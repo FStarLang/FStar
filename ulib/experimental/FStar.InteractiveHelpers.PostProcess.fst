@@ -399,7 +399,7 @@ let is_eq dbg t =
         Some ((Eq_Undec a), x, y)
       else None
     | [(a,Q_Implicit);(b,Q_Implicit);(x,Q_Explicit);(y,Q_Explicit)] ->
-      if name = "Prims.eq3" || name = "Prims.op_Equals_Equals_Equals" then
+      if name = "Prims.op_Equals_Equals_Equals" then
         Some ((Eq_Hetero a b), x, y)
       else None
     | _ -> None
@@ -415,8 +415,8 @@ let mk_eq k t1 t2 =
   | Eq_Undec ty ->
     mk_app (`Prims.eq2) [(ty, Q_Implicit); (t1, Q_Explicit); (t2, Q_Explicit)]
   | Eq_Hetero ty1 ty2 ->
-    mk_app (`Prims.eq3) [(ty1, Q_Implicit); (ty2, Q_Implicit);
-                            (t1, Q_Explicit); (t2, Q_Explicit)]
+    mk_app Prims.(`( === )) [(ty1, Q_Implicit); (ty2, Q_Implicit);
+                             (t1, Q_Explicit); (t2, Q_Explicit)]
 
 let formula_construct (f : formula) : Tac string =
   match f with

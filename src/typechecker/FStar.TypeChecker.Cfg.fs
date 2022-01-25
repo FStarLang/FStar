@@ -1058,18 +1058,6 @@ let equality_ops : prim_step_set =
         | _ ->
             failwith "Unexpected number of arguments"
     in
-    let interp_prop_eq3 (psc:psc) _norm_cb (args:args) : option<term> =
-        let r = psc.psc_range in
-        match args with
-        | [(t1, _); (t2, _); (a1, _); (a2, _)] ->    //eq3
-            (match U.eq_inj (U.eq_tm t1 t2) (U.eq_tm a1 a2) with
-            | U.Equal -> Some ({U.t_true with pos=r})
-            | U.NotEqual -> Some ({U.t_false with pos=r})
-            | _ -> None)
-
-        | _ ->
-            failwith "Unexpected number of arguments"
-    in
     let propositional_equality =
         {name = PC.eq2_lid;
          arity = 3;
@@ -1080,18 +1068,7 @@ let equality_ops : prim_step_set =
          interpretation = interp_prop_eq2;
          interpretation_nbe = fun _cb -> NBETerm.interp_prop_eq2}
     in
-    let hetero_propositional_equality =
-        {name = PC.eq3_lid;
-         arity = 4;
-         univ_arity = 2;
-         auto_reflect=None;
-         strong_reduction_ok=true;
-         requires_binder_substitution=false;
-         interpretation = interp_prop_eq3;
-         interpretation_nbe = fun _cb -> NBETerm.interp_prop_eq3}
-    in
-
-    prim_from_list [propositional_equality; hetero_propositional_equality]
+    prim_from_list [propositional_equality]
 
 (* Profiling the time each different primitive step consumes *)
 let primop_time_map : BU.smap<int> = BU.smap_create 50
