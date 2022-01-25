@@ -57,6 +57,7 @@ type step =
   | Unascribe
   | NBE
   | ForExtraction   //marking an invocation of the normalizer for extraction
+  | Unrefine
 and steps = list<step>
 
 val eq_step : step -> step -> bool

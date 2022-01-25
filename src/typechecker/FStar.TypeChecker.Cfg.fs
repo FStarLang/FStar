@@ -52,6 +52,7 @@ type fsteps = {
      weakly_reduce_scrutinee:bool;
      nbe_step:bool;
      for_extraction:bool;
+     unrefine : bool;
 }
 
 let steps_to_string f =
@@ -90,6 +91,7 @@ let steps_to_string f =
     in_full_norm_request = %s;\n\
     weakly_reduce_scrutinee = %s;\n\
     for_extraction = %s;\n\
+    unrefine = %s;\n\
   }"
   [ f.beta |> b;
     f.iota |> b;
@@ -118,6 +120,7 @@ let steps_to_string f =
     f.in_full_norm_request |> b;
     f.weakly_reduce_scrutinee |> b;
     f.for_extraction |> b;
+    f.unrefine |> b;
    ]
 
 let default_steps : fsteps = {
@@ -149,6 +152,7 @@ let default_steps : fsteps = {
     weakly_reduce_scrutinee = true;
     nbe_step = false;
     for_extraction = false;
+    unrefine = false;
 }
 
 let fstep_add_one s fs =
@@ -189,6 +193,7 @@ let fstep_add_one s fs =
     | Unascribe ->  { fs with unascribe = true }
     | NBE -> {fs with nbe_step = true }
     | ForExtraction -> {fs with for_extraction = true }
+    | Unrefine -> {fs with unrefine = true }
 
 let to_fsteps (s : list<step>) : fsteps =
     List.fold_right fstep_add_one s default_steps
