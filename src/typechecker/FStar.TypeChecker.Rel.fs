@@ -665,6 +665,13 @@ type flex_t =
 
 let flex_reason (Flex (_, u, _)) = u.ctx_uvar_reason
 
+let flex_uvar (Flex (_, u, _)) = u
+
+let flex_uvar_has_meta_tac u =
+  match u.ctx_uvar_meta with
+  | Some (Ctx_uvar_meta_tac _) -> true
+  | _ -> false
+
 let flex_t_to_string (Flex (_, c, args)) =
     BU.format2 "%s [%s]" (print_ctx_uvar c) (Print.args_to_string args)
 
@@ -710,7 +717,7 @@ let flex_uvar_head t =
  * We also return early if the substitution is empty or if the uvar is
  * totally unaffected by it.
  *)
-let ensure_no_uvar_subst (t0:term) (wl:worklist)
+let ensure_no_uvar_subst env (t0:term) (wl:worklist)
   : term * worklist
   = (* Returns true iff the variable x is not affected by substitution s *)
     let bv_not_affected_by (s:subst_ts) (x:bv) : bool =
@@ -762,6 +769,10 @@ let ensure_no_uvar_subst (t0:term) (wl:worklist)
         (* Solve the old variable *)
         let args_sol = List.map U.arg_of_non_null_binder dom_binders in
         let sol = S.mk_Tm_app t_v args_sol t0.pos in
+        if Env.debug env <| Options.Other "Rel"
+        then BU.print2 "ensure_no_uvar_subst solving %s with %s\n"
+               (Print.ctx_uvar_to_string uv)
+               (Print.term_to_string sol);
         U.set_uvar uv.ctx_uvar_head sol;
 
         (* Make a term for the new uvar, applied to the substitutions of
@@ -808,8 +819,8 @@ let destruct_flex_t' t : flex_t =
     | _ -> failwith "Not a flex-uvar"
 
 (* Destruct a term into its uvar head and arguments *)
-let destruct_flex_t t wl : flex_t * worklist =
-  let t, wl = ensure_no_uvar_subst t wl in
+let destruct_flex_t env t wl : flex_t * worklist =
+  let t, wl = ensure_no_uvar_subst env t wl in
   (* If there's any substitution on the head of t, it must
    * have been made trivial by the call above, so
    * calling destruct_flex_t' is fine. *)
@@ -874,7 +885,7 @@ let solve_prob' resolve_ok prob logical_guard uvis wl =
         then if resolve_ok
              then wl
              else (fail(); wl)
-        else let (Flex (_, uv, args), wl)  = destruct_flex_t g wl in
+        else let (Flex (_, uv, args), wl)  = destruct_flex_t wl.tcenv g wl in
              assign_solution (args_as_binders args) uv phi;
              wl
     in
@@ -1662,6 +1673,17 @@ let quasi_pattern env (f:flex_t) : option<(binders * typ)> =
       let formals, t_res = U.arrow_formals t_hd in
       aux [] formals t_res args
 
+let run_meta_arg_tac (ctx_u:ctx_uvar) : term =
+  match ctx_u.ctx_uvar_meta with
+  | Some (Ctx_uvar_meta_tac (env_dyn, tau)) ->
+    let env : Env.env = FStar.Compiler.Dyn.undyn env_dyn in
+    if Env.debug env (Options.Other "Tac")
+    then BU.print1 "Running tactic for meta-arg %s\n" (Print.ctx_uvar_to_string ctx_u);
+    Errors.with_ctx "Running tactic for meta-arg"
+      (fun () -> env.synth_hook env ctx_u.ctx_uvar_typ tau)
+  | _ ->
+    failwith "run_meta_arg_tac must have been called with a uvar that has a meta tac"
+
 (******************************************************************************************************)
 (* Main solving algorithm begins here *)
 (******************************************************************************************************)
@@ -1946,7 +1968,7 @@ and solve_rigid_flex_or_flex_rigid_subtyping
 
         //BEWARE: special treatment of Tot and GTot here
         if U.is_tot_or_gtot_comp comp
-        then let flex, wl = destruct_flex_t this_flex wl in
+        then let flex, wl = destruct_flex_t env this_flex wl in
              begin
              match quasi_pattern env flex with
              | None -> giveup_lit env "flex-arrow subtyping, not a quasi pattern" (TProb tp)
@@ -2507,9 +2529,26 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
 
 (* solve_t_flex-flex:
        Always delay flex-flex constraints, if possible.
-       If not, coerce both sides to patterns and solve
+       If not, see if one of the flex uvar has a meta program associated
+               If yes, run that meta program, solve the uvar, and try again
+               If not, coerce both sides to patterns and solve
 *)
 and solve_t_flex_flex env orig wl (lhs:flex_t) (rhs:flex_t) : solution =
+    let should_run_meta_arg_tac (flex:flex_t) =
+      let uv = flex_uvar flex in
+      flex_uvar_has_meta_tac uv &&
+      BU.set_is_empty (Free.uvars uv.ctx_uvar_typ) in
+
+    let run_meta_arg_tac_and_try_again (flex:flex_t) =
+      let uv = flex_uvar flex in
+      let t = run_meta_arg_tac uv in
+      if Env.debug env <| Options.Other "Rel"
+      then BU.print2 "solve_t_flex_flex: solving meta arg uvar %s with %s\n"
+             (Print.ctx_uvar_to_string uv)
+             (Print.term_to_string t);
+      U.set_uvar uv.ctx_uvar_head t;
+      solve env (attempt [orig] wl) in
+    
     match p_rel orig with
     | SUB
     | SUBINV ->
@@ -2525,6 +2564,13 @@ and solve_t_flex_flex env orig wl (lhs:flex_t) (rhs:flex_t) : solution =
       if wl.defer_ok
       && (not (is_flex_pat lhs)|| not (is_flex_pat rhs))
       then giveup_or_defer env orig wl Deferred_flex_flex_nonpattern (Thunk.mkv "flex-flex non-pattern")
+
+      else if should_run_meta_arg_tac lhs
+      then run_meta_arg_tac_and_try_again lhs
+
+      else if should_run_meta_arg_tac rhs
+      then run_meta_arg_tac_and_try_again rhs
+
       else
           match quasi_pattern env lhs, quasi_pattern env rhs with
           | Some (binders_lhs, t_res_lhs), Some (binders_rhs, t_res_rhs) ->
@@ -2763,7 +2809,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
      *)
     let try_match_heuristic env orig wl s1 s2 t1t2_opt =
         let try_solve_branch scrutinee p =
-            let (Flex (_t, uv, _args), wl) = destruct_flex_t scrutinee wl  in
+            let (Flex (_t, uv, _args), wl) = destruct_flex_t env scrutinee wl  in
             let xs, pat_term, _, _ = PatternUtils.pat_as_exp true true env p in
             let subst, wl =
                 List.fold_left (fun (subst, wl) x ->
@@ -3200,14 +3246,14 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
        * it to to solve_t_flex_flex, causing a crash.
        *
        * See issue #1616. *)
-        let t1, wl = ensure_no_uvar_subst t1 wl in
+        let t1, wl = ensure_no_uvar_subst env t1 wl in
         let t2 = U.canon_app t2 in
         (* ^ This canon_app call is needed for the incredibly infrequent case
          * where t2 is a Tm_app, its head uvar matches that of t1,
          * *and* the uvar is solved to an application by the previous
          * ensure_no_uvar_subst call. In that case, we get a nested application
          * in t2, and the call below would raise an error. *)
-        let t2, wl = ensure_no_uvar_subst t2 wl in
+        let t2, wl = ensure_no_uvar_subst env t2 wl in
         let f1 = destruct_flex_t' t1 in
         let f2 = destruct_flex_t' t2 in
         solve_t_flex_flex env orig wl f1 f2
@@ -3215,7 +3261,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
       (* flex-rigid equalities *)
       | Tm_uvar _, _
       | Tm_app({n=Tm_uvar _}, _), _ when (problem.relation=EQ) -> (* just imitate/project ... no slack *)
-        let f1, wl = destruct_flex_t t1 wl in
+        let f1, wl = destruct_flex_t env t1 wl in
         solve_t_flex_rigid_eq env orig wl f1 t2
 
       (* rigid-flex: reorient if it is an equality constraint *)
@@ -3250,7 +3296,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
             | Inr not_abs, Inl t_abs ->
               if is_flex not_abs //if it's a pattern and the free var check succeeds, then unify it with the abstraction in one step
               && p_rel orig = EQ
-              then let flex, wl = destruct_flex_t not_abs wl in
+              then let flex, wl = destruct_flex_t env not_abs wl in
                     solve_t_flex_rigid_eq env orig wl flex t_abs
               else begin
                 match head_matches_delta env wl not_abs t_abs with
@@ -4521,29 +4567,23 @@ let resolve_implicits' env is_tac g =
 
     | hd::tl ->
       let { imp_reason = reason; imp_tm = tm; imp_uvar = ctx_u; imp_range = r } = hd in
+      if Env.debug env <| Options.Other "Rel"
+      then BU.print2 "resolve_implicits' loop, imp_tm = %s and ctx_u = %s\n"
+             (Print.term_to_string tm)
+             (Print.ctx_uvar_to_string ctx_u);
       if ctx_u.ctx_uvar_should_check = Allow_unresolved
       then until_fixpoint (out, true) tl
       else if unresolved ctx_u
-      then begin match ctx_u.ctx_uvar_meta with
-           | Some (Ctx_uvar_meta_tac (env_dyn, tau)) ->
-             let env : Env.env = FStar.Compiler.Dyn.undyn env_dyn in
-             if Env.debug env (Options.Other "Tac") then
-               BU.print1 "Running tactic for meta-arg %s\n" (Print.ctx_uvar_to_string ctx_u);
+      then (if flex_uvar_has_meta_tac ctx_u
+            then let t = run_meta_arg_tac ctx_u in
+                 // let the unifier handle setting the variable
+                 let extra =
+                   match teq_nosmt env t tm with
+                   | None -> failwith "resolve_implicits: unifying with an unresolved uvar failed?"
+                   | Some g -> g.implicits in
 
-             let t =
-               Errors.with_ctx "Running tactic for meta-arg"
-                 (fun () -> env.synth_hook env hd.imp_uvar.ctx_uvar_typ tau) in
-             // let the unifier handle setting the variable
-             let extra =
-               match teq_nosmt env t tm with
-               | None -> failwith "resolve_implicits: unifying with an unresolved uvar failed?"
-               | Some g -> g.implicits in
-
-             let ctx_u = { ctx_u with ctx_uvar_meta = None } in
-             until_fixpoint (out, true) (extra @ tl)
-           | _ ->
-             until_fixpoint ((hd, Implicit_unresolved)::out, changed) tl
-      end
+                 until_fixpoint (out, true) (extra @ tl)
+            else until_fixpoint ((hd, Implicit_unresolved)::out, changed) tl)
       else if ctx_u.ctx_uvar_should_check = Allow_untyped
       then until_fixpoint (out, true) tl
       else begin
@@ -4553,7 +4593,16 @@ let resolve_implicits' env is_tac g =
          *       we may end up normalizing an implicit solution multiple times in
          *       multiple until_fixpoint calls
          *)
+               if Env.debug env <| Options.Other "Rel"
+      then BU.print2 "resolve_implicits' loop before norm, imp_tm = %s and ctx_u = %s\n"
+             (Print.term_to_string tm)
+             (Print.ctx_uvar_to_string ctx_u);
+
         let tm = norm_with_steps "FStar.TypeChecker.Rel.norm_with_steps.8" [Env.Beta] env tm in
+               if Env.debug env <| Options.Other "Rel"
+      then BU.print2 "resolve_implicits' loop after norm, imp_tm = %s and ctx_u = %s\n"
+             (Print.term_to_string tm)
+             (Print.ctx_uvar_to_string ctx_u);
         let hd = {hd with imp_tm=tm} in
         (*
          * AR: We do not retypecheck the solutions solved by a tactic
