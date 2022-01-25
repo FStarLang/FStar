@@ -3116,35 +3116,6 @@ let (equality_ops : primitive_step FStar_Compiler_Util.psmap) =
                }
          | uu___4 -> FStar_Pervasives_Native.None)
     | uu___ -> failwith "Unexpected number of arguments" in
-  let interp_prop_eq3 psc1 _norm_cb args =
-    let r = psc1.psc_range in
-    match args with
-    | (t1, uu___)::(t2, uu___1)::(a1, uu___2)::(a2, uu___3)::[] ->
-        let uu___4 =
-          let uu___5 = FStar_Syntax_Util.eq_tm t1 t2 in
-          let uu___6 = FStar_Syntax_Util.eq_tm a1 a2 in
-          FStar_Syntax_Util.eq_inj uu___5 uu___6 in
-        (match uu___4 with
-         | FStar_Syntax_Util.Equal ->
-             FStar_Pervasives_Native.Some
-               {
-                 FStar_Syntax_Syntax.n =
-                   (FStar_Syntax_Util.t_true.FStar_Syntax_Syntax.n);
-                 FStar_Syntax_Syntax.pos = r;
-                 FStar_Syntax_Syntax.vars =
-                   (FStar_Syntax_Util.t_true.FStar_Syntax_Syntax.vars)
-               }
-         | FStar_Syntax_Util.NotEqual ->
-             FStar_Pervasives_Native.Some
-               {
-                 FStar_Syntax_Syntax.n =
-                   (FStar_Syntax_Util.t_false.FStar_Syntax_Syntax.n);
-                 FStar_Syntax_Syntax.pos = r;
-                 FStar_Syntax_Syntax.vars =
-                   (FStar_Syntax_Util.t_false.FStar_Syntax_Syntax.vars)
-               }
-         | uu___5 -> FStar_Pervasives_Native.None)
-    | uu___ -> failwith "Unexpected number of arguments" in
   let propositional_equality =
     {
       name = FStar_Parser_Const.eq2_lid;
@@ -3157,19 +3128,7 @@ let (equality_ops : primitive_step FStar_Compiler_Util.psmap) =
       interpretation_nbe =
         (fun _cb -> FStar_TypeChecker_NBETerm.interp_prop_eq2)
     } in
-  let hetero_propositional_equality =
-    {
-      name = FStar_Parser_Const.eq3_lid;
-      arity = (Prims.of_int (4));
-      univ_arity = (Prims.of_int (2));
-      auto_reflect = FStar_Pervasives_Native.None;
-      strong_reduction_ok = true;
-      requires_binder_substitution = false;
-      interpretation = interp_prop_eq3;
-      interpretation_nbe =
-        (fun _cb -> FStar_TypeChecker_NBETerm.interp_prop_eq3)
-    } in
-  prim_from_list [propositional_equality; hetero_propositional_equality]
+  prim_from_list [propositional_equality]
 let (primop_time_map : Prims.int FStar_Compiler_Util.smap) =
   FStar_Compiler_Util.smap_create (Prims.of_int (50))
 let (primop_time_reset : unit -> unit) =

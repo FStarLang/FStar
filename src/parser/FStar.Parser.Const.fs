@@ -112,9 +112,8 @@ let dtuple2_lid  = pconst "dtuple2" // for l_Exists
 
 (* Various equality predicates *)
 let eq2_lid    = pconst  "eq2"
-let eq3_lid    = pconst  "eq3"
+let eq3_lid    = pconst  "op_Equals_Equals_Equals"
 let c_eq2_lid  = pconst "equals"
-let c_eq3_lid  = pconst "h_equals"
 
 (* Some common term constructors *)
 let cons_lid              = pconst  "Cons"

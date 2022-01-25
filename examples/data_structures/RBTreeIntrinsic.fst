@@ -196,6 +196,7 @@ val ins_mem : #h:nat -> #c:color -> x:int -> s:rbnode h c ->
 val insB_mem : #h:nat -> x:int -> s:rbnode h Black ->
   Lemma (ensures forall y. (mem y s \/ y = x) <==> hiddenTree_mem y (insB x s)) (decreases s)
 
+#push-options "--fuel 2 --ifuel 2 --z3rlimit_factor 4"
 let rec ins_mem #h #c x = function
   | Leaf -> ()
   | B a y b ->
@@ -212,6 +213,7 @@ and insB_mem #h x = function
     if x < y then ins_mem x a
     else if x = y then ()
     else ins_mem x b
+#pop-options
 
 val almostNode_sorted : #h:nat -> almostNode h -> bool
 let almostNode_sorted #h = function

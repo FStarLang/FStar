@@ -224,7 +224,6 @@ let rec resugar_term_as_op (t:S.term) : option<(string*expected_arity)> =
     (C.iff_lid     , "<==>");
     (C.precedes_lid, "<<");
     (C.eq2_lid     , "==");
-    (C.eq3_lid     , "===");
     (C.forall_lid  , "forall");
     (C.exists_lid  , "exists");
     (C.salloc_lid  , "alloc");
