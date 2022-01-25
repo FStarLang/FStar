@@ -438,6 +438,7 @@ let rec translate (cfg:config) (bs:list<t>) (e:term) : t =
 
     | Tm_refine (bv, tm) ->
       if cfg.core_cfg.steps.for_extraction
+      ||  cfg.core_cfg.steps.unrefine
       then translate cfg bs bv.sort //if we're only extracting, then drop the refinement
       else mk_t <| Refinement ((fun (y:t) -> translate cfg (y::bs) tm),
                               (fun () -> as_arg (translate cfg bs bv.sort))) // XXX: Bogus type?

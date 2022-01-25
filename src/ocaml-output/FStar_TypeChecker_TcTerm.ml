@@ -3005,11 +3005,12 @@ and (tc_maybe_toplevel_term :
            (match uu___5 with
             | (uu___6, lc, uu___7) ->
                 let t0 =
-                  FStar_TypeChecker_Normalize.unfold_whnf env1
+                  FStar_TypeChecker_Normalize.unfold_whnf'
+                    [FStar_TypeChecker_Env.Unascribe;
+                    FStar_TypeChecker_Env.Unmeta;
+                    FStar_TypeChecker_Env.Unrefine] env1
                     lc.FStar_TypeChecker_Common.res_typ in
-                let uu___8 =
-                  let uu___9 = FStar_Syntax_Util.unmeta t0 in
-                  FStar_Syntax_Util.head_and_args uu___9 in
+                let uu___8 = FStar_Syntax_Util.head_and_args t0 in
                 (match uu___8 with
                  | (thead, uu___9) ->
                      ((let uu___11 =
