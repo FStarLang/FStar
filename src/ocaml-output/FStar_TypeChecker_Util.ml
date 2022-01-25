@@ -7167,7 +7167,11 @@ let (find_record_or_dc_from_typ :
                 let uu___ =
                   let uu___1 =
                     let uu___2 =
-                      FStar_TypeChecker_Normalize.unfold_whnf env t1 in
+                      let uu___3 =
+                        let uu___4 =
+                          FStar_TypeChecker_Normalize.unfold_whnf env t1 in
+                        FStar_Syntax_Util.unmeta uu___4 in
+                      FStar_Syntax_Util.unrefine uu___3 in
                     FStar_Syntax_Util.unmeta uu___2 in
                   FStar_Syntax_Util.head_and_args uu___1 in
                 (match uu___ with

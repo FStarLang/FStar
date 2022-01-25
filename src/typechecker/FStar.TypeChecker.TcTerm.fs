@@ -1056,7 +1056,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
     in
     begin
     let t0 = N.unfold_whnf env lc.res_typ in
-    let thead, _ = U.head_and_args (U.unmeta t0) in
+    let thead, _ = U.head_and_args (U.unmeta (U.unrefine (U.unmeta t0))) in
     if Env.debug env <| Options.Other "RFD"
     then (
       BU.print3 "Got lc.res_typ=%s; t0 = %s; thead = %s\n"

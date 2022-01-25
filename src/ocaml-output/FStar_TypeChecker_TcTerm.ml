@@ -3008,7 +3008,11 @@ and (tc_maybe_toplevel_term :
                   FStar_TypeChecker_Normalize.unfold_whnf env1
                     lc.FStar_TypeChecker_Common.res_typ in
                 let uu___8 =
-                  let uu___9 = FStar_Syntax_Util.unmeta t0 in
+                  let uu___9 =
+                    let uu___10 =
+                      let uu___11 = FStar_Syntax_Util.unmeta t0 in
+                      FStar_Syntax_Util.unrefine uu___11 in
+                    FStar_Syntax_Util.unmeta uu___10 in
                   FStar_Syntax_Util.head_and_args uu___9 in
                 (match uu___8 with
                  | (thead, uu___9) ->
