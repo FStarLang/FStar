@@ -209,7 +209,7 @@
         "typing_Huffman.sorted", "unit_inversion", "unit_typing"
       ],
       0,
-      "368b793f567de97bb89ace47e046dab5"
+      "179d2287e4d5cb6cea9affe3c5312e2f"
     ],
     [
       "Huffman.insert_in_sorted",
@@ -249,7 +249,7 @@
         "subterm_ordering_Prims.Cons", "typing_Huffman.sorted"
       ],
       0,
-      "607f56dd50c98b6ab8f6560ddcfc6c06"
+      "0c3e1e5fea2d7d0be364662b351b5ca8"
     ],
     [
       "Huffman.insertion_sort",
@@ -494,7 +494,7 @@
         "typing_Prims.uu___is_Cons", "typing_Prims.uu___is_Nil"
       ],
       0,
-      "18d5e0d3c2f4d88b2dd1f83fc6057176"
+      "b0147b5c248ebfd925b46465039cf8b9"
     ],
     [
       "Huffman.decode_one",
@@ -695,7 +695,7 @@
         "typing_Huffman.uu___is_Node", "well-founded-ordering-on-nat"
       ],
       0,
-      "5e869891064602a2f850e633068afd16"
+      "022bf642b31f4b5e4a4822094ac5b60c"
     ],
     [
       "Huffman.decode",

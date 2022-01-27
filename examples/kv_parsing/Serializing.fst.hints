@@ -50,7 +50,7 @@
         "projection_inverse_Slice.BSlice_p", "typing_Serializing.offset_into"
       ],
       0,
-      "aef0db81715b57de8a9b2f214a281033"
+      "6ba828660d623425b62c6e928e986612"
     ],
     [
       "Serializing.buffer_fun",
@@ -507,7 +507,7 @@
         "typing_Slice.__proj__BSlice__item__p"
       ],
       0,
-      "4d076e38089ff89bb72a98885d99d369"
+      "46dc02b6417bf52b720a5ad6b43a481a"
     ]
   ]
 ]

@@ -1309,7 +1309,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "b9060bed1ace04525224aaa10f27534d"
+      "4c06cc04ee5583f2bba8c55db92b4860"
     ],
     [
       "FStar.Monotonic.HyperStack.modifies_some_refs",
@@ -1848,7 +1848,7 @@
         "typing_FStar.StrongExcludedMiddle.strong_excluded_middle"
       ],
       0,
-      "556758c8936582dd0907c41d82431537"
+      "c1cd4bc75cbe5d449698c7de71a8e7f2"
     ],
     [
       "FStar.Monotonic.HyperStack.aref_equal",

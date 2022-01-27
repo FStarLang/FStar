@@ -32,7 +32,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "9f3b6350ee7b5bbb032f61d89ff81b71"
+      "546fb0ea09d18d2cdd4b76d17ef427c8"
     ],
     [
       "QuickSort.List.mem_count",
@@ -129,7 +129,7 @@
         "typing_QuickSort.List.partition"
       ],
       0,
-      "39697dca9457af47d945fbcd7dbb797a"
+      "2863d1503c967830116fee52c7b8c1ba"
     ],
     [
       "QuickSort.List.sorted_app_lemma",
@@ -177,7 +177,7 @@
         "typing_QuickSort.List.sorted", "unit_typing"
       ],
       0,
-      "0ba3ee70f38c80eff8b71435e75e59b0"
+      "a8e2c53c768c2ac453ea375fcc64cc2c"
     ],
     [
       "QuickSort.List.is_permutation",
@@ -228,7 +228,7 @@
         "typing_FStar.List.Tot.Base.op_At", "typing_QuickSort.List.count"
       ],
       0,
-      "f12b360256347ed2e24433d46c589b33"
+      "73abe01eb82b1673e0136e2fe9887965"
     ],
     [
       "QuickSort.List.permutation_app_lemma",

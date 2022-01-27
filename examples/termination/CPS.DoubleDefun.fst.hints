@@ -118,7 +118,7 @@
         "typing_CPS.DoubleDefun.stack", "typing_tok_CPS.DoubleDefun.C0@tok"
       ],
       0,
-      "c461a525bacc1d169954d2c99c5c9cc5"
+      "b7b9bf9ca5977b05a1ad74893240e257"
     ],
     [
       "CPS.DoubleDefun.apply",
@@ -152,7 +152,7 @@
         "typing_tok_CPS.DoubleDefun.C0@tok", "well-founded-ordering-on-nat"
       ],
       0,
-      "2d5499650ff10c1a0e7ba2acf4cc6452"
+      "e55030a389b0acc0ed1203aed5fb30c2"
     ]
   ]
 ]
