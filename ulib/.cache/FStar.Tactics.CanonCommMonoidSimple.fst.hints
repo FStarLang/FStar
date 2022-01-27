@@ -118,7 +118,7 @@
         "typing_tok_FStar.Tactics.CanonCommMonoidSimple.Unit@tok"
       ],
       0,
-      "2f980235dcd71884b27e9e8ae31cdc1d"
+      "489cd70de4fa4b2adf3db1eebc31e225"
     ],
     [
       "FStar.Tactics.CanonCommMonoidSimple.xsdenote",
@@ -140,7 +140,7 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "5e89426cbf79dd2ce26ec582aefe7a6f"
+      "ab5dfe1c0b23b3058705043f44d8930b"
     ],
     [
       "FStar.Tactics.CanonCommMonoidSimple.flatten",
@@ -202,7 +202,7 @@
         "unit_typing"
       ],
       0,
-      "f572b462c96992affee8a3cf866eeff4"
+      "193da08fccb3c7b78f157c73bd7e52bb"
     ],
     [
       "FStar.Tactics.CanonCommMonoidSimple.flatten_correct",
@@ -251,7 +251,7 @@
         "typing_tok_FStar.Tactics.CanonCommMonoidSimple.Unit@tok"
       ],
       0,
-      "0441bfd713fb21b30b81c7264d86b5a2"
+      "3329604126ca730a7b6295cc9f30a796"
     ],
     [
       "FStar.Tactics.CanonCommMonoidSimple.apply_swap_aux_correct",

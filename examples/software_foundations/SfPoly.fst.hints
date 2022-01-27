@@ -275,7 +275,7 @@
         "typing_SfPoly.snoc"
       ],
       0,
-      "a2b0929a370ab8e2bb15d6ad08dc1c0b"
+      "027cc85144db01aacafb0d023338a653"
     ],
     [
       "SfPoly.rev_involutive",
@@ -315,7 +315,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "f0a46788c5cc62bfcc2b7153295c930d"
+      "20be860d676c536a045581ea4f0efff2"
     ],
     [
       "SfPoly.combine",
@@ -876,7 +876,7 @@
         "typing_SfPoly.snoc"
       ],
       0,
-      "bb3826b72397c37cf39467ff525a188d"
+      "cf627abe18a73962e83be62e0e31abbe"
     ],
     [
       "SfPoly.map_rev",

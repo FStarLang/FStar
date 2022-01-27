@@ -19,7 +19,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "e2124f54bd9e0443de9863859a18bbdd"
+      "13853e7595b310767cf377959f675946"
     ],
     [
       "Ex06d.append",
@@ -68,7 +68,7 @@
         "typing_Ex06d.count"
       ],
       0,
-      "2fbebe3c5fc2ee3a8592eb02dd3d4338"
+      "b700f58e9dbf0a8f0b34d3f9cf356f46"
     ],
     [
       "Ex06d.append_mem",
@@ -188,7 +188,7 @@
         "typing_FStar.Pervasives.Native.snd"
       ],
       0,
-      "269a623f1b845f975f9d8dcc62c3bd12"
+      "470f62d6b4d7e71a4df25bca74ab812c"
     ],
     [
       "Ex06d.sorted_concat_lemma",
@@ -236,7 +236,7 @@
         "typing_Ex06d.sorted"
       ],
       0,
-      "3067a43e6c4f0767d9e3eee5571bc908"
+      "65b3dcdcabf6ebba8abc462e18b0d231"
     ],
     [
       "Ex06d.sort",

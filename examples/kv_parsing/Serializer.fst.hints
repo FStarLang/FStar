@@ -106,7 +106,7 @@
         "typing_Serializer.__proj__Mkwriter__item__num_entries_written"
       ],
       0,
-      "a8dfe28f0964f0f470bc7ea2668ef772"
+      "497f89e44282cb958e621e0e160d47f4"
     ],
     [
       "Serializer.adjacent_advance",
@@ -163,7 +163,7 @@
         "typing_Slice.truncated_slice"
       ],
       0,
-      "ac7f0350a655f3d0b5b88d2507006d0c"
+      "8dfd85fee9e172ef697693bf751ac875"
     ],
     [
       "Serializer.adjacent_truncate",
@@ -207,7 +207,7 @@
         "typing_Slice.__proj__BSlice__item__p"
       ],
       0,
-      "d7780913595e697460d5e5ef85513686"
+      "c33c40b1e5abec9ff9eef2551e9cd232"
     ],
     [
       "Serializer.adjacent_0len",
@@ -275,7 +275,7 @@
         "typing_Slice.truncated_slice"
       ],
       0,
-      "e1633198a7349f2b6a925eff9f84d3a0"
+      "120c6a3a377eda4236eb61efee2153d0"
     ],
     [
       "Serializer.writer_init",
@@ -479,7 +479,7 @@
         "typing_Slice.__proj__BSlice__item__p", "typing_Slice.as_seq"
       ],
       0,
-      "1f39e05a96505b7fbc42865c7396212a"
+      "1d4375cf79752e94e8d707a1c58ac42b"
     ],
     [
       "Serializer.join_slices",
@@ -540,7 +540,7 @@
         "typing_Slice.u32_add_overflows"
       ],
       0,
-      "0712896d4376663bdf933ea44690a271"
+      "97c8caf74ba5e06c2471cbfa2721c8e3"
     ],
     [
       "Serializer.enc_one_more",
@@ -698,7 +698,7 @@
         "typing_Serializer.join_slices"
       ],
       0,
-      "0548bb49794fe76afe97f167d7b77b9f"
+      "50ca6142a8523a5c5b67605c34884d2e"
     ],
     [
       "Serializer.writer_append",
@@ -899,7 +899,7 @@
         "typing_Slice.buffer_split_at"
       ],
       0,
-      "f18283052ef3ec83afb42de49267c841"
+      "069c422a90faaf2e95546ba8a516448e"
     ],
     [
       "Serializer.join_is_concat",
@@ -960,7 +960,7 @@
         "typing_FStar.UInt32.add", "typing_FStar.UInt32.v"
       ],
       0,
-      "6f4df336f2c5da29b8022c33546173e9"
+      "b0cd6121177e979b7e7809576cab6d24"
     ],
     [
       "Serializer.writer_store_buf",
