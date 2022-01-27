@@ -357,7 +357,7 @@ let elim_equiv_laws ()
 ///
 /// It splits value vprops for a store sequence into `star` of value vprops for subsequences
 ///
-/// Since `get`, `put`, `with_key` manipualte one entry at a time,
+/// Since `get`, `put`, `with_key` manipulate one entry at a time,
 ///   we split the sequence at that i (prefix, at i, suffix)
 
 let value_vprops_split3

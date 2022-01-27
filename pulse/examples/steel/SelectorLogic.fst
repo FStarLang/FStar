@@ -3,7 +3,7 @@ module SelectorLogic
 open Steel.Memory
 module Mem = Steel.Memory
 
-(* Extending selectors to support wand; establishing a correspondance with linear logic *)
+(* Extending selectors to support wand; establishing a correspondence with linear logic *)
 
 #push-options "--ide_id_info_off"
 

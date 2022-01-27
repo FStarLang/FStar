@@ -18,10 +18,10 @@ module Steel.Preorder
 open FStar.PCM
 open FStar.Preorder
 
-/// This module explores the connexion between PCM and preorders. More specifically, we show here
+/// This module explores the connection between PCM and preorders. More specifically, we show here
 /// that any PCM induces a preorder relation, characterized by frame-preservation for any updates.
 ///
-/// Furthurmore, we also consider the reverse relationship where we derive a PCM for any preorder,
+/// Furthermore, we also consider the reverse relationship where we derive a PCM for any preorder,
 /// by taking as elements of the PCM the trace of all the states of the element.
 
 (**** PCM to preoder *)
@@ -109,7 +109,7 @@ let extends (#a: Type u#a) (#q:preorder a) : preorder (hist q) = extends'
 
 module L = FStar.List.Tot
 
-(** If [h0] extends by [h1], then the lenght of [h0] is superior *)
+(** If [h0] extends by [h1], then the length of [h0] is superior *)
 let rec extends_length_eq (#a: Type u#a) (#q:preorder a) (h0 h1:hist q)
   : Lemma (ensures (extends h0 h1 ==> h0 == h1 \/ L.length h0 > L.length h1))
           [SMTPat (extends h0 h1)]

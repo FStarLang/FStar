@@ -54,7 +54,7 @@ open FStar.NMST
 /// We start by defining some basic notions for a commutative monoid.
 ///
 /// We could reuse FStar.Algebra.CommMonoid, but this style with
-/// quanitifers was more convenient for the proof done here.
+/// quantifiers was more convenient for the proof done here.
 
 
 let symmetry #a (equals: a -> a -> prop) =

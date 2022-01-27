@@ -30,7 +30,7 @@ module Mem = Steel.Memory
 /// This library provides two versions, which can interoperate with each other.
 /// The first one uses the standard separation logic pts_to predicate, and has a non-informative selector
 /// The second one has a selector which returns the contents of the reference in memory, enabling
-/// to better separate reasoning about memory safety and functional correctness when handling refernences.
+/// to better separate reasoning about memory safety and functional correctness when handling references.
 
 /// An abstract datatype for references
 val ref (a:Type0) : Type0
