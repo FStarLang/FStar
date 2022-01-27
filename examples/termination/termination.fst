@@ -120,7 +120,7 @@ let rec treeMap #a #b f v = match v with
   | Node l ->
     (* NS: this next call seems to be unavoidable. We need to move the refinement "inside" the list.
            An alternative would be to give map a different type accounting for this "outside" refinement.
-           But, it's seems nicer to give map its normal type *)
+           But, it seems nicer to give map its normal type *)
     let l = move_refinement #_ #(fun aa -> aa << v) l in (* ghost *)
     Node (map (treeMap f) l) //treeMap f: (x:T a{x << v} -> Tot (T b))
 
