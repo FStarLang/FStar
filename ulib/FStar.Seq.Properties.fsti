@@ -308,7 +308,7 @@ val lemma_trans_perm: #a:eqtype -> s1:seq a -> s2:seq a -> s3:seq a{length s1 = 
   (ensures (permutation a (slice s1 i j) (slice s3 i j)))
 
 
-(*New addtions, please review*)
+(*New additions, please review*)
 
 let snoc (#a:Type) (s:seq a) (x:a) : Tot (seq a) = Seq.append s (Seq.create 1 x)
 

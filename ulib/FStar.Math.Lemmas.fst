@@ -138,7 +138,7 @@ let swap_neg_mul a b =
   neg_mul_left a b;
   neg_mul_right a b
 
-(* Lemma: multiplication is left distributive over substraction *)
+(* Lemma: multiplication is left distributive over subtraction *)
 val distributivity_sub_left: a:int -> b:int -> c:int ->
   Lemma ((a - b) * c = a * c - b * c)
 let distributivity_sub_left a b c =
@@ -152,7 +152,7 @@ let distributivity_sub_left a b c =
     a * c - b * c;
   }
 
-(* Lemma: multiplication is right distributive over substraction *)
+(* Lemma: multiplication is right distributive over subtraction *)
 val distributivity_sub_right: a:int -> b:int -> c:int ->
   Lemma ((a * (b - c) = a * b - a * c))
 let distributivity_sub_right a b c =
@@ -176,7 +176,7 @@ let lemma_abs_mul a b = ()
 val lemma_abs_bound : a:int -> b:nat -> Lemma (abs a < b <==> -b < a /\ a < b)
 let lemma_abs_bound a b = ()
 
-(* Lemma: multiplication keeps symetric bounds :
+(* Lemma: multiplication keeps symmetric bounds :
     b > 0 && d > 0 && -b < a < b && -d < c < d ==> - b * d < a * c < b * d *)
 val mul_ineq1: a:int -> b:nat -> c:int -> d:nat -> Lemma
     (requires (-b < a /\ a < b /\

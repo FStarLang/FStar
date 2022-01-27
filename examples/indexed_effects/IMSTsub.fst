@@ -156,7 +156,7 @@ let g ()
     assert (s2 = s1 * 42);
     assert (s3 = s1 * 43);
     assert (s3 = s2); 
-    assert (False); // WOOPS!!!
+    assert (False); // WHOOPS!!!
     s0
 
 let h ()

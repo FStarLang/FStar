@@ -105,7 +105,7 @@ let lemma_blit_quantifiers #a h0 h1 b bi b' bi' len =
   Classical.forall_intro #_ #lemma_post_2 qj_2
   
 
-(* Equality predicate between buffers wih quantifiers *)
+(* Equality predicate between buffers with quantifiers *)
 val eq_lemma: #a:Type -> h:mem -> b:buffer a{live h b} -> h':mem -> b':buffer a{live h' b'} -> Lemma
   (requires (equal h b h' b'))
   (ensures  (length b = length b' /\ (forall (i:nat). {:pattern (get h b i)} 

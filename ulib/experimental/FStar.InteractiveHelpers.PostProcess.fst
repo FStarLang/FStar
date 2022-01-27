@@ -183,7 +183,7 @@ let find_focused_assert_in_current_goal dbg =
   end
 
 (*** Analyze effectful term *)
-/// Analyze a term in order to print propertly instantiated pre/postconditions
+/// Analyze a term in order to print properly instantiated pre/postconditions
 /// and type conditions.
 
 /// with_globals states whether to analyze the target pre/post together with the
@@ -627,7 +627,7 @@ let unfold_in_assert_or_assume dbg ares =
   (* - subterm: the subterm of the assertion in which we found the focused term
    *   (if an equality, left or right operand, otherwise whole assertion)
    * - unf_res: the result of the exploration for the focused term inside the
-   *   assertion, which gives the term to UNFold
+   *   assertion, which gives the term to unfold
    * - rebuild: a Tot function which, given a term, rebuilds the equality by
    *   replacing the above subterm with the given term
    * - insert_before: whether to insert the new assertion before or after the

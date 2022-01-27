@@ -110,7 +110,7 @@ type sigelt_view =
       (lbs:list letbinding) ->
       sigelt_view
 
-  // Sg_Inductive basically coallesces the Sig_bundle used internally,
+  // Sg_Inductive basically coalesces the Sig_bundle used internally,
   // where the type definition and its constructors are split.
   // While that might be better for typechecking, this is probably better for metaprogrammers
   // (no mutually defined types for now)

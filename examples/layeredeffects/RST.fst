@@ -133,7 +133,7 @@ let test_match (x:t) : RSTATE unit emp (fun _ -> emp) True =
  *
  * When typechecking the pattern `C a x`, we generate a term with projectors and discriminators
  *   for each of the pattern bvs, a and x in this case, and those terms are then lax checked
- * Crucially when lax checking pat_bv_tm for `x`, `a` must be in the environement,
+ * Crucially when lax checking pat_bv_tm for `x`, `a` must be in the environment,
  *   earlier it wasn't
  *)
 

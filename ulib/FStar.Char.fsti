@@ -63,7 +63,7 @@ val uppercase: char -> Tot char
 
 (** This private primitive is used internally by the compiler to
     translate character literals with a desugaring-time check of the
-    size of the number, rather than an expensive verifiation check.
+    size of the number, rather than an expensive verification check.
     Since it is marked private, client programs cannot call it
     directly Since it is marked unfold, it eagerly reduces,
     eliminating the verification overhead of the wrapper *)

@@ -123,7 +123,7 @@ let reflect_on_the_fly u =
 
 
 
-(* Refining the specification of a refiable impure function using reify/reflect *)
+(* Refining the specification of a reifiable impure function using reify/reflect *)
 (* Note that unless we internalize monotonicity for wps we need to define
    refine_st using pre/post condition                                           *)
 let refine_st (#a:Type)

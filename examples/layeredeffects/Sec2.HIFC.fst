@@ -417,7 +417,7 @@ let pre_bind (a b:Type)
     bind_ifc_flows_ok x y;
     f
 
-(* Incidentially, The IFC indexing structure is a monoid 
+(* Incidentally, The IFC indexing structure is a monoid
    under the label_equiv equivalence relation, making
    hifc a graded Hoare monad
 *)

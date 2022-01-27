@@ -359,7 +359,7 @@ val forall_to_exists_2
       ($f: (x: a -> y: b -> Lemma ((p x /\ q y) ==> r)))
     : Lemma (((exists (x: a). p x) /\ (exists (y: b). q y)) ==> r)
 
-(** An eliminator for squashed existentials: If every witnesse can be
+(** An eliminator for squashed existentials: If every witness can be
     eliminated into a squashed proof of the [goal], then the [goal]
     postcondition is valid. *)
 val exists_elim

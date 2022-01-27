@@ -56,7 +56,7 @@ let simpl_ex1 (x : nat) =
 (**** Switch between asserts/assumes (C-S-s) *)
 /// People often write functions and proofs incrementally, by keeping an admit
 /// at the very end and adding function calls or assertions one at a time,
-/// type-checking with F* at every changement to make sure that it is legal.
+/// type-checking with F* at every code change to make sure that it is legal.
 /// However, when such functions or proofs become long, whenever we query F*,
 /// it takes a lot of time to recheck all the already known-to-succeed proof
 /// obligations, before getting to the new (interesting) ones. A common way of
@@ -164,7 +164,7 @@ let ci_ex2 (x : nat{x % 2 = 0}) (y : int{y % 3 = 0 /\ x + y % 5 = 0}) :
 /// It leads to assertions of the form:
 /// [> assert((fun __x0 __x1 -> pred __x0 __x1) __x0 __x1)
 ///
-/// As (C-c C-e C-e) performes simple normalization (to remove abstractions,
+/// As (C-c C-e C-e) performs simple normalization (to remove abstractions,
 /// for instance) on the terms it manipulates, you can manually rewrite this
 /// assert to:
 /// [> assert((fun __x0 __x1 -> pred __x0 __x1) x y)

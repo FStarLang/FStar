@@ -142,7 +142,7 @@ let x_times_42 x : prog = [
 // let _ = norm_assert (forall x. eval (x_times_42 x) == 42 * x)
 
 
-// (* All of these identies are quite easy by normalization. *)
+// (* All of these identities are quite easy by normalization. *)
 // let _ = norm_assert (forall x y. equiv_norm (add1 x y) (add2 x y))
 // let _ = norm_assert (forall x y. equiv_norm (add1 x y) (add3 x y))
 // let _ = norm_assert (forall x y. equiv_norm (add1 x y) (add4 x y))
