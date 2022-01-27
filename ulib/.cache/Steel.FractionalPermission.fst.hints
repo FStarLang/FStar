@@ -1,5 +1,5 @@
 [
-  "4Ý&ò·–ö\u0000?9ù7\u0019©N«",
+  ";‰9}Á\bÔSÁd#j§*€‹",
   [
     [
       "Steel.FractionalPermission.half_perm",
@@ -18,7 +18,7 @@
         "typing_Steel.FractionalPermission.__proj__MkPerm__item__v"
       ],
       0,
-      "fe34af26f21baa8727acdd0463281752"
+      "3c3ea249d2a47c77f049e6f85644711e"
     ],
     [
       "Steel.FractionalPermission.sum_perm",
@@ -37,7 +37,7 @@
         "typing_Steel.FractionalPermission.__proj__MkPerm__item__v"
       ],
       0,
-      "0a5296b5b746a64a26de2bc9d5602016"
+      "ad93d71aa0a827e7a421f5a567609d2c"
     ],
     [
       "Steel.FractionalPermission.full_perm",
@@ -52,7 +52,31 @@
         "projection_inverse_BoxReal_proj_0"
       ],
       0,
-      "694cc4da8120f6e53ab2cd8fa0dfe7fb"
+      "12292a7d0e9d88aa927dd89136046baa"
+    ],
+    [
+      "Steel.FractionalPermission.sum_halves",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "data_elim_Steel.FractionalPermission.MkPerm",
+        "equation_FStar.Real.two",
+        "equation_Steel.FractionalPermission.half_perm",
+        "equation_Steel.FractionalPermission.sum_perm",
+        "fuel_guarded_inversion_Steel.FractionalPermission.perm",
+        "primitive_FStar.Real.of_int", "primitive_FStar.Real.op_Plus_Dot",
+        "primitive_FStar.Real.op_Slash_Dot",
+        "proj_equation_Steel.FractionalPermission.MkPerm_v",
+        "projection_inverse_BoxInt_proj_0",
+        "projection_inverse_BoxReal_proj_0",
+        "projection_inverse_Steel.FractionalPermission.MkPerm_v",
+        "real_inversion", "real_typing",
+        "refinement_interpretation_Tm_refine_3f54e9b64bb1cf73ff37c7c9d439498d"
+      ],
+      0,
+      "8facb2b7eed30122b82305bac1902bed"
     ]
   ]
 ]

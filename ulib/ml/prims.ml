@@ -36,12 +36,6 @@ type ('Aa,'Ax,'dummyV0) equals =
 let uu___is_Refl : 'Aa . 'Aa -> 'Aa -> ('Aa,unit,unit) equals -> bool =
   fun x  -> fun uu____65  -> fun projectee  -> true
 type ('Aa,'Ax,'Ay) eq2 = unit
-type ('Aa,'Ax,'dummyV0,'dummyV1) h_equals =
-  | HRefl
-let uu___is_HRefl :
-  'Aa . 'Aa -> unit -> Obj.t -> ('Aa,unit,Obj.t,unit) h_equals -> bool
-  = fun x  -> fun b  -> fun uu____141  -> fun projectee  -> true
-type ('Aa,'Ab,'Ax,'Ay) eq3 = unit
 type ('Aa,'Ab,'Ax,'Ay) op_Equals_Equals_Equals = unit
 type 'Ab b2t = unit
 type ('Ap,'Aq) c_and =

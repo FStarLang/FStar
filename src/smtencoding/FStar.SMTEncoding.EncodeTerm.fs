@@ -1411,28 +1411,6 @@ and encode_formula (phi:typ) (env:env_t) : (term * decls_t)  = (* expects phi to
         else enc (bin_op mkEq) r rf
     in
 
-    // eq3 : #a:Type -> #b:Type -> a -> b -> Type
-    let eq3_op r args : (term * decls_t) =
-        let n = List.length args in
-        if n=4
-        then enc (fun terms ->
-                   match terms with
-                   | [t0; t1; v0; v1] -> mkAnd (mkEq(t0, t1), mkEq(v0, v1))
-                   | _ -> failwith "Impossible") r args
-        else failwith (BU.format1 "eq3_op: got %s non-implicit arguments instead of 4?" (string_of_int n))
-    in
-
-    // h_equals : #a:Type -> a -> #b:Type -> b -> Type
-    let h_equals_op r args : (term * decls_t) =
-        let n = List.length args in
-        if n=4
-        then enc (fun terms ->
-                   match terms with
-                   | [t0; v0; t1; v1] -> mkAnd (mkEq(t0, t1), mkEq(v0, v1))
-                   | _ -> failwith "Impossible") r args
-        else failwith (BU.format1 "eq3_op: got %s non-implicit arguments instead of 4?" (string_of_int n))
-    in
-
     let mk_imp r : Tot<(args -> (term * decls_t))> = function
         | [(lhs, _); (rhs, _)] ->
           let l1, decls1 = encode_formula rhs env in
@@ -1465,8 +1443,6 @@ and encode_formula (phi:typ) (env:env_t) : (term * decls_t)  = (* expects phi to
         (Const.not_lid,   enc_prop_c (un_op mkNot));
         (Const.eq2_lid,   eq_op);
         (Const.c_eq2_lid, eq_op);
-        (Const.eq3_lid,   eq3_op);
-        (Const.c_eq3_lid, h_equals_op);
         (Const.true_lid,  const_op Term.mkTrue);
         (Const.false_lid, const_op Term.mkFalse);
     ] in

@@ -307,6 +307,20 @@ let gather_gen #a #_ r p0 p1 =
   intro_vptr r (sum_perm p0 p1) x0;
   sum_perm p0 p1
 
+
+let gather (#a: Type0) (#uses: _) (#p: perm) (r: ref a)
+  : SteelGhost unit uses
+      (vptrp r (half_perm p) `star` vptrp r (half_perm p))
+      (fun _ -> vptrp r p)
+      (fun _ -> True)
+      (fun h _ h' ->
+        h' (vptrp r p) == h (vptrp r (half_perm p))
+      )
+  = let _ = gather_gen r _ _ in
+    change_equal_slprop
+      (vptrp r _)
+      (vptrp r p)
+
 (*** Lemmas on references *)
 
 let vptrp_not_null
