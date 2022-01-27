@@ -5514,6 +5514,17 @@ let (maybe_add_implicit_binders :
   =
   fun env ->
     fun bs ->
+      let is_implicit_binder uu___ =
+        match uu___ with
+        | { FStar_Syntax_Syntax.binder_bv = uu___1;
+            FStar_Syntax_Syntax.binder_qual = q;
+            FStar_Syntax_Syntax.binder_attrs = uu___2;_} ->
+            (match q with
+             | FStar_Pervasives_Native.Some (FStar_Syntax_Syntax.Implicit
+                 uu___3) -> true
+             | FStar_Pervasives_Native.Some (FStar_Syntax_Syntax.Meta uu___3)
+                 -> true
+             | uu___3 -> false) in
       let pos bs1 =
         match bs1 with
         | { FStar_Syntax_Syntax.binder_bv = hd;
@@ -5522,10 +5533,7 @@ let (maybe_add_implicit_binders :
             FStar_Syntax_Syntax.range_of_bv hd
         | uu___ -> FStar_TypeChecker_Env.get_range env in
       match bs with
-      | { FStar_Syntax_Syntax.binder_bv = uu___;
-          FStar_Syntax_Syntax.binder_qual = FStar_Pervasives_Native.Some
-            (FStar_Syntax_Syntax.Implicit uu___1);
-          FStar_Syntax_Syntax.binder_attrs = uu___2;_}::uu___3 -> bs
+      | b::uu___ when is_implicit_binder b -> bs
       | uu___ ->
           let uu___1 = FStar_TypeChecker_Env.expected_typ env in
           (match uu___1 with
@@ -5538,55 +5546,30 @@ let (maybe_add_implicit_binders :
                 | FStar_Syntax_Syntax.Tm_arrow (bs', uu___3) ->
                     let uu___4 =
                       FStar_Compiler_Util.prefix_until
-                        (fun uu___5 ->
-                           match uu___5 with
-                           | { FStar_Syntax_Syntax.binder_bv = uu___6;
-                               FStar_Syntax_Syntax.binder_qual =
-                                 FStar_Pervasives_Native.Some
-                                 (FStar_Syntax_Syntax.Implicit uu___7);
-                               FStar_Syntax_Syntax.binder_attrs = uu___8;_}
-                               -> false
-                           | uu___6 -> true) bs' in
+                        (fun b ->
+                           let uu___5 = is_implicit_binder b in
+                           Prims.op_Negation uu___5) bs' in
                     (match uu___4 with
                      | FStar_Pervasives_Native.None -> bs
                      | FStar_Pervasives_Native.Some ([], uu___5, uu___6) ->
                          bs
                      | FStar_Pervasives_Native.Some (imps, uu___5, uu___6) ->
-                         let uu___7 =
+                         let r = pos bs in
+                         let imps1 =
                            FStar_Compiler_Effect.op_Bar_Greater imps
-                             (FStar_Compiler_Util.for_all
-                                (fun uu___8 ->
-                                   match uu___8 with
-                                   | { FStar_Syntax_Syntax.binder_bv = x;
-                                       FStar_Syntax_Syntax.binder_qual =
-                                         uu___9;
-                                       FStar_Syntax_Syntax.binder_attrs =
-                                         uu___10;_}
-                                       ->
-                                       let uu___11 =
-                                         FStar_Ident.string_of_id
-                                           x.FStar_Syntax_Syntax.ppname in
-                                       FStar_Compiler_Util.starts_with
-                                         uu___11 "'")) in
-                         if uu___7
-                         then
-                           let r = pos bs in
-                           let imps1 =
-                             FStar_Compiler_Effect.op_Bar_Greater imps
-                               (FStar_Compiler_List.map
-                                  (fun b ->
-                                     let uu___8 =
-                                       FStar_Syntax_Syntax.set_range_of_bv
-                                         b.FStar_Syntax_Syntax.binder_bv r in
-                                     {
-                                       FStar_Syntax_Syntax.binder_bv = uu___8;
-                                       FStar_Syntax_Syntax.binder_qual =
-                                         (b.FStar_Syntax_Syntax.binder_qual);
-                                       FStar_Syntax_Syntax.binder_attrs =
-                                         (b.FStar_Syntax_Syntax.binder_attrs)
-                                     })) in
-                           FStar_Compiler_List.op_At imps1 bs
-                         else bs)
+                             (FStar_Compiler_List.map
+                                (fun b ->
+                                   let uu___7 =
+                                     FStar_Syntax_Syntax.set_range_of_bv
+                                       b.FStar_Syntax_Syntax.binder_bv r in
+                                   {
+                                     FStar_Syntax_Syntax.binder_bv = uu___7;
+                                     FStar_Syntax_Syntax.binder_qual =
+                                       (b.FStar_Syntax_Syntax.binder_qual);
+                                     FStar_Syntax_Syntax.binder_attrs =
+                                       (b.FStar_Syntax_Syntax.binder_attrs)
+                                   })) in
+                         FStar_Compiler_List.op_At imps1 bs)
                 | uu___3 -> bs))
 let (maybe_lift :
   FStar_TypeChecker_Env.env ->
