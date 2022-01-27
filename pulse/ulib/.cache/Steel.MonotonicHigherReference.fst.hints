@@ -852,7 +852,7 @@
       1,
       [ "@query", "lemma_Steel.FractionalPermission.sum_halves" ],
       0,
-      "d606dcf4d5cf3689c095de756a337b2d"
+      "8ba40fa4eda4a83b89adcb19a4398f2d"
     ],
     [
       "Steel.MonotonicHigherReference.intro_pure",

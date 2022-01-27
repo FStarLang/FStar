@@ -764,7 +764,7 @@
         "typing_Steel.Reference.vptr_"
       ],
       0,
-      "0b2b9bc2740f4a22fdaee2947798ee29"
+      "d02f8c401112e48228be878aa6847548"
     ],
     [
       "Steel.Reference.vptrp_not_null",
@@ -1348,7 +1348,7 @@
         "typing_Steel.Reference.ghost_vptr_"
       ],
       0,
-      "f51bd832f95d01cfc2b84064b887ccf7"
+      "56f88c72be5c60bfdad0ddd5186617f4"
     ]
   ]
 ]

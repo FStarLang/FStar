@@ -84,7 +84,7 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Trees.Node"
       ],
       0,
-      "3ba0cb105504f710d754115f0ee33b04"
+      "af97093ea39d644f7fc2673e9451487a"
     ],
     [
       "Trees.mem",
@@ -133,7 +133,7 @@
         "token_correspondence_Trees.is_bst.fuel_instrumented"
       ],
       0,
-      "5814d29fba033dc3bba2820e76f26289"
+      "08076f7c5eeb3ed46e56faafde8c7c22"
     ],
     [
       "Trees.height",
@@ -211,7 +211,7 @@
         "token_correspondence_Trees.is_bst.fuel_instrumented"
       ],
       0,
-      "adf0abb340d7cde1af7a676f0b614f53"
+      "6ede74aeafb8dc75ecaf94d4f9fc9a9b"
     ],
     [
       "Trees.insert_bst_preserves_forall_keys",
@@ -254,7 +254,7 @@
         "typing_Trees.is_bst", "unit_inversion", "unit_typing"
       ],
       0,
-      "589143c323b7e828d7fea62e8e511a55"
+      "b485a231fa0081feda35e0b5ea9ef3db"
     ],
     [
       "Trees.insert_bst_preserves_bst",
@@ -301,7 +301,7 @@
         "unit_typing"
       ],
       0,
-      "3f9743bd8a927dff6c7df2c1f4c4e94d"
+      "571407318045ce417e9b33ac2682ceff"
     ],
     [
       "Trees.is_balanced",
@@ -1009,7 +1009,7 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Trees.Node"
       ],
       0,
-      "1badaaaa065949f6f59d4a1565a50e10"
+      "58081338731f4dcd6ea2412c7efbc462"
     ],
     [
       "Trees.insert_avl_proof_aux",
@@ -1085,7 +1085,7 @@
         "unit_typing"
       ],
       0,
-      "f65c7b89bfe82278ee5d9a0ae1ba91ad"
+      "39841c79be09eecb3c3961df9b6931ee"
     ],
     [
       "Trees.insert_avl_proof",
