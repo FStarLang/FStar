@@ -3713,6 +3713,9 @@ and build_let_rec_env _top_level env lbs : list<letbinding> * env_t * guard_t =
             // tc_abs adding universes here so that when we add the let binding, we
             // can add a typescheme with these universes
             | Some (arity, lbdef) ->
+              if Env.debug env <| Options.Extreme
+              then BU.print2 "termination_check_enabled returned arity: %s and lbdef: %s\n"
+                     (string_of_int arity) (Print.term_to_string lbdef);
               let lb = {lb with lbtyp=lbtyp; lbunivs=univ_vars; lbdef=lbdef} in
               let env = {env with letrecs=(lb.lbname, arity, lbtyp, univ_vars)::env.letrecs} in
               lb, env
