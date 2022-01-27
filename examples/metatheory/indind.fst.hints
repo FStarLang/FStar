@@ -161,7 +161,7 @@
         "typing_tok_Indind.Nil@tok"
       ],
       0,
-      "4a57ab8eaab937d63e3ededa55711ed0"
+      "ef647697f46eaef1464c8e281bf528f1"
     ],
     [
       "Indind.vdl_induction",
@@ -222,7 +222,7 @@
         "subterm_ordering_Indind.Cons", "typing_tok_Indind.Nil@tok"
       ],
       0,
-      "fb32447e1ac279006133657d5c9ab4e2"
+      "5b7ec7004ac72b362571b2c73f1122ff"
     ],
     [
       "Indind.ctx0",

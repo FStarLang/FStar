@@ -2542,32 +2542,42 @@ let short_circuit_head l =
 
 (************************************************************************)
 (* maybe_add_implicit_binders (env:env) (bs:binders)                    *)
-(* Adding implicit binders for ticked variables                         *)
-(* in case the expected type is of the form #'a1 -> ... -> #'an -> t    *)
+(* Adding implicit binders                                              *)
+(* in case the expected type is of the form #a1 -> ... -> #an -> t      *)
 (* and bs does not begin with any implicit binders                      *)
-(* add #'a1 ... #'an to bs                                              *)
+(* add #a1 ... #an to bs                                                *)
+(* Note that there may be other implicit binders in t that bs don't     *)
+(* We don't add them here, so in that sense it is best case effort      *)
+(* This helps us sometimes to build a better decreases clause           *)
+(*   since it helps us count the arity by including implicits           *)
 (************************************************************************)
-let maybe_add_implicit_binders (env:env) (bs:binders)  : binders =
+let maybe_add_implicit_binders (env:env) (bs:binders) : binders =
+    let is_implicit_binder ({binder_qual=q}) : bool =
+        match q with
+        | Some (Implicit _)
+        | Some (Meta _) -> true
+        | _ -> false in
+
     let pos bs = match bs with
         | ({binder_bv=hd})::_ -> S.range_of_bv hd
         | _ -> Env.get_range env in
+
     match bs with
-        | ({binder_qual=Some (Implicit _)})::_ -> bs //bs begins with an implicit binder; don't add any
+        | b :: _ when is_implicit_binder b -> bs // bs begins with an implicit binder; don't add any
         | _ ->
           match Env.expected_typ env with
             | None -> bs
             | Some t ->
                 match (SS.compress t).n with
                     | Tm_arrow(bs', _) ->
-                      begin match BU.prefix_until (function ({binder_qual=Some (Implicit _)}) -> false | _ -> true) bs' with
+                      begin match BU.prefix_until (fun b -> not (is_implicit_binder b)) bs' with
                         | None -> bs
-                        | Some ([], _, _) -> bs //no implicits
+                        | Some ([], _, _) -> bs // no implicits in the prefix
                         | Some (imps, _,  _) ->
-                          if imps |> BU.for_all (fun ({binder_bv=x}) -> BU.starts_with (string_of_id x.ppname) "'")
-                          then let r = pos bs in
-                               let imps = imps |> List.map (fun b -> { b with binder_bv = (S.set_range_of_bv b.binder_bv r) }) in
-                               imps@bs //we have a prefix of ticked variables
-                          else bs
+                          let r = pos bs in
+                          let imps =
+                            imps |> List.map (fun b -> { b with binder_bv = (S.set_range_of_bv b.binder_bv r) }) in
+                          imps@bs // we have a prefix of implicits
                       end
 
                     | _ -> bs

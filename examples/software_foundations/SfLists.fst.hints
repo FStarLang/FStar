@@ -72,7 +72,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "aa3a2b42c03c1837f36936c22f6879b6"
+      "99cb66f6e60ce4810b72414ba708c10c"
     ],
     [
       "SfLists.app",
@@ -485,7 +485,7 @@
         "typing_tok_SfLists.Nil@tok"
       ],
       0,
-      "ad3e96d55f6709dd24f0390b3e62eeae"
+      "7571af721dd4fde8ed3458fb7651f927"
     ],
     [
       "SfLists.rev_length",
@@ -630,7 +630,7 @@
         "typing_SfLists.length", "well-founded-ordering-on-nat"
       ],
       0,
-      "fcefaabe83cdead52b7986be1e96f7ca"
+      "30b2f26a70f90d17b32ce405a03040d4"
     ],
     [
       "SfLists.foo3",

@@ -1285,7 +1285,7 @@
         "proj_equation_FStar.SL.Monotonic.Heap.Mkmref__addr"
       ],
       0,
-      "bd08f7a8900f5642b64d01ed7b1d2124"
+      "9e97f6aaaae84a9d74e7108e9aa8391a"
     ],
     [
       "FStar.SL.Monotonic.Heap.lemma_alloc",
@@ -1831,7 +1831,7 @@
         "fuel_guarded_inversion_FStar.SL.Monotonic.Heap.mref_"
       ],
       0,
-      "d6fe0cb47ea2675beb22d05c998db62f"
+      "a1fe6bedc4bf1b4c50be5b1668f4401d"
     ],
     [
       "FStar.SL.Monotonic.Heap.lemma_in_dom_emp",
@@ -2737,7 +2737,7 @@
         "typing_Tm_abs_83b92ea43d397fbc6d6605c72728cc67"
       ],
       0,
-      "63c8250e86b36a728dc7310f32f2b460"
+      "2094212aa6241a60b711b19b2b701130"
     ],
     [
       "FStar.SL.Monotonic.Heap.lemma_join_tot_emp_with_next_addr_h",
@@ -4473,7 +4473,7 @@
         "typing_FStar.SL.Monotonic.Heap.aref_of"
       ],
       0,
-      "0f24a2139f1c44b50045b1299a37b757"
+      "e79ec23ffab391c09488569030c5f351"
     ],
     [
       "FStar.SL.Monotonic.Heap.contains_gref_of",
@@ -4512,7 +4512,7 @@
         "typing_FStar.SL.Monotonic.Heap.gref_of"
       ],
       0,
-      "7e3a3fd69c8ca9fa796bda08113dc5af"
+      "40c2a549dc870b7e62d3d7dd42c31c04"
     ],
     [
       "FStar.SL.Monotonic.Heap.aref_of_gref_of",
