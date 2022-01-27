@@ -891,7 +891,7 @@ private let rcreate_common (#a:Type) (r:rid) (init:a) (len:UInt32.t) (mm:bool)
 (** This function allocates a buffer in an "eternal" region, i.e. a region where memory is
 //  * automatically-managed. One does not need to call rfree on such a buffer. It
 //  * translates to C as a call to malloc and assumes a conservative garbage
-//  * collector is runnning. *)
+//  * collector is running. *)
 val rcreate: #a:Type -> r:rid -> init:a -> len:UInt32.t -> ST (buffer a)
   (requires (fun h            -> is_eternal_region r))
   (ensures (fun (h0:mem) b h1 -> rcreate_post_common r init len b h0 h1 /\ ~(is_mm b.content)))

@@ -1055,8 +1055,8 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
       tc_term env e
     in
     begin
-    let t0 = N.unfold_whnf env lc.res_typ in
-    let thead, _ = U.head_and_args (U.unmeta t0) in
+    let t0 = N.unfold_whnf' [Unascribe; Unmeta; Unrefine] env lc.res_typ in
+    let thead, _ = U.head_and_args t0 in
     if Env.debug env <| Options.Other "RFD"
     then (
       BU.print3 "Got lc.res_typ=%s; t0 = %s; thead = %s\n"
@@ -3713,6 +3713,9 @@ and build_let_rec_env _top_level env lbs : list<letbinding> * env_t * guard_t =
             // tc_abs adding universes here so that when we add the let binding, we
             // can add a typescheme with these universes
             | Some (arity, lbdef) ->
+              if Env.debug env <| Options.Extreme
+              then BU.print2 "termination_check_enabled returned arity: %s and lbdef: %s\n"
+                     (string_of_int arity) (Print.term_to_string lbdef);
               let lb = {lb with lbtyp=lbtyp; lbunivs=univ_vars; lbdef=lbdef} in
               let env = {env with letrecs=(lb.lbname, arity, lbtyp, univ_vars)::env.letrecs} in
               lb, env

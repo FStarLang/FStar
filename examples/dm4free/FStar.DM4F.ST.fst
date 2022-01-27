@@ -56,6 +56,6 @@ total reifiable reflectable new_effect {
 //let repr0 = STATE_h.repr int
 
 // I would expect STATE.get to have type (s:Type) -> unit -> STATE s int
-// but this is not a valid type in F* (the effect is depedent on the input type s)
+// but this is not a valid type in F* (the effect is dependent on the input type s)
 // In current F*, we need to create a new applied effect in order to use this definition
 // i.e. new_effect STATE_int = STATE_h int

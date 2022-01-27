@@ -192,7 +192,7 @@ under some guard [g], adding the guard as a goal. *)
 let exact_guard (t : term) : Tac unit =
     with_policy Goal (fun () -> t_exact true false t)
 
-(** (TODO: explain bettter) When running [pointwise tau] For every
+(** (TODO: explain better) When running [pointwise tau] For every
 subterm [t'] of the goal's type [t], the engine will build a goal [Gamma
 |= t' == ?u] and run [tau] on it. When the tactic proves the goal,
 the engine will rewrite [t'] for [?u] in the original goal type. This
@@ -461,7 +461,7 @@ let admit_all () : Tac unit =
     let _ = repeat tadmit in
     ()
 
-(** [is_guard] returns whether the current goal arised from a typechecking guard *)
+(** [is_guard] returns whether the current goal arose from a typechecking guard *)
 let is_guard () : Tac bool =
     Tactics.Types.is_guard (_cur_goal ())
 
@@ -649,7 +649,7 @@ private val push1' : (#p:Type) -> (#q:Type) ->
 private let push1' #p #q f u = ()
 
 (*
- * Some easier applying, which should prevent frustation
+ * Some easier applying, which should prevent frustration
  * (or cause more when it doesn't do what you wanted to)
  *)
 val apply_squash_or_lem : d:nat -> term -> Tac unit
@@ -964,7 +964,7 @@ private let rec last (x : list 'a) : Tac 'a =
 
 (** When the goal is [match e with | p1 -> e1 ... | pn -> en],
 destruct it into [n] goals for each possible case, including an
-hypothesis for [e] matching the correposnding pattern. *)
+hypothesis for [e] matching the corresponding pattern. *)
 let branch_on_match () : Tac unit =
     focus (fun () ->
       let x = get_match_body () in

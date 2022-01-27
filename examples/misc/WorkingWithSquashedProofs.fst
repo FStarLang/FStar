@@ -18,7 +18,7 @@ module WorkingWithSquashedProofs
 open FStar.Squash
 
 //Mixing squashed an constructive proofs
-//It's a bit bureaucractic and technical ... I wish this part of F* were simpler
+//It's a bit bureaucratic and technical ... I wish this part of F* were simpler
 //There's a bunch of redundancy between Lemma, squash, GTot, prop, etc.
 //which is always confusing.
 

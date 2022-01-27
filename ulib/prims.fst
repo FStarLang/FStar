@@ -77,7 +77,7 @@ type unit : eqtype
 (** [squash p] is a central type in F*---[squash p] is the proof
     irrelevant analog of [p] and is represented as a unit
     refinement. Squashed proofs are typically discharged using an SMT
-    solver, without expliciltly reconstructed any proof terms. As
+    solver, without any proof terms explicitly reconstructed. As
     such, one way to think of [squash p] is as the type of properties
     proven using classical axioms without building proof terms.
 
@@ -152,19 +152,6 @@ type equals (#a: Type) (x: a) : a -> Type = | Refl : equals x x
 *)
 [@@ "tac_opaque"; smt_theory_symbol]
 type eq2 (#a: Type) (x: a) (y: a) : logical = squash (equals x y)
-
-(** [h_equals] is the heterogeneous equality, allowing stating
-    equality among values of different types, but only allowing
-    reflexivity proofs at a given type, as with [equals]. *)
-type h_equals (#a: Type) (x: a) : #b: Type -> b -> Type = | HRefl : h_equals x x
-
-(** [eq3] is the squashed variant of [h_equals] *)
-[@@ "tac_opaque"; smt_theory_symbol]
-type eq3 (#a: Type) (#b: Type) (x: a) (y: b) : logical = squash (h_equals x y)
-
-(** We typically write [eq3] as a infix, binary [===] *)
-unfold
-let op_Equals_Equals_Equals (#a #b: Type) (x: a) (y: b) = eq3 x y
 
 (** bool-to-type coercion: This is often automatically inserted type,
     when using a boolean in context expecting a type. But,
@@ -409,7 +396,7 @@ let pure_stronger (a: Type) (wp1 wp2: pure_wp a) = forall (p: pure_post a). wp1 
 unfold
 let pure_close_wp0 (a b: Type) (wp: (b -> GTot (pure_wp a))) (p: pure_post a) = forall (b: b). wp b p
 
-(** Trivial WP for PURE: Prove the WP with the trivial poscondition *)
+(** Trivial WP for PURE: Prove the WP with the trivial postcondition *)
 unfold
 let pure_trivial (a: Type) (wp: pure_wp a) = wp (fun (trivial_result: a) -> True)
 
@@ -490,7 +477,10 @@ effect GTot (a: Type) = GHOST a (pure_null_wp0 a)
 
 (***** End trusted primitives *****)
 
-(** This point onwards, F* fully verifies all the definitions *)
+(** This point onward, F* fully verifies all the definitions *)
+
+(** [===] heterogeneous equality *)
+let ( === ) (#a #b: Type) (x: a) (y: b) : logical = a == b /\ x == y
 
 (** Dependent pairs [dtuple2] in concrete syntax is [x:a & b x].
     Its values can be constructed with the concrete syntax [(| x, y |)] *)
@@ -502,7 +492,7 @@ type dtuple2 (a: Type) (b: (a -> GTot Type)) = | Mkdtuple2 : _1: a -> _2: b _1 -
 [@@ "tac_opaque"; smt_theory_symbol]
 type l_Exists (#a: Type) (p: (a -> GTot Type0)) : logical = squash (x: a & p x)
 
-(** Primitive type of mathematical intgers, mapped to zarith in OCaml
+(** Primitive type of mathematical integers, mapped to zarith in OCaml
     extraction and to the SMT sort of integers *)
 assume new
 type int : eqtype 
@@ -737,4 +727,4 @@ let labeled (r: range) (msg: string) (b: Type) : Type = b
 (** THIS IS MEANT TO BE KEPT IN SYNC WITH FStar.CheckedFiles.fs
     Incrementing this forces all .checked files to be invalidated *)
 irreducible
-let __cache_version_number__ = 39
+let __cache_version_number__ = 40

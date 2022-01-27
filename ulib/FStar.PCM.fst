@@ -85,7 +85,7 @@ let composable (#a: Type u#a) (p:pcm a) (x y:a) = p.p.composable x y
 let op (#a: Type u#a) (p:pcm a) (x:a) (y:a{composable p x y}) = p.p.op x y
 
 (**
-  Two elements [x] and [y] are compatible with respect to a PCM if their substraction
+  Two elements [x] and [y] are compatible with respect to a PCM if their subtraction
   is well-defined, e.g. if there exists an element [frame] such that [x * z = y]
 *)
 let compatible (#a: Type u#a) (pcm:pcm a) (x y:a) =

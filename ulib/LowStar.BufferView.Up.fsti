@@ -23,7 +23,7 @@ module LowStar.BufferView.Up
  * A "view" on a buffer is intended for specification purposes only
  * It does not correspond to a pointer cast in C.
  *
- * Building a view requires providing a pair of mutally inverse functions
+ * Building a view requires providing a pair of mutually inverse functions
  * from sequences of `a` (sub-sequences of the source buffer)
  * to elements of `b`.
  *

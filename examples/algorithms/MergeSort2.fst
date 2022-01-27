@@ -68,7 +68,7 @@ let rec merge'_sorted #a l1 l2 k = match (l1, l2) with
     then (merge'_sorted tl1 l2 k)
     else (merge'_sorted l1 tl2 k)
 
-(** filtering (l appended to r) wrt x is equivelant to merging l and r, then filtering wrt x **)
+(** filtering (l appended to r) wrt x is equivalent to merging l and r, then filtering wrt x **)
 val merge'_filter_eq_inv: #a:eqtype -> (l: list a{Cons? l}) -> (r: list a{Cons? r}) -> k:(a -> Tot int) ->
   Lemma (requires (sorted l k /\ sorted r k))
         (ensures (forall x. Cons? l /\ Cons? r /\ (filter_eq x (l@r) k = filter_eq x (merge' l r k) k)))

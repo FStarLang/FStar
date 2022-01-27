@@ -164,7 +164,7 @@ let term_construct (t : term) : Tac string =
 (*** Pretty printing *)
 /// There are many issues linked to terms (pretty) printing.
 /// The first issue is that when parsing terms, F* automatically inserts
-/// abscriptions, which then clutter the terms printed to the user. The current
+/// ascriptions, which then clutter the terms printed to the user. The current
 /// workaround is to filter those ascriptions in the terms before exploiting them.
 /// TODO: this actually doesn't work for some unknown reason: some terms like [a /\ b]
 /// become [l_and a b]...
@@ -222,7 +222,7 @@ noeq type genv =
    * the previous and new memory states, and which may not be available in the user
    * context, or where we don't always know which variable to use.
    * In this case, whenever we output the term, we write its content as an
-   * asbtraction applied to those missing parameters. For instance, in the
+   * abstraction applied to those missing parameters. For instance, in the
    * case of the assertion introduced for a post-condition:
    * [> assert((fun h1 h2 -> post) h1 h2);
    * Besides the informative goal, the user can replace those parameters (h1

@@ -201,7 +201,7 @@ let rec append_length_inv_head
   (decreases left1)
 = match left1 with
   | [] -> ()
-  | _ :: left1' ->    
+  | _ :: left1' ->
     append_length_inv_head left1' right1 (tl left2) right2
 
 let append_length_inv_tail
@@ -213,6 +213,24 @@ let append_length_inv_tail
 = append_length left1 right1;
   append_length left2 right2;
   append_length_inv_head left1 right1 left2 right2
+
+let append_injective #a (l0 l0':list a)
+                        (l1 l1':list a)
+  : Lemma
+    (ensures
+      (length l0 == length l0' \/ length l1 == length l1') /\
+      append l0 l1 == append l0' l1' ==>
+      l0 == l0' /\ l1 == l1')
+   = introduce
+         ((length l0 == length l0' \/ length l1 == length l1') /\
+          append l0 l1 == append l0' l1')
+          ==>
+         (l0 == l0' /\ l1 == l1')
+     with _. eliminate (length l0 == length l0') \/
+                       (length l1 == length l1')
+     returns _
+     with _. append_length_inv_head l0 l1 l0' l1'
+     and  _. append_length_inv_tail l0 l1 l0' l1'
 
 (** The [last] element of a list remains the same, even after that list is
     [append]ed to another list. *)
@@ -438,7 +456,7 @@ val partition_mem: #a:eqtype -> f:(a -> Tot bool)
                   -> x:a
                   -> Lemma (requires True)
                           (ensures (let l1, l2 = partition f l in
-			            mem x l = (mem x l1 || mem x l2)))
+                                    mem x l = (mem x l1 || mem x l2)))
 let rec partition_mem #a f l x = match l with
   | [] -> ()
   | hd::tl -> partition_mem f tl x
@@ -952,16 +970,16 @@ let rec strict_suffix_of_exists_append
       #(strict_suffix_of l1 q)
       #(fun _ -> exists l3 . l2 == append l3 l1)
       (fun _ ->
-	FStar.Classical.exists_intro (fun l3 -> l2 == append l3 l1) (a :: []))
+        FStar.Classical.exists_intro (fun l3 -> l2 == append l3 l1) (a :: []))
       (fun _ ->
-	FStar.Classical.exists_elim
-	  (exists l3 . l2 == append l3 l1)
-	  #_
-	  #(fun l3 -> q == append l3 l1)
-	  (strict_suffix_of_exists_append l1 q)
-	  (fun l3 ->
-	     FStar.Classical.exists_intro (fun l3 -> l2 == append l3 l1) (a :: l3)
-	     ))
+        FStar.Classical.exists_elim
+          (exists l3 . l2 == append l3 l1)
+          #_
+          #(fun l3 -> q == append l3 l1)
+          (strict_suffix_of_exists_append l1 q)
+          (fun l3 ->
+             FStar.Classical.exists_intro (fun l3 -> l2 == append l3 l1) (a :: l3)
+             ))
 
 let strict_suffix_of_or_eq_exists_append
   (#a: Type)
@@ -975,9 +993,9 @@ let strict_suffix_of_or_eq_exists_append
     (fun _ ->
       strict_suffix_of_exists_append l1 l2)
     (fun _ ->
-	FStar.Classical.exists_intro
-	  (fun l3 -> l2 == append l3 l1)
-	  [] )
+        FStar.Classical.exists_intro
+          (fun l3 -> l2 == append l3 l1)
+          [] )
 
 (** Properties of << with lists *)
 

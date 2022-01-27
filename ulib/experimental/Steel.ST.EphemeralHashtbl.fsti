@@ -277,6 +277,30 @@ val with_key
        (requires ~ (Map.contains i borrows))
        (ensures fun _ -> True)
 
+
+/// `remove` removes the key `i` from the concrete store, its mapping in the logical map is unchanged
+///
+/// The return value is `true` if `i` was present in the concrete store
+///   `false` if `i` was not present in the concrete store when the client called `remove`
+///
+/// In case `i` was present, it also calls the finalizer on the `i` value
+
+inline_for_extraction
+val remove
+  (#k:eqtype)
+  (#v #contents:Type0)
+  (#vp:vp_t k v contents)
+  (#h:hash_fn k)
+  (#finalizer:finalizer_t vp)
+  (#m:G.erased (Map.t k contents))
+  (#borrows:G.erased (Map.t k v))
+  (a:tbl h finalizer)
+  (i:k)
+  : STT bool
+        (tperm a m borrows)
+        (fun _ -> tperm a m borrows)
+
+
 /// `free`, calls finalizer on all the values in the table,
 ///   unless the corresponding key is borrowed
 
@@ -287,8 +311,8 @@ val free
   (#vp:vp_t k v contents)
   (#h:hash_fn k)
   (#finalizer:finalizer_t vp)
-  (m:G.erased (repr k contents))
-  (borrows:G.erased (Map.t k v))
+  (#m:G.erased (repr k contents))
+  (#borrows:G.erased (Map.t k v))
   (a:tbl h finalizer)
   : STT unit
         (tperm a m borrows)

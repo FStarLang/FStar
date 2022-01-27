@@ -230,7 +230,7 @@ let gtdata_extensionality
   (ensures (u1 == u2))
 = ()
 
-(* Interperets a type code (`typ`) as a FStar type (`Type0`). *)
+(* Interprets a type code (`typ`) as a FStar type (`Type0`). *)
 let rec type_of_typ'
   (t: typ)
 : Tot Type0

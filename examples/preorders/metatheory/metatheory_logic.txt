@@ -647,7 +647,7 @@ Proof:
 
     (   size(phi)   ,   height(a) + height(b)   )
 
-  by considering the following cases (origanised into groups of similar derivations):
+  by considering the following cases (organised into groups of similar derivations):
 
   Group 1: Either the derivation of (a) or (b) ends with [Hyp-SC].
 
@@ -1682,7 +1682,7 @@ Proof:
 
   Note: This classical tautology is only used because we have chosen to work with classical logic
   and thus the RHS of the sequent calculus's validity judgement contains a set of formulae,
-  rather than a single formula. If we would have used intuitionsitic logic instead, we would have
+  rather than a single formula. If we would have used intuitionistic logic instead, we would have
   been able to use [Witnessed-Functoriality] directly on (G , x:state | Phi , phi |- psi).
 
 qed.

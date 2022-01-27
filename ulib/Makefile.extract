@@ -21,7 +21,7 @@ CODEGEN ?= OCaml
 MY_FSTAR=$(FSTAR) $(OTHERFLAGS) --lax --cache_checked_modules --odir $(OUTPUT_DIRECTORY) --cache_dir .cache.lax
 
 %.checked.lax:
-	$(MY_FSTAR) $< --already_cached "* -$(basename $(notdir $<))"
+	$(MY_FSTAR) $< --already_cached "*,-$(basename $(notdir $<))"
 	touch -c $@
 
 # And then, in a separate invocation, from each .checked.lax we

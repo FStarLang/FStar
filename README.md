@@ -48,7 +48,7 @@ More details on [executing F\* code via OCaml] on the [F\* wiki].
 
 [executing F\* code via OCaml]: https://github.com/FStarLang/FStar/wiki/Executing-F*-code
 
-Also, code written in a C-like shalowly embedded DSL can be extracted to
+Also, code written in a C-like shallowly embedded DSL can be extracted to
 [C](https://arxiv.org/abs/1703.00053)
 or [WASM](https://doi.ieeecomputersociety.org/10.1109/SP.2019.00064)
 by the [KreMLin tool](https://github.com/FStarLang/kremlin),

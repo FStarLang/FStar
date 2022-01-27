@@ -1,6 +1,15 @@
 [
-  "ÖyÀœ,uŒl3èö\fV\u0013ñ[",
+  "⁄{¨ƒ_5(ßß\u0005∆Äc*P›",
   [
+    [
+      "Prims.op_Equals_Equals_Equals",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "df2cf61434ad9a4a408fc556ce7deccf"
+    ],
     [
       "Prims.__proj__Mkdtuple2__item___2",
       1,
@@ -11,7 +20,7 @@
         "projection_inverse_Prims.Mkdtuple2__1"
       ],
       0,
-      "937dd29958200fed6892361bc6193bcf"
+      "af202b1f39315bc6d52cb526f48493f9"
     ],
     [
       "Prims.list",
@@ -20,7 +29,7 @@
       1,
       [ "@query" ],
       0,
-      "d47273b6bc01a2c3cdb1055499f5f868"
+      "ec7e6a055261b9d32bd5a90f3bcd37ab"
     ],
     [
       "Prims.__proj__Cons__item__hd",
@@ -33,7 +42,7 @@
         "refinement_interpretation_Tm_refine_7aac12c24449a22c34d98a0ea8ed4a32"
       ],
       0,
-      "b5583d884f86e694f62ef09e69b4f674"
+      "f693bb39b00848277e8a9f2007dc687c"
     ],
     [
       "Prims.__proj__Cons__item__tl",
@@ -46,7 +55,7 @@
         "refinement_interpretation_Tm_refine_7aac12c24449a22c34d98a0ea8ed4a32"
       ],
       0,
-      "b4a0bd046df22cfd16693d755728c163"
+      "0252a648c83913a23f1b96116ef96a53"
     ],
     [
       "Prims._assert",
@@ -55,7 +64,7 @@
       1,
       [ "@query" ],
       0,
-      "d4c03073fc7bff53c4c80dc90f31b75e"
+      "12b2f64894382730aa7f3d1024b8b997"
     ],
     [
       "Prims.cut",
@@ -64,7 +73,7 @@
       1,
       [ "@query" ],
       0,
-      "1c7241906c602da01fda76fde8e84e79"
+      "082e551776b051cc5c852787101c50f5"
     ],
     [
       "Prims.pow2",
@@ -81,7 +90,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "7aecaff9ae040da51cadc03b1838ebda"
+      "f878eaa5430f538a2878c45d0704ea7d"
     ]
   ]
 ]

@@ -1884,7 +1884,7 @@ let (check_inductive_well_typedness :
                                        | uu___6 -> ()));
                                (sig_bndle, tcs1, datas2))))))
 let (early_prims_inductives : Prims.string Prims.list) =
-  ["c_False"; "c_True"; "equals"; "h_equals"; "c_and"; "c_or"]
+  ["c_False"; "c_True"; "equals"; "c_and"; "c_or"]
 let (mk_discriminator_and_indexed_projectors :
   FStar_Syntax_Syntax.qualifier Prims.list ->
     FStar_Syntax_Syntax.attribute Prims.list ->
@@ -2722,7 +2722,11 @@ let (mk_data_operations :
                                  FStar_Syntax_Subst.subst_binders
                                    univ_opening inductive_tps in
                                let typ01 =
-                                 FStar_Syntax_Subst.subst univ_opening typ0 in
+                                 let uu___5 =
+                                   FStar_Syntax_Subst.shift_subst
+                                     (FStar_Compiler_List.length
+                                        inductive_tps1) univ_opening in
+                                 FStar_Syntax_Subst.subst uu___5 typ0 in
                                let uu___5 =
                                  FStar_Syntax_Util.arrow_formals typ01 in
                                (match uu___5 with

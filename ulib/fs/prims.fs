@@ -101,7 +101,7 @@ type (' a, ' p) l_Exists = L_exists of unit
 
 
 type (' p, ' q, 'dummyP) eq2 = Eq2 of unit
-type (' p, ' q, 'dummyP, 'dummyQ) eq3 = Eq3 of unit
+type (' p, ' q, 'dummyP, 'dummyQ) op_Equals_Equals_Equals = Eq3 of unit
 
 type prop     = obj
 

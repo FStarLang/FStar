@@ -167,7 +167,7 @@ val hsl_create (len:u32{len >^ 0ul})
  *)
 val hsl_process (st:hsl_state) (p:u32)
   :ST unit (requires (fun h0      -> hsl_invariant st h0 /\  //invariant holds
-                                  p <=^ hsl_get_len st /\  //the new index upto which client wrote is in bounds
+                                  p <=^ hsl_get_len st /\  //the new index up to which client wrote is in bounds
 				  sel h0 (hsl_get_p1 st) <^ p))  //p1 < p, i.e. some new data is there
            (ensures  (fun h0 _ h1 -> hsl_invariant st h1 /\  //invariants holds again
 	                          sel h1 (hsl_get_p1 st) == p /\  //p1 has been updated to p

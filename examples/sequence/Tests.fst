@@ -29,7 +29,7 @@
 *)
 
 (**
-This module includes tests of sequence proprties.
+This module includes tests of sequence properties.
 
 @summary Tests sequence properties
 *)

@@ -778,7 +778,7 @@ let eterm_info_to_assertions dbg with_gpre with_gpost ge t is_let is_assert info
        * propositions. If the return value is of type unit, we can just use ().
        * Otherwise we need to introduce a variable.
        * For the reason why we do this: remember that the studied term might be
-       * a return value: it is not necessarily binded in a let. *)
+       * a return value: it is not necessarily bound in a let. *)
       if effect_type_is_stateful einfo.ei_type then
         if is_unit_type einfo.ei_ret_type.ty then
           ge, `(), None
@@ -796,7 +796,7 @@ let eterm_info_to_assertions dbg with_gpre with_gpost ge t is_let is_assert info
                              einfo.ei_pre einfo.ei_post parents children in
   print_dbg dbg ("- pre prop: " ^ option_to_string term_to_string pre_prop);
   print_dbg dbg ("- post prop: " ^ option_to_string term_to_string post_prop);
-  (* If the term is an assertion/asssumption, only output the postcondition -
+  (* If the term is an assertion/assumption, only output the postcondition -
    * note that in the case of an assertion, the pre and the post are the same,
    * but in the case of an assumption, only the post is interesting *)
   if is_assert then

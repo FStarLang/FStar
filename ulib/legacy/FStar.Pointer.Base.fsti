@@ -242,7 +242,7 @@ let type_of_struct_field'
 val struct (l: struct_typ) : Tot Type0
 val union (l: union_typ) : Tot Type0
 
-(* Interperets a type code (`typ`) as a FStar type (`Type0`). *)
+(* Interprets a type code (`typ`) as a FStar type (`Type0`). *)
 let rec type_of_typ
   (t: typ)
 : Tot Type0
