@@ -271,7 +271,7 @@ val gather_gen (#a:Type0) (#uses:_) (r:ref a) (p0:perm) (p1:perm)
       h' (vptrp r res) == h (vptrp r p1)
     )
 
-let gather (#a: Type0) (#uses: _) (#p: perm) (r: ref a)
+val gather (#a: Type0) (#uses: _) (#p: perm) (r: ref a)
   : SteelGhost unit uses
       (vptrp r (half_perm p) `star` vptrp r (half_perm p))
       (fun _ -> vptrp r p)
@@ -279,10 +279,6 @@ let gather (#a: Type0) (#uses: _) (#p: perm) (r: ref a)
       (fun h _ h' ->
         h' (vptrp r p) == h (vptrp r (half_perm p))
       )
-= let _ = gather_gen r _ _ in
-  change_equal_slprop
-    (vptrp r _)
-    (vptrp r p)
 
 /// A stateful lemma variant of the pts_to_not_null lemma above.
 /// This stateful function is computationally irrelevant and does not modify memory

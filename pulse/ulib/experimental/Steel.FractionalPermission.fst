@@ -46,3 +46,9 @@ let lesser_equal_perm (p1 p2:perm) : GTot bool =
 
 /// Wrapper around the full permission value
 let full_perm : perm = MkPerm one
+
+/// A convenience lemma
+let sum_halves (p:perm)
+  : Lemma (sum_perm (half_perm p) (half_perm p) == p)
+          [SMTPat (sum_perm (half_perm p) (half_perm p))]
+  = assert (forall (r:real). r /. 2.0R +. r /. 2.0R == r)
