@@ -111,6 +111,9 @@ let parse_string specs others (str:string) =
     | Some args ->
       parse_array specs others args 0
 
+let parse_list specs others lst =
+    parse_array specs others (Array.ofList lst) 0
+
 let cmdline () =
   let argv = System.Environment.GetCommandLineArgs() in
   List.ofArray argv

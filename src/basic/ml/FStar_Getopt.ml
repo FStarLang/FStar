@@ -98,5 +98,8 @@ let parse_string specs others (str:string) =
     | Some args ->
       parse_array specs others (Array.of_list args) 0
 
+let parse_list specs others lst =
+  parse_array specs others (Array.of_list lst) 0
+
 let cmdline () =
    Array.to_list (Sys.argv)
