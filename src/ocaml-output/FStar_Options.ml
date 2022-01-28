@@ -1497,10 +1497,11 @@ let (parse_cmd_line :
     let res =
       FStar_Getopt.parse_cmdline all_specs
         (fun i ->
-           let uu___1 =
-             let uu___2 = FStar_Compiler_Effect.op_Bang file_list_ in
-             FStar_Compiler_List.op_At uu___2 [i] in
-           FStar_Compiler_Effect.op_Colon_Equals file_list_ uu___1) in
+           (let uu___2 =
+              let uu___3 = FStar_Compiler_Effect.op_Bang file_list_ in
+              FStar_Compiler_List.op_At uu___3 [i] in
+            FStar_Compiler_Effect.op_Colon_Equals file_list_ uu___2);
+           FStar_Getopt.Success) in
     let res1 = if res = FStar_Getopt.Success then set_error_flags () else res in
     let uu___1 =
       let uu___2 = FStar_Compiler_Effect.op_Bang file_list_ in
@@ -1516,7 +1517,7 @@ let (restore_cmd_line_options : Prims.bool -> FStar_Getopt.parse_cmdline_res)
     if should_clear then clear () else init ();
     (let r =
        let uu___1 = specs false in
-       FStar_Getopt.parse_cmdline uu___1 (fun x -> ()) in
+       FStar_Getopt.parse_cmdline uu___1 (fun x -> FStar_Getopt.Success) in
      (let uu___2 =
         let uu___3 =
           let uu___4 =
@@ -2351,8 +2352,9 @@ let (set_options : Prims.string -> FStar_Getopt.parse_cmdline_res) =
              else
                (let res =
                   FStar_Getopt.parse_string settable_specs
-                    (fun s1 -> FStar_Compiler_Effect.raise (File_argument s1))
-                    s in
+                    (fun s1 ->
+                       FStar_Compiler_Effect.raise (File_argument s1);
+                       FStar_Getopt.Error "set_options with file argument") s in
                 if res = FStar_Getopt.Success
                 then set_error_flags ()
                 else res)) ()
