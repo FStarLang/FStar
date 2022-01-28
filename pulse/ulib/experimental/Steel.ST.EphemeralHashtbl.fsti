@@ -225,6 +225,26 @@ val put
 /// Using `with_key`, the client may avoid this extra write,
 ///   by passing-in the computation they intend to do on the (key, value) pair
 
+let with_key_post_present_predicate
+  (#k:eqtype)
+  (#v #contents:Type0)
+  (#vp:vp_t k v contents)
+  (#h:hash_fn k)
+  (#finalizer:finalizer_t vp)
+  (m:G.erased (repr k contents))
+  (borrows:G.erased (Map.t k v))
+  (a:tbl h finalizer)
+  (i:k)
+  (#res:Type)
+  (f_post:contents -> contents -> res -> vprop)
+  (c:contents)
+  (r:res)
+  : contents -> vprop
+  = fun c' -> 
+    tperm a (Map.upd i (G.reveal c') m) borrows
+      `star`
+    f_post c (G.reveal c') r
+
 let with_key_post
   (#k:eqtype)
   (#v #contents:Type0)
@@ -235,16 +255,15 @@ let with_key_post
   (borrows:G.erased (Map.t k v))
   (a:tbl h finalizer)
   (i:k)
+  (#res:Type)
   (f_pre:vprop)
-  (f_post:contents -> contents -> vprop)
-  : get_result k (G.erased contents) -> vprop
+  (f_post:contents -> contents -> res -> vprop)
+  : get_result k res -> vprop
   = fun r ->
     match r, Map.sel i m with
     | Present r, Some c ->
-      tperm a (Map.upd i (G.reveal r) m) borrows
-        `star`
-      f_post c (G.reveal r)
-    | Present r, None -> pure False
+      exists_ (with_key_post_present_predicate m borrows a i f_post c r)
+    | Present _, None -> pure False
     | Absent, _ ->
       tperm a m borrows
         `star`
@@ -267,11 +286,12 @@ val with_key
   (#borrows:G.erased (Map.t k v))
   (a:tbl h finalizer)
   (i:k)
-  (#f_pre:vprop) (#f_post:contents -> contents -> vprop)
-  ($f:(x:v -> c:G.erased contents -> STT (G.erased contents)
+  (#res:Type)
+  (#f_pre:vprop) (#f_post:contents -> contents -> res -> vprop)
+  ($f:(x:v -> c:G.erased contents -> STT res
                                        (f_pre `star` vp i x c)
-                                       (fun r -> f_post c r `star` vp i x r)))
-  : ST (get_result k (G.erased contents))
+                                       (fun r -> exists_ (fun c' -> f_post c c' r `star` vp i x c'))))
+  : ST (get_result k res)
        (tperm a m borrows `star` f_pre)
        (with_key_post m borrows a i f_pre f_post)
        (requires ~ (Map.contains i borrows))
