@@ -691,39 +691,45 @@ let display_usage_aux :
       Prims.list -> unit
   =
   fun specs ->
-    FStar_Compiler_Util.print_string "fstar.exe [options] file[s]\n";
+    FStar_Compiler_Util.print_string
+      "fstar.exe [options] file[s] [@respfile...]\n";
+    (let uu___2 =
+       let uu___3 = FStar_Compiler_Util.colorize_bold "@" in
+       FStar_Compiler_Util.format1
+         "  %srespfile  read options from respfile\n" uu___3 in
+     FStar_Compiler_Util.print_string uu___2);
     FStar_Compiler_List.iter
-      (fun uu___1 ->
-         match uu___1 with
-         | (uu___2, flag, p, doc) ->
+      (fun uu___2 ->
+         match uu___2 with
+         | (uu___3, flag, p, doc) ->
              (match p with
               | FStar_Getopt.ZeroArgs ig ->
                   if doc = ""
                   then
-                    let uu___3 =
-                      let uu___4 = FStar_Compiler_Util.colorize_bold flag in
-                      FStar_Compiler_Util.format1 "  --%s\n" uu___4 in
-                    FStar_Compiler_Util.print_string uu___3
-                  else
-                    (let uu___4 =
-                       let uu___5 = FStar_Compiler_Util.colorize_bold flag in
-                       FStar_Compiler_Util.format2 "  --%s  %s\n" uu___5 doc in
-                     FStar_Compiler_Util.print_string uu___4)
-              | FStar_Getopt.OneArg (uu___3, argname) ->
-                  if doc = ""
-                  then
                     let uu___4 =
                       let uu___5 = FStar_Compiler_Util.colorize_bold flag in
-                      let uu___6 = FStar_Compiler_Util.colorize_bold argname in
-                      FStar_Compiler_Util.format2 "  --%s %s\n" uu___5 uu___6 in
+                      FStar_Compiler_Util.format1 "  --%s\n" uu___5 in
                     FStar_Compiler_Util.print_string uu___4
                   else
                     (let uu___5 =
                        let uu___6 = FStar_Compiler_Util.colorize_bold flag in
-                       let uu___7 = FStar_Compiler_Util.colorize_bold argname in
-                       FStar_Compiler_Util.format3 "  --%s %s  %s\n" uu___6
-                         uu___7 doc in
-                     FStar_Compiler_Util.print_string uu___5))) specs
+                       FStar_Compiler_Util.format2 "  --%s  %s\n" uu___6 doc in
+                     FStar_Compiler_Util.print_string uu___5)
+              | FStar_Getopt.OneArg (uu___4, argname) ->
+                  if doc = ""
+                  then
+                    let uu___5 =
+                      let uu___6 = FStar_Compiler_Util.colorize_bold flag in
+                      let uu___7 = FStar_Compiler_Util.colorize_bold argname in
+                      FStar_Compiler_Util.format2 "  --%s %s\n" uu___6 uu___7 in
+                    FStar_Compiler_Util.print_string uu___5
+                  else
+                    (let uu___6 =
+                       let uu___7 = FStar_Compiler_Util.colorize_bold flag in
+                       let uu___8 = FStar_Compiler_Util.colorize_bold argname in
+                       FStar_Compiler_Util.format3 "  --%s %s  %s\n" uu___7
+                         uu___8 doc in
+                     FStar_Compiler_Util.print_string uu___6))) specs
 let (mk_spec :
   (FStar_BaseTypes.char * Prims.string * option_val FStar_Getopt.opt_variant
     * Prims.string) -> FStar_Getopt.opt)
@@ -956,7 +962,7 @@ let (interp_quake_arg : Prims.string -> (Prims.int * Prims.int * Prims.bool))
           let uu___ = ios f1 in let uu___1 = ios f2 in (uu___, uu___1, true)
         else failwith "unexpected value for --quake"
     | uu___ -> failwith "unexpected value for --quake"
-let (uu___406 : (((Prims.string -> unit) -> unit) * (Prims.string -> unit)))
+let (uu___407 : (((Prims.string -> unit) -> unit) * (Prims.string -> unit)))
   =
   let cb = FStar_Compiler_Util.mk_ref FStar_Pervasives_Native.None in
   let set1 f =
@@ -968,11 +974,11 @@ let (uu___406 : (((Prims.string -> unit) -> unit) * (Prims.string -> unit)))
     | FStar_Pervasives_Native.Some f -> f msg in
   (set1, call)
 let (set_option_warning_callback_aux : (Prims.string -> unit) -> unit) =
-  match uu___406 with
+  match uu___407 with
   | (set_option_warning_callback_aux1, option_warning_callback) ->
       set_option_warning_callback_aux1
 let (option_warning_callback : Prims.string -> unit) =
-  match uu___406 with
+  match uu___407 with
   | (set_option_warning_callback_aux1, option_warning_callback1) ->
       option_warning_callback1
 let (set_option_warning_callback : (Prims.string -> unit) -> unit) =
@@ -1460,7 +1466,7 @@ let (settable_specs :
     (FStar_Compiler_List.filter
        (fun uu___ ->
           match uu___ with | (uu___1, x, uu___2, uu___3) -> settable x))
-let (uu___587 :
+let (uu___588 :
   (((unit -> FStar_Getopt.parse_cmdline_res) -> unit) *
     (unit -> FStar_Getopt.parse_cmdline_res)))
   =
@@ -1477,11 +1483,11 @@ let (uu___587 :
   (set1, call)
 let (set_error_flags_callback_aux :
   (unit -> FStar_Getopt.parse_cmdline_res) -> unit) =
-  match uu___587 with
+  match uu___588 with
   | (set_error_flags_callback_aux1, set_error_flags) ->
       set_error_flags_callback_aux1
 let (set_error_flags : unit -> FStar_Getopt.parse_cmdline_res) =
-  match uu___587 with
+  match uu___588 with
   | (set_error_flags_callback_aux1, set_error_flags1) -> set_error_flags1
 let (set_error_flags_callback :
   (unit -> FStar_Getopt.parse_cmdline_res) -> unit) =
@@ -1491,17 +1497,34 @@ let (fstar_bin_directory : Prims.string) =
   FStar_Compiler_Util.get_exec_dir ()
 let (file_list_ : Prims.string Prims.list FStar_Compiler_Effect.ref) =
   FStar_Compiler_Util.mk_ref []
+let rec (parse_filename_arg :
+  FStar_Getopt.opt Prims.list ->
+    Prims.bool -> Prims.string -> FStar_Getopt.parse_cmdline_res)
+  =
+  fun specs1 ->
+    fun enable_filenames ->
+      fun arg ->
+        if FStar_Compiler_Util.starts_with arg "@"
+        then
+          let filename = FStar_Compiler_Util.substring_from arg Prims.int_one in
+          let lines = FStar_Compiler_Util.file_get_lines filename in
+          FStar_Getopt.parse_list specs1
+            (parse_filename_arg specs1 enable_filenames) lines
+        else
+          (if enable_filenames
+           then
+             (let uu___2 =
+                let uu___3 = FStar_Compiler_Effect.op_Bang file_list_ in
+                FStar_Compiler_List.op_At uu___3 [arg] in
+              FStar_Compiler_Effect.op_Colon_Equals file_list_ uu___2)
+           else ();
+           FStar_Getopt.Success)
 let (parse_cmd_line :
   unit -> (FStar_Getopt.parse_cmdline_res * Prims.string Prims.list)) =
   fun uu___ ->
     let res =
       FStar_Getopt.parse_cmdline all_specs
-        (fun i ->
-           (let uu___2 =
-              let uu___3 = FStar_Compiler_Effect.op_Bang file_list_ in
-              FStar_Compiler_List.op_At uu___3 [i] in
-            FStar_Compiler_Effect.op_Colon_Equals file_list_ uu___2);
-           FStar_Getopt.Success) in
+        (parse_filename_arg all_specs true) in
     let res1 = if res = FStar_Getopt.Success then set_error_flags () else res in
     let uu___1 =
       let uu___2 = FStar_Compiler_Effect.op_Bang file_list_ in
@@ -1515,9 +1538,9 @@ let (restore_cmd_line_options : Prims.bool -> FStar_Getopt.parse_cmdline_res)
   fun should_clear ->
     let old_verify_module = get_verify_module () in
     if should_clear then clear () else init ();
-    (let r =
-       let uu___1 = specs false in
-       FStar_Getopt.parse_cmdline uu___1 (fun x -> FStar_Getopt.Success) in
+    (let specs1 = specs false in
+     let r =
+       FStar_Getopt.parse_cmdline specs1 (parse_filename_arg specs1 false) in
      (let uu___2 =
         let uu___3 =
           let uu___4 =
