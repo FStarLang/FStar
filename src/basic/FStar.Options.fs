@@ -1483,7 +1483,7 @@ let fstar_bin_directory = Util.get_exec_dir ()
 let file_list_ : ref<(list<string>)> = Util.mk_ref []
 
 let parse_cmd_line () =
-  let res = Getopt.parse_cmdline all_specs (fun i -> file_list_ := !file_list_ @ [i]) in
+  let res = Getopt.parse_cmdline all_specs (fun i -> file_list_ := !file_list_ @ [i]; Success) in
   let res =
     if res = Success
     then set_error_flags()
@@ -1499,7 +1499,7 @@ let restore_cmd_line_options should_clear =
      * Add them here as needed. *)
     let old_verify_module = get_verify_module() in
     if should_clear then clear() else init();
-    let r = Getopt.parse_cmdline (specs false) (fun x -> ()) in
+    let r = Getopt.parse_cmdline (specs false) (fun x -> Success) in
     set_option' ("verify_module", List (List.map String old_verify_module));
     r
 
@@ -2031,7 +2031,7 @@ let set_options s =
     try
         if s = ""
         then Success
-        else let res = Getopt.parse_string settable_specs (fun s -> raise (File_argument s); ()) s in
+        else let res = Getopt.parse_string settable_specs (fun s -> raise (File_argument s); Error "set_options with file argument") s in
              if res=Success
              then set_error_flags()
              else res

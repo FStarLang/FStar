@@ -40,7 +40,7 @@ let rec parse (opts:opt list) def ar ix max i : parse_cmdline_res =
   if ix > max then Success
   else
     let arg = ar.(ix) in
-    let go_on () = let _ = def arg in parse opts def ar (ix + 1) max (i + 1) in
+    let go_on () = bind (def arg) (fun _ -> parse opts def ar (ix + 1) max (i + 1)) in
     match find_matching_opt opts arg with
     | None -> go_on ()
     | Some (None, _) -> Error ("unrecognized option '" ^ arg ^ "'\n")
