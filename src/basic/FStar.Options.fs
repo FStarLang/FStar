@@ -501,7 +501,8 @@ let display_version () =
                                   !_version !_platform !_compiler !_date !_commit)
 
 let display_usage_aux specs =
-  Util.print_string "fstar.exe [options] file[s]\n";
+  Util.print_string "fstar.exe [options] file[s] [@respfile...]\n";
+  Util.print_string (Util.format1 "  %srespfile  read options from respfile\n" (Util.colorize_bold "@"));
   List.iter
     (fun (_, flag, p, doc) ->
        match p with
@@ -1482,8 +1483,37 @@ let fstar_bin_directory = Util.get_exec_dir ()
 
 let file_list_ : ref<(list<string>)> = Util.mk_ref []
 
+(* In `parse_filename_arg specs arg`:
+
+   * `arg` is a filename argument to be parsed. If `arg` is of the
+     form `@file`, then `file` is a response file, from which further
+     arguments (including further options) are read. Nested response
+     files (@ response file arguments within response files) are
+     supported.
+
+   * `specs` is the list of option specifications (- and --)
+
+   * `enable_filenames` is a boolean, true if non-response file
+   * filenames should be handled.
+
+*)
+
+
+let rec parse_filename_arg specs enable_filenames arg =
+  if Util.starts_with arg "@"
+  then begin
+    // read and parse a response file
+    let filename = Util.substring_from arg 1 in
+    let lines = Util.file_get_lines filename in
+    Getopt.parse_list specs (parse_filename_arg specs enable_filenames) lines
+  end else begin
+    if enable_filenames
+    then file_list_ := !file_list_ @ [arg];
+    Success
+  end
+
 let parse_cmd_line () =
-  let res = Getopt.parse_cmdline all_specs (fun i -> file_list_ := !file_list_ @ [i]) in
+  let res = Getopt.parse_cmdline all_specs (parse_filename_arg all_specs true) in
   let res =
     if res = Success
     then set_error_flags()
@@ -1499,7 +1529,8 @@ let restore_cmd_line_options should_clear =
      * Add them here as needed. *)
     let old_verify_module = get_verify_module() in
     if should_clear then clear() else init();
-    let r = Getopt.parse_cmdline (specs false) (fun x -> ()) in
+    let specs = specs false in
+    let r = Getopt.parse_cmdline specs (parse_filename_arg specs false) in
     set_option' ("verify_module", List (List.map String old_verify_module));
     r
 
@@ -2031,7 +2062,7 @@ let set_options s =
     try
         if s = ""
         then Success
-        else let res = Getopt.parse_string settable_specs (fun s -> raise (File_argument s); ()) s in
+        else let res = Getopt.parse_string settable_specs (fun s -> raise (File_argument s); Error "set_options with file argument") s in
              if res=Success
              then set_error_flags()
              else res
