@@ -12,7 +12,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "af3f0557cd4d84aa803172110daa7fe6"
+      "40fcea130fbcb36f36eee72bb6664e8a"
     ],
     [
       "QuickSort.List.count",
@@ -23,16 +23,16 @@
         "@MaxIFuel_assumption", "@query",
         "binder_x_374b44ccfcb77ed85d505dbc44265913_2",
         "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
-        "equality_tok_Prims.LexTop@tok", "equation_Prims.eqtype",
-        "equation_Prims.nat", "fuel_guarded_inversion_Prims.list",
-        "primitive_Prims.op_Addition", "primitive_Prims.op_Equality",
+        "equation_Prims.eqtype", "equation_Prims.nat",
+        "equation_Prims.op_Equals_Equals_Equals",
+        "fuel_guarded_inversion_Prims.list", "primitive_Prims.op_Addition",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "adc465a869c7aeb6205741b81273df15"
+      "546fb0ea09d18d2cdd4b76d17ef427c8"
     ],
     [
       "QuickSort.List.mem_count",
@@ -64,7 +64,7 @@
         "subterm_ordering_Prims.Cons", "typing_QuickSort.List.count"
       ],
       0,
-      "cfbf0fe6ab763d180a926e3f0959232e"
+      "708934d6dc2735fec112929a003f2e7d"
     ],
     [
       "QuickSort.List.partition",
@@ -78,7 +78,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "c7afb4351a0210d567f77489f73f82d8"
+      "6eb8004146b7ee1c0ff972379bc15934"
     ],
     [
       "QuickSort.List.partition_lemma",
@@ -104,15 +104,15 @@
         "constructor_distinct_BoxBool", "constructor_distinct_Prims.Cons",
         "constructor_distinct_Prims.Nil", "constructor_distinct_Tm_unit",
         "data_elim_FStar.Pervasives.Native.Mktuple2", "data_elim_Prims.Cons",
-        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
-        "equality_tok_Prims.LexTop@tok", "equation_Prims.eqtype",
-        "equation_Prims.nat",
+        "data_typing_intro_Prims.Nil@tok", "disc_equation_Prims.Cons",
+        "disc_equation_Prims.Nil", "equation_Prims.eqtype",
+        "equation_Prims.nat", "equation_Prims.op_Equals_Equals_Equals",
         "equation_with_fuel_FStar.List.Tot.Base.length.fuel_instrumented",
         "equation_with_fuel_FStar.List.Tot.Base.mem.fuel_instrumented",
         "equation_with_fuel_QuickSort.List.count.fuel_instrumented",
         "equation_with_fuel_QuickSort.List.partition.fuel_instrumented",
         "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
-        "fuel_guarded_inversion_Prims.list", "int_inversion", "int_typing",
+        "fuel_guarded_inversion_Prims.list", "int_inversion",
         "lemma_QuickSort.List.mem_count", "primitive_Prims.op_Addition",
         "primitive_Prims.op_Equality", "primitive_Prims.op_GreaterThan",
         "projection_inverse_BoxBool_proj_0",
@@ -124,16 +124,12 @@
         "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "subterm_ordering_Prims.Cons",
-        "token_correspondence_FStar.List.Tot.Base.mem.fuel_instrumented",
-        "token_correspondence_QuickSort.List.count.fuel_instrumented",
-        "token_correspondence_QuickSort.List.partition.fuel_instrumented",
-        "typing_FStar.List.Tot.Base.length",
+        "subterm_ordering_Prims.Cons", "typing_FStar.List.Tot.Base.length",
         "typing_FStar.List.Tot.Base.mem", "typing_QuickSort.List.count",
         "typing_QuickSort.List.partition"
       ],
       0,
-      "e8355dea979dcf66d2c3dd6ed4493e78"
+      "2863d1503c967830116fee52c7b8c1ba"
     ],
     [
       "QuickSort.List.sorted_app_lemma",
@@ -161,6 +157,7 @@
         "constructor_distinct_Prims.unit", "data_elim_Prims.Cons",
         "data_typing_intro_Prims.Cons@tok", "disc_equation_Prims.Cons",
         "equation_FStar.List.Tot.Base.op_At", "equation_Prims.eqtype",
+        "equation_Prims.op_Equals_Equals_Equals",
         "equation_QuickSort.List.total_order",
         "equation_with_fuel_FStar.List.Tot.Base.append.fuel_instrumented",
         "equation_with_fuel_FStar.List.Tot.Base.mem.fuel_instrumented",
@@ -180,7 +177,7 @@
         "typing_QuickSort.List.sorted", "unit_typing"
       ],
       0,
-      "2949c12e87bb9ab5ccbc9bc9ed0ebe86"
+      "a8e2c53c768c2ac453ea375fcc64cc2c"
     ],
     [
       "QuickSort.List.is_permutation",
@@ -194,7 +191,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "a6f7553f6c35bb2d9ce4d53cadef44a2"
+      "f77341fee963cc63f6de825459314d27"
     ],
     [
       "QuickSort.List.append_count",
@@ -214,12 +211,12 @@
         "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Nil",
         "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
         "equation_FStar.List.Tot.Base.op_At", "equation_Prims.eqtype",
-        "equation_Prims.nat",
+        "equation_Prims.nat", "equation_Prims.op_Equals_Equals_Equals",
         "equation_with_fuel_FStar.List.Tot.Base.append.fuel_instrumented",
         "equation_with_fuel_QuickSort.List.count.fuel_instrumented",
         "fuel_guarded_inversion_Prims.list", "int_inversion", "int_typing",
-        "lemma_FStar.List.Tot.Properties.append_l_nil",
-        "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0",
+        "primitive_Prims.op_Addition", "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
         "projection_inverse_Prims.Cons_a",
         "projection_inverse_Prims.Cons_hd",
         "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a",
@@ -227,10 +224,11 @@
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "subterm_ordering_Prims.Cons",
         "token_correspondence_QuickSort.List.count.fuel_instrumented",
-        "typing_FStar.List.Tot.Base.append", "typing_QuickSort.List.count"
+        "typing_FStar.List.Tot.Base.append",
+        "typing_FStar.List.Tot.Base.op_At", "typing_QuickSort.List.count"
       ],
       0,
-      "b4306b0346c292247cebc71fd1cabf40"
+      "73abe01eb82b1673e0136e2fe9887965"
     ],
     [
       "QuickSort.List.permutation_app_lemma",
@@ -260,7 +258,7 @@
         "typing_QuickSort.List.count"
       ],
       0,
-      "4e9f66238a7e9339694ffb746aad5983"
+      "ba0e5001e6fbd65a2024dcb6bc13ffc3"
     ],
     [
       "QuickSort.List.quicksort",
@@ -315,7 +313,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "4377829c055e6df9a16e254227d95508"
+      "77899d43a00c978f6e0b4d9af57a5fd2"
     ]
   ]
 ]

@@ -21,12 +21,12 @@ module FStar.BV
 /// F*'s SMT encoding, which maps them to the SMT sort of bit vectors
 /// and operations on that sort.
 ///
-/// One way to use this module is in conjuction with
+/// One way to use this module is in conjunction with
 /// FStar.Tactics.BV. Its main tactic, [bv_tac], converts bitwise
 /// operations on unsigned integers to operations on bit vectors and
 /// back using the [int2bv / bv2int] isomorphism. This can be an
 /// effective way of discharging such proof obligations for bitwise
-/// operatoins on integers using the SMT solver's theory of
+/// operations on integers using the SMT solver's theory of
 /// bitvectors.
 
 open FStar.UInt

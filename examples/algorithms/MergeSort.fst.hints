@@ -45,7 +45,7 @@
         "typing_Prims.__proj__Cons__item__tl", "typing_Prims.uu___is_Cons"
       ],
       0,
-      "722159c8cf4e14c7e81fe51eb9416ea6"
+      "75ee1915c1c3ea20be145f879127594a"
     ],
     [
       "MergeSort.split",
@@ -93,7 +93,7 @@
         "typing_Prims.__proj__Cons__item__tl"
       ],
       0,
-      "640c30df07136bc6bac7661603e3db39"
+      "0da33091148c5296b08a95ddc67de62a"
     ],
     [
       "MergeSort.merge_inv",
@@ -102,7 +102,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "dddb2cad003245682f3d147dd04cb399"
+      "9d67d8bb55ecc6c102aeaf27368c6b7c"
     ],
     [
       "MergeSort.merge",
@@ -121,11 +121,11 @@
         "binder_x_66b03f5c7897b05649fed8196554c587_0",
         "binder_x_66b03f5c7897b05649fed8196554c587_1", "bool_inversion",
         "bool_typing", "constructor_distinct_Prims.Cons",
-        "constructor_distinct_Prims.Nil", "constructor_distinct_Tm_unit",
-        "data_elim_Prims.Cons", "disc_equation_Prims.Cons",
-        "disc_equation_Prims.Nil", "equality_tok_Prims.LexTop@tok",
+        "constructor_distinct_Prims.Nil", "data_elim_Prims.Cons",
+        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
         "equation_IntSort.permutation_2", "equation_MergeSort.merge_inv",
         "equation_Prims.eqtype", "equation_Prims.nat",
+        "equation_Prims.op_Equals_Equals_Equals",
         "equation_with_fuel_FStar.List.Tot.Base.length.fuel_instrumented",
         "equation_with_fuel_FStar.List.Tot.Base.mem.fuel_instrumented",
         "equation_with_fuel_IntSort.sorted.fuel_instrumented",
@@ -149,12 +149,11 @@
         "subterm_ordering_Prims.Cons",
         "token_correspondence_FStar.List.Tot.Base.length.fuel_instrumented",
         "token_correspondence_FStar.List.Tot.Base.mem.fuel_instrumented",
-        "token_correspondence_IntSort.sorted.fuel_instrumented",
         "typing_FStar.List.Tot.Base.length",
         "typing_FStar.List.Tot.Base.mem", "typing_IntSort.sorted"
       ],
       0,
-      "1056af2b22f93dea4c6524819217d536"
+      "a24df124a689daa025c21ad94927f715"
     ],
     [
       "MergeSort.mergesort",
@@ -194,7 +193,7 @@
         "typing_Prims.__proj__Cons__item__tl", "well-founded-ordering-on-nat"
       ],
       0,
-      "6f80d0e145e64189f3763d895cd9756f"
+      "4e6b659dc3cabc1b32d891e36593be3c"
     ]
   ]
 ]

@@ -367,7 +367,7 @@ let prelude' () : Tac unit =
   //the goal might start with exists x y. to quantify over the ref values
 
   //now the goal looks something like (defined m0 * m1 /\ (m == m0 * m1 /\ (...)))
-  //do couple of implies_intro and and_elim to get these conjections
+  //do couple of implies_intro and and_elim to get these conjunctions
   let h = implies_intro () in and_elim (binder_to_term h); clear h;
   let h = implies_intro() in and_elim (binder_to_term h); clear h;
 

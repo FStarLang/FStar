@@ -10,8 +10,8 @@
         "@MaxIFuel_assumption", "@query",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "binder_x_ae567c2fb75be05905677af440075565_0",
-        "binder_x_bb4e1c9af0265270f8e7a5f250f730e2_1",
-        "equality_tok_Prims.LexTop@tok", "equation_Prims.nat",
+        "binder_x_bb4e1c9af0265270f8e7a5f250f730e2_1", "equation_Prims.nat",
+        "equation_Prims.op_Equals_Equals_Equals",
         "function_token_typing_Prims.__cache_version_number__",
         "int_inversion", "int_typing", "primitive_Prims.op_Equality",
         "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
@@ -19,7 +19,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "2a41f3b783a6b585c362fc095c09c375"
+      "497072217e837d815f896257bdc6e653"
     ],
     [
       "FStar.Math.Fermat.fermat",
@@ -33,7 +33,7 @@
         "refinement_interpretation_Tm_refine_bcc53e0d0118ae334bf1ccba10e6ca4e"
       ],
       0,
-      "1206a00ef4f73e78d5269642f7423f83"
+      "749ba0435fed8189c35afb226feb5be7"
     ],
     [
       "FStar.Math.Fermat.mod_mult_congr",
@@ -47,7 +47,7 @@
         "refinement_interpretation_Tm_refine_bcc53e0d0118ae334bf1ccba10e6ca4e"
       ],
       0,
-      "f905a3a3f8c05a1db8bcb944fdf68996"
+      "e9cb3568295aba8b8bb119cbcb6c1b84"
     ],
     [
       "FStar.Math.Fermat.fermat_alt",
@@ -61,7 +61,7 @@
         "refinement_interpretation_Tm_refine_bcc53e0d0118ae334bf1ccba10e6ca4e"
       ],
       0,
-      "0b534bb7e9b35a2d67587e3ba7903075"
+      "9f94f6d2ec1c1aff95ccc09f987da69b"
     ]
   ]
 ]

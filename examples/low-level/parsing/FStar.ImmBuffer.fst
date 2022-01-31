@@ -61,7 +61,7 @@ let split_bytes (b:bytes) (i:t{v i <= length_bytes b}) : Tot (bytes * bytes) =
 let to_seq_byte (b:bytes) : Tot (seq byte) = Seq.slice b.content (start_bytes b) (start_bytes b + length_bytes b)
 let of_seq_byte (s:seq byte{Seq.length s < pow2 32}) : Tot bytes =
   {content = s; start = 0ul; length = uint_to_t (Seq.length s)}
-let of_string (s:string) : Tot bytes = magic() // TOOD
+let of_string (s:string) : Tot bytes = magic() // TODO
 
 (* Equality predicate on bytes *)
 let equal_bytes b b' : GTot Type0 = to_seq_byte b == to_seq_byte b'
@@ -152,7 +152,7 @@ let rec to_seq_bytes #t #ty s =
 let buffer (#t:sizeof_t) (ty:serializable t) = 
   b:bytes{length_bytes b % sizeof t = 0 /\ Correct? (of_seq_bytes #t #ty (to_seq_byte b))}
 
-(* Buffer have the size of bytes (should infered using the types) *)
+(* Buffer has the size of bytes (should be inferred using the types) *)
 assume BufferHasSize: forall (#ty:sizeof_t) (t:serializable ty).
   hasSize (buffer t) /\ sizeof (buffer t) = sizeof (bytes)
 
@@ -179,7 +179,7 @@ assume val lemma_as_seq_inj: #t:sizeof_t -> #ty:serializable t -> b:buffer ty ->
   (ensures  (equal_bytes b b'))
   (* [SMTPat (equal_bytes b b')] *)
 
-(* All those functions are functionaly expressed in terms of 'to_seq', which hide the 
+(* All those functions are functionally expressed in terms of 'to_seq', which hide the
    concrete type layout *)
 val read: #t':sizeof_t -> #ty:serializable t' -> b:buffer ty -> i:t{v i < length b} ->
   Tot (z:t'{z == index (to_seq b) (v i)})

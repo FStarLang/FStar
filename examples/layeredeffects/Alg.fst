@@ -802,7 +802,7 @@ let rec interp_sem #a (#labs:list baseop) (t : tree a (fixup labs)) : sem a labs
     fun s0 -> interp_sem #a #labs (k ()) s
   | Op Raise e k -> fun s0 -> (Inl e, s0)
 
-(* Way back: from the pure ALG into the free one, necessarilly giving
+(* Way back: from the pure ALG into the free one, necessarily giving
 a fully normalized tree *)
 
 let interp_from_lattice_tree #a #labs

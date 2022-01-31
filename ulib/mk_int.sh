@@ -22,7 +22,7 @@ for i in 8 16 32 64 128; do
 *)
 module FStar.Int$i
 
-(**** THIS MODULE IS GENETATED AUTOMATICALLY USING [mk_int.sh], DO NOT EDIT DIRECTLY ****)
+(**** THIS MODULE IS GENERATED AUTOMATICALLY USING [mk_int.sh], DO NOT EDIT DIRECTLY ****)
 
 unfold let n = $i
 
@@ -61,7 +61,7 @@ for i in 8 16 32 64 128; do
 *)
 module FStar.Int$i
 
-(**** THIS MODULE IS GENETATED AUTOMATICALLY USING [mk_int.sh], DO NOT EDIT DIRECTLY ****)
+(**** THIS MODULE IS GENERATED AUTOMATICALLY USING [mk_int.sh], DO NOT EDIT DIRECTLY ****)
 
 EOF
   cat FStar.IntN.fstp >> $f
@@ -97,7 +97,7 @@ for i in 8 16 32 64; do
 *)
 module FStar.UInt$i
 
-(**** THIS MODULE IS GENETATED AUTOMATICALLY USING [mk_int.sh], DO NOT EDIT DIRECTLY ****)
+(**** THIS MODULE IS GENERATED AUTOMATICALLY USING [mk_int.sh], DO NOT EDIT DIRECTLY ****)
 
 unfold let n = $i
 
@@ -139,7 +139,7 @@ for i in 8 16 32 64; do
 *)
 module FStar.UInt$i
 
-(**** THIS MODULE IS GENETATED AUTOMATICALLY USING [mk_int.sh], DO NOT EDIT DIRECTLY ****)
+(**** THIS MODULE IS GENERATED AUTOMATICALLY USING [mk_int.sh], DO NOT EDIT DIRECTLY ****)
 
 EOF
   cat FStar.UIntN.fstp >> $f

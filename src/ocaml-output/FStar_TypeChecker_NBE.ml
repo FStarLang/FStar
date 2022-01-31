@@ -209,7 +209,9 @@ let (zeta_false : config -> config) =
                FStar_TypeChecker_Cfg.nbe_step =
                  (uu___.FStar_TypeChecker_Cfg.nbe_step);
                FStar_TypeChecker_Cfg.for_extraction =
-                 (uu___.FStar_TypeChecker_Cfg.for_extraction)
+                 (uu___.FStar_TypeChecker_Cfg.for_extraction);
+               FStar_TypeChecker_Cfg.unrefine =
+                 (uu___.FStar_TypeChecker_Cfg.unrefine)
              });
           FStar_TypeChecker_Cfg.tcenv =
             (cfg_core.FStar_TypeChecker_Cfg.tcenv);
@@ -665,6 +667,8 @@ let rec (translate :
          | FStar_Syntax_Syntax.Tm_refine (bv, tm) ->
              if
                ((cfg.core_cfg).FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.for_extraction
+                 ||
+                 ((cfg.core_cfg).FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.unrefine
              then translate cfg bs bv.FStar_Syntax_Syntax.sort
              else
                FStar_Compiler_Effect.op_Less_Bar mk_t1
@@ -3130,7 +3134,9 @@ let (normalize :
                    FStar_TypeChecker_Cfg.nbe_step =
                      (uu___.FStar_TypeChecker_Cfg.nbe_step);
                    FStar_TypeChecker_Cfg.for_extraction =
-                     (uu___.FStar_TypeChecker_Cfg.for_extraction)
+                     (uu___.FStar_TypeChecker_Cfg.for_extraction);
+                   FStar_TypeChecker_Cfg.unrefine =
+                     (uu___.FStar_TypeChecker_Cfg.unrefine)
                  });
               FStar_TypeChecker_Cfg.tcenv = (cfg.FStar_TypeChecker_Cfg.tcenv);
               FStar_TypeChecker_Cfg.debug = (cfg.FStar_TypeChecker_Cfg.debug);
@@ -3236,7 +3242,9 @@ let (normalize_for_unit_test :
                  FStar_TypeChecker_Cfg.nbe_step =
                    (uu___.FStar_TypeChecker_Cfg.nbe_step);
                  FStar_TypeChecker_Cfg.for_extraction =
-                   (uu___.FStar_TypeChecker_Cfg.for_extraction)
+                   (uu___.FStar_TypeChecker_Cfg.for_extraction);
+                 FStar_TypeChecker_Cfg.unrefine =
+                   (uu___.FStar_TypeChecker_Cfg.unrefine)
                });
             FStar_TypeChecker_Cfg.tcenv = (cfg.FStar_TypeChecker_Cfg.tcenv);
             FStar_TypeChecker_Cfg.debug = (cfg.FStar_TypeChecker_Cfg.debug);

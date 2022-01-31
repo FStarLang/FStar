@@ -299,18 +299,6 @@ let primitive_type_axioms : env -> lident -> string -> term -> list<decl> =
         let eq2_x_y = mkApp(eq2, [a;x;y]) in
         let valid = mkApp("Valid", [eq2_x_y]) in
         [Util.mkAssume(mkForall (Env.get_range env) ([[eq2_x_y]], [aa;xx;yy], mkIff(mkEq(x, y), valid)), Some "Eq2 interpretation", "eq2-interp")] in
-    let mk_eq3_interp : env -> string -> term -> list<decl> = fun env eq3 tt ->
-        let aa = mk_fv ("a", Term_sort) in
-        let bb = mk_fv ("b", Term_sort) in
-        let xx = mk_fv ("x", Term_sort) in
-        let yy = mk_fv ("y", Term_sort) in
-        let a = mkFreeV aa in
-        let b = mkFreeV bb in
-        let x = mkFreeV xx in
-        let y = mkFreeV yy in
-        let eq3_x_y = mkApp(eq3, [a;b;x;y]) in
-        let valid = mkApp("Valid", [eq3_x_y]) in
-        [Util.mkAssume(mkForall (Env.get_range env) ([[eq3_x_y]], [aa;bb;xx;yy], mkIff(mkEq(x, y), valid)), Some "Eq3 interpretation", "eq3-interp")] in
     let mk_imp_interp : env -> string -> term -> list<decl> = fun env imp tt ->
         let aa = mk_fv ("a", Term_sort) in
         let bb = mk_fv ("b", Term_sort) in
@@ -393,7 +381,6 @@ let primitive_type_axioms : env -> lident -> string -> term -> list<decl> =
                  (Const.and_lid,    mk_and_interp);
                  (Const.or_lid,     mk_or_interp);
                  (Const.eq2_lid,    mk_eq2_interp);
-                 (Const.eq3_lid,    mk_eq3_interp);
                  (Const.imp_lid,    mk_imp_interp);
                  (Const.iff_lid,    mk_iff_interp);
                  (Const.not_lid,    mk_not_interp);
@@ -817,8 +804,12 @@ let encode_top_level_let :
                     | Tm_fvar fv when S.fv_eq_lid fv FStar.Parser.Const.logical_lid -> true
                     | _ -> false
                   in
-                  let is_prims = lbn |> FStar.Compiler.Util.right |> lid_of_fv |> (fun lid -> lid_equals (lid_of_ids (ns_of_lid lid)) Const.prims_lid) in
-                  if not is_prims && (quals |> List.contains Logic || is_logical)
+                  let is_smt_theory_symbol =
+                      let fv = FStar.Compiler.Util.right lbn in
+                      Env.fv_has_attr env.tcenv fv FStar.Parser.Const.smt_theory_symbol_attr_lid
+                  in
+                  if not is_smt_theory_symbol
+                  && (quals |> List.contains Logic || is_logical)
                   then app, mk_Valid app, encode_formula body env'
                   else app, app, encode_term body env'
                 in

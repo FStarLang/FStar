@@ -142,7 +142,7 @@ and eval_codes (cs:list code) (f:fuel) (s:state) : option state =
 ////////////////////////////////////////////////////////////////////////////////
 
 
-/// 1. We prove that incrasing the fuel is irrelevant to terminating executions
+/// 1. We prove that increasing the fuel is irrelevant to terminating executions
 
 val increase_fuel (c:code) (s0:state) (f0:fuel) (sN:state) (fN:fuel) : Lemma
   (requires
@@ -277,7 +277,7 @@ let rec vc_gen (cs:list code) (qcs:with_wps cs) (k:t_post)
 
   | QLemma pre post _ qcs ->
     pre /\ //prove the precondition of the lemma
-    (post ==> vc_gen cs qcs k s0) //and assume its postcondition to verify the progra
+    (post ==> vc_gen cs qcs k s0) //and assume its postcondition to verify the program
 
 /// The vc-generator is sound
 let rec vc_sound (cs:list code)

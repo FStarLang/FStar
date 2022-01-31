@@ -155,6 +155,6 @@ a given file from the command-line, instead of inside the IDE.
   If F\* crashes when browsing Steel files, and this option is not currently in the opened file,
   try to add it at the top, just below the open directives.
 
-- Emacs occasionnally reports that F\* could not infer some implicits, underlining them in red
+- Emacs occasionally reports that F\* could not infer some implicits, underlining them in red
   in the file. As long as interactive verification succeeds (by using the C-c C-n keybinding
   previously described for instance), these errors are incorrectly reported by the IDE.

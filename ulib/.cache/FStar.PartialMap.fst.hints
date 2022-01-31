@@ -1,6 +1,52 @@
 [
-  "=¨8«úñÙo\u000e∞HCœ\u001fU÷",
+  "~˘™ıÑ:oRö+'ùÿ£≠¡",
   [
+    [
+      "FStar.PartialMap.sel_empty",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "FStar.FunctionalExtensionality_interpretation_Tm_arrow_a7d5cc170be69663c495e8582d2bc62a",
+        "FStar.PartialMap_interpretation_Tm_arrow_4b0c7cc34485afa5854ebe5c95023d4c",
+        "equation_FStar.FunctionalExtensionality.feq",
+        "equation_FStar.PartialMap.empty", "equation_FStar.PartialMap.sel",
+        "equation_Prims.eqtype",
+        "interpretation_Tm_abs_2f35253ebccdd287e7ba60e135319e77",
+        "interpretation_Tm_abs_d956af1c4d42fc396b46c75e8016525b",
+        "lemma_FStar.FunctionalExtensionality.feq_on_domain",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "typing_Tm_abs_2f35253ebccdd287e7ba60e135319e77",
+        "typing_Tm_abs_d956af1c4d42fc396b46c75e8016525b"
+      ],
+      0,
+      "6a3aba0fe38ff723d06e8f4e4db1cc27"
+    ],
+    [
+      "FStar.PartialMap.sel_literal",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "FStar.FunctionalExtensionality_interpretation_Tm_arrow_a7d5cc170be69663c495e8582d2bc62a",
+        "FStar.PartialMap_interpretation_Tm_arrow_4b0c7cc34485afa5854ebe5c95023d4c",
+        "equation_FStar.FunctionalExtensionality.feq",
+        "equation_FStar.PartialMap.literal", "equation_FStar.PartialMap.sel",
+        "equation_Prims.eqtype",
+        "fuel_guarded_inversion_FStar.Pervasives.Native.option",
+        "interpretation_Tm_abs_1b4b90fcb163769fba5d58c86b29eb54",
+        "interpretation_Tm_abs_d956af1c4d42fc396b46c75e8016525b",
+        "lemma_FStar.FunctionalExtensionality.feq_on_domain",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "typing_FStar.PartialMap.literal", "typing_FStar.PartialMap.sel",
+        "typing_Tm_abs_1b4b90fcb163769fba5d58c86b29eb54",
+        "typing_Tm_abs_d956af1c4d42fc396b46c75e8016525b"
+      ],
+      0,
+      "f1b60495bfaae733675aac73f6aec80c"
+    ],
     [
       "FStar.PartialMap.sel_upd",
       1,
@@ -22,7 +68,7 @@
         "typing_Tm_abs_d956af1c4d42fc396b46c75e8016525b"
       ],
       0,
-      "f88812f2dd409cd9c7215926d59d9189"
+      "bcbd609b25725fda2639e7a9d00e4902"
     ],
     [
       "FStar.PartialMap.sel_upd_distinct_key",
@@ -47,7 +93,7 @@
         "typing_Tm_abs_d956af1c4d42fc396b46c75e8016525b"
       ],
       0,
-      "6aeaa5d05d28e8881a71f16a9c963c8b"
+      "e2660dda4b0c3579337447c23ad3f4a6"
     ],
     [
       "FStar.PartialMap.sel_remove",
@@ -70,7 +116,7 @@
         "typing_Tm_abs_d956af1c4d42fc396b46c75e8016525b"
       ],
       0,
-      "5a16bd2d90bf0fecfecb07bc79eaa2da"
+      "6ba25fb216cf7159492333c22cf58616"
     ],
     [
       "FStar.PartialMap.sel_remove_distinct_key",
@@ -95,29 +141,7 @@
         "typing_Tm_abs_d956af1c4d42fc396b46c75e8016525b"
       ],
       0,
-      "e3a7c976e75e720f9a59c84fa15c5807"
-    ],
-    [
-      "FStar.PartialMap.sel_empty",
-      1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "FStar.FunctionalExtensionality_interpretation_Tm_arrow_a7d5cc170be69663c495e8582d2bc62a",
-        "FStar.PartialMap_interpretation_Tm_arrow_4b0c7cc34485afa5854ebe5c95023d4c",
-        "equation_FStar.FunctionalExtensionality.feq",
-        "equation_FStar.PartialMap.empty", "equation_FStar.PartialMap.sel",
-        "equation_Prims.eqtype",
-        "interpretation_Tm_abs_2f35253ebccdd287e7ba60e135319e77",
-        "interpretation_Tm_abs_d956af1c4d42fc396b46c75e8016525b",
-        "lemma_FStar.FunctionalExtensionality.feq_on_domain",
-        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-        "typing_Tm_abs_2f35253ebccdd287e7ba60e135319e77",
-        "typing_Tm_abs_d956af1c4d42fc396b46c75e8016525b"
-      ],
-      0,
-      "90e5173c64441e554c309da31202bc47"
+      "56d7fe9805cf95e5e5f61872471b6592"
     ],
     [
       "FStar.PartialMap.equal",
@@ -131,7 +155,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "faca8cb6a04e8658d7b665137e155d2b"
+      "34c7235b0826eb047eb7f94fe9ec5f09"
     ],
     [
       "FStar.PartialMap.eq_intro",
@@ -143,7 +167,7 @@
         "equation_FStar.PartialMap.equal", "equation_FStar.PartialMap.sel"
       ],
       0,
-      "3a221a998a98ab2b4b91a85cc24e44e3"
+      "9001a15231be299bc13a5a82b894b915"
     ],
     [
       "FStar.PartialMap.eq_elim",
@@ -162,7 +186,7 @@
         "typing_Tm_abs_d956af1c4d42fc396b46c75e8016525b"
       ],
       0,
-      "cc8d478b152331b3e1fb2e8936a1bf5c"
+      "5e3d5800ac5bf63428d5d18cd8e161cc"
     ]
   ]
 ]

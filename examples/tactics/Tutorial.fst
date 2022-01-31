@@ -48,7 +48,7 @@ open FStar.List
 /// and faster proofs.
 ///
 /// On the other side of the Curry-Howard isomorphism, tactics can also
-/// be used to construct arbitrary terms, and not necessarilly proofs.
+/// be used to construct arbitrary terms, and not necessarily proofs.
 /// In this sense, they enable "metaprogramming" such as automatically
 /// generating printers for datatypes, recursors, or for whatever crazy
 /// boilerplate-like thing you want to do. We can also benefit from that in

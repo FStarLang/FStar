@@ -69,6 +69,7 @@ type step =
   | Unascribe
   | NBE
   | ForExtraction //marking an invocation of the normalizer for extraction
+  | Unrefine
 and steps = list<step>
 
 let rec eq_step s1 s2 =
@@ -94,7 +95,8 @@ let rec eq_step s1 s2 =
   | CheckNoUvars, CheckNoUvars
   | Unmeta, Unmeta
   | Unascribe, Unascribe
-  | NBE, NBE -> true
+  | NBE, NBE
+  | Unrefine, Unrefine -> true
   | Exclude s1, Exclude s2 -> eq_step s1 s2
   | UnfoldUntil s1, UnfoldUntil s2 -> s1 = s2
   | UnfoldOnly lids1, UnfoldOnly lids2

@@ -682,7 +682,7 @@ let default_settings : list<error_setting> =
     Fatal_SplicedUndef                                , CFatal, 300;
     Fatal_SpliceUnembedFail                           , CFatal, 301;
     Warning_ExtractionUnexpectedEffect                , CWarning, 302;
-    Error_DidNotFail                                  , CAlwaysError, 303;
+    Error_DidNotFail                                  , CError, 303;
     Warning_UnappliedFail                             , CWarning, 304;
     Warning_QuantifierWithoutPattern                  , CSilent, 305;
     Error_EmptyFailErrs                               , CAlwaysError, 306;
