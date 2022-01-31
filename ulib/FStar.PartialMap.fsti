@@ -29,6 +29,10 @@ val t (k:eqtype) (v:Type u#a) : Type u#a
 
 val empty (k:eqtype) (v:Type) : t k v
 
+/// A constructor that constructs the map from a function
+
+val literal (#k:eqtype) (#v:Type) (f:k -> option v) : t k v
+
 /// Select a key from the map, may fail by returning None
 
 val sel (#k:eqtype) (#v:Type) (x:k) (m:t k v) : option v
@@ -48,6 +52,14 @@ let contains (#k:eqtype) (#v:Type) (x:k) (m:t k v) : bool =
 
 /// The reasoning principles provided by the map
 
+val sel_empty (#k:eqtype) (v:Type) (x:k)
+  : Lemma (ensures sel x (empty k v) == None)
+          [SMTPat (sel x (empty k v))]
+
+val sel_literal (#k:eqtype) (#v:Type) (f:k -> option v) (x:k)
+  : Lemma (ensures sel x (literal f) == f x)
+          [SMTPat (sel x (literal f))]
+
 val sel_upd (#k:eqtype) (#v:Type) (x:k) (y:v) (m:t k v)
   : Lemma (ensures sel x (upd x y m) == Some y)
           [SMTPat (sel x (upd x y m))]
@@ -65,11 +77,6 @@ val sel_remove_distinct_key (#k:eqtype) (#v:Type) (x1 x2:k) (m:t k v)
   : Lemma (requires x1 =!= x2)
           (ensures sel x2 (remove x1 m) == sel x2 m)
           [SMTPat (sel x2 (remove x1 m))]
-
-val sel_empty (#k:eqtype) (v:Type) (x:k)
-  : Lemma (ensures sel x (empty k v) == None)
-          [SMTPat (sel x (empty k v))]
-
 
 /// The map type supports extensional equality
 ///
