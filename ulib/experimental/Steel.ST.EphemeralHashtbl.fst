@@ -37,17 +37,13 @@ module BV = Steel.ST.BitVector
 
 /// `store` is the concrete store implemented as an array
 ///
-/// `bv_borrows` is a bitvector, if the key in the cell `i` of the store is borrowed,
-///   the `ith` bit in `bv_borrows` is set
-///
 /// The hashing scheme we use is as follows:
 ///   for key `k`, its slot in the array is `(h k) mod n`
 
 noeq
-type tbl #k #v #contents (#vp:vp_t k v contents) (h:hash_fn k) (finalizer:finalizer_t vp) = {
+type tbl #k #v #contents (vp:vp_t k v contents) (h:hash_fn k) = {
   store_len    : n:u32{U32.v n > 0};
   store        : A.array (option (k & v));
-  bv_borrows   : BV.bv_t store_len;
   g_repr       : GR.ref (Map.t k contents);
   g_borrows    : GR.ref (Map.t k v);
   store_len_pf : squash (A.length store == U32.v store_len);
@@ -80,7 +76,8 @@ let seq_props_implies_keys_distinct (#k:eqtype) (#v:Type0) (h:hash_fn k) (s:Seq.
 
 let store_and_repr_related
   (#k:eqtype)
-  (#v #contents:Type0)
+  (#v:Type0)
+  (#contents:Type)
   (s:Seq.seq (option (k & v)))
   (m:repr k contents)
   : prop
@@ -89,26 +86,24 @@ let store_and_repr_related
       | None -> True
       | Some (k, _) -> Map.contains k m
 
-/// Relation between the store, the bitvector, and the borrows map
+/// For each (Some (k, v)) in the sequence,
+///   either borrows does not contain k, or it maps k to v
 
-let store_and_bv_and_borrows_related
+let store_and_borrows_related
   (#k:eqtype)
   (#v:Type0)
-  (bv:BV.repr)
   (s:Seq.seq (option (k & v)))
   (borrows:Map.t k v)
   : prop
-  = forall (i:nat{i < Seq.length s /\ i < Seq.length bv}).
+  = forall (i:nat{i < Seq.length s}).
       match Seq.index s i with
-      | None -> ~ (Seq.index bv i)
-      | Some (x, y) ->
-        if Seq.index bv i
-        then Map.sel x borrows == Some y
-        else ~ (Map.contains x borrows)
+      | None -> True
+      | Some (k, x) ->
+        Map.sel k borrows == None \/
+        Map.sel k borrows == Some x
 
 module CE = FStar.Algebra.CommMonoid.Equiv
 module SeqPerm = FStar.Seq.Permutation
-
 
 /// Setup for maintaining the value vprops in the table invariant
 ///
@@ -124,7 +119,8 @@ let vprop_monoid : CE.cm vprop Steel.Effect.Common.req = Steel.Effect.Common.rm
 
 let value_vprops_mapping_fn
   (#k:eqtype)
-  (#v #contents:Type0)
+  (#v:Type0)
+  (#contents:Type)
   (vp:vp_t k v contents)
   (m:repr k contents)
   (borrows:Map.t k v)
@@ -143,7 +139,8 @@ let value_vprops_mapping_fn
 [@@__reduce__]
 let value_vprops_seq
   (#k:eqtype)
-  (#v #contents:Type0)
+  (#v:Type0)
+  (#contents:Type)
   (vp:vp_t k v contents)
   (s:Seq.seq (option (k & v)))
   (m:repr k contents)
@@ -156,7 +153,8 @@ let value_vprops_seq
 [@@__reduce__]
 let value_vprops
   (#k:eqtype)
-  (#v #contents:Type0)
+  (#v:Type0)
+  (#contents:Type)
   (vp:vp_t k v contents)
   (s:Seq.seq (option (k & v)))
   (m:repr k contents)
@@ -166,34 +164,31 @@ let value_vprops
 
 let pure_invariant
   (#k:eqtype)
-  (#v #contents:Type0)
+  (#v:Type0)
+  (#contents:Type)
   (#vp:vp_t k v contents)
   (#h:hash_fn k)
-  (#finalizer:finalizer_t vp)
-  (arr:tbl h finalizer)
+  (arr:tbl vp h)
   (m:repr k contents)
   (borrows:Map.t k v)
-  (bv:BV.repr)
   (s:Seq.seq (option (k & v)))
   : prop
   = seq_props h s /\
     store_and_repr_related s m /\
-    store_and_bv_and_borrows_related bv s borrows
+    store_and_borrows_related s borrows
 
-/// The main invariant is defined as two existentials,
-///   one for the store, and one for the bitvector
+/// The main invariant is defined as an existential for the store sequence
 
 [@@__reduce__]
-let store_contents_pred_seq
+let store_contents_pred
   (#k:eqtype)
-  (#v #contents:Type0)
+  (#v:Type0)
+  (#contents:Type)
   (#vp:vp_t k v contents)
   (#h:hash_fn k)
-  (#finalizer:finalizer_t vp)
-  (arr:tbl h finalizer)
+  (arr:tbl vp h)
   (m:repr k contents)
   (borrows:Map.t k v)
-  (bv:BV.repr)
   : Seq.seq (option (k & v)) -> vprop
   = fun s ->
     A.pts_to arr.store full_perm s
@@ -202,26 +197,9 @@ let store_contents_pred_seq
       `star`
     GR.pts_to arr.g_borrows full_perm borrows
       `star`
-    pure (pure_invariant arr m borrows bv s)
+    pure (pure_invariant arr m borrows s)
       `star`
     value_vprops vp s m borrows
-
-[@@__reduce__]
-let store_contents_pred
-  (#k:eqtype)
-  (#v #contents:Type0)
-  (#vp:vp_t k v contents)
-  (#h:hash_fn k)
-  (#finalizer:finalizer_t vp)
-  (arr:tbl h finalizer)
-  (m:repr k contents)
-  (borrows:Map.t k v)
-  : BV.repr -> vprop
-  = fun bv ->
-    BV.pts_to arr.bv_borrows full_perm bv
-      `star`
-    exists_ (store_contents_pred_seq arr m borrows bv)
-
 
 /// Main invariant
 
@@ -252,15 +230,14 @@ let map_seq_append (#a #b:Type) (f:a -> Tot b) (s1 s2:Seq.seq a)
 
 let pack_tperm (#opened:_)
   (#k:eqtype)
-  (#v #contents:Type0)
+  (#v:Type0)
+  (#contents:Type)
   (#vp:vp_t k v contents)
   (#h:hash_fn k)
-  (#finalizer:finalizer_t vp)
   (s:Seq.seq (option (k & v)))
   (m:repr k contents)
   (borrows:Map.t k v)
-  (a:tbl h finalizer)
-  (bv:BV.repr)
+  (a:tbl vp h)
   : STGhost unit opened
       (A.pts_to a.store full_perm s
          `star`
@@ -268,39 +245,33 @@ let pack_tperm (#opened:_)
          `star`
        GR.pts_to a.g_borrows full_perm borrows
          `star`
-       value_vprops vp s m borrows
-         `star`
-       BV.pts_to a.bv_borrows full_perm bv)
+       value_vprops vp s m borrows)
       (fun _ -> tperm a m borrows)
-      (requires pure_invariant a m borrows bv s)
+      (requires pure_invariant a m borrows s)
       (ensures fun _ -> True)
-  = intro_pure (pure_invariant a m borrows bv s);
-    intro_exists s (store_contents_pred_seq a m borrows bv);
-    intro_exists bv (store_contents_pred a m borrows)
+  = intro_pure (pure_invariant a m borrows s);
+    intro_exists s (store_contents_pred a m borrows)
 
-let create #k #v #contents #vp h finalizer n =
+let create #k #v #contents vp h n =
   let store = A.alloc #(option (k & v)) None n in
-  let bv_borrows = BV.alloc n in
   let g_repr = GR.alloc (G.hide (Map.empty k contents)) in
   let g_borrows = GR.alloc (G.hide (Map.empty k v)) in
-  let arr : tbl #k #v #contents #vp h finalizer = {
+  let arr : tbl #k #v #contents vp h = {
     store_len = n;
     store = store;
-    bv_borrows = bv_borrows;
     g_repr = g_repr;
     g_borrows = g_borrows;
     store_len_pf = () } in
-  
+
+  //
+  //rewrite in terms of projections from the arr record
+  //
   rewrite (A.pts_to store _ (Seq.create #(option (k & v)) (U32.v n) None)
-             `star`
-           BV.pts_to bv_borrows _ (Seq.create (U32.v n) false)
              `star`
            GR.pts_to g_repr full_perm (Map.empty k contents)
              `star`
            GR.pts_to g_borrows full_perm (Map.empty k v))
           (A.pts_to arr.store _ (Seq.create #(option (k & v)) (U32.v n) None)
-             `star`
-           BV.pts_to arr.bv_borrows _ (Seq.create (U32.v n) false)
              `star`
            GR.pts_to arr.g_repr full_perm (Map.empty k contents)
              `star`
@@ -324,8 +295,56 @@ let create #k #v #contents #vp h finalizer n =
   pack_tperm (Seq.create (U32.v n) None)
              (Map.empty k contents)
              (Map.empty k v)
-             arr
-             (Seq.create (U32.v n) false);
+             arr;
+
+  return arr
+
+/// Similar to create, except that the repr map is a const map
+
+let create_v #k #v #contents vp h n c =
+  let store = A.alloc #(option (k & v)) None n in
+  let g_repr = GR.alloc (G.hide (Map.const k (G.reveal c))) in
+  let g_borrows = GR.alloc (G.hide (Map.empty k v)) in
+  let arr : tbl #k #v #contents vp h = {
+    store_len = n;
+    store = store;
+    g_repr = g_repr;
+    g_borrows = g_borrows;
+    store_len_pf = () } in
+
+  //
+  //rewrite in terms of projections from the arr record
+  //
+  rewrite (A.pts_to store _ (Seq.create #(option (k & v)) (U32.v n) None)
+             `star`
+           GR.pts_to g_repr full_perm (Map.const k (G.reveal c))
+             `star`
+           GR.pts_to g_borrows full_perm (Map.empty k v))
+          (A.pts_to arr.store _ (Seq.create #(option (k & v)) (U32.v n) None)
+             `star`
+           GR.pts_to arr.g_repr full_perm (Map.const k (G.reveal c))
+             `star`
+           GR.pts_to arr.g_borrows full_perm (Map.empty k v));
+
+  //
+  //The value vprops at this point are all emp
+  //
+  //A lemma that tells us that folding a monoid over a sequence of units
+  //  is monoid-equivalent to the unit
+  //
+  SeqPerm.foldm_snoc_unit_seq
+    vprop_monoid
+    (value_vprops_seq vp (Seq.create (U32.v n) None)
+                         (Map.const k (G.reveal c))
+                         (Map.empty k v));
+  rewrite_equiv emp (value_vprops vp (Seq.create (U32.v n) None)
+                                     (Map.const k (G.reveal c))
+                                     (Map.empty k v));
+
+  pack_tperm (Seq.create (U32.v n) None)
+             (Map.const k (G.reveal c))
+             (Map.empty k v)
+             arr;
 
   return arr
 
@@ -353,7 +372,7 @@ let elim_equiv_laws ()
     assert (req.eq == equiv);
     CE.elim_eq_laws req
 
-/// This is one of the workhorse of this library
+/// This is one of the workhorses of this library
 ///
 /// It splits value vprops for a store sequence into `star` of value vprops for subsequences
 ///
@@ -362,7 +381,8 @@ let elim_equiv_laws ()
 
 let value_vprops_split3
   (#k:eqtype)
-  (#v #contents:Type0)
+  (#v:Type0)
+  (#contents:Type)
   (vp:vp_t k v contents)
   (s:Seq.seq (option (k & v)))
   (m:Map.t k contents)
@@ -411,11 +431,11 @@ let value_vprops_split3
     }
 
 /// Once we have split value vprops into (prefix, at i, suffix),
-///   in all the three (`get`, `put`, `with_key`), the action happens at (at i)
+///   in all the API (`get`, `put`, `ghost_put`, `remove`), the action happens at (at i)
 ///
 /// The value vprops for prefix and suffix remain same
 ///
-/// We have three lemmas, one for each of the functions to prove that
+/// We have lemmas for each of the functions to prove that
 ///
 /// The lemmas prove equality of value vprops before and after
 ///   what each of the functions do to the arrays and maps
@@ -423,7 +443,8 @@ let value_vprops_split3
 
 let value_vprops_prefix_suffix_get
   (#k:eqtype)
-  (#v #contents:Type0)
+  (#v:Type0)
+  (#contents:Type)
   (h:hash_fn k)
   (vp:vp_t k v contents)
   (s:Seq.seq (option (k & v)))
@@ -447,7 +468,8 @@ let value_vprops_prefix_suffix_get
 
 let value_vprops_prefix_suffix_put
   (#k:eqtype)
-  (#v #contents:Type0)
+  (#v:Type0)
+  (#contents:Type)
   (h:hash_fn k)
   (vp:vp_t k v contents)
   (s:Seq.seq (option (k & v)))
@@ -473,54 +495,29 @@ let value_vprops_prefix_suffix_put
     assert (Seq.equal (value_vprops_seq vp (seq_from s idx) m borrows)
                       (value_vprops_seq vp (seq_from s1 idx) m1 borrows1))
 
-let value_vprops_prefix_suffix_with_key
-  (#k:eqtype)
-  (#v #contents:Type0)
-  (h:hash_fn k)
-  (vp:vp_t k v contents)
-  (s:Seq.seq (option (k & v)))
-  (m:repr k contents)
-  (borrows:Map.t k v)
-  (idx:nat{idx < Seq.length s})
-  (c:G.erased contents)
-  : Lemma (requires Some? (Seq.index s idx) /\
-                    seq_props h s)
-          (ensures (let Some (i, _) = Seq.index s idx in
-                    let m1 = Map.upd i (G.reveal c) m in
-                    value_vprops vp (seq_until s idx) m borrows ==
-                    value_vprops vp (seq_until s idx) m1 borrows /\
-                    value_vprops vp (seq_from s idx) m borrows ==
-                    value_vprops vp (seq_from s idx) m1 borrows))
-  = let Some (i, _) = Seq.index s idx in
-    let m1 = Map.upd i (G.reveal c) m in
-    assert (Seq.equal (value_vprops_seq vp (seq_until s idx) m borrows)
-                      (value_vprops_seq vp (seq_until s idx) m1 borrows));
-    assert (Seq.equal (value_vprops_seq vp (seq_from s idx) m borrows)
-                      (value_vprops_seq vp (seq_from s idx) m1 borrows))
-
-
 let value_vprops_prefix_suffix_remove
   (#k:eqtype)
-  (#v #contents:Type0)
+  (#v:Type0)
+  (#contents:Type)
   (h:hash_fn k)
   (vp:vp_t k v contents)
-  (s:Seq.seq (option (k & v)))
+  (s:Seq.seq (option (k & v)){seq_props h s})
   (m:repr k contents)
   (borrows:Map.t k v)
-  (idx:nat{idx < Seq.length s})
-  : Lemma (requires Some? (Seq.index s idx) /\
-                    seq_props h s)
+  (idx:nat)
+  (i:k{U32.v (h i) `UInt.mod` Seq.length s == idx})
+  : Lemma (requires Some? (Seq.index s idx))
           (ensures (let s1 = Seq.upd s idx None in
                     value_vprops vp (seq_until s idx) m borrows ==
-                    value_vprops vp (seq_until s1 idx) m borrows /\
+                    value_vprops vp (seq_until s1 idx) m (Map.remove i borrows) /\
                     value_vprops vp (seq_from s idx) m borrows ==
-                    value_vprops vp (seq_from s1 idx) m borrows))
+                    value_vprops vp (seq_from s1 idx) m (Map.remove i borrows)))
   = let s1 = Seq.upd s idx None in
+    let borrows1 = Map.remove i borrows in
     assert (Seq.equal (value_vprops_seq vp (seq_until s idx) m borrows)
-                      (value_vprops_seq vp (seq_until s1 idx) m borrows));
+                      (value_vprops_seq vp (seq_until s1 idx) m borrows1));
     assert (Seq.equal (value_vprops_seq vp (seq_from s idx) m borrows)
-                      (value_vprops_seq vp (seq_from s1 idx) m borrows))
-
+                      (value_vprops_seq vp (seq_from s1 idx) m borrows1))
 
 
 /// A common utility that we use in all APIs
@@ -532,7 +529,8 @@ let value_vprops_prefix_suffix_remove
 
 let unpack_value_vprops (#opened:_)
   (#k:eqtype)
-  (#v #contents:Type0)
+  (#v:Type0)
+  (#contents:Type)
   (vp:vp_t k v contents)
   (s:Seq.seq (option (k & v)))
   (m:Map.t k contents)
@@ -566,7 +564,8 @@ let unpack_value_vprops (#opened:_)
 
 let rewrite_value_vprops_prefix_and_suffix (#opened:_)
   (#k:eqtype)
-  (#v #contents:Type0)
+  (#v:Type0)
+  (#contents:Type)
   (vp:vp_t k v contents)
   (s1 s2:Seq.seq (option (k & v)))
   (m1 m2:Map.t k contents)
@@ -598,7 +597,8 @@ let rewrite_value_vprops_prefix_and_suffix (#opened:_)
 
 let pack_value_vprops (#opened:_)
   (#k:eqtype)
-  (#v #contents:Type0)
+  (#v:Type0)
+  (#contents:Type)
   (vp:vp_t k v contents)
   (s:Seq.seq (option (k & v)))
   (m:Map.t k contents)
@@ -629,12 +629,10 @@ let pack_value_vprops (#opened:_)
 
 /// `get`
 
-let get #k #v #contents #vp #h #finalizer #m #borrows a i =
-  let bv = elim_exists () in
+let get #k #v #contents #vp #h #m #borrows a i =
   let s = elim_exists () in
-  elim_pure (pure_invariant a m borrows bv s);
+  elim_pure (pure_invariant a m borrows s);
   A.pts_to_length a.store s;
-  BV.pts_to_length a.bv_borrows bv;
   let idx = h i `U32.rem` a.store_len in
   let vopt = A.read a.store idx in
   let r = match vopt with
@@ -644,13 +642,13 @@ let get #k #v #contents #vp #h #finalizer #m #borrows a i =
             else Present x in
   (match vopt with
    | None ->  //Nothing at the slot, return Absent
-     pack_tperm s m borrows a bv;
+     pack_tperm s m borrows a;
      rewrite (tperm a m borrows) (get_post m borrows a i r)
    | Some (i', x) ->
      if i <> i'
      then begin  //A different key, return Missing
        intro_pure (map_contains_prop i' m);
-       pack_tperm s m borrows a bv;
+       pack_tperm s m borrows a;
        rewrite (tperm a m borrows
                   `star`
                 pure (map_contains_prop i' m))
@@ -674,11 +672,9 @@ let get #k #v #contents #vp #h #finalizer #m #borrows a i =
 
        pack_value_vprops vp s m (Map.upd i x borrows) idx emp;
 
-       BV.bv_set a.bv_borrows idx;
-
        GR.write a.g_borrows (Map.upd i x borrows);
 
-       pack_tperm s m (Map.upd i x borrows) a (Seq.upd bv (U32.v idx) true);
+       pack_tperm s m (Map.upd i x borrows) a;
 
        rewrite (tperm a m (Map.upd i x borrows)
                  `star`
@@ -687,375 +683,341 @@ let get #k #v #contents #vp #h #finalizer #m #borrows a i =
      end);
      return r
 
-/// `put`
 
-let put #k #v #contents #vp #h #finalizer #m #borrows a i x c =
-  let bv = elim_exists () in
-  let s = elim_exists () in
-  elim_pure (pure_invariant a m borrows bv s);
-  A.pts_to_length a.store s;
-  BV.pts_to_length a.bv_borrows bv;
-  let idx = h i `U32.rem` a.store_len in
-  let vopt = A.read a.store idx in
+/// `put` helper, `put` writes to the ghost and concrete state
+///   and calls it to establish the invariant
 
-  A.write a.store idx (Some (i, x));
-  GR.write a.g_repr (Map.upd i (G.reveal c) m);
-  GR.write a.g_borrows (Map.remove i borrows);
+let put_vprops_aux (#opened:_)
+  (#k:eqtype)
+  (#v:Type0)
+  (#contents:Type)
+  (#vp:vp_t k v contents)
+  (#h:hash_fn k)
+  (arr:tbl vp h)
+  (m:repr k contents)
+  (borrows:Map.t k v)
+  (s:Seq.seq (option (k & v)))
+  (i:k)
+  (x:v)
+  (c:contents)
+  (idx:U32.t)
+  (_:squash (Seq.length s == A.length arr.store /\ idx == h i `U32.rem` arr.store_len))
+  : STGhost unit opened
+      (A.pts_to arr.store full_perm (Seq.upd s (U32.v idx) (Some (i, x)))
+         `star`
+       GR.pts_to arr.g_repr full_perm (Map.upd i c m)
+         `star`
+       GR.pts_to arr.g_borrows full_perm (Map.remove i borrows)
+         `star`
+       value_vprops vp s m borrows
+         `star`
+       vp i x c)
+      (fun _ -> tperm arr (Map.upd i c m) (Map.remove i borrows))
+      (requires pure_invariant arr m borrows s)
+      (ensures fun _ -> True)
+  = let vopt = Seq.index s (U32.v idx) in
+    match vopt with
+    | None ->
+      //
+      //The sequence slot earlier was None, meaning no entry
+      //
+      //This means there was nothing in the value vprops
+      //
+      //Unpack value vprops with emp at i
+      //
+      //Rewrite prefix and suffix
+      //
+      //Rewrite (at i) with (vp i x c)
+      //
+      //Pack value vprops
+      //
+      unpack_value_vprops vp s m borrows idx emp;
 
-  (match vopt with
-   | None ->
-     //
-     //Unpack value vprops
-     //
-     //Rewrite prefix and suffix
-     //
-     //Rewrite (at i) with (vp i x c)
-     //
-     //Pack value vprops
-     //
-     unpack_value_vprops vp s m borrows idx emp;
+      value_vprops_prefix_suffix_put h vp s m borrows (U32.v idx) i x c;
+      rewrite_value_vprops_prefix_and_suffix vp
+        s (Seq.upd s (U32.v idx) (Some (i, x)))
+        m (Map.upd i (G.reveal c) m)
+        borrows (Map.remove i borrows)
+        idx;
 
-     value_vprops_prefix_suffix_put h vp s m borrows (U32.v idx) i x c;
-     rewrite_value_vprops_prefix_and_suffix vp
-       s (Seq.upd s (U32.v idx) (Some (i, x)))
-       m (Map.upd i (G.reveal c) m)
-       borrows (Map.remove i borrows)
-       idx;
+      pack_value_vprops vp
+        (Seq.upd s (U32.v idx) (Some (i, x)))
+        (Map.upd i (G.reveal c) m)
+        (Map.remove i borrows)
+        idx
+        (vp i x c);
 
-     pack_value_vprops vp
-       (Seq.upd s (U32.v idx) (Some (i, x)))
-       (Map.upd i (G.reveal c) m)
-       (Map.remove i borrows)
-       idx
-       (vp i x c);
-
-     pack_tperm
-       (Seq.upd s (U32.v idx) (Some (i, x)))
-       (Map.upd i (G.reveal c) m)
-       (Map.remove i borrows)
-       a
-       bv
+      pack_tperm
+        (Seq.upd s (U32.v idx) (Some (i, x)))
+        (Map.upd i (G.reveal c) m)
+        (Map.remove i borrows)
+        arr
+  
    | Some (i', x') ->
-     let b = BV.bv_is_set a.bv_borrows idx in
-     if b
-     then begin
-       //Since the bv is set, we don't have (vp i x c),
-       //so unpack with emp, and pack with the new (vp i x c)
-       BV.bv_unset a.bv_borrows idx;
-       
+
+     //
+     //The sequence slot was set earlier
+     //
+     //Whether we have the corresponding vp permission depends on the borrows entry
+     //
+
+     let bopt = Map.sel i' borrows in
+     match bopt with
+     | None ->
+
+       //
+       //borrows does not contains i;
+       //
+       //unpack with (vp ...) at i' and pack with (vp ...) at i
+       //
+       //note that both i and i' map to the same slot
+       //
+
+       unpack_value_vprops vp s m borrows idx (vp i' x' (Some?.v (Map.sel i' m)));
+       drop (vp i' x' (Some?.v (Map.sel i' m)));
+
+       value_vprops_prefix_suffix_put h vp s m borrows (U32.v idx) i x c;
+       rewrite_value_vprops_prefix_and_suffix vp
+         s (Seq.upd s (U32.v idx) (Some (i, x)))
+         m (Map.upd i c m)
+         borrows (Map.remove i borrows)
+         idx;
+
+       pack_value_vprops vp
+         (Seq.upd s (U32.v idx) (Some (i, x)))
+         (Map.upd i (G.reveal c) m)
+         (Map.remove i borrows)
+         idx
+         (vp i x c);
+
+       pack_tperm
+         (Seq.upd s (U32.v idx) (Some (i, x)))
+         (Map.upd i c m)
+         (Map.remove i borrows)
+         arr
+
+     | _ ->
+
+       //
+       //borrow contains i', so we unpack with emp and pack with (vp ...)
+       //
+
        unpack_value_vprops vp s m borrows idx emp;
 
        value_vprops_prefix_suffix_put h vp s m borrows (U32.v idx) i x c;
        rewrite_value_vprops_prefix_and_suffix vp
          s (Seq.upd s (U32.v idx) (Some (i, x)))
-         m (Map.upd i (G.reveal c) m)
+         m (Map.upd i c m)
          borrows (Map.remove i borrows)
          idx;
 
        pack_value_vprops vp
          (Seq.upd s (U32.v idx) (Some (i, x)))
-         (Map.upd i (G.reveal c) m)
+         (Map.upd i c m)
          (Map.remove i borrows)
          idx
          (vp i x c);
 
        pack_tperm
          (Seq.upd s (U32.v idx) (Some (i, x)))
-         (Map.upd i (G.reveal c) m)
+         (Map.upd i c m)
          (Map.remove i borrows)
-         a
-         (Seq.upd bv (U32.v idx) false)
-     end
-     else begin
-       //
-       //Unpack with older (vp i x c)
-       //
-       //Call the finalizer
-       //
-       //Pack with the new (vp i x c)
-       //
-       unpack_value_vprops vp s m borrows idx (vp i' x' (Some?.v (Map.sel i' m)));
-       intro_exists (Some?.v (Map.sel i' m)) (vp i' x');
-       finalizer i' x';
+         arr
 
-       value_vprops_prefix_suffix_put h vp s m borrows (U32.v idx) i x c;
-       rewrite_value_vprops_prefix_and_suffix vp
-         s (Seq.upd s (U32.v idx) (Some (i, x)))
-         m (Map.upd i (G.reveal c) m)
-         borrows (Map.remove i borrows)
-         idx;
+/// `put`
 
-       pack_value_vprops vp
-         (Seq.upd s (U32.v idx) (Some (i, x)))
-         (Map.upd i (G.reveal c) m)
-         (Map.remove i borrows)
-         idx
-         (vp i x c);
-
-       pack_tperm
-         (Seq.upd s (U32.v idx) (Some (i, x)))
-         (Map.upd i (G.reveal c) m)
-         (Map.remove i borrows)
-         a
-         bv
-     end)
-
-/// `with_key`
-
-let with_key #k #v #contents #vp #h #finalizer #m #borrows a i #res #f_pre #f_post $f =
-  let bv = elim_exists () in
+let put #k #v #contents #vp #h #m #borrows a i x c =
   let s = elim_exists () in
-  elim_pure (pure_invariant a m borrows bv s);
+  elim_pure (pure_invariant a m borrows s);
   A.pts_to_length a.store s;
-  BV.pts_to_length a.bv_borrows bv;
-
   let idx = h i `U32.rem` a.store_len in
-  let vopt = A.read a.store idx in
 
-  match vopt returns STT (get_result k res) _ (with_key_post m borrows a i f_pre f_post) with
-  | None ->  //Nothing in the slot, return Absent
-    pack_tperm s m borrows a bv;
-    rewrite_with_tactic
-      (f_pre `star` tperm a m borrows)
-      (tperm a m borrows `star` f_pre);
-    let r = Absent in
-    rewrite (tperm a m borrows `star` f_pre) _;
-    return r
-  | Some (i', x) ->
-    if i' = i then begin
-      //Unpack with (vp i x c)
-      //Call f
-      //Pack with (vp i x c'), where f returns c'
-      unpack_value_vprops vp s m borrows idx (vp i x (Some?.v (Map.sel i m)));
+  A.write a.store idx (Some (i, x));
+  GR.write a.g_repr (Map.upd i (G.reveal c) m);
+  GR.write a.g_borrows (Map.remove i borrows);
 
-      let f_r = f x (Some?.v (Map.sel i m)) in
+  put_vprops_aux a m borrows s i x c idx ()
 
-      //f post returns an existential over the new contents
-      //get its witness
-      let c = elim_exists () in
+/// `ghost_put`
 
-      value_vprops_prefix_suffix_with_key h vp s m borrows (U32.v idx) c;
-      rewrite_value_vprops_prefix_and_suffix vp s s
+let ghost_put #_ #k #v #contents #vp #h #m #borrows a i x c =
+  let s = elim_exists () in
+  elim_pure (pure_invariant a m borrows s);
+  A.pts_to_length a.store s;
+  let idx = h i `U32.rem` a.store_len in
+
+  GR.write a.g_repr (Map.upd i (G.reveal c) m);
+  GR.write a.g_borrows (Map.remove i borrows);
+
+  //reestablish the invariant
+
+  let vopt = Seq.index s (U32.v idx) in
+  match vopt returns STGhostT _
+                              _
+                              _
+                              (fun _ -> tperm a (Map.upd i (G.reveal c) m) (Map.remove i borrows)) with
+  | None ->
+    //
+    //The sequence slot was not set
+    //
+    //So we can't keep the input vp permission, drop it
+    //
+    drop (vp i x c);
+    assert (Seq.equal (value_vprops_seq vp s m borrows)
+                      (value_vprops_seq vp s (Map.upd i (G.reveal c) m) (Map.remove i borrows)));
+    rewrite (value_vprops vp s m borrows)
+            (value_vprops vp s (Map.upd i (G.reveal c) m) (Map.remove i borrows));
+    pack_tperm s (Map.upd i (G.reveal c) m) (Map.remove i borrows) a
+  | Some (i', _) ->
+    let b = i' <> i in
+    if b returns STGhostT _
+                          _
+                          _
+                          (fun _ -> tperm a (Map.upd i (G.reveal c) m) (Map.remove i borrows))
+    then begin
+      //
+      //The sequence slot is set, but contains a different key
+      //
+      //Again, drop the input vp
+      //
+      drop (vp i x c);
+      assert (Seq.equal (value_vprops_seq vp s m borrows)
+                        (value_vprops_seq vp s (Map.upd i (G.reveal c) m) (Map.remove i borrows)));
+      rewrite (value_vprops vp s m borrows)
+              (value_vprops vp s (Map.upd i (G.reveal c) m) (Map.remove i borrows));
+      pack_tperm s (Map.upd i (G.reveal c) m) (Map.remove i borrows) a
+    end
+    else begin
+      //
+      //The sequence slot is set and contains the same key
+      //
+      //We also know that borrows contains the key (the precondition)
+      //
+      //So, unpack with emp and pack with vp at i
+      unpack_value_vprops vp s m borrows idx emp;
+
+      value_vprops_prefix_suffix_put h vp s m borrows (U32.v idx) i x c;
+      rewrite_value_vprops_prefix_and_suffix vp
+        s s
         m (Map.upd i (G.reveal c) m)
-        borrows borrows idx;
+        borrows (Map.remove i borrows)
+        idx;
 
-      pack_value_vprops vp s (Map.upd i (G.reveal c) m) borrows idx (vp i x (G.reveal c));
+      pack_value_vprops vp
+        s
+        (Map.upd i (G.reveal c) m)
+        (Map.remove i borrows)
+        idx
+        (vp i x c);
 
-      GR.write a.g_repr (Map.upd i (G.reveal c) m);
-      pack_tperm s (Map.upd i (G.reveal c) m) borrows a bv;
-
-      rewrite_with_tactic  //AC reasoning
-        (f_post (Some?.v (Map.sel i m)) c f_r `star` tperm a (Map.upd i (G.reveal c) m) borrows)
-        (tperm a (Map.upd i (G.reveal c) m) borrows `star` f_post (Some?.v (Map.sel i m)) (G.reveal c) f_r);
-
-      rewrite  //with_key_post_present_predicate is not marked __reduce__, so explicit rewrite
-        (tperm a (Map.upd i (G.reveal c) m) borrows `star` f_post (Some?.v (Map.sel i m)) (G.reveal c) f_r)
-        (with_key_post_present_predicate m borrows a i f_post (Some?.v (Map.sel i m)) f_r (G.reveal c));
-
-      //introduce the existential
-      intro_exists
-        (G.reveal c)
-        (with_key_post_present_predicate m borrows a i f_post (Some?.v (Map.sel i m)) f_r);
-
-      let r = Present f_r in
-      
-      rewrite //final rewrite to with_key_post
-        (exists_ (with_key_post_present_predicate m borrows a i f_post (Some?.v (Map.sel i m)) f_r))
-        _;
-      return r
+      pack_tperm
+        s
+        (Map.upd i (G.reveal c) m)
+        (Map.remove i borrows)
+        a
     end
-    else begin  //A different key in the slot, return (Missing i')
-      intro_pure (map_contains_prop i' m);
-      pack_tperm s m borrows a bv;
-      rewrite_with_tactic  //AC reasoning
-        (f_pre `star` (pure (map_contains_prop i' m) `star` tperm a m borrows))
-        (tperm a m borrows `star` f_pre `star` pure (map_contains_prop i' m));
-      let r = Missing i' in
-      rewrite
-        (tperm a m borrows `star` f_pre `star` pure (map_contains_prop i' m))
-        _;
-      return r
-    end
+
+
+/// `remove` helper to reestablish the invariant
+
+let remove_vprops_aux (#opened:_)
+  (#k:eqtype)
+  (#v:Type0)
+  (#contents:Type)
+  (#vp:vp_t k v contents)
+  (#h:hash_fn k)
+  (arr:tbl vp h)
+  (m:repr k contents)
+  (borrows:Map.t k v)
+  (s:Seq.seq (option (k & v)))
+  (i:k)
+  (idx:U32.t)
+  (_:squash (Seq.length s == A.length arr.store /\ idx == h i `U32.rem` arr.store_len))
+  : STGhost unit opened
+      (A.pts_to arr.store full_perm (Seq.upd s (U32.v idx) None)
+         `star`
+       GR.pts_to arr.g_repr full_perm m
+         `star`
+       GR.pts_to arr.g_borrows full_perm (Map.remove i borrows)
+         `star`
+       value_vprops vp s m borrows)
+      (fun _ -> tperm arr m (Map.remove i borrows))
+      (requires pure_invariant arr m borrows s)
+      (ensures fun _ -> True)
+  = let vopt = Seq.index s (U32.v idx) in
+    match vopt returns STGhostT _ _ _ (fun _ -> tperm arr m (Map.remove i borrows)) with
+    | None ->
+      //
+      //The sequence slot was already None
+      //
+      //Just rewrite, since we did not have any vp
+      //
+      assert (Seq.equal s (Seq.upd s (U32.v idx) None));
+      assert (Seq.equal (value_vprops_seq vp s m borrows)
+                        (value_vprops_seq vp s m (Map.remove i borrows)));
+      rewrite (value_vprops vp s m borrows)
+              (value_vprops vp (Seq.upd s (U32.v idx) None) m (Map.remove i borrows));
+      pack_tperm (Seq.upd s (U32.v idx) None) m (Map.remove i borrows) arr
+    | Some (i', x') ->
+      //
+      //The sequence slot was set
+      //
+      //Whether or not we had vp depends on the membership of i' in borrows
+      //
+      let r = Map.contains i' borrows in
+      match r returns STGhostT _ _ _ (fun _ -> tperm arr m (Map.remove i borrows)) with
+      | true ->
+        //
+        //Again, no vp, since borrows contains i', rewrite
+        //
+        assert (Seq.equal (value_vprops_seq vp s m borrows)
+                          (value_vprops_seq vp (Seq.upd s (U32.v idx) None) m (Map.remove i borrows)));
+        rewrite (value_vprops vp s m borrows)
+                (value_vprops vp (Seq.upd s (U32.v idx) None) m (Map.remove i borrows));
+        pack_tperm (Seq.upd s (U32.v idx) None) m (Map.remove i borrows) arr
+      | _ ->
+        //
+        //borrows did not have i'
+        //
+        //unpack with vp at i', pack with emp (we know that i and i' map to idx)
+        //
+        unpack_value_vprops vp s m borrows idx (vp i' x' (Some?.v (Map.sel i' m)));
+        drop (vp i' x' (Some?.v (Map.sel i' m)));
+
+        value_vprops_prefix_suffix_remove h vp s m borrows (U32.v idx) i;
+        rewrite_value_vprops_prefix_and_suffix vp
+          s (Seq.upd s (U32.v idx) None)
+          m m
+          borrows (Map.remove i borrows)
+          idx;
+        pack_value_vprops vp
+          (Seq.upd s (U32.v idx) None)
+          m
+          (Map.remove i borrows)
+          idx
+          emp;
+        pack_tperm (Seq.upd s (U32.v idx) None) m (Map.remove i borrows) arr
 
 /// `remove`
 
-let remove #k #v #contents #vp #h #finalizer #m #borrows a i =
-  let bv = elim_exists () in
+let remove #k #v #contents #vp #h #m #borrows a i =
   let s = elim_exists () in
-  elim_pure (pure_invariant a m borrows bv s);
+  elim_pure (pure_invariant a m borrows s);
   A.pts_to_length a.store s;
-  BV.pts_to_length a.bv_borrows bv;
   let idx = h i `U32.rem` a.store_len in
 
-  //
-  // We cannot simply write None in the store, since we may have to finalize the value
-  //
-
-  let vopt = A.read a.store idx in
-
-  match vopt returns STT bool _ (fun _ -> tperm a m borrows) with
-  | None ->  //the concrete store is already empty at the slot, nothing to do
-    pack_tperm s m borrows a bv;
-    return false
-  | Some (i', x) ->
-    if i' <> i  //the concrete store contains a different key at the slot, nothing to do
-    then begin
-      pack_tperm s m borrows a bv;
-      return false
-    end
-    else begin
-      A.write a.store idx None;
-      let b = BV.bv_is_set a.bv_borrows idx in
-      if b  //the key is found in the store, but is borrowed, can't call the finalizer
-      then begin
-        BV.bv_unset a.bv_borrows idx;
-
-        //
-        //Unpack with emp
-        //
-        //Pack with emp
-        //
-
-        unpack_value_vprops vp s m borrows idx emp;
-
-        value_vprops_prefix_suffix_remove h vp s m borrows (U32.v idx);
-        rewrite_value_vprops_prefix_and_suffix vp
-          s (Seq.upd s (U32.v idx) None)
-          m m
-          borrows borrows
-          idx;
-
-        pack_value_vprops vp
-          (Seq.upd s (U32.v idx) None)
-          m
-          borrows
-          idx
-          emp;
-
-        pack_tperm (Seq.upd s (U32.v idx) None) m borrows a (Seq.upd bv (U32.v idx) false);
-        return true
-
-      end
-      else begin  //the key is in the store, and is not borrowed
-
-        //
-        //Unpack with (vp i x c)
-        //
-        //Call the finalizer
-        //
-        //Pack with emp
-        //
-
-        unpack_value_vprops vp s m borrows idx (vp i' x (Some?.v (Map.sel i' m)));
-        intro_exists (Some?.v (Map.sel i' m)) (vp i' x);
-        finalizer i' x;
-
-        value_vprops_prefix_suffix_remove h vp s m borrows (U32.v idx);
-        rewrite_value_vprops_prefix_and_suffix vp
-          s (Seq.upd s (U32.v idx) None)
-          m m
-          borrows borrows
-          idx;
-
-        pack_value_vprops vp
-          (Seq.upd s (U32.v idx) None)
-          m
-          borrows
-          idx
-          emp;
-
-        pack_tperm (Seq.upd s (U32.v idx) None) m borrows a bv;
-
-        return true
-      end
-    end
-
-
-/// A utility function to iterate over the array and finalize the values
-///
-/// The induction is over an `s_ind` that starts being same as `s`,
-///   but each finalized entry is set to None in `s_ind`
-///
-/// So then, the value vprops are specified using s_ind
-
-let rec finalize_values
-  (#k:eqtype)
-  (#v #contents:Type0)
-  (#vp:vp_t k v contents)
-  (#h:hash_fn k)
-  (#finalizer:finalizer_t vp)
-  (#s:G.erased (Seq.seq (option (k & v))))
-  (#m:G.erased (repr k contents))
-  (#bv:G.erased BV.repr)
-  (a:tbl h finalizer)
-  (borrows:G.erased (Map.t k v))
-  (i:U32.t{U32.v a.store_len = Seq.length s /\ U32.v i <= U32.v a.store_len})
-  (s_ind:G.erased (Seq.seq (option (k & v))))
-  : ST unit (A.pts_to a.store full_perm s
-               `star`
-             BV.pts_to a.bv_borrows full_perm bv
-               `star`
-             value_vprops vp s_ind m borrows)
-            (fun _ -> A.pts_to a.store full_perm s
-                     `star`
-                   BV.pts_to a.bv_borrows full_perm bv)
-            (requires store_and_repr_related s m /\
-                      store_and_bv_and_borrows_related bv s borrows /\
-                      Seq.length s == Seq.length s_ind /\
-                      (forall (j:nat{j < U32.v i}). Seq.index s_ind j == None) /\
-                      (forall (j:nat{U32.v i <= j /\ j < Seq.length s}).
-                         Seq.index s_ind j == Seq.index s j))
-            (ensures fun _ -> True)
-                        
-  = A.pts_to_length a.store s;
-    BV.pts_to_length a.bv_borrows bv;
-    if i = a.store_len
-    then begin  //Done
-      SeqPerm.foldm_snoc_unit_seq vprop_monoid (value_vprops_seq vp s_ind m borrows);
-      rewrite_equiv (value_vprops vp s_ind m borrows) emp
-    end
-    else begin
-      let vopt = A.read a.store i in
-      match vopt with
-      | None -> finalize_values a borrows (U32.add i 1ul) s_ind  //Move on
-      | Some (i', x) ->
-        let b = BV.bv_is_set a.bv_borrows i in
-        if b
-        then begin  //This entry is borrowed, we don't have permission
-          unpack_value_vprops vp s_ind m borrows i emp;
-
-          rewrite_value_vprops_prefix_and_suffix vp
-            s_ind (Seq.upd s_ind (U32.v i) None)
-            m m borrows borrows i;
-
-          pack_value_vprops vp (Seq.upd s_ind (U32.v i) None) m borrows i emp;
-          finalize_values a borrows (U32.add i 1ul) (Seq.upd s_ind (U32.v i) None)
-        end
-        else begin  //finalize, set s_ind at idx to None, and iterate
-          unpack_value_vprops vp s_ind m borrows i (vp i' x (Some?.v (Map.sel i' m)));
-
-          intro_exists (Some?.v (Map.sel i' m)) (vp i' x);
-          finalizer i' x;
-
-          rewrite_value_vprops_prefix_and_suffix vp
-            s_ind (Seq.upd s_ind (U32.v i) None)
-            m m borrows borrows i;
-
-          pack_value_vprops vp (Seq.upd s_ind (U32.v i) None) m borrows i emp;
-          finalize_values a borrows (U32.add i 1ul) (Seq.upd s_ind (U32.v i) None)
-        end
-    end
+  A.write a.store idx None;
+  GR.write a.g_borrows (Map.remove i borrows);
+  remove_vprops_aux a m borrows s i idx ()
 
 /// `free`
 
-let free #k #v #contents #vp #h #finalizer #m #borrows a =
-  let bv = elim_exists () in
+let free #k #v #contents #vp #h #m #borrows a =
   let s = elim_exists () in
-  elim_pure (pure_invariant a m borrows bv s);
+  elim_pure (pure_invariant a m borrows s);
   A.pts_to_length a.store s;
-  finalize_values a borrows 0ul s;
-  intro_exists (G.reveal s) (A.pts_to a.store full_perm);
-  A.free a.store;
-  BV.free a.bv_borrows;
+  (intro_exists (G.reveal s) (A.pts_to a.store full_perm);
+   A.free a.store);
   GR.free a.g_repr;
-  GR.free a.g_borrows
+  GR.free a.g_borrows;
+  drop _

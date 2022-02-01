@@ -50,6 +50,11 @@ val remove (#k:eqtype) (#v:Type) (x:k) (m:t k v) : t k v
 let contains (#k:eqtype) (#v:Type) (x:k) (m:t k v) : bool =
   Some? (sel x m)
 
+/// A constant map
+
+let const (k:eqtype) (#v:Type) (y:v) : t k v =
+  literal (fun x -> Some y)
+
 /// The reasoning principles provided by the map
 
 val sel_empty (#k:eqtype) (v:Type) (x:k)
