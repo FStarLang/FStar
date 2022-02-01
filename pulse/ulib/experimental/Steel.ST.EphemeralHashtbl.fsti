@@ -53,12 +53,6 @@ module U32 = FStar.UInt32
 ///   in the example above, the map would contain both k1 and k2, with the mapping for k1 unchanged by the `put` operation on k2 (unless k1 == k2)
 ///
 /// So in that sense, the concrete state maintains a partial view of the logical map
-///
-/// The table may also be associated with a finalizer on values,
-///   e.g. a free function if the values are references
-///
-/// The finalizer is invoked when the table is freed, or a key is evicted from the table,
-///   unless the key is borrowed at the time, if so, client is responsible for finalizing
 
 type u32 = U32.t
 
@@ -70,31 +64,20 @@ type hash_fn (k:eqtype) = k -> u32
 
 type vp_t (k:eqtype) (v contents:Type0) = k -> v -> contents -> vprop
 
-/// Type of a finalizer
-///
-/// It is a stateful function that consumes the vp permission
-
-type finalizer_t
-  (#k:eqtype)
-  (#v #contents:Type0)
-  (vp:vp_t k v contents)
-  = x:k -> y:v -> STT unit (exists_ (vp x y)) (fun _ -> emp)
-
-/// The main hashtable table, indexed with a hash function and the finalizer
-
+/// The main hashtable table, indexed with a hash function and a vprop
 val tbl
   (#k:eqtype)
-  (#v #contents:Type0)
-  (#vp:vp_t k v contents)
+  (#v:Type0)
+  (#contents:Type)
+  (vp:vp_t k v contents)
   (h:hash_fn k)
-  (finalizer:finalizer_t vp)
   : Type0
 
 
 /// The logical representation of the hashtable is a map from keys to contents,
 ///   thereby collapsing the value-indirection
 
-type repr (k:eqtype) (contents:Type0) = Map.t k contents
+type repr (k:eqtype) (contents:Type) = Map.t k contents
 
 
 /// The hashtable separation logic permission
@@ -105,11 +88,11 @@ type repr (k:eqtype) (contents:Type0) = Map.t k contents
 
 val tperm
   (#k:eqtype)
-  (#v #contents:Type0)
+  (#v:Type0)
+  (#contents:Type)
   (#vp:vp_t k v contents)
   (#h:hash_fn k)
-  (#finalizer:finalizer_t vp)
-  (t:tbl h finalizer)
+  (t:tbl vp h)
   (m:repr k contents)
   (borrows:Map.t k v)
   : vprop
@@ -121,21 +104,42 @@ val tperm
 inline_for_extraction
 val create
   (#k:eqtype)
-  (#v #contents:Type0)
-  (#vp:vp_t k v contents)
+  (#v:Type0)
+  (#contents:Type)
+  (vp:vp_t k v contents)
   (h:hash_fn k)
-  (finalizer:finalizer_t vp)
   (n:u32{U32.v n > 0})
-  : STT (tbl h finalizer)
+  : STT (tbl vp h)
         emp
         (fun a -> tperm a (Map.empty k contents) (Map.empty k v))
+
+/// A second create function that takes an erased contents value
+///   and initializes the repr map to contain the erased value
+///   for all the keys
+///
+/// Internally, the permission `tperm` relates seq entries to
+///   the map, and does not specify any relation the other way round,
+///   so it is possible to provide a const map initially
+
+inline_for_extraction
+val create_v
+  (#k:eqtype)
+  (#v:Type0)
+  (#contents:Type)
+  (vp:vp_t k v contents)
+  (h:hash_fn k)
+  (n:u32{U32.v n > 0})
+  (c:G.erased contents)
+  : STT (tbl vp h)
+        emp
+        (fun a -> tperm a (Map.const k (G.reveal c)) (Map.empty k v))
 
 /// Return type for `get`
 ///   - Present v: the key is present in the table, and is mapped to the value v
 ///   - Absent: the key is not in the table, and its "slot" does not contain any other key either
 ///   - Missing k': the key is not in the table, and its "slot" contains another key k'
 
-type get_result (k:eqtype) (v:Type) =
+type get_result (k:eqtype) (v:Type0) =
   | Present : v -> get_result k v
   | Absent
   | Missing : k -> get_result k v
@@ -147,13 +151,13 @@ unfold let map_contains_prop (#k:eqtype) (#v:Type0) (x:k) (m:Map.t k v) : prop =
 
 let get_post 
   (#k:eqtype)
-  (#v #contents:Type0)
+  (#v:Type0)
+  (#contents:Type)
   (#vp:vp_t k v contents)
   (#h:hash_fn k)
-  (#finalizer:finalizer_t vp)
   (m:G.erased (repr k contents))
   (borrows:G.erased (Map.t k v))
-  (a:tbl h finalizer)
+  (a:tbl vp h)
   (i:k)
   : get_result k v -> vprop
   = fun r ->
@@ -177,13 +181,13 @@ let get_post
 inline_for_extraction
 val get
   (#k:eqtype)
-  (#v #contents:Type0)
+  (#v:Type0)
+  (#contents:Type)
   (#vp:vp_t k v contents)
   (#h:hash_fn k)
-  (#finalizer:finalizer_t vp)
   (#m:G.erased (repr k contents))
   (#borrows:G.erased (Map.t k v))
-  (a:tbl h finalizer)
+  (a:tbl vp h)
   (i:k)
   : ST (get_result k v)
        (tperm a m borrows)
@@ -199,13 +203,13 @@ val get
 inline_for_extraction
 val put
   (#k:eqtype)
-  (#v #contents:Type0)
+  (#v:Type0)
+  (#contents:Type)
   (#vp:vp_t k v contents)
   (#h:hash_fn k)
-  (#finalizer:finalizer_t vp)
   (#m:G.erased (repr k contents))
   (#borrows:G.erased (Map.t k v))
-  (a:tbl h finalizer)
+  (a:tbl vp h)
   (i:k)
   (x:v)
   (c:G.erased contents)
@@ -213,97 +217,32 @@ val put
         (tperm a m borrows `star` vp i x c)
         (fun _ -> tperm a (Map.upd i (G.reveal c) m) (Map.remove i borrows))
 
-/// with_key API
-///
-/// Suppose a client reads a key, works on the (key, value) pair returned,
-///   and wishes to unborrow the key, not updating the value (may be updating the contents)
-///
-/// The only way to do it so far is for the client to call `get` and then `put`
-///
-/// However, `put` incurs a stateful write, which is unnecessary for such cases
-///
-/// Using `with_key`, the client may avoid this extra write,
-///   by passing-in the computation they intend to do on the (key, value) pair
 
-let with_key_post_present_predicate
-  (#k:eqtype)
-  (#v #contents:Type0)
-  (#vp:vp_t k v contents)
-  (#h:hash_fn k)
-  (#finalizer:finalizer_t vp)
-  (m:G.erased (repr k contents))
-  (borrows:G.erased (Map.t k v))
-  (a:tbl h finalizer)
-  (i:k)
-  (#res:Type)
-  (f_post:contents -> contents -> res -> vprop)
-  (c:contents)
-  (r:res)
-  : contents -> vprop
-  = fun c' -> 
-    tperm a (Map.upd i (G.reveal c') m) borrows
-      `star`
-    f_post c (G.reveal c') r
-
-let with_key_post
-  (#k:eqtype)
-  (#v #contents:Type0)
-  (#vp:vp_t k v contents)
-  (#h:hash_fn k)
-  (#finalizer:finalizer_t vp)
-  (m:G.erased (repr k contents))
-  (borrows:G.erased (Map.t k v))
-  (a:tbl h finalizer)
-  (i:k)
-  (#res:Type)
-  (f_pre:vprop)
-  (f_post:contents -> contents -> res -> vprop)
-  : get_result k res -> vprop
-  = fun r ->
-    match r, Map.sel i m with
-    | Present r, Some c ->
-      exists_ (with_key_post_present_predicate m borrows a i f_post c r)
-    | Present _, None -> pure False
-    | Absent, _ ->
-      tperm a m borrows
-        `star`
-      f_pre
-    | Missing j, _ ->
-      tperm a m borrows
-        `star`
-      f_pre
-        `star`
-      pure (map_contains_prop j m)
+/// A ghost put function that returns the permission back to the table
+///
+/// The client also gets to update the represenation map
 
 inline_for_extraction
-val with_key
+val ghost_put (#opened:_)
   (#k:eqtype)
-  (#v #contents:Type0)
+  (#v:Type0)
+  (#contents:Type)
   (#vp:vp_t k v contents)
   (#h:hash_fn k)
-  (#finalizer:finalizer_t vp)
   (#m:G.erased (repr k contents))
   (#borrows:G.erased (Map.t k v))
-  (a:tbl h finalizer)
+  (a:tbl vp h)
   (i:k)
-  (#res:Type)
-  (#f_pre:vprop) (#f_post:contents -> contents -> res -> vprop)
-  ($f:(x:v -> c:G.erased contents -> STT res
-                                       (f_pre `star` vp i x c)
-                                       (fun r -> exists_ (fun c' -> f_post c c' r `star` vp i x c'))))
-  : ST (get_result k res)
-       (tperm a m borrows `star` f_pre)
-       (with_key_post m borrows a i f_pre f_post)
-       (requires ~ (Map.contains i borrows))
-       (ensures fun _ -> True)
-
+  (x:v)
+  (c:G.erased contents)
+  : STGhost unit
+            opened
+            (tperm a m borrows `star` vp i x c)
+            (fun _ -> tperm a (Map.upd i (G.reveal c) m) (Map.remove i borrows))
+            (requires Map.sel i borrows == Some x)
+            (ensures fun _ -> True)
 
 /// `remove` removes the key `i` from the concrete store, its mapping in the logical map is unchanged
-///
-/// The return value is `true` if `i` was present in the concrete store
-///   `false` if `i` was not present in the concrete store when the client called `remove`
-///
-/// In case `i` was present, it also calls the finalizer on the `i` value
 
 inline_for_extraction
 val remove
@@ -311,29 +250,27 @@ val remove
   (#v #contents:Type0)
   (#vp:vp_t k v contents)
   (#h:hash_fn k)
-  (#finalizer:finalizer_t vp)
   (#m:G.erased (Map.t k contents))
   (#borrows:G.erased (Map.t k v))
-  (a:tbl h finalizer)
+  (a:tbl vp h)
   (i:k)
-  : STT bool
+  : STT unit
         (tperm a m borrows)
-        (fun _ -> tperm a m borrows)
+        (fun _ -> tperm a m (Map.remove i borrows))
 
 
-/// `free`, calls finalizer on all the values in the table,
-///   unless the corresponding key is borrowed
+/// `free` frees the table and drops all the vp permissions
 
 inline_for_extraction
 val free
   (#k:eqtype)
-  (#v #contents:Type0)
+  (#v:Type0)
+  (#contents:Type)
   (#vp:vp_t k v contents)
   (#h:hash_fn k)
-  (#finalizer:finalizer_t vp)
   (#m:G.erased (repr k contents))
   (#borrows:G.erased (Map.t k v))
-  (a:tbl h finalizer)
+  (a:tbl vp h)
   : STT unit
         (tperm a m borrows)
         (fun _ -> emp)
