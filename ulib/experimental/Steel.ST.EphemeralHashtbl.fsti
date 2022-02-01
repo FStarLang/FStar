@@ -145,7 +145,7 @@ type get_result (k:eqtype) (v:Type0) =
   | Missing : k -> get_result k v
 
 unfold let map_contains_prop (#k:eqtype) (#v:Type0) (x:k) (m:Map.t k v) : prop =
-  Map.contains x m == true
+  Map.contains m x == true
 
 /// post vprop for `get`
 
@@ -161,9 +161,9 @@ let get_post
   (i:k)
   : get_result k v -> vprop
   = fun r ->
-    match r, Map.sel i m with
+    match r, Map.sel m i with
     | Present x, Some c ->
-      tperm a m (Map.upd i x borrows)  //when `get` succeeds, the key is added to `borrows`
+      tperm a m (Map.upd borrows i x)  //when `get` succeeds, the key is added to `borrows`
         `star`
       vp i x c                         //in addition, we return the vp permission for the key
 
@@ -192,7 +192,7 @@ val get
   : ST (get_result k v)
        (tperm a m borrows)
        (get_post m borrows a i)
-       (requires ~ (Map.contains i borrows))
+       (requires ~ (Map.contains borrows i))
        (ensures fun _ -> True)
 
 /// `put` function
@@ -215,7 +215,7 @@ val put
   (c:G.erased contents)
   : STT unit
         (tperm a m borrows `star` vp i x c)
-        (fun _ -> tperm a (Map.upd i (G.reveal c) m) (Map.remove i borrows))
+        (fun _ -> tperm a (Map.upd m i c) (Map.remove borrows i))
 
 
 /// A ghost put function that returns the permission back to the table
@@ -238,8 +238,8 @@ val ghost_put (#opened:_)
   : STGhost unit
             opened
             (tperm a m borrows `star` vp i x c)
-            (fun _ -> tperm a (Map.upd i (G.reveal c) m) (Map.remove i borrows))
-            (requires Map.sel i borrows == Some x)
+            (fun _ -> tperm a (Map.upd m i c) (Map.remove borrows i))
+            (requires Map.sel borrows i == Some x)
             (ensures fun _ -> True)
 
 /// `remove` removes the key `i` from the concrete store, its mapping in the logical map is unchanged
@@ -256,7 +256,7 @@ val remove
   (i:k)
   : STT unit
         (tperm a m borrows)
-        (fun _ -> tperm a m (Map.remove i borrows))
+        (fun _ -> tperm a m (Map.remove borrows i))
 
 
 /// `free` frees the table and drops all the vp permissions

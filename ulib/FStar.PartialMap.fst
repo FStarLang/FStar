@@ -24,9 +24,9 @@ type t k v = k ^-> option v
 
 let empty _ _ = on_dom _ (fun _ -> None)
 let literal f = on_dom _ (fun x -> f x)
-let sel x m = m x
-let upd x y m = on_dom _ (fun x1 -> if x1 = x then Some y else m x1)
-let remove x m = on_dom _ (fun x1 -> if x1 = x then None else m x1)
+let sel m x = m x
+let upd m x y = on_dom _ (fun x1 -> if x1 = x then Some y else m x1)
+let remove m x = on_dom _ (fun x1 -> if x1 = x then None else m x1)
 
 let sel_empty _ _ = ()
 let sel_literal _ _ = ()
