@@ -203,6 +203,7 @@ val copy_file: string -> string -> unit
 val flush_file: file_handle -> unit
 val delete_file: string -> unit
 val file_get_contents: string -> string
+val file_get_lines: string -> list<string>
 val mkdir: bool-> string -> unit (* [mkdir clean d] a new dir with user read/write; else delete content of [d] if it exists && clean *)
 val concat_dir_filename: string -> string -> string
 
