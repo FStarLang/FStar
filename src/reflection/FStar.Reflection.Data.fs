@@ -55,7 +55,7 @@ type term_view =
     | Tv_App       of term * argv
     | Tv_Abs       of binder * term
     | Tv_Arrow     of binder * comp
-    | Tv_Type      of unit
+    | Tv_Type      of universe
     | Tv_Refine    of bv * term
     | Tv_Const     of vconst
     | Tv_Uvar      of Z.t * ctx_uvar_and_subst

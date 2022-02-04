@@ -181,8 +181,8 @@ let rec inspect_ln (t:term) : term_view =
         in
         Tv_Abs (b, body)
 
-    | Tm_type _ ->
-        Tv_Type ()
+    | Tm_type u ->
+        Tv_Type u
 
     | Tm_arrow ([], k) ->
         failwith "inspect_ln: empty binders on arrow"
@@ -347,8 +347,8 @@ let pack_ln (tv:term_view) : term =
     | Tv_Arrow (b, c) ->
         mk (Tm_arrow ([b], c)) c.pos
 
-    | Tv_Type () ->
-        U.ktype
+    | Tv_Type u ->
+        mk (Tm_type(u)) Range.dummyRange
 
     | Tv_Refine (bv, t) ->
         mk (Tm_refine (bv, t)) t.pos

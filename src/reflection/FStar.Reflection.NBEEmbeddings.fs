@@ -342,7 +342,7 @@ let e_term_view_aq aq =
             mkConstruct ref_Tv_Arrow.fv [] [as_arg (embed e_binder cb b); as_arg (embed e_comp cb c)]
 
         | Tv_Type u ->
-            mkConstruct ref_Tv_Type.fv [] [as_arg (embed e_unit cb ())]
+            mkConstruct ref_Tv_Type.fv [] [as_arg (embed e_universe cb u)]
 
         | Tv_Refine (bv, t) ->
             mkConstruct ref_Tv_Refine.fv [] [as_arg (embed e_bv cb bv); as_arg (embed (e_term_aq aq) cb t)]
@@ -411,7 +411,7 @@ let e_term_view_aq aq =
             Some <| Tv_Arrow (b, c)))
 
         | Construct (fv, _, [(u, _)]) when S.fv_eq_lid fv ref_Tv_Type.lid ->
-            BU.bind_opt (unembed e_unit cb u) (fun u ->
+            BU.bind_opt (unembed e_universe cb u) (fun u ->
             Some <| Tv_Type u)
 
         | Construct (fv, _, [(t, _); (b, _)]) when S.fv_eq_lid fv ref_Tv_Refine.lid ->

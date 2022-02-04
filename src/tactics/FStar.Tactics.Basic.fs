@@ -1519,8 +1519,8 @@ let rec inspect (t:term) : tac<term_view> = wrap_err "inspect" (
         | b::bs -> ret <| Tv_Abs (b, U.abs bs t k)
         end
 
-    | Tm_type _ ->
-        ret <| Tv_Type ()
+    | Tm_type u ->
+        ret <| Tv_Type u
 
     | Tm_arrow ([], k) ->
         failwith "empty binders on arrow"
@@ -1619,8 +1619,8 @@ let pack (tv:term_view) : tac<term> =
     | Tv_Arrow (b, c) ->
         ret <| U.arrow [b] c
 
-    | Tv_Type () ->
-        ret <| U.ktype
+    | Tv_Type u ->
+        ret <| mk (Tm_type u) Range.dummyRange
 
     | Tv_Refine (bv, t) ->
         ret <| U.refine bv t

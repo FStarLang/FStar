@@ -351,7 +351,7 @@ let e_term_view_aq aq =
                         rng
 
         | Tv_Type u ->
-            S.mk_Tm_app ref_Tv_Type.t [S.as_arg (embed e_unit rng ())]
+            S.mk_Tm_app ref_Tv_Type.t [S.as_arg (embed e_universe rng u)]
                         rng
 
         | Tv_Refine (bv, t) ->
@@ -430,7 +430,7 @@ let e_term_view_aq aq =
             Some <| Tv_Arrow (b, c)))
 
         | Tm_fvar fv, [(u, _)] when S.fv_eq_lid fv ref_Tv_Type.lid ->
-            BU.bind_opt (unembed' w e_unit u) (fun u ->
+            BU.bind_opt (unembed' w e_universe u) (fun u ->
             Some <| Tv_Type u)
 
         | Tm_fvar fv, [(b, _); (t, _)] when S.fv_eq_lid fv ref_Tv_Refine.lid ->

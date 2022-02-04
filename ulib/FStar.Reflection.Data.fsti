@@ -66,7 +66,7 @@ type term_view =
   | Tv_App    : hd:term -> a:argv -> term_view
   | Tv_Abs    : bv:binder -> body:term -> term_view
   | Tv_Arrow  : bv:binder -> c:comp -> term_view
-  | Tv_Type   : unit -> term_view
+  | Tv_Type   : u:universe -> term_view
   | Tv_Refine : bv:bv -> ref:term -> term_view
   | Tv_Const  : vconst -> term_view
   | Tv_Uvar   : int -> ctx_uvar_and_subst -> term_view
