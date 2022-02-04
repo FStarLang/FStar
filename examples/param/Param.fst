@@ -45,7 +45,7 @@ let binder_set_qual (b:binder) (q:aqualv) : Tac binder =
 let rec param' (bvmap : bvmap) (t:term) : Tac term =
   let r =
   match inspect t with
-  | Tv_Type () ->
+  | Tv_Type u ->
     `(fun (s t : Type) -> s -> t -> Type0)
   | Tv_Var bv ->
     let (_, _, b) = lookup bvmap bv in

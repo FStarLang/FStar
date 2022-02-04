@@ -574,7 +574,7 @@ let related_term_is_effectul dbg ge tv : Tac bool =
     false
   | Tv_Abs br body -> false
   | Tv_Arrow br c0 -> false
-  | Tv_Type () -> false
+  | Tv_Type u -> false
   | Tv_Refine bv ref ->
     false
   | Tv_Const _ -> false

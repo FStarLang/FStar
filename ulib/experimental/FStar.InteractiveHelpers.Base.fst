@@ -457,7 +457,7 @@ let rec deep_apply_subst e t subst =
     let br, subst = deep_apply_subst_in_binder e br subst in
     let c = deep_apply_subst_in_comp e c subst in
     pack (Tv_Arrow br c)
-  | Tv_Type () -> t
+  | Tv_Type _ -> t
   | Tv_Refine bv ref ->
     let bv, subst = deep_apply_subst_in_bv e bv subst in
     let ref = deep_apply_subst e ref subst in

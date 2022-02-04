@@ -844,7 +844,7 @@ let rec visit_tm (ff : term -> Tac term) (t : term) : Tac term =
         let bv = on_sort_bv (visit_tm ff) bv in
         Tv_BVar bv
 
-    | Tv_Type () -> Tv_Type ()
+    | Tv_Type u -> Tv_Type u
     | Tv_Const c -> Tv_Const c
     | Tv_Uvar i u -> Tv_Uvar i u
     | Tv_Unknown -> Tv_Unknown

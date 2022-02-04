@@ -610,7 +610,7 @@ let rec visit_tm (ff : term -> Tac unit) (t : term) : Tac unit =
 
   | Tv_BVar bv -> on_sort_bv ff bv
 
-  | Tv_Type () -> ()
+  | Tv_Type _ -> ()
   | Tv_Const c -> ()
   | Tv_Uvar i u -> ()
   | Tv_Unknown -> ()

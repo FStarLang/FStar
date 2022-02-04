@@ -153,6 +153,31 @@ let compare_binder (b1 b2 : binder) : order =
     let bv2, _ = inspect_binder b2 in
     compare_bv bv1 bv2
 
+let rec compare_universe_view (uv1 uv2: universe_view): Tot order (decreases uv2) =
+    match uv1, uv2 with
+    | Uv_zero, Uv_zero -> Eq
+    | Uv_succ uv1, Uv_succ uv2 -> compare_universe_view uv1 uv2
+    | Uv_max l1, Uv_max l2 -> compare_universe_view_h l1 l2
+    | Uv_bvar n, Uv_bvar m -> compare_int n m
+    | Uv_name (r1,s1), Uv_name (r2,s2) -> order_from_int (compare_string s1 s2)
+    | Uv_zero   , _ -> Lt | Uv_zero   , _ -> Gt
+    | Uv_succ u , _ -> Lt | Uv_succ u , _ -> Gt
+    | Uv_max  l , _ -> Lt | Uv_max  l , _ -> Gt
+    | Uv_bvar n , _ -> Lt | Uv_bvar n , _ -> Gt
+    | Uv_name n , _ -> Lt | Uv_name n , _ -> Gt
+    | Uv_unknown, _ -> Lt | Uv_unknown, _ -> Gt
+and compare_universe_view_h l1' l2': Tot _ (decreases l2') =
+    match l1', l2' with
+    | [], [] -> Eq
+    | [], _ -> Lt
+    | _, [] -> Gt
+    | x::xs, y::ys -> lex (compare_universe_view x y) (fun () -> compare_universe_view_h xs ys)
+
+let compare_universe (u1 u2: universe): order =
+    let uv1 = inspect_universe u1 in
+    let uv2 = inspect_universe u2 in
+    compare_universe_view uv1 uv2
+
 let rec compare_term (s t : term) : Tot order (decreases s) =
     match inspect_ln s, inspect_ln t with
     | Tv_Var sv, Tv_Var tv ->
@@ -176,8 +201,8 @@ let rec compare_term (s t : term) : Tot order (decreases s) =
     | Tv_Arrow b1 e1, Tv_Arrow b2 e2 ->
         lex (compare_binder b1 b2) (fun () -> compare_comp e1 e2)
 
-    | Tv_Type (), Tv_Type () ->
-        Eq
+    | Tv_Type u1, Tv_Type u2 ->
+        compare_universe u1 u2
 
     | Tv_Const c1, Tv_Const c2 ->
         compare_const c1 c2
@@ -221,7 +246,7 @@ let rec compare_term (s t : term) : Tot order (decreases s) =
     | Tv_App _ _, _    -> Lt   | _, Tv_App _ _    -> Gt
     | Tv_Abs _ _, _    -> Lt   | _, Tv_Abs _ _    -> Gt
     | Tv_Arrow _ _, _  -> Lt   | _, Tv_Arrow _ _  -> Gt
-    | Tv_Type (), _    -> Lt   | _, Tv_Type ()    -> Gt
+    | Tv_Type _, _     -> Lt   | _, Tv_Type _     -> Gt
     | Tv_Refine _ _, _ -> Lt   | _, Tv_Refine _ _ -> Gt
     | Tv_Const _, _    -> Lt   | _, Tv_Const _    -> Gt
     | Tv_Uvar _ _, _   -> Lt   | _, Tv_Uvar _ _   -> Gt

@@ -493,7 +493,7 @@ let rec explore_term dbg dfs #a f x ge0 pl0 c0 t0 =
       let c1 = abs_update_opt_typ_or_comp br c0 ge1.env in
       explore_term dbg dfs f x0 ge1 pl1 c1 body
     | Tv_Arrow br c0 -> x0, Continue (* TODO: we might want to explore that *)
-    | Tv_Type () -> x0, Continue
+    | Tv_Type u -> x0, Continue
     | Tv_Refine bv ref ->
       let bvv = inspect_bv bv in
       let x1, flag1 = explore_term dbg dfs f x0 ge0 pl1 None bvv.bv_sort in

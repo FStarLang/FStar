@@ -212,7 +212,7 @@ let term_head t : Tac string =
   | Tv_App f x -> "Tv_App"
   | Tv_Abs x t -> "Tv_Abs"
   | Tv_Arrow x t -> "Tv_Arrow"
-  | Tv_Type () -> "Tv_Type"
+  | Tv_Type u -> "Tv_Type"
   | Tv_Refine x t -> "Tv_Refine"
   | Tv_Const cst -> "Tv_Const"
   | Tv_Uvar i t -> "Tv_Uvar"
@@ -310,7 +310,7 @@ let rec interp_pattern_aux (pat: pattern) (cur_bindings: bindings) (tm:term)
     | _ -> raise (SimpleMismatch (pat, tm)) in
   let interp_type cur_bindings tm =
     match inspect tm with
-    | Tv_Type () -> return cur_bindings
+    | Tv_Type _ -> return cur_bindings
     | _ -> raise (SimpleMismatch (pat, tm)) in
   let interp_app (p_hd p_arg: (p:pattern{p << pat})) cur_bindings tm =
     match inspect tm with
@@ -520,7 +520,7 @@ let rec pattern_of_term_ex tm : Tac (match_res pattern) =
   | Tv_FVar fv ->
     let qn = fv_to_string fv in
     return (if qn = any_qn then PAny else PQn qn)
-  | Tv_Type () ->
+  | Tv_Type _ ->
     return PType
   | Tv_App f (x, _) ->
     let is_any = match inspect f with
