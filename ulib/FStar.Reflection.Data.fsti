@@ -130,6 +130,17 @@ type sigelt_view =
 
   | Unk
 
+noeq
+type universe_view =
+  | Uv_zero
+  | Uv_succ  : (u:universe_view) -> universe_view
+  | Uv_max   : (us:list universe_view) -> universe_view
+  | Uv_bvar  : (n: int) -> universe_view
+  | Uv_name  : (n: univ_name) -> universe_view
+  // | Uv_unif  of universe_uvar TODO
+  | Uv_unknown
+
+
 (* Qualifiers for sigelts, see FStar.Syntax.Syntax for an explanation. *)
 noeq
 type qualifier =

@@ -306,6 +306,20 @@ let unlazy_as_t k t =
     | _ ->
       failwith "Not a Lazy of the expected kind (NBE)"
 
+let e_universe =
+    let embed_universe cb (b:universe) : t =
+        mk_lazy cb b fstar_refl_universe Lazy_universe
+    in
+    let unembed_universe cb (t:t) : option<universe> =
+        match t.nbe_t with
+        | Lazy (Inl {blob=b; lkind=Lazy_universe}, _) ->
+            Some (undyn b)
+        | _ ->
+            Err.log_issue Range.dummyRange (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded universe: %s" (t_to_string t)));
+            None
+    in
+    mk_emb' embed_universe unembed_universe fstar_refl_universe_fv
+
 let e_term_view_aq aq =
     let embed_term_view cb (tv:term_view) : t =
         match tv with
@@ -704,6 +718,36 @@ let e_sigelt_view =
             None
     in
     mk_emb' embed_sigelt_view unembed_sigelt_view fstar_refl_sigelt_view_fv
+
+let rec e_universe_view' () =
+    let embed_universe_view cb (sev:universe_view) : t =
+      match sev with
+      | Uv_zero    -> mkConstruct ref_Uv_zero.fv [] []
+      | Uv_succ u  -> mkConstruct ref_Uv_succ.fv [] [as_arg (embed (e_universe_view' ()) cb u)]
+      | Uv_max  l  -> mkConstruct ref_Uv_max.fv  [] [as_arg (embed (e_list (e_universe_view' ())) cb l)]
+      | Uv_bvar n  -> mkConstruct ref_Uv_max.fv  [] [as_arg (mk_t (Constant (Int n)))]
+      | Uv_name n  -> mkConstruct ref_Uv_max.fv  [] [as_arg (embed e_univ_name cb n)]
+      | Uv_unknown -> mkConstruct ref_Uv_max.fv  [] []
+    in
+    let unembed_universe_view cb (t:t) : option<universe_view> =
+        match t.nbe_t with
+        | Construct (fv, _, []) when S.fv_eq_lid fv ref_Uv_zero.lid -> Some Uv_zero
+        | Construct (fv, _, [(u, _)]) when S.fv_eq_lid fv ref_Uv_succ.lid -> 
+          BU.bind_opt (unembed (e_universe_view' ()) cb u) (fun u -> Some <| Uv_succ u)
+        | Construct (fv, _, [(l, _)]) when S.fv_eq_lid fv ref_Uv_max.lid ->
+          BU.bind_opt (unembed (e_list (e_universe_view' ())) cb l) (fun u -> Some <| Uv_max u)
+        | Construct (fv, _, [(n, _)]) when S.fv_eq_lid fv ref_Uv_bvar.lid -> 
+          BU.bind_opt (unembed e_int cb n) (fun n -> Some <| Uv_bvar n)
+        | Construct (fv, _, [(n, _)]) when S.fv_eq_lid fv ref_Uv_name.lid -> 
+          BU.bind_opt (unembed e_univ_name cb n) (fun n -> Some <| Uv_name n)
+        | Construct (fv, _, [(n, _)]) when S.fv_eq_lid fv ref_Uv_unknown.lid -> Some Uv_unknown
+        | _  ->
+            Err.log_issue Range.dummyRange (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded universe_view: %s" (t_to_string t)));
+            None
+    in
+    mk_emb' embed_universe_view unembed_universe_view fstar_refl_universe_view_fv
+
+let e_universe_view = e_universe_view' ()
 
 let e_exp =
     let rec embed_exp cb (e:exp) : t =

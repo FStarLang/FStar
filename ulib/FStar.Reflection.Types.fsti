@@ -24,6 +24,7 @@ assume new type env
 assume new type fv
 assume new type comp
 assume new type sigelt // called `def` in the paper, but we keep the internal name here
+assume new type universe
 assume new type ctx_uvar_and_subst
 assume new type letbinding
 

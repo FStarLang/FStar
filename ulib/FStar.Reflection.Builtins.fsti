@@ -38,6 +38,9 @@ val pack_comp      : comp_view -> comp
 val inspect_sigelt : sigelt -> sigelt_view
 val pack_sigelt    : sigelt_view -> sigelt
 
+val inspect_universe : universe -> universe_view
+val pack_universe    : universe_view -> universe
+
 val inspect_fv     : fv -> name
 val pack_fv        : name -> fv
 

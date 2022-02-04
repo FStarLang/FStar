@@ -118,6 +118,15 @@ type sigelt_view =
     | Sg_Val of name * list<univ_name> * typ
     | Unk
 
+type universe_view =
+  | Uv_zero
+  | Uv_succ  of universe_view
+  | Uv_max   of list<universe_view>
+  | Uv_bvar  of Z.t
+  | Uv_name  of univ_name
+  // | Uv_unif  of universe_uvar TODO
+  | Uv_unknown
+  
 type var = Z.t
 
 type exp =
@@ -171,6 +180,7 @@ let fstar_refl_inspect_bv     , fstar_refl_pack_bv     = mk_inspect_pack_pair "_
 let fstar_refl_inspect_binder , fstar_refl_pack_binder = mk_inspect_pack_pair "_binder"
 let fstar_refl_inspect_comp   , fstar_refl_pack_comp   = mk_inspect_pack_pair "_comp"
 let fstar_refl_inspect_sigelt , fstar_refl_pack_sigelt = mk_inspect_pack_pair "_sigelt"
+let fstar_refl_inspect_universe,fstar_refl_pack_universe=mk_inspect_pack_pair "_universe"
 let fstar_refl_inspect_lb     , fstar_refl_pack_lb     = mk_inspect_pack_pair "_lb"
 
 (* assumed types *)
@@ -186,6 +196,8 @@ let fstar_refl_binder           = mk_refl_types_lid_as_term "binder"
 let fstar_refl_binder_fv        = mk_refl_types_lid_as_fv   "binder"
 let fstar_refl_sigelt           = mk_refl_types_lid_as_term "sigelt"
 let fstar_refl_sigelt_fv        = mk_refl_types_lid_as_fv   "sigelt"
+let fstar_refl_universe         = mk_refl_types_lid_as_term "universe"
+let fstar_refl_universe_fv      = mk_refl_types_lid_as_fv   "universe"
 let fstar_refl_term             = mk_refl_types_lid_as_term "term"
 let fstar_refl_term_fv          = mk_refl_types_lid_as_fv   "term"
 let fstar_refl_letbinding       = mk_refl_types_lid_as_term "letbinding"
@@ -216,6 +228,8 @@ let fstar_refl_lb_view          = mk_refl_data_lid_as_term "lb_view"
 let fstar_refl_lb_view_fv       = mk_refl_data_lid_as_fv   "lb_view"
 let fstar_refl_sigelt_view      = mk_refl_data_lid_as_term "sigelt_view"
 let fstar_refl_sigelt_view_fv   = mk_refl_data_lid_as_fv   "sigelt_view"
+let fstar_refl_universe_view    = mk_refl_data_lid_as_term "universe_view"
+let fstar_refl_universe_view_fv = mk_refl_data_lid_as_fv   "universe_view"
 let fstar_refl_exp              = mk_refl_data_lid_as_term "exp"
 let fstar_refl_exp_fv           = mk_refl_data_lid_as_fv   "exp"
 let fstar_refl_qualifier        = mk_refl_data_lid_as_term "qualifier"
@@ -299,6 +313,14 @@ let ref_Sg_Let         = fstar_refl_data_const "Sg_Let"
 let ref_Sg_Inductive   = fstar_refl_data_const "Sg_Inductive"
 let ref_Sg_Val         = fstar_refl_data_const "Sg_Val"
 let ref_Unk            = fstar_refl_data_const "Unk"
+
+(* universes *)
+let ref_Uv_zero        = fstar_refl_data_const "Uv_zero"
+let ref_Uv_succ        = fstar_refl_data_const "Uv_succ"
+let ref_Uv_max         = fstar_refl_data_const "Uv_max"
+let ref_Uv_bvar        = fstar_refl_data_const "Uv_bvar"
+let ref_Uv_name        = fstar_refl_data_const "Uv_name"
+let ref_Uv_unknown     = fstar_refl_data_const "Uv_unknown"
 
 (* qualifiers *)
 let ref_qual_Assumption                       = fstar_refl_data_const "Assumption"

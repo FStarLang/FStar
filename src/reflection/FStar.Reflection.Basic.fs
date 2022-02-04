@@ -502,6 +502,25 @@ let sigelt_opts (se : sigelt) : option<vconfig> = se.sigopts
 let embed_vconfig (vcfg : vconfig) : term =
   EMB.embed EMB.e_vconfig vcfg Range.dummyRange None EMB.id_norm_cb
 
+let rec inspect_universe (u: universe): universe_view = 
+    match u with
+    | U_zero    -> Uv_zero
+    | U_succ u  -> Uv_succ (inspect_universe u)
+    | U_max  l  -> Uv_max (List.map inspect_universe l)
+    | U_bvar n  -> Uv_bvar (Z.of_int_fs n)
+    | U_name n  -> Uv_name n
+    | U_unif _  -> failwith "inspect_universe: cannot unpack U_unif (TODO)"
+    | U_unknown -> Uv_unknown 
+    
+let rec pack_universe (u: universe_view): universe = 
+    match u with
+    | Uv_zero    -> U_zero
+    | Uv_succ u  -> U_succ (pack_universe u)
+    | Uv_max  l  -> U_max (List.map pack_universe l)
+    | Uv_bvar n  -> U_bvar (Z.to_int_fs n)
+    | Uv_name n  -> U_name n
+    | Uv_unknown -> U_unknown 
+
 let inspect_sigelt (se : sigelt) : sigelt_view =
     match se.sigel with
     | Sig_let ((r, lbs), _) ->

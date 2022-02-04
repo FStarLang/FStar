@@ -145,6 +145,12 @@ let reflection_primops : list<Cfg.primitive_step> = [
     mk1 "pack_sigelt"           pack_sigelt           E.e_sigelt_view     E.e_sigelt
                                 pack_sigelt           NRE.e_sigelt_view   NRE.e_sigelt;
 
+    mk1 "inspect_universe"      inspect_universe      E.e_universe        E.e_universe_view
+                                inspect_universe      NRE.e_universe      NRE.e_universe_view;
+
+    mk1 "pack_universe"         pack_universe         E.e_universe_view   E.e_universe
+                                pack_universe         NRE.e_universe_view NRE.e_universe;
+
     mk1 "inspect_lb"            inspect_lb            E.e_letbinding      E.e_lb_view
                                 inspect_lb            NRE.e_letbinding    NRE.e_lb_view;
 

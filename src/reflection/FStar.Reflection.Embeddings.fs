@@ -58,6 +58,21 @@ let e_bv =
     in
     mk_emb embed_bv unembed_bv fstar_refl_bv
 
+let e_universe =
+    let embed_universe (rng:Range.range) (b:universe) : term =
+        U.mk_lazy b fstar_refl_universe Lazy_universe (Some rng)
+    in
+    let unembed_universe w (t:term) : option<universe> =
+        match (SS.compress t).n with
+        | Tm_lazy {blob=b; lkind=Lazy_universe} ->
+            Some (undyn b)
+        | _ ->
+            if w then
+                Err.log_issue t.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded universe: %s" (Print.term_to_string t)));
+            None
+    in
+    mk_emb embed_universe unembed_universe fstar_refl_universe
+
 let e_binder =
     let embed_binder (rng:Range.range) (b:binder) : term =
         U.mk_lazy b fstar_refl_binder Lazy_binder (Some rng)
@@ -733,6 +748,40 @@ let e_sigelt_view =
     in
     mk_emb embed_sigelt_view unembed_sigelt_view fstar_refl_sigelt_view
 
+
+let rec e_universe_view' () =
+    let  embed_universe_view (rng:Range.range) (sev:universe_view) : term =
+        match sev with
+        | Uv_zero    -> S.mk_Tm_app ref_Uv_zero.t [] rng
+        | Uv_succ u  -> S.mk_Tm_app ref_Uv_succ.t [S.as_arg (embed (e_universe_view' ()) rng u)] rng
+        | Uv_max  l  -> S.mk_Tm_app ref_Uv_max.t  [S.as_arg (embed (e_list (e_universe_view' ())) rng l)] rng
+        | Uv_bvar n  -> S.mk_Tm_app ref_Uv_max.t  [S.as_arg (U.exp_int (Z.string_of_big_int n))] rng
+        | Uv_name n  -> S.mk_Tm_app ref_Uv_max.t  [S.as_arg (embed e_univ_name rng n)] rng
+        | Uv_unknown -> S.mk_Tm_app ref_Uv_max.t  [] rng
+    in
+    let unembed_universe_view w (t:term) : option<universe_view> =
+        let t = U.unascribe t in
+        let hd, args = U.head_and_args t in
+        match (U.un_uinst hd).n, args with
+        | Tm_fvar fv, [] when S.fv_eq_lid fv ref_Uv_zero.lid -> Some Uv_zero
+        | Tm_fvar fv, [(u, _)] when S.fv_eq_lid fv ref_Uv_succ.lid -> 
+          BU.bind_opt (unembed' w (e_universe_view' ()) u) (fun u -> Some <| Uv_succ u)
+        | Tm_fvar fv, [(l, _)] when S.fv_eq_lid fv ref_Uv_max.lid ->
+          BU.bind_opt (unembed' w (e_list (e_universe_view' ())) l) (fun u -> Some <| Uv_max u)
+        | Tm_fvar fv, [(n, _)] when S.fv_eq_lid fv ref_Uv_bvar.lid -> 
+          BU.bind_opt (unembed' w e_int n) (fun n -> Some <| Uv_bvar n)
+        | Tm_fvar fv, [(n, _)] when S.fv_eq_lid fv ref_Uv_name.lid -> 
+          BU.bind_opt (unembed' w e_univ_name n) (fun n -> Some <| Uv_name n)
+        | Tm_fvar fv, [(n, _)] when S.fv_eq_lid fv ref_Uv_unknown.lid -> Some Uv_unknown
+        | _  ->
+             if w then
+                Err.log_issue t.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded universe_view: %s" (Print.term_to_string t)));
+            None
+    in
+    mk_emb embed_universe_view unembed_universe_view fstar_refl_universe_view
+
+let e_universe_view = e_universe_view' ()
+
 let e_exp =
     let rec embed_exp (rng:Range.range) (e:exp) : term =
         let r =
@@ -968,4 +1017,9 @@ let unfold_lazy_optionstate (i : lazyinfo) : term =
 let unfold_lazy_sigelt (i : lazyinfo) : term =
     let sigelt : sigelt = undyn i.blob in
     S.mk_Tm_app fstar_refl_pack_sigelt.t [S.as_arg (embed e_sigelt_view i.rng (inspect_sigelt sigelt))]
+                i.rng
+
+let unfold_lazy_universe (i : lazyinfo) : term =
+    let universe : universe = undyn i.blob in
+    S.mk_Tm_app fstar_refl_pack_universe.t [S.as_arg (embed (e_universe_view' ()) i.rng (inspect_universe universe))]
                 i.rng

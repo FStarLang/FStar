@@ -290,6 +290,7 @@ and lazy_kind =
   | Lazy_proofstate
   | Lazy_goal
   | Lazy_sigelt
+  | Lazy_universe
   | Lazy_uvar
   | Lazy_letbinding
   | Lazy_embedding of emb_typ * Thunk.t<term>
