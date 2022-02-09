@@ -13,7 +13,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 
-   Author: N. Swamy
+   Authors: N. Swamy, A. Rozanov
 *)
 module FStar.Seq.Permutation
 open FStar.Seq
@@ -355,4 +355,117 @@ let rec foldm_snoc_perm #a #eq m s0 s1 p
         foldm_snoc m s0;
       };
       eq.symmetry (foldm_snoc m s1) (foldm_snoc m s0))
+#pop-options
+
+(* We refine multiplication a bit to make proofs smoothier *)
+private unfold let ( *) (x y: int) : (t:int{(x>0 /\ y>0) ==> t>0}) = op_Multiply x y
+  
+private unfold type not_less_than (x: int) = (t: int{t>=x})
+private unfold type inbetween (x: int) (y: not_less_than x) = (t: int{t>=x && t<=y})
+private unfold type counter_of_range (x: int) (y: not_less_than x) = (t: nat{t<(y+1-x)})
+private unfold let range_count (x: int) (y: not_less_than x) : pos = (y+1)-x
+
+(* This constructs a sequence init function to be used to create
+   a sequence of function values in a given finite integer range *)
+unfold let init_func_from_expr #c (#n0: int) (#nk: not_less_than n0) 
+                                  (expr: (inbetween n0 nk) -> c) 
+                                  (a: inbetween n0 nk) (b: inbetween a nk) 
+                                  : ((counter_of_range a b) -> c)
+  = fun (i: counter_of_range a b) -> expr (n0+i)
+ 
+(* CommMonoid-induced pointwise sum of two functions *)
+unfold let func_sum #a #c #eq (cm: CE.cm c eq) (f g: a->c) 
+  : (t:(a->c){ forall (x:a). t x == f x `cm.mult` g x }) 
+  = fun (x:a) -> cm.mult (f x) (g x)
+  
+private let fold_decomposition_aux #c #eq (cm: CE.cm c eq)
+                           (n0: int) 
+                           (nk: int{nk=n0}) 
+                           (expr1 expr2: (inbetween n0 nk) -> c)
+  : Lemma (foldm_snoc cm (init (range_count n0 nk) 
+                               (init_func_from_expr (func_sum cm expr1 expr2) n0 nk)) `eq.eq`
+           cm.mult (foldm_snoc cm (init (range_count n0 nk) (init_func_from_expr expr1 n0 nk))) 
+                   (foldm_snoc cm (init (range_count n0 nk) (init_func_from_expr expr2 n0 nk)))) =   
+    Classical.forall_intro_2 (Classical.move_requires_2 eq.symmetry); 
+    Classical.forall_intro_3 (Classical.move_requires_3 eq.transitivity); 
+    let sum_of_funcs (i: counter_of_range n0 nk) 
+      = expr1 (n0+i) `cm.mult` expr2 (n0+i) in
+    lemma_eq_elim (init (range_count n0 nk) sum_of_funcs) 
+                  (create 1 (expr1 n0 `cm.mult` expr2 n0));
+    foldm_snoc_singleton cm (expr1 n0 `cm.mult` expr2 n0);
+    let ts = (init (range_count n0 nk) sum_of_funcs) in
+    let ts1 = (init (nk+1-n0) (fun i -> expr1 (n0+i))) in
+    let ts2 = (init (nk+1-n0) (fun i -> expr2 (n0+i))) in      
+    assert (foldm_snoc cm ts `eq.eq` sum_of_funcs (nk-n0)); // this assert speeds up the proof.
+    Seq.Permutation.foldm_snoc_singleton cm (expr1 nk);  
+    Seq.Permutation.foldm_snoc_singleton cm (expr2 nk); 
+    cm.congruence (foldm_snoc cm ts1) (foldm_snoc cm ts2) (expr1 nk) (expr2 nk)
+
+private let aux_shuffle_lemma #c #eq (cm: CE.cm c eq) 
+                                     (s1 s2 l1 l2: c)
+  : Lemma (((s1 `cm.mult` s2) `cm.mult` (l1 `cm.mult` l2)) `eq.eq`  
+           ((s1 `cm.mult` l1) `cm.mult` (s2 `cm.mult` l2))) =  
+  Classical.forall_intro eq.reflexivity;
+  Classical.forall_intro_2 (Classical.move_requires_2 cm.commutativity);
+  Classical.forall_intro_3 (Classical.move_requires_3 eq.transitivity); 
+  Classical.forall_intro_3 (Classical.move_requires_3 cm.associativity); 
+  let (+) = cm.mult in 
+  cm.congruence (s1+s2) l1 (s2+s1) l1;
+  cm.congruence ((s1+s2)+l1) l2 ((s2+s1)+l1) l2; 
+  cm.congruence ((s2+s1)+l1) l2 (s2+(s1+l1)) l2;
+  cm.congruence (s2+(s1+l1)) l2 ((s1+l1)+s2) l2
+  
+(* This lemma, especially when used with forall_intro, helps the prover verify
+   the index ranges of sequences that correspond to arbitrary big_sums *)
+private let bounds_lemma (n0:int) (nk: not_less_than n0) (i: counter_of_range n0 nk) 
+  : Lemma (n0+i >= n0 /\ n0+i <= nk) = ()
+  
+#push-options "--ifuel 0 --fuel 1 --z3rlimit 10 --z3refresh"
+let rec foldm_snoc_split #c #eq (cm: CE.cm c eq)
+                           (n0: int) 
+                           (nk: not_less_than n0) 
+                           (expr1 expr2: (inbetween n0 nk) -> c)
+  : Lemma (ensures foldm_snoc cm (init (range_count n0 nk) (init_func_from_expr (func_sum cm expr1 expr2) n0 nk)) `eq.eq`
+           cm.mult (foldm_snoc cm (init (range_count n0 nk) (init_func_from_expr expr1 n0 nk))) 
+                   (foldm_snoc cm (init (range_count n0 nk) (init_func_from_expr expr2 n0 nk)))) (decreases nk-n0) = 
+  if (nk=n0) then fold_decomposition_aux cm n0 nk expr1 expr2  else (  
+    Classical.forall_intro (bounds_lemma n0 nk); 
+    Classical.forall_intro_2 (Classical.move_requires_2 cm.commutativity);
+    Classical.forall_intro_3 (Classical.move_requires_3 eq.transitivity); 
+    let lfunc_up_to (nf: inbetween n0 nk) = init_func_from_expr (func_sum cm expr1 expr2) n0 nf in
+    let full_count = range_count n0 nk in
+    let sub_count = range_count n0 (nk-1) in 
+    let fullseq = init full_count (lfunc_up_to nk) in 
+    let rfunc_1_up_to (nf: inbetween n0 nk) = init_func_from_expr expr1 n0 nf in
+    let rfunc_2_up_to (nf: inbetween n0 nk) = init_func_from_expr expr2 n0 nf in 
+    let fullseq_r1 = init full_count (rfunc_1_up_to nk) in
+    let fullseq_r2 = init full_count (rfunc_2_up_to nk) in
+    foldm_snoc_split cm n0 (nk-1) expr1 expr2;
+    let subseq = init sub_count (lfunc_up_to nk) in
+    let subfold = foldm_snoc cm subseq in
+    let last = lfunc_up_to nk sub_count in
+    lemma_eq_elim (fst (un_snoc fullseq)) subseq; // subseq is literally (liat fullseq)   
+    let fullfold = foldm_snoc cm fullseq in 
+    let subseq_r1 = init sub_count (rfunc_1_up_to nk) in
+    let subseq_r2 = init sub_count (rfunc_2_up_to nk) in
+    lemma_eq_elim (fst (un_snoc fullseq_r1)) subseq_r1; // subseq is literally (liat fullseq)
+    lemma_eq_elim (fst (un_snoc fullseq_r2)) subseq_r2; // subseq is literally (liat fullseq)      
+    lemma_eq_elim (init sub_count (lfunc_up_to nk)) subseq; 
+    lemma_eq_elim (init sub_count (lfunc_up_to (nk-1))) subseq;  
+    lemma_eq_elim subseq_r1 (init sub_count (rfunc_1_up_to (nk-1)));
+    lemma_eq_elim subseq_r2 (init sub_count (rfunc_2_up_to (nk-1)));
+    let fullfold_r1 = foldm_snoc cm fullseq_r1 in
+    let fullfold_r2 = foldm_snoc cm fullseq_r2 in
+    let subfold_r1 = foldm_snoc cm subseq_r1 in
+    let subfold_r2 = foldm_snoc cm subseq_r2 in      
+    cm.congruence  (foldm_snoc cm (init sub_count (rfunc_1_up_to (nk-1)))) 
+                   (foldm_snoc cm (init sub_count (rfunc_2_up_to (nk-1))))
+                   subfold_r1 subfold_r2; 
+    let last_r1 = rfunc_1_up_to nk sub_count in
+    let last_r2 = rfunc_2_up_to nk sub_count in   
+    cm.congruence subfold last (subfold_r1 `cm.mult` subfold_r2) last;
+    aux_shuffle_lemma cm subfold_r1 subfold_r2 (rfunc_1_up_to nk sub_count) (rfunc_2_up_to nk sub_count);     
+    cm.congruence (subfold_r1 `cm.mult` (rfunc_1_up_to nk sub_count)) (subfold_r2 `cm.mult` (rfunc_2_up_to nk sub_count))
+                  (foldm_snoc cm fullseq_r1) (foldm_snoc cm fullseq_r2)
+) 
 #pop-options

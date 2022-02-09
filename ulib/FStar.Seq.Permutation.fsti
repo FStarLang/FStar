@@ -13,7 +13,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 
-   Author: N. Swamy
+   Authors: N. Swamy, A. Rozanov
 *)
 module FStar.Seq.Permutation
 open FStar.Seq
@@ -103,3 +103,33 @@ val foldm_snoc_perm (#a:_) (#eq:_)
                (p:seqperm s0 s1)
   : Lemma
     (ensures eq.eq (foldm_snoc m s0) (foldm_snoc m s1))
+ 
+private unfold type not_less_than (x: int) = (t: int{t>=x})
+private unfold type inbetween (x: int) (y: not_less_than x) = (t: int{t>=x && t<=y})
+private unfold type counter_of_range (x: int) (y: not_less_than x) = (t: nat{t<(y+1-x)})
+(* This constructs a sequence init function to be used to create
+   a sequence of function values in a given finite integer range *)
+unfold let init_func_from_expr #c (#n0: int) (#nk: not_less_than n0) 
+                                  (expr: (inbetween n0 nk) -> c) 
+                                  (a: inbetween n0 nk) (b: inbetween a nk) 
+                                  : ((counter_of_range a b) -> c)
+  = fun (i: counter_of_range a b) -> expr (n0+i)
+ 
+(* CommMonoid-induced pointwise sum of two functions *)
+unfold let func_sum #a #c #eq (cm: CE.cm c eq) (f g: a->c) 
+  : (t:(a->c){ forall (x:a). t x == f x `cm.mult` g x }) 
+  = fun (x:a) -> cm.mult (f x) (g x)
+
+(* if the fold is taken over a sequence of sums, it is equal
+   to a sum of folds of the summand sequences *)
+val foldm_snoc_split (#c:_) (#eq:_)
+                     (cm: CE.cm c eq)
+                     (n0: int)
+                     (nk: int{nk>=n0})
+                     (expr1 expr2: (t:int{t>=n0 && t<=nk})->c)
+  : Lemma (ensures foldm_snoc cm (init (nk+1-n0) 
+                        (init_func_from_expr #c #n0 #nk (func_sum cm expr1 expr2) n0 nk)) 
+                   `eq.eq` cm.mult 
+                   (foldm_snoc cm (init (nk+1-n0) (init_func_from_expr #c #n0 #nk expr1 n0 nk))) 
+                   (foldm_snoc cm (init (nk+1-n0) (init_func_from_expr #c #n0 #nk expr2 n0 nk)))) 
+          (decreases nk-n0) 
