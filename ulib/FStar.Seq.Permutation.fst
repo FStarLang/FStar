@@ -74,7 +74,7 @@ let rec find (#a:eqtype) (x:a) (s:seq a{ count x s > 0 })
     )
 #pop-options
 
-#push-options "--fuel 2 --ifuel 0 --z3rlimit_factor 10"
+#push-options "--fuel 2 --ifuel 0 --z3rlimit_factor 20"
 let rec permutation_from_equal_counts (#a:eqtype) (s0:seq a) (s1:seq a{(forall x. count x s0 == count x s1)})
   : Tot (seqperm s0 s1)//index_fun s0 { is_permutation s0 s1 f })
         (decreases (Seq.length s0))
@@ -211,6 +211,7 @@ let rec foldm_snoc_append #a #eq (m:CE.cm a eq) (s1 s2: seq a)
         (eq.eq) { }
         m.mult (foldm_snoc m s1) (foldm_snoc m s2);
       })
+#pop-options 
 
 let foldm_snoc_sym #a #eq (m:CE.cm a eq) (s1 s2: seq a)
   : Lemma
@@ -359,24 +360,9 @@ let rec foldm_snoc_perm #a #eq m s0 s1 p
 
 (* We refine multiplication a bit to make proofs smoothier *)
 private unfold let ( *) (x y: int) : (t:int{(x>0 /\ y>0) ==> t>0}) = op_Multiply x y
-  
-private unfold type not_less_than (x: int) = (t: int{t>=x})
-private unfold type inbetween (x: int) (y: not_less_than x) = (t: int{t>=x && t<=y})
-private unfold type counter_of_range (x: int) (y: not_less_than x) = (t: nat{t<(y+1-x)})
+   
 private unfold let range_count (x: int) (y: not_less_than x) : pos = (y+1)-x
-
-(* This constructs a sequence init function to be used to create
-   a sequence of function values in a given finite integer range *)
-unfold let init_func_from_expr #c (#n0: int) (#nk: not_less_than n0) 
-                                  (expr: (inbetween n0 nk) -> c) 
-                                  (a: inbetween n0 nk) (b: inbetween a nk) 
-                                  : ((counter_of_range a b) -> c)
-  = fun (i: counter_of_range a b) -> expr (n0+i)
  
-(* CommMonoid-induced pointwise sum of two functions *)
-unfold let func_sum #a #c #eq (cm: CE.cm c eq) (f g: a->c) 
-  : (t:(a->c){ forall (x:a). t x == f x `cm.mult` g x }) 
-  = fun (x:a) -> cm.mult (f x) (g x)
   
 private let fold_decomposition_aux #c #eq (cm: CE.cm c eq)
                            (n0: int) 
@@ -397,8 +383,8 @@ private let fold_decomposition_aux #c #eq (cm: CE.cm c eq)
     let ts1 = (init (nk+1-n0) (fun i -> expr1 (n0+i))) in
     let ts2 = (init (nk+1-n0) (fun i -> expr2 (n0+i))) in      
     assert (foldm_snoc cm ts `eq.eq` sum_of_funcs (nk-n0)); // this assert speeds up the proof.
-    Seq.Permutation.foldm_snoc_singleton cm (expr1 nk);  
-    Seq.Permutation.foldm_snoc_singleton cm (expr2 nk); 
+    foldm_snoc_singleton cm (expr1 nk);  
+    foldm_snoc_singleton cm (expr2 nk); 
     cm.congruence (foldm_snoc cm ts1) (foldm_snoc cm ts2) (expr1 nk) (expr2 nk)
 
 private let aux_shuffle_lemma #c #eq (cm: CE.cm c eq) 

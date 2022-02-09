@@ -131,5 +131,4 @@ val foldm_snoc_split (#c:_) (#eq:_)
                         (init_func_from_expr #c #n0 #nk (func_sum cm expr1 expr2) n0 nk)) 
                    `eq.eq` cm.mult 
                    (foldm_snoc cm (init (nk+1-n0) (init_func_from_expr #c #n0 #nk expr1 n0 nk))) 
-                   (foldm_snoc cm (init (nk+1-n0) (init_func_from_expr #c #n0 #nk expr2 n0 nk)))) 
-          (decreases nk-n0) 
+                   (foldm_snoc cm (init (nk+1-n0) (init_func_from_expr #c #n0 #nk expr2 n0 nk))))
