@@ -55,6 +55,8 @@ Since the measure strictly decreases on each recursive call, and there
 are no infinite descending chains, this guarantees that the function
 eventually stops making recursive calls, i.e., it terminates.
 
+.. _Part1_precedes_relation:
+
 The precedes relation
 .....................
 

@@ -78,7 +78,7 @@ learn about indexed inductive types from three related perspectives:
     language, including the handling of :ref:`termination proofs
     <Part1_termination>`, can also be understood in terms of inductive
     types that :ref:`model well-founded recursion
-    <Part2_well_founded>`.
+    <Part2_well_founded_recursion>`.
 
   * Representing computations: Inductive type definitions allow
     embedding other programming lanaguges or computational models
@@ -115,6 +115,7 @@ working knowledge of some core parts of F*'s type theory.
    part2_equality
    part2_logical_connectives
    part2_stlc
+   part2_phoas
    part2_par
    part2_well_founded
 

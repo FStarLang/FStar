@@ -17,37 +17,23 @@
    limitations under the License.
 *)
 
-module Part2.STLC
-
+module Part2.STLC.Strong
+open FStar.Classical.Sugar
 (* Constructive-style progress and preservation proof for STLC with
    strong reduction, using deBruijn indices and parallel substitution. *)
 
-//SNIPPET_START: typ$
 type typ =
   | TUnit : typ
   | TArr  : typ -> typ -> typ
-//SNIPPET_END: typ$
 
-//SNIPPET_START: exp$
 let var = nat
 type exp =
   | EUnit : exp
   | EVar  : var -> exp
   | ELam  : typ -> exp -> exp
   | EApp  : exp -> exp -> exp
-//SNIPPET_END: exp$  
 
 (* Parallel substitution operation `subst` *)
-
-(* The termination argument uses a lexicographic ordering composed of:
-   0) a bit saying whether the expression is a variable or not;
-   1) an _undecidable_ well-founded order on substitutions that
-      equates all renamings, equates all non-renamings, and makes
-      renamings strictly smaller than non-renamings; we write down a
-      non-constructive function is_renaming mapping substitutions
-      (infinite objects) to 0 (renaming) or 1 (non-renaming)
-   2) the structure of the expression e *)
-
 let sub (renaming:bool) = 
     f:(var -> exp){ renaming <==> (forall x. EVar? (f x)) }
 
@@ -85,8 +71,7 @@ and sub_elam (#r:bool) (s:sub r)
         then EVar y
         else subst sub_inc (s (y - 1))
     in
-//    assert (not r ==> (forall x. ~(EVar? (s x)) ==> ~(EVar? (f (x + 1)))));
-    introduce not r ==> _ //(exists x. ~ (EVar? (f x))) 
+    introduce not r ==> (exists x. ~ (EVar? (f x)))
     with not_r. 
       eliminate exists y. ~ (EVar? (s y))
       returns _
@@ -94,12 +79,8 @@ and sub_elam (#r:bool) (s:sub r)
         introduce exists x. ~(EVar? (f x))
         with (y + 1)
         and ()
-        //   assert (f (y + 1) == subst sub_inc (s y))
-        // )
     ;
     f
-
-open FStar.Classical.Sugar
 
 let sub_beta (e:exp)
   : sub (EVar? e)
@@ -116,7 +97,6 @@ let sub_beta (e:exp)
 (* Small-step operational semantics; strong / full-beta reduction is
    non-deterministic, so necessarily as inductive relation *)
 
-//SNIPPET_START: step$
 type step : exp -> exp -> Type =
   | SBeta : t:typ ->
             e1:exp ->
@@ -147,7 +127,6 @@ type step : exp -> exp -> Type =
               e':exp ->
               step e e' -> 
               step (ELam t e) (ELam t e')
-//SNIPPET_END: step$              
 
 (* Type system; as inductive relation (not strictly necessary for STLC) *)
 
