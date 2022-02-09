@@ -623,8 +623,8 @@ val elim_pure (#uses:_) (p:prop)
 /// the program as it will try to lift a SteelGhost computation with an informative return type
 val return (#a:Type u#a)
   (#opened_invariants:inames)
-  (#p:a -> vprop)
-  (x:a)
+  (#[@@@ framing_implicit] p:a -> vprop)
+  ($x:a)
   : SteelAtomicBase a true opened_invariants Unobservable
          (return_pre (p x)) p
          (return_req (p x)) (return_ens a x p)
