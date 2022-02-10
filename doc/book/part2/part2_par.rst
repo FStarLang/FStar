@@ -1,7 +1,7 @@
 .. _Part2_par:
 
-Embedding Computations with Higher-order Inductive Types
-========================================================
+A First Model of Computational Effects
+======================================
 
 The inductive types we've seen so far all have constructors whose
 arguments are simple types, like type parameters, natural numbers, or

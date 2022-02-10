@@ -3,13 +3,18 @@
 Simply Typed Lambda Calculus
 ============================
 
-In this chapter, we look at the simply typed lambda calculus (STLC), a
-very simple programming language which is often studied in
-introductory courses on the semantics of programming languages. Its
-syntax, type system, and runtime behavior can be described in just a
-few lines. The main result we're interested in proving is the
-soundness of the type system, i.e., that if a program type checks then
-it can be executed safely without a certain class of runtime errors.
+In this chapter, we look at how inductively defined types can be used
+to represent both raw data, inductively defined relations, and proofs
+relating the two.
+
+By way of illustration, we develop a case study in the simply typed
+lambda calculus (STLC), a very simple programming language which is
+often studied in introductory courses on the semantics of programming
+languages. Its syntax, type system, and runtime behavior can be
+described in just a few lines. The main result we're interested in
+proving is the soundness of the type system, i.e., that if a program
+type checks then it can be executed safely without a certain class of
+runtime errors.
 
 If you haven't seen the STLC before, there are several good resources
 for it available on the web, including the `Software Foundations book
