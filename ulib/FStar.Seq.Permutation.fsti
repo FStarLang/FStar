@@ -13,7 +13,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 
-   Authors: N. Swamy, A. Rozanov
+   Authors: N. Swamy, A. Rastogi, A. Rozanov
 *)
 module FStar.Seq.Permutation
 open FStar.Seq
@@ -57,9 +57,9 @@ val reveal_is_permutation (#a:Type) (s0 s1:seq a) (f:index_fun s0)
 let seqperm (#a:Type) (s0:seq a) (s1:seq a) =
   f:index_fun s0 { is_permutation s0 s1 f }
 
-(* We can construct a permutation from 
+(* We can construct a permutation from
    sequences whose element counts are the same *)
-val permutation_from_equal_counts 
+val permutation_from_equal_counts
       (#a:eqtype)
       (s0:seq a) (s1:seq a{(forall x. count x s0 == count x s1)})
   : Tot (seqperm s0 s1)
@@ -94,7 +94,7 @@ val foldm_snoc_sym (#a:Type) (#eq:CE.equiv a) (m:CE.cm a eq) (s1 s2: seq a)
     (ensures eq.eq (foldm_snoc m (append s1 s2))
                    (foldm_snoc m (append s2 s1)))
 
-(* And, finally, if s0 and s1 are permutations, 
+(* And, finally, if s0 and s1 are permutations,
    then folding m over them is identical *)
 val foldm_snoc_perm (#a:_) (#eq:_)
                (m:CE.cm a eq)
@@ -103,32 +103,47 @@ val foldm_snoc_perm (#a:_) (#eq:_)
                (p:seqperm s0 s1)
   : Lemma
     (ensures eq.eq (foldm_snoc m s0) (foldm_snoc m s1))
- 
-private unfold type not_less_than (x: int) = (t: int{t>=x})
-private unfold type inbetween (x: int) (y: not_less_than x) = (t: int{t>=x && t<=y})
-private unfold type counter_of_range (x: int) (y: not_less_than x) = (t: nat{t<(y+1-x)})
+
+/// foldm_snoc_split:  This next bit is for a lemma that proves that if
+///   if the fold is taken over a sequence of sums, it is equal
+///   to a sum of folds of the summand sequences
+
+(* An integer not less than x *)
+let not_less_than (x: int) = (t: int{t>=x})
+
+(* The closed interval [x,y] *)
+let in_between (x: int) (y: not_less_than x) = (t: int{t>=x && t<=y})
+
+(* A zero-based counter for the range [x,y] *)
+let counter_of_range (x: int) (y: not_less_than x) = (t: nat{t<(y+1-x)})
+
+(* The number of elements in the range [x,y] *)
+let range_count (x: int) (y: not_less_than x) : pos = (y+1)-x
+
 (* This constructs a sequence init function to be used to create
    a sequence of function values in a given finite integer range *)
-unfold let init_func_from_expr #c (#n0: int) (#nk: not_less_than n0) 
-                                  (expr: (inbetween n0 nk) -> c) 
-                                  (a: inbetween n0 nk) (b: inbetween a nk) 
-                                  : ((counter_of_range a b) -> c)
-  = fun (i: counter_of_range a b) -> expr (n0+i)
- 
+let init_func_from_expr #c (#n0: int) (#nk: not_less_than n0)
+                        (expr: in_between n0 nk -> c)
+                        (a: in_between n0 nk)
+                        (b: in_between a nk)
+                        (i: counter_of_range a b)
+  : c
+  = expr (n0+i)
+
 (* CommMonoid-induced pointwise sum of two functions *)
-unfold let func_sum #a #c #eq (cm: CE.cm c eq) (f g: a->c) 
-  : (t:(a->c){ forall (x:a). t x == f x `cm.mult` g x }) 
+let func_sum #a #c #eq (cm: CE.cm c eq) (f g: a -> c)
+  : t:(a -> c){ forall (x:a). t x == f x `cm.mult` g x }
   = fun (x:a) -> cm.mult (f x) (g x)
 
-(* if the fold is taken over a sequence of sums, it is equal
-   to a sum of folds of the summand sequences *)
+
+(* The lemma itself:
+     if the fold is taken over a sequence of sums, it is equal
+     to a sum of folds of the summand sequences *)
 val foldm_snoc_split (#c:_) (#eq:_)
                      (cm: CE.cm c eq)
                      (n0: int)
-                     (nk: int{nk>=n0})
-                     (expr1 expr2: (t:int{t>=n0 && t<=nk})->c)
-  : Lemma (ensures foldm_snoc cm (init (nk+1-n0) 
-                        (init_func_from_expr #c #n0 #nk (func_sum cm expr1 expr2) n0 nk)) 
-                   `eq.eq` cm.mult 
-                   (foldm_snoc cm (init (nk+1-n0) (init_func_from_expr #c #n0 #nk expr1 n0 nk))) 
-                   (foldm_snoc cm (init (nk+1-n0) (init_func_from_expr #c #n0 #nk expr2 n0 nk))))
+                     (nk: not_less_than n0)
+                     (expr1 expr2: (in_between n0 nk) -> c)
+  : Lemma (ensures (foldm_snoc cm (init (range_count n0 nk) (init_func_from_expr (func_sum cm expr1 expr2) n0 nk)) `eq.eq`
+           cm.mult (foldm_snoc cm (init (range_count n0 nk) (init_func_from_expr expr1 n0 nk)))
+                   (foldm_snoc cm (init (range_count n0 nk) (init_func_from_expr expr2 n0 nk)))))
