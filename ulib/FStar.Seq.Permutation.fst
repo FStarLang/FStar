@@ -13,7 +13,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 
-   Author: N. Swamy
+   Authors: N. Swamy, A. Rozanov
 *)
 module FStar.Seq.Permutation
 open FStar.Seq
@@ -74,7 +74,7 @@ let rec find (#a:eqtype) (x:a) (s:seq a{ count x s > 0 })
     )
 #pop-options
 
-#push-options "--fuel 2 --ifuel 0 --z3rlimit_factor 10"
+#push-options "--fuel 2 --ifuel 0 --z3rlimit_factor 20"
 let rec permutation_from_equal_counts (#a:eqtype) (s0:seq a) (s1:seq a{(forall x. count x s0 == count x s1)})
   : Tot (seqperm s0 s1)//index_fun s0 { is_permutation s0 s1 f })
         (decreases (Seq.length s0))
@@ -170,7 +170,7 @@ let x_yz_to_y_xz #a #eq (m:CE.cm a eq) (x y z:a)
              `eq.eq`
            (y `m.mult` (x `m.mult` z)))
   = CE.elim_eq_laws eq;
-    elim_monoid_laws m;  
+    elim_monoid_laws m;
     calc (eq.eq) {
       x `m.mult` (y `m.mult` z);
       (eq.eq) { m.commutativity x (y `m.mult` z) }
@@ -180,7 +180,7 @@ let x_yz_to_y_xz #a #eq (m:CE.cm a eq) (x y z:a)
       (eq.eq) { m.congruence y (z `m.mult` x) y (x `m.mult` z) }
       y `m.mult` (x `m.mult` z);
     }
-  
+
 #push-options "--fuel 1 --ifuel 0 --z3rlimit_factor 2"
 let rec foldm_snoc_append #a #eq (m:CE.cm a eq) (s1 s2: seq a)
   : Lemma
@@ -200,7 +200,7 @@ let rec foldm_snoc_append #a #eq (m:CE.cm a eq) (s1 s2: seq a)
                          (Seq.snoc (append s1 s2') last)) }
         foldm_snoc m (Seq.snoc (append s1 s2') last);
         (eq.eq) { assert (Seq.equal (fst (Seq.un_snoc (append s1 s2))) (append s1 s2')) }
-        
+
         m.mult last (foldm_snoc m (append s1 s2'));
         (eq.eq) { foldm_snoc_append m s1 s2';
                   m.congruence last (foldm_snoc m (append s1 s2'))
@@ -211,6 +211,7 @@ let rec foldm_snoc_append #a #eq (m:CE.cm a eq) (s1 s2: seq a)
         (eq.eq) { }
         m.mult (foldm_snoc m s1) (foldm_snoc m s2);
       })
+#pop-options
 
 let foldm_snoc_sym #a #eq (m:CE.cm a eq) (s1 s2: seq a)
   : Lemma
@@ -356,3 +357,156 @@ let rec foldm_snoc_perm #a #eq m s0 s1 p
       };
       eq.symmetry (foldm_snoc m s1) (foldm_snoc m s0))
 #pop-options
+
+////////////////////////////////////////////////////////////////////////////////
+// foldm_snoc_split
+////////////////////////////////////////////////////////////////////////////////
+
+(* Some utilities to introduce associativity-commutativity reasoning on
+   CM using quantified formulas with patterns.
+
+   Use these with care, since with large terms the SMT solver may end up
+   with an explosion of instantiations
+*)
+let cm_associativity #c #eq (cm: CE.cm c eq)
+  : Lemma (forall (x y z:c). {:pattern (x `cm.mult` y `cm.mult` z)}
+              (x `cm.mult` y `cm.mult` z) `eq.eq` (x `cm.mult` (y `cm.mult` z)))
+  = Classical.forall_intro_3 (Classical.move_requires_3 cm.associativity)
+
+let cm_commutativity #c #eq (cm: CE.cm c eq)
+  : Lemma (forall (x y:c). {:pattern (x `cm.mult` y)}
+              (x `cm.mult` y) `eq.eq` (y `cm.mult` x))
+  = Classical.forall_intro_2 (Classical.move_requires_2 cm.commutativity)
+
+(* A utility to introduce the equivalence relation laws into the context.
+   FStar.Algebra.CommutativeMonoid provides something similar, but this
+   version provides a more goal-directed pattern for transitivity.
+   We should consider changing FStar.Algebra.CommutativeMonoid *)
+let elim_eq_laws #a (eq:CE.equiv a)
+  : Lemma (
+          (forall x.{:pattern (x `eq.eq` x)} x `eq.eq` x) /\
+          (forall x y.{:pattern (x `eq.eq` y)} x `eq.eq` y ==> y `eq.eq` x) /\
+          (forall x y z.{:pattern eq.eq x y; eq.eq x z} (x `eq.eq` y /\ y `eq.eq` z) ==> x `eq.eq` z)
+          )
+   = CE.elim_eq_laws eq
+
+let fold_decomposition_aux #c #eq (cm: CE.cm c eq)
+                           (n0: int)
+                           (nk: int{nk=n0})
+                           (expr1 expr2: (in_between n0 nk) -> c)
+  : Lemma (foldm_snoc cm (init (range_count n0 nk)
+                               (init_func_from_expr (func_sum cm expr1 expr2) n0 nk)) `eq.eq`
+           cm.mult (foldm_snoc cm (init (range_count n0 nk) (init_func_from_expr expr1 n0 nk)))
+                   (foldm_snoc cm (init (range_count n0 nk) (init_func_from_expr expr2 n0 nk))))
+  = elim_eq_laws eq;
+    let sum_of_funcs (i: counter_of_range n0 nk)
+      = expr1 (n0+i) `cm.mult` expr2 (n0+i) in
+    lemma_eq_elim (init (range_count n0 nk) sum_of_funcs)
+                  (create 1 (expr1 n0 `cm.mult` expr2 n0));
+    foldm_snoc_singleton cm (expr1 n0 `cm.mult` expr2 n0);
+    let ts = (init (range_count n0 nk) sum_of_funcs) in
+    let ts1 = (init (nk+1-n0) (fun i -> expr1 (n0+i))) in
+    let ts2 = (init (nk+1-n0) (fun i -> expr2 (n0+i))) in
+    assert (foldm_snoc cm ts `eq.eq` sum_of_funcs (nk-n0)); // this assert speeds up the proof.
+    foldm_snoc_singleton cm (expr1 nk);
+    foldm_snoc_singleton cm (expr2 nk);
+    cm.congruence (foldm_snoc cm ts1) (foldm_snoc cm ts2) (expr1 nk) (expr2 nk)
+
+let aux_shuffle_lemma #c #eq (cm: CE.cm c eq)
+                                     (s1 s2 l1 l2: c)
+  : Lemma (((s1 `cm.mult` s2) `cm.mult` (l1 `cm.mult` l2)) `eq.eq`
+           ((s1 `cm.mult` l1) `cm.mult` (s2 `cm.mult` l2)))
+  = elim_eq_laws eq;
+    cm_commutativity cm;
+    cm_associativity cm;
+    let (+) = cm.mult in
+    cm.congruence (s1+s2) l1 (s2+s1) l1;
+    cm.congruence ((s1+s2)+l1) l2 ((s2+s1)+l1) l2;
+    cm.congruence ((s2+s1)+l1) l2 (s2+(s1+l1)) l2;
+    cm.congruence (s2+(s1+l1)) l2 ((s1+l1)+s2) l2
+
+
+#push-options "--ifuel 0 --fuel 1 --z3rlimit 20"
+(* This proof is quite delicate, for several reasons:
+     - It's working with higher order functions that are non-trivially dependently typed,
+       notably on the ranges the ranges of indexes they manipulate
+
+     - When using the induction hypothesis (i.e., on a recursive call), what we get
+       is a property about the function at a different type, i.e., `range_count n0 (nk - 1)`.
+
+     - If left to the SMT solver alone, these higher order functions
+       at slightly different types cannot be proven equal and the
+       proof fails, often mysteriously.
+
+     - To have something more robust, I rewrote this function to
+       return a squash proof, and then to coerce this proof to the
+       type needed, where the F* unififer/normalization machinery can
+       help, rather than leaving it purely to SMT, which is what
+       happens when the property is states as a postcondition of a
+       Lemma
+*)
+let rec foldm_snoc_split' #c #eq (cm: CE.cm c eq)
+                           (n0: int)
+                           (nk: not_less_than n0)
+                           (expr1 expr2: (in_between n0 nk) -> c)
+  : Tot (squash (foldm_snoc cm (init (range_count n0 nk) (init_func_from_expr (func_sum cm expr1 expr2) n0 nk)) `eq.eq`
+                 cm.mult (foldm_snoc cm (init (range_count n0 nk) (init_func_from_expr expr1 n0 nk)))
+                         (foldm_snoc cm (init (range_count n0 nk) (init_func_from_expr expr2 n0 nk)))))
+        (decreases nk-n0)
+  = if (nk=n0)
+    then fold_decomposition_aux cm n0 nk expr1 expr2
+    else (
+      cm_commutativity cm;
+      elim_eq_laws eq;
+      let lfunc_up_to (nf: in_between n0 nk) = init_func_from_expr (func_sum cm expr1 expr2) n0 nf in
+      let full_count = range_count n0 nk in
+      let sub_count = range_count n0 (nk-1) in
+      let fullseq = init full_count (lfunc_up_to nk) in
+      let rfunc_1_up_to (nf: in_between n0 nk) = init_func_from_expr expr1 n0 nf in
+      let rfunc_2_up_to (nf: in_between n0 nk) = init_func_from_expr expr2 n0 nf in
+      let fullseq_r1 = init full_count (rfunc_1_up_to nk) in
+      let fullseq_r2 = init full_count (rfunc_2_up_to nk) in
+      let subseq = init sub_count (lfunc_up_to nk) in
+      let subfold = foldm_snoc cm subseq in
+      let last = lfunc_up_to nk sub_count in
+      lemma_eq_elim (fst (un_snoc fullseq)) subseq; // subseq is literally (liat fullseq)
+      let fullfold = foldm_snoc cm fullseq in
+      let subseq_r1 = init sub_count (rfunc_1_up_to nk) in
+      let subseq_r2 = init sub_count (rfunc_2_up_to nk) in
+      lemma_eq_elim (fst (un_snoc fullseq_r1)) subseq_r1; // subseq is literally (liat fullseq)
+      lemma_eq_elim (fst (un_snoc fullseq_r2)) subseq_r2; // subseq is literally (liat fullseq)
+      lemma_eq_elim (init sub_count (lfunc_up_to nk)) subseq;
+      lemma_eq_elim (init sub_count (lfunc_up_to (nk-1))) subseq;
+      lemma_eq_elim subseq_r1 (init sub_count (rfunc_1_up_to (nk-1)));
+      lemma_eq_elim subseq_r2 (init sub_count (rfunc_2_up_to (nk-1)));
+      let fullfold_r1 = foldm_snoc cm fullseq_r1 in
+      let fullfold_r2 = foldm_snoc cm fullseq_r2 in
+      let subfold_r1 = foldm_snoc cm subseq_r1 in
+      let subfold_r2 = foldm_snoc cm subseq_r2 in
+      cm.congruence  (foldm_snoc cm (init sub_count (rfunc_1_up_to (nk-1))))
+                     (foldm_snoc cm (init sub_count (rfunc_2_up_to (nk-1))))
+                     subfold_r1 subfold_r2;
+      let last_r1 = rfunc_1_up_to nk sub_count in
+      let last_r2 = rfunc_2_up_to nk sub_count in
+      let nk' = nk - 1 in
+      (* here's the nasty bit with where we have to massage the proof from the induction hypothesis *)
+      let ih
+        : squash ((foldm_snoc cm (init (range_count n0 nk') (init_func_from_expr (func_sum cm expr1 expr2) n0 nk')) `eq.eq`
+              cm.mult (foldm_snoc cm (init (range_count n0 nk') (init_func_from_expr expr1 n0 nk')))
+                      (foldm_snoc cm (init (range_count n0 nk') (init_func_from_expr expr2 n0 nk')))))
+        = foldm_snoc_split' cm n0 nk' expr1 expr2
+      in
+      let _ : squash (subfold `eq.eq` (subfold_r1 `cm.mult` subfold_r2)) = ih in
+      cm.congruence subfold last (subfold_r1 `cm.mult` subfold_r2) last;
+      aux_shuffle_lemma cm subfold_r1 subfold_r2 (rfunc_1_up_to nk sub_count) (rfunc_2_up_to nk sub_count);
+      cm.congruence (subfold_r1 `cm.mult` (rfunc_1_up_to nk sub_count)) (subfold_r2 `cm.mult` (rfunc_2_up_to nk sub_count))
+                    (foldm_snoc cm fullseq_r1) (foldm_snoc cm fullseq_r2)
+  )
+#pop-options
+
+/// Finally, package the proof up into a Lemma, as expected by the interface
+let foldm_snoc_split #c #eq (cm: CE.cm c eq)
+                           (n0: int)
+                           (nk: not_less_than n0)
+                           (expr1 expr2: (in_between n0 nk) -> c)
+  = foldm_snoc_split' cm n0 nk expr1 expr2
