@@ -319,6 +319,29 @@ let preprocess (env:Env.env) (goal:term) : list<(Env.env * term * O.optionstate)
     (env, t', O.peek ()) :: gs
   )
 
+(* Retrieves a tactic associated to a given attribute, if any *)
+let find_user_tac_for_attr env (a:term) : option<sigelt> =
+  let hooks = Env.lookup_attr env PC.resolve_implicits_attr_string in
+  hooks |> BU.try_find
+              (fun hook ->
+                hook.sigattrs |> BU.for_some (U.attr_eq a))
+
+(* This function takes an environment [env] and a goal [goal], and tries to run
+   the tactic registered with the (handle_smt_goal) attribute, if any.
+   If such a tactic exists, all the unresolved goals must be propositions,
+   that will be directly encoded to SMT inside Rel.discharge_guard.
+   If such a tactic does not exist, this function is a no-op. *)
+let handle_smt_goal env goal =
+  (* Attempt to retrieve a tactic corresponding to the (handle_smt_goals) attribute *)
+  match find_user_tac_for_attr env (S.tconst PC.handle_smt_goals_attr) with
+  (* There is a tactic registered with the handle_smt_goals attribute *)
+  | Some tac ->
+    //let gs, _ = FStar.Tactics.Hooks.run_tactic_on_typ tac.sigrng in
+    [env, goal]
+  (* No such tactic was available in the current context *)
+  | None -> [env, goal]
+
+
 let synthesize (env:Env.env) (typ:typ) (tau:term) : term =
   Errors.with_ctx "While synthesizing term with a tactic" (fun () ->
     // Don't run the tactic (and end with a magic) when nosynth is set, cf. issue #73 in fstar-mode.el

@@ -4232,8 +4232,21 @@ let discharge_guard' use_env_range_msg env (g:guard_t) (use_smt:bool) : option<g
                     Options.with_saved_options (fun () ->
                         ignore <| Options.set_options "--no_tactics";
                         let vcs = env.solver.preprocess env vc in
-                        vcs |> List.map (fun (env, goal, opts) ->
-                        env, norm_with_steps "FStar.TypeChecker.Rel.norm_with_steps.7" [Env.Simplify; Env.Primops] env goal, opts)
+                        let vcs = List.map (fun (env, goal, opts) ->
+                        env, norm_with_steps "FStar.TypeChecker.Rel.norm_with_steps.7" [Env.Simplify; Env.Primops] env goal, opts) vcs in
+                        let vcs = List.map (fun (env, goal, opts) ->
+                          env.solver.handle_smt_goal env goal |>
+                            (* Keep the same SMT options if the goals were transformed *)
+                            List.map (fun (env, goal) -> (env, goal, opts)))
+                          vcs
+                        in List.flatten vcs
+                        // flatten_map (defer_to_handle_smt_goals)
+                        // defer_to_handle_smt_goals should:
+                        // * Create a new proofgoal for vc
+                        // * Run the tactic associated to the handle_smt_goals attr, if any
+                        // * Check that all remaining goals are getprop
+                        // * Return all remaining goals
+                        // It should probably go in DeferredImplicits to reuse functions there
                     )
                 end
                 else [env,vc,FStar.Options.peek ()]
