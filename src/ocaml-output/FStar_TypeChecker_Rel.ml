@@ -12411,19 +12411,35 @@ let (discharge_guard' :
                                       (let vcs1 =
                                          (env.FStar_TypeChecker_Env.solver).FStar_TypeChecker_Env.preprocess
                                            env vc2 in
-                                       FStar_Compiler_Effect.op_Bar_Greater
-                                         vcs1
-                                         (FStar_Compiler_List.map
-                                            (fun uu___13 ->
-                                               match uu___13 with
-                                               | (env1, goal, opts) ->
-                                                   let uu___14 =
-                                                     norm_with_steps
-                                                       "FStar.TypeChecker.Rel.norm_with_steps.7"
-                                                       [FStar_TypeChecker_Env.Simplify;
-                                                       FStar_TypeChecker_Env.Primops]
-                                                       env1 goal in
-                                                   (env1, uu___14, opts)))))
+                                       let vcs2 =
+                                         FStar_Compiler_List.map
+                                           (fun uu___13 ->
+                                              match uu___13 with
+                                              | (env1, goal, opts) ->
+                                                  let uu___14 =
+                                                    norm_with_steps
+                                                      "FStar.TypeChecker.Rel.norm_with_steps.7"
+                                                      [FStar_TypeChecker_Env.Simplify;
+                                                      FStar_TypeChecker_Env.Primops]
+                                                      env1 goal in
+                                                  (env1, uu___14, opts)) vcs1 in
+                                       let vcs3 =
+                                         FStar_Compiler_List.map
+                                           (fun uu___13 ->
+                                              match uu___13 with
+                                              | (env1, goal, opts) ->
+                                                  let uu___14 =
+                                                    (env1.FStar_TypeChecker_Env.solver).FStar_TypeChecker_Env.handle_smt_goal
+                                                      env1 goal in
+                                                  FStar_Compiler_Effect.op_Bar_Greater
+                                                    uu___14
+                                                    (FStar_Compiler_List.map
+                                                       (fun uu___15 ->
+                                                          match uu___15 with
+                                                          | (env2, goal1) ->
+                                                              (env2, goal1,
+                                                                opts)))) vcs2 in
+                                       FStar_Compiler_List.flatten vcs3))
                                else
                                  (let uu___12 =
                                     let uu___13 = FStar_Options.peek () in

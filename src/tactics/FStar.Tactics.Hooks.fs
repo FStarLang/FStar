@@ -319,29 +319,6 @@ let preprocess (env:Env.env) (goal:term) : list<(Env.env * term * O.optionstate)
     (env, t', O.peek ()) :: gs
   )
 
-(* Retrieves a tactic associated to a given attribute, if any *)
-let find_user_tac_for_attr env (a:term) : option<sigelt> =
-  let hooks = Env.lookup_attr env PC.resolve_implicits_attr_string in
-  hooks |> BU.try_find
-              (fun hook ->
-                hook.sigattrs |> BU.for_some (U.attr_eq a))
-
-(* This function takes an environment [env] and a goal [goal], and tries to run
-   the tactic registered with the (handle_smt_goal) attribute, if any.
-   If such a tactic exists, all the unresolved goals must be propositions,
-   that will be directly encoded to SMT inside Rel.discharge_guard.
-   If such a tactic does not exist, this function is a no-op. *)
-let handle_smt_goal env goal =
-  (* Attempt to retrieve a tactic corresponding to the (handle_smt_goals) attribute *)
-  match find_user_tac_for_attr env (S.tconst PC.handle_smt_goals_attr) with
-  (* There is a tactic registered with the handle_smt_goals attribute *)
-  | Some tac ->
-    //let gs, _ = FStar.Tactics.Hooks.run_tactic_on_typ tac.sigrng in
-    [env, goal]
-  (* No such tactic was available in the current context *)
-  | None -> [env, goal]
-
-
 let synthesize (env:Env.env) (typ:typ) (tau:term) : term =
   Errors.with_ctx "While synthesizing term with a tactic" (fun () ->
     // Don't run the tactic (and end with a magic) when nosynth is set, cf. issue #73 in fstar-mode.el
@@ -402,6 +379,61 @@ let solve_implicits (env:Env.env) (tau:term) (imps:Env.implicits) : unit =
     ()
     end
   )
+
+(* Retrieves a tactic associated to a given attribute, if any *)
+let find_user_tac_for_attr env (a:term) : option<sigelt> =
+  let hooks = Env.lookup_attr env PC.resolve_implicits_attr_string in
+  hooks |> BU.try_find
+              (fun hook ->
+                hook.sigattrs |> BU.for_some (U.attr_eq a))
+
+(* This function takes an environment [env] and a goal [goal], and tries to run
+   the tactic registered with the (handle_smt_goal) attribute, if any.
+   If such a tactic exists, all the unresolved goals must be propositions,
+   that will be directly encoded to SMT inside Rel.discharge_guard.
+   If such a tactic does not exist, this function is a no-op. *)
+let handle_smt_goal env goal =
+  (* Attempt to retrieve a tactic corresponding to the (handle_smt_goals) attribute *)
+  match find_user_tac_for_attr env (S.tconst PC.handle_smt_goals_attr) with
+  | Some tac ->
+    (* There is a tactic registered with the handle_smt_goals attribute,
+       we retrieve the corresponding term  *)
+    let tau =
+      match tac.sigel with
+      | Sig_let (_, [lid]) ->
+        let qn = Env.lookup_qname env lid in
+        let fv = S.lid_as_fv lid (Delta_constant_at_level 0) None in
+        let dd =
+          match Env.delta_depth_of_qninfo fv qn with
+          | Some dd -> dd
+          | None -> failwith "Expected a dd"
+        in
+        let term = S.fv_to_tm (S.lid_as_fv lid dd None) in
+        term
+      | _ -> failwith "Resolve_tac not found"
+    in
+
+   let gs = Errors.with_ctx "While handling an SMT goal with a tactic" (fun () ->
+      tacdbg := Env.debug env (O.Other "Tac");
+
+      (* Executing the tactic on the goal *)
+      let gs, _ = run_tactic_on_typ tau.pos (Env.get_range env) tau env goal in
+      // Check that all goals left are irrelevant and provable
+      gs |> List.map (fun g ->
+          match getprop (goal_env g) (goal_type g) with
+          | Some vc ->
+              if !tacdbg then
+                BU.print1 "handle_smt_goals left a goal: %s\n" (Print.term_to_string vc);
+              (goal_env g), vc
+          | None ->
+              Err.raise_error (Err.Fatal_OpenGoalsInSynthesis, "Handling an SMT goal by tactic left non-prop open goals")
+                              (Env.get_range env))
+    ) in
+
+    gs
+
+  (* No such tactic was available in the current context *)
+  | None -> [env, goal]
 
 let splice (env:Env.env) (rng:Range.range) (tau:term) : list<sigelt> =
   Errors.with_ctx "While running splice with a tactic" (fun () ->
