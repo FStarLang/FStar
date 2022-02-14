@@ -565,13 +565,13 @@ let e_sigelt =
 // embed_as : ('a -> 'b) -> ('b -> 'a) -> embedding<'a> -> embedding<'b>
 // so we don't write these things
 let e_ident : embedding<I.ident> =
-    let repr = e_tuple2 e_string e_range in
+    let repr = e_tuple2 e_range e_string in
     let embed_ident cb (i:I.ident) : t =
-        embed repr cb (I.string_of_id i, I.range_of_id i)
+        embed repr cb (I.range_of_id i, I.string_of_id i)
     in
     let unembed_ident cb (t:t) : option<I.ident> =
         match unembed repr cb t with
-        | Some (rng, s) -> Some (I.mk_ident (rng, s))
+        | Some (rng, s) -> Some (I.mk_ident (s, rng))
         | None -> None
     in
     let range_fv = (lid_as_fv PC.range_lid  delta_constant None) in
