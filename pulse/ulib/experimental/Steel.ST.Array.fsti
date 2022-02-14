@@ -36,6 +36,8 @@ val array (t:Type u#0) : Type u#0
 val length (#t:_) (r:array t) : GTot nat
 
 /// An abbreviation refining an array by its length
+
+inline_for_extraction
 let larray (t:Type) (n:nat) = a:array t{ length a = n }
 
 /// The main representation predicate
