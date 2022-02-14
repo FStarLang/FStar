@@ -393,47 +393,51 @@ let find_user_tac_for_attr env (a:term) : option<sigelt> =
    that will be directly encoded to SMT inside Rel.discharge_guard.
    If such a tactic does not exist, this function is a no-op. *)
 let handle_smt_goal env goal =
-  (* Attempt to retrieve a tactic corresponding to the (handle_smt_goals) attribute *)
-  match find_user_tac_for_attr env (S.tconst PC.handle_smt_goals_attr) with
-  | Some tac ->
-    (* There is a tactic registered with the handle_smt_goals attribute,
-       we retrieve the corresponding term  *)
-    let tau =
-      match tac.sigel with
-      | Sig_let (_, [lid]) ->
-        let qn = Env.lookup_qname env lid in
-        let fv = S.lid_as_fv lid (Delta_constant_at_level 0) None in
-        let dd =
-          match Env.delta_depth_of_qninfo fv qn with
-          | Some dd -> dd
-          | None -> failwith "Expected a dd"
-        in
-        let term = S.fv_to_tm (S.lid_as_fv lid dd None) in
-        term
-      | _ -> failwith "Resolve_tac not found"
-    in
+  match check_trivial goal with
+  (* No need to pass the term to the tactic if trivial *)
+  | Trivial -> [env, goal]
+  | NonTrivial goal ->
+    (* Attempt to retrieve a tactic corresponding to the (handle_smt_goals) attribute *)
+    match find_user_tac_for_attr env (S.tconst PC.handle_smt_goals_attr) with
+    | Some tac ->
+      (* There is a tactic registered with the handle_smt_goals attribute,
+         we retrieve the corresponding term  *)
+      let tau =
+        match tac.sigel with
+        | Sig_let (_, [lid]) ->
+          let qn = Env.lookup_qname env lid in
+          let fv = S.lid_as_fv lid (Delta_constant_at_level 0) None in
+          let dd =
+            match Env.delta_depth_of_qninfo fv qn with
+            | Some dd -> dd
+            | None -> failwith "Expected a dd"
+          in
+          let term = S.fv_to_tm (S.lid_as_fv lid dd None) in
+          term
+        | _ -> failwith "Resolve_tac not found"
+      in
 
-   let gs = Errors.with_ctx "While handling an SMT goal with a tactic" (fun () ->
-      tacdbg := Env.debug env (O.Other "Tac");
+     let gs = Errors.with_ctx "While handling an SMT goal with a tactic" (fun () ->
+        tacdbg := Env.debug env (O.Other "Tac");
 
-      (* Executing the tactic on the goal. *)
-      let gs, _ = run_tactic_on_typ tau.pos (Env.get_range env) tau env (U.mk_squash U_zero goal) in
-      // Check that all goals left are irrelevant and provable
-      gs |> List.map (fun g ->
-          match getprop (goal_env g) (goal_type g) with
-          | Some vc ->
-              if !tacdbg then
-                BU.print1 "handle_smt_goals left a goal: %s\n" (Print.term_to_string vc);
-              (goal_env g), vc
-          | None ->
-              Err.raise_error (Err.Fatal_OpenGoalsInSynthesis, "Handling an SMT goal by tactic left non-prop open goals")
-                              (Env.get_range env))
-    ) in
+        (* Executing the tactic on the goal. *)
+        let gs, _ = run_tactic_on_typ tau.pos (Env.get_range env) tau env (U.mk_squash U_zero goal) in
+        // Check that all goals left are irrelevant and provable
+        gs |> List.map (fun g ->
+            match getprop (goal_env g) (goal_type g) with
+            | Some vc ->
+                if !tacdbg then
+                  BU.print1 "handle_smt_goals left a goal: %s\n" (Print.term_to_string vc);
+                (goal_env g), vc
+            | None ->
+                Err.raise_error (Err.Fatal_OpenGoalsInSynthesis, "Handling an SMT goal by tactic left non-prop open goals")
+                                (Env.get_range env))
+      ) in
 
-    gs
+      gs
 
-  (* No such tactic was available in the current context *)
-  | None -> [env, goal]
+    (* No such tactic was available in the current context *)
+    | None -> [env, goal]
 
 let splice (env:Env.env) (rng:Range.range) (tau:term) : list<sigelt> =
   Errors.with_ctx "While running splice with a tactic" (fun () ->
