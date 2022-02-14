@@ -4240,13 +4240,6 @@ let discharge_guard' use_env_range_msg env (g:guard_t) (use_smt:bool) : option<g
                             List.map (fun (env, goal) -> (env, goal, opts)))
                           vcs
                         in List.flatten vcs
-                        // flatten_map (defer_to_handle_smt_goals)
-                        // defer_to_handle_smt_goals should:
-                        // * Create a new proofgoal for vc
-                        // * Run the tactic associated to the handle_smt_goals attr, if any
-                        // * Check that all remaining goals are getprop
-                        // * Return all remaining goals
-                        // It should probably go in DeferredImplicits to reuse functions there
                     )
                 end
                 else [env,vc,FStar.Options.peek ()]

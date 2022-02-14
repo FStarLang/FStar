@@ -416,8 +416,8 @@ let handle_smt_goal env goal =
    let gs = Errors.with_ctx "While handling an SMT goal with a tactic" (fun () ->
       tacdbg := Env.debug env (O.Other "Tac");
 
-      (* Executing the tactic on the goal *)
-      let gs, _ = run_tactic_on_typ tau.pos (Env.get_range env) tau env goal in
+      (* Executing the tactic on the goal. *)
+      let gs, _ = run_tactic_on_typ tau.pos (Env.get_range env) tau env (U.mk_squash U_zero goal) in
       // Check that all goals left are irrelevant and provable
       gs |> List.map (fun g ->
           match getprop (goal_env g) (goal_type g) with
