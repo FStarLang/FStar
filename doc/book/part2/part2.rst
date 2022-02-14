@@ -116,8 +116,8 @@ working knowledge of some core parts of F*'s type theory.
    part2_logical_connectives
    part2_stlc
    part2_phoas
-   part2_par
    part2_well_founded
+   part2_par
 
 ..
   Vectors for basics

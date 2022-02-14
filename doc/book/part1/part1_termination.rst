@@ -137,6 +137,8 @@ that ``tl << l`` is valid. But, from the sub-term ordering on
 inductive types, ``l = Cons _ tl``, so ``tl << l`` is indeed provable
 and everything checks out.
 
+.. _Part1_lexicographic_orderings:
+
 Lexicographic orderings
 ^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -196,8 +198,8 @@ There are three recursive calls to consider:
 
 .. _Part1_termination_default_measures:
 
-Defaults measures
-^^^^^^^^^^^^^^^^^
+Default measures
+^^^^^^^^^^^^^^^^
 
 As we saw earlier, F* allows you to write the following code, with no
 ``decreases`` clause, and it still accepts it.
