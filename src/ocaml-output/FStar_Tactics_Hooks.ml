@@ -796,8 +796,11 @@ let (handle_smt_goal :
                     FStar_Tactics_Interpreter.tacdbg uu___3);
                  (let uu___3 =
                     let uu___4 = FStar_TypeChecker_Env.get_range env in
+                    let uu___5 =
+                      FStar_Syntax_Util.mk_squash FStar_Syntax_Syntax.U_zero
+                        goal in
                     run_tactic_on_typ tau.FStar_Syntax_Syntax.pos uu___4 tau
-                      env goal in
+                      env uu___5 in
                   match uu___3 with
                   | (gs1, uu___4) ->
                       FStar_Compiler_Effect.op_Bar_Greater gs1
