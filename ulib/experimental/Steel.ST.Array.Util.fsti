@@ -29,6 +29,7 @@ open Steel.ST.Effect
 
 /// Create an array whose elements are specified by the input function
 
+inline_for_extraction
 val array_literal
   (#a:Type0)
   (n:U32.t)
@@ -43,6 +44,7 @@ val array_literal
 
 /// Check if all the elements of an array satisfy a predicate
 
+inline_for_extraction
 val for_all
   (#a:Type0)
   (#perm:perm)
@@ -55,4 +57,4 @@ val for_all
        (fun _ -> A.pts_to arr perm s)
        (requires A.length arr == U32.v n)
        (ensures fun b -> b <==> (forall (i:nat). i < Seq.length s ==>
-                                      p (Seq.index s i)))
+                                    p (Seq.index s i)))
