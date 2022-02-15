@@ -1197,7 +1197,7 @@
         "typing_Steel.Channel.Protocol.__proj__Mkpartial_trace_of__item__to"
       ],
       0,
-      "8797c15592daccb9d41ca8fe4ac7084e"
+      "0148102349422d75da1ce670f8cc2aa1"
     ],
     [
       "Duplex.PCM.next_message",
@@ -2132,6 +2132,7 @@
         "@fuel_correspondence_Steel.Channel.Protocol.hnf.fuel_instrumented",
         "@fuel_irrelevance_Duplex.PCM.no_loop.fuel_instrumented", "@query",
         "Duplex.PCM_interpretation_Tm_arrow_9d49407b244d671c70bd5c0c1a4ea6a6",
+        "FStar.PCM_interpretation_Tm_arrow_4418db7552582748ab4bfa39672e55e0",
         "Steel.Channel.Protocol_pretyping_9b8928235f58509ef2e6666b80acc076",
         "b2t_def", "bool_inversion", "bool_typing",
         "constructor_distinct_Duplex.PCM.A",
@@ -2144,7 +2145,6 @@
         "constructor_distinct_Steel.Channel.Protocol.Recv",
         "data_elim_Duplex.PCM.A_Fin", "data_elim_Duplex.PCM.A_R",
         "data_elim_Duplex.PCM.A_W", "data_elim_Duplex.PCM.B_W",
-        "data_elim_FStar.PCM.Mkpcm_",
         "data_elim_Steel.Channel.Protocol.Mkpartial_trace_of",
         "data_elim_Steel.Channel.Protocol.Msg",
         "data_typing_intro_Steel.Channel.Protocol.Mkpartial_trace_of@tok",
@@ -2184,10 +2184,11 @@
         "function_token_typing_Duplex.PCM.composable",
         "function_token_typing_Duplex.PCM.extended_to",
         "function_token_typing_Duplex.PCM.next",
+        "function_token_typing_FStar.PCM.__proj__Mkpcm___item__composable",
         "function_token_typing_FStar.Pervasives.pattern",
         "interpretation_Tm_abs_cfac7fcf0d742c8a4e20e4a19e003c2a",
         "interpretation_Tm_abs_ebb074e9676f6e6b4beecd823c9be2ed",
-        "l_and-interp", "l_or-interp",
+        "kinding_Duplex.PCM.t@tok", "l_and-interp", "l_or-interp",
         "l_quant_interp_1f5cbbab0d0e7a0ff3e90c0cdbd1d699",
         "lemma_Duplex.PCM.closure_inversion", "primitive_Prims.op_AmpAmp",
         "primitive_Prims.op_GreaterThan",
@@ -2243,8 +2244,9 @@
         "token_correspondence_Steel.Channel.Protocol.__proj__Msg__item__k",
         "typing_Duplex.PCM.is_fin", "typing_Duplex.PCM.is_recv",
         "typing_Duplex.PCM.is_send", "typing_Duplex.PCM.next_message",
-        "typing_Duplex.PCM.p_", "typing_Duplex.PCM.trace_length",
+        "typing_Duplex.PCM.pcm", "typing_Duplex.PCM.trace_length",
         "typing_Duplex.PCM.uu___is_A_R",
+        "typing_FStar.PCM.__proj__Mkpcm__item__p",
         "typing_Steel.Channel.Protocol.__proj__Mkpartial_trace_of__item__to",
         "typing_Steel.Channel.Protocol.__proj__Mkpartial_trace_of__item__tr",
         "typing_Steel.Channel.Protocol.extend",
@@ -2677,7 +2679,7 @@
         "typing_tok_Duplex.PCM.B@tok", "unit_inversion", "unit_typing"
       ],
       0,
-      "7b8f3cc5ac734111cc61e29d868069dd"
+      "9ea7f9c3ab87072668b618d4c3414103"
     ],
     [
       "Duplex.PCM.write_b_f_aux",
@@ -2822,13 +2824,14 @@
         "token_correspondence_FStar.ReflexiveTransitiveClosure.closure",
         "token_correspondence_Steel.Channel.Protocol.__proj__Msg__item__k",
         "token_correspondence_Steel.Channel.Protocol.hnf.fuel_instrumented",
-        "typing_Duplex.PCM.next", "typing_Duplex.PCM.partial_trace_of",
-        "typing_Duplex.PCM.pcm", "typing_FStar.PCM.__proj__Mkpcm__item__p",
+        "typing_Duplex.PCM.composable", "typing_Duplex.PCM.next",
+        "typing_Duplex.PCM.partial_trace_of", "typing_Duplex.PCM.pcm",
+        "typing_FStar.PCM.__proj__Mkpcm__item__p",
         "typing_Steel.Channel.Protocol.more", "typing_tok_Duplex.PCM.A@tok",
         "typing_tok_Duplex.PCM.B@tok", "unit_inversion", "unit_typing"
       ],
       0,
-      "ef3383f62e45a57715af048b5d2653f1"
+      "cd8fbff23038016580fa25fb4a6c5764"
     ],
     [
       "Duplex.PCM.lemma_ahead_extend_a",
