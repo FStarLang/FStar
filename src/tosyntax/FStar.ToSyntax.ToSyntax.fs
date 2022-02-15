@@ -1413,11 +1413,13 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
       desugar_term_aq env (AST.mkExplicitApp bind [t1; k] top.range)
 
     | Seq(t1, t2) ->
-      (* Convert it to a letbinding, desugar it, and then slap a Meta_desugared sequence on it to keep track of this *)
-      (* TODO: GM: Maybe we don't really care about that *)
-      let t = mk_term (Let(NoLetQualifier, [None, (mk_pattern (PatWild (None, [])) t1.range,t1)], t2)) top.range Expr in
-      let tm, s = desugar_term_aq env t in
-      mk (Tm_meta(tm, Meta_desugared Sequence)), s
+      //
+      // let _ : unit = e1 in e2
+      //
+      let p = mk_pattern (PatWild (None, [])) t1.range in
+      let p = mk_pattern (PatAscribed (p, (unit_ty p.prange, None))) p.prange in
+      let t = mk_term (Let(NoLetQualifier, [None, (p, t1)], t2)) top.range Expr in
+      desugar_term_aq env t
 
     | LetOpen (lid, e) ->
       let env = Env.push_namespace env lid in
