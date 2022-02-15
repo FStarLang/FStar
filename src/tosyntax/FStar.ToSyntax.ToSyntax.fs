@@ -1419,7 +1419,12 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
       let p = mk_pattern (PatWild (None, [])) t1.range in
       let p = mk_pattern (PatAscribed (p, (unit_ty p.prange, None))) p.prange in
       let t = mk_term (Let(NoLetQualifier, [None, (p, t1)], t2)) top.range Expr in
-      desugar_term_aq env t
+      let tm, s = desugar_term_aq env t in
+
+      //
+      // keep the Sequence, we will use it for resugaring
+      //
+      mk (Tm_meta (tm, Meta_desugared Sequence)), s
 
     | LetOpen (lid, e) ->
       let env = Env.push_namespace env lid in
