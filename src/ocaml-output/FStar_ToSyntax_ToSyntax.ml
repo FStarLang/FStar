@@ -3052,7 +3052,16 @@ and (desugar_term_maybe_top :
                    (FStar_Parser_AST.NoLetQualifier,
                      [(FStar_Pervasives_Native.None, (p1, t1))], t2))
                 top.FStar_Parser_AST.range FStar_Parser_AST.Expr in
-            desugar_term_aq env t
+            let uu___1 = desugar_term_aq env t in
+            (match uu___1 with
+             | (tm, s) ->
+                 let uu___2 =
+                   mk
+                     (FStar_Syntax_Syntax.Tm_meta
+                        (tm,
+                          (FStar_Syntax_Syntax.Meta_desugared
+                             FStar_Syntax_Syntax.Sequence))) in
+                 (uu___2, s))
         | FStar_Parser_AST.LetOpen (lid, e) ->
             let env1 = FStar_Syntax_DsEnv.push_namespace env lid in
             let uu___1 =
