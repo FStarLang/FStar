@@ -2000,97 +2000,17 @@ and (tc_maybe_toplevel_term :
            (e1, FStar_Syntax_Syntax.Meta_desugared
             (FStar_Syntax_Syntax.Sequence))
            ->
-           let uu___1 =
-             let uu___2 = FStar_Syntax_Subst.compress e1 in
-             uu___2.FStar_Syntax_Syntax.n in
+           let uu___1 = tc_term env1 e1 in
            (match uu___1 with
-            | FStar_Syntax_Syntax.Tm_let
-                ((uu___2,
-                  { FStar_Syntax_Syntax.lbname = x;
-                    FStar_Syntax_Syntax.lbunivs = uu___3;
-                    FStar_Syntax_Syntax.lbtyp = uu___4;
-                    FStar_Syntax_Syntax.lbeff = uu___5;
-                    FStar_Syntax_Syntax.lbdef = e11;
-                    FStar_Syntax_Syntax.lbattrs = uu___6;
-                    FStar_Syntax_Syntax.lbpos = uu___7;_}::[]),
-                 e2)
-                ->
-                let uu___8 =
-                  let uu___9 =
-                    FStar_TypeChecker_Env.set_expected_typ env1
-                      FStar_Syntax_Syntax.t_unit in
-                  tc_term uu___9 e11 in
-                (match uu___8 with
-                 | (e12, c1, g1) ->
-                     let uu___9 = tc_term env1 e2 in
-                     (match uu___9 with
-                      | (e21, c2, g2) ->
-                          let c =
-                            FStar_TypeChecker_Util.maybe_return_e2_and_bind
-                              e12.FStar_Syntax_Syntax.pos env1
-                              (FStar_Pervasives_Native.Some e12) c1 e21
-                              (FStar_Pervasives_Native.None, c2) in
-                          let e13 =
-                            FStar_TypeChecker_Util.maybe_lift env1 e12
-                              c1.FStar_TypeChecker_Common.eff_name
-                              c.FStar_TypeChecker_Common.eff_name
-                              c1.FStar_TypeChecker_Common.res_typ in
-                          let e22 =
-                            FStar_TypeChecker_Util.maybe_lift env1 e21
-                              c2.FStar_TypeChecker_Common.eff_name
-                              c.FStar_TypeChecker_Common.eff_name
-                              c2.FStar_TypeChecker_Common.res_typ in
-                          let attrs =
-                            let uu___10 =
-                              FStar_TypeChecker_Util.is_pure_or_ghost_effect
-                                env1 c1.FStar_TypeChecker_Common.eff_name in
-                            if uu___10
-                            then [FStar_Syntax_Util.inline_let_attr]
-                            else [] in
-                          let e3 =
-                            let uu___10 =
-                              let uu___11 =
-                                let uu___12 =
-                                  let uu___13 =
-                                    let uu___14 =
-                                      FStar_Syntax_Syntax.mk_lb
-                                        (x, [],
-                                          (c.FStar_TypeChecker_Common.eff_name),
-                                          FStar_Syntax_Syntax.t_unit, e13,
-                                          attrs,
-                                          (e13.FStar_Syntax_Syntax.pos)) in
-                                    [uu___14] in
-                                  (false, uu___13) in
-                                (uu___12, e22) in
-                              FStar_Syntax_Syntax.Tm_let uu___11 in
-                            FStar_Syntax_Syntax.mk uu___10
-                              e1.FStar_Syntax_Syntax.pos in
-                          let e4 =
-                            FStar_TypeChecker_Util.maybe_monadic env1 e3
-                              c.FStar_TypeChecker_Common.eff_name
-                              c.FStar_TypeChecker_Common.res_typ in
-                          let e5 =
-                            FStar_Syntax_Syntax.mk
-                              (FStar_Syntax_Syntax.Tm_meta
-                                 (e4,
-                                   (FStar_Syntax_Syntax.Meta_desugared
-                                      FStar_Syntax_Syntax.Sequence)))
-                              top.FStar_Syntax_Syntax.pos in
-                          let uu___10 =
-                            FStar_TypeChecker_Env.conj_guard g1 g2 in
-                          (e5, c, uu___10)))
-            | uu___2 ->
-                let uu___3 = tc_term env1 e1 in
-                (match uu___3 with
-                 | (e2, c, g) ->
-                     let e3 =
-                       FStar_Syntax_Syntax.mk
-                         (FStar_Syntax_Syntax.Tm_meta
-                            (e2,
-                              (FStar_Syntax_Syntax.Meta_desugared
-                                 FStar_Syntax_Syntax.Sequence)))
-                         top.FStar_Syntax_Syntax.pos in
-                     (e3, c, g)))
+            | (e2, c, g) ->
+                let e3 =
+                  FStar_Syntax_Syntax.mk
+                    (FStar_Syntax_Syntax.Tm_meta
+                       (e2,
+                         (FStar_Syntax_Syntax.Meta_desugared
+                            FStar_Syntax_Syntax.Sequence)))
+                    top.FStar_Syntax_Syntax.pos in
+                (e3, c, g))
        | FStar_Syntax_Syntax.Tm_meta
            (e1, FStar_Syntax_Syntax.Meta_monadic uu___1) -> tc_term env1 e1
        | FStar_Syntax_Syntax.Tm_meta
