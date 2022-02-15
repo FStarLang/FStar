@@ -3035,26 +3035,24 @@ and (desugar_term_maybe_top :
                 top.FStar_Parser_AST.range in
             desugar_term_aq env uu___1
         | FStar_Parser_AST.Seq (t1, t2) ->
+            let p =
+              FStar_Parser_AST.mk_pattern
+                (FStar_Parser_AST.PatWild (FStar_Pervasives_Native.None, []))
+                t1.FStar_Parser_AST.range in
+            let p1 =
+              FStar_Parser_AST.mk_pattern
+                (FStar_Parser_AST.PatAscribed
+                   (p,
+                     ((unit_ty p.FStar_Parser_AST.prange),
+                       FStar_Pervasives_Native.None)))
+                p.FStar_Parser_AST.prange in
             let t =
               FStar_Parser_AST.mk_term
                 (FStar_Parser_AST.Let
                    (FStar_Parser_AST.NoLetQualifier,
-                     [(FStar_Pervasives_Native.None,
-                        ((FStar_Parser_AST.mk_pattern
-                            (FStar_Parser_AST.PatWild
-                               (FStar_Pervasives_Native.None, []))
-                            t1.FStar_Parser_AST.range), t1))], t2))
+                     [(FStar_Pervasives_Native.None, (p1, t1))], t2))
                 top.FStar_Parser_AST.range FStar_Parser_AST.Expr in
-            let uu___1 = desugar_term_aq env t in
-            (match uu___1 with
-             | (tm, s) ->
-                 let uu___2 =
-                   mk
-                     (FStar_Syntax_Syntax.Tm_meta
-                        (tm,
-                          (FStar_Syntax_Syntax.Meta_desugared
-                             FStar_Syntax_Syntax.Sequence))) in
-                 (uu___2, s))
+            desugar_term_aq env t
         | FStar_Parser_AST.LetOpen (lid, e) ->
             let env1 = FStar_Syntax_DsEnv.push_namespace env lid in
             let uu___1 =
