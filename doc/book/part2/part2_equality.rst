@@ -266,6 +266,8 @@ loop when reducing open terms, but one can craft examples to make F*'s
 reduction macinery loop forever. As such, deciding if possibly open
 terms have the same normal form is also undecidable in F*.
 
+.. _Part2_funext:
+
 Functional Extensionality
 .........................
 

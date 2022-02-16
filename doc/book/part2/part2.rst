@@ -97,11 +97,42 @@ learn about indexed inductive types from three related perspectives:
       defined trees. The example showcases the use of inductive types
       at higher order.
 
-This sections is somewhat more technical than the first. But, by the
-end of this section, through several exercises, we expect the reader
-to be familiar enough with inductive types to define their own data
-structures and inductive defined relations, while also gaining a
-working knowledge of some core parts of F*'s type theory.
+This section is somewhat more advanced than the first. It also
+interleaves some technical material about F*'s core logic with case
+studies showing some of those core concepts at work. You can certainly
+work through the material sequentially, but depending on your
+interests, you may find the following paths through the material to be
+more accessible.
+
+If you're familiar with dependent types but are new to F* and want a
+quick tour, the following path might work for you:
+
+  * :ref:`Length-indexed lists <Part2_vectors>`, F*-specific notations
+
+  * :ref:`Equality <Part2_equality>`
+
+  * :ref:`Logical connectives <Part2_connectives>`
+
+  * Any of the case studies, depending on your interest.
+
+If you're unfamiliar with dependent types and are more curious to
+learn how to use F* by working through examples, following path might
+work for you:
+
+  * :ref:`Inductive type definitions <Part2_inductives>`, basic concepts
+
+  * :ref:`Length-indexed lists <Part2_vectors>`, F*-specific notations in the simplest setting
+
+  * :ref:`Merkle trees <Part2_merkle>`, a more interesting example, with applications to cryptographic security
+
+  * :ref:`Logical connectives <Part2_connectives>`, some utilities to manipulate F*'s logical connectives
+
+  * Any of the case studies, depending on your interest, with the :ref:`Simply Typed Lambda Calculus <Part2_stlc>` perhaps the easiest of them.
+
+But, by the end of this section, through several exercises, we expect
+the reader to be familiar enough with inductive types to define their
+own data structures and inductive defined relations, while also
+gaining a working knowledge of some core parts of F*'s type theory.
 
 
 .. toctree::

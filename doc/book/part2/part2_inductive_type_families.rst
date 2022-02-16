@@ -1,3 +1,5 @@
+.. _Part2_inductives:
+
 Inductive type definitions
 ==========================
 
