@@ -16,10 +16,9 @@
 #light "off"
 
 module FStar.SMTEncoding.Env
+open Prims
 open FStar.Pervasives
 open FStar.Compiler.Effect
-open FStar.Compiler.Effect
-open Prims
 open FStar
 open FStar.Compiler
 open FStar.TypeChecker.Env

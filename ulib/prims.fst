@@ -58,14 +58,14 @@ type eqtype = a: Type0{hasEq a}
 assume new
 type bool : eqtype 
 
-(** [c_False] is the empty inductive type. The type with no
-    inhabitants represents logical falsehood. Note, [c_False] is
+(** [empty] is the empty inductive type. The type with no
+    inhabitants represents logical falsehood. Note, [empty] is
     seldom used directly in F*. We instead use its "squashed" variant,
     [False], see below. *)
-type c_False = 
+type empty = 
 
 (** [c_True] is the singleton inductive type---it is trivially
-    inhabited. Like [c_False], [c_True] is seldom used. We instead use
+    inhabited. Like [empty], [c_True] is seldom used. We instead use
     its "squashed" variants, [True] *)
 type c_True = | T
 
@@ -135,7 +135,7 @@ let l_True:logical = squash c_True
     as "False" and rendered in the ide as [Falsee]. It is a squashed version
     of constructive truth, [c_True]. *)
 [@@ "tac_opaque"; smt_theory_symbol]
-let l_False:logical = squash c_False
+let l_False:logical = squash empty
 
 (** The type of provable equalities, defined as the usual inductive
     type with a single constructor for reflexivity.  As with the other
@@ -159,22 +159,22 @@ type eq2 (#a: Type) (x: a) (y: a) : logical = squash (equals x y)
 type b2t (b: bool) : logical = (b == true)
 
 (** constructive conjunction *)
-type c_and (p: Type) (q: Type) = | And : p -> q -> c_and p q
+type tuple2 (p: Type) (q: Type) = | Mktuple2 : _1:p -> _2:q -> tuple2 p q
 
 (** squashed conjunction, specialized to [Type0], written with an
     infix binary [/\] *)
 [@@ "tac_opaque"; smt_theory_symbol]
-type l_and (p: logical) (q: logical) : logical = squash (c_and p q)
+type l_and (p: logical) (q: logical) : logical = squash (tuple2 p q)
 
 (** constructive disjunction *)
-type c_or (p: Type) (q: Type) =
-  | Left : p -> c_or p q
-  | Right : q -> c_or p q
+type either (p: Type) (q: Type) =
+  | Inl : v:p -> either p q
+  | Inr : v:q -> either p q
 
 (** squashed disjunction, specialized to [Type0], written with an
     infix binary [\/] *)
 [@@ "tac_opaque"; smt_theory_symbol]
-type l_or (p: logical) (q: logical) : logical = squash (c_or p q)
+type l_or (p: logical) (q: logical) : logical = squash (either p q)
 
 (** squashed (non-dependent) implication, specialized to [Type0],
     written with an infix binary [==>]. Note, [==>] binds weaker than
@@ -485,7 +485,8 @@ let ( === ) (#a #b: Type) (x: a) (y: b) : logical = a == b /\ x == y
 (** Dependent pairs [dtuple2] in concrete syntax is [x:a & b x].
     Its values can be constructed with the concrete syntax [(| x, y |)] *)
 unopteq
-type dtuple2 (a: Type) (b: (a -> GTot Type)) = | Mkdtuple2 : _1: a -> _2: b _1 -> dtuple2 a b
+type dtuple2 (a: Type) (b: (a -> GTot Type)) =
+  | Mkdtuple2 : _1: a -> _2: b _1 -> dtuple2 a b
 
 (** Squashed existential quantification, or dependent sums,
     are written [exists (x:a). p x] : specialized to Type0 *)

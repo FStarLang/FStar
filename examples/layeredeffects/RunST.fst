@@ -27,7 +27,7 @@ noeq
 type action : inp:Type0 -> out:Type0 -> st0:Type0 -> st1:Type0 -> Type u#1 =
   | Read  : #st0:Type -> action unit st0 st0 st0
   | Write : #st0:Type -> #st1:Type -> action st1 unit st0 st1
-  | Raise : #st0:Type -> #st1:Type -> action exn c_False st0 st1
+  | Raise : #st0:Type -> #st1:Type -> action exn Prims.empty st0 st1
 
 // alternative: exceptions do not change state
 //  | Raise : #a:Type -> #st0:Type -> action exn a st0 st0
@@ -294,7 +294,7 @@ let rec _catchST (#a:Type0) #labs #si #sf
   | Op Read _i k -> _catchST #a #labs stt (k s0) s0
   | Op Write s k -> _catchST #a #labs stt (k ()) s
   | Op Raise e k ->
-    let k' (o : c_False) : repr (a & sf) stt stt labs =
+    let k' (o : Prims.empty) : repr (a & sf) stt stt labs =
       unreachable ()
     in
     Op Raise e k'
