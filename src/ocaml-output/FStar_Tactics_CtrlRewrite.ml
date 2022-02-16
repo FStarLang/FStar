@@ -234,10 +234,10 @@ let (do_rewrite :
           FStar_Tactics_Monad.bind uu___
             (fun uu___1 ->
                match uu___1 with
-               | FStar_Pervasives.Inl (FStar_Tactics_Common.TacticFailure
-                   "SKIP") -> FStar_Tactics_Monad.ret tm
-               | FStar_Pervasives.Inl e -> FStar_Tactics_Monad.traise e
-               | FStar_Pervasives.Inr tm' -> FStar_Tactics_Monad.ret tm')
+               | Prims.Inl (FStar_Tactics_Common.TacticFailure "SKIP") ->
+                   FStar_Tactics_Monad.ret tm
+               | Prims.Inl e -> FStar_Tactics_Monad.traise e
+               | Prims.Inr tm' -> FStar_Tactics_Monad.ret tm')
 type 'a ctac =
   'a -> ('a * FStar_Tactics_Types.ctrl_flag) FStar_Tactics_Monad.tac
 let seq_ctac : 'a . 'a ctac -> 'a ctac -> 'a ctac =
@@ -529,7 +529,7 @@ and (on_subterms :
                                    (hd1, asc_opt, brs1, lopt)), flag))
                 | FStar_Syntax_Syntax.Tm_let
                     ((false,
-                      { FStar_Syntax_Syntax.lbname = FStar_Pervasives.Inl bv;
+                      { FStar_Syntax_Syntax.lbname = Prims.Inl bv;
                         FStar_Syntax_Syntax.lbunivs = uu___1;
                         FStar_Syntax_Syntax.lbtyp = uu___2;
                         FStar_Syntax_Syntax.lbeff = uu___3;

@@ -254,8 +254,7 @@ and (elim_mlexpr :
       }
 type tydef =
   (FStar_Extraction_ML_Syntax.mlsymbol * FStar_Extraction_ML_Syntax.metadata
-    * (FStar_Extraction_ML_Syntax.mltyscheme, Prims.int)
-    FStar_Pervasives.either)
+    * (FStar_Extraction_ML_Syntax.mltyscheme, Prims.int) Prims.either)
 exception Drop_tydef 
 let (uu___is_Drop_tydef : Prims.exn -> Prims.bool) =
   fun projectee -> match projectee with | Drop_tydef -> true | uu___ -> false
@@ -374,7 +373,7 @@ let (elim_tydef_or_decl : env_t -> tydef -> (env_t * tydef)) =
   fun env ->
     fun td ->
       match td with
-      | (name, metadata, FStar_Pervasives.Inr arity) ->
+      | (name, metadata, Prims.Inr arity) ->
           let remove_typars_list =
             FStar_Compiler_Util.try_find
               (fun uu___ ->
@@ -400,11 +399,11 @@ let (elim_tydef_or_decl : env_t -> tydef -> (env_t * tydef)) =
                         uu___2) in
                let entries = aux Prims.int_zero in
                let uu___ = extend_env env name entries in (uu___, td))
-      | (name, metadata, FStar_Pervasives.Inl (parameters, mlty)) ->
+      | (name, metadata, Prims.Inl (parameters, mlty)) ->
           let uu___ = elim_tydef env name metadata parameters mlty in
           (match uu___ with
            | (env1, (name1, meta, params, mlty1)) ->
-               (env1, (name1, meta, (FStar_Pervasives.Inl (params, mlty1)))))
+               (env1, (name1, meta, (Prims.Inl (params, mlty1)))))
 let (elim_tydefs : env_t -> tydef Prims.list -> (env_t * tydef Prims.list)) =
   fun env ->
     fun tds ->

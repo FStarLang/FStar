@@ -15,7 +15,7 @@ type ctx_depth_t =
 type deps_t = FStar_Parser_Dep.deps
 type either_replst =
   (FStar_Interactive_JsonHelper.repl_state,
-    FStar_Interactive_JsonHelper.repl_state) FStar_Pervasives.either
+    FStar_Interactive_JsonHelper.repl_state) Prims.either
 let (repl_stack :
   FStar_Interactive_JsonHelper.repl_stack_t FStar_Compiler_Effect.ref) =
   FStar_Compiler_Util.mk_ref []
@@ -343,7 +343,7 @@ type name_tracking_event =
   
   | NTInclude of (FStar_Ident.lid * FStar_Ident.lid) 
   | NTBinding of (FStar_Syntax_Syntax.binding,
-  FStar_TypeChecker_Env.sig_binding) FStar_Pervasives.either 
+  FStar_TypeChecker_Env.sig_binding) Prims.either 
 let (uu___is_NTAlias : name_tracking_event -> Prims.bool) =
   fun projectee -> match projectee with | NTAlias _0 -> true | uu___ -> false
 let (__proj__NTAlias__item___0 :
@@ -368,7 +368,7 @@ let (uu___is_NTBinding : name_tracking_event -> Prims.bool) =
 let (__proj__NTBinding__item___0 :
   name_tracking_event ->
     (FStar_Syntax_Syntax.binding, FStar_TypeChecker_Env.sig_binding)
-      FStar_Pervasives.either)
+      Prims.either)
   = fun projectee -> match projectee with | NTBinding _0 -> _0
 let (query_of_ids :
   FStar_Ident.ident Prims.list -> FStar_Interactive_CompletionTable.query) =
@@ -419,9 +419,9 @@ let (update_names_from_event :
         | NTBinding binding ->
             let lids =
               match binding with
-              | FStar_Pervasives.Inl (FStar_Syntax_Syntax.Binding_lid
-                  (lid, uu___)) -> [lid]
-              | FStar_Pervasives.Inr (lids1, uu___) -> lids1
+              | Prims.Inl (FStar_Syntax_Syntax.Binding_lid (lid, uu___)) ->
+                  [lid]
+              | Prims.Inr (lids1, uu___) -> lids1
               | uu___ -> [] in
             FStar_Compiler_List.fold_left
               (fun tbl ->
@@ -708,7 +708,7 @@ let (repl_ldtx :
             revert_many st'1 entries in
       let rec aux st1 tasks1 previous =
         match (tasks1, previous) with
-        | ([], []) -> FStar_Pervasives.Inl st1
+        | ([], []) -> Prims.Inl st1
         | (task::tasks2, []) ->
             let timestamped_task = update_task_timestamps task in
             let uu___ = repl_tx st1 LaxCheck timestamped_task in
@@ -736,7 +736,7 @@ let (repl_ldtx :
                          (st2.FStar_Interactive_JsonHelper.repl_names)
                      } in
                    aux uu___1 tasks2 []
-                 else FStar_Pervasives.Inr st2)
+                 else Prims.Inr st2)
         | (task::tasks2, prev::previous1) when
             let uu___ = update_task_timestamps task in
             (FStar_Pervasives_Native.fst (FStar_Pervasives_Native.snd prev))
@@ -750,7 +750,7 @@ let (repl_ldtx :
 let (ld_deps :
   FStar_Interactive_JsonHelper.repl_state ->
     ((FStar_Interactive_JsonHelper.repl_state * Prims.string Prims.list),
-      FStar_Interactive_JsonHelper.repl_state) FStar_Pervasives.either)
+      FStar_Interactive_JsonHelper.repl_state) Prims.either)
   =
   fun st ->
     try
@@ -785,13 +785,12 @@ let (ld_deps :
                     } in
                   let uu___2 = repl_ldtx st1 tasks in
                   (match uu___2 with
-                   | FStar_Pervasives.Inr st2 -> FStar_Pervasives.Inr st2
-                   | FStar_Pervasives.Inl st2 ->
-                       FStar_Pervasives.Inl (st2, deps)))) ()
+                   | Prims.Inr st2 -> Prims.Inr st2
+                   | Prims.Inl st2 -> Prims.Inl (st2, deps)))) ()
     with
     | uu___ ->
         (FStar_Compiler_Util.print_error "[E] Failed to load deps";
-         FStar_Pervasives.Inr st)
+         Prims.Inr st)
 let (add_module_completions :
   Prims.string ->
     Prims.string Prims.list ->
@@ -860,7 +859,7 @@ let (full_lax :
          } in
        let uu___1 = ld_deps st in
        match uu___1 with
-       | FStar_Pervasives.Inl (st1, deps) ->
+       | Prims.Inl (st1, deps) ->
            let names =
              add_module_completions
                st1.FStar_Interactive_JsonHelper.repl_fname deps
@@ -883,4 +882,4 @@ let (full_lax :
                  (st1.FStar_Interactive_JsonHelper.repl_stdin);
                FStar_Interactive_JsonHelper.repl_names = names
              } LaxCheck (FStar_Interactive_JsonHelper.PushFragment frag)
-       | FStar_Pervasives.Inr st1 -> (FStar_Pervasives_Native.None, st1))
+       | Prims.Inr st1 -> (FStar_Pervasives_Native.None, st1))

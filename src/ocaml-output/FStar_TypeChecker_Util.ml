@@ -289,7 +289,7 @@ let (extract_let_rec_annotation :
                                     (e3.FStar_Syntax_Syntax.vars)
                                 }, recheck))
                      | FStar_Syntax_Syntax.Tm_ascribed
-                         (e', (FStar_Pervasives.Inr c, tac_opt), lopt) ->
+                         (e', (Prims.Inr c, tac_opt), lopt) ->
                          let uu___6 = FStar_Syntax_Util.is_total_comp c in
                          if uu___6
                          then
@@ -305,7 +305,7 @@ let (extract_let_rec_annotation :
                                         let uu___11 =
                                           let uu___12 =
                                             FStar_Syntax_Syntax.mk_Total t3 in
-                                          FStar_Pervasives.Inr uu___12 in
+                                          Prims.Inr uu___12 in
                                         (uu___11, tac_opt) in
                                       (e', uu___10, lopt) in
                                     FStar_Syntax_Syntax.Tm_ascribed uu___9 in
@@ -329,7 +329,7 @@ let (extract_let_rec_annotation :
                                 uu___9) in
                             FStar_Errors.raise_error uu___8 rng)
                      | FStar_Syntax_Syntax.Tm_ascribed
-                         (e', (FStar_Pervasives.Inl t3, tac_opt), lopt) ->
+                         (e', (Prims.Inl t3, tac_opt), lopt) ->
                          let uu___6 =
                            reconcile_let_rec_ascription_and_body_type t3
                              lbtyp_opt in
@@ -339,9 +339,7 @@ let (extract_let_rec_annotation :
                                 {
                                   FStar_Syntax_Syntax.n =
                                     (FStar_Syntax_Syntax.Tm_ascribed
-                                       (e',
-                                         ((FStar_Pervasives.Inl t4), tac_opt),
-                                         lopt));
+                                       (e', ((Prims.Inl t4), tac_opt), lopt));
                                   FStar_Syntax_Syntax.pos =
                                     (e3.FStar_Syntax_Syntax.pos);
                                   FStar_Syntax_Syntax.vars =
@@ -381,9 +379,7 @@ let (extract_let_rec_annotation :
                                            } in
                                          (t3, body4, recheck))
                                 | FStar_Syntax_Syntax.Tm_ascribed
-                                    (uu___8,
-                                     (FStar_Pervasives.Inl t3, uu___9),
-                                     uu___10)
+                                    (uu___8, (Prims.Inl t3, uu___9), uu___10)
                                     ->
                                     (match lbtyp_opt with
                                      | FStar_Pervasives_Native.Some lbtyp ->
@@ -394,9 +390,7 @@ let (extract_let_rec_annotation :
                                            mk_arrow uu___11 in
                                          (t4, body2, true))
                                 | FStar_Syntax_Syntax.Tm_ascribed
-                                    (body',
-                                     (FStar_Pervasives.Inr c, tac_opt), lopt)
-                                    ->
+                                    (body', (Prims.Inr c, tac_opt), lopt) ->
                                     let tarr = mk_arrow c in
                                     let uu___8 =
                                       reconcile_let_rec_ascription_and_body_type
@@ -425,9 +419,8 @@ let (extract_let_rec_annotation :
                                                      FStar_Syntax_Syntax.n =
                                                        (FStar_Syntax_Syntax.Tm_ascribed
                                                           (body',
-                                                            ((FStar_Pervasives.Inr
-                                                                c2), tac_opt),
-                                                            lopt));
+                                                            ((Prims.Inr c2),
+                                                              tac_opt), lopt));
                                                      FStar_Syntax_Syntax.pos
                                                        =
                                                        (body2.FStar_Syntax_Syntax.pos);
@@ -2512,7 +2505,7 @@ let (bind :
                                        then
                                          match b with
                                          | FStar_Pervasives_Native.None ->
-                                             FStar_Pervasives.Inl
+                                             Prims.Inl
                                                (c2, "trivial no binder")
                                          | FStar_Pervasives_Native.Some
                                              uu___10 ->
@@ -2521,10 +2514,9 @@ let (bind :
                                                  c2 in
                                              (if uu___11
                                               then
-                                                FStar_Pervasives.Inl
-                                                  (c2, "trivial ml")
+                                                Prims.Inl (c2, "trivial ml")
                                               else
-                                                FStar_Pervasives.Inr
+                                                Prims.Inr
                                                   "c1 trivial; but c2 is not ML")
                                        else
                                          (let uu___11 =
@@ -2533,28 +2525,25 @@ let (bind :
                                               (FStar_Syntax_Util.is_ml_comp
                                                  c2) in
                                           if uu___11
-                                          then
-                                            FStar_Pervasives.Inl
-                                              (c2, "both ml")
+                                          then Prims.Inl (c2, "both ml")
                                           else
-                                            FStar_Pervasives.Inr
+                                            Prims.Inr
                                               "c1 not trivial, and both are not ML") in
                                      let try_simplify uu___8 =
                                        let aux_with_trivial_guard uu___9 =
                                          let uu___10 = aux () in
                                          match uu___10 with
-                                         | FStar_Pervasives.Inl (c, reason)
-                                             ->
-                                             FStar_Pervasives.Inl
+                                         | Prims.Inl (c, reason) ->
+                                             Prims.Inl
                                                (c, trivial_guard, reason)
-                                         | FStar_Pervasives.Inr reason ->
-                                             FStar_Pervasives.Inr reason in
+                                         | Prims.Inr reason ->
+                                             Prims.Inr reason in
                                        let uu___9 =
                                          FStar_TypeChecker_Env.too_early_in_prims
                                            env in
                                        if uu___9
                                        then
-                                         FStar_Pervasives.Inl
+                                         Prims.Inl
                                            (c2, trivial_guard,
                                              "Early in prims; we don't have bind yet")
                                        else
@@ -2614,8 +2603,7 @@ let (bind :
                                                            uu___15 in
                                                        (c21, uu___14,
                                                          "c1 Tot") in
-                                                     FStar_Pervasives.Inl
-                                                       uu___13)
+                                                     Prims.Inl uu___13)
                                             | (uu___12,
                                                FStar_Pervasives_Native.Some
                                                x) ->
@@ -2646,8 +2634,7 @@ let (bind :
                                                            uu___16 in
                                                        (c21, uu___15,
                                                          "c1 Tot only close") in
-                                                     FStar_Pervasives.Inl
-                                                       uu___14)
+                                                     Prims.Inl uu___14)
                                             | (uu___12, uu___13) ->
                                                 aux_with_trivial_guard ()
                                           else
@@ -2666,11 +2653,11 @@ let (bind :
                                                         c2) in
                                                  (uu___15, trivial_guard,
                                                    "both GTot") in
-                                               FStar_Pervasives.Inl uu___14
+                                               Prims.Inl uu___14
                                              else aux_with_trivial_guard ())) in
                                      let uu___8 = try_simplify () in
                                      match uu___8 with
-                                     | FStar_Pervasives.Inl (c, g, reason) ->
+                                     | Prims.Inl (c, g, reason) ->
                                          (debug
                                             (fun uu___10 ->
                                                let uu___11 =
@@ -2680,7 +2667,7 @@ let (bind :
                                                  "(2) bind: Simplified (because %s) to\n\t%s\n"
                                                  reason uu___11);
                                           (c, g))
-                                     | FStar_Pervasives.Inr reason ->
+                                     | Prims.Inr reason ->
                                          (debug
                                             (fun uu___10 ->
                                                FStar_Compiler_Util.print1
@@ -5647,7 +5634,7 @@ let (mk_toplevel_definition :
            let uu___1 = FStar_Syntax_Util.incr_delta_qualifier def in
            FStar_Syntax_Syntax.lid_as_fv lident uu___1
              FStar_Pervasives_Native.None in
-         let lbname = FStar_Pervasives.Inr fv in
+         let lbname = Prims.Inr fv in
          let lb =
            (false,
              [FStar_Syntax_Util.mk_letbinding lbname []
@@ -7217,8 +7204,8 @@ let make_record_fields_in_order :
   'a .
     FStar_TypeChecker_Env.env ->
       FStar_Syntax_Syntax.unresolved_constructor ->
-        (FStar_Syntax_Syntax.typ, FStar_Syntax_Syntax.typ)
-          FStar_Pervasives.either FStar_Pervasives_Native.option ->
+        (FStar_Syntax_Syntax.typ, FStar_Syntax_Syntax.typ) Prims.either
+          FStar_Pervasives_Native.option ->
           FStar_Syntax_DsEnv.record_or_dc ->
             (FStar_Ident.lident * 'a) Prims.list ->
               (FStar_Ident.ident -> 'a FStar_Pervasives_Native.option) ->
@@ -7270,8 +7257,7 @@ let make_record_fields_in_order :
                              let uu___4 = print_rdc rdc1 in
                              FStar_Compiler_Util.format1 "topt=None; rdc=%s"
                                uu___4)
-                    | FStar_Pervasives_Native.Some (FStar_Pervasives.Inl t)
-                        ->
+                    | FStar_Pervasives_Native.Some (Prims.Inl t) ->
                         let uu___1 =
                           find_record_or_dc_from_typ env
                             FStar_Pervasives_Native.None uc rng in
@@ -7281,8 +7267,7 @@ let make_record_fields_in_order :
                              let uu___5 = print_rdc rdc1 in
                              FStar_Compiler_Util.format2
                                "topt=Some (Inl %s); rdc=%s" uu___4 uu___5)
-                    | FStar_Pervasives_Native.Some (FStar_Pervasives.Inr t)
-                        ->
+                    | FStar_Pervasives_Native.Some (Prims.Inr t) ->
                         let uu___1 =
                           find_record_or_dc_from_typ env
                             FStar_Pervasives_Native.None uc rng in

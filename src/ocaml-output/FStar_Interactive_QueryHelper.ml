@@ -76,15 +76,14 @@ let (symlookup :
               (FStar_Compiler_Util.map_option
                  (fun uu___1 ->
                     match uu___1 with
-                    | ((uu___2, typ), r) ->
-                        ((FStar_Pervasives.Inr lid1), typ, r))) in
+                    | ((uu___2, typ), r) -> ((Prims.Inr lid1), typ, r))) in
           let docs_of_lid lid = FStar_Pervasives_Native.None in
           let def_of_lid lid =
             let uu___ = FStar_TypeChecker_Env.lookup_qname tcenv lid in
             FStar_Compiler_Util.bind_opt uu___
               (fun uu___1 ->
                  match uu___1 with
-                 | (FStar_Pervasives.Inr (se, uu___2), uu___3) ->
+                 | (Prims.Inr (se, uu___2), uu___3) ->
                      let uu___4 = sigelt_to_string se in
                      FStar_Pervasives_Native.Some uu___4
                  | uu___2 -> FStar_Pervasives_Native.None) in
@@ -106,8 +105,8 @@ let (symlookup :
           | FStar_Pervasives_Native.Some (name_or_lid, typ, rng) ->
               let name =
                 match name_or_lid with
-                | FStar_Pervasives.Inl name1 -> name1
-                | FStar_Pervasives.Inr lid -> FStar_Ident.string_of_lid lid in
+                | Prims.Inl name1 -> name1
+                | Prims.Inr lid -> FStar_Ident.string_of_lid lid in
               let typ_str =
                 if FStar_Compiler_List.mem "type" requested_info
                 then
@@ -116,13 +115,13 @@ let (symlookup :
                 else FStar_Pervasives_Native.None in
               let doc_str =
                 match name_or_lid with
-                | FStar_Pervasives.Inr lid when
+                | Prims.Inr lid when
                     FStar_Compiler_List.mem "documentation" requested_info ->
                     docs_of_lid lid
                 | uu___ -> FStar_Pervasives_Native.None in
               let def_str =
                 match name_or_lid with
-                | FStar_Pervasives.Inr lid when
+                | Prims.Inr lid when
                     FStar_Compiler_List.mem "definition" requested_info ->
                     def_of_lid lid
                 | uu___ -> FStar_Pervasives_Native.None in

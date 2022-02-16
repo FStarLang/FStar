@@ -201,9 +201,9 @@ let rec (term_eq' :
                          term_eq' e e') pats pats'))
             && (term_eq' t t')
       | (FStar_Syntax_Syntax.Tm_ascribed
-         (t12, (FStar_Pervasives.Inl t22, uu___), uu___1),
+         (t12, (Prims.Inl t22, uu___), uu___1),
          FStar_Syntax_Syntax.Tm_ascribed
-         (s1, (FStar_Pervasives.Inl s2, uu___2), uu___3)) ->
+         (s1, (Prims.Inl s2, uu___2), uu___3)) ->
           (term_eq' t12 s1) && (term_eq' t22 s2)
       | (FStar_Syntax_Syntax.Tm_let ((is_rec, lbs), t),
          FStar_Syntax_Syntax.Tm_let ((is_rec', lbs'), s)) when

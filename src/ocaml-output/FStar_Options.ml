@@ -2065,13 +2065,13 @@ let with_saved_options : 'a . (unit -> 'a) -> 'a =
        (let r =
           try
             (fun uu___2 ->
-               match () with
-               | () -> let uu___3 = f () in FStar_Pervasives.Inr uu___3) ()
-          with | uu___2 -> FStar_Pervasives.Inl uu___2 in
+               match () with | () -> let uu___3 = f () in Prims.Inr uu___3)
+              ()
+          with | uu___2 -> Prims.Inl uu___2 in
         pop ();
         (match r with
-         | FStar_Pervasives.Inr v -> v
-         | FStar_Pervasives.Inl ex -> FStar_Compiler_Effect.raise ex)))
+         | Prims.Inr v -> v
+         | Prims.Inl ex -> FStar_Compiler_Effect.raise ex)))
     else (push (); (let retv = f () in pop (); retv))
 let (module_matches_namespace_filter :
   Prims.string -> Prims.string Prims.list -> Prims.bool) =
@@ -2208,7 +2208,7 @@ let (extract_settings :
                  let split_one t_setting =
                    match FStar_Compiler_Util.split t_setting ":" with
                    | default_setting::[] ->
-                       FStar_Pervasives.Inr
+                       Prims.Inr
                          (FStar_Compiler_Util.trim_string default_setting)
                    | target::setting::[] ->
                        let target1 = FStar_Compiler_Util.trim_string target in
@@ -2216,7 +2216,7 @@ let (extract_settings :
                        (match uu___4 with
                         | FStar_Pervasives_Native.None -> fail target1
                         | FStar_Pervasives_Native.Some tgt ->
-                            FStar_Pervasives.Inl
+                            Prims.Inl
                               (tgt,
                                 (FStar_Compiler_Util.trim_string setting))
                         | uu___5 -> fail t_setting) in
@@ -2234,7 +2234,7 @@ let (extract_settings :
                      (fun setting ->
                         fun out ->
                           match setting with
-                          | FStar_Pervasives.Inr def ->
+                          | Prims.Inr def ->
                               (match out.default_settings with
                                | FStar_Pervasives_Native.None ->
                                    {
@@ -2245,7 +2245,7 @@ let (extract_settings :
                                    }
                                | FStar_Pervasives_Native.Some uu___4 ->
                                    fail_duplicate def "default")
-                          | FStar_Pervasives.Inl (target, setting1) ->
+                          | Prims.Inl (target, setting1) ->
                               let uu___4 =
                                 FStar_Compiler_Util.try_find
                                   (fun uu___5 ->

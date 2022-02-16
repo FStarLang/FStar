@@ -21,9 +21,7 @@ let (disentangle_abbrevs_from_bundle :
                     match x.FStar_Syntax_Syntax.sigel with
                     | FStar_Syntax_Syntax.Sig_let
                         ((false,
-                          {
-                            FStar_Syntax_Syntax.lbname = FStar_Pervasives.Inr
-                              uu___;
+                          { FStar_Syntax_Syntax.lbname = Prims.Inr uu___;
                             FStar_Syntax_Syntax.lbunivs = uu___1;
                             FStar_Syntax_Syntax.lbtyp = uu___2;
                             FStar_Syntax_Syntax.lbeff = uu___3;
@@ -56,9 +54,7 @@ let (disentangle_abbrevs_from_bundle :
                         match x.FStar_Syntax_Syntax.sigel with
                         | FStar_Syntax_Syntax.Sig_let
                             ((uu___1,
-                              {
-                                FStar_Syntax_Syntax.lbname =
-                                  FStar_Pervasives.Inr fv;
+                              { FStar_Syntax_Syntax.lbname = Prims.Inr fv;
                                 FStar_Syntax_Syntax.lbunivs = uu___2;
                                 FStar_Syntax_Syntax.lbtyp = uu___3;
                                 FStar_Syntax_Syntax.lbeff = uu___4;
@@ -87,8 +83,7 @@ let (disentangle_abbrevs_from_bundle :
                             | FStar_Syntax_Syntax.Sig_let
                                 ((uu___3,
                                   {
-                                    FStar_Syntax_Syntax.lbname =
-                                      FStar_Pervasives.Inr fv;
+                                    FStar_Syntax_Syntax.lbname = Prims.Inr fv;
                                     FStar_Syntax_Syntax.lbunivs = uu___4;
                                     FStar_Syntax_Syntax.lbtyp = uu___5;
                                     FStar_Syntax_Syntax.lbeff = uu___6;
@@ -109,9 +104,7 @@ let (disentangle_abbrevs_from_bundle :
                     match x.FStar_Syntax_Syntax.sigel with
                     | FStar_Syntax_Syntax.Sig_let
                         ((uu___1,
-                          {
-                            FStar_Syntax_Syntax.lbname = FStar_Pervasives.Inr
-                              fv';
+                          { FStar_Syntax_Syntax.lbname = Prims.Inr fv';
                             FStar_Syntax_Syntax.lbunivs = uu___2;
                             FStar_Syntax_Syntax.lbtyp = uu___3;
                             FStar_Syntax_Syntax.lbeff = uu___4;
@@ -197,7 +190,7 @@ let (disentangle_abbrevs_from_bundle :
                                 | uu___3 -> true)) in
                       let lid =
                         match lb.FStar_Syntax_Syntax.lbname with
-                        | FStar_Pervasives.Inr fv ->
+                        | Prims.Inr fv ->
                             (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v
                         | uu___2 ->
                             failwith
@@ -292,9 +285,7 @@ let (disentangle_abbrevs_from_bundle :
                        match x.FStar_Syntax_Syntax.sigel with
                        | FStar_Syntax_Syntax.Sig_let
                            ((uu___1,
-                             {
-                               FStar_Syntax_Syntax.lbname =
-                                 FStar_Pervasives.Inr fv';
+                             { FStar_Syntax_Syntax.lbname = Prims.Inr fv';
                                FStar_Syntax_Syntax.lbunivs = uu___2;
                                FStar_Syntax_Syntax.lbtyp = uu___3;
                                FStar_Syntax_Syntax.lbeff = uu___4;

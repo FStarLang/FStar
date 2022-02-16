@@ -640,10 +640,9 @@ let (e_argv_aq :
     let uu___ = e_term_aq aq in
     FStar_Syntax_Embeddings.e_tuple2 uu___ e_aqualv
 let (e_match_returns_annotation :
-  ((FStar_Syntax_Syntax.term, FStar_Syntax_Syntax.comp)
-    FStar_Pervasives.either * FStar_Syntax_Syntax.term
-    FStar_Pervasives_Native.option) FStar_Pervasives_Native.option
-    FStar_Syntax_Embeddings.embedding)
+  ((FStar_Syntax_Syntax.term, FStar_Syntax_Syntax.comp) Prims.either *
+    FStar_Syntax_Syntax.term FStar_Pervasives_Native.option)
+    FStar_Pervasives_Native.option FStar_Syntax_Embeddings.embedding)
   =
   let uu___ =
     let uu___1 = FStar_Syntax_Embeddings.e_either e_term e_comp in

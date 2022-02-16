@@ -157,17 +157,6 @@ type ('heap, 'a, 'wp) all_trivial = unit
 type 'uuuuu inversion = unit
 
 
-type ('a, 'b) either =
-  | Inl of 'a 
-  | Inr of 'b 
-let uu___is_Inl : 'a 'b . ('a, 'b) either -> Prims.bool =
-  fun projectee -> match projectee with | Inl v -> true | uu___ -> false
-let __proj__Inl__item__v : 'a 'b . ('a, 'b) either -> 'a =
-  fun projectee -> match projectee with | Inl v -> v
-let uu___is_Inr : 'a 'b . ('a, 'b) either -> Prims.bool =
-  fun projectee -> match projectee with | Inr v -> true | uu___ -> false
-let __proj__Inr__item__v : 'a 'b . ('a, 'b) either -> 'b =
-  fun projectee -> match projectee with | Inr v -> v
 let dfst : 'a 'b . ('a, 'b) Prims.dtuple2 -> 'a =
   fun t -> Prims.__proj__Mkdtuple2__item___1 t
 let dsnd : 'a 'b . ('a, 'b) Prims.dtuple2 -> 'b =

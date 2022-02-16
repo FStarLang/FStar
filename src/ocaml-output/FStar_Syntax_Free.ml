@@ -255,17 +255,16 @@ let rec (free_names_and_uvs' :
            | FStar_Syntax_Syntax.Meta_named uu___ -> u1)
 and (free_names_and_uvars_ascription :
   ((FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax,
-    FStar_Syntax_Syntax.comp' FStar_Syntax_Syntax.syntax)
-    FStar_Pervasives.either * FStar_Syntax_Syntax.term'
-    FStar_Syntax_Syntax.syntax FStar_Pervasives_Native.option) ->
-    Prims.bool -> free_vars_and_fvars)
+    FStar_Syntax_Syntax.comp' FStar_Syntax_Syntax.syntax) Prims.either *
+    FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax
+    FStar_Pervasives_Native.option) -> Prims.bool -> free_vars_and_fvars)
   =
   fun asc ->
     fun use_cache ->
       let uu___ =
         match FStar_Pervasives_Native.fst asc with
-        | FStar_Pervasives.Inl t -> free_names_and_uvars t use_cache
-        | FStar_Pervasives.Inr c -> free_names_and_uvars_comp c use_cache in
+        | Prims.Inl t -> free_names_and_uvars t use_cache
+        | Prims.Inr c -> free_names_and_uvars_comp c use_cache in
       let uu___1 =
         match FStar_Pervasives_Native.snd asc with
         | FStar_Pervasives_Native.None -> no_free_vars

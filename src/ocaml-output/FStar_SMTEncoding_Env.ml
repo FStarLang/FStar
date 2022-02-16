@@ -18,14 +18,14 @@ let withenv :
   = fun c -> fun uu___ -> match uu___ with | (a, b) -> (a, b, c)
 let vargs :
   'uuuuu 'uuuuu1 'uuuuu2 .
-    (('uuuuu, 'uuuuu1) FStar_Pervasives.either * 'uuuuu2) Prims.list ->
-      (('uuuuu, 'uuuuu1) FStar_Pervasives.either * 'uuuuu2) Prims.list
+    (('uuuuu, 'uuuuu1) Prims.either * 'uuuuu2) Prims.list ->
+      (('uuuuu, 'uuuuu1) Prims.either * 'uuuuu2) Prims.list
   =
   fun args ->
     FStar_Compiler_List.filter
       (fun uu___ ->
          match uu___ with
-         | (FStar_Pervasives.Inl uu___1, uu___2) -> false
+         | (Prims.Inl uu___1, uu___2) -> false
          | uu___1 -> true) args
 let (escape : Prims.string -> Prims.string) =
   fun s -> FStar_Compiler_Util.replace_char s 39 95
@@ -993,9 +993,8 @@ let (lookup_free_var_name :
 let (lookup_free_var_sym :
   env_t ->
     FStar_Ident.lident FStar_Syntax_Syntax.withinfo_t ->
-      ((FStar_SMTEncoding_Term.op, FStar_SMTEncoding_Term.term)
-        FStar_Pervasives.either * FStar_SMTEncoding_Term.term Prims.list *
-        Prims.int))
+      ((FStar_SMTEncoding_Term.op, FStar_SMTEncoding_Term.term) Prims.either
+        * FStar_SMTEncoding_Term.term Prims.list * Prims.int))
   =
   fun env ->
     fun a ->
@@ -1007,26 +1006,22 @@ let (lookup_free_var_sym :
              FStar_SMTEncoding_Term.rng = uu___1;_},
            uu___2)
           when env.use_zfuel_name ->
-          ((FStar_Pervasives.Inl g), zf, (fvb.smt_arity + Prims.int_one))
+          ((Prims.Inl g), zf, (fvb.smt_arity + Prims.int_one))
       | uu___ ->
           (match fvb.smt_token with
            | FStar_Pervasives_Native.None when fvb.fvb_thunked ->
-               let uu___1 =
-                 let uu___2 = force_thunk fvb in FStar_Pervasives.Inr uu___2 in
+               let uu___1 = let uu___2 = force_thunk fvb in Prims.Inr uu___2 in
                (uu___1, [], (fvb.smt_arity))
            | FStar_Pervasives_Native.None ->
-               ((FStar_Pervasives.Inl
-                   (FStar_SMTEncoding_Term.Var (fvb.smt_id))), [],
+               ((Prims.Inl (FStar_SMTEncoding_Term.Var (fvb.smt_id))), [],
                  (fvb.smt_arity))
            | FStar_Pervasives_Native.Some sym ->
                (match sym.FStar_SMTEncoding_Term.tm with
                 | FStar_SMTEncoding_Term.App (g, fuel::[]) ->
-                    ((FStar_Pervasives.Inl g), [fuel],
-                      (fvb.smt_arity + Prims.int_one))
+                    ((Prims.Inl g), [fuel], (fvb.smt_arity + Prims.int_one))
                 | uu___1 ->
-                    ((FStar_Pervasives.Inl
-                        (FStar_SMTEncoding_Term.Var (fvb.smt_id))), [],
-                      (fvb.smt_arity))))
+                    ((Prims.Inl (FStar_SMTEncoding_Term.Var (fvb.smt_id))),
+                      [], (fvb.smt_arity))))
 let (tok_of_name :
   env_t ->
     Prims.string ->

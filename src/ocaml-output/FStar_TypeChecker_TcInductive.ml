@@ -178,9 +178,7 @@ let (tc_tycon :
                                                | (uvs2, t_tc1) ->
                                                    let uu___9 =
                                                      FStar_TypeChecker_Env.push_let_binding
-                                                       env0
-                                                       (FStar_Pervasives.Inr
-                                                          fv_tc)
+                                                       env0 (Prims.Inr fv_tc)
                                                        (uvs2, t_tc1) in
                                                    (uu___9,
                                                      {
@@ -2232,7 +2230,7 @@ let (mk_discriminator_and_indexed_projectors :
                                         FStar_Syntax_Syntax.lid_as_fv
                                           discriminator_name dd
                                           FStar_Pervasives_Native.None in
-                                      FStar_Pervasives.Inr uu___4 in
+                                      Prims.Inr uu___4 in
                                     let uu___4 =
                                       FStar_Syntax_Subst.close_univ_vars uvs
                                         imp in
@@ -2580,8 +2578,7 @@ let (mk_discriminator_and_indexed_projectors :
                                                       FStar_Syntax_Syntax.lid_as_fv
                                                         field_name dd
                                                         FStar_Pervasives_Native.None in
-                                                    FStar_Pervasives.Inr
-                                                      uu___7 in
+                                                    Prims.Inr uu___7 in
                                                   let uu___7 =
                                                     FStar_Syntax_Subst.close_univ_vars
                                                       uvs imp in

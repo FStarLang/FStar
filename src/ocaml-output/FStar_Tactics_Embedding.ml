@@ -217,12 +217,12 @@ let (e_proofstate_nbe :
                 (FStar_TypeChecker_NBETerm.String
                    ("(((proofstate.nbe)))", FStar_Compiler_Range.dummyRange)))) in
     FStar_TypeChecker_NBETerm.mk_t
-      (FStar_TypeChecker_NBETerm.Lazy ((FStar_Pervasives.Inl li), thunk)) in
+      (FStar_TypeChecker_NBETerm.Lazy ((Prims.Inl li), thunk)) in
   let unembed_proofstate _cb t =
     let uu___ = FStar_TypeChecker_NBETerm.nbe_t_of_t t in
     match uu___ with
     | FStar_TypeChecker_NBETerm.Lazy
-        (FStar_Pervasives.Inl
+        (Prims.Inl
          { FStar_Syntax_Syntax.blob = b;
            FStar_Syntax_Syntax.lkind = FStar_Syntax_Syntax.Lazy_proofstate;
            FStar_Syntax_Syntax.ltyp = uu___1;
@@ -306,12 +306,12 @@ let (e_goal_nbe :
                 (FStar_TypeChecker_NBETerm.String
                    ("(((goal.nbe)))", FStar_Compiler_Range.dummyRange)))) in
     FStar_Compiler_Effect.op_Less_Bar FStar_TypeChecker_NBETerm.mk_t
-      (FStar_TypeChecker_NBETerm.Lazy ((FStar_Pervasives.Inl li), thunk)) in
+      (FStar_TypeChecker_NBETerm.Lazy ((Prims.Inl li), thunk)) in
   let unembed_goal _cb t =
     let uu___ = FStar_TypeChecker_NBETerm.nbe_t_of_t t in
     match uu___ with
     | FStar_TypeChecker_NBETerm.Lazy
-        (FStar_Pervasives.Inl
+        (Prims.Inl
          { FStar_Syntax_Syntax.blob = b;
            FStar_Syntax_Syntax.lkind = FStar_Syntax_Syntax.Lazy_goal;
            FStar_Syntax_Syntax.ltyp = uu___1;

@@ -125,13 +125,13 @@ let parse fn =
     | Toplevel _ -> begin
       let fileOrFragment = MenhirLib.Convert.Simplified.traditional2revised FStar_Parser_Parse.inputFragment lexer in
       let frags = match fileOrFragment with
-          | FStar_Pervasives.Inl modul ->
+          | Prims.Inl modul ->
              if has_extension filename interface_extensions
              then match modul with
                   | FStar_Parser_AST.Module(l,d) ->
-                    FStar_Pervasives.Inl (FStar_Parser_AST.Interface(l, d, true))
+                    Prims.Inl (FStar_Parser_AST.Interface(l, d, true))
                   | _ -> failwith "Impossible"
-             else FStar_Pervasives.Inl modul
+             else Prims.Inl modul
           | _ -> fileOrFragment
       in ASTFragment (frags, FStar_Parser_Util.flush_comments ())
       end
@@ -139,7 +139,7 @@ let parse fn =
       Term (MenhirLib.Convert.Simplified.traditional2revised FStar_Parser_Parse.term lexer)
   with
     | FStar_Errors.Empty_frag ->
-      ASTFragment (FStar_Pervasives.Inr [], [])
+      ASTFragment (Prims.Inr [], [])
 
     | FStar_Errors.Error(e, msg, r, _ctx) ->
       ParseError (e, msg, r)

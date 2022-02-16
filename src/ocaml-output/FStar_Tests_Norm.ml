@@ -59,7 +59,7 @@ let (mk_let :
           (FStar_Syntax_Syntax.Tm_let
              ((false,
                 [{
-                   FStar_Syntax_Syntax.lbname = (FStar_Pervasives.Inl x);
+                   FStar_Syntax_Syntax.lbname = (Prims.Inl x);
                    FStar_Syntax_Syntax.lbunivs = [];
                    FStar_Syntax_Syntax.lbtyp = FStar_Syntax_Syntax.tun;
                    FStar_Syntax_Syntax.lbeff =
@@ -221,7 +221,7 @@ let (minus_nat :
           FStar_Syntax_Subst.subst
             [FStar_Syntax_Syntax.NM (minus1, Prims.int_zero)] uu___2 in
         {
-          FStar_Syntax_Syntax.lbname = (FStar_Pervasives.Inl minus1);
+          FStar_Syntax_Syntax.lbname = (Prims.Inl minus1);
           FStar_Syntax_Syntax.lbunivs = [];
           FStar_Syntax_Syntax.lbtyp = FStar_Syntax_Syntax.tun;
           FStar_Syntax_Syntax.lbeff = uu___;

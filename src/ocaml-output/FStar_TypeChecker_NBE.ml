@@ -289,12 +289,9 @@ let (pickBranch :
             (let scrutinee = unlazy_unmeta scrutinee0 in
              let r =
                match p.FStar_Syntax_Syntax.v with
-               | FStar_Syntax_Syntax.Pat_var bv ->
-                   FStar_Pervasives.Inl [scrutinee0]
-               | FStar_Syntax_Syntax.Pat_wild bv ->
-                   FStar_Pervasives.Inl [scrutinee0]
-               | FStar_Syntax_Syntax.Pat_dot_term uu___1 ->
-                   FStar_Pervasives.Inl []
+               | FStar_Syntax_Syntax.Pat_var bv -> Prims.Inl [scrutinee0]
+               | FStar_Syntax_Syntax.Pat_wild bv -> Prims.Inl [scrutinee0]
+               | FStar_Syntax_Syntax.Pat_dot_term uu___1 -> Prims.Inl []
                | FStar_Syntax_Syntax.Pat_constant s ->
                    let matches_const c s1 =
                      debug cfg
@@ -334,21 +331,19 @@ let (pickBranch :
                            | uu___2 -> false)
                       | uu___2 -> false) in
                    let uu___1 = matches_const scrutinee s in
-                   if uu___1
-                   then FStar_Pervasives.Inl []
-                   else FStar_Pervasives.Inr false
+                   if uu___1 then Prims.Inl [] else Prims.Inr false
                | FStar_Syntax_Syntax.Pat_cons (fv, arg_pats) ->
                    let rec matches_args out a p1 =
                      match (a, p1) with
-                     | ([], []) -> FStar_Pervasives.Inl out
+                     | ([], []) -> Prims.Inl out
                      | ((t, uu___1)::rest_a, (p2, uu___2)::rest_p) ->
                          let uu___3 = matches_pat t p2 in
                          (match uu___3 with
-                          | FStar_Pervasives.Inl s ->
+                          | Prims.Inl s ->
                               matches_args (FStar_Compiler_List.op_At out s)
                                 rest_a rest_p
                           | m -> m)
-                     | uu___1 -> FStar_Pervasives.Inr false in
+                     | uu___1 -> Prims.Inr false in
                    (match scrutinee.FStar_TypeChecker_NBETerm.nbe_t with
                     | FStar_TypeChecker_NBETerm.Construct
                         (fv', _us, args_rev) ->
@@ -357,14 +352,14 @@ let (pickBranch :
                         then
                           matches_args [] (FStar_Compiler_List.rev args_rev)
                             arg_pats
-                        else FStar_Pervasives.Inr false
-                    | uu___1 -> FStar_Pervasives.Inr true) in
+                        else Prims.Inr false
+                    | uu___1 -> Prims.Inr true) in
              let res_to_string uu___1 =
                match uu___1 with
-               | FStar_Pervasives.Inr b ->
+               | Prims.Inr b ->
                    let uu___2 = FStar_Compiler_Util.string_of_bool b in
                    Prims.op_Hat "Inr " uu___2
-               | FStar_Pervasives.Inl bs ->
+               | Prims.Inl bs ->
                    let uu___2 =
                      FStar_Compiler_Util.string_of_int
                        (FStar_Compiler_List.length bs) in
@@ -383,16 +378,16 @@ let (pickBranch :
           | (p, _wopt, e)::branches2 ->
               let uu___ = matches_pat scrut1 p in
               (match uu___ with
-               | FStar_Pervasives.Inl matches ->
+               | Prims.Inl matches ->
                    (debug cfg
                       (fun uu___2 ->
                          let uu___3 = FStar_Syntax_Print.pat_to_string p in
                          FStar_Compiler_Util.print1 "Pattern %s matches\n"
                            uu___3);
                     FStar_Pervasives_Native.Some (e, matches))
-               | FStar_Pervasives.Inr (false) ->
+               | Prims.Inr (false) ->
                    pickBranch_aux scrut1 branches2 branches0
-               | FStar_Pervasives.Inr (true) -> FStar_Pervasives_Native.None) in
+               | Prims.Inr (true) -> FStar_Pervasives_Native.None) in
         pickBranch_aux scrut branches branches
 let (should_reduce_recursive_definition :
   FStar_TypeChecker_NBETerm.args ->
@@ -428,10 +423,9 @@ let (find_sigelt_in_gamma :
           match uu___ with
           | (lr, rng) ->
               (match lr with
-               | FStar_Pervasives.Inr (elt, FStar_Pervasives_Native.None) ->
+               | Prims.Inr (elt, FStar_Pervasives_Native.None) ->
                    FStar_Pervasives_Native.Some elt
-               | FStar_Pervasives.Inr (elt, FStar_Pervasives_Native.Some us)
-                   ->
+               | Prims.Inr (elt, FStar_Pervasives_Native.Some us) ->
                    (debug cfg
                       (fun uu___2 ->
                          let uu___3 = FStar_Syntax_Print.univs_to_string us in
@@ -463,7 +457,7 @@ let (is_constr : FStar_TypeChecker_Env.qninfo -> Prims.bool) =
   fun q ->
     match q with
     | FStar_Pervasives_Native.Some
-        (FStar_Pervasives.Inr
+        (Prims.Inr
          ({
             FStar_Syntax_Syntax.sigel = FStar_Syntax_Syntax.Sig_datacon
               (uu___, uu___1, uu___2, uu___3, uu___4, uu___5);
@@ -515,8 +509,8 @@ let (find_let :
       FStar_Compiler_Util.find_map lbs
         (fun lb ->
            match lb.FStar_Syntax_Syntax.lbname with
-           | FStar_Pervasives.Inl uu___ -> failwith "find_let : impossible"
-           | FStar_Pervasives.Inr name ->
+           | Prims.Inl uu___ -> failwith "find_let : impossible"
+           | Prims.Inr name ->
                let uu___ = FStar_Syntax_Syntax.fv_eq name fvar in
                if uu___
                then FStar_Pervasives_Native.Some lb
@@ -660,8 +654,7 @@ let rec (translate :
                      (FStar_Compiler_List.rev binders_rev) c1 in
              let uu___2 =
                let uu___3 =
-                 let uu___4 = FStar_Thunk.mk norm in
-                 FStar_Pervasives.Inl uu___4 in
+                 let uu___4 = FStar_Thunk.mk norm in Prims.Inl uu___4 in
                FStar_TypeChecker_NBETerm.Arrow uu___3 in
              FStar_Compiler_Effect.op_Less_Bar mk_t1 uu___2
          | FStar_Syntax_Syntax.Tm_refine (bv, tm) ->
@@ -737,7 +730,7 @@ let rec (translate :
                (FStar_TypeChecker_NBETerm.Lam
                   ((fun ys ->
                       translate cfg (FStar_Compiler_List.append ys bs) body),
-                    (FStar_Pervasives.Inl (bs, xs, resc)),
+                    (Prims.Inl (bs, xs, resc)),
                     (FStar_Compiler_List.length xs)))
          | FStar_Syntax_Syntax.Tm_fvar fvar ->
              let uu___2 = try_in_cache cfg fvar in
@@ -899,24 +892,22 @@ let rec (translate :
              let make_returns uu___2 =
                match ret_opt with
                | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None
-               | FStar_Pervasives_Native.Some
-                   (FStar_Pervasives.Inl t, tacopt) ->
+               | FStar_Pervasives_Native.Some (Prims.Inl t, tacopt) ->
                    let uu___3 =
                      let uu___4 =
                        let uu___5 =
                          let uu___6 = translate cfg bs t in
                          readback cfg uu___6 in
-                       FStar_Pervasives.Inl uu___5 in
+                       Prims.Inl uu___5 in
                      (uu___4, tacopt) in
                    FStar_Pervasives_Native.Some uu___3
-               | FStar_Pervasives_Native.Some
-                   (FStar_Pervasives.Inr c, tacopt) ->
+               | FStar_Pervasives_Native.Some (Prims.Inr c, tacopt) ->
                    let uu___3 =
                      let uu___4 =
                        let uu___5 =
                          let uu___6 = translate_comp cfg bs c in
                          readback_comp cfg uu___6 in
-                       FStar_Pervasives.Inr uu___5 in
+                       Prims.Inr uu___5 in
                      (uu___4, tacopt) in
                    FStar_Pervasives_Native.Some uu___3 in
              let make_rc uu___2 =
@@ -1272,8 +1263,7 @@ let rec (translate :
                translate cfg bs t in
              let uu___2 =
                let uu___3 =
-                 let uu___4 = FStar_Thunk.mk f in
-                 ((FStar_Pervasives.Inl li), uu___4) in
+                 let uu___4 = FStar_Thunk.mk f in ((Prims.Inl li), uu___4) in
                FStar_TypeChecker_NBETerm.Lazy uu___3 in
              FStar_Compiler_Effect.op_Less_Bar mk_t1 uu___2)
 and (translate_comp :
@@ -1320,17 +1310,17 @@ and (iapp :
               let arg_values_rev = map_rev FStar_Pervasives_Native.fst args in
               let binders1 =
                 match binders with
-                | FStar_Pervasives.Inr raw_args ->
+                | Prims.Inr raw_args ->
                     let uu___1 = FStar_Compiler_List.splitAt m raw_args in
                     (match uu___1 with
-                     | (uu___2, raw_args1) -> FStar_Pervasives.Inr raw_args1)
-                | FStar_Pervasives.Inl (ctx, xs, rc) ->
+                     | (uu___2, raw_args1) -> Prims.Inr raw_args1)
+                | Prims.Inl (ctx, xs, rc) ->
                     let uu___1 = FStar_Compiler_List.splitAt m xs in
                     (match uu___1 with
                      | (uu___2, xs1) ->
                          let ctx1 =
                            FStar_Compiler_List.append arg_values_rev ctx in
-                         FStar_Pervasives.Inl (ctx1, xs1, rc)) in
+                         Prims.Inl (ctx1, xs1, rc)) in
               FStar_Compiler_Effect.op_Less_Bar mk
                 (FStar_TypeChecker_NBETerm.Lam
                    ((fun l ->
@@ -1676,7 +1666,7 @@ and (translate_fv :
                              let uu___9 =
                                let uu___10 = FStar_Common.tabulate arity f in
                                ([], uu___10, FStar_Pervasives_Native.None) in
-                             FStar_Pervasives.Inl uu___9 in
+                             Prims.Inl uu___9 in
                            ((fun args_rev ->
                                let args' =
                                  map_rev FStar_TypeChecker_NBETerm.as_arg
@@ -1748,7 +1738,7 @@ and (translate_fv :
                  then
                    match qninfo with
                    | FStar_Pervasives_Native.Some
-                       (FStar_Pervasives.Inr
+                       (Prims.Inr
                         ({
                            FStar_Syntax_Syntax.sigel =
                              FStar_Syntax_Syntax.Sig_let
@@ -1817,7 +1807,7 @@ and (translate_fv :
                  then
                    match qninfo with
                    | FStar_Pervasives_Native.Some
-                       (FStar_Pervasives.Inr
+                       (Prims.Inr
                         ({
                            FStar_Syntax_Syntax.sigel =
                              FStar_Syntax_Syntax.Sig_let
@@ -2609,7 +2599,7 @@ and (readback :
        | FStar_TypeChecker_NBETerm.Lam (f, binders, arity) ->
            let uu___1 =
              match binders with
-             | FStar_Pervasives.Inl (ctx, binders1, rc) ->
+             | Prims.Inl (ctx, binders1, rc) ->
                  let uu___2 =
                    FStar_Compiler_List.fold_left
                      (fun uu___3 ->
@@ -2656,7 +2646,7 @@ and (readback :
                               readback_residual_comp cfg uu___4 in
                             FStar_Pervasives_Native.Some uu___3 in
                       ((FStar_Compiler_List.rev binders_rev), accus_rev, rc1))
-             | FStar_Pervasives.Inr args ->
+             | Prims.Inr args ->
                  let uu___2 =
                    FStar_Compiler_List.fold_right
                      (fun uu___3 ->
@@ -2718,9 +2708,9 @@ and (readback :
        | FStar_TypeChecker_NBETerm.Reflect t ->
            let tm = readback cfg t in
            let uu___1 = FStar_Syntax_Util.mk_reflect tm in with_range uu___1
-       | FStar_TypeChecker_NBETerm.Arrow (FStar_Pervasives.Inl f) ->
+       | FStar_TypeChecker_NBETerm.Arrow (Prims.Inl f) ->
            let uu___1 = FStar_Thunk.force f in with_range uu___1
-       | FStar_TypeChecker_NBETerm.Arrow (FStar_Pervasives.Inr (args, c)) ->
+       | FStar_TypeChecker_NBETerm.Arrow (Prims.Inr (args, c)) ->
            let binders =
              FStar_Compiler_List.map
                (fun uu___1 ->
@@ -2847,7 +2837,7 @@ and (readback :
                    (uu___2.FStar_Syntax_Syntax.index);
                  FStar_Syntax_Syntax.sort = typ1
                } in
-             FStar_Pervasives.Inl uu___1 in
+             Prims.Inl uu___1 in
            let lb1 =
              {
                FStar_Syntax_Syntax.lbname = lbname;
@@ -2886,8 +2876,7 @@ and (readback :
                             FStar_Syntax_Syntax.sort = t1
                           } in
                         {
-                          FStar_Syntax_Syntax.lbname =
-                            (FStar_Pervasives.Inl v1);
+                          FStar_Syntax_Syntax.lbname = (Prims.Inl v1);
                           FStar_Syntax_Syntax.lbunivs =
                             (lb.FStar_Syntax_Syntax.lbunivs);
                           FStar_Syntax_Syntax.lbtyp = t1;
@@ -2983,8 +2972,7 @@ and (readback :
                         translate cfg bs lb.FStar_Syntax_Syntax.lbtyp in
                       readback cfg uu___2 in
                     {
-                      FStar_Syntax_Syntax.lbname =
-                        (FStar_Pervasives.Inl lbname);
+                      FStar_Syntax_Syntax.lbname = (Prims.Inl lbname);
                       FStar_Syntax_Syntax.lbunivs =
                         (lb.FStar_Syntax_Syntax.lbunivs);
                       FStar_Syntax_Syntax.lbtyp = lbtyp;
@@ -3016,7 +3004,7 @@ and (readback :
                 with_range uu___3)
        | FStar_TypeChecker_NBETerm.Quote (qt, qi) ->
            mk (FStar_Syntax_Syntax.Tm_quoted (qt, qi))
-       | FStar_TypeChecker_NBETerm.Lazy (FStar_Pervasives.Inl li, uu___1) ->
+       | FStar_TypeChecker_NBETerm.Lazy (Prims.Inl li, uu___1) ->
            mk (FStar_Syntax_Syntax.Tm_lazy li)
        | FStar_TypeChecker_NBETerm.Lazy (uu___1, thunk) ->
            let uu___2 = FStar_Thunk.force thunk in readback cfg uu___2)

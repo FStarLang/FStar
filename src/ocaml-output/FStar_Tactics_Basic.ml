@@ -1659,10 +1659,9 @@ let (intro_rec :
                             let uu___9 =
                               FStar_Syntax_Util.abs [b] u
                                 FStar_Pervasives_Native.None in
-                            FStar_Syntax_Util.mk_letbinding
-                              (FStar_Pervasives.Inl bv) [] uu___8
-                              FStar_Parser_Const.effect_Tot_lid uu___9 []
-                              FStar_Compiler_Range.dummyRange in
+                            FStar_Syntax_Util.mk_letbinding (Prims.Inl bv) []
+                              uu___8 FStar_Parser_Const.effect_Tot_lid uu___9
+                              [] FStar_Compiler_Range.dummyRange in
                           let body = FStar_Syntax_Syntax.bv_to_name bv in
                           let uu___8 =
                             FStar_Syntax_Subst.close_let_rec [lb] body in
@@ -1935,11 +1934,10 @@ let (t_exact :
                FStar_Tactics_Monad.bind uu___2
                  (fun uu___3 ->
                     match uu___3 with
-                    | FStar_Pervasives.Inr r -> FStar_Tactics_Monad.ret ()
-                    | FStar_Pervasives.Inl e when
-                        Prims.op_Negation try_refine ->
+                    | Prims.Inr r -> FStar_Tactics_Monad.ret ()
+                    | Prims.Inl e when Prims.op_Negation try_refine ->
                         FStar_Tactics_Monad.traise e
-                    | FStar_Pervasives.Inl e ->
+                    | Prims.Inl e ->
                         FStar_Tactics_Monad.mlog
                           (fun uu___4 ->
                              FStar_Compiler_Util.print_string
@@ -1959,14 +1957,14 @@ let (t_exact :
                              FStar_Tactics_Monad.bind uu___5
                                (fun uu___6 ->
                                   match uu___6 with
-                                  | FStar_Pervasives.Inr r ->
+                                  | Prims.Inr r ->
                                       FStar_Tactics_Monad.mlog
                                         (fun uu___7 ->
                                            FStar_Compiler_Util.print_string
                                              "__exact_now: failed after refining too\n")
                                         (fun uu___7 ->
                                            FStar_Tactics_Monad.ret ())
-                                  | FStar_Pervasives.Inl uu___7 ->
+                                  | Prims.Inl uu___7 ->
                                       FStar_Tactics_Monad.mlog
                                         (fun uu___8 ->
                                            FStar_Compiler_Util.print_string
@@ -5216,11 +5214,11 @@ let rec (inspect :
                    FStar_Reflection_Data.Tv_Unknown
                else
                  (match lb.FStar_Syntax_Syntax.lbname with
-                  | FStar_Pervasives.Inr uu___3 ->
+                  | Prims.Inr uu___3 ->
                       FStar_Compiler_Effect.op_Less_Bar
                         FStar_Tactics_Monad.ret
                         FStar_Reflection_Data.Tv_Unknown
-                  | FStar_Pervasives.Inl bv ->
+                  | Prims.Inl bv ->
                       let b = FStar_Syntax_Syntax.mk_binder bv in
                       let uu___3 = FStar_Syntax_Subst.open_term [b] t21 in
                       (match uu___3 with
@@ -5244,21 +5242,21 @@ let rec (inspect :
                    FStar_Reflection_Data.Tv_Unknown
                else
                  (match lb.FStar_Syntax_Syntax.lbname with
-                  | FStar_Pervasives.Inr uu___3 ->
+                  | Prims.Inr uu___3 ->
                       FStar_Compiler_Effect.op_Less_Bar
                         FStar_Tactics_Monad.ret
                         FStar_Reflection_Data.Tv_Unknown
-                  | FStar_Pervasives.Inl bv ->
+                  | Prims.Inl bv ->
                       let uu___3 = FStar_Syntax_Subst.open_let_rec [lb] t21 in
                       (match uu___3 with
                        | (lbs, t22) ->
                            (match lbs with
                             | lb1::[] ->
                                 (match lb1.FStar_Syntax_Syntax.lbname with
-                                 | FStar_Pervasives.Inr uu___4 ->
+                                 | Prims.Inr uu___4 ->
                                      FStar_Tactics_Monad.ret
                                        FStar_Reflection_Data.Tv_Unknown
-                                 | FStar_Pervasives.Inl bv1 ->
+                                 | Prims.Inl bv1 ->
                                      FStar_Compiler_Effect.op_Less_Bar
                                        FStar_Tactics_Monad.ret
                                        (FStar_Reflection_Data.Tv_Let
@@ -5364,7 +5362,7 @@ let (pack :
         FStar_Compiler_Effect.op_Less_Bar FStar_Tactics_Monad.ret uu___
     | FStar_Reflection_Data.Tv_Let (false, attrs, bv, t1, t2) ->
         let lb =
-          FStar_Syntax_Util.mk_letbinding (FStar_Pervasives.Inl bv) []
+          FStar_Syntax_Util.mk_letbinding (Prims.Inl bv) []
             bv.FStar_Syntax_Syntax.sort FStar_Parser_Const.effect_Tot_lid t1
             attrs FStar_Compiler_Range.dummyRange in
         let uu___ =
@@ -5380,7 +5378,7 @@ let (pack :
         FStar_Compiler_Effect.op_Less_Bar FStar_Tactics_Monad.ret uu___
     | FStar_Reflection_Data.Tv_Let (true, attrs, bv, t1, t2) ->
         let lb =
-          FStar_Syntax_Util.mk_letbinding (FStar_Pervasives.Inl bv) []
+          FStar_Syntax_Util.mk_letbinding (Prims.Inl bv) []
             bv.FStar_Syntax_Syntax.sort FStar_Parser_Const.effect_Tot_lid t1
             attrs FStar_Compiler_Range.dummyRange in
         let uu___ = FStar_Syntax_Subst.close_let_rec [lb] t2 in
@@ -5444,16 +5442,14 @@ let (pack :
         let uu___ =
           FStar_Syntax_Syntax.mk
             (FStar_Syntax_Syntax.Tm_ascribed
-               (e, ((FStar_Pervasives.Inl t), tacopt),
-                 FStar_Pervasives_Native.None))
+               (e, ((Prims.Inl t), tacopt), FStar_Pervasives_Native.None))
             FStar_Compiler_Range.dummyRange in
         FStar_Compiler_Effect.op_Less_Bar FStar_Tactics_Monad.ret uu___
     | FStar_Reflection_Data.Tv_AscribedC (e, c, tacopt) ->
         let uu___ =
           FStar_Syntax_Syntax.mk
             (FStar_Syntax_Syntax.Tm_ascribed
-               (e, ((FStar_Pervasives.Inr c), tacopt),
-                 FStar_Pervasives_Native.None))
+               (e, ((Prims.Inr c), tacopt), FStar_Pervasives_Native.None))
             FStar_Compiler_Range.dummyRange in
         FStar_Compiler_Effect.op_Less_Bar FStar_Tactics_Monad.ret uu___
     | FStar_Reflection_Data.Tv_Unknown ->

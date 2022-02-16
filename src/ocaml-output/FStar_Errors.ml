@@ -2908,12 +2908,12 @@ let with_ctx : 'a . Prims.string -> (unit -> 'a) -> 'a =
       (let r =
          let uu___1 = FStar_Options.trace_error () in
          if uu___1
-         then let uu___2 = f () in FStar_Pervasives.Inr uu___2
+         then let uu___2 = f () in Prims.Inr uu___2
          else
            (try
               (fun uu___3 ->
-                 match () with
-                 | () -> let uu___4 = f () in FStar_Pervasives.Inr uu___4) ()
+                 match () with | () -> let uu___4 = f () in Prims.Inr uu___4)
+                ()
             with
             | FStar_Compiler_Effect.Failure msg ->
                 let uu___4 =
@@ -2922,12 +2922,12 @@ let with_ctx : 'a . Prims.string -> (unit -> 'a) -> 'a =
                       let uu___7 = error_context.get () in ctx_string uu___7 in
                     FStar_String.op_Hat msg uu___6 in
                   FStar_Compiler_Effect.Failure uu___5 in
-                FStar_Pervasives.Inl uu___4
-            | ex -> FStar_Pervasives.Inl ex) in
+                Prims.Inl uu___4
+            | ex -> Prims.Inl ex) in
        (let uu___2 = error_context.pop () in ());
        (match r with
-        | FStar_Pervasives.Inr r1 -> r1
-        | FStar_Pervasives.Inl e -> FStar_Compiler_Effect.raise e))
+        | Prims.Inr r1 -> r1
+        | Prims.Inl e -> FStar_Compiler_Effect.raise e))
 let with_ctx_if : 'a . Prims.bool -> Prims.string -> (unit -> 'a) -> 'a =
   fun b -> fun s -> fun f -> if b then with_ctx s f else f ()
 let catch_errors :

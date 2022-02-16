@@ -499,11 +499,10 @@ let rec (erase_effect_annotations :
         FStar_Extraction_ML_Syntax.MLTY_Fun uu___
     | uu___ -> t
 let is_type_abstraction :
-  'a 'b 'c . (('a, 'b) FStar_Pervasives.either * 'c) Prims.list -> Prims.bool
-  =
+  'a 'b 'c . (('a, 'b) Prims.either * 'c) Prims.list -> Prims.bool =
   fun uu___ ->
     match uu___ with
-    | (FStar_Pervasives.Inl uu___1, uu___2)::uu___3 -> true
+    | (Prims.Inl uu___1, uu___2)::uu___3 -> true
     | uu___1 -> false
 let (is_xtuple :
   (Prims.string Prims.list * Prims.string) ->

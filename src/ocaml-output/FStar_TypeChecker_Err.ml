@@ -4,7 +4,7 @@ let (info_at_pos :
     Prims.string ->
       Prims.int ->
         Prims.int ->
-          ((Prims.string, FStar_Ident.lid) FStar_Pervasives.either *
+          ((Prims.string, FStar_Ident.lid) Prims.either *
             FStar_Syntax_Syntax.typ * FStar_Compiler_Range.range)
             FStar_Pervasives_Native.option)
   =
@@ -21,20 +21,20 @@ let (info_at_pos :
           | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None
           | FStar_Pervasives_Native.Some info ->
               (match info.FStar_TypeChecker_Common.identifier with
-               | FStar_Pervasives.Inl bv ->
+               | Prims.Inl bv ->
                    let uu___1 =
                      let uu___2 =
                        let uu___3 = FStar_Syntax_Print.nm_to_string bv in
-                       FStar_Pervasives.Inl uu___3 in
+                       Prims.Inl uu___3 in
                      let uu___3 = FStar_Syntax_Syntax.range_of_bv bv in
                      (uu___2, (info.FStar_TypeChecker_Common.identifier_ty),
                        uu___3) in
                    FStar_Pervasives_Native.Some uu___1
-               | FStar_Pervasives.Inr fv ->
+               | Prims.Inr fv ->
                    let uu___1 =
                      let uu___2 =
                        let uu___3 = FStar_Syntax_Syntax.lid_of_fv fv in
-                       FStar_Pervasives.Inr uu___3 in
+                       Prims.Inr uu___3 in
                      let uu___3 = FStar_Syntax_Syntax.range_of_fv fv in
                      (uu___2, (info.FStar_TypeChecker_Common.identifier_ty),
                        uu___3) in
@@ -96,7 +96,7 @@ let print_discrepancy :
 let (errors_smt_detail :
   FStar_TypeChecker_Env.env ->
     FStar_Errors.error Prims.list ->
-      (Prims.string, Prims.string) FStar_Pervasives.either ->
+      (Prims.string, Prims.string) Prims.either ->
         FStar_Errors.error Prims.list)
   =
   fun env ->
@@ -104,10 +104,8 @@ let (errors_smt_detail :
       fun smt_detail ->
         let maybe_add_smt_detail msg =
           match smt_detail with
-          | FStar_Pervasives.Inr d ->
-              Prims.op_Hat msg (Prims.op_Hat "\n\t" d)
-          | FStar_Pervasives.Inl d when
-              (FStar_Compiler_Util.trim_string d) <> "" ->
+          | Prims.Inr d -> Prims.op_Hat msg (Prims.op_Hat "\n\t" d)
+          | Prims.Inl d when (FStar_Compiler_Util.trim_string d) <> "" ->
               Prims.op_Hat msg (Prims.op_Hat "; " d)
           | uu___ -> msg in
         let errs1 =
@@ -174,7 +172,7 @@ let (errors_smt_detail :
 let (add_errors_smt_detail :
   FStar_TypeChecker_Env.env ->
     FStar_Errors.error Prims.list ->
-      (Prims.string, Prims.string) FStar_Pervasives.either -> unit)
+      (Prims.string, Prims.string) Prims.either -> unit)
   =
   fun env ->
     fun errs ->
@@ -183,8 +181,7 @@ let (add_errors_smt_detail :
         FStar_Errors.add_errors uu___
 let (add_errors :
   FStar_TypeChecker_Env.env -> FStar_Errors.error Prims.list -> unit) =
-  fun env ->
-    fun errs -> add_errors_smt_detail env errs (FStar_Pervasives.Inl "")
+  fun env -> fun errs -> add_errors_smt_detail env errs (Prims.Inl "")
 let (log_issue :
   FStar_TypeChecker_Env.env ->
     FStar_Compiler_Range.range ->

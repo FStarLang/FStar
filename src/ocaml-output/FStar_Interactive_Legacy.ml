@@ -656,16 +656,16 @@ let rec (go :
                                 (fun uu___3 ->
                                    match uu___3 with
                                    | ((uu___4, typ), r) ->
-                                       ((FStar_Pervasives.Inr lid1), typ, r)))) in
+                                       ((Prims.Inr lid1), typ, r)))) in
                   ((match info_opt with
                     | FStar_Pervasives_Native.None ->
                         FStar_Compiler_Util.print_string "\n#done-nok\n"
                     | FStar_Pervasives_Native.Some (name_or_lid, typ, rng) ->
                         let uu___2 =
                           match name_or_lid with
-                          | FStar_Pervasives.Inl name ->
+                          | Prims.Inl name ->
                               (name, FStar_Pervasives_Native.None)
-                          | FStar_Pervasives.Inr lid ->
+                          | Prims.Inr lid ->
                               let uu___3 = FStar_Ident.string_of_lid lid in
                               (uu___3, FStar_Pervasives_Native.None) in
                         (match uu___2 with

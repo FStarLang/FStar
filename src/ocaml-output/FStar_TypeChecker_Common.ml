@@ -231,13 +231,12 @@ let rec (decr_delta_depth :
     | FStar_Syntax_Syntax.Delta_abstract d -> decr_delta_depth d
 type identifier_info =
   {
-  identifier:
-    (FStar_Syntax_Syntax.bv, FStar_Syntax_Syntax.fv) FStar_Pervasives.either ;
+  identifier: (FStar_Syntax_Syntax.bv, FStar_Syntax_Syntax.fv) Prims.either ;
   identifier_ty: FStar_Syntax_Syntax.typ ;
   identifier_range: FStar_Compiler_Range.range }
 let (__proj__Mkidentifier_info__item__identifier :
   identifier_info ->
-    (FStar_Syntax_Syntax.bv, FStar_Syntax_Syntax.fv) FStar_Pervasives.either)
+    (FStar_Syntax_Syntax.bv, FStar_Syntax_Syntax.fv) Prims.either)
   =
   fun projectee ->
     match projectee with
@@ -317,8 +316,8 @@ let (print_identifier_info : identifier_info -> Prims.string) =
     let uu___ = FStar_Compiler_Range.string_of_range info.identifier_range in
     let uu___1 =
       match info.identifier with
-      | FStar_Pervasives.Inl x -> FStar_Syntax_Print.bv_to_string x
-      | FStar_Pervasives.Inr fv -> FStar_Syntax_Print.fv_to_string fv in
+      | Prims.Inl x -> FStar_Syntax_Print.bv_to_string x
+      | Prims.Inr fv -> FStar_Syntax_Print.fv_to_string fv in
     let uu___2 = FStar_Syntax_Print.term_to_string info.identifier_ty in
     FStar_Compiler_Util.format3 "id info { %s, %s : %s}" uu___ uu___1 uu___2
 let (id_info__insert :
@@ -338,8 +337,8 @@ let (id_info__insert :
           FStar_Compiler_Range.set_def_range range uu___ in
         let id_ty =
           match info.identifier with
-          | FStar_Pervasives.Inr uu___ -> info.identifier_ty
-          | FStar_Pervasives.Inl x -> ty_map info.identifier_ty in
+          | Prims.Inr uu___ -> info.identifier_ty
+          | Prims.Inl x -> ty_map info.identifier_ty in
         let info1 =
           {
             identifier = (info.identifier);
@@ -366,8 +365,7 @@ let (id_info__insert :
               (FStar_Compiler_Util.psmap_add db fn)
 let (id_info_insert :
   id_info_table ->
-    (FStar_Syntax_Syntax.bv, FStar_Syntax_Syntax.fv) FStar_Pervasives.either
-      ->
+    (FStar_Syntax_Syntax.bv, FStar_Syntax_Syntax.fv) Prims.either ->
       FStar_Syntax_Syntax.typ -> FStar_Compiler_Range.range -> id_info_table)
   =
   fun table ->
@@ -391,7 +389,7 @@ let (id_info_insert_bv :
         if table.id_info_enabled
         then
           let uu___ = FStar_Syntax_Syntax.range_of_bv bv in
-          id_info_insert table (FStar_Pervasives.Inl bv) ty uu___
+          id_info_insert table (Prims.Inl bv) ty uu___
         else table
 let (id_info_insert_fv :
   id_info_table ->
@@ -403,7 +401,7 @@ let (id_info_insert_fv :
         if table.id_info_enabled
         then
           let uu___ = FStar_Syntax_Syntax.range_of_fv fv in
-          id_info_insert table (FStar_Pervasives.Inr fv) ty uu___
+          id_info_insert table (Prims.Inr fv) ty uu___
         else table
 let (id_info_toggle : id_info_table -> Prims.bool -> id_info_table) =
   fun table ->
@@ -666,7 +664,7 @@ type lcomp =
   cflags: FStar_Syntax_Syntax.cflag Prims.list ;
   comp_thunk:
     (unit -> (FStar_Syntax_Syntax.comp * guard_t), FStar_Syntax_Syntax.comp)
-      FStar_Pervasives.either FStar_Compiler_Effect.ref
+      Prims.either FStar_Compiler_Effect.ref
     }
 let (__proj__Mklcomp__item__eff_name : lcomp -> FStar_Ident.lident) =
   fun projectee ->
@@ -684,7 +682,7 @@ let (__proj__Mklcomp__item__cflags :
 let (__proj__Mklcomp__item__comp_thunk :
   lcomp ->
     (unit -> (FStar_Syntax_Syntax.comp * guard_t), FStar_Syntax_Syntax.comp)
-      FStar_Pervasives.either FStar_Compiler_Effect.ref)
+      Prims.either FStar_Compiler_Effect.ref)
   =
   fun projectee ->
     match projectee with
@@ -699,21 +697,20 @@ let (mk_lcomp :
     fun res_typ ->
       fun cflags ->
         fun comp_thunk ->
-          let uu___ =
-            FStar_Compiler_Util.mk_ref (FStar_Pervasives.Inl comp_thunk) in
+          let uu___ = FStar_Compiler_Util.mk_ref (Prims.Inl comp_thunk) in
           { eff_name; res_typ; cflags; comp_thunk = uu___ }
 let (lcomp_comp : lcomp -> (FStar_Syntax_Syntax.comp * guard_t)) =
   fun lc ->
     let uu___ = FStar_Compiler_Effect.op_Bang lc.comp_thunk in
     match uu___ with
-    | FStar_Pervasives.Inl thunk ->
+    | Prims.Inl thunk ->
         let uu___1 = thunk () in
         (match uu___1 with
          | (c, g) ->
              (FStar_Compiler_Effect.op_Colon_Equals lc.comp_thunk
-                (FStar_Pervasives.Inr c);
+                (Prims.Inr c);
               (c, g)))
-    | FStar_Pervasives.Inr c -> (c, trivial_guard)
+    | Prims.Inr c -> (c, trivial_guard)
 let (apply_lcomp :
   (FStar_Syntax_Syntax.comp -> FStar_Syntax_Syntax.comp) ->
     (guard_t -> guard_t) -> lcomp -> lcomp)

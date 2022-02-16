@@ -16,7 +16,9 @@
 *)
 #light "off"
 module FStar.Parser.ParseIt
-open FStar open FStar.Compiler
+open Prims
+open FStar
+open FStar.Compiler
 open FStar.Pervasives
 open FStar.Compiler.Util
 open FStar.Errors

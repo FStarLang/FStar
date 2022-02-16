@@ -684,11 +684,6 @@ val allow_inversion (a: Type) : Pure unit (requires True) (ensures (fun x -> inv
 val invertOption (a: Type)
     : Lemma (requires True) (ensures (forall (x: option a). None? x \/ Some? x)) [SMTPat (option a)]
 
-(** Values of type [a] or type [b] *)
-type either a b =
-  | Inl : v: a -> either a b
-  | Inr : v: b -> either a b
-
 (** Projections for the components of a dependent pair *)
 let dfst (#a: Type) (#b: a -> GTot Type) (t: dtuple2 a b)
     : Tot a

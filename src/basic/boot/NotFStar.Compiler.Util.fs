@@ -26,6 +26,7 @@ open System.Security.Cryptography
 open System.Runtime.Serialization
 open System.Runtime.Serialization.Json
 open System.Text.RegularExpressions
+open Prims
 open FStar.Pervasives
 
 let return_all x = x

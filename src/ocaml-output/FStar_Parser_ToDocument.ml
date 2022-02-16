@@ -502,32 +502,28 @@ let (uu___is_Right : associativity -> Prims.bool) =
   fun projectee -> match projectee with | Right -> true | uu___ -> false
 let (uu___is_NonAssoc : associativity -> Prims.bool) =
   fun projectee -> match projectee with | NonAssoc -> true | uu___ -> false
-type token = (FStar_Char.char, Prims.string) FStar_Pervasives.either
+type token = (FStar_Char.char, Prims.string) Prims.either
 type associativity_level = (associativity * token Prims.list)
 let (token_to_string :
-  (FStar_BaseTypes.char, Prims.string) FStar_Pervasives.either ->
-    Prims.string)
-  =
+  (FStar_BaseTypes.char, Prims.string) Prims.either -> Prims.string) =
   fun uu___ ->
     match uu___ with
-    | FStar_Pervasives.Inl c ->
-        Prims.op_Hat (FStar_Compiler_Util.string_of_char c) ".*"
-    | FStar_Pervasives.Inr s -> s
+    | Prims.Inl c -> Prims.op_Hat (FStar_Compiler_Util.string_of_char c) ".*"
+    | Prims.Inr s -> s
 let (matches_token :
-  Prims.string ->
-    (FStar_Char.char, Prims.string) FStar_Pervasives.either -> Prims.bool)
+  Prims.string -> (FStar_Char.char, Prims.string) Prims.either -> Prims.bool)
   =
   fun s ->
     fun uu___ ->
       match uu___ with
-      | FStar_Pervasives.Inl c ->
+      | Prims.Inl c ->
           let uu___1 = FStar_String.get s Prims.int_zero in uu___1 = c
-      | FStar_Pervasives.Inr s' -> s = s'
+      | Prims.Inr s' -> s = s'
 let matches_level :
   'uuuuu .
     Prims.string ->
-      ('uuuuu * (FStar_Char.char, Prims.string) FStar_Pervasives.either
-        Prims.list) -> Prims.bool
+      ('uuuuu * (FStar_Char.char, Prims.string) Prims.either Prims.list) ->
+        Prims.bool
   =
   fun s ->
     fun uu___ ->
@@ -535,32 +531,22 @@ let matches_level :
       | (assoc_levels, tokens) ->
           let uu___1 = FStar_Compiler_List.tryFind (matches_token s) tokens in
           uu___1 <> FStar_Pervasives_Native.None
-let (opinfix4 : associativity_level) = (Right, [FStar_Pervasives.Inr "**"])
+let (opinfix4 : associativity_level) = (Right, [Prims.Inr "**"])
 let (opinfix3 : associativity_level) =
-  (Left,
-    [FStar_Pervasives.Inl 42;
-    FStar_Pervasives.Inl 47;
-    FStar_Pervasives.Inl 37])
-let (opinfix2 : associativity_level) =
-  (Left, [FStar_Pervasives.Inl 43; FStar_Pervasives.Inl 45])
-let (minus_lvl : associativity_level) = (Left, [FStar_Pervasives.Inr "-"])
-let (opinfix1 : associativity_level) =
-  (Right, [FStar_Pervasives.Inl 64; FStar_Pervasives.Inl 94])
-let (pipe_right : associativity_level) = (Left, [FStar_Pervasives.Inr "|>"])
-let (opinfix0d : associativity_level) = (Left, [FStar_Pervasives.Inl 36])
+  (Left, [Prims.Inl 42; Prims.Inl 47; Prims.Inl 37])
+let (opinfix2 : associativity_level) = (Left, [Prims.Inl 43; Prims.Inl 45])
+let (minus_lvl : associativity_level) = (Left, [Prims.Inr "-"])
+let (opinfix1 : associativity_level) = (Right, [Prims.Inl 64; Prims.Inl 94])
+let (pipe_right : associativity_level) = (Left, [Prims.Inr "|>"])
+let (opinfix0d : associativity_level) = (Left, [Prims.Inl 36])
 let (opinfix0c : associativity_level) =
-  (Left,
-    [FStar_Pervasives.Inl 61;
-    FStar_Pervasives.Inl 60;
-    FStar_Pervasives.Inl 62])
-let (equal : associativity_level) = (Left, [FStar_Pervasives.Inr "="])
-let (opinfix0b : associativity_level) = (Left, [FStar_Pervasives.Inl 38])
-let (opinfix0a : associativity_level) = (Left, [FStar_Pervasives.Inl 124])
-let (colon_equals : associativity_level) =
-  (NonAssoc, [FStar_Pervasives.Inr ":="])
-let (amp : associativity_level) = (Right, [FStar_Pervasives.Inr "&"])
-let (colon_colon : associativity_level) =
-  (Right, [FStar_Pervasives.Inr "::"])
+  (Left, [Prims.Inl 61; Prims.Inl 60; Prims.Inl 62])
+let (equal : associativity_level) = (Left, [Prims.Inr "="])
+let (opinfix0b : associativity_level) = (Left, [Prims.Inl 38])
+let (opinfix0a : associativity_level) = (Left, [Prims.Inl 124])
+let (colon_equals : associativity_level) = (NonAssoc, [Prims.Inr ":="])
+let (amp : associativity_level) = (Right, [Prims.Inr "&"])
+let (colon_colon : associativity_level) = (Right, [Prims.Inr "::"])
 let (level_associativity_spec : associativity_level Prims.list) =
   [opinfix4;
   opinfix3;
@@ -3983,7 +3969,7 @@ and (p_tmNoEqWith' :
                | (left, mine, right) ->
                    let p_dsumfst bt =
                      match bt with
-                     | FStar_Pervasives.Inl b ->
+                     | Prims.Inl b ->
                          let uu___1 = p_binder false b in
                          let uu___2 =
                            let uu___3 =
@@ -3991,7 +3977,7 @@ and (p_tmNoEqWith' :
                              FStar_Pprint.op_Hat_Hat uu___4 break1 in
                            FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu___3 in
                          FStar_Pprint.op_Hat_Hat uu___1 uu___2
-                     | FStar_Pervasives.Inr t ->
+                     | Prims.Inr t ->
                          let uu___1 = p_tmNoEqWith' false p_X left t in
                          let uu___2 =
                            let uu___3 =

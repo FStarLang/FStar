@@ -63,7 +63,7 @@ let (always_fail :
           let uu___1 =
             FStar_Syntax_Syntax.lid_as_fv lid
               FStar_Syntax_Syntax.delta_constant FStar_Pervasives_Native.None in
-          FStar_Pervasives.Inr uu___1 in
+          Prims.Inr uu___1 in
         let uu___1 = FStar_Parser_Const.effect_ML_lid () in
         {
           FStar_Syntax_Syntax.lbname = uu___;
@@ -245,8 +245,7 @@ let (binders_as_mlty_binders :
                  let name =
                    let uu___3 = FStar_Extraction_ML_UEnv.lookup_bv env2 bv in
                    match uu___3 with
-                   | FStar_Pervasives.Inl ty ->
-                       ty.FStar_Extraction_ML_UEnv.ty_b_name
+                   | Prims.Inl ty -> ty.FStar_Extraction_ML_UEnv.ty_b_name
                    | uu___4 -> failwith "Impossible" in
                  (env2, name)) env bs
 type data_constructor =
@@ -467,8 +466,8 @@ type iface =
       Prims.list
     ;
   iface_tydefs:
-    (FStar_Extraction_ML_UEnv.tydef, tydef_declaration)
-      FStar_Pervasives.either Prims.list
+    (FStar_Extraction_ML_UEnv.tydef, tydef_declaration) Prims.either
+      Prims.list
     ;
   iface_type_names:
     (FStar_Syntax_Syntax.fv * FStar_Extraction_ML_Syntax.mlpath) Prims.list }
@@ -489,8 +488,8 @@ let (__proj__Mkiface__item__iface_bindings :
         -> iface_bindings
 let (__proj__Mkiface__item__iface_tydefs :
   iface ->
-    (FStar_Extraction_ML_UEnv.tydef, tydef_declaration)
-      FStar_Pervasives.either Prims.list)
+    (FStar_Extraction_ML_UEnv.tydef, tydef_declaration) Prims.either
+      Prims.list)
   =
   fun projectee ->
     match projectee with
@@ -524,8 +523,7 @@ let (iface_of_bindings :
     }
 let (iface_of_tydefs : FStar_Extraction_ML_UEnv.tydef Prims.list -> iface) =
   fun tds ->
-    let uu___ =
-      FStar_Compiler_List.map (fun uu___1 -> FStar_Pervasives.Inl uu___1) tds in
+    let uu___ = FStar_Compiler_List.map (fun uu___1 -> Prims.Inl uu___1) tds in
     let uu___1 =
       FStar_Compiler_List.map
         (fun td ->
@@ -612,13 +610,13 @@ let print_tydef :
   'uuuuu 'uuuuu1 .
     FStar_Extraction_ML_Syntax.mlpath ->
       (FStar_Extraction_ML_UEnv.tydef, (Prims.string * 'uuuuu * 'uuuuu1))
-        FStar_Pervasives.either -> Prims.string
+        Prims.either -> Prims.string
   =
   fun cm ->
     fun tydef ->
       let uu___ =
         match tydef with
-        | FStar_Pervasives.Inl tydef1 ->
+        | Prims.Inl tydef1 ->
             let uu___1 =
               let uu___2 = FStar_Extraction_ML_UEnv.tydef_fv tydef1 in
               FStar_Syntax_Print.fv_to_string uu___2 in
@@ -626,7 +624,7 @@ let print_tydef :
               let uu___3 = FStar_Extraction_ML_UEnv.tydef_def tydef1 in
               tscheme_to_string cm uu___3 in
             (uu___1, uu___2)
-        | FStar_Pervasives.Inr (p, uu___1, uu___2) -> (p, "None") in
+        | Prims.Inr (p, uu___1, uu___2) -> (p, "None") in
       match uu___ with
       | (name, defn) -> FStar_Compiler_Util.format2 "(%s, %s)" name defn
 let (iface_to_string : iface -> Prims.string) =
@@ -1014,8 +1012,7 @@ let (extract_type_declaration :
                              FStar_Syntax_Syntax.t_unit
                              FStar_Pervasives_Native.None in
                          {
-                           FStar_Syntax_Syntax.lbname =
-                             (FStar_Pervasives.Inr fv);
+                           FStar_Syntax_Syntax.lbname = (Prims.Inr fv);
                            FStar_Syntax_Syntax.lbunivs = univs;
                            FStar_Syntax_Syntax.lbtyp = t;
                            FStar_Syntax_Syntax.lbeff =
@@ -1041,7 +1038,7 @@ let (extract_type_declaration :
                                   iface_bindings =
                                     (empty_iface.iface_bindings);
                                   iface_tydefs =
-                                    [FStar_Pervasives.Inr
+                                    [Prims.Inr
                                        ((FStar_Pervasives_Native.snd mlp),
                                          meta,
                                          (FStar_Compiler_List.length bs))];
@@ -1142,7 +1139,7 @@ let (extract_reifiable_effect :
                (FStar_Pervasives_Native.Some
                   ((a.FStar_Syntax_Syntax.action_defn).FStar_Syntax_Syntax.pos))
                FStar_Syntax_Syntax.tun in
-           FStar_Pervasives.Inl uu___2 in
+           Prims.Inl uu___2 in
          let lb =
            FStar_Syntax_Syntax.mk_lb
              (lbname, (a.FStar_Syntax_Syntax.action_univs),
@@ -1582,7 +1579,7 @@ let (extract_iface :
                    FStar_Compiler_List.map
                      (fun uu___2 ->
                         match uu___2 with
-                        | FStar_Pervasives.Inl td ->
+                        | Prims.Inl td ->
                             let uu___3 =
                               let uu___4 =
                                 FStar_Extraction_ML_UEnv.tydef_mlpath td in
@@ -1592,10 +1589,9 @@ let (extract_iface :
                             let uu___5 =
                               let uu___6 =
                                 FStar_Extraction_ML_UEnv.tydef_def td in
-                              FStar_Pervasives.Inl uu___6 in
+                              Prims.Inl uu___6 in
                             (uu___3, uu___4, uu___5)
-                        | FStar_Pervasives.Inr (p, m, n) ->
-                            (p, m, (FStar_Pervasives.Inr n)))
+                        | Prims.Inr (p, m, n) -> (p, m, (Prims.Inr n)))
                      iface1.iface_tydefs in
                  let uu___2 =
                    FStar_Extraction_ML_UEnv.extend_with_module_name g1

@@ -310,8 +310,7 @@ let (isTotFun_axioms :
               guards
 let (maybe_curry_app :
   FStar_Compiler_Range.range ->
-    (FStar_SMTEncoding_Term.op, FStar_SMTEncoding_Term.term)
-      FStar_Pervasives.either ->
+    (FStar_SMTEncoding_Term.op, FStar_SMTEncoding_Term.term) Prims.either ->
       Prims.int ->
         FStar_SMTEncoding_Term.term Prims.list -> FStar_SMTEncoding_Term.term)
   =
@@ -321,8 +320,8 @@ let (maybe_curry_app :
         fun args ->
           let n_args = FStar_Compiler_List.length args in
           match head with
-          | FStar_Pervasives.Inr head1 -> mk_Apply_args head1 args
-          | FStar_Pervasives.Inl head1 ->
+          | Prims.Inr head1 -> mk_Apply_args head1 args
+          | Prims.Inl head1 ->
               if n_args = arity
               then FStar_SMTEncoding_Util.mkApp' (head1, args)
               else
@@ -351,7 +350,7 @@ let (maybe_curry_fvb :
           mk_Apply_args uu___ args
         else
           maybe_curry_app rng
-            (FStar_Pervasives.Inl
+            (Prims.Inl
                (FStar_SMTEncoding_Term.Var (fvb.FStar_SMTEncoding_Env.smt_id)))
             fvb.FStar_SMTEncoding_Env.smt_arity args
 let (is_app : FStar_SMTEncoding_Term.op -> Prims.bool) =
@@ -1241,7 +1240,7 @@ and (encode_term :
        | FStar_Syntax_Syntax.Tm_ascribed (t2, (k, uu___1), uu___2) ->
            let uu___3 =
              match k with
-             | FStar_Pervasives.Inl t3 -> FStar_Syntax_Util.is_unit t3
+             | Prims.Inl t3 -> FStar_Syntax_Util.is_unit t3
              | uu___4 -> false in
            if uu___3
            then (FStar_SMTEncoding_Term.mk_Term_unit, [])
@@ -2530,14 +2529,10 @@ and (encode_term :
                                          uu___8 FStar_Pervasives_Native.snd in
                                      FStar_Pervasives_Native.Some uu___7
                                  | FStar_Syntax_Syntax.Tm_ascribed
-                                     (uu___7,
-                                      (FStar_Pervasives.Inl t2, uu___8),
-                                      uu___9)
+                                     (uu___7, (Prims.Inl t2, uu___8), uu___9)
                                      -> FStar_Pervasives_Native.Some t2
                                  | FStar_Syntax_Syntax.Tm_ascribed
-                                     (uu___7,
-                                      (FStar_Pervasives.Inr c, uu___8),
-                                      uu___9)
+                                     (uu___7, (Prims.Inr c, uu___8), uu___9)
                                      ->
                                      FStar_Pervasives_Native.Some
                                        (FStar_Syntax_Util.comp_result c)
@@ -2966,7 +2961,7 @@ and (encode_term :
                                              (f, uu___10)))))))))
        | FStar_Syntax_Syntax.Tm_let
            ((uu___1,
-             { FStar_Syntax_Syntax.lbname = FStar_Pervasives.Inr uu___2;
+             { FStar_Syntax_Syntax.lbname = Prims.Inr uu___2;
                FStar_Syntax_Syntax.lbunivs = uu___3;
                FStar_Syntax_Syntax.lbtyp = uu___4;
                FStar_Syntax_Syntax.lbeff = uu___5;
@@ -2977,7 +2972,7 @@ and (encode_term :
            -> failwith "Impossible: already handled by encoding of Sig_let"
        | FStar_Syntax_Syntax.Tm_let
            ((false,
-             { FStar_Syntax_Syntax.lbname = FStar_Pervasives.Inl x;
+             { FStar_Syntax_Syntax.lbname = Prims.Inl x;
                FStar_Syntax_Syntax.lbunivs = uu___1;
                FStar_Syntax_Syntax.lbtyp = t11;
                FStar_Syntax_Syntax.lbeff = uu___2;
@@ -3035,7 +3030,7 @@ and (encode_let :
               let uu___ =
                 let uu___1 =
                   FStar_Syntax_Util.ascribe e1
-                    ((FStar_Pervasives.Inl t1), FStar_Pervasives_Native.None) in
+                    ((Prims.Inl t1), FStar_Pervasives_Native.None) in
                 encode_term uu___1 env in
               match uu___ with
               | (ee1, decls1) ->
@@ -3616,7 +3611,7 @@ and (encode_formula :
             (match uu___2 with | (t, decls) -> (t, decls))
         | FStar_Syntax_Syntax.Tm_let
             ((false,
-              { FStar_Syntax_Syntax.lbname = FStar_Pervasives.Inl x;
+              { FStar_Syntax_Syntax.lbname = Prims.Inl x;
                 FStar_Syntax_Syntax.lbunivs = uu___;
                 FStar_Syntax_Syntax.lbtyp = t1;
                 FStar_Syntax_Syntax.lbeff = uu___1;

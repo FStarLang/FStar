@@ -70,8 +70,7 @@ let mk_lazy :
                  let uu___1 = FStar_Syntax_Util.unfold_lazy li in
                  FStar_TypeChecker_NBETerm.translate_cb cb uu___1) in
           FStar_TypeChecker_NBETerm.mk_t
-            (FStar_TypeChecker_NBETerm.Lazy
-               ((FStar_Pervasives.Inl li), thunk))
+            (FStar_TypeChecker_NBETerm.Lazy ((Prims.Inl li), thunk))
 let (e_bv : FStar_Syntax_Syntax.bv FStar_TypeChecker_NBETerm.embedding) =
   let embed_bv cb bv =
     mk_lazy cb bv FStar_Reflection_Data.fstar_refl_bv
@@ -79,7 +78,7 @@ let (e_bv : FStar_Syntax_Syntax.bv FStar_TypeChecker_NBETerm.embedding) =
   let unembed_bv cb t =
     match t.FStar_TypeChecker_NBETerm.nbe_t with
     | FStar_TypeChecker_NBETerm.Lazy
-        (FStar_Pervasives.Inl
+        (Prims.Inl
          { FStar_Syntax_Syntax.blob = b;
            FStar_Syntax_Syntax.lkind = FStar_Syntax_Syntax.Lazy_bv;
            FStar_Syntax_Syntax.ltyp = uu___;
@@ -106,7 +105,7 @@ let (e_binder :
   let unembed_binder cb t =
     match t.FStar_TypeChecker_NBETerm.nbe_t with
     | FStar_TypeChecker_NBETerm.Lazy
-        (FStar_Pervasives.Inl
+        (Prims.Inl
          { FStar_Syntax_Syntax.blob = b;
            FStar_Syntax_Syntax.lkind = FStar_Syntax_Syntax.Lazy_binder;
            FStar_Syntax_Syntax.ltyp = uu___;
@@ -227,7 +226,7 @@ let (e_fv : FStar_Syntax_Syntax.fv FStar_TypeChecker_NBETerm.embedding) =
   let unembed_fv cb t =
     match t.FStar_TypeChecker_NBETerm.nbe_t with
     | FStar_TypeChecker_NBETerm.Lazy
-        (FStar_Pervasives.Inl
+        (Prims.Inl
          { FStar_Syntax_Syntax.blob = b;
            FStar_Syntax_Syntax.lkind = FStar_Syntax_Syntax.Lazy_fvar;
            FStar_Syntax_Syntax.ltyp = uu___;
@@ -252,7 +251,7 @@ let (e_comp : FStar_Syntax_Syntax.comp FStar_TypeChecker_NBETerm.embedding) =
   let unembed_comp cb t =
     match t.FStar_TypeChecker_NBETerm.nbe_t with
     | FStar_TypeChecker_NBETerm.Lazy
-        (FStar_Pervasives.Inl
+        (Prims.Inl
          { FStar_Syntax_Syntax.blob = b;
            FStar_Syntax_Syntax.lkind = FStar_Syntax_Syntax.Lazy_comp;
            FStar_Syntax_Syntax.ltyp = uu___;
@@ -277,7 +276,7 @@ let (e_env : FStar_TypeChecker_Env.env FStar_TypeChecker_NBETerm.embedding) =
   let unembed_env cb t =
     match t.FStar_TypeChecker_NBETerm.nbe_t with
     | FStar_TypeChecker_NBETerm.Lazy
-        (FStar_Pervasives.Inl
+        (Prims.Inl
          { FStar_Syntax_Syntax.blob = b;
            FStar_Syntax_Syntax.lkind = FStar_Syntax_Syntax.Lazy_env;
            FStar_Syntax_Syntax.ltyp = uu___;
@@ -604,10 +603,9 @@ let (e_argv_aq :
     let uu___ = e_term_aq aq in
     FStar_TypeChecker_NBETerm.e_tuple2 uu___ e_aqualv
 let (e_match_returns_annotation :
-  ((FStar_Syntax_Syntax.term, FStar_Syntax_Syntax.comp)
-    FStar_Pervasives.either * FStar_Syntax_Syntax.term
-    FStar_Pervasives_Native.option) FStar_Pervasives_Native.option
-    FStar_TypeChecker_NBETerm.embedding)
+  ((FStar_Syntax_Syntax.term, FStar_Syntax_Syntax.comp) Prims.either *
+    FStar_Syntax_Syntax.term FStar_Pervasives_Native.option)
+    FStar_Pervasives_Native.option FStar_TypeChecker_NBETerm.embedding)
   =
   let uu___ =
     let uu___1 = FStar_TypeChecker_NBETerm.e_either e_term e_comp in
@@ -622,7 +620,7 @@ let unlazy_as_t :
     fun t ->
       match t.FStar_TypeChecker_NBETerm.nbe_t with
       | FStar_TypeChecker_NBETerm.Lazy
-          (FStar_Pervasives.Inl
+          (Prims.Inl
            { FStar_Syntax_Syntax.blob = v; FStar_Syntax_Syntax.lkind = k';
              FStar_Syntax_Syntax.ltyp = uu___;
              FStar_Syntax_Syntax.rng = uu___1;_},
@@ -1410,7 +1408,7 @@ let (e_sigelt :
   let unembed_sigelt cb t =
     match t.FStar_TypeChecker_NBETerm.nbe_t with
     | FStar_TypeChecker_NBETerm.Lazy
-        (FStar_Pervasives.Inl
+        (Prims.Inl
          { FStar_Syntax_Syntax.blob = b;
            FStar_Syntax_Syntax.lkind = FStar_Syntax_Syntax.Lazy_sigelt;
            FStar_Syntax_Syntax.ltyp = uu___;
@@ -1593,7 +1591,7 @@ let (e_letbinding :
   let unembed_letbinding cb t =
     match t.FStar_TypeChecker_NBETerm.nbe_t with
     | FStar_TypeChecker_NBETerm.Lazy
-        (FStar_Pervasives.Inl
+        (Prims.Inl
          { FStar_Syntax_Syntax.blob = lb;
            FStar_Syntax_Syntax.lkind = FStar_Syntax_Syntax.Lazy_letbinding;
            FStar_Syntax_Syntax.ltyp = uu___;

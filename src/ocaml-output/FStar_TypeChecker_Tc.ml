@@ -849,7 +849,7 @@ let (tc_sig_let :
                                         FStar_Syntax_Syntax.mk
                                           (FStar_Syntax_Syntax.Tm_ascribed
                                              ((lb.FStar_Syntax_Syntax.lbdef),
-                                               ((FStar_Pervasives.Inl
+                                               ((Prims.Inl
                                                    (lb.FStar_Syntax_Syntax.lbtyp)),
                                                  FStar_Pervasives_Native.None),
                                                FStar_Pervasives_Native.None))
@@ -871,8 +871,8 @@ let (tc_sig_let :
                                         let uu___7 =
                                           FStar_Parser_Const.effect_ALL_lid
                                             () in
-                                        ((FStar_Pervasives.Inr lbname), uvs,
-                                          uu___7, tval, def, [],
+                                        ((Prims.Inr lbname), uvs, uu___7,
+                                          tval, def, [],
                                           (lb.FStar_Syntax_Syntax.lbpos)) in
                                       FStar_Syntax_Syntax.mk_lb uu___6 in
                                     (false, uu___5, quals_opt1))) in

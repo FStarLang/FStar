@@ -2674,8 +2674,7 @@ let (encode_top_level_let :
                    | (binders1, body1, comp1) ->
                        let uu___3 =
                          FStar_Syntax_Util.ascribe body1
-                           ((FStar_Pervasives.Inl
-                               (FStar_Syntax_Util.comp_result comp1)),
+                           ((Prims.Inl (FStar_Syntax_Util.comp_result comp1)),
                              FStar_Pervasives_Native.None) in
                        (binders1, uu___3, comp1)) in
             (try
@@ -3287,7 +3286,7 @@ let (encode_top_level_let :
                                                                     args =
                                                                     FStar_SMTEncoding_EncodeTerm.maybe_curry_app
                                                                     rng
-                                                                    (FStar_Pervasives.Inl
+                                                                    (Prims.Inl
                                                                     (FStar_SMTEncoding_Term.Var
                                                                     g))
                                                                     (fvb.FStar_SMTEncoding_Env.smt_arity
@@ -4286,7 +4285,7 @@ and (encode_sigelt' :
             | (env1, decls) -> ((FStar_Compiler_List.flatten decls), env1))
        | FStar_Syntax_Syntax.Sig_let
            ((uu___1,
-             { FStar_Syntax_Syntax.lbname = FStar_Pervasives.Inr b2t;
+             { FStar_Syntax_Syntax.lbname = Prims.Inr b2t;
                FStar_Syntax_Syntax.lbunivs = uu___2;
                FStar_Syntax_Syntax.lbtyp = uu___3;
                FStar_Syntax_Syntax.lbeff = uu___4;

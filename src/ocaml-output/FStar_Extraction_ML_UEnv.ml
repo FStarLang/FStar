@@ -30,7 +30,7 @@ let (__proj__Mkexp_binding__item__exp_b_tscheme :
   fun projectee ->
     match projectee with
     | { exp_b_name; exp_b_expr; exp_b_tscheme;_} -> exp_b_tscheme
-type ty_or_exp_b = (ty_binding, exp_binding) FStar_Pervasives.either
+type ty_or_exp_b = (ty_binding, exp_binding) Prims.either
 type binding =
   | Bv of (FStar_Syntax_Syntax.bv * ty_or_exp_b) 
   | Fv of (FStar_Syntax_Syntax.fv * exp_binding) 
@@ -275,10 +275,7 @@ let (print_mlpath_map : uenv -> Prims.string) =
                uu___ :: entries1) [] in
     FStar_String.concat "\n" entries
 let (lookup_fv_generic :
-  uenv ->
-    FStar_Syntax_Syntax.fv ->
-      (Prims.bool, exp_binding) FStar_Pervasives.either)
-  =
+  uenv -> FStar_Syntax_Syntax.fv -> (Prims.bool, exp_binding) Prims.either) =
   fun g ->
     fun fv ->
       let v =
@@ -286,13 +283,13 @@ let (lookup_fv_generic :
           (fun uu___ ->
              match uu___ with
              | Fv (fv', t) when FStar_Syntax_Syntax.fv_eq fv fv' ->
-                 FStar_Pervasives_Native.Some (FStar_Pervasives.Inr t)
+                 FStar_Pervasives_Native.Some (Prims.Inr t)
              | ErasedFv fv' when FStar_Syntax_Syntax.fv_eq fv fv' ->
-                 FStar_Pervasives_Native.Some (FStar_Pervasives.Inl true)
+                 FStar_Pervasives_Native.Some (Prims.Inl true)
              | uu___1 -> FStar_Pervasives_Native.None) in
       match v with
       | FStar_Pervasives_Native.Some r -> r
-      | FStar_Pervasives_Native.None -> FStar_Pervasives.Inl false
+      | FStar_Pervasives_Native.None -> Prims.Inl false
 let (try_lookup_fv :
   FStar_Compiler_Range.range ->
     uenv ->
@@ -303,8 +300,8 @@ let (try_lookup_fv :
       fun fv ->
         let uu___ = lookup_fv_generic g fv in
         match uu___ with
-        | FStar_Pervasives.Inr r1 -> FStar_Pervasives_Native.Some r1
-        | FStar_Pervasives.Inl (true) ->
+        | Prims.Inr r1 -> FStar_Pervasives_Native.Some r1
+        | Prims.Inl (true) ->
             ((let uu___2 =
                 let uu___3 =
                   let uu___4 = FStar_Syntax_Print.fv_to_string fv in
@@ -317,7 +314,7 @@ let (try_lookup_fv :
                 (FStar_Errors.Error_CallToErased, uu___3) in
               FStar_Errors.log_issue r uu___2);
              FStar_Pervasives_Native.None)
-        | FStar_Pervasives.Inl (false) -> FStar_Pervasives_Native.None
+        | Prims.Inl (false) -> FStar_Pervasives_Native.None
 let (lookup_fv :
   FStar_Compiler_Range.range -> uenv -> FStar_Syntax_Syntax.fv -> exp_binding)
   =
@@ -326,8 +323,8 @@ let (lookup_fv :
       fun fv ->
         let uu___ = lookup_fv_generic g fv in
         match uu___ with
-        | FStar_Pervasives.Inr t -> t
-        | FStar_Pervasives.Inl b ->
+        | Prims.Inr t -> t
+        | Prims.Inl b ->
             let uu___1 =
               let uu___2 =
                 FStar_Compiler_Range.string_of_range
@@ -376,7 +373,7 @@ let (lookup_term :
       | FStar_Syntax_Syntax.Tm_fvar x ->
           let uu___ =
             let uu___1 = lookup_fv t.FStar_Syntax_Syntax.pos g x in
-            FStar_Pervasives.Inr uu___1 in
+            Prims.Inr uu___1 in
           (uu___, (x.FStar_Syntax_Syntax.fv_qual))
       | uu___ -> failwith "Impossible: lookup_term for a non-name"
 let (lookup_ty : uenv -> FStar_Syntax_Syntax.bv -> ty_binding) =
@@ -384,7 +381,7 @@ let (lookup_ty : uenv -> FStar_Syntax_Syntax.bv -> ty_binding) =
     fun x ->
       let uu___ = lookup_bv g x in
       match uu___ with
-      | FStar_Pervasives.Inl ty -> ty
+      | Prims.Inl ty -> ty
       | uu___1 -> failwith "Expected a type name"
 let (lookup_tydef :
   uenv ->
@@ -654,10 +651,7 @@ let (extend_ty : uenv -> FStar_Syntax_Syntax.bv -> Prims.bool -> uenv) =
               then FStar_Extraction_ML_Syntax.MLTY_Top
               else FStar_Extraction_ML_Syntax.MLTY_Var ml_a in
             let gamma =
-              (Bv
-                 (a,
-                   (FStar_Pervasives.Inl
-                      { ty_b_name = ml_a; ty_b_ty = mapped_to })))
+              (Bv (a, (Prims.Inl { ty_b_name = ml_a; ty_b_ty = mapped_to })))
               :: (g.env_bindings) in
             let tcenv = FStar_TypeChecker_Env.push_bv g.env_tcenv a in
             {
@@ -720,7 +714,7 @@ let (extend_bv :
                     exp_b_expr = mlx1;
                     exp_b_tscheme = t_x1
                   } in
-                let gamma = (Bv (x, (FStar_Pervasives.Inr exp_binding1))) ::
+                let gamma = (Bv (x, (Prims.Inr exp_binding1))) ::
                   (g.env_bindings) in
                 let tcenv =
                   let uu___1 = FStar_Syntax_Syntax.binders_of_list [x] in
@@ -880,8 +874,8 @@ let (extend_lb :
         fun t_x ->
           fun add_unit ->
             match l with
-            | FStar_Pervasives.Inl x -> extend_bv g x t_x add_unit false
-            | FStar_Pervasives.Inr f -> extend_fv g f t_x add_unit
+            | Prims.Inl x -> extend_bv g x t_x add_unit false
+            | Prims.Inr f -> extend_fv g f t_x add_unit
 let (extend_tydef :
   uenv ->
     FStar_Syntax_Syntax.fv ->
@@ -1125,6 +1119,6 @@ let (new_uenv : FStar_TypeChecker_Env.env -> uenv) =
           let uu___3 = FStar_Parser_Const.failwith_lid () in
           FStar_Syntax_Syntax.lid_as_fv uu___3
             FStar_Syntax_Syntax.delta_constant FStar_Pervasives_Native.None in
-        FStar_Pervasives.Inr uu___2 in
+        Prims.Inr uu___2 in
       extend_lb env uu___1 FStar_Syntax_Syntax.tun failwith_ty false in
     match uu___ with | (g, uu___1, uu___2) -> g
