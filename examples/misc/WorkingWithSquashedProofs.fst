@@ -83,13 +83,13 @@ let valid_baz (a:Type) (x:a)
   : Lemma (baz a x)
   = let s_fb : squash (foo a x \/ bar a x) = foo_or_bar x in
     FStar.Squash.bind_squash s_fb (fun (fb:(foo a x \/ bar a x)) ->
-    FStar.Squash.bind_squash fb  (fun (c_fb:c_or (foo a x) (bar a x)) ->
+    FStar.Squash.bind_squash fb  (fun (c_fb:Prims.either (foo a x) (bar a x)) ->
      let s_baz : squash (baz a x) =
        match c_fb with
-       | Left f ->
+       | Prims.Inl f ->
          // let sf = FStar.Squash.return_squash f in
          foo_baz x
-       | Right b ->
+       | Prims.Inr b ->
          // let sg = FStar.Squash.return_squash b in
          bar_baz x
      in
@@ -112,12 +112,12 @@ let valid_baz_alt (a:Type) (x:a)
   : Lemma (baz a x)
   = let s_fb : squash (foo a x \/ bar a x) = foo_or_bar x in
     FStar.Squash.bind_squash s_fb (fun (fb:(foo a x \/ bar a x)) ->
-    FStar.Squash.bind_squash fb  (fun (c_fb:c_or (foo a x) (bar a x)) ->
+    FStar.Squash.bind_squash fb  (fun (c_fb:Prims.either (foo a x) (bar a x)) ->
      let s_baz : squash (baz a x) =
        match c_fb with
-       | Left f ->
+       | Prims.Inl f ->
          c_foo_baz x f
-       | Right b ->
+       | Prims.Inr b ->
          c_bar_baz x b
      in
      s_baz))
@@ -129,8 +129,8 @@ let elim_squash_or (#r:_) (#p #q:_) (f:squash (p \/ q)) (left: p -> GTot r) (rig
   = FStar.Squash.bind_squash #_ #r f (fun pq ->
     FStar.Squash.bind_squash pq (fun c ->
     match c with
-    | Left x -> FStar.Squash.return_squash (left x)
-    | Right x -> FStar.Squash.return_squash (right x)))
+    | Prims.Inl x -> FStar.Squash.return_squash (left x)
+    | Prims.Inr x -> FStar.Squash.return_squash (right x)))
 
 let valid_baz_alt_alt (a:Type) (x:a)
   : GTot (squash (baz a x))
