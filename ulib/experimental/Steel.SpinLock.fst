@@ -64,6 +64,7 @@ val acquire_core (#p:vprop) (#u:inames) (r:ref bool) (i:inv (lockinv p r))
     (lockinv p r `star` emp)
     (fun b -> lockinv p r  `star` (if b then p else emp))
 
+#push-options "--fuel 1"
 let acquire_core #p #u r i =
   let ghost = witness_exists () in
 
@@ -76,6 +77,7 @@ let acquire_core #p #u r i =
 
   intro_lockinv_locked p r;
   return res
+#pop-options
 
 let rec acquire #p l =
   let r:ref bool = fst l in
@@ -94,6 +96,7 @@ val release_core (#p:vprop) (#u:inames) (r:ref bool) (i:inv (lockinv p r))
     (lockinv p r `star` p)
     (fun b -> lockinv p r `star` (if b then emp else p))
 
+#push-options "--fuel 1"
 let release_core #p #u r i =
   let v = witness_exists () in
 
@@ -106,6 +109,7 @@ let release_core #p #u r i =
 
   intro_lockinv_available p r;
   return res
+#pop-options
 
 let release (#p:vprop) (l:lock p) =
   let r:ref bool = fst l in

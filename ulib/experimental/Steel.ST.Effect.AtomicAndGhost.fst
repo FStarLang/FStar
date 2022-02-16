@@ -50,6 +50,7 @@ let equiv_star_emp_r (p:vprop)
     star_commutative p emp;
     equiv_trans (p `star` emp) (emp `star` p) p
 
+#push-options "--no_tactics"
 let weaken_repr #a #framed #o #g
                 (#pre:pre_t)
                 (#post:post_t a)
@@ -95,7 +96,7 @@ let weaken_repr #a #framed #o #g
         equiv_forall_elim post (fun x -> star (post x) emp)
     in
     epost ();
-    SEA.subcomp_opaque a o g g #framed #framed
+    SEA.subcomp a o g g #framed #framed
                          #pre #post
                          #req #ens
                          #pre #post
@@ -105,6 +106,7 @@ let weaken_repr #a #framed #o #g
                          #()
                          #()
                          f
+#pop-options
 
 let return_ (a:Type u#a)
             (x:a)

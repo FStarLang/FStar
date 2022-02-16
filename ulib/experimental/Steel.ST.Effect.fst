@@ -35,6 +35,7 @@ let equiv_star_emp_r (p:vprop)
     star_commutative p emp;
     equiv_trans (p `star` emp) (emp `star` p) p
 
+#push-options "--no_tactics"
 let weaken_repr a framed
                 (pre:pre_t)
                 (post:post_t a)
@@ -80,7 +81,7 @@ let weaken_repr a framed
         equiv_forall_elim post (fun x -> star (post x) emp)
     in
     epost ();
-    Steel.Effect.subcomp_opaque a #framed #framed
+    Steel.Effect.subcomp a #framed #framed
                          #pre #post
                          #req #ens
                          #pre #post
@@ -90,7 +91,7 @@ let weaken_repr a framed
                          #()
                          #()
                          f
-
+#pop-options
 
 let return_ (a:Type)
             (x:a)

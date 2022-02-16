@@ -210,6 +210,8 @@ let inv (#t:eqtype) (#p0 #p1:perm)
         pure (equal_up_to s0 s1 x) `star`
         pure (within_bounds x l b))
 
+#push-options "--no_tactics"
+
 let elim_inv #o
         (#t:eqtype)
         (#p0 #p1:perm)
@@ -229,14 +231,6 @@ let elim_inv #o
           pure (equal_up_to s0 s1 x) `star`
           pure (within_bounds x l b))
       = let open U32 in
-        assert_spinoff
-          ((inv #_ #p0 #p1 a0 a1 s0 s1 l ctr b) ==
-          (varray_pts_to a0 p0 s0 `star`
-           varray_pts_to a1 p1 s1 `star`
-           AT.h_exists (fun (v:option U32.t) ->
-             R.pts_to ctr Steel.FractionalPermission.full_perm v `star`
-             pure (equal_up_to s0 s1 v)  `star`
-             pure (within_bounds v l b))));
         AT.change_equal_slprop
           (inv #_ #p0 #p1 a0 a1 s0 s1 l ctr b)
           (varray_pts_to a0 p0 s0 `star`
@@ -247,6 +241,8 @@ let elim_inv #o
              pure (within_bounds v l b)));
         let _v = AT.witness_exists () in
         _v
+
+#pop-options
 
 let intro_inv #o
               (#t:eqtype)
@@ -330,10 +326,12 @@ let ref_read_pt (#a:Type) (#p:Steel.FractionalPermission.perm) (#v:Ghost.erased 
     (requires fun _ -> True)
     (ensures fun _ x _ -> x == Ghost.reveal v)
   = let v' = R.read_pt r in
-    assert_spinoff (R.pts_to r p v' == R.pts_to r p v);
-    AT.change_equal_slprop (R.pts_to r p v')
-                           (R.pts_to r p v);
+    AT.change_slprop_rel (R.pts_to r p v')
+                         (R.pts_to r p v)
+                         (fun x y -> x == y)
+                         (fun _ -> ());
     AT.return v'
+
 
 let extend_equal_up_to_lemma (#t:Type0)
                              (s0:Seq.seq t)
@@ -440,12 +438,11 @@ let compare_pts (#t:eqtype)
       = let _i = elim_inv _ _ _ _ _ in
         AT.elim_pure (within_bounds _ _ _);
         let Some i = ref_read_pt ctr in
-        assert_spinoff
-          ((pure (equal_up_to s0 s1 _i)) ==
-           (pure (equal_up_to s0 s1 (Some i))));
-        AT.change_equal_slprop
+        AT.change_slprop_rel
           (pure (equal_up_to s0 s1 _i))
-          (pure (equal_up_to s0 s1 (Some i)));
+          (pure (equal_up_to s0 s1 (Some i)))
+          (fun x y -> x == y)
+          (fun _ -> ());
         let v0 = read_pt a0 i in
         let v1 = read_pt a1 i in
         if v0 = v1
