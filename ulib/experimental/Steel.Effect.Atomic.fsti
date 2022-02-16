@@ -24,7 +24,6 @@ include Steel.Effect.Common
 
 #set-options "--warn_error -330 --ide_id_info_off"  //turn off the experimental feature warning
 
-
 (*** SteelAGCommon effect ***)
 
 /// The underlying representation of atomic and ghost computations, very similar to Steel
@@ -165,11 +164,7 @@ let subcomp_pre (#a:Type)
   (_:squash (can_be_split pre_g (pre_f `star` frame)))
   (_:squash (equiv_forall post_g (fun x -> post_f x `star` frame)))
   : pure_pre
-// The call to with_tactic allows us to reduce VCs in a controlled way, once all
-// uvars have been resolved.
-// To ensure an SMT-friendly encoding of the VC, it needs to be encapsulated in a squash call
-= T.rewrite_with_tactic vc_norm (squash (
-  can_be_split_trans pre_g (pre_f `star` frame) pre_f;
+= can_be_split_trans pre_g (pre_f `star` frame) pre_f;
   (forall (h0:hmem pre_g). req_g (mk_rmem pre_g h0) ==> req_f (focus_rmem (mk_rmem pre_g h0) pre_f)) /\
   (forall (h0:hmem pre_g) (x:a) (h1:hmem (post_g x)). (
      can_be_split_trans (post_g x) (post_f x `star` frame) (post_f x);
@@ -184,7 +179,6 @@ let subcomp_pre (#a:Type)
 
         ==> ens_g (mk_rmem pre_g h0) x (mk_rmem (post_g x) h1)
   ))
-))
 
 
 /// Subtyping combinator for Steel atomic computations.

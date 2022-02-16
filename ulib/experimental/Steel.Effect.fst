@@ -52,6 +52,8 @@ let rmem_depends_only_on_post (#a:Type) (post:post_t a)
     mk_rmem (post x) m0 == mk_rmem (post x) (join m0 m1))
   = Classical.forall_intro_3 (rmem_depends_only_on_post' post)
 
+#push-options "--no_tactics"
+
 [@@ __steel_reduce__]
 let req_to_act_req (#pre:pre_t) (req:req_t pre) : Sem.l_pre #state (hp_of pre) =
   rmem_depends_only_on pre;
@@ -162,6 +164,8 @@ let nmst_get (#st:Sem.st) ()
            (fun s0 s s1 -> s0 == s /\ s == s1)
   = NMST.get ()
 
+#pop-options
+
 let rec lemma_frame_equalities_refl (frame:vprop) (h:rmem frame) : Lemma (frame_equalities frame h h) =
   match frame with
   | VUnit _ -> ()
@@ -188,21 +192,27 @@ val req_frame (frame:vprop) (snap:rmem frame) : mprop (hp_of frame)
 let req_frame' (frame:vprop) (snap:rmem frame) (m:mem) : prop =
   interp (hp_of frame) m /\ mk_rmem frame m == snap
 
+#push-options "--no_tactics"
+
 let req_frame frame snap =
   rmem_depends_only_on frame;
   req_frame' frame snap
 
-#push-options "--z3rlimit 20 --fuel 1 --ifuel 1"
+#pop-options
 
 let frame_opaque frame h0 h1 = frame_equalities frame h0 h1
 
 unfold
 let norm_opaque = norm [delta_only [`%frame_opaque]]
 
+
+
 let lemma_frame_opaque_refl (frame:vprop) (h:rmem frame) : Lemma (frame_opaque frame h h) =
   assert (frame_opaque frame h h) by (
     T.norm [delta_only [`%frame_opaque]];
     T.apply_lemma (`lemma_frame_equalities_refl))
+
+#push-options "--z3rlimit 20 --fuel 1 --ifuel 1 --no_tactics"
 
 val frame00 (#a:Type)
           (#framed:bool)
@@ -323,7 +333,7 @@ val bind_opaque (a:Type) (b:Type)
     (bind_ens_opaque req_f ens_f ens_g frame_f frame_g post p1 p2)
 
 
-#push-options "--z3rlimit 20"
+#push-options "--z3rlimit 20 --no_tactics"
 let bind_opaque a b #framed_f #framed_g #pre_f #post_f #req_f #ens_f #pre_g #post_g #req_g #ens_g #frame_f #frame_g #post #_ #_ #p #p2 f g =
   fun frame ->
     let m0 = nmst_get () in
@@ -446,9 +456,9 @@ val subcomp_opaque (a:Type)
   (requires subcomp_pre_opaque req_f ens_f req_g ens_g p1 p2)
   (ensures fun _ -> True)
 
-#push-options "--fuel 1 --ifuel 1 --z3rlimit 20"
+#push-options "--fuel 1 --ifuel 1 --z3rlimit 20 --no_tactics"
 
-let subcomp_opaque a #framed_f #framed_g #pre_f #post_f #req_f #ens_f #pre_g #post_g #req_g #ens_g #fr #_ #p1 #p2 f =
+let subcomp a #framed_f #framed_g #pre_f #post_f #req_f #ens_f #pre_g #post_g #req_g #ens_g #fr #_ #p1 #p2 f =
   fun frame ->
     let m0 = nmst_get () in
     let h0 = mk_rmem pre_g (core_mem m0) in
@@ -483,121 +493,6 @@ let subcomp_opaque a #framed_f #framed_g #pre_f #post_f #req_f #ens_f #pre_g #po
     x
 
 #pop-options
-
-let lemma_rewrite (p:Type) : Lemma (requires T.rewrite_with_tactic vc_norm p) (ensures p)
-  = T.unfold_rewrite_with_tactic vc_norm p
-
-let lemma_norm_opaque (p:Type) : Lemma (requires norm_opaque p) (ensures p) = ()
-
-(** Need to manually remove the rewrite_with_tactic marker here *)
-let lemma_subcomp_pre_opaque_aux1 (#a:Type)
-  (#pre_f:pre_t) (#post_f:post_t a) (req_f:req_t pre_f) (ens_f:ens_t pre_f a post_f)
-  (#pre_g:pre_t) (#post_g:post_t a) (req_g:req_t pre_g) (ens_g:ens_t pre_g a post_g)
-  (#frame:vprop)
-  (p1:squash (can_be_split pre_g (pre_f `star` frame)))
-  (p2:squash (equiv_forall post_g (fun x -> post_f x `star` frame)))
-  : Lemma
-  (requires subcomp_pre req_f ens_f req_g ens_g p1 p2)
-  (ensures  (can_be_split_trans pre_g (pre_f `star` frame) pre_f;
-    (forall (h0:hmem pre_g). req_g (mk_rmem pre_g h0) ==> req_f (focus_rmem (mk_rmem pre_g h0) pre_f)) /\
-    (forall (h0:hmem pre_g) (x:a) (h1:hmem (post_g x)). (
-
-     can_be_split_trans (post_g x) (post_f x `star` frame) (post_f x);
-     can_be_split_trans (pre_g) (pre_f `star` frame) frame;
-     can_be_split_trans (post_g x) (post_f x `star` frame) frame;
-
-     (req_g (mk_rmem pre_g h0) /\
-      ens_f (focus_rmem (mk_rmem pre_g h0) pre_f) x (focus_rmem (mk_rmem (post_g x) h1) (post_f x)) /\
-      frame_equalities frame
-        (focus_rmem (mk_rmem pre_g h0) frame)
-        (focus_rmem (mk_rmem (post_g x) h1) frame))
-
-        ==> ens_g (mk_rmem pre_g h0) x (mk_rmem (post_g x) h1)
-       ))))
-  = lemma_rewrite (squash (
-      can_be_split_trans pre_g (pre_f `star` frame) pre_f;
-      (forall (h0:hmem pre_g). req_g (mk_rmem pre_g h0) ==> req_f (focus_rmem (mk_rmem pre_g h0) pre_f)) /\
-      (forall (h0:hmem pre_g) (x:a) (h1:hmem (post_g x)). (
-         can_be_split_trans (post_g x) (post_f x `star` frame) (post_f x);
-         can_be_split_trans (pre_g) (pre_f `star` frame) frame;
-         can_be_split_trans (post_g x) (post_f x `star` frame) frame;
-
-         (req_g (mk_rmem pre_g h0) /\
-          ens_f (focus_rmem (mk_rmem pre_g h0) pre_f) x (focus_rmem (mk_rmem (post_g x) h1) (post_f x)) /\
-          frame_equalities frame
-            (focus_rmem (mk_rmem pre_g h0) frame)
-            (focus_rmem (mk_rmem (post_g x) h1) frame))
-
-            ==> ens_g (mk_rmem pre_g h0) x (mk_rmem (post_g x) h1)
-      ))
-    ))
-
-#push-options "--no_tactics"
-
-let lemma_subcomp_pre_opaque_aux2 (#a:Type)
-  (#pre_f:pre_t) (#post_f:post_t a) (req_f:req_t pre_f) (ens_f:ens_t pre_f a post_f)
-  (#pre_g:pre_t) (#post_g:post_t a) (req_g:req_t pre_g) (ens_g:ens_t pre_g a post_g)
-  (#frame:vprop)
-  (p1:squash (can_be_split pre_g (pre_f `star` frame)))
-  (p2:squash (equiv_forall post_g (fun x -> post_f x `star` frame)))
-  : Lemma
-  (requires  (can_be_split_trans pre_g (pre_f `star` frame) pre_f;
-    (forall (h0:hmem pre_g). req_g (mk_rmem pre_g h0) ==> req_f (focus_rmem (mk_rmem pre_g h0) pre_f)) /\
-    (forall (h0:hmem pre_g) (x:a) (h1:hmem (post_g x)). (
-
-     can_be_split_trans (post_g x) (post_f x `star` frame) (post_f x);
-     can_be_split_trans (pre_g) (pre_f `star` frame) frame;
-     can_be_split_trans (post_g x) (post_f x `star` frame) frame;
-
-     (req_g (mk_rmem pre_g h0) /\
-      ens_f (focus_rmem (mk_rmem pre_g h0) pre_f) x (focus_rmem (mk_rmem (post_g x) h1) (post_f x)) /\
-      frame_equalities frame
-        (focus_rmem (mk_rmem pre_g h0) frame)
-        (focus_rmem (mk_rmem (post_g x) h1) frame))
-
-        ==> ens_g (mk_rmem pre_g h0) x (mk_rmem (post_g x) h1)
-       ))))
-
-  (ensures subcomp_pre_opaque req_f ens_f req_g ens_g p1 p2)
-  =  lemma_norm_opaque (squash (
-
-    can_be_split_trans pre_g (pre_f `star` frame) pre_f;
-    (forall (h0:hmem pre_g). req_g (mk_rmem pre_g h0) ==> req_f (focus_rmem (mk_rmem pre_g h0) pre_f)) /\
-    (forall (h0:hmem pre_g) (x:a) (h1:hmem (post_g x)). (
-
-     can_be_split_trans (post_g x) (post_f x `star` frame) (post_f x);
-     can_be_split_trans (pre_g) (pre_f `star` frame) frame;
-     can_be_split_trans (post_g x) (post_f x `star` frame) frame;
-
-     (req_g (mk_rmem pre_g h0) /\
-      ens_f (focus_rmem (mk_rmem pre_g h0) pre_f) x (focus_rmem (mk_rmem (post_g x) h1) (post_f x)) /\
-      frame_opaque frame
-        (focus_rmem (mk_rmem pre_g h0) frame)
-        (focus_rmem (mk_rmem (post_g x) h1) frame))
-
-        ==> ens_g (mk_rmem pre_g h0) x (mk_rmem (post_g x) h1)
-       ))
-  ))
-
-let lemma_subcomp_pre_opaque (#a:Type)
-  (#pre_f:pre_t) (#post_f:post_t a) (req_f:req_t pre_f) (ens_f:ens_t pre_f a post_f)
-  (#pre_g:pre_t) (#post_g:post_t a) (req_g:req_t pre_g) (ens_g:ens_t pre_g a post_g)
-  (#frame:vprop)
-  (p1:squash (can_be_split pre_g (pre_f `star` frame)))
-  (p2:squash (equiv_forall post_g (fun x -> post_f x `star` frame)))
-  : Lemma
-  (requires subcomp_pre req_f ens_f req_g ens_g p1 p2)
-  (ensures subcomp_pre_opaque req_f ens_f req_g ens_g p1 p2)
-  = lemma_subcomp_pre_opaque_aux1 req_f ens_f req_g ens_g p1 p2;
-    lemma_subcomp_pre_opaque_aux2 req_f ens_f req_g ens_g p1 p2
-
-#pop-options
-
-
-
-let subcomp a #framed_f #framed_g #pre_f #post_f #req_f #ens_f #pre_g #post_g #req_g #ens_g #fr #_ #p1 #p2 f =
-  lemma_subcomp_pre_opaque req_f ens_f req_g ens_g p1 p2;
-  subcomp_opaque a #framed_f #framed_g #pre_f #post_f #req_f #ens_f #pre_g #post_g #req_g #ens_g #fr #_ #p1 #p2 f
 
 let bind_pure_steel_ a b #wp #pre #post #req #ens f g
   = FStar.Monotonic.Pure.elim_pure_wp_monotonicity wp;
@@ -639,6 +534,8 @@ let bind_div_steel (a:Type) (b:Type)
 polymonadic_bind (DIV, SteelBase) |> SteelBase = bind_div_steel
 #pop-options
 
+#push-options "--no_tactics"
+
 let par0 (#aL:Type u#a) (#preL:vprop) (#postL:aL -> vprop)
          (f:repr aL false preL postL (fun _ -> True) (fun _ _ _ -> True))
          (#aR:Type u#a) (#preR:vprop) (#postR:aR -> vprop)
@@ -647,6 +544,8 @@ let par0 (#aL:Type u#a) (#preL:vprop) (#postL:aL -> vprop)
     (preL `star` preR)
     (fun y -> postL (fst y) `star` postR (snd y))
   = Steel?.reflect (fun frame -> Sem.run #state #_ #_ #_ #_ #_ frame (Sem.Par (Sem.Act f) (Sem.Act g)))
+
+#pop-options
 
 (*
  * AR: Steel is not marked reifiable since we intend to run Steel programs natively

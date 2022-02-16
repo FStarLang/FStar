@@ -122,19 +122,19 @@ let normal (#a:Type) (x:a) = norm normal_steps x
 let star = VStar
 
 /// Extracting the underlying separation logic assertion from a vprop
-[@@ __steel_reduce__]
+[@@ __steel_reduce__; strict_on_arguments [0]]
 let rec hp_of (p:vprop) = match p with
   | VUnit p -> p.hp
   | VStar p1 p2 -> hp_of p1 `Mem.star` hp_of p2
 
 /// Extracting the selector type from a vprop
-[@@ __steel_reduce__]
+[@@ __steel_reduce__; strict_on_arguments [0]]
 let rec t_of (p:vprop) = match p with
   | VUnit p -> p.t
   | VStar p1 p2 -> t_of p1 * t_of p2
 
 /// Extracting the selector from a vprop
-[@@ __steel_reduce__]
+[@@ __steel_reduce__; strict_on_arguments [0]]
 let rec sel_of (p:vprop) : GTot (selector (t_of p) (hp_of p)) = match p with
   | VUnit p -> fun h -> p.sel h
   | VStar p1 p2 ->
@@ -185,15 +185,17 @@ val can_be_split_trans (p q r:vprop)
   (requires p `can_be_split` q /\ q `can_be_split` r)
   (ensures p `can_be_split` r)
 
+/// Since SMT queries will be normalized, `star` will be reduced to its
+/// underlying definition and SMTPats need to be defined on VStar
 val can_be_split_star_l (p q:vprop)
 : Lemma
   (ensures (p `star` q) `can_be_split` p)
-  [SMTPat ((p `star` q) `can_be_split` p)]
+  [SMTPat ((p `VStar` q) `can_be_split` p)]
 
 val can_be_split_star_r (p q:vprop)
 : Lemma
   (ensures (p `star` q) `can_be_split` q)
-  [SMTPat ((p `star` q) `can_be_split` q)]
+  [SMTPat ((p `VStar` q) `can_be_split` q)]
 
 val can_be_split_refl (p:vprop)
 : Lemma (p `can_be_split` p)
@@ -531,6 +533,7 @@ val interp_vdep_hp (v: vprop) (p: ( (t_of v) -> Tot vprop)) (m: mem) : Lemma
   (interp (vdep_hp v p) m <==> (interp (hp_of v) m /\ interp (hp_of v `Mem.star` hp_of (p (sel_of v m))) m))
 
 /// Helper to define the selector type of the second component of the dependent star
+unfold
 let vdep_payload
   (v: vprop) (p: ( (t_of v) -> Tot vprop))
   (x: t_of v)
@@ -538,6 +541,7 @@ let vdep_payload
 = t_of (p x)
 
 /// Selector type for the dependent star: A dependent tuple, where the second component's type depends on the first vprop
+unfold
 let vdep_t (v: vprop) (p: ( (t_of v) -> Tot vprop)) : Tot Type
 = dtuple2 (t_of v) (vdep_payload v p)
 
@@ -2402,12 +2406,6 @@ let ite_soundness_tac () : Tac unit =
     (fun _ -> apply_lemma (`unfold_rewrite_with_tactic))
     trefl);
   smt ()
-
-
-/// Normalization step for VC generation, used in Steel and SteelAtomic subcomps
-/// This tactic is executed after frame inference, and just before sending the query to the SMT
-/// As such, it is a good place to add debugging features to inspect SMT queries when needed
-let vc_norm () : Tac unit = norm normal_steps; trefl()
 
 ////////////////////////////////////////////////////////////////////////////////
 //Common datatypes for the atomic & ghost effects

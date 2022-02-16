@@ -150,11 +150,7 @@ let subcomp_pre (#a:Type)
   (_:squash (can_be_split pre_g (pre_f `star` frame)))
   (_:squash (equiv_forall post_g (fun x -> post_f x `star` frame)))
   : pure_pre
-// The call to with_tactic allows us to reduce VCs in a controlled way, once all
-// uvars have been resolved.
-// To ensure an SMT-friendly encoding of the VC, it needs to be encapsulated in a squash call
-= T.rewrite_with_tactic vc_norm (squash (
-  can_be_split_trans pre_g (pre_f `star` frame) pre_f;
+= can_be_split_trans pre_g (pre_f `star` frame) pre_f;
   (forall (h0:hmem pre_g). req_g (mk_rmem pre_g h0) ==> req_f (focus_rmem (mk_rmem pre_g h0) pre_f)) /\
   (forall (h0:hmem pre_g) (x:a) (h1:hmem (post_g x)). (
      can_be_split_trans (post_g x) (post_f x `star` frame) (post_f x);
@@ -169,7 +165,6 @@ let subcomp_pre (#a:Type)
 
         ==> ens_g (mk_rmem pre_g h0) x (mk_rmem (post_g x) h1)
   ))
-))
 
 /// Subtyping combinator for Steel computations.
 /// Computation [f] is given type `repr a framed_g pre_g post_g req_g ens_g`.
@@ -343,3 +338,13 @@ val as_action  (#a:Type)
                (#q:a -> slprop)
                (f:action_except a Set.empty p q)
   : SteelT a (to_vprop p) (fun x -> to_vprop (q x))
+
+open FStar.Tactics
+
+/// Normalization step for VC generation, operating on the Steel VC sent to SMT
+/// This tactic is executed after frame inference, and just before sending the query to the SMT
+/// As such, it is a good place to add debugging features to inspect SMT queries when needed.
+/// Ideally it would go in Steel.Effect.Common, but it interacts badly with the existing Steel.ST
+/// effect
+[@@ resolve_implicits; handle_smt_goals]
+let vc_norm () : Tac unit = norm normal_steps

@@ -24,6 +24,9 @@ friend Steel.Effect
 let _ : squash (forall (pre:pre_t) (m0:mem{interp (hp_of pre) m0}) (m1:mem{disjoint m0 m1}).
   mk_rmem pre m0 == mk_rmem pre (join m0 m1)) = Classical.forall_intro rmem_depends_only_on
 
+#push-options "--no_tactics"
+
+unfold
 let req_to_act_req (#pre:vprop) (req:req_t pre) : mprop (hp_of pre) =
   fun m ->
     rmem_depends_only_on pre;
@@ -32,10 +35,13 @@ let req_to_act_req (#pre:vprop) (req:req_t pre) : mprop (hp_of pre) =
 unfold
 let to_post (#a:Type) (post:post_t a) = fun x -> (hp_of (post x))
 
+unfold
 let ens_to_act_ens (#pre:pre_t) (#a:Type) (#post:post_t a) (ens:ens_t pre a post)
 : mprop2 (hp_of pre) (to_post post)
 = fun m0 x m1 -> interp (hp_of pre) m0 /\ interp (hp_of (post x)) m1 /\
     ens (mk_rmem pre m0) x (mk_rmem (post x) m1)
+
+#pop-options
 
 let repr a framed opened f pre post req ens =
   action_except_full a opened (hp_of pre) (to_post post)
@@ -49,7 +55,7 @@ let return_ a x opened #p = fun _ ->
 
 #push-options "--fuel 0 --ifuel 0"
 
-#push-options "--z3rlimit 20 --fuel 1 --ifuel 1"
+#push-options "--z3rlimit 20 --fuel 1 --ifuel 1 --no_tactics"
 
 val frame00 (#a:Type)
           (#framed:bool)
@@ -280,27 +286,7 @@ let bind a b opened o1 o2 #framed_f #framed_g #pre_f #post_f #req_f #ens_f #pre_
   = norm_repr (bind_opaque a b opened o1 o2 #framed_f #framed_g #pre_f #post_f #req_f #ens_f #pre_g #post_g #req_g #ens_g #frame_f #frame_g #post #_ #_ #p #p2 f g)
 
 
-val subcomp_opaque (a:Type)
-  (opened:inames)
-  (o1:eqtype_as_type observability)
-  (o2:eqtype_as_type observability)
-  (#framed_f:eqtype_as_type bool)
-  (#framed_g:eqtype_as_type bool)
-  (#[@@@ framing_implicit] pre_f:pre_t) (#[@@@ framing_implicit] post_f:post_t a)
-  (#[@@@ framing_implicit] req_f:req_t pre_f) (#[@@@ framing_implicit] ens_f:ens_t pre_f a post_f)
-  (#[@@@ framing_implicit] pre_g:pre_t) (#[@@@ framing_implicit] post_g:post_t a)
-  (#[@@@ framing_implicit] req_g:req_t pre_g) (#[@@@ framing_implicit] ens_g:ens_t pre_g a post_g)
-  (#[@@@ framing_implicit] frame:vprop)
-  (#[@@@ framing_implicit] _ : squash (maybe_emp framed_f frame))
-  (#[@@@ framing_implicit] p1:squash (can_be_split pre_g (pre_f `star` frame)))
-  (#[@@@ framing_implicit] p2:squash (equiv_forall post_g (fun x -> post_f x `star` frame)))
-  (f:repr a framed_f opened o1 pre_f post_f req_f ens_f)
-: Pure (repr a framed_g opened o2 pre_g post_g req_g ens_g)
-  (requires (o1 = Unobservable || o2 = Observable) /\
-    subcomp_pre_opaque req_f ens_f req_g ens_g p1 p2)
-  (ensures fun _ -> True)
-
-let subcomp_opaque a opened o1 o2 #framed_f #framed_g #pre_f #post_f #req_f #ens_f #pre_g #post_g #req_g #ens_g #fr #_ #p1 #p2 f =
+let subcomp a opened o1 o2 #framed_f #framed_g #pre_f #post_f #req_f #ens_f #pre_g #post_g #req_g #ens_g #fr #_ #p1 #p2 f =
   fun frame ->
     let m0:full_mem = NMSTTotal.get () in
     let h0 = mk_rmem pre_g (core_mem m0) in
@@ -335,9 +321,6 @@ let subcomp_opaque a opened o1 o2 #framed_f #framed_g #pre_f #post_f #req_f #ens
 
     x
 
-let subcomp a opened o1 o2 #framed_f #framed_g #pre_f #post_f #req_f #ens_f #pre_g #post_g #req_g #ens_g #fr #_ #p1 #p2 f =
-  lemma_subcomp_pre_opaque req_f ens_f req_g ens_g p1 p2;
-  subcomp_opaque a opened o1 o2 #framed_f #framed_g #pre_f #post_f #req_f #ens_f #pre_g #post_g #req_g #ens_g #fr #_ #p1 #p2 f
 
 #pop-options
 
@@ -365,6 +348,8 @@ let get0 (#opened:inames) (#p:vprop) (_:unit) : repr (erased (rmem p))
       let h0 = mk_rmem p (core_mem m0) in
       lemma_frame_equalities_refl p h0;
       h0
+
+#pop-options
 
 let get () = SteelGhost?.reflect (get0 ())
 
@@ -569,6 +554,7 @@ let reveal_star0 (#opened:inames) (p1 p2:vprop)
      let m:full_mem = NMSTTotal.get () in
      Classical.forall_intro_3 reveal_mk_rmem
 
+
 let reveal_star p1 p2 = SteelGhost?.reflect (reveal_star0 p1 p2)
 
 let reveal_star_30 (#opened:inames) (p1 p2 p3:vprop)
@@ -694,6 +680,8 @@ let vdep_cond
   (x1: t_of (v `star` q))
 : Tot prop
 = q == p (fst x1)
+
+#push-options "--fuel 1 --ifuel 0 --z3rlimit 20"
 
 let vdep_rel
   (v: vprop)
