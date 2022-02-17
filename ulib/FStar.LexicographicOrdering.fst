@@ -105,14 +105,14 @@ let lex_to_lex_t #a #b r_a r_b t1 t2 p =
     : squash (lex_t r_a r_b t1 t2)
     = bind_squash p (fun p ->
         match p with
-        | And (_:dfst t1 == dfst t2) p2 ->
+        | Prims.Mktuple2 (_:dfst t1 == dfst t2) p2 ->
           bind_squash p2 (fun p2 ->
             return_squash (Right_lex #a #b #r_a #r_b (dfst t1) (dsnd t1) (dsnd t2) p2))) in
 
   bind_squash p (fun p ->
     match p with
-    | Left p1 -> left p1
-    | Right p2 -> right p2)
+    | Prims.Inl p1 -> left p1
+    | Prims.Inr p2 -> right p2)
 
 
 let lex_t_non_dep_wf #a #b #r_a #r_b wf_a wf_b =

@@ -51,13 +51,13 @@ let move_requires #a #p #q f x =
   give_proof (bind_squash (get_proof (l_or (p x) (~(p x))))
         (fun (b: l_or (p x) (~(p x))) ->
             bind_squash b
-              (fun (b': c_or (p x) (~(p x))) ->
+              (fun (b': Prims.either (p x) (~(p x))) ->
                   match b' with
-                  | Left hp ->
+                  | Prims.Inl hp ->
                     give_witness hp;
                     f x;
                     get_proof (p x ==> q x)
-                  | Right hnp -> give_witness hnp)))
+                  | Prims.Inr hnp -> give_witness hnp)))
 
 let move_requires_2 #a #b #p #q f x y = move_requires (f x) y
 
@@ -133,13 +133,13 @@ let ghost_lemma #a #p #q f =
       give_proof (bind_squash (get_proof (l_or (p x) (~(p x))))
             (fun (b: l_or (p x) (~(p x))) ->
                 bind_squash b
-                  (fun (b': c_or (p x) (~(p x))) ->
+                  (fun (b': Prims.either (p x) (~(p x))) ->
                       match b' with
-                      | Left hp ->
+                      | Prims.Inl hp ->
                         give_witness hp;
                         f x;
                         get_proof (p x ==> q x ())
-                      | Right hnp -> give_witness hnp))))
+                      | Prims.Inr hnp -> give_witness hnp))))
   in
   forall_intro lem
 
@@ -158,7 +158,7 @@ let exists_intro_not_all_not (#a:Type) (#p:a -> Type)
         = bind_squash
            (get_proof (forall x. ~ (p x)))
            (fun (g: (forall x. ~ (p x))) ->
-             bind_squash #(x:a -> GTot (~(p x))) #c_False g
+             bind_squash #(x:a -> GTot (~(p x))) #Prims.empty g
              (fun (h:(x:a -> GTot (~(p x)))) -> f h))
     in
     ()

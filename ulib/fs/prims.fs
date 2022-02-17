@@ -59,22 +59,22 @@ type 'd b2t    = B2t of unit
 
 type 'a squash = Squash of unit
 
-type (' p, ' q) c_or =
-  | Left of ' p
-  | Right of ' q
+type (' p, ' q) either =
+  | Inl of ' p
+  | Inr of ' q
 
-type (' p, ' q) l_or = ('p, 'q) c_or squash
+type (' p, ' q) l_or = ('p, 'q) either squash
 
-let uu___is_Left = function Left _ -> true | Right _ -> false
+let uu___is_Inl = function Inl _ -> true | Inr _ -> false
 
-let uu___is_Right = function Left _ -> false | Right _ -> true
+let uu___is_Inr = function Inl _ -> false | Inr _ -> true
 
-type (' p, ' q) c_and =
-| And of ' p * ' q
+type (' p, ' q) tuple2 =
+| Mktuple2 of ' p * ' q
 
-type (' p, ' q) l_and = ('p, 'q) c_and squash
+type (' p, ' q) l_and = ('p, 'q) tuple2 squash
 
-let uu___is_And _ = true
+let uu___is_Mktuple2 _ = true
 
 
 type c_True =

@@ -16,11 +16,11 @@
 #light "off"
 // (c) Microsoft Corporation. All rights reserved
 module FStar.Syntax.Free
+open Prims
 open FStar.Pervasives
 open FStar.Compiler.Effect
 open FStar.Compiler.List
 
-open Prims
 open FStar
 open FStar.Compiler
 open FStar.Compiler.Util

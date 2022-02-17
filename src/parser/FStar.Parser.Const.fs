@@ -104,11 +104,11 @@ let magic_lid  = pconst "magic"
 let has_type_lid = pconst "has_type"
 
 (* Constructive variants *)
-let c_true_lid   = pconst "c_True"
-let c_false_lid  = pconst "c_False"
-let c_and_lid    = pconst "c_and"
-let c_or_lid     = pconst "c_or"
-let dtuple2_lid  = pconst "dtuple2" // for l_Exists
+let c_true_lid      = pconst "c_True"
+let empty_type_lid  = pconst "empty"
+let c_and_lid       = pconst "tuple2"
+let c_or_lid        = pconst "either"
+let dtuple2_lid     = pconst "dtuple2" // for l_Exists
 
 (* Various equality predicates *)
 let eq2_lid    = pconst  "eq2"
