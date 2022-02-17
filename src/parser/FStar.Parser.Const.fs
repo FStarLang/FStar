@@ -106,8 +106,8 @@ let has_type_lid = pconst "has_type"
 (* Constructive variants *)
 let c_true_lid      = pconst "c_True"
 let empty_type_lid  = pconst "empty"
-let c_and_lid       = pconst "tuple2"
-let c_or_lid        = pconst "either"
+let c_and_lid       = pconst "pair"
+let c_or_lid        = pconst "sum"
 let dtuple2_lid     = pconst "dtuple2" // for l_Exists
 
 (* Various equality predicates *)

@@ -47,21 +47,21 @@ let __proj__Mktuple2__item___1 : 'Ap 'Aq . ('Ap,'Aq) tuple2 -> 'Ap =
 let __proj__Mktuple2__item___2 : 'Ap 'Aq . ('Ap,'Aq) tuple2 -> 'Aq =
   fun projectee  -> match projectee with | Mktuple2 (_0,_1) -> _1
 type ('Ap,'Aq) l_and = unit
-type ('Ap,'Aq) either =
-  | Inl of 'Ap
-  | Inr of 'Aq
-let uu___is_Inl : 'Ap 'Aq . ('Ap,'Aq) either -> bool =
+type ('Ap,'Aq) sum =
+  | Left of 'Ap
+  | Right of 'Aq
+let uu___is_Left : 'Ap 'Aq . ('Ap,'Aq) either -> bool =
   fun projectee  ->
-    match projectee with | Inl _0 -> true | uu____344 -> false
+    match projectee with | Left _0 -> true | uu____344 -> false
 
-let __proj__Inl__item___0 : 'Ap 'Aq . ('Ap,'Aq) either -> 'Ap =
-  fun projectee  -> match projectee with | Inl _0 -> _0
-let uu___is_Inr : 'Ap 'Aq . ('Ap,'Aq) either -> bool =
+let __proj__Left__item___0 : 'Ap 'Aq . ('Ap,'Aq) either -> 'Ap =
+  fun projectee  -> match projectee with | Left _0 -> _0
+let uu___is_Right : 'Ap 'Aq . ('Ap,'Aq) either -> bool =
   fun projectee  ->
-    match projectee with | Inr _0 -> true | uu____404 -> false
+    match projectee with | Right _0 -> true | uu____404 -> false
 
-let __proj__Inr__item___0 : 'Ap 'Aq . ('Ap,'Aq) either -> 'Aq =
-  fun projectee  -> match projectee with | Inr _0 -> _0
+let __proj__Right__item___0 : 'Ap 'Aq . ('Ap,'Aq) either -> 'Aq =
+  fun projectee  -> match projectee with | Right _0 -> _0
 type ('Ap,'Aq) l_or = unit
 type ('Ap,'Aq) l_imp = unit
 type ('Ap,'Aq) l_iff = unit

@@ -136,7 +136,7 @@ let run_all () =
     //imitation: unifies u to a constant
     FStar.Main.process_args () |> ignore; //set options
     let tm, us = inst 1 (tc "fun u x -> u x") in
-    let sol = tc "fun x -> Prims.tuple2 x x" in
+    let sol = tc "fun x -> Prims.pair x x" in
     unify_check 9 tm
             sol
             Trivial

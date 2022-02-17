@@ -45,9 +45,9 @@ let or_elim_simple
     bind_squash x (fun p_or_q ->
     bind_squash p_or_q (fun p_cor_q ->
     match p_cor_q with
-    | Prims.Inl p ->
+    | Prims.Left p ->
       f (return_squash p)
-    | Prims.Inr q ->
+    | Prims.Right q ->
       g (return_squash q)))
 
 let or_elim
@@ -73,7 +73,7 @@ let and_elim (p:Type)
   : Tot (squash r)
   = let open FStar.Squash in
     bind_squash x (fun p_and_q ->
-    bind_squash p_and_q (fun (Prims.Mktuple2 p q) ->
+    bind_squash p_and_q (fun (Prims.Pair p q) ->
     f (return_squash p) (return_squash q)))
 
 let forall_intro

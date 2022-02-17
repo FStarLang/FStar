@@ -68,13 +68,13 @@ let strong_excluded_middle (p: Type0) : GTot (b: bool{b = true <==> p}) =
     give_proof (bind_squash (get_proof (l_or p (~p)))
           (fun (b: l_or p (~p)) ->
               bind_squash b
-                (fun (b': Prims.either p (~p)) ->
+                (fun (b': Prims.sum p (~p)) ->
                     match b' with
-                    | Prims.Inl hp ->
+                    | Prims.Left hp ->
                       give_witness hp;
                       exists_intro (fun b -> b = true <==> p) true;
                       get_proof (exists b. b = true <==> p)
-                    | Prims.Inr hnp ->
+                    | Prims.Right hnp ->
                       give_witness hnp;
                       exists_intro (fun b -> b = true <==> p) false;
                       get_proof (exists b. b = true <==> p))))

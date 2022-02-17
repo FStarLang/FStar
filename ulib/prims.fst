@@ -159,22 +159,22 @@ type eq2 (#a: Type) (x: a) (y: a) : logical = squash (equals x y)
 type b2t (b: bool) : logical = (b == true)
 
 (** constructive conjunction *)
-type tuple2 (p: Type) (q: Type) = | Mktuple2 : _1:p -> _2:q -> tuple2 p q
+type pair (p: Type) (q: Type) = | Pair : _1:p -> _2:q -> pair p q
 
 (** squashed conjunction, specialized to [Type0], written with an
     infix binary [/\] *)
 [@@ "tac_opaque"; smt_theory_symbol]
-type l_and (p: logical) (q: logical) : logical = squash (tuple2 p q)
+type l_and (p: logical) (q: logical) : logical = squash (pair p q)
 
 (** constructive disjunction *)
-type either (p: Type) (q: Type) =
-  | Inl : v:p -> either p q
-  | Inr : v:q -> either p q
+type sum (p: Type) (q: Type) =
+  | Left : v:p -> sum p q
+  | Right : v:q -> sum p q
 
 (** squashed disjunction, specialized to [Type0], written with an
     infix binary [\/] *)
 [@@ "tac_opaque"; smt_theory_symbol]
-type l_or (p: logical) (q: logical) : logical = squash (either p q)
+type l_or (p: logical) (q: logical) : logical = squash (sum p q)
 
 (** squashed (non-dependent) implication, specialized to [Type0],
     written with an infix binary [==>]. Note, [==>] binds weaker than

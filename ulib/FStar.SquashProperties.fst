@@ -49,12 +49,12 @@ let forall_intro #a #p f =
 (* The whole point of defining squash is to soundly allow define excluded_middle;
    here this follows from get_proof and give_proof *)
 
-val bool_of_or : #p:Type -> #q:Type -> Prims.either p q ->
+val bool_of_or : #p:Type -> #q:Type -> Prims.sum p q ->
   Tot (b:bool{(b ==> p) /\ (not(b) ==> q)})
 let bool_of_or #p #q t =
   match t with
-  | Prims.Inl  _ -> true
-  | Prims.Inr _ -> false
+  | Prims.Left  _ -> true
+  | Prims.Right _ -> false
 
 val excluded_middle : p:Type -> GTot (squash (b:bool{b <==> p}))
 let excluded_middle (p:Type) = map_squash (join_squash (get_proof (p \/ (~p)))) bool_of_or
@@ -64,9 +64,9 @@ val excluded_middle_squash : p:Type0 -> GTot (p \/ ~p)
 let excluded_middle_squash p =
   bind_squash (excluded_middle p) (fun x ->
   if x then
-    map_squash (get_proof p) (Prims.Inl #p)
+    map_squash (get_proof p) (Prims.Left #p)
   else
-    return_squash (Prims.Inr #_ #(~p) (return_squash (fun (h:p) ->
+    return_squash (Prims.Right #_ #(~p) (return_squash (fun (h:p) ->
                                    give_proof (return_squash h);
                                    false_elim #False ()))))
 
@@ -76,10 +76,10 @@ let excluded_middle_squash p =
 val ifProp: #p:Type0 -> b:Type0 -> e1:squash p -> e2:squash p -> GTot (squash p)
 let ifProp #p b e1 e2 =
    bind_squash (excluded_middle_squash b) 
-	       (fun (x:Prims.either b (~ b)) -> 
+	       (fun (x:Prims.sum b (~ b)) -> 
 		match x with
-	        | Prims.Inl _ -> e1
-		| Prims.Inr _ -> e2)
+	        | Prims.Left _ -> e1
+		| Prims.Right _ -> e2)
 
 (* The powerset operator *)
 type pow (p:Type) = p -> GTot bool
@@ -107,11 +107,11 @@ let false_elim (#a:Type) (f:False) : Tot a
 val l1: (a:Type0) -> (b:Type0) -> GTot (squash (retract_cond (pow a) (pow b)))
 let l1 (a:Type) (b:Type) =
    bind_squash (excluded_middle_squash (retract (pow a) (pow b))) 
-	      (fun (x:Prims.either (retract (pow a) (pow b)) (~ (retract (pow a) (pow b)))) ->
+	      (fun (x:Prims.sum (retract (pow a) (pow b)) (~ (retract (pow a) (pow b)))) ->
 	         match x with
-		 | Prims.Inl (MkR f0 g0 e) -> 
+		 | Prims.Left (MkR f0 g0 e) -> 
 		   return_squash (MkC f0 g0 (fun _ -> e))
-		 | Prims.Inr nr ->
+		 | Prims.Right nr ->
 		   let f0 (x:pow a) (y:b) = false in
 		   let g0 (x:pow b) (y:a) = false in
 		   map_squash nr (fun (f:(retract (pow a) (pow b) -> GTot False)) -> 

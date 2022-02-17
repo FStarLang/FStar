@@ -37,9 +37,9 @@ noeq type retract_cond 'a 'b : Type =
 val l1: (a:Type0) -> (b:Type0) -> GTot (squash (retract_cond (pow a) (pow b)))
 let l1 (a:Type) (b:Type) =
    bind_squash (excluded_middle_squash (retract (pow a) (pow b)))
-	      (fun (x:Prims.either (retract (pow a) (pow b)) (~ (retract (pow a) (pow b)))) ->
+	      (fun (x:Prims.sum (retract (pow a) (pow b)) (~ (retract (pow a) (pow b)))) ->
 	         match x with
-		 | Prims.Inl (MkR f0 g0 e) ->
+		 | Prims.Left (MkR f0 g0 e) ->
 		   return_squash (MkC f0 g0 (fun _ -> e) (* <- this lambda causes the problem *))
-		 | Prims.Inr nr ->
+		 | Prims.Right nr ->
                    magic())
