@@ -81,7 +81,7 @@ learn about indexed inductive types from three related perspectives:
     <Part2_well_founded_recursion>`.
 
   * Representing computations: Inductive type definitions allow
-    embedding other programming lanaguges or computational models
+    embedding other programming languages or computational models
     within F*. We develop two case studies.
 
     + We develop a :ref:`deep embedding of the simply-typed lambda
@@ -91,10 +91,16 @@ learn about indexed inductive types from three related perspectives:
       programming language, a relation describing its type system, and
       another relation describing its operational semantics.
 
-    + We develop a :ref:`shallow embedding of an imperative
+    + We also show how to use :ref:`higher-order abstract syntax
+      <Part2_phoas>` to represent well-typed lambda terms, a concise
+      style that illustrates how to use inductive types that store
+      functions.
+
+    + Finally, we look at a :ref:`shallow embedding of an imperative
       programming language with structured concurrency <Part2_par>`,
       representing computations as infinitely branching inductively
-      defined trees. The example showcases the use of inductive types
+      defined trees. The example introduces modeling computational
+      effects as monads and and showcases the use of inductive types
       at higher order.
 
 This section is somewhat more advanced than the first. It also

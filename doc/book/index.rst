@@ -65,47 +65,51 @@ no background in formal proofs. Even if you are familiar with program
 proofs and dependent types, it will be useful to quickly go through
 this part, since some elements are quite specific to F*.
 
-Part 2: Programming and Proving with Inductive Types
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Part 2: Inductive Types for Data, Proofs, and Computations
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 We turn next to inductive type definitions, the main mechanism by
 which a user can define new data types. F*'s indexed inductive types
 allow one to capture useful properties of data structures, and
 dependently types functions over these indexed types can to respect
-several kinds of invariants.
+several kinds of invariants. Beyond their use for data structures,
+inductive data types are used at the core of F*'s logic to model
+fundamental notions like equality and termination proofs, and can also
+be used to model and embed other programming paradigms within F*.
 
 
-Part 2: Dependently Typed Functional Programming
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..
+   Part 2: Dependently Typed Functional Programming
+   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. _Universes:
-.. _TypeConversion:
+   .. _Universes:
+   .. _TypeConversion:
 
-  * Working with indexed data structures
-    - Vectors
-    - Red-black trees
-    - Merkle trees
+     * Working with indexed data structures
+       - Vectors
+       - Red-black trees
+       - Merkle trees
 
-  * Equality, type conversion, and subtyping
+     * Equality, type conversion, and subtyping
 
-.. _Classical:
+   .. _Classical:
 
-  * Proof irrelevance and classical logic: prop and squash
+     * Proof irrelevance and classical logic: prop and squash
 
-  * More termination proofs
-    - Infinitely branching trees and ordinal numbers
-    - Lexicographic orderings and unification
+     * More termination proofs
+       - Infinitely branching trees and ordinal numbers
+       - Lexicographic orderings and unification
 
-  * Calculational Proofs
+     * Calculational Proofs
 
-  * Generic programming
-    - Printf
-    - Integer overloading
-    - Codes for types
+     * Generic programming
+       - Printf
+       - Integer overloading
+       - Codes for types
 
-  * Typeclasses
+     * Typeclasses
 
-  * Universes
+     * Universes
 
 .. _effects:
 
