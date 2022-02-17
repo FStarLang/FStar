@@ -89,7 +89,7 @@ let rec memo_heap_to_valid_memo (#f:dom -> Tot codom) (h0:memo_heap f)
 = match h0 with
   | [] -> []
   | (|x,y|)::h0' ->
-    (* TODO (to investigate) : removing #f here prevents the fuinction from verifying *)
+    (* TODO (to investigate) : removing #f here prevents the function from verifying *)
     (x,y) :: memo_heap_to_valid_memo #f h0'
 
 let rec valid_memo_to_memo_heap (f:dom -> Tot codom) (h0:heap)
@@ -250,7 +250,7 @@ let memo_extr_p_computes (p:dom -> Type0) (f: (x:dom{p x} -> Memo codom)) (g:dom
 
 
 
-(* Tentaive approach to memoization of recursive functions *)
+(* Tentative approach to memoization of recursive functions *)
 (* Given a function [f : x0:dom -> f0:(x:dom{x << x0} -> Tot codom) -> Tot codom] *)
 (* we can compute its fixpoint as follow with [fix f] *)
 
@@ -483,7 +483,7 @@ let to_memo_pack_rec (#g:dom -> Tot codom)
 (*                                                                            *)
 (* ****************************************************************************)
 
-(* In order to prove that [fixp f] and [g] are extensionally equalsm *)
+(* In order to prove that [fixp f] and [g] are extensionally equal *)
 (* it is enough to prove that [fix_eq_proof f g] *)
 
 let rec complete_fixp_eq_proof

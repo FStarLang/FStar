@@ -8,7 +8,7 @@
       1,
       [ "@query", "equation_FStar.Pervasives.dfst" ],
       0,
-      "7ceeb04c263ba7ed966031d237b6dc18"
+      "e1559938c179d440b1f4fb22587321f6"
     ],
     [
       "MRefHeap.contains_same_addr_lemma",
@@ -29,7 +29,7 @@
         "refinement_interpretation_Tm_refine_8f2fff72b18dc472afbc83d481143bc1"
       ],
       0,
-      "4106b6a3266b7ef681402781c1bcf2f1"
+      "98f592e95a6241f35b05fdf0e000c87b"
     ],
     [
       "MRefHeap.contains_same_addr_lemma",
@@ -50,7 +50,7 @@
         "refinement_interpretation_Tm_refine_8f2fff72b18dc472afbc83d481143bc1"
       ],
       0,
-      "9b22cb285b2df65614d30c5404aa2c0d"
+      "e820aa36967cd940d4fa39409864ed5e"
     ],
     [
       "MRefHeap.contains_diff_addr_lemma",
@@ -66,7 +66,7 @@
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "1421bac6fb61a065c63fe88bea293880"
+      "238b3ad41a93c5a5344b29e197bac4a7"
     ],
     [
       "MRefHeap.contains_diff_addr_lemma",
@@ -76,13 +76,14 @@
       [
         "@MaxIFuel_assumption", "@query", "equation_MRefHeap.addr_of",
         "equation_MRefHeap.mref", "equation_Prims.eqtype",
-        "equation_Prims.nat", "function_token_typing_Prims.int",
+        "equation_Prims.nat", "equation_Prims.op_Equals_Equals_Equals",
+        "function_token_typing_Prims.int",
         "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2", "int_inversion",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "460e6a838adc986ec66fd9654ca870ec"
+      "7a0c97326f39f2f4cb0d488753895e62"
     ],
     [
       "MRefHeap.sel",
@@ -103,7 +104,7 @@
         "refinement_interpretation_Tm_refine_36453e3eb6145226f640e16ed9612466"
       ],
       0,
-      "a7fde7e7ba92391e7ab76c7eea4b94a9"
+      "e6458de4776048bfb7822b5f8711df9d"
     ],
     [
       "MRefHeap.alloc_ref",
@@ -115,7 +116,7 @@
         "refinement_interpretation_Tm_refine_36453e3eb6145226f640e16ed9612466"
       ],
       0,
-      "4ad3f535bf5c3dd0e37820ed7173a343"
+      "7c4347c52fd5601530c030e69822b5a9"
     ],
     [
       "MRefHeap.alloc_ref",
@@ -168,7 +169,7 @@
         "typing_FStar.Pervasives.Native.snd"
       ],
       0,
-      "de51424018da4a4c2af76d75b0fa8db2"
+      "e6682ab52e369bc6d6290dab5f996ef4"
     ],
     [
       "MRefHeap.upd",
@@ -183,7 +184,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "e37683ef56d891bf421d3a3706d23515"
+      "c22a550ee95900f1a7cabdefc68481d2"
     ],
     [
       "MRefHeap.upd",
@@ -201,11 +202,12 @@
         "equation_FStar.Pervasives.Native.fst",
         "equation_FStar.Pervasives.Native.snd",
         "equation_FStar.Pervasives.dfst", "equation_FStar.Pervasives.dsnd",
-        "equation_FStar.Preorder.preorder", "equation_MRefHeap.contains",
-        "equation_MRefHeap.heap", "equation_MRefHeap.heap_cell",
-        "equation_MRefHeap.mref", "equation_MRefHeap.preorder_t",
-        "equation_MRefHeap.sel", "equation_Prims.eqtype",
-        "equation_Prims.nat",
+        "equation_FStar.Preorder.preorder", "equation_MRefHeap.addr_of",
+        "equation_MRefHeap.contains", "equation_MRefHeap.heap",
+        "equation_MRefHeap.heap_cell", "equation_MRefHeap.mref",
+        "equation_MRefHeap.preorder_t", "equation_MRefHeap.sel",
+        "equation_Prims.eqtype", "equation_Prims.nat",
+        "equation_Prims.op_Equals_Equals_Equals",
         "fuel_guarded_inversion_FStar.Pervasives.Native.option",
         "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
         "fuel_guarded_inversion_Prims.dtuple2",
@@ -231,7 +233,7 @@
         "token_correspondence_FStar.Pervasives.Native.snd"
       ],
       0,
-      "b92dded96f23c56c0e63cfa6b22ed835"
+      "768e4b44ad4209f6fd33e2471088d38e"
     ],
     [
       "MRefHeap.emp",
@@ -252,7 +254,7 @@
         "token_correspondence_FStar.Pervasives.Native.snd"
       ],
       0,
-      "c2fccde4ac239d82d41285304f2c09ef"
+      "8661eddb8eb89a981cf381b7f77fa0e3"
     ]
   ]
 ]

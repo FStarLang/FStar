@@ -44,7 +44,7 @@ let upd #a #b r x v = (|x, v|)::r
 
 ////////////////////////////////////////////////////////////////////////////////
 
-/// `grows'` and `grows`: a preorder of invariant-respeting maps
+/// `grows'` and `grows`: a preorder of invariant-respecting maps
 ///    - Needs to be introduced in 2 steps because of an F* limitation
 let grows' (#a:eqtype) (#b:a -> Type) (#inv:(partial_dependent_map a b -> Type))
            (m1:imap a b inv) (m2:imap a b inv) =

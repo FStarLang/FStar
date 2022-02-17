@@ -1,5 +1,5 @@
 [
-  "äç'ˇ±•Ì∂6,\u0017æ à—±",
+  "=G\u001f'\u001d§≤ˇ£Ï’L\u0018ó‹",
   [
     [
       "FStar.Seq.Permutation.reveal_is_permutation",
@@ -16,7 +16,80 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "7c83ab1e97e35d181bedbff994368e4c"
+      "1eb6ecbf21eb49c1f52134a28905badb"
+    ],
+    [
+      "FStar.Seq.Permutation.range_count",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.Seq.Permutation.not_less_than",
+        "primitive_Prims.op_Addition", "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_4f1d92a9a3f071e1fa3026ba94fce31c"
+      ],
+      0,
+      "120a661314287a0e41a30089a4787083"
+    ],
+    [
+      "FStar.Seq.Permutation.init_func_from_expr",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.Seq.Permutation.in_between", "int_inversion",
+        "primitive_Prims.op_GreaterThanOrEqual",
+        "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_ecf30e7fc159ec0cc99d474256f7f5af"
+      ],
+      0,
+      "5253cc4a5320a42c9e0157a21878507a"
+    ],
+    [
+      "FStar.Seq.Permutation.init_func_from_expr",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.Seq.Permutation.counter_of_range",
+        "equation_FStar.Seq.Permutation.in_between",
+        "equation_FStar.Seq.Permutation.not_less_than", "equation_Prims.nat",
+        "int_inversion", "primitive_Prims.op_Addition",
+        "primitive_Prims.op_GreaterThanOrEqual",
+        "primitive_Prims.op_LessThanOrEqual",
+        "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_20b7381ed50fafb67b7b306d8eb53a44",
+        "refinement_interpretation_Tm_refine_4f1d92a9a3f071e1fa3026ba94fce31c",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_ecf30e7fc159ec0cc99d474256f7f5af"
+      ],
+      0,
+      "6c607aeccfe6ad9793e8c5637399d670"
+    ],
+    [
+      "FStar.Seq.Permutation.foldm_snoc_split",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.Seq.Permutation.not_less_than",
+        "equation_FStar.Seq.Permutation.range_count", "equation_Prims.nat",
+        "int_inversion", "primitive_Prims.op_GreaterThanOrEqual",
+        "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_4f1d92a9a3f071e1fa3026ba94fce31c",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
+      ],
+      0,
+      "f8662fcdcfc28ed54c378cf3968892f8"
     ]
   ]
 ]

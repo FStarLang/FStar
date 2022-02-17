@@ -238,7 +238,7 @@ let encrypt_ensures_push_pop (i:id) (st:state i Writer)
 
 (*+ contains_all_blocks x plain cipher prf_table: 
           fragments plain and cipher into blocks, 
-	    starting from position x onwards,
+	    starting from position x onward,
 	    ignoring the blocks from [otp_offset i .. x)
 	  and states that each of them is present in the prf_table
 

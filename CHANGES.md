@@ -367,6 +367,10 @@ Guidelines for the changelog:
 
 ## Miscellaneous
 
+   * [Issue #2444](https://github.com/FStarLang/FStar/issues/2444) The
+     definition of the type `ident` exposed `FStar.Reflection.Types`
+     is now `string * range` instead of `range * string`.
+
    * Development builds of F\* no longer report the date of the build
      in `fstar --version`. This is to prevent needlessly rebuilding
      F\* even when the code does not change.

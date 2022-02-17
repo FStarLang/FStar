@@ -73,10 +73,11 @@ $(FSTAR_HOME)/bin/fstarlib/fstarlib.cmxa:
 	+$(MAKE) -C $(FSTAR_HOME)/ulib/ml
 
 basic_clean:
-	rm -rf _build $(OUTPUT_DIRECTORY) *~ *.checked $(OCAML_EXE) $(KREMLIN_EXE) .depend
+	rm -rf _build $(OUTPUT_DIRECTORY) *~ *.checked $(OCAML_EXE) $(KREMLIN_EXE) .depend .depend.rsp
 
 .depend: $(FSTAR_FILES)
-	$(MY_FSTAR) --dep full $(addprefix --include , $(INCLUDE_PATHS)) $(FSTAR_FILES) > .depend
+	true $(shell rm -f .depend.rsp) $(foreach f,--dep full $(addprefix --include , $(INCLUDE_PATHS)) $(FSTAR_FILES),$(shell echo $(f) >> .depend.rsp))
+	$(MY_FSTAR) @.depend.rsp > .depend
 
 depend: .depend
 

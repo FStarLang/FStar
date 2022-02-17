@@ -42,7 +42,7 @@ let index_fun #a (s:seq a) = nat_at_most (S.length s) -> nat_at_most (S.length s
 (* An abstract predicate defining when an index_fun is a permutation *)
 val is_permutation (#a:Type) (s0:seq a) (s1:seq a) (f:index_fun s0) : prop
 
-(* Revealing the intepretation of is_permutation *)
+(* Revealing the interpretation of is_permutation *)
 val reveal_is_permutation (#a:Type) (s0 s1:seq a) (f:index_fun s0)
   : Lemma (is_permutation s0 s1 f <==>
            (* lengths of the sequences are the same *)

@@ -363,7 +363,7 @@ let mprop2 (#a:Type u#b) (fp_pre:slprop u#a) (fp_post:a -> slprop u#a) =
       q m_pre x m0 <==> q m_pre x (join m0 m1))}
 
 (**
-  The preorder along wich the memory evolves with every update. See [Steel.Heap.heap_evolves]
+  The preorder along which the memory evolves with every update. See [Steel.Heap.heap_evolves]
 *)
 val mem_evolves : FStar.Preorder.preorder full_mem
 

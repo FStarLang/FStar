@@ -830,6 +830,22 @@ let file_get_contents f =
   let s = really_input_string ic l in
   close_in ic;
   s
+let file_get_lines f =
+  let ic = open_in f in
+  let rec aux accu =
+    let l =
+      try
+        Some (input_line ic)
+      with
+      | End_of_file -> None
+    in
+    match l with
+    | None -> accu
+    | Some l -> aux (l::accu)
+  in
+  let l = aux [] in
+  close_in ic;
+  List.rev l
 let concat_dir_filename d f = Filename.concat d f
 let mkdir clean nm =
   let remove_all_in_dir nm =

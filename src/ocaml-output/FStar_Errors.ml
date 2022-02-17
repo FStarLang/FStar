@@ -2180,7 +2180,7 @@ let (default_settings : error_setting Prims.list) =
   (Fatal_SplicedUndef, CFatal, (Prims.of_int (300)));
   (Fatal_SpliceUnembedFail, CFatal, (Prims.of_int (301)));
   (Warning_ExtractionUnexpectedEffect, CWarning, (Prims.of_int (302)));
-  (Error_DidNotFail, CAlwaysError, (Prims.of_int (303)));
+  (Error_DidNotFail, CError, (Prims.of_int (303)));
   (Warning_UnappliedFail, CWarning, (Prims.of_int (304)));
   (Warning_QuantifierWithoutPattern, CSilent, (Prims.of_int (305)));
   (Error_EmptyFailErrs, CAlwaysError, (Prims.of_int (306)));

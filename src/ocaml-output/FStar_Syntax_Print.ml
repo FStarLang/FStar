@@ -67,8 +67,7 @@ let (infix_prim_ops : (FStar_Ident.lident * Prims.string) Prims.list) =
   (FStar_Parser_Const.imp_lid, "==>");
   (FStar_Parser_Const.iff_lid, "<==>");
   (FStar_Parser_Const.precedes_lid, "<<");
-  (FStar_Parser_Const.eq2_lid, "==");
-  (FStar_Parser_Const.eq3_lid, "===")]
+  (FStar_Parser_Const.eq2_lid, "==")]
 let (unary_prim_ops : (FStar_Ident.lident * Prims.string) Prims.list) =
   [(FStar_Parser_Const.op_Negation, "not");
   (FStar_Parser_Const.op_Minus, "-");

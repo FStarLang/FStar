@@ -23,7 +23,7 @@ module SEA = Steel.Effect.Atomic
 
 
 /// Any Steel ghost computation can always be lifted to an atomic computation if needed.
-/// Note that because SteelGhost is marked as erasble, the F* typechecker will throw an error
+/// Note that because SteelGhost is marked as erasable, the F* typechecker will throw an error
 /// if this lift is applied to a ghost computation with an informative return value
 let lift_ghost_atomic
     (a:Type)

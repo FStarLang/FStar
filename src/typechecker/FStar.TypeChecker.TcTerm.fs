@@ -723,27 +723,12 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
     Env.conj_guard g g' //but don't drop g' altogether, since it also contains unification constraints
 
   | Tm_meta(e, Meta_desugared Sequence) ->
-    begin match (SS.compress e).n with
-        | Tm_let((_,[{lbname=x; lbdef=e1}]), e2) -> //NS: Why not handle this specially in the deugaring phase, adding a unit annotation on x?
-          let e1, c1, g1 = tc_term (Env.set_expected_typ env t_unit) e1 in
-          let e2, c2, g2 = tc_term env e2 in
-          let c = TcUtil.maybe_return_e2_and_bind e1.pos env (Some e1) c1 e2 (None, c2) in
-          let e1 = TcUtil.maybe_lift env e1 c1.eff_name c.eff_name c1.res_typ in
-          let e2 = TcUtil.maybe_lift env e2 c2.eff_name c.eff_name c2.res_typ in
-          let attrs =
-            if TcUtil.is_pure_or_ghost_effect env c1.eff_name
-            then [U.inline_let_attr]
-            else []
-          in
-          let e = mk (Tm_let((false, [mk_lb (x, [], c.eff_name, t_unit, e1, attrs, e1.pos)]), e2)) e.pos in
-          let e = TcUtil.maybe_monadic env e c.eff_name c.res_typ in
-          let e = mk (Tm_meta(e, Meta_desugared Sequence)) top.pos in
-          e, c, Env.conj_guard g1 g2
-        | _ ->
-          let e, c, g = tc_term env e in
-          let e = mk (Tm_meta(e, Meta_desugared Sequence)) top.pos in
-          e, c, g
-    end
+    //
+    // Sequence is only relevant for pretty printing
+    //
+    let e, c, g = tc_term env e in
+    let e = mk (Tm_meta (e, Meta_desugared Sequence)) top.pos in
+    e, c, g
 
   | Tm_meta(e, Meta_monadic _)
   | Tm_meta(e, Meta_monadic_lift _) ->
@@ -1055,8 +1040,8 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
       tc_term env e
     in
     begin
-    let t0 = N.unfold_whnf env lc.res_typ in
-    let thead, _ = U.head_and_args (U.unmeta t0) in
+    let t0 = N.unfold_whnf' [Unascribe; Unmeta; Unrefine] env lc.res_typ in
+    let thead, _ = U.head_and_args t0 in
     if Env.debug env <| Options.Other "RFD"
     then (
       BU.print3 "Got lc.res_typ=%s; t0 = %s; thead = %s\n"
@@ -3713,6 +3698,9 @@ and build_let_rec_env _top_level env lbs : list<letbinding> * env_t * guard_t =
             // tc_abs adding universes here so that when we add the let binding, we
             // can add a typescheme with these universes
             | Some (arity, lbdef) ->
+              if Env.debug env <| Options.Extreme
+              then BU.print2 "termination_check_enabled returned arity: %s and lbdef: %s\n"
+                     (string_of_int arity) (Print.term_to_string lbdef);
               let lb = {lb with lbtyp=lbtyp; lbunivs=univ_vars; lbdef=lbdef} in
               let env = {env with letrecs=(lb.lbname, arity, lbtyp, univ_vars)::env.letrecs} in
               lb, env

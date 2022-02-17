@@ -8,7 +8,7 @@ Examples.fst: Examples of proofs using the tactics (swap, rotate, etc.)
 
 Scaling the experiment:
 
-SepLogic.Heap: miniature sl heap, without many unnecesary components (mm, rel, ...)
+SepLogic.Heap: miniature sl heap, without many unnecessary components (mm, rel, ...)
 Shallow.fst: realization of wp combinators in Lang.fst
 SL.Effect.fst: sl state monad as an F* effect
 

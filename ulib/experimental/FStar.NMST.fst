@@ -175,7 +175,7 @@ sub_effect PURE ~> NMSTATE = lift_pure_nmst
  * That's because, the as_ensures combinator is not encoded for Div effect in the SMT,
  *   the way it is done for PURE and GHOST
  *
- * However, since the reification usecase gives us Dv anyway, this is fine for now
+ * However, since the reification use case gives us Dv anyway, this is fine for now
  *)
 let bind_div_nmst (a:Type) (b:Type)
   (wp:pure_wp a)

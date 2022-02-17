@@ -117,10 +117,6 @@ let destruct_eq' (typ : typ) : option<(term * term)> =
       ||   Ident.lid_equals l PC.c_eq2_lid
       ->
         Some (e1, e2)
-    | Some (U.BaseConn(l, [_; _; (e1, _); (e2, _)]))
-      when Ident.lid_equals l PC.eq3_lid
-      ->
-        Some (e1, e2)
     | _ ->
       match U.unb2t typ with
       | None -> None

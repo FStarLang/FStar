@@ -18,15 +18,17 @@
         "binder_x_4bb3e7f5f20a26f76ed0f345eab0aa93_1",
         "binder_x_ae567c2fb75be05905677af440075565_0", "bool_inversion",
         "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Nil",
+        "constructor_distinct_Tm_unit", "data_elim_Prims.Cons",
         "data_typing_intro_Prims.Cons@tok", "disc_equation_Prims.Cons",
-        "disc_equation_Prims.Nil", "equality_tok_Prims.LexTop@tok",
-        "equation_IntSort.permutation", "equation_Prims.eqtype",
+        "disc_equation_Prims.Nil", "equation_IntSort.permutation",
+        "equation_Prims.eqtype", "equation_Prims.nat",
+        "equation_Prims.op_Equals_Equals_Equals",
         "equation_with_fuel_FStar.List.Tot.Base.length.fuel_instrumented",
         "equation_with_fuel_FStar.List.Tot.Base.mem.fuel_instrumented",
         "equation_with_fuel_IntSort.sorted.fuel_instrumented",
         "fuel_guarded_inversion_Prims.list",
         "function_token_typing_Prims.__cache_version_number__",
-        "function_token_typing_Prims.int", "int_inversion",
+        "function_token_typing_Prims.int", "int_inversion", "int_typing",
         "lemma_IntSort.sorted_smaller", "primitive_Prims.op_AmpAmp",
         "primitive_Prims.op_Equality", "primitive_Prims.op_LessThanOrEqual",
         "projection_inverse_BoxBool_proj_0",
@@ -34,14 +36,16 @@
         "projection_inverse_Prims.Cons_hd",
         "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_7d27f65491c760eed369810570f38690",
         "refinement_interpretation_Tm_refine_8940e385d966068a5e15c2861dbb927f",
         "subterm_ordering_Prims.Cons",
+        "token_correspondence_FStar.List.Tot.Base.length.fuel_instrumented",
         "token_correspondence_IntSort.sorted.fuel_instrumented",
-        "typing_IntSort.sorted"
+        "typing_FStar.List.Tot.Base.mem", "typing_IntSort.sorted"
       ],
       0,
-      "b3e86d65c31ff73c8d4bcc3b08cb4525"
+      "4d8290b689e3027be5e23fe112fe948a"
     ],
     [
       "InsertionSort.insert_implicit",
@@ -62,8 +66,8 @@
         "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Nil",
         "data_elim_Prims.Cons", "data_typing_intro_Prims.Cons@tok",
         "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
-        "equality_tok_Prims.LexTop@tok", "equation_IntSort.permutation",
-        "equation_Prims.eqtype",
+        "equation_IntSort.permutation", "equation_Prims.eqtype",
+        "equation_Prims.op_Equals_Equals_Equals",
         "equation_with_fuel_FStar.List.Tot.Base.length.fuel_instrumented",
         "equation_with_fuel_FStar.List.Tot.Base.mem.fuel_instrumented",
         "equation_with_fuel_IntSort.sorted.fuel_instrumented",
@@ -84,7 +88,7 @@
         "typing_IntSort.sorted"
       ],
       0,
-      "f726328e363727949d1979e2c721b17f"
+      "a0e19fa17e0c3216fb5b7695be2479fb"
     ],
     [
       "InsertionSort.sort",
@@ -120,7 +124,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "95c99459e978dbb70394181d9a3a36f6"
+      "19447899d6fd1bd2ef4258cfc4f6c31e"
     ]
   ]
 ]

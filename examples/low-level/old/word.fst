@@ -15,7 +15,7 @@
 *)
 module MachineWord
 
-(*copied fro examples/maths/bijection.fst, because that file doesn't compile*)
+(*copied from examples/maths/bijection.fst, because that file doesn't compile*)
 type inverseLR (#a:Type) (#b:Type) (fab:(a -> Tot b)) (fba:(b -> Tot a)) =
        (forall (x:a). fba (fab x) = x) /\ (forall (y:b). fab (fba y) = y)
 
