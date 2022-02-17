@@ -64,10 +64,10 @@ type bool : eqtype
     [False], see below. *)
 type empty = 
 
-(** [c_True] is the singleton inductive type---it is trivially
-    inhabited. Like [empty], [c_True] is seldom used. We instead use
+(** [trivial] is the singleton inductive type---it is trivially
+    inhabited. Like [empty], [trivial] is seldom used. We instead use
     its "squashed" variants, [True] *)
-type c_True = | T
+type trivial = | T
 
 (** [unit]: another singleton type, with its only inhabitant written [()]
     we assume it is primitive, for convenient interop with other languages *)
@@ -127,13 +127,13 @@ val smt_theory_symbol:attribute
 
 (** [l_True] has a special bit of syntactic sugar. It is written just
     as "True" and rendered in the ide as [True]. It is a squashed version
-    of constructive truth, [c_True]. *)
+    of constructive truth, [trivial]. *)
 [@@ "tac_opaque"; smt_theory_symbol]
-let l_True:logical = squash c_True
+let l_True:logical = squash trivial
 
 (** [l_False] has a special bit of syntactic sugar. It is written just
     as "False" and rendered in the ide as [Falsee]. It is a squashed version
-    of constructive truth, [c_True]. *)
+    of constructive falsehood, the empty type. *)
 [@@ "tac_opaque"; smt_theory_symbol]
 let l_False:logical = squash empty
 

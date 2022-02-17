@@ -69,25 +69,25 @@ let uu___is_Left = function Left _ -> true | Right _ -> false
 
 let uu___is_Right = function Left _ -> false | Right _ -> true
 
-type (' p, ' q) tuple2 =
-| Mktuple2 of ' p * ' q
+type (' p, ' q) pair =
+| Pair of ' p * ' q
 
-type (' p, ' q) l_and = ('p, 'q) tuple2 squash
+type (' p, ' q) l_and = ('p, 'q) pair squash
 
-let uu___is_Mktuple2 _ = true
+let uu___is_Pair _ = true
 
 
-type c_True =
+type trivial =
   | T
 
-type l_True = c_True squash
+type l_True = trivial squash
 
 let uu___is_T _ = true
 
-type c_False = unit
+type empty = unit
 (*This is how Coq extracts Inductive void := . Our extraction needs to be fixed to recognize when there
        are no constructors and generate this type abbreviation*)
-type l_False = c_False squash
+type l_False = empty squash
 
 type (' p, ' q) l_imp = ('p -> 'q) squash
 

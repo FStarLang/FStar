@@ -104,7 +104,7 @@ let magic_lid  = pconst "magic"
 let has_type_lid = pconst "has_type"
 
 (* Constructive variants *)
-let c_true_lid      = pconst "c_True"
+let c_true_lid      = pconst "trivial"
 let empty_type_lid  = pconst "empty"
 let c_and_lid       = pconst "pair"
 let c_or_lid        = pconst "sum"

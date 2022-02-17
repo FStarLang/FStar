@@ -3,9 +3,9 @@ NegativeTests.False.fst(23,13-23,33): (Error 19) assertion failed; The SMT solve
 >>]
 >> Got issues: [
 NegativeTests.False.fst(30,18-30,40): (Error 12) Expected type "Prims.l_True \/ Prims.l_True"; but "Prims.Left (Prims.T)" has type "Prims.sum (*?u1*) _ Prims.l_True"
-NegativeTests.False.fst(30,18-30,40): (Error 12) Expected type "Prims.l_True \/ Prims.l_True"; but "Prims.Left (Prims.T)" has type "Prims.sum Prims.c_True Prims.l_True"
+NegativeTests.False.fst(30,18-30,40): (Error 12) Expected type "Prims.l_True \/ Prims.l_True"; but "Prims.Left (Prims.T)" has type "Prims.sum Prims.trivial Prims.l_True"
 NegativeTests.False.fst(30,41-30,63): (Error 12) Expected type "Prims.l_True \/ Prims.l_True"; but "Prims.Right (Prims.T)" has type "Prims.sum Prims.l_True (*?u6*) _"
-NegativeTests.False.fst(30,41-30,63): (Error 12) Expected type "Prims.l_True \/ Prims.l_True"; but "Prims.Right (Prims.T)" has type "Prims.sum Prims.l_True Prims.c_True"
+NegativeTests.False.fst(30,41-30,63): (Error 12) Expected type "Prims.l_True \/ Prims.l_True"; but "Prims.Right (Prims.T)" has type "Prims.sum Prims.l_True Prims.trivial"
 >>]
 NegativeTests.False.fst(21,4-21,7): (Warning 240) Admitting NegativeTests.False.bar without a definition
 NegativeTests.False.fst(28,4-28,10): (Warning 240) Admitting NegativeTests.False.absurd without a definition
