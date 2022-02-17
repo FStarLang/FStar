@@ -223,7 +223,7 @@ the type of the state.
 Adapt the full development seen above to work with ``st s``, including
 proving the various laws.
 
-`Exercise file <../code/exercises/Part2.ST.fst>`_
+`Exercise file <../code/exercises/Part2.ST.fst>`__
 
 .. container:: toggle
 
@@ -247,7 +247,7 @@ you see how.
 Prove that the ``option`` type can be made into a monad, i.e., define
 ``bind`` and ``return`` and prove the monad laws.
 
-`Exercise file <../code/exercises/Part2.Option.fst>`_
+`Exercise file <../code/exercises/Part2.Option.fst>`__
 
 --------------------------------------------------------------------------------
 
@@ -437,7 +437,7 @@ Exercise
 Prove that the ``interp`` function interprets equivalent trees ``f``
 and ``g`` to pointwise equivalent functions.
 
-`Exercise File <../code/exercises/Part2.ComputationTreeEquiv.fst>`_
+`Exercise File <../code/exercises/Part2.ComputationTreeEquiv.fst>`__
 
 .. container:: toggle
 
@@ -609,7 +609,7 @@ work with this action class and prove (using ``assert_norm``) that a
 program that contains two parallel atomic increments increments the
 state twice.
 
-`Exercise File <../code/exercises/Part2.AtomicIncrement.fst>`_
+`Exercise File <../code/exercises/Part2.AtomicIncrement.fst>`__
 
 .. container:: toggle
 
@@ -619,8 +619,8 @@ state twice.
 
     .. literalinclude:: ../code/Part2.Par.fst
        :language: fstar
-       :start-after: //SNIPPET_START: atomic_increment$
-       :end-before: //SNIPPET_END: atomic_increment$
+       :start-after: //SNIPPET_START: atomic increment$
+       :end-before: //SNIPPET_END: atomic increment$
 
 --------------------------------------------------------------------------------
 

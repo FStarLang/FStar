@@ -159,7 +159,7 @@ Implement a function to access an element in a ``mtree`` in given a
 clause, is the most interesting part. The function itself is
 straightforward.
 
-`Exercise file <../code/exercises/Part2.MerkleTreeGet.fst>`_
+`Exercise file <../code/exercises/Part2.MerkleTreeGet.fst>`__
 
 .. container:: toggle
 
@@ -324,7 +324,7 @@ Implement a function to update an ``mtree`` at a given
 resulting tree will have a new root hash, so you will have to return
 the new hash along with the updated tree.
 
-`Exercise file <../code/exercises/Part2.MerkleTreeUpdate_V0.fst>`_
+`Exercise file <../code/exercises/Part2.MerkleTreeUpdate_V0.fst>`__
 
 .. container:: toggle
 
