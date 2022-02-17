@@ -38,14 +38,12 @@ let uu___is_Refl : 'Aa . 'Aa -> 'Aa -> ('Aa,unit,unit) equals -> bool =
 type ('Aa,'Ax,'Ay) eq2 = unit
 type ('Aa,'Ab,'Ax,'Ay) op_Equals_Equals_Equals = unit
 type 'Ab b2t = unit
-type ('Ap,'Aq) tuple2 =
-  | Mktuple2 of 'Ap * 'Aq
+(* 'a * 'b *)
+type ('a,'b) tuple2 = 'a * 'b[@@deriving yojson,show]
+let __proj__Mktuple2__1 = fst
+let __proj__Mktuple2__2 = snd
 let uu___is_Mktuple2 : 'Ap 'Aq . ('Ap,'Aq) tuple2 -> bool =
   fun projectee  -> true
-let __proj__Mktuple2__item___1 : 'Ap 'Aq . ('Ap,'Aq) tuple2 -> 'Ap =
-  fun projectee  -> match projectee with | Mktuple2 (_0,_1) -> _0
-let __proj__Mktuple2__item___2 : 'Ap 'Aq . ('Ap,'Aq) tuple2 -> 'Aq =
-  fun projectee  -> match projectee with | Mktuple2 (_0,_1) -> _1
 type ('Ap,'Aq) l_and = unit
 type ('Ap,'Aq) either =
   | Inl of 'Ap

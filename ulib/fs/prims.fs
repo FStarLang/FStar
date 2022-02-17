@@ -69,13 +69,13 @@ let uu___is_Inl = function Inl _ -> true | Inr _ -> false
 
 let uu___is_Inr = function Inl _ -> false | Inr _ -> true
 
-type (' p, ' q) tuple2 =
-| Mktuple2 of ' p * ' q
+type ('a,'b) tuple2 = 'a * 'b
 
 type (' p, ' q) l_and = ('p, 'q) tuple2 squash
 
 let uu___is_Mktuple2 _ = true
-
+let __proj__Mktuple2__1 = fst
+let __proj__Mktuple2__2 = snd
 
 type c_True =
   | T

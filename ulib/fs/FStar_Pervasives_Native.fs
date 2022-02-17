@@ -15,8 +15,6 @@ type ('a,'b) tuple2 = 'a * 'b
 let fst = Microsoft.FSharp.Core.Operators.fst
 let snd = Microsoft.FSharp.Core.Operators.snd
 
-let __proj__Mktuple2__1 = fst
-let __proj__Mktuple2__2 = snd
 
 type ('a,'b,'c) tuple3 =
  'a* 'b* 'c

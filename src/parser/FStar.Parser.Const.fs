@@ -399,9 +399,10 @@ let mk_tuple_lid n r =
   let t = U.format1 "tuple%s" (U.string_of_int n) in
   set_lid_range (psnconst t) r
 
-let lid_tuple2   = mk_tuple_lid 2 dummyRange
+let lid_tuple2   = pconst "tuple2"
 
 let is_tuple_constructor_string (s:string) :bool =
+  s = "Prims.tuple2" ||
   U.starts_with s "FStar.Pervasives.Native.tuple"
 
 let is_tuple_constructor_id  id  = is_tuple_constructor_string (string_of_id id)
@@ -411,9 +412,10 @@ let mk_tuple_data_lid n r =
   let t = U.format1 "Mktuple%s" (U.string_of_int n) in
   set_lid_range (psnconst t) r
 
-let lid_Mktuple2 = mk_tuple_data_lid 2 dummyRange
+let lid_Mktuple2 = pconst "Mktuple2"
 
 let is_tuple_datacon_string (s:string) :bool =
+  s = "Prims.Mktuple2" ||
   U.starts_with s "FStar.Pervasives.Native.Mktuple"
 
 let is_tuple_datacon_id  id  = is_tuple_datacon_string (string_of_id id)
