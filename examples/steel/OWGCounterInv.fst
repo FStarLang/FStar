@@ -27,6 +27,8 @@ module OWGCounterInv
 
 module G = FStar.Ghost
 
+open FStar.Tactics
+
 open Steel.Memory
 open Steel.FractionalPermission
 open Steel.Reference
@@ -112,6 +114,9 @@ let inv_pred (r:ref int) (r1 r2:ghost_ref int) =
 let inv_slprop (r:ref int) (r1 r2:ghost_ref int) : vprop =
   h_exists (inv_pred r r1 r2)
 
+[@@resolve_implicits; handle_smt_goals]
+let disable_norm () : Tac unit = ()
+
 (*
  * A helper lemma to show that in the inv slprop the ghost refs commute with equiv
  *)
@@ -160,6 +165,8 @@ let inv_equiv_lemma (r:ref int) (r1 r2:ghost_ref int)
   reveal_equiv (inv_slprop r r1 r2) (inv_slprop r r2 r1)
 #pop-options
 
+[@@resolve_implicits; handle_smt_goals]
+let enable_norm () : Tac unit = vc_norm ()
 
 (**** Helpers for the counter implementation ****)
 let incr (n:G.erased int) = G.elift1 (fun (n:int) -> n + 1) n
