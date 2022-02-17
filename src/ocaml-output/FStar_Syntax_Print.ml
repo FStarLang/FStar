@@ -1,4 +1,6 @@
 open Prims
+let (comp_names_ref : Prims.bool FStar_Compiler_Effect.ref) =
+  FStar_Compiler_Util.mk_ref false
 let rec (delta_depth_to_string :
   FStar_Syntax_Syntax.delta_depth -> Prims.string) =
   fun uu___ ->
@@ -991,6 +993,29 @@ and (args_to_string : FStar_Syntax_Syntax.args -> Prims.string) =
         (FStar_Compiler_List.map arg_to_string) in
     FStar_Compiler_Effect.op_Bar_Greater uu___ (FStar_String.concat " ")
 and (comp_to_string : FStar_Syntax_Syntax.comp -> Prims.string) =
+  fun c ->
+    let s =
+      let s1 =
+        let uu___ =
+          let r = FStar_Compiler_Effect.op_Bang c.FStar_Syntax_Syntax.vars in
+          match r with
+          | FStar_Pervasives_Native.None -> []
+          | FStar_Pervasives_Native.Some l ->
+              l.FStar_Syntax_Syntax.free_names in
+        FStar_Compiler_List.fold_left
+          (fun s2 ->
+             fun bv ->
+               let uu___1 =
+                 let uu___2 = bv_to_string bv in Prims.op_Hat ";" uu___2 in
+               Prims.op_Hat s2 uu___1) "start_names" uu___ in
+      FStar_Compiler_Util.format1 "Free names in comp : {%s}\n" s1 in
+    let s1 =
+      let uu___ = FStar_Compiler_Effect.op_Bang comp_names_ref in
+      if uu___ then s else "comp_names_ref_not_set" in
+    let cs = comp'_to_string c in
+    Prims.op_Hat "("
+      (Prims.op_Hat s1 (Prims.op_Hat "\n" (Prims.op_Hat cs ")")))
+and (comp'_to_string : FStar_Syntax_Syntax.comp -> Prims.string) =
   fun c ->
     let uu___ =
       let uu___1 = FStar_Options.ugly () in Prims.op_Negation uu___1 in

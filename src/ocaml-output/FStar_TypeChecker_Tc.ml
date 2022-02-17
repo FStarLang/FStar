@@ -1278,35 +1278,43 @@ let (tc_sig_let :
                                  match uu___6 with
                                  | (e3, uu___7, uu___8) -> e3) uu___4
                               "FStar.TypeChecker.Tc.tc_sig_let-tc-phase1" in
-                          ((let uu___5 =
+                          (FStar_Compiler_Effect.op_Colon_Equals
+                             FStar_Syntax_Print.comp_names_ref true;
+                           (let uu___6 =
                               FStar_Compiler_Effect.op_Less_Bar
                                 (FStar_TypeChecker_Env.debug env1)
                                 (FStar_Options.Other "TwoPhases") in
-                            if uu___5
+                            if uu___6
                             then
-                              let uu___6 =
+                              let uu___7 =
                                 FStar_Syntax_Print.term_to_string e2 in
                               FStar_Compiler_Util.print1
                                 "Let binding after phase 1, before removing uvars: %s\n"
-                                uu___6
+                                uu___7
                             else ());
+                           FStar_Compiler_Effect.op_Colon_Equals
+                             FStar_Syntax_Print.comp_names_ref false;
                            (let e3 =
-                              let uu___5 =
+                              let uu___7 =
                                 FStar_TypeChecker_Normalize.remove_uvar_solutions
                                   env' e2 in
-                              FStar_Compiler_Effect.op_Bar_Greater uu___5
+                              FStar_Compiler_Effect.op_Bar_Greater uu___7
                                 drop_lbtyp in
-                            (let uu___6 =
+                            (let uu___8 =
                                FStar_Compiler_Effect.op_Less_Bar
                                  (FStar_TypeChecker_Env.debug env1)
                                  (FStar_Options.Other "TwoPhases") in
-                             if uu___6
+                             if uu___8
                              then
-                               let uu___7 =
+                               let uu___9 =
                                  FStar_Syntax_Print.term_to_string e3 in
-                               FStar_Compiler_Util.print1
-                                 "Let binding after phase 1, uvars removed: %s\n"
-                                 uu___7
+                               let uu___10 =
+                                 let uu___11 = FStar_Syntax_Free.names e3 in
+                                 FStar_Syntax_Print.set_to_string
+                                   FStar_Syntax_Print.bv_to_string uu___11 in
+                               FStar_Compiler_Util.print2
+                                 "Let binding after phase 1, uvars removed: %s and free names: ( %s )\n"
+                                 uu___9 uu___10
                              else ());
                             e3))
                         else e in
@@ -3947,7 +3955,7 @@ let (tc_decls :
                ([], env) ses) in
       match uu___ with
       | (ses1, env1) -> ((FStar_Compiler_List.rev_append ses1 []), env1)
-let (uu___851 : unit) =
+let (uu___853 : unit) =
   FStar_Compiler_Effect.op_Colon_Equals tc_decls_knot
     (FStar_Pervasives_Native.Some tc_decls)
 let (snapshot_context :

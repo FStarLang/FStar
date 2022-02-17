@@ -2499,6 +2499,14 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
         //               (Print.term_to_string rhs)
         //               (names_to_string fvs2);
         let uvars, occurs_ok, msg = occurs_check ctx_uv rhs in
+        if Env.debug env <| Options.Other "Rel"
+        then begin
+          Print.comp_names_ref := true;
+          BU.print1 "RHS (for fvs2) = %s\n" (Print.term_to_string rhs);
+          BU.print2 "fvs2 = %s and fvs1 = %s\n" (Print.set_to_string Print.bv_to_string fvs2)
+                                                   (Print.set_to_string Print.bv_to_string fvs1);
+          Print.comp_names_ref := false
+         end;
         if not occurs_ok
         then giveup_or_defer env orig wl
                Deferred_occur_check_failed

@@ -3321,9 +3321,17 @@ and (tc_match :
                                   | FStar_Syntax_Syntax.Tm_name scrutinee_bv
                                       -> scrutinee_bv
                                   | uu___8 ->
-                                      FStar_Errors.raise_error
+                                      let uu___9 =
+                                        let uu___10 =
+                                          let uu___11 =
+                                            FStar_Syntax_Print.term_to_string
+                                              e12 in
+                                          FStar_Compiler_Util.format1
+                                            "The scrutinee must be a variable when a return annotation is supplied with a match, found %s"
+                                            uu___11 in
                                         (FStar_Errors.Fatal_UnexpectedTerm,
-                                          "The scrutinee must be a variable when a return annotation is supplied with a match")
+                                          uu___10) in
+                                      FStar_Errors.raise_error uu___9
                                         e12.FStar_Syntax_Syntax.pos) in
                            let uu___6 =
                              FStar_Compiler_Effect.op_Bar_Greater eqns

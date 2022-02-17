@@ -465,15 +465,18 @@ let tc_sig_let env r se lbs lids : list<sigelt> * list<sigelt> * Env.env =
               "FStar.TypeChecker.Tc.tc_sig_let-tc-phase1"
         in
 
+        Print.comp_names_ref := true;
         if Env.debug env <| Options.Other "TwoPhases" then
           BU.print1 "Let binding after phase 1, before removing uvars: %s\n"
             (Print.term_to_string e);
+        Print.comp_names_ref := false;
 
         let e = N.remove_uvar_solutions env' e |> drop_lbtyp in
 
         if Env.debug env <| Options.Other "TwoPhases" then
-          BU.print1 "Let binding after phase 1, uvars removed: %s\n"
-            (Print.term_to_string e);
+          BU.print2 "Let binding after phase 1, uvars removed: %s and free names: ( %s )\n"
+            (Print.term_to_string e)
+            (Print.set_to_string Print.bv_to_string (Free.names e));
         e
       end
       else e

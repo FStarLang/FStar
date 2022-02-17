@@ -38,6 +38,9 @@ module Unionfind  = FStar.Syntax.Unionfind
 module C          = FStar.Parser.Const
 module SU         = FStar.Syntax.Util
 
+
+let comp_names_ref = U.mk_ref false
+
 let rec delta_depth_to_string = function
     | Delta_constant_at_level i   -> "Delta_constant_at_level " ^ string_of_int i
     | Delta_equational_at_level i -> "Delta_equational_at_level " ^ string_of_int i
@@ -502,6 +505,17 @@ and args_to_string args =
     args |> List.map arg_to_string |> String.concat " "
 
 and comp_to_string c =
+    let s =
+      let s = List.fold_left (fun s bv -> s ^ ";" ^ (bv_to_string bv)) "start_names" (let r = !c.vars in
+                                                                match r with | None -> []
+                                                                             | Some l -> l.free_names) in
+      U.format1 "Free names in comp : {%s}\n" s
+      in
+   let s = if !comp_names_ref then s else "comp_names_ref_not_set" in
+   let cs = comp'_to_string c in
+   "(" ^ s ^ "\n" ^ cs ^ ")"
+
+and comp'_to_string c =
   if not (Options.ugly()) then
     let e = Errors.with_ctx "While resugaring a computation" (fun () -> Resugar.resugar_comp c) in
     let d = ToDocument.term_to_document e in

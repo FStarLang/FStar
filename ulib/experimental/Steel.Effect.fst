@@ -639,14 +639,11 @@ let bind_div_steel (a:Type) (b:Type)
 polymonadic_bind (DIV, SteelBase) |> SteelBase = bind_div_steel
 #pop-options
 
-let par0 (#aL:Type u#a) (#preL:vprop) (#postL:aL -> vprop)
-         (f:repr aL false preL postL (fun _ -> True) (fun _ _ _ -> True))
-         (#aR:Type u#a) (#preR:vprop) (#postR:aR -> vprop)
-         (g:repr aR false preR postR (fun _ -> True) (fun _ _ _ -> True))
-  : SteelT (aL & aR)
-    (preL `star` preR)
-    (fun y -> postL (fst y) `star` postR (snd y))
-  = Steel?.reflect (fun frame -> Sem.run #state #_ #_ #_ #_ #_ frame (Sem.Par (Sem.Act f) (Sem.Act g)))
+assume val par' (#aL:Type u#a) (#postL:aL -> vprop)
+         (f:repr aL false emp postL (fun _ -> True) (fun _ _ _ -> True))
+  : SteelT (aL & unit)
+    emp
+    (fun y -> postL (fst y))
 
 (*
  * AR: Steel is not marked reifiable since we intend to run Steel programs natively
@@ -659,11 +656,11 @@ assume val reify_steel_comp
   ($f:unit -> SteelBase a framed pre post req ens)
   : Dv (repr a framed pre post req ens)
 
-let par f g =
-  par0 (reify_steel_comp f) (reify_steel_comp g)
-
-let action_as_repr (#a:Type) (#p:slprop) (#q:a -> slprop) (f:action_except a Set.empty p q)
-  : repr a false (to_vprop p) (fun x -> to_vprop (q x)) (fun _ -> True) (fun _ _ _ -> True)
-  = Steel.Semantics.Instantiate.state_correspondence Set.empty; f
-
-let as_action #a #p #q f = Steel?.reflect (action_as_repr f)
+#push-options "--debug Steel.Effect --debug_level Rel --print_implicits --debug_level TwoPhases --print_bound_var_types --print_full_names --ugly --print_effect_args --debug_level Norm"
+let par'' (#aL:Type u#a) (#postL:aL -> vprop)
+         (f:repr aL false emp postL (fun _ -> True) (fun _ _ _ -> True))
+  : SteelT (aL & unit)
+    emp
+    (fun y -> postL (fst y))
+  = par' f
+#pop-options

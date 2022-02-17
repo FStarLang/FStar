@@ -1241,7 +1241,7 @@ and tc_match (env : Env.env) (top : term) : term * lcomp * guard_t =
            | Tm_name scrutinee_bv -> scrutinee_bv
            | _ ->
              raise_error (Errors.Fatal_UnexpectedTerm,
-               "The scrutinee must be a variable when a return annotation is supplied with a match") e1.pos) in
+               (BU.format1 "The scrutinee must be a variable when a return annotation is supplied with a match, found %s" (Print.term_to_string e1))) e1.pos) in
       guard_x,
       eqns |> List.map (tc_eqn guard_x env_branches ret_opt) in
 

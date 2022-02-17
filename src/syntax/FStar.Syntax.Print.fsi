@@ -25,6 +25,7 @@ open FStar.Compiler.Util
 
 module DsEnv = FStar.Syntax.DsEnv
 
+val comp_names_ref        : ref bool
 val db_to_string          : bv -> string
 val bv_to_string          : bv -> string
 val bvs_to_string         : string -> list<bv> -> string
