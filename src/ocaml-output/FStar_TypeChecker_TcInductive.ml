@@ -2340,19 +2340,19 @@ let (mk_discriminator_and_indexed_projectors :
                                             let field_name =
                                               FStar_Syntax_Util.mk_field_projector_name
                                                 lid x i in
+                                            let result_comp =
+                                              let t =
+                                                FStar_Syntax_Subst.subst
+                                                  subst
+                                                  x.FStar_Syntax_Syntax.sort in
+                                              if erasable
+                                              then
+                                                FStar_Syntax_Syntax.mk_GTotal
+                                                  t
+                                              else
+                                                FStar_Syntax_Syntax.mk_Total
+                                                  t in
                                             let t =
-                                              let result_comp =
-                                                let t1 =
-                                                  FStar_Syntax_Subst.subst
-                                                    subst
-                                                    x.FStar_Syntax_Syntax.sort in
-                                                if erasable
-                                                then
-                                                  FStar_Syntax_Syntax.mk_GTotal
-                                                    t1
-                                                else
-                                                  FStar_Syntax_Syntax.mk_Total
-                                                    t1 in
                                               let uu___4 =
                                                 FStar_Syntax_Util.arrow
                                                   binders result_comp in
@@ -2547,6 +2547,10 @@ let (mk_discriminator_and_indexed_projectors :
                                                     FStar_Pervasives_Native.None,
                                                     uu___7) in
                                                 let body =
+                                                  let returns_annotation =
+                                                    ((FStar_Pervasives.Inr
+                                                        result_comp),
+                                                      FStar_Pervasives_Native.None) in
                                                   let uu___6 =
                                                     let uu___7 =
                                                       let uu___8 =
@@ -2555,7 +2559,8 @@ let (mk_discriminator_and_indexed_projectors :
                                                             pat in
                                                         [uu___9] in
                                                       (arg_exp,
-                                                        FStar_Pervasives_Native.None,
+                                                        (FStar_Pervasives_Native.Some
+                                                           returns_annotation),
                                                         uu___8,
                                                         FStar_Pervasives_Native.None) in
                                                     FStar_Syntax_Syntax.Tm_match
