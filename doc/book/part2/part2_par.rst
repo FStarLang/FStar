@@ -223,6 +223,8 @@ the type of the state.
 Adapt the full development seen above to work with ``st s``, including
 proving the various laws.
 
+`Exercise file <../code/exercises/Part2.ST.fst>`_
+
 .. container:: toggle
 
     .. container:: header
@@ -244,6 +246,8 @@ you see how.
 
 Prove that the ``option`` type can be made into a monad, i.e., define
 ``bind`` and ``return`` and prove the monad laws.
+
+`Exercise file <../code/exercises/Part2.Option.fst>`_
 
 --------------------------------------------------------------------------------
 
@@ -433,6 +437,8 @@ Exercise
 Prove that the ``interp`` function interprets equivalent trees ``f``
 and ``g`` to pointwise equivalent functions.
 
+`Exercise File <../code/exercises/Part2.ComputationTreeEquiv.fst>`_
+
 .. container:: toggle
 
     .. container:: header
@@ -458,9 +464,8 @@ This is a little technical, since although functional extensionality
 is a theorem in F*, it is only true of :math:`\eta`-expanded functions.
 
 Try to use ``FStar.FunctionalExtensionality.fsti`` to adapt the
-definitions shown here so that we can prove the lemma ``equiv x y ==>
+definitions shown above so that we can prove the lemma ``equiv x y ==>
 x == y``.
-
 
 .. container:: toggle
 
@@ -604,14 +609,18 @@ work with this action class and prove (using ``assert_norm``) that a
 program that contains two parallel atomic increments increments the
 state twice.
 
+`Exercise File <../code/exercises/Part2.AtomicIncrement.fst>`_
+
 .. container:: toggle
 
     .. container:: header
 
        **Answer**
 
-    .. literalinclude:: ../code/Part2.FreeFunExt.fst
+    .. literalinclude:: ../code/Part2.Par.fst
        :language: fstar
+       :start-after: //SNIPPET_START: atomic_increment$
+       :end-before: //SNIPPET_END: atomic_increment$
 
 --------------------------------------------------------------------------------
 

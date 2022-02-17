@@ -354,7 +354,7 @@ let rec preservation #e #e' #g #t (ht:typing g e t) (hs:steps e e')
 let soundness #e #e' #t 
               (ht:typing empty e t) 
   : either (squash (is_value e))
-           (e':exp & steps e e' & typing empty e' t))
+           (e':exp & steps e e' & typing empty e' t)
 //SNIPPET_END: soundness_stmt$
 //SNIPPET_START: soundness_sol$
   = if is_value e then Inl ()

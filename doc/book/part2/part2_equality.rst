@@ -356,7 +356,7 @@ Then prove that Leibniz equality and the equality predicate ``equals x
 y`` defined above are isomorphic, in the sense that ``leq x y ->
 equals x y`` and ``equals x y -> leq x y``.
 
-`Click here, for the exercise file <../code/exercises/Part2.Leibniz.fst>`_
+`Exercise file <../code/exercises/Part2.Leibniz.fst>`_
 
 .. container:: toggle
 

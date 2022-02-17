@@ -13,18 +13,6 @@ let rec append #a #n #m (v1:vec a n) (v2:vec a m)
   : vec a (n + m)
   = admit()
 
-let rec reverse #a #n (v:vec a n)
-  : vec a n
-  = match v with
-    | Nil -> Nil
-    | Cons hd tl -> append (reverse tl) (Cons hd Nil)
-
-let rec foldr #a #n #acc
-              (f:a -> acc -> acc)
-              (v:vec a n)
-              (init:acc)
-  : acc
-  = match v with
-    | Nil -> init
-    | Cons hd tl ->
-      f hd (foldr f tl init)
+let split_at #a #n (v:vec a n) (i:nat { i <= n })
+  : vec a i & vec a (n - i)
+  = admit()

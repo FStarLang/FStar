@@ -249,5 +249,7 @@ below, try reconstructing other examples from Chlipala's paper,
 including a proof of correctness of a compiler implementing a
 continuation-passing style (CPS) transformation of STLC.
 
+`Exercise file <../code/Part2.PHOAS.fst>`_
+
 .. literalinclude:: ../code/Part2.PHOAS.fst
    :language: fstar

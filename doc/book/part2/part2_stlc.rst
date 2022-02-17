@@ -183,6 +183,9 @@ Define an inductive relation ``steps : exp -> exp -> Type`` for the
 transitive closure of ``step``, representing multiple steps of
 computation.
 
+Use this `exercise file <../code/exercises/Part2.STLC.fst>`_ for all
+the exercises that follow.
+
 .. container:: toggle
 
     .. container:: header
