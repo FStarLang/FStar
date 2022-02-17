@@ -112,7 +112,7 @@ let valid_baz_alt (a:Type) (x:a)
   : Lemma (baz a x)
   = let s_fb : squash (foo a x \/ bar a x) = foo_or_bar x in
     FStar.Squash.bind_squash s_fb (fun (fb:(foo a x \/ bar a x)) ->
-    FStar.Squash.bind_squash fb  (fun (c_fb:Prims.either (foo a x) (bar a x)) ->
+    FStar.Squash.bind_squash fb  (fun (c_fb:Prims.sum (foo a x) (bar a x)) ->
      let s_baz : squash (baz a x) =
        match c_fb with
        | Prims.Left f ->
