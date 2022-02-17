@@ -926,15 +926,12 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
       fields |> List.mapi (fun i ({binder_bv=x}) ->
           let p = S.range_of_bv x in
           let field_name = U.mk_field_projector_name lid x i in
-          let t =
-            let result_comp =
-              let t = Subst.subst subst x.sort in
-              if erasable
-              then S.mk_GTotal t
-              else S.mk_Total t
-            in
-            SS.close_univ_vars uvs <| U.arrow binders result_comp
-          in
+          let result_comp = 
+            let t = Subst.subst subst x.sort in
+            if erasable
+            then S.mk_GTotal t
+            else S.mk_Total t in
+          let t = SS.close_univ_vars uvs <| U.arrow binders result_comp in
           let only_decl =
             early_prims_inductive ||
             Options.dont_gen_projectors (string_of_lid (Env.current_module env))
@@ -977,7 +974,9 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
                   else pos (Pat_wild (S.gen_bv (string_of_id x.ppname) None tun)), b)
               in
               let pat = pos (S.Pat_cons (S.lid_as_fv lid delta_constant (Some fvq), arg_pats)), None, S.bv_to_name projection in
-              let body = mk (Tm_match(arg_exp, None, [U.branch pat], None)) p in
+              let body =
+                let returns_annotation = Inr result_comp, None in
+                mk (Tm_match(arg_exp, Some returns_annotation, [U.branch pat], None)) p in
               let imp = U.abs binders body None in
               let dd = Delta_equational_at_level 1 in
               let lbtyp = if no_decl then t else tun in
