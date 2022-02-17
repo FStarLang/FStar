@@ -160,9 +160,9 @@ let fmap f r =
 
 (* Those that need some translations. Maybe we can do this somewhere else
  * or automatically, but keep it for now *)
-let catch (t: unit -> 'a __tac): ((exn, 'a) FStar_Pervasives.either) __tac =
+let catch (t: unit -> 'a __tac): ((exn, 'a) either) __tac =
         fun ps -> fmap fix_either (from_tac_1 TM.catch (to_tac_0 (t ())) ps)
-let recover (t: unit -> 'a __tac): ((exn, 'a) FStar_Pervasives.either) __tac =
+let recover (t: unit -> 'a __tac): ((exn, 'a) either) __tac =
         fun ps -> fmap fix_either (from_tac_1 TM.recover (to_tac_0 (t ())) ps)
 
 let ctrl_rewrite
