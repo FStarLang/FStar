@@ -54,9 +54,6 @@ type option (a: Type) =
 /// tuple type rather than eagerly including 14-tuples in the
 /// dependence graph of all programs.
 
-(** Pairs: [tuple2 a b] is can be written either as [a * b], for
-    notation compatible with OCaml's. Or, better, as [a & b]. *)
-type tuple2 'a 'b = | Mktuple2 : _1: 'a -> _2: 'b -> tuple2 'a 'b
 
 (** The fst and snd projections on pairs are very common *)
 let fst (x: tuple2 'a 'b) : 'a = Mktuple2?._1 x

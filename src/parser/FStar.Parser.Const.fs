@@ -397,7 +397,7 @@ let const_to_string x = match x with
 
 let mk_tuple_lid n r =
   let t = U.format1 "tuple%s" (U.string_of_int n) in
-  set_lid_range (psnconst t) r
+  set_lid_range (if n = 2 then pconst t else psnconst t) r
 
 let lid_tuple2   = pconst "tuple2"
 
@@ -410,7 +410,7 @@ let is_tuple_constructor_lid lid = is_tuple_constructor_string (string_of_lid li
 
 let mk_tuple_data_lid n r =
   let t = U.format1 "Mktuple%s" (U.string_of_int n) in
-  set_lid_range (psnconst t) r
+  set_lid_range (if n = 2 then pconst t else psnconst t) r
 
 let lid_Mktuple2 = pconst "Mktuple2"
 

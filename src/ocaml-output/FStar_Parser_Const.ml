@@ -366,7 +366,8 @@ let (mk_tuple_lid :
       let t =
         let uu___ = FStar_Compiler_Util.string_of_int n in
         FStar_Compiler_Util.format1 "tuple%s" uu___ in
-      let uu___ = psnconst t in FStar_Ident.set_lid_range uu___ r
+      let uu___ = if n = (Prims.of_int (2)) then pconst t else psnconst t in
+      FStar_Ident.set_lid_range uu___ r
 let (lid_tuple2 : FStar_Ident.lident) = pconst "tuple2"
 let (is_tuple_constructor_string : Prims.string -> Prims.bool) =
   fun s ->
@@ -387,7 +388,8 @@ let (mk_tuple_data_lid :
       let t =
         let uu___ = FStar_Compiler_Util.string_of_int n in
         FStar_Compiler_Util.format1 "Mktuple%s" uu___ in
-      let uu___ = psnconst t in FStar_Ident.set_lid_range uu___ r
+      let uu___ = if n = (Prims.of_int (2)) then pconst t else psnconst t in
+      FStar_Ident.set_lid_range uu___ r
 let (lid_Mktuple2 : FStar_Ident.lident) = pconst "Mktuple2"
 let (is_tuple_datacon_string : Prims.string -> Prims.bool) =
   fun s ->

@@ -211,6 +211,8 @@ let rec build_core_type ?(annots = []) (ty: mlty): core_type =
      let p = path_to_ident (path, sym) in
      let ty = Typ.mk (Ptyp_constr (p, c_tys)) in
      (match path with
+      | ["Prims"] when sym="tuple2" ->
+          Typ.mk (Ptyp_tuple (map build_core_type tys))
       | ["FStar"; "Pervasives"; "Native"] ->
         (* A special case for tuples, so they are displayed as
          * ('a * 'b) instead of ('a,'b) FStar_Pervasives_Native.tuple2
