@@ -162,6 +162,6 @@ be admissible in inductive type definitions. In what follows, we will
 no longer use the ``__no_positivity`` option. In a later section, once
 we've introduced the *effect of divergence*, we will see that
 non-positive definitions can safely be used in a context where
-programs are not expected to terminate, allows us to safely model
+programs are not expected to terminate, allowing one to safely model
 things like the ``dyn`` type, without compromising the soundness of
 F*.
