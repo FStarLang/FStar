@@ -43,8 +43,8 @@ An ``st a`` computation is a function which when given an initial
 value for the state ``s0`` returns a pair ``(x, s1)`` with the result
 of the computation ``x:a`` and a final value for the state ``s1``.
 
-For example, a computation that read the state, incremented it, and
-returned the initial value of the state, could be expressed as shown
+For example, a computation that reads the state, increments it, and
+returns the initial value of the state, can be expressed as shown
 below.
 
 .. literalinclude:: ../code/Part2.STInt.fst

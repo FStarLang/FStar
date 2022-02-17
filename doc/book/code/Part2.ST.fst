@@ -1,4 +1,4 @@
-module Part2.STInt
+module Part2.ST
 
 let st s a = s -> a & s
 

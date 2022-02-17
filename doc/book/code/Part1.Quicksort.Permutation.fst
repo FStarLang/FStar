@@ -1,4 +1,5 @@
 module Part1.Quicksort.Permutation
+#push-options "--fuel 1 --ifuel 1"
 
 //Some auxiliary definitions to make this a standalone example
 let rec length #a (l:list a)

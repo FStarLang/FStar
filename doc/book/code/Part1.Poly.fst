@@ -1,4 +1,4 @@
-module Poly
+module Part1.Poly
 
 //SNIPPET_START: id
 let id (a:Type) (x:a) : a = x

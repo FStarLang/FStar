@@ -1,4 +1,4 @@
-module Termination
+module Part1.Termination
 
 //SNIPPET_START: ackermann
 let rec ackermann (m n:nat)

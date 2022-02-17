@@ -1,5 +1,5 @@
 //SNIPPET_START: sample
-module Sample
+module Part1.GettingOffTheGround
 
 let incr (x:int) : int = x + 1
 //SNIPPET_END: sample
