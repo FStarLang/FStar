@@ -12,13 +12,8 @@ let uu___is_Some = function Some _ -> true | _ -> false
 let __proj__Some__item__v = function Some x -> x | _ -> assert false
 
 (* 'a * 'b *)
-type ('a,'b) tuple2 = 'a * 'b[@@deriving yojson,show]
-
 let fst = Pervasives.fst
 let snd = Pervasives.snd
-
-let __proj__Mktuple2__1 = fst
-let __proj__Mktuple2__2 = snd
 
 type ('a,'b,'c) tuple3 =
  'a* 'b* 'c

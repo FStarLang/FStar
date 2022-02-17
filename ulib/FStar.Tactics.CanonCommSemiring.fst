@@ -1564,8 +1564,8 @@ let steps =
       `%FStar.List.Tot.Base.assoc;
       `%FStar.Pervasives.Native.fst;
       `%FStar.Pervasives.Native.snd;
-      `%FStar.Pervasives.Native.__proj__Mktuple2__item___1;
-      `%FStar.Pervasives.Native.__proj__Mktuple2__item___2;
+      `%Prims.__proj__Mktuple2__item___1;
+      `%Prims.__proj__Mktuple2__item___2;
       `%FStar.List.Tot.Base.op_At;
       `%FStar.List.Tot.Base.append;
     ]

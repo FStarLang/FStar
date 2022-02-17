@@ -57,7 +57,7 @@ let mod_qn       = ["Prims"; "op_Modulus"]
 let nil_qn       = ["Prims"; "Nil"]
 let cons_qn      = ["Prims"; "Cons"]
 
-let mktuple2_qn  = ["FStar"; "Pervasives"; "Native"; "Mktuple2"]
+let mktuple2_qn  = ["Prims"; "Mktuple2"]
 let mktuple3_qn  = ["FStar"; "Pervasives"; "Native"; "Mktuple3"]
 let mktuple4_qn  = ["FStar"; "Pervasives"; "Native"; "Mktuple4"]
 let mktuple5_qn  = ["FStar"; "Pervasives"; "Native"; "Mktuple5"]
