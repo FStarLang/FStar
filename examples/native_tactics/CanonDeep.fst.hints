@@ -28,7 +28,7 @@
         "fuel_guarded_inversion_FStar.Reflection.Arith.expr"
       ],
       0,
-      "0f48e79b854d1dbda805a4c65472998e"
+      "772672ae21411b9962def112d4a129e8"
     ],
     [
       "CanonDeep.expr_to_term",
@@ -74,7 +74,7 @@
         "subterm_ordering_FStar.Reflection.Arith.Umod"
       ],
       0,
-      "b3bf6ae8c0e62289fb63e0b86e696dd4"
+      "3c1530949aa1c4afcfa1e8320b3b2c62"
     ],
     [
       "CanonDeep.canon_correct",
@@ -83,7 +83,7 @@
       1,
       [ "@query", "equation_CanonDeep.canon_expr_" ],
       0,
-      "3c77148f333cfe44fb66cdc7802ec600"
+      "8ef93b902f43b88db31787047ea7b030"
     ]
   ]
 ]
