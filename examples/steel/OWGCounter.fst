@@ -77,6 +77,9 @@ let lock_inv_pred (r:ref int) (r1 r2:ghost_ref int) =
 let lock_inv (r:ref int) (r1 r2:ghost_ref int) : vprop =
   h_exists (lock_inv_pred r r1 r2)
 
+open FStar.Tactics
+[@@resolve_implicits; handle_smt_goals]
+let disable_norm () : Tac unit = ()
 
 #push-options "--warn_error -271 --fuel 1 --ifuel 1"
 /// A helper lemma to reason about the lock invariant
@@ -284,4 +287,3 @@ let incr_main (#v:G.erased int) (r:ref int)
     rewrite_slprop (pts_to r full_perm (fst w + snd w))
                    (pts_to r full_perm (v + 2))
                    (fun _ -> ())
-

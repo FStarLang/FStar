@@ -66,6 +66,10 @@ let rec next_last_correct
   | [a] -> ()
   | (_, c) :: q -> next_last_correct c.next q
 
+open FStar.Tactics
+[@@resolve_implicits; handle_smt_goals]
+let disable_norm () : Tac unit = ()
+
 let rec fragment_append
   (#a: Type0)
   (pstart: ref (cell a))
