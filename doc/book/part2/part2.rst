@@ -131,7 +131,7 @@ work for you:
 
 But, by the end of this section, through several exercises, we expect
 the reader to be familiar enough with inductive types to define their
-own data structures and inductive defined relations, while also
+own data structures and inductively defined relations, while also
 gaining a working knowledge of some core parts of F*'s type theory.
 
 

@@ -375,6 +375,8 @@ Introduction (Exercise)
 
 Prove the following introduction rule for negation:
 
+`Exercise file <../code/exercises/Part2.Connectives.Negation.fst>`_
+
 .. code-block:: fstar
 
    val neg_intro #p (f:squash p -> squash False)
@@ -404,6 +406,8 @@ rather than just SMT only.
 
    val neg_elim #p #q (f:squash (~p)) (x:unit -> Lemma p)
      : squash (~q)
+
+`Exercise file <../code/exercises/Part2.Connectives.Negation.fst>`_
 
 .. container:: toggle
 
@@ -604,6 +608,8 @@ signature:
 Revise the solution so that it instead returns a dependent
 pair. ``dtuple2`` is already defined in ``Prims``, so you don't have
 to define it again.
+
+`Exercise file <../code/exercises/Part2.MerkleTreeUpdate.fst>`_
 
 .. container:: toggle
 

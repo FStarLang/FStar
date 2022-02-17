@@ -117,24 +117,24 @@ let pconv_der (#a #b:Type)
 
 
 //SNIPPET_START: leibniz$
-let leq (#a:Type) (x y:a) = p:(a -> Type) -> p x -> p y
+let lbz_eq (#a:Type) (x y:a) = p:(a -> Type) -> p x -> p y
 
-// leq is an equivalence relation
-let leq_refl #a (x:a)
-  : leq x x
+// lbz_eq is an equivalence relation
+let lbz_eq_refl #a (x:a)
+  : lbz_eq x x
   = fun p px -> px
-let leq_trans #a (x y z:a) (pf1:leq x y) (pf2:leq y z)
-  : leq x z
+let lbz_eq_trans #a (x y z:a) (pf1:lbz_eq x y) (pf2:lbz_eq y z)
+  : lbz_eq x z
   = fun p px -> pf2 p (pf1 p px)
-let leq_sym #a (x y:a) (pf:leq x y)
-  : leq y x
+let lbz_eq_sym #a (x y:a) (pf:lbz_eq x y)
+  : lbz_eq y x
   = fun p -> pf (fun (z:a) -> (p z -> p x)) (fun (px: p x) -> px)
 
-// equals and leq are isomorphic
-let equals_leq (#a:Type) (x y:a) (pf:equals x y)
-  : leq x y
+// equals and lbz_eq are isomorphic
+let equals_lbz_eq (#a:Type) (x y:a) (pf:equals x y)
+  : lbz_eq x y
   = fun p px -> px
-let leq_equals (#a:Type) (x y:a) (pf:leq x y)
+let lbz_eq_equals (#a:Type) (x y:a) (pf:lbz_eq x y)
   : equals x y
   = pf (fun (z:a) -> equals x z) Reflexivity
 //SNIPPET_END: leibniz$
