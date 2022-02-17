@@ -83,21 +83,24 @@ recursive call succeeds trivially in a context with ``x:False``.
 Truth
 .....
 
-The ``unit`` inductive type has just a single proof, ``()``.
+The ``trivial`` inductive type has just a single proof, ``T``.
 
 .. code-block::
 
-   type unit = T
+   type trivial = T
 
-Although its constructor is ``T``, F* provides a bit of syntactic
-sugar to allow writing proofs of ``unit`` as ``()``, which is
-customary in most functional languages.
+.. note::
 
-The squashed form of ``unit`` is written ``True`` and is defined as:
+   Although isomorphic to the ``unit`` type with its single element
+   ``()``, for historic reasons, F* uses the ``trivial`` type to
+   represent trivial proofs. In the future, it is likely that
+   ``trivial`` will just be replaced by ``unit``.
+
+The squashed form of ``trivial`` is written ``True`` and is defined as:
 
 .. code-block::
 
-   let True = squash unit
+   let True = squash trivial
 
 Introduction
 ++++++++++++
@@ -107,14 +110,14 @@ are trivial.
 
 .. code-block::
 
-   let _ : unit = ()
+   let _ : trivial = T
    let _ : True = ()
 
 Elimination
 +++++++++++
 
-There is no elimination form, since proofs of ``unit`` are vacuous and
-cannot be used to derive any other proofs.
+There is no elimination form, since proofs of ``trivial`` are vacuous
+and cannot be used to derive any other proofs.
 
 
 Conjunction
@@ -125,12 +128,16 @@ proofs of ``p`` and ``q``, respectively.
 
 .. code-block::
 
-   type tuple2 (p q:Type) = | Mktuple2 : _1:p -> _1:q -> tuple2 p q
+   type pair (p q:Type) = | Pair : _1:p -> _1:q -> tuple2 p q
 
-This type is written ``b & q`` and instead of ``Mktuple2 x y``, we
-write ``x, y``. We encountered it previously :ref:`here
-<Part1_tuples>` and we've used tuples of data items in many examples
-so far---using it to represent a pair of proof is no different.
+.. note::
+
+   This type is isomorphic to the tuple type ``p & q`` that we
+   encountered previously :ref:`here <Part1_tuples>`. F* currently
+   uses a separate type for pairs used in proofs and those used to
+   pair data, though there is no fundamental reason for this. In the
+   future, it is likely that ``pair`` will just be replaced by the
+   regular tuple type.
 
 The squashed form of conjunction is written ``/\`` and is defined as
 follows:
@@ -211,16 +218,15 @@ inductive type:
 
 .. code-block:: fstar
 
-   type either (p q:Type) =
-     | Inl : p -> either p q
-     | Inr : q -> either p q
+   type sum (p q:Type) =
+     | Left : p -> either p q
+     | Right : q -> either p q
 
-The constructors ``Inl`` and ``Inr`` (read "in-left" and "in-right",
-respectively), inject proofs of ``p`` or ``q`` into a proof of
-``either p q``.
+The constructors ``Left`` and ``Right`` inject proofs of ``p`` or
+``q`` into a proof of ``sum p q``.
 
 The classical connective ``\/`` described previously is just a
-squashed version of ``either``.
+squashed version of ``sum``.
 
 .. code-block:: fstar
 
@@ -230,7 +236,7 @@ Introduction
 ++++++++++++
 
 As with the other connectives, introducing a constructive disjunction
-is just a matter of using the ``Inl`` or ``Inr`` constructor.
+is just a matter of using the ``Left`` or ``Right`` constructor.
 
 To introduc the squashed version ``\/``, one can either rely on the
 SMT solver, as shown below.
