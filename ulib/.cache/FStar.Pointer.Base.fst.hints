@@ -10872,7 +10872,7 @@
         "typing_FStar.Pointer.Base.step_disjoint", "typing_FStar.UInt32.v"
       ],
       0,
-      "56735269234cae716c093ab9b5e20b95"
+      "b95e047b0e34824a74b01c9c19fcf472"
     ],
     [
       "FStar.Pointer.Base.disjoint_includes",
@@ -15454,7 +15454,7 @@
         "typing_FStar.Pointer.Base.greference_of"
       ],
       0,
-      "0ee3ab3f0bf02d3c75da0b589d9da1a7"
+      "96792cedf53d097e313a9355c2b315d8"
     ],
     [
       "FStar.Pointer.Base.buffer_live_pointer_unused_in_disjoint",
@@ -15511,6 +15511,7 @@
         "lemma_FStar.Pointer.Base.live_region_frameOf_buffer",
         "primitive_Prims.op_AmpAmp", "primitive_Prims.op_Equality",
         "proj_equation_FStar.ModifiesGen.Cls_aloc_disjoint",
+        "proj_equation_FStar.Pointer.Base.Buffer_broot",
         "proj_equation_FStar.Pointer.Base.Pointer_contents",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_FStar.ModifiesGen.Cls_aloc_disjoint",
