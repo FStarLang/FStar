@@ -66,7 +66,7 @@ val arrow_to_impl (#a #b: Type0) (_: (squash a -> GTot (squash b))) : GTot (a ==
 val impl_intro_gtot (#p #q: Type0) ($_: (p -> GTot q)) : GTot (p ==> q)
 
 (** Similar to [impl_intro_gtot], but for a Tot arrow *)
-val impl_intro_tot (#p #q: Type0) ($_: (p -> q)) : (p ==> q)
+val impl_intro_tot (#p #q: Type0) ($_: (p -> Tot q)) : (p ==> q)
 
 (** Similar to [arrow_to_impl], but not squashing the proof of [p] on the LHS. *)
 val impl_intro (#p #q: Type0) ($_: (p -> Lemma q)) : Lemma (p ==> q)
