@@ -785,12 +785,10 @@ let (handle_smt_goal :
                        | FStar_Pervasives_Native.Some dd1 -> dd1
                        | FStar_Pervasives_Native.None ->
                            failwith "Expected a dd" in
-                     let term =
-                       let uu___3 =
-                         FStar_Syntax_Syntax.lid_as_fv lid dd
-                           FStar_Pervasives_Native.None in
-                       FStar_Syntax_Syntax.fv_to_tm uu___3 in
-                     term
+                     let uu___3 =
+                       FStar_Syntax_Syntax.lid_as_fv lid dd
+                         FStar_Pervasives_Native.None in
+                     FStar_Syntax_Syntax.fv_to_tm uu___3
                  | uu___2 -> failwith "Resolve_tac not found" in
                let gs =
                  FStar_Errors.with_ctx
