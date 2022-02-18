@@ -412,8 +412,7 @@ let handle_smt_goal env goal =
             | Some dd -> dd
             | None -> failwith "Expected a dd"
           in
-          let term = S.fv_to_tm (S.lid_as_fv lid dd None) in
-          term
+          S.fv_to_tm (S.lid_as_fv lid dd None)
         | _ -> failwith "Resolve_tac not found"
       in
 
