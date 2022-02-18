@@ -15,13 +15,13 @@
 *)
 #light "off"
 module FStar.Syntax.Syntax
+(* Prims is used for bootstrapping *)
+open Prims
 open FStar.Pervasives
 open FStar.Compiler.Effect
 open FStar.Compiler.List
 (* Type definitions for the core AST *)
 
-(* Prims is used for bootstrapping *)
-open Prims
 open FStar
 open FStar.Compiler
 open FStar.Compiler.Util
