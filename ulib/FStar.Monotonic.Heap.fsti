@@ -202,10 +202,10 @@ val lemma_sel_upd2 (#a:Type0) (#b:Type0) (#rel1:preorder a) (#rel2:preorder b) (
 	 [SMTPat (sel (upd h r2 x) r1)]
 
 val lemma_mref_injectivity
-  :(u:unit{forall (a:Type0) (b:Type0) (rel1:preorder a) (rel2:preorder b) (r1:mref a rel1) (r2:mref b rel2). a =!= b ==> ~ (eq3 r1 r2)})
+  :(u:unit{forall (a:Type0) (b:Type0) (rel1:preorder a) (rel2:preorder b) (r1:mref a rel1) (r2:mref b rel2). a =!= b ==> ~ (r1 === r2)})
 
 val lemma_mref_injectivity_preorder (_:unit)
-  : Lemma (forall (a:Type0) (rel1:preorder a) (rel2:preorder a) (r1:mref a rel1) (r2:mref a rel2). rel1 =!= rel2 ==> ~ (eq3 r1 r2))
+  : Lemma (forall (a:Type0) (rel1:preorder a) (rel2:preorder a) (r1:mref a rel1) (r2:mref a rel2). rel1 =!= rel2 ==> ~ (r1 === r2))
 
 val lemma_in_dom_emp (#a:Type0) (#rel:preorder a) (r:mref a rel)
   :Lemma (requires True)

@@ -780,7 +780,7 @@ let check_inductive_well_typedness (env:env_t) (ses:list<sigelt>) (quals:list<qu
 (******************************************************************************)
 
 //for these types we don't generate projectors, discriminators, and hasEq axioms
-let early_prims_inductives = [ "c_False"; "c_True"; "equals"; "h_equals"; "c_and"; "c_or" ]
+let early_prims_inductives = [ "c_False"; "c_True"; "equals"; "c_and"; "c_or" ]
 
 let mk_discriminator_and_indexed_projectors iquals                   (* Qualifiers of the envelopping bundle    *)
                                             (attrs:list<attribute>)  (* Attributes of the envelopping bundle    *)

@@ -1,5 +1,5 @@
 [
-  "6\u0018Duæ+ñ \u00078A7kc\u0016n",
+  "\u0013\u0000–Ÿ»\u0018åîŒØ\u0013x\u0007ê0Q",
   [
     [
       "SelectorLogic.__proj__Mkvprop__item__t",
@@ -11,7 +11,7 @@
         "projection_inverse_SelectorLogic.Mkvprop_hp"
       ],
       0,
-      "77a550d972f0718c1cf10dbc1734a96a"
+      "504d1558e4ac92752047e24442a27152"
     ],
     [
       "SelectorLogic.__proj__Mkvprop__item__sel",
@@ -26,7 +26,7 @@
         "token_correspondence_SelectorLogic.__proj__Mkvprop__item__t"
       ],
       0,
-      "280b362b4f8676a977db6f2e26f2ea6d"
+      "7cfe43ced1d02c073a0b70a709fd8dbb"
     ],
     [
       "SelectorLogic.star",
@@ -42,7 +42,7 @@
         "typing_SelectorLogic.__proj__Mkvprop__item__hp"
       ],
       0,
-      "0c4bd2aaff45b789dc6326ff80e47ad5"
+      "98b9dc0524be694e69fc3e4a6ecf9ab6"
     ],
     [
       "SelectorLogic.wand",
@@ -67,7 +67,7 @@
         "typing_SelectorLogic.__proj__Mkvprop__item__hp"
       ],
       0,
-      "75265408c452057288c2514141e6458d"
+      "25c644f284d2138bda1f2dc15796dce6"
     ],
     [
       "SelectorLogic.star_split",
@@ -76,7 +76,7 @@
       1,
       [ "@query" ],
       0,
-      "145affba24030e72159cc45c1b9a0747"
+      "181715aceb6fe2859f494649b14bb0aa"
     ],
     [
       "SelectorLogic.star_split",
@@ -101,7 +101,7 @@
         "refinement_interpretation_Tm_refine_5a121517d5876c554c3e043a63a98441"
       ],
       0,
-      "294775fb9043ff066b8e6798f34baa7b"
+      "25f486051b8f4949e010a1b894d87f4d"
     ],
     [
       "SelectorLogic.modus_ponens_interp",
@@ -127,7 +127,7 @@
         "typing_SelectorLogic.__proj__Mkvprop__item__hp"
       ],
       0,
-      "0c5e2284968c9fdff6fce042df6f4db3"
+      "28240c20c506e279eced147e7a051520"
     ],
     [
       "SelectorLogic.modus_ponens_derive_sel",
@@ -136,7 +136,7 @@
       1,
       [ "@query" ],
       0,
-      "b4b94d7693134b9b7810eb1bade43e0b"
+      "76c81eae3c276a9988f0d101e31a7fdd"
     ],
     [
       "SelectorLogic.modus_ponens_derive_sel",
@@ -169,7 +169,7 @@
         "typing_SelectorLogic.__proj__Mkvprop__item__hp"
       ],
       0,
-      "8667740d0a1dda03ab51ddf5cc6cd592"
+      "1aebb70cd9a1c8a5505678e8fae69b94"
     ]
   ]
 ]

@@ -211,7 +211,7 @@ and metadata =
   | Meta_monadic_lift  of monad_name * monad_name * typ          (* Sub-effecting: lift the subterm of type typ *)
                                                                  (* from the first monad_name m1 to the second monad name  m2 *)
 and meta_source_info =
-  | Sequence
+  | Sequence                                    (* used when resugaring *)
   | Primop                                      (* ... add more cases here as needed for better code generation *)
   | Masked_effect
   | Meta_smt_pat

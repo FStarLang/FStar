@@ -114,7 +114,7 @@ let lift_int_store_reader_int_store (a:Type) (wp:INT_STORE_READER?.wp a) (e:INT_
 #set-options "--admit_smt_queries false"
 
 
-(* Trying to have a refiable lift from IntStoreFixed to IntStoreExcFixed *)
+(* Trying to have a reifiable lift from IntStoreFixed to IntStoreExcFixed *)
 sub_effect INT_STORE_READER ~> INT_STORE {
   (* lift_wp = lift_int_store_reader_int_store_wp ; *)
   lift =  fun (a:Type) (e:int_store_reader a) ->

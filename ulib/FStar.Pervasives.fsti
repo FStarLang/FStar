@@ -402,7 +402,7 @@ let st_post_h' (heap a pre: Type) = a -> _: heap{pre} -> GTot Type0
 (** Postconditions without refinements *)
 let st_post_h (heap a: Type) = st_post_h' heap a True
 
-(** The type of the main WP-transformer for stateful comptuations *)
+(** The type of the main WP-transformer for stateful computations *)
 let st_wp_h (heap a: Type) = st_post_h heap a -> Tot (st_pre_h heap)
 
 (** Returning a value does not transform the state *)
@@ -527,7 +527,7 @@ let ex_stronger (a: Type) (wp1 wp2: ex_wp a) = (forall (p: ex_post a). wp1 p ==>
 unfold
 let ex_close_wp (a b: Type) (wp: (b -> GTot (ex_wp a))) (p: ex_post a) = (forall (b: b). wp b p)
 
-(** Applying a computation with a trivial poscondition *)
+(** Applying a computation with a trivial postcondition *)
 unfold
 let ex_trivial (a: Type) (wp: ex_wp a) = wp (fun r -> True)
 
@@ -676,7 +676,7 @@ new_effect {
 val inversion (a: Type) : Type0
 
 (** To introduce [inversion t] in the SMT solver's context, call
-    [allow_inverson t]. *)
+    [allow_inversion t]. *)
 val allow_inversion (a: Type) : Pure unit (requires True) (ensures (fun x -> inversion a))
 
 (** Since the [option] type is so common, we always allow inverting
@@ -1002,7 +1002,7 @@ val noextract_to (backend:string) : Tot unit
 val normalize_for_extraction (steps:list norm_step) : Tot unit
 
 
-(** A layered effect definition may optionally be annoated with
+(** A layered effect definition may optionally be annotated with
     (ite_soundness_by t) attribute, where t is another attribute
     When so, the implicits and the smt guard generated when
     checking the soundness of the if-then-else combinator, are

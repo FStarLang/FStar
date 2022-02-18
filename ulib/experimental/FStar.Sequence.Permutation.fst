@@ -79,7 +79,7 @@ let rec find (#a:eqtype) (x:a) (s:seq a{ count x s > 0 })
       cons (head s) pfx, sfx
     )
 
-//rlimit factor 2 seems sufficent, I tried with --quake 10 (10 random seeds)
+//rlimit factor 2 seems sufficient, I tried with --quake 10 (10 random seeds)
 //in contrast the corresponding proof in FStar.Seq.Permutation
 //requires around rlimit factor 20 to succeed reliably with --quake 10
 //though this one is more careful about how count is revealed,

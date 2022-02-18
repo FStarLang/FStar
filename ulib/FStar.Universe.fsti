@@ -17,7 +17,7 @@ module FStar.Universe
 
 (** This module implements some basic facilities to raise the universe of a type *
   * The type [raise_t a] is supposed to be isomorphic to [a] but in a higher     *
-  * universe. The two functions [raise_val] and [dowgrade_val] allow to coerce   *
+  * universe. The two functions [raise_val] and [downgrade_val] allow to coerce   *
   * from [a] to [raise_t a] and back.                                            **)
 
 

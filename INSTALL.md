@@ -38,8 +38,7 @@ required dependencies using the following command:
 
 To instead install the latest released version you can use the following command
 (keeping in mind that you will often get an old version of F\* this way,
-so unless a release happened recently we don't really recommend it;
-moreover, you will need to [install z3 separately](#runtime-dependency-particular-version-of-z3)):
+so unless a release happened recently we don't really recommend it):
 
     $ opam install fstar
 

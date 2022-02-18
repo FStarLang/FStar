@@ -39,7 +39,7 @@ let seqn (n: nat) (a: Type) = s: S.seq a {S.length s = n}
 (** [in_ s] is the type of a valid index into the sequence [s] *)
 let in_ (#a: Type) (s: S.seq a) = n: nat{n < S.length s}
 
-(** Find an index of an element in [s] startig from [i] that validates [p]  *)
+(** Find an index of an element in [s] starting from [i] that validates [p]  *)
 let rec find (#a: Type) (s: S.seq a) (p: (a -> bool)) (i: in_ s)
     : Pure (option (in_ s))
       (requires True)

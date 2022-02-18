@@ -24,7 +24,7 @@ open Lens // Pure lenses
 open FStar.Heap
 open FStar.Ref
 
-/// Rather than (:=), it's more convenenient here to describe the effect of lens
+/// Rather than (:=), it's more convenient here to describe the effect of lens
 /// using Heap.upd, instead of a combination of Heap.modifies and Heap.sel
 assume val upd_ref (#a:Type) (r:ref a) (v:a) : ST unit
        (requires (fun h -> True)) (ensures (fun h0 _ h1 -> h1 == upd h0 r v))
@@ -46,7 +46,7 @@ let as_hlens (l:lens 'a 'b) : hlens 'a 'b = {
     put = (fun y (h, x) -> h, (x.[l] <- y));
 }
 
-/// Componsing hlenses is just like composing lenses
+/// Composing hlenses is just like composing lenses
 let compose_hlens #a #b #c (l:hlens a b) (m:hlens b c) : hlens a c = {
      get = (fun (h0, x) -> m.get (h0, l.get (h0, x)));
      put = (fun (z:c) (h0, x) -> let h1, b = m.put z (h0, (l.get (h0, x))) in l.put b (h1, x))
@@ -144,7 +144,7 @@ let deref = v
 /// test3: test0 can be written more compactly like so
 let test3 (c:ref (ref int)) = c.[v |.. v]
 
-/// test4: and here's test2 written more compoactly
+/// test4: and here's test2 written more compactly
 let test4 (c:ref (ref int)) : ST unit
           (requires (fun h -> addr_of (sel h c) <> addr_of c))
           (ensures (fun h0 d h1 -> sel h1 (sel h1 c) = sel h0 (sel h0 c))) =

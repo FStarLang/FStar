@@ -149,7 +149,7 @@ type polyvec = poly (vec nnat)
   Perhaps the general theme is that we retain type parameters, even
     if they have type other than Type.
   Indeed, while translating type type abbreviations or inductive types,
-  we just copy the list of binders and dont even look at the types of binders.
+  we just copy the list of binders and don't even look at the types of binders.
 
   Of course, after the translation, all binders have type Type.
   So, one has to be careful while instantiating those binders.
@@ -162,7 +162,7 @@ type polyvec = poly (vec nnat)
   Is this mentioned somewhere in the thesis?
 
   All this seems a bit arbitrary, although is perhaps inspired by some
-  use cases in Coq, and haa been heavily tested (in Coq).
+  use cases in Coq, and has been heavily tested (in Coq).
   Yet, Why is this the right way, conceptually?
 
   Our current implementation makes these same choices as Coq's.

@@ -15,7 +15,7 @@
 *)
 module FStar.Int128
 
-(**** THIS MODULE IS GENETATED AUTOMATICALLY USING [mk_int.sh], DO NOT EDIT DIRECTLY ****)
+(**** THIS MODULE IS GENERATED AUTOMATICALLY USING [mk_int.sh], DO NOT EDIT DIRECTLY ****)
 
 open FStar.Int
 open FStar.Mul

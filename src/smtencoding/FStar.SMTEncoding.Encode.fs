@@ -299,18 +299,6 @@ let primitive_type_axioms : env -> lident -> string -> term -> list<decl> =
         let eq2_x_y = mkApp(eq2, [a;x;y]) in
         let valid = mkApp("Valid", [eq2_x_y]) in
         [Util.mkAssume(mkForall (Env.get_range env) ([[eq2_x_y]], [aa;xx;yy], mkIff(mkEq(x, y), valid)), Some "Eq2 interpretation", "eq2-interp")] in
-    let mk_eq3_interp : env -> string -> term -> list<decl> = fun env eq3 tt ->
-        let aa = mk_fv ("a", Term_sort) in
-        let bb = mk_fv ("b", Term_sort) in
-        let xx = mk_fv ("x", Term_sort) in
-        let yy = mk_fv ("y", Term_sort) in
-        let a = mkFreeV aa in
-        let b = mkFreeV bb in
-        let x = mkFreeV xx in
-        let y = mkFreeV yy in
-        let eq3_x_y = mkApp(eq3, [a;b;x;y]) in
-        let valid = mkApp("Valid", [eq3_x_y]) in
-        [Util.mkAssume(mkForall (Env.get_range env) ([[eq3_x_y]], [aa;bb;xx;yy], mkIff(mkEq(x, y), valid)), Some "Eq3 interpretation", "eq3-interp")] in
     let mk_imp_interp : env -> string -> term -> list<decl> = fun env imp tt ->
         let aa = mk_fv ("a", Term_sort) in
         let bb = mk_fv ("b", Term_sort) in
@@ -393,7 +381,6 @@ let primitive_type_axioms : env -> lident -> string -> term -> list<decl> =
                  (Const.and_lid,    mk_and_interp);
                  (Const.or_lid,     mk_or_interp);
                  (Const.eq2_lid,    mk_eq2_interp);
-                 (Const.eq3_lid,    mk_eq3_interp);
                  (Const.imp_lid,    mk_imp_interp);
                  (Const.iff_lid,    mk_iff_interp);
                  (Const.not_lid,    mk_not_interp);
@@ -817,8 +804,12 @@ let encode_top_level_let :
                     | Tm_fvar fv when S.fv_eq_lid fv FStar.Parser.Const.logical_lid -> true
                     | _ -> false
                   in
-                  let is_prims = lbn |> FStar.Compiler.Util.right |> lid_of_fv |> (fun lid -> lid_equals (lid_of_ids (ns_of_lid lid)) Const.prims_lid) in
-                  if not is_prims && (quals |> List.contains Logic || is_logical)
+                  let is_smt_theory_symbol =
+                      let fv = FStar.Compiler.Util.right lbn in
+                      Env.fv_has_attr env.tcenv fv FStar.Parser.Const.smt_theory_symbol_attr_lid
+                  in
+                  if not is_smt_theory_symbol
+                  && (quals |> List.contains Logic || is_logical)
                   then app, mk_Valid app, encode_formula body env'
                   else app, app, encode_term body env'
                 in
@@ -1451,12 +1442,9 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                         [ff],
                         Term.mk_NoHoist f tok_typing)
              | _ -> tok_typing in
-        let vars', guards', env'', decls_formals, _ = encode_binders (Some fuel_tm) formals env in //NS/CH: used to be s_fuel_tm
-        let ty_pred', decls_pred =
-             let xvars = List.map mkFreeV vars' in
-             let dapp =  mkApp(ddconstrsym, xvars) in //arity ok; |xvars| = |formals| = arity
-             encode_term_pred (Some fuel_tm) t_res env'' dapp in
-        let guard' = mk_and_l guards' in
+        let ty_pred', t_res_tm, decls_pred =
+             let t_res_tm, t_res_decls = encode_term t_res env' in
+             mk_HasTypeWithFuel (Some fuel_tm) dapp t_res_tm, t_res_tm, t_res_decls in
         let proxy_fresh = match formals with
             | [] -> []
             | _ -> [Term.fresh_token (ddtok, Term_sort) (varops.next_id())] in
@@ -1562,7 +1550,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                                                        Env.Unascribe;
                                                        //we don't know if this will terminate; so don't do recursive steps
                                                        Env.Exclude Env.Zeta]
-                                                       env''.tcenv
+                                                       env'.tcenv
                                                        t
                               in
                               let head', _ = U.head_and_args t' in
@@ -1587,7 +1575,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                         | None -> codomain_prec_l, cod_decls
                         | Some (bs, c) ->
                           //var bs << D ... var ...
-                          let bs', guards', _env', bs_decls, _ = encode_binders None bs env'' in
+                          let bs', guards', _env', bs_decls, _ = encode_binders None bs env' in
                           let fun_app = mk_Apply (mkFreeV var) bs' in
                           mkForall (Ident.range_of_lid d)
                                    ([[mk_Precedes lex_t lex_t fun_app dapp]],
@@ -1626,21 +1614,79 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
               [], []
         in
         let decls2, elim = encode_elim () in
+        let data_cons_typing_intro_decl =
+          //
+          //AR:
+          //
+          //Typing intro for the data constructor
+          //
+          //We do a bit of manipulation for type indices
+          //Consider the Cons data constructor of a length-indexed vector type:
+          //  type vector : nat -> Type = | Emp : vector 0
+          //  | Cons: n:nat -> hd:nat -> tl:vec n -> vec (n+1)
+          //
+          //So far we have
+          //  ty_pred' = HasTypeFuel f (Cons n hd tl) (vector (n+1))
+          //  vars = n, hd, tl
+          //  guard = And of typing guards for n, hd, tl (i.e. (HasType n nat) etc.)
+          //
+          //If we emitted the straightforward typing axiom:
+          //  forall n hd tl. HasTypeFuel f (Cons n hd tl) (vector (n+1))
+          //with pattern
+          //  HasTypeFuel f (Cons n hd tl) (vecor (n+1))
+          //
+          //It results in too restrictive a pattern,
+          //Specifically, if we need to prove HasTypeFuel f (Cons 0 1 Emp) (vector 1),
+          //  the axiom will not fire, since the pattern is specifically looking for
+          //  (n+1) in the resulting vector type, whereas here we have a term 1,
+          //  which is not addition syntactically
+          //
+          //So we do a little bit of surgery below to emit an axiom of the form:
+          //  forall n hd tl m. m = n + 1 ==> HasTypeFuel f (Cons n hd tl) (vector m)
+          //where m is a fresh variable
+          //
+          //Also see #2456
+          //
+          let ty_pred', vars, guard =
+            match t_res_tm.tm with
+            | App (op, args) ->
+              //iargs are index arguments in the return type of the data constructor
+              let targs, iargs = List.splitAt n_tps args in
+              //fresh vars for iargs
+              let fresh_ivars, fresh_iargs =
+                iargs |> List.map (fun _ -> fresh_fvar env.current_module_name "i" Term_sort)
+                      |> List.split in
+              //equality guards
+              let additional_guards =
+                mk_and_l (List.map2 (fun a fresh_a -> mkEq (a, fresh_a)) iargs fresh_iargs) in
+
+              mk_HasTypeWithFuel
+                (Some fuel_tm)
+                dapp
+                ({t_res_tm with tm = App (op, targs@fresh_iargs)}),
+
+              vars@(fresh_ivars |> List.map (fun s -> mk_fv (s, Term_sort))),
+
+              mkAnd (guard, additional_guards)
+
+            | _ -> ty_pred', vars, guard in  //When will this case arise?
+
+          Util.mkAssume(mkForall (Ident.range_of_lid d)
+                                 ([[ty_pred']],add_fuel (mk_fv (fuel_var, Fuel_sort)) vars, mkImp(guard, ty_pred')),
+                                 Some "data constructor typing intro",
+                                 ("data_typing_intro_"^ddtok)) in
+
         let g = binder_decls
                 @decls2
                 @decls3
                 @([Term.DeclFun(ddtok, [], Term_sort, Some (BU.format1 "data constructor proxy: %s" (Print.lid_to_string d)))]
                   @proxy_fresh |> mk_decls_trivial)
-                @decls_formals
                 @decls_pred
                 @([Util.mkAssume(tok_typing, Some "typing for data constructor proxy", ("typing_tok_"^ddtok));
                    Util.mkAssume(mkForall (Ident.range_of_lid d)
                                           ([[app]], vars,
                                            mkEq(app, dapp)), Some "equality for proxy", ("equality_tok_"^ddtok));
-                   Util.mkAssume(mkForall (Ident.range_of_lid d)
-                                          ([[ty_pred']],add_fuel (mk_fv (fuel_var, Fuel_sort)) vars', mkImp(guard', ty_pred')),
-                               Some "data constructor typing intro",
-                               ("data_typing_intro_"^ddtok));
+                   data_cons_typing_intro_decl;
                    ]@elim |> mk_decls_trivial) in
         (datacons |> mk_decls_trivial) @ g, env
 

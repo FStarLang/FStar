@@ -59,7 +59,7 @@ abstract type separateCoordinates (p:point) =
 abstract type live (h:heap) (p:point) = 
   live h (get_x p) /\ live h (get_y p) /\ live h (get_z p) /\ separateCoordinates p
 
-// Wellformedness of points : all its coordinates are properly normalized big integers
+// Well-formedness of points : all its coordinates are properly normalized big integers
 abstract type wellFormed (h:heap) (p:point) =
   norm h (get_x p) /\ norm h (get_y p) /\ norm h (get_z p) /\ separateCoordinates p
 
@@ -79,7 +79,7 @@ let erefs p = hide (refs p)
 
 let op_Plus_Plus_Plus a b = FStar.TSet.union a b
 
-// Two distincts points from a memory point of view
+// Two distinct points from a memory point of view
 type distinct (a:point) (b:point) =
   disjoint (get_x a) (get_x b) /\ disjoint (get_x a) (get_y b) /\ disjoint (get_x a) (get_z b)
   /\ disjoint (get_y a) (get_x b) /\ disjoint (get_y a) (get_y b) /\ disjoint (get_y a) (get_z b)

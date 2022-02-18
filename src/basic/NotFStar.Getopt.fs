@@ -61,7 +61,7 @@ let rec parse (opts:list<opt>) def (ar:string []) ix max i =
   if ix > max then Success
   else
     let arg = ar.[ix] in
-    let go_on () = let _ = def arg in parse opts def ar (ix + 1) max (i + 1) in
+    let go_on () = bind (def arg) (fun _ -> parse opts def ar (ix + 1) max (i + 1)) in
     match find_matching_opt opts arg with
     | None -> go_on ()
     | Some (None, _) -> Error ("unrecognized option '" + arg + "'\n")
@@ -110,6 +110,9 @@ let parse_string specs others (str:string) =
     | None -> Error("Failed to parse options; unmatched quote \"'\"")
     | Some args ->
       parse_array specs others args 0
+
+let parse_list specs others lst =
+    parse_array specs others (Array.ofList lst) 0
 
 let cmdline () =
   let argv = System.Environment.GetCommandLineArgs() in

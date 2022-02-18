@@ -15,7 +15,7 @@
         "refinement_kinding_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "4e8026e4ef033a944715dedaeb200e39"
+      "d93d62b97090c8e142878581b154b6c7"
     ],
     [
       "Problem01.prefix",
@@ -31,7 +31,7 @@
         "refinement_kinding_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "16e668fa1ad8bef10a512827ebcfc6a1"
+      "8e53013bd4c6675d8d0387840a2f7eb0"
     ],
     [
       "Problem01.prefix",
@@ -66,7 +66,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "738b3326c57e767fb36a33853405cbd4"
+      "13b067db3522d6b34a3460eee48654f6"
     ],
     [
       "Problem01.remove_elem_from_list",
@@ -95,7 +95,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "809fce1906aac10e5e8679f9f9476e43"
+      "2585c68b468c5de35ce8456080e71392"
     ],
     [
       "Problem01.test_prefix",
@@ -107,7 +107,7 @@
         "refinement_interpretation_Tm_refine_500911408eb15f82fac1b31c6fbc48ba"
       ],
       0,
-      "604aacae212ff0a65665d333ced1a69d"
+      "a30f056934cd2e0a0d280cf5de957711"
     ],
     [
       "Problem01.test_prefix",
@@ -119,7 +119,7 @@
         "refinement_interpretation_Tm_refine_500911408eb15f82fac1b31c6fbc48ba"
       ],
       0,
-      "a2f7e1277efcdea76336e4eb3a74c41e"
+      "77453bd018c0c7bdf02011f7c1d762c5"
     ],
     [
       "Problem01.test_prefix",
@@ -132,19 +132,20 @@
         "@query", "binder_x_b46f9febde162e476374095e6787c208_0",
         "binder_x_b46f9febde162e476374095e6787c208_2",
         "binder_x_cead0a6ed392996b481ea4c63547a885_1", "equation_Prims.nat",
+        "equation_Prims.op_Equals_Equals_Equals",
         "equation_with_fuel_FStar.List.Tot.Base.length.fuel_instrumented",
         "fuel_guarded_inversion_Prims.list", "int_inversion", "int_typing",
         "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_066ec34605b99f46d413e3ab3b1e988e",
+        "refinement_interpretation_Tm_refine_0cb1d842cc1a8dc8c2ab9b08d2d6140b",
         "refinement_interpretation_Tm_refine_500911408eb15f82fac1b31c6fbc48ba",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "refinement_interpretation_Tm_refine_bb7758cc8dcd21cd4832291c7528fcaa",
         "refinement_interpretation_Tm_refine_f7dce0fb4d4620c1462f9a7589022c50",
         "refinement_kinding_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "typing_Problem01.test_prefix", "well-founded-ordering-on-nat"
       ],
       0,
-      "0c4d51878650db0355c541ae9a6add75"
+      "ba4b4d75a9b00bed410669619437e88f"
     ],
     [
       "Problem01.test_prefix_exists_to_b",
@@ -156,7 +157,7 @@
         "refinement_interpretation_Tm_refine_500911408eb15f82fac1b31c6fbc48ba"
       ],
       0,
-      "02fec2a354ade1b9420b82bc4633fd00"
+      "69e0d77f6e33c38433fc5a3728419859"
     ],
     [
       "Problem01.test_prefix_exists_to_b",
@@ -195,7 +196,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "55025d9539b880042378e0265a98a0fe"
+      "77c3bd6afb129e3b86613c4d95183750"
     ],
     [
       "Problem01.test_prefix_iff",
@@ -217,7 +218,7 @@
         "typing_Problem01.test_prefix"
       ],
       0,
-      "cb00404c24ac99201d9ca61b9de4cddf"
+      "19c6d268d582f05b14e574cd631c4e0c"
     ],
     [
       "Problem01.test_relaxed_prefix",
@@ -253,7 +254,7 @@
         "typing_Problem01.prefix", "typing_Problem01.test_prefix"
       ],
       0,
-      "b97862e1f84ea9b694bafb76ec6fd444"
+      "298b146879ae8335ddf216f80b28d7c7"
     ]
   ]
 ]

@@ -29,6 +29,7 @@ type step =
   | Unascribe 
   | NBE 
   | ForExtraction 
+  | Unrefine 
 let (uu___is_Beta : step -> Prims.bool) =
   fun projectee -> match projectee with | Beta -> true | uu___ -> false
 let (uu___is_Iota : step -> Prims.bool) =
@@ -114,6 +115,8 @@ let (uu___is_NBE : step -> Prims.bool) =
 let (uu___is_ForExtraction : step -> Prims.bool) =
   fun projectee ->
     match projectee with | ForExtraction -> true | uu___ -> false
+let (uu___is_Unrefine : step -> Prims.bool) =
+  fun projectee -> match projectee with | Unrefine -> true | uu___ -> false
 type steps = step Prims.list
 let rec (eq_step : step -> step -> Prims.bool) =
   fun s1 ->
@@ -142,6 +145,7 @@ let rec (eq_step : step -> step -> Prims.bool) =
       | (Unmeta, Unmeta) -> true
       | (Unascribe, Unascribe) -> true
       | (NBE, NBE) -> true
+      | (Unrefine, Unrefine) -> true
       | (Exclude s11, Exclude s21) -> eq_step s11 s21
       | (UnfoldUntil s11, UnfoldUntil s21) -> s11 = s21
       | (UnfoldOnly lids1, UnfoldOnly lids2) ->

@@ -93,7 +93,7 @@ let rec n_flex_rhs = function
 (* A point substitution *)
 type subst = (nat * term)
 
-(* Composition of point substitions *)
+(* Composition of point substitutions *)
 type lsubst = list subst
 
 val subst_term : subst -> term -> Tot term

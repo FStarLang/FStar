@@ -19,7 +19,7 @@ module DoublyLinkedListIface
 /// This module consists of proofs / code for the iface that is
 /// written in the actual fsti. Most of this code will never be user
 /// facing, and will soon be merged into the DoublyLinkedList module,
-/// as I work on moving stuff into DoublLinkedList.fsti from the iface
+/// as I work on moving stuff into DoublyLinkedList.fsti from the iface
 /// fsti.
 
 module DLL = DoublyLinkedList

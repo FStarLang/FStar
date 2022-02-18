@@ -177,7 +177,7 @@ let mD52 n ch =
     popRegion (); mdd5
 
 
-(*can we run this program and compare it agains standard implementations?
+(*can we run this program and compare it against standard implementations?
   That at least needs the following:
   1) implementations of admitted functions, e.g. padding
   2) implementations of =

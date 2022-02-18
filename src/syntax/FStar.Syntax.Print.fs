@@ -86,7 +86,6 @@ let infix_prim_ops = [
     (C.iff_lid     , "<==>");
     (C.precedes_lid, "<<");
     (C.eq2_lid     , "==");
-    (C.eq3_lid     , "===");
 ]
 
 let unary_prim_ops = [

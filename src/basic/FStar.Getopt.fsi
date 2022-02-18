@@ -33,6 +33,7 @@ type parse_cmdline_res =
   | Error of string
   | Success
 
-val parse_cmdline: list<opt> -> (string -> 'a) -> parse_cmdline_res
-val parse_string: list<opt> -> (string -> 'a) -> string -> parse_cmdline_res
+val parse_cmdline: list<opt> -> (string -> parse_cmdline_res) -> parse_cmdline_res
+val parse_string: list<opt> -> (string -> parse_cmdline_res) -> string -> parse_cmdline_res
+val parse_list: list<opt> -> (string -> parse_cmdline_res) -> list<string> -> parse_cmdline_res
 val cmdline: unit -> list<string>

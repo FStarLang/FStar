@@ -47,7 +47,7 @@ let idempotent #a (f: (a -> a -> a)) = forall x. f x x == x
 
 (** A semilattice has a top element and a
     associative-commutative-idempotent least upper bound operator.
-    This is effectvely the typeclass of a semilattice, however, we
+    This is effectively the typeclass of a semilattice, however, we
     program explicitly with semilattice, rather than use typeclass
     instantiation.  *)
 noeq

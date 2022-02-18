@@ -46,7 +46,7 @@ type innerGuardLC (n:nat) (lo : lref nat) (li : lref nat)
 
 type vector (a:Type) (n:nat) = (k:nat{k<n}) -> Tot a
 
-(*cannot make n implcit, because the typechecker usually canNOT figure it out from f*)
+(*cannot make n implicit, because the typechecker usually cannot figure it out from f*)
 val marked : n:nat -> (vector bool n) -> m:nat{m<n} -> Tot bool
 let marked n f m = (f m)
 
@@ -60,8 +60,8 @@ val mark : n:nat -> ((k:nat{k<n}) -> Tot bool) -> index:nat{index<n} -> Tot ((k:
 let mark n f index =
   (fun indx -> if (indx= index) then true else f indx)
 
-(*using hetrogeneous lists, one can extend this to the general (n-ary) case*)
-(*previosly, mtail was need; verify*)
+(*using heterogeneous lists, one can extend this to the general (n-ary) case*)
+(*previously, mtail was need; verify*)
 type distinctRefsExists3
   (#a:Type) (#b:Type) (#c:Type) (m:smem)
   (ra:lref a) (rb: lref b) (rc: lref c)  =
