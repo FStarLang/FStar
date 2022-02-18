@@ -2008,7 +2008,7 @@ and norm_comp : cfg -> env -> comp -> comp =
                          | Some u -> Some <| norm_universe cfg env u
                          | None -> None
               in
-              { comp with n = Total (t, uopt) }
+              { mk_Total' t uopt with pos = comp.pos }
 
             | GTotal (t, uopt) ->
               let t = norm cfg env [] t in
@@ -2016,7 +2016,7 @@ and norm_comp : cfg -> env -> comp -> comp =
                          | Some u -> Some <| norm_universe cfg env u
                          | None -> None
               in
-              { comp with n = GTotal (t, uopt) }
+              { mk_GTotal' t uopt with pos = comp.pos }
 
             | Comp ct ->
               //if for extraction then erase effect args to unit
@@ -2034,10 +2034,10 @@ and norm_comp : cfg -> env -> comp -> comp =
                 | f -> f) in
               let comp_univs = List.map (norm_universe cfg env) ct.comp_univs in
               let result_typ = norm cfg env [] ct.result_typ in
-              { comp with n = Comp ({ct with comp_univs  = comp_univs;
-                                             result_typ  = result_typ;
-                                             effect_args = effect_args;
-                                             flags       = flags}) }
+              { mk_Comp ({ct with comp_univs  = comp_univs;
+                                                result_typ  = result_typ;
+                                                effect_args = effect_args;
+                                                flags       = flags}) with pos = comp.pos }
 
 and norm_binder (cfg:Cfg.cfg) (env:env) (b:binder) : binder =
     let x = { b.binder_bv with sort = norm cfg env [] b.binder_bv.sort } in
