@@ -44,6 +44,8 @@ let arrow_to_impl #a #b f = squash_double_arrow (return_squash (fun x -> f (retu
 
 let impl_intro_gtot #p #q f = return_squash f
 
+let impl_intro_tot #p #q f = return_squash #(p -> GTot q) f
+
 let impl_intro #p #q f =
   give_witness #(p ==> q) (squash_double_arrow (return_squash (lemma_to_squash_gtot f)))
 
