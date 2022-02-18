@@ -20,7 +20,7 @@ In F* (as in other PTSs) types have types too, functions can take
 types as arguments and return types as results, etc. In particular,
 the type of a type is ``Type``, e.g., ``bool : Type``, ``int : Type``,
 ``int -> int : Type`` etc. In fact, even ``Type`` has a type---as
-we'll see in the subsection on :ref:`universes <universes>`.
+we'll see when we learn about *universes*.
 
 Parametric polymorphism or generics
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

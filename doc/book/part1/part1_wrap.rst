@@ -27,8 +27,9 @@ projects.
 
 It'll serve you well to learn a bit more about how an SMT solver works
 and how F* interfaces with it---this is covered in a few upcoming
-sections, including a section on :ref:`classical proofs <Classical>`
-and on a :ref:`user's guide to SMT proofs <Part6_SMT>`.
+sections, including a section on :ref:`classical proofs
+<Part2_connectives>` and on a :ref:`user's guide to SMT proofs
+<Part6_SMT>`.
 
 * In particular, when trying to use universally quantified hypotheses
   or when proving existentially quantified goals, you will need to

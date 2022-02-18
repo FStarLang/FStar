@@ -138,7 +138,7 @@ is that dependently typed programming patterns that are `quite
 technical in other languages
 <http://adam.chlipala.net/cpdt/html/Cpdt.DataStruct.html>`_ are often
 fairly natural in F*. You'll learn more about this in :ref:`a later
-chapter <TypeConversion>`.
+chapter <Part2_equality>`.
 
 
 F* supports user-defined effectful programming

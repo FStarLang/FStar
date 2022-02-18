@@ -251,7 +251,7 @@ following signature:
 
 .. code-block:: fstar
 
-   val append #a #n #m (v1:vec a n) (v2:vec a m)
+   val append (#a:Type) (#n #m:nat) (v1:vec a n) (v2:vec a m)
      : vec a (n + m)
 
 .. container:: toggle
