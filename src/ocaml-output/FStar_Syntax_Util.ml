@@ -3036,7 +3036,7 @@ let (destruct_sq_base_table :
     [(FStar_Parser_Const.c_eq2_lid, FStar_Parser_Const.c_eq2_lid)]);
   (Prims.int_zero,
     [(FStar_Parser_Const.c_true_lid, FStar_Parser_Const.true_lid);
-    (FStar_Parser_Const.c_false_lid, FStar_Parser_Const.false_lid)])]
+    (FStar_Parser_Const.empty_type_lid, FStar_Parser_Const.false_lid)])]
 let (destruct_typ_as_formula :
   FStar_Syntax_Syntax.term -> connective FStar_Pervasives_Native.option) =
   fun f ->

@@ -183,6 +183,7 @@ ulib-extra:
 
 tutorial: .fstarlib
 	+$(MAKE) -C ../doc/tutorial regressions
+	+$(MAKE) -C ../doc/book/code
 
 utests: .fstarlib
 	+$(MAKE) -C ../tests all

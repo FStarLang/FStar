@@ -151,6 +151,12 @@ Guidelines for the changelog:
 
 ## Libraries
 
+   * Renamed some of the types in `Prims` in https://github.com/FStarLang/FStar/pull/2461.
+       - `c_False` became `empty`
+       - `c_True` became `trivial`
+       - `c_and` became `pair`
+       - `c_or` became `sum`
+
    * Guido Martinez found that `FStar.WellFounded.axiom1_dep` (and its
      specialization axiom1) is unsound when instantiated across
      different universe levels. The issue and fix is discussed in
