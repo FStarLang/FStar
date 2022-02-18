@@ -61,7 +61,7 @@ let predExt_Type =
             (ensures (p1 == p2))
 let predExt_Type_inconsistent (ax:predExt_Type)
   : Lemma False
-  = let p1 : predicate int = fun n -> c_True in
+  = let p1 : predicate int = fun n -> trivial in
     let p2 : predicate int = fun n -> unit in
     ax int p1 p2
 
@@ -78,6 +78,6 @@ let predExt_ss =
             (ensures (p1 == p2))
 let predExt_ss_inconsistent (ax:predExt_ss)
   : Lemma False
-  = let p1 : predicate_ss int = fun n -> c_True in
+  = let p1 : predicate_ss int = fun n -> trivial in
     let p2 : predicate_ss int = fun n -> unit in
     ax int p1 p2

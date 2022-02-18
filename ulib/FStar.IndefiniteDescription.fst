@@ -68,13 +68,13 @@ let strong_excluded_middle (p: Type0) : GTot (b: bool{b = true <==> p}) =
     give_proof (bind_squash (get_proof (l_or p (~p)))
           (fun (b: l_or p (~p)) ->
               bind_squash b
-                (fun (b': c_or p (~p)) ->
+                (fun (b': Prims.sum p (~p)) ->
                     match b' with
-                    | Left hp ->
+                    | Prims.Left hp ->
                       give_witness hp;
                       exists_intro (fun b -> b = true <==> p) true;
                       get_proof (exists b. b = true <==> p)
-                    | Right hnp ->
+                    | Prims.Right hnp ->
                       give_witness hnp;
                       exists_intro (fun b -> b = true <==> p) false;
                       get_proof (exists b. b = true <==> p))))
@@ -102,7 +102,7 @@ let stronger_markovs_principle_prop (p: (nat -> GTot prop))
 (** A proof for squash p can be eliminated to get p in the Ghost effect *)
 
 let elim_squash (#p:Type u#a) (s:squash p) : GTot p =
-  let uu : squash (x:p & squash c_True) =
+  let uu : squash (x:p & squash trivial) =
     bind_squash s (fun x -> return_squash (| x, return_squash T |)) in
   give_proof (return_squash uu);
-  indefinite_description_ghost p (fun _ -> squash c_True)
+  indefinite_description_ghost p (fun _ -> squash trivial)
