@@ -491,11 +491,15 @@ let rec foldm_snoc_split' #c #eq (cm: CE.cm c eq)
       let nk' = nk - 1 in
       (* here's the nasty bit with where we have to massage the proof from the induction hypothesis *)
       let ih
-        : squash ((foldm_snoc cm (init (range_count n0 nk') (init_func_from_expr (func_sum cm expr1 expr2) n0 nk')) `eq.eq`
-              cm.mult (foldm_snoc cm (init (range_count n0 nk') (init_func_from_expr expr1 n0 nk')))
-                      (foldm_snoc cm (init (range_count n0 nk') (init_func_from_expr expr2 n0 nk')))))
+        : squash ((foldm_snoc cm (init (range_count n0 nk') (init_func_from_expr #_ #n0 #nk' (func_sum #(in_between n0 nk') cm expr1 expr2) n0 nk')) `eq.eq`
+              cm.mult (foldm_snoc cm (init (range_count n0 nk') (init_func_from_expr #_ #n0 #nk' expr1 n0 nk')))
+                      (foldm_snoc cm (init (range_count n0 nk') (init_func_from_expr #_ #n0 #nk' expr2 n0 nk')))))
         = foldm_snoc_split' cm n0 nk' expr1 expr2
       in
+      assert (Seq.equal subseq (init (range_count n0 nk') (init_func_from_expr #_ #n0 #nk' (func_sum #(in_between n0 nk') cm expr1 expr2) n0 nk')));
+      assert (subfold == (foldm_snoc cm (init (range_count n0 nk') (init_func_from_expr #_ #n0 #nk' (func_sum #(in_between n0 nk') cm expr1 expr2) n0 nk'))));
+      assert (Seq.equal subseq_r1 (init (range_count n0 nk') (init_func_from_expr #_ #n0 #nk' expr1 n0 nk')));
+      assert (Seq.equal subseq_r2 (init (range_count n0 nk') (init_func_from_expr #_ #n0 #nk' expr2 n0 nk')));
       let _ : squash (subfold `eq.eq` (subfold_r1 `cm.mult` subfold_r2)) = ih in
       cm.congruence subfold last (subfold_r1 `cm.mult` subfold_r2) last;
       aux_shuffle_lemma cm subfold_r1 subfold_r2 (rfunc_1_up_to nk sub_count) (rfunc_2_up_to nk sub_count);
