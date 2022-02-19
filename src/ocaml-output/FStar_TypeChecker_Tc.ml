@@ -359,7 +359,7 @@ let (tc_inductive' :
                                        let uu___10 =
                                          FStar_Ident.string_of_lid lid in
                                        Prims.op_Hat uu___10
-                                         " does not satisfy the positivity condition" in
+                                         " does not satisfy the strict positivity condition" in
                                      Prims.op_Hat "Inductive type " uu___9 in
                                    (FStar_Errors.Error_InductiveTypeNotSatisfyPositivityCondition,
                                      uu___8) in
