@@ -8,7 +8,7 @@
       0,
       [ "@query" ],
       0,
-      "ed4c2d5d0f6e607a6f5ce21e77440fbe"
+      "ecf2f3dd4ad3af639ad630697f218074"
     ],
     [
       "Steel.SpinLock.intro_lockinv_locked",
@@ -17,7 +17,7 @@
       0,
       [ "@query" ],
       0,
-      "31ef41595a38b201cd9fefd75599ec80"
+      "8d6c53b1a0b31600902b386ea47b4255"
     ],
     [
       "Steel.SpinLock.new_lock",
@@ -37,7 +37,7 @@
         "refinement_interpretation_Tm_refine_30b51c86421a699c10f6925311aa63ba"
       ],
       0,
-      "4b893821291fc14ff1296d09e52b3ffe"
+      "e6ad7c94fca525af671419fc047dcfca"
     ],
     [
       "Steel.SpinLock.acquire_core",
@@ -63,7 +63,7 @@
         "typing_FStar.Ghost.reveal"
       ],
       0,
-      "05f9dc9d4f4f7c1849b03f597e79b06f"
+      "11b0432568ef09efaf8fd10c8dc8d5be"
     ],
     [
       "Steel.SpinLock.acquire",
@@ -96,7 +96,7 @@
         "typing_Tm_abs_d716b89c7122244f867c074692bc6a31"
       ],
       0,
-      "6730d31283cdeec70fbd7328616fb7d5"
+      "57234d68506ca4a8651e1a10df498a32"
     ],
     [
       "Steel.SpinLock.release_core",
@@ -122,7 +122,7 @@
         "typing_FStar.Ghost.reveal"
       ],
       0,
-      "5a187aeb584b22259f4f9b04d7162fb8"
+      "1bfc840d072508e7f6e2064c300156b5"
     ],
     [
       "Steel.SpinLock.release",
@@ -155,7 +155,7 @@
         "typing_Tm_abs_d716b89c7122244f867c074692bc6a31"
       ],
       0,
-      "3ac4981ad39a70fa700b1a6d89ba9b07"
+      "01b0f3c061328b4492d3aef58b124669"
     ],
     [
       "Steel.SpinLock.new_s_lock",
@@ -164,7 +164,7 @@
       0,
       [ "@query", "lemma_Steel.Effect.Common.can_be_split_refl" ],
       0,
-      "2b35a0495b398435bab93533eed40aff"
+      "05712343a090159013531c4b94e94a61"
     ],
     [
       "Steel.SpinLock.new_s_lock",
@@ -173,7 +173,7 @@
       0,
       [ "@query" ],
       0,
-      "9797d96a27d08398ca154d2bd91fa117"
+      "6d5f9e68d130da069a98e1b53df0d7f7"
     ],
     [
       "Steel.SpinLock.s_acquire",
@@ -182,7 +182,7 @@
       0,
       [ "@query", "lemma_Steel.Effect.Common.can_be_split_refl" ],
       0,
-      "c3b4adaf44554adf0aedcd2a8986da4d"
+      "c59c4e74e32829f2847d7cdec7c17fbc"
     ],
     [
       "Steel.SpinLock.s_acquire",
@@ -191,7 +191,7 @@
       0,
       [ "@query" ],
       0,
-      "98693ffc6c1d78e3a1bdf6278938d6a6"
+      "757c54b6fbab5a30b1021e6a34d692d4"
     ],
     [
       "Steel.SpinLock.s_release",
@@ -200,7 +200,7 @@
       0,
       [ "@query", "lemma_Steel.Effect.Common.can_be_split_refl" ],
       0,
-      "951f9f6844bd15a5ef7afe8255d8dfe3"
+      "967da38dee156df38187c0ff57c26b3b"
     ],
     [
       "Steel.SpinLock.s_release",
@@ -209,7 +209,7 @@
       0,
       [ "@query" ],
       0,
-      "0cc84d64208f77c9636ea3107afdd33b"
+      "3ff005c4411c277c43276df62762e604"
     ]
   ]
 ]
