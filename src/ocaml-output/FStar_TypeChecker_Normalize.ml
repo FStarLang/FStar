@@ -5620,11 +5620,11 @@ and (norm_comp :
                      (fun uu___2 -> FStar_Pervasives_Native.Some uu___2)
                      uu___1
                | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None in
+             let uu___1 = FStar_Syntax_Syntax.mk_Total' t1 uopt1 in
              {
-               FStar_Syntax_Syntax.n =
-                 (FStar_Syntax_Syntax.Total (t1, uopt1));
+               FStar_Syntax_Syntax.n = (uu___1.FStar_Syntax_Syntax.n);
                FStar_Syntax_Syntax.pos = (comp.FStar_Syntax_Syntax.pos);
-               FStar_Syntax_Syntax.vars = (comp.FStar_Syntax_Syntax.vars)
+               FStar_Syntax_Syntax.vars = (uu___1.FStar_Syntax_Syntax.vars)
              }
          | FStar_Syntax_Syntax.GTotal (t, uopt) ->
              let t1 = norm cfg env1 [] t in
@@ -5636,11 +5636,11 @@ and (norm_comp :
                      (fun uu___2 -> FStar_Pervasives_Native.Some uu___2)
                      uu___1
                | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None in
+             let uu___1 = FStar_Syntax_Syntax.mk_GTotal' t1 uopt1 in
              {
-               FStar_Syntax_Syntax.n =
-                 (FStar_Syntax_Syntax.GTotal (t1, uopt1));
+               FStar_Syntax_Syntax.n = (uu___1.FStar_Syntax_Syntax.n);
                FStar_Syntax_Syntax.pos = (comp.FStar_Syntax_Syntax.pos);
-               FStar_Syntax_Syntax.vars = (comp.FStar_Syntax_Syntax.vars)
+               FStar_Syntax_Syntax.vars = (uu___1.FStar_Syntax_Syntax.vars)
              }
          | FStar_Syntax_Syntax.Comp ct ->
              let effect_args =
@@ -5692,19 +5692,20 @@ and (norm_comp :
                  ct.FStar_Syntax_Syntax.comp_univs in
              let result_typ =
                norm cfg env1 [] ct.FStar_Syntax_Syntax.result_typ in
+             let uu___1 =
+               FStar_Syntax_Syntax.mk_Comp
+                 {
+                   FStar_Syntax_Syntax.comp_univs = comp_univs;
+                   FStar_Syntax_Syntax.effect_name =
+                     (ct.FStar_Syntax_Syntax.effect_name);
+                   FStar_Syntax_Syntax.result_typ = result_typ;
+                   FStar_Syntax_Syntax.effect_args = effect_args;
+                   FStar_Syntax_Syntax.flags = flags
+                 } in
              {
-               FStar_Syntax_Syntax.n =
-                 (FStar_Syntax_Syntax.Comp
-                    {
-                      FStar_Syntax_Syntax.comp_univs = comp_univs;
-                      FStar_Syntax_Syntax.effect_name =
-                        (ct.FStar_Syntax_Syntax.effect_name);
-                      FStar_Syntax_Syntax.result_typ = result_typ;
-                      FStar_Syntax_Syntax.effect_args = effect_args;
-                      FStar_Syntax_Syntax.flags = flags
-                    });
+               FStar_Syntax_Syntax.n = (uu___1.FStar_Syntax_Syntax.n);
                FStar_Syntax_Syntax.pos = (comp.FStar_Syntax_Syntax.pos);
-               FStar_Syntax_Syntax.vars = (comp.FStar_Syntax_Syntax.vars)
+               FStar_Syntax_Syntax.vars = (uu___1.FStar_Syntax_Syntax.vars)
              })
 and (norm_binder :
   FStar_TypeChecker_Cfg.cfg ->
