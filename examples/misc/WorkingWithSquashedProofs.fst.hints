@@ -1,5 +1,5 @@
 [
-  "ÄdŸ7˛JqÛ˛7g˛‰¶\u0011Ñ",
+  "aïPÙV¿ùÉ\u0006¥îÖ≤5\u0007@",
   [
     [
       "WorkingWithSquashedProofs.lemma_as_squash",
@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "d5e260ce81bafdc77ccaf0d4818e4359"
+      "8299531c2a06c97cba3f5b4c62726860"
     ],
     [
       "WorkingWithSquashedProofs.foo_implies_bar",
@@ -21,7 +21,7 @@
         "refinement_interpretation_Tm_refine_460b166284656e401cd2507f30d7a622"
       ],
       0,
-      "c4abd38291655176aa0be7559565cd60"
+      "340578980a387f324bbc48e98bf74d8f"
     ],
     [
       "WorkingWithSquashedProofs.valid_baz",
@@ -31,12 +31,12 @@
       [
         "@MaxIFuel_assumption", "@query", "disc_equation_Prims.Left",
         "disc_equation_Prims.Right", "equation_Prims.squash",
-        "fuel_guarded_inversion_Prims.c_or",
+        "fuel_guarded_inversion_Prims.sum",
         "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "a31444e789c90ce11166ddb53a439759"
+      "652e40db610db0524f11f22f2f3f4097"
     ],
     [
       "WorkingWithSquashedProofs.valid_baz_alt",
@@ -46,12 +46,12 @@
       [
         "@MaxIFuel_assumption", "@query", "disc_equation_Prims.Left",
         "disc_equation_Prims.Right", "equation_Prims.squash",
-        "fuel_guarded_inversion_Prims.c_or",
+        "fuel_guarded_inversion_Prims.sum",
         "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "dbe2f27bd1269da7e1ecae98830d526e"
+      "a0af8e7471db1298b6d3424a72419d7e"
     ],
     [
       "WorkingWithSquashedProofs.elim_squash_or",
@@ -60,11 +60,11 @@
       1,
       [
         "@MaxIFuel_assumption", "@query", "disc_equation_Prims.Left",
-        "disc_equation_Prims.Right", "fuel_guarded_inversion_Prims.c_or",
+        "disc_equation_Prims.Right", "fuel_guarded_inversion_Prims.sum",
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "2790bf4dd2132a66f78e35d35153c7d4"
+      "e0bcbb6f3dc48a9c1934b90df0924d37"
     ]
   ]
 ]
