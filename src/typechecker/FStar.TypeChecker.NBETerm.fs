@@ -63,7 +63,7 @@ type atom
        // 1. the scrutinee
        t *
        // 2. reconstruct the returns annotation
-       (unit -> option<ascription>) *
+       (unit -> option<match_returns_ascription>) *
        // 3. reconstructs the pattern matching
        (unit -> list<branch>) *
        // 4. reconstruct the residual comp if set
@@ -230,7 +230,7 @@ let mkConstruct i us ts = mk_t <| Construct(i, us, ts)
 let mkFV i us ts = mk_rt (S.range_of_fv i) (FV(i, us, ts))
 
 let mkAccuVar (v:var) = mk_rt (S.range_of_bv v) (Accu(Var v, []))
-let mkAccuMatch (s:t) (ret:(unit -> option<ascription>)) (bs:(unit -> list<branch>))
+let mkAccuMatch (s:t) (ret:(unit -> option<match_returns_ascription>)) (bs:(unit -> list<branch>))
   (rc:unit -> option<S.residual_comp>) =
   mk_t <| Accu(Match (s, ret, bs, rc), [])
 
