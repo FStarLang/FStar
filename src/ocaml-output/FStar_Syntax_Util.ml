@@ -4034,8 +4034,18 @@ let rec (unbound_variables :
           let uu___3 =
             match asc_opt with
             | FStar_Pervasives_Native.None -> []
-            | FStar_Pervasives_Native.Some asc ->
-                unbound_variables_ascription asc in
+            | FStar_Pervasives_Native.Some (b, asc) ->
+                let uu___4 = FStar_Syntax_Subst.open_ascription [b] asc in
+                (match uu___4 with
+                 | (bs, asc1) ->
+                     let uu___5 =
+                       FStar_Compiler_List.collect
+                         (fun b1 ->
+                            unbound_variables
+                              (b1.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort)
+                         bs in
+                     let uu___6 = unbound_variables_ascription asc1 in
+                     FStar_Compiler_List.op_At uu___5 uu___6) in
           let uu___4 =
             FStar_Compiler_Effect.op_Bar_Greater pats
               (FStar_Compiler_List.collect
