@@ -562,7 +562,7 @@
         "well_founded_ordering_on_codomain_Alg.Op"
       ],
       0,
-      "8af894005e516f8762f8dbcc09430e37"
+      "280a48d4508c280b0a8124dae21ec402"
     ],
     [
       "AlgWP.interp_bind",
@@ -1239,7 +1239,7 @@
         "true_interp", "typing_tok_Alg.Read@tok", "typing_tok_Alg.Write@tok"
       ],
       0,
-      "a9e025cd25db5378633907a5d2c0705a"
+      "938462242f09d3314fb228995ffb2439"
     ],
     [
       "AlgWP.interp_ro",

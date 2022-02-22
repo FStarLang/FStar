@@ -302,7 +302,7 @@
         "subterm_ordering_Prims.Cons", "typing_FStar.List.Tot.Base.map"
       ],
       0,
-      "2761110159f0f3b5f471fd285f7954c4"
+      "95422813425bbb5e3f31de0e69e38801"
     ],
     [
       "BinaryTreesEnumeration.pure_as_squash",
@@ -359,7 +359,7 @@
         "typing_FStar.Pervasives.Native.snd"
       ],
       0,
-      "d06a3151a01a0d93615db9d49ac026f3"
+      "88aefa7e5baf84171fdb372c1ec21878"
     ],
     [
       "BinaryTreesEnumeration.flatten_app",
