@@ -504,4 +504,4 @@ let or_elim_lid = classical_sugar_lid "or_elim"
 let and_elim_lid = classical_sugar_lid "and_elim"
 
 
-let match_returns_def_name = Ident.reserved_prefix ^ "_ret_"
+let match_returns_def_name = reserved_prefix ^ "_ret_"
