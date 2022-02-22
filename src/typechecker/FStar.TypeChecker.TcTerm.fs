@@ -1224,8 +1224,20 @@ and tc_match (env : Env.env) (top : term) : term * lcomp * guard_t =
            None,
            Env.conj_guard g1 g)
       | Some (b, asc) ->
-        //We have a returns annotation,
-        //  clear the expected type in the environment for the branches
+        //We have a returns annotation
+
+        //First check that e1 is pure or ghost
+        //The reason is that, we will compute the final type/comp
+        // of match result by substituting b with e1
+        if not (TcUtil.is_pure_or_ghost_effect env c1.eff_name)
+        then raise_error (Errors.Fatal_UnexpectedEffect,
+               BU.format2
+                 "For a match with returns annotation, the scrutinee should be pure/ghost, \
+                  found %s with effect %s"
+                 (Print.term_to_string e1)
+                 (string_of_lid c1.eff_name)) e1.pos;
+
+        //Clear the expected type in the environment for the branches
         //  we will check the expected type for the whole match at the end
         let env, _ = Env.clear_expected_typ env in
         let b, asc =
@@ -1367,8 +1379,9 @@ and tc_match (env : Env.env) (top : term) : term * lcomp * guard_t =
         | _ -> e
       in
 
-      //see issue #594: if the scrutinee is impure, then explicitly sequence it with an impure let binding
-      //                to protect it from the normalizer optimizing it away
+      //see issue #594:
+      //if the scrutinee is impure, then explicitly sequence it with an impure let binding
+      //to protect it from the normalizer optimizing it away
       if TcUtil.is_pure_or_ghost_effect env c1.eff_name
       then mk_match e1
       else
