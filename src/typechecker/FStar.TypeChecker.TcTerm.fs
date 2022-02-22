@@ -1229,6 +1229,10 @@ and tc_match (env : Env.env) (top : term) : term * lcomp * guard_t =
         //First check that e1 is pure or ghost
         //The reason is that, we will compute the final type/comp
         // of match result by substituting b with e1
+        //
+        //We could do an optimization here:
+        //  if b does not occur free in asc, then we don't need to do this check
+        //Is it worth doing?
         if not (TcUtil.is_pure_or_ghost_effect env c1.eff_name)
         then raise_error (Errors.Fatal_UnexpectedEffect,
                BU.format2
