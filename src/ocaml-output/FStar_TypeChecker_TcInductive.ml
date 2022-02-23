@@ -1884,7 +1884,7 @@ let (check_inductive_well_typedness :
                                        | uu___6 -> ()));
                                (sig_bndle, tcs1, datas2))))))
 let (early_prims_inductives : Prims.string Prims.list) =
-  ["c_False"; "c_True"; "equals"; "c_and"; "c_or"]
+  ["empty"; "trivial"; "equals"; "pair"; "sum"]
 let (mk_discriminator_and_indexed_projectors :
   FStar_Syntax_Syntax.qualifier Prims.list ->
     FStar_Syntax_Syntax.attribute Prims.list ->
@@ -2547,10 +2547,51 @@ let (mk_discriminator_and_indexed_projectors :
                                                     FStar_Pervasives_Native.None,
                                                     uu___7) in
                                                 let body =
+                                                  let return_bv =
+                                                    FStar_Syntax_Syntax.gen_bv
+                                                      "proj_ret"
+                                                      (FStar_Pervasives_Native.Some
+                                                         p1)
+                                                      FStar_Syntax_Syntax.tun in
+                                                  let result_comp1 =
+                                                    let uu___6 =
+                                                      let uu___7 =
+                                                        let uu___8 =
+                                                          let uu___9 =
+                                                            FStar_Syntax_Syntax.bv_to_name
+                                                              return_bv in
+                                                          ((arg_binder.FStar_Syntax_Syntax.binder_bv),
+                                                            uu___9) in
+                                                        FStar_Syntax_Syntax.NT
+                                                          uu___8 in
+                                                      [uu___7] in
+                                                    FStar_Syntax_Subst.subst_comp
+                                                      uu___6 result_comp in
+                                                  let result_comp2 =
+                                                    let uu___6 =
+                                                      let uu___7 =
+                                                        FStar_Syntax_Syntax.mk_binder
+                                                          return_bv in
+                                                      [uu___7] in
+                                                    FStar_Syntax_Subst.close_comp
+                                                      uu___6 result_comp1 in
+                                                  let return_binder =
+                                                    let uu___6 =
+                                                      let uu___7 =
+                                                        let uu___8 =
+                                                          FStar_Syntax_Syntax.mk_binder
+                                                            return_bv in
+                                                        [uu___8] in
+                                                      FStar_Syntax_Subst.close_binders
+                                                        uu___7 in
+                                                    FStar_Compiler_List.hd
+                                                      uu___6 in
                                                   let returns_annotation =
-                                                    ((FStar_Pervasives.Inr
-                                                        result_comp),
-                                                      FStar_Pervasives_Native.None) in
+                                                    FStar_Pervasives_Native.Some
+                                                      (return_binder,
+                                                        ((FStar_Pervasives.Inr
+                                                            result_comp2),
+                                                          FStar_Pervasives_Native.None)) in
                                                   let uu___6 =
                                                     let uu___7 =
                                                       let uu___8 =
@@ -2559,8 +2600,7 @@ let (mk_discriminator_and_indexed_projectors :
                                                             pat in
                                                         [uu___9] in
                                                       (arg_exp,
-                                                        (FStar_Pervasives_Native.Some
-                                                           returns_annotation),
+                                                        returns_annotation,
                                                         uu___8,
                                                         FStar_Pervasives_Native.None) in
                                                     FStar_Syntax_Syntax.Tm_match
