@@ -426,7 +426,7 @@ let aux_shuffle_lemma #c #eq (cm: CE.cm c eq)
     cm.congruence (s2+(s1+l1)) l2 ((s1+l1)+s2) l2
 
 
-#push-options "--ifuel 0 --fuel 1 --z3rlimit 20"
+#push-options "--ifuel 0 --fuel 1 --z3rlimit 40"
 (* This proof is quite delicate, for several reasons:
      - It's working with higher order functions that are non-trivially dependently typed,
        notably on the ranges the ranges of indexes they manipulate
