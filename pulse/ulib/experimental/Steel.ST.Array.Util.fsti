@@ -58,3 +58,28 @@ val for_all
        (requires A.length arr == U32.v n)
        (ensures fun b -> b <==> (forall (i:nat). i < Seq.length s ==>
                                     p (Seq.index s i)))
+
+
+/// for_all2, for predicates over elements of two arrays
+
+inline_for_extraction
+val for_all2
+  (#a:Type0)
+  (#p0 #p1:perm)
+  (#s0 #s1:G.erased (Seq.seq a))
+  (n:U32.t)
+  (a0 a1:A.array a)
+  (p:a -> a -> bool)
+  : ST bool
+       (A.pts_to a0 p0 s0
+          `star`
+        A.pts_to a1 p1 s1)
+       (fun _ ->
+        A.pts_to a0 p0 s0
+          `star`
+        A.pts_to a1 p1 s1)
+       (requires
+         A.length a0 == U32.v n /\
+         A.length a0 == A.length a1)
+       (ensures fun b -> b <==> (forall (i:nat). (i < Seq.length s0 /\ i < Seq.length s1) ==>
+                                    p (Seq.index s0 i) (Seq.index s1 i)))
