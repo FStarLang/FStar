@@ -1297,7 +1297,7 @@ and p_noSeqTerm' ps pb e = match e.tm with
                 (str "if" ^/+^ p_noSeqTermAndComment false false e1) ^/^
                 ((match as_opt with
                   | None -> empty
-                  | Some as_ident -> str " as " ^/^ p_ident as_ident ^/^ str " ")
+                  | Some as_ident -> str "as" ^/^ p_ident as_ident)
                    ^/^
                  (str "returns" ^/+^ p_tmIff ret)) ^/^
                 (str "then" ^/+^ e2_doc) ^/^
@@ -1317,7 +1317,7 @@ and p_noSeqTerm' ps pb e = match e.tm with
                              ((p_noSeqTermAndComment false false e) ^/+^
                               (match as_opt with
                                | None -> empty
-                               | Some as_ident -> str " as" ^/+^ (p_ident as_ident)) ^/+^
+                               | Some as_ident -> str "as" ^/+^ (p_ident as_ident)) ^/+^
                               (str "returns" ^/+^ p_tmIff ret))
                              (str "with")))
 
