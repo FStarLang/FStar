@@ -2496,11 +2496,8 @@ and (p_noSeqTerm' :
                            | FStar_Pervasives_Native.None ->
                                FStar_Pprint.empty
                            | FStar_Pervasives_Native.Some as_ident ->
-                               let uu___6 = str " as " in
-                               let uu___7 =
-                                 let uu___8 = p_ident as_ident in
-                                 let uu___9 = str " " in
-                                 FStar_Pprint.op_Hat_Slash_Hat uu___8 uu___9 in
+                               let uu___6 = str "as" in
+                               let uu___7 = p_ident as_ident in
                                FStar_Pprint.op_Hat_Slash_Hat uu___6 uu___7 in
                          let uu___6 =
                            let uu___7 = str "returns" in
@@ -2558,7 +2555,7 @@ and (p_noSeqTerm' :
                             | FStar_Pervasives_Native.None ->
                                 FStar_Pprint.empty
                             | FStar_Pervasives_Native.Some as_ident ->
-                                let uu___8 = str " as" in
+                                let uu___8 = str "as" in
                                 let uu___9 = p_ident as_ident in
                                 op_Hat_Slash_Plus_Hat uu___8 uu___9 in
                           let uu___8 =
