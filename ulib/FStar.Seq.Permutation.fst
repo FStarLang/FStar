@@ -496,8 +496,18 @@ let rec foldm_snoc_split' #c #eq (cm: CE.cm c eq)
                       (foldm_snoc cm (init (range_count n0 nk') (init_func_from_expr #_ #n0 #nk' expr2 n0 nk')))))
         = foldm_snoc_split' cm n0 nk' expr1 expr2
       in
-      assert (Seq.equal subseq (init (range_count n0 nk') (init_func_from_expr #_ #n0 #nk' (func_sum #(in_between n0 nk') cm expr1 expr2) n0 nk')));
-      assert (subfold == (foldm_snoc cm (init (range_count n0 nk') (init_func_from_expr #_ #n0 #nk' (func_sum #(in_between n0 nk') cm expr1 expr2) n0 nk'))));
+      calc (==) {
+        subfold;
+      == { }
+        foldm_snoc cm subseq;
+      == { assert (Seq.equal subseq
+                             (init (range_count n0 nk')
+                                   (init_func_from_expr #_ #n0 #nk'
+                                      (func_sum #(in_between n0 nk') cm expr1 expr2) n0 nk'))) }
+        foldm_snoc cm (init (range_count n0 nk')
+                            (init_func_from_expr #_ #n0 #nk'
+                               (func_sum #(in_between n0 nk') cm expr1 expr2) n0 nk'));
+      };
       assert (Seq.equal subseq_r1 (init (range_count n0 nk') (init_func_from_expr #_ #n0 #nk' expr1 n0 nk')));
       assert (Seq.equal subseq_r2 (init (range_count n0 nk') (init_func_from_expr #_ #n0 #nk' expr2 n0 nk')));
       let _ : squash (subfold `eq.eq` (subfold_r1 `cm.mult` subfold_r2)) = ih in
