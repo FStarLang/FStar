@@ -1356,14 +1356,14 @@ and tc_match (env : Env.env) (top : term) : term * lcomp * guard_t =
 
     let e =
       //repack the returns ascription
-      //we make the binder sort as tun,
-      //  since we always use the type of the scrutinee
       let ret_opt =
         match ret_opt with
         | None -> None
         | Some (b, asc) ->
           let asc = SS.close_ascription [b] asc in
           let b = List.hd (SS.close_binders [b]) in
+          //we make the binder sort as tun,
+          //  since we always use the type of the scrutinee
           let b = {b with binder_bv={b.binder_bv with sort=tun}} in
           Some (b, asc) in
       let mk_match scrutinee =
