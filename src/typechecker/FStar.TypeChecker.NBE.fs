@@ -530,11 +530,20 @@ let rec translate (cfg:config) (bs:list<t>) (e:term) : t =
 
     | Tm_match(scrut, ret_opt, branches, rc) ->
       (* Thunked computation to reconstrct the returns annotation *)
-      let make_returns () : option<ascription> =
+      let make_returns () : option<match_returns_ascription> =
         match ret_opt with
         | None -> None
-        | Some (Inl t, tacopt) -> Some (Inl (readback cfg (translate cfg bs t)), tacopt)
-        | Some (Inr c, tacopt) -> Some (Inr (readback_comp cfg (translate_comp cfg bs c)), tacopt) in
+        | Some (b, asc) ->
+          let b, bs =
+            let x = new_bv None (readback cfg (translate cfg bs b.binder_bv.sort)) in
+            mk_binder x, mkAccuVar x::bs in
+          let asc =
+            match asc with
+            | Inl t, tacopt -> Inl (readback cfg (translate cfg bs t)), tacopt
+            | Inr c, tacopt -> Inr (readback_comp cfg (translate_comp cfg bs c)), tacopt in
+          let asc = SS.close_ascription [b] asc in
+          let b = List.hd (SS.close_binders [b]) in
+          Some (b, asc) in
 
       (* Thunked computation to reconstruct residual comp *)
       let make_rc () : option<S.residual_comp> =

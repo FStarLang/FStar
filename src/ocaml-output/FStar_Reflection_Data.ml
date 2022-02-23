@@ -98,10 +98,9 @@ type term_view =
   | Tv_Let of (Prims.bool * FStar_Syntax_Syntax.term Prims.list *
   FStar_Syntax_Syntax.bv * FStar_Syntax_Syntax.term *
   FStar_Syntax_Syntax.term) 
-  | Tv_Match of (FStar_Syntax_Syntax.term * ((FStar_Syntax_Syntax.term,
-  FStar_Syntax_Syntax.comp) FStar_Pervasives.either *
-  FStar_Syntax_Syntax.term FStar_Pervasives_Native.option)
-  FStar_Pervasives_Native.option * branch Prims.list) 
+  | Tv_Match of (FStar_Syntax_Syntax.term *
+  FStar_Syntax_Syntax.match_returns_ascription FStar_Pervasives_Native.option
+  * branch Prims.list) 
   | Tv_AscribedT of (FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.term *
   FStar_Syntax_Syntax.term FStar_Pervasives_Native.option) 
   | Tv_AscribedC of (FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.comp *
@@ -167,9 +166,7 @@ let (uu___is_Tv_Match : term_view -> Prims.bool) =
     match projectee with | Tv_Match _0 -> true | uu___ -> false
 let (__proj__Tv_Match__item___0 :
   term_view ->
-    (FStar_Syntax_Syntax.term * ((FStar_Syntax_Syntax.term,
-      FStar_Syntax_Syntax.comp) FStar_Pervasives.either *
-      FStar_Syntax_Syntax.term FStar_Pervasives_Native.option)
+    (FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.match_returns_ascription
       FStar_Pervasives_Native.option * branch Prims.list))
   = fun projectee -> match projectee with | Tv_Match _0 -> _0
 let (uu___is_Tv_AscribedT : term_view -> Prims.bool) =

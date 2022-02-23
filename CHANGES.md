@@ -84,8 +84,9 @@ Guidelines for the changelog:
     and
     https://github.com/project-everest/hacl-star/pull/442
 
-  * PR https://github.com/FStarLang/FStar/pull/2256 adds support for Coq-style
-    dependent pattern matching. F* now supports `match e returns C with |...`
+  * PR https://github.com/FStarLang/FStar/pull/2256 and
+       https://github.com/FStarLang/FStar/pull/2464 add support for Coq-style
+    dependent pattern matching. F* now supports `match e as x returns C with |...`
     syntax for typechecking the branches with `C` appropriately substituted.
     This changes the syntax of the `match` nodes to maintain an optional
     annotation. The data constructor `Tv_Match` in the reflection API changes
@@ -200,6 +201,17 @@ Guidelines for the changelog:
      provided (using UInt128).
 
 ## Syntax
+
+   * `as` is a keyword now. One use of it is to (optionally) name the
+     scrutinee in dependent pattern matching, e.g.:
+
+     ```
+     match e as x in t with
+     | ...
+     ```
+
+     This is a breaking change, code that uses `as` as a variable name
+     will require changes (cf. https://github.com/FStarLang/FStar/pull/2464)
 
    * Type-based disambiguation for projectors and record
      constructors. You can now write:

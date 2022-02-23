@@ -20,3 +20,17 @@ let test4 (n: nat) =
   | 0 -> n + 1
   | _ -> n + 2
 
+let test5 (n:nat) =
+  match test4 n as y returns Tot (n:nat{n > y}) with
+  | 0 -> 0
+  | _ -> 1
+
+let test6 (n:nat) =
+  match n returns Tot (m:nat{m == n}) with
+  | 0 -> 0
+  | _ -> 1
+
+let test7 (n:nat) =
+  if test4 n > 0 as y returns Tot (n:nat{n > y})
+  then 0
+  else 1
