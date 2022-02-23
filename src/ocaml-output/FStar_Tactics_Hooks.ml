@@ -745,7 +745,7 @@ let (find_user_tac_for_attr :
     fun a ->
       let hooks =
         FStar_TypeChecker_Env.lookup_attr env
-          FStar_Parser_Const.resolve_implicits_attr_string in
+          FStar_Parser_Const.handle_smt_goals_attr_string in
       FStar_Compiler_Effect.op_Bar_Greater hooks
         (FStar_Compiler_Util.try_find (fun uu___ -> true))
 let (handle_smt_goal :

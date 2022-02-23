@@ -289,6 +289,8 @@ let (strict_on_arguments_attr : FStar_Ident.lident) =
 let (resolve_implicits_attr_string : Prims.string) =
   "FStar.Pervasives.resolve_implicits"
 let (handle_smt_goals_attr : FStar_Ident.lident) = psconst "handle_smt_goals"
+let (handle_smt_goals_attr_string : Prims.string) =
+  "FStar.Pervasives.handle_smt_goals"
 let (erasable_attr : FStar_Ident.lident) =
   p2l ["FStar"; "Pervasives"; "erasable"]
 let (comment_attr : FStar_Ident.lident) =
