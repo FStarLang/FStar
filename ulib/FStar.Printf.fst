@@ -195,8 +195,8 @@ let no_extensions : extension_parser = fun s -> None
 inline_for_extraction
 let sprintf
     (s:string{normalize_term (b2t (Some? (parse_format_string s no_extensions)))})
-    : unit //normalize_term (dir_type (Some?.v (parse_format_string s no_extensions)))
-    = admit () //normalize_term (string_of_dirs (Some?.v (parse_format_string s no_extensions)) (fun s -> s))
+    : normalize_term (dir_type (Some?.v (parse_format_string s no_extensions)))
+    = normalize_term (string_of_dirs (Some?.v (parse_format_string s no_extensions)) (fun s -> s))
 
 
 /// `ext_sprintf`: An extensible version of sprintf
@@ -204,5 +204,5 @@ inline_for_extraction
 let ext_sprintf
     (parse_ext: extension_parser)
     (s:string{normalize_term (b2t (Some? (parse_format_string s parse_ext)))})
-    : unit //normalize_term (dir_type (Some?.v (parse_format_string s parse_ext)))
-    = admit () //normalize_term (string_of_dirs (Some?.v (parse_format_string s parse_ext)) (fun s -> s))
+    : normalize_term (dir_type (Some?.v (parse_format_string s parse_ext)))
+    = normalize_term (string_of_dirs (Some?.v (parse_format_string s parse_ext)) (fun s -> s))
