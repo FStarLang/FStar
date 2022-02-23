@@ -191,8 +191,8 @@ type term' =
   | Tm_refine of (bv * term' syntax) 
   | Tm_app of (term' syntax * (term' syntax * arg_qualifier
   FStar_Pervasives_Native.option) Prims.list) 
-  | Tm_match of (term' syntax * ((term' syntax, comp' syntax)
-  FStar_Pervasives.either * term' syntax FStar_Pervasives_Native.option)
+  | Tm_match of (term' syntax * (binder * ((term' syntax, comp' syntax)
+  FStar_Pervasives.either * term' syntax FStar_Pervasives_Native.option))
   FStar_Pervasives_Native.option * (pat' withinfo_t * term' syntax
   FStar_Pervasives_Native.option * term' syntax) Prims.list * residual_comp
   FStar_Pervasives_Native.option) 
@@ -420,8 +420,8 @@ let (uu___is_Tm_match : term' -> Prims.bool) =
     match projectee with | Tm_match _0 -> true | uu___ -> false
 let (__proj__Tm_match__item___0 :
   term' ->
-    (term' syntax * ((term' syntax, comp' syntax) FStar_Pervasives.either *
-      term' syntax FStar_Pervasives_Native.option)
+    (term' syntax * (binder * ((term' syntax, comp' syntax)
+      FStar_Pervasives.either * term' syntax FStar_Pervasives_Native.option))
       FStar_Pervasives_Native.option * (pat' withinfo_t * term' syntax
       FStar_Pervasives_Native.option * term' syntax) Prims.list *
       residual_comp FStar_Pervasives_Native.option))
@@ -959,14 +959,17 @@ type uvar =
   (term' syntax FStar_Pervasives_Native.option FStar_Unionfind.p_uvar *
     version * FStar_Compiler_Range.range)
 type uvars = ctx_uvar FStar_Compiler_Util.set
-type pat = pat' withinfo_t
-type branch =
-  (pat' withinfo_t * term' syntax FStar_Pervasives_Native.option * term'
-    syntax)
 type comp = comp' syntax
 type ascription =
   ((term' syntax, comp' syntax) FStar_Pervasives.either * term' syntax
     FStar_Pervasives_Native.option)
+type match_returns_ascription =
+  (binder * ((term' syntax, comp' syntax) FStar_Pervasives.either * term'
+    syntax FStar_Pervasives_Native.option))
+type pat = pat' withinfo_t
+type branch =
+  (pat' withinfo_t * term' syntax FStar_Pervasives_Native.option * term'
+    syntax)
 type antiquotations = (bv * term' syntax) Prims.list
 type typ = term' syntax
 type aqual = arg_qualifier FStar_Pervasives_Native.option

@@ -20,12 +20,12 @@ type bool' = bool
 [@@deriving yojson,show]
 type bool = bool'
 [@@deriving yojson,show]
-type c_False = unit
+type empty = unit
 (*This is how Coq extracts Inductive void := . Our extraction needs to be fixed to recognize when there
        are no constructors and generate this type abbreviation*)
-type c_True =
+type trivial =
   | T
-let (uu___is_T : c_True -> bool) = fun projectee  -> true
+let (uu___is_T : trivial -> bool) = fun projectee  -> true
 type nonrec unit = unit
 type 'Ap squash = unit
 type 'Ap auto_squash = unit
@@ -38,29 +38,29 @@ let uu___is_Refl : 'Aa . 'Aa -> 'Aa -> ('Aa,unit,unit) equals -> bool =
 type ('Aa,'Ax,'Ay) eq2 = unit
 type ('Aa,'Ab,'Ax,'Ay) op_Equals_Equals_Equals = unit
 type 'Ab b2t = unit
-type ('Ap,'Aq) c_and =
-  | And of 'Ap * 'Aq
-let uu___is_And : 'Ap 'Aq . ('Ap,'Aq) c_and -> bool =
+type ('Ap,'Aq) pair =
+  | Pair of 'Ap * 'Aq
+let uu___is_Pair : 'Ap 'Aq . ('Ap,'Aq) pair -> bool =
   fun projectee  -> true
-let __proj__And__item___0 : 'Ap 'Aq . ('Ap,'Aq) c_and -> 'Ap =
-  fun projectee  -> match projectee with | And (_0,_1) -> _0
-let __proj__And__item___1 : 'Ap 'Aq . ('Ap,'Aq) c_and -> 'Aq =
-  fun projectee  -> match projectee with | And (_0,_1) -> _1
+let __proj__Pair__item___1 : 'Ap 'Aq . ('Ap,'Aq) pair -> 'Ap =
+  fun projectee  -> match projectee with | Pair (_0,_1) -> _0
+let __proj__Pair__item___2 : 'Ap 'Aq . ('Ap,'Aq) pair -> 'Aq =
+  fun projectee  -> match projectee with | Pair (_0,_1) -> _1
 type ('Ap,'Aq) l_and = unit
-type ('Ap,'Aq) c_or =
+type ('Ap,'Aq) sum =
   | Left of 'Ap
   | Right of 'Aq
-let uu___is_Left : 'Ap 'Aq . ('Ap,'Aq) c_or -> bool =
+let uu___is_Left : 'Ap 'Aq . ('Ap,'Aq) sum -> bool =
   fun projectee  ->
     match projectee with | Left _0 -> true | uu____344 -> false
 
-let __proj__Left__item___0 : 'Ap 'Aq . ('Ap,'Aq) c_or -> 'Ap =
+let __proj__Left__item___0 : 'Ap 'Aq . ('Ap,'Aq) sum -> 'Ap =
   fun projectee  -> match projectee with | Left _0 -> _0
-let uu___is_Right : 'Ap 'Aq . ('Ap,'Aq) c_or -> bool =
+let uu___is_Right : 'Ap 'Aq . ('Ap,'Aq) sum -> bool =
   fun projectee  ->
     match projectee with | Right _0 -> true | uu____404 -> false
 
-let __proj__Right__item___0 : 'Ap 'Aq . ('Ap,'Aq) c_or -> 'Aq =
+let __proj__Right__item___0 : 'Ap 'Aq . ('Ap,'Aq) sum -> 'Aq =
   fun projectee  -> match projectee with | Right _0 -> _0
 type ('Ap,'Aq) l_or = unit
 type ('Ap,'Aq) l_imp = unit

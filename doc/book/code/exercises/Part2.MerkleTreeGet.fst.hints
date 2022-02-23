@@ -1,0 +1,146 @@
+[
+  "“Çˆ/µ§\b€ò\u0012hë8tn\u0011",
+  [
+    [
+      "Part2.MerkleTreeGet.concat",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_Part2.MerkleTreeGet.lstring", "equation_Prims.nat",
+        "int_inversion", "primitive_Prims.op_Addition",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_5bd57a2b9b9fc8ea75ce9775c54c0669"
+      ],
+      0,
+      "cdd50c0f55b14260bb3616fd8c55d365"
+    ],
+    [
+      "Part2.MerkleTreeGet.mtree",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
+        "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
+      ],
+      0,
+      "b830a9c8acda2801d7d8e0ae9f4584de"
+    ],
+    [
+      "Part2.MerkleTreeGet.mtree",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_Part2.MerkleTreeGet.hash_t",
+        "equation_Part2.MerkleTreeGet.lstring",
+        "equation_Part2.MerkleTreeGet.resource", "equation_Prims.eqtype",
+        "equation_Prims.nat", "function_token_typing_Prims.int",
+        "function_token_typing_Prims.string",
+        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "haseqTm_refine_5bd57a2b9b9fc8ea75ce9775c54c0669", "int_inversion",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_5bd57a2b9b9fc8ea75ce9775c54c0669",
+        "string_inversion"
+      ],
+      0,
+      "90cb7cc9644dc9a147f53b646bdea642"
+    ],
+    [
+      "Part2.MerkleTreeGet.__proj__L__item__res",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_1227872f8061b10b03c76a5dafbade0c"
+      ],
+      0,
+      "b087b166afb67197d84c862ea0beecad"
+    ],
+    [
+      "Part2.MerkleTreeGet.__proj__N__item__n",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_65465018d9c94f30281c746e8f2f9472"
+      ],
+      0,
+      "e70b49cd7105abc18bc3027401ce139e"
+    ],
+    [
+      "Part2.MerkleTreeGet.__proj__N__item__hl",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_65465018d9c94f30281c746e8f2f9472"
+      ],
+      0,
+      "baff5ed466d273888a24658e58cae5d2"
+    ],
+    [
+      "Part2.MerkleTreeGet.__proj__N__item__hr",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_65465018d9c94f30281c746e8f2f9472"
+      ],
+      0,
+      "56a90fb4d66483db8466842dc5aba6dc"
+    ],
+    [
+      "Part2.MerkleTreeGet.__proj__N__item__left",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_Part2.MerkleTreeGet.hash_t",
+        "equation_Part2.MerkleTreeGet.lstring", "equation_Prims.nat",
+        "int_inversion", "proj_equation_Part2.MerkleTreeGet.N_hl",
+        "proj_equation_Part2.MerkleTreeGet.N_n",
+        "projection_inverse_Part2.MerkleTreeGet.N_hl",
+        "projection_inverse_Part2.MerkleTreeGet.N_n",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_5bd57a2b9b9fc8ea75ce9775c54c0669",
+        "refinement_interpretation_Tm_refine_65465018d9c94f30281c746e8f2f9472",
+        "string_inversion"
+      ],
+      0,
+      "64de2184bcec49b16ac8d3fe33355645"
+    ],
+    [
+      "Part2.MerkleTreeGet.__proj__N__item__right",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_Part2.MerkleTreeGet.hash_t",
+        "equation_Part2.MerkleTreeGet.lstring", "equation_Prims.nat",
+        "int_inversion", "proj_equation_Part2.MerkleTreeGet.N_hr",
+        "proj_equation_Part2.MerkleTreeGet.N_n",
+        "projection_inverse_Part2.MerkleTreeGet.N_hr",
+        "projection_inverse_Part2.MerkleTreeGet.N_n",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_5bd57a2b9b9fc8ea75ce9775c54c0669",
+        "refinement_interpretation_Tm_refine_65465018d9c94f30281c746e8f2f9472",
+        "string_inversion"
+      ],
+      0,
+      "361cadc0842c4b7b59179d02dec03515"
+    ]
+  ]
+]

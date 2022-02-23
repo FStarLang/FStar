@@ -16,11 +16,11 @@
 #light "off"
 // (c) Microsoft Corporation. All rights reserved
 module FStar.Syntax.Util
+open Prims
 open FStar.Pervasives
 open FStar.Compiler.Effect
 open FStar.Compiler.List
 
-open Prims
 open FStar
 open FStar.Compiler
 open FStar.Compiler.Util
@@ -1496,7 +1496,7 @@ let destruct_sq_base_table =
          (PC.c_or_lid, PC.or_lid);
          (PC.c_eq2_lid, PC.c_eq2_lid)]);
     (3, [(PC.c_eq2_lid, PC.c_eq2_lid)]);
-    (0, [(PC.c_true_lid, PC.true_lid); (PC.c_false_lid, PC.false_lid)])
+    (0, [(PC.c_true_lid, PC.true_lid); (PC.empty_type_lid, PC.false_lid)])
   ]
 
 let destruct_typ_as_formula f : option<connective> =
@@ -2028,7 +2028,10 @@ let rec unbound_variables tm :  list<bv> =
         unbound_variables t
         @ (match asc_opt with
            | None -> []
-           | Some asc -> unbound_variables_ascription asc)
+           | Some (b, asc) ->
+             let bs, asc = Subst.open_ascription [b] asc in
+             List.collect (fun b -> unbound_variables b.binder_bv.sort) bs
+             @ unbound_variables_ascription asc)
         @ (pats |> List.collect (fun br ->
                  let p, wopt, t = Subst.open_branch br in
                  unbound_variables t

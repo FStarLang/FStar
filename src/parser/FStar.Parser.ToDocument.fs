@@ -1292,10 +1292,14 @@ and p_noSeqTerm' ps pb e = match e.tm with
                (str "if" ^/+^ p_noSeqTermAndComment false false e1) ^/^
                (str "then" ^/+^ e2_doc) ^/^
                (str "else" ^/+^ p_noSeqTermAndComment ps pb e3))
-           | Some ret ->
+           | Some (as_opt, ret) ->
               group (
                 (str "if" ^/+^ p_noSeqTermAndComment false false e1) ^/^
-                (str "ret" ^/+^ p_tmIff ret) ^/^
+                ((match as_opt with
+                  | None -> empty
+                  | Some as_ident -> str "as" ^/^ p_ident as_ident)
+                   ^/^
+                 (str "returns" ^/+^ p_tmIff ret)) ^/^
                 (str "then" ^/+^ e2_doc) ^/^
                 (str "else" ^/+^ p_noSeqTermAndComment ps pb e3)))
   | TryWith(e, branches) ->
@@ -1308,10 +1312,14 @@ and p_noSeqTerm' ps pb e = match e.tm with
       (match ret_opt with
        | None ->
         group (surround 2 1 (str "match") (p_noSeqTermAndComment false false e) (str "with"))
-       | Some ret ->
-        group (surround 2 1 (str "match")
-                            ((p_noSeqTermAndComment false false e) ^/+^ (str "returns" ^/+^ p_tmIff ret))
-                            (str "with")))
+       | Some (as_opt, ret) ->
+         group (surround 2 1 (str "match")
+                             ((p_noSeqTermAndComment false false e) ^/+^
+                              (match as_opt with
+                               | None -> empty
+                               | Some as_ident -> str "as" ^/+^ (p_ident as_ident)) ^/+^
+                              (str "returns" ^/+^ p_tmIff ret))
+                             (str "with")))
 
       ^/^
 

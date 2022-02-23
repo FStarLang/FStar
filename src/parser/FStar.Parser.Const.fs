@@ -104,11 +104,11 @@ let magic_lid  = pconst "magic"
 let has_type_lid = pconst "has_type"
 
 (* Constructive variants *)
-let c_true_lid   = pconst "c_True"
-let c_false_lid  = pconst "c_False"
-let c_and_lid    = pconst "c_and"
-let c_or_lid     = pconst "c_or"
-let dtuple2_lid  = pconst "dtuple2" // for l_Exists
+let c_true_lid      = pconst "trivial"
+let empty_type_lid  = pconst "empty"
+let c_and_lid       = pconst "pair"
+let c_or_lid        = pconst "sum"
+let dtuple2_lid     = pconst "dtuple2" // for l_Exists
 
 (* Various equality predicates *)
 let eq2_lid    = pconst  "eq2"
@@ -502,3 +502,6 @@ let exists_elim_lid = classical_sugar_lid "exists_elim"
 let implies_elim_lid = classical_sugar_lid "implies_elim"
 let or_elim_lid = classical_sugar_lid "or_elim"
 let and_elim_lid = classical_sugar_lid "and_elim"
+
+
+let match_returns_def_name = reserved_prefix ^ "_ret_"

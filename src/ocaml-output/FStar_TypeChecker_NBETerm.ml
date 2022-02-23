@@ -39,8 +39,10 @@ let (__proj__SConst__item___0 : constant -> FStar_Const.sconst) =
 type atom =
   | Var of var 
   | Match of (t *
-  (unit -> FStar_Syntax_Syntax.ascription FStar_Pervasives_Native.option) *
-  (unit -> FStar_Syntax_Syntax.branch Prims.list) *
+  (unit ->
+     FStar_Syntax_Syntax.match_returns_ascription
+       FStar_Pervasives_Native.option)
+  * (unit -> FStar_Syntax_Syntax.branch Prims.list) *
   (unit -> FStar_Syntax_Syntax.residual_comp FStar_Pervasives_Native.option))
   
   | UnreducedLet of (var * t FStar_Thunk.t * t FStar_Thunk.t * t
@@ -122,7 +124,9 @@ let (uu___is_Match : atom -> Prims.bool) =
 let (__proj__Match__item___0 :
   atom ->
     (t *
-      (unit -> FStar_Syntax_Syntax.ascription FStar_Pervasives_Native.option)
+      (unit ->
+         FStar_Syntax_Syntax.match_returns_ascription
+           FStar_Pervasives_Native.option)
       * (unit -> FStar_Syntax_Syntax.branch Prims.list) *
       (unit ->
          FStar_Syntax_Syntax.residual_comp FStar_Pervasives_Native.option)))
@@ -381,7 +385,9 @@ let (mkAccuVar : var -> t) =
     mk_rt uu___ (Accu ((Var v), []))
 let (mkAccuMatch :
   t ->
-    (unit -> FStar_Syntax_Syntax.ascription FStar_Pervasives_Native.option)
+    (unit ->
+       FStar_Syntax_Syntax.match_returns_ascription
+         FStar_Pervasives_Native.option)
       ->
       (unit -> FStar_Syntax_Syntax.branch Prims.list) ->
         (unit ->

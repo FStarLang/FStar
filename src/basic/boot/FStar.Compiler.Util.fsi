@@ -15,9 +15,10 @@
 *)
 #light "off"
 module FStar.Compiler.Util
+open Prims
 open FStar.Pervasives
-open FStar.Compiler.Effect module List = FStar.Compiler.List
-open FStar.Compiler.Effect module List = FStar.Compiler.List
+open FStar.Compiler.Effect
+module List = FStar.Compiler.List
 
 open FStar.BaseTypes
 
@@ -251,7 +252,6 @@ val getcwd: unit -> string
 val readdir: string -> list<string>
 val paths_to_same_file: string -> string -> bool
 
-open Prims
 val file_exists: string -> Tot<bool>
 val is_directory: string -> Tot<bool>
 
