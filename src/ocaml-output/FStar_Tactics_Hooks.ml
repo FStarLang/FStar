@@ -747,11 +747,7 @@ let (find_user_tac_for_attr :
         FStar_TypeChecker_Env.lookup_attr env
           FStar_Parser_Const.resolve_implicits_attr_string in
       FStar_Compiler_Effect.op_Bar_Greater hooks
-        (FStar_Compiler_Util.try_find
-           (fun hook ->
-              FStar_Compiler_Effect.op_Bar_Greater
-                hook.FStar_Syntax_Syntax.sigattrs
-                (FStar_Compiler_Util.for_some (FStar_Syntax_Util.attr_eq a))))
+        (FStar_Compiler_Util.try_find (fun uu___ -> true))
 let (handle_smt_goal :
   FStar_TypeChecker_Env.env ->
     FStar_TypeChecker_Env.goal ->
