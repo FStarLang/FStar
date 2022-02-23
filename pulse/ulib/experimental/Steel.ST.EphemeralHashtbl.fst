@@ -852,11 +852,11 @@ let ghost_put #_ #k #v #contents #vp #h #m #borrows a i x c =
 
   //reestablish the invariant
 
-  let vopt = Seq.index s (U32.v idx) in
-  match vopt returns STGhostT _
-                              _
-                              _
-                              (fun _ -> tperm a (Map.upd m i c) (Map.remove borrows i)) with
+  match Seq.index s (U32.v idx)
+    returns STGhostT _
+                     _
+                     _
+                     (fun _ -> tperm a (Map.upd m i c) (Map.remove borrows i)) with
   | None ->
     //
     //The sequence slot was not set
@@ -870,11 +870,11 @@ let ghost_put #_ #k #v #contents #vp #h #m #borrows a i x c =
             (value_vprops vp s (Map.upd m i c) (Map.remove borrows i));
     pack_tperm s (Map.upd m i c) (Map.remove borrows i) a
   | Some (i', _) ->
-    let b = i' <> i in
-    if b returns STGhostT _
-                          _
-                          _
-                          (fun _ -> tperm a (Map.upd m i c) (Map.remove borrows i))
+    if i' <> i
+      returns STGhostT _
+                       _
+                       _
+                       (fun _ -> tperm a (Map.upd m i c) (Map.remove borrows i))
     then begin
       //
       //The sequence slot is set, but contains a different key
@@ -965,8 +965,8 @@ let remove_vprops_aux (#opened:_)
       //
       //Whether or not we had vp depends on the membership of i' in borrows
       //
-      let r = Map.contains borrows i' in
-      match r returns STGhostT _ _ _ (fun _ -> tperm arr m (Map.remove borrows i)) with
+      match Map.contains borrows i'
+        returns STGhostT _ _ _ (fun _ -> tperm arr m (Map.remove borrows i)) with
       | true ->
         //
         //Again, no vp, since borrows contains i', rewrite
