@@ -29,3 +29,8 @@ let test6 (n:nat) =
   match n returns Tot (m:nat{m == n}) with
   | 0 -> 0
   | _ -> 1
+
+let test7 (n:nat) =
+  if test4 n > 0 as y returns Tot (n:nat{n > y})
+  then 0
+  else 1
