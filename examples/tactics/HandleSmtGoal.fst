@@ -2,7 +2,7 @@ module HandleSmtGoal
 
 open FStar.Tactics
 
-[@@ resolve_implicits; handle_smt_goals]
+[@@ handle_smt_goals]
 let tac () : Tac unit =
   dump "now"
 
@@ -16,7 +16,7 @@ let f (x:int) : Pure unit (requires x == 2) (ensures fun _ -> True) =
 assume
 val test_lemma (_:unit) : Lemma (requires forall (x:nat). x >= 0) (ensures False)
 
-[@@ resolve_implicits; handle_smt_goals]
+[@@ handle_smt_goals]
 let tac2 () : Tac unit =
   apply_lemma (`test_lemma)
 
