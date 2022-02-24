@@ -40,6 +40,7 @@ val compress_univ:      universe -> universe
 val close:                binders -> term -> term
 val close_comp:           binders -> comp -> comp
 val close_binders:        binders -> binders
+val close_ascription:     binders -> ascription -> ascription
 val close_branch:         branch -> branch
 val close_univ_vars:      univ_names -> term -> term
 val close_univ_vars_comp: univ_names -> comp -> comp
@@ -51,6 +52,7 @@ val open_binders:       binders -> binders
 val open_term:          binders -> term -> binders * term
 val open_term':         binders -> term -> binders * term * subst_t
 val open_comp:          binders -> comp -> binders * comp
+val open_ascription:    binders -> ascription -> binders * ascription
 val open_branch:        branch -> branch
 val open_branch':       branch -> branch * subst_t
 val open_let_rec:       list<letbinding> -> term -> list<letbinding> * term

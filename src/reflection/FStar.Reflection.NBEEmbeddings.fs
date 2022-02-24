@@ -296,7 +296,8 @@ let e_branch_aq aq = e_tuple2 e_pattern      (e_term_aq aq)
 let e_argv_aq   aq = e_tuple2 (e_term_aq aq) e_aqualv
 
 let e_match_returns_annotation =
-  e_option (e_tuple2 (e_either e_term e_comp) (e_option e_term))
+  e_option (e_tuple2 e_binder
+                     (e_tuple2 (e_either e_term e_comp) (e_option e_term)))
 
 let unlazy_as_t k t =
     match t.nbe_t with

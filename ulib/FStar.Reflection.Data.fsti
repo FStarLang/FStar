@@ -71,7 +71,7 @@ type term_view =
   | Tv_Const  : vconst -> term_view
   | Tv_Uvar   : int -> ctx_uvar_and_subst -> term_view
   | Tv_Let    : recf:bool -> attrs:(list term) -> bv:bv -> def:term -> body:term -> term_view
-  | Tv_Match  : scrutinee:term -> ret:option (either term comp & option term) -> brs:(list branch) -> term_view
+  | Tv_Match  : scrutinee:term -> ret:option match_returns_ascription -> brs:(list branch) -> term_view
   | Tv_AscribedT : e:term -> t:term -> tac:option term -> term_view
   | Tv_AscribedC : e:term -> c:comp -> tac:option term -> term_view
   | Tv_Unknown  : term_view // Baked in "None"

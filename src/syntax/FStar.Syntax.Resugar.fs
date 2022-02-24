@@ -667,12 +667,9 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
       let body = resugar_term' env t in
       mk (A.Let(A.NoLetQualifier, bnds, body))
 
-    | Tm_match(e, asc_opt, [(pat1, _, t1); (pat2, _, t2)], _) when is_true_pat pat1 && is_wild_pat pat2 ->
-      let asc_opt =
-        match BU.map_opt asc_opt (resugar_ascription env) with
-        | None -> None
-        | Some (asc, None) -> Some asc
-        | _ -> failwith "resugaring does not support match return annotation with a tactic" in
+    | Tm_match(e, asc_opt, [(pat1, _, t1); (pat2, _, t2)], _)
+      when is_true_pat pat1 && is_wild_pat pat2 ->
+      let asc_opt = resugar_match_returns env e t.pos asc_opt in
       mk (A.If(resugar_term' env e,
                asc_opt,
                resugar_term' env t1,
@@ -688,11 +685,7 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
           | Some e -> Some (resugar_term' env e) in
         let b = resugar_term' env b in
         (pat, wopt, b) in
-      let asc_opt =
-        match BU.map_opt asc_opt (resugar_ascription env) with
-        | None -> None
-        | Some (asc, None) -> Some asc
-        | _ -> failwith "resugaring does not support match return annotation with a tactic" in
+      let asc_opt = resugar_match_returns env e t.pos asc_opt in
       mk (A.Match(resugar_term' env e,
                   asc_opt,
                   List.map resugar_branch branches))
@@ -945,6 +938,33 @@ and resugar_calc (env:DsEnv.env) (t0:S.term) : option<A.term> =
   BU.bind_opt (resugar_all_steps pack) (fun (steps, k) ->
   BU.bind_opt (resugar_init k) (fun x0 ->
   Some <| build_calc rel x0 (List.rev steps))))
+
+and resugar_match_returns env scrutinee r asc_opt =
+  match asc_opt with
+  | None -> None
+  | Some (b, asc) ->
+    let bopt, asc =
+      let bs, asc = SS.open_ascription [b] asc in
+      let b = List.hd bs in
+      //trying to be a little smart,
+      //  if the binder name is the reserved prefix, then don't emit it
+      //but we need to substitute binder with scrutinee,
+      //  basically reverse of what ToSyntax does
+      if string_of_id b.binder_bv.ppname = C.match_returns_def_name
+      then match (SS.compress scrutinee |> U.unascribe).n with
+           | Tm_name sbv ->
+             None, SS.subst_ascription [NT (b.binder_bv, S.bv_to_name sbv)] asc
+           | _ -> None, asc
+      else Some b, asc in
+    let bopt = BU.map_option (fun b ->
+      BU.must (resugar_binder' env b r)
+      |> A.ident_of_binder r) bopt in
+    let asc =
+      match resugar_ascription env asc with
+      | asc, None -> asc
+      | _ -> failwith "resugaring does not support match return annotation with a tactic" in
+    Some (bopt, asc)
+
 
 and resugar_comp' (env: DsEnv.env) (c:S.comp) : A.term =
   let mk (a:A.term') : A.term =

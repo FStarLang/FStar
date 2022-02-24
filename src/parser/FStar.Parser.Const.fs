@@ -502,3 +502,6 @@ let exists_elim_lid = classical_sugar_lid "exists_elim"
 let implies_elim_lid = classical_sugar_lid "implies_elim"
 let or_elim_lid = classical_sugar_lid "or_elim"
 let and_elim_lid = classical_sugar_lid "and_elim"
+
+
+let match_returns_def_name = reserved_prefix ^ "_ret_"

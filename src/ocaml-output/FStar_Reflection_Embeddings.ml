@@ -640,15 +640,17 @@ let (e_argv_aq :
     let uu___ = e_term_aq aq in
     FStar_Syntax_Embeddings.e_tuple2 uu___ e_aqualv
 let (e_match_returns_annotation :
-  ((FStar_Syntax_Syntax.term, FStar_Syntax_Syntax.comp)
-    FStar_Pervasives.either * FStar_Syntax_Syntax.term
-    FStar_Pervasives_Native.option) FStar_Pervasives_Native.option
-    FStar_Syntax_Embeddings.embedding)
+  (FStar_Syntax_Syntax.binder * ((FStar_Syntax_Syntax.term,
+    FStar_Syntax_Syntax.comp) FStar_Pervasives.either *
+    FStar_Syntax_Syntax.term FStar_Pervasives_Native.option))
+    FStar_Pervasives_Native.option FStar_Syntax_Embeddings.embedding)
   =
   let uu___ =
-    let uu___1 = FStar_Syntax_Embeddings.e_either e_term e_comp in
-    let uu___2 = FStar_Syntax_Embeddings.e_option e_term in
-    FStar_Syntax_Embeddings.e_tuple2 uu___1 uu___2 in
+    let uu___1 =
+      let uu___2 = FStar_Syntax_Embeddings.e_either e_term e_comp in
+      let uu___3 = FStar_Syntax_Embeddings.e_option e_term in
+      FStar_Syntax_Embeddings.e_tuple2 uu___2 uu___3 in
+    FStar_Syntax_Embeddings.e_tuple2 e_binder uu___1 in
   FStar_Syntax_Embeddings.e_option uu___
 let (e_term_view_aq :
   FStar_Syntax_Syntax.antiquotations ->

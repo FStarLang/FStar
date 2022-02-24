@@ -132,8 +132,8 @@ type term' =
   | Tm_arrow      of binders * comp                              (* (xi:ti) -> M t' wp *)
   | Tm_refine     of bv * term                                   (* x:t{phi} *)
   | Tm_app        of term * args                                 (* h tau_1 ... tau_n, args in order from left to right *)
-  | Tm_match      of term * option<ascription> * list<branch> * option<residual_comp>
-                                                                 (* (match e (returns asc?) with b1 ... bn) : (C | N)) *)
+  | Tm_match      of term * option<match_returns_ascription> * list<branch> * option<residual_comp>
+                                                                 (* (match e (as x returns asc)? with b1 ... bn) : (C | N)) *)
   | Tm_ascribed   of term * ascription * option<lident>          (* an effect label is the third arg, filled in by the type-checker *)
   | Tm_let        of letbindings * term                          (* let (rec?) x1 = e1 AND ... AND xn = en in e *)
   | Tm_uvar       of ctx_uvar_and_subst                          (* A unification variable ?u (aka meta-variable)
@@ -159,6 +159,7 @@ and ctx_uvar_meta_t =
 and ctx_uvar_and_subst = ctx_uvar * subst_ts
 and uvar = Unionfind.p_uvar<option<term>> * version * Range.range
 and uvars = set<ctx_uvar>
+and match_returns_ascription = binder * ascription               (* as x returns C|t *)
 and branch = pat * option<term> * term                           (* optional when clause in each branch *)
 and ascription = either<term, comp> * option<term>               (* e <: t [by tac] or e <: C [by tac] *)
 and pat' =

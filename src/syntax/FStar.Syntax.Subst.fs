@@ -432,7 +432,14 @@ let rec push_subst s t =
             | Some w -> Some (subst' s w) in
           let branch = subst' s branch in
           (pat, wopt, branch)) in
-        mk (Tm_match(t0, U.map_opt asc_opt (subst_ascription' s), pats, push_subst_lcomp s lopt))
+        let asc_opt =
+          match asc_opt with
+          | None -> None
+          | Some (b, asc) ->
+            let b = subst_binder' s b in
+            let asc = subst_ascription' (shift_subst' 1 s) asc in
+            Some (b, asc) in
+        mk (Tm_match(t0, asc_opt, pats, push_subst_lcomp s lopt))
 
     | Tm_let((is_rec, lbs), body) ->
         let n = List.length lbs in
@@ -547,6 +554,9 @@ let open_term (bs:binders) t =
 let open_comp (bs:binders) t =
    let bs', opening = open_binders' bs in
    bs', subst_comp opening t
+let open_ascription bs asc =
+  let bs', opening = open_binders' bs in
+  bs', subst_ascription opening asc
 
 let open_pat (p:pat) : pat * subst_t =
     let rec open_pat_aux sub p =
@@ -600,6 +610,8 @@ let close_binders (bs:binders) : binders =
           let s' = NM(x, 0)::shift_subst 1 s in
           (S.mk_binder_with_attrs x imp attrs)::aux s' tl in
     aux [] bs
+let close_ascription (bs:binders) (asc:ascription) =
+  subst_ascription (closing_subst bs) asc
 
 let close_pat p =
     let rec aux sub p = match p.v with
@@ -860,7 +872,12 @@ let rec deep_compress (t:term) : term =
            map_opt wopt deep_compress,
            deep_compress t)
       in
-      mk (Tm_match(deep_compress t, U.map_opt asc_opt elim_ascription, List.map elim_branch branches, map_opt rc_opt elim_rc))
+      let asc_opt =
+        match asc_opt with
+        | None -> None
+        | Some (b, asc) ->
+          Some (deep_compress_binder b, elim_ascription asc) in
+      mk (Tm_match(deep_compress t, asc_opt, List.map elim_branch branches, map_opt rc_opt elim_rc))
 
     | Tm_ascribed(t, a, lopt) ->
       mk (Tm_ascribed(deep_compress t, elim_ascription a, lopt))
@@ -1005,9 +1022,11 @@ and deep_compress_aqual (q:aqual) : aqual =
 
   | _ -> q
 
+and deep_compress_binder b =
+  let x = {b.binder_bv with sort=deep_compress b.binder_bv.sort} in
+  let q = deep_compress_bqual b.binder_qual in
+  let attrs = b.binder_attrs |> List.map deep_compress in
+  S.mk_binder_with_attrs x q attrs
+
 and deep_compress_binders bs =
-    List.map (fun b ->
-                let x = {b.binder_bv with sort=deep_compress b.binder_bv.sort} in
-                let q = deep_compress_bqual b.binder_qual in
-                let attrs = b.binder_attrs |> List.map deep_compress in
-                (S.mk_binder_with_attrs x q attrs)) bs
+  bs |> List.map deep_compress_binder
