@@ -33,37 +33,37 @@ type not_greater_than (x: int) = less_than (x+1)
 let coerce_to_less_than #n (x: not_greater_than n) : less_than (n+1) = x
 let coerce_to_not_less_than #n (x: greater_than n) : not_less_than (n+1) = x
 
-let interval_condition (x: int) (y: not_less_than x) t = (x <= t) && (t < y)
+let interval_condition (x y t: int) = (x <= t) && (t < y)
 
-type interval_type (x:int) (y: not_less_than x) 
-  = z : Type0{ z == t:int{interval_condition x y t} }
+type interval_type (x y:int) = z : Type0{ z == t:int{interval_condition x y t} }
 
 (* Default interval is half-open, which is the most frequently used case *) 
-type interval (x: int) (y: not_less_than x) : interval_type x y 
-  = t:int{interval_condition x y t}
+type interval (x y: int) : interval_type x y = t:int{interval_condition x y t}
 
 (* general finite integer intervals *)
-type efrom_eto (x: int) (y: greater_than x) = interval (x+1) y
-type efrom_ito (x: int) (y: not_less_than x) = interval (x+1) (y+1)
-type ifrom_eto (x: int) (y: not_less_than x) = interval x y
-type ifrom_ito (x: int) (y: not_less_than x) = interval x (y+1)
+type efrom_eto (x y: int) = interval (x+1) y
+type efrom_ito (x y: int) = interval (x+1) (y+1)
+type ifrom_eto (x y: int) = interval x y
+type ifrom_ito (x y: int) = interval x (y+1)
 
 (* If we define our intervals this way, then the following lemma comes for free: *)
-private let closed_interval_lemma (x:int) (y: not_less_than x) 
-  : Lemma (interval x (y+1) == ifrom_ito x y) = ()
+private let closed_interval_lemma (x y:int) : Lemma (interval x (y+1) == ifrom_ito x y) = ()
 
-(* when we want a zero-based index that runs over an interval, we use this *)
-type counter_for (#x:int) (#y: not_less_than x) (interval: interval_type x y) = under (y-x)
 
 (* how many numbers fall into an interval? *)
-let interval_size (#x: int) (#y: not_less_than x) (interval: interval_type x y) : nat = y-x
+let interval_size (#x #y: int) (interval: interval_type x y) : nat 
+  = if y >= x then y-x else 0
+
+(* when we want a zero-based index that runs over an interval, we use this *)
+type counter_for (#x #y:int) (interval: interval_type x y) = under (interval_size interval)
 
 (* special case for closed intervals, used in FStar.Algebra.CommMonoid.Fold *)
-let closed_interval_size (x: int) (y: not_less_than x) : nat = interval_size (ifrom_ito x y)
+let closed_interval_size (x y: int) : nat = interval_size (ifrom_ito x y)
 
 (* A usage example and a test at the same time: *)
 private let _ = assert (interval_size (interval 5 10) = 5)
 private let _ = assert (interval_size (ifrom_ito 5 10) = 6)
+private let _ = assert (interval_size (ifrom_ito 15 10) = 0)
 
 (* This lemma, especially when used with forall_intro, helps the 
    prover verify the index ranges of sequences that correspond 
@@ -71,5 +71,5 @@ private let _ = assert (interval_size (ifrom_ito 5 10) = 6)
 
    It is supposed to be invoked to decrease the toll we put on rlimit,
    i.e. will be redundant in most use cases. *)
-let counter_bounds_lemma (x:int) (y: not_less_than x) (i: (counter_for (ifrom_ito x y))) 
+let counter_bounds_lemma (x y:int) (i: (counter_for (ifrom_ito x y))) 
   : Lemma (x+i >= x /\ x+i <= y) = ()
