@@ -58,7 +58,7 @@ let rec fold #c #eq
   = if b = a then expr b
     else (fold cm a (b-1) expr) `cm.mult` expr b
 
-(* This lemma establishes the definitional equality of the fold 
+(* This lemma establishes the provable equality of the fold 
    given said equality for all the values from the allowed range *)
 let rec fold_equality #c #eq (cm: CE.cm c eq) 
   (a: int) (b: not_less_than a) 
