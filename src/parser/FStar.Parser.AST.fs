@@ -61,8 +61,8 @@ type term' =
   | LetOpenRecord of term * term * term
   | Seq       of term * term
   | Bind      of ident * term * term
-  | If        of term * option<term> * term * term  //option<term> here and in Match is the return annotation
-  | Match     of term * option<term> * list<branch>
+  | If        of term * option<match_returns_annotation> * term * term
+  | Match     of term * option<match_returns_annotation> * list<branch>
   | TryWith   of term * list<branch>
   | Ascribed  of term * term * option<term>
   | Record    of option<term> * list<(lid * term)>
@@ -97,6 +97,9 @@ type term' =
   | ElimOr of term * term * term * binder * term * binder * term  (* elim_or P Q to R with x.e1 and y.e2 *)
   | ElimAnd of term * term * term * binder * binder * term        (* elim_and P Q to R with x y. e *)
 and term = {tm:term'; range:range; level:level}
+
+(* (as y)? returns t *)
+and match_returns_annotation = option<ident> * term
 
 and patterns = list<ident> * list<list<term>>
 
@@ -594,7 +597,12 @@ let rec term_to_string (x:term) = match x.tm with
       (t1|> term_to_string)
       (match ret_opt with
        | None -> ""
-       | Some ret -> Util.format1 "ret %s " (term_to_string ret))
+       | Some (as_opt, ret) ->
+         Util.format2 "%sreturns %s "
+           (match as_opt with
+            | None -> ""
+            | Some as_ident -> Util.format1 " as %s " (string_of_id as_ident))
+           (term_to_string ret))
       (t2|> term_to_string)
       (t3|> term_to_string)
 
@@ -754,7 +762,12 @@ and try_or_match_to_string (x:term) scrutinee branches ret_opt =
     (scrutinee|> term_to_string)
     (match ret_opt with
      | None -> ""
-     | Some ret -> Util.format1 "ret %s " (term_to_string ret))
+     | Some (as_opt, ret) ->
+       Util.format2 "%sreturns %s "
+         (match as_opt with
+          | None -> ""
+          | Some as_ident -> Util.format1 "as %s " (string_of_id as_ident))
+         (term_to_string ret))
     (to_string_l " | " (fun (p,w,e) -> Util.format3 "%s %s -> %s"
       (p |> pat_to_string)
       (match w with | None -> "" | Some e -> Util.format1 "when %s" (term_to_string e))
@@ -864,16 +877,15 @@ let thunk (ens : term) : term =
     let wildpat = mk_pattern (PatWild (None, [])) ens.range in
     mk_term (Abs ([wildpat], ens)) ens.range Expr
 
+let ident_of_binder r b =
+  match b.b with
+  | Variable i
+  | TVariable i
+  | Annotated (i, _)
+  | TAnnotated (i, _) -> i
+  | NoName _ ->
+    raise_error (Fatal_MissingQuantifierBinder,
+                 "Wildcard binders in quantifiers are not allowed") r
+
 let idents_of_binders bs r =
-    bs |> List.map
-      (fun b ->
-        match b.b with
-        | Variable i
-        | TVariable i
-        | Annotated (i, _)
-        | TAnnotated (i, _) ->
-          i
-        | NoName _ ->
-          raise_error (Fatal_MissingQuantifierBinder,
-                      "Wildcard binders in quantifiers are not allowed")
-                      r)
+    bs |> List.map (ident_of_binder r)

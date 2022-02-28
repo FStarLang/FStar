@@ -524,3 +524,5 @@ let (exists_elim_lid : FStar_Ident.lid) = classical_sugar_lid "exists_elim"
 let (implies_elim_lid : FStar_Ident.lid) = classical_sugar_lid "implies_elim"
 let (or_elim_lid : FStar_Ident.lid) = classical_sugar_lid "or_elim"
 let (and_elim_lid : FStar_Ident.lid) = classical_sugar_lid "and_elim"
+let (match_returns_def_name : Prims.string) =
+  FStar_String.op_Hat FStar_Ident.reserved_prefix "_ret_"

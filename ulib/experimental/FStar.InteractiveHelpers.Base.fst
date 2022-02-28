@@ -472,14 +472,17 @@ let rec deep_apply_subst e t subst =
     pack (Tv_Let recf [] bv def body)
   | Tv_Match scrutinee ret_opt branches -> (* TODO: type of pattern variables *)
     let scrutinee = deep_apply_subst e scrutinee subst in
-    let ret_opt = map_opt (fun ret ->
-      match ret with
-      | Inl t, tacopt ->
-        Inl (deep_apply_subst e t subst),
-        map_opt (fun tac -> deep_apply_subst e tac subst) tacopt
-      | Inr c, tacopt ->
-        Inr (deep_apply_subst_in_comp e c subst),
-        map_opt (fun tac -> deep_apply_subst e tac subst) tacopt) ret_opt in
+    let ret_opt = map_opt (fun (b, asc) ->
+      let b, subst = deep_apply_subst_in_binder e b subst in
+      let asc =
+        match asc with
+        | Inl t, tacopt ->
+          Inl (deep_apply_subst e t subst),
+          map_opt (fun tac -> deep_apply_subst e tac subst) tacopt
+        | Inr c, tacopt ->
+          Inr (deep_apply_subst_in_comp e c subst),
+          map_opt (fun tac -> deep_apply_subst e tac subst) tacopt in
+      b, asc) ret_opt in
     (* For the branches: we don't need to explore the patterns *)
     let deep_apply_subst_in_branch branch =
       let pat, tm = branch in

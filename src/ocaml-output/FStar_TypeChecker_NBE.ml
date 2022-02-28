@@ -899,26 +899,45 @@ let rec (translate :
              let make_returns uu___2 =
                match ret_opt with
                | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None
-               | FStar_Pervasives_Native.Some
-                   (FStar_Pervasives.Inl t, tacopt) ->
+               | FStar_Pervasives_Native.Some (b, asc) ->
                    let uu___3 =
-                     let uu___4 =
-                       let uu___5 =
-                         let uu___6 = translate cfg bs t in
-                         readback cfg uu___6 in
-                       FStar_Pervasives.Inl uu___5 in
-                     (uu___4, tacopt) in
-                   FStar_Pervasives_Native.Some uu___3
-               | FStar_Pervasives_Native.Some
-                   (FStar_Pervasives.Inr c, tacopt) ->
-                   let uu___3 =
-                     let uu___4 =
-                       let uu___5 =
-                         let uu___6 = translate_comp cfg bs c in
-                         readback_comp cfg uu___6 in
-                       FStar_Pervasives.Inr uu___5 in
-                     (uu___4, tacopt) in
-                   FStar_Pervasives_Native.Some uu___3 in
+                     let x =
+                       let uu___4 =
+                         let uu___5 =
+                           translate cfg bs
+                             (b.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort in
+                         readback cfg uu___5 in
+                       FStar_Syntax_Syntax.new_bv
+                         FStar_Pervasives_Native.None uu___4 in
+                     let uu___4 = FStar_Syntax_Syntax.mk_binder x in
+                     let uu___5 =
+                       let uu___6 = FStar_TypeChecker_NBETerm.mkAccuVar x in
+                       uu___6 :: bs in
+                     (uu___4, uu___5) in
+                   (match uu___3 with
+                    | (b1, bs1) ->
+                        let asc1 =
+                          match asc with
+                          | (FStar_Pervasives.Inl t, tacopt) ->
+                              let uu___4 =
+                                let uu___5 =
+                                  let uu___6 = translate cfg bs1 t in
+                                  readback cfg uu___6 in
+                                FStar_Pervasives.Inl uu___5 in
+                              (uu___4, tacopt)
+                          | (FStar_Pervasives.Inr c, tacopt) ->
+                              let uu___4 =
+                                let uu___5 =
+                                  let uu___6 = translate_comp cfg bs1 c in
+                                  readback_comp cfg uu___6 in
+                                FStar_Pervasives.Inr uu___5 in
+                              (uu___4, tacopt) in
+                        let asc2 =
+                          FStar_Syntax_Subst.close_ascription [b1] asc1 in
+                        let b2 =
+                          let uu___4 = FStar_Syntax_Subst.close_binders [b1] in
+                          FStar_Compiler_List.hd uu___4 in
+                        FStar_Pervasives_Native.Some (b2, asc2)) in
              let make_rc uu___2 =
                match rc with
                | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None
