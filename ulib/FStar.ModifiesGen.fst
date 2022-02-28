@@ -1922,7 +1922,7 @@ let union_loc_of_loc_includes_elim
     (GSet.mem x auxs /\ GSet.mem x.addr (addrs_of_loc_weak smaller x.region)) ==>
     GSet.mem x (GSet.union auxl doml)
   );
-  assert (larger `loc_includes` smaller)
+  assert (larger `loc_includes'` smaller)
 
 #reset-options "--z3cliopt 'smt.qi.eager_threshold=100'"
 
