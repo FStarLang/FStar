@@ -904,6 +904,12 @@ val strict_on_arguments (x: list int) : Tot unit
  **)
 val resolve_implicits : unit
 
+(** A tactic registered to solve implicits with the (handle_smt_goals)
+    attribute will receive the SMT goal generated during typechecking
+    just before it is passed to the SMT solver.
+   *)
+val handle_smt_goals : unit
+
 (** This attribute can be added to an inductive type definition,
     indicating that it should be erased on extraction to `unit`.
 
