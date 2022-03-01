@@ -210,16 +210,17 @@ and env = {
 }
 and solver_depth_t = int * int * int
 and solver_t = {
-    init         :env -> unit;
-    push         :string -> unit;
-    pop          :string -> unit;
-    snapshot     :string -> (solver_depth_t * unit);
-    rollback     :string -> option<solver_depth_t> -> unit;
-    encode_sig   :env -> sigelt -> unit;
-    preprocess   :env -> goal -> list<(env * goal * FStar.Options.optionstate)>;
-    solve        :option<(unit -> string)> -> env -> typ -> unit;
-    finish       :unit -> unit;
-    refresh      :unit -> unit;
+    init            :env -> unit;
+    push            :string -> unit;
+    pop             :string -> unit;
+    snapshot        :string -> (solver_depth_t * unit);
+    rollback        :string -> option<solver_depth_t> -> unit;
+    encode_sig      :env -> sigelt -> unit;
+    preprocess      :env -> goal -> list<(env * goal * FStar.Options.optionstate)>;
+    handle_smt_goal :env -> goal -> list<(env * goal)>;
+    solve           :option<(unit -> string)> -> env -> typ -> unit;
+    finish          :unit -> unit;
+    refresh         :unit -> unit;
 }
 and tcenv_hooks =
   { tc_push_in_gamma_hook : (env -> either<binding, sig_binding> -> unit) }
@@ -861,7 +862,7 @@ let delta_depth_of_qninfo (fv:fv) (qn:qninfo) : option<delta_depth> =
     let lid = fv.fv_name.v in
     if nsstr lid = "Prims" then Some fv.fv_delta //NS delta: too many special cases in existing code
     else delta_depth_of_qninfo_lid lid qn
-    
+
 let delta_depth_of_fv env fv =
   let lid = fv.fv_name.v in
   if nsstr lid = "Prims" then fv.fv_delta //NS delta: too many special cases in existing code for prims; FIXME!
@@ -1491,7 +1492,7 @@ let update_effect_lattice env src tgt st_mlift =
          | Some e -> e::edges
          | None -> edges) [] in
 
-  let check_cycle src tgt = 
+  let check_cycle src tgt =
     if lid_equals src tgt
     then raise_error (Errors.Fatal_Effects_Ordering_Coherence,
            BU.format3 "Adding an edge %s~>%s induces a cycle %s"
@@ -1551,7 +1552,7 @@ let update_effect_lattice env src tgt st_mlift =
         match smap_try_find ubs key with
         | Some ubs -> (i, j, k, ik, jk)::ubs
         | None -> [i, j, k, ik, jk] in
-        
+
       smap_add ubs key v in
 
     //Populate ubs
@@ -1577,7 +1578,7 @@ let update_effect_lattice env src tgt st_mlift =
       //Make sure there is only one such entry
       if List.length lubs <> 1
       then raise_error (Errors.Fatal_Effects_Ordering_Coherence,
-                        BU.format1 "Effects %s have incomparable upper bounds" s) 
+                        BU.format1 "Effects %s have incomparable upper bounds" s)
                        env.range
       else lubs@joins) [] in
 
@@ -2008,6 +2009,7 @@ let dummy_solver = {
     rollback=(fun _ _ -> ());
     encode_sig=(fun _ _ -> ());
     preprocess=(fun e g -> [e,g, FStar.Options.peek ()]);
+    handle_smt_goal=(fun e g -> [e,g]);
     solve=(fun _ _ _ -> ());
     finish=(fun () -> ());
     refresh=(fun () -> ());
