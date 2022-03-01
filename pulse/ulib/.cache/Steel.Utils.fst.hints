@@ -21,7 +21,7 @@
         "typing_tok_Prims.T@tok"
       ],
       0,
-      "b756582a354e28162b2663449205f804"
+      "d3364e18d529f0f54642fd30cf1bc17f"
     ],
     [
       "Steel.Utils.change_slprop_ens",
@@ -40,7 +40,7 @@
         "typing_Steel.Memory.star"
       ],
       0,
-      "ec2a7e4edef92ba83f4f242504c7c421"
+      "341787a496b8b76ca012bc1fb3ddb376"
     ],
     [
       "Steel.Utils.pure_as_ens",
@@ -60,7 +60,7 @@
         "typing_Steel.Effect.Common.to_vprop_", "typing_Steel.Memory.pure"
       ],
       0,
-      "55ac540a189ec2407d08bd305428c2d2"
+      "0ff6655962cb58fa06202d608aab13a9"
     ],
     [
       "Steel.Utils.rewrite",
@@ -80,7 +80,7 @@
         "true_interp", "typing_tok_Prims.T@tok"
       ],
       0,
-      "7ed4f9ef0bbcb73b4dff917d5b965f55"
+      "05d024bd47c9adb6d3fa6597af85acf7"
     ],
     [
       "Steel.Utils.extract_pure",
@@ -100,7 +100,7 @@
         "true_interp", "typing_tok_Prims.T@tok"
       ],
       0,
-      "61325e6443a6530f5c0c16beca816062"
+      "9f5e3202212649cd5bedffcd9999ba46"
     ],
     [
       "Steel.Utils.dup_pure",
@@ -109,7 +109,7 @@
       1,
       [ "@query", "equation_Steel.Effect.Common.true_p", "true_interp" ],
       0,
-      "bab8ca39c32bf4ace6ea36f1d36b1d99"
+      "de09002af3e0936cb4efeb77b5f638d1"
     ],
     [
       "Steel.Utils.emp_unit",
@@ -131,7 +131,7 @@
         "typing_Steel.Memory.star"
       ],
       0,
-      "70fb3aab91c119fb33bc401d26e2a3a0"
+      "142264f4f64302a702f0064489ec6eda"
     ]
   ]
 ]
