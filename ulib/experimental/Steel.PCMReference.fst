@@ -20,7 +20,9 @@ module Steel.PCMReference
 module Mem = Steel.Memory
 
 let read r v0 = as_action (sel_action FStar.Set.empty r v0)
+let atomic_read #opened #_ #_ r v0 = as_atomic_action (sel_action opened r v0)
 let write r v0 v1 = as_action (upd_action FStar.Set.empty r v0 v1)
+let atomic_write #opened #_ #_ r v0 v1 = as_atomic_action (upd_action opened r v0 v1)
 
 val alloc' (#a:Type)
            (#pcm:pcm a)

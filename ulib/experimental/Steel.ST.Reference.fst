@@ -78,6 +78,10 @@ let read (#a:Type)
   = let u = coerce_steel (fun _ -> R.read_pt r) in
     return u
 
+let atomic_read r =
+  let u = coerce_atomic (fun _ -> R.atomic_read_pt r) in
+  return u
+
 let write (#a:Type0)
           (#v:erased a)
           (r:ref a)
@@ -87,6 +91,10 @@ let write (#a:Type0)
       (fun _ -> pts_to r full_perm x)
   = coerce_steel (fun _ -> R.write_pt r x);
     return ()
+
+let atomic_write r x =
+  coerce_atomic (fun _ -> R.atomic_write_pt r x);
+  return ()
 
 let free (#a:Type0)
          (#v:erased a)

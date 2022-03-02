@@ -101,6 +101,21 @@ val read (#a:Type)
       (requires True)
       (ensures fun x -> x == Ghost.reveal v)
 
+/// Atomic read, similar to read except that the reference is read atomically
+///
+/// -- This is a little too powerful. We should only allow it on [t]'s
+///    that are small enough. E.g., word-sized
+val atomic_read (#opened:_)
+  (#a:Type)
+  (#p:perm)
+  (#v:erased a)
+  (r:ref a)
+  : STAtomic a opened
+      (pts_to r p v)
+      (fun x -> pts_to r p v)
+      (requires True)
+      (ensures fun x -> x == Ghost.reveal v)
+
 /// Writes value `x` in the reference `r`, as long as we have full
 /// ownership of `r`
 val write (#a:Type0)
@@ -108,6 +123,19 @@ val write (#a:Type0)
           (r:ref a)
           (x:a)
   : STT unit
+      (pts_to r full_perm v)
+      (fun _ -> pts_to r full_perm x)
+
+/// Atomic write, similar to write except that the reference is written atomically
+///
+/// -- This is a little too powerful. We should only allow it on [t]'s
+///    that are small enough. E.g., word-sized
+val atomic_write (#opened:_)
+  (#a:Type0)
+  (#v:erased a)
+  (r:ref a)
+  (x:a)
+  : STAtomicT unit opened
       (pts_to r full_perm v)
       (fun _ -> pts_to r full_perm x)
 
