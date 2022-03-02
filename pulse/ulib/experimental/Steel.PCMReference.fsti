@@ -47,6 +47,19 @@ val read (#a:Type)
           (requires fun _ -> True)
           (ensures fun _ v _ -> compatible pcm v0 v /\ True)
 
+/// Atomic read, similar to read except the reference is read atomically
+///
+/// -- This is a little too powerful. We should only allow it on [t]'s
+///    that are small enough. E.g., word-sized
+val atomic_read (#opened:_) (#a:Type) (#pcm:pcm a)
+  (r:ref a pcm)
+  (v0:erased a)
+  : SteelAtomic a opened
+      (pts_to r v0)
+      (fun _ -> pts_to r v0)
+      (requires fun _ -> True)
+      (ensures fun _ v _ -> compatible pcm v0 v /\ True)
+
 /// Writing value [v1] in reference [r], as long as it is frame-preserving with our
 /// current knowledge [v0], and that [v1] is a refined value for the PCM [pcm]
 val write (#a:Type)
@@ -59,6 +72,20 @@ val write (#a:Type)
           (fun _ -> pts_to r v1)
           (requires fun _ -> frame_preserving pcm v0 v1 /\ pcm.refine v1)
           (ensures fun _ _ _ -> True)
+
+/// Atomic write, similar to write except the reference is written atomically
+///
+/// -- This is a little too powerful. We should only allow it on [t]'s
+///    that are small enough. E.g., word-sized
+val atomic_write (#opened:_) (#a:Type) (#pcm:pcm a)
+  (r:ref a pcm)
+  (v0:erased a)
+  (v1:a)
+  : SteelAtomic unit opened
+      (pts_to r v0)
+      (fun _ -> pts_to r v1)
+      (requires fun _ -> frame_preserving pcm v0 v1 /\ pcm.refine v1)
+      (ensures fun _ _ _ -> True)
 
 /// Allocates a new reference, initially storing value [x].
 val alloc (#a:Type)
