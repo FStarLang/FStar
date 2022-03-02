@@ -45,9 +45,6 @@ PREFIX=$(shell pwd)/fstar
 # The string "Madoko" if madoko is installed, something else otherwise.
 MADOKO = $(shell madoko --version 2>/dev/null | cut -c -6)
 DOS2UNIX=$(shell which dos2unix >/dev/null 2>&1 && echo dos2unix || echo true)
-# Set PACKAGE_DOCS to 1 if you want to include html docs into the binary package.
-# If so, then Madoko MUST be installed on the machine building the package.
-PACKAGE_DOCS?=0
 
 # Detect the GNU utilities
 INSTALL_EXEC := $(shell ginstall --version 2>/dev/null | cut -c -8 | head -n 1)
@@ -277,19 +274,7 @@ package:
 	cp ../../_tags $(PREFIX)/
 	cp ../../.common.mk $(PREFIX)/
 	@# Then the rest of the static files.
-	$(call fexport,examples)
-	$(call fexport,tests)
 	$(call fexport,ucontrib)
-	$(call fexport,doc/tutorial)
-ifeq ($(MADOKO),Madoko)
-	@# Build the tutorial
-	+$(MAKE) -C fstar/doc/tutorial
-else
-	@echo " ********** You don't have Madoko installed. Binary package will not include tutorial in html form."
-ifeq ($(PACKAGE_DOCS),1)
-	false
-endif
-endif
 	@# Documentation and licenses
 	cp ../../README.md ../../INSTALL.md ../../LICENSE ../../LICENSE-fsharp.txt $(PREFIX)
 	cp $(Z3_LICENSE) $(PREFIX)/LICENSE-z3.txt

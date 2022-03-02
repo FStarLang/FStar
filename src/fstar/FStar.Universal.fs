@@ -115,7 +115,10 @@ let init_env deps : TcEnv.env =
   let solver =
     if Options.lax()
     then SMT.dummy
-    else {SMT.solver with preprocess=FStar.Tactics.Hooks.preprocess} in
+    else {SMT.solver with
+      preprocess=FStar.Tactics.Hooks.preprocess;
+      handle_smt_goal=FStar.Tactics.Hooks.handle_smt_goal
+    } in
   let env =
       TcEnv.initial_env
         deps
