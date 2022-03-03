@@ -68,6 +68,9 @@ let rec fold_equality #c #eq (cm: CE.cm c eq)
           (decreases b - a) = 
   if b > a then fold_equality cm a (b - 1) expr1 expr2 
   
+let fold_singleton_lemma #c #eq (cm:CE.cm c eq) (a:int) (expr: ifrom_ito a a -> c)
+  : Lemma (fold cm a a expr == expr a) = () 
+ 
 (* This lemma decomposes the big_sum into the sum of the first 
    (k-1) elements plus the remaining last one.
    Obviously requires the argument range that is at least 
