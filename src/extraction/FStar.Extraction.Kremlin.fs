@@ -1034,6 +1034,21 @@ and translate_expr env e: expr =
          string_of_mlpath p = "Steel.ST.Util.return" ->
     translate_expr env e
 
+  | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, _)}, [_fp; _fp'; _opened; _p; _i; {expr=MLE_Fun (_, body)}])
+    when string_of_mlpath p = "Steel.ST.Util.with_invariant" ->
+    translate_expr env body
+
+  | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, _)}, [_fp; _fp'; _opened; _p; _i; e])
+    when string_of_mlpath p = "Steel.ST.Util.with_invariant" ->
+    Errors.raise_error
+      (Errors.Fatal_ExtractionUnsupported,
+       BU.format2
+         "Extraction of with_invariant requires its argument to be a function literal \
+         at extraction time, try marking its argument inline_for_extraction (%s, %s)"
+         (string_of_int (fst e.loc))
+         (snd e.loc))
+      Range.dummyRange
+
   | MLE_App (head, args) ->
       EApp (translate_expr env head, List.map (translate_expr env) args)
 
