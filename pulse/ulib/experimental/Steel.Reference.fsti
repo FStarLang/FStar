@@ -23,6 +23,8 @@ open Steel.Memory
 open Steel.Effect.Atomic
 open Steel.Effect
 
+
+module U32 = FStar.UInt32
 module Mem = Steel.Memory
 
 /// The main user-facing Steel library.
@@ -107,17 +109,6 @@ val read_pt (#a:Type) (#p:perm) (#v:erased a) (r:ref a)
            (requires fun _ -> True)
            (ensures fun _ x _ -> x == Ghost.reveal v)
 
-/// Atomic read
-///
-/// -- This is a little too powerful. We should only allow it on [t]'s
-///    that are small enough. E.g., word-sized
-val atomic_read_pt (#opened:_) (#a:Type) (#p:perm) (#v:erased a) (r:ref a)
-  : SteelAtomic a opened
-      (pts_to r p v)
-      (fun x -> pts_to r p x)
-      (requires fun _ -> True)
-      (ensures fun _ x _ -> x == Ghost.reveal v)
-
 /// A variant of read, useful when an existentially quantified predicate
 /// depends on the value stored in the reference
 val read_refine_pt (#a:Type0) (#p:perm) (q:a -> vprop) (r:ref a)
@@ -127,15 +118,6 @@ val read_refine_pt (#a:Type0) (#p:perm) (q:a -> vprop) (r:ref a)
 /// Writes value [x] in the reference [r], as long as we have full ownership of [r]
 val write_pt (#a:Type0) (#v:erased a) (r:ref a) (x:a)
   : SteelT unit (pts_to r full_perm v) (fun _ -> pts_to r full_perm x)
-
-/// Atomic write, also requires full ownership of [r]
-///
-/// -- This is a little too powerful. We should only allow it on [t]'s
-///    that are small enough. E.g., word-sized
-val atomic_write_pt (#opened:_) (#a:Type0) (#v:erased a) (r:ref a) (x:a)
-  : SteelAtomicT unit opened
-      (pts_to r full_perm v)
-      (fun _ -> pts_to r full_perm x)
 
 /// Frees reference [r], as long as we have full ownership of [r]
 val free_pt (#a:Type0) (#v:erased a) (r:ref a)
@@ -155,13 +137,40 @@ val gather_pt (#a:Type0) (#uses:_) (#p0:perm) (#p1:perm) (#v0 #v1:erased a) (r:r
     (pts_to r p0 v0 `star` pts_to r p1 v1)
     (fun _ -> pts_to r (sum_perm p0 p1) v0)
 
-/// Atomic compare and swap on references.
-val cas_pt (#t:eqtype)
-        (#uses:inames)
-        (r:ref t)
-        (v:Ghost.erased t)
-        (v_old:t)
-        (v_new:t)
+
+/// Atomic operations, read, write, and cas
+///
+/// These are not polymorphic and are allowed only for small types (e.g. word-sized)
+///   For now, exporting only for U32
+
+val atomic_read_pt_u32 (#opened:_) (#p:perm) (#v:erased U32.t) (r:ref U32.t)
+  : SteelAtomic U32.t opened
+      (pts_to r p v)
+      (fun x -> pts_to r p x)
+      (requires fun _ -> True)
+      (ensures fun _ x _ -> x == Ghost.reveal v)
+
+val atomic_write_pt_u32 (#opened:_) (#v:erased U32.t) (r:ref U32.t) (x:U32.t)
+  : SteelAtomicT unit opened
+      (pts_to r full_perm v)
+      (fun _ -> pts_to r full_perm x)
+
+val cas_pt_u32 (#uses:inames)
+        (r:ref U32.t)
+        (v:Ghost.erased U32.t)
+        (v_old:U32.t)
+        (v_new:U32.t)
+  : SteelAtomicT
+        (b:bool{b <==> (Ghost.reveal v == v_old)})
+        uses
+        (pts_to r full_perm v)
+        (fun b -> if b then pts_to r full_perm v_new else pts_to r full_perm v)
+
+val cas_pt_bool (#uses:inames)
+        (r:ref bool)
+        (v:Ghost.erased bool)
+        (v_old:bool)
+        (v_new:bool)
   : SteelAtomicT
         (b:bool{b <==> (Ghost.reveal v == v_old)})
         uses
