@@ -105,14 +105,6 @@ let read_pt #a #p #v r =
   rewrite_slprop (H.pts_to r p (hide x)) (pts_to r p v') (fun _ -> ());
   return v'
 
-let atomic_read_pt #_ #a #p #v r =
-  let v' = Ghost.hide (U.raise_val (Ghost.reveal v)) in
-  rewrite_slprop (pts_to r p v) (H.pts_to r p v') (fun _ -> ());
-  let x = H.atomic_read r in
-  let v':a = U.downgrade_val x in
-  rewrite_slprop (H.pts_to r p (hide x)) (pts_to r p v') (fun _ -> ());
-  return v'
-
 let read_refine_pt #a #p q r =
   Classical.forall_intro_2 reveal_equiv;
   lift_exists (fun (v:a) -> pts_to r p v `star` q v);
@@ -130,13 +122,6 @@ let write_pt #a #v r x =
   rewrite_slprop (pts_to r full_perm v) (H.pts_to r full_perm v') (fun _ -> ());
   let x' = U.raise_val x in
   H.write r x';
-  rewrite_slprop (H.pts_to r full_perm (hide x')) (pts_to r full_perm x) (fun _ -> ())
-
-let atomic_write_pt #_ #a #v r x =
-  let v' = Ghost.hide (U.raise_val (Ghost.reveal v)) in
-  rewrite_slprop (pts_to r full_perm v) (H.pts_to r full_perm v') (fun _ -> ());
-  let x' = U.raise_val x in
-  H.atomic_write r x';
   rewrite_slprop (H.pts_to r full_perm (hide x')) (pts_to r full_perm x) (fun _ -> ())
 
 let free_pt #a #v r =
@@ -217,8 +202,30 @@ let cas_action (#t:eqtype)
      raise_equiv (Ghost.reveal v) v_old;
      b
 
-let cas_pt #t #uses r v v_old v_new =
-  let b = as_atomic_action (cas_action #t #uses r v v_old v_new) in
+let atomic_read_pt_u32 #_ #p #v r =
+  let v' = Ghost.hide (U.raise_val (Ghost.reveal v)) in
+  rewrite_slprop (pts_to r p v) (H.pts_to r p v') (fun _ -> ());
+  let x = H.atomic_read r in
+  let v':U32.t = U.downgrade_val x in
+  rewrite_slprop (H.pts_to r p (hide x)) (pts_to r p v') (fun _ -> ());
+  return v'
+
+let atomic_write_pt_u32 #_ #v r x =
+  let v' = Ghost.hide (U.raise_val (Ghost.reveal v)) in
+  rewrite_slprop (pts_to r full_perm v) (H.pts_to r full_perm v') (fun _ -> ());
+  let x' = U.raise_val x in
+  H.atomic_write r x';
+  rewrite_slprop (H.pts_to r full_perm (hide x')) (pts_to r full_perm x) (fun _ -> ())
+
+let cas_pt_u32 #uses r v v_old v_new =
+  let b = as_atomic_action (cas_action #U32.t #uses r v v_old v_new) in
+  rewrite_slprop (to_vprop (if b then pts_to_sl r full_perm v_new else pts_to_sl r full_perm v))
+                 (if b then pts_to r full_perm v_new else pts_to r full_perm v)
+                 (fun _ -> ());
+  return b
+
+let cas_pt_bool #uses r v v_old v_new =
+  let b = as_atomic_action (cas_action #bool #uses r v v_old v_new) in
   rewrite_slprop (to_vprop (if b then pts_to_sl r full_perm v_new else pts_to_sl r full_perm v))
                  (if b then pts_to r full_perm v_new else pts_to r full_perm v)
                  (fun _ -> ());
