@@ -26,25 +26,35 @@ open Steel.ST.Util
 open Steel.ST.Loops
 open Steel.ST.Reference
 
-let locked = true
-let unlocked = false
+module U32 = FStar.UInt32
+
+unfold let locked : U32.t = 1ul
+unfold let unlocked : U32.t = 0ul
+
+unfold let is_locked (n:U32.t) : bool = n = locked
+unfold let is_unlocked (n:U32.t) : bool = n = unlocked
 
 [@@ __reduce__]
-let lockinv_predicate (p:vprop) (r:ref bool)
-  : bool -> vprop
-  = fun (b:bool) -> pts_to r full_perm b `star` (if b then emp else p)
+let lockinv_predicate (p:vprop) (r:ref U32.t)
+  : U32.t -> vprop
+  = fun b ->
+    pts_to r full_perm b
+      `star`
+    pure (b == locked \/ b == unlocked)
+      `star`
+    (if is_locked b then emp else p)
 
 [@@ __reduce__]
-let lockinv (p:vprop) (r:ref bool) : vprop =
+let lockinv (p:vprop) (r:ref U32.t) : vprop =
   exists_ (lockinv_predicate p r)
 
-let lock_t = ref bool & erased iname
+let lock_t = ref U32.t & erased iname
 let protects l p = snd l >--> lockinv p (fst l)
 
 let new_lock p =
   let r = alloc unlocked in
-  rewrite (pts_to _ _ _ `star` p)
-          (lockinv_predicate p r unlocked);
+  intro_pure (unlocked == locked \/ unlocked == unlocked);
+  rewrite p (if is_locked unlocked then emp else p);
   intro_exists unlocked (lockinv_predicate p r);
   let i = new_invariant (lockinv p r) in
   return (r, i)
@@ -54,19 +64,22 @@ let acquire_loop_inv (p:vprop) : bool -> vprop =
   fun b -> if b then emp else p
 
 inline_for_extraction
-let acquire_core (#opened:_) (p:vprop) (r:ref bool) ()
+let acquire_core (#opened:_) (p:vprop) (r:ref U32.t) ()
   : STAtomicT bool opened
       (lockinv p r `star` exists_ (acquire_loop_inv p))
       (fun b -> lockinv p r `star` acquire_loop_inv p b)
   = let w = elim_exists #_ #_ #(lockinv_predicate p r) () in
     drop (exists_ _);
-    let b = cas r w unlocked locked in
+    let b = cas_u32 w r unlocked locked in
     if b
     then begin
       let res = false in
-      rewrite (if w then emp else p) p;
-      rewrite ((if b then _ else _) `star` emp)
-              (lockinv_predicate p r locked);
+      elim_pure _;
+      rewrite (if is_locked w then emp else p) p;
+      intro_pure (locked == locked \/ locked == unlocked);
+      rewrite (if b then _ else _)
+              (pts_to r full_perm locked);
+      rewrite emp (if is_locked locked then emp else p);
       intro_exists locked (lockinv_predicate p r);
       rewrite p (acquire_loop_inv p res);
       return res
@@ -81,13 +94,17 @@ let acquire_core (#opened:_) (p:vprop) (r:ref bool) ()
     end
 
 inline_for_extraction
-let acquire_loop_cond (p:vprop) (r:ref bool) (i:inv (lockinv p r)) ()
+let acquire_loop_cond
+  (p:vprop)
+  (r:ref U32.t)
+  (i:inv (lockinv p r))
+  ()
   : STT bool (exists_ (acquire_loop_inv p))
              (fun b -> acquire_loop_inv p b)
   = with_invariant i (acquire_core p r)
 
 inline_for_extraction
-let acquire_loop_body (p:vprop) (r:ref bool) ()
+let acquire_loop_body (p:vprop) (r:ref U32.t) ()
   : STT unit (acquire_loop_inv p true)
              (fun _ -> exists_ (acquire_loop_inv p))
   = intro_exists true (acquire_loop_inv p)
@@ -102,14 +119,18 @@ let acquire #p l =
   rewrite (acquire_loop_inv p false) p
 
 inline_for_extraction
-let release_core (#opened:_) (p:vprop) (r:ref bool) ()
+let release_core (#opened:_) (p:vprop) (r:ref U32.t) ()
   : STAtomicT unit opened
       (lockinv p r `star` p)
       (fun _ -> lockinv p r `star` emp)
-  = let _ = elim_exists () in
+  = let w = elim_exists () in
+    elim_pure _;
     drop (if _ then _ else _);
-    atomic_write r unlocked;
-    rewrite p (if unlocked then emp else p);
+    let b = cas_u32 w r locked unlocked in
+    rewrite (if b then _ else _)
+            (pts_to r full_perm unlocked);
+    rewrite p (if is_locked unlocked then emp else p);
+    intro_pure (unlocked == locked \/ unlocked == unlocked);
     intro_exists unlocked (lockinv_predicate p r)
 
 let release #p l = with_invariant (snd l) (release_core p (fst l))
