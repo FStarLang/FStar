@@ -2739,6 +2739,58 @@ and (translate_expr : env -> FStar_Extraction_ML_Syntax.mlexpr -> expr) =
             (let uu___7 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
              uu___7 = "Steel.ST.Util.return")
           -> translate_expr env1 e1
+      | FStar_Extraction_ML_Syntax.MLE_App
+          ({
+             FStar_Extraction_ML_Syntax.expr =
+               FStar_Extraction_ML_Syntax.MLE_TApp
+               ({
+                  FStar_Extraction_ML_Syntax.expr =
+                    FStar_Extraction_ML_Syntax.MLE_Name p;
+                  FStar_Extraction_ML_Syntax.mlty = uu___;
+                  FStar_Extraction_ML_Syntax.loc = uu___1;_},
+                uu___2);
+             FStar_Extraction_ML_Syntax.mlty = uu___3;
+             FStar_Extraction_ML_Syntax.loc = uu___4;_},
+           _fp::_fp'::_opened::_p::_i::{
+                                         FStar_Extraction_ML_Syntax.expr =
+                                           FStar_Extraction_ML_Syntax.MLE_Fun
+                                           (uu___5, body);
+                                         FStar_Extraction_ML_Syntax.mlty =
+                                           uu___6;
+                                         FStar_Extraction_ML_Syntax.loc =
+                                           uu___7;_}::[])
+          when
+          let uu___8 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+          uu___8 = "Steel.ST.Util.with_invariant" -> translate_expr env1 body
+      | FStar_Extraction_ML_Syntax.MLE_App
+          ({
+             FStar_Extraction_ML_Syntax.expr =
+               FStar_Extraction_ML_Syntax.MLE_TApp
+               ({
+                  FStar_Extraction_ML_Syntax.expr =
+                    FStar_Extraction_ML_Syntax.MLE_Name p;
+                  FStar_Extraction_ML_Syntax.mlty = uu___;
+                  FStar_Extraction_ML_Syntax.loc = uu___1;_},
+                uu___2);
+             FStar_Extraction_ML_Syntax.mlty = uu___3;
+             FStar_Extraction_ML_Syntax.loc = uu___4;_},
+           _fp::_fp'::_opened::_p::_i::e1::[])
+          when
+          let uu___5 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+          uu___5 = "Steel.ST.Util.with_invariant" ->
+          let uu___5 =
+            let uu___6 =
+              let uu___7 =
+                FStar_Compiler_Util.string_of_int
+                  (FStar_Pervasives_Native.fst
+                     e1.FStar_Extraction_ML_Syntax.loc) in
+              FStar_Compiler_Util.format2
+                "Extraction of with_invariant requires its argument to be a function literal at extraction time, try marking its argument inline_for_extraction (%s, %s)"
+                uu___7
+                (FStar_Pervasives_Native.snd
+                   e1.FStar_Extraction_ML_Syntax.loc) in
+            (FStar_Errors.Fatal_ExtractionUnsupported, uu___6) in
+          FStar_Errors.raise_error uu___5 FStar_Compiler_Range.dummyRange
       | FStar_Extraction_ML_Syntax.MLE_App (head, args) ->
           let uu___ =
             let uu___1 = translate_expr env1 head in
