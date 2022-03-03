@@ -73,3 +73,12 @@ private let _ = assert (interval_size (ifrom_ito 15 10) = 0)
    i.e. will be redundant in most use cases. *)
 let counter_bounds_lemma (x y:int) (i: (counter_for (ifrom_ito x y))) 
   : Lemma (x+i >= x /\ x+i <= y) = ()
+
+(* An integer sequence [0..n), n values in total,
+   with index value available to the prover. *)
+private let indices_seq (n: nat) 
+  : (f:FStar.Seq.Base.seq (under n) {
+       FStar.Seq.Base.length f = n /\ 
+       (forall (k: under n). FStar.Seq.Base.index f k = k) 
+    }) 
+  = FStar.Seq.Base.init n (fun x -> x)
