@@ -117,3 +117,35 @@ let rec fold_equals_seq_foldm #c #eq
     eq.symmetry rhs (subfold `op` last);
     eq.transitivity lhs (subfold `op` last) rhs
   )
+ 
+(* This lemma proves that if we offset some function by some value, 
+   fold of the function against its own domain will be equal to fold 
+   of the offset function against the offset domain
+   
+   Notice how we make bounds explicit in order for the lemma to be 
+   readily usable in subdomain reasoning, provided exprs are 
+   compatible too *)
+let rec fold_offset_irrelevance_lemma #c #eq (cm: CE.cm c eq) 
+  (m0: int) (mk: not_less_than m0) (expr1 : ifrom_ito m0 mk -> c)
+  (n0: int) (nk: not_less_than n0) (expr2 : ifrom_ito n0 nk -> c)
+  : Lemma (requires (((mk-m0) = (nk-n0)) /\ 
+                    (forall (i:under (closed_interval_size m0 mk)). 
+                        expr1 (i+m0) == expr2 (i+n0))))
+          (ensures fold cm m0 mk expr1 == fold cm n0 nk expr2)
+          (decreases (mk-m0)) = 
+  if (mk>m0 && nk>n0) then (
+      fold_offset_irrelevance_lemma cm m0 (mk-1) expr1 n0 (nk-1) expr2;
+      assert (expr1 ((mk-m0)+m0) == expr2 ((nk-n0)+n0))
+  )
+
+(* In particular, we would often find it useful to move our domain 
+   to make it start from 0 *)
+let fold_offset_elimination_lemma #c #eq (cm: CE.cm c eq) 
+                             (m0: int) (mk: not_less_than m0) 
+                             (expr1 : ifrom_ito m0 mk -> c)
+                             (expr2 : under (closed_interval_size m0 mk) -> c)
+  : Lemma (requires ((forall (i:under (closed_interval_size m0 mk)). 
+                         expr2 i == expr1 (i+m0))))
+          (ensures fold cm m0 mk expr1 == fold cm 0 (mk-m0) expr2)
+          (decreases (mk-m0)) 
+  = fold_offset_irrelevance_lemma cm m0 mk expr1 0 (mk-m0) expr2
