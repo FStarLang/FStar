@@ -17,7 +17,6 @@
 
 module FStar.SMTEncoding.Encode
 open FStar.Compiler.Effect
-open FStar.Compiler.Effect
 open FStar.SMTEncoding.Term
 module ErrorReporting = FStar.SMTEncoding.ErrorReporting
 module S = FStar.Syntax.Syntax

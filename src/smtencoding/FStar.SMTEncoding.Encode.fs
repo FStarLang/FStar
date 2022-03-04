@@ -16,10 +16,10 @@
 #light "off"
 
 module FStar.SMTEncoding.Encode
+open Prims
 open FStar.Pervasives
 open FStar.Compiler.Effect
 open FStar.Compiler.List
-open Prims
 open FStar
 open FStar.Compiler
 open FStar.TypeChecker.Env
@@ -1442,12 +1442,9 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                         [ff],
                         Term.mk_NoHoist f tok_typing)
              | _ -> tok_typing in
-        let vars', guards', env'', decls_formals, _ = encode_binders (Some fuel_tm) formals env in //NS/CH: used to be s_fuel_tm
-        let ty_pred', decls_pred =
-             let xvars = List.map mkFreeV vars' in
-             let dapp =  mkApp(ddconstrsym, xvars) in //arity ok; |xvars| = |formals| = arity
-             encode_term_pred (Some fuel_tm) t_res env'' dapp in
-        let guard' = mk_and_l guards' in
+        let ty_pred', t_res_tm, decls_pred =
+             let t_res_tm, t_res_decls = encode_term t_res env' in
+             mk_HasTypeWithFuel (Some fuel_tm) dapp t_res_tm, t_res_tm, t_res_decls in
         let proxy_fresh = match formals with
             | [] -> []
             | _ -> [Term.fresh_token (ddtok, Term_sort) (varops.next_id())] in
@@ -1553,7 +1550,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                                                        Env.Unascribe;
                                                        //we don't know if this will terminate; so don't do recursive steps
                                                        Env.Exclude Env.Zeta]
-                                                       env''.tcenv
+                                                       env'.tcenv
                                                        t
                               in
                               let head', _ = U.head_and_args t' in
@@ -1578,7 +1575,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                         | None -> codomain_prec_l, cod_decls
                         | Some (bs, c) ->
                           //var bs << D ... var ...
-                          let bs', guards', _env', bs_decls, _ = encode_binders None bs env'' in
+                          let bs', guards', _env', bs_decls, _ = encode_binders None bs env' in
                           let fun_app = mk_Apply (mkFreeV var) bs' in
                           mkForall (Ident.range_of_lid d)
                                    ([[mk_Precedes lex_t lex_t fun_app dapp]],
@@ -1617,21 +1614,79 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
               [], []
         in
         let decls2, elim = encode_elim () in
+        let data_cons_typing_intro_decl =
+          //
+          //AR:
+          //
+          //Typing intro for the data constructor
+          //
+          //We do a bit of manipulation for type indices
+          //Consider the Cons data constructor of a length-indexed vector type:
+          //  type vector : nat -> Type = | Emp : vector 0
+          //  | Cons: n:nat -> hd:nat -> tl:vec n -> vec (n+1)
+          //
+          //So far we have
+          //  ty_pred' = HasTypeFuel f (Cons n hd tl) (vector (n+1))
+          //  vars = n, hd, tl
+          //  guard = And of typing guards for n, hd, tl (i.e. (HasType n nat) etc.)
+          //
+          //If we emitted the straightforward typing axiom:
+          //  forall n hd tl. HasTypeFuel f (Cons n hd tl) (vector (n+1))
+          //with pattern
+          //  HasTypeFuel f (Cons n hd tl) (vecor (n+1))
+          //
+          //It results in too restrictive a pattern,
+          //Specifically, if we need to prove HasTypeFuel f (Cons 0 1 Emp) (vector 1),
+          //  the axiom will not fire, since the pattern is specifically looking for
+          //  (n+1) in the resulting vector type, whereas here we have a term 1,
+          //  which is not addition syntactically
+          //
+          //So we do a little bit of surgery below to emit an axiom of the form:
+          //  forall n hd tl m. m = n + 1 ==> HasTypeFuel f (Cons n hd tl) (vector m)
+          //where m is a fresh variable
+          //
+          //Also see #2456
+          //
+          let ty_pred', vars, guard =
+            match t_res_tm.tm with
+            | App (op, args) ->
+              //iargs are index arguments in the return type of the data constructor
+              let targs, iargs = List.splitAt n_tps args in
+              //fresh vars for iargs
+              let fresh_ivars, fresh_iargs =
+                iargs |> List.map (fun _ -> fresh_fvar env.current_module_name "i" Term_sort)
+                      |> List.split in
+              //equality guards
+              let additional_guards =
+                mk_and_l (List.map2 (fun a fresh_a -> mkEq (a, fresh_a)) iargs fresh_iargs) in
+
+              mk_HasTypeWithFuel
+                (Some fuel_tm)
+                dapp
+                ({t_res_tm with tm = App (op, targs@fresh_iargs)}),
+
+              vars@(fresh_ivars |> List.map (fun s -> mk_fv (s, Term_sort))),
+
+              mkAnd (guard, additional_guards)
+
+            | _ -> ty_pred', vars, guard in  //When will this case arise?
+
+          Util.mkAssume(mkForall (Ident.range_of_lid d)
+                                 ([[ty_pred']],add_fuel (mk_fv (fuel_var, Fuel_sort)) vars, mkImp(guard, ty_pred')),
+                                 Some "data constructor typing intro",
+                                 ("data_typing_intro_"^ddtok)) in
+
         let g = binder_decls
                 @decls2
                 @decls3
                 @([Term.DeclFun(ddtok, [], Term_sort, Some (BU.format1 "data constructor proxy: %s" (Print.lid_to_string d)))]
                   @proxy_fresh |> mk_decls_trivial)
-                @decls_formals
                 @decls_pred
                 @([Util.mkAssume(tok_typing, Some "typing for data constructor proxy", ("typing_tok_"^ddtok));
                    Util.mkAssume(mkForall (Ident.range_of_lid d)
                                           ([[app]], vars,
                                            mkEq(app, dapp)), Some "equality for proxy", ("equality_tok_"^ddtok));
-                   Util.mkAssume(mkForall (Ident.range_of_lid d)
-                                          ([[ty_pred']],add_fuel (mk_fv (fuel_var, Fuel_sort)) vars', mkImp(guard', ty_pred')),
-                               Some "data constructor typing intro",
-                               ("data_typing_intro_"^ddtok));
+                   data_cons_typing_intro_decl;
                    ]@elim |> mk_decls_trivial) in
         (datacons |> mk_decls_trivial) @ g, env
 

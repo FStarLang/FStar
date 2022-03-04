@@ -235,7 +235,7 @@ let (run_all : unit -> Prims.bool) =
            inst Prims.int_one uu___14 in
          match uu___13 with
          | (tm, us) ->
-             let sol = FStar_Tests_Pars.tc "fun x -> c_and x x" in
+             let sol = FStar_Tests_Pars.tc "fun x -> Prims.pair x x" in
              (unify_check (Prims.of_int (9)) tm sol
                 FStar_TypeChecker_Common.Trivial
                 (fun uu___15 ->

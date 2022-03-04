@@ -1663,6 +1663,7 @@ let (solver : FStar_TypeChecker_Env.solver_t) =
          fun g ->
            let uu___ = let uu___1 = FStar_Options.peek () in (e, g, uu___1) in
            [uu___]);
+    FStar_TypeChecker_Env.handle_smt_goal = (fun e -> fun g -> [(e, g)]);
     FStar_TypeChecker_Env.solve = solve;
     FStar_TypeChecker_Env.finish = FStar_SMTEncoding_Z3.finish;
     FStar_TypeChecker_Env.refresh = FStar_SMTEncoding_Z3.refresh
@@ -1681,6 +1682,7 @@ let (dummy : FStar_TypeChecker_Env.solver_t) =
          fun g ->
            let uu___ = let uu___1 = FStar_Options.peek () in (e, g, uu___1) in
            [uu___]);
+    FStar_TypeChecker_Env.handle_smt_goal = (fun e -> fun g -> [(e, g)]);
     FStar_TypeChecker_Env.solve =
       (fun uu___ -> fun uu___1 -> fun uu___2 -> ());
     FStar_TypeChecker_Env.finish = (fun uu___ -> ());

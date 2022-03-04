@@ -1,5 +1,5 @@
 [
-  "%ÿ0æY≠j\u0012\u0003¸“ê'Âﬁå",
+  "¸]éH\u0015µÙ\u001c[µœöîVo",
   [
     [
       "FStar.IndefiniteDescription.indefinite_description_ghost",
@@ -12,7 +12,7 @@
         "typing_FStar.IndefiniteDescription.indefinite_description_tot"
       ],
       0,
-      "1612abfab86228e59549a1f79aa8d4f5"
+      "b12cc1e8058b4a3908334703c97caddc"
     ],
     [
       "FStar.IndefiniteDescription.strong_excluded_middle",
@@ -25,13 +25,12 @@
         "equation_Prims.l_and", "equation_Prims.l_iff",
         "equation_Prims.l_imp", "equation_Prims.l_not",
         "equation_Prims.squash", "equation_Prims.subtype_of",
-        "fuel_guarded_inversion_Prims.c_or",
-        "l_quant_interp_5b2993f9f2c0eba3627049a3b4167c7a",
+        "fuel_guarded_inversion_Prims.sum",
         "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "5b5e956d7ecfaecc038c85fdbd7f3e37"
+      "d7236a0ff6d761c9a86d0689ae78ef09"
     ],
     [
       "FStar.IndefiniteDescription.stronger_markovs_principle",
@@ -50,7 +49,7 @@
         "refinement_interpretation_Tm_refine_f3db4b290bcde56fe0046b79b9c3a13f"
       ],
       0,
-      "2290f76099e34badf55d73e52a1d0f47"
+      "770102f4a82adaf9594b3c8491f731e4"
     ],
     [
       "FStar.IndefiniteDescription.stronger_markovs_principle_prop",
@@ -64,7 +63,7 @@
         "refinement_interpretation_Tm_refine_e76bd1e3fcd1369d7232ec3854a8c984"
       ],
       0,
-      "3fde8a979d22a84a28d98823d5bc8b9b"
+      "19b0d35d824fc7840b5ebc56c67a4db3"
     ],
     [
       "FStar.IndefiniteDescription.elim_squash",
@@ -81,7 +80,7 @@
         "typing_tok_Prims.T@tok"
       ],
       0,
-      "73de31f9dce1aa5d2367ef58f938ba72"
+      "0456c8466e8260a8d8cdec55d8de6818"
     ]
   ]
 ]

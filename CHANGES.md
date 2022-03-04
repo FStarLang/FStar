@@ -84,8 +84,9 @@ Guidelines for the changelog:
     and
     https://github.com/project-everest/hacl-star/pull/442
 
-  * PR https://github.com/FStarLang/FStar/pull/2256 adds support for Coq-style
-    dependent pattern matching. F* now supports `match e returns C with |...`
+  * PR https://github.com/FStarLang/FStar/pull/2256 and
+       https://github.com/FStarLang/FStar/pull/2464 add support for Coq-style
+    dependent pattern matching. F* now supports `match e as x returns C with |...`
     syntax for typechecking the branches with `C` appropriately substituted.
     This changes the syntax of the `match` nodes to maintain an optional
     annotation. The data constructor `Tv_Match` in the reflection API changes
@@ -151,6 +152,12 @@ Guidelines for the changelog:
 
 ## Libraries
 
+   * Renamed some of the types in `Prims` in https://github.com/FStarLang/FStar/pull/2461.
+       - `c_False` became `empty`
+       - `c_True` became `trivial`
+       - `c_and` became `pair`
+       - `c_or` became `sum`
+
    * Guido Martinez found that `FStar.WellFounded.axiom1_dep` (and its
      specialization axiom1) is unsound when instantiated across
      different universe levels. The issue and fix is discussed in
@@ -194,6 +201,17 @@ Guidelines for the changelog:
      provided (using UInt128).
 
 ## Syntax
+
+   * `as` is a keyword now. One use of it is to (optionally) name the
+     scrutinee in dependent pattern matching, e.g.:
+
+     ```
+     match e as x in t with
+     | ...
+     ```
+
+     This is a breaking change, code that uses `as` as a variable name
+     will require changes (cf. https://github.com/FStarLang/FStar/pull/2464)
 
    * Type-based disambiguation for projectors and record
      constructors. You can now write:
@@ -366,6 +384,10 @@ Guidelines for the changelog:
      does not imply `a < c`). For some examples, see `examples/calc/`.
 
 ## Miscellaneous
+
+   * [Issue #2444](https://github.com/FStarLang/FStar/issues/2444) The
+     definition of the type `ident` exposed `FStar.Reflection.Types`
+     is now `string * range` instead of `range * string`.
 
    * Development builds of F\* no longer report the date of the build
      in `fstar --version`. This is to prevent needlessly rebuilding

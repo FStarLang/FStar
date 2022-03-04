@@ -53,9 +53,9 @@ let split_at_i (#b: _) (vb:buffer b) (i:nat{i < length vb}) (h:HS.mem)
                 Seq.seq src_t *
                 Seq.lseq src_t (View?.n (get_view vb)) *
                 Seq.seq src_t){
-               let prefix, as, suffix = frags in
+               let prefix, es, suffix = frags in
                B.as_seq h (as_buffer vb) ==
-               (prefix `Seq.append` (as `Seq.append` suffix))
+               (prefix `Seq.append` (es `Seq.append` suffix))
             })
     = let open FStar.Mul in
       let s0 = B.as_seq h (as_buffer vb) in
@@ -66,15 +66,15 @@ let split_at_i (#b: _) (vb:buffer b) (i:nat{i < length vb}) (h:HS.mem)
       length_eq vb;
       let prefix, suffix = Seq.split s0 start in
       Seq.lemma_split s0 start;
-      let as, tail = Seq.split suffix n in
+      let es, tail = Seq.split suffix n in
       Seq.lemma_split suffix n;
-      prefix, as, tail
+      prefix, es, tail
 
 let sel (#b: _) (h:HS.mem) (vb:buffer b) (i:nat{i < length vb})
    : GTot b
    = let v = get_view vb in
-     let _, as, _ = split_at_i vb i h in
-     View?.get v as
+     let _, es, _ = split_at_i vb i h in
+     View?.get v es
 
 let upd #b h vb i x
   : GTot HS.mem
@@ -90,18 +90,18 @@ let sel_upd1 (#b:_) (vb:buffer b) (i:nat{i < length vb}) (x:b) (h:HS.mem{live h 
     let v = get_view vb in
     view_indexing vb i;
     let h' = upd h vb i x in
-    let prefix, as, suffix = split_at_i vb i h in
-    let as' = View?.put v x in
+    let prefix, es, suffix = split_at_i vb i h in
+    let es' = View?.put v x in
     let s' = B.as_seq h' (as_buffer vb) in
-    B.g_upd_seq_as_seq (as_buffer vb) (prefix `Seq.append` (as' `Seq.append` suffix)) h;
-    assert (s' == prefix `Seq.append` (as' `Seq.append` suffix));
-    let prefix', as'', suffix' = split_at_i vb i h' in
-    assert (s' == prefix' `Seq.append` (as'' `Seq.append` suffix'));
-    Seq.lemma_append_inj prefix  (as' `Seq.append` suffix)
-                         prefix' (as'' `Seq.append` suffix');
-    Seq.lemma_append_inj as' suffix
-                         as'' suffix';
-    assert (as' == as'')
+    B.g_upd_seq_as_seq (as_buffer vb) (prefix `Seq.append` (es' `Seq.append` suffix)) h;
+    assert (s' == prefix `Seq.append` (es' `Seq.append` suffix));
+    let prefix', es'', suffix' = split_at_i vb i h' in
+    assert (s' == prefix' `Seq.append` (es'' `Seq.append` suffix'));
+    Seq.lemma_append_inj prefix  (es' `Seq.append` suffix)
+                         prefix' (es'' `Seq.append` suffix');
+    Seq.lemma_append_inj es' suffix
+                         es'' suffix';
+    assert (es' == es'')
 
 let lt_leq_mul (min:nat) (max:nat{min < max}) (n:nat)
    : Lemma (FStar.Mul.(min * n + n <= max * n))
@@ -157,9 +157,9 @@ let sel_upd #b vb i j x h =
 
 let lemma_upd_with_sel #b vb i h =
   let v = get_view vb in
-  let prefix, as, suffix = split_at_i vb i h in
+  let prefix, es, suffix = split_at_i vb i h in
   let s0 = B.as_seq h (as_buffer vb) in
-  let s1 = prefix `Seq.append` (View?.put v (View?.get v as) `Seq.append` suffix) in
+  let s1 = prefix `Seq.append` (View?.put v (View?.get v es) `Seq.append` suffix) in
   assert (Seq.equal s0 s1);
   B.lemma_g_upd_with_same_seq (as_buffer vb) h
 

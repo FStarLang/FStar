@@ -871,10 +871,13 @@ let rec visit_tm (ff : term -> Tac term) (t : term) : Tac term =
         Tv_Let r attrs b def t
     | Tv_Match sc ret_opt brs ->
         let sc = visit_tm ff sc in
-        let ret_opt = map_opt (fun ret ->
-          match ret with
-          | Inl t, tacopt -> Inl (visit_tm ff t), map_opt (visit_tm ff) tacopt
-          | Inr c, tacopt -> Inr (visit_comp ff c), map_opt (visit_tm ff) tacopt) ret_opt in
+        let ret_opt = map_opt (fun (b, asc) ->
+          let b = on_sort_binder (visit_tm ff) b in
+          let asc =
+            match asc with
+            | Inl t, tacopt -> Inl (visit_tm ff t), map_opt (visit_tm ff) tacopt
+            | Inr c, tacopt -> Inr (visit_comp ff c), map_opt (visit_tm ff) tacopt in
+          b, asc) ret_opt in
         let brs = map (visit_br ff) brs in
         Tv_Match sc ret_opt brs
     | Tv_AscribedT e t topt ->

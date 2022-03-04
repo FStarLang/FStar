@@ -102,7 +102,7 @@ and you can simply think of the type `squash phi` as the type of irrelevant
 proofs of `phi`. We call goals that are squashed ``irrelevant''.
 
 > For experts: You might notice that `True` is already a squash (of
-> `c_True`), so this seems useless. In this case it is, but we squash
+> `trivial`), so this seems useless. In this case it is, but we squash
 > nevertheless for consistency since this might be not so.
 
 A tactic is not required to completely prove an assertion, and can leave

@@ -1,0 +1,26 @@
+[
+  "Ôy\u0001>B¦ëžø­è[Z$lT",
+  [
+    [
+      "HandleSmtGoal.f",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "78f755715ade37912a77dcf8971ad8ad"
+    ],
+    [
+      "HandleSmtGoal.g",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
+      ],
+      0,
+      "0eb8c3c3e10ab205d9cd0648bdfd2828"
+    ]
+  ]
+]

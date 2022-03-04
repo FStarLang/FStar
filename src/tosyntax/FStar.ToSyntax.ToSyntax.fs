@@ -1413,11 +1413,18 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
       desugar_term_aq env (AST.mkExplicitApp bind [t1; k] top.range)
 
     | Seq(t1, t2) ->
-      (* Convert it to a letbinding, desugar it, and then slap a Meta_desugared sequence on it to keep track of this *)
-      (* TODO: GM: Maybe we don't really care about that *)
-      let t = mk_term (Let(NoLetQualifier, [None, (mk_pattern (PatWild (None, [])) t1.range,t1)], t2)) top.range Expr in
+      //
+      // let _ : unit = e1 in e2
+      //
+      let p = mk_pattern (PatWild (None, [])) t1.range in
+      let p = mk_pattern (PatAscribed (p, (unit_ty p.prange, None))) p.prange in
+      let t = mk_term (Let(NoLetQualifier, [None, (p, t1)], t2)) top.range Expr in
       let tm, s = desugar_term_aq env t in
-      mk (Tm_meta(tm, Meta_desugared Sequence)), s
+
+      //
+      // keep the Sequence, we will use it for resugaring
+      //
+      mk (Tm_meta (tm, Meta_desugared Sequence)), s
 
     | LetOpen (lid, e) ->
       let env = Env.push_namespace env lid in
@@ -1624,10 +1631,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
       let t_bool = mk (Tm_fvar(S.lid_as_fv C.bool_lid delta_constant None)) in
       let t1', aq1 = desugar_term_aq env t1 in
       let t1' = U.ascribe t1' (Inl t_bool, None) in
-      let asc_opt, aq0 =
-        match asc_opt with
-        | None -> None, []
-        | Some t -> desugar_ascription env t None |> (fun (t, q) -> Some t, q) in
+      let asc_opt, aq0 = desugar_match_returns env t1' asc_opt in
       let t2', aq2 = desugar_term_aq env t2 in
       let t3', aq3 = desugar_term_aq env t3 in
       mk (Tm_match(t1', asc_opt,
@@ -1654,10 +1658,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
         desugar_disjunctive_pattern pat wopt b, aq
       in
       let e, aq = desugar_term_aq env e in
-      let asc_opt, aq0 =
-        match topt with
-        | None -> None, []
-        | Some t -> desugar_ascription env t None |> (fun (t, q) -> Some t, q) in
+      let asc_opt, aq0 = desugar_match_returns env e topt in
       let brs, aqs = List.map desugar_branch branches |> List.unzip |> (fun (x, y) -> (List.flatten x, y)) in
       mk <| Tm_match(e, asc_opt, brs, None), join_aqs (aq::aq0::aqs)
 
@@ -2146,7 +2147,32 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
       raise_error (Fatal_UnexpectedTerm, ("Unexpected term: " ^ term_to_string top)) top.range
   end
 
-and desugar_ascription env t tac_opt =
+and desugar_match_returns env scrutinee asc_opt =
+  match asc_opt with
+  | None -> None, []
+  | Some asc ->
+    let env_asc, b =
+      match fst asc with
+      | None ->
+        //no binder is specified, generate a fresh one
+        let bv = S.gen_bv C.match_returns_def_name (Some scrutinee.pos) S.tun in
+        env, S.mk_binder bv
+      | Some b ->
+        let env, bv = Env.push_bv env b in
+        env, S.mk_binder bv in
+    let asc = snd asc in
+    let asc, aq = desugar_ascription env_asc asc None in
+    //if scrutinee is a name, it may appear in the ascription
+    //  substitute it with the (new or annotated) binder
+    let asc =
+      match (scrutinee |> U.unascribe).n with
+      | Tm_name sbv -> SS.subst_ascription [NT (sbv, S.bv_to_name b.binder_bv)] asc
+      | _ -> asc in
+    let asc = SS.close_ascription [b] asc in
+    let b = List.hd (SS.close_binders [b]) in
+    Some (b, asc), aq
+
+and desugar_ascription env t tac_opt : S.ascription * antiquotations =
   let annot, aq0 =
     if is_comp_type env t
     then let comp = desugar_comp t.range true env t in

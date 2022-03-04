@@ -1,0 +1,307 @@
+[
+  "÷å0ù¢DeÁı¸·Bƒ\u0012±t",
+  [
+    [
+      "Part2.WellFounded.fix_F",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_40f85999d856f0c0a49c750f59fba9bf_7",
+        "fuel_guarded_inversion_Part2.WellFounded.acc",
+        "proj_equation_Part2.WellFounded.AccIntro_access_smaller",
+        "token_correspondence_Part2.WellFounded.__proj__AccIntro__item__access_smaller",
+        "well_founded_ordering_on_codomain_Part2.WellFounded.AccIntro"
+      ],
+      0,
+      "27a4d3dd839dff6f83d8cd009ea1d4eb"
+    ],
+    [
+      "Part2.WellFounded.wf_lt_nat",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_bb4e1c9af0265270f8e7a5f250f730e2_0", "eq2-interp",
+        "equation_Part2.WellFounded.lt_nat", "equation_Prims.nat",
+        "primitive_Prims.op_LessThan", "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "well-founded-ordering-on-nat"
+      ],
+      0,
+      "4f1130f8d8877daee0262cba6590c0d9"
+    ],
+    [
+      "Part2.WellFounded.subrel_wf",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "FStar.WellFounded_interpretation_Tm_arrow_1746c45d493cb65cef6c9dae848785d2",
+        "fuel_guarded_inversion_Part2.WellFounded.acc",
+        "proj_equation_Part2.WellFounded.AccIntro_access_smaller",
+        "token_correspondence_Part2.WellFounded.__proj__AccIntro__item__access_smaller",
+        "well_founded_ordering_on_codomain_Part2.WellFounded.AccIntro"
+      ],
+      0,
+      "cf513b852c40a6b2765173c2bc3cafdc"
+    ],
+    [
+      "Part2.WellFounded.inverse_image_wf",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "FStar.Classical_interpretation_Tm_arrow_6980332764c4493a7b0df5c02f7aefbe",
+        "equation_Part2.WellFounded.inverse_image",
+        "fuel_guarded_inversion_Part2.WellFounded.acc",
+        "interpretation_Tm_abs_edd09bedcd003825726f248e787a0aa1",
+        "proj_equation_Part2.WellFounded.AccIntro_access_smaller",
+        "token_correspondence_Part2.WellFounded.__proj__AccIntro__item__access_smaller",
+        "token_correspondence_Part2.WellFounded.inverse_image",
+        "well_founded_ordering_on_codomain_Part2.WellFounded.AccIntro"
+      ],
+      0,
+      "56e850623b3562c6a0967cf67f2d64ce"
+    ],
+    [
+      "Part2.WellFounded.negate",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Part2.WellFounded.neg",
+        "primitive_Prims.op_Minus", "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_53244119120a0c2642bc1a0709e77283"
+      ],
+      0,
+      "dddef923d4339fb43cf7716ac404de7d"
+    ],
+    [
+      "Part2.WellFounded.__proj__Left_lex__item__x1",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_f095a3e83ff7224da51a49875b4e334e"
+      ],
+      0,
+      "444bbe569896aa4a737eed56dd3b34e7"
+    ],
+    [
+      "Part2.WellFounded.__proj__Left_lex__item__x2",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_f095a3e83ff7224da51a49875b4e334e"
+      ],
+      0,
+      "ec2d89a0b51bdafd817d96af93a87d86"
+    ],
+    [
+      "Part2.WellFounded.__proj__Left_lex__item__y1",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "fuel_guarded_inversion_Prims.dtuple2",
+        "proj_equation_Part2.WellFounded.Left_lex_x1",
+        "projection_inverse_Part2.WellFounded.Left_lex_x1",
+        "refinement_interpretation_Tm_refine_f095a3e83ff7224da51a49875b4e334e"
+      ],
+      0,
+      "82c0962dc8474fc94722ac48a3882f0e"
+    ],
+    [
+      "Part2.WellFounded.__proj__Left_lex__item__y2",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "fuel_guarded_inversion_Prims.dtuple2",
+        "proj_equation_Part2.WellFounded.Left_lex_x2",
+        "projection_inverse_Part2.WellFounded.Left_lex_x2",
+        "refinement_interpretation_Tm_refine_f095a3e83ff7224da51a49875b4e334e"
+      ],
+      0,
+      "766620cd7d624287f9e97ecc43958448"
+    ],
+    [
+      "Part2.WellFounded.__proj__Left_lex__item___4",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "fuel_guarded_inversion_Prims.dtuple2",
+        "proj_equation_Part2.WellFounded.Left_lex_x1",
+        "proj_equation_Part2.WellFounded.Left_lex_x2",
+        "projection_inverse_Part2.WellFounded.Left_lex_x1",
+        "projection_inverse_Part2.WellFounded.Left_lex_x2",
+        "refinement_interpretation_Tm_refine_f095a3e83ff7224da51a49875b4e334e"
+      ],
+      0,
+      "4834f6e0ff47d6458660bfee8f02e651"
+    ],
+    [
+      "Part2.WellFounded.__proj__Right_lex__item__x",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_cf363fc3bd1f4d47c2eb173795e82412"
+      ],
+      0,
+      "824209f2b18400db78ff96169ded9fe3"
+    ],
+    [
+      "Part2.WellFounded.__proj__Right_lex__item__y1",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "fuel_guarded_inversion_Prims.dtuple2",
+        "proj_equation_Part2.WellFounded.Right_lex_x",
+        "projection_inverse_Part2.WellFounded.Right_lex_x",
+        "refinement_interpretation_Tm_refine_cf363fc3bd1f4d47c2eb173795e82412"
+      ],
+      0,
+      "17a3b067b127bb0cb570d5de19e16a02"
+    ],
+    [
+      "Part2.WellFounded.__proj__Right_lex__item__y2",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "fuel_guarded_inversion_Prims.dtuple2",
+        "proj_equation_Part2.WellFounded.Right_lex_x",
+        "projection_inverse_Part2.WellFounded.Right_lex_x",
+        "refinement_interpretation_Tm_refine_cf363fc3bd1f4d47c2eb173795e82412"
+      ],
+      0,
+      "62c2208dff2f0ab1d1de10e87e4a61ca"
+    ],
+    [
+      "Part2.WellFounded.__proj__Right_lex__item___3",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "fuel_guarded_inversion_Prims.dtuple2",
+        "proj_equation_Part2.WellFounded.Right_lex_x",
+        "proj_equation_Part2.WellFounded.Right_lex_y1",
+        "proj_equation_Part2.WellFounded.Right_lex_y2",
+        "projection_inverse_Part2.WellFounded.Right_lex_x",
+        "projection_inverse_Part2.WellFounded.Right_lex_y1",
+        "projection_inverse_Part2.WellFounded.Right_lex_y2",
+        "refinement_interpretation_Tm_refine_cf363fc3bd1f4d47c2eb173795e82412"
+      ],
+      0,
+      "4e74beaeed74208c1c9bbf5552de6e8d"
+    ],
+    [
+      "Part2.WellFounded.mk_lt_nat",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
+        "int_inversion", "primitive_Prims.op_LessThan",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_8233d76b57e95451540fc312b717fa79"
+      ],
+      0,
+      "ffd51cde3abf4de3d000c1b5567aa292"
+    ],
+    [
+      "Part2.WellFounded.mk_lex_order_nat_pair",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
+        "primitive_Prims.op_LessThan", "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_Prims.Mkdtuple2__1",
+        "projection_inverse_Prims.Mkdtuple2__2",
+        "refinement_interpretation_Tm_refine_a6b719ee0ec38710e48ce4f7ee6fd3eb"
+      ],
+      0,
+      "7bae73bd44cb8799eae52868426a7b15"
+    ],
+    [
+      "Part2.WellFounded.ackermann'",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "equation_Prims.nat",
+        "function_token_typing_Prims.__cache_version_number__",
+        "int_inversion", "primitive_Prims.op_Addition",
+        "primitive_Prims.op_Equality", "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "projection_inverse_Prims.Mkdtuple2__1",
+        "projection_inverse_Prims.Mkdtuple2__2",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
+      ],
+      0,
+      "ccb6f2a2408f7e71c0f6f58ecea2ed1a"
+    ],
+    [
+      "Part2.WellFounded.coerce",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_3d43c06f2094a24f825a659f6869bc3a_3",
+        "fuel_guarded_inversion_Part2.WellFounded.acc",
+        "proj_equation_Part2.WellFounded.AccIntro_access_smaller",
+        "token_correspondence_Part2.WellFounded.__proj__AccIntro__item__access_smaller",
+        "well_founded_ordering_on_codomain_Part2.WellFounded.AccIntro"
+      ],
+      0,
+      "b1241ac5670bdf166d8d7ce0baff0fa2"
+    ],
+    [
+      "Part2.WellFounded.ackermann_wf",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "Prims_pretyping_f537159ed795b314b4e58c260361ae86",
+        "binder_x_bb4e1c9af0265270f8e7a5f250f730e2_0",
+        "binder_x_bb4e1c9af0265270f8e7a5f250f730e2_1", "eq2-interp",
+        "equation_Part2.WellFounded.lt_nat", "equation_Prims.nat",
+        "function_token_typing_Prims.__cache_version_number__",
+        "int_inversion", "primitive_Prims.op_Addition",
+        "primitive_Prims.op_Equality", "primitive_Prims.op_LessThan",
+        "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
+      ],
+      0,
+      "9c1038999e5605ba7d93e775f2e5d3d3"
+    ]
+  ]
+]

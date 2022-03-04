@@ -148,6 +148,8 @@ let strict_on_arguments _ = ()
 
 let resolve_implicits = ()
 
+let handle_smt_goals = ()
+
 let erasable = ()
 
 let allow_informative_binders = ()

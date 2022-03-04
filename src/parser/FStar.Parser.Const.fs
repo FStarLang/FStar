@@ -104,11 +104,11 @@ let magic_lid  = pconst "magic"
 let has_type_lid = pconst "has_type"
 
 (* Constructive variants *)
-let c_true_lid   = pconst "c_True"
-let c_false_lid  = pconst "c_False"
-let c_and_lid    = pconst "c_and"
-let c_or_lid     = pconst "c_or"
-let dtuple2_lid  = pconst "dtuple2" // for l_Exists
+let c_true_lid      = pconst "trivial"
+let empty_type_lid  = pconst "empty"
+let c_and_lid       = pconst "pair"
+let c_or_lid        = pconst "sum"
+let dtuple2_lid     = pconst "dtuple2" // for l_Exists
 
 (* Various equality predicates *)
 let eq2_lid    = pconst  "eq2"
@@ -341,6 +341,8 @@ let dm4f_bind_range_attr = p2l ["FStar"; "Pervasives"; "dm4f_bind_range"]
 let must_erase_for_extraction_attr = psconst "must_erase_for_extraction"
 let strict_on_arguments_attr = p2l ["FStar"; "Pervasives"; "strict_on_arguments"]
 let resolve_implicits_attr_string = "FStar.Pervasives.resolve_implicits"
+let handle_smt_goals_attr = psconst "handle_smt_goals"
+let handle_smt_goals_attr_string = "FStar.Pervasives.handle_smt_goals"
 let erasable_attr = p2l ["FStar"; "Pervasives"; "erasable"]
 let comment_attr = p2l ["FStar"; "Pervasives"; "Comment"]
 let fail_attr      = psconst "expect_failure"
@@ -502,3 +504,6 @@ let exists_elim_lid = classical_sugar_lid "exists_elim"
 let implies_elim_lid = classical_sugar_lid "implies_elim"
 let or_elim_lid = classical_sugar_lid "or_elim"
 let and_elim_lid = classical_sugar_lid "and_elim"
+
+
+let match_returns_def_name = reserved_prefix ^ "_ret_"
