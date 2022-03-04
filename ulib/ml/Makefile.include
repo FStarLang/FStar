@@ -2,7 +2,7 @@
 # future-proof w.r.t. realized modules!
 
 FSTAR_REALIZED_MODULES=All BaseTypes Buffer Bytes Char CommonST Constructive Dyn Float Ghost Heap Monotonic.Heap \
-	HyperStack.All HyperStack.ST HyperStack.IO Int16 Int32 Int64 Int8 IO \
+	HyperStack.All HyperStack.ST HyperStack.IO Int.Cast Int16 Int32 Int64 Int8 IO \
 	List List.Tot.Base Mul Option Pervasives.Native Set ST Exn String \
 	UInt16 UInt32 UInt64 UInt8 \
 	Pointer.Derived1 Pointer.Derived2 \

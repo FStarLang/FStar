@@ -54,38 +54,38 @@
     <Compile Include="fs\prims.fs" Link="prims.fs" />
     <Compile Include="fs\FStar_All.fs" Link="FStar_All.fs" />
     <Compile Include="fs\FStar_Char.fs" Link="FStar_Char.fs" />
-    <Compile Include="fs\FStar_Dyn.fs" Link="FStar_Dyn.fs" /> 
+    <Compile Include="fs\FStar_Dyn.fs" Link="FStar_Dyn.fs" />
     <Compile Include="fs\FStar_Float.fs" Link="FStar_Float.fs" />
     <Compile Include="fs\FStar_Ghost.fs" Link="FStar_Ghost.fs" />
     <Compile Include="fs\FStar_Monotonic_Heap.fs" Link="FStar_Monotonic_Heap.fs" />
     <Compile Include="fs\FStar_CommonST.fs" Link="FStar_CommonST.fs" />
     <Compile Include="fs\FStar_Heap.fs" Link="FStar_Heap.fs" />
-    <Compile Include="fs\FStar_Int16.fs" Link="FStar_Int16.fs" /> 
-    <Compile Include="fs\FStar_Int32.fs" Link="FStar_Int32.fs" /> 
-    <Compile Include="fs\FStar_Int64.fs" Link="FStar_Int64.fs" /> 
-    <Compile Include="fs\FStar_Int8.fs" Link="FStar_Int8.fs" /> 
+    <Compile Include="fs\FStar_Int16.fs" Link="FStar_Int16.fs" />
+    <Compile Include="fs\FStar_Int32.fs" Link="FStar_Int32.fs" />
+    <Compile Include="fs\FStar_Int64.fs" Link="FStar_Int64.fs" />
+    <Compile Include="fs\FStar_Int8.fs" Link="FStar_Int8.fs" />
     <Compile Include="fs\FStar_IO.fs" Link="FStar_IO.fs" />
     <Compile Include="fs\FStar_List.fs" Link="FStar_List.fs" />
     <Compile Include="fs\FStar_List_Tot_Base.fs" Link="FStar_List_Tot_Base.fs" />
     <Compile Include="fs\FStar_Mul.fs" Link="FStar_Mul.fs" />
     <Compile Include="fs\FStar_Option.fs" Link="FStar_Option.fs" />
     <Compile Include="fs\FStar_Pervasives_Native.fs" Link="FStar_Pervasives_Native.fs" />
-    <!-- TODO: Set is implemented with extra 'comparison' constraint on key. 
-               Extracted modules that depend on Set (e.g. Map) don't respect this (i.e. constraint is not emitted). 
-               Moreover, both Set and Map modules restrict key with 'eqtype' which only gives decidable equality, 
-               but we should require ordering. 
-               
+    <!-- TODO: Set is implemented with extra 'comparison' constraint on key.
+               Extracted modules that depend on Set (e.g. Map) don't respect this (i.e. constraint is not emitted).
+               Moreover, both Set and Map modules restrict key with 'eqtype' which only gives decidable equality,
+               but we should require ordering.
+
                So there are two points to address:
                1. Emitting constraints for type parameters when extracting F# code (e.g. for eqtype or 'ordered')
                2. Add 'type ordered = Type{hasOrder 'a}' or similar and use it instead of 'eqtype' in Set/Map interface.
     -->
-    <Compile Include="fs\FStar_Set.fs" Link="FStar_Set.fs" /> 
+    <Compile Include="fs\FStar_Set.fs" Link="FStar_Set.fs" />
     <Compile Include="fs\FStar_ST.fs" Link="FStar_ST.fs" />
     <Compile Include="fs\FStar_Exn.fs" Link="FStar_Exn.fs" />
     <Compile Include="fs\FStar_String.fs" Link="FStar_String.fs" />
     <Compile Include="fs\FStar_UInt16.fs" Link="FStar_UInt16.fs" />
     <Compile Include="fs\FStar_UInt32.fs" Link="FStar_UInt32.fs" />
-    <Compile Include="fs\FStar_UInt64.fs" Link="FStar_UInt64.fs" /> 
+    <Compile Include="fs\FStar_UInt64.fs" Link="FStar_UInt64.fs" />
     <Compile Include="fs\FStar_UInt8.fs" Link="FStar_UInt8.fs" />
     <!-- <Compile Include="fs\FStar_Tactics_Builtins.fs" Link="FStar_Tactics_Builtins.fs" /> --> <!-- TODO: Should tactics be part of ulibfs? Separate lib? -->
     <!-- <Compile Include="fs\FStar_Reflection_Types.fs" Link="FStar_Reflection_Types.fs" /> --> <!-- TODO: Should tactics be part of ulibfs? Separate lib? -->
@@ -109,16 +109,16 @@
     <Compile Include="FStar.StrongExcludedMiddle.fst" />
     <Compile Include="FStar.PropositionalExtensionality.fst" />
     <Compile Include="FStar.PredicateExtensionality.fst" />
-    <Compile Include="fs/FStar_Map.fs" Link="FStar_Map.fs" /> <!-- TODO: Map is 'almost' extracted. 
-                                                                         It lacks only the constraint on the key and there's an issue 
-                                                                         with erasure of 'key:eqtype implicit parameter on map_val 
+    <Compile Include="fs/FStar_Map.fs" Link="FStar_Map.fs" /> <!-- TODO: Map is 'almost' extracted.
+                                                                         It lacks only the constraint on the key and there's an issue
+                                                                         with erasure of 'key:eqtype implicit parameter on map_val
                                                               -->
     <!-- <Compile Include="FStar.Map.fst" /> --> <!-- TODO: Doesn't work with current implementation of Set (see TODO note on Set) -->
     <Compile Include="FStar.Monotonic.Witnessed.fst" /> <!-- TODO: (Warning 341) Expected parameter 'state of witnessed to be unused in its definition and eliminated -->
     <Compile Include="FStar.List.Tot.Properties.fst" />
     <Compile Include="FStar.Monotonic.HyperHeap.fst" />
     <Compile Include="FStar.Monotonic.HyperStack.fst" /> <!-- TODO: Produces unsafe coerce -->
-    <Compile Include="FStar.HyperStack.fst" /> 
+    <Compile Include="FStar.HyperStack.fst" />
     <Compile Include="fs\FStar_HyperStack_All.fs" Link="FStar_HyperStack_All.fs" />
     <Compile Include="fs\FStar_HyperStack_ST.fs" Link="FStar_HyperStack_ST.fs" />
     <Compile Include="fs\FStar_HyperStack_IO.fs" Link="FStar_HyperStack_IO.fs" />
@@ -132,6 +132,7 @@
     <Compile Include="FStar.BitVector.fst" />
     <Compile Include="FStar.UInt.fst" />
     <Compile Include="FStar.Int.fst" />
+    <Compile Include="FStar.Int.Cast.fsti" />
     <Compile Include="FStar.Int.Cast.fst" />
     <Compile Include="FStar.UInt128.fst" />
     <!-- <Compile Include="FStar.Universe.fst" /> -->
@@ -215,12 +216,12 @@
     <Compile Include="FStar.Ghost.fsti" />
     <Compile Include="FStar.HyperStack.ST.fsti" />
     <!-- <Compile Include="FStar.IFC.fsti" /> -->
-    <Compile Include="FStar.Int.fsti" /> 
+    <Compile Include="FStar.Int.fsti" />
     <Compile Include="FStar.Int128.fsti" />
     <Compile Include="FStar.Int16.fsti" />
     <Compile Include="FStar.Int32.fsti" />
     <Compile Include="FStar.Int64.fsti" />
-    <Compile Include="FStar.Int8.fsti" /> 
+    <Compile Include="FStar.Int8.fsti" />
     <!-- <Compile Include="FStar.MRef.fsti" /> -->
     <Compile Include="FStar.Map.fsti" />  <!-- TODO: Doesn't work with current implementation of Set (see TODO note on Set) -->
     <!-- <Compile Include="FStar.Math.Euclid.fsti" /> -->
@@ -250,7 +251,7 @@
     <Compile Include="FStar.UInt128.fsti" />
     <Compile Include="FStar.UInt16.fsti" />
     <Compile Include="FStar.UInt32.fsti" />
-    <Compile Include="FStar.UInt64.fsti" /> 
+    <Compile Include="FStar.UInt64.fsti" />
     <Compile Include="FStar.UInt8.fsti" />
     <!-- <Compile Include="FStar.Udp.fsti" /> -->
     <!-- <Compile Include="FStar.Universe.fsti" /> -->
@@ -285,7 +286,7 @@
     <Reference Include="System.Core" />
     <Reference Include="System.Numerics" />
   </ItemGroup>
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it.
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">
   </Target>
