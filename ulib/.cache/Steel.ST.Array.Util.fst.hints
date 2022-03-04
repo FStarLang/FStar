@@ -1,5 +1,5 @@
 [
-  "‹¹’Aµ\u0019Þ\u0013‡°ðËûM›Õ",
+  "–Š\u000fƒb Óp\tBÖë­\u001f±A",
   [
     [
       "Steel.ST.Array.Util.array_literal_inv_pure",
@@ -23,7 +23,7 @@
         "typing_FStar.UInt32.v"
       ],
       0,
-      "76528db7604b55729c6b425100a4fdab"
+      "592e7cc54f6c39a504bffc0b7713749c"
     ],
     [
       "Steel.ST.Array.Util.array_literal_loop_body",
@@ -32,7 +32,7 @@
       1,
       [ "@query" ],
       0,
-      "dca3d78da30907a2c958a5137f141dc0"
+      "9f5032ede0bf897a9851491463cf9796"
     ],
     [
       "Steel.ST.Array.Util.array_literal_loop_body",
@@ -63,7 +63,7 @@
         "typing_FStar.UInt32.v"
       ],
       0,
-      "3e748d380a5c9556ff774d2e0f14c8b7"
+      "e983b7e1f92ba323dea9125b9fb4bbe2"
     ],
     [
       "Steel.ST.Array.Util.array_literal",
@@ -83,7 +83,7 @@
         "typing_FStar.UInt32.v"
       ],
       0,
-      "3e7f905f1c9c4a8b7e1b09dcaa0ffa16"
+      "0d00fa34092460c57644fef224ef78fc"
     ],
     [
       "Steel.ST.Array.Util.array_literal",
@@ -119,7 +119,7 @@
         "typing_FStar.UInt32.v", "typing_Steel.ST.Array.length"
       ],
       0,
-      "e5a47c9b621df8a763ec3e95c6a86045"
+      "e8c3fc81ce9efd0ad214109e0066d791"
     ],
     [
       "Steel.ST.Array.Util.forall_pure_inv",
@@ -128,7 +128,7 @@
       1,
       [ "@query" ],
       0,
-      "fc23109e4e9ac647b3ecc4f8ce4486b6"
+      "4e8bd970a9c3e3271117d70906593546"
     ],
     [
       "Steel.ST.Array.Util.forall_pure_inv",
@@ -150,7 +150,7 @@
         "typing_FStar.UInt32.lte", "typing_FStar.UInt32.v"
       ],
       0,
-      "f975060d38026ebe27b1efe32ebc3117"
+      "e95fc157176b640ced0b6b3e50563b5b"
     ],
     [
       "Steel.ST.Array.Util.forall_pure_inv_b",
@@ -159,7 +159,7 @@
       1,
       [ "@query" ],
       0,
-      "bb09829a6779cb5bd1af5ae4943efacc"
+      "99ae8d9a5d731fb4642d2531e56784a9"
     ],
     [
       "Steel.ST.Array.Util.forall_pure_inv_b",
@@ -182,7 +182,7 @@
         "typing_FStar.UInt32.lt", "typing_FStar.UInt32.v"
       ],
       0,
-      "603e441e3d8c3823a7134261ff251354"
+      "eec55731fa8bc5d0c24398cd4dd35d6a"
     ],
     [
       "Steel.ST.Array.Util.forall_pred",
@@ -191,7 +191,7 @@
       1,
       [ "@query" ],
       0,
-      "6ebbf5b364dcc9ba74e1cc7765d8f65c"
+      "2aac63be602198178521db90ec371055"
     ],
     [
       "Steel.ST.Array.Util.forall_pred",
@@ -204,7 +204,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "702cbbfae39f45945e9442d80be04305"
+      "10ad94b13d664545cc9fe0bfc533ba3b"
     ],
     [
       "Steel.ST.Array.Util.forall_inv",
@@ -213,7 +213,7 @@
       1,
       [ "@query" ],
       0,
-      "1b9dbc668db7ce56a29081becf618c0c"
+      "4ca364dcdd20293dd5ee35bd3a6bc0ac"
     ],
     [
       "Steel.ST.Array.Util.forall_inv",
@@ -226,7 +226,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "20756c55cadf668679bf77cc6d4bad74"
+      "d17fbf940070bca80362f19630b953dd"
     ],
     [
       "Steel.ST.Array.Util.forall_cond",
@@ -235,7 +235,7 @@
       1,
       [ "@query" ],
       0,
-      "efdfb3e9bcdef2ecdcdf67641af73e2e"
+      "53e10d730645889e5d3bd75cfc12fd52"
     ],
     [
       "Steel.ST.Array.Util.forall_cond",
@@ -267,7 +267,7 @@
         "typing_FStar.UInt32.v"
       ],
       0,
-      "14961353eda69f195ec50ecec830d210"
+      "db9ba15e95f530d349280f0a9b6b99e2"
     ],
     [
       "Steel.ST.Array.Util.forall_body",
@@ -276,7 +276,7 @@
       1,
       [ "@query" ],
       0,
-      "c71ca3b9175188c300a8e39a441280c9"
+      "bb06750b88f583c85fb64f2dc8dfba2d"
     ],
     [
       "Steel.ST.Array.Util.forall_body",
@@ -308,7 +308,7 @@
         "typing_FStar.UInt32.v"
       ],
       0,
-      "17bfe42221cc50129e98bb0b577f99d6"
+      "92f9047d9b2fbf2885391e240d7670ab"
     ],
     [
       "Steel.ST.Array.Util.for_all",
@@ -317,7 +317,7 @@
       1,
       [ "@query" ],
       0,
-      "9525a998125dc6faae83b41c423e811a"
+      "75362bb7e996a14234e603811122c61c"
     ],
     [
       "Steel.ST.Array.Util.for_all",
@@ -352,7 +352,7 @@
         "typing_Steel.ST.Array.length", "unit_typing"
       ],
       0,
-      "ac150a1f0e51eb8bc1e7944f10b38a5b"
+      "d1822805d95f183e70ba869a8b16ad96"
     ],
     [
       "Steel.ST.Array.Util.forall2_pure_inv",
@@ -361,7 +361,7 @@
       1,
       [ "@query" ],
       0,
-      "fafffac24810b9ad934a363243c93344"
+      "dcf1c97ab1b3497736482e8bcfee919d"
     ],
     [
       "Steel.ST.Array.Util.forall2_pure_inv",
@@ -385,7 +385,7 @@
         "typing_FStar.UInt32.v"
       ],
       0,
-      "e4f6b4066e298a7e6312ffcbd1e919e0"
+      "e41275d47e9675043fdb77792b302c3c"
     ],
     [
       "Steel.ST.Array.Util.forall2_pure_inv_b",
@@ -394,7 +394,7 @@
       1,
       [ "@query" ],
       0,
-      "28fc6615299ac91686e74b87e7bbe771"
+      "5f709947eb11684562f3b972cc8843e1"
     ],
     [
       "Steel.ST.Array.Util.forall2_pure_inv_b",
@@ -420,7 +420,7 @@
         "typing_FStar.UInt32.v"
       ],
       0,
-      "d183f1f472d9d3c53e6bd7a1ff48695b"
+      "8657429a233537043d481766c9f7fdca"
     ],
     [
       "Steel.ST.Array.Util.forall2_pred",
@@ -429,7 +429,7 @@
       1,
       [ "@query" ],
       0,
-      "b4d5f6ac502eb480f497589172874459"
+      "35d41fced96e2895e815b7bf449ecbc9"
     ],
     [
       "Steel.ST.Array.Util.forall2_pred",
@@ -443,7 +443,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "86fbe7bf15dc96c17f9d81a191ddd9cb"
+      "0583c8ca8f755c70e08d3af83a6f326c"
     ],
     [
       "Steel.ST.Array.Util.forall2_inv",
@@ -452,7 +452,7 @@
       1,
       [ "@query" ],
       0,
-      "1cd9ad9cc066a79b6b59df63ae1e34fd"
+      "094581bac3eca7b5db11a08d20dc0bba"
     ],
     [
       "Steel.ST.Array.Util.forall2_inv",
@@ -466,7 +466,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "bc37ca0f5049b54d2e17dfb80cc9a2f5"
+      "cc04d8fdc09b4951f71a92ea4e3b8471"
     ],
     [
       "Steel.ST.Array.Util.forall2_cond",
@@ -475,7 +475,7 @@
       1,
       [ "@query" ],
       0,
-      "bb70ecf29260b712e451d6db0748f63a"
+      "985517a5fd98c17ed6c8380f4e8343d0"
     ],
     [
       "Steel.ST.Array.Util.forall2_cond",
@@ -508,7 +508,7 @@
         "typing_FStar.UInt32.v"
       ],
       0,
-      "ca8e65a13417615570cbd770028a1d12"
+      "ba0cc4bfa80d9326d7440569d8d46aad"
     ],
     [
       "Steel.ST.Array.Util.forall2_body",
@@ -517,7 +517,7 @@
       1,
       [ "@query" ],
       0,
-      "76c8c01669779fbf6011c27dd9860968"
+      "6c59a20e71bbb4a44108f989696c51fa"
     ],
     [
       "Steel.ST.Array.Util.forall2_body",
@@ -551,7 +551,7 @@
         "typing_FStar.UInt32.lt", "typing_FStar.UInt32.v"
       ],
       0,
-      "c9beb05519f3bc78b95b6aea189fca92"
+      "3b6d9f1b0f18a45ca517718aba51a9a7"
     ],
     [
       "Steel.ST.Array.Util.for_all2",
@@ -560,7 +560,7 @@
       1,
       [ "@query" ],
       0,
-      "0dd332775fa5f794689ab75f03573c40"
+      "1d084491d7d3941dc85eee1e750acc12"
     ],
     [
       "Steel.ST.Array.Util.for_all2",
@@ -595,7 +595,35 @@
         "typing_Steel.ST.Array.length"
       ],
       0,
-      "7629a51342acbe5b2c7305ea8739334c"
+      "c906d321189b52685cf168994d46b95a"
+    ],
+    [
+      "Steel.ST.Array.Util.compare",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "4d1a4747e3036e1ebeaba136cdaae427"
+    ],
+    [
+      "Steel.ST.Array.Util.compare",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
+        "lemma_FStar.Ghost.hide_reveal",
+        "lemma_FStar.Seq.Base.lemma_eq_elim",
+        "lemma_FStar.Seq.Base.lemma_eq_intro",
+        "lemma_FStar.Seq.Base.lemma_eq_refl",
+        "refinement_interpretation_Tm_refine_05c2f60613689ec93c4b6f6a9a210756",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "refinement_interpretation_Tm_refine_d83f8da8ef6c1cb9f71d1465c1bb1c55",
+        "typing_FStar.Ghost.reveal", "typing_FStar.Seq.Base.seq"
+      ],
+      0,
+      "1a5edfe6ebd87dd5b5cc0101f9424990"
     ]
   ]
 ]
