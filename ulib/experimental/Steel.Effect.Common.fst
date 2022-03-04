@@ -84,6 +84,7 @@ let lemma_frame_emp h0 h1 p =
   FStar.PropositionalExtensionality.apply True (h0 (VUnit emp') == h1 (VUnit emp'))
 
 let elim_conjunction p1 p1' p2 p2' = ()
+let elim_left a b = ()
 
 let equiv_can_be_split p1 p2 = ()
 let intro_can_be_split_frame p q frame = ()

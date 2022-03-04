@@ -259,8 +259,8 @@ val reveal_mk_rmem (r:vprop) (h:hmem r) (r0:vprop{r `can_be_split` r0})
 (* Logical pre and postconditions can only access the restricted view of the heap *)
 
 type req_t (pre:pre_t) = rmem pre -> Type0
-type ens_t (pre:pre_t) (a:Type) (post:post_t a) =
-  rmem pre -> (x:a) -> rmem (post x) -> Type0
+type ens_t (pre:pre_t) (req:req_t pre) (a:Type) (post:post_t a) =
+  (h0:rmem pre{req h0}) -> (x:a) -> rmem (post x) -> Type0
 
 (* Empty assertion *)
 val emp : vprop
@@ -356,6 +356,9 @@ val elim_conjunction (p1 p1' p2 p2':Type0)
   : Lemma (requires p1 == p1' /\ p2 == p2')
           (ensures (p1 /\ p2) == (p1' /\ p2'))
 
+val elim_left (a b:Type0)
+  : Lemma ((a /\ b) ==> a)
+
 /// Normalization and rewriting step for generating frame equalities.
 /// The frame_equalities function has the strict_on_arguments attribute on the [frame],
 /// ensuring that it is not reduced when the frame is symbolic.
@@ -401,7 +404,15 @@ let frame_vc_norm () : Tac unit =
   // If it fails, the frame was not symbolic, so there is nothing to do
   or_else (fun _ -> apply_lemma (`lemma_frame_equalities); dismiss ()) (fun _ -> ());
   norm normal_steps;
-  trefl ()
+  trefl ();
+
+  // If there was a non-trivial requires associated to the pre-rmem, unification during
+  // the application of `lemma_frame_equalities above led to an SMT goal
+  // of the shape `squash (valid_rmem h0 /\ req h0 ==> valid_rmem h0)`
+  // which we discharge here instead of going to SMT
+  or_else
+    (fun _ -> set_goals (smt_goals ()); apply_lemma (`elim_left); set_smt_goals [])
+    (fun _ -> ())
 
 [@@ __steel_reduce__]
 unfold
