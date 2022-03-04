@@ -1,5 +1,5 @@
 [
-  "≠À!ﬁ€∏\u0005yyñ÷®ËX\u007fR",
+  "\u0019m\u001b¡[as‰ÁitxÛ‘‘\u0001",
   [
     [
       "Steel.PCMReference.read",
@@ -218,6 +218,27 @@
       [ "@query" ],
       0,
       "4cc4380f8af79878eac8e786bc162cc8"
+    ],
+    [
+      "Steel.PCMReference.atomic_read",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_efd80b63dfc41f480a66e6cc9ae0681f"
+      ],
+      0,
+      "3feab809322181d0f54e7cc1872814a2"
+    ],
+    [
+      "Steel.PCMReference.atomic_write",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "783df6ebf7fe961dfe84f776c323b1b0"
     ]
   ]
 ]
