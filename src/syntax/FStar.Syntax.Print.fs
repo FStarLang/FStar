@@ -86,7 +86,6 @@ let infix_prim_ops = [
     (C.iff_lid     , "<==>");
     (C.precedes_lid, "<<");
     (C.eq2_lid     , "==");
-    (C.eq3_lid     , "===");
 ]
 
 let unary_prim_ops = [
@@ -351,8 +350,9 @@ and term_to_string x =
           (term_to_string head)
           (match asc_opt with
            | None -> ""
-           | Some (asc, tacopt) ->
-             U.format2 "returns %s%s "
+           | Some (b, (asc, tacopt)) ->
+             U.format3 "as %s returns %s%s "
+               (binder_to_string b)
                (match asc with
                 | Inl t -> term_to_string t
                 | Inr c -> comp_to_string c)

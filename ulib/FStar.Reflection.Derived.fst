@@ -214,7 +214,7 @@ let rec compare_term (s t : term) : Tot order (decreases s) =
     | Tv_Unknown, Tv_Unknown ->
         Eq
 
-    // From here onwards, they must have different constructors. Order them arbitrarilly as in the definition.
+    // From here onward, they must have different constructors. Order them arbitrarily as in the definition.
     | Tv_Var _, _      -> Lt   | _, Tv_Var _      -> Gt
     | Tv_BVar _, _     -> Lt   | _, Tv_BVar _     -> Gt
     | Tv_FVar _, _     -> Lt   | _, Tv_FVar _     -> Gt

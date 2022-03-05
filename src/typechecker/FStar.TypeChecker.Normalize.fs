@@ -90,7 +90,7 @@ type stack_elt =
  | Arg      of closure * aqual * Range.range
  | UnivArgs of list<universe> * Range.range
  | MemoLazy of memo<(env * term)>
- | Match    of env * option<ascription> * branches * option<residual_comp> * cfg * Range.range  //ascription is the return annotation
+ | Match    of env * option<match_returns_ascription> * branches * option<residual_comp> * cfg * Range.range
  | Abs      of env * binders * env * option<residual_comp> * Range.range //the second env is the first one extended with the binders, for reducing the option<lcomp>
  | App      of env * term * aqual * Range.range
  | CBVApp   of env * term * aqual * Range.range
@@ -339,7 +339,9 @@ let rec inline_closure_env cfg (env:env) stack t =
         let t = mk (Tm_arrow(bs, c)) t.pos in
         rebuild_closure cfg env stack t
 
-      | Tm_refine(x, _) when cfg.steps.for_extraction ->
+      | Tm_refine(x, _)
+          when cfg.steps.for_extraction
+             || cfg.steps.unrefine ->
         inline_closure_env cfg env stack x.sort
 
       | Tm_refine(x, phi) ->
@@ -479,7 +481,7 @@ and rebuild_closure cfg env stack t =
       in
       let t =
           mk (Tm_match(t,
-                       BU.map_opt asc_opt (close_ascription cfg env),
+                       close_match_returns cfg env asc_opt,
                        branches |> List.map (close_one_branch env),
                        lopt)) t.pos
       in
@@ -508,6 +510,14 @@ and rebuild_closure cfg env stack t =
 
     | _ -> failwith "Impossible: unexpected stack element"
 
+
+and close_match_returns cfg env ret_opt =
+  match ret_opt with
+  | None -> None
+  | Some (b, asc) ->
+    let bs, env = close_binders cfg env [b] in
+    let asc = close_ascription cfg env asc in
+    Some (List.hd bs, asc)
 
 and close_ascription cfg env (annot, tacopt) =
   let annot =
@@ -1363,7 +1373,9 @@ let rec norm : cfg -> env -> stack -> term -> term =
                    rebuild cfg env stack term
             end
 
-          | Tm_refine(x, _) when cfg.steps.for_extraction ->
+          | Tm_refine(x, _)
+              when cfg.steps.for_extraction
+                 || cfg.steps.unrefine ->
             norm cfg env stack x.sort
 
           | Tm_refine(x, f) -> //non tail-recursive; the alternative is to keep marks on the stack to rebuild the term ... but that's very heavy
@@ -1404,17 +1416,14 @@ let rec norm : cfg -> env -> stack -> term -> term =
                 log cfg  (fun () -> BU.print_string "+++ Keeping ascription \n");
                 let t1 = norm cfg env [] t1 in
                 log cfg  (fun () -> BU.print_string "+++ Normalizing ascription \n");
-                let tc = match tc with
-                    | Inl t -> Inl (norm cfg env [] t)
-                    | Inr c -> Inr (norm_comp cfg env c) in
-                let tacopt = BU.map_opt tacopt (norm cfg env []) in
+                let asc = norm_ascription cfg env (tc, tacopt) in
                 match stack with
                 | Cfg (cfg', dbg) :: stack ->
                   maybe_debug cfg t1 dbg;
-                  let t = mk (Tm_ascribed(U.unascribe t1, (tc, tacopt), l)) t.pos in
+                  let t = mk (Tm_ascribed(U.unascribe t1, asc, l)) t.pos in
                   norm cfg' env stack t
                 | _ ->
-                  rebuild cfg env stack (mk (Tm_ascribed(U.unascribe t1, (tc, tacopt), l)) t.pos)
+                  rebuild cfg env stack (mk (Tm_ascribed(U.unascribe t1, asc, l)) t.pos)
             end
 
           | Tm_match(head, asc_opt, branches, lopt) ->
@@ -2599,12 +2608,6 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
             then closure_as_term cfg_exclude_zeta env t
             else norm cfg_exclude_zeta env [] t
           in
-          let norm_ascription (tc, tacopt) =
-            let tc = match tc with
-                     | Inl t -> Inl (norm cfg env [] t)
-                     | Inr c -> Inr (norm_comp cfg env c) in
-            let tacopt = BU.map_opt tacopt (norm cfg env []) in
-            tc, tacopt in
           let rec norm_pat env p = match p.v with
             | Pat_constant _ -> p, env
             | Pat_cons(fv, pats) ->
@@ -2687,7 +2690,7 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
                           scrutinee //scrutinee was only reduced to wnf; reduce it fully
                 else scrutinee
               in
-              let asc_opt = BU.map_opt asc_opt norm_ascription in
+              let asc_opt = norm_match_returns cfg env asc_opt in
               let branches = norm_branches() in
               rebuild cfg env stack (mk (Tm_match(scrutinee, asc_opt, branches, lopt)) r)
           in
@@ -2775,6 +2778,21 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
         if cfg.steps.iota
         then matches scrutinee branches
         else norm_and_rebuild_match ()
+
+and norm_match_returns cfg env ret_opt =
+  match ret_opt with
+  | None -> None
+  | Some (b, asc) ->
+    let b = norm_binder cfg env b in
+    let subst, asc = SS.open_ascription [b] asc in
+    let asc = norm_ascription cfg (dummy::env) asc in
+    Some (b, SS.close_ascription subst asc)
+
+and norm_ascription cfg env (tc, tacopt) =
+  (match tc with
+   | Inl t -> Inl (norm cfg env [] t)
+   | Inr c -> Inr (norm_comp cfg env c)),
+  BU.map_opt tacopt (norm cfg env [])
 
 and norm_residual_comp cfg env (rc:residual_comp) : residual_comp =
   {rc with residual_typ = BU.map_option (closure_as_term cfg env) rc.residual_typ}

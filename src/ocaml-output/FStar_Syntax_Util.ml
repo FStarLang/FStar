@@ -2418,7 +2418,6 @@ let (mk_eq2 :
             FStar_Compiler_Range.union_ranges e1.FStar_Syntax_Syntax.pos
               e2.FStar_Syntax_Syntax.pos in
           FStar_Syntax_Syntax.mk uu___ uu___1
-let (teq3 : FStar_Syntax_Syntax.term) = fvar_const FStar_Parser_Const.eq3_lid
 let (mk_eq3_no_univ :
   FStar_Syntax_Syntax.term ->
     FStar_Syntax_Syntax.term ->
@@ -2426,6 +2425,7 @@ let (mk_eq3_no_univ :
         FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
           FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax)
   =
+  let teq3 = fvar_const FStar_Parser_Const.eq3_lid in
   fun t1 ->
     fun t2 ->
       fun e1 ->
@@ -2449,26 +2449,6 @@ let (mk_eq3_no_univ :
             FStar_Compiler_Range.union_ranges e1.FStar_Syntax_Syntax.pos
               e2.FStar_Syntax_Syntax.pos in
           FStar_Syntax_Syntax.mk uu___ uu___1
-let (mk_untyped_eq3 :
-  FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
-    FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
-      FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax)
-  =
-  fun e1 ->
-    fun e2 ->
-      let uu___ =
-        let uu___1 =
-          let uu___2 =
-            let uu___3 = FStar_Syntax_Syntax.as_arg e1 in
-            let uu___4 =
-              let uu___5 = FStar_Syntax_Syntax.as_arg e2 in [uu___5] in
-            uu___3 :: uu___4 in
-          (teq3, uu___2) in
-        FStar_Syntax_Syntax.Tm_app uu___1 in
-      let uu___1 =
-        FStar_Compiler_Range.union_ranges e1.FStar_Syntax_Syntax.pos
-          e2.FStar_Syntax_Syntax.pos in
-      FStar_Syntax_Syntax.mk uu___ uu___1
 let (mk_has_type :
   FStar_Syntax_Syntax.term ->
     FStar_Syntax_Syntax.term ->
@@ -2903,50 +2883,47 @@ let (is_sub_singleton : FStar_Syntax_Syntax.term -> Prims.bool) =
           let uu___3 = un_uinst head in uu___3.FStar_Syntax_Syntax.n in
         (match uu___2 with
          | FStar_Syntax_Syntax.Tm_fvar fv ->
-             ((((((((((((((((((FStar_Syntax_Syntax.fv_eq_lid fv
-                                 FStar_Parser_Const.unit_lid)
-                                ||
-                                (FStar_Syntax_Syntax.fv_eq_lid fv
-                                   FStar_Parser_Const.squash_lid))
+             (((((((((((((((((FStar_Syntax_Syntax.fv_eq_lid fv
+                                FStar_Parser_Const.unit_lid)
                                ||
                                (FStar_Syntax_Syntax.fv_eq_lid fv
-                                  FStar_Parser_Const.auto_squash_lid))
+                                  FStar_Parser_Const.squash_lid))
                               ||
                               (FStar_Syntax_Syntax.fv_eq_lid fv
-                                 FStar_Parser_Const.and_lid))
+                                 FStar_Parser_Const.auto_squash_lid))
                              ||
                              (FStar_Syntax_Syntax.fv_eq_lid fv
-                                FStar_Parser_Const.or_lid))
+                                FStar_Parser_Const.and_lid))
                             ||
                             (FStar_Syntax_Syntax.fv_eq_lid fv
-                               FStar_Parser_Const.not_lid))
+                               FStar_Parser_Const.or_lid))
                            ||
                            (FStar_Syntax_Syntax.fv_eq_lid fv
-                              FStar_Parser_Const.imp_lid))
+                              FStar_Parser_Const.not_lid))
                           ||
                           (FStar_Syntax_Syntax.fv_eq_lid fv
-                             FStar_Parser_Const.iff_lid))
+                             FStar_Parser_Const.imp_lid))
                          ||
                          (FStar_Syntax_Syntax.fv_eq_lid fv
-                            FStar_Parser_Const.ite_lid))
+                            FStar_Parser_Const.iff_lid))
                         ||
                         (FStar_Syntax_Syntax.fv_eq_lid fv
-                           FStar_Parser_Const.exists_lid))
+                           FStar_Parser_Const.ite_lid))
                        ||
                        (FStar_Syntax_Syntax.fv_eq_lid fv
-                          FStar_Parser_Const.forall_lid))
+                          FStar_Parser_Const.exists_lid))
                       ||
                       (FStar_Syntax_Syntax.fv_eq_lid fv
-                         FStar_Parser_Const.true_lid))
+                         FStar_Parser_Const.forall_lid))
                      ||
                      (FStar_Syntax_Syntax.fv_eq_lid fv
-                        FStar_Parser_Const.false_lid))
+                        FStar_Parser_Const.true_lid))
                     ||
                     (FStar_Syntax_Syntax.fv_eq_lid fv
-                       FStar_Parser_Const.eq2_lid))
+                       FStar_Parser_Const.false_lid))
                    ||
                    (FStar_Syntax_Syntax.fv_eq_lid fv
-                      FStar_Parser_Const.eq3_lid))
+                      FStar_Parser_Const.eq2_lid))
                   ||
                   (FStar_Syntax_Syntax.fv_eq_lid fv
                      FStar_Parser_Const.b2t_lid))
@@ -3043,12 +3020,10 @@ let (destruct_base_table :
     f FStar_Parser_Const.or_lid;
     f FStar_Parser_Const.imp_lid;
     f FStar_Parser_Const.iff_lid;
-    f FStar_Parser_Const.eq2_lid;
-    f FStar_Parser_Const.eq3_lid]);
+    f FStar_Parser_Const.eq2_lid]);
   (Prims.int_one, [f FStar_Parser_Const.not_lid]);
   ((Prims.of_int (3)),
-    [f FStar_Parser_Const.ite_lid; f FStar_Parser_Const.eq2_lid]);
-  ((Prims.of_int (4)), [f FStar_Parser_Const.eq3_lid])]
+    [f FStar_Parser_Const.ite_lid; f FStar_Parser_Const.eq2_lid])]
 let (destruct_sq_base_table :
   (Prims.int * (FStar_Ident.lident * FStar_Ident.lident) Prims.list)
     Prims.list)
@@ -3056,15 +3031,12 @@ let (destruct_sq_base_table :
   [((Prims.of_int (2)),
      [(FStar_Parser_Const.c_and_lid, FStar_Parser_Const.and_lid);
      (FStar_Parser_Const.c_or_lid, FStar_Parser_Const.or_lid);
-     (FStar_Parser_Const.c_eq2_lid, FStar_Parser_Const.c_eq2_lid);
-     (FStar_Parser_Const.c_eq3_lid, FStar_Parser_Const.c_eq3_lid)]);
+     (FStar_Parser_Const.c_eq2_lid, FStar_Parser_Const.c_eq2_lid)]);
   ((Prims.of_int (3)),
     [(FStar_Parser_Const.c_eq2_lid, FStar_Parser_Const.c_eq2_lid)]);
-  ((Prims.of_int (4)),
-    [(FStar_Parser_Const.c_eq3_lid, FStar_Parser_Const.c_eq3_lid)]);
   (Prims.int_zero,
     [(FStar_Parser_Const.c_true_lid, FStar_Parser_Const.true_lid);
-    (FStar_Parser_Const.c_false_lid, FStar_Parser_Const.false_lid)])]
+    (FStar_Parser_Const.empty_type_lid, FStar_Parser_Const.false_lid)])]
 let (destruct_typ_as_formula :
   FStar_Syntax_Syntax.term -> connective FStar_Pervasives_Native.option) =
   fun f ->
@@ -4062,8 +4034,18 @@ let rec (unbound_variables :
           let uu___3 =
             match asc_opt with
             | FStar_Pervasives_Native.None -> []
-            | FStar_Pervasives_Native.Some asc ->
-                unbound_variables_ascription asc in
+            | FStar_Pervasives_Native.Some (b, asc) ->
+                let uu___4 = FStar_Syntax_Subst.open_ascription [b] asc in
+                (match uu___4 with
+                 | (bs, asc1) ->
+                     let uu___5 =
+                       FStar_Compiler_List.collect
+                         (fun b1 ->
+                            unbound_variables
+                              (b1.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort)
+                         bs in
+                     let uu___6 = unbound_variables_ascription asc1 in
+                     FStar_Compiler_List.op_At uu___5 uu___6) in
           let uu___4 =
             FStar_Compiler_Effect.op_Bar_Greater pats
               (FStar_Compiler_List.collect

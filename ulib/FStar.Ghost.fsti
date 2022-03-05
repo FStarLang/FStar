@@ -41,7 +41,7 @@ module FStar.Ghost
 /// [reveal] and [hide] are coercions: the typechecker will
 /// automatically insert them when required. That is, if the type of
 /// an expression is [erased X], and the expected type is NOT an
-/// [erased Y], it will insert [reveal], and viceversa for [hide].
+/// [erased Y], it will insert [reveal], and vice versa for [hide].
 
 (** [erased t] is the computationally irrelevant counterpart of [t] *)
 [@@ erasable]

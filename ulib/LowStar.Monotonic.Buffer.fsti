@@ -253,7 +253,7 @@ val mbuffer_injectivity_in_first_preorder (_:unit)
   : Lemma (forall (a:Type0) (rrel1 rrel2 rel1 rel2:srel a)
              (b1:mbuffer a rrel1 rel1)
 	     (b2:mbuffer a rrel2 rel2).
-	     rrel1 =!= rrel2 ==> ~ (eq3 b1 b2))
+	     rrel1 =!= rrel2 ==> ~ (b1 === b2))
 
 /// Before defining sub-buffer related API, we need to define the notion of "compatibility"
 ///
@@ -2065,7 +2065,7 @@ let freeable_disjoint' (#a1 #a2:Type0) (#rrel1 #rel1:srel a1) (#rrel2 #rel2:srel
  *   while heap dependent postconditions are provided in the ensures clause
  *
  *   One unsatisfying aspect is that these functions are duplicated in the wrappers that we write
- *   (e.g. Buffer, Immutablebuffer, etc.)
+ *   (e.g. Buffer, ImmutableBuffer, etc.)
  *   If we don't duplicate, then the clients may face type inference issues (for preorders)
  *
  *   So, if you change any of the pre- or postcondition, you should change the pre and post spec functions
@@ -2077,7 +2077,7 @@ let freeable_disjoint' (#a1 #a2:Type0) (#rrel1 #rel1:srel a1) (#rrel2 #rel2:srel
  *   For memory dependent post, alloc_post_mem_common is the one used by everyone
  *
  *   For heap allocations, the library also provides partial functions that could return null
- *     Clients need to explicitly check for non-nullness when using these functions
+ *     Clients need to explicitly check for non-null values when using these functions
  *     Partial function specs use alloc_partial_post_mem_common
  *
  *   NOTE: a useful test for the implementation of partial functions is that

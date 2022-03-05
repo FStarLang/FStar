@@ -269,7 +269,7 @@ let rec lemma_merge_merge_opt_equivalence_helper_same (#n:nat) (uf:uf_forest n) 
                     let p_1, _ = reify (find uf j_1 h) h in
 
                     r_1 <> r_2 /\ height uf r_1 h >= height uf r_2 h /\  //consider only the case where the behavior of merge and merge_opt differs
-		    (p_1 = r_1 \/ p_1 = r_2)))  //j_1 is in one of the two componenets being merged
+		    (p_1 = r_1 \/ p_1 = r_2)))  //j_1 is in one of the two components being merged
          (ensures  (let r_1, _ = reify (find uf i_1 h) h in
 	            let r_2, _ = reify (find uf i_2 h) h in
 	 

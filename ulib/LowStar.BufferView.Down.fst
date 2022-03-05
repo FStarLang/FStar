@@ -78,12 +78,12 @@ let indexing' (#a #b: _) (v:view a b) (len_as:nat) (i:nat{i < len_as * View?.n v
 let indexing #b vb i = indexing' (get_view vb) (B.length (as_buffer vb)) i
 
 let sel' (#a #b: _) (v:view a b)
-         (as:Seq.seq a)
-         (i:nat{i / View?.n v < Seq.length as})
+         (es:Seq.seq a)
+         (i:nat{i / View?.n v < Seq.length es})
    : GTot b
    = let n = View?.n v in
      let a_i = i / n in
-     let bs = View?.get v (Seq.index as a_i) in
+     let bs = View?.get v (Seq.index es a_i) in
      Seq.index bs (i % n)
 
 let sel (#b: _)
@@ -92,9 +92,9 @@ let sel (#b: _)
         (i:nat{i < length vb})
    : GTot b
    = indexing vb i;
-     let as = B.as_seq h (as_buffer vb) in
+     let es = B.as_seq h (as_buffer vb) in
      let v = get_view vb in
-     sel' v as i
+     sel' v es i
 
 let lemma_g_upd_with_same_seq (#a:Type0) (#rrel #rel:srel a) (b:mbuffer a rrel rel) (h:HS.mem{B.live h b}) (s:_)
   : Lemma (Seq.equal s (B.as_seq h b) ==>
@@ -129,17 +129,17 @@ val upd' (#b: _)
 #push-options "--z3rlimit_factor 8"
 let upd' #b h vb i x =
     indexing vb i;
-    let as = B.as_seq h (as_buffer vb) in
+    let es = B.as_seq h (as_buffer vb) in
     let v = get_view vb in
     let n = View?.n v in
     let a_i = i / n in
-    let bs = View?.get v (Seq.index as a_i) in
+    let bs = View?.get v (Seq.index es a_i) in
     let bs' = Seq.upd bs (i % n) x in
     assert (x == sel h vb i ==> Seq.equal bs bs');
     let a' = View?.put v bs' in
     let mem = B.g_upd (as_buffer vb) a_i a' h in
-    B.g_upd_seq_as_seq (as_buffer vb) (Seq.upd as a_i a') h;
-    lemma_g_upd_with_same_seq (as_buffer vb) h (Seq.upd as a_i a');
+    B.g_upd_seq_as_seq (as_buffer vb) (Seq.upd es a_i a') h;
+    lemma_g_upd_with_same_seq (as_buffer vb) h (Seq.upd es a_i a');
     mem
 #pop-options
 
@@ -157,14 +157,14 @@ let rec seq_fold_right_gtot #a #b (s:Seq.seq a) (f:a -> b -> GTot b) (acc:b)
 let cons_view #a #b (v:view a b) (x:a) (tl:Seq.seq b) : GTot (Seq.seq b) =
   Seq.append (View?.get v x) tl
 
-let as_seq' (#a #b:_) (as:Seq.seq a) (v:view a b) : GTot (Seq.seq b) =
-  seq_fold_right_gtot #a #(Seq.seq b) as (cons_view #a #b v) Seq.empty
+let as_seq' (#a #b:_) (es:Seq.seq a) (v:view a b) : GTot (Seq.seq b) =
+  seq_fold_right_gtot #a #(Seq.seq b) es (cons_view #a #b v) Seq.empty
 
-let rec as_seq'_len (#a #b:_) (as:Seq.seq a) (v:view a b)
-  : Lemma (ensures (Seq.length (as_seq' as v) == View?.n v * Seq.length as))
-          (decreases (Seq.length as))
-  = if Seq.length as = 0 then ()
-    else as_seq'_len (Seq.tail as) v
+let rec as_seq'_len (#a #b:_) (es:Seq.seq a) (v:view a b)
+  : Lemma (ensures (Seq.length (as_seq' es v) == View?.n v * Seq.length es))
+          (decreases (Seq.length es))
+  = if Seq.length es = 0 then ()
+    else as_seq'_len (Seq.tail es) v
 
 let rec as_seq'_injective #a #b (v:view a b) (as1 as2:Seq.seq a)
   : Lemma
@@ -189,36 +189,36 @@ let rec as_seq'_injective #a #b (v:view a b) (as1 as2:Seq.seq a)
 
 let as_seq #b h vb =
   let (| a, _, _, BufferView buf v |) = vb in
-  let as = B.as_seq h buf in
-  let bs = as_seq' #a #b as v in
-  as_seq'_len as v;
+  let es = B.as_seq h buf in
+  let bs = as_seq' #a #b es v in
+  as_seq'_len es v;
   bs
 
 #push-options "--max_ifuel 0"
-val sel'_tail (#a #b:_) (v:view a b) (as:Seq.seq a{Seq.length as > 0})
-              (i:nat{View?.n v <= i /\ i < Seq.length as * View?.n v})
+val sel'_tail (#a #b:_) (v:view a b) (es:Seq.seq a{Seq.length es > 0})
+              (i:nat{View?.n v <= i /\ i < Seq.length es * View?.n v})
   : Lemma (let j = i - View?.n v in
-           sel' v as i == sel' v (Seq.tail as) j)
-let sel'_tail #a #b v as i =
-  let len_as = Seq.length as in
+           sel' v es i == sel' v (Seq.tail es) j)
+let sel'_tail #a #b v es i =
+  let len_as = Seq.length es in
   indexing' v len_as i;
   let n = View?.n v in
   let j = i - n in
   let a_i = i / n in
-  assert (sel' v as i == Seq.index (View?.get v (Seq.index as a_i)) (i % n));
+  assert (sel' v es i == Seq.index (View?.get v (Seq.index es a_i)) (i % n));
   FStar.Math.Lemmas.lemma_mod_sub i n 1;
   FStar.Math.Lemmas.add_div_mod_1 j n;
   assert (j / n == (i / n) - 1)
 
 val as_seq'_sel' (#a #b: _)
                  (v:view a b)
-                 (as:Seq.seq a)
-                 (i:nat{i < Seq.length as * View?.n v})
+                 (es:Seq.seq a)
+                 (i:nat{i < Seq.length es * View?.n v})
   : Lemma
      (ensures (
-       as_seq'_len as v;
-       sel' v as i == Seq.index (as_seq' as v) i))
-     (decreases (Seq.length as))
+       as_seq'_len es v;
+       sel' v es i == Seq.index (as_seq' es v) i))
+     (decreases (Seq.length es))
 
 //flaky
 #reset-options
@@ -227,74 +227,74 @@ val as_seq'_sel' (#a #b: _)
 #set-options "--smtencoding.nl_arith_repr wrapped"
 #set-options "--z3rlimit_factor 10" //just being conservative
 #set-options "--initial_fuel 1 --max_fuel 1 --max_ifuel 0"
-let rec as_seq'_sel' #a #b v as i =
-  as_seq'_len as v;
+let rec as_seq'_sel' #a #b v es i =
+  as_seq'_len es v;
   let n : pos = View?.n v in
-  assert (i / n < Seq.length as);
-  if Seq.length as = 0 then ()
-  else let bs = as_seq' as v in
-       assert (Seq.length bs = n + Seq.length (as_seq' (Seq.tail as) v));
+  assert (i / n < Seq.length es);
+  if Seq.length es = 0 then ()
+  else let bs = as_seq' es v in
+       assert (Seq.length bs = n + Seq.length (as_seq' (Seq.tail es) v));
        if (i < n) then
          begin
-           assert (Seq.index bs i == Seq.index (View?.get v (Seq.head as)) i)
+           assert (Seq.index bs i == Seq.index (View?.get v (Seq.head es)) i)
          end
        else
          begin
-           let as' = Seq.tail as in
+           let as' = Seq.tail es in
            as_seq'_len as' v;
            let j = i - n in
            assert (j / n < Seq.length as');
            assert (j < Seq.length (as_seq' as' v));
            as_seq'_sel' v as' j;
            assert (sel' v as' j == Seq.index (as_seq' as' v) j);
-           assert (Seq.index (as_seq' as v) i ==
+           assert (Seq.index (as_seq' es v) i ==
                    Seq.index (as_seq' as' v) j);
-           sel'_tail v as i
+           sel'_tail v es i
          end
 #reset-options
 
 let as_seq_sel #b h vb i =
   indexing vb i;
   let (| a, _, _, BufferView buf v |) = vb in
-  let as = B.as_seq h buf in
-  as_seq'_len as v;
-  as_seq'_sel' v as i
+  let es = B.as_seq h buf in
+  as_seq'_len es v;
+  as_seq'_sel' v es i
 
 let get_sel #b h vb i = as_seq_sel h vb i
 
 val as_seq'_slice (#a #b: _)
                   (v:view a b)
-                  (as:Seq.seq a)
-                  (i:nat{i < Seq.length as * View?.n v})
+                  (es:Seq.seq a)
+                  (i:nat{i < Seq.length es * View?.n v})
   : Lemma
     (ensures (
-      as_seq'_len as v;
-      indexing' v (Seq.length as) i;
+      as_seq'_len es v;
+      indexing' v (Seq.length es) i;
       let n = View?.n v in
-      View?.get v (Seq.index as (i / n)) ==
-      Seq.slice (as_seq' as v) (n * (i /n)) (n * (i / n) + n)))
-    (decreases (Seq.length as))
+      View?.get v (Seq.index es (i / n)) ==
+      Seq.slice (as_seq' es v) (n * (i /n)) (n * (i / n) + n)))
+    (decreases (Seq.length es))
 
 #push-options "--z3rlimit 100"
-let rec as_seq'_slice #a #b v as i =
+let rec as_seq'_slice #a #b v es i =
   let n = View?.n v in
-  if Seq.length as = 0 then ()
-  else let bs = as_seq' as v in
+  if Seq.length es = 0 then ()
+  else let bs = as_seq' es v in
        if i < n then
          begin
-         assert (View?.get v (Seq.index as (i / n)) `Seq.equal`
-                 Seq.slice (as_seq' as v) (n * (i /n)) (n * (i / n) + n))
+         assert (View?.get v (Seq.index es (i / n)) `Seq.equal`
+                 Seq.slice (as_seq' es v) (n * (i /n)) (n * (i / n) + n))
          end
-       else let as' = Seq.tail as in
+       else let as' = Seq.tail es in
             let j  = i - n in
-            as_seq'_slice v (Seq.tail as) (i - n);
+            as_seq'_slice v (Seq.tail es) (i - n);
             as_seq'_len as' v;
             indexing' v (Seq.length as') j;
             FStar.Math.Lemmas.add_div_mod_1 j n;
             assert (View?.get v (Seq.index as' (j / n)) `Seq.equal`
                     Seq.slice (as_seq' as' v) (n * (j / n)) (n * (j / n) + n));
             assert (Seq.slice (as_seq' as' v) (n * (j / n)) (n * (j / n) + n) `Seq.equal`
-                    Seq.slice (as_seq' as v) (n * (j / n) + n) (n * (j / n) + n + n));
+                    Seq.slice (as_seq' es v) (n * (j / n) + n) (n * (j / n) + n + n));
             FStar.Math.Lemmas.add_div_mod_1 j n;
             assert (j / n == i / n - 1)
 #pop-options
@@ -303,11 +303,11 @@ let put_sel #b h vb i =
     indexing vb i;
     let v = get_view vb in
     let n = View?.n v in
-    let as = (B.as_seq h (as_buffer vb)) in
-    as_seq'_slice v as i;
-    as_seq'_len as v;
-    assert (View?.put v (View?.get v (Seq.index as (i / n))) ==
-            View?.put v (Seq.slice (as_seq' as v) (n * (i /n)) (n * (i / n) + n)))
+    let es = (B.as_seq h (as_buffer vb)) in
+    as_seq'_slice v es i;
+    as_seq'_len es v;
+    assert (View?.put v (View?.get v (Seq.index es (i / n))) ==
+            View?.put v (Seq.slice (as_seq' es v) (n * (i /n)) (n * (i / n) + n)))
 
 let rec upd_seq' (#a #b: _) (v:view a b) (s:Seq.seq b{Seq.length s % View?.n v = 0}) (acc:Seq.seq a)
   : GTot (Seq.lseq a (Seq.length acc + Seq.length s / View?.n v))
@@ -316,14 +316,14 @@ let rec upd_seq' (#a #b: _) (v:view a b) (s:Seq.seq b{Seq.length s % View?.n v =
   if Seq.length s = 0 then acc
   else let pfx, suffix = Seq.split s n in
        Math.lemma_mod_sub (Seq.length s) n 1;
-       let as = upd_seq' v suffix acc in
-       Seq.cons (View?.put v pfx) as
+       let es = upd_seq' v suffix acc in
+       Seq.cons (View?.put v pfx) es
 
 let upd_seq #b h vb s =
   let (| a, _, _, BufferView b v |) = vb in
   Math.cancel_mul_mod (B.length b) (View?.n v);
-  let as : Seq.seq a = upd_seq' v s Seq.empty in
-  B.g_upd_seq b as h
+  let es : Seq.seq a = upd_seq' v s Seq.empty in
+  B.g_upd_seq b es h
 
 let as_seq'_cons (#a #b:_) (v:view a b) (hd:a) (tl:Seq.seq a)
   : Lemma (as_seq' (Seq.cons hd tl) v == View?.get v hd `Seq.append` as_seq' tl v)
@@ -334,8 +334,8 @@ let as_seq'_cons (#a #b:_) (v:view a b) (hd:a) (tl:Seq.seq a)
 let rec upd_seq'_spec (#a #b: _) (v:view a b) (s:Seq.seq b{Seq.length s % View?.n v = 0}) (acc:Seq.seq a)
   : Lemma
       (ensures (
-        let as = upd_seq' v s acc in
-        as_seq' as v `Seq.equal` Seq.append s (as_seq' acc v)))
+        let es = upd_seq' v s acc in
+        as_seq' es v `Seq.equal` Seq.append s (as_seq' acc v)))
       (decreases (Seq.length s))
   = if Seq.length s = 0 then ()
     else let n = View?.n v in
@@ -345,24 +345,24 @@ let rec upd_seq'_spec (#a #b: _) (v:view a b) (s:Seq.seq b{Seq.length s % View?.
          as_seq'_slice v (upd_seq' v s acc) 0;
          let as' = upd_seq' v suffix acc in
          assert (as_seq' as' v `Seq.equal` Seq.append suffix (as_seq' acc v));
-         let as = upd_seq' v s acc in
-         assert (as `Seq.equal` Seq.cons (View?.put v pfx) as');
+         let es = upd_seq' v s acc in
+         assert (es `Seq.equal` Seq.cons (View?.put v pfx) as');
          as_seq'_cons v (View?.put v pfx) as'
 
 #set-options "--z3rlimit 20"
 let upd_seq_spec (#b: _) (h:HS.mem) (vb:buffer b{live h vb}) (s:Seq.seq b{Seq.length s = length vb})
   = let h' = upd_seq h vb s in
     Math.cancel_mul_mod (B.length (as_buffer vb)) (View?.n (get_view vb));
-    let as = upd_seq' (get_view vb) s Seq.empty in
-    B.g_upd_seq_as_seq (as_buffer vb) as h;
-    lemma_g_upd_with_same_seq (as_buffer vb) h as;
+    let es = upd_seq' (get_view vb) s Seq.empty in
+    B.g_upd_seq_as_seq (as_buffer vb) es h;
+    lemma_g_upd_with_same_seq (as_buffer vb) h es;
     assert (FStar.HyperStack.ST.equal_domains h h');
     assert (modifies vb h h');
     upd_seq'_spec (get_view vb) s Seq.empty;
     assert (as_seq h' vb `Seq.equal` s);
     assert (as_seq h vb == as_seq' (B.as_seq h (as_buffer vb)) (get_view vb));
     assert (as_seq h' vb == s);
-    assert (as == B.as_seq h' (as_buffer vb));
+    assert (es == B.as_seq h' (as_buffer vb));
     let v= get_view vb in
     FStar.Classical.forall_intro_2 (fun as1 as2 ->
       Classical.move_requires (as_seq'_injective v as1) as2

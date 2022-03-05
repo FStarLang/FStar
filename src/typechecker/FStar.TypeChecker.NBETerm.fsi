@@ -76,7 +76,7 @@ type atom
        // 1. the scrutinee
        t *
        // 2. reconstruct the returns annotation
-       (unit -> option<ascription>) *
+       (unit -> option<match_returns_ascription>) *
        // 3. reconstructs the pattern matching, if it needs to be readback
        (unit -> list<branch>) *
        // 4. reconstruct the residual comp if set
@@ -220,7 +220,7 @@ val mkConstruct : fv -> list<universe> -> args -> t
 val mkFV : fv -> list<universe> -> args -> t
 
 val mkAccuVar : var -> t
-val mkAccuMatch : t -> (unit -> option<ascription>) -> (unit -> list<branch>) -> (unit -> option<S.residual_comp>) -> t
+val mkAccuMatch : t -> (unit -> option<match_returns_ascription>) -> (unit -> list<branch>) -> (unit -> option<S.residual_comp>) -> t
 
 val as_arg : t -> arg
 val as_iarg : t -> arg
@@ -336,7 +336,6 @@ val list_of_string' : (string -> t)
 
 val decidable_eq : bool -> args -> option<t>
 val interp_prop_eq2 : args -> option<t>
-val interp_prop_eq3 : args -> option<t>
 
 val mixed_binary_op : (arg -> option<'a>) -> (arg -> option<'b>) -> ('c -> t) ->
                       ('a -> 'b -> option<'c>) -> args -> option<t>

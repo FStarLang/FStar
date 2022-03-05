@@ -82,7 +82,7 @@ let enxor_h0_h1
   HS.(is_stack_region h0.tip) /\
   HS.(is_stack_region h1.tip) /\    //the tip of the stack is not root
   enxor_pre aead_st nonce aad plain cipher h0                 /\          //enxor_pre holds for h0
-  enc_dec_liveness_and_separation aead_st aad plain cipher_tagged h1 /\   //liveness and separation ghold in h1
+  enc_dec_liveness_and_separation aead_st aad plain cipher_tagged h1 /\   //liveness and separation hold in h1
   (safeMac i ==>  (
      let prf = itable i aead_st.prf in
      let table_0 = HS.sel h0 prf in

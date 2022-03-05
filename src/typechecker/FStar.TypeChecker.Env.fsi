@@ -57,6 +57,7 @@ type step =
   | Unascribe
   | NBE
   | ForExtraction   //marking an invocation of the normalizer for extraction
+  | Unrefine
 and steps = list<step>
 
 val eq_step : step -> step -> bool
@@ -107,7 +108,7 @@ and mlift = {
   mlift_term:option<(universe -> typ -> term -> term)>
 }
 
-(* 
+(*
  * Edge in the effect lattice
  *
  * May have been computed by composing other "edges"
@@ -204,16 +205,17 @@ and env = {
 
 and solver_depth_t = int * int * int
 and solver_t = {
-    init         :env -> unit;
-    push         :string -> unit;
-    pop          :string -> unit;
-    snapshot     :string -> (solver_depth_t * unit);
-    rollback     :string -> option<solver_depth_t> -> unit;
-    encode_sig   :env -> sigelt -> unit;
-    preprocess   :env -> goal -> list<(env * goal * FStar.Options.optionstate)>;
-    solve        :option<(unit -> string)> -> env -> goal -> unit; //call to the smt solver
-    finish       :unit -> unit;
-    refresh      :unit -> unit;
+    init            :env -> unit;
+    push            :string -> unit;
+    pop             :string -> unit;
+    snapshot        :string -> (solver_depth_t * unit);
+    rollback        :string -> option<solver_depth_t> -> unit;
+    encode_sig      :env -> sigelt -> unit;
+    preprocess      :env -> goal -> list<(env * goal * FStar.Options.optionstate)>;
+    handle_smt_goal :env -> goal -> list<(env * goal)>;
+    solve           :option<(unit -> string)> -> env -> goal -> unit; //call to the smt solver
+    finish          :unit -> unit;
+    refresh         :unit -> unit;
 }
 and tcenv_hooks =
   { tc_push_in_gamma_hook : (env -> either<binding, sig_binding> -> unit) }

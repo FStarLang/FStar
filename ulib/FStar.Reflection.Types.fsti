@@ -28,7 +28,8 @@ assume new type ctx_uvar_and_subst
 assume new type letbinding
 
 type name : eqtype = list string
-type ident = range * string
+type ident = string * range
 type univ_name = ident
 type typ     = term
 type binders = list binder
+type match_returns_ascription = binder & (either term comp & option term)

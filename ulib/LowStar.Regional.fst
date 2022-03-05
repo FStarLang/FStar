@@ -94,7 +94,7 @@ noeq type regional (st:Type) (a:Type0) =
     repr: Type0 ->
     r_repr: (h:HS.mem -> v:a{r_inv h v} -> GTot repr) ->
 
-    // A core separation lemma, saying that the invariant and represenation are
+    // A core separation lemma, saying that the invariant and representation are
     // preserved when an orthogonal state transition happens.
     r_sep:
       (v:a -> p:loc -> h:HS.mem -> h':HS.mem ->

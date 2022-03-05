@@ -115,10 +115,10 @@ let rec memP_append_aux #a (x: a) (l: list a) :
            let pf : squash (x == h \/ List.memP x t) = () in
            p <-- FStar.Squash.join_squash pf ;
            match p with 
-           | Left x_eq_h -> 
+           | Prims.Left x_eq_h -> 
              let l12 = [], t in
              assert (l == (fst l12) @ (x :: snd l12)) //trigger
-           | Right mem_x_t -> 
+           | Prims.Right mem_x_t -> 
              FStar.Classical.exists_elim 
                  goal
                  (pure_as_squash (memP_append_aux x) t)

@@ -16,7 +16,7 @@
 module Embeddings
 
 (* Tests for generating bindings to native tactics with correct calls to the
-   embedding and unembedding functions for the types supported in tactic compilaton.
+   embedding and unembedding functions for the types supported in tactic compilation.
    Tactics should be generated without warnings and compile without errors.
 *)
 

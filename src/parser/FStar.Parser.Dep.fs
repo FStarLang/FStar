@@ -923,12 +923,18 @@ let collect_one
             collect_term t2
         | If (t1, ret_opt, t2, t3) ->
             collect_term t1;
-            iter_opt ret_opt collect_term;
+            (match ret_opt with
+             | None -> ()
+             | Some (_, ret) ->
+               collect_term ret);
             collect_term t2;
             collect_term t3
         | Match (t, ret_opt, bs) ->
             collect_term t;
-            iter_opt ret_opt collect_term;
+            (match ret_opt with
+             | None -> ()
+             | Some (_, ret) ->
+               collect_term ret);
             collect_branches bs
         | TryWith (t, bs) ->
             collect_term t;

@@ -34,7 +34,7 @@ LowStar.Ex1.fst \
 LowStar.Ex2.fst \
 LowStar.Ex3.fst
 
-include ../Makefile.include
+include ../../../Makefile.include
 
 verify-%: __force__
 	$(FSTAR) --include $(FSTAR_CONTRIB)/Platform/fst --include $(FSTAR_CONTRIB)/CoreCrypto/fst $*

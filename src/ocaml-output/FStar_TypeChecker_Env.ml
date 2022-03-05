@@ -29,6 +29,7 @@ type step =
   | Unascribe 
   | NBE 
   | ForExtraction 
+  | Unrefine 
 let (uu___is_Beta : step -> Prims.bool) =
   fun projectee -> match projectee with | Beta -> true | uu___ -> false
 let (uu___is_Iota : step -> Prims.bool) =
@@ -114,6 +115,8 @@ let (uu___is_NBE : step -> Prims.bool) =
 let (uu___is_ForExtraction : step -> Prims.bool) =
   fun projectee ->
     match projectee with | ForExtraction -> true | uu___ -> false
+let (uu___is_Unrefine : step -> Prims.bool) =
+  fun projectee -> match projectee with | Unrefine -> true | uu___ -> false
 type steps = step Prims.list
 let rec (eq_step : step -> step -> Prims.bool) =
   fun s1 ->
@@ -142,6 +145,7 @@ let rec (eq_step : step -> step -> Prims.bool) =
       | (Unmeta, Unmeta) -> true
       | (Unascribe, Unascribe) -> true
       | (NBE, NBE) -> true
+      | (Unrefine, Unrefine) -> true
       | (Exclude s11, Exclude s21) -> eq_step s11 s21
       | (UnfoldUntil s11, UnfoldUntil s21) -> s11 = s21
       | (UnfoldOnly lids1, UnfoldOnly lids2) ->
@@ -351,6 +355,7 @@ and solver_t =
   encode_sig: env -> FStar_Syntax_Syntax.sigelt -> unit ;
   preprocess:
     env -> goal -> (env * goal * FStar_Options.optionstate) Prims.list ;
+  handle_smt_goal: env -> goal -> (env * goal) Prims.list ;
   solve:
     (unit -> Prims.string) FStar_Pervasives_Native.option ->
       env -> FStar_Syntax_Syntax.typ -> unit
@@ -1206,24 +1211,24 @@ let (__proj__Mkenv__item__erase_erasable_args : env -> Prims.bool) =
 let (__proj__Mksolver_t__item__init : solver_t -> env -> unit) =
   fun projectee ->
     match projectee with
-    | { init; push; pop; snapshot; rollback; encode_sig; preprocess; 
-        solve; finish; refresh;_} -> init
+    | { init; push; pop; snapshot; rollback; encode_sig; preprocess;
+        handle_smt_goal; solve; finish; refresh;_} -> init
 let (__proj__Mksolver_t__item__push : solver_t -> Prims.string -> unit) =
   fun projectee ->
     match projectee with
-    | { init; push; pop; snapshot; rollback; encode_sig; preprocess; 
-        solve; finish; refresh;_} -> push
+    | { init; push; pop; snapshot; rollback; encode_sig; preprocess;
+        handle_smt_goal; solve; finish; refresh;_} -> push
 let (__proj__Mksolver_t__item__pop : solver_t -> Prims.string -> unit) =
   fun projectee ->
     match projectee with
-    | { init; push; pop; snapshot; rollback; encode_sig; preprocess; 
-        solve; finish; refresh;_} -> pop
+    | { init; push; pop; snapshot; rollback; encode_sig; preprocess;
+        handle_smt_goal; solve; finish; refresh;_} -> pop
 let (__proj__Mksolver_t__item__snapshot :
   solver_t -> Prims.string -> ((Prims.int * Prims.int * Prims.int) * unit)) =
   fun projectee ->
     match projectee with
-    | { init; push; pop; snapshot; rollback; encode_sig; preprocess; 
-        solve; finish; refresh;_} -> snapshot
+    | { init; push; pop; snapshot; rollback; encode_sig; preprocess;
+        handle_smt_goal; solve; finish; refresh;_} -> snapshot
 let (__proj__Mksolver_t__item__rollback :
   solver_t ->
     Prims.string ->
@@ -1232,22 +1237,28 @@ let (__proj__Mksolver_t__item__rollback :
   =
   fun projectee ->
     match projectee with
-    | { init; push; pop; snapshot; rollback; encode_sig; preprocess; 
-        solve; finish; refresh;_} -> rollback
+    | { init; push; pop; snapshot; rollback; encode_sig; preprocess;
+        handle_smt_goal; solve; finish; refresh;_} -> rollback
 let (__proj__Mksolver_t__item__encode_sig :
   solver_t -> env -> FStar_Syntax_Syntax.sigelt -> unit) =
   fun projectee ->
     match projectee with
-    | { init; push; pop; snapshot; rollback; encode_sig; preprocess; 
-        solve; finish; refresh;_} -> encode_sig
+    | { init; push; pop; snapshot; rollback; encode_sig; preprocess;
+        handle_smt_goal; solve; finish; refresh;_} -> encode_sig
 let (__proj__Mksolver_t__item__preprocess :
   solver_t ->
     env -> goal -> (env * goal * FStar_Options.optionstate) Prims.list)
   =
   fun projectee ->
     match projectee with
-    | { init; push; pop; snapshot; rollback; encode_sig; preprocess; 
-        solve; finish; refresh;_} -> preprocess
+    | { init; push; pop; snapshot; rollback; encode_sig; preprocess;
+        handle_smt_goal; solve; finish; refresh;_} -> preprocess
+let (__proj__Mksolver_t__item__handle_smt_goal :
+  solver_t -> env -> goal -> (env * goal) Prims.list) =
+  fun projectee ->
+    match projectee with
+    | { init; push; pop; snapshot; rollback; encode_sig; preprocess;
+        handle_smt_goal; solve; finish; refresh;_} -> handle_smt_goal
 let (__proj__Mksolver_t__item__solve :
   solver_t ->
     (unit -> Prims.string) FStar_Pervasives_Native.option ->
@@ -1255,18 +1266,18 @@ let (__proj__Mksolver_t__item__solve :
   =
   fun projectee ->
     match projectee with
-    | { init; push; pop; snapshot; rollback; encode_sig; preprocess; 
-        solve; finish; refresh;_} -> solve
+    | { init; push; pop; snapshot; rollback; encode_sig; preprocess;
+        handle_smt_goal; solve; finish; refresh;_} -> solve
 let (__proj__Mksolver_t__item__finish : solver_t -> unit -> unit) =
   fun projectee ->
     match projectee with
-    | { init; push; pop; snapshot; rollback; encode_sig; preprocess; 
-        solve; finish; refresh;_} -> finish
+    | { init; push; pop; snapshot; rollback; encode_sig; preprocess;
+        handle_smt_goal; solve; finish; refresh;_} -> finish
 let (__proj__Mksolver_t__item__refresh : solver_t -> unit -> unit) =
   fun projectee ->
     match projectee with
-    | { init; push; pop; snapshot; rollback; encode_sig; preprocess; 
-        solve; finish; refresh;_} -> refresh
+    | { init; push; pop; snapshot; rollback; encode_sig; preprocess;
+        handle_smt_goal; solve; finish; refresh;_} -> refresh
 let (__proj__Mktcenv_hooks__item__tc_push_in_gamma_hook :
   tcenv_hooks ->
     env ->
@@ -6197,6 +6208,7 @@ let (dummy_solver : solver_t) =
          fun g ->
            let uu___ = let uu___1 = FStar_Options.peek () in (e, g, uu___1) in
            [uu___]);
+    handle_smt_goal = (fun e -> fun g -> [(e, g)]);
     solve = (fun uu___ -> fun uu___1 -> fun uu___2 -> ());
     finish = (fun uu___ -> ());
     refresh = (fun uu___ -> ())

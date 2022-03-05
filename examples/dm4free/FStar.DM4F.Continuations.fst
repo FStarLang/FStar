@@ -26,7 +26,7 @@ let bind (ans:Type) (a:Type) (b:Type) (m : cont ans a) (f : a -> Tot (cont ans b
                    m (fun (x:a) -> let fx = f x in fx k)
 (* let bind1 a b m f : Tot (cont b) = fun k -> bind a b m f k *)
 
-(* Sum type with explicit type anotations to bypass current lack of implicit arguments *)
+(* Sum type with explicit type annotations to bypass current lack of implicit arguments *)
 noeq type either : Type u#a -> Type u#b -> Type u#(1 + max a b) =
 | L : (a:Type u#a) -> (b:Type u#b) -> a -> either a b
 | R : (a:Type u#a) -> (b:Type u#b) -> b -> either a b

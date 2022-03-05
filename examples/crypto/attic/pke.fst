@@ -22,7 +22,7 @@
    We could further code "events" as membership of increasing mutable
    lists, but this is possibly too advanced for a tutorial *)
 
-module RSA (* trustedd implementation of RSA-OAEP *) 
+module RSA (* trusted implementation of RSA-OAEP *)
 
 assume type pkey
 assume type skey

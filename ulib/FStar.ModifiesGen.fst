@@ -1125,6 +1125,7 @@ let addr_unused_in_aloc_preserved
     (ensures (c.aloc_preserved b h1 h2))
 = c.same_mreference_aloc_preserved b h1 h2 (fun a' pre r' -> assert False)
 
+#push-options "--z3rlimit_factor 2"
 let modifies_only_live_regions_weak
   (#al: aloc_t) (#c: cls al)
   (rs: Set.set HS.rid)
@@ -1139,6 +1140,7 @@ let modifies_only_live_regions_weak
   (ensures (modifies l h h'))
 = assert (modifies_preserves_mreferences l h h'); // FIXME: WHY WHY WHY?
   Classical.forall_intro_3 (fun r a b -> Classical.move_requires (addr_unused_in_aloc_preserved #al #c #r #a b h) h')
+#pop-options
 
 (* Restrict a set of locations along a set of regions *)
 
@@ -1860,7 +1862,7 @@ let union_loc_of_loc_includes_intro
   let doms = aloc_domain (cls_union c) (Loc?.regions smaller) (Loc?.live_addrs smaller) in
   assert (doml `loc_aux_includes` doms)
 
-#reset-options "--z3rlimit 100 --max_fuel 0 --max_ifuel 0 --smtencoding.valid_intro true --smtencoding.valid_elim true"
+#reset-options "--z3rlimit 200 --max_fuel 0 --max_ifuel 0 --smtencoding.valid_intro true --smtencoding.valid_elim true"
 
 let union_loc_of_loc_includes_elim
   (#al: (bool -> HS.rid -> nat -> Tot Type))
@@ -1920,7 +1922,7 @@ let union_loc_of_loc_includes_elim
     (GSet.mem x auxs /\ GSet.mem x.addr (addrs_of_loc_weak smaller x.region)) ==>
     GSet.mem x (GSet.union auxl doml)
   );
-  assert (larger `loc_includes` smaller)
+  assert (larger `loc_includes'` smaller)
 
 #reset-options "--z3cliopt 'smt.qi.eager_threshold=100'"
 

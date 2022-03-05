@@ -73,7 +73,7 @@ let none_to_empty_list x =
 %token FRIEND OPEN REC THEN TRUE TRY TYPE CALC CLASS INSTANCE EFFECT VAL
 %token INTRO ELIM
 %token INCLUDE
-%token WHEN RETURNS WITH HASH AMP LPAREN RPAREN LPAREN_RPAREN COMMA LONG_LEFT_ARROW LARROW RARROW
+%token WHEN AS RETURNS WITH HASH AMP LPAREN RPAREN LPAREN_RPAREN COMMA LONG_LEFT_ARROW LARROW RARROW
 %token IFF IMPLIES CONJUNCTION DISJUNCTION
 %token DOT COLON COLON_COLON SEMICOLON
 %token QMARK_DOT
@@ -678,7 +678,7 @@ term:
       { mk_term (Bind(x, e1, e2)) (rhs2 parseState 1 5) Expr }
 
 match_returning:
-  | RETURNS t=tmIff {t}
+  | as_opt=option(AS i=lident {i}) RETURNS t=tmIff {as_opt,t}
 
 noSeqTerm:
   | t=typ  { t }

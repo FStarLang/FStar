@@ -67,8 +67,7 @@ let (infix_prim_ops : (FStar_Ident.lident * Prims.string) Prims.list) =
   (FStar_Parser_Const.imp_lid, "==>");
   (FStar_Parser_Const.iff_lid, "<==>");
   (FStar_Parser_Const.precedes_lid, "<<");
-  (FStar_Parser_Const.eq2_lid, "==");
-  (FStar_Parser_Const.eq3_lid, "===")]
+  (FStar_Parser_Const.eq2_lid, "==")]
 let (unary_prim_ops : (FStar_Ident.lident * Prims.string) Prims.list) =
   [(FStar_Parser_Const.op_Negation, "not");
   (FStar_Parser_Const.op_Minus, "-");
@@ -663,19 +662,20 @@ and (term_to_string : FStar_Syntax_Syntax.term -> Prims.string) =
                let uu___4 =
                  match asc_opt with
                  | FStar_Pervasives_Native.None -> ""
-                 | FStar_Pervasives_Native.Some (asc, tacopt) ->
-                     let uu___5 =
+                 | FStar_Pervasives_Native.Some (b, (asc, tacopt)) ->
+                     let uu___5 = binder_to_string b in
+                     let uu___6 =
                        match asc with
                        | FStar_Pervasives.Inl t -> term_to_string t
                        | FStar_Pervasives.Inr c -> comp_to_string c in
-                     let uu___6 =
+                     let uu___7 =
                        match tacopt with
                        | FStar_Pervasives_Native.None -> ""
                        | FStar_Pervasives_Native.Some tac ->
-                           let uu___7 = term_to_string tac in
-                           FStar_Compiler_Util.format1 " by %s" uu___7 in
-                     FStar_Compiler_Util.format2 "returns %s%s " uu___5
-                       uu___6 in
+                           let uu___8 = term_to_string tac in
+                           FStar_Compiler_Util.format1 " by %s" uu___8 in
+                     FStar_Compiler_Util.format3 "as %s returns %s%s " uu___5
+                       uu___6 uu___7 in
                let uu___5 =
                  let uu___6 =
                    FStar_Compiler_Effect.op_Bar_Greater branches

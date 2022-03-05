@@ -13,7 +13,7 @@
         "refinement_interpretation_Tm_refine_e357af150cfcd9684beb853ff130a9db"
       ],
       0,
-      "e2f337c2bc3927f95c589fb3af3193d1"
+      "996f63903a8043c3952315340d8f067a"
     ],
     [
       "Steel.FractionalAnchoredPreorder.initial_value",
@@ -46,7 +46,7 @@
         "true_interp"
       ],
       0,
-      "7d1d2d5fa9eb39082843366a0d2d07f2"
+      "fdf08cf5de351fd11cae386ed546a1cd"
     ],
     [
       "Steel.FractionalAnchoredPreorder.__proj__Owns__item___0",
@@ -58,7 +58,7 @@
         "refinement_interpretation_Tm_refine_fd8ddb33aa4a2f310fec06ee36e08b23"
       ],
       0,
-      "a98648d3ab988bb1a79e384d4a0f083a"
+      "28f225d4f9c3588c97f77f0e34473418"
     ],
     [
       "Steel.FractionalAnchoredPreorder.b2p",
@@ -72,7 +72,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "762938554e83f287601b99f563b35c58"
+      "5b42eb8f1742749b86d8c9f907037116"
     ],
     [
       "Steel.FractionalAnchoredPreorder.perm_opt_composable",
@@ -95,7 +95,7 @@
         "typing_tok_Prims.T@tok"
       ],
       0,
-      "80c4c844fed53ea5b824c61f57445cce"
+      "7a9ff5f54e06209711cdddcc2e9582c0"
     ],
     [
       "Steel.FractionalAnchoredPreorder.compose_perm_opt",
@@ -111,7 +111,7 @@
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2"
       ],
       0,
-      "394883860cabeff946837865dbbba1ba"
+      "5cb75949ba09815395d81fc8200ea14b"
     ],
     [
       "Steel.FractionalAnchoredPreorder.permission_composable",
@@ -126,7 +126,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "b85b02890c87a89a1ba859585bed40f5"
+      "843ab728379dd186acf4f68848c79105"
     ],
     [
       "Steel.FractionalAnchoredPreorder.compose_permissions",
@@ -151,7 +151,7 @@
         "typing_FStar.Pervasives.Native.snd"
       ],
       0,
-      "9f5c4755f760a34a5de1aa6adedb8ee2"
+      "e3fac952a5509337bb784ff28e452862"
     ],
     [
       "Steel.FractionalAnchoredPreorder.avalue_composable",
@@ -180,7 +180,7 @@
         "typing_Steel.FractionalAnchoredPreorder.has_some_ownership"
       ],
       0,
-      "4258c9016fea56fe5cd6c567a87dcfef"
+      "963723e683a4cb4f6c6a20e4af2c976d"
     ],
     [
       "Steel.FractionalAnchoredPreorder.composable",
@@ -245,7 +245,7 @@
         "typing_FStar.Pervasives.Native.fst", "typing_tok_Prims.T@tok"
       ],
       0,
-      "2af589e41241daa059c9c97c9d8de9fa"
+      "3ed4a09ad30fdb187da5064048b621b4"
     ],
     [
       "Steel.FractionalAnchoredPreorder.compose_avalue",
@@ -316,7 +316,7 @@
         "typing_Steel.Preorder.vhist"
       ],
       0,
-      "b6aaa994b05de30333fa9597269ad093"
+      "69361b4c5494b09845e7e5c49b3c931f"
     ],
     [
       "Steel.FractionalAnchoredPreorder.compose_avalue_comm",
@@ -397,7 +397,7 @@
         "typing_Steel.Preorder.p_op", "typing_Steel.Preorder.vhist"
       ],
       0,
-      "fca12bdc08ba0bc53ab32e25821fbeb0"
+      "78667dce7561aead882eda51a156ea5f"
     ],
     [
       "Steel.FractionalAnchoredPreorder.avalue_composable_assoc_l",
@@ -406,7 +406,7 @@
       2,
       [ "@query" ],
       0,
-      "02b2cf8ad37b19f3e98b114f2bf9348d"
+      "092c966f5f7072d4faed447e149f7263"
     ],
     [
       "Steel.FractionalAnchoredPreorder.avalue_composable_assoc_l",
@@ -515,7 +515,7 @@
         "typing_Steel.Preorder.vhist"
       ],
       0,
-      "d796684536264a39c9b036a708cb298f"
+      "f1794b138d6fd25518fa4776909128d7"
     ],
     [
       "Steel.FractionalAnchoredPreorder.compose_avalue_assoc_l",
@@ -524,7 +524,7 @@
       2,
       [ "@query" ],
       0,
-      "36de55db434abfdf7171faf0fbf495ca"
+      "0a349bc16dbd6f9a2202ca6e979cd11f"
     ],
     [
       "Steel.FractionalAnchoredPreorder.compose_avalue_assoc_l",
@@ -614,7 +614,7 @@
         "typing_Steel.Preorder.p_op", "typing_Steel.Preorder.vhist"
       ],
       0,
-      "e6aa9bb997ae896aaf9630bd12079b02"
+      "53ba085f2e838dfeb24a8195593cc0e2"
     ],
     [
       "Steel.FractionalAnchoredPreorder.avalue_composable_assoc_r",
@@ -623,7 +623,7 @@
       2,
       [ "@query" ],
       0,
-      "ac6e9994cb9b3928dc19ef04eac4f32a"
+      "57e7d9d7324cefe48c29b6a721de403c"
     ],
     [
       "Steel.FractionalAnchoredPreorder.avalue_composable_assoc_r",
@@ -732,7 +732,7 @@
         "typing_Steel.Preorder.vhist"
       ],
       0,
-      "9cdbabd106b36c43b86fc44491603e0a"
+      "837b6d12ea4addbc7f7681a2a92415ad"
     ],
     [
       "Steel.FractionalAnchoredPreorder.compose_avalue_assoc_r",
@@ -741,7 +741,7 @@
       2,
       [ "@query" ],
       0,
-      "719f5866f2718c730c5b7864f05f7168"
+      "f104067853441d39693dc8ae5405fd18"
     ],
     [
       "Steel.FractionalAnchoredPreorder.compose_avalue_assoc_r",
@@ -828,7 +828,7 @@
         "typing_Steel.Preorder.p_op", "typing_Steel.Preorder.vhist"
       ],
       0,
-      "dd4f95e14c73bd7d2351cc0c81b7af4f"
+      "302e1df2a0c466b1b4da5a02be35aa31"
     ],
     [
       "Steel.FractionalAnchoredPreorder.compose",
@@ -856,7 +856,7 @@
         "token_correspondence_Steel.FractionalAnchoredPreorder.composable"
       ],
       0,
-      "fafde9b688ed7d791d1c62a023e400be"
+      "fc0711c81ba00931dfa8ee038481d52a"
     ],
     [
       "Steel.FractionalAnchoredPreorder.composable_assoc_r",
@@ -906,7 +906,7 @@
         "true_interp"
       ],
       0,
-      "ebcc38dfdd96f69e5744cfa23931642a"
+      "00f4c759290fb81bbc3191f2651e2799"
     ],
     [
       "Steel.FractionalAnchoredPreorder.composable_assoc_l",
@@ -955,7 +955,7 @@
         "true_interp"
       ],
       0,
-      "5909a66e1a0fc87a96bee1e26fdb28c8"
+      "73e521731670adfb4f74f1e88875ee28"
     ],
     [
       "Steel.FractionalAnchoredPreorder.avalue_owns",
@@ -970,7 +970,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "27fa4d8308f26aee6a4bbf6d9f823804"
+      "947cd8024a97120a75c369c1116094d4"
     ],
     [
       "Steel.FractionalAnchoredPreorder.full_knowledge",
@@ -988,7 +988,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "8dfb8191a2d4fcbfffd5a49409cdca2a"
+      "801131abb281bd0eb989e92e529d3864"
     ],
     [
       "Steel.FractionalAnchoredPreorder.pcm",
@@ -1035,7 +1035,7 @@
         "true_interp"
       ],
       0,
-      "7edadd919fd5a3984a960f3f4e066af8"
+      "d06321364e02f55a6072f1bdbf71cc79"
     ],
     [
       "Steel.FractionalAnchoredPreorder.avalue_update",
@@ -1057,7 +1057,7 @@
         "refinement_interpretation_Tm_refine_78ac283fce1cd27d3e9ce0303f136043"
       ],
       0,
-      "cb139ba047b246523b0fc000464601b7"
+      "be3fe8df0246aa8a712dc2891b9c13d4"
     ],
     [
       "Steel.FractionalAnchoredPreorder.update_hist",
@@ -1187,7 +1187,7 @@
         "typing_Steel.Preorder.extends", "typing_Steel.Preorder.vhist"
       ],
       0,
-      "e3cb6700cd32d96b39e2e73a17bfc58f"
+      "9e795f07d08432f75827baa1c192d3e0"
     ],
     [
       "Steel.FractionalAnchoredPreorder.avalue_update_value",
@@ -1216,7 +1216,7 @@
         "token_correspondence_Steel.Preorder.extends_"
       ],
       0,
-      "ea179019705cc21a3be17d18f103bd87"
+      "859c5d636e408efc0f88d39dadb40732"
     ],
     [
       "Steel.FractionalAnchoredPreorder.update_value",
@@ -1237,7 +1237,7 @@
         "refinement_interpretation_Tm_refine_d994c5b8ab6b6d0f56b0cc87c029406f"
       ],
       0,
-      "5319f6b49220a3aebb2e5e4aaf807350"
+      "aa92d35e20c46d3b85101a215351a601"
     ],
     [
       "Steel.FractionalAnchoredPreorder.avalue_anchored_update",
@@ -1267,7 +1267,7 @@
         "typing_Steel.FractionalAnchoredPreorder.avalue_perm"
       ],
       0,
-      "c7ff5a8f348290b308e21fb98694e6bc"
+      "675a08ae85eddb1e8f39b0f300e77989"
     ],
     [
       "Steel.FractionalAnchoredPreorder.update_anchored_hist",
@@ -1407,7 +1407,7 @@
         "typing_Steel.Preorder.vhist"
       ],
       0,
-      "37267ef2fc535fea101edc3c59d3d886"
+      "a7096b52830694743f1600d0c8158c7c"
     ],
     [
       "Steel.FractionalAnchoredPreorder.avalue_update_anchored_value",
@@ -1436,7 +1436,7 @@
         "token_correspondence_Steel.Preorder.extends_"
       ],
       0,
-      "6d05b0508323aaaf7b38419c43431969"
+      "2037dd19e50ffa81ddc8eeedb35801a5"
     ],
     [
       "Steel.FractionalAnchoredPreorder.update_anchored_value",
@@ -1457,7 +1457,7 @@
         "refinement_interpretation_Tm_refine_be8b2216ddd78616d1fcd23ce1a9765e"
       ],
       0,
-      "99d6e489c47ce7201a9adee88a3b7ab8"
+      "a8d0a18950d42b8c769f0e231c0b29c8"
     ],
     [
       "Steel.FractionalAnchoredPreorder.snapshot",
@@ -1478,7 +1478,7 @@
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2"
       ],
       0,
-      "a40819e4bdfc1200235407dac7f84bcf"
+      "dd16b432f1c1a6e4b865bb980806046e"
     ],
     [
       "Steel.FractionalAnchoredPreorder.snapshot_lemma",
@@ -1545,7 +1545,7 @@
         "typing_Steel.FractionalAnchoredPreorder.has_some_ownership"
       ],
       0,
-      "0567b1fd1b96c9225553a4d08e39c947"
+      "6024ba1f53d0fed208df3ab341d79c8f"
     ],
     [
       "Steel.FractionalAnchoredPreorder.snapshot_dup_lemma",
@@ -1598,7 +1598,7 @@
         "typing_Steel.FractionalAnchoredPreorder.avalue_val"
       ],
       0,
-      "a6945b882ea20962344f709afea0fe70"
+      "a11b8d4f31610090f7bd8535be8fb56b"
     ],
     [
       "Steel.FractionalAnchoredPreorder.anchored_snapshot",
@@ -1639,7 +1639,7 @@
         "typing_Steel.Preorder.vhist"
       ],
       0,
-      "30e1ac8c3cb8c4151e560b13aec5094e"
+      "76631755fca70bb88c4c08e3a5d2a083"
     ],
     [
       "Steel.FractionalAnchoredPreorder.anchored_snapshot_lemma",
@@ -1729,7 +1729,7 @@
         "unit_typing"
       ],
       0,
-      "d934f119c346ed341d15646875288b7b"
+      "ee821717ab8d04dca6d6b72a264c25f8"
     ]
   ]
 ]

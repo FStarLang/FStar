@@ -29,47 +29,59 @@ val t (k:eqtype) (v:Type u#a) : Type u#a
 
 val empty (k:eqtype) (v:Type) : t k v
 
+/// A constructor that constructs the map from a function
+
+val literal (#k:eqtype) (#v:Type) (f:k -> option v) : t k v
+
 /// Select a key from the map, may fail by returning None
 
-val sel (#k:eqtype) (#v:Type) (x:k) (m:t k v) : option v
+val sel (#k:eqtype) (#v:Type) (m:t k v) (x:k) : option v
 
 /// Updating a key in the map
 
-val upd (#k:eqtype) (#v:Type) (x:k) (y:v) (m:t k v) : t k v
+val upd (#k:eqtype) (#v:Type) (m:t k v) (x:k) (y:v) : t k v
 
 /// Removing a key from the map
 
-val remove (#k:eqtype) (#v:Type) (x:k) (m:t k v) : t k v
+val remove (#k:eqtype) (#v:Type) (m:t k v) (x:k) : t k v
 
 /// Helper function to check if a key exists in the map
 
-let contains (#k:eqtype) (#v:Type) (x:k) (m:t k v) : bool =
-  Some? (sel x m)
+let contains (#k:eqtype) (#v:Type) (m:t k v) (x:k) : bool =
+  Some? (sel m x)
+
+/// A constant map
+
+let const (k:eqtype) (#v:Type) (y:v) : t k v =
+  literal (fun x -> Some y)
 
 /// The reasoning principles provided by the map
 
-val sel_upd (#k:eqtype) (#v:Type) (x:k) (y:v) (m:t k v)
-  : Lemma (ensures sel x (upd x y m) == Some y)
-          [SMTPat (sel x (upd x y m))]
-
-val sel_upd_distinct_key (#k:eqtype) (#v:Type) (x1 x2:k) (y:v) (m:t k v)
-  : Lemma (requires x1 =!= x2)
-          (ensures sel x2 (upd x1 y m) == sel x2 m)
-          [SMTPat (sel x2 (upd x1 y m))]
-
-val sel_remove (#k:eqtype) (#v:Type) (x:k) (m:t k v)
-  : Lemma (ensures sel x (remove x m) == None)
-          [SMTPat (sel x (remove x m))]
-
-val sel_remove_distinct_key (#k:eqtype) (#v:Type) (x1 x2:k) (m:t k v)
-  : Lemma (requires x1 =!= x2)
-          (ensures sel x2 (remove x1 m) == sel x2 m)
-          [SMTPat (sel x2 (remove x1 m))]
-
 val sel_empty (#k:eqtype) (v:Type) (x:k)
-  : Lemma (ensures sel x (empty k v) == None)
-          [SMTPat (sel x (empty k v))]
+  : Lemma (ensures sel (empty k v) x == None)
+          [SMTPat (sel (empty k v) x)]
 
+val sel_literal (#k:eqtype) (#v:Type) (f:k -> option v) (x:k)
+  : Lemma (ensures sel (literal f) x == f x)
+          [SMTPat (sel (literal f) x)]
+
+val sel_upd (#k:eqtype) (#v:Type) (m:t k v) (x:k) (y:v)
+  : Lemma (ensures sel (upd m x y) x == Some y)
+          [SMTPat (sel (upd m x y) x)]
+
+val sel_upd_distinct_key (#k:eqtype) (#v:Type) (m:t k v) (x1 x2:k) (y:v)
+  : Lemma (requires x1 =!= x2)
+          (ensures sel (upd m x1 y) x2 == sel m x2)
+          [SMTPat (sel (upd m x1 y) x2)]
+
+val sel_remove (#k:eqtype) (#v:Type) (m:t k v) (x:k)
+  : Lemma (ensures sel (remove m x) x == None)
+          [SMTPat (sel (remove m x) x)]
+
+val sel_remove_distinct_key (#k:eqtype) (#v:Type) (m:t k v) (x1 x2:k)
+  : Lemma (requires x1 =!= x2)
+          (ensures sel (remove m x1) x2 == sel m x2)
+          [SMTPat (sel (remove m x1) x2)]
 
 /// The map type supports extensional equality
 ///
@@ -78,7 +90,7 @@ val sel_empty (#k:eqtype) (v:Type) (x:k)
 val equal (#k:eqtype) (#v:Type) (m1 m2:t k v) : prop
 
 val eq_intro (#k:eqtype) (#v:Type) (m1 m2:t k v)
-  : Lemma (requires forall (x:k). sel x m1 == sel x m2)
+  : Lemma (requires forall (x:k). sel m1 x == sel m2 x)
           (ensures equal m1 m2)
           [SMTPat (equal m1 m2)]
 

@@ -58,16 +58,16 @@ type eqtype = a: Type0{hasEq a}
 assume new
 type bool : eqtype 
 
-(** [c_False] is the empty inductive type. The type with no
-    inhabitants represents logical falsehood. Note, [c_False] is
+(** [empty] is the empty inductive type. The type with no
+    inhabitants represents logical falsehood. Note, [empty] is
     seldom used directly in F*. We instead use its "squashed" variant,
     [False], see below. *)
-type c_False = 
+type empty = 
 
-(** [c_True] is the singleton inductive type---it is trivially
-    inhabited. Like [c_False], [c_True] is seldom used. We instead use
+(** [trivial] is the singleton inductive type---it is trivially
+    inhabited. Like [empty], [trivial] is seldom used. We instead use
     its "squashed" variants, [True] *)
-type c_True = | T
+type trivial = | T
 
 (** [unit]: another singleton type, with its only inhabitant written [()]
     we assume it is primitive, for convenient interop with other languages *)
@@ -127,15 +127,15 @@ val smt_theory_symbol:attribute
 
 (** [l_True] has a special bit of syntactic sugar. It is written just
     as "True" and rendered in the ide as [True]. It is a squashed version
-    of constructive truth, [c_True]. *)
+    of constructive truth, [trivial]. *)
 [@@ "tac_opaque"; smt_theory_symbol]
-let l_True:logical = squash c_True
+let l_True:logical = squash trivial
 
 (** [l_False] has a special bit of syntactic sugar. It is written just
     as "False" and rendered in the ide as [Falsee]. It is a squashed version
-    of constructive truth, [c_True]. *)
+    of constructive falsehood, the empty type. *)
 [@@ "tac_opaque"; smt_theory_symbol]
-let l_False:logical = squash c_False
+let l_False:logical = squash empty
 
 (** The type of provable equalities, defined as the usual inductive
     type with a single constructor for reflexivity.  As with the other
@@ -153,41 +153,28 @@ type equals (#a: Type) (x: a) : a -> Type = | Refl : equals x x
 [@@ "tac_opaque"; smt_theory_symbol]
 type eq2 (#a: Type) (x: a) (y: a) : logical = squash (equals x y)
 
-(** [h_equals] is the heterogeneous equality, allowing stating
-    equality among values of different types, but only allowing
-    reflexivity proofs at a given type, as with [equals]. *)
-type h_equals (#a: Type) (x: a) : #b: Type -> b -> Type = | HRefl : h_equals x x
-
-(** [eq3] is the squashed variant of [h_equals] *)
-[@@ "tac_opaque"; smt_theory_symbol]
-type eq3 (#a: Type) (#b: Type) (x: a) (y: b) : logical = squash (h_equals x y)
-
-(** We typically write [eq3] as a infix, binary [===] *)
-unfold
-let op_Equals_Equals_Equals (#a #b: Type) (x: a) (y: b) = eq3 x y
-
 (** bool-to-type coercion: This is often automatically inserted type,
     when using a boolean in context expecting a type. But,
     occasionally, one may have to write [b2t] explicitly *)
 type b2t (b: bool) : logical = (b == true)
 
 (** constructive conjunction *)
-type c_and (p: Type) (q: Type) = | And : p -> q -> c_and p q
+type pair (p: Type) (q: Type) = | Pair : _1:p -> _2:q -> pair p q
 
 (** squashed conjunction, specialized to [Type0], written with an
     infix binary [/\] *)
 [@@ "tac_opaque"; smt_theory_symbol]
-type l_and (p: logical) (q: logical) : logical = squash (c_and p q)
+type l_and (p: logical) (q: logical) : logical = squash (pair p q)
 
 (** constructive disjunction *)
-type c_or (p: Type) (q: Type) =
-  | Left : p -> c_or p q
-  | Right : q -> c_or p q
+type sum (p: Type) (q: Type) =
+  | Left : v:p -> sum p q
+  | Right : v:q -> sum p q
 
 (** squashed disjunction, specialized to [Type0], written with an
     infix binary [\/] *)
 [@@ "tac_opaque"; smt_theory_symbol]
-type l_or (p: logical) (q: logical) : logical = squash (c_or p q)
+type l_or (p: logical) (q: logical) : logical = squash (sum p q)
 
 (** squashed (non-dependent) implication, specialized to [Type0],
     written with an infix binary [==>]. Note, [==>] binds weaker than
@@ -492,10 +479,14 @@ effect GTot (a: Type) = GHOST a (pure_null_wp0 a)
 
 (** This point onward, F* fully verifies all the definitions *)
 
+(** [===] heterogeneous equality *)
+let ( === ) (#a #b: Type) (x: a) (y: b) : logical = a == b /\ x == y
+
 (** Dependent pairs [dtuple2] in concrete syntax is [x:a & b x].
     Its values can be constructed with the concrete syntax [(| x, y |)] *)
 unopteq
-type dtuple2 (a: Type) (b: (a -> GTot Type)) = | Mkdtuple2 : _1: a -> _2: b _1 -> dtuple2 a b
+type dtuple2 (a: Type) (b: (a -> GTot Type)) =
+  | Mkdtuple2 : _1: a -> _2: b _1 -> dtuple2 a b
 
 (** Squashed existential quantification, or dependent sums,
     are written [exists (x:a). p x] : specialized to Type0 *)
@@ -737,4 +728,4 @@ let labeled (r: range) (msg: string) (b: Type) : Type = b
 (** THIS IS MEANT TO BE KEPT IN SYNC WITH FStar.CheckedFiles.fs
     Incrementing this forces all .checked files to be invalidated *)
 irreducible
-let __cache_version_number__ = 39
+let __cache_version_number__ = 41

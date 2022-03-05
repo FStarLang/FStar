@@ -63,7 +63,7 @@ type atom
        // 1. the scrutinee
        t *
        // 2. reconstruct the returns annotation
-       (unit -> option<ascription>) *
+       (unit -> option<match_returns_ascription>) *
        // 3. reconstructs the pattern matching
        (unit -> list<branch>) *
        // 4. reconstruct the residual comp if set
@@ -230,7 +230,7 @@ let mkConstruct i us ts = mk_t <| Construct(i, us, ts)
 let mkFV i us ts = mk_rt (S.range_of_fv i) (FV(i, us, ts))
 
 let mkAccuVar (v:var) = mk_rt (S.range_of_bv v) (Accu(Var v, []))
-let mkAccuMatch (s:t) (ret:(unit -> option<ascription>)) (bs:(unit -> list<branch>))
+let mkAccuMatch (s:t) (ret:(unit -> option<match_returns_ascription>)) (bs:(unit -> list<branch>))
   (rc:unit -> option<S.residual_comp>) =
   mk_t <| Accu(Match (s, ret, bs, rc), [])
 
@@ -875,19 +875,8 @@ let interp_prop_eq2 (args:args) : option<t> =
       end
    | _ -> failwith "Unexpected number of arguments"
 
-let interp_prop_eq3 (args:args) : option<t> =
-    match args with
-    | [(_u, _); (_v, _); (t1, _); (t2, _); (a1, _); (a2, _)] ->  //eq3
-      begin match U.eq_inj (eq_t t1 t2) (eq_t a1 a2) with
-      | U.Equal -> Some (embed e_bool bogus_cbs true)
-      | U.NotEqual -> Some (embed e_bool bogus_cbs false)
-      | U.Unknown -> None
-      end
-   | _ -> failwith "Unexpected number of arguments"
-
 let dummy_interp (lid : Ident.lid) (args : args) : option<t> =
     failwith ("No interpretation for " ^ (Ident.string_of_lid lid))
-
 
 let prims_to_fstar_range_step (args:args) : option<t> =
     match args with

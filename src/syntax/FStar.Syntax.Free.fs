@@ -16,11 +16,11 @@
 #light "off"
 // (c) Microsoft Corporation. All rights reserved
 module FStar.Syntax.Free
+open Prims
 open FStar.Pervasives
 open FStar.Compiler.Effect
 open FStar.Compiler.List
 
-open Prims
 open FStar
 open FStar.Compiler
 open FStar.Compiler.Util
@@ -79,7 +79,7 @@ let rec free_univs u = match Subst.compress_univ u with
 //this flag is propagated, and is used in the function should_invalidate_cache below
 let rec free_names_and_uvs' tm use_cache : free_vars_and_fvars =
     let aux_binders (bs : binders) (from_body : free_vars_and_fvars) =
-        let from_binders = bs |> List.fold_left (fun n b -> union n (free_names_and_uvars b.binder_bv.sort use_cache)) no_free_vars in
+        let from_binders = free_names_and_uvars_binders bs use_cache in
         union from_binders from_body
     in
     let t = Subst.compress tm in
@@ -133,7 +133,10 @@ let rec free_names_and_uvs' tm use_cache : free_vars_and_fvars =
             (union (free_names_and_uvars t use_cache)
                    (match asc_opt with
                     | None -> no_free_vars
-                    | Some asc -> free_names_and_uvars_ascription asc use_cache))
+                    | Some (b, asc) ->
+                      union
+                        (free_names_and_uvars_binders [b] use_cache)
+                        (free_names_and_uvars_ascription asc use_cache)))
 
       | Tm_ascribed(t1, asc, _) ->
         union (free_names_and_uvars t1 use_cache)
@@ -166,6 +169,11 @@ let rec free_names_and_uvs' tm use_cache : free_vars_and_fvars =
         | Meta_desugared _
         | Meta_named _ -> u1
         end
+
+
+and free_names_and_uvars_binders bs use_cache =
+  bs |> List.fold_left (fun n b ->
+    union n (free_names_and_uvars b.binder_bv.sort use_cache)) no_free_vars
 
 
 and free_names_and_uvars_ascription asc use_cache =
@@ -244,9 +252,6 @@ and should_invalidate_cache n use_cache =
            | None -> false)
       )
 
-let free_names_and_uvars_binders (bs:binders) acc use_cache =
-    bs |> List.fold_left (fun n b -> union n (free_names_and_uvars b.binder_bv.sort use_cache)) acc
-
 //note use_cache is set false ONLY for fvars, which is not maintained at each AST node
 //see the comment above
 let compare_uv uv1 uv2 = UF.uvar_id uv1.ctx_uvar_head - UF.uvar_id uv2.ctx_uvar_head
@@ -263,6 +268,9 @@ let univs t = FStar.Compiler.Util.as_set (fst (free_names_and_uvars t true)).fre
 let univnames t = FStar.Compiler.Util.as_set (fst (free_names_and_uvars t true)).free_univ_names Syntax.order_univ_name
 let univnames_comp c = FStar.Compiler.Util.as_set (fst (free_names_and_uvars_comp c true)).free_univ_names Syntax.order_univ_name
 let fvars t = snd (free_names_and_uvars t false)
-let names_of_binders (bs:binders) = FStar.Compiler.Util.as_set ((fst (free_names_and_uvars_binders bs no_free_vars true)).free_names) Syntax.order_bv
+let names_of_binders (bs:binders) =
+  FStar.Compiler.Util.as_set
+    ((fst (free_names_and_uvars_binders bs true)).free_names)
+    Syntax.order_bv
 
 let uvars_uncached t = FStar.Compiler.Util.as_set (fst (free_names_and_uvars t false)).free_uvars compare_uv

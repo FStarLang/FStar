@@ -39,8 +39,10 @@ let (__proj__SConst__item___0 : constant -> FStar_Const.sconst) =
 type atom =
   | Var of var 
   | Match of (t *
-  (unit -> FStar_Syntax_Syntax.ascription FStar_Pervasives_Native.option) *
-  (unit -> FStar_Syntax_Syntax.branch Prims.list) *
+  (unit ->
+     FStar_Syntax_Syntax.match_returns_ascription
+       FStar_Pervasives_Native.option)
+  * (unit -> FStar_Syntax_Syntax.branch Prims.list) *
   (unit -> FStar_Syntax_Syntax.residual_comp FStar_Pervasives_Native.option))
   
   | UnreducedLet of (var * t FStar_Thunk.t * t FStar_Thunk.t * t
@@ -122,7 +124,9 @@ let (uu___is_Match : atom -> Prims.bool) =
 let (__proj__Match__item___0 :
   atom ->
     (t *
-      (unit -> FStar_Syntax_Syntax.ascription FStar_Pervasives_Native.option)
+      (unit ->
+         FStar_Syntax_Syntax.match_returns_ascription
+           FStar_Pervasives_Native.option)
       * (unit -> FStar_Syntax_Syntax.branch Prims.list) *
       (unit ->
          FStar_Syntax_Syntax.residual_comp FStar_Pervasives_Native.option)))
@@ -381,7 +385,9 @@ let (mkAccuVar : var -> t) =
     mk_rt uu___ (Accu ((Var v), []))
 let (mkAccuMatch :
   t ->
-    (unit -> FStar_Syntax_Syntax.ascription FStar_Pervasives_Native.option)
+    (unit ->
+       FStar_Syntax_Syntax.match_returns_ascription
+         FStar_Pervasives_Native.option)
       ->
       (unit -> FStar_Syntax_Syntax.branch Prims.list) ->
         (unit ->
@@ -1664,23 +1670,6 @@ let (interp_prop_eq2 : args -> t FStar_Pervasives_Native.option) =
          | FStar_Syntax_Util.NotEqual ->
              let uu___5 = embed e_bool bogus_cbs false in
              FStar_Pervasives_Native.Some uu___5
-         | FStar_Syntax_Util.Unknown -> FStar_Pervasives_Native.None)
-    | uu___ -> failwith "Unexpected number of arguments"
-let (interp_prop_eq3 : args -> t FStar_Pervasives_Native.option) =
-  fun args1 ->
-    match args1 with
-    | (_u, uu___)::(_v, uu___1)::(t1, uu___2)::(t2, uu___3)::(a1, uu___4)::
-        (a2, uu___5)::[] ->
-        let uu___6 =
-          let uu___7 = eq_t t1 t2 in
-          let uu___8 = eq_t a1 a2 in FStar_Syntax_Util.eq_inj uu___7 uu___8 in
-        (match uu___6 with
-         | FStar_Syntax_Util.Equal ->
-             let uu___7 = embed e_bool bogus_cbs true in
-             FStar_Pervasives_Native.Some uu___7
-         | FStar_Syntax_Util.NotEqual ->
-             let uu___7 = embed e_bool bogus_cbs false in
-             FStar_Pervasives_Native.Some uu___7
          | FStar_Syntax_Util.Unknown -> FStar_Pervasives_Native.None)
     | uu___ -> failwith "Unexpected number of arguments"
 let (dummy_interp :

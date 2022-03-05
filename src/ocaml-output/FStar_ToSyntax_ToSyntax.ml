@@ -3035,15 +3035,22 @@ and (desugar_term_maybe_top :
                 top.FStar_Parser_AST.range in
             desugar_term_aq env uu___1
         | FStar_Parser_AST.Seq (t1, t2) ->
+            let p =
+              FStar_Parser_AST.mk_pattern
+                (FStar_Parser_AST.PatWild (FStar_Pervasives_Native.None, []))
+                t1.FStar_Parser_AST.range in
+            let p1 =
+              FStar_Parser_AST.mk_pattern
+                (FStar_Parser_AST.PatAscribed
+                   (p,
+                     ((unit_ty p.FStar_Parser_AST.prange),
+                       FStar_Pervasives_Native.None)))
+                p.FStar_Parser_AST.prange in
             let t =
               FStar_Parser_AST.mk_term
                 (FStar_Parser_AST.Let
                    (FStar_Parser_AST.NoLetQualifier,
-                     [(FStar_Pervasives_Native.None,
-                        ((FStar_Parser_AST.mk_pattern
-                            (FStar_Parser_AST.PatWild
-                               (FStar_Pervasives_Native.None, []))
-                            t1.FStar_Parser_AST.range), t1))], t2))
+                     [(FStar_Pervasives_Native.None, (p1, t1))], t2))
                 top.FStar_Parser_AST.range FStar_Parser_AST.Expr in
             let uu___1 = desugar_term_aq env t in
             (match uu___1 with
@@ -3550,19 +3557,7 @@ and (desugar_term_maybe_top :
                    FStar_Syntax_Util.ascribe t1'
                      ((FStar_Pervasives.Inl t_bool),
                        FStar_Pervasives_Native.None) in
-                 let uu___2 =
-                   match asc_opt with
-                   | FStar_Pervasives_Native.None ->
-                       (FStar_Pervasives_Native.None, [])
-                   | FStar_Pervasives_Native.Some t ->
-                       let uu___3 =
-                         desugar_ascription env t
-                           FStar_Pervasives_Native.None in
-                       FStar_Compiler_Effect.op_Bar_Greater uu___3
-                         (fun uu___4 ->
-                            match uu___4 with
-                            | (t4, q) ->
-                                ((FStar_Pervasives_Native.Some t4), q)) in
+                 let uu___2 = desugar_match_returns env t1'1 asc_opt in
                  (match uu___2 with
                   | (asc_opt1, aq0) ->
                       let uu___3 = desugar_term_aq env t2 in
@@ -3646,19 +3641,7 @@ and (desugar_term_maybe_top :
             let uu___1 = desugar_term_aq env e in
             (match uu___1 with
              | (e1, aq) ->
-                 let uu___2 =
-                   match topt with
-                   | FStar_Pervasives_Native.None ->
-                       (FStar_Pervasives_Native.None, [])
-                   | FStar_Pervasives_Native.Some t ->
-                       let uu___3 =
-                         desugar_ascription env t
-                           FStar_Pervasives_Native.None in
-                       FStar_Compiler_Effect.op_Bar_Greater uu___3
-                         (fun uu___4 ->
-                            match uu___4 with
-                            | (t1, q) ->
-                                ((FStar_Pervasives_Native.Some t1), q)) in
+                 let uu___2 = desugar_match_returns env e1 topt in
                  (match uu___2 with
                   | (asc_opt, aq0) ->
                       let uu___3 =
@@ -4604,16 +4587,79 @@ and (desugar_term_maybe_top :
                 Prims.op_Hat "Unexpected term: " uu___4 in
               (FStar_Errors.Fatal_UnexpectedTerm, uu___3) in
             FStar_Errors.raise_error uu___2 top.FStar_Parser_AST.range
+and (desugar_match_returns :
+  env_t ->
+    FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
+      (FStar_Ident.ident FStar_Pervasives_Native.option *
+        FStar_Parser_AST.term) FStar_Pervasives_Native.option ->
+        ((FStar_Syntax_Syntax.binder *
+          ((FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax,
+          FStar_Syntax_Syntax.comp' FStar_Syntax_Syntax.syntax)
+          FStar_Pervasives.either * FStar_Syntax_Syntax.term'
+          FStar_Syntax_Syntax.syntax FStar_Pervasives_Native.option))
+          FStar_Pervasives_Native.option * (FStar_Syntax_Syntax.bv *
+          FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax) Prims.list))
+  =
+  fun env ->
+    fun scrutinee ->
+      fun asc_opt ->
+        match asc_opt with
+        | FStar_Pervasives_Native.None -> (FStar_Pervasives_Native.None, [])
+        | FStar_Pervasives_Native.Some asc ->
+            let uu___ =
+              match FStar_Pervasives_Native.fst asc with
+              | FStar_Pervasives_Native.None ->
+                  let bv =
+                    FStar_Syntax_Syntax.gen_bv
+                      FStar_Parser_Const.match_returns_def_name
+                      (FStar_Pervasives_Native.Some
+                         (scrutinee.FStar_Syntax_Syntax.pos))
+                      FStar_Syntax_Syntax.tun in
+                  let uu___1 = FStar_Syntax_Syntax.mk_binder bv in
+                  (env, uu___1)
+              | FStar_Pervasives_Native.Some b ->
+                  let uu___1 = FStar_Syntax_DsEnv.push_bv env b in
+                  (match uu___1 with
+                   | (env1, bv) ->
+                       let uu___2 = FStar_Syntax_Syntax.mk_binder bv in
+                       (env1, uu___2)) in
+            (match uu___ with
+             | (env_asc, b) ->
+                 let asc1 = FStar_Pervasives_Native.snd asc in
+                 let uu___1 =
+                   desugar_ascription env_asc asc1
+                     FStar_Pervasives_Native.None in
+                 (match uu___1 with
+                  | (asc2, aq) ->
+                      let asc3 =
+                        let uu___2 =
+                          let uu___3 =
+                            FStar_Compiler_Effect.op_Bar_Greater scrutinee
+                              FStar_Syntax_Util.unascribe in
+                          uu___3.FStar_Syntax_Syntax.n in
+                        match uu___2 with
+                        | FStar_Syntax_Syntax.Tm_name sbv ->
+                            let uu___3 =
+                              let uu___4 =
+                                let uu___5 =
+                                  let uu___6 =
+                                    FStar_Syntax_Syntax.bv_to_name
+                                      b.FStar_Syntax_Syntax.binder_bv in
+                                  (sbv, uu___6) in
+                                FStar_Syntax_Syntax.NT uu___5 in
+                              [uu___4] in
+                            FStar_Syntax_Subst.subst_ascription uu___3 asc2
+                        | uu___3 -> asc2 in
+                      let asc4 = FStar_Syntax_Subst.close_ascription [b] asc3 in
+                      let b1 =
+                        let uu___2 = FStar_Syntax_Subst.close_binders [b] in
+                        FStar_Compiler_List.hd uu___2 in
+                      ((FStar_Pervasives_Native.Some (b1, asc4)), aq)))
 and (desugar_ascription :
   env_t ->
     FStar_Parser_AST.term ->
       FStar_Parser_AST.term FStar_Pervasives_Native.option ->
-        (((FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax,
-          FStar_Syntax_Syntax.comp' FStar_Syntax_Syntax.syntax)
-          FStar_Pervasives.either * FStar_Syntax_Syntax.term'
-          FStar_Syntax_Syntax.syntax FStar_Pervasives_Native.option) *
-          (FStar_Syntax_Syntax.bv * FStar_Syntax_Syntax.term'
-          FStar_Syntax_Syntax.syntax) Prims.list))
+        (FStar_Syntax_Syntax.ascription * FStar_Syntax_Syntax.antiquotations))
   =
   fun env ->
     fun t ->
@@ -5828,6 +5874,8 @@ let rec (desugar_tycon :
             let imp_of_aqual b =
               match b.FStar_Parser_AST.aqual with
               | FStar_Pervasives_Native.Some (FStar_Parser_AST.Implicit) ->
+                  FStar_Parser_AST.Hash
+              | FStar_Pervasives_Native.Some (FStar_Parser_AST.Meta uu___) ->
                   FStar_Parser_AST.Hash
               | uu___ -> FStar_Parser_AST.Nothing in
             FStar_Compiler_List.fold_left

@@ -67,15 +67,14 @@ let (b2t_lid : FStar_Ident.lident) = pconst "b2t"
 let (admit_lid : FStar_Ident.lident) = pconst "admit"
 let (magic_lid : FStar_Ident.lident) = pconst "magic"
 let (has_type_lid : FStar_Ident.lident) = pconst "has_type"
-let (c_true_lid : FStar_Ident.lident) = pconst "c_True"
-let (c_false_lid : FStar_Ident.lident) = pconst "c_False"
-let (c_and_lid : FStar_Ident.lident) = pconst "c_and"
-let (c_or_lid : FStar_Ident.lident) = pconst "c_or"
+let (c_true_lid : FStar_Ident.lident) = pconst "trivial"
+let (empty_type_lid : FStar_Ident.lident) = pconst "empty"
+let (c_and_lid : FStar_Ident.lident) = pconst "pair"
+let (c_or_lid : FStar_Ident.lident) = pconst "sum"
 let (dtuple2_lid : FStar_Ident.lident) = pconst "dtuple2"
 let (eq2_lid : FStar_Ident.lident) = pconst "eq2"
-let (eq3_lid : FStar_Ident.lident) = pconst "eq3"
+let (eq3_lid : FStar_Ident.lident) = pconst "op_Equals_Equals_Equals"
 let (c_eq2_lid : FStar_Ident.lident) = pconst "equals"
-let (c_eq3_lid : FStar_Ident.lident) = pconst "h_equals"
 let (cons_lid : FStar_Ident.lident) = pconst "Cons"
 let (nil_lid : FStar_Ident.lident) = pconst "Nil"
 let (some_lid : FStar_Ident.lident) = psnconst "Some"
@@ -289,6 +288,9 @@ let (strict_on_arguments_attr : FStar_Ident.lident) =
   p2l ["FStar"; "Pervasives"; "strict_on_arguments"]
 let (resolve_implicits_attr_string : Prims.string) =
   "FStar.Pervasives.resolve_implicits"
+let (handle_smt_goals_attr : FStar_Ident.lident) = psconst "handle_smt_goals"
+let (handle_smt_goals_attr_string : Prims.string) =
+  "FStar.Pervasives.handle_smt_goals"
 let (erasable_attr : FStar_Ident.lident) =
   p2l ["FStar"; "Pervasives"; "erasable"]
 let (comment_attr : FStar_Ident.lident) =
@@ -522,3 +524,5 @@ let (exists_elim_lid : FStar_Ident.lid) = classical_sugar_lid "exists_elim"
 let (implies_elim_lid : FStar_Ident.lid) = classical_sugar_lid "implies_elim"
 let (or_elim_lid : FStar_Ident.lid) = classical_sugar_lid "or_elim"
 let (and_elim_lid : FStar_Ident.lid) = classical_sugar_lid "and_elim"
+let (match_returns_def_name : Prims.string) =
+  FStar_String.op_Hat FStar_Ident.reserved_prefix "_ret_"

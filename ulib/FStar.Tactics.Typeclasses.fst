@@ -51,8 +51,20 @@ and trywith (seen:list term) (fuel:int) (t:term) : Tac unit =
     debug ("Trying to apply hypothesis/instance: " ^ term_to_string t);
     (fun () -> apply_noinst t) `seq` (fun () -> tcresolve' seen (fuel-1))
 
+let rec maybe_intros () : Tac unit =
+  let g = cur_goal () in
+  match inspect_ln g with
+  | Tv_Arrow _ _ ->
+    ignore (intro ());
+    maybe_intros ()
+  | _ -> ()
+
 [@@plugin]
 let tcresolve () : Tac unit =
+    //we sometimes get goal type as _ -> t
+    //so intro if that's the case
+    //not using intros () directly, since that unfolds aggressively if the term is not an arrow
+    maybe_intros ();
     try tcresolve' [] 16
     with
     | TacticFailure s -> fail ("Typeclass resolution failed: " ^ s)

@@ -440,7 +440,7 @@ qed.
 Lemma (Variables are reducible):
 --------------------------------
 
-  Givem
+  Given
 
     G |- x : t
 
@@ -892,7 +892,7 @@ Proof:
 
       forall (k \in kRed_{unit}) . (k @ witness,s) is strongly normalising
 
-    However, as there is inly one reduction rule that applies to the configuration (k @ witness,s), we only have to show that
+    However, as there is only one reduction rule that applies to the configuration (k @ witness,s), we only have to show that
 
       forall (k \in kRed_{unit}) . (k @ return (),s) is strongly normalising
 

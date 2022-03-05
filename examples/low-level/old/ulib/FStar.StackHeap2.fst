@@ -101,7 +101,7 @@ let pop_top_frame (h:t{poppable h}) : Tot t =
   (| Cons.tl (frame_ids h), heaps h |)
 
 (* s1 has a new frame on top of s0. JK: Because of maps monotonicity I believe it 
-   guaranties the unicity of the new frame id, needs to be checked *)
+   guarantees the unicity of the new frame id, needs to be checked *)
 let fresh_frame (s0:t) (s1:t) = s1 = push_empty_frame s0
   (* Cons.tl (frame_ids s1) = frame_ids s0 /\      //the new stack extends the old one by just one frame *)
   (* not (Map.contains (heaps s0) (top_frame_id s1)) /\ //this new frame is not anywhere in the old stack *)

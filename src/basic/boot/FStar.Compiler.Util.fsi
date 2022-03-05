@@ -15,9 +15,10 @@
 *)
 #light "off"
 module FStar.Compiler.Util
+open Prims
 open FStar.Pervasives
-open FStar.Compiler.Effect module List = FStar.Compiler.List
-open FStar.Compiler.Effect module List = FStar.Compiler.List
+open FStar.Compiler.Effect
+module List = FStar.Compiler.List
 
 open FStar.BaseTypes
 
@@ -203,6 +204,7 @@ val copy_file: string -> string -> unit
 val flush_file: file_handle -> unit
 val delete_file: string -> unit
 val file_get_contents: string -> string
+val file_get_lines: string -> list<string>
 val mkdir: bool-> string -> unit (* [mkdir clean d] a new dir with user read/write; else delete content of [d] if it exists && clean *)
 val concat_dir_filename: string -> string -> string
 
@@ -250,7 +252,6 @@ val getcwd: unit -> string
 val readdir: string -> list<string>
 val paths_to_same_file: string -> string -> bool
 
-open Prims
 val file_exists: string -> Tot<bool>
 val is_directory: string -> Tot<bool>
 
