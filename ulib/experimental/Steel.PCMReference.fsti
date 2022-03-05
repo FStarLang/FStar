@@ -158,3 +158,34 @@ val upd_gen (#a:Type) (#p:pcm a) (r:ref a p) (x y:erased a)
   : SteelT unit
            (pts_to r x)
            (fun _ -> pts_to r y)
+
+
+/// Atomic read and write
+///
+/// These are a little too powerful right now, allowing atomics on arbitrary types
+/// We should allow only on [t]'s that are small enough, e.g. word-sized
+///
+/// The commonly used derivations of this module, e.g. Steel.ST.Reference, export
+///   more restrictive atomic operations interface
+///
+/// If you use these functions directly from here, use with care
+
+
+val atomic_read (#opened:_) (#a:Type) (#pcm:pcm a)
+  (r:ref a pcm)
+  (v0:erased a)
+  : SteelAtomic a opened
+      (pts_to r v0)
+      (fun _ -> pts_to r v0)
+      (requires fun _ -> True)
+      (ensures fun _ v _ -> compatible pcm v0 v /\ True)
+
+val atomic_write (#opened:_) (#a:Type) (#pcm:pcm a)
+  (r:ref a pcm)
+  (v0:erased a)
+  (v1:a)
+  : SteelAtomic unit opened
+      (pts_to r v0)
+      (fun _ -> pts_to r v1)
+      (requires fun _ -> frame_preserving pcm v0 v1 /\ pcm.refine v1)
+      (ensures fun _ _ _ -> True)

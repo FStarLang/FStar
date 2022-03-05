@@ -265,37 +265,41 @@ let for_all #a #perm #s n arr p =
 /// Implementation of for_all2 using a while loop
 
 let forall2_pure_inv
-  (#a:Type0)
+  (#a #b:Type0)
   (n:U32.t)
-  (p:a -> a -> bool)
-  (s0 s1:Seq.seq a)
+  (p:a -> b -> bool)
+  (s0:Seq.seq a)
+  (s1:Seq.seq b)
   (_:squash (Seq.length s0 == U32.v n /\ Seq.length s0 == Seq.length s1))
   (i:U32.t)
   : prop
   = i `U32.lte` n /\ (forall (j:nat). j < U32.v i ==> p (Seq.index s0 j) (Seq.index s1 j))
 
 let forall2_pure_inv_b
-  (#a:Type0)
+  (#a #b:Type0)
   (n:U32.t)
-  (p:a -> a -> bool)
-  (s0 s1:Seq.seq a)
+  (p:a -> b -> bool)
+  (s0:Seq.seq a)
+  (s1:Seq.seq b)
   (_:squash (Seq.length s0 == U32.v n /\ Seq.length s0 == Seq.length s1))
   (i:U32.t)
-  (b:bool)
+  (g:bool)
   : prop
-  = b == (i `U32.lt` n && p (Seq.index s0 (U32.v i)) (Seq.index s1 (U32.v i)))
+  = g == (i `U32.lt` n && p (Seq.index s0 (U32.v i)) (Seq.index s1 (U32.v i)))
 
 [@@ __reduce__]
 let forall2_pred
-  (#a:Type0)
+  (#a #b:Type0)
   (n:U32.t)
-  (a0 a1:A.array a)
-  (p:a -> a -> bool)
+  (a0:A.array a)
+  (a1:A.array b)
+  (p:a -> b -> bool)
   (r:R.ref U32.t)
   (p0 p1:perm)
-  (s0 s1:Seq.seq a)
+  (s0:Seq.seq a)
+  (s1:Seq.seq b)
   (_:squash (Seq.length s0 == U32.v n /\ Seq.length s0 == Seq.length s1))
-  (b:bool)
+  (g:bool)
   : U32.t -> vprop
   = fun i ->
     A.pts_to a0 p0 s0
@@ -306,30 +310,34 @@ let forall2_pred
       `star`
     pure (forall2_pure_inv n p s0 s1 () i)
       `star`
-    pure (forall2_pure_inv_b n p s0 s1 () i b)
+    pure (forall2_pure_inv_b n p s0 s1 () i g)
 
 [@@ __reduce__]
 let forall2_inv
-  (#a:Type0)
+  (#a #b:Type0)
   (n:U32.t)
-  (a0 a1:A.array a)
-  (p:a -> a -> bool)
+  (a0:A.array a)
+  (a1:A.array b)
+  (p:a -> b -> bool)
   (r:R.ref U32.t)
   (p0 p1:perm)
-  (s0 s1:Seq.seq a)
+  (s0:Seq.seq a)
+  (s1:Seq.seq b)
   (_:squash (Seq.length s0 == U32.v n /\ Seq.length s0 == Seq.length s1))
   : bool -> vprop
-  = fun b -> exists_ (forall2_pred n a0 a1 p r p0 p1 s0 s1 () b)
+  = fun g -> exists_ (forall2_pred n a0 a1 p r p0 p1 s0 s1 () g)
 
 inline_for_extraction
 let forall2_cond
-  (#a:Type0)
+  (#a #b:Type0)
   (n:U32.t)
-  (a0 a1:A.array a)
-  (p:a -> a -> bool)
+  (a0:A.array a)
+  (a1:A.array b)
+  (p:a -> b -> bool)
   (r:R.ref U32.t)
   (p0 p1:perm)
-  (s0 s1:G.erased (Seq.seq a))
+  (s0:G.erased (Seq.seq a))
+  (s1:G.erased (Seq.seq b))
   (_:squash (Seq.length s0 == U32.v n /\ Seq.length s0 == Seq.length s1))
   : unit ->
     STT bool
@@ -356,13 +364,15 @@ let forall2_cond
 
 inline_for_extraction
 let forall2_body
-  (#a:Type0)
+  (#a #b:Type0)
   (n:U32.t)
-  (a0 a1:A.array a)
-  (p:a -> a -> bool)
+  (a0:A.array a)
+  (a1:A.array b)
+  (p:a -> b -> bool)
   (r:R.ref U32.t)
   (p0 p1:perm)
-  (s0 s1:G.erased (Seq.seq a))
+  (s0:G.erased (Seq.seq a))
+  (s1:G.erased (Seq.seq b))
   (_:squash (Seq.length s0 == U32.v n /\ Seq.length s0 == Seq.length s1))
   : unit ->
     STT unit
@@ -392,7 +402,7 @@ let forall2_body
                                        (Seq.index s1 (U32.v (U32.add i 1ul))))
       (forall2_inv n a0 a1 p r p0 p1 s0 s1 ())
 
-let for_all2 #a #p0 #p1 #s0 #s1 n a0 a1 p =
+let for_all2 #a #b #p0 #p1 #s0 #s1 n a0 a1 p =
   A.pts_to_length a0 s0;
   A.pts_to_length a1 s1;
 
