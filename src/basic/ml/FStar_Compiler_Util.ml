@@ -424,12 +424,12 @@ let pimap_fold (m:'value pimap) f a = ZMap.fold f m a
 (* restore pre-2.11 BatString.nsplit behavior,
    see https://github.com/ocaml-batteries-team/batteries-included/issues/845 *)
 let batstring_nsplit s t =
-  if s = "" then [] else BatString.nsplit s t
-                                    
+  if s = "" then [] else BatString.split_on_string s t
+
 let format (fmt:string) (args:string list) =
   let frags = batstring_nsplit fmt "%s" in
   if BatList.length frags <> BatList.length args + 1 then
-    failwith ("Not enough arguments to format string " ^fmt^ " : expected " ^ (Pervasives.string_of_int (BatList.length frags)) ^ " got [" ^ (BatString.concat ", " args) ^ "] frags are [" ^ (BatString.concat ", " frags) ^ "]")
+    failwith ("Not enough arguments to format string " ^fmt^ " : expected " ^ (Stdlib.string_of_int (BatList.length frags)) ^ " got [" ^ (BatString.concat ", " args) ^ "] frags are [" ^ (BatString.concat ", " frags) ^ "]")
   else
     let args = args@[""] in
     BatList.fold_left2 (fun out frag arg -> out ^ frag ^ arg) "" frags args
@@ -556,7 +556,7 @@ let replace_chars (s:string) c (by:string) =
   BatString.replace_chars (fun x -> if x = Char.chr c then by else BatString.of_char x) s
 let hashcode s = Z.of_int (StringOps.hash s)
 let compare s1 s2 = Z.of_int (BatString.compare s1 s2)
-let split s sep = if s = "" then [""] else BatString.nsplit s sep
+let split s sep = BatString.split_on_string s sep
 let splitlines s = split s "\n"
 
 let iof = int_of_float
