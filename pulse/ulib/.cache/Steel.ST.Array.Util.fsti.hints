@@ -1,5 +1,5 @@
 [
-  "¼=\\‡·wœ\t,¯\u0017€sÈœë",
+  "Ïç’\u0011–\u0001>šOVý;³[K}",
   [
     [
       "Steel.ST.Array.Util.array_literal",
@@ -19,7 +19,7 @@
         "typing_FStar.UInt32.v"
       ],
       0,
-      "f4bec77e1381b5b46a43f7234b636532"
+      "8577c73b2a1d72fdea3810f8f166b49e"
     ],
     [
       "Steel.ST.Array.Util.for_all",
@@ -28,7 +28,7 @@
       1,
       [ "@query" ],
       0,
-      "30f4c9757df928e058695a9a0d4990d2"
+      "ab8633316c65acd775bfc4e429183cc6"
     ],
     [
       "Steel.ST.Array.Util.for_all2",
@@ -37,7 +37,35 @@
       1,
       [ "@query" ],
       0,
-      "1318720c156b7860ea0bda538a9a8e05"
+      "4893b5b98646297fb3370c57d31f2a4c"
+    ],
+    [
+      "Steel.ST.Array.Util.compare",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "517bdcda4da7377d4d6bad868abf425d"
+    ],
+    [
+      "Steel.ST.Array.Util.compare",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
+        "lemma_FStar.Ghost.hide_reveal",
+        "lemma_FStar.Seq.Base.lemma_eq_elim",
+        "lemma_FStar.Seq.Base.lemma_eq_intro",
+        "lemma_FStar.Seq.Base.lemma_eq_refl",
+        "refinement_interpretation_Tm_refine_05c2f60613689ec93c4b6f6a9a210756",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "refinement_interpretation_Tm_refine_d83f8da8ef6c1cb9f71d1465c1bb1c55",
+        "typing_FStar.Ghost.reveal", "typing_FStar.Seq.Base.seq"
+      ],
+      0,
+      "b570d115e593b9d09b79ead80883786c"
     ]
   ]
 ]
