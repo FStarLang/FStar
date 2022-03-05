@@ -43,7 +43,7 @@ SHOULD_VERIFY_CLOSED=Bug022.fst Bug024.fst Bug025.fst Bug026.fst Bug026b.fst Bug
   Bug379.fst Bug1182a.fst Bug1182b.fst Bug1901.fst Bug1902.fst Bug258.fst Bug2055.fst Bug2081.fst Bug2099.fst Bug2106.fst Bug2132.fst \
   Bug2138.fst Bug2146.fst Bug2074.fst Bug2125a.fst Bug2125b.fst Bug2167.fst Bug2169.fst Bug2169b.fst Bug2066.fst Bug2189.fst Bug2184.fst \
   Bug2211.fst Bug2210.fst Bug2193.fst Bug2257.fst Bug2229.fst Dec.fst Bug2269.fst Bug2352.fst Bug2366.fst Bug2331.fst \
-  Bug2398.fst Bug2432.fst Bug2374.fst Bug2438.fst Bug2456.fst
+  Bug2398.fst Bug2432.fst Bug2374.fst Bug2438.fst Bug2456.fst Bug2475.fst
 
 SHOULD_VERIFY_INTERFACE_CLOSED=Bug771.fsti Bug771b.fsti
 SHOULD_VERIFY_AND_WARN_CLOSED=Bug016.fst
