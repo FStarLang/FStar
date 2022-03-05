@@ -33,14 +33,12 @@ noeq type t3 = | T3 :
   (x: nat) -> (y: u x) -> (z: f (| x, y |)) -> t3
 
 
-#push-options "--__temp_no_proj  Bug1355"
 noeq type g
   (u: (nat -> Type0))
   (f: ((x: nat & u x) -> Type0))
   (x: nat)
   (y: u x)
 = | G : (r: (f (| x, y |))) -> g u f x y
-#pop-options
 
 noeq
 type monad (m:Type0 -> Type0) : Type = {
