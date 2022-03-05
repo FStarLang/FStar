@@ -610,7 +610,7 @@
         "typing_Steel.Memory.pure", "typing_Steel.Memory.star"
       ],
       0,
-      "80afebc0469f431e329c28db50688e3c"
+      "e360ff7d972a06883e35dc7a77928f05"
     ],
     [
       "Steel.HigherReference.read_refine",
@@ -808,7 +808,7 @@
         "typing_Steel.Memory.pure", "typing_Steel.Memory.star"
       ],
       0,
-      "6d98b18edba763511ef83a25bc0c941c"
+      "9f8ec2e52102472e290fe47c28577d5a"
     ],
     [
       "Steel.HigherReference.free",
