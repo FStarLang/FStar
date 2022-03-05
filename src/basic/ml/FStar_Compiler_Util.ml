@@ -424,7 +424,7 @@ let pimap_fold (m:'value pimap) f a = ZMap.fold f m a
 (* restore pre-2.11 BatString.nsplit behavior,
    see https://github.com/ocaml-batteries-team/batteries-included/issues/845 *)
 let batstring_nsplit s t =
-  if s = "" then [] else BatString.split_on_string s t
+  if s = "" then [] else BatString.split_on_string t s
 
 let format (fmt:string) (args:string list) =
   let frags = batstring_nsplit fmt "%s" in
@@ -556,7 +556,7 @@ let replace_chars (s:string) c (by:string) =
   BatString.replace_chars (fun x -> if x = Char.chr c then by else BatString.of_char x) s
 let hashcode s = Z.of_int (StringOps.hash s)
 let compare s1 s2 = Z.of_int (BatString.compare s1 s2)
-let split s sep = BatString.split_on_string s sep
+let split s sep = BatString.split_on_string sep s
 let splitlines s = split s "\n"
 
 let iof = int_of_float
