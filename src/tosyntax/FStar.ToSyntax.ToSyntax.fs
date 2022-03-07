@@ -1224,7 +1224,11 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
                   let te, aq = desugar_term_aq env t in
                   arg_withimp_t imp te, aq) args |> List.unzip in
                 let head = if universes = [] then head else mk (Tm_uinst(head, universes)) in
-                mk (Tm_app (head, args)), join_aqs aqs
+                let tm =
+                  if List.length args = 0
+                  then head
+                  else mk (Tm_app (head, args)) in
+                tm, join_aqs aqs
             end
         | None ->
             let err =
