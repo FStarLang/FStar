@@ -1222,16 +1222,20 @@ let uvar_env (env : env) (ty : option<typ>) : tac<term> =
     bind
         (match ty with
         | Some ty ->
-          ret ty
+          let env = Env.set_expected_typ env (U.type_u () |> fst) in
+          bind (__tc_ghost env ty)
+               (fun (ty, _, g) -> ret (ty, g, ty.pos))
 
         | None ->
           bind (new_uvar "uvar_env.2" env (fst <| U.type_u ()) ps.entry_range)
-              (fun (typ, uvar_typ) -> //NS, FIXME discarding uvar_typ
-                   ret typ)
+               (fun (typ, uvar_typ) -> //NS, FIXME discarding uvar_typ
+                ret (typ, Env.trivial_guard, Range.dummyRange))
         )
-        (fun typ ->
-            bind (new_uvar "uvar_env" env typ ps.entry_range) (fun (t, uvar_t) ->
-            ret t)))
+        (fun (typ, g, r) ->
+            bind (proc_guard "uvar_env_typ" env g r)
+                 (fun () ->
+                  bind (new_uvar "uvar_env" env typ ps.entry_range)
+                       (fun (t, uvar_t) -> ret t))))
 
 let unshelve (t : term) : tac<unit> = wrap_err "unshelve" <|
     bind get (fun ps ->
