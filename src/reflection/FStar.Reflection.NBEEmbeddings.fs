@@ -297,7 +297,7 @@ let e_argv_aq   aq = e_tuple2 (e_term_aq aq) e_aqualv
 
 let e_match_returns_annotation =
   e_option (e_tuple2 e_binder
-                     (e_tuple2 (e_either e_term e_comp) (e_option e_term)))
+                     (e_tuple3 (e_either e_term e_comp) (e_option e_term) e_bool))
 
 let unlazy_as_t k t =
     match t.nbe_t with
@@ -353,17 +353,19 @@ let e_term_view_aq aq =
                 as_arg (embed e_match_returns_annotation cb ret_opt);
                 as_arg (embed (e_list (e_branch_aq aq)) cb brs)]
 
-        | Tv_AscribedT (e, t, tacopt) ->
+        | Tv_AscribedT (e, t, tacopt, use_eq) ->
             mkConstruct ref_Tv_AscT.fv []
                         [as_arg (embed (e_term_aq aq) cb e);
                          as_arg (embed (e_term_aq aq) cb t);
-                         as_arg (embed (e_option (e_term_aq aq)) cb tacopt)]
+                         as_arg (embed (e_option (e_term_aq aq)) cb tacopt);
+                         as_arg (embed e_bool cb use_eq)]
 
-        | Tv_AscribedC (e, c, tacopt) ->
+        | Tv_AscribedC (e, c, tacopt, use_eq) ->
             mkConstruct ref_Tv_AscT.fv []
                         [as_arg (embed (e_term_aq aq) cb e);
                          as_arg (embed e_comp cb c);
-                         as_arg (embed (e_option (e_term_aq aq)) cb tacopt)]
+                         as_arg (embed (e_option (e_term_aq aq)) cb tacopt);
+                         as_arg (embed e_bool cb use_eq)]
 
         | Tv_Unknown ->
             mkConstruct ref_Tv_Unknown.fv [] []
@@ -429,17 +431,19 @@ let e_term_view_aq aq =
             BU.bind_opt (unembed e_match_returns_annotation cb ret_opt) (fun ret_opt ->
             Some <| Tv_Match (t, ret_opt, brs))))
 
-        | Construct (fv, _, [(tacopt, _); (t, _); (e, _)]) when S.fv_eq_lid fv ref_Tv_AscT.lid ->
+        | Construct (fv, _, [(tacopt, _); (t, _); (e, _); (use_eq, _)]) when S.fv_eq_lid fv ref_Tv_AscT.lid ->
             BU.bind_opt (unembed e_term cb e) (fun e ->
             BU.bind_opt (unembed e_term cb t) (fun t ->
             BU.bind_opt (unembed (e_option e_term) cb tacopt) (fun tacopt ->
-            Some <| Tv_AscribedT (e, t, tacopt))))
+            BU.bind_opt (unembed e_bool cb use_eq) (fun use_eq ->
+            Some <| Tv_AscribedT (e, t, tacopt, use_eq)))))
 
-        | Construct (fv, _, [(tacopt, _); (c, _); (e, _)]) when S.fv_eq_lid fv ref_Tv_AscC.lid ->
+        | Construct (fv, _, [(tacopt, _); (c, _); (e, _); (use_eq, _)]) when S.fv_eq_lid fv ref_Tv_AscC.lid ->
             BU.bind_opt (unembed e_term cb e) (fun e ->
             BU.bind_opt (unembed e_comp cb c) (fun c ->
             BU.bind_opt (unembed (e_option e_term) cb tacopt) (fun tacopt ->
-            Some <| Tv_AscribedC (e, c, tacopt))))
+            BU.bind_opt (unembed e_bool cb use_eq) (fun use_eq ->
+            Some <| Tv_AscribedC (e, c, tacopt, use_eq)))))
 
         | Construct (fv, _, []) when S.fv_eq_lid fv ref_Tv_Unknown.lid ->
             Some <| Tv_Unknown

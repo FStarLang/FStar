@@ -724,7 +724,7 @@ let encode_top_level_let :
                binders@more_binders, body, comp
           else binders, body, comp
       in
-      binders, U.ascribe body (Inl (U.comp_result comp), None), comp
+      binders, U.ascribe body (Inl (U.comp_result comp), None, false), comp
     in
 
 

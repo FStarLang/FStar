@@ -775,8 +775,8 @@ let rec (ascribe :
     ((FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax,
       FStar_Syntax_Syntax.comp' FStar_Syntax_Syntax.syntax)
       FStar_Pervasives.either * FStar_Syntax_Syntax.term'
-      FStar_Syntax_Syntax.syntax FStar_Pervasives_Native.option) ->
-      FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax)
+      FStar_Syntax_Syntax.syntax FStar_Pervasives_Native.option * Prims.bool)
+      -> FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax)
   =
   fun t ->
     fun k ->
@@ -4121,19 +4121,22 @@ and (unbound_variables_ascription :
   ((FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax,
     FStar_Syntax_Syntax.comp' FStar_Syntax_Syntax.syntax)
     FStar_Pervasives.either * FStar_Syntax_Syntax.term'
-    FStar_Syntax_Syntax.syntax FStar_Pervasives_Native.option) ->
-    FStar_Syntax_Syntax.bv Prims.list)
+    FStar_Syntax_Syntax.syntax FStar_Pervasives_Native.option * Prims.bool)
+    -> FStar_Syntax_Syntax.bv Prims.list)
   =
   fun asc ->
-    let uu___ =
-      match FStar_Pervasives_Native.fst asc with
-      | FStar_Pervasives.Inl t2 -> unbound_variables t2
-      | FStar_Pervasives.Inr c2 -> unbound_variables_comp c2 in
-    let uu___1 =
-      match FStar_Pervasives_Native.snd asc with
-      | FStar_Pervasives_Native.None -> []
-      | FStar_Pervasives_Native.Some tac -> unbound_variables tac in
-    FStar_Compiler_List.op_At uu___ uu___1
+    let uu___ = asc in
+    match uu___ with
+    | (asc1, topt, uu___1) ->
+        let uu___2 =
+          match asc1 with
+          | FStar_Pervasives.Inl t2 -> unbound_variables t2
+          | FStar_Pervasives.Inr c2 -> unbound_variables_comp c2 in
+        let uu___3 =
+          match topt with
+          | FStar_Pervasives_Native.None -> []
+          | FStar_Pervasives_Native.Some tac -> unbound_variables tac in
+        FStar_Compiler_List.op_At uu___2 uu___3
 and (unbound_variables_comp :
   FStar_Syntax_Syntax.comp -> FStar_Syntax_Syntax.bv Prims.list) =
   fun c ->

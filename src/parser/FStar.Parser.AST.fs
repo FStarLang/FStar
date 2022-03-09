@@ -64,7 +64,7 @@ type term' =
   | If        of term * option<match_returns_annotation> * term * term
   | Match     of term * option<match_returns_annotation> * list<branch>
   | TryWith   of term * list<branch>
-  | Ascribed  of term * term * option<term>
+  | Ascribed  of term * term * option<term> * bool
   | Record    of option<term> * list<(lid * term)>
   | Project   of term * lid
   | Product   of list<binder> * term                 (* function space *)
@@ -99,7 +99,7 @@ type term' =
 and term = {tm:term'; range:range; level:level}
 
 (* (as y)? returns t *)
-and match_returns_annotation = option<ident> * term
+and match_returns_annotation = option<ident> * term * bool
 
 and patterns = list<ident> * list<list<term>>
 
@@ -597,11 +597,13 @@ let rec term_to_string (x:term) = match x.tm with
       (t1|> term_to_string)
       (match ret_opt with
        | None -> ""
-       | Some (as_opt, ret) ->
-         Util.format2 "%sreturns %s "
+       | Some (as_opt, ret, use_eq) ->
+         let s = if use_eq then "returns$" else "returns" in
+         Util.format3 "%s%s %s "
            (match as_opt with
             | None -> ""
             | Some as_ident -> Util.format1 " as %s " (string_of_id as_ident))
+           s
            (term_to_string ret))
       (t2|> term_to_string)
       (t3|> term_to_string)
@@ -609,10 +611,12 @@ let rec term_to_string (x:term) = match x.tm with
   | Match(t, ret_opt,  branches) -> try_or_match_to_string x t branches ret_opt
   | TryWith (t, branches) -> try_or_match_to_string x t branches None
 
-  | Ascribed(t1, t2, None) ->
-    Util.format2 "(%s : %s)" (t1|> term_to_string) (t2|> term_to_string)
-  | Ascribed(t1, t2, Some tac) ->
-    Util.format3 "(%s : %s by %s)" (t1|> term_to_string) (t2|> term_to_string) (tac |> term_to_string)
+  | Ascribed(t1, t2, None, flag) ->
+    let s = if flag then "$" else ":" in
+    Util.format3 "(%s %s %s)" (t1|> term_to_string) s (t2|> term_to_string)
+  | Ascribed(t1, t2, Some tac, flag) ->
+    let s = if flag then "$" else ":" in
+    Util.format4 "(%s %s %s by %s)" (t1|> term_to_string) s (t2|> term_to_string) (tac |> term_to_string)
   | Record(Some e, fields) ->
     Util.format2 "{%s with %s}" (e|> term_to_string) (to_string_l " " (fun (l,e) -> Util.format2 "%s=%s" ((string_of_lid l)) (e|> term_to_string)) fields)
   | Record(None, fields) ->
@@ -762,8 +766,9 @@ and try_or_match_to_string (x:term) scrutinee branches ret_opt =
     (scrutinee|> term_to_string)
     (match ret_opt with
      | None -> ""
-     | Some (as_opt, ret) ->
-       Util.format2 "%sreturns %s "
+     | Some (as_opt, ret, use_eq) ->
+       let s = if use_eq then "returns$" else "returns" in
+       Util.format3 "%s%s %s " s
          (match as_opt with
           | None -> ""
           | Some as_ident -> Util.format1 "as %s " (string_of_id as_ident))

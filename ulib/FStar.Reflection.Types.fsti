@@ -32,4 +32,4 @@ type ident = string * range
 type univ_name = ident
 type typ     = term
 type binders = list binder
-type match_returns_ascription = binder & (either term comp & option term)
+type match_returns_ascription = binder & (either term comp & option term & bool)

@@ -994,8 +994,8 @@ and (close_match_returns :
           ((FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax,
           FStar_Syntax_Syntax.comp' FStar_Syntax_Syntax.syntax)
           FStar_Pervasives.either * FStar_Syntax_Syntax.term'
-          FStar_Syntax_Syntax.syntax FStar_Pervasives_Native.option))
-          FStar_Pervasives_Native.option)
+          FStar_Syntax_Syntax.syntax FStar_Pervasives_Native.option *
+          Prims.bool)) FStar_Pervasives_Native.option)
   =
   fun cfg ->
     fun env1 ->
@@ -1016,17 +1016,19 @@ and (close_ascription :
       ((FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax,
         FStar_Syntax_Syntax.comp' FStar_Syntax_Syntax.syntax)
         FStar_Pervasives.either * FStar_Syntax_Syntax.term'
-        FStar_Syntax_Syntax.syntax FStar_Pervasives_Native.option) ->
+        FStar_Syntax_Syntax.syntax FStar_Pervasives_Native.option *
+        Prims.bool) ->
         ((FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax,
           FStar_Syntax_Syntax.comp' FStar_Syntax_Syntax.syntax)
           FStar_Pervasives.either * FStar_Syntax_Syntax.term'
-          FStar_Syntax_Syntax.syntax FStar_Pervasives_Native.option))
+          FStar_Syntax_Syntax.syntax FStar_Pervasives_Native.option *
+          Prims.bool))
   =
   fun cfg ->
     fun env1 ->
       fun uu___ ->
         match uu___ with
-        | (annot, tacopt) ->
+        | (annot, tacopt, use_eq) ->
             let annot1 =
               match annot with
               | FStar_Pervasives.Inl t ->
@@ -1038,7 +1040,7 @@ and (close_ascription :
             let tacopt1 =
               FStar_Compiler_Util.map_opt tacopt
                 (non_tail_inline_closure_env cfg env1) in
-            (annot1, tacopt1)
+            (annot1, tacopt1, use_eq)
 and (close_imp :
   FStar_TypeChecker_Cfg.cfg ->
     env ->
@@ -1836,14 +1838,17 @@ let rec (maybe_weakly_reduced :
                 (fun uu___ ->
                    match uu___ with | (a, uu___1) -> maybe_weakly_reduced a)))
     | FStar_Syntax_Syntax.Tm_ascribed (t1, asc, uu___) ->
-        ((maybe_weakly_reduced t1) ||
-           (match FStar_Pervasives_Native.fst asc with
-            | FStar_Pervasives.Inl t2 -> maybe_weakly_reduced t2
-            | FStar_Pervasives.Inr c2 -> aux_comp c2))
-          ||
-          ((match FStar_Pervasives_Native.snd asc with
-            | FStar_Pervasives_Native.None -> false
-            | FStar_Pervasives_Native.Some tac -> maybe_weakly_reduced tac))
+        (maybe_weakly_reduced t1) ||
+          (let uu___1 = asc in
+           (match uu___1 with
+            | (asc_tc, asc_tac, uu___2) ->
+                (match asc_tc with
+                 | FStar_Pervasives.Inl t2 -> maybe_weakly_reduced t2
+                 | FStar_Pervasives.Inr c2 -> aux_comp c2) ||
+                  ((match asc_tac with
+                    | FStar_Pervasives_Native.None -> false
+                    | FStar_Pervasives_Native.Some tac ->
+                        maybe_weakly_reduced tac))))
     | FStar_Syntax_Syntax.Tm_meta (t1, m) ->
         (maybe_weakly_reduced t1) ||
           ((match m with
@@ -3962,10 +3967,10 @@ let rec (norm :
                         let uu___4 = norm_binders cfg env1 bs1 in
                         FStar_Syntax_Util.arrow uu___4 c2 in
                       rebuild cfg env1 stack1 t2)
-           | FStar_Syntax_Syntax.Tm_ascribed (t11, (tc, tacopt), l) when
+           | FStar_Syntax_Syntax.Tm_ascribed (t11, uu___2, l) when
                (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.unascribe
                -> norm cfg env1 stack1 t11
-           | FStar_Syntax_Syntax.Tm_ascribed (t11, (tc, tacopt), l) ->
+           | FStar_Syntax_Syntax.Tm_ascribed (t11, asc, l) ->
                (match stack1 with
                 | (Match uu___2)::uu___3 when
                     (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.beta
@@ -4018,7 +4023,7 @@ let rec (norm :
                         (fun uu___5 ->
                            FStar_Compiler_Util.print_string
                              "+++ Normalizing ascription \n");
-                      (let asc = norm_ascription cfg env1 (tc, tacopt) in
+                      (let asc1 = norm_ascription cfg env1 asc in
                        match stack1 with
                        | (Cfg (cfg', dbg))::stack2 ->
                            (maybe_debug cfg t12 dbg;
@@ -4027,7 +4032,7 @@ let rec (norm :
                                  let uu___7 =
                                    let uu___8 =
                                      FStar_Syntax_Util.unascribe t12 in
-                                   (uu___8, asc, l) in
+                                   (uu___8, asc1, l) in
                                  FStar_Syntax_Syntax.Tm_ascribed uu___7 in
                                FStar_Syntax_Syntax.mk uu___6
                                  t1.FStar_Syntax_Syntax.pos in
@@ -4037,7 +4042,7 @@ let rec (norm :
                              let uu___7 =
                                let uu___8 =
                                  let uu___9 = FStar_Syntax_Util.unascribe t12 in
-                                 (uu___9, asc, l) in
+                                 (uu___9, asc1, l) in
                                FStar_Syntax_Syntax.Tm_ascribed uu___8 in
                              FStar_Syntax_Syntax.mk uu___7
                                t1.FStar_Syntax_Syntax.pos in
@@ -7829,8 +7834,8 @@ and (norm_match_returns :
           ((FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax,
           FStar_Syntax_Syntax.comp' FStar_Syntax_Syntax.syntax)
           FStar_Pervasives.either * FStar_Syntax_Syntax.term'
-          FStar_Syntax_Syntax.syntax FStar_Pervasives_Native.option))
-          FStar_Pervasives_Native.option)
+          FStar_Syntax_Syntax.syntax FStar_Pervasives_Native.option *
+          Prims.bool)) FStar_Pervasives_Native.option)
   =
   fun cfg ->
     fun env1 ->
@@ -7854,17 +7859,19 @@ and (norm_ascription :
       ((FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax,
         FStar_Syntax_Syntax.comp' FStar_Syntax_Syntax.syntax)
         FStar_Pervasives.either * FStar_Syntax_Syntax.term'
-        FStar_Syntax_Syntax.syntax FStar_Pervasives_Native.option) ->
+        FStar_Syntax_Syntax.syntax FStar_Pervasives_Native.option *
+        Prims.bool) ->
         ((FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax,
           FStar_Syntax_Syntax.comp' FStar_Syntax_Syntax.syntax)
           FStar_Pervasives.either * FStar_Syntax_Syntax.term'
-          FStar_Syntax_Syntax.syntax FStar_Pervasives_Native.option))
+          FStar_Syntax_Syntax.syntax FStar_Pervasives_Native.option *
+          Prims.bool))
   =
   fun cfg ->
     fun env1 ->
       fun uu___ ->
         match uu___ with
-        | (tc, tacopt) ->
+        | (tc, tacopt, use_eq) ->
             let uu___1 =
               match tc with
               | FStar_Pervasives.Inl t ->
@@ -7875,7 +7882,7 @@ and (norm_ascription :
                   FStar_Pervasives.Inr uu___2 in
             let uu___2 =
               FStar_Compiler_Util.map_opt tacopt (norm cfg env1 []) in
-            (uu___1, uu___2)
+            (uu___1, uu___2, use_eq)
 and (norm_residual_comp :
   FStar_TypeChecker_Cfg.cfg ->
     env ->
@@ -9030,7 +9037,7 @@ let rec (elim_uvars :
                                     ((a.FStar_Syntax_Syntax.action_defn),
                                       ((FStar_Pervasives.Inl
                                           (a.FStar_Syntax_Syntax.action_typ)),
-                                        FStar_Pervasives_Native.None),
+                                        FStar_Pervasives_Native.None, false),
                                       FStar_Pervasives_Native.None))
                                  (a.FStar_Syntax_Syntax.action_defn).FStar_Syntax_Syntax.pos in
                              match a.FStar_Syntax_Syntax.action_params with
@@ -9049,7 +9056,7 @@ let rec (elim_uvars :
                              | FStar_Syntax_Syntax.Tm_ascribed
                                  (defn,
                                   (FStar_Pervasives.Inl typ,
-                                   FStar_Pervasives_Native.None),
+                                   FStar_Pervasives_Native.None, uu___5),
                                   FStar_Pervasives_Native.None)
                                  -> (defn, typ)
                              | uu___5 -> failwith "Impossible" in

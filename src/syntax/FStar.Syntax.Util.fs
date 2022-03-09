@@ -2074,10 +2074,11 @@ let rec unbound_variables tm :  list<bv> =
            | Meta_named _ -> [])
 
 and unbound_variables_ascription asc =
-  (match fst asc with
+  let asc, topt, _ = asc in
+  (match asc with
    | Inl t2 -> unbound_variables t2
    | Inr c2 -> unbound_variables_comp c2) @
-  (match snd asc with
+  (match topt with
    | None -> []
    | Some tac -> unbound_variables tac)
 

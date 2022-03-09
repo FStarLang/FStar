@@ -181,7 +181,7 @@ let rec is_comp_type env t =
     | Construct(l, _) -> Env.try_lookup_effect_name env l |> Option.isSome
     | App(head, _, _) -> is_comp_type env head
     | Paren t -> failwith "impossible"
-    | Ascribed(t, _, _)
+    | Ascribed(t, _, _, _)
     | LetOpen(_, t) -> is_comp_type env t
     | _ -> false
 
@@ -324,7 +324,7 @@ and free_type_vars env t = match (unparen t).tm with
 
   | Paren t -> failwith "impossible"
 
-  | Ascribed(t, t', tacopt) ->
+  | Ascribed(t, t', tacopt, _) ->
     let ts = t::t'::(match tacopt with None -> [] | Some t -> [t]) in
     List.collect (free_type_vars env) ts
 
@@ -587,14 +587,14 @@ let rec generalize_annotated_univs (s:sigelt) :sigelt =
          let uvs1 = bs_univnames bs in
          let uvs2 =
            match e.n with
-           | Tm_ascribed (_, (Inl t, _), _) -> Free.univnames t
-           | Tm_ascribed (_, (Inr c, _), _) -> Free.univnames_comp c
+           | Tm_ascribed (_, (Inl t, _, _), _) -> Free.univnames t
+           | Tm_ascribed (_, (Inr c, _, _), _) -> Free.univnames_comp c
            | _ -> empty_set
          in
          BU.set_union uvs1 uvs2
        | Tm_arrow (bs, _) -> bs_univnames bs
-       | Tm_ascribed (_, (Inl t, _), _) -> Free.univnames t
-       | Tm_ascribed (_, (Inr c, _), _) -> Free.univnames_comp c
+       | Tm_ascribed (_, (Inl t, _, _), _) -> Free.univnames t
+       | Tm_ascribed (_, (Inr c, _, _), _) -> Free.univnames_comp c
        | _ -> empty_set)
     in
     let all_lb_univs = lbs |> List.fold_left (fun uvs lb -> BU.set_union uvs (lb_univnames lb)) empty_set |> BU.set_elements in
@@ -1466,7 +1466,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
                               List.map (fun (field, _) -> mk_pattern (PatVar (field, None, []))) record.fields))
         in
         let branch = (pat, None, e) in
-        let r = mk_term (Ascribed (r, rty, None)) r.range Expr in
+        let r = mk_term (Ascribed (r, rty, None, false)) r.range Expr in
         { top with tm = Match (r, None, [branch]) }
       in
       desugar_term_maybe_top top_level env elab
@@ -1554,7 +1554,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
                     then AST.ml_comp t
                     else AST.tot_comp t
                 in
-                mk_term (Ascribed(def, t, tacopt)) def.range Expr
+                mk_term (Ascribed(def, t, tacopt, false)) def.range Expr
             in
             let def = match args with
                  | [] -> def
@@ -1634,7 +1634,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
       let x = Syntax.new_bv (Some t3.range) (tun_r t3.range) in
       let t_bool = mk (Tm_fvar(S.lid_as_fv C.bool_lid delta_constant None)) in
       let t1', aq1 = desugar_term_aq env t1 in
-      let t1' = U.ascribe t1' (Inl t_bool, None) in
+      let t1' = U.ascribe t1' (Inl t_bool, None, false) in
       let asc_opt, aq0 = desugar_match_returns env t1' asc_opt in
       let t2', aq2 = desugar_term_aq env t2 in
       let t3', aq3 = desugar_term_aq env t3 in
@@ -1666,8 +1666,8 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
       let brs, aqs = List.map desugar_branch branches |> List.unzip |> (fun (x, y) -> (List.flatten x, y)) in
       mk <| Tm_match(e, asc_opt, brs, None), join_aqs (aq::aq0::aqs)
 
-    | Ascribed(e, t, tac_opt) ->
-      let asc, aq0 = desugar_ascription env t tac_opt in
+    | Ascribed(e, t, tac_opt, use_eq) ->
+      let asc, aq0 = desugar_ascription env t tac_opt use_eq in
       let e, aq = desugar_term_aq env e in
       mk <| Tm_ascribed(e, asc, None), aq0@aq
 
@@ -1844,7 +1844,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
             mk_term (Ascribed (
                 mkApp rel [(xt, Nothing); (yt, Nothing)] rel.range,
                 mk_term (Name (Ident.lid_of_str "Type0")) rel.range Expr,
-                None)) rel.range Expr)) rel.range Expr
+                None, false)) rel.range Expr)) rel.range Expr
       in
       let rel = eta_and_annot rel in
 
@@ -1903,7 +1903,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
         match bs with
         | [] ->
           let sq_p = U.mk_squash U_unknown p in
-          U.ascribe e (Inl sq_p, None)
+          U.ascribe e (Inl sq_p, None, false)
 
         | b::bs ->
           let tail = aux bs in
@@ -2074,7 +2074,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
               x.sort
               (U.abs [b] p None)
               squash_token
-              (U.abs [b;b_pf_p] (U.ascribe e (Inl sq_q, None)) None)
+              (U.abs [b;b_pf_p] (U.ascribe e (Inl sq_q, None, false)) None)
               (range_of_bv x)
 
         | b::bs ->
@@ -2155,8 +2155,9 @@ and desugar_match_returns env scrutinee asc_opt =
   match asc_opt with
   | None -> None, []
   | Some asc ->
+    let asc_b, asc_tc, asc_use_eq = asc in
     let env_asc, b =
-      match fst asc with
+      match asc_b with
       | None ->
         //no binder is specified, generate a fresh one
         let bv = S.gen_bv C.match_returns_def_name (Some scrutinee.pos) S.tun in
@@ -2164,8 +2165,7 @@ and desugar_match_returns env scrutinee asc_opt =
       | Some b ->
         let env, bv = Env.push_bv env b in
         env, S.mk_binder bv in
-    let asc = snd asc in
-    let asc, aq = desugar_ascription env_asc asc None in
+    let asc, aq = desugar_ascription env_asc asc_tc None asc_use_eq in
     //if scrutinee is a name, it may appear in the ascription
     //  substitute it with the (new or annotated) binder
     let asc =
@@ -2176,14 +2176,14 @@ and desugar_match_returns env scrutinee asc_opt =
     let b = List.hd (SS.close_binders [b]) in
     Some (b, asc), aq
 
-and desugar_ascription env t tac_opt : S.ascription * antiquotations =
+and desugar_ascription env t tac_opt use_eq : S.ascription * antiquotations =
   let annot, aq0 =
     if is_comp_type env t
     then let comp = desugar_comp t.range true env t in
          (Inr comp, [])
     else let tm, aq = desugar_term_aq env t in
          (Inl tm, aq) in
-  (annot, BU.map_opt tac_opt (desugar_term env)), aq0
+  (annot, BU.map_opt tac_opt (desugar_term env), use_eq), aq0
 
 and desugar_args env args =
     args |> List.map (fun (a, imp) -> arg_withimp_t imp (desugar_term env a))

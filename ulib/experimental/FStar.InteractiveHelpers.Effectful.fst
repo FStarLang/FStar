@@ -333,7 +333,7 @@ let cast_info_to_propositions dbg ge ci =
        * concerned (hence the ``has_type``), and which types should be
        * related (hence the ascription).
        *)
-      let ascr_term = pack (Tv_AscribedT ci.term p_rty None) in
+      let ascr_term = pack (Tv_AscribedT ci.term p_rty None false) in
       let has_type_params = [(p_rty, Q_Implicit); (ascr_term, Q_Explicit); (e_rty, Q_Explicit)] in
       let type_cast = mk_app (`has_type) has_type_params in
       (* Expected type's refinement *)
@@ -587,8 +587,8 @@ let related_term_is_effectul dbg ge tv : Tac bool =
      * Besides, in practice it is uncommon (impossible?) to use an effectful term
      * as the scrutinee of a match *)
     is_effectful scrutinee
-  | Tv_AscribedT e ty tac -> false (* The focused term should be inside the ascription *)
-  | Tv_AscribedC e c tac -> false (* The focused term should be inside the ascription *)
+  | Tv_AscribedT e ty tac _ -> false (* The focused term should be inside the ascription *)
+  | Tv_AscribedC e c tac _ -> false (* The focused term should be inside the ascription *)
   | _ -> (* Unknown: keep things safe *) true
 
 /// Look for a term of the form ``let h = ST.get ()`` in a list of parent/children terms
@@ -961,6 +961,3 @@ let eterm_info_to_assertions dbg with_gpre with_gpost ge t is_let is_assert info
     if dbg then iter (fun x -> print (term_to_string x)) posts;
     ge2, { pres = pres; posts = posts }
     end
-
-
-

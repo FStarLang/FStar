@@ -57,8 +57,8 @@ type term_view =
     | Tv_Uvar      of Z.t * ctx_uvar_and_subst
     | Tv_Let       of bool * list<term> * bv * term * term
     | Tv_Match     of term * option<match_returns_ascription> * list<branch>
-    | Tv_AscribedT of term * term * option<term>
-    | Tv_AscribedC of term * comp * option<term>
+    | Tv_AscribedT of term * term * option<term> * bool
+    | Tv_AscribedC of term * comp * option<term> * bool
     | Tv_Unknown
 
 (* This is a mirror of FStar.Syntax.Syntax.qualifier *)

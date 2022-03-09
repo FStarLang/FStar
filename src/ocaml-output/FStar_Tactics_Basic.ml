@@ -5460,19 +5460,19 @@ let (pack :
                (t, ret_opt, brs2, FStar_Pervasives_Native.None))
             FStar_Compiler_Range.dummyRange in
         FStar_Compiler_Effect.op_Less_Bar FStar_Tactics_Monad.ret uu___
-    | FStar_Reflection_Data.Tv_AscribedT (e, t, tacopt) ->
+    | FStar_Reflection_Data.Tv_AscribedT (e, t, tacopt, use_eq) ->
         let uu___ =
           FStar_Syntax_Syntax.mk
             (FStar_Syntax_Syntax.Tm_ascribed
-               (e, ((FStar_Pervasives.Inl t), tacopt),
+               (e, ((FStar_Pervasives.Inl t), tacopt, use_eq),
                  FStar_Pervasives_Native.None))
             FStar_Compiler_Range.dummyRange in
         FStar_Compiler_Effect.op_Less_Bar FStar_Tactics_Monad.ret uu___
-    | FStar_Reflection_Data.Tv_AscribedC (e, c, tacopt) ->
+    | FStar_Reflection_Data.Tv_AscribedC (e, c, tacopt, use_eq) ->
         let uu___ =
           FStar_Syntax_Syntax.mk
             (FStar_Syntax_Syntax.Tm_ascribed
-               (e, ((FStar_Pervasives.Inr c), tacopt),
+               (e, ((FStar_Pervasives.Inr c), tacopt, use_eq),
                  FStar_Pervasives_Native.None))
             FStar_Compiler_Range.dummyRange in
         FStar_Compiler_Effect.op_Less_Bar FStar_Tactics_Monad.ret uu___

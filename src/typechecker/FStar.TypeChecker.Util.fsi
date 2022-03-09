@@ -82,7 +82,7 @@ val get_neg_branch_conds: list<formula> -> list<formula> * formula
 
 //the bv is the scrutinee binder, that bind_cases uses to close the guard (from lifting the computations)
 val bind_cases: env -> typ -> list<(typ * lident * list<cflag> * (bool -> lcomp))> -> bv -> lcomp
-val weaken_result_typ: env -> term -> lcomp -> typ -> term * lcomp * guard_t
+val weaken_result_typ: env -> term -> lcomp -> typ -> bool -> term * lcomp * guard_t
 val strengthen_precondition: (option<(unit -> string)> -> env -> term -> lcomp -> guard_t -> lcomp*guard_t)
 val weaken_guard: guard_formula -> guard_formula -> guard_formula
 val weaken_precondition: env -> lcomp -> guard_formula -> lcomp
@@ -98,8 +98,8 @@ val universe_of_comp: env -> universe -> comp -> universe
 val check_trivial_precondition : env -> comp -> (comp_typ * formula * guard_t)
 
 //checking that e:t is convertible to t'
-val check_has_type : env -> term -> t:typ -> t':typ -> guard_t
-val check_has_type_maybe_coerce : env -> term -> lcomp -> typ -> term * lcomp * guard_t
+val check_has_type : env -> term -> t:typ -> t':typ -> use_eq:bool -> guard_t
+val check_has_type_maybe_coerce : env -> term -> lcomp -> typ -> bool -> term * lcomp * guard_t
 val check_top_level: env -> guard_t -> lcomp -> bool*comp
 
 val maybe_coerce_lc : env -> term -> lcomp -> typ -> term * lcomp * guard_t

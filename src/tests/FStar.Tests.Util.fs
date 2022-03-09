@@ -80,7 +80,7 @@ let rec term_eq' t1 t2 =
         List.length pats = List.length pats'
         && List.forall2 (fun (_, _, e) (_, _, e') -> term_eq' e e') pats pats'
         && term_eq' t t'
-      | Tm_ascribed(t1, (Inl t2, _), _), Tm_ascribed(s1, (Inl s2, _), _) ->
+      | Tm_ascribed(t1, (Inl t2, _, _), _), Tm_ascribed(s1, (Inl s2, _, _), _) ->
         term_eq' t1 s1 && term_eq' t2 s2
       | Tm_let((is_rec, lbs), t), Tm_let((is_rec',lbs'), s) when is_rec=is_rec' ->
         List.length lbs = List.length lbs'

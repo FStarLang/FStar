@@ -159,7 +159,7 @@ and env = {
   gamma_sig      :list<sig_binding>;            (* and signature elements *)
   gamma_cache    :BU.smap<cached_elt>;          (* Memo table for the local environment *)
   modules        :list<modul>;                  (* already fully type checked modules *)
-  expected_typ   :option<typ>;                  (* type expected by the context *)
+  expected_typ   :option<(typ * bool)>;         (* type expected by the context *)
   sigtab         :BU.smap<sigelt>;              (* a dictionary of long-names to sigelts *)
   attrtab        :BU.smap<list<sigelt>>;        (* a dictionary of attribute( name)s to sigelts, mostly in support of typeclasses *)
   instantiate_imp:bool;                         (* instantiate implicit arguments? default=true *)
@@ -1637,13 +1637,16 @@ let open_universes_in env uvs terms =
     env', univ_vars, List.map (Subst.subst univ_subst) terms
 
 let set_expected_typ env t =
-  {env with expected_typ = Some t; use_eq=false}
+  {env with expected_typ = Some (t, false); use_eq=false}
+
+let set_expected_typ_maybe_eq env t use_eq =
+  {env with expected_typ = Some (t, use_eq); use_eq=false}
 
 let expected_typ env = match env.expected_typ with
   | None -> None
   | Some t -> Some t
 
-let clear_expected_typ (env_: env): env * option<typ> =
+let clear_expected_typ (env_: env): env * option<(typ * bool)> =
     {env_ with expected_typ=None; use_eq=false}, expected_typ env_
 
 let finish_module =
