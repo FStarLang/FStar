@@ -934,6 +934,17 @@ let occurs_check (uk:ctx_uvar) t =
                         (Print.uvar_to_string uk.ctx_uvar_head)
                         (Print.term_to_string t)) in
     uvars, not occurs, msg
+let occurs_full (uk:ctx_uvar) t =
+    let uvars =
+        Free.uvars_full t
+        |> BU.set_elements
+    in
+    let occurs =
+        (uvars
+        |> BU.for_some (fun uv ->
+           UF.equiv uv.ctx_uvar_head uk.ctx_uvar_head))
+    in
+    occurs
 
 let rec maximal_prefix (bs:binders) (bs':binders) : binders * (binders * binders) =
   match bs, bs' with
@@ -2628,8 +2639,8 @@ and solve_t_flex_flex env orig wl (lhs:flex_t) (rhs:flex_t) : solution =
                              Print.binders_to_string ", " zs]
                  in
                  let s1_sol = U.abs binders_lhs w_app (Some (U.residual_tot t_res_lhs)) in
-                 let _, not_occurs, _ = occurs_check u_lhs s1_sol in
-                 if not not_occurs
+                 let occurs = occurs_full u_lhs s1_sol in
+                 if occurs
                  then giveup_or_defer env orig wl Deferred_flex_flex_nonpattern (Thunk.mkv "flex-flex: occurs")
                  else (
                      let s1 = TERM(u_lhs, s1_sol) in
@@ -2637,8 +2648,8 @@ and solve_t_flex_flex env orig wl (lhs:flex_t) (rhs:flex_t) : solution =
                      then solve env (solve_prob orig None [s1] wl)
                      else (
                        let s2_sol = U.abs binders_rhs w_app (Some (U.residual_tot t_res_lhs)) in
-                       let _, not_occurs, _ = occurs_check u_rhs s2_sol in
-                       if not not_occurs
+                       let occurs = occurs_full u_rhs s2_sol in
+                       if occurs
                        then giveup_or_defer env orig wl Deferred_flex_flex_nonpattern (Thunk.mkv "flex-flex: occurs")
                        else let s2 = TERM(u_rhs, s2_sol) in
                             solve env (solve_prob orig None [s1;s2] wl)

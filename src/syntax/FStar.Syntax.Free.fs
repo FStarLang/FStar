@@ -96,7 +96,7 @@ let rec free_names_and_uvs' tm (use_cache:use_cache_t) : free_vars_and_fvars =
 
       | Tm_uvar (uv, (s, _)) ->
         union (singleton_uv uv)
-              (free_names_and_uvars uv.ctx_uvar_typ use_cache)
+              (if use_cache = Full then free_names_and_uvars uv.ctx_uvar_typ use_cache else no_free_vars)
 
       | Tm_type u ->
         free_univs u

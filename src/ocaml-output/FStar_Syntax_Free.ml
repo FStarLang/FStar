@@ -154,8 +154,11 @@ let rec (free_names_and_uvs' :
       | FStar_Syntax_Syntax.Tm_name x -> singleton_bv x
       | FStar_Syntax_Syntax.Tm_uvar (uv, (s, uu___)) ->
           let uu___1 =
-            free_names_and_uvars uv.FStar_Syntax_Syntax.ctx_uvar_typ
-              use_cache in
+            if use_cache = Full
+            then
+              free_names_and_uvars uv.FStar_Syntax_Syntax.ctx_uvar_typ
+                use_cache
+            else no_free_vars in
           union (singleton_uv uv) uu___1
       | FStar_Syntax_Syntax.Tm_type u -> free_univs u
       | FStar_Syntax_Syntax.Tm_bvar uu___ -> no_free_vars
@@ -558,7 +561,7 @@ let (uvars_uncached :
       uu___1.FStar_Syntax_Syntax.free_uvars in
     FStar_Compiler_Util.as_set uu___ compare_uv
 let (uvars_full :
-  FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
+  FStar_Syntax_Syntax.term ->
     FStar_Syntax_Syntax.ctx_uvar FStar_Compiler_Util.set)
   =
   fun t ->
