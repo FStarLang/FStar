@@ -2084,7 +2084,7 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
       //we don't abstract over subtyping constraints; so solve them now
       //but leave out the tactics constraints for later so that the tactic
       //can have a more global view of all the constraints
-      let guard_body = Rel.solve_non_tactic_deferred_constraints envbody guard_body in
+      let guard_body = Rel.solve_non_tactic_deferred_constraints true envbody guard_body in
 
       if should_check_expected_effect
       then let cbody, g_lc = TcComm.lcomp_comp cbody in
@@ -2096,7 +2096,8 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
            body, cbody, Env.conj_guard guard_body g_lc
     in
 
-    let guard = if env.top_level || not(Env.should_verify env)
+    let guard = if env.top_level
+                || not (Options.should_verify (string_of_lid env.curmodule))
                 then Env.conj_guard (Rel.discharge_guard env g_env)
                                     (Rel.discharge_guard envbody guard_body)
                 else let guard = Env.conj_guard g_env (Env.close_guard env (bs@letrec_binders) guard_body) in
