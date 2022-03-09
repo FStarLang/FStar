@@ -6137,45 +6137,94 @@ and (solve_t_flex_flex :
                                                            "flex-flex quasi:\n\tlhs=%s\n\trhs=%s\n\tsol=%s\n\tctx_l@binders_lhs=%s\n\tctx_r@binders_rhs=%s\n\tzs=%s\n"
                                                            uu___22
                                                        else ());
-                                                      (let sol =
-                                                         let s1 =
-                                                           let uu___21 =
-                                                             let uu___22 =
-                                                               FStar_Syntax_Util.abs
-                                                                 binders_lhs
-                                                                 w_app
-                                                                 (FStar_Pervasives_Native.Some
-                                                                    (
-                                                                    FStar_Syntax_Util.residual_tot
-                                                                    t_res_lhs)) in
-                                                             (u_lhs, uu___22) in
-                                                           TERM uu___21 in
-                                                         let uu___21 =
-                                                           FStar_Syntax_Unionfind.equiv
-                                                             u_lhs.FStar_Syntax_Syntax.ctx_uvar_head
-                                                             u_rhs.FStar_Syntax_Syntax.ctx_uvar_head in
-                                                         if uu___21
-                                                         then [s1]
-                                                         else
-                                                           (let s2 =
-                                                              let uu___23 =
-                                                                let uu___24 =
-                                                                  FStar_Syntax_Util.abs
+                                                      (let s1_sol =
+                                                         FStar_Syntax_Util.abs
+                                                           binders_lhs w_app
+                                                           (FStar_Pervasives_Native.Some
+                                                              (FStar_Syntax_Util.residual_tot
+                                                                 t_res_lhs)) in
+                                                       let uu___21 =
+                                                         occurs_check u_lhs
+                                                           s1_sol in
+                                                       match uu___21 with
+                                                       | (uu___22,
+                                                          not_occurs,
+                                                          uu___23) ->
+                                                           if
+                                                             Prims.op_Negation
+                                                               not_occurs
+                                                           then
+                                                             let uu___24 =
+                                                               FStar_Thunk.mkv
+                                                                 "flex-flex: occurs" in
+                                                             giveup_or_defer
+                                                               env orig wl1
+                                                               FStar_TypeChecker_Common.Deferred_flex_flex_nonpattern
+                                                               uu___24
+                                                           else
+                                                             (let s1 =
+                                                                TERM
+                                                                  (u_lhs,
+                                                                    s1_sol) in
+                                                              let uu___25 =
+                                                                FStar_Syntax_Unionfind.equiv
+                                                                  u_lhs.FStar_Syntax_Syntax.ctx_uvar_head
+                                                                  u_rhs.FStar_Syntax_Syntax.ctx_uvar_head in
+                                                              if uu___25
+                                                              then
+                                                                let uu___26 =
+                                                                  solve_prob
+                                                                    orig
+                                                                    FStar_Pervasives_Native.None
+                                                                    [s1] wl1 in
+                                                                solve env
+                                                                  uu___26
+                                                              else
+                                                                (let s2_sol =
+                                                                   FStar_Syntax_Util.abs
                                                                     binders_rhs
                                                                     w_app
-                                                                    (
-                                                                    FStar_Pervasives_Native.Some
+                                                                    (FStar_Pervasives_Native.Some
                                                                     (FStar_Syntax_Util.residual_tot
                                                                     t_res_lhs)) in
-                                                                (u_rhs,
-                                                                  uu___24) in
-                                                              TERM uu___23 in
-                                                            [s1; s2]) in
-                                                       let uu___21 =
-                                                         solve_prob orig
-                                                           FStar_Pervasives_Native.None
-                                                           sol wl1 in
-                                                       solve env uu___21))))))
+                                                                 let uu___27
+                                                                   =
+                                                                   occurs_check
+                                                                    u_rhs
+                                                                    s2_sol in
+                                                                 match uu___27
+                                                                 with
+                                                                 | (uu___28,
+                                                                    not_occurs1,
+                                                                    uu___29)
+                                                                    ->
+                                                                    if
+                                                                    Prims.op_Negation
+                                                                    not_occurs1
+                                                                    then
+                                                                    let uu___30
+                                                                    =
+                                                                    FStar_Thunk.mkv
+                                                                    "flex-flex: occurs" in
+                                                                    giveup_or_defer
+                                                                    env orig
+                                                                    wl1
+                                                                    FStar_TypeChecker_Common.Deferred_flex_flex_nonpattern
+                                                                    uu___30
+                                                                    else
+                                                                    (let s2 =
+                                                                    TERM
+                                                                    (u_rhs,
+                                                                    s2_sol) in
+                                                                    let uu___31
+                                                                    =
+                                                                    solve_prob
+                                                                    orig
+                                                                    FStar_Pervasives_Native.None
+                                                                    [s1; s2]
+                                                                    wl1 in
+                                                                    solve env
+                                                                    uu___31)))))))))
                            | uu___8 ->
                                let uu___9 =
                                  FStar_Thunk.mkv "flex-flex: non-patterns" in
