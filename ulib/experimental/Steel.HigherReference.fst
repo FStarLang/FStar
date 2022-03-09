@@ -176,6 +176,21 @@ let read (#a:Type) (#p:perm) (#v:erased a) (r:ref a)
     rewrite_slprop (pts_to r p v) (pts_to r p x) (fun _ -> ());
     return x
 
+let atomic_read (#opened:_) (#a:Type) (#p:perm) (#v:erased a) (r:ref a)
+  = let v1 : erased (fractional a) = Ghost.hide (Some (Ghost.reveal v, p)) in
+    rewrite_slprop (pts_to r p v) (RP.pts_to r v1 `star` pure (perm_ok p)) (fun _ -> ());
+    elim_pure (perm_ok p);
+
+    let v2 = RP.atomic_read r v1 in
+    rewrite_slprop (RP.pts_to r v1) (pts_to r p v)
+      (fun m ->
+        emp_unit (hp_of (pts_to_raw r p v));
+        pure_star_interp (hp_of (pts_to_raw r p v)) (perm_ok p) m);
+    assert (compatible pcm_frac v1 v2);
+    let Some (x, _) = v2 in
+    rewrite_slprop (pts_to r p v) (pts_to r p x) (fun _ -> ());
+    return x
+
 let read_refine (#a:Type) (#p:perm) (q:a -> vprop) (r:ref a)
   : SteelT a (h_exists (fun (v:a) -> pts_to r p v `star` q v))
                 (fun v -> pts_to r p v `star` q v)
@@ -197,6 +212,18 @@ let write (#a:Type) (#v:erased a) (r:ref a) (x:a)
     elim_pure (perm_ok full_perm);
 
     RP.write r v_old v_new;
+    rewrite_slprop (RP.pts_to r v_new) (pts_to r full_perm x)
+        (fun m -> emp_unit (hp_of (pts_to_raw r full_perm x));
+          pure_star_interp (hp_of (pts_to_raw r full_perm x)) (perm_ok full_perm) m)
+
+let atomic_write #opened #a #v r x
+  = let v_old : erased (fractional a) = Ghost.hide (Some (Ghost.reveal v, full_perm)) in
+    let v_new : fractional a = Some (x, full_perm) in
+    rewrite_slprop (pts_to r full_perm v) (RP.pts_to r v_old `star` pure (perm_ok full_perm)) (fun _ -> ());
+
+    elim_pure (perm_ok full_perm);
+
+    RP.atomic_write r v_old v_new;
     rewrite_slprop (RP.pts_to r v_new) (pts_to r full_perm x)
         (fun m -> emp_unit (hp_of (pts_to_raw r full_perm x));
           pure_star_interp (hp_of (pts_to_raw r full_perm x)) (perm_ok full_perm) m)

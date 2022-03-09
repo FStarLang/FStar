@@ -17,7 +17,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "6499672b967e90928eb1c99935465b49"
+      "9842b6a3afbb0723e7fda62c7465d6fa"
     ],
     [
       "Part1.Quicksort.Permutation.append",
@@ -32,7 +32,7 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "e2d8e191ca3e27cdccc84d760c8e6399"
+      "d4a61f3a2a95012db62c1e60fd56e68a"
     ],
     [
       "Part1.Quicksort.Permutation.sorted",
@@ -52,7 +52,7 @@
         "subterm_ordering_Prims.Cons", "typing_Prims.__proj__Cons__item__tl"
       ],
       0,
-      "f746f3a93a26315df18ca13550bc26f4"
+      "8af8a2523d81295f296f48d0b7d2ae51"
     ],
     [
       "Part1.Quicksort.Permutation.count",
@@ -72,7 +72,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "8478530a2f792fee4c052b59783543e0"
+      "36ecd165e98e85104c2c6244ceb77506"
     ],
     [
       "Part1.Quicksort.Permutation.is_permutation",
@@ -86,7 +86,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "d81eaf2e27bbb651aa21fcfd6b0e3ea3"
+      "5319bfb55e9b7b345757b0a353a2a5b1"
     ],
     [
       "Part1.Quicksort.Permutation.append_count",
@@ -121,7 +121,7 @@
         "typing_Part1.Quicksort.Permutation.count"
       ],
       0,
-      "87429e87e23560e8f425c2577bc32ec6"
+      "984bc09fb4dcaabf86116956ef3ae8ad"
     ],
     [
       "Part1.Quicksort.Permutation.partition",
@@ -160,7 +160,7 @@
         "typing_Part1.Quicksort.Permutation.length"
       ],
       0,
-      "477ec959de78c224297ce925b22d97d5"
+      "50239726c56433de650fc801645b89af"
     ],
     [
       "Part1.Quicksort.Permutation.sort",
@@ -205,7 +205,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "337ae54cdf8cf82dc12792e097eae925"
+      "7baeb85f94c51c272e4d33cfe25fac14"
     ],
     [
       "Part1.Quicksort.Permutation.sorted_concat",
@@ -258,7 +258,7 @@
         "typing_Part1.Quicksort.Permutation.sorted"
       ],
       0,
-      "fefc4d0fd55f4a077d25519ba74c3bd5"
+      "8cab4006cfd86c54583e94f0cedc8691"
     ]
   ]
 ]
