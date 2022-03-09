@@ -1,6 +1,7 @@
 name: Build FStar Binaries
 
 on:
+  workflow_dispatch:
   schedule:
     - cron: '0 0 * * 0'
 
@@ -34,4 +35,4 @@ jobs:
       uses: actions/upload-artifact@v1
       with:
         name: fstar_package
-        path: FStar/src/ocaml-output/fstar_0.9.7.0-alpha1_Darwin_x86_64.tar.gz
+        path: FStar/src/ocaml-output/fstar_2022.03.05~dev_Darwin_x86_64.tar.gz 
