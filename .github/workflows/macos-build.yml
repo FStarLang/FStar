@@ -36,4 +36,4 @@ jobs:
       uses: actions/upload-artifact@v1
       with:
         name: fstar_package
-        path: FStar/src/ocaml-output/*.tar.gz 
+        path: FStar/src/ocaml-output/
