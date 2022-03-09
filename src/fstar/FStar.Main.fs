@@ -234,8 +234,13 @@ let handle_error e =
 
 let main () =
   try
+    Util.print1 "fstar_bin_directory is %s\n" Options.fstar_bin_directory;
+    Util.print1 "fstar_lib is %s\n"
     setup_hooks ();
     let _, time = Util.record_time go in
+      (match Util.expand_environment_variable "FSTAR_LIB" with
+       | None -> "None"
+       | Some s -> s);
     if FStar.Options.query_stats()
     then Util.print2_error "TOTAL TIME %s ms: %s\n"
               (FStar.Compiler.Util.string_of_int time)

@@ -1503,7 +1503,19 @@ let (set_uvar : FStar_Syntax_Syntax.uvar -> FStar_Syntax_Syntax.term -> unit)
                 FStar_Compiler_Util.string_of_int uu___4 in
             FStar_Compiler_Util.format1 "Changing a fixed uvar! ?%s\n" uu___3 in
           failwith uu___2
-      | uu___1 -> FStar_Syntax_Unionfind.change uv t
+      | uu___1 ->
+          let uvars =
+            let uu___2 = FStar_Syntax_Free.uvars_uncached t in
+            FStar_Compiler_Effect.op_Bar_Greater uu___2
+              FStar_Compiler_Util.set_elements in
+          let occurs =
+            FStar_Compiler_Effect.op_Bar_Greater uvars
+              (FStar_Compiler_Util.for_some
+                 (fun uk ->
+                    FStar_Syntax_Unionfind.equiv uv
+                      uk.FStar_Syntax_Syntax.ctx_uvar_head)) in
+          (if occurs then failwith "FAILED OCCURS CHECK!" else ();
+           FStar_Syntax_Unionfind.change2 uv t)
 let (qualifier_equal :
   FStar_Syntax_Syntax.qualifier ->
     FStar_Syntax_Syntax.qualifier -> Prims.bool)

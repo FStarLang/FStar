@@ -324,15 +324,25 @@ let main : 'uuuuu . unit -> 'uuuuu =
               (let uu___3 = FStar_Compiler_Util.record_time go in
                match uu___3 with
                | (uu___4, time) ->
-                   ((let uu___6 = FStar_Options.query_stats () in
-                     if uu___6
-                     then
-                       let uu___7 = FStar_Compiler_Util.string_of_int time in
+                   (FStar_Compiler_Util.print1 "fstar_bin_directory is %s\n"
+                      FStar_Options.fstar_bin_directory;
+                    (let uu___7 =
                        let uu___8 =
-                         let uu___9 = FStar_Getopt.cmdline () in
-                         FStar_String.concat " " uu___9 in
+                         FStar_Compiler_Util.expand_environment_variable
+                           "FSTAR_LIB" in
+                       match uu___8 with
+                       | FStar_Pervasives_Native.None -> "None"
+                       | FStar_Pervasives_Native.Some s -> s in
+                     FStar_Compiler_Util.print1 "fstar_lib is %s\n" uu___7);
+                    (let uu___8 = FStar_Options.query_stats () in
+                     if uu___8
+                     then
+                       let uu___9 = FStar_Compiler_Util.string_of_int time in
+                       let uu___10 =
+                         let uu___11 = FStar_Getopt.cmdline () in
+                         FStar_String.concat " " uu___11 in
                        FStar_Compiler_Util.print2_error
-                         "TOTAL TIME %s ms: %s\n" uu___7 uu___8
+                         "TOTAL TIME %s ms: %s\n" uu___9 uu___10
                      else ());
                     cleanup ();
                     FStar_Compiler_Effect.exit Prims.int_zero)))) ()

@@ -1584,7 +1584,8 @@ let find_file =
   let file_map = Util.smap_create 100 in
   fun filename ->
      match Util.smap_try_find file_map filename with
-     | Some f -> f
+     | Some f ->
+       f
      | None ->
        let result =
           (try

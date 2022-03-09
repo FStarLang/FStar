@@ -1105,6 +1105,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                   | _ -> ());
             compress t
         in
+      //  log cfg (fun () -> BU.print1 "Called norm with stack %s\n" (BU.stack_dump()); BU.flush_stdout());
         log cfg (fun () ->
           BU.print5 ">>> %s (no_full_norm=%s)\nNorm %s  with with %s env elements top of the stack %s \n"
                                         (Print.tag_of_term t)

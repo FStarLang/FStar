@@ -710,29 +710,9 @@ and (ctx_uvar_to_string_aux :
   Prims.bool -> FStar_Syntax_Syntax.ctx_uvar -> Prims.string) =
   fun print_reason ->
     fun ctx_uvar ->
-      let reason_string =
-        if print_reason
-        then
-          FStar_Compiler_Util.format1 "(* %s *)\n"
-            ctx_uvar.FStar_Syntax_Syntax.ctx_uvar_reason
-        else
-          (let uu___1 =
-             let uu___2 =
-               FStar_Compiler_Range.start_of_range
-                 ctx_uvar.FStar_Syntax_Syntax.ctx_uvar_range in
-             FStar_Compiler_Range.string_of_pos uu___2 in
-           let uu___2 =
-             let uu___3 =
-               FStar_Compiler_Range.end_of_range
-                 ctx_uvar.FStar_Syntax_Syntax.ctx_uvar_range in
-             FStar_Compiler_Range.string_of_pos uu___3 in
-           FStar_Compiler_Util.format2 "(%s-%s) " uu___1 uu___2) in
-      let uu___ =
-        binders_to_string ", " ctx_uvar.FStar_Syntax_Syntax.ctx_uvar_binders in
-      let uu___1 = uvar_to_string ctx_uvar.FStar_Syntax_Syntax.ctx_uvar_head in
-      let uu___2 = term_to_string ctx_uvar.FStar_Syntax_Syntax.ctx_uvar_typ in
-      FStar_Compiler_Util.format4 "%s(%s |- %s : %s)" reason_string uu___
-        uu___1 uu___2
+      let uu___ = uvar_to_string ctx_uvar.FStar_Syntax_Syntax.ctx_uvar_head in
+      let uu___1 = term_to_string ctx_uvar.FStar_Syntax_Syntax.ctx_uvar_typ in
+      FStar_Compiler_Util.format2 "(%s @ %s)" uu___ uu___1
 and (subst_elt_to_string : FStar_Syntax_Syntax.subst_elt -> Prims.string) =
   fun uu___ ->
     match uu___ with

@@ -2188,6 +2188,10 @@ let weaken_result_typ env (e:term) (lc:lcomp) (t:typ) : term * lcomp * guard_t =
                 TcComm.lcomp_comp lc
               else begin
                   //try to normalize one more time, since more unification variables may be resolved now
+                  if Env.debug env <| Options.Extreme
+                  then (BU.print_string "About to call norm in weaken_result_typ ... ";
+                        // BU.print1 "%s\n" (Print.term_to_string f);
+                        BU.flush_stdout());
                   let f = N.normalize [Env.Beta; Env.Eager_unfolding; Env.Simplify; Env.Primops] env f in
                   match (SS.compress f).n with
                       | Tm_abs(_, {n=Tm_fvar fv}, _) when S.fv_eq_lid fv C.true_lid ->

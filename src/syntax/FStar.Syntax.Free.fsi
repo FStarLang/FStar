@@ -37,3 +37,4 @@ val fvars: term -> set<Ident.lident>
 val names_of_binders: binders -> set<bv>
 
 val uvars_uncached: term -> set<ctx_uvar>
+val uvars_full : term -> set<ctx_uvar>

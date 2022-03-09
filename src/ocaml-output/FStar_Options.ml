@@ -1647,6 +1647,7 @@ let (find_file : Prims.string -> Prims.string FStar_Pervasives_Native.option)
                              if p = "."
                              then filename
                              else FStar_Compiler_Util.join_paths p filename in
+                           FStar_Compiler_Util.print1 "Searching for file <%s>\n" path;
                            if FStar_Compiler_Util.file_exists path
                            then FStar_Pervasives_Native.Some path
                            else FStar_Pervasives_Native.None))) ()

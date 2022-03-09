@@ -31,7 +31,7 @@ val update_in_tx       : ref<'a> -> 'a -> unit
 val fresh              : Range.range -> S.uvar
 val uvar_id            : S.uvar -> int
 val find               : S.uvar -> option<S.term>
-val change             : S.uvar -> S.term -> unit
+val change2             : S.uvar -> S.term -> unit
 val equiv              : S.uvar -> S.uvar -> bool
 val union              : S.uvar -> S.uvar -> unit
 

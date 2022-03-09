@@ -482,10 +482,24 @@ let (set_solution :
             FStar_Compiler_Util.format1 "Goal %s is already solved" uu___3 in
           FStar_Tactics_Monad.fail uu___2
       | FStar_Pervasives_Native.None ->
-          (FStar_Syntax_Unionfind.change
-             (goal.FStar_Tactics_Types.goal_ctx_uvar).FStar_Syntax_Syntax.ctx_uvar_head
-             solution;
-           FStar_Tactics_Monad.ret ())
+          let uvars =
+            let uu___1 = FStar_Syntax_Free.uvars_uncached solution in
+            FStar_Compiler_Effect.op_Bar_Greater uu___1
+              FStar_Compiler_Util.set_elements in
+          let occurs =
+            FStar_Compiler_Effect.op_Bar_Greater uvars
+              (FStar_Compiler_Util.for_some
+                 (fun uk ->
+                    FStar_Syntax_Unionfind.equiv
+                      (goal.FStar_Tactics_Types.goal_ctx_uvar).FStar_Syntax_Syntax.ctx_uvar_head
+                      uk.FStar_Syntax_Syntax.ctx_uvar_head)) in
+          if occurs
+          then FStar_Tactics_Monad.fail "FAILED OCCURS CHECK!"
+          else
+            (FStar_Syntax_Unionfind.change2
+               (goal.FStar_Tactics_Types.goal_ctx_uvar).FStar_Syntax_Syntax.ctx_uvar_head
+               solution;
+             FStar_Tactics_Monad.ret ())
 let (trysolve :
   FStar_Tactics_Types.goal ->
     FStar_Syntax_Syntax.term -> Prims.bool FStar_Tactics_Monad.tac)

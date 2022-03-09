@@ -149,7 +149,7 @@ let fresh (rng:Range.range)  =
     PU.puf_fresh (get_term_graph()) None, get_version(), rng
 
 let find u     = PU.puf_find (get_term_graph()) (chk_v_t u)
-let change u t = set_term_graph (PU.puf_change (get_term_graph()) (chk_v_t u) (Some t))
+let change2 u t = set_term_graph (PU.puf_change (get_term_graph()) (chk_v_t u) (Some t))
 let equiv u v  = PU.puf_equivalent (get_term_graph()) (chk_v_t u) (chk_v_t v)
 let union  u v = set_term_graph (PU.puf_union (get_term_graph()) (chk_v_t u) (chk_v_t v))
 

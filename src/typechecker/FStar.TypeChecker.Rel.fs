@@ -483,6 +483,34 @@ let explain env d (s : lstring) =
 (* ------------------------------------------------*)
 (* <uvi ops> Instantiating unification variables   *)
 (* ------------------------------------------------*)
+
+let occurs_check_failed = BU.mk_ref false
+let set_uvar uv t =
+  match Unionfind.find uv with
+    | Some _ -> failwith (BU.format1 "Changing a fixed uvar! ?%s\n" (BU.string_of_int <| Unionfind.uvar_id uv))
+    | _ ->
+      if !occurs_check_failed
+      then Unionfind.change2 uv t
+      else (
+      let uvars =
+        Free.uvars_full t
+        |> BU.set_elements
+      in
+      let occurs =
+        (uvars
+        |> BU.for_some (fun uk ->
+           Unionfind.equiv uv uk.ctx_uvar_head))
+      in
+      if occurs
+      then (BU.print3 "FAILED OCCURS CHECK!\n\t%s occurs in\n\t%s\n\n%s"
+                                (BU.string_of_int (Unionfind.uvar_id uv))
+                                (Print.term_to_string t)
+                                (BU.stack_dump());
+                                
+            occurs_check_failed := true);
+//           failwith "ABORT");
+      Unionfind.change2 uv t)
+
 let commit uvis = uvis |> List.iter (function
     | UNIV(u, t)      ->
       begin match t with
@@ -491,7 +519,7 @@ let commit uvis = uvis |> List.iter (function
       end
     | TERM(u, t) ->
       def_check_closed_in t.pos "commit" (List.map (fun b -> b.binder_bv) u.ctx_uvar_binders) t;
-      U.set_uvar u.ctx_uvar_head t
+      set_uvar u.ctx_uvar_head t
     )
 
 let find_term_uvar uv s = BU.find_map s (function
@@ -773,7 +801,7 @@ let ensure_no_uvar_subst env (t0:term) (wl:worklist)
         then BU.print2 "ensure_no_uvar_subst solving %s with %s\n"
                (Print.ctx_uvar_to_string uv)
                (Print.term_to_string sol);
-        U.set_uvar uv.ctx_uvar_head sol;
+        set_uvar uv.ctx_uvar_head sol;
 
         (* Make a term for the new uvar, applied to the substitutions of
          * the abstracted arguments, plus all the original arguments. *)
@@ -860,7 +888,7 @@ let solve_prob' resolve_ok prob logical_guard uvis wl =
         let phi = U.abs xs phi (Some (U.residual_tot U.ktype0)) in
         def_check_closed_in (p_loc prob) ("solve_prob'.sol." ^ string_of_int (p_pid prob))
                             (List.map (fun b -> b.binder_bv) <| p_scope prob) phi;
-        U.set_uvar uv.ctx_uvar_head phi
+        set_uvar uv.ctx_uvar_head phi
     in
     let uv = p_guard_uvar prob in
     let fail () =
@@ -985,7 +1013,7 @@ let restrict_ctx env (tgt:ctx_uvar) (bs:binders) (src:ctx_uvar) wl : worklist =
     let _, src', wl = new_uvar ("restricted " ^ (Print.uvar_to_string src.ctx_uvar_head)) wl
       src.ctx_uvar_range g pfx t
       src.ctx_uvar_should_check src.ctx_uvar_meta in
-    U.set_uvar src.ctx_uvar_head (f src');
+    set_uvar src.ctx_uvar_head (f src');
     wl in
 
   let bs = bs |> List.filter (fun ({binder_bv=bv1}) ->
@@ -1318,7 +1346,20 @@ let rank_less_than r1 r2 =
     //doesn't parse in the F# build of F* with #light "off" (!)
     r1 <> r2 &&
     rank_t_num r1 <= rank_t_num r2
-let compress_tprob tcenv p = {p with lhs=whnf tcenv p.lhs; rhs=whnf tcenv p.rhs}
+let compress_tprob tcenv p =
+  let whnf t = 
+    if Env.debug tcenv <| Options.Other "Rel"
+    then BU.print1 "whnf %s\n"
+          (Print.term_to_string t);
+    whnf tcenv t 
+  in
+  if Env.debug tcenv <| Options.Other "Rel"
+  then BU.print3 "compress_tprob %s;\n\tlhs=%s\n\trhs=%s\n"
+                   (string_of_int p.pid)
+                   (Print.term_to_string p.lhs)
+                   (Print.term_to_string p.rhs)                   
+                   ;
+    {p with lhs=whnf p.lhs; rhs=whnf p.rhs}
 
 let compress_prob tcenv p =
     match p with
@@ -1695,7 +1736,16 @@ let rec solve (env:Env.env) (probs:worklist) : solution =
       BU.print1 "solve: wl_implicits = %s\n"
                     (Common.implicits_to_string probs.wl_implicits);
 
-    match next_prob probs with
+    if Env.debug env <| Options.Other "Rel"
+    then BU.print_string "About to chose next problem\n";
+    
+    let nxt = next_prob probs in
+    
+    if Env.debug env <| Options.Other "Rel"
+    then BU.print1 "chose problem %s\n" 
+          (match nxt with | None -> "None" | Some (p, _, _) -> string_of_int (p_pid p));
+
+    match nxt  with
     | Some (hd, tl, rank) ->
       let probs = {probs with attempting=tl} in
       def_check_prob "solve,hd" hd;
@@ -1719,6 +1769,8 @@ let rec solve (env:Env.env) (probs:worklist) : solution =
          begin
          match probs.wl_deferred with
          | [] ->
+           if Env.debug env <| Options.Other "Rel"
+           then BU.print_string "Done!\n" ;
            Success ([], as_deferred probs.wl_deferred_to_tac, probs.wl_implicits) //Yay ... done!
 
          | _ ->
@@ -2546,7 +2598,7 @@ and solve_t_flex_flex env orig wl (lhs:flex_t) (rhs:flex_t) : solution =
       then BU.print2 "solve_t_flex_flex: solving meta arg uvar %s with %s\n"
              (Print.ctx_uvar_to_string uv)
              (Print.term_to_string t);
-      U.set_uvar uv.ctx_uvar_head t;
+      set_uvar uv.ctx_uvar_head t;
       solve env (attempt [orig] wl) in
     
     match p_rel orig with
@@ -3246,6 +3298,9 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
        * it to to solve_t_flex_flex, causing a crash.
        *
        * See issue #1616. *)
+        if debug env (Options.Other "Rel")
+        then (BU.print_string "Attempting .. flex-flex\n"; BU.flush_stdout());
+       
         let t1, wl = ensure_no_uvar_subst env t1 wl in
         let t2 = U.canon_app t2 in
         (* ^ This canon_app call is needed for the incredibly infrequent case
@@ -3404,19 +3459,25 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
       | _, Tm_constant _
       | _, Tm_fvar _
       | _, Tm_app _ ->
+        if debug env (Options.Other "Rel")
+        then (BU.print_string "Attempting .. rigid-rigid\n"; BU.flush_stdout());
          let head1 = U.head_and_args t1 |> fst in
          let head2 = U.head_and_args t2 |> fst in
+        if debug env (Options.Other "Rel")
+        then (BU.print_string "rigid-rigid .. head1, head2\n"; BU.flush_stdout());         
          let _ =
              if debug env (Options.Other "Rel")
-             then BU.print ">> (%s) (smtok=%s)\n>>> head1 = %s [interpreted=%s; no_free_uvars=%s]\n>>> head2 = %s [interpreted=%s;no_free_uvars=%s]\n"
+             then (BU.print ">> (%s) (smtok=%s)\n>>> head1 = %s [interpreted=%s; no_free_uvars=%s]\n>>> head2 = %s [interpreted=%s;no_free_uvars=%s]\n"
                [(string_of_int problem.pid);
                 (string_of_bool wl.smt_ok);
                 (Print.term_to_string head1);
                 (string_of_bool (Env.is_interpreted env head1));
-                (string_of_bool (no_free_uvars t1));
+                (string_of_bool false); //(no_free_uvars t1));
                 (Print.term_to_string head2);
                 (string_of_bool (Env.is_interpreted env head2));
-                (string_of_bool (no_free_uvars t2))]
+                (string_of_bool false)];//(no_free_uvars t2))];
+                BU.flush_stdout()
+               )
          in
          let equal t1 t2 =
             let t1 = norm_with_steps "FStar.TypeChecker.Rel.norm_with_steps.2" [Env.UnfoldUntil delta_constant; Env.Primops; Env.Beta; Env.Eager_unfolding; Env.Iota] env t1 in

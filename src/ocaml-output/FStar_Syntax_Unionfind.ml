@@ -221,7 +221,8 @@ let (find :
   fun u ->
     let uu___ = get_term_graph () in
     let uu___1 = chk_v_t u in FStar_Unionfind.puf_find uu___ uu___1
-let (change : FStar_Syntax_Syntax.uvar -> FStar_Syntax_Syntax.term -> unit) =
+let (change2 : FStar_Syntax_Syntax.uvar -> FStar_Syntax_Syntax.term -> unit)
+  =
   fun u ->
     fun t ->
       let uu___ =

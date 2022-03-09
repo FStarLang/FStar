@@ -905,7 +905,19 @@ let ses_of_sigbundle (se:sigelt) :list<sigelt> =
 let set_uvar uv t =
   match Unionfind.find uv with
     | Some _ -> failwith (U.format1 "Changing a fixed uvar! ?%s\n" (U.string_of_int <| Unionfind.uvar_id uv))
-    | _ -> Unionfind.change uv t
+    | _ ->
+      let uvars =
+        Free.uvars_uncached t
+        |> U.set_elements
+      in
+      let occurs =
+        (uvars
+        |> U.for_some (fun uk ->
+           Unionfind.equiv uv uk.ctx_uvar_head))
+      in
+      if occurs
+      then (failwith "FAILED OCCURS CHECK!");
+      Unionfind.change2 uv t
 
 let qualifier_equal q1 q2 = match q1, q2 with
   | Discriminator l1, Discriminator l2 -> lid_equals l1 l2

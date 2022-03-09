@@ -375,16 +375,22 @@ and branch_to_string (p, wopt, e) : string =
                 (p |> pat_to_string)
                 (match wopt with | None -> "" | Some w -> U.format1 "when %s" (w |> term_to_string))
                 (e |> term_to_string)
+
+// and ctx_uvar_to_string_aux' print_reason ctx_uvar =
+//     let reason_string =
+//       if print_reason
+//       then U.format1 "(* %s *)\n" ctx_uvar.ctx_uvar_reason
+//       else U.format2 "(%s-%s) "
+//              (Range.string_of_pos (Range.start_of_range ctx_uvar.ctx_uvar_range))
+//              (Range.string_of_pos (Range.end_of_range ctx_uvar.ctx_uvar_range)) in
+//     format4 "%s(%s |- %s : %s)"
+//             reason_string
+//             (binders_to_string ", " ctx_uvar.ctx_uvar_binders)
+//             (uvar_to_string ctx_uvar.ctx_uvar_head)
+//             (term_to_string ctx_uvar.ctx_uvar_typ)
+
 and ctx_uvar_to_string_aux print_reason ctx_uvar =
-    let reason_string =
-      if print_reason
-      then U.format1 "(* %s *)\n" ctx_uvar.ctx_uvar_reason
-      else U.format2 "(%s-%s) "
-             (Range.string_of_pos (Range.start_of_range ctx_uvar.ctx_uvar_range))
-             (Range.string_of_pos (Range.end_of_range ctx_uvar.ctx_uvar_range)) in
-    format4 "%s(%s |- %s : %s)"
-            reason_string
-            (binders_to_string ", " ctx_uvar.ctx_uvar_binders)
+    format2 "(%s @ %s)"
             (uvar_to_string ctx_uvar.ctx_uvar_head)
             (term_to_string ctx_uvar.ctx_uvar_typ)
 

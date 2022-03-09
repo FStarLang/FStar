@@ -264,8 +264,21 @@ let set_solution goal solution : tac<unit> =
     | Some _ ->
       fail (BU.format1 "Goal %s is already solved" (goal_to_string_verbose goal))
     | None ->
-      FStar.Syntax.Unionfind.change goal.goal_ctx_uvar.ctx_uvar_head solution;
-      ret ()
+      let uvars =
+        FStar.Syntax.Free.uvars_uncached solution
+        |> BU.set_elements
+      in
+      let occurs =
+        (uvars
+        |> BU.for_some (fun uk ->
+           FStar.Syntax.Unionfind.equiv goal.goal_ctx_uvar.ctx_uvar_head uk.ctx_uvar_head))
+      in
+      if occurs
+      then fail "FAILED OCCURS CHECK!"
+      else (
+        FStar.Syntax.Unionfind.change2 goal.goal_ctx_uvar.ctx_uvar_head solution;
+        ret ()
+      )
 
 let trysolve (goal : goal) (solution : term) : tac<bool> =
     do_unify (goal_env goal) solution (goal_witness goal)

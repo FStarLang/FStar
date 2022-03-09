@@ -10,7 +10,7 @@ include ../../.common.mk
 
 MENHIR=menhir #--explain --infer -la 1 --table
 OCAMLLEX=ocamllex
-FSTAR_OCAMLBUILD_EXTRAS ?= -cflag -g
+FSTAR_OCAMLBUILD_EXTRAS ?= -cflag -g -lflag -g
 
 # From the root
 OCAMLBUILD_INCLUDES := \
@@ -114,6 +114,16 @@ $(FSTAR_MAIN_NATIVE): export OCAMLFIND_IGNORE_DUPS_IN = $(shell ocamlfind query 
 $(FSTAR_MAIN_NATIVE): $(GENERATED_FILES)
 	@echo "[OCAMLBUILD]"
 	$(Q)$(OCAMLBUILD) $(notdir $(FSTAR_MAIN_NATIVE)) FStar_Syntax_Syntax.inferred.mli
+
+FSTAR_MAIN_BYTE=_build/src/fstar/ml/main.byte
+$(FSTAR_MAIN_BYTE): export OCAMLFIND_IGNORE_DUPS_IN = $(shell ocamlfind query compiler-libs)
+$(FSTAR_MAIN_BYTE): $(GENERATED_FILES)
+	@echo "[OCAMLBUILD]"
+	$(Q)$(OCAMLBUILD) $(notdir $(FSTAR_MAIN_BYTE)) FStar_Syntax_Syntax.inferred.mli
+
+../../bin/fstar.byte: $(FSTAR_MAIN_BYTE)
+	$(Q)rm -f $@
+	$(Q)cp $^ $@
 
 ../../bin/fstar.exe: $(FSTAR_MAIN_NATIVE)
 	$(Q)rm -f $@
