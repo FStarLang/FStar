@@ -2636,9 +2636,9 @@ and solve_t_flex_flex env orig wl (lhs:flex_t) (rhs:flex_t) : solution =
                  let gamma_w = gamma_until u_lhs.ctx_uvar_gamma ctx_w in
                  let zs = intersect_binders gamma_w (ctx_l @ binders_lhs) (ctx_r @ binders_rhs) in
                  let new_uvar_typ = U.arrow zs (S.mk_Total t_res_lhs) in
-                 if occurs_full u_lhs new_uvar_typ
+                 if snd (occurs u_lhs new_uvar_typ)
                  ||  (not (Unionfind.equiv u_lhs.ctx_uvar_head u_rhs.ctx_uvar_head) &&
-                     occurs_full u_rhs new_uvar_typ)
+                     snd (occurs u_rhs new_uvar_typ))
                  then giveup_or_defer_flex_flex env orig wl Deferred_flex_flex_nonpattern 
                          (Thunk.mkv (BU.format1 "flex-flex: occurs\n defer_ok=%s\n"
                                                 (string_of_defer_ok wl.defer_ok)))

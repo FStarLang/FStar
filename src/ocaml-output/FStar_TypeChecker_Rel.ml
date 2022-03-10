@@ -6089,8 +6089,11 @@ and (solve_t_flex_flex :
                                                   FStar_Syntax_Util.arrow zs
                                                     uu___18 in
                                                 let uu___18 =
-                                                  (occurs_full u_lhs
-                                                     new_uvar_typ)
+                                                  (let uu___19 =
+                                                     occurs u_lhs
+                                                       new_uvar_typ in
+                                                   FStar_Pervasives_Native.snd
+                                                     uu___19)
                                                     ||
                                                     ((let uu___19 =
                                                         FStar_Syntax_Unionfind.equiv
@@ -6099,8 +6102,11 @@ and (solve_t_flex_flex :
                                                       Prims.op_Negation
                                                         uu___19)
                                                        &&
-                                                       (occurs_full u_rhs
-                                                          new_uvar_typ)) in
+                                                       (let uu___19 =
+                                                          occurs u_rhs
+                                                            new_uvar_typ in
+                                                        FStar_Pervasives_Native.snd
+                                                          uu___19)) in
                                                 if uu___18
                                                 then
                                                   let uu___19 =
