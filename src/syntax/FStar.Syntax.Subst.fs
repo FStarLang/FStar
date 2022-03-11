@@ -271,11 +271,13 @@ let subst_comp' s t =
       | Comp ct -> mk_Comp(subst_comp_typ' s ct)
 
 let subst_ascription' s asc =
-  let annot, topt = asc in
+  let annot, topt, use_eq = asc in
   let annot = match annot with
               | Inl t -> Inl (subst' s t)
               | Inr c -> Inr (subst_comp' s c) in
-  annot, U.map_opt topt (subst' s)
+  annot,
+  U.map_opt topt (subst' s),
+  use_eq
 
 let shift n s = match s with
     | DB(i, t) -> DB(i+n, t)
@@ -913,11 +915,12 @@ let rec deep_compress (t:term) : term =
     | Tm_meta(t, md) ->
       mk (Tm_meta(deep_compress t, deep_compress_meta md))
 
-and elim_ascription (tc, topt) =
+and elim_ascription (tc, topt, b) =
   (match tc with
    | Inl t -> Inl (deep_compress t)
    | Inr c -> Inr (deep_compress_comp c)),
-  map_opt topt deep_compress
+  map_opt topt deep_compress,
+  b
 
 and elim_rc (rc:residual_comp) : residual_comp = {
   residual_effect = rc.residual_effect;
