@@ -918,20 +918,20 @@ let rec (translate :
                     | (b1, bs1) ->
                         let asc1 =
                           match asc with
-                          | (FStar_Pervasives.Inl t, tacopt) ->
+                          | (FStar_Pervasives.Inl t, tacopt, use_eq) ->
                               let uu___4 =
                                 let uu___5 =
                                   let uu___6 = translate cfg bs1 t in
                                   readback cfg uu___6 in
                                 FStar_Pervasives.Inl uu___5 in
-                              (uu___4, tacopt)
-                          | (FStar_Pervasives.Inr c, tacopt) ->
+                              (uu___4, tacopt, use_eq)
+                          | (FStar_Pervasives.Inr c, tacopt, use_eq) ->
                               let uu___4 =
                                 let uu___5 =
                                   let uu___6 = translate_comp cfg bs1 c in
                                   readback_comp cfg uu___6 in
                                 FStar_Pervasives.Inr uu___5 in
-                              (uu___4, tacopt) in
+                              (uu___4, tacopt, use_eq) in
                         let asc2 =
                           FStar_Syntax_Subst.close_ascription [b1] asc1 in
                         let b2 =

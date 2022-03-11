@@ -264,21 +264,24 @@ and (free_names_and_uvars_ascription :
   ((FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax,
     FStar_Syntax_Syntax.comp' FStar_Syntax_Syntax.syntax)
     FStar_Pervasives.either * FStar_Syntax_Syntax.term'
-    FStar_Syntax_Syntax.syntax FStar_Pervasives_Native.option) ->
-    Prims.bool -> free_vars_and_fvars)
+    FStar_Syntax_Syntax.syntax FStar_Pervasives_Native.option * Prims.bool)
+    -> Prims.bool -> free_vars_and_fvars)
   =
   fun asc ->
     fun use_cache ->
-      let uu___ =
-        match FStar_Pervasives_Native.fst asc with
-        | FStar_Pervasives.Inl t -> free_names_and_uvars t use_cache
-        | FStar_Pervasives.Inr c -> free_names_and_uvars_comp c use_cache in
-      let uu___1 =
-        match FStar_Pervasives_Native.snd asc with
-        | FStar_Pervasives_Native.None -> no_free_vars
-        | FStar_Pervasives_Native.Some tac ->
-            free_names_and_uvars tac use_cache in
-      union uu___ uu___1
+      let uu___ = asc in
+      match uu___ with
+      | (asc1, tacopt, uu___1) ->
+          let uu___2 =
+            match asc1 with
+            | FStar_Pervasives.Inl t -> free_names_and_uvars t use_cache
+            | FStar_Pervasives.Inr c -> free_names_and_uvars_comp c use_cache in
+          let uu___3 =
+            match tacopt with
+            | FStar_Pervasives_Native.None -> no_free_vars
+            | FStar_Pervasives_Native.Some tac ->
+                free_names_and_uvars tac use_cache in
+          union uu___2 uu___3
 and (free_names_and_uvars :
   FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
     Prims.bool -> free_vars_and_fvars)

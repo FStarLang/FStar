@@ -619,7 +619,8 @@ and (term_to_string : FStar_Syntax_Syntax.term -> Prims.string) =
                let uu___3 = lbs_to_string [] lbs in
                let uu___4 = term_to_string e in
                FStar_Compiler_Util.format2 "%s\nin\n%s" uu___3 uu___4
-           | FStar_Syntax_Syntax.Tm_ascribed (e, (annot, topt), eff_name) ->
+           | FStar_Syntax_Syntax.Tm_ascribed (e, (annot, topt, b), eff_name)
+               ->
                let annot1 =
                  match annot with
                  | FStar_Pervasives.Inl t ->
@@ -638,9 +639,10 @@ and (term_to_string : FStar_Syntax_Syntax.term -> Prims.string) =
                  | FStar_Pervasives_Native.Some t ->
                      let uu___3 = term_to_string t in
                      FStar_Compiler_Util.format1 "by %s" uu___3 in
+               let s = if b then "ascribed_eq" else "ascribed" in
                let uu___3 = term_to_string e in
-               FStar_Compiler_Util.format3 "(%s <ascribed: %s %s)" uu___3
-                 annot1 topt1
+               FStar_Compiler_Util.format4 "(%s <%s: %s %s)" uu___3 s annot1
+                 topt1
            | FStar_Syntax_Syntax.Tm_match (head, asc_opt, branches, lc) ->
                let lc_str =
                  match lc with
@@ -662,7 +664,8 @@ and (term_to_string : FStar_Syntax_Syntax.term -> Prims.string) =
                let uu___4 =
                  match asc_opt with
                  | FStar_Pervasives_Native.None -> ""
-                 | FStar_Pervasives_Native.Some (b, (asc, tacopt)) ->
+                 | FStar_Pervasives_Native.Some (b, (asc, tacopt, use_eq)) ->
+                     let s = if use_eq then "returns$" else "returns" in
                      let uu___5 = binder_to_string b in
                      let uu___6 =
                        match asc with
@@ -674,7 +677,7 @@ and (term_to_string : FStar_Syntax_Syntax.term -> Prims.string) =
                        | FStar_Pervasives_Native.Some tac ->
                            let uu___8 = term_to_string tac in
                            FStar_Compiler_Util.format1 " by %s" uu___8 in
-                     FStar_Compiler_Util.format3 "as %s returns %s%s " uu___5
+                     FStar_Compiler_Util.format4 "as %s %s %s%s " uu___5 s
                        uu___6 uu___7 in
                let uu___5 =
                  let uu___6 =

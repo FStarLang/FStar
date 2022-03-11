@@ -1217,12 +1217,12 @@ and (encode_term :
              FStar_Compiler_Util.format1
                "Impossible: locally nameless; got %s" uu___2 in
            failwith uu___1
-       | FStar_Syntax_Syntax.Tm_ascribed (t2, (k, uu___1), uu___2) ->
-           let uu___3 =
+       | FStar_Syntax_Syntax.Tm_ascribed (t2, (k, uu___1, uu___2), uu___3) ->
+           let uu___4 =
              match k with
              | FStar_Pervasives.Inl t3 -> FStar_Syntax_Util.is_unit t3
-             | uu___4 -> false in
-           if uu___3
+             | uu___5 -> false in
+           if uu___4
            then (FStar_SMTEncoding_Term.mk_Term_unit, [])
            else encode_term t2 env
        | FStar_Syntax_Syntax.Tm_quoted (qt, uu___1) ->
@@ -2510,13 +2510,15 @@ and (encode_term :
                                      FStar_Pervasives_Native.Some uu___7
                                  | FStar_Syntax_Syntax.Tm_ascribed
                                      (uu___7,
-                                      (FStar_Pervasives.Inl t2, uu___8),
-                                      uu___9)
+                                      (FStar_Pervasives.Inl t2, uu___8,
+                                       uu___9),
+                                      uu___10)
                                      -> FStar_Pervasives_Native.Some t2
                                  | FStar_Syntax_Syntax.Tm_ascribed
                                      (uu___7,
-                                      (FStar_Pervasives.Inr c, uu___8),
-                                      uu___9)
+                                      (FStar_Pervasives.Inr c, uu___8,
+                                       uu___9),
+                                      uu___10)
                                      ->
                                      FStar_Pervasives_Native.Some
                                        (FStar_Syntax_Util.comp_result c)
@@ -3014,7 +3016,8 @@ and (encode_let :
               let uu___ =
                 let uu___1 =
                   FStar_Syntax_Util.ascribe e1
-                    ((FStar_Pervasives.Inl t1), FStar_Pervasives_Native.None) in
+                    ((FStar_Pervasives.Inl t1), FStar_Pervasives_Native.None,
+                      false) in
                 encode_term uu___1 env in
               match uu___ with
               | (ee1, decls1) ->

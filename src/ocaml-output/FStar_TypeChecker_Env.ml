@@ -249,7 +249,8 @@ and env =
   gamma_sig: sig_binding Prims.list ;
   gamma_cache: cached_elt FStar_Compiler_Util.smap ;
   modules: FStar_Syntax_Syntax.modul Prims.list ;
-  expected_typ: FStar_Syntax_Syntax.typ FStar_Pervasives_Native.option ;
+  expected_typ:
+    (FStar_Syntax_Syntax.typ * Prims.bool) FStar_Pervasives_Native.option ;
   sigtab: FStar_Syntax_Syntax.sigelt FStar_Compiler_Util.smap ;
   attrtab: FStar_Syntax_Syntax.sigelt Prims.list FStar_Compiler_Util.smap ;
   instantiate_imp: Prims.bool ;
@@ -553,7 +554,9 @@ let (__proj__Mkenv__item__modules :
         erasable_types_tab; enable_defer_to_tac; unif_allow_ref_guards;
         erase_erasable_args;_} -> modules
 let (__proj__Mkenv__item__expected_typ :
-  env -> FStar_Syntax_Syntax.typ FStar_Pervasives_Native.option) =
+  env ->
+    (FStar_Syntax_Syntax.typ * Prims.bool) FStar_Pervasives_Native.option)
+  =
   fun projectee ->
     match projectee with
     | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
@@ -5194,7 +5197,7 @@ let (set_expected_typ : env -> FStar_Syntax_Syntax.typ -> env) =
         gamma_sig = (env1.gamma_sig);
         gamma_cache = (env1.gamma_cache);
         modules = (env1.modules);
-        expected_typ = (FStar_Pervasives_Native.Some t);
+        expected_typ = (FStar_Pervasives_Native.Some (t, false));
         sigtab = (env1.sigtab);
         attrtab = (env1.attrtab);
         instantiate_imp = (env1.instantiate_imp);
@@ -5238,14 +5241,76 @@ let (set_expected_typ : env -> FStar_Syntax_Syntax.typ -> env) =
         unif_allow_ref_guards = (env1.unif_allow_ref_guards);
         erase_erasable_args = (env1.erase_erasable_args)
       }
+let (set_expected_typ_maybe_eq :
+  env -> FStar_Syntax_Syntax.typ -> Prims.bool -> env) =
+  fun env1 ->
+    fun t ->
+      fun use_eq ->
+        {
+          solver = (env1.solver);
+          range = (env1.range);
+          curmodule = (env1.curmodule);
+          gamma = (env1.gamma);
+          gamma_sig = (env1.gamma_sig);
+          gamma_cache = (env1.gamma_cache);
+          modules = (env1.modules);
+          expected_typ = (FStar_Pervasives_Native.Some (t, use_eq));
+          sigtab = (env1.sigtab);
+          attrtab = (env1.attrtab);
+          instantiate_imp = (env1.instantiate_imp);
+          effects = (env1.effects);
+          generalize = (env1.generalize);
+          letrecs = (env1.letrecs);
+          top_level = (env1.top_level);
+          check_uvars = (env1.check_uvars);
+          use_eq = false;
+          use_eq_strict = (env1.use_eq_strict);
+          is_iface = (env1.is_iface);
+          admit = (env1.admit);
+          lax = (env1.lax);
+          lax_universes = (env1.lax_universes);
+          phase1 = (env1.phase1);
+          failhard = (env1.failhard);
+          nosynth = (env1.nosynth);
+          uvar_subtyping = (env1.uvar_subtyping);
+          tc_term = (env1.tc_term);
+          typeof_tot_or_gtot_term = (env1.typeof_tot_or_gtot_term);
+          universe_of = (env1.universe_of);
+          typeof_well_typed_tot_or_gtot_term =
+            (env1.typeof_well_typed_tot_or_gtot_term);
+          use_bv_sorts = (env1.use_bv_sorts);
+          qtbl_name_and_index = (env1.qtbl_name_and_index);
+          normalized_eff_names = (env1.normalized_eff_names);
+          fv_delta_depths = (env1.fv_delta_depths);
+          proof_ns = (env1.proof_ns);
+          synth_hook = (env1.synth_hook);
+          try_solve_implicits_hook = (env1.try_solve_implicits_hook);
+          splice = (env1.splice);
+          mpreprocess = (env1.mpreprocess);
+          postprocess = (env1.postprocess);
+          identifier_info = (env1.identifier_info);
+          tc_hooks = (env1.tc_hooks);
+          dsenv = (env1.dsenv);
+          nbe = (env1.nbe);
+          strict_args_tab = (env1.strict_args_tab);
+          erasable_types_tab = (env1.erasable_types_tab);
+          enable_defer_to_tac = (env1.enable_defer_to_tac);
+          unif_allow_ref_guards = (env1.unif_allow_ref_guards);
+          erase_erasable_args = (env1.erase_erasable_args)
+        }
 let (expected_typ :
-  env -> FStar_Syntax_Syntax.typ FStar_Pervasives_Native.option) =
+  env ->
+    (FStar_Syntax_Syntax.typ * Prims.bool) FStar_Pervasives_Native.option)
+  =
   fun env1 ->
     match env1.expected_typ with
     | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None
     | FStar_Pervasives_Native.Some t -> FStar_Pervasives_Native.Some t
 let (clear_expected_typ :
-  env -> (env * FStar_Syntax_Syntax.typ FStar_Pervasives_Native.option)) =
+  env ->
+    (env * (FStar_Syntax_Syntax.typ * Prims.bool)
+      FStar_Pervasives_Native.option))
+  =
   fun env_ ->
     let uu___ = expected_typ env_ in
     ({
