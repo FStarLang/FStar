@@ -352,7 +352,7 @@ and term_to_string x =
           (match asc_opt with
            | None -> ""
            | Some (b, (asc, tacopt, use_eq)) ->
-             let s = if use_eq then "returns" else "returns$" in
+             let s = if use_eq then "returns$" else "returns" in
              U.format4 "as %s %s %s%s "
                (binder_to_string b)
                s
