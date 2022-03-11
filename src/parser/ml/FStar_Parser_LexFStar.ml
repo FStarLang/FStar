@@ -141,6 +141,7 @@ let () =
    "/\\", CONJUNCTION;
    "\\/", DISJUNCTION;
    "<:", SUBTYPE;
+   "$:", EQUALTYPE;
    "<@", SUBKIND;
    "(|", LENS_PAREN_LEFT;
    "|)", LENS_PAREN_RIGHT;
@@ -389,7 +390,7 @@ let ignored_op_char = [%sedlex.regexp? Chars ".$"]
 
 (* op_token must be splt into seperate regular expressions to prevent
    compliation from hanging *)
-let op_token_1 = [%sedlex.regexp? "~" | "-" | "/\\" | "\\/" | "<:" | "<@" | "(|" | "|)" | "#" ]
+let op_token_1 = [%sedlex.regexp? "~" | "-" | "/\\" | "\\/" | "<:" | "$:" | "<@" | "(|" | "|)" | "#" ]
 let op_token_2 = [%sedlex.regexp? "u#" | "&" | "()" | "(" | ")" | "," | "~>" | "->" | "<--" ]
 let op_token_3 = [%sedlex.regexp? "<-" | "<==>" | "==>" | "." | "?." | "?" | ".[|" | ".[" | ".(|" | ".(" ]
 let op_token_4 = [%sedlex.regexp? "$" | "{:pattern" | "{:well-founded" | ":" | "::" | ":=" | ";;" | ";" | "=" | "%[" ]
