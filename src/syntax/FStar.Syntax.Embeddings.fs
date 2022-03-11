@@ -405,6 +405,75 @@ let e_tuple2 (ea:embedding<'a>) (eb:embedding<'b>) =
         printer
         emb_t_pair_a_b
 
+let e_tuple3 (ea:embedding<'a>) (eb:embedding<'b>) (ec:embedding<'c>) =
+    let t_pair_a_b_c =
+        let t_tup3 = U.fvar_const PC.lid_tuple3 in
+        S.mk_Tm_app t_tup3 [S.as_arg ea.typ; S.as_arg eb.typ; S.as_arg ec.typ]
+                    Range.dummyRange
+    in
+    let emb_t_pair_a_b_c =
+        ET_app(PC.lid_tuple3 |> Ident.string_of_lid, [ea.emb_typ; eb.emb_typ; ec.emb_typ])
+    in
+    let printer (x, y, z) =
+        BU.format3 "(%s, %s, %s)" (ea.print x) (eb.print y) (ec.print z)
+    in
+    let em ((x1, x2, x3):('a * 'b * 'c)) (rng:range) topt norm : term =
+        lazy_embed
+            printer
+            emb_t_pair_a_b_c
+            rng
+            t_pair_a_b_c
+            (x1, x2, x3)
+            (fun () ->
+                let proj i abc =
+                    let proj_i = U.mk_field_projector_name (PC.mk_tuple_data_lid 3 rng) (S.null_bv S.tun) i in
+                    let proj_i_tm = S.fv_to_tm (lid_as_fv proj_i delta_equational None) in
+                    S.mk_Tm_app (S.mk_Tm_uinst proj_i_tm [U_zero])
+                                [S.iarg (type_of ea);
+                                 S.iarg (type_of eb);
+                                 S.iarg (type_of ec);
+                                 S.as_arg abc]
+                                rng
+                in
+                let shadow_a = map_shadow topt (proj 1) in
+                let shadow_b = map_shadow topt (proj 2) in
+                let shadow_c = map_shadow topt (proj 3) in
+                S.mk_Tm_app (S.mk_Tm_uinst (S.tdataconstr PC.lid_Mktuple3) [U_zero;U_zero;U_zero])
+                            [S.iarg (type_of ea);
+                             S.iarg (type_of eb);
+                             S.iarg (type_of ec);
+                             S.as_arg (embed ea x1 rng shadow_a norm);
+                             S.as_arg (embed eb x2 rng shadow_b norm);
+                             S.as_arg (embed ec x3 rng shadow_c norm)]
+                            rng)
+    in
+    let un (t0:term) (w:bool) norm : option<('a * 'b * 'c)> =
+        let t = U.unmeta_safe t0 in
+        lazy_unembed
+            printer
+            emb_t_pair_a_b_c
+            t
+            t_pair_a_b_c
+            (fun t ->
+                let hd, args = U.head_and_args_full t in
+                match (U.un_uinst hd).n, args with
+                | Tm_fvar fv, [_; _; (a, _); (b, _); (c, _)] when S.fv_eq_lid fv PC.lid_Mktuple3 ->
+                    BU.bind_opt (unembed ea a w norm) (fun a ->
+                    BU.bind_opt (unembed eb b w norm) (fun b ->
+                    BU.bind_opt (unembed ec c w norm) (fun c ->
+                    Some (a, b, c))))
+                | _ ->
+                    if w then
+                    Err.log_issue t0.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded pair: %s" (Print.term_to_string t0)));
+                    None)
+    in
+    mk_emb_full
+        em
+        un
+        (S.t_tuple3_of (type_of ea) (type_of eb) (type_of ec))
+        printer
+        emb_t_pair_a_b_c
+
 let e_either (ea:embedding<'a>) (eb:embedding<'b>) =
     let t_sum_a_b =
         let t_either = U.fvar_const PC.either_lid in
