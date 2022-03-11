@@ -290,10 +290,17 @@ let no_logical_guard env (te, kt, f) =
     | Trivial -> te, kt, f
     | NonTrivial f -> raise_error (Err.unexpected_non_trivial_precondition_on_term env f) (Env.get_range env)
 
-let print_expected_ty env = match Env.expected_typ env with
-    | None -> BU.print_string "Expected type is None\n"
-    | Some (t, use_eq) ->
-      BU.print2 "Expected type is (%s, use_eq=%s)" (Print.term_to_string t) (string_of_bool use_eq)
+let print_expected_ty_str env =
+  match Env.expected_typ env with
+  | None -> "Expected type is None"
+  | Some (t, use_eq) ->
+    BU.format2
+      "Expected type is (%s, use_eq = %s)"
+      (Print.term_to_string t)
+      (string_of_bool use_eq)
+           
+
+let print_expected_ty env = BU.print1 "%s\n" (print_expected_ty_str env)
 
 (************************************************************************************************************)
 (* check the patterns in an SMT lemma to make sure all bound vars are mentiond *)
@@ -588,12 +595,12 @@ let is_comp_ascribed_reflect (e:term) : option<(lident * term * aqual)> =
 (************************************************************************************************************)
 let rec tc_term env e =
     if Env.debug env Options.Medium then
-        BU.print5 "(%s) Starting tc_term (phase1=%s) of %s (%s) with expected type: %s {\n"
+        BU.print5 "(%s) Starting tc_term (phase1=%s) of %s (%s), %s {\n"
           (Range.string_of_range <| Env.get_range env)
           (string_of_bool env.phase1)
           (Print.term_to_string e)
           (Print.tag_of_term (SS.compress e))
-          (print_expected_ty env)
+          (print_expected_ty_str env);
 
     let r, ms = BU.record_time (fun () ->
                     tc_maybe_toplevel_term ({env with top_level=false}) e) in
@@ -1112,10 +1119,10 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
     let env0 = env in
     let env = Env.clear_expected_typ env |> fst |> instantiate_both in
     if debug env Options.High
-    then BU.print3 "(%s) Checking app %s, expected type is %s\n"
+    then BU.print3 "(%s) Checking app %s, %s\n"
                     (Range.string_of_range top.pos)
                     (Print.term_to_string top)
-                    (print_expected_ty env0);
+                    (print_expected_ty_str env0);
 
     //Don't instantiate head; instantiations will be computed below, accounting for implicits/explicits
     let head, chead, g_head = tc_term (no_inst env) head in
