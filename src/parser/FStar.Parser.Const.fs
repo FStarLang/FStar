@@ -402,6 +402,7 @@ let mk_tuple_lid n r =
   set_lid_range (psnconst t) r
 
 let lid_tuple2   = mk_tuple_lid 2 dummyRange
+let lid_tuple3   = mk_tuple_lid 3 dummyRange
 
 let is_tuple_constructor_string (s:string) :bool =
   U.starts_with s "FStar.Pervasives.Native.tuple"
@@ -414,6 +415,7 @@ let mk_tuple_data_lid n r =
   set_lid_range (psnconst t) r
 
 let lid_Mktuple2 = mk_tuple_data_lid 2 dummyRange
+let lid_Mktuple3 = mk_tuple_data_lid 3 dummyRange
 
 let is_tuple_datacon_string (s:string) :bool =
   U.starts_with s "FStar.Pervasives.Native.Mktuple"
