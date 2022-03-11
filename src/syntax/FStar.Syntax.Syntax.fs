@@ -161,7 +161,8 @@ and uvar = Unionfind.p_uvar<option<term>> * version * Range.range
 and uvars = set<ctx_uvar>
 and match_returns_ascription = binder * ascription               (* as x returns C|t *)
 and branch = pat * option<term> * term                           (* optional when clause in each branch *)
-and ascription = either<term, comp> * option<term>               (* e <: t [by tac] or e <: C [by tac] *)
+and ascription = either<term, comp> * option<term> * bool        (* e <: t [by tac] or e <: C [by tac] *)
+                                                                 (* the bool says whether the ascription is an equality ascription, i.e. $: *)
 and pat' =
   | Pat_constant of sconst
   | Pat_cons     of fv * list<(pat * bool)>                      (* flag marks an explicitly provided implicit *)
@@ -777,10 +778,30 @@ let t_tactic_of t =
               [as_arg t] Range.dummyRange
 
 let t_tactic_unit = t_tactic_of t_unit
-let t_list_of t = mk_Tm_app (mk_Tm_uinst (tabbrev PC.list_lid) [U_zero]) [as_arg t] Range.dummyRange
-let t_option_of t = mk_Tm_app (mk_Tm_uinst (tabbrev PC.option_lid) [U_zero]) [as_arg t] Range.dummyRange
-let t_tuple2_of t1 t2 = mk_Tm_app (mk_Tm_uinst (tabbrev PC.lid_tuple2) [U_zero;U_zero]) [as_arg t1; as_arg t2] Range.dummyRange
-let t_either_of t1 t2 = mk_Tm_app (mk_Tm_uinst (tabbrev PC.either_lid) [U_zero;U_zero]) [as_arg t1; as_arg t2] Range.dummyRange
+
+(*
+ * AR: what's up with all the U_zero below?
+ *)
+let t_list_of t = mk_Tm_app
+  (mk_Tm_uinst (tabbrev PC.list_lid) [U_zero])
+  [as_arg t]
+  Range.dummyRange
+let t_option_of t = mk_Tm_app
+  (mk_Tm_uinst (tabbrev PC.option_lid) [U_zero])
+  [as_arg t]
+  Range.dummyRange
+let t_tuple2_of t1 t2 = mk_Tm_app
+  (mk_Tm_uinst (tabbrev PC.lid_tuple2) [U_zero;U_zero])
+  [as_arg t1; as_arg t2]
+  Range.dummyRange
+let t_tuple3_of t1 t2 t3 = mk_Tm_app
+  (mk_Tm_uinst (tabbrev PC.lid_tuple3) [U_zero;U_zero;U_zero])
+  [as_arg t1; as_arg t2; as_arg t3]
+  Range.dummyRange
+let t_either_of t1 t2 = mk_Tm_app
+  (mk_Tm_uinst (tabbrev PC.either_lid) [U_zero;U_zero])
+  [as_arg t1; as_arg t2]
+  Range.dummyRange
 
 let unit_const_with_range r = mk (Tm_constant FStar.Const.Const_unit) r
 let unit_const = unit_const_with_range Range.dummyRange
