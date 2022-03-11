@@ -1432,7 +1432,12 @@ noSeqTerm:
       ( mk_term (Ascribed(e,{t with level=Expr},tactic_opt,false)) (rhs2 parseState 1 4) Expr )}
 | tmIff EQUALTYPE tmIff option___anonymous_8_
     {let (e, _2, t, tactic_opt) = ($1, (), $3, $4) in
-      ( mk_term (Ascribed(e,{t with level=Expr},tactic_opt,true)) (rhs2 parseState 1 4) Expr )}
+      (
+        log_issue (lhs parseState)
+	          (Warning_BleedingEdge_Feature,
+		   "Equality type ascriptions is an experimental feature subject to redesign in the future");
+        mk_term (Ascribed(e,{t with level=Expr},tactic_opt,true)) (rhs2 parseState 1 4) Expr
+      )}
 | atomicTermNotQUident DOT_LPAREN term RPAREN LARROW noSeqTerm
     {let (e1, _1, e, _3_inlined1, _3, e3) = ($1, (), $3, (), (), $6) in
 let op_expr =                              ( mk_ident (".()", rhs parseState 1), e, rhs2 parseState 1 3 ) in

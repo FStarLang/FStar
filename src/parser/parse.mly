@@ -685,7 +685,12 @@ noSeqTerm:
   | e=tmIff SUBTYPE t=tmIff tactic_opt=option(BY tactic=thunk(typ) {tactic})
       { mk_term (Ascribed(e,{t with level=Expr},tactic_opt,false)) (rhs2 parseState 1 4) Expr }
   | e=tmIff EQUALTYPE t=tmIff tactic_opt=option(BY tactic=thunk(typ) {tactic})
-      { mk_term (Ascribed(e,{t with level=Expr},tactic_opt,true)) (rhs2 parseState 1 4) Expr }
+      {
+        log_issue (lhs parseState)
+	          (Warning_BleedingEdge_Feature,
+		   "Equality type ascriptions is an experimental feature subject to redesign in the future");
+        mk_term (Ascribed(e,{t with level=Expr},tactic_opt,true)) (rhs2 parseState 1 4) Expr
+      }
   | e1=atomicTermNotQUident op_expr=dotOperator LARROW e3=noSeqTerm
       {
         let (op, e2, _) = op_expr in
