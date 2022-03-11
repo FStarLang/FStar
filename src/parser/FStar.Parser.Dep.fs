@@ -925,7 +925,7 @@ let collect_one
             collect_term t1;
             (match ret_opt with
              | None -> ()
-             | Some (_, ret) ->
+             | Some (_, ret, _) ->
                collect_term ret);
             collect_term t2;
             collect_term t3
@@ -933,16 +933,16 @@ let collect_one
             collect_term t;
             (match ret_opt with
              | None -> ()
-             | Some (_, ret) ->
+             | Some (_, ret, _) ->
                collect_term ret);
             collect_branches bs
         | TryWith (t, bs) ->
             collect_term t;
             collect_branches bs
-        | Ascribed (t1, t2, None) ->
+        | Ascribed (t1, t2, None, _) ->
             collect_term t1;
             collect_term t2
-        | Ascribed (t1, t2, Some tac) ->
+        | Ascribed (t1, t2, Some tac, _) ->
             collect_term t1;
             collect_term t2;
             collect_term tac
