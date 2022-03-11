@@ -270,7 +270,7 @@ let subst_comp' s t =
       | GTotal (t, uopt) -> mk_GTotal' (subst' s t) (Option.map (subst_univ (fst s)) uopt)
       | Comp ct -> mk_Comp(subst_comp_typ' s ct)
 
-let subst_ascription' s asc =
+let subst_ascription' s (asc:ascription) =
   let annot, topt, use_eq = asc in
   let annot = match annot with
               | Inl t -> Inl (subst' s t)
@@ -531,7 +531,7 @@ let set_use_range r t = subst' ([], SomeUseRange (Range.set_def_range r (Range.u
 let subst_comp s t = subst_comp' ([s], NoUseRange) t
 let subst_bqual s imp = subst_bqual' ([s], NoUseRange) imp
 let subst_aqual s imp = subst_aqual' ([s], NoUseRange) imp
-let subst_ascription s asc = subst_ascription' ([s], NoUseRange) asc
+let subst_ascription s (asc:ascription) = subst_ascription' ([s], NoUseRange) asc
 let subst_decreasing_order s dec = subst_dec_order' ([s], NoUseRange) dec
 let closing_subst (bs:binders) =
     List.fold_right (fun b (subst, n)  -> (NM(b.binder_bv, n)::subst, n+1)) bs ([], 0) |> fst

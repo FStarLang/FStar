@@ -477,17 +477,13 @@ let (subst_comp' :
            | FStar_Syntax_Syntax.Comp ct ->
                let uu___1 = subst_comp_typ' s ct in
                FStar_Syntax_Syntax.mk_Comp uu___1)
-let subst_ascription' :
-  'uuuuu .
-    FStar_Syntax_Syntax.subst_ts ->
+let (subst_ascription' :
+  FStar_Syntax_Syntax.subst_ts ->
+    FStar_Syntax_Syntax.ascription ->
       ((FStar_Syntax_Syntax.term,
         FStar_Syntax_Syntax.comp' FStar_Syntax_Syntax.syntax)
         FStar_Pervasives.either * FStar_Syntax_Syntax.term
-        FStar_Pervasives_Native.option * 'uuuuu) ->
-        ((FStar_Syntax_Syntax.term,
-          FStar_Syntax_Syntax.comp' FStar_Syntax_Syntax.syntax)
-          FStar_Pervasives.either * FStar_Syntax_Syntax.term
-          FStar_Pervasives_Native.option * 'uuuuu)
+        FStar_Pervasives_Native.option * Prims.bool))
   =
   fun s ->
     fun asc ->
