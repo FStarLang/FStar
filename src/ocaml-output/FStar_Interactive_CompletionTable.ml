@@ -138,10 +138,9 @@ let __proj__StrBranch__item___0 :
   'a . 'a btree -> (Prims.string * 'a * 'a btree * 'a btree) =
   fun projectee -> match projectee with | StrBranch _0 -> _0
 let rec btree_to_list_rev :
-  'uuuuu .
-    'uuuuu btree ->
-      (Prims.string * 'uuuuu) Prims.list ->
-        (Prims.string * 'uuuuu) Prims.list
+  'a .
+    'a btree ->
+      (Prims.string * 'a) Prims.list -> (Prims.string * 'a) Prims.list
   =
   fun btree1 ->
     fun acc ->
@@ -152,9 +151,9 @@ let rec btree_to_list_rev :
             let uu___1 = btree_to_list_rev lbt acc in (key, value) :: uu___1 in
           btree_to_list_rev rbt uu___
 let rec btree_from_list :
-  'uuuuu .
-    (Prims.string * 'uuuuu) Prims.list ->
-      Prims.int -> ('uuuuu btree * (Prims.string * 'uuuuu) Prims.list)
+  'a .
+    (Prims.string * 'a) Prims.list ->
+      Prims.int -> ('a btree * (Prims.string * 'a) Prims.list)
   =
   fun nodes ->
     fun size ->

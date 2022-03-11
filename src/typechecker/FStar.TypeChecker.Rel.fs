@@ -71,13 +71,25 @@ type uvi =
     | TERM of ctx_uvar * term
     | UNIV of S.universe_uvar * universe
 
+type defer_ok_t = 
+  | NoDefer
+  | DeferAny
+  | DeferFlexFlexOnly
+
+
+let string_of_defer_ok =
+  function
+  | NoDefer -> "NoDefer"
+  | DeferAny -> "DeferAny"
+  | DeferFlexFlexOnly -> "DeferFlexFlexOnly"
+
 (* The set of problems currently being addressed *)
 type worklist = {
     attempting:   probs;
     wl_deferred:  list<(int * deferred_reason * lstring * prob)>; //flex-flex cases, non patterns, and subtyping constraints involving a unification variable,
     wl_deferred_to_tac: list<(int * deferred_reason * lstring * prob)>; //problems that should be dispatched to a user-provided tactics
     ctr:          int;                          //a counter incremented each time we extend subst, used to detect if we've made progress
-    defer_ok:     bool;                         //whether or not carrying constraints is ok---at the top-level, this flag is false
+    defer_ok:     defer_ok_t;                   //whether or not carrying constraints is ok---at the top-level, this flag is NoDefer
     smt_ok:       bool;                         //whether or not falling back to the SMT solver is permitted
     umax_heuristic_ok: bool;                    //whether or not it's ok to apply a structural match on umax us = umax us'
     tcenv:        Env.env;
@@ -216,7 +228,7 @@ let empty_worklist env = {
     wl_deferred_to_tac=[];
     ctr=0;
     tcenv=env;
-    defer_ok=true;
+    defer_ok=DeferAny;
     smt_ok=true;
     umax_heuristic_ok=true;
     wl_implicits=[];
@@ -934,6 +946,17 @@ let occurs_check (uk:ctx_uvar) t =
                         (Print.uvar_to_string uk.ctx_uvar_head)
                         (Print.term_to_string t)) in
     uvars, not occurs, msg
+let occurs_full (uk:ctx_uvar) t =
+    let uvars =
+        Free.uvars_full t
+        |> BU.set_elements
+    in
+    let occurs =
+        (uvars
+        |> BU.for_some (fun uv ->
+           UF.equiv uv.ctx_uvar_head uk.ctx_uvar_head))
+    in
+    occurs
 
 let rec maximal_prefix (bs:binders) (bs':binders) : binders * (binders * binders) =
   match bs, bs' with
@@ -962,6 +985,8 @@ let gamma_until (g:gamma) (bs:binders) =
  * Given G_s |- ?u_s bs : t_s and G_t |- ?u_t : t_t, this code restricts G_t to the
  *   maximal prefix of G_s and G_t, creating a new uvar maximal_prefix(G_s, G_t) |- ?u : t_t,
  *   and assigning ?u_t = ?u
+ *
+ * NS: 03/22 Question:  How do we know that t_t is well-formed in maximal_prefix(G_s, G_t)?
  *
  * However simply doing this does not allow the solution of ?u to mention the binders bs
  *
@@ -1541,7 +1566,7 @@ let rec really_solve_universe_eq pid_orig wl u1 u2 =
 
         | U_max _, _
         | _, U_max _ ->
-          if wl.defer_ok
+          if wl.defer_ok = DeferAny
           then UDeferred wl
           else let u1 = norm_univ wl u1 in
                let u2 = norm_univ wl u2 in
@@ -1708,7 +1733,7 @@ let rec solve (env:Env.env) (probs:worklist) : solution =
         if rank=Rigid_rigid
         || (tp.relation = EQ && rank <> Flex_flex)
         then solve_t env tp probs
-        else if probs.defer_ok
+        else if probs.defer_ok = DeferAny
         then maybe_defer_to_user_tac env tp "deferring flex_rigid or flex_flex subtyping" probs
         else if rank=Flex_flex
         then solve_t env ({tp with relation=EQ}) probs //turn flex_flex subtyping into flex_flex eq
@@ -1774,7 +1799,16 @@ and solve_maybe_uinsts (env:Env.env) (orig:prob) (t1:term) (t2:term) (wl:worklis
             USolved wl
 
 and giveup_or_defer (env:Env.env) (orig:prob) (wl:worklist) (reason:deferred_reason) (msg:lstring) : solution =
-    if wl.defer_ok
+    if wl.defer_ok = DeferAny
+    then begin
+        if Env.debug env <| Options.Other "Rel" then
+            BU.print2 "\n\t\tDeferring %s\n\t\tBecause %s\n" (prob_to_string env orig) (Thunk.force msg);
+        solve env (defer reason msg orig wl)
+    end
+    else giveup env msg orig
+
+and giveup_or_defer_flex_flex (env:Env.env) (orig:prob) (wl:worklist) (reason:deferred_reason) (msg:lstring) : solution =
+    if wl.defer_ok <> NoDefer
     then begin
         if Env.debug env <| Options.Other "Rel" then
             BU.print2 "\n\t\tDeferring %s\n\t\tBecause %s\n" (prob_to_string env orig) (Thunk.force msg);
@@ -1874,7 +1908,7 @@ and solve_rigid_flex_or_flex_rigid_subtyping
                           (as_arg t1_hd::t1_args)
                           (as_arg t2_hd::t2_args)
                   in
-                  let wl' = {wl with defer_ok=false;
+                  let wl' = {wl with defer_ok=NoDefer;
                                      smt_ok=false;
                                      attempting=probs;
                                      wl_deferred=[];
@@ -2050,7 +2084,7 @@ and solve_rigid_flex_or_flex_rigid_subtyping
 
       let tx = UF.new_transaction () in
       begin
-      match solve_t env eq_prob ({wl' with defer_ok=false;
+      match solve_t env eq_prob ({wl' with defer_ok=NoDefer;
                                            wl_implicits = [];
                                            attempting=sub_probs}) with
       | Success (_, defer_to_tac, imps) ->
@@ -2243,7 +2277,7 @@ and try_solve_without_smt_or_else
         (try_solve: (Env.env -> worklist -> solution))
         (else_solve: Env.env -> worklist -> (prob * lstring) -> solution)
     : solution =
-    let wl' = {wl with defer_ok=false;
+    let wl' = {wl with defer_ok=NoDefer;
                        smt_ok=false;
                        umax_heuristic_ok=false;
                        attempting=[];
@@ -2267,7 +2301,7 @@ and try_solve_then_or_else
         (else_solve: Env.env -> worklist -> solution)
     : solution =
     let empty_wl =
-      {wl with defer_ok=false;
+      {wl with defer_ok=NoDefer;
                attempting=[];
                wl_deferred=[];
                wl_implicits=[]} in
@@ -2473,7 +2507,7 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
     match p_rel orig with
     | SUB
     | SUBINV ->
-      if wl.defer_ok
+      if wl.defer_ok = DeferAny
       then giveup_or_defer env orig wl Deferred_flex (Thunk.mkv "flex-rigid subtyping")
       else solve_t_flex_rigid_eq env (make_prob_eq orig) wl lhs rhs
 
@@ -2507,7 +2541,7 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
         then let sol = mk_solution env lhs lhs_binders rhs in
              let wl = restrict_all_uvars env ctx_uv lhs_binders uvars wl in
              solve env (solve_prob orig None sol wl)
-        else if wl.defer_ok
+        else if wl.defer_ok = DeferAny
         then
           let msg = mklstr (fun () ->
                                 BU.format3 "free names in the RHS {%s} are out of scope for the LHS: {%s}, {%s}"
@@ -2519,7 +2553,7 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
 
 
       | _ -> //Not a pattern
-        if wl.defer_ok
+        if wl.defer_ok = DeferAny
         then giveup_or_defer env orig wl Deferred_not_a_pattern (Thunk.mkv "Not a pattern")
         else match try_quasi_pattern orig env wl lhs rhs with
             | Inr sol, wl ->
@@ -2552,8 +2586,8 @@ and solve_t_flex_flex env orig wl (lhs:flex_t) (rhs:flex_t) : solution =
     match p_rel orig with
     | SUB
     | SUBINV ->
-      if wl.defer_ok
-      then giveup_or_defer env orig wl Deferred_flex (Thunk.mkv "flex-flex subtyping")
+      if wl.defer_ok = DeferAny
+      then giveup_or_defer_flex_flex env orig wl Deferred_flex (Thunk.mkv "flex-flex subtyping")
       else solve_t_flex_flex env (make_prob_eq orig) wl lhs rhs
 
     | EQ ->
@@ -2561,9 +2595,9 @@ and solve_t_flex_flex env orig wl (lhs:flex_t) (rhs:flex_t) : solution =
       then defer_to_user_tac env orig (flex_reason lhs ^", "^flex_reason rhs)wl
       else
 
-      if wl.defer_ok
+      if wl.defer_ok = DeferAny
       && (not (is_flex_pat lhs)|| not (is_flex_pat rhs))
-      then giveup_or_defer env orig wl Deferred_flex_flex_nonpattern (Thunk.mkv "flex-flex non-pattern")
+      then giveup_or_defer_flex_flex env orig wl Deferred_flex_flex_nonpattern (Thunk.mkv "flex-flex non-pattern")
 
       else if should_run_meta_arg_tac lhs
       then run_meta_arg_tac_and_try_again lhs
@@ -2601,20 +2635,28 @@ and solve_t_flex_flex env orig wl (lhs:flex_t) (rhs:flex_t) : solution =
                  in
                  let gamma_w = gamma_until u_lhs.ctx_uvar_gamma ctx_w in
                  let zs = intersect_binders gamma_w (ctx_l @ binders_lhs) (ctx_r @ binders_rhs) in
-                 let _, w, wl = new_uvar ("flex-flex quasi:"
+                 let new_uvar_typ = U.arrow zs (S.mk_Total t_res_lhs) in
+                 if snd (occurs u_lhs new_uvar_typ)
+                 ||  (not (Unionfind.equiv u_lhs.ctx_uvar_head u_rhs.ctx_uvar_head) &&
+                     snd (occurs u_rhs new_uvar_typ))
+                 then giveup_or_defer_flex_flex env orig wl Deferred_flex_flex_nonpattern 
+                         (Thunk.mkv (BU.format1 "flex-flex: occurs\n defer_ok=%s\n"
+                                                (string_of_defer_ok wl.defer_ok)))
+                 else begin
+                   let _, w, wl = new_uvar ("flex-flex quasi:"
                                           ^"\tlhs="  ^u_lhs.ctx_uvar_reason
                                           ^ "\trhs=" ^u_rhs.ctx_uvar_reason)
-                                         wl range gamma_w ctx_w (U.arrow zs (S.mk_Total t_res_lhs))
+                                         wl range gamma_w ctx_w new_uvar_typ
                                          (if u_lhs.ctx_uvar_should_check = Allow_untyped &&
                                              u_rhs.ctx_uvar_should_check = Allow_untyped
                                           then Allow_untyped
                                           else Strict)
                                          None in
-                 let w_app = S.mk_Tm_app w (List.map (fun ({binder_bv=z}) -> S.as_arg (S.bv_to_name z)) zs) w.pos in
-                 let _ =
-                    if Env.debug env <| Options.Other "Rel"
-                    then BU.print "flex-flex quasi:\n\t\
-                                        lhs=%s\n\t\
+                   let w_app = S.mk_Tm_app w (List.map (fun ({binder_bv=z}) -> S.as_arg (S.bv_to_name z)) zs) w.pos in
+                   let _ =
+                     if Env.debug env <| Options.Other "Rel"
+                     then BU.print "flex-flex quasi:\n\t\
+                                              lhs=%s\n\t\
                                         rhs=%s\n\t\
                                         sol=%s\n\t\
                                         ctx_l@binders_lhs=%s\n\t\
@@ -2626,15 +2668,17 @@ and solve_t_flex_flex env orig wl (lhs:flex_t) (rhs:flex_t) : solution =
                              Print.binders_to_string ", " (ctx_l@binders_lhs);
                              Print.binders_to_string ", " (ctx_r@binders_rhs);
                              Print.binders_to_string ", " zs]
-                 in
-                 let sol =
-                     let s1 = TERM(u_lhs, U.abs binders_lhs w_app (Some (U.residual_tot t_res_lhs))) in
-                     if Unionfind.equiv u_lhs.ctx_uvar_head u_rhs.ctx_uvar_head
-                     then [s1]
-                     else let s2 = TERM(u_rhs, U.abs binders_rhs w_app (Some (U.residual_tot t_res_lhs))) in
-                          [s1;s2]
-                 in
-                 solve env (solve_prob orig None sol wl)
+                   in
+                   let s1_sol = U.abs binders_lhs w_app (Some (U.residual_tot t_res_lhs)) in
+                   let s1 = TERM(u_lhs, s1_sol) in
+                   if Unionfind.equiv u_lhs.ctx_uvar_head u_rhs.ctx_uvar_head
+                   then solve env (solve_prob orig None [s1] wl)
+                   else (
+                       let s2_sol = U.abs binders_rhs w_app (Some (U.residual_tot t_res_lhs)) in
+                       let s2 = TERM(u_rhs, s2_sol) in
+                       solve env (solve_prob orig None [s1;s2] wl)
+                     )
+                 end
 
           | _ ->
             giveup_or_defer env orig wl Deferred_flex_flex_nonpattern (Thunk.mkv "flex-flex: non-patterns")
@@ -2826,7 +2870,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                             EQ pat_term None scrutinee.pos
                             "match heuristic"
             in
-            let wl' = {wl with defer_ok=false;
+            let wl' = {wl with defer_ok=NoDefer;
                                 smt_ok=false;
                                 attempting=[TProb prob];
                                 wl_deferred=[];
@@ -2863,7 +2907,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                 then BU.print1 "match head %s is not a flex term\n" (Print.term_to_string scrutinee);
                 Inr None
               end
-              else if wl.defer_ok
+              else if wl.defer_ok = DeferAny
               then (if Env.debug env <| Options.Other "Rel"
                     then BU.print_string "Deferring ... \n";
                     Inl "defer")
@@ -3207,7 +3251,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
              (* We set wl_implicits to false, since in the success case we will
               * extend the original wl with the extra implicits we get, and we
               * do not want to duplicate the existing ones. *)
-             match solve env ({wl with defer_ok=false;
+             match solve env ({wl with defer_ok=NoDefer;
                                        wl_implicits=[];
                                        attempting=[ref_prob];
                                        wl_deferred=[]}) with
@@ -4110,7 +4154,7 @@ let solve_universe_inequalities' tx env (variables, ineqs) : unit =
       []) in
    //apply all the solutions
    let _ =
-     let wl = {empty_worklist env with defer_ok=false} in
+     let wl = {empty_worklist env with defer_ok=NoDefer} in
      sols |> List.map (fun (lb, v) ->
          //     printfn "Setting %s to its lower bound %s" (Print.univ_to_string v) (Print.univ_to_string lb);
          match solve_universe_eq (-1) wl lb v with
@@ -4149,8 +4193,8 @@ let solve_universe_inequalities env ineqs : unit =
     let tx = UF.new_transaction () in
     solve_universe_inequalities' tx env ineqs;
     UF.commit tx
-
-let try_solve_deferred_constraints defer_ok smt_ok deferred_to_tac_ok env (g:guard_t) : guard_t =
+  
+let try_solve_deferred_constraints (defer_ok:defer_ok_t) smt_ok deferred_to_tac_ok env (g:guard_t) : guard_t =
   Profiling.profile (fun () ->
    let fail (d,s) =
       let msg = explain env d s in
@@ -4161,13 +4205,13 @@ let try_solve_deferred_constraints defer_ok smt_ok deferred_to_tac_ok env (g:gua
    if Env.debug env <| Options.Other "Rel"
    then begin
          BU.print3 "Trying to solve carried problems (defer_ok=%s): begin\n\t%s\nend\n and %s implicits\n"
-                  (BU.string_of_bool defer_ok)
+                  (string_of_defer_ok defer_ok)
                   (wl_to_string wl)
                   (string_of_int (List.length g.implicits))
    end;
    let g =
      match solve_and_commit env wl fail with
-     | Some (_::_, _, _) when not defer_ok ->
+     | Some (_::_, _, _) when (defer_ok = NoDefer) ->
        failwith "Impossible: Unexpected deferred constraints remain"
 
      | Some (deferred, defer_to_tac, imps) ->
@@ -4194,13 +4238,13 @@ let try_solve_deferred_constraints defer_ok smt_ok deferred_to_tac_ok env (g:gua
 
 
 let solve_deferred_constraints env (g:guard_t) =
-    let defer_ok = false in
+    let defer_ok = NoDefer in
     let smt_ok = true in
     let deferred_to_tac_ok = true in
     try_solve_deferred_constraints defer_ok smt_ok deferred_to_tac_ok env g
 
-let solve_non_tactic_deferred_constraints env (g:guard_t) =
-    let defer_ok = false in
+let solve_non_tactic_deferred_constraints maybe_defer_flex_flex env (g:guard_t) =
+    let defer_ok = if maybe_defer_flex_flex then DeferFlexFlexOnly else NoDefer in
     let smt_ok = true in
     let deferred_to_tac_ok = false in
     try_solve_deferred_constraints defer_ok smt_ok deferred_to_tac_ok env g
@@ -4235,7 +4279,7 @@ let discharge_guard' use_env_range_msg env (g:guard_t) (use_smt:bool) : option<g
                   guard = %s\n"
                   (guard_to_string env g);
   let g =
-    let defer_ok = false in
+    let defer_ok = NoDefer in
     let deferred_to_tac_ok = true in
     try_solve_deferred_constraints defer_ok use_smt deferred_to_tac_ok env g
   in
