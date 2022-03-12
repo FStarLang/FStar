@@ -73,7 +73,7 @@ let none_to_empty_list x =
 %token FRIEND OPEN REC THEN TRUE TRY TYPE CALC CLASS INSTANCE EFFECT VAL
 %token INTRO ELIM
 %token INCLUDE
-%token WHEN AS RETURNS WITH HASH AMP LPAREN RPAREN LPAREN_RPAREN COMMA LONG_LEFT_ARROW LARROW RARROW
+%token WHEN AS RETURNS RETURNS_EQ WITH HASH AMP LPAREN RPAREN LPAREN_RPAREN COMMA LONG_LEFT_ARROW LARROW RARROW
 %token IFF IMPLIES CONJUNCTION DISJUNCTION
 %token DOT COLON COLON_COLON SEMICOLON
 %token QMARK_DOT
@@ -679,6 +679,7 @@ term:
 
 match_returning:
   | as_opt=option(AS i=lident {i}) RETURNS t=tmIff {as_opt,t,false}
+  | as_opt=option(AS i=lident {i}) RETURNS_EQ t=tmIff {as_opt,t,true}
 
 noSeqTerm:
   | t=typ  { t }
