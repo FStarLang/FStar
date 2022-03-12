@@ -979,7 +979,9 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
                 let result_comp = SS.subst_comp [NT (arg_binder.binder_bv, S.bv_to_name return_bv)] result_comp in
                 let result_comp = SS.close_comp [S.mk_binder return_bv] result_comp in
                 let return_binder = List.hd (SS.close_binders [S.mk_binder return_bv]) in
-                let returns_annotation = Some (return_binder, (Inr result_comp, None)) in
+                let returns_annotation =
+                  let use_eq = true in
+                  Some (return_binder, (Inr result_comp, None, use_eq)) in
                 mk (Tm_match(arg_exp, returns_annotation, [U.branch pat], None)) p in
               let imp = U.abs binders body None in
               let dd = Delta_equational_at_level 1 in
