@@ -145,7 +145,8 @@ and uvar = Unionfind.p_uvar<option<term>> * version * Range.range
 and uvars = set<ctx_uvar>
 and match_returns_ascription = binder * ascription               (* as x returns C|t *)
 and branch = pat * option<term> * term                           (* optional when clause in each branch *)
-and ascription = either<term, comp> * option<term>               (* e <: t [by tac] or e <: C [by tac] *)
+and ascription = either<term, comp> * option<term> * bool        (* e <: t [by tac] or e <: C [by tac] *)
+                                                                 (* the bool says whether the ascription is an equality ascription, i.e. $: *)
 and pat' =
   | Pat_constant of sconst
   | Pat_cons     of fv * list<(pat * bool)>                      (* flag marks an explicitly provided implicit *)
@@ -676,6 +677,7 @@ val t_tactic_unit   : term
 val t_list_of       : term -> term
 val t_option_of     : term -> term
 val t_tuple2_of     : term -> term -> term
+val t_tuple3_of     : term -> term -> term -> term
 val t_either_of     : term -> term -> term
 
 val unit_const_with_range : Range.range -> term

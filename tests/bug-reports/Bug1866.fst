@@ -32,14 +32,14 @@ let rec not_do_much e: Tac term =
       let e = pack (Tv_Let r attrs bv e1 e2) in
       e
 
-  | Tv_AscribedT e t tac ->
+  | Tv_AscribedT e t tac use_eq ->
       let e = not_do_much e in
-      let e = pack (Tv_AscribedT e t tac) in
+      let e = pack (Tv_AscribedT e t tac use_eq) in
       e
 
-  | Tv_AscribedC e c tac ->
+  | Tv_AscribedC e c tac use_eq ->
       let e = not_do_much e in
-      let e = pack (Tv_AscribedC e c tac) in
+      let e = pack (Tv_AscribedC e c tac use_eq) in
       e
 
   | Tv_Arrow _ _

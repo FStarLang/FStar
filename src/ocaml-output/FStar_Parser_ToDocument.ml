@@ -2341,18 +2341,22 @@ and (p_noSeqTerm' :
     fun pb ->
       fun e ->
         match e.FStar_Parser_AST.tm with
-        | FStar_Parser_AST.Ascribed (e1, t, FStar_Pervasives_Native.None) ->
+        | FStar_Parser_AST.Ascribed
+            (e1, t, FStar_Pervasives_Native.None, use_eq) ->
             let uu___ =
               let uu___1 = p_tmIff e1 in
               let uu___2 =
                 let uu___3 =
                   let uu___4 = p_typ ps pb t in
                   FStar_Pprint.op_Hat_Slash_Hat FStar_Pprint.colon uu___4 in
-                FStar_Pprint.op_Hat_Hat FStar_Pprint.langle uu___3 in
+                FStar_Pprint.op_Hat_Hat
+                  (if use_eq
+                   then FStar_Pprint.dollar
+                   else FStar_Pprint.langle) uu___3 in
               FStar_Pprint.op_Hat_Slash_Hat uu___1 uu___2 in
             FStar_Pprint.group uu___
-        | FStar_Parser_AST.Ascribed (e1, t, FStar_Pervasives_Native.Some tac)
-            ->
+        | FStar_Parser_AST.Ascribed
+            (e1, t, FStar_Pervasives_Native.Some tac, use_eq) ->
             let uu___ =
               let uu___1 = p_tmIff e1 in
               let uu___2 =
@@ -2365,7 +2369,10 @@ and (p_noSeqTerm' :
                       FStar_Pprint.op_Hat_Slash_Hat uu___7 uu___8 in
                     FStar_Pprint.op_Hat_Slash_Hat uu___5 uu___6 in
                   FStar_Pprint.op_Hat_Slash_Hat FStar_Pprint.colon uu___4 in
-                FStar_Pprint.op_Hat_Hat FStar_Pprint.langle uu___3 in
+                FStar_Pprint.op_Hat_Hat
+                  (if use_eq
+                   then FStar_Pprint.dollar
+                   else FStar_Pprint.langle) uu___3 in
               FStar_Pprint.op_Hat_Slash_Hat uu___1 uu___2 in
             FStar_Pprint.group uu___
         | FStar_Parser_AST.Op (id, e1::e2::e3::[]) when
@@ -2483,7 +2490,7 @@ and (p_noSeqTerm' :
                        FStar_Pprint.op_Hat_Slash_Hat uu___4 uu___5 in
                      FStar_Pprint.op_Hat_Slash_Hat uu___2 uu___3 in
                    FStar_Pprint.group uu___1
-               | FStar_Pervasives_Native.Some (as_opt, ret) ->
+               | FStar_Pervasives_Native.Some (as_opt, ret, use_eq) ->
                    let uu___1 =
                      let uu___2 =
                        let uu___3 = str "if" in
@@ -2500,7 +2507,8 @@ and (p_noSeqTerm' :
                                let uu___7 = p_ident as_ident in
                                FStar_Pprint.op_Hat_Slash_Hat uu___6 uu___7 in
                          let uu___6 =
-                           let uu___7 = str "returns" in
+                           let uu___7 =
+                             str (if use_eq then "returns$" else "returns") in
                            let uu___8 = p_tmIff ret in
                            op_Hat_Slash_Plus_Hat uu___7 uu___8 in
                          FStar_Pprint.op_Hat_Slash_Hat uu___5 uu___6 in
@@ -2544,7 +2552,7 @@ and (p_noSeqTerm' :
                       FStar_Pprint.surround (Prims.of_int (2)) Prims.int_one
                         uu___3 uu___4 uu___5 in
                     FStar_Pprint.group uu___2
-                | FStar_Pervasives_Native.Some (as_opt, ret) ->
+                | FStar_Pervasives_Native.Some (as_opt, ret, use_eq) ->
                     let uu___2 =
                       let uu___3 = str "match" in
                       let uu___4 =
@@ -2559,7 +2567,8 @@ and (p_noSeqTerm' :
                                 let uu___9 = p_ident as_ident in
                                 op_Hat_Slash_Plus_Hat uu___8 uu___9 in
                           let uu___8 =
-                            let uu___9 = str "returns" in
+                            let uu___9 =
+                              str (if use_eq then "returns$" else "returns") in
                             let uu___10 = p_tmIff ret in
                             op_Hat_Slash_Plus_Hat uu___9 uu___10 in
                           op_Hat_Slash_Plus_Hat uu___7 uu___8 in

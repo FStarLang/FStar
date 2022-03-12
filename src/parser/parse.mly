@@ -66,7 +66,7 @@ let none_to_empty_list x =
 %token IRREDUCIBLE UNFOLDABLE INLINE OPAQUE UNFOLD INLINE_FOR_EXTRACTION
 %token NOEXTRACT
 %token NOEQUALITY UNOPTEQUALITY PRAGMALIGHT PRAGMA_SET_OPTIONS PRAGMA_RESET_OPTIONS PRAGMA_PUSH_OPTIONS PRAGMA_POP_OPTIONS PRAGMA_RESTART_SOLVER PRAGMA_PRINT_EFFECTS_GRAPH
-%token TYP_APP_LESS TYP_APP_GREATER SUBTYPE SUBKIND BY
+%token TYP_APP_LESS TYP_APP_GREATER SUBTYPE EQUALTYPE SUBKIND BY
 %token AND ASSERT SYNTH BEGIN ELSE END
 %token EXCEPTION FALSE FUN FUNCTION IF IN MODULE DEFAULT
 %token MATCH OF
@@ -678,12 +678,19 @@ term:
       { mk_term (Bind(x, e1, e2)) (rhs2 parseState 1 5) Expr }
 
 match_returning:
-  | as_opt=option(AS i=lident {i}) RETURNS t=tmIff {as_opt,t}
+  | as_opt=option(AS i=lident {i}) RETURNS t=tmIff {as_opt,t,false}
 
 noSeqTerm:
   | t=typ  { t }
   | e=tmIff SUBTYPE t=tmIff tactic_opt=option(BY tactic=thunk(typ) {tactic})
-      { mk_term (Ascribed(e,{t with level=Expr},tactic_opt)) (rhs2 parseState 1 4) Expr }
+      { mk_term (Ascribed(e,{t with level=Expr},tactic_opt,false)) (rhs2 parseState 1 4) Expr }
+  | e=tmIff EQUALTYPE t=tmIff tactic_opt=option(BY tactic=thunk(typ) {tactic})
+      {
+        log_issue (lhs parseState)
+	          (Warning_BleedingEdge_Feature,
+		   "Equality type ascriptions is an experimental feature subject to redesign in the future");
+        mk_term (Ascribed(e,{t with level=Expr},tactic_opt,true)) (rhs2 parseState 1 4) Expr
+      }
   | e1=atomicTermNotQUident op_expr=dotOperator LARROW e3=noSeqTerm
       {
         let (op, e2, _) = op_expr in
@@ -734,7 +741,7 @@ noSeqTerm:
   | LET OPEN t=term IN e=term
       {
             match t.tm with
-            | Ascribed(r, rty, None) ->
+            | Ascribed(r, rty, None, _) ->
               mk_term (LetOpenRecord(r, rty, e)) (rhs2 parseState 1 5) Expr
 
             | Name uid ->
@@ -1193,7 +1200,7 @@ projectionLHS:
          * generated. *)
         let e1 = match sort_opt with
           | None -> e
-          | Some (level, t) -> mk_term (Ascribed(e,{t with level=level},None)) (rhs2 parseState 1 4) level
+          | Some (level, t) -> mk_term (Ascribed(e,{t with level=level},None,false)) (rhs2 parseState 1 4) level
         in mk_term (Paren e1) (rhs2 parseState 1 4) (e.level)
       }
   | LBRACK_BAR es=semiColonTermList BAR_RBRACK

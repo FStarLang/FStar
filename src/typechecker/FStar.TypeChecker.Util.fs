@@ -74,7 +74,7 @@ let close_guard_implicits env solve_deferred (xs:binders) (g:guard_t) : guard_t 
       List.iter (fun (_, s, p) -> BU.print2 "%s: %s\n" s (Rel.prob_to_string env p)) defer;
       BU.print_string "END\n"
     end;
-    let g = Rel.solve_non_tactic_deferred_constraints env ({g with deferred=solve_now}) in
+    let g = Rel.solve_non_tactic_deferred_constraints false env ({g with deferred=solve_now}) in
     let g = {g with deferred=defer} in
     g
   else g
@@ -257,19 +257,19 @@ let extract_let_rec_annotation env {lbname=lbname; lbunivs=univ_vars; lbtyp=t; l
             let t, e', recheck = aux_lbdef e' in
             t, { e with n = Tm_meta(e', m) }, recheck
 
-          | Tm_ascribed(e', (Inr c, tac_opt), lopt) ->
+          | Tm_ascribed(e', (Inr c, tac_opt, use_eq), lopt) ->
             if U.is_total_comp c
             then let t, lbtyp, recheck = reconcile_let_rec_ascription_and_body_type (U.comp_result c) lbtyp_opt in
-                 let e = { e with n = Tm_ascribed(e', (Inr (S.mk_Total t), tac_opt), lopt) } in
+                 let e = { e with n = Tm_ascribed(e', (Inr (S.mk_Total t), tac_opt, use_eq), lopt) } in
                  lbtyp, e, recheck
             else raise_error (Errors.Fatal_UnexpectedComputationTypeForLetRec,
                               BU.format1 "Expected a 'let rec' to be annotated with a value type; got a computation type %s"
                                                    (Print.comp_to_string c))
                               rng
 
-          | Tm_ascribed(e', (Inl t, tac_opt), lopt) ->
+          | Tm_ascribed(e', (Inl t, tac_opt, use_eq), lopt) ->
             let t, lbtyp, recheck = reconcile_let_rec_ascription_and_body_type t lbtyp_opt in
-            let e = { e with n = Tm_ascribed(e', (Inl t, tac_opt), lopt) } in
+            let e = { e with n = Tm_ascribed(e', (Inl t, tac_opt, use_eq), lopt) } in
             lbtyp, e, recheck
 
           | Tm_abs _ ->
@@ -288,7 +288,18 @@ let extract_let_rec_annotation env {lbname=lbname; lbunivs=univ_vars; lbtyp=t; l
                 let body = { body with n = Tm_meta(body', m) } in
                 t, body, recheck
 
-              | Tm_ascribed (_, (Inl t, _), _) -> //no decreases clause here
+              | Tm_ascribed (_, (Inl t, _, use_eq), _) -> //no decreases clause here
+                //
+                //AR: In this case, the type in the ascription is moving to lbtyp
+                //    if use_eq is true, then we are in trouble
+                //    since we don't yet support equality in lbtyp
+                //
+                if use_eq
+                then raise_error
+                       (Errors.Fatal_NotSupported,
+                        BU.format1 "Equality ascription in this case (%s) is not yet supported, \
+                                    please use subtyping"
+                                   (Print.term_to_string t)) t.pos;
                 begin
                 match lbtyp_opt with
                 | Some lbtyp ->
@@ -299,7 +310,7 @@ let extract_let_rec_annotation env {lbname=lbname; lbunivs=univ_vars; lbtyp=t; l
                   t, body, true
                 end
 
-              | Tm_ascribed (body', (Inr c, tac_opt), lopt) ->
+              | Tm_ascribed (body', (Inr c, tac_opt, use_eq), lopt) ->
                 let tarr = mk_arrow c in
                 let tarr, lbtyp, recheck = reconcile_let_rec_ascription_and_body_type tarr lbtyp_opt in
                 let bs', c = un_arrow tarr in
@@ -307,7 +318,7 @@ let extract_let_rec_annotation env {lbname=lbname; lbunivs=univ_vars; lbtyp=t; l
                 then failwith "Impossible"
                 else let subst = U.rename_binders bs' bs in
                      let c = SS.subst_comp subst c in
-                     let body = { body with n = Tm_ascribed(body', (Inr c, tac_opt), lopt) } in
+                     let body = { body with n = Tm_ascribed(body', (Inr c, tac_opt, use_eq), lopt) } in
                      lbtyp, body, recheck
 
               | _ ->
@@ -2101,13 +2112,14 @@ let coerce_views (env:Env.env) (e:term) (lc:lcomp) : option<(term * lcomp)> =
     | _ ->
         None
 
-let weaken_result_typ env (e:term) (lc:lcomp) (t:typ) : term * lcomp * guard_t =
+let weaken_result_typ env (e:term) (lc:lcomp) (t:typ) (use_eq:bool) : term * lcomp * guard_t =
   if Env.debug env Options.High then
     BU.print3 "weaken_result_typ e=(%s) lc=(%s) t=(%s)\n"
             (Print.term_to_string e)
             (TcComm.lcomp_to_string lc)
             (Print.term_to_string t);
   let use_eq =
+    use_eq            ||  //caller wants to check equality
     env.use_eq_strict ||
     env.use_eq        ||
     (match Env.effect_decl_opt env lc.eff_name with
@@ -2329,7 +2341,10 @@ let maybe_instantiate (env:Env.env) e t =
   else begin
        if Env.debug env Options.High then
          BU.print3 "maybe_instantiate: starting check for (%s) of type (%s), expected type is %s\n"
-                 (Print.term_to_string e) (Print.term_to_string t) (FStar.Common.string_of_option Print.term_to_string (Env.expected_typ env));
+                 (Print.term_to_string e) (Print.term_to_string t)
+                 (match Env.expected_typ env with
+                  | None -> "None"
+                  | Some (t, _) -> Print.term_to_string t);
        (* Similar to U.arrow_formals, but makes sure to unfold
         * recursively to catch all the binders across type
         * definitions. TODO: Move to library? Revise other uses
@@ -2355,7 +2370,7 @@ let maybe_instantiate (env:Env.env) e t =
        let inst_n_binders t =
            match Env.expected_typ env with
            | None -> None
-           | Some expected_t ->
+           | Some (expected_t, _) ->  //the use_eq flag is irrelevant for instantiation
              let n_expected = number_of_implicits expected_t in
              let n_available = number_of_implicits t in
              if n_available < n_expected
@@ -2443,7 +2458,7 @@ let maybe_instantiate (env:Env.env) e t =
 //check_has_type env e t1 t2
 //checks is e:t1 has type t2, subject to some guard.
 
-let check_has_type env (e:term) (t1:typ) (t2:typ) : guard_t =
+let check_has_type env (e:term) (t1:typ) (t2:typ) (use_eq:bool) : guard_t =
   let env = Env.set_range env e.pos in
 
   let g_opt =
@@ -2451,7 +2466,7 @@ let check_has_type env (e:term) (t1:typ) (t2:typ) : guard_t =
     then match Rel.teq_nosmt_force env t1 t2 with
        | false -> None
        | true -> Env.trivial_guard |> Some
-    else if env.use_eq
+    else if use_eq || env.use_eq
     then Rel.try_teq true env t1 t2
     else match Rel.get_subtyping_predicate env t1 t2 with
              | None -> None
@@ -2461,10 +2476,10 @@ let check_has_type env (e:term) (t1:typ) (t2:typ) : guard_t =
   | None -> raise_error (Err.expected_expression_of_type env t2 e t1) (Env.get_range env)
   | Some g -> g
 
-let check_has_type_maybe_coerce env (e:term) (lc:lcomp) (t2:typ) : term * lcomp * guard_t =
+let check_has_type_maybe_coerce env (e:term) (lc:lcomp) (t2:typ) use_eq : term * lcomp * guard_t =
   let env = Env.set_range env e.pos in
   let e, lc, g_c = maybe_coerce_lc env e lc t2 in
-  let g = check_has_type env e lc.res_typ t2 in
+  let g = check_has_type env e lc.res_typ t2 use_eq in
   if debug env <| Options.Other "Rel" then
     BU.print1 "Applied guard is %s\n" <| guard_to_string env g;
   e, lc, (Env.conj_guard g g_c)
@@ -2567,7 +2582,7 @@ let maybe_add_implicit_binders (env:env) (bs:binders) : binders =
         | _ ->
           match Env.expected_typ env with
             | None -> bs
-            | Some t ->
+            | Some (t, _) ->  //the use_eq flag is not relevant
                 match (SS.compress t).n with
                     | Tm_arrow(bs', _) ->
                       begin match BU.prefix_until (fun b -> not (is_implicit_binder b)) bs' with

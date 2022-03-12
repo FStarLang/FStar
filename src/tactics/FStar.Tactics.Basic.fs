@@ -1658,11 +1658,11 @@ let pack (tv:term_view) : tac<term> =
         let brs = List.map SS.close_branch brs in
         ret <| S.mk (Tm_match (t, ret_opt, brs, None)) Range.dummyRange
 
-    | Tv_AscribedT(e, t, tacopt) ->
-        ret <| S.mk (Tm_ascribed(e, (Inl t, tacopt), None)) Range.dummyRange
+    | Tv_AscribedT(e, t, tacopt, use_eq) ->
+        ret <| S.mk (Tm_ascribed(e, (Inl t, tacopt, use_eq), None)) Range.dummyRange
 
-    | Tv_AscribedC(e, c, tacopt) ->
-        ret <| S.mk (Tm_ascribed(e, (Inr c, tacopt), None)) Range.dummyRange
+    | Tv_AscribedC(e, c, tacopt, use_eq) ->
+        ret <| S.mk (Tm_ascribed(e, (Inr c, tacopt, use_eq), None)) Range.dummyRange
 
     | Tv_Unknown ->
         ret <| S.mk Tm_unknown Range.dummyRange

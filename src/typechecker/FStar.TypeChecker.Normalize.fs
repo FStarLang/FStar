@@ -519,13 +519,13 @@ and close_match_returns cfg env ret_opt =
     let asc = close_ascription cfg env asc in
     Some (List.hd bs, asc)
 
-and close_ascription cfg env (annot, tacopt) =
+and close_ascription cfg env (annot, tacopt, use_eq) =
   let annot =
     match annot with
     | Inl t -> Inl (non_tail_inline_closure_env cfg env t)
     | Inr c -> Inr (close_comp cfg env c) in
   let tacopt = BU.map_opt tacopt (non_tail_inline_closure_env cfg env) in
-  annot, tacopt
+  annot, tacopt, use_eq
 
 and close_imp cfg env imp =
     match imp with
@@ -838,12 +838,14 @@ let rec maybe_weakly_reduced tm :  bool =
 
       | Tm_ascribed(t1, asc, _) ->
         maybe_weakly_reduced t1
-        || (match fst asc with
+        || (let asc_tc, asc_tac, _ = asc in
+           (match asc_tc with
             | Inl t2 -> maybe_weakly_reduced t2
             | Inr c2 -> aux_comp c2)
-        || (match snd asc with
-           | None -> false
-           | Some tac -> maybe_weakly_reduced tac)
+           ||
+           (match asc_tac with
+            | None -> false
+            | Some tac -> maybe_weakly_reduced tac))
 
       | Tm_meta(t, m) ->
         maybe_weakly_reduced t
@@ -1400,10 +1402,10 @@ let rec norm : cfg -> env -> stack -> term -> term =
                  let t = arrow (norm_binders cfg env bs) c in
                  rebuild cfg env stack t
 
-          | Tm_ascribed(t1, (tc, tacopt), l) when cfg.steps.unascribe ->
+          | Tm_ascribed(t1, _, l) when cfg.steps.unascribe ->
             norm cfg env stack t1
 
-          | Tm_ascribed(t1, (tc, tacopt), l) ->
+          | Tm_ascribed(t1, asc, l) ->
             begin match stack with
               | Match _ :: _
               | Arg _ :: _
@@ -1416,7 +1418,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                 log cfg  (fun () -> BU.print_string "+++ Keeping ascription \n");
                 let t1 = norm cfg env [] t1 in
                 log cfg  (fun () -> BU.print_string "+++ Normalizing ascription \n");
-                let asc = norm_ascription cfg env (tc, tacopt) in
+                let asc = norm_ascription cfg env asc in
                 match stack with
                 | Cfg (cfg', dbg) :: stack ->
                   maybe_debug cfg t1 dbg;
@@ -2788,11 +2790,12 @@ and norm_match_returns cfg env ret_opt =
     let asc = norm_ascription cfg (dummy::env) asc in
     Some (b, SS.close_ascription subst asc)
 
-and norm_ascription cfg env (tc, tacopt) =
+and norm_ascription cfg env (tc, tacopt, use_eq) =
   (match tc with
    | Inl t -> Inl (norm cfg env [] t)
    | Inr c -> Inr (norm_comp cfg env c)),
-  BU.map_opt tacopt (norm cfg env [])
+  BU.map_opt tacopt (norm cfg env []),
+  use_eq
 
 and norm_residual_comp cfg env (rc:residual_comp) : residual_comp =
   {rc with residual_typ = BU.map_option (closure_as_term cfg env) rc.residual_typ}
@@ -3139,13 +3142,13 @@ let rec elim_uvars (env:Env.env) (s:sigelt) =
       in
       let elim_action a =
         let action_typ_templ =
-            let body = S.mk (Tm_ascribed(a.action_defn, (Inl a.action_typ, None), None)) a.action_defn.pos in
+            let body = S.mk (Tm_ascribed(a.action_defn, (Inl a.action_typ, None, false), None)) a.action_defn.pos in
             match a.action_params with
             | [] -> body
             | _ -> S.mk (Tm_abs(a.action_params, body, None)) a.action_defn.pos in
         let destruct_action_body body =
             match (SS.compress body).n with
-            | Tm_ascribed(defn, (Inl typ, None), None) -> defn, typ
+            | Tm_ascribed(defn, (Inl typ, None, _), None) -> defn, typ
             | _ -> failwith "Impossible"
         in
         let destruct_action_typ_templ t =

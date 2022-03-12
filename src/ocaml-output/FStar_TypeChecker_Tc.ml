@@ -851,7 +851,8 @@ let (tc_sig_let :
                                              ((lb.FStar_Syntax_Syntax.lbdef),
                                                ((FStar_Pervasives.Inl
                                                    (lb.FStar_Syntax_Syntax.lbtyp)),
-                                                 FStar_Pervasives_Native.None),
+                                                 FStar_Pervasives_Native.None,
+                                                 false),
                                                FStar_Pervasives_Native.None))
                                           (lb.FStar_Syntax_Syntax.lbdef).FStar_Syntax_Syntax.pos in
                                   (if
