@@ -6,14 +6,12 @@ assume val t: v:(int -> Type) -> (i:int -> v i -> Type0) -> Type
 
 irreducible type w #v #r (x:t v r) = True
 
-#push-options "--__temp_no_proj  Bug1355"
 noeq type u = 
 | U:
   k: (i:int -> Type) ->
   x: t k (fun _ _ -> True) ->
   f: (i:int -> Tot (y:k i{w x})) ->
   u
-#pop-options
 
 (***** Example 2 *****)
 
@@ -49,13 +47,11 @@ type monad (m:Type0 -> Type0) : Type = {
 
 open FStar.Ghost
 
-#push-options "--__temp_no_proj  Bug1355"
 noeq type t5 = {
   x: erased int;
   y: erased (y:int{y>= reveal x});
   y_: (y_:int{y_ = reveal y});
 }
-#pop-options
 
 noeq
 type monad2 (rr : Type) (m:Type0 -> Type0) : Type = {
