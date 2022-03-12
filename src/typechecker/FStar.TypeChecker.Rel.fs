@@ -3463,9 +3463,16 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                 (string_of_bool (no_free_uvars t2))]
          in
          let equal t1 t2 =
-            let t1 = norm_with_steps "FStar.TypeChecker.Rel.norm_with_steps.2" [Env.UnfoldUntil delta_constant; Env.Primops; Env.Beta; Env.Eager_unfolding; Env.Iota] env t1 in
-            let t2 = norm_with_steps "FStar.TypeChecker.Rel.norm_with_steps.3" [Env.UnfoldUntil delta_constant; Env.Primops; Env.Beta; Env.Eager_unfolding; Env.Iota] env t2 in
-            U.eq_tm t1 t2 = U.Equal
+            (U.eq_tm t1 t2 = U.Equal) ||
+            (let steps = [
+               Env.UnfoldUntil delta_constant;
+               Env.Primops;
+               Env.Beta;
+               Env.Eager_unfolding;
+               Env.Iota ] in
+             let t1 = norm_with_steps "FStar.TypeChecker.Rel.norm_with_steps.2" steps env t1 in
+             let t2 = norm_with_steps "FStar.TypeChecker.Rel.norm_with_steps.3" steps env t2 in
+             U.eq_tm t1 t2 = U.Equal)
          in
          if (Env.is_interpreted env head1 || Env.is_interpreted env head2) //we have something like (+ x1 x2) =?= (- y1 y2)
            && problem.relation = EQ
