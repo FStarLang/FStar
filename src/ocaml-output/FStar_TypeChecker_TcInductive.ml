@@ -2587,11 +2587,13 @@ let (mk_discriminator_and_indexed_projectors :
                                                     FStar_Compiler_List.hd
                                                       uu___6 in
                                                   let returns_annotation =
+                                                    let use_eq = true in
                                                     FStar_Pervasives_Native.Some
                                                       (return_binder,
                                                         ((FStar_Pervasives.Inr
                                                             result_comp2),
-                                                          FStar_Pervasives_Native.None)) in
+                                                          FStar_Pervasives_Native.None,
+                                                          use_eq)) in
                                                   let uu___6 =
                                                     let uu___7 =
                                                       let uu___8 =
