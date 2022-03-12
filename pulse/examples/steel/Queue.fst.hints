@@ -18,7 +18,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "36bf01557516a3d30ec61ddfdf95c49a"
+      "0601e17d620c8b905d21338148bf7378"
     ],
     [
       "Queue.emp_equiv_pure",
@@ -45,7 +45,7 @@
         "typing_Steel.Memory.pure"
       ],
       0,
-      "1df4446c2bddaa71cb5c7da10803ca55"
+      "9f2743cebb7d8f4b0a703f3e199af431"
     ],
     [
       "Queue.next_last",
@@ -60,7 +60,7 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "84e594d93828dfdea49e4e39421fbbf5"
+      "fef2f211dfa91aee5b1b446f103bee78"
     ],
     [
       "Queue.next_last_correct",
@@ -72,7 +72,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "d0b9a6092654cfc79ab61249c45309b3"
+      "39c21af6dd496d9044a4c5646878a277"
     ],
     [
       "Queue.next_last_correct",
@@ -114,7 +114,7 @@
         "typing_Steel.Reference.ref"
       ],
       0,
-      "8765ec99c76f408780f27f70afb0df3a"
+      "4eed54b966fe4fdd3e8815d674ef617f"
     ],
     [
       "Queue.fragment_append",
@@ -164,7 +164,7 @@
         "typing_Steel.Effect.Common.star", "typing_Steel.Reference.ref"
       ],
       0,
-      "158f510b42b4c3d4e8c93300484ad9c4"
+      "de908e38071ea8a7f3748b4b2e8f0618"
     ],
     [
       "Queue.intro_fragment_nil",
@@ -186,7 +186,7 @@
         "typing_Steel.Reference.ref"
       ],
       0,
-      "e1e10a2dec04c9e295e80d67cc6335f6"
+      "861e591d2c962301173c3b329c6c2780"
     ],
     [
       "Queue.intro_fragment_cons",
@@ -203,7 +203,7 @@
         "typing_tok_Prims.T@tok"
       ],
       0,
-      "e1e155fe19c35242b240035a8be5dfb6"
+      "629db673de88ed8ddc1826212b36e327"
     ],
     [
       "Queue.fragment_append_singleton",
@@ -261,7 +261,7 @@
         "typing_Steel.Reference.ref"
       ],
       0,
-      "4fb4b97cf9fa272af03bf9371e9b3c2c"
+      "620cc4bee3fca841fbb5dc7e61bc3b1a"
     ],
     [
       "Queue.queue_lc_prop",
@@ -288,7 +288,7 @@
         "typing_Steel.Reference.ref"
       ],
       0,
-      "aad261c5efe89a2922cf6b7836356560"
+      "ded78ec97e4d9119740a2ae680ae14af"
     ],
     [
       "Queue.new_queue",
@@ -358,7 +358,7 @@
         "typing_Steel.Reference.is_null", "typing_Steel.Reference.null"
       ],
       0,
-      "960157c7cca6fd8a1ff4403b42051f1d"
+      "9962047d7d5826ac4bd05819c226e77b"
     ],
     [
       "Queue.witness_h_exists_erased",
@@ -367,7 +367,7 @@
       1,
       [ "@query", "equation_Steel.Effect.Common.true_p", "true_interp" ],
       0,
-      "cec9effb6e0054c2850079e4dbe39e1f"
+      "161f443fcee403dba4b784fad3c3ba2b"
     ],
     [
       "Queue.snoc_inj",
@@ -380,7 +380,7 @@
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2"
       ],
       0,
-      "2ac504401191b0b63ed2994f42655461"
+      "ab19613551ef107454665ba0ed25758d"
     ],
     [
       "Queue.unsnoc",
@@ -401,7 +401,7 @@
         "token_correspondence_FStar.List.Tot.Base.length.fuel_instrumented"
       ],
       0,
-      "8ece5940f0c1e218e968b12d65a45d21"
+      "ddbbdc17492b7a436edee80f92e2116a"
     ],
     [
       "Queue.unsnoc_hd",
@@ -410,7 +410,7 @@
       1,
       [ "@query" ],
       0,
-      "800dd60536491ca98bdd36d84b51c2f5"
+      "4a5c69b82e1394c101b394150ad64c60"
     ],
     [
       "Queue.unsnoc_tl",
@@ -419,7 +419,7 @@
       1,
       [ "@query" ],
       0,
-      "5548405058a50e4f50606cab930279f5"
+      "eac568b0ff17760790550cded9f5fc1d"
     ],
     [
       "Queue.enqueue",
@@ -530,7 +530,7 @@
         "typing_Steel.Reference.pts_to_sl", "typing_Steel.Reference.ref"
       ],
       0,
-      "1674d31411f9b00e3b76774c34097a2f"
+      "fad8c9b53ae0152e064828494b24d9d6"
     ],
     [
       "Queue.dequeue_post_success",
@@ -547,7 +547,7 @@
         "typing_Queue.Def.t"
       ],
       0,
-      "ecd6e919637282fb6c68a9e3d6b54806"
+      "c40a5be39b2b09c02704110aeac1efee"
     ],
     [
       "Queue.dequeue_post",
@@ -558,7 +558,7 @@
         "@query", "lemma_FStar.Pervasives.invertOption", "typing_Queue.Def.t"
       ],
       0,
-      "96d91730ab4f096d2129cb07a87cf3c2"
+      "8e8f503d733b90ce29659944b63c6233"
     ],
     [
       "Queue.dequeue",
@@ -631,7 +631,7 @@
         "typing_Steel.Reference.ref"
       ],
       0,
-      "f2d48d990bd44366cca2b405010b1d39"
+      "3199fc5f91169aa0db5b7c3451142147"
     ]
   ]
 ]

@@ -8,7 +8,7 @@
       1,
       [ "@query", "lemma_Steel.Effect.Common.can_be_split_refl" ],
       0,
-      "f1da06c89b70e7810663f901ac47179d"
+      "4e916fd41723cce19bb279665c4198bf"
     ],
     [
       "Steel.SpinLock.s_acquire",
@@ -17,7 +17,7 @@
       1,
       [ "@query", "lemma_Steel.Effect.Common.can_be_split_refl" ],
       0,
-      "bc11ebfd050e900b9db9b30decbffe42"
+      "3fa2ecd614b2bb9291b1153db9c571a6"
     ],
     [
       "Steel.SpinLock.s_release",
@@ -26,7 +26,7 @@
       1,
       [ "@query", "lemma_Steel.Effect.Common.can_be_split_refl" ],
       0,
-      "5b9d591967e91c87ac46ca768b71695a"
+      "524d07f91e038a7ce3599dbb7322a2c3"
     ]
   ]
 ]
