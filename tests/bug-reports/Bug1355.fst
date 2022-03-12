@@ -1,7 +1,5 @@
 module Bug1355
 
-(***** Example 1 from the issue, still fails *****)
-
 assume val t: v:(int -> Type) -> (i:int -> v i -> Type0) -> Type
 
 irreducible type w #v #r (x:t v r) = True
@@ -13,8 +11,6 @@ noeq type u =
   f: (i:int -> Tot (y:k i{w x})) ->
   u
 
-(***** Example 2 *****)
-
 module B   = LowStar.Buffer
 
 assume val struct (a:Type0) :Type0
@@ -22,8 +18,6 @@ assume val struct (a:Type0) :Type0
 noeq type t2 =
   | C2: x:int -> fld:B.pointer (struct (u:int{u < x})) -> t2
 
-
-(***** Example 3 *****)
 
 noeq type t3 = | T3 :
   (u: (nat -> Type0)) ->
@@ -79,3 +73,15 @@ type test_t =
     s: list nat ->
     lem: squash (for_all_range (List.Tot.length s) (fun (i: nat{i < List.Tot.length s}) -> true)) ->
     test_t
+
+noeq type t6 = | T :
+  (u: (nat -> Type0)) ->
+  (f: ((x: nat & u x) -> Type0)) ->
+  (x: nat) -> (y: u x) -> (z: g u f x y) -> t6
+
+noeq type g2
+  (u: (nat -> Type0))
+  (f: ((x: nat & u x) -> Type0))
+  (x: nat)
+  (y: u x)
+= | G2 : (r: (f (| x, y |))) -> g2 u f x y
