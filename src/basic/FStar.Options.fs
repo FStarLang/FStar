@@ -160,7 +160,6 @@ let add_light_off_file (filename:string) = light_off_files := filename :: !light
 
 let defaults =
      [
-      ("__temp_no_proj"               , List []);
       ("__temp_fast_implicits"        , Bool false);
       ("abort_on"                     , Int 0);
       ("admit_smt_queries"            , Bool false);
@@ -448,7 +447,6 @@ let get_no_tactics              ()      = lookup_opt "no_tactics"               
 let get_using_facts_from        ()      = lookup_opt "using_facts_from"         (as_option (as_list as_string))
 let get_vcgen_optimize_bind_as_seq  ()  = lookup_opt "vcgen.optimize_bind_as_seq" (as_option as_string)
 let get_verify_module           ()      = lookup_opt "verify_module"            (as_list as_string)
-let get___temp_no_proj          ()      = lookup_opt "__temp_no_proj"           (as_list as_string)
 let get_version                 ()      = lookup_opt "version"                  as_bool
 let get_warn_default_effects    ()      = lookup_opt "warn_default_effects"     as_bool
 let get_z3cliopt                ()      = lookup_opt "z3cliopt"                 (as_list as_string)
@@ -1257,11 +1255,6 @@ let rec specs_with_types warn_unsafe : list<(char * string * opt_type * string)>
            but at the cost of VC bloat, which may often be redundant.");
 
        ( noshort,
-        "__temp_no_proj",
-        Accumulated (SimpleStr "module_name"),
-        "Don't generate projectors for this module");
-
-       ( noshort,
         "__temp_fast_implicits",
         Const (Bool true),
         "Don't use this option yet");
@@ -1438,7 +1431,6 @@ let settable = function
     | "tactic_trace_d"
     | "tcnorm"
     | "__temp_fast_implicits"
-    | "__temp_no_proj"
     | "timing"
     | "trace_error"
     | "ugly"
@@ -1553,8 +1545,6 @@ let should_verify_file fn =
     should_verify (module_name_of_file_name fn)
 
 let module_name_eq m1 m2 = String.lowercase m1 = String.lowercase m2
-
-let dont_gen_projectors m = get___temp_no_proj() |> List.existsb (module_name_eq m)
 
 let should_print_message m =
     if should_verify m
@@ -1686,7 +1676,6 @@ let parse_settings ns : list<(list<string> * bool)> =
              |> List.map parse_one_setting) s)
              |> List.rev
 
-let __temp_no_proj               s  = get___temp_no_proj() |> List.contains s
 let __temp_fast_implicits        () = lookup_opt "__temp_fast_implicits" as_bool
 let admit_smt_queries            () = get_admit_smt_queries           ()
 let admit_except                 () = get_admit_except                ()
