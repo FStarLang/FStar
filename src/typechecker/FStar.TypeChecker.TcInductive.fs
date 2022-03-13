@@ -837,7 +837,7 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
             let no_decl = false in
             let only_decl =
               early_prims_inductive ||
-              Options.dont_gen_projectors (string_of_lid (Env.current_module env))
+              U.has_attribute attrs C.no_auto_projectors_attr
             in
             let quals =
                 (* KM : What about Logic ? should it still be there even with an implementation *)
@@ -934,7 +934,7 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
           let t = SS.close_univ_vars uvs <| U.arrow binders result_comp in
           let only_decl =
             early_prims_inductive ||
-            Options.dont_gen_projectors (string_of_lid (Env.current_module env))
+            U.has_attribute attrs C.no_auto_projectors_attr
           in
           (* KM : Why would we want to prevent a declaration only in this particular case ? *)
           (* TODO : If we don't want the declaration then we need to propagate the right types in the patterns *)

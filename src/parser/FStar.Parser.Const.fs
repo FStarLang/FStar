@@ -361,6 +361,7 @@ let allow_informative_binders_attr = psconst "allow_informative_binders"
 let remove_unused_type_parameters_lid = psconst "remove_unused_type_parameters"
 let ite_soundness_by_attr = psconst "ite_soundness_by"
 let binder_strictly_positive_attr = psconst "strictly_positive"
+let no_auto_projectors_attr = psconst "no_auto_projectors"
 
 
 //the type of well-founded relations, used for decreases clauses with relations

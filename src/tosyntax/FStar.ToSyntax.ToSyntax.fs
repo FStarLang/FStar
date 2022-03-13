@@ -2577,7 +2577,7 @@ let mk_data_discriminators quals env datas =
           sigopts = None;
         })
 
-let mk_indexed_projector_names iquals fvq env lid (fields:list<S.binder>) =
+let mk_indexed_projector_names iquals fvq attrs env lid (fields:list<S.binder>) =
     let p = range_of_lid lid in
 
     fields |> List.mapi (fun i fld ->
@@ -2586,7 +2586,7 @@ let mk_indexed_projector_names iquals fvq env lid (fields:list<S.binder>) =
         let only_decl =
             lid_equals C.prims_lid  (Env.current_module env)
             || fvq<>Data_ctor
-            || Options.dont_gen_projectors (string_of_lid (Env.current_module env))
+            || U.has_attribute attrs C.no_auto_projectors_attr
         in
         let no_decl = Syntax.is_type x.sort in
         let quals q =
@@ -2647,7 +2647,7 @@ let mk_data_projector_names iquals env se : list<sigelt> =
             in
             (* ignoring parameters *)
             let _, rest = BU.first_N n formals in
-            mk_indexed_projector_names iquals fv_qual env lid rest
+            mk_indexed_projector_names iquals fv_qual se.sigattrs env lid rest
     end
 
   | _ -> []
