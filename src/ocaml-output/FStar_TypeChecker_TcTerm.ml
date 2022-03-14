@@ -5819,7 +5819,7 @@ and (tc_abs :
                              | (body3, cbody, guard_body) ->
                                  let guard_body1 =
                                    FStar_TypeChecker_Rel.solve_non_tactic_deferred_constraints
-                                     envbody2 guard_body in
+                                     true envbody2 guard_body in
                                  if should_check_expected_effect
                                  then
                                    let uu___8 =
@@ -5986,7 +5986,10 @@ and (tc_abs :
                             let uu___6 =
                               env1.FStar_TypeChecker_Env.top_level ||
                                 (let uu___7 =
-                                   FStar_TypeChecker_Env.should_verify env1 in
+                                   let uu___8 =
+                                     FStar_Ident.string_of_lid
+                                       env1.FStar_TypeChecker_Env.curmodule in
+                                   FStar_Options.should_verify uu___8 in
                                  Prims.op_Negation uu___7) in
                             if uu___6
                             then
@@ -7698,18 +7701,16 @@ and (tc_pat :
                                                   FStar_TypeChecker_Env.set_expected_typ
                                                     env1 t_f1 in
                                                 let uu___10 =
-                                                  tc_tot_or_gtot_term env2 a in
+                                                  tc_tot_or_gtot_term_maybe_solve_deferred
+                                                    env2 a "" false in
                                                 (match uu___10 with
                                                  | (a1, uu___11, g) ->
-                                                     let g1 =
-                                                       FStar_TypeChecker_Rel.discharge_guard_no_smt
-                                                         env2 g in
                                                      let subst1 =
                                                        (FStar_Syntax_Syntax.NT
                                                           (f1, a1))
                                                        :: subst in
                                                      ((a1, imp_a), subst1,
-                                                       bvs, g1))
+                                                       bvs, g))
                                             | uu___9 ->
                                                 fail "Not a simple pattern" in
                                           (match uu___7 with
@@ -7977,7 +7978,10 @@ and (tc_pat :
                                   p0.FStar_Syntax_Syntax.p t in
                               pat_typ_ok env1 simple_pat_t uu___5 in
                             let guard1 =
-                              FStar_TypeChecker_Env.conj_guard guard g' in
+                              FStar_TypeChecker_Rel.discharge_guard_no_smt
+                                env1 guard in
+                            let guard2 =
+                              FStar_TypeChecker_Env.conj_guard guard1 g' in
                             ((let uu___6 =
                                 FStar_Compiler_Effect.op_Less_Bar
                                   (FStar_TypeChecker_Env.debug env1)
@@ -8014,7 +8018,7 @@ and (tc_pat :
                                   "$$$$$$$$$$$$Checked simple pattern %s at type %s with bvs=%s\n"
                                   uu___7 uu___8 uu___9
                               else ());
-                             (simple_pat_e1, simple_bvs1, guard1, erasable)) in
+                             (simple_pat_e1, simple_bvs1, guard2, erasable)) in
                       match uu___3 with
                       | (simple_pat_e1, simple_bvs1, g1, erasable) ->
                           let uu___4 =
@@ -11270,6 +11274,77 @@ and (tc_smt_pats :
                       let uu___2 = FStar_TypeChecker_Env.conj_guard g g' in
                       ((args :: pats1), uu___2))) pats
         ([], FStar_TypeChecker_Env.trivial_guard)
+and (tc_tot_or_gtot_term_maybe_solve_deferred :
+  FStar_TypeChecker_Env.env ->
+    FStar_Syntax_Syntax.term ->
+      Prims.string ->
+        Prims.bool ->
+          (FStar_Syntax_Syntax.term * FStar_TypeChecker_Common.lcomp *
+            FStar_TypeChecker_Common.guard_t))
+  =
+  fun env ->
+    fun e ->
+      fun msg ->
+        fun solve_deferred ->
+          let uu___ = tc_maybe_toplevel_term env e in
+          match uu___ with
+          | (e1, c, g) ->
+              let uu___1 = FStar_TypeChecker_Common.is_tot_or_gtot_lcomp c in
+              if uu___1
+              then (e1, c, g)
+              else
+                (let g1 =
+                   if solve_deferred
+                   then
+                     FStar_TypeChecker_Rel.solve_deferred_constraints env g
+                   else g in
+                 let uu___3 = FStar_TypeChecker_Common.lcomp_comp c in
+                 match uu___3 with
+                 | (c1, g_c) ->
+                     let c2 = norm_c env c1 in
+                     let uu___4 =
+                       let uu___5 =
+                         FStar_TypeChecker_Util.is_pure_effect env
+                           (FStar_Syntax_Util.comp_effect_name c2) in
+                       if uu___5
+                       then
+                         let uu___6 =
+                           FStar_Syntax_Syntax.mk_Total
+                             (FStar_Syntax_Util.comp_result c2) in
+                         (uu___6, false)
+                       else
+                         (let uu___7 =
+                            FStar_Syntax_Syntax.mk_GTotal
+                              (FStar_Syntax_Util.comp_result c2) in
+                          (uu___7, true)) in
+                     (match uu___4 with
+                      | (target_comp, allow_ghost) ->
+                          let uu___5 =
+                            FStar_TypeChecker_Rel.sub_comp env c2 target_comp in
+                          (match uu___5 with
+                           | FStar_Pervasives_Native.Some g' ->
+                               let uu___6 =
+                                 FStar_TypeChecker_Common.lcomp_of_comp
+                                   target_comp in
+                               let uu___7 =
+                                 let uu___8 =
+                                   FStar_TypeChecker_Env.conj_guard g_c g' in
+                                 FStar_TypeChecker_Env.conj_guard g1 uu___8 in
+                               (e1, uu___6, uu___7)
+                           | uu___6 ->
+                               if allow_ghost
+                               then
+                                 let uu___7 =
+                                   FStar_TypeChecker_Err.expected_ghost_expression
+                                     e1 c2 msg in
+                                 FStar_Errors.raise_error uu___7
+                                   e1.FStar_Syntax_Syntax.pos
+                               else
+                                 (let uu___8 =
+                                    FStar_TypeChecker_Err.expected_pure_expression
+                                      e1 c2 msg in
+                                  FStar_Errors.raise_error uu___8
+                                    e1.FStar_Syntax_Syntax.pos))))
 and (tc_tot_or_gtot_term' :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.term ->
@@ -11279,63 +11354,7 @@ and (tc_tot_or_gtot_term' :
   =
   fun env ->
     fun e ->
-      fun msg ->
-        let uu___ = tc_maybe_toplevel_term env e in
-        match uu___ with
-        | (e1, c, g) ->
-            let uu___1 = FStar_TypeChecker_Common.is_tot_or_gtot_lcomp c in
-            if uu___1
-            then (e1, c, g)
-            else
-              (let g1 =
-                 FStar_TypeChecker_Rel.solve_deferred_constraints env g in
-               let uu___3 = FStar_TypeChecker_Common.lcomp_comp c in
-               match uu___3 with
-               | (c1, g_c) ->
-                   let c2 = norm_c env c1 in
-                   let uu___4 =
-                     let uu___5 =
-                       FStar_TypeChecker_Util.is_pure_effect env
-                         (FStar_Syntax_Util.comp_effect_name c2) in
-                     if uu___5
-                     then
-                       let uu___6 =
-                         FStar_Syntax_Syntax.mk_Total
-                           (FStar_Syntax_Util.comp_result c2) in
-                       (uu___6, false)
-                     else
-                       (let uu___7 =
-                          FStar_Syntax_Syntax.mk_GTotal
-                            (FStar_Syntax_Util.comp_result c2) in
-                        (uu___7, true)) in
-                   (match uu___4 with
-                    | (target_comp, allow_ghost) ->
-                        let uu___5 =
-                          FStar_TypeChecker_Rel.sub_comp env c2 target_comp in
-                        (match uu___5 with
-                         | FStar_Pervasives_Native.Some g' ->
-                             let uu___6 =
-                               FStar_TypeChecker_Common.lcomp_of_comp
-                                 target_comp in
-                             let uu___7 =
-                               let uu___8 =
-                                 FStar_TypeChecker_Env.conj_guard g_c g' in
-                               FStar_TypeChecker_Env.conj_guard g1 uu___8 in
-                             (e1, uu___6, uu___7)
-                         | uu___6 ->
-                             if allow_ghost
-                             then
-                               let uu___7 =
-                                 FStar_TypeChecker_Err.expected_ghost_expression
-                                   e1 c2 msg in
-                               FStar_Errors.raise_error uu___7
-                                 e1.FStar_Syntax_Syntax.pos
-                             else
-                               (let uu___8 =
-                                  FStar_TypeChecker_Err.expected_pure_expression
-                                    e1 c2 msg in
-                                FStar_Errors.raise_error uu___8
-                                  e1.FStar_Syntax_Syntax.pos))))
+      fun msg -> tc_tot_or_gtot_term_maybe_solve_deferred env e msg true
 and (tc_tot_or_gtot_term :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.term ->

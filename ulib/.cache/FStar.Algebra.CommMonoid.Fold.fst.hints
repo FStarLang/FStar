@@ -28,7 +28,7 @@
         "refinement_interpretation_Tm_refine_fcf1a3596fffd49dd2e91f2678358f19"
       ],
       0,
-      "126148bbdab85b4195fb8d7b74afe5ba"
+      "26c9b7fb037a3dd3c85b728179fdd10a"
     ],
     [
       "FStar.Algebra.CommMonoid.Fold.fold",
@@ -54,7 +54,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "33c04e438afadea2358fd37ba212e84e"
+      "332259e6dbd9c3566fdab78a6a20dddb"
     ],
     [
       "FStar.Algebra.CommMonoid.Fold.fold_equality",
@@ -97,7 +97,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "2118771298addf616d3cb25a8bf751d0"
+      "81db3850800bd930ed8bb946f5d317c3"
     ],
     [
       "FStar.Algebra.CommMonoid.Fold.fold_snoc_decomposition",
@@ -124,7 +124,7 @@
         "refinement_interpretation_Tm_refine_25948cf2cb84e8edfffe30eaf3d63408"
       ],
       0,
-      "47ad63a544da617970a6501109c1de98"
+      "5858f3d6eef899fec5bbf7fa1cab17a2"
     ],
     [
       "FStar.Algebra.CommMonoid.Fold.fold_equals_seq_foldm",
@@ -145,7 +145,7 @@
         "refinement_interpretation_Tm_refine_25948cf2cb84e8edfffe30eaf3d63408"
       ],
       0,
-      "037985467ecbd4498b6717d04ee9e913"
+      "981b30586b9042846ab97c8f4d272099"
     ],
     [
       "FStar.Algebra.CommMonoid.Fold.fold_equals_seq_foldm",
@@ -236,7 +236,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "d8903361a3d51b4a16925fb1acea35ab"
+      "f91d54c9a4bd72e7e064683dd9a7a316"
     ]
   ]
 ]

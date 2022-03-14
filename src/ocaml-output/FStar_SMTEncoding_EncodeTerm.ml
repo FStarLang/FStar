@@ -750,27 +750,6 @@ and (encode_term_pred :
               let uu___1 =
                 FStar_SMTEncoding_Term.mk_HasTypeWithFuel fuel_opt e t1 in
               (uu___1, decls)
-and (encode_term_pred' :
-  FStar_SMTEncoding_Term.term FStar_Pervasives_Native.option ->
-    FStar_Syntax_Syntax.typ ->
-      FStar_SMTEncoding_Env.env_t ->
-        FStar_SMTEncoding_Term.term ->
-          (FStar_SMTEncoding_Term.term * FStar_SMTEncoding_Term.decls_t))
-  =
-  fun fuel_opt ->
-    fun t ->
-      fun env ->
-        fun e ->
-          let uu___ = encode_term t env in
-          match uu___ with
-          | (t1, decls) ->
-              (match fuel_opt with
-               | FStar_Pervasives_Native.None ->
-                   let uu___1 = FStar_SMTEncoding_Term.mk_HasTypeZ e t1 in
-                   (uu___1, decls)
-               | FStar_Pervasives_Native.Some f ->
-                   let uu___1 = FStar_SMTEncoding_Term.mk_HasTypeFuel f e t1 in
-                   (uu___1, decls))
 and (encode_arith_term :
   FStar_SMTEncoding_Env.env_t ->
     FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
@@ -3306,39 +3285,6 @@ and (encode_args :
                              (FStar_Compiler_List.op_At decls decls'))))
              ([], [])) in
       match uu___ with | (l1, decls) -> ((FStar_Compiler_List.rev l1), decls)
-and (encode_function_type_as_formula :
-  FStar_Syntax_Syntax.typ ->
-    FStar_SMTEncoding_Env.env_t ->
-      (FStar_SMTEncoding_Term.term * FStar_SMTEncoding_Term.decls_t))
-  =
-  fun t ->
-    fun env ->
-      let universe_of_binders binders =
-        FStar_Compiler_List.map (fun uu___ -> FStar_Syntax_Syntax.U_zero)
-          binders in
-      let quant = FStar_Syntax_Util.smt_lemma_as_forall t universe_of_binders in
-      let env1 =
-        {
-          FStar_SMTEncoding_Env.bvar_bindings =
-            (env.FStar_SMTEncoding_Env.bvar_bindings);
-          FStar_SMTEncoding_Env.fvar_bindings =
-            (env.FStar_SMTEncoding_Env.fvar_bindings);
-          FStar_SMTEncoding_Env.depth = (env.FStar_SMTEncoding_Env.depth);
-          FStar_SMTEncoding_Env.tcenv = (env.FStar_SMTEncoding_Env.tcenv);
-          FStar_SMTEncoding_Env.warn = (env.FStar_SMTEncoding_Env.warn);
-          FStar_SMTEncoding_Env.nolabels =
-            (env.FStar_SMTEncoding_Env.nolabels);
-          FStar_SMTEncoding_Env.use_zfuel_name = true;
-          FStar_SMTEncoding_Env.encode_non_total_function_typ =
-            (env.FStar_SMTEncoding_Env.encode_non_total_function_typ);
-          FStar_SMTEncoding_Env.current_module_name =
-            (env.FStar_SMTEncoding_Env.current_module_name);
-          FStar_SMTEncoding_Env.encoding_quantifier =
-            (env.FStar_SMTEncoding_Env.encoding_quantifier);
-          FStar_SMTEncoding_Env.global_cache =
-            (env.FStar_SMTEncoding_Env.global_cache)
-        } in
-      encode_formula quant env1
 and (encode_smt_patterns :
   FStar_Syntax_Syntax.arg Prims.list Prims.list ->
     FStar_SMTEncoding_Env.env_t ->
@@ -3824,3 +3770,36 @@ and (encode_formula :
                    FStar_SMTEncoding_Term.mkExists
                      phi1.FStar_Syntax_Syntax.pos uu___5 in
                  (uu___4, decls))))
+let (encode_function_type_as_formula :
+  FStar_Syntax_Syntax.typ ->
+    FStar_SMTEncoding_Env.env_t ->
+      (FStar_SMTEncoding_Term.term * FStar_SMTEncoding_Term.decls_t))
+  =
+  fun t ->
+    fun env ->
+      let universe_of_binders binders =
+        FStar_Compiler_List.map (fun uu___ -> FStar_Syntax_Syntax.U_zero)
+          binders in
+      let quant = FStar_Syntax_Util.smt_lemma_as_forall t universe_of_binders in
+      let env1 =
+        {
+          FStar_SMTEncoding_Env.bvar_bindings =
+            (env.FStar_SMTEncoding_Env.bvar_bindings);
+          FStar_SMTEncoding_Env.fvar_bindings =
+            (env.FStar_SMTEncoding_Env.fvar_bindings);
+          FStar_SMTEncoding_Env.depth = (env.FStar_SMTEncoding_Env.depth);
+          FStar_SMTEncoding_Env.tcenv = (env.FStar_SMTEncoding_Env.tcenv);
+          FStar_SMTEncoding_Env.warn = (env.FStar_SMTEncoding_Env.warn);
+          FStar_SMTEncoding_Env.nolabels =
+            (env.FStar_SMTEncoding_Env.nolabels);
+          FStar_SMTEncoding_Env.use_zfuel_name = true;
+          FStar_SMTEncoding_Env.encode_non_total_function_typ =
+            (env.FStar_SMTEncoding_Env.encode_non_total_function_typ);
+          FStar_SMTEncoding_Env.current_module_name =
+            (env.FStar_SMTEncoding_Env.current_module_name);
+          FStar_SMTEncoding_Env.encoding_quantifier =
+            (env.FStar_SMTEncoding_Env.encoding_quantifier);
+          FStar_SMTEncoding_Env.global_cache =
+            (env.FStar_SMTEncoding_Env.global_cache)
+        } in
+      encode_formula quant env1

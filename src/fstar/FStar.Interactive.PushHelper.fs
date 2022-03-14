@@ -53,7 +53,8 @@ let set_check_kind env check_kind =
 (** Build a list of dependency loading tasks from a list of dependencies **)
 let repl_ld_tasks_of_deps (deps: list<string>) (final_tasks: list<repl_task>) =
   let wrap fname = { tf_fname = fname; tf_modtime = U.now () } in
-  let rec aux deps final_tasks =
+  let rec aux (deps:list<string>) (final_tasks:list<repl_task>)
+    : list<repl_task> =
     match deps with
     | intf :: impl :: deps' when needs_interleaving intf impl ->
       LDInterleaved (wrap intf, wrap impl) :: aux deps' final_tasks

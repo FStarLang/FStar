@@ -2084,7 +2084,7 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
       //we don't abstract over subtyping constraints; so solve them now
       //but leave out the tactics constraints for later so that the tactic
       //can have a more global view of all the constraints
-      let guard_body = Rel.solve_non_tactic_deferred_constraints envbody guard_body in
+      let guard_body = Rel.solve_non_tactic_deferred_constraints true envbody guard_body in
 
       if should_check_expected_effect
       then let cbody, g_lc = TcComm.lcomp_comp cbody in
@@ -2096,7 +2096,8 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
            body, cbody, Env.conj_guard guard_body g_lc
     in
 
-    let guard = if env.top_level || not(Env.should_verify env)
+    let guard = if env.top_level
+                || not (Options.should_verify (string_of_lid env.curmodule))
                 then Env.conj_guard (Rel.discharge_guard env g_env)
                                     (Rel.discharge_guard envbody guard_body)
                 else let guard = Env.conj_guard g_env (Env.close_guard env (bs@letrec_binders) guard_body) in
@@ -2742,8 +2743,24 @@ and tc_pat env (pat_t:typ) (p0:pat) :
 
                 | Tm_uvar _ ->
                   let env = Env.set_expected_typ env t_f in
-                  let a, _, g = tc_tot_or_gtot_term env a in
-                  let g = Rel.discharge_guard_no_smt env g in
+                  //
+                  //AR: 03/03: When typechecking these uvar args,
+                  //  we don't want to solve the deferred constraints here,
+                  //  since solving them here may mean solving flex-flex equations
+                  //  among them
+                  //
+                  //  Whereas if we wait for unification of these dot pattern uvars
+                  //  with the type of the scrutinee (in pat_typ_ok), we have a good
+                  //  chance of solving these uvars as flex-rigid equations
+                  //
+                  //  Therefore, ask tc_tot to not solve deferred, and return the
+                  //  guard as is
+                  //
+                  let a, _, g = tc_tot_or_gtot_term_maybe_solve_deferred
+                    env
+                    a
+                    ""
+                    false in  //don't solve the deferred constraints in the guard
                   let subst = NT(f, a)::subst in
                   (a, imp_a), subst, bvs, g
 
@@ -2887,10 +2904,18 @@ and tc_pat env (pat_t:typ) (p0:pat) :
                                           (BU.string_of_int (List.length sub_pats))
                                           (BU.string_of_int (List.length simple_bvs)));
           let simple_pat_e, simple_bvs, g1, erasable =
+              //
+              //guard is the typechecking guard
+              //it contains some deferred constraints for dot pattern uvars
+              //we will solve them after pat_typ_ok
+              //
               let simple_pat_e, simple_pat_t, simple_bvs, guard, erasable =
                   type_of_simple_pat env simple_pat_e
               in
               let g' = pat_typ_ok env simple_pat_t (expected_pat_typ env p0.p t) in
+              //Now solve guard
+              let guard = Rel.discharge_guard_no_smt env guard in
+              //And combine with g' (the guard from pat_typ_ok)
               let guard = Env.conj_guard guard g' in
               if Env.debug env <| Options.Other "Patterns"
               then BU.print3 "$$$$$$$$$$$$Checked simple pattern %s at type %s with bvs=%s\n"
@@ -3959,12 +3984,15 @@ and tc_smt_pats en pats =
       let args, g' = tc_args en p in
       (args::pats, Env.conj_guard g g')) pats ([], Env.trivial_guard)
 
-and tc_tot_or_gtot_term' (env:env) (e:term) (msg:string)
+and tc_tot_or_gtot_term_maybe_solve_deferred (env:env) (e:term) (msg:string) (solve_deferred:bool)
 : term * lcomp * guard_t
 = let e, c, g = tc_maybe_toplevel_term env e in
   if TcComm.is_tot_or_gtot_lcomp c
   then e, c, g
-  else let g = Rel.solve_deferred_constraints env g in
+  else let g =
+         if solve_deferred
+         then Rel.solve_deferred_constraints env g
+         else g in
        let c, g_c = TcComm.lcomp_comp c in
        let c = norm_c env c in
        let target_comp, allow_ghost =
@@ -3977,6 +4005,10 @@ and tc_tot_or_gtot_term' (env:env) (e:term) (msg:string)
           if allow_ghost
           then raise_error (Err.expected_ghost_expression e c msg) e.pos
           else raise_error (Err.expected_pure_expression e c msg) e.pos
+
+and tc_tot_or_gtot_term' (env:env) (e:term) (msg:string)
+: term * lcomp * guard_t
+= tc_tot_or_gtot_term_maybe_solve_deferred env e msg true
 
 and tc_tot_or_gtot_term env e = tc_tot_or_gtot_term' env e ""
 

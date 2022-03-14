@@ -2541,11 +2541,16 @@ and (desugar_term_maybe_top :
                                     mk
                                       (FStar_Syntax_Syntax.Tm_uinst
                                          (head1, universes1)) in
-                                let uu___5 =
-                                  mk
-                                    (FStar_Syntax_Syntax.Tm_app
-                                       (head2, args2)) in
-                                (uu___5, (join_aqs aqs)))))
+                                let tm =
+                                  if
+                                    (FStar_Compiler_List.length args2) =
+                                      Prims.int_zero
+                                  then head2
+                                  else
+                                    mk
+                                      (FStar_Syntax_Syntax.Tm_app
+                                         (head2, args2)) in
+                                (tm, (join_aqs aqs)))))
              | FStar_Pervasives_Native.None ->
                  let err =
                    let uu___2 =
