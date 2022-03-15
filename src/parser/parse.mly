@@ -31,7 +31,7 @@ let old_attribute_syntax_warning =
   "The `[@ ...]` syntax of attributes is deprecated. \
    Use `[@@ a1; a2; ...; an]`, a semi-colon separated list of attributes, instead"
 
-let none_to_empty_list x = 
+let none_to_empty_list x =
   match x with
   | None -> []
   | Some l -> l
@@ -291,10 +291,10 @@ typeDefinition:
       { (fun id binders kopt -> check_id id; TyconVariant(id, binders, kopt, ct_decls)) }
 
 recordFieldDecl:
-  | qualified_lid=aqualifiedWithAttrs(lident) COLON t=typ 
-      { 
+  | qualified_lid=aqualifiedWithAttrs(lident) COLON t=typ
+      {
         let (qual, attrs), lid = qualified_lid in
-        (lid, qual, attrs, t) 
+        (lid, qual, attrs, t)
       }
 
 constructorDecl:
@@ -433,7 +433,7 @@ qualifier:
   | DEFAULT       { DefaultEffect }
   | TOTAL         { TotalEffect }
   | PRIVATE       { Private }
-  
+
   | NOEQUALITY    { Noeq }
   | UNOPTEQUALITY { Unopteq }
   | NEW           { New }
@@ -456,7 +456,7 @@ letqualifier:
  *     (a) allow attributes on non-implicit binders
  *     note that in the [@@ case, we choose the Implicit aqual
  *)
-aqual: 
+aqual:
   | HASH LBRACK t=thunk(tmNoEq) RBRACK { mk_meta_tac t }
   | HASH      { Implicit }
   | DOLLAR    { Equality }
@@ -718,7 +718,7 @@ noSeqTerm:
 	| _ ->
 	  raise_error (Fatal_SyntaxError,
 	    "Syntax error: To use well-founded relations, write e1 e2") (rhs parseState 3) }
-	  
+
   | ATTRIBUTES es=nonempty_list(atomicTerm)
       { mk_term (Attributes es) (rhs2 parseState 1 2) Type_level }
   | IF e1=noSeqTerm ret_opt=option(match_returning) THEN e2=noSeqTerm ELSE e3=noSeqTerm
@@ -810,7 +810,7 @@ noSeqTerm:
         if List.length bs <> List.length vs
         then raise_error (Fatal_SyntaxError, "Syntax error: expected instantiations for all binders") (rhs parseState 7)
         else mk_term (IntroExists(bs, p, vs, e)) (rhs2 parseState 1 9) Expr
-     }    
+     }
 
    | INTRO p=tmFormula IMPLIES q=tmFormula WITH y=singleBinder DOT e=noSeqTerm
      {
@@ -822,7 +822,7 @@ noSeqTerm:
         let b =
             if lr = "Left" then true
             else if lr = "Right" then false
-            else raise_error (Fatal_SyntaxError, "Syntax error: _intro_ \/ expects either 'Left' or 'Right'") (rhs parseState 6)
+            else raise_error (Fatal_SyntaxError, "Syntax error: _intro_ \\/ expects either 'Left' or 'Right'") (rhs parseState 6)
         in
         mk_term (IntroOr(b, p, q, e))  (rhs2 parseState 1 7) Expr
      }
@@ -836,7 +836,7 @@ noSeqTerm:
      {
         mk_term (ElimForall(xs, p, vs)) (rhs2 parseState 1 7) Expr
      }
-     
+
    | ELIM EXISTS bs=binders DOT p=noSeqTerm RETURNS q=noSeqTerm WITH y=singleBinder DOT e=noSeqTerm
      {
         mk_term (ElimExists(bs, p, q, y, e)) (rhs2 parseState 1 11) Expr
@@ -850,7 +850,7 @@ noSeqTerm:
    | ELIM p=tmFormula DISJUNCTION q=tmConjunction RETURNS r=noSeqTerm WITH x=singleBinder DOT e1=noSeqTerm AND y=singleBinder DOT e2=noSeqTerm
      {
         mk_term (ElimOr(p, q, r, x, e1, y, e2)) (rhs2 parseState 1 14) Expr
-     }    
+     }
 
    | ELIM p=tmConjunction CONJUNCTION q=tmTuple RETURNS r=noSeqTerm WITH xs=binders DOT e=noSeqTerm
      {
@@ -865,7 +865,7 @@ singleBinder:
        | [b] -> b
        | _ -> raise_error (Fatal_SyntaxError, "Syntax error: expected a single binder") (rhs parseState 1)
     }
-    
+
 calcRel:
   | i=binop_name { mk_term (Op (i, [])) (rhs parseState 1) Expr }
   | BACKTICK id=qlident BACKTICK { mk_term (Var id) (rhs2 parseState 2 4) Un }
