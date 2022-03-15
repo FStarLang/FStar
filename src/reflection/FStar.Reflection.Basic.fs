@@ -279,7 +279,7 @@ let pack_comp (cv : comp_view) : comp =
     match cv with
     | C_Total (t, []) -> mk_Total t
     | C_Total (t, l) ->
-        let ct = { comp_univs=[U_zero]
+        let ct = { comp_univs=[U_unknown]
                  ; effect_name=PC.effect_Tot_lid
                  ; result_typ = t
                  ; effect_args = []
@@ -289,7 +289,7 @@ let pack_comp (cv : comp_view) : comp =
 
     | C_GTotal (t, []) -> mk_GTotal t
     | C_GTotal (t, l) ->
-        let ct = { comp_univs=[U_zero]
+        let ct = { comp_univs=[U_unknown]
                  ; effect_name=PC.effect_GTot_lid
                  ; result_typ = t
                  ; effect_args = []
