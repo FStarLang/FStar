@@ -76,7 +76,7 @@ let (close_guard_implicits :
                   else ());
                  (let g1 =
                     FStar_TypeChecker_Rel.solve_non_tactic_deferred_constraints
-                      env
+                      false env
                       {
                         FStar_TypeChecker_Common.guard_f =
                           (g.FStar_TypeChecker_Common.guard_f);

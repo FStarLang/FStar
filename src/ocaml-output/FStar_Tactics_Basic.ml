@@ -3897,7 +3897,19 @@ let (uvar_env :
            let uu___ =
              match ty with
              | FStar_Pervasives_Native.Some ty1 ->
-                 FStar_Tactics_Monad.ret ty1
+                 let env2 =
+                   let uu___1 =
+                     let uu___2 = FStar_Syntax_Util.type_u () in
+                     FStar_Compiler_Effect.op_Bar_Greater uu___2
+                       FStar_Pervasives_Native.fst in
+                   FStar_TypeChecker_Env.set_expected_typ env1 uu___1 in
+                 let uu___1 = __tc_ghost env2 ty1 in
+                 FStar_Tactics_Monad.bind uu___1
+                   (fun uu___2 ->
+                      match uu___2 with
+                      | (ty2, uu___3, g) ->
+                          FStar_Tactics_Monad.ret
+                            (ty2, g, (ty2.FStar_Syntax_Syntax.pos)))
              | FStar_Pervasives_Native.None ->
                  let uu___1 =
                    let uu___2 =
@@ -3909,16 +3921,24 @@ let (uvar_env :
                  FStar_Tactics_Monad.bind uu___1
                    (fun uu___2 ->
                       match uu___2 with
-                      | (typ, uvar_typ) -> FStar_Tactics_Monad.ret typ) in
+                      | (typ, uvar_typ) ->
+                          FStar_Tactics_Monad.ret
+                            (typ, FStar_TypeChecker_Env.trivial_guard,
+                              FStar_Compiler_Range.dummyRange)) in
            FStar_Tactics_Monad.bind uu___
-             (fun typ ->
-                let uu___1 =
-                  FStar_Tactics_Monad.new_uvar "uvar_env" env1 typ
-                    ps.FStar_Tactics_Types.entry_range in
-                FStar_Tactics_Monad.bind uu___1
-                  (fun uu___2 ->
-                     match uu___2 with
-                     | (t, uvar_t) -> FStar_Tactics_Monad.ret t)))
+             (fun uu___1 ->
+                match uu___1 with
+                | (typ, g, r) ->
+                    let uu___2 = proc_guard "uvar_env_typ" env1 g r in
+                    FStar_Tactics_Monad.bind uu___2
+                      (fun uu___3 ->
+                         let uu___4 =
+                           FStar_Tactics_Monad.new_uvar "uvar_env" env1 typ
+                             ps.FStar_Tactics_Types.entry_range in
+                         FStar_Tactics_Monad.bind uu___4
+                           (fun uu___5 ->
+                              match uu___5 with
+                              | (t, uvar_t) -> FStar_Tactics_Monad.ret t))))
 let (unshelve : FStar_Syntax_Syntax.term -> unit FStar_Tactics_Monad.tac) =
   fun t ->
     let uu___ =

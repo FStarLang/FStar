@@ -323,7 +323,7 @@ let (pack_comp : FStar_Reflection_Data.comp_view -> FStar_Syntax_Syntax.comp)
     | FStar_Reflection_Data.C_Total (t, l) ->
         let ct =
           {
-            FStar_Syntax_Syntax.comp_univs = [FStar_Syntax_Syntax.U_zero];
+            FStar_Syntax_Syntax.comp_univs = [FStar_Syntax_Syntax.U_unknown];
             FStar_Syntax_Syntax.effect_name =
               FStar_Parser_Const.effect_Tot_lid;
             FStar_Syntax_Syntax.result_typ = t;
@@ -338,7 +338,7 @@ let (pack_comp : FStar_Reflection_Data.comp_view -> FStar_Syntax_Syntax.comp)
     | FStar_Reflection_Data.C_GTotal (t, l) ->
         let ct =
           {
-            FStar_Syntax_Syntax.comp_univs = [FStar_Syntax_Syntax.U_zero];
+            FStar_Syntax_Syntax.comp_univs = [FStar_Syntax_Syntax.U_unknown];
             FStar_Syntax_Syntax.effect_name =
               FStar_Parser_Const.effect_GTot_lid;
             FStar_Syntax_Syntax.result_typ = t;

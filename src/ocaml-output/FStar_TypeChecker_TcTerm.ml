@@ -5819,7 +5819,7 @@ and (tc_abs :
                              | (body3, cbody, guard_body) ->
                                  let guard_body1 =
                                    FStar_TypeChecker_Rel.solve_non_tactic_deferred_constraints
-                                     envbody2 guard_body in
+                                     true envbody2 guard_body in
                                  if should_check_expected_effect
                                  then
                                    let uu___8 =
@@ -5986,7 +5986,10 @@ and (tc_abs :
                             let uu___6 =
                               env1.FStar_TypeChecker_Env.top_level ||
                                 (let uu___7 =
-                                   FStar_TypeChecker_Env.should_verify env1 in
+                                   let uu___8 =
+                                     FStar_Ident.string_of_lid
+                                       env1.FStar_TypeChecker_Env.curmodule in
+                                   FStar_Options.should_verify uu___8 in
                                  Prims.op_Negation uu___7) in
                             if uu___6
                             then
