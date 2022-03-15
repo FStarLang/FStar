@@ -1,4 +1,21 @@
-module FStar.FSet
+(*
+   Copyright 2021 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+
+   Author: John Li
+*)
+module FStar.FiniteSet
 
 open FStar.List.Tot
 open FStar.FunctionalExtensionality
@@ -20,6 +37,8 @@ let intro_set (#a:eqtype) (f: a ^-> bool) (xs: Ghost.erased (list a))
 = Classical.exists_intro (fun xs -> f `has_elements` xs) xs;
   f 
 
+let mem #a x s = s x
+
 let emptyset #a: set a = intro_set (on_dom a (fun _ -> false)) []
 
 let insert x (s: set 'a): set 'a =
@@ -33,7 +52,7 @@ let rec list_remove (#a:eqtype) x (xs: list a) = match xs with
   | x' :: xs ->
     if x = x' then list_remove x xs
     else x' :: list_remove x xs
-
+module L = FStar.List.Tot
 let rec list_remove_spec (#a:eqtype) f x (xs: list a)
 : Lemma
     (requires f `has_elements` xs)
@@ -42,7 +61,7 @@ let rec list_remove_spec (#a:eqtype) f x (xs: list a)
 = match xs with
   | [] -> ()
   | x' :: xs ->
-    let g: (a ^-> bool) = on_dom _ (fun x -> x `mem` xs) in
+    let g: (a ^-> bool) = on_dom _ (fun x -> x `L.mem` xs) in
     let f': (a ^-> bool) = on_dom _ (fun x'' -> x'' = x' || g x'') in
     assert (f `feq` f');
     assert (g `has_elements` xs);
@@ -63,4 +82,3 @@ let remove_insert x (s: set 'a)
   [SMTPat (remove x (insert x s))]
 = assert (remove x (insert x s) `feq` s)
 
-let notin (s: set 'a) (x: 'a): prop = s x == false
