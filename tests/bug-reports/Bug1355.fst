@@ -85,3 +85,30 @@ noeq type g2
   (x: nat)
   (y: u x)
 = | G2 : (r: (f (| x, y |))) -> g2 u f x y
+
+
+(*
+ * Examples from #1276
+ *)
+
+assume val type_mapper: n:nat -> Type0
+
+noeq
+type container =
+  | TC:
+    pred:(n:nat -> Type0) ->
+    n:(let t i = pred i in k:nat{type_mapper k == i:nat{t i}}) ->
+    container
+
+
+noeq type type_container0 =
+  | TC0:
+    t: Type0 ->
+    type_container0
+
+let create() =
+  let tc = TC0 int in
+  let t1 = tc.t in
+  let t2 = int in
+  assert(t1 == t2);
+  assert(i1:(t1){True} == i2:(t2){True})
