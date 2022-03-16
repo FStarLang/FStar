@@ -2031,6 +2031,21 @@ and (encode_term :
                       FStar_SMTEncoding_Term.mk_decls_trivial in
                   FStar_Compiler_List.op_At decls uu___4 in
                 (ttm, uu___3))
+       | FStar_Syntax_Syntax.Tm_app
+           ({ FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_fvar head;
+              FStar_Syntax_Syntax.pos = uu___1;
+              FStar_Syntax_Syntax.vars = uu___2;_},
+            (arg, uu___3)::[])
+           when
+           (FStar_Syntax_Syntax.fv_eq_lid head FStar_Parser_Const.squash_lid)
+             &&
+             (let uu___4 = FStar_Syntax_Util.destruct_typ_as_formula arg in
+              FStar_Compiler_Option.isSome uu___4)
+           ->
+           let dummy =
+             FStar_Syntax_Syntax.new_bv FStar_Pervasives_Native.None
+               FStar_Syntax_Syntax.t_unit in
+           let t2 = FStar_Syntax_Util.refine dummy arg in encode_term t2 env
        | FStar_Syntax_Syntax.Tm_app uu___1 ->
            let uu___2 = FStar_Syntax_Util.head_and_args t0 in
            (match uu___2 with

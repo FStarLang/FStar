@@ -908,6 +908,13 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
         in
         ttm, decls@([d] |> mk_decls_trivial)
 
+      | Tm_app({n=Tm_fvar head}, [(arg, _)])
+          when S.fv_eq_lid head Const.squash_lid
+            && Option.isSome (U.destruct_typ_as_formula arg) ->
+        let dummy = S.new_bv None t_unit in
+        let t = U.refine dummy arg in (* so that `squash f`, when f is a formula, benefits from shallow embedding *)
+        encode_term t env
+
       | Tm_app _ ->
         let head, args_e = U.head_and_args t0 in
         (* if Env.debug env.tcenv <| Options.Other "SMTEncoding" *)
