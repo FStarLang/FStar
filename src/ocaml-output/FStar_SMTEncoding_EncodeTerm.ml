@@ -2037,7 +2037,10 @@ and (encode_term :
               FStar_Syntax_Syntax.vars = uu___2;_},
             (arg, uu___3)::[])
            when
-           (FStar_Syntax_Syntax.fv_eq_lid head FStar_Parser_Const.squash_lid)
+           ((FStar_Syntax_Syntax.fv_eq_lid head FStar_Parser_Const.squash_lid)
+              ||
+              (FStar_Syntax_Syntax.fv_eq_lid head
+                 FStar_Parser_Const.auto_squash_lid))
              &&
              (let uu___4 = FStar_Syntax_Util.destruct_typ_as_formula arg in
               FStar_Compiler_Option.isSome uu___4)
