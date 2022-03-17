@@ -79,14 +79,24 @@ let rec find (#a:eqtype) (x:a) (s:seq a{ count x s > 0 })
       cons (head s) pfx, sfx
     )
 
-//rlimit factor 2 seems sufficient, I tried with --quake 10 (10 random seeds)
-//in contrast the corresponding proof in FStar.Seq.Permutation
-//requires around rlimit factor 20 to succeed reliably with --quake 10
-//though this one is more careful about how count is revealed,
-//so, it's not really a head-to-head comparison.
-//If I don't control how count is revealed, then this proof times out
-//even at rlimit factor 30
-#push-options "--fuel 1 --ifuel 0 --z3rlimit_factor 2"
+let count_singleton_one (#a:eqtype) (x:a)
+  : Lemma (count x (singleton x) == 1)
+  = reveal_opaque (`%count) (count #a)
+let count_singleton_zero (#a:eqtype) (x y:a)
+  : Lemma (x =!= y ==> count x (singleton y) == 0)
+  = reveal_opaque (`%count) (count #a)
+let equal_counts_empty (#a:eqtype) (s0 s1:seq a)
+  : Lemma
+    (requires S.length s0 == 0 /\ (forall x. count x s0 == count x s1))
+    (ensures  S.length s1 == 0)
+  = reveal_opaque (`%count) (count #a);
+    if S.length s1 > 0 then
+    assert (count (head s1) s1 > 0)
+let count_head (#a:eqtype) (x:seq a{ S.length x > 0 })
+  : Lemma (count (head x) x > 0)
+  = reveal_opaque (`%count) (count #a)
+
+#push-options "--fuel 0 --ifuel 0 --z3rlimit_factor 2 --quake 10/10 --query_stats"
 let rec permutation_from_equal_counts (#a:eqtype) (s0:seq a) (s1:seq a{(forall x. count x s0 == count x s1)})
   : Tot (seqperm s0 s1)
         (decreases (S.length s0))
@@ -96,21 +106,62 @@ let rec permutation_from_equal_counts (#a:eqtype) (s0:seq a) (s1:seq a{(forall x
       assert (forall x. count x s0 = 0);
       let f : index_fun s0 = fun i -> i in
       reveal_is_permutation_nopats s0 s1 f;
-      if S.length s1 = 0 then f
-      else (
-        count_head s1;
-        f
-      )
+      equal_counts_empty s0 s1;
+      f
     )
     else (
       count_head s0;
       let pfx, sfx = find (head s0) s1 in
       introduce forall x. count x (tail s0) == count x (S.append pfx sfx)
-      with (
-        reveal_opaque (`%count) (count #a);
-        lemma_append_count_aux x pfx sfx;
-        lemma_append_count_aux x (singleton (head s0)) sfx;
-        lemma_append_count_aux x pfx (cons (head s0) sfx)
+      with
+      (
+        if x = head s0
+        then  (
+          calc (eq2 #int) {
+            count x (tail s0) <: int;
+          (==) {
+                 assert (s0 `S.equal` cons (head s0) (tail s0));
+                 lemma_append_count_aux (head s0) (S.singleton (head s0)) (tail s0);
+                 count_singleton_one x
+               }
+            count x s0 - 1 <: int;
+          (==) {}
+            count x s1 - 1 <: int;
+          (==) {}
+            count x (S.append pfx (cons (head s0) sfx)) - 1 <: int;
+          (==) { lemma_append_count_aux x pfx (cons (head s0) sfx) }
+            count x pfx + count x (cons (head s0) sfx) - 1 <: int;
+          (==) { lemma_append_count_aux x (S.singleton (head s0)) sfx }
+            count x pfx + (count x (S.singleton (head s0)) + count x sfx) - 1 <: int;
+          (==) { count_singleton_one x }
+            count x pfx + count x sfx <: int;
+          (==) { lemma_append_count_aux x pfx sfx }
+            count x (S.append pfx sfx) <: int;
+          }
+        )
+        else (
+          calc (==) {
+            count x (tail s0);
+           (==) {
+                  assert (s0 `S.equal` cons (head s0) (tail s0));
+                  lemma_append_count_aux x (S.singleton (head s0)) (tail s0);
+                  count_singleton_zero x (head s0)
+                }
+            count x s0;
+           (==) { }
+            count x s1;
+           (==) { }
+            count x (S.append pfx (cons (head s0) sfx));
+           (==) { lemma_append_count_aux x pfx (cons (head s0) sfx) }
+            count x pfx + count x (cons (head s0) sfx);
+          (==) { lemma_append_count_aux x (S.singleton (head s0)) sfx }
+            count x pfx + (count x (S.singleton (head s0)) + count x sfx) ;
+          (==) { count_singleton_zero x (head s0) }
+            count x pfx + count x sfx;
+          (==) { lemma_append_count_aux x pfx sfx }
+            count x (S.append pfx sfx);
+          }
+        )
       );
       let s1' = (S.append pfx sfx) in
       let f' = permutation_from_equal_counts (tail s0) s1'  in
