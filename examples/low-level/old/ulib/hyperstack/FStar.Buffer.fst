@@ -72,7 +72,6 @@ let disjoint #a #a' (x:buffer a) (y:buffer a') : GTot Type0 =
   \/ (as_aref x = as_aref y /\ (idx x + length x <= idx y \/ idx y + length y <= idx x))
 
 (* Abstraction of buffers of any type *)
-#set-options "--__temp_no_proj SBuffer"
 type abuffer = | Buff: #t:Type -> b:buffer t -> abuffer
 
 let disjoint_a b b' : GTot Type0 =

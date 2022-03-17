@@ -173,9 +173,6 @@ let weakening_ok (#st:st) (#a:Type u#a) (pre:st.hprop) (post:post_t st a)
 = weaker_pre wpre pre /\ stronger_post wpost post
 
 
-/// Setting the flag just to reduce the time to typecheck the type m
-
-#push-options "--__temp_no_proj Steel.Semantics.Hoare.MST"
 noeq
 type m (st:st) :
       a:Type u#a ->
@@ -233,7 +230,6 @@ type m (st:st) :
     _:squash (weakening_ok pre post wpre wpost) ->
     m st a pre post ->
     m st a wpre wpost
-#pop-options
 
 (**** End definition of the computation AST ****)
 

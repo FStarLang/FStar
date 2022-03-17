@@ -837,7 +837,7 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
             let no_decl = false in
             let only_decl =
               early_prims_inductive ||
-              Options.dont_gen_projectors (string_of_lid (Env.current_module env))
+              U.has_attribute attrs C.no_auto_projectors_attr
             in
             let quals =
                 (* KM : What about Logic ? should it still be there even with an implementation *)
@@ -926,18 +926,15 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
       fields |> List.mapi (fun i ({binder_bv=x}) ->
           let p = S.range_of_bv x in
           let field_name = U.mk_field_projector_name lid x i in
-          let t =
-            let result_comp =
-              let t = Subst.subst subst x.sort in
-              if erasable
-              then S.mk_GTotal t
-              else S.mk_Total t
-            in
-            SS.close_univ_vars uvs <| U.arrow binders result_comp
-          in
+          let result_comp = 
+            let t = Subst.subst subst x.sort in
+            if erasable
+            then S.mk_GTotal t
+            else S.mk_Total t in
+          let t = SS.close_univ_vars uvs <| U.arrow binders result_comp in
           let only_decl =
             early_prims_inductive ||
-            Options.dont_gen_projectors (string_of_lid (Env.current_module env))
+            U.has_attribute attrs C.no_auto_projectors_attr
           in
           (* KM : Why would we want to prevent a declaration only in this particular case ? *)
           (* TODO : If we don't want the declaration then we need to propagate the right types in the patterns *)
@@ -977,7 +974,17 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
                   else pos (Pat_wild (S.gen_bv (string_of_id x.ppname) None tun)), b)
               in
               let pat = pos (S.Pat_cons (S.lid_as_fv lid delta_constant (Some fvq), arg_pats)), None, S.bv_to_name projection in
-              let body = mk (Tm_match(arg_exp, None, [U.branch pat], None)) p in
+              let body =
+                let return_bv = S.gen_bv "proj_ret" (Some p) S.tun in
+                let result_typ = result_comp
+                  |> U.comp_result
+                  |> SS.subst [NT (arg_binder.binder_bv, S.bv_to_name return_bv)]
+                  |> SS.close [S.mk_binder return_bv] in
+                let return_binder = List.hd (SS.close_binders [S.mk_binder return_bv]) in
+                let returns_annotation =
+                  let use_eq = true in
+                  Some (return_binder, (Inl result_typ, None, use_eq)) in
+                mk (Tm_match(arg_exp, returns_annotation, [U.branch pat], None)) p in
               let imp = U.abs binders body None in
               let dd = Delta_equational_at_level 1 in
               let lbtyp = if no_decl then t else tun in

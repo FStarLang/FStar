@@ -153,7 +153,8 @@ and env = {
   gamma_sig      :list<sig_binding>;            (* and signature elements *)
   gamma_cache    :FStar.Compiler.Util.smap<cached_elt>;  (* Memo table for the local environment *)
   modules        :list<modul>;                  (* already fully type checked modules *)
-  expected_typ   :option<typ>;                  (* type expected by the context *)
+  expected_typ   :option<(typ * bool)>;         (* type expected by the context *)
+                                                (* a true bool will check for type equality (else subtyping) *)
   sigtab         :BU.smap<sigelt>;              (* a dictionary of long-names to sigelts *)
   attrtab        :BU.smap<list<sigelt>>;        (* a dictionary of attribute( name)s to sigelts, mostly in support of typeclasses *)
   instantiate_imp:bool;                         (* instantiate implicit arguments? default=true *)
@@ -359,8 +360,13 @@ val push_binders          : env -> binders -> env
 val push_univ_vars        : env -> univ_names -> env
 val open_universes_in     : env -> univ_names -> list<term> -> env * univ_names * list<term>
 val set_expected_typ      : env -> typ -> env
-val expected_typ          : env -> option<typ>
-val clear_expected_typ    : env -> env*option<typ>
+val set_expected_typ_maybe_eq
+                          : env -> typ -> bool -> env  //boolean true will check for type equality
+
+//the returns boolean true means check for type equality
+val expected_typ          : env -> option<(typ * bool)>
+val clear_expected_typ    : env -> env*option<(typ * bool)>
+
 val set_current_module    : env -> lident -> env
 val finish_module         : (env -> modul -> env)
 

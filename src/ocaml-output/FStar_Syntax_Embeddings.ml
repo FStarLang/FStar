@@ -746,6 +746,186 @@ let e_tuple2 : 'a 'b . 'a embedding -> 'b embedding -> ('a * 'b) embedding =
         let uu___2 = type_of eb in
         FStar_Syntax_Syntax.t_tuple2_of uu___1 uu___2 in
       mk_emb_full em un uu___ printer1 emb_t_pair_a_b
+let e_tuple3 :
+  'a 'b 'c .
+    'a embedding -> 'b embedding -> 'c embedding -> ('a * 'b * 'c) embedding
+  =
+  fun ea ->
+    fun eb ->
+      fun ec ->
+        let t_pair_a_b_c =
+          let t_tup3 =
+            FStar_Syntax_Util.fvar_const FStar_Parser_Const.lid_tuple3 in
+          let uu___ =
+            let uu___1 = FStar_Syntax_Syntax.as_arg ea.typ in
+            let uu___2 =
+              let uu___3 = FStar_Syntax_Syntax.as_arg eb.typ in
+              let uu___4 =
+                let uu___5 = FStar_Syntax_Syntax.as_arg ec.typ in [uu___5] in
+              uu___3 :: uu___4 in
+            uu___1 :: uu___2 in
+          FStar_Syntax_Syntax.mk_Tm_app t_tup3 uu___
+            FStar_Compiler_Range.dummyRange in
+        let emb_t_pair_a_b_c =
+          let uu___ =
+            let uu___1 =
+              FStar_Compiler_Effect.op_Bar_Greater
+                FStar_Parser_Const.lid_tuple3 FStar_Ident.string_of_lid in
+            (uu___1, [ea.emb_typ; eb.emb_typ; ec.emb_typ]) in
+          FStar_Syntax_Syntax.ET_app uu___ in
+        let printer1 uu___ =
+          match uu___ with
+          | (x, y, z) ->
+              let uu___1 = ea.print x in
+              let uu___2 = eb.print y in
+              let uu___3 = ec.print z in
+              FStar_Compiler_Util.format3 "(%s, %s, %s)" uu___1 uu___2 uu___3 in
+        let em uu___ rng topt norm =
+          match uu___ with
+          | (x1, x2, x3) ->
+              lazy_embed printer1 emb_t_pair_a_b_c rng t_pair_a_b_c
+                (x1, x2, x3)
+                (fun uu___1 ->
+                   let proj i abc =
+                     let proj_i =
+                       let uu___2 =
+                         FStar_Parser_Const.mk_tuple_data_lid
+                           (Prims.of_int (3)) rng in
+                       let uu___3 =
+                         FStar_Syntax_Syntax.null_bv FStar_Syntax_Syntax.tun in
+                       FStar_Syntax_Util.mk_field_projector_name uu___2
+                         uu___3 i in
+                     let proj_i_tm =
+                       let uu___2 =
+                         FStar_Syntax_Syntax.lid_as_fv proj_i
+                           FStar_Syntax_Syntax.delta_equational
+                           FStar_Pervasives_Native.None in
+                       FStar_Syntax_Syntax.fv_to_tm uu___2 in
+                     let uu___2 =
+                       FStar_Syntax_Syntax.mk_Tm_uinst proj_i_tm
+                         [FStar_Syntax_Syntax.U_zero] in
+                     let uu___3 =
+                       let uu___4 =
+                         let uu___5 = type_of ea in
+                         FStar_Syntax_Syntax.iarg uu___5 in
+                       let uu___5 =
+                         let uu___6 =
+                           let uu___7 = type_of eb in
+                           FStar_Syntax_Syntax.iarg uu___7 in
+                         let uu___7 =
+                           let uu___8 =
+                             let uu___9 = type_of ec in
+                             FStar_Syntax_Syntax.iarg uu___9 in
+                           let uu___9 =
+                             let uu___10 = FStar_Syntax_Syntax.as_arg abc in
+                             [uu___10] in
+                           uu___8 :: uu___9 in
+                         uu___6 :: uu___7 in
+                       uu___4 :: uu___5 in
+                     FStar_Syntax_Syntax.mk_Tm_app uu___2 uu___3 rng in
+                   let shadow_a = map_shadow topt (proj Prims.int_one) in
+                   let shadow_b = map_shadow topt (proj (Prims.of_int (2))) in
+                   let shadow_c = map_shadow topt (proj (Prims.of_int (3))) in
+                   let uu___2 =
+                     let uu___3 =
+                       FStar_Syntax_Syntax.tdataconstr
+                         FStar_Parser_Const.lid_Mktuple3 in
+                     FStar_Syntax_Syntax.mk_Tm_uinst uu___3
+                       [FStar_Syntax_Syntax.U_zero;
+                       FStar_Syntax_Syntax.U_zero;
+                       FStar_Syntax_Syntax.U_zero] in
+                   let uu___3 =
+                     let uu___4 =
+                       let uu___5 = type_of ea in
+                       FStar_Syntax_Syntax.iarg uu___5 in
+                     let uu___5 =
+                       let uu___6 =
+                         let uu___7 = type_of eb in
+                         FStar_Syntax_Syntax.iarg uu___7 in
+                       let uu___7 =
+                         let uu___8 =
+                           let uu___9 = type_of ec in
+                           FStar_Syntax_Syntax.iarg uu___9 in
+                         let uu___9 =
+                           let uu___10 =
+                             let uu___11 =
+                               let uu___12 = embed ea x1 in
+                               uu___12 rng shadow_a norm in
+                             FStar_Syntax_Syntax.as_arg uu___11 in
+                           let uu___11 =
+                             let uu___12 =
+                               let uu___13 =
+                                 let uu___14 = embed eb x2 in
+                                 uu___14 rng shadow_b norm in
+                               FStar_Syntax_Syntax.as_arg uu___13 in
+                             let uu___13 =
+                               let uu___14 =
+                                 let uu___15 =
+                                   let uu___16 = embed ec x3 in
+                                   uu___16 rng shadow_c norm in
+                                 FStar_Syntax_Syntax.as_arg uu___15 in
+                               [uu___14] in
+                             uu___12 :: uu___13 in
+                           uu___10 :: uu___11 in
+                         uu___8 :: uu___9 in
+                       uu___6 :: uu___7 in
+                     uu___4 :: uu___5 in
+                   FStar_Syntax_Syntax.mk_Tm_app uu___2 uu___3 rng) in
+        let un t0 w norm =
+          let t = FStar_Syntax_Util.unmeta_safe t0 in
+          lazy_unembed printer1 emb_t_pair_a_b_c t t_pair_a_b_c
+            (fun t1 ->
+               let uu___ = FStar_Syntax_Util.head_and_args_full t1 in
+               match uu___ with
+               | (hd, args) ->
+                   let uu___1 =
+                     let uu___2 =
+                       let uu___3 = FStar_Syntax_Util.un_uinst hd in
+                       uu___3.FStar_Syntax_Syntax.n in
+                     (uu___2, args) in
+                   (match uu___1 with
+                    | (FStar_Syntax_Syntax.Tm_fvar fv,
+                       uu___2::uu___3::(a1, uu___4)::(b1, uu___5)::(c1,
+                                                                    uu___6)::[])
+                        when
+                        FStar_Syntax_Syntax.fv_eq_lid fv
+                          FStar_Parser_Const.lid_Mktuple3
+                        ->
+                        let uu___7 =
+                          let uu___8 = unembed ea a1 in uu___8 w norm in
+                        FStar_Compiler_Util.bind_opt uu___7
+                          (fun a2 ->
+                             let uu___8 =
+                               let uu___9 = unembed eb b1 in uu___9 w norm in
+                             FStar_Compiler_Util.bind_opt uu___8
+                               (fun b2 ->
+                                  let uu___9 =
+                                    let uu___10 = unembed ec c1 in
+                                    uu___10 w norm in
+                                  FStar_Compiler_Util.bind_opt uu___9
+                                    (fun c2 ->
+                                       FStar_Pervasives_Native.Some
+                                         (a2, b2, c2))))
+                    | uu___2 ->
+                        (if w
+                         then
+                           (let uu___4 =
+                              let uu___5 =
+                                let uu___6 =
+                                  FStar_Syntax_Print.term_to_string t0 in
+                                FStar_Compiler_Util.format1
+                                  "Not an embedded pair: %s" uu___6 in
+                              (FStar_Errors.Warning_NotEmbedded, uu___5) in
+                            FStar_Errors.log_issue t0.FStar_Syntax_Syntax.pos
+                              uu___4)
+                         else ();
+                         FStar_Pervasives_Native.None))) in
+        let uu___ =
+          let uu___1 = type_of ea in
+          let uu___2 = type_of eb in
+          let uu___3 = type_of ec in
+          FStar_Syntax_Syntax.t_tuple3_of uu___1 uu___2 uu___3 in
+        mk_emb_full em un uu___ printer1 emb_t_pair_a_b_c
 let e_either :
   'a 'b .
     'a embedding ->
