@@ -39,7 +39,10 @@ let divides_transitive a b c =
   with _pf. 
     eliminate exists q2. c == q2 * b
     returns _
-    with _pf2. assert (c == (q1 * q2) * a)
+    with _pf2.
+         introduce exists q. c == q * a
+	 with (q1 * q2)
+	 and ()
 
 
 let divide_antisym a b =
