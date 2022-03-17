@@ -976,12 +976,14 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
               let pat = pos (S.Pat_cons (S.lid_as_fv lid delta_constant (Some fvq), arg_pats)), None, S.bv_to_name projection in
               let body =
                 let return_bv = S.gen_bv "proj_ret" (Some p) S.tun in
-                let result_comp = SS.subst_comp [NT (arg_binder.binder_bv, S.bv_to_name return_bv)] result_comp in
-                let result_comp = SS.close_comp [S.mk_binder return_bv] result_comp in
+                let result_typ = result_comp
+                  |> U.comp_result
+                  |> SS.subst [NT (arg_binder.binder_bv, S.bv_to_name return_bv)]
+                  |> SS.close [S.mk_binder return_bv] in
                 let return_binder = List.hd (SS.close_binders [S.mk_binder return_bv]) in
                 let returns_annotation =
                   let use_eq = true in
-                  Some (return_binder, (Inr result_comp, None, use_eq)) in
+                  Some (return_binder, (Inl result_typ, None, use_eq)) in
                 mk (Tm_match(arg_exp, returns_annotation, [U.branch pat], None)) p in
               let imp = U.abs binders body None in
               let dd = Delta_equational_at_level 1 in
