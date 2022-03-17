@@ -2179,8 +2179,13 @@ and desugar_match_returns env scrutinee asc_opt =
 and desugar_ascription env t tac_opt use_eq : S.ascription * antiquotations =
   let annot, aq0 =
     if is_comp_type env t
-    then let comp = desugar_comp t.range true env t in
-         (Inr comp, [])
+    then if use_eq
+         then raise_error
+                (Errors.Fatal_NotSupported,
+                 "Equality ascription with computation types is not supported yet")
+                t.range
+         else let comp = desugar_comp t.range true env t in
+              (Inr comp, [])
     else let tm, aq = desugar_term_aq env t in
          (Inl tm, aq) in
   (annot, BU.map_opt tac_opt (desugar_term env), use_eq), aq0
