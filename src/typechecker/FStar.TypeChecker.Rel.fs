@@ -4104,9 +4104,9 @@ let get_teq_predicate env t1 t2 =
 let subtype_fail env e t1 t2 =
     Errors.log_issue (Env.get_range env) (Err.basic_type_error env (Some e) t2 t1)
 
-let sub_comp env c1 c2 =
+let sub_or_eq_comp env (use_eq:bool) c1 c2 =
   Profiling.profile (fun () ->
-    let rel = if env.use_eq then EQ else SUB in
+    let rel = if use_eq || env.use_eq then EQ else SUB in
     if debug env <| Options.Other "Rel" then
       BU.print3 "sub_comp of %s --and-- %s --with-- %s\n" (Print.comp_to_string c1) (Print.comp_to_string c2) (if rel = EQ then "EQ" else "SUB");
     let prob, wl = new_problem (empty_worklist env) env c1 rel c2 None (Env.get_range env) "sub_comp" in
@@ -4122,6 +4122,8 @@ let sub_comp env c1 c2 =
   (Some (Ident.string_of_lid (Env.current_module env)))
   "FStar.TypeChecker.Rel.sub_comp"
 
+let sub_comp env c1 c2 = sub_or_eq_comp env false c1 c2
+let eq_comp env c1 c2 = sub_or_eq_comp env true c1 c2
 
 let solve_universe_inequalities' tx env (variables, ineqs) : unit =
    //variables: ?u1, ..., ?un are the universes of the inductive types we're trying to compute
