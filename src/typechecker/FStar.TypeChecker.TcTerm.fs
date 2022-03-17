@@ -226,7 +226,8 @@ let comp_check_expected_typ env e lc : term * lcomp * guard_t =
 (************************************************************************************************************)
 (* check_expected_effect: triggers a sub-effecting, WP implication, etc. if needed                          *)
 (************************************************************************************************************)
-let check_expected_effect env (copt:option<comp>) (ec : term * comp) : term * comp * guard_t =
+let check_expected_effect env (use_eq:bool) (copt:option<comp>) (ec : term * comp)
+  : term * comp * guard_t =
   let e, c = ec in
   let tot_or_gtot c = //expects U.is_pure_or_ghost_comp c
      if U.is_pure_comp c
@@ -274,9 +275,12 @@ let check_expected_effect env (copt:option<comp>) (ec : term * comp) : term * co
        let c = TcUtil.maybe_assume_result_eq_pure_term env e (TcComm.lcomp_of_comp c) in
        let c, g_c = TcComm.lcomp_comp c in
        if debug env <| Options.Medium then
-       BU.print3 "In check_expected_effect, asking rel to solve the problem on e=(%s) and c=(%s) and expected_c=(%s)\n"
-                 (Print.term_to_string e) (Print.comp_to_string c) (Print.comp_to_string expected_c);
-       let e, _, g = TcUtil.check_comp env e c expected_c in
+       BU.print4 "In check_expected_effect, asking rel to solve the problem on e=(%s) and c=(%s), expected_c=(%s), and use_eq=%s\n"
+                 (Print.term_to_string e)
+                 (Print.comp_to_string c)
+                 (Print.comp_to_string expected_c)
+                 (string_of_bool use_eq);
+       let e, _, g = TcUtil.check_comp env use_eq e c expected_c in
        let g = TcUtil.label_guard (Env.get_range env) "could not prove post-condition" g in
        if debug env Options.Medium
        then BU.print2 "(%s) DONE check_expected_effect;\n\tguard is: %s\n"
@@ -840,7 +844,9 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
       e in
     let e, expected_c, g'' =
       let c', g_c' = TcComm.lcomp_comp c' in
-      let e, expected_c, g'' = check_expected_effect env0 (Some expected_c) (e, c') in
+      let e, expected_c, g'' = check_expected_effect env0 use_eq
+        (Some expected_c)
+        (e, c') in
       e, expected_c, Env.conj_guard g_c' g'' in
     let e = mk (Tm_ascribed(e, (Inr expected_c, None, use_eq), Some (U.comp_effect_name expected_c))) top.pos in  //AR: this used to be Inr t_res, which meant it lost annotation for the second phase
     let lc = TcComm.lcomp_of_comp expected_c in
@@ -2047,8 +2053,7 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
     let fail :string -> typ -> 'a = fun msg t ->
         raise_error (Err.expected_a_term_of_type_t_got_a_function env msg t top) (top.pos) in
 
-    (* whether to try first to use unification for solving sub-typing constraints or only propagate to the SMT solver *)
-    let use_eq = env.use_eq in
+    let env0 = env in
     (* topt is the expected type of the expression obtained from the env *)
     let env, topt = Env.clear_expected_typ env in
 
@@ -2087,8 +2092,18 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
        *       we make the body as (M.reflect e) <: c_opt
        *     Basically, typechecking a reflect can be made better by the effect indices
        *     See also special casing of M.reflect <: C in the same file
+       *
+       * AR: the type of should_check_expected_effect is
+       *       either<bool, unit>
+       *
+       *     where Inl b means do check expected effect, with use_eq = b
+       *     and Inr _ means don't check expected effect
        *)
       let envbody, body, should_check_expected_effect =
+        let use_eq_opt =
+          match topt with
+          | Some (_, use_eq) -> use_eq |> Some
+          | _ -> None in
         if c_opt |> is_some &&
            (match (SS.compress body).n with  //body is an M.reflect
             | Tm_app (head, args) when List.length args = 1 ->
@@ -2097,15 +2112,12 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
                | _ -> false)
             | _ -> false)
         then
-          let use_eq =
-            match topt with
-            | None -> failwith "Impossible, breaks internal invariant (copt is some, topt must also be)!"
-            | Some (_, use_eq) -> use_eq in
           Env.clear_expected_typ envbody |> fst,
           S.mk
-            (Tm_ascribed (body, (Inr (c_opt |> must), None, use_eq), None))
+            //since copt is Some, topt, and hence use_eq_opt must also be Some
+            (Tm_ascribed (body, (Inr (c_opt |> must), None, use_eq_opt |> must), None))
             Range.dummyRange,
-          false
+          Inr ()  //no need to check expected type
         else
           envbody,
           body,
@@ -2115,25 +2127,28 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
              //don't check it again
              //Not only is it redundant and inefficient, it also sometimes leads to bizarre errors
              //e.g., Issue #1208
-             false
-           | _ -> true)
+             Inr ()
+           | _ -> Inl (BU.dflt false use_eq_opt))
       in
       let body, cbody, guard_body =
-        tc_term ({envbody with top_level=false; use_eq=use_eq}) body in
+        tc_term ({envbody with top_level=false; use_eq=env0.use_eq}) body in
 
       //we don't abstract over subtyping constraints; so solve them now
       //but leave out the tactics constraints for later so that the tactic
       //can have a more global view of all the constraints
       let guard_body = Rel.solve_non_tactic_deferred_constraints true envbody guard_body in
 
-      if should_check_expected_effect
-      then let cbody, g_lc = TcComm.lcomp_comp cbody in
-           let body, cbody, guard = check_expected_effect
-             ({envbody with use_eq=use_eq})
-             c_opt (body, cbody) in
-           body, cbody, Env.conj_guard guard_body (Env.conj_guard g_lc guard)
-      else let cbody, g_lc = TcComm.lcomp_comp cbody in
-           body, cbody, Env.conj_guard guard_body g_lc
+      match should_check_expected_effect with
+      | Inl use_eq ->
+        let cbody, g_lc = TcComm.lcomp_comp cbody in
+        let body, cbody, guard = check_expected_effect
+          ({envbody with use_eq=env0.use_eq})
+          use_eq
+          c_opt (body, cbody) in
+        body, cbody, Env.conj_guard guard_body (Env.conj_guard g_lc guard)
+      | Inr _ ->
+        let cbody, g_lc = TcComm.lcomp_comp cbody in
+        body, cbody, Env.conj_guard guard_body g_lc
     in
 
     let guard = if env.top_level

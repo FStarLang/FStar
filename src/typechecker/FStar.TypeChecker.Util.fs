@@ -1885,13 +1885,15 @@ let bind_cases env0 (res_t:typ)
     in
     TcComm.mk_lcomp eff res_t bind_cases_flags bind_cases
 
-let check_comp env (e:term) (c:comp) (c':comp) : term * comp * guard_t =
-  if false then
-    BU.print3 "Checking sub_comp:\n%s has type %s\n\t<:\n%s\n"
+let check_comp env (use_eq:bool) (e:term) (c:comp) (c':comp) : term * comp * guard_t =
+  if Env.debug env <| Options.Extreme then
+    BU.print4 "Checking comp relation:\n%s has type %s\n\t %s \n%s\n"
             (Print.term_to_string e)
             (Print.comp_to_string c)
+            (if use_eq || env.use_eq then "$:" else "<:")
             (Print.comp_to_string c');
-  match Rel.sub_comp env c c' with
+  let f = if use_eq then Rel.eq_comp else Rel.sub_comp in
+  match f env c c' with
     | None ->
         if env.use_eq
         then raise_error (Err.computed_computation_type_does_not_match_annotation_eq env e c c') (Env.get_range env)
