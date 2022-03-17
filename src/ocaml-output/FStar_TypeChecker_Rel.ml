@@ -12069,87 +12069,106 @@ let (subtype_fail :
             FStar_TypeChecker_Err.basic_type_error env
               (FStar_Pervasives_Native.Some e) t2 t1 in
           FStar_Errors.log_issue uu___ uu___1
+let (sub_or_eq_comp :
+  FStar_TypeChecker_Env.env ->
+    Prims.bool ->
+      FStar_Syntax_Syntax.comp ->
+        FStar_Syntax_Syntax.comp ->
+          FStar_TypeChecker_Common.guard_t FStar_Pervasives_Native.option)
+  =
+  fun env ->
+    fun use_eq ->
+      fun c1 ->
+        fun c2 ->
+          let uu___ =
+            let uu___1 =
+              let uu___2 = FStar_TypeChecker_Env.current_module env in
+              FStar_Ident.string_of_lid uu___2 in
+            FStar_Pervasives_Native.Some uu___1 in
+          FStar_Profiling.profile
+            (fun uu___1 ->
+               let rel =
+                 if use_eq || env.FStar_TypeChecker_Env.use_eq
+                 then FStar_TypeChecker_Common.EQ
+                 else FStar_TypeChecker_Common.SUB in
+               (let uu___3 =
+                  FStar_Compiler_Effect.op_Less_Bar
+                    (FStar_TypeChecker_Env.debug env)
+                    (FStar_Options.Other "Rel") in
+                if uu___3
+                then
+                  let uu___4 = FStar_Syntax_Print.comp_to_string c1 in
+                  let uu___5 = FStar_Syntax_Print.comp_to_string c2 in
+                  FStar_Compiler_Util.print3
+                    "sub_comp of %s --and-- %s --with-- %s\n" uu___4 uu___5
+                    (if rel = FStar_TypeChecker_Common.EQ
+                     then "EQ"
+                     else "SUB")
+                else ());
+               (let uu___3 =
+                  let uu___4 = FStar_TypeChecker_Env.get_range env in
+                  new_problem (empty_worklist env) env c1 rel c2
+                    FStar_Pervasives_Native.None uu___4 "sub_comp" in
+                match uu___3 with
+                | (prob, wl) ->
+                    let wl1 =
+                      {
+                        attempting = (wl.attempting);
+                        wl_deferred = (wl.wl_deferred);
+                        wl_deferred_to_tac = (wl.wl_deferred_to_tac);
+                        ctr = (wl.ctr);
+                        defer_ok = (wl.defer_ok);
+                        smt_ok = (wl.smt_ok);
+                        umax_heuristic_ok = (wl.umax_heuristic_ok);
+                        tcenv = (wl.tcenv);
+                        wl_implicits = (wl.wl_implicits);
+                        repr_subcomp_allowed = true
+                      } in
+                    let prob1 = FStar_TypeChecker_Common.CProb prob in
+                    (def_check_prob "sub_comp" prob1;
+                     (let uu___5 =
+                        FStar_Compiler_Util.record_time
+                          (fun uu___6 ->
+                             let uu___7 =
+                               solve_and_commit env
+                                 (singleton wl1 prob1 true)
+                                 (fun uu___8 -> FStar_Pervasives_Native.None) in
+                             FStar_Compiler_Effect.op_Less_Bar
+                               (with_guard env prob1) uu___7) in
+                      match uu___5 with
+                      | (r, ms) ->
+                          ((let uu___7 =
+                              FStar_Compiler_Effect.op_Less_Bar
+                                (FStar_TypeChecker_Env.debug env)
+                                (FStar_Options.Other "RelBench") in
+                            if uu___7
+                            then
+                              let uu___8 =
+                                FStar_Syntax_Print.comp_to_string c1 in
+                              let uu___9 =
+                                FStar_Syntax_Print.comp_to_string c2 in
+                              let uu___10 =
+                                FStar_Compiler_Util.string_of_int ms in
+                              FStar_Compiler_Util.print4
+                                "sub_comp of %s --and-- %s --with-- %s --- solved in %s ms\n"
+                                uu___8 uu___9
+                                (if rel = FStar_TypeChecker_Common.EQ
+                                 then "EQ"
+                                 else "SUB") uu___10
+                            else ());
+                           r))))) uu___ "FStar.TypeChecker.Rel.sub_comp"
 let (sub_comp :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.comp ->
       FStar_Syntax_Syntax.comp ->
         FStar_TypeChecker_Common.guard_t FStar_Pervasives_Native.option)
-  =
-  fun env ->
-    fun c1 ->
-      fun c2 ->
-        let uu___ =
-          let uu___1 =
-            let uu___2 = FStar_TypeChecker_Env.current_module env in
-            FStar_Ident.string_of_lid uu___2 in
-          FStar_Pervasives_Native.Some uu___1 in
-        FStar_Profiling.profile
-          (fun uu___1 ->
-             let rel =
-               if env.FStar_TypeChecker_Env.use_eq
-               then FStar_TypeChecker_Common.EQ
-               else FStar_TypeChecker_Common.SUB in
-             (let uu___3 =
-                FStar_Compiler_Effect.op_Less_Bar
-                  (FStar_TypeChecker_Env.debug env)
-                  (FStar_Options.Other "Rel") in
-              if uu___3
-              then
-                let uu___4 = FStar_Syntax_Print.comp_to_string c1 in
-                let uu___5 = FStar_Syntax_Print.comp_to_string c2 in
-                FStar_Compiler_Util.print3
-                  "sub_comp of %s --and-- %s --with-- %s\n" uu___4 uu___5
-                  (if rel = FStar_TypeChecker_Common.EQ then "EQ" else "SUB")
-              else ());
-             (let uu___3 =
-                let uu___4 = FStar_TypeChecker_Env.get_range env in
-                new_problem (empty_worklist env) env c1 rel c2
-                  FStar_Pervasives_Native.None uu___4 "sub_comp" in
-              match uu___3 with
-              | (prob, wl) ->
-                  let wl1 =
-                    {
-                      attempting = (wl.attempting);
-                      wl_deferred = (wl.wl_deferred);
-                      wl_deferred_to_tac = (wl.wl_deferred_to_tac);
-                      ctr = (wl.ctr);
-                      defer_ok = (wl.defer_ok);
-                      smt_ok = (wl.smt_ok);
-                      umax_heuristic_ok = (wl.umax_heuristic_ok);
-                      tcenv = (wl.tcenv);
-                      wl_implicits = (wl.wl_implicits);
-                      repr_subcomp_allowed = true
-                    } in
-                  let prob1 = FStar_TypeChecker_Common.CProb prob in
-                  (def_check_prob "sub_comp" prob1;
-                   (let uu___5 =
-                      FStar_Compiler_Util.record_time
-                        (fun uu___6 ->
-                           let uu___7 =
-                             solve_and_commit env (singleton wl1 prob1 true)
-                               (fun uu___8 -> FStar_Pervasives_Native.None) in
-                           FStar_Compiler_Effect.op_Less_Bar
-                             (with_guard env prob1) uu___7) in
-                    match uu___5 with
-                    | (r, ms) ->
-                        ((let uu___7 =
-                            FStar_Compiler_Effect.op_Less_Bar
-                              (FStar_TypeChecker_Env.debug env)
-                              (FStar_Options.Other "RelBench") in
-                          if uu___7
-                          then
-                            let uu___8 = FStar_Syntax_Print.comp_to_string c1 in
-                            let uu___9 = FStar_Syntax_Print.comp_to_string c2 in
-                            let uu___10 =
-                              FStar_Compiler_Util.string_of_int ms in
-                            FStar_Compiler_Util.print4
-                              "sub_comp of %s --and-- %s --with-- %s --- solved in %s ms\n"
-                              uu___8 uu___9
-                              (if rel = FStar_TypeChecker_Common.EQ
-                               then "EQ"
-                               else "SUB") uu___10
-                          else ());
-                         r))))) uu___ "FStar.TypeChecker.Rel.sub_comp"
+  = fun env -> fun c1 -> fun c2 -> sub_or_eq_comp env false c1 c2
+let (eq_comp :
+  FStar_TypeChecker_Env.env ->
+    FStar_Syntax_Syntax.comp ->
+      FStar_Syntax_Syntax.comp ->
+        FStar_TypeChecker_Common.guard_t FStar_Pervasives_Native.option)
+  = fun env -> fun c1 -> fun c2 -> sub_or_eq_comp env true c1 c2
 let (solve_universe_inequalities' :
   FStar_Syntax_Unionfind.tx ->
     FStar_TypeChecker_Env.env ->

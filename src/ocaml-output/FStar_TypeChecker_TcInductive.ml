@@ -2544,28 +2544,38 @@ let (mk_discriminator_and_indexed_projectors :
                                                       (FStar_Pervasives_Native.Some
                                                          p1)
                                                       FStar_Syntax_Syntax.tun in
-                                                  let result_comp1 =
+                                                  let result_typ =
                                                     let uu___6 =
                                                       let uu___7 =
-                                                        let uu___8 =
-                                                          let uu___9 =
-                                                            FStar_Syntax_Syntax.bv_to_name
-                                                              return_bv in
-                                                          ((arg_binder.FStar_Syntax_Syntax.binder_bv),
-                                                            uu___9) in
-                                                        FStar_Syntax_Syntax.NT
-                                                          uu___8 in
-                                                      [uu___7] in
-                                                    FStar_Syntax_Subst.subst_comp
-                                                      uu___6 result_comp in
-                                                  let result_comp2 =
-                                                    let uu___6 =
-                                                      let uu___7 =
-                                                        FStar_Syntax_Syntax.mk_binder
-                                                          return_bv in
-                                                      [uu___7] in
-                                                    FStar_Syntax_Subst.close_comp
-                                                      uu___6 result_comp1 in
+                                                        FStar_Compiler_Effect.op_Bar_Greater
+                                                          result_comp
+                                                          FStar_Syntax_Util.comp_result in
+                                                      let uu___8 =
+                                                        let uu___9 =
+                                                          let uu___10 =
+                                                            let uu___11 =
+                                                              let uu___12 =
+                                                                FStar_Syntax_Syntax.bv_to_name
+                                                                  return_bv in
+                                                              ((arg_binder.FStar_Syntax_Syntax.binder_bv),
+                                                                uu___12) in
+                                                            FStar_Syntax_Syntax.NT
+                                                              uu___11 in
+                                                          [uu___10] in
+                                                        FStar_Syntax_Subst.subst
+                                                          uu___9 in
+                                                      FStar_Compiler_Effect.op_Bar_Greater
+                                                        uu___7 uu___8 in
+                                                    let uu___7 =
+                                                      let uu___8 =
+                                                        let uu___9 =
+                                                          FStar_Syntax_Syntax.mk_binder
+                                                            return_bv in
+                                                        [uu___9] in
+                                                      FStar_Syntax_Subst.close
+                                                        uu___8 in
+                                                    FStar_Compiler_Effect.op_Bar_Greater
+                                                      uu___6 uu___7 in
                                                   let return_binder =
                                                     let uu___6 =
                                                       let uu___7 =
@@ -2581,8 +2591,8 @@ let (mk_discriminator_and_indexed_projectors :
                                                     let use_eq = true in
                                                     FStar_Pervasives_Native.Some
                                                       (return_binder,
-                                                        ((FStar_Pervasives.Inr
-                                                            result_comp2),
+                                                        ((FStar_Pervasives.Inl
+                                                            result_typ),
                                                           FStar_Pervasives_Native.None,
                                                           use_eq)) in
                                                   let uu___6 =

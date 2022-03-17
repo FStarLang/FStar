@@ -33,7 +33,7 @@ let old_attribute_syntax_warning =
   "The `[@ ...]` syntax of attributes is deprecated. \
    Use `[@@ a1; a2; ...; an]`, a semi-colon separated list of attributes, instead"
 
-let none_to_empty_list x = 
+let none_to_empty_list x =
   match x with
   | None -> []
   | Some l -> l
@@ -857,9 +857,9 @@ typeDefinition:
 recordFieldDecl:
   aqualifiedWithAttrs_lident_ COLON typ
     {let (qualified_lid, _2, t) = ($1, (), $3) in
-      ( 
+      (
         let (qual, attrs), lid = qualified_lid in
-        (lid, qual, attrs, t) 
+        (lid, qual, attrs, t)
       )}
 
 constructorDecl:
@@ -1621,7 +1621,7 @@ let pbs =    ( List.rev xs ) in
         let b =
             if lr = "Left" then true
             else if lr = "Right" then false
-            else raise_error (Fatal_SyntaxError, "Syntax error: _intro_ \/ expects either 'Left' or 'Right'") (rhs parseState 6)
+            else raise_error (Fatal_SyntaxError, "Syntax error: _intro_ \\/ expects either 'Left' or 'Right'") (rhs parseState 6)
         in
         mk_term (IntroOr(b, p, q, e))  (rhs2 parseState 1 7) Expr
      )}
@@ -2838,4 +2838,3 @@ in
    ( x :: xs )}
 
 %%
-

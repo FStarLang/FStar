@@ -4686,8 +4686,15 @@ and (desugar_ascription :
             let uu___1 = is_comp_type env t in
             if uu___1
             then
-              let comp = desugar_comp t.FStar_Parser_AST.range true env t in
-              ((FStar_Pervasives.Inr comp), [])
+              (if use_eq
+               then
+                 FStar_Errors.raise_error
+                   (FStar_Errors.Fatal_NotSupported,
+                     "Equality ascription with computation types is not supported yet")
+                   t.FStar_Parser_AST.range
+               else
+                 (let comp = desugar_comp t.FStar_Parser_AST.range true env t in
+                  ((FStar_Pervasives.Inr comp), [])))
             else
               (let uu___3 = desugar_term_aq env t in
                match uu___3 with

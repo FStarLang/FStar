@@ -3945,33 +3945,54 @@ let (bind_cases :
                 bind_cases1
 let (check_comp :
   FStar_TypeChecker_Env.env ->
-    FStar_Syntax_Syntax.term ->
-      FStar_Syntax_Syntax.comp ->
+    Prims.bool ->
+      FStar_Syntax_Syntax.term ->
         FStar_Syntax_Syntax.comp ->
-          (FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.comp *
-            FStar_TypeChecker_Common.guard_t))
+          FStar_Syntax_Syntax.comp ->
+            (FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.comp *
+              FStar_TypeChecker_Common.guard_t))
   =
   fun env ->
-    fun e ->
-      fun c ->
-        fun c' ->
-          let uu___1 = FStar_TypeChecker_Rel.sub_comp env c c' in
-          match uu___1 with
-          | FStar_Pervasives_Native.None ->
-              if env.FStar_TypeChecker_Env.use_eq
-              then
-                let uu___2 =
-                  FStar_TypeChecker_Err.computed_computation_type_does_not_match_annotation_eq
-                    env e c c' in
-                let uu___3 = FStar_TypeChecker_Env.get_range env in
-                FStar_Errors.raise_error uu___2 uu___3
-              else
-                (let uu___3 =
-                   FStar_TypeChecker_Err.computed_computation_type_does_not_match_annotation
-                     env e c c' in
-                 let uu___4 = FStar_TypeChecker_Env.get_range env in
-                 FStar_Errors.raise_error uu___3 uu___4)
-          | FStar_Pervasives_Native.Some g -> (e, c', g)
+    fun use_eq ->
+      fun e ->
+        fun c ->
+          fun c' ->
+            (let uu___1 =
+               FStar_Compiler_Effect.op_Less_Bar
+                 (FStar_TypeChecker_Env.debug env) FStar_Options.Extreme in
+             if uu___1
+             then
+               let uu___2 = FStar_Syntax_Print.term_to_string e in
+               let uu___3 = FStar_Syntax_Print.comp_to_string c in
+               let uu___4 = FStar_Syntax_Print.comp_to_string c' in
+               FStar_Compiler_Util.print4
+                 "Checking comp relation:\n%s has type %s\n\t %s \n%s\n"
+                 uu___2 uu___3
+                 (if use_eq || env.FStar_TypeChecker_Env.use_eq
+                  then "$:"
+                  else "<:") uu___4
+             else ());
+            (let f =
+               if use_eq
+               then FStar_TypeChecker_Rel.eq_comp
+               else FStar_TypeChecker_Rel.sub_comp in
+             let uu___1 = f env c c' in
+             match uu___1 with
+             | FStar_Pervasives_Native.None ->
+                 if env.FStar_TypeChecker_Env.use_eq
+                 then
+                   let uu___2 =
+                     FStar_TypeChecker_Err.computed_computation_type_does_not_match_annotation_eq
+                       env e c c' in
+                   let uu___3 = FStar_TypeChecker_Env.get_range env in
+                   FStar_Errors.raise_error uu___2 uu___3
+                 else
+                   (let uu___3 =
+                      FStar_TypeChecker_Err.computed_computation_type_does_not_match_annotation
+                        env e c c' in
+                    let uu___4 = FStar_TypeChecker_Env.get_range env in
+                    FStar_Errors.raise_error uu___3 uu___4)
+             | FStar_Pervasives_Native.Some g -> (e, c', g))
 let (universe_of_comp :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.universe ->
