@@ -3967,10 +3967,7 @@ let (check_comp :
                let uu___4 = FStar_Syntax_Print.comp_to_string c' in
                FStar_Compiler_Util.print4
                  "Checking comp relation:\n%s has type %s\n\t %s \n%s\n"
-                 uu___2 uu___3
-                 (if use_eq || env.FStar_TypeChecker_Env.use_eq
-                  then "$:"
-                  else "<:") uu___4
+                 uu___2 uu___3 (if use_eq then "$:" else "<:") uu___4
              else ());
             (let f =
                if use_eq
@@ -3979,7 +3976,7 @@ let (check_comp :
              let uu___1 = f env c c' in
              match uu___1 with
              | FStar_Pervasives_Native.None ->
-                 if env.FStar_TypeChecker_Env.use_eq
+                 if use_eq
                  then
                    let uu___2 =
                      FStar_TypeChecker_Err.computed_computation_type_does_not_match_annotation_eq
@@ -4451,9 +4448,7 @@ let (weaken_result_typ :
                  uu___4
              else ());
             (let use_eq1 =
-               ((use_eq || env.FStar_TypeChecker_Env.use_eq_strict) ||
-                  env.FStar_TypeChecker_Env.use_eq)
-                 ||
+               (use_eq || env.FStar_TypeChecker_Env.use_eq_strict) ||
                  (let uu___1 =
                     FStar_TypeChecker_Env.effect_decl_opt env
                       lc.FStar_TypeChecker_Common.eff_name in
@@ -5353,7 +5348,7 @@ let (check_has_type :
                      (fun uu___1 -> FStar_Pervasives_Native.Some uu___1)
                  else FStar_Pervasives_Native.None)
               else
-                if use_eq || env1.FStar_TypeChecker_Env.use_eq
+                if use_eq
                 then FStar_TypeChecker_Rel.try_teq true env1 t1 t2
                 else
                   (let uu___2 =
@@ -6901,8 +6896,6 @@ let (update_env_sub_eff :
                 (env.FStar_TypeChecker_Env.top_level);
               FStar_TypeChecker_Env.check_uvars =
                 (env.FStar_TypeChecker_Env.check_uvars);
-              FStar_TypeChecker_Env.use_eq =
-                (env.FStar_TypeChecker_Env.use_eq);
               FStar_TypeChecker_Env.use_eq_strict =
                 (env.FStar_TypeChecker_Env.use_eq_strict);
               FStar_TypeChecker_Env.is_iface =
@@ -6994,7 +6987,6 @@ let (update_env_sub_eff :
             (env1.FStar_TypeChecker_Env.top_level);
           FStar_TypeChecker_Env.check_uvars =
             (env1.FStar_TypeChecker_Env.check_uvars);
-          FStar_TypeChecker_Env.use_eq = (env1.FStar_TypeChecker_Env.use_eq);
           FStar_TypeChecker_Env.use_eq_strict =
             (env1.FStar_TypeChecker_Env.use_eq_strict);
           FStar_TypeChecker_Env.is_iface =
