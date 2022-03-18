@@ -2,54 +2,13 @@
   "þhÎNáT\u0006|IXf]_6bŽ",
   [
     [
-      "FStar.Algebra.CommMonoid.__proj__CM__item__identity",
-      1,
-      2,
-      1,
-      [
-        "@query", "proj_equation_FStar.Algebra.CommMonoid.CM_mult",
-        "proj_equation_FStar.Algebra.CommMonoid.CM_unit",
-        "projection_inverse_FStar.Algebra.CommMonoid.CM_mult",
-        "projection_inverse_FStar.Algebra.CommMonoid.CM_unit",
-        "token_correspondence_FStar.Algebra.CommMonoid.__proj__CM__item__mult"
-      ],
-      0,
-      "955b7cc91530304e5dd740288ef67f0a"
-    ],
-    [
-      "FStar.Algebra.CommMonoid.__proj__CM__item__associativity",
-      1,
-      2,
-      1,
-      [
-        "@query", "proj_equation_FStar.Algebra.CommMonoid.CM_mult",
-        "projection_inverse_FStar.Algebra.CommMonoid.CM_mult",
-        "token_correspondence_FStar.Algebra.CommMonoid.__proj__CM__item__mult"
-      ],
-      0,
-      "dcc14d9c04e67769b92be541243acf93"
-    ],
-    [
-      "FStar.Algebra.CommMonoid.__proj__CM__item__commutativity",
-      1,
-      2,
-      1,
-      [
-        "@query", "proj_equation_FStar.Algebra.CommMonoid.CM_mult",
-        "projection_inverse_FStar.Algebra.CommMonoid.CM_mult",
-        "token_correspondence_FStar.Algebra.CommMonoid.__proj__CM__item__mult"
-      ],
-      0,
-      "f20b699e50766d24871c0d5ef7857fb6"
-    ],
-    [
       "FStar.Algebra.CommMonoid.right_identity",
       1,
       2,
       1,
       [ "@query" ],
       0,
-      "11b1e74825c053f83bfff23b5b33a6e7"
+      "ddb10f542d29572d081f1dad153b7b1a"
     ],
     [
       "FStar.Algebra.CommMonoid.int_plus_cm",
@@ -61,7 +20,7 @@
         "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "f5285348f64b2761d817dff2dfd49e69"
+      "0e0fd77e0da3957da452ed73f98d9aff"
     ],
     [
       "FStar.Algebra.CommMonoid.int_multiply_cm",
@@ -73,7 +32,7 @@
         "primitive_Prims.op_Multiply", "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "2a5bee5dd76a4c2c22cbefcd7ae4e1a2"
+      "1239f1082314cb25dff2c1f945f3fde7"
     ]
   ]
 ]

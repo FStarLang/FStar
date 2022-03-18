@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "a7b6dc4d495a77d894bcec6620eac870"
+      "9058a850f7f8dfee103764d30eb75f76"
     ],
     [
       "Evens.__proj__US__item___0",
@@ -21,7 +21,7 @@
         "refinement_interpretation_Tm_refine_7094be438dbc16658c0caec70fa7452e"
       ],
       0,
-      "f7ddca2466264809771be87eb2e34be3"
+      "87ab67afde3437f5d77aa163267b3f42"
     ],
     [
       "Evens.even",
@@ -30,7 +30,7 @@
       1,
       [ "@query", "assumption_Evens.unary_nat__uu___haseq" ],
       0,
-      "a464c76db1d43ea66775c52ffe55e33c"
+      "653f7b7e8e5bd5c5e4c5d5b437cabf3c"
     ],
     [
       "Evens.__proj__Even_SSn__item__n",
@@ -43,7 +43,7 @@
         "refinement_interpretation_Tm_refine_6b35b246e3f3e217f09d76d285c6fcd3"
       ],
       0,
-      "cce4ef0d8417652d3170fae601f4239c"
+      "5cbb80623e7d70bd8d0ce03e2b69d184"
     ],
     [
       "Evens.__proj__Even_SSn__item___1",
@@ -51,14 +51,11 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "disc_equation_Evens.Even_SSn",
-        "proj_equation_Evens.Even_SSn_n",
-        "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_Evens.Even_SSn_n",
+        "@MaxIFuel_assumption", "@query", "data_elim_Evens.Even_SSn",
         "refinement_interpretation_Tm_refine_6b35b246e3f3e217f09d76d285c6fcd3"
       ],
       0,
-      "b8508f6452ca59f2bc6c3d2a2591fe68"
+      "91a25a6d41d6ff75edeb54d9a7e2d4ce"
     ],
     [
       "Evens.nat2unary",
@@ -74,7 +71,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "f2472788b947f70038ed8f28fa417f5d"
+      "543578b170c65c68b68501dff6f6eef7"
     ],
     [
       "Evens.even0",
@@ -86,7 +83,7 @@
         "equality_tok_Evens.U0@tok", "typing_tok_Evens.Even0@tok"
       ],
       0,
-      "b665028b68da8badbdf26f77cefe565e"
+      "afd06d4b491db18fea92ebdfe886173e"
     ],
     [
       "Evens.evenSSn",
@@ -95,7 +92,7 @@
       1,
       [ "@query", "true_interp" ],
       0,
-      "6ac3147a6dbdfdc5029fde27ec55b1b7"
+      "198469f153bdbdd78f9ec0a19f5eceed"
     ]
   ]
 ]

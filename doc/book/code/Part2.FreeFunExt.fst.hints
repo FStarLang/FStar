@@ -1,29 +1,53 @@
 [
-  "Ý±\u001b<`€…ßóR;ÎÖšíý",
+  "Mr{Ô°^\u000bvµ2\u0011™Y8s",
   [
     [
-      "Part2.FreeFunExt.__proj__Mkaction_class__item__input_of",
+      "Part2.FreeFunExt.__proj__Return__item__x",
       1,
       2,
       1,
       [
-        "@query", "proj_equation_Part2.FreeFunExt.Mkaction_class_t",
-        "projection_inverse_Part2.FreeFunExt.Mkaction_class_t"
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_976fbe440c65ea1a6802f2e2f85d2641"
       ],
       0,
-      "d4f69a8e7d2d83bb79689a95509a5b0a"
+      "842602a9d4d301b9303a5c54d8d3fa83"
     ],
     [
-      "Part2.FreeFunExt.__proj__Mkaction_class__item__output_of",
+      "Part2.FreeFunExt.__proj__DoThen__item__act",
       1,
       2,
       1,
       [
-        "@query", "proj_equation_Part2.FreeFunExt.Mkaction_class_t",
-        "projection_inverse_Part2.FreeFunExt.Mkaction_class_t"
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_8b92ee21a145a10bf2628fc50d692aa7"
       ],
       0,
-      "3ed0abfa71f44edc591c269f234b469c"
+      "76d8243e043cf3e1138346a3529e08b8"
+    ],
+    [
+      "Part2.FreeFunExt.__proj__DoThen__item__input",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_8b92ee21a145a10bf2628fc50d692aa7"
+      ],
+      0,
+      "7fcfa8f37bbd315fce07563f99a79352"
+    ],
+    [
+      "Part2.FreeFunExt.__proj__DoThen__item__continue",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_8b92ee21a145a10bf2628fc50d692aa7"
+      ],
+      0,
+      "4c8904e1ddcb3359c577689e1881c595"
     ],
     [
       "Part2.FreeFunExt.bind",
@@ -44,7 +68,7 @@
         "well_founded_ordering_on_codomain_Part2.FreeFunExt.DoThen"
       ],
       0,
-      "562f33103f4b3ce212394afc300939db"
+      "eaa350c4a4b33bd8bc1c617189575b74"
     ],
     [
       "Part2.FreeFunExt.equiv",
@@ -65,7 +89,7 @@
         "well_founded_ordering_on_codomain_Part2.FreeFunExt.DoThen"
       ],
       0,
-      "be2bc9f59119eb88376f2d87aa4603c7"
+      "783f469812219dc6a6471fd92315763e"
     ],
     [
       "Part2.FreeFunExt.equiv_refl",
@@ -107,7 +131,7 @@
         "well_founded_ordering_on_codomain_Part2.FreeFunExt.DoThen"
       ],
       0,
-      "a0b82a832b97b750c6318e0e5d25f878"
+      "95a580587c3d69157ada0b617392723c"
     ],
     [
       "Part2.FreeFunExt.equiv_sym",
@@ -156,7 +180,7 @@
         "well_founded_ordering_on_codomain_Part2.FreeFunExt.DoThen"
       ],
       0,
-      "ab6cbc7d6db6612e592f7fa2c38c2ec4"
+      "b63c4c5796c5f02fc97a542bc655d73d"
     ],
     [
       "Part2.FreeFunExt.equiv_trans",
@@ -209,7 +233,7 @@
         "well_founded_ordering_on_codomain_Part2.FreeFunExt.DoThen"
       ],
       0,
-      "10ad09b2a0ba2358166a4606f5ed0b15"
+      "5b437ed94760a3ade11891ce59a341fd"
     ],
     [
       "Part2.FreeFunExt.equiv_is_equal",
@@ -262,7 +286,7 @@
         "well_founded_ordering_on_codomain_Part2.FreeFunExt.DoThen"
       ],
       0,
-      "33d2a26ec2ec35805282450ef9ab8d82"
+      "fb79848130eaa2663bd7392e15057435"
     ],
     [
       "Part2.FreeFunExt.right_identity",
@@ -282,7 +306,7 @@
         "typing_Part2.FreeFunExt.return"
       ],
       0,
-      "a10f5cf2b1602ded334d18e075870082"
+      "c6b85cbf2d2a94daea69bd65c45460d9"
     ],
     [
       "Part2.FreeFunExt.left_identity",
@@ -346,7 +370,7 @@
         "well_founded_ordering_on_codomain_Part2.FreeFunExt.DoThen"
       ],
       0,
-      "7a1cb4748e368f80749737d9851f3102"
+      "c8fc8751acafee7bc886acbc8a1fe666"
     ],
     [
       "Part2.FreeFunExt.assoc",
@@ -415,7 +439,7 @@
         "well_founded_ordering_on_codomain_Part2.FreeFunExt.DoThen"
       ],
       0,
-      "5bb88bb0bbc6f901b568992c1b51b08a"
+      "647bff8d4942a359c84a1157a0618325"
     ],
     [
       "Part2.FreeFunExt.input_of",
@@ -430,7 +454,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "14d63262ce5fec65fe3958879e729f8b"
+      "f453eee6ee948cb8c24ee7353219c9c9"
     ],
     [
       "Part2.FreeFunExt.output_of",
@@ -445,7 +469,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "48ca58eabcbb8424e55eacf768999741"
+      "41e0881c0a3ab2e2487a5b327e0ee7f0"
     ],
     [
       "Part2.FreeFunExt.read",
@@ -471,7 +495,7 @@
         "token_correspondence_Part2.FreeFunExt.output_of", "unit_typing"
       ],
       0,
-      "f3bc94c229e05be41803f5dafb15e722"
+      "d96ecfaca33dd900d59f844a6281aefc"
     ],
     [
       "Part2.FreeFunExt.write",
@@ -497,7 +521,7 @@
         "token_correspondence_Part2.FreeFunExt.output_of"
       ],
       0,
-      "4e3da96c39008972479a8bf96d45b029"
+      "3c59635d9de2e4af7d01cf6b42f61f1a"
     ],
     [
       "Part2.FreeFunExt.interp",
@@ -541,7 +565,7 @@
         "well_founded_ordering_on_codomain_Part2.FreeFunExt.DoThen"
       ],
       0,
-      "48ba73db4cfcb4378547aaefe16ceb2b"
+      "3adee7ad19e93d640d908399aa314788"
     ],
     [
       "Part2.FreeFunExt.interp_equiv",
@@ -550,7 +574,7 @@
       1,
       [ "@query", "equation_FStar.FunctionalExtensionality.feq" ],
       0,
-      "a46a79b25a2636f5f9956d4173fc8ad2"
+      "16068062f64c602426dc18591f76ca39"
     ]
   ]
 ]

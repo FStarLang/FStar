@@ -1,5 +1,5 @@
 [
-  "ÈªÀa|N-JŽ…àÌ {H.",
+  "ÏÓ]àS¨,\nc«‡ær\rk‡",
   [
     [
       "FStar.InteractiveHelpers.Base.opt_apply",
@@ -8,7 +8,7 @@
       1,
       [ "@query", "lemma_FStar.Pervasives.invertOption" ],
       0,
-      "fe114826fdad906a8deea2be097dacda"
+      "110d8b25d2b06fe3f26cbc13c70394ac"
     ],
     [
       "FStar.InteractiveHelpers.Base.opt_tapply",
@@ -17,7 +17,7 @@
       1,
       [ "@query", "lemma_FStar.Pervasives.invertOption" ],
       0,
-      "34160c52000bb9884a51b92a35f64e41"
+      "14a071795a85e1647784b8f81607a6cc"
     ],
     [
       "FStar.InteractiveHelpers.Base.option_to_string",
@@ -26,7 +26,7 @@
       1,
       [ "@query", "lemma_FStar.Pervasives.invertOption" ],
       0,
-      "c4822b11c09403fc1d3933fcde288ff9"
+      "3e26a639b20a8db8d716599cf55bdaf1"
     ],
     [
       "FStar.InteractiveHelpers.Base.opt_cons",
@@ -35,7 +35,7 @@
       1,
       [ "@query", "lemma_FStar.Pervasives.invertOption" ],
       0,
-      "7d48d25b20184e8ca35bbeb9bf95795a"
+      "ebbcd160cad7179319f69ca8accdf70e"
     ],
     [
       "FStar.InteractiveHelpers.Base.unzip",
@@ -50,7 +50,7 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "1f9635117b178b8779943541e73098fd"
+      "a6735023eed6258b7690ab33ee535caa"
     ],
     [
       "FStar.InteractiveHelpers.Base.print_binder_info",
@@ -67,7 +67,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "f6e8da818c4219a4b9de127b4780e08a"
+      "32b62d8f9bb0b48b70afeff6ad70cad9"
     ],
     [
       "FStar.InteractiveHelpers.Base.acomp_to_string",
@@ -86,7 +86,7 @@
         "typing_FStar.Reflection.Builtins.inspect_comp"
       ],
       0,
-      "7a5e494bd351272f4acf8d1a6d1fdf09"
+      "572a48f3119db6fc979d2d7a335f464c"
     ],
     [
       "FStar.InteractiveHelpers.Base.__proj__MetaAnalysis__item__uu___",
@@ -98,7 +98,7 @@
         "refinement_interpretation_Tm_refine_31faf0785289105b75219c704006352e"
       ],
       0,
-      "1c21602fedd3eef7cffb530b84222da4"
+      "4726422dc606f566a9780a73c0545036"
     ],
     [
       "FStar.InteractiveHelpers.Base.bind_map_get",
@@ -115,7 +115,7 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "12f82aebc62880c4367898e158b2b5fd"
+      "5e1034ede6147d537296a905e5162f76"
     ],
     [
       "FStar.InteractiveHelpers.Base.bind_map_get_from_name",
@@ -131,7 +131,7 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "3ef6f96cf4e04d0dd4aae34897005287"
+      "b3ccb13ac0076fecffb4f97b4f58ea48"
     ],
     [
       "FStar.InteractiveHelpers.Base.genv_push_bv",
@@ -140,7 +140,7 @@
       1,
       [ "@query", "projection_inverse_BoxBool_proj_0" ],
       0,
-      "dad667cbd0950d17d97df7ccaca47ca7"
+      "13d96054b35349aadcdfca1f5fe4c0c3"
     ],
     [
       "FStar.InteractiveHelpers.Base.bv_is_abstract",
@@ -162,7 +162,7 @@
         "typing_FStar.InteractiveHelpers.Base.genv_get"
       ],
       0,
-      "78c4f40f82b4cb9d169bd1da7228e5cd"
+      "da7579e88e6109ebb756891a31e48b49"
     ],
     [
       "FStar.InteractiveHelpers.Base.norm_apply_subst_in_comp",
@@ -186,7 +186,7 @@
         "typing_FStar.Reflection.Builtins.inspect_comp"
       ],
       0,
-      "c80ee365fb159c1a414c8fd36903f833"
+      "cba862a89fbda24ff55dbb23f8edc776"
     ],
     [
       "FStar.InteractiveHelpers.Base.deep_apply_subst",
@@ -195,29 +195,34 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_f537159ed795b314b4e58c260361ae86", "bool_typing",
         "data_elim_FStar.Tactics.Result.Success",
         "data_typing_intro_FStar.Pervasives.Native.Mktuple2@tok",
         "disc_equation_FStar.Pervasives.Inl",
         "disc_equation_FStar.Pervasives.Inr",
+        "disc_equation_FStar.Reflection.Data.Tv_Var",
         "equation_FStar.InteractiveHelpers.Base.bind_map",
+        "equation_Prims.eqtype",
         "fuel_guarded_inversion_FStar.Pervasives.either",
         "fuel_guarded_inversion_FStar.Tactics.Result.__result",
         "function_token_typing_FStar.Reflection.Types.bv",
         "function_token_typing_FStar.Reflection.Types.comp",
         "function_token_typing_FStar.Reflection.Types.term",
+        "function_token_typing_Prims.bool",
         "kinding_FStar.Pervasives.Native.option@tok",
         "kinding_FStar.Pervasives.Native.tuple2@tok",
         "kinding_FStar.Pervasives.either@tok",
         "kinding_FStar.Reflection.Data.pattern@tok",
         "kinding_Prims.list@tok", "lemma_FStar.Pervasives.invertOption",
         "lemma_FStar.Tactics.Result.result_split",
-        "proj_equation_FStar.Pervasives.Native.Mktuple2__1",
+        "proj_equation_FStar.Pervasives.Native.Mktuple3__1",
         "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "typing_FStar.InteractiveHelpers.Base.bind_map_get",
-        "typing_FStar.Pervasives.Native.__proj__Mktuple2__item___1"
+        "typing_FStar.Pervasives.Native.__proj__Mktuple3__item___1"
       ],
       0,
-      "a5c3e5f51ab9dd385e71b1cc48718281"
+      "5f42d4ea1fbeb1c0747248e25fb058e8"
     ],
     [
       "FStar.InteractiveHelpers.Base.deep_apply_subst",
@@ -241,7 +246,7 @@
         "typing_FStar.Reflection.Builtins.inspect_comp"
       ],
       0,
-      "00c8b19f3de3799f3e8edf26981f7805"
+      "45c484adb64e4575b4086eebaa69a655"
     ],
     [
       "FStar.InteractiveHelpers.Base.deep_apply_subst",
@@ -259,7 +264,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "c314947da9518570d29d31ae27bb59ce"
+      "98b92e844acde130cb510c419941aced"
     ],
     [
       "FStar.InteractiveHelpers.Base.opt_apply_subst",
@@ -271,7 +276,7 @@
         "lemma_FStar.Pervasives.invertOption"
       ],
       0,
-      "fb3de6fdb39a4eacec427ac40ced3b6c"
+      "312e0b6d1cec73b4df36945d1508d329"
     ],
     [
       "FStar.InteractiveHelpers.Base._generate_shadowed_subst",
@@ -284,7 +289,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "4831ea978e94c111b95990e0c2634595"
+      "cdfb39d01f1910383e76b2d2ec181151"
     ]
   ]
 ]

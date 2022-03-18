@@ -13,7 +13,7 @@
         "refinement_interpretation_Tm_refine_565f37515590049580c96eef602ba10e"
       ],
       0,
-      "a4dbdbcd1af350ba0bbd8e2336f411db"
+      "b27122666444a22053c3269086c4202b"
     ],
     [
       "FStar.ReflexiveTransitiveClosure.__proj__Step__item__x",
@@ -27,7 +27,7 @@
         "refinement_interpretation_Tm_refine_9a46ad0604fd75a49244a1b7546c3895"
       ],
       0,
-      "cdbabf28d7a934d7dbde8a009bacb3d3"
+      "45a28a52e4c28244f300f05f14a9a1f3"
     ],
     [
       "FStar.ReflexiveTransitiveClosure.__proj__Step__item__y",
@@ -41,7 +41,7 @@
         "refinement_interpretation_Tm_refine_9a46ad0604fd75a49244a1b7546c3895"
       ],
       0,
-      "890c90c93af8cd1deeb21b36833ed99b"
+      "55077e078c2350a8d4dea8e2fb2dcc47"
     ],
     [
       "FStar.ReflexiveTransitiveClosure.__proj__Step__item___2",
@@ -50,16 +50,11 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "disc_equation_FStar.ReflexiveTransitiveClosure.Step",
-        "proj_equation_FStar.ReflexiveTransitiveClosure.Step_x",
-        "proj_equation_FStar.ReflexiveTransitiveClosure.Step_y",
-        "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_FStar.ReflexiveTransitiveClosure.Step_x",
-        "projection_inverse_FStar.ReflexiveTransitiveClosure.Step_y",
+        "data_elim_FStar.ReflexiveTransitiveClosure.Step",
         "refinement_interpretation_Tm_refine_9a46ad0604fd75a49244a1b7546c3895"
       ],
       0,
-      "447c35c351a4cc304841fa6b8e3d528a"
+      "523129fffa4367358fe4f39261f2f425"
     ],
     [
       "FStar.ReflexiveTransitiveClosure.__proj__Closure__item__x",
@@ -73,7 +68,7 @@
         "refinement_interpretation_Tm_refine_62741fd7a534e641c7be743e886031c0"
       ],
       0,
-      "12c4c03380b9219493d0f1a31dc2959f"
+      "d390f1eb4968de95cfe473c58a8e878a"
     ],
     [
       "FStar.ReflexiveTransitiveClosure.__proj__Closure__item__y",
@@ -87,7 +82,7 @@
         "refinement_interpretation_Tm_refine_62741fd7a534e641c7be743e886031c0"
       ],
       0,
-      "b28b79cd6ef4d68d798616bef136013d"
+      "84db83bfc82dc9988e2fe7caf17f6a5a"
     ],
     [
       "FStar.ReflexiveTransitiveClosure.__proj__Closure__item__z",
@@ -101,7 +96,7 @@
         "refinement_interpretation_Tm_refine_62741fd7a534e641c7be743e886031c0"
       ],
       0,
-      "fae7a32f26093ec5c274d6dbc9a73eb0"
+      "fd37c640fa92771b53f07cd744d306fc"
     ],
     [
       "FStar.ReflexiveTransitiveClosure.__proj__Closure__item___3",
@@ -110,16 +105,11 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "disc_equation_FStar.ReflexiveTransitiveClosure.Closure",
-        "proj_equation_FStar.ReflexiveTransitiveClosure.Closure_x",
-        "proj_equation_FStar.ReflexiveTransitiveClosure.Closure_y",
-        "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_FStar.ReflexiveTransitiveClosure.Closure_x",
-        "projection_inverse_FStar.ReflexiveTransitiveClosure.Closure_y",
+        "data_elim_FStar.ReflexiveTransitiveClosure.Closure",
         "refinement_interpretation_Tm_refine_62741fd7a534e641c7be743e886031c0"
       ],
       0,
-      "ce8f4f83a217964b6863d69008ff02ca"
+      "d8f131afc38f4011ede1d72bc16b1509"
     ],
     [
       "FStar.ReflexiveTransitiveClosure.__proj__Closure__item___4",
@@ -128,16 +118,11 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "disc_equation_FStar.ReflexiveTransitiveClosure.Closure",
-        "proj_equation_FStar.ReflexiveTransitiveClosure.Closure_y",
-        "proj_equation_FStar.ReflexiveTransitiveClosure.Closure_z",
-        "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_FStar.ReflexiveTransitiveClosure.Closure_y",
-        "projection_inverse_FStar.ReflexiveTransitiveClosure.Closure_z",
+        "data_elim_FStar.ReflexiveTransitiveClosure.Closure",
         "refinement_interpretation_Tm_refine_62741fd7a534e641c7be743e886031c0"
       ],
       0,
-      "d1127696c0953ee41bd079fbe7f8bdc2"
+      "e38fbcb859062ed7e15b038be9e07f69"
     ],
     [
       "FStar.ReflexiveTransitiveClosure._closure0",
@@ -151,7 +136,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "94064db6978aa32019316367f6f9ace7"
+      "660aea6972456e2540032b20c4b8697d"
     ],
     [
       "FStar.ReflexiveTransitiveClosure.get_squash",
@@ -163,7 +148,7 @@
         "refinement_interpretation_Tm_refine_a6c63e0f25f76613bb266e2eb47b9c58"
       ],
       0,
-      "ef042c2fbc050ca60764c387cda0ac6d"
+      "a1c27f18b0bd7b6104c29d9b415c70e7"
     ],
     [
       "FStar.ReflexiveTransitiveClosure.closure_reflexive",
@@ -176,7 +161,7 @@
         "true_interp"
       ],
       0,
-      "287d4abac6b3d58290b4b413feb1618e"
+      "a833b1e92ba8e571f5b39f1d6f75da59"
     ],
     [
       "FStar.ReflexiveTransitiveClosure.closure_transitive",
@@ -193,7 +178,7 @@
         "unit_inversion"
       ],
       0,
-      "30f393d8a30a05c4868917274eb65072"
+      "a3c1f9d0324cfe9c76d53c16d21b7a87"
     ],
     [
       "FStar.ReflexiveTransitiveClosure.closure",
@@ -202,7 +187,7 @@
       1,
       [ "@query", "equation_FStar.Preorder.preorder_rel" ],
       0,
-      "bfb7a2d27622b7e3aa2cc2279379af7e"
+      "4fa998af18eb09e532bdae0566416966"
     ],
     [
       "FStar.ReflexiveTransitiveClosure.closure_step",
@@ -211,7 +196,7 @@
       1,
       [ "@query", "true_interp" ],
       0,
-      "be7a0d93b8472a2ea8eba48c9d2d760c"
+      "64a403e0104e5040e321d9a3b0594a1f"
     ],
     [
       "FStar.ReflexiveTransitiveClosure.closure_one_aux",
@@ -237,7 +222,7 @@
         "subterm_ordering_FStar.ReflexiveTransitiveClosure.Closure"
       ],
       0,
-      "368c22ff1d677833b65a96bb9cd47ada"
+      "a40351933288bf6c822625eb59fc1460"
     ],
     [
       "FStar.ReflexiveTransitiveClosure.closure_one_aux'",
@@ -255,7 +240,7 @@
         "typing_FStar.ReflexiveTransitiveClosure.closure_one_aux"
       ],
       0,
-      "d19070be254619a359edc8a1c63d2017"
+      "283e276992f69967b67c115f6ecd2082"
     ],
     [
       "FStar.ReflexiveTransitiveClosure.closure_inversion",
@@ -269,7 +254,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "eda4fe7f8a0d2986fe75fe7867fc0fd5"
+      "72c7d3ebdc4fe8b4cd30be9ed3a56272"
     ],
     [
       "FStar.ReflexiveTransitiveClosure._stable_on_closure",
@@ -295,7 +280,7 @@
         "subterm_ordering_FStar.ReflexiveTransitiveClosure.Closure"
       ],
       0,
-      "4831116bde1432cc28ba00f467f7cb27"
+      "d57f9e3f342f071e8da424e96c3254c4"
     ],
     [
       "FStar.ReflexiveTransitiveClosure.squash_implies_to_arrow",
@@ -304,7 +289,7 @@
       1,
       [ "@query" ],
       0,
-      "28956729ad55e5a6621779b37794b61d"
+      "e7a04d468214e8190af8ce302d995e82"
     ],
     [
       "FStar.ReflexiveTransitiveClosure.stable_on_closure",
@@ -313,7 +298,7 @@
       1,
       [ "@query", "true_interp" ],
       0,
-      "ec16ab505ec9a7a2a35dfeec541c819e"
+      "15928f1bde2c2c95916c8dc8b68b94d2"
     ],
     [
       "FStar.ReflexiveTransitiveClosure.stable_on_closure",
@@ -322,7 +307,7 @@
       1,
       [ "@query" ],
       0,
-      "63a247dbf2986fb96feb0c14a19f0315"
+      "e06dc40e40d29147dfb107f9ee19c340"
     ]
   ]
 ]
