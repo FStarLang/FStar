@@ -15,7 +15,7 @@
         "well_founded_ordering_on_codomain_Part2.WellFounded.AccIntro"
       ],
       0,
-      "27a4d3dd839dff6f83d8cd009ea1d4eb"
+      "8851e77f315ee839cc70df33c6f6f4d8"
     ],
     [
       "Part2.WellFounded.wf_lt_nat",
@@ -32,7 +32,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "4f1130f8d8877daee0262cba6590c0d9"
+      "4d06a0bd24389e994a9e1e5a3cefbedb"
     ],
     [
       "Part2.WellFounded.subrel_wf",
@@ -48,7 +48,7 @@
         "well_founded_ordering_on_codomain_Part2.WellFounded.AccIntro"
       ],
       0,
-      "cf513b852c40a6b2765173c2bc3cafdc"
+      "60693862998bc860e351b9e0a984adb8"
     ],
     [
       "Part2.WellFounded.inverse_image_wf",
@@ -67,7 +67,7 @@
         "well_founded_ordering_on_codomain_Part2.WellFounded.AccIntro"
       ],
       0,
-      "56e850623b3562c6a0967cf67f2d64ce"
+      "956624768f168bbc73606189d69297b1"
     ],
     [
       "Part2.WellFounded.negate",
@@ -80,7 +80,7 @@
         "refinement_interpretation_Tm_refine_53244119120a0c2642bc1a0709e77283"
       ],
       0,
-      "dddef923d4339fb43cf7716ac404de7d"
+      "95f3bb8586c562685e8fba4474592707"
     ],
     [
       "Part2.WellFounded.__proj__Left_lex__item__x1",
@@ -92,7 +92,7 @@
         "refinement_interpretation_Tm_refine_f095a3e83ff7224da51a49875b4e334e"
       ],
       0,
-      "444bbe569896aa4a737eed56dd3b34e7"
+      "3185800896435f4d4fb1771aaf83b613"
     ],
     [
       "Part2.WellFounded.__proj__Left_lex__item__x2",
@@ -104,7 +104,7 @@
         "refinement_interpretation_Tm_refine_f095a3e83ff7224da51a49875b4e334e"
       ],
       0,
-      "ec2d89a0b51bdafd817d96af93a87d86"
+      "2e20eeadc79de8fd6eddaabd4383ca4a"
     ],
     [
       "Part2.WellFounded.__proj__Left_lex__item__y1",
@@ -113,13 +113,12 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
+        "data_elim_Part2.WellFounded.Left_lex",
         "fuel_guarded_inversion_Prims.dtuple2",
-        "proj_equation_Part2.WellFounded.Left_lex_x1",
-        "projection_inverse_Part2.WellFounded.Left_lex_x1",
         "refinement_interpretation_Tm_refine_f095a3e83ff7224da51a49875b4e334e"
       ],
       0,
-      "82c0962dc8474fc94722ac48a3882f0e"
+      "43a9229108a121b1f072e40f91fbdd68"
     ],
     [
       "Part2.WellFounded.__proj__Left_lex__item__y2",
@@ -128,13 +127,12 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
+        "data_elim_Part2.WellFounded.Left_lex",
         "fuel_guarded_inversion_Prims.dtuple2",
-        "proj_equation_Part2.WellFounded.Left_lex_x2",
-        "projection_inverse_Part2.WellFounded.Left_lex_x2",
         "refinement_interpretation_Tm_refine_f095a3e83ff7224da51a49875b4e334e"
       ],
       0,
-      "766620cd7d624287f9e97ecc43958448"
+      "3ec662bf7b9cb5cd5cabca9cf8258651"
     ],
     [
       "Part2.WellFounded.__proj__Left_lex__item___4",
@@ -143,15 +141,12 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
+        "data_elim_Part2.WellFounded.Left_lex",
         "fuel_guarded_inversion_Prims.dtuple2",
-        "proj_equation_Part2.WellFounded.Left_lex_x1",
-        "proj_equation_Part2.WellFounded.Left_lex_x2",
-        "projection_inverse_Part2.WellFounded.Left_lex_x1",
-        "projection_inverse_Part2.WellFounded.Left_lex_x2",
         "refinement_interpretation_Tm_refine_f095a3e83ff7224da51a49875b4e334e"
       ],
       0,
-      "4834f6e0ff47d6458660bfee8f02e651"
+      "d2526c24249ba60a229032a40af1eac8"
     ],
     [
       "Part2.WellFounded.__proj__Right_lex__item__x",
@@ -163,7 +158,7 @@
         "refinement_interpretation_Tm_refine_cf363fc3bd1f4d47c2eb173795e82412"
       ],
       0,
-      "824209f2b18400db78ff96169ded9fe3"
+      "eac8f267b73553f301888efbd1bb0678"
     ],
     [
       "Part2.WellFounded.__proj__Right_lex__item__y1",
@@ -172,13 +167,12 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
+        "data_elim_Part2.WellFounded.Right_lex",
         "fuel_guarded_inversion_Prims.dtuple2",
-        "proj_equation_Part2.WellFounded.Right_lex_x",
-        "projection_inverse_Part2.WellFounded.Right_lex_x",
         "refinement_interpretation_Tm_refine_cf363fc3bd1f4d47c2eb173795e82412"
       ],
       0,
-      "17a3b067b127bb0cb570d5de19e16a02"
+      "b6495107dc15f673d761e662a3d52d5f"
     ],
     [
       "Part2.WellFounded.__proj__Right_lex__item__y2",
@@ -187,13 +181,12 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
+        "data_elim_Part2.WellFounded.Right_lex",
         "fuel_guarded_inversion_Prims.dtuple2",
-        "proj_equation_Part2.WellFounded.Right_lex_x",
-        "projection_inverse_Part2.WellFounded.Right_lex_x",
         "refinement_interpretation_Tm_refine_cf363fc3bd1f4d47c2eb173795e82412"
       ],
       0,
-      "62c2208dff2f0ab1d1de10e87e4a61ca"
+      "30d44ed094937999791d5b056f64fcb7"
     ],
     [
       "Part2.WellFounded.__proj__Right_lex__item___3",
@@ -202,17 +195,12 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
+        "data_elim_Part2.WellFounded.Right_lex",
         "fuel_guarded_inversion_Prims.dtuple2",
-        "proj_equation_Part2.WellFounded.Right_lex_x",
-        "proj_equation_Part2.WellFounded.Right_lex_y1",
-        "proj_equation_Part2.WellFounded.Right_lex_y2",
-        "projection_inverse_Part2.WellFounded.Right_lex_x",
-        "projection_inverse_Part2.WellFounded.Right_lex_y1",
-        "projection_inverse_Part2.WellFounded.Right_lex_y2",
         "refinement_interpretation_Tm_refine_cf363fc3bd1f4d47c2eb173795e82412"
       ],
       0,
-      "4e74beaeed74208c1c9bbf5552de6e8d"
+      "4b9d57ae3556564bbb319201c0f6796d"
     ],
     [
       "Part2.WellFounded.mk_lt_nat",
@@ -226,7 +214,7 @@
         "refinement_interpretation_Tm_refine_8233d76b57e95451540fc312b717fa79"
       ],
       0,
-      "ffd51cde3abf4de3d000c1b5567aa292"
+      "20e2ffe5dd789e71d0b76976f3db00e2"
     ],
     [
       "Part2.WellFounded.mk_lex_order_nat_pair",
@@ -241,7 +229,7 @@
         "refinement_interpretation_Tm_refine_a6b719ee0ec38710e48ce4f7ee6fd3eb"
       ],
       0,
-      "7bae73bd44cb8799eae52868426a7b15"
+      "36872bc568f2c3715cda98240cdc23e4"
     ],
     [
       "Part2.WellFounded.ackermann'",
@@ -262,7 +250,7 @@
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "ccb6f2a2408f7e71c0f6f58ecea2ed1a"
+      "5efba54883239e1b49262983dee24856"
     ],
     [
       "Part2.WellFounded.coerce",
@@ -278,7 +266,7 @@
         "well_founded_ordering_on_codomain_Part2.WellFounded.AccIntro"
       ],
       0,
-      "b1241ac5670bdf166d8d7ce0baff0fa2"
+      "3e6e21ccdf137525c4d2251c9f9f0205"
     ],
     [
       "Part2.WellFounded.ackermann_wf",
@@ -301,7 +289,7 @@
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "9c1038999e5605ba7d93e775f2e5d3d3"
+      "e5c7e5de70798729a070fffe77dd9fff"
     ]
   ]
 ]

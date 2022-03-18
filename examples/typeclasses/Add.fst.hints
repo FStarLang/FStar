@@ -2,49 +2,6 @@
   "Ž\u0018v\u0011”’÷e9–è)IðaË",
   [
     [
-      "Add.__proj__Mkadditive__item__zero_l",
-      1,
-      2,
-      1,
-      [
-        "@query", "proj_equation_Add.Mkadditive_plus",
-        "proj_equation_Add.Mkadditive_zero",
-        "projection_inverse_Add.Mkadditive_plus",
-        "projection_inverse_Add.Mkadditive_zero",
-        "token_correspondence_Add.__proj__Mkadditive__item__plus"
-      ],
-      0,
-      "2f04b75fc47557de7c897cf6d5ac9c57"
-    ],
-    [
-      "Add.__proj__Mkadditive__item__zero_r",
-      1,
-      2,
-      1,
-      [
-        "@query", "proj_equation_Add.Mkadditive_plus",
-        "proj_equation_Add.Mkadditive_zero",
-        "projection_inverse_Add.Mkadditive_plus",
-        "projection_inverse_Add.Mkadditive_zero",
-        "token_correspondence_Add.__proj__Mkadditive__item__plus"
-      ],
-      0,
-      "fd31d0ab6869efa05d4bfa344ebb50e7"
-    ],
-    [
-      "Add.__proj__Mkadditive__item__plus_assoc",
-      1,
-      2,
-      1,
-      [
-        "@query", "proj_equation_Add.Mkadditive_plus",
-        "projection_inverse_Add.Mkadditive_plus",
-        "token_correspondence_Add.__proj__Mkadditive__item__plus"
-      ],
-      0,
-      "d9ef78ae43c67f6fc70c6bf79ab522d2"
-    ],
-    [
       "Add.mkadd",
       1,
       2,
@@ -56,7 +13,7 @@
         "projection_inverse_Add.Mkadditive_zero"
       ],
       0,
-      "004851a99581a8c31b2407aef42e427d"
+      "b4a8bd70c9b69960e8b197bc4efdbd45"
     ],
     [
       "Add.add_int",
@@ -68,7 +25,7 @@
         "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "6af0b3c2c47f8cee0c3b04e7c81405d0"
+      "8f25b0251768e720f2c43cd24ca94411"
     ],
     [
       "Add.add_bool",
@@ -80,7 +37,7 @@
         "primitive_Prims.op_BarBar", "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "e58f1885786633106cabe4d40f3f47dc"
+      "9295507c02ffa355fee950d95fbc7c91"
     ],
     [
       "Add.add_list",
@@ -89,7 +46,7 @@
       1,
       [ "@query" ],
       0,
-      "f9efa32ad9006a2ab26bf5436be0010b"
+      "7e872bdf588825fbea451ac080afadb2"
     ],
     [
       "Add.uu___46",
@@ -108,7 +65,7 @@
         "token_correspondence_Prims.op_Addition"
       ],
       0,
-      "e9657c6cc323205c3ed2f9efaaef5c1c"
+      "e2401af99263089d679de596dc80665b"
     ],
     [
       "Add.uu___47",
@@ -125,7 +82,7 @@
         "token_correspondence_Prims.op_BarBar"
       ],
       0,
-      "c54027d1e790a266c9ebf47a925262ef"
+      "52040e8275f0bd7b879d4e70c31cac9e"
     ],
     [
       "Add.uu___48",
@@ -142,7 +99,7 @@
         "token_correspondence_Prims.op_BarBar"
       ],
       0,
-      "8d25192119e259765996531dc39cace9"
+      "e661b52940a0d4f04530aeeaea457ae9"
     ],
     [
       "Add.uu___49",
@@ -173,7 +130,7 @@
         "typing_Add.add_list"
       ],
       0,
-      "89289cda3d2feb4e1bd59e2d195055c6"
+      "42c59698ed68f161c3aeaec6f382ad14"
     ]
   ]
 ]
