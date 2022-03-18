@@ -2,18 +2,6 @@
   "שךE×\fףp3D‡<­«{\u0012\u0006",
   [
     [
-      "Steel.Primitive.ForkJoin.__proj__Mkthread__item__l",
-      1,
-      2,
-      1,
-      [
-        "@query", "proj_equation_Steel.Primitive.ForkJoin.Mkthread_r",
-        "projection_inverse_Steel.Primitive.ForkJoin.Mkthread_r"
-      ],
-      0,
-      "db9678a9918df51ee5c8ae883bb9972b"
-    ],
-    [
       "Steel.Primitive.ForkJoin.intro_maybe_p_false",
       1,
       2,
@@ -29,7 +17,7 @@
         "typing_Steel.Primitive.ForkJoin.maybe_p"
       ],
       0,
-      "cae26093d4ba1c80af2ebd766f68f11b"
+      "05fffbeeea1d66cd427ae22ee850954f"
     ],
     [
       "Steel.Primitive.ForkJoin.intro_maybe_p_true",
@@ -38,7 +26,7 @@
       1,
       [ "@query", "equation_Steel.Primitive.ForkJoin.maybe_p" ],
       0,
-      "e1057aac8bb9dfd1baeafd799a841a48"
+      "b62032eb024310205829c09d4ff81b9e"
     ],
     [
       "Steel.Primitive.ForkJoin.new_thread",
@@ -47,7 +35,7 @@
       1,
       [ "@query", "equation_Steel.Effect.Common.true_p", "true_interp" ],
       0,
-      "22e6f1645e6b85844c0c412a6150b8e9"
+      "8446e157a33757d2e4f885e812ad7093"
     ],
     [
       "Steel.Primitive.ForkJoin.finish",
@@ -56,7 +44,7 @@
       1,
       [ "@query", "equation_Steel.Effect.Common.true_p", "true_interp" ],
       0,
-      "e81162380a10312f9d3d3cb8cc286e19"
+      "8d93cb7bd80b6629721954cb4b496b8b"
     ],
     [
       "Steel.Primitive.ForkJoin.acquire",
@@ -68,7 +56,7 @@
         "equation_Steel.Effect.Common.true_p", "true_interp"
       ],
       0,
-      "8da4059a552e3e1adeb21cb25063a323"
+      "dfc6a66b9e91858da4fbfbdda1a4055d"
     ],
     [
       "Steel.Primitive.ForkJoin.spawn",
@@ -77,7 +65,7 @@
       1,
       [ "@query", "equation_Steel.Effect.Common.true_p", "true_interp" ],
       0,
-      "cda18cc7ddc21504b1bc582d20b44833"
+      "691fb45b98d78444345e6be73e37d590"
     ],
     [
       "Steel.Primitive.ForkJoin.fork",
@@ -95,7 +83,7 @@
         "true_interp", "typing_Steel.Effect.Common.true_p"
       ],
       0,
-      "7dfc0b868115e83403cadb35913eef97"
+      "d5c94d3537c0ea6db789c3fb3a455a2e"
     ],
     [
       "Steel.Primitive.ForkJoin.join",
@@ -133,7 +121,7 @@
         "typing_Steel.Reference.pts_to"
       ],
       0,
-      "7e3a55069777b19e4c255c2b0d372362"
+      "5e5c174e220f6e4a33a0719e6b98bdea"
     ]
   ]
 ]

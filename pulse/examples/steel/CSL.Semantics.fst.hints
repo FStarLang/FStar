@@ -1,84 +1,6 @@
 [
-  "ÂU+ùƒıõ\f^Xëˇ∏RY˘",
+  "ÿeˇ}Æ`±‚ÏΩ7èµ¨\u000bs",
   [
-    [
-      "CSL.Semantics.__proj__Mkst0__item__evolves",
-      1,
-      0,
-      2,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_FStar.Preorder.preorder",
-        "proj_equation_CSL.Semantics.Mkst0_mem",
-        "projection_inverse_CSL.Semantics.Mkst0_mem",
-        "refinement_interpretation_Tm_refine_bd10f09297e0e7dc08314f7d9211801c"
-      ],
-      0,
-      "ba16433f6db17f607fa4aaa89e284288"
-    ],
-    [
-      "CSL.Semantics.__proj__Mkst0__item__invariant",
-      1,
-      0,
-      2,
-      [
-        "@query", "proj_equation_CSL.Semantics.Mkst0_hprop",
-        "proj_equation_CSL.Semantics.Mkst0_mem",
-        "projection_inverse_CSL.Semantics.Mkst0_hprop",
-        "projection_inverse_CSL.Semantics.Mkst0_mem"
-      ],
-      0,
-      "1ec7ca04838c47b0c81c12ce62f6f6b6"
-    ],
-    [
-      "CSL.Semantics.__proj__Mkst0__item__interp",
-      1,
-      0,
-      2,
-      [
-        "@query", "proj_equation_CSL.Semantics.Mkst0_hprop",
-        "proj_equation_CSL.Semantics.Mkst0_mem",
-        "projection_inverse_CSL.Semantics.Mkst0_hprop",
-        "projection_inverse_CSL.Semantics.Mkst0_mem"
-      ],
-      0,
-      "3f0443b23eef7e8856a78327cdc9a09f"
-    ],
-    [
-      "CSL.Semantics.__proj__Mkst0__item__emp",
-      1,
-      0,
-      2,
-      [
-        "@query", "proj_equation_CSL.Semantics.Mkst0_hprop",
-        "projection_inverse_CSL.Semantics.Mkst0_hprop"
-      ],
-      0,
-      "3d54f590e6afc5c879a422691216d218"
-    ],
-    [
-      "CSL.Semantics.__proj__Mkst0__item__star",
-      1,
-      0,
-      2,
-      [
-        "@query", "proj_equation_CSL.Semantics.Mkst0_hprop",
-        "projection_inverse_CSL.Semantics.Mkst0_hprop"
-      ],
-      0,
-      "0fcedd3a5f4e2eae5ce565b593f723a6"
-    ],
-    [
-      "CSL.Semantics.__proj__Mkst0__item__equals",
-      1,
-      0,
-      2,
-      [
-        "@query", "proj_equation_CSL.Semantics.Mkst0_hprop",
-        "projection_inverse_CSL.Semantics.Mkst0_hprop"
-      ],
-      0,
-      "db3695ea5160f89b3498acac94ffe2c6"
-    ],
     [
       "CSL.Semantics.__proj__Ret__item__a",
       1,
@@ -89,7 +11,7 @@
         "refinement_interpretation_Tm_refine_f3dc27bb7809509e972176ef82428497"
       ],
       0,
-      "37babdfacfc2f7fe462c543ae2f97a5f"
+      "7a01406393d1889be98a1fb62f5df6df"
     ],
     [
       "CSL.Semantics.__proj__Ret__item__post",
@@ -97,13 +19,11 @@
       0,
       2,
       [
-        "@MaxIFuel_assumption", "@query",
-        "proj_equation_CSL.Semantics.Ret_a",
-        "projection_inverse_CSL.Semantics.Ret_a",
+        "@MaxIFuel_assumption", "@query", "data_elim_CSL.Semantics.Ret",
         "refinement_interpretation_Tm_refine_f3dc27bb7809509e972176ef82428497"
       ],
       0,
-      "20543b8c2a3be7789f84fa030f607d87"
+      "3dfc81742bbe75e3d555aecceeb60803"
     ],
     [
       "CSL.Semantics.__proj__Ret__item__x",
@@ -111,13 +31,11 @@
       0,
       2,
       [
-        "@MaxIFuel_assumption", "@query",
-        "proj_equation_CSL.Semantics.Ret_a",
-        "projection_inverse_CSL.Semantics.Ret_a",
+        "@MaxIFuel_assumption", "@query", "data_elim_CSL.Semantics.Ret",
         "refinement_interpretation_Tm_refine_f3dc27bb7809509e972176ef82428497"
       ],
       0,
-      "6e2444140ae532269d081addd073d896"
+      "3fe683a7819391a9bb1aa00d644416f2"
     ],
     [
       "CSL.Semantics.__proj__Bind__item__a",
@@ -129,7 +47,7 @@
         "refinement_interpretation_Tm_refine_677f7e3f992af40dc2b78e5aeb842279"
       ],
       0,
-      "0d4beb145f39d7f1eddf250bce305d51"
+      "efc5edb628369382db18dd5e0561aab6"
     ],
     [
       "CSL.Semantics.__proj__Bind__item__pre",
@@ -141,7 +59,7 @@
         "refinement_interpretation_Tm_refine_677f7e3f992af40dc2b78e5aeb842279"
       ],
       0,
-      "6c481df6ce85871f796cceae7fab3c13"
+      "e8adeacf0edeba7b36ec42bb0830c06b"
     ],
     [
       "CSL.Semantics.__proj__Bind__item__post_a",
@@ -149,13 +67,11 @@
       0,
       2,
       [
-        "@MaxIFuel_assumption", "@query",
-        "proj_equation_CSL.Semantics.Bind_a",
-        "projection_inverse_CSL.Semantics.Bind_a",
+        "@MaxIFuel_assumption", "@query", "data_elim_CSL.Semantics.Bind",
         "refinement_interpretation_Tm_refine_677f7e3f992af40dc2b78e5aeb842279"
       ],
       0,
-      "d6361660646a783aa8ae15e507204657"
+      "6ff5da0cb5bff0ae3c03d33eb0d56a3d"
     ],
     [
       "CSL.Semantics.__proj__Bind__item__b",
@@ -167,7 +83,7 @@
         "refinement_interpretation_Tm_refine_677f7e3f992af40dc2b78e5aeb842279"
       ],
       0,
-      "76ddbc8bd742319575fec339b0e83b48"
+      "93b4cd3862e859e2d4a2eb16b9fe31fa"
     ],
     [
       "CSL.Semantics.__proj__Bind__item__post_b",
@@ -175,13 +91,11 @@
       0,
       2,
       [
-        "@MaxIFuel_assumption", "@query",
-        "proj_equation_CSL.Semantics.Bind_b",
-        "projection_inverse_CSL.Semantics.Bind_b",
+        "@MaxIFuel_assumption", "@query", "data_elim_CSL.Semantics.Bind",
         "refinement_interpretation_Tm_refine_677f7e3f992af40dc2b78e5aeb842279"
       ],
       0,
-      "46683c8e1beddf00f951819238b3de7f"
+      "50e39022432d3e545631f74ccb8be4db"
     ],
     [
       "CSL.Semantics.__proj__Bind__item__f",
@@ -199,7 +113,7 @@
         "refinement_interpretation_Tm_refine_677f7e3f992af40dc2b78e5aeb842279"
       ],
       0,
-      "1aab7ac5e72e1d51ca7ba680fa9e1fde"
+      "7397e6ac76379f2196105c98ce0653d3"
     ],
     [
       "CSL.Semantics.__proj__Bind__item__g",
@@ -220,7 +134,7 @@
         "token_correspondence_CSL.Semantics.__proj__Bind__item__post_a"
       ],
       0,
-      "8edc48aa45e52dd4282710067b398aff"
+      "c8bc819381c8d7c0701fc0daee62e550"
     ],
     [
       "CSL.Semantics.__proj__Act__item__a",
@@ -232,7 +146,7 @@
         "refinement_interpretation_Tm_refine_41a1e97f299d31e55c57a7ab95fc23c3"
       ],
       0,
-      "4bccbdd9d66703b0786829e048bf85d2"
+      "83d53000b504ea1a7205d3cfbecd891f"
     ],
     [
       "CSL.Semantics.__proj__Act__item__pre",
@@ -244,7 +158,7 @@
         "refinement_interpretation_Tm_refine_41a1e97f299d31e55c57a7ab95fc23c3"
       ],
       0,
-      "d239b7829e6e67bd80ac4ccaaad94434"
+      "edd7d1471cf607e9546fb3ccd70eaa6c"
     ],
     [
       "CSL.Semantics.__proj__Act__item__post",
@@ -252,13 +166,11 @@
       0,
       2,
       [
-        "@MaxIFuel_assumption", "@query",
-        "proj_equation_CSL.Semantics.Act_a",
-        "projection_inverse_CSL.Semantics.Act_a",
+        "@MaxIFuel_assumption", "@query", "data_elim_CSL.Semantics.Act",
         "refinement_interpretation_Tm_refine_41a1e97f299d31e55c57a7ab95fc23c3"
       ],
       0,
-      "251b63fa85c99b6f2301dead5ff1687f"
+      "61389bd55e94d65001e2d4733ab7765d"
     ],
     [
       "CSL.Semantics.__proj__Act__item__f",
@@ -277,7 +189,7 @@
         "token_correspondence_CSL.Semantics.__proj__Act__item__post"
       ],
       0,
-      "083ea770eeb045806dbd4be34d68d8bd"
+      "935f3570b9ebd0f05dfe2054bfdff690"
     ],
     [
       "CSL.Semantics.__proj__Frame__item__a",
@@ -289,7 +201,7 @@
         "refinement_interpretation_Tm_refine_c7161bb06cdd161dab63f15ab3171b6d"
       ],
       0,
-      "62f428b7f91813ed2fd9a4311dfc8f94"
+      "5a2358929c6db7299d7554571e0df425"
     ],
     [
       "CSL.Semantics.__proj__Frame__item__pre",
@@ -301,7 +213,7 @@
         "refinement_interpretation_Tm_refine_c7161bb06cdd161dab63f15ab3171b6d"
       ],
       0,
-      "92340000e1dca826e8f14cac148d990e"
+      "f2134345da4e8c8d48da68f7ed51ad70"
     ],
     [
       "CSL.Semantics.__proj__Frame__item__post",
@@ -309,13 +221,11 @@
       0,
       2,
       [
-        "@MaxIFuel_assumption", "@query",
-        "proj_equation_CSL.Semantics.Frame_a",
-        "projection_inverse_CSL.Semantics.Frame_a",
+        "@MaxIFuel_assumption", "@query", "data_elim_CSL.Semantics.Frame",
         "refinement_interpretation_Tm_refine_c7161bb06cdd161dab63f15ab3171b6d"
       ],
       0,
-      "31dd7116f12340c2919641e924022615"
+      "4fff4cd75c6f29455b296d75a77422b0"
     ],
     [
       "CSL.Semantics.__proj__Frame__item__f",
@@ -333,7 +243,7 @@
         "refinement_interpretation_Tm_refine_c7161bb06cdd161dab63f15ab3171b6d"
       ],
       0,
-      "bf44e0aa63a16e8f7302cb006d3137d2"
+      "9a18acff19fd37aaee2962932716ab09"
     ],
     [
       "CSL.Semantics.__proj__Frame__item__frame",
@@ -345,7 +255,7 @@
         "refinement_interpretation_Tm_refine_c7161bb06cdd161dab63f15ab3171b6d"
       ],
       0,
-      "8791355be852596367980627db89c710"
+      "834faf21de6de8eb6bac635cb503f582"
     ],
     [
       "CSL.Semantics.__proj__Par__item__aL",
@@ -357,7 +267,7 @@
         "refinement_interpretation_Tm_refine_b910805b2717752de2bdb0f1e0b2fe72"
       ],
       0,
-      "c5275635e74ba4cefc1e9d696e8fbdbd"
+      "d292790e568fc3e8173678f5eac16a77"
     ],
     [
       "CSL.Semantics.__proj__Par__item__preL",
@@ -369,7 +279,7 @@
         "refinement_interpretation_Tm_refine_b910805b2717752de2bdb0f1e0b2fe72"
       ],
       0,
-      "72ee60f894e373d41ceef6aa5627e496"
+      "ccec23e15056477b73510e3f37a020f9"
     ],
     [
       "CSL.Semantics.__proj__Par__item__postL",
@@ -377,13 +287,11 @@
       0,
       2,
       [
-        "@MaxIFuel_assumption", "@query",
-        "proj_equation_CSL.Semantics.Par_aL",
-        "projection_inverse_CSL.Semantics.Par_aL",
+        "@MaxIFuel_assumption", "@query", "data_elim_CSL.Semantics.Par",
         "refinement_interpretation_Tm_refine_b910805b2717752de2bdb0f1e0b2fe72"
       ],
       0,
-      "7a4f253ca64dbafc4f30de5c9bd80ad4"
+      "2869743b13887e808ca42fa2ea9e51b6"
     ],
     [
       "CSL.Semantics.__proj__Par__item__mL",
@@ -401,7 +309,7 @@
         "refinement_interpretation_Tm_refine_b910805b2717752de2bdb0f1e0b2fe72"
       ],
       0,
-      "23cb69d35477fff07eada60071a6a964"
+      "f4f6625fbe552310482a756e59db8cb6"
     ],
     [
       "CSL.Semantics.__proj__Par__item__aR",
@@ -413,7 +321,7 @@
         "refinement_interpretation_Tm_refine_b910805b2717752de2bdb0f1e0b2fe72"
       ],
       0,
-      "59cd8d1aeaf8143bdef5046645a3b037"
+      "85d49934fd3c32b01ac62cc831648ac7"
     ],
     [
       "CSL.Semantics.__proj__Par__item__preR",
@@ -425,7 +333,7 @@
         "refinement_interpretation_Tm_refine_b910805b2717752de2bdb0f1e0b2fe72"
       ],
       0,
-      "54330bf7bdc3bbf6b98225401e545f1d"
+      "635e2ccfb186569c57d6583490e2fbe2"
     ],
     [
       "CSL.Semantics.__proj__Par__item__postR",
@@ -433,13 +341,11 @@
       0,
       2,
       [
-        "@MaxIFuel_assumption", "@query",
-        "proj_equation_CSL.Semantics.Par_aR",
-        "projection_inverse_CSL.Semantics.Par_aR",
+        "@MaxIFuel_assumption", "@query", "data_elim_CSL.Semantics.Par",
         "refinement_interpretation_Tm_refine_b910805b2717752de2bdb0f1e0b2fe72"
       ],
       0,
-      "f9e7a38e669464d9f1cc1ee35022321d"
+      "425df6e6c6e98b197faac353dfda2182"
     ],
     [
       "CSL.Semantics.__proj__Par__item__mR",
@@ -457,7 +363,7 @@
         "refinement_interpretation_Tm_refine_b910805b2717752de2bdb0f1e0b2fe72"
       ],
       0,
-      "aa27ebb0fe1de66f218d70f893cf6249"
+      "e40c5c8e9e5e8d2de7551118cbad170f"
     ],
     [
       "CSL.Semantics.__proj__Weaken__item__a",
@@ -469,7 +375,7 @@
         "refinement_interpretation_Tm_refine_babbb3883e1fda1bd3343a51c86512b6"
       ],
       0,
-      "b999b75ad0e7ab28c44d95e3cc8b440d"
+      "9d672984b086d60cb6c02e23c781f2e2"
     ],
     [
       "CSL.Semantics.__proj__Weaken__item__pre",
@@ -481,7 +387,7 @@
         "refinement_interpretation_Tm_refine_babbb3883e1fda1bd3343a51c86512b6"
       ],
       0,
-      "ee046029319a133e3beaeda562c6e5ba"
+      "554e4c3762c93eb212684e97a5579d33"
     ],
     [
       "CSL.Semantics.__proj__Weaken__item__post",
@@ -489,13 +395,11 @@
       0,
       2,
       [
-        "@MaxIFuel_assumption", "@query",
-        "proj_equation_CSL.Semantics.Weaken_a",
-        "projection_inverse_CSL.Semantics.Weaken_a",
+        "@MaxIFuel_assumption", "@query", "data_elim_CSL.Semantics.Weaken",
         "refinement_interpretation_Tm_refine_babbb3883e1fda1bd3343a51c86512b6"
       ],
       0,
-      "ddbf95ec62bf2903a69cc9210a152457"
+      "92aedb58acce4db39195f329be730010"
     ],
     [
       "CSL.Semantics.__proj__Weaken__item__wpre",
@@ -507,7 +411,7 @@
         "refinement_interpretation_Tm_refine_babbb3883e1fda1bd3343a51c86512b6"
       ],
       0,
-      "e7e2e58ca9b958a7608749fe12a544de"
+      "b50e60785df284d213b994d7a94d3492"
     ],
     [
       "CSL.Semantics.__proj__Weaken__item__wpost",
@@ -515,13 +419,11 @@
       0,
       2,
       [
-        "@MaxIFuel_assumption", "@query",
-        "proj_equation_CSL.Semantics.Weaken_a",
-        "projection_inverse_CSL.Semantics.Weaken_a",
+        "@MaxIFuel_assumption", "@query", "data_elim_CSL.Semantics.Weaken",
         "refinement_interpretation_Tm_refine_babbb3883e1fda1bd3343a51c86512b6"
       ],
       0,
-      "38b092d77aaa18014bd0ccf832aeb828"
+      "6d77e38331bd59a8f75aab9df148213c"
     ],
     [
       "CSL.Semantics.__proj__Weaken__item__uu___0",
@@ -529,21 +431,11 @@
       0,
       2,
       [
-        "@MaxIFuel_assumption", "@query",
-        "proj_equation_CSL.Semantics.Weaken_a",
-        "proj_equation_CSL.Semantics.Weaken_post",
-        "proj_equation_CSL.Semantics.Weaken_pre",
-        "proj_equation_CSL.Semantics.Weaken_wpost",
-        "proj_equation_CSL.Semantics.Weaken_wpre",
-        "projection_inverse_CSL.Semantics.Weaken_a",
-        "projection_inverse_CSL.Semantics.Weaken_post",
-        "projection_inverse_CSL.Semantics.Weaken_pre",
-        "projection_inverse_CSL.Semantics.Weaken_wpost",
-        "projection_inverse_CSL.Semantics.Weaken_wpre",
+        "@MaxIFuel_assumption", "@query", "data_elim_CSL.Semantics.Weaken",
         "refinement_interpretation_Tm_refine_babbb3883e1fda1bd3343a51c86512b6"
       ],
       0,
-      "21dfa3d2dcd92b5e233be4025a2c86d7"
+      "b519a1095bdc7d1c47c8d3fb6e4590cb"
     ],
     [
       "CSL.Semantics.__proj__Weaken__item___6",
@@ -561,21 +453,7 @@
         "refinement_interpretation_Tm_refine_babbb3883e1fda1bd3343a51c86512b6"
       ],
       0,
-      "b9ab23200f79c2454569b58b8335f87e"
-    ],
-    [
-      "CSL.Semantics.__proj__Step__item___2",
-      1,
-      0,
-      2,
-      [
-        "@query", "proj_equation_CSL.Semantics.Step_next_post",
-        "proj_equation_CSL.Semantics.Step_next_pre",
-        "projection_inverse_CSL.Semantics.Step_next_post",
-        "projection_inverse_CSL.Semantics.Step_next_pre"
-      ],
-      0,
-      "e44e7893ee0d94a5829488a14aae540a"
+      "01f37b3f6c0903592601d4dedf8e3606"
     ],
     [
       "CSL.Semantics.apply_assoc",
@@ -592,7 +470,7 @@
         "token_correspondence_CSL.Semantics.__proj__Mkst0__item__star"
       ],
       0,
-      "5dea44b6be493c7651c00e788dbc523d"
+      "91b3940ee3352fc9f4832329bfbd4f6c"
     ],
     [
       "CSL.Semantics.equals_ext_right",
@@ -614,7 +492,7 @@
         "typing_CSL.Semantics.__proj__Mkst0__item__star"
       ],
       0,
-      "c3cffebde3b05f205fefb95dca0fa490"
+      "b0b6b517b309d9d03529c257ccb815b6"
     ],
     [
       "CSL.Semantics.commute_star_right",
@@ -632,7 +510,7 @@
         "refinement_interpretation_Tm_refine_229f5664a201306e888a6141b3357a0c"
       ],
       0,
-      "81d2e05b7eeb0eb55af84d2cdfaeca1d"
+      "d9d89c3203e666140c9268cfc4c70066"
     ],
     [
       "CSL.Semantics.assoc_star_right",
@@ -653,7 +531,7 @@
         "refinement_interpretation_Tm_refine_229f5664a201306e888a6141b3357a0c"
       ],
       0,
-      "124dcba7241cf4c3a7de1c76f7a587ac"
+      "efafac2f66e80e5236af1d88516f64fd"
     ],
     [
       "CSL.Semantics.commute_assoc_star_right",
@@ -676,7 +554,7 @@
         "refinement_interpretation_Tm_refine_229f5664a201306e888a6141b3357a0c"
       ],
       0,
-      "f8ec157a3b2bdf2c4a81be91c4233b03"
+      "20be046ef374c93031e4e95f6ebfed71"
     ],
     [
       "CSL.Semantics.apply_interp_ext",
@@ -694,7 +572,7 @@
         "token_correspondence_CSL.Semantics.__proj__Mkst0__item__interp"
       ],
       0,
-      "fdf480d78c677a061e2ba4d06dfd8a70"
+      "a6215df52856b3697f583061f0a7fce6"
     ],
     [
       "CSL.Semantics.preserves_frame_trans",
@@ -703,7 +581,7 @@
       2,
       [ "@query", "equation_CSL.Semantics.preserves_frame" ],
       0,
-      "e97328e9a548c2bc6da110861b0d9ad9"
+      "4f3062767c88e9d7af178baa4049dcb5"
     ],
     [
       "CSL.Semantics.preserves_frame_stronger_post",
@@ -740,7 +618,7 @@
         "typing_CSL.Semantics.__proj__Mkst0__item__star"
       ],
       0,
-      "8cfcc17c35cd36ab5f69f309cd2ad08a"
+      "217d6ad9ae480060cdc0d95780e93012"
     ],
     [
       "CSL.Semantics.preserves_frame_star",
@@ -772,7 +650,7 @@
         "typing_CSL.Semantics.__proj__Mkst0__item__star"
       ],
       0,
-      "837199ee30a1b4ddf42f11882e65e289"
+      "f55ef09f4a6db3eee0e72ef456e6a942"
     ],
     [
       "CSL.Semantics.preserves_frame_star_left",
@@ -804,7 +682,7 @@
         "typing_CSL.Semantics.__proj__Mkst0__item__star"
       ],
       0,
-      "a3fadb180c76bc9628c798a2ea584202"
+      "898f09127da49ba203df68de42338d05"
     ],
     [
       "CSL.Semantics.par_weaker_lpre_and_stronger_lpost_r",
@@ -839,7 +717,7 @@
         "typing_CSL.Semantics.__proj__Mkst0__item__star"
       ],
       0,
-      "6027569c1064dbe3a00e876a21fa8f5e"
+      "10671db8fbbf145f1f0fba192bc8ce6d"
     ],
     [
       "CSL.Semantics.stronger_post_par_r",
@@ -871,7 +749,7 @@
         "typing_CSL.Semantics.__proj__Mkst0__item__star"
       ],
       0,
-      "ff337783640cdf75eae11978d17ed9a7"
+      "fba2f35138970e8494577c741aadc6c9"
     ],
     [
       "CSL.Semantics.step_ret",
@@ -893,7 +771,7 @@
         "refinement_interpretation_Tm_refine_f3dc27bb7809509e972176ef82428497"
       ],
       0,
-      "a559774b23f83788b376c34d47f700a1"
+      "ff6fa876f885b8f4770c0c536127fa4a"
     ],
     [
       "CSL.Semantics.step_act",
@@ -916,7 +794,7 @@
         "token_correspondence_CSL.Semantics.__proj__Act__item__post"
       ],
       0,
-      "c3e2671dbbe8e83a40cda574fb186e79"
+      "72f61efbf8646eb8c06a7f2ab8f4cbc1"
     ],
     [
       "CSL.Semantics.step_bind_ret_aux",
@@ -925,7 +803,7 @@
       2,
       [ "@query" ],
       0,
-      "bd1c562aff3730b32ba9832245dfeb23"
+      "9e4181e4689f1e1d67ffb413a1d1a054"
     ],
     [
       "CSL.Semantics.step_bind_ret_aux",
@@ -960,7 +838,7 @@
         "token_correspondence_CSL.Semantics.__proj__Mkst0__item__evolves"
       ],
       0,
-      "e72a97759865ae7b1a9a414ea038af5f"
+      "52ad7c50535181c04a9acdd96ab86f1c"
     ],
     [
       "CSL.Semantics.step_bind_ret",
@@ -969,7 +847,7 @@
       2,
       [ "@query" ],
       0,
-      "dd0cb1ae4e05892ecd22c4a37e865135"
+      "8dc5e24a9572033cf7dab6672b18d66a"
     ],
     [
       "CSL.Semantics.step_bind_ret",
@@ -981,7 +859,7 @@
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1"
       ],
       0,
-      "95e041acb8163e1a2d424b7d0280019c"
+      "e3b54fd9ac6562f186cb7e108840cb48"
     ],
     [
       "CSL.Semantics.step_bind",
@@ -1008,7 +886,7 @@
         "refinement_interpretation_Tm_refine_677f7e3f992af40dc2b78e5aeb842279"
       ],
       0,
-      "706d2fa4092c57ae25908f912f078bf7"
+      "1b5a6b6ccb02a2ebc42c4404932bda5f"
     ],
     [
       "CSL.Semantics.step_frame_ret",
@@ -1017,7 +895,7 @@
       2,
       [ "@query" ],
       0,
-      "7ae9086f43778f63564a1562830b5e11"
+      "d3067cb6603437bbe0347c0f20e7916c"
     ],
     [
       "CSL.Semantics.step_frame_ret",
@@ -1045,7 +923,7 @@
         "refinement_interpretation_Tm_refine_7ac9e1a8472254ca8106d80e37ea4e80"
       ],
       0,
-      "d936045c1047fc630cfb7404f84a2319"
+      "39b9cc2773a62ae3f9c4beb316859b2a"
     ],
     [
       "CSL.Semantics.step_frame",
@@ -1104,7 +982,7 @@
         "typing_Tm_abs_da52449427b9850d7ae753c7336f2ef5"
       ],
       0,
-      "1d7e1e78e677a0a062550e2f929dc09e"
+      "bd24317880bd835a83754c58757d2cec"
     ],
     [
       "CSL.Semantics.step_par_ret_aux",
@@ -1113,7 +991,7 @@
       2,
       [ "@query" ],
       0,
-      "52d1126651c300895439432d9b4446af"
+      "ff33995047ba678737199090c1d72653"
     ],
     [
       "CSL.Semantics.step_par_ret_aux",
@@ -1155,7 +1033,7 @@
         "token_correspondence_CSL.Semantics.__proj__Mkst0__item__evolves"
       ],
       0,
-      "642a2e9c9dd012be7903b7bf0887c7e0"
+      "419796939179c1e9a35d6848aa468c8b"
     ],
     [
       "CSL.Semantics.step_par_ret",
@@ -1164,7 +1042,7 @@
       2,
       [ "@query" ],
       0,
-      "9edefd30eb945f781de5a3c57d9f011b"
+      "33549a4240d370788a811926e32d54b9"
     ],
     [
       "CSL.Semantics.step_par_ret",
@@ -1176,7 +1054,7 @@
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1"
       ],
       0,
-      "d7743db83ddc1061d7a945d311ee9d81"
+      "fc342bf5fed3293699af0569bf837bcd"
     ],
     [
       "CSL.Semantics.step_par",
@@ -1236,7 +1114,7 @@
         "typing_Tm_abs_6c34a0e9b065f08fc01e2b5356385abb"
       ],
       0,
-      "47279def6b8c76b62d8bf17b84ef03f1"
+      "5ab0c15039bf5a011f84b03cb7f90142"
     ],
     [
       "CSL.Semantics.step_par",
@@ -1287,7 +1165,7 @@
         "typing_CSL.Semantics.__proj__Step__item__next_post"
       ],
       0,
-      "4f9fe5f48cc289432308c123253cdf98"
+      "59ddae6250e98a9be134d49f8369a339"
     ],
     [
       "CSL.Semantics.step_weaken",
@@ -1332,7 +1210,7 @@
         "typing_CSL.Semantics.__proj__Mkst0__item__star"
       ],
       0,
-      "d22e8fc20a5225fe39c1c7579406b0e8"
+      "29213d961a4e1909c93647114afcb71f"
     ],
     [
       "CSL.Semantics.step",
@@ -1351,7 +1229,7 @@
         "refinement_interpretation_Tm_refine_229f5664a201306e888a6141b3357a0c"
       ],
       0,
-      "8624a7047819f3f339169b8cc5ae53a4"
+      "2f45ab4ca18d5beadecbc54c986c8796"
     ],
     [
       "CSL.Semantics.run",
@@ -1390,7 +1268,7 @@
         "typing_CSL.Semantics.__proj__Mkst0__item__star"
       ],
       0,
-      "79b5ec13e06da96d455611e8311b07e8"
+      "10b2e5db3e95ce0482a0e24aaa9cc71c"
     ]
   ]
 ]
