@@ -82,8 +82,9 @@ let rec interp_as_wp #a (t : Alg.tree a [Read;Write]) : st_wp a =
 
 (* With handlers. Can only be done into []? See the use of `run`. *)
 let interp_as_wp2 #a #l (t : rwtree a l) : Alg (st_wp a) [] =
+  let t0 : Alg.tree a [Read; Write] = t in
   handle_with #a #(st_wp a) #[Read; Write] #[]
-              (fun () -> Alg?.reflect t)
+              (fun () -> Alg?.reflect t0)
               (fun x -> return_wp x)
               (function Read  -> (fun i k -> bind_wp read_wp (fun s -> run (fun () -> k s)))
                       | Write -> (fun i k -> bind_wp (write_wp i) (fun _ -> run k)))

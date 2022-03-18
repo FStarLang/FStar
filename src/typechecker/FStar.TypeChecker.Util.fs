@@ -1890,12 +1890,12 @@ let check_comp env (use_eq:bool) (e:term) (c:comp) (c':comp) : term * comp * gua
     BU.print4 "Checking comp relation:\n%s has type %s\n\t %s \n%s\n"
             (Print.term_to_string e)
             (Print.comp_to_string c)
-            (if use_eq || env.use_eq then "$:" else "<:")
+            (if use_eq then "$:" else "<:")
             (Print.comp_to_string c');
   let f = if use_eq then Rel.eq_comp else Rel.sub_comp in
   match f env c c' with
     | None ->
-        if env.use_eq
+        if use_eq
         then raise_error (Err.computed_computation_type_does_not_match_annotation_eq env e c c') (Env.get_range env)
         else raise_error (Err.computed_computation_type_does_not_match_annotation env e c c') (Env.get_range env)
     | Some g -> e, c', g
@@ -2123,7 +2123,6 @@ let weaken_result_typ env (e:term) (lc:lcomp) (t:typ) (use_eq:bool) : term * lco
   let use_eq =
     use_eq            ||  //caller wants to check equality
     env.use_eq_strict ||
-    env.use_eq        ||
     (match Env.effect_decl_opt env lc.eff_name with
      // See issue #881 for why weakening result type of a reifiable computation is problematic
      | Some (ed, qualifiers) -> qualifiers |> List.contains Reifiable
@@ -2468,7 +2467,7 @@ let check_has_type env (e:term) (t1:typ) (t2:typ) (use_eq:bool) : guard_t =
     then match Rel.teq_nosmt_force env t1 t2 with
        | false -> None
        | true -> Env.trivial_guard |> Some
-    else if use_eq || env.use_eq
+    else if use_eq
     then Rel.try_teq true env t1 t2
     else match Rel.get_subtyping_predicate env t1 t2 with
              | None -> None
