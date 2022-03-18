@@ -341,7 +341,6 @@ let is_BitVector_primitive head args =
 
     | _ -> false
 
-
 let rec encode_const c env =
     match c with
     | Const_unit -> mk_Term_unit, []
@@ -394,12 +393,6 @@ and encode_binders (fuel_opt:option<term>) (bs:Syntax.binders) (env:env_t) :
 and encode_term_pred (fuel_opt:option<term>) (t:typ) (env:env_t) (e:term) : term * decls_t =
     let t, decls = encode_term t env in
     mk_HasTypeWithFuel fuel_opt e t, decls
-
-and encode_term_pred' (fuel_opt:option<term>) (t:typ) (env:env_t) (e:term) : term * decls_t =
-    let t, decls = encode_term t env in
-    match fuel_opt with
-        | None -> mk_HasTypeZ e t, decls
-        | Some f -> mk_HasTypeFuel f e t, decls
 
 and encode_arith_term env head args_e =
     let arg_tms, decls = encode_args args_e env in
@@ -607,7 +600,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
       | Tm_bvar x ->
         failwith (BU.format1 "Impossible: locally nameless; got %s" (Print.bv_to_string x))
 
-      | Tm_ascribed(t, (k,_), _) ->
+      | Tm_ascribed(t, (k,_,_), _) ->
         if (match k with Inl t -> U.is_unit t | _ -> false)
         then Term.mk_Term_unit, []
         else encode_term t env
@@ -775,7 +768,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
              let t_decls = [tdecl; k_assumption; pre_typing; t_interp] in
              t, decls@decls'@guard_decls@(mk_decls tsym tkey_hash t_decls (decls@decls'@guard_decls))
 
-        else 
+        else
              (*
               * AR: compute a hash for the Non total arrow,
               *       that we will use in the name of the arrow
@@ -794,8 +787,8 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                  ([], vars, mk_and_l (guards_l@[ct]@effect_args)) in
                let tkey_hash = "Non_total_Tm_arrow" ^ (hash_of_term tkey) ^ "@Effect=" ^
                  (c |> U.comp_effect_name |> string_of_lid) in
-               BU.digest_of_string tkey_hash in                 
-        
+               BU.digest_of_string tkey_hash in
+
              let tsym = "Non_total_Tm_arrow_" ^ tkey_hash in
              let tdecl = Term.DeclFun(tsym, [], Term_sort, None) in
              let t = mkApp(tsym, []) in
@@ -1053,8 +1046,8 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                 | Tm_name x -> Some x.sort
                 | Tm_uinst({n=Tm_fvar fv}, _)
                 | Tm_fvar fv -> Some (Env.lookup_lid env.tcenv fv.fv_name.v |> fst |> snd)
-                | Tm_ascribed(_, (Inl t, _), _) -> Some t
-                | Tm_ascribed(_, (Inr c, _), _) -> Some (U.comp_result c)
+                | Tm_ascribed(_, (Inl t, _, _), _) -> Some t
+                | Tm_ascribed(_, (Inr c, _, _), _) -> Some (U.comp_result c)
                 | _ -> None
             in
 
@@ -1239,7 +1232,9 @@ and encode_let
     -> term * decls_t
     =
     fun x t1 e1 e2 env encode_body ->
-        let ee1, decls1 = encode_term (U.ascribe e1 (Inl t1, None)) env in
+        //setting the use_eq ascription flag to false,
+        //  doesn't matter since the flag is irrelevant outside the typechecker
+        let ee1, decls1 = encode_term (U.ascribe e1 (Inl t1, None, false)) env in
         let xs, e2 = SS.open_term [S.mk_binder x] e2 in
         let x = (List.hd xs).binder_bv in
         let env' = push_term_var env x ee1 in
@@ -1333,13 +1328,6 @@ and encode_args (l:args) (env:env_t) : (list<term> * decls_t)  =
         (fun (tms, decls) (t, _) -> let t, decls' = encode_term t env in t::tms, decls@decls')
         ([], []) in
     List.rev l, decls
-
-(* this assumes t is a Lemma *)
-and encode_function_type_as_formula (t:typ) (env:env_t) : term * decls_t =
-    let universe_of_binders binders = List.map (fun _ -> U_zero) binders in
-    let quant = U.smt_lemma_as_forall t universe_of_binders in
-    let env = {env with use_zfuel_name=true} in //see #1028; SMT lemmas should not violate the fuel instrumentation
-    encode_formula quant env
 
 and encode_smt_patterns (pats_l:list<(list<S.arg>)>) env : list<(list<term>)> * decls_t =
     let env = {env with use_zfuel_name=true} in
@@ -1546,6 +1534,13 @@ and encode_formula (phi:typ) (env:env_t) : (term * decls_t)  = (* expects phi to
           pats |> List.iter (check_pattern_vars env vars);
           let vars, pats, guard, body, decls = encode_q_body env vars pats body in
           mkExists phi.pos (pats, vars, mkAnd(guard, body)), decls
+
+(* this assumes t is a Lemma *)
+let encode_function_type_as_formula (t:typ) (env:env_t) : term * decls_t =
+    let universe_of_binders binders = List.map (fun _ -> U_zero) binders in
+    let quant = U.smt_lemma_as_forall t universe_of_binders in
+    let env = {env with use_zfuel_name=true} in //see #1028; SMT lemmas should not violate the fuel instrumentation
+    encode_formula quant env
 
 (***************************************************************************************************)
 (* end main encoding of kinds/types/exps/formulae *)

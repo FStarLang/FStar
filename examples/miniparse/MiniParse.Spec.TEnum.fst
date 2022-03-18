@@ -28,7 +28,7 @@ let rec mk_tenum_branches (ty: T.term) (vty: T.term) (v: nat) (accu: list T.bran
     let v' = v + 1 in
     let env = T.cur_env () in
     let v = T.mk_app (`(mk_u16)) [pack_nat v, T.Q_Explicit] in
-    let v = T.pack (T.Tv_AscribedT v vty None) in
+    let v = T.pack (T.Tv_AscribedT v vty None false) in
     let pat =
       T.Pat_Cons (T.pack_fv n) []
     in

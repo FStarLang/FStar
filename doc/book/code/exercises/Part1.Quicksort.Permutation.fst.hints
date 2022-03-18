@@ -17,7 +17,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "9842b6a3afbb0723e7fda62c7465d6fa"
+      "63419a91855e05d8a60fb1ce0b2e46d5"
     ],
     [
       "Part1.Quicksort.Permutation.append",
@@ -32,7 +32,7 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "d4a61f3a2a95012db62c1e60fd56e68a"
+      "c21bcfe3b583bce07dcb198afa575bea"
     ],
     [
       "Part1.Quicksort.Permutation.sorted",
@@ -52,7 +52,7 @@
         "subterm_ordering_Prims.Cons", "typing_Prims.__proj__Cons__item__tl"
       ],
       0,
-      "8af8a2523d81295f296f48d0b7d2ae51"
+      "a8de11105240d1dd7038659f224d455e"
     ],
     [
       "Part1.Quicksort.Permutation.count",
@@ -72,7 +72,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "36ecd165e98e85104c2c6244ceb77506"
+      "ae2bad3447bf3493c08d8be60f518245"
     ],
     [
       "Part1.Quicksort.Permutation.is_permutation",
@@ -86,7 +86,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "5319bfb55e9b7b345757b0a353a2a5b1"
+      "1a0a195c6ea6ef5179638a76c41bef80"
     ],
     [
       "Part1.Quicksort.Permutation.append_count",
@@ -121,7 +121,7 @@
         "typing_Part1.Quicksort.Permutation.count"
       ],
       0,
-      "984bc09fb4dcaabf86116956ef3ae8ad"
+      "adbca10ef5e5503f9e1971bee119a0a2"
     ],
     [
       "Part1.Quicksort.Permutation.partition",
@@ -160,7 +160,7 @@
         "typing_Part1.Quicksort.Permutation.length"
       ],
       0,
-      "50239726c56433de650fc801645b89af"
+      "7babe9215fa10daf5a7b554127b5695b"
     ],
     [
       "Part1.Quicksort.Permutation.sort",
@@ -205,7 +205,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "7baeb85f94c51c272e4d33cfe25fac14"
+      "5a3c628daf28bbeb4cb32ad19928081f"
     ],
     [
       "Part1.Quicksort.Permutation.sorted_concat",
@@ -258,7 +258,7 @@
         "typing_Part1.Quicksort.Permutation.sorted"
       ],
       0,
-      "8cab4006cfd86c54583e94f0cedc8691"
+      "19d959649a3fe20b3253d68230ef8384"
     ]
   ]
 ]

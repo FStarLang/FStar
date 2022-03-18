@@ -1023,6 +1023,17 @@ val ite_soundness_by : unit
   *)
 val strictly_positive : unit
 
+(** This attribute may be added to an inductive type
+    to disable auto generated projectors
+
+    Normally there should not be any need to use this unless:
+    for some reason F* cannot typecheck the auto-generated projectors.
+    
+    Another reason to use this attribute may be to avoid generating and
+    typechecking lot of projectors, most of which are not going to be used
+    in the rest of the program
+  *)
+val no_auto_projectors : unit
 
 (** Pure and ghost inner let bindings are now always inlined during
     the wp computation, if: the return type is not unit and the head

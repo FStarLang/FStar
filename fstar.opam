@@ -1,11 +1,11 @@
 opam-version: "2.0"
-version: "2022.03.02~dev"
+version: "2022.03.18~dev"
 maintainer: "taramana@microsoft.com"
 authors: "Nik Swamy <nswamy@microsoft.com>,Jonathan Protzenko <protz@microsoft.com>,Tahina Ramananandro <taramana@microsoft.com>"
 homepage: "http://fstar-lang.org"
 license: "Apache-2.0"
 depends: [
-  "ocaml" {>= "4.04.1"}
+  "ocaml" {>= "4.07.0"}
   "ocamlfind"
   "batteries"
   "zarith"

@@ -80,13 +80,15 @@ type btree<'a> =
 | StrBranch of string * 'a * (btree<'a>) * (btree<'a>)
 (* (key: string) * (value: 'a) * (lbt: btree 'a) * (rbt: btree 'a) *)
 
-let rec btree_to_list_rev btree acc =
+let rec btree_to_list_rev (btree:btree<'a>) (acc:list<(string * 'a)>)
+  : list<(string * 'a)> =
   match btree with
   | StrEmpty -> acc
   | StrBranch (key, value, lbt, rbt) ->
     btree_to_list_rev rbt ((key, value) :: btree_to_list_rev lbt acc)
 
-let rec btree_from_list nodes size =
+let rec btree_from_list (nodes:list<(string * 'a)>) (size:int)
+ : btree<'a> * list<(string * 'a)> =
   if size = 0 then (StrEmpty, nodes)
   else
     let lbt_size = size / 2 in

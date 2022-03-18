@@ -90,6 +90,7 @@ let () =
   Hashtbl.add keywords "open"          OPEN        ;
   Hashtbl.add keywords "opaque"        OPAQUE      ;
   Hashtbl.add keywords "private"       PRIVATE     ;
+  Hashtbl.add keywords "quote"         QUOTE       ;
   Hashtbl.add keywords "range_of"      RANGE_OF    ;
   Hashtbl.add keywords "rec"           REC         ;
   Hashtbl.add keywords "reifiable"     REIFIABLE   ;
@@ -140,6 +141,7 @@ let () =
    "/\\", CONJUNCTION;
    "\\/", DISJUNCTION;
    "<:", SUBTYPE;
+   "$:", EQUALTYPE;
    "<@", SUBKIND;
    "(|", LENS_PAREN_LEFT;
    "|)", LENS_PAREN_RIGHT;
@@ -165,6 +167,7 @@ let () =
    ".[|", DOT_LBRACK_BAR;
    "{:pattern", LBRACE_COLON_PATTERN;
    "{:well-founded", LBRACE_COLON_WELL_FOUNDED;
+   "returns$", RETURNS_EQ;
    ":", COLON;
    "::", COLON_COLON;
    ":=", COLON_EQUALS;
@@ -388,10 +391,10 @@ let ignored_op_char = [%sedlex.regexp? Chars ".$"]
 
 (* op_token must be splt into seperate regular expressions to prevent
    compliation from hanging *)
-let op_token_1 = [%sedlex.regexp? "~" | "-" | "/\\" | "\\/" | "<:" | "<@" | "(|" | "|)" | "#" ]
+let op_token_1 = [%sedlex.regexp? "~" | "-" | "/\\" | "\\/" | "<:" | "$:" | "<@" | "(|" | "|)" | "#" ]
 let op_token_2 = [%sedlex.regexp? "u#" | "&" | "()" | "(" | ")" | "," | "~>" | "->" | "<--" ]
 let op_token_3 = [%sedlex.regexp? "<-" | "<==>" | "==>" | "." | "?." | "?" | ".[|" | ".[" | ".(|" | ".(" ]
-let op_token_4 = [%sedlex.regexp? "$" | "{:pattern" | "{:well-founded" | ":" | "::" | ":=" | ";;" | ";" | "=" | "%[" ]
+let op_token_4 = [%sedlex.regexp? "$" | "{:pattern" | "{:well-founded" | ":" | "::" | ":=" | ";;" | ";" | "=" | "%[" | "returns$" ]
 let op_token_5 = [%sedlex.regexp? "!{" | "[@@@" | "[@@" | "[@" | "[|" | "{|" | "[" | "|>" | "]" | "|]" | "|}" | "{" | "|" | "}" ]
 
 (* -------------------------------------------------------------------- *)
@@ -454,7 +457,6 @@ match%sedlex lexbuf with
  | "`%" -> BACKTICK_PERC
  | "`#" -> BACKTICK_HASH
  | "`@" -> BACKTICK_AT
- | "quote" -> QUOTE
  | "#light" -> FStar_Options.add_light_off_file (L.source_file lexbuf); PRAGMALIGHT
  | "#set-options" -> PRAGMA_SET_OPTIONS
  | "#reset-options" -> PRAGMA_RESET_OPTIONS

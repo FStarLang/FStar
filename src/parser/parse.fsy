@@ -33,7 +33,7 @@ let old_attribute_syntax_warning =
   "The `[@ ...]` syntax of attributes is deprecated. \
    Use `[@@ a1; a2; ...; an]`, a semi-colon separated list of attributes, instead"
 
-let none_to_empty_list x = 
+let none_to_empty_list x =
   match x with
   | None -> []
   | Some l -> l
@@ -83,6 +83,7 @@ let none_to_empty_list x =
 %token ENSURES
 %token EOF
 %token EQUALS
+%token EQUALTYPE
 %token EXCEPTION
 %token EXISTS
 %token FALSE
@@ -175,6 +176,7 @@ let none_to_empty_list x =
 %token REIFY
 %token REQUIRES
 %token RETURNS
+%token RETURNS_EQ
 %token RPAREN
 %token SEMICOLON
 %token SEMICOLON_SEMICOLON
@@ -236,7 +238,15 @@ option___anonymous_1_:
 let x =                                                (t) in
     ( Some x )}
 
-option___anonymous_10_:
+option___anonymous_11_:
+  
+    {    ( None )}
+| BY thunk2_typ_
+    {let (_1, tactic) = ((), $2) in
+let x =                                                                 (tactic) in
+    ( Some x )}
+
+option___anonymous_12_:
   
     {    ( None )}
 | LBRACE noSeqTerm RBRACE
@@ -274,6 +284,14 @@ let x =                               (i) in
 option___anonymous_7_:
   
     {    ( None )}
+| AS lident
+    {let (_1, i) = ((), $2) in
+let x =                               (i) in
+    ( Some x )}
+
+option___anonymous_8_:
+  
+    {    ( None )}
 | BY thunk_typ_
     {let (_1, tactic) = ((), $2) in
 let x =                                                                    (tactic) in
@@ -282,9 +300,9 @@ let x =                                                                    (tact
 option___anonymous_9_:
   
     {    ( None )}
-| BY thunk2_typ_
+| BY thunk_typ_
     {let (_1, tactic) = ((), $2) in
-let x =                                                                 (tactic) in
+let x =                                                                      (tactic) in
     ( Some x )}
 
 option_ascribeKind_:
@@ -373,10 +391,10 @@ loption_separated_nonempty_list_SEMICOLON_tuplePattern__:
     {let x = $1 in
     ( x )}
 
-list___anonymous_11_:
+list___anonymous_13_:
   
     {    ( [] )}
-| DOT qlident list___anonymous_11_
+| DOT qlident list___anonymous_13_
     {let (_1, id, xs) = ((), $2, $3) in
 let x =                                                     (id) in
     ( x :: xs )}
@@ -839,9 +857,9 @@ typeDefinition:
 recordFieldDecl:
   aqualifiedWithAttrs_lident_ COLON typ
     {let (qualified_lid, _2, t) = ($1, (), $3) in
-      ( 
+      (
         let (qual, attrs), lid = qualified_lid in
-        (lid, qual, attrs, t) 
+        (lid, qual, attrs, t)
       )}
 
 constructorDecl:
@@ -1412,15 +1430,26 @@ term:
 match_returning:
   option___anonymous_6_ RETURNS tmIff
     {let (as_opt, _2, t) = ($1, (), $3) in
-                                                   (as_opt,t)}
+                                                   (as_opt,t,false)}
+| option___anonymous_7_ RETURNS_EQ tmIff
+    {let (as_opt, _2, t) = ($1, (), $3) in
+                                                      (as_opt,t,true)}
 
 noSeqTerm:
   typ
     {let t = $1 in
            ( t )}
-| tmIff SUBTYPE tmIff option___anonymous_7_
+| tmIff SUBTYPE tmIff option___anonymous_8_
     {let (e, _2, t, tactic_opt) = ($1, (), $3, $4) in
-      ( mk_term (Ascribed(e,{t with level=Expr},tactic_opt)) (rhs2 parseState 1 4) Expr )}
+      ( mk_term (Ascribed(e,{t with level=Expr},tactic_opt,false)) (rhs2 parseState 1 4) Expr )}
+| tmIff EQUALTYPE tmIff option___anonymous_9_
+    {let (e, _2, t, tactic_opt) = ($1, (), $3, $4) in
+      (
+        log_issue (lhs parseState)
+	          (Warning_BleedingEdge_Feature,
+		   "Equality type ascriptions is an experimental feature subject to redesign in the future");
+        mk_term (Ascribed(e,{t with level=Expr},tactic_opt,true)) (rhs2 parseState 1 4) Expr
+      )}
 | atomicTermNotQUident DOT_LPAREN term RPAREN LARROW noSeqTerm
     {let (e1, _1, e, _3_inlined1, _3, e3) = ($1, (), $3, (), (), $6) in
 let op_expr =                              ( mk_ident (".()", rhs parseState 1), e, rhs2 parseState 1 3 ) in
@@ -1490,7 +1519,7 @@ let pbs =    ( List.rev xs ) in
          let branches = focusBranches (pbs) (rhs2 parseState 1 4) in
          mk_term (TryWith(e1, branches)) (rhs2 parseState 1 4) Expr
       )}
-| MATCH term option_match_returning_ WITH reverse_left_flexible_list_BAR___anonymous_8_
+| MATCH term option_match_returning_ WITH reverse_left_flexible_list_BAR___anonymous_10_
     {let (_1, e, ret_opt, _4, xs) = ((), $2, $3, (), $5) in
 let pbs =    ( List.rev xs ) in
       (
@@ -1501,7 +1530,7 @@ let pbs =    ( List.rev xs ) in
     {let (_1, _2, t, _4, e) = ($1, (), $3, (), $5) in
       (
             match t.tm with
-            | Ascribed(r, rty, None) ->
+            | Ascribed(r, rty, None, _) ->
               mk_term (LetOpenRecord(r, rty, e)) (rhs2 parseState 1 5) Expr
 
             | Name uid ->
@@ -1541,7 +1570,7 @@ let pbs =    ( List.rev xs ) in
       ( let a = set_lid_range assume_lid (rhs parseState 1) in
         mkExplicitApp (mk_term (Var a) (rhs parseState 1) Expr) [e] (rhs2 parseState 1 2)
       )}
-| ASSERT atomicTerm option___anonymous_9_
+| ASSERT atomicTerm option___anonymous_11_
     {let (_1, e, tactic_opt) = ((), $2, $3) in
       (
         match tactic_opt with
@@ -1592,7 +1621,7 @@ let pbs =    ( List.rev xs ) in
         let b =
             if lr = "Left" then true
             else if lr = "Right" then false
-            else raise_error (Fatal_SyntaxError, "Syntax error: _intro_ \/ expects either 'Left' or 'Right'") (rhs parseState 6)
+            else raise_error (Fatal_SyntaxError, "Syntax error: _intro_ \\/ expects either 'Left' or 'Right'") (rhs parseState 6)
         in
         mk_term (IntroOr(b, p, q, e))  (rhs2 parseState 1 7) Expr
      )}
@@ -2338,7 +2367,7 @@ tmRefinement:
                ( e )}
 
 refineOpt:
-  option___anonymous_10_
+  option___anonymous_12_
     {let phi_opt = $1 in
                                                     (phi_opt)}
 
@@ -2448,7 +2477,7 @@ let op =     ( mk_ident (op, rhs parseState 1) ) in
 | LENS_PAREN_LEFT tmEq COMMA separated_nonempty_list_COMMA_tmEq_ LENS_PAREN_RIGHT
     {let (_1, e0, _3, el, _5) = ((), $2, (), $4, ()) in
       ( mkDTuple (e0::el) (rhs2 parseState 1 5) )}
-| projectionLHS list___anonymous_11_
+| projectionLHS list___anonymous_13_
     {let (e, field_projs) = ($1, $2) in
       ( fold_left (fun e lid -> mk_term (Project(e, lid)) (rhs2 parseState 1 2) Expr ) e field_projs )}
 | BEGIN term END
@@ -2484,7 +2513,7 @@ projectionLHS:
          * generated. *)
         let e1 = match sort_opt with
           | None -> e
-          | Some (level, t) -> mk_term (Ascribed(e,{t with level=level},None)) (rhs2 parseState 1 4) level
+          | Some (level, t) -> mk_term (Ascribed(e,{t with level=level},None,false)) (rhs2 parseState 1 4) level
         in mk_term (Paren e1) (rhs2 parseState 1 4) (e.level)
       )}
 | LBRACK_BAR right_flexible_list_SEMICOLON_noSeqTerm_ BAR_RBRACK
@@ -2780,14 +2809,14 @@ right_flexible_nonempty_list_SEMICOLON_simpleDef_:
     {let (x, _2, xs) = ($1, (), $3) in
                                            ( x :: xs )}
 
-reverse_left_flexible_list_BAR___anonymous_8_:
+reverse_left_flexible_list_BAR___anonymous_10_:
   
     {   ( [] )}
 | patternBranch
     {let pb = $1 in
 let x =                                                                                                    (pb) in
    ( [x] )}
-| reverse_left_flexible_list_BAR___anonymous_8_ BAR patternBranch
+| reverse_left_flexible_list_BAR___anonymous_10_ BAR patternBranch
     {let (xs, _2, pb) = ($1, (), $3) in
 let x =                                                                                                    (pb) in
    ( x :: xs )}
@@ -2809,4 +2838,3 @@ in
    ( x :: xs )}
 
 %%
-
