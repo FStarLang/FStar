@@ -212,7 +212,7 @@ let matrix_last_line_equals_gen_fold #c #eq
                       (CF.fold cm 0 (n-1) (generator (m-1))) 
 #pop-options 
 
-#push-options "--ifuel 0 --fuel 0 --z3rlimit 1"
+#push-options "--ifuel 0 --fuel 0 --z3rlimit 10"
 let rec matrix_fold_aux #c #eq // lemma needed for precise generator domain control
                            (#gen_m #gen_n: pos) // full generator domain
                            (cm: CE.cm c eq) 
