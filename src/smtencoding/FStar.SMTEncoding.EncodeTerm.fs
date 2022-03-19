@@ -908,19 +908,16 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
         in
         ttm, decls@([d] |> mk_decls_trivial)
 
-      | Tm_app({n=Tm_fvar head}, [(arg, _)])
-          when (S.fv_eq_lid head Const.squash_lid
-               || S.fv_eq_lid head Const.auto_squash_lid)
-            && Option.isSome (U.destruct_typ_as_formula arg) ->
-        let dummy = S.new_bv None t_unit in
-        let t = U.refine dummy arg in (* so that `squash f`, when f is a formula, benefits from shallow embedding *)
-        encode_term t env
+      // | Tm_app({n=Tm_fvar head}, [(arg, _)])
+      //     when (S.fv_eq_lid head Const.squash_lid
+      //          || S.fv_eq_lid head Const.auto_squash_lid)
+      //       && Option.isSome (U.destruct_typ_as_formula arg) ->
+      //   let dummy = S.new_bv None t_unit in
+      //   let t = U.refine dummy arg in (* so that `squash f`, when f is a formula, benefits from shallow embedding *)
+      //   encode_term t env
 
       | Tm_app _ ->
         let head, args_e = U.head_and_args t0 in
-        (* if Env.debug env.tcenv <| Options.Other "SMTEncoding" *)
-        (* then BU.print2 "Encoding app head=%s, n_args=%s\n" (Print.term_to_string head) *)
-        (*                                                    (string_of_int <| List.length args_e); *)
         let head, args_e =
           if head_redex env head
           then match maybe_whnf env t0 with
@@ -928,6 +925,11 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                | Some t -> U.head_and_args t
           else head, args_e
         in
+        // if Env.debug env.tcenv <| Options.Other "SMTEncoding"
+        // then BU.print3 "Encoding app head=%s (%s), n_args=%s\n"
+        //                (Print.term_to_string head)
+        //                (Print.tag_of_term (SS.compress head))
+        //                (string_of_int <| List.length args_e);
         begin
         match (SS.compress head).n, args_e with
         | _ when is_arithmetic_primitive head args_e ->
@@ -935,6 +937,16 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
 
         | _ when is_BitVector_primitive head args_e ->
             encode_BitVector_term env head args_e
+
+        | Tm_fvar fv, [(arg, _)]
+        | Tm_uinst({n=Tm_fvar fv}, _), [(arg, _)]
+            when
+             (S.fv_eq_lid fv Const.squash_lid
+              || S.fv_eq_lid fv Const.auto_squash_lid)
+              && Option.isSome (U.destruct_typ_as_formula arg) ->
+          let dummy = S.new_bv None t_unit in
+          let t = U.refine dummy arg in (* so that `squash f`, when f is a formula, benefits from shallow embedding *)
+          encode_term t env
 
         | Tm_fvar fv, _
         | Tm_uinst({n=Tm_fvar fv}, _), _
