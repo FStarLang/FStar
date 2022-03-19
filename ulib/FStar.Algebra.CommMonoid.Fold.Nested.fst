@@ -27,7 +27,7 @@ module CF = FStar.Algebra.CommMonoid.Fold
 module CE = FStar.Algebra.CommMonoid.Equiv
 
 open FStar.IntegerIntervals
-open FStar.Seq.Matrix 
+open FStar.Matrix 
 
 (* This constructs a generator function that has its arguments in reverse 
    order. Useful when reasoning about nested folds, transposed matrices, etc. 
@@ -45,7 +45,11 @@ let double_fold #c #eq #a0 (#ak: not_less_than a0) #b0 (#bk:not_less_than b0)
                 (cm: CE.cm c eq)
                 (g: ifrom_ito a0 ak -> ifrom_ito b0 bk -> c) = 
   CF.fold cm a0 ak (fun (i: ifrom_ito a0 ak) -> CF.fold cm b0 bk (g i))  
- 
+
+(* Auxiliary utility that casts (matrix c m n) to seq of length (m*n) *)
+private let matrix_seq #c #m #r (generator: matrix_generator c m r) = 
+  seq_of_matrix (Matrix.init generator)
+
 (* Most general form of nested fold swap theorem. Here we prove that we can 
    exchange the order of nested foldings over any suitable generator function.
    We use the previously proved weaker version (for zero-based indices) in 
