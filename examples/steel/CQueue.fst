@@ -1,7 +1,7 @@
 module CQueue
 open CQueue.LList
 
-#set-options "--ide_id_info_off"
+#set-options "--ide_id_info_off --z3cliopt 'smt.qi.eager_threshold=100'"
 
 (* BEGIN library *)
 
