@@ -131,13 +131,13 @@ and inst_lcomp_opt s l = match l with
     | Some rc -> Some ({rc with residual_typ = FStar.Compiler.Util.map_opt rc.residual_typ (inst s)})
 
 and inst_ascription s (asc:ascription) =
-  let annot, topt = asc in
+  let annot, topt, use_eq = asc in
   let annot =
     match annot with
     | Inl t -> Inl (inst s t)
     | Inr c -> Inr (inst_comp s c) in
   let topt = FStar.Compiler.Util.map_opt topt (inst s) in
-  annot, topt
+  annot, topt, use_eq
 
 let instantiate i t = match i with
     | [] -> t

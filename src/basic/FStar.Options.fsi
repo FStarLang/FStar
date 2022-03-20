@@ -100,7 +100,6 @@ val settable                    : string -> bool
 
 val abort_counter : ref<int>
 
-val __temp_no_proj              : string  -> bool
 val __temp_fast_implicits       : unit    -> bool
 val admit_smt_queries           : unit    -> bool
 val set_admit_smt_queries       : bool    -> unit
@@ -123,7 +122,6 @@ val dep                         : unit    -> option<string>
 val detail_errors               : unit    -> bool
 val detail_hint_replay          : unit    -> bool
 val display_usage               : unit    -> unit
-val dont_gen_projectors         : string  -> bool
 val dump_module                 : string  -> bool
 val eager_subtyping             : unit    -> bool
 val error_contexts              : unit    -> bool

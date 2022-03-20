@@ -186,10 +186,11 @@ and free_names_and_uvars_binders bs use_cache =
 
 
 and free_names_and_uvars_ascription asc use_cache =
-  union (match fst asc with
+  let asc, tacopt, _ = asc in
+  union (match asc with
          | Inl t -> free_names_and_uvars t use_cache
          | Inr c -> free_names_and_uvars_comp c use_cache)
-        (match snd asc with
+        (match tacopt with
          | None -> no_free_vars
          | Some tac -> free_names_and_uvars tac use_cache)
 

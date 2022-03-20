@@ -1592,8 +1592,6 @@ let (encode_free_var :
                                        (uu___8.FStar_TypeChecker_Env.top_level);
                                      FStar_TypeChecker_Env.check_uvars =
                                        (uu___8.FStar_TypeChecker_Env.check_uvars);
-                                     FStar_TypeChecker_Env.use_eq =
-                                       (uu___8.FStar_TypeChecker_Env.use_eq);
                                      FStar_TypeChecker_Env.use_eq_strict =
                                        (uu___8.FStar_TypeChecker_Env.use_eq_strict);
                                      FStar_TypeChecker_Env.is_iface =
@@ -2500,8 +2498,6 @@ let (encode_top_level_let :
                     (uu___1.FStar_TypeChecker_Env.top_level);
                   FStar_TypeChecker_Env.check_uvars =
                     (uu___1.FStar_TypeChecker_Env.check_uvars);
-                  FStar_TypeChecker_Env.use_eq =
-                    (uu___1.FStar_TypeChecker_Env.use_eq);
                   FStar_TypeChecker_Env.use_eq_strict =
                     (uu___1.FStar_TypeChecker_Env.use_eq_strict);
                   FStar_TypeChecker_Env.is_iface =
@@ -2676,7 +2672,7 @@ let (encode_top_level_let :
                          FStar_Syntax_Util.ascribe body1
                            ((FStar_Pervasives.Inl
                                (FStar_Syntax_Util.comp_result comp1)),
-                             FStar_Pervasives_Native.None) in
+                             FStar_Pervasives_Native.None, false) in
                        (binders1, uu___3, comp1)) in
             (try
                (fun uu___1 ->

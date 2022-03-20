@@ -1217,12 +1217,12 @@ and (encode_term :
              FStar_Compiler_Util.format1
                "Impossible: locally nameless; got %s" uu___2 in
            failwith uu___1
-       | FStar_Syntax_Syntax.Tm_ascribed (t2, (k, uu___1), uu___2) ->
-           let uu___3 =
+       | FStar_Syntax_Syntax.Tm_ascribed (t2, (k, uu___1, uu___2), uu___3) ->
+           let uu___4 =
              match k with
              | FStar_Pervasives.Inl t3 -> FStar_Syntax_Util.is_unit t3
-             | uu___4 -> false in
-           if uu___3
+             | uu___5 -> false in
+           if uu___4
            then (FStar_SMTEncoding_Term.mk_Term_unit, [])
            else encode_term t2 env
        | FStar_Syntax_Syntax.Tm_quoted (qt, uu___1) ->
@@ -1409,8 +1409,6 @@ and (encode_term :
                                 (uu___6.FStar_TypeChecker_Env.top_level);
                               FStar_TypeChecker_Env.check_uvars =
                                 (uu___6.FStar_TypeChecker_Env.check_uvars);
-                              FStar_TypeChecker_Env.use_eq =
-                                (uu___6.FStar_TypeChecker_Env.use_eq);
                               FStar_TypeChecker_Env.use_eq_strict =
                                 (uu___6.FStar_TypeChecker_Env.use_eq_strict);
                               FStar_TypeChecker_Env.is_iface =
@@ -2031,24 +2029,6 @@ and (encode_term :
                       FStar_SMTEncoding_Term.mk_decls_trivial in
                   FStar_Compiler_List.op_At decls uu___4 in
                 (ttm, uu___3))
-       | FStar_Syntax_Syntax.Tm_app
-           ({ FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_fvar head;
-              FStar_Syntax_Syntax.pos = uu___1;
-              FStar_Syntax_Syntax.vars = uu___2;_},
-            (arg, uu___3)::[])
-           when
-           ((FStar_Syntax_Syntax.fv_eq_lid head FStar_Parser_Const.squash_lid)
-              ||
-              (FStar_Syntax_Syntax.fv_eq_lid head
-                 FStar_Parser_Const.auto_squash_lid))
-             &&
-             (let uu___4 = FStar_Syntax_Util.destruct_typ_as_formula arg in
-              FStar_Compiler_Option.isSome uu___4)
-           ->
-           let dummy =
-             FStar_Syntax_Syntax.new_bv FStar_Pervasives_Native.None
-               FStar_Syntax_Syntax.t_unit in
-           let t2 = FStar_Syntax_Util.refine dummy arg in encode_term t2 env
        | FStar_Syntax_Syntax.Tm_app uu___1 ->
            let uu___2 = FStar_Syntax_Util.head_and_args t0 in
            (match uu___2 with
@@ -2075,6 +2055,48 @@ and (encode_term :
                           encode_arith_term env head1 args_e1
                       | uu___5 when is_BitVector_primitive head1 args_e1 ->
                           encode_BitVector_term env head1 args_e1
+                      | (FStar_Syntax_Syntax.Tm_fvar fv, (arg, uu___5)::[])
+                          when
+                          ((FStar_Syntax_Syntax.fv_eq_lid fv
+                              FStar_Parser_Const.squash_lid)
+                             ||
+                             (FStar_Syntax_Syntax.fv_eq_lid fv
+                                FStar_Parser_Const.auto_squash_lid))
+                            &&
+                            (let uu___6 =
+                               FStar_Syntax_Util.destruct_typ_as_formula arg in
+                             FStar_Compiler_Option.isSome uu___6)
+                          ->
+                          let dummy =
+                            FStar_Syntax_Syntax.new_bv
+                              FStar_Pervasives_Native.None
+                              FStar_Syntax_Syntax.t_unit in
+                          let t2 = FStar_Syntax_Util.refine dummy arg in
+                          encode_term t2 env
+                      | (FStar_Syntax_Syntax.Tm_uinst
+                         ({
+                            FStar_Syntax_Syntax.n =
+                              FStar_Syntax_Syntax.Tm_fvar fv;
+                            FStar_Syntax_Syntax.pos = uu___5;
+                            FStar_Syntax_Syntax.vars = uu___6;_},
+                          uu___7),
+                         (arg, uu___8)::[]) when
+                          ((FStar_Syntax_Syntax.fv_eq_lid fv
+                              FStar_Parser_Const.squash_lid)
+                             ||
+                             (FStar_Syntax_Syntax.fv_eq_lid fv
+                                FStar_Parser_Const.auto_squash_lid))
+                            &&
+                            (let uu___9 =
+                               FStar_Syntax_Util.destruct_typ_as_formula arg in
+                             FStar_Compiler_Option.isSome uu___9)
+                          ->
+                          let dummy =
+                            FStar_Syntax_Syntax.new_bv
+                              FStar_Pervasives_Native.None
+                              FStar_Syntax_Syntax.t_unit in
+                          let t2 = FStar_Syntax_Util.refine dummy arg in
+                          encode_term t2 env
                       | (FStar_Syntax_Syntax.Tm_fvar fv, uu___5) when
                           (Prims.op_Negation
                              env.FStar_SMTEncoding_Env.encoding_quantifier)
@@ -2528,13 +2550,15 @@ and (encode_term :
                                      FStar_Pervasives_Native.Some uu___7
                                  | FStar_Syntax_Syntax.Tm_ascribed
                                      (uu___7,
-                                      (FStar_Pervasives.Inl t2, uu___8),
-                                      uu___9)
+                                      (FStar_Pervasives.Inl t2, uu___8,
+                                       uu___9),
+                                      uu___10)
                                      -> FStar_Pervasives_Native.Some t2
                                  | FStar_Syntax_Syntax.Tm_ascribed
                                      (uu___7,
-                                      (FStar_Pervasives.Inr c, uu___8),
-                                      uu___9)
+                                      (FStar_Pervasives.Inr c, uu___8,
+                                       uu___9),
+                                      uu___10)
                                      ->
                                      FStar_Pervasives_Native.Some
                                        (FStar_Syntax_Util.comp_result c)
@@ -3032,7 +3056,8 @@ and (encode_let :
               let uu___ =
                 let uu___1 =
                   FStar_Syntax_Util.ascribe e1
-                    ((FStar_Pervasives.Inl t1), FStar_Pervasives_Native.None) in
+                    ((FStar_Pervasives.Inl t1), FStar_Pervasives_Native.None,
+                      false) in
                 encode_term uu___1 env in
               match uu___ with
               | (ee1, decls1) ->

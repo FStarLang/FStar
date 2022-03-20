@@ -380,7 +380,7 @@ let tc_sig_let env r se lbs lids : list<sigelt> * list<sigelt> * Env.env =
                 | Tm_unknown -> lb.lbdef
                 | _ ->
                   (* If there are two type ascriptions we check that they are compatible *)
-                  mk (Tm_ascribed (lb.lbdef, (Inl lb.lbtyp, None), None)) lb.lbdef.pos
+                  mk (Tm_ascribed (lb.lbdef, (Inl lb.lbtyp, None, false), None)) lb.lbdef.pos
               in
               if lb.lbunivs <> [] && List.length lb.lbunivs <> List.length uvs
               then raise_error (Errors.Fatal_IncoherentInlineUniverse, ("Inline universes are incoherent with annotation from val declaration")) r;

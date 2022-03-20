@@ -537,14 +537,14 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
             let rec resugar_body t = match (t.tm) with
               | A.Match(e, None, [(_,_,b)]) -> b
               | A.Let(_, _, b) -> b  // One branch Match that is resugared as Let
-              | A.Ascribed(t1, t2, t3) ->
+              | A.Ascribed(t1, t2, t3, use_eq) ->
                 (* this case happens when the match is wrapped in Meta_Monadic which is resugared to Ascribe*)
-                mk (A.Ascribed(resugar_body t1, t2, t3))
+                mk (A.Ascribed(resugar_body t1, t2, t3, use_eq))
               | _ -> failwith("unexpected body format to try_with") in
             let e = resugar_body body in
             let rec resugar_branches t = match (t.tm) with
               | A.Match(e, None, branches) -> branches
-              | A.Ascribed(t1, t2, t3) ->
+              | A.Ascribed(t1, t2, t3, _) ->
                 (* this case happens when the match is wrapped in Meta_Monadic which is resugared to Ascribe*)
                 (* TODO: where should we keep the information stored in Ascribed? *)
                 resugar_branches t1
@@ -691,8 +691,8 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
                   List.map resugar_branch branches))
 
     | Tm_ascribed(e, asc, _) ->
-      let (asc, tac_opt) = resugar_ascription env asc in
-      mk (A.Ascribed(resugar_term' env e, asc, tac_opt))
+      let asc, tac_opt, b = resugar_ascription env asc in
+      mk (A.Ascribed (resugar_term' env e, asc, tac_opt, b))
 
     | Tm_let((is_rec, source_lbs), body) ->
       let mk_pat a = A.mk_pattern a t.pos in
@@ -768,9 +768,9 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
               let rec resugar_seq t = match t.tm with
                 | A.Let(_, [_, (p, t1)], t2) ->
                    mk (A.Seq(t1, t2))
-                | A.Ascribed(t1, t2, t3) ->
+                | A.Ascribed(t1, t2, t3, use_eq) ->
                    (* this case happens when the let is wrapped in Meta_Monadic which is resugared to Ascribe*)
-                   mk (A.Ascribed(resugar_seq t1, t2, t3))
+                   mk (A.Ascribed(resugar_seq t1, t2, t3, use_eq))
                 | _ ->
                    (* this case happens in typechecker.normalize when Tm_let is_pure_effect, then
                       only the body of Tm_let is used. *)
@@ -805,13 +805,14 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
 
     | Tm_unknown -> mk A.Wild
 
-and resugar_ascription env (asc, tac_opt) =
+and resugar_ascription env (asc, tac_opt, b) =
   (match asc with
    | Inl n -> (* term *)
      resugar_term' env n
    | Inr n -> (* comp *)
      resugar_comp' env n),
-  BU.map_opt tac_opt (resugar_term' env)
+  BU.map_opt tac_opt (resugar_term' env),
+  b
 
 (* This entire function is of course very tied to the the desugaring
 of calc expressions in ToSyntax. This only really works for fully
@@ -959,11 +960,11 @@ and resugar_match_returns env scrutinee r asc_opt =
     let bopt = BU.map_option (fun b ->
       BU.must (resugar_binder' env b r)
       |> A.ident_of_binder r) bopt in
-    let asc =
+    let asc, use_eq =
       match resugar_ascription env asc with
-      | asc, None -> asc
+      | asc, None, use_eq -> asc, use_eq
       | _ -> failwith "resugaring does not support match return annotation with a tactic" in
-    Some (bopt, asc)
+    Some (bopt, asc, use_eq)
 
 
 and resugar_comp' (env: DsEnv.env) (c:S.comp) : A.term =
