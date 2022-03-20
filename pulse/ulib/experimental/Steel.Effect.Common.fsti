@@ -636,11 +636,11 @@ let rec visit_tm (ff : term -> Tac unit) (t : term) : Tac unit =
       visit_tm ff sc;
       iter (visit_br ff) brs
 
-  | Tv_AscribedT e t topt ->
+  | Tv_AscribedT e t topt _ ->
       visit_tm ff e;
       visit_tm ff t
 
-  | Tv_AscribedC e c topt ->
+  | Tv_AscribedC e c topt _ ->
       visit_tm ff e
 
   ); ff t

@@ -1,5 +1,5 @@
 [
-  "Î,ðQª/#¨xJm¯‚Mq¼",
+  "gi/\u000br²ÐA-» Ü'ë3\u0012",
   [
     [
       "OWGCounterInv.ghost_gather",
@@ -7,29 +7,11 @@
       0,
       0,
       [
-        "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_0da546199211a769a972571cdb3aec67", "eq2-interp",
-        "equality_tok_Prims.T@tok", "equation_FStar.Real.one",
-        "equation_FStar.Real.two", "equation_Prims.eq2",
-        "equation_Prims.l_True", "equation_Prims.squash",
-        "equation_Prims.subtype_of",
-        "equation_Steel.Effect.Common.ens_depends_only_on",
-        "equation_Steel.FractionalPermission.full_perm",
-        "equation_Steel.FractionalPermission.half_perm",
-        "interpretation_Tm_abs_969966c67162dea6e9b964c039900bb4",
-        "l_quant_interp_5b2993f9f2c0eba3627049a3b4167c7a",
-        "primitive_FStar.Real.of_int", "primitive_FStar.Real.op_Plus_Dot",
-        "primitive_FStar.Real.op_Slash_Dot",
-        "proj_equation_Steel.FractionalPermission.MkPerm_v",
-        "projection_inverse_BoxInt_proj_0",
-        "projection_inverse_BoxReal_proj_0",
-        "projection_inverse_Steel.FractionalPermission.MkPerm_v",
-        "real_inversion",
-        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
-        "typing_FStar.Real.one", "typing_tok_Prims.T@tok"
+        "@query", "lemma_Steel.FractionalPermission.sum_halves",
+        "typing_Steel.FractionalPermission.full_perm"
       ],
       0,
-      "a3527cb52e65e70181adf6847d6850b8"
+      "97ff181e79620b83acbf4fd3f3606015"
     ],
     [
       "OWGCounterInv.ghost_share",
@@ -49,7 +31,7 @@
         "true_interp", "typing_tok_Prims.T@tok"
       ],
       0,
-      "ace6db9db635fc37b678f7ef5f3b13e9"
+      "55bdf4e785c60a84ddc71240671f5ba3"
     ],
     [
       "OWGCounterInv.gather_invariant",
@@ -70,7 +52,7 @@
         "real_inversion", "typing_FStar.Real.one"
       ],
       0,
-      "0a402d0d308021bd93ab2c29828e897e"
+      "2e42bcc6e4052a573ce6d44a169693d4"
     ],
     [
       "OWGCounterInv.with_invariant",
@@ -95,7 +77,7 @@
         "typing_Steel.Effect.Common.set_add", "typing_Steel.Memory.iname"
       ],
       0,
-      "696d65fb55b9fc43977ac84fc348685f"
+      "62dd061a5296489d00f8262871b731bc"
     ],
     [
       "OWGCounterInv.inv_equiv_lemma",
@@ -136,7 +118,7 @@
         "typing_Steel.Reference.pts_to"
       ],
       0,
-      "8bbe498d1b1ca784cf4b22901b74d914"
+      "fb38eed1bb49248d95eedd9224a3cf3d"
     ],
     [
       "OWGCounterInv.incr_ghost_contrib",
@@ -157,7 +139,7 @@
         "true_interp", "typing_tok_Prims.T@tok"
       ],
       0,
-      "c78f9dacada15ad76930936eadd049f3"
+      "aca43e9d875d725d9e88c01d99c3b5ed"
     ],
     [
       "OWGCounterInv.incr_with_inv_slprop",
@@ -193,7 +175,7 @@
         "typing_Tm_abs_43476be6e2b528121aa9b342a6d30d83"
       ],
       0,
-      "234141968762fe4f364a397d7808e5a6"
+      "c8a70b12ecfae629c218102646fb9f22"
     ],
     [
       "OWGCounterInv.incr_with_invariant",
@@ -202,7 +184,7 @@
       0,
       [ "@query" ],
       0,
-      "8bce8ca7776df60482d996945a9ec1a3"
+      "bc78ca1a3f72e96cf38d1a214ebad433"
     ],
     [
       "OWGCounterInv.incr_main",
@@ -242,7 +224,7 @@
         "typing_Steel.Memory.iname"
       ],
       0,
-      "6d289e0def37ce2d3d0b963606a5771d"
+      "4575f1d20bf470f2ff40511ca5ca1c6e"
     ]
   ]
 ]
