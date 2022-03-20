@@ -271,5 +271,158 @@ let matrix_fold_equals_func_double_fold #c #eq #m #n cm generator
     let init = SB.init #c in
     let lemma_eq_elim = SB.lemma_eq_elim #c in 
     matrix_fold_aux cm m n generator
- 
-  
+
+let rec eq_of_seq #c (eq:CE.equiv c) (s1 s2: SB.seq c) 
+  : Tot prop (decreases SB.length s1) = 
+  (SB.length s1 = SB.length s2 /\
+   (SB.length s1 = 0 \/ (
+    let s1s, s1l = SProp.un_snoc s1 in
+     let s2s, s2l = SProp.un_snoc s2 in
+      eq.eq s1l s2l /\ eq_of_seq eq s1s s2s)))
+
+let rec eq_of_seq_element_equality #c (eq: CE.equiv c) (s1 s2: SB.seq c)
+  : Lemma (requires eq_of_seq eq s1 s2) 
+          (ensures SB.length s1 = SB.length s2 /\ (forall (i: under (SB.length s1)). (SB.index s1 i `eq.eq` SB.index s2 i))) 
+          (decreases SB.length s1)
+  = 
+  if (SB.length s1 > 0) then 
+  let s1liat, s1last = SProp.un_snoc s1 in
+  let s2liat, s2last = SProp.un_snoc s2 in
+  eq_of_seq_element_equality eq s1liat s2liat
+
+let rec eq_of_seq_from_element_equality #c (eq: CE.equiv c) (s1 s2: SB.seq c)
+  : Lemma (requires (SB.length s1 = SB.length s2) /\ (forall (i: under (SB.length s1)). (SB.index s1 i `eq.eq` SB.index s2 i)))
+          (ensures eq_of_seq eq s1 s2)
+          (decreases SB.length s1) = 
+  if SB.length s1 = 0 then () else 
+  let s1liat, s1last = SProp.un_snoc s1 in
+  let s2liat, s2last = SProp.un_snoc s2 in  
+  eq_of_seq_from_element_equality eq s1liat s2liat
+
+let eq_of_seq_condition #c (eq: CE.equiv c) (s1 s2: SB.seq c)
+  : Lemma ((SB.length s1==SB.length s2) /\ (forall (i: under (SB.length s1)). (SB.index s1 i `eq.eq` SB.index s2 i)) <==>
+            eq_of_seq eq s1 s2) = 
+  Classical.move_requires_2 (eq_of_seq_element_equality eq) s1 s2;
+  Classical.move_requires_2 (eq_of_seq_from_element_equality eq) s1 s2
+
+let rec eq_of_seq_reflexivity #c (eq: CE.equiv c) (s: SB.seq c)
+  : Lemma (ensures eq_of_seq eq s s) (decreases SB.length s) = 
+  if SB.length s > 0 then 
+  let liat, last = SProp.un_snoc s in
+  eq_of_seq_reflexivity eq liat;
+  eq.reflexivity last
+
+let rec eq_of_seq_symmetry #c (eq: CE.equiv c) (s1 s2: SB.seq c)
+  : Lemma (requires eq_of_seq eq s1 s2) (ensures eq_of_seq eq s2 s1) (decreases SB.length s1) =  
+  if SB.length s1 > 0 then 
+  let lia1, las1 = SProp.un_snoc s1 in
+  let lia2, las2 = SProp.un_snoc s2 in
+  eq_of_seq_symmetry eq lia1 lia2;
+  eq.symmetry las1 las2
+
+let rec eq_of_seq_transitivity #c (eq: CE.equiv c) (s1 s2 s3: SB.seq c)
+  : Lemma (requires eq_of_seq eq s1 s2 /\ eq_of_seq eq s2 s3) (ensures eq_of_seq eq s1 s3) (decreases SB.length s1) =  
+  if SB.length s1 > 0 then 
+  let lia1, las1 = SProp.un_snoc s1 in
+  let lia2, las2 = SProp.un_snoc s2 in
+  let lia3, las3 = SProp.un_snoc s3 in
+  eq_of_seq_transitivity eq lia1 lia2 lia3;
+  eq.transitivity las1 las2 las3
+
+let seq_equiv #c (eq:CE.equiv c) : (CE.equiv (SB.seq c)) = 
+  CE.EQ (eq_of_seq eq) (eq_of_seq_reflexivity eq)
+                       (eq_of_seq_symmetry eq)
+                       (eq_of_seq_transitivity eq)
+
+let matrix_add_generator #c #eq (#m #n: pos) (add: CE.cm c eq) (ma mb: matrix c m n) 
+  : matrix_generator c m n = fun i j -> add.mult (ijth ma i j) (ijth mb i j)
+
+let matrix_add #c #eq (#m #n: pos) (add: CE.cm c eq) (ma mb: matrix c m n) 
+  : matrix_of (matrix_add_generator add ma mb)
+  = init (matrix_add_generator add ma mb)
+
+let matrix_add_ijth #c #eq (#m #n: pos) (add: CE.cm c eq) (ma mb: matrix c m n) (i: under m) (j: under n)
+  : Lemma (ijth (matrix_add add ma mb) i j == add.mult (ijth ma i j) (ijth mb i j)) = ()
+
+let matrix_eq_fun #c (#m #n: pos) (eq: CE.equiv c) (ma mb: matrix c m n) =   
+  eq_of_seq eq (seq_of_matrix ma) (seq_of_matrix mb)
+
+let matrix_equiv #c (eq: CE.equiv c) (m n: pos) : CE.equiv (matrix c m n) = 
+  CE.EQ (matrix_eq_fun eq)
+        (fun m -> eq_of_seq_reflexivity eq (seq_of_matrix m))
+        (fun ma mb -> eq_of_seq_symmetry eq (seq_of_matrix ma) (seq_of_matrix mb))
+        (fun ma mb mc -> eq_of_seq_transitivity eq (seq_of_matrix ma) (seq_of_matrix mb) (seq_of_matrix mc))
+
+let matrix_equiv_ijth #c (#m #n: pos) (eq: CE.equiv c) (ma mb: matrix c m n) (i: under m) (j: under n)
+  : Lemma (requires (matrix_equiv eq m n).eq ma mb) (ensures ijth ma i j `eq.eq` ijth mb i j) = 
+  eq_of_seq_element_equality eq (seq_of_matrix ma) (seq_of_matrix mb)
+
+#push-options "--fuel 1 --z3rlimit 2"
+let matrix_equiv_from_element_eq #c (#m #n: pos) (eq: CE.equiv c) (ma mb: matrix c m n)
+  : Lemma (requires (forall (i: under m) (j: under n). ijth ma i j `eq.eq` ijth mb i j))
+          (ensures matrix_eq_fun eq ma mb) = 
+  assert (SB.length (seq_of_matrix ma) = SB.length (seq_of_matrix mb));
+  let s1 = seq_of_matrix ma in
+  let s2 = seq_of_matrix mb in
+  assert (forall (ij: under (m*n)). SB.index s1 ij == ijth ma (get_i m n ij) (get_j m n ij));
+  assert (forall (ij: under (m*n)). SB.index s2 ij == ijth mb (get_i m n ij) (get_j m n ij));
+  assert (forall (ij: under (m*n)). SB.index s1 ij `eq.eq` SB.index s2 ij);  
+  eq_of_seq_from_element_equality eq (seq_of_matrix ma) (seq_of_matrix mb)
+#pop-options
+
+let matrix_add_is_associative #c #eq (#m #n: pos) (add: CE.cm c eq) (ma mb mc: matrix c m n)
+  : Lemma (matrix_add add (matrix_add add ma mb) mc `(matrix_equiv eq m n).eq` 
+           matrix_add add ma (matrix_add add mb mc)) = 
+  let rhs = matrix_add add ma (matrix_add add mb mc) in
+  let lhs = matrix_add add (matrix_add add ma mb) mc in
+  let lemma (i: under m) (j: under n) : Lemma (ijth lhs i j `eq.eq` ijth rhs i j) 
+    = add.associativity (ijth ma i j) (ijth mb i j) (ijth mc i j) 
+    in Classical.forall_intro_2 lemma;
+  matrix_equiv_from_element_eq eq lhs rhs
+
+let matrix_add_is_commutative #c #eq (#m #n: pos) (add: CE.cm c eq) (ma mb: matrix c m n)
+  : Lemma (matrix_add add ma mb `(matrix_equiv eq m n).eq` matrix_add add mb ma) =
+  let lhs = matrix_add add ma mb in
+  let rhs = matrix_add add mb ma in
+  let lemma (i: under m) (j: under n) 
+    : Lemma (ijth lhs i j `eq.eq` ijth rhs i j) 
+    = add.commutativity (ijth ma i j) (ijth mb i j)
+    in Classical.forall_intro_2 lemma;
+  matrix_equiv_from_element_eq eq lhs rhs
+
+let matrix_add_congruence #c #eq (#m #n: pos) (add: CE.cm c eq) (ma mb mc md: matrix c m n)
+  : Lemma (requires matrix_eq_fun eq ma mc /\ matrix_eq_fun eq mb md)
+          (ensures matrix_add add ma mb `matrix_eq_fun eq` matrix_add add mc md) =
+  let lhs = matrix_add add ma mb in
+  let rhs = matrix_add add mc md in
+  let lemma (i: under m) (j: under n) 
+    : Lemma (ijth lhs i j `eq.eq` ijth rhs i j) 
+    = matrix_equiv_ijth eq ma mc i j;
+      matrix_equiv_ijth eq mb md i j;
+      add.congruence (ijth ma i j) (ijth mb i j) (ijth mc i j) (ijth md i j)
+    in Classical.forall_intro_2 lemma;
+  matrix_equiv_from_element_eq eq lhs rhs
+
+let matrix_add_zero #c #eq (add: CE.cm c eq) (m n: pos) : (z: matrix c m n {
+  forall (i: under m) (j: under n). ijth z i j == add.unit
+}) = matrix_of_seq m n (SB.create (m*n) add.unit)
+
+let matrix_add_identity #c #eq (add: CE.cm c eq) (#m #n: pos) (mx: matrix c m n)
+  : Lemma (matrix_add add (matrix_add_zero add m n) mx `matrix_eq_fun eq` mx) =
+  let zero = matrix_add_zero add m n in
+  let lhs = matrix_add add zero mx in
+  let rhs = matrix_add add mx zero in
+  let lemma (i: under m) (j: under n) 
+    : Lemma (ijth lhs i j `eq.eq` ijth mx i j) 
+    = add.identity (ijth mx i j) 
+    in Classical.forall_intro_2 lemma;
+  matrix_equiv_from_element_eq eq lhs mx 
+
+let matrix_add_comm_monoid #c #eq (add: CE.cm c eq) (m n: pos)
+  : CE.cm (matrix c m n) (matrix_equiv eq m n) 
+  = CE.CM (matrix_add_zero add m n)
+          (matrix_add add)
+          (matrix_add_identity add)
+          (matrix_add_is_associative add)
+          (matrix_add_is_commutative add)
+          (matrix_add_congruence add)

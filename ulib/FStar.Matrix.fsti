@@ -207,4 +207,14 @@ let matrix_fold_equals_fold_of_transpose #c #eq
                                         (SP.foldm_snoc cm (matrix_seq (transposed_matrix_gen gen)));
   eq.transitivity (foldm cm (init gen)) (SP.foldm_snoc cm (matrix_seq (transposed_matrix_gen gen)))
                   (foldm cm (init (transposed_matrix_gen gen))) 
-  
+
+val matrix_equiv : (#c: Type) ->
+                   (eq:  CE.equiv c) ->
+                   (m: pos) -> (n: pos) ->
+                   CE.equiv (matrix c m n)                   
+
+val matrix_add_comm_monoid : (#c:Type) -> 
+                             (#eq:CE.equiv c) -> 
+                             (add: CE.cm c eq) -> 
+                             (m:pos) -> (n: pos) -> 
+                             CE.cm (matrix c m n) (matrix_equiv eq m n)
