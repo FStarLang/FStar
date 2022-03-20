@@ -246,8 +246,8 @@ let rec unfold_until_arrow e ty0 =
       (* Continue with the type of bv *)
       let ty' = type_of_bv bv in
       unfold_until_arrow e ty'
-    | Tv_AscribedT body _ _
-    | Tv_AscribedC body _ _ ->
+    | Tv_AscribedT body _ _ _
+    | Tv_AscribedC body _ _ _ ->
       unfold_until_arrow e body
     | _ ->
       (* Other situations: don't know what to do *)
@@ -535,13 +535,13 @@ let rec explore_term dbg dfs #a f x ge0 pl0 c0 t0 =
       let x1 = explore_term dbg dfs #a f x0 ge0 pl1 scrut_c scrutinee in
       (* Explore the branches *)
       fold_left explore_branch x1 branches
-    | Tv_AscribedT e ty tac ->
+    | Tv_AscribedT e ty tac _ ->
       let c1 = Some (TC_Typ ty [] 0) in
       let x1, flag = explore_term dbg dfs #a f x0 ge0 pl1 None ty in
       if flag = Continue then
         explore_term dbg dfs #a f x1 ge0 pl1 c1 e
       else x1, convert_ctrl_flag flag
-    | Tv_AscribedC e c1 tac ->
+    | Tv_AscribedC e c1 tac _ ->
       (* TODO: explore the comp *)
       explore_term dbg dfs #a f x0 ge0 pl1 (Some (TC_Comp c1 [] 0)) e
     | _ ->

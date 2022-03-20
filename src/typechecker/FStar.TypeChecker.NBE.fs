@@ -539,8 +539,8 @@ let rec translate (cfg:config) (bs:list<t>) (e:term) : t =
             mk_binder x, mkAccuVar x::bs in
           let asc =
             match asc with
-            | Inl t, tacopt -> Inl (readback cfg (translate cfg bs t)), tacopt
-            | Inr c, tacopt -> Inr (readback_comp cfg (translate_comp cfg bs c)), tacopt in
+            | Inl t, tacopt, use_eq -> Inl (readback cfg (translate cfg bs t)), tacopt, use_eq
+            | Inr c, tacopt, use_eq -> Inr (readback_comp cfg (translate_comp cfg bs c)), tacopt, use_eq in
           let asc = SS.close_ascription [b] asc in
           let b = List.hd (SS.close_binders [b]) in
           Some (b, asc) in

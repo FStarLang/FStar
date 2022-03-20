@@ -559,6 +559,33 @@ let e_tuple2 (ea:embedding<'a>) (eb:embedding<'b>) =
     in
     mk_emb em un (lid_as_typ PC.lid_tuple2 [U_zero;U_zero] [as_arg (type_of eb); as_arg (type_of ea)]) etyp
 
+let e_tuple3 (ea:embedding<'a>) (eb:embedding<'b>) (ec:embedding<'c>) =
+    let etyp =
+        ET_app(PC.lid_tuple3 |> Ident.string_of_lid, [ea.emb_typ; eb.emb_typ; ec.emb_typ])
+    in
+    let em cb ((x1, x2, x3):('a * 'b * 'c)) : t =
+        lazy_embed etyp (x1, x2, x3) (fun () ->
+        lid_as_constr (PC.lid_Mktuple3)
+                      [U_zero; U_zero; U_zero]
+                      [as_arg (embed ec cb x3);
+                       as_arg (embed eb cb x2);
+                       as_arg (embed ea cb x1);
+                       as_iarg (type_of ec);
+                       as_iarg (type_of eb);
+                       as_iarg (type_of ea)])
+    in
+    let un cb (trm:t) : option<('a * 'b * 'c)> =
+        lazy_unembed cb etyp trm (fun trm ->
+        match trm.nbe_t with
+        | Construct (fvar, us, [(c, _); (b, _); (a, _); _; _]) when S.fv_eq_lid fvar PC.lid_Mktuple3 ->
+          BU.bind_opt (unembed ea cb a) (fun a ->
+          BU.bind_opt (unembed eb cb b) (fun b ->
+          BU.bind_opt (unembed ec cb c) (fun c ->
+          Some (a, b, c))))
+        | _ -> None)
+    in
+    mk_emb em un (lid_as_typ PC.lid_tuple3 [U_zero;U_zero;U_zero] [as_arg (type_of ec); as_arg (type_of eb); as_arg (type_of ea)]) etyp
+
 let e_either (ea:embedding<'a>) (eb:embedding<'b>) =
     let etyp =
         ET_app(PC.either_lid |> Ident.string_of_lid, [ea.emb_typ; eb.emb_typ])

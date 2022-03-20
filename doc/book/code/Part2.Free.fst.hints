@@ -2,30 +2,6 @@
   "“¶'ºv\u0004¯Dø\u007fŸ³\u0010ý³Å",
   [
     [
-      "Part2.Free.__proj__Mkaction_class__item__input_of",
-      1,
-      2,
-      1,
-      [
-        "@query", "proj_equation_Part2.Free.Mkaction_class_t",
-        "projection_inverse_Part2.Free.Mkaction_class_t"
-      ],
-      0,
-      "f5f8724401302e6bdf45fe70c6b99542"
-    ],
-    [
-      "Part2.Free.__proj__Mkaction_class__item__output_of",
-      1,
-      2,
-      1,
-      [
-        "@query", "proj_equation_Part2.Free.Mkaction_class_t",
-        "projection_inverse_Part2.Free.Mkaction_class_t"
-      ],
-      0,
-      "900f4098d3efe2ccaa3bf241c616f09d"
-    ],
-    [
       "Part2.Free.input_of",
       1,
       2,
@@ -37,7 +13,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "8e2d53902aacb92117e6c97d7761a161"
+      "14de7ed2d4ebb83a7d6ff670c41ae67f"
     ],
     [
       "Part2.Free.output_of",
@@ -51,7 +27,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "ab77c985071f522aaafaac04ae7281e9"
+      "fdb9e8a0b1089eecf9521b5ba83969dc"
     ],
     [
       "Part2.Free.__proj__Return__item__x",
@@ -63,7 +39,7 @@
         "refinement_interpretation_Tm_refine_d0470c21c90bb5572aec576a7d2ec2c8"
       ],
       0,
-      "cc0b98c752909fd3938011afbbbf6301"
+      "66b46ea599d25de1c71676e2cd8e4ea9"
     ],
     [
       "Part2.Free.__proj__DoThen__item__act",
@@ -75,7 +51,7 @@
         "refinement_interpretation_Tm_refine_eaa2744753f30789855f30670ce233d3"
       ],
       0,
-      "2a09d7d2125be1ced5543e9859425f30"
+      "020aa3696998cfd44dde65be95f9559b"
     ],
     [
       "Part2.Free.__proj__DoThen__item__input",
@@ -92,7 +68,7 @@
         "token_correspondence_Part2.Free.__proj__Mkaction_class__item__input_of"
       ],
       0,
-      "daffdca25d161be85ccb54a8ecdb5970"
+      "b3542e637faacc246d1c9f93eccf80a3"
     ],
     [
       "Part2.Free.__proj__DoThen__item__continue",
@@ -107,7 +83,7 @@
         "refinement_interpretation_Tm_refine_eaa2744753f30789855f30670ce233d3"
       ],
       0,
-      "2206e77e70c3af8ca2e8d17da825e666"
+      "6e15b59a8452eb7f0f303efc8e70ee4d"
     ],
     [
       "Part2.Free.bind",
@@ -127,7 +103,7 @@
         "well_founded_ordering_on_codomain_Part2.Free.DoThen"
       ],
       0,
-      "e7f3072b124ccd5041120f21797f70ff"
+      "3f529d51f508f5f5aaf7e668020c481e"
     ],
     [
       "Part2.Free.equiv",
@@ -148,7 +124,7 @@
         "well_founded_ordering_on_codomain_Part2.Free.DoThen"
       ],
       0,
-      "098755ee98d286bc6e4063609591acb4"
+      "27681a776a4cc3362a417c2069949792"
     ],
     [
       "Part2.Free.equiv_refl",
@@ -188,7 +164,7 @@
         "well_founded_ordering_on_codomain_Part2.Free.DoThen"
       ],
       0,
-      "abfb6d68ec72e3c624ac2bbde8a184d2"
+      "ab9cd1863a3d55f24ab9138c6ba29c91"
     ],
     [
       "Part2.Free.equiv_sym",
@@ -234,7 +210,7 @@
         "well_founded_ordering_on_codomain_Part2.Free.DoThen"
       ],
       0,
-      "36a1b5cd393bf9831d8f05f9456ef64a"
+      "c9db15bab2f97b2d1fcca760736d53a9"
     ],
     [
       "Part2.Free.equiv_trans",
@@ -284,7 +260,7 @@
         "well_founded_ordering_on_codomain_Part2.Free.DoThen"
       ],
       0,
-      "b2ce8ea7dea96330ac1a28792f20534f"
+      "40b5710b89273f0b5ec01d6d9f457796"
     ],
     [
       "Part2.Free.right_identity",
@@ -303,7 +279,7 @@
         "projection_inverse_Part2.Free.Return_x", "typing_Part2.Free.return"
       ],
       0,
-      "5f965b2db7dbb7908ae59a5ea9fabda7"
+      "b50a0216de7c0abdc9d118f5eaceea16"
     ],
     [
       "Part2.Free.left_identity",
@@ -352,7 +328,7 @@
         "well_founded_ordering_on_codomain_Part2.Free.DoThen"
       ],
       0,
-      "5a915694fc5b356bbd06f02568574fa0"
+      "8e4896618697863f5d40fa5353affa5d"
     ],
     [
       "Part2.Free.assoc",
@@ -408,7 +384,7 @@
         "well_founded_ordering_on_codomain_Part2.Free.DoThen"
       ],
       0,
-      "49fd349d373969c7649821d6f9b475f8"
+      "b54667de3dfc07b278c938bc01ed4462"
     ],
     [
       "Part2.Free.read",
@@ -432,7 +408,7 @@
         "token_correspondence_Part2.Free.output_of", "unit_typing"
       ],
       0,
-      "11bb9574b46c74d1de158b3b0e4ed556"
+      "78a38b2af54a2bb2550ec639bb1d2da9"
     ],
     [
       "Part2.Free.write",
@@ -456,7 +432,7 @@
         "token_correspondence_Part2.Free.output_of"
       ],
       0,
-      "e998d57298081f6e2ed8696eabe793e4"
+      "382208cdaf0e69ed123e1343bd45e4e2"
     ],
     [
       "Part2.Free.interp",
@@ -497,7 +473,7 @@
         "well_founded_ordering_on_codomain_Part2.Free.DoThen"
       ],
       0,
-      "0c0171076fe9665176ecffee56f82122"
+      "21a634a9f795df860b468002f5dcb162"
     ],
     [
       "Part2.Free.interp_equiv",
@@ -561,7 +537,7 @@
         "well_founded_ordering_on_codomain_Part2.Free.DoThen"
       ],
       0,
-      "516117a9dc6edf2a245cb65fb3b4bbab"
+      "c94ba18e90bd55c882267bf5a148abea"
     ]
   ]
 ]

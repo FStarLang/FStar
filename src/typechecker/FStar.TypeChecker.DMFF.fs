@@ -294,7 +294,7 @@ let gen_wps_for_free
         U.mk_app c_lift2 (List.map S.as_arg [
           U.mk_app l_ite [S.as_arg (S.bv_to_name c)]
         ])
-      ) (Inr result_comp, None)
+      ) (Inr result_comp, None, false)
     ) (Some (U.residual_comp_of_comp result_comp))
   in
   let wp_if_then_else = register env (mk_lid "wp_if_then_else") wp_if_then_else in
@@ -683,15 +683,15 @@ and star_type' env t =
   | Tm_meta (t, m) ->
       mk (Tm_meta (star_type' env t, m))
 
-  | Tm_ascribed (e, (Inl t, None), something) ->
-      mk (Tm_ascribed (star_type' env e, (Inl (star_type' env t), None), something))
+  | Tm_ascribed (e, (Inl t, None, use_eq), something) ->
+      mk (Tm_ascribed (star_type' env e, (Inl (star_type' env t), None, use_eq), something))
 
-  | Tm_ascribed (e, (Inr c, None), something) ->
-      mk (Tm_ascribed (star_type' env e, (Inl (star_type' env (U.comp_result c)), None), something))  //AR: this should effectively be the same, the effect checking for c should have done someplace else?
+  | Tm_ascribed (e, (Inr c, None, use_eq), something) ->
+      mk (Tm_ascribed (star_type' env e, (Inl (star_type' env (U.comp_result c)), None, use_eq), something))  //AR: this should effectively be the same, the effect checking for c should have done someplace else?
       (*raise_err (Errors.Fatal_TermOutsideOfDefLanguage, (BU.format1 "Tm_ascribed is outside of the definition language: %s"
               (Print.term_to_string t)))*)
 
- | Tm_ascribed (_, (_, Some _), _) ->
+ | Tm_ascribed (_, (_, Some _, _), _) ->
       raise_err (Errors.Fatal_TermOutsideOfDefLanguage, (BU.format1 "Ascriptions with tactics are outside of the definition language: %s"
         (Print.term_to_string t)))
 
@@ -978,7 +978,7 @@ and infer (env: env) (e: term): nm * term * term =
       let u_body, u_rc_opt =
           let comp = trans_G env (U.comp_result comp) (is_monadic rc_opt) (SS.subst env.subst s_body) in
           (* TODO : consider removing this ascription *)
-          U.ascribe u_body (Inr comp, None),
+          U.ascribe u_body (Inr comp, None, false),
           Some (U.residual_comp_of_comp comp)
       in
 
@@ -1186,14 +1186,14 @@ and mk_match env e0 branches f =
     in
     let t1_star =  U.arrow [S.mk_binder <| S.new_bv None p_type] (S.mk_Total U.ktype0) in
     M t1,
-    mk (Tm_ascribed (s_e, (Inl t1_star, None), None)) ,
+    mk (Tm_ascribed (s_e, (Inl t1_star, None, false), None)) ,
     mk (Tm_match (u_e0, None, u_branches, None))
   end else begin
     let s_branches = List.map close_branch s_branches in
     let u_branches = List.map close_branch u_branches in
     let t1_star = t1 in
     N t1,
-    mk (Tm_ascribed (mk (Tm_match (s_e0, None, s_branches, None)), (Inl t1_star, None), None)),
+    mk (Tm_ascribed (mk (Tm_match (s_e0, None, s_branches, None)), (Inl t1_star, None, false), None)),
     mk (Tm_match (u_e0, None, u_branches, None))
   end
 

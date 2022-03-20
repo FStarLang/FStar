@@ -270,12 +270,14 @@ let subst_comp' s t =
       | GTotal (t, uopt) -> mk_GTotal' (subst' s t) (Option.map (subst_univ (fst s)) uopt)
       | Comp ct -> mk_Comp(subst_comp_typ' s ct)
 
-let subst_ascription' s asc =
-  let annot, topt = asc in
+let subst_ascription' s (asc:ascription) =
+  let annot, topt, use_eq = asc in
   let annot = match annot with
               | Inl t -> Inl (subst' s t)
               | Inr c -> Inr (subst_comp' s c) in
-  annot, U.map_opt topt (subst' s)
+  annot,
+  U.map_opt topt (subst' s),
+  use_eq
 
 let shift n s = match s with
     | DB(i, t) -> DB(i+n, t)
@@ -529,7 +531,7 @@ let set_use_range r t = subst' ([], SomeUseRange (Range.set_def_range r (Range.u
 let subst_comp s t = subst_comp' ([s], NoUseRange) t
 let subst_bqual s imp = subst_bqual' ([s], NoUseRange) imp
 let subst_aqual s imp = subst_aqual' ([s], NoUseRange) imp
-let subst_ascription s asc = subst_ascription' ([s], NoUseRange) asc
+let subst_ascription s (asc:ascription) = subst_ascription' ([s], NoUseRange) asc
 let subst_decreasing_order s dec = subst_dec_order' ([s], NoUseRange) dec
 let closing_subst (bs:binders) =
     List.fold_right (fun b (subst, n)  -> (NM(b.binder_bv, n)::subst, n+1)) bs ([], 0) |> fst
@@ -913,11 +915,12 @@ let rec deep_compress (t:term) : term =
     | Tm_meta(t, md) ->
       mk (Tm_meta(deep_compress t, deep_compress_meta md))
 
-and elim_ascription (tc, topt) =
+and elim_ascription (tc, topt, b) =
   (match tc with
    | Inl t -> Inl (deep_compress t)
    | Inr c -> Inr (deep_compress_comp c)),
-  map_opt topt deep_compress
+  map_opt topt deep_compress,
+  b
 
 and elim_rc (rc:residual_comp) : residual_comp = {
   residual_effect = rc.residual_effect;

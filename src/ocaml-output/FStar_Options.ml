@@ -206,8 +206,7 @@ let (add_light_off_file : Prims.string -> unit) =
         :: uu___1 in
     FStar_Compiler_Effect.op_Colon_Equals light_off_files uu___
 let (defaults : (Prims.string * option_val) Prims.list) =
-  [("__temp_no_proj", (List []));
-  ("__temp_fast_implicits", (Bool false));
+  [("__temp_fast_implicits", (Bool false));
   ("abort_on", (Int Prims.int_zero));
   ("admit_smt_queries", (Bool false));
   ("admit_except", Unset);
@@ -593,8 +592,6 @@ let (get_vcgen_optimize_bind_as_seq :
   fun uu___ -> lookup_opt "vcgen.optimize_bind_as_seq" (as_option as_string)
 let (get_verify_module : unit -> Prims.string Prims.list) =
   fun uu___ -> lookup_opt "verify_module" (as_list as_string)
-let (get___temp_no_proj : unit -> Prims.string Prims.list) =
-  fun uu___ -> lookup_opt "__temp_no_proj" (as_list as_string)
 let (get_version : unit -> Prims.bool) =
   fun uu___ -> lookup_opt "version" as_bool
 let (get_warn_default_effects : unit -> Prims.bool) =
@@ -962,7 +959,7 @@ let (interp_quake_arg : Prims.string -> (Prims.int * Prims.int * Prims.bool))
           let uu___ = ios f1 in let uu___1 = ios f2 in (uu___, uu___1, true)
         else failwith "unexpected value for --quake"
     | uu___ -> failwith "unexpected value for --quake"
-let (uu___407 : (((Prims.string -> unit) -> unit) * (Prims.string -> unit)))
+let (uu___406 : (((Prims.string -> unit) -> unit) * (Prims.string -> unit)))
   =
   let cb = FStar_Compiler_Util.mk_ref FStar_Pervasives_Native.None in
   let set1 f =
@@ -974,11 +971,11 @@ let (uu___407 : (((Prims.string -> unit) -> unit) * (Prims.string -> unit)))
     | FStar_Pervasives_Native.Some f -> f msg in
   (set1, call)
 let (set_option_warning_callback_aux : (Prims.string -> unit) -> unit) =
-  match uu___407 with
+  match uu___406 with
   | (set_option_warning_callback_aux1, option_warning_callback) ->
       set_option_warning_callback_aux1
 let (option_warning_callback : Prims.string -> unit) =
-  match uu___407 with
+  match uu___406 with
   | (set_option_warning_callback_aux1, option_warning_callback1) ->
       option_warning_callback1
 let (set_option_warning_callback : (Prims.string -> unit) -> unit) =
@@ -1296,9 +1293,6 @@ let rec (specs_with_types :
     (FStar_Getopt.noshort, "vcgen.optimize_bind_as_seq",
       (EnumStr ["off"; "without_type"; "with_type"]),
       "\n\t\tOptimize the generation of verification conditions, \n\t\t\tspecifically the construction of monadic `bind`,\n\t\t\tgenerating `seq` instead of `bind` when the first computation as a trivial post-condition.\n\t\t\tBy default, this optimization does not apply.\n\t\t\tWhen the `without_type` option is chosen, this imposes a cost on the SMT solver\n\t\t\tto reconstruct type information.\n\t\t\tWhen `with_type` is chosen, type information is provided to the SMT solver,\n\t\t\tbut at the cost of VC bloat, which may often be redundant.");
-    (FStar_Getopt.noshort, "__temp_no_proj",
-      (Accumulated (SimpleStr "module_name")),
-      "Don't generate projectors for this module");
     (FStar_Getopt.noshort, "__temp_fast_implicits", (Const (Bool true)),
       "Don't use this option yet");
     (118, "version",
@@ -1435,7 +1429,6 @@ let (settable : Prims.string -> Prims.bool) =
     | "tactic_trace_d" -> true
     | "tcnorm" -> true
     | "__temp_fast_implicits" -> true
-    | "__temp_no_proj" -> true
     | "timing" -> true
     | "trace_error" -> true
     | "ugly" -> true
@@ -1466,7 +1459,7 @@ let (settable_specs :
     (FStar_Compiler_List.filter
        (fun uu___ ->
           match uu___ with | (uu___1, x, uu___2, uu___3) -> settable x))
-let (uu___588 :
+let (uu___586 :
   (((unit -> FStar_Getopt.parse_cmdline_res) -> unit) *
     (unit -> FStar_Getopt.parse_cmdline_res)))
   =
@@ -1483,11 +1476,11 @@ let (uu___588 :
   (set1, call)
 let (set_error_flags_callback_aux :
   (unit -> FStar_Getopt.parse_cmdline_res) -> unit) =
-  match uu___588 with
+  match uu___586 with
   | (set_error_flags_callback_aux1, set_error_flags) ->
       set_error_flags_callback_aux1
 let (set_error_flags : unit -> FStar_Getopt.parse_cmdline_res) =
-  match uu___588 with
+  match uu___586 with
   | (set_error_flags_callback_aux1, set_error_flags1) -> set_error_flags1
 let (set_error_flags_callback :
   (unit -> FStar_Getopt.parse_cmdline_res) -> unit) =
@@ -1577,11 +1570,6 @@ let (should_verify_file : Prims.string -> Prims.bool) =
 let (module_name_eq : Prims.string -> Prims.string -> Prims.bool) =
   fun m1 ->
     fun m2 -> (FStar_String.lowercase m1) = (FStar_String.lowercase m2)
-let (dont_gen_projectors : Prims.string -> Prims.bool) =
-  fun m ->
-    let uu___ = get___temp_no_proj () in
-    FStar_Compiler_Effect.op_Bar_Greater uu___
-      (FStar_Compiler_List.existsb (module_name_eq m))
 let (should_print_message : Prims.string -> Prims.bool) =
   fun m ->
     let uu___ = should_verify m in if uu___ then m <> "Prims" else false
@@ -1772,11 +1760,6 @@ let (parse_settings :
                      FStar_Compiler_Effect.op_Bar_Greater uu___2
                        (FStar_Compiler_List.map parse_one_setting)) s1)) in
     FStar_Compiler_Effect.op_Bar_Greater uu___ FStar_Compiler_List.rev
-let (__temp_no_proj : Prims.string -> Prims.bool) =
-  fun s ->
-    let uu___ = get___temp_no_proj () in
-    FStar_Compiler_Effect.op_Bar_Greater uu___
-      (FStar_Compiler_List.contains s)
 let (__temp_fast_implicits : unit -> Prims.bool) =
   fun uu___ -> lookup_opt "__temp_fast_implicits" as_bool
 let (admit_smt_queries : unit -> Prims.bool) =
