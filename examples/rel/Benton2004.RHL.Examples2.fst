@@ -37,7 +37,7 @@ let lemma_included_helper ()
            included phi2 (gsubst (gsubst phi2 i Left (exp_to_gexp asi_e Left)) i Right (exp_to_gexp asi_e Right)))
   = ()
 
-#set-options "--max_fuel 3 --max_ifuel 0 --initial_fuel 3 --z3rlimit_factor 2"
+#set-options "--max_fuel 3 --max_ifuel 0 --initial_fuel 3 --z3rlimit_factor 4"
 
 let proof () : Lemma
   (related l r (phi ()) (phi ()))
