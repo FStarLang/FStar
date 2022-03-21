@@ -1,22 +1,29 @@
 HINTS_ENABLED?=--use_hints
-# 271: theory symbols in smt patters
-WARN_ERROR=--warn_error -271
+WARN_ERROR=
 OTHERFLAGS+=$(WARN_ERROR)
 
 ifdef Z3
 OTHERFLAGS+=--smt $(Z3)
 endif
 
+# Set ADMIT=1 to admit queries
+ADMIT ?=
+MAYBE_ADMIT = $(if $(ADMIT),--admit_smt_queries true)
+
 ifdef FSTAR_HOME
-FSTAR_ALWAYS=$(shell cd $(FSTAR_HOME) && pwd)/bin/fstar.exe $(OTHERFLAGS) $(HINTS_ENABLED)
-FSTAR=$(FSTAR_ALWAYS)
+  FSTAR_HOME := $(realpath $(FSTAR_HOME))
+  ifeq ($(OS),Windows_NT)
+    FSTAR_HOME := $(shell cygpath -m $(FSTAR_HOME))
+  endif
+  FSTAR_EXE?=$(FSTAR_HOME)/bin/fstar.exe
 else
 # FSTAR_HOME not defined, assume fstar.exe reachable from PATH
-FSTAR=fstar.exe $(OTHERFLAGS) $(HINTS_ENABLED)
+FSTAR_EXE?=fstar.exe
 endif
+FSTAR=$(FSTAR_EXE) $(OTHERFLAGS) $(MAYBE_ADMIT) $(HINTS_ENABLED) $(WITH_CACHE_DIR)
 
 # Benchmarking wrappers are enabled by setting BENCHMARK_CMD, for example:
-#  make -C examples/micro-benchmarks BENCHMARK_CMD=time
+#  make -C tests/micro-benchmarks BENCHMARK_CMD=time
 #  make -C ulib benchmark BENCHMARK_CMD='perf stat -x,'
 #
 # This will utilize the BENCHMARK_CMD to collect data on the executed commands

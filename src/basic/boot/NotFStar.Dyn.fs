@@ -13,7 +13,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-module FStar.Dyn
+module FStar.Compiler.Dyn
 
 type dyn = | Dyn of obj
 

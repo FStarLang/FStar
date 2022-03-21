@@ -16,19 +16,22 @@
 #light "off"
 // (c) Microsoft Corporation. All rights reserved
 module FStar.Syntax.InstFV
-open FStar.ST
-open FStar.All
+open FStar.Pervasives
+open FStar.Compiler.Effect
+open FStar.Compiler.Effect
 open FStar.Syntax.Syntax
 open FStar.Ident
-open FStar.Util
+open FStar.Compiler.Util
+open FStar.Compiler
+
 module S = FStar.Syntax.Syntax
 module SS = FStar.Syntax.Subst
-module U = FStar.Util
+module U = FStar.Compiler.Util
 type inst_t = list<(lident * universes)>
 
 
 
-let mk t s = S.mk s None t.pos
+let mk t s = S.mk s t.pos
 
 let rec inst (s:term -> fv -> term) t =
     let t = SS.compress t in
@@ -69,24 +72,22 @@ let rec inst (s:term -> fv -> term) t =
       | Tm_app(t, args) ->
         mk (Tm_app(inst s t, inst_args s args))
 
-      | Tm_match(t, pats) ->
+      | Tm_match(t, asc_opt, pats, lopt) ->
         let pats = pats |> List.map (fun (p, wopt, t) ->
             let wopt = match wopt with
                 | None ->   None
                 | Some w -> Some (inst s w) in
             let t = inst s t in
             (p, wopt, t)) in
-        mk (Tm_match(inst s t, pats))
+        let asc_opt =
+          match asc_opt with
+          | None -> None
+          | Some (b, asc) ->
+            Some (inst_binder s b, inst_ascription s asc) in
+        mk (Tm_match(inst s t, asc_opt, pats, inst_lcomp_opt s lopt))
 
       | Tm_ascribed(t1, asc, f) ->
-        let inst_asc (annot, topt) =
-            let topt = FStar.Util.map_opt topt (inst s) in
-            let annot = match annot with
-                | Inl t -> Inl (inst s t)
-                | Inr c -> Inr (inst_comp s c) in
-            annot, topt
-        in
-        mk (Tm_ascribed(inst s t1, inst_asc asc, f))
+        mk (Tm_ascribed(inst s t1, inst_ascription s asc, f))
 
       | Tm_let(lbs, t) ->
         let lbs = fst lbs, snd lbs |> List.map (fun lb -> {lb with lbtyp=inst s lb.lbtyp; lbdef=inst s lb.lbdef}) in
@@ -101,7 +102,12 @@ let rec inst (s:term -> fv -> term) t =
       | Tm_meta(t, tag) ->
         mk (Tm_meta(inst s t, tag))
 
-and inst_binders s bs = bs |> List.map (fun (x, imp) -> {x with sort=inst s x.sort}, imp)
+and inst_binder s b =
+  { b with
+    binder_bv = { b.binder_bv with sort = inst s b.binder_bv.sort };
+    binder_attrs = b.binder_attrs |> List.map (inst s) }
+
+and inst_binders s bs = bs |> List.map (inst_binder s)
 
 and inst_args s args = args |> List.map (fun (a, imp) -> inst s a, imp)
 
@@ -111,14 +117,27 @@ and inst_comp s c = match c.n with
     | Comp ct -> let ct = {ct with result_typ=inst s ct.result_typ;
                                    effect_args=inst_args s ct.effect_args;
                                    flags=ct.flags |> List.map (function
-                                        | DECREASES t -> DECREASES (inst s t)
+                                        | DECREASES dec_order ->
+                                          DECREASES (inst_decreases_order s dec_order)
                                         | f -> f)} in
                  S.mk_Comp ct
 
+and inst_decreases_order s = function
+    | Decreases_lex l -> Decreases_lex (l |> List.map (inst s))
+    | Decreases_wf (rel, e) -> Decreases_wf (inst s rel, inst s e)
 
 and inst_lcomp_opt s l = match l with
     | None -> None
-    | Some rc -> Some ({rc with residual_typ = FStar.Util.map_opt rc.residual_typ (inst s)})
+    | Some rc -> Some ({rc with residual_typ = FStar.Compiler.Util.map_opt rc.residual_typ (inst s)})
+
+and inst_ascription s (asc:ascription) =
+  let annot, topt, use_eq = asc in
+  let annot =
+    match annot with
+    | Inl t -> Inl (inst s t)
+    | Inr c -> Inr (inst_comp s c) in
+  let topt = FStar.Compiler.Util.map_opt topt (inst s) in
+  annot, topt, use_eq
 
 let instantiate i t = match i with
     | [] -> t

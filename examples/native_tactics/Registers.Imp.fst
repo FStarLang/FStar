@@ -66,7 +66,7 @@ let eval p = let rm = eval' (Seq p) (R.create 0) in R.sel rm 0
 irreducible
 let unfold_defs = ()
 
-[@unfold_defs]
+[@@unfold_defs]
 let reg x = x
 
 let equiv p1 p2 =
@@ -75,7 +75,7 @@ let equiv p1 p2 =
      forall (r:reg_t). R.sel (eval' (Seq p1) rm) r 
                == R.sel (eval' (Seq p2) rm) r)
 
-[@unfold_defs]
+[@@unfold_defs]
 let all_equiv (rm1 rm2:regmap) =
     let rec aux (r:reg_t) =
       R.sel rm1 r == R.sel rm2 r /\
@@ -84,7 +84,7 @@ let all_equiv (rm1 rm2:regmap) =
     in
     aux 10
 
-[@unfold_defs]
+[@@unfold_defs]
 let equiv_norm p1 p2 =
     (forall rm. 
      let rm = R.eta_map 10 rm in
@@ -94,35 +94,35 @@ let equiv_norm p1 p2 =
 ////////////////////////////////////////////////////////////////////////////////
 // Sample programs
 ////////////////////////////////////////////////////////////////////////////////
-[@unfold_defs]
+[@@unfold_defs]
 let add1 x y : prog = [
     Const x (reg 0);
     Const y (reg 1);
     Add (reg 0) (reg 1) (reg 0);
 ]
 
-[@unfold_defs]
+[@@unfold_defs]
 let add2 x y : prog = [
     Const y (reg 1);
     Const x (reg 0);
     Add (reg 0) (reg 1) (reg 0);
 ]
     
-[@unfold_defs]
+[@@unfold_defs]
 let add3 x y : prog = [
     Const x (reg 0);
     Const y (reg 1);
     Add (reg 1) (reg 0) (reg 0);
 ]
     
-[@unfold_defs]
+[@@unfold_defs]
 let add4 x y : prog = [
     Const y (reg 1);
     Const x (reg 0);
     Add (reg 1) (reg 0) (reg 0);
 ]
 
-[@unfold_defs]
+[@@unfold_defs]
 let x_times_42 x : prog = [
     Const x (reg 0);
     Add (reg 0) (reg 0) (reg 1); //2x
@@ -137,7 +137,7 @@ let x_times_42 x : prog = [
     Sub (reg 0) (reg 1) (reg 0); //42x
 ]
 
-[@unfold_defs]
+[@@unfold_defs]
 let long_zero x : prog =
     let l = x_times_42 x in
     let l = l `L.append` l in
@@ -175,7 +175,7 @@ let _ = norm_assert (forall x y. equiv_norm (long_zero x) (long_zero y))
 // let _ = norm_assert (forall x. eval (x_times_42 x) == 42 * x)
 
 
-// (* All of these identies are quite easy by normalization. *)
+// (* All of these identities are quite easy by normalization. *)
 // let _ = norm_assert (forall x y. equiv_norm (add1 x y) (add2 x y))
 // let _ = norm_assert (forall x y. equiv_norm (add1 x y) (add3 x y))
 // let _ = norm_assert (forall x y. equiv_norm (add1 x y) (add4 x y))
@@ -185,16 +185,16 @@ let _ = norm_assert (forall x y. equiv_norm (long_zero x) (long_zero y))
 
 
 // (* Without normalizing, they require fuel, or else fail *)
-// [@expect_failure] let _ = assert (forall x y. equiv (add1 x y) (add2 x y))
-// [@expect_failure] let _ = assert (forall x y. equiv (add1 x y) (add3 x y))
-// [@expect_failure] let _ = assert (forall x y. equiv (add1 x y) (add4 x y))
-// [@expect_failure] let _ = assert (forall x y. equiv (add2 x y) (add3 x y))
-// [@expect_failure] let _ = assert (forall x y. equiv (add2 x y) (add4 x y))
-// [@expect_failure] let _ = assert (forall x y. equiv (add3 x y) (add4 x y))
+// [@@expect_failure] let _ = assert (forall x y. equiv (add1 x y) (add2 x y))
+// [@@expect_failure] let _ = assert (forall x y. equiv (add1 x y) (add3 x y))
+// [@@expect_failure] let _ = assert (forall x y. equiv (add1 x y) (add4 x y))
+// [@@expect_failure] let _ = assert (forall x y. equiv (add2 x y) (add3 x y))
+// [@@expect_failure] let _ = assert (forall x y. equiv (add2 x y) (add4 x y))
+// [@@expect_failure] let _ = assert (forall x y. equiv (add3 x y) (add4 x y))
 
 // (* poly5 x = x^5 + x^4 + x^3 + x^2 + x^1 + 1 *)
 
-// [@unfold_defs]
+// [@@unfold_defs]
 // let poly5 x : prog = [
 //     Const 1 (reg 0);
 //     Const x (reg 1);
@@ -221,7 +221,7 @@ let _ = norm_assert (forall x y. equiv_norm (long_zero x) (long_zero y))
 // #reset-options "--max_fuel 0"
 
 // (* A different way of computing it *)
-// [@unfold_defs]
+// [@@unfold_defs]
 // let poly5' x : prog = [
 //     Const 1 (reg 0);
 //     Const x (reg 1);
@@ -258,7 +258,7 @@ let _ = norm_assert (forall x y. equiv_norm (long_zero x) (long_zero y))
 // // open FStar.Tactics.CanonCommSemiring
 // // open FStar.Algebra.CommMonoid
 
-// // [@expect_failure]
+// // [@@expect_failure]
 // // let _ = assert (forall x. poly5 x `equiv` poly5' x)
 
 // // #set-options "--z3rlimit 10"

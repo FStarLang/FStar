@@ -34,6 +34,7 @@ type token =
   | SEMICOLON_SEMICOLON
   | SEMICOLON
   | RPAREN
+  | RETURNS
   | REQUIRES
   | REIFY
   | REIFIABLE
@@ -53,8 +54,11 @@ type token =
   | PRAGMA_RESTART_SOLVER
   | PRAGMA_RESET_OPTIONS
   | PRAGMA_PUSH_OPTIONS
+  | PRAGMA_PRINT_EFFECTS_GRAPH
   | PRAGMA_POP_OPTIONS
   | PRAGMALIGHT
+  | POLYMONADIC_SUBCOMP
+  | POLYMONADIC_BIND
   | PIPE_RIGHT
   | PERCENT_LBRACK
   | OP_MIXFIX_ASSIGNMENT of (string)
@@ -87,12 +91,18 @@ type token =
   | LENS_PAREN_RIGHT
   | LENS_PAREN_LEFT
   | LBRACK_BAR
+  | LBRACK_AT_AT_AT
+  | LBRACK_AT_AT
   | LBRACK_AT
   | LBRACK
+  | LBRACE_COLON_WELL_FOUNDED
   | LBRACE_COLON_PATTERN
+  | LBRACE_BAR
   | LBRACE
+  | LAYERED_EFFECT
   | LARROW
   | IRREDUCIBLE
+  | INTRO
   | INT8 of (string * bool)
   | INT64 of (string * bool)
   | INT32 of (string * bool)
@@ -111,8 +121,6 @@ type token =
   | HASH
   | FUNCTION
   | FUN
-  | FSDOC_STANDALONE of (fsdoc)
-  | FSDOC of (fsdoc)
   | FRIEND
   | FORALL
   | FALSE
@@ -123,6 +131,7 @@ type token =
   | ENSURES
   | END
   | ELSE
+  | ELIM
   | EFFECT
   | DOT_LPAREN
   | DOT_LENS_PAREN_LEFT
@@ -132,6 +141,7 @@ type token =
   | DOLLAR
   | DISJUNCTION
   | DEFAULT
+  | DECREASES
   | CONJUNCTION
   | COMMA
   | COLON_EQUALS
@@ -144,6 +154,7 @@ type token =
   | BY
   | BEGIN
   | BAR_RBRACK
+  | BAR_RBRACE
   | BAR
   | BANG_LBRACE
   | BACKTICK_PERC
@@ -155,7 +166,6 @@ type token =
   | ASSERT
   | AND
   | AMP
-  | ABSTRACT
 type tokenId = 
     | TOKEN_WITH
     | TOKEN_WHEN
@@ -189,6 +199,7 @@ type tokenId =
     | TOKEN_SEMICOLON_SEMICOLON
     | TOKEN_SEMICOLON
     | TOKEN_RPAREN
+    | TOKEN_RETURNS
     | TOKEN_REQUIRES
     | TOKEN_REIFY
     | TOKEN_REIFIABLE
@@ -208,8 +219,11 @@ type tokenId =
     | TOKEN_PRAGMA_RESTART_SOLVER
     | TOKEN_PRAGMA_RESET_OPTIONS
     | TOKEN_PRAGMA_PUSH_OPTIONS
+    | TOKEN_PRAGMA_PRINT_EFFECTS_GRAPH
     | TOKEN_PRAGMA_POP_OPTIONS
     | TOKEN_PRAGMALIGHT
+    | TOKEN_POLYMONADIC_SUBCOMP
+    | TOKEN_POLYMONADIC_BIND
     | TOKEN_PIPE_RIGHT
     | TOKEN_PERCENT_LBRACK
     | TOKEN_OP_MIXFIX_ASSIGNMENT
@@ -242,12 +256,18 @@ type tokenId =
     | TOKEN_LENS_PAREN_RIGHT
     | TOKEN_LENS_PAREN_LEFT
     | TOKEN_LBRACK_BAR
+    | TOKEN_LBRACK_AT_AT_AT
+    | TOKEN_LBRACK_AT_AT
     | TOKEN_LBRACK_AT
     | TOKEN_LBRACK
+    | TOKEN_LBRACE_COLON_WELL_FOUNDED
     | TOKEN_LBRACE_COLON_PATTERN
+    | TOKEN_LBRACE_BAR
     | TOKEN_LBRACE
+    | TOKEN_LAYERED_EFFECT
     | TOKEN_LARROW
     | TOKEN_IRREDUCIBLE
+    | TOKEN_INTRO
     | TOKEN_INT8
     | TOKEN_INT64
     | TOKEN_INT32
@@ -266,8 +286,6 @@ type tokenId =
     | TOKEN_HASH
     | TOKEN_FUNCTION
     | TOKEN_FUN
-    | TOKEN_FSDOC_STANDALONE
-    | TOKEN_FSDOC
     | TOKEN_FRIEND
     | TOKEN_FORALL
     | TOKEN_FALSE
@@ -278,6 +296,7 @@ type tokenId =
     | TOKEN_ENSURES
     | TOKEN_END
     | TOKEN_ELSE
+    | TOKEN_ELIM
     | TOKEN_EFFECT
     | TOKEN_DOT_LPAREN
     | TOKEN_DOT_LENS_PAREN_LEFT
@@ -287,6 +306,7 @@ type tokenId =
     | TOKEN_DOLLAR
     | TOKEN_DISJUNCTION
     | TOKEN_DEFAULT
+    | TOKEN_DECREASES
     | TOKEN_CONJUNCTION
     | TOKEN_COMMA
     | TOKEN_COLON_EQUALS
@@ -299,6 +319,7 @@ type tokenId =
     | TOKEN_BY
     | TOKEN_BEGIN
     | TOKEN_BAR_RBRACK
+    | TOKEN_BAR_RBRACE
     | TOKEN_BAR
     | TOKEN_BANG_LBRACE
     | TOKEN_BACKTICK_PERC
@@ -310,14 +331,12 @@ type tokenId =
     | TOKEN_ASSERT
     | TOKEN_AND
     | TOKEN_AMP
-    | TOKEN_ABSTRACT
     | TOKEN_end_of_input
     | TOKEN_error
 type nonTerminalId = 
     | NONTERM__startwarn_error_list
     | NONTERM__startterm
     | NONTERM__startinputFragment
-    | NONTERM_option_FSDOC_
     | NONTERM_option___anonymous_1_
     | NONTERM_option___anonymous_2_
     | NONTERM_option___anonymous_5_
@@ -327,33 +346,34 @@ type nonTerminalId =
     | NONTERM_option_ascribeKind_
     | NONTERM_option_ascribeTyp_
     | NONTERM_option_fsTypeArgs_
+    | NONTERM_option_match_returning_
     | NONTERM_option_pair_hasSort_simpleTerm__
     | NONTERM_option_string_
     | NONTERM_option_term_
     | NONTERM_boption_SQUIGGLY_RARROW_
     | NONTERM_boption___anonymous_0_
     | NONTERM_loption_separated_nonempty_list_COMMA_appTerm__
-    | NONTERM_loption_separated_nonempty_list_SEMICOLON_lidentOrOperator__
+    | NONTERM_loption_separated_nonempty_list_SEMICOLON_ident__
     | NONTERM_loption_separated_nonempty_list_SEMICOLON_tuplePattern__
     | NONTERM_list___anonymous_10_
     | NONTERM_list___anonymous_4_
     | NONTERM_list_argTerm_
     | NONTERM_list_atomicTerm_
     | NONTERM_list_attr_letbinding_
+    | NONTERM_list_calcStep_
     | NONTERM_list_constructorDecl_
     | NONTERM_list_decl_
     | NONTERM_list_decoration_
     | NONTERM_list_multiBinder_
-    | NONTERM_nonempty_list_aqualified_lident__
-    | NONTERM_nonempty_list_aqualified_lidentOrUnderscore__
+    | NONTERM_nonempty_list_aqualifiedWithAttrs_lident__
+    | NONTERM_nonempty_list_aqualifiedWithAttrs_lidentOrUnderscore__
     | NONTERM_nonempty_list_atomicPattern_
     | NONTERM_nonempty_list_atomicTerm_
     | NONTERM_nonempty_list_atomicUniverse_
-    | NONTERM_nonempty_list_calcStep_
     | NONTERM_nonempty_list_dotOperator_
     | NONTERM_nonempty_list_patternOrMultibinder_
     | NONTERM_separated_nonempty_list_AND_letbinding_
-    | NONTERM_separated_nonempty_list_AND_pair_option_FSDOC__typeDecl__
+    | NONTERM_separated_nonempty_list_AND_typeDecl_
     | NONTERM_separated_nonempty_list_BAR_tuplePattern_
     | NONTERM_separated_nonempty_list_COMMA_appTerm_
     | NONTERM_separated_nonempty_list_COMMA_atomicTerm_
@@ -363,7 +383,7 @@ type nonTerminalId =
     | NONTERM_separated_nonempty_list_DISJUNCTION_conjunctivePat_
     | NONTERM_separated_nonempty_list_SEMICOLON_appTerm_
     | NONTERM_separated_nonempty_list_SEMICOLON_effectDecl_
-    | NONTERM_separated_nonempty_list_SEMICOLON_lidentOrOperator_
+    | NONTERM_separated_nonempty_list_SEMICOLON_ident_
     | NONTERM_separated_nonempty_list_SEMICOLON_tuplePattern_
     | NONTERM_inputFragment
     | NONTERM_pragma
@@ -383,13 +403,16 @@ type nonTerminalId =
     | NONTERM_newEffect
     | NONTERM_effectRedefinition
     | NONTERM_effectDefinition
+    | NONTERM_layeredEffectDefinition
     | NONTERM_effectDecl
     | NONTERM_subEffect
+    | NONTERM_polymonadic_bind
+    | NONTERM_polymonadic_subcomp
     | NONTERM_qualifier
     | NONTERM_maybeFocus
     | NONTERM_letqualifier
     | NONTERM_aqual
-    | NONTERM_aqualUniverses
+    | NONTERM_binderAttributes
     | NONTERM_disjunctivePattern
     | NONTERM_tuplePattern
     | NONTERM_constructorPattern
@@ -399,8 +422,8 @@ type nonTerminalId =
     | NONTERM_binder
     | NONTERM_multiBinder
     | NONTERM_binders
-    | NONTERM_aqualified_lident_
-    | NONTERM_aqualified_lidentOrUnderscore_
+    | NONTERM_aqualifiedWithAttrs_lident_
+    | NONTERM_aqualifiedWithAttrs_lidentOrUnderscore_
     | NONTERM_qlident
     | NONTERM_quident
     | NONTERM_path_lident_
@@ -419,7 +442,10 @@ type nonTerminalId =
     | NONTERM_ascribeKind
     | NONTERM_kind
     | NONTERM_term
+    | NONTERM_match_returning
     | NONTERM_noSeqTerm
+    | NONTERM_singleBinder
+    | NONTERM_calcRel
     | NONTERM_calcStep
     | NONTERM_typ
     | NONTERM_trigger
@@ -441,7 +467,7 @@ type nonTerminalId =
     | NONTERM_tmEqWith_tmRefinement_
     | NONTERM_tmNoEqWith_appTerm_
     | NONTERM_tmNoEqWith_tmRefinement_
-    | NONTERM_binop
+    | NONTERM_binop_name
     | NONTERM_tmEqNoRefinement
     | NONTERM_tmEq
     | NONTERM_tmNoEq
@@ -470,6 +496,7 @@ type nonTerminalId =
     | NONTERM_warn_error
     | NONTERM_flag
     | NONTERM_range
+    | NONTERM_string
     | NONTERM_some_fsTypeArgs_
     | NONTERM_right_flexible_list_SEMICOLON_fieldPattern_
     | NONTERM_right_flexible_list_SEMICOLON_noSeqTerm_

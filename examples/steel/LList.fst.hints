@@ -1,0 +1,97 @@
+[
+  "|'æ\"8S·žž³¥\u0015•\u0011pa",
+  [
+    [
+      "LList.datas",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_1086dd6f10123e0e90960d84dd8cb06b_1",
+        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "fuel_guarded_inversion_Prims.list",
+        "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
+      ],
+      0,
+      "68a7027bd72d654fe0a157d4a0c610ed"
+    ],
+    [
+      "LList.new_llist",
+      1,
+      2,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_LList.datas.fuel_instrumented", "@query",
+        "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Nil",
+        "data_typing_intro_Prims.Nil@tok",
+        "equation_FStar.Pervasives.Native.snd",
+        "equation_Steel.Effect.Common.true_p",
+        "equation_with_fuel_LList.datas.fuel_instrumented",
+        "kinding_Prims.list@tok",
+        "proj_equation_FStar.Pervasives.Native.Mktuple2__2",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
+        "projection_inverse_Prims.Cons_a",
+        "projection_inverse_Prims.Cons_hd",
+        "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a",
+        "true_interp",
+        "typing_FStar.Pervasives.Native.__proj__Mktuple2__item___2",
+        "typing_LList.Invariant.cell", "typing_LList.Invariant.t"
+      ],
+      0,
+      "cbea64da08aad92606f4e49f87bf1f67"
+    ],
+    [
+      "LList.push",
+      1,
+      2,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_LList.datas.fuel_instrumented",
+        "@fuel_irrelevance_LList.datas.fuel_instrumented", "@query",
+        "constructor_distinct_Prims.Cons",
+        "equation_FStar.Pervasives.Native.snd", "equation_LList.Invariant.t",
+        "equation_Steel.Effect.Common.true_p",
+        "equation_with_fuel_LList.datas.fuel_instrumented",
+        "fuel_guarded_inversion_Steel.Effect.Common.vprop",
+        "kinding_Prims.list@tok",
+        "proj_equation_FStar.Pervasives.Native.Mktuple2__2",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
+        "projection_inverse_Prims.Cons_a",
+        "projection_inverse_Prims.Cons_hd",
+        "projection_inverse_Prims.Cons_tl", "true_interp",
+        "typing_FStar.Pervasives.Native.__proj__Mktuple2__item___2",
+        "typing_LList.Invariant.cell", "typing_LList.Invariant.llist",
+        "typing_LList.Invariant.t"
+      ],
+      0,
+      "3f25cd435c78e637b3418d128dee3616"
+    ],
+    [
+      "LList.pop",
+      1,
+      2,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_Steel.Effect.Common.hp_of.fuel_instrumented",
+        "@fuel_irrelevance_Steel.Effect.Common.hp_of.fuel_instrumented",
+        "@query", "data_elim_Prims.Cons", "disc_equation_Prims.Cons",
+        "equation_FStar.List.Tot.Base.hd",
+        "equation_FStar.List.Tot.Base.tail",
+        "equation_FStar.List.Tot.Base.tl",
+        "equation_Steel.Effect.Common.true_p",
+        "fuel_guarded_inversion_Prims.list",
+        "fuel_guarded_inversion_Steel.Effect.Common.vprop",
+        "lemma_FStar.Ghost.reveal_hide", "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_f4083c75d91d987991022631a49dd534",
+        "true_interp", "typing_LList.Invariant.cell",
+        "typing_LList.Invariant.llist"
+      ],
+      0,
+      "ba46728593785dd949d4fd9c1766bf1f"
+    ]
+  ]
+]

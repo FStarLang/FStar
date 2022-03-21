@@ -184,8 +184,8 @@ let typing_extensional g g' e = context_invariance e g g'
 val substitution_preserves_typing : x:int -> e:exp -> v:exp ->
       g:env{Some? (typing empty v) &&
             Some? (typing (extend g x (Some?.v (typing empty v))) e)} ->
-      Tot (u:unit{typing g (subst x v e) ==
-                  typing (extend g x (Some?.v (typing empty v))) e})
+      Lemma (typing g (subst x v e) ==
+             typing (extend g x (Some?.v (typing empty v))) e)
 let rec substitution_preserves_typing x e v g =
   let Some t_x = typing empty v in
   let gx = extend g x t_x in
@@ -217,7 +217,7 @@ let rec substitution_preserves_typing x e v g =
         substitution_preserves_typing x e1 v gy)
 
 val preservation : e:exp{Some? (typing empty e) /\ Some? (step e)} ->
-      Tot (u:unit{typing empty (Some?.v (step e)) == typing empty e})
+      Lemma (typing empty (Some?.v (step e)) == typing empty e)
 let rec preservation e =
   match e with
   | EApp e1 e2 ->

@@ -16,14 +16,15 @@
 #light "off"
 
 module FStar.SMTEncoding.Z3
-open FStar.ST
-open FStar.Exn
-open FStar.All
+open FStar.Compiler.Effect
+open FStar.Compiler.List
 open FStar
+open FStar.Compiler
 open FStar.SMTEncoding.Term
 open FStar.BaseTypes
-open FStar.Util
-module BU = FStar.Util
+open FStar.Compiler.Util
+
+module BU = FStar.Compiler.Util
 
 (****************************************************************************)
 (* Z3 Specifics                                                             *)
@@ -212,7 +213,12 @@ let new_z3proc id cmd_and_args =
 
 let new_z3proc_with_id =
     let ctr = BU.mk_ref (-1) in
-    (fun cmd_and_args -> new_z3proc (BU.format1 "bg-%s" (incr ctr; !ctr |> string_of_int)) cmd_and_args)
+    (fun cmd_and_args ->
+      let p = new_z3proc (BU.format1 "bg-%s" (incr ctr; !ctr |> string_of_int)) cmd_and_args in
+      let reply = BU.ask_process p "(echo \"Test\")\n(echo \"Done!\")\n" (fun _ -> "Killed") in
+      if reply = "Test\n"
+      then p
+      else failwith (BU.format1 "Failed to start and test Z3 process, expected output \"Test\" got \"%s\"" reply))
 
 type bgproc = {
     ask:      string -> string;
@@ -242,25 +248,44 @@ let bg_z3_proc =
       the_z3proc_ask_count := 0 in
     let z3proc () =
       if !the_z3proc = None then make_new_z3_proc (z3_cmd_and_args ());
-      must (!the_z3proc) in
+      must (!the_z3proc)
+    in
     let ask input =
         incr the_z3proc_ask_count;
         let kill_handler () = "\nkilled\n" in
-        BU.ask_process (z3proc ()) input kill_handler in
+        BU.ask_process (z3proc ()) input kill_handler
+    in
+    let maybe_kill_z3proc () =
+      if !the_z3proc <> None then begin
+         BU.kill_process (must (!the_z3proc));
+         the_z3proc := None
+      end
+    in
     let refresh () =
         let next_params = z3_cmd_and_args () in
         let old_params = must (!the_z3proc_params) in
-        if (Options.log_queries()) || (!the_z3proc_ask_count > 0) || (not (old_params = next_params)) then begin
-          if (Options.query_stats()) && (not (!the_z3proc = None)) then
-             BU.print3 "Refreshing the z3proc (ask_count=%s old=[%s] new=[%s]) \n" (BU.string_of_int !the_z3proc_ask_count) (cmd_and_args_to_string old_params) (cmd_and_args_to_string next_params);
-          BU.kill_process (z3proc ());
+        if Options.log_queries() ||
+           (!the_z3proc_ask_count > 0) ||
+           not (old_params = next_params)
+        then begin
+          maybe_kill_z3proc();
+          if Options.query_stats()
+          then begin
+             BU.print3 "Refreshing the z3proc (ask_count=%s old=[%s] new=[%s]) \n"
+               (BU.string_of_int !the_z3proc_ask_count)
+               (cmd_and_args_to_string old_params)
+               (cmd_and_args_to_string next_params)
+          end;
           make_new_z3_proc next_params
-        end ;
-        query_logging.close_log() in
+        end;
+        query_logging.close_log()
+    in
     let restart () =
+        maybe_kill_z3proc();
         query_logging.close_log();
         let next_params = z3_cmd_and_args () in
-        make_new_z3_proc next_params in
+        make_new_z3_proc next_params
+    in
     let x : list<unit> = [] in
     BU.mk_ref ({ask = BU.with_monitor x ask;
                 refresh = BU.with_monitor x refresh;
@@ -379,7 +404,7 @@ let doZ3Exe (log_file:_) (r:Range.range) (fresh:bool) (input:string) (label_mess
     let reason_unknown = BU.map_opt smt_output.smt_reason_unknown (fun x ->
         let ru = String.concat " " x in
         if BU.starts_with ru "(:reason-unknown \""
-        then let reason = FStar.Util.substring_from ru (String.length "(:reason-unknown \"" ) in
+        then let reason = FStar.Compiler.Util.substring_from ru (String.length "(:reason-unknown \"" ) in
              let res = String.substring reason 0 (String.length reason - 2) in //it ends with '")'
              res
         else ru) in
@@ -422,11 +447,6 @@ let z3_options = BU.mk_ref
 let set_z3_options opts =
     z3_options := opts
 
-type job_t<'a> = {
-    job:unit -> 'a;
-    callback: 'a -> unit
-}
-
 type z3result = {
       z3result_status      : z3status;
       z3result_time        : int;
@@ -434,10 +454,6 @@ type z3result = {
       z3result_query_hash  : option<string>;
       z3result_log_file    : option<string>
 }
-
-type z3job = job_t<z3result>
-
-let run_job j = j.callback <| j.job ()
 
 let init () =
     (* A no-op now that there's no concurrency *)
@@ -567,13 +583,10 @@ let mk_input fresh theory =
     in
     r, hash, log_file_name
 
-type cb = z3result -> unit
-
 let cache_hit
     (log_file:option<string>)
     (cache:option<string>)
-    (qhash:option<string>)
-    (cb:cb) =
+    (qhash:option<string>) : option<z3result> =
     if Options.use_hints() && Options.use_hint_hashes() then
         match qhash with
         | Some (x) when qhash = cache ->
@@ -586,22 +599,31 @@ let cache_hit
               z3result_query_hash = qhash;
               z3result_log_file = log_file
             } in
-            cb result;
-            true
+            Some result
         | _ ->
-            false
+            None
     else
-        false
+        None
 
 let z3_job (log_file:_) (r:Range.range) fresh (label_messages:error_labels) input qhash () : z3result =
-  let start = BU.now() in
-  let status, statistics =
-    try doZ3Exe log_file r fresh input label_messages
-    with e ->
-        refresh(); //refresh the solver but don't handle the exception; it'll be caught upstream
-        raise e
+  //This code is a little ugly:
+  //We insert a profiling call to accumulate total time spent in Z3
+  //But, we also record the time of this particular call so that we can
+  //record the elapsed time in the z3result_time field.
+  //That field is printed out in the query-stats output, which is a separate
+  //profiling feature. We could try in the future to unify all the different
+  //kinds of profiling features ... but that's beyond scope for now.
+  let (status, statistics), elapsed_time =
+    Profiling.profile
+      (fun () ->
+        try
+          BU.record_time (fun () -> doZ3Exe log_file r fresh input label_messages)
+        with e ->
+          refresh(); //refresh the solver but don't handle the exception; it'll be caught upstream
+          raise e)
+      (Some (query_logging.get_module_name()))
+      "FStar.SMTEncoding.Z3 (aggregate query time)"
   in
-  let _, elapsed_time = BU.time_diff start (BU.now()) in
   { z3result_status     = status;
     z3result_time       = elapsed_time;
     z3result_statistics = statistics;
@@ -615,8 +637,7 @@ let ask
     (label_messages:error_labels)
     (qry:list<decl>)
     (_scope : option<scope_t>) // GM: This was only used in ask_n_cores
-    (cb:cb)
-    (fresh:bool)
+    (fresh:bool) : z3result
   = let theory =
         if fresh
         then flatten_fresh_scope()
@@ -627,5 +648,11 @@ let ask
     let theory = theory @[Push]@qry@[Pop] in
     let theory, _used_unsat_core = filter_theory theory in
     let input, qhash, log_file_name = mk_input fresh theory in
-    if not (fresh && cache_hit log_file_name cache qhash cb) then
-        run_job ({job=z3_job log_file_name r fresh label_messages input qhash; callback=cb})
+
+    let just_ask () = z3_job log_file_name r fresh label_messages input qhash () in
+    if fresh then
+        match cache_hit log_file_name cache qhash with
+        | Some z3r -> z3r
+        | None -> just_ask ()
+    else
+        just_ask ()

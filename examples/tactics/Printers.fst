@@ -14,7 +14,7 @@
    limitations under the License.
 *)
 module Printers
-
+open FStar.List.Tot
 (* TODO: This is pretty much a blast-to-the-past of Meta-F*, we can do
  * much better now. *)
 
@@ -48,7 +48,7 @@ let mk_print_bv (self : name) (f : term) (bv : bv) : Tac term =
 let mk_printer_type (t : term) : Tac term =
     let b = fresh_binder_named "arg" t in
     let str = pack (Tv_FVar (pack_fv string_lid)) in
-    let c = pack_comp (C_Total str None) in
+    let c = pack_comp (C_Total str []) in
     pack (Tv_Arrow b c)
 
 
@@ -57,7 +57,7 @@ let mk_printer_type (t : term) : Tac term =
 let mk_printer_fun (dom : term) : Tac term =
     admit ();
     set_guard_policy SMT;
-    let e = cur_env () in
+    let e = top_env () in
     (* Recursive binding *)
     let ff = fresh_bv_named "ff_rec" (mk_printer_type dom) in
     let fftm = pack (Tv_Var ff) in
@@ -73,32 +73,24 @@ let mk_printer_fun (dom : term) : Tac term =
     in
 
     match inspect_sigelt se with
-    | Sg_Let _ _ _ _ _ -> fail "cannot create printer for let"
+    | Sg_Let _ _ -> fail "cannot create printer for let"
     | Sg_Inductive _ _ bs t ctors ->
         let br1 ctor : Tac branch =
-            let se = match lookup_typ e ctor with
-                     | None -> fail "Constructor not found..?"
-                     | Some se -> se
-            in
-            begin match inspect_sigelt se with
-            | Sg_Constructor name t ->
+            let (name, t) = ctor in
             let pn = String.concat "." name in
             let t_args, _ = collect_arr t in
-            let bv_pats = TU.map (fun ti -> let bv = fresh_bv_named "a" ti in (bv, Pat_Var bv)) t_args in
+            let bv_pats = TU.map (fun ti -> let bv = fresh_bv_named "a" ti in (bv, (Pat_Var bv, false))) t_args in
             let bvs, pats = List.Tot.split bv_pats in
             let head = pack (Tv_Const (C_String pn)) in
             let bod = mk_concat (mk_stringlit " ") (head :: TU.map (mk_print_bv xt_ns fftm) bvs) in
             let bod = match t_args with | [] -> bod | _ -> paren bod in
             (Pat_Cons (pack_fv name) pats, bod)
-            | _ ->
-                fail "Not a constructor..?"
-            end
         in
         let branches = TU.map br1 ctors in
         let xi = fresh_binder_named "v_inner" dom in
 
         // Generate the match on the internal argument
-        let m = pack (Tv_Match (pack (Tv_Var (bv_of_binder xi))) branches) in
+        let m = pack (Tv_Match (pack (Tv_Var (bv_of_binder xi))) None branches) in
         (* debug ("m = " ^ term_to_string m); *)
 
         // Wrap it into an internal function
@@ -108,7 +100,7 @@ let mk_printer_fun (dom : term) : Tac term =
         // Wrap it in a let rec; basically:
         // let rec ff = fun t -> match t with { .... } in ff x
         let xtm = pack (Tv_Var (bv_of_binder x)) in
-        let b = pack (Tv_Let true ff f (mk_e_app fftm [xtm])) in
+        let b = pack (Tv_Let true [] ff f (mk_e_app fftm [xtm])) in
         (* debug ("b = " ^ term_to_string b); *)
 
         // Wrap it in a lambda taking the initial argument
@@ -124,15 +116,19 @@ let rec maplast (f : 'a -> 'a) (l : list 'a) : list 'a =
     | [x] -> [f x]
     | x::xs -> x :: (maplast f xs)
 
-let mk_printer dom : Tac unit =
+let mk_printer dom : Tac decls =
     let nm = match inspect dom with
              | Tv_FVar fv -> inspect_fv fv
              | _ -> fail "not an fv?"
     in
     let nm = maplast (fun s -> s ^ "_print") nm in
-    let sv : sigelt_view = Sg_Let false (pack_fv nm) [] (mk_printer_type dom) (mk_printer_fun dom) in
+    let lb = pack_lb ({lb_fv = pack_fv nm;
+                       lb_us = [];
+                       lb_typ = mk_printer_type dom;
+                       lb_def = mk_printer_fun dom}) in
+    let sv : sigelt_view = Sg_Let false [lb] in
     let ses : list sigelt = [pack_sigelt sv] in
-    exact (quote ses)
+    ses
 
 noeq
 type t1 =

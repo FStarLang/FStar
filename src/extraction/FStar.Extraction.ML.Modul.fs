@@ -15,10 +15,12 @@
 *)
 #light "off"
 module FStar.Extraction.ML.Modul
-open FStar.ST
-open FStar.All
+open FStar.Pervasives
+open FStar.Compiler.Effect
+open FStar.Compiler.List
 open FStar
-open FStar.Util
+open FStar.Compiler
+open FStar.Compiler.Util
 open FStar.Syntax.Syntax
 open FStar.Const
 open FStar.Extraction.ML
@@ -31,9 +33,10 @@ open FStar.Syntax
 module Term = FStar.Extraction.ML.Term
 module Print = FStar.Syntax.Print
 module MLS = FStar.Extraction.ML.Syntax
-module BU = FStar.Util
+module BU = FStar.Compiler.Util
 module S  = FStar.Syntax.Syntax
 module SS = FStar.Syntax.Subst
+module UF = FStar.Syntax.Unionfind
 module U  = FStar.Syntax.Util
 module TC = FStar.TypeChecker.Tc
 module N  = FStar.TypeChecker.Normalize
@@ -41,16 +44,19 @@ module PC = FStar.Parser.Const
 module Util = FStar.Extraction.ML.Util
 module Env = FStar.TypeChecker.Env
 module TcUtil = FStar.TypeChecker.Util
-module Env = FStar.TypeChecker.Env
+module EMB=FStar.Syntax.Embeddings
+module Cfg = FStar.TypeChecker.Cfg
 
 type env_t = UEnv.uenv
 
 (*This approach assumes that failwith already exists in scope. This might be problematic, see below.*)
 let fail_exp (lid:lident) (t:typ) =
-    mk (Tm_app(S.fvar PC.failwith_lid delta_constant None, //NS delta: wrong
+    mk (Tm_app(S.fvar (PC.failwith_lid()) delta_constant None, //NS delta: wrong
                [ S.iarg t
-               ; S.as_arg <| mk (Tm_constant (Const_string ("Not yet implemented:"^(Print.lid_to_string lid), Range.dummyRange))) None Range.dummyRange]))
-        None
+               ; S.as_arg <|
+                 mk (Tm_constant
+                      (Const_string ("Not yet implemented:"^(Print.lid_to_string lid), Range.dummyRange)))
+                    Range.dummyRange]))
         Range.dummyRange
 
 let always_fail lid t =
@@ -67,17 +73,12 @@ let always_fail lid t =
         lbname=Inr (S.lid_as_fv lid delta_constant None);
         lbunivs=[];
         lbtyp=t;
-        lbeff=PC.effect_ML_lid;
+        lbeff=PC.effect_ML_lid();
         lbdef=imp;
         lbattrs=[];
         lbpos=imp.pos;
     } in
     lb
-
-let mangle_projector_lid (x: lident) : lident =
-    x
-
-let lident_as_mlsymbol (id : lident) : mlsymbol = avoid_keyword id.ident.idText
 
 let as_pair = function
    | [a;b] -> (a,b)
@@ -127,15 +128,34 @@ let rec extract_meta x =
   | { n = Tm_constant (Const_string ("c_inline", _)) } -> Some CInline
   | { n = Tm_constant (Const_string ("substitute", _)) } -> Some Substitute
   | { n = Tm_meta (x, _) } -> extract_meta x
-  | _ -> None
+  | _ ->
+    let head, args = U.head_and_args x in
+    match (SS.compress head).n, args with
+    | Tm_fvar fv, [_]
+       when S.fv_eq_lid fv FStar.Parser.Const.remove_unused_type_parameters_lid ->
+       begin
+       match fst (FStar.ToSyntax.ToSyntax.parse_attr_with_list
+                    false x FStar.Parser.Const.remove_unused_type_parameters_lid)
+       with
+       | None -> None
+       | Some l -> Some (RemoveUnusedTypeParameters (l, S.range_of_fv fv))
+       end
+    | _ -> None
 
 let extract_metadata metas =
   List.choose extract_meta metas
 
 let binders_as_mlty_binders (env:UEnv.uenv) bs =
-    BU.fold_map (fun env (bv, _) ->
-        UEnv.extend_ty env bv (Some (MLTY_Var (bv_as_ml_tyvar bv))), bv_as_ml_tyvar bv)
-    env bs
+    BU.fold_map
+      (fun env ({binder_bv=bv}) ->
+        let env = UEnv.extend_ty env bv false in
+        let name =
+          match lookup_bv env bv with
+          | Inl ty -> ty.ty_b_name
+          | _ -> failwith "Impossible"
+        in
+        env, name)
+      env bs
 
 (*******************************************************************************)
 (* A more convenient representation of inductive types for extraction purposes *)
@@ -169,25 +189,27 @@ let print_ifamily i =
             ^ Print.term_to_string d.dtyp)
         |> String.concat "\n\t\t")
 
-let bundle_as_inductive_families env ses quals attrs
+let bundle_as_inductive_families env ses quals
     : UEnv.uenv
     * list<inductive_family> =
     let env, ifams =
         BU.fold_map
         (fun env se -> match se.sigel with
-            | Sig_inductive_typ(l, _us, bs, t, _mut_i, datas) ->
+            | Sig_inductive_typ(l, us, bs, t, _mut_i, datas) ->
+                let _us, t = SS.open_univ_vars us t in
                 let bs, t = SS.open_term bs t in
                 let datas = ses |> List.collect (fun se -> match se.sigel with
-                    | Sig_datacon(d, _, t, l', nparams, _) when Ident.lid_equals l l' ->
+                    | Sig_datacon(d, us, t, l', nparams, _) when Ident.lid_equals l l' ->
+                        let _us, t = SS.open_univ_vars us t in
                         let bs', body = U.arrow_formals t in
                         let bs_params, rest = BU.first_N (List.length bs) bs' in
-                        let subst = List.map2 (fun (b', _) (b, _) -> S.NT(b', S.bv_to_name b)) bs_params bs in
+                        let subst = List.map2 (fun ({binder_bv=b'}) ({binder_bv=b}) -> S.NT(b', S.bv_to_name b)) bs_params bs in
                         let t = U.arrow rest (S.mk_Total body) |> SS.subst subst in
                         [{dname=d; dtyp=t}]
                     | _ -> []) in
-                let metadata = extract_metadata (se.sigattrs @ attrs) @ List.choose flag_of_qual quals in
+                let metadata = extract_metadata se.sigattrs @ List.choose flag_of_qual quals in
                 let fv = S.lid_as_fv l delta_constant None in
-                let env = UEnv.extend_type_name env fv in
+                let _, env = UEnv.extend_type_name env fv in
                 env, [{   ifv = fv
                         ; iname=l
                         ; iparams=bs
@@ -203,11 +225,13 @@ let bundle_as_inductive_families env ses quals attrs
 (* Extract Interfaces *)
 (********************************************************************************************)
 
+type tydef_declaration = (mlsymbol * FStar.Extraction.ML.Syntax.metadata * int) //int is the arity
+
 type iface = {
     iface_module_name: mlpath;
     iface_bindings: list<(fv * exp_binding)>;
-    iface_tydefs: list<tydef>;
-    iface_type_names:list<fv>;
+    iface_tydefs: list<(either<tydef, tydef_declaration>)>;
+    iface_type_names:list<(fv * mlpath)>;
 }
 
 let empty_iface = {
@@ -224,8 +248,8 @@ let iface_of_bindings fvs = {
 
 let iface_of_tydefs tds = {
     empty_iface with
-        iface_tydefs = tds;
-        iface_type_names=List.map (fun td -> td.tydef_fv) tds;
+        iface_tydefs = List.map Inl tds;
+        iface_type_names=List.map (fun td -> tydef_fv td, tydef_mlpath td) tds;
 }
 
 let iface_of_type_names fvs = {
@@ -250,30 +274,35 @@ let mlpath_to_string (p:mlpath) =
 let tscheme_to_string cm ts =
         (Code.string_of_mlty cm (snd ts))
 let print_exp_binding cm e =
-    BU.format4 "{\n\texp_b_name = %s\n\texp_b_expr = %s\n\texp_b_tscheme = %s\n\texp_b_is_rec = %s }"
+    BU.format3 "{\n\texp_b_name = %s\n\texp_b_expr = %s\n\texp_b_tscheme = %s }"
         e.exp_b_name
         (Code.string_of_mlexpr cm e.exp_b_expr)
         (tscheme_to_string cm e.exp_b_tscheme)
-        (BU.string_of_bool e.exp_b_inst_ok)
 let print_binding cm (fv, exp_binding) =
     BU.format2 "(%s, %s)"
             (Print.fv_to_string fv)
             (print_exp_binding cm exp_binding)
 let print_tydef cm tydef =
-    BU.format2 "(%s, %s)"
-            (Print.fv_to_string tydef.tydef_fv)
-            (tscheme_to_string cm tydef.tydef_def)
+  let name, defn =
+      match tydef with
+      | Inl tydef ->
+        Print.fv_to_string (tydef_fv tydef),
+        tscheme_to_string cm (tydef_def tydef)
+      | Inr (p, _, _) ->
+        p, "None"
+  in
+  BU.format2 "(%s, %s)" name defn
 let iface_to_string iface =
     let cm = iface.iface_module_name in
-    let print_type_name tn = Print.fv_to_string tn in
+    let print_type_name (tn, _) = Print.fv_to_string tn in
     BU.format4 "Interface %s = {\niface_bindings=\n%s;\n\niface_tydefs=\n%s;\n\niface_type_names=%s;\n}"
         (mlpath_to_string iface.iface_module_name)
         (List.map (print_binding cm) iface.iface_bindings |> String.concat "\n")
         (List.map (print_tydef cm) iface.iface_tydefs |> String.concat "\n")
         (List.map print_type_name iface.iface_type_names |> String.concat "\n")
 let gamma_to_string env =
-    let cm = env.currentModule in
-    let gamma = List.collect (function Fv (b, e) -> [b, e] | _ -> []) env.env_bindings in
+    let cm = current_module_of_uenv env in
+    let gamma = List.collect (function Fv (b, e) -> [b, e] | _ -> []) (bindings_of_uenv env) in
     BU.format1 "Gamma = {\n %s }"
         (List.map (print_binding cm) gamma |> String.concat "\n")
 
@@ -298,11 +327,11 @@ let extract_typ_abbrev env quals attrs lb
     * list<mlmodule1> =
     let tcenv, (lbdef, lbtyp) =
         let tcenv, _, def_typ =
-          FStar.TypeChecker.Env.open_universes_in env.env_tcenv lb.lbunivs [lb.lbdef; lb.lbtyp]
+          FStar.TypeChecker.Env.open_universes_in (tcenv_of_uenv env) lb.lbunivs [lb.lbdef; lb.lbtyp]
         in
         tcenv, as_pair def_typ
     in
-    let lbtyp = FStar.TypeChecker.Normalize.normalize [Env.Beta;Env.UnfoldUntil delta_constant] tcenv lbtyp in
+    let lbtyp = FStar.TypeChecker.Normalize.normalize [Env.Beta;Env.UnfoldUntil delta_constant; Env.ForExtraction] tcenv lbtyp in
     //eta expansion is important; see issue #490
     let lbdef = FStar.TypeChecker.Normalize.eta_expand_with_type tcenv lbdef lbtyp in
     let fv = right lb.lbname in
@@ -322,20 +351,32 @@ let extract_typ_abbrev env quals attrs lb
     let body =
       Term.term_as_mlty env1 body |> Util.eraseTypeDeep (Util.udelta_unfold env1)
     in
-    let mangled_projector =
-         if quals |> BU.for_some (function Projector _ -> true | _ -> false) //projector names have to mangled
-         then let mname = mangle_projector_lid lid in
-              Some mname.ident.idText
-         else None in
-    let metadata = extract_metadata attrs @ List.choose flag_of_qual quals in
-    let td = assumed, lident_as_mlsymbol lid, mangled_projector, ml_bs, metadata, Some (MLTD_Abbrev body) in
-    let def = [MLM_Loc (Util.mlloc_of_range (Ident.range_of_lid lid)); MLM_Ty [td]] in
-    let env, iface =
-        if quals |> BU.for_some (function Assumption | New -> true | _ -> false)
-        then UEnv.extend_type_name env fv, iface_of_type_names [fv]
-        else let env, tydef = UEnv.extend_tydef env fv td in
-             env, iface_of_tydefs [tydef]
+    let metadata =
+      let has_val_decl = UEnv.has_tydef_declaration env lid in
+      let meta = extract_metadata attrs @ List.choose flag_of_qual quals in
+      if has_val_decl
+      then (//BU.print1 "%s has val decl\n" (Ident.string_of_lid lid);
+            HasValDecl (Ident.range_of_lid lid) :: meta)
+      else (//BU.print1 "%s does not have val decl\n" (Ident.string_of_lid lid);
+            meta)
     in
+    let tyscheme = ml_bs, body in
+    let mlpath, iface, env =
+        if quals |> BU.for_some (function Assumption | New -> true | _ -> false)
+        then let mlp, env = UEnv.extend_type_name env fv in
+             mlp, iface_of_type_names [(fv, mlp)], env
+        else let td, mlp, env = UEnv.extend_tydef env fv tyscheme metadata in
+             mlp, iface_of_tydefs [td], env
+    in
+    let td = {
+      tydecl_assumed = assumed;
+      tydecl_name = snd mlpath;
+      tydecl_ignored = None;
+      tydecl_parameters = ml_bs;
+      tydecl_meta = metadata;
+      tydecl_defn = Some (MLTD_Abbrev body)
+    } in
+    let def = [MLM_Loc (Util.mlloc_of_range (Ident.range_of_lid lid)); MLM_Ty [td]] in
     env,
     iface,
     def
@@ -349,8 +390,9 @@ let extract_let_rec_type env quals attrs lb
         [Env.Beta;
          Env.AllowUnboundUniverses;
          Env.EraseUniverses;
-         Env.UnfoldUntil delta_constant]
-        env.env_tcenv
+         Env.UnfoldUntil delta_constant;
+         Env.ForExtraction]
+        (tcenv_of_uenv env)
         lb.lbtyp
     in
     let bs, _ = U.arrow_formals lbtyp in
@@ -360,16 +402,17 @@ let extract_let_rec_type env quals attrs lb
     let body = MLTY_Top in
     let metadata = extract_metadata attrs @ List.choose flag_of_qual quals in
     let assumed = false in
-    let td =
-      assumed,
-      lident_as_mlsymbol lid,
-      None,
-      ml_bs,
-      metadata,
-      Some (MLTD_Abbrev body)
-    in
+    let tscheme = ml_bs, body in
+    let tydef, mlp, env = UEnv.extend_tydef env fv tscheme metadata in
+    let td = {
+      tydecl_assumed = assumed;
+      tydecl_name = snd mlp;
+      tydecl_ignored = None;
+      tydecl_parameters = ml_bs;
+      tydecl_meta = metadata;
+      tydecl_defn = Some (MLTD_Abbrev body)
+    } in
     let def = [MLM_Loc (Util.mlloc_of_range (Ident.range_of_lid lid)); MLM_Ty [td]] in
-    let env, tydef = UEnv.extend_tydef env fv td in
     let iface = iface_of_tydefs [tydef] in
     env,
     iface,
@@ -392,8 +435,8 @@ let extract_bundle_iface env se
                     (Util.udelta_unfold env_iparams)
                     (Term.term_as_mlty env_iparams ctor.dtyp) in
         let tys = (ml_tyvars, mlt) in
-        let fvv = mkFvvar ctor.dname ctor.dtyp in
-        let env, _, b = extend_fv env fvv tys false false in
+        let fvv = lid_as_fv ctor.dname delta_constant None in
+        let env, _, b = extend_fv env fvv tys false in
         env, (fvv, b)
     in
 
@@ -401,6 +444,21 @@ let extract_bundle_iface env se
         : env_t * list<(fv * exp_binding)> =
        let env_iparams, vars  = binders_as_mlty_binders env ind.iparams in
        let env, ctors = ind.idatas |> BU.fold_map (extract_ctor env_iparams vars) env in
+       let env =
+         match BU.find_opt (function RecordType _ -> true | _ -> false) ind.iquals with
+         | Some (RecordType (ns, ids)) ->
+           let g =
+            List.fold_right
+                (fun id g ->
+                   let _, g = UEnv.extend_record_field_name g (ind.iname, id) in
+                   g)
+                ids
+                env
+           in
+           g
+         | _ ->
+          env
+       in
        env, ctors
     in
 
@@ -410,25 +468,30 @@ let extract_bundle_iface env se
         env, iface_of_bindings [ctor]
 
     | Sig_bundle(ses, _), quals ->
-        let env, ifams = bundle_as_inductive_families env ses quals se.sigattrs in
-        let env, td = BU.fold_map extract_one_family env ifams in
-        env,
-        iface_union
-            (iface_of_type_names (List.map (fun x -> x.ifv) ifams))
+        if U.has_attribute se.sigattrs PC.erasable_attr
+        then env, empty_iface
+        else begin
+          let env, ifams = bundle_as_inductive_families env ses quals in
+          let env, td = BU.fold_map extract_one_family env ifams in
+          env,
+          iface_union
+            (iface_of_type_names (List.map (fun x -> x.ifv, UEnv.mlpath_of_lident env x.iname) ifams))
             (iface_of_bindings (List.flatten td))
+        end
 
     | _ -> failwith "Unexpected signature element"
 
-let extract_type_declaration (g:uenv) lid quals attrs univs t
+let extract_type_declaration (g:uenv) is_interface_val lid quals attrs univs t
     : env_t
     * iface
     * list<mlmodule1>
     = if not (quals |> BU.for_some (function Assumption -> true | _ -> false))
-      then g, empty_iface, []
+      then let g = UEnv.extend_with_tydef_declaration g lid in
+           g, empty_iface, []
       else let bs, _ = U.arrow_formals t in
            let fv = S.lid_as_fv lid delta_constant None in
            let lb = {
-               lbname = BU.Inr fv;
+               lbname = Inr fv;
                lbunivs = univs;
                lbtyp = t;
                lbeff = PC.effect_Tot_lid;
@@ -436,37 +499,42 @@ let extract_type_declaration (g:uenv) lid quals attrs univs t
                lbattrs = attrs;
                lbpos = t.pos
            } in
-           extract_typ_abbrev g quals attrs lb
+           let g, iface, mods = extract_typ_abbrev g quals attrs lb in
+           let iface =
+             if is_interface_val
+             then let mlp = UEnv.mlpath_of_lident g lid in
+                  let meta = extract_metadata attrs in
+                  { empty_iface with iface_tydefs = [Inr (snd mlp, meta, List.length bs)] }
+             else iface
+           in
+           g, iface, mods
 
 let extract_reifiable_effect g ed
     : uenv
     * iface
     * list<mlmodule1> =
-    let extend_env g lid ml_name tm tysc =
+    let extend_iface lid mlp exp exp_binding =
         let fv = (S.lid_as_fv lid delta_equational None) in
-        let g, mangled_name, exp_binding = extend_fv' g fv ml_name tysc false false in
-        if Env.debug g.env_tcenv <| Options.Other "ExtractionReify" then
-        BU.print1 "Mangled name: %s\n" mangled_name;
         let lb = {
-            mllb_name=mangled_name;
+            mllb_name=snd mlp;
             mllb_tysc=None;
             mllb_add_unit=false;
-            mllb_def=tm;
+            mllb_def=exp;
             mllb_meta = [];
             print_typ=false
             }
         in
-        g, iface_of_bindings [fv, exp_binding], MLM_Let(NonRec, [lb])
+        iface_of_bindings [fv, exp_binding], MLM_Let(NonRec, [lb])
     in
 
     let rec extract_fv tm =
-        if Env.debug g.env_tcenv <| Options.Other "ExtractionReify" then
+        if Env.debug (tcenv_of_uenv g) <| Options.Other "ExtractionReify" then
             BU.print1 "extract_fv term: %s\n" (Print.term_to_string tm);
         match (SS.compress tm).n with
         | Tm_uinst (tm, _) -> extract_fv tm
         | Tm_fvar fv ->
-            let mlp = mlpath_of_lident fv.fv_name.v in
-            let ({exp_b_tscheme=tysc}) = UEnv.lookup_fv g fv in
+            let mlp = mlpath_of_lident g fv.fv_name.v in
+            let ({exp_b_tscheme=tysc}) = UEnv.lookup_fv tm.pos g fv in
             with_ty MLTY_Top <| MLE_Name mlp, tysc
         | _ -> failwith (BU.format2 "(%s) Not an fv: %s"
                                         (Range.string_of_range tm.pos)
@@ -475,41 +543,43 @@ let extract_reifiable_effect g ed
 
     let extract_action g (a:S.action) =
         assert (match a.action_params with | [] -> true | _ -> false);
-        if Env.debug g.env_tcenv <| Options.Other "ExtractionReify" then
+        if Env.debug (tcenv_of_uenv g) <| Options.Other "ExtractionReify" then
             BU.print2 "Action type %s and term %s\n"
             (Print.term_to_string a.action_typ)
             (Print.term_to_string a.action_defn);
-        let a_nm, a_lid = action_name ed a in
         let lbname = Inl (S.new_bv (Some a.action_defn.pos) tun) in
         let lb = mk_lb (lbname, a.action_univs, PC.effect_Tot_lid, a.action_typ, a.action_defn, [], a.action_defn.pos) in
         let lbs = (false, [lb]) in
-        let action_lb = mk (Tm_let(lbs, U.exp_false_bool)) None a.action_defn.pos in
+        let action_lb = mk (Tm_let(lbs, U.exp_false_bool)) a.action_defn.pos in
         let a_let, _, ty = Term.term_as_mlexpr g action_lb in
-        if Env.debug g.env_tcenv <| Options.Other "ExtractionReify" then
-            BU.print1 "Extracted action term: %s\n" (Code.string_of_mlexpr a_nm a_let);
         let exp, tysc = match a_let.expr with
             | MLE_Let((_, [mllb]), _) ->
                 (match mllb.mllb_tysc with
                 | Some(tysc) -> mllb.mllb_def, tysc
                 | None -> failwith "No type scheme")
             | _ -> failwith "Impossible" in
-        if Env.debug g.env_tcenv <| Options.Other "ExtractionReify" then begin
+        let a_nm, a_lid, exp_b, g = extend_with_action_name g ed a tysc in
+        if Env.debug (tcenv_of_uenv g) <| Options.Other "ExtractionReify" then
+            BU.print1 "Extracted action term: %s\n" (Code.string_of_mlexpr a_nm a_let);
+        if Env.debug (tcenv_of_uenv g) <| Options.Other "ExtractionReify" then begin
             BU.print1 "Extracted action type: %s\n" (Code.string_of_mlty a_nm (snd tysc));
             List.iter (fun x -> BU.print1 "and binders: %s\n" x) (fst tysc) end;
-        let env, iface, impl = extend_env g a_lid a_nm exp tysc in
-        env, (iface, impl)
+        let iface, impl = extend_iface a_lid a_nm exp exp_b in
+        g, (iface, impl)
     in
 
     let g, return_iface, return_decl =
-        let return_tm, ty_sc = extract_fv (snd ed.return_repr) in
-        let return_nm, return_lid = monad_op_name ed "return" in
-        extend_env g return_lid return_nm return_tm ty_sc
+        let return_tm, ty_sc = extract_fv (ed |> U.get_return_repr |> must |> snd) in
+        let return_nm, return_lid, return_b, g = extend_with_monad_op_name g ed "return" ty_sc in
+        let iface, impl = extend_iface return_lid return_nm return_tm return_b in
+        g, iface, impl
     in
 
     let g, bind_iface, bind_decl =
-        let bind_tm, ty_sc = extract_fv (snd ed.bind_repr) in
-        let bind_nm, bind_lid = monad_op_name ed "bind" in
-        extend_env g bind_lid bind_nm bind_tm ty_sc
+        let bind_tm, ty_sc = extract_fv (ed |> U.get_bind_repr |> must |> snd) in
+        let bind_nm, bind_lid, bind_b, g = extend_with_monad_op_name g ed "bind" ty_sc in
+        let iface, impl = extend_iface bind_lid bind_nm bind_tm bind_b in
+        g, iface, impl
     in
 
     let g, actions = BU.fold_map extract_action g ed.actions in
@@ -550,8 +620,68 @@ let extract_let_rec_types se (env:uenv) (lbs:list<letbinding>) =
       List.rev impls |> List.flatten
 
 
+let get_noextract_to (se:sigelt) (backend:option<Options.codegen_t>) : bool =
+  BU.for_some (function attr ->
+    let hd, args = U.head_and_args attr in
+    match (SS.compress hd).n, args with
+    | Tm_fvar fv, [(a, _)] when S.fv_eq_lid fv PC.noextract_to_attr ->
+        begin match EMB.unembed EMB.e_string a false EMB.id_norm_cb with
+        | Some s ->
+          Option.isSome backend && Options.parse_codegen s = backend
+        | None ->
+          false
+        end
+    | _ -> false
+  ) se.sigattrs
+
+(*
+ * We support two kinds of noextract knobs:
+ *   - a noextract qualifier
+ *   - a "noextract_to" attribute that takes a string value as argument
+ *     the string value is the backend name, e.g. Kremlin, OCaml, ...
+ *
+ * Whether to extract a definition depends on the backend
+ *   since sometimes Kremlin needs the stubs even for definitions
+ *   marked as noextract
+ *
+ * TODO: what are such cases? Even there, can we optimize
+ *   extraction to extract only the signature of the definition
+ *   so that we don't pay the cost of normalization etc. for the body
+ *)
+let sigelt_has_noextract (se:sigelt) : bool =
+  let has_noextract_qualifier = List.contains S.NoExtract se.sigquals in
+  let has_noextract_attribute = get_noextract_to se (Options.codegen ()) in
+  match Options.codegen () with
+  | Some Options.Kremlin ->
+    has_noextract_qualifier && has_noextract_attribute
+  | _ ->
+    has_noextract_qualifier || has_noextract_attribute
+  
+// If this sigelt had [@@ noextract_to "Kremlin"] and we are indeed
+// extracting to Kremlin, then we will still process it: it's the
+// kremlin pipeline which will later drop the body. It checks for the
+// NoExtract qualifier to decide that, so we add it here.
+let kremlin_fixup_qual (se:sigelt) : sigelt =
+ if Options.codegen () = Some Options.Kremlin
+    && get_noextract_to se (Some Options.Kremlin)
+    && not (List.contains S.NoExtract se.sigquals)
+ then { se with sigquals = S.NoExtract :: se.sigquals }
+ else se
+
+let mark_sigelt_erased (se:sigelt) (g:uenv) : uenv =
+  debug g (fun u -> BU.print1 ">>>> NOT extracting %s \n" (Print.sigelt_to_string_short se));
+  // Cheating with delta levels and qualifiers below, but we don't ever use them.
+  List.fold_right (fun lid g -> extend_erased_fv g (S.lid_as_fv lid delta_constant None))
+                  (U.lids_of_sigelt se) g
+
 (*  The top-level extraction of a sigelt to an interface *)
 let extract_sigelt_iface (g:uenv) (se:sigelt) : uenv * iface =
+    if sigelt_has_noextract se then
+      let g = mark_sigelt_erased se g in
+      g, empty_iface
+    else
+    let se = kremlin_fixup_qual se in
+
     match se.sigel with
     | Sig_bundle _
     | Sig_inductive_typ _
@@ -560,15 +690,22 @@ let extract_sigelt_iface (g:uenv) (se:sigelt) : uenv * iface =
 
     | Sig_declare_typ(lid, univs, t)  when Term.is_arity g t -> //lid is a type
       let env, iface, _ =
-          extract_type_declaration g lid se.sigquals se.sigattrs univs t
+          extract_type_declaration g true lid se.sigquals se.sigattrs univs t
       in
       env, iface
 
     | Sig_let((false, [lb]), _) when Term.is_arity g lb.lbtyp ->
-      let env, iface, _ =
+      if se.sigquals |> BU.for_some (function Projector _ -> true | _ -> false)
+      then (
+        //Don't extract projectors returning types---not useful for typing generated code and
+        //And can actually break F# extraction, in case there are unused type parameters
+        g, empty_iface
+      ) else (
+        let env, iface, _ =
           extract_typ_abbrev g se.sigquals se.sigattrs lb
-      in
-      env, iface
+        in
+        env, iface
+      )
 
     | Sig_let ((true, lbs), _)
       when BU.for_some (fun lb -> Term.is_arity g lb.lbtyp) lbs ->
@@ -580,7 +717,7 @@ let extract_sigelt_iface (g:uenv) (se:sigelt) : uenv * iface =
     | Sig_declare_typ(lid, _univs, t) ->
       let quals = se.sigquals in
       if quals |> List.contains Assumption
-      && not (TcUtil.must_erase_for_extraction g.env_tcenv t)
+      && not (TcUtil.must_erase_for_extraction (tcenv_of_uenv g) t)
       then let g, bindings = Term.extract_lb_iface g (false, [always_fail lid t]) in
            g, iface_of_bindings bindings
       else g, empty_iface //it's not assumed, so wait for the corresponding Sig_let to generate code
@@ -590,11 +727,11 @@ let extract_sigelt_iface (g:uenv) (se:sigelt) : uenv * iface =
       let g, bindings = Term.extract_lb_iface g lbs in
       g, iface_of_bindings bindings
 
-    | Sig_main _
-    | Sig_new_effect_for_free _
     | Sig_assume _
     | Sig_sub_effect  _
-    | Sig_effect_abbrev _ ->
+    | Sig_effect_abbrev _
+    | Sig_polymonadic_bind _
+    | Sig_polymonadic_subcomp _ ->
       g, empty_iface
 
     | Sig_pragma (p) ->
@@ -604,8 +741,11 @@ let extract_sigelt_iface (g:uenv) (se:sigelt) : uenv * iface =
     | Sig_splice _ ->
       failwith "impossible: trying to extract splice"
 
+    | Sig_fail _ ->
+      failwith "impossible: trying to extract Sig_fail"
+
     | Sig_new_effect ed ->
-      if Env.is_reifiable_effect g.env_tcenv ed.mname
+      if Env.is_reifiable_effect (tcenv_of_uenv g) ed.mname
       && List.isEmpty ed.binders //we do not extract parameterized effects
       then let env, iface, _ = extract_reifiable_effect g ed in
            env, iface
@@ -615,7 +755,7 @@ let extract_iface' (g:env_t) modul =
     if Options.interactive() then g, empty_iface else
     let _ = Options.restore_cmd_line_options true in
     let decls = modul.declarations in
-    let iface = {empty_iface with iface_module_name=g.currentModule} in
+    let iface = {empty_iface with iface_module_name=(current_module_of_uenv g)} in
     let res =
         List.fold_left (fun (g, iface) se ->
             let g, iface' = extract_sigelt_iface g se in
@@ -627,17 +767,27 @@ let extract_iface' (g:env_t) modul =
     res
 
 let extract_iface (g:env_t) modul =
-    if Options.debug_any()
-    then FStar.Util.measure_execution_time
-             (BU.format1 "Extracted interface of %s" modul.name.str)
+  let g, iface =
+    UF.with_uf_enabled (fun () ->
+      if Options.debug_any()
+      then FStar.Compiler.Util.measure_execution_time
+             (BU.format1 "Extracted interface of %s" (string_of_lid modul.name))
              (fun () -> extract_iface' g modul)
-    else extract_iface' g modul
-
-let extend_with_iface (g:env_t) (iface:iface) =
-     { g with
-         env_bindings=List.map Fv iface.iface_bindings@g.env_bindings;
-         tydefs=iface.iface_tydefs@g.tydefs;
-         type_names=iface.iface_type_names@g.type_names}
+      else extract_iface' g modul)
+  in
+  let g, _ = UEnv.with_typars_env g (fun e ->
+    let iface_tydefs : list<RemoveUnusedParameters.tydef> =
+      List.map
+        (function
+          | Inl td -> snd (UEnv.tydef_mlpath td), UEnv.tydef_meta td, Inl (UEnv.tydef_def td)
+          | Inr (p, m, n) -> p, m, Inr n)
+        iface.iface_tydefs
+    in
+    let module_name, _ = UEnv.extend_with_module_name g modul.name in
+    let e = RemoveUnusedParameters.set_current_module e module_name in
+    RemoveUnusedParameters.elim_tydefs e iface_tydefs)
+  in
+  UEnv.exit_module g, iface
 
 (********************************************************************************************)
 (* Extract Implementations *)
@@ -651,44 +801,55 @@ let extract_bundle env se =
         env_t * (mlsymbol * list<(mlsymbol * mlty)>)
         =
         let mlt = Util.eraseTypeDeep (Util.udelta_unfold env_iparams) (Term.term_as_mlty env_iparams ctor.dtyp) in
-        let steps = [ Env.Inlining; Env.UnfoldUntil S.delta_constant; Env.EraseUniverses; Env.AllowUnboundUniverses ] in
-        let names = match (SS.compress (N.normalize steps env_iparams.env_tcenv ctor.dtyp)).n with
+        let steps = [ Env.Inlining; Env.UnfoldUntil S.delta_constant; Env.EraseUniverses; Env.AllowUnboundUniverses; Env.ForExtraction ] in
+        let names = match (SS.compress (N.normalize steps (tcenv_of_uenv env_iparams) ctor.dtyp)).n with
           | Tm_arrow (bs, _) ->
-              List.map (fun ({ ppname = ppname }, _) -> ppname.idText) bs
+              List.map (fun ({binder_bv={ ppname = ppname }}) -> (string_of_id ppname)) bs
           | _ ->
               []
         in
         let tys = (ml_tyvars, mlt) in
-        let fvv = mkFvvar ctor.dname ctor.dtyp in
-        let env, _, _ = extend_fv env fvv tys false false in
+        let fvv = lid_as_fv ctor.dname delta_constant None in
+        let env, mls, _ = extend_fv env fvv tys false in
         env,
-        (lident_as_mlsymbol ctor.dname, List.zip names (argTypes mlt)) in
+        (mls, List.zip names (argTypes mlt)) in
 
     let extract_one_family env ind =
        let env_iparams, vars  = binders_as_mlty_binders env ind.iparams in
        let env, ctors = ind.idatas |> BU.fold_map (extract_ctor env_iparams vars) env in
        let indices, _ = U.arrow_formals ind.ityp in
        let ml_params = List.append vars (indices |> List.mapi (fun i _ -> "'dummyV" ^ BU.string_of_int i)) in
-       let tbody =
+       let tbody, env =
          match BU.find_opt (function RecordType _ -> true | _ -> false) ind.iquals with
          | Some (RecordType (ns, ids)) ->
-             // JP: why are the names in c_ty prefixed with ^fname^? Why do we
-             // have to do this voodoo dance to recover field names? Why don't
-             // we just drop the special ^fname^ prefix?
              let _, c_ty = List.hd ctors in
              assert (List.length ids = List.length c_ty);
-             let fields =
-                List.map2
-                    (fun id (_, ty) ->
-                        let lid = lid_of_ids (ns @ [id]) in
-                        lident_as_mlsymbol lid, ty)
-                    ids
-                    c_ty
+             let fields, g =
+                List.fold_right2
+                  (fun id (_, ty) (fields, g) ->
+                     let mlid, g = UEnv.extend_record_field_name g (ind.iname, id) in
+                     (mlid, ty)::fields, g)
+                   ids
+                   c_ty
+                   ([], env)
              in
-             MLTD_Record fields
+             Some (MLTD_Record fields), g
+         | _ when List.length ctors = 0 ->
+             None, env
          | _ ->
-             MLTD_DType ctors in
-        env,  (false, lident_as_mlsymbol ind.iname, None, ml_params, ind.imetadata, Some tbody) in
+             Some (MLTD_DType ctors), env
+       in
+       let td = {
+         tydecl_assumed = false;
+         tydecl_name = snd (mlpath_of_lident env ind.iname);
+         tydecl_ignored = None;
+         tydecl_parameters = ml_params;
+         tydecl_meta = ind.imetadata;
+         tydecl_defn = tbody
+       } in
+       env,
+       td
+    in
 
     match se.sigel, se.sigquals with
     | Sig_bundle([{sigel = Sig_datacon(l, _, t, _, _, _)}], _), [ExceptionConstructor] ->
@@ -696,9 +857,13 @@ let extract_bundle env se =
         env, [MLM_Exn ctor]
 
     | Sig_bundle(ses, _), quals ->
-        let env, ifams = bundle_as_inductive_families env ses quals se.sigattrs in
-        let env, td = BU.fold_map extract_one_family env ifams in
-        env, [MLM_Ty td]
+        if U.has_attribute se.sigattrs PC.erasable_attr
+        then env, []
+        else begin
+          let env, ifams = bundle_as_inductive_families env ses quals in
+          let env, td = BU.fold_map extract_one_family env ifams in
+          env, [MLM_Ty td]
+        end
 
     | _ -> failwith "Unexpected signature element"
 
@@ -708,7 +873,6 @@ let extract_bundle env se =
    is extracted along with an invocation to FStar.Tactics.Native.register_tactic or register_plugin,
    which installs the compiled term as a primitive step in the normalizer
  *)
-module EMB=FStar.Syntax.Embeddings
 let maybe_register_plugin (g:env_t) (se:sigelt) : list<mlmodule1> =
     let w = with_ty MLTY_Top in
     let plugin_with_arity attrs =
@@ -736,14 +900,14 @@ let maybe_register_plugin (g:env_t) (se:sigelt) : list<mlmodule1> =
                   let fv_lid = fv.fv_name.v in
                   let fv_t = lb.lbtyp in
                   let ml_name_str = MLE_Const (MLC_String (Ident.string_of_lid fv_lid)) in
-                  match Util.interpret_plugin_as_term_fun g.env_tcenv fv fv_t arity_opt ml_name_str with
+                  match Util.interpret_plugin_as_term_fun g fv fv_t arity_opt ml_name_str with
                   | Some (interp, nbe_interp, arity, plugin) ->
                       let register, args =
                         if plugin
-                        then "FStar_Tactics_Native.register_plugin", [interp; nbe_interp]
-                        else "FStar_Tactics_Native.register_tactic", [interp]
+                        then (["FStar_Tactics_Native"], "register_plugin"), [interp; nbe_interp]
+                        else (["FStar_Tactics_Native"], "register_tactic"), [interp]
                       in
-                      let h = with_ty MLTY_Top <| MLE_Name (mlpath_of_lident (lid_of_str register)) in
+                      let h = with_ty MLTY_Top <| MLE_Name register in
                       let arity  = MLE_Const (MLC_Int(string_of_int arity, None)) in
                       let app = with_ty MLTY_Top <| MLE_App (h, [w ml_name_str; w arity] @ args) in
                       [MLM_Top app]
@@ -752,18 +916,28 @@ let maybe_register_plugin (g:env_t) (se:sigelt) : list<mlmodule1> =
                List.collect mk_registration (snd lbs)
            | _ -> []
            end
+
+
 (*****************************************************************************)
 (* Extracting the top-level definitions in a module                          *)
 (*****************************************************************************)
 let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
-     debug g (fun u -> BU.print1 ">>>> extract_sig %s \n" (Print.sigelt_to_string se));
+  Errors.with_ctx (BU.format1 "While extracting top-level definition `%s`" (Print.sigelt_to_string_short se)) (fun () ->
+     debug g (fun u -> BU.print1 ">>>> extract_sig %s \n" (Print.sigelt_to_string_short se));
+
+     if sigelt_has_noextract se then
+       let g = mark_sigelt_erased se g in
+       g, []
+     else
+    let se = kremlin_fixup_qual se in
+
      match se.sigel with
         | Sig_bundle _
         | Sig_inductive_typ _
         | Sig_datacon _ ->
           extract_bundle g se
 
-        | Sig_new_effect ed when Env.is_reifiable_effect g.env_tcenv ed.mname ->
+        | Sig_new_effect ed when Env.is_reifiable_effect (tcenv_of_uenv g) ed.mname ->
           let env, _iface, impl =
               extract_reifiable_effect g ed in
           env, impl
@@ -771,21 +945,31 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
         | Sig_splice _ ->
           failwith "impossible: trying to extract splice"
 
+        | Sig_fail _ ->
+          failwith "impossible: trying to extract Sig_fail"
+
         | Sig_new_effect _ ->
           g, []
 
         | Sig_declare_typ(lid, univs, t)  when Term.is_arity g t -> //lid is a type
           //extracting `assume type t : k`
-          let env, _, impl = extract_type_declaration g lid se.sigquals se.sigattrs univs t in
+          let env, _, impl = extract_type_declaration g false lid se.sigquals se.sigattrs univs t in
           env, impl
 
         | Sig_let((false, [lb]), _) when Term.is_arity g lb.lbtyp ->
           //extracting `type t = e`
           //or         `let t = e` when e is a type
-          let env, _, impl =
-              extract_typ_abbrev g se.sigquals se.sigattrs lb
-          in
-          env, impl
+          if se.sigquals |> BU.for_some (function Projector _ -> true | _ -> false)
+          then (
+            //Don't extract projectors returning types---not useful for typing generated code and
+            //And can actually break F# extraction, in case there are unused type parameters
+            g, []
+          ) else (
+            let env, _, impl =
+                extract_typ_abbrev g se.sigquals se.sigattrs lb
+            in
+            env, impl
+          )
 
         | Sig_let((true, lbs), _)
           when BU.for_some (fun lb -> Term.is_arity g lb.lbtyp) lbs ->
@@ -799,28 +983,86 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
         | Sig_let (lbs, _) ->
           let attrs = se.sigattrs in
           let quals = se.sigquals in
-          let attrs, post_tau =
+          let maybe_postprocess_lbs lbs =
+            let post_tau =
               match U.extract_attr' PC.postprocess_extr_with attrs with
-              | None -> attrs, None
-              | Some (ats, (tau, None)::_) -> ats, Some tau
-              | Some (ats, args) ->
-                  Errors.log_issue se.sigrng (Errors.Warning_UnrecognizedAttribute,
-                                         ("Ill-formed application of `postprocess_for_extraction_with`"));
-                  attrs, None
-          in
-          let postprocess_lb (tau:term) (lb:letbinding) : letbinding =
-              let lbdef = Env.postprocess g.env_tcenv tau lb.lbtyp lb.lbdef in
+              | None -> None
+              | Some (_, (tau, None)::_) -> Some tau
+              | Some _ ->
+                  Errors.log_issue
+                      se.sigrng
+                      (Errors.Warning_UnrecognizedAttribute,
+                       "Ill-formed application of 'postprocess_for_extraction_with'");
+                  None
+            in
+            let postprocess_lb (tau:term) (lb:letbinding) : letbinding =
+              let env = tcenv_of_uenv g in
+              let lbdef = 
+                Profiling.profile
+                     (fun () -> Env.postprocess env tau lb.lbtyp lb.lbdef)
+                     (Some (Ident.string_of_lid (Env.current_module env)))
+                     "FStar.Extraction.ML.Module.post_process_for_extraction"
+              in
               { lb with lbdef = lbdef }
+            in
+            match post_tau with
+            | None -> lbs
+            | Some tau -> fst lbs, List.map (postprocess_lb tau) (snd lbs)
           in
-          let lbs = (fst lbs,
-                      (match post_tau with
-                       | Some tau -> List.map (postprocess_lb tau) (snd lbs)
-                       | None -> (snd lbs)))
+          let maybe_normalize_for_extraction lbs = 
+            let norm_steps =
+              match U.extract_attr' PC.normalize_for_extraction_lid attrs with
+              | None -> None
+              | Some (_, (steps, None)::_) ->
+                let steps = 
+                  //just normalizing the steps themselves, so that the user
+                  //does not have to write a literal at every use of the attribute
+                  N.normalize 
+                    [Env.UnfoldUntil delta_constant; Env.Zeta; Env.Iota; Env.Primops]
+                    (tcenv_of_uenv g)
+                    steps
+                in
+                begin
+                match Cfg.try_unembed_simple (EMB.e_list EMB.e_norm_step) steps with
+                | Some steps -> 
+                  Some (Cfg.translate_norm_steps steps)
+                | _ -> 
+                  Errors.log_issue 
+                      se.sigrng
+                      (Errors.Warning_UnrecognizedAttribute,
+                       BU.format1
+                         "Ill-formed application of 'normalize_for_extraction': normalization steps '%s' could not be interpreted"
+                         (Print.term_to_string steps));
+                  None
+                end
+              | Some _ ->
+                  Errors.log_issue 
+                      se.sigrng
+                      (Errors.Warning_UnrecognizedAttribute,
+                       "Ill-formed application of 'normalize_for_extraction'");
+                  None
+            in
+            let norm_one_lb steps lb =
+              let env = tcenv_of_uenv g in
+              let env = {env with erase_erasable_args=true} in
+              let lbd = 
+                Profiling.profile
+                     (fun () -> N.normalize steps env lb.lbdef)
+                     (Some (Ident.string_of_lid (Env.current_module env)))
+                     "FStar.Extraction.ML.Module.normalize_for_extraction"
+              in
+              { lb with lbdef = lbd }
+            in
+            match norm_steps with
+            | None -> lbs
+            | Some steps ->
+              fst lbs, List.map (norm_one_lb steps) (snd lbs)
           in
           let ml_let, _, _ =
+            let lbs = maybe_normalize_for_extraction (maybe_postprocess_lbs lbs) in
             Term.term_as_mlexpr
                     g
-                    (mk (Tm_let(lbs, U.exp_false_bool)) None se.sigrng)
+                    (mk (Tm_let(lbs, U.exp_false_bool)) se.sigrng)
           in
           begin
           match ml_let.expr with
@@ -862,18 +1104,15 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
                             let ml_lb = { ml_lb with mllb_meta = meta } in
                             let g, ml_lb =
                                 if quals |> BU.for_some (function Projector _ -> true | _ -> false) //projector names have to mangled
-                                then let mname = mangle_projector_lid lb_lid |> mlpath_of_lident in
-                                     let env, _, _ =
-                                         UEnv.extend_fv'
+                                then let env, mls, _ =
+                                         UEnv.extend_fv
                                                 env
                                                 (right lbname)
-                                                mname
                                                 (must ml_lb.mllb_tysc)
                                                 ml_lb.mllb_add_unit
-                                                false
                                      in
-                                     env, {ml_lb with mllb_name=snd mname }
-                                else let env, _, _ = UEnv.extend_lb env lbname t (must ml_lb.mllb_tysc) ml_lb.mllb_add_unit false in
+                                     env, {ml_lb with mllb_name=mls }
+                                else let env, _, _ = UEnv.extend_lb env lbname t (must ml_lb.mllb_tysc) ml_lb.mllb_add_unit in
                                      env, ml_lb in
                         g, ml_lb::ml_lbs)
                 (g, [])
@@ -885,13 +1124,13 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
             @ maybe_register_plugin g se
 
         | _ ->
-          failwith (BU.format1 "Impossible: Translated a let to a non-let: %s" (Code.string_of_mlexpr g.currentModule ml_let))
+          failwith (BU.format1 "Impossible: Translated a let to a non-let: %s" (Code.string_of_mlexpr (current_module_of_uenv g) ml_let))
         end
 
        | Sig_declare_typ(lid, _, t) ->
          let quals = se.sigquals in
          if quals |> List.contains Assumption
-         && not (TcUtil.must_erase_for_extraction g.env_tcenv t)
+         && not (TcUtil.must_erase_for_extraction (tcenv_of_uenv g) t)
          then let always_fail =
                   { se with sigel = Sig_let((false, [always_fail lid t]), []) } in
               let g, mlm = extract_sig g always_fail in //extend the scope with the new name
@@ -910,40 +1149,36 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
          else g, [] //it's not assumed, so wait for the corresponding Sig_let to generate code
                     //or, it must be erased
 
-       | Sig_main(e) ->
-         let ml_main, _, _ = Term.term_as_mlexpr g e in
-         g, [MLM_Loc (Util.mlloc_of_range se.sigrng); MLM_Top ml_main]
-
-       | Sig_new_effect_for_free _ ->
-           failwith "impossible -- removed by tc.fs"
-
        | Sig_assume _ //not needed; purely logical
        | Sig_sub_effect  _
-       | Sig_effect_abbrev _ -> //effects are all primitive; so these are not extracted; this may change as we add user-defined non-primitive effects
+       | Sig_effect_abbrev _ //effects are all primitive; so these are not extracted; this may change as we add user-defined non-primitive effects
+       | Sig_polymonadic_bind _
+       | Sig_polymonadic_subcomp _ ->
          g, []
        | Sig_pragma (p) ->
          U.process_pragma p se.sigrng;
          g, []
+  )
 
 let extract' (g:uenv) (m:modul) : uenv * option<mllib> =
   let _ = Options.restore_cmd_line_options true in
-  let name = MLS.mlpath_of_lident m.name in
-  let g = {g with env_tcenv=FStar.TypeChecker.Env.set_current_module g.env_tcenv m.name;
-                  currentModule = name} in
+  let name, g = UEnv.extend_with_module_name g m.name in
+  let g = set_tcenv g (FStar.TypeChecker.Env.set_current_module (tcenv_of_uenv g) m.name) in
+  let g = set_current_module g name in
   let g, sigs =
     BU.fold_map
         (fun g se ->
-            if Options.debug_module m.name.str
+            if Options.debug_module (string_of_lid m.name)
             then let nm = FStar.Syntax.Util.lids_of_sigelt se |> List.map Ident.string_of_lid |> String.concat ", " in
                  BU.print1 "+++About to extract {%s}\n" nm;
-                 FStar.Util.measure_execution_time
+                 FStar.Compiler.Util.measure_execution_time
                        (BU.format1 "---Extracted {%s}" nm)
                        (fun () -> extract_sig g se)
             else extract_sig g se)
         g m.declarations in
   let mlm : mlmodule = List.flatten sigs in
   let is_kremlin = Options.codegen () = Some Options.Kremlin in
-  if m.name.str <> "Prims"
+  if string_of_lid m.name <> "Prims"
   && (is_kremlin || not m.is_interface)
   then begin
     if not (Options.silent()) then (BU.print1 "Extracted module %s\n" (string_of_lid m.name));
@@ -953,14 +1188,34 @@ let extract' (g:uenv) (m:modul) : uenv * option<mllib> =
 
 let extract (g:uenv) (m:modul) =
   ignore <| Options.restore_cmd_line_options true;
-  if not (Options.should_extract m.name.str)
-  then failwith (BU.format1 "Extract called on a module %s that should not be extracted" (Ident.string_of_lid m.name));
-  if Options.interactive() then g, None else
-  let res =
-      if Options.debug_any ()
-      then let msg = BU.format1 "Extracting module %s\n" (Print.lid_to_string m.name) in
-           BU.measure_execution_time msg (fun () -> extract' g m)
-      else extract' g m
+  let tgt = 
+    match Options.codegen() with
+    | None -> failwith "Impossible: We're in extract, codegen must be set!"
+    | Some t -> t
+  in
+  if not (Options.should_extract (string_of_lid m.name) tgt) then
+    failwith (BU.format1 "Extract called on a module %s that should not be extracted" (Ident.string_of_lid m.name));
+
+  if Options.interactive() then g, None else begin
+
+  let nm = string_of_lid m.name in
+  let g, mllib =
+    UF.with_uf_enabled (fun () ->
+      Errors.with_ctx ("While extracting module " ^ nm) 
+      (fun () ->
+        Profiling.profile
+          (fun () -> extract' g m)
+          (Some nm)
+          "FStar.Extraction.ML.Modul.extract"))
+  in
+  let g, mllib =
+    match mllib with
+    | None ->
+      g, mllib
+    | Some mllib ->
+      let g, mllib = UEnv.with_typars_env g (fun e -> RemoveUnusedParameters.elim_mllib e mllib) in
+      g, Some mllib
   in
   ignore <| Options.restore_cmd_line_options true;
-  res
+  exit_module g, mllib
+  end

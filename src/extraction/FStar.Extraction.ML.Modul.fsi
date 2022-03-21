@@ -16,11 +16,12 @@
 *)
 #light "off"
 module FStar.Extraction.ML.Modul
-open FStar.All
+open FStar.Pervasives
+open FStar.Compiler.Effect
 open FStar.Syntax.Syntax
 open FStar.Extraction.ML.Syntax
 open FStar.Extraction.ML.UEnv
 type iface
 val extract_iface: uenv -> modul -> uenv * iface
-val extend_with_iface: uenv -> iface -> uenv
 val extract : uenv -> modul -> uenv * option<mllib>
+

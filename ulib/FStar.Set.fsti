@@ -42,13 +42,19 @@ val intersect  : #a:eqtype -> set a -> set a -> Tot (set a)
 val complement : #a:eqtype -> set a -> Tot (set a)
 val intension  : #a:eqtype -> (a -> Tot bool) -> GTot (set a)
 
-(* a property about sets *)
+(* Derived functions *)
+
 let disjoint (#a:eqtype) (s1: set a) (s2: set a) =
   equal (intersect s1 s2) empty
 
-(* ops *)
 let subset (#a:eqtype) (s1:set a) (s2:set a) =
   forall x. mem x s1 ==> mem x s2
+
+let add (#a:eqtype) (x:a) (s:set a) : set a =
+  union s (singleton x)
+
+let remove (#a:eqtype) (x:a) (s:set a) : set a =
+  intersect s (complement (singleton x))
 
 (* Properties *)
 val mem_empty: #a:eqtype -> x:a -> Lemma

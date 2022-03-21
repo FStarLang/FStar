@@ -10,12 +10,13 @@
         "@MaxIFuel_assumption", "@query",
         "binder_x_5529d1ec063451477f1e5ac4ca5ccdc8_2",
         "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
-        "equality_tok_Prims.LexTop@tok",
         "equation_FStar.Monotonic.HyperStack.mem",
-        "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
+        "equation_Prims.op_Equals_Equals_Equals",
+        "fuel_guarded_inversion_Prims.list",
+        "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "e453b4470cf79c650295b17c5f6bd38d"
+      "48b620af4c8b8a0d95750e5c22d74b83"
     ],
     [
       "DoublyLinkedListIface.dll_head",
@@ -35,7 +36,7 @@
         "typing_FStar.List.Tot.Base.length"
       ],
       0,
-      "31444ae12edbd2b8adb7cbdc915eb7a5"
+      "53efe70c577ad29c0cd71be48310f3d8"
     ],
     [
       "DoublyLinkedListIface.dll_tail",
@@ -47,7 +48,7 @@
         "refinement_interpretation_Tm_refine_3aac47f90ec5f312f230a639872610fd"
       ],
       0,
-      "ffac2f511bd7602e6f67b9d8082c8619"
+      "7a19084f45822781d8a5bd4a9b7ccfe1"
     ],
     [
       "DoublyLinkedListIface.has_next",
@@ -59,7 +60,7 @@
         "refinement_interpretation_Tm_refine_6bceef2fe1a51f9aee1e75c41c68a03e"
       ],
       0,
-      "035b4c105ea23cc2d5876884240df5dd"
+      "7e3970401412f9e82b68c55362ed8e49"
     ],
     [
       "DoublyLinkedListIface.has_prev",
@@ -71,7 +72,7 @@
         "refinement_interpretation_Tm_refine_6bceef2fe1a51f9aee1e75c41c68a03e"
       ],
       0,
-      "13e7af762b76acac43fd3aab7c59994e"
+      "ae543bf07e0cd51d5f07a350e2d5b04f"
     ],
     [
       "DoublyLinkedListIface.next_node",
@@ -87,7 +88,7 @@
         "refinement_interpretation_Tm_refine_ce52b7121c636592230bd67a03c02599"
       ],
       0,
-      "28dd3ed14b585689179be755ed188e9e"
+      "d61b127c9461b67aabeb0890bb7e2a55"
     ],
     [
       "DoublyLinkedListIface.prev_node",
@@ -101,7 +102,7 @@
         "refinement_interpretation_Tm_refine_ce52b7121c636592230bd67a03c02599"
       ],
       0,
-      "46652ed0c1f589e0a5b3044c8181f909"
+      "2120c064cb6a32dd2fc5b038197ad24f"
     ],
     [
       "DoublyLinkedListIface.l_insert_before",
@@ -113,7 +114,7 @@
         "refinement_interpretation_Tm_refine_18b4556aabc6626d8d5bc2bb83aa5d71"
       ],
       0,
-      "a3d7c53d994add3c4e2a3e268de97496"
+      "36a546adcfd2037fccbebe2e6e7e569b"
     ],
     [
       "DoublyLinkedListIface.l_insert_after",
@@ -140,7 +141,7 @@
         "typing_FStar.Pervasives.Native.__proj__Mktuple2__item___2"
       ],
       0,
-      "de6c17a4b26993b679635b265f70d70c"
+      "df4d2de023c11e5a437f6b2fe5764e4a"
     ],
     [
       "DoublyLinkedListIface.l_insert_after'",
@@ -159,7 +160,7 @@
         "typing_FStar.Pervasives.Native.__proj__Mktuple2__item___2"
       ],
       0,
-      "1d91caa7aabce7896112756b73ebefcd"
+      "428eae15b37a0be80e7dcae016385bfd"
     ],
     [
       "DoublyLinkedListIface.l_remove_head",
@@ -178,7 +179,7 @@
         "typing_FStar.List.Tot.Base.length"
       ],
       0,
-      "11277442e094b4b77265af0e1cb7b3ae"
+      "18702005cd36d8394e66b80aa3d64d88"
     ],
     [
       "DoublyLinkedListIface.l_remove_mid",
@@ -203,7 +204,7 @@
         "typing_FStar.Pervasives.Native.__proj__Mktuple2__item___2"
       ],
       0,
-      "6fcab9276ebb0480e0fc2ce056592cb9"
+      "bd88bc3379c8393de7b924338e89756a"
     ],
     [
       "DoublyLinkedListIface.l_remove_mid'",
@@ -224,7 +225,7 @@
         "typing_FStar.Pervasives.Native.__proj__Mktuple2__item___2"
       ],
       0,
-      "ac35cc17a360c5a394f91c3eb986e2d7"
+      "8d368aed06c03e27442fe5ff53fddb05"
     ],
     [
       "DoublyLinkedListIface.dll_insert_before",
@@ -236,7 +237,7 @@
         "refinement_interpretation_Tm_refine_4d912e105966ac35136c583fe866a795"
       ],
       0,
-      "8d020b61d2063742ba13e598e0583ef4"
+      "b578891cf9a6d936915c7a62e2436e68"
     ],
     [
       "DoublyLinkedListIface.dll_insert_after",
@@ -252,7 +253,7 @@
         "refinement_interpretation_Tm_refine_ce52b7121c636592230bd67a03c02599"
       ],
       0,
-      "6d12fca990fd3cce2d7129500ca5be69"
+      "006c6e9c5d9b76c0f2799c8f4240fd65"
     ],
     [
       "DoublyLinkedListIface.dll_remove_head",
@@ -284,7 +285,7 @@
         "typing_DoublyLinkedListIface.node"
       ],
       0,
-      "9d0526154308b1c02fbd1d4d7a91e568"
+      "5f9aec5d2f44d1b9c292d624862b1e4c"
     ],
     [
       "DoublyLinkedListIface.dll_remove_tail",
@@ -316,7 +317,7 @@
         "typing_DoublyLinkedListIface.node"
       ],
       0,
-      "9b61e4cd0eef98b982efb0748caf63f5"
+      "44c626e069e6cf4aeba0277171e683fa"
     ],
     [
       "DoublyLinkedListIface.dll_remove_mid",
@@ -343,7 +344,7 @@
         "typing_DoublyLinkedListIface.node"
       ],
       0,
-      "3fd5d34dc1f9e0e98fb39d6ab602e576"
+      "9050faa5b26a4b63d448bc7e68da0667"
     ],
     [
       "DoublyLinkedListIface.dll_split_using",
@@ -355,7 +356,7 @@
         "refinement_interpretation_Tm_refine_75b973181c1e06bed5da9965f6c8c60c"
       ],
       0,
-      "5096722e2a9fc8b5e8882dd6234a6790"
+      "a37a26e84d55a997e8d490d97ba9d709"
     ]
   ]
 ]

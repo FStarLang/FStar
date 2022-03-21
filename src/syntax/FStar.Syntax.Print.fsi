@@ -16,12 +16,12 @@
 #light "off"
 // (c) Microsoft Corporation. All rights reserved
 module FStar.Syntax.Print
-open FStar.ST
-open FStar.All
+open FStar.Compiler.Effect
+open FStar.Compiler.Effect
 open FStar.Syntax.Syntax
 open FStar.Ident
 open FStar.Const
-open FStar.Util
+open FStar.Compiler.Util
 
 module DsEnv = FStar.Syntax.DsEnv
 
@@ -40,20 +40,24 @@ val lbs_to_string         : list<qualifier> -> letbindings -> string
 val tag_of_term           : term -> string
 val lbname_to_string      : lbname -> string
 val pat_to_string         : pat -> string
+val branch_to_string      : Syntax.branch -> string
 val modul_to_string       : modul -> string
-val lcomp_to_string       : lcomp -> string
 val univ_names_to_string  : univ_names -> string
 val univ_to_string        : universe -> string
+val univs_to_string       : universes -> string
 val attrs_to_string       : list<attribute> -> string
 val sigelt_to_string      : sigelt -> string
 val sigelt_to_string_short: sigelt -> string
+val tag_of_sigelt         : sigelt -> string
 val binder_to_string      : binder -> string
 val binders_to_string     : string -> binders -> string
 val binder_to_json        : DsEnv.env -> binder -> json
 val binders_to_json       : DsEnv.env -> binders -> json
 val aqual_to_string       : aqual -> string
+val bqual_to_string       : bqual -> string
 val args_to_string        : args -> string
 val eff_decl_to_string    : bool -> eff_decl -> string
+val sub_eff_to_string     : sub_eff -> string
 val subst_to_string       : subst_t -> string
 val const_to_string       : sconst -> string
 val qual_to_string        : qualifier -> string
@@ -67,8 +71,7 @@ val delta_depth_to_string : delta_depth -> string
 val action_to_string  : action -> string
 val metadata_to_string : metadata -> string
 val ctx_uvar_to_string    : ctx_uvar -> string
+val ctx_uvar_to_string_no_reason    : ctx_uvar -> string
 
 val emb_typ_to_string: emb_typ -> string
 
-// VD: just for NBE testing
-val univs_to_string: universes -> string

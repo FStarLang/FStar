@@ -437,9 +437,10 @@ let assign #a vec i v =
 private val resize_ratio: uint32_t
 private let resize_ratio = 2ul
 
-private val new_capacity: cap:uint32_t{cap > 0ul} -> Tot uint32_t
+private val new_capacity: cap:uint32_t -> Tot uint32_t
 private let new_capacity cap =
   if cap >= max_uint32 / resize_ratio then max_uint32
+  else if cap = 0ul then 1ul
   else cap * resize_ratio
 
 val insert:
@@ -631,7 +632,7 @@ private val get_preserved_within:
         [SMTPat (live h0 vec);
         SMTPat (modifies (loc_vector_within vec i j) h0 h1);
         SMTPat (get h0 vec k)]
-let rec get_preserved_within #a vec i j k h0 h1 =
+let get_preserved_within #a vec i j k h0 h1 =
   if k < i then begin
     loc_vector_within_disjoint vec k (k + 1ul) i j;
     get_preserved vec k (loc_vector_within vec i j) h0 h1
@@ -667,7 +668,8 @@ val forall_as_seq:
   Lemma (requires (p (S.index s0 k) /\ S.slice s0 i j == S.slice s1 i j))
         (ensures (p (S.index s1 k)))
         [SMTPat (p (S.index s0 k));
-        SMTPat (S.slice s0 i j == S.slice s1 i j)]
+         SMTPat (S.slice s0 i j);
+         SMTPat (S.slice s1 i j)]
 let forall_as_seq #a s0 s1 i j k p =
   assert (S.index (S.slice s0 i j) (k - i) ==
          S.index (S.slice s1 i j) (k - i))

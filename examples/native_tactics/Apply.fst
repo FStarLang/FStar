@@ -23,7 +23,7 @@ assume val x : int
 val refl : (a:Type) -> (x:a) -> Lemma (x == x)
 let refl a x = ()
 
-[@plugin]
+[@@plugin]
 let tau () : Tac unit =
     apply_lemma (`refl)
 

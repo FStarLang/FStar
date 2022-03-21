@@ -30,13 +30,13 @@ class inhab a = {
 (* mark with tcnorm. we need to write it as a match and not call the
  * projector since the projector won't unfold (but it could..., maybe
  * we need an UnfoldAttrFully?) *)
-[@tcnorm]
-let elem' #a [|d : inhab a|] =
+[@@tcnorm]
+let elem' #a {|d : inhab a|} =
     match d with
     | Mkinhab elem -> elem
 
 (* regular instance *)
-[@ tcnorm]
+[@@ tcnorm]
 instance inhab_unit : inhab unit = { elem = fun () -> admit #unit () }
 
 (* This will only succeed if the found instance is inlined, sa
@@ -47,7 +47,7 @@ let f (u:unit) =
 
 #push-options "--tcnorm false"
 
-[@expect_failure]
+[@@expect_failure]
 let f_fail (u:unit) =
   let t = elem' #unit () in
   assert (forall y. y == 1)

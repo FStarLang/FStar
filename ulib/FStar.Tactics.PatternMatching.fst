@@ -166,21 +166,18 @@ type varname = string
 type qn = string
 
 type pattern =
-| PAny: pattern
 | PVar: name: varname -> pattern
 | PQn: qn: qn -> pattern
 | PType: pattern
 | PApp: hd: pattern -> arg: pattern -> pattern
 
 let desc_of_pattern = function
-| PAny -> "anything"
 | PVar _ -> "a variable"
 | PQn qn -> "a constant (" ^ qn ^ ")"
 | PType -> "Type"
 | PApp _ _ -> "a function application"
 
 let rec string_of_pattern = function
-| PAny -> "__"
 | PVar x -> "?" ^ x
 | PQn qn -> qn
 | PType -> "Type"
@@ -216,10 +213,10 @@ let term_head t : Tac string =
   | Tv_Refine x t -> "Tv_Refine"
   | Tv_Const cst -> "Tv_Const"
   | Tv_Uvar i t -> "Tv_Uvar"
-  | Tv_Let r b t1 t2 -> "Tv_Let"
-  | Tv_Match t branches -> "Tv_Match"
-  | Tv_AscribedT _ _ _ -> "Tv_AscribedT"
-  | Tv_AscribedC _ _ _ -> "Tv_AscribedC"
+  | Tv_Let r attrs b t1 t2 -> "Tv_Let"
+  | Tv_Match t _ branches -> "Tv_Match"
+  | Tv_AscribedT _ _ _ _ -> "Tv_AscribedT"
+  | Tv_AscribedC _ _ _ _ -> "Tv_AscribedC"
   | Tv_Unknown -> "Tv_Unknown"
 
 let string_of_match_exception = function
@@ -295,10 +292,8 @@ the pattern.  Returns a result in the exception monad. **)
 let rec interp_pattern_aux (pat: pattern) (cur_bindings: bindings) (tm:term)
     : Tac (match_res bindings) =
   admit();
-  let interp_any () cur_bindings tm =
-    return [] in
   let interp_var (v: varname) cur_bindings tm =
-    match List.Tot.assoc v cur_bindings with
+    match List.Tot.Base.assoc v cur_bindings with
     | Some tm' -> if term_eq tm tm' then return cur_bindings
                  else raise (NonLinearMismatch (v, tm, tm'))
     | None -> return ((v, tm) :: cur_bindings) in
@@ -320,7 +315,6 @@ let rec interp_pattern_aux (pat: pattern) (cur_bindings: bindings) (tm:term)
       return with_arg
     | _ -> raise (SimpleMismatch (pat, tm)) in
     match pat with
-    | PAny -> interp_any () cur_bindings tm
     | PVar var -> interp_var var cur_bindings tm
     | PQn qn -> interp_qn qn cur_bindings tm
     | PType -> interp_type cur_bindings tm
@@ -334,7 +328,7 @@ Returns a result in the exception monad. **)
 let interp_pattern (pat: pattern) : term -> Tac (match_res bindings) =
   fun (tm: term) ->
     rev_bindings <-- interp_pattern_aux pat [] tm;
-    return (List.Tot.rev rev_bindings)
+    return (List.Tot.Base.rev rev_bindings)
 
 (** Match a term `tm` against a pattern `pat`.
 Raises an exception if the match fails.  This is mostly useful for debugging:
@@ -371,7 +365,7 @@ let string_of_matching_problem mp =
     String.concat ", " mp.mp_vars in
   let hyps =
     String.concat "\n        "
-      (List.Tot.map (fun (nm, pat) ->
+      (List.Tot.Base.map (fun (nm, pat) ->
         nm ^ ": " ^ (string_of_pattern pat)) mp.mp_hyps) in
   let goal = match mp.mp_goal with
              | None -> "_"
@@ -402,7 +396,7 @@ let string_of_matching_solution ms =
 (** Find a varname in an association list; fail if it can't be found. **)
 let assoc_varname_fail (#b: Type) (key: varname) (ls: list (varname * b))
     : Tac b =
-  match List.Tot.assoc key ls with
+  match List.Tot.Base.assoc key ls with
   | None -> fail ("Not found: " ^ key)
   | Some x -> x
 
@@ -508,9 +502,6 @@ let solve_mp #a (problem: matching_problem)
 /// variables are holes, free variables are constants, and applications are
 /// application patterns.
 
-// This is a hack to allow users to capture anything.
-assume val __ : #t:Type -> t
-let any_qn = `%__
 
 (** Compile a term `tm` into a pattern. **)
 let rec pattern_of_term_ex tm : Tac (match_res pattern) =
@@ -519,16 +510,10 @@ let rec pattern_of_term_ex tm : Tac (match_res pattern) =
     return (PVar (name_of_bv bv))
   | Tv_FVar fv ->
     let qn = fv_to_string fv in
-    return (if qn = any_qn then PAny else PQn qn)
+    return (PQn qn)
   | Tv_Type () ->
     return PType
   | Tv_App f (x, _) ->
-    let is_any = match inspect f with
-                 | Tv_FVar fv -> fv_to_string fv = any_qn
-                 | _ -> false in
-    if is_any then
-      return PAny
-    else
       (fpat <-- pattern_of_term_ex f;
        xpat <-- pattern_of_term_ex x;
        return (PApp fpat xpat))
@@ -672,8 +657,8 @@ let matching_problem_of_abs (tm: term)
     (map abspat_argspec_of_binder classified_binders, tm) in
 
   let mp =
-    { mp_vars = List.rev #varname problem.mp_vars;
-      mp_hyps = List.rev #(varname * pattern) problem.mp_hyps;
+    { mp_vars = List.Tot.Base.rev #varname problem.mp_vars;
+      mp_hyps = List.Tot.Base.rev #(varname * pattern) problem.mp_hyps;
       mp_goal = problem.mp_goal } in
 
   debug ("Got matching problem: " ^ (string_of_matching_problem mp));
@@ -771,7 +756,7 @@ let inspect_abspat_problem #a (abspat: a) : Tac matching_problem =
 
 (** Inspect the matching solution produced by parsing and solving an abspat. **)
 let inspect_abspat_solution #a (abspat: a) : Tac matching_solution =
-  match_abspat abspat (fun _ -> (fun solution -> solution) <: Tac _)
+  match_abspat abspat (fun _ -> (fun solution -> solution <: Tac _) <: Tac _)
 
 let tpair #a #b (x : a) : Tac (b -> Tac (a * b)) =
   fun (y: b) -> (x, y)

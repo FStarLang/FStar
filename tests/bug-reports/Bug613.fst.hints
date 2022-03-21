@@ -1,0 +1,53 @@
+[
+  "ŒÂÀÅÍüdÚß­¼\u0006p¤7¦",
+  [
+    [
+      "Bug613.l",
+      1,
+      2,
+      1,
+      [
+        "@query", "function_token_typing_Bug613.f",
+        "function_token_typing_Bug613.g"
+      ],
+      0,
+      "669d40cdc8e0aa3ae12a7d4c5f8e129b"
+    ],
+    [
+      "Bug613.l'",
+      1,
+      2,
+      1,
+      [
+        "@query", "function_token_typing_Bug613.f",
+        "function_token_typing_Bug613.g"
+      ],
+      0,
+      "148786c8ac59869955f4640f88497f07"
+    ],
+    [
+      "Bug613.l''",
+      1,
+      2,
+      1,
+      [
+        "@query", "function_token_typing_Bug613.f",
+        "function_token_typing_Bug613.h"
+      ],
+      0,
+      "4750020f03bc4582bd08ce7aa9b1fec0"
+    ],
+    [
+      "Bug613.test_i",
+      1,
+      2,
+      1,
+      [
+        "@query", "function_token_typing_Bug613.i0",
+        "function_token_typing_Bug613.i1"
+      ],
+      0,
+      "f4b6821c24cde8b36d66c0d27eb44ec9"
+    ]
+  ]
+]

@@ -25,12 +25,12 @@ let goal_is_true () : Tac unit =
     | True_ -> trivial ()
     | _ -> fail "not syntactically true"
 
-[@plugin]
+[@@plugin]
 let test_simplify () : Tac unit =
     simplify ();
     or_else goal_is_true (fun () -> dump ""; fail "simplify left open goals")
 
-[@plugin]
+[@@plugin]
 let simplify_c () : Tac unit = simplify (); admit_all()
 
 let test1 (r: ref int) =

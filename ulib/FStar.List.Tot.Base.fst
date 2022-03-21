@@ -15,13 +15,13 @@
 *)
 (**
 This module defines all pure and total operations on lists that can be
-used in specifications.
+used in specifications. It is implemented by FStar_List_Tot_Base.ml, any
+functional change and/or the addition of new functions MUST be reflected
+there.
 
 @summary Pure total operations on lists
 *)
 module FStar.List.Tot.Base
-
-module F = FStar.FunctionalExtensionality
 
 (**
 Base operations
@@ -120,7 +120,7 @@ let rec append x y = match x with
   | [] -> y
   | a::tl -> a::append tl y
 
-(** Defines notation [@] for [append], as in OCaml, F# . *)
+(** Defines notation [@@] for [append], as in OCaml, F# . *)
 let op_At x y = append x y
 
 (** [snoc (l, x)] adds [x] to the end of the list [l].
@@ -152,7 +152,7 @@ let rec map f x = match x with
   | [] -> []
   | a::tl -> f a::map f tl
 
-(** [mapi_init f n l] applies, for each [k], [f (n+k)] to the [k]-th
+(** [mapi_init f l n] applies, for each [k], [f (n+k)] to the [k]-th
 element of [l] and returns the list of results, in the order of the
 original elements in [l]. Requires, at type-checking time, [f] to be a
 pure total function. *)
@@ -220,6 +220,16 @@ let rec fold_left2 f accu l1 l2 =
   | ([], []) -> accu
   | (a1::l1, a2::l2) -> fold_left2 f (f accu a1 a2) l1 l2
 
+(** Propositional membership (as in Coq). Does not require decidable
+equality. *)
+
+(** [memP x l] holds if, and only if, [x] appears as an
+element of [l]. Similar to: List.In in Coq. *)
+let rec memP (#a: Type) (x: a) (l: list a) : Tot Type0 =
+  match l with
+  | [] -> False
+  | y :: q -> x == y \/ memP x q
+
 (** List searching **)
 
 (** [mem x l] returns [true] if, and only if, [x] appears as an
@@ -230,16 +240,6 @@ val mem: #a:eqtype -> a -> list a -> Tot bool
 let rec mem #a x = function
   | [] -> false
   | hd::tl -> if hd = x then true else mem x tl
-
-(** Propositional membership (as in Coq). Does not require decidable
-equality. *)
-
-(** [memP x l] holds if, and only if, [x] appears as an
-element of [l]. Similar to: List.In in Coq. *)
-let rec memP (#a: Type) (x: a) (l: list a) : Tot Type0 =
-  match l with
-  | [] -> False
-  | y :: q -> x == y \/ memP x q
 
 (** [contains x l] returns [true] if, and only if, [x] appears as an
 element of [l]. Requires, at type-checking time, the type of elements
@@ -270,49 +270,30 @@ let rec find #a f l = match l with
 (** Filtering elements of a list [l] through a Boolean pure total
 predicate [f] *)
 
-(** We would like to have a postcondition for [filter f l] saying
-that, for any element [x] of [filter f l], [f x] holds. To this end,
-we need to use [mem] as defined above, which would require the
-underlying type [a] of list elements to have decidable
-equality. However, we would still like to define [filter] on all
-element types, even those that do not have decidable equality. Thus,
-we define our postcondition as [mem_filter_spec f m u] below, where
-[m] is the intended [filter f l] and [u] indicates whether [a] has
-decidable equality ([None] if not). Requires, at type-checking time,
-[f] to be a pure total function. *)
-let mem_filter_spec (#a : Type) (f: (a -> Tot bool)) (m: list a) (u: option (x : unit { hasEq a } )) : Tot Type0 =
-  match u with
-  | None -> True
-  | Some z -> forall x . mem x m ==> f x
-
 (** [filter f l] returns [l] with all elements [x] such that [f x]
 does not hold removed. Requires, at type-checking time, [f] to be a
 pure total function.  Named as in: OCaml, Coq *)
-val filter : #a: Type -> f:(a -> Tot bool) -> l: list a -> Tot (m:list a { forall u . mem_filter_spec f m u } )
+val filter : #a: Type -> f:(a -> Tot bool) -> l: list a -> Tot (m:list a{forall x. memP x m ==> f x})
 let rec filter #a f = function
   | [] -> []
   | hd::tl -> if f hd then hd::filter f tl else filter f tl
 
-(** Postcondition on [filter f l] for types with decidable equality:
-for any element [x] of [filter f l], [f x] holds. Requires, at
-type-checking time, [f] to be a pure total function.*)
-val mem_filter (#a: eqtype) (f: (a -> Tot bool)) (l: list a) (x: a) : Lemma
-  (requires (mem #a x (filter f l)))
+(** Postcondition on [filter f l]: for any element [x] of [filter f l],
+[f x] holds. Requires, at type-checking time, [f] to be a pure total
+function.*)
+val mem_filter (#a:Type) (f: (a -> Tot bool)) (l: list a) (x: a) : Lemma
+  (requires (memP x (filter f l)))
   (ensures (f x))
-let mem_filter #a f l x =
-  let u : option ( u : unit { hasEq a } ) = Some () in
-  let y : (z : unit { mem_filter_spec f (filter f l) u } ) = () in
-  ()
+let mem_filter f l x = ()
 
-(** Postcondition on [filter f l] for types with decidable equality,
-stated with [forall]: for any element [x] of [filter f l], [f x]
-holds. Requires, at type-checking time, [f] to be a pure total
-function. *)
-val mem_filter_forall (#a: eqtype) (f: (a -> Tot bool)) (l: list a) : Lemma
+(** Postcondition on [filter f l]: stated with [forall]: for any element
+[x] of [filter f l], [f x] holds. Requires, at type-checking time, [f]
+to be a pure total function. *)
+val mem_filter_forall (#a:Type) (f: (a -> Tot bool)) (l: list a) : Lemma
   (requires True)
-  (ensures (forall x . mem #a x (filter f l) ==> f x))
+  (ensures (forall x . memP x (filter f l) ==> f x))
   [SMTPat (filter f l)]
-let mem_filter_forall #a f l = FStar.Classical.ghost_lemma (mem_filter f l)
+let mem_filter_forall f l = FStar.Classical.ghost_lemma (mem_filter f l)
 
 (** [for_all f l] returns [true] if, and only if, for all elements [x]
 appearing in [l], [f x] holds. Requires, at type-checking time, [f] to
@@ -325,11 +306,11 @@ let rec for_all f l = match l with
 
 (** Specification for [for_all f l] vs. mem *)
 let rec for_all_mem
-  (#a: eqtype)
+  (#a: Type)
   (f: (a -> Tot bool))
   (l: list a)
 : Lemma
-  (for_all f l <==> (forall x . mem x l ==> f x))
+  (for_all f l <==> (forall x . memP x l ==> f x))
 = match l with
   | [] -> ()
   | _ :: q -> for_all_mem f q
@@ -442,7 +423,7 @@ let rec split l = match l with
 (** [unzip] takes a list of pairs [(x1, y1), ..., (xn, yn)] and
 returns the pair of lists ([x1, ..., xn], [y1, ..., yn]). Named as in:
 Haskell *)
-let unzip = split
+let unzip l = split l
 
 (** [unzip3] takes a list of triples [(x1, y1, z1), ..., (xn, yn, zn)]
 and returns the triple of lists ([x1, ..., xn], [y1, ..., yn], [z1,
@@ -459,7 +440,7 @@ let rec unzip3 l = match l with
 (** [splitAt] takes a natural number n and a list and returns a pair
     of the maximal prefix of l of size smaller than n and the rest of
     the list *)
-let rec splitAt (#a:Type) (n:nat) (l:list a) : list a * list a =
+let rec splitAt (#a:Type) (n:nat) (l:list a) : Tot (list a * list a) =
   if n = 0 then [], l
   else
     match l with
@@ -488,9 +469,9 @@ let unsnoc #a l =
     element itself. *)
 val split3: #a:Type -> l:list a -> i:nat{i < length l} -> Tot (list a * a * list a)
 let split3 #a l i =
-  let a, as = splitAt i l in
+  let a, rest = splitAt i l in
   lemma_splitAt_snd_length i l;
-  let b :: c = as in
+  let b :: c = rest in
   a, b, c
 
 (** Sorting (implemented as quicksort) **)
@@ -507,14 +488,15 @@ let rec partition_length f l = match l with
   | hd::tl -> partition_length f tl
 
 (** [bool_of_compare] turns a comparison function into a strict
-order. More precisely, [bool_of_compare compare x y] returns true if,
-and only if, [compare x y] is positive. Inspired from OCaml, where
-polymorphic comparison using both the [compare] function and the (>)
-infix operator are such that [compare x y] is positive if, and only
-if, x > y. Requires, at type-checking time, [compare] to be a pure
-total function. *)
+    order. More precisely, [bool_of_compare compare x y] returns true
+    if, and only if, [compare x y] is negative, meaning [x] precedes
+    [y] in the ordering defined by compare.
+
+    This is used in sorting, and is defined to be consistent with
+    OCaml and F#, where sorting is performed in ascending order.
+*)
 val bool_of_compare : #a:Type -> (a -> a -> Tot int) -> a -> a -> Tot bool
-let bool_of_compare #a f x y = f x y > 0
+let bool_of_compare #a f x y = f x y < 0
 
 (** [compare_of_bool] turns a strict order into a comparison
 function. More precisely, [compare_of_bool rel x y] returns a positive
@@ -525,37 +507,38 @@ if, x > y. Requires, at type-checking time, [rel] to be a pure total
 function.  *)
 val compare_of_bool : #a:eqtype -> (a -> a -> Tot bool) -> a -> a -> Tot int
 let compare_of_bool #a rel x y =
-    if x `rel` y  then 1
+    if x `rel` y  then -1
     else if x = y then 0
-    else 0-1
+    else 1
 
 let compare_of_bool_of_compare (#a:eqtype) (f:a -> a -> Tot bool)
   : Lemma (forall x y. bool_of_compare (compare_of_bool f) x y == f x y)
   = ()
 
 (** [sortWith compare l] returns the list [l'] containing the elements
-of [l] sorted along the comparison function [compare], in such a way
-that if [compare x y > 0], then [x] appears before [y] in
-[l']. Requires, at type-checking time, [compare] to be a pure total
-function. *)
+    of [l] sorted along the comparison function [compare], in such a
+    way that if [compare x y > 0], then [x] appears before [y] in
+    [l']. Sorts in ascending order *)
 val sortWith: ('a -> 'a -> Tot int) -> l:list 'a -> Tot (list 'a) (decreases (length l))
 let rec sortWith f = function
   | [] -> []
   | pivot::tl ->
-     let hi, lo  = partition (bool_of_compare f pivot) tl in
+     let hi, lo = partition (bool_of_compare f pivot) tl in
      partition_length (bool_of_compare f pivot) tl;
      append (sortWith f lo) (pivot::sortWith f hi)
 
-(** A l1 is a strict prefix of l2. *)
-
-let rec strict_prefix_of (#a: Type) (l1 l2: list a)
+(** A l1 is a strict suffix of l2. *)
+let rec strict_suffix_of (#a: Type) (l1 l2: list a)
 : Pure Type0
   (requires True)
   (ensures (fun _ -> True))
   (decreases l2)
 = match l2 with
   | [] -> False
-  | _ :: q -> l1 == q \/ l1 `strict_prefix_of` q
+  | _ :: q -> l1 == q \/ l1 `strict_suffix_of` q
+
+[@@deprecated "This function was misnamed: Please use 'strict_suffix_of'"]
+let strict_prefix_of = strict_suffix_of
 
 val list_unref : #a:Type -> #p:(a -> Type0) -> list (x:a{p x}) -> Tot (list a)
 let rec list_unref #a #p l =

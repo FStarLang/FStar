@@ -1,5 +1,5 @@
 [
-  "ó\tæfÎ,ÿ?¥]\u0019›î\u0013Ä ",
+  "\u001c£\b\u0010&≈HÆÊÅw\u0015∞4Ò™",
   [
     [
       "Tutorial.ex3",
@@ -12,7 +12,7 @@
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "a1118bf09d2f6df6b67c9f6186aef6cb"
+      "1c25ff27a64febebf960f7b3e75b0dfa"
     ],
     [
       "Tutorial.ex3'",
@@ -25,24 +25,11 @@
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "05f950384e023d5b55b1ca140bd4c12f"
+      "e04e6c2653709ad76ed2b4638c744ee3"
     ],
     [
       "Tutorial.ex4",
       1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
-        "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
-      ],
-      0,
-      "052a5f0d386a6c222fd9914b5274829e"
-    ],
-    [
-      "Tutorial.ex4",
-      2,
       2,
       1,
       [
@@ -51,37 +38,11 @@
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "6d61738544c49d4629e181baa3ce79dd"
-    ],
-    [
-      "Tutorial.ex3",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
-        "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
-      ],
-      0,
-      "0fdb67fed475c55cd01eb1e1a02dce47"
-    ],
-    [
-      "Tutorial.ex3'",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
-        "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
-      ],
-      0,
-      "66399cca5069c0c00091598d6f7f72ee"
+      "9da005cb868845e06d7e4f88c083faaa"
     ],
     [
       "Tutorial.ex4",
-      3,
+      2,
       2,
       1,
       [
@@ -90,20 +51,7 @@
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "969de360d908535e996e8fc0d7120caa"
-    ],
-    [
-      "Tutorial.ex4",
-      4,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
-        "primitive_Prims.op_Minus", "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
-      ],
-      0,
-      "fb3db2e2bb9e73c4d79ff9afb8515884"
+      "882a3c2b2eb3504bbf459ec0e93e9be8"
     ]
   ]
 ]

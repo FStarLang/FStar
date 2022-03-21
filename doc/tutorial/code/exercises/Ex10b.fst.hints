@@ -13,7 +13,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "1618bb992ac7879ccc83cc7638a8749c"
+      "e37687db3463476a80642db7120ee16c"
     ],
     [
       "Ex10b.__proj__Point__item__y",
@@ -27,7 +27,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "4175bf5ae12e657bba995610817005e1"
+      "5216cf131eb78b2819d3a212063323c1"
     ],
     [
       "Ex10b.__proj__Point__item__y",
@@ -43,7 +43,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "b43792fdec6dfe255c2d505dff724da0"
+      "ab4d7e19f910a3882f391076774d3732"
     ],
     [
       "Ex10b.new_point",
@@ -57,7 +57,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "6d0122efb85381ba0f9834d96d0b17e5"
+      "87796064be4899b890f947788ff1cae8"
     ],
     [
       "Ex10b.new_point",
@@ -92,7 +92,7 @@
         "typing_FStar.Monotonic.Heap.addr_of", "typing_FStar.Set.empty"
       ],
       0,
-      "db7608e3bd166a9cc5de05ad500bc73e"
+      "6f4d1c6a61ddd698b5e0e183971cc8b9"
     ],
     [
       "Ex10b.shift_x_p1",
@@ -106,7 +106,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "507ef7d794b1088b279d71e2cc1b72e0"
+      "0a057865db4e98ec29a41dc8acd2c95b"
     ],
     [
       "Ex10b.shift_x_p1",
@@ -120,7 +120,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "fd8f3c53f801f7e24291c9ab4ade4c3f"
+      "f80cd6fe7071b0b94a85f08643d5a297"
     ],
     [
       "Ex10b.test",
@@ -148,79 +148,7 @@
         "typing_FStar.Heap.trivial_preorder"
       ],
       0,
-      "da7a397946676e3ed879fb6de29bc344"
-    ],
-    [
-      "Ex10b.point",
-      1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
-        "equation_Prims.nat", "function_token_typing_Prims.int",
-        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
-      ],
-      0,
-      "27924e568909d00e0e201b5c7778f01a"
-    ],
-    [
-      "Ex10b.__proj__Point__item__y",
-      3,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
-        "equation_Prims.nat", "function_token_typing_Prims.int",
-        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
-      ],
-      0,
-      "3b808283eaec54923a97351d67ca9d85"
-    ],
-    [
-      "Ex10b.__proj__Point__item__y",
-      4,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
-        "equation_Prims.nat", "fuel_guarded_inversion_Ex10b.point",
-        "function_token_typing_Prims.int",
-        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "proj_equation_Ex10b.Point_x", "projection_inverse_Ex10b.Point_x",
-        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
-      ],
-      0,
-      "945db787585574cccc9d3adcf83c5fb5"
-    ],
-    [
-      "Ex10b.new_point",
-      3,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
-        "equation_Prims.nat", "function_token_typing_Prims.int",
-        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
-      ],
-      0,
-      "52478dea89803609b692348a2505aa09"
-    ],
-    [
-      "Ex10b.shift_x_p1",
-      3,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
-        "equation_Prims.nat", "function_token_typing_Prims.int",
-        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
-      ],
-      0,
-      "6cb34458e40955e840a4fbd0a3b422ae"
+      "759f8462c69e1d2aec7a1b122fffc634"
     ]
   ]
 ]

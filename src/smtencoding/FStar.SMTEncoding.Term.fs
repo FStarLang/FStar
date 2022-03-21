@@ -16,15 +16,14 @@
 #light "off"
 
 module FStar.SMTEncoding.Term
-open FStar.ST
-open FStar.Exn
-open FStar.All
-
+open FStar.Compiler.Effect
+open FStar.Compiler.List
 open FStar
+open FStar.Compiler
 open FStar.Syntax.Syntax
 open FStar.Syntax
-open FStar.Util
-module BU = FStar.Util
+open FStar.Compiler.Util
+module BU = FStar.Compiler.Util
 module U = FStar.Syntax.Util
 
 let escape (s:string) = BU.replace_char s '\'' '_'
@@ -101,6 +100,10 @@ type qop =
 //de Bruijn representation of terms in locally nameless style
 type term' =
   | Integer    of string //unbounded mathematical integers
+  | String     of string //string constants
+                         //we keep the string constants as is in the AST (and hence in the checked files)
+                         //and convert them to integer ids just before sending them to Z3
+                         //(see termToSmt)
   | Real       of string //real numbers
   | BoundV     of int
   | FreeV      of fv
@@ -286,6 +289,7 @@ let fv_of_term = function
     | _ -> failwith "impossible"
 let rec freevars t = match t.tm with
   | Integer _
+  | String _
   | Real _
   | BoundV _ -> []
   | FreeV fv when fv_force fv -> [] //this is actually a top-level constant
@@ -354,6 +358,7 @@ let weightToSmt = function
 
 let rec hash_of_term' t = match t with
   | Integer i ->  i
+  | String s -> s
   | Real r -> r
   | BoundV i  -> "@"^string_of_int i
   | FreeV x   -> fv_name x ^ ":" ^ strSort (fv_sort x) //Question: Why is the sort part of the hash?
@@ -481,6 +486,7 @@ let check_pattern_ok (t:term) : option<term> =
     let rec aux t =
         match t.tm with
         | Integer _
+        | String _
         | Real _
         | BoundV _
         | FreeV _ -> None
@@ -544,6 +550,7 @@ let check_pattern_ok (t:term) : option<term> =
  let rec print_smt_term (t:term) :string =
   match t.tm with
   | Integer n               -> BU.format1 "(Integer %s)" n
+  | String s                -> BU.format1 "(String %s)" s
   | Real r                  -> BU.format1 "(Real %s)" r
   | BoundV  n               -> BU.format1 "(BoundV %s)" (BU.string_of_int n)
   | FreeV  fv               -> BU.format1 "(FreeV %s)" (fv_name fv)
@@ -596,6 +603,7 @@ let abstr fvs t = //fvs is a subset of the free vars of t; the result closes ove
     | _ ->
       begin match t.tm with
         | Integer _
+        | String _
         | Real _
         | BoundV _ -> t
         | FreeV x ->
@@ -621,6 +629,7 @@ let inst tms t =
   let n = List.length tms in //instantiate the first n BoundV's with tms, in order
   let rec aux shift t = match t.tm with
     | Integer _
+    | String _
     | Real _
     | FreeV _ -> t
     | BoundV i ->
@@ -771,6 +780,10 @@ let name_macro_binders sorts =
 let termToSmt
   : print_ranges:bool -> enclosing_name:string -> t:term -> string
   =
+  //a counter and a hash table for string constants to integer ids mapping
+  let string_id_counter = BU.mk_ref 0 in
+  let string_cache= BU.smap_create 20 in
+
   fun print_ranges enclosing_name t ->
       let next_qid =
           let ctr = BU.mk_ref 0 in
@@ -793,6 +806,15 @@ let termToSmt
         match t.tm with
         | Integer i -> i
         | Real r -> r
+        | String s ->
+          let id_opt = BU.smap_try_find string_cache s in
+          (match id_opt with
+           | Some id -> id
+           | None ->
+             let id = !string_id_counter |> string_of_int in
+             BU.incr string_id_counter;
+             BU.smap_add string_cache s id;
+             id)
         | BoundV i ->
           List.nth names i |> fv_name
         | FreeV x when fv_force x -> "(" ^ fv_name x ^ " Dummy_value)" //force a thunked name
@@ -865,7 +887,7 @@ let rec declToSmt' print_captions z3options decl =
   | Module (s, decls) ->
     let res = List.map (declToSmt' print_captions z3options) decls |> String.concat "\n" in
     if Options.keep_query_captions()
-    then BU.format5 "\n;;; Start module %s\n%s\n;;; End module %s (%s decls; total size %s)"
+    then BU.format5 "\n;;; Start %s\n%s\n;;; End %s (%s decls; total size %s)"
                     s
                     res
                     s
@@ -895,8 +917,8 @@ let rec declToSmt' print_captions z3options decl =
   | Assume a ->
     let fact_ids_to_string ids =
         ids |> List.map (function
-        | Name n -> "Name " ^Ident.text_of_lid n
-        | Namespace ns -> "Namespace " ^Ident.text_of_lid ns
+        | Name n -> "Name " ^ Ident.string_of_lid n
+        | Namespace ns -> "Namespace " ^ Ident.string_of_lid ns
         | Tag t -> "Tag " ^t)
     in
     let fids =
@@ -925,8 +947,6 @@ let rec declToSmt' print_captions z3options decl =
   | GetReasonUnknown-> "(echo \"<reason-unknown>\")\n(get-info :reason-unknown)\n(echo \"</reason-unknown>\")"
 
 and declToSmt         z3options decl = declToSmt' (Options.keep_query_captions())  z3options decl
-and declToSmt_no_caps z3options decl = declToSmt' false z3options decl
-and declsToSmt        z3options decls = List.map (declToSmt z3options) decls |> String.concat "\n"
 
 and mkPrelude z3options =
   let basic = z3options ^
@@ -992,18 +1012,10 @@ and mkPrelude z3options =
                                  (fst boxIntFun,     [snd boxIntFun,  Int_sort, true],   Term_sort, 7, true);
                                  (fst boxBoolFun,    [snd boxBoolFun, Bool_sort, true],  Term_sort, 8, true);
                                  (fst boxStringFun,  [snd boxStringFun, String_sort, true], Term_sort, 9, true);
-                                 (fst boxRealFun,    [snd boxRealFun, Sort "Real", true], Term_sort, 10, true);
-                                 ("LexCons",    [("LexCons_0", Term_sort, true); ("LexCons_1", Term_sort, true); ("LexCons_2", Term_sort, true)], Term_sort, 11, true)] in
+                                 (fst boxRealFun,    [snd boxRealFun, Sort "Real", true], Term_sort, 10, true)] in
    let bcons = constrs |> List.collect (constructor_to_decl norng)
                        |> List.map (declToSmt z3options) |> String.concat "\n" in
-   let lex_ordering = "\n(define-fun is-Prims.LexCons ((t Term)) Bool \n\
-                                   (is-LexCons t))\n\
-                       (declare-fun Prims.lex_t () Term)\n\
-                       (assert (forall ((t1 Term) (t2 Term) (x1 Term) (x2 Term) (y1 Term) (y2 Term))\n\
-                                    (iff (Valid (Prims.precedes Prims.lex_t Prims.lex_t (LexCons t1 x1 x2) (LexCons t2 y1 y2)))\n\
-                                         (or (Valid (Prims.precedes t1 t2 x1 y1))\n\
-                                             (and (= x1 y1)\n\
-                                                  (Valid (Prims.precedes Prims.lex_t Prims.lex_t x2 y2)))))))\n\
+   let lex_ordering = "\n(declare-fun Prims.lex_t () Term)\n\
                       (assert (forall ((t1 Term) (t2 Term) (e1 Term) (e2 Term))\n\
                                                           (! (iff (Valid (Prims.precedes t1 t2 e1 e2))\n\
                                                                   (Valid (Prims.precedes Prims.lex_t Prims.lex_t e1 e2)))\n\
@@ -1037,6 +1049,8 @@ and mkPrelude z3options =
       then valid_elim
       else "")
 
+let declsToSmt        z3options decls = List.map (declToSmt z3options) decls |> String.concat "\n"
+let declToSmt_no_caps z3options decl = declToSmt' false z3options decl
 
 (* Generate boxing/unboxing functions for bitvectors of various sizes. *)
 (* For ids, to avoid dealing with generation of fresh ids,
@@ -1113,7 +1127,7 @@ let mk_Valid t        = match t.tm with
     | App(Var "Prims.b2t", [{tm=App(Var "Prims.op_Negation", [t])}]) -> mkNot (unboxBool t) t.rng
     | App(Var "Prims.b2t", [{tm=App(Var "FStar.BV.bvult", [t0; t1;t2])}])
     | App(Var "Prims.equals", [_; {tm=App(Var "FStar.BV.bvult", [t0; t1;t2])}; _])
-            when (FStar.Util.is_some (getBoxedInteger t0))->
+            when (FStar.Compiler.Util.is_some (getBoxedInteger t0))->
         // sometimes b2t gets needlessly normalized...
         let sz = match getBoxedInteger t0 with | Some sz -> sz | _ -> failwith "impossible" in
         mkBvUlt (unboxBitVec sz t1, unboxBitVec sz t2) t.rng
@@ -1138,9 +1152,8 @@ let mk_tester n t     = mkApp("is-"^n,   [t]) t.rng
 let mk_ApplyTF t t'   = mkApp("ApplyTF", [t;t']) t.rng
 let mk_ApplyTT t t'  r  = mkApp("ApplyTT", [t;t']) r
 let kick_partial_app t  = mk_ApplyTT (mkApp("__uu__PartialApp", []) t.rng) t t.rng |> mk_Valid
-let mk_String_const i r = mkApp("FString_const", [ mkInteger' i norng]) r
+let mk_String_const s r = mkApp ("FString_const", [mk (String s) r]) r
 let mk_Precedes x1 x2 x3 x4 r = mkApp("Prims.precedes", [x1;x2;x3;x4])  r|> mk_Valid
-let mk_LexCons x1 x2 x3 r  = mkApp("LexCons", [x1;x2;x3]) r
 let rec n_fuel n =
     if n = 0 then mkApp("ZFuel", []) norng
     else mkApp("SFuel", [n_fuel (n - 1)]) norng

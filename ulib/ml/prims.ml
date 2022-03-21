@@ -20,12 +20,12 @@ type bool' = bool
 [@@deriving yojson,show]
 type bool = bool'
 [@@deriving yojson,show]
-type c_False = unit
+type empty = unit
 (*This is how Coq extracts Inductive void := . Our extraction needs to be fixed to recognize when there
        are no constructors and generate this type abbreviation*)
-type c_True =
+type trivial =
   | T
-let (uu___is_T : c_True -> bool) = fun projectee  -> true
+let (uu___is_T : trivial -> bool) = fun projectee  -> true
 type nonrec unit = unit
 type 'Ap squash = unit
 type 'Ap auto_squash = unit
@@ -36,37 +36,31 @@ type ('Aa,'Ax,'dummyV0) equals =
 let uu___is_Refl : 'Aa . 'Aa -> 'Aa -> ('Aa,unit,unit) equals -> bool =
   fun x  -> fun uu____65  -> fun projectee  -> true
 type ('Aa,'Ax,'Ay) eq2 = unit
-type ('Aa,'Ax,'dummyV0,'dummyV1) h_equals =
-  | HRefl
-let uu___is_HRefl :
-  'Aa . 'Aa -> unit -> Obj.t -> ('Aa,unit,Obj.t,unit) h_equals -> bool
-  = fun x  -> fun b  -> fun uu____141  -> fun projectee  -> true
-type ('Aa,'Ab,'Ax,'Ay) eq3 = unit
 type ('Aa,'Ab,'Ax,'Ay) op_Equals_Equals_Equals = unit
 type 'Ab b2t = unit
-type ('Ap,'Aq) c_and =
-  | And of 'Ap * 'Aq
-let uu___is_And : 'Ap 'Aq . ('Ap,'Aq) c_and -> bool =
+type ('Ap,'Aq) pair =
+  | Pair of 'Ap * 'Aq
+let uu___is_Pair : 'Ap 'Aq . ('Ap,'Aq) pair -> bool =
   fun projectee  -> true
-let __proj__And__item___0 : 'Ap 'Aq . ('Ap,'Aq) c_and -> 'Ap =
-  fun projectee  -> match projectee with | And (_0,_1) -> _0
-let __proj__And__item___1 : 'Ap 'Aq . ('Ap,'Aq) c_and -> 'Aq =
-  fun projectee  -> match projectee with | And (_0,_1) -> _1
+let __proj__Pair__item___1 : 'Ap 'Aq . ('Ap,'Aq) pair -> 'Ap =
+  fun projectee  -> match projectee with | Pair (_0,_1) -> _0
+let __proj__Pair__item___2 : 'Ap 'Aq . ('Ap,'Aq) pair -> 'Aq =
+  fun projectee  -> match projectee with | Pair (_0,_1) -> _1
 type ('Ap,'Aq) l_and = unit
-type ('Ap,'Aq) c_or =
+type ('Ap,'Aq) sum =
   | Left of 'Ap
   | Right of 'Aq
-let uu___is_Left : 'Ap 'Aq . ('Ap,'Aq) c_or -> bool =
+let uu___is_Left : 'Ap 'Aq . ('Ap,'Aq) sum -> bool =
   fun projectee  ->
     match projectee with | Left _0 -> true | uu____344 -> false
 
-let __proj__Left__item___0 : 'Ap 'Aq . ('Ap,'Aq) c_or -> 'Ap =
+let __proj__Left__item___0 : 'Ap 'Aq . ('Ap,'Aq) sum -> 'Ap =
   fun projectee  -> match projectee with | Left _0 -> _0
-let uu___is_Right : 'Ap 'Aq . ('Ap,'Aq) c_or -> bool =
+let uu___is_Right : 'Ap 'Aq . ('Ap,'Aq) sum -> bool =
   fun projectee  ->
     match projectee with | Right _0 -> true | uu____404 -> false
 
-let __proj__Right__item___0 : 'Ap 'Aq . ('Ap,'Aq) c_or -> 'Aq =
+let __proj__Right__item___0 : 'Ap 'Aq . ('Ap,'Aq) sum -> 'Aq =
   fun projectee  -> match projectee with | Right _0 -> _0
 type ('Ap,'Aq) l_or = unit
 type ('Ap,'Aq) l_imp = unit
@@ -77,6 +71,7 @@ type ('Aa,'Ab,'Auu____484,'Auu____485) precedes = unit
 type ('Aa,'Auu____490,'Auu____491) has_type = unit
 type ('Aa,'Ap) l_Forall = unit
 type prop = unit
+let id x = x
 type ('Aa,'Ab) dtuple2 =
   | Mkdtuple2 of 'Aa * 'Ab
 let uu___is_Mkdtuple2 : 'Aa 'Ab . ('Aa,'Ab) dtuple2 -> bool =
@@ -195,11 +190,7 @@ let op_Modulus x y = x mod y
 let op_Division x y = x / y
 let rec (pow2 : nat -> pos) =
   fun x  ->
-    match x with
-    | _0_2 when _0_2 = (parse_int "0") -> (parse_int "1")
-    | uu____1577 ->
-        op_Multiply (parse_int "2")
-          (pow2 (op_Subtraction x (parse_int "1")))
+    Z.shift_left Z.one (Z.to_int x)
 
 let (min : int -> int -> int) =
   fun x  -> fun y  -> if x <= y then x else y

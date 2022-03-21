@@ -48,10 +48,10 @@ endif
 all: ../krml-test.exe ../spartan_aes/aes.o LowCProvider.cmxa
 
 ../spartan_aes/aes.o:
-	$(MAKE) -C ../spartan_aes
+	+$(MAKE) -C ../spartan_aes
 
 ../krml-test.exe: $(wildcard ../crypto/*.fst)
-	$(MAKE) -C .. krml-test.exe
+	+$(MAKE) -C .. krml-test.exe
 
 %.cmi: %.mli
 	$(OCAMLC) -c $<
@@ -63,7 +63,7 @@ all: ../krml-test.exe ../spartan_aes/aes.o LowCProvider.cmxa
 	$(OCAMLOPT) -c $<
 
 $(CORECRYPTO)/CoreCrypto.cmx: $(CORECRYPTO)/CoreCrypto.ml
-	$(MAKE) -C $(CORECRYPTO)
+	+$(MAKE) -C $(CORECRYPTO)
 
 
 
@@ -81,8 +81,8 @@ Tests.exe: LowCProvider.cmxa Tests.cmx
 	$(OCAMLOPT) $(EXTRA_OPTS) -I $(PLATFORM) -package batteries,zarith -linkpkg -o $@ libllcrypto.a lowc_stub.o CoreCrypto.cmxa LowCProvider.cmx Tests.cmx
 
 clean:
-	$(MAKE) -C $(PLATFORM) clean
-	$(MAKE) -C $(CORECRYPTO) clean
+	+$(MAKE) -C $(PLATFORM) clean
+	+$(MAKE) -C $(CORECRYPTO) clean
 	rm -fr tmp
 	rm -f Tests.exe *.[oa] *.so *.cm[ixoa] *.cmxa *.exe *.dll *.annot *~
 

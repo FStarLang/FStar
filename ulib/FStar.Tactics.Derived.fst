@@ -14,7 +14,7 @@
    limitations under the License.
 *)
 module FStar.Tactics.Derived
-
+open FStar.List.Tot
 open FStar.Reflection
 open FStar.Reflection.Formula
 open FStar.Tactics.Types
@@ -22,19 +22,20 @@ open FStar.Tactics.Effect
 open FStar.Tactics.Builtins
 open FStar.Tactics.Result
 open FStar.Tactics.Util
+open FStar.Tactics.SyntaxHelpers
 module L = FStar.List.Tot
 
-(* Another hook to just run a tactic without goals, just by reusing `with_tactic` *)
-let run_tactic (t:unit -> Tac unit)
-  : Pure unit
-         (requires (set_range_of (with_tactic (fun () -> trivial (); t ()) (squash True)) (range_of t)))
-         (ensures (fun _ -> True))
-  = ()
+exception Goal_not_trivial
 
 let goals () : Tac (list goal) = goals_of (get ())
 let smt_goals () : Tac (list goal) = smt_goals_of (get ())
 
-let fail (#a:Type) (m:string) = raise #a (TacticFailure m)
+let fail (#a:Type) (m:string) =
+  raise #a (TacticFailure m)
+
+let fail_silently (#a:Type) (m:string) =
+  set_urgency 0;
+  raise #a (TacticFailure m)
 
 (** Return the current *goal*, not its type. (Ignores SMT goals) *)
 let _cur_goal () : Tac goal =
@@ -70,6 +71,31 @@ let with_policy pol (f : unit -> Tac 'a) : Tac 'a =
     let r = f () in
     set_guard_policy old_pol;
     r
+
+(** [exact e] will solve a goal [Gamma |- w : t] if [e] has type exactly
+[t] in [Gamma]. *)
+let exact (t : term) : Tac unit =
+    with_policy SMT (fun () -> t_exact true false t)
+
+(** [exact_with_ref e] will solve a goal [Gamma |- w : t] if [e] has
+type [t'] where [t'] is a subtype of [t] in [Gamma]. This is a more
+flexible variant of [exact]. *)
+let exact_with_ref (t : term) : Tac unit =
+    with_policy SMT (fun () -> t_exact true true t)
+
+let trivial () : Tac unit =
+  norm [iota; zeta; reify_; delta; primops; simplify; unmeta];
+  let g = cur_goal () in
+  match term_as_formula g with
+  | True_ -> exact (`())
+  | _ -> raise Goal_not_trivial
+
+(* Another hook to just run a tactic without goals, just by reusing `with_tactic` *)
+let run_tactic (t:unit -> Tac unit)
+  : Pure unit
+         (requires (set_range_of (with_tactic (fun () -> trivial (); t ()) (squash True)) (range_of t)))
+         (ensures (fun _ -> True))
+  = ()
 
 (** Ignore the current goal. If left unproven, this will fail after
 the tactic finishes. *)
@@ -118,12 +144,6 @@ let later () : Tac unit =
     | g::gs -> set_goals (gs @ [g])
     | _ -> fail "later: no goals"
 
-(** [exact e] will solve a goal [Gamma |- w : t] if [e] has type exactly
-[t] in [Gamma]. Also, [e] needs to unift with [w], but this will almost
-always be the case since [w] is usually a uvar. *)
-let exact (t : term) : Tac unit =
-    with_policy SMT (fun () -> t_exact true false t)
-
 (** [apply f] will attempt to produce a solution to the goal by an application
 of [f] to any amount of arguments (which need to be solved as further goals).
 The amount of arguments introduced is the least such that [f a_i] unifies
@@ -133,6 +153,33 @@ let apply (t : term) : Tac unit =
 
 let apply_noinst (t : term) : Tac unit =
     t_apply true true t
+
+(** [apply_lemma l] will solve a goal of type [squash phi] when [l] is a
+Lemma ensuring [phi]. The arguments to [l] and its requires clause are
+introduced as new goals. As a small optimization, [unit] arguments are
+discharged by the engine. Just a thin wrapper around [t_apply_lemma]. *)
+let apply_lemma (t : term) : Tac unit =
+    t_apply_lemma false false t
+
+(** See docs for [t_trefl] *)
+let trefl () : Tac unit =
+  t_trefl false
+
+(** See docs for [t_trefl] *)
+let trefl_guard () : Tac unit =
+  t_trefl true
+
+(** See docs for [t_commute_applied_match] *)
+let commute_applied_match () : Tac unit =
+  t_commute_applied_match ()
+
+(** Similar to [apply_lemma], but will not instantiate uvars in the
+goal while applying. *)
+let apply_lemma_noinst (t : term) : Tac unit =
+    t_apply_lemma true false t
+
+let apply_lemma_rw (t : term) : Tac unit =
+    t_apply_lemma false true t
 
 (** [apply_raw f] is like [apply], but will ask for all arguments
 regardless of whether they appear free in further goals. See the
@@ -145,6 +192,57 @@ under some guard [g], adding the guard as a goal. *)
 let exact_guard (t : term) : Tac unit =
     with_policy Goal (fun () -> t_exact true false t)
 
+(** (TODO: explain better) When running [pointwise tau] For every
+subterm [t'] of the goal's type [t], the engine will build a goal [Gamma
+|= t' == ?u] and run [tau] on it. When the tactic proves the goal,
+the engine will rewrite [t'] for [?u] in the original goal type. This
+is done for every subterm, bottom-up. This allows to recurse over an
+unknown goal type. By inspecting the goal, the [tau] can then decide
+what to do (to not do anything, use [trefl]). *)
+let t_pointwise (d:direction) (tau : unit -> Tac unit) : Tac unit =
+  let ctrl (t:term) : Tac (bool & ctrl_flag) =
+    true, Continue
+  in
+  let rw () : Tac unit =
+    tau ()
+  in
+  ctrl_rewrite d ctrl rw
+
+(** [topdown_rewrite ctrl rw] is used to rewrite those sub-terms [t]
+    of the goal on which [fst (ctrl t)] returns true.
+
+    On each such sub-term, [rw] is presented with an equality of goal
+    of the form [Gamma |= t == ?u]. When [rw] proves the goal,
+    the engine will rewrite [t] for [?u] in the original goal
+    type.
+
+    The goal formula is traversed top-down and the traversal can be
+    controlled by [snd (ctrl t)]:
+
+    When [snd (ctrl t) = 0], the traversal continues down through the
+    position in the goal term.
+
+    When [snd (ctrl t) = 1], the traversal continues to the next
+    sub-tree of the goal.
+
+    When [snd (ctrl t) = 2], no more rewrites are performed in the
+    goal.
+*)
+let topdown_rewrite (ctrl : term -> Tac (bool * int))
+                    (rw:unit -> Tac unit) : Tac unit
+  = let ctrl' (t:term) : Tac (bool & ctrl_flag) =
+      let b, i = ctrl t in
+      let f =
+        match i with
+        | 0 -> Continue
+        | 1 -> Skip
+        | 2 -> Abort
+        | _ -> fail "topdown_rewrite: bad value from ctrl"
+      in
+      b, f
+    in
+    ctrl_rewrite TopDown ctrl' rw
+
 let pointwise  (tau : unit -> Tac unit) : Tac unit = t_pointwise BottomUp tau
 let pointwise' (tau : unit -> Tac unit) : Tac unit = t_pointwise TopDown  tau
 
@@ -155,7 +253,7 @@ let open_modules () : Tac (list name) =
     env_open_modules (top_env ())
 
 let rec repeatn (#a:Type) (n : int) (t : unit -> Tac a) : Tac (list a) =
-    if n = 0
+    if n <= 0
     then []
     else t () :: repeatn (n - 1) t
 
@@ -163,10 +261,17 @@ let fresh_uvar (o : option typ) : Tac term =
     let e = cur_env () in
     uvar_env e o
 
-let unify t1 t2 : Tac bool =
+let unify (t1 t2 : term) : Tac bool =
     let e = cur_env () in
     unify_env e t1 t2
 
+let unify_guard (t1 t2 : term) : Tac bool =
+    let e = cur_env () in
+    unify_guard_env e t1 t2
+
+let tmatch (t1 t2 : term) : Tac bool =
+    let e = cur_env () in
+    match_env e t1 t2
 
 (** [divide n t1 t2] will split the current set of goals into the [n]
 first ones, and the rest. It then runs [t1] on the first set, and [t2]
@@ -175,7 +280,7 @@ let divide (n:int) (l : unit -> Tac 'a) (r : unit -> Tac 'b) : Tac ('a * 'b) =
     if n < 0 then
       fail "divide: negative n";
     let gs, sgs = goals (), smt_goals () in
-    let gs1, gs2 = List.Tot.splitAt n gs in
+    let gs1, gs2 = List.Tot.Base.splitAt n gs in
 
     set_goals gs1; set_smt_goals [];
     let x = l () in
@@ -187,6 +292,11 @@ let divide (n:int) (l : unit -> Tac 'a) (r : unit -> Tac 'b) : Tac ('a * 'b) =
 
     set_goals (gsl @ gsr); set_smt_goals (sgs @ sgsl @ sgsr);
     (x, y)
+
+let rec iseq (ts : list (unit -> Tac unit)) : Tac unit =
+    match ts with
+    | t::ts -> let _ = divide 1 t (fun () -> iseq ts) in ()
+    | []    -> ()
 
 (** [focus t] runs [t ()] on the current active goal, hiding all others
 and restoring them at the end. *)
@@ -226,12 +336,12 @@ let iterAllSMT (t : unit -> Tac unit) : Tac unit =
 (** Runs tactic [t1] on the current goal, and then tactic [t2] on *each*
 subgoal produced by [t1]. Each invocation of [t2] runs on a proofstate
 with a single goal (they're "focused"). *)
-let rec seq (f : unit -> Tac unit) (g : unit -> Tac unit) : Tac unit =
+let seq (f : unit -> Tac unit) (g : unit -> Tac unit) : Tac unit =
     focus (fun () -> f (); iterAll g)
 
 let exact_args (qs : list aqualv) (t : term) : Tac unit =
     focus (fun () ->
-        let n = List.length qs in
+        let n = List.Tot.Base.length qs in
         let uvs = repeatn n (fun () -> fresh_uvar None) in
         let t' = mk_app t (zip uvs qs) in
         exact t';
@@ -244,10 +354,10 @@ let exact_n (n : int) (t : term) : Tac unit =
     exact_args (repeatn n (fun () -> Q_Explicit)) t
 
 (** [ngoals ()] returns the number of goals *)
-let ngoals () : Tac int = List.length (goals ())
+let ngoals () : Tac int = List.Tot.Base.length (goals ())
 
 (** [ngoals_smt ()] returns the number of SMT goals *)
-let ngoals_smt () : Tac int = List.length (smt_goals ())
+let ngoals_smt () : Tac int = List.Tot.Base.length (smt_goals ())
 
 let fresh_bv t : Tac bv =
     (* These bvs are fresh anyway through a separate counter,
@@ -264,9 +374,13 @@ let fresh_binder t : Tac binder =
     let i = fresh () in
     fresh_binder_named ("x" ^ string_of_int i) t
 
-let norm_term (s : list norm_step) (t : term) : Tac term =
-    let e = cur_env () in
-    norm_term_env e s t
+let fresh_implicit_binder_named nm t : Tac binder =
+    mk_implicit_binder (fresh_bv_named nm t)
+
+let fresh_implicit_binder t : Tac binder =
+    (* See comment in fresh_bv *)
+    let i = fresh () in
+    fresh_implicit_binder_named ("x" ^ string_of_int i) t
 
 let guard (b : bool) : TacH unit (requires (fun _ -> True))
                                  (ensures (fun ps r -> if b
@@ -297,7 +411,7 @@ val (<|>) : (unit -> Tac 'a) ->
             (unit -> Tac 'a)
 let (<|>) t1 t2 = fun () -> or_else t1 t2
 
-let rec first (ts : list (unit -> Tac 'a)) : Tac 'a =
+let first (ts : list (unit -> Tac 'a)) : Tac 'a =
     L.fold_right (<|>) ts (fun () -> fail "no tactics to try") ()
 
 let rec repeat (#a:Type) (t : unit -> Tac a) : Tac (list a) =
@@ -310,6 +424,13 @@ let repeat1 (#a:Type) (t : unit -> Tac a) : Tac (list a) =
 
 let repeat' (f : unit -> Tac 'a) : Tac unit =
     let _ = repeat f in ()
+
+let norm_term (s : list norm_step) (t : term) : Tac term =
+    let e =
+        try cur_env ()
+        with | _ -> top_env ()
+    in
+    norm_term_env e s t
 
 (** Join all of the SMT goals into one. This helps when all of them are
 expected to be similar, and therefore easier to prove at once by the SMT
@@ -340,7 +461,7 @@ let admit_all () : Tac unit =
     let _ = repeat tadmit in
     ()
 
-(** [is_guard] returns whether the current goal arised from a typechecking guard *)
+(** [is_guard] returns whether the current goal arose from a typechecking guard *)
 let is_guard () : Tac bool =
     Tactics.Types.is_guard (_cur_goal ())
 
@@ -354,7 +475,7 @@ let guards_to_smt () : Tac unit =
     ()
 
 let simpl   () : Tac unit = norm [simplify; primops]
-let whnf    () : Tac unit = norm [weak; hnf; primops]
+let whnf    () : Tac unit = norm [weak; hnf; primops; delta]
 let compute () : Tac unit = norm [primops; iota; delta; zeta]
 
 let intros () : Tac (list binder) = repeat intro
@@ -380,13 +501,11 @@ let pose (t:term) : Tac binder =
 
 let intro_as (s:string) : Tac binder =
     let b = intro () in
-    rename_to b s;
-    b
+    rename_to b s
 
 let pose_as (s:string) (t:term) : Tac binder =
     let b = pose t in
-    rename_to b s;
-    b
+    rename_to b s
 
 let for_each_binder (f : binder -> Tac 'a) : Tac (list 'a) =
     map f (cur_binders ())
@@ -470,25 +589,17 @@ let rewrite_equality (t:term) : Tac unit =
 let unfold_def (t:term) : Tac unit =
     match inspect t with
     | Tv_FVar fv ->
-        let n = String.concat "." (inspect_fv fv) in
+        let n = implode_qn (inspect_fv fv) in
         norm [delta_fully [n]]
     | _ -> fail "unfold_def: term is not a fv"
 
-let grewrite' (t1 t2 eq : term) : Tac unit =
-    let g = cur_goal () in
-    match term_as_formula g with
-    | Comp (Eq _) l _ ->
-        if term_eq l t1
-        then exact eq
-        else trefl ()
-    | _ ->
-        fail "impossible"
-
-(** Rewrites left-to-right, and bottom-up, given a set of lemmas stating equalities *)
+(** Rewrites left-to-right, and bottom-up, given a set of lemmas stating
+equalities. The lemmas need to prove *propositional* equalities, that
+is, using [==]. *)
 let l_to_r (lems:list term) : Tac unit =
     let first_or_trefl () : Tac unit =
         fold_left (fun k l () ->
-                    (fun () -> apply_lemma l)
+                    (fun () -> apply_lemma_rw l)
                     `or_else` k)
                   trefl lems () in
     pointwise first_or_trefl
@@ -503,12 +614,27 @@ let mk_sq_eq (t1 t2 : term) : term =
 
 let grewrite (t1 t2 : term) : Tac unit =
     let e = tcut (mk_sq_eq t1 t2) in
-    pointwise (fun () -> grewrite' t1 t2 (pack_ln (Tv_Var (bv_of_binder e))))
+    let e = pack_ln (Tv_Var (bv_of_binder e)) in
+    pointwise (fun () -> try exact e with | _ -> trefl ())
 
-let rec iseq (ts : list (unit -> Tac unit)) : Tac unit =
-    match ts with
-    | t::ts -> let _ = divide 1 t (fun () -> iseq ts) in ()
-    | []    -> ()
+private
+let __un_sq_eq (#a:Type) (x y : a) (_ : (x == y)) : Lemma (x == y) = ()
+
+(** A wrapper to [grewrite] which takes a binder of an equality type *)
+let grewrite_eq (b:binder) : Tac unit =
+  match term_as_formula (type_of_binder b) with
+  | Comp (Eq _) l r ->
+    grewrite l r;
+    iseq [idtac; (fun () -> exact (binder_to_term b))]
+  | _ ->
+    begin match term_as_formula' (type_of_binder b) with
+    | Comp (Eq _) l r ->
+      grewrite l r;
+      iseq [idtac; (fun () -> apply_lemma (`__un_sq_eq);
+                              exact (binder_to_term b))]
+    | _ ->
+      fail "grewrite_eq: binder type is not an equality"
+    end
 
 private val push1 : (#p:Type) -> (#q:Type) ->
                         squash (p ==> q) ->
@@ -523,7 +649,7 @@ private val push1' : (#p:Type) -> (#q:Type) ->
 private let push1' #p #q f u = ()
 
 (*
- * Some easier applying, which should prevent frustation
+ * Some easier applying, which should prevent frustration
  * (or cause more when it doesn't do what you wanted to)
  *)
 val apply_squash_or_lem : d:nat -> term -> Tac unit
@@ -536,11 +662,12 @@ let rec apply_squash_or_lem d t =
     // Fuel cutoff, just in case.
     if d <= 0 then fail "mapply: out of fuel" else begin
 
-    let ty = tc t in
+    let ty = tc (cur_env ()) t in
     let tys, c = collect_arr ty in
     match inspect_comp c with
-    | C_Lemma pre post ->
+    | C_Lemma pre post _ ->
        begin
+       let post = `((`#post) ()) in (* unthunk *)
        let post = norm_term [] post in
        (* Is the lemma an implication? We can try to intro *)
        match term_as_formula' post with
@@ -591,10 +718,23 @@ let rec apply_squash_or_lem d t =
 let mapply (t : term) : Tac unit =
     apply_squash_or_lem 10 t
 
-val admit_dump : #a:Type -> (#[(dump "Admitting"; exact (quote (fun () -> admit #a () <: Admit a)))] x : (unit -> Admit a)) -> unit -> Admit a
+
+private
+let admit_dump_t () : Tac unit =
+  dump "Admitting";
+  apply (`admit)
+
+val admit_dump : #a:Type -> (#[admit_dump_t ()] x : (unit -> Admit a)) -> unit -> Admit a
 let admit_dump #a #x () = x ()
 
-val magic_dump : #a:Type -> (#[(dump "Admitting"; exact (quote (magic #a ())))] x : a) -> unit -> Tot a
+private
+let magic_dump_t () : Tac unit =
+  dump "Admitting";
+  apply (`magic);
+  exact (`());
+  ()
+
+val magic_dump : #a:Type -> (#[magic_dump_t ()] x : a) -> unit -> Tot a
 let magic_dump #a #x () = x
 
 let change_with t1 t2 : Tac unit =
@@ -661,3 +801,220 @@ let tlabel' (l:string) =
 let focus_all () : Tac unit =
     set_goals (goals () @ smt_goals ());
     set_smt_goals []
+
+private
+let rec extract_nth (n:nat) (l : list 'a) : option ('a * list 'a) =
+  match n, l with
+  | _, [] -> None
+  | 0, hd::tl -> Some (hd, tl)
+  | _, hd::tl -> begin
+    match extract_nth (n-1) tl with
+    | Some (hd', tl') -> Some (hd', hd::tl')
+    | None -> None
+  end
+
+let bump_nth (n:pos) : Tac unit =
+  // n-1 since goal numbering begins at 1
+  match extract_nth (n - 1) (goals ()) with
+  | None -> fail "bump_nth: not that many goals"
+  | Some (h, t) -> set_goals (h :: t)
+
+let on_sort_bv (f : term -> Tac term) (xbv:bv) : Tac bv =
+  let bvv = inspect_bv xbv in
+  let bvv = { bvv with bv_sort = f bvv.bv_sort } in
+  let bv = pack_bv bvv in
+  bv
+
+let on_sort_binder (f : term -> Tac term) (b:binder) : Tac binder =
+  let bv, (q, attrs) = inspect_binder b in
+  let bv = on_sort_bv f bv in
+  let b = pack_binder bv q attrs in
+  b
+
+let rec visit_tm (ff : term -> Tac term) (t : term) : Tac term =
+  let tv = inspect_ln t in
+  let tv' =
+    match tv with
+    | Tv_FVar _ -> tv
+    | Tv_Var bv ->
+        let bv = on_sort_bv (visit_tm ff) bv in
+        Tv_Var bv
+
+    | Tv_BVar bv ->
+        let bv = on_sort_bv (visit_tm ff) bv in
+        Tv_BVar bv
+
+    | Tv_Type () -> Tv_Type ()
+    | Tv_Const c -> Tv_Const c
+    | Tv_Uvar i u -> Tv_Uvar i u
+    | Tv_Unknown -> Tv_Unknown
+    | Tv_Arrow b c ->
+        let b = on_sort_binder (visit_tm ff) b in
+        let c = visit_comp ff c in
+        Tv_Arrow b c
+    | Tv_Abs b t ->
+        let b = on_sort_binder (visit_tm ff) b in
+        let t = visit_tm ff t in
+        Tv_Abs b t
+    | Tv_App l (r, q) ->
+         let l = visit_tm ff l in
+         let r = visit_tm ff r in
+         Tv_App l (r, q)
+    | Tv_Refine b r ->
+        let b = on_sort_bv (visit_tm ff) b in
+        let r = visit_tm ff r in
+        Tv_Refine b r
+    | Tv_Let r attrs b def t ->
+        let b = on_sort_bv (visit_tm ff) b in
+        let def = visit_tm ff def in
+        let t = visit_tm ff t in
+        Tv_Let r attrs b def t
+    | Tv_Match sc ret_opt brs ->
+        let sc = visit_tm ff sc in
+        let ret_opt = map_opt (fun (b, asc) ->
+          let b = on_sort_binder (visit_tm ff) b in
+          let asc =
+            match asc with
+            | Inl t, tacopt, use_eq ->
+              Inl (visit_tm ff t), map_opt (visit_tm ff) tacopt, use_eq
+            | Inr c, tacopt, use_eq->
+              Inr (visit_comp ff c), map_opt (visit_tm ff) tacopt, use_eq in
+          b, asc) ret_opt in
+        let brs = map (visit_br ff) brs in
+        Tv_Match sc ret_opt brs
+    | Tv_AscribedT e t topt use_eq ->
+        let e = visit_tm ff e in
+        let t = visit_tm ff t in
+        Tv_AscribedT e t topt use_eq
+    | Tv_AscribedC e c topt use_eq ->
+        let e = visit_tm ff e in
+        Tv_AscribedC e c topt use_eq
+  in
+  ff (pack_ln tv')
+and visit_br (ff : term -> Tac term) (b:branch) : Tac branch =
+  let (p, t) = b in
+  let p = visit_pat ff p in
+  let t = visit_tm ff t in
+  (p, t)
+and visit_pat (ff : term -> Tac term) (p:pattern) : Tac pattern =
+  match p with
+  | Pat_Constant c -> p
+  | Pat_Cons fv l ->
+      let l = (map (fun(p,b) -> (visit_pat ff p, b)) l) in
+      Pat_Cons fv l
+  | Pat_Var bv ->
+      let bv = on_sort_bv (visit_tm ff) bv in
+      Pat_Var bv
+  | Pat_Wild bv ->
+      let bv = on_sort_bv (visit_tm ff) bv in
+      Pat_Wild bv
+  | Pat_Dot_Term bv term ->
+      let bv = on_sort_bv (visit_tm ff) bv in
+      let term = visit_tm ff term in
+      Pat_Dot_Term bv term
+and visit_comp (ff : term -> Tac term) (c : comp) : Tac comp =
+  let cv = inspect_comp c in
+  let cv' =
+    match cv with
+    | C_Total ret decr ->
+        let ret = visit_tm ff ret in
+        let decr = map (visit_tm ff) decr in
+        C_Total ret decr
+
+    | C_GTotal ret decr ->
+        let ret = visit_tm ff ret in
+        let decr = map (visit_tm ff) decr in
+        C_GTotal ret decr
+
+    | C_Lemma pre post pats ->
+        let pre = visit_tm ff pre in
+        let post = visit_tm ff post in
+        let pats = visit_tm ff pats in
+        C_Lemma pre post pats
+
+    | C_Eff us eff res args ->
+        let res = visit_tm ff res in
+        let args = map (fun (a, q) -> (visit_tm ff a, q)) args in
+        C_Eff us eff res args
+  in
+  pack_comp cv'
+
+let rec destruct_list (t : term) : Tac (list term) =
+    let head, args = collect_app t in
+    match inspect_ln head, args with
+    | Tv_FVar fv, [(a1, Q_Explicit); (a2, Q_Explicit)]
+    | Tv_FVar fv, [(_, Q_Implicit); (a1, Q_Explicit); (a2, Q_Explicit)] ->
+      if inspect_fv fv = cons_qn
+      then a1 :: destruct_list a2
+      else raise NotAListLiteral
+    | Tv_FVar fv, _ ->
+      if inspect_fv fv = nil_qn
+      then []
+      else raise NotAListLiteral
+    | _ ->
+      raise NotAListLiteral
+
+private let get_match_body () : Tac term =
+  match FStar.Reflection.Formula.unsquash (cur_goal ()) with
+  | None -> fail ""
+  | Some t -> match inspect t with
+             | Tv_Match sc _ _ -> sc
+             | _ -> fail "Goal is not a match"
+
+private let rec last (x : list 'a) : Tac 'a =
+    match x with
+    | [] -> fail "last: empty list"
+    | [x] -> x
+    | _::xs -> last xs
+
+(** When the goal is [match e with | p1 -> e1 ... | pn -> en],
+destruct it into [n] goals for each possible case, including an
+hypothesis for [e] matching the corresponding pattern. *)
+let branch_on_match () : Tac unit =
+    focus (fun () ->
+      let x = get_match_body () in
+      let _ = t_destruct x in
+      iterAll (fun () ->
+        let bs = repeat intro in
+        let b = last bs in (* this one is the equality *)
+        grewrite_eq b;
+        norm [iota])
+    )
+
+(** When the argument [i] is non-negative, [nth_binder] grabs the nth
+binder in the current goal. When it is negative, it grabs the (-i-1)th
+binder counting from the end of the goal. That is, [nth_binder (-1)]
+will return the last binder, [nth_binder (-2)] the second to last, and
+so on. *)
+let nth_binder (i:int) : Tac binder =
+  let bs = cur_binders () in
+  let k : int = if i >= 0 then i else List.Tot.Base.length bs + i in
+  let k : nat = if k < 0 then fail "not enough binders" else k in
+  match List.Tot.Base.nth bs k with
+  | None -> fail "not enough binders"
+  | Some b -> b
+
+exception Appears
+
+(** Decides whether a top-level name [nm] syntactically
+appears in the term [t]. *)
+let name_appears_in (nm:name) (t:term) : Tac bool =
+  let ff (t : term) : Tac term =
+    match t with
+    | Tv_FVar fv ->
+      if inspect_fv fv = nm then
+        raise Appears;
+      t
+    | t -> t
+  in
+  try ignore (visit_tm ff t); false with
+  | Appears -> true
+  | e -> raise e
+
+(** [mk_abs [x1; ...; xn] t] returns the term [fun x1 ... xn -> t] *)
+let rec mk_abs (args : list binder) (t : term) : Tac term (decreases args) =
+  match args with
+  | [] -> t
+  | a :: args' ->
+    let t' = mk_abs args' t in
+    pack (Tv_Abs a t')

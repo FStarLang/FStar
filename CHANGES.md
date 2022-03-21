@@ -13,11 +13,103 @@ Guidelines for the changelog:
 
 # Version 0.9.7.0
 
+## Tactics
+  * Mutually recursive let bindings are now supported in the reflected syntax, using the
+    same constructor (`Tv_Let`) as before (https://github.com/FStarLang/FStar/pull/2291.
+    Inspection of a let binding now usually looks like this:
+    ```
+    match inspect_sigelt se with
+    | Sg_Let r lbs ->
+      let lbv = lookup_lb_view lbs (inspect_fv fv) in
+      lbv.lb_def
+    ```
+    Where `lookup_lb_view` looks for a `name` in a list of let bindings, returning the corresponding let binding view. In turn, packing a let binding usually takes the form:
+    ```
+     let lbv = {lb_fv=fv;lb_us=us;lb_typ=ty;lb_def=def} in
+     let lb = pack_lb lbv in
+     let se = pack_sigelt (Sg_Let false [lb]) in
+     ...
+    ```
+
+## Typeclass argument syntax
+
+  * The syntax for a typeclass argument (a.k.a. constraint) is now `{| ... |}`
+    instead of `[| ... |]`. They are also better supported, and be used in
+    `val` declarations and arrows which was not previously the case.
+
 ## Module system
 
   * Friend modules (https://github.com/FStarLang/FStar/wiki/Friend-modules)
 
 ## Core typechecker
+  * F* now supports accessibility predicates based termination proofs. When writing a recursive function
+
+    ```
+    let rec x_i : Tot t = ...
+    ```
+
+    The decreases metric may be specified as:
+
+    ```
+    let rec x_i : Tot t (decreses {:well-founded rel e}) = ...
+    ```
+
+    where `rel` is a well-founded relation and `e` is an expression that decreases according to the relation in the recursive calls. See [this PR](https://github.com/FStarLang/FStar/pull/2307) for more details.
+
+  * Since 2686888aab7e8fa7059b61c161ad7a2f867ee1f8, F* no longer
+    supports eta equivalence. Dominique Unruh observed that the
+    primitive `pointwise` tactic (which treats provable equality as a
+    congruence) allows proving functional extensionality, which is
+    unsound in conjunction with subtyping in F* (see below for more
+    discussion of that). It turns out that a crucial step in that
+    unsoundness proof is the use of eta equivalence (See Bug1966a.fst
+    for a proof of that, with thanks due there also to Catalin Hritcu,
+    who writes about it here
+    https://github.com/FStarLang/FStar/wiki/SMT-Equality-and-Extensionality-in-F*).
+
+    To fix this, we removed eta equivalence. One rough intuition for
+    why eta reduction is incompatible with subtyping is that it can
+    change the type of a function, widening its domain, e.g., for
+    `f:int -> int`, reducing `(fun (x:nat) -> f x)` to `f` changes its
+    type. Restricting eta reductions to only those that are type
+    preserving turns out to not feasible in the presence of
+    abstraction and subtyping.
+
+    With the removal of eta, functional extensionality is now a
+    theorem in F\* at least for eta-expanded functions, no longer an
+    axiom, which is an improvement. The removal of eta equivalence
+    introduced regressions in some proofs that were implicitly relying
+    on it. See, for example,
+    https://github.com/FStarLang/FStar/pull/2294
+    and
+    https://github.com/project-everest/hacl-star/pull/442
+
+  * PR https://github.com/FStarLang/FStar/pull/2256 and
+       https://github.com/FStarLang/FStar/pull/2464 add support for Coq-style
+    dependent pattern matching. F* now supports `match e as x returns C with |...`
+    syntax for typechecking the branches with `C` appropriately substituted.
+    This changes the syntax of the `match` nodes to maintain an optional
+    annotation. The data constructor `Tv_Match` in the reflection API changes
+    accordingly.
+
+  * Cf. issue https://github.com/FStarLang/FStar/issues/1916,
+    F* has a revised treatment for the lexicographic tuples. This is a breaking change
+    and may require some additional annotations in the decreases clauses, see for example:
+    https://github.com/FStarLang/FStar/pull/2218/commits/0baf2277cd1e2c83ba71c4bc9659f1a84837a33a.
+    F* tries to give a warning for such cases that the proof may require type annotations on
+    these decreases clause elements.
+
+  * The expected type of the `if_then_else` combinator for layered effects is now
+    `a:Type -> bs -> f:repr a is -> g:repr a js -> p:bool -> Type`
+    Previously, the `p` parameter used to have type `Type0`. It only needs
+    change in the definition of the combinator, no changes are required in
+    the client code using the effect. For example, see:
+    https://github.com/FStarLang/FStar/commit/731b353aa3bb6c32f4da97170284a1f301b242e1
+
+    The types of the combinators are also subject to stricter typing (no smt and no subtyping).
+    See this commit: https://github.com/FStarLang/FStar/commit/a5b2d8818e386b2be1058061a913ffcef4bfb8ea
+    for the kind of fixes this change required.
+
   * Cf. issue https://github.com/FStarLang/FStar/issues/1055,
     F* now enforces that unannotated, effectful functions have a
     trivial precondition (this is already the case for pure functions).
@@ -30,11 +122,56 @@ Guidelines for the changelog:
     This is a breaking change, see this commit for how we fixed the F* examples:
     https://github.com/FStarLang/FStar/commit/24bbae4b93a9937695160dff381625adb6565d28
 
-
   * Revised typechecking of nested patterns and ascriptions on
     patterns, fixing unsoundnesses (issue #238, for example)
 
+  * NBE: A call-by-value reduction strategy for F* terms is
+    implemented using "normalization by evaluation". Specific calls to
+    the normalizer (e.g., via `Pervasives.norm`) can request to use
+    this reduction strategy by passing the `nbe:norm_step` among the
+    reduction steps.
+
+  * Polymonadic binds: See https://github.com/FStarLang/FStar/wiki/Polymonadic-binds
+
+  * Names in the expressions are now annotated with the types at their binding sites
+    rather than with the expected types at the use sites. This change resulted in
+    a regression in the F* examples:
+    https://github.com/FStarLang/FStar/commit/752d457bda9c0a38eef04e71886cc16899d9c13d
+
+    The workaround is an explicit annotation (see comments in the commit above).
+
+  * An unsoundness was discovered and fixed in the treatment of
+    lexicographic tuples. In particular, we used to allow relating lex
+    tuples of different arity, notably, we had `LexCons _ _ << LexTop`.
+    This was intended for the convenience of writing mutual recursive
+    functions with decreases clauses using lex tuples of different arities.
+    However, this convenience was seldom used and it actually lead to
+    an unsoundness: See examples/bug-reports/BugLexTop.fst. This
+    variable arity lexicographic tuple ordering is no longer supported.
+
+
 ## Libraries
+
+   * Renamed some of the types in `Prims` in https://github.com/FStarLang/FStar/pull/2461.
+       - `c_False` became `empty`
+       - `c_True` became `trivial`
+       - `c_and` became `pair`
+       - `c_or` became `sum`
+
+   * Guido Martinez found that `FStar.WellFounded.axiom1_dep` (and its
+     specialization axiom1) is unsound when instantiated across
+     different universe levels. The issue and fix is discussed in
+     detail here: https://github.com/FStarLang/FStar/issues/2069
+
+     In summary, `FStar.WellFounded.axiom1_dep`,
+     `FStar.WellFounded.axiom1`, and `FStar.WellFounded.apply` have
+     all been removed. The user-facing universe polymorphic axiom is
+     no longer needed---you should just be able to remove calls to it
+     in your programs. Instead, we have enhanced F*'s SMT encoding of
+     inductive types to include additional, more targeted
+     well-foundedness axioms.
+     tests/micro-benchmarks/TestWellFoundedRecursion.fst provides
+     several small representative examples.
 
    * Two core axioms were discovered by Aseem Rastogi to be formulated
      in an unsound manner.
@@ -54,7 +191,67 @@ Guidelines for the changelog:
 
      See issue #1542 for more discussion.
 
+   * The ulib directory has been restructured with old modules in
+     legacy (consider them deprecated), an experimental directory as a
+     staging ground, and a .cache directory in which .checked and
+     .hints files are maintained.
+
+   * FStar.UInt[N].mul_div has been removed. This operation was not
+     supported uniformly, with only an implementation for UInt64
+     provided (using UInt128).
+
 ## Syntax
+
+   * `as` is a keyword now. One use of it is to (optionally) name the
+     scrutinee in dependent pattern matching, e.g.:
+
+     ```
+     match e as x in t with
+     | ...
+     ```
+
+     This is a breaking change, code that uses `as` as a variable name
+     will require changes (cf. https://github.com/FStarLang/FStar/pull/2464)
+
+   * Type-based disambiguation for projectors and record
+     constructors. You can now write:
+
+     ```
+     type t = { f : bool }
+     type s = { f : bool }
+     let test1 (x:t) (y:s) = x.f && y.f
+     let test2 (x:t) : s = { f = x.f }
+     ```
+
+     Where types are used to disambiguate the field names of `t` and
+     `s`. See tests/micro-benchmarks/RecordFieldDisambiguation.fst for
+     more examples.
+
+   * `eliminate` and `introduce` are now keywords. They are used to
+     implement sugar for manipulating classical logic connectives, as
+     documented here:
+     https://github.com/FStarLang/FStar/wiki/Sugar-for-manipulating-connectives-in-classical-logic
+
+   * Record opening syntax: Inspired in part by Agda's records as
+     modules, you can now write
+
+     ```
+     type ty = {x:int; y:bool}
+
+     let f (r:ty) : int =
+       let open r <: ty in
+       if y then x else -x
+     ```
+
+     See tests/micro-benchmarks/RecordOpen.fst for more examples.
+
+   * Support for binder attributes in the reflection APIs `pack_binder`
+     and `inspect_binder`. This is a breaking change, see
+     https://github.com/project-everest/hacl-star/commit/7a3199c745b69966e54a313e648a275d21686087
+     commit for how to fix the breaking code.
+
+   * `abstract` qualifier and the related option `--use_extracted_interfaces`
+     are no longer supported. Use interfaces instead.
 
    * We now overload `&` to construct both dependent and non-dependent
      tuple types. `t1 & t2` is equivalent to `tuple2 t1 t2` whereas
@@ -64,6 +261,15 @@ Guidelines for the changelog:
      the multiplication on integers, the `&` symbol can be used for
      tuples while reserving `*` for multiplication.
 
+   * Attributes are now specified using the notation `[@@ a1; ... ; an]` i.e.,
+     a semicolon separated list of terms. The old syntax will soon
+     be deprecated.
+
+   * Attributes on binders are now using a different syntax `[@@@ a1; ... ; an]` i.e.,
+     @@@ instead of @@. This is a breaking change that enables
+     using attributes on explicit binders, record fields and more. See
+     https://github.com/FStarLang/FStar/pull/2192 for more details.
+
 ## Extraction
 
    * Cross-module inlining: Declarations in interfaces marked with the
@@ -72,6 +278,10 @@ Guidelines for the changelog:
      soon be the default behavior. Also see:
      https://github.com/FStarLang/FStar/wiki/Cross-module-Inlining
      and https://github.com/FStarLang/FStar/tree/master/examples/extraction/cmi.
+
+   * `--use_nbe_for_extraction`: A new option that enables the use of
+     the call-by-value normalization-by-evaluation reduction strategy
+     for normalizing code prior to extraction.
 
 ## SMT Encoding
 
@@ -175,6 +385,10 @@ Guidelines for the changelog:
 
 ## Miscellaneous
 
+   * [Issue #2444](https://github.com/FStarLang/FStar/issues/2444) The
+     definition of the type `ident` exposed `FStar.Reflection.Types`
+     is now `string * range` instead of `range * string`.
+
    * Development builds of F\* no longer report the date of the build
      in `fstar --version`. This is to prevent needlessly rebuilding
      F\* even when the code does not change.
@@ -191,11 +405,24 @@ Guidelines for the changelog:
 
 ## Command line options
 
+   * [Issue #2385](https://github.com/FStarLang/FStar/issues/2385).
+     The behavior of the --extract option was changed so that it no
+     longer treats the OCaml and Kremlin targets
+     differently. Previously, when used with --dep full, F* would
+     disregard the --extract setting when emitting the
+     `ALL_KRML_FILES` variable.
+
    * [PR #1711](https://github.com/FStarLang/FStar/pull/1711): Where
      options take lists of namespaces as arguments
      (`--already_cached`, `--extract`, `--using_facts_from`, etc.),
      those lists of namespaces can be given under the form `+A -B +C`
      (space-separated) or `+A,-B,+C` (comma-separated).
+
+   * [PR #1985](https://github.com/FStarLang/FStar/pull/1985): The
+     `--profile` flag changed to take instead a set of modules on
+     which to enable profiling. The output of F* on its finished
+     message changed to not print the time it took to verify a module.
+
 
 ## Editors
 
@@ -204,6 +431,8 @@ Guidelines for the changelog:
 # Version 0.9.6.0
 
 ## Command line options
+
+   `--use_two_phase_tc` is no longer a command line option.
 
    F* reads .checked files by default unless the `--cache_off` option is provided.
    To write .checked files, provide `--cache_checked_modules`

@@ -1,8 +1,7 @@
 open List
 open Lexing
-open Migrate_parsetree
-open Migrate_parsetree.Ast_405
-open Migrate_parsetree.Ast_405.Parsetree
+open Ppxlib_ast
+open Parsetree
 open Location
 open Pprintast
 open Ast_helper
@@ -93,7 +92,8 @@ let mk_top_mllb (e: mlexpr): mllb =
    print_typ=false }
 
 (* names of F* functions which need to be handled differently *)
-let try_with_ident = path_to_ident (["FStar"; "All"], "try_with")
+let fstar_compiler_effect_try_with_ident = path_to_ident (["FStar"; "Compiler"; "Effect"], "try_with")
+let fstar_all_try_with_ident = path_to_ident (["FStar"; "All"], "try_with")
 
 (* For integer constants (not 0/1) in this range we will use Prims.of_int
  * Outside this range we will use string parsing to allow arbitrary sized
@@ -106,6 +106,16 @@ let min_of_int_const = Z.of_int (-65536)
 
 (* mapping functions from F* ML AST to Parsetree *)
 let build_constant (c: mlconstant): Parsetree.constant =
+  let stdint_module (s:FStar_Const.signedness) (w:FStar_Const.width) : string =
+    let sign = match s with
+      | FStar_Const.Signed -> "Int"
+      | FStar_Const.Unsigned -> "Uint" in
+    let with_w ws = BatString.concat "" ["Stdint."; sign; ws] in
+    match w with
+    | FStar_Const.Int8 -> with_w "8"
+    | FStar_Const.Int16 -> with_w "16"
+    | FStar_Const.Int32 -> with_w "32"
+    | FStar_Const.Int64 -> with_w "64" in
   match c with
   | MLC_Int (v, None) ->
       let s = match Z.of_string v with
@@ -115,6 +125,20 @@ let build_constant (c: mlconstant): Parsetree.constant =
             BatString.concat v ["(Prims.of_int ("; "))"]
         | x ->
             BatString.concat v ["(Prims.parse_int \""; "\")"] in
+      Const.integer s
+  (* Special case for UInt8, as it's realized as OCaml built-in int type *)
+  | MLC_Int (v, Some (FStar_Const.Unsigned, FStar_Const.Int8)) ->
+      Const.integer v
+  | MLC_Int (v, Some (s, w)) ->
+      let s = match Z.of_string v with
+        | x when x = Z.zero ->
+            BatString.concat "" [stdint_module s w; ".zero"]
+        | x when x = Z.one ->
+            BatString.concat "" [stdint_module s w; ".one"]
+        | x when (min_of_int_const < x) && (x < max_of_int_const) ->
+            BatString.concat "" ["("; stdint_module s w; ".of_int ("; v; "))"]
+        | x ->
+            BatString.concat "" ["("; stdint_module s w; ".of_string \""; v; "\")"] in
       Const.integer s
   | MLC_Float v -> Const.float (string_of_float v)
   | MLC_Char v -> Const.int v
@@ -291,7 +315,8 @@ let rec build_expr (e: mlexpr): expression =
 
 and resugar_app f args es: expression =
   match f.pexp_desc with
-  | Pexp_ident x when (x = try_with_ident) ->
+  | Pexp_ident x when (x = fstar_all_try_with_ident ||
+                       x = fstar_compiler_effect_try_with_ident) ->
     (* resugar FStar_All.try_with to a try...with
        try_with : (unit -> ML 'a) -> (exn -> ML 'a) -> ML 'a *)
     assert (length es == 2);
@@ -406,7 +431,11 @@ let type_metadata (md : metadata): attributes option =
   ) md in
   if List.length deriving > 0 then
     let str = String.concat "," deriving in
-    Some [ mk_sym "deriving", PStr [Str.eval (Exp.ident (mk_lident str))] ]
+    Some [ {
+      attr_name = mk_sym "deriving";
+      attr_payload = PStr [Str.eval (Exp.ident (mk_lident str))];
+      attr_loc = no_location }
+    ]
   else
     None
 
@@ -414,15 +443,22 @@ let add_deriving_const (md: metadata) (ptype_manifest: core_type option): core_t
   match List.filter (function PpxDerivingShowConstant _ -> true | _ -> false) md with
   | [PpxDerivingShowConstant s] ->
       let e = Exp.apply (Exp.ident (path_to_ident (["Format"], "pp_print_string"))) [(Nolabel, Exp.ident (mk_lident "fmt")); (Nolabel, Exp.constant (Const.string s))] in
-      let deriving_const = (mk_sym "printer", PStr [Str.eval (Exp.fun_ Nolabel None (build_binding_pattern "fmt") (Exp.fun_ Nolabel None (Pat.any ()) e))]) in
+      let deriving_const = {
+        attr_name = mk_sym "printer";
+        attr_payload = PStr [Str.eval (Exp.fun_ Nolabel None (build_binding_pattern "fmt") (Exp.fun_ Nolabel None (Pat.any ()) e))];
+        attr_loc = no_location } in
       BatOption.map (fun x -> {x with ptyp_attributes=[deriving_const]}) ptype_manifest
   | _ -> ptype_manifest
 
-let build_one_tydecl ((_, x, mangle_opt, tparams, attrs, body): one_mltydecl): type_declaration =
+let build_one_tydecl ({tydecl_name=x;
+                       tydecl_ignored=mangle_opt;
+                       tydecl_parameters=tparams;
+                       tydecl_meta=attrs;
+                       tydecl_defn=body}: one_mltydecl): type_declaration =
   let ptype_name = match mangle_opt with
     | Some y -> mk_sym y
     | None -> mk_sym x in
-  let ptype_params = Some (map (fun sym -> Typ.mk (Ptyp_var (mk_typ_name sym)), Invariant) tparams) in
+  let ptype_params = Some (map (fun sym -> Typ.mk (Ptyp_var (mk_typ_name sym)), (NoVariance, NoInjectivity)) tparams) in
   let (ptype_manifest: core_type option) =
     BatOption.map_default build_ty_manifest None body |> add_deriving_const attrs in
   let ptype_kind =  Some (BatOption.map_default build_ty_kind Ptype_abstract body) in
@@ -434,11 +470,12 @@ let build_tydecl (td: mltydecl): structure_item_desc option =
   let type_declarations = map build_one_tydecl td in
   if type_declarations = [] then None else Some (Pstr_type (recf, type_declarations))
 
-let build_exn (sym, tys): extension_constructor =
+let build_exn (sym, tys): type_exception =
   let tys = List.map snd tys in
   let name = mk_sym sym in
   let args = Some (Pcstr_tuple (map build_core_type tys)) in
-  Te.decl ?args:args name
+  let ctor = Te.decl ?args:args name in
+  Te.mk_exception ctor
 
 let build_module1 path (m1: mlmodule1): structure_item option =
   match m1 with
@@ -461,7 +498,7 @@ let build_m path (md: (mlsig * mlmodule) option) : structure =
   match md with
   | Some(s, m) ->
      let open_prims =
-       Str.open_ (Opn.mk ?override:(Some Fresh) (mk_lident "Prims")) in
+       Str.open_ (Opn.mk ?override:(Some Fresh) (Mod.ident (mk_lident "Prims"))) in
      open_prims::(map (build_module1 path) m |> flatmap opt_to_list)
   | None -> []
 
@@ -480,10 +517,8 @@ let build_ast (out_dir: string option) (ext: string) (ml: mllib) =
 
 (* printing the AST to the correct path *)
 let print_module ((path, m): string * structure) =
-  let migration =
-    Versions.migrate Versions.ocaml_405 Versions.ocaml_current in
   Format.set_formatter_out_channel (open_out_bin path);
-  structure Format.std_formatter (migration.copy_structure m);
+  structure Format.std_formatter m;
   Format.pp_print_flush Format.std_formatter ()
 
 let print (out_dir: string option) (ext: string) (ml: mllib) =
@@ -494,9 +529,10 @@ let print (out_dir: string option) (ext: string) (ml: mllib) =
      iter print_module ast
   | ".fs" ->
      (* Use the old printer for F# extraction *)
-     let new_doc = FStar_Pprint.blank_buffer_doc in
+     let new_doc = FStar_Extraction_ML_Code.doc_of_mllib ml in
      iter (fun (n, d) ->
-         FStar_Util.write_file
+         FStar_Compiler_Util.write_file
            (FStar_Options.prepend_output_dir (BatString.concat "" [n;ext]))
-           (FStar_Pprint.pretty_string 0.8 (Prims.parse_int "120") d)) new_doc
+           (FStar_Extraction_ML_Code.pretty (Prims.parse_int "120") d)
+           ) new_doc
   | _ -> failwith "Unrecognized extension"

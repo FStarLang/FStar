@@ -61,9 +61,9 @@ let map_u16_to_bounded_u16
   (u2: squash (bound == bound'))
 : Tot (bounded_fun a' bound')
 = fun x ->
-  [@inline_let]
+  [@@inline_let]
   let _ = g x in
-  [@inline_let]
+  [@@inline_let]
   let y' : bounded_u16 bound = f x in
   y'
 

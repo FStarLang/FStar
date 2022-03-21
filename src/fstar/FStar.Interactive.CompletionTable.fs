@@ -1,8 +1,8 @@
 #light "off"
 module FStar.Interactive.CompletionTable
 
-open FStar
-open FStar.All
+open FStar open FStar.Compiler
+open FStar.Compiler.Effect
 
 let string_compare s1 s2 =
   String.compare s1 s2
@@ -80,13 +80,15 @@ type btree<'a> =
 | StrBranch of string * 'a * (btree<'a>) * (btree<'a>)
 (* (key: string) * (value: 'a) * (lbt: btree 'a) * (rbt: btree 'a) *)
 
-let rec btree_to_list_rev btree acc =
+let rec btree_to_list_rev (btree:btree<'a>) (acc:list<(string * 'a)>)
+  : list<(string * 'a)> =
   match btree with
   | StrEmpty -> acc
   | StrBranch (key, value, lbt, rbt) ->
     btree_to_list_rev rbt ((key, value) :: btree_to_list_rev lbt acc)
 
-let rec btree_from_list nodes size =
+let rec btree_from_list (nodes:list<(string * 'a)>) (size:int)
+ : btree<'a> * list<(string * 'a)> =
   if size = 0 then (StrEmpty, nodes)
   else
     let lbt_size = size / 2 in
@@ -157,7 +159,7 @@ let matched_prefix_of_path_elem (elem: path_elem) = elem.segment.prefix
 
 let mk_path_el imports segment = { imports = imports; segment = segment }
 
-let rec btree_find_prefix (bt: btree<'a>) (prefix: string)
+let btree_find_prefix (bt: btree<'a>) (prefix: string)
     : list<(prefix_match * 'a)> (* ↑ keys *) =
   let rec aux (bt: btree<'a>) (prefix: string) (acc: list<(prefix_match * 'a)>) : list<(prefix_match * 'a)> =
     match bt with
@@ -376,7 +378,7 @@ let empty : table =
 // completion of opens and includes, and these take full module paths.
 // Inclusions handling would have to be reinstated should we wish to also
 // complete partial names of unloaded (e.g. [open FStar // let x = List._] when
-// FStar.List isn't loaded).
+// FStar.Compiler.List isn't loaded).
 
 let insert (tbl: table) (host_query: query) (id: string) (c: lid_symbol) : table =
   { tbl with tbl_lids = trie_insert tbl.tbl_lids host_query id c }
@@ -444,13 +446,13 @@ let first_import_of_path (path: path) : option<string> =
   | { imports = imports } :: _ -> List.last imports
 
 let alist_of_ns_info ns_info =
-  [("name", FStar.Util.JsonStr ns_info.ns_name);
-   ("loaded", FStar.Util.JsonBool ns_info.ns_loaded)]
+  [("name", FStar.Compiler.Util.JsonStr ns_info.ns_name);
+   ("loaded", FStar.Compiler.Util.JsonBool ns_info.ns_loaded)]
 
 let alist_of_mod_info mod_info =
-  [("name", FStar.Util.JsonStr mod_info.mod_name);
-   ("path", FStar.Util.JsonStr mod_info.mod_path);
-   ("loaded", FStar.Util.JsonBool mod_info.mod_loaded)]
+  [("name", FStar.Compiler.Util.JsonStr mod_info.mod_name);
+   ("path", FStar.Compiler.Util.JsonStr mod_info.mod_path);
+   ("loaded", FStar.Compiler.Util.JsonBool mod_info.mod_loaded)]
 
 type completion_result =
   { completion_match_length: int;

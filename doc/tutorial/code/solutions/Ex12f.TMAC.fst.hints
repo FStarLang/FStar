@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "c32bacd4294b5c7e811b7656f12d3311"
+      "4ec428acf2dcda69175d353314e9e92b"
     ],
     [
       "Ex12f.TMAC.mac",
@@ -19,16 +19,16 @@
         "@MaxIFuel_assumption", "@query", "equation_Ex12.Pad.bytes",
         "equation_Ex12.Pad.encode", "equation_Ex12.Pad.text",
         "equation_Ex12f.TMAC.bspec", "equation_Ex12f.TMAC.pkey",
-        "function_token_typing_Ex12.BMAC.key_prop",
-        "function_token_typing_FStar.UInt8.t", "lemma_Ex12.Pad.inj",
-        "lemma_FStar.Seq.Base.lemma_eq_elim",
+        "equation_Prims.eqtype", "function_token_typing_Ex12.BMAC.key_prop",
+        "lemma_Ex12.Pad.inj", "lemma_FStar.Seq.Base.lemma_eq_elim",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "refinement_interpretation_Tm_refine_71abb27e82b0c356f50fe92b2fe580a1",
-        "refinement_interpretation_Tm_refine_9a019c37bda9aa395e0805475b581d9a",
+        "refinement_interpretation_Tm_refine_dededb70fb94e9a423bec802a85357ed",
         "refinement_interpretation_Tm_refine_ee191569bd9f131505476eb9bb2f0dbe",
-        "token_correspondence_Ex12f.TMAC.bspec"
+        "token_correspondence_Ex12f.TMAC.bspec", "typing_FStar.UInt8.t"
       ],
       0,
-      "12805e724623fa6e41fdc59984814930"
+      "0a057da382e79e06b2b9240e7d745cca"
     ],
     [
       "Ex12f.TMAC.verify",
@@ -40,64 +40,16 @@
         "equation_Ex12.Pad.blocksize", "equation_Ex12.Pad.bytes",
         "equation_Ex12.Pad.encode", "equation_Ex12.Pad.nbytes",
         "equation_Ex12f.TMAC.bspec", "equation_Ex12f.TMAC.pkey",
-        "function_token_typing_Ex12.BMAC.key_prop",
-        "function_token_typing_FStar.UInt8.t",
+        "equation_Prims.eqtype", "function_token_typing_Ex12.BMAC.key_prop",
         "lemma_FStar.Seq.Base.lemma_eq_refl",
-        "refinement_interpretation_Tm_refine_43058a325e271c84cdddd4bb5cf626de",
+        "refinement_interpretation_Tm_refine_314facab926fb5ccee666fe97e081552",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "refinement_interpretation_Tm_refine_71abb27e82b0c356f50fe92b2fe580a1",
-        "token_correspondence_Ex12f.TMAC.bspec", "typing_Ex12.Pad.encode"
+        "token_correspondence_Ex12f.TMAC.bspec", "typing_Ex12.Pad.encode",
+        "typing_FStar.UInt8.t"
       ],
       0,
-      "20339faa3b267daf5aecc89dbca622ee"
-    ],
-    [
-      "Ex12f.TMAC.keygen",
-      2,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "7aa10f2c876164e8446e4f4adce29a25"
-    ],
-    [
-      "Ex12f.TMAC.mac",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Ex12.Pad.bytes",
-        "equation_Ex12.Pad.encode", "equation_Ex12.Pad.text",
-        "equation_Ex12f.TMAC.bspec", "equation_Ex12f.TMAC.pkey",
-        "function_token_typing_Ex12.BMAC.key_prop",
-        "function_token_typing_FStar.UInt8.t", "lemma_Ex12.Pad.inj",
-        "lemma_FStar.Seq.Base.lemma_eq_elim",
-        "refinement_interpretation_Tm_refine_71abb27e82b0c356f50fe92b2fe580a1",
-        "refinement_interpretation_Tm_refine_9a019c37bda9aa395e0805475b581d9a",
-        "refinement_interpretation_Tm_refine_ee191569bd9f131505476eb9bb2f0dbe",
-        "token_correspondence_Ex12f.TMAC.bspec"
-      ],
-      0,
-      "7510c5a65662bb75832c6b37ecb3f6df"
-    ],
-    [
-      "Ex12f.TMAC.verify",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Ex12.Pad.block",
-        "equation_Ex12.Pad.blocksize", "equation_Ex12.Pad.bytes",
-        "equation_Ex12.Pad.encode", "equation_Ex12.Pad.nbytes",
-        "equation_Ex12f.TMAC.bspec", "equation_Ex12f.TMAC.pkey",
-        "function_token_typing_Ex12.BMAC.key_prop",
-        "function_token_typing_FStar.UInt8.t",
-        "lemma_FStar.Seq.Base.lemma_eq_refl",
-        "refinement_interpretation_Tm_refine_43058a325e271c84cdddd4bb5cf626de",
-        "refinement_interpretation_Tm_refine_71abb27e82b0c356f50fe92b2fe580a1",
-        "token_correspondence_Ex12f.TMAC.bspec", "typing_Ex12.Pad.encode"
-      ],
-      0,
-      "a3d2e91869f6144d30599b148d9539fc"
+      "19eecaeea47a6b8f7ec13d0cfde96959"
     ]
   ]
 ]

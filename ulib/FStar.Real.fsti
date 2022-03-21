@@ -20,13 +20,20 @@ module FStar.Real
   Real number constants can be specific in floating point format with
   an 'R' suffix, e.g., 1.0R
 
-  All these operations are mapped to the correspondings primitives
+  All these operations are mapped to the corresponding primitives
   in Z3's theory of real arithmetic.
 *)
 
 val real : eqtype
 
 val of_int : int -> Tot real
+
+(**
+  Used to extract real constants; this function is
+  uninterpreted logically. i.e., 1.1R is extracted to
+  [of_string "1.1"]
+  *)
+val of_string: string -> Tot real
 
 val ( +. ) : real -> real -> Tot real
 val ( -. ) : real -> real -> Tot real
@@ -41,8 +48,9 @@ val ( <=. ) : real -> real -> Tot bool
 
 #reset-options "--smtencoding.elim_box true --smtencoding.l_arith_repr native --smtencoding.nl_arith_repr native"
 //Tests
+let zero : real = of_int 0
 let one : real = of_int 1
-let two : real = 2.0R
+let two : real = of_int 2
 
 val sqrt_2 : r:real{r *. r = two}
 

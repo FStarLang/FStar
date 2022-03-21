@@ -18,7 +18,7 @@
         "constructor_distinct_MiniParseExample.TB",
         "constructor_distinct_MiniParseExample.TC",
         "constructor_distinct_MiniParseExample.TD",
-        "data_typing_intro_MiniParseExample.TC@tok", "eq2-interp",
+        "data_typing_intro_MiniParseExample.TB@tok", "eq2-interp",
         "equality_tok_MiniParseExample.TA@tok",
         "equality_tok_MiniParseExample.TB@tok",
         "equality_tok_MiniParseExample.TC@tok",
@@ -49,11 +49,11 @@
         "primitive_Prims.op_Subtraction",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_122393b221b19344c38b437c8217b781",
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_641a6a7f4fb70f47c0def193c3c84dcf",
         "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
-        "refinement_interpretation_Tm_refine_eccc8485be5b1198387fff0ba1cee674",
         "refinement_interpretation_Tm_refine_f13070840248fced9d9d60d77bdae3ec",
         "token_correspondence_MiniParse.Spec.Int.bounded_u16_eq",
         "token_correspondence_Prims.op_Equality",
@@ -63,37 +63,7 @@
         "typing_Tm_abs_faa9e5cff5df42ab6564d6584bf6a1cc"
       ],
       0,
-      "0f447d8e502dc21517e7cce25fb0d95f"
-    ],
-    [
-      "MiniParseExample.q",
-      1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "equation_MiniParse.Spec.Combinators.synth_inverse",
-        "equation_Prims.squash",
-        "interpretation_Tm_abs_faa9e5cff5df42ab6564d6584bf6a1cc",
-        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
-      ],
-      0,
-      "53c16ed2cc666e413bac830208506bce"
-    ],
-    [
-      "MiniParseExample.q",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "equation_MiniParse.Spec.Combinators.synth_inverse",
-        "equation_Prims.squash",
-        "interpretation_Tm_abs_faa9e5cff5df42ab6564d6584bf6a1cc",
-        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
-      ],
-      0,
-      "88c27cea28a3e126529258ca90821299"
+      "b378a743e18a2cccdd0f73559a65d62d"
     ]
   ]
 ]

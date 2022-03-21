@@ -15,11 +15,11 @@
 *)
 #light "off"
 module FStar.ToSyntax.ToSyntax
-open FStar.ST
-open FStar.All
+open FStar.Compiler.Effect
+open FStar.Compiler.Effect
 
-open FStar
-open FStar.Util
+open FStar open FStar.Compiler
+open FStar.Compiler.Util
 open FStar.Syntax
 open FStar.Syntax.Syntax
 open FStar.Syntax.Util
@@ -49,4 +49,5 @@ val add_modul_to_env: Syntax.modul
 
 val parse_attr_with_list : bool -> S.term -> lident -> option<(list<int>)> * bool
 
-val get_fail_attr : bool -> S.term -> option<(list<int> * bool)>
+val get_fail_attr1 : bool -> S.term       -> option<(list<int> * bool)>
+val get_fail_attr  : bool -> list<S.term> -> option<(list<int> * bool)>

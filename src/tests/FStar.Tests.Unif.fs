@@ -2,10 +2,10 @@
 module FStar.Tests.Unif
 //Unification tests
 //open FSharp.Compatibility.OCaml
-open FStar
-open FStar.All
+open FStar open FStar.Compiler
+open FStar.Compiler.Effect
 open FStar.Errors
-open FStar.Util
+open FStar.Compiler.Util
 open FStar.Syntax.Syntax
 open FStar.Tests.Pars
 module S = FStar.Syntax.Syntax
@@ -16,11 +16,11 @@ module P  = FStar.Syntax.Print
 module N = FStar.TypeChecker.Normalize
 module Rel = FStar.TypeChecker.Rel
 module Env = FStar.TypeChecker.Env
-module BU = FStar.Util
+module BU = FStar.Compiler.Util
 open FStar.TypeChecker.Common
 open FStar.TypeChecker.Env
 open FStar.Ident
-open FStar.Range
+open FStar.Compiler.Range
 open FStar.Tests.Util
 
 let tcenv () = Pars.init()
@@ -65,7 +65,7 @@ let should_fail x y =
         match g.guard_f with
             | Trivial -> fail (BU.format2 "%s and %s should not be unifiable\n" (P.term_to_string x) (P.term_to_string y))
             | NonTrivial f -> BU.print3 "%s and %s are unifiable if %s\n"  (P.term_to_string x) (P.term_to_string y) (P.term_to_string f)
-    with Error(e, msg, r) -> BU.print1 "%s\n" msg
+    with Error(e, msg, r, _ctx) -> BU.print1 "%s\n" msg // FIXME?
 
 let unify' x y =
     let x = pars x in
@@ -136,7 +136,7 @@ let run_all () =
     //imitation: unifies u to a constant
     FStar.Main.process_args () |> ignore; //set options
     let tm, us = inst 1 (tc "fun u x -> u x") in
-    let sol = tc "fun x -> c_and x x" in
+    let sol = tc "fun x -> Prims.pair x x" in
     unify_check 9 tm
             sol
             Trivial

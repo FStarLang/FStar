@@ -139,7 +139,7 @@ let parse_u16_array_nochk : input:bslice -> Stack (u16_array_st * off:U32.t{U32.
                 Some? (parse_u16_array bs) /\
                 (let (v, n) = Some?.v (parse_u16_array bs) in
                   let (rv, off) = r in
-                  // BUG: ommitting this live assertion causes failure in the
+                  // BUG: omitting this live assertion causes failure in the
                   // precondition to as_u16_array, but the error reported is
                   // simply "ill-kinded type" on as_u16_array
                   live h1 rv.a16_st /\
@@ -150,7 +150,7 @@ let parse_u16_array_nochk : input:bslice -> Stack (u16_array_st * off:U32.t{U32.
   let a = U16ArraySt len (truncate_slice input (Cast.uint16_to_uint32 len)) in
   (a, U32.add off (Cast.uint16_to_uint32 len))
 
-let parse_u32_array_nochk : input:bslice -> Stack (u32_array_st * off:U32.t)
+let parse_u32_array_nochk : input:bslice -> Stack (u32_array_st * U32.t)
   (requires (fun h0 -> live h0 input /\
                     (let bs = as_seq h0 input in
                     Some? (parse_u32_array bs))))
@@ -264,7 +264,7 @@ let ser_u32 v = fun buf ->
 let enc_u16_array_st (a: u16_array_st) (h:mem{live h a.a16_st}) : GTot bytes =
     encode_u16 a.len16_st `append` as_seq h a.a16_st
 
-inline_for_extraction [@"substitute"]
+inline_for_extraction [@@"substitute"]
 val ser_u16_array : a:u16_array_st ->
   serializer_any (hide (TSet.singleton a.a16_st)) (fun h -> enc_u16_array_st a h)
 let ser_u16_array a = fun buf ->

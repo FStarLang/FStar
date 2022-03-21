@@ -88,7 +88,7 @@ unfold let buffer_of_literal_post (s: ascii_string) (h0: HS.mem) (b: IB.ibuffer 
 /// literal can be seen as an immutable buffer and passed around as such.
 /// This function checks at extraction-time that its argument is a literal.
 val buffer_of_literal: (s: ascii_string) ->
-  ST.Stack (b: IB.ibuffer UInt8.t)
+  ST.Stack (IB.ibuffer UInt8.t)
     (requires (fun _ -> String.length s < pow2 32))
     (ensures buffer_of_literal_post s)
 
@@ -115,6 +115,6 @@ let buf_len_of_literal (s: string):
       UInt32.v l = normalize_term (List.Tot.length (String.list_of_string s)) /\
       UInt32.v l = IB.length b))
 =
-  [@inline_let]
+  [@@inline_let]
   let l = normalize_term (UInt32.uint_to_t (List.Tot.length (String.list_of_string s))) in
   buffer_of_literal s, l

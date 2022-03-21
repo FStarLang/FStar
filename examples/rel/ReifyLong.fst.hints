@@ -2,15 +2,6 @@
   "\u0004bÍP‘Œÿ\u001e1j®\u0005ÕNòi",
   [
     [
-      "ReifyLong.is_x",
-      1,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "8d377d5e354db61726de5ddebc68d30f"
-    ],
-    [
       "ReifyLong.bidule",
       1,
       2,
@@ -28,16 +19,7 @@
         "unit_typing"
       ],
       0,
-      "e7c7169672a90ad0853cd70a281ccc8a"
-    ],
-    [
-      "ReifyLong.is_x",
-      2,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "db76577ae2090870fa7a7bef09d81450"
+      "d9c7ad5dbf8329772580ef1c59e8f6db"
     ]
   ]
 ]

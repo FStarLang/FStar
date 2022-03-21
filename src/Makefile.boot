@@ -1,59 +1,43 @@
 include Makefile.config
 
-INCLUDE_PATHS = \
-	../ulib \
-	boot \
-	basic \
-	extraction \
-	fsdoc \
-	fstar \
-	parser \
-	prettyprint \
-	reflection \
-	smtencoding \
-	syntax \
-	tactics \
-	tosyntax \
-	typechecker \
-	tests
+FSTAR_HOME ?= ..
 
-CACHE_DIR?=./.cache.boot
+# Provides variables INCLUDE_PATHS, FSTAR_BOOT_OPTIONS,
+# and CACHE_DIR, shared with interactive mode targets
+include Makefile.boot.common
 
 FSTAR_BOOT ?= $(FSTAR)
 
 # FSTAR_C: This is the way in which we invoke F* for boostrapping
 #   -- we use automatic dependence analysis based on files in ulib, src/{basic, ...} and boot
 #   -- MLish and lax tune type-inference for use with unverified ML programs
-FSTAR_C=$(FSTAR_BOOT) $(OTHERFLAGS) --cache_checked_modules		\
-	--use_extracted_interfaces false                                \
-	--lax --MLish --no_location_info				\
-	--odir ocaml-output $(addprefix --include , $(INCLUDE_PATHS))	\
-	--warn_error -272-241-319 --cache_dir $(CACHE_DIR)
+FSTAR_C=$(FSTAR_BOOT) $(FSTAR_BOOT_OPTIONS) --cache_checked_modules --odir ocaml-output
 
 # Each "project" for the compiler is in its own namespace.  We want to
 # extract them all to OCaml.  Would be more convenient if all of them
 # were within, say, FStar.Compiler.*
-EXTRACT_NAMESPACES=FStar.Extraction FStar.Fsdoc FStar.Parser		\
+EXTRACT_NAMESPACES=FStar.Extraction FStar.Parser		\
 		   FStar.Reflection FStar.SMTEncoding FStar.Syntax	\
 		   FStar.Tactics FStar.Tests FStar.ToSyntax		\
-		   FStar.TypeChecker
+		   FStar.TypeChecker FStar.Profiling
 
 # Except some files that want to extract are not within a particularly
 # specific namespace. So, we mention extracting those explicitly.
-EXTRACT_MODULES=FStar.Pervasives FStar.Common FStar.Range		\
-		FStar.Options FStar.Ident FStar.Errors FStar.Const	\
+EXTRACT_MODULES=FStar.Pervasives FStar.Common FStar.Compiler.Range FStar.Thunk		\
+		FStar.VConfig FStar.Options FStar.Ident FStar.Errors FStar.Const	\
 		FStar.Order FStar.Dependencies		\
 		FStar.Interactive.CompletionTable			\
 		FStar.Interactive.JsonHelper FStar.Interactive.QueryHelper \
 		FStar.Interactive.PushHelper FStar.Interactive.Lsp	\
 		FStar.Interactive.Ide FStar.Interactive.Legacy		\
 		FStar.CheckedFiles FStar.Universal FStar.Prettyprint    \
-		FStar.Main
+		FStar.Main FStar.Compiler.List FStar.Compiler.Option    \
+                FStar.Compiler.Dyn
 
 # And there are a few specific files that should not be extracted at
 # all, despite being in one of the EXTRACT_NAMESPACES
 NO_EXTRACT=FStar.Tactics.Native FStar.Tactics.Load	\
-	   FStar.Extraction.ML.PrintML
+	   FStar.Extraction.ML.PrintML FStar.Compiler.List
 
 EXTRACT = $(addprefix --extract_module , $(EXTRACT_MODULES))		\
 	  $(addprefix --extract_namespace , $(EXTRACT_NAMESPACES))	\
@@ -65,13 +49,15 @@ EXTRACT = $(addprefix --extract_module , $(EXTRACT_MODULES))		\
 # ensures that if this rule is successful then %.checked.lax is more
 # recent than its dependences.
 %.checked.lax:
-	$(FSTAR_C) $< --already_cached "* -$(basename $(notdir $<))"
-	touch $@
+	@echo "[LAXCHECK  $(basename $(basename $(notdir $@)))]"
+	$(Q)$(FSTAR_C) $(SIL) $< --already_cached '*,'-$(basename $(notdir $<))
+	$(Q)@touch -c $@
 
 # And then, in a separate invocation, from each .checked.lax we
 # extract an .ml file
 ocaml-output/%.ml:
-	$(BENCHMARK_PRE) $(FSTAR_C) $(notdir $(subst .checked.lax,,$<)) \
+	@echo "[EXTRACT   $(notdir $@)]"
+	$(Q)$(BENCHMARK_PRE) $(FSTAR_C) $(SIL) $(notdir $(subst .checked.lax,,$<)) \
                    --codegen OCaml \
                    --extract_module $(basename $(notdir $(subst .checked.lax,,$<)))
 
@@ -88,12 +74,13 @@ ocaml-output/%.ml:
 # the dependency analysis failed.
 
 .depend:
-	$(FSTAR_C) --dep full                 \
-		   fstar/FStar.Main.fs	      \
-		   boot/FStar.Tests.Test.fst  \
-		   $(EXTRACT)		      > ._depend
-	mv ._depend .depend
-	mkdir -p $(CACHE_DIR)
+	@echo "[DEPEND]"
+	$(Q)$(FSTAR_C) $(SIL) --dep full	\
+		fstar/FStar.Main.fs		\
+		boot/FStar.Tests.Test.fst	\
+		$(EXTRACT)			> ._depend
+	$(Q)mv ._depend .depend
+	$(Q)mkdir -p $(CACHE_DIR)
 
 depend: .depend
 

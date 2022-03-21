@@ -15,19 +15,23 @@
 *)
 #light "off"
 module FStar.TypeChecker.Env
-open FStar.ST
-open FStar.All
-open FStar
+open FStar.Pervasives
+open FStar.Compiler.Effect
+open FStar.Compiler.Effect
+open FStar open FStar.Compiler
 open FStar.Syntax.Syntax
 open FStar.Ident
 open FStar.TypeChecker.Common
 
-module BU = FStar.Util
+module BU = FStar.Compiler.Util
+module S = FStar.Syntax.Syntax
+module TcComm = FStar.TypeChecker.Common
 
 type step =
   | Beta
   | Iota            //pattern matching
   | Zeta            //fixed points
+  | ZetaFull        //fixed points, even under blocked matches
   | Exclude of step //the first three kinds are included by default, unless Excluded explicity
   | Weak            //Do not descend into binders
   | HNF             //Only produce a head normal form
@@ -39,6 +43,7 @@ type step =
   | UnfoldOnly  of list<FStar.Ident.lid>
   | UnfoldFully of list<FStar.Ident.lid>
   | UnfoldAttr  of list<FStar.Ident.lid>
+  | UnfoldQual  of list<string>
   | UnfoldTac
   | PureSubtermsWithinComputations
   | Simplify        //Simplifies some basic logical tautologies: not part of definitional equality!
@@ -52,6 +57,7 @@ type step =
   | Unascribe
   | NBE
   | ForExtraction   //marking an invocation of the normalizer for extraction
+  | Unrefine
 and steps = list<step>
 
 val eq_step : step -> step -> bool
@@ -64,33 +70,6 @@ type delta_level =
   | Eager_unfolding_only
   | Unfold of delta_depth
 
-(* Type of wp liftings [l] between 2 effects Msource and Mtarget : *)
-(* given a computational type [Msource t wp], [wp' = mlift_wp t wp] should *)
-(* be a weakest precondition such that [Mtarget t wp'] is well-formed *)
-(* and if both effects are reifiable, [mlift_term], if provided, maps *)
-(* computations [e] of type [Msource.repr t wp] to a computation of type *)
-(* [Mtarget.repr t (lift_wp t wp)] *)
-type mlift = {
-  mlift_wp:universe -> typ -> typ -> typ ;
-  mlift_term:option<(universe -> typ -> typ -> term -> term)>
-  (* KM : not exactly sure if mlift_term really need the wp term inside the compiler *)
-  (* (it needs it in the F* source to be well-typed but we are forgetting a lot here) *)
-}
-
-(* Edge in the effect lattice *)
-type edge = {
-  msource :lident;
-  mtarget :lident;
-  mlift   :mlift;
-}
-
-
-type effects = {
-  decls :list<(eff_decl * list<qualifier>)>;
-  order :list<edge>;                                       (* transitive closure of the order in the signature *)
-  joins :list<(lident * lident * lident * mlift * mlift)>; (* least upper bounds *)
-}
-
 // A name prefix, such as ["FStar";"Math"]
 type name_prefix = FStar.Ident.path
 // A choice of which name prefixes are enabled/disabled
@@ -98,28 +77,94 @@ type name_prefix = FStar.Ident.path
 // To turn off everything, one can prepend `([], false)` to this (since [] is a prefix of everything)
 type proof_namespace = list<(name_prefix * bool)>
 
-type cached_elt = FStar.Util.either<(universes * typ), (sigelt * option<universes>)> * Range.range
+type cached_elt = either<(universes * typ), (sigelt * option<universes>)> * Range.range
 type goal = term
 
-type env = {
+type must_tot = bool
+
+(*
+ * AR: The mlift record that maintains functions to lift 'source' computation types
+ *     and terms to 'target' computation types and terms (terms in the case of reifiable effects)
+ *
+ *     The signature to lift computation types is quite nice: comp to comp
+ *     For the terms, we don't require the indices (wps etc.) anymore since
+ *     they are computationally irrelevant, in the previous code where we needed them
+ *     all the clients were passing Tm_unknown, so what's the point
+ *     Read the signature as: u_a:universe -> a:typ -> e:term -> term
+ *
+ *     Note that these types compose quite nicely along the effect lattice
+ *)
+
+type lift_comp_t = env -> comp -> comp * guard_t
+
+(*
+ * AR: Env maintains polymonadic binds as functions of type polymonadic_bind_t
+ *     read as: env -> c1 -> x -> c2 -> flags -> r -> (c * g)
+ *)
+and polymonadic_bind_t = env -> comp_typ -> option<bv> -> comp_typ -> list<cflag> -> Range.range -> comp * guard_t
+
+and mlift = {
+  mlift_wp:lift_comp_t;
+  mlift_term:option<(universe -> typ -> term -> term)>
+}
+
+(*
+ * Edge in the effect lattice
+ *
+ * May have been computed by composing other "edges"
+ *)
+and edge = {
+  msource : lident;
+  mtarget : lident;
+  mlift   : mlift;
+  mpath   : list<lident>;  //this is just for debugging pusposes
+                           //e.g. it is used when printing the effects graph
+                           //it has no other role
+                           //the path is the list of nodes that the "edge" goes through
+                           //not including msource and mtarget
+}
+
+(*
+ * The effects graph
+ *
+ * Each of order, joins, polymonadic binds, subcomps, are lists,
+ *   that may have multiple entries for same nodes,
+ *   e.g. multiple edges between effects M and N
+ *
+ * We keep adding the latest ones to the head of the list,
+ *   which is then picked for application
+ *
+ * I.e. we don't remove when overriding
+ *)
+
+and effects = {
+  decls :list<(eff_decl * list<qualifier>)>;
+  order :list<edge>;                                       (* transitive closure of the order in the signature *)
+  joins :list<(lident * lident * lident * mlift * mlift)>; (* least upper bounds *)
+  polymonadic_binds :list<(lident * lident * lident * polymonadic_bind_t)>;  (* (m, n) |> p *)
+  polymonadic_subcomps :list<(lident * lident * tscheme)>;  (* m <: n *)
+}
+
+and env = {
   solver         :solver_t;                     (* interface to the SMT solver *)
   range          :Range.range;                  (* the source location of the term being checked *)
   curmodule      :lident;                       (* Name of this module *)
   gamma          :list<binding>;                (* Local typing environment *)
   gamma_sig      :list<sig_binding>;            (* and signature elements *)
-  gamma_cache    :FStar.Util.smap<cached_elt>;  (* Memo table for the local environment *)
+  gamma_cache    :FStar.Compiler.Util.smap<cached_elt>;  (* Memo table for the local environment *)
   modules        :list<modul>;                  (* already fully type checked modules *)
-  expected_typ   :option<typ>;                  (* type expected by the context *)
+  expected_typ   :option<(typ * bool)>;         (* type expected by the context *)
+                                                (* a true bool will check for type equality (else subtyping) *)
   sigtab         :BU.smap<sigelt>;              (* a dictionary of long-names to sigelts *)
   attrtab        :BU.smap<list<sigelt>>;        (* a dictionary of attribute( name)s to sigelts, mostly in support of typeclasses *)
-  is_pattern     :bool;                         (* is the current term being checked a pattern? *)
   instantiate_imp:bool;                         (* instantiate implicit arguments? default=true *)
   effects        :effects;                      (* monad lattice *)
   generalize     :bool;                         (* should we generalize let bindings? *)
-  letrecs        :list<(lbname * typ * univ_names)>;           (* mutually recursive names and their types (for termination checking), adding universes, see the note in TcTerm.fs:build_let_rec_env about usage of this field *)
+  letrecs        :list<(lbname * int * typ * univ_names)>;  (* mutually recursive names, with recursion arity and their types (for termination checking), adding universes, see the note in TcTerm.fs:build_let_rec_env about usage of this field *)
   top_level      :bool;                         (* is this a top-level term? if so, then discharge guards *)
   check_uvars    :bool;                         (* paranoid: re-typecheck unification variables *)
-  use_eq         :bool;                         (* generate an equality constraint, rather than subtyping/subkinding *)
+  use_eq_strict  :bool;                         (* this flag runs the typechecker in non-subtyping mode *)
+                                                (* i.e. using type equality instead of subtyping *)
   is_iface       :bool;                         (* is the module we're currently checking an interface? *)
   admit          :bool;                         (* admit VCs in the current module *)
   lax            :bool;                         (* don't even generate VCs *)
@@ -128,66 +173,67 @@ type env = {
   failhard       :bool;                         (* don't try to carry on after a typechecking error *)
   nosynth        :bool;                         (* don't run synth tactics *)
   uvar_subtyping :bool;
-  tc_term        :env -> term -> term*lcomp*guard_t; (* a callback to the type-checker; g |- e : M t wp *)
-  type_of        :env -> term ->term*typ*guard_t; (* a callback to the type-checker; check_term g e = t ==> g |- e : Tot t *)
-  universe_of    :env -> term -> universe;        (* a callback to the type-checker; g |- e : Tot (Type u) *)
-  check_type_of  :bool -> env -> term -> typ -> guard_t;
+
+  tc_term :env -> term -> term * lcomp * guard_t; (* typechecker callback; G |- e : C <== g *)
+  typeof_tot_or_gtot_term :env -> term -> must_tot -> term * typ * guard_t; (* typechecker callback; G |- e : (G)Tot t <== g *)
+  universe_of :env -> term -> universe; (* typechecker callback; G |- e : Tot (Type u) *)
+  typeof_well_typed_tot_or_gtot_term :env -> term -> must_tot -> typ * guard_t; (* typechecker callback, uses fast path, with a fallback on the slow path *)
+
   use_bv_sorts   :bool;                           (* use bv.sort for a bound-variable's type rather than consulting gamma *)
   qtbl_name_and_index:BU.smap<int> * option<(lident*int)>;    (* the top-level term we're currently processing and the nth query for it, in addition we maintain a counter for query index per lid *)
   normalized_eff_names:BU.smap<lident>;           (* cache for normalized effect name, used to be captured in the function norm_eff_name, which made it harder to roll back etc. *)
   fv_delta_depths:BU.smap<delta_depth>;           (* cache for fv delta depths, its preferable to use Env.delta_depth_of_fv, soon fv.delta_depth should be removed *)
   proof_ns       :proof_namespace;                (* the current names that will be encoded to SMT (a.k.a. hint db) *)
   synth_hook          :env -> typ -> term -> term;     (* hook for synthesizing terms via tactics, third arg is tactic term *)
-  splice         :env -> term -> list<sigelt>;    (* hook for synthesizing terms via tactics, third arg is tactic term *)
+  try_solve_implicits_hook :env -> term -> implicits -> unit;     (* *)
+  splice         :env -> Range.range -> term -> list<sigelt>; (* hook for synthesizing terms via tactics, third arg is tactic term *)
+  mpreprocess    :env -> term -> term -> term;    (* hook for preprocessing typechecked terms via metaprograms *)
   postprocess    :env -> term -> typ -> term -> term; (* hook for postprocessing typechecked terms via metaprograms *)
-  is_native_tactic: lid -> bool;                  (* callback into the native tactics engine *)
   identifier_info: ref<FStar.TypeChecker.Common.id_info_table>; (* information on identifiers *)
   tc_hooks       : tcenv_hooks;                   (* hooks that the interactive more relies onto for symbol tracking *)
   dsenv          : FStar.Syntax.DsEnv.env;        (* The desugaring environment from the front-end *)
   nbe            : list<step> -> env -> term -> term;  (* Callback to the NBE function *)
-  strict_args_tab:BU.smap<(option<(list<int>)>)>;                (* a dictionary of fv names to strict arguments *)
+  strict_args_tab:BU.smap<(option<(list<int>)>)>;  (* a dictionary of fv names to strict arguments *)
+  erasable_types_tab:BU.smap<bool>;              (* a dictionary of type names to erasable types *)
+  enable_defer_to_tac: bool;                     (* Set by default; unset when running within a tactic itself, since we do not allow
+                                                    a tactic to defer problems to another tactic via the attribute mechanism *)
+  unif_allow_ref_guards:bool;                    (* Allow guards when unifying refinements, even when SMT is disabled *)
+  erase_erasable_args: bool                      (* This flag is set when running normalize_for_extraction, see Extraction.ML.Modul *)
 }
 
 and solver_depth_t = int * int * int
 and solver_t = {
-    init         :env -> unit;
-    push         :string -> unit;
-    pop          :string -> unit;
-    snapshot     :string -> (solver_depth_t * unit);
-    rollback     :string -> option<solver_depth_t> -> unit;
-    encode_sig   :env -> sigelt -> unit;
-    preprocess   :env -> goal -> list<(env * goal * FStar.Options.optionstate)>;
-    solve        :option<(unit -> string)> -> env -> goal -> unit; //call to the smt solver
-    finish       :unit -> unit;
-    refresh      :unit -> unit;
+    init            :env -> unit;
+    push            :string -> unit;
+    pop             :string -> unit;
+    snapshot        :string -> (solver_depth_t * unit);
+    rollback        :string -> option<solver_depth_t> -> unit;
+    encode_sig      :env -> sigelt -> unit;
+    preprocess      :env -> goal -> list<(env * goal * FStar.Options.optionstate)>;
+    handle_smt_goal :env -> goal -> list<(env * goal)>;
+    solve           :option<(unit -> string)> -> env -> goal -> unit; //call to the smt solver
+    finish          :unit -> unit;
+    refresh         :unit -> unit;
 }
-and guard_t = {
-  guard_f:    guard_formula;
-  deferred:   deferred;
-  univ_ineqs: list<universe> * list<univ_ineq>;
-  implicits:  implicits;
-}
-// Reason, term and uvar, and (rough) position where it is introduced
-// The term is just a Tm_uvar of the ctx_uvar
-and implicit = {
-    imp_reason : string;                  // Reason (in text) why the implicit was introduced
-    imp_uvar   : ctx_uvar;                // The ctx_uvar representing it
-    imp_tm     : term;                    // The term, made up of the ctx_uvar
-    imp_range  : Range.range;             // Position where it was introduced
-}
-and implicits = list<implicit>
 and tcenv_hooks =
-  { tc_push_in_gamma_hook : (env -> BU.either<binding, sig_binding> -> unit) }
+  { tc_push_in_gamma_hook : (env -> either<binding, sig_binding> -> unit) }
+
+type implicit = TcComm.implicit
+type implicits = TcComm.implicits
+type guard_t = TcComm.guard_t
+
 val tc_hooks : env -> tcenv_hooks
 val set_tc_hooks: env -> tcenv_hooks -> env
+val preprocess : env -> term -> term -> term
 val postprocess : env -> term -> typ -> term -> term
 
 type env_t = env
+
 val initial_env : FStar.Parser.Dep.deps ->
-                  (env -> term -> term*lcomp*guard_t) ->
-                  (env -> term -> term*typ*guard_t) ->
+                  (env -> term -> term * lcomp * guard_t) ->
+                  (env -> term -> must_tot -> term * typ * guard_t) ->
+                  (env -> term -> must_tot -> option<typ>) ->
                   (env -> term -> universe) ->
-                  (bool -> env -> term -> typ -> guard_t) ->
                   solver_t -> lident ->
                   (list<step> -> env -> term -> term) -> env
 
@@ -220,7 +266,7 @@ val insert_fv_info : env -> fv -> typ -> unit
 val toggle_id_info : env -> bool -> unit
 val promote_id_info : env -> (typ -> typ) -> unit
 
-type qninfo = option<(BU.either<(universes * typ),(sigelt * option<universes>)> * Range.range)>
+type qninfo = option<(either<(universes * typ),(sigelt * option<universes>)> * Range.range)>
 
 (* Querying identifiers *)
 val lid_exists             : env -> lident -> bool
@@ -247,10 +293,13 @@ val lookup_attrs_of_lid    : env -> lid -> option<list<attribute>>
 val fv_with_lid_has_attr   : env -> fv_lid:lid -> attr_lid:lid -> bool
 val fv_has_attr            : env -> fv -> attr_lid:lid -> bool
 val fv_has_strict_args     : env -> fv -> option<(list<int>)>
+val fv_has_erasable_attr   : env -> fv -> bool
+val non_informative        : env -> typ -> bool
 val try_lookup_effect_lid  : env -> lident -> option<term>
 val lookup_effect_lid      : env -> lident -> term
 val lookup_effect_abbrev   : env -> universes -> lident -> option<(binders * comp)>
 val norm_eff_name          : (env -> lident -> lident)
+val num_effect_indices     : env -> lident -> Range.range -> int
 val lookup_effect_quals    : env -> lident -> list<qualifier>
 val lookup_projector       : env -> lident -> int -> lident
 val lookup_attr            : env -> string -> list<sigelt>
@@ -277,41 +326,70 @@ val inst_effect_fun_with   : universes -> env -> eff_decl -> tscheme -> term
 val mk_univ_subst          : list<univ_name> -> universes -> list<subst_elt>
 
 (* Introducing identifiers and updating the environment *)
-val push_sigelt        : env -> sigelt -> env
-val push_bv            : env -> bv -> env
-val push_bvs           : env -> list<bv> -> env
-val pop_bv             : env -> option<(bv * env)>
-val push_let_binding   : env -> lbname -> tscheme -> env
-val push_binders       : env -> binders -> env
-val push_module        : env -> modul -> env
-val push_univ_vars     : env -> univ_names -> env
-val open_universes_in  : env -> univ_names -> list<term> -> env * univ_names * list<term>
-val set_expected_typ   : env -> typ -> env
-val expected_typ       : env -> option<typ>
-val clear_expected_typ : env -> env*option<typ>
-val set_current_module : env -> lident -> env
-val finish_module      : (env -> modul -> env)
+
+(*
+ * push_sigelt only adds the sigelt to various caches maintained by env
+ * For semantic changes, such as adding an effect or adding an edge to the effect lattice,
+ *   Tc calls separate functions
+ *)
+val push_sigelt           : env -> sigelt -> env
+val push_new_effect       : env -> (eff_decl * list<qualifier>) -> env
+
+//client constructs the mlift and gives it to us
+
+val exists_polymonadic_bind: env -> lident -> lident -> option<(lident * polymonadic_bind_t)>
+val exists_polymonadic_subcomp: env -> lident -> lident -> option<tscheme>
+
+//print the effects graph in dot format
+val print_effects_graph: env -> string
+
+val update_effect_lattice  : env -> src:lident -> tgt:lident -> mlift -> env
+
+val join_opt               : env -> lident -> lident -> option<(lident * mlift * mlift)>
+val add_polymonadic_bind   : env -> m:lident -> n:lident -> p:lident -> polymonadic_bind_t -> env
+val add_polymonadic_subcomp: env -> m:lident -> n:lident -> tscheme -> env
+
+val push_bv               : env -> bv -> env
+val push_bvs              : env -> list<bv> -> env
+val pop_bv                : env -> option<(bv * env)>
+val push_let_binding      : env -> lbname -> tscheme -> env
+val push_binders          : env -> binders -> env
+val push_univ_vars        : env -> univ_names -> env
+val open_universes_in     : env -> univ_names -> list<term> -> env * univ_names * list<term>
+val set_expected_typ      : env -> typ -> env
+val set_expected_typ_maybe_eq
+                          : env -> typ -> bool -> env  //boolean true will check for type equality
+
+//the returns boolean true means check for type equality
+val expected_typ          : env -> option<(typ * bool)>
+val clear_expected_typ    : env -> env*option<(typ * bool)>
+
+val set_current_module    : env -> lident -> env
+val finish_module         : (env -> modul -> env)
 
 (* Collective state of the environment *)
 val bound_vars   : env -> list<bv>
 val all_binders  : env -> binders
 val modules      : env -> list<modul>
 val uvars_in_env : env -> uvars
-val univ_vars    : env -> FStar.Util.set<universe_uvar>
-val univnames    : env -> FStar.Util.set<univ_name>
+val univ_vars    : env -> FStar.Compiler.Util.set<universe_uvar>
+val univnames    : env -> FStar.Compiler.Util.set<univ_name>
 val lidents      : env -> list<lident>
 
 (* operations on monads *)
-val identity_mlift      : mlift
-val join                : env -> lident -> lident -> lident * mlift * mlift
-val monad_leq           : env -> lident -> lident -> option<edge>
-val effect_decl_opt     : env -> lident -> option<(eff_decl * list<qualifier>)>
-val get_effect_decl     : env -> lident -> eff_decl
-val wp_signature        : env -> lident -> (bv * term)
-val comp_to_comp_typ    : env -> comp -> comp_typ
-val unfold_effect_abbrev: env -> comp -> comp_typ
-val effect_repr         : env -> comp -> universe -> option<term>
-val reify_comp          : env -> comp -> universe -> term
+val identity_mlift         : mlift
+val join                   : env -> lident -> lident -> lident * mlift * mlift
+val monad_leq              : env -> lident -> lident -> option<edge>
+val effect_decl_opt        : env -> lident -> option<(eff_decl * list<qualifier>)>
+val get_effect_decl        : env -> lident -> eff_decl
+val is_layered_effect      : env -> lident -> bool
+val wp_signature           : env -> lident -> (bv * term)
+val comp_to_comp_typ       : env -> comp -> comp_typ
+val unfold_effect_abbrev   : env -> comp -> comp_typ
+val effect_repr            : env -> comp -> universe -> option<term>
+val reify_comp             : env -> comp -> universe -> term
+
+val is_erasable_effect     : env -> lident -> bool
 
 (* [is_reifiable_* env x] returns true if the effect name/computational effect (of *)
 (* a body or codomain of an arrow) [x] is reifiable *)
@@ -324,6 +402,7 @@ val is_reifiable_function    : env -> term -> bool
 (* reifying effects marked with the `reifiable` keyword. (For instance, TAC *)
 (* is reifiable but not user-reifiable.) *)
 val is_user_reifiable_effect : env -> lident -> bool
+val is_user_reflectable_effect : env -> lident -> bool
 
 (* Is this effect marked `total`? *)
 val is_total_effect : env -> lident -> bool
@@ -347,7 +426,7 @@ val closed'         : term -> bool
 
 (* Operations on guard_t *)
 val close_guard_univs         : universes -> binders -> guard_t -> guard_t
-val close_guard               : env -> binders -> guard_t -> guard_t
+val close_guard               : env -> binders -> guard_t -> guard_t  //this closes the guard formula with bs
 val apply_guard               : guard_t -> term -> guard_t
 val map_guard                 : guard_t -> (term -> term) -> guard_t
 val always_map_guard          : guard_t -> (term -> term) -> guard_t
@@ -364,11 +443,51 @@ val guard_form                : guard_t -> guard_formula
 val check_trivial             : term -> guard_formula
 
 (* Other utils *)
+val too_early_in_prims : env -> bool
+
 val def_check_closed_in       : Range.range -> msg:string -> scope:list<bv> -> term -> unit
 val def_check_closed_in_env   : Range.range -> msg:string -> env -> term -> unit
 val def_check_guard_wf        : Range.range -> msg:string -> env -> guard_t -> unit
 val close_forall              : env -> binders -> term -> term
 
-val new_implicit_var_aux : string -> Range.range -> env -> typ -> should_check_uvar -> option<(FStar.Dyn.dyn * term)> -> (term * list<(ctx_uvar * Range.range)> * guard_t)
+val new_implicit_var_aux : string ->
+                           Range.range ->
+                           env ->
+                           typ ->
+                           should_check_uvar ->
+                           option<ctx_uvar_meta_t> ->
+                           (term * list<(ctx_uvar * Range.range)> * guard_t)
+
 
 val print_gamma : gamma -> string
+
+(* layered effect utils *)
+
+(*
+ * This gadget is used when the typechecker applies the layered effect combinators
+ *
+ * Given (opened) bs = x_i:t_i, this function creates uvars ?u_i:t_i
+ *
+ * When creating a ?u_i, it performs the substitution substs@[x_j/?u_j] in t_i, forall j < i
+ *   so that the t_i is well-typed in env
+ *
+ * It returns the list of the uvars, and combined guard (which essentially contains the uvars as implicits)
+ *)
+
+val uvars_for_binders : env -> bs:S.binders -> substs:S.subst_t -> reason:(S.binder -> string) -> r:Range.range -> (list<S.term> * guard_t)
+
+val pure_precondition_for_trivial_post : env -> universe -> typ -> typ -> Range.range -> typ
+
+(* Fetch the arity from the letrecs field. None if not there (happens
+for either not a recursive let, or one that does not need the totality
+check. *)
+val get_letrec_arity : env -> lbname -> option<int>
+
+(* Construct a Tm_fvar with the delta_depth metadata populated
+   -- Note, the delta_qual is not populated, so don't use this with
+      Data constructors, projectors, record identifiers etc.
+
+   -- Also, don't use this with lidents that refer to Prims, that
+      still requires special handling
+*)
+val fvar_of_nonqual_lid : env -> lident -> term

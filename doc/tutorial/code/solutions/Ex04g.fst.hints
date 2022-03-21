@@ -12,7 +12,7 @@
         "refinement_interpretation_Tm_refine_7aac12c24449a22c34d98a0ea8ed4a32"
       ],
       0,
-      "fe15836b2cfe266a27b2cb3813a2cc3b"
+      "5cde007bc4e6d1741aad58ee80313528"
     ],
     [
       "Ex04g.tl",
@@ -25,33 +25,7 @@
         "refinement_interpretation_Tm_refine_7aac12c24449a22c34d98a0ea8ed4a32"
       ],
       0,
-      "624e3bd6eae3e0690d8a9952f0b6a71f"
-    ],
-    [
-      "Ex04g.hd",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "disc_equation_Prims.Cons",
-        "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_7aac12c24449a22c34d98a0ea8ed4a32"
-      ],
-      0,
-      "49ee07db86ed9fab3921f22d92a30510"
-    ],
-    [
-      "Ex04g.tl",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "disc_equation_Prims.Cons",
-        "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_7aac12c24449a22c34d98a0ea8ed4a32"
-      ],
-      0,
-      "5dde711c0a074d3f2cf8c6681f704ff8"
+      "693f965992037d07fd9ed06d08f6308b"
     ]
   ]
 ]

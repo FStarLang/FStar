@@ -1,0 +1,38 @@
+[
+  "þhÎNáT\u0006|IXf]_6bŽ",
+  [
+    [
+      "FStar.Algebra.CommMonoid.right_identity",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "ddb10f542d29572d081f1dad153b7b1a"
+    ],
+    [
+      "FStar.Algebra.CommMonoid.int_plus_cm",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "int_inversion",
+        "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0"
+      ],
+      0,
+      "0e0fd77e0da3957da452ed73f98d9aff"
+    ],
+    [
+      "FStar.Algebra.CommMonoid.int_multiply_cm",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "int_inversion",
+        "primitive_Prims.op_Multiply", "projection_inverse_BoxInt_proj_0"
+      ],
+      0,
+      "1239f1082314cb25dff2c1f945f3fde7"
+    ]
+  ]
+]

@@ -13,7 +13,6 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-(* NOTE: This example MUST HAVE an .fsti because of --use_extracted_interfaces *)
 module MiniParseExample
 open MiniParse.Impl.Base
 

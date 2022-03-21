@@ -26,11 +26,11 @@ open FStar.Preorder
 
 (* Starting the predicates that constitute the preorder *)
 
-[@"opaque_to_smt"]
+[@@"opaque_to_smt"]
 private unfold let contains_region (m:mem) (r:rid) = get_hmap m `Map.contains` r
 
 (* The preorder is the conjunction of above predicates *)
-private val mem_rel :preorder mem
+val mem_rel :preorder mem
 
 type mem_predicate = mem -> Type0
 
@@ -58,7 +58,7 @@ sub_effect DIV ~> GST = lift_div_gst
  *     - `stable p` is a precondition for `gst_witness`
  *     - `gst_recall` does not have a precondition for `stable p`, since `gst_witness` is the only way
  *       clients would have obtained `witnessed p`, and so, `p` should already be stable
- *     - `lemma_functoriality` does not require stablility for either `p` or `q`
+ *     - `lemma_functoriality` does not require stability for either `p` or `q`
  *       Our metatheory ensures that this is sound (without requiring stability of `q`)
  *       This form is useful in defining the MRRef interface (see mr_witness)
  *)
@@ -116,27 +116,27 @@ effect Unsafe (a:Type) (pre:st_pre) (post: (m0:mem -> Tot (st_post' a (pre m0)))
 (*
 //  * marking these opaque, since expect them to be unfolded away beforehand
 //  *)
-[@"opaque_to_smt"]
+[@@"opaque_to_smt"]
 unfold private let equal_heap_dom (r:rid) (m0 m1:mem) :Type0
   = Heap.equal_dom (get_hmap m0 `Map.sel` r) (get_hmap m1 `Map.sel` r)
 
-[@"opaque_to_smt"]
+[@@"opaque_to_smt"]
 unfold private let contained_region :mem -> mem -> rid -> Type0
   = fun m0 m1 r -> m0 `contains_region` r /\ m1 `contains_region` r
 
-[@"opaque_to_smt"]
+[@@"opaque_to_smt"]
 unfold private let contained_stack_region :mem -> mem -> rid -> Type0
   = fun m0 m1 r -> is_stack_region r /\ contained_region m0 m1 r
 
-[@"opaque_to_smt"]
+[@@"opaque_to_smt"]
 unfold private let contained_non_tip_region :mem -> mem -> rid -> Type0
   = fun m0 m1 r -> r =!= get_tip m0 /\ r =!= get_tip m1 /\ contained_region m0 m1 r
 
-[@"opaque_to_smt"]
+[@@"opaque_to_smt"]
 unfold private let contained_non_tip_stack_region :mem -> mem -> rid -> Type0
   = fun m0 m1 r -> is_stack_region r /\ contained_non_tip_region m0 m1 r
 
-[@"opaque_to_smt"]
+[@@"opaque_to_smt"]
 unfold private let same_refs_common (p:mem -> mem -> rid -> Type0) (m0 m1:mem) =
   forall (r:rid). p m0 m1 r ==> equal_heap_dom r m0 m1
 
@@ -305,7 +305,7 @@ type mmref (a:Type) = mmmref a (Heap.trivial_preorder a)
 type s_ref (i:rid) (a:Type) = s_mref i a (Heap.trivial_preorder a)
 
 let is_eternal_region (r:rid) :Type0
-  = HS.is_eternal_color (color r) /\ (r == HS.root \/ witnessed (region_contains_pred r))
+  = HS.is_eternal_region_hs r /\ (r == HS.root \/ witnessed (region_contains_pred r))
 
 (*
  * AR: The change to using ST.rid may not be that bad itself,
@@ -340,45 +340,44 @@ val salloc (#a:Type) (#rel:preorder a) (init:a)
   
 // JP, AR: these are not supported in C, and `salloc` already benefits from
 // automatic memory management.
-[@ (deprecated "use salloc instead") ]
+[@@ (deprecated "use salloc instead") ]
 val salloc_mm (#a:Type) (#rel:preorder a) (init:a)
   :StackInline (mmmstackref a rel) (requires (fun m -> is_stack_region (get_tip m)))
                                    (ensures  salloc_post init)
 
-[@ (deprecated "use salloc instead") ]
+[@@ (deprecated "use salloc instead") ]
 val sfree (#a:Type) (#rel:preorder a) (r:mmmstackref a rel)
   :StackInline unit (requires (fun m0 -> frameOf r = get_tip m0 /\ m0 `contains` r))
                     (ensures (fun m0 _ m1 -> m0 `contains` r /\ m1 == HS.free r m0))
+
+unfold
+let new_region_post_common (r0 r1:rid) (m0 m1:mem) =
+  r1 `HS.extends` r0 /\
+  HS.fresh_region r1 m0 m1 /\
+  get_hmap m1 == Map.upd (get_hmap m0) r1 Heap.emp /\
+  get_tip m1 == get_tip m0 /\ 
+  HS.live_region m0 r0
 
 val new_region (r0:rid)
   :ST rid
       (requires (fun m        -> is_eternal_region r0))
       (ensures  (fun m0 r1 m1 ->
-                 r1 `HS.extends` r0                               /\
-                 HS.fresh_region r1 m0 m1                         /\
+                 new_region_post_common r0 r1 m0 m1               /\
 		 HS.color r1 = HS.color r0                        /\
 		 is_eternal_region r1                             /\
-		 get_hmap m1 == Map.upd (get_hmap m0) r1 Heap.emp /\
-		 get_tip m1 == get_tip m0 /\ 
-                 HS.live_region m0 r0 /\
-                 (r1, m1) == HS.new_eternal_region m0 r0 None
-                 ))
+                 (r1, m1) == HS.new_eternal_region m0 r0 None))
 
 val new_colored_region (r0:rid) (c:int)
   :ST rid
-      (requires (fun m       -> HS.is_eternal_color c /\ is_eternal_region r0))
+      (requires (fun m       -> HS.is_heap_color c /\ is_eternal_region r0))
       (ensures (fun m0 r1 m1 ->
-                r1 `HS.extends` r0                               /\
-                HS.fresh_region r1 m0 m1                         /\
+                new_region_post_common r0 r1 m0 m1               /\
 	        HS.color r1 = c                                  /\
 		is_eternal_region r1                             /\
-                HS.live_region m0 r0 /\
-                (r1, m1) == HS.new_eternal_region m0 r0 (Some c) /\
-	        get_hmap m1 == Map.upd (get_hmap m0) r1 Heap.emp /\
-		get_tip m1 == get_tip m0))
+                (r1, m1) == HS.new_eternal_region m0 r0 (Some c)))
 
 let ralloc_post (#a:Type) (#rel:preorder a) (i:rid) (init:a) (m0:mem)
-                       (x:mreference a rel{is_eternal_region (frameOf x)}) (m1:mem) =
+                       (x:mreference a rel) (m1:mem) =
   let region_i = get_hmap m0 `Map.sel` i in
   as_ref x `Heap.unused_in` region_i /\
   i `is_in` get_hmap m0              /\
@@ -404,7 +403,7 @@ let is_live_for_rw_in (#a:Type) (#rel:preorder a) (r:mreference a rel) (m:mem) :
      (is_eternal_region i \/ i `HS.is_above` get_tip m) /\
      (not (is_mm r)       \/ m `HS.contains_ref_in_its_region` r))
 
-val rfree (#a:Type) (#rel:preorder a) (r:mmmref a rel)
+val rfree (#a:Type) (#rel:preorder a) (r:mreference a rel{HS.is_mm r /\ HS.is_heap_color (HS.color (HS.frameOf r))})
   :ST unit (requires (fun m0     -> r `is_live_for_rw_in` m0))
            (ensures (fun m0 _ m1 -> m0 `contains` r /\ m1 == HS.free r m0))
 
@@ -413,7 +412,7 @@ unfold let assign_post (#a:Type) (#rel:preorder a) (r:mreference a rel) (v:a) (m
 
 (**
  * Assigns, provided that the reference exists.
- * Guaranties the strongest low-level effect: Stack
+ * Guarantees the strongest low-level effect: Stack
  *)
 val op_Colon_Equals (#a:Type) (#rel:preorder a) (r:mreference a rel) (v:a)
   :STL unit (requires (fun m -> r `is_live_for_rw_in` m /\ rel (HS.sel m r) v))
@@ -424,7 +423,7 @@ unfold let deref_post (#a:Type) (#rel:preorder a) (r:mreference a rel) (m0:mem) 
 
 (**
  * Dereferences, provided that the reference exists.
- * Guaranties the strongest low-level effect: Stack
+ * Guarantees the strongest low-level effect: Stack
  *)
 val op_Bang (#a:Type) (#rel:preorder a) (r:mreference a rel)
   :Stack a (requires (fun m -> r `is_live_for_rw_in` m))
@@ -444,8 +443,8 @@ val get (_:unit)
 (**
  * We can only recall refs with mm bit unset, not stack refs
  *)
-val recall (#a:Type) (#rel:preorder a) (r:mref a rel)
-  :Stack unit (requires (fun m -> True))
+val recall (#a:Type) (#rel:preorder a) (r:mreference a rel{not (HS.is_mm r)})
+  :Stack unit (requires (fun m -> is_eternal_region (HS.frameOf r) \/ m `contains_region` (HS.frameOf r)))
               (ensures  (fun m0 _ m1 -> m0 == m1 /\ m1 `contains` r))
 
 (**
@@ -456,7 +455,7 @@ val recall_region (i:rid{is_eternal_region i})
               (ensures (fun m0 _ m1 -> m0 == m1 /\ i `is_in` get_hmap m1))
 
 val witness_region (i:rid)
-  :Stack unit (requires (fun m0      -> is_eternal_color (color i) ==> i `is_in` get_hmap m0))
+  :Stack unit (requires (fun m0      -> HS.is_eternal_region_hs i ==> i `is_in` get_hmap m0))
               (ensures  (fun m0 _ m1 -> m0 == m1 /\ witnessed (region_contains_pred i)))
 
 val witness_hsref (#a:Type) (#rel:preorder a) (r:HS.mreference a rel)
@@ -475,12 +474,15 @@ unfold type stable_on (#a:Type0) (#rel:preorder a) (p:mem_predicate) (r:mreferen
   = forall (h0 h1:mem).{:pattern (p h0); rel (HS.sel h0 r) (HS.sel h1 r)}
                   (p h0 /\ rel (HS.sel h0 r) (HS.sel h1 r)) ==> p h1
 
-[@(deprecated "FStar.HyperStack.ST.stable_on")]
+(*
+ * The stable_on_t and mr_witness API is here for legacy reasons,
+ * the preferred API is stable_on and witness_p
+ *)
+
 unfold type stable_on_t (#i:erid) (#a:Type) (#b:preorder a)
                         (r:m_rref i a b) (p:mem_predicate)
   = stable_on p r
 
-[@(deprecated "FStar.HyperStack.ST.witness_p")]
 val mr_witness (#r:erid) (#a:Type) (#b:preorder a)
                (m:m_rref r a b) (p:mem_predicate)
   :ST unit (requires (fun h0      -> p h0   /\ stable_on_t m p))
@@ -502,7 +504,7 @@ val testify_forall_region_contains_pred (#c:Type) (#p:(c -> GTot rid))
   ($s:squash (forall (x:c). witnessed (region_contains_pred (p x))))
   :ST unit (requires (fun _       -> True))
            (ensures  (fun h0 _ h1 -> h0 == h1 /\
-	                          (forall (x:c). (not (HS.is_eternal_color (color (p x)))) \/ h1 `contains_region` (p x))))
+	                          (forall (x:c). HS.is_eternal_region_hs (p x) ==> h1 `contains_region` (p x))))
 
 
 (****** Begin: preferred API for witnessing and recalling predicates ******)
@@ -552,3 +554,45 @@ val lemma_witnessed_forall (#t:Type) (p:(t -> mem_predicate))
 
 val lemma_witnessed_exists (#t:Type) (p:(t -> mem_predicate))
   :Lemma ((exists x. witnessed (p x)) ==> witnessed (fun s -> exists x. p x s))
+
+
+(*** Support for dynamic regions ***)
+
+
+let is_freeable_heap_region (r:rid) : Type0 =
+  HS.is_heap_color (color r) /\ HS.rid_freeable r /\ witnessed (region_contains_pred r)
+
+type d_hrid = r:rid{is_freeable_heap_region r}
+
+val drgn : Type0
+
+val rid_of_drgn (d:drgn) : d_hrid
+
+val new_drgn (r0:rid)
+: ST drgn
+  (requires fun m -> is_eternal_region r0)
+  (ensures fun m0 d m1 ->
+    let r1 = rid_of_drgn d in
+    new_region_post_common r0 r1 m0 m1 /\
+    HS.color r1 == HS.color r0 /\
+    (r1, m1) == HS.new_freeable_heap_region m0 r0)
+
+val free_drgn (d:drgn)
+: ST unit
+  (requires fun m -> contains_region m (rid_of_drgn d))
+  (ensures fun m0 _ m1 -> m1 == HS.free_heap_region m0 (rid_of_drgn d))
+
+val ralloc_drgn (#a:Type) (#rel:preorder a) (d:drgn) (init:a)
+: ST (mreference a rel)
+  (requires fun m -> m `contains_region` (rid_of_drgn d))
+  (ensures fun m0 r m1 ->
+    not (HS.is_mm r) /\
+    ralloc_post (rid_of_drgn d) init m0 r m1)
+
+val ralloc_drgn_mm (#a:Type) (#rel:preorder a) (d:drgn) (init:a)
+: ST (mreference a rel)
+  (requires fun m -> m `contains_region` (rid_of_drgn d))
+  (ensures fun m0 r m1 ->
+    HS.is_mm r /\
+    ralloc_post (rid_of_drgn d) init m0 r m1)
+

@@ -12,7 +12,7 @@
         "refinement_interpretation_Tm_refine_43c663371132c0c847de0562111b3034"
       ],
       0,
-      "ced6bd7231062543b3e837b1c68ae566"
+      "07f6b123fc1c00cee44a5c359114f140"
     ],
     [
       "Ex10a.__proj__Writable__item___0",
@@ -25,7 +25,7 @@
         "refinement_interpretation_Tm_refine_b7c189cb365c663bbaaab1bb8e2e94da"
       ],
       0,
-      "234dcfbb642f4568c5395eb0142b6127"
+      "cf2350c0d02aa501e775ea3431d5c148"
     ],
     [
       "Ex10a.canRead",
@@ -38,7 +38,7 @@
         "fuel_guarded_inversion_Ex10a.entry"
       ],
       0,
-      "56f4c7d9adf67de57974844af4f79f52"
+      "ffb92244b4fe19faead6ba8cafb07152"
     ],
     [
       "Ex10a.revoke",
@@ -51,7 +51,7 @@
         "refinement_interpretation_Ex10a_Tm_refine_f978ff754af8f266cb4edc62e2a055cb"
       ],
       0,
-      "d90f129b54294c358a34932758f111a5"
+      "b85168d78e510b3f43896ba84f834819"
     ],
     [
       "Ex10a.safe_delete",
@@ -72,7 +72,7 @@
         "string_inversion", "unit_inversion", "unit_typing"
       ],
       0,
-      "517cfb2f9d8b147b32562e7028995450"
+      "781e40dbf66fa37aca024df4ab8e8d5d"
     ],
     [
       "Ex10a.test_acls",
@@ -85,16 +85,17 @@
         "@query",
         "Ex10a_interpretation_Tm_arrow_874ea41fef5db3d0b79dc4f1f9eea4a2",
         "FStar.List.Tot.Base_interpretation_Tm_arrow_84543425b818e2d10a976186b8e8c250",
-        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
         "assumption_Ex10a.entry__uu___haseq",
         "constructor_distinct_Ex10a.Readable",
         "constructor_distinct_FStar.Pervasives.Native.Some",
         "constructor_distinct_Prims.Cons",
         "disc_equation_FStar.Pervasives.Native.Some",
         "equation_Ex10a.canRead", "equation_Ex10a.canRead_t",
-        "equation_Ex10a.db",
+        "equation_Ex10a.db", "equation_FStar.Heap.trivial_preorder",
+        "equation_FStar.ST.mref", "equation_FStar.ST.ref",
         "equation_with_fuel_FStar.List.Tot.Base.tryFind.fuel_instrumented",
         "fuel_guarded_inversion_FStar.Pervasives.result",
+        "function_token_typing_Ex10a.db",
         "interpretation_Tm_abs_93700a44318bb4193871b2dacb8d41d6",
         "kinding_Ex10a.entry@tok", "primitive_Prims.op_Equality",
         "projection_inverse_Ex10a.Readable__0",
@@ -103,58 +104,13 @@
         "projection_inverse_Prims.Cons_a",
         "projection_inverse_Prims.Cons_hd",
         "projection_inverse_Prims.Cons_tl",
-        "typing_Tm_abs_93700a44318bb4193871b2dacb8d41d6", "unit_typing"
+        "refinement_interpretation_Tm_refine_e33ef751d600ad1c7f71142479103c47",
+        "typing_Ex10a.acls", "typing_FStar.Heap.trivial_preorder",
+        "typing_FStar.Monotonic.Heap.sel",
+        "typing_Tm_abs_93700a44318bb4193871b2dacb8d41d6"
       ],
       0,
-      "3e6a8f306db9e8ffb9715200b48a71c3"
-    ],
-    [
-      "Ex10a.__proj__Readable__item___0",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "disc_equation_Ex10a.Readable",
-        "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_43c663371132c0c847de0562111b3034"
-      ],
-      0,
-      "46ee64599ba54563f2d55e4a24c5ae1d"
-    ],
-    [
-      "Ex10a.__proj__Writable__item___0",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "disc_equation_Ex10a.Writable",
-        "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_b7c189cb365c663bbaaab1bb8e2e94da"
-      ],
-      0,
-      "6eb734e3be78935a0532c315fb21f639"
-    ],
-    [
-      "Ex10a.canRead",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_string",
-        "disc_equation_Ex10a.Readable", "disc_equation_Ex10a.Writable",
-        "fuel_guarded_inversion_Ex10a.entry"
-      ],
-      0,
-      "01112d2d05fbfb30f8414f56a8f34d68"
-    ],
-    [
-      "Ex10a.revoke",
-      2,
-      2,
-      1,
-      [ "@query", "assumption_Ex10a.entry__uu___haseq" ],
-      0,
-      "43c85bd881c2cf7b550307a6b009b00c"
+      "88d10c6fcfaf556ac038b9ad0ae0ae92"
     ]
   ]
 ]

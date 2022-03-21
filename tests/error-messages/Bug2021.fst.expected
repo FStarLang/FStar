@@ -1,0 +1,20 @@
+>> Got issues: [
+Bug2021.fst(5,15-5,16): (Error 66) Failed to resolve implicit argument ?2 of type Type introduced for user-provided implicit term at Bug2021.fst(5,15-5,16)
+>>]
+>> Got issues: [
+Bug2021.fst(10,8-10,9): (Error 66) Failed to resolve implicit argument ?2 of type Type introduced for user-provided implicit term at Bug2021.fst(10,8-10,9)
+>>]
+>> Got issues: [
+Bug2021.fst(16,12-16,13): (Error 66) Failed to resolve implicit argument ?5 of type Type introduced for user-provided implicit term at Bug2021.fst(16,12-16,13)
+>>]
+>> Got issues: [
+Bug2021.fst(24,13-24,14): (Error 66) Failed to resolve implicit argument ?9 of type Prims.int introduced for Instantiating implicit argument in application (see also Bug2021.fst(23,11-23,12))
+>>]
+>> Got issues: [
+Bug2021.fst(30,13-30,17): (Error 66) Failed to resolve implicit argument ?10 of type Prims.int introduced for Instantiating implicit argument in application (see also Bug2021.fst(29,11-29,12))
+>>]
+>> Got issues: [
+Bug2021.fst(38,13-38,17): (Error 66) Failed to resolve implicit argument ?13 of type Prims.int introduced for Instantiating implicit argument in application (see also Bug2021.fst(37,11-37,12))
+>>]
+Verified module: Bug2021
+All verification conditions discharged successfully

@@ -1,0 +1,76 @@
+[
+  " Ô\u0012îb\u0012ÒÆân\u0000\u0007WÙ#§",
+  [
+    [
+      "FStar.Tactics.Result.__proj__Success__item__v",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_FStar.Tactics.Result.Success",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_29b9adb85ab54486bb858ab07eefa868"
+      ],
+      0,
+      "972a52b3238929707d1e51c743cd2577"
+    ],
+    [
+      "FStar.Tactics.Result.__proj__Success__item__ps",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_FStar.Tactics.Result.Success",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_29b9adb85ab54486bb858ab07eefa868"
+      ],
+      0,
+      "c40c4b632d6a77da1bbf898827b86e14"
+    ],
+    [
+      "FStar.Tactics.Result.__proj__Failed__item__exn",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_FStar.Tactics.Result.Failed",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_e5441e7c5a446e2437660eff2f66dd32"
+      ],
+      0,
+      "e2ff96c1aa7bb06eb9ea72693c9a5078"
+    ],
+    [
+      "FStar.Tactics.Result.__proj__Failed__item__ps",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_FStar.Tactics.Result.Failed",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_e5441e7c5a446e2437660eff2f66dd32"
+      ],
+      0,
+      "3bf9d012161222b4b96d970b8b17402b"
+    ],
+    [
+      "FStar.Tactics.Result.result_split",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_FStar.Tactics.Result.Failed",
+        "disc_equation_FStar.Tactics.Result.Success",
+        "fuel_guarded_inversion_FStar.Tactics.Result.__result",
+        "projection_inverse_BoxBool_proj_0"
+      ],
+      0,
+      "7eff7937b0e352d5e7825f1bfe9bde96"
+    ]
+  ]
+]

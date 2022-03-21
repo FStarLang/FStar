@@ -17,7 +17,7 @@ module FStar.Universe
 
 (** This module implements some basic facilities to raise the universe of a type *
   * The type [raise_t a] is supposed to be isomorphic to [a] but in a higher     *
-  * universe. The two functions [raise_val] and [dowgrade_val] allow to coerce   *
+  * universe. The two functions [raise_val] and [downgrade_val] allow to coerce   *
   * from [a] to [raise_t a] and back.                                            **)
 
 
@@ -43,3 +43,9 @@ val raise_val_downgrade_val
 : Lemma
   (raise_val (downgrade_val x) == x)
   [SMTPat (raise_val u#a u#b (downgrade_val x))]
+
+let lift_dom #a #b (q:a -> b) : raise_t a -> b =
+  fun v -> q (downgrade_val v)
+
+let lift_codom #a #b (q:a -> b) : a -> raise_t b =
+  fun v -> raise_val (q v)

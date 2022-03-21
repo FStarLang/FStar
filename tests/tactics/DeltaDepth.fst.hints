@@ -1,0 +1,83 @@
+[
+  "˛◊-IÈ5+°ï\u0004'ùßï\b˚",
+  [
+    [
+      "DeltaDepth.__proj__A__item___0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_DeltaDepth.A",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_5e57589849c6497f93798a0ea15a1df2"
+      ],
+      0,
+      "4453b9cc28a978f9af70e11efd31ff10"
+    ],
+    [
+      "DeltaDepth.__proj__B__item___0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_DeltaDepth.B",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_90c35950d1e7f0a820470167e5c76674"
+      ],
+      0,
+      "d90b5794a63e24785bd34c85fe1e9f49"
+    ],
+    [
+      "DeltaDepth.m",
+      1,
+      2,
+      1,
+      [
+        "@query", "constructor_distinct_DeltaDepth.A",
+        "disc_equation_DeltaDepth.A", "equation_DeltaDepth.v",
+        "projection_inverse_DeltaDepth.A__0"
+      ],
+      0,
+      "3708a10823a60da4f7771ba3a5db3dfc"
+    ],
+    [
+      "DeltaDepth.__proj__A__item___0",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_DeltaDepth.A",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_5e57589849c6497f93798a0ea15a1df2"
+      ],
+      0,
+      "bfb685ff6fe5d479e3ffacb756260f11"
+    ],
+    [
+      "DeltaDepth.__proj__B__item___0",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_DeltaDepth.B",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_90c35950d1e7f0a820470167e5c76674"
+      ],
+      0,
+      "f0d5bdbd4edc7ff287c3f80b2be62672"
+    ],
+    [
+      "DeltaDepth.m",
+      2,
+      2,
+      1,
+      [
+        "@query", "constructor_distinct_DeltaDepth.A",
+        "disc_equation_DeltaDepth.A", "equation_DeltaDepth.v",
+        "projection_inverse_DeltaDepth.A__0"
+      ],
+      0,
+      "b3797131f4ee2104b6a788fcd8f272f4"
+    ]
+  ]
+]

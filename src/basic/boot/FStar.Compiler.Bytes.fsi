@@ -1,7 +1,7 @@
 #light "off"
 module FStar.Compiler.Bytes
-open FStar.ST
-open FStar.All
+open FStar.Compiler.Effect module List = FStar.Compiler.List
+open FStar.Compiler.Effect module List = FStar.Compiler.List
 open FStar.BaseTypes
 
 type array<'a> = 'a[] // JUST FSHARP

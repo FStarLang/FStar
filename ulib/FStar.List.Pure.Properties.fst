@@ -95,7 +95,7 @@ let rec lemma_append_splitAt (#t:Type) (l1 l2:list t) :
 
 
 (** Fully characterize behavior of [splitAt] in terms of more standard list concepts *)
-let rec lemma_splitAt (#t: Type) (l l1 l2:list t) (n:nat{n <= length l}) :
+let lemma_splitAt (#t: Type) (l l1 l2:list t) (n:nat{n <= length l}) :
   Lemma (splitAt n l == (l1, l2) <==> l == l1 @ l2 /\ length l1 = n) =
   lemma_splitAt_append n l;
   lemma_append_splitAt l1 l2
@@ -160,7 +160,7 @@ let rec lemma_splitAt_reindex_right (#t:Type) (i:nat) (l:list t) (j:nat) :
 
 (** The 3 pieces returned via [split3] can be joined together via an
     [append] and a [cons] *)
-let rec lemma_split3_append (#t:Type) (l:list t) (n:nat{n < length l}) :
+let lemma_split3_append (#t:Type) (l:list t) (n:nat{n < length l}) :
   Lemma
     (requires True)
     (ensures (
@@ -170,7 +170,7 @@ let rec lemma_split3_append (#t:Type) (l:list t) (n:nat{n < length l}) :
 
 
 (** The middle element returned via [split3] is the [n]th [index]ed element *)
-let rec lemma_split3_index (#t:Type) (l:list t) (n:nat{n < length l}) :
+let lemma_split3_index (#t:Type) (l:list t) (n:nat{n < length l}) :
   Lemma
     (requires True)
     (ensures (
@@ -180,7 +180,7 @@ let rec lemma_split3_index (#t:Type) (l:list t) (n:nat{n < length l}) :
 
 
 (** The lengths of the left and right parts of a [split3] are as expected. *)
-let rec lemma_split3_length (#t:Type) (l:list t) (n:nat{n < length l}) :
+let lemma_split3_length (#t:Type) (l:list t) (n:nat{n < length l}) :
   Lemma
     (requires True)
     (ensures (
@@ -243,7 +243,7 @@ let rec lemma_split3_unsnoc (#t:Type) (l:list t) (n:nat{n < length l}) :
 
 (** Doing [unsnoc] and [split3] in either order leads to the same left
     part, and element. *)
-let rec lemma_unsnoc_split3 (#t:Type) (l:list t) (i:nat{i < length l}) :
+let lemma_unsnoc_split3 (#t:Type) (l:list t) (i:nat{i < length l}) :
   Lemma
     (requires (i <> length l - 1))
     (ensures (

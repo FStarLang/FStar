@@ -1,0 +1,93 @@
+[
+  "’$‹ÔêïÔ\u0003ó§\u0005A \u0003V‚",
+  [
+    [
+      "LowStar.Lens.view",
+      1,
+      2,
+      1,
+      [ "@query", "equation_LowStar.Lens.inv" ],
+      0,
+      "36331573c72c5f822f085b0ccc660770"
+    ],
+    [
+      "LowStar.Lens.LensST",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "0933795a0234bfa25c52cadd02ec0dcd"
+    ],
+    [
+      "LowStar.Lens.reveal_inv",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_LowStar.Lens.inv",
+        "equation_LowStar.Lens.mods", "equation_LowStar.Lens.view",
+        "fuel_guarded_inversion_LowStar.Lens.hs_lens"
+      ],
+      0,
+      "68be5b38d71a1d0dc52228072b56521f"
+    ],
+    [
+      "LowStar.Lens.reveal_inv",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_LowStar.Lens.inv",
+        "equation_LowStar.Lens.mods", "equation_LowStar.Lens.view",
+        "fuel_guarded_inversion_LowStar.Lens.hs_lens"
+      ],
+      0,
+      "187b12d74b5d4925364d69b0ebc1b3dc"
+    ],
+    [
+      "LowStar.Lens.for_n",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
+        "int_inversion", "primitive_Prims.op_Addition",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_c1424615841f28cac7fc34e92b7ff33c"
+      ],
+      0,
+      "021a60a421c3b25f53c27e539680542f"
+    ],
+    [
+      "LowStar.Lens.for_n",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "bool_inversion",
+        "equation_FStar.Monotonic.HyperHeap.hmap",
+        "equation_FStar.Monotonic.HyperStack.is_tip",
+        "equation_FStar.Monotonic.HyperStack.is_wf_with_ctr_and_tip",
+        "equation_FStar.Monotonic.HyperStack.mem", "equation_Prims.eqtype",
+        "equation_Prims.nat",
+        "function_token_typing_FStar.Monotonic.Heap.heap",
+        "function_token_typing_Prims.int",
+        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2", "int_inversion",
+        "lemma_FStar.Map.lemma_ContainsDom", "primitive_Prims.op_Addition",
+        "primitive_Prims.op_Equality", "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_05e15190c946858f68c69156f585f95a",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_7e0b9b2dbca36eab00de093c1b701c6d",
+        "typing_FStar.Map.contains", "typing_FStar.Monotonic.HyperHeap.rid",
+        "typing_FStar.Monotonic.HyperStack.get_hmap",
+        "typing_FStar.Monotonic.HyperStack.get_tip"
+      ],
+      0,
+      "1273d54382635a1a957d82506ca5d14e"
+    ]
+  ]
+]

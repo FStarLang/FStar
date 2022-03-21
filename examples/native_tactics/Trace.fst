@@ -85,9 +85,9 @@ let rec instrument_body (ii : ins_info) (t : term) : Tac term =
     pack (Tv_Match t brs')
     end
   // descend into lets
-  | Tv_Let r b t1 t2 -> begin
+  | Tv_Let r attrs b t1 t2 -> begin
     let t2' = instrument_body ii t2 in
-    pack (Tv_Let r b t1 t2')
+    pack (Tv_Let r attrs b t1 t2')
     end
   | _ -> begin
     let hd, args = collect_app t in
@@ -115,7 +115,7 @@ let rec cutlast (l : list 'a) : list 'a * 'a =
     | [x] -> [], x
     | x::xs -> let ys, y = cutlast xs in x::ys, y
 
-[@plugin]
+[@@plugin]
 let instrument (f : 'a) : Tac unit =
     admit ();
     let t = quote f in

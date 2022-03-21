@@ -25,5 +25,5 @@ type r = HyE.RSA.plain
 val repr:    p:t{not conf} -> Tot r
 let repr t = HyE.AE.leak t       (* a pure function from t to RSA.plain *)
 
-assume val coerce: x:r -> Tot (option (y:t)) //MK changed from t{repr y = x}
+assume val coerce: x:r -> Tot (option t) //MK changed from t{repr y = x}
 //let coerce t = Some t (* a partial function from RSA.plain to t *)

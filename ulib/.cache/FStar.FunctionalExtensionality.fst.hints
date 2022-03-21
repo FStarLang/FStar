@@ -1,0 +1,151 @@
+[
+  "\u0004ÌÇLHe2ø~ª\u000b¸!æ&©",
+  [
+    [
+      "FStar.FunctionalExtensionality.feq_on_domain",
+      1,
+      0,
+      0,
+      [
+        "@query", "equation_FStar.FunctionalExtensionality.feq",
+        "equation_FStar.FunctionalExtensionality.on_domain",
+        "interpretation_Tm_abs_d3988c6b3796e1c5fa6d721e12c50d6e"
+      ],
+      0,
+      "34397ffc848382d6472be8bccdfe6944"
+    ],
+    [
+      "FStar.FunctionalExtensionality.idempotence_on_domain",
+      1,
+      0,
+      0,
+      [ "@query", "equation_FStar.FunctionalExtensionality.on_domain" ],
+      0,
+      "7aa55b7243574ad5ceb8e65f3978c554"
+    ],
+    [
+      "FStar.FunctionalExtensionality.on_dom",
+      1,
+      0,
+      0,
+      [
+        "@query", "equation_FStar.FunctionalExtensionality.is_restricted",
+        "lemma_FStar.FunctionalExtensionality.idempotence_on_domain"
+      ],
+      0,
+      "0de4552ed6ec3d9e8c2cb490f1ae5493"
+    ],
+    [
+      "FStar.FunctionalExtensionality.quantifier_as_lemma",
+      1,
+      0,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.l_Forall",
+        "equation_Prims.squash",
+        "l_quant_interp_b318409532d0e00e9125f72f3b997468",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "a015acc6dbf2dd8fe3fb263098ecd723"
+    ],
+    [
+      "FStar.FunctionalExtensionality.try_with",
+      1,
+      2,
+      2,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_2feddfe489e78a01f5d2e9b55172b46a",
+        "data_elim_FStar.Tactics.Result.Success",
+        "disc_equation_FStar.Pervasives.Inl",
+        "disc_equation_FStar.Pervasives.Inr",
+        "disc_equation_FStar.Tactics.Result.Success",
+        "equality_tok_FStar.Tactics.Common.NotAListLiteral@tok",
+        "fuel_guarded_inversion_FStar.Pervasives.either",
+        "projection_inverse_BoxBool_proj_0",
+        "typing_tok_FStar.Tactics.Common.NotAListLiteral@tok"
+      ],
+      0,
+      "323272e9e2e67507ce067876272006a6"
+    ],
+    [
+      "FStar.FunctionalExtensionality.extensionality_1",
+      1,
+      2,
+      1,
+      [ "@query", "true_interp" ],
+      0,
+      "74c5a51361474f585f73e8d3f4706cb7"
+    ],
+    [
+      "FStar.FunctionalExtensionality.extensionality",
+      1,
+      0,
+      0,
+      [
+        "@query", "equation_FStar.FunctionalExtensionality.feq",
+        "equation_FStar.FunctionalExtensionality.on_domain",
+        "lemma_FStar.FunctionalExtensionality.feq_on_domain"
+      ],
+      0,
+      "44ac4e94c332afa3f5662a7e5214a050"
+    ],
+    [
+      "FStar.FunctionalExtensionality.feq_on_domain_g",
+      1,
+      0,
+      0,
+      [
+        "@query", "equation_FStar.FunctionalExtensionality.feq_g",
+        "equation_FStar.FunctionalExtensionality.on_domain_g",
+        "interpretation_Tm_abs_9f8d8bcb0bd54b26007da155012bc829"
+      ],
+      0,
+      "9b36db5ac9b5b3e395dc5236e48cba47"
+    ],
+    [
+      "FStar.FunctionalExtensionality.idempotence_on_domain_g",
+      1,
+      0,
+      0,
+      [ "@query", "equation_FStar.FunctionalExtensionality.on_domain_g" ],
+      0,
+      "17da490f2b58bf1b729a85a80197286c"
+    ],
+    [
+      "FStar.FunctionalExtensionality.on_dom_g",
+      1,
+      0,
+      0,
+      [
+        "@query", "equation_FStar.FunctionalExtensionality.is_restricted_g",
+        "lemma_FStar.FunctionalExtensionality.idempotence_on_domain_g"
+      ],
+      0,
+      "064244951a9c711cc3d2309bbd8c5c4b"
+    ],
+    [
+      "FStar.FunctionalExtensionality.extensionality_1_g",
+      1,
+      2,
+      1,
+      [ "@query", "true_interp" ],
+      0,
+      "6648a9f31f100d82e064224752a3be1a"
+    ],
+    [
+      "FStar.FunctionalExtensionality.extensionality_g",
+      1,
+      0,
+      0,
+      [
+        "@query", "equation_FStar.FunctionalExtensionality.feq_g",
+        "equation_FStar.FunctionalExtensionality.on_domain_g",
+        "lemma_FStar.FunctionalExtensionality.feq_on_domain_g"
+      ],
+      0,
+      "a56e772618b8cf7a319d2abafa76bc01"
+    ]
+  ]
+]

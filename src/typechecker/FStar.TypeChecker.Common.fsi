@@ -16,17 +16,18 @@
 #light "off"
 module FStar.TypeChecker.Common
 open Prims
-open FStar.ST
-open FStar.All
+open FStar.Pervasives
+open FStar.Compiler.Effect
+open FStar.Compiler.Effect
 
-open FStar
-open FStar.Util
+open FStar open FStar.Compiler
+open FStar.Compiler.Util
 open FStar.Syntax
 open FStar.Syntax.Syntax
 open FStar.Ident
 module S = FStar.Syntax.Syntax
 
-module BU = FStar.Util
+module BU = FStar.Compiler.Util
 
 (* relations on types, kinds, etc. *)
 type rel =
@@ -69,7 +70,19 @@ type guard_formula =
 
 val check_uvar_ctx_invariant : string -> Range.range -> bool -> gamma -> binders -> unit
 
-type deferred = list<(string * prob)>
+type deferred_reason =
+  | Deferred_univ_constraint
+  | Deferred_occur_check_failed
+  | Deferred_first_order_heuristic_failed
+  | Deferred_flex
+  | Deferred_free_names_check_failed
+  | Deferred_not_a_pattern
+  | Deferred_flex_flex_nonpattern
+  | Deferred_delay_match_heuristic
+  | Deferred_to_user_tac
+
+type deferred = list<(deferred_reason * string * prob)>
+
 type univ_ineq = universe * universe
 
 val mk_by_tactic : term -> term -> term
@@ -117,3 +130,62 @@ val id_info_insert_fv : id_info_table -> fv -> typ -> id_info_table
 val id_info_toggle    : id_info_table -> bool -> id_info_table
 val id_info_promote   : id_info_table -> (typ -> typ) -> id_info_table
 val id_info_at_pos    : id_info_table -> string -> int -> int -> option<identifier_info>
+
+// Reason, term and uvar, and (rough) position where it is introduced
+// The term is just a Tm_uvar of the ctx_uvar
+type implicit = {
+    imp_reason : string;                  // Reason (in text) why the implicit was introduced
+    imp_uvar   : ctx_uvar;                // The ctx_uvar representing it
+    imp_tm     : term;                    // The term, made up of the ctx_uvar
+    imp_range  : Range.range;             // Position where it was introduced
+}
+type implicits = list<implicit>
+
+val implicits_to_string : implicits -> string
+
+type guard_t = {
+  guard_f:    guard_formula;
+  deferred_to_tac: deferred; //This field maintains problems that are to be dispatched to a tactic
+                             //They are never attempted by the unification engine in Rel
+  deferred:   deferred;
+  univ_ineqs: list<universe> * list<univ_ineq>;
+  implicits:  implicits;
+}
+
+val trivial_guard : guard_t
+
+val conj_guard    : guard_t -> guard_t -> guard_t
+val check_trivial : term -> guard_formula
+val imp_guard     : guard_t -> guard_t -> guard_t
+val conj_guards   : list<guard_t> -> guard_t
+
+val weaken_guard_formula: guard_t -> typ -> guard_t
+type lcomp = { //a lazy computation
+    eff_name: lident;
+    res_typ: typ;
+    cflags: list<cflag>;
+    comp_thunk: ref<(either<(unit -> (comp * guard_t)), comp>)>
+}
+
+val mk_lcomp:
+    eff_name: lident ->
+    res_typ: typ ->
+    cflags: list<cflag> ->
+    comp_thunk: (unit -> (comp * guard_t)) -> lcomp
+
+val lcomp_comp: lcomp -> (comp * guard_t)
+val apply_lcomp : (comp -> comp) -> (guard_t -> guard_t) -> lcomp -> lcomp
+val lcomp_to_string : lcomp -> string
+val lcomp_set_flags : lcomp -> list<S.cflag> -> lcomp
+val is_total_lcomp : lcomp -> bool
+val is_tot_or_gtot_lcomp : lcomp -> bool
+val is_lcomp_partial_return : lcomp -> bool
+val is_pure_lcomp : lcomp -> bool
+val is_pure_or_ghost_lcomp : lcomp -> bool
+val set_result_typ_lc : lcomp -> typ -> lcomp
+val residual_comp_of_lcomp : lcomp -> residual_comp
+val lcomp_of_comp_guard : comp -> guard_t -> lcomp
+//lcomp_of_comp_guard with trivial guard
+val lcomp_of_comp : comp -> lcomp
+val simplify : debug:bool -> term -> term
+

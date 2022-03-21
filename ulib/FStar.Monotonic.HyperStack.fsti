@@ -26,10 +26,12 @@ include FStar.Monotonic.HyperHeap
 unfold let is_in (r:rid) (h:hmap) = h `Map.contains` r
 
 let is_stack_region r = color r > 0
-let is_eternal_color c = c <= 0
+let is_heap_color c = c <= 0
 
-[@(deprecated "FStar.HyperStack.ST.is_eternal_region")]
-let is_eternal_region r  = is_eternal_color (color r)
+[@@(deprecated "FStar.HyperStack.ST.is_eternal_region")]
+let is_eternal_region r  = is_heap_color (color r) && not (rid_freeable r)
+
+unfold let is_eternal_region_hs r = is_heap_color (color r) && not (rid_freeable r)
 
 type sid = r:rid{is_stack_region r} //stack region ids
 
@@ -43,20 +45,21 @@ let is_strictly_below r1 r2 = r1 `is_below` r2 && r1 <> r2
 let is_strictly_above r1 r2 = r1 `is_above` r2 && r1 <> r2
 
 
-[@"opaque_to_smt"]
+[@@"opaque_to_smt"]
 unfold private let map_invariant_predicate (m:hmap) :Type0 =
   forall r. Map.contains m r ==>
       (forall s. includes s r ==> Map.contains m s)
 
-[@"opaque_to_smt"]
+[@@"opaque_to_smt"]
 unfold private let downward_closed_predicate (h:hmap) :Type0 =
   forall (r:rid). r `is_in` h  //for any region in the memory
         ==> (r=root    //either is the root
-            \/ (forall (s:rid). r `is_above` s  //or, any region beneath it
-                          /\ s `is_in` h   //that is also in the memory
-                     ==> (is_stack_region r = is_stack_region s))) //must be of the same flavor as itself
+            \/ (forall (s:rid). (r `is_above` s  //or, any region beneath it
+                           /\ s `is_in` h)   //that is also in the memory
+                     ==> ((is_stack_region r = is_stack_region s) /\  //must be of the same flavor as itself
+                          ((is_heap_color (color r) /\ rid_freeable r) ==> s == r)))) //and if r is a freeable heap region, s can only be r (no regions strictly below r)
 
-[@"opaque_to_smt"]
+[@@"opaque_to_smt"]
 unfold private let tip_top_predicate (tip:rid) (h:hmap) :Type0 =
   forall (r:sid). r `is_in` h <==> r `is_above` tip
 
@@ -66,16 +69,20 @@ let rid_last_component (r:rid) :GTot int
     if length r = 0 then 0
     else snd (hd r)
 
-[@"opaque_to_smt"]
+[@@"opaque_to_smt"]
 unfold private let rid_ctr_pred_predicate (h:hmap) (n:int) :Type0 =
   forall (r:rid). h `Map.contains` r ==> rid_last_component r < n
 
 
 (****** Mem definition ******)
 
+[@@ remove_unused_type_parameters [0]]
 val map_invariant (m:hmap) :Type0  //all regions above a contained region are contained
+[@@ remove_unused_type_parameters [0]]
 val downward_closed (h:hmap) :Type0  //regions below a non-root region are of the same color
+[@@ remove_unused_type_parameters [0;1]]
 val tip_top (tip:rid) (h:hmap) :Type0  //all contained stack regions are above tip
+[@@ remove_unused_type_parameters [0;1]]
 val rid_ctr_pred (h:hmap) (n:int) :Type0  //all live regions have last component less than the rid_ctr
 
 let is_tip (tip:rid) (h:hmap) =
@@ -84,7 +91,12 @@ let is_tip (tip:rid) (h:hmap) =
   tip_top tip h                          //any other sid activation is a above (or equal to) the tip
 
 let is_wf_with_ctr_and_tip (h:hmap) (ctr:int) (tip:rid)
-  = root `is_in` h /\ tip `is_tip` h /\ map_invariant h /\ downward_closed h /\ rid_ctr_pred h ctr
+  = (not (rid_freeable root)) /\
+    root `is_in` h /\
+    tip `is_tip` h /\
+    map_invariant h /\
+    downward_closed h /\
+    rid_ctr_pred h ctr
 
 private val mem' :Type u#1
 
@@ -134,9 +146,9 @@ val lemma_map_invariant (m:mem) (r s:rid)
 
 val lemma_downward_closed (m:mem) (r:rid) (s:rid{s =!= root})
   :Lemma (requires (r `is_in` get_hmap m /\ s `is_above` r))
-         (ensures  (is_eternal_color (color r) == is_eternal_color (color s) /\
+         (ensures  (is_heap_color (color r) == is_heap_color (color s) /\
 	            is_stack_region r == is_stack_region s))
-         [SMTPatOr [[SMTPat (get_hmap m `Map.contains` r); SMTPat (s `is_above` r); SMTPat (is_eternal_color (color s))];
+         [SMTPatOr [[SMTPat (get_hmap m `Map.contains` r); SMTPat (s `is_above` r); SMTPat (is_heap_color (color s))];
                     [SMTPat (get_hmap m `Map.contains` r); SMTPat (s `is_above` r); SMTPat (is_stack_region s)]
                     ]]
 
@@ -166,16 +178,16 @@ val lemma_rid_ctr_pred (_:unit)
 (****** Operations on mem ******)
 
 
-let empty_mem (m:hmap) :mem =
-  let empty_map = Map.restrict (Set.empty) m in
+let empty_mem : mem =
+  let empty_map = Map.restrict Set.empty (Map.const Heap.emp) in
   let h = Map.upd empty_map root Heap.emp in
   let tip = root in
   assume (rid_last_component root == 0);
   lemma_is_wf_ctr_and_tip_intro h 1 tip;
   mk_mem 1 h tip
 
-let eternal_region_does_not_overlap_with_tip
-  (m:mem) (r:rid{is_eternal_color (color r) /\ not (disjoint r (get_tip m)) /\ r =!= root /\ is_stack_region (get_tip m)})
+let heap_region_does_not_overlap_with_tip
+  (m:mem) (r:rid{is_heap_color (color r) /\ not (disjoint r (get_tip m)) /\ r =!= root /\ is_stack_region (get_tip m)})
   : Lemma (requires True)
           (ensures (~ (r `is_in` get_hmap m)))
   = root_has_color_zero()
@@ -248,13 +260,13 @@ let mstackref (a:Type) (rel:preorder a) =
   s:mreference a rel{ is_stack_region (frameOf s)  && not (is_mm s) }
 
 let mref (a:Type) (rel:preorder a) =
-  s:mreference a rel{ is_eternal_color (color (frameOf s)) && not (is_mm s) }
+  s:mreference a rel{ is_eternal_region_hs (frameOf s) && not (is_mm s) }
 
 let mmmstackref (a:Type) (rel:preorder a) =
   s:mreference a rel{ is_stack_region (frameOf s) && is_mm s }
 
 let mmmref (a:Type) (rel:preorder a) =
-  s:mreference a rel{ is_eternal_color (color (frameOf s)) && is_mm s }
+  s:mreference a rel{ is_eternal_region_hs (frameOf s) && is_mm s }
 
 //NS: Why do we need this one?
 let s_mref (i:rid) (a:Type) (rel:preorder a) = s:mreference a rel{frameOf s = i}
@@ -350,8 +362,8 @@ let hs_push_frame (m:mem) :Tot (m':mem{fresh_frame m m'})
     lemma_is_wf_ctr_and_tip_intro h (rid_ctr + 1) new_tip_rid;
     mk_mem (rid_ctr + 1) h new_tip_rid
 
-let new_eternal_region (m:mem) (parent:rid{is_eternal_color (color parent) /\ get_hmap m `Map.contains` parent})
-                       (c:option int{None? c \/ is_eternal_color (Some?.v c)})
+let new_eternal_region (m:mem) (parent:rid{is_eternal_region_hs parent /\ get_hmap m `Map.contains` parent})
+                       (c:option int{None? c \/ is_heap_color (Some?.v c)})
   :Tot (t:(rid * mem){fresh_region (fst t) m (snd t)})
   = let h, rid_ctr, tip = get_hmap m, get_rid_ctr m, get_tip m in
     lemma_is_wf_ctr_and_tip_elim m;
@@ -362,6 +374,31 @@ let new_eternal_region (m:mem) (parent:rid{is_eternal_color (color parent) /\ ge
     let h = Map.upd h new_rid Heap.emp in
     lemma_is_wf_ctr_and_tip_intro h (rid_ctr + 1) tip;
     new_rid, mk_mem (rid_ctr + 1) h tip
+
+let new_freeable_heap_region
+  (m:mem)
+  (parent:rid{is_eternal_region_hs parent /\ get_hmap m `Map.contains` parent})  
+: t:(rid * mem){fresh_region (fst t) m (snd t) /\ rid_freeable (fst t)}
+= let h, rid_ctr, tip = get_hmap m, get_rid_ctr m, get_tip m in
+  lemma_is_wf_ctr_and_tip_elim m;
+  let new_rid = extend_monochrome_freeable parent rid_ctr true in
+  let h = Map.upd h new_rid Heap.emp in
+  lemma_is_wf_ctr_and_tip_intro h (rid_ctr + 1) tip;
+  new_rid, mk_mem (rid_ctr + 1) h tip
+
+let free_heap_region
+  (m0:mem)
+  (r:rid{
+    is_heap_color (color r) /\
+    rid_freeable r /\
+    get_hmap m0 `Map.contains` r})
+: mem
+= let h0, rid_ctr0 = get_hmap m0, get_rid_ctr m0 in
+  lemma_is_wf_ctr_and_tip_elim m0;
+  let dom = remove_elt (Map.domain h0) r in
+  let h1 = Map.restrict dom h0 in
+  lemma_is_wf_ctr_and_tip_intro h1 rid_ctr0 (get_tip m0);
+  mk_mem (get_rid_ctr m0) h1 (get_tip m0)
 
 
 (****** The following two lemmas are only used in FStar.Pointer.Base, and invoked explicitly ******)
@@ -412,13 +449,13 @@ noeq type some_ref =
 
 let some_refs = list some_ref
 
-[@"opaque_to_smt"]
+[@@"opaque_to_smt"]
 private let rec regions_of_some_refs (rs:some_refs) :Tot (Set.set rid) =
   match rs with
   | []         -> Set.empty
   | (Ref r)::tl -> Set.union (Set.singleton (frameOf r)) (regions_of_some_refs tl)
 
-[@"opaque_to_smt"]
+[@@"opaque_to_smt"]
 private let rec refs_in_region (r:rid) (rs:some_refs) :GTot (Set.set nat) =
   match rs with
   | []         -> Set.empty
@@ -426,7 +463,7 @@ private let rec refs_in_region (r:rid) (rs:some_refs) :GTot (Set.set nat) =
     Set.union (if frameOf x = r then Set.singleton (as_addr x) else Set.empty)
               (refs_in_region r tl)
 
-[@"opaque_to_smt"]
+[@@"opaque_to_smt"]
 private let rec modifies_some_refs (i:some_refs) (rs:some_refs) (h0:mem) (h1:mem) :GTot Type0 =
   match i with
   | []         -> True
@@ -434,7 +471,7 @@ private let rec modifies_some_refs (i:some_refs) (rs:some_refs) (h0:mem) (h1:mem
     (modifies_ref (frameOf x) (refs_in_region (frameOf x) rs) h0 h1) /\
     (modifies_some_refs tl rs h0 h1)
 
-[@"opaque_to_smt"]
+[@@"opaque_to_smt"]
 unfold private let norm_steps :list norm_step =
   //iota for reducing match
   [iota; zeta; delta; delta_only ["FStar.Monotonic.HyperStack.regions_of_some_refs";
@@ -442,7 +479,7 @@ unfold private let norm_steps :list norm_step =
                                   "FStar.Monotonic.HyperStack.modifies_some_refs"];
    primops]
 
-[@"opaque_to_smt"]
+[@@"opaque_to_smt"]
 unfold let mods (rs:some_refs) (h0 h1:mem) :GTot Type0 =
   (norm norm_steps (modifies (regions_of_some_refs rs) h0 h1)) /\
   (norm norm_steps (modifies_some_refs rs rs h0 h1))
@@ -450,7 +487,7 @@ unfold let mods (rs:some_refs) (h0 h1:mem) :GTot Type0 =
 //////
 
 val eternal_disjoint_from_tip (h:mem{is_stack_region (get_tip h)})
-                              (r:rid{is_eternal_color (color r) /\
+                              (r:rid{is_heap_color (color r) /\
                                      r =!= root /\
                                      r `is_in` get_hmap h})
   :Lemma (disjoint (get_tip h) r)
@@ -519,6 +556,7 @@ val is_mm_aref_of (#t:Type) (#rel:preorder t) (r:mreference t rel)
   :Lemma (aref_is_mm (aref_of r) == is_mm r)
          [SMTPat (aref_is_mm (aref_of r))]
 
+[@@ remove_unused_type_parameters [0;1]]
 val aref_unused_in (a:aref) (h:mem) :GTot Type0
 
 val unused_in_aref_of (#t:Type) (#rel:preorder t) (r:mreference t rel) (h:mem)
@@ -532,6 +570,7 @@ val contains_aref_unused_in (#a:Type) (#rel:preorder a) (h:mem) (x:mreference a 
 
 (* Elimination rule *)
 
+[@@ remove_unused_type_parameters [0;1;2;3]]
 val aref_live_at (h:mem) (a:aref) (v:Type0) (rel:preorder v) :GTot Type0
 
 val greference_of (a:aref) (v:Type0) (rel:preorder v)

@@ -26,7 +26,7 @@ let lem0 (x:int) =
         by (prune ""; addns "Prims")
 
 // Can't locally define tactics
-[@plugin]
+[@@plugin]
 let tau1 () : Tac unit =
     prune "";
     FStar.Tactics.split ();

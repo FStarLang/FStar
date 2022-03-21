@@ -16,16 +16,18 @@
 #light "off"
 
 module FStar.CheckedFiles
-open FStar.ST
-open FStar.Exn
-open FStar.All
+open FStar.Compiler.Effect
+open FStar.Compiler.Effect
 open FStar
-open FStar.Util
+open FStar.Compiler
+open FStar.Compiler.Util
 open FStar.Extraction.ML.UEnv
 open FStar.Syntax.DsEnv
 
 module Syntax  = FStar.Syntax.Syntax
 module Dep     = FStar.Parser.Dep
+
+val cache_version_number : int
 
 (*
  * This is what is returned when clients read a module from the caches

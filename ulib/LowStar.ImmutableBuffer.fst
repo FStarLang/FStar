@@ -54,11 +54,23 @@ inline_for_extraction let ioffset (#a:Type0) = moffset #a #(immutable_preorder a
  *)
 let cpred (#a:Type0) (s:Seq.seq a) :spred a = fun s1 -> Seq.equal s s1
 
-let seq_eq (s:Ghost.erased (Seq.seq 'a)) (s':Seq.seq 'a) =
-  s' `Seq.equal` Ghost.reveal s
+let seq_eq (s:Ghost.erased (Seq.seq 'a)) : spred 'a =
+  fun s' -> s' `Seq.equal` Ghost.reveal s
   
 let value_is #a (b:ibuffer a) (s:Ghost.erased (Seq.seq a)) =
   witnessed b (seq_eq s)
+
+let sub_ptr_value_is (#a:_) (b0 b1:ibuffer a) (h:HS.mem) (i len:U32.t) (v:Seq.seq a)
+  : Lemma
+    (requires
+      U32.v i + U32.v len <= length b1 /\
+      b0 == mgsub (immutable_preorder a) b1 i len /\
+      value_is b1 v /\
+      Seq.length v == length b1)
+    (ensures
+      value_is b0 (Seq.slice v (U32.v i) (U32.v i + U32.v len)))
+ = let sub_v = Seq.slice v (U32.v i) (U32.v i + U32.v len) in
+   witnessed_functorial b1 b0 i len (seq_eq (Ghost.hide v)) (seq_eq (Ghost.hide sub_v))
 
 unfold let libuffer (a:Type0) (len:nat) (s:Seq.seq a) =
   b:lmbuffer a (immutable_preorder a) (immutable_preorder a) len{witnessed b (cpred s)}
@@ -144,7 +156,7 @@ let ialloca (#a:Type0) (init:a) (len:U32.t)
 
 let ialloca_and_blit (#a:Type0)
   (#rrel1 #rel1:srel a) (src:mbuffer a rrel1 rel1) (id_src:U32.t) (len:U32.t)
-  : HST.StackInline (b:lmbuffer a (immutable_preorder a) (immutable_preorder a) (U32.v len))
+  : HST.StackInline (lmbuffer a (immutable_preorder a) (immutable_preorder a) (U32.v len))
     (requires fun h0 ->
       alloca_pre len /\
       live h0 src /\ U32.v id_src + U32.v len <= length src)
@@ -159,7 +171,7 @@ let ialloca_and_blit (#a:Type0)
     b
 
 let ialloca_of_list (#a:Type0) (init: list a)
-  :HST.StackInline (b:libuffer a (normalize_term (List.Tot.length init)) (Seq.seq_of_list init))
+  :HST.StackInline (libuffer a (normalize_term (List.Tot.length init)) (Seq.seq_of_list init))
                    (requires (fun _      -> alloca_of_list_pre init))
                    (ensures (fun h0 b h1 -> alloc_post_mem_common b h0 h1 (Seq.seq_of_list init) /\
 		                         frameOf b == HS.get_tip h0))
@@ -212,8 +224,8 @@ let recall_value (#a:Type0) (b:ibuffer a) (s:Ghost.erased (Seq.seq a))
  * After which it is easy to derive the contradiction, provided client has provided a witness for inhabitance
  *)
 let inhabited_immutable_buffer_is_distinct_from_buffer (#a:Type0) (x:a) (ib:ibuffer a) (b:LowStar.Buffer.buffer a)
-  : Lemma (~ (eq3 ib b))
-  = let aux () : Lemma (requires (eq3 ib b)) (ensures False)
+  : Lemma (~ (ib === b))
+  = let aux () : Lemma (requires (ib === b)) (ensures False)
       = //use injectivity to prove that all sequences of type a are equal
         mbuffer_injectivity_in_first_preorder ();
         assert (immutable_preorder a == LowStar.Buffer.trivial_preorder a);
@@ -230,7 +242,6 @@ let inhabited_immutable_buffer_is_distinct_from_buffer (#a:Type0) (x:a) (ib:ibuf
     in
     (Classical.move_requires aux) ()
 
-abstract
 let buffer_immutable_buffer_disjoint
   (#t: Type) (#ti: Type)
   (b: LowStar.Buffer.buffer t)

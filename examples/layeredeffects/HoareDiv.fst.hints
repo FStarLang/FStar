@@ -1,0 +1,82 @@
+[
+  "{Y3ÉkŠòBþLVûj‹¬î",
+  [
+    [
+      "HoareDiv.repr",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "a58ecd2dc0c8276c49ee9f6ba039bfc7"
+    ],
+    [
+      "HoareDiv.bind",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "9fdbfa391831a7c28f01a5c25c3f4969"
+    ],
+    [
+      "HoareDiv.subcomp",
+      1,
+      2,
+      1,
+      [ "@query", "equation_HoareDiv.repr" ],
+      0,
+      "0f6dbf79d4b6d39c2c475937a421e5ca"
+    ],
+    [
+      "HoareDiv.HoareDiv",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "b2t_def", "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "c5baf5e5a338cd271b9e2676fcdd918c"
+    ],
+    [
+      "HoareDiv.HoareDiv",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_de09779676242898794a0b057d5f5bb4"
+      ],
+      0,
+      "a59f4b519ff46ff263c839ede14cd3c2"
+    ],
+    [
+      "HoareDiv.lift_pure_meff",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_interpretation_Tm_arrow_2eaa01e78f73e9bab5d0955fc1a662da",
+        "Prims_interpretation_Tm_arrow_92458cff82f9ffee1f6e26a1c0c579f3",
+        "assumption_HoareDiv.WP_pure_monotonic", "eq2-interp",
+        "equation_Prims.l_True", "equation_Prims.logical",
+        "equation_Prims.pure_post", "equation_Prims.pure_post_",
+        "function_token_typing_Prims.l_True",
+        "interpretation_Tm_abs_2d04d138904bd71a6adce46b0ec78292",
+        "interpretation_Tm_abs_5e34897418ce4950a4effcc8c159cf53",
+        "interpretation_Tm_abs_b66a28ec01f7bbb11191891e2b8510ec",
+        "l_imp-interp", "l_not-interp",
+        "l_quant_interp_904a74cfe3507104488fdcb4d014247a",
+        "refinement_interpretation_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
+        "typing_Tm_abs_2d04d138904bd71a6adce46b0ec78292",
+        "typing_Tm_abs_5e34897418ce4950a4effcc8c159cf53",
+        "typing_Tm_abs_b66a28ec01f7bbb11191891e2b8510ec"
+      ],
+      0,
+      "f49efe3432d10d3b34b12bcecbf8fd33"
+    ]
+  ]
+]

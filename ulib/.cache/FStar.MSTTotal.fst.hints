@@ -1,0 +1,150 @@
+[
+  "ˆ€mw2\\Q3È>Ds«\tf7",
+  [
+    [
+      "FStar.MSTTotal.repr",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "data_typing_intro_FStar.Pervasives.Native.Mktuple2@tok"
+      ],
+      0,
+      "20427f270e0bd21abb5f4499c3d74f50"
+    ],
+    [
+      "FStar.MSTTotal.return",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_FStar.Preorder.preorder",
+        "equation_FStar.Preorder.preorder_rel",
+        "equation_FStar.Preorder.reflexive",
+        "refinement_interpretation_Tm_refine_bd10f09297e0e7dc08314f7d9211801c"
+      ],
+      0,
+      "fc0b515b2750725afc17a24135dc08b7"
+    ],
+    [
+      "FStar.MSTTotal.bind",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_FStar.Preorder.preorder",
+        "equation_FStar.Preorder.preorder_rel",
+        "equation_FStar.Preorder.transitive",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
+        "refinement_interpretation_Tm_refine_bd10f09297e0e7dc08314f7d9211801c"
+      ],
+      0,
+      "01d84555bfa8be06c78a0e9080f5b6a4"
+    ],
+    [
+      "FStar.MSTTotal.subcomp",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "977658a5f30db6bc4d2d2559e60ced91"
+    ],
+    [
+      "FStar.MSTTotal.MSTATETOT",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "b2t_def", "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "0815fabd817f9830ca927309931be489"
+    ],
+    [
+      "FStar.MSTTotal.MSTATETOT",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_de09779676242898794a0b057d5f5bb4"
+      ],
+      0,
+      "6e62b2988a571715ad1ffb2d266508df"
+    ],
+    [
+      "FStar.MSTTotal.get",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_FStar.Preorder.preorder",
+        "equation_FStar.Preorder.preorder_rel",
+        "equation_FStar.Preorder.reflexive",
+        "refinement_interpretation_Tm_refine_bd10f09297e0e7dc08314f7d9211801c"
+      ],
+      0,
+      "dd1ba8bf164e03b4dac32c22db20506a"
+    ],
+    [
+      "FStar.MSTTotal.put",
+      1,
+      2,
+      1,
+      [ "@query", "unit_typing" ],
+      0,
+      "e6090ea7e5a8935971da3564ed38191c"
+    ],
+    [
+      "FStar.MSTTotal.lift_pure_mst_total",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_interpretation_Tm_arrow_2eaa01e78f73e9bab5d0955fc1a662da",
+        "Prims_interpretation_Tm_arrow_92458cff82f9ffee1f6e26a1c0c579f3",
+        "eq2-interp", "equation_FStar.Preorder.preorder",
+        "equation_FStar.Preorder.preorder_rel",
+        "equation_FStar.Preorder.reflexive", "equation_Prims.l_Forall",
+        "equation_Prims.l_True", "equation_Prims.logical",
+        "equation_Prims.pure_post", "equation_Prims.pure_post_",
+        "function_token_typing_Prims.l_True",
+        "interpretation_Tm_abs_3308759af9fac4679594edec00089023",
+        "interpretation_Tm_abs_5e34897418ce4950a4effcc8c159cf53",
+        "interpretation_Tm_abs_da437716eb372fac740da22fdb123c4f",
+        "l_imp-interp", "l_not-interp", "l_or-interp",
+        "l_quant_interp_88c8a67952914b773cd43f0fb2208112",
+        "refinement_interpretation_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
+        "refinement_interpretation_Tm_refine_bd10f09297e0e7dc08314f7d9211801c",
+        "typing_Tm_abs_3308759af9fac4679594edec00089023",
+        "typing_Tm_abs_5e34897418ce4950a4effcc8c159cf53",
+        "typing_Tm_abs_da437716eb372fac740da22fdb123c4f"
+      ],
+      0,
+      "ccdb34647e38933ee37ae80241741bdb"
+    ],
+    [
+      "FStar.MSTTotal.mst_tot_assume",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "249f6cfa7efaf262f25102bd67d39b43"
+    ],
+    [
+      "FStar.MSTTotal.mst_tot_assert",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "a1e8865f70f961914ffc7c978ec01051"
+    ]
+  ]
+]

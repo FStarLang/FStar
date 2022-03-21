@@ -1,6 +1,6 @@
 #light "off"
 module FStar.BigInt
-open FStar.All
+open FStar.Compiler.Effect module List = FStar.Compiler.List
 
 type bigint
     = FSharp.Compatibility.OCaml.Big_int.big_int // JUST FSHARP

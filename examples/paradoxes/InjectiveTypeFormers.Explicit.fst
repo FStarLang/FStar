@@ -6,7 +6,7 @@ let lemma_of_squash (x:squash 'a) : Lemma 'a = ()
 type i (f : Type u#1 -> Type u#0) : Type u#1 =
   | Mkinj : i f
 
-[@(expect_failure [19])]
+[@@(expect_failure [19])]
 let isInj (x:_) (y:_) (w:i x)
   : Lemma (i x == i y ==> x == y)
   = ()
@@ -32,7 +32,7 @@ val false_of_pq : p q -> Lemma False
 let false_of_pq pq =
   FStar.Classical.(
     exists_elim
-      c_False
+      Prims.empty
       (give_witness pq)
       (fun (a:(Type u#1 -> Type u#0){i a == q /\ ~(a q)}) ->
         isInj_admit p a w))
@@ -40,7 +40,7 @@ let false_of_pq pq =
 
 let false_of_pq_squash (pq: p q) : GTot False =
   false_of_pq pq;
-  coerce (FStar.Squash.return_squash #c_False (match () with))
+  coerce (FStar.Squash.return_squash #Prims.empty (match () with))
 
 let not_pq : ~ (p q) =
   FStar.Classical.give_witness

@@ -117,18 +117,6 @@ let permute_correct (p:permute) =
 // In the general case, an arbitrary permutation can be done via swaps.
 // (see FStar.Tactics.CanonCommSwaps for a proof)
 
-let swap (n:nat) :Type = x:nat{x < n-1}
-
-let rec apply_swap_aux (#a:Type) (n:nat) (xs:list a) (s:swap (length xs + n)) :
-    Pure (list a) (requires True)
-                  (ensures (fun zs -> length zs == length xs)) (decreases xs) =
-  match xs with
-  | [] | [_] -> xs
-  | x1 :: x2 :: xs' -> if n = (s <: nat)
-                       then x2 :: x1 :: xs'
-                       else x1 :: apply_swap_aux (n+1) (x2 :: xs') s
-
-let apply_swap (#a:Type) = apply_swap_aux #a 0
 
 let rec apply_swap_aux_correct (#a:Type) (n:nat) (m:cm a) (am:amap a)
                            (xs:list atom) (s:swap (length xs + n)) :
@@ -152,13 +140,6 @@ let apply_swap_correct (#a:Type) (m:cm a) (am:amap a)
     Lemma (ensures (xsdenote m am xs == xsdenote m am (apply_swap xs s)))
           (decreases xs) = apply_swap_aux_correct 0 m am xs s
 
-let rec apply_swaps (#a:Type) (xs:list a) (ss:list (swap (length xs))) :
-    Pure (list a) (requires True)
-                  (ensures (fun zs -> length zs == length xs)) (decreases ss) =
-  match ss with
-  | [] -> xs
-  | s::ss' -> apply_swaps (apply_swap xs s) ss'
-
 let rec apply_swaps_correct (#a:Type) (m:cm a) (am:amap a)
                             (xs:list atom) (ss:list (swap (length xs))):
     Lemma (requires True)
@@ -173,7 +154,7 @@ let permute_via_swaps (p:permute) =
   (#a:Type) -> (am:amap a) -> xs:list atom ->
     Lemma (exists ss. p xs == apply_swaps xs ss)
 
-let rec permute_via_swaps_correct_aux (p:permute) (pvs:permute_via_swaps p)
+let permute_via_swaps_correct_aux (p:permute) (pvs:permute_via_swaps p)
                                (#a:Type) (m:cm a) (am:amap a) (xs:list atom) :
     Lemma (xsdenote m am xs == xsdenote m am (p xs)) =
   pvs am xs;
@@ -191,18 +172,16 @@ let permute_via_swaps_correct
 
 // Here we sort the variable numbers
 
-let sort : permute = List.Tot.sortWith #nat (compare_of_bool (<))
+let sort : permute = List.Tot.Base.sortWith #nat (compare_of_bool (<))
 
-let sort_via_swaps (#a:Type) (am : amap a)  (xs:list atom) :
-  Lemma (exists ss. sort xs == apply_swaps xs ss) =
+let sort_via_swaps (#a:Type) (am : amap a)  (xs:list atom)
+  : Lemma (exists ss. sort xs == apply_swaps xs ss)
+  =
   List.Tot.Properties.sortWith_permutation #nat (compare_of_bool (<)) xs;
   let ss = equal_counts_implies_swaps #nat xs (sort xs) in
-  assert (sort xs == apply_swaps xs ss)
-      by (dump "here"; admit1 ())
-  // this should just work from the type of ss,
-  // but ss gets substituted by its definition in the WP
+  ()
 
-let rec sort_correct_aux (#a:Type) (m:cm a) (am:amap a) (xs:list atom) :
+let sort_correct_aux (#a:Type) (m:cm a) (am:amap a) (xs:list atom) :
     Lemma (xsdenote m am xs == xsdenote m am (sort xs)) =
   permute_via_swaps_correct sort (fun #a am -> sort_via_swaps am) m am xs
 
@@ -210,7 +189,7 @@ let sort_correct : permute_correct sort = (fun #a -> sort_correct_aux #a)
 
 (***** Canonicalization tactics *)
 
-[@plugin]
+(* [@@plugin] *)
 let canon (e:exp) = sort (flatten e)
 
 let canon_correct (#a:Type) (m:cm a) (am:amap a) (e:exp) :
@@ -260,9 +239,9 @@ let rec reification_aux (#a:Type) (ts:list term) (am:amap a)
 
 let reification (#a:Type) (m:cm a) (ts:list term) (am:amap a) (t:term) :
     Tac (exp * list term * amap a) =
-  let mult = norm_term [delta] (quote (CM?.mult m)) in
-  let unit = norm_term [delta] (quote (CM?.unit m)) in
-  let t    = norm_term [delta] t in
+  let mult = norm_term [delta;zeta;iota] (quote (CM?.mult m)) in
+  let unit = norm_term [delta;zeta;iota] (quote (CM?.unit m)) in
+  let t    = norm_term [delta;zeta;iota] t in
   reification_aux ts am mult unit t
 
 let canon_monoid (#a:Type) (m:cm a) : Tac unit =

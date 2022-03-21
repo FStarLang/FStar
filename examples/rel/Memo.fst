@@ -17,13 +17,14 @@ module Memo
 
 open FStar.Classical
 open FStar.Squash
-open FStar.WellFounded
+
 
 (* These should be indices of our effect *)
 type dom : eqtype = int
 type codom : Type = int
 
 type heap = list (dom * codom)
+
 
 type memo (a:Type) = heap -> M (a * heap)
 let return (a:Type) (x:a) : memo a = fun h -> (x, h)
@@ -50,7 +51,8 @@ effect Memo (a:Type) = MEMO a (fun _ p -> forall z. p z)
 (* Access to the whole heap (for verification-debugging purpose) *)
 private
 let get_heap () : MEMO heap (fun h0 p -> p (h0, h0))
-= let f : MEMO?.repr heap (fun h0 p -> p (h0, h0)) = fun h0 -> h0, h0 in
+= admit ();
+  let f : MEMO?.repr heap (fun h0 p -> p (h0, h0)) = fun h0 -> h0, h0 in
   MEMO?.reflect f
 
 
@@ -87,7 +89,7 @@ let rec memo_heap_to_valid_memo (#f:dom -> Tot codom) (h0:memo_heap f)
 = match h0 with
   | [] -> []
   | (|x,y|)::h0' ->
-    (* TODO (to investigate) : removing #f here prevents the fuinction from verifying *)
+    (* TODO (to investigate) : removing #f here prevents the function from verifying *)
     (x,y) :: memo_heap_to_valid_memo #f h0'
 
 let rec valid_memo_to_memo_heap (f:dom -> Tot codom) (h0:heap)
@@ -248,7 +250,7 @@ let memo_extr_p_computes (p:dom -> Type0) (f: (x:dom{p x} -> Memo codom)) (g:dom
 
 
 
-(* Tentaive approach to memoization of recursive functions *)
+(* Tentative approach to memoization of recursive functions *)
 (* Given a function [f : x0:dom -> f0:(x:dom{x << x0} -> Tot codom) -> Tot codom] *)
 (* we can compute its fixpoint as follow with [fix f] *)
 
@@ -270,11 +272,6 @@ noeq type partial_result (x0:dom) : Type =
 (* Or a computation asking for the result of the recursive call on [x] and a continuation [cont] *)
 | Need : x:dom{x << x0} -> cont:(codom -> Tot (partial_result x0)) -> partial_result x0
 
-(* The rule [f x << f] is currently not primitive but take as an axiom in FStar.WellFounded *)
-(* We define a convenience operator doing the application and ensuring the corresponding decreasing clause *)
-unfold
-let ( <| ) #x = apply #codom #(fun _ -> partial_result x)
-
 
 (* We can define the actual total function represented *)
 (* by [f : x:dom -> Tot (partial_result x)] with *)
@@ -286,7 +283,7 @@ let rec  complete_fixp (f: (x:dom) -> partial_result x) (x:dom) (px:partial_resu
   match px with
   | Done y -> y
   | Need x' cont ->
-    complete_fixp f x (cont <| (fixp f x'))
+    complete_fixp f x (cont (fixp f x'))
 
 and fixp (f: (x:dom -> Tot (partial_result x))) (x0:dom)
   : Tot codom (decreases %[x0 ; 1 ; ()])
@@ -313,7 +310,7 @@ let rec fpartial_result x (f: (x:dom -> partial_result x)) (px:partial_result x)
   match px with
   | Done y -> y == fixp f x
   | Need x1 cont ->
-    fpartial_result x f (cont <| (fixp f x1))
+    fpartial_result x f (cont (fixp f x1))
 
 
 let rec fpartial_result_lemma f x px (w:reachable f x px) : Lemma (requires True) (ensures (fpartial_result x f px)) (decreases px)
@@ -321,7 +318,7 @@ let rec fpartial_result_lemma f x px (w:reachable f x px) : Lemma (requires True
   | Done y -> reachable_lemma f x px w (* ; assert (y == fixp f x) ;     assert (fpartial_result x f px) *)
 
   | Need x' cont ->
-    let px' = cont <| (fixp f x') in
+    let px' = cont (fixp f x') in
     fpartial_result_lemma f x px' (Later x' cont w)
 
 let fpartial_result_init_lemma f x
@@ -361,14 +358,13 @@ let rec complete_memo_rec (f: (x:dom -> Tot (partial_result x))) (x:dom) (px:par
       | None ->
         let px' = f x' in
         fpartial_result_lemma f x' px' Now ;
-        assert ( %[x' ; px'] << %[x ; px]) ;
         let y = complete_memo_rec f x' (f x') in
         assert (y == fixp f x') ;
         MEMO?.put x' y ;
         y
     in
     assert (y == fixp f x') ;
-    let px1 = cont <| y in
+    let px1 = cont y in
     assert (fpartial_result x f px1) ;
     complete_memo_rec f x px1
 
@@ -398,7 +394,7 @@ let memo_rec (f: (x:dom -> Tot (partial_result x))) (x0:dom)
 (* ****************************************************************************)
 
 
-let p (x:dom) (px:partial_result x) (x':dom) = %[ %[x'; 2 ; ()] ] << %[ %[x; 0 ; px] ]
+let p (x:dom) (px:partial_result x) (x':dom) = x' << x
 
 (*  *)
 let rec complete_memo_rec_extr
@@ -411,7 +407,7 @@ let rec complete_memo_rec_extr
   | Done y -> y
   | Need x' cont ->
     let y = memo_extr_p (p x px) (memo_rec_extr_temp f x px) x' in
-    complete_memo_rec_extr f x (cont <| y)
+    complete_memo_rec_extr f x (cont y)
 
 and memo_rec_extr_temp (f: (x:dom -> partial_result x)) (x0:dom) (px0:partial_result x0) (x:dom{p x0 px0 x})
   : Memo codom (decreases %[x0 ; 0 ; px0])
@@ -436,7 +432,8 @@ let rec complete_memo_rec_extr_computes :
     let compute_lemma0 (h0:heap) (vm:squash(valid_memo h0 (fixp f))) (x':dom) (px':squash (p x px x'))
         : Lemma (p x px x' ==> (let y, h1 = reify (memo_rec_extr_temp f x px x') h0 in
                                y == fixp f x' /\ valid_memo h1 (fixp f)))
-    = give_proof vm ; give_proof px' ; assert (%[ %[x; 0 ; px] ] << %[ %[x; 1 ; px] ]); memo_rec_extr_computes f x' h0
+    = give_proof vm ; give_proof px' ;
+      memo_rec_extr_computes f x' h0
     in
     let compute_lemma1 (h0:heap) (vm:squash(valid_memo h0 (fixp f)))
       : Lemma (forall x'. p x px x' ==> (let y, h1 = reify (memo_rec_extr_temp f x px x') h0 in y == fixp f x' /\ valid_memo h1 (fixp f)))
@@ -449,7 +446,7 @@ let rec complete_memo_rec_extr_computes :
     let y, h1 = reify (memo_extr_p (p x px) (memo_rec_extr_temp f x px) x') h0 in
     assert (y == fixp f x') ;
     assert (valid_memo h1 (fixp f)) ;
-    complete_memo_rec_extr_computes f x (cont <| y) h1
+    complete_memo_rec_extr_computes f x (cont y) h1
 and memo_rec_extr_computes :
   (f:(x:dom -> partial_result x)) ->
   (x:dom) ->
@@ -486,7 +483,7 @@ let to_memo_pack_rec (#g:dom -> Tot codom)
 (*                                                                            *)
 (* ****************************************************************************)
 
-(* In order to prove that [fixp f] and [g] are extensionally equalsm *)
+(* In order to prove that [fixp f] and [g] are extensionally equal *)
 (* it is enough to prove that [fix_eq_proof f g] *)
 
 let rec complete_fixp_eq_proof
@@ -499,7 +496,7 @@ let rec complete_fixp_eq_proof
   match px with
   | Done y -> y == g x
   | Need x1 cont ->
-    fixp f x1 == g x1 ==> complete_fixp_eq_proof f g x (cont <| (fixp f x1))
+    fixp f x1 == g x1 ==> complete_fixp_eq_proof f g x (cont (fixp f x1))
 
 unfold
 let fixp_eq_proof f g = forall x. complete_fixp_eq_proof f g x (f x)
@@ -519,7 +516,7 @@ let rec complete_fixp_eq
   match px with
   | Done y -> ()
   | Need x1 cont ->
-    fixp_eq' f g x1 ; complete_fixp_eq f g x (cont <| (fixp f x1))
+    fixp_eq' f g x1 ; complete_fixp_eq f g x (cont  (fixp f x1))
 
 and fixp_eq'
   (f: (x:dom -> Tot (partial_result x)))

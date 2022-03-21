@@ -1,4 +1,4 @@
-Title         : Verified programming in F\*
+Title         : Verified programming in F*
 Sub title     : A tutorial
 Heading Base  : 2
 Author        : The F* Team
@@ -475,8 +475,8 @@ ordering and have F\* infer those effects for your programs---but that's
 more advanced and beyond the scope of this tutorial. (If curious you can
 check out [this paper](https://www.fstar-lang.org/papers/dm4free/).)
 
-From now on, we'll just refer to a type-and-effect pair (e.g. `:Tot
-int` where `:Tot` is the effect and `:int` is the result type), as a
+From now on, we'll just refer to a type-and-effect pair (e.g. `:Tot int` 
+where `:Tot` is the effect and `:int` is the result type), as a
 *computation* type.
 
 ## Function types
@@ -550,8 +550,8 @@ val canWrite: filename -> Tot bool
 ### The default effect is `Tot`
 
 Since total functions are very commonly used in verified programs,
-writing `Tot` is optional in F\*'s syntax.  As such, `filename ->
-bool` is a shorthand for `filename -> Tot bool`. Nevertheless, we
+writing `Tot` is optional in F\*'s syntax.  As such, `filename -> bool` 
+is a shorthand for `filename -> Tot bool`. Nevertheless, we
 consider it good practice to annotate functions with their result
 effect, even when it is `Tot`.
 
@@ -670,7 +670,7 @@ We can assert and automatically check more general properties about `max`. For e
 ## Factorial and Fibonacci functions
 
 Let's take a look at the factorial function:
-
+    open FStar.Mul
     let rec factorial n = 
       if n = 0 then 1 else n * (factorial (n - 1))
 
@@ -1305,8 +1305,8 @@ That's quite a tedious proof, isn't it. Here's a simpler proof.
 The `rev_injective_2` proof is based on the idea that every involutive
 function is injective. We've already proven that `reverse` is
 involutive. So, we invoke our lemma, once for `l1` and once for `l2`.
-This gives to the SMT solver the information that `reverse (reverse
-l1) = l1` and `reverse (reverse l2) = l2`, which suffices to complete
+This gives to the SMT solver the information that `reverse (reverse l1) = l1` 
+and `reverse (reverse l2) = l2`, which suffices to complete
 the proof. As usual, when structuring proofs, lemmas are your friends!
 ~~
 ~
@@ -1948,22 +1948,15 @@ And here are a couple of lemmas about `partition` and `sorted`:
      val partition_lemma: f:('a -> Tot bool)
         -> l:list 'a
         -> Lemma (requires True)
-                 (ensures ((length (fst (partition f l))
-                          + length (snd (partition f l)) = length l
-                      /\ (forall x. mem x (fst (partition f l)) ==> f x)
-                      /\ (forall x. mem x (snd (partition f l)) ==> not (f x))
-                      /\ (forall x. mem x l = (mem x (fst (partition f l))
-                                            || mem x (snd (partition f l)))))))
+                 (ensures (
+                      let l1, l2 = partition f l in
+                      length l1 + length l2 = length l /\
+                      (forall x. mem x l1 ==> f x) /\
+                      (forall x. mem x l2 ==> not (f x)) /\
+                      (forall x. mem x l = (mem x l1 || mem x l2))))
      let rec partition_lemma f l = match l with
        | [] -> ()
        | hd :: tl -> partition_lemma f tl
-
-~Remark
-The repeated sub-terms like `fst (partition f l)` in specifications
-call for a `let`-binding construct in types. We will see how
-to do that in a later section---once we have introduced some additional
-machinery.
-~
 
      val sorted_concat_lemma: l1:list int{sorted l1}
                            -> l2:list int{sorted l2}
@@ -1991,7 +1984,7 @@ quicksort. Unfortunately, with the lemmas as they are, we still can't
 prove our original implementation of quicksort correct. As we saw with
 our proofs of `rev_injective` (Section [#sec-basic-lists]), we need to
 explicitly invoke our lemmas in order to use their properties. We'll
-be able to do better in a minute, but lets see how to modify `sort` by
+be able to do better in a minute, but let's see how to modify `sort` by
 calling the lemmas to make the proof go through.
 
     let cmp i j = i <= j
@@ -2040,27 +2033,27 @@ properties? F\* provides exactly such a mechanism, which gives a
 way to bridge the gap between extrinsic and intrinsic proofs.
 
 Let's say we wrote the type of `partition_lemma` as below---the only
-difference is in the very last line, the addition of `[SMTPat
-(partition f l)]`. That line instructs F\* and the SMT solver to
+difference is in the very last line, the addition of `[SMTPat (partition f l)]`. 
+That line instructs F\* and the SMT solver to
 associate with every occurrence of the term `partition f l` the
 property proven by the lemma.
 
     val partition_lemma: f:('a -> Tot bool)
       -> l:list 'a
       -> Lemma (requires True)
-               (ensures ((length (fst (partition f l))
-                        + length (snd (partition f l)) = length l
-                    /\ (forall x. mem x (fst (partition f l)) ==> f x)
-                    /\ (forall x. mem x (snd (partition f l)) ==> not (f x))
-                    /\ (forall x. mem x l = (mem x (fst (partition f l))
-                                          || mem x (snd (partition f l)))))))
-                         [SMTPat (partition f l)]
+               (ensures (
+                   let l1, l2 = partition f l in
+                   length l1 + length l2 = length l /\
+                   (forall x. mem x l1 ==> f x) /\
+                   (forall x. mem x l2 ==> not (f x)) /\
+                   (forall x. mem x l = (mem x l1 || mem x l2))))
+               [SMTPat (partition f l)]
 
 Likewise, here's a revised type for `sorted_concat_lemma`. This time,
 we instruct F\* and the SMT solver to associate the lemma property
 only with very specific terms: just those that have the shape
 ```
-sorted (append 11 (pivot :: l2))
+sorted (append l1 (pivot :: l2))
 ```
 The more specific a pattern you can provide,
 the more discriminating the SMT solver will be in applying lemmas,
@@ -2215,9 +2208,9 @@ $\mathsf{bool} \to \mathsf{bool}$ in paper notation.
 We represent the expressions of STLC by the datatype `exp`.
 ```
 type exp =
-  | EVar   : v:var -> exp
+  | EVar   : v:int -> exp
   | EApp   : fn:exp -> arg:exp -> exp
-  | EAbs   : v:var -> vty:ty -> body:exp -> exp
+  | EAbs   : v:int -> vty:ty -> body:exp -> exp
   | ETrue  : exp
   | EFalse : exp
   | EIf    : test:exp -> btrue:exp -> bfalse:exp -> exp
@@ -2335,7 +2328,7 @@ val step : exp -> Tot (option exp)
 We execute an application expression `EApp e1 e2` in multiple steps by first reducing
 `e1` to a value, then reducing `e2` to a value (following a *call-by-value*
 evaluation order), and if additionally `e1`
-is an abstraction `EAbs x t e' `we continue by substituting the formal
+is an abstraction `EAbs x t e'` we continue by substituting the formal
 argument `x` by the actual argument `e2`. If not we signal a dynamic typing error
 (a non-functional value is applied to arguments) by returning `None`.
 For `EIf e1 e2 e3` we first reduce the guard `e1`: if the guard reduces to `true`
@@ -2591,8 +2584,7 @@ We can use these results to show the following substitution lemma:
 val substitution_preserves_typing : x:int -> e:exp -> v:exp -> g:env -> Lemma
   (requires (Some? (typing empty v) /\
              Some? (typing (extend g x (Some?.v (typing empty v))) e)))
-  (ensures (Some? (typing empty v) /\
-            typing g (subst x v e) ==
+  (ensures (typing g (subst x v e) ==
             typing (extend g x (Some?.v (typing empty v))) e))
 let rec substitution_preserves_typing x e v g =
   let Some t_x = typing empty v in
@@ -3139,7 +3131,7 @@ effects for illustration.
 On a first reading, you may wish to skip this section and proceed
 directly to the next chapter.
 
-
+<!-- obsolete, wlp's no longer around
 ## Background: Generating compact verification conditions
 
 Type inference in F\* is based on a weakest pre-condition calculus for
@@ -3265,37 +3257,32 @@ predicate transformers. As we will see shortly, computing both the WP
 and the WLP allows F\* to move between the two styles without a loss
 in precision (computing just the WP alone would not allow this).
 
+-->
 
 ## Computation types
 
 Expressions in F\* are given _computation types_ `C`.  In its most
 primitive form, each effect in F\* introduces a computation type of
-the form `M t_1..t_n t wp wlp`. The `M t_1..t_n` indicates the name of the
+the form `M t_1..t_n t wp`. The `M t_1..t_n` indicates the name of the
 effect `M` and several user-defined indexes `t_1..t_n`.  The type `t`
 indicates the type of the result of the computation; `wp` is a
 predicate transformer that is not weaker than the weakest
-pre-condition of `e`; and `wlp` is a predicate transformer not weaker
-than the weakest liberal pre-condition of `e`. For the sake of
-brevity, we call `wp` the weakest pre-condition and `wlp` the weakest
-liberal pre-condition.
+pre-condition of `e`. For the sake of brevity, we call `wp` the weakest pre-condition.
 
 For the purposes of the presentation here, we start by discussing a
 simplified form of these `C` types, i.e, we will consider computation
-types of the form `M t wp wlp`, those that have a non-parameterized
+types of the form `M t wp`, those that have a non-parameterized
 effect constructor `M` (and generalize to the full form towards the
 end of this chapter).
 
-A computation `e` has type `M t wp wlp` if when run in an initial
+A computation `e` has type `M t wp` if when run in an initial
 configuration satisfying `wp post`, it (either runs forever, if
 allowed, or) produces a result of type `t` in a final configuration
 `f` such that `post f` is true, all the while exhibiting no more
 effects than are allowed by `M`. In other words, `M` is an upper bound
 on the effects of `e`; `t` is its result type; and `wp` is a predicate
 transformer that for any post-condition of the final configuration of
-`e`, produces a sufficient condition on the initial configuration of
-`e`. The `wlp` is similar, except it is liberal with respect to the
-internal assertions of `e` in the sense described in the previous
-section.
+`e`, produces a sufficient condition on the initial configuration of `e`.
 
 These computation types (specifically their predicate transformers)
 form what is known as a [Dijkstra monad]. Some concrete examples
@@ -3314,7 +3301,7 @@ primitive form of `ST`; `EXN` is the primitive form of `Exn`; etc.
 
 ~
 
-[Dijkstra monad]: http://research.microsoft.com/en-us/um/people/nswamy/papers/paper-pldi13.pdf
+[Dijkstra monad]: https://www.microsoft.com/en-us/research/publication/verifying-higher-order-programs-with-the-dijkstra-monad/
 
 
 
@@ -3327,13 +3314,13 @@ as it provides some insight into how F\* works under the covers. It
 also provides some guidance on how to define new effects. We discuss a
 fragment of it here.
 
-The type of pure computations is `PURE t wp wlp` where
-`wp, wlp : (t -> Type) -> Type`. This means that pure computations produce
+The type of pure computations is `PURE t wp` where
+`wp : (t -> Type) -> Type`. This means that pure computations produce
 `t`-typed results and are described by predicate transformers that
 transform result predicates (post-conditions of kind `t -> Type`) to
 pre-conditions, which are propositions of kind `Type`.
 
-Seen another way, the signatures of the `wp` and `wlp` have the
+Seen another way, the signatures of the `wp` has the
 following form---they transform pure post-conditions to pure
 pre-conditions.
 
@@ -3344,7 +3331,7 @@ let pure_wp (a:Type) = pure_post a -> pure_pre
 ```
 
 For example, one computation type for `0` is
-`PURE int return_zero return_zero` where
+`PURE int return_zero` where
 ```
 return_zero = fun (p:(int -> Type)) -> p 0
 ```
@@ -3360,11 +3347,11 @@ type return_PURE (#a:Type) (x:a) = fun (post: pure_post a) -> post x
 
 When sequentially composing two pure computations using
 `let x = e1 in e2`, if
-`e1: PURE t1 wp1 wlp1` and
-`e2: (x:t1 -> PURE t2 (wp2 x) (wlp2 x))`,
+`e1: PURE t1 wp1` and
+`e2: (x:t1 -> PURE t2 (wp2 x))`,
 we type the composed computation as
 ```
-PURE t2 (bind_PURE wp1 wp2) (bind_PURE wlp1 wlp2)
+PURE t2 (bind_PURE wp1 wp2)
 ```
 where:
 ```
@@ -3386,7 +3373,6 @@ predicate transformers. It is defined as follows:
 ```
 effect Pure (a:Type) (pre:Type) (post: a -> Type) =
        PURE a (fun (p:pure_post a) -> pre /\ forall (x:a). post x ==> p x)
-              (fun (p:pure_post a) -> forall (x:a). pre /\ post x ==> p x)
 ```
 
 That is `Pure a pre post` is a computation which when `pre` is true
@@ -3397,17 +3383,18 @@ The `Tot` effect is defined below:
 ```
 effect Tot (a:Type) =
        PURE a (fun (p:pure_post a) -> forall (x:a). p x)
-              (fun (p:pure_post a) -> forall (x:a). p x)
 ```
 
 This means that a computation type `Tot a` only reveals that the
 computation always terminates with an `a`-typed result.
 
+<!-- relies on wlp's, which are long gone
+
 ### From predicate transformers to pre- and post-conditions
 
 We have just seen how the definition of `Pure a pre post` unfolds into
 the `PURE` effect. It is also possible to go in the other direction,
-turning a specification written in the `PURE a wp wlp` style into a
+turning a specification written in the `PURE a wp` style into a
 `Pure a pre post`. However, whereas F\* will always automatically
 unfold the definition of `Pure` in terms of `PURE` as needed, it will
 not automatically transform the more primitive `PURE` effect into the
@@ -3551,12 +3538,13 @@ Pure t (p)
 ~~
 ~
 
+-->
 
 ## The `STATE` effect
 
 Stateful programs operate on an input heap producing a result and an
-output heap. The computation type `STATE t wp wlp` describes such a
-computation, where `wp, wlp : state_wp t` has the signature below.
+output heap. The computation type `STATE t wp` describes such a
+computation, where `wp : state_wp t` has the signature below.
 
 ```
 let state_post t = t -> heap -> Type
@@ -3564,7 +3552,7 @@ let state_pre    = heap -> Type
 let state_wp t   = state_post t -> state_pre
 ```
 
-In other words, WPs and WLPs for stateful programs transform stateful
+In other words, WPs for stateful programs transform stateful
 post-conditions (relating the t-typed result of a computation to the
 final heap) into a pre-condition, a predicate on the input heap.
 
@@ -3619,7 +3607,7 @@ Let's start with the signature of `read`:
 ```
 let wp_read r = fun (post:state_post a) (h0:heap) ->  post (sel h0 r) h0
 
-assume val read: #a:Type -> r:ref a -> STATE a (wp_read r) (wp_read r)
+assume val read: #a:Type -> r:ref a -> STATE a (wp_read r)
 ```
 
 This says that `read r` returns a result `v:a` when `r:ref a`;
@@ -3630,9 +3618,9 @@ when `read r` is run in the initial heap `h0`.
 Next, here's the signature of `write`:
 
 ```
-let wp_write r = fun (post:state_post a) (h0:heap) -> post () (upd h0 r v)
+let wp_write r v = fun (post:state_post a) (h0:heap) -> post () (upd h0 r v)
 
-assume val write: #a:Type -> r:ref a -> v:a -> STATE unit (wp_write r) (wp_write r)
+assume val write: #a:Type -> r:ref a -> v:a -> STATE unit (wp_write r v)
 ```
 
 This says that `write r v` returns a a `unit`-typed result when
@@ -3673,10 +3661,9 @@ of predicate transformers. It is defined as shown below (in
 effect ST (a:Type) (pre:state_pre) (post: (heap -> state_post a)) = STATE a
   (fun (p:state_post a) (h:heap) ->
      pre h /\ (forall a h1. (pre h /\ post h a h1) ==> p a h1)) (* WP *)
-  (fun (p:state_post a) (h:heap) ->
-     (forall a h1. (pre h /\ post h a h1) ==> p a h1))          (* WLP *)
 ```
 
+<!-- relies on wlp, which is long gone
 As before, we can also define a coercion to move to `ST` from `STATE`.
 
 
@@ -3706,6 +3693,7 @@ let h f x = f x
 val g : x:ref int -> ST int (fun h -> True) (fun h0 y h1 -> h0=h1 /\ y >= 0)
 let g = h (as_ST f)
 ```
+-->
 
 ### The `St` effect
 
@@ -3744,7 +3732,7 @@ sub_effect
 ```
 
 This says that in order to lift a `PURE` computation to `STATE`, we
-lift its `wp:pure_wp a` (equivalently for its `wlp`) to a `state_wp a`
+lift its `wp:pure_wp a` to a `state_wp a`
 that says that that pure computation leaves the state unmodified.
 
 Note that the type of `PURE ~> STATE` is
@@ -3758,7 +3746,7 @@ let state_pre    = heap -> Type
 ## Indexed computation types
 
 Finally, as mentioned earlier, in its full form a computation type has
-the shape `M t_1..t_n t wp wlp`, where `t_1..t_n` are some user-chosen
+the shape `M t_1..t_n t wp`, where `t_1..t_n` are some user-chosen
 indices to the effect constructor `M`.
 
 This is convenient in that it allows effects to be defined
@@ -4232,7 +4220,6 @@ type t = Map.t rid heap
 new_effect STATE = STATE_h t
 effect ST (a:Type) (pre:t -> Type) (post:t -> a -> t -> Type) =
        STATE a (fun 'p m0 -> pre m0 /\ (forall x m1. post m0 x m1 ==> 'p x m1))
-               (fun 'p m0 ->  (forall x m1. pre m0 /\ post m0 x m1 ==> 'p x m1))
 ```
 
 That is `HyperHeap.STATE` and `HyperHeap.ST` are just like the `STATE`
@@ -4815,7 +4802,7 @@ the server has indeed sent the
 message in response to a matching request from the client.
 
 To this end, the protocol uses message authentication codes (MACs) computed as
-keyed hashes, such that each symmetric MAC key kab is associated with (and known
+keyed hashes, such that each symmetric MAC key `kab` is associated with (and known
 to) the pair of principals a and b. Our protocol may be informally described as follows.
 An Authenticated RPC Protocol:
 
@@ -5226,7 +5213,7 @@ how F\* is used in the process. For the encrypt-then-mac example in the next
 section, it might be nice to have an introduction to game-based proofs.
 ~
 
-Lets make the theory more concrete by looking at Encrypt-then-MAC 
+Let's make the theory more concrete by looking at Encrypt-then-MAC 
 based authenticated encryption. 
 
 ## Encrypt-then-MAC 
@@ -5331,7 +5318,7 @@ hide whether it was `m` or a string of `0z`s that was encrypted:
 [INCLUDE=code/solutions/EtM.CPA.fst:EtMCPADecrypt]
 ```
 
-Note that in the `match` statement, we did not define a '`| None`' branche. This is because the 
+Note that in the `match` statement, we did not define the '`| None`' branch. This is because the 
 precondition of `decrypt` requires for IND-CPA restricted adversaries (`ind_cpa_rest_adv=true`)
 that table lookup in `log` always succeeds.
 
@@ -5340,7 +5327,7 @@ This can be expressed as a stateful precondition for `decrypt`:
 ~ SolutionFragment {exname=EtM.CPA}
 [INCLUDE=code/solutions/EtM.CPA.fst:EtMCPADecryptRequires]
 ~
-where function `m_sel h0 k.log` retrives the content of `k.log` as stored in heap `h0`.
+where function `m_sel h0 k.log` retrieves the content of `k.log` as stored in heap `h0`.
 
 ~ Exercise
 Play with the type of `EtM.CPA.decrypt` above. What fails if you remove the precondition. What is the connection with chosen plaintext attacks?
@@ -5893,7 +5880,7 @@ let test() =
 
 This document was created using Daan Leijen's <https://madoko.net> markdown processor.
 
-If` you find any errors in it, or would like to improve it in any way,
+If you find any errors in it, or would like to improve it in any way,
 this is how you do it: 
 
 1. Point your browser at <https://madoko.net>

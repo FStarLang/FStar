@@ -15,15 +15,16 @@
 *)
 #light "off"
 module FStar.Parser.AST
-open FStar.ST
-open FStar.Exn
-open FStar.All
+open FStar.Pervasives
+open FStar.Compiler.Effect
+open FStar.Compiler.List
 open FStar.Errors
 module C = FStar.Parser.Const
-open FStar.Range
+open FStar.Compiler.Range
 open FStar.Ident
 open FStar
-open FStar.Util
+open FStar.Compiler
+open FStar.Compiler.Util
 open FStar.Const
 
 (* AST produced by the parser, before desugaring
@@ -57,16 +58,17 @@ type term' =
   | App       of term * term * imp                    (* aqual marks an explicitly provided implicit parameter *)
   | Let       of let_qualifier * list<(option<attributes_> * (pattern * term))> * term
   | LetOpen   of lid * term
+  | LetOpenRecord of term * term * term
   | Seq       of term * term
   | Bind      of ident * term * term
-  | If        of term * term * term
-  | Match     of term * list<branch>
+  | If        of term * option<match_returns_annotation> * term * term
+  | Match     of term * option<match_returns_annotation> * list<branch>
   | TryWith   of term * list<branch>
-  | Ascribed  of term * term * option<term>
+  | Ascribed  of term * term * option<term> * bool  (* bool says whether equality ascription $: *)
   | Record    of option<term> * list<(lid * term)>
   | Project   of term * lid
-  | Product   of list<binder> * term                 (* function space *)
-  | Sum       of list<(either<binder,term>)> * term                 (* dependent tuple *)
+  | Product   of list<binder> * term                (* function space *)
+  | Sum       of list<(either<binder,term>)> * term (* dependent tuple *)
   | QForall   of list<binder> * patterns * term
   | QExists   of list<binder> * patterns * term
   | Refine    of binder * term
@@ -74,6 +76,9 @@ type term' =
   | Paren     of term
   | Requires  of term * option<string>
   | Ensures   of term * option<string>
+  | LexList   of list<term>  (* a decreases clause mentions either a lexicographically ordered list, *)
+  | WFOrder   of term * term  (* or a well-founded relation or some type and an expression of the same type *)
+  | Decreases of term * option<string>
   | Labeled   of term * string * bool
   | Discrim   of lid   (* Some?  (formerly is_Some) *)
   | Attributes of list<term>   (* attributes decorating a term *)
@@ -81,8 +86,20 @@ type term' =
   | Quote     of term * quote_kind
   | VQuote    of term        (* Quoting an lid, this gets removed by the desugarer *)
   | CalcProof of term * term * list<calc_step> (* A calculational proof with relation, initial expression, and steps *)
-
+  | IntroForall of list<binder> * term * term                     (* intro_forall x1..xn. P with e *)
+  | IntroExists of list<binder> * term * list<term> * term        (* intro_exists x1...xn.P using v1..vn with e *)
+  | IntroImplies of term * term * binder * term                   (* intro_implies P Q with x. e *)
+  | IntroOr of bool * term * term * term                          (* intro_or_{left ,right} P Q with e *)
+  | IntroAnd of term * term * term * term                         (* intro_and P Q with e1 and e2 *)
+  | ElimForall  of list<binder> * term * list<term>               (* elim_forall x1..xn. P using v1..vn *)
+  | ElimExists  of list<binder> * term * term * binder * term     (* elim_exists x1...xn.P to Q with e *)
+  | ElimImplies of term * term * term                             (* elim_implies P Q with e *)
+  | ElimOr of term * term * term * binder * term * binder * term  (* elim_or P Q to R with x.e1 and y.e2 *)
+  | ElimAnd of term * term * term * binder * binder * term        (* elim_and P Q to R with x y. e *)
 and term = {tm:term'; range:range; level:level}
+
+(* (as y)? returns t *)
+and match_returns_annotation = option<ident> * term * bool
 
 and patterns = list<ident> * list<list<term>>
 
@@ -98,15 +115,15 @@ and binder' =
   | TAnnotated of ident * term
   | NoName of term
 
-and binder = {b:binder'; brange:range; blevel:level; aqual:aqual}
+and binder = {b:binder'; brange:range; blevel:level; aqual:aqual; battributes:attributes_}
 
 and pattern' =
-  | PatWild     of aqual
+  | PatWild     of aqual * attributes_
   | PatConst    of sconst
   | PatApp      of pattern * list<pattern>
-  | PatVar      of ident * aqual
+  | PatVar      of ident * aqual * attributes_
   | PatName     of lid
-  | PatTvar     of ident * aqual
+  | PatTvar     of ident * aqual * attributes_
   | PatList     of list<pattern>
   | PatTuple    of list<pattern> * bool (* dependent if flag is set *)
   | PatRecord   of list<(lid * pattern)>
@@ -133,23 +150,15 @@ type knd = term
 type typ = term
 type expr = term
 
-// Documentation comment. May appear appear as follows:
-//  - Immediately before a top-level declaration
-//  - Immediately after a type constructor or record field
-//  - In the middle of a file, as a standalone documentation declaration
-(* KM : Would need some range information on fsdocs to be able to print them correctly *)
-type fsdoc = string * list<(string * string)> // comment + (name,value) keywords
-
 (* TODO (KM) : it would be useful for the printer to have range information for those *)
 type tycon =
   | TyconAbstract of ident * list<binder> * option<knd>
   | TyconAbbrev   of ident * list<binder> * option<knd> * term
-  | TyconRecord   of ident * list<binder> * option<knd> * list<(ident * term * option<fsdoc>)>
-  | TyconVariant  of ident * list<binder> * option<knd> * list<(ident * option<term> * option<fsdoc> * bool)> (* bool is whether it's using 'of' notation *)
+  | TyconRecord   of ident * list<binder> * option<knd> * list<(ident * aqual * attributes_ * term)>
+  | TyconVariant  of ident * list<binder> * option<knd> * list<(ident * option<term> * bool)> (* bool is whether it's using 'of' notation *)
 
 type qualifier =
   | Private
-  | Abstract
   | Noeq
   | Unopteq
   | Assumption
@@ -174,7 +183,6 @@ type qualifiers = list<qualifier>
 type decoration =
   | Qualifier of qualifier
   | DeclAttributes of list<term>
-  | Doc of fsdoc
 
 type lift_op =
   | NonReifiableLift of term
@@ -194,6 +202,7 @@ type pragma =
   | PopOptions
   | RestartSolver
   | LightOff
+  | PrintEffectsGraph
 
 type decl' =
   | TopLevelModule of lid
@@ -202,23 +211,23 @@ type decl' =
   | Include of lid
   | ModuleAbbrev of ident * lid
   | TopLevelLet of let_qualifier * list<(pattern * term)>
-  | Main of term
-  | Tycon of bool * bool * list<(tycon * option<fsdoc>)>
+  | Tycon of bool * bool * list<tycon>
     (* first bool is for effect *)
     (* second bool is for typeclass *)
   | Val of ident * term  (* bool is for logic val *)
   | Exception of ident * option<term>
   | NewEffect of effect_decl
+  | LayeredEffect of effect_decl
   | SubEffect of lift
+  | Polymonadic_bind of lid * lid * lid * term
+  | Polymonadic_subcomp of lid * lid * term
   | Pragma of pragma
-  | Fsdoc of fsdoc
   | Assume of ident * term
   | Splice of list<ident> * term
 
 and decl = {
   d:decl';
   drange:range;
-  doc:option<fsdoc>;
   quals: qualifiers;
   attrs: attributes_
 }
@@ -237,10 +246,10 @@ let decl_drange decl = decl.drange
 
 (********************************************************************************)
 let check_id id =
-    let first_char = String.substring id.idText 0 1 in
+    let first_char = String.substring (string_of_id id) 0 1 in
     if String.lowercase first_char = first_char
     then ()
-    else raise_error (Fatal_InvalidIdentifier, Util.format1 "Invalid identifer '%s'; expected a symbol that begins with a lower-case character" id.idText)  id.idRange
+    else raise_error (Fatal_InvalidIdentifier, Util.format1 "Invalid identifer '%s'; expected a symbol that begins with a lower-case character" (string_of_id id))  (range_of_id id)
 
 let at_most_one s r l = match l with
   | [ x ] -> Some x
@@ -248,15 +257,15 @@ let at_most_one s r l = match l with
   | _ -> raise_error (Fatal_MoreThanOneDeclaration, (Util.format1 "At most one %s is allowed on declarations" s)) r
 
 let mk_decl d r decorations =
-  let doc = at_most_one "fsdoc" r (List.choose (function Doc d -> Some d | _ -> None) decorations) in
   let attributes_ = at_most_one "attribute set" r (
     List.choose (function DeclAttributes a -> Some a | _ -> None) decorations
   ) in
   let attributes_ = Util.dflt [] attributes_ in
   let qualifiers = List.choose (function Qualifier q -> Some q | _ -> None) decorations in
-  { d=d; drange=r; doc=doc; quals=qualifiers; attrs=attributes_ }
+  { d=d; drange=r; quals=qualifiers; attrs=attributes_ }
 
-let mk_binder b r l i = {b=b; brange=r; blevel=l; aqual=i}
+let mk_binder_with_attrs b r l i attrs = {b=b; brange=r; blevel=l; aqual=i; battributes=attrs}
+let mk_binder b r l i = mk_binder_with_attrs b r l i []
 let mk_term t r l = {tm=t; range=r; level=l}
 let mk_uminus t rminus r l =
   let t =
@@ -274,8 +283,8 @@ let un_curry_abs ps body = match body.tm with
     | _ -> Abs(ps, body)
 let mk_function branches r1 r2 =
   let x = Ident.gen r1 in
-  mk_term (Abs([mk_pattern (PatVar(x,None)) r1],
-               mk_term (Match(mk_term (Var(lid_of_ids [x])) r1 Expr, branches)) r2 Expr))
+  mk_term (Abs([mk_pattern (PatVar(x,None,[])) r1],
+               mk_term (Match(mk_term (Var(lid_of_ids [x])) r1 Expr, None, branches)) r2 Expr))
     r2 Expr
 let un_function p tm = match p.pat, tm.tm with
     | PatVar _, Abs(pats, body) -> Some (mk_pattern (PatApp(p, pats)) p.prange, body)
@@ -285,18 +294,16 @@ let lid_with_range lid r = lid_of_path (path_of_lid lid) r
 
 let consPat r hd tl = PatApp(mk_pattern (PatName C.cons_lid) r, [hd;tl])
 let consTerm r hd tl = mk_term (Construct(C.cons_lid, [(hd, Nothing);(tl, Nothing)])) r Expr
-let lexConsTerm r hd tl = mk_term (Construct(C.lexcons_lid, [(hd, Nothing);(tl, Nothing)])) r Expr
 
 let mkConsList r elts =
   let nil = mk_term (Construct(C.nil_lid, [])) r Expr in
     List.fold_right (fun e tl -> consTerm r e tl) elts nil
 
-let mkLexList r elts =
-  let nil = mk_term (Construct(C.lextop_lid, [])) r Expr in
-  List.fold_right (fun e tl -> lexConsTerm r e tl) elts nil
+let unit_const r = mk_term(Const Const_unit) r Expr
 
 let ml_comp t =
-    let ml = mk_term (Name C.effect_ML_lid) t.range Expr in
+    let lid = C.effect_ML_lid () in
+    let ml = mk_term (Name lid) t.range Expr in
     let t = mk_term (App(ml, t, Nothing)) t.range Expr in
     t
 
@@ -329,8 +336,6 @@ let mkExplicitApp t args r = match args with
       | Name s -> mk_term (Construct(s, (List.map (fun a -> (a, Nothing)) args))) r Un
       | _ -> List.fold_left (fun t a -> mk_term (App(t, a, Nothing)) r Un) t args
 
-let unit_const r = mk_term(Const Const_unit) r Expr
-
 let mkAdmitMagic r =
     let admit =
         let admit_name = mk_term(Var(set_lid_range C.admit_lid r)) r Expr in
@@ -341,7 +346,7 @@ let mkAdmitMagic r =
     let admit_magic = mk_term(Seq(admit, magic)) r Expr in
     admit_magic
 
-let mkWildAdmitMagic r = (mk_pattern (PatWild None) r, None, mkAdmitMagic r)
+let mkWildAdmitMagic r = (mk_pattern (PatWild (None, [])) r, None, mkAdmitMagic r)
 
 let focusBranches branches r =
     let should_filter = Util.for_some fst branches in
@@ -381,17 +386,17 @@ let mkDTuple args r =
   let cons = C.mk_dtuple_data_lid (List.length args) r in
   mkApp (mk_term (Name cons) r Expr) (List.map (fun x -> (x, Nothing)) args) r
 
-let mkRefinedBinder id t should_bind_var refopt m implicit =
-  let b = mk_binder (Annotated(id, t)) m Type_level implicit in
+let mkRefinedBinder id t should_bind_var refopt m implicit attrs : binder =
+  let b = mk_binder_with_attrs (Annotated(id, t)) m Type_level implicit attrs in
   match refopt with
     | None -> b
     | Some phi ->
         if should_bind_var
-        then mk_binder (Annotated(id, mk_term (Refine(b, phi)) m Type_level)) m Type_level implicit
+        then mk_binder_with_attrs (Annotated(id, mk_term (Refine(b, phi)) m Type_level)) m Type_level implicit attrs
         else
             let x = gen t.range in
-            let b = mk_binder (Annotated (x, t)) m Type_level implicit in
-            mk_binder (Annotated(id, mk_term (Refine(b, phi)) m Type_level)) m Type_level implicit
+            let b = mk_binder_with_attrs (Annotated (x, t)) m Type_level implicit attrs in
+            mk_binder_with_attrs (Annotated(id, mk_term (Refine(b, phi)) m Type_level)) m Type_level implicit attrs
 
 let mkRefinedPattern pat t should_bind_pat phi_opt t_range range =
     let t = match phi_opt with
@@ -400,8 +405,8 @@ let mkRefinedPattern pat t should_bind_pat phi_opt t_range range =
             if should_bind_pat
             then
                 begin match pat.pat with
-                | PatVar (x,_) ->
-                    mk_term (Refine(mk_binder (Annotated(x, t)) t_range Type_level None, phi)) range Type_level
+                | PatVar (x,_,attrs) ->
+                    mk_term (Refine(mk_binder_with_attrs (Annotated(x, t)) t_range Type_level None attrs, phi)) range Type_level
                 | _ ->
                     let x = gen t_range in
                     let phi =
@@ -409,10 +414,10 @@ let mkRefinedPattern pat t should_bind_pat phi_opt t_range range =
                         let x_var = mk_term (Var (lid_of_ids [x])) phi.range Formula in
                         let pat_branch = (pat, None, phi)in
                         let otherwise_branch =
-                            (mk_pattern (PatWild None) phi.range, None,
+                            (mk_pattern (PatWild (None, [])) phi.range, None,
                              mk_term (Name (lid_of_path ["False"] phi.range)) phi.range Formula)
                         in
-                        mk_term (Match (x_var, [pat_branch ; otherwise_branch])) phi.range Formula
+                        mk_term (Match (x_var, None, [pat_branch ; otherwise_branch])) phi.range Formula
                     in
                     mk_term (Refine(mk_binder (Annotated(x, t)) t_range Type_level None, phi)) range Type_level
                 end
@@ -531,22 +536,28 @@ let imp_to_string = function
     | _ -> ""
 let rec term_to_string (x:term) = match x.tm with
   | Wild -> "_"
+  | LexList l -> Util.format1 "%[%s]"
+    (match l with
+     | [] -> " "
+     | hd::tl ->
+       tl |> List.fold_left (fun s t -> s ^ "; " ^ term_to_string t) (term_to_string hd))
+  | Decreases (t, _) -> Util.format1 "(decreases %s)" (term_to_string t)
   | Requires (t, _) -> Util.format1 "(requires %s)" (term_to_string t)
   | Ensures (t, _) -> Util.format1 "(ensures %s)" (term_to_string t)
   | Labeled (t, l, _) -> Util.format2 "(labeled %s %s)" l (term_to_string t)
   | Const c -> C.const_to_string c
   | Op(s, xs) ->
-      Util.format2 "%s(%s)" (text_of_id s) (String.concat ", " (List.map (fun x -> x|> term_to_string) xs))
+      Util.format2 "%s(%s)" (string_of_id s) (String.concat ", " (List.map (fun x -> x|> term_to_string) xs))
   | Tvar id
-  | Uvar id -> id.idText
+  | Uvar id -> (string_of_id id)
   | Var l
-  | Name l -> l.str
+  | Name l -> (string_of_lid l)
 
   | Projector (rec_lid, field_id) ->
-    Util.format2 "%s?.%s" (string_of_lid rec_lid) (field_id.idText)
+    Util.format2 "%s?.%s" (string_of_lid rec_lid) ((string_of_id field_id))
 
   | Construct (l, args) ->
-    Util.format2 "(%s %s)" l.str (to_string_l " " (fun (a,imp) -> Util.format2 "%s%s" (imp_to_string imp) (term_to_string a)) args)
+    Util.format2 "(%s %s)" (string_of_lid l) (to_string_l " " (fun (a,imp) -> Util.format2 "%s%s" (imp_to_string imp) (term_to_string a)) args)
   | Abs(pats, t) ->
     Util.format2 "(fun %s -> %s)" (to_string_l " " pat_to_string pats) (t|> term_to_string)
   | App(t1, t2, imp) -> Util.format3 "%s %s%s" (t1|> term_to_string) (imp_to_string imp) (t2|> term_to_string)
@@ -579,37 +590,39 @@ let rec term_to_string (x:term) = match x.tm with
     Util.format2 "%s; %s" (t1|> term_to_string) (t2|> term_to_string)
 
   | Bind (id, t1, t2) ->
-    Util.format3 "%s <- %s; %s" id.idText (term_to_string t1) (term_to_string t2)
+    Util.format3 "%s <- %s; %s" (string_of_id id) (term_to_string t1) (term_to_string t2)
 
-  | If(t1, t2, t3) ->
-    Util.format3 "if %s then %s else %s" (t1|> term_to_string) (t2|> term_to_string) (t3|> term_to_string)
+  | If(t1, ret_opt, t2, t3) ->
+    Util.format4 "if %s %sthen %s else %s"
+      (t1|> term_to_string)
+      (match ret_opt with
+       | None -> ""
+       | Some (as_opt, ret, use_eq) ->
+         let s = if use_eq then "returns$" else "returns" in
+         Util.format3 "%s%s %s "
+           (match as_opt with
+            | None -> ""
+            | Some as_ident -> Util.format1 " as %s " (string_of_id as_ident))
+           s
+           (term_to_string ret))
+      (t2|> term_to_string)
+      (t3|> term_to_string)
 
-  | Match(t, branches)
-  | TryWith (t, branches) ->
-    let s =
-      match x.tm with
-      | Match _ -> "match"
-      | TryWith _ -> "try"
-      | _ -> failwith "impossible"
-    in
-    Util.format3 "%s %s with %s"
-      s
-      (t|> term_to_string)
-      (to_string_l " | " (fun (p,w,e) -> Util.format3 "%s %s -> %s"
-        (p |> pat_to_string)
-        (match w with | None -> "" | Some e -> Util.format1 "when %s" (term_to_string e))
-        (e |> term_to_string)) branches)
+  | Match(t, ret_opt,  branches) -> try_or_match_to_string x t branches ret_opt
+  | TryWith (t, branches) -> try_or_match_to_string x t branches None
 
-  | Ascribed(t1, t2, None) ->
-    Util.format2 "(%s : %s)" (t1|> term_to_string) (t2|> term_to_string)
-  | Ascribed(t1, t2, Some tac) ->
-    Util.format3 "(%s : %s by %s)" (t1|> term_to_string) (t2|> term_to_string) (tac |> term_to_string)
+  | Ascribed(t1, t2, None, flag) ->
+    let s = if flag then "$:" else "<:" in
+    Util.format3 "(%s %s %s)" (t1|> term_to_string) s (t2|> term_to_string)
+  | Ascribed(t1, t2, Some tac, flag) ->
+    let s = if flag then "$:" else "<:" in
+    Util.format4 "(%s %s %s by %s)" (t1|> term_to_string) s (t2|> term_to_string) (tac |> term_to_string)
   | Record(Some e, fields) ->
-    Util.format2 "{%s with %s}" (e|> term_to_string) (to_string_l " " (fun (l,e) -> Util.format2 "%s=%s" (l.str) (e|> term_to_string)) fields)
+    Util.format2 "{%s with %s}" (e|> term_to_string) (to_string_l " " (fun (l,e) -> Util.format2 "%s=%s" ((string_of_lid l)) (e|> term_to_string)) fields)
   | Record(None, fields) ->
-    Util.format1 "{%s}" (to_string_l " " (fun (l,e) -> Util.format2 "%s=%s" (l.str) (e|> term_to_string)) fields)
+    Util.format1 "{%s}" (to_string_l " " (fun (l,e) -> Util.format2 "%s=%s" ((string_of_lid l)) (e|> term_to_string)) fields)
   | Project(e,l) ->
-    Util.format2 "%s.%s" (e|> term_to_string) (l.str)
+    Util.format2 "%s.%s" (e|> term_to_string) ((string_of_lid l))
   | Product([], t) ->
     term_to_string t
   | Product(b::hd::tl, t) ->
@@ -636,7 +649,7 @@ let rec term_to_string (x:term) = match x.tm with
   | Refine(b, t) ->
     Util.format2 "%s:{%s}" (b|> binder_to_string) (t|> term_to_string)
   | NamedTyp(x, t) ->
-    Util.format2 "%s:%s" x.idText  (t|> term_to_string)
+    Util.format2 "%s:%s" (string_of_id x)  (t|> term_to_string)
   | Paren t -> Util.format1 "(%s)" (t|> term_to_string)
   | Product(bs, t) ->
         Util.format2 "Unidentified product: [%s] %s"
@@ -665,37 +678,148 @@ let rec term_to_string (x:term) = match x.tm with
                                        (term_to_string init)
                                        (String.concat " " <| List.map calc_step_to_string steps)
 
+
+  | ElimForall(bs, t, vs) ->
+    Util.format3 "_elim_ forall %s. %s using %s"
+        (binders_to_string " " bs)
+        (term_to_string t)
+        (String.concat " " (List.map term_to_string vs))
+
+  | ElimExists(bs, p, q, b, e) ->
+    Util.format5 "_elim_ exists %s. %s _to_ %s\n\with %s. %s"
+        (binders_to_string " " bs)
+        (term_to_string p)
+        (term_to_string q)
+        (binder_to_string b)
+        (term_to_string e)
+
+  | ElimImplies(p, q, e) ->
+    Util.format3 "_elim_ %s ==> %s with %s"
+      (term_to_string p)
+      (term_to_string q)
+      (term_to_string e)
+
+  | ElimOr(p, q, r, x, e, y, e') ->
+     Util.format "_elim_ %s \/ %s _to_ %s\n\with %s. %s\n\and %s.%s"
+       [term_to_string p;
+        term_to_string q;
+        term_to_string r;
+        binder_to_string x;
+        term_to_string e;
+        binder_to_string y;
+        term_to_string e']
+
+  | ElimAnd(p, q, r, x, y, e) ->
+     Util.format "_elim_ %s /\ %s _to_ %s\n\with %s %s. %s"
+       [term_to_string p;
+        term_to_string q;
+        term_to_string r;
+        binder_to_string x;
+        binder_to_string y;        
+        term_to_string e]
+
+  | IntroForall(xs, p, e) -> 
+    Util.format3 "_intro_ forall %s. %s with %s"
+      (binders_to_string " " xs)
+      (term_to_string p)
+      (term_to_string e)
+        
+  | IntroExists(xs, t, vs, e) ->
+    Util.format4 "_intro_ exists %s. %s using %s with %s"
+      (binders_to_string " " xs)
+      (term_to_string t)
+      (String.concat " " (List.map term_to_string vs))
+      (term_to_string e)
+  
+  | IntroImplies(p, q, x, e) ->
+    Util.format4 ("_intro_ %s ==> %s with %s. %s")
+      (term_to_string p)
+      (term_to_string q)
+      (binder_to_string x)
+      (term_to_string p)
+      
+  | IntroOr(b, p, q, r) ->
+    Util.format4 ("_intro_ %s \/ %s using %s with %s")
+      (term_to_string p)
+      (term_to_string q)
+      (if b then "Left" else "Right")
+      (term_to_string r)
+      
+  | IntroAnd(p, q, e1, e2) ->
+    Util.format4 ("_intro_ %s /\ %s with %s and %s")  
+      (term_to_string p)
+      (term_to_string q)
+      (term_to_string e1)
+      (term_to_string e2)
+      
+and binders_to_string sep bs =
+    List.map binder_to_string bs |> String.concat sep
+
+and try_or_match_to_string (x:term) scrutinee branches ret_opt =
+  let s =
+    match x.tm with
+    | Match _ -> "match"
+    | TryWith _ -> "try"
+    | _ -> failwith "impossible" in
+  Util.format4 "%s %s %swith %s"
+    s
+    (scrutinee|> term_to_string)
+    (match ret_opt with
+     | None -> ""
+     | Some (as_opt, ret, use_eq) ->
+       let s = if use_eq then "returns$" else "returns" in
+       Util.format3 "%s%s %s " s
+         (match as_opt with
+          | None -> ""
+          | Some as_ident -> Util.format1 "as %s " (string_of_id as_ident))
+         (term_to_string ret))
+    (to_string_l " | " (fun (p,w,e) -> Util.format3 "%s %s -> %s"
+      (p |> pat_to_string)
+      (match w with | None -> "" | Some e -> Util.format1 "when %s" (term_to_string e))
+      (e |> term_to_string)) branches)
+
 and calc_step_to_string (CalcStep (rel, just, next)) =
     Util.format3 "%s{ %s } %s" (term_to_string rel) (term_to_string just) (term_to_string next)
 
 and binder_to_string x =
   let s = match x.b with
-  | Variable i -> i.idText
-  | TVariable i -> Util.format1 "%s:_" (i.idText)
+  | Variable i -> (string_of_id i)
+  | TVariable i -> Util.format1 "%s:_" ((string_of_id i))
   | TAnnotated(i,t)
-  | Annotated(i,t) -> Util.format2 "%s:%s" (i.idText) (t |> term_to_string)
+  | Annotated(i,t) -> Util.format2 "%s:%s" ((string_of_id i)) (t |> term_to_string)
   | NoName t -> t |> term_to_string in
-  Util.format2 "%s%s" (aqual_to_string x.aqual) s
+  Util.format3 "%s%s%s"
+    (aqual_to_string x.aqual)
+    (attr_list_to_string x.battributes)
+    s
 
 and aqual_to_string = function
   | Some Equality -> "$"
   | Some Implicit -> "#"
-  | _ -> ""
+  | Some (Meta t) -> "#[" ^ term_to_string t ^ "]"
+  | None -> ""
+
+and attr_list_to_string = function
+  | [] -> ""
+  | l -> attrs_opt_to_string (Some l)
 
 and pat_to_string x = match x.pat with
-  | PatWild None -> "_"
-  | PatWild _ -> "#_"
+  | PatWild (None, attrs) -> attr_list_to_string attrs ^ "_"
+  | PatWild (_, attrs) -> "#" ^ (attr_list_to_string attrs) ^ "_" 
   | PatConst c -> C.const_to_string c
   | PatApp(p, ps) -> Util.format2 "(%s %s)" (p |> pat_to_string) (to_string_l " " pat_to_string ps)
-  | PatTvar (i, aq)
-  | PatVar (i,  aq) -> Util.format2 "%s%s" (aqual_to_string aq) i.idText
-  | PatName l -> l.str
+  | PatTvar (i, aq, attrs)
+  | PatVar (i,  aq, attrs) -> Util.format3 "%s%s%s"
+    (aqual_to_string aq)
+    (attr_list_to_string attrs)
+    (string_of_id i)
+  | PatName l -> (string_of_lid l)
   | PatList l -> Util.format1 "[%s]" (to_string_l "; " pat_to_string l)
   | PatTuple (l, false) -> Util.format1 "(%s)" (to_string_l ", " pat_to_string l)
   | PatTuple (l, true) -> Util.format1 "(|%s|)" (to_string_l ", " pat_to_string l)
-  | PatRecord l -> Util.format1 "{%s}" (to_string_l "; " (fun (f,e) -> Util.format2 "%s=%s" (f.str) (e |> pat_to_string)) l)
+  | PatRecord l -> Util.format1 "{%s}" (to_string_l "; " (fun (f,e) -> Util.format2 "%s=%s" ((string_of_lid f)) (e |> pat_to_string)) l)
   | PatOr l ->  to_string_l "|\n " pat_to_string l
-  | PatOp op ->  Util.format1 "(%s)" (Ident.text_of_id op)
+  | PatOp op ->  Util.format1 "(%s)" (Ident.string_of_id op)
   | PatAscribed(p,(t, None)) -> Util.format2 "(%s:%s)" (p |> pat_to_string) (t |> term_to_string)
   | PatAscribed(p,(t, Some tac)) -> Util.format3 "(%s:%s by %s)" (p |> pat_to_string) (t |> term_to_string) (tac |> term_to_string)
 
@@ -705,7 +829,7 @@ and attrs_opt_to_string = function
 
 let rec head_id_of_pat p = match p.pat with
   | PatName l -> [l]
-  | PatVar (i, _) -> [FStar.Ident.lid_of_ids [i]]
+  | PatVar (i, _, _) -> [FStar.Ident.lid_of_ids [i]]
   | PatApp(p, _) -> head_id_of_pat p
   | PatAscribed(p, _) -> head_id_of_pat p
   | _ -> []
@@ -716,26 +840,32 @@ let id_of_tycon = function
   | TyconAbstract(i, _, _)
   | TyconAbbrev(i, _, _, _)
   | TyconRecord(i, _, _, _)
-  | TyconVariant(i, _, _, _) -> i.idText
+  | TyconVariant(i, _, _, _) -> (string_of_id i)
 
 let decl_to_string (d:decl) = match d.d with
-  | TopLevelModule l -> "module " ^ l.str
-  | Open l -> "open " ^ l.str
-  | Friend l -> "friend " ^ l.str
-  | Include l -> "include " ^ l.str
-  | ModuleAbbrev (i, l) -> Util.format2 "module %s = %s" i.idText l.str
-  | TopLevelLet(_, pats) -> "let " ^ (lids_of_let pats |> List.map (fun l -> l.str) |> String.concat ", ")
-  | Main _ -> "main ..."
-  | Assume(i, _) -> "assume " ^ i.idText
-  | Tycon(_, _, tys) -> "type " ^ (tys |> List.map (fun (x,_)->id_of_tycon x) |> String.concat ", ")
-  | Val(i, _) -> "val " ^ i.idText
-  | Exception(i, _) -> "exception " ^ i.idText
+  | TopLevelModule l -> "module " ^ (string_of_lid l)
+  | Open l -> "open " ^ (string_of_lid l)
+  | Friend l -> "friend " ^ (string_of_lid l)
+  | Include l -> "include " ^ (string_of_lid l)
+  | ModuleAbbrev (i, l) -> Util.format2 "module %s = %s" (string_of_id i) (string_of_lid l)
+  | TopLevelLet(_, pats) -> "let " ^ (lids_of_let pats |> List.map (fun l -> (string_of_lid l)) |> String.concat ", ")
+  | Assume(i, _) -> "assume " ^ (string_of_id i)
+  | Tycon(_, _, tys) -> "type " ^ (tys |> List.map id_of_tycon |> String.concat ", ")
+  | Val(i, _) -> "val " ^ (string_of_id i)
+  | Exception(i, _) -> "exception " ^ (string_of_id i)
   | NewEffect(DefineEffect(i, _, _, _))
-  | NewEffect(RedefineEffect(i, _, _)) -> "new_effect " ^ i.idText
-  | Splice (ids, t) -> "splice[" ^ (String.concat ";" <| List.map (fun i -> i.idText) ids) ^ "] (" ^ term_to_string t ^ ")"
+  | NewEffect(RedefineEffect(i, _, _)) -> "new_effect " ^ (string_of_id i)
+  | LayeredEffect(DefineEffect(i, _, _, _))
+  | LayeredEffect(RedefineEffect(i, _, _)) -> "layered_effect " ^ (string_of_id i)
+  | Polymonadic_bind (l1, l2, l3, _) ->
+      Util.format3 "polymonadic_bind (%s, %s) |> %s"
+                    (string_of_lid l1) (string_of_lid l2) (string_of_lid l3)
+  | Polymonadic_subcomp (l1, l2, _) ->
+      Util.format2 "polymonadic_subcomp %s <: %s"
+                    (string_of_lid l1) (string_of_lid l2)
+  | Splice (ids, t) -> "splice[" ^ (String.concat ";" <| List.map (fun i -> (string_of_id i)) ids) ^ "] (" ^ term_to_string t ^ ")"
   | SubEffect _ -> "sub_effect"
   | Pragma _ -> "pragma"
-  | Fsdoc _ -> "fsdoc"
 
 let modul_to_string (m:modul) = match m with
     | Module (_, decls)
@@ -749,19 +879,18 @@ let decl_is_val id decl =
     | _ -> false
 
 let thunk (ens : term) : term =
-    let wildpat = mk_pattern (PatWild None) ens.range in
+    let wildpat = mk_pattern (PatWild (None, [])) ens.range in
     mk_term (Abs ([wildpat], ens)) ens.range Expr
 
+let ident_of_binder r b =
+  match b.b with
+  | Variable i
+  | TVariable i
+  | Annotated (i, _)
+  | TAnnotated (i, _) -> i
+  | NoName _ ->
+    raise_error (Fatal_MissingQuantifierBinder,
+                 "Wildcard binders in quantifiers are not allowed") r
+
 let idents_of_binders bs r =
-    bs |> List.map
-      (fun b ->
-        match b.b with
-        | Variable i
-        | TVariable i
-        | Annotated (i, _)
-        | TAnnotated (i, _) ->
-          i
-        | NoName _ ->
-          raise_error (Fatal_MissingQuantifierBinder,
-                      "Wildcard binders in quantifiers are not allowed")
-                      r)
+    bs |> List.map (ident_of_binder r)

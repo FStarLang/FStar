@@ -21,7 +21,7 @@ assume val phi : Type
 assume val psi : Type
 assume val  xi: Type
 
-[@plugin]
+[@@plugin]
 let tau () : Tac unit =
     let h = implies_intro () in
     right ();

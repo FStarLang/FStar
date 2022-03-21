@@ -52,11 +52,12 @@
   </Choose>
   <Import Project="$(FSharpTargetsPath)" />
   <ItemGroup>
+    <Compile Include="FStar.TypeChecker.Common.fsi" />
     <Compile Include="FStar.TypeChecker.Common.fs" />
     <Compile Include="FStar.TypeChecker.Env.fsi" />
     <Compile Include="FStar.TypeChecker.Env.fs" />
-    <Compile Include="boot/FStar.TypeChecker.NBETerm.fsi" />
-    <Compile Include="boot/FStar.TypeChecker.NBETerm.fs" />
+    <Compile Include="FStar.TypeChecker.NBETerm.fsi" />
+    <Compile Include="FStar.TypeChecker.NBETerm.fs" />
     <Compile Include="FStar.TypeChecker.Cfg.fsi" />
     <Compile Include="FStar.TypeChecker.Cfg.fs" />
     <Compile Include="FStar.TypeChecker.PatternUtils.fsi" />
@@ -66,14 +67,20 @@
     <Compile Include="FStar.TypeChecker.NBE.fsi" />
     <Compile Include="FStar.TypeChecker.NBE.fs" />
     <Compile Include="FStar.TypeChecker.Err.fs" />
+    <Compile Include="FStar.TypeChecker.DeferredImplicits.fsi" />
+    <Compile Include="FStar.TypeChecker.DeferredImplicits.fs" />
     <Compile Include="FStar.TypeChecker.Rel.fsi" />
     <Compile Include="FStar.TypeChecker.Rel.fs" />
+    <Compile Include="FStar.TypeChecker.Generalize.fsi" />
+    <Compile Include="FStar.TypeChecker.Generalize.fs" />
     <Compile Include="FStar.TypeChecker.Util.fsi" />
     <Compile Include="FStar.TypeChecker.Util.fs" />
-    <Compile Include="FStar.TypeChecker.DMFF.fsi" />
-    <Compile Include="FStar.TypeChecker.DMFF.fs" />
     <Compile Include="FStar.TypeChecker.TcTerm.fsi" />
     <Compile Include="FStar.TypeChecker.TcTerm.fs" />
+    <Compile Include="FStar.TypeChecker.DMFF.fsi" />
+    <Compile Include="FStar.TypeChecker.DMFF.fs" />
+    <Compile Include="FStar.TypeChecker.TcEffect.fsi" />
+    <Compile Include="FStar.TypeChecker.TcEffect.fs" />
     <Compile Include="FStar.TypeChecker.TcInductive.fsi" />
     <Compile Include="FStar.TypeChecker.TcInductive.fs" />
     <Compile Include="FStar.TypeChecker.Tc.fsi" />
@@ -87,7 +94,7 @@
       <Private>True</Private>
     </ProjectReference>
     <Reference Include="FSharp.Compatibility.OCaml">
-      <HintPath>..\VS\packages\FSharp.Compatibility.OCaml.0.1.10\lib\net40\FSharp.Compatibility.OCaml.dll</HintPath>
+      <HintPath>..\VS\packages\FSharp.Compatibility.OCaml.0.1.14\lib\net45\FSharp.Compatibility.OCaml.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="FSharp.PPrint">
@@ -99,7 +106,7 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="FSharp.Core">
-      <HintPath>..\VS\packages\FSharp.Core.4.1.18\lib\net45\FSharp.Core.dll</HintPath>
+      <HintPath>..\VS\packages\FSharp.Core.4.3.4\lib\net45\FSharp.Core.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="mscorlib" />

@@ -1,0 +1,209 @@
+[
+  "ÕÏ™®\u0014h„kýp\u0002ÀÉs¡ê",
+  [
+    [
+      "Part2.PHOAS.typ",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "49d2ca1e33fd31de7d4bbec11c247abd"
+    ],
+    [
+      "Part2.PHOAS.__proj__Arrow__item___0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_89ad2f3ebcf13da182c8948e4bde8678"
+      ],
+      0,
+      "a2b4918474d89588bf305c91b05ce1d0"
+    ],
+    [
+      "Part2.PHOAS.__proj__Arrow__item___1",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_89ad2f3ebcf13da182c8948e4bde8678"
+      ],
+      0,
+      "d0fb1565d99e53e6d19ed50c0be94d97"
+    ],
+    [
+      "Part2.PHOAS.__proj__Var__item__t",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_eeecd4ea77bbf98724603ca7300a772d"
+      ],
+      0,
+      "eaa2c897c795bb148a8e583814523a1e"
+    ],
+    [
+      "Part2.PHOAS.__proj__Var__item___1",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "data_elim_Part2.PHOAS.Var",
+        "refinement_interpretation_Tm_refine_eeecd4ea77bbf98724603ca7300a772d"
+      ],
+      0,
+      "4a6ec52295f923e3966d484c79f29eed"
+    ],
+    [
+      "Part2.PHOAS.__proj__App__item__t1",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_b02d03e9f0081ee40ab4dd8634fa7714"
+      ],
+      0,
+      "cb16e961a29e0d40c481ee2f662542c6"
+    ],
+    [
+      "Part2.PHOAS.__proj__App__item__t2",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_b02d03e9f0081ee40ab4dd8634fa7714"
+      ],
+      0,
+      "2c582f885261ccd185b13c987d376889"
+    ],
+    [
+      "Part2.PHOAS.__proj__App__item___2",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "data_elim_Part2.PHOAS.App",
+        "proj_equation_Part2.PHOAS.App_t1",
+        "proj_equation_Part2.PHOAS.App_t2",
+        "projection_inverse_Part2.PHOAS.App_t1",
+        "projection_inverse_Part2.PHOAS.App_t2",
+        "refinement_interpretation_Tm_refine_b02d03e9f0081ee40ab4dd8634fa7714"
+      ],
+      0,
+      "783a541b58893d1dd8f138c616f9743c"
+    ],
+    [
+      "Part2.PHOAS.__proj__App__item___3",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "data_elim_Part2.PHOAS.App",
+        "refinement_interpretation_Tm_refine_b02d03e9f0081ee40ab4dd8634fa7714"
+      ],
+      0,
+      "ba3e5ba354e74f3a231b1ea5e60b820e"
+    ],
+    [
+      "Part2.PHOAS.__proj__Lam__item__t1",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_7cf713abff1884147d7ff954c39c0499"
+      ],
+      0,
+      "146cfd12e3daa81e1e05ad8be14da02f"
+    ],
+    [
+      "Part2.PHOAS.__proj__Lam__item__t2",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_7cf713abff1884147d7ff954c39c0499"
+      ],
+      0,
+      "2bf8071d70c1b684a45360979d5cd609"
+    ],
+    [
+      "Part2.PHOAS.__proj__Lam__item___2",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "data_elim_Part2.PHOAS.Lam",
+        "proj_equation_Part2.PHOAS.Lam_t1",
+        "proj_equation_Part2.PHOAS.Lam_t2",
+        "projection_inverse_Part2.PHOAS.Lam_t1",
+        "projection_inverse_Part2.PHOAS.Lam_t2",
+        "refinement_interpretation_Tm_refine_7cf713abff1884147d7ff954c39c0499"
+      ],
+      0,
+      "b5e4175f2dabbff340ba9ee325cd7028"
+    ],
+    [
+      "Part2.PHOAS.denote_typ",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Part2.PHOAS_pretyping_d0a951e5feb389351eea2e8d0eeb0c2f",
+        "binder_x_d0a951e5feb389351eea2e8d0eeb0c2f_0",
+        "disc_equation_Part2.PHOAS.Arrow", "disc_equation_Part2.PHOAS.Bool",
+        "equality_tok_Part2.PHOAS.Bool@tok",
+        "fuel_guarded_inversion_Part2.PHOAS.typ",
+        "projection_inverse_BoxBool_proj_0",
+        "subterm_ordering_Part2.PHOAS.Arrow",
+        "typing_tok_Part2.PHOAS.Bool@tok"
+      ],
+      0,
+      "9676b80af5b6c34928d5b00a43a096c0"
+    ],
+    [
+      "Part2.PHOAS.denote_term0",
+      1,
+      2,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_Part2.PHOAS.denote_typ.fuel_instrumented",
+        "@query",
+        "Part2.PHOAS_interpretation_Tm_arrow_21a072829f7914957fc7b0d643c1400d",
+        "Part2.PHOAS_interpretation_Tm_arrow_36d6f29ffe36b1919fdd553f1c8a9142",
+        "binder_x_d0a951e5feb389351eea2e8d0eeb0c2f_0",
+        "binder_x_d868b15b9bff666b4a74ccad864e037c_1", "bool_inversion",
+        "constructor_distinct_Part2.PHOAS.Arrow",
+        "constructor_distinct_Part2.PHOAS.Bool",
+        "constructor_distinct_Part2.PHOAS.TT", "data_elim_Part2.PHOAS.App",
+        "data_elim_Part2.PHOAS.FF", "data_elim_Part2.PHOAS.Lam",
+        "data_elim_Part2.PHOAS.TT", "data_elim_Part2.PHOAS.Var",
+        "disc_equation_Part2.PHOAS.App", "disc_equation_Part2.PHOAS.FF",
+        "disc_equation_Part2.PHOAS.Lam", "disc_equation_Part2.PHOAS.TT",
+        "disc_equation_Part2.PHOAS.Var", "equality_tok_Part2.PHOAS.Bool@tok",
+        "equation_with_fuel_Part2.PHOAS.denote_typ.fuel_instrumented",
+        "fuel_guarded_inversion_Part2.PHOAS.term0",
+        "function_token_typing_Part2.PHOAS.denote_typ",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_Part2.PHOAS.Arrow__0",
+        "projection_inverse_Part2.PHOAS.Arrow__1",
+        "projection_inverse_Part2.PHOAS.TT_v",
+        "subterm_ordering_Part2.PHOAS.App", "typing_Part2.PHOAS.uu___is_TT",
+        "typing_Part2.PHOAS.uu___is_Var",
+        "typing_Tm_abs_5c6185031c061b91384f839962599f20",
+        "well_founded_ordering_on_codomain_Part2.PHOAS.Lam"
+      ],
+      0,
+      "c535df0240200fc7b6564f24089381f3"
+    ]
+  ]
+]

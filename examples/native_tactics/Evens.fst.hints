@@ -1,5 +1,5 @@
 [
-  "ã_tVT|,uÂá™‹¡≈Án",
+  "S¶NÉÎùHÚˇ√k∞XË\\Ã",
   [
     [
       "Evens.unary_nat",
@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "c05555f50ca86c773d41f7acb876dbb2"
+      "0bf4b2a0e8ce926561368ef66da5e7d9"
     ],
     [
       "Evens.__proj__US__item___0",
@@ -21,7 +21,7 @@
         "refinement_interpretation_Tm_refine_7094be438dbc16658c0caec70fa7452e"
       ],
       0,
-      "cd4c321e6150e43f4ac1934550b31203"
+      "30257a62cc0b99fec4b23c6f83747c8d"
     ],
     [
       "Evens.even",
@@ -30,7 +30,7 @@
       1,
       [ "@query", "assumption_Evens.unary_nat__uu___haseq" ],
       0,
-      "fb2646612498fd49820bbd3d8481a4d5"
+      "d78ccb8c068fe422b1b7b887e52bc9eb"
     ],
     [
       "Evens.__proj__Even_SSn__item__n",
@@ -43,7 +43,7 @@
         "refinement_interpretation_Tm_refine_6b35b246e3f3e217f09d76d285c6fcd3"
       ],
       0,
-      "19c158f07ce43fab8f89d4fcd492e2b0"
+      "c80a9cd884c0f04cc97e5330ad610f64"
     ],
     [
       "Evens.__proj__Even_SSn__item___1",
@@ -51,14 +51,11 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "disc_equation_Evens.Even_SSn",
-        "proj_equation_Evens.Even_SSn_n",
-        "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_Evens.Even_SSn_n",
+        "@MaxIFuel_assumption", "@query", "data_elim_Evens.Even_SSn",
         "refinement_interpretation_Tm_refine_6b35b246e3f3e217f09d76d285c6fcd3"
       ],
       0,
-      "6b6504bee58d63bf8ce1684f88affbd6"
+      "4ccbcbeed90390f71b8bc66e4d696dc8"
     ],
     [
       "Evens.nat2unary",
@@ -74,7 +71,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "4cd65aaced2535a9e7dd119a8a5598d7"
+      "f75cbead9c1418097b8b880724f4366a"
     ],
     [
       "Evens.even0",
@@ -86,7 +83,7 @@
         "equality_tok_Evens.U0@tok", "typing_tok_Evens.Even0@tok"
       ],
       0,
-      "c6b264e9efa733623611a50c54960de4"
+      "aec9123d9597868103a7ad550760435e"
     ],
     [
       "Evens.evenSSn",
@@ -95,7 +92,7 @@
       1,
       [ "@query", "true_interp" ],
       0,
-      "f9e2e2b79524eca3ba18fe755c3ba31c"
+      "06eada77b066a2004b53a6158306e868"
     ]
   ]
 ]

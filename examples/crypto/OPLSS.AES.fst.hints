@@ -1,0 +1,19 @@
+[
+  "«JV\u0018_êó·«?¡·c]˜²",
+  [
+    [
+      "OPLSS.AES.iv_cipher",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
+        "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "typing_OPLSS.AES.cipher_size", "typing_OPLSS.AES.ivsize"
+      ],
+      0,
+      "b4520ccd2178475b9b26a60218a31a9e"
+    ]
+  ]
+]

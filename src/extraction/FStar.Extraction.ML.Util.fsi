@@ -16,11 +16,12 @@
 #light "off"
 module FStar.Extraction.ML.Util
 open Prims
-open FStar
+open FStar open FStar.Compiler
+open FStar.Pervasives
 open FStar.Ident
 open FStar.Extraction.ML.Syntax
 module S = FStar.Syntax.Syntax
-module BU = FStar.Util
+module BU = FStar.Compiler.Util
 
 val codegen_fsharp : unit -> bool
 val pruneNones : list<(option<'a>)> -> list<'a>
@@ -39,7 +40,7 @@ type unfold_t = mlty -> option<mlty>
 val type_leq_c : unfold_ty:unfold_t -> e:option<mlexpr> -> t:mlty -> t':mlty -> bool * option<mlexpr>
 val type_leq : g:unfold_t -> t1:mlty -> t2:mlty -> bool
 val erase_effect_annotations: mlty -> mlty
-val is_type_abstraction : list<(BU.either<'a,'b> * 'c)> -> bool
+val is_type_abstraction : list<(either<'a,'b> * 'c)> -> bool
 val is_xtuple : list<string> * string -> option<int>
 val is_xtuple_ty : list<string> * string -> option<int>
 val resugar_exp : e:mlexpr -> mlexpr
@@ -48,8 +49,8 @@ val record_field_path : list<lident> -> list<string>
 val record_fields : fs:list<lident> -> vs:list<'a> -> list<(string * 'a)>
 
 val flatten_ns : ns:list<string> -> string
-val flatten_mlpath : ns:list<string> * n:string -> string
-val mlpath_of_lid : l:lident -> list<string> * string
+val flatten_mlpath : list<string> * string -> string
+val ml_module_name_of_lid: lident -> string
 val erasableType : unfold_ty:unfold_t -> t:mlty -> bool
 val eraseTypeDeep : unfold_ty:unfold_t -> t:mlty -> mlty
 val prims_op_equality : mlexpr
@@ -62,7 +63,7 @@ val argTypes : t:mlty -> list<mlty>
 val uncurry_mlty_fun : t:mlty -> list<mlty> * mlty
 
 val interpret_plugin_as_term_fun :
-               TypeChecker.Env.env
+              UEnv.uenv
             -> fv:S.fv
             -> t:S.typ
             -> arity:option<int>

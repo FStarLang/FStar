@@ -1,48 +1,49 @@
 open Dynlink
 
-module U = FStar_Util
+module U = FStar_Compiler_Util
 module E = FStar_Errors
+module O = FStar_Options
 
-let loaded_taclib = ref false
-
-(* We had weird failures, so don't trust in Dynlink.error_message *)
-let error_message : Dynlink.error -> string =
-    fun e ->
-    let s = match e with
-    | Not_a_bytecode_file _ -> "Not_a_bytecode_file"
-    | Inconsistent_import _ -> "Inconsistent_import"
-    | Unavailable_unit _ -> "Unavailable_unit"
-    | Unsafe_file -> "Unsafe_file"
-    | Linking_error _ -> "Linking_error"
-    | Corrupted_interface _ -> "Corrupted_interface"
-    | File_not_found _ -> "File_not_found"
-    | Cannot_open_dll _ -> "Cannot_open_dll"
-    | Inconsistent_implementation _ -> "Inconsistent_implementation"
-    in s ^ ": " ^ Dynlink.error_message e
+let perr  s   = if O.debug_any () then U.print_error s
+let perr1 s x = if O.debug_any () then U.print1_error s x
 
 let find_taclib () =
-  let r = Process.run "ocamlfind" [| "query"; "fstar-tactics-lib" |] in
-  match r with
-  | { Process.Output.exit_status = Process.Exit.Exit 0; stdout; _ } ->
-      String.trim (List.hd stdout)
-  | _ ->
-      FStar_Options.fstar_bin_directory ^ "/fstar-tactics-lib"
+  let default = FStar_Options.fstar_bin_directory ^ "/fstar-tactics-lib" in
+  try
+    begin
+      let r = Process.run "ocamlfind" [| "query"; "fstar-tactics-lib" |] in
+      match r with
+      | { Process.Output.exit_status = Process.Exit.Exit 0; stdout; _ } ->
+         String.trim (List.hd stdout)
+      | _ -> default
+    end
+  with _ -> default
 
+let dynlink fname =
+  try
+    perr ("Attempting to load " ^ fname ^ "\n");
+    Dynlink.loadfile fname
+  with Dynlink.Error e ->
+    failwith (U.format2 "Dynlinking %s failed: %s" fname (Dynlink.error_message e))
+
+let load_lib : unit -> unit =
+  let already_loaded = ref false in
+  fun () ->
+    if not (!already_loaded) then begin
+      dynlink (find_taclib () ^ "/fstartaclib.cmxs");
+      already_loaded := true;
+      perr "Loaded fstartaclib successfully\n"
+    end
+
+let try_load_lib () =
+  (* It might not be there, just try to load it and ignore if not *)
+  try load_lib ()
+  with | _ -> perr "Did NOT load fstartaclib\n"
 
 let load_tactic tac =
-  let dynlink fname =
-    try
-      print_string ("Loading plugin from " ^ fname ^ "\n");
-      Dynlink.loadfile fname
-    with Dynlink.Error e ->
-      failwith (U.format2 "Dynlinking %s failed: %s" fname (error_message e)) in
-
-  if not !loaded_taclib then begin
-    dynlink (find_taclib () ^ "/fstartaclib.cmxs");
-    loaded_taclib := true
-  end;
+  load_lib ();
   dynlink tac;
-  ignore (U.print1 "Dynlinked %s\n" tac)
+  perr1 "Loaded %s\n" tac
 
 let load_tactics tacs =
     List.iter load_tactic tacs
@@ -51,7 +52,7 @@ let load_tactics_dir dir =
     (* Dynlink all .cmxs files in the given directory *)
     Sys.readdir dir
     |> Array.to_list
-    |> List.filter (fun s -> String.sub s (String.length s - 4) 4 = "cmxs")
+    |> List.filter (fun s -> String.length s >= 5 && String.sub s (String.length s - 5) 5 = ".cmxs")
     |> List.map (fun s -> dir ^ "/" ^ s)
     |> List.iter load_tactic
 

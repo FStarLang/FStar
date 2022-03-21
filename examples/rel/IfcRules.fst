@@ -73,7 +73,7 @@ type ni_exp (env:label_fun) (e:exp) (l:label) =
 (* env,pc:l |- c
    - References with a label below l are not modified
    - Total correctness
-   - Low equivalent input heaps ==> Low equivalet output heaps
+   - Low equivalent input heaps ==> Low equivalent output heaps
 *)
 type ni_com' (env:label_fun) (c:com) (l:label) (h0: rel (option heap)) =
     (Some? (R?.l h0) /\ Some? (R?.r h0) ==>

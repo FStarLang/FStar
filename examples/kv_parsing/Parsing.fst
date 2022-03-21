@@ -166,7 +166,7 @@ let stateful_validator #t (p: erased (parser t)) =
 /// This only works when there is no structural dependency: the two parsers
 /// always run one after the other. This validator will check any combination of
 /// the results of the two parsers.
-[@"substitute"]
+[@@"substitute"]
 let then_check #t (p: erased (parser t)) (v: stateful_validator p)
                 #t' (p': erased (parser t')) (v': stateful_validator p')
                 #t'' (f: t -> t' -> t'') :
@@ -183,7 +183,7 @@ fun input ->
 
 #reset-options
 
-[@"substitute"]
+[@@"substitute"]
 let validate_done_st : stateful_validator (hide parsing_done) = fun input ->
   if U32.eq input.len 0ul then Some 0ul else None
 
@@ -273,7 +273,7 @@ let validate_one_more #t p n buf off off' h =
 // TODO: get this to extract in validate_many_st (even unfold doesn't work,
 // though it at least gets to an error "todo: translate_expr [MLE_App]")
 //unfold
-[@"substitute"]
+[@@"substitute"]
 val for_readonly :
   #t:Type0 ->
   init:t ->
@@ -333,7 +333,7 @@ let for_readonly #t init start finish #a buf inv f =
   (i, v, break)
 
 /// Validate a sequence of values from a parser (corresponding to parse_many).
-inline_for_extraction [@"substitute"]
+inline_for_extraction [@@"substitute"]
 val validate_many_st (#t:Type) (p:erased (parser t)) (v:stateful_validator p) (n:U32.t) :
     stateful_validator (elift1 (fun p -> (parse_many p (U32.v n))) p)
 let validate_many_st #t p v n = fun buf ->

@@ -17,7 +17,7 @@ module FStar.Math.Lib
 
 open FStar.Mul
 
-(* Definition of the diviion operator *)
+(* Definition of the division operator *)
 val lemma_div_def: a:nat -> b:pos -> Lemma (a = b * (a/b) + a % b)
 let lemma_div_def a b = ()
 
@@ -41,7 +41,7 @@ private let lemma_mul_minus_distr_l (a:int) (b:int) (c:int) : Lemma (a * (b - c)
   = ()
 
 (* Axiom: definition of the "b divides c" relation *)
-#reset-options "--z3rlimit 20"
+#reset-options "--z3rlimit 30"
 val slash_star_axiom: a:nat -> b:pos -> c:nat -> Lemma
   (requires (a * b = c))
   (ensures  (a = c / b))

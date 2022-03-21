@@ -27,8 +27,8 @@ let rec fib a b n =
   | _ -> fib b (a+b) (n-1)
 
 val fib_is_ok_aux : i:nat -> n:nat{i<=n} ->
-      Tot (u:unit{fib (fibonacci i) (fibonacci (i+1)) (n-i) = fibonacci n})
-      (decreases (n-i))
+      Lemma (ensures fib (fibonacci i) (fibonacci (i+1)) (n-i) = fibonacci n)
+            (decreases (n-i))
 let rec fib_is_ok_aux i n =
   if i=n then ()
   else fib_is_ok_aux (i+1) n

@@ -1,0 +1,11 @@
+>> Got issues: [
+Bug1988.fst(4,14-4,30): (Error 189) Expected expression of type "Prims.int"; got expression ""string literal"" of type "Prims.string"
+>>]
+>> Got issues: [
+Bug1988.fst(15,32-15,38): (Error 54) Prims.string is not equal to the expected type _: Bug1988.ident -> Prims.Tot Prims.string
+>>]
+>> Got issues: [
+Bug1988.fst(21,32-21,38): (Error 54) Prims.string is not a subtype of the expected type _: (*?u21*) _ -> Prims.Tot (*?u22*) _
+>>]
+Verified module: Bug1988
+All verification conditions discharged successfully

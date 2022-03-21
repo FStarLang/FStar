@@ -1,0 +1,203 @@
+[
+  "\u0014xø)“,K\u0014’ášïI¥¾Ö",
+  [
+    [
+      "ID2.return",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "b0bd2d87865cd952dae233fa919e34f4"
+    ],
+    [
+      "ID2.bind",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_interpretation_Tm_arrow_2eaa01e78f73e9bab5d0955fc1a662da",
+        "Prims_interpretation_Tm_arrow_92458cff82f9ffee1f6e26a1c0c579f3",
+        "equation_Prims.l_True", "equation_Prims.logical",
+        "equation_Prims.pure_post", "equation_Prims.pure_post_",
+        "equation_Prims.squash", "function_token_typing_Prims.l_True",
+        "interpretation_Tm_abs_5e34897418ce4950a4effcc8c159cf53",
+        "interpretation_Tm_abs_6fb96edbc059ad811f34c5790ded4e4c",
+        "interpretation_Tm_abs_d0f415a5361a9d7988d8e425dc193472",
+        "refinement_interpretation_Tm_refine_134584ea4bdb9bfdebfec754be7787e9",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
+        "refinement_interpretation_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
+        "true_interp", "typing_Tm_abs_5e34897418ce4950a4effcc8c159cf53",
+        "typing_Tm_abs_6fb96edbc059ad811f34c5790ded4e4c",
+        "typing_Tm_abs_d0f415a5361a9d7988d8e425dc193472"
+      ],
+      0,
+      "870e1fd3e07407cf6d7c6204410b68d6"
+    ],
+    [
+      "ID2.subcomp",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_interpretation_Tm_arrow_2eaa01e78f73e9bab5d0955fc1a662da",
+        "Prims_interpretation_Tm_arrow_92458cff82f9ffee1f6e26a1c0c579f3",
+        "equation_ID2.sat", "equation_Prims.l_True",
+        "equation_Prims.logical", "equation_Prims.pure_post",
+        "equation_Prims.pure_post_", "function_token_typing_Prims.l_True",
+        "interpretation_Tm_abs_5e34897418ce4950a4effcc8c159cf53",
+        "refinement_interpretation_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
+        "typing_Tm_abs_5e34897418ce4950a4effcc8c159cf53"
+      ],
+      0,
+      "a33238e4c15ff078d1931741cf3d1138"
+    ],
+    [
+      "ID2.if_then_else_wp",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_ID2.w",
+        "refinement_interpretation_Tm_refine_4c9fcb91d9b375e2e26411eb85d293f5"
+      ],
+      0,
+      "52b6e0f4b4ea30045093f97323a9fc12"
+    ],
+    [
+      "ID2.ID",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "b2t_def", "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "2b5f8e6dfd04714768eeec8c8153e9e7"
+    ],
+    [
+      "ID2.ID",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_de09779676242898794a0b057d5f5bb4"
+      ],
+      0,
+      "b49ba45612ec7da6c6081a2117c4a42f"
+    ],
+    [
+      "ID2.lift_pure_nd",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_interpretation_Tm_arrow_2eaa01e78f73e9bab5d0955fc1a662da",
+        "Prims_interpretation_Tm_arrow_92458cff82f9ffee1f6e26a1c0c579f3",
+        "eq2-interp", "equation_ID2.nomon", "equation_ID2.sat",
+        "equation_ID2.w", "equation_Prims.l_Forall", "equation_Prims.l_True",
+        "equation_Prims.logical", "equation_Prims.pure_post",
+        "equation_Prims.pure_post_", "equation_Prims.squash",
+        "function_token_typing_Prims.l_True",
+        "interpretation_Tm_abs_5e34897418ce4950a4effcc8c159cf53",
+        "interpretation_Tm_abs_8d742b80e8981705a8e66d47bbb1482f",
+        "interpretation_Tm_abs_927a276ce23d88dbe79a87bbe56dc445",
+        "l_imp-interp", "l_quant_interp_baea33a345b303ab420ed75b1e4a600f",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
+        "refinement_interpretation_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
+        "token_correspondence_ID2.nomon",
+        "typing_Tm_abs_5e34897418ce4950a4effcc8c159cf53",
+        "typing_Tm_abs_927a276ce23d88dbe79a87bbe56dc445"
+      ],
+      0,
+      "4a860e71097c4d8ee34c15443d5e5f5b"
+    ],
+    [
+      "ID2.count",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "26c8c8548a8d0c393b84e2bb230b32de"
+    ],
+    [
+      "ID2.count",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "binder_x_bb4e1c9af0265270f8e7a5f250f730e2_0",
+        "equality_tok_Prims.LexTop@tok", "equation_Prims.nat",
+        "function_token_typing_Prims.__cache_version_number__",
+        "int_inversion", "int_typing", "primitive_Prims.op_Equality",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "well-founded-ordering-on-nat"
+      ],
+      0,
+      "f6f6a4ba9201ea9dafb80bedcbb02867"
+    ],
+    [
+      "ID2.test_f",
+      1,
+      2,
+      1,
+      [ "@query", "int_typing" ],
+      0,
+      "fd7900cb08e2b33155d0f1afc0a32572"
+    ],
+    [
+      "ID2.test_f",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "957597df85fa3f7b55363b6d05f78961"
+    ],
+    [
+      "ID2.test_2",
+      1,
+      2,
+      1,
+      [ "@query", "int_typing" ],
+      0,
+      "fefcf5f6ad76d8bafc43fb8c85d135c8"
+    ],
+    [
+      "ID2.Id",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "903c8a6093c5ae93986b61f1928e778c"
+    ],
+    [
+      "ID2.sum",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "binder_x_66b03f5c7897b05649fed8196554c587_0",
+        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "fuel_guarded_inversion_Prims.list",
+        "function_token_typing_Prims.__cache_version_number__",
+        "proj_equation_Prims.Cons_tl", "projection_inverse_BoxBool_proj_0",
+        "subterm_ordering_Prims.Cons"
+      ],
+      0,
+      "0191e87c0e0e03d06e682cef696f473c"
+    ]
+  ]
+]

@@ -5,7 +5,7 @@ module FStar.Endianness
 ///
 /// The functions in this module aim to be as generic as possible, in order to
 /// facilitate compatibility with:
-/// - Vale's model of machine integers (nat64 et. al.), which does not rely on
+/// - Vale's model of machine integers (nat64 et al.), which does not rely on
 ///   FStar's machine integers
 /// - HACL*'s Lib.IntTypes module, which exposes a universal indexed integer
 ///   type but uses F* machine integers under the hood.
@@ -27,7 +27,7 @@ module U64 = FStar.UInt64
 module Math = FStar.Math.Lemmas
 module S = FStar.Seq
 
-noextract
+[@@ noextract_to "Kremlin"]
 type bytes = S.seq U8.t
 
 open FStar.Mul
@@ -39,10 +39,10 @@ open FStar.Mul
 /// This is our spec, to be audited. From bytes to nat.
 
 /// lt_to_n interprets a byte sequence as a little-endian natural number
-val le_to_n : b:bytes -> Tot nat (decreases (S.length b))
+val le_to_n : b:bytes -> Tot nat
 
 /// be_to_n interprets a byte sequence as a big-endian natural number
-val be_to_n : b:bytes -> Tot nat (decreases (S.length b))
+val be_to_n : b:bytes -> Tot nat
 
 /// Induction for le_to_n and be_to_n
 
@@ -268,7 +268,7 @@ val be_of_seq_uint32_base (s1: S.seq U32.t) (s2: S.seq U8.t): Lemma
     S.length s2 = 4 /\
     be_to_n s2 = U32.v (S.index s1 0)))
   (ensures (S.equal s2 (be_of_seq_uint32 s1)))
-  [ SMTPat (be_to_n s2 = U32.v (S.index s1 0)) ]
+  [ SMTPat (be_to_n s2); SMTPat (U32.v (S.index s1 0)) ]
 
 val le_of_seq_uint32_base (s1: S.seq U32.t) (s2: S.seq U8.t): Lemma
   (requires (
@@ -276,7 +276,7 @@ val le_of_seq_uint32_base (s1: S.seq U32.t) (s2: S.seq U8.t): Lemma
     S.length s2 = 4 /\
     le_to_n s2 = U32.v (S.index s1 0)))
   (ensures (S.equal s2 (le_of_seq_uint32 s1)))
-  [ SMTPat (le_to_n s2 = U32.v (S.index s1 0)) ]
+  [ SMTPat (le_to_n s2); SMTPat (U32.v (S.index s1 0)) ]
 
 val be_of_seq_uint64_base (s1: S.seq U64.t) (s2: S.seq U8.t): Lemma
   (requires (
@@ -284,7 +284,7 @@ val be_of_seq_uint64_base (s1: S.seq U64.t) (s2: S.seq U8.t): Lemma
     S.length s2 = 8 /\
     be_to_n s2 = U64.v (S.index s1 0)))
   (ensures (S.equal s2 (be_of_seq_uint64 s1)))
-  [ SMTPat (be_to_n s2 = U64.v (S.index s1 0)) ]
+  [ SMTPat (be_to_n s2); SMTPat (U64.v (S.index s1 0)) ]
 
 val be_of_seq_uint32_append (s1 s2: S.seq U32.t): Lemma
   (ensures (

@@ -1,0 +1,19 @@
+[
+  "ΘÒ\n\u0014Δειω/„µ\u0001χ\u000eΧ",
+  [
+    [
+      "FStar.Reflection.Types.name",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "assumption_Prims.list__uu___haseq", "equation_Prims.eqtype",
+        "function_token_typing_Prims.string",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "1b90d989ef130f31f1eb1ec4fcea1e0b"
+    ]
+  ]
+]

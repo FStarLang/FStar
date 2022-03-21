@@ -50,26 +50,25 @@ unfold
 let only (#a:Type0) (r:ref a) :GTot (Set.set nat)
   = Heap.only r
 
-abstract let recall (#a:Type0) (r:ref a)
-  :STATE unit (fun p h -> h `contains` r ==> p () h)
-  = recall r
+val recall (#a:Type0) (r:ref a) : STATE unit (fun p h -> h `contains` r ==> p () h)
+let recall #_ r = recall r
 
-abstract let alloc (#a:Type0) (init:a)
+val alloc (#a:Type0) (init:a)
   :ST (ref a)
       (fun _       -> True)
       (fun h0 r h1 -> fresh r h0 h1 /\ modifies Set.empty h0 h1 /\ sel h1 r == init)
-  = alloc init
+let alloc #_ init = alloc init
 
-abstract let read (#a:Type0) (r:ref a) :STATE a (fun p h -> p (sel h r) h)
-  = read r
+val read (#a:Type0) (r:ref a) :STATE a (fun p h -> p (sel h r) h)
+let read #_ r = read r
 
-abstract let write (#a:Type0) (r:ref a) (v:a)
+val write (#a:Type0) (r:ref a) (v:a)
   :ST unit (fun _ -> True) (fun h0 _ h1 -> h0 `contains` r /\ modifies (only r) h0 h1 /\ equal_dom h0 h1 /\ sel h1 r == v)
-  = write r v
+let write #_ r v = write r v
 
-abstract let op_Bang (#a:Type0) (r:ref a) :STATE a (fun p h -> p (sel h r) h)
-  = read r
+val op_Bang (#a:Type0) (r:ref a) :STATE a (fun p h -> p (sel h r) h)
+let op_Bang #_ r = read r
 
-abstract let op_Colon_Equals (#a:Type0) (r:ref a) (v:a)
+val op_Colon_Equals (#a:Type0) (r:ref a) (v:a)
   :ST unit (fun _ -> True) (fun h0 _ h1 -> h0 `contains` r /\ modifies (only r) h0 h1 /\ equal_dom h0 h1 /\ sel h1 r == v)
-  = write r v
+let op_Colon_Equals #_ r v = write r v

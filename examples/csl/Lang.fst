@@ -68,7 +68,6 @@ let rec wpsep_command (#a:Type0) (c:command a) :st_wp a
        * again into h1' and h1'', where c2 runs on h1' resulting in h2.
        * The final heap is then join of h2 and h1''.
        *)
-      FStar.Classical.forall_intro (FStar.WellFounded.axiom1 #a #(command b) c2);
       fun p h3 -> exists (h2':heap) (h2'':heap). h3 == join_tot h2' h2'' /\
      (wpsep_command c1) (fun x h1 -> exists (h1':heap) (h1'':heap). (join_tot h1 h2'') == (join_tot h1' h1'') /\
      (wpsep_command (c2 x)) (fun y h2 -> p y (join_tot h2 h1'')) h1') h2'

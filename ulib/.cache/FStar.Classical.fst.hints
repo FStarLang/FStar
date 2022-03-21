@@ -1,0 +1,276 @@
+[
+  "\u0016TãJ0‰×ä÷\n†¨Y\u0013Y—",
+  [
+    [
+      "FStar.Classical.give_witness",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "66be3ab7eb4638b2c1e1b9bc811941f3"
+    ],
+    [
+      "FStar.Classical.give_witness_from_squash",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "568c56a460fd89b89a56f68f467960fc"
+    ],
+    [
+      "FStar.Classical.get_squashed",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "e7d28cea28c27ed51f2f6bdb8bef6038"
+    ],
+    [
+      "FStar.Classical.get_equality",
+      1,
+      2,
+      1,
+      [ "@query", "equation_Prims.eq2" ],
+      0,
+      "5b6f4b8ff91e90515bc473483a61366e"
+    ],
+    [
+      "FStar.Classical.impl_intro",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "e39f347041c7f4e491565d1b789629f2"
+    ],
+    [
+      "FStar.Classical.move_requires",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Prims.Left",
+        "disc_equation_Prims.Right", "equation_Prims.l_not",
+        "fuel_guarded_inversion_Prims.sum",
+        "projection_inverse_BoxBool_proj_0"
+      ],
+      0,
+      "edb4cea9e1b38d6bc4d76db73ecbfe9e"
+    ],
+    [
+      "FStar.Classical.impl_intro_gen",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "5c57d7adcfdbe853cdaeed9b80170729"
+    ],
+    [
+      "FStar.Classical.impl_intro_gen",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "cc3e2caeb3d9bdb24d6f0bf884a6316a"
+    ],
+    [
+      "FStar.Classical.impl_intro_gen",
+      3,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "ed8d7f041a79d4057b1680be4b138371"
+    ],
+    [
+      "FStar.Classical.get_forall",
+      1,
+      2,
+      1,
+      [ "@query", "equation_Prims.l_Forall" ],
+      0,
+      "2a72a249dfb71116792efdb40bc11e6a"
+    ],
+    [
+      "FStar.Classical.forall_intro_gtot",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "342a0dc70ee756a37e03a786edddb699"
+    ],
+    [
+      "FStar.Classical.lemma_forall_intro_gtot",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "e532adbf481895d223de93b093defd4f"
+    ],
+    [
+      "FStar.Classical.gtot_to_lemma",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "e06060006a2f7beb8549558cdc5a497f"
+    ],
+    [
+      "FStar.Classical.forall_intro",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "c3a332c7bc25aac8d4c265f2711a1d55"
+    ],
+    [
+      "FStar.Classical.forall_impl_intro",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "509f5329d77bc15c1af39fbf46b87984"
+    ],
+    [
+      "FStar.Classical.ghost_lemma",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Prims.Left",
+        "disc_equation_Prims.Right", "equation_Prims.l_not",
+        "fuel_guarded_inversion_Prims.sum",
+        "projection_inverse_BoxBool_proj_0"
+      ],
+      0,
+      "e0d3432f682de9c795f9c7ff87adf4cb"
+    ],
+    [
+      "FStar.Classical.exists_intro",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "30179858c6be8b2580c25d0d152f0eb1"
+    ],
+    [
+      "FStar.Classical.exists_intro_not_all_not",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
+        "equation_Prims.l_False", "equation_Prims.l_Forall",
+        "equation_Prims.l_imp", "equation_Prims.l_not",
+        "equation_Prims.squash", "false_interp",
+        "l_quant_interp_07e3de4ecd2b786690bc7e98f79b3aed",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
+        "unit_typing"
+      ],
+      0,
+      "eddc880c1475c40d3b0843ed0cea2c5b"
+    ],
+    [
+      "FStar.Classical.forall_to_exists",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "a598ec135cf5ebfb4763eb1767a0dde0"
+    ],
+    [
+      "FStar.Classical.forall_to_exists_2",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "001b1bde4b40d9b44896827ca88eee9b"
+    ],
+    [
+      "FStar.Classical.exists_elim",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "da18e21e9c9af18fcc9cce1d5a50a924"
+    ],
+    [
+      "FStar.Classical.or_elim",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "53ae11a26728655702fb37bd9b5e9a21"
+    ],
+    [
+      "FStar.Classical.or_elim",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "b02675b841e5dc451252caf8bd069605"
+    ],
+    [
+      "FStar.Classical.or_elim",
+      3,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "480687cc295ad630f2ceef0db6d04697"
+    ],
+    [
+      "FStar.Classical.excluded_middle",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "718ff204fc61d38783847ba2f2095438"
+    ]
+  ]
+]

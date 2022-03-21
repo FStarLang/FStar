@@ -796,7 +796,7 @@ val new_region_modifies
   (r0: HS.rid)
   (col: option int)
 : Lemma
-  (requires (HST.is_eternal_region r0 /\ HS.live_region m0 r0 /\ (None? col \/ HS.is_eternal_color (Some?.v col))))
+  (requires (HST.is_eternal_region r0 /\ HS.live_region m0 r0 /\ (None? col \/ HS.is_heap_color (Some?.v col))))
   (ensures (
     let (_, m1) = HS.new_eternal_region m0 r0 col in
     modifies (loc_none #_ #c) m0 m1
@@ -854,7 +854,7 @@ val modifies_ralloc_post
   (i: HS.rid)
   (init: a)
   (h: HS.mem)
-  (x: HST.mreference a rel { HST.is_eternal_region (HS.frameOf x) } )
+  (x: HST.mreference a rel)
   (h' : HS.mem)
 : Lemma
   (requires (HST.ralloc_post i init h x h'))

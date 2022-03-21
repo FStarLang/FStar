@@ -15,11 +15,12 @@
 *)
 #light "off"
 module FStar.TypeChecker.Tc
-open FStar.ST
-open FStar.All
+open FStar.Compiler.Effect
+open FStar.Compiler.Effect
 open FStar.Syntax.Syntax
 open FStar.TypeChecker.Env
 open FStar.TypeChecker.Common
+module EMB = FStar.Syntax.Embeddings
 
 
 val check_module: env -> modul -> bool -> modul * env
@@ -30,7 +31,6 @@ val push_context: env -> string -> env
 val snapshot_context: env -> string -> ((int * int * solver_depth_t * int) * env)
 val rollback_context: solver_t -> string -> option<(int * int * solver_depth_t * int)> -> env
 
-val tc_decls: env -> list<sigelt> -> list<sigelt> * list<sigelt> * env
-val tc_partial_modul: env -> modul -> modul * list<sigelt> * env
+val tc_decls: env -> list<sigelt> -> list<sigelt> * env
+val tc_partial_modul: env -> modul -> modul * env
 val tc_more_partial_modul: env -> modul -> list<sigelt> -> modul * list<sigelt> * env
-val extract_interface: env -> modul -> modul

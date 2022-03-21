@@ -33,26 +33,26 @@ type cipher = (CPA.cipher * MAC.tag)
 type log_t (r:rid) = Monotonic.Seq.log_t r (CPA.msg * cipher)
 
 
-abstract noeq type key =
+(* abstract *) noeq type key =
   | Key:  #region:rid ->
                ke:CPA.key { extends (CPA.Key?.region ke) region  } ->
                km:MAC.key { extends (MAC.Key?.region km) region /\
                  (disjoint( CPA.Key?.region ke) (MAC.Key?.region km)) } ->
                log:log_t region -> key
 
-abstract let get_log (m:mem) (k:key) =
+(* abstract *) let get_log (m:mem) (k:key) =
   sel m k.log
 
 
-abstract let get_mac_log (m:mem) (k:key) =
+(* abstract *) let get_mac_log (m:mem) (k:key) =
   sel m (MAC.Key?.log k.km)
 
-abstract let get_cpa_log (m:mem) (k:key) =
+(* abstract *) let get_cpa_log (m:mem) (k:key) =
   sel m (CPA.Key?.log k.ke)
 
 
 // BEGIN: EtMAEInvariant
-abstract let invariant (h:mem) (k:key) =
+(* abstract *) let invariant (h:mem) (k:key) =
   let log = get_log h k in
   let mac_log = get_mac_log h k in
   let cpa_log = get_cpa_log h k in
@@ -73,7 +73,7 @@ abstract let invariant (h:mem) (k:key) =
 
 
 
-abstract let genPost parent h0 (k:key) h1 =
+(* abstract *) let genPost parent h0 (k:key) h1 =
     modifies Set.empty h0 h1
   /\ extends k.region parent
   /\ HyperStack.fresh_region k.region h0 h1
@@ -83,7 +83,7 @@ abstract let genPost parent h0 (k:key) h1 =
   /\ invariant h1 k
 
 
-abstract val keygen: parent:rid -> ST key
+(* abstract *) val keygen: parent:rid -> ST key
   (requires (fun _ -> HST.witnessed (HST.region_contains_pred parent)))
   (ensures  (genPost parent))
 
@@ -96,11 +96,11 @@ let keygen parent =
   Key #region ke ka log
 
 
-abstract let region_of (k:key) :rid = k.region
+(* abstract *) let region_of (k:key) :rid = k.region
 
-abstract let log_of (k:key) :(log_t (region_of k)) = k.log
+(* abstract *) let log_of (k:key) :(log_t (region_of k)) = k.log
 
-abstract val encrypt: k:key -> m:Plain.plain -> ST cipher
+(* abstract *) val encrypt: k:key -> m:Plain.plain -> ST cipher
   (requires (fun h0 -> invariant h0 k))
   (ensures  (fun h0 c h1 ->
     (let log0 = get_log h0 k in
@@ -121,7 +121,7 @@ let encrypt k plain =
   (c, t)
 // END: EtMAEEncrypt
 
-abstract val decrypt: k:key -> c:cipher -> ST (option Plain.plain)
+(* abstract *) val decrypt: k:key -> c:cipher -> ST (option Plain.plain)
   (requires (fun h0 -> invariant h0 k))
   (ensures (fun h0 res h1 ->
     modifies_none h0 h1 /\

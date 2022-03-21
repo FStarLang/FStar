@@ -38,7 +38,7 @@ let t = uint128
 let _ = intro_ambient n
 let _ = intro_ambient t
 
-noextract
+[@@ noextract_to "Kremlin"]
 let v x = U64.v x.low + (U64.v x.high) * (pow2 64)
 
 let div_mod (x:nat) (k:nat{k > 0}) : Lemma (x / k * k + x % k == x) = ()
@@ -137,26 +137,25 @@ let mod_add_small n1 n2 k =
   mod_add n1 n2 k;
   Math.small_modulo_lemma_1 (n1%k + n2%k) k
 
-val pow2_plus_pat: n1:nat -> n2:nat -> Lemma (pow2 n1 * pow2 n2 == pow2 (n1 + n2))
-  [SMTPat (pow2 n1 * pow2 n2)]
-let pow2_plus_pat n1 n2 = Math.pow2_plus n1 n2
-
-val mod_mul_pat: n:nat -> k1:pos -> k2:pos ->
-  Lemma ((n % k2) * k1 == (n * k1) % (k1*k2))
-  [SMTPat ((n % k2) * k1)]
-let mod_mul_pat n k1 k2 = mod_mul n k1 k2
-
-val mod_mod_pat: a:nat -> k:nat{k>0} -> k':nat{k'>0} ->
-    Lemma (requires (k' >= k))
-          (ensures ((a % k) % k' == a % k))
-    [SMTPat ((a % k) % k')]
-let mod_mod_pat a k k' =
-  assert (a % k < k)
-
 #set-options "--z3rlimit 20"
+
+#push-options "--warn_error -271"
 let add_mod (a b: t) : Pure t
   (requires True)
   (ensures (fun r -> (v a + v b) % pow2 128 = v r)) =
+
+  let mod_mul_pat (n:nat) (k1:pos) (k2:pos)
+    : Lemma ((n % k2) * k1 == (n * k1) % (k1*k2))
+      [SMTPat ()]
+    = mod_mul n k1 k2 in
+
+  let mod_mod_pat (a:nat) (k k':pos)
+    : Lemma
+      (requires (k' >= k))
+      (ensures ((a % k) % k' == a % k))
+      [SMTPat ()]
+    = assert (a % k < k) in
+
   let l = U64.add_mod a.low b.low in
   let r = { low = l;
             high = U64.add_mod (U64.add_mod a.high b.high) (carry l b.low)} in
@@ -189,6 +188,8 @@ let add_mod (a b: t) : Pure t
           b_h * pow2 64 +
           a_l + b_l) % pow2 128);
   r
+#pop-options
+
 #set-options "--z3rlimit 5"
 
 let sub (a b: t) : Pure t
@@ -261,7 +262,7 @@ let sub_mod_wrap_ok (a b:t) : Lemma
     then sub_mod_wrap1_ok a b
     else sub_mod_wrap2_ok a b
 
-#set-options "--z3rlimit 20"
+#set-options "--z3rlimit 40"
 let sub_mod (a b: t) : Pure t
   (requires True)
   (ensures (fun r -> v r = (v a - v b) % pow2 128)) =
@@ -907,6 +908,7 @@ let mul_wide_high (x y: U64.t) =
     (phl x y + pll_h x y) / pow2 32 +
     (plh x y + (phl x y + pll_h x y) % pow2 32) / pow2 32
 
+inline_for_extraction noextract
 let mul_wide_impl_t' (x y: U64.t) : Pure (tuple4 U64.t U64.t U64.t U64.t)
   (requires True)
   (ensures (fun r -> let (u1, w3, x', t') = r in
@@ -936,6 +938,7 @@ let u32_combine' (hi lo: U64.t) : Pure U64.t
   U64.add lo (U64.shift_left hi u32_32)
 
 #set-options "--z3rlimit 20"
+inline_for_extraction noextract
 let mul_wide_impl (x: U64.t) (y: U64.t) :
     Tot (r:t{U64.v r.low == mul_wide_low x y /\
              U64.v r.high == mul_wide_high x y % pow2 64}) =

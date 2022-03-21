@@ -1,0 +1,41 @@
+[
+  "{\u0006çŸˇ^§möÁ˘ë0\u0000¨?",
+  [
+    [
+      "Splice2.uu___0",
+      1,
+      2,
+      1,
+      [ "@query", "equation_Splice.x" ],
+      0,
+      "f601047df21b765e78048a29e00a1862"
+    ],
+    [
+      "Splice2.uu___1",
+      1,
+      2,
+      1,
+      [ "@query", "equation_Splice.y" ],
+      0,
+      "238cef1d01d1ddc3e11061a1b4c550c7"
+    ],
+    [
+      "Splice2.uu___0",
+      2,
+      2,
+      1,
+      [ "@query", "equation_Splice.x" ],
+      0,
+      "dff46b7a39b7264d275476387c6842e8"
+    ],
+    [
+      "Splice2.uu___1",
+      2,
+      2,
+      1,
+      [ "@query", "equation_Splice.y" ],
+      0,
+      "adde1099dc385608e263dc3b890f4a07"
+    ]
+  ]
+]

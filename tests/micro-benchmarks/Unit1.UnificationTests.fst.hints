@@ -1,0 +1,33 @@
+[
+  "ú«Ê”xâí\u0005Oyf¾™ê\u0005ô",
+  [
+    [
+      "Unit1.UnificationTests.t_indexed",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_Unit1.UnificationTests.X",
+        "disc_equation_Unit1.UnificationTests.Y",
+        "fuel_guarded_inversion_Unit1.UnificationTests.some_enum"
+      ],
+      0,
+      "c4573d17f622d69ef13cc2bc68bca121"
+    ],
+    [
+      "Unit1.UnificationTests.t_indexed",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_Unit1.UnificationTests.X",
+        "disc_equation_Unit1.UnificationTests.Y",
+        "fuel_guarded_inversion_Unit1.UnificationTests.some_enum"
+      ],
+      0,
+      "357470b1e0ca892eff509c28b3e97c18"
+    ]
+  ]
+]

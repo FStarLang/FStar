@@ -30,7 +30,7 @@ let assumption' () : Tac unit =
     apply_raw (`FStar.Squash.return_squash);
     assumption ()
 
-[@plugin]
+[@@plugin]
 let tau () : Tac unit =
     let _ = implies_intro () in
     let _ = implies_intro () in

@@ -21,7 +21,7 @@ all: verify-all
 x: $(shell rm -f _cache/Bench.*.fst.checked)
 
 ../CanonCommSemiring.cmxs:
-	$(MAKE) -C .. canon-native
+	+$(MAKE) -C .. canon-native
 
 $(CACHE_DIR):
 	mkdir -p $@

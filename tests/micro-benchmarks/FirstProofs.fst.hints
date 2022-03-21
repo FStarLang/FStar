@@ -1,0 +1,166 @@
+[
+  "hÏ.‹Ø¡oíðÁB\róO\u0012}",
+  [
+    [
+      "FirstProofs.factorial",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_bb4e1c9af0265270f8e7a5f250f730e2_0", "equation_Prims.nat",
+        "int_inversion", "int_typing", "primitive_Prims.op_Equality",
+        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "well-founded-ordering-on-nat"
+      ],
+      0,
+      "8c1071b0d5f126bd714aa74c93dbda11"
+    ],
+    [
+      "FirstProofs.factorial_is_positive",
+      1,
+      2,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_FirstProofs.factorial.fuel_instrumented",
+        "@fuel_irrelevance_FirstProofs.factorial.fuel_instrumented",
+        "@query", "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "binder_x_bb4e1c9af0265270f8e7a5f250f730e2_0", "equation_Prims.nat",
+        "equation_with_fuel_FirstProofs.factorial.fuel_instrumented",
+        "function_token_typing_Prims.__cache_version_number__",
+        "int_inversion", "int_typing", "primitive_Prims.op_Equality",
+        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_cc98951263b359d7650ab45083f72aaa",
+        "well-founded-ordering-on-nat"
+      ],
+      0,
+      "cfcdefdc1f65fa322d888d7f241224ef"
+    ],
+    [
+      "FirstProofs.factorial_is_increasing",
+      1,
+      4,
+      2,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_FirstProofs.factorial.fuel_instrumented",
+        "@fuel_irrelevance_FirstProofs.factorial.fuel_instrumented",
+        "@query", "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "binder_x_cc4f0568bcfe0e328e96ec8a8f1cce9a_0", "equation_Prims.nat",
+        "equation_with_fuel_FirstProofs.factorial.fuel_instrumented",
+        "function_token_typing_Prims.__cache_version_number__",
+        "int_inversion", "int_typing", "primitive_Prims.op_Equality",
+        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_45626e3fb191d65dc06c4dc9870b6b11",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_a742c27047faf8f9a8f6263ecd2e6f8e",
+        "well-founded-ordering-on-nat"
+      ],
+      0,
+      "cc8f833eb97fd691f7ad4d8d81c7f908"
+    ],
+    [
+      "FirstProofs.factorial_is_doubling",
+      1,
+      4,
+      0,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_FirstProofs.factorial.fuel_instrumented",
+        "@fuel_irrelevance_FirstProofs.factorial.fuel_instrumented",
+        "@query", "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "binder_x_341f51172cbc07bb6db29a15470e13c0_0", "equation_Prims.nat",
+        "equation_with_fuel_FirstProofs.factorial.fuel_instrumented",
+        "function_token_typing_Prims.__cache_version_number__",
+        "int_inversion", "int_typing", "primitive_Prims.op_Equality",
+        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_3fd582fff7abe35f926b0f5977b70ae5",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "well-founded-ordering-on-nat"
+      ],
+      0,
+      "ab73d4594c837088bd10b7987b977ee2"
+    ],
+    [
+      "FirstProofs.fibonacci",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
+        "int_inversion", "int_typing", "primitive_Prims.op_Addition",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "well-founded-ordering-on-nat"
+      ],
+      0,
+      "be80841f0f6e51753315879b93bdd0be"
+    ],
+    [
+      "FirstProofs.fibonacci_is_increasing",
+      1,
+      2,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_FirstProofs.fibonacci.fuel_instrumented",
+        "@fuel_irrelevance_FirstProofs.fibonacci.fuel_instrumented",
+        "@query", "binder_x_bb4e1c9af0265270f8e7a5f250f730e2_0",
+        "equation_Prims.nat",
+        "equation_with_fuel_FirstProofs.fibonacci.fuel_instrumented",
+        "int_inversion", "int_typing", "primitive_Prims.op_Addition",
+        "primitive_Prims.op_GreaterThan", "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_d6773504ead7ffb1521ad91f1b0cdeaa",
+        "token_correspondence_FirstProofs.fibonacci.fuel_instrumented",
+        "typing_FirstProofs.fibonacci", "well-founded-ordering-on-nat"
+      ],
+      0,
+      "c637c836601d4ad2c1df45d451dbee10"
+    ],
+    [
+      "FirstProofs.factorial",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_bb4e1c9af0265270f8e7a5f250f730e2_0", "equation_Prims.nat",
+        "int_inversion", "int_typing", "primitive_Prims.op_Equality",
+        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "well-founded-ordering-on-nat"
+      ],
+      0,
+      "1daa2e70c5afdf9e88d34aeb1afc8531"
+    ],
+    [
+      "FirstProofs.fibonacci",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
+        "int_inversion", "int_typing", "primitive_Prims.op_Addition",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "well-founded-ordering-on-nat"
+      ],
+      0,
+      "f5d1c9411959365bc63de586b77959d7"
+    ]
+  ]
+]

@@ -31,9 +31,6 @@ module Buffer = LowStar.Buffer
 
 module ST = FStar.HyperStack.ST
 
-type u32 = UInt32.t
-
-type loc = LowStar.Modifies.loc
 
 (*
  * We currently model the reading side of TLS
@@ -47,7 +44,7 @@ type loc = LowStar.Modifies.loc
  * 
  * We also keep msgs: list of all subsequences in the buffer that don't contain a 0ul
  *)
-abstract noeq type hsl_state =
+noeq type hsl_state =
   | Mk_state: len:u32 ->
               buf:Buffer.buffer u32{Buffer.len buf == len} ->
               p0:reference u32 ->
@@ -56,71 +53,14 @@ abstract noeq type hsl_state =
 	      hsl_state
 
 (* abstract getters *)
-abstract let hsl_get_len (st:hsl_state) :u32 = st.len
-abstract let hsl_get_buf (st:hsl_state) :Buffer.buffer u32 = st.buf
-abstract let hsl_get_p0 (st:hsl_state) :reference u32 = st.p0
-abstract let hsl_get_p1 (st:hsl_state) :reference u32 = st.p1
-abstract let hsl_get_msgs (st:hsl_state) :reference (list (u32 * u32)) = st.msgs
-
-(* Liveness and disjointness *)
-[@"opaque_to_smt"]
-unfold private let liveness_and_disjointness (st:hsl_state) (h:mem) :Type0 =
-  let len, buf, p0, p1, msgs = hsl_get_len st, hsl_get_buf st, hsl_get_p0 st, hsl_get_p1 st, hsl_get_msgs st in
-  
-  loc_pairwise_disjoint [
-    Mods.loc_mreference p0;
-    Mods.loc_mreference p1;
-    Mods.loc_buffer buf;
-    Mods.loc_mreference msgs;
-  ] /\
-
-  Buffer.live h buf /\ contains h p0 /\ contains h p1 /\ contains h msgs /\  //liveness
-  Buffer.len buf == len /\  //buffer length
-  sel h p1 <=^ len /\  //p1 is leq len
-  sel h p0 <=^ sel h p1  //p0 is leq p1
-
-(*
- * An invariant on the sequence content between p0 and p1 in the buffer, that it doesn't contains 0ul
- *
- *)
-[@"opaque_to_smt"]
-unfold private let null_terminator_invariant_helper
-  (buf:Buffer.buffer u32) (p0:u32) (p1:u32{p1 <=^ Buffer.len buf /\ p0 <=^ p1}) (h:mem)
-  = let subseq_size = p1 -^ p0 in
-    let subseq = Buffer.as_seq h (Buffer.gsub buf p0 subseq_size) in
-    forall (i:nat). i < v subseq_size ==> Seq.index subseq i =!= 0ul
-
-(* Lifted to hsl_state *)
-[@"opaque_to_smt"]
-unfold private let null_terminator_invariant (st:hsl_state) (h:mem{liveness_and_disjointness st h})
-  = let buf, p0, p1 = hsl_get_buf st, sel h (hsl_get_p0 st), sel h (hsl_get_p1 st) in
-    null_terminator_invariant_helper buf p0 p1 h
-
-(*
- * An invariant on the list that all subsequences are 0ul free
- *)
-[@"opaque_to_smt"]
-unfold private let msgs_list_invariant_helper
-  (buf:Buffer.buffer u32) (l:list (u32 * u32)) (p0:u32{p0 <=^ Buffer.len buf}) (h:mem)
-  = forall (i j:u32). List.Tot.mem (i, j) l ==>  //if (i, j) is in the list
-                 (i <^ j /\ j <^ p0 /\  //then both lie before p0
-		  (let subseq_size = j -^ i in
-		   let subseq = Buffer.as_seq h (Buffer.gsub buf i subseq_size) in
-		   forall (k:nat). k < v subseq_size ==> Seq.index subseq k =!= 0ul))  //and no 0ul
-
-(* Lifted to hsl_state *)
-[@"opaque_to_smt"]
-unfold private let msgs_list_invariant (st:hsl_state) (h:mem{liveness_and_disjointness st h})
-  = let buf, p0, msgs = hsl_get_buf st, sel h (hsl_get_p0 st), sel h (hsl_get_msgs st) in
-    msgs_list_invariant_helper buf msgs p0 h
-
-(* Combine the predicates above *)
-[@"opaque_to_smt"]
-unfold private let hsl_invariant_predicate (st:hsl_state) (h:mem)
-  = liveness_and_disjointness st h /\ null_terminator_invariant st h /\ msgs_list_invariant st h
+let hsl_get_len (st:hsl_state) :u32 = st.len
+let hsl_get_buf (st:hsl_state) :Buffer.buffer u32 = st.buf
+let hsl_get_p0 (st:hsl_state) :reference u32 = st.p0
+let hsl_get_p1 (st:hsl_state) :reference u32 = st.p1
+let hsl_get_msgs (st:hsl_state) :reference (list (u32 * u32)) = st.msgs
 
 (* Finally, the abstract invariant and its elimination *)
-abstract let hsl_invariant (st:hsl_state) (h:mem) = hsl_invariant_predicate st h
+let hsl_invariant (st:hsl_state) (h:mem) = hsl_invariant_predicate st h
 
 (*
  * This is a place where we can control what clients get to derive from the invariant
@@ -131,16 +71,6 @@ let lemma_hsl_invariant_elim (st:hsl_state) (h:mem)
          (ensures  (hsl_invariant_predicate st h))
          [SMTPat (hsl_invariant st h)]
   = ()
-
-(*
- * HSL footprint = p0, p1, buffer contents between 0 and p1, and msgs
- * This is not abstract, so that the client (Record) can append the buffer after p1, and use the framing lemma
- *)
-let hsl_footprint (st:hsl_state) (h:mem{hsl_invariant st h}) =
-  loc_union (loc_union (loc_buffer (Buffer.gsub (hsl_get_buf st) 0ul (sel h (hsl_get_p1 st))))
-		       (loc_mreference (hsl_get_p0 st)))
-	    (loc_union (loc_mreference (hsl_get_p1 st))
-	               (loc_mreference (hsl_get_msgs st)))
 
 (*
  * Framing the HSL invariant across its footprint

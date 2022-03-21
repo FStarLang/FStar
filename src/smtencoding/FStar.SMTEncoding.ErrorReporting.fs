@@ -16,18 +16,18 @@
 #light "off"
 
 module FStar.SMTEncoding.ErrorReporting
-open FStar.ST
-open FStar.Exn
-open FStar.All
+open FStar.Compiler.Effect
+open FStar.Compiler.List
 open FStar
+open FStar.Compiler
 open FStar.BaseTypes
-open FStar.Util
+open FStar.Compiler.Util
 open FStar.SMTEncoding.Term
 open FStar.SMTEncoding.Util
 open FStar.SMTEncoding.Z3
 open FStar.SMTEncoding
-open FStar.Range
-module BU = FStar.Util
+open FStar.Compiler.Range
+module BU = FStar.Compiler.Util
 
 exception Not_a_wp_implication of string
 type label = error_label
@@ -111,6 +111,7 @@ let label_goals use_env_msg  //when present, provides an alternate error message
      =  match q.tm with
         | BoundV _
         | Integer _
+        | String _
         | Real _ ->
           labels, q
 

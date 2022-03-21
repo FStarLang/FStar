@@ -26,7 +26,7 @@ let bind (ans:Type) (a:Type) (b:Type) (m : cont ans a) (f : a -> Tot (cont ans b
                    m (fun (x:a) -> let fx = f x in fx k)
 (* let bind1 a b m f : Tot (cont b) = fun k -> bind a b m f k *)
 
-(* Sum type with explicit type anotations to bypass current lack of implicit arguments *)
+(* Sum type with explicit type annotations to bypass current lack of implicit arguments *)
 noeq type either : Type u#a -> Type u#b -> Type u#(1 + max a b) =
 | L : (a:Type u#a) -> (b:Type u#b) -> a -> either a b
 | R : (a:Type u#a) -> (b:Type u#b) -> b -> either a b
@@ -103,7 +103,7 @@ let em_wp (a:Type)
           (* 2] the overall result satisfies kspec (R _) _ *)
           (forall (x: either a (a -> Tot False)) (post' : False -> Type0). pbpost x post')
 
-//#push-options "--admit_smt_queries true"
+#push-options "--admit_smt_queries true"
 let em2 (a:Type) : CONTINUATION?.repr (either a (a -> Tot False)) (em_wp a)
   = fun (kspec : (either a (a -> Tot False)) -> (False -> Tot Type0) -> Tot Type0)
       (k : (x:(either a (a -> Tot False))) -> PURE False (kspec x)) ->
@@ -111,7 +111,7 @@ let em2 (a:Type) : CONTINUATION?.repr (either a (a -> Tot False)) (em_wp a)
         let devil (x:a) : Tot False = k (L a (a -> Tot False) x) in
         k (R a (a -> Tot False) devil)
       end
-
+#pop-options
 
  let excluded_middle (a:Type)
   : CONTINUATION (either a (a -> Tot False)) (em_wp a)

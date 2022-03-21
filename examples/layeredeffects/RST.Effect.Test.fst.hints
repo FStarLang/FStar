@@ -1,0 +1,287 @@
+[
+  "›Ð¯bpmˆ§áý>^ \"sÂ",
+  [
+    [
+      "RST.Effect.Test.test1",
+      1,
+      2,
+      2,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
+      ],
+      0,
+      "c312142f4c5c6d16154c26aba5792f5d"
+    ],
+    [
+      "RST.Effect.Test.f1",
+      1,
+      2,
+      2,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
+        "fuel_guarded_inversion_Steel.Resource.resource", "int_inversion",
+        "int_typing", "lemma_Steel.RST.is_subresource_of_refl",
+        "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_87b197c370bcbb3ce316e5ac94cf7212",
+        "typing_RST.Effect.Test.r1", "typing_RST.Effect.Test.r2"
+      ],
+      0,
+      "f8c5030093e9988d8ef1126a8cdb7a9a"
+    ],
+    [
+      "RST.Effect.Test.f2",
+      1,
+      2,
+      2,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
+        "fuel_guarded_inversion_Steel.Resource.resource", "int_inversion",
+        "int_typing", "lemma_Steel.RST.is_subresource_of_refl",
+        "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_87b197c370bcbb3ce316e5ac94cf7212",
+        "typing_RST.Effect.Test.r2", "typing_RST.Effect.Test.r3"
+      ],
+      0,
+      "fa50be57116527a39438717c412e7d37"
+    ],
+    [
+      "RST.Effect.Test.f3",
+      1,
+      2,
+      2,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
+        "fuel_guarded_inversion_Steel.Resource.resource", "int_inversion",
+        "int_typing", "lemma_Steel.RST.is_subresource_of_refl",
+        "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_87b197c370bcbb3ce316e5ac94cf7212",
+        "typing_RST.Effect.Test.r3"
+      ],
+      0,
+      "ff5d4017dee749fedbf949dace73afba"
+    ],
+    [
+      "RST.Effect.Test.test2",
+      1,
+      2,
+      2,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
+        "fuel_guarded_inversion_Steel.Resource.resource", "int_typing",
+        "lemma_Steel.RST.is_subresource_of_refl",
+        "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_87b197c370bcbb3ce316e5ac94cf7212",
+        "typing_RST.Effect.Test.r1", "typing_RST.Effect.Test.r3"
+      ],
+      0,
+      "7f0f9a70f0990aefa6b88c020945a0d7"
+    ],
+    [
+      "RST.Effect.Test.test3",
+      1,
+      2,
+      2,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "assumption_RST.Effect.Test.Can_be_split_into_emp",
+        "equation_Prims.nat",
+        "fuel_guarded_inversion_Steel.Resource.resource", "int_typing",
+        "lemma_Steel.RST.is_subresource_of_refl",
+        "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_87b197c370bcbb3ce316e5ac94cf7212",
+        "typing_RST.Effect.Test.r1", "typing_RST.Effect.Test.r3"
+      ],
+      0,
+      "05a27839d48f4fa7a6b340469c080ee7"
+    ],
+    [
+      "RST.Effect.Test.test4",
+      1,
+      2,
+      2,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
+        "fuel_guarded_inversion_Steel.Resource.resource", "int_typing",
+        "lemma_Steel.RST.is_subresource_of_refl",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_87b197c370bcbb3ce316e5ac94cf7212",
+        "typing_RST.Effect.Test.r1"
+      ],
+      0,
+      "f28c2eac25d95c6b72f01ac4e3c1df17"
+    ],
+    [
+      "RST.Effect.Test.test6",
+      1,
+      2,
+      2,
+      [
+        "@query", "disc_equation_Prims.Cons",
+        "projection_inverse_BoxBool_proj_0"
+      ],
+      0,
+      "2a5ee98182bac70a2920fad2b50bf171"
+    ],
+    [
+      "RST.Effect.Test.test7",
+      1,
+      2,
+      2,
+      [
+        "@query", "disc_equation_FStar.Pervasives.Native.Some",
+        "disc_equation_Prims.Cons", "primitive_Prims.op_GreaterThan",
+        "projection_inverse_BoxBool_proj_0"
+      ],
+      0,
+      "c67677d9f5f3114b3c874cee54b4a5a5"
+    ],
+    [
+      "RST.Effect.Test.index",
+      1,
+      2,
+      2,
+      [
+        "@MaxIFuel_assumption", "@query", "b2t_def",
+        "equation_FStar.UInt.fits", "equation_FStar.UInt.min_int",
+        "equation_FStar.UInt.size", "equation_FStar.UInt.uint_t",
+        "int_inversion", "lemma_Steel.RST.is_subresource_of_refl",
+        "primitive_Prims.op_AmpAmp", "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_500cd0882dc0b26a204a6bb1fe0291fd",
+        "refinement_interpretation_Tm_refine_68aa93e2308e404b26431d6760bb6f73",
+        "refinement_interpretation_Tm_refine_f13070840248fced9d9d60d77bdae3ec",
+        "typing_FStar.UInt32.v", "typing_RST.Effect.Test.array_resource"
+      ],
+      0,
+      "d66850116a96d7be005667d96b97fa20"
+    ],
+    [
+      "RST.Effect.Test.upd",
+      1,
+      2,
+      2,
+      [
+        "@MaxIFuel_assumption", "@query", "b2t_def",
+        "equation_FStar.UInt.fits", "equation_FStar.UInt.min_int",
+        "equation_FStar.UInt.size", "equation_FStar.UInt.uint_t",
+        "int_inversion", "lemma_Steel.RST.is_subresource_of_refl",
+        "primitive_Prims.op_AmpAmp", "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_500cd0882dc0b26a204a6bb1fe0291fd",
+        "refinement_interpretation_Tm_refine_68aa93e2308e404b26431d6760bb6f73",
+        "refinement_interpretation_Tm_refine_f13070840248fced9d9d60d77bdae3ec",
+        "typing_FStar.UInt32.v", "typing_RST.Effect.Test.array_resource"
+      ],
+      0,
+      "072e629f59310a983169c6d8a9379d9c"
+    ],
+    [
+      "RST.Effect.Test.as_rseq_focus_rmem1",
+      1,
+      2,
+      2,
+      [
+        "@query", "lemma_Steel.RST.can_be_split_into_intro_star",
+        "lemma_Steel.RST.is_subresource_of_intro1",
+        "lemma_Steel.RST.is_subresource_of_refl",
+        "typing_RST.Effect.Test.array_resource",
+        "typing_Steel.Resource.op_Less_Star_Greater"
+      ],
+      0,
+      "fc6502292fb65d63b1d7d11313795825"
+    ],
+    [
+      "RST.Effect.Test.as_rseq_focus_rmem2",
+      1,
+      2,
+      2,
+      [
+        "@query", "lemma_Steel.RST.can_be_split_into_intro_star",
+        "lemma_Steel.RST.is_subresource_of_intro2",
+        "lemma_Steel.RST.is_subresource_of_refl",
+        "typing_RST.Effect.Test.array_resource",
+        "typing_Steel.Resource.op_Less_Star_Greater"
+      ],
+      0,
+      "6eeb69086cdded23707cfdaf57ab121e"
+    ],
+    [
+      "RST.Effect.Test.as_rseq_focus_rmem_inv1",
+      1,
+      2,
+      2,
+      [
+        "@query", "lemma_Steel.RST.can_be_split_into_intro_star",
+        "lemma_Steel.RST.is_subresource_of_intro1",
+        "typing_RST.Effect.Test.array_resource",
+        "typing_Steel.Resource.op_Less_Star_Greater"
+      ],
+      0,
+      "ceebf73c84daf1e9ed5979e037c2414f"
+    ],
+    [
+      "RST.Effect.Test.as_rseq_focus_rmem_inv2",
+      1,
+      2,
+      2,
+      [
+        "@query", "lemma_Steel.RST.can_be_split_into_intro_star",
+        "lemma_Steel.RST.is_subresource_of_intro2",
+        "typing_RST.Effect.Test.array_resource",
+        "typing_Steel.Resource.op_Less_Star_Greater"
+      ],
+      0,
+      "3970e8b439efd5e775a80917feac3cb3"
+    ],
+    [
+      "RST.Effect.Test.copy_state",
+      1,
+      0,
+      0,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_Prims.pow2.fuel_instrumented", "@query",
+        "FStar.UInt32_pretyping_041e3a67a2d2b51fd702f1f88cfc3b44", "b2t_def",
+        "bool_inversion", "bool_typing", "equation_FStar.UInt.fits",
+        "equation_FStar.UInt.max_int", "equation_FStar.UInt.min_int",
+        "equation_FStar.UInt.size", "equation_FStar.UInt.uint_t",
+        "equation_Prims.nat", "equation_RST.Effect.Test.state",
+        "function_token_typing_FStar.UInt32.t", "int_inversion",
+        "int_typing", "lemma_FStar.UInt.pow2_values",
+        "lemma_FStar.UInt32.vu_inv",
+        "lemma_RST.Effect.Test.as_rseq_focus_rmem1",
+        "lemma_RST.Effect.Test.as_rseq_focus_rmem2",
+        "lemma_Steel.RST.can_be_split_into_intro_star",
+        "lemma_Steel.RST.is_subresource_of_intro1",
+        "lemma_Steel.RST.is_subresource_of_intro2",
+        "lemma_Steel.RST.is_subresource_of_refl",
+        "lemma_Steel.Resource.star_can_be_split_into_parts_",
+        "primitive_Prims.op_AmpAmp", "primitive_Prims.op_LessThanOrEqual",
+        "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_3380e1ac9fad36aeb763811164fb699b",
+        "refinement_interpretation_Tm_refine_500cd0882dc0b26a204a6bb1fe0291fd",
+        "refinement_interpretation_Tm_refine_51b8a1562853a84bb9b4549abf915aa7",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_795c3385b2687aeac4aa752e4f23d12b",
+        "refinement_interpretation_Tm_refine_ba692b46b147e0698ce345d91c78aaac",
+        "refinement_interpretation_Tm_refine_d20633d14c7b9699742ddb85f166e42b",
+        "refinement_interpretation_Tm_refine_f13070840248fced9d9d60d77bdae3ec",
+        "typing_FStar.UInt32.v", "typing_RST.Effect.Test.array_resource",
+        "typing_RST.Effect.Test.as_rseq",
+        "typing_Steel.Resource.op_Less_Star_Greater"
+      ],
+      0,
+      "b281f8bd4762adeeb889be2471c37822"
+    ]
+  ]
+]

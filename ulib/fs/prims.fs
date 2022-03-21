@@ -1,9 +1,6 @@
 #light "off"
 module Prims
 open System.Numerics
-module Obj = FSharp.Compatibility.OCaml.Obj
-
-module Z = FSharp.Compatibility.OCaml.Big_int
 
 (* Euclidean division and remainder:
    Inefficient implementation based on the naive version at
@@ -11,18 +8,18 @@ module Z = FSharp.Compatibility.OCaml.Big_int
 
    Note, in OCaml, we use ZArith's ediv and erem
 *)
-let rec ediv_rem (n:Z) (d:Z.big_int) : t * t =
-    if Z.lt_big_int d Z.zero_big_int then
-      let q, r = ediv_rem n (Z.minus_big_int d) in
-      Z.minus_big_int q, r
-    else if Z.lt_big_int n Z.zero_big_int then
-      let q, r = ediv_rem (Z.minus_big_int n) d in
-      if r = Z.zero_big_int then
-        Z.minus_big_int q, Z.zero_big_int
+let rec ediv_rem (n:bigint) (d:bigint) : bigint * bigint =
+    if d < 0I then
+      let q, r = ediv_rem n (-d) in
+      -q, r
+    else if n < 0I then
+      let q, r = ediv_rem (-n) d in
+      if r = 0I then
+        -q, 0I
       else
-        Z.sub_big_int (Z.minus_big_int q) (Z.minus_big_int Z.unit_big_int),
-        Z.sub_big_int d r
-    else Z.quomod_big_int n d
+        (-q) - (-1I),
+        d - r
+    else BigInteger.DivRem (n, d)
 
 type int       = bigint
 type nonzero = int
@@ -35,9 +32,9 @@ let ( >= ) (x:int) (y:int)  = x >= y
 let ( < )  (x:int) (y:int) = x < y
 let ( > )  (x:int) (y:int) = x > y
 let (mod) (x:int) (y:int)  = snd (ediv_rem x y)
-let ( ~- ) (x:int) = (~-) x
+let ( ~- ) (x:int) = -x
 let abs (x:int) = BigInteger.Abs x
-let of_int (x:int) = BigInteger x
+let of_int (x:FSharp.Core.int) = BigInteger x
 let int_zero = of_int 0
 let int_one = of_int 1
 let parse_int = BigInteger.Parse
@@ -62,35 +59,35 @@ type 'd b2t    = B2t of unit
 
 type 'a squash = Squash of unit
 
-type (' p, ' q) c_or =
+type (' p, ' q) sum =
   | Left of ' p
   | Right of ' q
 
-type (' p, ' q) l_or = ('p, 'q) c_or squash
+type (' p, ' q) l_or = ('p, 'q) sum squash
 
 let uu___is_Left = function Left _ -> true | Right _ -> false
 
 let uu___is_Right = function Left _ -> false | Right _ -> true
 
-type (' p, ' q) c_and =
-| And of ' p * ' q
+type (' p, ' q) pair =
+| Pair of ' p * ' q
 
-type (' p, ' q) l_and = ('p, 'q) c_and squash
+type (' p, ' q) l_and = ('p, 'q) pair squash
 
-let uu___is_And _ = true
+let uu___is_Pair _ = true
 
 
-type c_True =
+type trivial =
   | T
 
-type l_True = c_True squash
+type l_True = trivial squash
 
 let uu___is_T _ = true
 
-type c_False = unit
+type empty = unit
 (*This is how Coq extracts Inductive void := . Our extraction needs to be fixed to recognize when there
        are no constructors and generate this type abbreviation*)
-type l_False = c_False squash
+type l_False = empty squash
 
 type (' p, ' q) l_imp = ('p -> 'q) squash
 
@@ -104,7 +101,7 @@ type (' a, ' p) l_Exists = L_exists of unit
 
 
 type (' p, ' q, 'dummyP) eq2 = Eq2 of unit
-type (' p, ' q, 'dummyP, 'dummyQ) eq3 = Eq3 of unit
+type (' p, ' q, 'dummyP, 'dummyQ) op_Equals_Equals_Equals = Eq3 of unit
 
 type prop     = obj
 
@@ -113,7 +110,7 @@ let admit () = failwith "no admits"
 let _assume () = ()
 let _assert x = ()
 let magic () = failwith "no magic"
-let unsafe_coerce x = Obj.magic x
+let unsafe_coerce x = unbox (box x)
 let op_Negation x = not x
 
 let mk_range f a b c d : range = let r = (f, (a, b), (c, d)) in (r, r)

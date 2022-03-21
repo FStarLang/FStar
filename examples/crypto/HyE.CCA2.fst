@@ -25,35 +25,23 @@ open HyE.PlainPKE
 module RSA = HyE.RSA
 module PlainPKE = HyE.PlainPKE
 
-type rid = erid
-type cipher = RSA.cipher
-noeq type entry =
-  | Entry : c:RSA.cipher
-         -> p:PlainPKE.t
-         -> entry
+let ciphersize = admit ()
 
-assume val ciphersize : nat
-
-type log_t (r:rid) = m_rref r (seq entry) grows
-
-noeq abstract type pkey = 
+noeq type pkey =
   | PKey: #region:rid -> rawpk:RSA.pkey -> log: log_t region -> pkey
 
-abstract let access_pk_raw (pk:pkey) =
+let access_pk_raw (pk:pkey) =
   PKey?.rawpk pk
 
-
-noeq abstract type skey =
+noeq type skey =
   | SKey: raw:RSA.skey -> pk:pkey -> skey
 
-val keygen: parent:rid{HyperStack.ST.witnessed (region_contains_pred parent)} -> ML (pkey * skey)
 let keygen parent  =
   let pkey_raw, skey_raw = RSA.gen () in
   let region = new_region parent in
   let log = alloc_mref_seq region Seq.empty in
   let pkey = PKey #region pkey_raw log in
   pkey, SKey skey_raw pkey
-
 
 let encrypt pk (p:PlainPKE.t) : ML RSA.cipher =
   let p' = if HyE.Ideal.ind_cca then RSA.dummy else PlainPKE.repr p in

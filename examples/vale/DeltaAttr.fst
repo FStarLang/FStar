@@ -26,13 +26,13 @@ let normalize (#t:Type) (steps : list norm_step) (x:t) : Tac unit =
   norm steps;
   trefl ()
 
-[@myattr]
+[@@myattr]
 let add_1 (x:int) : int = x + 1
 
-[@myattr]
+[@@myattr]
 let sub_1 (x:int) : int = x - 1
 
-[@otherattr]
+[@@otherattr]
 let add (x:int) : int = x + x
 
 let test_1 (x:int) : int = synth_by_tactic

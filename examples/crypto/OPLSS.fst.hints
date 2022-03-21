@@ -1,0 +1,28 @@
+[
+  ".ıu‘å\"±\u0018\r5r\u0006åﬂT\u000f",
+  [
+    [
+      "OPLSS.lbytes",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
+        "equation_Prims.nat", "function_token_typing_Prims.int",
+        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "a2634462c2ad8370e6440270b52520e7"
+    ],
+    [
+      "OPLSS.auto_lemma_mem_snoc",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "823395b6265aab9efc5190cb8d39e5cc"
+    ]
+  ]
+]

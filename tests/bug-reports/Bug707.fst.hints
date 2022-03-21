@@ -1,0 +1,100 @@
+[
+  "6\u0015®ÒV'¼Ø“¹R1;ŒQ0",
+  [
+    [
+      "Bug707.bind",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Bug707_interpretation_Tm_arrow_0e9d2ce21210024c64d270958ff1fc12",
+        "bool_inversion", "bool_typing",
+        "disc_equation_FStar.Pervasives.Native.None",
+        "disc_equation_FStar.Pervasives.Native.Some",
+        "equation_Bug707.stexn", "equation_Prims.eqtype",
+        "function_token_typing_Prims.int", "int_inversion",
+        "kinding_FStar.Pervasives.Native.option@tok",
+        "lemma_FStar.Pervasives.invertOption",
+        "proj_equation_FStar.Pervasives.Native.Mktuple2__1",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "typing_FStar.Pervasives.Native.__proj__Mktuple2__item___1"
+      ],
+      0,
+      "e589e7d123478c6ad8fa26e46a88d602"
+    ],
+    [
+      "Bug707._dm4f_STEXN_bind_wp",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "bool_inversion", "bool_typing",
+        "disc_equation_FStar.Pervasives.Native.None",
+        "disc_equation_FStar.Pervasives.Native.Some",
+        "equation_Prims.eqtype", "function_token_typing_Prims.int",
+        "kinding_FStar.Pervasives.Native.option@tok",
+        "lemma_FStar.Pervasives.invertOption",
+        "proj_equation_FStar.Pervasives.Native.Mktuple2__1",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "typing_FStar.Pervasives.Native.__proj__Mktuple2__item___1"
+      ],
+      0,
+      "3716006d000df605f4802b269764c102"
+    ],
+    [
+      "Bug707._dm4f_STEXN___proj__STEXN__item__get_elab",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "e05ce1a6703c0a41171edb79dbf50ba2"
+    ],
+    [
+      "Bug707._dm4f_STEXN___proj__STEXN__item__put_elab",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "7b51bf33964d49442853860f6a403ffb"
+    ],
+    [
+      "Bug707._dm4f_STEXN___proj__STEXN__item__raise_elab",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "ebab7695702cc463fd1ec0db82df71a7"
+    ],
+    [
+      "Bug707.STEXN",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "26b0fb125f0c995a8f2ac956ed54fd65"
+    ],
+    [
+      "Bug707.STEXN",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "7bbbd73395368f2c35df4ec6c75f68aa"
+    ],
+    [
+      "Bug707.STEXN",
+      3,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "c204c17476411e459020d83ffe67308e"
+    ]
+  ]
+]

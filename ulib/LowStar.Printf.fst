@@ -134,7 +134,7 @@ type arg =
   | Any
 
 /// Interpreting a `base_typ` as a type
-[@__reduce__]
+[@@__reduce__]
 noextract
 let base_typ_as_type (b:base_typ) : Type0 =
   match b with
@@ -164,7 +164,7 @@ let fragments = list fragment
 /// `parse_format s`:
 ///     Parses a list of characters in a format string into a list of fragments
 ///     Or None, in case the format string is invalid
-[@__reduce__]
+[@@__reduce__]
 noextract inline_for_extraction
 let rec parse_format
       (s:list char)
@@ -226,7 +226,7 @@ let rec parse_format
 
 
 /// `parse_format_string`: a wrapper around `parse_format`
-[@__reduce__]
+[@@__reduce__]
 noextract inline_for_extraction
 let parse_format_string
     (s:string)
@@ -244,7 +244,11 @@ let done : lift unit = Lift u#0 u#1 ()
 
 /// `arg_t`: interpreting an argument as a type
 ///   (in universe 1) since it is polymorphic in the preorders of a buffer
-[@__reduce__]
+/// GM: Somehow, this needs to be a `let rec` (even if it not really recursive)
+///     or print_frags fails to verify. I don't know why; the generated
+///     VC and its encoding seem identical (modulo hash consing in the
+///     latter).
+[@@__reduce__]
 noextract
 let rec arg_t (a:arg) : Type u#1 =
   match a with
@@ -257,7 +261,7 @@ noextract
 let frag_t = either string (a:arg & arg_t a)
 
 /// `live_frags h l` is a liveness predicate on all the buffers in `l`
-[@__reduce__]
+[@@__reduce__]
 noextract
 let rec live_frags (h:_) (l:list frag_t) : prop =
   match l with
@@ -273,7 +277,7 @@ let rec live_frags (h:_) (l:list frag_t) : prop =
 /// `interpret_frags` interprets a list of fragments as a Low* function type
 ///    Note `l` is the fragments in L-to-R order (i.e., parsing order)
 ///    `acc` accumulates the fragment values in reverse order
-[@__reduce__]
+[@@__reduce__]
 noextract
 let rec interpret_frags (l:fragments) (acc:list frag_t) : Type u#1 =
   match l with
@@ -381,16 +385,16 @@ let rec print_frags (acc:list frag_t)
        | Inr (| Any, (| _, printer, value |) |) ->
          printer value)
 
-[@__reduce__]
+[@@__reduce__]
 let no_inst #a (#b:a -> Type) (f: (#x:a -> b x)) : unit -> #x:a -> b x = fun () -> f
-[@__reduce__]
+[@@__reduce__]
 let elim_unit_arrow #t (f:unit -> t) : t = f ()
 
 // let test2 (f: (#a:Type -> a -> a)) : id_t 0 = test f ()
 // let coerce #a (#b: (a -> Type)) ($f: (#x:a -> b x)) (t:Type{norm t == (#x:a -> b x)})
 /// `aux frags acc`: This is the main workhorse which interprets a
 /// parsed format string (`frags`) as a variadic, stateful function
-[@__reduce__]
+[@@__reduce__]
 noextract inline_for_extraction
 let rec aux (frags:fragments) (acc:list frag_t) (fp: fragment_printer) : interpret_frags frags acc =
   match frags with
@@ -436,13 +440,13 @@ let rec aux (frags:fragments) (acc:list frag_t) (fp: fragment_printer) : interpr
     elim_unit_arrow (no_inst (f ()) <: (unit -> interpret_frags (Interpolate Any :: rest) acc))
 
 /// `format_string` : A valid format string is one that can be successfully parsed
-[@__reduce__]
+[@@__reduce__]
 noextract
 let format_string = s:string{normal #bool (Some? (parse_format_string s))}
 
 /// `interpret_format_string` parses a string into fragments and then
 /// interprets it as a type
-[@__reduce__]
+[@@__reduce__]
 noextract
 let interpret_format_string (s:format_string) : Type =
   interpret_frags (Some?.v (parse_format_string s)) []
@@ -478,7 +482,7 @@ val printf : s:normal format_string -> normal (interpret_format_string s)
 let printf = intro_normal_f #format_string interpret_format_string printf'
 
 
-/// `skip`: We also provide `skip`, a funcion that has the same type as printf
+/// `skip`: We also provide `skip`, a function that has the same type as printf
 ///  but normalizes to `()`, i.e., it prints nothing. This is useful for conditional
 ///  printing in debug code, for instance.
 noextract inline_for_extraction

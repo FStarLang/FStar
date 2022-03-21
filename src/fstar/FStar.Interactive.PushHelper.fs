@@ -20,9 +20,11 @@
 
 module FStar.Interactive.PushHelper
 open FStar
-open FStar.ST
-open FStar.All
-open FStar.Util
+open FStar.Compiler
+open FStar.Pervasives
+open FStar.Compiler.Effect
+open FStar.Compiler.List
+open FStar.Compiler.Util
 open FStar.Ident
 open FStar.Errors
 open FStar.Universal
@@ -30,7 +32,7 @@ open FStar.Parser.ParseIt
 open FStar.TypeChecker.Env
 open FStar.Interactive.JsonHelper
 
-module U = FStar.Util
+module U = FStar.Compiler.Util
 module SS = FStar.Syntax.Syntax
 module DsEnv = FStar.Syntax.DsEnv
 module TcErr = FStar.TypeChecker.Err
@@ -51,7 +53,8 @@ let set_check_kind env check_kind =
 (** Build a list of dependency loading tasks from a list of dependencies **)
 let repl_ld_tasks_of_deps (deps: list<string>) (final_tasks: list<repl_task>) =
   let wrap fname = { tf_fname = fname; tf_modtime = U.now () } in
-  let rec aux deps final_tasks =
+  let rec aux (deps:list<string>) (final_tasks:list<repl_task>)
+    : list<repl_task> =
     match deps with
     | intf :: impl :: deps' when needs_interleaving intf impl ->
       LDInterleaved (wrap intf, wrap impl) :: aux deps' final_tasks
@@ -184,18 +187,18 @@ type name_tracking_event =
 | NTBinding of either<FStar.Syntax.Syntax.binding, TcEnv.sig_binding>
 
 let query_of_ids (ids: list<ident>) : CTable.query =
-  List.map text_of_id ids
+  List.map string_of_id ids
 
 let query_of_lid (lid: lident) : CTable.query =
-  query_of_ids (lid.ns @ [lid.ident])
+  query_of_ids (ns_of_lid lid @ [ident_of_lid lid])
 
 let update_names_from_event cur_mod_str table evt =
-  let is_cur_mod lid = lid.str = cur_mod_str in
+  let is_cur_mod lid = (string_of_lid lid) = cur_mod_str in
   match evt with
   | NTAlias (host, id, included) ->
     if is_cur_mod host then
       CTable.register_alias
-        table (text_of_id id) [] (query_of_lid included)
+        table (string_of_id id) [] (query_of_lid included)
     else
       table
   | NTOpen (host, (included, kind)) ->
@@ -215,15 +218,15 @@ let update_names_from_event cur_mod_str table evt =
       | _ -> [] in
     List.fold_left
       (fun tbl lid ->
-         let ns_query = if lid.nsstr = cur_mod_str then []
-                        else query_of_ids lid.ns in
+         let ns_query = if nsstr lid = cur_mod_str then []
+                        else query_of_ids (ns_of_lid lid) in
          CTable.insert
-           tbl ns_query (text_of_id lid.ident) lid)
+           tbl ns_query (string_of_id (ident_of_lid lid)) lid)
       table lids
 
 let commit_name_tracking' cur_mod names name_events =
   let cur_mod_str = match cur_mod with
-                    | None -> "" | Some md -> (SS.mod_name md).str in
+                    | None -> "" | Some md -> string_of_lid (SS.mod_name md) in
   let updater = update_names_from_event cur_mod_str in
   List.fold_left updater names name_events
 
@@ -272,9 +275,9 @@ let repl_tx st push_kind task =
     Some (js_diag st.repl_fname msg None), st
   | U.SigInt ->
     U.print_error "[E] Interrupt"; None, st
-  | Error (e, msg, r) ->
+  | Error (e, msg, r, _ctx) -> // TODO: display the error context somehow
     Some (js_diag st.repl_fname msg (Some r)), st
-  | Err (e, msg) ->
+  | Err (e, msg, _ctx) ->
     Some (js_diag st.repl_fname msg None), st
   | Stop ->
     U.print_error "[E] Stop"; None, st

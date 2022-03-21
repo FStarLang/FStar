@@ -19,7 +19,7 @@ module Nest
 
 open FStar.Tactics
 
-[@plugin]
+[@@plugin]
 let tau = fun () -> pointwise (fun () -> pointwise trefl; trefl ())
 
 let _ = assert (3 == 3) by tau ()

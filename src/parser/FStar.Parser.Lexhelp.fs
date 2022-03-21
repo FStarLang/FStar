@@ -29,13 +29,13 @@
 #light "off"
 
 module FStar.Parser.Lexhelp
-open FStar.ST
-open FStar.Exn
-open FStar.All
+open FStar.Compiler.Effect
+open FStar.Compiler.Effect
 open FStar.Mul
 open FStar
-open FStar.Util
-open FStar.Range
+open FStar.Compiler
+open FStar.Compiler.Util
+open FStar.Compiler.Range
 open FStar.Errors
 open FStar.Parser
 open FStar.Parser.Parse
@@ -138,8 +138,7 @@ type compatibilityMode =
     | FSHARP  (* keyword, but an identifier under --ml-compatibility mode *)
 
 let keywords =
-  [ ALWAYS, "abstract"   ,ABSTRACT;
-    ALWAYS, "attributes" ,ATTRIBUTES;
+  [ ALWAYS, "attributes" ,ATTRIBUTES;
     ALWAYS, "noeq"       ,NOEQUALITY;
     ALWAYS, "unopteq"    ,UNOPTEQUALITY;
     ALWAYS, "and"        ,AND;
@@ -149,8 +148,10 @@ let keywords =
     ALWAYS, "by"         ,BY;
     ALWAYS, "calc"       ,CALC;
     ALWAYS, "class"      ,CLASS;
+    ALWAYS, "decreases"  ,DECREASES;
     FSHARP, "default"    ,DEFAULT;
     ALWAYS, "effect"     ,EFFECT;
+    ALWAYS, "eliminate"  ,ELIM;
     ALWAYS, "else"       ,ELSE;
     ALWAYS, "end"        ,END;
     ALWAYS, "ensures"    ,ENSURES;
@@ -167,18 +168,25 @@ let keywords =
     ALWAYS, "inline"     ,INLINE;
     ALWAYS, "inline_for_extraction"     ,INLINE_FOR_EXTRACTION;
     ALWAYS, "instance"   ,INSTANCE;
+    ALWAYS, "introduce"  ,INTRO;
     ALWAYS, "irreducible",IRREDUCIBLE;
     ALWAYS, "let"        ,LET(false);
     ALWAYS, "logic"      ,LOGIC;
     ALWAYS, "match"      ,MATCH;
+    ALWAYS, "as"         ,AS;
+    ALWAYS, "returns"    ,RETURNS;
     ALWAYS, "module"     ,MODULE;
     ALWAYS, "new"        ,NEW;
     ALWAYS, "new_effect" ,NEW_EFFECT;
+    ALWAYS, "layered_effect"            ,LAYERED_EFFECT;
+    ALWAYS, "polymonadic_bind"          ,POLYMONADIC_BIND;
+    ALWAYS, "polymonadic_subcomp"       ,POLYMONADIC_SUBCOMP;
     ALWAYS, "noextract",  NOEXTRACT;
     ALWAYS, "of"         ,OF;
     ALWAYS, "open"       ,OPEN;
     ALWAYS, "opaque"     ,OPAQUE;
     ALWAYS, "private"    ,PRIVATE;
+    ALWAYS, "quote"      ,QUOTE;
     ALWAYS, "range_of"   ,RANGE_OF;
     ALWAYS, "rec"        ,REC;
     ALWAYS, "reifiable"  ,REIFIABLE;

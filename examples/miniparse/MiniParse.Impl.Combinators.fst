@@ -179,7 +179,7 @@ let parse_filter_impl
     | Some (v, consumed) ->
       if g v
       then
-        [@inline_let]
+        [@@inline_let]
         let (v' : t { f v' == true } ) = v in
 	Some (v', consumed)
       else

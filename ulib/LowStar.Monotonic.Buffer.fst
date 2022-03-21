@@ -23,7 +23,7 @@ module Seq = FStar.Seq
 module HS = FStar.HyperStack
 module HST = FStar.HyperStack.ST
 
-private let srel_to_lsrel (#a:Type0) (len:nat) (pre:srel a) :P.preorder (Seq.lseq a len) = fun s1 s2 -> pre s1 s2
+private let srel_to_lsrel (#a:Type0) (len:nat) (pre:srel a) :P.preorder (Seq.lseq a len) = pre
 
 (*
  * Counterpart of compatible_sub from the fsti but using sequences
@@ -33,12 +33,7 @@ private let srel_to_lsrel (#a:Type0) (len:nat) (pre:srel a) :P.preorder (Seq.lse
  *)
 let compatible_sub_preorder (#a:Type0)
   (len:nat) (rel:srel a) (i:nat) (j:nat{i <= j /\ j <= len}) (sub_rel:srel a)
-  = (forall (s1 s2:Seq.seq a). {:pattern (rel s1 s2); (sub_rel (Seq.slice s1 i j) (Seq.slice s2 i j))}
-                         (Seq.length s1 == len /\ Seq.length s2 == len /\ rel s1 s2) ==>
-		         (sub_rel (Seq.slice s1 i j) (Seq.slice s2 i j))) /\
-    (forall (s s2:Seq.seq a). {:pattern (sub_rel (Seq.slice s i j) s2); (rel s (Seq.replace_subseq s i j s2))}
-                        (Seq.length s == len /\ Seq.length s2 == j - i /\ sub_rel (Seq.slice s i j) s2) ==>
-  		        (rel s (Seq.replace_subseq s i j s2)))
+  = compatible_subseq_preorder len rel i j sub_rel
 
 (*
  * Reflexivity of the compatibility relation
@@ -93,7 +88,7 @@ noeq type mbuffer (a:Type0) (rrel:srel a) (rel:srel a) :Type0 =
     max_length:U32.t ->
     content:HST.mreference (Seq.lseq a (U32.v max_length)) (srel_to_lsrel (U32.v max_length) rrel) ->
     idx:U32.t ->
-    length:U32.t{U32.v idx + U32.v length <= U32.v max_length} ->
+    length:Ghost.erased U32.t{U32.v idx + U32.v (Ghost.reveal length) <= U32.v max_length} ->
     mbuffer a rrel rel
 
 let g_is_null #_ #_ #_ b = Null? b
@@ -157,7 +152,7 @@ let mgsub #a #rrel #rel sub_rel b i len =
   match b with
   | Null -> Null
   | Buffer max_len content idx length ->
-    Buffer max_len content (U32.add idx i) len
+    Buffer max_len content (U32.add idx i) (Ghost.hide len)
 
 let live_gsub #_ #rrel #rel _ b i len sub_rel =
   match b with
@@ -206,6 +201,18 @@ let as_seq_gsub #_ #_ #_ h b i len _ =
   | Buffer _ content idx len0 ->
     Seq.slice_slice (HS.sel h content) (U32.v idx) (U32.v idx + U32.v len0) (U32.v i) (U32.v i + U32.v len)
 
+let lemma_equal_instances_implies_equal_types (a:Type) (b:Type) (s1:Seq.seq a) (s2:Seq.seq b)
+  : Lemma (requires s1 === s2)
+          (ensures a == b)
+  = Seq.lemma_equal_instances_implies_equal_types ()
+
+let s_lemma_equal_instances_implies_equal_types (_:unit)
+  : Lemma (forall (a:Type) (b:Type) (s1:Seq.seq a) (s2:Seq.seq b).
+          {:pattern (has_type s1 (Seq.seq a));
+                    (has_type s2 (Seq.seq b)) }
+          s1 === s2 ==> a == b)
+  = Seq.lemma_equal_instances_implies_equal_types()
+  
 let live_same_addresses_equal_types_and_preorders'
   (#a1 #a2: Type0)
   (#rrel1 #rel1: srel a1)
@@ -214,14 +221,22 @@ let live_same_addresses_equal_types_and_preorders'
   (b2: mbuffer a2 rrel2 rel2)
   (h: HS.mem)
 : Lemma
-  (requires (frameOf b1 == frameOf b2 /\ as_addr b1 == as_addr b2 /\ live h b1 /\ live h b2 /\ (~ (g_is_null b1 /\ g_is_null b2))))
-  (ensures (
+  (requires 
+    frameOf b1 == frameOf b2 /\
+    as_addr b1 == as_addr b2 /\
+    live h b1 /\
+    live h b2 /\
+    (~ (g_is_null b1 /\ g_is_null b2)))
+  (ensures 
     a1 == a2 /\
-    rrel1 == rrel2
-  ))
+    rrel1 == rrel2)
 =   Heap.lemma_distinct_addrs_distinct_preorders ();
     Heap.lemma_distinct_addrs_distinct_mm ();
-    Seq.lemma_equal_instances_implies_equal_types ()
+    let s1 : Seq.seq a1 = as_seq h b1 in
+    assert (Seq.seq a1 == Seq.seq a2);
+    let s1' : Seq.seq a2 = coerce_eq _ s1 in
+    assert (s1 === s1');
+    lemma_equal_instances_implies_equal_types a1 a2 s1 s1'
 
 let live_same_addresses_equal_types_and_preorders
   #_ #_ #_ #_ #_ #_ b1 b2 h
@@ -375,7 +390,7 @@ val same_mreference_ubuffer_preserved
 
 let same_mreference_ubuffer_preserved #r #a b h1 h2 f =
   ubuffer_preserved_intro b h1 h2
-  (fun t' _ _ b' -> 
+  (fun t' _ _ b' ->
     if Null? b'
     then ()
     else
@@ -829,7 +844,7 @@ val loc_includes_buffer (#a:Type0) (#rrel1:srel a) (#rrel2:srel a) (#rel1:srel a
          (ensures  (loc_includes (loc_buffer b1) (loc_buffer b2)))
 let loc_includes_buffer #t #_ #_ #_ #_ b1 b2 =
   let t1 = ubuffer (frameOf b1) (as_addr b1) in
-  MG.loc_includes_aloc #_ #cls #(frameOf b1) #(as_addr b1) (ubuffer_of_buffer b1) (ubuffer_of_buffer b2 <: t1)
+  MG.loc_includes_aloc #_ #cls #(frameOf b1) #(as_addr b1) (ubuffer_of_buffer b1) (ubuffer_of_buffer b2)
 
 let loc_includes_gsub_buffer_r l #_ #_ #_ b i len sub_rel =
   let b' = mgsub sub_rel b i len in
@@ -1127,7 +1142,10 @@ let modifies_loc_buffer_from_to_intro' #a #rrel #rel b from to l h h' =
         // prove that the types, rrels, rels are equal
         Heap.lemma_distinct_addrs_distinct_preorders ();
         Heap.lemma_distinct_addrs_distinct_mm ();
-        Seq.lemma_equal_instances_implies_equal_types ();
+        assert (Seq.seq t' == Seq.seq a);
+        let _s0 : Seq.seq a = as_seq h b in
+        let _s1 : Seq.seq t' = coerce_eq _ _s0 in
+        lemma_equal_instances_implies_equal_types a t' _s0 _s1;
         let boff = U32.v (Buffer?.idx b) in
         let from_ = boff + U32.v from in
         let to_ = boff + U32.v to in
@@ -1141,7 +1159,7 @@ let modifies_loc_buffer_from_to_intro' #a #rrel #rel b from to l h h' =
           (requires (i < xlen))
           (ensures (i < xlen /\ Seq.index xh i == Seq.index xh' i))
         = let xi = xoff + i in
-          let bi : ubuffer r0 a0 = 
+          let bi : ubuffer r0 a0 =
             Ghost.hide ({ b_max_length = ml; b_offset = xi; b_length = 1; b_is_mm = is_mm; })
           in
           assert (Seq.index xh i == Seq.index (Seq.slice (as_seq h b') (xi - b'off) (xi - b'off + 1)) 0);
@@ -1283,7 +1301,7 @@ let moffset #a #rrel #rel sub_rel b i =
   match b with
   | Null -> Null
   | Buffer max_len content i0 len ->
-    Buffer max_len content (U32.add i0 i) (U32.sub len i)
+    Buffer max_len content (U32.add i0 i) (Ghost.hide ((U32.sub (Ghost.reveal len) i)))
 
 let index #_ #_ #_ b i =
   let open HST in
@@ -1307,7 +1325,7 @@ let lemma_g_upd_with_same_seq #_ #_ #_ b h =
     HS.lemma_heap_equality_upd_with_sel h (Buffer?.content b)
 
 #push-options "--z3rlimit 48"
-let g_upd_seq_as_seq #_ #_ #_ b s h =
+let g_upd_seq_as_seq #a #_ #_ b s h =
   let h' = g_upd_seq b s h in
   if g_is_null b then assert (Seq.equal s Seq.empty)
   else begin
@@ -1315,7 +1333,7 @@ let g_upd_seq_as_seq #_ #_ #_ b s h =
     // prove modifies_1_preserves_ubuffers
     Heap.lemma_distinct_addrs_distinct_preorders ();
     Heap.lemma_distinct_addrs_distinct_mm ();
-    Seq.lemma_equal_instances_implies_equal_types ();
+    s_lemma_equal_instances_implies_equal_types ();
     modifies_1_modifies b h h'
   end
 
@@ -1324,16 +1342,21 @@ let g_upd_modifies_strong #_ #_ #_ b i v h =
     // prove modifies_1_from_to_preserves_ubuffers
     Heap.lemma_distinct_addrs_distinct_preorders ();
     Heap.lemma_distinct_addrs_distinct_mm ();
-    Seq.lemma_equal_instances_implies_equal_types ();
+    s_lemma_equal_instances_implies_equal_types ();
     modifies_1_from_to_modifies b (U32.uint_to_t i) (U32.uint_to_t (i + 1)) h h'
 #pop-options
 
 let upd' #_ #_ #_ b i v =
   let open HST in
+  let h = get() in
   let Buffer max_length content idx len = b in
   let s0 = !content in
-  let sb0 = Seq.slice s0 (U32.v idx) (U32.v idx + U32.v len) in
-  content := Seq.replace_subseq s0 (U32.v idx) (U32.v idx + U32.v len) (Seq.upd sb0 (U32.v i) v)
+  let sb0 = Seq.slice s0 (U32.v idx) (U32.v max_length) in
+  let s_upd = Seq.upd sb0 (U32.v i) v in
+  let sf = Seq.replace_subseq s0 (U32.v idx) (U32.v max_length) s_upd in
+  assert (sf `Seq.equal`
+    Seq.replace_subseq s0 (U32.v idx) (U32.v idx + U32.v len) (Seq.upd (as_seq h b) (U32.v i) v));
+  content := sf
 
 let recallable (#a:Type0) (#rrel #rel:srel a) (b:mbuffer a rrel rel) :GTot Type0 =
   (not (g_is_null b)) ==> (
@@ -1341,6 +1364,19 @@ let recallable (#a:Type0) (#rrel #rel:srel a) (b:mbuffer a rrel rel) :GTot Type0
     not (HS.is_mm (Buffer?.content b)) /\
     buffer_compatible b
   )
+
+let region_lifetime_buf #_ #_ #_ b =
+  (not (g_is_null b)) ==> (
+    HS.is_heap_color (HS.color (frameOf b)) /\
+    not (HS.is_mm (Buffer?.content b)) /\
+    buffer_compatible b
+  )
+
+let region_lifetime_sub #a #rrel #rel #subrel b0 b1 =
+  match b1 with
+  | Null -> ()
+  | Buffer max_len content idx length ->
+    assert (forall (len:nat) (i:nat) (j:nat{i <= j /\ j <= len}). compatible_sub_preorder len rrel i j subrel)
 
 let recallable_null #_ #_ #_ = ()
 
@@ -1399,13 +1435,26 @@ let recall_p #_ #_ #_ b p =
   | Null -> ()
   | Buffer _ content _ _ -> HST.recall_p content (spred_as_mempred b p)
 
+let witnessed_functorial #a #rrel #rel1 #rel2 b1 b2 i len s1 s2 =
+  match b1, b2 with
+  | Null, Null -> assert (as_seq HS.empty_mem b1 == Seq.empty)
+  | Buffer _ content _ _, _ ->
+    assert (forall (len:nat) (i:nat) (j:nat{i <= j /\ j <= len}). compatible_sub_preorder len rrel i j rel1);
+    HST.token_functoriality content (spred_as_mempred b1 s1) (spred_as_mempred b2 s2)
+
+let witnessed_functorial_st #a #rrel #rel1 #rel2 b1 b2 i len s1 s2 =
+  match b1, b2 with
+  | Null, Null -> ()
+  | Buffer _ content _ _, _ ->
+    HST.token_functoriality content (spred_as_mempred b1 s1) (spred_as_mempred b2 s2)
+
 let freeable (#a:Type0) (#rrel #rel:srel a) (b:mbuffer a rrel rel) =
   (not (g_is_null b)) /\
   HS.is_mm (Buffer?.content b) /\
-  HST.is_eternal_region (frameOf b) /\
+  HS.is_heap_color (HS.color (frameOf b)) /\
   U32.v (Buffer?.max_length b) > 0 /\
   Buffer?.idx b == 0ul /\
-  Buffer?.length b == Buffer?.max_length b
+  Ghost.reveal (Buffer?.length b) == Buffer?.max_length b
 
 let free #_ #_ #_ b = HST.rfree (Buffer?.content b)
 
@@ -1424,12 +1473,12 @@ private let alloc_heap_common (#a:Type0) (#rrel:srel a)
 	                        frameOf b == r /\
                                 HS.is_mm (Buffer?.content b) == mm /\
                                 Buffer?.idx b == 0ul /\
-                                Buffer?.length b == Buffer?.max_length b))
+                                Ghost.reveal (Buffer?.length b) == Buffer?.max_length b))
   = lemma_seq_sub_compatilibity_is_reflexive (U32.v len) rrel;
     let content: HST.mreference (Seq.lseq a (U32.v len)) (srel_to_lsrel (U32.v len) rrel) =
       if mm then HST.ralloc_mm r s else HST.ralloc r s
     in
-    let b = Buffer len content 0ul len in
+    let b = Buffer len content 0ul (Ghost.hide len) in
     b
 
 let mgcmalloc #_ #_ r init len =
@@ -1447,7 +1496,7 @@ private let read_sub_buffer (#a:Type0) (#rrel #rel:srel a)
   = let open HST in
     let s = ! (Buffer?.content b) in  //the whole allocation unit
     let s = Seq.slice s (U32.v (Buffer?.idx b))
-              (U32.v (Buffer?.idx b) + U32.v (Buffer?.length b)) in //b buffer
+              (U32.v (Buffer?.max_length b)) in //b buffer
     Seq.slice s (U32.v idx) (U32.v idx + U32.v len)  //slice of b
 
 let mgcmalloc_and_blit #_ #_ r #_ #_ src id_src len =
@@ -1464,16 +1513,14 @@ let malloca #a #rrel init len =
   let content: HST.mreference (Seq.lseq a (U32.v len)) (srel_to_lsrel (U32.v len) rrel) =
     HST.salloc (Seq.create (U32.v len) init)
   in
-  let b = Buffer len content 0ul len in
-  b
+  Buffer len content 0ul (Ghost.hide len)
 
 let malloca_and_blit #a #rrel #_ #_ src id_src len =
   lemma_seq_sub_compatilibity_is_reflexive (U32.v len) rrel;
   let content: HST.mreference (Seq.lseq a (U32.v len)) (srel_to_lsrel (U32.v len) rrel) =
     HST.salloc (read_sub_buffer src id_src len)
   in
-  let b = Buffer len content 0ul len in
-  b
+  Buffer len content 0ul (Ghost.hide len)
 
 let malloca_of_list #a #rrel init =
   let len = U32.uint_to_t (FStar.List.Tot.length init) in
@@ -1482,8 +1529,7 @@ let malloca_of_list #a #rrel init =
   let content: HST.mreference (Seq.lseq a (U32.v len)) (srel_to_lsrel (U32.v len) rrel) =
     HST.salloc s
   in
-  let b = Buffer len content 0ul len in
-  b
+  Buffer len content 0ul (Ghost.hide len)
 
 let mgcmalloc_of_list #a #rrel r init =
   let len = U32.uint_to_t (FStar.List.Tot.length init) in
@@ -1492,56 +1538,77 @@ let mgcmalloc_of_list #a #rrel r init =
   let content: HST.mreference (Seq.lseq a (U32.v len)) (srel_to_lsrel (U32.v len) rrel) =
     HST.ralloc r s
   in
-  let b = Buffer len content 0ul len in
-  b
+  Buffer len content 0ul (Ghost.hide len)
+
+let mmalloc_drgn #a #rrel d init len =
+  lemma_seq_sub_compatilibity_is_reflexive (U32.v len) rrel;
+  let content : HST.mreference (Seq.lseq a (U32.v len)) (srel_to_lsrel (U32.v len) rrel) =
+    HST.ralloc_drgn d (Seq.create (U32.v len) init)
+  in
+  Buffer len content 0ul len
+
+let mmalloc_drgn_mm #a #rrel d init len =
+  lemma_seq_sub_compatilibity_is_reflexive (U32.v len) rrel;
+  let content : HST.mreference (Seq.lseq a (U32.v len)) (srel_to_lsrel (U32.v len) rrel) =
+    HST.ralloc_drgn_mm d (Seq.create (U32.v len) init)
+  in
+  Buffer len content 0ul len
+
+let mmalloc_drgn_and_blit #a #rrel #_ #_ d src id_src len =
+  lemma_seq_sub_compatilibity_is_reflexive (U32.v len) rrel;
+  let content: HST.mreference (Seq.lseq a (U32.v len)) (srel_to_lsrel (U32.v len) rrel) =
+    HST.ralloc_drgn d (read_sub_buffer src id_src len)
+  in
+  Buffer len content 0ul len
 
 #push-options "--max_fuel 0 --initial_ifuel 1 --max_ifuel 1 --z3rlimit 64"
 let blit #a #rrel1 #rrel2 #rel1 #rel2 src idx_src dst idx_dst len =
   let open HST in
-  if len = 0ul then begin
-    (*
-     * AR: 07/03: the then case, which should actually be trivial, takes a long time to verify
-     *            we should do some z3 profiling to see what's going on
-     *)
-    let h = get () in
-    Seq.slice_is_empty (as_seq h dst) (U32.v idx_dst);
-    Seq.slice_is_empty (as_seq h src) (U32.v idx_src);
-    assert (Seq.equal (Seq.slice (as_seq h dst) (U32.v idx_dst) (U32.v idx_dst + U32.v len))
-                      (Seq.slice (as_seq h src) (U32.v idx_src) (U32.v idx_src + U32.v len)));
-    ()
-  end
-  else
-    let h = get () in
-    let Buffer _ content1 idx1 length1 = src in
-    let Buffer _ content2 idx2 length2 = dst in
-    let s_full1 = !content1 in
-    let s_full2 = !content2 in
-    let s1 = Seq.slice s_full1 (U32.v idx1) (U32.v idx1 + U32.v length1) in
-    let s2 = Seq.slice s_full2 (U32.v idx2) (U32.v idx2 + U32.v length2) in
-    let s_sub_src = Seq.slice s1 (U32.v idx_src) (U32.v idx_src + U32.v len) in
-    let s2' = Seq.replace_subseq s2 (U32.v idx_dst) (U32.v idx_dst + U32.v len) s_sub_src in
-    let s_full2' = Seq.replace_subseq s_full2 (U32.v idx2) (U32.v idx2 + U32.v length2) s2' in
-    (* TODO: remove once patterns on loc_buffer_from_to are introduced *)
-    let _ : squash (loc_disjoint (loc_buffer_from_to src idx_src (idx_src `U32.add` len)) (loc_buffer_from_to dst idx_dst (idx_dst `U32.add` len))) =
-      (* prove that disjoint src dst implies disjointness on loc_buffer_from_to *)
-      let prf () : Lemma
-        (requires (disjoint src dst))
-        (ensures (loc_disjoint (loc_buffer_from_to src idx_src (idx_src `U32.add` len)) (loc_buffer_from_to dst idx_dst (idx_dst `U32.add` len))))
-      = loc_includes_loc_buffer_loc_buffer_from_to src idx_src (idx_src `U32.add` len);
-        loc_includes_loc_buffer_loc_buffer_from_to dst idx_dst (idx_dst `U32.add` len);
-        loc_disjoint_includes (loc_buffer src) (loc_buffer dst) (loc_buffer_from_to src idx_src (idx_src `U32.add` len)) (loc_buffer_from_to dst idx_dst (idx_dst `U32.add` len))
-      in
-      Classical.move_requires prf ()
-    in
-    assert (Seq.equal (Seq.slice s2' (U32.v idx_dst) (U32.v idx_dst + U32.v len)) s_sub_src);
-    assert (Seq.equal (Seq.slice s2' 0 (U32.v idx_dst)) (Seq.slice s2 0 (U32.v idx_dst)));
-    assert (Seq.equal (Seq.slice s2' (U32.v idx_dst + U32.v len) (length dst))
-                      (Seq.slice s2 (U32.v idx_dst + U32.v len) (length dst)));
-    content2 := s_full2';
-    g_upd_seq_as_seq dst s2' h  //for modifies clause
-#pop-options
+  match src, dst with
+  | Buffer _ _ _ _, Buffer _ _ _ _ ->
+    if len = 0ul then ()
+    else
+      let h = get () in
+      let Buffer max_length1 content1 idx1 length1 = src in
+      let Buffer max_length2 content2 idx2 length2 = dst in
+      let s_full1 = !content1 in
+      let s_full2 = !content2 in
+      let s1 = Seq.slice s_full1 (U32.v idx1) (U32.v max_length1) in
+      let s2 = Seq.slice s_full2 (U32.v idx2) (U32.v max_length2) in
+      let s_sub_src = Seq.slice s1 (U32.v idx_src) (U32.v idx_src + U32.v len) in
+      let s2' = Seq.replace_subseq s2 (U32.v idx_dst) (U32.v idx_dst + U32.v len) s_sub_src in
+      let s_full2' = Seq.replace_subseq s_full2 (U32.v idx2) (U32.v max_length2) s2' in
 
-#push-options "--z3rlimit 64 --max_fuel 0 --max_ifuel 1 --initial_ifuel 1"
+      assert (Seq.equal (Seq.slice s2' (U32.v idx_dst) (U32.v idx_dst + U32.v len)) s_sub_src);
+      assert (Seq.equal (Seq.slice s2' 0 (U32.v idx_dst)) (Seq.slice s2 0 (U32.v idx_dst)));
+      assert (Seq.equal (Seq.slice s2' (U32.v idx_dst + U32.v len) (length dst))
+                        (Seq.slice s2 (U32.v idx_dst + U32.v len) (length dst)));
+
+    // AF: Needed to trigger the preorder relation. A bit verbose because the second sequence
+    // has a ghost computation (U32.v (Ghost.reveal length))
+    assert (s_full2' `Seq.equal`
+            Seq.replace_subseq s_full2
+                               (U32.v idx2)
+                               (U32.v idx2 + U32.v length2)
+                               (Seq.replace_subseq (as_seq h dst)
+                                                   (U32.v idx_dst)
+                                                   (U32.v idx_dst + U32.v len)
+			                           (Seq.slice (as_seq h src)
+                                                              (U32.v idx_src)
+                                                              (U32.v idx_src + U32.v len)
+                                                   )
+                               )
+            );
+
+      content2 := s_full2';
+
+      let h1 = get () in
+      assert (s_full2' `Seq.equal` Seq.replace_subseq s_full2 (U32.v idx2) (U32.v idx2 + U32.v length2) (Seq.slice s2' 0 (U32.v length2)));
+      assert (h1 == g_upd_seq dst (Seq.slice s2' 0 (U32.v length2)) h);
+      g_upd_seq_as_seq dst (Seq.slice s2' 0 (U32.v length2)) h  //for modifies clause
+  | _, _ -> ()
+
+#push-options "--z3rlimit 128 --max_fuel 0 --max_ifuel 1 --initial_ifuel 1 --z3cliopt smt.qi.EAGER_THRESHOLD=4"
 let fill' (#t:Type) (#rrel #rel: srel t)
   (b: mbuffer t rrel rel)
   (z:t)
@@ -1564,15 +1631,18 @@ let fill' (#t:Type) (#rrel #rel: srel t)
     let h = get () in
     let Buffer max_length content idx length = b in
     let s_full = !content in
-    let s = Seq.slice s_full (U32.v idx) (U32.v idx + U32.v length) in
+    let s = Seq.slice s_full (U32.v idx) (U32.v max_length) in
     let s_src = Seq.create (U32.v len) z in
     let s' = Seq.replace_subseq s 0 (U32.v len) s_src in
     let s_full' = Seq.replace_subseq s_full (U32.v idx) (U32.v idx + U32.v len) s_src in
-    assert (s_full' `Seq.equal` Seq.replace_subseq s_full (U32.v idx) (U32.v idx + U32.v length) s');
+    // AF: Needed to trigger the preorder relation. A bit verbose because the second sequence
+    // has a ghost computation (U32.v (Ghost.reveal length))
+    assert (s_full' `Seq.equal` Seq.replace_subseq s_full (U32.v idx) (U32.v idx + U32.v length) (Seq.replace_subseq (Seq.slice s_full (U32.v idx) (U32.v idx + U32.v length)) 0 (U32.v len) s_src));
     content := s_full';
     let h' = HST.get () in
-    assert (h' == g_upd_seq b s' h);
-    g_upd_seq_as_seq b s' h  //for modifies clause
+    assert (s_full' `Seq.equal` Seq.replace_subseq s_full (U32.v idx) (U32.v idx + U32.v length) (Seq.slice s' 0 (U32.v length)));
+    assert (h' == g_upd_seq b (Seq.slice s' 0 (U32.v length)) h);
+    g_upd_seq_as_seq b (Seq.slice s' 0 (U32.v length)) h  //for modifies clause
   end
 #pop-options
 

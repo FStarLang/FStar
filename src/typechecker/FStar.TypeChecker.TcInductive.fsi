@@ -1,11 +1,11 @@
 #light "off"
 module FStar.TypeChecker.TcInductive
-open FStar.ST
-open FStar.All
-open FStar
+open FStar.Compiler.Effect
+open FStar.Compiler.Effect
+open FStar open FStar.Compiler
 open FStar.TypeChecker
 open FStar.TypeChecker.Env
-open FStar.Util
+open FStar.Compiler.Util
 open FStar.Ident
 open FStar.Syntax
 open FStar.Syntax.Syntax
@@ -16,8 +16,6 @@ open FStar.TypeChecker.Rel
 open FStar.TypeChecker.Common
 
 val check_inductive_well_typedness: env_t -> list<sigelt> -> list<qualifier> -> list<lident> -> (sigelt * list<sigelt> * list<sigelt>)
-val check_positivity: sigelt -> env -> bool
-val check_exn_positivity: lid -> env -> bool
 
 val early_prims_inductives :list<string>
 
@@ -26,4 +24,4 @@ val get_haseq_axiom_lid: lid -> lid  //for the given inductive tycon lid, get th
 val optimized_haseq_scheme: sigelt -> list<sigelt> -> list<sigelt> -> env_t -> list<sigelt>
 val unoptimized_haseq_scheme: sigelt -> list<sigelt> -> list<sigelt> -> env_t -> list<sigelt>
 
-val mk_data_operations: list<qualifier> -> env -> list<sigelt> -> sigelt -> list<sigelt>  //elaborate discriminator and projectors
+val mk_data_operations: list<qualifier> -> list<attribute> -> env -> list<sigelt> -> sigelt -> list<sigelt>  //elaborate discriminator and projectors

@@ -1,0 +1,25 @@
+[
+  "[\u0007¶À‡WÉ∂∫?\u0018bµ\u001a\u0007\u007f",
+  [
+    [
+      "Bug162.eval",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_65b174b249a700ce28c04f3b50fefb87_0",
+        "equation_Bug162.good", "equation_Prims.nat", "int_inversion",
+        "int_typing",
+        "interpretation_Tm_abs_3dccb3b317e963ed790a5ac81ae0fe4c",
+        "primitive_Prims.op_Addition", "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_8aa9e6cae545c0e84b17a5689bf4bf5b",
+        "well-founded-ordering-on-nat"
+      ],
+      0,
+      "f5a01d8501cdeb7c5ed240cb0239229e"
+    ]
+  ]
+]

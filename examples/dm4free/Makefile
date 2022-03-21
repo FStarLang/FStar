@@ -1,4 +1,3 @@
-FSTAR_HOME=../..
 include ../Makefile.include
 
 all: uall
@@ -11,6 +10,7 @@ uall:	FStar.DM4F.MonadLaws.uver \
 	FStar.DM4F.ST.uver \
 	FStar.DM4F.Heap.uver \
 	FStar.DM4F.Heap.ST.uver \
+	FStar.DM4F.Heap.IntStoreFixed.uver \
 	FStar.DM4F.StExnC.uver \
 	FStar.DM4F.IFC.uver \
 	FStar.DM4F.Continuations.uver \
@@ -24,9 +24,9 @@ uall:	FStar.DM4F.MonadLaws.uver \
 	FStar.DM4F.Id.uver
 
 old:
-	$(MAKE) -C old
+	+$(MAKE) -C old
 
 %.uver-explicit: %.fst
 	$(FSTAR) $^ --explicit_deps
 
-include $(FSTAR_HOME)/ulib/ml/Makefile.include
+include $(FSTAR_ULIB)/ml/Makefile.include

@@ -4,7 +4,7 @@ module FStar.Tactics.Native
 open FStar.Tactics.Types
 open FStar.Tactics.Basic
 open FStar.Syntax.Syntax
-open FStar.Range
+open FStar.Compiler.Range
 module Cfg = FStar.TypeChecker.Cfg
 module N = FStar.TypeChecker.Normalize
 module EMB = FStar.Syntax.Embeddings
@@ -18,5 +18,3 @@ type native_primitive_step =
       tactic: itac}
 
 let list_all : unit -> list<native_primitive_step> = fun () -> []
-
-let is_native_tactic : FStar.Ident.lid -> bool = fun _ -> false

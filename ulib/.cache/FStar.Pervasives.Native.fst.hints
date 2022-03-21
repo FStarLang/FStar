@@ -1,0 +1,145 @@
+[
+  "åÍ\u000f\u0014n%\u0005<¿¡QfÜC\u00193",
+  [
+    [
+      "FStar.Pervasives.Native.option",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "e2ba34f249a6d9469f796b62c532afb4"
+    ],
+    [
+      "FStar.Pervasives.Native.__proj__Some__item__v",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_FStar.Pervasives.Native.Some",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_4d5241eb6fe198666a8101195bbd4a2a"
+      ],
+      0,
+      "a64c9f8ebd1aeab30a8dd387c36a3365"
+    ],
+    [
+      "FStar.Pervasives.Native.tuple2",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "1cb9da3544bab8ba31defc19a33da20f"
+    ],
+    [
+      "FStar.Pervasives.Native.tuple3",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "2d9ab25895f00c2da712dfe66e93a7dc"
+    ],
+    [
+      "FStar.Pervasives.Native.tuple4",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "3c2a1e4aa0f0905bd95505f2949c3f3a"
+    ],
+    [
+      "FStar.Pervasives.Native.tuple5",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "200f41b60af0c3f6416178146e2a931f"
+    ],
+    [
+      "FStar.Pervasives.Native.tuple6",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "2533d4d38c655dd67809746d187165fe"
+    ],
+    [
+      "FStar.Pervasives.Native.tuple7",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "9cd90d74e562a0c69436e0ad772fbd84"
+    ],
+    [
+      "FStar.Pervasives.Native.tuple8",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "7bdb135c5218eff675edc7edcc3320e9"
+    ],
+    [
+      "FStar.Pervasives.Native.tuple9",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "0ecc55355006026e8238aa62d83781a3"
+    ],
+    [
+      "FStar.Pervasives.Native.tuple10",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "ae69f5852d69c01d3b53d9242fe05294"
+    ],
+    [
+      "FStar.Pervasives.Native.tuple11",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "838ebe508d3c9244282ae11238aaa7d7"
+    ],
+    [
+      "FStar.Pervasives.Native.tuple12",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "f59ad936ef2700abf657aa16a7149548"
+    ],
+    [
+      "FStar.Pervasives.Native.tuple13",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "80a4a8d8545b741673f11920f4edccca"
+    ],
+    [
+      "FStar.Pervasives.Native.tuple14",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "2cf9aa8a8e4f0bc30aee07f111758511"
+    ]
+  ]
+]

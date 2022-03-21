@@ -1,0 +1,92 @@
+[
+  "\u0002<ËÌÁy ë)–i\u001aêeò",
+  [
+    [
+      "OPLSS.Plain.plain",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_OPLSS.AES.plain",
+        "equation_OPLSS.bytes", "equation_OPLSS.lbytes",
+        "equation_Prims.eqtype",
+        "haseqTm_refine_1770f7f5914d37a8c358e0f35e606914",
+        "lemma_FStar.Seq.Base.hasEq_lemma",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "typing_FStar.UInt8.t"
+      ],
+      0,
+      "670e6b6eeec8c31dee5d4016f47c0f54"
+    ],
+    [
+      "OPLSS.Plain.reveal_hide",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_OPLSS.Plain.hide", "equation_OPLSS.Plain.reveal"
+      ],
+      0,
+      "03a7b2b6af22787045abc435d271bea3"
+    ],
+    [
+      "OPLSS.Plain.hide_reveal",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_OPLSS.Plain.hide", "equation_OPLSS.Plain.reveal"
+      ],
+      0,
+      "c058496044724e74787155a11f75573d"
+    ],
+    [
+      "OPLSS.Plain.repr",
+      1,
+      2,
+      1,
+      [ "@query", "equation_OPLSS.Plain.reveal" ],
+      0,
+      "8f7cafb0f7f6d6abb0d1b115029e4555"
+    ],
+    [
+      "OPLSS.Plain.coerce",
+      1,
+      2,
+      1,
+      [ "@query", "equation_OPLSS.Plain.hide" ],
+      0,
+      "3a428e089c02e0e3032e7a7af462cdd7"
+    ],
+    [
+      "OPLSS.Plain.length",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_OPLSS.Plain.reveal",
+        "equation_Prims.eqtype", "equation_Prims.nat",
+        "function_token_typing_Prims.int",
+        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "cc37dc7b98ee7c7f2f0f80b3a5420b80"
+    ],
+    [
+      "OPLSS.Plain.length",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_OPLSS.Plain.reveal",
+        "equation_Prims.eqtype", "equation_Prims.nat",
+        "function_token_typing_Prims.int",
+        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "410d1c4dcc7dd740929cce05b11a79fe"
+    ]
+  ]
+]

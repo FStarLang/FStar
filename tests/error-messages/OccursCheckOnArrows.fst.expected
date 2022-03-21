@@ -1,0 +1,5 @@
+>> Got issues: [
+OccursCheckOnArrows.fst(18,15-18,16): (Error 54) _: (*?u5*) _ -> Prims.Tot (*?u4*) _ is not a subtype of the expected type (*?u5*) _ (see also OccursCheckOnArrows.fst(18,9-18,10))
+>>]
+Verified module: OccursCheckOnArrows
+All verification conditions discharged successfully

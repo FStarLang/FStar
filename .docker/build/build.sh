@@ -2,10 +2,15 @@
 
 #set -x
 
+set -e # abort on errors
+
 target=$1
-out_file=$2
+out_file=$2 # GM: This seems unused
 threads=$3
 branchname=$4
+
+# Make sure to get verbose output from makefiles
+export V=1
 
 function export_home() {
     local home_path=""
@@ -20,7 +25,7 @@ function export_home() {
     # Update .bashrc file
     token=$1_HOME=
     if grep -q "$token" ~/.bashrc; then
-        sed -i -E "s/$token.*/$token$home_path/" ~/.bashrc
+        sed -i -E "s,$token.*,$token$home_path," ~/.bashrc
     else
         echo "export $1_HOME=$home_path" >> ~/.bashrc
     fi
@@ -83,9 +88,7 @@ function fetch_kremlin() {
     export_home KREMLIN "$(pwd)/kremlin"
 }
 
-function fetch_and_make_kremlin() {
-    fetch_kremlin
-
+function make_kremlin() {
     # Default build target is minimal, unless specified otherwise
     local localTarget
     if [[ $1 == "" ]]; then
@@ -120,9 +123,7 @@ function fetch_qd() {
     export_home QD "$(pwd)/qd"
 }
 
-function fetch_and_make_qd() {
-    fetch_qd
-
+function make_qd() {
     # Default build target is minimal, unless specified otherwise
     local localTarget
     if [[ $1 == "" ]]; then
@@ -156,11 +157,50 @@ function fetch_mitls() {
     export_home MITLS "$(pwd)/mitls-fstar"
 }
 
-function refresh_fstar_hints() {
-    if [ -f ".scripts/git_rm_stale_hints.sh" ]; then
-        ./.scripts/git_rm_stale_hints.sh
+# Update the version number in version.txt and fstar.opam
+
+function update_version_number () {
+    # version suffix string
+    local dev='~dev'
+
+    # Read the latest version number
+    last_version_number=$(sed 's!'"$dev"'!!' < version.txt)
+
+    # If the only diffs are the snapshot hints and/or CI scripts,
+    # then we don't need to
+    # update the version number.  This check will fail if the version
+    # number does not correspond to any existing release.  This is
+    # sound, since if the version number is not a tag, it means that
+    # it has already been updated since the latest release, so there
+    # were more than just *.hints diffs, so we can update the version
+    # number again.  Please mind the initial 'v' introducing the
+    # version tag
+    if git diff --exit-code v$last_version_number..HEAD -- ':(exclude)*.hints' ':(exclude).docker' ':(exclude).ci' ':(exclude).scripts' ; then
+	echo "No diffs since latest release other than hints and/or CI scripts"
+	return 0
     fi
 
+    # Create a new version number.  Fail if it is identical to the
+    # last version number. In other words, this task should be run at
+    # most once a day.
+    this_date=$(date '+%Y.%m.%d')
+    version_number="$this_date""$dev"
+    [[ $version_number != $last_version_number ]]
+
+    # Update it in version.txt
+    echo $version_number > version.txt
+
+    # Update it in fstar.opam
+    sed -i 's!^version:.*$!version: "'$version_number'"!' fstar.opam
+
+    # Commit the new version number. This is guaranteed to be a
+    # nonempty change, since version numbers were tested to be
+    # different
+    git add -u version.txt fstar.opam
+    git commit -m "[CI] bump version number to $version_number"
+}
+
+function refresh_fstar_hints() {
     refresh_hints "git@github.com:FStarLang/FStar.git" "git ls-files src/ocaml-output/ | xargs git add" "regenerate hints + ocaml snapshot" "."
 }
 
@@ -179,17 +219,42 @@ function refresh_hints() {
     CI_BRANCH=${branchname##refs/heads/}
     echo "Current branch_name=$CI_BRANCH"
 
+    # Record the latest commit
+    last_commit=$(git rev-parse HEAD)
+    
     # Add all the hints, even those not under version control
-    find $hints_dir -iname '*.hints' -and -not -path '*/.*' -and -not -path '*/dependencies/*' | xargs git add
+    find $hints_dir/doc -iname '*.hints' | xargs git add
+    find $hints_dir/examples -iname '*.hints' | xargs git add
+    find $hints_dir/ulib -iname '*.hints' | xargs git add
 
     # Without the eval, this was doing weird stuff such as,
     # when $2 = "git ls-files src/ocaml-output/ | xargs git add",
     # outputting the list of files to stdout
     eval "$extra"
 
-    git commit --allow-empty -m "[CI] $msg"
-    # Memorize that commit
+    # Commit only if changes were staged.
+    # From: https://stackoverflow.com/a/2659808
+    if ! git diff-index --quiet --cached HEAD -- ; then
+	git commit -m "[CI] $msg"
+    else
+	echo "Hints/snapshot update: no diff"
+    fi
+
+    # Update the version number in version.txt and fstar.opam, and if
+    # so, commit. Do this only for the master branch.
+    if [[ $CI_BRANCH = master ]] ; then
+	update_version_number
+    fi
+
+    # Memorize the latest commit (which might have been a version number update)
     commit=$(git rev-parse HEAD)
+
+    # If nothing has been committed (neither hints nor version number), then exit.
+    if [[ $commit = $last_commit ]] ; then
+       echo "Nothing has been committed"
+       return 0
+    fi
+
     # Drop any other files that were modified as part of the build (e.g.
     # parse.fsi)
     git reset --hard HEAD
@@ -203,7 +268,7 @@ function refresh_hints() {
     git merge $commit -Xtheirs
 
     # Check if build hints branch exist on remote and remove it if it exists
-    exist=$(git branch -a | egrep 'remotes/origin/BuildHints-master' | wc -l)
+    exist=$(git branch -a | egrep 'remotes/origin/BuildHints-'$CI_BRANCH | wc -l)
     if [ $exist == 1 ]; then
         git push $remote :BuildHints-$CI_BRANCH
     fi
@@ -212,6 +277,122 @@ function refresh_hints() {
     git checkout -b BuildHints-$CI_BRANCH
     git push $remote BuildHints-$CI_BRANCH
 }
+
+function fstar_binary_build () {
+    fetch_kremlin
+    ./.scripts/process_build.sh && echo true >$status_file
+}
+
+function fstar_docs_build () {
+    # First - get fstar built
+    # Second - run fstar with the --doc flag
+    make -C src/ocaml-output clean && \
+        make -C src/ocaml-output -j $threads && \
+        .ci/fsdoc.sh && \
+        echo true >$status_file
+}
+
+function fstar_default_build () {
+    localTarget=$1
+
+    if [[ $localTarget == "uregressions-ulong" ]]; then
+        export OTHERFLAGS="--record_hints $OTHERFLAGS"
+    fi
+
+    # Start fetching while we build F*
+    fetch_kremlin &
+    fetch_hacl &
+    fetch_qd &
+    fetch_mitls &
+
+    # Build F*, along with fstarlib
+    if ! make -C src -j $threads utest-prelude; then
+        echo Warm-up failed
+        echo Failure >$result_file
+        return 1
+    fi
+
+    export_home FSTAR "$(pwd)"
+
+    wait # for fetches above
+
+    # The commands above were executed in sub-shells and their EXPORTs are not
+    # propagated to the current shell. Re-do.
+    export_home HACL "$(pwd)/hacl-star"
+    export_home EVERCRYPT "$(pwd)/hacl-star/providers"
+    export_home KREMLIN "$(pwd)/kremlin"
+    export_home QD "$(pwd)/qd"
+
+    # Fetch and build subprojects for orange tests
+    make_kremlin &
+    make_qd &
+    wait
+
+    # fetch_vale depends on fetch_hacl for the hacl-star/vale/.vale_version file
+    fetch_vale
+
+    # Once F* is built, run its main regression suite, along with more relevant
+    # tests.
+    {
+        $gnutime make -C src -j $threads -k $localTarget && echo true >$status_file
+        echo Done building FStar
+    } &
+
+    {
+        OTHERFLAGS='--warn_error -276 --use_hint_hashes' \
+        NOOPENSSLCHECK=1 make -C hacl-star -j $threads min-test ||
+            {
+                echo "Error - Hacl.Hash.MD.fst.checked (HACL*)"
+                echo " - min-test (HACL*)" >>$ORANGE_FILE
+            }
+    } &
+
+    # The LowParse test suite is now in project-everest/everparse
+    {
+        $gnutime make -C qd -j $threads -k lowparse-fstar-test || {
+            echo "Error - LowParse"
+            echo " - min-test (LowParse)" >>$ORANGE_FILE
+        }
+    } &
+
+    # We now run all (hardcoded) tests in mitls-fstar@master
+    {
+        # First regenerate dependencies and parsers (maybe not
+        # really needed for now, since any test of this set
+        # already does this; but it will become necessary if
+        # we later decide to perform these tests in parallel,
+        # to avoid races.)
+        make -C mitls-fstar/src/tls refresh-depend
+
+        OTHERFLAGS=--use_hint_hashes make -C mitls-fstar/src/tls -j $threads StreamAE.fst-ver ||
+            {
+                echo "Error - StreamAE.fst-ver (mitls)"
+                echo " - StreamAE.fst-ver (mitls)" >>$ORANGE_FILE
+            }
+
+        OTHERFLAGS=--use_hint_hashes make -C mitls-fstar/src/tls -j $threads Pkg.fst-ver ||
+            {
+                echo "Error - Pkg.fst-ver (mitls verify)"
+                echo " - Pkg.fst-ver (mitls verify)" >>$ORANGE_FILE
+            }
+    } &
+
+    wait
+
+    # Make it an orange if there's a git diff. Note: FStar_Version.ml is in the
+    # .gitignore.
+    echo "Searching for a diff in src/ocaml-output"
+    if ! git diff --exit-code src/ocaml-output; then
+        echo "GIT DIFF: the files in the list above have a git diff"
+        { echo " - snapshot-diff (F*)" >>$ORANGE_FILE; }
+    fi
+
+    # We should not generate hints when building on Windows
+    if [[ $localTarget == "uregressions-ulong" && "$OS" != "Windows_NT" ]]; then
+        refresh_fstar_hints || echo false >$status_file
+    fi
+}
+
 
 function build_fstar() {
     local localTarget=$1
@@ -239,113 +420,11 @@ function build_fstar() {
     fi
 
     if [[ $localTarget == "fstar-binary-build" ]]; then
-        fetch_kremlin
-        ./.scripts/process_build.sh && echo true >$status_file
+        fstar_binary_build
     elif [[ $localTarget == "fstar-docs" ]]; then
-        # First - get fstar built
-        # Second - run fstar with the --doc flag
-        make -C src/ocaml-output clean && make -C src/ocaml-output -j $threads && .ci/fsdoc.sh && echo true >$status_file
+        fstar_docs_build
     else
-        if [[ $localTarget == "uregressions-ulong" ]]; then
-            export OTHERFLAGS="--record_hints $OTHERFLAGS"
-        fi
-
-        fetch_kremlin
-
-        if ! make -C src -j $threads utest-prelude
-        then
-            echo Warm-up failed
-            echo Failure >$result_file
-        else
-            export_home FSTAR "$(pwd)"
-
-            fetch_hacl &
-            fetch_and_make_kremlin &
-            fetch_mitls &
-            fetch_and_make_qd &
-            {
-                if [ ! -d hacl-star-old ]; then
-                    git clone https://github.com/mitls/hacl-star hacl-star-old
-                    cd hacl-star-old && git reset --hard 98755f79579a0c153140e8d9a186145beafacf8f
-                fi
-            } &
-            wait
-            # fetch_vale depends on fetch_hacl for the hacl-star/vale/.vale_version file
-            fetch_vale
-
-            # The commands above were executed in sub-shells and their EXPORTs are not
-            # propagated to the current shell. Re-do.
-            export_home HACL "$(pwd)/hacl-star"
-            export_home KREMLIN "$(pwd)/kremlin"
-            export_home QD "$(pwd)/qd"
-
-            # Once F* is built, run its main regression suite, along with more relevant
-            # tests.
-            {
-                $gnutime make -C src -j $threads -k $localTarget && echo true >$status_file
-                echo Done building FStar
-            } &
-
-            {
-                OTHERFLAGS='--warn_error -276 --use_hint_hashes' \
-                NOOPENSSLCHECK=1 make -C hacl-star -j $threads min-test ||
-                    {
-                        echo "Error - Hacl.Hash.MD.fst.checked (HACL*)"
-                        echo " - min-test (HACL*)" >>$ORANGE_FILE
-                    }
-            } &
-
-	    # The LowParse test suite is now in project-everest/everparse
-	    {
-		$gnutime make -C qd -j $threads -k lowparse-fstar-test || {
-		    echo "Error - LowParse"
-		    echo " - min-test (LowParse)" >>$ORANGE_FILE
-		}
-	    } &
-	    
-            # We now run all (hardcoded) tests in mitls-fstar@master
-            {
-                # First regenerate dependencies and parsers (maybe not
-                # really needed for now, since any test of this set
-                # already does this; but it will become necessary if
-                # we later decide to perform these tests in parallel,
-                # to avoid races.)
-                make -C mitls-fstar/src/tls refresh-depend
-
-                OTHERFLAGS=--use_hint_hashes make -C mitls-fstar/src/tls -j $threads StreamAE.fst-ver ||
-                    {
-                        echo "Error - StreamAE.fst-ver (mitls)"
-                        echo " - StreamAE.fst-ver (mitls)" >>$ORANGE_FILE
-                    }
-
-                OTHERFLAGS=--use_hint_hashes make -C mitls-fstar/src/tls -j $threads Pkg.fst-ver ||
-                    {
-                        echo "Error - Pkg.fst-ver (mitls verify)"
-                        echo " - Pkg.fst-ver (mitls verify)" >>$ORANGE_FILE
-                    }
-
-                OTHERFLAGS="--use_hint_hashes --use_extracted_interfaces true" make -C mitls-fstar/src/tls -j $threads Pkg.fst-ver ||
-                    {
-                        echo "Error - Pkg.fst-ver with --use_extracted_interfaces true (mitls verify)"
-                        echo " - Pkg.fst-ver with --use_extracted_interfaces true (mitls verify)" >>$ORANGE_FILE
-                    }
-            } &
-
-            wait
-
-            # Make it an orange if there's a git diff. Note: FStar_Version.ml is in the
-            # .gitignore.
-            echo "Searching for a diff in src/ocaml-output"
-            if ! git diff --exit-code --name-only src/ocaml-output; then
-                echo "GIT DIFF: the files in the list above have a git diff"
-                { echo " - snapshot-diff (F*)" >>$ORANGE_FILE; }
-            fi
-
-            # We should not generate hints when building on Windows
-            if [[ $localTarget == "uregressions-ulong" && "$OS" != "Windows_NT" ]]; then
-                refresh_fstar_hints || echo false >$status_file
-            fi
-        fi
+        fstar_default_build $target
     fi
 
     if [[ $(cat $status_file) != "true" ]]; then

@@ -139,7 +139,7 @@ let point #a x = fun y -> if y = Some x then 1 else 0
 
 (** If there exists a bijection over tapes such that `p1` evaluated
     on the result of `c1` is less than or equal to `p2` evaluated
-    on the resulf of `c2`, then the measure of `p1` wrt `c1` is less than or
+    on the result of `c2`, then the measure of `p1` wrt `c1` is less than or
     equal to the measure of `p2` wrt `c2` *)
 val pr_leq: #a:Type -> #b:Type ->
   c1:(store -> M (a * id)) ->

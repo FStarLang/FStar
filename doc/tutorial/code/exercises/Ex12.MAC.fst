@@ -30,7 +30,7 @@ module SHA1 = Ex12.SHA1
 (* We make the MAC.key abstract so that it cannot be accessed by 
    the adversary *)
 
-abstract type key=SHA1.key 
+(* abstract *) type key=SHA1.key 
 
 (* we attach an authenticated properties to each key,
    used as a pre-condition for MACing and

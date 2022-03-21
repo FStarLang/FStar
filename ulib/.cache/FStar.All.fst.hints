@@ -1,0 +1,18 @@
+[
+  "\u0012äeêíb©ﬂœ’∞\u0013ë≥…A",
+  [
+    [
+      "FStar.All.__proj__Failure__item__uu___",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_FStar.All.Failure",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_149c6719f34c408becdf9120a4ae2d59"
+      ],
+      0,
+      "4ce9357b5d2d611dfae03ac4176b46bf"
+    ]
+  ]
+]

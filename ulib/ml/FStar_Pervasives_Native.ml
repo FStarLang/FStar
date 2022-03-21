@@ -14,8 +14,8 @@ let __proj__Some__item__v = function Some x -> x | _ -> assert false
 (* 'a * 'b *)
 type ('a,'b) tuple2 = 'a * 'b[@@deriving yojson,show]
 
-let fst = Pervasives.fst
-let snd = Pervasives.snd
+let fst = Stdlib.fst
+let snd = Stdlib.snd
 
 let __proj__Mktuple2__1 = fst
 let __proj__Mktuple2__2 = snd

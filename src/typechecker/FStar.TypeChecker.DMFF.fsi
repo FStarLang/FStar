@@ -17,8 +17,8 @@
 *)
 #light "off"
 module FStar.TypeChecker.DMFF
-open FStar.ST
-open FStar.All
+open FStar.Compiler.Effect
+open FStar.Compiler.Effect
 open FStar.TypeChecker
 open FStar.Syntax.Syntax
 
@@ -40,3 +40,5 @@ val double_star: typ -> typ
 val star_type: env -> typ -> typ
 val star_expr: env -> term -> typ * term * term
 val trans_F  : env -> typ -> term -> term
+val recheck_debug : string -> FStar.TypeChecker.Env.env -> term -> term
+val cps_and_elaborate : FStar.TypeChecker.Env.env -> eff_decl -> (list<sigelt> * eff_decl * option<sigelt>)

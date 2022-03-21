@@ -1,0 +1,40 @@
+[
+  "Q^™úÐê\tg:„'Í3\u00172Ä",
+  [
+    [
+      "FStar.Reader.f",
+      1,
+      2,
+      1,
+      [
+        "@query", "int_typing", "primitive_Prims.op_Addition", "unit_typing"
+      ],
+      0,
+      "f5bcd38db146edfe0337f9c1ff83fa48"
+    ],
+    [
+      "FStar.Reader.g",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "equation_FStar.Heap.trivial_preorder",
+        "equation_FStar.Heap.trivial_rel", "equation_FStar.ST.mref",
+        "equation_FStar.ST.ref", "equation_Prims.eqtype",
+        "function_token_typing_FStar.Heap.trivial_preorder",
+        "function_token_typing_Prims.__cache_version_number__",
+        "function_token_typing_Prims.int", "int_inversion",
+        "interpretation_Tm_abs_568747eb5009c1dec504311dee989dc2",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "refinement_interpretation_Tm_refine_41b2933971127c266ea1c6972c34dc5c",
+        "refinement_interpretation_Tm_refine_e33ef751d600ad1c7f71142479103c47",
+        "true_interp", "typing_FStar.Heap.trivial_preorder",
+        "typing_FStar.Monotonic.Heap.sel"
+      ],
+      0,
+      "b6bf25f1b362bfbe654b22a26f4cb80c"
+    ]
+  ]
+]

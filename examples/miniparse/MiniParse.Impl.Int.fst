@@ -71,7 +71,7 @@ let parse_bounded_u16_impl
   if b >= 65536
   then (fun input len -> parse_synth_impl parse_u16_impl (fun x -> x <: bounded_u16 b) (fun x -> x <: bounded_u16 b) (fun x -> x) () input len)
   else
-    [@inline_let]
+    [@@inline_let]
     let b' = U16.uint_to_t b in
     parse_synth_impl
       (parse_filter_impl parse_u16_impl (fun x -> U16.v x < b) (fun x -> x `U16.lt` b'))

@@ -1,8 +1,0 @@
-.PHONY: all verify-% __force__
-
-ifndef FSTAR_HOME
-   $(error "Please define the `FSTAR_HOME` variable before including this makefile.")
-endif
-
-include $(FSTAR_HOME)/ulib/gmake/z3.mk
-include $(FSTAR_HOME)/ulib/gmake/fstar.mk

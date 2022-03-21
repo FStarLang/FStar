@@ -15,13 +15,13 @@
 *)
 #light "off"
 module FStar.ToSyntax.Interleave
-open FStar.ST
-open FStar.All
+open FStar.Compiler.Effect
+open FStar.Compiler.Effect
 open FStar.Ident
 open FStar.Parser.AST
 
 (* GM: If I don't use the full name, I cannot bootstrap *)
 
 val initialize_interface:        lident -> list<decl> -> FStar.Syntax.DsEnv.withenv<unit>
-val prefix_with_interface_decls: decl -> FStar.Syntax.DsEnv.withenv<(list<decl>)>
+val prefix_with_interface_decls: lident -> decl -> FStar.Syntax.DsEnv.withenv<(list<decl>)>
 val interleave_module:           modul -> bool -> FStar.Syntax.DsEnv.withenv<modul>

@@ -15,11 +15,11 @@
 *)
 #light "off"
 module FStar.Parser.ParseIt
-open FStar.ST
-open FStar.All
+open FStar.Compiler.Effect
+open FStar.Compiler.Effect
 open FStar.Parser
-open FStar.Util
-open FStar
+open FStar.Compiler.Util
+open FStar open FStar.Compiler
 open FStar.Errors
 
 type filename = string
@@ -50,4 +50,4 @@ type parse_result =
 val parse: parse_frag -> parse_result // either<(AST.inputFragment * list<(string * Range.range)>) , (string * Range.range)>
 val find_file: string -> string
 
-val parse_warn_error: string -> list<FStar.Options.error_flag>
+val parse_warn_error: string -> list<FStar.Errors.error_setting>

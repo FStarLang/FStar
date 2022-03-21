@@ -1,0 +1,17 @@
+[
+  "a(Žos+\r8\fWBÿ°\u0006–­",
+  [
+    [
+      "FStar.Tactics.Common.__proj__TacticFailure__item__uu___",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_f53d64a13e4d8d524df16a3fedd94d61"
+      ],
+      0,
+      "a4bf8c330ced885ef50c80a5a65de415"
+    ]
+  ]
+]

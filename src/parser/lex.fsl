@@ -21,7 +21,7 @@ module FStar.LexFStar
  * (c) Microsoft Corporation. All rights reserved
  *-----------------------------------------------------------------------*)
 open FSharp.Compatibility.OCaml
-open FStar.Range
+open FStar.Compiler.Range
 open FStar.Parser
 open FStar.Parser.Parse
 open FStar.Parser.AST
@@ -235,8 +235,6 @@ rule token args = parse
      { SPLICE }
  | "`%"
      { BACKTICK_PERC }
- | "quote"
-     { QUOTE }
  | ident
      { Lexhelp.kwd_or_id args (getLexerRange lexbuf) (ulexeme lexbuf) }
  | "`#"
@@ -257,6 +255,8 @@ rule token args = parse
      { PRAGMA_RESET_OPTIONS }
  | "#restart-solver"
      { PRAGMA_RESTART_SOLVER }
+ | "#print-effects-graph"
+     { PRAGMA_PRINT_EFFECTS_GRAPH }
  | "#push-options"
      { PRAGMA_PUSH_OPTIONS }
  | "#pop-options"
@@ -282,12 +282,12 @@ rule token args = parse
      {
        let s = ulexeme lexbuf in INT(s, false)
      }
- 
+
  | range { let s = ulexeme lexbuf in RANGE(s) }
 
  | real
      { REAL (string_trim_both (ulexeme lexbuf) 0 1) }
-     
+
  | ieee64
      { IEEE64 (try float(ulexeme lexbuf) with _ -> fail lexbuf (Errors.Fatal_InvalidFloatingPointNumber, "Invalid floating point number") 0.0) }
 
@@ -323,20 +323,15 @@ rule token args = parse
  | '\'' unicodegraph_short '\'' { CHAR (char (int32 (Lexhelp.unicodegraph_short (trim_both lexbuf 3 1)))) }
  | '\'' unicodegraph_long '\''  { raise_err (Errors.Fatal_InvalidUnicodeInStringLiteral, "This unicode encoding is only valid in string literals") }
  | "<:"             { SUBTYPE }
+ | "$:"             { EQUALTYPE }
  | "<@"             { SUBKIND }
 
  | "(|"             { LENS_PAREN_LEFT }
  | "|)"             { LENS_PAREN_RIGHT }
 
- | "(*" '*'* "*)" // Silly to have, but fsdoc breaks bootstrapping otherwise
-    { token args lexbuf }
-
  | "(*"
      { let m = getLexerRange  lexbuf in
        comment(1,m,args) lexbuf }
-
- | "(**"
-     { fsdoc(1,"",[]) lexbuf}
 
  | '"'
      { let buf,fin,m = start_string lexbuf in
@@ -360,6 +355,8 @@ rule token args = parse
      }
 
  | "///[@"
+ | "[@@@"       { LBRACK_AT_AT_AT }
+ | "[@@"       { LBRACK_AT_AT }
  | "[@"        { LBRACK_AT }
  | "//"  [^'\n''\r']*
      { token args lexbuf  }
@@ -389,9 +386,9 @@ rule token args = parse
  | "?." { QMARK_DOT }
  | "?" { QMARK }
  | ".[" { DOT_LBRACK }
- | ".(|" { DOT_LENS_PAREN_LEFT } 
+ | ".(|" { DOT_LENS_PAREN_LEFT }
  | ".(" { DOT_LPAREN }
- | ".[|" { DOT_LBRACK_BAR } 
+ | ".[|" { DOT_LBRACK_BAR }
  | "{:pattern" { LBRACE_COLON_PATTERN }
  | ":" { COLON }
  | "::" { COLON_COLON }
@@ -402,11 +399,13 @@ rule token args = parse
  | "!{" { BANG_LBRACE }
  | "[" { LBRACK }
  | "[|" { LBRACK_BAR }
+ | "{|" { LBRACE_BAR }
  | "<" {  if is_typ_app args lexbuf then TYP_APP_LESS else OPINFIX0c("<")  }
  | ">" {  if is_typ_app_gt () then TYP_APP_GREATER else symbolchar_parser args lexbuf }
  | "|>" { PIPE_RIGHT }
  | "]"  { RBRACK }
  | "|]" { BAR_RBRACK }
+ | "|}" { BAR_RBRACE }
  | "{" { LBRACE }
  | "|" { BAR }
  | "}" { RBRACE }
@@ -426,7 +425,7 @@ rule token args = parse
  | ".()<-"                { OP_MIXFIX_ASSIGNMENT (ulexeme lexbuf) }
  | ".(||)<-"              { OP_MIXFIX_ASSIGNMENT (ulexeme lexbuf) }
  | ".[||]<-"                { OP_MIXFIX_ASSIGNMENT (ulexeme lexbuf) }
- 
+
  | ".[]"                  { OP_MIXFIX_ACCESS (ulexeme lexbuf) }
  | ".()"                  { OP_MIXFIX_ACCESS (ulexeme lexbuf) }
  | ".(||)"                { OP_MIXFIX_ACCESS (ulexeme lexbuf) }
@@ -593,59 +592,6 @@ and comment cargs = parse
  | _ { let n,m,args = cargs in
        comment(n,m,args) lexbuf }
 
-and fsdoc cargs = parse
- | '(' '*'
-    { let n,doc,kw = cargs in
-      fsdoc (n+1,doc^"(*",kw) lexbuf }
-
- // Fsdoc followed by newline is a standalone comment and uses a different
- // token from fsdoc annotations to avoid all grammar ambiguities
- | "*)" newline newline
-    { let n,doc,kw = cargs in
-	  mknewline 2 lexbuf;
-      if n > 1 then fsdoc (n-1,doc^(ulexeme lexbuf),kw) lexbuf
-      else FSDOC_STANDALONE(doc,kw) }
-
- | "*)" newline
-    { let n,doc,kw = cargs in
-	  mknewline 1 lexbuf;
-      if n > 1 then fsdoc (n-1,doc^(ulexeme lexbuf),kw) lexbuf
-      else FSDOC(doc,kw) }
-
- | newline "\\@"
-    { let n,doc,kw = cargs in
-	  mknewline 1 lexbuf;
-	  let nl = trim_right lexbuf 2 in
-	  fsdoc(n,doc^nl^"@",kw) lexbuf}
-
- | newline "@"
-	 { let n,doc,kw = cargs in
-	   mknewline 1 lexbuf;
-	   fsdoc_kw (n,doc,kw) lexbuf}
-
- | newline
-    { let n,doc,kw = cargs in
-      mknewline 1 lexbuf;
-      fsdoc (n,doc^(ulexeme lexbuf),kw) lexbuf }
-
- | _ { let n,doc,kw = cargs in
-       fsdoc(n,doc^(ulexeme lexbuf),kw) lexbuf }
-
-and fsdoc_kw cargs = parse
- | anywhite*
-     {fsdoc_kw cargs lexbuf}
- | ['a'-'z' 'A'-'Z']+
-     { let n,doc,kw = cargs in
-	   fsdoc_kw_arg(n,doc,kw,ulexeme lexbuf,"") lexbuf }
- | _ { fail lexbuf (Errors.Fatal_InvalidFSDocKeyword, "Invalid FSDoc keyword") EOF }
-
-and fsdoc_kw_arg cargs = parse
- | newline
-     { let n,doc,kw,kwn,kwa = cargs in
-	   mknewline 1 lexbuf;
-	   fsdoc(n,doc^(ulexeme lexbuf),(kwn,kwa)::kw) lexbuf}
- | _ { let n,doc,kw,kwn,kwa = cargs in
-       fsdoc_kw_arg(n,doc,kw,kwn,kwa^(ulexeme lexbuf)) lexbuf }
 
 and ignore_endline args = parse
  | ' '* newline

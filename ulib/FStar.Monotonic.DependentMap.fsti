@@ -188,7 +188,7 @@ val extend
     (t:t r a b inv)
     (x:a)
     (y:b x)
-  : ST unit
+  : Stack unit
        (requires (fun h ->
          ~(defined t x h) /\
          inv (repr (upd (HS.sel h t) x y))))
@@ -242,5 +242,5 @@ val map_f (#a:eqtype) (#b #c:a -> Type)
 	  :ST (t r' a c inv')
 	      (requires (fun h0 -> inv' (DM.map (f_opt f) (repr (HS.sel h0 m))) /\ witnessed (region_contains_pred r')))
 	      (ensures  (fun h0 m' h1 ->
-	                 inv' (DM.map (f_opt f) (repr (HS.sel h0 m))) /\  //AR: surprised that even after the fix for #57, we need this repetetion from the requires clause
+	                 inv' (DM.map (f_opt f) (repr (HS.sel h0 m))) /\  //AR: surprised that even after the fix for #57, we need this repetition from the requires clause
 	                 ralloc_post r' (mmap_f (HS.sel h0 m) f) h0 m' h1))

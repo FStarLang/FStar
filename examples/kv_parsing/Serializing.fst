@@ -104,7 +104,7 @@ inline_for_extraction
 let serializer_any (inputs:erased (TSet.set bslice))
                    (enc: buffer_fun inputs) =
   buf:bslice ->
-  Stack (option (off:offset_into buf))
+  Stack (option (offset_into buf))
      (requires (fun h0 -> live h0 buf /\
                        disjoint_from h0 (reveal inputs) buf))
      (ensures (fun h0 r h1 ->
@@ -129,12 +129,12 @@ let serializer_1 (input:bslice) (enc: buffer_fun (hide (TSet.singleton input))) 
 
 // this is really a coercion that lifts a pure bytes serializer to one that
 // takes an input buffer (and ignores it)
-[@"substitute"]
+[@@"substitute"]
 let ser_input (input:bslice) (#b:erased bytes) (s:serializer b) : serializer_1 input (fun _ -> reveal b) =
   fun buf -> s buf
 
 // coercion to increase the size of the inputs set
-[@"substitute"]
+[@@"substitute"]
 let ser_inputs (#inputs1:erased (TSet.set bslice))
                 (inputs2:erased (TSet.set bslice){TSet.subset (reveal inputs1) (reveal inputs2)})
                 (#b: buffer_fun inputs1)
@@ -145,7 +145,7 @@ let ser_inputs (#inputs1:erased (TSet.set bslice))
 
 /// Run two serializers in sequence (monoidally combines serializers). Fully
 /// general; combines the input buffer sets of the two serializers.
-[@"substitute"]
+[@@"substitute"]
 let ser_append (#inputs1 #inputs2:erased (TSet.set bslice))
                (#b1: buffer_fun inputs1) (#b2: buffer_fun inputs2)
                (s1:serializer_any inputs1 b1) (s2:serializer_any inputs2 b2) :
@@ -188,9 +188,9 @@ let ser_append (#inputs1 #inputs2:erased (TSet.set bslice))
 
 /// Simple serializer_1 that just copies the input buffer. Fails if supplied
 /// a short output buffer, and otherwise just performs a memcpy.
-[@"substitute"]
+[@@"substitute"]
 val ser_copy : data:bslice -> serializer_1 data (fun h -> as_seq h data)
-[@"substitute"]
+[@@"substitute"]
 let ser_copy data = fun buf ->
   if U32.lt buf.len data.len then None
   else begin

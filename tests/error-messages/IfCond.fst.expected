@@ -1,0 +1,5 @@
+>> Got issues: [
+IfCond.fst(4,17-4,18): (Error 189) Expected expression of type "Prims.bool"; got expression "2" of type "Prims.int"
+>>]
+Verified module: IfCond
+All verification conditions discharged successfully

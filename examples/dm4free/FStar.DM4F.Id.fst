@@ -34,7 +34,10 @@ total reifiable reflectable new_effect {
   }
 
 // Paranoid check that dm4f didn't mess up something
-[@expect_failure]
+// GM: This is actually not very useful: if we mistakenly set
+// --lax, then this check will be skipped since it's not an
+// expect_lax_failure, but we also cannot use expect_lax_failure.
+[@@expect_failure]
 let _ = assert False
 
 // Checking that we can access the generated combinators

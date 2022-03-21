@@ -21,10 +21,10 @@ let myty b = if b then int else unit
 let mk_if (test e_true e_false: term) : Tac term =
   let br_true = (Pat_Constant C_True, e_true) in
   let br_false = (Pat_Constant C_False, e_false) in
-  let m = pack (Tv_Match test [ br_true; br_false ] ) in
+  let m = pack (Tv_Match test None [ br_true; br_false ] ) in
   m
 
-[@plugin]
+[@@plugin]
 let t () : Tac unit =
   let b = `bool in
   let test' = fresh_bv b in

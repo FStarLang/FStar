@@ -36,9 +36,7 @@ open FStar.IndefiniteDescription
 open FStar.Int
 open FStar.Int128
 open FStar.Int16
-open FStar.Int31
 open FStar.Int32
-open FStar.Int63
 open FStar.Int64
 open FStar.Int8
 open FStar.Int.Cast
@@ -63,7 +61,6 @@ open FStar.OrdSet
 open FStar.OrdSetProps
 open FStar.PredicateExtensionality
 open FStar.PropositionalExtensionality
-open FStar.Reader
 open FStar.Reflection
 
 open FStar.Tactics
@@ -72,7 +69,7 @@ open FStar.List
 // This query will go the SMT, in the default proof namespace
 let f (x:int) = assert (x + 1 == 1 + x)
 
-[@plugin]
+[@@plugin]
 let tau1 =
     (fun () -> prune "";
             addns "FStar.List";
@@ -82,7 +79,7 @@ let tau1 =
 // This one should be sent in a pruned context
 let _ = assert (rev [1;2] == [2;1]) by tau1 ()
 
-[@plugin]
+[@@plugin]
 let tau2 =
     (fun () ->
        prune "";

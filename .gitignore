@@ -34,10 +34,14 @@ cache/
 examples/*/*.ml
 examples/crypto/CntProtocol.exe
 examples/wysteria/ocaml-output/*
-examples/incl/*.neg/error.log
+
+tests/*/*.ml
+tests/incl/*.neg/error.log
 
 _build/
 /ulib/ml/_taclib_build/
+/ulib/fs/obj
+/ulib/fs/bin
 
 *.native
 *.byte
@@ -58,6 +62,8 @@ dump
 *.o
 
 .depend
+.depend.rsp
+._depend
 *.a
 *.cmxa
 *.so

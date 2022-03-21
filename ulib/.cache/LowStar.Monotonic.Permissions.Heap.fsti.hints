@@ -1,0 +1,33 @@
+[
+  "c\u001aþ\u0000©‹V¢Ymëÿ½\u0014\u0003†",
+  [
+    [
+      "LowStar.Monotonic.Permissions.Heap.share",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
+        "equation_Prims.nat", "function_token_typing_Prims.int",
+        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "e4887dbe47098c14a248934ae3fb6713"
+    ],
+    [
+      "LowStar.Monotonic.Permissions.Heap.merge",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
+        "equation_Prims.nat", "function_token_typing_Prims.int",
+        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "260e0c177ed4ce0c13fd127dd247690d"
+    ]
+  ]
+]

@@ -1,25 +1,28 @@
 open Prims
-let main : 'Auu____6 'Auu____7 . 'Auu____6 -> 'Auu____7 =
-  fun argv  ->
-    FStar_Util.print_string "Initializing ...\n";
+let main : 'uuuuu 'uuuuu1 . 'uuuuu -> 'uuuuu1 =
+  fun argv ->
+    FStar_Compiler_Util.print_string "Initializing ...\n";
     (try
-       (fun uu___3_19  ->
+       (fun uu___1 ->
           match () with
           | () ->
-              ((let uu____21 = FStar_Tests_Pars.init ()  in
-                FStar_All.pipe_right uu____21 (fun a1  -> ()));
+              (FStar_Main.setup_hooks ();
+               (let uu___4 = FStar_Tests_Pars.init () in
+                FStar_Compiler_Effect.op_Bar_Greater uu___4
+                  (fun uu___5 -> ()));
                FStar_Tests_Norm.run_all ();
-               (let uu____24 = FStar_Tests_Unif.run_all ()  in
-                if uu____24 then () else FStar_All.exit Prims.int_one);
-               FStar_All.exit Prims.int_zero)) ()
+               (let uu___6 = FStar_Tests_Unif.run_all () in
+                if uu___6
+                then ()
+                else FStar_Compiler_Effect.exit Prims.int_one);
+               FStar_Compiler_Effect.exit Prims.int_zero)) ()
      with
-     | FStar_Errors.Error (err,msg,r) when
-         let uu____42 = FStar_Options.trace_error ()  in
-         FStar_All.pipe_left Prims.op_Negation uu____42 ->
-         (if r = FStar_Range.dummyRange
-          then FStar_Util.print_string msg
+     | FStar_Errors.Error (err, msg, r, _ctx) when
+         let uu___2 = FStar_Options.trace_error () in
+         FStar_Compiler_Effect.op_Less_Bar Prims.op_Negation uu___2 ->
+         (if r = FStar_Compiler_Range.dummyRange
+          then FStar_Compiler_Util.print_string msg
           else
-            (let uu____50 = FStar_Range.string_of_range r  in
-             FStar_Util.print2 "%s: %s\n" uu____50 msg);
-          FStar_All.exit Prims.int_one))
-  
+            (let uu___4 = FStar_Compiler_Range.string_of_range r in
+             FStar_Compiler_Util.print2 "%s: %s\n" uu___4 msg);
+          FStar_Compiler_Effect.exit Prims.int_one))

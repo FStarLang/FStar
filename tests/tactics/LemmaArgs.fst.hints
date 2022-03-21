@@ -1,0 +1,47 @@
+[
+  " Y^¥~\u007fz²\u0001ÄÒ$ñ[š™",
+  [
+    [
+      "LemmaArgs.lemma_example1",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_b80473856ccf72c395276ef95e2db4d6"
+      ],
+      0,
+      "48c45a604eb8d34a8e7f48d8f8d37ef8"
+    ],
+    [
+      "LemmaArgs.example0",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int", "true_interp" ],
+      0,
+      "3b0ae7dc186584ffb87eec868ef36327"
+    ],
+    [
+      "LemmaArgs.example0",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_db815536b8c60a25cb27b439971d8826"
+      ],
+      0,
+      "c2c5e673d8c66cbdbe2796399e6d411c"
+    ],
+    [
+      "LemmaArgs.example1",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int", "true_interp" ],
+      0,
+      "3919fbd6450b64c01463a103988b92f1"
+    ]
+  ]
+]

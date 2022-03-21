@@ -221,7 +221,7 @@ private let simplify () : Tac unit =
  * step tactic steps through the wp and tries each command specific tactic
  *)
 let solve () : Tac unit =
- norm [delta; delta_only unfold_steps; primops];
+ norm [delta; delta_only unfold_steps; primops; zeta; iota];
  let _ = trytac implies_intros' in
  let _ = repeat step in
  simplify ()

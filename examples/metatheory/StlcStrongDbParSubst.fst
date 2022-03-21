@@ -155,20 +155,21 @@ let rec progress #e #t h =
      | _          -> let ExIntro e1' h1' = progress h1 in
                      ExIntro (EApp e1' e2) (SApp1 e2 h1')
 
+module T = FStar.Tactics
+
 (* Substitution extensional - used by substitution lemma below *)
 val subst_extensional: s1:sub -> s2:sub{feq s1 s2} -> e:exp ->
                        Lemma (requires True)
                              (ensures (subst s1 e = subst s2 e))
                              [SMTPat (subst s1 e); SMTPat (subst s2 e)]
 let rec subst_extensional s1 s2 e =
-  let open FStar.Tactics in
   match e with
   | EVar _ -> ()
   | ELam t e1 ->
     assert (subst s1 (ELam t e1) == ELam t (subst (sub_elam s1) e1))
-      by norm [delta_only [`%subst]];
+      by T.norm [zeta; iota; delta_only [`%subst]];
     assert (subst s2 (ELam t e1) == ELam t (subst (sub_elam s2) e1))
-      by norm [delta_only [`%subst]];
+      by T.norm [zeta; iota; delta_only [`%subst]];
     subst_extensional (sub_elam s1) (sub_elam s2) e1
   | EApp e1 e2 -> subst_extensional s1 s2 e1; subst_extensional s1 s2 e2
   | _ -> ()

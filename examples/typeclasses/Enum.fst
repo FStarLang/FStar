@@ -15,7 +15,6 @@
 *)
 module Enum
 
-open Easy
 open FStar.Tactics.Typeclasses
 open FStar.Tactics
 

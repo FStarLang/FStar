@@ -62,16 +62,15 @@ let rec partition f = function
      then hd::l1, l2
      else l1, hd::l2
 
-
 val partition_lemma: #t:eqtype -> f:(t -> Tot bool)
    -> l:list t
    -> Lemma (requires True)
-            (ensures ((length (fst (partition f l))
-                     + length (snd (partition f l)) = length l
-                  /\ (forall x. mem x (fst (partition f l)) ==> f x)
-                  /\ (forall x. mem x (snd (partition f l)) ==> not (f x))
-                  /\ (forall x. mem x l = (mem x (fst (partition f l))
-                                        || mem x (snd (partition f l)))))))
+           (ensures (
+             let l1, l2 = partition f l in
+              length l1 + length l2 = length l /\
+              (forall x. mem x l1 ==> f x) /\
+              (forall x. mem x l2 ==> not (f x)) /\
+              (forall x. mem x l = (mem x l1 || mem x l2))))
             [SMTPat (partition f l)]
 let rec partition_lemma #t f l = match l with
     | [] -> ()

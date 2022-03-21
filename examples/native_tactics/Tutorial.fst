@@ -53,7 +53,7 @@ environment for different subgoals. The main goal is to get more robust
 and faster proofs.
 
 On the other side of the Curry-Howard isomorphism, tactics can also
-be used to construct arbitrary terms, and not necessarilly proofs.
+be used to construct arbitrary terms, and not necessarily proofs.
 In this sense, they enable "metaprogramming" such as automatically
 generating printers for datatypes, recursors, or for whatever crazy
 boilerplate-like thing you want to do. We can also benefit from that in
@@ -102,7 +102,7 @@ and you can simply think of the type `squash phi` as the type of irrelevant
 proofs of `phi`. We call goals that are squashed ``irrelevant''.
 
 > For experts: You might notice that `True` is already a squash (of
-> `c_True`), so this seems useless. In this case it is, but we squash
+> `trivial`), so this seems useless. In this case it is, but we squash
 > nevertheless for consistency since this might be not so.
 
 A tactic is not required to completely prove an assertion, and can leave
@@ -117,7 +117,7 @@ and solve one of its subformulas.
 
 *)
 
-[@plugin]
+[@@plugin]
 let tau3 () : Tac unit =
   Tactics.split ();
   smt ();
@@ -187,7 +187,7 @@ succession to each of the open goals.
 
 *)
 
-[@plugin]
+[@@plugin]
 let rec split_all () : Tac unit =
   if is_conj ()
   then

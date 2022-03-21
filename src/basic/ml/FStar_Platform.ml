@@ -1,5 +1,12 @@
+type sys =
+| Windows
+| Posix
 
-(* TODO : this file does not have the same interface as platform.fsi *)
+let system =
+ if Sys.win32 || Sys.cygwin then
+     Windows
+ else
+     Posix
 
 let exe name =
   if Sys.unix then

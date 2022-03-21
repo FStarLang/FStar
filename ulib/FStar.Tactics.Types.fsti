@@ -16,6 +16,7 @@
 module FStar.Tactics.Types
 
 open FStar.Reflection.Types
+include FStar.Tactics.Common
 
 assume new type proofstate
 assume new type goal
@@ -37,17 +38,22 @@ val set_label    : string -> goal -> goal
 (* Tracing *)
 val incr_depth : proofstate -> proofstate
 val decr_depth : proofstate -> proofstate
-val tracepoint : proofstate -> unit
+(* [tracepoint] always returns true. We do not use unit to prevent
+erasure. *)
+val tracepoint : proofstate -> b:bool{b == true}
 val set_proofstate_range : proofstate -> FStar.Range.range -> proofstate
 
 type direction =
     | TopDown
     | BottomUp
 
+type ctrl_flag =
+    | Continue
+    | Skip
+    | Abort
+
 type guard_policy =
     | SMT
     | Goal
     | Force
     | Drop // unsound! careful!
-
-exception TacticFailure of string

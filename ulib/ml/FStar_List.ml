@@ -33,6 +33,10 @@ let fold_right = BatList.fold_right
 let fold_left2 = BatList.fold_left2
 let fold_right2 = BatList.fold_right2
 let rev_map_onto f l acc = fold_left (fun acc x -> f x :: acc) acc l
+let rec init = function
+  | [] -> failwith "init: empty list"
+  | [h] -> []
+  | h::t -> h::(init t)
 let last l = fold_left (fun _ x -> Some x) None l
 let collect f l = BatList.flatten (BatList.map f l)
 let unzip = BatList.split

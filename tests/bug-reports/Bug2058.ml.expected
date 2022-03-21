@@ -1,0 +1,13 @@
+open Prims
+type record1 = {
+  field: Prims.string }
+let (__proj__Mkrecord1__item__field : record1 -> Prims.string) =
+  fun projectee -> match projectee with | { field;_} -> field
+let (r0 : record1) = { field = "aaa" }
+type record2 = {
+  field1: Prims.string Prims.list }
+let (__proj__Mkrecord2__item__field : record2 -> Prims.string Prims.list) =
+  fun projectee -> match projectee with | { field1 = field;_} -> field
+let (r1 : record2) = { field1 = ["aaa"] }
+let (r2 : record1) = { field = "aaa" }
+let (r3 : record2) = { field1 = ["aaa"; "bbb"] }

@@ -26,7 +26,7 @@
 
      1. Raw vectors receive special treatment during extraction,
         especially by KreMLin, which extracts a vector to a raw C
-        pointer. When extracing to OCaml, a `raw a l` is a
+        pointer. When extracting to OCaml, a `raw a l` is a
         `Batteries.Vect t a`
 
      2. The length of a vector is representable in a U32.t
@@ -274,7 +274,7 @@ val len:
   -> len_t
 
 /// A convenience to access the length of a t-vector as a nat
-[@"deprecated: this will be moved to the ghost effect"]
+[@@"deprecated: this will be moved to the ghost effect"]
 let length (#a:Type) (x:t a) : nat = U32.v (len x)
 
 /// Access the underlying raw vector

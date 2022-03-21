@@ -323,7 +323,7 @@ contains the first [n] elements of [l] and [l2] contains the
 rest. Raises an exception if [l] has fewer than [n] elements. *)
 val splitAt: nat -> list 'a -> ML (list 'a * list 'a)
 let rec splitAt n l =
-  if n = 0 then l, []
+  if n = 0 then [], l
   else
     match l with
       | []     -> failwith "splitAt index is more that list length"

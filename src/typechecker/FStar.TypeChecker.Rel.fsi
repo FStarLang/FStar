@@ -15,17 +15,18 @@
 *)
 #light "off"
 module FStar.TypeChecker.Rel
-open FStar.ST
-open FStar.All
+open FStar.Pervasives
+open FStar.Compiler.Effect
+open FStar.Compiler.Effect
 
-open FStar
-open FStar.Util
+open FStar open FStar.Compiler
+open FStar.Compiler.Util
 open FStar.TypeChecker
 open FStar.Syntax
 open FStar.TypeChecker.Env
 open FStar.Syntax.Syntax
 open FStar.TypeChecker.Common
-open FStar.Range
+open FStar.Compiler.Range
 
 val prob_to_string: env -> prob -> string
 val flex_prob_closing         : env -> binders -> prob -> bool
@@ -45,7 +46,7 @@ val flex_prob_closing         : env -> binders -> prob -> bool
 val guard_to_string           : env -> guard_t -> string
 val simplify_guard            : env -> guard_t -> guard_t
 val solve_deferred_constraints: env -> guard_t -> guard_t
-val solve_some_deferred_constraints: env -> guard_t -> guard_t
+val solve_non_tactic_deferred_constraints: maybe_defer_flex_flex:bool -> env -> guard_t -> guard_t
 val discharge_guard_no_smt    : env -> guard_t -> guard_t
 val discharge_guard           : env -> guard_t -> guard_t
 val force_trivial_guard       : env -> guard_t -> unit
@@ -57,13 +58,17 @@ val base_and_refinement       : env -> term -> term * option<(bv * term)>
 val unrefine   : env -> typ -> typ
 val try_teq    : bool -> env -> typ -> typ -> option<guard_t>
 val teq        : env -> typ -> typ -> guard_t
+val get_teq_predicate : env -> typ -> typ -> option<guard_t>
+val teq_force  : env -> typ -> typ -> unit
 val teq_nosmt        : env -> typ -> typ -> option<guard_t>
 val teq_nosmt_force  : env -> typ -> typ -> bool
+val layered_effect_teq : env -> typ -> typ -> reason:option<string> -> guard_t
 val get_subtyping_predicate: env -> typ -> typ -> option<guard_t>
 val get_subtyping_prop: env -> typ -> typ -> option<guard_t>
 val subtype_nosmt       : env -> typ -> typ -> option<guard_t>
 val subtype_nosmt_force : env -> typ -> typ -> bool
 val sub_comp   : env -> comp -> comp -> option<guard_t>
+val eq_comp : env -> comp -> comp -> option<guard_t>
 
 val universe_inequality : universe -> universe -> guard_t
 

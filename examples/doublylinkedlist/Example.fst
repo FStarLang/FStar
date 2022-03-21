@@ -24,7 +24,7 @@ module L = FStar.List.Tot
 
 open DLL
 
-let rec l_reverse (l:list 'a) : GTot (y:list 'a) =
+let rec l_reverse (l:list 'a) : GTot (list 'a) =
   match l with
   | [] -> []
   | hd :: tl ->

@@ -19,10 +19,10 @@ open FStar.Tactics
 open FStar.Mul
 open FStar.Tactics.Canon
 
-[@plugin]
+[@@plugin]
 let canon () = FStar.Tactics.Canon.canon()
 
-[@plugin]
+[@@plugin]
 let check_canon () =
     canon ();
     trivial ();

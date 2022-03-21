@@ -1,6 +1,5 @@
 
 OTHERFLAGS+=$(FLAGS) $(LIB) --include ../dm4free
-FSTAR_HOME=../..
 include ../Makefile.include
 
 uall: all
@@ -58,7 +57,7 @@ benton2004:\
   Benton2004.RHL.Derived.uver\
   Benton2004.RHL.Examples2.uver\
 
-%.fst-in:
+%.fsti-in %.fst-in:
 	@echo $(OTHERFLAGS)
 
 pack:
