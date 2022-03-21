@@ -76,9 +76,13 @@ unfold private let rid_ctr_pred_predicate (h:hmap) (n:int) :Type0 =
 
 (****** Mem definition ******)
 
+[@@ remove_unused_type_parameters [0]]
 val map_invariant (m:hmap) :Type0  //all regions above a contained region are contained
+[@@ remove_unused_type_parameters [0]]
 val downward_closed (h:hmap) :Type0  //regions below a non-root region are of the same color
+[@@ remove_unused_type_parameters [0;1]]
 val tip_top (tip:rid) (h:hmap) :Type0  //all contained stack regions are above tip
+[@@ remove_unused_type_parameters [0;1]]
 val rid_ctr_pred (h:hmap) (n:int) :Type0  //all live regions have last component less than the rid_ctr
 
 let is_tip (tip:rid) (h:hmap) =
@@ -552,6 +556,7 @@ val is_mm_aref_of (#t:Type) (#rel:preorder t) (r:mreference t rel)
   :Lemma (aref_is_mm (aref_of r) == is_mm r)
          [SMTPat (aref_is_mm (aref_of r))]
 
+[@@ remove_unused_type_parameters [0;1]]
 val aref_unused_in (a:aref) (h:mem) :GTot Type0
 
 val unused_in_aref_of (#t:Type) (#rel:preorder t) (r:mreference t rel) (h:mem)
@@ -565,6 +570,7 @@ val contains_aref_unused_in (#a:Type) (#rel:preorder a) (h:mem) (x:mreference a 
 
 (* Elimination rule *)
 
+[@@ remove_unused_type_parameters [0;1;2;3]]
 val aref_live_at (h:mem) (a:aref) (v:Type0) (rel:preorder v) :GTot Type0
 
 val greference_of (a:aref) (v:Type0) (rel:preorder v)

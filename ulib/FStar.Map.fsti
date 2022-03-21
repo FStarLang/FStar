@@ -76,6 +76,11 @@ let const_on (#key:eqtype) (#value:Type) (dom:S.set key) (v:value)
   : t key value
   = restrict dom (const v)
 
+
+(* map_literal f: A map that is extensionally equal to the function [f] *)
+val map_literal (#k:eqtype) (#v:Type) (f: k -> Tot v)
+  : t k v
+
 (* disjoint_dom m1 m2:
       Disjoint domains. TODO: its pattern is biased towards `m1`. Why?
  *)
@@ -147,6 +152,11 @@ val lemma_UpdDomain : #key:eqtype -> #value:Type -> m:t key value -> k:key -> v:
   Lemma (requires True)
         (ensures (S.equal (domain (upd m k v)) (S.union (domain m) (S.singleton k))))
         [SMTPat (domain (upd m k v))]
+
+val lemma_map_literal (#k:eqtype) (#v:Type) (f: k -> Tot v)
+  : Lemma ((forall k.{:pattern (sel (map_literal f) k)} sel (map_literal f) k == f k) /\
+           domain (map_literal f) == Set.complement Set.empty)
+          [SMTPat (map_literal f)]
 
 (*** Extensional equality ***)
 

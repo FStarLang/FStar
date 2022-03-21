@@ -1,14 +1,35 @@
-.PHONY: all package clean boot 0 1 2 3 hints bench
+.PHONY: all package clean boot 0 1 2 3 hints bench libs output install uninstall package_unknown_platform no-ulib-checked
 
 include .common.mk
 
 all:
 	$(Q)+$(MAKE) -C src/ocaml-output
-	$(Q)+$(MAKE) -C ulib
 	$(Q)+$(MAKE) -C ulib/ml
+	$(Q)+$(MAKE) -C ulib
 
-package:
+install:
+	$(Q)+$(MAKE) -C src/ocaml-output install
+
+# The directory where we install files when doing "make install".
+# Overridden via the command-line by the OPAM invocation.
+PREFIX=$(shell pwd)/fstar
+
+uninstall:
+	ocamlfind remove fstarlib
+	ocamlfind remove fstar-compiler-lib
+	ocamlfind remove fstar-tactics-lib
+	rm -rf \
+	  $(PREFIX)/lib/fstar \
+	  $(PREFIX)/doc/fstar \
+	  $(PREFIX)/etc/fstar \
+	  $(PREFIX)/bin/fstar.exe \
+	  $(PREFIX)/share/fstar
+
+package: all
 	$(Q)+$(MAKE) -C src/ocaml-output package
+
+package_unknown_platform: all
+	$(Q)+$(MAKE) -C src/ocaml-output package_unknown_platform
 
 clean:
 	$(Q)+$(MAKE) -C ulib clean
@@ -40,8 +61,9 @@ boot:
 	$(Q)+$(MAKE) -C src/ ocaml
 	$(Q)+$(MAKE) -C src/ocaml-output ../../bin/fstar.exe
 
-# Build the libraries: fstar-compiler-lib, fstarlib, fstartaclib
+# Build the binary libraries: fstar-compiler-lib, fstarlib, fstartaclib
 # Removes the .mgen files to trigger rebuild of the libraries if needed.
+# This does NOT verify the library modules.
 libs:
 	$(Q)+$(MAKE) -C src/ocaml-output
 	$(Q)rm -f ulib/*.mgen

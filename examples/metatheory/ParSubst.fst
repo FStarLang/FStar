@@ -82,18 +82,19 @@ and subst_eabs s y =
   if y = 0 then EVar y
   else subst (s (y-1)) sub_inc
 
+module T = FStar.Tactics
+
 val subst_extensional: e:exp -> s1:sub -> s2:sub{feq s1 s2} ->
                Lemma (requires True) (ensures (subst e s1 = subst e s2))
                      [SMTPat (subst e s1);  SMTPat (subst e s2)]
 let rec subst_extensional e s1 s2 =
-  let open FStar.Tactics in
   match e with
   | EVar _ -> ()
   | EAbs t e1 ->
     assert (subst (EAbs t e1) s1 == EAbs t (subst e1 (subst_eabs s1)))
-      by norm [zeta; iota; delta_only [`%subst]];
+      by T.norm [zeta; iota; delta_only [`%subst]];
     assert (subst (EAbs t e1) s2 == EAbs t (subst e1 (subst_eabs s2)))
-      by norm [zeta; iota; delta_only [`%subst]];
+      by T.norm [zeta; iota; delta_only [`%subst]];
     subst_extensional e1 (subst_eabs s1) (subst_eabs s2)
   | EApp e1 e2 -> subst_extensional e1 s1 s2; subst_extensional e2 s1 s2
 

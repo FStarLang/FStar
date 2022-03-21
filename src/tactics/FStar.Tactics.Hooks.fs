@@ -2,9 +2,11 @@
 module FStar.Tactics.Hooks
 
 open FStar
-open FStar.All
-open FStar.Util
-open FStar.Range
+open FStar.Compiler
+open FStar.Compiler.Effect
+open FStar.Compiler.List
+open FStar.Compiler.Util
+open FStar.Compiler.Range
 open FStar.Syntax.Syntax
 open FStar.Syntax.Embeddings
 open FStar.TypeChecker.Env
@@ -13,8 +15,8 @@ open FStar.Tactics.Types
 open FStar.Tactics.Basic
 open FStar.Tactics.Interpreter
 
-module BU      = FStar.Util
-module Range   = FStar.Range
+module BU      = FStar.Compiler.Util
+module Range   = FStar.Compiler.Range
 module Err     = FStar.Errors
 module O       = FStar.Options
 module PC      = FStar.Parser.Const
@@ -36,7 +38,7 @@ let run_tactic_on_typ
                     =
     let rng = range_of_rng (use_range rng_goal) (use_range rng_tac) in
     let ps, w = proofstate_of_goal_ty rng env typ in
-    let gs, _res = run_tactic_on_ps rng_tac rng_goal e_unit () e_unit tactic ps in
+    let gs, _res = run_tactic_on_ps rng_tac rng_goal false e_unit () e_unit tactic ps in
     gs, w
 
 let run_tactic_on_all_implicits
@@ -47,8 +49,9 @@ let run_tactic_on_all_implicits
     let ps, _ = proofstate_of_all_implicits rng_goal env imps in
     let goals, () =
       run_tactic_on_ps
-        rng_tac
+        (Env.get_range env)
         rng_goal
+        true
         e_unit
         ()
         e_unit
@@ -77,6 +80,10 @@ let flip p = match p with
     | Pos -> Neg
     | Neg -> Pos
     | Both -> Both
+
+let getprop (e:Env.env) (t:term) : option<term> =
+    let tn = N.normalize [Env.Weak; Env.HNF; Env.UnfoldUntil delta_constant] e t in
+    U.un_squash tn
 
 let by_tactic_interp (pol:pol) (e:Env.env) (t:term) : tres =
     let hd, args = U.head_and_args t in
@@ -113,6 +120,34 @@ let by_tactic_interp (pol:pol) (e:Env.env) (t:term) : tres =
         | Neg ->
             Simplified (assertion, [])
         end
+
+    // rewrite_with_tactic marker
+    | Tm_fvar fv, [(tactic, None); (typ, Some ({ aqual_implicit = true } )); (tm, None)]
+            when S.fv_eq_lid fv PC.rewrite_by_tactic_lid ->
+
+        // Create a new uvar that must be equal to the initial term
+        let uvtm, _, g_imp = Env.new_implicit_var_aux "rewrite_with_tactic RHS" tm.pos e typ Allow_untyped None in
+
+        let u = e.universe_of e typ in
+        // eq2 is squashed already, so it's in Type0
+        let goal = U.mk_squash U_zero (U.mk_eq2 u typ tm uvtm) in
+        let gs, _ = run_tactic_on_typ tactic.pos tm.pos tactic e goal in
+
+        // Ensure that rewriting did not leave goals
+        let _ =
+          match gs with
+          | [] -> ()
+          | _ ->
+            Err.raise_error (Err.Fatal_OpenGoalsInSynthesis, "rewrite_with_tactic left open goals") typ.pos
+        in
+
+        // abort if the uvar was not solved
+        let g_imp = TcRel.resolve_implicits_tac e g_imp in
+        report_implicits tm.pos g_imp.implicits;
+
+        // If the rewriting succeeded, we return the generated uvar, which is now
+        // a synthesized term
+        Simplified (uvtm, [])
 
     | _ ->
         Unchanged t
@@ -206,9 +241,9 @@ let rec traverse (f: pol -> Env.env -> term -> tres) (pol:pol) (e:Env.env) (t:te
                 // TODO: traverse k?
                 let bs, topen = SS.open_term bs t in
                 let e' = Env.push_binders e bs in
-                let r0 = List.map (fun (bv, aq) ->
-                                     let r = traverse f (flip pol) e bv.sort in
-                                     comb1 (fun s' -> ({ bv with sort = s' }, aq)) r
+                let r0 = List.map (fun b ->
+                                     let r = traverse f (flip pol) e b.binder_bv.sort in
+                                     comb1 (fun s' -> ({b with binder_bv={ b.binder_bv with sort = s' }})) r
                                   ) bs
                 in
                 let rbs = comb_list r0 in
@@ -219,8 +254,8 @@ let rec traverse (f: pol -> Env.env -> term -> tres) (pol:pol) (e:Env.env) (t:te
             // TODO: traverse the types?
             comb1 (fun t -> Tm_ascribed (t, asc, ef)) (traverse f pol e t)
 
-        | Tm_match (sc, brs) ->
-            comb2 (fun sc brs -> Tm_match (sc, brs))
+        | Tm_match (sc, asc_opt, brs, lopt) ->  //AR: not traversing the return annotation
+            comb2 (fun sc brs -> Tm_match (sc, asc_opt, brs, lopt))
                   (traverse f pol e sc)
                   (comb_list (List.map (fun br -> let (pat, w, exp) = SS.open_branch br in
                                                   let bvs = S.pat_bvs pat in
@@ -242,11 +277,8 @@ let rec traverse (f: pol -> Env.env -> term -> tres) (pol:pol) (e:Env.env) (t:te
         let (_, p', gs') = explode rp in
         Dual ({t with n = tn}, p', gs@gs')
 
-let getprop (e:Env.env) (t:term) : option<term> =
-    let tn = N.normalize [Env.Weak; Env.HNF; Env.UnfoldUntil delta_constant] e t in
-    U.un_squash tn
-
 let preprocess (env:Env.env) (goal:term) : list<(Env.env * term * O.optionstate)> =
+  Errors.with_ctx "While preprocessing VC with a tactic" (fun () ->
     tacdbg := Env.debug env (O.Other "Tac");
     if !tacdbg then
         BU.print2 "About to preprocess %s |= %s\n"
@@ -285,8 +317,10 @@ let preprocess (env:Env.env) (goal:term) : list<(Env.env * term * O.optionstate)
     let gs = List.rev gs in (* Return new VCs in same order as goals *)
     // Use default opts for main goal
     (env, t', O.peek ()) :: gs
+  )
 
 let synthesize (env:Env.env) (typ:typ) (tau:term) : term =
+  Errors.with_ctx "While synthesizing term with a tactic" (fun () ->
     // Don't run the tactic (and end with a magic) when nosynth is set, cf. issue #73 in fstar-mode.el
     if env.nosynth
     then mk_Tm_app (TcUtil.fvar_const env PC.magic_lid) [S.as_arg U.exp_unit] typ.pos
@@ -314,9 +348,10 @@ let synthesize (env:Env.env) (typ:typ) (tau:term) : term =
             Err.raise_error (Err.Fatal_OpenGoalsInSynthesis, "synthesis left open goals") typ.pos) gs;
     w
     end
-
+  )
 
 let solve_implicits (env:Env.env) (tau:term) (imps:Env.implicits) : unit =
+  Errors.with_ctx "While solving implicits with a tactic" (fun () ->
     if env.nosynth then () else
     begin
     tacdbg := Env.debug env (O.Other "Tac");
@@ -343,14 +378,72 @@ let solve_implicits (env:Env.env) (tau:term) (imps:Env.implicits) : unit =
                             (Env.get_range env));
     ()
     end
+  )
+
+(* Retrieves a tactic associated to a given attribute, if any *)
+let find_user_tac_for_attr env (a:term) : option<sigelt> =
+  let hooks = Env.lookup_attr env PC.handle_smt_goals_attr_string in
+  hooks |> BU.try_find (fun _ -> true)
+
+(* This function takes an environment [env] and a goal [goal], and tries to run
+   the tactic registered with the (handle_smt_goal) attribute, if any.
+   If such a tactic exists, all the unresolved goals must be propositions,
+   that will be directly encoded to SMT inside Rel.discharge_guard.
+   If such a tactic does not exist, this function is a no-op. *)
+let handle_smt_goal env goal =
+  match check_trivial goal with
+  (* No need to pass the term to the tactic if trivial *)
+  | Trivial -> [env, goal]
+  | NonTrivial goal ->
+    (* Attempt to retrieve a tactic corresponding to the (handle_smt_goals) attribute *)
+    match find_user_tac_for_attr env (S.tconst PC.handle_smt_goals_attr) with
+    | Some tac ->
+      (* There is a tactic registered with the handle_smt_goals attribute,
+         we retrieve the corresponding term  *)
+      let tau =
+        match tac.sigel with
+        | Sig_let (_, [lid]) ->
+          let qn = Env.lookup_qname env lid in
+          let fv = S.lid_as_fv lid (Delta_constant_at_level 0) None in
+          let dd =
+            match Env.delta_depth_of_qninfo fv qn with
+            | Some dd -> dd
+            | None -> failwith "Expected a dd"
+          in
+          S.fv_to_tm (S.lid_as_fv lid dd None)
+        | _ -> failwith "Resolve_tac not found"
+      in
+
+     let gs = Errors.with_ctx "While handling an SMT goal with a tactic" (fun () ->
+        tacdbg := Env.debug env (O.Other "Tac");
+
+        (* Executing the tactic on the goal. *)
+        let gs, _ = run_tactic_on_typ tau.pos (Env.get_range env) tau env (U.mk_squash U_zero goal) in
+        // Check that all goals left are irrelevant and provable
+        gs |> List.map (fun g ->
+            match getprop (goal_env g) (goal_type g) with
+            | Some vc ->
+                if !tacdbg then
+                  BU.print1 "handle_smt_goals left a goal: %s\n" (Print.term_to_string vc);
+                (goal_env g), vc
+            | None ->
+                Err.raise_error (Err.Fatal_OpenGoalsInSynthesis, "Handling an SMT goal by tactic left non-prop open goals")
+                                (Env.get_range env))
+      ) in
+
+      gs
+
+    (* No such tactic was available in the current context *)
+    | None -> [env, goal]
 
 let splice (env:Env.env) (rng:Range.range) (tau:term) : list<sigelt> =
+  Errors.with_ctx "While running splice with a tactic" (fun () ->
     if env.nosynth then [] else begin
     tacdbg := Env.debug env (O.Other "Tac");
 
     let typ = S.t_decls in // running with goal type FStar.Reflection.Data.decls
     let ps = proofstate_of_goals tau.pos env [] [] in
-    let gs, sigelts = run_tactic_on_ps tau.pos tau.pos
+    let gs, sigelts = run_tactic_on_ps tau.pos tau.pos false
                                   e_unit ()
                                   (e_list RE.e_sigelt) tau ps in
 
@@ -379,16 +472,20 @@ let splice (env:Env.env) (rng:Range.range) (tau:term) : list<sigelt> =
     in
     sigelts
     end
+  )
 
 let mpreprocess (env:Env.env) (tau:term) (tm:term) : term =
+  Errors.with_ctx "While preprocessing a definition with a tactic" (fun () ->
     if env.nosynth then tm else begin
     tacdbg := Env.debug env (O.Other "Tac");
     let ps = proofstate_of_goals tm.pos env [] [] in
-    let gs, tm = run_tactic_on_ps tau.pos tm.pos RE.e_term tm RE.e_term tau ps in
+    let gs, tm = run_tactic_on_ps tau.pos tm.pos false RE.e_term tm RE.e_term tau ps in
     tm
     end
+  )
 
 let postprocess (env:Env.env) (tau:term) (typ:term) (tm:term) : term =
+  Errors.with_ctx "While postprocessing a definition with a tactic" (fun () ->
     if env.nosynth then tm else begin
     tacdbg := Env.debug env (O.Other "Tac");
     let uvtm, _, g_imp = Env.new_implicit_var_aux "postprocess RHS" tm.pos env typ Allow_untyped None in
@@ -419,4 +516,4 @@ let postprocess (env:Env.env) (tau:term) (typ:term) (tm:term) : term =
 
     uvtm
     end
-
+  )

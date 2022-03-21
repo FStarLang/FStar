@@ -4,7 +4,7 @@ module FStar.Tactics.Native
 open FStar.Tactics.Types
 open FStar.Tactics.Basic
 open FStar.Syntax.Syntax
-open FStar.Range
+open FStar.Compiler.Range
 module Cfg = FStar.TypeChecker.Cfg
 module N = FStar.TypeChecker.Normalize
 module EMB = FStar.Syntax.Embeddings

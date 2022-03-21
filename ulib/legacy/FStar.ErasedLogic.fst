@@ -16,16 +16,16 @@
 module FStar.ErasedLogic
 
 (*F* 's exists should be thought of Coq's sigT. It is totally unerased *)
-(*Coq has 2 more versions, with increading degree of erasure*)
+(*Coq has 2 more versions, with increasing degree of erasure*)
 (* https://coq.inria.fr/library/Coq.Init.Specif.html#sigT *)
 open FStar.Ghost
 
-(*you can get the withness x, that the proof part is erased*)
+(*you can get the witness x, that the proof part is erased*)
 (*https://coq.inria.fr/library/Coq.Init.Specif.html#sig*)
 type sig_ (a:Type) (p: a->Type) = exists (x:a). (erased (p x))
 
 
-(*you get nothing. ofcourse, in ghost contexts, or to build other erased date, you get everything*)
+(*you get nothing. Of course, in ghost contexts, or to build other erased date, you get everything*)
 (* https://coq.inria.fr/library/Coq.Init.Logic.html#ex *)
 type ex (a:Type) (p:a->Type) = erased (exists (x:a). (p x))
 

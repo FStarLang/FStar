@@ -14,7 +14,7 @@
    limitations under the License.
 *)
 module FStar.Tactics.Derived
-
+open FStar.List.Tot
 open FStar.Reflection
 open FStar.Reflection.Formula
 open FStar.Tactics.Types
@@ -25,12 +25,7 @@ open FStar.Tactics.Util
 open FStar.Tactics.SyntaxHelpers
 module L = FStar.List.Tot
 
-(* Another hook to just run a tactic without goals, just by reusing `with_tactic` *)
-let run_tactic (t:unit -> Tac unit)
-  : Pure unit
-         (requires (set_range_of (with_tactic (fun () -> trivial (); t ()) (squash True)) (range_of t)))
-         (ensures (fun _ -> True))
-  = ()
+exception Goal_not_trivial
 
 let goals () : Tac (list goal) = goals_of (get ())
 let smt_goals () : Tac (list goal) = smt_goals_of (get ())
@@ -76,6 +71,31 @@ let with_policy pol (f : unit -> Tac 'a) : Tac 'a =
     let r = f () in
     set_guard_policy old_pol;
     r
+
+(** [exact e] will solve a goal [Gamma |- w : t] if [e] has type exactly
+[t] in [Gamma]. *)
+let exact (t : term) : Tac unit =
+    with_policy SMT (fun () -> t_exact true false t)
+
+(** [exact_with_ref e] will solve a goal [Gamma |- w : t] if [e] has
+type [t'] where [t'] is a subtype of [t] in [Gamma]. This is a more
+flexible variant of [exact]. *)
+let exact_with_ref (t : term) : Tac unit =
+    with_policy SMT (fun () -> t_exact true true t)
+
+let trivial () : Tac unit =
+  norm [iota; zeta; reify_; delta; primops; simplify; unmeta];
+  let g = cur_goal () in
+  match term_as_formula g with
+  | True_ -> exact (`())
+  | _ -> raise Goal_not_trivial
+
+(* Another hook to just run a tactic without goals, just by reusing `with_tactic` *)
+let run_tactic (t:unit -> Tac unit)
+  : Pure unit
+         (requires (set_range_of (with_tactic (fun () -> trivial (); t ()) (squash True)) (range_of t)))
+         (ensures (fun _ -> True))
+  = ()
 
 (** Ignore the current goal. If left unproven, this will fail after
 the tactic finishes. *)
@@ -124,17 +144,6 @@ let later () : Tac unit =
     | g::gs -> set_goals (gs @ [g])
     | _ -> fail "later: no goals"
 
-(** [exact e] will solve a goal [Gamma |- w : t] if [e] has type exactly
-[t] in [Gamma]. *)
-let exact (t : term) : Tac unit =
-    with_policy SMT (fun () -> t_exact true false t)
-
-(** [exact_with_ref e] will solve a goal [Gamma |- w : t] if [e] has
-type [t'] where [t'] is a subtype of [t] in [Gamma]. This is a more
-flexible variant of [exact]. *)
-let exact_with_ref (t : term) : Tac unit =
-    with_policy SMT (fun () -> t_exact true true t)
-
 (** [apply f] will attempt to produce a solution to the goal by an application
 of [f] to any amount of arguments (which need to be solved as further goals).
 The amount of arguments introduced is the least such that [f a_i] unifies
@@ -151,6 +160,18 @@ introduced as new goals. As a small optimization, [unit] arguments are
 discharged by the engine. Just a thin wrapper around [t_apply_lemma]. *)
 let apply_lemma (t : term) : Tac unit =
     t_apply_lemma false false t
+
+(** See docs for [t_trefl] *)
+let trefl () : Tac unit =
+  t_trefl false
+
+(** See docs for [t_trefl] *)
+let trefl_guard () : Tac unit =
+  t_trefl true
+
+(** See docs for [t_commute_applied_match] *)
+let commute_applied_match () : Tac unit =
+  t_commute_applied_match ()
 
 (** Similar to [apply_lemma], but will not instantiate uvars in the
 goal while applying. *)
@@ -171,7 +192,7 @@ under some guard [g], adding the guard as a goal. *)
 let exact_guard (t : term) : Tac unit =
     with_policy Goal (fun () -> t_exact true false t)
 
-(** (TODO: explain bettter) When running [pointwise tau] For every
+(** (TODO: explain better) When running [pointwise tau] For every
 subterm [t'] of the goal's type [t], the engine will build a goal [Gamma
 |= t' == ?u] and run [tau] on it. When the tactic proves the goal,
 the engine will rewrite [t'] for [?u] in the original goal type. This
@@ -243,6 +264,10 @@ let fresh_uvar (o : option typ) : Tac term =
 let unify (t1 t2 : term) : Tac bool =
     let e = cur_env () in
     unify_env e t1 t2
+
+let unify_guard (t1 t2 : term) : Tac bool =
+    let e = cur_env () in
+    unify_guard_env e t1 t2
 
 let tmatch (t1 t2 : term) : Tac bool =
     let e = cur_env () in
@@ -349,6 +374,14 @@ let fresh_binder t : Tac binder =
     let i = fresh () in
     fresh_binder_named ("x" ^ string_of_int i) t
 
+let fresh_implicit_binder_named nm t : Tac binder =
+    mk_implicit_binder (fresh_bv_named nm t)
+
+let fresh_implicit_binder t : Tac binder =
+    (* See comment in fresh_bv *)
+    let i = fresh () in
+    fresh_implicit_binder_named ("x" ^ string_of_int i) t
+
 let guard (b : bool) : TacH unit (requires (fun _ -> True))
                                  (ensures (fun ps r -> if b
                                                        then Success? r /\ Success?.ps r == ps
@@ -428,7 +461,7 @@ let admit_all () : Tac unit =
     let _ = repeat tadmit in
     ()
 
-(** [is_guard] returns whether the current goal arised from a typechecking guard *)
+(** [is_guard] returns whether the current goal arose from a typechecking guard *)
 let is_guard () : Tac bool =
     Tactics.Types.is_guard (_cur_goal ())
 
@@ -616,7 +649,7 @@ private val push1' : (#p:Type) -> (#q:Type) ->
 private let push1' #p #q f u = ()
 
 (*
- * Some easier applying, which should prevent frustation
+ * Some easier applying, which should prevent frustration
  * (or cause more when it doesn't do what you wanted to)
  *)
 val apply_squash_or_lem : d:nat -> term -> Tac unit
@@ -793,9 +826,9 @@ let on_sort_bv (f : term -> Tac term) (xbv:bv) : Tac bv =
   bv
 
 let on_sort_binder (f : term -> Tac term) (b:binder) : Tac binder =
-  let (bv, q) = inspect_binder b in
+  let bv, (q, attrs) = inspect_binder b in
   let bv = on_sort_bv f bv in
-  let b = pack_binder bv q in
+  let b = pack_binder bv q attrs in
   b
 
 let rec visit_tm (ff : term -> Tac term) (t : term) : Tac term =
@@ -828,48 +861,69 @@ let rec visit_tm (ff : term -> Tac term) (t : term) : Tac term =
          let r = visit_tm ff r in
          Tv_App l (r, q)
     | Tv_Refine b r ->
+        let b = on_sort_bv (visit_tm ff) b in
         let r = visit_tm ff r in
         Tv_Refine b r
     | Tv_Let r attrs b def t ->
+        let b = on_sort_bv (visit_tm ff) b in
         let def = visit_tm ff def in
         let t = visit_tm ff t in
         Tv_Let r attrs b def t
-    | Tv_Match sc brs ->
+    | Tv_Match sc ret_opt brs ->
         let sc = visit_tm ff sc in
+        let ret_opt = map_opt (fun (b, asc) ->
+          let b = on_sort_binder (visit_tm ff) b in
+          let asc =
+            match asc with
+            | Inl t, tacopt, use_eq ->
+              Inl (visit_tm ff t), map_opt (visit_tm ff) tacopt, use_eq
+            | Inr c, tacopt, use_eq->
+              Inr (visit_comp ff c), map_opt (visit_tm ff) tacopt, use_eq in
+          b, asc) ret_opt in
         let brs = map (visit_br ff) brs in
-        Tv_Match sc brs
-    | Tv_AscribedT e t topt ->
+        Tv_Match sc ret_opt brs
+    | Tv_AscribedT e t topt use_eq ->
         let e = visit_tm ff e in
         let t = visit_tm ff t in
-        Tv_AscribedT e t topt
-    | Tv_AscribedC e c topt ->
+        Tv_AscribedT e t topt use_eq
+    | Tv_AscribedC e c topt use_eq ->
         let e = visit_tm ff e in
-        Tv_AscribedC e c topt
+        Tv_AscribedC e c topt use_eq
   in
   ff (pack_ln tv')
 and visit_br (ff : term -> Tac term) (b:branch) : Tac branch =
   let (p, t) = b in
-  (p, visit_tm ff t)
+  let p = visit_pat ff p in
+  let t = visit_tm ff t in
+  (p, t)
+and visit_pat (ff : term -> Tac term) (p:pattern) : Tac pattern =
+  match p with
+  | Pat_Constant c -> p
+  | Pat_Cons fv l ->
+      let l = (map (fun(p,b) -> (visit_pat ff p, b)) l) in
+      Pat_Cons fv l
+  | Pat_Var bv ->
+      let bv = on_sort_bv (visit_tm ff) bv in
+      Pat_Var bv
+  | Pat_Wild bv ->
+      let bv = on_sort_bv (visit_tm ff) bv in
+      Pat_Wild bv
+  | Pat_Dot_Term bv term ->
+      let bv = on_sort_bv (visit_tm ff) bv in
+      let term = visit_tm ff term in
+      Pat_Dot_Term bv term
 and visit_comp (ff : term -> Tac term) (c : comp) : Tac comp =
   let cv = inspect_comp c in
   let cv' =
     match cv with
     | C_Total ret decr ->
         let ret = visit_tm ff ret in
-        let decr =
-            match decr with
-            | None -> None
-            | Some d -> Some (visit_tm ff d)
-        in
+        let decr = map (visit_tm ff) decr in
         C_Total ret decr
 
     | C_GTotal ret decr ->
         let ret = visit_tm ff ret in
-        let decr =
-            match decr with
-            | None -> None
-            | Some d -> Some (visit_tm ff d)
-        in
+        let decr = map (visit_tm ff) decr in
         C_GTotal ret decr
 
     | C_Lemma pre post pats ->
@@ -904,7 +958,7 @@ private let get_match_body () : Tac term =
   match FStar.Reflection.Formula.unsquash (cur_goal ()) with
   | None -> fail ""
   | Some t -> match inspect t with
-             | Tv_Match sc _ -> sc
+             | Tv_Match sc _ _ -> sc
              | _ -> fail "Goal is not a match"
 
 private let rec last (x : list 'a) : Tac 'a =
@@ -915,7 +969,7 @@ private let rec last (x : list 'a) : Tac 'a =
 
 (** When the goal is [match e with | p1 -> e1 ... | pn -> en],
 destruct it into [n] goals for each possible case, including an
-hypothesis for [e] matching the correposnding pattern. *)
+hypothesis for [e] matching the corresponding pattern. *)
 let branch_on_match () : Tac unit =
     focus (fun () ->
       let x = get_match_body () in
@@ -939,3 +993,28 @@ let nth_binder (i:int) : Tac binder =
   match List.Tot.Base.nth bs k with
   | None -> fail "not enough binders"
   | Some b -> b
+
+exception Appears
+
+(** Decides whether a top-level name [nm] syntactically
+appears in the term [t]. *)
+let name_appears_in (nm:name) (t:term) : Tac bool =
+  let ff (t : term) : Tac term =
+    match t with
+    | Tv_FVar fv ->
+      if inspect_fv fv = nm then
+        raise Appears;
+      t
+    | t -> t
+  in
+  try ignore (visit_tm ff t); false with
+  | Appears -> true
+  | e -> raise e
+
+(** [mk_abs [x1; ...; xn] t] returns the term [fun x1 ... xn -> t] *)
+let rec mk_abs (args : list binder) (t : term) : Tac term (decreases args) =
+  match args with
+  | [] -> t
+  | a :: args' ->
+    let t' = mk_abs args' t in
+    pack (Tv_Abs a t')

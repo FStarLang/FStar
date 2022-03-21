@@ -1,0 +1,467 @@
+[
+  "µw^P–µ÷‘`\u0017‡fº’ÿà",
+  [
+    [
+      "Vec.even",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "b5e0154b4b35b231007672b76b89ae1f"
+    ],
+    [
+      "Vec.__proj__ECons__item___0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_fb118a40a2834de6ebe952e4660e7f51"
+      ],
+      0,
+      "be42764d06bbbb51a4aebe287fbfa9fc"
+    ],
+    [
+      "Vec.__proj__ECons__item___1",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_fb118a40a2834de6ebe952e4660e7f51"
+      ],
+      0,
+      "fbefb2b7b9c2a99485088c1b9690a2a0"
+    ],
+    [
+      "Vec.elength",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_82dfc742d5c5b320bbb0e3acaf116a38_3",
+        "disc_equation_Vec.ECons", "disc_equation_Vec.ENil",
+        "equation_Prims.nat", "fuel_guarded_inversion_Vec.even",
+        "primitive_Prims.op_Addition", "primitive_Prims.op_Modulus",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_d5d6229fe614bb2f0682fc77ade75507",
+        "subterm_ordering_Vec.ECons"
+      ],
+      0,
+      "1573436605924c2337ef6109a919e3b8"
+    ],
+    [
+      "Vec.elength",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_b60832c9c09d9dc6ceb8b54100e8ce76_3", "equation_Prims.nat",
+        "primitive_Prims.op_Addition", "primitive_Prims.op_Modulus",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_148be657e3a342509cd0bb35055d7a4f",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "subterm_ordering_Vec.OCons"
+      ],
+      0,
+      "4a7be5ac1aef59024c67b47df060f338"
+    ],
+    [
+      "Vec.even_or_odd_list",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "b9d96d392b878ddd8ca49425a69e7215"
+    ],
+    [
+      "Vec.__proj__EOCons__item___0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_0a79ad1d8fdf24780d923a3e59d4efae"
+      ],
+      0,
+      "9a29277d1ff8a354de545fcc807a9aa3"
+    ],
+    [
+      "Vec.__proj__EOCons__item__b",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_0a79ad1d8fdf24780d923a3e59d4efae"
+      ],
+      0,
+      "fd32e43a191665b89bde40a86bbd34c4"
+    ],
+    [
+      "Vec.__proj__EOCons__item___2",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "bool_inversion",
+        "data_elim_Vec.EOCons",
+        "refinement_interpretation_Tm_refine_0a79ad1d8fdf24780d923a3e59d4efae"
+      ],
+      0,
+      "9dc03898ecacf578702a0d929eb5547c"
+    ],
+    [
+      "Vec.eo_length",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_f3b20fe77ccdf25981a0b2e7812ef19d_3",
+        "binder_x_f537159ed795b314b4e58c260361ae86_2", "bool_inversion",
+        "constructor_distinct_Vec.EONil", "data_elim_Vec.EOCons",
+        "disc_equation_Vec.EOCons", "disc_equation_Vec.EONil",
+        "equation_Prims.nat", "fuel_guarded_inversion_Vec.even_or_odd_list",
+        "primitive_Prims.op_Addition", "primitive_Prims.op_Modulus",
+        "primitive_Prims.op_Negation", "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_53bd6eef4bbe62dbd6a68eb34a4dada6",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "subterm_ordering_Vec.EOCons"
+      ],
+      0,
+      "86c72e5c112001253fbdaad6f2bbff83"
+    ],
+    [
+      "Vec.vec",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
+        "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
+      ],
+      0,
+      "fc9ea5ce8e19e8fe58b9b869e6ff7a2a"
+    ],
+    [
+      "Vec.vec",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
+        "equation_Prims.nat", "function_token_typing_Prims.int",
+        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2", "int_inversion",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
+      ],
+      0,
+      "74cbdf311228af88bb142363afe4cfd9"
+    ],
+    [
+      "Vec.__proj__Cons__item__n",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_27cc4d268b550376309de84f8f59c70e"
+      ],
+      0,
+      "2b307b424740aee5a99b77db44e360f5"
+    ],
+    [
+      "Vec.__proj__Cons__item__hd",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_27cc4d268b550376309de84f8f59c70e"
+      ],
+      0,
+      "315f00e8c47eff76957e266bbe383f64"
+    ],
+    [
+      "Vec.__proj__Cons__item__tl",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "data_elim_Vec.Cons",
+        "refinement_interpretation_Tm_refine_27cc4d268b550376309de84f8f59c70e"
+      ],
+      0,
+      "be7a8507a207aa236b52089f107483b2"
+    ],
+    [
+      "Vec.get",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_c1424615841f28cac7fc34e92b7ff33c"
+      ],
+      0,
+      "5872bdf2e1ba72a903c38f6f7cb26d73"
+    ],
+    [
+      "Vec.get",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "binder_x_672374d0b42dedb03cc70d39558dc5d9_3",
+        "binder_x_ae567c2fb75be05905677af440075565_2",
+        "binder_x_c780f186a1dcbae20732e2061166cd65_4",
+        "constructor_distinct_Vec.Nil", "data_elim_Vec.Cons",
+        "disc_equation_Vec.Cons", "disc_equation_Vec.Nil",
+        "equation_Prims.nat", "fuel_guarded_inversion_Vec.vec",
+        "function_token_typing_Prims.__cache_version_number__",
+        "int_inversion", "int_typing", "primitive_Prims.op_Addition",
+        "primitive_Prims.op_Equality", "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0", "projection_inverse_Vec.Cons_n",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_a21d6f09caede4017908c96b90a022a4",
+        "well-founded-ordering-on-nat"
+      ],
+      0,
+      "d5433dbc673c7400d808288eae481e79"
+    ],
+    [
+      "Vec.split_at",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_7e0b9b2dbca36eab00de093c1b701c6d"
+      ],
+      0,
+      "9ca5845a5e76e816e40c8e446fc97b51"
+    ],
+    [
+      "Vec.split_at",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "binder_x_031347bd6d0f45e7775d5a1f64648e98_3",
+        "binder_x_ae567c2fb75be05905677af440075565_2",
+        "binder_x_c780f186a1dcbae20732e2061166cd65_4", "data_elim_Vec.Cons",
+        "disc_equation_Vec.Cons", "equation_Prims.nat",
+        "fuel_guarded_inversion_Vec.vec",
+        "function_token_typing_Prims.__cache_version_number__",
+        "int_inversion", "int_typing", "primitive_Prims.op_Addition",
+        "primitive_Prims.op_Equality", "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0", "projection_inverse_Vec.Cons_n",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_948a1d893ab96a75637a654b08f92e5a",
+        "well-founded-ordering-on-nat"
+      ],
+      0,
+      "a2b082cfaa70fb24d8bac5a3e40a3e47"
+    ],
+    [
+      "Vec.append",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
+        "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
+      ],
+      0,
+      "4436c3e37620f5c26b844bc4df80bf06"
+    ],
+    [
+      "Vec.append",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_74df369ef327b18ded5ed26a252bac6e_4",
+        "binder_x_bb4e1c9af0265270f8e7a5f250f730e2_2",
+        "binder_x_bb4e1c9af0265270f8e7a5f250f730e2_3", "data_elim_Vec.Cons",
+        "data_elim_Vec.Nil", "disc_equation_Vec.Cons",
+        "disc_equation_Vec.Nil", "equation_Prims.nat",
+        "fuel_guarded_inversion_Vec.vec", "int_inversion", "int_typing",
+        "primitive_Prims.op_Addition", "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "well-founded-ordering-on-nat"
+      ],
+      0,
+      "adf6eb1e12a4e7437c7cb70ba4cd30ce"
+    ],
+    [
+      "Vec.reverse",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_74df369ef327b18ded5ed26a252bac6e_3",
+        "binder_x_bb4e1c9af0265270f8e7a5f250f730e2_2",
+        "constructor_distinct_Vec.Nil", "data_elim_Vec.Cons",
+        "disc_equation_Vec.Cons", "disc_equation_Vec.Nil",
+        "equation_Prims.nat", "fuel_guarded_inversion_Vec.vec",
+        "int_inversion", "primitive_Prims.op_Addition",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "well-founded-ordering-on-nat"
+      ],
+      0,
+      "215d74e509ae01d66ddf0043e382d4b1"
+    ],
+    [
+      "Vec.split_at_tail",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_7e0b9b2dbca36eab00de093c1b701c6d"
+      ],
+      0,
+      "b6650bb63ad1e751ec1524a6218d38e3"
+    ],
+    [
+      "Vec.split_at_tail",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "Vec_pretyping_1debc543dbd0994e62228e32e83c442e",
+        "data_elim_Vec.Cons", "disc_equation_Vec.Cons", "equation_Prims.nat",
+        "fuel_guarded_inversion_Vec.vec",
+        "function_token_typing_Prims.__cache_version_number__",
+        "int_inversion", "int_typing", "primitive_Prims.op_Addition",
+        "primitive_Prims.op_Equality", "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0", "projection_inverse_Vec.Cons_n",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_7e0b9b2dbca36eab00de093c1b701c6d",
+        "well-founded-ordering-on-nat"
+      ],
+      0,
+      "55cf00c21ebda3fd3097b2f873616ee6"
+    ],
+    [
+      "Vec.foldr",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_bb4e1c9af0265270f8e7a5f250f730e2_3",
+        "binder_x_ea6e1c341e790e65a92d935d4c3c15fd_6", "data_elim_Vec.Cons",
+        "disc_equation_Vec.Cons", "disc_equation_Vec.Nil",
+        "equation_Prims.nat", "fuel_guarded_inversion_Vec.vec",
+        "int_inversion", "primitive_Prims.op_Addition",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "well-founded-ordering-on-nat"
+      ],
+      0,
+      "1cc6ac4ecc0ce2206aaf50e45c3dade3"
+    ],
+    [
+      "Vec.pow2",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_bb4e1c9af0265270f8e7a5f250f730e2_0", "equation_Prims.nat",
+        "int_inversion", "int_typing", "primitive_Prims.op_Equality",
+        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "well-founded-ordering-on-nat"
+      ],
+      0,
+      "b86345bb81f2884ce14a48ceeb79411b"
+    ],
+    [
+      "Vec.proof_by_normalization",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "a30179b84152aace154f8c839b9dbe05"
+    ],
+    [
+      "Vec.fold_right",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_8e2b3e2e2d5822bdb0266bcb517fa74a_5",
+        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "fuel_guarded_inversion_Prims.list",
+        "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
+      ],
+      0,
+      "f548a280bf82a29b98806deedfce86e6"
+    ],
+    [
+      "Vec.imp_intro_lem",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "5cd98b8b262d462fde8b6ffc241cc77c"
+    ],
+    [
+      "Vec.split_lem",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "fe2c46ad4089f073737e065b3e429322"
+    ],
+    [
+      "Vec.split_lem'",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "0093c22cd57b635d9e427089c34df147"
+    ]
+  ]
+]

@@ -23,20 +23,21 @@
 *)
 module FStar.Parser.Dep
 
-open FStar.ST   //for ref
-open FStar.All  //for failwith
-
+open FStar.Pervasives
+open FStar.Compiler.Effect   //for ref, failwith etc
+open FStar.Compiler.List
 open FStar
+open FStar.Compiler
 open FStar.Parser
 open FStar.Parser.AST
-open FStar.Util
+open FStar.Compiler.Util
 open FStar.Const
 open FStar.String
 open FStar.Ident
 open FStar.Errors
 
 module Const = FStar.Parser.Const
-module BU = FStar.Util
+module BU = FStar.Compiler.Util
 
 let profile f c = Profiling.profile f None c
 
@@ -52,7 +53,26 @@ type verify_mode =
   | VerifyUserList
   | VerifyFigureItOut
 
-type files_for_module_name = smap<(option<string> * option<string>)>
+type intf_and_impl = option<string> * option<string>
+
+type files_for_module_name = smap<intf_and_impl>
+
+let intf_and_impl_to_string ii =
+  match ii with
+  | None, None -> "<None>, <None>"
+  | Some intf, None -> intf
+  | None, Some impl -> impl
+  | Some intf, Some impl -> intf ^ ", " ^ impl
+
+
+let files_for_module_name_to_string (m:files_for_module_name) =
+  BU.print_string "Printing the file system map {\n";
+  let str_opt_to_string sopt =
+    match sopt with
+    | None -> "<None>"
+    | Some s -> s in
+  smap_iter m (fun k v -> BU.print2 "%s:%s\n" k (intf_and_impl_to_string v));
+  BU.print_string "}\n"
 
 type color = | White | Gray | Black
 
@@ -140,7 +160,7 @@ type dependence_graph = //maps file names to the modules it depends on
 type parsing_data_elt =
   | P_begin_module of lident  //begin_module
   | P_open of bool * lident  //record_open
-  | P_open_module_or_namespace of (open_kind * lid)  //record_open_module_or_namespace
+  | P_implicit_open_module_or_namespace of (open_kind * lid)  //record_open_module_or_namespace
   | P_dep of bool * lident  //add_dep_on_module
   | P_alias of ident * lident  //record_module_alias
   | P_lid of lident  //record_lid
@@ -157,7 +177,7 @@ let str_of_parsing_data_elt elt =
   match elt with
   | P_begin_module lid -> "P_begin_module (" ^ (string_of_lid lid) ^ ")"
   | P_open (b, lid) -> "P_open (" ^ (string_of_bool b) ^ ", " ^ (string_of_lid lid) ^ ")"
-  | P_open_module_or_namespace (k, lid) -> "P_open_module_or_namespace (" ^ (str_of_open_kind k) ^ ", " ^ (string_of_lid lid) ^ ")"
+  | P_implicit_open_module_or_namespace (k, lid) -> "P_implicit_open_module_or_namespace (" ^ (str_of_open_kind k) ^ ", " ^ (string_of_lid lid) ^ ")"
   | P_dep (b, lid) -> "P_dep (" ^ (string_of_lid lid) ^ ", " ^ (string_of_bool b) ^ ")"
   | P_alias (id, lid) -> "P_alias (" ^ (string_of_id id) ^ ", " ^ (string_of_lid lid) ^ ")"
   | P_lid lid -> "P_lid (" ^ (string_of_lid lid) ^ ")"
@@ -171,7 +191,8 @@ let parsing_data_elt_eq (e1:parsing_data_elt) (e2:parsing_data_elt) =
   match e1, e2 with
   | P_begin_module l1, P_begin_module l2 -> lid_equals l1 l2
   | P_open (b1, l1), P_open (b2, l2) -> b1 = b2 && lid_equals l1 l2
-  | P_open_module_or_namespace (k1, l1), P_open_module_or_namespace (k2, l2) -> k1 = k2 && lid_equals l1 l2
+  | P_implicit_open_module_or_namespace (k1, l1), P_implicit_open_module_or_namespace (k2, l2) ->
+    k1 = k2 && lid_equals l1 l2
   | P_dep (b1, l1), P_dep (b2, l2) -> b1 = b2 && lid_equals l1 l2
   | P_alias (i1, l1), P_alias (i2, l2) -> string_of_id i1 = string_of_id i2 && lid_equals l1 l2
   | P_lid l1, P_lid l2 -> lid_equals l1 l2
@@ -441,24 +462,6 @@ let build_map (filenames: list<string>): files_for_module_name =
   ) filenames;
   map
 
-(** For all items [i] in the map that start with [prefix], add an additional
-    entry where [i] stripped from [prefix] points to the same value. Returns a
-    boolean telling whether the map was modified. *)
-let enter_namespace (original_map: files_for_module_name) (working_map: files_for_module_name) (prefix: string): bool =
-  let found = BU.mk_ref false in
-  let prefix = prefix ^ "." in
-  smap_iter original_map (fun k _ ->
-    if Util.starts_with k prefix then
-      let suffix =
-        String.substring k (String.length prefix) (String.length k - String.length prefix)
-      in
-      let filename = must (smap_try_find original_map k) in
-      smap_add working_map suffix filename;
-      found := true
-  );
-  !found
-
-
 let string_of_lid (l: lident) (last: bool) =
   let suffix = if last then [ (string_of_id (ident_of_lid l)) ] else [ ] in
   let names = List.map (fun x -> (string_of_id x)) (ns_of_lid l) @ suffix in
@@ -490,23 +493,73 @@ let core_modules =
    Options.pervasives_native_basename ()]
   |> List.map module_name_of_file
 
+let implicit_ns_deps =
+  [ Const.fstar_ns_lid ]
+
+let implicit_module_deps =
+  [ Const.prims_lid; Const.pervasives_lid ]
+
 let hard_coded_dependencies full_filename =
   let filename : string = basename full_filename in
 
+  let implicit_module_deps = List.map (fun l -> l, Open_module) implicit_module_deps in
+  let implicit_ns_deps = List.map (fun l -> l, Open_namespace) implicit_ns_deps in
+
   (* The core libraries do not have any implicit dependencies *)
   if List.mem (module_name_of_file filename) core_modules then []
-  else let implicit_deps =
-           [ (Const.fstar_ns_lid, Open_namespace);
-             (Const.prims_lid, Open_module);
-             (Const.pervasives_lid, Open_module) ] in
-       match (namespace_of_module (lowercase_module_name full_filename)) with
-       | None -> implicit_deps
-       | Some ns -> implicit_deps @ [(ns, Open_namespace)]
+  else match (namespace_of_module (lowercase_module_name full_filename)) with
+       | None -> implicit_ns_deps @ implicit_module_deps
+         (*
+          * AR: we open FStar, and then ns
+          *       which means that enter_namespace will be called first for F*, and then for ns
+          *       giving precedence to My.M over FStar.M
+          *)
+       | Some ns -> implicit_ns_deps @ implicit_module_deps @ [(ns, Open_namespace)]
 
 let dep_subsumed_by d d' =
       match d, d' with
       | PreferInterface l', FriendImplementation l -> l=l'
       | _ -> d = d'
+
+(** For all items [i] in the map that start with [prefix], add an additional
+    entry where [i] stripped from [prefix] points to the same value. Returns a
+    boolean telling whether the map was modified.
+    
+    If the open is an implicit open (as indicated by the flag),
+    and doing so shadows an existing entry, warn! *)
+let enter_namespace
+  (original_map: files_for_module_name)
+  (working_map: files_for_module_name)
+  (prefix: string)
+  (implicit_open:bool) : bool =
+  let found = BU.mk_ref false in
+  let prefix = prefix ^ "." in
+  let suffix_exists mopt =
+    match mopt with
+    | None -> false
+    | Some (intf, impl) -> is_some intf || is_some impl in
+  smap_iter original_map (fun k _ ->
+    if Util.starts_with k prefix then
+      let suffix =
+        String.substring k (String.length prefix) (String.length k - String.length prefix)
+      in
+
+      begin
+        let suffix_filename = smap_try_find original_map suffix in
+        if implicit_open &&
+           suffix_exists suffix_filename
+        then let str = suffix_filename |> must |> intf_and_impl_to_string in
+             FStar.Errors.log_issue Range.dummyRange
+               (Errors.Warning_UnexpectedFile,
+                BU.format4 "Implicitly opening %s namespace shadows (%s -> %s), rename %s to \
+                  avoid conflicts" prefix suffix str str)
+      end;
+
+      let filename = must (smap_try_find original_map k) in
+      smap_add working_map suffix filename;
+      found := true
+  );
+  !found
 
 (*
  * Get parsing data for a file
@@ -541,6 +594,7 @@ let collect_one
     =  let deps     : ref<(list<dependence>)> = BU.mk_ref [] in
        let has_inline_for_extraction = BU.mk_ref false in
 
+
        let mo_roots =
          let mname = lowercase_module_name filename in
          if is_interface filename
@@ -550,7 +604,7 @@ let collect_one
        in
 
        let auto_open = hard_coded_dependencies filename |> List.map (fun (lid, k) ->
-         P_open_module_or_namespace (k, lid))
+         P_implicit_open_module_or_namespace (k, lid))
        in
 
        let working_map = smap_copy original_map in
@@ -602,10 +656,10 @@ let collect_one
          end
        in
 
-       let record_open_namespace lid =
+         let record_open_namespace lid (implicit_open:bool) =
          let key = lowercase_join_longident lid true in
-         let r = enter_namespace original_map working_map key in
-         if not r then
+         let r = enter_namespace original_map working_map key implicit_open in
+         if not r && not implicit_open then  //suppress the warning for implicit opens
            FStar.Errors.log_issue (range_of_lid lid)
              (Errors.Warning_ModuleOrFileNotFoundWarning, (Util.format1 "No modules in namespace %s and no file with \
              that name either" (string_of_lid lid true)))
@@ -615,12 +669,12 @@ let collect_one
          if record_open_module let_open lid
          then ()
          else if not let_open //syntactically, this cannot be a namespace if let_open is true; so don't retry
-         then record_open_namespace lid
+         then record_open_namespace lid false
        in
 
-       let record_open_module_or_namespace (lid, kind) =
+       let record_implicit_open_module_or_namespace (lid, kind) =
          match kind with
-         | Open_namespace -> record_open_namespace lid
+         | Open_namespace -> record_open_namespace lid true
          | Open_module -> let _ = record_open_module false lid in ()
        in
 
@@ -674,7 +728,7 @@ let collect_one
              match elt with
              | P_begin_module lid -> begin_module lid
              | P_open (b, lid) -> record_open b lid
-             | P_open_module_or_namespace (k, lid) -> record_open_module_or_namespace (lid, k)
+             | P_implicit_open_module_or_namespace (k, lid) -> record_implicit_open_module_or_namespace (lid, k)
              | P_dep (b, lid) -> add_dep_on_module lid b
              | P_alias (id, lid) -> ignore (record_module_alias id lid)
              | P_lid lid -> record_lid lid
@@ -776,7 +830,10 @@ let collect_one
         | TyconRecord (_, binders, k, identterms) ->
             collect_binders binders;
             iter_opt k collect_term;
-            List.iter (fun (_, t) -> collect_term t) identterms
+            List.iter (fun (_, aq, attrs, t) -> 
+                collect_aqual aq;
+                attrs |> List.iter collect_term;
+                collect_term t) identterms
         | TyconVariant (_, binders, k, identterms) ->
             collect_binders binders;
             iter_opt k collect_term;
@@ -796,6 +853,7 @@ let collect_one
 
       and collect_binder b =
         collect_aqual b.aqual;
+        b.battributes |> List.iter collect_term;
         match b with
         | { b = Annotated (_, t) }
         | { b = TAnnotated (_, t) }
@@ -803,8 +861,7 @@ let collect_one
         | _ -> ()
 
       and collect_aqual = function
-        | Some (Meta (Arg_qualifier_meta_tac t))
-        | Some (Meta (Arg_qualifier_meta_attr t)) -> collect_term t
+        | Some (Meta t) -> collect_term t
         | _ -> ()
 
       and collect_term t =
@@ -827,10 +884,7 @@ let collect_one
             ()
         | Const c ->
             collect_constant c
-        | Op (s, ts) ->
-            if Ident.string_of_id s = "@" then
-              (* We use FStar.List.Tot.Base instead of FStar.List.Tot to prevent FStar.List.Tot.Properties from depending on FStar.List.Tot *)
-              collect_term' (Name (lid_of_path (path_of_text "FStar.List.Tot.Base.append") Range.dummyRange));
+        | Op (_, ts) ->
             List.iter collect_term ts
         | Tvar _
         | AST.Uvar _ ->
@@ -859,30 +913,49 @@ let collect_one
         | LetOpen (lid, t) ->
             add_to_parsing_data (P_open (true, lid));
             collect_term t
+        | LetOpenRecord (r, rty, e) ->
+            collect_term r;
+            collect_term rty;
+            collect_term e
         | Bind(_, t1, t2)
         | Seq (t1, t2) ->
             collect_term t1;
             collect_term t2
-        | If (t1, t2, t3) ->
+        | If (t1, ret_opt, t2, t3) ->
             collect_term t1;
+            (match ret_opt with
+             | None -> ()
+             | Some (_, ret, _) ->
+               collect_term ret);
             collect_term t2;
             collect_term t3
-        | Match (t, bs)
+        | Match (t, ret_opt, bs) ->
+            collect_term t;
+            (match ret_opt with
+             | None -> ()
+             | Some (_, ret, _) ->
+               collect_term ret);
+            collect_branches bs
         | TryWith (t, bs) ->
             collect_term t;
             collect_branches bs
-        | Ascribed (t1, t2, None) ->
+        | Ascribed (t1, t2, None, _) ->
             collect_term t1;
             collect_term t2
-        | Ascribed (t1, t2, Some tac) ->
+        | Ascribed (t1, t2, Some tac, _) ->
             collect_term t1;
             collect_term t2;
             collect_term tac
         | Record (t, idterms) ->
             iter_opt t collect_term;
-            List.iter (fun (_, t) -> collect_term t) idterms
-        | Project (t, _) ->
-            collect_term t
+            List.iter 
+              (fun (fn, t) -> 
+                collect_fieldname fn;
+                collect_term t)
+              idterms
+        | Project (t, f) ->
+            collect_term t;
+            collect_fieldname f
         | Product (binders, t) ->
           collect_binders binders;
           collect_term t
@@ -906,9 +979,15 @@ let collect_one
             collect_term t
         | Requires (t, _)
         | Ensures (t, _)
-        | Decreases (t, _)
         | Labeled (t, _, _) ->
             collect_term t
+        | LexList l -> List.iter collect_term l
+        | WFOrder (t1, t2) ->
+          add_to_parsing_data (P_dep (false, (Ident.lid_of_str "FStar.WellFounded")));
+          begin
+           collect_term t1; collect_term t2
+          end
+        | Decreases (t, _) -> collect_term t
         | Quote (t, _)
         | Antiquote t
         | VQuote t ->
@@ -926,6 +1005,78 @@ let collect_one
                 collect_term next) steps
             end
 
+        | IntroForall (bs, p, e) ->
+          add_to_parsing_data (P_dep (false, (Ident.lid_of_str "FStar.Classical.Sugar")));        
+          collect_binders bs;
+          collect_term p;
+          collect_term e
+          
+        | IntroExists(bs, t, vs, e) ->
+          add_to_parsing_data (P_dep (false, (Ident.lid_of_str "FStar.Classical.Sugar")));        
+          collect_binders bs;
+          collect_term t;
+          List.iter collect_term vs;
+          collect_term e
+
+        | IntroImplies(p, q, x, e) ->
+          add_to_parsing_data (P_dep (false, (Ident.lid_of_str "FStar.Classical.Sugar")));        
+          collect_term p;
+          collect_term q;
+          collect_binder x;
+          collect_term e
+          
+        | IntroOr(b, p, q, r) ->
+          add_to_parsing_data (P_dep (false, (Ident.lid_of_str "FStar.Classical.Sugar")));
+          collect_term p;
+          collect_term q;          
+          collect_term r
+          
+        | IntroAnd(p, q, r, e) ->
+          add_to_parsing_data (P_dep (false, (Ident.lid_of_str "FStar.Classical.Sugar")));
+          collect_term p;
+          collect_term q;          
+          collect_term r;
+          collect_term e          
+
+        | ElimForall(bs, p, vs) ->
+           add_to_parsing_data (P_dep (false, (Ident.lid_of_str "FStar.Classical.Sugar")));
+           collect_binders bs;
+           collect_term p;
+           List.iter collect_term vs
+            
+        | ElimExists(bs, p, q, b, e) ->
+           add_to_parsing_data (P_dep (false, (Ident.lid_of_str "FStar.Classical.Sugar")));
+           collect_binders bs;
+           collect_term p;
+           collect_term q;
+           collect_binder b;
+           collect_term e
+
+        | ElimImplies(p, q, e) -> 
+          add_to_parsing_data (P_dep (false, (Ident.lid_of_str "FStar.Classical.Sugar")));        
+          collect_term p;
+          collect_term q;
+          collect_term e
+
+        | ElimAnd(p, q, r, x, y, e) -> 
+          add_to_parsing_data (P_dep (false, (Ident.lid_of_str "FStar.Classical.Sugar")));
+          collect_term p;
+          collect_term q;
+          collect_term r;          
+          collect_binder x;
+          collect_binder y;
+          collect_term e
+
+        | ElimOr(p, q, r, x, e, y, e') -> 
+          add_to_parsing_data (P_dep (false, (Ident.lid_of_str "FStar.Classical.Sugar")));
+          collect_term p;
+          collect_term q;
+          collect_term r;
+          collect_binder x;
+          collect_binder y;
+          collect_term e;
+          collect_term e'          
+
       and collect_patterns ps =
         List.iter collect_pattern ps
 
@@ -933,10 +1084,11 @@ let collect_one
         collect_pattern' p.pat
 
       and collect_pattern' = function
-        | PatVar (_, aqual)
-        | PatTvar (_, aqual)
-        | PatWild aqual ->
-            collect_aqual aqual
+        | PatVar (_, aqual, attrs)
+        | PatTvar (_, aqual, attrs)
+        | PatWild (aqual, attrs) ->
+            collect_aqual aqual;
+            attrs |> List.iter collect_term
 
         | PatOp _
         | PatConst _ ->
@@ -968,6 +1120,10 @@ let collect_one
         collect_pattern pat;
         iter_opt t1 collect_term;
         collect_term t2
+
+      and collect_fieldname fn =
+          if nsstr fn <> ""
+          then add_to_parsing_data (P_dep (false, lid_of_ids (ns_of_lid fn)))
 
       in
       let ast, _ = Driver.parse_file filename in
@@ -1619,11 +1775,11 @@ let print_full (deps:deps) : unit =
                       List.filter
                         (fun df ->
                            lowercase_module_name df <> lowercase_module_name file_name //avoid circular deps on f's own cmx
-                           && Options.should_extract (lowercase_module_name df))
+                           && Options.should_extract (lowercase_module_name df) Options.OCaml)
                   in
                   extracted_fst_files |> List.map output_cmx_file
               in
-              if Options.should_extract (lowercase_module_name file_name)
+              if Options.should_extract (lowercase_module_name file_name) Options.OCaml
               then
                 let cmx_files = String.concat "\\\n\t" cmx_files in
                 print_entry
@@ -1668,7 +1824,7 @@ let print_full (deps:deps) : unit =
         all_fst_files
         |> List.iter (fun fst_file ->
                        let mname = lowercase_module_name fst_file in
-                       if Options.should_extract mname
+                       if Options.should_extract mname Options.OCaml
                        then BU.smap_add ml_file_map mname (output_ml_file fst_file));
         sort_output_files ml_file_map
     in
@@ -1677,7 +1833,8 @@ let print_full (deps:deps) : unit =
         keys
         |> List.iter (fun fst_file ->
                        let mname = lowercase_module_name fst_file in
-                       BU.smap_add krml_file_map mname (output_krml_file fst_file));
+                       if Options.should_extract mname Options.Kremlin
+                       then BU.smap_add krml_file_map mname (output_krml_file fst_file));
         sort_output_files krml_file_map
     in
     let print_all tag files =
@@ -1689,7 +1846,7 @@ let print_full (deps:deps) : unit =
     all_fsti_files
     |> List.iter
       (fun fsti ->
-          let mn = lowercase_module_name fsti in
+         let mn = lowercase_module_name fsti in
          let range_of_file fsti =
            let r = Range.set_file_of_range Range.dummyRange fsti in
            Range.set_use_range r (Range.def_range r)

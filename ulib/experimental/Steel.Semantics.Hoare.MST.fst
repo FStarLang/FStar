@@ -20,7 +20,7 @@ module P = FStar.Preorder
 
 open FStar.Tactics
 
-open NMST
+open FStar.NMST
 
 
 (*
@@ -46,7 +46,7 @@ open NMST
 /// Disabling projectors because we don't use them and they increase the typechecking time
 
 #push-options "--fuel  0 --ifuel 2 --z3rlimit 20 --print_implicits --print_universes \
-   --using_facts_from 'Prims FStar.Pervasives FStar.Preorder MST NMST Steel.Semantics.Hoare.MST'"
+   --using_facts_from 'Prims FStar.Pervasives FStar.Preorder FStar.MST FStar.NMST Steel.Semantics.Hoare.MST'"
 
 (**** Begin state defn ****)
 
@@ -54,7 +54,7 @@ open NMST
 /// We start by defining some basic notions for a commutative monoid.
 ///
 /// We could reuse FStar.Algebra.CommMonoid, but this style with
-/// quanitifers was more convenient for the proof done here.
+/// quantifiers was more convenient for the proof done here.
 
 
 let symmetry #a (equals: a -> a -> prop) =
@@ -280,7 +280,7 @@ let l_post (#st:st) (#a:Type) (pre:st.hprop) (post:post_t st a) = fp_prop2 pre p
 (**** End expects, provides, requires,
       and ensures defns ****)
 
-open NMSTTotal
+open FStar.NMSTTotal
 let full_mem (st:st) = m:st.mem{st.full_mem_pred m}
 
 effect Mst (a:Type) (#st:st) (req:st.mem -> Type0) (ens:st.mem -> a -> st.mem -> Type0) =
@@ -457,7 +457,6 @@ let weakening_ok
 
 /// Setting the flag just to reduce the time to typecheck the type m
 
-#push-options "--__temp_no_proj Steel.Semantics.Hoare.MST"
 noeq
 type m (st:st) :
       a:Type u#a ->
@@ -541,7 +540,6 @@ type m (st:st) :
     _:squash (weakening_ok lpre lpost wlpre wlpost) ->
     m st a pre post lpre lpost ->
     m st a wpre wpost wlpre wlpost
-#pop-options
 
 (**** End definition of the computation AST ****)
 
@@ -634,7 +632,9 @@ let step_ens
     let Step next_pre next_post next_lpre next_lpost _ = r in
     post_preserves_frame next_pre frame m0 m1 /\
     stronger_post post next_post /\
-    next_lpre (st.core m1) /\
+    next_lpre (st.core m1) /\  //we are writing it here explicitly,
+                              //but it is derivable from weaker_lpre
+                              //removing it is also fine for the proofs
     weaker_lpre lpre next_lpre m0 m1 /\
     stronger_lpost lpost next_lpost m0 m1
 
@@ -1054,7 +1054,7 @@ let step_act
 
   Step (post x) post (fun h -> lpost h x h) lpost (Ret post x lpost)
 
-module M = MST
+module M = FStar.MST
 
 let step_bind_ret_aux
       (#st:st)

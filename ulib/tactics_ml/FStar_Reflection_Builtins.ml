@@ -15,6 +15,7 @@ let term_to_string          = RB.term_to_string
 let comp_to_string          = RB.comp_to_string
 let env_open_modules        = RB.env_open_modules
 let sigelt_opts             = RB.sigelt_opts
+let embed_vconfig           = RB.embed_vconfig
 let sigelt_attrs            = RB.sigelt_attrs
 let set_sigelt_attrs        = RB.set_sigelt_attrs
 let sigelt_quals            = RB.sigelt_quals
@@ -33,9 +34,17 @@ let inspect_bv              = RB.inspect_bv
 let pack_bv                 = RB.pack_bv
 let inspect_binder          = RB.inspect_binder
 let pack_binder             = RB.pack_binder
-let inspect_aqual           = RB.inspect_aqual
-let pack_aqual              = RB.pack_aqual
+let inspect_lb              = RB.inspect_lb
+let pack_lb                 = RB.pack_lb
 let implode_qn              = RB.implode_qn
 let explode_qn              = RB.explode_qn
 let compare_string          = RB.compare_string
 let push_binder             = RB.push_binder
+let subst                   = RB.subst
+let close_term              = RB.close_term
+
+
+(* GM: Not sure if theese are needed, we don't expose them
+ * in the library. *)
+let inspect_aqual           = RB.inspect_aqual
+let pack_aqual              = RB.pack_aqual

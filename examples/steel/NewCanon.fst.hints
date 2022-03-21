@@ -1,0 +1,194 @@
+[
+  "H'|! tπÅ\u000e8\u001bÈ\u0003$Å^",
+  [
+    [
+      "NewCanon.test_imp",
+      1,
+      2,
+      1,
+      [ "@query", "equation_Steel.Effect.Common.true_p", "true_interp" ],
+      0,
+      "93c5bc9700b53ac337e5c2ac49a752db"
+    ],
+    [
+      "NewCanon.test1",
+      1,
+      2,
+      1,
+      [ "@query", "equation_Steel.Effect.Common.true_p", "true_interp" ],
+      0,
+      "1f2d917ca44fd3966d69de4e86da3ec1"
+    ],
+    [
+      "NewCanon.test2",
+      1,
+      2,
+      1,
+      [ "@query", "equation_Steel.Effect.Common.true_p", "true_interp" ],
+      0,
+      "db2ba334bd6a76645b0fa915182dc9a3"
+    ],
+    [
+      "NewCanon.test3",
+      1,
+      2,
+      1,
+      [ "@query", "equation_Steel.Effect.Common.true_p", "true_interp" ],
+      0,
+      "2abcdb09c6869eea0b437b305e4ea4f7"
+    ],
+    [
+      "NewCanon.test4",
+      1,
+      2,
+      1,
+      [ "@query", "equation_Steel.Effect.Common.true_p", "true_interp" ],
+      0,
+      "c122d6b993244299fb9eed86c0a9292c"
+    ],
+    [
+      "NewCanon.test5",
+      1,
+      2,
+      1,
+      [ "@query", "equation_Steel.Effect.Common.true_p", "true_interp" ],
+      0,
+      "be968cd11adaef5daa3b439ebee1a00c"
+    ],
+    [
+      "NewCanon.test6",
+      1,
+      2,
+      1,
+      [ "@query", "equation_Steel.Effect.Common.true_p", "true_interp" ],
+      0,
+      "bc2e57203a82545ef67afe24db0adaff"
+    ],
+    [
+      "NewCanon.test7",
+      1,
+      2,
+      1,
+      [ "@query", "equation_Steel.Effect.Common.true_p", "true_interp" ],
+      0,
+      "f8270aed13183b78a1eb88fdf3f7ae05"
+    ],
+    [
+      "NewCanon.test8",
+      1,
+      2,
+      1,
+      [ "@query", "equation_Steel.Effect.Common.true_p", "true_interp" ],
+      0,
+      "045999fa1c5c3be37c7030b914946500"
+    ],
+    [
+      "NewCanon.test_dep_frame",
+      1,
+      2,
+      1,
+      [ "@query", "equation_Steel.Effect.Common.true_p", "true_interp" ],
+      0,
+      "4bd9ead0e03d67b4f32e8db234d8fa80"
+    ],
+    [
+      "NewCanon.read_write",
+      1,
+      2,
+      1,
+      [ "@query", "equation_Steel.Effect.Common.true_p", "true_interp" ],
+      0,
+      "e94f738b2cb91ba2a840286e9230467a"
+    ],
+    [
+      "NewCanon.swap",
+      1,
+      2,
+      1,
+      [ "@query", "equation_Steel.Effect.Common.true_p", "true_interp" ],
+      0,
+      "be2016ac05219c49860a86667cd4f4fd"
+    ],
+    [
+      "NewCanon.swap2",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_Steel.Effect.Common.true_p",
+        "lemma_FStar.Ghost.hide_reveal",
+        "refinement_interpretation_Tm_refine_0384ec095b850a18864324063aca63b2",
+        "true_interp"
+      ],
+      0,
+      "c9c018025d2f27a96cdbe6e016334e73"
+    ],
+    [
+      "NewCanon.test21",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_Steel.Effect.Atomic.obs_at_most_one",
+        "equation_Steel.Effect.Common.true_p", "true_interp"
+      ],
+      0,
+      "e080e7aabcdfe0de8d12e4e7bb18deaa"
+    ],
+    [
+      "NewCanon.test23",
+      1,
+      2,
+      1,
+      [ "@query", "equation_Steel.Effect.Common.true_p", "true_interp" ],
+      0,
+      "67fabefb446630f6d19d6ee3339e5e08"
+    ],
+    [
+      "NewCanon.test24",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_Steel.Effect.Atomic.obs_at_most_one",
+        "equation_Steel.Effect.Common.true_p", "true_interp"
+      ],
+      0,
+      "947119e809f4b2ba5d5609cfa0748e69"
+    ],
+    [
+      "NewCanon.test25",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_Steel.Effect.Atomic.obs_at_most_one",
+        "equation_Steel.Effect.Common.true_p", "true_interp"
+      ],
+      0,
+      "ecff377881659b5b7285f1bb9d851ccb"
+    ],
+    [
+      "NewCanon.test26",
+      1,
+      2,
+      1,
+      [ "@query", "equation_Steel.Effect.Common.true_p", "true_interp" ],
+      0,
+      "1dd31e198027cf16ff546d699bba2350"
+    ],
+    [
+      "NewCanon.test27",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_Steel.Effect.Atomic.obs_at_most_one",
+        "equation_Steel.Effect.Common.true_p", "true_interp"
+      ],
+      0,
+      "1b73257b64d741ec93000cb9c1a90eb8"
+    ]
+  ]
+]

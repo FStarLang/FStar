@@ -5,44 +5,46 @@ let (has_cygpath : Prims.bool) =
        match () with
        | () ->
            let t_out =
-             FStar_Util.run_process "has_cygpath" "which" ["cygpath"]
-               FStar_Pervasives_Native.None in
-           (FStar_Util.trim_string t_out) = "/usr/bin/cygpath") ()
+             FStar_Compiler_Util.run_process "has_cygpath" "which"
+               ["cygpath"] FStar_Pervasives_Native.None in
+           (FStar_Compiler_Util.trim_string t_out) = "/usr/bin/cygpath") ()
   with | uu___ -> false
 let (try_convert_file_name_to_mixed : Prims.string -> Prims.string) =
-  let cache = FStar_Util.smap_create (Prims.of_int (20)) in
+  let cache = FStar_Compiler_Util.smap_create (Prims.of_int (20)) in
   fun s ->
-    if has_cygpath && (FStar_Util.starts_with s "/")
+    if has_cygpath && (FStar_Compiler_Util.starts_with s "/")
     then
-      let uu___ = FStar_Util.smap_try_find cache s in
+      let uu___ = FStar_Compiler_Util.smap_try_find cache s in
       match uu___ with
       | FStar_Pervasives_Native.Some s1 -> s1
       | FStar_Pervasives_Native.None ->
           let label = "try_convert_file_name_to_mixed" in
           let out =
             let uu___1 =
-              FStar_Util.run_process label "cygpath" ["-m"; s]
+              FStar_Compiler_Util.run_process label "cygpath" ["-m"; s]
                 FStar_Pervasives_Native.None in
-            FStar_All.pipe_right uu___1 FStar_Util.trim_string in
-          (FStar_Util.smap_add cache s out; out)
+            FStar_Compiler_Effect.op_Bar_Greater uu___1
+              FStar_Compiler_Util.trim_string in
+          (FStar_Compiler_Util.smap_add cache s out; out)
     else s
 let snapshot :
   'a 'b 'c .
-    ('a -> 'b) -> 'c Prims.list FStar_ST.ref -> 'a -> (Prims.int * 'b)
+    ('a -> 'b) ->
+      'c Prims.list FStar_Compiler_Effect.ref -> 'a -> (Prims.int * 'b)
   =
   fun push ->
     fun stackref ->
       fun arg ->
-        FStar_Util.atomically
+        FStar_Compiler_Util.atomically
           (fun uu___ ->
              let len =
-               let uu___1 = FStar_ST.op_Bang stackref in
-               FStar_List.length uu___1 in
+               let uu___1 = FStar_Compiler_Effect.op_Bang stackref in
+               FStar_Compiler_List.length uu___1 in
              let arg' = push arg in (len, arg'))
 let rollback :
   'a 'c .
     (unit -> 'a) ->
-      'c Prims.list FStar_ST.ref ->
+      'c Prims.list FStar_Compiler_Effect.ref ->
         Prims.int FStar_Pervasives_Native.option -> 'a
   =
   fun pop ->
@@ -56,15 +58,16 @@ let rollback :
             then pop ()
             else ((let uu___3 = pop () in ()); aux (n - Prims.int_one)) in
         let curdepth =
-          let uu___ = FStar_ST.op_Bang stackref in FStar_List.length uu___ in
+          let uu___ = FStar_Compiler_Effect.op_Bang stackref in
+          FStar_Compiler_List.length uu___ in
         let n =
           match depth with
           | FStar_Pervasives_Native.Some d -> curdepth - d
           | FStar_Pervasives_Native.None -> Prims.int_one in
-        FStar_Util.atomically (fun uu___ -> aux n)
+        FStar_Compiler_Util.atomically (fun uu___ -> aux n)
 let raise_failed_assertion : 'uuuuu . Prims.string -> 'uuuuu =
   fun msg ->
-    let uu___ = FStar_Util.format1 "Assertion failed: %s" msg in
+    let uu___ = FStar_Compiler_Util.format1 "Assertion failed: %s" msg in
     failwith uu___
 let (runtime_assert : Prims.bool -> Prims.string -> unit) =
   fun b ->
@@ -75,7 +78,8 @@ let string_of_list :
     fun l ->
       let uu___ =
         let uu___1 =
-          let uu___2 = FStar_List.map f l in FStar_String.concat ", " uu___2 in
+          let uu___2 = FStar_Compiler_List.map f l in
+          FStar_String.concat ", " uu___2 in
         Prims.op_Hat uu___1 "]" in
       Prims.op_Hat "[" uu___
 let list_of_option : 'a . 'a FStar_Pervasives_Native.option -> 'a Prims.list
@@ -127,8 +131,10 @@ let max_suffix :
         | x::xs2 when f x -> aux (x :: acc) xs2
         | x::xs2 -> (acc, (x :: xs2)) in
       let uu___ =
-        let uu___1 = FStar_All.pipe_right xs FStar_List.rev in
-        FStar_All.pipe_right uu___1 (aux []) in
-      FStar_All.pipe_right uu___
+        let uu___1 =
+          FStar_Compiler_Effect.op_Bar_Greater xs FStar_Compiler_List.rev in
+        FStar_Compiler_Effect.op_Bar_Greater uu___1 (aux []) in
+      FStar_Compiler_Effect.op_Bar_Greater uu___
         (fun uu___1 ->
-           match uu___1 with | (xs1, ys) -> ((FStar_List.rev ys), xs1))
+           match uu___1 with
+           | (xs1, ys) -> ((FStar_Compiler_List.rev ys), xs1))

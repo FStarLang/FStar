@@ -167,17 +167,17 @@ let (fsharpkeywords : Prims.string Prims.list) =
 let (string_of_mlpath : mlpath -> mlsymbol) =
   fun uu___ ->
     match uu___ with
-    | (p, s) -> FStar_String.concat "." (FStar_List.append p [s])
+    | (p, s) -> FStar_String.concat "." (FStar_Compiler_List.op_At p [s])
 type mlidents = mlident Prims.list
 type mlsymbols = mlsymbol Prims.list
 type e_tag =
   | E_PURE 
-  | E_GHOST 
+  | E_ERASABLE 
   | E_IMPURE 
 let (uu___is_E_PURE : e_tag -> Prims.bool) =
   fun projectee -> match projectee with | E_PURE -> true | uu___ -> false
-let (uu___is_E_GHOST : e_tag -> Prims.bool) =
-  fun projectee -> match projectee with | E_GHOST -> true | uu___ -> false
+let (uu___is_E_ERASABLE : e_tag -> Prims.bool) =
+  fun projectee -> match projectee with | E_ERASABLE -> true | uu___ -> false
 let (uu___is_E_IMPURE : e_tag -> Prims.bool) =
   fun projectee -> match projectee with | E_IMPURE -> true | uu___ -> false
 type mlloc = (Prims.int * Prims.string)
@@ -322,6 +322,9 @@ type meta =
   | CIfDef 
   | CMacro 
   | Deprecated of Prims.string 
+  | RemoveUnusedTypeParameters of (Prims.int Prims.list *
+  FStar_Compiler_Range.range) 
+  | HasValDecl of FStar_Compiler_Range.range 
 let (uu___is_Mutable : meta -> Prims.bool) =
   fun projectee -> match projectee with | Mutable -> true | uu___ -> false
 let (uu___is_Assumed : meta -> Prims.bool) =
@@ -387,6 +390,19 @@ let (uu___is_Deprecated : meta -> Prims.bool) =
     match projectee with | Deprecated _0 -> true | uu___ -> false
 let (__proj__Deprecated__item___0 : meta -> Prims.string) =
   fun projectee -> match projectee with | Deprecated _0 -> _0
+let (uu___is_RemoveUnusedTypeParameters : meta -> Prims.bool) =
+  fun projectee ->
+    match projectee with
+    | RemoveUnusedTypeParameters _0 -> true
+    | uu___ -> false
+let (__proj__RemoveUnusedTypeParameters__item___0 :
+  meta -> (Prims.int Prims.list * FStar_Compiler_Range.range)) =
+  fun projectee -> match projectee with | RemoveUnusedTypeParameters _0 -> _0
+let (uu___is_HasValDecl : meta -> Prims.bool) =
+  fun projectee ->
+    match projectee with | HasValDecl _0 -> true | uu___ -> false
+let (__proj__HasValDecl__item___0 : meta -> FStar_Compiler_Range.range) =
+  fun projectee -> match projectee with | HasValDecl _0 -> _0
 type metadata = meta Prims.list
 type mlletflavor =
   | Rec 
@@ -578,8 +594,47 @@ let (__proj__MLTD_DType__item___0 :
   mltybody -> (mlsymbol * (mlsymbol * mlty) Prims.list) Prims.list) =
   fun projectee -> match projectee with | MLTD_DType _0 -> _0
 type one_mltydecl =
-  (Prims.bool * mlsymbol * mlsymbol FStar_Pervasives_Native.option * mlidents
-    * metadata * mltybody FStar_Pervasives_Native.option)
+  {
+  tydecl_assumed: Prims.bool ;
+  tydecl_name: mlsymbol ;
+  tydecl_ignored: mlsymbol FStar_Pervasives_Native.option ;
+  tydecl_parameters: mlidents ;
+  tydecl_meta: metadata ;
+  tydecl_defn: mltybody FStar_Pervasives_Native.option }
+let (__proj__Mkone_mltydecl__item__tydecl_assumed :
+  one_mltydecl -> Prims.bool) =
+  fun projectee ->
+    match projectee with
+    | { tydecl_assumed; tydecl_name; tydecl_ignored; tydecl_parameters;
+        tydecl_meta; tydecl_defn;_} -> tydecl_assumed
+let (__proj__Mkone_mltydecl__item__tydecl_name : one_mltydecl -> mlsymbol) =
+  fun projectee ->
+    match projectee with
+    | { tydecl_assumed; tydecl_name; tydecl_ignored; tydecl_parameters;
+        tydecl_meta; tydecl_defn;_} -> tydecl_name
+let (__proj__Mkone_mltydecl__item__tydecl_ignored :
+  one_mltydecl -> mlsymbol FStar_Pervasives_Native.option) =
+  fun projectee ->
+    match projectee with
+    | { tydecl_assumed; tydecl_name; tydecl_ignored; tydecl_parameters;
+        tydecl_meta; tydecl_defn;_} -> tydecl_ignored
+let (__proj__Mkone_mltydecl__item__tydecl_parameters :
+  one_mltydecl -> mlidents) =
+  fun projectee ->
+    match projectee with
+    | { tydecl_assumed; tydecl_name; tydecl_ignored; tydecl_parameters;
+        tydecl_meta; tydecl_defn;_} -> tydecl_parameters
+let (__proj__Mkone_mltydecl__item__tydecl_meta : one_mltydecl -> metadata) =
+  fun projectee ->
+    match projectee with
+    | { tydecl_assumed; tydecl_name; tydecl_ignored; tydecl_parameters;
+        tydecl_meta; tydecl_defn;_} -> tydecl_meta
+let (__proj__Mkone_mltydecl__item__tydecl_defn :
+  one_mltydecl -> mltybody FStar_Pervasives_Native.option) =
+  fun projectee ->
+    match projectee with
+    | { tydecl_assumed; tydecl_name; tydecl_ignored; tydecl_parameters;
+        tydecl_meta; tydecl_defn;_} -> tydecl_defn
 type mltydecl = one_mltydecl Prims.list
 type mlmodule1 =
   | MLM_Ty of mltydecl 
@@ -654,14 +709,12 @@ let (mlp_lalloc : (Prims.string Prims.list * Prims.string)) =
 let (apply_obj_repr : mlexpr -> mlty -> mlexpr) =
   fun x ->
     fun t ->
-      let obj_ns =
+      let repr_name =
         let uu___ =
           let uu___1 = FStar_Options.codegen () in
           uu___1 = (FStar_Pervasives_Native.Some FStar_Options.FSharp) in
-        if uu___ then "FSharp.Compatibility.OCaml.Obj" else "Obj" in
-      let obj_repr =
-        with_ty (MLTY_Fun (t, E_PURE, MLTY_Top))
-          (MLE_Name ([obj_ns], "repr")) in
+        if uu___ then MLE_Name ([], "box") else MLE_Name (["Obj"], "repr") in
+      let obj_repr = with_ty (MLTY_Fun (t, E_PURE, MLTY_Top)) repr_name in
       with_ty_loc MLTY_Top (MLE_App (obj_repr, [x])) x.loc
 let (push_unit : mltyscheme -> mltyscheme) =
   fun ts ->

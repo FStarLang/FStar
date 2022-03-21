@@ -15,8 +15,8 @@
 *)
 #light "off"
 module FStar.ToSyntax.Interleave
-open FStar.ST
-open FStar.All
+open FStar.Compiler.Effect
+open FStar.Compiler.Effect
 open FStar.Ident
 open FStar.Parser.AST
 

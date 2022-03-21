@@ -129,8 +129,6 @@ let rec sorted (#a:Type) (f:a -> a -> Tot bool) (s:seq a)
   else let hd = head s in
        f hd (index s 1) && sorted f (tail s)
 
-module F = FStar.FunctionalExtensionality
-
 val sorted_feq (#a:Type)
                (f g : (a -> a -> Tot bool))
                (s:seq a{forall x y. f x y == g x y})
@@ -310,7 +308,7 @@ val lemma_trans_perm: #a:eqtype -> s1:seq a -> s2:seq a -> s3:seq a{length s1 = 
   (ensures (permutation a (slice s1 i j) (slice s3 i j)))
 
 
-(*New addtions, please review*)
+(*New additions, please review*)
 
 let snoc (#a:Type) (s:seq a) (x:a) : Tot (seq a) = Seq.append s (Seq.create 1 x)
 
@@ -472,6 +470,7 @@ val lemma_index_is_nth: #a:Type -> s:seq a -> i:nat{i < length s} -> Lemma
 //    An undecidable version of `mem`,
 //    for when the sequence payload is not an eqtype
 ////////////////////////////////////////////////////////////////////////////////
+[@@ remove_unused_type_parameters [0; 1; 2]]
 val contains (#a:Type) (s:seq a) (x:a) : Tot Type0
 
 val contains_intro (#a:Type) (s:seq a) (k:nat) (x:a)
@@ -745,3 +744,28 @@ let sort_lseq (#a:eqtype) #n (f:tot_ord a) (s:lseq a n)
   perm_len s s';
   sorted_feq f (L.bool_of_compare (L.compare_of_bool f)) s';
   s'
+
+let rec foldr (#a #b:Type) (f:b -> a -> Tot a) (s:seq b) (init:a)
+  : Tot a (decreases (length s))
+  = if length s = 0 then init
+    else f (head s) (foldr f (tail s) init)
+
+let rec foldr_snoc (#a #b:Type) (f:b -> a -> Tot a) (s:seq b) (init:a)
+  : Tot a (decreases (length s))
+  = if length s = 0 then init
+    else let s, last = un_snoc s in
+         f last (foldr_snoc f s init)
+
+(****** Seq map ******)
+
+val map_seq (#a #b:Type) (f:a -> Tot b) (s:Seq.seq a) : Tot (Seq.seq b)
+
+val map_seq_len (#a #b:Type) (f:a -> Tot b) (s:Seq.seq a)
+  : Lemma (ensures Seq.length (map_seq f s) == Seq.length s)
+
+val map_seq_index (#a #b:Type) (f:a -> Tot b) (s:Seq.seq a) (i:nat{i < Seq.length s})
+  : Lemma (ensures (map_seq_len f s; Seq.index (map_seq f s) i == f (Seq.index s i)))
+
+val map_seq_append (#a #b:Type) (f:a -> Tot b) (s1 s2:Seq.seq a)
+  : Lemma (ensures (map_seq f (Seq.append s1 s2) ==
+                    Seq.append (map_seq f s1) (map_seq f s2)))

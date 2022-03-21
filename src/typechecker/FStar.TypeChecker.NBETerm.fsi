@@ -17,19 +17,21 @@
 *)
 #light "off"
 module FStar.TypeChecker.NBETerm
-open FStar.All
-open FStar.Exn
+open FStar.Pervasives
+open FStar.Compiler.Effect
 open FStar
+open FStar.Compiler
 open FStar.TypeChecker
 open FStar.TypeChecker.Env
 open FStar.Syntax.Syntax
 open FStar.Ident
 open FStar.Errors
+open FStar.VConfig
 
 module S = FStar.Syntax.Syntax
 module U = FStar.Syntax.Util
 module P = FStar.Syntax.Print
-module BU = FStar.Util
+module BU = FStar.Compiler.Util
 module Env = FStar.TypeChecker.Env
 module Z = FStar.BigInt
 module C = FStar.Const
@@ -73,8 +75,12 @@ type atom
   | Match of
        // 1. the scrutinee
        t *
-       // 2. reconstructs the pattern matching, if it needs to be readback
-       (unit -> list<branch>)
+       // 2. reconstruct the returns annotation
+       (unit -> option<match_returns_ascription>) *
+       // 3. reconstructs the pattern matching, if it needs to be readback
+       (unit -> list<branch>) *
+       // 4. reconstruct the residual comp if set
+       (unit -> option<S.residual_comp>)
   | UnreducedLet of
      // Especially when extracting, we do not always want to reduce let bindings
      // since that can lead to exponential code size blowup. This node represents
@@ -105,7 +111,7 @@ type atom
 and t'
   =
   | Lam of (list<t> -> t)            //these expect their arguments in binder order (optimized for convenience beta reduction)
-        * BU.either<(list<t> * binders * option<S.residual_comp>), list<arg>> //a context, binders and residual_comp for readback
+        * either<(list<t> * binders * option<S.residual_comp>), list<arg>> //a context, binders and residual_comp for readback
                                                                  //or a list of arguments, for primitive unembeddings
         * int                        // arity
   | Accu of atom * args
@@ -115,11 +121,11 @@ and t'
   | Type_t of universe
   | Univ of universe
   | Unknown
-  | Arrow of BU.either<Thunk.t<S.term>, (list<arg> * comp)>
+  | Arrow of either<Thunk.t<S.term>, (list<arg> * comp)>
   | Refinement of (t -> t) * (unit -> arg)
   | Reflect of t
   | Quote of S.term * S.quoteinfo
-  | Lazy of BU.either<S.lazyinfo,(Dyn.dyn * emb_typ)> * Thunk.t<t>
+  | Lazy of either<S.lazyinfo,(Dyn.dyn * emb_typ)> * Thunk.t<t>
   | Meta of t * Thunk.t<S.metadata>
   | TopLevelLet of
        // 1. The definition of the fv
@@ -187,7 +193,8 @@ and cflag =
   | SHOULD_NOT_INLINE
   | LEMMA
   | CPS
-  | DECREASES of t
+  | DECREASES_lex of list<t>
+  | DECREASES_wf of (t * t)
 
 and arg = t * aqual
 and args = list<(arg)>
@@ -213,7 +220,7 @@ val mkConstruct : fv -> list<universe> -> args -> t
 val mkFV : fv -> list<universe> -> args -> t
 
 val mkAccuVar : var -> t
-val mkAccuMatch : t -> (unit -> list<branch>) -> t
+val mkAccuMatch : t -> (unit -> option<match_returns_ascription>) -> (unit -> list<branch>) -> (unit -> option<S.residual_comp>) -> t
 
 val as_arg : t -> arg
 val as_iarg : t -> arg
@@ -253,11 +260,13 @@ val e_unit   : embedding<unit>
 val e_any    : embedding<t>
 val mk_any_emb : t -> embedding<t>
 val e_range  : embedding<Range.range>
+val e_vconfig  : embedding<vconfig>
 val e_norm_step : embedding<Syntax.Embeddings.norm_step>
 val e_list   : embedding<'a> -> embedding<list<'a>>
 val e_option : embedding<'a> -> embedding<option<'a>>
 val e_tuple2 : embedding<'a> -> embedding<'b> -> embedding<('a * 'b)>
-val e_either : embedding<'a> -> embedding<'b> -> embedding<BU.either<'a ,'b>>
+val e_tuple3 : embedding<'a> -> embedding<'b> -> embedding<'c> -> embedding<('a * 'b * 'c)>
+val e_either : embedding<'a> -> embedding<'b> -> embedding<either<'a ,'b>>
 val e_string_list : embedding<list<string>>
 val e_arrow : embedding<'a> -> embedding<'b> -> embedding<('a -> 'b)>
 
@@ -299,9 +308,10 @@ val arg_as_bool : arg -> option<bool>
 val arg_as_char : arg -> option<FStar.Char.char>
 val arg_as_string : arg -> option<string>
 val arg_as_list : embedding<'a> -> arg -> option<list<'a>>
-val arg_as_bounded_int : arg -> option<(fv * Z.t)>
+val arg_as_bounded_int : arg -> option<(fv * Z.t * option<S.meta_source_info>)>
 
 val int_as_bounded : fv -> Z.t -> t
+val with_meta_ds : t -> option<meta_source_info> -> t
 
 val unary_int_op : (Z.t -> Z.t) -> (args -> option<t>)
 val binary_int_op : (Z.t -> Z.t -> Z.t) -> (args -> option<t>)
@@ -327,10 +337,9 @@ val list_of_string' : (string -> t)
 
 val decidable_eq : bool -> args -> option<t>
 val interp_prop_eq2 : args -> option<t>
-val interp_prop_eq3 : args -> option<t>
 
 val mixed_binary_op : (arg -> option<'a>) -> (arg -> option<'b>) -> ('c -> t) ->
-                      ('a -> 'b -> 'c) -> args -> option<t>
+                      ('a -> 'b -> option<'c>) -> args -> option<t>
 val unary_op : (arg -> option<'a>) -> ('a -> t) -> (args -> option<t>)
 val binary_op : (arg -> option<'a>) -> ('a -> 'a -> t) -> (args -> option<t>)
 
@@ -339,3 +348,5 @@ val prims_to_fstar_range_step : args -> option<t>
 
 val mk_range : args -> option<t>
 val division_op : args -> option<t>
+val and_op : args -> option<t>
+val or_op : args -> option<t>

@@ -34,13 +34,10 @@ LowStar.Ex1.fst \
 LowStar.Ex2.fst \
 LowStar.Ex3.fst
 
-FSTAR_HOME=../../../../
-include ../Makefile.include
-
-HYPERSTACK=$(FSTAR_HOME)/ulib/hyperstack
+include ../../../Makefile.include
 
 verify-%: __force__
-	$(FSTAR) --include $(FSTAR_HOME)/ucontrib/Platform/fst --include $(FSTAR_HOME)/ucontrib/CoreCrypto/fst $*
+	$(FSTAR) --include $(FSTAR_CONTRIB)/Platform/fst --include $(FSTAR_CONTRIB)/CoreCrypto/fst $*
 
 
 all: uall sall
@@ -51,15 +48,20 @@ uall: $(VERFILES:%=verify-%)
 
 # Importing targets for simplified extraction to Ocaml
 
-include $(FSTAR_HOME)/ulib/ml/Makefile.include
+include $(FSTAR_ULIB)/ml/Makefile.include
 
 out:
 	mkdir -p out
 
+
+HAS_OCAMLFIND := $(shell which ocamlfind 2>/dev/null)
+
 Ex01a-ocaml: out Ex01a.fst
 	$(FSTAR) $(FSTAR_DEFAULT_ARGS) --odir out --codegen OCaml Ex01a.fst
+ifdef HAS_OCAMLFIND
 	$(OCAMLOPT) out/Ex01a.ml -o Ex01a.exe
 	-./Ex01a.exe
+endif
 
 # # Parameter for interactive mode
 # %.fst-in: 

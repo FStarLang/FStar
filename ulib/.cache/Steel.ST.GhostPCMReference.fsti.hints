@@ -1,0 +1,26 @@
+[
+  "\u000b{„$$Ýv>\u001dæa\u0002ÉÞ½ê",
+  [
+    [
+      "Steel.ST.GhostPCMReference.share",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "2187519c5e910a169b87bea292dbd7b8"
+    ],
+    [
+      "Steel.ST.GhostPCMReference.gather",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_2312a63c4e89fea10d3f55e0bd838c5e"
+      ],
+      0,
+      "0cc7f1d603c8ceaf3a5706dae733f9c1"
+    ]
+  ]
+]

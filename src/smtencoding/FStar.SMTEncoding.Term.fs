@@ -16,15 +16,14 @@
 #light "off"
 
 module FStar.SMTEncoding.Term
-open FStar.ST
-open FStar.Exn
-open FStar.All
-
+open FStar.Compiler.Effect
+open FStar.Compiler.List
 open FStar
+open FStar.Compiler
 open FStar.Syntax.Syntax
 open FStar.Syntax
-open FStar.Util
-module BU = FStar.Util
+open FStar.Compiler.Util
+module BU = FStar.Compiler.Util
 module U = FStar.Syntax.Util
 
 let escape (s:string) = BU.replace_char s '\'' '_'
@@ -1013,18 +1012,10 @@ and mkPrelude z3options =
                                  (fst boxIntFun,     [snd boxIntFun,  Int_sort, true],   Term_sort, 7, true);
                                  (fst boxBoolFun,    [snd boxBoolFun, Bool_sort, true],  Term_sort, 8, true);
                                  (fst boxStringFun,  [snd boxStringFun, String_sort, true], Term_sort, 9, true);
-                                 (fst boxRealFun,    [snd boxRealFun, Sort "Real", true], Term_sort, 10, true);
-                                 ("LexCons",    [("LexCons_0", Term_sort, true); ("LexCons_1", Term_sort, true); ("LexCons_2", Term_sort, true)], Term_sort, 11, true)] in
+                                 (fst boxRealFun,    [snd boxRealFun, Sort "Real", true], Term_sort, 10, true)] in
    let bcons = constrs |> List.collect (constructor_to_decl norng)
                        |> List.map (declToSmt z3options) |> String.concat "\n" in
-   let lex_ordering = "\n(define-fun is-Prims.LexCons ((t Term)) Bool \n\
-                                   (is-LexCons t))\n\
-                       (declare-fun Prims.lex_t () Term)\n\
-                       (assert (forall ((t1 Term) (t2 Term) (x1 Term) (x2 Term) (y1 Term) (y2 Term))\n\
-                                    (iff (Valid (Prims.precedes Prims.lex_t Prims.lex_t (LexCons t1 x1 x2) (LexCons t2 y1 y2)))\n\
-                                         (or (Valid (Prims.precedes t1 t2 x1 y1))\n\
-                                             (and (= x1 y1)\n\
-                                                  (Valid (Prims.precedes Prims.lex_t Prims.lex_t x2 y2)))))))\n\
+   let lex_ordering = "\n(declare-fun Prims.lex_t () Term)\n\
                       (assert (forall ((t1 Term) (t2 Term) (e1 Term) (e2 Term))\n\
                                                           (! (iff (Valid (Prims.precedes t1 t2 e1 e2))\n\
                                                                   (Valid (Prims.precedes Prims.lex_t Prims.lex_t e1 e2)))\n\
@@ -1136,7 +1127,7 @@ let mk_Valid t        = match t.tm with
     | App(Var "Prims.b2t", [{tm=App(Var "Prims.op_Negation", [t])}]) -> mkNot (unboxBool t) t.rng
     | App(Var "Prims.b2t", [{tm=App(Var "FStar.BV.bvult", [t0; t1;t2])}])
     | App(Var "Prims.equals", [_; {tm=App(Var "FStar.BV.bvult", [t0; t1;t2])}; _])
-            when (FStar.Util.is_some (getBoxedInteger t0))->
+            when (FStar.Compiler.Util.is_some (getBoxedInteger t0))->
         // sometimes b2t gets needlessly normalized...
         let sz = match getBoxedInteger t0 with | Some sz -> sz | _ -> failwith "impossible" in
         mkBvUlt (unboxBitVec sz t1, unboxBitVec sz t2) t.rng
@@ -1163,7 +1154,6 @@ let mk_ApplyTT t t'  r  = mkApp("ApplyTT", [t;t']) r
 let kick_partial_app t  = mk_ApplyTT (mkApp("__uu__PartialApp", []) t.rng) t t.rng |> mk_Valid
 let mk_String_const s r = mkApp ("FString_const", [mk (String s) r]) r
 let mk_Precedes x1 x2 x3 x4 r = mkApp("Prims.precedes", [x1;x2;x3;x4])  r|> mk_Valid
-let mk_LexCons x1 x2 x3 r  = mkApp("LexCons", [x1;x2;x3]) r
 let rec n_fuel n =
     if n = 0 then mkApp("ZFuel", []) norng
     else mkApp("SFuel", [n_fuel (n - 1)]) norng

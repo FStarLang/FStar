@@ -17,11 +17,11 @@
 // (c) Microsoft Corporation. All rights reserved
 
 module FStar.TypeChecker.PatternUtils
-open FStar.ST
-open FStar.Exn
-open FStar.All
+open FStar.Compiler.Effect
+open FStar.Compiler.Effect
 open FStar
-open FStar.Util
+open FStar.Compiler
+open FStar.Compiler.Util
 open FStar.Errors
 open FStar.TypeChecker
 open FStar.Syntax
@@ -34,9 +34,10 @@ open FStar.Syntax
 
 val elaborate_pat : env -> pat -> pat
 val pat_as_exp:  introduce_bv_uvars:bool
-              -> env:Env.env
-              -> p:pat
-              -> list<bv>           (* pattern-bound variables (which may appear in the branch of match) *)
-                * term              (* expressions corresponding to the pattern *)
-                * guard_t           (* guard with all implicits introduced in the pattern *)
-                * pat               (* decorated pattern, with all the missing implicit args in p filled in *)
+               -> inst_pat_cons_univs:bool  (* whether it should instantiate the universes for data constructor patterns, on when called from Rel *)
+               -> env:Env.env
+               -> p:pat
+               -> list<bv>       (* pattern-bound variables (which may appear in the branch of match) *)
+                 * term         (* expressions corresponding to the pattern *)
+                 * guard_t      (* guard with all implicits introduced in the pattern *)
+                 * pat          (* decorated pattern, with all the missing implicit args in p filled in *)

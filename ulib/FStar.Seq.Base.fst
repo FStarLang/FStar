@@ -61,7 +61,7 @@ let empty #_ = MkSeq []
 
 let lemma_empty #_ _ = ()
 
-private let rec upd' (#a:Type) (s:seq a) (n:nat{n < length s}) (v:a) 
+private let rec upd' (#a:Type) (s:seq a) (n:nat{n < length s}) (v:a)
     : Tot (seq a)
       (decreases (length s))
   = if n = 0 then cons v (tl s) else cons (hd s) (upd' (tl s) (n - 1) v)
@@ -165,15 +165,22 @@ let rec lemma_index_app2' (#a:Type) (s1:seq a) (s2:seq a) (i:nat{i < length s1 +
 
 let lemma_index_app2 = lemma_index_app2'
 
-#push-options "--z3rlimit 20 --ifuel 0 --fuel 1"
+#push-options "--z3rlimit 20 --ifuel 2 --fuel 1"
 let rec lemma_index_slice' (#a:Type) (s:seq a) (i:nat) (j:nat{i <= j /\ j <= length s}) (k:nat{k < j - i})
 : Lemma
   (requires True)
   (ensures (index (slice s i j) k == index s (k + i))) (decreases (length s))
-= if i > 0 then lemma_index_slice' #a (tl s) (i - 1) (j - 1) k
-  else
+= if i > 0
+  then (
+    lemma_index_slice' #a (tl s) (i - 1) (j - 1) k;
+    assert (index (slice (tl s) (i - 1) (j - 1)) k == index (tl s) (k + (i - 1)));
+    assert (index (slice (tl s) (i - 1) (j - 1)) k == index s (k + i));
+    assert (index (slice s i j) k == index s (k + i))
+  )
+  else (
     if j = 0 then ()
     else if k = 0 then () else lemma_index_slice' #a (tl s) i (j - 1) (k - 1)
+  )
 #pop-options
 
 let lemma_index_slice = lemma_index_slice'

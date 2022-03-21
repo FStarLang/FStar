@@ -14,10 +14,10 @@ open FStar.Reflection.Data
 open FStar.Tactics.Types
 open FStar.Tactics.Monad
 
-module BU    = FStar.Util
+module BU    = FStar.Compiler.Util
 module EMB   = FStar.Syntax.Embeddings
 module O     = FStar.Options
-module Range = FStar.Range
+module Range = FStar.Compiler.Range
 module Z     = FStar.BigInt
 
 (* Internal utilities *)
@@ -41,7 +41,6 @@ val tc                     : env -> term -> tac<typ>
 val tcc                    : env -> term -> tac<comp>
 val unshelve               : term -> tac<unit>
 val unquote                : typ -> term -> tac<term>
-val trivial                : unit -> tac<unit>
 val norm                   : list<EMB.norm_step> -> tac<unit>
 val norm_term_env          : env -> list<EMB.norm_step> -> term -> tac<term>
 val norm_binder_type       : list<EMB.norm_step> -> binder -> tac<unit>
@@ -60,7 +59,8 @@ val print                  : string -> tac<unit>
 val debugging              : unit -> tac<bool>
 val dump                   : string -> tac<unit>
 val dump_all               : bool -> string -> tac<unit>
-val trefl                  : unit -> tac<unit>
+val dump_uvars_of          : goal -> string -> tac<unit>
+val t_trefl                : (*allow_guards:*)bool -> tac<unit>
 val dup                    : unit -> tac<unit>
 val prune                  : string -> tac<unit>
 val addns                  : string -> tac<unit>
@@ -68,6 +68,7 @@ val t_destruct             : term -> tac<list<(fv * Z.t)>>
 val set_options            : string -> tac<unit>
 val uvar_env               : env -> option<typ> -> tac<term>
 val unify_env              : env -> term -> term -> tac<bool>
+val unify_guard_env        : env -> term -> term -> tac<bool>
 val match_env              : env -> term -> term -> tac<bool>
 val launch_process         : string -> list<string> -> string -> tac<string>
 val fresh_bv_named         : string -> typ -> tac<bv>
@@ -83,3 +84,4 @@ val lget                   : typ -> string -> tac<term>
 val lset                   : typ -> string -> term -> tac<unit>
 val curms                  : unit -> tac<Z.t>
 val set_urgency            : Z.t -> tac<unit>
+val t_commute_applied_match : unit -> tac<unit>

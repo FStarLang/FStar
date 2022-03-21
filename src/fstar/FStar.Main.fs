@@ -15,13 +15,14 @@
 *)
 #light "off"
 module FStar.Main
-open FStar.ST
-open FStar.All
-open FStar.Util
+open FStar.Compiler.Effect
+open FStar.Compiler.List
+open FStar.Compiler.Util
 open FStar.Getopt
 open FStar.Ident
 open FStar.CheckedFiles
 open FStar.Universal
+open FStar.Compiler
 module E = FStar.Errors
 module UF = FStar.Syntax.Unionfind
 
@@ -62,31 +63,36 @@ let report_errors fmods =
 
 let load_native_tactics () =
     let modules_to_load = Options.load() |> List.map Ident.lid_of_str in
+    let cmxs_to_load = Options.load_cmxs () |> List.map Ident.lid_of_str in
     let ml_module_name m = FStar.Extraction.ML.Util.ml_module_name_of_lid m in
     let ml_file m = ml_module_name m ^ ".ml" in
     let cmxs_file m =
         let cmxs = ml_module_name m ^ ".cmxs" in
-        match FStar.Options.find_file (cmxs |> Options.prepend_output_dir) with
+        match FStar.Options.find_file cmxs with
         | Some f -> f
         | None ->
-        match FStar.Options.find_file (ml_file m |> Options.prepend_output_dir) with
-        | None ->
-            E.raise_err (E.Fatal_FailToCompileNativeTactic,
-                         Util.format1 "Failed to compile native tactic; extracted module %s not found" (ml_file m))
-        | Some ml ->
-            let dir = Util.dirname ml in
-            FStar.Tactics.Load.compile_modules dir [ml_module_name m];
-            begin match FStar.Options.find_file cmxs with
+          if List.contains m cmxs_to_load  //if this module comes from the cmxs list, fail hard
+          then E.raise_err (E.Fatal_FailToCompileNativeTactic,
+                            Util.format1 "Could not find %s to load" cmxs)
+          else  //else try to find and compile the ml file
+            match FStar.Options.find_file (ml_file m) with
             | None ->
-                E.raise_err (E.Fatal_FailToCompileNativeTactic,
-                         Util.format1 "Failed to compile native tactic; compiled object %s not found" cmxs)
-            | Some f -> f
-            end
+              E.raise_err (E.Fatal_FailToCompileNativeTactic,
+                           Util.format1 "Failed to compile native tactic; extracted module %s not found" (ml_file m))
+            | Some ml ->
+              let dir = Util.dirname ml in
+              FStar.Tactics.Load.compile_modules dir [ml_module_name m];
+              begin match FStar.Options.find_file cmxs with
+                | None ->
+                  E.raise_err (E.Fatal_FailToCompileNativeTactic,
+                               Util.format1 "Failed to compile native tactic; compiled object %s not found" cmxs)
+                | Some f -> f
+              end
     in
-    let cmxs_files = modules_to_load |> List.map cmxs_file in
+    let cmxs_files = (modules_to_load@cmxs_to_load) |> List.map cmxs_file in
     if Options.debug_any () then
       Util.print1 "Will try to load cmxs files: %s\n" (String.concat ", " cmxs_files);
-    if not (Options.no_load_fstartaclib ()) && not (FStar.Platform.system = FStar.Platform.Windows) then
+    if not (Options.no_load_fstartaclib ()) then
         Tactics.Load.try_load_lib ();
     Tactics.Load.load_tactics cmxs_files;
     iter_opt (Options.use_native_tactics ()) Tactics.Load.load_tactics_dir;
@@ -197,6 +203,7 @@ let lazy_chooser k i = match k with
     | FStar.Syntax.Syntax.BadLazy -> failwith "lazy chooser: got a BadLazy"
     | FStar.Syntax.Syntax.Lazy_bv         -> FStar.Reflection.Embeddings.unfold_lazy_bv          i
     | FStar.Syntax.Syntax.Lazy_binder     -> FStar.Reflection.Embeddings.unfold_lazy_binder      i
+    | FStar.Syntax.Syntax.Lazy_letbinding -> FStar.Reflection.Embeddings.unfold_lazy_letbinding  i
     | FStar.Syntax.Syntax.Lazy_optionstate -> FStar.Reflection.Embeddings.unfold_lazy_optionstate i
     | FStar.Syntax.Syntax.Lazy_fvar       -> FStar.Reflection.Embeddings.unfold_lazy_fvar        i
     | FStar.Syntax.Syntax.Lazy_comp       -> FStar.Reflection.Embeddings.unfold_lazy_comp        i
@@ -213,7 +220,6 @@ let setup_hooks () =
     FStar.Syntax.Syntax.lazy_chooser := Some lazy_chooser;
     FStar.Syntax.Util.tts_f := Some FStar.Syntax.Print.term_to_string;
     FStar.TypeChecker.Normalize.unembed_binder_knot := Some FStar.Reflection.Embeddings.e_binder;
-    FStar.TypeChecker.Tc.unembed_optionstate_knot := Some FStar.Reflection.Embeddings.e_optionstate;
     ()
 
 let handle_error e =
@@ -232,7 +238,7 @@ let main () =
     let _, time = Util.record_time go in
     if FStar.Options.query_stats()
     then Util.print2_error "TOTAL TIME %s ms: %s\n"
-              (FStar.Util.string_of_int time)
+              (FStar.Compiler.Util.string_of_int time)
               (String.concat " " (FStar.Getopt.cmdline()));
     cleanup ();
     exit 0

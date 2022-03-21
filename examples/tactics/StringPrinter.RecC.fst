@@ -26,15 +26,21 @@ type do_while_sz_interm (tin: Type) (tout: Type) =
   | IRight: U32.t -> tout -> do_while_sz_interm tin tout
   | IOverflow
 
+let decr_t (#a:Type) (tin:Type) (tout:Type) (decrease:tin -> GTot a) (x:do_while_sz_interm tin tout) =
+  match x with
+  | ILeft _ _ -> a
+  | _ -> unit
+
 let do_while_sz_measure
+  (#a:Type)
   (tin: Type)
   (tout: Type)
-  (decrease: tin -> GTot lex_t)
+  (decrease: tin -> GTot a)
   (x: do_while_sz_interm tin tout)
-: GTot lex_t
+: GTot (decr_t tin tout decrease x)
 = match x with
   | ILeft _ x' -> decrease x'
-  | _ -> LexTop
+  | _ -> ()
 
 inline_for_extraction
 let do_while_sz_continue
@@ -45,8 +51,9 @@ let do_while_sz_continue
 = ILeft? x
 
 let do_while_sz_inv
+  (#a:Type)
   (tin tout: Type)
-  (decrease: (tin -> GTot lex_t))
+  (decrease:tin -> GTot a)
   (body: ((x: tin) -> Tot (m (c_or (tin_decr tin decrease x) tout))))
   (x0: tin)
   (continue: bool)
@@ -68,8 +75,9 @@ let do_while_sz_inv
 
 inline_for_extraction
 let do_while_sz_body
+  (#a:Type)
   (tin tout: Type)
-  (decrease: (tin -> GTot lex_t))
+  (decrease:tin -> GTot a)
   (body: ((x: tin) -> Tot (m (c_or (tin_decr tin decrease x) tout))))
   (body_sz: ((x: tin) -> Tot (m_sz (body x))))
   (x0: tin)
@@ -99,8 +107,9 @@ let do_while_sz_body
 
 inline_for_extraction
 let do_while_sz
+  (#a:Type)
   (tin tout: Type)
-  (decrease: (tin -> GTot lex_t))
+  (decrease:tin -> GTot a)
   (body: ((x: tin) -> Tot (m (c_or (tin_decr tin decrease x) tout))))
   (body_sz: ((x: tin) -> Tot (m_sz (body x))))
   (x: tin)
@@ -109,6 +118,7 @@ let do_while_sz
   let res =
     Loops.total_while_gen
       #(do_while_sz_interm tin tout)
+      #_
       (do_while_sz_measure tin tout decrease)
       (do_while_sz_inv tin tout decrease body x)
       (do_while_sz_continue tin tout)
@@ -133,8 +143,9 @@ type do_while_st_interm (tin tout: Type) = {
 
 inline_for_extraction
 let do_while_st_inv
+  (#a:Type)
   (tin tout: Type)
-  (decrease: (tin -> GTot lex_t))
+  (decrease:tin -> GTot a)
   (body: ((x: tin) -> Tot (m (c_or (tin_decr tin decrease x) tout))))
   (h0: G.erased HS.mem)
   (x0: tin)
@@ -176,8 +187,9 @@ let do_while_st_inv
 
 inline_for_extraction
 let do_while_st_body
+  (#a:Type)
   (tin tout: Type)
-  (decrease: (tin -> GTot lex_t))
+  (decrease:tin -> GTot a)
   (body: ((x: tin) -> Tot (m (c_or (tin_decr tin decrease x) tout))))
   (body_st: ((x: tin) -> Tot (m_st (body x))))
   (h0: G.erased HS.mem)
@@ -252,8 +264,9 @@ let do_while_st_body
 
 inline_for_extraction
 let do_while_st
+  (#a:Type)
   (tin tout: Type)
-  (decrease: (tin -> GTot lex_t))
+  (decrease:tin -> GTot a)
   (body: ((x: tin) -> Tot (m (c_or (tin_decr tin decrease x) tout))))
   (body_st: ((x: tin) -> Tot (m_st (body x))))
   (x: tin)
@@ -306,6 +319,7 @@ let compile_do_while
     in
     let ty' = T.mk_app (quote c_or) [
       T.mk_app (quote tin_decr) [
+        T.fresh_uvar None, T.Q_Implicit;
         tin, T.Q_Explicit;
         decrease, T.Q_Explicit;
         T.pack (T.Tv_Var (T.bv_of_binder x')), T.Q_Explicit;

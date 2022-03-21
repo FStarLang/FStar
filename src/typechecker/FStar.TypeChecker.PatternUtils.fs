@@ -17,11 +17,11 @@
 // (c) Microsoft Corporation. All rights reserved
 
 module FStar.TypeChecker.PatternUtils
-open FStar.ST
-open FStar.Exn
-open FStar.All
+open FStar.Compiler.Effect
+open FStar.Compiler.Effect
 open FStar
-open FStar.Util
+open FStar.Compiler
+open FStar.Compiler.Util
 open FStar.Errors
 open FStar.TypeChecker
 open FStar.Syntax
@@ -36,7 +36,7 @@ type lcomp_with_binder = option<bv> * lcomp
 
 module SS = FStar.Syntax.Subst
 module S = FStar.Syntax.Syntax
-module BU = FStar.Util
+module BU = FStar.Compiler.Util
 module U = FStar.Syntax.Util
 module P = FStar.Syntax.Print
 module C = FStar.Parser.Const
@@ -52,6 +52,11 @@ let rec elaborate_pat env p = //Adds missing implicit patterns to constructor pa
         else withinfo (Pat_var a) r
     in
     match p.v with
+    | Pat_cons({fv_qual=Some (Unresolved_constructor _)}, _) ->
+      (* Unresolved constructors cannot be elaborated yet.
+         tc_pat has to resolve it first. *)
+      p
+
     | Pat_cons(fv, pats) ->
         let pats = List.map (fun (p, imp) -> elaborate_pat env p, imp) pats in
         let _, t = Env.lookup_datacon env fv.fv_name.v in
@@ -66,7 +71,8 @@ let rec elaborate_pat env p = //Adds missing implicit patterns to constructor pa
             | _::_, [] -> //fill the rest with dot patterns, if all the remaining formals are implicit
             formals |>
             List.map
-                (fun (t, imp) ->
+                (fun fml ->
+                    let t, imp = fml.binder_bv, fml.binder_qual in
                     match imp with
                     | Some (Implicit inaccessible) ->
                     let a = Syntax.new_bv (Some (Syntax.range_of_bv t)) tun in
@@ -81,7 +87,7 @@ let rec elaborate_pat env p = //Adds missing implicit patterns to constructor pa
 
             | f::formals', (p, p_imp)::pats' ->
             begin
-            match f with
+            match f.binder_bv, f.binder_qual with
             | (_, Some (Implicit inaccessible))
                 when inaccessible && p_imp -> //we have an inaccessible pattern but the user wrote a pattern there explicitly
               begin
@@ -110,7 +116,7 @@ let rec elaborate_pat env p = //Adds missing implicit patterns to constructor pa
                 (p, true)::aux formals' pats
 
             | (_, imp) ->
-                (p, S.is_implicit imp)::aux formals' pats'
+                (p, S.is_bqual_implicit imp)::aux formals' pats'
             end
         in
         {p with v=Pat_cons(fv, aux f pats)}
@@ -121,6 +127,7 @@ let rec elaborate_pat env p = //Adds missing implicit patterns to constructor pa
     Turns a pattern p into a triple:
 *)
 let pat_as_exp (introduce_bv_uvars:bool)
+               (inst_pat_cons_univs:bool)
                (env:Env.env)
                (p:pat)
     : (list<bv>          (* pattern-bound variables (which may appear in the branch of match) *)
@@ -156,9 +163,9 @@ let pat_as_exp (introduce_bv_uvars:bool)
 
            | Pat_dot_term(x, _) ->
              let k, _ = U.type_u () in
-             let t, _, g = new_implicit_var_aux "pat_dot_term type" (S.range_of_bv x) env k Allow_untyped None in
+             let t, _, g = new_implicit_var_aux "pat_dot_term type" (S.range_of_bv x) env k Allow_ghost None in
              let x = {x with sort=t} in
-             let e, _,  g' = new_implicit_var_aux "pat_dot_term" (S.range_of_bv x) env t Allow_untyped None in
+             let e, _,  g' = new_implicit_var_aux "pat_dot_term" (S.range_of_bv x) env t Allow_ghost None in
              let p = {p with v=Pat_dot_term(x, e)} in
              ([], [], [], env, e, conj_guard g g', p)
 
@@ -182,7 +189,13 @@ let pat_as_exp (introduce_bv_uvars:bool)
                     (b'::b, a'::a, w'::w, env, arg::args, conj_guard guard guard', (pat, imp)::pats))
                ([], [], [], env, [], trivial_guard, [])
              in
-             let e = mk_Tm_app (Syntax.fv_to_tm fv) (args |> List.rev) p.p in
+             let hd =
+               let hd = Syntax.fv_to_tm fv in
+               if not inst_pat_cons_univs then hd
+               else let us, _ = Env.lookup_datacon env (Syntax.lid_of_fv fv) in
+                    if List.length us = 0 then hd
+                    else Syntax.mk_Tm_uinst hd us in
+             let e = mk_Tm_app hd (args |> List.rev) p.p in
              (List.rev b |> List.flatten,
               List.rev a |> List.flatten,
               List.rev w |> List.flatten,

@@ -126,15 +126,24 @@ layered_effect {
        if_then_else = if_then_else
 }
 
+(*
+ * AR: 11/23:
+ *     the type of the lift should not mention f in the current
+ *     implementation, which is also the reason test () below
+ *     didn't work
+ *     there is now a check in the typechecker to forbid it,
+ *     so the lift below fails
+ *)
 let lift_pure_dm4a (a:Type) (wp : pure_wp a) (f:(eqtype_as_type unit -> PURE a wp))
   : Tot (repr a (wp (fun _ -> True)) (fun _ -> w_return (f ())))
   = fun _ -> 
-      FStar.Monotonic.Pure.wp_monotonic_pure ();
+      FStar.Monotonic.Pure.elim_pure_wp_monotonicity_forall ();
       let x = f () in
       interp_ret x;
       m_return x
 
+[@@expect_failure]
 sub_effect PURE ~> DM4A = lift_pure_dm4a
 
-[@@expect_failure [54]] // why?
+[@@expect_failure [34]] // why?
 let test () : DM4A int True (fun _ -> w_return 5) = 5

@@ -17,12 +17,11 @@
 
 module FStar.CheckedFiles
 open FStar
-open FStar.ST
-open FStar.Exn
-open FStar.All
-open FStar
+open FStar.Pervasives
+open FStar.Compiler.Effect
+open FStar.Compiler
 open FStar.Errors
-open FStar.Util
+open FStar.Compiler.Util
 open FStar.Getopt
 open FStar.Syntax.Syntax
 open FStar.Extraction.ML.UEnv
@@ -33,16 +32,16 @@ open FStar.Syntax.DsEnv
 module Syntax  = FStar.Syntax.Syntax
 module TcEnv   = FStar.TypeChecker.Env
 module SMT     = FStar.SMTEncoding.Solver
-module BU      = FStar.Util
+module BU      = FStar.Compiler.Util
 module Dep     = FStar.Parser.Dep
 
 
 (*
  * We write this version number to the cache files, and
  * detect when loading the cache that the version number is same
- * It need to be kept in sync with prims.fst
+ * It needs to be kept in sync with prims.fst
  *)
-let cache_version_number = 28
+let cache_version_number = 42
 
 type tc_result = {
   checked_module: Syntax.modul; //persisted
@@ -148,7 +147,7 @@ let hash_dependences (deps:Dep.deps) (fn:string) :either<string, list<(string * 
          not (Dep.is_interface fn &&
               Dep.lowercase_module_name fn = module_name)) in
   let binary_deps =
-    FStar.List.sortWith
+    FStar.Compiler.List.sortWith
       (fun fn1 fn2 ->
        String.compare (Dep.lowercase_module_name fn1)
                       (Dep.lowercase_module_name fn2))
@@ -370,6 +369,7 @@ let load_parsing_data_from_cache file_name =
    *   rather provide a separate F* command --detect_cycles --alredy_cached '*' that builds
    *   can invoke in the end for cycle detection
    *)
+  Errors.with_ctx ("While loading parsing data from " ^ file_name) (fun () ->
   let cache_file =
     try
      Parser.Dep.cache_file_name file_name |> Some
@@ -381,11 +381,12 @@ let load_parsing_data_from_cache file_name =
     match load_checked_file file_name cache_file with
     | _, Inl msg  -> None
     | _, Inr data -> Some data
+  )
 
 let load_module_from_cache =
   //this is only used for supressing more than one cache invalid warnings
   let already_failed = BU.mk_ref false in
-  fun env fn ->
+  fun env fn -> Errors.with_ctx ("While loading module from file " ^ fn) (fun () ->
     let load_it fn () =
       let cache_file = Dep.cache_file_name fn in
       let fail msg cache_file =
@@ -442,7 +443,7 @@ let load_module_from_cache =
          | Some _ -> load_with_profiling fn
            
     else load_with_profiling fn
-
+  )
 
 (*
  * Just to make sure data has the right type
@@ -452,7 +453,8 @@ let store_values_to_cache
     (stage1:checked_file_entry_stage1)
     (stage2:checked_file_entry_stage2)
     :unit =
-  BU.save_2values_to_file cache_file stage1 stage2
+  Errors.with_ctx ("While writing checked file " ^ cache_file) (fun () ->
+    BU.save_2values_to_file cache_file stage1 stage2)
 
 let store_module_to_cache env fn parsing_data tc_result =
   if Options.cache_checked_modules()
@@ -469,8 +471,8 @@ let store_module_to_cache env fn parsing_data tc_result =
       store_values_to_cache cache_file stage1 stage2
     | Inl msg ->
       FStar.Errors.log_issue
-        (FStar.Range.mk_range fn (FStar.Range.mk_pos 0 0)
-                                 (FStar.Range.mk_pos 0 0))
+        (FStar.Compiler.Range.mk_range fn (FStar.Compiler.Range.mk_pos 0 0)
+                                 (FStar.Compiler.Range.mk_pos 0 0))
         (Errors.Warning_FileNotWritten,
          BU.format2 "%s was not written since %s"
                     cache_file msg)

@@ -20,7 +20,7 @@ module P = FStar.Preorder
 
 open FStar.Tactics
 
-open NMST
+open FStar.NMST
 
 
 (*
@@ -173,9 +173,6 @@ let weakening_ok (#st:st) (#a:Type u#a) (pre:st.hprop) (post:post_t st a)
 = weaker_pre wpre pre /\ stronger_post wpost post
 
 
-/// Setting the flag just to reduce the time to typecheck the type m
-
-#push-options "--__temp_no_proj Steel.Semantics.Hoare.MST"
 noeq
 type m (st:st) :
       a:Type u#a ->
@@ -233,7 +230,6 @@ type m (st:st) :
     _:squash (weakening_ok pre post wpre wpost) ->
     m st a pre post ->
     m st a wpre wpost
-#pop-options
 
 (**** End definition of the computation AST ****)
 
@@ -523,7 +519,7 @@ let step_act (#st:st) (#a:Type u#a) (#pre:st.hprop) (#post:post_t st a)
   let x = f () in
   Step (Ret post x)
 
-module M = MST
+module M = FStar.MST
 
 let step_bind_ret_aux (#st:st) (#a:Type) (#pre:st.hprop) (#post:post_t st a)
   (f:m st a pre post{Bind? f /\ Ret? (Bind?.f f)})

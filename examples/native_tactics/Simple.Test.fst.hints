@@ -1,5 +1,5 @@
 [
-  "ÕìÛ\rKîêC$sk m(\r®",
+  "\u0006xÉ3ø\u0010\b∫¥~,5 Y\n:",
   [
     [
       "Simple.Test.test0",
@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "364600052b4cbf68ab4088ae34d4a65b"
+      "d50b91fe1f5f8324814aee2acb0ab450"
     ],
     [
       "Simple.Test.test1",
@@ -17,16 +17,7 @@
       1,
       [ "@query", "assumption_Simple.Test.t__uu___haseq" ],
       0,
-      "332f8f868aaebee48f071b227497502e"
-    ],
-    [
-      "Simple.Test.test1",
-      2,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "0c20863637e834e46dd3e8508ceffcf9"
+      "22a90c8b82df06004be444e104707bd6"
     ],
     [
       "Simple.Test.test2",
@@ -38,16 +29,7 @@
         "assumption_Simple.Test.t__uu___haseq", "kinding_Simple.Test.t@tok"
       ],
       0,
-      "3e81f6a451c6ad57677cdd915636187c"
-    ],
-    [
-      "Simple.Test.test2",
-      2,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "7c2ae1d8804941421ec75f2a919b5de1"
+      "7f9a3bdadad7b61d945e85548f0ab130"
     ],
     [
       "Simple.Test.test3",
@@ -59,16 +41,7 @@
         "assumption_Simple.Test.t__uu___haseq", "kinding_Simple.Test.t@tok"
       ],
       0,
-      "5487c64ba9a10387e2fa32af14a26998"
-    ],
-    [
-      "Simple.Test.test3",
-      2,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "dc4d971a3e7ba0faf2ded75e5ad0be99"
+      "07dd24561a2d0fc6a14464d027d5e0f8"
     ],
     [
       "Simple.Test.test4",
@@ -77,7 +50,7 @@
       1,
       [ "@query" ],
       0,
-      "28779eb1489a419e3e003e5f958a2c9f"
+      "550d54a6a75f1431a2cf9c7c04b35eaf"
     ]
   ]
 ]

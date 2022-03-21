@@ -29,7 +29,7 @@ open MachineWord
 (*http://rosettacode.org/wiki/MD5/Implementation#Haskell
  While the version in Haskell and other higher order languages
 is elegant, they do not seem to be memory efficient.
-For example, mapping 64-way in parallel is unnceccesary and we need
+For example, mapping 64-way in parallel is unnecessary and we need
 only 4 accumulators at any given time
 *)
 
@@ -137,7 +137,7 @@ let ad = (admitP (divides div m /\ m < n+ div /\ n<=m)) in m
 (*(ceil (n/div))*div*)
 
 
-(*size of the messsage after padding. this function will be used to preallocate
+(*size of the message after padding. this function will be used to preallocate
   an array of the right size*)
 val psize : n:nat -> Tot (m:nat{divides 16 m /\ (m < n+ 32) /\ (n<=m)})
 let psize n =
@@ -148,9 +148,9 @@ open Seq
 
 assume val initAcc : s:(seq word){length s =4}
 
-(*we can tradeoff space for time by not copying the whole thing,
+(*we can trade space for time by not copying the whole thing,
   but allocate only a new array for padding. Perhaps it can also include
-  the leftofer from the last complete chunk.
+  the leftover from the last complete chunk.
    The MD5 main loop will have to be modified to handle this dichotomy
   of data/chunk location*)
 (*pads the input*)

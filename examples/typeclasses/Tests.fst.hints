@@ -11,12 +11,13 @@
         "binder_x_029153658607d4ade672ec4c8454839e_2",
         "binder_x_0a56e3de562c08d8ab59f4ac6f626a98_3",
         "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
-        "equality_tok_Prims.LexTop@tok",
+        "equation_Prims.op_Equals_Equals_Equals",
         "fuel_guarded_inversion_Add.additive",
-        "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
+        "fuel_guarded_inversion_Prims.list",
+        "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "a8c6883f542647aa7737ac4f9ea88e24"
+      "5fae062a30d4ff89176a7b373b24a1fc"
     ],
     [
       "Tests.uu___13",
@@ -25,7 +26,7 @@
       1,
       [ "@query" ],
       0,
-      "260c88de34747566f6e518a3116939fb"
+      "02da8eabc76077692336d13732111f7e"
     ],
     [
       "Tests.uu___14",
@@ -34,7 +35,7 @@
       1,
       [ "@query" ],
       0,
-      "80010ce8a391c364faefe92593387d6e"
+      "9e71f5a82fe38d3bcb2c8e63bb9e620a"
     ],
     [
       "Tests.test1",
@@ -71,7 +72,7 @@
         "typing_Num.num_int", "typing_Tests.sum"
       ],
       0,
-      "7f72499e56a682c6ccbd6ce92e2505ff"
+      "c1a163bfddc83ae762eb3e292ccb122c"
     ],
     [
       "Tests.test2",
@@ -85,6 +86,7 @@
         "equation_Eq.uu___20", "equation_Num.add_num", "equation_Num.minus",
         "equation_Num.mknum", "equation_Num.num_int",
         "function_token_typing_Prims.__cache_version_number__",
+        "interpretation_Tm_abs_12ddde8171c888fa95f826be9c2a1fe9",
         "interpretation_Tm_abs_40026aa5a5e3b3e50d1af1c281a9904a",
         "interpretation_Tm_abs_f1927ad0930192edc55cbc50c157da6d",
         "primitive_Prims.op_Addition", "primitive_Prims.op_Subtraction",
@@ -95,11 +97,10 @@
         "projection_inverse_Num.Mknum_add_super",
         "projection_inverse_Num.Mknum_minus",
         "token_correspondence_Add.plus", "token_correspondence_Num.minus",
-        "token_correspondence_Prims.op_Addition",
-        "token_correspondence_Prims.op_Subtraction"
+        "token_correspondence_Prims.op_Addition"
       ],
       0,
-      "c5e28abf5dc9c7f4bf2a613c2914a174"
+      "36fc2d088b1e774e0b3d31f46d77cc2b"
     ]
   ]
 ]

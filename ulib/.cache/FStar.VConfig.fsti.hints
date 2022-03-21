@@ -1,0 +1,21 @@
+[
+  "¸”‚5¢ò1!\u0013çâƒ‡Åçã",
+  [
+    [
+      "FStar.VConfig.vconfig",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ce036b6b736ef4e0bc3a9ff132a12aed",
+        "assumption_FStar.Pervasives.Native.option__uu___haseq",
+        "assumption_Prims.list__uu___haseq", "equation_Prims.eqtype",
+        "function_token_typing_Prims.string",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "a390f13058141509af62b005e56498aa"
+    ]
+  ]
+]

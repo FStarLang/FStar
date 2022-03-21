@@ -51,10 +51,7 @@ let pow2_values x =
    | 63 -> assert_norm (pow2 63 == 9223372036854775808)
    | 64 -> assert_norm (pow2 64 == 18446744073709551616)
    | _  -> ()
-let compare x y =
-  if x < y then 1
-  else if y < x then 0-1
-  else 0
+let compare x y = x - y
 let test_sort = assert_norm (FStar.List.Tot.sortWith compare [10; 9; 8; 7; 6; 5; 4; 3; 2; 1] = [1; 2; 3; 4; 5; 6; 7; 8; 9; 10])
 let test_sort1 = assert_norm (FStar.List.Tot.sortWith (FStar.List.Tot.compare_of_bool (<)) [10; 9; 8; 7; 6; 5; 4; 3; 2; 1] = [1; 2; 3; 4; 5; 6; 7; 8; 9; 10])
 
@@ -76,3 +73,13 @@ let f_1529_2 () =
 let f_1529_3 () =
   reveal_opaque (`%f_1529) f_1529;
   assert (f_1529 4 == 5)
+
+
+(*
+ * FStar.Char.u32_of_char
+ *)
+#push-options "--no_smt"
+let test_u32_of_char () =
+  assert_norm (FStar.Char.u32_of_char 'c' == 99ul);
+  assert_norm (FStar.Char.u32_of_char '→' == 8594ul)
+#pop-options

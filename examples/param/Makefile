@@ -1,6 +1,3 @@
-FSTAR_HOME=../..
-KREMLIN_HOME?=$(FSTAR_HOME)/../Kremlin
-INCLUDE_PATHS=$(KREMLIN_HOME)/kremlib
 FSTAR_FILES = $(wildcard *.fst)
 
 all: verify-all

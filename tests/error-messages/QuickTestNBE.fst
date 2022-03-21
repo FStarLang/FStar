@@ -32,12 +32,12 @@ let label (r:range) (msg:string) (p:Type0) : Ghost Type (requires True) (ensures
 
 noeq type quickCodes (a:Type0) : Type =
 | QEmpty: a -> quickCodes a
-| QPURE: r:range -> msg:string -> pre:((unit -> GTot Type0) -> GTot Type0) ->
+| QPURE: r:range -> msg:string -> pre:pure_wp unit ->
     (unit -> PURE unit pre) -> quickCodes a -> quickCodes a
 
 [@va_qattr]
 let qPURE
-    (#pre:(unit -> GTot Type0) -> GTot Type0) (#a:Type0) (r:range) (msg:string)
+    (#pre:pure_wp unit) (#a:Type0) (r:range) (msg:string)
     ($l:unit -> PURE unit pre) (qcs:quickCodes a)
   : quickCodes a =
   QPURE r msg pre l qcs
@@ -89,8 +89,11 @@ assume val lem (x:int) : Lemma
   (requires f x - f x == 0)
   (ensures (forall (i:int).{:pattern f i} f i > 0))
 
+open FStar.Monotonic.Pure
+
 [@"opaque_to_smt" va_qattr]
 let va_qcode_Test : (quickCode unit) =
+  reveal_opaque (`%pure_wp_monotonic) pure_wp_monotonic;
   (qblock
     (fun (va_s:vale_state) ->
       qPURE range1 "" (fun (_:unit) -> lem 4) (
@@ -113,6 +116,7 @@ assume val lem2 (x:int) : Lemma
 
 [@"opaque_to_smt" va_qattr]
 let va_qcode_Test2 : (quickCode unit) =
+  reveal_opaque (`%pure_wp_monotonic) pure_wp_monotonic;
   (qblock
     (fun (va_s:vale_state) ->
       qPURE range1 "" (fun (_:unit) -> lem2 4) (

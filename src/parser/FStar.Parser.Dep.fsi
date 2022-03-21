@@ -1,18 +1,18 @@
 #light "off"
 module FStar.Parser.Dep
-open FStar.ST
-open FStar.All
-open FStar
+open FStar.Compiler.Effect
+open FStar.Compiler.Effect
+open FStar open FStar.Compiler
 open FStar.Parser
 open FStar.Parser.AST
 open FStar.Parser.Parse
-open FStar.Util
+open FStar.Compiler.Util
 open FStar.Const
 open FStar.String
 open FStar.Ident
 open FStar.Errors
 module Const = FStar.Parser.Const
-module BU = FStar.Util
+module BU = FStar.Compiler.Util
 
 type open_kind = | Open_module | Open_namespace
 

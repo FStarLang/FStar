@@ -1,0 +1,95 @@
+[
+  "=G\u001f'\u001d¤²ðÿ£ìÕL\u0018—Ü",
+  [
+    [
+      "FStar.Seq.Permutation.reveal_is_permutation",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.Seq.Permutation.nat_at_most",
+        "equation_Prims.eqtype", "equation_Prims.nat",
+        "function_token_typing_Prims.int",
+        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "haseqTm_refine_c1424615841f28cac7fc34e92b7ff33c",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "1793fddddbdc53ba790d7ee7c23c7e3b"
+    ],
+    [
+      "FStar.Seq.Permutation.range_count",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.Seq.Permutation.not_less_than",
+        "primitive_Prims.op_Addition", "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_4f1d92a9a3f071e1fa3026ba94fce31c"
+      ],
+      0,
+      "ab22cf55f2f451fb9929396d8a83ebca"
+    ],
+    [
+      "FStar.Seq.Permutation.init_func_from_expr",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.Seq.Permutation.in_between", "int_inversion",
+        "primitive_Prims.op_GreaterThanOrEqual",
+        "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_ecf30e7fc159ec0cc99d474256f7f5af"
+      ],
+      0,
+      "7b23e72aaa4717755927360fa94b2e6c"
+    ],
+    [
+      "FStar.Seq.Permutation.init_func_from_expr",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.Seq.Permutation.counter_of_range",
+        "equation_FStar.Seq.Permutation.in_between",
+        "equation_FStar.Seq.Permutation.not_less_than", "equation_Prims.nat",
+        "int_inversion", "primitive_Prims.op_Addition",
+        "primitive_Prims.op_GreaterThanOrEqual",
+        "primitive_Prims.op_LessThanOrEqual",
+        "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_20b7381ed50fafb67b7b306d8eb53a44",
+        "refinement_interpretation_Tm_refine_4f1d92a9a3f071e1fa3026ba94fce31c",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_ecf30e7fc159ec0cc99d474256f7f5af"
+      ],
+      0,
+      "a4f4e39e827971428f128cf24920863d"
+    ],
+    [
+      "FStar.Seq.Permutation.foldm_snoc_split",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.Seq.Permutation.not_less_than",
+        "equation_FStar.Seq.Permutation.range_count", "equation_Prims.nat",
+        "int_inversion", "primitive_Prims.op_GreaterThanOrEqual",
+        "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_4f1d92a9a3f071e1fa3026ba94fce31c",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
+      ],
+      0,
+      "fec84972b3fa7bad6f859610143790d2"
+    ]
+  ]
+]

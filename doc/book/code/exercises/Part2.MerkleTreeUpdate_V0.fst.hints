@@ -1,0 +1,152 @@
+[
+  "Œò˜Ð+÷\u000båFÜ«\u001c|I«t",
+  [
+    [
+      "Part2.MerkleTreeUpdate_V0.concat",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_Part2.MerkleTreeUpdate_V0.lstring", "equation_Prims.nat",
+        "int_inversion", "primitive_Prims.op_Addition",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_5bd57a2b9b9fc8ea75ce9775c54c0669"
+      ],
+      0,
+      "2e885ce612af8b608a859671871e3f59"
+    ],
+    [
+      "Part2.MerkleTreeUpdate_V0.mtree",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
+        "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
+      ],
+      0,
+      "a77d45335139b1779f35444d607b7f52"
+    ],
+    [
+      "Part2.MerkleTreeUpdate_V0.mtree",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_Part2.MerkleTreeUpdate_V0.hash_t",
+        "equation_Part2.MerkleTreeUpdate_V0.lstring",
+        "equation_Part2.MerkleTreeUpdate_V0.resource",
+        "equation_Prims.eqtype", "equation_Prims.nat",
+        "function_token_typing_Prims.int",
+        "function_token_typing_Prims.string",
+        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "haseqTm_refine_5bd57a2b9b9fc8ea75ce9775c54c0669", "int_inversion",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_5bd57a2b9b9fc8ea75ce9775c54c0669",
+        "string_inversion"
+      ],
+      0,
+      "1f6edbb2992c74e6533fca467b1512d4"
+    ],
+    [
+      "Part2.MerkleTreeUpdate_V0.__proj__L__item__res",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_8e69cebc710bb68b015c24d3e7cb8a83"
+      ],
+      0,
+      "201c993a60edb45455623e2964ba3204"
+    ],
+    [
+      "Part2.MerkleTreeUpdate_V0.__proj__N__item__n",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_1bf7098eb8d0594bdef0a02cc4ddcde1"
+      ],
+      0,
+      "ddf84747a574fe3fd9770cbf9a9e1004"
+    ],
+    [
+      "Part2.MerkleTreeUpdate_V0.__proj__N__item__hl",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_1bf7098eb8d0594bdef0a02cc4ddcde1"
+      ],
+      0,
+      "a31bb6956f7875265c2a59cbf66ed59c"
+    ],
+    [
+      "Part2.MerkleTreeUpdate_V0.__proj__N__item__hr",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_1bf7098eb8d0594bdef0a02cc4ddcde1"
+      ],
+      0,
+      "6f2122081fe605f8c37486dec6310e3a"
+    ],
+    [
+      "Part2.MerkleTreeUpdate_V0.__proj__N__item__left",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "data_elim_Part2.MerkleTreeUpdate_V0.N",
+        "refinement_interpretation_Tm_refine_1bf7098eb8d0594bdef0a02cc4ddcde1"
+      ],
+      0,
+      "153a179ab553b70261da80e46ae5c1c7"
+    ],
+    [
+      "Part2.MerkleTreeUpdate_V0.__proj__N__item__right",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "data_elim_Part2.MerkleTreeUpdate_V0.N",
+        "refinement_interpretation_Tm_refine_1bf7098eb8d0594bdef0a02cc4ddcde1"
+      ],
+      0,
+      "af199ab57facbfb560097e198afc6494"
+    ],
+    [
+      "Part2.MerkleTreeUpdate_V0.mtree'",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "assumption_Part2.MerkleTreeUpdate_V0.mtree__uu___haseq",
+        "equation_Part2.MerkleTreeUpdate_V0.hash_t",
+        "equation_Part2.MerkleTreeUpdate_V0.lstring",
+        "equation_Prims.eqtype", "equation_Prims.nat",
+        "function_token_typing_Prims.string",
+        "haseqTm_refine_5bd57a2b9b9fc8ea75ce9775c54c0669", "int_inversion",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_5bd57a2b9b9fc8ea75ce9775c54c0669",
+        "string_inversion"
+      ],
+      0,
+      "8637472e60a7d6c6f142bc552445f573"
+    ]
+  ]
+]

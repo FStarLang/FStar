@@ -1,5 +1,5 @@
 [
-  "µ\bJM°≤UJ∫\r˙Î¬\n°è",
+  ":≈\u0005∫v@Ö˝Wº\u0001•1*@Ô",
   [
     [
       "SigeltOpts.sp1",
@@ -24,7 +24,7 @@
         "typing_FStar.List.Tot.Base.length"
       ],
       0,
-      "73f1474b7634482ae3923b1b2b334d8f"
+      "4642980a2d0a2775e6ec6301e71bddbe"
     ],
     [
       "SigeltOpts.tau",
@@ -34,18 +34,16 @@
       [
         "@MaxIFuel_assumption", "@query",
         "FStar.Reflection.Types_pretyping_b57262eead998d474939c05a17e1ffab",
-        "bool_inversion", "constructor_distinct_FStar.Tactics.Result.Failed",
+        "constructor_distinct_FStar.Tactics.Result.Failed",
         "constructor_distinct_FStar.Tactics.Result.Success",
         "data_elim_FStar.Tactics.Result.Success",
         "data_typing_intro_Prims.Cons@tok",
         "data_typing_intro_Prims.Nil@tok",
-        "disc_equation_FStar.Pervasives.Native.None",
-        "disc_equation_FStar.Pervasives.Native.Some",
         "equation_FStar.Reflection.Types.name", "equation_Prims.eqtype",
         "fuel_guarded_inversion_FStar.Tactics.Result.__result",
         "function_token_typing_FStar.Reflection.Types.sigelt",
-        "function_token_typing_FStar.Reflection.Types.term",
         "function_token_typing_Prims.string",
+        "kinding_FStar.VConfig.vconfig@tok",
         "lemma_FStar.Pervasives.invertOption",
         "projection_inverse_FStar.Tactics.Result.Failed_a",
         "projection_inverse_FStar.Tactics.Result.Failed_exn",
@@ -54,13 +52,11 @@
         "projection_inverse_FStar.Tactics.Result.Success_ps",
         "projection_inverse_FStar.Tactics.Result.Success_v",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-        "string_typing", "typing_FStar.Pervasives.Native.uu___is_None",
-        "typing_FStar.Pervasives.Native.uu___is_Some",
-        "typing_FStar.Reflection.Builtins.lookup_typ",
+        "string_typing", "typing_FStar.Reflection.Builtins.lookup_typ",
         "typing_FStar.Reflection.Builtins.sigelt_opts"
       ],
       0,
-      "b0fe4436a7c49977f80c151e3f67439c"
+      "4eb7e783b870ccf6e89f734a4c3c4ec7"
     ],
     [
       "SigeltOpts.blah",
@@ -85,7 +81,7 @@
         "typing_FStar.List.Tot.Base.length"
       ],
       0,
-      "1d6dc0753cd0262b49a0b928f1bd1221"
+      "ebc3c9d5faa875f2541488ea3e750762"
     ]
   ]
 ]

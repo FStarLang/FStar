@@ -14,6 +14,8 @@
    limitations under the License.
 *)
 module Demo
+open FStar.HyperStack.ST
+open LowStar.Buffer
 open Demo.Deps
 
 (**
@@ -21,14 +23,22 @@ open Demo.Deps
     Copying a buffer of bytes 
 **)
 
-// /// Attempt: copy just the first byte
-// let copy0 (src dest:buffer uint8) : St unit =
-//   dest.(0ul) <- src.(0ul)
+/// Attempt: copy just the first byte
+[@@expect_failure [19]] //liveness
+let copy0 (src dest:buffer uint8) : St unit =
+  dest.(0ul) <- src.(0ul)
 
-// /// Attempt: copy just the first byte, but add a bounds check
-// let copy1 (len:uint32) (src dest:lbuffer len uint8) : St unit =
-//   if 0ul < len
-//   then dest.(0ul) <- src.(0ul)
+
+/// Attempt: copy just the first byte, but add a bounds check
+[@@expect_failure] //bounds check
+let copy1 (len:uint32) (src dest:lbuffer len uint8) 
+  : ST unit
+       (requires fun h ->
+         live h src /\
+         live h dest)
+       (ensures fun h0 _ h1 ->
+         modifies dest h0 h1)
+  = dest.(0ul) <- src.(0ul)
 
 /// Copy just the first byte, but add both a bounds check
 /// and a liveness pre-condition
@@ -40,7 +50,7 @@ let copy2 (len:uint32) (src dest:lbuffer len uint8)
          live h src /\
          live h dest)
        (ensures fun h0 _ h1 ->
-         modifies1 dest h0 h1)
+         modifies dest h0 h1)
   = if 0ul < len
     then dest.(0ul) <- src.(0ul)
 
@@ -55,37 +65,38 @@ let rec copy3
          live h src /\
          live h dest)
        (ensures fun h0 _ h1 ->
-         modifies1 dest h0 h1)
+         modifies dest h0 h1)
   = if cur < len
     then begin
       dest.(cur) <- src.(cur);
       copy3 len (cur + 1ul) src dest
     end
 
-// /// Attempt: Prove the copy correct
-// ///     -- Needs a loop invariant
-// let rec copy4
-//         (len:uint32)
-//         (cur:uint32{cur <= len})
-//         (src dest:lbuffer len uint8)
-//   : ST unit 
-//        (requires fun h ->
-//          live h src  /\
-//          live h dest /\
-//          prefix_equal h src dest cur)
-//        (ensures fun h0 _ h1 ->
-//          modifies1 dest h0 h1 /\
-//          prefix_equal h1 src dest len)
-//   = if cur < len
-//     then begin
-//       dest.(cur) <- src.(cur);
-//       copy4 len (cur + 1ul) src dest
-//     end
+/// Attempt: Prove the copy correct
+///     -- Needs a loop invariant
+[@@expect_failure] //not inductive
+let rec copy4
+        (len:uint32)
+        (cur:uint32{cur <= len})
+        (src dest:lbuffer len uint8)
+  : ST unit 
+       (requires fun h ->
+         live h src  /\
+         live h dest /\
+         prefix_equal h src dest cur)
+       (ensures fun h0 _ h1 ->
+         modifies dest h0 h1 /\
+         prefix_equal h1 src dest len)
+  = if cur < len
+    then begin
+      dest.(cur) <- src.(cur);
+      copy4 len (cur + 1ul) src dest
+    end
 
 
 /// Attempt: Prove the copy correct
 ///     -- Needs a loop invariant
-let rec copy4
+let rec memcpy
         (len:uint32)
         (cur:uint32{cur <= len})
         (src dest:lbuffer len uint8)
@@ -96,10 +107,25 @@ let rec copy4
          disjoint src dest /\
          prefix_equal h src dest cur)
        (ensures fun h0 _ h1 ->
-         modifies1 dest h0 h1 /\
+         modifies dest h0 h1 /\
          prefix_equal h1 src dest len)
   = if cur < len
     then begin
       dest.(cur) <- src.(cur);
-      copy4 len (cur + 1ul) src dest
+      memcpy len (cur + 1ul) src dest
     end
+
+let malloc_copy_free (len:uint32 { 0ul < len })
+                    (src:lbuffer len uint8)
+  : ST (lbuffer len uint8)
+       (requires fun h -> 
+         live h src /\
+         freeable src)
+       (ensures fun h0 dest h1 -> 
+         live h1 dest /\
+         (forall (j:uint32). j < len ==> get h0 src j
+                                 == get h1 dest j))
+  = let dest = malloc 0uy len in
+    memcpy len 0ul src dest;
+    free src;
+    dest

@@ -76,7 +76,7 @@
   </ItemGroup>
   <ItemGroup>
     <Reference Include="FSharp.Compatibility.OCaml">
-      <HintPath>..\VS\packages\FSharp.Compatibility.OCaml.0.1.10\lib\net40\FSharp.Compatibility.OCaml.dll</HintPath>
+      <HintPath>..\VS\packages\FSharp.Compatibility.OCaml.0.1.14\lib\net45\FSharp.Compatibility.OCaml.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="FSharp.PPrint">
@@ -88,7 +88,7 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="FSharp.Core">
-      <HintPath>..\VS\packages\FSharp.Core.4.1.18\lib\net45\FSharp.Core.dll</HintPath>
+      <HintPath>..\VS\packages\FSharp.Core.4.3.4\lib\net45\FSharp.Core.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="mscorlib" />

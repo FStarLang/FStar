@@ -1,5 +1,6 @@
 module Bug1902
 
+open FStar.List.Tot
 open FStar.Tactics
 
 // a few helpers
@@ -20,8 +21,9 @@ let rec f m (n: nat): Tot int (decreases n) =
 // we extract f's type
 let typOfF (): Tac typ =
   let Some fdef = admit (); lookup_typ (top_env ()) (inspect_fv (fvOf (`f (*`*)))) in
-  let Sg_Let _ _ _ typ _ = admit (); inspect_sigelt fdef in
-  typ
+  let Sg_Let _ lbs = admit (); inspect_sigelt fdef in
+  let lbv = lookup_lb_view lbs (inspect_fv (fvOf (`f (*`*)))) in
+  lbv.lb_typ
 
 // Note that the type of f is actually
 // not containing multiple decreases clauses
@@ -42,8 +44,8 @@ let rec mk_tot_arr_decr (bs: list binder) (cod : term) decr : Tac term =
     | [] -> cod
     | (b::bs) -> pack (Tv_Arrow b (pack_comp (C_Total (mk_tot_arr_decr bs cod decr) (
       if decr_at_every_level || FStar.List.Tot.length bs = 0
-      then Some decr
-      else None
+      then [decr]
+      else []
     ))))
 
 let craft_f' use_f_type: Tac decls =
@@ -60,10 +62,10 @@ let craft_f' use_f_type: Tac decls =
            then typOfF ()
            else mk_tot_arr_decr [m;n] (`(*`*)int) n'
   in
-  let se = Sg_Let true name [] typ (
+  let def = (
     mk_abs [m;n] (
       pack (
-        Tv_Match n'
+        Tv_Match n' None
         [ (Pat_Constant   (C_Int 0), (`(*`*)0))
         ; (Pat_Wild (fresh_bv (`(*`*)int)),
                     call2 (pack (Tv_FVar name))
@@ -74,6 +76,8 @@ let craft_f' use_f_type: Tac decls =
       )
     )
   ) in
+  let lb = pack_lb ({lb_fv = name; lb_us = []; lb_typ = typ; lb_def = def}) in
+  let se = Sg_Let true [lb] in
   [pack_sigelt se]
 
 // crafting f' using f type works

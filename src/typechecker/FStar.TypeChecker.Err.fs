@@ -16,20 +16,21 @@
 #light "off"
 
 module FStar.TypeChecker.Err
-open FStar.ST
-open FStar.All
+open FStar.Pervasives
+open FStar.Compiler.Effect
+open FStar.Compiler.Effect
 
-open FStar
+open FStar open FStar.Compiler
 open FStar.Syntax
 open FStar.Syntax.Syntax
-open FStar.Util
+open FStar.Compiler.Util
 open FStar.TypeChecker.Normalize
 open FStar.TypeChecker.Env
-open FStar.Range
+open FStar.Compiler.Range
 open FStar.Ident
 
 module N = FStar.TypeChecker.Normalize
-module BU = FStar.Util //basic util
+module BU = FStar.Compiler.Util //basic util
 module Env = FStar.TypeChecker.Env
 open FStar.TypeChecker.Common
 
@@ -128,7 +129,11 @@ let print_discrepancy (f : 'a -> string) (x : 'a) (y : 'a) : string * string =
  *     in the first case, we print it starting from a newline,
  *       while in the latter, it is printed on the same line
  *)
-let errors_smt_detail env errs smt_detail =
+let errors_smt_detail env
+        (errs : list<Errors.error>)
+        (smt_detail : either<string,string>)
+: list<Errors.error>
+=
     let maybe_add_smt_detail msg =
       match smt_detail with
       | Inr d -> msg ^ "\n\t" ^ d
@@ -138,10 +143,10 @@ let errors_smt_detail env errs smt_detail =
     let errs =
         errs
         |> List.map
-          (fun (e, msg, r) ->
-            let e, msg, r =
+          (fun (e, msg, r, ctx) ->
+            let e, msg, r, ctx =
                 if r = dummyRange
-                then e, msg, Env.get_range env
+                then e, msg, Env.get_range env, ctx
                 else let r' = Range.set_def_range r (Range.use_range r) in
                      if Range.file_of_range r' <> Range.file_of_range (Env.get_range env) //r points to another file
                      then e,
@@ -150,17 +155,21 @@ let errors_smt_detail env errs smt_detail =
                                 ^ (if Range.use_range r <> Range.def_range r
                                    then "(Other related locations: " ^ Range.string_of_def_range r ^")"
                                    else "")),
-                          Env.get_range env
-                     else e, msg, r
+                          Env.get_range env,
+                          ctx
+                     else e, msg, r, ctx
             in
-            e, maybe_add_smt_detail msg, r)
+            e, maybe_add_smt_detail msg, r, ctx)
     in
     errs
 
-let add_errors_smt_detail env errs smt_detail =
+let add_errors_smt_detail env (errs:list<Errors.error>) smt_detail : unit =
     FStar.Errors.add_errors (errors_smt_detail env errs smt_detail)
 
 let add_errors env errs = add_errors_smt_detail env errs (Inl "")
+
+let log_issue env r (e, m) : unit =
+ add_errors env [e, m, r, Errors.get_ctx ()]
 
 let err_msg_type_strings env t1 t2 :(string * string) =
   print_discrepancy (N.term_to_string env) t1 t2

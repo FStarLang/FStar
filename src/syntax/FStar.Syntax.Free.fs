@@ -16,21 +16,28 @@
 #light "off"
 // (c) Microsoft Corporation. All rights reserved
 module FStar.Syntax.Free
-open FStar.ST
-open FStar.All
-
 open Prims
+open FStar.Pervasives
+open FStar.Compiler.Effect
+open FStar.Compiler.List
+
 open FStar
-open FStar.Util
+open FStar.Compiler
+open FStar.Compiler.Util
 open FStar.Syntax
 open FStar.Syntax.Syntax
-module Util = FStar.Util
+module Util = FStar.Compiler.Util
 module UF = FStar.Syntax.Unionfind
 
 
 (********************************************************************************)
 (************************* Free names and unif variables ************************)
 (********************************************************************************)
+
+type use_cache_t =
+  | Def
+  | NoCache
+  | Full
 
 type free_vars_and_fvars = free_vars * set<Ident.lident>
 
@@ -75,9 +82,9 @@ let rec free_univs u = match Subst.compress_univ u with
 //to handle that, use_cache flag is UNSET when asking for free_fvars, so that all the terms are traversed completely
 //on the other hand, for earlier interface use_cache is true
 //this flag is propagated, and is used in the function should_invalidate_cache below
-let rec free_names_and_uvs' tm use_cache : free_vars_and_fvars =
+let rec free_names_and_uvs' tm (use_cache:use_cache_t) : free_vars_and_fvars =
     let aux_binders (bs : binders) (from_body : free_vars_and_fvars) =
-        let from_binders = bs |> List.fold_left (fun n (x, _) -> union n (free_names_and_uvars x.sort use_cache)) no_free_vars in
+        let from_binders = free_names_and_uvars_binders bs use_cache in
         union from_binders from_body
     in
     let t = Subst.compress tm in
@@ -87,8 +94,9 @@ let rec free_names_and_uvs' tm use_cache : free_vars_and_fvars =
       | Tm_name x ->
         singleton_bv x
 
-      | Tm_uvar (uv, _) ->
-        singleton_uv uv
+      | Tm_uvar (uv, (s, _)) ->
+        union (singleton_uv uv)
+              (if use_cache = Full then free_names_and_uvars uv.ctx_uvar_typ use_cache else no_free_vars)
 
       | Tm_type u ->
         free_univs u
@@ -105,19 +113,22 @@ let rec free_names_and_uvs' tm use_cache : free_vars_and_fvars =
         let f = free_names_and_uvars t use_cache in
         List.fold_left (fun out u -> union out (free_univs u)) f us
 
-      | Tm_abs(bs, t, _) ->
-        aux_binders bs (free_names_and_uvars t use_cache)
+      | Tm_abs(bs, t, ropt) ->
+        union (aux_binders bs (free_names_and_uvars t use_cache))
+              (match ropt with
+                | Some { residual_typ = Some t } ->  free_names_and_uvars t use_cache
+                | _ -> no_free_vars)
 
       | Tm_arrow (bs, c) ->
         aux_binders bs (free_names_and_uvars_comp c use_cache)
 
       | Tm_refine(bv, t) ->
-        aux_binders [bv, None] (free_names_and_uvars t use_cache)
+        aux_binders [mk_binder bv] (free_names_and_uvars t use_cache)
 
       | Tm_app(t, args) ->
         free_names_and_uvars_args args (free_names_and_uvars t use_cache) use_cache
 
-      | Tm_match(t, pats) ->
+      | Tm_match(t, asc_opt, pats, _) ->
         pats |> List.fold_left (fun n (p, wopt, t) ->
             let n1 = match wopt with
                 | None ->   no_free_vars
@@ -127,17 +138,18 @@ let rec free_names_and_uvs' tm use_cache : free_vars_and_fvars =
             let n =
               pat_bvs p |> List.fold_left (fun n x -> union n (free_names_and_uvars x.sort use_cache)) n
             in
-            union n (union n1 n2) )
-            (free_names_and_uvars t use_cache)
+            union n (union n1 n2))
+            (union (free_names_and_uvars t use_cache)
+                   (match asc_opt with
+                    | None -> no_free_vars
+                    | Some (b, asc) ->
+                      union
+                        (free_names_and_uvars_binders [b] use_cache)
+                        (free_names_and_uvars_ascription asc use_cache)))
 
       | Tm_ascribed(t1, asc, _) ->
-        let u1 = free_names_and_uvars t1 use_cache in
-        let u2 = match fst asc with
-         | Inl t2 -> free_names_and_uvars t2 use_cache
-         | Inr c2 -> free_names_and_uvars_comp c2 use_cache in
-        (match snd asc with
-         | None -> union u1 u2
-         | Some tac -> union (union u1 u2) (free_names_and_uvars tac use_cache))
+        union (free_names_and_uvars t1 use_cache)
+              (free_names_and_uvars_ascription asc use_cache)
 
       | Tm_let(lbs, t) ->
         snd lbs |> List.fold_left (fun n lb ->
@@ -168,6 +180,21 @@ let rec free_names_and_uvs' tm use_cache : free_vars_and_fvars =
         end
 
 
+and free_names_and_uvars_binders bs use_cache =
+  bs |> List.fold_left (fun n b ->
+    union n (free_names_and_uvars b.binder_bv.sort use_cache)) no_free_vars
+
+
+and free_names_and_uvars_ascription asc use_cache =
+  let asc, tacopt, _ = asc in
+  union (match asc with
+         | Inl t -> free_names_and_uvars t use_cache
+         | Inr c -> free_names_and_uvars_comp c use_cache)
+        (match tacopt with
+         | None -> no_free_vars
+         | Some tac -> free_names_and_uvars tac use_cache)
+
+
 and free_names_and_uvars t use_cache =
   let t = Subst.compress t in
   match !t.vars with
@@ -175,7 +202,7 @@ and free_names_and_uvars t use_cache =
   | _ ->
       t.vars := None;
       let n = free_names_and_uvs' t use_cache in
-      t.vars := Some (fst n);
+      if use_cache <> Full then t.vars := Some (fst n);
       n
 
 and free_names_and_uvars_args args (acc:free_vars * set<Ident.lident>) use_cache =
@@ -198,25 +225,41 @@ and free_names_and_uvars_comp c use_cache =
               union (free_univs u) (free_names_and_uvars t use_cache)
 
             | Comp ct ->
-              let us = free_names_and_uvars_args ct.effect_args (free_names_and_uvars ct.result_typ use_cache) use_cache in
-              List.fold_left (fun us u -> union us (free_univs u)) us ct.comp_univs in
+              //collect from the decreases clause
+              let decreases_vars =
+                match List.tryFind (function DECREASES _ -> true | _ -> false) ct.flags with
+                | None -> no_free_vars
+                | Some (DECREASES dec_order) ->
+                  free_names_and_uvars_dec_order dec_order use_cache
+              in
+              //decreases clause + return type
+              let us = union (free_names_and_uvars ct.result_typ use_cache) decreases_vars in
+              //decreases clause + return type + effect args
+              let us = free_names_and_uvars_args ct.effect_args us use_cache in
+              //decreases clause + return type + effect args + comp_univs
+              List.fold_left (fun us u -> union us (free_univs u)) us ct.comp_univs
+         in
          c.vars := Some (fst n);
          n
 
+and free_names_and_uvars_dec_order dec_order use_cache =
+  match dec_order with
+  | Decreases_lex l ->
+    l |> List.fold_left (fun acc t -> union acc (free_names_and_uvars t use_cache)) no_free_vars
+  | Decreases_wf (rel, e) ->
+    union (free_names_and_uvars rel use_cache)
+          (free_names_and_uvars e use_cache)
+
 and should_invalidate_cache n use_cache =
-    not use_cache ||
-      (n.free_uvars |> Util.for_some (fun u ->
+    (use_cache <> Def) ||
+    (n.free_uvars |> Util.for_some (fun u ->
          match UF.find u.ctx_uvar_head with
          | Some _ -> true
-         | _ -> false)
-   || n.free_univs |> Util.for_some (fun u ->
+         | _ -> false)) ||
+    (n.free_univs |> Util.for_some (fun u ->
            match UF.univ_find u with
            | Some _ -> true
-           | None -> false)
-      )
-
-let free_names_and_uvars_binders (bs:binders) acc use_cache =
-    bs |> List.fold_left (fun n (x, _) -> union n (free_names_and_uvars x.sort use_cache)) acc
+           | None -> false))
 
 //note use_cache is set false ONLY for fvars, which is not maintained at each AST node
 //see the comment above
@@ -228,12 +271,16 @@ let new_universe_uvar_set () : set<universe_uvar> =
     Util.new_set compare_universe_uvar
 
 let empty = Util.new_set Syntax.order_bv
-let names t = FStar.Util.as_set (fst (free_names_and_uvars t true)).free_names Syntax.order_bv
-let uvars t = FStar.Util.as_set (fst (free_names_and_uvars t true)).free_uvars compare_uv
-let univs t = FStar.Util.as_set (fst (free_names_and_uvars t true)).free_univs compare_universe_uvar
-let univnames t = FStar.Util.as_set (fst (free_names_and_uvars t true)).free_univ_names Syntax.order_univ_name
-let univnames_comp c = FStar.Util.as_set (fst (free_names_and_uvars_comp c true)).free_univ_names Syntax.order_univ_name
-let fvars t = snd (free_names_and_uvars t false)
-let names_of_binders (bs:binders) = FStar.Util.as_set ((fst (free_names_and_uvars_binders bs no_free_vars true)).free_names) Syntax.order_bv
+let names t = FStar.Compiler.Util.as_set (fst (free_names_and_uvars t Def)).free_names Syntax.order_bv
+let uvars t = FStar.Compiler.Util.as_set (fst (free_names_and_uvars t Def)).free_uvars compare_uv
+let univs t = FStar.Compiler.Util.as_set (fst (free_names_and_uvars t Def)).free_univs compare_universe_uvar
+let univnames t = FStar.Compiler.Util.as_set (fst (free_names_and_uvars t Def)).free_univ_names Syntax.order_univ_name
+let univnames_comp c = FStar.Compiler.Util.as_set (fst (free_names_and_uvars_comp c Def)).free_univ_names Syntax.order_univ_name
+let fvars t = snd (free_names_and_uvars t NoCache)
+let names_of_binders (bs:binders) =
+  FStar.Compiler.Util.as_set
+    ((fst (free_names_and_uvars_binders bs Def)).free_names)
+    Syntax.order_bv
 
-let uvars_uncached t = FStar.Util.as_set (fst (free_names_and_uvars t false)).free_uvars compare_uv
+let uvars_uncached t = FStar.Compiler.Util.as_set (fst (free_names_and_uvars t NoCache)).free_uvars compare_uv
+let uvars_full t = FStar.Compiler.Util.as_set (fst (free_names_and_uvars t Full)).free_uvars compare_uv

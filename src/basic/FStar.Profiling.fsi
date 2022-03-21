@@ -16,7 +16,7 @@
 #light "off"
 
 module FStar.Profiling
-open FStar.All
+open FStar.Compiler.Effect module List = FStar.Compiler.List
 
 // When --profile module_name
 // And  --profile_component component_name

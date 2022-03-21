@@ -36,7 +36,7 @@ ALL=Apply\
     Tutorial\
     Unify
 
-OTHERFLAGS += --use_two_phase_tc false
+OTHERFLAGS +=
 
 all: $(addsuffix .sep.test, $(TAC_MODULES)) $(addsuffix .test, $(ALL))
 

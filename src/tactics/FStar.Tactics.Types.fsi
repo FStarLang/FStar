@@ -1,14 +1,14 @@
 #light "off"
 module FStar.Tactics.Types
 
-open FStar.All
+open FStar.Compiler.Effect
 open FStar.Syntax.Syntax
 open FStar.TypeChecker.Env
 open FStar.Tactics.Common
 module Cfg = FStar.TypeChecker.Cfg
 module N = FStar.TypeChecker.Normalize
-module Range = FStar.Range
-module BU = FStar.Util
+module Range = FStar.Compiler.Range
+module BU = FStar.Compiler.Util
 module O = FStar.Options
 
 (*
@@ -25,7 +25,7 @@ type goal = {
     goal_main_env: env;
     goal_ctx_uvar : ctx_uvar;
     opts    : FStar.Options.optionstate; // option state for this particular goal
-    is_guard : bool; // Marks whether this goal arised from a guard during tactic runtime
+    is_guard : bool; // Marks whether this goal arose from a guard during tactic runtime
                      // We make the distinction to be more user-friendly at times
     label : string; // A user-defined description
 }
@@ -89,6 +89,7 @@ val mk_goal: env -> ctx_uvar -> FStar.Options.optionstate -> bool -> string -> g
 
 val goal_of_goal_ty : env -> typ -> goal * guard_t
 val goal_of_implicit : env -> implicit -> goal
+val goal_of_ctx_uvar: goal -> ctx_uvar -> goal
 
 type ctrl_flag =
     | Continue

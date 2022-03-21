@@ -1,7 +1,7 @@
 #light "off"
 module FStar.Tactics.Load
 
-open FStar.All
+open FStar.Compiler.Effect
 
 val try_load_lib         : unit -> unit
 val load_lib             : unit -> unit

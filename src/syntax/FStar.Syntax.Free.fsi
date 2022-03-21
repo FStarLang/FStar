@@ -16,11 +16,11 @@
 #light "off"
 // (c) Microsoft Corporation. All rights reserved
 module FStar.Syntax.Free
-open FStar.ST
-open FStar.All
+open FStar.Compiler.Effect
+open FStar.Compiler.Effect
 open Prims
-open FStar
-open FStar.Util
+open FStar open FStar.Compiler
+open FStar.Compiler.Util
 open FStar.Syntax
 open FStar.Syntax.Syntax
 
@@ -37,3 +37,4 @@ val fvars: term -> set<Ident.lident>
 val names_of_binders: binders -> set<bv>
 
 val uvars_uncached: term -> set<ctx_uvar>
+val uvars_full: term -> set<ctx_uvar>

@@ -1,5 +1,5 @@
 [
-  "§8'hÿ™#þgð\u001bó@‘\u007fJ",
+  "ÍÏ/&@Û\u0011|©=Å{DÕr®",
   [
     [
       "EtM.CPA.iv",
@@ -13,7 +13,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "4bcf819cdc68b57b0fad62a4f9177a3d"
+      "f6625577f68dd319d4381eaf351d353b"
     ],
     [
       "EtM.CPA.aes_key",
@@ -25,7 +25,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "5eb8c5fe5c53cecdd7cd3f71d25dd07f"
+      "1cb75aa8cb64ec496b58d7e1dffda93d"
     ],
     [
       "EtM.CPA.log_entry",
@@ -41,7 +41,7 @@
         "typing_EtM.Plain.plain"
       ],
       0,
-      "6ab50f65ffdec93b8cbc6025677c51d1"
+      "d6249d9e62051b313da4c26b24c06bbc"
     ],
     [
       "EtM.CPA.iv_of_entry",
@@ -59,7 +59,7 @@
         "refinement_interpretation_Tm_refine_7f78f70eb44b3abbe4ffd0af2859ffdb"
       ],
       0,
-      "75b1029e4855d7e29d45e992c6833d50"
+      "230fa7a0c28111c446e83197bd7679d2"
     ],
     [
       "EtM.CPA.raw_cipher",
@@ -76,7 +76,7 @@
         "refinement_interpretation_Tm_refine_7de8468e4c8be42394c70da6b10033dd"
       ],
       0,
-      "509ab10e596c71be0bab2d067a704e13"
+      "ced803dfb2bc145f96c128f56f51688d"
     ],
     [
       "EtM.CPA.split_entry",
@@ -122,7 +122,7 @@
         "typing_Platform.Bytes.op_At_Bar", "typing_Platform.Bytes.split"
       ],
       0,
-      "05ad81eae98bc8bb156fa6cf1737a9ea"
+      "a0d30266fd032afb7485ed84f9ca5705"
     ],
     [
       "EtM.CPA.iv_of_entry_inj",
@@ -151,19 +151,7 @@
         "typing_EtM.CPA.iv_of_entry"
       ],
       0,
-      "40cc75bda28e1213b8b0b1f2cd12bca0"
-    ],
-    [
-      "EtM.CPA.__proj__Key__item__log",
-      1,
-      2,
-      1,
-      [
-        "@query", "proj_equation_EtM.CPA.Key_region",
-        "projection_inverse_EtM.CPA.Key_region"
-      ],
-      0,
-      "110f80a6e505bd89013ee2bcd467cf07"
+      "ae7c3e57edab4e23a0e9001285c7775e"
     ],
     [
       "EtM.CPA.iv_not_in",
@@ -177,7 +165,7 @@
         "haseqTm_refine_b3982a6d174e1d047431ae85c35dc7d8"
       ],
       0,
-      "87ff0f7e335a5cbf0c30a89fb3312247"
+      "35cf6abcd988cd4ca0b7fa7480d2f842"
     ],
     [
       "EtM.CPA.pairwise_distinct_ivs",
@@ -210,7 +198,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "ab27e38257f96ddb3420cb53088fee89"
+      "3c7ca4ec6ecc66dcc281bd429bbdbcba"
     ],
     [
       "EtM.CPA.pairwise_snoc",
@@ -235,7 +223,7 @@
         "typing_FStar.Seq.Properties.snoc"
       ],
       0,
-      "18d1cf04dc7f8466ee6fc5b164fdc2ec"
+      "a425a331842bce43f6fe0402214b394b"
     ],
     [
       "EtM.CPA.invert_pairwise",
@@ -256,7 +244,7 @@
         "refinement_interpretation_Tm_refine_b80d66df2e638bd4e8ce22b10f41ad1a"
       ],
       0,
-      "e333b59bbc7651fdaa9dd8c0688e024c"
+      "dcd63a8c9a8b7d8955685567db613031"
     ],
     [
       "EtM.CPA.entry_functional_correctness",
@@ -269,7 +257,7 @@
         "primitive_Prims.op_AmpAmp", "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "0b16955ad27619121fe2923ea3b6e894"
+      "174d02e7274f4a57b046c6ea976f986d"
     ],
     [
       "EtM.CPA.cipher_functional_correctness",
@@ -278,7 +266,7 @@
       1,
       [ "@query", "assumption_EtM.CPA.log_entry__uu___haseq" ],
       0,
-      "c79b3eb9bd66fdc6ab2db9479cb46da0"
+      "aa559599b445f8fb14dcd5e35f5b17a4"
     ],
     [
       "EtM.CPA.keygen",
@@ -380,7 +368,7 @@
         "typing_FStar.Set.singleton", "typing_FStar.Set.union"
       ],
       0,
-      "97ee71a4ef058d05a730a689a248829b"
+      "967af458873932cded7b74441071566a"
     ],
     [
       "EtM.CPA.encrypt",
@@ -439,7 +427,7 @@
         "typing_FStar.Seq.Base.seq"
       ],
       0,
-      "959a4113868adb072b44f463f0c1cb47"
+      "0670ee4c4fd0d814117e3ff4b32e4c56"
     ],
     [
       "EtM.CPA.find_entry",
@@ -469,7 +457,7 @@
         "typing_FStar.Seq.Base.index"
       ],
       0,
-      "6a7cf3c3513f7a9686d9865868fe3a56"
+      "329aa0637a5c23715bbd5f2969703379"
     ],
     [
       "EtM.CPA.decrypt",
@@ -559,7 +547,7 @@
         "typing_FStar.Set.complement", "typing_FStar.Set.empty"
       ],
       0,
-      "e15613d1c98bbf22257d9b5ee5d65d62"
+      "90399d025766022e39184482cbb69dd7"
     ]
   ]
 ]

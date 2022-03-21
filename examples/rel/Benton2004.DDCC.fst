@@ -40,7 +40,7 @@ let interpolable_ns_t #t : Lemma (interpolable #t ns_t) = ()
 let interpolable_ns_singl #t (c: t) : Lemma (interpolable (ns_singl c)) = ()
 let interpolable_ns_delta #t : Lemma (interpolable #t ns_delta) = ()
 
-#set-options "--z3rlimit 128 --max_fuel 8 --max_ifuel 8"
+#set-options "--z3rlimit 20 --max_fuel 2 --max_ifuel 1 --z3cliopt smt.qi.eager_threshold=100"
 
 let holds_st_nil
   (x y: heap)
@@ -381,6 +381,7 @@ let d_skip
   [SMTPat (exec_equiv p p skip skip)]
 = Benton2004.d_skip p
 
+#push-options "--fuel 0 --ifuel 0 --z3rlimit_factor 4"
 let d_assign
   (p: sttype)
   (x: var)
@@ -397,6 +398,7 @@ let d_assign
   ))
   [SMTPat (exec_equiv (st_cons p x f) (st_cons p x f') (assign x e) (assign x e'))]  
 = ()
+#pop-options
 
 let d_seq
   (p0 p1 p2 : sttype)
@@ -416,7 +418,7 @@ let d_seq
   ]]
 = Benton2004.d_seq p0 p1 p2 c01 c01' c12 c12'
 
-#set-options "--z3rlimit 1024"
+//#set-options "--z3rlimit 1024"
 
 let d_ifthenelse
   (b b' : exp bool)
@@ -431,6 +433,12 @@ let d_ifthenelse
   (ensures (exec_equiv phi phi' (ifthenelse b c1 c2) (ifthenelse b' c1' c2')))
   [SMTPat (exec_equiv phi phi' (ifthenelse b c1 c2) (ifthenelse b' c1' c2'))]
 = ()
+
+#push-options "--z3rlimit_factor 4 --fuel 1 --ifuel 0"
+let elim_fuel_monotonic (fc:reified_computation) (s0:heap) (f0 f1:nat)
+  : Lemma (requires f0 <= f1 /\ fst (fc f0 s0))
+          (ensures fc f0 s0 == fc f1 s0)
+  = ()
 
 let rec d_whl_terminates
   (b b' : exp bool)
@@ -464,8 +472,11 @@ let rec d_whl_terminates
       (requires (fst (fc' fuel0 s0') == true))
       (ensures (terminates_on f' s0'))
     = let fuel1 = fuel + fuel0 in
+      elim_fuel_monotonic fc' s0' fuel0 fuel1;
       assert (fc' fuel1 s0' == fc' fuel0 s0');
-      assert  (fc fuel1 s0 == fc fuel s0);
+      assert (terminates_on fc s0);
+      elim_fuel_monotonic fc s0 fuel fuel1;
+      assert (fc fuel1 s0 == fc fuel s0);
       let s1 = snd (fc fuel1 s0) in
       let s1' = snd (fc' fuel1 s0') in
       assert (holds phi s1 s1');
@@ -478,6 +489,7 @@ let rec d_whl_terminates
         (requires (fst (f' fuel2 s1') == true))
         (ensures (terminates_on f' s0'))
       = let fuel3 = fuel1 + fuel2 + 1 in
+        reified_computation_elim fc' fuel1 fuel3 s0';
         assert (fc' fuel3 s0' == fc' fuel1 s0');
         assert (f' fuel3 s0' == f' (fuel3 - 1) s1')
       in
@@ -554,7 +566,7 @@ let d_whl
     end else ()
   in
   Classical.forall_intro_3 (fun x y -> Classical.move_requires (prf2 x y))
-
+#pop-options
 (* 3.1 Basic equations *)
 
 let d_su1

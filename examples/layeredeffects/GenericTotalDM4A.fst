@@ -84,10 +84,19 @@ layered_effect {
        if_then_else = if_then_else
 }
 
+(*
+ * AR: 11/23:
+ *     the type of the lift should not mention f in the current
+ *     implementation, which is also the reason test () below
+ *     didn't work
+ *     there is now a check in the typechecker to forbid it,
+ *     so the lift below fails
+ *)
 let lift_pure_dm4a (a:Type) (f:(eqtype_as_type unit -> Tot a))
   : repr a (w_return (f ()))
   = return _ (f ())
 
+[@@ expect_failure]
 sub_effect PURE ~> DM4A = lift_pure_dm4a
 
 [@@expect_failure] // lift doesn't really work

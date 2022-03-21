@@ -1,8 +1,8 @@
 #light "off"
 module FStar.Tactics.Types
 
-open FStar
-open FStar.All
+open FStar open FStar.Compiler
+open FStar.Compiler.Effect
 open FStar.Syntax.Syntax
 open FStar.TypeChecker.Env
 open FStar.TypeChecker.Common
@@ -12,8 +12,8 @@ module O       = FStar.Options
 module SS      = FStar.Syntax.Subst
 module Cfg     = FStar.TypeChecker.Cfg
 module N       = FStar.TypeChecker.Normalize
-module Range   = FStar.Range
-module BU      = FStar.Util
+module Range   = FStar.Compiler.Range
+module BU      = FStar.Compiler.Util
 module S       = FStar.Syntax.Syntax
 module U       = FStar.Syntax.Util
 
@@ -33,7 +33,7 @@ type goal = {
     goal_main_env : env;
     goal_ctx_uvar : ctx_uvar;
     opts    : O.optionstate; // option state for this particular goal
-    is_guard : bool; // Marks whether this goal arised from a guard during tactic runtime
+    is_guard : bool; // Marks whether this goal arose from a guard during tactic runtime
                      // We make the distinction to be more user-friendly at times
     label : string; // A user-defined description
 }
@@ -42,15 +42,19 @@ let goal_witness g =
     FStar.Syntax.Syntax.mk (Tm_uvar (g.goal_ctx_uvar, ([], NoUseRange))) Range.dummyRange
 let goal_type g = g.goal_ctx_uvar.ctx_uvar_typ
 
-let goal_with_type g t =
+let goal_with_type g t : goal =
     let c = g.goal_ctx_uvar in
     let c' = {c with ctx_uvar_typ = t} in
     { g with goal_ctx_uvar = c' }
 
-let goal_with_env g env =
+let goal_with_env g env : goal =
     let c = g.goal_ctx_uvar in
     let c' = {c with ctx_uvar_gamma = env.gamma ; ctx_uvar_binders = Env.all_binders env } in
     { g with goal_main_env=env; goal_ctx_uvar = c' }
+
+(* Unsafe? *)
+let goal_of_ctx_uvar (g:goal) (ctx_u : ctx_uvar) : goal =
+    { g with goal_ctx_uvar = ctx_u }
 
 let mk_goal env u o b l = {
     goal_main_env=env;
@@ -72,12 +76,13 @@ let goal_of_implicit env (i:Env.implicit) : goal =
   mk_goal ({env with gamma=i.imp_uvar.ctx_uvar_gamma}) i.imp_uvar (FStar.Options.peek()) false i.imp_reason
 
 let rename_binders subst bs =
-    bs |> List.map (function (x, imp) ->
+    bs |> List.map (function b ->
+        let x = b.binder_bv in
         let y = SS.subst subst (S.bv_to_name x) in
         match (SS.compress y).n with
         | Tm_name y ->
             // We don't want to change the type
-            ({ y with sort = SS.subst subst x.sort }, imp)
+            { b with binder_bv = { b.binder_bv with sort = SS.subst subst x.sort } }
         | _ -> failwith "Not a renaming")
 
 (* This is only for show: this goal becomes ill-formed since it does

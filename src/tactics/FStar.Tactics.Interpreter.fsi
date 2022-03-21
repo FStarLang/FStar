@@ -1,16 +1,17 @@
 ﻿#light "off"
 module FStar.Tactics.Interpreter
 
-open FStar.ST
-open FStar.Range
+open FStar.Compiler.Effect
+open FStar.Compiler.Range
 open FStar.Syntax.Syntax
 open FStar.Syntax.Embeddings
 open FStar.Tactics.Types
 module Env = FStar.TypeChecker.Env
 
 val run_tactic_on_ps :
-    range -> (* position on the tactic *)
+    range -> (* position on the tactic call *)
     range -> (* position for the goal *)
+    bool -> (* whether this call is in the "background", like resolve_implicits *)
     embedding<'a> ->
     'a ->
     embedding<'b> ->

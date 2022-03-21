@@ -86,7 +86,7 @@ open FStar.DM4F.IntStoreFixed
 (* #set-options "--admit_smt_queries false" *)
 
 
-(* Trying to have a refiable lift from IntStoreFixed to IntStoreExcFixed *)
+(* Trying to have a reifiable lift from IntStoreFixed to IntStoreExcFixed *)
 sub_effect INT_STORE ~> INT_STORE_EXC {
   (* lift_wp = lift_int_store_int_store_exc_wp ; *)
   lift = fun (a:Type) (e:int_store a) ->

@@ -23,7 +23,7 @@ module Seq = FStar.Seq
 module HS = FStar.HyperStack
 module HST = FStar.HyperStack.ST
 
-private let srel_to_lsrel (#a:Type0) (len:nat) (pre:srel a) :P.preorder (Seq.lseq a len) = fun s1 s2 -> pre s1 s2
+private let srel_to_lsrel (#a:Type0) (len:nat) (pre:srel a) :P.preorder (Seq.lseq a len) = pre
 
 (*
  * Counterpart of compatible_sub from the fsti but using sequences
@@ -201,6 +201,18 @@ let as_seq_gsub #_ #_ #_ h b i len _ =
   | Buffer _ content idx len0 ->
     Seq.slice_slice (HS.sel h content) (U32.v idx) (U32.v idx + U32.v len0) (U32.v i) (U32.v i + U32.v len)
 
+let lemma_equal_instances_implies_equal_types (a:Type) (b:Type) (s1:Seq.seq a) (s2:Seq.seq b)
+  : Lemma (requires s1 === s2)
+          (ensures a == b)
+  = Seq.lemma_equal_instances_implies_equal_types ()
+
+let s_lemma_equal_instances_implies_equal_types (_:unit)
+  : Lemma (forall (a:Type) (b:Type) (s1:Seq.seq a) (s2:Seq.seq b).
+          {:pattern (has_type s1 (Seq.seq a));
+                    (has_type s2 (Seq.seq b)) }
+          s1 === s2 ==> a == b)
+  = Seq.lemma_equal_instances_implies_equal_types()
+  
 let live_same_addresses_equal_types_and_preorders'
   (#a1 #a2: Type0)
   (#rrel1 #rel1: srel a1)
@@ -209,14 +221,22 @@ let live_same_addresses_equal_types_and_preorders'
   (b2: mbuffer a2 rrel2 rel2)
   (h: HS.mem)
 : Lemma
-  (requires (frameOf b1 == frameOf b2 /\ as_addr b1 == as_addr b2 /\ live h b1 /\ live h b2 /\ (~ (g_is_null b1 /\ g_is_null b2))))
-  (ensures (
+  (requires 
+    frameOf b1 == frameOf b2 /\
+    as_addr b1 == as_addr b2 /\
+    live h b1 /\
+    live h b2 /\
+    (~ (g_is_null b1 /\ g_is_null b2)))
+  (ensures 
     a1 == a2 /\
-    rrel1 == rrel2
-  ))
+    rrel1 == rrel2)
 =   Heap.lemma_distinct_addrs_distinct_preorders ();
     Heap.lemma_distinct_addrs_distinct_mm ();
-    Seq.lemma_equal_instances_implies_equal_types ()
+    let s1 : Seq.seq a1 = as_seq h b1 in
+    assert (Seq.seq a1 == Seq.seq a2);
+    let s1' : Seq.seq a2 = coerce_eq _ s1 in
+    assert (s1 === s1');
+    lemma_equal_instances_implies_equal_types a1 a2 s1 s1'
 
 let live_same_addresses_equal_types_and_preorders
   #_ #_ #_ #_ #_ #_ b1 b2 h
@@ -1122,7 +1142,10 @@ let modifies_loc_buffer_from_to_intro' #a #rrel #rel b from to l h h' =
         // prove that the types, rrels, rels are equal
         Heap.lemma_distinct_addrs_distinct_preorders ();
         Heap.lemma_distinct_addrs_distinct_mm ();
-        Seq.lemma_equal_instances_implies_equal_types ();
+        assert (Seq.seq t' == Seq.seq a);
+        let _s0 : Seq.seq a = as_seq h b in
+        let _s1 : Seq.seq t' = coerce_eq _ _s0 in
+        lemma_equal_instances_implies_equal_types a t' _s0 _s1;
         let boff = U32.v (Buffer?.idx b) in
         let from_ = boff + U32.v from in
         let to_ = boff + U32.v to in
@@ -1302,7 +1325,7 @@ let lemma_g_upd_with_same_seq #_ #_ #_ b h =
     HS.lemma_heap_equality_upd_with_sel h (Buffer?.content b)
 
 #push-options "--z3rlimit 48"
-let g_upd_seq_as_seq #_ #_ #_ b s h =
+let g_upd_seq_as_seq #a #_ #_ b s h =
   let h' = g_upd_seq b s h in
   if g_is_null b then assert (Seq.equal s Seq.empty)
   else begin
@@ -1310,7 +1333,7 @@ let g_upd_seq_as_seq #_ #_ #_ b s h =
     // prove modifies_1_preserves_ubuffers
     Heap.lemma_distinct_addrs_distinct_preorders ();
     Heap.lemma_distinct_addrs_distinct_mm ();
-    Seq.lemma_equal_instances_implies_equal_types ();
+    s_lemma_equal_instances_implies_equal_types ();
     modifies_1_modifies b h h'
   end
 
@@ -1319,7 +1342,7 @@ let g_upd_modifies_strong #_ #_ #_ b i v h =
     // prove modifies_1_from_to_preserves_ubuffers
     Heap.lemma_distinct_addrs_distinct_preorders ();
     Heap.lemma_distinct_addrs_distinct_mm ();
-    Seq.lemma_equal_instances_implies_equal_types ();
+    s_lemma_equal_instances_implies_equal_types ();
     modifies_1_from_to_modifies b (U32.uint_to_t i) (U32.uint_to_t (i + 1)) h h'
 #pop-options
 

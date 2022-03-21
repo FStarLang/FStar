@@ -15,16 +15,16 @@
 *)
 #light "off"
 module FStar.Parser.Driver
-open FStar.ST
-open FStar.Exn
-open FStar.All
+open FStar.Pervasives
+open FStar.Compiler.Effect
 
 open FStar
+open FStar.Compiler
 open FStar.Parser
 open FStar.Parser.AST
 open FStar.Parser.Parse
 open FStar.Parser.ParseIt
-open FStar.Util
+open FStar.Compiler.Util
 open FStar.Errors
 
 let is_cache_file (fn: string) = Util.get_file_extension fn = ".cache"

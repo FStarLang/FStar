@@ -1,5 +1,5 @@
 [
-  "6∏€Î#Å\u0015F4…y\u001eóòØî",
+  "≥˙õE\u001eÂà7îæ\u001cgI\bá\u0017",
   [
     [
       "SigeltOpts2.tau",
@@ -17,8 +17,8 @@
         "equation_FStar.Reflection.Types.name", "equation_Prims.eqtype",
         "fuel_guarded_inversion_FStar.Tactics.Result.__result",
         "function_token_typing_FStar.Reflection.Types.sigelt",
-        "function_token_typing_FStar.Reflection.Types.term",
         "function_token_typing_Prims.string",
+        "kinding_FStar.VConfig.vconfig@tok",
         "lemma_FStar.Pervasives.invertOption",
         "projection_inverse_FStar.Tactics.Result.Failed_a",
         "projection_inverse_FStar.Tactics.Result.Failed_exn",
@@ -31,7 +31,7 @@
         "typing_FStar.Reflection.Builtins.sigelt_opts"
       ],
       0,
-      "a0267aadcdf7b1432468d3db00c131b8"
+      "f263f93e9d4daaa3d56b05d878292326"
     ]
   ]
 ]

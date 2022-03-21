@@ -16,10 +16,11 @@
 #light "off"
 
 module FStar.TypeChecker.Util
-open FStar.ST
-open FStar.All
+open FStar.Pervasives
+open FStar.Compiler.Effect
+open FStar.Compiler.Effect
 
-open FStar
+open FStar open FStar.Compiler
 open FStar.TypeChecker
 open FStar.Syntax
 open FStar.TypeChecker.Env
@@ -38,13 +39,14 @@ val check_uvars: Range.range -> typ -> unit
 val close_guard_implicits: env -> bool -> binders -> guard_t -> guard_t
 
 //extracting annotations from a term
-val extract_let_rec_annotation: env -> letbinding -> univ_names * typ * bool
+val extract_let_rec_annotation: env -> letbinding -> univ_names * typ * term * bool
 
 //pattern utilities
 //val decorate_pattern: env -> pat -> term -> pat
 val decorated_pattern_as_term: pat -> list<bv> * term
 
 //instantiation of implicits
+val maybe_implicit_with_meta_or_attr: bqual -> list<attribute> -> bool
 val maybe_instantiate : env -> term -> typ -> (term * typ * guard_t)
 
 //operations on computation types
@@ -56,9 +58,46 @@ val is_pure_or_ghost_effect: env -> lident -> bool
 val should_not_inline_lc: lcomp -> bool
 val bind: Range.range -> env -> option<term> -> lcomp -> lcomp_with_binder -> lcomp
 val maybe_return_e2_and_bind: Range.range -> env -> option<term> -> lcomp -> e2:term -> lcomp_with_binder -> lcomp
+
+(*
+ * When typechecking a match term, typechecking each branch returns
+ *   a branch condition
+ *
+ * E.g. match e with | C -> ... | D -> ...
+ *   the two branch conditions would be (is_C e) and (is_D e)
+ *
+ * This function builds a list of formulas that are the negation of
+ *   all the previous branches
+ *
+ * In the example, neg_branch_conds would be:
+ *   [True; not (is_C e); not (is_C e) /\ not (is_D e)]
+ *   thus, the length of the list is one more than lcases
+ *
+ * The return value is then ([True; not (is_C e)], not (is_C e) /\ not (is_D e))
+ *
+ * (The last element of the list becomes the branch condition for the
+     unreachable branch to check for pattern exhaustiveness)
+ *)
+val get_neg_branch_conds: list<formula> -> list<formula> * formula
+
 //the bv is the scrutinee binder, that bind_cases uses to close the guard (from lifting the computations)
 val bind_cases: env -> typ -> list<(typ * lident * list<cflag> * (bool -> lcomp))> -> bv -> lcomp
-val weaken_result_typ: env -> term -> lcomp -> typ -> term * lcomp * guard_t
+
+(*
+ * weaken_result_type env e lc t use_eq
+ *   precondition: env |- e : lc
+ * 
+ * tries to weaken the result type of lc to t
+ *
+ * roughly checking that lc.result_typ <: t
+ *
+ * but if either (a) use_eq argument is true, or
+ *               (b) env.use_eq is true, or
+ *               (c) env.use_eq_strict is true, then checking that lc.result_typ = t
+ *
+ *)
+val weaken_result_typ: env -> term -> lcomp -> typ -> bool -> term * lcomp * guard_t
+
 val strengthen_precondition: (option<(unit -> string)> -> env -> term -> lcomp -> guard_t -> lcomp*guard_t)
 val weaken_guard: guard_formula -> guard_formula -> guard_formula
 val weaken_precondition: env -> lcomp -> guard_formula -> lcomp
@@ -66,15 +105,27 @@ val maybe_assume_result_eq_pure_term: env -> term -> lcomp -> lcomp
 val close_wp_lcomp: env -> list<bv> -> lcomp -> lcomp
 val close_layered_lcomp: env -> list<bv> -> list<term> -> lcomp -> lcomp
 val pure_or_ghost_pre_and_post: env -> comp -> (option<typ> * typ)
-val check_comp: env -> term -> comp -> comp -> term * comp * guard_t
+
+//
+// Setting the boolean flag to true, clients may say if they want to use equality
+//   instead of subtyping
+//
+val check_comp: env -> use_eq:bool -> term -> comp -> comp -> term * comp * guard_t
+
 val universe_of_comp: env -> universe -> comp -> universe
 (*
  * return value: formula for input comp to have trivial wp * guard for that formula
  *)
 val check_trivial_precondition : env -> comp -> (comp_typ * formula * guard_t)
 
+//
 //checking that e:t is convertible to t'
-val check_has_type : env -> term -> lcomp -> typ -> term * lcomp * guard_t
+//
+//set the boolan flag to true if you want to check for type equality
+//
+val check_has_type : env -> term -> t:typ -> t':typ -> use_eq:bool -> guard_t
+val check_has_type_maybe_coerce : env -> term -> lcomp -> typ -> bool -> term * lcomp * guard_t
+
 val check_top_level: env -> guard_t -> lcomp -> bool*comp
 
 val maybe_coerce_lc : env -> term -> lcomp -> typ -> term * lcomp * guard_t
@@ -130,3 +181,18 @@ val get_field_projector_name : env -> datacon:lident -> index:int -> lident
 (* update the env functions *)
 val update_env_sub_eff : env -> sub_eff -> Range.range -> env
 val update_env_polymonadic_bind : env -> lident -> lident -> lident -> tscheme -> env
+
+val try_lookup_record_type : env -> lident -> option<DsEnv.record_or_dc>
+val find_record_or_dc_from_typ : env -> option<typ> -> unresolved_constructor -> Range.range -> DsEnv.record_or_dc * lident * fv
+val field_name_matches : lident -> DsEnv.record_or_dc -> ident -> bool
+val make_record_fields_in_order : env -> unresolved_constructor -> option<either<typ,typ>> ->
+                                DsEnv.record_or_dc ->
+                                list<(lident * 'a)> ->
+                                not_found:(ident -> option<'a>) ->
+                                Range.range ->
+                                list<'a>
+
+
+val check_positivity: env -> sigelt -> bool
+val name_strictly_positive_in_type: env -> bv -> term -> bool
+val check_exn_positivity: env -> lident -> bool

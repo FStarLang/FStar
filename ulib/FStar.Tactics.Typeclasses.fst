@@ -17,7 +17,7 @@ module FStar.Tactics.Typeclasses
 
 (* TODO: This must be in the FStar.Tactics.* namespace or we fail to build
  * fstarlib. That seems silly, but I forget the details of the library split. *)
-
+open FStar.List.Tot
 open FStar.Tactics
 module T = FStar.Tactics
 
@@ -51,8 +51,20 @@ and trywith (seen:list term) (fuel:int) (t:term) : Tac unit =
     debug ("Trying to apply hypothesis/instance: " ^ term_to_string t);
     (fun () -> apply_noinst t) `seq` (fun () -> tcresolve' seen (fuel-1))
 
+let rec maybe_intros () : Tac unit =
+  let g = cur_goal () in
+  match inspect_ln g with
+  | Tv_Arrow _ _ ->
+    ignore (intro ());
+    maybe_intros ()
+  | _ -> ()
+
 [@@plugin]
 let tcresolve () : Tac unit =
+    //we sometimes get goal type as _ -> t
+    //so intro if that's the case
+    //not using intros () directly, since that unfolds aggressively if the term is not an arrow
+    maybe_intros ();
     try tcresolve' [] 16
     with
     | TacticFailure s -> fail ("Typeclass resolution failed: " ^ s)
@@ -110,16 +122,19 @@ let mk_class (nm:string) : Tac decls =
                   let sfv = pack_fv (ns @ [s]) in
                   let dbv = fresh_bv_named "d" cod in
                   let tcr = (`tcresolve) in
-                  let tcdict = pack_binder dbv (Q_Meta tcr) in
+                  let tcdict = pack_binder dbv (Q_Meta tcr) [] in
                   let proj_name = cur_module () @ [base ^ s] in
-                  let proj = pack (Tv_FVar (pack_fv (cur_module () @ [base ^ s]))) in
+                  let proj = pack (Tv_FVar (pack_fv proj_name)) in
 
                   let proj_ty =
                     match lookup_typ (top_env ()) proj_name with
                     | None -> fail "mk_class: proj not found?"
                     | Some se ->
                       match inspect_sigelt se with
-                      | Sg_Let _ _ _ t _ -> t
+                      | Sg_Let _ lbs ->  begin
+                        let ({lb_fv=_;lb_us=_;lb_typ=typ;lb_def=_}) =
+                          lookup_lb_view lbs proj_name in typ
+                        end
                       | _ -> fail "mk_class: proj not Sg_Let?"
                   in
                   //dump ("proj_ty = " ^ term_to_string proj_ty);
@@ -130,7 +145,7 @@ let mk_class (nm:string) : Tac decls =
                     | [] -> fail "mk_class: impossible, no binders"
                     | b1::bs' ->
                         let (bv, aq) = inspect_binder b1 in
-                        let b1 = pack_binder bv (Q_Meta tcr) in
+                        let b1 = pack_binder bv (Q_Meta tcr) [] in
                         mk_arr (ps@(b1::bs')) cod
                   in
 
@@ -145,9 +160,13 @@ let mk_class (nm:string) : Tac decls =
                   let ty : term = ty in
                   let def : term = def in
                   let sfv : fv = sfv in
-                  let se = pack_sigelt (Sg_Let false sfv us ty def) in
+
+                  let lbv = {lb_fv=sfv;lb_us=us;lb_typ=ty;lb_def=def} in
+                  let lb = pack_lb lbv in
+                  let se = pack_sigelt (Sg_Let false [lb]) in
                   let se = set_sigelt_quals to_propagate se in
-                  //let se = set_sigelt_attrs [`tcnorm] se in
+                  let _, (_, attrs) = inspect_binder b in
+                  let se = set_sigelt_attrs attrs se in
                   //dump ("trying to return : " ^ term_to_string (quote se));
                   se
     ) bs

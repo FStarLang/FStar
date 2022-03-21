@@ -44,8 +44,11 @@ val pack_fv        : name -> fv
 val inspect_bv     : bv -> bv_view
 val pack_bv        : bv_view -> bv
 
-val inspect_binder : binder -> bv * aqualv
-val pack_binder    : bv -> aqualv -> binder
+val inspect_lb     : letbinding -> lb_view
+val pack_lb        : lb_view -> letbinding
+
+val inspect_binder : binder -> bv * (aqualv * list term)
+val pack_binder    : bv -> aqualv -> list term -> binder
 
 (* These are equivalent to [String.concat "."], [String.split ['.']]
  * and [String.compare]. We're only taking them as primitives to break
@@ -85,9 +88,18 @@ val set_sigelt_attrs : list term -> sigelt -> sigelt
 val sigelt_quals     : sigelt -> list qualifier
 val set_sigelt_quals : list qualifier -> sigelt -> sigelt
 
-(* Reading the optionstate under which a particular sigelt was typechecked *)
-val sigelt_opts : sigelt -> option term
+(* Reading the vconfig under which a particular sigelt was typechecked *)
+val sigelt_opts : sigelt -> option vconfig
 
-(* Marker to check a sigelt with a particular optionstate *)
+(* Embed a vconfig as a term, for instance to use it with the check_with
+attribute *)
+val embed_vconfig : vconfig -> term
+
+(* Marker to check a sigelt with a particular vconfig *)
 irreducible
-let check_with (o : optionstate) : unit = ()
+let check_with (vcfg : vconfig) : unit = ()
+
+val subst : bv -> term -> term -> term
+
+
+val close_term : binder -> term -> term

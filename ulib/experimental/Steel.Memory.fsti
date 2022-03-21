@@ -34,6 +34,10 @@ val mem  : Type u#(a + 1)
 *)
 val core_mem (m:mem u#a) : mem u#a
 
+val core_mem_invol (m: mem u#a) : Lemma
+  (core_mem (core_mem m) == core_mem m)
+  [SMTPat (core_mem (core_mem m))]
+
 (** A predicate describing non-overlapping memories. Based on [Steel.Heap.disjoint] *)
 val disjoint (m0 m1:mem u#h) : prop
 
@@ -51,7 +55,8 @@ val join_commutative (m0 m1:mem)
     (requires
       disjoint m0 m1)
     (ensures
-      (disjoint_sym m0 m1;
+      (disjoint m0 m1 /\
+       disjoint m1 m0 /\
        join m0 m1 == join m1 m0))
 
 (** Disjointness distributes over join *)
@@ -86,8 +91,19 @@ val interp (p:slprop u#a) (m:mem u#a) : prop
 let hmem (p:slprop u#a) = m:mem u#a {interp p m}
 
 (** Equivalence relation on slprops is just equivalence of their interpretations *)
-let equiv (p1 p2:slprop) : prop =
-  forall m. interp p1 m <==> interp p2 m
+val equiv (p1 p2:slprop u#a) : prop
+
+(**
+  An extensional equivalence principle for slprop
+ *)
+val slprop_extensionality (p q:slprop)
+  : Lemma
+    (requires p `equiv` q)
+    (ensures p == q)
+
+val reveal_equiv (p1 p2:slprop u#a) : Lemma
+  (ensures (forall m. interp p1 m <==> interp p2 m) <==> p1 `equiv` p2)
+  [SMTPat (p1 `equiv` p2)]
 
 (** Implication of slprops *)
 let slimp (p1 p2 : slprop) : prop =
@@ -95,6 +111,14 @@ let slimp (p1 p2 : slprop) : prop =
 
 (** A memory maps a [ref]erence to its associated value *)
 val ref (a:Type u#a) (pcm:pcm a) : Type u#0
+
+(** [null] is a specific reference, that is not associated to any value
+*)
+val null (#a:Type u#a) (#pcm:pcm a) : ref a pcm
+
+(** Checking whether [r] is the null pointer is decidable through [is_null]
+*)
+val is_null (#a:Type u#a) (#pcm:pcm a) (r:ref a pcm) : (b:bool{b <==> r == null})
 
 (** All the standard connectives of separation logic, based on [Steel.Heap] *)
 val emp : slprop u#a
@@ -159,6 +183,14 @@ val pts_to_compatible_equiv (#a:Type)
   : Lemma (equiv (pts_to x v0 `star` pts_to x v1)
                  (pts_to x (op pcm v0 v1)))
 
+val pts_to_not_null (#a:Type u#a)
+                    (#pcm:_)
+                    (x:ref a pcm)
+                    (v:a)
+                    (m:mem u#a)
+  : Lemma (requires interp (pts_to x v) m)
+          (ensures x =!= null)
+
 (***** Properties of the separating conjunction *)
 
 /// See [Steel.Memory.Heap] for more explanations
@@ -177,6 +209,11 @@ val elim_star (p q:slprop) (m:hmem (p `star` q))
     (ensures exists ml mr.
       disjoint ml mr /\ m == join ml mr /\ interp p ml /\ interp q mr)
 
+val interp_star
+  (p q: slprop)
+  (m: mem)
+: Lemma
+  (interp (p `star` q) m <==> (exists (mp: mem) (mq: mem) . disjoint mp mq /\ interp p mp /\ interp q mq /\ join mp mq == m))
 
 val star_commutative (p1 p2:slprop)
   : Lemma ((p1 `star` p2) `equiv` (p2 `star` p1))
@@ -200,7 +237,7 @@ module S = FStar.Set
 (** Invariants have a name *)
 val iname : eqtype
 
-let inames = S.set iname
+let inames = erased (S.set iname)
 
 (** This proposition tells us that all the invariants names in [e] are valid in memory [m] *)
 val inames_ok (e:inames) (m:mem) : prop
@@ -232,8 +269,8 @@ let hmem_with_inv (fp:slprop u#a) = hmem_with_inv_except S.empty fp
 (** Any separation logic proposition valid over [m] is also valid on [core_mem m] *)
 val core_mem_interp (hp:slprop u#a) (m:mem u#a)
     : Lemma
-      (requires interp hp m)
-      (ensures interp hp (core_mem m))
+      (requires True)
+      (ensures (interp hp (core_mem m) <==> interp hp m))
       [SMTPat (interp hp (core_mem m))]
 
 (** Interpretation is an affine heap proposition. See [Steel.Heap.interp_depends_only_on] *)
@@ -247,6 +284,50 @@ let affine_star_smt (p q:slprop u#a) (m:mem u#a)
     : Lemma (interp (p `star` q) m ==> interp p m /\ interp q m)
       [SMTPat (interp (p `star` q) m)]
     = affine_star p q m
+
+let mem_prop_is_affine
+  (sl: slprop u#a)
+  (f: (hmem sl -> Tot prop))
+: Tot prop
+= (forall m . f m <==> f (core_mem m)) /\
+  (forall (m0: hmem sl) m1 . (disjoint m0 m1 /\ interp sl (join m0 m1)) ==> (f m0 <==> f (join m0 m1)))
+
+let a_mem_prop (sl: slprop u#a) : Type u#(a+1) = (f: (hmem sl -> Tot prop) { mem_prop_is_affine sl f })
+
+val refine_slprop
+  (sl: slprop u#a)
+  (f: a_mem_prop sl)
+: Tot (slprop u#a)
+
+val interp_refine_slprop
+  (sl: slprop u#a)
+  (f: a_mem_prop sl)
+  (m: mem u#a)
+: Lemma
+  (interp (refine_slprop sl f) m <==> (interp sl m /\ f m))
+  [SMTPat (interp (refine_slprop sl f) m)]
+
+val sdep
+  (s: slprop u#a)
+  (f: (hmem s -> Tot (slprop u#a)))
+: Tot (slprop u#a)
+
+let dep_slprop_is_affine
+  (s: slprop)
+  (f: (hmem s -> Tot slprop))
+: Tot prop
+= (forall (h: hmem s) . f h `equiv`  f (core_mem h))
+
+val interp_sdep
+  (s: slprop)
+  (f: (hmem s -> Tot slprop))
+  (m: mem)
+: Lemma
+  (requires (dep_slprop_is_affine s f))
+  (ensures (
+    interp (sdep s f) m <==> (exists m1 m2 . interp s m1 /\ interp (f m1) m2 /\ disjoint m1 m2 /\ join m1 m2 == m)
+  ))
+  [SMTPat (interp (sdep s f) m)]
 
 (** See [Steel.Heap.h_exists_cong] *)
 val h_exists_cong (#a:Type) (p q : a -> slprop)
@@ -272,8 +353,17 @@ let mprop (fp:slprop u#a) =
     forall (m0:mem{interp fp m0}) (m1:mem{disjoint m0 m1}).
       q m0 <==> q (join m0 m1)}
 
+let mprop2 (#a:Type u#b) (fp_pre:slprop u#a) (fp_post:a -> slprop u#a) =
+  q:(mem u#a -> a -> mem u#a -> prop){
+    // can join any disjoint mem to the pre-mem and q is still valid
+    (forall (x:a) (m0:mem{interp fp_pre m0}) (m_post:mem{interp (fp_post x) m_post}) (m1:mem{disjoint m0 m1}).
+      q m0 x m_post <==> q (join m0 m1) x m_post) /\
+    // can join any mem to the post-mem and q is still valid
+    (forall (x:a) (m_pre:mem{interp fp_pre m_pre}) (m0:mem{interp (fp_post x) m0}) (m1:mem{disjoint m0 m1}).
+      q m_pre x m0 <==> q m_pre x (join m0 m1))}
+
 (**
-  The preorder along wich the memory evolves with every update. See [Steel.Heap.heap_evolves]
+  The preorder along which the memory evolves with every update. See [Steel.Heap.heap_evolves]
 *)
 val mem_evolves : FStar.Preorder.preorder full_mem
 
@@ -289,19 +379,31 @@ effect MstTot
   (expects:slprop u#1)
   (provides: a -> slprop u#1)
   (frame:slprop u#1)
+  (pre:mprop expects)
+  (post:mprop2 expects provides)
   = NMSTTotal.NMSTATETOT a (full_mem u#1) mem_evolves
     (requires fun m0 ->
         inames_ok except m0 /\
-        interp (expects `star` frame `star` locks_invariant except m0) m0)
+        interp (expects `star` frame `star` locks_invariant except m0) m0 /\
+        pre (core_mem m0))
     (ensures fun m0 x m1 ->
         inames_ok except m1 /\
         interp (expects `star` frame `star` locks_invariant except m0) m0 /\  //TODO: fix the effect so as not to repeat this
         interp (provides x `star` frame `star` locks_invariant except m1) m1 /\
+        post (core_mem m0) x (core_mem m1) /\
         (forall (f_frame:mprop frame). f_frame (core_mem m0) == f_frame (core_mem m1)))
 
 (** An action is just a thunked computation in [MstTot] that takes a frame as argument *)
 let action_except (a:Type u#a) (except:inames) (expects:slprop) (provides: a -> slprop) =
-  frame:slprop -> MstTot a except expects provides frame
+  frame:slprop -> MstTot a except expects provides frame (fun _ -> True) (fun _ _ _ -> True)
+
+let action_except_full (a:Type u#a)
+  (except:inames)
+  (expects:slprop)
+  (provides: a -> slprop)
+  (req:mprop expects)
+  (ens:mprop2 expects provides)
+= frame:slprop -> MstTot a except expects provides frame req ens
 
 val sel_action (#a:Type u#1) (#pcm:_) (e:inames) (r:ref a pcm) (v0:erased a)
   : action_except (v:a{compatible pcm v0 v}) e (pts_to r v0) (fun _ -> pts_to r v0)
@@ -396,7 +498,12 @@ val recall (#a:Type u#1) (#pcm:pcm a) (#fact:property a)
 val ( >--> ) (i:iname) (p:slprop u#1) : prop
 
 (**[i : inv p] is an invariant whose content is [p] *)
-let inv (p:slprop) = i:iname{i >--> p}
+let inv (p:slprop) = i:(erased iname){reveal i >--> p}
+
+let mem_inv (#p:slprop) (e:inames) (i:inv p) : erased bool = elift2 (fun e i -> Set.mem i e) e i
+
+let add_inv (#p:slprop) (e:inames) (i:inv p) : inames =
+  Set.union (Set.singleton (reveal i)) (reveal e)
 
 (** Creates a new invariant from a separation logic predicate [p] owned at the time of the call *)
 val new_invariant (e:inames) (p:slprop)
@@ -407,8 +514,8 @@ val with_invariant (#a:Type)
                    (#fp':a -> slprop)
                    (#opened_invariants:inames)
                    (#p:slprop)
-                   (i:inv p{not (i `Set.mem` opened_invariants)})
-                   (f:action_except a (Set.union (Set.singleton i) opened_invariants) (p `star` fp) (fun x -> p `star` fp' x))
+                   (i:inv p{not (mem_inv opened_invariants i)})
+                   (f:action_except a (add_inv opened_invariants i) (p `star` fp) (fun x -> p `star` fp' x))
   : action_except a opened_invariants fp fp'
 
 
@@ -416,9 +523,11 @@ val frame (#a:Type)
           (#opened_invariants:inames)
           (#pre:slprop)
           (#post:a -> slprop)
+          (#req:mprop pre)
+          (#ens:mprop2 pre post)
           (frame:slprop)
-          ($f:action_except a opened_invariants pre post)
-  : action_except a opened_invariants (pre `star` frame) (fun x -> post x `star` frame)
+          ($f:action_except_full a opened_invariants pre post req ens)
+  : action_except_full a opened_invariants (pre `star` frame) (fun x -> post x `star` frame) req ens
 
 val change_slprop (#opened_invariants:inames)
                   (p q:slprop)

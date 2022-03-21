@@ -15,7 +15,7 @@
 *)
 module FStar.Int8
 
-(**** THIS MODULE IS GENETATED AUTOMATICALLY USING [mk_int.sh], DO NOT EDIT DIRECTLY ****)
+(**** THIS MODULE IS GENERATED AUTOMATICALLY USING [mk_int.sh], DO NOT EDIT DIRECTLY ****)
 
 open FStar.Int
 open FStar.Mul
@@ -38,6 +38,12 @@ let uv_inv _ = ()
 let vu_inv _ = ()
 
 let v_inj _ _ = ()
+
+let zero = int_to_t 0
+
+let one =
+  FStar.Math.Lemmas.pow2_lt_compat (n - 1) 1;
+  int_to_t 1
 
 let add a b = Mk (add (v a) (v b))
 

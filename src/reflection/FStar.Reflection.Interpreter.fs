@@ -1,6 +1,8 @@
 #light "off"
 module FStar.Reflection.Interpreter
-
+open FStar.Compiler
+open FStar.Compiler.Effect
+open FStar.Compiler.List
 module Cfg = FStar.TypeChecker.Cfg
 module N = FStar.TypeChecker.Normalize
 open FStar.Reflection.Data
@@ -8,12 +10,12 @@ open FStar.Reflection.Basic
 module RB = FStar.Reflection.Basic
 open FStar.Ident
 open FStar.TypeChecker.Env
-module Range = FStar.Range
-open FStar.List
+module Range = FStar.Compiler.Range
+open FStar.Compiler.List
 open FStar.Syntax.Syntax
 open FStar.Syntax.Embeddings
 module Print = FStar.Syntax.Print
-module BU = FStar.Util
+module BU = FStar.Compiler.Util
 module E = FStar.Reflection.Embeddings
 module NRE = FStar.Reflection.NBEEmbeddings
 module Ident = FStar.Ident
@@ -48,6 +50,16 @@ let int2 (m:lid) (f:'a -> 'b -> 'r) (ea:embedding<'a>) (eb:embedding<'b>) (er:em
         Some (embed er (Cfg.psc_range psc) (f a b) n)))
     | _ -> None
 
+let int3 (m:lid) (f:'a -> 'b -> 'c -> 'r) (ea:embedding<'a>) (eb:embedding<'b>) (ec:embedding<'c>) (er:embedding<'r>)
+                 (psc:Cfg.psc) n (args : args) : option<term> =
+    match args with
+    | [(a, _); (b, _); (c, _)] ->
+        BU.bind_opt (try_unembed ea a n) (fun a ->
+        BU.bind_opt (try_unembed eb b n) (fun b ->
+        BU.bind_opt (try_unembed ec c n) (fun c ->
+        Some (embed er (Cfg.psc_range psc) (f a b c) n))))
+    | _ -> None
+
 let nbe_int1 (m:lid) (f:'a -> 'r) (ea:NBET.embedding<'a>) (er:NBET.embedding<'r>)
                      (cb:NBET.nbe_cbs) (args : NBET.args) : option<NBET.t> =
     match args with
@@ -63,6 +75,16 @@ let nbe_int2 (m:lid) (f:'a -> 'b -> 'r) (ea:NBET.embedding<'a>) (eb:NBET.embeddi
         BU.bind_opt (NBET.unembed ea cb a) (fun a ->
         BU.bind_opt (NBET.unembed eb cb b) (fun b ->
         Some (NBET.embed er cb (f a b))))
+    | _ -> None
+
+let nbe_int3 (m:lid) (f:'a -> 'b -> 'c -> 'r) (ea:NBET.embedding<'a>) (eb:NBET.embedding<'b>) (ec:NBET.embedding<'c>) (er:NBET.embedding<'r>)
+                     (cb:NBET.nbe_cbs) (args : NBET.args) : option<NBET.t> =
+    match args with
+    | [(a, _); (b, _); (c, _)] ->
+        BU.bind_opt (NBET.unembed ea cb a) (fun a ->
+        BU.bind_opt (NBET.unembed eb cb b) (fun b ->
+        BU.bind_opt (NBET.unembed ec cb c) (fun c ->
+        Some (NBET.embed er cb (f a b c)))))
     | _ -> None
 
 let mklid (nm : string) : lid = fstar_refl_builtins_lid nm
@@ -92,6 +114,12 @@ let mk2 nm (f  : 'a  -> 'b  -> 'r)  (ea  : embedding<'a>)       (eb  : embedding
     mk l 2 (int2     l  f  ea  eb  er)
            (nbe_int2 l nf ena enb enr)
 
+let mk3 nm (f  : 'a  -> 'b  -> 'c  -> 'r)  (ea  : embedding<'a>)       (eb  : embedding<'b>)       (ec  : embedding<'c>)       (er  : embedding<'r>)
+           (nf : 'na -> 'nb -> 'nc -> 'nr) (ena : NBET.embedding<'na>) (enb : NBET.embedding<'nb>) (enc : NBET.embedding<'nc>) (enr : NBET.embedding<'nr>) : Cfg.primitive_step =
+    let l = mklid nm in
+    mk l 3 (int3     l  f  ea  eb  ec  er)
+           (nbe_int3 l nf ena enb enc enr)
+
 let reflection_primops : list<Cfg.primitive_step> = [
     mk1 "inspect_ln"            inspect_ln            E.e_term            E.e_term_view
                                 inspect_ln            NRE.e_term          NRE.e_term_view;
@@ -117,14 +145,23 @@ let reflection_primops : list<Cfg.primitive_step> = [
     mk1 "pack_sigelt"           pack_sigelt           E.e_sigelt_view     E.e_sigelt
                                 pack_sigelt           NRE.e_sigelt_view   NRE.e_sigelt;
 
+    mk1 "inspect_lb"            inspect_lb            E.e_letbinding      E.e_lb_view
+                                inspect_lb            NRE.e_letbinding    NRE.e_lb_view;
+
+    mk1 "pack_lb"               pack_lb               E.e_lb_view         E.e_letbinding
+                                pack_lb               NRE.e_lb_view       NRE.e_letbinding;
+
     mk1 "inspect_bv"            inspect_bv            E.e_bv              E.e_bv_view
                                 inspect_bv            NRE.e_bv            NRE.e_bv_view;
 
     mk1 "pack_bv"               pack_bv               E.e_bv_view         E.e_bv
                                 pack_bv               NRE.e_bv_view       NRE.e_bv;
 
-    mk1 "sigelt_opts"           sigelt_opts           E.e_sigelt          (e_option E.e_term)
-                                sigelt_opts           NRE.e_sigelt        (NBET.e_option NRE.e_term);
+    mk1 "sigelt_opts"           sigelt_opts           E.e_sigelt          (e_option e_vconfig)
+                                sigelt_opts           NRE.e_sigelt        (NBET.e_option NBET.e_vconfig);
+
+    mk1 "embed_vconfig"         embed_vconfig         e_vconfig           E.e_term
+                                embed_vconfig         NBET.e_vconfig      NRE.e_term;
 
     mk1 "sigelt_attrs"          sigelt_attrs          E.e_sigelt          E.e_attributes
                                 sigelt_attrs          NRE.e_sigelt        NRE.e_attributes;
@@ -141,8 +178,14 @@ let reflection_primops : list<Cfg.primitive_step> = [
     mk1 "inspect_binder"        inspect_binder        E.e_binder          E.e_binder_view
                                 inspect_binder        NRE.e_binder        NRE.e_binder_view;
 
-    mk2 "pack_binder"           pack_binder           E.e_bv              E.e_aqualv         E.e_binder
-                                pack_binder           NRE.e_bv            NRE.e_aqualv       NRE.e_binder;
+    mk3 "pack_binder"           RB.pack_binder        E.e_bv              E.e_aqualv         (e_list E.e_term)          E.e_binder
+                                RB.pack_binder        NRE.e_bv            NRE.e_aqualv       (NBET.e_list NRE.e_term)   NRE.e_binder;
+
+    mk3 "subst"                 subst                 E.e_bv              E.e_term           E.e_term           E.e_term
+                                subst                 NRE.e_bv            NRE.e_term         NRE.e_term         NRE.e_term;
+
+    mk2 "close_term"            close_term            E.e_binder          E.e_term           E.e_term
+                                close_term            NRE.e_binder        NRE.e_term         NRE.e_term;
 
     mk2 "compare_bv"            compare_bv            E.e_bv              E.e_bv             E.e_order
                                 compare_bv            NRE.e_bv            NRE.e_bv           NRE.e_order;

@@ -1,6 +1,5 @@
-FSTAR_HOME = ../../..
-CONTRIB=ucontrib
-PLATFORM = $(FSTAR_HOME)/$(CONTRIB)/Platform/ml
+CONTRIB?=../..
+PLATFORM = $(CONTRIB)/Platform/ml
 DB=db
 INCLUDE=-package batteries,zarith -I $(PLATFORM) -I $(DB)
 MARCH?=x86_64

@@ -65,6 +65,9 @@ val arrow_to_impl (#a #b: Type0) (_: (squash a -> GTot (squash b))) : GTot (a ==
 (** Similar to [arrow_to_impl], but without squashing proofs on the left *)
 val impl_intro_gtot (#p #q: Type0) ($_: (p -> GTot q)) : GTot (p ==> q)
 
+(** Similar to [impl_intro_gtot], but for a Tot arrow *)
+val impl_intro_tot (#p #q: Type0) ($_: (p -> Tot q)) : Tot (p ==> q)
+
 (** Similar to [arrow_to_impl], but not squashing the proof of [p] on the LHS. *)
 val impl_intro (#p #q: Type0) ($_: (p -> Lemma q)) : Lemma (p ==> q)
 
@@ -316,6 +319,7 @@ val ghost_lemma
       ($_: (x: a -> Lemma (requires p x) (ensures (q x ()))))
     : Lemma (forall (x: a). p x ==> q x ())
 
+
 (**** Existential quantification *)
 
 (** The most basic way to introduce a squashed existential quantifier
@@ -358,7 +362,7 @@ val forall_to_exists_2
       ($f: (x: a -> y: b -> Lemma ((p x /\ q y) ==> r)))
     : Lemma (((exists (x: a). p x) /\ (exists (y: b). q y)) ==> r)
 
-(** An eliminator for squashed existentials: If every witnesse can be
+(** An eliminator for squashed existentials: If every witness can be
     eliminated into a squashed proof of the [goal], then the [goal]
     postcondition is valid. *)
 val exists_elim
@@ -367,6 +371,7 @@ val exists_elim
       (_: squash (exists (x: a). p x))
       (_: (x: a{p x} -> GTot (squash goal)))
     : Lemma goal
+
 
 (*** Disjunction *)
 
@@ -381,4 +386,3 @@ val or_elim
 
 (** The law of excluded middle: squashed types are classical *)
 val excluded_middle (p: Type) : Lemma (requires (True)) (ensures (p \/ ~p))
-

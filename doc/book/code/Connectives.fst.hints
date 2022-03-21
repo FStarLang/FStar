@@ -1,0 +1,332 @@
+[
+  "P×\u001b·f\u000f¬\u0018Þwj\u000eûÏæ…",
+  [
+    [
+      "Connectives.empty_elim",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "fuel_guarded_inversion_Connectives.empty"
+      ],
+      0,
+      "1c8edb60b5591b503bd25d28e404a8f9"
+    ],
+    [
+      "Connectives.false_elim",
+      1,
+      2,
+      1,
+      [
+        "binder_x_4929b252db904d65280aa2416964fe91_2",
+        "equation_Prims.l_False", "false_interp"
+      ],
+      0,
+      "ca51c26bc3357f3041b29b9ef9ae87b7"
+    ],
+    [
+      "Connectives.conj_intro",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "ceb7ef5a79348fcdb10087a4609bc4ec"
+    ],
+    [
+      "Connectives.conj_elim_1",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.l_and",
+        "equation_Prims.squash", "l_and-interp",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "810d822055fef9b2895b3c478d89fae6"
+    ],
+    [
+      "Connectives.conj_elim_2",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.l_and",
+        "equation_Prims.squash", "l_and-interp",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "e4493bcdfc5de98e178edadd1bb284c4"
+    ],
+    [
+      "Connectives.conj_elim_sugar_1",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.l_and",
+        "equation_Prims.squash", "l_and-interp",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "fa7af1255ba862fbe52556c8baca7663"
+    ],
+    [
+      "Connectives.conj_elim_sugar_2",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.l_and",
+        "equation_Prims.squash", "l_and-interp",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "081db15c7555e5b1f4ab18eb43f6b812"
+    ],
+    [
+      "Connectives.or_intro_left",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "58003164b3900e994e72905015edaf72"
+    ],
+    [
+      "Connectives.or_intro_right",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "c63831fb2df0fd014872fe1fda35eebd"
+    ],
+    [
+      "Connectives.or_intro_sugar_right",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.l_not",
+        "equation_Prims.squash", "l_not-interp",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "d2876fa2374ec93efb2813b40df6bc63"
+    ],
+    [
+      "Connectives.either_elim",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_FStar.Pervasives.Inl",
+        "disc_equation_FStar.Pervasives.Inr",
+        "fuel_guarded_inversion_FStar.Pervasives.either",
+        "projection_inverse_BoxBool_proj_0"
+      ],
+      0,
+      "b2149e39aad4faba150eefcaa60e4589"
+    ],
+    [
+      "Connectives.or_elim",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.l_imp",
+        "equation_Prims.l_or", "equation_Prims.squash", "l_imp-interp",
+        "l_or-interp",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "49b9946875efd25b10b59c4807f4600c"
+    ],
+    [
+      "Connectives.or_elim_sugar",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.l_or",
+        "equation_Prims.squash", "l_or-interp",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "2c2a813e20202ca8814ba637165d4869"
+    ],
+    [
+      "Connectives.implies_intro_2",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "172b0187a0676eca6579c384fae33e76"
+    ],
+    [
+      "Connectives.implies_intro_3",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.l_imp",
+        "equation_Prims.squash", "l_imp-interp",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "3a9ea545705e03283f4b3aeca144f4eb"
+    ],
+    [
+      "Connectives.implies_elim",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.l_imp",
+        "equation_Prims.squash", "l_imp-interp",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "9de8b88dceb4bd927c0ed4e6534fa1bb"
+    ],
+    [
+      "Connectives.implies_elim_sugar",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.l_imp",
+        "equation_Prims.squash", "l_imp-interp",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "81e4567494ae86ee73fd838eac1d205f"
+    ],
+    [
+      "Connectives.neg_elim",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.l_not",
+        "equation_Prims.squash", "l_not-interp",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "acd453a6009557840481c82da3277017"
+    ],
+    [
+      "Connectives.forall_intro_2",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "80cc68604ce5f883ff89b9d89acdc11e"
+    ],
+    [
+      "Connectives.forall_intro_3",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "378cb930ba4d8a4c052b7b2928af1b21"
+    ],
+    [
+      "Connectives.forall_elim_1",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.l_Forall",
+        "equation_Prims.squash",
+        "l_quant_interp_b318409532d0e00e9125f72f3b997468",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "fe8dd38d5ead2e7d3623a900599a96da"
+    ],
+    [
+      "Connectives.forall_elim_2",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.l_Forall",
+        "equation_Prims.squash",
+        "l_quant_interp_a773a6c72c667d0c5ad65449fce5c096",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "13ebf1a2133e0e9f859ec5775b86a7f5"
+    ],
+    [
+      "Connectives.exists_intro_1",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.l_and",
+        "equation_Prims.squash", "l_and-interp",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "a2b09e4e615a2df2da3b8dd2f7a2aea1"
+    ],
+    [
+      "Connectives.exists_intro_3",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "df0f2bd6e4626edf7277cf9edac2790a"
+    ],
+    [
+      "Connectives.exists_elim",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.l_Exists",
+        "equation_Prims.squash",
+        "l_quant_interp_d46b146d2567458f0007597467179aa2",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "1f16cb5b71a8be7548e74c1608af7dc0"
+    ],
+    [
+      "Connectives.exists_elim_alt",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.l_Exists",
+        "equation_Prims.squash",
+        "l_quant_interp_d46b146d2567458f0007597467179aa2",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "453c18808144936885a1f2921b2865ba"
+    ]
+  ]
+]

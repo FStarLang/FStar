@@ -2,7 +2,7 @@
 
 module FStar.Platform
 
-open FStar
+open FStar open FStar.Compiler
 open System
 
 type sys =

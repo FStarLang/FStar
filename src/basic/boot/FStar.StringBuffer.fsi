@@ -15,7 +15,7 @@
 *)
 #light "off"
 module FStar.StringBuffer
-open FStar.All
+open FStar.Compiler.Effect module List = FStar.Compiler.List
 open Prims
 open FStar.BigInt
 
@@ -32,4 +32,4 @@ val create : FStar.BigInt.t -> t
 val add: string -> t -> t
 val contents: t -> string
 val clear: t -> t
-val output_channel: FStar.Util.out_channel -> t -> unit
+val output_channel: FStar.Compiler.Util.out_channel -> t -> unit

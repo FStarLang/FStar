@@ -20,9 +20,11 @@
 
 module FStar.Unionfind
 open FSharp.Compatibility.OCaml
-open FStar.ST
-open FStar.All
-open FStar.Util
+open FStar.Pervasives
+open FStar.Compiler.Effect
+module List = FStar.Compiler.List
+open FStar.Compiler.Util
+module Util = FStar.Compiler.Util
 
 (* Persistent union-find implementation adapted from
    https:  / /www.lri.fr/~filliatr/puf/ *)

@@ -1,0 +1,141 @@
+[
+  "¥í\u0019îÅÁ›®¦IQa£”‡ý",
+  [
+    [
+      "Steel.ST.Effect.AtomicAndGhost.equiv_star_emp_r",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "5f71e89d047e483a5913c04100a75acf"
+    ],
+    [
+      "Steel.ST.Effect.AtomicAndGhost.weaken_repr",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Steel.Effect.Common_interpretation_Tm_arrow_bb7a711af297fead4d60d7aa8b8ddd2f",
+        "Steel.Effect.Common_pretyping_614e3c4c751aa6a59362078adcc31115",
+        "bool_inversion",
+        "data_typing_intro_Steel.Effect.Common.Unobservable@tok",
+        "equality_tok_Steel.Effect.Common.Observable@tok",
+        "equality_tok_Steel.Effect.Common.Unobservable@tok",
+        "equation_Prims.l_Forall", "equation_Prims.squash",
+        "equation_Steel.Effect.Common.maybe_emp",
+        "equation_Steel.Effect.Common.post_t",
+        "equation_Steel.Effect.Common.pre_t",
+        "fuel_guarded_inversion_Steel.Effect.Common.observability",
+        "l_quant_interp_3d2ca4933ce1cdd4322fc8e43ecb0756",
+        "l_quant_interp_603be6bcb8d23ca1e060d008e691593b",
+        "l_quant_interp_f7b3b4ff7483466107645cbebf3039e6",
+        "lemma_Steel.Effect.Common.can_be_split_refl",
+        "primitive_Prims.op_Equality", "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
+        "typing_Steel.Effect.Common.emp",
+        "typing_Steel.Effect.Common.mk_rmem",
+        "typing_Steel.Effect.Common.star"
+      ],
+      0,
+      "19da191b13a095c3e54e318323ed9300"
+    ],
+    [
+      "Steel.ST.Effect.AtomicAndGhost.return_",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "dc5dd163485a1bb88665a574c9b69224"
+    ],
+    [
+      "Steel.ST.Effect.AtomicAndGhost.bind",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "d5bfb6851d262b38151a8ef178195bae"
+    ],
+    [
+      "Steel.ST.Effect.AtomicAndGhost.subcomp",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "bool_inversion",
+        "equation_Steel.ST.Effect.AtomicAndGhost.repr"
+      ],
+      0,
+      "f3c979f4cf913aa9ee80891048747afc"
+    ],
+    [
+      "Steel.ST.Effect.AtomicAndGhost.STAGCommon",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "b2t_def", "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "bd4559bc270bddc4077fc05e3c79a07e"
+    ],
+    [
+      "Steel.ST.Effect.AtomicAndGhost.STAGCommon",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "dd9d56afb784709d418b81ac109e0482"
+    ],
+    [
+      "Steel.ST.Effect.AtomicAndGhost.STAGCommon",
+      3,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_de09779676242898794a0b057d5f5bb4"
+      ],
+      0,
+      "55544decf97aac7d2244e349c936532b"
+    ],
+    [
+      "Steel.ST.Effect.AtomicAndGhost.STAGCommon",
+      4,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "690e735b5afd627b965bb44b303e9e29"
+    ],
+    [
+      "Steel.ST.Effect.AtomicAndGhost.bind_pure_stag",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_interpretation_Tm_arrow_2eaa01e78f73e9bab5d0955fc1a662da",
+        "Prims_interpretation_Tm_arrow_92458cff82f9ffee1f6e26a1c0c579f3",
+        "equation_Prims.l_True", "equation_Prims.pure_post",
+        "equation_Prims.pure_post_",
+        "interpretation_Tm_abs_6ba36691ee58dee85cd144324b083848",
+        "refinement_interpretation_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
+        "typing_Tm_abs_6ba36691ee58dee85cd144324b083848"
+      ],
+      0,
+      "ccd5dbf4353c670215af0cd76f37dd40"
+    ]
+  ]
+]

@@ -16,19 +16,21 @@
 #light "off"
 
 module FStar.SMTEncoding.Solver
-open FStar.ST
-open FStar.All
+open FStar.Pervasives
+open FStar.Compiler.Effect
+open FStar.Compiler.List
 open FStar
+open FStar.Compiler
 open FStar.SMTEncoding.Z3
 open FStar.SMTEncoding.Term
-open FStar.Util
+open FStar.Compiler.Util
 open FStar.TypeChecker
 open FStar.TypeChecker.Env
 open FStar.SMTEncoding
 open FStar.SMTEncoding.ErrorReporting
 open FStar.SMTEncoding.Util
 
-module BU = FStar.Util
+module BU = FStar.Compiler.Util
 module U = FStar.Syntax.Util
 module TcUtil = FStar.TypeChecker.Util
 module Print = FStar.Syntax.Print
@@ -39,7 +41,7 @@ module Err = FStar.Errors
 (* Hint databases for record and replay (private)                           *)
 (****************************************************************************)
 
-// The type definition is now in [FStar.Util], since it needs to be visible to
+// The type definition is now in [FStar.Compiler.Util], since it needs to be visible to
 // both the F# and OCaml implementations.
 
 type z3_replay_result = either<Z3.unsat_core, error_labels>
@@ -183,7 +185,7 @@ type errors = {
     error_fuel: int;
     error_ifuel: int;
     error_hint: option<(list<string>)>;
-    error_messages: list<(Errors.raw_error * string * Range.range)>
+    error_messages: list<Errors.error>;
 }
 
 let error_to_short_string err =
@@ -264,7 +266,11 @@ let query_errors settings z3result =
             error_fuel = settings.query_fuel;
             error_ifuel = settings.query_ifuel;
             error_hint = settings.query_hint;
-            error_messages = List.map (fun (_, x, y) -> Errors.Error_Z3SolverError,x,y) error_labels
+            error_messages = List.map (fun (_, x, y) -> Errors.Error_Z3SolverError,
+                                                        x,
+                                                        y,
+                                                        Errors.get_ctx ()) // FIXME: leaking abstraction
+                                      error_labels
         }
      in
      Some err
@@ -286,7 +292,7 @@ let detail_hint_replay settings z3result =
            in
            detail_errors true settings.query_env settings.query_all_labels ask_z3
 
-let find_localized_errors errs =
+let find_localized_errors (errs : list<errors>) : option<errors> =
     errs |> List.tryFind (fun err -> match err.error_messages with [] -> false | _ -> true)
 
 let errors_to_report (settings : query_settings) : list<Errors.error> =
@@ -351,7 +357,8 @@ let errors_to_report (settings : query_settings) : list<Errors.error> =
                    settings.query_env
                    [(Errors.Error_UnknownFatal_AssertionFailure,
                      "Unknown assertion failed",
-                     settings.query_range)]
+                     settings.query_range,
+                     Errors.get_ctx ())]
                    smt_error
     in
     let detailed_errors : unit =
@@ -816,10 +823,10 @@ let ask_and_report_errors env all_labels prefix query suffix : unit =
             (* Summarize them *)
             let errs = errs |> List.flatten |> collect in
             (* Show the amount on each error *)
-            let errs = errs |> List.map (fun ((e, m, r), n) ->
+            let errs = errs |> List.map (fun ((e, m, r, ctx), n) ->
                 if n > 1
-                then (e, m ^ BU.format1 " (%s times)" (string_of_int n), r)
-                else (e, m, r))
+                then (e, m ^ BU.format1 " (%s times)" (string_of_int n), r, ctx)
+                else (e, m, r, ctx))
             in
             (* Now report them *)
             FStar.Errors.add_errors errs;
@@ -831,9 +838,9 @@ let ask_and_report_errors env all_labels prefix query suffix : unit =
             in
             (* Adding another error for the threshold (but not for --retry) *)
             if quaking then
-              FStar.TypeChecker.Err.add_errors
-                env
-                [(Errors.Error_QuakeFailed,
+              FStar.TypeChecker.Err.log_issue
+                env rng
+                (Errors.Error_QuakeFailed,
                   BU.format6
                     "Query %s failed the quake test, %s out of %s attempts succeded, \
                      but the threshold was %s out of %s%s"
@@ -842,8 +849,8 @@ let ask_and_report_errors env all_labels prefix query suffix : unit =
                     (string_of_int total_ran)
                     (string_of_int lo)
                     (string_of_int hi)
-                    (if total_ran < hi then " (early abort)" else ""),
-                  rng)]
+                    (if total_ran < hi then " (early abort)" else ""))
+
           end
           else begin
             (* Just report them as usual *)
@@ -855,6 +862,7 @@ let ask_and_report_errors env all_labels prefix query suffix : unit =
 
     let skip =
         Options.admit_smt_queries () ||
+        Env.too_early_in_prims env   ||
         (match Options.admit_except () with
          | Some id ->
            if BU.starts_with id "("
@@ -917,26 +925,24 @@ let do_solve use_env_msg tcenv q : unit =
     with
       | FStar.SMTEncoding.Env.Inner_let_rec names ->  //can be raised by encode_query
         pop ();  //AR: Important, we push-ed before encode_query was called
-        FStar.TypeChecker.Err.add_errors
-          tcenv
-          [(Errors.Error_NonTopRecFunctionNotFullyEncoded,
-            BU.format1
-              "Could not encode the query since F* does not support precise smtencoding of inner let-recs yet (in this case %s)"
-              (String.concat "," (List.map fst names)),
-            tcenv.range)]
+        FStar.TypeChecker.Err.log_issue
+          tcenv tcenv.range
+          (Errors.Error_NonTopRecFunctionNotFullyEncoded,
+           BU.format1
+             "Could not encode the query since F* does not support precise smtencoding of inner let-recs yet (in this case %s)"
+             (String.concat "," (List.map fst names)))
 
 let solve use_env_msg tcenv q : unit =
     if Options.no_smt () then
-        FStar.TypeChecker.Err.add_errors
-                 tcenv
-                 [(Errors.Error_NoSMTButNeeded,
-                    BU.format1 "Q = %s\nA query could not be solved internally, and --no_smt was given" (Print.term_to_string q),
-                        tcenv.range)]
+        FStar.TypeChecker.Err.log_issue
+          tcenv tcenv.range
+            (Errors.Error_NoSMTButNeeded,
+             BU.format1 "Q = %s\nA query could not be solved internally, and --no_smt was given" (Print.term_to_string q))
     else
     Profiling.profile
       (fun () -> do_solve use_env_msg tcenv q)
       (Some (Ident.string_of_lid (Env.current_module tcenv)))
-      "FStar.TypeChecker.SMTEncoding.solve_top_level"
+      "FStar.SMTEncoding.solve_top_level"
 
 
 (**********************************************************************************************)
@@ -951,6 +957,7 @@ let solver = {
     rollback=Encode.rollback;
     encode_sig=Encode.encode_sig;
     preprocess=(fun e g -> [e,g, FStar.Options.peek ()]);
+    handle_smt_goal=(fun e g -> [e,g]);
     solve=solve;
     finish=Z3.finish;
     refresh=Z3.refresh;
@@ -963,6 +970,7 @@ let dummy = {
     rollback=(fun _ _ -> ());
     encode_sig=(fun _ _ -> ());
     preprocess=(fun e g -> [e,g, FStar.Options.peek ()]);
+    handle_smt_goal=(fun e g -> [e,g]);
     solve=(fun _ _ _ -> ());
     finish=(fun () -> ());
     refresh=(fun () -> ());

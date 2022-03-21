@@ -15,7 +15,7 @@
 *)
 module Bug1091
 //disabling of two phase tc here is intentional, as the bug happens only then
-#set-options "--max_fuel 1 --max_ifuel 1 --initial_fuel 1 --initial_ifuel 1 --use_two_phase_tc false"
+#set-options "--max_fuel 1 --max_ifuel 1 --initial_fuel 1 --initial_ifuel 1"
 
 ////////////////////////////////////////////////////////////////////////////////
 // June 21, 2017
@@ -27,7 +27,7 @@ type jun21_2017_t = { low: U64.t; high: U64.t }
 
 assume val jun21_2017_v: jun21_2017_t -> n:nat{n < pow2 128}
 
-[@@ (expect_failure [66;19])]
+[@@ (expect_failure [66])]
 let jun21_2017_logand_fail (a b: jun21_2017_t) : Pure jun21_2017_t
   (requires True)
   (ensures (fun r -> jun21_2017_v r = UInt.logand (jun21_2017_v a) (jun21_2017_v b))) = a
@@ -38,13 +38,6 @@ let jun21_2017_logand (a b: jun21_2017_t) : Pure jun21_2017_t
   (requires True)
   (ensures (fun r -> jun21_2017_vv r = UInt.logand (jun21_2017_vv a) (jun21_2017_vv b))) = a
 
-////////////////////////////////////////////////////////////////////////////////
-// June 29, 2017
-let jun29_2017 =
-    let x =
-      let rec __f u : unit = __f u in
-      __f
-    in x
 
 ////////////////////////////////////////////////////////////////////////////////
 // July 25, 2017
@@ -92,7 +85,7 @@ let rec apr19_2017_mem #a x xs =
         | [] -> false
         | hd :: tl -> if x = hd then true else apr19_2017_mem x tl
 
-[@@ (expect_failure [19;19;19;19])]
+[@@ (expect_failure [19])]
 let apr19_2017_mem_sanity_fail #a x xs =
         assert (apr19_2017_mem x xs <==> apr19_2017_mem x xs) by idtac ()
 

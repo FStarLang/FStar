@@ -36,10 +36,31 @@ let rec term_to_ast_string (t:term) : Tac string =
                               bv_to_string x ^ ", " ^
                               term_to_ast_string e1 ^ ", " ^
                               term_to_ast_string e2)
-  | Tv_Match e brs -> "Tv_Match " ^ paren (term_to_ast_string e ^ ", " ^ branches_to_ast_string brs)
-  | Tv_AscribedT e t _ -> "Tv_AscribedT " ^ paren (term_to_ast_string e ^ ", " ^ term_to_ast_string t)
-  | Tv_AscribedC e c _ -> "Tv_AscribedC " ^ paren (term_to_ast_string e ^ ", " ^ comp_to_ast_string c)
+  | Tv_Match e ret_opt brs ->
+    "Tv_Match " ^
+      paren (
+        term_to_ast_string e ^
+        ", " ^
+        match_returns_to_string ret_opt ^
+        ", " ^
+        branches_to_ast_string brs)
+  | Tv_AscribedT e t _ use_eq -> "Tv_AscribedT " ^ paren (term_to_ast_string e ^ ", " ^ term_to_ast_string t ^ ", " ^ string_of_bool use_eq)
+  | Tv_AscribedC e c _ use_eq -> "Tv_AscribedC " ^ paren (term_to_ast_string e ^ ", " ^ comp_to_ast_string c ^ ", " ^ string_of_bool use_eq)
   | Tv_Unknown -> "_"
+
+and match_returns_to_string (ret_opt:option match_returns_ascription) : Tac string =
+  let tacopt_to_string tacopt : Tac string =
+    match tacopt with
+    | None -> ""
+    | Some tac -> " by " ^ (term_to_ast_string tac) in
+  match ret_opt with
+  | None -> ""
+  | Some (b, asc) ->
+    (binder_to_string b ^ " ")
+      ^
+    (match asc with
+     | Inl t, tacopt, _ -> (term_to_ast_string t) ^ (tacopt_to_string tacopt)
+     | Inr c, tacopt, _ -> (comp_to_ast_string c) ^ (tacopt_to_string tacopt))
 
 and branches_to_ast_string (brs:list branch) : Tac string =
   print_list branch_to_ast_string brs

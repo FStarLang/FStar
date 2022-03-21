@@ -12,7 +12,7 @@
         "fuel_guarded_inversion_Closure.state"
       ],
       0,
-      "13e05113841ed40e0da2ae3c46c4d8b1"
+      "07e94b7302285c87d869737cd835405a"
     ],
     [
       "Closure.reachable_from_B",
@@ -34,7 +34,7 @@
         "typing_tok_Closure.B@tok"
       ],
       0,
-      "b9b249421a12057c8c608da771948105"
+      "110222e30f38bab9fe3fb079362cfdba"
     ],
     [
       "Closure.__proj__Start__item__retried",
@@ -47,7 +47,7 @@
         "refinement_interpretation_Tm_refine_9b8feac8e67696762ba27b558e40f256"
       ],
       0,
-      "bf51e6fcaaf7144db4402a00b1893bdf"
+      "70ac862224fabfb91814c342195e8201"
     ],
     [
       "Closure.__proj__Hello__item__retried",
@@ -60,7 +60,7 @@
         "refinement_interpretation_Tm_refine_8abf72c04d002ce86c7c7f261e811ec5"
       ],
       0,
-      "0681d0ca891dfd912c70e949031e7f1e"
+      "0300d75d1d4115c517dca0c4962ad0e9"
     ],
     [
       "Closure.__proj__Hello__item__ch",
@@ -73,7 +73,7 @@
         "refinement_interpretation_Tm_refine_8abf72c04d002ce86c7c7f261e811ec5"
       ],
       0,
-      "bd6a0405af4a7586ca42c0c08238652d"
+      "fcbf5e0e309f53bceddc9ed02fd71423"
     ],
     [
       "Closure.__proj__Transcript12__item__ch",
@@ -87,7 +87,7 @@
         "refinement_interpretation_Tm_refine_8be6d7d0f86d71af96581ee9ae09ad53"
       ],
       0,
-      "098bf0d986b310cf58e1a4bbf7f3808b"
+      "0bf461e754cca8c2052d1ef618afa855"
     ],
     [
       "Closure.__proj__Transcript12__item__sh",
@@ -101,7 +101,7 @@
         "refinement_interpretation_Tm_refine_8be6d7d0f86d71af96581ee9ae09ad53"
       ],
       0,
-      "8aef75951d615be19aa0db4c2bbaf79b"
+      "7dc46b88ec0979fd78d840047cd826bd"
     ],
     [
       "Closure.__proj__Transcript12__item__rest",
@@ -115,7 +115,7 @@
         "refinement_interpretation_Tm_refine_8be6d7d0f86d71af96581ee9ae09ad53"
       ],
       0,
-      "17c16b7c709ce87ad5a3987a96b9eccb"
+      "f19872c0be150cf92c7a99b3a8bc4198"
     ],
     [
       "Closure.__proj__Transcript13__item__retried",
@@ -129,7 +129,7 @@
         "refinement_interpretation_Tm_refine_c3bb8422e22464cd744542b84591ff3f"
       ],
       0,
-      "c6df3b8cc5de02a6607b45b471368e85"
+      "2ec9c3b8075e19f9ef264da1e254e567"
     ],
     [
       "Closure.__proj__Transcript13__item__ch",
@@ -143,7 +143,7 @@
         "refinement_interpretation_Tm_refine_c3bb8422e22464cd744542b84591ff3f"
       ],
       0,
-      "1512a0985bd8db0e5c586877b9195efb"
+      "c2d98f9b91add667a4b464cd95d5bb15"
     ],
     [
       "Closure.__proj__Transcript13__item__sh",
@@ -157,7 +157,7 @@
         "refinement_interpretation_Tm_refine_c3bb8422e22464cd744542b84591ff3f"
       ],
       0,
-      "6f57dd1ea9ee684c5a6ce1ac9320a5dd"
+      "886497ee927f168bdbe53802ac34434a"
     ],
     [
       "Closure.__proj__Transcript13__item__rest",
@@ -171,7 +171,7 @@
         "refinement_interpretation_Tm_refine_c3bb8422e22464cd744542b84591ff3f"
       ],
       0,
-      "66352293ea8ceac29c88474ba8ac2560"
+      "33074af8e2033a4622927963ca18641d"
     ],
     [
       "Closure.transcript_size",
@@ -185,7 +185,7 @@
         "fuel_guarded_inversion_Closure.transcript_t"
       ],
       0,
-      "c470df08ebf6854b127aa87cefd304e8"
+      "e4275eed9ad0d8c04bce33adc671375a"
     ],
     [
       "Closure.client_state",
@@ -204,7 +204,7 @@
         "typing_Closure.max_transcript_size"
       ],
       0,
-      "1f241eb7b352124630861acdf65a82b9"
+      "8579b5e64bcab200892847f1b5768c4b"
     ],
     [
       "Closure.__proj__C_truncated_ClientHello__item__transcript",
@@ -218,7 +218,7 @@
         "refinement_interpretation_Tm_refine_ee2d48a428eec18a9bf958fc9b3867d8"
       ],
       0,
-      "c8f9cabd8300a0919d5c0940d485363c"
+      "fff6ae4fba88e60822ccc5dbafe11b85"
     ],
     [
       "Closure.__proj__C_truncated_ClientHello__item__offer",
@@ -234,7 +234,7 @@
         "refinement_interpretation_Tm_refine_ee2d48a428eec18a9bf958fc9b3867d8"
       ],
       0,
-      "431437ad0a74206e1099defd73ffe997"
+      "4fa5936eb21a0edebcdd62a40d1f771d"
     ],
     [
       "Closure.__proj__C_wait_ServerHello__item__transcript",
@@ -248,7 +248,7 @@
         "refinement_interpretation_Tm_refine_ba03bb475e226de884d5d34396eaf785"
       ],
       0,
-      "2d502b23fdb3bcc900fb1c337215004d"
+      "7ba3d4b14b91849bdb70d39b345bdf35"
     ],
     [
       "Closure.__proj__C_wait_ServerHello__item__offer",
@@ -264,7 +264,7 @@
         "refinement_interpretation_Tm_refine_ba03bb475e226de884d5d34396eaf785"
       ],
       0,
-      "821c36172b0b9d432df51fb800bfef59"
+      "e8f009d8f2cf4c19964c1977b75a5285"
     ],
     [
       "Closure.__proj__C13_wait_Finished1__item__transcript",
@@ -278,7 +278,7 @@
         "refinement_interpretation_Tm_refine_d027e86d743ce1c67ee5fe0ba7862796"
       ],
       0,
-      "e384c6a45ce591b8f26de1555929b44d"
+      "5ffb1cfda8ef9f864493d01f3fbbc27d"
     ],
     [
       "Closure.__proj__C13_wait_Finished1__item__mode",
@@ -301,7 +301,7 @@
         "typing_Closure.max_transcript_size"
       ],
       0,
-      "79f4c87f2e07bf33f0fd84170c6f48ab"
+      "32a2cfcf55e74f35f7fadcf423a76943"
     ],
     [
       "Closure.__proj__C13_wait_Finished1__item__mode",
@@ -313,19 +313,20 @@
         "data_elim_Closure.C13_wait_Finished1",
         "data_elim_Closure.Transcript13",
         "disc_equation_Closure.C13_wait_Finished1",
-        "equation_Closure.bounded_list", "equation_Prims.nat",
-        "int_inversion",
+        "equation_Closure.bounded_list", "equation_Closure.trans",
+        "equation_Prims.pos", "int_inversion",
         "proj_equation_Closure.C13_wait_Finished1_transcript",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_Closure.C13_wait_Finished1_transcript",
         "refinement_interpretation_Tm_refine_15a5a0786f9d93d98189c913fd5d4cd5",
-        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
+        "refinement_interpretation_Tm_refine_78a4b3cb1e73985c7eb89385f9a6ef6f",
         "refinement_interpretation_Tm_refine_97b5d0648d70b22a9061aeb250fab276",
         "refinement_interpretation_Tm_refine_d027e86d743ce1c67ee5fe0ba7862796",
         "typing_Closure.max_transcript_size"
       ],
       0,
-      "afdbb1c335252bfcd456356f84e622a1"
+      "2f007d709c322b9969f457af07bb46dd"
     ],
     [
       "Closure.witness_offer",
@@ -368,7 +369,7 @@
         "typing_tok_Closure.C_init@tok"
       ],
       0,
-      "4af72f167f2c0ea35a40e6221b62c9a4"
+      "8d4662d85714aec0f48f1eac47df24f4"
     ]
   ]
 ]

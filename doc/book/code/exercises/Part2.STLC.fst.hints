@@ -1,0 +1,770 @@
+[
+  "ùß7HV\t\u000b\u0002%q·’∏ö°[",
+  [
+    [
+      "Part2.STLC.typ",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "a8b7f8172ac788a01615a16afc971fb4"
+    ],
+    [
+      "Part2.STLC.__proj__TArr__item___0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_186733527fde97e5fc201c81831d8909"
+      ],
+      0,
+      "f1eeddbda36f086ce5879f7bca8f75f6"
+    ],
+    [
+      "Part2.STLC.__proj__TArr__item___1",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_186733527fde97e5fc201c81831d8909"
+      ],
+      0,
+      "5af652b5891527fe79ceb5ce9cc9063b"
+    ],
+    [
+      "Part2.STLC.exp",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "assumption_Part2.STLC.typ__uu___haseq", "equation_Part2.STLC.var",
+        "equation_Prims.eqtype", "equation_Prims.nat",
+        "function_token_typing_Prims.int",
+        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "4b62ac88cac747787262e4315f961966"
+    ],
+    [
+      "Part2.STLC.__proj__EVar__item___0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_a33d2a5e9563090c25ee7a18ccaecd18"
+      ],
+      0,
+      "ba42d102533a2646fd7420c598e66d92"
+    ],
+    [
+      "Part2.STLC.__proj__ELam__item___0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_5e9ee79804f7f01ce1d0cbcf87f0a5ef"
+      ],
+      0,
+      "c35a629cc83edfa0203c1416683e64ba"
+    ],
+    [
+      "Part2.STLC.__proj__ELam__item___1",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_5e9ee79804f7f01ce1d0cbcf87f0a5ef"
+      ],
+      0,
+      "1649111c6609f1350afe469ef348ca5c"
+    ],
+    [
+      "Part2.STLC.__proj__EApp__item___0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_c4a5a0b7c0e4995139dde45518ed30a0"
+      ],
+      0,
+      "dce0ee554a608c35f782436ae3996c12"
+    ],
+    [
+      "Part2.STLC.__proj__EApp__item___1",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_c4a5a0b7c0e4995139dde45518ed30a0"
+      ],
+      0,
+      "0ba332c54c420bda244f9ac0e823c100"
+    ],
+    [
+      "Part2.STLC.sub_inc",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Part2.STLC.var",
+        "equation_Prims.nat", "primitive_Prims.op_Addition",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
+      ],
+      0,
+      "24d2e20c6446d4a4c265bd634ea10db4"
+    ],
+    [
+      "Part2.STLC.sub_inc",
+      2,
+      2,
+      1,
+      [
+        "@query", "constructor_distinct_Part2.STLC.EVar",
+        "disc_equation_Part2.STLC.EVar", "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_Part2.STLC.EVar__0"
+      ],
+      0,
+      "59adae1d603ac83255ad633d711e66c4"
+    ],
+    [
+      "Part2.STLC.sub_beta",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565", "bool_inversion",
+        "constructor_distinct_Part2.STLC.EVar",
+        "disc_equation_Part2.STLC.EVar", "equation_Part2.STLC.var",
+        "equation_Prims.l_Exists", "equation_Prims.nat",
+        "equation_Prims.squash",
+        "function_token_typing_Prims.__cache_version_number__",
+        "int_inversion", "l_quant_interp_191c71ea999f6d58af5389d0b7e67a1d",
+        "primitive_Prims.op_Equality", "primitive_Prims.op_Negation",
+        "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "projection_inverse_Part2.STLC.EVar__0",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "typing_Part2.STLC.uu___is_EVar"
+      ],
+      0,
+      "dc4c4a9e8112be520cfb33101d9ef220"
+    ],
+    [
+      "Part2.STLC.subst",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Part2.STLC_pretyping_55096fc9f22d964749a41bbd0db73f9c",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "binder_x_55096fc9f22d964749a41bbd0db73f9c_2",
+        "binder_x_65215a7c2640be606af5ca0b4e699808_1",
+        "binder_x_f537159ed795b314b4e58c260361ae86_0", "bool_inversion",
+        "constructor_distinct_Part2.STLC.EApp",
+        "constructor_distinct_Part2.STLC.ELam",
+        "constructor_distinct_Part2.STLC.EVar",
+        "disc_equation_Part2.STLC.EApp", "disc_equation_Part2.STLC.ELam",
+        "disc_equation_Part2.STLC.EUnit", "disc_equation_Part2.STLC.EVar",
+        "equality_tok_Part2.STLC.EUnit@tok",
+        "equation_Part2.STLC.bool_order", "equation_Part2.STLC.sub",
+        "equation_Prims.op_Equals_Equals_Equals",
+        "fuel_guarded_inversion_Part2.STLC.exp",
+        "function_token_typing_Prims.__cache_version_number__", "int_typing",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "projection_inverse_Part2.STLC.EApp__0",
+        "projection_inverse_Part2.STLC.EApp__1",
+        "projection_inverse_Part2.STLC.ELam__0",
+        "projection_inverse_Part2.STLC.ELam__1",
+        "refinement_interpretation_Tm_refine_cea8159856afa53c211cd745a014a257",
+        "subterm_ordering_Part2.STLC.EApp",
+        "subterm_ordering_Part2.STLC.ELam", "typing_Part2.STLC.bool_order",
+        "typing_Part2.STLC.uu___is_EUnit", "typing_Part2.STLC.uu___is_EVar",
+        "typing_tok_Part2.STLC.EUnit@tok", "well-founded-ordering-on-nat"
+      ],
+      0,
+      "3958d457210e6ec39acf489475b63a10"
+    ],
+    [
+      "Part2.STLC.subst",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Part2.STLC_interpretation_Tm_arrow_c9b4ef96ab5da9e78dfe025bc15e63d9",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "binder_x_65215a7c2640be606af5ca0b4e699808_1",
+        "binder_x_f537159ed795b314b4e58c260361ae86_0", "bool_inversion",
+        "bool_typing", "constructor_distinct_Part2.STLC.EVar",
+        "data_elim_Part2.STLC.EVar", "disc_equation_Part2.STLC.EVar",
+        "equality_tok_Part2.STLC.EUnit@tok",
+        "equation_Part2.STLC.bool_order", "equation_Part2.STLC.sub",
+        "equation_Part2.STLC.sub_inc", "equation_Part2.STLC.var",
+        "equation_Prims.nat", "equation_Prims.op_Equals_Equals_Equals",
+        "fuel_guarded_inversion_Part2.STLC.exp",
+        "function_token_typing_Prims.__cache_version_number__",
+        "int_inversion", "int_typing",
+        "l_quant_interp_2de7c21b0601c0f4dd3f55faefa9de23",
+        "primitive_Prims.op_Addition", "primitive_Prims.op_Equality",
+        "primitive_Prims.op_Negation", "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "projection_inverse_Part2.STLC.EVar__0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_6cd001454cf80ea2609a5958d40759ee",
+        "refinement_interpretation_Tm_refine_cea8159856afa53c211cd745a014a257",
+        "refinement_interpretation_Tm_refine_eec4c454c7e6999e7dbf994854687c5c",
+        "typing_Part2.STLC.bool_order", "typing_Part2.STLC.sub_inc",
+        "typing_Part2.STLC.subst", "typing_Part2.STLC.uu___is_EVar",
+        "typing_tok_Part2.STLC.EUnit@tok", "well-founded-ordering-on-nat"
+      ],
+      0,
+      "3e3c8f70317980feb6ed1a7d49b269bc"
+    ],
+    [
+      "Part2.STLC.step",
+      1,
+      2,
+      1,
+      [
+        "@query", "assumption_Part2.STLC.exp__uu___haseq",
+        "assumption_Part2.STLC.typ__uu___haseq"
+      ],
+      0,
+      "443c51ce17ca5176b86cb5ba9a39ad5b"
+    ],
+    [
+      "Part2.STLC.__proj__Beta__item__t",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_09f024080f652bb340a7d2f2144122af"
+      ],
+      0,
+      "fc68aa8391b5e5901c04f0c7410e53f5"
+    ],
+    [
+      "Part2.STLC.__proj__Beta__item__e1",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_09f024080f652bb340a7d2f2144122af"
+      ],
+      0,
+      "7af3f9f7d143413e9495326e3a1a9d09"
+    ],
+    [
+      "Part2.STLC.__proj__Beta__item__e2",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_09f024080f652bb340a7d2f2144122af"
+      ],
+      0,
+      "7aef92a2905d8f31ed5ed7d764d627cb"
+    ],
+    [
+      "Part2.STLC.__proj__AppLeft__item__e1",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_43003b9576654c3a901f320486ea2517"
+      ],
+      0,
+      "d25d684393cd46385ff8dda0db5d6483"
+    ],
+    [
+      "Part2.STLC.__proj__AppLeft__item__e2",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_43003b9576654c3a901f320486ea2517"
+      ],
+      0,
+      "8c8b2fd39c68f5c5a4fa4df65cdf1170"
+    ],
+    [
+      "Part2.STLC.__proj__AppLeft__item__e1'",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_43003b9576654c3a901f320486ea2517"
+      ],
+      0,
+      "c85488035d848f4c9e4dc4128beae693"
+    ],
+    [
+      "Part2.STLC.__proj__AppLeft__item__hst",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "data_elim_Part2.STLC.AppLeft",
+        "proj_equation_Part2.STLC.AppLeft_e1",
+        "proj_equation_Part2.STLC.AppLeft_e1_",
+        "projection_inverse_Part2.STLC.AppLeft_e1",
+        "projection_inverse_Part2.STLC.AppLeft_e1_",
+        "refinement_interpretation_Tm_refine_43003b9576654c3a901f320486ea2517"
+      ],
+      0,
+      "95ba89f8a0e3d34899a53103a6f0a218"
+    ],
+    [
+      "Part2.STLC.__proj__AppRight__item__e1",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_84bb1db4141ccc2afa5e4a4da8e062f9"
+      ],
+      0,
+      "aa7cd0e67afee5ecabddf6d989762ef9"
+    ],
+    [
+      "Part2.STLC.__proj__AppRight__item__e2",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_84bb1db4141ccc2afa5e4a4da8e062f9"
+      ],
+      0,
+      "7205ad3a9f67b1949337414dbf98155f"
+    ],
+    [
+      "Part2.STLC.__proj__AppRight__item__e2'",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_84bb1db4141ccc2afa5e4a4da8e062f9"
+      ],
+      0,
+      "99d71631145cf40a893e618ba87c84ba"
+    ],
+    [
+      "Part2.STLC.__proj__AppRight__item__hst",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "data_elim_Part2.STLC.AppRight",
+        "proj_equation_Part2.STLC.AppRight_e2",
+        "proj_equation_Part2.STLC.AppRight_e2_",
+        "projection_inverse_Part2.STLC.AppRight_e2",
+        "projection_inverse_Part2.STLC.AppRight_e2_",
+        "refinement_interpretation_Tm_refine_84bb1db4141ccc2afa5e4a4da8e062f9"
+      ],
+      0,
+      "ae8028a3583d7b7483ea479b8040a9e6"
+    ],
+    [
+      "Part2.STLC.extend",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Part2.STLC.var",
+        "equation_Prims.nat", "int_inversion", "primitive_Prims.op_Equality",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
+      ],
+      0,
+      "a695d8c54bc8772689c1363fe8e7998d"
+    ],
+    [
+      "Part2.STLC.typing",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_7b1876d4248c127fc44bb888731a7e0b"
+      ],
+      0,
+      "293b32278761104e439e39514ac84db1"
+    ],
+    [
+      "Part2.STLC.__proj__TyUnit__item__g",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_458ed1c37648df81e4eddbf462b96636"
+      ],
+      0,
+      "08e2d917f950dd2a4b4ce5647583795d"
+    ],
+    [
+      "Part2.STLC.__proj__TyVar__item__g",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_40723128acd6569a8e31354a71e4468b"
+      ],
+      0,
+      "8efdaf49cf9f217aea0cbafea40ae805"
+    ],
+    [
+      "Part2.STLC.__proj__TyVar__item__x",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "data_elim_Part2.STLC.TyVar",
+        "refinement_interpretation_Tm_refine_40723128acd6569a8e31354a71e4468b"
+      ],
+      0,
+      "8a117fcdfd29e592bfd0223c31fed6e3"
+    ],
+    [
+      "Part2.STLC.__proj__TyLam__item__g",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_816632a5355bf5ee6589c220d8031049"
+      ],
+      0,
+      "047aff39d640301c4d42f75cc2cf6a77"
+    ],
+    [
+      "Part2.STLC.__proj__TyLam__item__t",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_816632a5355bf5ee6589c220d8031049"
+      ],
+      0,
+      "3e9fed00e60a1ad8f6b91fccd45e0c1a"
+    ],
+    [
+      "Part2.STLC.__proj__TyLam__item__e1",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_816632a5355bf5ee6589c220d8031049"
+      ],
+      0,
+      "e638704e34fabbda7b67458ddf2e3260"
+    ],
+    [
+      "Part2.STLC.__proj__TyLam__item__t'",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_816632a5355bf5ee6589c220d8031049"
+      ],
+      0,
+      "4ad265dd2a44e440563f78515394ce71"
+    ],
+    [
+      "Part2.STLC.__proj__TyLam__item__hbody",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "data_elim_Part2.STLC.TyLam",
+        "proj_equation_Part2.STLC.TyLam_e1",
+        "proj_equation_Part2.STLC.TyLam_g",
+        "proj_equation_Part2.STLC.TyLam_t",
+        "proj_equation_Part2.STLC.TyLam_t_",
+        "projection_inverse_Part2.STLC.TyLam_e1",
+        "projection_inverse_Part2.STLC.TyLam_g",
+        "projection_inverse_Part2.STLC.TyLam_t",
+        "projection_inverse_Part2.STLC.TyLam_t_",
+        "refinement_interpretation_Tm_refine_816632a5355bf5ee6589c220d8031049"
+      ],
+      0,
+      "bd387312a2859106f97b7bdaac1836c0"
+    ],
+    [
+      "Part2.STLC.__proj__TyApp__item__g",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_2208fb049bb54c9e470ca43dca7a0a6c"
+      ],
+      0,
+      "6659f61852bbb2cd05b916488f8bea7d"
+    ],
+    [
+      "Part2.STLC.__proj__TyApp__item__e1",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_2208fb049bb54c9e470ca43dca7a0a6c"
+      ],
+      0,
+      "aaa41ac6b4b20d7a1a17750a1fd2d5a3"
+    ],
+    [
+      "Part2.STLC.__proj__TyApp__item__e2",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_2208fb049bb54c9e470ca43dca7a0a6c"
+      ],
+      0,
+      "9ecb817e900a9c95bf194b5b437b2bc6"
+    ],
+    [
+      "Part2.STLC.__proj__TyApp__item__t11",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_2208fb049bb54c9e470ca43dca7a0a6c"
+      ],
+      0,
+      "ae5e72235dc8defefe6affd010edcfa5"
+    ],
+    [
+      "Part2.STLC.__proj__TyApp__item__t12",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_2208fb049bb54c9e470ca43dca7a0a6c"
+      ],
+      0,
+      "af72a9739928543c5c3983d0223b0d83"
+    ],
+    [
+      "Part2.STLC.__proj__TyApp__item__h1",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "data_elim_Part2.STLC.TyApp",
+        "proj_equation_Part2.STLC.TyApp_e1",
+        "proj_equation_Part2.STLC.TyApp_g",
+        "proj_equation_Part2.STLC.TyApp_t11",
+        "proj_equation_Part2.STLC.TyApp_t12",
+        "projection_inverse_Part2.STLC.TyApp_e1",
+        "projection_inverse_Part2.STLC.TyApp_g",
+        "projection_inverse_Part2.STLC.TyApp_t11",
+        "projection_inverse_Part2.STLC.TyApp_t12",
+        "refinement_interpretation_Tm_refine_2208fb049bb54c9e470ca43dca7a0a6c"
+      ],
+      0,
+      "5d9b3e68e1142c196097ba548cc04105"
+    ],
+    [
+      "Part2.STLC.__proj__TyApp__item__h2",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "data_elim_Part2.STLC.TyApp",
+        "proj_equation_Part2.STLC.TyApp_e2",
+        "proj_equation_Part2.STLC.TyApp_g",
+        "proj_equation_Part2.STLC.TyApp_t11",
+        "projection_inverse_Part2.STLC.TyApp_e2",
+        "projection_inverse_Part2.STLC.TyApp_g",
+        "projection_inverse_Part2.STLC.TyApp_t11",
+        "refinement_interpretation_Tm_refine_2208fb049bb54c9e470ca43dca7a0a6c"
+      ],
+      0,
+      "b5bc7ab9bcb17bb36a368bc4d2be9501"
+    ],
+    [
+      "Part2.STLC.subst_typing",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_7b1876d4248c127fc44bb888731a7e0b"
+      ],
+      0,
+      "7ccdc02ad5b51033317eba4dab4fd01f"
+    ],
+    [
+      "Part2.STLC.substitution",
+      1,
+      2,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_Part2.STLC.sub_elam.fuel_instrumented",
+        "@fuel_correspondence_Part2.STLC.subst.fuel_instrumented",
+        "@fuel_irrelevance_Part2.STLC.sub_elam.fuel_instrumented",
+        "@fuel_irrelevance_Part2.STLC.subst.fuel_instrumented", "@query",
+        "Part2.STLC_interpretation_Tm_arrow_3fde94793e4352702e33568f84524ace",
+        "Part2.STLC_interpretation_Tm_arrow_712f4e4fcb5912ac9dd754e09c76ec37",
+        "Part2.STLC_pretyping_55096fc9f22d964749a41bbd0db73f9c",
+        "Part2.STLC_pretyping_e841e6e464194e88d1dfdbd7a30122f9",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "binder_x_18fd788e03c31147f96c0298a51bc5a4_0",
+        "binder_x_18fd788e03c31147f96c0298a51bc5a4_5",
+        "binder_x_55096fc9f22d964749a41bbd0db73f9c_1",
+        "binder_x_869dc3522990f6752b17c4783de7d0eb_4",
+        "binder_x_cfd31026f64830b2d708ae7864f25351_6",
+        "binder_x_e841e6e464194e88d1dfdbd7a30122f9_2",
+        "binder_x_f537159ed795b314b4e58c260361ae86_3", "bool_inversion",
+        "constructor_distinct_FStar.Pervasives.Native.Some",
+        "constructor_distinct_Part2.STLC.EApp",
+        "constructor_distinct_Part2.STLC.ELam",
+        "constructor_distinct_Part2.STLC.EUnit",
+        "constructor_distinct_Part2.STLC.EVar",
+        "constructor_distinct_Part2.STLC.TyApp",
+        "data_elim_Part2.STLC.TyApp", "data_elim_Part2.STLC.TyLam",
+        "data_elim_Part2.STLC.TyUnit", "data_elim_Part2.STLC.TyVar",
+        "disc_equation_FStar.Pervasives.Native.None",
+        "disc_equation_FStar.Pervasives.Native.Some",
+        "disc_equation_Part2.STLC.EVar", "disc_equation_Part2.STLC.TyApp",
+        "disc_equation_Part2.STLC.TyLam", "disc_equation_Part2.STLC.TyUnit",
+        "disc_equation_Part2.STLC.TyVar",
+        "equality_tok_Part2.STLC.EUnit@tok",
+        "equality_tok_Part2.STLC.TUnit@tok",
+        "equation_Part2.STLC.bool_order", "equation_Part2.STLC.env",
+        "equation_Part2.STLC.extend", "equation_Part2.STLC.sub",
+        "equation_Part2.STLC.var", "equation_Prims.nat",
+        "equation_Prims.op_Equals_Equals_Equals",
+        "equation_with_fuel_Part2.STLC.sub_elam.fuel_instrumented",
+        "equation_with_fuel_Part2.STLC.subst.fuel_instrumented",
+        "fuel_guarded_inversion_Part2.STLC.typing",
+        "function_token_typing_Part2.STLC.extend",
+        "function_token_typing_Prims.__cache_version_number__",
+        "int_inversion", "int_typing",
+        "interpretation_Tm_abs_85ab00838dfe4b6efc9f846921e0c88c",
+        "interpretation_Tm_abs_d22096c997e9f07f22f773ec2e947cfe",
+        "kinding_Part2.STLC.typ@tok", "lemma_FStar.Pervasives.invertOption",
+        "primitive_Prims.op_Addition", "primitive_Prims.op_Equality",
+        "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "projection_inverse_Part2.STLC.EApp__0",
+        "projection_inverse_Part2.STLC.EApp__1",
+        "projection_inverse_Part2.STLC.ELam__0",
+        "projection_inverse_Part2.STLC.ELam__1",
+        "projection_inverse_Part2.STLC.EVar__0",
+        "projection_inverse_Part2.STLC.TyApp_e1",
+        "projection_inverse_Part2.STLC.TyApp_e2",
+        "projection_inverse_Part2.STLC.TyApp_g",
+        "projection_inverse_Part2.STLC.TyApp_h1",
+        "projection_inverse_Part2.STLC.TyApp_h2",
+        "projection_inverse_Part2.STLC.TyApp_t11",
+        "projection_inverse_Part2.STLC.TyApp_t12",
+        "projection_inverse_Part2.STLC.TyLam_e1",
+        "projection_inverse_Part2.STLC.TyLam_g",
+        "projection_inverse_Part2.STLC.TyLam_t",
+        "projection_inverse_Part2.STLC.TyLam_t_",
+        "refinement_interpretation_Tm_refine_50e7de642855ca6a5033352d0a02d538",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_7b1876d4248c127fc44bb888731a7e0b",
+        "refinement_interpretation_Tm_refine_a8efdd71c0bf2303c6916e3236cfe08c",
+        "refinement_interpretation_Tm_refine_cea8159856afa53c211cd745a014a257",
+        "subterm_ordering_Part2.STLC.EApp",
+        "subterm_ordering_Part2.STLC.ELam",
+        "token_correspondence_Part2.STLC.extend",
+        "token_correspondence_Part2.STLC.sub_elam",
+        "typing_Part2.STLC.bool_order", "typing_Part2.STLC.uu___is_EVar",
+        "typing_Part2.STLC.uu___is_TyApp", "typing_Part2.STLC.uu___is_TyLam",
+        "typing_Part2.STLC.uu___is_TyUnit",
+        "typing_tok_Part2.STLC.EUnit@tok", "typing_tok_Part2.STLC.TUnit@tok",
+        "well-founded-ordering-on-nat"
+      ],
+      0,
+      "74683ae5e2d9ab1a1d7807dd7aa7088f"
+    ],
+    [
+      "Part2.STLC.preservation_step",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Part2.STLC_pretyping_55096fc9f22d964749a41bbd0db73f9c",
+        "binder_x_55096fc9f22d964749a41bbd0db73f9c_0",
+        "binder_x_55096fc9f22d964749a41bbd0db73f9c_1",
+        "binder_x_98a0f19aef2b8e6043dbf8bc755a92b6_5",
+        "binder_x_a341b415fffbec44cf2df914f70352d3_4",
+        "constructor_distinct_Part2.STLC.EApp",
+        "constructor_distinct_Part2.STLC.ELam",
+        "constructor_distinct_Part2.STLC.EUnit",
+        "constructor_distinct_Part2.STLC.EVar",
+        "constructor_distinct_Part2.STLC.TArr",
+        "constructor_distinct_Part2.STLC.TUnit",
+        "data_elim_Part2.STLC.AppLeft", "data_elim_Part2.STLC.AppRight",
+        "data_elim_Part2.STLC.Beta", "disc_equation_Part2.STLC.AppLeft",
+        "disc_equation_Part2.STLC.AppRight", "disc_equation_Part2.STLC.Beta",
+        "disc_equation_Part2.STLC.TyApp", "disc_equation_Part2.STLC.TyLam",
+        "equality_tok_Part2.STLC.EUnit@tok",
+        "equality_tok_Part2.STLC.TUnit@tok",
+        "fuel_guarded_inversion_Part2.STLC.exp",
+        "fuel_guarded_inversion_Part2.STLC.step",
+        "fuel_guarded_inversion_Part2.STLC.typing",
+        "proj_equation_Part2.STLC.TyLam_e1",
+        "proj_equation_Part2.STLC.TyLam_g",
+        "proj_equation_Part2.STLC.TyLam_t",
+        "proj_equation_Part2.STLC.TyLam_t_",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_Part2.STLC.EApp__0",
+        "projection_inverse_Part2.STLC.EApp__1",
+        "projection_inverse_Part2.STLC.ELam__1",
+        "projection_inverse_Part2.STLC.TArr__0",
+        "projection_inverse_Part2.STLC.TArr__1",
+        "projection_inverse_Part2.STLC.TyApp_e1",
+        "projection_inverse_Part2.STLC.TyApp_e2",
+        "projection_inverse_Part2.STLC.TyApp_g",
+        "projection_inverse_Part2.STLC.TyApp_h1",
+        "projection_inverse_Part2.STLC.TyApp_t11",
+        "projection_inverse_Part2.STLC.TyApp_t12",
+        "subterm_ordering_Part2.STLC.EApp", "typing_tok_Part2.STLC.EUnit@tok"
+      ],
+      0,
+      "fa8f5b5cf2516b7b85fe09c24f94e491"
+    ]
+  ]
+]

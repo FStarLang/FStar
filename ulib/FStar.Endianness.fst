@@ -5,7 +5,7 @@ module FStar.Endianness
 ///
 /// The functions in this module aim to be as generic as possible, in order to
 /// facilitate compatibility with:
-/// - Vale's model of machine integers (nat64 et. al.), which does not rely on
+/// - Vale's model of machine integers (nat64 et al.), which does not rely on
 ///   FStar's machine integers
 /// - HACL*'s Lib.IntTypes module, which exposes a universal indexed integer
 ///   type but uses F* machine integers under the hood.
@@ -28,13 +28,15 @@ open FStar.Mul
 /// Definition of little and big-endianness
 /// ---------------------------------------
 
-let rec le_to_n b =
-  if S.length b = 0 then 0
-  else U8.v (S.head b) + pow2 8 * le_to_n (S.tail b)
+let rec le_to_n b
+  : Tot nat (decreases (S.length b))
+  = if S.length b = 0 then 0
+    else U8.v (S.head b) + pow2 8 * le_to_n (S.tail b)
 
-let rec be_to_n b: Tot nat (decreases (S.length b)) =
-  if S.length b = 0 then 0
-  else U8.v (S.last b) + pow2 8 * be_to_n (S.slice b 0 (S.length b - 1))
+let rec be_to_n b
+  : Tot nat (decreases (S.length b))
+  = if S.length b = 0 then 0
+    else U8.v (S.last b) + pow2 8 * be_to_n (S.slice b 0 (S.length b - 1))
 
 let reveal_le_to_n _ = ()
 

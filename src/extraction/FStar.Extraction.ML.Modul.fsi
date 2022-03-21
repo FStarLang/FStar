@@ -16,7 +16,8 @@
 *)
 #light "off"
 module FStar.Extraction.ML.Modul
-open FStar.All
+open FStar.Pervasives
+open FStar.Compiler.Effect
 open FStar.Syntax.Syntax
 open FStar.Extraction.ML.Syntax
 open FStar.Extraction.ML.UEnv

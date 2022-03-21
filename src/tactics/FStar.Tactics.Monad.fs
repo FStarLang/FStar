@@ -2,7 +2,10 @@
 module FStar.Tactics.Monad
 
 open FStar
-open FStar.All
+open FStar.Compiler
+open FStar.Pervasives
+open FStar.Compiler.Effect
+open FStar.Compiler.List
 open FStar.Syntax.Syntax
 open FStar.TypeChecker.Common
 open FStar.TypeChecker.Env
@@ -12,8 +15,9 @@ open FStar.Tactics.Printing
 open FStar.Tactics.Common
 
 module O       = FStar.Options
-module BU      = FStar.Util
+module BU      = FStar.Compiler.Util
 module Err     = FStar.Errors
+module Range   = FStar.Compiler.Range
 module S       = FStar.Syntax.Syntax
 module U       = FStar.Syntax.Util
 module UF      = FStar.Syntax.Unionfind
@@ -39,8 +43,8 @@ let run_safe t ps =
     if Options.tactics_failhard ()
     then run t ps
     else try run t ps
-    with | Errors.Err (_, msg)
-         | Errors.Error (_, msg, _) -> Failed (TacticFailure msg, ps)
+    with | Errors.Err (_, msg, _)
+         | Errors.Error (_, msg, _, _) -> Failed (TacticFailure msg, ps)
          | e -> Failed (e, ps)
 
 let ret (x:'a) : tac<'a> =
@@ -77,37 +81,37 @@ let fail (msg:string) =
         Failed (TacticFailure msg, ps)
     )
 
-let catch (t : tac<'a>) : tac<BU.either<exn,'a>> =
+let catch (t : tac<'a>) : tac<either<exn,'a>> =
     mk_tac (fun ps ->
             let tx = UF.new_transaction () in
             match run t ps with
             | Success (a, q) ->
                 UF.commit tx;
-                Success (BU.Inr a, q)
+                Success (Inr a, q)
             | Failed (m, q) ->
                 UF.rollback tx;
                 let ps = { ps with freshness = q.freshness } in //propagate the freshness even on failures
-                Success (BU.Inl m, ps)
+                Success (Inl m, ps)
            )
 
-let recover (t : tac<'a>) : tac<BU.either<exn,'a>> =
+let recover (t : tac<'a>) : tac<either<exn,'a>> =
     mk_tac (fun ps ->
             match run t ps with
-            | Success (a, q) -> Success (BU.Inr a, q)
-            | Failed (m, q)  -> Success (BU.Inl m, q)
+            | Success (a, q) -> Success (Inr a, q)
+            | Failed (m, q)  -> Success (Inl m, q)
            )
 
 let trytac (t : tac<'a>) : tac<option<'a>> =
     bind (catch t) (fun r ->
     match r with
-    | BU.Inr v -> ret (Some v)
-    | BU.Inl _ -> ret None)
+    | Inr v -> ret (Some v)
+    | Inl _ -> ret None)
 
 let trytac_exn (t : tac<'a>) : tac<option<'a>> =
     mk_tac (fun ps ->
     try run (trytac t) ps
-    with | Errors.Err (_, msg)
-         | Errors.Error (_, msg, _) ->
+    with | Errors.Err (_, msg, _)
+         | Errors.Error (_, msg, _, _) ->
            log ps (fun () -> BU.print1 "trytac_exn error: (%s)" msg);
            Success (None, ps))
 
@@ -219,33 +223,34 @@ let add_implicits (i:implicits) : tac<unit> =
     bind get (fun ps ->
     set ({ps with all_implicits=i@ps.all_implicits}))
 
-let new_uvar (reason:string) (env:env) (typ:typ) : tac<(term * ctx_uvar)> =
-    // TODO: typ.pos should really never be a FStar.Range.range ... can it?
+let new_uvar (reason:string) (env:env) (typ:typ) (rng:Range.range) : tac<(term * ctx_uvar)> =
     let u, ctx_uvar, g_u =
-        Env.new_implicit_var_aux reason typ.pos env typ Allow_untyped None
+        Env.new_implicit_var_aux reason rng env typ Allow_untyped None
     in
     bind (add_implicits g_u.implicits) (fun _ ->
     ret (u, fst (List.hd ctx_uvar)))
 
-let mk_irrelevant_goal (reason:string) (env:env) (phi:typ) opts label : tac<goal> =
+let mk_irrelevant_goal (reason:string) (env:env) (phi:typ) (rng:Range.range) opts label : tac<goal> =
     let typ = U.mk_squash (env.universe_of env phi) phi in
-    bind (new_uvar reason env typ) (fun (_, ctx_uvar) ->
+    bind (new_uvar reason env typ rng) (fun (_, ctx_uvar) ->
     let goal = mk_goal env ctx_uvar opts false label in
     ret goal)
 
 let add_irrelevant_goal' (reason:string) (env:Env.env)
-                         (phi:term) (opts:FStar.Options.optionstate)
+                         (phi:term) (rng:Range.range)
+                         (opts:FStar.Options.optionstate)
                          (label:string) : tac<unit> =
-    bind (mk_irrelevant_goal reason env phi opts label) (fun goal ->
+    bind (mk_irrelevant_goal reason env phi rng opts label) (fun goal ->
     add_goals [goal])
 
 let add_irrelevant_goal (base_goal:goal) (reason:string) 
                          (env:Env.env) (phi:term) : tac<unit> =
-    add_irrelevant_goal' reason env phi base_goal.opts base_goal.label
+    add_irrelevant_goal' reason env phi base_goal.goal_ctx_uvar.ctx_uvar_range
+                         base_goal.opts base_goal.label
 
-let goal_of_guard (reason:string) (e:Env.env) (f:term) : tac<goal> =
+let goal_of_guard (reason:string) (e:Env.env) (f:term) (rng:Range.range) : tac<goal> =
   bind getopts (fun opts ->
-  bind (mk_irrelevant_goal reason e f opts "") (fun goal ->
+  bind (mk_irrelevant_goal reason e f rng opts "") (fun goal ->
   let goal = { goal with is_guard = true } in
   ret goal))
 

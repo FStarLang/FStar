@@ -83,7 +83,13 @@ let disjoint_addr (m0 m1:heap u#h) (a:addr)
     | None, None ->
       True
 
-let ref (a:Type u#a) (pcm:pcm a): Type u#0 = addr
+type ref (a:Type u#a) (pcm:pcm a): Type u#0 =
+  | Null
+  | Addr of addr
+
+let null (#a:Type u#a) (#pcm:pcm a) : ref a pcm = Null
+
+let is_null (#a:Type u#a) (#pcm:pcm a) (r:ref a pcm) : (b:bool{b <==> r == null}) = Null? r
 
 let disjoint (m0 m1:heap u#h)
   : prop
@@ -247,8 +253,7 @@ let join_associative2 (m0 m1 m2:heap)
     join_associative m2 m0 m1
 
 ////////////////////////////////////////////////////////////////////////////////
-
-let slprop = a_heap_prop
+let slprop = p:(heap ^-> prop) { heap_prop_is_affine p }
 
 module W = FStar.WellFounded
 
@@ -257,9 +262,15 @@ let interp (p:slprop u#a) (m:heap u#a)
   : Tot prop
   = p m
 
-let as_slprop p = p
+let as_slprop p = FStar.FunctionalExtensionality.on _ p
 
-let emp : slprop u#a = fun h -> True
+let slprop_extensionality (p q:slprop)
+  : Lemma
+    (requires p `equiv` q)
+    (ensures p == q)
+  = FStar.PredicateExtensionality.predicateExtensionality _ p q
+
+let emp : slprop u#a = as_slprop (fun h -> True)
 
 let affine_hprop_intro
    (p:heap u#a -> prop)
@@ -290,57 +301,61 @@ let pts_to_cell_join (#a:Type u#a) (pcm:pcm a) (v1 v2:a) (c:cell u#a)
 
 let pts_to (#a:Type u#a) (#pcm:_) (r:ref a pcm) (v:a) : slprop u#a =
   let hprop  (h: heap) : Tot prop =
-    h `contains_addr` r /\
-    pts_to_cell pcm v (select_addr h r)
+    Addr? r /\
+    h `contains_addr` (Addr?._0 r) /\
+    pts_to_cell pcm v (select_addr h (Addr?._0 r))
   in
-  affine_hprop_intro hprop (fun h0 h1 -> match h0 r, h1 r, (join h0 h1) r with
-  | Some (Ref a0 pcm0 _ v0), Some (Ref a1 pcm1 _ v1), Some (Ref a01 pcm01 _ v01) ->
-     compatible_elim pcm01 v v0 (compatible pcm01 v v01) (fun frame ->
-       pcm01.comm frame v;
-       pcm01.assoc_r v frame v1;
-       pcm01.comm frame v1;
-       let new_frame = (op pcm01 v1 frame) in
-       pcm01.comm v new_frame
-     )
-  | None, Some _, _
-  | Some _, None, _ -> ()
-  | None, None, _ -> ()
+  affine_hprop_intro hprop (fun h0 h1 ->
+  match r with | Null -> () | Addr r -> (
+    match h0 r, h1 r, (join h0 h1) r with
+    | Some (Ref a0 pcm0 _ v0), Some (Ref a1 pcm1 _ v1), Some (Ref a01 pcm01 _ v01) ->
+       compatible_elim pcm01 v v0 (compatible pcm01 v v01) (fun frame ->
+         pcm01.comm frame v;
+         pcm01.assoc_r v frame v1;
+         pcm01.comm frame v1;
+         let new_frame = (op pcm01 v1 frame) in
+         pcm01.comm v new_frame
+       )
+    | None, Some _, _
+    | Some _, None, _ -> ()
+    | None, None, _ -> ()
+    )
   );
-  hprop
+  as_slprop hprop
 
 
 let h_and (p1 p2:slprop u#a) : slprop u#a =
-  fun (h: heap) -> p1 h /\ p2 h
+  as_slprop (fun (h: heap) -> p1 h /\ p2 h)
 
 let h_or (p1 p2:slprop u#a) : slprop u#a =
-  fun (h: heap) -> p1 h \/ p2 h
+  as_slprop (fun (h: heap) -> p1 h \/ p2 h)
 
 let star (p1 p2: slprop u#a) : slprop u#a =
-  fun (h: heap) -> exists (h1 h2 : heap).
+  as_slprop (fun (h: heap) -> exists (h1 h2 : heap).
         h1 `disjoint` h2 /\
         h == join h1 h2 /\
         interp p1 h1 /\
-        interp p2 h2
+        interp p2 h2)
 
 let wand (p1 p2: slprop u#a) : slprop u#a =
-  fun (h: heap) ->  forall (h1: heap).
+  as_slprop (fun (h: heap) ->  forall (h1: heap).
         h `disjoint` h1 /\
         interp p1 h1 ==>
-        interp p2 (join h h1)
+        interp p2 (join h h1))
 
 let h_exists_body (#a:Type u#b) (f: (a -> slprop u#a)) (h:heap) (x:a) : prop =
   interp (f x) h
 
 let h_exists  (#a:Type u#b) (f: (a -> slprop u#a)) : slprop u#a =
-  fun (h: heap) -> exists x. h_exists_body f h x
+  as_slprop (fun (h: heap) -> exists x. h_exists_body f h x)
 
 let h_forall_body (#a:Type u#b) (f: (a -> slprop u#a)) (h:heap) (x:a) : prop =
   interp (f x) h
 
 let h_forall (#a:Type u#b) (f: (a -> slprop u#a)) : slprop u#a =
-  fun (h: heap) -> forall x. h_forall_body f h x
+  as_slprop (fun (h: heap) -> forall x. h_forall_body f h x)
 
-let h_refine p r = h_and p r
+let h_refine p r = h_and p (as_slprop r)
 
  ////////////////////////////////////////////////////////////////////////////////
 //properties of equiv
@@ -373,6 +388,14 @@ let intro_emp h = ()
 
 let h_exists_cong (#a:Type) (p q : a -> slprop) = ()
 
+let sl_implies (p q:slprop) = forall m. interp p m ==> interp q m
+let h_exists_alt (#a:Type) (p q: a -> slprop)
+  : Lemma
+    (requires (forall x. exists y. p x `sl_implies` q y) /\
+              (forall x. exists y. q x `sl_implies` p y))
+    (ensures equiv (h_exists p) (h_exists q))
+  = ()
+
 let intro_h_exists #a x p h = ()
 
 let elim_h_exists #a p h = ()
@@ -386,8 +409,9 @@ let interp_depends_only_on (hp:slprop u#a) = emp_unit hp
 let intro_pts_to (#a:_) (#pcm:pcm a) (x:ref a pcm) (v:a) (m:heap)
   : Lemma
     (requires
-       m `contains_addr` x /\
-       (let Ref a' pcm' _ v' = select_addr m x in
+       Addr? x /\
+       m `contains_addr` (Addr?._0 x) /\
+       (let Ref a' pcm' _ v' = select_addr m (Addr?._0 x) in
         a == a' /\
         pcm == pcm' /\
         compatible pcm v v'))
@@ -395,7 +419,7 @@ let intro_pts_to (#a:_) (#pcm:pcm a) (x:ref a pcm) (v:a) (m:heap)
        interp (pts_to x v) m)
   = ()
 
-
+#push-options "--z3rlimit_factor 4"
 let pts_to_compatible_fwd (#a:Type u#a)
                           (#pcm:_)
                           (x:ref a pcm)
@@ -407,8 +431,9 @@ let pts_to_compatible_fwd (#a:Type u#a)
     (ensures
       composable pcm v0 v1 /\
       interp (pts_to x (op pcm v0 v1)) m)
-  = let c = select_addr m x in
-    let Ref _ _ _ v = select_addr m x in
+  = let Addr addr = x in
+    let c = select_addr m addr in
+    let Ref _ _ _ v = select_addr m addr in
     let aux (c0 c1: cell u#a)
       : Lemma
         (requires
@@ -472,8 +497,9 @@ let pts_to_compatible_bk (#a:Type u#a)
       interp (pts_to x (op pcm v0 v1)) m)
     (ensures
       interp (pts_to x v0 `star` pts_to x v1) m)
-  = let c = select_addr m x in
-    let Ref _ _ _ v = select_addr m x in
+  = let Addr addr = x in
+    let c = select_addr m addr in
+    let Ref _ _ _ v = select_addr m addr in
     let v01 = (op pcm v0 v1) in
     assert (pts_to_cell pcm v01 c);
     let Ref _ _ frac v = c in
@@ -508,8 +534,8 @@ let pts_to_compatible_bk (#a:Type u#a)
         };
         assert (disjoint_cells c0 c1);
         assert (c == join_cells c0 c1);
-        let m0 = update_addr empty_heap x c0 in
-        let m1 = update_addr m x c1 in
+        let m0 = update_addr empty_heap addr c0 in
+        let m1 = update_addr m addr c1 in
         assert (disjoint m0 m1) //fire the existential
     in
     ()
@@ -531,11 +557,13 @@ let pts_to_join' (#a:Type u#a) (#pcm:_) (r:ref a pcm) (v1 v2:a) (m:heap)
   : Lemma (requires (interp (pts_to r v1) m /\ interp (pts_to r v2) m))
           (ensures (exists z. compatible pcm v1 z /\ compatible pcm v2 z /\
                          interp (pts_to r z) m))
-  = let Ref a' pcm' _ v' = (select_addr m r) in
+  = let Ref a' pcm' _ v' = (select_addr m (Addr?._0 r)) in
     compatible_refl pcm v'
 
 let pts_to_compatible_equiv (#a:Type) (#pcm:_) (x:ref a pcm) (v0:a) (v1:a{composable pcm v0 v1})
   = FStar.Classical.forall_intro (pts_to_compatible x v0 v1)
+
+let pts_to_not_null (#a:Type) (#pcm:_) (x:ref a pcm) (v:a) (m:heap) = ()
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -669,14 +697,14 @@ let weaken_free_above (h:heap) (a b:nat)
 ////////////////////////////////////////////////////////////////////////////////
 let sel #a #pcm (r:ref a pcm) (m:full_hheap (ptr r))
   : a
-  = let Ref _ _ _ v = select_addr m r in
+  = let Ref _ _ _ v = select_addr m (Addr?._0 r) in
     v
 
 let sel_v #a #pcm r v m = sel r m
 
 let sel_lemma (#a:_) (#pcm:_) (r:ref a pcm) (m:full_hheap (ptr r))
   : Lemma (interp (pts_to r (sel r m)) m)
-  = let Ref _ _ _ v = select_addr m r in
+  = let Ref _ _ _ v = select_addr m (Addr?._0 r) in
     assert (sel r m == v);
     compatible_refl pcm v
 
@@ -690,12 +718,13 @@ let witnessed_ref_stability #a #pcm (r:ref a pcm) (fact:a -> prop)
         (ensures
           fact_h h1)
         [SMTPat ()]
-      = assert (interp (ptr r) h0);
+      = let Addr addr = r in
+        assert (interp (ptr r) h0);
         assert (fact (sel r h0));
-        assert (contains_addr h1 r);
-        compatible_refl pcm (select_addr h1 r).v;
-        assert (compatible pcm (select_addr h1 r).v (select_addr h1 r).v);
-        assert (interp (pts_to r (select_addr h1 r).v) h1);
+        assert (contains_addr h1 addr);
+        compatible_refl pcm (select_addr h1 addr).v;
+        assert (compatible pcm (select_addr h1 addr).v (select_addr h1 addr).v);
+        assert (interp (pts_to r (select_addr h1 addr).v) h1);
         assert (interp (ptr r) h1);
         assert (fact (sel r h1))
     in
@@ -750,6 +779,20 @@ let refined_pre_action_as_action (#fp0:slprop) (#a:Type) (#fp1:a -> slprop)
     in
     g
 
+let select_join #a #p (r:ref a p) (x:erased a) (h:full_heap) (hl hr:heap)
+  : Lemma
+    (requires
+      disjoint hl hr /\
+      h == join hl hr /\
+      interp (pts_to r x) h /\
+      interp (pts_to r x) hl /\
+      contains_addr hr (Addr?._0 r))
+    (ensures (
+      let Ref _ _ _ vl = select_addr hl (Addr?._0 r) in
+      let Ref _ _ _ vr = select_addr hr (Addr?._0 r) in
+      sel_v r x h == op p vl vr))
+  = ()
+
 #push-options "--z3rlimit_factor 8 --max_fuel 0 --initial_ifuel 2 --max_ifuel 2"
 let select_refine_pre (#a:_) (#p:_)
                       (r:ref a p)
@@ -780,12 +823,14 @@ let select_refine_pre (#a:_) (#p:_)
                              interp (pts_to r (f v)) hl' /\
                              interp frame hr)
                  [SMTPat()]
-             = if contains_addr hr r
+             = let Addr ad = r in
+               if contains_addr hr ad
                then begin
-                    let Ref _ _ frac_l v_l = select_addr hl r in
-                    let Ref _ _ _ v_r = select_addr hr r in
+                    let Ref _ _ frac_l v_l = select_addr hl ad in
+                    let Ref _ _ _ v_r = select_addr hr ad in
                     assert (composable p v_l v_r);
-                    assert (op p v_l v_r == v);
+                    select_join r x h0 hl hr;
+                    assert (op p v_l v_r == v); //NS: this one seems to be fragile, without the lemma call above
                     assert (compatible p x v_l);
                     let aux (frame_l:a)
                       : Lemma
@@ -810,17 +855,17 @@ let select_refine_pre (#a:_) (#p:_)
                         p.assoc (f v) frame_l v_r;
                         p.comm (f v) frame_l;
                         assert (op p (op p frame_l (f v)) v_r == v);
-                        let hl' = update_addr hl r (Ref a p frac_l (op p frame_l (f v))) in
+                        let hl' = update_addr hl ad (Ref a p frac_l (op p frame_l (f v))) in
                         assert (disjoint hl' hr);
                         assert (h0 == join hl hr);
-                        assert (forall a. a <> r ==> hl a == hl' a);
+                        assert (forall a. a <> ad ==> hl a == hl' a);
                         assert (frac_l =!= Frac.full_perm);
-                        assert (hl' r == Some (Ref a p frac_l (op p frame_l (f v))));
+                        assert (hl' ad == Some (Ref a p frac_l (op p frame_l (f v))));
                         let aux (a:addr)
                           : Lemma (h0 a == (join hl' hr) a)
                             [SMTPat (h0 a)]
                           = if (contains_addr hr a && contains_addr hl a)
-                            then if a <> r
+                            then if a <> ad
                                  then ()
                                  else ()
                             else ()
@@ -850,247 +895,13 @@ let select_refine (#a:_) (#p:_)
             (fun v -> pts_to r (f v))
    = refined_pre_action_as_action (select_refine_pre r x f)
 
-
 let update_addr_full_heap (h:full_heap) (a:addr) (c:cell{c.frac == Frac.full_perm}) : full_heap =
   let h' = update_addr h a c in
   assert (forall x. contains_addr h' x ==> x==a \/ contains_addr h x);
   h'
 
-
-let upd' (#a:_) (#pcm:_) (r:ref a pcm) (v0:FStar.Ghost.erased a) (v1:a {frame_preserving pcm v0 v1 /\ pcm.refine v1})
-  : pre_action (pts_to r v0) unit (fun _ -> pts_to r v1)
-  = fun h ->
-    let cell = Ref a pcm Frac.full_perm v1  in
-    let h' = update_addr h r cell in
-    assert (forall x. contains_addr h' x ==> x==r \/ contains_addr h x);
-    assert (h' `contains_addr` r);
-    assert (pts_to_cell pcm v1 cell);
-    assert (interp (pts_to r v1) h');
-    (| (), h' |)
-
-
-let definedness #a #pcm (v0:a) (v0_val:a) (v1:a) (vf:a)
-  : Lemma (requires
-             compatible pcm v0 v0_val /\
-             composable pcm v0_val vf /\
-             frame_preserving pcm v0 v1)
-          (ensures
-             composable pcm vf v1 /\
-             composable pcm v1 vf)
-  = assert (exists vf'. composable pcm vf' v0 /\ op pcm vf' v0 == v0_val);
-    let aux (vf':a {composable pcm vf' v0 /\ op pcm vf' v0 == v0_val})
-      : Lemma (composable pcm vf v1 /\
-               composable pcm v1 vf)
-              [SMTPat(op pcm vf' v0)]
-        = assert (composable pcm (op pcm vf' v0) vf);
-          pcm.comm vf' v0;
-          assert (composable pcm (op pcm v0 vf') vf);
-          pcm.assoc_r v0 vf' vf;
-          assert (composable pcm v0 (op pcm vf' vf));
-          pcm.comm vf vf';
-          assert (composable pcm v0 (op pcm vf vf'));
-          assert (composable pcm (op pcm vf vf') v1);
-          pcm.comm (op pcm vf vf') v1;
-          pcm.assoc v1 vf vf';
-          assert (composable pcm (op pcm v1 vf) vf')
-    in
-    ()
-
-let composable_compatible #a pcm (x y z:a)
-  : Lemma (requires compatible pcm x y /\
-                    composable pcm y z)
-          (ensures composable pcm x z /\
-                   composable pcm z x)
-  = let aux (f:a{composable pcm f x /\ op pcm f x == y})
-      : Lemma (composable pcm x z /\
-               composable pcm z x)
-              [SMTPat (op pcm f x)]
-      = assert (composable pcm (op pcm f x) z);
-        pcm.assoc_r f x z;
-        assert (composable pcm f (op pcm x z));
-        pcm.comm x z
-    in
-    let s : squash (exists f. composable pcm f x /\ op pcm f x == y) = () in
-    ()
-
-let heap_evolves_by_frame_preserving_update #a #pcm (r:ref a pcm)
-                                            (v0:Ghost.erased a)
-                                            (v1:a {frame_preserving pcm v0 v1 /\ pcm.refine v1})
-                                            (h0:full_hheap (pts_to r v0))
-   : Lemma (let h1 = update_addr_full_heap h0 r (Ref a pcm Frac.full_perm v1) in
-            heap_evolves h0 h1)
-  = let v = sel r h0 in
-    PP.frame_preserving_is_preorder_respecting pcm v0 v1;
-    assert (PP.preorder_of_pcm pcm v v1)
-
-#push-options "--z3rlimit_factor 4 --max_fuel 1 --initial_ifuel 1 --max_ifuel 2"
-#restart-solver
-let upd_lemma'_1 (#a:_) #pcm (r:ref a pcm)
-                 (v0:Ghost.erased a) (v1:a {frame_preserving pcm v0 v1 /\ pcm.refine v1})
-                 (h:full_hheap (pts_to r v0)) (frame:slprop)
-                 (h0 hf:heap)
-  : Lemma
-    (requires
-      interp (pts_to r v0 `star` frame) h /\
-      disjoint h0 hf /\
-      h == join h0 hf /\
-      interp (pts_to r v0) h0 /\
-      interp frame hf)
-    (ensures (
-      let (| _, h' |) = upd' r v0 v1 h in
-      let cell0 = select_addr h0 r in
-      let h0' = update_addr h0 r (Ref a pcm cell0.frac v1) in
-      disjoint h0' hf /\
-      interp (pts_to r v1) h0' /\
-      interp frame hf /\
-      h' == join h0' hf /\
-      heap_evolves h h' /\
-      (forall (hp:hprop frame). hp h == hp h')))
-  = let (| _, h'|) = upd' r v0 v1 h in
-    let cell0 = select_addr h0 r in
-    let cell1 = (Ref a pcm cell0.frac v1) in
-    let h0' = update_addr h0 r cell1 in
-    assert (interp (pts_to r v1) h0');
-    assert (interp frame hf);
-    let aux (a:addr)
-      : Lemma (disjoint_addr h0' hf a )
-              [SMTPat (disjoint_addr h0' hf a)]
-      = if a <> r then ()
-        else match h0 a, h0' a, hf a with
-             | Some (Ref a0 p0 f0 v0_val),
-               Some (Ref a0' p0' f0' v0'),
-               Some (Ref af pf ff vf) ->
-                  assert (a0' == af);
-                  assert (p0' == pf);
-                  assert (v0' == v1);
-                  assert (f0 == f0');
-                  assert (Frac.sum_perm f0 ff `Frac.lesser_equal_perm` Frac.full_perm);
-                  assert (compatible pcm v0 v0_val);
-
-                  compatible_refl pcm vf;
-                  assert (pts_to_cell pcm vf (Some?.v (hf a)));
-                  assert (interp (pts_to r vf) hf);
-
-                  compatible_refl pcm v0_val;
-                  assert (pts_to_cell pcm v0_val (Some?.v (h0 a)));
-                  assert (interp (pts_to r v0_val) h0);
-                  assert (interp (pts_to r v0_val `star` pts_to r vf) h);
-                  pts_to_compatible r v0_val vf h;
-                  assert (composable pcm v0_val vf);
-
-                  assert (interp (pts_to r (op pcm v0_val vf)) h);
-                  pcm.comm v0_val vf;
-                  definedness #_ #pcm v0 v0_val v1 vf;
-                  assert (composable pcm v1 vf);
-                  assert (Frac.sum_perm f0' ff `Frac.lesser_equal_perm` Frac.full_perm);
-                  assert (pcm.refine v1);
-                  assert (exists f0. composable pcm v0 f0 /\ op pcm f0 v0 == v0_val);
-                  assert (exists f0. composable pcm v0 f0 /\ composable pcm (op pcm f0 v0) vf);
-                  let aux f0
-                    : Lemma
-                      (requires
-                        composable pcm v0 f0 /\
-                        composable pcm (op pcm f0 v0) vf)
-                      (ensures
-                        composable pcm vf v0)
-                    [SMTPat (composable pcm v0 f0)]
-                    = pcm.comm v0 f0;
-                      pcm.assoc_r f0 v0 vf;
-                      pcm.comm vf v0
-                  in
-                  assert (composable pcm vf v0);
-                  assert (op pcm vf v1 == v1);
-                  pcm.comm vf v1;
-                  assert (Frac.sum_perm f0' ff == Frac.full_perm ==> pcm.refine (op pcm v1 vf))
-
-             | _ -> ()
-    in
-    assert (disjoint h0' hf);
-    let aux (a:addr)
-         : Lemma (h' a == (join h0' hf) a)
-                 [SMTPat ()]
-         = if a <> r
-           then ()
-           else begin
-             assert (h0' a == Some cell1);
-             match h0 a, hf a with
-             | _, None -> ()
-             | Some (Ref a0 p0 f0 v0_val),
-               Some (Ref af pf ff vf) ->
-               let c0 = Some?.v (h0 a) in
-               let cf = Some?.v (hf a) in
-               assert (a0 == af);
-               assert (p0 == pf);
-               assert (compatible pcm v0 v0_val);
-               assert (disjoint_cells c0 cf);
-               assert (composable pcm v0_val vf);
-               composable_compatible pcm v0 v0_val vf;
-               assert (composable pcm v0 vf);
-               assert (disjoint_cells cell1 cf);
-               assert (composable pcm v1 vf);
-               assert (composable pcm vf v0);
-               assert (op pcm vf v1 == v1);
-               pcm.comm vf v1
-           end
-    in
-    assert (mem_equiv h' (join h0' hf));
-    heap_evolves_by_frame_preserving_update r v0 v1 h;
-    let aux (hp:hprop frame)
-         : Lemma (ensures (hp h == hp h'))
-                 [SMTPat ()]
-         = FStar.PropositionalExtensionality.apply (hp h) (hp h')
-    in
-    assert (forall (hp:hprop frame). hp h == hp h')
-
-let upd_lemma' (#a:_) #pcm (r:ref a pcm)
-               (v0:Ghost.erased a) (v1:a {frame_preserving pcm v0 v1 /\ pcm.refine v1})
-               (h:full_hheap (pts_to r v0)) (frame:slprop)
-  : Lemma
-    (requires
-      interp (pts_to r v0 `star` frame) h)
-    (ensures (
-      (let (| x, h1 |) = upd' r v0 v1 h in
-       interp (pts_to r v1 `star` frame) h1 /\
-       heap_evolves h h1 /\
-       (forall (hp:hprop frame). hp h == hp h1))))
-  = let aux (h0 hf:heap)
-     : Lemma
-       (requires
-         interp (pts_to r v0 `star` frame) h /\
-         disjoint h0 hf /\
-         h == join h0 hf /\
-         interp (pts_to r v0) h0 /\
-         interp frame hf)
-       (ensures (
-         let (| _, h' |) = upd' r v0 v1 h in
-         let cell0 = select_addr h0 r in
-         let h0' = update_addr h0 r (Ref a pcm cell0.frac v1) in
-         disjoint h0' hf /\
-         interp (pts_to r v1) h0' /\
-         interp frame hf /\
-         h' == join h0' hf /\
-         heap_evolves h h' /\
-         (forall (hp:hprop frame). hp h == hp h')))
-       [SMTPat (disjoint h0 hf)]
-     = upd_lemma'_1 r v0 v1 h frame h0 hf
-    in
-    ()
-#pop-options
-
-
-let upd_action (#a:_) (#pcm:_) (r:ref a pcm)
-               (v0:FStar.Ghost.erased a) (v1:a {frame_preserving pcm v0 v1 /\ pcm.refine v1})
-  : action (pts_to r v0) unit (fun _ -> pts_to r v1)
-  = let g : refined_pre_action (pts_to r v0) unit (fun _ -> pts_to r v1)
-      = fun m ->
-          let res = upd' r v0 v1 m in
-          FStar.Classical.forall_intro (FStar.Classical.move_requires (upd_lemma' r v0 v1 m));
-          res
-    in
-    refined_pre_action_as_action g
-
 let partial_pre_action (fp:slprop u#a) (a:Type u#b) (fp':a -> slprop u#a) =
-  hheap fp -> (x:a & hheap (fp' x))
+  full_hheap fp -> (x:a & full_hheap (fp' x))
 
 let upd_gen #a (#p:pcm a)
                (r:ref a p)
@@ -1100,25 +911,19 @@ let upd_gen #a (#p:pcm a)
                        unit
                        (fun _ -> pts_to r v)
   = fun h ->
-     let Ref _ _ frac old_v = select_addr h r in
+     let Ref a p frac old_v = select_addr h (Addr?._0 r) in
      let new_v = f old_v in
      let cell = Ref a p frac new_v in
-     let h' = update_addr h r cell in
+     let h' = update_addr_full_heap h (Addr?._0 r) cell in
      (| (), h' |)
 
 let upd_gen_updates_only_r #a (#p:pcm a) (r:ref a p)
                            (x v:Ghost.erased a)
                            (f: frame_preserving_upd p x v)
-                           (h0:hheap (pts_to r x))
+                           (h0:full_hheap (pts_to r x))
   : Lemma (let (| _, h1 |) = upd_gen r x v f h0 in
-           forall s. s <> r ==> h0 s == h1 s)
+           forall s. s <> (Addr?._0 r) ==> h0 s == h1 s)
   = ()
-
-let frame_preserving_is_preorder_respecting_pcm_t #a (p:pcm a) (x y:a)
-  : Lemma (requires frame_preserving p x y)
-          (ensures (PP.preorder_of_pcm p x y))
-  = PP.frame_preserving_is_preorder_respecting p x y;
-    compatible_refl p x
 
 let upd_gen_full_evolution #a (#p:pcm a)
       (r:ref a p)
@@ -1132,22 +937,20 @@ let upd_gen_full_evolution #a (#p:pcm a)
        heap_evolves h h1))
   = let old_v = sel_action' r x h in
     let new_v = f old_v in
-    assert (frame_preserving p old_v new_v);
-    frame_preserving_is_preorder_respecting_pcm_t p old_v new_v;
     assert (PP.preorder_of_pcm p old_v new_v);
     let (| _, h1 |) = upd_gen r x y f h in
-    assert (forall a. a<>r ==> h1 a == h a);
-    assert (forall (x:addr). contains_addr h1 x ==> x==r \/ contains_addr h x);
+    assert (forall a. a<>(Addr?._0 r) ==> h1 a == h a);
+    assert (forall (x:addr). contains_addr h1 x ==> x==(Addr?._0 r) \/ contains_addr h x);
     assert (full_heap_pred h1);
     assert (heap_evolves h h1)
 
-#push-options "--z3rlimit_factor 4"
+#push-options "--z3rlimit_factor 8"
 
-let upd_gen_frame_preserving #a (#p:pcm a)
+let upd_gen_frame_preserving (#a:Type u#a) (#p:pcm a)
       (r:ref a p)
       (x y:Ghost.erased a)
       (f:frame_preserving_upd p x y)
-      (h:hheap (pts_to r x))
+      (h:full_hheap (pts_to r x))
       (frame:slprop)
  : Lemma
    (requires interp (pts_to r x `star` frame) h)
@@ -1155,11 +958,12 @@ let upd_gen_frame_preserving #a (#p:pcm a)
      (let (| b, h1 |) = upd_gen r x y f h in
       interp ((pts_to r y) `star` frame) h1 /\
       (forall (hp:hprop frame). hp h == hp h1)))
- = let Ref _ _ frac old_v = select_addr h r in
+ = let Ref a p frac old_v = select_addr h (Addr?._0 r) in
    let old_v : a = old_v in
    let (| _, h1 |) = upd_gen r x y f h in
    let new_v = f old_v in
-   assert (forall a. a<>r ==> h1 a == h a);
+   assert (forall a. a<>(Addr?._0 r) ==> h1 a == h a);
+   assert (h1 (Addr?._0 r) == Some (Ref a p frac new_v));
    let aux (hl hr:heap)
        : Lemma
          (requires
@@ -1167,39 +971,52 @@ let upd_gen_frame_preserving #a (#p:pcm a)
            h == join hl hr /\
            interp (pts_to r x) hl /\
            interp frame hr)
-         (ensures (
-           let (| _, hl' |) = upd_gen r x y f hl in
+         (ensures
+           exists hl'.
            disjoint hl' hr /\
-           h1 == join hl' hr
-           ))
+           h1 == join hl' hr /\
+           interp (pts_to r y) hl')
          [SMTPat (disjoint hl hr)]
-       = assert (contains_addr hl r);
-         let Ref _ _ _ old_v_l = select_addr hl r in
-         let old_v_l : a = old_v_l in
-         let (| _, hl' |) = upd_gen r x y f hl in
-         upd_gen_updates_only_r r x y f hl;
-         assert (forall s. s<>r ==> hl s == hl' s);
-         let Ref _ _ _ new_v_l = select_addr hl' r in
-         let new_v_l : a = new_v_l in
-         if contains_addr hr r
-         then let Ref _ _ _ old_v_r = select_addr hr r in
-              let old_v_r : a = old_v_r in
-              assert (composable p old_v_l old_v_r);
-              assert (op p old_v_l old_v_r == old_v); //old_v_l * old_v_r = old_v
-              assert (new_v_l == f old_v_l);
-              assert (composable p new_v_l old_v_r);
-              assert (op p new_v_l old_v_r == new_v);
-              assert (disjoint hl' hr);
-              mem_equiv_eq h1 (join hl' hr)
-         else begin
-           assert (old_v_l == old_v);
-           assert (new_v == new_v_l);
-           assert (disjoint hl hr);
+       = let r_addr = Addr?._0 r in
+         assert (contains_addr hl r_addr);
+         let Ref a_l p_l frac_l old_v_l = select_addr hl r_addr in
+         if contains_addr hr r_addr then
+           let Ref a_r p_r frac_r old_v_r = select_addr hr r_addr in
+           assert (a_l == a_r /\ a_r == a /\
+                   p_l == p_r /\ p_r == p /\
+                   Frac.sum_perm frac_l frac_r `Frac.lesser_equal_perm` Frac.full_perm /\
+                   Frac.sum_perm frac_l frac_r == frac /\
+                   composable p old_v_l old_v_r /\
+                   op p old_v_l old_v_r == old_v);
+
+           assert (compatible p x old_v_l);
+           let frame = FStar.IndefiniteDescription.indefinite_description_ghost
+             a (fun frame -> composable p frame x /\ op p frame x == old_v_l) in
+           assert (composable p x frame);
+           assert (op p frame x == old_v_l);
+           p.comm frame x;
+           assert (op p (op p x frame) old_v_r == old_v);
+           p.assoc_r x frame old_v_r;
+           assert (op p x (op p frame old_v_r) == old_v);
+           assert (op p y (op p frame old_v_r) == new_v);
+           p.assoc y frame old_v_r;
+           assert (op p (op p y frame) old_v_r == new_v);
+           let hl' = update_addr hl r_addr (Ref a_l p_l frac_l (op p y frame)) in
            assert (disjoint hl' hr);
-           assert (h1 r == hl' r);
-           mem_equiv_eq h1 (join hl' hr);
+           assert (h1 r_addr == (join hl' hr) r_addr);
+           assert (mem_equiv h1 (join hl' hr));
            assert (h1 == join hl' hr);
-           ()
+           p.comm frame y;
+           assert (compatible p y (op p y frame));
+           assert (interp (pts_to r y) hl')
+         else begin
+           assert (a_l == a /\ p_l == p /\ frac_l == frac /\ old_v_l == old_v);
+           let hl' = update_addr hl r_addr (Ref a_l p_l frac_l new_v) in
+           assert (disjoint hl' hr);
+           assert (h1 r_addr == (join hl' hr) r_addr);
+           assert (mem_equiv h1 (join hl' hr));
+           assert (h1 == join hl' hr);
+           assert (interp (pts_to r y) hl')
          end
      in
      let aux (hp:hprop frame)
@@ -1208,6 +1025,7 @@ let upd_gen_frame_preserving #a (#p:pcm a)
        = FStar.PropositionalExtensionality.apply (hp h) (hp h1)
      in
      ()
+ 
 
 let upd_gen_action #a (#p:pcm a) (r:ref a p) (x y:Ghost.erased a) (f:frame_preserving_upd p x y)
   : action (pts_to r x)
@@ -1218,19 +1036,34 @@ let upd_gen_action #a (#p:pcm a) (r:ref a p) (x y:Ghost.erased a) (f:frame_prese
                     unit
                     (fun _ -> pts_to r y)
      = fun h ->
-         let (|u, h1|) = upd_gen r x y f h in
+         let (|u, h1|) = upd_gen #a #p r x y f h in
          FStar.Classical.forall_intro (FStar.Classical.move_requires (upd_gen_frame_preserving r x y f h));
-         upd_gen_full_evolution #a r x y f h;
+         upd_gen_full_evolution r x y f h;
+         let h1 : full_hheap (pts_to r y) = h1 in
+         assert (forall x. contains_addr h1 x ==> contains_addr h x);
+         assert (forall ctr. h `free_above_addr` ctr ==> h1 `free_above_addr` ctr);
          (| (), h1 |)
     in
     refined_pre_action_as_action refined
 
+let upd_action (#a:_) (#pcm:_) (r:ref a pcm)
+               (v0:FStar.Ghost.erased a) (v1:a {frame_preserving pcm v0 v1 /\ pcm.refine v1})
+  : action (pts_to r v0) unit (fun _ -> pts_to r v1)
+  = upd_gen_action r v0 (Ghost.hide v1) (frame_preserving_val_to_fp_upd pcm  v0 v1)
+  
 ////////////////////////////////////////////////////////////////////////////////
 
 let free_action (#a:_) (#pcm:_) (r:ref a pcm) (v0:FStar.Ghost.erased a{exclusive pcm v0 /\ pcm.refine pcm.FStar.PCM.p.one})
   : action (pts_to r v0) unit (fun _ -> pts_to r pcm.FStar.PCM.p.one)
-  = FStar.PCM.exclusive_is_frame_preserving pcm v0;
-    upd_action r v0 pcm.FStar.PCM.p.one
+  = let one = pcm.FStar.PCM.p.one in
+    compatible_refl pcm one;
+    assert (compatible pcm one one);
+    assert (forall (frame:a{composable pcm v0 frame}). frame == one);
+    pcm.is_unit one;
+    assert (forall (frame:a{composable pcm v0 frame}). composable pcm one frame);
+    let f : frame_preserving_upd pcm v0 one =
+      fun v -> one in
+    upd_gen_action r v0 one f
 
 ////////////////////////////////////////////////////////////////////////////////
 let split_action #a #pcm r v0 v1
@@ -1260,10 +1093,10 @@ let gather_action #a #pcm r v0 v1
 ////////////////////////////////////////////////////////////////////////////////
 #push-options "--z3rlimit 20"
 let extend #a #pcm x addr h =
-    let r : ref a pcm = addr in
-    let h' = update_addr_full_heap h r (Ref a pcm Frac.full_perm x) in
+    let r : ref a pcm = Addr addr in
+    let h' = update_addr_full_heap h addr (Ref a pcm Frac.full_perm x) in
     assert (h' `free_above_addr` (addr + 1));
-    assert (h' `contains_addr` r);
+    assert (h' `contains_addr` addr);
     assert (interp (pts_to r x) h');
     let extend_aux (frame:slprop) (h0 hf:heap)
       : Lemma
@@ -1273,7 +1106,7 @@ let extend #a #pcm x addr h =
           interp emp h0 /\
           interp frame hf)
        (ensures (
-          let h0' = update_addr h0 r (Ref a pcm Frac.full_perm x) in
+          let h0' = update_addr h0 addr (Ref a pcm Frac.full_perm x) in
           disjoint h0' hf /\
           interp (pts_to r x) h0' /\
           h' == join h0' hf /\
@@ -1283,7 +1116,7 @@ let extend #a #pcm x addr h =
          ))
        [SMTPat (interp emp h0);
         SMTPat (interp frame hf)]
-      = let h0' = update_addr h0 r (Ref a pcm Frac.full_perm x) in
+      = let h0' = update_addr h0 addr (Ref a pcm Frac.full_perm x) in
         // assert (disjoint h0' hf);
         // assert (interp (pts_to r x) h0');
         assert (mem_equiv h' (join h0' hf));
@@ -1300,7 +1133,13 @@ let extend #a #pcm x addr h =
      (| r, h' |)
 #pop-options
 
+let hprop_sub (p q:slprop) (h0 h1:heap)
+  : Lemma (requires (forall (hp:hprop (p `star` q)). hp h0 == hp h1))
+          (ensures (forall (hp:hprop q). hp h0 == hp h1))
+  = ()
 
+#push-options "--z3rlimit_factor 4 --max_fuel 1 --max_ifuel 1"
+#restart-solver
 let frame (#a:Type)
           (#pre:slprop)
           (#post:a -> slprop)
@@ -1318,10 +1157,21 @@ let frame (#a:Type)
                 : Lemma (requires
                             interp ((pre `star` frame) `star` frame') h0)
                         (ensures
-                            interp ((post x `star` frame) `star` frame') h1)
-                        [SMTPat ()]
+                            interp ((post x `star` frame) `star` frame') h1 /\
+                            (forall (hp:hprop frame'). hp h0 == hp h1))
                 = star_associative pre frame frame';
-                  star_associative (post x) frame frame'
+                  star_associative (post x) frame frame';
+                  hprop_sub frame frame' h0 h1
+              in
+              let aux (frame':slprop)
+                : Lemma
+                  (requires interp ((pre `star` frame) `star` frame') h0)
+                  (ensures  interp ((post x `star` frame) `star` frame') h1 /\
+                            heap_evolves h0 h1 /\
+                            (forall (hp:hprop frame'). hp h0 == hp h1) /\
+                            (forall ctr. h0 `free_above_addr` ctr ==> h1 `free_above_addr` ctr))
+                  [SMTPat ((pre `star` frame) `star` frame')]
+                 = aux frame'
               in
               assert (forall frame'. frame_related_heaps h0 h1 (pre `star` frame) (post x `star` frame) frame' false);
               (| x, h1 |)
@@ -1416,5 +1266,5 @@ let elim_pure (p:prop)
 let pts_to_evolve (#a:Type u#a) (#pcm:_) (r:ref a pcm) (x y : a) (h:heap)
   : Lemma (requires (interp (pts_to r x) h /\ compatible pcm y x))
           (ensures  (interp (pts_to r y) h))
-  = let Ref a' pcm' _ v' = (select_addr h r) in
+  = let Ref a' pcm' _ v' = (select_addr h (Addr?._0 r)) in
     compatible_trans pcm y x v'

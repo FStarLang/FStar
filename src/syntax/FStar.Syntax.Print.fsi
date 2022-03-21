@@ -16,12 +16,12 @@
 #light "off"
 // (c) Microsoft Corporation. All rights reserved
 module FStar.Syntax.Print
-open FStar.ST
-open FStar.All
+open FStar.Compiler.Effect
+open FStar.Compiler.Effect
 open FStar.Syntax.Syntax
 open FStar.Ident
 open FStar.Const
-open FStar.Util
+open FStar.Compiler.Util
 
 module DsEnv = FStar.Syntax.DsEnv
 
@@ -54,6 +54,7 @@ val binders_to_string     : string -> binders -> string
 val binder_to_json        : DsEnv.env -> binder -> json
 val binders_to_json       : DsEnv.env -> binders -> json
 val aqual_to_string       : aqual -> string
+val bqual_to_string       : bqual -> string
 val args_to_string        : args -> string
 val eff_decl_to_string    : bool -> eff_decl -> string
 val sub_eff_to_string     : sub_eff -> string

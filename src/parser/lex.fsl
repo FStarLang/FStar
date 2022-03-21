@@ -21,7 +21,7 @@ module FStar.LexFStar
  * (c) Microsoft Corporation. All rights reserved
  *-----------------------------------------------------------------------*)
 open FSharp.Compatibility.OCaml
-open FStar.Range
+open FStar.Compiler.Range
 open FStar.Parser
 open FStar.Parser.Parse
 open FStar.Parser.AST
@@ -235,8 +235,6 @@ rule token args = parse
      { SPLICE }
  | "`%"
      { BACKTICK_PERC }
- | "quote"
-     { QUOTE }
  | ident
      { Lexhelp.kwd_or_id args (getLexerRange lexbuf) (ulexeme lexbuf) }
  | "`#"
@@ -257,6 +255,8 @@ rule token args = parse
      { PRAGMA_RESET_OPTIONS }
  | "#restart-solver"
      { PRAGMA_RESTART_SOLVER }
+ | "#print-effects-graph"
+     { PRAGMA_PRINT_EFFECTS_GRAPH }
  | "#push-options"
      { PRAGMA_PUSH_OPTIONS }
  | "#pop-options"
@@ -282,12 +282,12 @@ rule token args = parse
      {
        let s = ulexeme lexbuf in INT(s, false)
      }
- 
+
  | range { let s = ulexeme lexbuf in RANGE(s) }
 
  | real
      { REAL (string_trim_both (ulexeme lexbuf) 0 1) }
-     
+
  | ieee64
      { IEEE64 (try float(ulexeme lexbuf) with _ -> fail lexbuf (Errors.Fatal_InvalidFloatingPointNumber, "Invalid floating point number") 0.0) }
 
@@ -323,6 +323,7 @@ rule token args = parse
  | '\'' unicodegraph_short '\'' { CHAR (char (int32 (Lexhelp.unicodegraph_short (trim_both lexbuf 3 1)))) }
  | '\'' unicodegraph_long '\''  { raise_err (Errors.Fatal_InvalidUnicodeInStringLiteral, "This unicode encoding is only valid in string literals") }
  | "<:"             { SUBTYPE }
+ | "$:"             { EQUALTYPE }
  | "<@"             { SUBKIND }
 
  | "(|"             { LENS_PAREN_LEFT }
@@ -354,7 +355,8 @@ rule token args = parse
      }
 
  | "///[@"
- | "[@@"       { LBRACK_AT_AT } 
+ | "[@@@"       { LBRACK_AT_AT_AT }
+ | "[@@"       { LBRACK_AT_AT }
  | "[@"        { LBRACK_AT }
  | "//"  [^'\n''\r']*
      { token args lexbuf  }
@@ -384,9 +386,9 @@ rule token args = parse
  | "?." { QMARK_DOT }
  | "?" { QMARK }
  | ".[" { DOT_LBRACK }
- | ".(|" { DOT_LENS_PAREN_LEFT } 
+ | ".(|" { DOT_LENS_PAREN_LEFT }
  | ".(" { DOT_LPAREN }
- | ".[|" { DOT_LBRACK_BAR } 
+ | ".[|" { DOT_LBRACK_BAR }
  | "{:pattern" { LBRACE_COLON_PATTERN }
  | ":" { COLON }
  | "::" { COLON_COLON }
@@ -423,7 +425,7 @@ rule token args = parse
  | ".()<-"                { OP_MIXFIX_ASSIGNMENT (ulexeme lexbuf) }
  | ".(||)<-"              { OP_MIXFIX_ASSIGNMENT (ulexeme lexbuf) }
  | ".[||]<-"                { OP_MIXFIX_ASSIGNMENT (ulexeme lexbuf) }
- 
+
  | ".[]"                  { OP_MIXFIX_ACCESS (ulexeme lexbuf) }
  | ".()"                  { OP_MIXFIX_ACCESS (ulexeme lexbuf) }
  | ".(||)"                { OP_MIXFIX_ACCESS (ulexeme lexbuf) }

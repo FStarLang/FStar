@@ -1,0 +1,18 @@
+[
+  "\u0003ze£ºÌﬁ—ûO¡@FH\u0001E",
+  [
+    [
+      "Steel.ST.CancellableSpinLock.acquire",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_Steel.ST.CancellableSpinLock.maybe_acquired",
+        "fuel_guarded_inversion_Steel.ST.CancellableSpinLock.cancellable_lock"
+      ],
+      0,
+      "19a42d44e59400bf6c5cd4a02447815e"
+    ]
+  ]
+]

@@ -28,7 +28,7 @@ let rec mk_tenum_branches (ty: T.term) (vty: T.term) (v: nat) (accu: list T.bran
     let v' = v + 1 in
     let env = T.cur_env () in
     let v = T.mk_app (`(mk_u16)) [pack_nat v, T.Q_Explicit] in
-    let v = T.pack (T.Tv_AscribedT v vty None) in
+    let v = T.pack (T.Tv_AscribedT v vty None false) in
     let pat =
       T.Pat_Cons (T.pack_fv n) []
     in
@@ -45,7 +45,7 @@ let rec mk_tenum_branches (ty: T.term) (vty: T.term) (v: nat) (accu: list T.bran
 
 let mk_function (t: T.term) (l: list T.branch) : T.Tac T.term =
   let b = T.fresh_binder t in
-  let body = T.pack (T.Tv_Match (T.pack (T.Tv_Var (T.bv_of_binder b))) l) in
+  let body = T.pack (T.Tv_Match (T.pack (T.Tv_Var (T.bv_of_binder b))) None l) in
   T.pack (T.Tv_Abs b body)
 
 let get_inductive_constructors (t: T.term) : T.Tac (list T.name) =
@@ -117,7 +117,7 @@ let invert_function' (enum_ty val_ty: T.term) (teq: T.term) (f: T.term) : T.Tac 
   match T.inspect f with
   | T.Tv_Abs b body ->
     begin match T.inspect body with
-    | T.Tv_Match t br ->
+    | T.Tv_Match t _ br ->
       if T.term_eq t (T.pack (T.Tv_Var (T.bv_of_binder b)))
       then
         let bx = T.fresh_binder val_ty in

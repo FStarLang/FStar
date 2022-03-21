@@ -7,14 +7,12 @@ open FStar.Syntax.Embeddings
 open FStar.Order
 module Env = FStar.TypeChecker.Env
 open FStar.Reflection.Data
-open FStar.ST
-module O = FStar.Options
-module RD = FStar.Reflection.Data
+open FStar.Compiler.Effect
+module O   = FStar.Options
+module RD  = FStar.Reflection.Data
 module EMB = FStar.Syntax.Embeddings
-module Z = FStar.BigInt
-
-(* Another hack to circumvent module recursion *)
-val e_optionstate_hook : ref<option<EMB.embedding<O.optionstate>>>
+module Z   = FStar.BigInt
+open FStar.VConfig
 
 (* Primitives *)
 val compare_bv            : bv -> bv -> order
@@ -31,7 +29,8 @@ val term_eq               : term -> term -> bool
 val term_to_string        : term -> string
 val comp_to_string        : comp -> string
 val env_open_modules      : Env.env -> list<name>
-val sigelt_opts           : sigelt -> option<term>
+val sigelt_opts           : sigelt -> option<vconfig>
+val embed_vconfig         : vconfig -> term
 
 val sigelt_attrs     : sigelt -> list<attribute>
 val set_sigelt_attrs : list<attribute> -> sigelt -> sigelt
@@ -55,14 +54,20 @@ val pack_comp     : comp_view -> comp
 val inspect_sigelt : sigelt -> sigelt_view
 val pack_sigelt    : sigelt_view -> sigelt
 
+val inspect_lb     : letbinding -> lb_view
+val pack_lb        : lb_view -> letbinding
+
 val inspect_bv     : bv -> bv_view
 val pack_bv        : bv_view -> bv
 
-val inspect_binder : binder -> bv * aqualv
-val pack_binder    : bv -> aqualv -> binder
+val inspect_binder : binder -> bv * (aqualv * list<term>)
+val pack_binder    : bv -> aqualv -> list<term> -> binder
 
 val inspect_aqual  : aqual -> aqualv
 val pack_aqual     : aqualv -> aqual
+
+val subst          : bv -> term -> term -> term
+val close_term     : binder -> term -> term
 
 (* We're only taking these as primitives to break the dependency from *
 FStar.Tactics into FStar.String, which pulls a LOT of modules. *)

@@ -37,17 +37,19 @@ module FStar.Extraction.ML.UEnv
     kinds of concerns this addresses.
  *)
 
-open FStar.ST
-open FStar.All
+open FStar.Pervasives
+open FStar.Compiler.Effect
+open FStar.Compiler.List
 open FStar
-open FStar.Util
+open FStar.Compiler
+open FStar.Compiler.Util
 open FStar.Ident
 open FStar.Extraction.ML.Syntax
 open FStar.Syntax
 open FStar.Syntax.Syntax
 open FStar.TypeChecker
 module U  = FStar.Syntax.Util
-module BU = FStar.Util
+module BU = FStar.Compiler.Util
 module Const = FStar.Parser.Const
 
 (**** Type definitions *)
@@ -91,10 +93,14 @@ type ty_or_exp_b = either<ty_binding, exp_binding>
 
     [Fv]: An F* top-level fv is associated with an ML term binding.
           Type definitions are maintained separately, see [tydef].
+
+    [ErasedFv]: An F* top-level name that was erased. Only to give
+                proper errors.
   *)
 type binding =
   | Bv  of bv * ty_or_exp_b
   | Fv  of fv * exp_binding
+  | ErasedFv of fv
 
 (** A top-level F* type definition, i.e., a type abbreviation,
     corresponds to a [tydef] in ML.
@@ -110,11 +116,13 @@ type tydef = {
   tydef_fv:fv;
   tydef_mlmodule_name:list<mlsymbol>;
   tydef_name:mlsymbol;
+  tydef_meta:FStar.Extraction.ML.Syntax.metadata;
   tydef_def:mltyscheme
 }
 
 (** tydef is abstract:  Some accessors *)
 let tydef_fv (td : tydef) = td.tydef_fv
+let tydef_meta (td : tydef) = td.tydef_meta
 let tydef_def (td : tydef) = td.tydef_def
 let tydef_mlpath (td : tydef) : mlpath = td.tydef_mlmodule_name, td.tydef_name
 
@@ -134,11 +142,13 @@ type uenv = {
   env_tcenv:TypeChecker.Env.env;
   env_bindings:list<binding>;
   env_mlident_map:psmap<mlident>;
+  env_remove_typars:RemoveUnusedParameters.env_t;
   mlpath_of_lid:psmap<mlpath>;
   env_fieldname_map:psmap<mlident>;
   mlpath_of_fieldname:psmap<mlpath>;
   tydefs:list<tydef>;
   type_names:list<(fv*mlpath)>;
+  tydef_declarations:psmap<bool>;
   currentModule: mlpath // needed to properly translate the definitions in the current file
 }
 
@@ -148,6 +158,9 @@ let tcenv_of_uenv (u:uenv) : TypeChecker.Env.env = u.env_tcenv
 let set_tcenv (u:uenv) (t:TypeChecker.Env.env) = { u with env_tcenv=t}
 let current_module_of_uenv (u:uenv) : mlpath = u.currentModule
 let set_current_module (u:uenv) (m:mlpath) : uenv = { u with currentModule = m }
+let with_typars_env (u:uenv) (f:_) =
+  let e, x = f u.env_remove_typars in
+  {u with env_remove_typars=e}, x
 
 (**** Debugging *)
 
@@ -176,22 +189,48 @@ let print_mlpath_map (g:uenv) =
 
 (** Scans the list of bindings for an fv:
     - it's always mapped to an ML expression
+  Takes a range for error reporting.
   *)
-let try_lookup_fv (g:uenv) (fv:fv) : option<exp_binding> =
-    BU.find_map
-      g.env_bindings
+
+// Inr b: success
+// Inl true: was erased
+// Inl false: not found
+let lookup_fv_generic (g:uenv) (fv:fv) : either<bool, exp_binding> =
+  let v =
+    BU.find_map g.env_bindings
       (function
-        | Fv (fv', t) when fv_eq fv fv' -> Some t
-        | _ -> None)
+       | Fv (fv', t) when fv_eq fv fv' -> Some (Inr t)
+       | ErasedFv fv' when fv_eq fv fv' -> Some (Inl true)
+       | _ -> None)
+  in
+  match v with
+  | Some r -> r
+  | None -> Inl false
+
+let try_lookup_fv (r:Range.range) (g:uenv) (fv:fv) : option<exp_binding> =
+  match lookup_fv_generic g fv with
+  | Inr r -> Some r
+  | Inl true ->
+    (* Log an error/warning and return None *)
+    Errors.log_issue r
+      (Errors.Error_CallToErased,
+       BU.format2 "Will not extract reference to variable `%s` since it is noextract; either remove its qualifier \
+                   or add it to this definition. This error can be ignored with `--warn_error -%s`."
+                   (Print.fv_to_string fv)
+                   (string_of_int Errors.call_to_erased_errno));
+    None
+  | Inl false ->
+    None
 
 (** Fatal failure version of try_lookup_fv *)
-let lookup_fv (g:uenv) (fv:fv) : exp_binding =
-    match try_lookup_fv g fv with
-    | None ->
-      failwith (BU.format2 "(%s) free Variable %s not found\n"
-                           (Range.string_of_range fv.fv_name.p)
-                           (Print.lid_to_string fv.fv_name.v))
-    | Some y -> y
+let lookup_fv (r:Range.range) (g:uenv) (fv:fv) : exp_binding =
+  match lookup_fv_generic g fv with
+  | Inr t -> t
+  | Inl b ->
+    failwith (BU.format3 "Internal error: (%s) free variable %s not found during extraction (erased=%s)\n"
+              (Range.string_of_range fv.fv_name.p)
+              (Print.lid_to_string fv.fv_name.v)
+              (string_of_bool b))
 
 (** An F* local variable (bv) can be mapped either to
     a ML type variable or a term variable *)
@@ -213,7 +252,7 @@ let lookup_bv (g:uenv) (bv:bv) : ty_or_exp_b =
 let lookup_term g (t:term) =
     match t.n with
     | Tm_name x -> lookup_bv g x, None
-    | Tm_fvar x -> Inr (lookup_fv g x), x.fv_qual
+    | Tm_fvar x -> Inr (lookup_fv t.pos g x), x.fv_qual
     | _ -> failwith "Impossible: lookup_term for a non-name"
 
 (** Lookup an local variable mapped to a ML type variable *)
@@ -230,6 +269,11 @@ let lookup_tydef (env:uenv) ((module_name, ty_name):mlpath)
         && module_name = tydef.tydef_mlmodule_name
         then Some tydef.tydef_def
         else None)
+
+let has_tydef_declaration (u:uenv) (l:lid) =
+  match BU.psmap_try_find u.tydef_declarations (Ident.string_of_lid l) with
+  | None -> false
+  | Some b -> b
 
 (** Given an F* qualified name, find its ML counterpart *)
 let mlpath_of_lident (g:uenv) (x:lident) : mlpath =
@@ -389,7 +433,7 @@ let mlns_of_lid (x:lident) = List.map string_of_id (ns_of_lid x)
 *)
 let new_mlpath_of_lident (g:uenv) (x : lident) : mlpath * uenv =
   let mlp, g =
-    if Ident.lid_equals x FStar.Parser.Const.failwith_lid
+    if Ident.lid_equals x (FStar.Parser.Const.failwith_lid())
     then ([], string_of_id (ident_of_lid x)), g
     else let name, map = find_uniq g.env_mlident_map (string_of_id (ident_of_lid x)) false in
          let g = { g with env_mlident_map = map } in
@@ -492,6 +536,9 @@ let extend_fv (g:uenv) (x:fv) (t_x:mltyscheme) (add_unit:bool)
         {g with env_bindings=gamma; env_mlident_map=mlident_map}, mlsymbol, exp_binding
     else failwith "freevars found"
 
+let extend_erased_fv (g:uenv) (f:fv) : uenv =
+  { g with env_bindings = ErasedFv f :: g.env_bindings }
+
 (** Extend with a let binding, either local or top-level *)
 let extend_lb (g:uenv) (l:lbname) (t:typ) (t_x:mltyscheme) (add_unit:bool)
     : uenv
@@ -505,17 +552,22 @@ let extend_lb (g:uenv) (l:lbname) (t:typ) (t_x:mltyscheme) (add_unit:bool)
         extend_fv g f t_x add_unit
 
 (** Extend with an abbreviation [fv] for the type scheme [ts] *)
-let extend_tydef (g:uenv) (fv:fv) (ts:mltyscheme) : tydef * mlpath * uenv =
+let extend_tydef (g:uenv) (fv:fv) (ts:mltyscheme) (meta:FStar.Extraction.ML.Syntax.metadata)
+  : tydef * mlpath * uenv =
     let name, g = new_mlpath_of_lident g fv.fv_name.v in
     let tydef = {
         tydef_fv = fv;
         tydef_mlmodule_name=fst name;
         tydef_name = snd name;
+        tydef_meta = meta;
         tydef_def = ts;
     } in
     tydef,
     name,
     {g with tydefs=tydef::g.tydefs; type_names=(fv, name)::g.type_names}
+
+let extend_with_tydef_declaration u l =
+  { u with tydef_declarations = BU.psmap_add u.tydef_declarations (Ident.string_of_lid l) true }
 
 (** Extend with [fv], the identifer for an F* inductive type *)
 let extend_type_name (g:uenv) (fv:fv) : mlpath * uenv =
@@ -600,18 +652,20 @@ let new_uenv (e:TypeChecker.Env.env)
       env_tcenv = e;
       env_bindings =[];
       env_mlident_map=initial_mlident_map ();
+      env_remove_typars=RemoveUnusedParameters.initial_env;
       mlpath_of_lid = BU.psmap_empty();
       env_fieldname_map=initial_mlident_map ();
       mlpath_of_fieldname = BU.psmap_empty();
       tydefs =[];
       type_names=[];
+      tydef_declarations = BU.psmap_empty();
       currentModule = ([], "");
     } in
     (* We handle [failwith] specially, extracting it to OCaml's 'failwith'
-       rather than FStar_All.failwith. Not sure this is necessary *)
+       rather than FStar.Compiler.Effect.failwith. Not sure this is necessary *)
     let a = "'a" in
     let failwith_ty = ([a], MLTY_Fun(MLTY_Named([], (["Prims"], "string")), E_IMPURE, MLTY_Var a)) in
     let g, _, _ =
-        extend_lb env (Inr (lid_as_fv Const.failwith_lid delta_constant None)) tun failwith_ty false
+        extend_lb env (Inr (lid_as_fv (Const.failwith_lid()) delta_constant None)) tun failwith_ty false
     in
     g

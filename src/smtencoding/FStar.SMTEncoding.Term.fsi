@@ -16,13 +16,13 @@
 #light "off"
 
 module FStar.SMTEncoding.Term
-open FStar.ST
-open FStar.All
+open FStar.Compiler.Effect
+open FStar.Compiler.Effect
 open Prims
-open FStar
+open FStar open FStar.Compiler
 open FStar.Syntax.Syntax
 open FStar.Syntax
-open FStar.Util
+open FStar.Compiler.Util
 
 type sort =
   | Bool_sort
@@ -293,7 +293,6 @@ val mk_ApplyTF:      term -> term -> term
 val mk_ApplyTT:      term -> term -> Range.range -> term
 val mk_String_const: string -> Range.range -> term
 val mk_Precedes:     term -> term -> term -> term -> Range.range -> term
-val mk_LexCons:      term -> term -> term -> Range.range -> term
 val fuel_2: term
 val fuel_100:term
 val n_fuel: int -> term

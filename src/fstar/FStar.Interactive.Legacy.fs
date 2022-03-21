@@ -16,10 +16,12 @@
 #light "off"
 
 module FStar.Interactive.Legacy
-open FStar.ST
-open FStar.All
+open FStar.Pervasives
+open FStar.Compiler.Effect
+open FStar.Compiler.List
 open FStar
-open FStar.Util
+open FStar.Compiler
+open FStar.Compiler.Util
 open FStar.Getopt
 open FStar.Ident
 
@@ -74,12 +76,12 @@ let check_frag (env:TcEnv.env) curmod frag =
         let m, env = tc_one_fragment curmod env frag in
         Some (m, env, FStar.Errors.get_err_count())
     with
-        | FStar.Errors.Error(e, msg, r) when not ((Options.trace_error())) ->
-          FStar.TypeChecker.Err.add_errors env [(e, msg, r)];
+        | FStar.Errors.Error(e, msg, r, ctx) when not ((Options.trace_error())) ->
+          FStar.TypeChecker.Err.add_errors env [(e, msg, r, ctx)];
           None
 
-        | FStar.Errors.Err (e, msg) when not ((Options.trace_error())) ->
-          FStar.TypeChecker.Err.add_errors env [(e, msg, FStar.TypeChecker.Env.get_range env)];
+        | FStar.Errors.Err (e, msg, ctx) when not ((Options.trace_error())) ->
+          FStar.TypeChecker.Err.add_errors env [(e, msg, FStar.TypeChecker.Env.get_range env, ctx)];
           None
 
 let report_fail () =
@@ -402,12 +404,12 @@ let rec go (line_col:(int*int))
       //Q: isn't the output list<ident> always the same as the candidate?
         // About the degree of the match, cpitclaudel says:
         //      Because we're measuring the length of the match and we allow partial
-        //      matches. Say we're matching FS.Li.app against FStar.List.Append. Then
+        //      matches. Say we're matching FS.Li.app against FStar.Compiler.List.Append. Then
         //      the length we want is (length "FStar" + 1 + length "List" + 1 + length
         //      "app"), not (length "FStar" + 1 + length "List" + 1 + length
         //      "append"). This length is used to know how much of the candidate to
         //      highlight in the company-mode popup (we want to display the candidate
-        //      as FStar.List.append.
+        //      as FStar.Compiler.List.append.
       = fun search_term candidate ->
           match search_term, candidate with
           | [], _ -> Some ([], 0)

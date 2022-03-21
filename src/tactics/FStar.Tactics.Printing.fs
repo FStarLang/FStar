@@ -2,16 +2,18 @@
 module FStar.Tactics.Printing
 
 open FStar
-open FStar.Util
-open FStar.All
+open FStar.Compiler
+open FStar.Compiler.Util
+open FStar.Compiler.Effect
+open FStar.Compiler.List
 open FStar.Ident
 open FStar.Syntax.Syntax
 open FStar.TypeChecker.Common
 open FStar.TypeChecker.Env
 open FStar.Tactics.Types
 
-module BU      = FStar.Util
-module Range   = FStar.Range
+module BU      = FStar.Compiler.Util
+module Range   = FStar.Compiler.Range
 module Options = FStar.Options
 module Print   = FStar.Syntax.Print
 module SS      = FStar.Syntax.Subst
@@ -47,10 +49,10 @@ let unshadow (bs : binders) (t : term) : binders * term =
                     | [b] -> b
                     | _ -> failwith "impossible: unshadow subst_binders"
             in
-            let (bv0, q) = b in
+            let (bv0, q) = b.binder_bv, b.binder_qual in
             let nbs = fresh_until (s bv0) (fun s -> not (List.mem s seen)) in
             let bv = sset bv0 nbs in
-            let b = (bv, q) in
+            let b = S.mk_binder_with_attrs bv q b.binder_attrs in
             go (nbs::seen) (subst @ [NT (bv0, S.bv_to_name bv)]) bs (b :: bs') t
             end
     in
