@@ -83,7 +83,7 @@ let disjoint_addr (m0 m1:heap u#h) (a:addr)
     | None, None ->
       True
 
-type ref (a:Type u#a) (pcm:pcm a): Type u#0 =
+type core_ref : Type u#0 =
   | Null
   | Addr of addr
 
