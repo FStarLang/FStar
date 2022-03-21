@@ -68,27 +68,27 @@ function fetch_hacl() {
     export_home EVERCRYPT "$(pwd)/hacl-star/providers"
 }
 
-# By default, kremlin master works against F* stable. Can also be overridden.
-function fetch_kremlin() {
-    if [ ! -d kremlin ]; then
-        git clone https://github.com/FStarLang/kremlin kremlin
+# By default, karamel master works against F* stable. Can also be overridden.
+function fetch_karamel() {
+    if [ ! -d karamel ]; then
+        git clone https://github.com/FStarLang/karamel karamel
     fi
 
-    cd kremlin
+    cd karamel
     git fetch origin
-    local ref=$(jq -c -r '.RepoVersions["kremlin_version"]' "$rootPath/.docker/build/config.json" )
+    local ref=$(jq -c -r '.RepoVersions["karamel_version"]' "$rootPath/.docker/build/config.json" )
     if [[ $ref == "null" ]]; then
-        echo "Unale to find RepoVersions.kremlin_version on $rootPath/.docker/build/config.json"
+        echo "Unale to find RepoVersions.karamel_version on $rootPath/.docker/build/config.json"
         return -1
     fi
 
-    echo Switching to KreMLin $ref
+    echo Switching to KaRaMeL $ref
     git reset --hard $ref
     cd ..
-    export_home KREMLIN "$(pwd)/kremlin"
+    export_home KRML "$(pwd)/karamel"
 }
 
-function make_kremlin() {
+function make_karamel() {
     # Default build target is minimal, unless specified otherwise
     local localTarget
     if [[ $1 == "" ]]; then
@@ -97,10 +97,10 @@ function make_kremlin() {
         localTarget="$1"
     fi
 
-    make -C kremlin -j $threads $localTarget ||
-        (cd kremlin && git clean -fdx && make -j $threads $localTarget)
-    OTHERFLAGS='--admit_smt_queries true' make -C kremlin/kremlib -j $threads
-    export PATH="$(pwd)/kremlin:$PATH"
+    make -C karamel -j $threads $localTarget ||
+        (cd karamel && git clean -fdx && make -j $threads $localTarget)
+    OTHERFLAGS='--admit_smt_queries true' make -C karamel/krmllib -j $threads
+    export PATH="$(pwd)/karamel:$PATH"
 }
 
 # By default, QuackyDucky master works against F* stable. Can also be overridden.
@@ -279,7 +279,7 @@ function refresh_hints() {
 }
 
 function fstar_binary_build () {
-    fetch_kremlin
+    fetch_karamel
     ./.scripts/process_build.sh && echo true >$status_file
 }
 
@@ -300,7 +300,7 @@ function fstar_default_build () {
     fi
 
     # Start fetching while we build F*
-    fetch_kremlin &
+    fetch_karamel &
     fetch_hacl &
     fetch_qd &
     fetch_mitls &
@@ -320,11 +320,11 @@ function fstar_default_build () {
     # propagated to the current shell. Re-do.
     export_home HACL "$(pwd)/hacl-star"
     export_home EVERCRYPT "$(pwd)/hacl-star/providers"
-    export_home KREMLIN "$(pwd)/kremlin"
+    export_home KRML "$(pwd)/karamel"
     export_home QD "$(pwd)/qd"
 
     # Fetch and build subprojects for orange tests
-    make_kremlin &
+    make_karamel &
     make_qd &
     wait
 

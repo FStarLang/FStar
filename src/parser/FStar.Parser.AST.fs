@@ -171,7 +171,7 @@ type qualifier =
   | Unfold_for_unification_and_vcgen       //a definition that will be unfolded by the normalizer, during unification and for SMT queries
   | Inline_for_extraction                  //a definition that will be inlined only during compilation
   | Irreducible                            //a definition that can never be unfolded by the normalizer
-  | NoExtract                              // a definition whose contents won't be extracted (currently, by KreMLin only)
+  | NoExtract                              // a definition whose contents won't be extracted (currently, by KaRaMeL only)
   | Reifiable
   | Reflectable
   //old qualifiers

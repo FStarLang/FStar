@@ -20,9 +20,9 @@ open FStar.Mul
 /// scalar values (see https://erratique.ch/software/uucp/doc/Uucp.html#uminimal) for an excellent
 /// crash course on Unicode.
 
-/// When compiling with KreMLin, string literals are printed as series of bytes,
+/// When compiling with KaRaMeL, string literals are printed as series of bytes,
 /// where non-alphanumeric characters are hex-encoded. For instance, if after reading
-/// the C standard, the user writes ``let x = "🤮"``, then KreMLin will generate
+/// the C standard, the user writes ``let x = "🤮"``, then KaRaMeL will generate
 /// ``const char *x = "\xf0\x9f\xa4\xae"``.
 
 /// String literals as buffers
@@ -84,7 +84,7 @@ unfold let buffer_of_literal_post (s: ascii_string) (h0: HS.mem) (b: IB.ibuffer 
 
 /// Consequently, this function becomes in C a simple cast from ``const char *`` to
 /// ``char *``, since immutable buffers don't (yet) have the ``const`` attribute in
-/// KreMLin. (This is unsavory, and should be fixed later.) This way, a string
+/// KaRaMeL. (This is unsavory, and should be fixed later.) This way, a string
 /// literal can be seen as an immutable buffer and passed around as such.
 /// This function checks at extraction-time that its argument is a literal.
 val buffer_of_literal: (s: ascii_string) ->
@@ -101,7 +101,7 @@ val buffer_of_literal: (s: ascii_string) ->
 
 /// Rather than having to write ``assert_norm`` by hand, this convenient wrapper
 /// relies on the normalizer to discharge all the relevant proof obligations, and
-/// synthesizes the length of the resulting buffer. The pair has no cost: KreMLin
+/// synthesizes the length of the resulting buffer. The pair has no cost: KaRaMeL
 /// guarantees that it will be eliminated.
 unfold
 let buf_len_of_literal (s: string):

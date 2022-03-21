@@ -31,7 +31,7 @@
 
     "RepoVersions" : {
         "hacl_version" : "origin/master",
-        "kremlin_version" : "origin/master",
+        "karamel_version" : "origin/master",
         "qd_version" : "origin/master",
         "mitls_version" : "origin/master"
     }

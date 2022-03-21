@@ -123,7 +123,7 @@ let rec extract_meta x =
       | "Prims.deprecated" -> Some (Deprecated s)
       | _ -> None
       end
-  | { n = Tm_constant (Const_string ("KremlinPrivate", _)) } -> Some Private // This one generated internally
+  | { n = Tm_constant (Const_string ("KrmlPrivate", _)) } -> Some Private // This one generated internally
   // These are only for backwards compatibility, they should be removed at some point.
   | { n = Tm_constant (Const_string ("c_inline", _)) } -> Some CInline
   | { n = Tm_constant (Const_string ("substitute", _)) } -> Some Substitute
@@ -638,10 +638,10 @@ let get_noextract_to (se:sigelt) (backend:option<Options.codegen_t>) : bool =
  * We support two kinds of noextract knobs:
  *   - a noextract qualifier
  *   - a "noextract_to" attribute that takes a string value as argument
- *     the string value is the backend name, e.g. Kremlin, OCaml, ...
+ *     the string value is the backend name, e.g. Krml, OCaml, ...
  *
  * Whether to extract a definition depends on the backend
- *   since sometimes Kremlin needs the stubs even for definitions
+ *   since sometimes Karamel needs the stubs even for definitions
  *   marked as noextract
  *
  * TODO: what are such cases? Even there, can we optimize
@@ -652,18 +652,18 @@ let sigelt_has_noextract (se:sigelt) : bool =
   let has_noextract_qualifier = List.contains S.NoExtract se.sigquals in
   let has_noextract_attribute = get_noextract_to se (Options.codegen ()) in
   match Options.codegen () with
-  | Some Options.Kremlin ->
+  | Some Options.Krml ->
     has_noextract_qualifier && has_noextract_attribute
   | _ ->
     has_noextract_qualifier || has_noextract_attribute
   
-// If this sigelt had [@@ noextract_to "Kremlin"] and we are indeed
-// extracting to Kremlin, then we will still process it: it's the
-// kremlin pipeline which will later drop the body. It checks for the
+// If this sigelt had [@@ noextract_to "Krml"] and we are indeed
+// extracting to Karamel, then we will still process it: it's the
+// karamel pipeline which will later drop the body. It checks for the
 // NoExtract qualifier to decide that, so we add it here.
-let kremlin_fixup_qual (se:sigelt) : sigelt =
- if Options.codegen () = Some Options.Kremlin
-    && get_noextract_to se (Some Options.Kremlin)
+let karamel_fixup_qual (se:sigelt) : sigelt =
+ if Options.codegen () = Some Options.Krml
+    && get_noextract_to se (Some Options.Krml)
     && not (List.contains S.NoExtract se.sigquals)
  then { se with sigquals = S.NoExtract :: se.sigquals }
  else se
@@ -680,7 +680,7 @@ let extract_sigelt_iface (g:uenv) (se:sigelt) : uenv * iface =
       let g = mark_sigelt_erased se g in
       g, empty_iface
     else
-    let se = kremlin_fixup_qual se in
+    let se = karamel_fixup_qual se in
 
     match se.sigel with
     | Sig_bundle _
@@ -929,7 +929,7 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
        let g = mark_sigelt_erased se g in
        g, []
      else
-    let se = kremlin_fixup_qual se in
+    let se = karamel_fixup_qual se in
 
      match se.sigel with
         | Sig_bundle _
@@ -1177,9 +1177,9 @@ let extract' (g:uenv) (m:modul) : uenv * option<mllib> =
             else extract_sig g se)
         g m.declarations in
   let mlm : mlmodule = List.flatten sigs in
-  let is_kremlin = Options.codegen () = Some Options.Kremlin in
+  let is_karamel = Options.codegen () = Some Options.Krml in
   if string_of_lid m.name <> "Prims"
-  && (is_kremlin || not m.is_interface)
+  && (is_karamel || not m.is_interface)
   then begin
     if not (Options.silent()) then (BU.print1 "Extracted module %s\n" (string_of_lid m.name));
     g, Some (MLLib ([name, Some ([], mlm), (MLLib [])]))

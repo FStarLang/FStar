@@ -251,9 +251,9 @@ val lemma_as_ref_inj (#a:Type) (#rel:preorder a) (r:mreference a rel)
 let is_mm (#a:Type) (#rel:preorder a) (r:mreference a rel) :GTot bool =
   Heap.is_mm (as_ref r)
 
-// Warning: all of the type aliases below get special support for KreMLin
+// Warning: all of the type aliases below get special support for KaRaMeL
 // extraction. If you rename or add to this list,
-// src/extraction/FStar.Extraction.Kremlin.fs needs to be updated.
+// src/extraction/FStar.Extraction.Karamel.fs needs to be updated.
 
 //adding (not s.mm) to stackref and ref so as to keep their semantics as is
 let mstackref (a:Type) (rel:preorder a) =

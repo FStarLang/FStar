@@ -26,10 +26,10 @@ open FStar.HyperStack
 open FStar.HyperStack.ST
 module B = FStar.Buffer
 
-// kremlib libraries
+// krmllib libraries
 module C = C
 open C.Loops
-open FStar.Kremlin.Endianness
+open FStar.Krml.Endianness
 
 module U8 = FStar.UInt8
 module U16 = FStar.UInt16

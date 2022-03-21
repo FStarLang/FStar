@@ -20,7 +20,7 @@ module StringPrinter.Base
 module S = FStar.Seq
 module U8 = FStar.UInt8
 
-(* Prims.c_or is not supported by KreMLin, so let's use ours. *)
+(* Prims.c_or is not supported by KaRaMeL, so let's use ours. *)
 type c_or   (p:Type) (q:Type) =
   | Left  : p -> c_or p q
   | Right : q -> c_or p q
@@ -729,7 +729,7 @@ let phi_t_internal
 : Tot Type
 = (unit -> HST.ST (option (t * B.buffer U8.t)) (requires (fun h -> h == h0)) (ensures (fun _ res h' -> phi_post x h0 res h')))
 
-(* FIXME: the following does not extract to KreMLin. This was an attempt to push the CPS-style down to the effectful code as well, but does not work.
+(* FIXME: the following does not extract to KaRaMeL. This was an attempt to push the CPS-style down to the effectful code as well, but does not work.
 
 inline_for_extraction
 let phi

@@ -16,7 +16,7 @@
 (* -------------------------------------------------------------------- *)
 #light "off"
 
-module FStar.Extraction.Kremlin
+module FStar.Extraction.Krml
 type decl
 type program = list<decl>
 type file = string * program

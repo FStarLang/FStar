@@ -530,7 +530,7 @@ let rec doc_of_expr (currentModule : mlsymbol) (outer : level) (e : mlexpr) : do
             combine hardline (List.map (doc_of_branch currentModule) pats)
         ]
     | MLE_TApp (head, ty_args) ->
-        // Type applications are only useful meta-data for backends without inference, for example Kremlin.
+        // Type applications are only useful meta-data for backends without inference, for example Krml.
         // We just skip them here.
         doc_of_expr currentModule outer head
 and  doc_of_binop currentModule p e1 e2 : doc =

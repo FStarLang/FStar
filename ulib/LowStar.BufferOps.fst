@@ -37,7 +37,7 @@ unfold
 let op_Array_Assignment (#a:Type0) (#rrel #rel:B.srel a) = B.upd #a #rrel #rel
 
 (* NOTE: DO NOT mark ( !* ) as inline_for_extraction,
-   because it is specially treated by KreMLin to extract as *p instead
+   because it is specially treated by KaRaMeL to extract as *p instead
    of p[0] *)
 let ( !* ) (#a:Type0) (#rrel #rel:B.srel a) (p:B.mpointer a rrel rel):
   HST.Stack a
@@ -46,7 +46,7 @@ let ( !* ) (#a:Type0) (#rrel #rel:B.srel a) (p:B.mpointer a rrel rel):
   B.index p 0ul
 
 (* NOTE: DO NOT mark ( *= ) as inline_for_extraction,
-   because it is specially treated by KreMLin to extract as *p = v instead
+   because it is specially treated by KaRaMeL to extract as *p = v instead
    of p[0] = v *)
 let ( *= ) (#a:Type0) (#rrel #rel:B.srel a) (p:B.mpointer a rrel rel) (v:a) : HST.Stack unit
   (requires (fun h -> B.live h p /\ rel (B.as_seq h p) (Seq.upd (B.as_seq h p) 0 v)))

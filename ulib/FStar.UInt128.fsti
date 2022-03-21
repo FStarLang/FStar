@@ -26,10 +26,10 @@ let n = 128
 
 val t: (x:Type0{hasEq x})
 
-[@@ noextract_to "Kremlin"]
+[@@ noextract_to "Krml"]
 val v (x:t) : Tot (uint_t n)
 
-[@@ noextract_to "Kremlin"]
+[@@ noextract_to "Krml"]
 val uint_to_t: x:uint_t n -> Pure t
   (requires True)
   (ensures (fun y -> v y = x))

@@ -51,7 +51,7 @@ More details on [executing F\* code via OCaml] on the [F\* wiki].
 Also, code written in a C-like shallowly embedded DSL can be extracted to
 [C](https://arxiv.org/abs/1703.00053)
 or [WASM](https://doi.ieeecomputersociety.org/10.1109/SP.2019.00064)
-by the [KreMLin tool](https://github.com/FStarLang/kremlin),
+by the [KaRaMeL tool](https://github.com/FStarLang/karamel),
 and code written in an ASM-like deeply embedded DSL can be extracted
 to ASM by the [Vale tool](https://github.com/project-everest/vale).
 

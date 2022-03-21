@@ -27,7 +27,7 @@ module LowStar.ConstBuffer
    the weakest (i.e., mutability).
 
    The main type of this module is `const_buffer t`. It is extracted
-   by KreMLin to  `const t*`.
+   by KaRaMeL to  `const t*`.
 *)
 
 module U32 = FStar.UInt32
