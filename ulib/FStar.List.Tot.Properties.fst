@@ -1102,3 +1102,15 @@ let init_last_inj (#a: Type) (l1: list a { Cons? l1 } ) (l2: list a { Cons? l2 }
   (ensures (l1 == l2))
 = append_init_last l1;
   append_init_last l2
+
+(* Properties of for_all *)
+
+#push-options "--fuel 1"
+let rec for_all_append #a (f: a -> Tot bool) (s1 s2: list a): Lemma
+  (ensures for_all f (s1 @ s2) <==> for_all f s1 && for_all f s2)
+=
+  let _ = allow_inversion (list a) in
+  match s1 with
+  | [] -> ()
+  | hd1 :: tl1 -> for_all_append f tl1 s2
+#pop-options
