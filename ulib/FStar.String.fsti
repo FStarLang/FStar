@@ -14,7 +14,7 @@
    limitations under the License.
 *)
 module FStar.String
-
+open FStar.List.Tot
 (* String is a primitive type in F*.
 
    Most of the functions in this interface have a special status in
@@ -95,7 +95,7 @@ val index_of: string -> char -> Tot int
 /// `sub s i len`
 ///     Second argument is a length, not an index.
 ///     Returns a substring of length `len` beginning at `i`
-val sub: s:string -> i:nat -> l:nat{i + l <= length s} -> Tot string
+val sub: s:string -> i:nat -> l:nat{i + l <= length s} -> Tot (r: string {length r = l})
 
 /// `collect f s`: maps `f` over each character of `s`
 ///  from left to right, appending and flattening the result
@@ -118,3 +118,31 @@ val concat_length (s1 s2: string): Lemma
 
 val list_of_concat (s1 s2: string): Lemma
   (ensures list_of_string (s1 ^ s2) == list_of_string s1 @ list_of_string s2)
+
+val index_string_of_list (l:list char) (i : nat{i < List.Tot.length l}) :
+  Lemma (
+    (**) list_of_string_of_list l; // necessary to get equality between the lengths
+    index (string_of_list l) i == List.Tot.index l i)
+
+let index_list_of_string (s:string) (i : nat{i < length s}) :
+  Lemma (List.Tot.index (list_of_string s) i == index s i) =
+  index_string_of_list (list_of_string s) i;
+  string_of_list_of_string s
+
+let concat_injective (s0 s0':string)
+                     (s1 s1':string)
+  : Lemma
+    (s0 ^ s1 == s0' ^ s1' /\
+     (length s0 == length s0' \/
+      length s1 == length s1') ==>
+     s0 == s0' /\ s1 == s1')
+  = list_of_concat s0 s1;
+    list_of_concat s0' s1';
+    append_injective (list_of_string s0)
+                     (list_of_string s0')
+                     (list_of_string s1)
+                     (list_of_string s1');
+    string_of_list_of_string s0;
+    string_of_list_of_string s0';
+    string_of_list_of_string s1;
+    string_of_list_of_string s1'

@@ -69,11 +69,11 @@ val to_seq (#a:Type0) (s:array a)
        (requires (fun h -> contains h s))
        (ensures  (fun h0 x h1 -> (sel h0 s == x /\ h0 == h1)))
 
-// Used by the compiler for array litterals
+// Used by the compiler for array literals
 val of_list (#a:Type0) (l:list a)
 : ST (array a)
   (requires fun _ -> True)
-  (ensures create_post (of_list l))
+  (ensures create_post (seq_of_list l))
 
 val create (#a:Type0) (n:nat) (init:a)
   : ST (array a)

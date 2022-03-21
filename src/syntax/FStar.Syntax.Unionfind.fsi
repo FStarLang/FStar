@@ -4,8 +4,8 @@ module FStar.Syntax.Unionfind
 (* This module offers a transactional interface specialized for terms and
  * universes on top of the existing union-find implementation. *)
 
-open FStar.All
-module Range = FStar.Range
+open FStar.Compiler.Effect
+module Range = FStar.Compiler.Range
 module S = FStar.Syntax.Syntax
 
 type uf

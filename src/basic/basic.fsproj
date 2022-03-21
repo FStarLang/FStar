@@ -63,23 +63,23 @@
   <ItemGroup>
     <Compile Include="basetypes-fake.fs" />
     <Compile Include="prims-fake.fs" />
-    <Compile Include="st-fake.fs" />
-    <Compile Include="exn-fake.fs" />
     <Compile Include="all-fake.fs" />
     <Compile Include="mul-fake.fs" />
+    <Compile Include="NotFStar.Compiler.List.fsi" />
+    <Compile Include="FStar.Compiler.List.fs" />        
     <Compile Include="fs/char.fsi" />
     <Compile Include="fs/char.fs" />
+    <Compile Include="FStar.Compiler.Option.fsi" />    
+    <Compile Include="FStar.Compiler.Option.fs" />
+    <Compile Include="boot/NotFStar.Pervasives.fs" />
     <Compile Include="boot/FStar.BigInt.fsi" />
     <Compile Include="boot/NotFStar.BigInt.fs" />
     <Compile Include="boot/FStar.String.fsi" />
     <Compile Include="boot/FStar.String.fs" />
-    <Compile Include="boot/FStar.List.fsi" />
-    <Compile Include="boot/FStar.List.fs" />
-    <Compile Include="boot/FStar.Util.fsi" />
-    <Compile Include="boot/NotFStar.Util.fs" />
+    <Compile Include="boot/FStar.Compiler.Util.fsi" />
+    <Compile Include="boot/NotFStar.Compiler.Util.fs" />
     <Compile Include="boot/FStar.Compiler.Bytes.fsi" />
     <Compile Include="boot/NotFStar.Compiler.Bytes.fs" />
-    <Compile Include="boot/FStar.Dyn.fsi" />
     <Compile Include="boot/NotFStar.Dyn.fs" />
     <Compile Include="boot/FStar.StringBuffer.fsi" />
     <Compile Include="boot/FStar.StringBuffer.fs" />
@@ -93,8 +93,8 @@
     <Compile Include="FStar.VConfig.fs" />
     <Compile Include="FStar.Options.fsi" />
     <Compile Include="FStar.Options.fs" />
-    <Compile Include="FStar.Range.fsi" />
-    <Compile Include="FStar.Range.fs" />
+    <Compile Include="FStar.Compiler.Range.fsi" />
+    <Compile Include="FStar.Compiler.Range.fs" />
     <Compile Include="FStar.Ident.fsi" />
     <Compile Include="FStar.Ident.fs" />
     <Compile Include="FStar.Unionfind.fsi" />
@@ -110,7 +110,7 @@
   </ItemGroup>
   <ItemGroup>
     <Reference Include="FSharp.Compatibility.OCaml">
-      <HintPath>..\VS\packages\FSharp.Compatibility.OCaml.0.1.10\lib\net40\FSharp.Compatibility.OCaml.dll</HintPath>
+      <HintPath>..\VS\packages\FSharp.Compatibility.OCaml.0.1.14\lib\net45\FSharp.Compatibility.OCaml.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="FSharp.PPrint">
@@ -122,7 +122,7 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="FSharp.Core">
-      <HintPath>..\VS\packages\FSharp.Core.4.1.18\lib\net45\FSharp.Core.dll</HintPath>
+      <HintPath>..\VS\packages\FSharp.Core.4.3.4\lib\net45\FSharp.Core.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="mscorlib" />

@@ -1,5 +1,3 @@
-
-FSTAR_HOME=../..
 include ../Makefile.include
 
 all: uall
@@ -7,9 +5,9 @@ all: uall
 uall: BinarySearch.uver IntSort.uver InsertionSort.uver MergeSort.uver QuickSort.List.uver QuickSort.Seq.uver GC.uver Unification.uver Huffman.uver QuickSort.Array.uver #downgrade  //TODO
 
 downgrade: QuickSort.Array.fst downgrade.fst
-	$(FSTAR) --include $(FSTAR_HOME)/ulib/reclaimable downgrade.fst
+	$(FSTAR) --include $(FSTAR_ULIB)/reclaimable downgrade.fst
 
-include $(FSTAR_HOME)/ulib/ml/Makefile.include
+include $(FSTAR_ULIB)/ml/Makefile.include
 
 huffman-ocaml: out Huffman.fst
 	$(FSTAR) $(FSTAR_DEFAULT_ARGS) --odir out --codegen OCaml Huffman.fst

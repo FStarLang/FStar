@@ -16,11 +16,11 @@
 #light "off"
 
 module FStar.SMTEncoding.Env
-open FStar.ST
-open FStar.Exn
-open FStar.All
 open Prims
+open FStar.Pervasives
+open FStar.Compiler.Effect
 open FStar
+open FStar.Compiler
 open FStar.TypeChecker.Env
 open FStar.Syntax
 open FStar.Syntax.Syntax
@@ -30,14 +30,14 @@ open FStar.Ident
 open FStar.SMTEncoding.Util
 
 module SS = FStar.Syntax.Subst
-module BU = FStar.Util
+module BU = FStar.Compiler.Util
 module U = FStar.Syntax.Util
 
 exception Inner_let_rec of list<(string * Range.range)> //name of the inner let-rec(s) and their locations
 
 let add_fuel x tl = if (Options.unthrottle_inductives()) then tl else x::tl
 let withenv c (a, b) = (a,b,c)
-let vargs args = List.filter (function (BU.Inl _, _) -> false | _ -> true) args
+let vargs args = List.filter (function (Inl _, _) -> false | _ -> true) args
 (* ------------------------------------ *)
 (* Some operations on constants *)
 let escape (s:string) = BU.replace_char s '\'' '_'
@@ -52,7 +52,7 @@ let primitive_projector_by_pos env lid i =
           if ((i < 0) || i >= List.length binders) //this has to be within bounds!
           then fail ()
           else let b = List.nth binders i in
-                mk_term_projector_name lid (fst b)
+                mk_term_projector_name lid b.binder_bv
         | _ -> fail ()
 let mk_term_projector_name_by_pos lid (i:int) = escape <| BU.format2 "%s_%s" (string_of_lid lid) (string_of_int i)
 let mk_term_projector (lid:lident) (a:bv) : term =
@@ -119,7 +119,7 @@ type fvar_binding = {
     smt_arity: int;
     smt_id:    string;
     smt_token: option<term>;
-    smt_fuel_partial_app:option<term>;
+    smt_fuel_partial_app:option<(term * term)>;
     fvb_thunked: bool
 }
 let fvb_to_string fvb =
@@ -127,11 +127,18 @@ let fvb_to_string fvb =
     | None -> "None"
     | Some s -> Term.print_smt_term s
   in
+  let term_pair_opt_to_string = function
+    | None -> "None"
+    | Some (s0, s1) ->
+      BU.format2 "(%s, %s)"
+        (Term.print_smt_term s0)
+        (Term.print_smt_term s1)
+  in
   BU.format5 "{ lid = %s;\n  smt_id = %s;\n  smt_token = %s;\n smt_fuel_partial_app = %s;\n fvb_thunked = %s }"
     (Ident.string_of_lid fvb.fvar_lid)
     fvb.smt_id
     (term_opt_to_string fvb.smt_token)
-    (term_opt_to_string fvb.smt_fuel_partial_app)
+    (term_pair_opt_to_string fvb.smt_fuel_partial_app)
     (BU.string_of_bool fvb.fvb_thunked)
 
 let check_valid_fvb fvb =
@@ -250,9 +257,22 @@ let new_term_constant_and_tok_from_lid (env:env_t) (x:lident) arity =
     fname, Option.get ftok_name_opt, env
 let new_term_constant_and_tok_from_lid_maybe_thunked (env:env_t) (x:lident) arity th =
     new_term_constant_and_tok_from_lid_aux env x arity th
+let fail_fvar_lookup env a =
+  let q = Env.lookup_qname env.tcenv a in
+  match q with
+  | None ->
+    failwith (BU.format1 "Name %s not found in the smtencoding and typechecker env" (Print.lid_to_string a))
+  | _ ->
+    let quals = Env.quals_of_qninfo q in
+    if BU.is_some quals &&
+       (quals |> BU.must |> List.contains Unfold_for_unification_and_vcgen)
+    then Errors.raise_error (Errors.Fatal_IdentifierNotFound,
+           BU.format1 "Name %s not found in the smtencoding env (the symbol is marked unfold, \
+             expected it to reduce)" (Print.lid_to_string a)) (Ident.range_of_lid a)
+    else failwith (BU.format1 "Name %s not found in the smtencoding env" (Print.lid_to_string a))
 let lookup_lid env a =
     match lookup_fvar_binding env a with
-    | None -> failwith (BU.format1 "Name not found: %s" (Print.lid_to_string a))
+    | None -> fail_fvar_lookup env a
     | Some s -> check_valid_fvb s; s
 let push_free_var_maybe_thunked env (x:lident) arity fname ftok thunked =
     let fvb = mk_fvb x fname arity ftok None thunked in
@@ -261,10 +281,11 @@ let push_free_var env (x:lident) arity fname ftok =
     push_free_var_maybe_thunked env x arity fname ftok false
 let push_free_var_thunk env (x:lident) arity fname ftok =
     push_free_var_maybe_thunked env x arity fname ftok (arity=0)
-let push_zfuel_name env (x:lident) f =
+let push_zfuel_name env (x:lident) f ftok =
     let fvb = lookup_lid env x in
     let t3 = mkApp(f, [mkApp("ZFuel", [])]) in
-    let fvb = mk_fvb x fvb.smt_id fvb.smt_arity fvb.smt_token (Some t3) false in
+    let t3' = mk_ApplyTF (mkApp(ftok, [])) (mkApp("ZFuel", [])) in
+    let fvb = mk_fvb x fvb.smt_id fvb.smt_arity fvb.smt_token (Some (t3, t3')) false in
     {env with fvar_bindings=add_fvar_binding fvb env.fvar_bindings}
 let force_thunk fvb =
     if not (fvb.fvb_thunked) || fvb.smt_arity <> 0
@@ -284,7 +305,7 @@ let try_lookup_free_var env l =
       else
       begin
       match fvb.smt_fuel_partial_app with
-      | Some f when env.use_zfuel_name -> Some f
+      | Some (_, f) when env.use_zfuel_name -> Some f
       | _ ->
         begin
         match fvb.smt_token with
@@ -303,28 +324,28 @@ let try_lookup_free_var env l =
 let lookup_free_var env a =
     match try_lookup_free_var env a.v with
     | Some t -> t
-    | None -> failwith (BU.format1 "Name not found: %s" (Print.lid_to_string a.v))
+    | None -> fail_fvar_lookup env a.v
 let lookup_free_var_name env a = lookup_lid env a.v
 let lookup_free_var_sym env a =
     let fvb = lookup_lid env a.v in
     match fvb.smt_fuel_partial_app with
-    | Some({tm=App(g, zf)})
+    | Some({tm=App(g, zf)}, _)
         when env.use_zfuel_name ->
-      BU.Inl g, zf, fvb.smt_arity + 1
+      Inl g, zf, fvb.smt_arity + 1
     | _ ->
         begin
         match fvb.smt_token with
         | None when fvb.fvb_thunked ->
-            BU.Inr (force_thunk fvb), [], fvb.smt_arity
+            Inr (force_thunk fvb), [], fvb.smt_arity
         | None ->
-            BU.Inl (Var fvb.smt_id), [], fvb.smt_arity
+            Inl (Var fvb.smt_id), [], fvb.smt_arity
         | Some sym ->
             begin
             match sym.tm with
             | App(g, [fuel]) ->
-                BU.Inl g, [fuel], fvb.smt_arity + 1
+                Inl g, [fuel], fvb.smt_arity + 1
             | _ ->
-                BU.Inl (Var fvb.smt_id), [], fvb.smt_arity
+                Inl (Var fvb.smt_id), [], fvb.smt_arity
             end
         end
 

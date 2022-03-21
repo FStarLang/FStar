@@ -166,21 +166,18 @@ type varname = string
 type qn = string
 
 type pattern =
-| PAny: pattern
 | PVar: name: varname -> pattern
 | PQn: qn: qn -> pattern
 | PType: pattern
 | PApp: hd: pattern -> arg: pattern -> pattern
 
 let desc_of_pattern = function
-| PAny -> "anything"
 | PVar _ -> "a variable"
 | PQn qn -> "a constant (" ^ qn ^ ")"
 | PType -> "Type"
 | PApp _ _ -> "a function application"
 
 let rec string_of_pattern = function
-| PAny -> "__"
 | PVar x -> "?" ^ x
 | PQn qn -> qn
 | PType -> "Type"
@@ -217,9 +214,9 @@ let term_head t : Tac string =
   | Tv_Const cst -> "Tv_Const"
   | Tv_Uvar i t -> "Tv_Uvar"
   | Tv_Let r attrs b t1 t2 -> "Tv_Let"
-  | Tv_Match t branches -> "Tv_Match"
-  | Tv_AscribedT _ _ _ -> "Tv_AscribedT"
-  | Tv_AscribedC _ _ _ -> "Tv_AscribedC"
+  | Tv_Match t _ branches -> "Tv_Match"
+  | Tv_AscribedT _ _ _ _ -> "Tv_AscribedT"
+  | Tv_AscribedC _ _ _ _ -> "Tv_AscribedC"
   | Tv_Unknown -> "Tv_Unknown"
 
 let string_of_match_exception = function
@@ -295,8 +292,6 @@ the pattern.  Returns a result in the exception monad. **)
 let rec interp_pattern_aux (pat: pattern) (cur_bindings: bindings) (tm:term)
     : Tac (match_res bindings) =
   admit();
-  let interp_any () cur_bindings tm =
-    return [] in
   let interp_var (v: varname) cur_bindings tm =
     match List.Tot.Base.assoc v cur_bindings with
     | Some tm' -> if term_eq tm tm' then return cur_bindings
@@ -320,7 +315,6 @@ let rec interp_pattern_aux (pat: pattern) (cur_bindings: bindings) (tm:term)
       return with_arg
     | _ -> raise (SimpleMismatch (pat, tm)) in
     match pat with
-    | PAny -> interp_any () cur_bindings tm
     | PVar var -> interp_var var cur_bindings tm
     | PQn qn -> interp_qn qn cur_bindings tm
     | PType -> interp_type cur_bindings tm
@@ -508,9 +502,6 @@ let solve_mp #a (problem: matching_problem)
 /// variables are holes, free variables are constants, and applications are
 /// application patterns.
 
-// This is a hack to allow users to capture anything.
-assume val __ : #t:Type -> t
-let any_qn = `%__
 
 (** Compile a term `tm` into a pattern. **)
 let rec pattern_of_term_ex tm : Tac (match_res pattern) =
@@ -519,16 +510,10 @@ let rec pattern_of_term_ex tm : Tac (match_res pattern) =
     return (PVar (name_of_bv bv))
   | Tv_FVar fv ->
     let qn = fv_to_string fv in
-    return (if qn = any_qn then PAny else PQn qn)
+    return (PQn qn)
   | Tv_Type () ->
     return PType
   | Tv_App f (x, _) ->
-    let is_any = match inspect f with
-                 | Tv_FVar fv -> fv_to_string fv = any_qn
-                 | _ -> false in
-    if is_any then
-      return PAny
-    else
       (fpat <-- pattern_of_term_ex f;
        xpat <-- pattern_of_term_ex x;
        return (PApp fpat xpat))

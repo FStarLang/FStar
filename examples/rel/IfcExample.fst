@@ -66,10 +66,10 @@ val c1_3_ni : unit -> Lemma (ni_com env c1_3 Low)
 let c1_3_ni () = ()
 
 (* c1_4 cannot be shown to be non-interferent by typing since it contains an
-   explicict flow from z (High) to x (Low)
+   explicit flow from z (High) to x (Low)
    However, the sequence of c1_3 and c1_4 is fine, since in c1_3 we overwrite 
    z with the low value (y+7). 
-   We can hene prove non-interference by relying on SMT.
+   We can hence prove non-interference by relying on SMT.
    *)
 val c1_3_4_ni : unit -> Lemma (ni_com env (Seq c1_3 c1_4) Low)
 let c1_3_4_ni () = ()

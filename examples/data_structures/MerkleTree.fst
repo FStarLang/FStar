@@ -34,7 +34,7 @@ assume val gen_hash: #n:nat -> mstring n -> Tot (mstring hash_size)
 let len = List.length
 
 (*
- * merkel tree, indexed by the depth of the tree and hash for the present node
+ * Merkle tree, indexed by the depth of the tree and hash for the present node
  * all data is stored in leaves, trees are complete
  *)
 type mtree: nat -> hash -> Type =

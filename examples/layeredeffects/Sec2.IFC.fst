@@ -1,4 +1,5 @@
 module Sec2.IFC
+open FStar.List.Tot
 open FStar.Map
 let loc = int
 type store = m:Map.t loc int{forall l. contains m l}
@@ -43,7 +44,7 @@ let has_flow_1 (from to:loc) (f:flow) = from `Set.mem` fst f /\ to `Set.mem` snd
 let has_flow (from to:loc) (fs:flows) = (exists rs. rs `List.Tot.memP` fs /\ has_flow_1 from to rs)
 let flows_included_in (fs0 fs1:flows) =
   forall f0. f0 `List.Tot.memP` fs0 ==>
-        (forall from to. has_flow_1 from to f0 ==> (exists f1. f1 `List.Tot.memP` fs1 /\ has_flow_1 from to f1))
+        (forall from to. has_flow_1 from to f0 /\ from <> to ==> (exists f1. f1 `List.Tot.memP` fs1 /\ has_flow_1 from to f1))
 let flows_equiv (fs0 fs1:flows) = fs0 `flows_included_in` fs1 /\ fs1 `flows_included_in` fs0
 let flows_equiv_refl fs
   : Lemma (fs `flows_equiv` fs)
@@ -309,6 +310,7 @@ let flows_included_append (f0 f1 g0 g1:flows)
           (ensures  flows_included_in (f0@f1) (g0@g1))
   = let aux (f:_) (from to:_)
     : Lemma (requires List.Tot.memP f (f0@f1) /\
+                      from <> to /\
                       has_flow_1 from to f)
             (ensures (exists g. g `List.Tot.memP` (g0@g1) /\ has_flow_1 from to g))
             [SMTPat (has_flow_1 from to f)]
@@ -581,3 +583,7 @@ let test14 ()
              ([cr0, cw1;
                union cr0 cr1, cw2])
   = (c0 (); c1()); c2()
+
+let test15 (l:lref)
+  : IST unit (single l) (single l) []
+  = write l (read l)

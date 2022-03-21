@@ -3,6 +3,9 @@ module FStar.Tests.Norm
 //Normalization tests
 
 open FStar
+open FStar.Compiler
+open FStar.Compiler.Effect
+open FStar.Pervasives
 open FStar.Syntax.Syntax
 open FStar.Tests.Pars
 module S = FStar.Syntax.Syntax
@@ -11,11 +14,11 @@ module SS = FStar.Syntax.Subst
 module I = FStar.Ident
 module P  = FStar.Syntax.Print
 module Const = FStar.Parser.Const
-module BU = FStar.Util
+module BU = FStar.Compiler.Util
 module N = FStar.TypeChecker.Normalize
 module Env = FStar.TypeChecker.Env
 open FStar.Ident
-open FStar.Range
+open FStar.Compiler.Range
 open FStar.Tests.Util
 
 
@@ -40,7 +43,7 @@ let minus m n = app n [pred; m]
 let let_ x e e' : term = app (U.abs [b x] e' None) [e]
 let mk_let x e e' : term =
     let e' = FStar.Syntax.Subst.subst [NM(x, 0)] e' in
-    mk (Tm_let((false, [{lbname=BU.Inl x; lbunivs=[]; lbtyp=tun; lbdef=e; lbeff=Const.effect_Tot_lid; lbattrs=[];lbpos=dummyRange}]), e'))
+    mk (Tm_let((false, [{lbname=Inl x; lbunivs=[]; lbtyp=tun; lbdef=e; lbeff=Const.effect_Tot_lid; lbattrs=[];lbpos=dummyRange}]), e'))
                            dummyRange
 
 let lid x = lid_of_path ["Test"; x] dummyRange
@@ -55,7 +58,7 @@ open FStar.Syntax.Subst
 module SS=FStar.Syntax.Subst
 let mk_match h branches =
     let branches = branches |> List.map U.branch in
-    mk (Tm_match(h, branches)) dummyRange
+    mk (Tm_match(h, None, branches, None)) dummyRange
 let pred_nat s  =
     let zbranch = pat (Pat_cons(znat_l, [])),
                   None,
@@ -74,7 +77,7 @@ let minus_nat t1 t2 =
     let sbranch = pat (Pat_cons(snat_l, [pat (Pat_var n), false])),
                   None,
                   app (nm minus) [pred_nat (nm x); nm n] in
-    let lb = {lbname=BU.Inl minus; lbeff=lid_of_path ["Pure"] dummyRange; lbunivs=[]; lbtyp=tun;
+    let lb = {lbname=Inl minus; lbeff=lid_of_path ["Pure"] dummyRange; lbunivs=[]; lbtyp=tun;
               lbdef=subst [NM(minus, 0)] (U.abs [b x; b y] (mk_match (nm y) [zbranch; sbranch]) None);
               lbattrs=[]; lbpos=dummyRange} in
     mk (Tm_let((true, [lb]), subst [NM(minus, 0)] (app (nm minus) [t1; t2]))) dummyRange
@@ -245,6 +248,8 @@ let run_either i r expected normalizer =
     Options.init(); //reset them
     Options.set_option "print_universes" (Options.Bool true);
     Options.set_option "print_implicits" (Options.Bool true);
+    Options.set_option "ugly" (Options.Bool true);
+    Options.set_option "print_bound_var_types" (Options.Bool true);
     // ignore (Options.set_options "--debug Test --debug_level univ_norm --debug_level NBE");
     always i (term_eq (U.unascribe x) expected)
 
@@ -252,11 +257,11 @@ let run_interpreter i r expected = run_either i r expected (N.normalize [Env.Bet
 let run_nbe i r expected = run_either i r expected (FStar.TypeChecker.NBE.normalize_for_unit_test [FStar.TypeChecker.Env.UnfoldUntil delta_constant])
 let run_interpreter_with_time i r expected =
   let interp () = run_interpreter i r expected in
-  (i, snd (FStar.Util.return_execution_time interp))
+  (i, snd (FStar.Compiler.Util.return_execution_time interp))
 
 let run_nbe_with_time i r expected =
   let nbe () = run_nbe i r expected in
-  (i, snd (FStar.Util.return_execution_time nbe))
+  (i, snd (FStar.Compiler.Util.return_execution_time nbe))
 
 let run_tests run =
   Options.__set_unit_tests();
@@ -291,9 +296,9 @@ let run_all_interpreter_with_time () =
 let run_both_with_time i r expected =
   let nbe () = run_nbe i r expected in
   let norm () = run_interpreter i r expected in
-  FStar.Util.measure_execution_time "nbe" nbe;
+  FStar.Compiler.Util.measure_execution_time "nbe" nbe;
   BU.print_string "\n";
-  FStar.Util.measure_execution_time "normalizer" norm;
+  FStar.Compiler.Util.measure_execution_time "normalizer" norm;
   BU.print_string "\n"
 
 let compare () =

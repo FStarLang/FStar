@@ -38,12 +38,10 @@ let par3 (r s t : ref int) : ST int (fun p m -> exists v w u. m == (r |> v <*> s
   x + z
 
 (* Funny, the VC for this is much smaller and verifies a lot quicker *)
-#push-options "--use_two_phase_tc false"
 let par3' (r s t : ref int) : ST int (fun p m -> exists v w u. m == (r |> v <*> s |> w <*> t |> u) /\ p 5 (r |> v <*> s |> w <*> t |> u)) [] by (sl_auto ())
 =
   let (x, z) = par (fun () -> par2 r s) (right t) in
   x + z
-#pop-options
 
 let ret (x:'a) () : ST 'a (fun p m -> m == emp /\ p x m) [] =
   x

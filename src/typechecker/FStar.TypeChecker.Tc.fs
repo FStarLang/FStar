@@ -15,16 +15,16 @@
 *)
 #light "off"
 module FStar.TypeChecker.Tc
-open FStar.ST
-open FStar.Exn
-open FStar.All
-
+open FStar.Pervasives
+open FStar.Compiler.Effect
+open FStar.Compiler.List
 open FStar
+open FStar.Compiler
 open FStar.Errors
 open FStar.TypeChecker
 open FStar.TypeChecker.Common
 open FStar.TypeChecker.Env
-open FStar.Util
+open FStar.Compiler.Util
 open FStar.Ident
 open FStar.Syntax
 open FStar.Syntax.Syntax
@@ -40,7 +40,7 @@ module UF = FStar.Syntax.Unionfind
 module N  = FStar.TypeChecker.Normalize
 module TcComm = FStar.TypeChecker.Common
 module TcUtil = FStar.TypeChecker.Util
-module BU = FStar.Util //basic util
+module BU = FStar.Compiler.Util //basic util
 module U  = FStar.Syntax.Util
 module PP = FStar.Syntax.Print
 module Gen = FStar.TypeChecker.Generalize
@@ -78,81 +78,6 @@ let log env = (Options.log_types()) &&  not(lid_equals PC.prims_lid (Env.current
 
 
 (*****************Type-checking the signature of a module*****************************)
-
-let tc_lex_t env ses quals lids =
-    (* We specifically type lex_t as:
-
-          type lex_t<u> : Type(u) =
-          datacon LexTop<utop>  : lex_t<utop>
-          datacon LexCons<ucons1, ucons2> : #a:Type(ucons1) -> hd:a -> tl:lex_t<ucons2> -> lex_t<max ucons1 ucons2>
-    *)
-    assert (quals = []);
-    let err_range = (List.hd ses).sigrng in
-    begin match lids with
-        | [lex_t; lex_top; lex_cons] when
-            (lid_equals lex_t PC.lex_t_lid
-             && lid_equals lex_top PC.lextop_lid
-             && lid_equals lex_cons PC.lexcons_lid) -> ()
-        | _ -> Errors.raise_error (Errors.Fatal_InvalidRedefinitionOfLexT, ("Invalid (partial) redefinition of lex_t")) err_range
-    end;
-    begin match ses with
-      //AR: we were enforcing the univs to be [], which breaks down when we have two phases
-      //    the typechecking of lex_t is anyway hardcoded, so it should be fine to ignore that restriction
-      | [{ sigel = Sig_inductive_typ(lex_t, _, [], t, _, _);  sigquals = []; sigrng = r };
-         { sigel = Sig_datacon(lex_top, _, _t_top, _lex_t_top, 0, _); sigquals = []; sigrng = r1 };
-         { sigel = Sig_datacon(lex_cons, _, _t_cons, _lex_t_cons, 0, _); sigquals = []; sigrng = r2 }]
-         when (lid_equals lex_t PC.lex_t_lid
-            && lid_equals lex_top PC.lextop_lid
-            && lid_equals lex_cons PC.lexcons_lid) ->
-
-        let u = S.new_univ_name (Some r) in
-        let t = mk (Tm_type(U_name u)) r in
-        let t = Subst.close_univ_vars [u] t in
-        let tc = { sigel = Sig_inductive_typ(lex_t, [u], [], t, [], [PC.lextop_lid; PC.lexcons_lid]);
-                   sigquals = [];
-                   sigrng = r;
-                   sigmeta = default_sigmeta;
-                   sigattrs = [];
-                   sigopts = None; } in
-
-        let utop = S.new_univ_name (Some r1) in
-        let lex_top_t = mk (Tm_uinst(S.fvar (Ident.set_lid_range PC.lex_t_lid r1) delta_constant None, [U_name utop])) r1 in
-        let lex_top_t = Subst.close_univ_vars [utop] lex_top_t in
-        let dc_lextop = { sigel = Sig_datacon(lex_top, [utop], lex_top_t, PC.lex_t_lid, 0, []);
-                          sigquals = [];
-                          sigrng = r1;
-                          sigmeta = default_sigmeta;
-                          sigattrs = [];
-                          sigopts = None; } in
-
-        let ucons1 = S.new_univ_name (Some r2) in
-        let ucons2 = S.new_univ_name (Some r2) in
-        let lex_cons_t =
-            let a = S.new_bv (Some r2) (mk (Tm_type(U_name ucons1)) r2) in
-            let hd = S.new_bv (Some r2) (S.bv_to_name a) in
-            let tl = S.new_bv (Some r2) (mk (Tm_uinst(S.fvar (Ident.set_lid_range PC.lex_t_lid r2) delta_constant None, [U_name ucons2])) r2) in
-            let res = mk (Tm_uinst(S.fvar (Ident.set_lid_range PC.lex_t_lid r2) delta_constant None, [U_max [U_name ucons1; U_name ucons2]])) r2 in
-            U.arrow [(a, Some S.imp_tag); (hd, None); (tl, None)] (S.mk_Total res) in
-        let lex_cons_t = Subst.close_univ_vars [ucons1;ucons2]  lex_cons_t in
-        let dc_lexcons = { sigel = Sig_datacon(lex_cons, [ucons1;ucons2], lex_cons_t, PC.lex_t_lid, 0, []);
-                           sigquals = [];
-                           sigrng = r2;
-                           sigmeta = default_sigmeta;
-                           sigattrs = [];
-                           sigopts = None; } in
-        { sigel = Sig_bundle([tc; dc_lextop; dc_lexcons], lids);
-          sigquals = [];
-          sigrng = Env.get_range env;
-          sigmeta = default_sigmeta;
-          sigattrs = [];
-          sigopts = None; }
-      | _ ->
-        let err_msg =
-          BU.format1 "Invalid (re)definition of lex_t: %s\n"
-            (Print.sigelt_to_string (mk_sigelt (Sig_bundle(ses, lids))))
-        in
-        raise_error (Errors.Fatal_InvalidRedefinitionOfLexT, err_msg) err_range
-    end
 
 let tc_type_common (env:env) ((uvs, t):tscheme) (expected_typ:typ) (r:Range.range) :tscheme =
   let uvs, t = SS.open_univ_vars uvs t in
@@ -196,14 +121,14 @@ let tc_inductive' env ses quals attrs lids =
        let env = Env.push_sigelt env sig_bndle in
        (* Check positivity of the inductives within the Sig_bundle *)
        List.iter (fun ty ->
-         let b = TcInductive.check_positivity ty env in
+         let b = TcUtil.check_positivity env ty in
          if not b then
            let lid, r =
              match ty.sigel with
              | Sig_inductive_typ (lid, _, _, _, _, _) -> lid, ty.sigrng
              | _                                         -> failwith "Impossible!"
            in
-           Errors.log_issue r (Errors.Error_InductiveTypeNotSatisfyPositivityCondition, ("Inductive type " ^ (string_of_lid lid) ^ " does not satisfy the positivity condition"))
+           Errors.log_issue r (Errors.Error_InductiveTypeNotSatisfyPositivityCondition, ("Inductive type " ^ (string_of_lid lid) ^ " does not satisfy the strict positivity condition"))
          else ()
        ) tcs;
 
@@ -215,7 +140,7 @@ let tc_inductive' env ses quals attrs lids =
             | Sig_datacon (data_lid, _, _, ty_lid, _, _) -> data_lid, ty_lid
             | _ -> failwith "Impossible"
          in
-         if lid_equals ty_lid PC.exn_lid && not (TcInductive.check_exn_positivity data_lid env) then
+         if lid_equals ty_lid PC.exn_lid && not (TcUtil.check_exn_positivity env data_lid) then
             Errors.log_issue d.sigrng
                      (Errors.Error_InductiveTypeNotSatisfyPositivityCondition,
                         ("Exception " ^ (string_of_lid data_lid) ^ " does not satisfy the positivity condition"))
@@ -387,6 +312,233 @@ let store_sigopts (se:sigelt) : sigelt =
 let tc_decls_knot : ref<option<(Env.env -> list<sigelt> -> list<sigelt> * Env.env)>> =
   BU.mk_ref None
 
+let do_two_phases env : bool = Env.should_verify env
+
+(* The type checking rule for Sig_let (lbs, lids) *)
+let tc_sig_let env r se lbs lids : list<sigelt> * list<sigelt> * Env.env =
+    let env0 = env in
+    let env = Env.set_range env r in
+    let check_quals_eq l qopt val_q = match qopt with
+      | None -> Some val_q
+      | Some q' ->
+        //logic is now a deprecated qualifier, so discard it from the checking
+        //AR: 05/19: drop irreducible also
+        //           irreducible is not allowed on val, but one could add it on let
+        let drop_logic_and_irreducible = List.filter (fun x -> not (x = Logic || x = Irreducible)) in
+        if (let val_q, q' = drop_logic_and_irreducible val_q, drop_logic_and_irreducible q' in
+            List.length val_q = List.length q'
+            && List.forall2 U.qualifier_equal val_q q')
+        then Some q'  //but retain it in the returned list of qualifiers, some code may still add type annotations of Type0, which will hinder `logical` inference
+        else raise_error (Errors.Fatal_InconsistentQualifierAnnotation, (BU.format3 "Inconsistent qualifier annotations on %s; Expected {%s}, got {%s}"
+                              (Print.lid_to_string l)
+                              (Print.quals_to_string val_q)
+                              (Print.quals_to_string q'))) r
+    in
+
+    let rename_parameters lb =
+      let rename_in_typ def typ =
+        let typ = Subst.compress typ in
+        let def_bs = match (Subst.compress def).n with
+                     | Tm_abs (binders, _, _) -> binders
+                     | _ -> [] in
+        match typ with
+        | { n = Tm_arrow(val_bs, c); pos = r } -> begin
+          let has_auto_name bv =
+            BU.starts_with (string_of_id bv.ppname) Ident.reserved_prefix in
+          let rec rename_binders def_bs val_bs =
+            match def_bs, val_bs with
+            | [], _ | _, [] -> val_bs
+            | ({binder_bv=body_bv}) :: bt, val_b :: vt ->
+              (match has_auto_name body_bv, has_auto_name val_b.binder_bv with
+               | true, _ -> val_b
+               | false, true -> { val_b with
+                                 binder_bv={val_b.binder_bv with
+                                   ppname = mk_ident (string_of_id body_bv.ppname, range_of_id val_b.binder_bv.ppname)} }
+               | false, false ->
+                 // if (string_of_id body_bv.ppname) <> (string_of_id val_bv.ppname) then
+                 //   Errors.warn (range_of_id body_bv.ppname)
+                 //     (BU.format2 "Parameter name %s doesn't match name %s used in val declaration"
+                 //                  (string_of_id body_bv.ppname) (string_of_id val_bv.ppname));
+                 val_b) :: rename_binders bt vt in
+          Syntax.mk (Tm_arrow(rename_binders def_bs val_bs, c)) r end
+        | _ -> typ in
+      { lb with lbtyp = rename_in_typ lb.lbdef lb.lbtyp } in
+
+    (* 1. (a) Annotate each lb in lbs with a type from the corresponding val decl, if there is one
+          (b) Generalize the type of lb only if none of the lbs have val decls nor explicit universes
+      *)
+    let should_generalize, lbs', quals_opt =
+       snd lbs |> List.fold_left (fun (gen, lbs, quals_opt) lb ->
+          let lbname = right lb.lbname in //this is definitely not a local let binding
+          let gen, lb, quals_opt = match Env.try_lookup_val_decl env lbname.fv_name.v with
+            | None ->
+                gen, lb, quals_opt
+
+            | Some ((uvs,tval), quals) ->
+              let quals_opt = check_quals_eq lbname.fv_name.v quals_opt quals in
+              let def = match lb.lbtyp.n with
+                | Tm_unknown -> lb.lbdef
+                | _ ->
+                  (* If there are two type ascriptions we check that they are compatible *)
+                  mk (Tm_ascribed (lb.lbdef, (Inl lb.lbtyp, None, false), None)) lb.lbdef.pos
+              in
+              if lb.lbunivs <> [] && List.length lb.lbunivs <> List.length uvs
+              then raise_error (Errors.Fatal_IncoherentInlineUniverse, ("Inline universes are incoherent with annotation from val declaration")) r;
+              false, //explicit annotation provided; do not generalize
+              mk_lb (Inr lbname, uvs, PC.effect_ALL_lid(), tval, def, [], lb.lbpos),
+              quals_opt
+          in
+          gen, lb::lbs, quals_opt)
+          (true, [], (if se.sigquals=[] then None else Some se.sigquals))
+    in
+
+    (* Check that all the mutually recursive bindings mention the same universes *)
+    U.check_mutual_universes lbs';
+    
+    let quals = match quals_opt with
+      | None -> [Visible_default]
+      | Some q ->
+        if q |> BU.for_some (function Irreducible | Visible_default | Unfold_for_unification_and_vcgen -> true | _ -> false)
+        then q
+        else Visible_default::q //the default visibility for a let binding is Unfoldable
+    in
+
+    let lbs' = List.rev lbs' in
+
+    (* preprocess_with *)
+    let attrs, pre_tau =
+        match U.extract_attr' PC.preprocess_with se.sigattrs with
+        | None -> se.sigattrs, None
+        | Some (ats, [tau, None]) -> ats, Some tau
+        | Some (ats, args) ->
+            Errors.log_issue r (Errors.Warning_UnrecognizedAttribute,
+                                   ("Ill-formed application of `preprocess_with`"));
+            se.sigattrs, None
+    in
+    let se = { se with sigattrs = attrs } in (* to remove the preprocess_with *)
+
+    let preprocess_lb (tau:term) (lb:letbinding) : letbinding =
+        let lbdef = Env.preprocess env tau lb.lbdef in
+        if Env.debug env <| Options.Other "TwoPhases" then
+          BU.print1 "lb preprocessed into: %s\n" (Print.term_to_string lbdef);
+        { lb with lbdef = lbdef }
+    in
+    // Preprocess the letbindings with the tactic, if any
+    let lbs' = match pre_tau with
+               | Some tau -> List.map (preprocess_lb tau) lbs'
+               | None -> lbs'
+    in
+    (* / preprocess_with *)
+
+    (* 2. Turn the top-level lb into a Tm_let with a unit body *)
+    let e = mk (Tm_let((fst lbs, lbs'), mk (Tm_constant (Const_unit)) r)) r in
+
+    (* 3. Type-check the Tm_let and convert it back to Sig_let *)
+    let env' = { env with top_level = true; generalize = should_generalize } in
+    let e =
+      if do_two_phases env' then begin
+        let drop_lbtyp (e_lax:term) :term =
+          match (SS.compress e_lax).n with
+          | Tm_let ((false, [ lb ]), e2) ->
+            let lb_unannotated =
+              match (SS.compress e).n with  //checking type annotation on e, the lb before phase 1, capturing e from above
+              | Tm_let ((_, [ lb ]), _) ->
+                (match (SS.compress lb.lbtyp).n with
+                 | Tm_unknown -> true
+                 | _ -> false)
+              | _                       -> failwith "Impossible: first phase lb and second phase lb differ in structure!"
+            in
+            if lb_unannotated then { e_lax with n = Tm_let ((false, [ { lb with lbtyp = S.tun } ]), e2)}  //erase the type annotation
+            else e_lax
+          | Tm_let ((true, lbs), _) -> 
+            U.check_mutual_universes lbs;
+            //leave recursive lets as is; since the decreases clause from the ascription (if any)
+            //is propagated to the lbtyp by TcUtil.extract_let_rec_annotation
+            //if we drop the lbtyp here, we'll lose the decreases clause
+            e_lax
+        in
+        let e =
+          Profiling.profile (fun () ->
+              let (e, _, _) = tc_maybe_toplevel_term ({ env' with phase1 = true; lax = true }) e in
+              e)
+              (Some (Ident.string_of_lid (Env.current_module env)))
+              "FStar.TypeChecker.Tc.tc_sig_let-tc-phase1"
+        in
+
+        if Env.debug env <| Options.Other "TwoPhases" then
+          BU.print1 "Let binding after phase 1, before removing uvars: %s\n"
+            (Print.term_to_string e);
+
+        let e = N.remove_uvar_solutions env' e |> drop_lbtyp in
+
+        if Env.debug env <| Options.Other "TwoPhases" then
+          BU.print1 "Let binding after phase 1, uvars removed: %s\n"
+            (Print.term_to_string e);
+        e
+      end
+      else e
+    in
+    let attrs, post_tau = handle_postprocess_with_attr env se.sigattrs in
+    (* remove the postprocess_with, if any *)
+    let se = { se with sigattrs = attrs } in
+
+    let postprocess_lb (tau:term) (lb:letbinding) : letbinding =
+        let s, univnames = SS.univ_var_opening lb.lbunivs in
+        let lbdef = SS.subst s lb.lbdef in
+        let lbtyp = SS.subst s lb.lbtyp in
+        let env = Env.push_univ_vars env univnames in
+        let lbdef = Env.postprocess env tau lbtyp lbdef in
+        let lbdef = SS.close_univ_vars univnames lbdef in
+        { lb with lbdef = lbdef }
+    in
+    let r = 
+      Profiling.profile (fun () -> tc_maybe_toplevel_term env' e)
+                        (Some (Ident.string_of_lid (Env.current_module env)))
+                        "FStar.TypeChecker.Tc.tc_sig_let-tc-phase2"
+    in
+    let se, lbs = match r with
+      | {n=Tm_let(lbs, e)}, _, g when Env.is_trivial g ->
+        U.check_mutual_universes (snd lbs);
+        
+        // Propagate binder names into signature
+        let lbs = (fst lbs, (snd lbs) |> List.map rename_parameters) in
+
+        // Postprocess the letbindings with the tactic, if any
+        let lbs = (fst lbs,
+                    (match post_tau with
+                     | Some tau -> List.map (postprocess_lb tau) (snd lbs)
+                     | None -> (snd lbs)))
+        in
+
+        //propagate the MaskedEffect tag to the qualifiers
+        let quals = match e.n with
+            | Tm_meta(_, Meta_desugared Masked_effect) -> HasMaskedEffect::quals
+            | _ -> quals
+        in
+        { se with sigel = Sig_let(lbs, lids);
+                  sigquals =  quals },
+        lbs
+      | _ -> failwith "impossible (typechecking should preserve Tm_let)"
+    in
+
+    (* 4. Record the type of top-level lets, and log if requested *)
+    snd lbs |> List.iter (fun lb ->
+        let fv = right lb.lbname in
+        Env.insert_fv_info env fv lb.lbtyp);
+
+    if log env
+    then BU.print1 "%s\n" (snd lbs |> List.map (fun lb ->
+          let should_log = match Env.try_lookup_val_decl env (right lb.lbname).fv_name.v with
+              | None -> true
+              | _ -> false in
+          if should_log
+          then BU.format2 "let %s : %s" (Print.lbname_to_string lb.lbname) (Print.term_to_string (*env*) lb.lbtyp)
+          else "") |> String.concat "\n");
+
+    check_must_erase_attribute env0 se;
+
+    [se], [], env0
+
 let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
   let env = env0 in
   TcUtil.check_sigelt_quals env se;
@@ -455,22 +607,10 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
     end;
     [], [], env
 
-  | Sig_bundle(ses, lids) when (lids |> BU.for_some (lid_equals PC.lex_t_lid)) ->
-    //lex_t is very special; it uses a more expressive form of universe polymorphism than is allowed elsewhere
-    //Instead of this special treatment, we could make use of explicit lifts, but LexCons is used pervasively
-    (*
-        type lex_t<u> =
-          | LexTop<u>  : lex_t<u>
-          | LexCons<u1, u2> : #a:Type(u1) -> a -> lex_t<u2> -> lex_t<max u1 u2>
-    *)
-    let env = Env.set_range env r in
-    let se = tc_lex_t env ses se.sigquals lids  in
-    [se], [], env0
-
   | Sig_bundle(ses, lids) ->
     let env = Env.set_range env r in
     let ses =
-      if Options.use_two_phase_tc () && Env.should_verify env then begin
+      if do_two_phases env then begin
         //we generate extra sigelts even in the first phase, and then throw them away, would be nice to not generate them at all
         let ses =
           tc_inductive ({ env with phase1 = true; lax = true }) ses se.sigquals se.sigattrs lids
@@ -507,11 +647,14 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
         | Some lift -> [ { se with sigel = Sig_new_effect (ne) } ; lift ]
         | None -> [ { se with sigel = Sig_new_effect (ne) } ] in
 
+      let effect_and_lift_ses = effect_and_lift_ses |> List.map (fun sigelt ->
+        { sigelt with sigmeta={sigelt.sigmeta with sigmeta_admit=true}}) in
+
       //only elaborate, the loop in tc_decls would send these back to us for typechecking
       [], ses @ effect_and_lift_ses, env0
     else       
       let ne =
-        if Options.use_two_phase_tc () && Env.should_verify env then begin
+        if do_two_phases env then begin
           let ne =
             TcEff.tc_eff_decl ({ env with phase1 = true; lax = true }) ne se.sigquals se.sigattrs
             |> (fun ne -> { se with sigel = Sig_new_effect ne })
@@ -533,7 +676,7 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
 
   | Sig_effect_abbrev (lid, uvs, tps, c, flags) ->
     let lid, uvs, tps, c =
-      if Options.use_two_phase_tc () && Env.should_verify env
+      if do_two_phases env
       then
         TcEff.tc_effect_abbrev ({ env with phase1 = true; lax = true }) (lid, uvs, tps, c) r
         |> (fun (lid, uvs, tps, c) -> { se with sigel = Sig_effect_abbrev (lid, uvs, tps, c, flags) })
@@ -562,7 +705,7 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
                                    (Ident.string_of_lid lid))) r;
 
     let uvs, t =
-      if Options.use_two_phase_tc () && Env.should_verify env then begin
+      if do_two_phases env then begin
         let uvs, t = tc_declare_typ ({ env with phase1 = true; lax = true }) (uvs, t) se.sigrng in //|> N.normalize [Env.NoFullNorm; Env.Beta; Env.DoNotUnfoldPureLets] env in
         if Env.debug env <| Options.Other "TwoPhases" then BU.print2 "Val declaration after phase 1: %s and uvs: %s\n" (Print.term_to_string t) (Print.univ_names_to_string uvs);
         uvs, t
@@ -580,7 +723,7 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
     let env = Env.set_range env r in
 
     let uvs, t =
-      if Options.use_two_phase_tc () && Env.should_verify env then begin
+      if do_two_phases env then begin
         let uvs, t = tc_assume ({ env with phase1 = true; lax = true }) (uvs, t) se.sigrng in
         if Env.debug env <| Options.Other "TwoPhases" then BU.print2 "Assume after phase 1: %s and uvs: %s\n" (Print.term_to_string t) (Print.univ_names_to_string uvs);
         uvs, t
@@ -618,219 +761,14 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
     [], ses, env
 
   | Sig_let(lbs, lids) ->
-    let env = Env.set_range env r in
-    let check_quals_eq l qopt val_q = match qopt with
-      | None -> Some val_q
-      | Some q' ->
-        //logic is now a deprecated qualifier, so discard it from the checking
-        let drop_logic = List.filter (fun x -> not (x = Logic)) in
-        if (let val_q, q' = drop_logic val_q, drop_logic q' in
-            List.length val_q = List.length q'
-            && List.forall2 U.qualifier_equal val_q q')
-        then Some q'  //but retain it in the returned list of qualifiers, some code may still add type annotations of Type0, which will hinder `logical` inference
-        else raise_error (Errors.Fatal_InconsistentQualifierAnnotation, (BU.format3 "Inconsistent qualifier annotations on %s; Expected {%s}, got {%s}"
-                              (Print.lid_to_string l)
-                              (Print.quals_to_string val_q)
-                              (Print.quals_to_string q'))) r
-    in
-
-    let rename_parameters lb =
-      let rename_in_typ def typ =
-        let typ = Subst.compress typ in
-        let def_bs = match (Subst.compress def).n with
-                     | Tm_abs (binders, _, _) -> binders
-                     | _ -> [] in
-        match typ with
-        | { n = Tm_arrow(val_bs, c); pos = r } -> begin
-          let has_auto_name bv =
-            BU.starts_with (string_of_id bv.ppname) Ident.reserved_prefix in
-          let rec rename_binders def_bs val_bs =
-            match def_bs, val_bs with
-            | [], _ | _, [] -> val_bs
-            | (body_bv, _) :: bt, (val_bv, aqual) :: vt ->
-              (match has_auto_name body_bv, has_auto_name val_bv with
-               | true, _ -> (val_bv, aqual)
-               | false, true -> ({ val_bv with
-                                   ppname = mk_ident (string_of_id body_bv.ppname, range_of_id val_bv.ppname) }, aqual)
-               | false, false ->
-                 // if (string_of_id body_bv.ppname) <> (string_of_id val_bv.ppname) then
-                 //   Errors.warn (range_of_id body_bv.ppname)
-                 //     (BU.format2 "Parameter name %s doesn't match name %s used in val declaration"
-                 //                  (string_of_id body_bv.ppname) (string_of_id val_bv.ppname));
-                 (val_bv, aqual)) :: rename_binders bt vt in
-          Syntax.mk (Tm_arrow(rename_binders def_bs val_bs, c)) r end
-        | _ -> typ in
-      { lb with lbtyp = rename_in_typ lb.lbdef lb.lbtyp } in
-
-    (* 1. (a) Annotate each lb in lbs with a type from the corresponding val decl, if there is one
-          (b) Generalize the type of lb only if none of the lbs have val decls nor explicit universes
-      *)
-    let should_generalize, lbs', quals_opt =
-       snd lbs |> List.fold_left (fun (gen, lbs, quals_opt) lb ->
-          let lbname = right lb.lbname in //this is definitely not a local let binding
-          let gen, lb, quals_opt = match Env.try_lookup_val_decl env lbname.fv_name.v with
-            | None ->
-                gen, lb, quals_opt
-
-            | Some ((uvs,tval), quals) ->
-              let quals_opt = check_quals_eq lbname.fv_name.v quals_opt quals in
-              let def = match lb.lbtyp.n with
-                | Tm_unknown -> lb.lbdef
-                | _ ->
-                  (* If there are two type ascriptions we check that they are compatible *)
-                  mk (Tm_ascribed (lb.lbdef, (Inl lb.lbtyp, None), None)) lb.lbdef.pos
-              in
-              if lb.lbunivs <> [] && List.length lb.lbunivs <> List.length uvs
-              then raise_error (Errors.Fatal_IncoherentInlineUniverse, ("Inline universes are incoherent with annotation from val declaration")) r;
-              false, //explicit annotation provided; do not generalize
-              mk_lb (Inr lbname, uvs, PC.effect_ALL_lid, tval, def, [], lb.lbpos),
-              quals_opt
-          in
-          gen, lb::lbs, quals_opt)
-          (true, [], (if se.sigquals=[] then None else Some se.sigquals))
-    in
-
-    let quals = match quals_opt with
-      | None -> [Visible_default]
-      | Some q ->
-        if q |> BU.for_some (function Irreducible | Visible_default | Unfold_for_unification_and_vcgen -> true | _ -> false)
-        then q
-        else Visible_default::q //the default visibility for a let binding is Unfoldable
-    in
-
-    let lbs' = List.rev lbs' in
-
-    (* preprocess_with *)
-    let attrs, pre_tau =
-        match U.extract_attr' PC.preprocess_with se.sigattrs with
-        | None -> se.sigattrs, None
-        | Some (ats, [tau, None]) -> ats, Some tau
-        | Some (ats, args) ->
-            Errors.log_issue r (Errors.Warning_UnrecognizedAttribute,
-                                   ("Ill-formed application of `preprocess_with`"));
-            se.sigattrs, None
-    in
-    let se = { se with sigattrs = attrs } in (* to remove the preprocess_with *)
-
-    let preprocess_lb (tau:term) (lb:letbinding) : letbinding =
-        let lbdef = Env.preprocess env tau lb.lbdef in
-        if Env.debug env <| Options.Other "TwoPhases" then
-          BU.print1 "lb preprocessed into: %s\n" (Print.term_to_string lbdef);
-        { lb with lbdef = lbdef }
-    in
-    // Preprocess the letbindings with the tactic, if any
-    let lbs' = match pre_tau with
-               | Some tau -> List.map (preprocess_lb tau) lbs'
-               | None -> lbs'
-    in
-    (* / preprocess_with *)
-
-    (* 2. Turn the top-level lb into a Tm_let with a unit body *)
-    let e = mk (Tm_let((fst lbs, lbs'), mk (Tm_constant (Const_unit)) r)) r in
-
-    (* 3. Type-check the Tm_let and convert it back to Sig_let *)
-    let env' = { env with top_level = true; generalize = should_generalize } in
-    let e =
-      if Options.use_two_phase_tc () && Env.should_verify env' then begin
-        let drop_lbtyp (e_lax:term) :term =
-          match (SS.compress e_lax).n with
-          | Tm_let ((false, [ lb ]), e2) ->
-            let lb_unannotated =
-              match (SS.compress e).n with  //checking type annotation on e, the lb before phase 1, capturing e from above
-              | Tm_let ((_, [ lb ]), _) ->
-                (match (SS.compress lb.lbtyp).n with
-                 | Tm_unknown -> true
-                 | _ -> false)
-              | _                       -> failwith "Impossible: first phase lb and second phase lb differ in structure!"
-            in
-            if lb_unannotated then { e_lax with n = Tm_let ((false, [ { lb with lbtyp = S.tun } ]), e2)}  //erase the type annotation
-            else e_lax
-          | _ -> e_lax  //leave recursive lets as is
-        in
-        let (e, ms) =
-            BU.record_time (fun () ->
-              let (e, _, _) = tc_maybe_toplevel_term ({ env' with phase1 = true; lax = true }) e in
-              e)
-        in
-        if Env.debug env <| Options.Other "TCDeclTime" then
-          BU.print1 "Let binding elaborated (phase 1) in %s milliseconds, now removing uvars\n"
-            (string_of_int ms);
-
-        if Env.debug env <| Options.Other "TwoPhases" then
-          BU.print1 "Let binding after phase 1, before removing uvars: %s\n"
-            (Print.term_to_string e);
-
-        let e = N.remove_uvar_solutions env' e |> drop_lbtyp in
-
-        if Env.debug env <| Options.Other "TwoPhases" then
-          BU.print1 "Let binding after phase 1, uvars removed: %s\n"
-            (Print.term_to_string e);
-        e
-      end
-      else e
-    in
-    let attrs, post_tau = handle_postprocess_with_attr env se.sigattrs in
-    (* remove the postprocess_with, if any *)
-    let se = { se with sigattrs = attrs } in
-
-    let postprocess_lb (tau:term) (lb:letbinding) : letbinding =
-        let s, univnames = SS.univ_var_opening lb.lbunivs in
-        let lbdef = SS.subst s lb.lbdef in
-        let lbtyp = SS.subst s lb.lbtyp in
-        let env = Env.push_univ_vars env univnames in
-        let lbdef = Env.postprocess env tau lbtyp lbdef in
-        let lbdef = SS.close_univ_vars univnames lbdef in
-        { lb with lbdef = lbdef }
-    in
-    let (r, ms) = BU.record_time (fun () -> tc_maybe_toplevel_term env' e) in
-    if Env.debug env <| Options.Other "TCDeclTime" then
-      BU.print1 "Let binding typechecked in phase 2 in %s milliseconds\n"
-        (string_of_int ms);
-
-    let se, lbs = match r with
-      | {n=Tm_let(lbs, e)}, _, g when Env.is_trivial g ->
-        // Propagate binder names into signature
-        let lbs = (fst lbs, (snd lbs) |> List.map rename_parameters) in
-
-        // Postprocess the letbindings with the tactic, if any
-        let lbs = (fst lbs,
-                    (match post_tau with
-                     | Some tau -> List.map (postprocess_lb tau) (snd lbs)
-                     | None -> (snd lbs)))
-        in
-
-        //propagate the MaskedEffect tag to the qualifiers
-        let quals = match e.n with
-            | Tm_meta(_, Meta_desugared Masked_effect) -> HasMaskedEffect::quals
-            | _ -> quals
-        in
-        { se with sigel = Sig_let(lbs, lids);
-                  sigquals =  quals },
-        lbs
-      | _ -> failwith "impossible (typechecking should preserve Tm_let)"
-    in
-
-    (* 4. Record the type of top-level lets, and log if requested *)
-    snd lbs |> List.iter (fun lb ->
-        let fv = right lb.lbname in
-        Env.insert_fv_info env fv lb.lbtyp);
-
-    if log env
-    then BU.print1 "%s\n" (snd lbs |> List.map (fun lb ->
-          let should_log = match Env.try_lookup_val_decl env (right lb.lbname).fv_name.v with
-              | None -> true
-              | _ -> false in
-          if should_log
-          then BU.format2 "let %s : %s" (Print.lbname_to_string lb.lbname) (Print.term_to_string (*env*) lb.lbtyp)
-          else "") |> String.concat "\n");
-
-    check_must_erase_attribute env0 se;
-
-    [se], [], env0
+    Profiling.profile 
+      (fun () -> tc_sig_let env r se lbs lids)
+      (Some (Ident.string_of_lid (Env.current_module env)))
+      "FStar.TypeChecker.Tc.tc_sig_let"
 
   | Sig_polymonadic_bind (m, n, p, t, _) ->  //desugaring does not set the last field, tc does
     let t =
-      if Options.use_two_phase_tc () && Env.should_verify env then
+      if do_two_phases env then
         let t, ty =
           TcEff.tc_polymonadic_bind ({ env with phase1 = true; lax = true }) m n p t
           |> (fun (t, ty) -> { se with sigel = Sig_polymonadic_bind (m, n, p, t, ty) })
@@ -850,7 +788,7 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
 
   | Sig_polymonadic_subcomp (m, n, t, _) ->  //desugaring does not set the last field, tc does
     let t =
-      if Options.use_two_phase_tc () && Env.should_verify env then
+      if do_two_phases env then
         let t, ty =
           TcEff.tc_polymonadic_subcomp ({ env with phase1 = true; lax = true }) m n t
           |> (fun (t, ty) -> { se with sigel = Sig_polymonadic_subcomp (m, n, t, ty) })
@@ -929,6 +867,10 @@ let add_sigelt_to_env (env:Env.env) (se:sigelt) (from_cache:bool) : Env.env =
         env
       end
 
+    | Sig_pragma PrintEffectsGraph ->
+      BU.write_file "effects.graph" (Env.print_effects_graph env);
+      env
+
     | Sig_new_effect ne ->
       let env = Env.push_new_effect env (ne, se.sigquals) in
       ne.actions |> List.fold_left (fun env a -> Env.push_sigelt env (U.action_as_lb ne.mname a a.action_defn.pos)) env
@@ -954,6 +896,9 @@ let tc_decls env ses =
                         (Print.tag_of_sigelt se)
                         (Print.sigelt_to_string se);
 
+    if Options.ide_id_info_off() then Env.toggle_id_info env false;
+    if Env.debug env (Options.Other "IdInfoOn") then Env.toggle_id_info env true;
+
     let ses', ses_elaborated, env =
             Errors.with_ctx (BU.format1 "While typechecking the top-level declaration `%s`" (Print.sigelt_to_string_short se))
                     (fun () -> tc_decl env se)
@@ -969,6 +914,8 @@ let tc_decls env ses =
         N.elim_uvars env se) in
 
     Env.promote_id_info env (fun t ->
+        if Env.debug env (Options.Other "UF")
+        then BU.print1 "check uvars %s\n" (Print.term_to_string t);
         N.normalize
                [Env.AllowUnboundUniverses; //this is allowed, since we're reducing types that appear deep within some arbitrary context
                 Env.CheckNoUvars;

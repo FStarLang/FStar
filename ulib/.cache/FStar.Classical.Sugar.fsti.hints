@@ -1,0 +1,80 @@
+[
+  "Bè\fa7QÎ©Ü1Õðó\u0002Èq",
+  [
+    [
+      "FStar.Classical.Sugar.implies_elim",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.l_imp",
+        "equation_Prims.squash", "l_imp-interp",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "8b0ff3a105373917965d2167424879cf"
+    ],
+    [
+      "FStar.Classical.Sugar.or_elim",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.l_not",
+        "equation_Prims.squash", "l_not-interp",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "4e0898b057fc14d8dce4be84452e35cc"
+    ],
+    [
+      "FStar.Classical.Sugar.and_elim",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "4f4ca06f634b205993950165904002be"
+    ],
+    [
+      "FStar.Classical.Sugar.implies_intro",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "e2d26238a0ef0ee32381c6c302f046c0"
+    ],
+    [
+      "FStar.Classical.Sugar.or_intro_right",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.l_not",
+        "equation_Prims.squash", "l_not-interp",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "23a3decb6e706eabfd862f17c8dd6315"
+    ],
+    [
+      "FStar.Classical.Sugar.and_intro",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "f7001f2ce89b0745306870ea70ef4750"
+    ]
+  ]
+]

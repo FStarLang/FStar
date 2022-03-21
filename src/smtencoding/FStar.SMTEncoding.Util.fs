@@ -1,12 +1,12 @@
 ﻿#light "off"
 
 module FStar.SMTEncoding.Util
-open FStar.ST
-open FStar.All
+open FStar.Compiler.Effect
+open FStar.Compiler.Effect
 
-open FStar
+open FStar open FStar.Compiler
 open FStar.TypeChecker.Env
-open FStar.Util
+open FStar.Compiler.Util
 open FStar.Syntax
 open FStar.Syntax.Syntax
 open FStar.TypeChecker
@@ -81,7 +81,6 @@ let mk_or_l = norng mk_or_l
 let mk_ApplyTT = norng2 mk_ApplyTT
 let mk_String_const = norng mk_String_const
 let mk_Precedes = norng4 mk_Precedes
-let mk_LexCons = norng3 mk_LexCons
 
 
 (*

@@ -1,5 +1,5 @@
 [
-  "2µ\u0011%I6¢ŸŒ×hë5dü\u0019",
+  "¸_Ñÿ(0Äð(\u007f4í\u000bp¡ª",
   [
     [
       "Lang.__proj__Return__item__a",
@@ -12,7 +12,7 @@
         "refinement_interpretation_Tm_refine_3b7831d9973ba6ea1ea4e42a3c37eb98"
       ],
       0,
-      "472a288103a72930b3131f1914e15cee"
+      "8748baf4dfbb91ecaf0d3cae328e689c"
     ],
     [
       "Lang.__proj__Return__item__v",
@@ -20,13 +20,11 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "disc_equation_Lang.Return",
-        "proj_equation_Lang.Return_a", "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_Lang.Return_a",
+        "@MaxIFuel_assumption", "@query", "data_elim_Lang.Return",
         "refinement_interpretation_Tm_refine_3b7831d9973ba6ea1ea4e42a3c37eb98"
       ],
       0,
-      "0ebacc9f34590a8196e0e4c43e62156c"
+      "03d6763f7f8fc1d8e3a97cf48c9d2d26"
     ],
     [
       "Lang.__proj__Read__item__id",
@@ -39,7 +37,7 @@
         "refinement_interpretation_Tm_refine_8b0b214c8c365de975ef6f968fef05ff"
       ],
       0,
-      "c3c0630c7f6f71e43041b289a7390586"
+      "18286a25fa19e46990f0cd2eba13e14f"
     ],
     [
       "Lang.__proj__Write__item__id",
@@ -52,7 +50,7 @@
         "refinement_interpretation_Tm_refine_d48ca6a107dccb6956bc9f7c46bdf471"
       ],
       0,
-      "936af99de604521a120b58ea299646a4"
+      "a37bf43e2ca02496683d7e47e191a8e1"
     ],
     [
       "Lang.__proj__Write__item__v",
@@ -65,7 +63,7 @@
         "refinement_interpretation_Tm_refine_d48ca6a107dccb6956bc9f7c46bdf471"
       ],
       0,
-      "457e7ae050f904346619420711d81a24"
+      "3aa3f054ca8c6e112885d3515fffd9c4"
     ],
     [
       "Lang.__proj__Bind__item__a",
@@ -78,7 +76,7 @@
         "refinement_interpretation_Tm_refine_d927e07481e8f5540c72e4aad9322a2e"
       ],
       0,
-      "3e25065c163000be6725f1b2c486be4b"
+      "0bd88e0bfb1956e75b7d893d9928a5ea"
     ],
     [
       "Lang.__proj__Bind__item__b",
@@ -91,7 +89,7 @@
         "refinement_interpretation_Tm_refine_d927e07481e8f5540c72e4aad9322a2e"
       ],
       0,
-      "a957a4feb9b49a4f2213c1aa05887c45"
+      "bfa990181455cfd03ba20ceaa839a82c"
     ],
     [
       "Lang.__proj__Bind__item__c1",
@@ -99,13 +97,11 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "disc_equation_Lang.Bind",
-        "proj_equation_Lang.Bind_a", "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_Lang.Bind_a",
+        "@MaxIFuel_assumption", "@query", "data_elim_Lang.Bind",
         "refinement_interpretation_Tm_refine_d927e07481e8f5540c72e4aad9322a2e"
       ],
       0,
-      "1ce33a25da2b9cce1b7be49e4f95f5e3"
+      "789e3c832d9f1a6e0a3f7170e2ec56a4"
     ],
     [
       "Lang.__proj__Bind__item__c2",
@@ -113,14 +109,11 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "disc_equation_Lang.Bind",
-        "proj_equation_Lang.Bind_a", "proj_equation_Lang.Bind_b",
-        "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_Lang.Bind_a", "projection_inverse_Lang.Bind_b",
+        "@MaxIFuel_assumption", "@query", "data_elim_Lang.Bind",
         "refinement_interpretation_Tm_refine_d927e07481e8f5540c72e4aad9322a2e"
       ],
       0,
-      "4ae7e96c2d5696afd82e2995d6ac09da"
+      "b8c9e981827a9a6fe156736d5d64353d"
     ],
     [
       "Lang.wpsep_command",
@@ -137,11 +130,12 @@
         "disc_equation_Lang.Read", "disc_equation_Lang.Return",
         "disc_equation_Lang.Write", "equality_tok_Lang.Alloc@tok",
         "equation_Lang.addr", "fuel_guarded_inversion_Lang.command",
-        "subterm_ordering_Lang.Bind", "typing_tok_Lang.Alloc@tok",
-        "unit_typing"
+        "projection_inverse_BoxBool_proj_0", "subterm_ordering_Lang.Bind",
+        "typing_tok_Lang.Alloc@tok", "unit_typing",
+        "well_founded_ordering_on_codomain_Lang.Bind"
       ],
       0,
-      "7a1f389be63469207e5a1fc8f1074a1f"
+      "ad55d742a5e1d20e0f5ebf50f025e887"
     ]
   ]
 ]

@@ -18,9 +18,9 @@
 #light "off"
 
 module FStar.Common
-open FStar.ST
-open FStar.All
-module BU = FStar.Util
+open FStar.Compiler.Effect module List = FStar.Compiler.List
+open FStar.Compiler.Effect module List = FStar.Compiler.List
+module BU = FStar.Compiler.Util
 
 let has_cygpath =
     try

@@ -38,7 +38,7 @@ unfold
 let iex_return   (a:Type) (x:a) (es:exns) (p:iex_post a) : GTot Type0 = p (V x)
 
 unfold 
-let iex_bind_wp (r1:range) (a:Type) (b:Type)
+let iex_bind_wp (a:Type) (b:Type)
       (wp1:iex_wp a)
       (wp2:(a -> GTot (iex_wp b))) (es:exns) (p:iex_post b)
   : GTot Type0 =

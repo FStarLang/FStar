@@ -2,54 +2,6 @@
   "éä“ëCBRÀ$\rëbç-\b\u0014",
   [
     [
-      "EtM.AE.__proj__Key__item__ke",
-      1,
-      2,
-      1,
-      [
-        "@query", "proj_equation_EtM.AE.Key_region",
-        "projection_inverse_EtM.AE.Key_region"
-      ],
-      0,
-      "37f57e4a35c3bb7c0a8686cf788dc2c5"
-    ],
-    [
-      "EtM.AE.__proj__Key__item__km",
-      1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "bool_inversion",
-        "equation_EtM.AE.rid", "equation_EtM.MAC.rid",
-        "equation_FStar.HyperStack.ST.erid",
-        "equation_FStar.Monotonic.HyperHeap.disjoint",
-        "primitive_Prims.op_AmpAmp", "proj_equation_EtM.AE.Key_ke",
-        "proj_equation_EtM.AE.Key_region",
-        "proj_equation_EtM.MAC.Key_region",
-        "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_EtM.AE.Key_ke",
-        "projection_inverse_EtM.AE.Key_region",
-        "refinement_interpretation_EtM.AE_Tm_refine_8d49bc9ff43ccc39e9b67eab704a8474",
-        "refinement_interpretation_FStar.HyperStack.ST_Tm_refine_08d14059b664746699a12b0c359d3b8d",
-        "typing_EtM.MAC.__proj__Key__item__region",
-        "typing_FStar.Monotonic.HyperHeap.extends"
-      ],
-      0,
-      "b0268dcff0c27351b5bbe64f3a0e7500"
-    ],
-    [
-      "EtM.AE.__proj__Key__item__log",
-      1,
-      2,
-      1,
-      [
-        "@query", "proj_equation_EtM.AE.Key_region",
-        "projection_inverse_EtM.AE.Key_region"
-      ],
-      0,
-      "563f0a13da527c598e5de27976f380ee"
-    ],
-    [
       "EtM.AE.mac_only_cpa_ciphers",
       1,
       2,
@@ -81,7 +33,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "7ea252127ce592fa7976aeaac69de2d3"
+      "b86ec4ea966ddadd47775c8f7a3e5b68"
     ],
     [
       "EtM.AE.mac_only_cpa_ciphers_snoc",
@@ -110,7 +62,7 @@
         "typing_FStar.Seq.Properties.snoc"
       ],
       0,
-      "463184722ca8fa7ab7c48dc30ab4ed09"
+      "5a83ee4fbc22c20dc869073b0a61bd34"
     ],
     [
       "EtM.AE.mac_only_cpa_ciphers_mem",
@@ -130,7 +82,7 @@
         "refinement_kinding_Tm_refine_7de8468e4c8be42394c70da6b10033dd"
       ],
       0,
-      "79601cce76ab42453fa2bb8a1855c57f"
+      "544b32fc58757d390860cf10ff62d945"
     ],
     [
       "EtM.AE.mac_only_cpa_ciphers_mem",
@@ -202,7 +154,7 @@
         "unit_typing", "well-founded-ordering-on-nat"
       ],
       0,
-      "37456b50cf09dc30cfab9211c891bd01"
+      "55a96a63f639710209f6c38bb22cdbf7"
     ],
     [
       "EtM.AE.mac_and_cpa_refine_ae",
@@ -237,7 +189,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "30b2cceb7c7655f6263ef4a431774fde"
+      "9117c2be1718991d90e7ba9681b3adf2"
     ],
     [
       "EtM.AE.mac_and_cpa_refine_ae_snoc",
@@ -269,7 +221,7 @@
         "typing_FStar.Seq.Properties.snoc"
       ],
       0,
-      "5ef9937bbd77ff9de2bae02ed71b2d92"
+      "c4a51bf425bf17409bd6ae5b85fe91eb"
     ],
     [
       "EtM.AE.invert_invariant_aux",
@@ -294,7 +246,7 @@
         "typing_EtM.Plain.plain"
       ],
       0,
-      "58a90a75da181bb839f7d6685d909c7b"
+      "8c285c9d89afa23f38c331ef0e17045a"
     ],
     [
       "EtM.AE.invert_invariant_aux",
@@ -382,7 +334,7 @@
         "unit_typing", "well-founded-ordering-on-nat"
       ],
       0,
-      "aeee59071fbbbd4a7e6caec1cac98652"
+      "d5f35f8fe486f85e8a5fb94bf5869be9"
     ],
     [
       "EtM.AE.invert_invariant",
@@ -413,7 +365,7 @@
         "typing_EtM.Plain.plain"
       ],
       0,
-      "27341a80c331b23b1fbc6e53fd9ce37b"
+      "0d1cf5673a203728d4216e27de7fb343"
     ],
     [
       "EtM.AE.keygen",
@@ -546,7 +498,7 @@
         "typing_FStar.StrongExcludedMiddle.strong_excluded_middle"
       ],
       0,
-      "61070d6bf803323266c49ea37cc3a2af"
+      "3b1fd9924d280eb1aa40d36ee3196211"
     ],
     [
       "EtM.AE.encrypt",
@@ -711,7 +663,7 @@
         "typing_FStar.StrongExcludedMiddle.strong_excluded_middle"
       ],
       0,
-      "189c958d47ace234cc5609e67bc60fab"
+      "091448e6612e4573bd9c325c260c574a"
     ],
     [
       "EtM.AE.decrypt",
@@ -849,7 +801,7 @@
         "typing_FStar.StrongExcludedMiddle.strong_excluded_middle"
       ],
       0,
-      "e0df7902fc827b615201e6d5e5fe0b97"
+      "7af8abc44b38726e3fb949c5d003eeb3"
     ]
   ]
 ]

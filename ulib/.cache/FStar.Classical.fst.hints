@@ -1,5 +1,5 @@
 [
-  "»]nw\u0001\u0005\u001c‘hâ\nÛ\u0004Å\u0003",
+  "\u0016T„J0â◊‰˜\nÜ®Y\u0013Yó",
   [
     [
       "FStar.Classical.give_witness",
@@ -11,7 +11,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "86c8c450440d617a844eb88dab715978"
+      "66be3ab7eb4638b2c1e1b9bc811941f3"
     ],
     [
       "FStar.Classical.give_witness_from_squash",
@@ -23,7 +23,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "4c269666b5e0ff68bfe14222927e7e0f"
+      "568c56a460fd89b89a56f68f467960fc"
     ],
     [
       "FStar.Classical.get_squashed",
@@ -35,7 +35,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "a871640105aefef8e5e5474268fe7f6e"
+      "e7d28cea28c27ed51f2f6bdb8bef6038"
     ],
     [
       "FStar.Classical.get_equality",
@@ -44,7 +44,7 @@
       1,
       [ "@query", "equation_Prims.eq2" ],
       0,
-      "1cb330fa7ec283f86fc6dddab6b8d885"
+      "5b6f4b8ff91e90515bc473483a61366e"
     ],
     [
       "FStar.Classical.impl_intro",
@@ -53,7 +53,7 @@
       1,
       [ "@query" ],
       0,
-      "bad65713e8538f5a1f2a09490cbf177c"
+      "e39f347041c7f4e491565d1b789629f2"
     ],
     [
       "FStar.Classical.move_requires",
@@ -63,10 +63,11 @@
       [
         "@MaxIFuel_assumption", "@query", "disc_equation_Prims.Left",
         "disc_equation_Prims.Right", "equation_Prims.l_not",
-        "fuel_guarded_inversion_Prims.c_or"
+        "fuel_guarded_inversion_Prims.sum",
+        "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "2fe0a2bd601e12eee5d4f34d3e6a4095"
+      "edb4cea9e1b38d6bc4d76db73ecbfe9e"
     ],
     [
       "FStar.Classical.impl_intro_gen",
@@ -78,7 +79,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "ca6a9f51dc764322af32d98d18fc9fbe"
+      "5c57d7adcfdbe853cdaeed9b80170729"
     ],
     [
       "FStar.Classical.impl_intro_gen",
@@ -90,7 +91,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "7a253173184b68e82e4d54e718a8776e"
+      "cc3e2caeb3d9bdb24d6f0bf884a6316a"
     ],
     [
       "FStar.Classical.impl_intro_gen",
@@ -99,7 +100,7 @@
       1,
       [ "@query" ],
       0,
-      "9fb3d48b3e005cf5289390de6a16affa"
+      "ed8d7f041a79d4057b1680be4b138371"
     ],
     [
       "FStar.Classical.get_forall",
@@ -108,7 +109,7 @@
       1,
       [ "@query", "equation_Prims.l_Forall" ],
       0,
-      "796cf5aeafeaa6db2bf49fcda5dcdb25"
+      "2a72a249dfb71116792efdb40bc11e6a"
     ],
     [
       "FStar.Classical.forall_intro_gtot",
@@ -117,7 +118,7 @@
       1,
       [ "@query" ],
       0,
-      "6fc43f07c6898fd699d0a6c00575f4a9"
+      "342a0dc70ee756a37e03a786edddb699"
     ],
     [
       "FStar.Classical.lemma_forall_intro_gtot",
@@ -126,7 +127,7 @@
       1,
       [ "@query" ],
       0,
-      "d14e5eb5f06a8aa5bf3767373f41468b"
+      "e532adbf481895d223de93b093defd4f"
     ],
     [
       "FStar.Classical.gtot_to_lemma",
@@ -135,7 +136,7 @@
       1,
       [ "@query" ],
       0,
-      "9e1d28353fd1a37ee13f4b28f3e251da"
+      "e06060006a2f7beb8549558cdc5a497f"
     ],
     [
       "FStar.Classical.forall_intro",
@@ -144,7 +145,7 @@
       1,
       [ "@query" ],
       0,
-      "850afd561d62d7b5ab083203e6e9e26a"
+      "c3a332c7bc25aac8d4c265f2711a1d55"
     ],
     [
       "FStar.Classical.forall_impl_intro",
@@ -153,7 +154,7 @@
       1,
       [ "@query" ],
       0,
-      "78f047316563a6f3e939c5f4b2c58a4b"
+      "509f5329d77bc15c1af39fbf46b87984"
     ],
     [
       "FStar.Classical.ghost_lemma",
@@ -163,10 +164,11 @@
       [
         "@MaxIFuel_assumption", "@query", "disc_equation_Prims.Left",
         "disc_equation_Prims.Right", "equation_Prims.l_not",
-        "fuel_guarded_inversion_Prims.c_or", "unit_inversion"
+        "fuel_guarded_inversion_Prims.sum",
+        "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "c68f86b87c4a00f45abb7a94e038864a"
+      "e0d3432f682de9c795f9c7ff87adf4cb"
     ],
     [
       "FStar.Classical.exists_intro",
@@ -175,7 +177,7 @@
       1,
       [ "@query" ],
       0,
-      "4e91622ace24ee5f4c6d6907bd899765"
+      "30179858c6be8b2580c25d0d152f0eb1"
     ],
     [
       "FStar.Classical.exists_intro_not_all_not",
@@ -193,7 +195,7 @@
         "unit_typing"
       ],
       0,
-      "3de8f8e4241d1e371031d0f950c5af95"
+      "eddc880c1475c40d3b0843ed0cea2c5b"
     ],
     [
       "FStar.Classical.forall_to_exists",
@@ -202,7 +204,7 @@
       1,
       [ "@query" ],
       0,
-      "f833d738f3a4f7a0cf3dcf2d8edbb4e9"
+      "a598ec135cf5ebfb4763eb1767a0dde0"
     ],
     [
       "FStar.Classical.forall_to_exists_2",
@@ -211,7 +213,7 @@
       1,
       [ "@query" ],
       0,
-      "40af5074ea4571d0593fc8e64540c86e"
+      "001b1bde4b40d9b44896827ca88eee9b"
     ],
     [
       "FStar.Classical.exists_elim",
@@ -223,7 +225,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "3aa19d17ba1d5ffa54c628c72ba5e3d1"
+      "da18e21e9c9af18fcc9cce1d5a50a924"
     ],
     [
       "FStar.Classical.or_elim",
@@ -235,7 +237,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "c50d67f8b9bb9a64f2d71f71f23ac94a"
+      "53ae11a26728655702fb37bd9b5e9a21"
     ],
     [
       "FStar.Classical.or_elim",
@@ -247,7 +249,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "3c9c8e9f456e0883f0eab8ef5e189ad4"
+      "b02675b841e5dc451252caf8bd069605"
     ],
     [
       "FStar.Classical.or_elim",
@@ -259,7 +261,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "f75a3daf8a2004beaac3510dbe70d473"
+      "480687cc295ad630f2ceef0db6d04697"
     ],
     [
       "FStar.Classical.excluded_middle",
@@ -268,7 +270,7 @@
       1,
       [ "@query" ],
       0,
-      "8cfe05da8092daf641fbe4cb1920bb84"
+      "718ff204fc61d38783847ba2f2095438"
     ]
   ]
 ]

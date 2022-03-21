@@ -89,6 +89,8 @@ val promote (#sl:sl)
 /// cannot implement a boolean comparison function on secret_ints
 
 (** Bounds-respecting addition *)
+noextract
+inline_for_extraction
 val addition (#sl:sl)
              (#l:lattice_element sl)
              (#s:sw)
@@ -97,6 +99,8 @@ val addition (#sl:sl)
     : Tot (z:secret_int l s{m z == m x + m y})
 
 (** Addition modulo *)
+noextract
+inline_for_extraction
 val addition_mod (#sl:sl)
                  (#l:lattice_element sl)
                  (#sw: _ {Unsigned? sw /\ width_of_sw sw <> W128})
@@ -164,6 +168,8 @@ let as_public (#q:qual{Public? q}) (x:t q)
 (** Lifting addition to work over both secret and public integers *)
 [@@mark_for_norm]
 unfold
+noextract
+inline_for_extraction
 let ( + ) (#q:qual) (x:t q) (y:t q{ok (+) (i x) (i y)})
     : Tot (t q)
     = match q with
@@ -173,6 +179,8 @@ let ( + ) (#q:qual) (x:t q) (y:t q{ok (+) (i x) (i y)})
 (** Lifting addition modulo to work over both secret and public integers *)
 [@@mark_for_norm]
 unfold
+noextract
+inline_for_extraction
 let ( +% ) (#q:qual{norm (Unsigned? (sw_qual q) /\ width_of_sw (sw_qual q) <> W128)})
            (x:t q)
            (y:t q)

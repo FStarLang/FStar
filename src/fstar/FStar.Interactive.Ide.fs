@@ -16,12 +16,13 @@
 #light "off"
 
 module FStar.Interactive.Ide
-open FStar.ST
-open FStar.Exn
-open FStar.All
+open FStar.Pervasives
+open FStar.Compiler.Effect
+open FStar.Compiler.List
 open FStar
-open FStar.Range
-open FStar.Util
+open FStar.Compiler
+open FStar.Compiler.Range
+open FStar.Compiler.Util
 open FStar.Getopt
 open FStar.Ident
 open FStar.Errors
@@ -695,7 +696,11 @@ let run_push_without_deps st query =
 
   let frag = { frag_fname = "<input>"; frag_text = text; frag_line = line; frag_col = column } in
 
-  TcEnv.toggle_id_info st.repl_env true;
+  let _ =
+    if FStar.Options.ide_id_info_off()
+    then TcEnv.toggle_id_info st.repl_env false
+    else TcEnv.toggle_id_info st.repl_env true
+  in
   let st = set_nosynth_flag st peek_only in
   let success, st = run_repl_transaction st push_kind peek_only (PushFragment frag) in
   let st = set_nosynth_flag st false in
@@ -1084,7 +1089,7 @@ let interactive_printer printer =
                          forward_message printer label (get_json ())) }
 
 let install_ide_mode_hooks printer =
-  FStar.Util.set_printer (interactive_printer printer);
+  FStar.Compiler.Util.set_printer (interactive_printer printer);
   FStar.Errors.set_handler interactive_error_handler
 
 let initial_range =

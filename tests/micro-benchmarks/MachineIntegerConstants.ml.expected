@@ -1,0 +1,46 @@
+open Prims
+let (e_int8 : FStar_Int8.t -> FStar_Int8.t) =
+  fun x ->
+    match x with
+    | uu___ when uu___ = (Stdint.Int8.of_int (22)) ->
+        FStar_Int8.add (Stdint.Int8.of_int (42)) x
+    | uu___ -> Stdint.Int8.zero
+let (e_int16 : FStar_Int16.t -> FStar_Int16.t) =
+  fun x ->
+    match x with
+    | uu___ when uu___ = (Stdint.Int16.of_int (22)) ->
+        FStar_Int16.add (Stdint.Int16.of_int (42)) x
+    | uu___ -> Stdint.Int16.zero
+let (e_int32 : FStar_Int32.t -> FStar_Int32.t) =
+  fun x ->
+    match x with
+    | uu___ when uu___ = (Stdint.Int32.of_int (22)) ->
+        FStar_Int32.add (Stdint.Int32.of_int (42)) x
+    | uu___ -> Stdint.Int32.zero
+let (e_int64 : FStar_Int64.t -> FStar_Int64.t) =
+  fun x ->
+    match x with
+    | uu___ when uu___ = (Stdint.Int64.of_int (22)) ->
+        FStar_Int64.add (Stdint.Int64.of_int (42)) x
+    | uu___ -> Stdint.Int64.zero
+let (e_uint8 : FStar_UInt8.t -> FStar_UInt8.t) =
+  fun x ->
+    match x with | uu___ when uu___ = 22 -> FStar_UInt8.add 42 x | uu___ -> 0
+let (e_uint16 : FStar_UInt16.t -> FStar_UInt16.t) =
+  fun x ->
+    match x with
+    | uu___ when uu___ = (Stdint.Uint16.of_int (22)) ->
+        FStar_UInt16.add (Stdint.Uint16.of_int (42)) x
+    | uu___ -> Stdint.Uint16.zero
+let (e_uint32 : FStar_UInt32.t -> FStar_UInt32.t) =
+  fun x ->
+    match x with
+    | uu___ when uu___ = (Stdint.Uint32.of_int (22)) ->
+        FStar_UInt32.add (Stdint.Uint32.of_int (42)) x
+    | uu___ -> Stdint.Uint32.zero
+let (e_uint64 : FStar_UInt64.t -> FStar_UInt64.t) =
+  fun x ->
+    match x with
+    | uu___ when uu___ = (Stdint.Uint64.of_int (22)) ->
+        FStar_UInt64.add (Stdint.Uint64.of_int (42)) x
+    | uu___ -> Stdint.Uint64.zero

@@ -15,7 +15,7 @@
 *)
 module FStar.Int32
 
-(**** THIS MODULE IS GENETATED AUTOMATICALLY USING [mk_int.sh], DO NOT EDIT DIRECTLY ****)
+(**** THIS MODULE IS GENERATED AUTOMATICALLY USING [mk_int.sh], DO NOT EDIT DIRECTLY ****)
 
 unfold let n = 32
 
@@ -46,6 +46,10 @@ val vu_inv (x : int_t n) : Lemma
 val v_inj (x1 x2: t): Lemma
   (requires (v x1 == v x2))
   (ensures (x1 == x2))
+
+val zero : x:t{v x = 0}
+
+val one : x:t{v x = 1}
 
 val add (a:t) (b:t) : Pure t
   (requires (size (v a + v b) n))
@@ -137,7 +141,7 @@ let ct_abs (a:t{min_int n < v a}) : Tot (b:t{v b = abs (v a)}) =
   if 0 <= v a then
     begin
     sign_bit_positive (v a);
-    nth_lemma (v mask) (zero _);
+    nth_lemma (v mask) (FStar.Int.zero _);
     logxor_lemma_1 (v a)
     end
   else

@@ -35,7 +35,7 @@ let mem = t
 (* Type of region references *)
 abstract let rref (id:rid) (a:Type) = Heap.ref a
 
-(* Abstract uniform reprensetation of the values allocated on the stack *)
+(* Abstract uniform representation of the values allocated on the stack *)
 assume new type stacked : Type -> Type
 assume val frameOf: #a:Type -> stacked a -> Tot rid
 assume val refOf: #a:Type -> s:stacked a -> Tot (rref (frameOf s) a)
@@ -77,7 +77,7 @@ let top_frame s = Map.sel (heaps s) (top_frame_id s)
 let poppable (s:t) = includes [root] (stack s)
 
 (* s1 has a new frame on top of s0. JK: Because of maps monotonicity I believe it 
-   guaranties the unicity of the new frame id, needs to be checked *)
+   guarantees the unicity of the new frame id, needs to be checked *)
 let fresh_frame (s0:t) (s1:t) = 
   includes [root] (stack s1) /\ Cons.tl (stack s1) = stack s0
   /\ not (Map.contains (heaps s0) (top_frame_id s1))

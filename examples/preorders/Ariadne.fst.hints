@@ -1,5 +1,5 @@
 [
-  "Ã/D\u0015ìP¬Ωˇ∏⁄òl\u0005}ã",
+  ".Y\u0011r^\bÌê\\N‚∂Å◊À,",
   [
     [
       "Ariadne.case",
@@ -12,7 +12,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "a6a38adb4dfa7cc54f69344305161121"
+      "0e9ccfdb18649b5e4ca2a3c27fd37540"
     ],
     [
       "Ariadne.__proj__Ok__item__saved",
@@ -25,7 +25,7 @@
         "refinement_interpretation_Tm_refine_433d08d8d7a72b888729343254dd5f4a"
       ],
       0,
-      "9efc3bd62ce495b7494453a1af384e64"
+      "fc54da31b7f14484333d5c69e45f59cf"
     ],
     [
       "Ariadne.__proj__Recover__item__read",
@@ -38,7 +38,7 @@
         "refinement_interpretation_Tm_refine_4866c1405a82ccc72c55102aa593b7ee"
       ],
       0,
-      "ad0088ecc034bc9e29ceffacafd2e1fc"
+      "171b0e29dcd281117c4b03b81e169907"
     ],
     [
       "Ariadne.__proj__Recover__item__other",
@@ -51,7 +51,7 @@
         "refinement_interpretation_Tm_refine_4866c1405a82ccc72c55102aa593b7ee"
       ],
       0,
-      "b99fc3b2c5ed054a5c924666d7d5629e"
+      "91fc4dd6b588ec87f9e0486c54c885d0"
     ],
     [
       "Ariadne.__proj__Writing__item__written",
@@ -64,7 +64,7 @@
         "refinement_interpretation_Tm_refine_4fff7e1627aecb8a01ff14db8bd98023"
       ],
       0,
-      "85a0afa4a541a74d75d4898f66e33cc4"
+      "bafa45b887058e1997fd1ada1dabd85d"
     ],
     [
       "Ariadne.__proj__Writing__item__old",
@@ -77,7 +77,7 @@
         "refinement_interpretation_Tm_refine_4fff7e1627aecb8a01ff14db8bd98023"
       ],
       0,
-      "a53b41adb536ed5d6a91c5a7d5f0e43a"
+      "1a4ed6c334bd12dd64af3ace64e53636"
     ],
     [
       "Ariadne.__proj__Crash__item__read",
@@ -90,7 +90,7 @@
         "refinement_interpretation_Tm_refine_afc93d5e07c3e90000704a2ee31d4fab"
       ],
       0,
-      "6e52e5806ac092715b8054bf73de510b"
+      "1b1bd745e230c7dbfade30fd116e18f6"
     ],
     [
       "Ariadne.__proj__Crash__item__other",
@@ -103,7 +103,7 @@
         "refinement_interpretation_Tm_refine_afc93d5e07c3e90000704a2ee31d4fab"
       ],
       0,
-      "7df300a434b3333d782a77485af9f0a7"
+      "d441e7908d63541eec9c1236a7dfd545"
     ],
     [
       "Ariadne.counter",
@@ -119,7 +119,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "590f5d9afb972773c2316d123bf3ac9a"
+      "38cfec36e9b2e854c92ad9d4a1f392bf"
     ],
     [
       "Ariadne.saved",
@@ -137,7 +137,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "09e71d4642687c739772757d2ee163a1"
+      "d8b7cd854e7b9b2dcc7f41d6e13eaf04"
     ],
     [
       "Ariadne.preorder'",
@@ -152,7 +152,7 @@
         "l_quant_interp_2d93d1e2e978575420277bf29c7a470b"
       ],
       0,
-      "4de722de4b825aa12f0a67be8075b234"
+      "5dd68b4e4a3f2dc2cf75f922c13ffa11"
     ],
     [
       "Ariadne.saved_backup",
@@ -174,7 +174,7 @@
         "typing_Ariadne.preorder_"
       ],
       0,
-      "0f905fd9675806fd759b94628a1b57be"
+      "f1ed9661c5dd08a4c878ac2f6d210c4d"
     ],
     [
       "Ariadne.backup",
@@ -187,7 +187,7 @@
         "typing_Ariadne.saved_backup"
       ],
       0,
-      "ef75783a9d0622b197fb25e460dfabd1"
+      "53df0395ad687196c6e4e65f3f77d6d3"
     ],
     [
       "Ariadne.log_pre",
@@ -196,32 +196,20 @@
       1,
       [
         "@MaxFuel_assumption", "@MaxIFuel_assumption",
-        "@fuel_correspondence_FStar.List.Tot.Base.strict_prefix_of.fuel_instrumented",
-        "@fuel_irrelevance_FStar.List.Tot.Base.strict_prefix_of.fuel_instrumented",
+        "@fuel_correspondence_FStar.List.Tot.Base.strict_suffix_of.fuel_instrumented",
+        "@fuel_irrelevance_FStar.List.Tot.Base.strict_suffix_of.fuel_instrumented",
         "@query", "equation_Ariadne.backup", "equation_Ariadne.log_pre_",
-        "equation_Ariadne.prefix_of", "equation_FStar.Preorder.preorder_rel",
+        "equation_Ariadne.suffix_of", "equation_FStar.Preorder.preorder_rel",
         "equation_FStar.Preorder.reflexive",
         "equation_FStar.Preorder.transitive",
-        "equation_with_fuel_FStar.List.Tot.Base.strict_prefix_of.fuel_instrumented",
+        "equation_with_fuel_FStar.List.Tot.Base.strict_suffix_of.fuel_instrumented",
         "false_interp", "fuel_guarded_inversion_Prims.list",
-        "interpretation_Tm_abs_b12da42f1278d37b8e165027f8b750bf",
-        "lemma_FStar.List.Tot.Properties.strict_prefix_of_trans",
+        "interpretation_Tm_abs_c7b3a92b04ac49b355f01e4f39fe0528",
+        "lemma_FStar.List.Tot.Properties.strict_suffix_of_trans",
         "typing_Ariadne.backup"
       ],
       0,
-      "79f6e2f4afbe4b2e4266d2c3add67aeb"
-    ],
-    [
-      "Ariadne.__proj__Protect__item__k",
-      1,
-      2,
-      1,
-      [
-        "@query", "proj_equation_Ariadne.Protect_c",
-        "projection_inverse_Ariadne.Protect_c"
-      ],
-      0,
-      "fa41a62a73336c219e9aec34d4a8a6b6"
+      "20bd3571163126b53ef6b4fa3cbd5015"
     ],
     [
       "Ariadne.create",
@@ -270,7 +258,7 @@
         "typing_FStar.Monotonic.Heap.sel", "typing_FStar.Set.empty"
       ],
       0,
-      "7a4f4386f9c80c4bf8daec1e1b094e24"
+      "dabccbcac8750d9d17c675faa21c3b10"
     ],
     [
       "Ariadne.pre0",
@@ -284,7 +272,7 @@
         "fuel_guarded_inversion_Ariadne.case"
       ],
       0,
-      "e1864b3e8b26fa385ac97b7750ad6b91"
+      "5ff1e97495f2eb6f72a0b10894e30d7d"
     ],
     [
       "Ariadne.step0",
@@ -298,7 +286,7 @@
         "equation_Ariadne.state", "fuel_guarded_inversion_Ariadne.case"
       ],
       0,
-      "91afee7463f8fe860cdf19fc35a87d86"
+      "587ce69318f4651fb6df6ca09cb02d54"
     ],
     [
       "Ariadne.save",
@@ -307,10 +295,9 @@
       1,
       [
         "@MaxFuel_assumption", "@MaxIFuel_assumption",
-        "@fuel_correspondence_FStar.List.Tot.Base.strict_prefix_of.fuel_instrumented",
+        "@fuel_correspondence_FStar.List.Tot.Base.strict_suffix_of.fuel_instrumented",
         "@query", "Ariadne_pretyping_aa7fb1e4d4d9e1f5c4d43327f007a8ad",
-        "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "Prims_pretyping_f8666440faa91836cc5a13998af863fc", "b2t_def",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565", "b2t_def",
         "bool_inversion", "bool_typing",
         "constructor_distinct_Ariadne.Crash",
         "constructor_distinct_Ariadne.Writing",
@@ -322,27 +309,29 @@
         "equation_Ariadne.index", "equation_Ariadne.key",
         "equation_Ariadne.log", "equation_Ariadne.log_pre",
         "equation_Ariadne.log_pre_", "equation_Ariadne.pre0",
-        "equation_Ariadne.prefix_of", "equation_Ariadne.preorder_",
-        "equation_Ariadne.record", "equation_Ariadne.saved",
-        "equation_Ariadne.saved_backup", "equation_Ariadne.state",
-        "equation_Ariadne.step0", "equation_FStar.Monotonic.Heap.equal_dom",
+        "equation_Ariadne.preorder_", "equation_Ariadne.record",
+        "equation_Ariadne.saved", "equation_Ariadne.saved_backup",
+        "equation_Ariadne.state", "equation_Ariadne.step0",
+        "equation_Ariadne.suffix_of",
+        "equation_FStar.Monotonic.Heap.equal_dom",
         "equation_FStar.Monotonic.Heap.set",
+        "equation_FStar.Pervasives.pattern",
         "equation_FStar.Preorder.preorder",
         "equation_FStar.Preorder.preorder_rel",
         "equation_FStar.Preorder.reflexive", "equation_FStar.ST.mref",
         "equation_Prims.eqtype", "equation_Prims.nat", "equation_Prims.pos",
-        "equation_with_fuel_FStar.List.Tot.Base.strict_prefix_of.fuel_instrumented",
+        "equation_with_fuel_FStar.List.Tot.Base.strict_suffix_of.fuel_instrumented",
         "false_interp", "fuel_guarded_inversion_Ariadne.case",
         "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
         "function_token_typing_Ariadne.log_pre",
         "function_token_typing_Ariadne.saved_backup",
+        "function_token_typing_FStar.Pervasives.pattern",
         "function_token_typing_Prims.__cache_version_number__",
         "function_token_typing_Prims.int",
-        "function_token_typing_Prims.unit",
         "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2", "int_inversion",
         "interpretation_Tm_abs_94ac1d7db7c09cc7672544949d0efc27",
         "interpretation_Tm_abs_a5ca6fe12225dcddc723177173d17b3f",
-        "interpretation_Tm_abs_b12da42f1278d37b8e165027f8b750bf",
+        "interpretation_Tm_abs_c7b3a92b04ac49b355f01e4f39fe0528",
         "kinding_Ariadne.counter@tok", "kinding_Prims.list@tok",
         "l_and-interp", "l_or-interp",
         "l_quant_interp_2d93d1e2e978575420277bf29c7a470b",
@@ -382,7 +371,7 @@
         "typing_FStar.Set.singleton", "unit_inversion", "unit_typing"
       ],
       0,
-      "3f0be0a724fb32ba7937060a492d7a47"
+      "d8e5b784fa30e02ae37cc80abcdbcd85"
     ],
     [
       "Ariadne.step1",
@@ -396,7 +385,7 @@
         "refinement_interpretation_Tm_refine_4187e98250438914a336576d12992752"
       ],
       0,
-      "72d66728f3efc40afaae3347d5ec94b5"
+      "879152c8619696ee44718dc86ff3f867"
     ],
     [
       "Ariadne.incr",
@@ -410,7 +399,7 @@
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "b3e4b11e96f144a912aaefdecc1a2075"
+      "751aa187dac8dbe14cad2cf80cf15bec"
     ],
     [
       "Ariadne.incr",
@@ -454,7 +443,7 @@
         "unit_inversion", "unit_typing"
       ],
       0,
-      "9aaf74ad8df5952fe8512ca3ca600e0e"
+      "f951287f29448e5438de7fea5885f652"
     ],
     [
       "Ariadne.store",
@@ -463,7 +452,7 @@
       1,
       [ "@query", "assumption_Ariadne.case__uu___haseq" ],
       0,
-      "452199e8115c2882663712fd484ff892"
+      "d907152918224a4d9cb96fd654d94b19"
     ],
     [
       "Ariadne.store",
@@ -496,7 +485,7 @@
         "string_inversion", "unit_typing"
       ],
       0,
-      "fc57e8670ab42e0b12019bc826ac57a3"
+      "657c1e3c42cc29321adfa008afe546cd"
     ],
     [
       "Ariadne.recover",
@@ -510,7 +499,7 @@
         "equation_Ariadne.state", "fuel_guarded_inversion_Ariadne.case"
       ],
       0,
-      "460f3af5970c823bdcd5878c2892ebea"
+      "7d983f1605b58e26e9a2d3ede78ad6bd"
     ],
     [
       "Ariadne.recover",
@@ -577,7 +566,7 @@
         "typing_Ariadne.step0", "typing_Ariadne.step1"
       ],
       0,
-      "2f3c5aa4eb742dca9af6cb4a0f136802"
+      "8aa8501aac0c3d11084a13da6af84d18"
     ],
     [
       "Ariadne.example",
@@ -609,7 +598,7 @@
         "string_inversion", "string_typing", "unit_inversion", "unit_typing"
       ],
       0,
-      "5d0d807544980e076fad189dbcd8e492"
+      "bc48560414d55233df1ba93890686426"
     ]
   ]
 ]

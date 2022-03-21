@@ -25,7 +25,7 @@ module FlightsStExn
 /// This module layers a state effect over Exn
 ///
 /// We could define the state effect parametric in the state,
-///   but that currently does not extract, see ParametricStateissue.fst
+///   but that currently does not extract, see ParametricStateIssue.fst
 
 open FStar.Integers
 

@@ -35,7 +35,7 @@ let st_return  (a:Type) (x:a) (s:Type0) (post:st_post s a)
   = post x
 
 unfold 
-let st_bind_wp (r1:range) (a:Type) (b:Type)
+let st_bind_wp (a:Type) (b:Type)
                (wp1:st_wp a) (wp2:(a -> GTot (st_wp b)))
                (s:Type0) (post:st_post s b) (s0:s) 
   = wp1 s (fun a s1 -> wp2 a s post s1) s0

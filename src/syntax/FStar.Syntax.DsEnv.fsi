@@ -17,18 +17,18 @@
 // (c) Microsoft Corporation. All rights reserved
 
 module FStar.Syntax.DsEnv
-open FStar.ST
-open FStar.All
+open FStar.Compiler.Effect
+open FStar.Compiler.Effect
 
 
-open FStar
-open FStar.Util
+open FStar open FStar.Compiler
+open FStar.Compiler.Util
 open FStar.Syntax
 open FStar.Syntax.Syntax
 open FStar.Syntax.Util
 open FStar.Parser
 open FStar.Ident
-module BU = FStar.Util
+module BU = FStar.Compiler.Util
 module S = FStar.Syntax.Syntax
 module U = FStar.Syntax.Util
 
@@ -101,6 +101,7 @@ arguments are instantiated. *)
 val try_lookup_root_effect_name: env -> lident -> option<lident>
 val try_lookup_datacon: env -> lident -> option<fv>
 val try_lookup_record_by_field_name: env -> lident -> option<record_or_dc>
+val try_lookup_record_type: env -> lident -> option<record_or_dc>
 val belongs_to_record: env -> lident -> record_or_dc -> bool
 val try_lookup_dc_by_field_name: env -> lident -> option<(lident * bool)>
 val try_lookup_definition: env -> lident -> option<term>

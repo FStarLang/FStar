@@ -87,7 +87,7 @@ let return (#a:Type) (#r:a -> resource) (x:a)
 : RSTATE a (r x) r True
 = RSTATE?.reflect (returnc a x r)
 
-assume val wp_monotonic_pure (_:unit)
+assume val elim_pure_wp_monotonicity_forall (_:unit)
   : Lemma
     (forall (a:Type) (wp:pure_wp a).
        (forall (p q:pure_post a).
@@ -98,7 +98,7 @@ let lift_pure_rst (a:Type) (wp:pure_wp a) (r:resource) (f:eqtype_as_type unit ->
 : Pure (repr a r (fun _ -> r) True)
   (requires wp (fun _ -> True))
   (ensures fun _ -> True)
-= wp_monotonic_pure ();
+= elim_pure_wp_monotonicity_forall ();
   fun _ -> f ()
 
 sub_effect PURE ~> RSTATE = lift_pure_rst
@@ -133,7 +133,7 @@ let test_match (x:t) : RSTATE unit emp (fun _ -> emp) True =
  *
  * When typechecking the pattern `C a x`, we generate a term with projectors and discriminators
  *   for each of the pattern bvs, a and x in this case, and those terms are then lax checked
- * Crucially when lax checking pat_bv_tm for `x`, `a` must be in the environement,
+ * Crucially when lax checking pat_bv_tm for `x`, `a` must be in the environment,
  *   earlier it wasn't
  *)
 

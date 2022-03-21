@@ -1,0 +1,96 @@
+[
+  "€éþ°\u001cë&ø¥þK–\u0019©n¨",
+  [
+    [
+      "FStar.InteractiveHelpers.Output._split_subst_at_bv",
+      1,
+      0,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_1eabc41484fd5b9dcaf6fca81ee03b09_3",
+        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "equality_tok_Prims.LexTop@tok", "fuel_guarded_inversion_Prims.list",
+        "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
+      ],
+      0,
+      "4c0f7e24ace7d0192e97f3cac60bdfa5"
+    ],
+    [
+      "FStar.InteractiveHelpers.Output.subst_shadowed_with_abs_in_assertions",
+      1,
+      0,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "fuel_guarded_inversion_FStar.Tactics.Result.__result",
+        "projection_inverse_BoxBool_proj_0"
+      ],
+      0,
+      "bb78f18ab8ee6d8f3f8e8d06734a6346"
+    ],
+    [
+      "FStar.InteractiveHelpers.Output.opt_term_to_printout",
+      1,
+      0,
+      1,
+      [
+        "@query", "function_token_typing_FStar.Reflection.Types.term",
+        "lemma_FStar.Pervasives.invertOption"
+      ],
+      0,
+      "d513f6c2f545056b01177e0975450b4c"
+    ],
+    [
+      "FStar.InteractiveHelpers.Output.__proj__ESuccess__item__ge",
+      1,
+      0,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_c3603a9204b69bd537f4b4bbf2a00266"
+      ],
+      0,
+      "00d25286f87cfe8b1f2b4305d87f8277"
+    ],
+    [
+      "FStar.InteractiveHelpers.Output.__proj__ESuccess__item__a",
+      1,
+      0,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_c3603a9204b69bd537f4b4bbf2a00266"
+      ],
+      0,
+      "2a919a3e92d2c3fad24166c2c526023f"
+    ],
+    [
+      "FStar.InteractiveHelpers.Output.__proj__EFailure__item__err",
+      1,
+      0,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_c8334db65fdbf30bb7a9e3ef5d0b3120"
+      ],
+      0,
+      "046c66fb801c0d32468d13e24c92a411"
+    ],
+    [
+      "FStar.InteractiveHelpers.Output.result_to_printout",
+      1,
+      0,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_FStar.InteractiveHelpers.Output.EFailure",
+        "disc_equation_FStar.InteractiveHelpers.Output.ESuccess",
+        "fuel_guarded_inversion_FStar.InteractiveHelpers.Output.export_result",
+        "projection_inverse_BoxBool_proj_0"
+      ],
+      0,
+      "f463ba363d24ae33a1e97b8356cf2611"
+    ]
+  ]
+]

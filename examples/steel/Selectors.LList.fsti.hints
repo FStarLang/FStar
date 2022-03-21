@@ -1,0 +1,48 @@
+[
+  "èærÅÈ∏SR1¯-£&\u001dz\u001d",
+  [
+    [
+      "Selectors.LList.v_llist",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.l_True",
+        "equation_Prims.l_and", "equation_Prims.logical",
+        "equation_Prims.squash",
+        "function_token_typing_Steel.Effect.Common.selector_tactic",
+        "l_and-interp", "lemma_FStar.Tactics.Effect.by_tactic_seman",
+        "refinement_interpretation_Tm_refine_18317c6e69cf3729c3f50cd32d64630b",
+        "refinement_kinding_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "8647fe439219217699cc3b4947b9f203"
+    ],
+    [
+      "Selectors.LList.tail",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "4a8363872161dd73d714fe90a1612851"
+    ],
+    [
+      "Selectors.LList.v_ind_llist",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.l_True",
+        "equation_Prims.l_and", "equation_Prims.logical",
+        "equation_Prims.squash",
+        "function_token_typing_Steel.Effect.Common.selector_tactic",
+        "l_and-interp", "lemma_FStar.Tactics.Effect.by_tactic_seman",
+        "refinement_interpretation_Tm_refine_795c4e41f9a1bae050820a2f35749c51",
+        "refinement_kinding_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "44d633fe655c74ea75c556a41abbcf1d"
+    ]
+  ]
+]

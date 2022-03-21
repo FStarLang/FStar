@@ -15,18 +15,20 @@
 *)
 #light "off"
 module FStar.Syntax.Syntax
-open FStar.ST
-open FStar.All
-(* Type definitions for the core AST *)
-
 (* Prims is used for bootstrapping *)
 open Prims
+open FStar.Pervasives
+open FStar.Compiler.Effect
+open FStar.Compiler.List
+(* Type definitions for the core AST *)
+
 open FStar
-open FStar.Util
-open FStar.Range
+open FStar.Compiler
+open FStar.Compiler.Util
+open FStar.Compiler.Range
 open FStar.Ident
 open FStar.Const
-open FStar.Dyn
+open FStar.Compiler.Dyn
 module O = FStar.Options
 module PC = FStar.Parser.Const
 open FStar.VConfig
@@ -54,6 +56,7 @@ type pragma =
   | PopOptions
   | RestartSolver
   | LightOff
+  | PrintEffectsGraph
 
 // IN F*: [@ PpxDerivingYoJson (PpxDerivingShowConstant "None") ]
 type memo<'a> = ref<option<'a>>
@@ -115,6 +118,7 @@ type delta_depth =
 type should_check_uvar =
   | Allow_unresolved      (* Escape hatch for uvars in logical guards that are sometimes left unresolved *)
   | Allow_untyped         (* Escape hatch to not re-typecheck guards in WPs and types of pattern bound vars *)
+  | Allow_ghost           (* Escape hatch used for dot patterns *)
   | Strict                (* Everything else is strict *)
 
 type term' =
@@ -128,7 +132,8 @@ type term' =
   | Tm_arrow      of binders * comp                              (* (xi:ti) -> M t' wp *)
   | Tm_refine     of bv * term                                   (* x:t{phi} *)
   | Tm_app        of term * args                                 (* h tau_1 ... tau_n, args in order from left to right *)
-  | Tm_match      of term * list<branch>                         (* match e with b1 ... bn *)
+  | Tm_match      of term * option<match_returns_ascription> * list<branch> * option<residual_comp>
+                                                                 (* (match e (as x returns asc)? with b1 ... bn) : (C | N)) *)
   | Tm_ascribed   of term * ascription * option<lident>          (* an effect label is the third arg, filled in by the type-checker *)
   | Tm_let        of letbindings * term                          (* let (rec?) x1 = e1 AND ... AND xn = en in e *)
   | Tm_uvar       of ctx_uvar_and_subst                          (* A unification variable ?u (aka meta-variable)
@@ -154,8 +159,10 @@ and ctx_uvar_meta_t =
 and ctx_uvar_and_subst = ctx_uvar * subst_ts
 and uvar = Unionfind.p_uvar<option<term>> * version * Range.range
 and uvars = set<ctx_uvar>
+and match_returns_ascription = binder * ascription               (* as x returns C|t *)
 and branch = pat * option<term> * term                           (* optional when clause in each branch *)
-and ascription = either<term, comp> * option<term>               (* e <: t [by tac] or e <: C [by tac] *)
+and ascription = either<term, comp> * option<term> * bool        (* e <: t [by tac] or e <: C [by tac] *)
+                                                                 (* the bool says whether the ascription is an equality ascription, i.e. $: *)
 and pat' =
   | Pat_constant of sconst
   | Pat_cons     of fv * list<(pat * bool)>                      (* flag marks an explicitly provided implicit *)
@@ -193,9 +200,16 @@ and pat = withinfo_t<pat'>
 and comp = syntax<comp'>
 and arg = term * aqual                                           (* marks an explicitly provided implicit arg *)
 and args = list<arg>
-and binder = bv * aqual                                          (* f:   #n:nat -> vector n int -> T; f #17 v *)
+and binder = {
+  binder_bv    : bv;
+  binder_qual  : bqual;
+  binder_attrs : list<attribute>
+}                                                                (* f:   #[@@ attr] n:nat -> vector n int -> T; f #17 v *)
 and binders = list<binder>                                       (* bool marks implicit binder *)
-and cflag =                                                      (* flags applicable to computation types, usually for optimizations *)
+and decreases_order =
+  | Decreases_lex of list<term>  (* a decreases clause may either specify a lexicographic ordered list of terms, *)
+  | Decreases_wf of term * term  (* or a well-founded relation and a term *)
+and cflag =                                                        (* flags applicable to computation types, usually for optimizations *)
   | TOTAL                                                          (* computation has no real effect, can be reduced safely *)
   | MLEFFECT                                                       (* the effect is ML    (Parser.Const.effect_ML_lid) *)
   | LEMMA                                                          (* the effect is Lemma (Parser.Const.effect_Lemma_lid) *)
@@ -205,7 +219,7 @@ and cflag =                                                      (* flags applic
   | TRIVIAL_POSTCONDITION                                          (* the computation has no meaningful postcondition *)
   | SHOULD_NOT_INLINE                                              (* a stopgap, see issue #1362, removing it revives the failure *)
   | CPS                                                            (* computation is marked with attribute `cps`, for DM4F, seems useless, see #1557 *)
-  | DECREASES of term
+  | DECREASES of decreases_order
 and metadata =
   | Meta_pattern       of list<term> * list<args>                (* Patterns for SMT quantifier instantiation; the first arg is the list of names of the binders of the enclosing forall/exists *)
   | Meta_named         of lident                                 (* Useful for pretty printing to keep the type abbreviation around *)
@@ -216,14 +230,22 @@ and metadata =
   | Meta_monadic_lift  of monad_name * monad_name * typ          (* Sub-effecting: lift the subterm of type typ *)
                                                                  (* from the first monad_name m1 to the second monad name  m2 *)
 and meta_source_info =
-  | Sequence
+  | Sequence                                    (* used when resugaring *)
   | Primop                                      (* ... add more cases here as needed for better code generation *)
   | Masked_effect
   | Meta_smt_pat
+  | Machine_integer of signedness * width
 and fv_qual =
   | Data_ctor
-  | Record_projector of (lident * ident)          (* the fully qualified (unmangled) name of the data constructor and the field being projected *)
+  | Record_projector of (lident * ident)        (* the fully qualified (unmangled) name of the data constructor and the field being projected *)
   | Record_ctor of lident * list<ident>         (* the type of the record being constructed and its (unmangled) fields in order *)
+  | Unresolved_projector of option<fv>          (* ToSyntax's best guess at what the projector is (based only on scoping rules) *)
+  | Unresolved_constructor of unresolved_constructor (* ToSyntax's best guess at what the constructor is (based only on scoping rules) *)
+and unresolved_constructor = {
+  uc_base_term : bool;      // The base term is `e` when the user writes `{ e with f1=v1; ... }`
+  uc_typename: option<lident>;      // The constructed type, as determined by the ToSyntax's scoping rules
+  uc_fields : list<lident>  // The fields names as written in the source
+}
 and lbname = either<bv, fv>
 and letbindings = bool * list<letbinding>       (* let recs may have more than one element; top-level lets have lidents *)
 and subst_ts = list<list<subst_elt>>            (* A composition of parallel substitutions *)
@@ -288,6 +310,7 @@ and lazy_kind =
   | Lazy_goal
   | Lazy_sigelt
   | Lazy_uvar
+  | Lazy_letbinding
   | Lazy_embedding of emb_typ * Thunk.t<term>
 
 and binding =
@@ -300,13 +323,15 @@ and binding =
   | Binding_univ     of univ_name
 and tscheme = list<univ_name> * typ
 and gamma = list<binding>
-and arg_qualifier =
+and binder_qualifier =
   | Implicit of bool //boolean marks an inaccessible implicit argument of a data constructor
-  | Meta of arg_qualifier_meta_t
+  | Meta of term     //meta-argument that specifies a tactic term
   | Equality
-and arg_qualifier_meta_t =
-  | Arg_qualifier_meta_tac of term
-  | Arg_qualifier_meta_attr of term
+and bqual = option<binder_qualifier>
+and arg_qualifier = {
+  aqual_implicit : bool;
+  aqual_attributes : list<attribute>
+}
 and aqual = option<arg_qualifier>
 
 // This is set in FStar.Main.main, where all modules are in-scope.
@@ -398,7 +423,7 @@ type eff_decl = {
   mname       : lident;
 
   cattributes : list<cflag>;
-  
+
   univs       : univ_names;
   binders     : binders;
 
@@ -460,7 +485,7 @@ type sigelt' =
   | Sig_fail              of list<int>         (* Expected errors *)
                           * bool               (* true if should fail in --lax *)
                           * list<sigelt>       (* The sigelts to be checked *)
-  
+
 and sigelt = {
     sigel:    sigelt';
     sigrng:   Range.range;
@@ -524,7 +549,7 @@ let lookup_aq (bv : bv) (aq : antiquotations) : option<term> =
 (*********************************************************************************)
 (* Syntax builders *)
 (*********************************************************************************)
-open FStar.Range
+open FStar.Compiler.Range
 
 let syn p k f = f k p
 let mk_fvs () = Util.mk_ref None
@@ -559,7 +584,7 @@ let mk (t:'a) r = {
 
 let bv_to_tm   bv :term = mk (Tm_bvar bv) (range_of_bv bv)
 let bv_to_name bv :term = mk (Tm_name bv) (range_of_bv bv)
-let binders_to_names (bs:binders) : list<term> = bs |> List.map (fun (x, _) -> bv_to_name x)
+let binders_to_names (bs:binders) : list<term> = bs |> List.map (fun b -> bv_to_name b.binder_bv)
 let mk_Tm_app (t1:typ) (args:list<arg>) p =
     match args with
     | [] -> t1
@@ -617,27 +642,33 @@ let is_type (t:term) = match t.n with
     | _ -> false
 let null_id  = mk_ident("_", dummyRange)
 let null_bv k = {ppname=null_id; index=0; sort=k}
-let mk_binder (a:bv) : binder = a, None
-let null_binder t : binder = null_bv t, None
+let mk_binder_with_attrs bv aqual attrs = {
+  binder_bv = bv;
+  binder_qual = aqual;
+  binder_attrs = attrs
+}
+let mk_binder a = mk_binder_with_attrs a None []
+let null_binder t : binder = mk_binder (null_bv t)
 let imp_tag = Implicit false
-let iarg t : arg = t, Some imp_tag
+let iarg t : arg = t, Some ({ aqual_implicit = true; aqual_attributes = [] })
 let as_arg t : arg = t, None
 let is_null_bv (b:bv) = string_of_id b.ppname = string_of_id null_id
-let is_null_binder (b:binder) = is_null_bv (fst b)
+let is_null_binder (b:binder) = is_null_bv b.binder_bv
 
 let is_top_level = function
     | {lbname=Inr _}::_ -> true
     | _ -> false
 
 let freenames_of_binders (bs:binders) : freenames =
-    List.fold_right (fun (x, _) out -> Util.set_add x out) bs no_names
+    List.fold_right (fun b out -> Util.set_add b.binder_bv out) bs no_names
 
-let binders_of_list fvs : binders = (fvs |> List.map (fun t -> t, None))
+let binders_of_list fvs : binders = (fvs |> List.map (fun t -> mk_binder t))
 let binders_of_freenames (fvs:freenames) = Util.set_elements fvs |> binders_of_list
-let is_implicit = function Some (Implicit _) -> true | _ -> false
-let is_implicit_or_meta = function Some (Implicit _) | Some (Meta _) -> true | _ -> false
-let as_implicit = function true -> Some imp_tag | _ -> None
-
+let is_bqual_implicit = function Some (Implicit _) -> true | _ -> false
+let is_aqual_implicit = function Some { aqual_implicit = b } -> b | _ -> false
+let is_bqual_implicit_or_meta = function Some (Implicit _) | Some (Meta _) -> true | _ -> false
+let as_bqual_implicit = function true -> Some imp_tag | _ -> None
+let as_aqual_implicit = function true -> Some ({aqual_implicit=true; aqual_attributes=[]}) | _ -> None
 let pat_bvs (p:pat) : list<bv> =
     let rec aux b p = match p.v with
         | Pat_dot_term _
@@ -662,7 +693,7 @@ let freshen_bv bv =
     then new_bv (Some (range_of_bv bv)) bv.sort
     else {bv with index=Ident.next_id()}
 
-let freshen_binder (b:binder) = let (bv, aq) = b in (freshen_bv bv, aq)
+let freshen_binder (b:binder) = { b with binder_bv = freshen_bv b.binder_bv }
 
 let new_univ_name ropt =
     let id = Ident.next_id() in
@@ -747,10 +778,30 @@ let t_tactic_of t =
               [as_arg t] Range.dummyRange
 
 let t_tactic_unit = t_tactic_of t_unit
-let t_list_of t = mk_Tm_app (mk_Tm_uinst (tabbrev PC.list_lid) [U_zero]) [as_arg t] Range.dummyRange
-let t_option_of t = mk_Tm_app (mk_Tm_uinst (tabbrev PC.option_lid) [U_zero]) [as_arg t] Range.dummyRange
-let t_tuple2_of t1 t2 = mk_Tm_app (mk_Tm_uinst (tabbrev PC.lid_tuple2) [U_zero;U_zero]) [as_arg t1; as_arg t2] Range.dummyRange
-let t_either_of t1 t2 = mk_Tm_app (mk_Tm_uinst (tabbrev PC.either_lid) [U_zero;U_zero]) [as_arg t1; as_arg t2] Range.dummyRange
+
+(*
+ * AR: what's up with all the U_zero below?
+ *)
+let t_list_of t = mk_Tm_app
+  (mk_Tm_uinst (tabbrev PC.list_lid) [U_zero])
+  [as_arg t]
+  Range.dummyRange
+let t_option_of t = mk_Tm_app
+  (mk_Tm_uinst (tabbrev PC.option_lid) [U_zero])
+  [as_arg t]
+  Range.dummyRange
+let t_tuple2_of t1 t2 = mk_Tm_app
+  (mk_Tm_uinst (tabbrev PC.lid_tuple2) [U_zero;U_zero])
+  [as_arg t1; as_arg t2]
+  Range.dummyRange
+let t_tuple3_of t1 t2 t3 = mk_Tm_app
+  (mk_Tm_uinst (tabbrev PC.lid_tuple3) [U_zero;U_zero;U_zero])
+  [as_arg t1; as_arg t2; as_arg t3]
+  Range.dummyRange
+let t_either_of t1 t2 = mk_Tm_app
+  (mk_Tm_uinst (tabbrev PC.either_lid) [U_zero;U_zero])
+  [as_arg t1; as_arg t2]
+  Range.dummyRange
 
 let unit_const_with_range r = mk (Tm_constant FStar.Const.Const_unit) r
 let unit_const = unit_const_with_range Range.dummyRange

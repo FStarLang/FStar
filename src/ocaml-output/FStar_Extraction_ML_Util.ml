@@ -6,20 +6,24 @@ let (codegen_fsharp : unit -> Prims.bool) =
 let pruneNones :
   'a . 'a FStar_Pervasives_Native.option Prims.list -> 'a Prims.list =
   fun l ->
-    FStar_List.fold_right
+    FStar_Compiler_List.fold_right
       (fun x ->
          fun ll ->
            match x with
            | FStar_Pervasives_Native.Some xs -> xs :: ll
            | FStar_Pervasives_Native.None -> ll) l []
 let (mk_range_mle : FStar_Extraction_ML_Syntax.mlexpr) =
-  FStar_All.pipe_left
+  FStar_Compiler_Effect.op_Less_Bar
     (FStar_Extraction_ML_Syntax.with_ty FStar_Extraction_ML_Syntax.MLTY_Top)
     (FStar_Extraction_ML_Syntax.MLE_Name (["Prims"], "mk_range"))
 let (dummy_range_mle : FStar_Extraction_ML_Syntax.mlexpr) =
-  FStar_All.pipe_left
+  FStar_Compiler_Effect.op_Less_Bar
     (FStar_Extraction_ML_Syntax.with_ty FStar_Extraction_ML_Syntax.MLTY_Top)
     (FStar_Extraction_ML_Syntax.MLE_Name (["FStar"; "Range"], "dummyRange"))
+let (fstar_real_of_string : FStar_Extraction_ML_Syntax.mlexpr) =
+  FStar_Compiler_Effect.op_Less_Bar
+    (FStar_Extraction_ML_Syntax.with_ty FStar_Extraction_ML_Syntax.MLTY_Top)
+    (FStar_Extraction_ML_Syntax.MLE_Name (["FStar"; "Real"], "of_string"))
 let (mlconst_of_const' :
   FStar_Const.sconst -> FStar_Extraction_ML_Syntax.mlconstant) =
   fun sctt ->
@@ -47,7 +51,7 @@ let (mlconst_of_const' :
     | FStar_Const.Const_reflect uu___ ->
         failwith "Unhandled constant: real/reify/reflect"
 let (mlconst_of_const :
-  FStar_Range.range ->
+  FStar_Compiler_Range.range ->
     FStar_Const.sconst -> FStar_Extraction_ML_Syntax.mlconstant)
   =
   fun p ->
@@ -56,62 +60,67 @@ let (mlconst_of_const :
       with
       | uu___ ->
           let uu___1 =
-            let uu___2 = FStar_Range.string_of_range p in
+            let uu___2 = FStar_Compiler_Range.string_of_range p in
             let uu___3 = FStar_Syntax_Print.const_to_string c in
-            FStar_Util.format2 "(%s) Failed to translate constant %s " uu___2
-              uu___3 in
+            FStar_Compiler_Util.format2
+              "(%s) Failed to translate constant %s " uu___2 uu___3 in
           failwith uu___1
 let (mlexpr_of_range :
-  FStar_Range.range -> FStar_Extraction_ML_Syntax.mlexpr') =
+  FStar_Compiler_Range.range -> FStar_Extraction_ML_Syntax.mlexpr') =
   fun r ->
     let cint i =
       let uu___ =
         let uu___1 =
           let uu___2 =
-            let uu___3 = FStar_Util.string_of_int i in
+            let uu___3 = FStar_Compiler_Util.string_of_int i in
             (uu___3, FStar_Pervasives_Native.None) in
           FStar_Extraction_ML_Syntax.MLC_Int uu___2 in
-        FStar_All.pipe_right uu___1
+        FStar_Compiler_Effect.op_Bar_Greater uu___1
           (fun uu___2 -> FStar_Extraction_ML_Syntax.MLE_Const uu___2) in
-      FStar_All.pipe_right uu___
+      FStar_Compiler_Effect.op_Bar_Greater uu___
         (FStar_Extraction_ML_Syntax.with_ty
            FStar_Extraction_ML_Syntax.ml_int_ty) in
     let cstr s =
       let uu___ =
-        FStar_All.pipe_right (FStar_Extraction_ML_Syntax.MLC_String s)
+        FStar_Compiler_Effect.op_Bar_Greater
+          (FStar_Extraction_ML_Syntax.MLC_String s)
           (fun uu___1 -> FStar_Extraction_ML_Syntax.MLE_Const uu___1) in
-      FStar_All.pipe_right uu___
+      FStar_Compiler_Effect.op_Bar_Greater uu___
         (FStar_Extraction_ML_Syntax.with_ty
            FStar_Extraction_ML_Syntax.ml_string_ty) in
     let uu___ =
       let uu___1 =
         let uu___2 =
-          let uu___3 = FStar_Range.file_of_range r in
-          FStar_All.pipe_right uu___3 cstr in
+          let uu___3 = FStar_Compiler_Range.file_of_range r in
+          FStar_Compiler_Effect.op_Bar_Greater uu___3 cstr in
         let uu___3 =
           let uu___4 =
             let uu___5 =
-              let uu___6 = FStar_Range.start_of_range r in
-              FStar_All.pipe_right uu___6 FStar_Range.line_of_pos in
-            FStar_All.pipe_right uu___5 cint in
+              let uu___6 = FStar_Compiler_Range.start_of_range r in
+              FStar_Compiler_Effect.op_Bar_Greater uu___6
+                FStar_Compiler_Range.line_of_pos in
+            FStar_Compiler_Effect.op_Bar_Greater uu___5 cint in
           let uu___5 =
             let uu___6 =
               let uu___7 =
-                let uu___8 = FStar_Range.start_of_range r in
-                FStar_All.pipe_right uu___8 FStar_Range.col_of_pos in
-              FStar_All.pipe_right uu___7 cint in
+                let uu___8 = FStar_Compiler_Range.start_of_range r in
+                FStar_Compiler_Effect.op_Bar_Greater uu___8
+                  FStar_Compiler_Range.col_of_pos in
+              FStar_Compiler_Effect.op_Bar_Greater uu___7 cint in
             let uu___7 =
               let uu___8 =
                 let uu___9 =
-                  let uu___10 = FStar_Range.end_of_range r in
-                  FStar_All.pipe_right uu___10 FStar_Range.line_of_pos in
-                FStar_All.pipe_right uu___9 cint in
+                  let uu___10 = FStar_Compiler_Range.end_of_range r in
+                  FStar_Compiler_Effect.op_Bar_Greater uu___10
+                    FStar_Compiler_Range.line_of_pos in
+                FStar_Compiler_Effect.op_Bar_Greater uu___9 cint in
               let uu___9 =
                 let uu___10 =
                   let uu___11 =
-                    let uu___12 = FStar_Range.end_of_range r in
-                    FStar_All.pipe_right uu___12 FStar_Range.col_of_pos in
-                  FStar_All.pipe_right uu___11 cint in
+                    let uu___12 = FStar_Compiler_Range.end_of_range r in
+                    FStar_Compiler_Effect.op_Bar_Greater uu___12
+                      FStar_Compiler_Range.col_of_pos in
+                  FStar_Compiler_Effect.op_Bar_Greater uu___11 cint in
                 [uu___10] in
               uu___8 :: uu___9 in
             uu___6 :: uu___7 in
@@ -120,13 +129,25 @@ let (mlexpr_of_range :
       (mk_range_mle, uu___1) in
     FStar_Extraction_ML_Syntax.MLE_App uu___
 let (mlexpr_of_const :
-  FStar_Range.range ->
+  FStar_Compiler_Range.range ->
     FStar_Const.sconst -> FStar_Extraction_ML_Syntax.mlexpr')
   =
   fun p ->
     fun c ->
       match c with
       | FStar_Const.Const_range r -> mlexpr_of_range r
+      | FStar_Const.Const_real s ->
+          let str = mlconst_of_const p (FStar_Const.Const_string (s, p)) in
+          let uu___ =
+            let uu___1 =
+              let uu___2 =
+                FStar_Compiler_Effect.op_Less_Bar
+                  (FStar_Extraction_ML_Syntax.with_ty
+                     FStar_Extraction_ML_Syntax.ml_string_ty)
+                  (FStar_Extraction_ML_Syntax.MLE_Const str) in
+              [uu___2] in
+            (fstar_real_of_string, uu___1) in
+          FStar_Extraction_ML_Syntax.MLE_App uu___
       | uu___ ->
           let uu___1 = mlconst_of_const p c in
           FStar_Extraction_ML_Syntax.MLE_Const uu___1
@@ -140,7 +161,7 @@ let rec (subst_aux :
       match t with
       | FStar_Extraction_ML_Syntax.MLTY_Var x ->
           let uu___ =
-            FStar_Util.find_opt
+            FStar_Compiler_Util.find_opt
               (fun uu___1 -> match uu___1 with | (y, uu___2) -> y = x) subst in
           (match uu___ with
            | FStar_Pervasives_Native.Some ts ->
@@ -153,11 +174,11 @@ let rec (subst_aux :
           FStar_Extraction_ML_Syntax.MLTY_Fun uu___
       | FStar_Extraction_ML_Syntax.MLTY_Named (args, path) ->
           let uu___ =
-            let uu___1 = FStar_List.map (subst_aux subst) args in
+            let uu___1 = FStar_Compiler_List.map (subst_aux subst) args in
             (uu___1, path) in
           FStar_Extraction_ML_Syntax.MLTY_Named uu___
       | FStar_Extraction_ML_Syntax.MLTY_Tuple ts ->
-          let uu___ = FStar_List.map (subst_aux subst) ts in
+          let uu___ = FStar_Compiler_List.map (subst_aux subst) ts in
           FStar_Extraction_ML_Syntax.MLTY_Tuple uu___
       | FStar_Extraction_ML_Syntax.MLTY_Top -> t
       | FStar_Extraction_ML_Syntax.MLTY_Erased -> t
@@ -170,11 +191,14 @@ let (try_subst :
     fun args ->
       match uu___ with
       | (formals, t) ->
-          if (FStar_List.length formals) <> (FStar_List.length args)
+          if
+            (FStar_Compiler_List.length formals) <>
+              (FStar_Compiler_List.length args)
           then FStar_Pervasives_Native.None
           else
             (let uu___2 =
-               let uu___3 = FStar_List.zip formals args in subst_aux uu___3 t in
+               let uu___3 = FStar_Compiler_List.zip formals args in
+               subst_aux uu___3 t in
              FStar_Pervasives_Native.Some uu___2)
 let (subst :
   (FStar_Extraction_ML_Syntax.mlidents * FStar_Extraction_ML_Syntax.mlty) ->
@@ -208,11 +232,13 @@ let (udelta_unfold :
                       let uu___4 =
                         FStar_Extraction_ML_Syntax.string_of_mlpath n in
                       let uu___5 =
-                        FStar_Util.string_of_int (FStar_List.length args) in
+                        FStar_Compiler_Util.string_of_int
+                          (FStar_Compiler_List.length args) in
                       let uu___6 =
-                        FStar_Util.string_of_int
-                          (FStar_List.length (FStar_Pervasives_Native.fst ts)) in
-                      FStar_Util.format3
+                        FStar_Compiler_Util.string_of_int
+                          (FStar_Compiler_List.length
+                             (FStar_Pervasives_Native.fst ts)) in
+                      FStar_Compiler_Util.format3
                         "Substitution must be fully applied; got an application of %s with %s args whereas %s were expected (see GitHub issue #490)"
                         uu___4 uu___5 uu___6 in
                     failwith uu___3
@@ -228,8 +254,8 @@ let (eff_leq :
     fun f' ->
       match (f, f') with
       | (FStar_Extraction_ML_Syntax.E_PURE, uu___) -> true
-      | (FStar_Extraction_ML_Syntax.E_GHOST,
-         FStar_Extraction_ML_Syntax.E_GHOST) -> true
+      | (FStar_Extraction_ML_Syntax.E_ERASABLE,
+         FStar_Extraction_ML_Syntax.E_ERASABLE) -> true
       | (FStar_Extraction_ML_Syntax.E_IMPURE,
          FStar_Extraction_ML_Syntax.E_IMPURE) -> true
       | uu___ -> false
@@ -237,10 +263,10 @@ let (eff_to_string : FStar_Extraction_ML_Syntax.e_tag -> Prims.string) =
   fun uu___ ->
     match uu___ with
     | FStar_Extraction_ML_Syntax.E_PURE -> "Pure"
-    | FStar_Extraction_ML_Syntax.E_GHOST -> "Ghost"
+    | FStar_Extraction_ML_Syntax.E_ERASABLE -> "Erasable"
     | FStar_Extraction_ML_Syntax.E_IMPURE -> "Impure"
 let (join :
-  FStar_Range.range ->
+  FStar_Compiler_Range.range ->
     FStar_Extraction_ML_Syntax.e_tag ->
       FStar_Extraction_ML_Syntax.e_tag -> FStar_Extraction_ML_Syntax.e_tag)
   =
@@ -257,41 +283,42 @@ let (join :
         | (FStar_Extraction_ML_Syntax.E_IMPURE,
            FStar_Extraction_ML_Syntax.E_IMPURE) ->
             FStar_Extraction_ML_Syntax.E_IMPURE
-        | (FStar_Extraction_ML_Syntax.E_GHOST,
-           FStar_Extraction_ML_Syntax.E_GHOST) ->
-            FStar_Extraction_ML_Syntax.E_GHOST
+        | (FStar_Extraction_ML_Syntax.E_ERASABLE,
+           FStar_Extraction_ML_Syntax.E_ERASABLE) ->
+            FStar_Extraction_ML_Syntax.E_ERASABLE
         | (FStar_Extraction_ML_Syntax.E_PURE,
-           FStar_Extraction_ML_Syntax.E_GHOST) ->
-            FStar_Extraction_ML_Syntax.E_GHOST
-        | (FStar_Extraction_ML_Syntax.E_GHOST,
+           FStar_Extraction_ML_Syntax.E_ERASABLE) ->
+            FStar_Extraction_ML_Syntax.E_ERASABLE
+        | (FStar_Extraction_ML_Syntax.E_ERASABLE,
            FStar_Extraction_ML_Syntax.E_PURE) ->
-            FStar_Extraction_ML_Syntax.E_GHOST
+            FStar_Extraction_ML_Syntax.E_ERASABLE
         | (FStar_Extraction_ML_Syntax.E_PURE,
            FStar_Extraction_ML_Syntax.E_PURE) ->
             FStar_Extraction_ML_Syntax.E_PURE
         | uu___ ->
             let uu___1 =
-              let uu___2 = FStar_Range.string_of_range r in
+              let uu___2 = FStar_Compiler_Range.string_of_range r in
               let uu___3 = eff_to_string f in
               let uu___4 = eff_to_string f' in
-              FStar_Util.format3
+              FStar_Compiler_Util.format3
                 "Impossible (%s): Inconsistent effects %s and %s" uu___2
                 uu___3 uu___4 in
             failwith uu___1
 let (join_l :
-  FStar_Range.range ->
+  FStar_Compiler_Range.range ->
     FStar_Extraction_ML_Syntax.e_tag Prims.list ->
       FStar_Extraction_ML_Syntax.e_tag)
   =
   fun r ->
     fun fs ->
-      FStar_List.fold_left (join r) FStar_Extraction_ML_Syntax.E_PURE fs
+      FStar_Compiler_List.fold_left (join r)
+        FStar_Extraction_ML_Syntax.E_PURE fs
 let (mk_ty_fun :
   (FStar_Extraction_ML_Syntax.mlident * FStar_Extraction_ML_Syntax.mlty)
     Prims.list ->
     FStar_Extraction_ML_Syntax.mlty -> FStar_Extraction_ML_Syntax.mlty)
   =
-  FStar_List.fold_right
+  FStar_Compiler_List.fold_right
     (fun uu___ ->
        fun t ->
          match uu___ with
@@ -329,7 +356,7 @@ let rec (type_leq_c :
                       match body.FStar_Extraction_ML_Syntax.expr with
                       | FStar_Extraction_ML_Syntax.MLE_Fun (ys, body1) ->
                           FStar_Extraction_ML_Syntax.MLE_Fun
-                            ((FStar_List.append xs ys), body1)
+                            ((FStar_Compiler_List.op_At xs ys), body1)
                       | uu___1 ->
                           FStar_Extraction_ML_Syntax.MLE_Fun (xs, body) in
                     let uu___1 =
@@ -348,7 +375,7 @@ let rec (type_leq_c :
                    then
                      (if
                         (f = FStar_Extraction_ML_Syntax.E_PURE) &&
-                          (f' = FStar_Extraction_ML_Syntax.E_GHOST)
+                          (f' = FStar_Extraction_ML_Syntax.E_ERASABLE)
                       then
                         let uu___3 = type_leq unfold_ty t2 t2' in
                         (if uu___3
@@ -360,7 +387,7 @@ let rec (type_leq_c :
                              if uu___4
                              then FStar_Extraction_ML_Syntax.ml_unit
                              else
-                               FStar_All.pipe_left
+                               FStar_Compiler_Effect.op_Less_Bar
                                  (FStar_Extraction_ML_Syntax.with_ty t2')
                                  (FStar_Extraction_ML_Syntax.MLE_Coerce
                                     (FStar_Extraction_ML_Syntax.ml_unit,
@@ -373,7 +400,7 @@ let rec (type_leq_c :
                                    mk_ty_fun [x]
                                      body1.FStar_Extraction_ML_Syntax.mlty in
                                  FStar_Extraction_ML_Syntax.with_ty uu___7 in
-                               FStar_All.pipe_left uu___6
+                               FStar_Compiler_Effect.op_Less_Bar uu___6
                                  (FStar_Extraction_ML_Syntax.MLE_Fun
                                     ([x], body1)) in
                              FStar_Pervasives_Native.Some uu___5 in
@@ -383,7 +410,7 @@ let rec (type_leq_c :
                         (let uu___4 =
                            let uu___5 =
                              let uu___6 = mk_fun xs body in
-                             FStar_All.pipe_left
+                             FStar_Compiler_Effect.op_Less_Bar
                                (fun uu___7 ->
                                   FStar_Pervasives_Native.Some uu___7) uu___6 in
                            type_leq_c unfold_ty uu___5 t2 t2' in
@@ -409,7 +436,7 @@ let rec (type_leq_c :
               if path = path'
               then
                 let uu___ =
-                  FStar_List.forall2 (type_leq unfold_ty) args args' in
+                  FStar_Compiler_List.forall2 (type_leq unfold_ty) args args' in
                 (if uu___
                  then (true, e)
                  else (false, FStar_Pervasives_Native.None))
@@ -427,7 +454,8 @@ let rec (type_leq_c :
                           type_leq_c unfold_ty e t t'1))
           | (FStar_Extraction_ML_Syntax.MLTY_Tuple ts,
              FStar_Extraction_ML_Syntax.MLTY_Tuple ts') ->
-              let uu___ = FStar_List.forall2 (type_leq unfold_ty) ts ts' in
+              let uu___ =
+                FStar_Compiler_List.forall2 (type_leq unfold_ty) ts ts' in
               if uu___
               then (true, e)
               else (false, FStar_Pervasives_Native.None)
@@ -457,7 +485,8 @@ and (type_leq :
     fun t1 ->
       fun t2 ->
         let uu___ = type_leq_c g FStar_Pervasives_Native.None t1 t2 in
-        FStar_All.pipe_right uu___ FStar_Pervasives_Native.fst
+        FStar_Compiler_Effect.op_Bar_Greater uu___
+          FStar_Pervasives_Native.fst
 let rec (erase_effect_annotations :
   FStar_Extraction_ML_Syntax.mlty -> FStar_Extraction_ML_Syntax.mlty) =
   fun t ->
@@ -470,10 +499,11 @@ let rec (erase_effect_annotations :
         FStar_Extraction_ML_Syntax.MLTY_Fun uu___
     | uu___ -> t
 let is_type_abstraction :
-  'a 'b 'c . (('a, 'b) FStar_Util.either * 'c) Prims.list -> Prims.bool =
+  'a 'b 'c . (('a, 'b) FStar_Pervasives.either * 'c) Prims.list -> Prims.bool
+  =
   fun uu___ ->
     match uu___ with
-    | (FStar_Util.Inl uu___1, uu___2)::uu___3 -> true
+    | (FStar_Pervasives.Inl uu___1, uu___2)::uu___3 -> true
     | uu___1 -> false
 let (is_xtuple :
   (Prims.string Prims.list * Prims.string) ->
@@ -483,13 +513,15 @@ let (is_xtuple :
     match uu___ with
     | (ns, n) ->
         let uu___1 =
-          let uu___2 = FStar_Util.concat_l "." (FStar_List.append ns [n]) in
+          let uu___2 =
+            FStar_Compiler_Util.concat_l "."
+              (FStar_Compiler_List.op_At ns [n]) in
           FStar_Parser_Const.is_tuple_datacon_string uu___2 in
         if uu___1
         then
           let uu___2 =
-            let uu___3 = FStar_Util.char_at n (Prims.of_int (7)) in
-            FStar_Util.int_of_char uu___3 in
+            let uu___3 = FStar_Compiler_Util.char_at n (Prims.of_int (7)) in
+            FStar_Compiler_Util.int_of_char uu___3 in
           FStar_Pervasives_Native.Some uu___2
         else FStar_Pervasives_Native.None
 let (resugar_exp :
@@ -500,7 +532,7 @@ let (resugar_exp :
         let uu___ = is_xtuple mlp in
         (match uu___ with
          | FStar_Pervasives_Native.Some n ->
-             FStar_All.pipe_left
+             FStar_Compiler_Effect.op_Less_Bar
                (FStar_Extraction_ML_Syntax.with_ty
                   e.FStar_Extraction_ML_Syntax.mlty)
                (FStar_Extraction_ML_Syntax.MLE_Tuple args)
@@ -512,11 +544,13 @@ let (record_field_path :
     match uu___ with
     | f::uu___1 ->
         let uu___2 =
-          let uu___3 = FStar_Ident.ns_of_lid f in FStar_Util.prefix uu___3 in
+          let uu___3 = FStar_Ident.ns_of_lid f in
+          FStar_Compiler_Util.prefix uu___3 in
         (match uu___2 with
          | (ns, uu___3) ->
-             FStar_All.pipe_right ns
-               (FStar_List.map (fun id -> FStar_Ident.string_of_id id)))
+             FStar_Compiler_Effect.op_Bar_Greater ns
+               (FStar_Compiler_List.map
+                  (fun id -> FStar_Ident.string_of_id id)))
     | uu___1 -> failwith "impos"
 let record_fields :
   'a .
@@ -525,7 +559,7 @@ let record_fields :
   =
   fun fs ->
     fun vs ->
-      FStar_List.map2
+      FStar_Compiler_List.map2
         (fun f ->
            fun e ->
              let uu___ =
@@ -540,13 +574,15 @@ let (is_xtuple_ty :
     match uu___ with
     | (ns, n) ->
         let uu___1 =
-          let uu___2 = FStar_Util.concat_l "." (FStar_List.append ns [n]) in
+          let uu___2 =
+            FStar_Compiler_Util.concat_l "."
+              (FStar_Compiler_List.op_At ns [n]) in
           FStar_Parser_Const.is_tuple_constructor_string uu___2 in
         if uu___1
         then
           let uu___2 =
-            let uu___3 = FStar_Util.char_at n (Prims.of_int (5)) in
-            FStar_Util.int_of_char uu___3 in
+            let uu___3 = FStar_Compiler_Util.char_at n (Prims.of_int (5)) in
+            FStar_Compiler_Util.int_of_char uu___3 in
           FStar_Pervasives_Native.Some uu___2
         else FStar_Pervasives_Native.None
 let (resugar_mlty :
@@ -561,24 +597,20 @@ let (resugar_mlty :
          | uu___1 -> t)
     | uu___ -> t
 let (flatten_ns : Prims.string Prims.list -> Prims.string) =
-  fun ns ->
-    let uu___ = codegen_fsharp () in
-    if uu___ then FStar_String.concat "." ns else FStar_String.concat "_" ns
+  fun ns -> FStar_String.concat "_" ns
 let (flatten_mlpath :
   (Prims.string Prims.list * Prims.string) -> Prims.string) =
   fun uu___ ->
     match uu___ with
-    | (ns, n) ->
-        let uu___1 = codegen_fsharp () in
-        if uu___1
-        then FStar_String.concat "." (FStar_List.append ns [n])
-        else FStar_String.concat "_" (FStar_List.append ns [n])
+    | (ns, n) -> FStar_String.concat "_" (FStar_Compiler_List.op_At ns [n])
 let (ml_module_name_of_lid : FStar_Ident.lident -> Prims.string) =
   fun l ->
     let mlp =
       let uu___ =
-        let uu___1 = FStar_All.pipe_right l FStar_Ident.ns_of_lid in
-        FStar_All.pipe_right uu___1 (FStar_List.map FStar_Ident.string_of_id) in
+        let uu___1 =
+          FStar_Compiler_Effect.op_Bar_Greater l FStar_Ident.ns_of_lid in
+        FStar_Compiler_Effect.op_Bar_Greater uu___1
+          (FStar_Compiler_List.map FStar_Ident.string_of_id) in
       let uu___1 =
         let uu___2 = FStar_Ident.ident_of_lid l in
         FStar_Ident.string_of_id uu___2 in
@@ -630,15 +662,16 @@ let rec (eraseTypeDeep :
           then FStar_Extraction_ML_Syntax.MLTY_Erased
           else
             (let uu___2 =
-               let uu___3 = FStar_List.map (eraseTypeDeep unfold_ty) lty in
+               let uu___3 =
+                 FStar_Compiler_List.map (eraseTypeDeep unfold_ty) lty in
                (uu___3, mlp) in
              FStar_Extraction_ML_Syntax.MLTY_Named uu___2)
       | FStar_Extraction_ML_Syntax.MLTY_Tuple lty ->
-          let uu___ = FStar_List.map (eraseTypeDeep unfold_ty) lty in
+          let uu___ = FStar_Compiler_List.map (eraseTypeDeep unfold_ty) lty in
           FStar_Extraction_ML_Syntax.MLTY_Tuple uu___
       | uu___ -> t
 let (prims_op_equality : FStar_Extraction_ML_Syntax.mlexpr) =
-  FStar_All.pipe_left
+  FStar_Compiler_Effect.op_Less_Bar
     (FStar_Extraction_ML_Syntax.with_ty FStar_Extraction_ML_Syntax.MLTY_Top)
     (FStar_Extraction_ML_Syntax.MLE_Name (["Prims"], "op_Equality"))
 let (prims_op_amp_amp : FStar_Extraction_ML_Syntax.mlexpr) =
@@ -649,7 +682,7 @@ let (prims_op_amp_amp : FStar_Extraction_ML_Syntax.mlexpr) =
         ("y", FStar_Extraction_ML_Syntax.ml_bool_ty)]
         FStar_Extraction_ML_Syntax.ml_bool_ty in
     FStar_Extraction_ML_Syntax.with_ty uu___1 in
-  FStar_All.pipe_left uu___
+  FStar_Compiler_Effect.op_Less_Bar uu___
     (FStar_Extraction_ML_Syntax.MLE_Name (["Prims"], "op_AmpAmp"))
 let (conjoin :
   FStar_Extraction_ML_Syntax.mlexpr ->
@@ -657,7 +690,7 @@ let (conjoin :
   =
   fun e1 ->
     fun e2 ->
-      FStar_All.pipe_left
+      FStar_Compiler_Effect.op_Less_Bar
         (FStar_Extraction_ML_Syntax.with_ty
            FStar_Extraction_ML_Syntax.ml_bool_ty)
         (FStar_Extraction_ML_Syntax.MLE_App (prims_op_amp_amp, [e1; e2]))
@@ -677,11 +710,12 @@ let (conjoin_opt :
           FStar_Pervasives_Native.Some x
       | (FStar_Pervasives_Native.Some x, FStar_Pervasives_Native.Some y) ->
           let uu___ = conjoin x y in FStar_Pervasives_Native.Some uu___
-let (mlloc_of_range : FStar_Range.range -> (Prims.int * Prims.string)) =
+let (mlloc_of_range :
+  FStar_Compiler_Range.range -> (Prims.int * Prims.string)) =
   fun r ->
-    let pos = FStar_Range.start_of_range r in
-    let line = FStar_Range.line_of_pos pos in
-    let uu___ = FStar_Range.file_of_range r in (line, uu___)
+    let pos = FStar_Compiler_Range.start_of_range r in
+    let line = FStar_Compiler_Range.line_of_pos pos in
+    let uu___ = FStar_Compiler_Range.file_of_range r in (line, uu___)
 let rec (doms_and_cod :
   FStar_Extraction_ML_Syntax.mlty ->
     (FStar_Extraction_ML_Syntax.mlty Prims.list *
@@ -715,7 +749,7 @@ let (uu___is_NoTacticEmbedding : Prims.exn -> Prims.bool) =
 let (__proj__NoTacticEmbedding__item__uu___ : Prims.exn -> Prims.string) =
   fun projectee -> match projectee with | NoTacticEmbedding uu___ -> uu___
 let (not_implemented_warning :
-  FStar_Range.range -> Prims.string -> Prims.string -> unit) =
+  FStar_Compiler_Range.range -> Prims.string -> Prims.string -> unit) =
   fun r ->
     fun t ->
       fun msg ->
@@ -727,8 +761,9 @@ let (not_implemented_warning :
                   FStar_Errors.lookup
                     FStar_Errors.Warning_PluginNotImplemented in
                 FStar_Errors.error_number uu___4 in
-              FStar_All.pipe_left FStar_Util.string_of_int uu___3 in
-            FStar_Util.format3
+              FStar_Compiler_Effect.op_Less_Bar
+                FStar_Compiler_Util.string_of_int uu___3 in
+            FStar_Compiler_Util.format3
               "Plugin %s can not run natively because %s (use --warn_error -%s to carry on)."
               t msg uu___2 in
           (FStar_Errors.Warning_PluginNotImplemented, uu___1) in
@@ -780,7 +815,7 @@ let (interpret_plugin_as_term_fun :
               FStar_Extraction_ML_Syntax.with_ty
                 FStar_Extraction_ML_Syntax.MLTY_Top in
             let as_name mlp =
-              FStar_All.pipe_left
+              FStar_Compiler_Effect.op_Less_Bar
                 (FStar_Extraction_ML_Syntax.with_ty
                    FStar_Extraction_ML_Syntax.MLTY_Top)
                 (FStar_Extraction_ML_Syntax.MLE_Name mlp) in
@@ -788,7 +823,7 @@ let (interpret_plugin_as_term_fun :
               let uu___ =
                 let uu___1 = FStar_Extraction_ML_UEnv.mlpath_of_lident env l in
                 FStar_Extraction_ML_Syntax.MLE_Name uu___1 in
-              FStar_All.pipe_left
+              FStar_Compiler_Effect.op_Less_Bar
                 (FStar_Extraction_ML_Syntax.with_ty
                    FStar_Extraction_ML_Syntax.MLTY_Top) uu___ in
             let str_to_name s = as_name ([], s) in
@@ -811,13 +846,13 @@ let (interpret_plugin_as_term_fun :
                           let uu___7 = FStar_Ident.string_of_lid fv_lid in
                           FStar_Extraction_ML_Syntax.MLC_String uu___7 in
                         FStar_Extraction_ML_Syntax.MLE_Const uu___6 in
-                      FStar_All.pipe_left
+                      FStar_Compiler_Effect.op_Less_Bar
                         (FStar_Extraction_ML_Syntax.with_ty
                            FStar_Extraction_ML_Syntax.MLTY_Top) uu___5 in
                     [uu___4] in
                   (uu___2, uu___3) in
                 FStar_Extraction_ML_Syntax.MLE_App uu___1 in
-              FStar_All.pipe_left
+              FStar_Compiler_Effect.op_Less_Bar
                 (FStar_Extraction_ML_Syntax.with_ty
                    FStar_Extraction_ML_Syntax.MLTY_Top) uu___ in
             let emb_prefix uu___ =
@@ -829,7 +864,7 @@ let (interpret_plugin_as_term_fun :
             let mk_tactic_interpretation l arity =
               if arity > FStar_Tactics_InterpFuns.max_tac_arity
               then
-                FStar_Exn.raise
+                FStar_Compiler_Effect.raise
                   (NoTacticEmbedding
                      "tactic plugins can only take up to 20 arguments")
               else
@@ -839,7 +874,7 @@ let (interpret_plugin_as_term_fun :
                    | uu___1 -> "mk_nbe_tactic_interpretation_" in
                  let uu___1 =
                    let uu___2 =
-                     let uu___3 = FStar_Util.string_of_int arity in
+                     let uu___3 = FStar_Compiler_Util.string_of_int arity in
                      Prims.op_Hat idroot uu___3 in
                    (["FStar_Tactics_InterpFuns"], uu___2) in
                  as_name uu___1) in
@@ -850,7 +885,7 @@ let (interpret_plugin_as_term_fun :
                 | uu___ -> "from_nbe_tactic_" in
               let uu___ =
                 let uu___1 =
-                  let uu___2 = FStar_Util.string_of_int arity in
+                  let uu___2 = FStar_Compiler_Util.string_of_int arity in
                   Prims.op_Hat idroot uu___2 in
                 (["FStar_Tactics_Native"], uu___1) in
               as_name uu___ in
@@ -867,7 +902,7 @@ let (interpret_plugin_as_term_fun :
               else emb_prefix l (Prims.op_Hat "e_" s) in
             let mk_arrow_as_prim_step l arity =
               let uu___ =
-                let uu___1 = FStar_Util.string_of_int arity in
+                let uu___1 = FStar_Compiler_Util.string_of_int arity in
                 Prims.op_Hat "arrow_as_prim_step_" uu___1 in
               emb_prefix l uu___ in
             let mk_any_embedding l s =
@@ -877,9 +912,9 @@ let (interpret_plugin_as_term_fun :
                   let uu___3 = let uu___4 = str_to_name s in [uu___4] in
                   (uu___2, uu___3) in
                 FStar_Extraction_ML_Syntax.MLE_App uu___1 in
-              FStar_All.pipe_left w uu___ in
+              FStar_Compiler_Effect.op_Less_Bar w uu___ in
             let mk_lam nm e =
-              FStar_All.pipe_left w
+              FStar_Compiler_Effect.op_Less_Bar w
                 (FStar_Extraction_ML_Syntax.MLE_Fun
                    ([(nm, FStar_Extraction_ML_Syntax.MLTY_Top)], e)) in
             let emb_arrow l e1 e2 =
@@ -887,7 +922,7 @@ let (interpret_plugin_as_term_fun :
                 let uu___1 =
                   let uu___2 = emb_prefix l "e_arrow" in (uu___2, [e1; e2]) in
                 FStar_Extraction_ML_Syntax.MLE_App uu___1 in
-              FStar_All.pipe_left w uu___ in
+              FStar_Compiler_Effect.op_Less_Bar w uu___ in
             let known_type_constructors =
               let term_cs =
                 let uu___ =
@@ -902,7 +937,7 @@ let (interpret_plugin_as_term_fun :
                                   let uu___9 =
                                     FStar_Parser_Const.mk_tuple_lid
                                       (Prims.of_int (2))
-                                      FStar_Range.dummyRange in
+                                      FStar_Compiler_Range.dummyRange in
                                   (uu___9, (Prims.of_int (2)), "tuple2") in
                                 (uu___8, Syntax_term) in
                               let uu___8 =
@@ -981,7 +1016,7 @@ let (interpret_plugin_as_term_fun :
                 ((FStar_Parser_Const.int_lid, Prims.int_zero, "int"),
                   Syntax_term) :: uu___ in
               let nbe_cs =
-                FStar_List.map
+                FStar_Compiler_List.map
                   (fun uu___ ->
                      match uu___ with
                      | (x, Syntax_term) -> (x, NBE_t)
@@ -993,7 +1028,7 @@ let (interpret_plugin_as_term_fun :
                 | Refl_emb -> term_cs
                 | uu___1 -> nbe_cs in
             let is_known_type_constructor l fv1 n =
-              FStar_Util.for_some
+              FStar_Compiler_Util.for_some
                 (fun uu___ ->
                    match uu___ with
                    | ((x, args, uu___1), uu___2) ->
@@ -1011,14 +1046,15 @@ let (interpret_plugin_as_term_fun :
                 uu___1.FStar_Syntax_Syntax.n in
               match uu___ with
               | FStar_Syntax_Syntax.Tm_name bv when
-                  FStar_Util.for_some (find_env_entry bv) env1 ->
+                  FStar_Compiler_Util.for_some (find_env_entry bv) env1 ->
                   let uu___1 =
                     let uu___2 =
                       let uu___3 =
-                        FStar_Util.find_opt (find_env_entry bv) env1 in
-                      FStar_Util.must uu___3 in
+                        FStar_Compiler_Util.find_opt (find_env_entry bv) env1 in
+                      FStar_Compiler_Util.must uu___3 in
                     FStar_Pervasives_Native.snd uu___2 in
-                  FStar_All.pipe_left (mk_any_embedding l) uu___1
+                  FStar_Compiler_Effect.op_Less_Bar (mk_any_embedding l)
+                    uu___1
               | FStar_Syntax_Syntax.Tm_refine (x, uu___1) ->
                   mk_embedding l env1 x.FStar_Syntax_Syntax.sort
               | FStar_Syntax_Syntax.Tm_ascribed (t4, uu___1, uu___2) ->
@@ -1030,8 +1066,8 @@ let (interpret_plugin_as_term_fun :
                    | (bs, c1) ->
                        let t0 =
                          let uu___2 =
-                           let uu___3 = FStar_List.hd bs in
-                           FStar_Pervasives_Native.fst uu___3 in
+                           let uu___3 = FStar_Compiler_List.hd bs in
+                           uu___3.FStar_Syntax_Syntax.binder_bv in
                          uu___2.FStar_Syntax_Syntax.sort in
                        let t11 = FStar_Syntax_Util.comp_result c1 in
                        let uu___2 = mk_embedding l env1 t0 in
@@ -1054,7 +1090,7 @@ let (interpret_plugin_as_term_fun :
                   let uu___2 = FStar_Syntax_Util.head_and_args t3 in
                   (match uu___2 with
                    | (head, args) ->
-                       let n_args = FStar_List.length args in
+                       let n_args = FStar_Compiler_List.length args in
                        let uu___3 =
                          let uu___4 = FStar_Syntax_Util.un_uinst head in
                          uu___4.FStar_Syntax_Syntax.n in
@@ -1062,8 +1098,8 @@ let (interpret_plugin_as_term_fun :
                         | FStar_Syntax_Syntax.Tm_fvar fv1 when
                             is_known_type_constructor l fv1 n_args ->
                             let arg_embeddings =
-                              FStar_All.pipe_right args
-                                (FStar_List.map
+                              FStar_Compiler_Effect.op_Bar_Greater args
+                                (FStar_Compiler_List.map
                                    (fun uu___4 ->
                                       match uu___4 with
                                       | (t4, uu___5) ->
@@ -1075,13 +1111,14 @@ let (interpret_plugin_as_term_fun :
                               FStar_Ident.string_of_id uu___4 in
                             let uu___4 =
                               let uu___5 =
-                                FStar_Util.find_opt
+                                FStar_Compiler_Util.find_opt
                                   (fun uu___6 ->
                                      match uu___6 with
                                      | ((x, uu___7, uu___8), uu___9) ->
                                          FStar_Syntax_Syntax.fv_eq_lid fv1 x)
                                   (known_type_constructors l) in
-                              FStar_All.pipe_right uu___5 FStar_Util.must in
+                              FStar_Compiler_Effect.op_Bar_Greater uu___5
+                                FStar_Compiler_Util.must in
                             (match uu___4 with
                              | ((uu___5, t_arity, _trepr_head),
                                 loc_embedding) ->
@@ -1091,7 +1128,7 @@ let (interpret_plugin_as_term_fun :
                                   | uu___6 when uu___6 = Prims.int_zero ->
                                       head1
                                   | n ->
-                                      FStar_All.pipe_left w
+                                      FStar_Compiler_Effect.op_Less_Bar w
                                         (FStar_Extraction_ML_Syntax.MLE_App
                                            (head1, arg_embeddings))))
                         | uu___4 ->
@@ -1102,12 +1139,12 @@ let (interpret_plugin_as_term_fun :
                                 Prims.op_Hat
                                   "Embedding not defined for type " uu___7 in
                               NoTacticEmbedding uu___6 in
-                            FStar_Exn.raise uu___5))
+                            FStar_Compiler_Effect.raise uu___5))
               | FStar_Syntax_Syntax.Tm_uinst uu___1 ->
                   let uu___2 = FStar_Syntax_Util.head_and_args t3 in
                   (match uu___2 with
                    | (head, args) ->
-                       let n_args = FStar_List.length args in
+                       let n_args = FStar_Compiler_List.length args in
                        let uu___3 =
                          let uu___4 = FStar_Syntax_Util.un_uinst head in
                          uu___4.FStar_Syntax_Syntax.n in
@@ -1115,8 +1152,8 @@ let (interpret_plugin_as_term_fun :
                         | FStar_Syntax_Syntax.Tm_fvar fv1 when
                             is_known_type_constructor l fv1 n_args ->
                             let arg_embeddings =
-                              FStar_All.pipe_right args
-                                (FStar_List.map
+                              FStar_Compiler_Effect.op_Bar_Greater args
+                                (FStar_Compiler_List.map
                                    (fun uu___4 ->
                                       match uu___4 with
                                       | (t4, uu___5) ->
@@ -1128,13 +1165,14 @@ let (interpret_plugin_as_term_fun :
                               FStar_Ident.string_of_id uu___4 in
                             let uu___4 =
                               let uu___5 =
-                                FStar_Util.find_opt
+                                FStar_Compiler_Util.find_opt
                                   (fun uu___6 ->
                                      match uu___6 with
                                      | ((x, uu___7, uu___8), uu___9) ->
                                          FStar_Syntax_Syntax.fv_eq_lid fv1 x)
                                   (known_type_constructors l) in
-                              FStar_All.pipe_right uu___5 FStar_Util.must in
+                              FStar_Compiler_Effect.op_Bar_Greater uu___5
+                                FStar_Compiler_Util.must in
                             (match uu___4 with
                              | ((uu___5, t_arity, _trepr_head),
                                 loc_embedding) ->
@@ -1144,7 +1182,7 @@ let (interpret_plugin_as_term_fun :
                                   | uu___6 when uu___6 = Prims.int_zero ->
                                       head1
                                   | n ->
-                                      FStar_All.pipe_left w
+                                      FStar_Compiler_Effect.op_Less_Bar w
                                         (FStar_Extraction_ML_Syntax.MLE_App
                                            (head1, arg_embeddings))))
                         | uu___4 ->
@@ -1155,12 +1193,12 @@ let (interpret_plugin_as_term_fun :
                                 Prims.op_Hat
                                   "Embedding not defined for type " uu___7 in
                               NoTacticEmbedding uu___6 in
-                            FStar_Exn.raise uu___5))
+                            FStar_Compiler_Effect.raise uu___5))
               | FStar_Syntax_Syntax.Tm_app uu___1 ->
                   let uu___2 = FStar_Syntax_Util.head_and_args t3 in
                   (match uu___2 with
                    | (head, args) ->
-                       let n_args = FStar_List.length args in
+                       let n_args = FStar_Compiler_List.length args in
                        let uu___3 =
                          let uu___4 = FStar_Syntax_Util.un_uinst head in
                          uu___4.FStar_Syntax_Syntax.n in
@@ -1168,8 +1206,8 @@ let (interpret_plugin_as_term_fun :
                         | FStar_Syntax_Syntax.Tm_fvar fv1 when
                             is_known_type_constructor l fv1 n_args ->
                             let arg_embeddings =
-                              FStar_All.pipe_right args
-                                (FStar_List.map
+                              FStar_Compiler_Effect.op_Bar_Greater args
+                                (FStar_Compiler_List.map
                                    (fun uu___4 ->
                                       match uu___4 with
                                       | (t4, uu___5) ->
@@ -1181,13 +1219,14 @@ let (interpret_plugin_as_term_fun :
                               FStar_Ident.string_of_id uu___4 in
                             let uu___4 =
                               let uu___5 =
-                                FStar_Util.find_opt
+                                FStar_Compiler_Util.find_opt
                                   (fun uu___6 ->
                                      match uu___6 with
                                      | ((x, uu___7, uu___8), uu___9) ->
                                          FStar_Syntax_Syntax.fv_eq_lid fv1 x)
                                   (known_type_constructors l) in
-                              FStar_All.pipe_right uu___5 FStar_Util.must in
+                              FStar_Compiler_Effect.op_Bar_Greater uu___5
+                                FStar_Compiler_Util.must in
                             (match uu___4 with
                              | ((uu___5, t_arity, _trepr_head),
                                 loc_embedding) ->
@@ -1197,7 +1236,7 @@ let (interpret_plugin_as_term_fun :
                                   | uu___6 when uu___6 = Prims.int_zero ->
                                       head1
                                   | n ->
-                                      FStar_All.pipe_left w
+                                      FStar_Compiler_Effect.op_Less_Bar w
                                         (FStar_Extraction_ML_Syntax.MLE_App
                                            (head1, arg_embeddings))))
                         | uu___4 ->
@@ -1208,14 +1247,14 @@ let (interpret_plugin_as_term_fun :
                                 Prims.op_Hat
                                   "Embedding not defined for type " uu___7 in
                               NoTacticEmbedding uu___6 in
-                            FStar_Exn.raise uu___5))
+                            FStar_Compiler_Effect.raise uu___5))
               | uu___1 ->
                   let uu___2 =
                     let uu___3 =
                       let uu___4 = FStar_Syntax_Print.term_to_string t3 in
                       Prims.op_Hat "Embedding not defined for type " uu___4 in
                     NoTacticEmbedding uu___3 in
-                  FStar_Exn.raise uu___2 in
+                  FStar_Compiler_Effect.raise uu___2 in
             let abstract_tvars tvar_names body =
               match tvar_names with
               | [] ->
@@ -1231,7 +1270,7 @@ let (interpret_plugin_as_term_fun :
                                 let uu___7 = FStar_Ident.string_of_lid fv_lid in
                                 FStar_Extraction_ML_Syntax.MLC_String uu___7 in
                               FStar_Extraction_ML_Syntax.MLE_Const uu___6 in
-                            FStar_All.pipe_left
+                            FStar_Compiler_Effect.op_Less_Bar
                               (FStar_Extraction_ML_Syntax.with_ty
                                  FStar_Extraction_ML_Syntax.MLTY_Top) uu___5 in
                           let uu___5 =
@@ -1244,13 +1283,13 @@ let (interpret_plugin_as_term_fun :
                                       [uu___11] in
                                     (body, uu___10) in
                                   FStar_Extraction_ML_Syntax.MLE_App uu___9 in
-                                FStar_All.pipe_left w uu___8 in
+                                FStar_Compiler_Effect.op_Less_Bar w uu___8 in
                               mk_lam "_" uu___7 in
                             [uu___6] in
                           uu___4 :: uu___5 in
                         (uu___2, uu___3) in
                       FStar_Extraction_ML_Syntax.MLE_App uu___1 in
-                    FStar_All.pipe_left w uu___ in
+                    FStar_Compiler_Effect.op_Less_Bar w uu___ in
                   mk_lam "args" body1
               | uu___ ->
                   let args_tail =
@@ -1263,7 +1302,7 @@ let (interpret_plugin_as_term_fun :
                       [FStar_Extraction_ML_Syntax.MLP_Var v;
                       FStar_Extraction_ML_Syntax.MLP_Wild] in
                   let pattern =
-                    FStar_List.fold_right
+                    FStar_Compiler_List.fold_right
                       (fun hd_var -> mk_cons (fst_pat hd_var)) tvar_names
                       args_tail in
                   let branch =
@@ -1274,7 +1313,7 @@ let (interpret_plugin_as_term_fun :
                             let uu___5 = as_name ([], "args") in [uu___5] in
                           (body, uu___4) in
                         FStar_Extraction_ML_Syntax.MLE_App uu___3 in
-                      FStar_All.pipe_left w uu___2 in
+                      FStar_Compiler_Effect.op_Less_Bar w uu___2 in
                     (pattern, FStar_Pervasives_Native.None, uu___1) in
                   let default_branch =
                     let uu___1 =
@@ -1284,15 +1323,16 @@ let (interpret_plugin_as_term_fun :
                           let uu___5 =
                             let uu___6 =
                               let uu___7 =
-                                mlexpr_of_const FStar_Range.dummyRange
+                                mlexpr_of_const
+                                  FStar_Compiler_Range.dummyRange
                                   (FStar_Const.Const_string
                                      ("arity mismatch",
-                                       FStar_Range.dummyRange)) in
-                              FStar_All.pipe_left w uu___7 in
+                                       FStar_Compiler_Range.dummyRange)) in
+                              FStar_Compiler_Effect.op_Less_Bar w uu___7 in
                             [uu___6] in
                           (uu___4, uu___5) in
                         FStar_Extraction_ML_Syntax.MLE_App uu___3 in
-                      FStar_All.pipe_left w uu___2 in
+                      FStar_Compiler_Effect.op_Less_Bar w uu___2 in
                     (FStar_Extraction_ML_Syntax.MLP_Wild,
                       FStar_Pervasives_Native.None, uu___1) in
                   let body1 =
@@ -1301,7 +1341,7 @@ let (interpret_plugin_as_term_fun :
                         let uu___3 = as_name ([], "args") in
                         (uu___3, [branch; default_branch]) in
                       FStar_Extraction_ML_Syntax.MLE_Match uu___2 in
-                    FStar_All.pipe_left w uu___1 in
+                    FStar_Compiler_Effect.op_Less_Bar w uu___1 in
                   let body2 =
                     let uu___1 =
                       let uu___2 =
@@ -1314,7 +1354,7 @@ let (interpret_plugin_as_term_fun :
                                 let uu___8 = FStar_Ident.string_of_lid fv_lid in
                                 FStar_Extraction_ML_Syntax.MLC_String uu___8 in
                               FStar_Extraction_ML_Syntax.MLE_Const uu___7 in
-                            FStar_All.pipe_left
+                            FStar_Compiler_Effect.op_Less_Bar
                               (FStar_Extraction_ML_Syntax.with_ty
                                  FStar_Extraction_ML_Syntax.MLTY_Top) uu___6 in
                           let uu___6 =
@@ -1322,7 +1362,7 @@ let (interpret_plugin_as_term_fun :
                           uu___5 :: uu___6 in
                         (uu___3, uu___4) in
                       FStar_Extraction_ML_Syntax.MLE_App uu___2 in
-                    FStar_All.pipe_left w uu___1 in
+                    FStar_Compiler_Effect.op_Less_Bar w uu___1 in
                   mk_lam "args" body2 in
             let uu___ = FStar_Syntax_Util.arrow_formals_comp t1 in
             match uu___ with
@@ -1331,73 +1371,80 @@ let (interpret_plugin_as_term_fun :
                   match arity_opt with
                   | FStar_Pervasives_Native.None -> (bs, c)
                   | FStar_Pervasives_Native.Some n ->
-                      let n_bs = FStar_List.length bs in
+                      let n_bs = FStar_Compiler_List.length bs in
                       if n = n_bs
                       then (bs, c)
                       else
                         if n < n_bs
                         then
-                          (let uu___3 = FStar_Util.first_N n bs in
+                          (let uu___3 = FStar_Compiler_Util.first_N n bs in
                            match uu___3 with
                            | (bs1, rest) ->
                                let c1 =
                                  let uu___4 = FStar_Syntax_Util.arrow rest c in
-                                 FStar_All.pipe_left
+                                 FStar_Compiler_Effect.op_Less_Bar
                                    FStar_Syntax_Syntax.mk_Total uu___4 in
                                (bs1, c1))
                         else
                           (let msg =
                              let uu___4 = FStar_Ident.string_of_lid fv_lid in
-                             let uu___5 = FStar_Util.string_of_int n in
-                             let uu___6 = FStar_Util.string_of_int n_bs in
-                             FStar_Util.format3
+                             let uu___5 = FStar_Compiler_Util.string_of_int n in
+                             let uu___6 =
+                               FStar_Compiler_Util.string_of_int n_bs in
+                             FStar_Compiler_Util.format3
                                "Embedding not defined for %s; expected arity at least %s; got %s"
                                uu___4 uu___5 uu___6 in
-                           FStar_Exn.raise (NoTacticEmbedding msg)) in
+                           FStar_Compiler_Effect.raise
+                             (NoTacticEmbedding msg)) in
                 (match uu___1 with
                  | (bs1, c1) ->
                      let result_typ = FStar_Syntax_Util.comp_result c1 in
-                     let arity = FStar_List.length bs1 in
+                     let arity = FStar_Compiler_List.length bs1 in
                      let uu___2 =
                        let uu___3 =
-                         FStar_Util.prefix_until
+                         FStar_Compiler_Util.prefix_until
                            (fun uu___4 ->
                               match uu___4 with
-                              | (b, uu___5) ->
-                                  let uu___6 =
-                                    let uu___7 =
+                              | { FStar_Syntax_Syntax.binder_bv = b;
+                                  FStar_Syntax_Syntax.binder_qual = uu___5;
+                                  FStar_Syntax_Syntax.binder_attrs = uu___6;_}
+                                  ->
+                                  let uu___7 =
+                                    let uu___8 =
                                       FStar_Syntax_Subst.compress
                                         b.FStar_Syntax_Syntax.sort in
-                                    uu___7.FStar_Syntax_Syntax.n in
-                                  (match uu___6 with
-                                   | FStar_Syntax_Syntax.Tm_type uu___7 ->
+                                    uu___8.FStar_Syntax_Syntax.n in
+                                  (match uu___7 with
+                                   | FStar_Syntax_Syntax.Tm_type uu___8 ->
                                        false
-                                   | uu___7 -> true)) bs1 in
+                                   | uu___8 -> true)) bs1 in
                        match uu___3 with
                        | FStar_Pervasives_Native.None -> (bs1, [])
                        | FStar_Pervasives_Native.Some (tvars, x, rest) ->
                            (tvars, (x :: rest)) in
                      (match uu___2 with
                       | (type_vars, bs2) ->
-                          let tvar_arity = FStar_List.length type_vars in
-                          let non_tvar_arity = FStar_List.length bs2 in
+                          let tvar_arity =
+                            FStar_Compiler_List.length type_vars in
+                          let non_tvar_arity = FStar_Compiler_List.length bs2 in
                           let tvar_names =
-                            FStar_List.mapi
+                            FStar_Compiler_List.mapi
                               (fun i ->
                                  fun tv ->
-                                   let uu___3 = FStar_Util.string_of_int i in
+                                   let uu___3 =
+                                     FStar_Compiler_Util.string_of_int i in
                                    Prims.op_Hat "tv_" uu___3) type_vars in
                           let tvar_context =
-                            FStar_List.map2
+                            FStar_Compiler_List.map2
                               (fun b ->
                                  fun nm ->
-                                   ((FStar_Pervasives_Native.fst b), nm))
+                                   ((b.FStar_Syntax_Syntax.binder_bv), nm))
                               type_vars tvar_names in
                           let rec aux loc accum_embeddings bs3 =
                             match bs3 with
                             | [] ->
                                 let arg_unembeddings =
-                                  FStar_List.rev accum_embeddings in
+                                  FStar_Compiler_List.rev accum_embeddings in
                                 let res_embedding =
                                   mk_embedding loc tvar_context result_typ in
                                 let fv_lid1 =
@@ -1419,7 +1466,7 @@ let (interpret_plugin_as_term_fun :
                                               let uu___10 =
                                                 let uu___11 =
                                                   let uu___12 =
-                                                    FStar_Util.string_of_int
+                                                    FStar_Compiler_Util.string_of_int
                                                       tvar_arity in
                                                   (uu___12,
                                                     FStar_Pervasives_Native.None) in
@@ -1427,16 +1474,17 @@ let (interpret_plugin_as_term_fun :
                                                   uu___11 in
                                               FStar_Extraction_ML_Syntax.MLE_Const
                                                 uu___10 in
-                                            FStar_All.pipe_left
+                                            FStar_Compiler_Effect.op_Less_Bar
                                               (FStar_Extraction_ML_Syntax.with_ty
                                                  FStar_Extraction_ML_Syntax.MLTY_Top)
                                               uu___9 in
                                           [uu___8; fv_lid_embedded; cb] in
                                         uu___6 :: uu___7 in
                                       res_embedding :: uu___5 in
-                                    FStar_List.append arg_unembeddings uu___4 in
+                                    FStar_Compiler_List.op_At
+                                      arg_unembeddings uu___4 in
                                   let fun_embedding =
-                                    FStar_All.pipe_left w
+                                    FStar_Compiler_Effect.op_Less_Bar w
                                       (FStar_Extraction_ML_Syntax.MLE_App
                                          (embed_fun_N, args)) in
                                   let tabs =
@@ -1474,27 +1522,31 @@ let (interpret_plugin_as_term_fun :
                                            (uu___8, uu___9) in
                                          FStar_Extraction_ML_Syntax.MLE_App
                                            uu___7 in
-                                       FStar_All.pipe_left w uu___6 in
+                                       FStar_Compiler_Effect.op_Less_Bar w
+                                         uu___6 in
                                      let psc = str_to_name "psc" in
                                      let ncb = str_to_name "ncb" in
                                      let all_args = str_to_name "args" in
                                      let args =
-                                       FStar_List.append [tac_fun]
-                                         (FStar_List.append arg_unembeddings
+                                       FStar_Compiler_List.op_At [tac_fun]
+                                         (FStar_Compiler_List.op_At
+                                            arg_unembeddings
                                             [res_embedding; psc; ncb]) in
                                      let tabs =
                                        match tvar_names with
                                        | [] ->
                                            let uu___6 =
-                                             FStar_All.pipe_left w
+                                             FStar_Compiler_Effect.op_Less_Bar
+                                               w
                                                (FStar_Extraction_ML_Syntax.MLE_App
                                                   (h,
-                                                    (FStar_List.append args
-                                                       [all_args]))) in
+                                                    (FStar_Compiler_List.op_At
+                                                       args [all_args]))) in
                                            mk_lam "args" uu___6
                                        | uu___6 ->
                                            let uu___7 =
-                                             FStar_All.pipe_left w
+                                             FStar_Compiler_Effect.op_Less_Bar
+                                               w
                                                (FStar_Extraction_ML_Syntax.MLE_App
                                                   (h, args)) in
                                            abstract_tvars tvar_names uu___7 in
@@ -1512,14 +1564,17 @@ let (interpret_plugin_as_term_fun :
                                             "Plugins not defined for type "
                                             uu___9 in
                                         NoTacticEmbedding uu___8 in
-                                      FStar_Exn.raise uu___7))
-                            | (b, uu___3)::bs4 ->
-                                let uu___4 =
-                                  let uu___5 =
+                                      FStar_Compiler_Effect.raise uu___7))
+                            | { FStar_Syntax_Syntax.binder_bv = b;
+                                FStar_Syntax_Syntax.binder_qual = uu___3;
+                                FStar_Syntax_Syntax.binder_attrs = uu___4;_}::bs4
+                                ->
+                                let uu___5 =
+                                  let uu___6 =
                                     mk_embedding loc tvar_context
                                       b.FStar_Syntax_Syntax.sort in
-                                  uu___5 :: accum_embeddings in
-                                aux loc uu___4 bs4 in
+                                  uu___6 :: accum_embeddings in
+                                aux loc uu___5 bs4 in
                           (try
                              (fun uu___3 ->
                                 match () with

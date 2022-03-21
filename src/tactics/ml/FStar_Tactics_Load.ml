@@ -1,6 +1,6 @@
 open Dynlink
 
-module U = FStar_Util
+module U = FStar_Compiler_Util
 module E = FStar_Errors
 module O = FStar_Options
 
@@ -8,12 +8,16 @@ let perr  s   = if O.debug_any () then U.print_error s
 let perr1 s x = if O.debug_any () then U.print1_error s x
 
 let find_taclib () =
-  let r = Process.run "ocamlfind" [| "query"; "fstar-tactics-lib" |] in
-  match r with
-  | { Process.Output.exit_status = Process.Exit.Exit 0; stdout; _ } ->
-      String.trim (List.hd stdout)
-  | _ ->
-      FStar_Options.fstar_bin_directory ^ "/fstar-tactics-lib"
+  let default = FStar_Options.fstar_bin_directory ^ "/fstar-tactics-lib" in
+  try
+    begin
+      let r = Process.run "ocamlfind" [| "query"; "fstar-tactics-lib" |] in
+      match r with
+      | { Process.Output.exit_status = Process.Exit.Exit 0; stdout; _ } ->
+         String.trim (List.hd stdout)
+      | _ -> default
+    end
+  with _ -> default
 
 let dynlink fname =
   try

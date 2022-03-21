@@ -1,4 +1,3 @@
-FSTAR_HOME=../..
 include ../Makefile.include
 
 all: uall
@@ -30,4 +29,4 @@ old:
 %.uver-explicit: %.fst
 	$(FSTAR) $^ --explicit_deps
 
-include $(FSTAR_HOME)/ulib/ml/Makefile.include
+include $(FSTAR_ULIB)/ml/Makefile.include

@@ -67,7 +67,7 @@ type no_sensitive_upd (h:heap) (env:label_fun) (pc:label) (h':heap) =
 (* TODO : This function is total and does not use exceptions *)
 (* as such it wouldn't be that surprising that writing it in a *)
 (* exception free effect helps proving properties about it *)
-(* The problem is that we then need refiable lifts from the *)
+(* The problem is that we then need reifiable lifts from the *)
 (* exceptionless effect to the exceptionfull one and this not covered yet *)
 (* by the F* implementation. *)
 

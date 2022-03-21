@@ -43,9 +43,11 @@ assume WP_t_monotonic:
        (forall x m. p x m ==> q x m) ==>
        (forall m. wp p m ==> wp q m))
 
+open FStar.Monotonic.Pure
+
 type repr (a:Type) (wp:wp_t a) =
   m:locals_t ->
-  PURE (a & locals_t) (fun p -> wp (fun r m1 -> p (r, m1)) m)
+  PURE (a & locals_t) (as_pure_wp (fun p -> wp (fun r m1 -> p (r, m1)) m))
 
 let return (a:Type) (x:a)
 : repr a (fun p m -> p x m)

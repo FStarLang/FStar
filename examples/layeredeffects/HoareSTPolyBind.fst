@@ -136,7 +136,7 @@ let get ()
   (fun h0 h h1 -> h0 == h1 /\ h == h1)
 = HoareST?.reflect get
 
-assume val wp_monotonic_pure (_:unit)
+assume val elim_pure_wp_monotonicity_forall (_:unit)
   : Lemma
     (forall (a:Type) (wp:pure_wp a).
        (forall (p q:pure_post a).
@@ -154,7 +154,7 @@ let bind_pure_hoarest (a:Type) (b:Type) (wp:pure_wp a) (req:a -> pre_t) (ens:a -
 : repr b
   (fun h -> wp (fun x -> req x h))
   (fun h0 r h1 -> exists x. (~ (wp (fun r -> r =!= x))) /\ ens x h0 r h1)
-= wp_monotonic_pure ();
+= elim_pure_wp_monotonicity_forall ();
   fun _ ->
   let x = f () in
   g x ()
@@ -168,7 +168,7 @@ let bind_hoarest_pure (a:Type) (b:Type) (req:pre_t) (ens:post_t a) (wp:a -> pure
 : repr b
   (fun h -> req h /\ (forall x h1. ens h x h1 ==> (wp x) (fun _ -> True)))
   (fun h0 r h1 -> exists x. ens h0 x h1 /\ (~ ((wp x) (fun y -> y =!= r))))
-= wp_monotonic_pure ();
+= elim_pure_wp_monotonicity_forall ();
   fun _ ->
   let x = f () in
   (g x) ()
@@ -187,7 +187,7 @@ let subcomp_pure_hoarest (a:Type) (wp:pure_wp a) (req:pre_t) (ens:post_t a)
     (forall h. req h ==>  wp (fun _ -> True)) /\
     (forall h0 r h1. (~ (wp (fun x -> x =!= r \/ h0 =!= h1))) ==>  ens h0 r h1))
   (ensures fun _ -> True)
-= wp_monotonic_pure ();
+= elim_pure_wp_monotonicity_forall ();
   fun _ -> f ()
 
 polymonadic_subcomp PURE <: HoareST = subcomp_pure_hoarest
@@ -207,8 +207,9 @@ assume val f : x:int -> HoareST int (fun _ -> True) (fun _ r _ -> r == x + 1)
 let test () : HoareST int (fun _ -> True) (fun _ r _ -> r == 1)
 = f 0
 
+open FStar.Monotonic.Pure
 
-assume val g : int -> int -> PURE int (fun p -> forall x. p x)
+assume val g : int -> int -> PURE int (as_pure_wp (fun p -> forall x. p x))
 
 let test2 () : HoareST int (fun _ -> True) (fun _ _ _ -> True)
 = g 2 (f 0)
@@ -230,7 +231,7 @@ let test2 () : HoareST int (fun _ -> True) (fun _ _ _ -> True)
 
 assume type t_int (x:int) : Type0
 assume val dep_f (x:int) : HoareST (t_int x) (fun _ -> True) (fun _ _ _ -> True)
-assume val pure_g (_:unit) : PURE int (fun p -> forall (x:int). x >= 2 ==> p x)
+assume val pure_g (_:unit) : PURE int (as_pure_wp (fun p -> forall (x:int). x >= 2 ==> p x))
 
 let test_dep_f () : HoareST (t_int (pure_g ())) (fun _ -> True) (fun _ _ _ -> True) =
   dep_f (pure_g ())

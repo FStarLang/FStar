@@ -1,11 +1,12 @@
 ﻿#light "off"
 module FStar.Tests.Pars
 //open FSharp.Compatibility.OCaml
-open FStar
-open FStar.All
-open FStar.Range
+open FStar open FStar.Compiler
+open FStar.Pervasives
+open FStar.Compiler.Effect
+open FStar.Compiler.Range
 open FStar.Parser
-open FStar.Util
+open FStar.Compiler.Util
 open FStar.Syntax
 open FStar.Syntax.Syntax
 open FStar.Errors
@@ -17,7 +18,7 @@ module SMT = FStar.SMTEncoding.Solver
 module Tc = FStar.TypeChecker.Tc
 module TcTerm = FStar.TypeChecker.TcTerm
 module ToSyntax = FStar.ToSyntax.ToSyntax
-module BU = FStar.Util
+module BU = FStar.Compiler.Util
 module D = FStar.Parser.Driver
 module Rel = FStar.TypeChecker.Rel
 module NBE = FStar.TypeChecker.NBE
@@ -32,7 +33,7 @@ let parse_mod mod_name dsenv =
     match parse (Filename mod_name) with
     | ASTFragment (Inl m, _) ->
         let m, env'= ToSyntax.ast_modul_to_modul m dsenv in
-        let env' , _ = DsEnv.prepare_module_or_interface false false env' (FStar.Ident.lid_of_path ["Test"] (FStar.Range.dummyRange)) DsEnv.default_mii in
+        let env' , _ = DsEnv.prepare_module_or_interface false false env' (FStar.Ident.lid_of_path ["Test"] (FStar.Compiler.Range.dummyRange)) DsEnv.default_mii in
         env', m
     | ParseError (err, msg, r) ->
         raise (Error(err, msg, r, []))
@@ -54,9 +55,9 @@ let init_once () : unit =
   let env = TcEnv.initial_env
                 FStar.Parser.Dep.empty_deps
                 TcTerm.tc_term
-                TcTerm.type_of_tot_term
+                TcTerm.typeof_tot_or_gtot_term
+                TcTerm.typeof_tot_or_gtot_term_fastpath
                 TcTerm.universe_of
-                TcTerm.check_type_of_well_typed_term
                 solver
                 Const.prims_lid
                 NBE.normalize_for_unit_test in
@@ -66,15 +67,15 @@ let init_once () : unit =
   let _prims_mod, env = Tc.check_module env prims_mod false in
   // needed to run tests with chars
   // let dsenv, env = add_mods ["FStar.Pervasives.Native.fst"; "FStar.Pervasives.fst"; "FStar.Mul.fst"; "FStar.Squash.fsti";
-  //                            "FStar.Classical.fst"; "FStar.List.Tot.Base.fst"; "FStar.List.Tot.Properties.fst"; "FStar.List.Tot.fst";
+  //                            "FStar.Classical.fst"; "FStar.Compiler.List.Tot.Base.fst"; "FStar.Compiler.List.Tot.Properties.fst"; "FStar.Compiler.List.Tot.fst";
   //                            "FStar.StrongExcludedMiddle.fst"; "FStar.Seq.Base.fst"; "FStar.Seq.Properties.fst"; "FStar.Seq.fst";
   //                            "FStar.BitVector.fst"; "FStar.Math.Lib.fst"; "FStar.Math.Lemmas.fst"; "FStar.UInt.fst"; "FStar.UInt32.fst";
   //                            "FStar.Char.fsti"; "FStar.String.fsti"] dsenv env in
 
   // only needed to test tatic normalization
-  // let dsenv, env = add_mods ["FStar.Range.fsti"; "FStar.Pervasives.Native.fst"; "FStar.Pervasives.fst"; "FStar.Reflection.Types.fsti"; "FStar.Order.fst";
+  // let dsenv, env = add_mods ["FStar.Compiler.Range.fsti"; "FStar.Pervasives.Native.fst"; "FStar.Pervasives.fst"; "FStar.Reflection.Types.fsti"; "FStar.Order.fst";
   //                            "FStar.Reflection.Data.fst"; "FStar.Reflection.Basic.fst"; "FStar.Squash.fsti"; "FStar.Classical.fst";
-  //                            "FStar.List.Tot.Base.fst"; "FStar.List.Tot.Properties.fst"; "FStar.List.Tot.fst"; "FStar.Char.fsti";
+  //                            "FStar.Compiler.List.Tot.Base.fst"; "FStar.Compiler.List.Tot.Properties.fst"; "FStar.Compiler.List.Tot.fst"; "FStar.Char.fsti";
   //                            "FStar.String.fsti"; "FStar.Reflection.Syntax.fst"; "FStar.Reflection.Syntax.Lemmas.fst";
   //                            "FStar.Reflection.Formula.fst"; "FStar.Tactics.Types.fsti"; "FStar.Tactics.Result.fst";
   //                            "FStar.Tactics.Effect.fst"; "FStar.Tactics.Builtins.fst"; "FStar.Tactics.Derived.fst";

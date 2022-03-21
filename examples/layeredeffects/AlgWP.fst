@@ -5,9 +5,9 @@ can recover semantic facts from the labels alone, e.g. that interpreting
 a tree will not change the state, effectively allowing to strengthen a
 WP from intensional information about the operations in the tree. *)
 
+open FStar.List.Tot
 open Common
 open FStar.Calc
-module WF = FStar.WellFounded
 module FE = FStar.FunctionalExtensionality
 module F = FStar.FunctionalExtensionality
 module W = FStar.WellFounded
@@ -48,7 +48,14 @@ let tbind : #a:_ -> #b:_ ->
             rwtree a labs1 -> 
             (a -> rwtree b labs2) -> rwtree b (labs1@@labs2) = fun c f -> Alg.bind _ _ c f
 
-let st_wp (a:Type) : Type = state -> (a & state -> Type0) -> Type0
+let st_wp0 (a:Type) : Type = state -> (a & state -> Type0) -> Type0
+
+let st_monotonic #a (w : st_wp0 a) : Type0 =
+  //forall s0 p1 p2. (forall r. p1 r ==> p2 r) ==> w s0 p1 ==> w s0 p2
+  // ^ this version seems to be less SMT-friendly
+  forall s0 p1 p2. (forall x s1. p1 (x, s1) ==> p2 (x, s1)) ==> w s0 p1 ==> w s0 p2
+
+let st_wp (a:Type) = wp:st_wp0 a{st_monotonic wp}
 
 unfold
 let return_wp #a x : st_wp a = fun s0 p -> p (x, s0)
@@ -69,14 +76,15 @@ let rec interp_as_wp #a (t : Alg.tree a [Read;Write]) : st_wp a =
   match t with
   | Return x -> return_wp x
   | Op Read _ k ->
-    bind_wp read_wp (fun s -> WF.axiom1 k s; interp_as_wp (k s))
+    bind_wp read_wp (fun s -> interp_as_wp (k s))
   | Op Write s k ->
-    bind_wp (write_wp s) (fun (o:unit) -> WF.axiom1 k o; interp_as_wp (k o))
+    bind_wp (write_wp s) (fun (o:unit) -> interp_as_wp (k o))
 
 (* With handlers. Can only be done into []? See the use of `run`. *)
 let interp_as_wp2 #a #l (t : rwtree a l) : Alg (st_wp a) [] =
+  let t0 : Alg.tree a [Read; Write] = t in
   handle_with #a #(st_wp a) #[Read; Write] #[]
-              (fun () -> Alg?.reflect t)
+              (fun () -> Alg?.reflect t0)
               (fun x -> return_wp x)
               (function Read  -> (fun i k -> bind_wp read_wp (fun s -> run (fun () -> k s)))
                       | Write -> (fun i k -> bind_wp (write_wp i) (fun _ -> run k)))
@@ -109,14 +117,12 @@ let rec interp_monotonic #a #l (c:rwtree a l) : Lemma (wp_is_monotonic (interp_a
   | Return x -> ()
   | Op Read _ k ->
     let aux (x:state) : Lemma (wp_is_monotonic (interp_as_wp (k x))) =
-      WF.axiom1 k x;
       interp_monotonic #_ #l (k x)
     in
     Classical.forall_intro aux;
     bind_preserves_mon read_wp (fun x -> interp_as_wp (k x))
   | Op Write s k ->
     let aux (x:unit) : Lemma (wp_is_monotonic (interp_as_wp (k x))) =
-      WF.axiom1 k x;
       interp_monotonic #_ #l (k x)
     in
     Classical.forall_intro aux;
@@ -139,7 +145,6 @@ let rec interp_morph #a #b #l1 #l2 (c : rwtree a l1) (f : a -> rwtree b l2) (p:_
     | Op Read _ k ->
       let aux (o:state) : Lemma (interp_as_wp (k o) s0 (fun (y, s1) -> interp_as_wp (f y) s1 p)
                                         == interp_as_wp (tbind #_ #_ #l1 #l2 (k o) f) s0 p) =
-        WF.axiom1 k o;
         interp_morph #_ #_ #l1 #l2 (k o) f p s0
       in
       Classical.forall_intro aux
@@ -147,7 +152,6 @@ let rec interp_morph #a #b #l1 #l2 (c : rwtree a l1) (f : a -> rwtree b l2) (p:_
     | Op Write s k ->
       let aux (o:unit) : Lemma (interp_as_wp (k o) s (fun (y, s1) -> interp_as_wp (f y) s1 p)
                                         == interp_as_wp (tbind #_ #_ #l1 #l2 (k o) f) s p) =
-        WF.axiom1 k o;
         interp_morph #_ #_ #l1 #l2 (k o) f p s
       in
       Classical.forall_intro aux
@@ -228,6 +232,7 @@ let put (s:state) : AlgWP unit [Write] (write_wp s) =
 
 unfold
 let lift_pure_wp (#a:Type) (wp : pure_wp a) : st_wp a =
+  FStar.Monotonic.Pure.elim_pure_wp_monotonicity_forall ();
   fun s0 p -> wp (fun x -> p (x, s0))
 
 let lift_pure_algwp (a:Type) wp (f:(eqtype_as_type unit -> PURE a wp))
@@ -236,7 +241,7 @@ let lift_pure_algwp (a:Type) wp (f:(eqtype_as_type unit -> PURE a wp))
          (ensures (fun _ -> True))
   =
     let v : a = elim_pure f (fun _ -> True) in
-    FStar.Monotonic.Pure.wp_monotonic_pure (); // need this lemma
+    FStar.Monotonic.Pure.elim_pure_wp_monotonicity_forall (); // need this lemma
     assert (forall p. wp p ==> p v); // this is key fact needed for the proof
     assert_norm (stronger (lift_pure_wp wp) (return_wp v));
     Return v
@@ -268,15 +273,15 @@ let add_via_state (x y : int) : AlgWP int [Read;Write] (fun s0 p -> p ((x+y), s0
 // literally zero difference in the VC a tactic sees. Also, seems only
 // for the builtin Pure???
 
+open FStar.Monotonic.Pure
+
 let rec interp_sem #a (t : rwtree a [Read; Write]) (s0:state)
-  : ID5.ID (a & state) (interp_as_wp t s0)
+  : ID5.ID (a & state) (as_pure_wp (interp_as_wp t s0))
   = match t with
     | Return x -> (x, s0)
     | Op Read i k -> 
-      WF.axiom1 k s0;
       interp_sem (k s0) s0
     | Op Write i k ->
-      WF.axiom1 k ();
       interp_sem (k ()) i
 
 let quotient_ro #a (w : st_wp a) : st_wp a =
@@ -291,21 +296,20 @@ let sanity_1 = assert (forall s0 p. quotient_ro read_wp s0 p <==> read_wp s0 p)
 let sanity_2 = assert (forall s0 p s1. p ((), s0) ==> quotient_ro (write_wp s1) s0 p)
 
 let rec interp_ro #a (t : rwtree a [Read]) (s0:state)
-  : ID5.ID (a & state) (quotient_ro (interp_as_wp t) s0)
+  : ID5.ID (a & state) (as_pure_wp (quotient_ro (interp_as_wp t) s0))
   = match t with
     | Return x -> (x, s0)
     | Op Read i k -> 
-      WF.axiom1 k s0;
       interp_ro (k s0) s0
 
 let st_soundness #a #wp (t : unit -> AlgWP a [Read; Write] wp)
-  : Tot (s0:state -> ID5.ID (a & state) (wp s0))
+  : Tot (s0:state -> ID5.ID (a & state) (as_pure_wp (wp s0)))
   = let c = reify (t ()) in interp_sem c
 
 (* This guarantees the final state is unchanged, but see below
 for an alternative statement. *)
 let ro_soundness #a #wp (t : unit -> AlgWP a [Read] wp)
-  : Tot (s0:state -> ID5.ID (a & state) (quotient_ro wp s0))
+  : Tot (s0:state -> ID5.ID (a & state) (as_pure_wp (quotient_ro wp s0)))
   = let c = reify (t ()) in interp_ro c
 
 
@@ -347,7 +351,6 @@ let rec ro_tree_wp #a (t : tree a [Read])
     | Return x -> ()
     | Op Read i k ->
       let aux (x:state) : Lemma (is_ro (interp_as_wp (k x))) =
-        WF.axiom1 k x;
         ro_tree_wp (k x)
       in
       Classical.forall_intro aux;
@@ -374,17 +377,6 @@ let null_ro #a : st_wp a = quotient_ro null
 let null_ro1 #a : st_wp a = fun s0 p -> forall x. p (x, s0)
 let null_equiv_sanity a = assert (null_ro #a `equiv` null_ro1 #a)
 
-//let null_ro_strongest_ro #a (w : st_wp a)
-//  : Lemma (requires (is_ro w))
-//          (ensures (null_ro `stronger` w))
-//  = assert (quotient_ro w `stronger` w);
-//    assert (quotient_ro w `stronger` quotient_ro w);
-//    admit ()
-//
-//
-//    assume (is_mono w);
-//    ()
-
 let bind_null_ro #a #b (w : st_wp a) (f : a -> st_wp b)
   : Lemma (requires (null_ro `stronger` w) /\ (forall x. null_ro `stronger` f x))
           (ensures null_ro `stronger` (bind_wp w f))
@@ -398,7 +390,6 @@ let rec null_ro_tree_wp #a (t : tree a [Read])
     | Return x -> ()
     | Op Read i k ->
       let aux (x:state) : Lemma (null_ro `stronger` interp_as_wp (k x)) =
-        WF.axiom1 k x;
         null_ro_tree_wp (k x)
       in
       Classical.forall_intro aux;

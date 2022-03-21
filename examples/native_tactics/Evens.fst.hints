@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "170b0f1fb42e79882d2479e6680025a7"
+      "0bf4b2a0e8ce926561368ef66da5e7d9"
     ],
     [
       "Evens.__proj__US__item___0",
@@ -21,7 +21,7 @@
         "refinement_interpretation_Tm_refine_7094be438dbc16658c0caec70fa7452e"
       ],
       0,
-      "98d5d49fff3b1fe1b357b0bad1745038"
+      "30257a62cc0b99fec4b23c6f83747c8d"
     ],
     [
       "Evens.even",
@@ -30,7 +30,7 @@
       1,
       [ "@query", "assumption_Evens.unary_nat__uu___haseq" ],
       0,
-      "52e13cca6c4fcd7f7c9e2957fe726684"
+      "d78ccb8c068fe422b1b7b887e52bc9eb"
     ],
     [
       "Evens.__proj__Even_SSn__item__n",
@@ -43,7 +43,7 @@
         "refinement_interpretation_Tm_refine_6b35b246e3f3e217f09d76d285c6fcd3"
       ],
       0,
-      "8282b7324d26e32539b0d09e5c464d48"
+      "c80a9cd884c0f04cc97e5330ad610f64"
     ],
     [
       "Evens.__proj__Even_SSn__item___1",
@@ -51,14 +51,11 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "disc_equation_Evens.Even_SSn",
-        "proj_equation_Evens.Even_SSn_n",
-        "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_Evens.Even_SSn_n",
+        "@MaxIFuel_assumption", "@query", "data_elim_Evens.Even_SSn",
         "refinement_interpretation_Tm_refine_6b35b246e3f3e217f09d76d285c6fcd3"
       ],
       0,
-      "d53c72883f1d5c95abda7c5d801bdf69"
+      "4ccbcbeed90390f71b8bc66e4d696dc8"
     ],
     [
       "Evens.nat2unary",
@@ -74,7 +71,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "9371254e83e2702a2a52e3c47da88ee1"
+      "f75cbead9c1418097b8b880724f4366a"
     ],
     [
       "Evens.even0",
@@ -86,7 +83,7 @@
         "equality_tok_Evens.U0@tok", "typing_tok_Evens.Even0@tok"
       ],
       0,
-      "aa8829088eee8b4be6bceacafb13b023"
+      "aec9123d9597868103a7ad550760435e"
     ],
     [
       "Evens.evenSSn",
@@ -95,7 +92,7 @@
       1,
       [ "@query", "true_interp" ],
       0,
-      "37cf60dff897fad3d164bfd467e3942e"
+      "06eada77b066a2004b53a6158306e868"
     ]
   ]
 ]

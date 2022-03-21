@@ -48,7 +48,7 @@ let op_Less_Less_Less (a:u32) (s:u32{v s <= 32}) =
   let (m:u32{v m = 32}) = 32ul in
   (op_Less_Less_Hat a s) |^ (op_Greater_Greater_Hat a (m -^ s))
 
-(** Inplace xor operation on bytes *)
+(** In-place xor operation on bytes *)
 (* TODO: add functional spec *)
 val xor_bytes_inplace: output:bytes -> in1:bytes{disjoint in1 output} ->
   len:u32{v len <= length output /\ v len <= length in1} -> STL unit

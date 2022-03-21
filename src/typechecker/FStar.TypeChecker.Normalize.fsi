@@ -17,8 +17,8 @@
 // (c) Microsoft Corporation. All rights reserved
 
 module FStar.TypeChecker.Normalize
-open FStar.ST
-open FStar.All
+open FStar.Compiler.Effect
+open FStar.Compiler.Effect
 
 open FStar.TypeChecker
 open FStar.Syntax.Syntax
@@ -50,14 +50,29 @@ val unfold_whnf':         steps -> Env.env -> term -> term
 val unfold_whnf:          Env.env -> term -> term
 val reduce_uvar_solutions:Env.env -> term -> term
 val non_info_norm: Env.env -> term -> bool
-val ghost_to_pure:        Env.env -> comp -> comp
-val ghost_to_pure_lcomp:  Env.env -> lcomp -> lcomp
+
+(*
+ * The maybe versions of ghost_to_pure only promote
+ *   when the type of the computation is non-informative
+ * else the input comp is returned as is
+ *)
+val maybe_ghost_to_pure:        Env.env -> comp -> comp
+val maybe_ghost_to_pure_lcomp:  Env.env -> lcomp -> lcomp
+
+(*
+ * The two input computations are to be composed or related by subcomp
+ * These functions first call the maybe versions of ghost_to_pure, and then
+ *   if one of them is erasable, and the other is GHOST,
+ *   the GHOST one is promoted to PURE, see their implementation for more details
+ *)
+val ghost_to_pure2 : Env.env -> (comp * comp) -> (comp * comp)
+val ghost_to_pure_lcomp2 : Env.env -> (lcomp * lcomp) -> (lcomp * lcomp)
+
 val normalize_with_primitive_steps : list<primitive_step> -> steps -> Env.env -> term -> term
 val term_to_string:  Env.env -> term -> string
 val comp_to_string:  Env.env -> comp -> string
 val elim_uvars: Env.env -> sigelt -> sigelt
 val erase_universes: Env.env -> term -> term
-val tr_norm_steps : list<FStar.Syntax.Embeddings.norm_step> -> list<step>
 
 val remove_uvar_solutions: Env.env -> term -> term
 

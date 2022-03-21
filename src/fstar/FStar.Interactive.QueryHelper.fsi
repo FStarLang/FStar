@@ -19,9 +19,9 @@
 #light "off"
 
 module FStar.Interactive.QueryHelper
-open FStar
-open FStar.Range
-open FStar.Util
+open FStar open FStar.Compiler
+open FStar.Compiler.Range
+open FStar.Compiler.Util
 open FStar.TypeChecker.Env
 open FStar.Interactive.JsonHelper
 

@@ -16,7 +16,42 @@
 
 module FStar.Monotonic.Pure
 
-assume val wp_monotonic_pure (_:unit)
-    : Lemma
-      (forall (a:Type) (wp:pure_wp a). (forall (p q:pure_post a).
-        (forall (x:a). p x ==> q x) ==> (wp p ==> wp q)))
+(*
+ * This module provides utilities to intro and elim the monotonicity
+ *   property of pure wps
+ *
+ * Since pure_wp_monotonic predicate is marked opaque_to_smt in prims,
+ *   reasoning with it requires explicit coercions
+ *)
+
+unfold
+let is_monotonic (#a:Type) (wp:pure_wp' a) =
+  (*
+   * Once we support using tactics in ulib/,
+   *   this would be written as: Prims.pure_wp_monotonic0,
+   *   with a postprocessing tactic to norm it
+   *)
+  forall (p q:pure_post a). (forall (x:a). p x ==> q x) ==> (wp p ==> wp q)  
+
+let elim_pure_wp_monotonicity (#a:Type) (wp:pure_wp a)
+  : Lemma (is_monotonic wp)
+  = reveal_opaque (`%pure_wp_monotonic) pure_wp_monotonic
+
+let elim_pure_wp_monotonicity_forall (_:unit)
+  : Lemma
+    (forall (a:Type) (wp:pure_wp a). is_monotonic wp)
+  = reveal_opaque (`%pure_wp_monotonic) pure_wp_monotonic
+
+let intro_pure_wp_monotonicity (#a:Type) (wp:pure_wp' a)
+  : Lemma
+      (requires is_monotonic wp)
+      (ensures pure_wp_monotonic a wp)
+  = reveal_opaque (`%pure_wp_monotonic) pure_wp_monotonic
+
+unfold
+let as_pure_wp (#a:Type) (wp:pure_wp' a)
+  : Pure (pure_wp a)
+      (requires is_monotonic wp)
+      (ensures fun r -> r == wp)
+  = intro_pure_wp_monotonicity wp;
+    wp

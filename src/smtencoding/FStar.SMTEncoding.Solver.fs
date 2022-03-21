@@ -16,19 +16,21 @@
 #light "off"
 
 module FStar.SMTEncoding.Solver
-open FStar.ST
-open FStar.All
+open FStar.Pervasives
+open FStar.Compiler.Effect
+open FStar.Compiler.List
 open FStar
+open FStar.Compiler
 open FStar.SMTEncoding.Z3
 open FStar.SMTEncoding.Term
-open FStar.Util
+open FStar.Compiler.Util
 open FStar.TypeChecker
 open FStar.TypeChecker.Env
 open FStar.SMTEncoding
 open FStar.SMTEncoding.ErrorReporting
 open FStar.SMTEncoding.Util
 
-module BU = FStar.Util
+module BU = FStar.Compiler.Util
 module U = FStar.Syntax.Util
 module TcUtil = FStar.TypeChecker.Util
 module Print = FStar.Syntax.Print
@@ -39,7 +41,7 @@ module Err = FStar.Errors
 (* Hint databases for record and replay (private)                           *)
 (****************************************************************************)
 
-// The type definition is now in [FStar.Util], since it needs to be visible to
+// The type definition is now in [FStar.Compiler.Util], since it needs to be visible to
 // both the F# and OCaml implementations.
 
 type z3_replay_result = either<Z3.unsat_core, error_labels>
@@ -860,6 +862,7 @@ let ask_and_report_errors env all_labels prefix query suffix : unit =
 
     let skip =
         Options.admit_smt_queries () ||
+        Env.too_early_in_prims env   ||
         (match Options.admit_except () with
          | Some id ->
            if BU.starts_with id "("
@@ -939,7 +942,7 @@ let solve use_env_msg tcenv q : unit =
     Profiling.profile
       (fun () -> do_solve use_env_msg tcenv q)
       (Some (Ident.string_of_lid (Env.current_module tcenv)))
-      "FStar.TypeChecker.SMTEncoding.solve_top_level"
+      "FStar.SMTEncoding.solve_top_level"
 
 
 (**********************************************************************************************)
@@ -954,6 +957,7 @@ let solver = {
     rollback=Encode.rollback;
     encode_sig=Encode.encode_sig;
     preprocess=(fun e g -> [e,g, FStar.Options.peek ()]);
+    handle_smt_goal=(fun e g -> [e,g]);
     solve=solve;
     finish=Z3.finish;
     refresh=Z3.refresh;
@@ -966,6 +970,7 @@ let dummy = {
     rollback=(fun _ _ -> ());
     encode_sig=(fun _ _ -> ());
     preprocess=(fun e g -> [e,g, FStar.Options.peek ()]);
+    handle_smt_goal=(fun e g -> [e,g]);
     solve=(fun _ _ _ -> ());
     finish=(fun () -> ());
     refresh=(fun () -> ());

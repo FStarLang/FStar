@@ -35,8 +35,14 @@ let bv_of_binder (b : binder) : bv =
     let bv, _ = inspect_binder b in
     bv
 
+(*
+ * AR: add versions that take attributes as arguments?
+ *)
 let mk_binder (bv : bv) : binder =
-    pack_binder bv Q_Explicit
+    pack_binder bv Q_Explicit []
+
+let mk_implicit_binder (bv : bv) : binder =
+    pack_binder bv Q_Implicit []
 
 let name_of_binder (b : binder) : string =
     name_of_bv (bv_of_binder b)
@@ -45,7 +51,7 @@ let type_of_binder (b : binder) : typ =
     type_of_bv (bv_of_binder b)
 
 let binder_to_string (b : binder) : string =
-    bv_to_string (bv_of_binder b) //TODO: print aqual
+    bv_to_string (bv_of_binder b) //TODO: print aqual, attributes
 
 val flatten_name : name -> Tot string
 let rec flatten_name ns =
@@ -77,7 +83,7 @@ let mk_e_app (t : term) (args : list term) : Tot term =
 let rec mk_tot_arr_ln (bs: list binder) (cod : term) : Tot term (decreases bs) =
     match bs with
     | [] -> cod
-    | (b::bs) -> pack_ln (Tv_Arrow b (pack_comp (C_Total (mk_tot_arr_ln bs cod) None)))
+    | (b::bs) -> pack_ln (Tv_Arrow b (pack_comp (C_Total (mk_tot_arr_ln bs cod) [])))
 
 private
 let rec collect_arr' (bs : list binder) (c : comp) : Tot (list binder * comp) (decreases c) =
@@ -94,12 +100,12 @@ let rec collect_arr' (bs : list binder) (c : comp) : Tot (list binder * comp) (d
 
 val collect_arr_ln_bs : typ -> list binder * comp
 let collect_arr_ln_bs t =
-    let (bs, c) = collect_arr' [] (pack_comp (C_Total t None)) in
+    let (bs, c) = collect_arr' [] (pack_comp (C_Total t [])) in
     (List.Tot.Base.rev bs, c)
 
 val collect_arr_ln : typ -> list typ * comp
 let collect_arr_ln t =
-    let (bs, c) = collect_arr' [] (pack_comp (C_Total t None)) in
+    let (bs, c) = collect_arr' [] (pack_comp (C_Total t [])) in
     let ts = List.Tot.Base.map type_of_binder bs in
     (List.Tot.Base.rev ts, c)
 
@@ -146,8 +152,8 @@ let compare_binder (b1 b2 : binder) : order =
     let bv1, _ = inspect_binder b1 in
     let bv2, _ = inspect_binder b2 in
     compare_bv bv1 bv2
-  
-let rec compare_term (s t : term) : order =
+
+let rec compare_term (s t : term) : Tot order (decreases s) =
     match inspect_ln s, inspect_ln t with
     | Tv_Var sv, Tv_Var tv ->
         compare_bv sv tv
@@ -184,10 +190,10 @@ let rec compare_term (s t : term) : order =
         lex (compare_term t1 t2) (fun () ->
              compare_term t1' t2'))
 
-    | Tv_Match _ _, Tv_Match _ _ ->
+    | Tv_Match _ _ _, Tv_Match _ _ _ ->
         Eq // TODO
 
-    | Tv_AscribedT e1 t1 tac1, Tv_AscribedT e2 t2 tac2 ->
+    | Tv_AscribedT e1 t1 tac1 _, Tv_AscribedT e2 t2 tac2 _ ->
         lex (compare_term e1 e2) (fun () ->
         lex (compare_term t1 t2) (fun () ->
         match tac1, tac2 with
@@ -196,7 +202,7 @@ let rec compare_term (s t : term) : order =
         | _, None -> Gt
         | Some e1, Some e2 -> compare_term e1 e2))
 
-    | Tv_AscribedC e1 c1 tac1, Tv_AscribedC e2 c2 tac2 ->
+    | Tv_AscribedC e1 c1 tac1 _, Tv_AscribedC e2 c2 tac2 _ ->
         lex (compare_term e1 e2) (fun () ->
         lex (compare_comp c1 c2) (fun () ->
         match tac1, tac2 with
@@ -208,7 +214,7 @@ let rec compare_term (s t : term) : order =
     | Tv_Unknown, Tv_Unknown ->
         Eq
 
-    // From here onwards, they must have different constructors. Order them arbitrarilly as in the definition.
+    // From here onward, they must have different constructors. Order them arbitrarily as in the definition.
     | Tv_Var _, _      -> Lt   | _, Tv_Var _      -> Gt
     | Tv_BVar _, _     -> Lt   | _, Tv_BVar _     -> Gt
     | Tv_FVar _, _     -> Lt   | _, Tv_FVar _     -> Gt
@@ -219,11 +225,19 @@ let rec compare_term (s t : term) : order =
     | Tv_Refine _ _, _ -> Lt   | _, Tv_Refine _ _ -> Gt
     | Tv_Const _, _    -> Lt   | _, Tv_Const _    -> Gt
     | Tv_Uvar _ _, _   -> Lt   | _, Tv_Uvar _ _   -> Gt
-    | Tv_Match _ _, _  -> Lt   | _, Tv_Match _ _  -> Gt
-    | Tv_AscribedT _ _ _, _  -> Lt | _, Tv_AscribedT _ _ _  -> Gt
-    | Tv_AscribedC _ _ _, _  -> Lt | _, Tv_AscribedC _ _ _  -> Gt    
+    | Tv_Match _ _ _, _  -> Lt | _, Tv_Match _ _ _  -> Gt
+    | Tv_AscribedT _ _ _ _, _  -> Lt | _, Tv_AscribedT _ _ _ _ -> Gt
+    | Tv_AscribedC _ _ _ _, _  -> Lt | _, Tv_AscribedC _ _ _ _ -> Gt
     | Tv_Unknown, _    -> Lt   | _, Tv_Unknown    -> Gt
-and compare_argv (a1 a2 : argv) : order =
+and compare_term_list (l1 l2:list term) : Tot order (decreases l1) =
+  match l1, l2 with
+  | [], [] -> Eq
+  | [], _ -> Lt
+  | _, [] -> Gt
+  | hd1::tl1, hd2::tl2 ->
+    lex (compare_term hd1 hd2) (fun () -> compare_term_list tl1 tl2)
+
+and compare_argv (a1 a2 : argv) : Tot order (decreases a1) =
     let a1, q1 = a1 in
     let a2, q2 = a2 in
     match q1, q2 with
@@ -231,27 +245,19 @@ and compare_argv (a1 a2 : argv) : order =
     | Q_Implicit, Q_Explicit -> Lt
     | Q_Explicit, Q_Implicit -> Gt
     | _, _ -> compare_term a1 a2
-and compare_comp (c1 c2 : comp) : order =
+and compare_comp (c1 c2 : comp) : Tot order (decreases c1) =
     let cv1 = inspect_comp c1 in
     let cv2 = inspect_comp c2 in
     match cv1, cv2 with
     | C_Total t1 md1, C_Total t2 md2 -> lex (compare_term t1 t2)
-                                        (fun () -> match md1, md2 with
-                                                   | None, None -> Eq
-                                                   | None, Some _ -> Lt
-                                                   | Some _, None -> Gt
-                                                   | Some x, Some y -> compare_term x y)
+                                           (fun () -> compare_term_list md1 md2)
 
     | C_GTotal t1 md1, C_GTotal t2 md2 -> lex (compare_term t1 t2)
-                                        (fun () -> match md1, md2 with
-                                                   | None, None -> Eq
-                                                   | None, Some _ -> Lt
-                                                   | Some _, None -> Gt
-                                                   | Some x, Some y -> compare_term x y)
+                                             (fun () -> compare_term_list md1 md2)
 
     | C_Lemma p1 q1 s1, C_Lemma p2 q2 s2 ->
       lex (compare_term p1 p2)
-          (fun () -> 
+          (fun () ->
             lex (compare_term q1 q2)
                 (fun () -> compare_term s1 s2)
           )
@@ -319,13 +325,13 @@ let mkpair (t1 t2 : term) : term =
 
 let rec head (t : term) : term =
     match inspect_ln t with
-    | Tv_Match t _
+    | Tv_Match t _ _
     | Tv_Let _ _ _ t _
     | Tv_Abs _ t
     | Tv_Refine _ t
     | Tv_App t _
-    | Tv_AscribedT t _ _ 
-    | Tv_AscribedC t _ _ -> head t
+    | Tv_AscribedT t _ _ _
+    | Tv_AscribedC t _ _ _ -> head t
 
     | Tv_Unknown
     | Tv_Uvar _ _
@@ -347,8 +353,8 @@ let is_uvar (t : term) : bool =
     | _ -> false
 
 let binder_set_qual (q:aqualv) (b:binder) : Tot binder =
-  let (bv, _) = inspect_binder b in
-  pack_binder bv q
+  let bv, (_, attrs) = inspect_binder b in
+  pack_binder bv q attrs
 
 (** Set a vconfig for a sigelt *)
 val add_check_with : vconfig -> sigelt -> Tot sigelt

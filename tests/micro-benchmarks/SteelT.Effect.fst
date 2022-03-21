@@ -13,9 +13,9 @@ let returnc (a:Type u#a) (x:a) (p:a -> slprop)
 = admit()
 
 let bind (a:Type) (b:Type)
-  (#[@@resolve_framing] pre_f:pre_t)
-  (#[@@resolve_framing] post_f:post_t a)
-  (#[@@resolve_framing] post_g:post_t b)
+  (#[@@@resolve_framing] pre_f:pre_t)
+  (#[@@@resolve_framing] post_f:post_t a)
+  (#[@@@resolve_framing] post_g:post_t b)
   (f:repr a pre_f post_f)
   (g:(x:a -> repr b (post_f x) post_g))
 : repr b pre_f post_g

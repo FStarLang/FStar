@@ -20,8 +20,10 @@ let st_monotonic #st #a (w : wp0 st a) : Type0 =
 
 type wp st a = w:(wp0 st a){st_monotonic w}
 
+open FStar.Monotonic.Pure
+
 type repr (a:Type u#ua) (st:Type0) (wp : wp u#ua st a) : Type u#ua =
-  s0:st -> ID (a & st) (fun p -> wp s0 (curry p))
+  s0:st -> ID (a & st) (as_pure_wp (fun p -> wp s0 (curry p)))
 
 unfold
 let return_wp (#a:Type) (#st:Type0) (x:a) : wp st a =
@@ -125,14 +127,16 @@ let lift_pure_st_wp #a #st (w : pure_wp a) : wp st a =
 //
 //sub_effect PURE ~> ST = lift_pure_st
 
-let lift_id_st_wp #a #st (w : ID2.w a) : wp st a =
+let lift_id_st_wp #a #st (w : pure_wp a) : wp st a =
+  elim_pure_wp_monotonicity_forall ();
   fun s0 p -> w (fun x -> p x s0)
 
 (* It's odd that I *have* to use the repr here, instead of a thunked
 ID a wp as above. *)
 let lift_id_st a st wp (f : ID2.repr a wp)
   : repr a st (lift_id_st_wp wp)
-  = fun s0 -> (f (), s0)
+  = elim_pure_wp_monotonicity_forall ();
+    fun s0 -> (f (), s0)
 
 sub_effect ID ~> ST = lift_id_st
 

@@ -1,0 +1,173 @@
+[
+  "òP\u0000vP¨6])O«ß1é\u001f-",
+  [
+    [
+      "FStar.NMSTTotal.return",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_Prims.nat",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1"
+      ],
+      0,
+      "fc57afd4aa0f0a7e2fca29259efa6d5d"
+    ],
+    [
+      "FStar.NMSTTotal.bind",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
+        "proj_equation_FStar.Pervasives.Native.Mktuple2__1",
+        "refinement_kinding_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "typing_FStar.Pervasives.Native.__proj__Mktuple2__item___1"
+      ],
+      0,
+      "4bb68b9cdffc580405e0e7154e2f889d"
+    ],
+    [
+      "FStar.NMSTTotal.subcomp",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "data_elim_FStar.Pervasives.Native.Mktuple2",
+        "equation_FStar.NMSTTotal.repr", "equation_Prims.nat",
+        "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2"
+      ],
+      0,
+      "9e86b478c1ae91d46207b42f8389cda1"
+    ],
+    [
+      "FStar.NMSTTotal.NMSTATETOT",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "b2t_def", "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "f688ff1c9603787cfa9769a9b16d9d1b"
+    ],
+    [
+      "FStar.NMSTTotal.NMSTATETOT",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_de09779676242898794a0b057d5f5bb4"
+      ],
+      0,
+      "fe09472204ad1c703be9522f756c6719"
+    ],
+    [
+      "FStar.NMSTTotal.get",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_Prims.nat",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1"
+      ],
+      0,
+      "09c984d698f33f3f3c4bd6fe258dfa14"
+    ],
+    [
+      "FStar.NMSTTotal.put",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "db6cd41ac779682e66485b4fd51c2f32"
+    ],
+    [
+      "FStar.NMSTTotal.witness",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.MSTTotal.stable",
+        "equation_FStar.NMSTTotal.stable",
+        "equation_FStar.NMSTTotal.witnessed"
+      ],
+      0,
+      "cbc3b39be85c5ac65b18f69c1134e8a2"
+    ],
+    [
+      "FStar.NMSTTotal.recall",
+      1,
+      2,
+      1,
+      [ "@query", "equation_FStar.NMSTTotal.witnessed" ],
+      0,
+      "a07477df3eafa384a9846a1480d99512"
+    ],
+    [
+      "FStar.NMSTTotal.sample",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
+        "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
+      ],
+      0,
+      "eb63d721909f5c59a63ce753eb177d9e"
+    ],
+    [
+      "FStar.NMSTTotal.lift_pure_nmst",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_interpretation_Tm_arrow_2eaa01e78f73e9bab5d0955fc1a662da",
+        "Prims_interpretation_Tm_arrow_92458cff82f9ffee1f6e26a1c0c579f3",
+        "eq2-interp", "equation_FStar.NMSTTotal.tape",
+        "equation_Prims.l_Forall", "equation_Prims.l_True",
+        "equation_Prims.logical", "equation_Prims.nat",
+        "equation_Prims.pure_post", "equation_Prims.pure_post_",
+        "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
+        "function_token_typing_Prims.l_True",
+        "interpretation_Tm_abs_24b6622be388b21bc8d055b037c4c6dd",
+        "interpretation_Tm_abs_5e34897418ce4950a4effcc8c159cf53",
+        "interpretation_Tm_abs_dc670feaee5a9cdeefefb04a5984b858",
+        "l_imp-interp", "l_not-interp", "l_or-interp",
+        "l_quant_interp_a6744653fb6eb4eeacca019834400768",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
+        "refinement_interpretation_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
+        "typing_Tm_abs_24b6622be388b21bc8d055b037c4c6dd",
+        "typing_Tm_abs_5e34897418ce4950a4effcc8c159cf53",
+        "typing_Tm_abs_dc670feaee5a9cdeefefb04a5984b858"
+      ],
+      0,
+      "4f94101d96364bb281848b98d0487835"
+    ],
+    [
+      "FStar.NMSTTotal.nmst_tot_assume",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "baf79fe4cb0dd7ec78b1bf4fd9838b97"
+    ],
+    [
+      "FStar.NMSTTotal.nmst_tot_assert",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "1779dda3fa2342bbdbc171deaa6eabc1"
+    ]
+  ]
+]

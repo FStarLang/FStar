@@ -16,19 +16,23 @@
 #light "off"
 // (c) Microsoft Corporation. All rights reserved
 module FStar.Syntax.Subst
-open FStar.ST
-open FStar.All
+open FStar.Compiler.Effect
+open FStar.Compiler.Effect
 
-open FStar
+open FStar open FStar.Compiler
 open FStar.Syntax
 open FStar.Syntax.Syntax
-open FStar.Util
+open FStar.Compiler.Util
 
 val shift_subst:        int -> subst_t -> subst_t
 val subst:              list<subst_elt> -> term -> term
-val subst':           subst_ts -> term -> term
+val subst':             subst_ts -> term -> term
 val subst_comp:         list<subst_elt> -> comp -> comp
-val subst_imp:          list<subst_elt> -> aqual -> aqual
+val subst_bqual:        list<subst_elt> -> bqual -> bqual
+val subst_aqual:        list<subst_elt> -> aqual -> aqual
+val subst_ascription:   list<subst_elt> -> ascription -> ascription
+val subst_decreasing_order:
+                        list<subst_elt> -> decreases_order -> decreases_order
 val subst_binders:      list<subst_elt> -> binders -> binders
 val compress:           term -> term
 val compress_univ:      universe -> universe
@@ -36,6 +40,7 @@ val compress_univ:      universe -> universe
 val close:                binders -> term -> term
 val close_comp:           binders -> comp -> comp
 val close_binders:        binders -> binders
+val close_ascription:     binders -> ascription -> ascription
 val close_branch:         branch -> branch
 val close_univ_vars:      univ_names -> term -> term
 val close_univ_vars_comp: univ_names -> comp -> comp
@@ -47,6 +52,7 @@ val open_binders:       binders -> binders
 val open_term:          binders -> term -> binders * term
 val open_term':         binders -> term -> binders * term * subst_t
 val open_comp:          binders -> comp -> binders * comp
+val open_ascription:    binders -> ascription -> binders * ascription
 val open_branch:        branch -> branch
 val open_branch':       branch -> branch * subst_t
 val open_let_rec:       list<letbinding> -> term -> list<letbinding> * term

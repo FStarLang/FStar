@@ -1,12 +1,14 @@
 #light "off"
 module FStar.Errors
+open FStar.Pervasives
 open FStar.String
-open FStar.ST
-open FStar.Exn
-open FStar.All
-open FStar.Util
-open FStar.Range
+open FStar.Compiler.Effect
+open FStar.Compiler.List
+open FStar.Compiler.Util
+open FStar.Compiler.Range
 open FStar.Options
+module List = FStar.Compiler.List
+module Util = FStar.Compiler.Util
 
 (** This exception is raised in FStar.Error
     when a warn_error string could not be processed;
@@ -366,6 +368,12 @@ type raw_error =
   | Error_BadSplice
   | Error_UnexpectedUnresolvedUvar
   | Warning_UnfoldPlugin
+  | Error_LayeredMissingAnnot
+  | Error_CallToErased
+  | Error_ErasedCtor
+  | Error_RemoveUnusedTypeParameter
+  | Warning_NoMagicInFSharp
+  | Error_BadLetOpenRecord
 
 type flag = error_flag
 type error_setting = raw_error * error_flag * int
@@ -674,7 +682,7 @@ let default_settings : list<error_setting> =
     Fatal_SplicedUndef                                , CFatal, 300;
     Fatal_SpliceUnembedFail                           , CFatal, 301;
     Warning_ExtractionUnexpectedEffect                , CWarning, 302;
-    Error_DidNotFail                                  , CAlwaysError, 303;
+    Error_DidNotFail                                  , CError, 303;
     Warning_UnappliedFail                             , CWarning, 304;
     Warning_QuantifierWithoutPattern                  , CSilent, 305;
     Error_EmptyFailErrs                               , CAlwaysError, 306;
@@ -711,8 +719,14 @@ let default_settings : list<error_setting> =
     Error_BadSplice                                   , CError, 338;
     Error_UnexpectedUnresolvedUvar                    , CAlwaysError, 339;
     Warning_UnfoldPlugin                              , CWarning, 340;
+    Error_LayeredMissingAnnot                         , CAlwaysError, 341;
+    Error_CallToErased                                , CError, 342;
+    Error_ErasedCtor                                  , CError, 343;
+    Error_RemoveUnusedTypeParameter                   , CWarning, 344;
+    Warning_NoMagicInFSharp                           , CWarning, 345;
+    Error_BadLetOpenRecord                            , CAlwaysError, 346;
     ]
-module BU = FStar.Util
+module BU = FStar.Compiler.Util
 
 let lookup_error settings e =
   match
@@ -736,6 +750,7 @@ let error_number (_, _, i) = i
 
 let warn_on_use_errno = error_number (lookup_error default_settings Warning_WarnOnUse)
 let defensive_errno   = error_number (lookup_error default_settings Warning_Defensive)
+let call_to_erased_errno = error_number (lookup_error default_settings Error_CallToErased)
 
 let update_flags (l:list<(error_flag * string)>)
   : list<error_setting>
@@ -776,7 +791,7 @@ let update_flags (l:list<(error_flag * string)>)
 
 
 (* error code, message, source position, and error context *)
-type error = raw_error * string * Range.range * list<string>
+type error = raw_error * string * FStar.Compiler.Range.range * list<string>
 
 exception Err     of raw_error * string * list<string>
 exception Error   of error
@@ -786,7 +801,7 @@ exception Stop
 (* Raised when an empty fragment is parsed *)
 exception Empty_frag
 
-module BU = FStar.Util
+module BU = FStar.Compiler.Util
 
 type issue_level =
 | ENotImplemented
@@ -797,7 +812,7 @@ type issue_level =
 type issue = {
     issue_msg: string;
     issue_level: issue_level;
-    issue_range: option<Range.range>;
+    issue_range: option<FStar.Compiler.Range.range>;
     issue_number: option<int>;
     issue_ctx: list<string>;
 }
@@ -835,12 +850,12 @@ let format_issue issue =
       | None -> "", ""
       | Some r when r = dummyRange ->
           "", (if def_range r = def_range dummyRange then ""
-               else BU.format1 " (see also %s)" (Range.string_of_range r))
+               else BU.format1 " (see also %s)" (FStar.Compiler.Range.string_of_range r))
       | Some r ->
-        (BU.format1 "%s: " (Range.string_of_use_range r),
+        (BU.format1 "%s: " (FStar.Compiler.Range.string_of_use_range r),
          (if use_range r = def_range r || def_range r = def_range dummyRange
           then ""
-          else BU.format1 " (see also %s)" (Range.string_of_range r)))
+          else BU.format1 " (see also %s)" (FStar.Compiler.Range.string_of_range r)))
   in
   let issue_number =
       match issue.issue_number with
@@ -863,7 +878,7 @@ let compare_issues i1 i2 =
     | None, None -> 0
     | None, Some _ -> -1
     | Some _, None -> 1
-    | Some r1, Some r2 -> Range.compare_use_range r1 r2
+    | Some r1, Some r2 -> FStar.Compiler.Range.compare_use_range r1 r2
 
 let mk_default_handler print =
     let issues : ref<list<issue>> = BU.mk_ref [] in
@@ -971,7 +986,7 @@ let warn_unsafe_options rng_opt msg =
     add_one (mk_issue EError rng_opt ("Every use of this option triggers an error: " ^msg) (Some warn_on_use_errno) [])
   | _ -> ()
 
-let set_option_warning_callback_range (ropt:option<Range.range>) =
+let set_option_warning_callback_range (ropt:option<FStar.Compiler.Range.range>) =
     Options.set_option_warning_callback (warn_unsafe_options ropt)
 
 let set_parse_warn_error,

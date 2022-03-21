@@ -17,17 +17,22 @@
 
 // (c) Microsoft Corporation. All rights reserved
 module FStar.Options
+open FStar.Compiler
+open FStar.Compiler.List
+open FStar.Pervasives
 open FStar.String
-open FStar.ST
-open FStar.Exn
-open FStar.All
+open FStar.Compiler.Effect
 open FStar
-open FStar.Util
+open FStar.Compiler
+open FStar.Compiler.Util
 open FStar.Getopt
 open FStar.BaseTypes
 open FStar.VConfig
 
+module Option = FStar.Compiler.Option
 module FC = FStar.Common
+module Util = FStar.Compiler.Util
+module List = FStar.Compiler.List
 
 let debug_embedding = mk_ref false
 let eager_embedding = mk_ref false
@@ -155,7 +160,6 @@ let add_light_off_file (filename:string) = light_off_files := filename :: !light
 
 let defaults =
      [
-      ("__temp_no_proj"               , List []);
       ("__temp_fast_implicits"        , Bool false);
       ("abort_on"                     , Int 0);
       ("admit_smt_queries"            , Bool false);
@@ -190,6 +194,7 @@ let defaults =
       ("hint_file"                    , Unset);
       ("in"                           , Bool false);
       ("ide"                          , Bool false);
+      ("ide_id_info_off"              , Bool false);
       ("lsp"                          , Bool false);
       ("include"                      , List []);
       ("print"                        , Bool false);
@@ -202,6 +207,7 @@ let defaults =
       ("keep_query_captions"          , Bool true);
       ("lax"                          , Bool false);
       ("load"                         , List []);
+      ("load_cmxs"                    , List []);
       ("log_queries"                  , Bool false);
       ("log_types"                    , Bool false);
       ("max_fuel"                     , Int 8);
@@ -270,7 +276,6 @@ let defaults =
       ("z3rlimit_factor"              , Int 1);
       ("z3seed"                       , Int 0);
       ("z3cliopt"                     , List []);
-      ("use_two_phase_tc"             , Bool true);
       ("__no_positivity"              , Bool false);
       ("__tactics_nbe"                , Bool false);
       ("warn_error"                   , List []);
@@ -333,7 +338,6 @@ let set_verification_options o =
     "z3rlimit";
     "z3rlimit_factor";
     "z3seed";
-    "use_two_phase_tc";
     "trivial_pre_for_unannotated_effectful_fns";
   ] in
   List.iter (fun k -> set_option k (Util.smap_try_find o k |> Util.must)) verifopts
@@ -373,6 +377,7 @@ let get_hint_dir                ()      = lookup_opt "hint_dir"                 
 let get_hint_file               ()      = lookup_opt "hint_file"                (as_option as_string)
 let get_in                      ()      = lookup_opt "in"                       as_bool
 let get_ide                     ()      = lookup_opt "ide"                      as_bool
+let get_ide_id_info_off         ()      = lookup_opt "ide_id_info_off"          as_bool
 let get_lsp                     ()      = lookup_opt "lsp"                      as_bool
 let get_include                 ()      = lookup_opt "include"                  (as_list as_string)
 let get_print                   ()      = lookup_opt "print"                    as_bool
@@ -382,6 +387,7 @@ let get_initial_ifuel           ()      = lookup_opt "initial_ifuel"            
 let get_keep_query_captions     ()      = lookup_opt "keep_query_captions"      as_bool
 let get_lax                     ()      = lookup_opt "lax"                      as_bool
 let get_load                    ()      = lookup_opt "load"                     (as_list as_string)
+let get_load_cmxs               ()      = lookup_opt "load_cmxs"                (as_list as_string)
 let get_log_queries             ()      = lookup_opt "log_queries"              as_bool
 let get_log_types               ()      = lookup_opt "log_types"                as_bool
 let get_max_fuel                ()      = lookup_opt "max_fuel"                 as_int
@@ -441,7 +447,6 @@ let get_no_tactics              ()      = lookup_opt "no_tactics"               
 let get_using_facts_from        ()      = lookup_opt "using_facts_from"         (as_option (as_list as_string))
 let get_vcgen_optimize_bind_as_seq  ()  = lookup_opt "vcgen.optimize_bind_as_seq" (as_option as_string)
 let get_verify_module           ()      = lookup_opt "verify_module"            (as_list as_string)
-let get___temp_no_proj          ()      = lookup_opt "__temp_no_proj"           (as_list as_string)
 let get_version                 ()      = lookup_opt "version"                  as_bool
 let get_warn_default_effects    ()      = lookup_opt "warn_default_effects"     as_bool
 let get_z3cliopt                ()      = lookup_opt "z3cliopt"                 (as_list as_string)
@@ -449,7 +454,6 @@ let get_z3refresh               ()      = lookup_opt "z3refresh"                
 let get_z3rlimit                ()      = lookup_opt "z3rlimit"                 as_int
 let get_z3rlimit_factor         ()      = lookup_opt "z3rlimit_factor"          as_int
 let get_z3seed                  ()      = lookup_opt "z3seed"                   as_int
-let get_use_two_phase_tc        ()      = lookup_opt "use_two_phase_tc"         as_bool
 let get_no_positivity           ()      = lookup_opt "__no_positivity"          as_bool
 let get_warn_error              ()      = lookup_opt "warn_error"               (as_list as_string)
 let get_use_nbe                 ()      = lookup_opt "use_nbe"                  as_bool
@@ -484,18 +488,19 @@ let universe_include_path_base_dirs =
 
 
 // See comment in the interface file
-let _version = FStar.Util.mk_ref ""
-let _platform = FStar.Util.mk_ref ""
-let _compiler = FStar.Util.mk_ref ""
-let _date = FStar.Util.mk_ref "<not set>"
-let _commit = FStar.Util.mk_ref ""
+let _version = Util.mk_ref ""
+let _platform = Util.mk_ref ""
+let _compiler = Util.mk_ref ""
+let _date = Util.mk_ref "<not set>"
+let _commit = Util.mk_ref ""
 
 let display_version () =
   Util.print_string (Util.format5 "F* %s\nplatform=%s\ncompiler=%s\ndate=%s\ncommit=%s\n"
                                   !_version !_platform !_compiler !_date !_commit)
 
 let display_usage_aux specs =
-  Util.print_string "fstar.exe [options] file[s]\n";
+  Util.print_string "fstar.exe [options] file[s] [@respfile...]\n";
+  Util.print_string (Util.format1 "  %srespfile  read options from respfile\n" (Util.colorize_bold "@"));
   List.iter
     (fun (_, flag, p, doc) ->
        match p with
@@ -775,15 +780,16 @@ let rec specs_with_types warn_unsafe : list<(char * string * opt_type * string)>
 
        ( noshort,
          "extract",
-         Accumulated (SimpleStr "One or more space-separated occurrences of '[+|-]( * | namespace | module)'"),
+         Accumulated (SimpleStr "One or more semicolon separated occurrences of '[TargetName:]ModuleSelector'"),
         "\n\t\tExtract only those modules whose names or namespaces match the provided options.\n\t\t\t\
-         Modules can be extracted or not using the [+|-] qualifier. \n\t\t\t\
-         For example --extract '* -FStar.Reflection +FStar.List -FStar.List.Tot' will \n\t\t\t\t\
-         not extract FStar.List.Tot.*, \n\t\t\t\t\
-         extract remaining modules from FStar.List.*, \n\t\t\t\t\
-         not extract FStar.Reflection.*, \n\t\t\t\t\
-         and extract all the rest.\n\t\t\
-         Note, the '+' is optional: --extract '+A' and --extract 'A' mean the same thing.\n\t\t\
+         'TargetName' ranges over {OCaml, Kremlin, FSharp, Plugin}.\n\t\t\t\
+         A 'ModuleSelector' is a space or comma-separated list of '[+|-]( * | namespace | module)'.\n\t\t\t\
+         For example --extract 'OCaml:A -A.B' --extract 'Kremlin:A -A.C' --extract '*' means\n\t\t\t\t\
+         for OCaml, extract everything in the A namespace only except A.B;\n\t\t\t\t\
+         for Kremlin, extract everything in the A namespace only except A.C;\n\t\t\t\t\
+         for everything else, extract everything.\n\t\t\t\
+         Note, the '+' is optional: --extract '+A' and --extract 'A' mean the same thing.\n\t\t\t\
+         Note also that '--extract A' applies both to a module named 'A' and to any module in the 'A' namespace\n\t\t\
          Multiple uses of this option accumulate, e.g., --extract A --extract B is interpreted as --extract 'A B'.");
 
        ( noshort,
@@ -830,6 +836,11 @@ let rec specs_with_types warn_unsafe : list<(char * string * opt_type * string)>
         "ide",
         Const (Bool true),
         "JSON-based interactive mode for IDEs");
+
+       ( noshort,
+        "ide_id_info_off",
+        Const (Bool true),
+        "Disable identifier tables in IDE mode (temporary workaround useful in Steel)");
 
        ( noshort,
         "lsp",
@@ -915,7 +926,12 @@ let rec specs_with_types warn_unsafe : list<(char * string * opt_type * string)>
       ( noshort,
        "load",
         ReverseAccumulated (PathStr "module"),
-        "Load compiled module");
+        "Load OCaml module, compiling it if necessary");
+
+      ( noshort,
+       "load_cmxs",
+        ReverseAccumulated (PathStr "module"),
+        "Load compiled module, fails hard if the module is not already compiled");
 
        ( noshort,
         "log_types",
@@ -1218,12 +1234,12 @@ let rec specs_with_types warn_unsafe : list<(char * string * opt_type * string)>
          ReverseAccumulated (SimpleStr "One or more space-separated occurrences of '[+|-]( * | namespace | fact id)'"),
         "\n\t\tPrunes the context to include only the facts from the given namespace or fact id. \n\t\t\t\
          Facts can be include or excluded using the [+|-] qualifier. \n\t\t\t\
-         For example --using_facts_from '* -FStar.Reflection +FStar.List -FStar.List.Tot' will \n\t\t\t\t\
-         remove all facts from FStar.List.Tot.*, \n\t\t\t\t\
-         retain all remaining facts from FStar.List.*, \n\t\t\t\t\
+         For example --using_facts_from '* -FStar.Reflection +FStar.Compiler.List -FStar.Compiler.List.Tot' will \n\t\t\t\t\
+         remove all facts from FStar.Compiler.List.Tot.*, \n\t\t\t\t\
+         retain all remaining facts from FStar.Compiler.List.*, \n\t\t\t\t\
          remove all facts from FStar.Reflection.*, \n\t\t\t\t\
          and retain all the rest.\n\t\t\
-         Note, the '+' is optional: --using_facts_from 'FStar.List' is equivalent to --using_facts_from '+FStar.List'. \n\t\t\
+         Note, the '+' is optional: --using_facts_from 'FStar.Compiler.List' is equivalent to --using_facts_from '+FStar.Compiler.List'. \n\t\t\
          Multiple uses of this option accumulate, e.g., --using_facts_from A --using_facts_from B is interpreted as --using_facts_from A^B.");
 
        ( noshort,
@@ -1237,11 +1253,6 @@ let rec specs_with_types warn_unsafe : list<(char * string * opt_type * string)>
            to reconstruct type information.\n\t\t\t\
            When `with_type` is chosen, type information is provided to the SMT solver,\n\t\t\t\
            but at the cost of VC bloat, which may often be redundant.");
-
-       ( noshort,
-        "__temp_no_proj",
-        Accumulated (SimpleStr "module_name"),
-        "Don't generate projectors for this module");
 
        ( noshort,
         "__temp_fast_implicits",
@@ -1283,11 +1294,6 @@ let rec specs_with_types warn_unsafe : list<(char * string * opt_type * string)>
         "z3seed",
         IntStr "positive_integer",
         "Set the Z3 random seed (default 0)");
-
-       ( noshort,
-        "use_two_phase_tc",
-        BoolStr,
-        "Use the two phase typechecker (default 'true')");
 
        ( noshort,
         "__no_positivity",
@@ -1372,6 +1378,7 @@ let settable = function
     | "detail_errors"
     | "detail_hint_replay"
     | "eager_subtyping"
+    | "error_contexts"
     | "hide_uvar_nums"
     | "hint_dir"
     | "hint_file"
@@ -1380,8 +1387,10 @@ let settable = function
     | "ifuel"
     | "initial_fuel"
     | "initial_ifuel"
+    | "ide_id_info_off"
     | "lax"
     | "load"
+    | "load_cmxs"
     | "log_queries"
     | "log_types"
     | "max_fuel"
@@ -1422,13 +1431,11 @@ let settable = function
     | "tactic_trace_d"
     | "tcnorm"
     | "__temp_fast_implicits"
-    | "__temp_no_proj"
     | "timing"
     | "trace_error"
     | "ugly"
     | "unthrottle_inductives"
     | "use_eq_at_higher_order"
-    | "use_two_phase_tc"
     | "using_facts_from"
     | "vcgen.optimize_bind_as_seq"
     | "warn_error"
@@ -1468,8 +1475,37 @@ let fstar_bin_directory = Util.get_exec_dir ()
 
 let file_list_ : ref<(list<string>)> = Util.mk_ref []
 
+(* In `parse_filename_arg specs arg`:
+
+   * `arg` is a filename argument to be parsed. If `arg` is of the
+     form `@file`, then `file` is a response file, from which further
+     arguments (including further options) are read. Nested response
+     files (@ response file arguments within response files) are
+     supported.
+
+   * `specs` is the list of option specifications (- and --)
+
+   * `enable_filenames` is a boolean, true if non-response file
+   * filenames should be handled.
+
+*)
+
+
+let rec parse_filename_arg specs enable_filenames arg =
+  if Util.starts_with arg "@"
+  then begin
+    // read and parse a response file
+    let filename = Util.substring_from arg 1 in
+    let lines = Util.file_get_lines filename in
+    Getopt.parse_list specs (parse_filename_arg specs enable_filenames) lines
+  end else begin
+    if enable_filenames
+    then file_list_ := !file_list_ @ [arg];
+    Success
+  end
+
 let parse_cmd_line () =
-  let res = Getopt.parse_cmdline all_specs (fun i -> file_list_ := !file_list_ @ [i]) in
+  let res = Getopt.parse_cmdline all_specs (parse_filename_arg all_specs true) in
   let res =
     if res = Success
     then set_error_flags()
@@ -1485,7 +1521,8 @@ let restore_cmd_line_options should_clear =
      * Add them here as needed. *)
     let old_verify_module = get_verify_module() in
     if should_clear then clear() else init();
-    let r = Getopt.parse_cmdline (specs false) (fun x -> ()) in
+    let specs = specs false in
+    let r = Getopt.parse_cmdline specs (parse_filename_arg specs false) in
     set_option' ("verify_module", List (List.map String old_verify_module));
     r
 
@@ -1509,8 +1546,6 @@ let should_verify_file fn =
 
 let module_name_eq m1 m2 = String.lowercase m1 = String.lowercase m2
 
-let dont_gen_projectors m = get___temp_no_proj() |> List.existsb (module_name_eq m)
-
 let should_print_message m =
     if should_verify m
     then m <> "Prims"
@@ -1526,7 +1561,7 @@ let include_path () =
     cache_dir @ get_include()
   else
     let lib_paths =
-        match FStar.Util.expand_environment_variable "FSTAR_LIB" with
+        match Util.expand_environment_variable "FSTAR_LIB" with
         | None ->
           let fstar_home = fstar_bin_directory ^ "/.."  in
           let defs = universe_include_path_base_dirs in
@@ -1536,7 +1571,7 @@ let include_path () =
     cache_dir @ lib_paths @ get_include() @ [ "." ]
 
 let find_file =
-  let file_map = FStar.Util.smap_create 100 in
+  let file_map = Util.smap_create 100 in
   fun filename ->
      match Util.smap_try_find file_map filename with
      | Some f -> f
@@ -1596,12 +1631,12 @@ let pervasives_native_basename () =
 let prepend_output_dir fname =
   match get_odir() with
   | None -> fname
-  | Some x -> FStar.Util.join_paths x fname
+  | Some x -> Util.join_paths x fname
 
 let prepend_cache_dir fpath =
   match get_cache_dir() with
   | None -> fpath
-  | Some x -> FStar.Util.join_paths x (FStar.Util.basename fpath)
+  | Some x -> Util.join_paths x (Util.basename fpath)
 
 //Used to parse the options of
 //   --using_facts_from
@@ -1622,26 +1657,25 @@ let parse_settings ns : list<(list<string> * bool)> =
     let parse_one_setting s =
         if s = "*" then ([], true)
         else if s = "-*" then ([], false)
-        else if FStar.Util.starts_with s "-"
-        then let path = path_of_text (FStar.Util.substring_from s 1) in
+        else if Util.starts_with s "-"
+        then let path = path_of_text (Util.substring_from s 1) in
              (path, false)
-        else let s = if FStar.Util.starts_with s "+"
-                     then FStar.Util.substring_from s 1
+        else let s = if Util.starts_with s "+"
+                     then Util.substring_from s 1
                      else s in
              (path_of_text s, true)
     in
     ns |> List.collect (fun s ->
-      let s = FStar.Util.trim_string s in
+      let s = Util.trim_string s in
       if s = "" then []
       else with_cache (fun s ->
-             let s = FStar.Util.replace_char s ' ' ',' in
-             FStar.Util.splitlines s
-             |> List.concatMap (fun s -> FStar.Util.split s ",")
+             let s = Util.replace_char s ' ' ',' in
+             Util.splitlines s
+             |> List.concatMap (fun s -> Util.split s ",")
              |> List.filter (fun s -> s <> "")
              |> List.map parse_one_setting) s)
              |> List.rev
 
-let __temp_no_proj               s  = get___temp_no_proj() |> List.contains s
 let __temp_fast_implicits        () = lookup_opt "__temp_fast_implicits" as_bool
 let admit_smt_queries            () = get_admit_smt_queries           ()
 let admit_except                 () = get_admit_except                ()
@@ -1650,15 +1684,25 @@ let cache_off                    () = get_cache_off                   ()
 let print_cache_version          () = get_print_cache_version         ()
 let cmi                          () = get_cmi                         ()
 type codegen_t = | OCaml | FSharp | Kremlin | Plugin
+
+let parse_codegen =
+  function
+  | "OCaml" -> Some OCaml
+  | "FSharp" -> Some FSharp
+  | "Kremlin" -> Some Kremlin
+  | "Plugin" -> Some Plugin
+  | _ -> None
+
+let print_codegen =
+  function
+  | OCaml -> "OCaml"
+  | FSharp -> "FSharp"
+  | Kremlin -> "Kremlin"
+  | Plugin -> "Plugin"
+
 let codegen                      () =
-    Util.map_opt
-           (get_codegen())
-           (function
-            | "OCaml" -> OCaml
-            | "FSharp" -> FSharp
-            | "Kremlin" -> Kremlin
-            | "Plugin" -> Plugin
-            | _ -> failwith "Impossible")
+    Util.map_opt (get_codegen())
+                 (fun s -> parse_codegen s |> must)
 
 let codegen_libs                 () = get_codegen_lib () |> List.map (fun x -> Util.split x ".")
 let debug_any                    () = get_debug () <> []
@@ -1698,6 +1742,7 @@ let hint_file_for_src src_filename =
         in
         Util.format1 "%s.hints" file_name
 let ide                          () = get_ide                         ()
+let ide_id_info_off              () = get_ide_id_info_off             ()
 let print                        () = get_print                       ()
 let print_in_place               () = get_print_in_place              ()
 let initial_fuel                 () = min (get_initial_fuel ()) (get_max_fuel ())
@@ -1705,6 +1750,7 @@ let initial_ifuel                () = min (get_initial_ifuel ()) (get_max_ifuel 
 let interactive                  () = get_in () || get_ide ()
 let lax                          () = get_lax                         ()
 let load                         () = get_load                        ()
+let load_cmxs                    () = get_load_cmxs                   ()
 let legacy_interactive           () = get_in                          ()
 let lsp_server                   () = get_lsp                         ()
 let log_queries                  () = get_log_queries                 ()
@@ -1784,8 +1830,6 @@ let z3_refresh                   () = get_z3refresh                   ()
 let z3_rlimit                    () = get_z3rlimit                    ()
 let z3_rlimit_factor             () = get_z3rlimit_factor             ()
 let z3_seed                      () = get_z3seed                      ()
-let use_two_phase_tc             () = get_use_two_phase_tc            ()
-                                    && not (lax())
 let no_positivity                () = get_no_positivity               ()
 let use_nbe                      () = get_use_nbe                     ()
 let use_nbe_for_extraction       () = get_use_nbe_for_extraction      ()
@@ -1832,11 +1876,124 @@ let matches_namespace_filter_opt m =
   | None -> false
   | Some filter -> module_matches_namespace_filter m filter
 
+type parsed_extract_setting = {
+  target_specific_settings: list<(codegen_t * string)>;
+  default_settings:option<string>
+}
 
-let should_extract m =
+let print_pes pes =
+  Util.format2 "{ target_specific_settings = %s;\n\t
+               default_settings = %s }"
+            (List.map (fun (tgt, s) ->
+                         Util.format2 "(%s, %s)"
+                           (print_codegen tgt)
+                           s)
+                      pes.target_specific_settings
+             |> String.concat "; ")
+            (match pes.default_settings with
+             | None -> "None"
+             | Some s -> s)
+
+let find_setting_for_target tgt (s:list<(codegen_t * string)>)
+  : option<string>
+  = match Util.try_find (fun (x, _) -> x = tgt) s with
+    | Some (_, s) -> Some s
+    | _ -> None
+
+let extract_settings
+  : unit -> option<parsed_extract_setting>
+  = let memo:ref<(option<parsed_extract_setting> * bool)> = Util.mk_ref (None, false) in
+    let merge_parsed_extract_settings p0 p1 : parsed_extract_setting =
+      let merge_setting s0 s1 =
+        match s0, s1 with
+        | None, None -> None
+        | Some p, None
+        | None, Some p -> Some p
+        | Some p0, Some p1 -> Some (p0 ^ "," ^ p1)
+      in
+      let merge_target tgt =
+        match
+          merge_setting
+            (find_setting_for_target tgt p0.target_specific_settings)
+            (find_setting_for_target tgt p1.target_specific_settings)
+        with
+        | None -> []
+        | Some x -> [tgt,x]
+      in
+      {
+        target_specific_settings = List.collect merge_target [OCaml;FSharp;Kremlin;Plugin];
+        default_settings = merge_setting p0.default_settings p1.default_settings
+      }
+    in
+    fun _ ->
+      let result, set = !memo in
+      let fail msg =
+           display_usage();
+           failwith (Util.format1 "Could not parse '%s' passed to the --extract option" msg)
+      in
+      if set then result
+      else match get_extract () with
+           | None ->
+             memo := (None, true);
+             None
+
+           | Some extract_settings ->
+             let parse_one_setting extract_setting =
+               // T1:setting1; T2:setting2; ... or
+               // setting <-- applies to all other targets
+               let tgt_specific_settings = Util.split extract_setting ";" in
+               let split_one t_setting =
+                   match Util.split t_setting ":" with
+                   | [default_setting] ->
+                     Inr (Util.trim_string default_setting)
+                   | [target; setting] ->
+                     let target = Util.trim_string target in
+                     match parse_codegen target with
+                     | None -> fail target
+                     | Some tgt -> Inl (tgt, Util.trim_string setting)
+                   | _ -> fail t_setting
+               in
+               let settings = List.map split_one tgt_specific_settings in
+               let fail_duplicate msg tgt =
+                   display_usage();
+                   failwith
+                     (Util.format2
+                       "Could not parse '%s'; multiple setting for %s target"
+                       msg tgt)
+               in
+               let pes =
+                 List.fold_right
+                   (fun setting out ->
+                     match setting with
+                     | Inr def ->
+                       (match out.default_settings with
+                         | None -> { out with default_settings = Some def }
+                         | Some _ ->  fail_duplicate def "default")
+                     | Inl (target, setting) ->
+                       (match Util.try_find (fun (x, _) -> x = target) out.target_specific_settings with
+                         | None -> { out with target_specific_settings = (target, setting):: out.target_specific_settings }
+                         | Some _ -> fail_duplicate setting (print_codegen target)))
+                   settings
+                   ({ target_specific_settings = []; default_settings = None })
+               in
+               pes
+             in
+             let empty_pes = { target_specific_settings = []; default_settings = None } in
+             let pes =
+               //the left-most settings on the command line are at the end of the list
+               //so fold_right
+               List.fold_right
+                 (fun setting pes -> merge_parsed_extract_settings pes (parse_one_setting setting))
+                 extract_settings
+                 empty_pes
+             in
+             memo := (Some pes, true);
+             Some pes
+
+let should_extract m tgt =
     let m = String.lowercase m in
-    match get_extract() with
-    | Some extract_setting -> //new option, using --extract '* -FStar' etc.
+    match extract_settings() with
+    | Some pes -> //new option, using --extract 'OCaml:* -FStar' etc.
       let _ =
         match get_no_extract(),
               get_extract_namespace(),
@@ -1847,7 +2004,15 @@ let should_extract m =
                         --extract cannot be used with \
                         --no_extract, --extract_namespace or --extract_module"
       in
-      module_matches_namespace_filter m extract_setting
+      let tsetting =
+        match find_setting_for_target tgt pes.target_specific_settings with
+        | Some s -> s
+        | None ->
+          match pes.default_settings with
+          | Some s -> s
+          | None -> "*" //extract everything, by default
+      in
+      module_matches_namespace_filter m [tsetting]
     | None -> //old
         let should_extract_namespace m =
             match get_extract_namespace () with
@@ -1861,7 +2026,7 @@ let should_extract m =
         in
         not (no_extract m) &&
         (match get_extract_namespace (), get_extract_module() with
-        | [], [] -> true //neither is set
+        | [], [] -> true //neither is set; extract everything
         | _ -> should_extract_namespace m || should_extract_module m)
 
 let should_be_already_cached m =
@@ -1886,12 +2051,12 @@ let set_options s =
     try
         if s = ""
         then Success
-        else let res = Getopt.parse_string settable_specs (fun s -> raise (File_argument s); ()) s in
+        else let res = Getopt.parse_string settable_specs (fun s -> raise (File_argument s); Error "set_options with file argument") s in
              if res=Success
              then set_error_flags()
              else res
     with
-    | File_argument s -> Getopt.Error (FStar.Util.format1 "File %s is not a valid option" s)
+    | File_argument s -> Getopt.Error (Util.format1 "File %s is not a valid option" s)
 
 
 let get_vconfig () =
@@ -1921,7 +2086,6 @@ let get_vconfig () =
     z3rlimit                                  = get_z3rlimit ();
     z3rlimit_factor                           = get_z3rlimit_factor ();
     z3seed                                    = get_z3seed ();
-    use_two_phase_tc                          = get_use_two_phase_tc ();
     trivial_pre_for_unannotated_effectful_fns = get_trivial_pre_for_unannotated_effectful_fns ();
     reuse_hint_for                            = get_reuse_hint_for ();
   }
@@ -1959,7 +2123,6 @@ let set_vconfig (vcfg:vconfig) : unit =
   set_option "z3rlimit"                                  (Int vcfg.z3rlimit);
   set_option "z3rlimit_factor"                           (Int vcfg.z3rlimit_factor);
   set_option "z3seed"                                    (Int vcfg.z3seed);
-  set_option "use_two_phase_tc"                          (Bool vcfg.use_two_phase_tc);
   set_option "trivial_pre_for_unannotated_effectful_fns" (Bool vcfg.trivial_pre_for_unannotated_effectful_fns);
   set_option "reuse_hint_for"                            (option_as String vcfg.reuse_hint_for);
   ()

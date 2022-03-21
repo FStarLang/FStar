@@ -16,10 +16,12 @@
 #light "off"
 module FStar.Extraction.ML.Util
 open Prims
-open FStar.ST
-open FStar.All
+open FStar.Pervasives
+open FStar.Compiler.Effect
+open FStar.Compiler.List
 open FStar
-open FStar.Util
+open FStar.Compiler
+open FStar.Compiler.Util
 open FStar.Syntax
 open FStar.Syntax.Syntax
 open FStar.Syntax.Embeddings
@@ -28,11 +30,11 @@ open FStar.Extraction.ML.Syntax
 open FStar.Const
 open FStar.Ident
 open FStar.Errors
-module BU = FStar.Util
+module BU = FStar.Compiler.Util
 module U = FStar.Syntax.Util
 module UEnv = FStar.Extraction.ML.UEnv
 module PC = FStar.Parser.Const
-module Range = FStar.Range
+module Range = FStar.Compiler.Range
 module S = FStar.Syntax.Syntax
 module N = FStar.TypeChecker.Normalize
 module Env = FStar.TypeChecker.Env
@@ -48,6 +50,7 @@ let pruneNones (l : list<option<'a>>) : list<'a> =
 
 let mk_range_mle = with_ty MLTY_Top <| MLE_Name (["Prims"], "mk_range")
 let dummy_range_mle = with_ty MLTY_Top <| MLE_Name (["FStar"; "Range"], "dummyRange")
+let fstar_real_of_string = with_ty MLTY_Top <| MLE_Name (["FStar";"Real"], "of_string")
 
 (* private *)
 let mlconst_of_const' (sctt : sconst) =
@@ -102,6 +105,10 @@ let mlexpr_of_const (p:Range.range) (c:sconst) : mlexpr' =
     | Const_range r ->
         mlexpr_of_range r
 
+    | Const_real s ->
+        let str = mlconst_of_const p (Const_string(s, p)) in
+        MLE_App(fstar_real_of_string, [with_ty ml_string_ty <| MLE_Const str])
+
     | _ ->
         MLE_Const (mlconst_of_const p c)
 
@@ -147,22 +154,22 @@ let udelta_unfold (g:UEnv.uenv) = function
 
 let eff_leq f f' = match f, f' with
     | E_PURE, _          -> true
-    | E_GHOST, E_GHOST   -> true
+    | E_ERASABLE, E_ERASABLE   -> true
     | E_IMPURE, E_IMPURE -> true
     | _ -> false
 
 let eff_to_string = function
     | E_PURE -> "Pure"
-    | E_GHOST -> "Ghost"
+    | E_ERASABLE -> "Erasable"
     | E_IMPURE -> "Impure"
 
 let join r f f' = match f, f' with
     | E_IMPURE, E_PURE
     | E_PURE  , E_IMPURE
     | E_IMPURE, E_IMPURE -> E_IMPURE
-    | E_GHOST , E_GHOST  -> E_GHOST
-    | E_PURE  , E_GHOST  -> E_GHOST
-    | E_GHOST , E_PURE   -> E_GHOST
+    | E_ERASABLE , E_ERASABLE  -> E_ERASABLE
+    | E_PURE  , E_ERASABLE  -> E_ERASABLE
+    | E_ERASABLE , E_PURE   -> E_ERASABLE
     | E_PURE  , E_PURE   -> E_PURE
     | _ -> failwith (BU.format3 "Impossible (%s): Inconsistent effects %s and %s"
                             (Range.string_of_range r)
@@ -201,7 +208,7 @@ let rec type_leq_c (unfold_ty:unfold_t) (e:option<mlexpr>) (t:mlty) (t':mlty) : 
             if type_leq unfold_ty t1' t1
             && eff_leq f f'
             then if f=E_PURE
-                && f'=E_GHOST
+                && f'=E_ERASABLE
                 then if type_leq unfold_ty t2 t2'
                     then let body = if type_leq unfold_ty t2 ml_unit_ty
                                     then ml_unit
@@ -320,15 +327,9 @@ let resugar_mlty t = match t with
         | _ -> t
       end
     | _ -> t
-
-let flatten_ns ns =
-    if codegen_fsharp()
-    then String.concat "." ns
-    else String.concat "_" ns
-let flatten_mlpath (ns, n) =
-    if codegen_fsharp()
-    then String.concat "." (ns@[n])
-    else String.concat "_" (ns@[n])
+    
+let flatten_ns ns = String.concat "_" ns
+let flatten_mlpath (ns, n) = String.concat "_" (ns@[n])
 let ml_module_name_of_lid (l:lident) =
   let mlp = l |> ns_of_lid |> List.map string_of_id,  string_of_id (ident_of_lid l) in
   flatten_mlpath mlp
@@ -545,7 +546,7 @@ let interpret_plugin_as_term_fun (env:UEnv.uenv) (fv:fv) (t:typ) (arity_opt:opti
 
         | Tm_arrow ([b], c) when U.is_pure_comp c ->
           let bs, c = FStar.Syntax.Subst.open_comp [b] c in
-          let t0 = (fst (List.hd bs)).sort in
+          let t0 = (List.hd bs).binder_bv.sort in
           let t1 = U.comp_result c in
           emb_arrow l (mk_embedding l env t0) (mk_embedding l env t1)
 
@@ -671,7 +672,7 @@ let interpret_plugin_as_term_fun (env:UEnv.uenv) (fv:fv) (t:typ) (arity_opt:opti
     let type_vars, bs =
         match
             BU.prefix_until
-                (fun (b, _) ->
+                (fun ({binder_bv=b}) ->
                     match (Subst.compress b.sort).n with
                     | Tm_type _ -> false
                     | _ -> true)
@@ -690,7 +691,7 @@ let interpret_plugin_as_term_fun (env:UEnv.uenv) (fv:fv) (t:typ) (arity_opt:opti
     let tvar_arity = List.length type_vars in
     let non_tvar_arity = List.length bs in
     let tvar_names = List.mapi (fun i tv -> ("tv_" ^ string_of_int i)) type_vars in
-    let tvar_context : list<(bv * string)> = List.map2 (fun b nm -> fst b, nm) type_vars tvar_names in
+    let tvar_context : list<(bv * string)> = List.map2 (fun b nm -> b.binder_bv, nm) type_vars tvar_names in
     // The tvar_context records all the ML type variables in scope
     // All their embeddings will be just identity embeddings
 
@@ -754,7 +755,7 @@ let interpret_plugin_as_term_fun (env:UEnv.uenv) (fv:fv) (t:typ) (arity_opt:opti
           end
           else raise (NoTacticEmbedding("Plugins not defined for type " ^ Print.term_to_string t))
 
-        | (b, _)::bs ->
+        | ({binder_bv=b})::bs ->
           aux loc (mk_embedding loc tvar_context b.sort::accum_embeddings) bs
     in
     try

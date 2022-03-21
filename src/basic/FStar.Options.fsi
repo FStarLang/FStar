@@ -17,11 +17,12 @@
 
 // (c) Microsoft Corporation. All rights reserved
 module FStar.Options
-open FStar.ST
-open FStar.All
+open FStar.Compiler.Effect
 open FStar.Getopt
 open FStar.BaseTypes
 open FStar.VConfig
+open FStar.Compiler
+module List = FStar.Compiler.List
 
 //let __test_norm_all = Util.mk_ref false
 
@@ -46,7 +47,7 @@ val init                        : unit    -> unit  //sets the current options to
 val clear                       : unit    -> unit  //wipes the stack of options, and then inits
 val restore_cmd_line_options    : bool -> parse_cmdline_res //inits or clears (if the flag is set) the current options and then sets it to the cmd line
 
-type optionstate = Util.smap<option_val>
+type optionstate = FStar.Compiler.Util.smap<option_val>
 (* Control the option stack *)
 (* Briefly, push/pop are used by the interactive mode and internal_*
  * by #push-options/#pop-options. Read the comment in the .fs for more
@@ -99,7 +100,6 @@ val settable                    : string -> bool
 
 val abort_counter : ref<int>
 
-val __temp_no_proj              : string  -> bool
 val __temp_fast_implicits       : unit    -> bool
 val admit_smt_queries           : unit    -> bool
 val set_admit_smt_queries       : bool    -> unit
@@ -111,6 +111,7 @@ val cmi                         : unit    -> bool
 type codegen_t =
     | OCaml | FSharp | Kremlin | Plugin
 val codegen                     : unit    -> option<codegen_t>
+val parse_codegen               : string  -> option<codegen_t>
 val codegen_libs                : unit    -> list<list<string>>
 val profile_enabled             : module_name:option<string> -> profile_phase:string -> bool
 val profile_group_by_decls      : unit    -> bool
@@ -121,7 +122,6 @@ val dep                         : unit    -> option<string>
 val detail_errors               : unit    -> bool
 val detail_hint_replay          : unit    -> bool
 val display_usage               : unit    -> unit
-val dont_gen_projectors         : string  -> bool
 val dump_module                 : string  -> bool
 val eager_subtyping             : unit    -> bool
 val error_contexts              : unit    -> bool
@@ -137,6 +137,7 @@ val hide_uvar_nums              : unit    -> bool
 val hint_info                   : unit    -> bool
 val hint_file_for_src           : string  -> string
 val ide                         : unit    -> bool
+val ide_id_info_off             : unit    -> bool
 val include_path                : unit    -> list<string>
 val print                       : unit    -> bool
 val print_in_place              : unit    -> bool
@@ -146,6 +147,7 @@ val interactive                 : unit    -> bool
 val keep_query_captions         : unit    -> bool
 val lax                         : unit    -> bool
 val load                        : unit    -> list<string>
+val load_cmxs                   : unit    -> list<string>
 val legacy_interactive          : unit    -> bool
 val lsp_server                  : unit    -> bool
 val log_queries                 : unit    -> bool
@@ -190,7 +192,7 @@ val set_option                  : string  -> option_val -> unit
 val set_options                 : string -> parse_cmdline_res
 val should_be_already_cached    : string  -> bool
 val should_print_message        : string  -> bool
-val should_extract              : string  -> bool
+val should_extract              : string  -> codegen_t -> bool
 val should_check                : string  -> bool (* Should check this module, lax or not. *)
 val should_check_file           : string  -> bool (* Should check this file, lax or not. *)
 val should_verify               : string  -> bool (* Should check this module with verification enabled. *)
@@ -232,7 +234,6 @@ val z3_refresh                  : unit    -> bool
 val z3_rlimit                   : unit    -> int
 val z3_rlimit_factor            : unit    -> int
 val z3_seed                     : unit    -> int
-val use_two_phase_tc            : unit    -> bool
 val no_positivity               : unit    -> bool
 val warn_error                  : unit    -> string
 val set_error_flags_callback    : ((unit  -> parse_cmdline_res) -> unit)

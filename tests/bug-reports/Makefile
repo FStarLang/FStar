@@ -11,7 +11,7 @@ all: verify iverify not-verify extract
 # These will be checked as part of the F* regressions.
 SHOULD_VERIFY_CLOSED=Bug022.fst Bug024.fst Bug025.fst Bug026.fst Bug026b.fst Bug028.fst Bug046.fst Bug052.fst\
   Bug056.fst Bug058.fst Bug058b.fst Bug067.fst Bug069.fst Bug077.fst Bug097b.fst Bug102.fst Bug103.fst\
-  Bug111.fst Bug116.fst Bug122.fst Bug124.fst Bug125.fst Bug126.fst Bug128.fst Bug138.fst Bug139.fst Bug152.fst\
+  Bug111.fst Bug116.fst Bug122.fst Bug124.fst Bug125.fst Bug126.fst Bug138.fst Bug139.fst Bug152.fst\
   Bug155.fst Bug161.fst Bug162.fst Bug170.fst Bug173.fst Bug175.fst Bug178.fst Bug181.fst Bug184Eta.fst\
   Bug184.fst Bug185.fst Bug187.fst Bug190.fst Bug195.fst Bug195b.fst Bug209.fst Bug209b.fst Bug212.fst\
   Bug213.fst Bug215.fst Bug237b.fst Bug238.fst Bug244.fst Bug251.fst Bug252.fst Bug254.fst Bug256.fst\
@@ -36,12 +36,15 @@ SHOULD_VERIFY_CLOSED=Bug022.fst Bug024.fst Bug025.fst Bug026.fst Bug026b.fst Bug
   Bug1730b.fst Bug1612.fst Bug1614a.fst Bug1614b.fst Bug1614c.fst Bug1614d.fst Bug1614e.fst Bug1750.fst Bug1750.Aux.fst \
   Bug1622.fst Bug1540.fst Bug1784.fst Bug1802.fst Bug1055.fst Bug1818.fst Bug1640.fst Bug1243.fst Bug1841.fst \
   Bug1847.fst Bug1855.fst Bug1812.fst Bug1840.fst Bug1866.fst Bug811.fst Bug841.fst Bug1060.fst Bug1070.fst \
-  Bug1130.fst Bug1170.fst Bug1191.fst Bug1799.fst Bug1900.fst Bug1908.fst Bug1913.fst BugLexTop.fst Bug1940a.fst \
+  Bug1130.fst Bug1170.fst Bug1191.fst Bug1799.fst Bug1900.fst Bug1908.fst Bug1913.fst Bug1940a.fst \
   Bug1940b.fst Bug1940c.fst Bug1936.fst Bug1952a.fst Bug1952b.fst Bug1953.fst Bug1074.fst Bug442.fst Bug1954.fst \
   Bug1903.fst Bug1121a.fst Bug1121b.fst Bug1956.fst Bug1228.fst Bug829.fst Bug451.fst Bug1966a.fst Bug1966b.fst Bug1976.fst \
   Bug1986.fst Bug1995.fst Bug1507.fst Bug2001.fst Bug2004.fst Bug855a.fst Bug855b.fst Bug1097.fst Bug1918.fst Bug1390.fst Bug2031.fst \
   Bug379.fst Bug1182a.fst Bug1182b.fst Bug1901.fst Bug1902.fst Bug258.fst Bug2055.fst Bug2081.fst Bug2099.fst Bug2106.fst Bug2132.fst \
-  Bug2138.fst Bug2146.fst Bug2074.fst Bug2125a.fst Bug2125b.fst Bug2167.fst
+  Bug2138.fst Bug2146.fst Bug2074.fst Bug2125a.fst Bug2125b.fst Bug2167.fst Bug2169.fst Bug2169b.fst Bug2066.fst Bug2189.fst Bug2184.fst \
+  Bug2211.fst Bug2210.fst Bug2193.fst Bug2257.fst Bug2229.fst Dec.fst Bug2269.fst Bug2352.fst Bug2366.fst Bug2331.fst \
+  Bug2398.fst Bug2432.fst Bug2374.fst Bug2438.fst Bug2456.fst Bug2475.fst Bug2477.fst Bug1355.fst \
+  Bug1418.fst
 
 SHOULD_VERIFY_INTERFACE_CLOSED=Bug771.fsti Bug771b.fsti
 SHOULD_VERIFY_AND_WARN_CLOSED=Bug016.fst
@@ -101,7 +104,9 @@ SHOULD_NOT_VERIFY_NOT_WORKING=Bug186.fst Bug397b.fst
 
 # These will be checked as part of the F* regressions.
 SHOULD_EXTRACT_CLOSED=Bug086.fst Bug314.fst Bug540.fst Bug541.fst Bug589.fst \
-	ExtractionBug2.fst Bug1101.fst Bug1485.fst Bug734.fst Bug310.fst
+	ExtractionBug2.fst Bug1101.fst Bug1485.fst Bug734.fst Bug310.fst \
+	Bug2058.fst RemoveUnusedTypars.B.fst RemoveUnusedTyparsIFace.B.fst \
+	PushPopProjectors.fst Bug2412.fst
 #ExtractionBug03.fst
 
 # Bug1479.fst Crashes when in CI with "Error: Unbound module FStar_Tactics_Effect"
@@ -130,7 +135,7 @@ CAPPED=$(subst Bug,Bug,$*)
 
 Bug1383.verify: OTHERFLAGS += --warn_error @275 #Z3 warnings are fatal
 Bug1694.verify: OTHERFLAGS += --codegen OCaml
-
+Bug2210.verify: OTHERFLAGS += --codegen OCaml
 
 verify: $(subst .fst,.verify,$(SHOULD_VERIFY_CLOSED))
 
@@ -158,6 +163,30 @@ Bug2058.ml:
 
 Bug2058.extract: Bug2058.ml
 	diff -u --strip-trailing-cr Bug2058.ml Bug2058.ml.expected
+
+output-accept: Bug310.ml Bug2058.ml
+	cp Bug310.ml Bug310.ml.expected
+	cp Bug2058.ml Bug2058.ml.expected
+
+RemoveUnusedTypars.B.extract: RemoveUnusedTypars.A.fst RemoveUnusedTypars.B.fst
+	$(FSTAR) $(FSTAR_DEFAULT_ARGS) --cache_checked_modules RemoveUnusedTypars.A.fst
+	$(FSTAR) $(FSTAR_DEFAULT_ARGS) --cache_checked_modules RemoveUnusedTypars.B.fst
+	$(FSTAR) $(FSTAR_DEFAULT_ARGS) --extract RemoveUnusedTypars.A --codegen FSharp RemoveUnusedTypars.A.fst
+	$(FSTAR) $(FSTAR_DEFAULT_ARGS) --extract RemoveUnusedTypars.B --codegen FSharp RemoveUnusedTypars.B.fst
+	diff -u --strip-trailing-cr RemoveUnusedTypars_A.fs RemoveUnusedTypars_A.fs.expected
+	diff -u --strip-trailing-cr RemoveUnusedTypars_B.fs RemoveUnusedTypars_B.fs.expected
+
+RemoveUnusedTyparsIFace.B.extract: RemoveUnusedTyparsIFace.A.fst RemoveUnusedTyparsIFace.B.fst
+	$(FSTAR) $(FSTAR_DEFAULT_ARGS) --cache_checked_modules RemoveUnusedTyparsIFace.A.fsti --warn_error -333
+	$(FSTAR) $(FSTAR_DEFAULT_ARGS) --cache_checked_modules RemoveUnusedTyparsIFace.A.fst --warn_error -333
+	$(FSTAR) $(FSTAR_DEFAULT_ARGS) --cache_checked_modules RemoveUnusedTyparsIFace.B.fst --warn_error -333
+	$(FSTAR) $(FSTAR_DEFAULT_ARGS) --extract RemoveUnusedTyparsIFace.A --codegen FSharp RemoveUnusedTyparsIFace.A.fst
+	$(FSTAR) $(FSTAR_DEFAULT_ARGS) --extract RemoveUnusedTyparsIFace.B --codegen FSharp RemoveUnusedTyparsIFace.B.fst
+	diff -u --strip-trailing-cr RemoveUnusedTyparsIFace_A.fs RemoveUnusedTyparsIFace_A.fs.expected
+	diff -u --strip-trailing-cr RemoveUnusedTyparsIFace_B.fs RemoveUnusedTyparsIFace_B.fs.expected
+
+PushPopProjectors.extract: PushPopProjectors.fst
+	$(FSTAR) $(FSTAR_DEFAULT_ARGS) --odir out_$* --codegen FSharp $^
 
 output-accept: Bug310.ml Bug2058.ml
 	cp Bug310.ml Bug310.ml.expected

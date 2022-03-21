@@ -18,12 +18,11 @@
 
 #light "off"
 module FStar.TypeChecker.DeferredImplicits
-open FStar.ST
-open FStar.Exn
-open FStar.All
-
+open FStar.Compiler.Effect
+open FStar.Compiler.List
 open FStar
-open FStar.Util
+open FStar.Compiler
+open FStar.Compiler.Util
 open FStar.Errors
 open FStar.TypeChecker
 open FStar.Syntax
@@ -33,19 +32,19 @@ open FStar.Syntax.Subst
 open FStar.Ident
 open FStar.TypeChecker.Common
 open FStar.Syntax
-module BU = FStar.Util
+module BU = FStar.Compiler.Util
 module S = FStar.Syntax.Syntax
 module U = FStar.Syntax.Util
 module SS = FStar.Syntax.Subst
 
 let is_flex t =
-  let head, _args = U.head_and_args t in
+  let head, _args = U.head_and_args_full t in
   match (SS.compress head).n with
   | Tm_uvar _ -> true
   | _ -> false
 
 let flex_uvar_head t =
-    let head, _args = U.head_and_args t in
+    let head, _args = U.head_and_args_full t in
     match (SS.compress head).n with
     | Tm_uvar (u, _) -> u
     | _ -> failwith "Not a flex-uvar"
@@ -120,7 +119,7 @@ let solve_deferred_to_tactic_goals env g =
     let deferred = g.deferred_to_tac in
     (** A unification problem between two terms is presented to
         a tactic as an equality goal between the terms. *)
-    let prob_as_implicit (reason, prob)
+    let prob_as_implicit (_, reason, prob)
       : implicit * sigelt =
       match prob with
       | TProb tp when tp.relation=EQ ->
@@ -134,11 +133,11 @@ let solve_deferred_to_tactic_goals env g =
             if is_flex tp.lhs then tp.lhs
             else tp.rhs
           in
-          env.type_of env_lax t
+          env.typeof_tot_or_gtot_term env_lax t true  //AR: TODO: can we call type_of_well_typed?
         in
         let goal_ty = U.mk_eq2 (env.universe_of env_lax t_eq) t_eq tp.lhs tp.rhs in
         let goal, ctx_uvar, _ =
-            Env.new_implicit_var_aux reason tp.lhs.pos env goal_ty Strict None
+            Env.new_implicit_var_aux reason tp.lhs.pos env goal_ty Allow_untyped None
         in
         let imp =
             { imp_reason = "";
@@ -149,7 +148,9 @@ let solve_deferred_to_tactic_goals env g =
         in
         let sigelt =
             if is_flex tp.lhs
-            then find_user_tac_for_uvar env (flex_uvar_head tp.lhs)
+            then (match find_user_tac_for_uvar env (flex_uvar_head tp.lhs) with
+              | None -> if is_flex tp.rhs then find_user_tac_for_uvar env (flex_uvar_head tp.rhs) else None
+              | v -> v)
             else if is_flex tp.rhs
             then find_user_tac_for_uvar env (flex_uvar_head tp.rhs)
             else None

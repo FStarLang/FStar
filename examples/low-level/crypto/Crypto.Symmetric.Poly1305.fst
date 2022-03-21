@@ -216,7 +216,7 @@ val bound27_isSum: h0:mem -> h1:mem -> a:bigint -> b:bigint
     (requires (norm h0 a /\ norm h0 b /\ isSum h0 h1 a b))
     (ensures  (bound27 h1 a))
 let bound27_isSum h0 h1 a b =
-  // The (i+0) is there on purpuose to trigger the pattern in isSum
+  // The (i+0) is there on purpose to trigger the pattern in isSum
   cut (forall (i:nat). {:pattern (v (get h1 a i))} i < norm_length ==> v (get h1 a (i+0)) < pow2 26 + pow2 26);
   pow2_double_sum 26
 

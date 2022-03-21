@@ -18,19 +18,18 @@ module Steel.Channel.Protocol
 
 type tag = | Send | Recv
 
-[@@erasable]
+// AF: Make it non erasable for now to implement duplex.PCM
+//[@@erasable]
 noeq
 type prot : Type -> Type =
 | Return  : #a:Type -> v:a -> prot a
 | Msg     : tag -> a:Type -> #b:Type -> k:(a -> prot b) -> prot b
 | DoWhile : prot bool -> #a:Type -> k:prot a -> prot a
 
-module WF = FStar.WellFounded
-
 let rec ok #a (p:prot a) =
   match p with
   | Return _ -> True
-  | Msg _ a k -> (forall x. (WF.axiom1 k x; ok (k x)))
+  | Msg _ a k -> (forall x. ok (k x))
   | DoWhile p k -> Msg? p /\ ok p /\ ok k
 
 let protocol a = p:prot a { ok p }
@@ -45,8 +44,7 @@ let rec dual #a (p:protocol a) : q:protocol a{Msg? p ==> Msg? q} =
   | Return _ -> p
   | Msg tag b #a k ->
     let k : b -> protocol a =
-      fun (x:b) -> WF.axiom1 k x;
-                dual #a (k x)
+      fun (x:b) -> dual #a (k x)
     in
     Msg (flip_tag tag) b #a k
   | DoWhile p #a k -> DoWhile (dual p) #a (dual k)
@@ -58,8 +56,7 @@ let rec bind #a #b (p:protocol a) (q:(a -> protocol b))
     | Return v -> q v
     | Msg tag c #a' k ->
       let k : c -> protocol b =
-        fun x -> WF.axiom1 k x;
-              bind (k x) q
+        fun x -> bind (k x) q
       in
       Msg tag c k
     | DoWhile w k -> DoWhile w (bind k q)
@@ -88,6 +85,7 @@ let more_msgs (p:protocol 'a) : GTot bool = Msg? (hnf p)
 let next_msg_t (p:protocol 'a) : Type = match hnf p with | Msg _ a _ -> a | Return #a _ -> a
 let step (p:protocol 'a{more_msgs p}) (x:next_msg_t p) : protocol 'a = Msg?.k (hnf p) x
 
+
 noeq
 type trace : from:protocol unit -> to:protocol unit -> Type =
   | Waiting  : p:protocol unit -> trace p p
@@ -112,7 +110,7 @@ let rec last_step_of (#from #to:protocol unit)
 
    : Tot (q:protocol unit &
           x:next_msg_t q &
-          _:squash (more_msgs q /\to == step q x))
+          squash (more_msgs q /\to == step q x))
          (decreases t)
    = match t with
      | Message _ x _ (Waiting _) -> (| from , x, () |)

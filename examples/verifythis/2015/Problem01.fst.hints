@@ -15,7 +15,7 @@
         "refinement_kinding_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "92ca1cc25ca7ad110dd86e9a7e4d0185"
+      "93cb5cf39ab6e84bb9ce8be70b7f8589"
     ],
     [
       "Problem01.prefix",
@@ -31,7 +31,7 @@
         "refinement_kinding_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "89700a6bb223427a966e651b798148cc"
+      "553867f68b0a61a7623b36384b18a4ef"
     ],
     [
       "Problem01.prefix",
@@ -66,7 +66,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "2913410f76be5a81d809a6f69b2df6a1"
+      "24add4297a8955de5509e8224ed94c94"
     ],
     [
       "Problem01.remove_elem_from_list",
@@ -95,7 +95,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "fa6ba0def2efe19577b876e5592299b6"
+      "9f2748ce56aef3982eebcb5ae758ea61"
     ],
     [
       "Problem01.test_prefix",
@@ -107,7 +107,7 @@
         "refinement_interpretation_Tm_refine_500911408eb15f82fac1b31c6fbc48ba"
       ],
       0,
-      "3651ccb9364b7398582a9910ec7da161"
+      "02ad0661dca942f9c4c46dad6dd95e58"
     ],
     [
       "Problem01.test_prefix",
@@ -119,7 +119,7 @@
         "refinement_interpretation_Tm_refine_500911408eb15f82fac1b31c6fbc48ba"
       ],
       0,
-      "e2b3fbf57e70854c853ba4c627597617"
+      "899e7df1ac1d5df2724d2dd97ba1ad7f"
     ],
     [
       "Problem01.test_prefix",
@@ -132,11 +132,12 @@
         "@query", "binder_x_b46f9febde162e476374095e6787c208_0",
         "binder_x_b46f9febde162e476374095e6787c208_2",
         "binder_x_cead0a6ed392996b481ea4c63547a885_1", "equation_Prims.nat",
+        "equation_Prims.op_Equals_Equals_Equals",
         "equation_with_fuel_FStar.List.Tot.Base.length.fuel_instrumented",
         "fuel_guarded_inversion_Prims.list", "int_inversion", "int_typing",
         "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_066ec34605b99f46d413e3ab3b1e988e",
-        "refinement_interpretation_Tm_refine_335af5c3a02c136fd065fd0818074cd6",
+        "refinement_interpretation_Tm_refine_0cb1d842cc1a8dc8c2ab9b08d2d6140b",
         "refinement_interpretation_Tm_refine_500911408eb15f82fac1b31c6fbc48ba",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_f7dce0fb4d4620c1462f9a7589022c50",
@@ -144,7 +145,7 @@
         "typing_Problem01.test_prefix", "well-founded-ordering-on-nat"
       ],
       0,
-      "e1c6a234bb6227817566e9e1297a13d4"
+      "1ce8c2d1cf1e4b0f405093959eb5415f"
     ],
     [
       "Problem01.test_prefix_exists_to_b",
@@ -156,7 +157,7 @@
         "refinement_interpretation_Tm_refine_500911408eb15f82fac1b31c6fbc48ba"
       ],
       0,
-      "6cbb49e8d2ca70e906e490e9dfb156e7"
+      "d9d6c3eb042808f71fcc613e4d5d2aa6"
     ],
     [
       "Problem01.test_prefix_exists_to_b",
@@ -195,31 +196,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "b9045402991396f79a5d5ab3cf868414"
-    ],
-    [
-      "Problem01.test_prefix_exists_to_b",
-      3,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "refinement_interpretation_Tm_refine_500911408eb15f82fac1b31c6fbc48ba"
-      ],
-      0,
-      "243f62b34754c31f6148467c58eefb16"
-    ],
-    [
-      "Problem01.test_prefix_exists_to_b",
-      4,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "refinement_interpretation_Tm_refine_500911408eb15f82fac1b31c6fbc48ba"
-      ],
-      0,
-      "07c08662c026b2632f10ddf6bbbbad2f"
+      "e2a7d1d19cb4d0c26d3410af3f570316"
     ],
     [
       "Problem01.test_prefix_iff",
@@ -241,7 +218,7 @@
         "typing_Problem01.test_prefix"
       ],
       0,
-      "38bc4219e7410ae150072c38ff996895"
+      "7468fd47679020886b4dfe9867886226"
     ],
     [
       "Problem01.test_relaxed_prefix",
@@ -277,7 +254,7 @@
         "typing_Problem01.prefix", "typing_Problem01.test_prefix"
       ],
       0,
-      "531e2ab869315b5b9026efe1f57d27d8"
+      "b77d372da0bf7e3815e5d4ae9d520b58"
     ]
   ]
 ]

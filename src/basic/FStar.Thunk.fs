@@ -17,15 +17,14 @@
 *)
 #light "off"
 module FStar.Thunk
-
-open FStar.Util
-open FStar.ST
+open FStar.Pervasives
+open FStar.Compiler.Effect module List = FStar.Compiler.List
 
 type thunk<'a> = ref<(either<(unit -> 'a), 'a>)>
 type t<'a> = thunk<'a>
 
-let mk (f:unit -> 'a) : thunk<'a> = mk_ref (Inl f)
-let mkv (v:'a) : thunk<'a> = mk_ref (Inr v)
+let mk (f:unit -> 'a) : thunk<'a> = alloc (Inl f)
+let mkv (v:'a) : thunk<'a> = alloc (Inr v)
 
 let force (t:thunk<'a>) =
     match !t with

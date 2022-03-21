@@ -1,4 +1,3 @@
-FSTAR_HOME=../../..
 include ../../Makefile.include
 FSTAR_FILES := Demo.fst
 FSTAR_FLAGS +=--cache_checked_modules --use_hints --use_hint_hashes $(OTHERFLAGS)

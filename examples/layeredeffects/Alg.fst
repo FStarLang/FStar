@@ -6,7 +6,7 @@ open Common
 open FStar.Tactics
 open FStar.List.Tot
 open FStar.Universe
-module WF = FStar.WellFounded
+//module WF = FStar.WellFounded
 module L = Lattice
 
 type state = int
@@ -35,7 +35,7 @@ let op_out : op -> Type =
  | Read -> state
  | Write -> unit
  | Raise -> empty
- | Other i -> other_inp i
+ | Other i -> other_out i
 
 (* Free monad over `op` *)
 noeq
@@ -49,7 +49,7 @@ let sublist (l1 l2 : ops) = forall x. memP x l1 ==> memP x l2
 (* Limiting the operations allowed in a tree *)
 let rec abides #a (labs:ops) (f : tree0 a) : prop =
   begin match f with
-  | Op a i k -> a `memP` labs /\ (forall o. (WF.axiom1 k o; abides labs (k o)))
+  | Op a i k -> a `memP` labs /\ (forall o. abides labs (k o))
   | Return _ -> True
   end
 
@@ -88,7 +88,6 @@ let rec abides_sublist_nopat #a (l1 l2 : ops) (c : tree0 a)
     | Return _ -> ()
     | Op a i k ->
       let sub o : Lemma (abides l2 (k o)) =
-        FStar.WellFounded.axiom1 k o;
         abides_sublist_nopat l1 l2 (k o)
       in
       Classical.forall_intro sub
@@ -129,7 +128,6 @@ let rec fold_with #a #b #labs f v h =
   | Return x -> v x
   | Op act i k ->
     let k' (o : op_out act) : b =
-       WF.axiom1 k o;
        fold_with #_ #_ #labs (k o) v h
     in
     h act i k'
@@ -262,7 +260,6 @@ let rec __catch0 #a #labs (t1 : tree a (Raise::labs)) (t2 : tree a labs)
     | Op Raise e _ -> t2
     | Op act i k ->
       let k' o : tree a labs =
-        WF.axiom1 k o;
         __catch0 (k o) t2
       in
       Op act i k'
@@ -311,8 +308,7 @@ let handle_with (#a #b:_) (#labs0 #labs1 : ops)
            (v : a -> Alg b labs1)
            (h : handler labs0 b labs1)
            (* Looking at v and h together, they basically represent
-            * a handler type [ a<labs0> ->> b<labs1> ] from other
-            * languages. *)
+            * a handler type [ a<labs0> ->> b<labs1> ] *)
    : Alg b labs1
   = Alg?.reflect (handle_tree (reify (f ()))
                               (fun x -> reify (v x))
@@ -369,12 +365,11 @@ let test_try_with3 (f : unit -> Alg int [Raise; Write]) : Alg int [Write] =
 let rec __catchST0 #a #labs (t1 : tree a (Read::Write::labs)) (s0:state) : tree (a & int) labs =
   match t1 with
   | Return v -> Return (v, s0)
-  | Op Write s k -> WF.axiom1 k (); __catchST0 (k ()) s
-  | Op Read  _ k -> WF.axiom1 k s0; __catchST0 (k s0) s0
+  | Op Write s k -> __catchST0 (k ()) s
+  | Op Read  _ k -> __catchST0 (k s0) s0
   | Op act i k ->
      (* default case *)
      let k' o : tree (a & int) labs =
-       WF.axiom1 k o;
        __catchST0 #a #labs (k o) s0
      in
      Op act i k'
@@ -592,7 +587,6 @@ let rec interp_rd_tree #a (t : tree a [Read]) (s:state) : Tot a =
   match t with
   | Return x -> x
   | Op Read _ k ->
-    FStar.WellFounded.axiom1 k s;
     interp_rd_tree (k s) s
 
 let interp_rd #a (f : unit -> Alg a [Read]) (s:state) : Tot a = interp_rd_tree (reify (f ())) s
@@ -601,10 +595,8 @@ let rec interp_rdwr_tree #a (t : tree a [Read; Write]) (s:state) : Tot (a & stat
   match t with
   | Return x -> (x, s)
   | Op Read _ k ->
-    FStar.WellFounded.axiom1 k s;
     interp_rdwr_tree (k s) s
   | Op Write s k ->
-    FStar.WellFounded.axiom1 k ();
     interp_rdwr_tree (k ()) s
 
 let interp_rdwr #a (f : unit -> Alg a [Read; Write]) (s:state) : Tot (a & state) = interp_rdwr_tree (reify (f ())) s
@@ -613,7 +605,6 @@ let rec interp_read_raise_tree #a (t : tree a [Read; Raise]) (s:state) : either 
   match t with
   | Return x -> Inr x
   | Op Read _ k ->
-    FStar.WellFounded.axiom1 k s;
     interp_read_raise_tree (k s) s
   | Op Raise e k ->
     Inl e
@@ -625,10 +616,8 @@ let rec interp_all_tree #a (t : tree a [Read; Write; Raise]) (s:state) : Tot (op
   match t with
   | Return x -> (Some x, s)
   | Op Read _ k ->
-    FStar.WellFounded.axiom1 k s;
     interp_all_tree (k s) s
   | Op Write s k ->
-    FStar.WellFounded.axiom1 k ();
     interp_all_tree (k ()) s
   | Op Raise e k ->
     (None, s)
@@ -673,10 +662,9 @@ let rec handle #a #b #labs l f h v =
   | Return x -> v x
   | Op act i k ->
     if act = l
-    then h i (fun o -> WF.axiom1 k o; handle l (k o) h v)
+    then h i (fun o -> handle l (k o) h v)
     else begin
       let k' o : tree b labs =
-         WF.axiom1 k o;
          handle l (k o) h v
       in
       Op act i k'
@@ -695,12 +683,11 @@ let rec handle2 #a #b #labs l1 l2 f h1 h2 v =
   | Return x -> v x
   | Op act i k ->
     if act = l1
-    then h1 i (fun o -> WF.axiom1 k o; handle2 l1 l2 (k o) h1 h2 v)
+    then h1 i (fun o -> handle2 l1 l2 (k o) h1 h2 v)
     else if act = l2
-    then h2 i (fun o -> WF.axiom1 k o; handle2 l1 l2 (k o) h1 h2 v)
+    then h2 i (fun o -> handle2 l1 l2 (k o) h1 h2 v)
     else begin
       let k' o : tree b labs =
-         WF.axiom1 k o;
          handle2 l1 l2 (k o) h1 h2 v
       in
       Op act i k'
@@ -773,16 +760,13 @@ let rec interp_into_lattice_tree #a (#labs:list baseop)
     | Return x -> L.return _ x
     | Op Read i k ->
       L.bind _ _ _ _ (reify (L.get i))
-       (fun x -> WF.axiom1 k x;
-              interp_into_lattice_tree #a #labs (k x))
+       (fun x -> interp_into_lattice_tree #a #labs (k x))
     | Op Write i k ->
       L.bind _ _ _ _ (reify (L.put i))
-       (fun x -> WF.axiom1 k x;
-              interp_into_lattice_tree #a #labs (k x))
+       (fun x -> interp_into_lattice_tree #a #labs (k x))
     | Op Raise i k ->
       L.bind _ _ _ _ (reify (L.raise ()))
-       (fun x -> WF.axiom1 k x;
-              interp_into_lattice_tree #a #labs (k x))
+       (fun x -> interp_into_lattice_tree #a #labs (k x))
 
 let interp_into_lattice #a (#labs:list baseop)
   (f : unit -> Alg a (fixup labs))
@@ -812,17 +796,13 @@ let rec interp_sem #a (#labs:list baseop) (t : tree a (fixup labs)) : sem a labs
   match t with
   | Return x -> fun s0 -> (Inr x, s0)
   | Op Read _ k ->
-    (* Needs this trick for termination. Trying to call axiom1 within
-     * `r` messes up the refinement about Read. *)
-    let k : (s:state -> (r:(tree a (fixup labs)){r << k})) = fun s -> WF.axiom1 k s; k s in
     let r : sem a labs = fun s0 -> interp_sem #a #labs (k s0) s0 in
     r
   | Op Write s k ->
-    WF.axiom1 k ();
     fun s0 -> interp_sem #a #labs (k ()) s
   | Op Raise e k -> fun s0 -> (Inl e, s0)
 
-(* Way back: from the pure ALG into the free one, necessarilly giving
+(* Way back: from the pure ALG into the free one, necessarily giving
 a fully normalized tree *)
 
 let interp_from_lattice_tree #a #labs

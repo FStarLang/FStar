@@ -8,10 +8,6 @@ open FStar.List.Tot
 open FStar.Universe
 open FStar.Ghost
 
-module WF = FStar.WellFounded
-
-let axiom1 = WF.axiom1
-
 #set-options "--print_universes --print_implicits --print_effect_args"
 
 // GM: Force a type equality by SMT
@@ -31,7 +27,7 @@ noeq
 type action : inp:Type0 -> out:Type0 -> st0:Type0 -> st1:Type0 -> Type u#1 =
   | Read  : #st0:Type -> action unit st0 st0 st0
   | Write : #st0:Type -> #st1:Type -> action st1 unit st0 st1
-  | Raise : #st0:Type -> #st1:Type -> action exn c_False st0 st1
+  | Raise : #st0:Type -> #st1:Type -> action exn Prims.empty st0 st1
 
 // alternative: exceptions do not change state
 //  | Raise : #a:Type -> #st0:Type -> action exn a st0 st0
@@ -50,7 +46,7 @@ let abides_act #i #o (ann:annot) (a : action i o 'st0 'st1) : prop =
 let rec abides #a (ann:annot) (f : repr0 a 'st0 'st1) : prop =
   begin match f with
   | Op a i k ->
-    abides_act ann a /\ (forall o. (axiom1 k o; abides ann (k o)))
+    abides_act ann a /\ (forall o. abides ann (k o))
   | Return _ -> True
   end
 
@@ -107,7 +103,6 @@ let rec abides_sublist #a (l1 l2 : list eff_label) (c : repr0 a 'st0 'st1)
     | Return _ -> ()
     | Op a i k ->
       let sub o : Lemma (abides (interp l2) (k o)) =
-        axiom1 k o;
         abides_sublist l1 l2 (k o)
       in
       Classical.forall_intro sub
@@ -122,7 +117,6 @@ let rec abides_app #a (l1 l2 : list eff_label) (c : repr0 a 'st0 'st1)
     | Return _ -> ()
     | Op a i k ->
       let sub o : Lemma (abides (interp (l1@l2)) (k o)) =
-        axiom1 k o;
         abides_app l1 l2 (k o)
       in
       Classical.forall_intro sub
@@ -152,7 +146,6 @@ let rec bind (a b : Type)
     | Return x -> f x
     | Op a i k ->
       let k' o : repr b _ _ (labs1@labs2) =
-        axiom1 k o;
         bind _ _ _ _ _ _ _ (k o) f
       in
       Op a i k'
@@ -270,8 +263,8 @@ let _runST (#a:Type0) #labs #si #sf ($c : repr a si sf labs) (s0:si) : Tot (opti
   let rec aux #st0 (s:st0) (c : repr a st0 sf labs) : Tot (option (a & sf)) (decreases c) =
     match c with
     | Return x -> Some (x, s)
-    | Op Read  _ k -> axiom1 k s; aux s (k s)
-    | Op Write s k -> axiom1 k (); aux s (k ())
+    | Op Read  _ k -> aux s (k s)
+    | Op Write s k -> aux s (k ())
     | Op Raise e k -> None
   in
   aux s0 c
@@ -298,10 +291,10 @@ let rec _catchST (#a:Type0) #labs #si #sf
 : repr (a & sf) stt stt labs
 = match c with
   | Return x -> Return (x, s0)
-  | Op Read _i k -> axiom1 k s0; _catchST #a #labs stt (k s0) s0
-  | Op Write s k -> axiom1 k (); _catchST #a #labs stt (k ()) s
+  | Op Read _i k -> _catchST #a #labs stt (k s0) s0
+  | Op Write s k -> _catchST #a #labs stt (k ()) s
   | Op Raise e k ->
-    let k' (o : c_False) : repr (a & sf) stt stt labs =
+    let k' (o : Prims.empty) : repr (a & sf) stt stt labs =
       unreachable ()
     in
     Op Raise e k'
@@ -309,7 +302,6 @@ let rec _catchST (#a:Type0) #labs #si #sf
 // if exceptions did not change the state type, we could in theory
 // handle its continuation as well, though it would never be called.
 //  let k' o : repr (a & sf) _ _ labs =
-//    axiom1 k o;
 //    _catchST #a #labs stt (k o) s0
 
 (* I would hope to write a general case like this:
@@ -323,7 +315,6 @@ val act_keeps_state (a:action 'in 'out 'st0 'st1) : Lemma ('st0 == 'st1)
     assert (st1 == unit);
     assert (st2__ == unit);
     let k' o : repr (a & sf) st1 st2__ labs =
-      axiom1 k o;
       _catchST #a #labs stt (k o) s0
     in
     Op act e k'
@@ -351,7 +342,6 @@ let rec _catchE (#a:Type0) #labs #si #sf
   | Op Raise e k -> h si
   | Op act i k ->
     let k' o : repr a _ _ labs =
-      axiom1 k o;
       _catchE (k o) h
     in
     Op act i k'
@@ -411,7 +401,6 @@ let rec interp_rd_tree #a #st0 #st1 (t : repr a st0 st1 [RD]) (s:st0) : Tot a =
   match t with
   | Return x -> x
   | Op Read _ k ->
-    axiom1 k s;
     interp_rd_tree (k s) s
 
 let interp_rd #a #st0 #st1 (f : unit -> EFF a st0 st1 [RD]) (s:st0) : Tot a
@@ -421,10 +410,8 @@ let rec interp_rdwr_tree #a #st0 #st1 (t : repr a st0 st1 [RD;WR]) (s:st0) : Tot
   match t with
   | Return x -> (x, s)
   | Op Read _ k ->
-    axiom1 k s;
     interp_rdwr_tree (k s) s
   | Op Write s k ->
-    axiom1 k ();
     interp_rdwr_tree (k ()) s
 
 let interp_rdwr #a #st0 #st1

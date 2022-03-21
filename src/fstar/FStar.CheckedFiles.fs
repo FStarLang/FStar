@@ -17,12 +17,11 @@
 
 module FStar.CheckedFiles
 open FStar
-open FStar.ST
-open FStar.Exn
-open FStar.All
-open FStar
+open FStar.Pervasives
+open FStar.Compiler.Effect
+open FStar.Compiler
 open FStar.Errors
-open FStar.Util
+open FStar.Compiler.Util
 open FStar.Getopt
 open FStar.Syntax.Syntax
 open FStar.Extraction.ML.UEnv
@@ -33,7 +32,7 @@ open FStar.Syntax.DsEnv
 module Syntax  = FStar.Syntax.Syntax
 module TcEnv   = FStar.TypeChecker.Env
 module SMT     = FStar.SMTEncoding.Solver
-module BU      = FStar.Util
+module BU      = FStar.Compiler.Util
 module Dep     = FStar.Parser.Dep
 
 
@@ -42,7 +41,7 @@ module Dep     = FStar.Parser.Dep
  * detect when loading the cache that the version number is same
  * It needs to be kept in sync with prims.fst
  *)
-let cache_version_number = 29
+let cache_version_number = 42
 
 type tc_result = {
   checked_module: Syntax.modul; //persisted
@@ -148,7 +147,7 @@ let hash_dependences (deps:Dep.deps) (fn:string) :either<string, list<(string * 
          not (Dep.is_interface fn &&
               Dep.lowercase_module_name fn = module_name)) in
   let binary_deps =
-    FStar.List.sortWith
+    FStar.Compiler.List.sortWith
       (fun fn1 fn2 ->
        String.compare (Dep.lowercase_module_name fn1)
                       (Dep.lowercase_module_name fn2))
@@ -472,8 +471,8 @@ let store_module_to_cache env fn parsing_data tc_result =
       store_values_to_cache cache_file stage1 stage2
     | Inl msg ->
       FStar.Errors.log_issue
-        (FStar.Range.mk_range fn (FStar.Range.mk_pos 0 0)
-                                 (FStar.Range.mk_pos 0 0))
+        (FStar.Compiler.Range.mk_range fn (FStar.Compiler.Range.mk_pos 0 0)
+                                 (FStar.Compiler.Range.mk_pos 0 0))
         (Errors.Warning_FileNotWritten,
          BU.format2 "%s was not written since %s"
                     cache_file msg)

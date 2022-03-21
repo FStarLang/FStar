@@ -1,6 +1,10 @@
 #light "off"
 module FStar.Reflection.Data
 
+open FStar.Pervasives
+open FStar.Compiler.Effect
+open FStar.Compiler.List
+
 (* NOTE: This file is exactly the same as its .fs variant. It is only
 here so the equally-named interface file in ulib/ is not taken by the
 dependency analysis to be the interface of the .fs. We also cannot ditch
@@ -9,7 +13,7 @@ from an interface. Hence we keep both, exactly equal to each other. *)
 
 open FStar.Syntax.Syntax
 module Ident = FStar.Ident
-module Range = FStar.Range
+module Range = FStar.Compiler.Range
 module Z     = FStar.BigInt
 open FStar.Ident
 module PC = FStar.Parser.Const
@@ -41,25 +45,24 @@ type aqualv =
     | Q_Implicit
     | Q_Explicit
     | Q_Meta of term
-    | Q_Meta_attr of term
 
 type argv = term * aqualv
 
 type term_view =
-    | Tv_Var    of bv
-    | Tv_BVar   of bv
-    | Tv_FVar   of fv
-    | Tv_App    of term * argv
-    | Tv_Abs    of binder * term
-    | Tv_Arrow  of binder * comp
-    | Tv_Type   of unit
-    | Tv_Refine of bv * term
-    | Tv_Const  of vconst
-    | Tv_Uvar   of Z.t * ctx_uvar_and_subst
-    | Tv_Let    of bool * list<term> * bv * term * term
-    | Tv_Match  of term * list<branch>
-    | Tv_AscribedT of term * term * option<term>
-    | Tv_AscribedC of term * comp * option<term>
+    | Tv_Var       of bv
+    | Tv_BVar      of bv
+    | Tv_FVar      of fv
+    | Tv_App       of term * argv
+    | Tv_Abs       of binder * term
+    | Tv_Arrow     of binder * comp
+    | Tv_Type      of unit
+    | Tv_Refine    of bv * term
+    | Tv_Const     of vconst
+    | Tv_Uvar      of Z.t * ctx_uvar_and_subst
+    | Tv_Let       of bool * list<term> * bv * term * term
+    | Tv_Match     of term * option<match_returns_ascription> * list<branch>
+    | Tv_AscribedT of term * term * option<term> * bool
+    | Tv_AscribedC of term * comp * option<term> * bool
     | Tv_Unknown
 
 (* This is a mirror of FStar.Syntax.Syntax.qualifier *)
@@ -94,18 +97,29 @@ type bv_view = {
     bv_sort : typ;
 }
 
-type binder_view = bv * aqualv
+type binder_view = bv * (aqualv * list<term>)
 
 type comp_view =
-    | C_Total of typ * option<term>  //optional decreases clause
-    | C_GTotal of typ * option<term> //idem
+    | C_Total of typ * list<term>  //decreases clause
+    | C_GTotal of typ * list<term> //idem
     | C_Lemma of term * term * term
     | C_Eff of list<unit> * name * term * list<argv>
 
 type ctor = name * typ
+
+type lb_view = {
+    lb_fv : fv;
+    lb_us : list<univ_name>;
+    lb_typ : typ;
+    lb_def : term;
+}
+
 type sigelt_view =
-    | Sg_Let of bool * fv * list<univ_name> * typ * term
+    | Sg_Let of bool * list<letbinding>
+        // The bool indicates if it's a let rec
+        // Non-empty list of (possibly) mutually recursive let-bindings
     | Sg_Inductive of name * list<univ_name> * list<binder> * typ * list<ctor> // name, params, type, constructors
+    | Sg_Val of name * list<univ_name> * typ
     | Unk
 
 type var = Z.t
@@ -161,6 +175,7 @@ let fstar_refl_inspect_bv     , fstar_refl_pack_bv     = mk_inspect_pack_pair "_
 let fstar_refl_inspect_binder , fstar_refl_pack_binder = mk_inspect_pack_pair "_binder"
 let fstar_refl_inspect_comp   , fstar_refl_pack_comp   = mk_inspect_pack_pair "_comp"
 let fstar_refl_inspect_sigelt , fstar_refl_pack_sigelt = mk_inspect_pack_pair "_sigelt"
+let fstar_refl_inspect_lb     , fstar_refl_pack_lb     = mk_inspect_pack_pair "_lb"
 
 (* assumed types *)
 let fstar_refl_env              = mk_refl_types_lid_as_term "env"
@@ -177,6 +192,8 @@ let fstar_refl_sigelt           = mk_refl_types_lid_as_term "sigelt"
 let fstar_refl_sigelt_fv        = mk_refl_types_lid_as_fv   "sigelt"
 let fstar_refl_term             = mk_refl_types_lid_as_term "term"
 let fstar_refl_term_fv          = mk_refl_types_lid_as_fv   "term"
+let fstar_refl_letbinding       = mk_refl_types_lid_as_term "letbinding"
+let fstar_refl_letbinding_fv    = mk_refl_types_lid_as_fv   "letbinding"
 let fstar_refl_ident            = mk_refl_types_lid_as_term "ident"
 let fstar_refl_ident_fv         = mk_refl_types_lid_as_fv   "ident"
 let fstar_refl_univ_name        = mk_refl_types_lid_as_term "univ_name"
@@ -199,6 +216,8 @@ let fstar_refl_bv_view          = mk_refl_data_lid_as_term "bv_view"
 let fstar_refl_bv_view_fv       = mk_refl_data_lid_as_fv   "bv_view"
 let fstar_refl_vconst           = mk_refl_data_lid_as_term "vconst"
 let fstar_refl_vconst_fv        = mk_refl_data_lid_as_fv   "vconst"
+let fstar_refl_lb_view          = mk_refl_data_lid_as_term "lb_view"
+let fstar_refl_lb_view_fv       = mk_refl_data_lid_as_fv   "lb_view"
 let fstar_refl_sigelt_view      = mk_refl_data_lid_as_term "sigelt_view"
 let fstar_refl_sigelt_view_fv   = mk_refl_data_lid_as_fv   "sigelt_view"
 let fstar_refl_exp              = mk_refl_data_lid_as_term "exp"
@@ -216,6 +235,20 @@ let ref_Mk_bv =
                                 Ident.mk_ident ("bv_ppname", Range.dummyRange);
                                 Ident.mk_ident ("bv_index" , Range.dummyRange);
                                 Ident.mk_ident ("bv_sort"  , Range.dummyRange)]) in
+    let fv = lid_as_fv lid delta_constant (Some attr) in
+    { lid = lid
+    ; fv  = fv
+    ; t   = fv_to_tm fv
+    }
+
+let ref_Mk_lb =
+    let lid = fstar_refl_data_lid "Mklb_view" in
+    let attr = Record_ctor (fstar_refl_data_lid "lb_view", [
+                                Ident.mk_ident ("lb_fv"  , Range.dummyRange);
+                                Ident.mk_ident ("lb_us"  , Range.dummyRange);
+				Ident.mk_ident ("lb_typ" , Range.dummyRange);
+                                Ident.mk_ident ("lb_def" , Range.dummyRange)
+                                ]) in
     let fv = lid_as_fv lid delta_constant (Some attr) in
     { lid = lid
     ; fv  = fv
@@ -280,6 +313,7 @@ let ref_C_Eff     = fstar_refl_data_const "C_Eff"
 (* inductives & sigelts *)
 let ref_Sg_Let         = fstar_refl_data_const "Sg_Let"
 let ref_Sg_Inductive   = fstar_refl_data_const "Sg_Inductive"
+let ref_Sg_Val         = fstar_refl_data_const "Sg_Val"
 let ref_Unk            = fstar_refl_data_const "Unk"
 
 (* qualifiers *)

@@ -1,5 +1,5 @@
 [
-  "ß‡åÂ€ã\u001cóÐ©\"\u001f˜î\bj",
+  "\u0015~\u000e\u0001[¿Uñ“}-åa 7¢",
   [
     [
       "FStar.Tactics.Effect.__bind",
@@ -18,7 +18,7 @@
         "typing_FStar.Tactics.Types.tracepoint"
       ],
       0,
-      "19be5ad1f0b9411f381f5bdb1abd2852"
+      "86746108fb5dfbb510b1a7e40bf7abb3"
     ],
     [
       "FStar.Tactics.Effect.g_bind",
@@ -34,7 +34,7 @@
         "typing_FStar.Tactics.Result.uu___is_Failed"
       ],
       0,
-      "1eb706fc0dbca8d15d07d774c06a9c25"
+      "f7bbc9864f64486f12da6191436907f5"
     ],
     [
       "FStar.Tactics.Effect._dm4f_TAC___proj__TAC__item____raise_elab",
@@ -43,7 +43,7 @@
       1,
       [ "@query" ],
       0,
-      "b9b847c78e63e3a6892b8d42fdc3b39b"
+      "50dbfeaafab4fea87546d20c573cbf63"
     ],
     [
       "FStar.Tactics.Effect._dm4f_TAC___proj__TAC__item____get_elab",
@@ -52,7 +52,7 @@
       1,
       [ "@query" ],
       0,
-      "8bf3021f4252fb47a7514333f63604cb"
+      "e85b277ae21160879da73f22696294e3"
     ],
     [
       "FStar.Tactics.Effect.TAC",
@@ -61,7 +61,7 @@
       1,
       [ "@query" ],
       0,
-      "4d9c1a8a87c1b80b6112cbb755ba1d76"
+      "f475798225b6227c918a3af935155ccf"
     ],
     [
       "FStar.Tactics.Effect.TAC",
@@ -70,7 +70,7 @@
       1,
       [ "@query" ],
       0,
-      "7936e6c10059d346f40dec21581f92fe"
+      "9f8d28a9c3e2a07a6678b73882ecb627"
     ],
     [
       "FStar.Tactics.Effect.assert_by_tactic",
@@ -82,7 +82,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "96d9d9ecd22a6b65388b0003072cea45"
+      "09c8ebd370d058ed9f3b4a01e48b56fc"
     ],
     [
       "FStar.Tactics.Effect.unfold_with_tactic",
@@ -91,7 +91,16 @@
       1,
       [ "@query", "equation_FStar.Tactics.Effect.with_tactic" ],
       0,
-      "38a5cbbf32c502a84a76938cb8359245"
+      "17a9d7acde8dda2ddb222c026d091d0b"
+    ],
+    [
+      "FStar.Tactics.Effect.unfold_rewrite_with_tactic",
+      1,
+      2,
+      1,
+      [ "@query", "equation_FStar.Tactics.Effect.rewrite_with_tactic" ],
+      0,
+      "756a5f9dd9c84a5f9e5b2995c65a7fe3"
     ]
   ]
 ]

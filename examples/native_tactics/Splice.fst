@@ -17,11 +17,15 @@ module Splice
 
 open FStar.Tactics
 
-let make_x_42 () : Tac unit =
+let make_x_42 () : Tac decls =
     (* The let binds are needed due to the Tac effect *)
     (* TODO: make the "A" prefix unneeded, it doesn't make sense to use another module *)
-    let sv : sigelt_view = Sg_Let false (pack_fv ["A"; "x"]) [] (`nat) (`42) in
+    let lb = pack_lb ({lb_fv = pack_fv ["A"; "x"];
+                       lb_us = [];
+                       lb_typ = (`nat);
+                       lb_def = (`42)}) in
+    let sv : sigelt_view = Sg_Let false [lb] in
     let ses : list sigelt = [pack_sigelt sv] in
-    exact (quote ses)
+    ses
 
-%splice (make_x_42 ())
+%splice[] (make_x_42 ())

@@ -27,7 +27,7 @@ let f1_hp h x = h, sel h x
 val f2_hp : heap -> ref int -> Tot (heap * int)
 let f2_hp h x = h, 0
 
-  (* Stateful functions ipmlementing these pure functions *)
+  (* Stateful functions implementing these pure functions *)
 val f1 : x:(ref int) -> ST int (requires (fun h -> True))
                                (ensures  (fun h r h' -> fst (f1_hp h x) == h'
                                                      /\ snd (f1_hp h x) == r))

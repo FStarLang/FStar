@@ -50,7 +50,7 @@ let rec lt l =
     | hd :: tl -> ld hd + lt tl
 
 val finish : #a:Type0 -> #t:Type0 -> rights : list (dList t) -> xs : a -> f : (a -> t -> a)
--> Tot a  (decreases %[lt rights; 1])
+-> Tot a  (decreases %[(lt rights) <: int; 1])
 val walk : #a:Type0 -> #t:Type0 -> rights : list (dList t)  -> l : dList t -> xs : a -> f : (a -> t -> Tot a) 
 -> Tot a (decreases %[ld l + lt rights; 0])
 

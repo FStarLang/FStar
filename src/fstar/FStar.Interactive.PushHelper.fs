@@ -20,9 +20,11 @@
 
 module FStar.Interactive.PushHelper
 open FStar
-open FStar.ST
-open FStar.All
-open FStar.Util
+open FStar.Compiler
+open FStar.Pervasives
+open FStar.Compiler.Effect
+open FStar.Compiler.List
+open FStar.Compiler.Util
 open FStar.Ident
 open FStar.Errors
 open FStar.Universal
@@ -30,7 +32,7 @@ open FStar.Parser.ParseIt
 open FStar.TypeChecker.Env
 open FStar.Interactive.JsonHelper
 
-module U = FStar.Util
+module U = FStar.Compiler.Util
 module SS = FStar.Syntax.Syntax
 module DsEnv = FStar.Syntax.DsEnv
 module TcErr = FStar.TypeChecker.Err
@@ -51,7 +53,8 @@ let set_check_kind env check_kind =
 (** Build a list of dependency loading tasks from a list of dependencies **)
 let repl_ld_tasks_of_deps (deps: list<string>) (final_tasks: list<repl_task>) =
   let wrap fname = { tf_fname = fname; tf_modtime = U.now () } in
-  let rec aux deps final_tasks =
+  let rec aux (deps:list<string>) (final_tasks:list<repl_task>)
+    : list<repl_task> =
     match deps with
     | intf :: impl :: deps' when needs_interleaving intf impl ->
       LDInterleaved (wrap intf, wrap impl) :: aux deps' final_tasks

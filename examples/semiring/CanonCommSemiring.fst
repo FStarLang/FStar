@@ -26,7 +26,7 @@ module CanonCommSemiring
 ///   That is, a + -a = 0
 /// - A commutative monoid (a, *, 1) for multiplication
 ///   That is, * is associative, commutative and has identity element 1
-/// - Multipication left-distributes over addition
+/// - Multiplication left-distributes over addition
 ///   That is, a * (b + c) == a * b + a * c
 /// - 0 is an absorbing element of multiplication
 ///   That is, 0 * a = 0
@@ -206,7 +206,7 @@ and csm_aux #a r c1 l1 t1 s2 =
     //if c1 = aone then Cons_varlist l1 t1 else
     Cons_monom c1 l1 t1
 
-(* Inserts a monomial into the apropriate position in a canonical sum *)
+(* Inserts a monomial into the appropriate position in a canonical sum *)
 val monom_insert: #a:eqtype -> r:cr a
   -> c1:a -> l1:varlist -> s2:canonical_sum a -> canonical_sum a
 
@@ -361,7 +361,7 @@ let spolynomial_simplify #a r p =
 (**
  * The variable map:
  * This maps polynomial variables to ring expressions. That is, any term
- * that is not an addition or a multplication is turned into a variable
+ * that is not an addition or a multiplication is turned into a variable
  *
  * The representation is inefficient. For large terms it might be worthwhile
  * using a better data structure.

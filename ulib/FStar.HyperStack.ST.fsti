@@ -58,7 +58,7 @@ sub_effect DIV ~> GST = lift_div_gst
  *     - `stable p` is a precondition for `gst_witness`
  *     - `gst_recall` does not have a precondition for `stable p`, since `gst_witness` is the only way
  *       clients would have obtained `witnessed p`, and so, `p` should already be stable
- *     - `lemma_functoriality` does not require stablility for either `p` or `q`
+ *     - `lemma_functoriality` does not require stability for either `p` or `q`
  *       Our metatheory ensures that this is sound (without requiring stability of `q`)
  *       This form is useful in defining the MRRef interface (see mr_witness)
  *)
@@ -412,7 +412,7 @@ unfold let assign_post (#a:Type) (#rel:preorder a) (r:mreference a rel) (v:a) (m
 
 (**
  * Assigns, provided that the reference exists.
- * Guaranties the strongest low-level effect: Stack
+ * Guarantees the strongest low-level effect: Stack
  *)
 val op_Colon_Equals (#a:Type) (#rel:preorder a) (r:mreference a rel) (v:a)
   :STL unit (requires (fun m -> r `is_live_for_rw_in` m /\ rel (HS.sel m r) v))
@@ -423,7 +423,7 @@ unfold let deref_post (#a:Type) (#rel:preorder a) (r:mreference a rel) (m0:mem) 
 
 (**
  * Dereferences, provided that the reference exists.
- * Guaranties the strongest low-level effect: Stack
+ * Guarantees the strongest low-level effect: Stack
  *)
 val op_Bang (#a:Type) (#rel:preorder a) (r:mreference a rel)
   :Stack a (requires (fun m -> r `is_live_for_rw_in` m))
@@ -474,12 +474,15 @@ unfold type stable_on (#a:Type0) (#rel:preorder a) (p:mem_predicate) (r:mreferen
   = forall (h0 h1:mem).{:pattern (p h0); rel (HS.sel h0 r) (HS.sel h1 r)}
                   (p h0 /\ rel (HS.sel h0 r) (HS.sel h1 r)) ==> p h1
 
-[@@(deprecated "FStar.HyperStack.ST.stable_on")]
+(*
+ * The stable_on_t and mr_witness API is here for legacy reasons,
+ * the preferred API is stable_on and witness_p
+ *)
+
 unfold type stable_on_t (#i:erid) (#a:Type) (#b:preorder a)
                         (r:m_rref i a b) (p:mem_predicate)
   = stable_on p r
 
-[@@(deprecated "FStar.HyperStack.ST.witness_p")]
 val mr_witness (#r:erid) (#a:Type) (#b:preorder a)
                (m:m_rref r a b) (p:mem_predicate)
   :ST unit (requires (fun h0      -> p h0   /\ stable_on_t m p))

@@ -47,7 +47,6 @@ type vconfig = {
   z3rlimit                                  : int;
   z3rlimit_factor                           : int;
   z3seed                                    : int;
-  use_two_phase_tc                          : bool;
   trivial_pre_for_unannotated_effectful_fns : bool;
   reuse_hint_for                            : option string;
 }

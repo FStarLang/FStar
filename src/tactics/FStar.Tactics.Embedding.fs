@@ -1,18 +1,19 @@
 ﻿#light "off"
 module FStar.Tactics.Embedding
-open FStar
-open FStar.ST
-open FStar.All
+open FStar open FStar.Compiler
+open FStar.Pervasives
+open FStar.Compiler.Effect
+open FStar.Compiler.Effect
 open FStar.Syntax.Syntax
 open FStar.Syntax.Embeddings
-open FStar.Util
+open FStar.Compiler.Util
 
 open FStar.Tactics.Common
 module S = FStar.Syntax.Syntax
 module SS = FStar.Syntax.Subst
 module PC = FStar.Parser.Const
 module Env = FStar.TypeChecker.Env
-module BU = FStar.Util
+module BU = FStar.Compiler.Util
 module C = FStar.Const
 module U = FStar.Syntax.Util
 module Rel = FStar.TypeChecker.Rel
@@ -109,7 +110,7 @@ let e_proofstate =
     let unembed_proofstate w (t:term) : option<proofstate> =
         match (SS.compress t).n with
         | Tm_lazy {blob=b; lkind=Lazy_proofstate} ->
-            Some <| FStar.Dyn.undyn b
+            Some <| FStar.Compiler.Dyn.undyn b
         | _ ->
             if w then
                 Err.log_issue t.pos
@@ -135,17 +136,17 @@ let fv_as_emb_typ fv = S.ET_app (FStar.Ident.string_of_lid fv.fv_name.v, [])
 let e_proofstate_nbe =
     let embed_proofstate _cb (ps:proofstate) : NBETerm.t =
         let li = { lkind = Lazy_proofstate
-                 ; blob = FStar.Dyn.mkdyn ps
+                 ; blob = FStar.Compiler.Dyn.mkdyn ps
                  ; ltyp = fstar_tactics_proofstate.t
                  ; rng = Range.dummyRange }
         in
         let thunk = Thunk.mk (fun () -> NBETerm.mk_t <| NBETerm.Constant (NBETerm.String ("(((proofstate.nbe)))", Range.dummyRange))) in
-        NBETerm.mk_t (NBETerm.Lazy (BU.Inl li, thunk))
+        NBETerm.mk_t (NBETerm.Lazy (Inl li, thunk))
     in
     let unembed_proofstate _cb (t:NBETerm.t) : option<proofstate> =
         match NBETerm.nbe_t_of_t t with
-        | NBETerm.Lazy (BU.Inl {blob=b; lkind = Lazy_proofstate}, _) ->
-            Some <| FStar.Dyn.undyn b
+        | NBETerm.Lazy (Inl {blob=b; lkind = Lazy_proofstate}, _) ->
+            Some <| FStar.Compiler.Dyn.undyn b
         | _ ->
           if !Options.debug_embedding then
             Err.log_issue Range.dummyRange
@@ -166,7 +167,7 @@ let e_goal =
     let unembed_goal w (t:term) : option<goal> =
         match (SS.compress t).n with
         | Tm_lazy {blob=b; lkind=Lazy_goal} ->
-            Some <| FStar.Dyn.undyn b
+            Some <| FStar.Compiler.Dyn.undyn b
         | _ ->
             if w then
                 Err.log_issue t.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded goal: %s" (Print.term_to_string t)));
@@ -180,17 +181,17 @@ let unfold_lazy_goal (i : lazyinfo) : term =
 let e_goal_nbe =
     let embed_goal _cb (ps:goal) : NBETerm.t =
         let li = { lkind = Lazy_goal
-                 ; blob = FStar.Dyn.mkdyn ps
+                 ; blob = FStar.Compiler.Dyn.mkdyn ps
                  ; ltyp = fstar_tactics_goal.t
                  ; rng = Range.dummyRange }
         in
         let thunk = Thunk.mk (fun () -> NBETerm.mk_t <| NBETerm.Constant (NBETerm.String ("(((goal.nbe)))", Range.dummyRange))) in
-        NBETerm.mk_t <| NBETerm.Lazy (BU.Inl li, thunk)
+        NBETerm.mk_t <| NBETerm.Lazy (Inl li, thunk)
     in
     let unembed_goal _cb (t:NBETerm.t) : option<goal> =
         match NBETerm.nbe_t_of_t t with
-        | NBETerm.Lazy (BU.Inl {blob=b; lkind = Lazy_goal}, _) ->
-            Some <| FStar.Dyn.undyn b
+        | NBETerm.Lazy (Inl {blob=b; lkind = Lazy_goal}, _) ->
+            Some <| FStar.Compiler.Dyn.undyn b
         | _ ->
             if !Options.debug_embedding then
               Err.log_issue Range.dummyRange (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded NBE goal: %s" (NBETerm.t_to_string t)));

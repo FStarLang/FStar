@@ -49,7 +49,7 @@ _tags:
 # Note, by default F* will extract all files in the dependency graph
 # With the --extract_module, we instruct it to just extract A.ml
 $(OUTPUT_DIRECTORY)/%.ml:
-	$(MY_FSTAR) $(subst .checked,,$<) --codegen OCaml --extract_module $(subst .fst.checked,,$<)
+	$(MY_FSTAR) $(subst .checked,,$(notdir $<)) --codegen OCaml --extract_module $(subst .fst.checked,,$(notdir $<))
 
 $(OCAML_EXE): _tags $(ML_FILES) $(TOP_LEVEL_FILE) $(FSTAR_HOME)/bin/fstarlib/fstarlib.cmxa
 	OCAMLPATH="$(FSTAR_HOME)/bin" ocamlbuild -I $(OUTPUT_DIRECTORY) -use-ocamlfind -pkg fstarlib $(subst .ml,.native,$(TOP_LEVEL_FILE))
@@ -73,10 +73,11 @@ $(FSTAR_HOME)/bin/fstarlib/fstarlib.cmxa:
 	+$(MAKE) -C $(FSTAR_HOME)/ulib/ml
 
 basic_clean:
-	rm -rf _build $(OUTPUT_DIRECTORY) *~ *.checked $(OCAML_EXE) $(KREMLIN_EXE) .depend
+	rm -rf _build $(OUTPUT_DIRECTORY) *~ *.checked $(OCAML_EXE) $(KREMLIN_EXE) .depend .depend.rsp
 
 .depend: $(FSTAR_FILES)
-	$(MY_FSTAR) --dep full $(addprefix --include , $(INCLUDE_PATHS)) $(FSTAR_FILES) > .depend
+	true $(shell rm -f .depend.rsp) $(foreach f,--dep full $(addprefix --include , $(INCLUDE_PATHS)) $(FSTAR_FILES),$(shell echo $(f) >> .depend.rsp))
+	$(MY_FSTAR) @.depend.rsp > .depend
 
 depend: .depend
 

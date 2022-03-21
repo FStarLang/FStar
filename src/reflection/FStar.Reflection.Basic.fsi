@@ -7,7 +7,7 @@ open FStar.Syntax.Embeddings
 open FStar.Order
 module Env = FStar.TypeChecker.Env
 open FStar.Reflection.Data
-open FStar.ST
+open FStar.Compiler.Effect
 module O   = FStar.Options
 module RD  = FStar.Reflection.Data
 module EMB = FStar.Syntax.Embeddings
@@ -54,14 +54,20 @@ val pack_comp     : comp_view -> comp
 val inspect_sigelt : sigelt -> sigelt_view
 val pack_sigelt    : sigelt_view -> sigelt
 
+val inspect_lb     : letbinding -> lb_view
+val pack_lb        : lb_view -> letbinding
+
 val inspect_bv     : bv -> bv_view
 val pack_bv        : bv_view -> bv
 
-val inspect_binder : binder -> bv * aqualv
-val pack_binder    : bv -> aqualv -> binder
+val inspect_binder : binder -> bv * (aqualv * list<term>)
+val pack_binder    : bv -> aqualv -> list<term> -> binder
 
 val inspect_aqual  : aqual -> aqualv
 val pack_aqual     : aqualv -> aqual
+
+val subst          : bv -> term -> term -> term
+val close_term     : binder -> term -> term
 
 (* We're only taking these as primitives to break the dependency from *
 FStar.Tactics into FStar.String, which pulls a LOT of modules. *)

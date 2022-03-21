@@ -304,7 +304,7 @@ let verify_liveness (#i:CMA.id) (r:rid) (ak:CMA.state i) (tag:lbuffer (v MAC.tag
 (*+ verify_ok: 
 	post-condition of verify
 	
-	Notably, if verify returnes true, then the mac log contains 
+	Notably, if verify returns true, then the mac log contains
 	the expected tag
   **)	
 let verify_ok (#i:CMA.id) (st:CMA.state i) (acc:CMA.accBuffer i) (tag:lbuffer 16) 

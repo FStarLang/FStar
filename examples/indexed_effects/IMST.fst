@@ -36,7 +36,7 @@ let st_return (a:Type) (x:a) (s:Type0) (rel:preorder s) (post:st_post s a) (s0:s
   = forall v. v == x ==> post v s0
 
 unfold
-let st_bind (r:range) (a:Type) (b:Type)
+let st_bind (a:Type) (b:Type)
             (wp1:st_wp a) (wp2: (a -> Tot (st_wp b))) 
             (s:Type0) (rel:preorder s) (post:st_post s b) (s0:s) 
   = wp1 s rel (fun x s1 -> wp2 x s rel post s1) s0

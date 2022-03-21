@@ -1,7 +1,7 @@
 #light "off"
 module FStar.Reflection.Embeddings
 
-open FStar.All
+open FStar.Compiler.Effect
 open FStar.Reflection.Data
 open FStar.Syntax.Syntax
 open FStar.Syntax.Embeddings
@@ -12,8 +12,8 @@ module S = FStar.Syntax.Syntax // TODO: remove, it's open
 
 module I = FStar.Ident
 module SS = FStar.Syntax.Subst
-module BU = FStar.Util
-module Range = FStar.Range
+module BU = FStar.Compiler.Util
+module Range = FStar.Compiler.Range
 module U = FStar.Syntax.Util
 module Print = FStar.Syntax.Print
 module Env = FStar.TypeChecker.Env
@@ -26,7 +26,7 @@ module PC = FStar.Parser.Const
 module O = FStar.Options
 module RD = FStar.Reflection.Data
 
-open FStar.Dyn
+open FStar.Compiler.Dyn
 
 (*
  * embed   : from compiler to user
@@ -114,9 +114,6 @@ let e_aqualv =
         | Data.Q_Meta t   ->
             S.mk_Tm_app ref_Q_Meta.t [S.as_arg (embed e_term rng t)]
                         Range.dummyRange
-        | Data.Q_Meta_attr t   ->
-            S.mk_Tm_app ref_Q_Meta_attr.t [S.as_arg (embed e_term rng t)]
-                        Range.dummyRange
         in { r with pos = rng }
     in
     let unembed_aqualv w (t : term) : option<aqualv> =
@@ -128,9 +125,6 @@ let e_aqualv =
         | Tm_fvar fv, [(t, _)] when S.fv_eq_lid fv ref_Q_Meta.lid ->
             BU.bind_opt (unembed' w e_term t) (fun t ->
             Some (Data.Q_Meta t))
-        | Tm_fvar fv, [(t, _)] when S.fv_eq_lid fv ref_Q_Meta_attr.lid ->
-            BU.bind_opt (unembed' w e_term t) (fun t ->
-            Some (Data.Q_Meta_attr t))
 
         | _ ->
             if w then
@@ -311,6 +305,10 @@ let e_args   = e_list e_argv
 let e_branch_aq aq = e_tuple2 e_pattern      (e_term_aq aq)
 let e_argv_aq   aq = e_tuple2 (e_term_aq aq) e_aqualv
 
+let e_match_returns_annotation =
+  e_option (e_tuple2 e_binder
+                     (e_tuple3 (e_either e_term e_comp) (e_option e_term) e_bool))
+
 let e_term_view_aq aq =
     let embed_term_view (rng:Range.range) (t:term_view) : term =
         match t with
@@ -364,23 +362,26 @@ let e_term_view_aq aq =
                                       S.as_arg (embed (e_term_aq aq) rng t2)]
                         rng
 
-        | Tv_Match (t, brs) ->
+        | Tv_Match (t, ret_opt, brs) ->
             S.mk_Tm_app ref_Tv_Match.t [S.as_arg (embed (e_term_aq aq) rng t);
+                                        S.as_arg (embed e_match_returns_annotation rng ret_opt);
                                         S.as_arg (embed (e_list (e_branch_aq aq)) rng brs)]
                         rng
 
-        | Tv_AscribedT (e, t, tacopt) ->
+        | Tv_AscribedT (e, t, tacopt, use_eq) ->
             S.mk_Tm_app ref_Tv_AscT.t
                         [S.as_arg (embed (e_term_aq aq) rng e);
                          S.as_arg (embed (e_term_aq aq) rng t);
-                         S.as_arg (embed (e_option (e_term_aq aq)) rng tacopt)]
+                         S.as_arg (embed (e_option (e_term_aq aq)) rng tacopt);
+                         S.as_arg (embed e_bool rng use_eq)]
                         rng
 
-        | Tv_AscribedC (e, c, tacopt) ->
+        | Tv_AscribedC (e, c, tacopt, use_eq) ->
             S.mk_Tm_app ref_Tv_AscC.t
                         [S.as_arg (embed (e_term_aq aq) rng e);
                          S.as_arg (embed e_comp rng c);
-                         S.as_arg (embed (e_option (e_term_aq aq)) rng tacopt)]
+                         S.as_arg (embed (e_option (e_term_aq aq)) rng tacopt);
+                         S.as_arg (embed e_bool rng use_eq)]
                         rng
 
         | Tv_Unknown ->
@@ -442,22 +443,25 @@ let e_term_view_aq aq =
             BU.bind_opt (unembed' w e_term t2) (fun t2 ->
             Some <| Tv_Let (r, attrs, b, t1, t2))))))
 
-        | Tm_fvar fv, [(t, _); (brs, _)] when S.fv_eq_lid fv ref_Tv_Match.lid ->
+        | Tm_fvar fv, [(t, _); (ret_opt, _); (brs, _)] when S.fv_eq_lid fv ref_Tv_Match.lid ->
             BU.bind_opt (unembed' w e_term t) (fun t ->
             BU.bind_opt (unembed' w (e_list e_branch) brs) (fun brs ->
-            Some <| Tv_Match (t, brs)))
+            BU.bind_opt (unembed' w e_match_returns_annotation ret_opt) (fun ret_opt ->
+            Some <| Tv_Match (t, ret_opt, brs))))
 
-        | Tm_fvar fv, [(e, _); (t, _); (tacopt, _)] when S.fv_eq_lid fv ref_Tv_AscT.lid ->
+        | Tm_fvar fv, [(e, _); (t, _); (tacopt, _); (use_eq, _)] when S.fv_eq_lid fv ref_Tv_AscT.lid ->
             BU.bind_opt (unembed' w e_term e) (fun e ->
             BU.bind_opt (unembed' w e_term t) (fun t ->
             BU.bind_opt (unembed' w (e_option e_term) tacopt) (fun tacopt ->
-            Some <| Tv_AscribedT (e, t, tacopt))))
+            BU.bind_opt (unembed' w e_bool use_eq) (fun use_eq ->
+            Some <| Tv_AscribedT (e, t, tacopt, use_eq)))))
 
-        | Tm_fvar fv, [(e, _); (c, _); (tacopt, _)] when S.fv_eq_lid fv ref_Tv_AscC.lid ->
+        | Tm_fvar fv, [(e, _); (c, _); (tacopt, _); (use_eq, _)] when S.fv_eq_lid fv ref_Tv_AscC.lid ->
             BU.bind_opt (unembed' w e_term e) (fun e ->
             BU.bind_opt (unembed' w e_comp c) (fun c ->
             BU.bind_opt (unembed' w (e_option e_term) tacopt) (fun tacopt ->
-            Some <| Tv_AscribedC (e, c, tacopt))))
+            BU.bind_opt (unembed' w e_bool use_eq) (fun use_eq ->
+            Some <| Tv_AscribedC (e, c, tacopt, use_eq)))))
 
         | Tm_fvar fv, [] when S.fv_eq_lid fv ref_Tv_Unknown.lid ->
             Some <| Tv_Unknown
@@ -517,12 +521,12 @@ let e_comp_view =
         match cv with
         | C_Total (t, md) ->
             S.mk_Tm_app ref_C_Total.t [S.as_arg (embed e_term rng t);
-                                       S.as_arg (embed (e_option e_term) rng md)]
+                                       S.as_arg (embed (e_list e_term) rng md)]
                         rng
 
         | C_GTotal (t, md) ->
             S.mk_Tm_app ref_C_GTotal.t [S.as_arg (embed e_term rng t);
-                                       S.as_arg (embed (e_option e_term) rng md)]
+                                       S.as_arg (embed (e_list e_term) rng md)]
                         rng
 
         | C_Lemma (pre, post, pats) ->
@@ -544,12 +548,12 @@ let e_comp_view =
         match (U.un_uinst hd).n, args with
         | Tm_fvar fv, [(t, _); (md, _)] when S.fv_eq_lid fv ref_C_Total.lid ->
             BU.bind_opt (unembed' w e_term t) (fun t ->
-            BU.bind_opt (unembed' w (e_option e_term) md) (fun md ->
+            BU.bind_opt (unembed' w (e_list e_term) md) (fun md ->
             Some <| C_Total (t, md)))
 
         | Tm_fvar fv, [(t, _); (md, _)] when S.fv_eq_lid fv ref_C_GTotal.lid ->
             BU.bind_opt (unembed' w e_term t) (fun t ->
-            BU.bind_opt (unembed' w (e_option e_term) md) (fun md ->
+            BU.bind_opt (unembed' w (e_list e_term) md) (fun md ->
             Some <| C_GTotal (t, md)))
 
         | Tm_fvar fv, [(pre, _); (post, _); (pats, _)] when S.fv_eq_lid fv ref_C_Lemma.lid ->
@@ -627,16 +631,59 @@ let e_univ_names = e_list e_univ_name
 
 let e_ctor = e_tuple2 (e_string_list) e_term
 
+let e_lb_view =
+    let embed_lb_view (rng:Range.range) (lbv:lb_view) : term =
+        S.mk_Tm_app ref_Mk_lb.t [S.as_arg (embed e_fv         rng lbv.lb_fv);
+                                 S.as_arg (embed e_univ_names rng lbv.lb_us);
+				 S.as_arg (embed e_term       rng lbv.lb_typ);
+                                 S.as_arg (embed e_term       rng lbv.lb_def)]
+                    rng
+    in
+    let unembed_lb_view w (t : term) : option<lb_view> =
+        let t = U.unascribe t in
+        let hd, args = U.head_and_args t in
+        match (U.un_uinst hd).n, args with
+        | Tm_fvar fv, [(fv', _); (us, _); (typ, _); (def,_)]
+	  when S.fv_eq_lid fv ref_Mk_lb.lid ->
+            BU.bind_opt (unembed' w e_fv fv') (fun fv' ->
+	    BU.bind_opt (unembed' w e_univ_names us) (fun us ->
+            BU.bind_opt (unembed' w e_term typ) (fun typ ->
+            BU.bind_opt (unembed' w e_term def) (fun def ->
+            Some <|
+	      { lb_fv = fv'; lb_us = us; lb_typ = typ; lb_def = def }))))
+
+        | _ ->
+            if w then
+                Err.log_issue t.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded lb_view: %s" (Print.term_to_string t)));
+            None
+    in
+    mk_emb embed_lb_view unembed_lb_view fstar_refl_lb_view
+
+let e_attribute  = e_term
+let e_attributes = e_list e_attribute
+
+let e_letbinding =
+    let embed_letbinding (rng:Range.range) (lb:letbinding) : term =
+        U.mk_lazy lb fstar_refl_letbinding Lazy_letbinding (Some rng)
+    in
+    let unembed_letbinding w (t : term) : option<letbinding> =
+        match (SS.compress t).n with
+        | Tm_lazy {blob=lb; lkind=Lazy_letbinding} ->
+            Some (undyn lb)
+        | _ ->
+            if w then
+                Err.log_issue t.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded letbinding: %s" (Print.term_to_string t)));
+            None
+    in
+    mk_emb embed_letbinding unembed_letbinding fstar_refl_letbinding
+
 let e_sigelt_view =
     let embed_sigelt_view (rng:Range.range) (sev:sigelt_view) : term =
         match sev with
-        | Sg_Let (r, fv, univs, ty, t) ->
+        | Sg_Let (r, lbs) ->
             S.mk_Tm_app ref_Sg_Let.t
                         [S.as_arg (embed e_bool rng r);
-                            S.as_arg (embed e_fv rng fv);
-                            S.as_arg (embed e_univ_names rng univs);
-                            S.as_arg (embed e_term rng ty);
-                            S.as_arg (embed e_term rng t)]
+                         S.as_arg (embed (e_list e_letbinding) rng lbs)]
                         rng
 
         | Sg_Inductive (nm, univs, bs, t, dcs) ->
@@ -646,6 +693,13 @@ let e_sigelt_view =
                             S.as_arg (embed e_binders rng bs);
                             S.as_arg (embed e_term rng t);
                             S.as_arg (embed (e_list e_ctor) rng dcs)]
+                        rng
+
+        | Sg_Val (nm, univs, t) ->
+            S.mk_Tm_app ref_Sg_Val.t
+                        [S.as_arg (embed e_string_list rng nm);
+                         S.as_arg (embed e_univ_names rng univs);
+                         S.as_arg (embed e_term rng t)]
                         rng
 
         | Unk ->
@@ -663,20 +717,23 @@ let e_sigelt_view =
             BU.bind_opt (unembed' w (e_list e_ctor) dcs) (fun dcs ->
             Some <| Sg_Inductive (nm, us, bs, t, dcs))))))
 
-        | Tm_fvar fv, [(r, _); (fvar, _); (univs, _); (ty, _); (t, _)] when S.fv_eq_lid fv ref_Sg_Let.lid ->
+        | Tm_fvar fv, [(r, _); (lbs, _)] when S.fv_eq_lid fv ref_Sg_Let.lid ->
             BU.bind_opt (unembed' w e_bool r) (fun r ->
-            BU.bind_opt (unembed' w e_fv fvar) (fun fvar ->
-            BU.bind_opt (unembed' w e_univ_names univs) (fun univs ->
-            BU.bind_opt (unembed' w e_term ty) (fun ty ->
+            BU.bind_opt (unembed' w (e_list e_letbinding) lbs) (fun lbs ->
+            Some <| Sg_Let (r, lbs)))
+
+        | Tm_fvar fv, [(nm, _); (us, _); (t, _)] when S.fv_eq_lid fv ref_Sg_Val.lid ->
+            BU.bind_opt (unembed' w e_string_list nm) (fun nm ->
+            BU.bind_opt (unembed' w e_univ_names us) (fun us ->
             BU.bind_opt (unembed' w e_term t) (fun t ->
-            Some <| Sg_Let (r, fvar, univs, ty, t))))))
+            Some <| Sg_Val (nm, us, t))))
 
         | Tm_fvar fv, [] when S.fv_eq_lid fv ref_Unk.lid ->
             Some Unk
 
-        | _ ->
-            if w then
-                Err.log_issue t.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded sigelt_view: %s" (Print.term_to_string t)));
+        | _  ->
+             if w then
+                Err.log_issue t.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded sigelt_view: %s " (Print.term_to_string t)));
             None
     in
     mk_emb embed_sigelt_view unembed_sigelt_view fstar_refl_sigelt_view
@@ -717,10 +774,7 @@ let e_exp =
     mk_emb embed_exp unembed_exp fstar_refl_exp
 
 
-let e_binder_view = e_tuple2 e_bv e_aqualv
-
-let e_attribute  = e_term
-let e_attributes = e_list e_attribute
+let e_binder_view = e_tuple2 e_bv (e_tuple2 e_aqualv e_attributes)
 
 let e_qualifier =
     let embed (rng:Range.range) (q:RD.qualifier) : term =
@@ -880,10 +934,23 @@ let unfold_lazy_bv  (i : lazyinfo) : term =
 (* TODO: non-uniform *)
 let unfold_lazy_binder (i : lazyinfo) : term =
     let binder : binder = undyn i.blob in
-    let bv, aq = inspect_binder binder in
+    let bv, (aq, attrs) = inspect_binder binder in
     S.mk_Tm_app fstar_refl_pack_binder.t [S.as_arg (embed e_bv i.rng bv);
-                                        S.as_arg (embed e_aqualv i.rng aq)]
+                                          S.as_arg (embed e_aqualv i.rng aq);
+                                          S.as_arg (embed e_attributes i.rng attrs)]
                 i.rng
+
+let unfold_lazy_letbinding (i : lazyinfo) : term =
+    let lb : letbinding = undyn i.blob in
+    let lbv = inspect_lb lb in
+    S.mk_Tm_app fstar_refl_pack_lb.t
+        [
+            S.as_arg (embed e_fv i.rng lbv.lb_fv);
+            S.as_arg (embed e_univ_names i.rng lbv.lb_us);
+            S.as_arg (embed e_term i.rng lbv.lb_typ);
+            S.as_arg (embed e_term i.rng lbv.lb_def)
+        ]
+        i.rng
 
 let unfold_lazy_fvar (i : lazyinfo) : term =
     let fv : fv = undyn i.blob in

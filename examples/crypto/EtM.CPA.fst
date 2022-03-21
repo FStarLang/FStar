@@ -210,7 +210,7 @@ val fresh_iv (k:key) : ST iv
 
 /// encrypt:
 ///     -- requires a key initially in the invariant
-///     -- ensures that only the key's region is modifie
+///     -- ensures that only the key's region is modified
 ///        and that the the key's log grows by just one entry
 let encrypt (k:key) (m:plain)
   : ST cipher
@@ -238,7 +238,7 @@ let encrypt (k:key) (m:plain)
   pairwise_snoc (log k h0) e;
   c
 
-/// find_entry: An auxiliary function with a somewhhat technical proof
+/// find_entry: An auxiliary function with a somewhat technical proof
 ///    -- We search for an entry in a log that contains a cipher using
 ///       a left-to-right scan of the sequence provide by Seq.seq_find
 ///    -- Knowing that a the cipher exists in the log (via Seq.mem)
@@ -281,7 +281,7 @@ let decrypt (k:key) (c:cipher)
     let Entry plain _ = find_entry log c in
     split_entry plain c iv c';
     if not ind_cpa then begin
-       //no correction necessary: raw_plain is the corrext plain text already
+       //no correction necessary: raw_plain is the correct plain text already
        CC.enc_dec_inverses CC.AES_128_CBC raw_key iv (repr plain);
        assert (repr plain == raw_plain);
        plain

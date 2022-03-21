@@ -36,7 +36,10 @@ Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "reflection", "..\reflection
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "tactics", "..\tactics\tactics.fsproj", "{82336F31-A87C-4403-A2F4-2B90B4F0996B}"
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "ulibfs", "..\..\ulib\fs\ulibfs.fsproj", "{E3E96B71-22AB-4518-B08E-9C55C4D256DB}"
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "ulibfs", "..\..\ulib\ulibfs.fsproj", "{E3E96B71-22AB-4518-B08E-9C55C4D256DB}"
+	ProjectSection(ProjectDependencies) = postProject
+		{F95B3965-1A6A-4FBF-A079-E849E8EA3FF7} = {F95B3965-1A6A-4FBF-A079-E849E8EA3FF7}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

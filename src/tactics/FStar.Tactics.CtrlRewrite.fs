@@ -1,8 +1,11 @@
 #light "off"
 module FStar.Tactics.CtrlRewrite
 
-open FStar.All
-open FStar.Util
+open FStar.Pervasives
+open FStar.Compiler.Effect
+open FStar.Compiler.List
+open FStar.Compiler
+open FStar.Compiler.Util
 open FStar.Syntax.Syntax
 open FStar.Reflection.Data
 open FStar.Reflection.Basic
@@ -15,7 +18,7 @@ open FStar.Tactics.Monad
 open FStar.Tactics.Common
 
 module Print  = FStar.Syntax.Print
-module BU     = FStar.Util
+module BU     = FStar.Compiler.Util
 module S      = FStar.Syntax.Syntax
 module U      = FStar.Syntax.Util
 module SS     = FStar.Syntax.Subst
@@ -23,6 +26,10 @@ module Z      = FStar.BigInt
 module Env    = FStar.TypeChecker.Env
 module TcComm = FStar.TypeChecker.Common
 module N      = FStar.TypeChecker.Normalize
+module Const  = FStar.Const
+module Errors = FStar.Errors
+
+let rangeof g = g.goal_ctx_uvar.ctx_uvar_range
 
 (* WHY DO I NEED TO COPY THESE? *)
 type controller_ty = term -> tac<(bool * ctrl_flag)>
@@ -35,21 +42,56 @@ let __do_rewrite
     (tm : term)
   : tac<term>
 =
+  (*
+   * We skip certain terms. In particular if the term is a constant
+   * which must have an argument (reify, reflect, range_of,
+   * set_range_of), since typechecking will then fail, and the tactic
+   * will also not be able to do anything useful. Morally, `reify` is
+   * not a term, so it's fine to skip it.
+   *
+   * This is not perfect since if we have any other node wrapping the
+   * `reify` (metadata?) this will still fail. But I don't think that
+   * ever happens currently.
+   *)
+  let should_skip =
+    match (SS.compress tm).n with
+    | S.Tm_constant Const.Const_reify
+    | S.Tm_constant (Const.Const_reflect _)
+    | S.Tm_constant Const.Const_range_of
+    | S.Tm_constant Const.Const_set_range_of ->
+      true
+    | _ -> false
+  in
+  if should_skip then ret tm else begin
+
     (* It's important to keep the original term if we want to do
      * nothing, (hence the underscore below) since after the call to
      * the typechecker, t can be elaborated and have more structure. In
      * particular, it can be abscribed and hence CONTAIN t AS A SUBTERM!
      * Which would cause an infinite loop between this function and
-     * ctrl_fold_env. *)
-    let _, lcomp, g = env.tc_term ({ env with Env.lax = true }) tm in
-    (* TODO: re-typechecking the goal is expensive *)
-    (* use type_of_well_typed_term...? *)
+     * ctrl_fold_env.
+     *
+     * If we got an error about a layered effect missing an annotation,
+     * we just skip the term, for reasons similar to unapplied constants
+     * above. Other exceptions are re-raised.
+     *)
+    let res =
+      try
+        Errors.with_ctx "While typechecking a subterm for ctrl_rewrite" (fun () ->
+          Some (env.tc_term ({ env with Env.lax = true }) tm))
+      with
+      | Errors.Error (Errors.Error_LayeredMissingAnnot, _, _, _) -> None
+      | e -> raise e
+    in
+    match res with
+    | None -> ret tm
+    | Some (_, lcomp, g) ->
 
-    if not (TcComm.is_pure_or_ghost_lcomp lcomp) || not (Env.is_trivial g) then
-      ret tm (* SHOULD THIS CHECK BE IN MAYBE_REWRITE INSTEAD? *)
+    if not (TcComm.is_pure_or_ghost_lcomp lcomp) then 
+      ret tm (* SHOULD THIS CHECK BE IN maybe_rewrite INSTEAD? *)
     else
     let typ = lcomp.res_typ in
-    bind (new_uvar "do_rewrite.rhs" env typ) (fun (ut, uvar_ut) ->
+    bind (new_uvar "do_rewrite.rhs" env typ (rangeof g0)) (fun (ut, uvar_ut) ->
     mlog (fun () ->
        BU.print2 "do_rewrite: making equality\n\t%s ==\n\t%s\n"
          (Print.term_to_string tm) (Print.term_to_string ut)) (fun () ->
@@ -66,6 +108,7 @@ let __do_rewrite
                    (Print.term_to_string tm)
                    (Print.term_to_string ut)) (fun () ->
     ret ut)))))
+  end
 
 (* If __do_rewrite fails with "SKIP" we do nothing *)
 let do_rewrite
@@ -122,11 +165,11 @@ let rec map_ctac (c : ctac<'a>)
         bind (par_ctac c (map_ctac c) (x, xs)) (fun ((x, xs), flag) ->
         ret (x::xs, flag))
 
-let bind_ctac
-    (t : ctac<'a>)
-    (f : 'a -> ctac<'b>)
-  : ctac<'b>
-  = fun b -> failwith ""
+(* let bind_ctac *)
+(*     (t : ctac<'a>) *)
+(*     (f : 'a -> ctac<'b>) *)
+(*   : ctac<'b> *)
+(*   = fun b -> failwith "" *)
 
 let ctac_id (* : ctac<'a> *) =
   fun (x:'a) -> ret (x, Continue)
@@ -177,6 +220,26 @@ and on_subterms
   : tac<(term * ctrl_flag)>
   = let recurse env tm = ctrl_fold_env g0 d controller rewriter env tm in
     let rr = recurse env in (* recurse on current env *)
+    let rec descend_binders orig accum_binders accum_flag env bs t rebuild =
+        match bs with
+        | [] -> 
+            bind (recurse env t) (fun (t, flag) ->
+            match flag with
+            | Abort -> ret (orig.n, flag) //if anything aborts, just return the original abs
+            | _ -> 
+              let bs = List.rev accum_binders in
+              ret (rebuild (SS.close_binders bs) (SS.close bs t),
+                  par_combine (accum_flag, flag)))
+        | b::bs ->
+            bind (recurse env b.binder_bv.sort) (fun (s, flag) -> 
+            match flag with
+            | Abort -> ret (orig.n, flag) //if anything aborts, just return the original abs
+            | _ -> 
+              let bv = {b.binder_bv with sort = s} in
+              let b = {b with binder_bv = bv} in
+              let env = Env.push_binders env [b] in
+              descend_binders orig (b::accum_binders) (par_combine (accum_flag, flag)) env bs t rebuild)
+    in
     let go () : tac<(term' * ctrl_flag)> =
       let tm = SS.compress tm in
       match tm.n with
@@ -186,20 +249,31 @@ and on_subterms
         ret (Tm_app (hd, args), flag))
 
       (* Open, descend, rebuild *)
-      (* NOTE: we do not go into the binders' types *)
       | Tm_abs (bs, t, k) ->
-        let bs, t = SS.open_term bs t in
-        bind (recurse (Env.push_binders env bs) t) (fun (t, flag) ->
-        ret (Tm_abs (SS.close_binders bs, SS.close bs t, k), flag))
+        let bs_orig, t = SS.open_term bs t in
+        descend_binders tm [] Continue env bs_orig t
+                        (fun bs t -> Tm_abs(bs, t, k))
 
+      | Tm_refine (x, phi) -> 
+        let bs, phi = SS.open_term [S.mk_binder x] phi in
+        descend_binders tm [] Continue env bs phi
+                        (fun bs phi -> 
+                          let x = 
+                            match bs with
+                            | [x] -> x.binder_bv
+                            | _ -> failwith "Impossible"
+                          in
+                          Tm_refine (x, phi))
+      
       (* Do nothing (FIXME) *)
       | Tm_arrow (bs, k) ->
         ret (tm.n, Continue)
 
       (* Descend on head and branches in parallel. Branches
        * are opened with their contexts extended. Ignore the when clause,
-       * and do not go into patterns. *)
-      | Tm_match (hd, brs) ->
+       * and do not go into patterns.
+       * also ignoring the return annotations *)
+      | Tm_match (hd, asc_opt, brs, lopt) ->
         let c_branch (br:S.branch) : tac<(S.branch * ctrl_flag)> =
           let (pat, w, e) = SS.open_branch br in
           let bvs = S.pat_bvs pat in
@@ -208,7 +282,7 @@ and on_subterms
           ret (br, flag))
         in
         bind (par_ctac rr (map_ctac c_branch) (hd, brs)) (fun ((hd, brs), flag) ->
-        ret (Tm_match (hd, brs), flag))
+        ret (Tm_match (hd, asc_opt, brs, lopt), flag))
 
       (* Descend, in parallel, in the definiens and the body, where
        * the body is extended with the bv. Do not go into the type. *)

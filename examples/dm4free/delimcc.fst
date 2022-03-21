@@ -101,20 +101,14 @@ unfold let bind_k3 (#a:Type) (#b:Type)
                 (m:cont3 a) (f:a -> Tot (cont3 b)) : cont3 b =
         fun k -> m (fun x -> f x k)
 
-(* Don't know why this is not automatic in lu. *)
-val ext : #a:Type -> #b:Type ->
-         p:(a -> Tot b) ->
-         Lemma ( (fun x -> p x) == p )
-let ext #a #b (p : a -> Tot b) = ()
-
 val left_unit3 : #a:Type -> #b:Type ->
                  x:a -> f:(a -> Tot (cont3 b)) ->
-                 Lemma (bind_k3 (return_k3 x) f == f x)
-let left_unit3 #a #b x f = ext (f x)
+                 Lemma (bind_k3 (return_k3 x) f `feq` f x)
+let left_unit3 #a #b x f = ()
 
 val right_unit3 : #a:Type ->
                   m:(cont3 a) ->
-                  Lemma (bind_k3 m return_k3 == m)
+                  Lemma (forall k. bind_k3 m return_k3 k == m (fun x -> k x)) //we no longer have eta
 let right_unit3 #a m = ()
 
 val associativity3 : #a:Type -> #b:Type -> #c:Type ->

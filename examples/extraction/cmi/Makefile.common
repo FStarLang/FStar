@@ -1,7 +1,11 @@
-FSTAR_HOME?=../../..
+ifndef FSTAR_EXAMPLES
+  $(error FSTAR_EXAMPLES must be defined)
+endif
+
 ROOTS?=
 EXTRACT?=
-include $(FSTAR_HOME)/examples/Makefile.include
+
+include $(FSTAR_EXAMPLES)/Makefile.include
 include .depend
 
 OTHERFLAGS+=--cache_dir .cache

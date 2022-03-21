@@ -30,7 +30,7 @@ let st_wp (a:Type) = post a -> pre
 (* unfold *) let frame_post (#a:Type) (p:post a) (m0:memory) :post a =
   fun x m1 -> defined (m1 <*> m0) /\ p x (m1 <*> m0)  //m1 is the frame
 
-(* unfold *) let bind_wp (r:range) (a:Type) (b:Type) (wp1:st_wp a) (wp2:a -> st_wp b)
+(* unfold *) let bind_wp (a:Type) (b:Type) (wp1:st_wp a) (wp2:a -> st_wp b)
   :st_wp b
   = fun post m0 -> wp1 (fun x m1 -> wp2 x post m1) m0
     // frame_wp wp1 (frame_post (fun x m1 -> frame_wp (wp2 x) (frame_post post) m1)) m0

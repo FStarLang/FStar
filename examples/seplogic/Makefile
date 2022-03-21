@@ -1,4 +1,3 @@
-FSTAR_HOME=../..
 include ../Makefile.include
 
 OTHERFLAGS+=--include ../tactics

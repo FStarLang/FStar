@@ -1,5 +1,5 @@
 [
-  "]õCÊˆå\u001aŸ\u0006Vw\n.Å\u001eb",
+  ";â9}¡\b‘S¡d#jß*Äã",
   [
     [
       "Steel.FractionalPermission.half_perm",
@@ -8,16 +8,17 @@
       1,
       [
         "@MaxIFuel_assumption", "@query", "equation_FStar.Real.two",
-        "primitive_FStar.Real.of_int", "primitive_FStar.Real.op_Greater_Dot",
+        "equation_FStar.Real.zero", "primitive_FStar.Real.of_int",
+        "primitive_FStar.Real.op_Greater_Dot",
         "primitive_FStar.Real.op_Slash_Dot",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
         "projection_inverse_BoxReal_proj_0", "real_inversion",
-        "refinement_interpretation_Tm_refine_809987c72e0fbe7303bb954613d8d745",
+        "refinement_interpretation_Tm_refine_3f54e9b64bb1cf73ff37c7c9d439498d",
         "typing_Steel.FractionalPermission.__proj__MkPerm__item__v"
       ],
       0,
-      "920aeb1f00e85b9ef1219c179c7193b9"
+      "8b1aad045661d27223d21b84cdceb453"
     ],
     [
       "Steel.FractionalPermission.sum_perm",
@@ -25,17 +26,18 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query",
-        "primitive_FStar.Real.op_Greater_Dot",
+        "@MaxIFuel_assumption", "@query", "equation_FStar.Real.zero",
+        "primitive_FStar.Real.of_int", "primitive_FStar.Real.op_Greater_Dot",
         "primitive_FStar.Real.op_Plus_Dot",
         "proj_equation_Steel.FractionalPermission.MkPerm_v",
         "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
         "projection_inverse_BoxReal_proj_0",
-        "refinement_interpretation_Tm_refine_809987c72e0fbe7303bb954613d8d745",
+        "refinement_interpretation_Tm_refine_3f54e9b64bb1cf73ff37c7c9d439498d",
         "typing_Steel.FractionalPermission.__proj__MkPerm__item__v"
       ],
       0,
-      "e28241d460cb89333e688288b1e863a5"
+      "8d21ba3ee7bda2474f80f7ee5a8daeed"
     ],
     [
       "Steel.FractionalPermission.full_perm",
@@ -43,12 +45,38 @@
       2,
       1,
       [
-        "@query", "primitive_FStar.Real.op_Greater_Dot",
+        "@query", "equation_FStar.Real.one", "equation_FStar.Real.zero",
+        "primitive_FStar.Real.of_int", "primitive_FStar.Real.op_Greater_Dot",
         "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
         "projection_inverse_BoxReal_proj_0"
       ],
       0,
-      "fda4de3c8eddcfada4626df92e6bb19a"
+      "9a6cfa9891fdc72493dab15c3cde69db"
+    ],
+    [
+      "Steel.FractionalPermission.sum_halves",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "data_elim_Steel.FractionalPermission.MkPerm",
+        "equation_FStar.Real.two",
+        "equation_Steel.FractionalPermission.half_perm",
+        "equation_Steel.FractionalPermission.sum_perm",
+        "fuel_guarded_inversion_Steel.FractionalPermission.perm",
+        "primitive_FStar.Real.of_int", "primitive_FStar.Real.op_Plus_Dot",
+        "primitive_FStar.Real.op_Slash_Dot",
+        "proj_equation_Steel.FractionalPermission.MkPerm_v",
+        "projection_inverse_BoxInt_proj_0",
+        "projection_inverse_BoxReal_proj_0",
+        "projection_inverse_Steel.FractionalPermission.MkPerm_v",
+        "real_inversion", "real_typing",
+        "refinement_interpretation_Tm_refine_3f54e9b64bb1cf73ff37c7c9d439498d"
+      ],
+      0,
+      "2ee3c6ea9cd93a64f59888bfbdb2fd50"
     ]
   ]
 ]
