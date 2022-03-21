@@ -110,7 +110,9 @@ let slimp (p1 p2 : slprop) : prop =
   forall m. interp p1 m ==> interp p2 m
 
 (** A memory maps a [ref]erence to its associated value *)
-val ref (a:Type u#a) (pcm:pcm a) : Type u#0
+val core_ref : Type u#0
+
+let ref (a:Type u#a) (pcm:pcm a) : Type u#0 = core_ref
 
 (** [null] is a specific reference, that is not associated to any value
 *)
