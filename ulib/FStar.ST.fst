@@ -127,6 +127,6 @@ let op_Colon_Equals (#a:Type) (#rel:preorder a) (r:mref a rel) (v:a)
                  sel h1 r == v)
 = write #a #rel r v
 
-type ref ([@@@ strictly_positive] a:Type0) = mref a (trivial_preorder a)
+type ref (a:Type0) = mref a (trivial_preorder a)
 
 let modifies_none (h0:heap) (h1:heap) = modifies !{} h0 h1
