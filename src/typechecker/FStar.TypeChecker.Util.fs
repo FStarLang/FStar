@@ -3399,10 +3399,12 @@ let debug_positivity (env:env_t) (msg:unit -> string) : unit =
  * This function checks that whereever ty_lid appears in the args,
  *   the corresponding parameter in t is marked strictly positive
  *)
-let check_strictly_positive_argument
+let rec check_strictly_positive_argument
+  env
   (ty_lid:lident)
   (t:typ)
   (args:args)
+  (unfolded:unfolded_memo_t)
   : bool =
   let bs, _ = U.arrow_formals t in
   let rec aux (bs:binders) args : bool =
@@ -3412,14 +3414,16 @@ let check_strictly_positive_argument
       List.for_all (fun (arg, _) -> not (ty_occurs_in ty_lid arg)) args
     | b::bs, (arg, _)::args ->
       ((not (ty_occurs_in ty_lid arg)) ||
-       U.has_attribute b.binder_attrs FStar.Parser.Const.binder_strictly_positive_attr)
+       (ty_strictly_positive_in_type env ty_lid arg unfolded &&
+        U.has_attribute
+          b.binder_attrs
+          FStar.Parser.Const.binder_strictly_positive_attr))
       && aux bs args
   in
   aux bs args
-  
 
 //check if ty_lid occurs strictly positively in some binder type btype
-let rec ty_strictly_positive_in_type env (ty_lid:lident) (btype:term) (unfolded:unfolded_memo_t) : bool =
+and ty_strictly_positive_in_type env (ty_lid:lident) (btype:term) (unfolded:unfolded_memo_t) : bool =
   debug_positivity env (fun () -> "Checking strict positivity in type: " ^ (Print.term_to_string btype));
   //normalize the type to unfold any type abbreviations
   let btype = N.normalize
@@ -3450,7 +3454,7 @@ let rec ty_strictly_positive_in_type env (ty_lid:lident) (btype:term) (unfolded:
          env
          t
          (let must_tot = false in must_tot) in
-       check_strictly_positive_argument ty_lid t_ty args
+       check_strictly_positive_argument env ty_lid t_ty args unfolded
      end
      else
        let fv, us = fv_us_opt |> must in
@@ -3524,7 +3528,7 @@ and ty_nested_positive_in_inductive env (ty_lid:lident) (ilid:lident) (us:univer
 
     else match Env.try_lookup_lid env ilid with
          | Some ((_, t), _) ->
-           check_strictly_positive_argument ty_lid t args
+           check_strictly_positive_argument env ty_lid t args unfolded
          | None ->
            debug_positivity env (fun () -> "Checking nested positivity, no attrs or type, return false");
            false
