@@ -7517,35 +7517,42 @@ let (debug_positivity :
           Prims.op_Hat "Positivity::" uu___2 in
         FStar_Compiler_Util.print_string uu___1
       else ()
-let (check_strictly_positive_argument :
-  FStar_Ident.lident ->
-    FStar_Syntax_Syntax.typ -> FStar_Syntax_Syntax.args -> Prims.bool)
+let rec (check_strictly_positive_argument :
+  FStar_TypeChecker_Env.env ->
+    FStar_Ident.lident ->
+      FStar_Syntax_Syntax.typ ->
+        FStar_Syntax_Syntax.args -> unfolded_memo_t -> Prims.bool)
   =
-  fun ty_lid ->
-    fun t ->
-      fun args ->
-        let uu___ = FStar_Syntax_Util.arrow_formals t in
-        match uu___ with
-        | (bs, uu___1) ->
-            let rec aux bs1 args1 =
-              match (bs1, args1) with
-              | (uu___2, []) -> true
-              | ([], uu___2) ->
-                  FStar_Compiler_List.for_all
-                    (fun uu___3 ->
-                       match uu___3 with
-                       | (arg, uu___4) ->
-                           let uu___5 = ty_occurs_in ty_lid arg in
-                           Prims.op_Negation uu___5) args1
-              | (b::bs2, (arg, uu___2)::args2) ->
-                  ((let uu___3 = ty_occurs_in ty_lid arg in
-                    Prims.op_Negation uu___3) ||
-                     (FStar_Syntax_Util.has_attribute
-                        b.FStar_Syntax_Syntax.binder_attrs
-                        FStar_Parser_Const.binder_strictly_positive_attr))
-                    && (aux bs2 args2) in
-            aux bs args
-let rec (ty_strictly_positive_in_type :
+  fun env ->
+    fun ty_lid ->
+      fun t ->
+        fun args ->
+          fun unfolded ->
+            let uu___ = FStar_Syntax_Util.arrow_formals t in
+            match uu___ with
+            | (bs, uu___1) ->
+                let rec aux bs1 args1 =
+                  match (bs1, args1) with
+                  | (uu___2, []) -> true
+                  | ([], uu___2) ->
+                      FStar_Compiler_List.for_all
+                        (fun uu___3 ->
+                           match uu___3 with
+                           | (arg, uu___4) ->
+                               let uu___5 = ty_occurs_in ty_lid arg in
+                               Prims.op_Negation uu___5) args1
+                  | (b::bs2, (arg, uu___2)::args2) ->
+                      ((let uu___3 = ty_occurs_in ty_lid arg in
+                        Prims.op_Negation uu___3) ||
+                         ((ty_strictly_positive_in_type env ty_lid arg
+                             unfolded)
+                            &&
+                            (FStar_Syntax_Util.has_attribute
+                               b.FStar_Syntax_Syntax.binder_attrs
+                               FStar_Parser_Const.binder_strictly_positive_attr)))
+                        && (aux bs2 args2) in
+                aux bs args
+and (ty_strictly_positive_in_type :
   FStar_TypeChecker_Env.env ->
     FStar_Ident.lident ->
       FStar_Syntax_Syntax.term -> unfolded_memo_t -> Prims.bool)
@@ -7598,7 +7605,8 @@ let rec (ty_strictly_positive_in_type :
                             env t (let must_tot = false in must_tot) in
                         match uu___6 with
                         | (t_ty, uu___7) ->
-                            check_strictly_positive_argument ty_lid t_ty args))
+                            check_strictly_positive_argument env ty_lid t_ty
+                              args unfolded))
                     else
                       (let uu___6 =
                          FStar_Compiler_Effect.op_Bar_Greater fv_us_opt
@@ -7787,7 +7795,8 @@ and (ty_nested_positive_in_inductive :
                          match uu___4 with
                          | FStar_Pervasives_Native.Some ((uu___5, t), uu___6)
                              ->
-                             check_strictly_positive_argument ty_lid t args
+                             check_strictly_positive_argument env ty_lid t
+                               args unfolded
                          | FStar_Pervasives_Native.None ->
                              (debug_positivity env
                                 (fun uu___6 ->
