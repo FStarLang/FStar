@@ -157,3 +157,9 @@ type t_t22
 
 [@@ expect_failure]
 type t_t23 (a:Type0) = t_t22 (fun t -> (t -> False)) a
+
+
+[@@ expect_failure]
+noeq
+type t_t24 (a:[@@@ strictly_positive] (_:Type0) -> Type0) =
+  | C241 : a (t_t24 a -> False) -> t_t24 a
