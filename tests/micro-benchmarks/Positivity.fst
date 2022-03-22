@@ -118,3 +118,42 @@ let g : f_false (t_t20 f_false) =
      | C201 h -> h x
 
 let r1 : squash False = g (C201 g)
+
+(*
+ * If inductive type parameters are marked strictly_positive,
+ *   they should be checked properly
+ *)
+
+type t_t21 ([@@@ strictly_positive] a:Type0) : Type0 =
+  | C211 : a -> t_t21 a
+
+//binder a is not used in a strictly positive position
+[@@ expect_failure]
+noeq
+type t_t22 ([@@@ strictly_positive] a:Type0) : Type0 =
+  | C221 : (a -> int) -> t_t22 a
+
+//
+//binder b is not used in a strictly positive position
+//e.g. if a is instantiated with something like fun t -> (t -> int)
+//
+[@@ expect_failure]
+noeq
+type t_t22 (a:Type0 -> Type0) ([@@@ strictly_positive] b:Type0) =
+  | C221 : a b -> t_t22 a b
+
+//
+//but we can annotate a's binder, and then we are good
+//
+noeq
+type t_t22
+  (a:[@@@ strictly_positive] (_:Type0) -> Type0)
+  ([@@@ strictly_positive] b:Type0) =
+  | C221 : a b -> t_t22 a b
+
+//
+//instantiating t_t22 with a argument that doesn't satisfy
+//  the strictly positive constraint fails
+
+[@@ expect_failure]
+type t_t23 (a:Type0) = t_t22 (fun t -> (t -> False)) a
