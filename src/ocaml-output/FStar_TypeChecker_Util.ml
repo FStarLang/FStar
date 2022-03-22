@@ -473,7 +473,19 @@ let (extract_let_rec_annotation :
                                | (lbtyp, body1, recheck) ->
                                    let uu___9 =
                                      FStar_Syntax_Util.abs bs body1 rcopt in
-                                   (lbtyp, uu___9, recheck))) in
+                                   (lbtyp, uu___9, recheck)))
+                     | uu___6 ->
+                         let uu___7 =
+                           let uu___8 =
+                             let uu___9 =
+                               FStar_Syntax_Print.term_to_string e3 in
+                             FStar_Compiler_Util.format1
+                               "Expected the definition of a 'let rec' to be a function literal; got %s"
+                               uu___9 in
+                           (FStar_Errors.Fatal_UnexpectedComputationTypeForLetRec,
+                             uu___8) in
+                         FStar_Errors.raise_error uu___7
+                           e3.FStar_Syntax_Syntax.pos in
                    aux_lbdef e1 in
                  match t2.FStar_Syntax_Syntax.n with
                  | FStar_Syntax_Syntax.Tm_unknown ->
