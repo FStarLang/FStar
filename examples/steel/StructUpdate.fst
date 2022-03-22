@@ -41,8 +41,6 @@ open Steel.Effect.Atomic
 open Steel.Effect
 open Steel.PCMReference
 
-let pts_to (#a:Type u#1) (#pcm:pcm a) (r:ref a pcm) (v:a) = to_vprop (Steel.Memory.pts_to r v)
-
 let upd_first (#a #b:Type u#1) (r:ref (t a b) pcm_t) (x:Ghost.erased a) (y:a)
   : SteelT unit 
            (pts_to r (First #a #b x))
