@@ -332,6 +332,12 @@ let extract_let_rec_annotation env {lbname=lbname; lbunivs=univ_vars; lbtyp=t; l
             in
             let lbtyp, body, recheck = aux_abs_body body in
             lbtyp, U.abs bs body rcopt, recheck
+            
+          | _ ->
+            raise_error (Errors.Fatal_UnexpectedComputationTypeForLetRec,
+                         BU.format1 "Expected the definition of a 'let rec' to be a function literal; got %s"
+                                                   (Print.term_to_string e))
+                              e.pos
       in
       aux_lbdef e
     in

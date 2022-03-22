@@ -22,7 +22,7 @@ module FStar.Universe
 
 
 (** [raise_t a] is an isomorphic copy of [a] (living in universe 'ua) in universe [max 'ua 'ub] **)
-val raise_t : Type u#a -> Type u#(max a b)
+val raise_t ([@@@ strictly_positive] _ : Type u#a) : Type u#(max a b)
 
 (** [raise_val x] injects a value [x] of type [a] to [raise_t a] **)
 val raise_val : #a:Type u#a -> x:a -> raise_t u#a u#b a
