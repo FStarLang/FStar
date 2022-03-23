@@ -147,7 +147,7 @@ type t_t22 (a:Type0 -> Type0) ([@@@ strictly_positive] b:Type0) =
 //
 noeq
 type t_t22
-  (a:[@@@ strictly_positive] (_:Type0) -> Type0)
+  (a:([@@@ strictly_positive] _:Type0 -> Type0))
   ([@@@ strictly_positive] b:Type0) =
   | C221 : a b -> t_t22 a b
 
@@ -161,5 +161,5 @@ type t_t23 (a:Type0) = t_t22 (fun t -> (t -> False)) a
 
 [@@ expect_failure]
 noeq
-type t_t24 (a:[@@@ strictly_positive] (_:Type0) -> Type0) =
+type t_t24 (a:([@@@ strictly_positive] _:Type0 -> Type0)) =
   | C241 : a (t_t24 a -> False) -> t_t24 a
