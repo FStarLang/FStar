@@ -140,10 +140,12 @@ let tc_inductive' env ses quals attrs lids =
             | Sig_datacon (data_lid, _, _, ty_lid, _, _) -> data_lid, ty_lid
             | _ -> failwith "Impossible"
          in
-         if lid_equals ty_lid PC.exn_lid && not (TcUtil.check_exn_positivity env data_lid) then
+         if lid_equals ty_lid PC.exn_lid &&
+            not (TcUtil.check_exn_positivity env data_lid)
+         then
             Errors.log_issue d.sigrng
-                     (Errors.Error_InductiveTypeNotSatisfyPositivityCondition,
-                        ("Exception " ^ (string_of_lid data_lid) ^ " does not satisfy the positivity condition"))
+              (Errors.Error_InductiveTypeNotSatisfyPositivityCondition,
+               ("Exception " ^ (string_of_lid data_lid) ^ " does not satisfy the positivity condition"))
        ) datas
     end;
 
@@ -380,7 +382,7 @@ let tc_sig_let env r se lbs lids : list<sigelt> * list<sigelt> * Env.env =
                 | Tm_unknown -> lb.lbdef
                 | _ ->
                   (* If there are two type ascriptions we check that they are compatible *)
-                  mk (Tm_ascribed (lb.lbdef, (Inl lb.lbtyp, None), None)) lb.lbdef.pos
+                  mk (Tm_ascribed (lb.lbdef, (Inl lb.lbtyp, None, false), None)) lb.lbdef.pos
               in
               if lb.lbunivs <> [] && List.length lb.lbunivs <> List.length uvs
               then raise_error (Errors.Fatal_IncoherentInlineUniverse, ("Inline universes are incoherent with annotation from val declaration")) r;
@@ -611,7 +613,8 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
     let env = Env.set_range env r in
     let ses =
       if do_two_phases env then begin
-        //we generate extra sigelts even in the first phase, and then throw them away, would be nice to not generate them at all
+        //we generate extra sigelts even in the first phase and then throw them away
+        //would be nice to not generate them at all
         let ses =
           tc_inductive ({ env with phase1 = true; lax = true }) ses se.sigquals se.sigattrs lids
           |> fst

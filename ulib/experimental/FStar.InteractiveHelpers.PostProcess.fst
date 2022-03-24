@@ -592,13 +592,13 @@ let rec replace_term_in dbg from_term to_term tm =
     let scrutinee' = replace_term_in dbg from_term to_term scrutinee in
     let branches' = map explore_branch branches in
     pack (Tv_Match scrutinee' ret_opt branches')
-  | Tv_AscribedT e ty tac ->
+  | Tv_AscribedT e ty tac use_eq ->
     let e' = replace_term_in dbg from_term to_term e in
     let ty' = replace_term_in dbg from_term to_term ty in
-    pack (Tv_AscribedT e' ty' tac)
-  | Tv_AscribedC e c tac ->
+    pack (Tv_AscribedT e' ty' tac use_eq)
+  | Tv_AscribedC e c tac use_eq ->
     let e' = replace_term_in dbg from_term to_term e in
-    pack (Tv_AscribedC e' c tac)
+    pack (Tv_AscribedC e' c tac use_eq)
   | _ ->
     (* Unknown *)
     tm
@@ -757,4 +757,3 @@ let pp_unfold_in_assert_or_assume dbg () =
     end_proof ()
   with | MetaAnalysis msg -> printout_failure msg; end_proof ()
        | err -> (* Shouldn't happen, so transmit the exception for debugging *) raise err
-

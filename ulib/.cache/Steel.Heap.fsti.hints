@@ -11,7 +11,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "4c23602f5bca99d4a1adee1f9df58f33"
+      "884764f87fb3d6e13470df0e31b334ac"
     ],
     [
       "Steel.Heap.disjoint_join",
@@ -20,7 +20,7 @@
       1,
       [ "@query" ],
       0,
-      "82bee3b316e0ff625e0c72f1e772dbcc"
+      "a85ee2c15571abaf3f83c5371612195c"
     ],
     [
       "Steel.Heap.join_associative",
@@ -28,12 +28,11 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
-        "l_and-interp",
-        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_b3a6822d21434eb6a4849a21492ca268"
       ],
       0,
-      "0fc93756de055aedd2b0a47d5c1db49d"
+      "314ff8f5945fcdbb1689aa8a37f49da3"
     ],
     [
       "Steel.Heap.heap_prop_is_affine",
@@ -47,7 +46,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "3d293c1ef1bbcdb8e5837b93a428bd2a"
+      "a718408c146cfb81a6a287f777bb24f2"
     ],
     [
       "Steel.Heap.pts_to_compatible",
@@ -56,7 +55,7 @@
       1,
       [ "@query" ],
       0,
-      "320cc2eec3a421d117a331a33c065378"
+      "2311ec3e4a8e864ae5cda31490ae9892"
     ],
     [
       "Steel.Heap.intro_star",
@@ -68,7 +67,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "dbbdeb1e7195a7d359e07b9ba9f2063e"
+      "62587d64cd5fe34e447f52ff8bad50f8"
     ],
     [
       "Steel.Heap.pure",
@@ -80,7 +79,7 @@
         "interpretation_Tm_abs_631a29915bf9a085ae2d714058f48fbf"
       ],
       0,
-      "d6e9eebb9b188050d1f04c05aafab3b3"
+      "096a7bb73ec909185ac9935238d70abd"
     ],
     [
       "Steel.Heap.is_frame_preserving",
@@ -89,7 +88,7 @@
       1,
       [ "@query" ],
       0,
-      "184b35c48049275a044985ade6c5214a"
+      "1a5cba50922f3da29405bfe4b29a5043"
     ],
     [
       "Steel.Heap.action_with_frame",
@@ -98,7 +97,7 @@
       1,
       [ "@query" ],
       0,
-      "5bcf1142473ad972ca467988bfbc9b83"
+      "acf90441b0930b042a7b6c228aecc6e2"
     ],
     [
       "Steel.Heap.action_framing",
@@ -114,7 +113,7 @@
         "refinement_interpretation_Tm_refine_edbdae9d6b6624a6ec3f6b429364c960"
       ],
       0,
-      "902fdd622beabf962515940721517430"
+      "d06b178cb2848fd3b25fe4b98a7970f1"
     ],
     [
       "Steel.Heap.sel_v",
@@ -123,7 +122,7 @@
       1,
       [ "@query" ],
       0,
-      "d612dbd0398e9fa10c29e5cd989382ca"
+      "5ed9d3e92b8634a3bdc46ca955b10537"
     ],
     [
       "Steel.Heap.witnessed_ref",
@@ -132,7 +131,7 @@
       1,
       [ "@query" ],
       0,
-      "79b029c6ed3ec0240c614f9e8eb58365"
+      "d4f5a15f07cb687ef8079344c6dfe2b2"
     ],
     [
       "Steel.Heap.select_refine",
@@ -141,7 +140,7 @@
       1,
       [ "@query" ],
       0,
-      "b218c05fb5c22189d4f1622c92363d83"
+      "aa16ab639132410bd83cc8d211c76070"
     ],
     [
       "Steel.Heap.split_action",
@@ -153,7 +152,7 @@
         "refinement_interpretation_Tm_refine_782bbf7acd60ae0036bd61a1f4d3807b"
       ],
       0,
-      "8183a3ad2928c3512aca45401c613062"
+      "d385870df1030e98569000e1ad354bf1"
     ],
     [
       "Steel.Heap.gather_action",
@@ -165,7 +164,7 @@
         "refinement_interpretation_Tm_refine_625413e9a3a548e616103efddf1886c4"
       ],
       0,
-      "3fd75871b5299d4809a4819dee944359"
+      "e4a98c6126e771b95f362cea49665624"
     ],
     [
       "Steel.Heap.extend",
@@ -178,7 +177,7 @@
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "4866c862448fcd0130ac86b77aae5b72"
+      "78a5ff147489b2cd13d33f56a7b3de02"
     ],
     [
       "Steel.Heap.id_elim_star",
@@ -187,7 +186,7 @@
       1,
       [ "@query" ],
       0,
-      "560e5615fc44d66678b9a45391173498"
+      "e1e9643fa14b31074ac0984c88433715"
     ],
     [
       "Steel.Heap.is_frame_monotonic",
@@ -201,7 +200,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "1775747d660774e55b517db8a9bf8663"
+      "7ef2d788e735a9f350659b522fa7de68"
     ]
   ]
 ]

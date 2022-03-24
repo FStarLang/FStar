@@ -140,8 +140,6 @@ let expect_lax_failure _ = ()
 
 let tcdecltime = ()
 
-let assume_strictly_positive = ()
-
 let unifier_hint_injective = ()
 
 let strict_on_arguments _ = ()
@@ -163,6 +161,8 @@ let normalize_for_extraction _ = ()
 let ite_soundness_by = ()
 
 let strictly_positive = ()
+
+let no_auto_projectors = ()
 
 let singleton #_ x = x
 

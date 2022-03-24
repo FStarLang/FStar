@@ -875,18 +875,20 @@ let rec visit_tm (ff : term -> Tac term) (t : term) : Tac term =
           let b = on_sort_binder (visit_tm ff) b in
           let asc =
             match asc with
-            | Inl t, tacopt -> Inl (visit_tm ff t), map_opt (visit_tm ff) tacopt
-            | Inr c, tacopt -> Inr (visit_comp ff c), map_opt (visit_tm ff) tacopt in
+            | Inl t, tacopt, use_eq ->
+              Inl (visit_tm ff t), map_opt (visit_tm ff) tacopt, use_eq
+            | Inr c, tacopt, use_eq->
+              Inr (visit_comp ff c), map_opt (visit_tm ff) tacopt, use_eq in
           b, asc) ret_opt in
         let brs = map (visit_br ff) brs in
         Tv_Match sc ret_opt brs
-    | Tv_AscribedT e t topt ->
+    | Tv_AscribedT e t topt use_eq ->
         let e = visit_tm ff e in
         let t = visit_tm ff t in
-        Tv_AscribedT e t topt
-    | Tv_AscribedC e c topt ->
+        Tv_AscribedT e t topt use_eq
+    | Tv_AscribedC e c topt use_eq ->
         let e = visit_tm ff e in
-        Tv_AscribedC e c topt
+        Tv_AscribedC e c topt use_eq
   in
   ff (pack_ln tv')
 and visit_br (ff : term -> Tac term) (b:branch) : Tac branch =

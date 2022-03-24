@@ -1578,7 +1578,7 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
                      extract_app_with_instantiations ()
             end
 
-        | Tm_ascribed(e0, (tc, _), f) ->
+        | Tm_ascribed(e0, (tc, _, _), f) ->
           let t = match tc with
             | Inl t -> term_as_mlty g t
             | Inr c -> term_as_mlty g (maybe_reify_comp g (tcenv_of_uenv g) c) in

@@ -13,7 +13,7 @@
         "refinement_interpretation_Tm_refine_565f37515590049580c96eef602ba10e"
       ],
       0,
-      "a4dbdbcd1af350ba0bbd8e2336f411db"
+      "18ec5d5f5d60f08cf42632d34635d761"
     ],
     [
       "FStar.ReflexiveTransitiveClosure.__proj__Step__item__x",
@@ -27,7 +27,7 @@
         "refinement_interpretation_Tm_refine_9a46ad0604fd75a49244a1b7546c3895"
       ],
       0,
-      "cdbabf28d7a934d7dbde8a009bacb3d3"
+      "598e8a12bf0d1a2214e389d828bb469c"
     ],
     [
       "FStar.ReflexiveTransitiveClosure.__proj__Step__item__y",
@@ -41,7 +41,7 @@
         "refinement_interpretation_Tm_refine_9a46ad0604fd75a49244a1b7546c3895"
       ],
       0,
-      "890c90c93af8cd1deeb21b36833ed99b"
+      "db7b67f2a07df93639af2464cd251605"
     ],
     [
       "FStar.ReflexiveTransitiveClosure.__proj__Step__item___2",
@@ -50,16 +50,11 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "disc_equation_FStar.ReflexiveTransitiveClosure.Step",
-        "proj_equation_FStar.ReflexiveTransitiveClosure.Step_x",
-        "proj_equation_FStar.ReflexiveTransitiveClosure.Step_y",
-        "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_FStar.ReflexiveTransitiveClosure.Step_x",
-        "projection_inverse_FStar.ReflexiveTransitiveClosure.Step_y",
+        "data_elim_FStar.ReflexiveTransitiveClosure.Step",
         "refinement_interpretation_Tm_refine_9a46ad0604fd75a49244a1b7546c3895"
       ],
       0,
-      "447c35c351a4cc304841fa6b8e3d528a"
+      "571cf819be5bf699f3371a54b2835daf"
     ],
     [
       "FStar.ReflexiveTransitiveClosure.__proj__Closure__item__x",
@@ -73,7 +68,7 @@
         "refinement_interpretation_Tm_refine_62741fd7a534e641c7be743e886031c0"
       ],
       0,
-      "12c4c03380b9219493d0f1a31dc2959f"
+      "aac34e1873d0d6536966b18279136897"
     ],
     [
       "FStar.ReflexiveTransitiveClosure.__proj__Closure__item__y",
@@ -87,7 +82,7 @@
         "refinement_interpretation_Tm_refine_62741fd7a534e641c7be743e886031c0"
       ],
       0,
-      "b28b79cd6ef4d68d798616bef136013d"
+      "434c38617173c0b9d365928dc739c6be"
     ],
     [
       "FStar.ReflexiveTransitiveClosure.__proj__Closure__item__z",
@@ -101,7 +96,7 @@
         "refinement_interpretation_Tm_refine_62741fd7a534e641c7be743e886031c0"
       ],
       0,
-      "fae7a32f26093ec5c274d6dbc9a73eb0"
+      "683c925d2e631f291889f397b2b48046"
     ],
     [
       "FStar.ReflexiveTransitiveClosure.__proj__Closure__item___3",
@@ -110,16 +105,11 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "disc_equation_FStar.ReflexiveTransitiveClosure.Closure",
-        "proj_equation_FStar.ReflexiveTransitiveClosure.Closure_x",
-        "proj_equation_FStar.ReflexiveTransitiveClosure.Closure_y",
-        "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_FStar.ReflexiveTransitiveClosure.Closure_x",
-        "projection_inverse_FStar.ReflexiveTransitiveClosure.Closure_y",
+        "data_elim_FStar.ReflexiveTransitiveClosure.Closure",
         "refinement_interpretation_Tm_refine_62741fd7a534e641c7be743e886031c0"
       ],
       0,
-      "ce8f4f83a217964b6863d69008ff02ca"
+      "700578398073c38b763d781cdecae939"
     ],
     [
       "FStar.ReflexiveTransitiveClosure.__proj__Closure__item___4",
@@ -128,16 +118,11 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "disc_equation_FStar.ReflexiveTransitiveClosure.Closure",
-        "proj_equation_FStar.ReflexiveTransitiveClosure.Closure_y",
-        "proj_equation_FStar.ReflexiveTransitiveClosure.Closure_z",
-        "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_FStar.ReflexiveTransitiveClosure.Closure_y",
-        "projection_inverse_FStar.ReflexiveTransitiveClosure.Closure_z",
+        "data_elim_FStar.ReflexiveTransitiveClosure.Closure",
         "refinement_interpretation_Tm_refine_62741fd7a534e641c7be743e886031c0"
       ],
       0,
-      "d1127696c0953ee41bd079fbe7f8bdc2"
+      "48f67bcf535cd93bc47b6f99f2615d09"
     ],
     [
       "FStar.ReflexiveTransitiveClosure._closure0",
@@ -151,7 +136,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "94064db6978aa32019316367f6f9ace7"
+      "f5fbcf33574bfae8b5dbc818cae6e77c"
     ],
     [
       "FStar.ReflexiveTransitiveClosure.get_squash",
@@ -163,7 +148,7 @@
         "refinement_interpretation_Tm_refine_a6c63e0f25f76613bb266e2eb47b9c58"
       ],
       0,
-      "ef042c2fbc050ca60764c387cda0ac6d"
+      "d1fc01eb1f1660fbfb33075167cc28fd"
     ],
     [
       "FStar.ReflexiveTransitiveClosure.closure_reflexive",
@@ -176,7 +161,7 @@
         "true_interp"
       ],
       0,
-      "287d4abac6b3d58290b4b413feb1618e"
+      "fe3f63531b851062c2581b6c43140101"
     ],
     [
       "FStar.ReflexiveTransitiveClosure.closure_transitive",
@@ -193,7 +178,7 @@
         "unit_inversion"
       ],
       0,
-      "30f393d8a30a05c4868917274eb65072"
+      "d4e20f07ef4d691601d579cec410c6af"
     ],
     [
       "FStar.ReflexiveTransitiveClosure.closure",
@@ -202,7 +187,7 @@
       1,
       [ "@query", "equation_FStar.Preorder.preorder_rel" ],
       0,
-      "bfb7a2d27622b7e3aa2cc2279379af7e"
+      "b0f5920730d6f2e5b3de76d2dd211c36"
     ],
     [
       "FStar.ReflexiveTransitiveClosure.closure_step",
@@ -211,7 +196,7 @@
       1,
       [ "@query", "true_interp" ],
       0,
-      "be7a0d93b8472a2ea8eba48c9d2d760c"
+      "001b3f565ab2a25b53e97f571eb97c4b"
     ],
     [
       "FStar.ReflexiveTransitiveClosure.closure_one_aux",
@@ -228,16 +213,15 @@
         "disc_equation_FStar.Pervasives.Inr",
         "disc_equation_FStar.ReflexiveTransitiveClosure.Closure",
         "disc_equation_FStar.ReflexiveTransitiveClosure.Refl",
-        "disc_equation_FStar.ReflexiveTransitiveClosure.Step", "eq2-interp",
-        "equality_tok_Prims.LexTop@tok", "equation_Prims.eq2",
-        "equation_Prims.squash",
+        "disc_equation_FStar.ReflexiveTransitiveClosure.Step",
         "fuel_guarded_inversion_FStar.Pervasives.either",
         "fuel_guarded_inversion_FStar.ReflexiveTransitiveClosure._closure",
-        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_0dee8cb03258a67c2f7ec66427696212",
         "subterm_ordering_FStar.ReflexiveTransitiveClosure.Closure"
       ],
       0,
-      "368c22ff1d677833b65a96bb9cd47ada"
+      "30c88602034b4d634ab1c5082b4e3fdf"
     ],
     [
       "FStar.ReflexiveTransitiveClosure.closure_one_aux'",
@@ -248,14 +232,14 @@
         "@MaxIFuel_assumption",
         "@fuel_correspondence_FStar.ReflexiveTransitiveClosure.closure_one_aux.fuel_instrumented",
         "@query", "disc_equation_FStar.Pervasives.Inl",
-        "disc_equation_FStar.Pervasives.Inr", "eq2-interp",
-        "equation_Prims.eq2", "equation_Prims.squash",
+        "disc_equation_FStar.Pervasives.Inr",
         "fuel_guarded_inversion_FStar.Pervasives.either",
-        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_0dee8cb03258a67c2f7ec66427696212",
         "typing_FStar.ReflexiveTransitiveClosure.closure_one_aux"
       ],
       0,
-      "d19070be254619a359edc8a1c63d2017"
+      "60efa987eb95e9bab284489288f40559"
     ],
     [
       "FStar.ReflexiveTransitiveClosure.closure_inversion",
@@ -263,13 +247,11 @@
       0,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "eq2-interp",
-        "equation_Prims.l_or", "equation_Prims.squash", "l_or-interp",
-        "l_quant_interp_961fef7a3af6eca02e4655636527d707",
-        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_9ad0ee561093839b89d4b6e0dbd1c88f"
       ],
       0,
-      "eda4fe7f8a0d2986fe75fe7867fc0fd5"
+      "9e8c35f9ede49f98921bf3fe2e96b059"
     ],
     [
       "FStar.ReflexiveTransitiveClosure._stable_on_closure",
@@ -278,24 +260,24 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
+        "binder_x_15eb93a88416e84c88bf35cb90374a57_4",
         "binder_x_29b7d9bf718d3e6dd0deac59ece245f8_7",
         "binder_x_30b2fec920cb6b97ce4366e6674b0de4_8",
-        "binder_x_a108461aefff9b3838771cc51d076281_4",
         "data_elim_FStar.ReflexiveTransitiveClosure.Closure",
         "data_elim_FStar.ReflexiveTransitiveClosure.Refl",
         "data_elim_FStar.ReflexiveTransitiveClosure.Step",
         "disc_equation_FStar.ReflexiveTransitiveClosure.Closure",
         "disc_equation_FStar.ReflexiveTransitiveClosure.Refl",
         "disc_equation_FStar.ReflexiveTransitiveClosure.Step",
-        "equality_tok_Prims.LexTop@tok", "equation_Prims.l_Forall",
         "equation_Prims.squash",
         "fuel_guarded_inversion_FStar.ReflexiveTransitiveClosure._closure",
-        "l_quant_interp_ca26188549525b859a685fdf1de7a661",
+        "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
+        "refinement_interpretation_Tm_refine_901113479364b6bede6dd8ae79f6a880",
         "subterm_ordering_FStar.ReflexiveTransitiveClosure.Closure"
       ],
       0,
-      "4831116bde1432cc28ba00f467f7cb27"
+      "101d9e98496b214e70f3a67760632a43"
     ],
     [
       "FStar.ReflexiveTransitiveClosure.squash_implies_to_arrow",
@@ -304,7 +286,7 @@
       1,
       [ "@query" ],
       0,
-      "28956729ad55e5a6621779b37794b61d"
+      "0f1d598025cca212bdc22daa64079a26"
     ],
     [
       "FStar.ReflexiveTransitiveClosure.stable_on_closure",
@@ -313,7 +295,7 @@
       1,
       [ "@query", "true_interp" ],
       0,
-      "ec16ab505ec9a7a2a35dfeec541c819e"
+      "4d12d51502796db7dd9640224903910e"
     ],
     [
       "FStar.ReflexiveTransitiveClosure.stable_on_closure",
@@ -322,7 +304,7 @@
       1,
       [ "@query" ],
       0,
-      "63a247dbf2986fb96feb0c14a19f0315"
+      "b92b0123d87789763f0c01eb4efbf317"
     ]
   ]
 ]

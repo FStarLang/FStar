@@ -1,5 +1,5 @@
 [
-  "Ck\u0012§\u0011ƒ1ïàR‡]®{Dö",
+  "„º°^áè\u000bën9J¤Ù2pu",
   [
     [
       "FStar.Pervasives.Lemma",
@@ -290,74 +290,6 @@
       "916b644393b3cbf75e6387d26402ab10"
     ],
     [
-      "FStar.Pervasives.__proj__Mkdtuple3__item___2",
-      1,
-      2,
-      1,
-      [
-        "@query", "proj_equation_FStar.Pervasives.Mkdtuple3__1",
-        "projection_inverse_FStar.Pervasives.Mkdtuple3__1"
-      ],
-      0,
-      "20a131a0df662910a17c9e6134ed3cbe"
-    ],
-    [
-      "FStar.Pervasives.__proj__Mkdtuple3__item___3",
-      1,
-      2,
-      1,
-      [
-        "@query", "proj_equation_FStar.Pervasives.Mkdtuple3__1",
-        "proj_equation_FStar.Pervasives.Mkdtuple3__2",
-        "projection_inverse_FStar.Pervasives.Mkdtuple3__1",
-        "projection_inverse_FStar.Pervasives.Mkdtuple3__2"
-      ],
-      0,
-      "8f1125d2203de9beece506e23f462820"
-    ],
-    [
-      "FStar.Pervasives.__proj__Mkdtuple4__item___2",
-      1,
-      2,
-      1,
-      [
-        "@query", "proj_equation_FStar.Pervasives.Mkdtuple4__1",
-        "projection_inverse_FStar.Pervasives.Mkdtuple4__1"
-      ],
-      0,
-      "38cd6b25dfc96f71e23c3710eed707e6"
-    ],
-    [
-      "FStar.Pervasives.__proj__Mkdtuple4__item___3",
-      1,
-      2,
-      1,
-      [
-        "@query", "proj_equation_FStar.Pervasives.Mkdtuple4__1",
-        "proj_equation_FStar.Pervasives.Mkdtuple4__2",
-        "projection_inverse_FStar.Pervasives.Mkdtuple4__1",
-        "projection_inverse_FStar.Pervasives.Mkdtuple4__2"
-      ],
-      0,
-      "6eb921d1dd69fac51adc39acda7c2c25"
-    ],
-    [
-      "FStar.Pervasives.__proj__Mkdtuple4__item___4",
-      1,
-      2,
-      1,
-      [
-        "@query", "proj_equation_FStar.Pervasives.Mkdtuple4__1",
-        "proj_equation_FStar.Pervasives.Mkdtuple4__2",
-        "proj_equation_FStar.Pervasives.Mkdtuple4__3",
-        "projection_inverse_FStar.Pervasives.Mkdtuple4__1",
-        "projection_inverse_FStar.Pervasives.Mkdtuple4__2",
-        "projection_inverse_FStar.Pervasives.Mkdtuple4__3"
-      ],
-      0,
-      "3d236d12d1c085d8f749919be905fe8c"
-    ],
-    [
       "FStar.Pervasives.__proj__PpxDerivingShowConstant__item___0",
       1,
       2,
@@ -369,7 +301,7 @@
         "refinement_interpretation_Tm_refine_564db2f0aa0878b4d96c60508be3dd36"
       ],
       0,
-      "5f26a6304db85a0adb8bbe5cde1d8b0c"
+      "34e51e0b3902f40b1b7695c11c1b1024"
     ],
     [
       "FStar.Pervasives.__proj__Comment__item___0",
@@ -383,7 +315,7 @@
         "refinement_interpretation_Tm_refine_c53089e2d20d1b0f5a267296ac8e45f0"
       ],
       0,
-      "4cd3c28a776b2ba0e05d553d47a9fa96"
+      "ff8dd98552db50221d1279e863ce0700"
     ],
     [
       "FStar.Pervasives.__proj__CPrologue__item___0",
@@ -397,7 +329,7 @@
         "refinement_interpretation_Tm_refine_ac46c1a2a06ce46a180e0eda48004c47"
       ],
       0,
-      "2ffb04ee124e8413f6a3d320a9b12cc5"
+      "5548b9140b4b39fb2ef9d9ad4a0b4faa"
     ],
     [
       "FStar.Pervasives.__proj__CEpilogue__item___0",
@@ -411,7 +343,7 @@
         "refinement_interpretation_Tm_refine_47384bef739d1f0729fd782d351dc9a5"
       ],
       0,
-      "dead87d6c09a20085604116e050f9fce"
+      "c34b6864f610c10110e07658f1ba6e1a"
     ],
     [
       "FStar.Pervasives.__proj__CConst__item___0",
@@ -425,7 +357,7 @@
         "refinement_interpretation_Tm_refine_5036c6b2983454bc3afeffcba3f00f50"
       ],
       0,
-      "07a77c9a0bc325cde871c84ba5cdbe1a"
+      "1527216ee36501f4aad99533bee29afb"
     ],
     [
       "FStar.Pervasives.__proj__CCConv__item___0",
@@ -439,7 +371,7 @@
         "refinement_interpretation_Tm_refine_2c4510f48649a66c3dca1fc9e3a2d320"
       ],
       0,
-      "1f36a0403a7ceab3c579ce091bce79b5"
+      "ad888d80a64ca953b93402dc498557f5"
     ],
     [
       "FStar.Pervasives.coerce_eq",
@@ -447,12 +379,11 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "eq2-interp", "equation_Prims.eq2",
-        "equation_Prims.squash",
-        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_0dee8cb03258a67c2f7ec66427696212"
       ],
       0,
-      "b90326f3daaa5bb542c4bcdced8526f9"
+      "be077bdacd1708a40c91823eacb5f756"
     ]
   ]
 ]

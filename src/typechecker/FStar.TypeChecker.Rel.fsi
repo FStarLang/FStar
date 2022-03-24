@@ -68,6 +68,7 @@ val get_subtyping_prop: env -> typ -> typ -> option<guard_t>
 val subtype_nosmt       : env -> typ -> typ -> option<guard_t>
 val subtype_nosmt_force : env -> typ -> typ -> bool
 val sub_comp   : env -> comp -> comp -> option<guard_t>
+val eq_comp : env -> comp -> comp -> option<guard_t>
 
 val universe_inequality : universe -> universe -> guard_t
 

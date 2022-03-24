@@ -490,15 +490,15 @@ let (pack_ln : FStar_Reflection_Data.term_view -> FStar_Syntax_Syntax.term) =
           (FStar_Syntax_Syntax.Tm_match
              (t, ret_opt, brs1, FStar_Pervasives_Native.None))
           FStar_Compiler_Range.dummyRange
-    | FStar_Reflection_Data.Tv_AscribedT (e, t, tacopt) ->
+    | FStar_Reflection_Data.Tv_AscribedT (e, t, tacopt, use_eq) ->
         FStar_Syntax_Syntax.mk
           (FStar_Syntax_Syntax.Tm_ascribed
-             (e, ((FStar_Pervasives.Inl t), tacopt),
+             (e, ((FStar_Pervasives.Inl t), tacopt, use_eq),
                FStar_Pervasives_Native.None)) FStar_Compiler_Range.dummyRange
-    | FStar_Reflection_Data.Tv_AscribedC (e, c, tacopt) ->
+    | FStar_Reflection_Data.Tv_AscribedC (e, c, tacopt, use_eq) ->
         FStar_Syntax_Syntax.mk
           (FStar_Syntax_Syntax.Tm_ascribed
-             (e, ((FStar_Pervasives.Inr c), tacopt),
+             (e, ((FStar_Pervasives.Inr c), tacopt, use_eq),
                FStar_Pervasives_Native.None)) FStar_Compiler_Range.dummyRange
     | FStar_Reflection_Data.Tv_Unknown ->
         FStar_Syntax_Syntax.mk FStar_Syntax_Syntax.Tm_unknown

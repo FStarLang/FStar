@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "946d2551953b893391d8256369be4a9a"
+      "89fa069c5e04c2b3feb19f992442789c"
     ],
     [
       "Part2.PHOAS.__proj__Arrow__item___0",
@@ -20,7 +20,7 @@
         "refinement_interpretation_Tm_refine_89ad2f3ebcf13da182c8948e4bde8678"
       ],
       0,
-      "9f93b7bc760e4be698aa9778f6703618"
+      "099709f15a3ba6292894cc74dd0e0cf5"
     ],
     [
       "Part2.PHOAS.__proj__Arrow__item___1",
@@ -32,7 +32,7 @@
         "refinement_interpretation_Tm_refine_89ad2f3ebcf13da182c8948e4bde8678"
       ],
       0,
-      "4509ad893ee56cf4168a1a386f904186"
+      "c7e6219739f8513d47e6aa7b9e90d820"
     ],
     [
       "Part2.PHOAS.__proj__Var__item__t",
@@ -44,7 +44,7 @@
         "refinement_interpretation_Tm_refine_eeecd4ea77bbf98724603ca7300a772d"
       ],
       0,
-      "d6fb0b2f613e6bb6243a44fe781bfb32"
+      "086b74fe43d677714533d133a9e85cce"
     ],
     [
       "Part2.PHOAS.__proj__Var__item___1",
@@ -52,12 +52,11 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "proj_equation_Part2.PHOAS.Var_t",
-        "projection_inverse_Part2.PHOAS.Var_t",
+        "@MaxIFuel_assumption", "@query", "data_elim_Part2.PHOAS.Var",
         "refinement_interpretation_Tm_refine_eeecd4ea77bbf98724603ca7300a772d"
       ],
       0,
-      "3c76045b13a85cc0003b635d760b5a07"
+      "487214f85e6089a6ea28261b60198fc8"
     ],
     [
       "Part2.PHOAS.__proj__App__item__t1",
@@ -69,7 +68,7 @@
         "refinement_interpretation_Tm_refine_b02d03e9f0081ee40ab4dd8634fa7714"
       ],
       0,
-      "93af2663463a04ac874a4a7f5504e56a"
+      "9e67d2d5736096c6b7f6807fee22f002"
     ],
     [
       "Part2.PHOAS.__proj__App__item__t2",
@@ -81,7 +80,7 @@
         "refinement_interpretation_Tm_refine_b02d03e9f0081ee40ab4dd8634fa7714"
       ],
       0,
-      "a4535c50536fe0e5e93f71eb0d445002"
+      "e2c778f258274958675436bb307dcbfa"
     ],
     [
       "Part2.PHOAS.__proj__App__item___2",
@@ -97,7 +96,7 @@
         "refinement_interpretation_Tm_refine_b02d03e9f0081ee40ab4dd8634fa7714"
       ],
       0,
-      "002754f93ab840606d6ac1f154ba7428"
+      "1d9fa92f6a2a1ff4facbc76c946622dc"
     ],
     [
       "Part2.PHOAS.__proj__App__item___3",
@@ -105,12 +104,11 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "proj_equation_Part2.PHOAS.App_t1",
-        "projection_inverse_Part2.PHOAS.App_t1",
+        "@MaxIFuel_assumption", "@query", "data_elim_Part2.PHOAS.App",
         "refinement_interpretation_Tm_refine_b02d03e9f0081ee40ab4dd8634fa7714"
       ],
       0,
-      "0e71304cda91ec2f894b89843765a35d"
+      "0969d31c1c44d9dc5484829d11faa18d"
     ],
     [
       "Part2.PHOAS.__proj__Lam__item__t1",
@@ -122,7 +120,7 @@
         "refinement_interpretation_Tm_refine_7cf713abff1884147d7ff954c39c0499"
       ],
       0,
-      "5eed15bfe40ae955f8d41e3580d0780d"
+      "ed8bb46bb76ef3fae535c5110cd57eff"
     ],
     [
       "Part2.PHOAS.__proj__Lam__item__t2",
@@ -134,7 +132,7 @@
         "refinement_interpretation_Tm_refine_7cf713abff1884147d7ff954c39c0499"
       ],
       0,
-      "3acadd42b9979fc5775ea9b904815753"
+      "1adc6f900d2cc24fdffe6da86c036bb5"
     ],
     [
       "Part2.PHOAS.__proj__Lam__item___2",
@@ -150,7 +148,7 @@
         "refinement_interpretation_Tm_refine_7cf713abff1884147d7ff954c39c0499"
       ],
       0,
-      "fa64f313c7772c79746ed07848d955ee"
+      "fc49fa77c3274898693710b901c93456"
     ],
     [
       "Part2.PHOAS.denote_typ",
@@ -169,7 +167,7 @@
         "typing_tok_Part2.PHOAS.Bool@tok"
       ],
       0,
-      "049c7671b68ab94324ac98640a966c13"
+      "a4bb07155507a326fd091c5d9f38cffc"
     ],
     [
       "Part2.PHOAS.denote_term0",
@@ -205,7 +203,7 @@
         "well_founded_ordering_on_codomain_Part2.PHOAS.Lam"
       ],
       0,
-      "98469b450b204bb2d634cf63b72700cc"
+      "d0d30da83e24020baa264e2a66e0abff"
     ]
   ]
 ]

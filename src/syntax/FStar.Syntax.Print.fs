@@ -331,14 +331,15 @@ and term_to_string x =
       | Tm_refine(xt, f) -> U.format3 "(%s:%s{%s})" (bv_to_string xt) (xt.sort |> term_to_string) (f |> formula_to_string)
       | Tm_app(t, args) ->  U.format2 "(%s %s)" (term_to_string t) (args_to_string args)
       | Tm_let(lbs, e) ->   U.format2 "%s\nin\n%s" (lbs_to_string [] lbs) (term_to_string e)
-      | Tm_ascribed(e,(annot, topt),eff_name) ->
+      | Tm_ascribed(e,(annot, topt, b),eff_name) ->
         let annot = match annot with
             | Inl t -> U.format2 "[%s] %s" (map_opt eff_name Ident.string_of_lid |> dflt "default") (term_to_string t)
             | Inr c -> comp_to_string c in
         let topt = match topt with
             | None -> ""
             | Some t -> U.format1 "by %s" (term_to_string t) in
-        U.format3 "(%s <ascribed: %s %s)" (term_to_string e) annot topt
+        let s = if b then "ascribed_eq" else "ascribed" in
+        U.format4 "(%s <%s: %s %s)" (term_to_string e) s annot topt
       | Tm_match(head, asc_opt, branches, lc) ->
         let lc_str =
           match lc with
@@ -350,9 +351,11 @@ and term_to_string x =
           (term_to_string head)
           (match asc_opt with
            | None -> ""
-           | Some (b, (asc, tacopt)) ->
-             U.format3 "as %s returns %s%s "
+           | Some (b, (asc, tacopt, use_eq)) ->
+             let s = if use_eq then "returns$" else "returns" in
+             U.format4 "as %s %s %s%s "
                (binder_to_string b)
+               s
                (match asc with
                 | Inl t -> term_to_string t
                 | Inr c -> comp_to_string c)
