@@ -41,7 +41,7 @@ noeq type t4 =
 open FStar.ST
 noeq
 type t =
-  | MkT : ref t -> t //relies in assume_strictly_positive
+  | MkT : ref t -> t
 
 (*
  * #868

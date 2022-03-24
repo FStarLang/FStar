@@ -3518,26 +3518,15 @@ and ty_nested_positive_in_inductive env (ty_lid:lident) (ilid:lident) (us:univer
   let b, idatas = datacons_of_typ env ilid in
 
   (*
-   * Two special cases:
-   *   -- If ilid is marked with an escape hatch "assume_strictly_positive"
-   *   -- If ilid's corresponding binder is marked "strictly_positive", note this is checked by F*
+   * Check if ilid's corresponding binder is marked "strictly_positive"
    *)
   if not b then begin
-    if Env.fv_has_attr
-         env
-         (S.lid_as_fv ilid delta_constant None)
-         FStar.Parser.Const.assume_strictly_positive_attr_lid
-    then (debug_positivity env (fun () -> BU.format1
-                                         "Checking nested positivity, special case decorated with `assume_strictly_positive` %s; return true"
-                                         (Ident.string_of_lid ilid));
-          true)
-
-    else match Env.try_lookup_lid env ilid with
-         | Some ((_, t), _) ->
-           check_strictly_positive_argument env ty_lid t args unfolded
-         | None ->
-           debug_positivity env (fun () -> "Checking nested positivity, no attrs or type, return false");
-           false
+    match Env.try_lookup_lid env ilid with
+    | Some ((_, t), _) ->
+      check_strictly_positive_argument env ty_lid t args unfolded
+    | None ->
+      debug_positivity env (fun () -> "Checking nested positivity, no type, return false");
+      false
   end
   //if ilid has already been unfolded with same arguments, return true
   else

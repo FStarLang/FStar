@@ -848,21 +848,6 @@ val expect_lax_failure (errs: list int) : Tot unit
 (** Print the time it took to typecheck a top-level definition *)
 val tcdecltime : unit
 
-(** **THIS ATTRIBUTE IS AN ESCAPE HATCH AND CAN BREAK SOUNDNESS**
-
-    **USE WITH CARE**
-
-    The positivity check for inductive types stops at abstraction
-    boundaries. This results in spurious errors about positivity,
-    e.g., when defining types like `type t = ref (option t)` By adding
-    this attribute to a declaration of a top-level name positivity
-    checks on applications of that name are admitted.  See, for
-    instance, FStar.Monotonic.Heap.mref We plan to decorate binders of
-    abstract types with polarities to allow us to check positivity
-    across abstraction boundaries and will eventually remove this
-    attribute.  *)
-val assume_strictly_positive : unit
-
 (** This attribute is to be used as a hint for the unifier.  A
     function-typed symbol `t` marked with this attribute will be treated
     as being injective in all its arguments by the unifier.  That is,
