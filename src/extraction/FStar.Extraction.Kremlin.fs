@@ -738,6 +738,11 @@ and translate_expr env e: expr =
           string_of_mlpath p = "LowStar.ImmutableBuffer.recall_contents") ->
       EUnit
 
+  | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ _ebuf; _eidx ])
+    when (string_of_mlpath p = "LowStar.UninitializedBuffer.witness_initialized" ||
+          string_of_mlpath p = "LowStar.UninitializedBuffer.recall_initialized") ->
+      EUnit
+
  | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e1 ])
    when string_of_mlpath p = "LowStar.ConstBuffer.of_buffer"
      || string_of_mlpath p = "LowStar.ConstBuffer.of_ibuffer"
