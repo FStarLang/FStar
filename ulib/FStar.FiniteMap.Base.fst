@@ -48,14 +48,11 @@ let domain (#a: eqtype) (#b: Type0) (m: map a b) : FSet.set a =
   match m with
   | Mkdtuple2 keys f -> keys
 
-private let typecast (a: Type0) (b: Type0{a == b}) (v: a) : b =
-  (v <: b)
-
 let elements (#a: eqtype) (#b: Type0) (m: map a b) : (setfun_t a b (domain m)) =
   match m with
   | Mkdtuple2 keys f -> f
 
-let rec key_list_to_item_list
+private let rec key_list_to_item_list
   (#a: eqtype)
   (#b: Type0)
   (m: map a b)
@@ -157,7 +154,7 @@ let choose (#a: eqtype) (#b: Type0) (m: map a b{exists key. mem key m}) : GTot (
 /// For fact `xxx_fact`, we prove it with `xxx_lemma`.  Sometimes, that
 /// requires a helper lemma, which we call `xxx_helper`.
 
-let cardinality_zero_iff_empty_lemma ()
+private let cardinality_zero_iff_empty_lemma ()
 : Lemma (cardinality_zero_iff_empty_fact) =
   introduce forall (a: eqtype) (b: Type0) (m: map a b). cardinality m = 0 <==> m == emptymap
   with (
@@ -165,7 +162,7 @@ let cardinality_zero_iff_empty_lemma ()
     with _. assert (feq (elements m) (elements emptymap))
   )
 
-let empty_or_domain_occupied_lemma ()
+private let empty_or_domain_occupied_lemma ()
 : Lemma (empty_or_domain_occupied_fact) =
   introduce forall (a: eqtype) (b: Type0) (m: map a b). m == emptymap \/ (exists k. mem k m)
   with
@@ -179,7 +176,7 @@ let empty_or_domain_occupied_lemma ()
       introduce m == emptymap \/ (exists k. mem k m)
       with Right ()
 
-let empty_or_values_occupied_lemma ()
+private let empty_or_values_occupied_lemma ()
 : Lemma (empty_or_values_occupied_fact) =
   introduce forall (a: eqtype) (b: Type0) (m: map a b). m == emptymap \/ (exists v. (values m) v)
   with
@@ -197,7 +194,7 @@ let empty_or_values_occupied_lemma ()
         assert ((values m) v)
       )
 
-let empty_or_items_occupied_lemma ()
+private let empty_or_items_occupied_lemma ()
 : Lemma (empty_or_items_occupied_fact) =
   introduce forall (a: eqtype) (b: Type0) (m: map a b). m == emptymap \/ (exists item. (items m) item)
   with
@@ -215,12 +212,12 @@ let empty_or_items_occupied_lemma ()
         assert ((items m) (k, v))
       )
 
-let map_cardinality_matches_domain_lemma ()
+private let map_cardinality_matches_domain_lemma ()
 : Lemma (map_cardinality_matches_domain_fact) =
   introduce forall (a: eqtype) (b: Type0) (m: map a b). FSet.cardinality (domain m) = cardinality m
   with ()
 
-let values_contains_lemma ()
+private let values_contains_lemma ()
 : Lemma (values_contains_fact) =
   introduce forall (a: eqtype) (b: Type0) (m: map a b) (v: b).
     (values m) v <==>
@@ -228,7 +225,7 @@ let values_contains_lemma ()
           FSet.mem u (domain m) /\ (elements m) u == Some v)
   with ()
 
-let items_contains_lemma ()
+private let items_contains_lemma ()
 : Lemma (items_contains_fact) =
   introduce forall (a: eqtype) (b: Type0) (m: map a b) (item: a * b).
     (items m) item <==>
@@ -236,24 +233,24 @@ let items_contains_lemma ()
       /\ (elements m) (fst item) == Some (snd item)
   with ()
 
-let empty_domain_empty_lemma ()
+private let empty_domain_empty_lemma ()
 : Lemma (empty_domain_empty_fact) =
   introduce forall (a: eqtype) (b: Type0) (u: a). not (FSet.mem u (domain (emptymap #a #b)))
   with ()
 
-let glue_domain_lemma ()
+private let glue_domain_lemma ()
 : Lemma (glue_domain_fact) =
   introduce forall (a: eqtype) (b: Type0) (keys: FSet.set a) (f: setfun_t a b keys). domain (glue keys f) == keys
   with ()
 
-let glue_elements_lemma ()
+private let glue_elements_lemma ()
 : Lemma (glue_elements_fact) =
   introduce forall (a: eqtype) (b: Type0) (keys: FSet.set a) (f: setfun_t a b keys).
       domain (glue keys f) == keys
     /\ elements (glue keys f) == f
   with ()
 
-let insert_elements_lemma ()
+private let insert_elements_lemma ()
 : Lemma (insert_elements_fact) =
   introduce forall (a: eqtype) (b: Type0) (m: map a b) (key: a) (key': a) (value: b).
       (key' = key ==>   FSet.mem key' (domain (insert key value m))
@@ -262,49 +259,49 @@ let insert_elements_lemma ()
                      /\ (elements (insert key value m)) key' == (elements m) key')
   with ()
 
-let insert_member_cardinality_lemma ()
+private let insert_member_cardinality_lemma ()
 : Lemma (insert_member_cardinality_fact) =
   introduce forall (a: eqtype) (b: Type0) (m: map a b) (key: a) (value: b).
     FSet.mem key (domain m) ==> cardinality (insert key value m) = cardinality m
   with ()
 
-let insert_nonmember_cardinality_lemma ()
+private let insert_nonmember_cardinality_lemma ()
 : Lemma (insert_nonmember_cardinality_fact) =
   introduce forall (a: eqtype) (b: Type0) (m: map a b) (key: a) (value: b).
     not (FSet.mem key (domain m)) ==> cardinality (insert key value m) = cardinality m + 1
   with ()
 
-let merge_domain_is_union_lemma ()
+private let merge_domain_is_union_lemma ()
 : Lemma (merge_domain_is_union_fact) =
   introduce forall (a: eqtype) (b: Type0) (m1: map a b) (m2: map a b). domain (merge m1 m2) == FSet.union (domain m1) (domain m2)
   with ()
 
-let merge_element_lemma ()
+private let merge_element_lemma ()
 : Lemma (merge_element_fact) =
   introduce forall (a: eqtype) (b: Type0) (m1: map a b) (m2: map a b) (key: a). FSet.mem key (domain (merge m1 m2)) ==>
         (not (FSet.mem key (domain m2)) ==> FSet.mem key (domain m1) /\ (elements (merge m1 m2)) key == (elements m1) key)
       /\ (FSet.mem key (domain m2) ==> (elements (merge m1 m2)) key == (elements m2) key)
   with ()
 
-let subtract_domain_lemma ()
+private let subtract_domain_lemma ()
 : Lemma (subtract_domain_fact) =
   introduce forall (a: eqtype) (b: Type0) (m: map a b) (s: FSet.set a). domain (subtract m s) == FSet.difference (domain m) s
   with ()
 
-let subtract_element_lemma ()
+private let subtract_element_lemma ()
 : Lemma (subtract_element_fact) =
   introduce forall (a: eqtype) (b: Type0) (m: map a b) (s: FSet.set a) (key: a).
     FSet.mem key (domain (subtract m s)) ==> FSet.mem key (domain m) /\ (elements (subtract m s)) key == (elements m) key
   with ()
 
-let map_equal_lemma ()
+private let map_equal_lemma ()
 : Lemma (map_equal_fact) =
   introduce forall (a: eqtype) (b: Type0) (m1: map a b) (m2: map a b).
     equal m1 m2 <==>   (forall key. FSet.mem key (domain m1) = FSet.mem key (domain m2))
                    /\ (forall key. FSet.mem key (domain m1) ==> (elements m1) key == (elements m2) key)
   with ()
 
-let map_extensionality_lemma ()
+private let map_extensionality_lemma ()
 : Lemma (map_extensionality_fact) =
   introduce forall (a: eqtype) (b: Type0) (m1: map a b) (m2: map a b). equal m1 m2 ==> m1 == m2
   with (
@@ -315,7 +312,7 @@ let map_extensionality_lemma ()
     )
   )
 
-let disjoint_lemma ()
+private let disjoint_lemma ()
 : Lemma (disjoint_fact) =
   introduce forall (a: eqtype) (b: Type0) (m1: map a b) (m2: map a b).
     disjoint m1 m2 <==> (forall key.{:pattern FSet.mem key (domain m1) \/ FSet.mem key (domain m2)}
