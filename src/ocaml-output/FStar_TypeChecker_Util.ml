@@ -7786,34 +7786,16 @@ and (ty_nested_positive_in_inductive :
                    if Prims.op_Negation b
                    then
                      let uu___2 =
-                       let uu___3 =
-                         FStar_Syntax_Syntax.lid_as_fv ilid
-                           FStar_Syntax_Syntax.delta_constant
-                           FStar_Pervasives_Native.None in
-                       FStar_TypeChecker_Env.fv_has_attr env uu___3
-                         FStar_Parser_Const.assume_strictly_positive_attr_lid in
-                     (if uu___2
-                      then
-                        (debug_positivity env
-                           (fun uu___4 ->
-                              let uu___5 = FStar_Ident.string_of_lid ilid in
-                              FStar_Compiler_Util.format1
-                                "Checking nested positivity, special case decorated with `assume_strictly_positive` %s; return true"
-                                uu___5);
-                         true)
-                      else
-                        (let uu___4 =
-                           FStar_TypeChecker_Env.try_lookup_lid env ilid in
-                         match uu___4 with
-                         | FStar_Pervasives_Native.Some ((uu___5, t), uu___6)
-                             ->
-                             check_strictly_positive_argument env ty_lid t
-                               args unfolded
-                         | FStar_Pervasives_Native.None ->
-                             (debug_positivity env
-                                (fun uu___6 ->
-                                   "Checking nested positivity, no attrs or type, return false");
-                              false)))
+                       FStar_TypeChecker_Env.try_lookup_lid env ilid in
+                     (match uu___2 with
+                      | FStar_Pervasives_Native.Some ((uu___3, t), uu___4) ->
+                          check_strictly_positive_argument env ty_lid t args
+                            unfolded
+                      | FStar_Pervasives_Native.None ->
+                          (debug_positivity env
+                             (fun uu___4 ->
+                                "Checking nested positivity, no type, return false");
+                           false))
                    else
                      (let uu___3 = already_unfolded ilid args unfolded env in
                       if uu___3
