@@ -261,9 +261,8 @@ Then follow step 4 in [Instructions for all OSes](#instructions-for-all-oses) be
   $ opam install .
   ```
 
-  **Note:** This list of opam packages is longer than the list in the
-  [Testing a binary package](#testing-a-binary-package) section above,
-  because the additional packages here are necessary to compile F\*.
+  **Note:** On some Linux distributions, for example Gentoo, where `opambuild` comes pre-installed, you may need run 
+  `CHECK_IF_PREINSTALLED=false opam install .` instead to prevent build failures.
 
   **Note:** Some of these opam packages depend on binary packages that you need to install locally
   (eg, using your Linux package manager). So if the command above gives you errors like this:
