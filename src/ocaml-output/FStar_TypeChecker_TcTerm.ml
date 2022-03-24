@@ -263,12 +263,14 @@ let (check_expected_aqual_for_binder :
             then
               FStar_Errors.raise_error
                 (FStar_Errors.Fatal_InconsistentImplicitQualifier,
-                  "Inconsistent implicit qualifiers") pos
+                  "Inconsistent implicit qualifiers (expected implicit annotation on the argument)")
+                pos
             else expected_aq
         | (FStar_Pervasives_Native.Some aq1, FStar_Pervasives_Native.None) ->
             FStar_Errors.raise_error
               (FStar_Errors.Fatal_InconsistentImplicitQualifier,
-                "Inconsistent implicit qualifiers") pos
+                "Inconsistent implicit qualifiers (did not expect argument aquals)")
+              pos
         | (FStar_Pervasives_Native.Some aq1, FStar_Pervasives_Native.Some
            eaq) ->
             if
@@ -277,7 +279,7 @@ let (check_expected_aqual_for_binder :
             then
               FStar_Errors.raise_error
                 (FStar_Errors.Fatal_InconsistentImplicitQualifier,
-                  "Inconsistent implicit qualifiers") pos
+                  "Inconsistent implicit qualifiers (mismatch)") pos
             else expected_aq
 let (check_erasable_binder_attributes :
   FStar_TypeChecker_Env.env ->

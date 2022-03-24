@@ -41,7 +41,7 @@ noeq type t4 =
 open FStar.ST
 noeq
 type t =
-  | MkT : ref t -> t //relies in assume_strictly_positive
+  | MkT : ref t -> t
 
 (*
  * #868
@@ -118,3 +118,72 @@ let g : f_false (t_t20 f_false) =
      | C201 h -> h x
 
 let r1 : squash False = g (C201 g)
+
+(*
+ * If inductive type parameters are marked strictly_positive,
+ *   they should be checked properly
+ *)
+
+type t_t21 ([@@@ strictly_positive] a:Type0) : Type0 =
+  | C211 : a -> t_t21 a
+
+//binder a is not used in a strictly positive position
+[@@ expect_failure]
+noeq
+type t_t22 ([@@@ strictly_positive] a:Type0) : Type0 =
+  | C221 : (a -> int) -> t_t22 a
+
+//
+//binder b is not used in a strictly positive position
+//e.g. if a is instantiated with something like fun t -> (t -> int)
+//
+[@@ expect_failure]
+noeq
+type t_t22 (a:Type0 -> Type0) ([@@@ strictly_positive] b:Type0) =
+  | C221 : a b -> t_t22 a b
+
+//
+//but we can annotate a's binder, and then we are good
+//
+noeq
+type t_t22
+  (a:([@@@ strictly_positive] _:Type0 -> Type0))
+  ([@@@ strictly_positive] b:Type0) =
+  | C221 : a b -> t_t22 a b
+
+//
+//instantiating t_t22 with a argument that doesn't satisfy
+//  the strictly positive constraint fails
+
+[@@ expect_failure]
+type t_t23 (a:Type0) = t_t22 (fun t -> (t -> False)) a
+
+//
+//Though a promises to treat its first argument as strictly positive,
+//  the argument that we pass to it is negative for t_t24
+
+[@@ expect_failure]
+noeq
+type t_t24 (a:([@@@ strictly_positive] _:Type0 -> Type0)) =
+  | C241 : a (t_t24 a -> False) -> t_t24 a
+
+//
+//the classic free monad is not strictly positive
+//
+[@@ expect_failure]
+type free (f:Type -> Type) (a:Type) : Type =
+  | Pure   : a -> free f a
+  | Impure : f (free f a) -> free f a
+
+//
+//but we can use strictly positive annotation on the
+//  parameter of f, and instantiate it with functors that are positive in their argument
+//
+type free (f:([@@@ strictly_positive] _:Type -> Type)) (a:Type) : Type =
+  | Pure   : a -> free f a
+  | Impure : f (free f a) -> free f a
+
+type free_inst0 = free list int
+
+[@@ expect_failure]
+type free_inst1 = free (fun t -> t -> False) int
