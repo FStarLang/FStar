@@ -158,8 +158,32 @@ type t_t22
 [@@ expect_failure]
 type t_t23 (a:Type0) = t_t22 (fun t -> (t -> False)) a
 
+//
+//Though a promises to treat its first argument as strictly positive,
+//  the argument that we pass to it is negative for t_t24
 
 [@@ expect_failure]
 noeq
 type t_t24 (a:([@@@ strictly_positive] _:Type0 -> Type0)) =
   | C241 : a (t_t24 a -> False) -> t_t24 a
+
+//
+//the classic free monad is not strictly positive
+//
+[@@ expect_failure]
+type free (f:Type -> Type) (a:Type) : Type =
+  | Pure   : a -> free f a
+  | Impure : f (free f a) -> free f a
+
+//
+//but we can use strictly positive annotation on the
+//  parameter of f, and instantiate it with functors that are positive in their argument
+//
+type free (f:([@@@ strictly_positive] _:Type -> Type)) (a:Type) : Type =
+  | Pure   : a -> free f a
+  | Impure : f (free f a) -> free f a
+
+type free_inst0 = free list int
+
+[@@ expect_failure]
+type free_inst1 = free (fun t -> t -> False) int
