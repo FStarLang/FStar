@@ -3,6 +3,13 @@ open CQueue.LList
 
 #set-options "--ide_id_info_off"
 
+//Re-define squash, since this module explicitly
+//replies on proving equalities of the form `t_of v == squash p`
+//which are delicate in the presence of optimizations that
+//unfold `Prims.squash (p /\ q)`to _:unit{p /\ q}
+//See Issue #2496
+let squash (p:Type u#a) : Type0 = squash p
+
 (* BEGIN library *)
 
 let intro_vrewrite_no_norm (#opened:inames)
