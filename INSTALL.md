@@ -245,8 +245,8 @@ Then follow step 4 in [Instructions for all OSes](#instructions-for-all-oses) be
      type `opam switch list-available`
      to see what versions are available and then `opam switch <version-number>`.
 
-   - Afterwards you can also install the `depext` package,
-     to be able to install some binary dependencies below more easily.
+   - Afterwards you can also install the `depext` package if you are on OPAM version lower then 2.1,
+     to be able to install some binary dependencies below more easily. Version of OPAM after 2.1 has depext handling backed in.
      ```sh
      $ opam install depext
      ```
@@ -258,7 +258,7 @@ Then follow step 4 in [Instructions for all OSes](#instructions-for-all-oses) be
 4. F\* depends on a bunch of external OCaml packages which you should install using OPAM:
 
   ```sh
-  $ opam install ocamlbuild ocamlfind batteries stdint zarith yojson fileutils pprint menhir sedlex ppx_deriving ppx_deriving_yojson process ppxlib=0.22.0
+  $ opam install .
   ```
 
   **Note:** This list of opam packages is longer than the list in the
