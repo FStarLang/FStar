@@ -733,26 +733,53 @@ let check_inductive_well_typedness (env:env_t) (ses:list<sigelt>) (quals:list<qu
     else (List.map fst tcs), datas
   in
 
-  let sig_bndle = { sigel = Sig_bundle(tcs@datas, lids);
-                    sigquals = quals;
-                    sigrng = Env.get_range env0;
-                    sigmeta = default_sigmeta;
-                    sigattrs = List.collect (fun s -> s.sigattrs) ses;
-                    sigopts = None; } in
-
   (* In any of the tycons had their typed declared using `val`,
      check that the declared and inferred types are compatible *)
-  tcs |> List.iter (fun se ->
+
+  (* Also copy the binder attributes from val type parameters
+     to tycon type parameters *)
+  
+  let tcs = tcs |> List.map (fun se ->
     match se.sigel with
-    | Sig_inductive_typ(l, univs, binders, typ, _, _) ->
+    | Sig_inductive_typ(l, univs, binders, typ, ts, ds) ->
       let fail expected inferred =
-          raise_error (Errors.Fatal_UnexpectedInductivetype, (BU.format2 "Expected an inductive with type %s; got %s"
-                                            (Print.tscheme_to_string expected)
-                                            (Print.tscheme_to_string inferred)))
-                       se.sigrng
+          raise_error (Errors.Fatal_UnexpectedInductivetype,
+                       (BU.format2 "Expected an inductive with type %s; got %s"
+                                   (Print.tscheme_to_string expected)
+                                   (Print.tscheme_to_string inferred)))
+                      se.sigrng
+      in
+      //
+      //binders are the binders in Sig_inductive
+      //expected is the val type
+      //this function then copies attributes from val binders to Sig_inductive binders
+      //  and returns new binders
+      //helps later to check strict positivity
+      //
+      let copy_binder_attrs_from_val binders expected =
+        // 
+        // AR: A note on opening:
+        //     get_n_binders opens some of the expected binders
+        //     we end up throwing them, we are only interested in attrs
+        //     binders remain as they are, we only change attributes there
+        //
+        let expected_attrs =
+          N.get_n_binders env (List.length binders) expected
+          |> fst
+          |> List.map (fun {binder_attrs=attrs} -> attrs) in
+        if List.length expected_attrs <> List.length binders
+        then raise_error
+               (Errors.Fatal_UnexpectedInductivetype,
+                (BU.format2 "Could not get %s type parameters from val type %s"
+                            (binders |> List.length |> string_of_int)
+                            (Print.term_to_string expected)))
+               se.sigrng
+        else List.map2 (fun ex_attrs b ->
+               {b with binder_attrs = b.binder_attrs@ex_attrs}
+             ) expected_attrs binders
       in
       begin match Env.try_lookup_val_decl env0 l with
-            | None -> ()
+            | None -> se
             | Some (expected_typ, _) ->
               let inferred_typ =
                   let body =
@@ -764,12 +791,26 @@ let check_inductive_well_typedness (env:env_t) (ses:list<sigelt>) (quals:list<qu
               if List.length univs = List.length (fst expected_typ)
               then let _, inferred = Subst.open_univ_vars univs (snd inferred_typ) in
                    let _, expected = Subst.open_univ_vars univs (snd expected_typ) in
+                   //
+                   //  AR: Shouldn't we push opened universes to env0?
+                   //
                    if Rel.teq_nosmt_force env0 inferred expected
-                   then ()
+                   then begin
+                     let binders = copy_binder_attrs_from_val binders expected in
+                     {se with sigel=Sig_inductive_typ (l, univs, binders, typ, ts, ds)}
+                   end
                    else fail expected_typ inferred_typ
               else fail expected_typ inferred_typ
       end
-    | _ -> ());
+    | _ -> se) in
+
+  let sig_bndle = { sigel = Sig_bundle(tcs@datas, lids);
+                    sigquals = quals;
+                    sigrng = Env.get_range env0;
+                    sigmeta = default_sigmeta;
+                    sigattrs = List.collect (fun s -> s.sigattrs) ses;
+                    sigopts = None; } in
+
   sig_bndle, tcs, datas
 
 
@@ -837,7 +878,7 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
             let no_decl = false in
             let only_decl =
               early_prims_inductive ||
-              Options.dont_gen_projectors (string_of_lid (Env.current_module env))
+              U.has_attribute attrs C.no_auto_projectors_attr
             in
             let quals =
                 (* KM : What about Logic ? should it still be there even with an implementation *)
@@ -926,18 +967,15 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
       fields |> List.mapi (fun i ({binder_bv=x}) ->
           let p = S.range_of_bv x in
           let field_name = U.mk_field_projector_name lid x i in
-          let t =
-            let result_comp =
-              let t = Subst.subst subst x.sort in
-              if erasable
-              then S.mk_GTotal t
-              else S.mk_Total t
-            in
-            SS.close_univ_vars uvs <| U.arrow binders result_comp
-          in
+          let result_comp = 
+            let t = Subst.subst subst x.sort in
+            if erasable
+            then S.mk_GTotal t
+            else S.mk_Total t in
+          let t = SS.close_univ_vars uvs <| U.arrow binders result_comp in
           let only_decl =
             early_prims_inductive ||
-            Options.dont_gen_projectors (string_of_lid (Env.current_module env))
+            U.has_attribute attrs C.no_auto_projectors_attr
           in
           (* KM : Why would we want to prevent a declaration only in this particular case ? *)
           (* TODO : If we don't want the declaration then we need to propagate the right types in the patterns *)
@@ -977,7 +1015,17 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
                   else pos (Pat_wild (S.gen_bv (string_of_id x.ppname) None tun)), b)
               in
               let pat = pos (S.Pat_cons (S.lid_as_fv lid delta_constant (Some fvq), arg_pats)), None, S.bv_to_name projection in
-              let body = mk (Tm_match(arg_exp, None, [U.branch pat], None)) p in
+              let body =
+                let return_bv = S.gen_bv "proj_ret" (Some p) S.tun in
+                let result_typ = result_comp
+                  |> U.comp_result
+                  |> SS.subst [NT (arg_binder.binder_bv, S.bv_to_name return_bv)]
+                  |> SS.close [S.mk_binder return_bv] in
+                let return_binder = List.hd (SS.close_binders [S.mk_binder return_bv]) in
+                let returns_annotation =
+                  let use_eq = true in
+                  Some (return_binder, (Inl result_typ, None, use_eq)) in
+                mk (Tm_match(arg_exp, returns_annotation, [U.branch pat], None)) p in
               let imp = U.abs binders body None in
               let dd = Delta_equational_at_level 1 in
               let lbtyp = if no_decl then t else tun in

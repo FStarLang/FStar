@@ -21,3 +21,18 @@ let test2 (r:ref int) : St int =
   | 0 -> 1
   | _ -> n+2
 
+let test3 (n:nat) =
+  match n returns nat with
+  | 0 -> 0
+  | _ -> 1
+
+[@@ expect_failure]
+let test4 (n:nat) =
+  match n returns$ nat with
+  | 0 -> 0
+  | _ -> 1
+
+let test4 (n:nat) =
+  match n returns$ int with
+  | 0 -> 0
+  | _ -> 1

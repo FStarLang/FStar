@@ -16,7 +16,7 @@
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "d2006d5f0bb405a8385231b199e9e33f"
+      "65c865842bfa73a7dc11bbee22b19a4d"
     ],
     [
       "Enum.succ",
@@ -34,64 +34,7 @@
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "c8483cc7b1ed0a1245ee7cb1768c1910"
-    ],
-    [
-      "Enum.__proj__Mkenum__item__toInt",
-      1,
-      2,
-      1,
-      [
-        "@query", "proj_equation_Enum.Mkenum_max",
-        "projection_inverse_Enum.Mkenum_max"
-      ],
-      0,
-      "d6fbe5e2993b61f116133d85d6ef04c6"
-    ],
-    [
-      "Enum.__proj__Mkenum__item__fromInt",
-      1,
-      2,
-      1,
-      [
-        "@query", "proj_equation_Enum.Mkenum_max",
-        "projection_inverse_Enum.Mkenum_max"
-      ],
-      0,
-      "4f059086d2a3c679ee3ab994ac54fa32"
-    ],
-    [
-      "Enum.__proj__Mkenum__item__inv1",
-      1,
-      2,
-      1,
-      [
-        "@query", "proj_equation_Enum.Mkenum_fromInt",
-        "proj_equation_Enum.Mkenum_toInt",
-        "projection_inverse_Enum.Mkenum_fromInt",
-        "projection_inverse_Enum.Mkenum_toInt",
-        "token_correspondence_Enum.__proj__Mkenum__item__fromInt",
-        "token_correspondence_Enum.__proj__Mkenum__item__toInt"
-      ],
-      0,
-      "8fc3a9ccd9c89ce6869803b0bb338fd7"
-    ],
-    [
-      "Enum.__proj__Mkenum__item__inv2",
-      1,
-      2,
-      1,
-      [
-        "@query", "proj_equation_Enum.Mkenum_fromInt",
-        "proj_equation_Enum.Mkenum_max", "proj_equation_Enum.Mkenum_toInt",
-        "projection_inverse_Enum.Mkenum_fromInt",
-        "projection_inverse_Enum.Mkenum_max",
-        "projection_inverse_Enum.Mkenum_toInt",
-        "token_correspondence_Enum.__proj__Mkenum__item__fromInt",
-        "token_correspondence_Enum.__proj__Mkenum__item__toInt"
-      ],
-      0,
-      "d5d49027324d0f0878719866fa035a46"
+      "c5da29a2d5c9f74f4ac02858329db57e"
     ],
     [
       "Enum.enum_nat",
@@ -105,7 +48,7 @@
         "projection_inverse_FStar.Pervasives.Native.None_a"
       ],
       0,
-      "b4b3a10e6cbbb43936f19788694297ae"
+      "068c798307b2b503d24c42ee2265b1ac"
     ],
     [
       "Enum.enum_opt",
@@ -140,7 +83,7 @@
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "b9409be810f39848c587a84a2c4abfb1"
+      "c5a2768990aebb0e48e69eecdab467f0"
     ]
   ]
 ]

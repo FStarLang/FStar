@@ -193,7 +193,7 @@ let rec compare_term (s t : term) : Tot order (decreases s) =
     | Tv_Match _ _ _, Tv_Match _ _ _ ->
         Eq // TODO
 
-    | Tv_AscribedT e1 t1 tac1, Tv_AscribedT e2 t2 tac2 ->
+    | Tv_AscribedT e1 t1 tac1 _, Tv_AscribedT e2 t2 tac2 _ ->
         lex (compare_term e1 e2) (fun () ->
         lex (compare_term t1 t2) (fun () ->
         match tac1, tac2 with
@@ -202,7 +202,7 @@ let rec compare_term (s t : term) : Tot order (decreases s) =
         | _, None -> Gt
         | Some e1, Some e2 -> compare_term e1 e2))
 
-    | Tv_AscribedC e1 c1 tac1, Tv_AscribedC e2 c2 tac2 ->
+    | Tv_AscribedC e1 c1 tac1 _, Tv_AscribedC e2 c2 tac2 _ ->
         lex (compare_term e1 e2) (fun () ->
         lex (compare_comp c1 c2) (fun () ->
         match tac1, tac2 with
@@ -226,8 +226,8 @@ let rec compare_term (s t : term) : Tot order (decreases s) =
     | Tv_Const _, _    -> Lt   | _, Tv_Const _    -> Gt
     | Tv_Uvar _ _, _   -> Lt   | _, Tv_Uvar _ _   -> Gt
     | Tv_Match _ _ _, _  -> Lt | _, Tv_Match _ _ _  -> Gt
-    | Tv_AscribedT _ _ _, _  -> Lt | _, Tv_AscribedT _ _ _  -> Gt
-    | Tv_AscribedC _ _ _, _  -> Lt | _, Tv_AscribedC _ _ _  -> Gt
+    | Tv_AscribedT _ _ _ _, _  -> Lt | _, Tv_AscribedT _ _ _ _ -> Gt
+    | Tv_AscribedC _ _ _ _, _  -> Lt | _, Tv_AscribedC _ _ _ _ -> Gt
     | Tv_Unknown, _    -> Lt   | _, Tv_Unknown    -> Gt
 and compare_term_list (l1 l2:list term) : Tot order (decreases l1) =
   match l1, l2 with
@@ -330,8 +330,8 @@ let rec head (t : term) : term =
     | Tv_Abs _ t
     | Tv_Refine _ t
     | Tv_App t _
-    | Tv_AscribedT t _ _
-    | Tv_AscribedC t _ _ -> head t
+    | Tv_AscribedT t _ _ _
+    | Tv_AscribedC t _ _ _ -> head t
 
     | Tv_Unknown
     | Tv_Uvar _ _

@@ -349,7 +349,6 @@ let fail_attr      = psconst "expect_failure"
 let fail_lax_attr  = psconst "expect_lax_failure"
 let tcdecltime_attr = psconst "tcdecltime"
 let noextract_to_attr = psconst "noextract_to"
-let assume_strictly_positive_attr_lid = psconst "assume_strictly_positive"
 let unifier_hint_injective_lid = psconst "unifier_hint_injective"
 let normalize_for_extraction_lid = psconst "normalize_for_extraction"
 let postprocess_with = p2l ["FStar"; "Tactics"; "Effect"; "postprocess_with"]
@@ -361,6 +360,7 @@ let allow_informative_binders_attr = psconst "allow_informative_binders"
 let remove_unused_type_parameters_lid = psconst "remove_unused_type_parameters"
 let ite_soundness_by_attr = psconst "ite_soundness_by"
 let binder_strictly_positive_attr = psconst "strictly_positive"
+let no_auto_projectors_attr = psconst "no_auto_projectors"
 
 
 //the type of well-founded relations, used for decreases clauses with relations
@@ -402,6 +402,7 @@ let mk_tuple_lid n r =
   set_lid_range (psnconst t) r
 
 let lid_tuple2   = mk_tuple_lid 2 dummyRange
+let lid_tuple3   = mk_tuple_lid 3 dummyRange
 
 let is_tuple_constructor_string (s:string) :bool =
   U.starts_with s "FStar.Pervasives.Native.tuple"
@@ -414,6 +415,7 @@ let mk_tuple_data_lid n r =
   set_lid_range (psnconst t) r
 
 let lid_Mktuple2 = mk_tuple_data_lid 2 dummyRange
+let lid_Mktuple3 = mk_tuple_data_lid 3 dummyRange
 
 let is_tuple_datacon_string (s:string) :bool =
   U.starts_with s "FStar.Pervasives.Native.Mktuple"

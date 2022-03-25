@@ -1047,6 +1047,90 @@ let e_tuple2 : 'a 'b . 'a embedding -> 'b embedding -> ('a * 'b) embedding =
         lid_as_typ FStar_Parser_Const.lid_tuple2
           [FStar_Syntax_Syntax.U_zero; FStar_Syntax_Syntax.U_zero] uu___1 in
       mk_emb em un uu___ etyp
+let e_tuple3 :
+  'a 'b 'c .
+    'a embedding -> 'b embedding -> 'c embedding -> ('a * 'b * 'c) embedding
+  =
+  fun ea ->
+    fun eb ->
+      fun ec ->
+        let etyp =
+          let uu___ =
+            let uu___1 =
+              FStar_Compiler_Effect.op_Bar_Greater
+                FStar_Parser_Const.lid_tuple3 FStar_Ident.string_of_lid in
+            (uu___1, [ea.emb_typ; eb.emb_typ; ec.emb_typ]) in
+          FStar_Syntax_Syntax.ET_app uu___ in
+        let em cb uu___ =
+          match uu___ with
+          | (x1, x2, x3) ->
+              lazy_embed etyp (x1, x2, x3)
+                (fun uu___1 ->
+                   let uu___2 =
+                     let uu___3 =
+                       let uu___4 = embed ec cb x3 in as_arg uu___4 in
+                     let uu___4 =
+                       let uu___5 =
+                         let uu___6 = embed eb cb x2 in as_arg uu___6 in
+                       let uu___6 =
+                         let uu___7 =
+                           let uu___8 = embed ea cb x1 in as_arg uu___8 in
+                         let uu___8 =
+                           let uu___9 =
+                             let uu___10 = type_of ec in as_iarg uu___10 in
+                           let uu___10 =
+                             let uu___11 =
+                               let uu___12 = type_of eb in as_iarg uu___12 in
+                             let uu___12 =
+                               let uu___13 =
+                                 let uu___14 = type_of ea in as_iarg uu___14 in
+                               [uu___13] in
+                             uu___11 :: uu___12 in
+                           uu___9 :: uu___10 in
+                         uu___7 :: uu___8 in
+                       uu___5 :: uu___6 in
+                     uu___3 :: uu___4 in
+                   lid_as_constr FStar_Parser_Const.lid_Mktuple3
+                     [FStar_Syntax_Syntax.U_zero;
+                     FStar_Syntax_Syntax.U_zero;
+                     FStar_Syntax_Syntax.U_zero] uu___2) in
+        let un cb trm =
+          lazy_unembed cb etyp trm
+            (fun trm1 ->
+               match trm1.nbe_t with
+               | Construct
+                   (fvar, us,
+                    (c1, uu___)::(b1, uu___1)::(a1, uu___2)::uu___3::uu___4::[])
+                   when
+                   FStar_Syntax_Syntax.fv_eq_lid fvar
+                     FStar_Parser_Const.lid_Mktuple3
+                   ->
+                   let uu___5 = unembed ea cb a1 in
+                   FStar_Compiler_Util.bind_opt uu___5
+                     (fun a2 ->
+                        let uu___6 = unembed eb cb b1 in
+                        FStar_Compiler_Util.bind_opt uu___6
+                          (fun b2 ->
+                             let uu___7 = unembed ec cb c1 in
+                             FStar_Compiler_Util.bind_opt uu___7
+                               (fun c2 ->
+                                  FStar_Pervasives_Native.Some (a2, b2, c2))))
+               | uu___ -> FStar_Pervasives_Native.None) in
+        let uu___ =
+          let uu___1 =
+            let uu___2 = let uu___3 = type_of ec in as_arg uu___3 in
+            let uu___3 =
+              let uu___4 = let uu___5 = type_of eb in as_arg uu___5 in
+              let uu___5 =
+                let uu___6 = let uu___7 = type_of ea in as_arg uu___7 in
+                [uu___6] in
+              uu___4 :: uu___5 in
+            uu___2 :: uu___3 in
+          lid_as_typ FStar_Parser_Const.lid_tuple3
+            [FStar_Syntax_Syntax.U_zero;
+            FStar_Syntax_Syntax.U_zero;
+            FStar_Syntax_Syntax.U_zero] uu___1 in
+        mk_emb em un uu___ etyp
 let e_either :
   'a 'b .
     'a embedding ->

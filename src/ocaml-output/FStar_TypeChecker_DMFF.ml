@@ -609,7 +609,7 @@ let (gen_wps_for_free :
                         FStar_Syntax_Util.mk_app c_lift21 uu___6 in
                       FStar_Syntax_Util.ascribe uu___5
                         ((FStar_Pervasives.Inr result_comp),
-                          FStar_Pervasives_Native.None) in
+                          FStar_Pervasives_Native.None, false) in
                     FStar_Syntax_Util.abs uu___3 uu___4
                       (FStar_Pervasives_Native.Some
                          (FStar_Syntax_Util.residual_comp_of_comp result_comp)) in
@@ -1688,7 +1688,8 @@ and (star_type' :
             FStar_Syntax_Syntax.Tm_meta uu___1 in
           mk uu___
       | FStar_Syntax_Syntax.Tm_ascribed
-          (e, (FStar_Pervasives.Inl t2, FStar_Pervasives_Native.None),
+          (e,
+           (FStar_Pervasives.Inl t2, FStar_Pervasives_Native.None, use_eq),
            something)
           ->
           let uu___ =
@@ -1698,12 +1699,12 @@ and (star_type' :
                 let uu___4 =
                   let uu___5 = star_type' env1 t2 in
                   FStar_Pervasives.Inl uu___5 in
-                (uu___4, FStar_Pervasives_Native.None) in
+                (uu___4, FStar_Pervasives_Native.None, use_eq) in
               (uu___2, uu___3, something) in
             FStar_Syntax_Syntax.Tm_ascribed uu___1 in
           mk uu___
       | FStar_Syntax_Syntax.Tm_ascribed
-          (e, (FStar_Pervasives.Inr c, FStar_Pervasives_Native.None),
+          (e, (FStar_Pervasives.Inr c, FStar_Pervasives_Native.None, use_eq),
            something)
           ->
           let uu___ =
@@ -1714,20 +1715,22 @@ and (star_type' :
                   let uu___5 =
                     star_type' env1 (FStar_Syntax_Util.comp_result c) in
                   FStar_Pervasives.Inl uu___5 in
-                (uu___4, FStar_Pervasives_Native.None) in
+                (uu___4, FStar_Pervasives_Native.None, use_eq) in
               (uu___2, uu___3, something) in
             FStar_Syntax_Syntax.Tm_ascribed uu___1 in
           mk uu___
       | FStar_Syntax_Syntax.Tm_ascribed
-          (uu___, (uu___1, FStar_Pervasives_Native.Some uu___2), uu___3) ->
-          let uu___4 =
-            let uu___5 =
-              let uu___6 = FStar_Syntax_Print.term_to_string t1 in
+          (uu___, (uu___1, FStar_Pervasives_Native.Some uu___2, uu___3),
+           uu___4)
+          ->
+          let uu___5 =
+            let uu___6 =
+              let uu___7 = FStar_Syntax_Print.term_to_string t1 in
               FStar_Compiler_Util.format1
                 "Ascriptions with tactics are outside of the definition language: %s"
-                uu___6 in
-            (FStar_Errors.Fatal_TermOutsideOfDefLanguage, uu___5) in
-          FStar_Errors.raise_err uu___4
+                uu___7 in
+            (FStar_Errors.Fatal_TermOutsideOfDefLanguage, uu___6) in
+          FStar_Errors.raise_err uu___5
       | FStar_Syntax_Syntax.Tm_refine uu___ ->
           let uu___1 =
             let uu___2 =
@@ -2311,7 +2314,7 @@ and (infer :
                       let uu___4 =
                         FStar_Syntax_Util.ascribe u_body
                           ((FStar_Pervasives.Inr comp1),
-                            FStar_Pervasives_Native.None) in
+                            FStar_Pervasives_Native.None, false) in
                       (uu___4,
                         (FStar_Pervasives_Native.Some
                            (FStar_Syntax_Util.residual_comp_of_comp comp1))) in
@@ -2872,7 +2875,7 @@ and (mk_match :
                               (FStar_Syntax_Syntax.Tm_ascribed
                                  (s_e,
                                    ((FStar_Pervasives.Inl t1_star),
-                                     FStar_Pervasives_Native.None),
+                                     FStar_Pervasives_Native.None, false),
                                    FStar_Pervasives_Native.None)) in
                           let uu___5 =
                             mk
@@ -2899,7 +2902,7 @@ and (mk_match :
                                           FStar_Pervasives_Native.None)) in
                                  (uu___8,
                                    ((FStar_Pervasives.Inl t1_star),
-                                     FStar_Pervasives_Native.None),
+                                     FStar_Pervasives_Native.None, false),
                                    FStar_Pervasives_Native.None) in
                                FStar_Syntax_Syntax.Tm_ascribed uu___7 in
                              mk uu___6 in

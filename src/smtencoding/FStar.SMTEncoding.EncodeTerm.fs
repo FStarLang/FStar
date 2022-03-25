@@ -600,7 +600,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
       | Tm_bvar x ->
         failwith (BU.format1 "Impossible: locally nameless; got %s" (Print.bv_to_string x))
 
-      | Tm_ascribed(t, (k,_), _) ->
+      | Tm_ascribed(t, (k,_,_), _) ->
         if (match k with Inl t -> U.is_unit t | _ -> false)
         then Term.mk_Term_unit, []
         else encode_term t env
@@ -910,9 +910,6 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
 
       | Tm_app _ ->
         let head, args_e = U.head_and_args t0 in
-        (* if Env.debug env.tcenv <| Options.Other "SMTEncoding" *)
-        (* then BU.print2 "Encoding app head=%s, n_args=%s\n" (Print.term_to_string head) *)
-        (*                                                    (string_of_int <| List.length args_e); *)
         let head, args_e =
           if head_redex env head
           then match maybe_whnf env t0 with
@@ -927,6 +924,16 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
 
         | _ when is_BitVector_primitive head args_e ->
             encode_BitVector_term env head args_e
+
+        | Tm_fvar fv, [(arg, _)]
+        | Tm_uinst({n=Tm_fvar fv}, _), [(arg, _)]
+            when
+             (S.fv_eq_lid fv Const.squash_lid
+              || S.fv_eq_lid fv Const.auto_squash_lid)
+              && Option.isSome (U.destruct_typ_as_formula arg) ->
+          let dummy = S.new_bv None t_unit in
+          let t = U.refine dummy arg in (* so that `squash f`, when f is a formula, benefits from shallow embedding *)
+          encode_term t env
 
         | Tm_fvar fv, _
         | Tm_uinst({n=Tm_fvar fv}, _), _
@@ -1046,8 +1053,8 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                 | Tm_name x -> Some x.sort
                 | Tm_uinst({n=Tm_fvar fv}, _)
                 | Tm_fvar fv -> Some (Env.lookup_lid env.tcenv fv.fv_name.v |> fst |> snd)
-                | Tm_ascribed(_, (Inl t, _), _) -> Some t
-                | Tm_ascribed(_, (Inr c, _), _) -> Some (U.comp_result c)
+                | Tm_ascribed(_, (Inl t, _, _), _) -> Some t
+                | Tm_ascribed(_, (Inr c, _, _), _) -> Some (U.comp_result c)
                 | _ -> None
             in
 
@@ -1232,7 +1239,9 @@ and encode_let
     -> term * decls_t
     =
     fun x t1 e1 e2 env encode_body ->
-        let ee1, decls1 = encode_term (U.ascribe e1 (Inl t1, None)) env in
+        //setting the use_eq ascription flag to false,
+        //  doesn't matter since the flag is irrelevant outside the typechecker
+        let ee1, decls1 = encode_term (U.ascribe e1 (Inl t1, None, false)) env in
         let xs, e2 = SS.open_term [S.mk_binder x] e2 in
         let x = (List.hd xs).binder_bv in
         let env' = push_term_var env x ee1 in

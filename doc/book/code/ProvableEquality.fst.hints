@@ -12,7 +12,7 @@
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "92e74788c59333ae8cc114317d55a0c8"
+      "7b25647baabb119eaf8bda12512fc050"
     ],
     [
       "ProvableEquality.vec",
@@ -27,7 +27,7 @@
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "bb3d907c9f21df058779ef74fd8342a5"
+      "52d833b09eed9ff813033b939e808fcf"
     ],
     [
       "ProvableEquality.__proj__Cons__item__n",
@@ -39,7 +39,7 @@
         "refinement_interpretation_Tm_refine_a2365be9b7f040248516d13a6266b140"
       ],
       0,
-      "561a345287af5c65d931101b531e6e8b"
+      "5aeb954e42d4572e3634e0f1bcb36d7e"
     ],
     [
       "ProvableEquality.__proj__Cons__item__hd",
@@ -51,7 +51,7 @@
         "refinement_interpretation_Tm_refine_a2365be9b7f040248516d13a6266b140"
       ],
       0,
-      "22b55334addb9b74d4bb895baaf23024"
+      "7e78e2c7a5796ed1d8ccc158372a1a77"
     ],
     [
       "ProvableEquality.__proj__Cons__item__tl",
@@ -59,13 +59,11 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query",
-        "proj_equation_ProvableEquality.Cons_n",
-        "projection_inverse_ProvableEquality.Cons_n",
+        "@MaxIFuel_assumption", "@query", "data_elim_ProvableEquality.Cons",
         "refinement_interpretation_Tm_refine_a2365be9b7f040248516d13a6266b140"
       ],
       0,
-      "baf82762c376e49040efbe10585b555b"
+      "e2f7ceea255fce8e8b79efce2778f419"
     ],
     [
       "ProvableEquality.factorial",
@@ -82,7 +80,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "c6fdb1ca74f5dc5359389f78ce8efa1f"
+      "bb0d815ba0e032aaa7587637301a015a"
     ],
     [
       "ProvableEquality.equals",
@@ -91,7 +89,7 @@
       1,
       [ "@query" ],
       0,
-      "c3b4ed1da0c84f648e1fcdab31192d40"
+      "6a987b96e2f6eb2f8e570013d274f3a9"
     ],
     [
       "ProvableEquality.symmetry",
@@ -103,7 +101,7 @@
         "fuel_guarded_inversion_ProvableEquality.equals"
       ],
       0,
-      "cd7cec987dcba90f0e7811a96b066db0"
+      "9c50a65ed69e2350234b048b03896003"
     ],
     [
       "ProvableEquality.transitivity",
@@ -115,7 +113,7 @@
         "fuel_guarded_inversion_ProvableEquality.equals"
       ],
       0,
-      "6b193bddbcfb664474cdfc3eaf4345f9"
+      "6879fd3256ce12046f3a9114661fb11a"
     ],
     [
       "ProvableEquality.uip_refl",
@@ -127,7 +125,7 @@
         "fuel_guarded_inversion_ProvableEquality.equals"
       ],
       0,
-      "143fc1e4d4362387d80d237268a993ef"
+      "2bf0140db17585ce54efeacc7df69010"
     ],
     [
       "ProvableEquality.uip_refl_explicit",
@@ -139,7 +137,7 @@
         "fuel_guarded_inversion_ProvableEquality.equals"
       ],
       0,
-      "c6e4dc0f6464844269915ee70f876431"
+      "4ff2e1d7241998597b5816f219ba71bc"
     ],
     [
       "ProvableEquality.uip",
@@ -151,7 +149,7 @@
         "fuel_guarded_inversion_ProvableEquality.equals"
       ],
       0,
-      "a57cdc0b6364ca673e2b2a491bd88f6d"
+      "8c7d9678d78c36dca24ab25f225d65ce"
     ],
     [
       "ProvableEquality.pconv_vec_z",
@@ -163,7 +161,7 @@
         "refinement_interpretation_Tm_refine_0cc3b8bc4390a8152398abb544530a43"
       ],
       0,
-      "beb7d6f4570eb20e858adc406e53e99f"
+      "0f1a68d208664bf16f1fa5ad7efbd39d"
     ],
     [
       "ProvableEquality.pconv_vec_nm",
@@ -175,7 +173,7 @@
         "refinement_interpretation_Tm_refine_0dee8cb03258a67c2f7ec66427696212"
       ],
       0,
-      "a04ba2df5ed34fbc93c07b530c49c34d"
+      "9cc84bd82e100de24d16ef4e4ed46f1d"
     ],
     [
       "ProvableEquality.pconv_int",
@@ -187,7 +185,7 @@
         "refinement_interpretation_Tm_refine_1f5ab8b59c8e7f172e4f39cbe2899a5d"
       ],
       0,
-      "b50242408030cde0c67387722e0aaa3d"
+      "049175d76c0cc1abc22231f46401cc7b"
     ],
     [
       "ProvableEquality.pconv_ab",
@@ -199,7 +197,7 @@
         "refinement_interpretation_Tm_refine_0dee8cb03258a67c2f7ec66427696212"
       ],
       0,
-      "1acce54185536722ae516fc31e6595b8"
+      "d77061aa5ad21e68e2f8d926cc86fd9b"
     ],
     [
       "ProvableEquality.pconv_der",
@@ -213,7 +211,7 @@
         "refinement_interpretation_Tm_refine_0da555bbe11d10924e139a6451fdb45d"
       ],
       0,
-      "64609bd8c95048a3211e8f079ec861fe"
+      "93da62c96065cedd80f08cc381918ddf"
     ],
     [
       "ProvableEquality.equals_lbz_eq",
@@ -225,7 +223,7 @@
         "fuel_guarded_inversion_ProvableEquality.equals"
       ],
       0,
-      "e15cfd37c4da5ddd4f27c3bfa717248f"
+      "63f32fc3dc01d9924a112a8791174217"
     ],
     [
       "ProvableEquality.full_funext_false",
@@ -245,7 +243,7 @@
         "refinement_interpretation_Tm_refine_afd51579b90d50ea23e03b743a1fa001"
       ],
       0,
-      "8b990604d39b9fc67242219d0f0bf5ce"
+      "7b49fbca9861d60ea7d80de4e6fd58fe"
     ],
     [
       "ProvableEquality.eta_equiv_false",
@@ -254,8 +252,7 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_ae567c2fb75be05905677af440075565", "eq2-interp",
-        "equation_Prims.eq2", "equation_Prims.squash",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "equation_ProvableEquality.f", "equation_ProvableEquality.g",
         "equation_ProvableEquality.pos",
         "function_token_typing_Prims.__cache_version_number__",
@@ -263,11 +260,11 @@
         "function_token_typing_ProvableEquality.g",
         "primitive_Prims.op_Equality", "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
-        "refinement_interpretation_Tm_refine_afd51579b90d50ea23e03b743a1fa001"
+        "refinement_interpretation_Tm_refine_afd51579b90d50ea23e03b743a1fa001",
+        "refinement_interpretation_Tm_refine_e4c025b9e2bb23444824553ab6c4e094"
       ],
       0,
-      "b39a5a27ddaf0bd4531692c9053b4c9c"
+      "96124249bd4c2e44e36605afaf778b8f"
     ],
     [
       "ProvableEquality.dec_equals",
@@ -280,7 +277,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "974f612133301d99212d483771873fef"
+      "fbc75aea6e9cefe495dac1da0804bfaa"
     ],
     [
       "ProvableEquality.equals_dec",
@@ -292,7 +289,7 @@
         "fuel_guarded_inversion_ProvableEquality.equals"
       ],
       0,
-      "b5bf4daf12e3d51028caa5efbc0f44a1"
+      "b4ec7227d89fba18ac931461a2aec116"
     ],
     [
       "ProvableEquality.__proj__Node__item__hd",
@@ -304,7 +301,7 @@
         "refinement_interpretation_Tm_refine_78a78ab6b86c5d95d4a09252057f5f84"
       ],
       0,
-      "b0c3411f8ec590b6a0750b05d1dd80c3"
+      "c5be6a23a58ad2a8a988252dc8905185"
     ],
     [
       "ProvableEquality.__proj__Node__item__tl",
@@ -316,7 +313,7 @@
         "refinement_interpretation_Tm_refine_78a78ab6b86c5d95d4a09252057f5f84"
       ],
       0,
-      "d50df98c83317ef4e617878f2c78a050"
+      "58c70ead59b73ce62750cdcd6ee40671"
     ],
     [
       "ProvableEquality.uu___183",
@@ -333,7 +330,7 @@
         "token_correspondence_Prims.list@tok"
       ],
       0,
-      "bee94a4cb99dc65f75f6e4b78e78a4f3"
+      "7d409a603df3b9223c03d393b9d0721a"
     ]
   ]
 ]
