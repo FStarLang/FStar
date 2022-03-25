@@ -16,8 +16,6 @@ else
   RUNTIME = mono
 endif
 
-NUGET=$(RUNTIME) .nuget/NuGet.exe
-
 CONFIGURATION?=Release
 
 MSBUILD := $(MSBUILD) /verbosity:minimal /p:Configuration=$(CONFIGURATION)
@@ -29,9 +27,7 @@ all: install-packages
 	$(MSBUILD) UlibFS.sln
 
 install-packages:
-	mkdir -p packages
-	$(NUGET) restore UlibFS.sln
-	find packages -name '*.exe' -exec chmod +x '{}' ';'
+	$(MSBUILD) /t:Restore UlibFS.sln
 
 clean:
 	$(MSBUILD) /t:clean UlibFS.sln

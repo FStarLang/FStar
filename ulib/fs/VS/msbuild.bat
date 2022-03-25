@@ -22,7 +22,7 @@ set VSCMD_START_DIR=%CD%
 rem TODO: change the platform as needed
 call "%InstallDir%\Common7\Tools\VsDevCmd.bat" -arch=amd64 -host_arch=amd64
 if errorlevel 1 exit /b 1
-"%InstallDir%\MSBuild\15.0\Bin\MSBuild.exe" %*
+"%InstallDir%\MSBuild\Current\Bin\MSBuild.exe" %*
 if errorlevel 1 exit /b 1
 goto end
 
