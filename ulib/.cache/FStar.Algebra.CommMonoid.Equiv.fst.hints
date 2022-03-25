@@ -7,16 +7,16 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.l_Forall",
-        "equation_Prims.l_and", "equation_Prims.squash",
+        "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
         "fuel_guarded_inversion_FStar.Algebra.CommMonoid.Equiv.equiv",
-        "l_and-interp", "l_quant_interp_0543a34e36002c1bba45a1c2c5a53e32",
-        "l_quant_interp_5db8f848bc8a8bbdeaf825f7d949db00",
-        "l_quant_interp_6a870113470ec8e18dc57cecddff3176",
-        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
+        "refinement_interpretation_Tm_refine_47be45ffd8611322d91a144f06c98b33",
+        "refinement_interpretation_Tm_refine_609c5c7e0247304f283d81720a84abd4",
+        "refinement_interpretation_Tm_refine_6748cd8e66ff4cdded59c06d76c844c8",
+        "refinement_interpretation_Tm_refine_d1b2f1d51ec217fc7d0f57abe8ff2fe9"
       ],
       0,
-      "c02b37041d8c41aa00c424454f93db39"
+      "c91a62668af6ae48a37eeec5c38ca6b8"
     ],
     [
       "FStar.Algebra.CommMonoid.Equiv.equality_equiv",
@@ -25,7 +25,7 @@
       1,
       [ "@query" ],
       0,
-      "b342fa72540d3a708e6a519b6366a902"
+      "3e8cab38f4256f26e434334a589c89f3"
     ],
     [
       "FStar.Algebra.CommMonoid.Equiv.right_identity",
@@ -34,7 +34,7 @@
       1,
       [ "@query" ],
       0,
-      "1d8f94e255924d89a8ed518444414cc8"
+      "c881cbf6962ed1d3a7222abbb33a443f"
     ],
     [
       "FStar.Algebra.CommMonoid.Equiv.int_plus_cm",
@@ -55,7 +55,7 @@
         "token_correspondence_FStar.Algebra.CommMonoid.Equiv.__proj__EQ__item__eq"
       ],
       0,
-      "20c7d24861d0c53a04ce399db319d085"
+      "3dbe74546ab181759e03f69343a9ac58"
     ],
     [
       "FStar.Algebra.CommMonoid.Equiv.int_multiply_cm",
@@ -76,7 +76,7 @@
         "token_correspondence_FStar.Algebra.CommMonoid.Equiv.__proj__EQ__item__eq"
       ],
       0,
-      "bc8315ae836277ea6ac1a9fdee48773d"
+      "5328d277e28ea4601b510f6286a03fc3"
     ]
   ]
 ]

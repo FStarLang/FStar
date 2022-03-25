@@ -13,7 +13,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 
-   Authors: N. Swamy, A. Rozanov
+   Authors: N. Swamy, A. Rastogi, A. Rozanov
 *)
 module FStar.Seq.Permutation
 open FStar.Seq
@@ -74,40 +74,130 @@ let rec find (#a:eqtype) (x:a) (s:seq a{ count x s > 0 })
     )
 #pop-options
 
-#push-options "--fuel 2 --ifuel 0 --z3rlimit_factor 20"
+let introduce_is_permutation (#a:Type) (s0:seq a) (s1:seq a)
+                             (f:index_fun s0)
+                             (_:squash (Seq.length s0 == Seq.length s1))
+                             (_:squash (forall x y. x <> y ==> f x <> f y))
+                             (_:squash (forall (i:nat{i < Seq.length s0}). Seq.index s0 i == Seq.index s1 (f i)))
+   : Lemma
+     (ensures
+       is_permutation s0 s1 f)
+   = reveal_is_permutation_nopats s0 s1 f
+
+let reveal_is_permutation_pats (#a:Type) (s0 s1:seq a) (f:index_fun s0)
+  : Lemma (is_permutation s0 s1 f <==>
+
+           Seq.length s0 == Seq.length s1 /\
+
+           (forall x y. {:pattern f x; f y } x <> y ==> f x <> f y) /\
+
+           (forall (i:nat{i < Seq.length s0}). {:pattern (Seq.index s0 i)}
+              Seq.index s0 i == Seq.index s1 (f i)))
+   = reveal_is_permutation s0 s1 f
+
+let adapt_index_fun (s:Seq.seq 'a { Seq.length s > 0 })
+                    (f:index_fun (Seq.tail s))
+                    (n:nat{n < Seq.length s})
+  : index_fun s
+  = fun i -> if i = 0
+          then n
+          else if f (i - 1) < n
+          then f (i - 1)
+          else f (i - 1) + 1
+
+let count_singleton_one (#a:eqtype) (x:a)
+  : Lemma (count x (Seq.create 1 x) == 1)
+  = ()
+let count_singleton_zero (#a:eqtype) (x y:a)
+  : Lemma (x =!= y ==> count x (Seq.create 1 y) == 0)
+  = ()
+let equal_counts_empty (#a:eqtype) (s0 s1:seq a)
+  : Lemma
+    (requires Seq.length s0 == 0 /\ (forall x. count x s0 == count x s1))
+    (ensures  Seq.length s1 == 0)
+  = if Seq.length s1 > 0 then
+    assert (count (Seq.head s1) s1 > 0)
+let count_head (#a:eqtype) (x:seq a{ Seq.length x > 0 })
+  : Lemma (count (Seq.head x) x > 0)
+  = ()
+
+
+#push-options "--fuel 0 --quake 10/10"
+#restart-solver
 let rec permutation_from_equal_counts (#a:eqtype) (s0:seq a) (s1:seq a{(forall x. count x s0 == count x s1)})
-  : Tot (seqperm s0 s1)//index_fun s0 { is_permutation s0 s1 f })
+  : Tot (seqperm s0 s1)
         (decreases (Seq.length s0))
   = if Seq.length s0 = 0
     then (
       let f : index_fun s0 = fun i -> i in
-      reveal_is_permutation_nopats s0 s1 f;
-      if Seq.length s1 = 0 then f
-      else (assert (count (Seq.head s1) s1 > 0); f)
+      reveal_is_permutation_pats s0 s1 f;
+      equal_counts_empty s0 s1;
+      f
     ) else (
+      count_head s0;
       assert (count (Seq.head s0) s0 > 0);
       let pfx, sfx = find (Seq.head s0) s1 in
       introduce forall x. count x (Seq.tail s0) == count x (Seq.append pfx sfx)
       with (
-        lemma_append_count_aux x pfx sfx;
-        lemma_append_count_aux x (Seq.create 1 (Seq.head s0)) sfx;
-        lemma_append_count_aux x pfx (Seq.cons (Seq.head s0) sfx)
+        if x = Seq.head s0
+        then  (
+          calc (eq2 #int) {
+            count x (Seq.tail s0) <: int;
+          (==) {
+                 assert (s0 `Seq.equal` Seq.cons (Seq.head s0) (Seq.tail s0));
+                 lemma_append_count_aux (Seq.head s0) (Seq.create 1 (Seq.head s0)) (Seq.tail s0);
+                 count_singleton_one x
+               }
+            count x s0 - 1 <: int;
+          (==) {}
+            count x s1 - 1 <: int;
+          (==) {}
+            count x (Seq.append pfx (Seq.cons (Seq.head s0) sfx)) - 1 <: int;
+          (==) { lemma_append_count_aux x pfx (Seq.cons (Seq.head s0) sfx) }
+            count x pfx + count x (Seq.cons (Seq.head s0) sfx) - 1 <: int;
+          (==) { lemma_append_count_aux x (Seq.create 1 (Seq.head s0)) sfx }
+            count x pfx + (count x (Seq.create 1 (Seq.head s0)) + count x sfx) - 1 <: int;
+          (==) { count_singleton_one x }
+            count x pfx + count x sfx <: int;
+          (==) { lemma_append_count_aux x pfx sfx }
+            count x (Seq.append pfx sfx) <: int;
+          }
+        )
+        else (
+          calc (==) {
+            count x (Seq.tail s0);
+           (==) {
+                  assert (s0 `Seq.equal` Seq.cons (Seq.head s0) (Seq.tail s0));
+                  lemma_append_count_aux x (Seq.create 1 (Seq.head s0)) (Seq.tail s0);
+                  count_singleton_zero x (Seq.head s0)
+                }
+            count x s0;
+           (==) { }
+            count x s1;
+           (==) { }
+            count x (Seq.append pfx (Seq.cons (Seq.head s0) sfx));
+           (==) { lemma_append_count_aux x pfx (Seq.cons (Seq.head s0) sfx) }
+            count x pfx + count x (Seq.cons (Seq.head s0) sfx);
+          (==) { lemma_append_count_aux x (Seq.create 1 (Seq.head s0)) sfx }
+            count x pfx + (count x (Seq.create 1 (Seq.head s0)) + count x sfx) ;
+          (==) { count_singleton_zero x (Seq.head s0) }
+            count x pfx + count x sfx;
+          (==) { lemma_append_count_aux x pfx sfx }
+            count x (Seq.append pfx sfx);
+          }
+        )
       );
       let s1' = (Seq.append pfx sfx) in
       let f' = permutation_from_equal_counts (Seq.tail s0) s1'  in
-      reveal_is_permutation_nopats (Seq.tail s0) s1' f';
+      reveal_is_permutation_pats (Seq.tail s0) s1' f';
       let n = Seq.length pfx in
-      let f : index_fun s0 =
-          fun i -> if i = 0
-                then n
-                else if f' (i - 1) < n
-                then f' (i - 1)
-                else f' (i - 1) + 1
-      in
+      let f : index_fun s0 = adapt_index_fun s0 f' n in
       assert (Seq.length s0 == Seq.length s1);
+      let len_eq : squash (Seq.length s0 == Seq.length s1) = () in
       assert (forall x y. x <> y ==> f' x <> f' y);
+      let neq =
       introduce forall x y. x <> y ==> f x <> f y
-      with (introduce _ ==> _
+        with (introduce _ ==> _
             with _. (
               if f x = n || f y = n
               then ()
@@ -125,8 +215,27 @@ let rec permutation_from_equal_counts (#a:eqtype) (s0:seq a) (s1:seq a{(forall x
                 else assert (f y == f' (y - 1) + 1)
               )
             )
-      );
-      reveal_is_permutation_nopats s0 s1 f; f)
+        )
+      in
+      let perm_prop =
+        introduce forall (i:nat{i < Seq.length s0}). Seq.index s0 i == Seq.index s1 (f i)
+        with (
+          if i = 0 then ()
+          else if f' (i - 1) < n
+          then (
+            assert (f i == f' (i - 1));
+            assert (Seq.index (Seq.tail s0) (i - 1) ==
+                    Seq.index s1' (f' (i - 1)))
+          )
+          else (
+            assert (f i = f' (i - 1) + 1);
+            assert (Seq.index (Seq.tail s0) (i - 1) ==
+                    Seq.index s1' (f' (i - 1)))
+          )
+        )
+      in
+      introduce_is_permutation s0 s1 f len_eq neq perm_prop;
+      f)
 #pop-options
 
 
