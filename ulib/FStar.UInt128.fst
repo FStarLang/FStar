@@ -38,7 +38,7 @@ let t = uint128
 let _ = intro_ambient n
 let _ = intro_ambient t
 
-[@@ noextract_to "Krml"]
+[@@ noextract_to "krml"]
 let v x = U64.v x.low + (U64.v x.high) * (pow2 64)
 
 let div_mod (x:nat) (k:nat{k > 0}) : Lemma (x / k * k + x % k == x) = ()

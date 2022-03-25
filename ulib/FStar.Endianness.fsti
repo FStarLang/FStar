@@ -27,7 +27,7 @@ module U64 = FStar.UInt64
 module Math = FStar.Math.Lemmas
 module S = FStar.Seq
 
-[@@ noextract_to "Krml"]
+[@@ noextract_to "krml"]
 type bytes = S.seq U8.t
 
 open FStar.Mul

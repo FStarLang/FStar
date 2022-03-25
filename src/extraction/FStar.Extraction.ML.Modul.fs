@@ -657,7 +657,7 @@ let sigelt_has_noextract (se:sigelt) : bool =
   | _ ->
     has_noextract_qualifier || has_noextract_attribute
   
-// If this sigelt had [@@ noextract_to "Krml"] and we are indeed
+// If this sigelt had [@@ noextract_to "krml"] and we are indeed
 // extracting to Karamel, then we will still process it: it's the
 // karamel pipeline which will later drop the body. It checks for the
 // NoExtract qualifier to decide that, so we add it here.
