@@ -14,7 +14,7 @@
                 3. fsti files are filtered out
                 4. the order of files is unchanged.
     -->
-    <UsingTask TaskName="TransformFStarSourceFiles" TaskFactory="CodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.v4.0.dll" >
+    <UsingTask TaskName="TransformFStarSourceFiles" TaskFactory="RoslynCodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll">
         <ParameterGroup>
             <Odir ParameterType="System.String" Required="true" />
             <Files ParameterType="Microsoft.Build.Framework.ITaskItem[]" Required="true" />
@@ -54,18 +54,18 @@
         </Task>
     </UsingTask>
 
-    <PropertyGroup>
-        <!-- Path where extracted fs files should be written by default -->
-        <FSTAR_EXTRACTED_PATH Condition=" '$(FSTAR_EXTRACTED_PATH)' == '' ">$(IntermediateOutputPath)extracted</FSTAR_EXTRACTED_PATH>
-        <!-- # 271: theory symbols in smt patters -->
-        <FSTAR_WARN_ERROR Condition=" '$(FSTAR_WARN_ERROR)' == '' ">--warn_error -271</FSTAR_WARN_ERROR>
-        <FSTAR_EXTRACTION_FLAGS Condition=" '$(FSTAR_EXTRACTION_FLAGS)' == '' ">--odir $(FSTAR_EXTRACTED_PATH) --codegen FSharp</FSTAR_EXTRACTION_FLAGS>
-        <!-- If FSTAR_HOME is not defined then assume that fstar.exe is available on the path -->
-        <FSTAR_EXE Condition="'$(FSTAR_HOME)' == ''">fstar.exe</FSTAR_EXE>
-        <FSTAR_EXE Condition="'$(FSTAR_HOME)' != ''">$(FSTAR_HOME)\bin\fstar.exe</FSTAR_EXE>
-    </PropertyGroup>
-
     <Target Name="GenerateFSharpSources" BeforeTargets="BeforeBuild;BeforeRebuild">
+
+        <PropertyGroup>
+            <!-- Path where extracted fs files should be written by default -->
+            <FSTAR_EXTRACTED_PATH Condition=" '$(FSTAR_EXTRACTED_PATH)' == '' ">$(IntermediateOutputPath)extracted</FSTAR_EXTRACTED_PATH>
+            <!-- # 271: theory symbols in smt patters -->
+            <FSTAR_WARN_ERROR Condition=" '$(FSTAR_WARN_ERROR)' == '' ">--warn_error -271</FSTAR_WARN_ERROR>
+            <FSTAR_EXTRACTION_FLAGS Condition=" '$(FSTAR_EXTRACTION_FLAGS)' == '' ">--odir $(FSTAR_EXTRACTED_PATH) --codegen FSharp</FSTAR_EXTRACTION_FLAGS>
+            <!-- If FSTAR_HOME is not defined then assume that fstar.exe is available on the path -->
+            <FSTAR_EXE Condition="'$(FSTAR_HOME)' == ''">fstar.exe</FSTAR_EXE>
+            <FSTAR_EXE Condition="'$(FSTAR_HOME)' != ''">$(FSTAR_HOME)\bin\fstar.exe</FSTAR_EXE>
+        </PropertyGroup>
         <!--
             Assumptions:
                 - FSTAR property is defined
