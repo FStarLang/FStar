@@ -402,7 +402,7 @@ private let disjoint_fact =
   forall (a: eqtype) (s1: set a) (s2: set a).{:pattern disjoint s1 s2}
     disjoint s1 s2 <==> (forall o.{:pattern mem o s1 \/ mem o s2} not (mem o s1) \/ not (mem o s2))
 
-/// We add a couple more facts for the utility function `remove` and for `set_as_list`:
+/// We add a few more facts for the utility function `remove` and for `set_as_list`:
 
 private let insert_remove_fact =
   forall (a: eqtype) (x: a) (s: set a).{:pattern insert x (remove x s)}
