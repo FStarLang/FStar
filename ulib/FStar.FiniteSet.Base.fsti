@@ -162,7 +162,7 @@ let notin (#a: eqtype) (x: a) (s: set a)
 ///
 /// axiom (forall<T> o: T :: { Set#Empty()[o] } !Set#Empty()[o]);
 
-private let empty_set_contains_no_elements_fact =
+let empty_set_contains_no_elements_fact =
   forall (a: eqtype) (o: a).{:pattern mem o (emptyset)} not (mem o (emptyset #a))
 
 /// We represent the following Dafny axiom with `length_zero_fact`:
@@ -171,7 +171,7 @@ private let empty_set_contains_no_elements_fact =
 ///  (Set#Card(s) == 0 <==> s == Set#Empty()) &&
 ///  (Set#Card(s) != 0 ==> (exists x: T :: s[x])));
 
-private let length_zero_fact =
+let length_zero_fact =
   forall (a: eqtype) (s: set a).{:pattern cardinality s}
       (cardinality s = 0 <==> s == emptyset)
     /\ (cardinality s <> 0 <==> (exists x. mem x s))
@@ -180,21 +180,21 @@ private let length_zero_fact =
 ///
 /// axiom (forall<T> r: T :: { Set#Singleton(r) } Set#Singleton(r)[r]);
 
-private let singleton_contains_argument_fact =
+let singleton_contains_argument_fact =
   forall (a: eqtype) (r: a).{:pattern singleton r} mem r (singleton r)
     
 /// We represent the following Dafny axiom with `singleton_contains_fact`:
 ///
 /// axiom (forall<T> r: T, o: T :: { Set#Singleton(r)[o] } Set#Singleton(r)[o] <==> r == o);
 
-private let singleton_contains_fact =
+let singleton_contains_fact =
   forall (a: eqtype) (r: a) (o: a).{:pattern mem o (singleton r)} mem o (singleton r) <==> r == o
     
 /// We represent the following Dafny axiom with `singleton_cardinality_fact`:
 ///
 /// axiom (forall<T> r: T :: { Set#Card(Set#Singleton(r)) } Set#Card(Set#Singleton(r)) == 1);
 
-private let singleton_cardinality_fact =
+let singleton_cardinality_fact =
   forall (a: eqtype) (r: a).{:pattern cardinality (singleton r)} cardinality (singleton r) = 1
     
 /// We represent the following Dafny axiom with `insert_fact`:
@@ -202,7 +202,7 @@ private let singleton_cardinality_fact =
 /// axiom (forall<T> a: Set T, x: T, o: T :: { Set#UnionOne(a,x)[o] }
 ///  Set#UnionOne(a,x)[o] <==> o == x || a[o]);
 
-private let insert_fact =
+let insert_fact =
   forall (a: eqtype) (s: set a) (x: a) (o: a).{:pattern mem o (insert x s)}
     mem o (insert x s) <==> o == x \/ mem o s
     
@@ -211,7 +211,7 @@ private let insert_fact =
 /// axiom (forall<T> a: Set T, x: T :: { Set#UnionOne(a, x) }
 ///  Set#UnionOne(a, x)[x]);
 
-private let insert_contains_argument_fact =
+let insert_contains_argument_fact =
   forall (a: eqtype) (s: set a) (x: a).{:pattern insert x s}
     mem x (insert x s)
     
@@ -220,7 +220,7 @@ private let insert_contains_argument_fact =
 /// axiom (forall<T> a: Set T, x: T, y: T :: { Set#UnionOne(a, x), a[y] }
 ///  a[y] ==> Set#UnionOne(a, x)[y]);
 
-private let insert_contains_fact =
+let insert_contains_fact =
   forall (a: eqtype) (s: set a) (x: a) (y: a).{:pattern insert x s; mem y s}
     mem y s ==> mem y (insert x s)
     
@@ -229,7 +229,7 @@ private let insert_contains_fact =
 /// axiom (forall<T> a: Set T, x: T :: { Set#Card(Set#UnionOne(a, x)) }
 ///  a[x] ==> Set#Card(Set#UnionOne(a, x)) == Set#Card(a));
 
-private let insert_member_cardinality_fact =
+let insert_member_cardinality_fact =
   forall (a: eqtype) (s: set a) (x: a).{:pattern cardinality (insert x s)}
     mem x s ==> cardinality (insert x s) = cardinality s
     
@@ -238,7 +238,7 @@ private let insert_member_cardinality_fact =
 /// axiom (forall<T> a: Set T, x: T :: { Set#Card(Set#UnionOne(a, x)) }
 ///  !a[x] ==> Set#Card(Set#UnionOne(a, x)) == Set#Card(a) + 1);
 
-private let insert_nonmember_cardinality_fact =
+let insert_nonmember_cardinality_fact =
   forall (a: eqtype) (s: set a) (x: a).{:pattern cardinality (insert x s)}
     not (mem x s) ==> cardinality (insert x s) = cardinality s + 1
     
@@ -247,7 +247,7 @@ private let insert_nonmember_cardinality_fact =
 /// axiom (forall<T> a: Set T, b: Set T, o: T :: { Set#Union(a,b)[o] }
 ///  Set#Union(a,b)[o] <==> a[o] || b[o]);
 
-private let union_contains_fact =
+let union_contains_fact =
   forall (a: eqtype) (s1: set a) (s2: set a) (o: a).{:pattern mem o (union s1 s2)}
     mem o (union s1 s2) <==> mem o s1 \/ mem o s2
     
@@ -256,7 +256,7 @@ private let union_contains_fact =
 /// axiom (forall<T> a, b: Set T, y: T :: { Set#Union(a, b), a[y] }
 ///  a[y] ==> Set#Union(a, b)[y]);
 
-private let union_contains_element_from_first_argument_fact =
+let union_contains_element_from_first_argument_fact =
   forall (a: eqtype) (s1: set a) (s2: set a) (y: a).{:pattern union s1 s2; mem y s1}
     mem y s1 ==> mem y (union s1 s2)
     
@@ -265,7 +265,7 @@ private let union_contains_element_from_first_argument_fact =
 /// axiom (forall<T> a, b: Set T, y: T :: { Set#Union(a, b), a[y] }
 ///  b[y] ==> Set#Union(a, b)[y]);
 
-private let union_contains_element_from_second_argument_fact =
+let union_contains_element_from_second_argument_fact =
   forall (a: eqtype) (s1: set a) (s2: set a) (y: a).{:pattern union s1 s2; mem y s2}
     mem y s2 ==> mem y (union s1 s2)
 
@@ -276,7 +276,7 @@ private let union_contains_element_from_second_argument_fact =
 ///    Set#Difference(Set#Union(a, b), a) == b &&
 ///    Set#Difference(Set#Union(a, b), b) == a);
 
-private let union_of_disjoint_fact =
+let union_of_disjoint_fact =
   forall (a: eqtype) (s1: set a) (s2: set a).{:pattern union s1 s2}
     disjoint s1 s2 ==> difference (union s1 s2) s1 == s2 /\ difference (union s1 s2) s2 == s1
 
@@ -285,7 +285,7 @@ private let union_of_disjoint_fact =
 /// axiom (forall<T> a: Set T, b: Set T, o: T :: { Set#Intersection(a,b)[o] }
 ///  Set#Intersection(a,b)[o] <==> a[o] && b[o]);
 
-private let intersection_contains_fact =
+let intersection_contains_fact =
   forall (a: eqtype) (s1: set a) (s2: set a) (o: a).{:pattern mem o (intersection s1 s2)}
     mem o (intersection s1 s2) <==> mem o s1 /\ mem o s2
 
@@ -294,7 +294,7 @@ private let intersection_contains_fact =
 /// axiom (forall<T> a, b: Set T :: { Set#Union(Set#Union(a, b), b) }
 ///  Set#Union(Set#Union(a, b), b) == Set#Union(a, b));
 
-private let union_idempotent_right_fact =
+let union_idempotent_right_fact =
   forall (a: eqtype) (s1: set a) (s2: set a).{:pattern union (union s1 s2) s2}
     union (union s1 s2) s2 == union s1 s2
 
@@ -303,7 +303,7 @@ private let union_idempotent_right_fact =
 /// axiom (forall<T> a, b: Set T :: { Set#Union(a, Set#Union(a, b)) }
 ///  Set#Union(a, Set#Union(a, b)) == Set#Union(a, b));
 
-private let union_idempotent_left_fact =
+let union_idempotent_left_fact =
   forall (a: eqtype) (s1: set a) (s2: set a).{:pattern union s1 (union s1 s2)}
     union s1 (union s1 s2) == union s1 s2
 
@@ -312,7 +312,7 @@ private let union_idempotent_left_fact =
 /// axiom (forall<T> a, b: Set T :: { Set#Intersection(Set#Intersection(a, b), b) }
 ///  Set#Intersection(Set#Intersection(a, b), b) == Set#Intersection(a, b));
 
-private let intersection_idempotent_right_fact =
+let intersection_idempotent_right_fact =
   forall (a: eqtype) (s1: set a) (s2: set a).{:pattern intersection (intersection s1 s2) s2}
     intersection (intersection s1 s2) s2 == intersection s1 s2
 
@@ -321,7 +321,7 @@ private let intersection_idempotent_right_fact =
 /// axiom (forall<T> a, b: Set T :: { Set#Intersection(a, Set#Intersection(a, b)) }
 ///  Set#Intersection(a, Set#Intersection(a, b)) == Set#Intersection(a, b));
 
-private let intersection_idempotent_left_fact =
+let intersection_idempotent_left_fact =
   forall (a: eqtype) (s1: set a) (s2: set a).{:pattern intersection s1 (intersection s1 s2)}
     intersection s1 (intersection s1 s2) == intersection s1 s2
 
@@ -330,7 +330,7 @@ private let intersection_idempotent_left_fact =
 /// axiom (forall<T> a, b: Set T :: { Set#Card(Set#Union(a, b)) }{ Set#Card(Set#Intersection(a, b)) }
 ///  Set#Card(Set#Union(a, b)) + Set#Card(Set#Intersection(a, b)) == Set#Card(a) + Set#Card(b));
 
-private let intersection_cardinality_fact =
+let intersection_cardinality_fact =
   forall (a: eqtype) (s1: set a) (s2: set a).{:pattern cardinality (intersection s1 s2)}
     cardinality (union s1 s2) + cardinality (intersection s1 s2) = cardinality s1 + cardinality s2
 
@@ -339,7 +339,7 @@ private let intersection_cardinality_fact =
 /// axiom (forall<T> a: Set T, b: Set T, o: T :: { Set#Difference(a,b)[o] }
 ///  Set#Difference(a,b)[o] <==> a[o] && !b[o]);
 
-private let difference_contains_fact =
+let difference_contains_fact =
   forall (a: eqtype) (s1: set a) (s2: set a) (o: a).{:pattern mem o (difference s1 s2)}
     mem o (difference s1 s2) <==> mem o s1 /\ not (mem o s2)
 
@@ -348,7 +348,7 @@ private let difference_contains_fact =
 /// axiom (forall<T> a, b: Set T, y: T :: { Set#Difference(a, b), b[y] }
 ///  b[y] ==> !Set#Difference(a, b)[y] );
 
-private let difference_doesnt_include_fact =
+let difference_doesnt_include_fact =
   forall (a: eqtype) (s1: set a) (s2: set a) (y: a).{:pattern difference s1 s2; mem y s2}
     mem y s2 ==> not (mem y (difference s1 s2))
 
@@ -361,7 +361,7 @@ private let difference_doesnt_include_fact =
 ///    == Set#Card(Set#Union(a, b)) &&
 ///  Set#Card(Set#Difference(a, b)) == Set#Card(a) - Set#Card(Set#Intersection(a, b)));
 
-private let difference_cardinality_fact =
+let difference_cardinality_fact =
   forall (a: eqtype) (s1: set a) (s2: set a).{:pattern cardinality (difference s1 s2)}
       cardinality (difference s1 s2) + cardinality (difference s2 s1) + cardinality (intersection s1 s2) = cardinality (union s1 s2)
     /\ cardinality (difference s1 s2) = cardinality s1 - cardinality (intersection s1 s2)
@@ -371,7 +371,7 @@ private let difference_cardinality_fact =
 /// axiom(forall<T> a: Set T, b: Set T :: { Set#Subset(a,b) }
 ///  Set#Subset(a,b) <==> (forall o: T :: {a[o]} {b[o]} a[o] ==> b[o]));
 
-private let subset_fact =
+let subset_fact =
   forall (a: eqtype) (s1: set a) (s2: set a).{:pattern subset s1 s2}
     subset s1 s2 <==> (forall o.{:pattern mem o s1 \/ mem o s2} mem o s1 ==> mem o s2)
 
@@ -380,7 +380,7 @@ private let subset_fact =
 /// axiom(forall<T> a: Set T, b: Set T :: { Set#Equal(a,b) }
 ///  Set#Equal(a,b) <==> (forall o: T :: {a[o]} {b[o]} a[o] <==> b[o]));
 
-private let equal_fact =
+let equal_fact =
   forall (a: eqtype) (s1: set a) (s2: set a).{:pattern equal s1 s2}
     equal s1 s2 <==> (forall o.{:pattern mem o s1 \/ mem o s2} mem o s1 <==> mem o s2)
 
@@ -389,7 +389,7 @@ private let equal_fact =
 /// axiom(forall<T> a: Set T, b: Set T :: { Set#Equal(a,b) }  // extensionality axiom for sets
 ///  Set#Equal(a,b) ==> a == b);
 
-private let equal_extensionality_fact =
+let equal_extensionality_fact =
   forall (a: eqtype) (s1: set a) (s2: set a).{:pattern equal s1 s2}
     equal s1 s2 ==> s1 == s2
 
@@ -398,21 +398,21 @@ private let equal_extensionality_fact =
 /// axiom (forall<T> a: Set T, b: Set T :: { Set#Disjoint(a,b) }
 ///  Set#Disjoint(a,b) <==> (forall o: T :: {a[o]} {b[o]} !a[o] || !b[o]));
 
-private let disjoint_fact =
+let disjoint_fact =
   forall (a: eqtype) (s1: set a) (s2: set a).{:pattern disjoint s1 s2}
     disjoint s1 s2 <==> (forall o.{:pattern mem o s1 \/ mem o s2} not (mem o s1) \/ not (mem o s2))
 
 /// We add a few more facts for the utility function `remove` and for `set_as_list`:
 
-private let insert_remove_fact =
+let insert_remove_fact =
   forall (a: eqtype) (x: a) (s: set a).{:pattern insert x (remove x s)}
     mem x s = true ==> insert x (remove x s) == s
 
-private let remove_insert_fact =
+let remove_insert_fact =
   forall (a: eqtype) (x: a) (s: set a).{:pattern remove x (insert x s)}
     mem x s = false ==> remove x (insert x s) == s
 
-private let set_as_list_cardinality_fact =
+let set_as_list_cardinality_fact =
   forall (a: eqtype) (s: set a).{:pattern FLT.length (set_as_list s)}
     FLT.length (set_as_list s) = cardinality s
 

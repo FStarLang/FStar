@@ -42,19 +42,20 @@ module FSet = FStar.FiniteSet.Base
 open FStar.FiniteSet.Ambient
 
 // Finite maps
-type map (a: eqtype) (b: Type0) = (keys: FSet.set a) & (setfun_t a b keys)
+type map (a: eqtype) (b: Type u#b) = (keys: FSet.set a) & (setfun_t a b keys)
 
-let domain (#a: eqtype) (#b: Type0) (m: map a b) : FSet.set a =
-  match m with
-  | Mkdtuple2 keys f -> keys
+let domain (#a: eqtype) (#b: Type u#b) (m: map a b) : FSet.set a =
+  let (| keys, _ |) = m in 
+  keys
 
-let elements (#a: eqtype) (#b: Type0) (m: map a b) : (setfun_t a b (domain m)) =
-  match m with
-  | Mkdtuple2 keys f -> f
 
-private let rec key_list_to_item_list
+let elements (#a: eqtype) (#b: Type u#b) (m: map a b) : (setfun_t a b (domain m)) =
+  let (| _, f |) = m in
+  f
+  
+let rec key_list_to_item_list
   (#a: eqtype)
-  (#b: Type0)
+  (#b: Type u#b)
   (m: map a b)
   (keys: list a{FSet.list_nonrepeating keys /\ (forall key. FLT.mem key keys ==> FSet.mem key (domain m))})
 : GTot (items: list (a * b){item_list_doesnt_repeat_keys items /\ (forall key. FLT.mem key keys <==> key_in_item_list key items)})
@@ -63,7 +64,7 @@ private let rec key_list_to_item_list
   | [] -> []
   | key :: remaining_keys -> (key, Some?.v ((elements m) key)) :: key_list_to_item_list m remaining_keys
 
-let map_as_list (#a: eqtype) (#b: Type0) (m: map a b)
+let map_as_list (#a: eqtype) (#b: Type u#b) (m: map a b)
 : GTot (items: list (a * b){item_list_doesnt_repeat_keys items /\ (forall key. key_in_item_list key items <==> mem key m)}) =
   key_list_to_item_list m (FSet.set_as_list (domain m))
 
@@ -71,42 +72,42 @@ let map_as_list (#a: eqtype) (#b: Type0) (m: map a b)
 ///
 /// function Map#Card<U,V>(Map U V) : int;
 
-let cardinality (#a: eqtype) (#b: Type0) (m: map a b) : GTot nat =
+let cardinality (#a: eqtype) (#b: Type u#b) (m: map a b) : GTot nat =
   FSet.cardinality (domain m)
 
 /// We represent the Dafny function `Map#Values` with `values`:
 ///
 /// function Map#Values<U,V>(Map U V) : Set V;
 
-let values (#a: eqtype) (#b: Type0) (m: map a b) : GTot (b -> Type0) =
+let values (#a: eqtype) (#b: Type u#b) (m: map a b) : GTot (b -> prop) =
   fun value -> exists key. ((elements m) key == Some value)
 
 /// We represent the Dafny function `Map#Items` with `items`:
 ///
 /// function Map#Items<U,V>(Map U V) : Set Box;
 
-let items (#a: eqtype) (#b: Type0) (m: map a b) : GTot ((a * b) -> Type0) =
+let items (#a: eqtype) (#b: Type u#b) (m: map a b) : GTot ((a * b) -> prop) =
   fun item -> ((elements m) (fst item) == Some (snd item))
 
 /// We represent the Dafny function `Map#Empty` with `emptymap`:
 ///
 /// function Map#Empty<U, V>(): Map U V;
 
-let emptymap (#a: eqtype) (#b: Type0) : (map a b) =
+let emptymap (#a: eqtype) (#b: Type u#b) : (map a b) =
   (| FSet.emptyset, on_domain a (fun key -> None) |)
 
 /// We represent the Dafny function `Map#Glue` with `glue`.
 ///
 /// function Map#Glue<U, V>([U]bool, [U]V, Ty): Map U V;
 
-let glue (#a: eqtype) (#b: Type0) (keys: FSet.set a) (f: setfun_t a b keys) : map a b =
+let glue (#a: eqtype) (#b: Type u#b) (keys: FSet.set a) (f: setfun_t a b keys) : map a b =
   (| keys, f |)
   
 /// We represent the Dafny function `Map#Build` with `build`:
 ///
 /// function Map#Build<U, V>(Map U V, U, V): Map U V;
 
-let insert (#a: eqtype) (#b: Type0) (k: a) (v: b) (m: map a b) : map a b =
+let insert (#a: eqtype) (#b: Type u#b) (k: a) (v: b) (m: map a b) : map a b =
   let keys' = FSet.insert k (domain m) in
   let f' = on_domain a (fun key -> if key = k then Some v else (elements m) key) in
   (| keys', f' |)
@@ -115,7 +116,7 @@ let insert (#a: eqtype) (#b: Type0) (k: a) (v: b) (m: map a b) : map a b =
 ///
 /// function Map#Merge<U, V>(Map U V, Map U V): Map U V;
 
-let merge (#a: eqtype) (#b: Type0) (m1: map a b) (m2: map a b) : map a b =
+let merge (#a: eqtype) (#b: Type u#b) (m1: map a b) (m2: map a b) : map a b =
   let keys' = FSet.union (domain m1) (domain m2) in
   let f' = on_domain a (fun key -> if FSet.mem key (domain m2) then (elements m2) key else (elements m1) key) in
   (| keys', f' |)
@@ -124,7 +125,7 @@ let merge (#a: eqtype) (#b: Type0) (m1: map a b) (m2: map a b) : map a b =
 ///
 /// function Map#Subtract<U, V>(Map U V, Set U): Map U V;
 
-let subtract (#a: eqtype) (#b: Type0) (m: map a b) (s: FSet.set a) : map a b =
+let subtract (#a: eqtype) (#b: Type u#b) (m: map a b) (s: FSet.set a) : map a b =
   let keys' = FSet.difference (domain m) s in
   let f' = on_domain a (fun key -> if FSet.mem key keys' then (elements m) key else None) in
   (| keys', f' |)
@@ -133,57 +134,60 @@ let subtract (#a: eqtype) (#b: Type0) (m: map a b) (s: FSet.set a) : map a b =
 ///
 /// function Map#Equal<U, V>(Map U V, Map U V): bool;
 
-let equal (#a: eqtype) (#b: Type0) (m1: map a b) (m2: map a b) : Type0 =
-  feq (elements m1) (elements m2)
+let equal (#a: eqtype) (#b: Type u#b) (m1: map a b) (m2: map a b) : prop =
+  feq (elements m1) (elements m2) /\ True //a bit ugly, a prop coercion
 
 /// We represent the Dafny function `Map#Disjoint` with `disjoint`:
 ///
 /// function Map#Disjoint<U, V>(Map U V, Map U V): bool;
 
-let disjoint (#a: eqtype) (#b: Type0) (m1: map a b) (m2: map a b) : Type0 =
-  FSet.disjoint (domain m1) (domain m2)
+let disjoint (#a: eqtype) (#b: Type u#b) (m1: map a b) (m2: map a b) : prop =
+  FSet.disjoint (domain m1) (domain m2) /\ True //prop coercion
 
 /// We represent the Dafny choice operator by `choose`:
 ///
 /// var x: T :| x in s;
 
-let choose (#a: eqtype) (#b: Type0) (m: map a b{exists key. mem key m}) : GTot (key: a{mem key m}) =
+let choose (#a: eqtype) (#b: Type u#b) (m: map a b{exists key. mem key m}) : GTot (key: a{mem key m}) =
   FSet.choose (domain m)
 
 /// We now prove each of the facts that comprise `all_finite_map_facts`.
 /// For fact `xxx_fact`, we prove it with `xxx_lemma`.
 
-private let cardinality_zero_iff_empty_lemma ()
-: Lemma (cardinality_zero_iff_empty_fact) =
-  introduce forall (a: eqtype) (b: Type0) (m: map a b). cardinality m = 0 <==> m == emptymap
+let cardinality_zero_iff_empty_lemma (b:Type u#b)
+: Lemma (cardinality_zero_iff_empty_fact b) =
+  introduce forall (a: eqtype) (m: map a b). cardinality m = 0 <==> m == emptymap
   with (
     introduce cardinality m = 0 ==> m == emptymap
     with _. assert (feq (elements m) (elements emptymap))
   )
 
-private let empty_or_domain_occupied_lemma ()
-: Lemma (empty_or_domain_occupied_fact) =
-  introduce forall (a: eqtype) (b: Type0) (m: map a b). m == emptymap \/ (exists k. mem k m)
-  with
+
+let empty_or_domain_occupied_lemma (b:Type u#b)
+  : Lemma (empty_or_domain_occupied_fact b)
+  = introduce forall (a: eqtype) (m: map a b). m == emptymap \/ (exists k. mem k m)
+    with (  
     if FSet.cardinality (domain m) = 0 then
       introduce m == emptymap \/ (exists k. mem k m)
       with Left (
         assert (cardinality m = 0);
-        cardinality_zero_iff_empty_lemma ()
+        cardinality_zero_iff_empty_lemma b
       )
     else
       introduce m == emptymap \/ (exists k. mem k m)
       with Right ()
+    )
+    
 
-private let empty_or_values_occupied_lemma ()
-: Lemma (empty_or_values_occupied_fact) =
-  introduce forall (a: eqtype) (b: Type0) (m: map a b). m == emptymap \/ (exists v. (values m) v)
+let empty_or_values_occupied_lemma (b:Type u#b)
+: Lemma (empty_or_values_occupied_fact b) =
+  introduce forall (a: eqtype) (m: map a b). m == emptymap \/ (exists v. (values m) v)
   with
     if FSet.cardinality (domain m) = 0 then
       introduce m == emptymap \/ (exists v. (values m) v)
       with Left (
         assert (cardinality m = 0);
-        cardinality_zero_iff_empty_lemma ()
+        cardinality_zero_iff_empty_lemma b
       )
     else
       introduce m == emptymap \/ (exists v. (values m) v)
@@ -193,15 +197,15 @@ private let empty_or_values_occupied_lemma ()
         assert ((values m) v)
       )
 
-private let empty_or_items_occupied_lemma ()
-: Lemma (empty_or_items_occupied_fact) =
+let empty_or_items_occupied_lemma (b:Type u#b)
+: Lemma (empty_or_items_occupied_fact b) =
   introduce forall (a: eqtype) (b: Type0) (m: map a b). m == emptymap \/ (exists item. (items m) item)
   with
     if FSet.cardinality (domain m) = 0 then
       introduce m == emptymap \/ (exists v. (values m) v)
       with Left (
         assert (cardinality m = 0);
-        cardinality_zero_iff_empty_lemma ()
+        cardinality_zero_iff_empty_lemma b
       )
     else
       introduce m == emptymap \/ (exists item. (items m) item)
@@ -211,65 +215,74 @@ private let empty_or_items_occupied_lemma ()
         assert ((items m) (k, v))
       )
 
-private let map_cardinality_matches_domain_lemma ()
-: Lemma (map_cardinality_matches_domain_fact) =
+let map_cardinality_matches_domain_lemma (b:Type u#b)
+: Lemma (map_cardinality_matches_domain_fact b) =
   ()
 
-private let values_contains_lemma ()
-: Lemma (values_contains_fact) =
+let values_contains_lemma (b:Type u#b)
+: Lemma (values_contains_fact b) =
   ()
 
-private let items_contains_lemma ()
-: Lemma (items_contains_fact) =
+let items_contains_lemma (b:Type u#b)
+: Lemma (items_contains_fact b) =
   ()
 
-private let empty_domain_empty_lemma ()
-: Lemma (empty_domain_empty_fact) =
+let empty_domain_empty_lemma (b:Type u#b)
+: Lemma (empty_domain_empty_fact b) =
   ()
 
-private let glue_domain_lemma ()
-: Lemma (glue_domain_fact) =
+let glue_domain_lemma (b:Type u#b)
+: Lemma (glue_domain_fact b) =
   ()
 
-private let glue_elements_lemma ()
-: Lemma (glue_elements_fact) =
+let glue_elements_lemma (b:Type u#b)
+: Lemma (glue_elements_fact b) =
   ()
 
-private let insert_elements_lemma ()
-: Lemma (insert_elements_fact) =
+let insert_elements_lemma (b:Type u#b)
+: Lemma (insert_elements_fact b) =
   ()
 
-private let insert_member_cardinality_lemma ()
-: Lemma (insert_member_cardinality_fact) =
+let insert_member_cardinality_lemma (b:Type u#b)
+: Lemma (insert_member_cardinality_fact b) =
   ()
 
-private let insert_nonmember_cardinality_lemma ()
-: Lemma (insert_nonmember_cardinality_fact) =
+let insert_nonmember_cardinality_lemma (b:Type u#b)
+: Lemma (insert_nonmember_cardinality_fact b) =
   ()
 
-private let merge_domain_is_union_lemma ()
-: Lemma (merge_domain_is_union_fact) =
+let merge_domain_is_union_lemma (b:Type u#b)
+: Lemma (merge_domain_is_union_fact b) =
   ()
 
-private let merge_element_lemma ()
-: Lemma (merge_element_fact) =
+let merge_element_lemma (b:Type u#b)
+: Lemma (merge_element_fact b) =
   ()
 
-private let subtract_domain_lemma ()
-: Lemma (subtract_domain_fact) =
+let subtract_domain_lemma (b:Type u#b)
+: Lemma (subtract_domain_fact b) =
   ()
 
-private let subtract_element_lemma ()
-: Lemma (subtract_element_fact) =
+let subtract_element_lemma (b:Type u#b)
+: Lemma (subtract_element_fact b) =
   ()
 
-private let map_equal_lemma ()
-: Lemma (map_equal_fact) =
-  ()
+module T = FStar.Tactics
+let map_equal_lemma (b:Type u#b)
+: Lemma (map_equal_fact b) //Surprising; needed to split this goal into two
+= assert (map_equal_fact b)
+    by (T.norm [delta_only [`%map_equal_fact]];
+        let _ = T.forall_intro () in
+        let _ = T.forall_intro () in
+        let _ = T.forall_intro () in         
+        T.split ();
+        T.smt();
+        T.smt())
 
-private let map_extensionality_lemma ()
-: Lemma (map_extensionality_fact) =
-  introduce forall (a: eqtype) (b: Type0) (m1: map a b) (m2: map a b). equal m1 m2 ==> m1 == m2
+
+let map_extensionality_lemma (b: Type u#b)
+: Lemma (map_extensionality_fact b) =
+  introduce forall (a: eqtype) (m1: map a b) (m2: map a b). equal m1 m2 ==> m1 == m2
   with (
     introduce equal m1 m2 ==> m1 == m2
     with _. (
@@ -278,29 +291,29 @@ private let map_extensionality_lemma ()
     )
   )
 
-private let disjoint_lemma ()
-: Lemma (disjoint_fact) =
+let disjoint_lemma (b:Type u#b)
+: Lemma (disjoint_fact b) =
   ()
 
-let all_finite_map_facts_lemma ()
-: Lemma (all_finite_map_facts) =
-  cardinality_zero_iff_empty_lemma ();
-  empty_or_domain_occupied_lemma ();
-  empty_or_values_occupied_lemma ();
-  empty_or_items_occupied_lemma ();
-  map_cardinality_matches_domain_lemma ();
-  values_contains_lemma ();
-  items_contains_lemma ();
-  empty_domain_empty_lemma ();
-  glue_domain_lemma ();
-  glue_elements_lemma ();
-  insert_elements_lemma ();
-  insert_member_cardinality_lemma ();
-  insert_nonmember_cardinality_lemma ();
-  merge_domain_is_union_lemma ();
-  merge_element_lemma ();
-  subtract_domain_lemma ();
-  subtract_element_lemma ();
-  map_equal_lemma ();
-  map_extensionality_lemma ();
-  disjoint_lemma ()
+let all_finite_map_facts_lemma (b:Type u#b)
+: Lemma (all_finite_map_facts b) =
+  cardinality_zero_iff_empty_lemma b;
+  empty_or_domain_occupied_lemma b;
+  empty_or_values_occupied_lemma b;
+  empty_or_items_occupied_lemma b;
+  map_cardinality_matches_domain_lemma b;
+  values_contains_lemma b;
+  items_contains_lemma b;
+  empty_domain_empty_lemma b;
+  glue_domain_lemma b;
+  glue_elements_lemma b;
+  insert_elements_lemma b;
+  insert_member_cardinality_lemma b;
+  insert_nonmember_cardinality_lemma b;
+  merge_domain_is_union_lemma b;
+  merge_element_lemma b;
+  subtract_domain_lemma b;
+  subtract_element_lemma b;
+  map_equal_lemma b;
+  map_extensionality_lemma b;
+  disjoint_lemma b

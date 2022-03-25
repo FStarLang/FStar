@@ -39,7 +39,7 @@ module FStar.FiniteSet.Base
 module FLT = FStar.List.Tot
 open FStar.FunctionalExtensionality
 
-private let has_elements (#a: eqtype) (f: a ^-> bool) (xs: list a): prop =
+let has_elements (#a: eqtype) (f: a ^-> bool) (xs: list a): prop =
   forall x. f x == x `FLT.mem` xs
 
 // Finite sets
@@ -54,7 +54,7 @@ let mem (#a: eqtype) (x: a) (s: set a) : bool =
 ///
 /// function Set#Card<T>(Set T): int;
 
-private let rec remove_repeats (#a: eqtype) (xs: list a)
+let rec remove_repeats (#a: eqtype) (xs: list a)
 : (ys: list a{list_nonrepeating ys /\ (forall y. FLT.mem y ys <==> FLT.mem y xs)}) =
   match xs with
   | [] -> []
@@ -67,7 +67,7 @@ let set_as_list (#a: eqtype) (s: set a): GTot (xs: list a{list_nonrepeating xs /
 let cardinality (#a: eqtype) (s: set a) : GTot nat =
   FLT.length (set_as_list s)
 
-private let intro_set (#a: eqtype) (f: a ^-> bool) (xs: Ghost.erased (list a))
+let intro_set (#a: eqtype) (f: a ^-> bool) (xs: Ghost.erased (list a))
 : Pure (set a)
     (requires f `has_elements` xs)
     (ensures fun _ -> True)
@@ -96,7 +96,7 @@ let singleton (#a: eqtype) (x: a) : set a =
 ///
 /// function Set#Union<T>(Set T, Set T): Set T;
 
-private let rec union_lists (#a: eqtype) (xs: list a) (ys: list a) : (zs: list a{forall z. FLT.mem z zs <==> FLT.mem z xs \/ FLT.mem z ys}) =
+let rec union_lists (#a: eqtype) (xs: list a) (ys: list a) : (zs: list a{forall z. FLT.mem z zs <==> FLT.mem z xs \/ FLT.mem z ys}) =
   match xs with
   | [] -> ys
   | hd :: tl -> hd :: union_lists tl ys
@@ -108,7 +108,7 @@ let union (#a: eqtype) (s1: set a) (s2: set a) : (set a) =
 ///
 /// function Set#Intersection<T>(Set T, Set T): Set T;
 
-private let rec intersect_lists (#a: eqtype) (xs: list a) (ys: list a)
+let rec intersect_lists (#a: eqtype) (xs: list a) (ys: list a)
 : (zs: list a{forall z. FLT.mem z zs <==> FLT.mem z xs /\ FLT.mem z ys}) =
   match xs with
   | [] -> []
@@ -121,7 +121,7 @@ let intersection (#a: eqtype) (s1: set a) (s2: set a) : set a =
 ///
 /// function Set#Difference<T>(Set T, Set T): Set T;
 
-private let rec difference_lists (#a: eqtype) (xs: list a) (ys: list a)
+let rec difference_lists (#a: eqtype) (xs: list a) (ys: list a)
 : (zs: list a{forall z. FLT.mem z zs <==> FLT.mem z xs /\ ~(FLT.mem z ys)}) =
   match xs with
   | [] -> []
@@ -162,11 +162,11 @@ let choose (#a: eqtype) (s: set a{exists x. mem x s}) : GTot (x: a{mem x s}) =
 /// For fact `xxx_fact`, we prove it with `xxx_lemma`.  Sometimes, that
 /// requires a helper lemma, which we call `xxx_helper`.
 
-private let empty_set_contains_no_elements_lemma ()
+let empty_set_contains_no_elements_lemma ()
 : Lemma (empty_set_contains_no_elements_fact) =
   ()
 
-private let length_zero_lemma ()
+let length_zero_lemma ()
 : Lemma (length_zero_fact) =
   introduce forall (a: eqtype) (s: set a). (cardinality s = 0 <==> s == emptyset) /\ (cardinality s <> 0 <==> (exists x. mem x s))
   with (
@@ -177,15 +177,15 @@ private let length_zero_lemma ()
     with _. assert (set_as_list s == [])
   )
 
-private let singleton_contains_argument_lemma ()
+let singleton_contains_argument_lemma ()
 : Lemma (singleton_contains_argument_fact) =
   ()
 
-private let singleton_contains_lemma ()
+let singleton_contains_lemma ()
 : Lemma (singleton_contains_fact) =
   ()
 
-private let rec singleton_cardinality_helper (#a: eqtype) (r: a) (xs: list a)
+let rec singleton_cardinality_helper (#a: eqtype) (r: a) (xs: list a)
 : Lemma (requires FLT.mem r xs /\ (forall x. FLT.mem x xs <==> x = r))
         (ensures  remove_repeats xs == [r]) =
   match xs with
@@ -194,7 +194,7 @@ private let rec singleton_cardinality_helper (#a: eqtype) (r: a) (xs: list a)
       assert (Cons?.hd tl = r);
       singleton_cardinality_helper r tl
 
-private let singleton_cardinality_lemma ()
+let singleton_cardinality_lemma ()
 : Lemma (singleton_cardinality_fact) =
   introduce forall (a: eqtype) (r: a). cardinality (singleton r) = 1
   with (
@@ -202,33 +202,33 @@ private let singleton_cardinality_lemma ()
     singleton_cardinality_helper r (set_as_list (singleton r))
   )
 
-private let insert_lemma ()
+let insert_lemma ()
 : Lemma (insert_fact) =
   ()
 
-private let insert_contains_argument_lemma ()
+let insert_contains_argument_lemma ()
 : Lemma (insert_contains_argument_fact) =
   ()
 
-private let insert_contains_lemma ()
+let insert_contains_lemma ()
 : Lemma (insert_contains_fact) =
   ()
 
-private let rec remove_from_nonrepeating_list (#a: eqtype) (x: a) (xs: list a{FLT.mem x xs /\ list_nonrepeating xs})
+let rec remove_from_nonrepeating_list (#a: eqtype) (x: a) (xs: list a{FLT.mem x xs /\ list_nonrepeating xs})
 : (xs': list a{  list_nonrepeating xs'
                /\ FLT.length xs' = FLT.length xs - 1
                /\ (forall y. FLT.mem y xs' <==> FLT.mem y xs /\ y <> x)}) =
   match xs with
   | hd :: tl -> if x = hd then tl else hd :: (remove_from_nonrepeating_list x tl)
 
-private let rec nonrepeating_lists_with_same_elements_have_same_length (#a: eqtype) (s1: list a) (s2: list a)
+let rec nonrepeating_lists_with_same_elements_have_same_length (#a: eqtype) (s1: list a) (s2: list a)
 : Lemma (requires list_nonrepeating s1 /\ list_nonrepeating s2 /\ (forall x. FLT.mem x s1 <==> FLT.mem x s2))
         (ensures  FLT.length s1 = FLT.length s2) =
   match s1 with
   | [] -> ()
   | hd :: tl -> nonrepeating_lists_with_same_elements_have_same_length tl (remove_from_nonrepeating_list hd s2)
 
-private let insert_member_cardinality_lemma ()
+let insert_member_cardinality_lemma ()
 : Lemma (insert_member_cardinality_fact) =
   introduce forall (a: eqtype) (s: set a) (x: a). mem x s ==> cardinality (insert x s) = cardinality s
   with
@@ -238,7 +238,7 @@ private let insert_member_cardinality_lemma ()
       nonrepeating_lists_with_same_elements_have_same_length (set_as_list s) (set_as_list (insert x s))
     )
 
-private let insert_nonmember_cardinality_lemma ()
+let insert_nonmember_cardinality_lemma ()
 : Lemma (insert_nonmember_cardinality_fact) =
   introduce forall (a: eqtype) (s: set a) (x: a). not (mem x s) ==> cardinality (insert x s) = cardinality s + 1
   with
@@ -248,19 +248,19 @@ private let insert_nonmember_cardinality_lemma ()
       nonrepeating_lists_with_same_elements_have_same_length (x :: (set_as_list s)) (set_as_list (insert x s))
     )
 
-private let union_contains_lemma ()
+let union_contains_lemma ()
 : Lemma (union_contains_fact) =
   ()
 
-private let union_contains_element_from_first_argument_lemma ()
+let union_contains_element_from_first_argument_lemma ()
 : Lemma (union_contains_element_from_first_argument_fact) =
   ()
 
-private let union_contains_element_from_second_argument_lemma ()
+let union_contains_element_from_second_argument_lemma ()
 : Lemma (union_contains_element_from_second_argument_fact) =
   ()
 
-private let union_of_disjoint_lemma ()
+let union_of_disjoint_lemma ()
 : Lemma (union_of_disjoint_fact) =
   introduce forall (a: eqtype) (s1: set a) (s2: set a). disjoint s1 s2 ==> difference (union s1 s2) s1 == s2 /\ difference (union s1 s2) s2 == s1
   with
@@ -270,31 +270,31 @@ private let union_of_disjoint_lemma ()
       assert (feq (difference (union s1 s2) s2) s1)
     )
 
-private let intersection_contains_lemma ()
+let intersection_contains_lemma ()
 : Lemma (intersection_contains_fact) =
   ()
 
-private let union_idempotent_right_lemma ()
+let union_idempotent_right_lemma ()
 : Lemma (union_idempotent_right_fact) =
   introduce forall (a: eqtype) (s1: set a) (s2: set a). union (union s1 s2) s2 == union s1 s2
   with assert (feq (union (union s1 s2) s2) (union s1 s2))
 
-private let union_idempotent_left_lemma ()
+let union_idempotent_left_lemma ()
 : Lemma (union_idempotent_left_fact) =
   introduce forall (a: eqtype) (s1: set a) (s2: set a). union s1 (union s1 s2) == union s1 s2
   with assert (feq (union s1 (union s1 s2)) (union s1 s2))
 
-private let intersection_idempotent_right_lemma ()
+let intersection_idempotent_right_lemma ()
 : Lemma (intersection_idempotent_right_fact) =
   introduce forall (a: eqtype) (s1: set a) (s2: set a). intersection (intersection s1 s2) s2 == intersection s1 s2
   with assert (feq (intersection (intersection s1 s2) s2) (intersection s1 s2))
 
-private let intersection_idempotent_left_lemma ()
+let intersection_idempotent_left_lemma ()
 : Lemma (intersection_idempotent_left_fact) =
   introduce forall (a: eqtype) (s1: set a) (s2: set a). intersection s1 (intersection s1 s2) == intersection s1 s2
   with assert (feq (intersection s1 (intersection s1 s2)) (intersection s1 s2))
 
-private let rec union_of_disjoint_nonrepeating_lists_length_lemma (#a: eqtype) (xs1: list a) (xs2: list a) (xs3: list a)
+let rec union_of_disjoint_nonrepeating_lists_length_lemma (#a: eqtype) (xs1: list a) (xs2: list a) (xs3: list a)
 : Lemma (requires   list_nonrepeating xs1
                   /\ list_nonrepeating xs2
                   /\ list_nonrepeating xs3
@@ -305,28 +305,28 @@ private let rec union_of_disjoint_nonrepeating_lists_length_lemma (#a: eqtype) (
   | [] -> nonrepeating_lists_with_same_elements_have_same_length xs2 xs3
   | hd :: tl -> union_of_disjoint_nonrepeating_lists_length_lemma tl xs2 (remove_from_nonrepeating_list hd xs3)
 
-private let union_of_disjoint_sets_cardinality_lemma (#a: eqtype) (s1: set a) (s2: set a)
+let union_of_disjoint_sets_cardinality_lemma (#a: eqtype) (s1: set a) (s2: set a)
 : Lemma (requires disjoint s1 s2)
         (ensures  cardinality (union s1 s2) = cardinality s1 + cardinality s2) =
   reveal_opaque (`%cardinality) (cardinality #a);
   union_of_disjoint_nonrepeating_lists_length_lemma (set_as_list s1) (set_as_list s2) (set_as_list (union s1 s2))
 
-private let union_of_three_disjoint_sets_cardinality_lemma (#a: eqtype) (s1: set a) (s2: set a) (s3: set a)
+let union_of_three_disjoint_sets_cardinality_lemma (#a: eqtype) (s1: set a) (s2: set a) (s3: set a)
 : Lemma (requires disjoint s1 s2 /\ disjoint s2 s3 /\ disjoint s1 s3)
         (ensures  cardinality (union (union s1 s2) s3) = cardinality s1 + cardinality s2 + cardinality s3) =
   union_of_disjoint_sets_cardinality_lemma s1 s2;
   union_of_disjoint_sets_cardinality_lemma (union s1 s2) s3
 
-private let cardinality_matches_difference_plus_intersection_lemma (#a: eqtype) (s1: set a) (s2: set a)
+let cardinality_matches_difference_plus_intersection_lemma (#a: eqtype) (s1: set a) (s2: set a)
 : Lemma (ensures cardinality s1 = cardinality (difference s1 s2) + cardinality (intersection s1 s2)) =
   union_of_disjoint_sets_cardinality_lemma (difference s1 s2) (intersection s1 s2);
   assert (feq s1 (union (difference s1 s2) (intersection s1 s2)))
 
-private let union_is_differences_and_intersection (#a: eqtype) (s1: set a) (s2: set a)
+let union_is_differences_and_intersection (#a: eqtype) (s1: set a) (s2: set a)
 : Lemma (union s1 s2 == union (union (difference s1 s2) (intersection s1 s2)) (difference s2 s1)) =
   assert (feq (union s1 s2) (union (union (difference s1 s2) (intersection s1 s2)) (difference s2 s1)))
 
-private let intersection_cardinality_helper (a: eqtype) (s1: set a) (s2: set a)
+let intersection_cardinality_helper (a: eqtype) (s1: set a) (s2: set a)
 : Lemma (cardinality (union s1 s2) + cardinality (intersection s1 s2) = cardinality s1 + cardinality s2) =
   cardinality_matches_difference_plus_intersection_lemma s1 s2;
   cardinality_matches_difference_plus_intersection_lemma s2 s1;
@@ -334,29 +334,29 @@ private let intersection_cardinality_helper (a: eqtype) (s1: set a) (s2: set a)
   union_of_three_disjoint_sets_cardinality_lemma (difference s1 s2) (intersection s1 s2) (difference s2 s1);
   assert (feq (intersection s1 s2) (intersection s2 s1))
 
-private let intersection_cardinality_lemma ()
+let intersection_cardinality_lemma ()
 : Lemma (intersection_cardinality_fact) =
   introduce forall (a: eqtype) (s1: set a) (s2: set a).
     cardinality (union s1 s2) + cardinality (intersection s1 s2) = cardinality s1 + cardinality s2
   with
     intersection_cardinality_helper a s1 s2
 
-private let difference_contains_lemma ()
+let difference_contains_lemma ()
 : Lemma (difference_contains_fact) =
   ()
 
-private let difference_doesnt_include_lemma ()
+let difference_doesnt_include_lemma ()
 : Lemma (difference_doesnt_include_fact) =
   ()
 
-private let difference_cardinality_helper (a: eqtype) (s1: set a) (s2: set a)
+let difference_cardinality_helper (a: eqtype) (s1: set a) (s2: set a)
 : Lemma (  cardinality (difference s1 s2) + cardinality (difference s2 s1) + cardinality (intersection s1 s2) = cardinality (union s1 s2)
          /\ cardinality (difference s1 s2) = cardinality s1 - cardinality (intersection s1 s2)) =
   union_is_differences_and_intersection s1 s2;
   union_of_three_disjoint_sets_cardinality_lemma (difference s1 s2) (intersection s1 s2) (difference s2 s1);
   cardinality_matches_difference_plus_intersection_lemma s1 s2
 
-private let difference_cardinality_lemma ()
+let difference_cardinality_lemma ()
 : Lemma (difference_cardinality_fact) =
   introduce forall (a: eqtype) (s1: set a) (s2: set a).
                  cardinality (difference s1 s2) + cardinality (difference s2 s1) +
@@ -365,19 +365,19 @@ private let difference_cardinality_lemma ()
   with
     difference_cardinality_helper a s1 s2
 
-private let subset_helper  (a: eqtype) (s1: set a) (s2: set a)
+let subset_helper  (a: eqtype) (s1: set a) (s2: set a)
 : Lemma (subset s1 s2 <==> (forall o.{:pattern mem o s1 \/ mem o s2} mem o s1 ==> mem o s2)) =
   introduce (forall o.{:pattern mem o s1 \/ mem o s2} mem o s1 ==> mem o s2) ==> subset s1 s2
   with _.
     introduce forall x. s1 x = true ==> s2 x = true
     with assert (mem x s1 = s1 x)
 
-private let subset_lemma ()
+let subset_lemma ()
 : Lemma (subset_fact) =
   introduce forall (a: eqtype) (s1: set a) (s2: set a). subset s1 s2 <==> (forall o.{:pattern mem o s1 \/ mem o s2} mem o s1 ==> mem o s2)
   with subset_helper a s1 s2
 
-private let equal_lemma ()
+let equal_lemma ()
 : Lemma (equal_fact) =
   introduce forall (a: eqtype) (s1: set a) (s2: set a).
     equal s1 s2 <==> (forall o.{:pattern mem o s1 \/ mem o s2} mem o s1 <==> mem o s2)
@@ -388,11 +388,11 @@ private let equal_lemma ()
       with assert (mem x s1 = s1 x /\ mem x s2 = s2 x)
   )
 
-private let equal_extensionality_lemma ()
+let equal_extensionality_lemma ()
 : Lemma (equal_extensionality_fact) =
   ()
 
-private let disjoint_lemma ()
+let disjoint_lemma ()
 : Lemma (disjoint_fact) =
   introduce forall (a: eqtype) (s1: set a) (s2: set a).
     disjoint s1 s2 <==> (forall o.{:pattern mem o s1 \/ mem o s2} not (mem o s1) \/ not (mem o s2))
@@ -404,30 +404,30 @@ private let disjoint_lemma ()
     )
   )
 
-private let insert_remove_helper (a: eqtype) (x: a) (s: set a)
+let insert_remove_helper (a: eqtype) (x: a) (s: set a)
 : Lemma (requires mem x s)
         (ensures  insert x (remove x s) == s) =
   assert (feq s (insert x (remove x s)))
 
-private let insert_remove_lemma ()
+let insert_remove_lemma ()
 : Lemma (insert_remove_fact) =
   introduce forall (a: eqtype) (x: a) (s: set a). mem x s = true ==> insert x (remove x s) == s
   with
     introduce mem x s = true ==> insert x (remove x s) == s
     with _.  insert_remove_helper a x s
 
-private let remove_insert_helper (a: eqtype) (x: a) (s: set a)
+let remove_insert_helper (a: eqtype) (x: a) (s: set a)
 : Lemma (requires mem x s = false)
         (ensures  remove x (insert x s) == s) =
   assert (feq s (remove x (insert x s)))
 
-private let remove_insert_lemma ()
+let remove_insert_lemma ()
 : Lemma (remove_insert_fact) =
   introduce forall (a: eqtype) (x: a) (s: set a). mem x s = false ==> remove x (insert x s) == s
   with introduce mem x s = false ==> remove x (insert x s) == s
   with _. remove_insert_helper a x s
 
-private let set_as_list_cardinality_lemma ()
+let set_as_list_cardinality_lemma ()
 : Lemma (set_as_list_cardinality_fact) = 
   introduce forall (a: eqtype) (s: set a). FLT.length (set_as_list s) = cardinality s
   with reveal_opaque (`%cardinality) (cardinality #a)
