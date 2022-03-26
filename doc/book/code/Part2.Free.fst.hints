@@ -2,30 +2,6 @@
   "“¶'ºv\u0004¯Dø\u007fŸ³\u0010ý³Å",
   [
     [
-      "Part2.Free.__proj__Mkaction_class__item__input_of",
-      1,
-      2,
-      1,
-      [
-        "@query", "proj_equation_Part2.Free.Mkaction_class_t",
-        "projection_inverse_Part2.Free.Mkaction_class_t"
-      ],
-      0,
-      "f5f8724401302e6bdf45fe70c6b99542"
-    ],
-    [
-      "Part2.Free.__proj__Mkaction_class__item__output_of",
-      1,
-      2,
-      1,
-      [
-        "@query", "proj_equation_Part2.Free.Mkaction_class_t",
-        "projection_inverse_Part2.Free.Mkaction_class_t"
-      ],
-      0,
-      "900f4098d3efe2ccaa3bf241c616f09d"
-    ],
-    [
       "Part2.Free.input_of",
       1,
       2,
@@ -37,7 +13,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "8e2d53902aacb92117e6c97d7761a161"
+      "35d5008c514578586c017758ac7b90fd"
     ],
     [
       "Part2.Free.output_of",
@@ -51,7 +27,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "ab77c985071f522aaafaac04ae7281e9"
+      "c416d0956bcbd7a32470604a5654299d"
     ],
     [
       "Part2.Free.__proj__Return__item__x",
@@ -63,7 +39,7 @@
         "refinement_interpretation_Tm_refine_d0470c21c90bb5572aec576a7d2ec2c8"
       ],
       0,
-      "cc0b98c752909fd3938011afbbbf6301"
+      "9e37913c9a139acf4bf24d215b439360"
     ],
     [
       "Part2.Free.__proj__DoThen__item__act",
@@ -75,7 +51,7 @@
         "refinement_interpretation_Tm_refine_eaa2744753f30789855f30670ce233d3"
       ],
       0,
-      "2a09d7d2125be1ced5543e9859425f30"
+      "f1a113c9b879c11d1b95c0f4e27cc8e1"
     ],
     [
       "Part2.Free.__proj__DoThen__item__input",
@@ -92,7 +68,7 @@
         "token_correspondence_Part2.Free.__proj__Mkaction_class__item__input_of"
       ],
       0,
-      "daffdca25d161be85ccb54a8ecdb5970"
+      "8b87299e6661973c01687cc63bd34f40"
     ],
     [
       "Part2.Free.__proj__DoThen__item__continue",
@@ -107,7 +83,7 @@
         "refinement_interpretation_Tm_refine_eaa2744753f30789855f30670ce233d3"
       ],
       0,
-      "2206e77e70c3af8ca2e8d17da825e666"
+      "79beab1d860745b9a883c18d9b2a3c60"
     ],
     [
       "Part2.Free.bind",
@@ -127,7 +103,7 @@
         "well_founded_ordering_on_codomain_Part2.Free.DoThen"
       ],
       0,
-      "e7f3072b124ccd5041120f21797f70ff"
+      "fe09678ebd2e9323c93d2ca75a3048c9"
     ],
     [
       "Part2.Free.equiv",
@@ -148,7 +124,7 @@
         "well_founded_ordering_on_codomain_Part2.Free.DoThen"
       ],
       0,
-      "098755ee98d286bc6e4063609591acb4"
+      "f695d073f4127c030fffd9c4fdca1b2d"
     ],
     [
       "Part2.Free.equiv_refl",
@@ -166,13 +142,11 @@
         "constructor_distinct_Part2.Free.DoThen",
         "constructor_distinct_Part2.Free.Return",
         "disc_equation_Part2.Free.DoThen", "disc_equation_Part2.Free.Return",
-        "eq2-interp", "equation_Prims.l_Forall",
-        "equation_Prims.op_Equals_Equals_Equals", "equation_Prims.squash",
+        "eq2-interp", "equation_Prims.op_Equals_Equals_Equals",
         "equation_with_fuel_Part2.Free.equiv.fuel_instrumented",
         "fuel_guarded_inversion_Part2.Free.action_class",
         "fuel_guarded_inversion_Part2.Free.tree", "l_and-interp",
         "l_quant_interp_147662b6d17a607c9ba539d9be309d4f",
-        "l_quant_interp_867bd6e107f54aa9564513a8bc82372c",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
@@ -184,11 +158,11 @@
         "projection_inverse_Part2.Free.Return_a",
         "projection_inverse_Part2.Free.Return_acts",
         "projection_inverse_Part2.Free.Return_x",
-        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
+        "refinement_interpretation_Tm_refine_2b32fa4057ca59c1d7d4d64bcb683e4c",
         "well_founded_ordering_on_codomain_Part2.Free.DoThen"
       ],
       0,
-      "abfb6d68ec72e3c624ac2bbde8a184d2"
+      "0ba3541167ed6274be797cafa75ddc4b"
     ],
     [
       "Part2.Free.equiv_sym",
@@ -207,13 +181,12 @@
         "constructor_distinct_Part2.Free.DoThen",
         "constructor_distinct_Part2.Free.Return",
         "disc_equation_Part2.Free.DoThen", "disc_equation_Part2.Free.Return",
-        "eq2-interp", "equation_Prims.l_Forall", "equation_Prims.l_and",
-        "equation_Prims.op_Equals_Equals_Equals", "equation_Prims.squash",
+        "eq2-interp", "equation_Prims.l_and",
+        "equation_Prims.op_Equals_Equals_Equals",
         "equation_with_fuel_Part2.Free.equiv.fuel_instrumented",
         "false_interp", "fuel_guarded_inversion_Part2.Free.action_class",
         "fuel_guarded_inversion_Part2.Free.tree", "l_and-interp",
         "l_quant_interp_147662b6d17a607c9ba539d9be309d4f",
-        "l_quant_interp_248d921c366415675dabfb24fda99d4c",
         "proj_equation_FStar.Pervasives.Native.Mktuple2__1",
         "proj_equation_FStar.Pervasives.Native.Mktuple2__2",
         "proj_equation_Part2.Free.Mkaction_class_output_of",
@@ -229,12 +202,12 @@
         "projection_inverse_Part2.Free.Return_a",
         "projection_inverse_Part2.Free.Return_acts",
         "projection_inverse_Part2.Free.Return_x",
-        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
+        "refinement_interpretation_Tm_refine_a5230dc05a8db2bb92d8109b0d6298a3",
         "token_correspondence_Part2.Free.__proj__Mkaction_class__item__output_of",
         "well_founded_ordering_on_codomain_Part2.Free.DoThen"
       ],
       0,
-      "36a1b5cd393bf9831d8f05f9456ef64a"
+      "2ea7ca06b076c0d2a11a744819b44826"
     ],
     [
       "Part2.Free.equiv_trans",
@@ -254,13 +227,12 @@
         "constructor_distinct_Part2.Free.DoThen",
         "constructor_distinct_Part2.Free.Return",
         "disc_equation_Part2.Free.DoThen", "disc_equation_Part2.Free.Return",
-        "eq2-interp", "equation_Prims.l_Forall", "equation_Prims.l_and",
-        "equation_Prims.op_Equals_Equals_Equals", "equation_Prims.squash",
+        "eq2-interp", "equation_Prims.l_and",
+        "equation_Prims.op_Equals_Equals_Equals",
         "equation_with_fuel_Part2.Free.equiv.fuel_instrumented",
         "false_interp", "fuel_guarded_inversion_Part2.Free.action_class",
         "fuel_guarded_inversion_Part2.Free.tree", "l_and-interp",
         "l_quant_interp_147662b6d17a607c9ba539d9be309d4f",
-        "l_quant_interp_248d921c366415675dabfb24fda99d4c",
         "primitive_Prims.op_AmpAmp",
         "proj_equation_FStar.Pervasives.Native.Mktuple3__1",
         "proj_equation_FStar.Pervasives.Native.Mktuple3__2",
@@ -279,12 +251,12 @@
         "projection_inverse_Part2.Free.DoThen_continue",
         "projection_inverse_Part2.Free.DoThen_input",
         "projection_inverse_Part2.Free.Return_x",
-        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
+        "refinement_interpretation_Tm_refine_a5230dc05a8db2bb92d8109b0d6298a3",
         "token_correspondence_Part2.Free.__proj__Mkaction_class__item__output_of",
         "well_founded_ordering_on_codomain_Part2.Free.DoThen"
       ],
       0,
-      "b2ce8ea7dea96330ac1a28792f20534f"
+      "7101007d44400fdfc993f026b2cd28d0"
     ],
     [
       "Part2.Free.right_identity",
@@ -303,7 +275,7 @@
         "projection_inverse_Part2.Free.Return_x", "typing_Part2.Free.return"
       ],
       0,
-      "5f965b2db7dbb7908ae59a5ea9fabda7"
+      "dd226783ce5bcc8a82bbeb6c7d76de5a"
     ],
     [
       "Part2.Free.left_identity",
@@ -326,8 +298,7 @@
         "constructor_distinct_Part2.Free.Return",
         "disc_equation_Part2.Free.DoThen", "disc_equation_Part2.Free.Return",
         "eq2-interp", "equation_Part2.Free.return",
-        "equation_Prims.l_Forall", "equation_Prims.op_Equals_Equals_Equals",
-        "equation_Prims.squash",
+        "equation_Prims.op_Equals_Equals_Equals",
         "equation_with_fuel_Part2.Free.bind.fuel_instrumented",
         "equation_with_fuel_Part2.Free.equiv.fuel_instrumented",
         "fuel_guarded_inversion_Part2.Free.action_class",
@@ -335,7 +306,6 @@
         "function_token_typing_Part2.Free.return",
         "interpretation_Tm_abs_00754ba46bd155c755cd50c3b32ac525",
         "l_and-interp", "l_quant_interp_147662b6d17a607c9ba539d9be309d4f",
-        "l_quant_interp_37f5ec6b41f1146e18ce6a1e3bb56e11",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
@@ -347,12 +317,12 @@
         "projection_inverse_Part2.Free.Return_a",
         "projection_inverse_Part2.Free.Return_acts",
         "projection_inverse_Part2.Free.Return_x",
-        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
+        "refinement_interpretation_Tm_refine_8baf35f87cbdd7166980d7b79c8009f2",
         "token_correspondence_Part2.Free.return", "typing_Part2.Free.bind",
         "well_founded_ordering_on_codomain_Part2.Free.DoThen"
       ],
       0,
-      "5a915694fc5b356bbd06f02568574fa0"
+      "cc500c7d1dac672517d873bec1d0349b"
     ],
     [
       "Part2.Free.assoc",
@@ -381,15 +351,13 @@
         "constructor_distinct_Part2.Free.Return",
         "disc_equation_Part2.Free.DoThen", "disc_equation_Part2.Free.Return",
         "eq2-interp", "equation_Part2.Free.return",
-        "equation_Prims.l_Forall", "equation_Prims.op_Equals_Equals_Equals",
-        "equation_Prims.squash",
+        "equation_Prims.op_Equals_Equals_Equals",
         "equation_with_fuel_Part2.Free.bind.fuel_instrumented",
         "equation_with_fuel_Part2.Free.equiv.fuel_instrumented",
         "fuel_guarded_inversion_Part2.Free.action_class",
         "fuel_guarded_inversion_Part2.Free.tree",
         "interpretation_Tm_abs_00754ba46bd155c755cd50c3b32ac525",
         "l_and-interp", "l_quant_interp_147662b6d17a607c9ba539d9be309d4f",
-        "l_quant_interp_6509ba964c157638bc877fd719feb684",
         "proj_equation_Part2.Free.Mkaction_class_t",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
@@ -402,13 +370,13 @@
         "projection_inverse_Part2.Free.Return_a",
         "projection_inverse_Part2.Free.Return_acts",
         "projection_inverse_Part2.Free.Return_x",
-        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
+        "refinement_interpretation_Tm_refine_57627e4790640ec6a7eca66e1732fd8b",
         "typing_Part2.Free.bind",
         "typing_Tm_abs_5baf9c1bdccc8aec070b6b64bcf81545",
         "well_founded_ordering_on_codomain_Part2.Free.DoThen"
       ],
       0,
-      "49fd349d373969c7649821d6f9b475f8"
+      "d768e1559c48e721ce4947a00968850e"
     ],
     [
       "Part2.Free.read",
@@ -432,7 +400,7 @@
         "token_correspondence_Part2.Free.output_of", "unit_typing"
       ],
       0,
-      "11bb9574b46c74d1de158b3b0e4ed556"
+      "e66a9a0461f1df2ce2c16252ccb78f24"
     ],
     [
       "Part2.Free.write",
@@ -456,7 +424,7 @@
         "token_correspondence_Part2.Free.output_of"
       ],
       0,
-      "e998d57298081f6e2ed8696eabe793e4"
+      "746f13c39deca747603603651c9cd687"
     ],
     [
       "Part2.Free.interp",
@@ -497,7 +465,7 @@
         "well_founded_ordering_on_codomain_Part2.Free.DoThen"
       ],
       0,
-      "0c0171076fe9665176ecffee56f82122"
+      "fe3c1f8ceb154f3f65b8798da9ce061b"
     ],
     [
       "Part2.Free.interp_equiv",
@@ -521,8 +489,7 @@
         "disc_equation_Part2.Free.DoThen", "disc_equation_Part2.Free.Return",
         "eq2-interp", "equation_Part2.Free.feq",
         "equation_Part2.Free.input_of", "equation_Part2.Free.output_of",
-        "equation_Part2.Free.rw_action_class", "equation_Prims.l_Forall",
-        "equation_Prims.squash",
+        "equation_Part2.Free.rw_action_class",
         "equation_with_fuel_Part2.Free.equiv.fuel_instrumented",
         "equation_with_fuel_Part2.Free.interp.fuel_instrumented",
         "false_interp", "fuel_guarded_inversion_Part2.Free.rw",
@@ -532,7 +499,6 @@
         "int_inversion",
         "interpretation_Tm_abs_018d8684cb5d0984784642ef85488503",
         "l_and-interp", "l_quant_interp_147662b6d17a607c9ba539d9be309d4f",
-        "l_quant_interp_fcddcf2b1b2d47d8684b04c978b94837",
         "proj_equation_FStar.Pervasives.Native.Mktuple2__1",
         "proj_equation_FStar.Pervasives.Native.Mktuple2__2",
         "proj_equation_Part2.Free.Mkaction_class_input_of",
@@ -552,7 +518,7 @@
         "projection_inverse_Part2.Free.Return_a",
         "projection_inverse_Part2.Free.Return_acts",
         "projection_inverse_Part2.Free.Return_x",
-        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
+        "refinement_interpretation_Tm_refine_6eb7fb4db839ba96b10121ca1762e465",
         "token_correspondence_Part2.Free.__proj__Mkaction_class__item__input_of",
         "token_correspondence_Part2.Free.__proj__Mkaction_class__item__output_of",
         "token_correspondence_Part2.Free.input_of",
@@ -561,7 +527,7 @@
         "well_founded_ordering_on_codomain_Part2.Free.DoThen"
       ],
       0,
-      "516117a9dc6edf2a245cb65fb3b4bbab"
+      "c421d17aa56fd9c0038e121043ac3717"
     ]
   ]
 ]

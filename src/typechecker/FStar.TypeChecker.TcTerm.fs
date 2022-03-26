@@ -105,13 +105,16 @@ let check_expected_aqual_for_binder aq b pos =
     | None, None -> aq
     | None, Some eaq ->
       if eaq.aqual_implicit //programmer should have written #
-      then raise_error (Errors.Fatal_InconsistentImplicitQualifier, "Inconsistent implicit qualifiers") pos
+      then raise_error (Errors.Fatal_InconsistentImplicitQualifier,
+                        "Inconsistent implicit qualifiers (expected implicit annotation on the argument)") pos
       else expected_aq //keep the attributes
     | Some aq, None ->
-      raise_error (Errors.Fatal_InconsistentImplicitQualifier, "Inconsistent implicit qualifiers") pos
+      raise_error (Errors.Fatal_InconsistentImplicitQualifier,
+                   "Inconsistent implicit qualifiers (did not expect argument aquals)") pos
     | Some aq, Some eaq ->
       if aq.aqual_implicit <> eaq.aqual_implicit
-      then raise_error (Errors.Fatal_InconsistentImplicitQualifier, "Inconsistent implicit qualifiers") pos
+      then raise_error (Errors.Fatal_InconsistentImplicitQualifier,
+                        "Inconsistent implicit qualifiers (mismatch)") pos
       else expected_aq //keep the attributes
 
 let check_erasable_binder_attributes env attrs (binder_ty:typ) =
@@ -2131,7 +2134,7 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
            | _ -> Inl (BU.dflt false use_eq_opt))
       in
       let body, cbody, guard_body =
-        tc_term ({envbody with top_level=false; use_eq=env0.use_eq}) body in
+        tc_term ({envbody with top_level=false}) body in
 
       //we don't abstract over subtyping constraints; so solve them now
       //but leave out the tactics constraints for later so that the tactic
@@ -2142,7 +2145,7 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
       | Inl use_eq ->
         let cbody, g_lc = TcComm.lcomp_comp cbody in
         let body, cbody, guard = check_expected_effect
-          ({envbody with use_eq=env0.use_eq})
+          envbody
           use_eq
           c_opt (body, cbody) in
         body, cbody, Env.conj_guard guard_body (Env.conj_guard g_lc guard)
@@ -2520,11 +2523,13 @@ and check_application_args env head (chead:comp) ghead args expected_topt : term
                            (Print.subst_to_string subst)
                            (Print.term_to_string targ);
             let targ, g_ex = check_no_escape (Some head) env fvs targ in
-            let env = Env.set_expected_typ env targ in
-            let env = {env with use_eq=is_eq bqual} in
+            let env = Env.set_expected_typ_maybe_eq env targ (is_eq bqual) in
             if debug env Options.High
             then BU.print4 "Checking arg (%s) %s at type %s with use_eq:%s\n"
-                   (Print.tag_of_term e) (Print.term_to_string e) (Print.term_to_string targ) (string_of_bool env.use_eq);
+                   (Print.tag_of_term e)
+                   (Print.term_to_string e)
+                   (Print.term_to_string targ)
+                   (bqual |> is_eq |> string_of_bool);
             let e, c, g_e = tc_term env e in
             let g = Env.conj_guard g_ex <| Env.conj_guard g g_e in
 //                if debug env Options.High then BU.print2 "Guard on this arg is %s;\naccumulated guard is %s\n" (guard_to_string env g_e) (guard_to_string env g);
@@ -2797,7 +2802,8 @@ and tc_pat env (pat_t:typ) (p0:pat) :
                   (a, imp_a), subst, bvs@[x], Env.trivial_guard
 
                 | Tm_uvar _ ->
-                  let env = Env.set_expected_typ env t_f in
+                  let use_eq = true in
+                  let env = Env.set_expected_typ_maybe_eq env t_f use_eq in
                   //
                   //AR: 03/03: When typechecking these uvar args,
                   //  we don't want to solve the deferred constraints here,
@@ -3034,7 +3040,7 @@ and tc_pat env (pat_t:typ) (p0:pat) :
     then BU.print1 "Checking pattern: %s\n" (Print.pat_to_string p0);
     let bvs, tms, pat_e, pat, g, erasable =
         check_nested_pattern
-            ({(Env.clear_expected_typ env |> fst) with use_eq=true})
+            (Env.clear_expected_typ env |> fst)
             (PatternUtils.elaborate_pat env p0)
             pat_t
     in

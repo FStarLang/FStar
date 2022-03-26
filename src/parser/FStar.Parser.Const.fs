@@ -349,7 +349,6 @@ let fail_attr      = psconst "expect_failure"
 let fail_lax_attr  = psconst "expect_lax_failure"
 let tcdecltime_attr = psconst "tcdecltime"
 let noextract_to_attr = psconst "noextract_to"
-let assume_strictly_positive_attr_lid = psconst "assume_strictly_positive"
 let unifier_hint_injective_lid = psconst "unifier_hint_injective"
 let normalize_for_extraction_lid = psconst "normalize_for_extraction"
 let postprocess_with = p2l ["FStar"; "Tactics"; "Effect"; "postprocess_with"]

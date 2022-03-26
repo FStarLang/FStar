@@ -169,11 +169,8 @@ and env = {
   letrecs        :list<(lbname * int * typ * univ_names)>;  (* mutually recursive names, with recursion arity and their types (for termination checking), adding universes, see the note in TcTerm.fs:build_let_rec_env about usage of this field *)
   top_level      :bool;                         (* is this a top-level term? if so, then discharge guards *)
   check_uvars    :bool;                         (* paranoid: re-typecheck unification variables *)
-  use_eq         :bool;                         (* generate an equality constraint, rather than subtyping/subkinding *)
-  use_eq_strict  :bool;                         (* this flag is a stricter version of use_eq *)
-                                                (* use_eq is not sticky, it is reset on set_expected_typ and clear_expected_typ *)
-                                                (* at least, whereas use_eq_strict does not change as we traverse the term *)
-                                                (* during typechecking *)
+  use_eq_strict  :bool;                         (* this flag runs the typechecker in non-subtyping mode *)
+                                                (* i.e. using type equality instead of subtyping *)
   is_iface       :bool;                         (* is the module we're currently checking an interface? *)
   admit          :bool;                         (* admit VCs in the current module *)
   lax            :bool;                         (* don't even generate VCs *)
@@ -296,7 +293,6 @@ let initial_env deps
     letrecs=[];
     top_level=false;
     check_uvars=false;
-    use_eq=false;
     use_eq_strict=false;
     is_iface=false;
     admit=false;
@@ -1639,17 +1635,17 @@ let open_universes_in env uvs terms =
 
 let set_expected_typ env t =
   //false bit says that use subtyping
-  {env with expected_typ = Some (t, false); use_eq=false}
+  {env with expected_typ = Some (t, false)}
 
 let set_expected_typ_maybe_eq env t use_eq =
-  {env with expected_typ = Some (t, use_eq); use_eq=false}
+  {env with expected_typ = Some (t, use_eq)}
 
 let expected_typ env = match env.expected_typ with
   | None -> None
   | Some t -> Some t
 
 let clear_expected_typ (env_: env): env * option<(typ * bool)> =
-    {env_ with expected_typ=None; use_eq=false}, expected_typ env_
+    {env_ with expected_typ=None}, expected_typ env_
 
 let finish_module =
     let empty_lid = lid_of_ids [id_of_text ""] in

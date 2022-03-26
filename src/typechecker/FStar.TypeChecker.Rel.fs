@@ -4106,7 +4106,7 @@ let subtype_fail env e t1 t2 =
 
 let sub_or_eq_comp env (use_eq:bool) c1 c2 =
   Profiling.profile (fun () ->
-    let rel = if use_eq || env.use_eq then EQ else SUB in
+    let rel = if use_eq then EQ else SUB in
     if debug env <| Options.Other "Rel" then
       BU.print3 "sub_comp of %s --and-- %s --with-- %s\n" (Print.comp_to_string c1) (Print.comp_to_string c2) (if rel = EQ then "EQ" else "SUB");
     let prob, wl = new_problem (empty_worklist env) env c1 rel c2 None (Env.get_range env) "sub_comp" in

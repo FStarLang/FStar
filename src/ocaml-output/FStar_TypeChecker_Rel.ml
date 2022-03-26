@@ -274,8 +274,6 @@ let (copy_uvar :
                 (uu___.FStar_TypeChecker_Env.top_level);
               FStar_TypeChecker_Env.check_uvars =
                 (uu___.FStar_TypeChecker_Env.check_uvars);
-              FStar_TypeChecker_Env.use_eq =
-                (uu___.FStar_TypeChecker_Env.use_eq);
               FStar_TypeChecker_Env.use_eq_strict =
                 (uu___.FStar_TypeChecker_Env.use_eq_strict);
               FStar_TypeChecker_Env.is_iface =
@@ -5604,8 +5602,6 @@ and (solve_t_flex_rigid_eq :
                                           (env1.FStar_TypeChecker_Env.top_level);
                                         FStar_TypeChecker_Env.check_uvars =
                                           (env1.FStar_TypeChecker_Env.check_uvars);
-                                        FStar_TypeChecker_Env.use_eq =
-                                          (env1.FStar_TypeChecker_Env.use_eq);
                                         FStar_TypeChecker_Env.use_eq_strict =
                                           (env1.FStar_TypeChecker_Env.use_eq_strict);
                                         FStar_TypeChecker_Env.is_iface =
@@ -12088,7 +12084,7 @@ let (sub_or_eq_comp :
           FStar_Profiling.profile
             (fun uu___1 ->
                let rel =
-                 if use_eq || env.FStar_TypeChecker_Env.use_eq
+                 if use_eq
                  then FStar_TypeChecker_Common.EQ
                  else FStar_TypeChecker_Common.SUB in
                (let uu___3 =
@@ -13027,8 +13023,6 @@ let (check_implicit_solution :
                     (env.FStar_TypeChecker_Env.top_level);
                   FStar_TypeChecker_Env.check_uvars =
                     (env.FStar_TypeChecker_Env.check_uvars);
-                  FStar_TypeChecker_Env.use_eq =
-                    (env.FStar_TypeChecker_Env.use_eq);
                   FStar_TypeChecker_Env.use_eq_strict =
                     (env.FStar_TypeChecker_Env.use_eq_strict);
                   FStar_TypeChecker_Env.is_iface =
@@ -13154,8 +13148,6 @@ let (check_implicit_solution_and_discharge_guard :
                   (env.FStar_TypeChecker_Env.top_level);
                 FStar_TypeChecker_Env.check_uvars =
                   (env.FStar_TypeChecker_Env.check_uvars);
-                FStar_TypeChecker_Env.use_eq =
-                  (env.FStar_TypeChecker_Env.use_eq);
                 FStar_TypeChecker_Env.use_eq_strict =
                   (env.FStar_TypeChecker_Env.use_eq_strict);
                 FStar_TypeChecker_Env.is_iface =
@@ -13485,8 +13477,6 @@ let (resolve_implicits' :
                                        (env.FStar_TypeChecker_Env.top_level);
                                      FStar_TypeChecker_Env.check_uvars =
                                        (env.FStar_TypeChecker_Env.check_uvars);
-                                     FStar_TypeChecker_Env.use_eq =
-                                       (env.FStar_TypeChecker_Env.use_eq);
                                      FStar_TypeChecker_Env.use_eq_strict =
                                        (env.FStar_TypeChecker_Env.use_eq_strict);
                                      FStar_TypeChecker_Env.is_iface =
