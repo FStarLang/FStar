@@ -107,7 +107,7 @@ itself: currently F* binary packages for 2021.x are built with OCaml
    the following command to install the packages required to compile
    OCaml programs extracted from F\* code:
 
-       $ opam install ocamlfind batteries stdint zarith ppx_deriving_yojson pprint ppxlib ocaml-compiler-libs
+       $ opam install ocamlfind batteries stdint zarith ppx_deriving_yojson pprint 'ppxlib>=0.22.0' ocaml-compiler-libs
 
    For more on extracting to OCaml, check out
    [the documentation on extracting and executing F\* code](https://github.com/FStarLang/FStar/wiki/Executing-F*-code).
@@ -258,7 +258,7 @@ Then follow step 4 in [Instructions for all OSes](#instructions-for-all-oses) be
 4. F\* depends on a bunch of external OCaml packages which you should install using OPAM:
 
   ```sh
-  $ opam install ocamlbuild ocamlfind batteries stdint zarith yojson fileutils pprint menhir sedlex ppx_deriving ppx_deriving_yojson process ppxlib=0.22.0
+  $ opam install ocamlbuild ocamlfind batteries stdint zarith yojson fileutils pprint menhir sedlex ppx_deriving ppx_deriving_yojson process 'ppxlib>=0.22.0'
   ```
 
   **Note:** This list of opam packages is longer than the list in the
