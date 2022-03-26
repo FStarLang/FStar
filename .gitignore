@@ -89,3 +89,8 @@ nubuild.progress
 
 # Z3/F* nightly/weekly files
 /nightly
+
+# IDE per-user settings files
+.ionide/
+.vs/
+
