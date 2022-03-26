@@ -13,7 +13,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "ad58ba63645ab3f9db3f13f7ea63cdd0"
+      "c1dba795d259540e2ae23edb432dd6a5"
     ],
     [
       "Steel.PCMMap.compose_maps",
@@ -32,7 +32,7 @@
         "typing_FStar.Set.empty"
       ],
       0,
-      "4e77795d77852d0b8b28061c59f8ab73"
+      "afde9f881bc23c5a855fe1f05d6363dd"
     ],
     [
       "Steel.PCMMap.composable_maps_comm",
@@ -52,7 +52,7 @@
         "typing_FStar.Map.sel", "typing_FStar.PCM.__proj__Mkpcm__item__p"
       ],
       0,
-      "95de1c45a039de6aecd2bb7e69630998"
+      "ebe40c80b909fd70e5c35e80f56421f5"
     ],
     [
       "Steel.PCMMap.compose_maps_comm",
@@ -63,13 +63,11 @@
         "@MaxIFuel_assumption", "@query", "data_elim_FStar.PCM.Mkpcm",
         "data_elim_FStar.PCM.Mkpcm_", "equation_FStar.PCM.composable",
         "equation_FStar.PCM.op", "equation_FStar.PCM.symrel",
-        "equation_Prims.l_Forall", "equation_Prims.squash",
-        "equation_Steel.PCMMap.composable_maps",
+        "equation_Prims.squash", "equation_Steel.PCMMap.composable_maps",
         "equation_Steel.PCMMap.compose_maps", "equation_Steel.PCMMap.map",
         "fuel_guarded_inversion_FStar.PCM.pcm",
         "fuel_guarded_inversion_FStar.PCM.pcm_",
         "interpretation_Tm_abs_5188755db2ead4251e1b8bdb6dbf5d47",
-        "l_quant_interp_8748cd07e5f90be9bb409c78f9043964",
         "lemma_FStar.Map.lemma_ContainsDom",
         "lemma_FStar.Map.lemma_equal_elim",
         "lemma_FStar.Map.lemma_equal_intro",
@@ -77,6 +75,7 @@
         "proj_equation_FStar.PCM.Mkpcm__composable",
         "proj_equation_FStar.PCM.Mkpcm_p",
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
+        "refinement_interpretation_Tm_refine_8942ff0471eabbf8839bda32db593e6d",
         "refinement_interpretation_Tm_refine_8d24a8ed0792f3ba8f451fa9e50aefec",
         "refinement_interpretation_Tm_refine_d231fcdc87ac931cd2eb3a8a90951676",
         "token_correspondence_FStar.PCM.__proj__Mkpcm___item__composable",
@@ -84,7 +83,7 @@
         "typing_Tm_abs_5188755db2ead4251e1b8bdb6dbf5d47"
       ],
       0,
-      "9541237ef932dc87975cbedb073c44db"
+      "f2078e58c159d71360ea7ad6751de10c"
     ],
     [
       "Steel.PCMMap.composable_maps_assoc_l",
@@ -93,24 +92,23 @@
       1,
       [
         "@MaxIFuel_assumption", "@query", "equation_FStar.PCM.composable",
-        "equation_FStar.PCM.op", "equation_Prims.l_Forall",
-        "equation_Prims.squash", "equation_Steel.PCMMap.composable_maps",
+        "equation_FStar.PCM.op", "equation_Steel.PCMMap.composable_maps",
         "equation_Steel.PCMMap.compose_maps", "equation_Steel.PCMMap.map",
         "fuel_guarded_inversion_FStar.PCM.pcm",
         "interpretation_Tm_abs_5188755db2ead4251e1b8bdb6dbf5d47",
-        "l_and-interp", "l_quant_interp_3b658c21bd8614b23bb074fcc07c883d",
-        "l_quant_interp_ae489c0894456d59cb9ad368809ab743",
-        "l_quant_interp_bcc87a1505b5fa6f7c8f546ad25757ab",
         "lemma_FStar.Map.lemma_ContainsDom",
         "lemma_FStar.Map.lemma_equal_elim",
         "lemma_FStar.Map.lemma_equal_intro",
         "lemma_FStar.Map.lemma_map_literal",
-        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
+        "refinement_interpretation_Tm_refine_5303181a5d27fef432d1746041ff7dab",
+        "refinement_interpretation_Tm_refine_5ba0a4f3db9feb43e0f1cee2575cc87d",
+        "refinement_interpretation_Tm_refine_69fc6dbe530b225e9e5ae08389025880",
+        "refinement_interpretation_Tm_refine_6d198908cf65416169ba9b1d083dcd23",
         "refinement_interpretation_Tm_refine_8d24a8ed0792f3ba8f451fa9e50aefec",
         "typing_Tm_abs_5188755db2ead4251e1b8bdb6dbf5d47"
       ],
       0,
-      "af0468dfdccd92f76cd897780115d711"
+      "b095b3afa20c8578cc32906a74fb29d4"
     ],
     [
       "Steel.PCMMap.composable_maps_assoc_r",
@@ -119,24 +117,23 @@
       1,
       [
         "@MaxIFuel_assumption", "@query", "equation_FStar.PCM.composable",
-        "equation_FStar.PCM.op", "equation_Prims.l_Forall",
-        "equation_Prims.squash", "equation_Steel.PCMMap.composable_maps",
+        "equation_FStar.PCM.op", "equation_Steel.PCMMap.composable_maps",
         "equation_Steel.PCMMap.compose_maps", "equation_Steel.PCMMap.map",
         "fuel_guarded_inversion_FStar.PCM.pcm",
         "interpretation_Tm_abs_5188755db2ead4251e1b8bdb6dbf5d47",
-        "l_and-interp", "l_quant_interp_117e78783e6c545821d3286fedc9b001",
-        "l_quant_interp_3b658c21bd8614b23bb074fcc07c883d",
-        "l_quant_interp_ae489c0894456d59cb9ad368809ab743",
         "lemma_FStar.Map.lemma_ContainsDom",
         "lemma_FStar.Map.lemma_equal_elim",
         "lemma_FStar.Map.lemma_equal_intro",
         "lemma_FStar.Map.lemma_map_literal",
-        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
+        "refinement_interpretation_Tm_refine_39ffd5e1d242c9945774215dc136349b",
+        "refinement_interpretation_Tm_refine_5303181a5d27fef432d1746041ff7dab",
+        "refinement_interpretation_Tm_refine_5ba0a4f3db9feb43e0f1cee2575cc87d",
+        "refinement_interpretation_Tm_refine_656a629b4c9c7ad9f199b4963d603c9a",
         "refinement_interpretation_Tm_refine_8d24a8ed0792f3ba8f451fa9e50aefec",
         "typing_Tm_abs_5188755db2ead4251e1b8bdb6dbf5d47"
       ],
       0,
-      "bfa01d9736ef7165e3d411233d9b953e"
+      "17ae29e4cfd56afa85d901ea45dfe9bf"
     ],
     [
       "Steel.PCMMap.pcm'_map_of_pcm",
@@ -168,7 +165,7 @@
         "typing_FStar.Set.mem"
       ],
       0,
-      "70bb0b8a553f529cc8bd9fecdc166fb0"
+      "b30503377bb2e6d9a37faecde2fdd432"
     ],
     [
       "Steel.PCMMap.is_unit",
@@ -181,15 +178,12 @@
         "bool_inversion", "data_elim_FStar.PCM.Mkpcm",
         "data_elim_FStar.PCM.Mkpcm_", "equation_FStar.PCM.composable",
         "equation_FStar.PCM.op", "equation_FStar.PCM.symrel",
-        "equation_Prims.l_Forall", "equation_Prims.squash",
         "equation_Steel.PCMMap.composable_maps",
         "equation_Steel.PCMMap.compose_maps", "equation_Steel.PCMMap.map",
         "fuel_guarded_inversion_FStar.PCM.pcm",
         "fuel_guarded_inversion_FStar.PCM.pcm_",
         "function_token_typing_FStar.PCM.__proj__Mkpcm___item__composable",
         "interpretation_Tm_abs_5188755db2ead4251e1b8bdb6dbf5d47",
-        "l_quant_interp_31a6cadbf72489619e4213dee10e1596",
-        "l_quant_interp_4b4c577db559902baf553ff504d91af3",
         "lemma_FStar.Map.lemma_ContainsDom",
         "lemma_FStar.Map.lemma_InDomConstMap",
         "lemma_FStar.Map.lemma_SelConst", "lemma_FStar.Map.lemma_equal_elim",
@@ -202,8 +196,9 @@
         "proj_equation_FStar.PCM.Mkpcm__composable",
         "proj_equation_FStar.PCM.Mkpcm__one",
         "proj_equation_FStar.PCM.Mkpcm_p",
-        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
+        "refinement_interpretation_Tm_refine_195b56cbe6ad1ab33bfa8ffb2a1a59d5",
         "refinement_interpretation_Tm_refine_8d24a8ed0792f3ba8f451fa9e50aefec",
+        "refinement_interpretation_Tm_refine_a300336e83f30e5b14170b632ef2cab8",
         "refinement_interpretation_Tm_refine_d231fcdc87ac931cd2eb3a8a90951676",
         "token_correspondence_FStar.PCM.__proj__Mkpcm___item__composable",
         "typing_FStar.Map.const", "typing_FStar.Map.domain",
@@ -215,7 +210,7 @@
         "typing_Tm_abs_5188755db2ead4251e1b8bdb6dbf5d47"
       ],
       0,
-      "a485f6915d36b8abba530ea153d2be44"
+      "96649fefb7000cf6c0b331c1c963a200"
     ],
     [
       "Steel.PCMMap.pointwise",
@@ -255,7 +250,7 @@
         "typing_Tm_abs_5188755db2ead4251e1b8bdb6dbf5d47"
       ],
       0,
-      "1a82f14736bb6b7251c2114a19922235"
+      "ecb5a70b573cd4e6a22448f6d337d043"
     ],
     [
       "Steel.PCMMap.compatible_pointwise",
@@ -263,19 +258,19 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "data_elim_FStar.PCM.Mkpcm",
-        "data_elim_FStar.PCM.Mkpcm_", "eq2-interp",
+        "@MaxIFuel_assumption", "@query",
+        "FStar.PCM_interpretation_Tm_arrow_4418db7552582748ab4bfa39672e55e0",
+        "data_elim_FStar.PCM.Mkpcm", "data_elim_FStar.PCM.Mkpcm_",
         "equation_FStar.PCM.compatible", "equation_FStar.PCM.composable",
         "equation_FStar.PCM.op", "equation_FStar.PCM.symrel",
-        "equation_Prims.l_Forall", "equation_Prims.l_and",
-        "equation_Prims.squash", "equation_Steel.PCMMap.composable_maps",
+        "equation_Steel.PCMMap.composable_maps",
         "equation_Steel.PCMMap.compose_maps", "equation_Steel.PCMMap.map",
         "equation_Steel.PCMMap.pcm__map_of_pcm",
         "equation_Steel.PCMMap.pointwise",
         "fuel_guarded_inversion_FStar.PCM.pcm",
         "fuel_guarded_inversion_FStar.PCM.pcm_",
+        "function_token_typing_FStar.PCM.__proj__Mkpcm___item__composable",
         "interpretation_Tm_abs_5188755db2ead4251e1b8bdb6dbf5d47",
-        "l_and-interp", "l_quant_interp_3743d42db629aeec70efa587d3d11c7d",
         "lemma_FStar.Map.lemma_map_literal",
         "proj_equation_FStar.PCM.Mkpcm__composable",
         "proj_equation_FStar.PCM.Mkpcm__op",
@@ -283,9 +278,10 @@
         "projection_inverse_FStar.PCM.Mkpcm__composable",
         "projection_inverse_FStar.PCM.Mkpcm__op",
         "projection_inverse_FStar.PCM.Mkpcm_p",
-        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
         "refinement_interpretation_Tm_refine_8d24a8ed0792f3ba8f451fa9e50aefec",
+        "refinement_interpretation_Tm_refine_b3a987e4ba803bfe02044d89c484b533",
         "refinement_interpretation_Tm_refine_d231fcdc87ac931cd2eb3a8a90951676",
+        "refinement_interpretation_Tm_refine_e2b216a7dfb1760ea4eb73668c89ed27",
         "token_correspondence_FStar.PCM.__proj__Mkpcm___item__composable",
         "token_correspondence_FStar.PCM.__proj__Mkpcm___item__op",
         "token_correspondence_Steel.PCMMap.composable_maps",
@@ -297,7 +293,7 @@
         "typing_Tm_abs_5188755db2ead4251e1b8bdb6dbf5d47"
       ],
       0,
-      "1a07475dd6a2e753b852f784e0816629"
+      "d4c49eb00d43e52233fc9c657b39fd5f"
     ],
     [
       "Steel.PCMMap.compatible_pointwise_upd",
@@ -306,11 +302,9 @@
       1,
       [
         "@MaxIFuel_assumption", "@query", "data_elim_FStar.PCM.Mkpcm",
-        "data_elim_FStar.PCM.Mkpcm_", "eq2-interp",
-        "equation_FStar.PCM.compatible", "equation_FStar.PCM.composable",
-        "equation_FStar.PCM.op", "equation_FStar.PCM.symrel",
-        "equation_Prims.l_and", "equation_Prims.squash",
-        "equation_Steel.PCMMap.composable_maps",
+        "data_elim_FStar.PCM.Mkpcm_", "equation_FStar.PCM.compatible",
+        "equation_FStar.PCM.composable", "equation_FStar.PCM.op",
+        "equation_FStar.PCM.symrel", "equation_Steel.PCMMap.composable_maps",
         "equation_Steel.PCMMap.compose_maps", "equation_Steel.PCMMap.map",
         "equation_Steel.PCMMap.pcm__map_of_pcm",
         "equation_Steel.PCMMap.pointwise",
@@ -319,7 +313,6 @@
         "function_token_typing_Steel.PCMMap.composable_maps",
         "function_token_typing_Steel.PCMMap.compose_maps",
         "interpretation_Tm_abs_5188755db2ead4251e1b8bdb6dbf5d47",
-        "l_and-interp", "l_quant_interp_f5ddf7bb1acc83ee1dcc9a6b1c369d19",
         "lemma_FStar.Map.lemma_ContainsDom",
         "lemma_FStar.Map.lemma_InDomConstMap",
         "lemma_FStar.Map.lemma_InDomUpd1", "lemma_FStar.Map.lemma_SelUpd1",
@@ -339,9 +332,11 @@
         "projection_inverse_FStar.PCM.Mkpcm__composable",
         "projection_inverse_FStar.PCM.Mkpcm__op",
         "projection_inverse_FStar.PCM.Mkpcm_p",
-        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
+        "refinement_interpretation_Tm_refine_59490849516d2b011914f38e2e5816ef",
         "refinement_interpretation_Tm_refine_8d24a8ed0792f3ba8f451fa9e50aefec",
+        "refinement_interpretation_Tm_refine_b3a987e4ba803bfe02044d89c484b533",
         "refinement_interpretation_Tm_refine_d231fcdc87ac931cd2eb3a8a90951676",
+        "refinement_interpretation_Tm_refine_e305f01ed6491b28d26326f3082e5dfc",
         "token_correspondence_FStar.PCM.__proj__Mkpcm___item__composable",
         "token_correspondence_FStar.PCM.__proj__Mkpcm___item__op",
         "token_correspondence_Steel.PCMMap.composable_maps",
@@ -355,7 +350,7 @@
         "typing_Tm_abs_5188755db2ead4251e1b8bdb6dbf5d47"
       ],
       0,
-      "d910ab0e91688c07f9b298471eceb591"
+      "69e511c446a85305e791e618a93c0240"
     ],
     [
       "Steel.PCMMap.lift_frame_preservation",
@@ -364,17 +359,14 @@
       1,
       [
         "@MaxIFuel_assumption", "@query", "data_elim_FStar.PCM.Mkpcm_",
-        "eq2-interp", "equation_FStar.PCM.composable",
-        "equation_FStar.PCM.op", "equation_Prims.eq2",
-        "equation_Prims.l_Forall", "equation_Prims.squash",
-        "equation_Steel.PCMMap.composable_maps",
+        "equation_FStar.PCM.composable", "equation_FStar.PCM.op",
+        "equation_Prims.squash", "equation_Steel.PCMMap.composable_maps",
         "equation_Steel.PCMMap.compose_maps", "equation_Steel.PCMMap.map",
         "equation_Steel.PCMMap.pcm__map_of_pcm",
         "equation_Steel.PCMMap.pointwise",
         "fuel_guarded_inversion_FStar.PCM.pcm",
         "function_token_typing_Steel.PCMMap.compose_maps",
         "interpretation_Tm_abs_5188755db2ead4251e1b8bdb6dbf5d47",
-        "l_quant_interp_eb7ee0365664a592bc253fc6536b0c2f",
         "lemma_FStar.Map.lemma_ContainsDom",
         "lemma_FStar.Map.lemma_InDomConstMap",
         "lemma_FStar.Map.lemma_InDomUpd1", "lemma_FStar.Map.lemma_SelUpd1",
@@ -397,7 +389,9 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
         "refinement_interpretation_Tm_refine_8d24a8ed0792f3ba8f451fa9e50aefec",
         "refinement_interpretation_Tm_refine_c428f7ae2683c1eea369cca164523c65",
+        "refinement_interpretation_Tm_refine_ccc5507399fe8ea63e0a62253eee3591",
         "refinement_interpretation_Tm_refine_dcb4d7348be20a6f23242373c11d6f91",
+        "refinement_interpretation_Tm_refine_df1d73bbdc138cf10e8b9085d3257e0b",
         "token_correspondence_FStar.PCM.__proj__Mkpcm___item__composable",
         "token_correspondence_FStar.PCM.__proj__Mkpcm___item__op",
         "token_correspondence_Steel.PCMMap.composable_maps",
@@ -412,7 +406,7 @@
         "typing_Tm_abs_5188755db2ead4251e1b8bdb6dbf5d47"
       ],
       0,
-      "cc4a12060914177edc3b272e745524bc"
+      "40668314612adebe2e02b7e3c3ef3ea3"
     ],
     [
       "Steel.PCMMap.lift_frame_preserving_upd",
@@ -447,7 +441,7 @@
         "typing_FStar.Set.singleton", "typing_FStar.Set.union"
       ],
       0,
-      "a3c20fb12ece9c878ea6f9f34d5bb1b3"
+      "97ab467cc527cee510f34aa1698f0fa3"
     ],
     [
       "Steel.PCMMap.lift_composable",
@@ -487,7 +481,7 @@
         "typing_Steel.PCMMap.pcm__map_of_pcm"
       ],
       0,
-      "fb12681bf41bd10f461617e02dd05653"
+      "d35d12084439cf9465aeb1245f0fcc38"
     ]
   ]
 ]
