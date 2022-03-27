@@ -258,7 +258,7 @@ Then follow step 4 in [Instructions for all OSes](#instructions-for-all-oses) be
 4. F\* depends on a bunch of external OCaml packages which you should install using OPAM:
 
   ```sh
-  $ opam install .
+  $ opam install --deps-only .
   ```
 
   **Note:** On some Linux distributions, for example Gentoo, where `opambuild` comes pre-installed, you may need run 
