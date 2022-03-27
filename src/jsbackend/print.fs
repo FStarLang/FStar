@@ -73,7 +73,7 @@ and pretty_print_statement (p:statement_t) : doc =
 
   | JSS_For(i,c,l,s) -> reduce [ws; text "for"; reduce [
     (match i with None -> empty
-     | Some e -> (match e with JSF_Expression(f) -> pretty_print_exp_il f
+     | Some e -> (match e with JSF_Expression(f) -> pretty_print_exp f
         | JSF_Declaration(l) -> List.map
             (fun (x,vl) -> reduce [text "var"; ws; text (jstr_escape x);
                 (match vl with None -> empty | Some v -> reduce [ws; text "="; ws; pretty_print_exp_cl v])]
@@ -84,7 +84,7 @@ and pretty_print_statement (p:statement_t) : doc =
     hardline; optws s]
 
   | JSS_Forin(i,e,s) -> reduce [ws; text "for"; reduce [
-    (match i with JSF_Expression(f) -> pretty_print_exp_il f
+    (match i with JSF_Expression(f) -> pretty_print_exp f
     | JSF_Declaration(l) -> List.map (fun (x,v) -> reduce [text "var"; ws; text (jstr_escape x);
         (match v with None->empty | Some v -> reduce [ws; text "="; ws; pretty_print_exp_cl v])])
     l |> combine comma); ws; colon; ws; pretty_print_exp e] |> parens;
@@ -113,7 +113,7 @@ and pretty_print_statements l = reduce (List.map pretty_print_statement l)
 
 and pt s b = if b then parens s else s
 
-and pretty_print_exp_gen (commaless:bool) (inless:bool) =
+and pretty_print_exp_gen (commaless:bool) =
   let rec ppe input = match input with
   | JSE_This -> (text "this", 0)
   | JSE_Null -> (text "null", 0)
@@ -175,9 +175,8 @@ and pretty_print_exp_gen (commaless:bool) (inless:bool) =
     (reduce [pt s1 (p1>k1); ws; text op; ws; pt s2 (p2>k2)], pr)
   in fun e -> fst (ppe e)
 
-and pretty_print_exp : expression_t -> doc = pretty_print_exp_gen false false
-and pretty_print_exp_cl = pretty_print_exp_gen true false
-and pretty_print_exp_il = pretty_print_exp_gen false true
+and pretty_print_exp : expression_t -> doc = pretty_print_exp_gen false
+and pretty_print_exp_cl = pretty_print_exp_gen true
 
 and pretty_print_elist l = List.map pretty_print_exp_cl l |> combine comma
 
