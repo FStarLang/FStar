@@ -103,27 +103,27 @@ function make_karamel() {
     export PATH="$(pwd)/karamel:$PATH"
 }
 
-# By default, QuackyDucky master works against F* stable. Can also be overridden.
-function fetch_qd() {
-    if [ ! -d qd ]; then
-        git clone https://github.com/project-everest/quackyducky qd
+# By default, EverParse master works against F* stable. Can also be overridden.
+function fetch_everparse() {
+    if [ ! -d everparse ]; then
+        git clone https://github.com/project-everest/everparse everparse
     fi
 
-    cd qd
+    cd everparse
     git fetch origin
-    local ref=$(jq -c -r '.RepoVersions["qd_version"]' "$rootPath/.docker/build/config.json" )
+    local ref=$(jq -c -r '.RepoVersions["everparse_version"]' "$rootPath/.docker/build/config.json" )
     if [[ $ref == "" || $ref == "null" ]]; then
-        echo "Unable to find RepoVersions.qd_version on $rootPath/.docker/build/config.json"
+        echo "Unable to find RepoVersions.everparse_version on $rootPath/.docker/build/config.json"
         return -1
     fi
 
-    echo Switching to QuackyDucky $ref
+    echo Switching to EverParse $ref
     git reset --hard $ref
     cd ..
-    export_home QD "$(pwd)/qd"
+    export_home EVERPARSE "$(pwd)/everparse"
 }
 
-function make_qd() {
+function make_everparse() {
     # Default build target is minimal, unless specified otherwise
     local localTarget
     if [[ $1 == "" ]]; then
@@ -132,8 +132,8 @@ function make_qd() {
         localTarget="$1"
     fi
 
-    make -C qd -j $threads $localTarget ||
-        (cd qd && git clean -fdx && make -j $threads $localTarget)
+    make -C everparse -j $threads $localTarget ||
+        (cd everparse && git clean -fdx && make -j $threads $localTarget)
 }
 
 
@@ -302,7 +302,7 @@ function fstar_default_build () {
     # Start fetching while we build F*
     fetch_karamel &
     fetch_hacl &
-    fetch_qd &
+    fetch_everparse &
     fetch_mitls &
 
     # Build F*, along with fstarlib
@@ -321,11 +321,11 @@ function fstar_default_build () {
     export_home HACL "$(pwd)/hacl-star"
     export_home EVERCRYPT "$(pwd)/hacl-star/providers"
     export_home KRML "$(pwd)/karamel"
-    export_home QD "$(pwd)/qd"
+    export_home EVERPARSE "$(pwd)/everparse"
 
     # Fetch and build subprojects for orange tests
     make_karamel &
-    make_qd &
+    make_everparse &
     wait
 
     # fetch_vale depends on fetch_hacl for the hacl-star/vale/.vale_version file
@@ -349,7 +349,7 @@ function fstar_default_build () {
 
     # The LowParse test suite is now in project-everest/everparse
     {
-        $gnutime make -C qd -j $threads -k lowparse-fstar-test || {
+        $gnutime make -C everparse -j $threads -k lowparse-fstar-test || {
             echo "Error - LowParse"
             echo " - min-test (LowParse)" >>$ORANGE_FILE
         }
