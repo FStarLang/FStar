@@ -19,9 +19,12 @@ open Steel.Memory
 open Steel.ST.Effect.Ghost
 module U = FStar.Universe
 module SEA = Steel.Effect.Atomic
+module SE = Steel.Effect
 module STG = Steel.ST.Effect.Ghost
 module STAG = Steel.ST.Effect.AtomicAndGhost
 open Steel.ST.Coercions
+
+#set-options "--ide_id_info_off"
 
 let weaken #o p q l =
   coerce_ghost (fun () -> SEA.rewrite_slprop p q l)
@@ -113,3 +116,13 @@ let with_invariant_g (#a:Type)
                                  (p `star` fp)
                                  (fun x -> p `star` fp' x) = f in
     coerce_ghost (fun _ -> SEA.with_invariant_g i f)
+
+let par #aL #aR #preL #postL #preR #postR f g =
+  let f : unit -> SE.SteelT aL preL postL = fun _ -> f () in
+  let g : unit -> SE.SteelT aR preR postR = fun _ -> g () in    
+  let p
+    : unit -> SE.SteelT (aL & aR)
+                       (preL `star` preR)
+                       (fun y -> postL (fst y) `star` postR (snd y))
+    = fun _ -> SE.par f g in
+  coerce_steel p
