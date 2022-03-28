@@ -468,7 +468,7 @@ let default_value_for_ty (g:uenv) (t : mlty) : mlexpr  =
          with_ty t <| MLE_Fun (vs_ts, body r)
 
 let maybe_eta_expand_coercion g expect e =
-    if Options.codegen () = Some Options.Kremlin // we need to stay first order for Kremlin
+    if Options.codegen () = Some Options.Krml // we need to stay first order for Karamel
     then e
     else eta_expand g expect e
 
@@ -560,7 +560,7 @@ let maybe_coerce pos (g:uenv) e ty (expect:mlty) : mlexpr =
                 BU.print2 "\n Effect mismatch on type of %s : %s\n"
                             (Code.string_of_mlexpr (current_module_of_uenv g) e)
                             (Code.string_of_mlty (current_module_of_uenv g) ty)) in
-               e //types differ but only on effect labels, which ML/KreMLin don't care about; so no coercion needed
+               e //types differ but only on effect labels, which ML/KaRaMeL don't care about; so no coercion needed
           else let _ = debug g (fun () ->
                 BU.print3 "\n (*needed to coerce expression \n %s \n of type \n %s \n to type \n %s *) \n"
                             (Code.string_of_mlexpr (current_module_of_uenv g) e)
@@ -847,8 +847,8 @@ let rec extract_one_pat (imp : bool)
     in
     match p.v with
     | Pat_constant (Const_int (c, swopt))
-      when Options.codegen() <> Some Options.Kremlin ->
-      //Kremlin supports native integer constants in patterns
+      when Options.codegen() <> Some Options.Krml ->
+      //Karamel supports native integer constants in patterns
       //Don't convert them into `when` clauses
         let mlc, ml_ty =
             match swopt with
@@ -1514,7 +1514,7 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
                                with additional MLTY_Erased type arguments.
 
                              Note, in both cases, we preserve type application in the ML AST
-                             since KreMLin requires it.
+                             since KaRaMeL requires it.
 
                              See e.g., bug #1694.
                            *)
@@ -1711,12 +1711,12 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
           (* env_burn only matters for non-recursive lets and simply burns
            * the let bound variable in its own definition to generate
            * code that is more understandable. We only do it for OCaml,
-           * to not affect Kremlin naming. *)
+           * to not affect Karamel naming. *)
           let env_body, lbs, env_burn = List.fold_right (fun lb (env, lbs, env_burn) ->
               let (lbname, _, (t, (_, polytype)), add_unit, _) = lb in
               let env, nm, _ = UEnv.extend_lb env lbname t polytype add_unit in
               let env_burn =
-                if Options.codegen () <> Some Options.Kremlin
+                if Options.codegen () <> Some Options.Krml
                 then UEnv.burn_name env_burn nm
                 else env_burn
               in

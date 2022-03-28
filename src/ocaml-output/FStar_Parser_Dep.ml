@@ -2577,7 +2577,7 @@ let (print_full : deps -> unit) =
                (fun fst_file ->
                   let mname = lowercase_module_name fst_file in
                   let uu___2 =
-                    FStar_Options.should_extract mname FStar_Options.Kremlin in
+                    FStar_Options.should_extract mname FStar_Options.Krml in
                   if uu___2
                   then
                     let uu___3 = output_krml_file fst_file in

@@ -30,9 +30,9 @@
     "TrackPerformance" : false,
 
     "RepoVersions" : {
-        "hacl_version" : "origin/master",
-        "kremlin_version" : "origin/master",
-        "qd_version" : "origin/master",
-        "mitls_version" : "origin/master"
+        "hacl_version" : "origin/pnmadelaine_rename_kremlin",
+        "karamel_version" : "origin/pnmadelaine_renaming",
+        "everparse_version" : "origin/taramana_krml_rename",
+        "mitls_version" : "origin/taramana_krml_rename"
     }
 }

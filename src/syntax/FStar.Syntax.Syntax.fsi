@@ -340,7 +340,7 @@ type qualifier =
   | Visible_default                        //a definition that may be unfolded by the normalizer, but only if necessary (default)
   | Irreducible                            //a definition that can never be unfolded by the normalizer
   | Inline_for_extraction                  //a symbol whose definition must be unfolded when compiling the program
-  | NoExtract                              // a definition whose contents won't be extracted (currently, by KreMLin only)
+  | NoExtract                              // a definition whose contents won't be extracted (currently, by KaRaMeL only)
   | Noeq                                   //for this type, don't generate HasEq
   | Unopteq                                //for this type, use the unoptimized HasEq scheme
   | TotalEffect                            //an effect that forbids non-termination

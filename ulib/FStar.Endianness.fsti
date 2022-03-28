@@ -19,7 +19,7 @@ module FStar.Endianness
 ///
 /// .. note::
 ///
-///    This module supersedes the poorly-named ``FStar.Kremlin.Endianness``.
+///    This module supersedes the poorly-named ``FStar.Krml.Endianness``.
 
 module U8 = FStar.UInt8
 module U32 = FStar.UInt32
@@ -27,7 +27,7 @@ module U64 = FStar.UInt64
 module Math = FStar.Math.Lemmas
 module S = FStar.Seq
 
-[@@ noextract_to "Kremlin"]
+[@@ noextract_to "krml"]
 type bytes = S.seq U8.t
 
 open FStar.Mul

@@ -708,7 +708,7 @@ let mac_is_used (#rgn:region) (#i:id)
        Some? (snd (m_sel h mac_st))))
 
 (* JP: not extracting because the use of false_elim means that the None branch
- * is not eliminated from the match, which means that KreMLin would have to
+ * is not eliminated from the match, which means that KaRaMeL would have to
  * implement false_elim as a function that always returns a value of the right
  * type (impossible in C). *)
 noextract let find_refined_aead_entry
