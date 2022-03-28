@@ -144,9 +144,9 @@ commands. (Note: On Windows this requires Cygwin and `make`)
          code. Thus, they require having OCaml installed. If OCaml is
          absent, then these examples will be skipped.
 
-   Note: Some of the examples currently require having [KreMLin](https://github.com/FStarLang/kremlin)
-         installed and the `KREMLIN_HOME` variable pointing to its location.
-         If KReMLin is absent, then these examples will be skipped.
+   Note: Some of the examples currently require having [KaRaMeL](https://github.com/FStarLang/karamel)
+         installed and the `KRML_HOME` variable pointing to its location.
+         If KaRaMeL is absent, then these examples will be skipped.
 
    Note: On Linux if you get a file descriptor exhaustion error that looks
          like this `Unix.Unix_error(Unix.ENOMEM, "fork", "")`

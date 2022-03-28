@@ -1,7 +1,7 @@
 FSTAR_HOME=../../..
 INCLUDE_PATHS=..
-KREMLIN_HOME?=$(FSTAR_HOME)/../Kremlin
-INCLUDE_PATHS=$(KREMLIN_HOME)/kremlib ..
+KRML_HOME?=$(FSTAR_HOME)/../Karamel
+INCLUDE_PATHS=$(KRML_HOME)/krmllib ..
 EXCLUDED_FSTAR_FILES=PolyStub.fst
 
 POLYS=$(foreach FACTOR,1 2 3,\

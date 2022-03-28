@@ -17,7 +17,7 @@ module MemCpy
 open Demo.Deps
 
 (**
-    A demo of F*, Low* and KreMLin
+    A demo of F*, Low* and KaRaMeL
     Copying a buffer of bytes 
 **)
 

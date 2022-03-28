@@ -1651,7 +1651,7 @@ let frame2
 = frame2_repr a frame ppre pre p post post_err l inner ()
 
 noeq
-[@erasable] // very important, otherwise KReMLin will fail with argument typing
+[@erasable] // very important, otherwise KaRaMeL will fail with argument typing
 type valid_rewrite_t
   (p1: parser)
   (p2: parser)

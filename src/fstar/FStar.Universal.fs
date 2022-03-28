@@ -226,7 +226,7 @@ let load_interface_decls env interface_file_name : TcEnv.env_t =
 (* Batch mode: checking a file                                         *)
 (***********************************************************************)
 
-(* Extraction to OCaml, F# or Kremlin *)
+(* Extraction to OCaml, F# or Krml *)
 let emit (mllibs:list<FStar.Extraction.ML.Syntax.mllib>) =
   let opt = Options.codegen () in
   if opt <> None then
@@ -234,7 +234,7 @@ let emit (mllibs:list<FStar.Extraction.ML.Syntax.mllib>) =
       | Some Options.FSharp -> ".fs"
       | Some Options.OCaml
       | Some Options.Plugin -> ".ml"
-      | Some Options.Kremlin -> ".krml"
+      | Some Options.Krml -> ".krml"
       | _ -> failwith "Unrecognized option"
     in
     match opt with
@@ -245,9 +245,9 @@ let emit (mllibs:list<FStar.Extraction.ML.Syntax.mllib>) =
            for F# extraction and the new printer for OCaml extraction. *)
         let outdir = Options.output_dir() in
         List.iter (FStar.Extraction.ML.PrintML.print outdir ext) mllibs
-    | Some Options.Kremlin ->
-        let programs = List.collect Extraction.Kremlin.translate mllibs in
-        let bin: Extraction.Kremlin.binary_format = Extraction.Kremlin.current_version, programs in
+    | Some Options.Krml ->
+        let programs = List.collect Extraction.Krml.translate mllibs in
+        let bin: Extraction.Krml.binary_format = Extraction.Krml.current_version, programs in
         begin match programs with
         | [ name, _ ] ->
             save_value_to_file (Options.prepend_output_dir (name ^ ext)) bin
@@ -418,7 +418,7 @@ let tc_one_file
           | None -> None
           | Some tgt ->
             if Options.should_extract (string_of_lid tcmod.name) tgt
-            && (not tcmod.is_interface || tgt=Options.Kremlin)
+            && (not tcmod.is_interface || tgt=Options.Krml)
             then let extracted_defs, _extraction_time = maybe_extract_mldefs tcmod env in
                  extracted_defs
             else None
