@@ -37,18 +37,18 @@ let llist_node = llist_node u32
 inline_for_extraction
 let llist = llist u32
 
-let lpts_to (ll:llist) (l:list u32) = lpts_to ll l
+let is_list (ll:llist) (l:list u32) = is_list ll l
 
 let cons (#l:G.erased (list u32)) (x:u32) (ll:llist)
   : STT llist
-        (ll `lpts_to` l)
-        (fun ll -> ll `lpts_to` (x::l))
+        (ll `is_list` l)
+        (fun ll -> ll `is_list` (x::l))
   = cons x ll
 
 let peek (#l:G.erased (list u32)) (ll:llist) (_:squash (Cons? l))
   : ST u32
-       (ll `lpts_to` l)
-       (fun _ -> ll `lpts_to` l)
+       (ll `is_list` l)
+       (fun _ -> ll `is_list` l)
        (requires True)
        (ensures fun x -> x == Cons?.hd l)
   = peek ll ()

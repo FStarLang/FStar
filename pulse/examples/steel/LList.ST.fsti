@@ -45,9 +45,9 @@ type llist (a:Type0) : Type0 = ref (llist_node a)
 
 
 /// The module provides a logical view of the linked list
-///   as a functional list, related by the lpts_to vprop
+///   as a functional list, related by the is_list vprop
 
-val lpts_to (#a:Type0) (ll:llist a) (l:list a) : vprop
+val is_list (#a:Type0) (ll:llist a) (l:list a) : vprop
 
 /// Empty linked list is a value
 val empty (a:Type0) : llist a
@@ -56,14 +56,14 @@ val empty (a:Type0) : llist a
 val empty_pts_to (#opened:_) (a:Type0)
   : STGhostT unit opened
       emp
-      (fun _ -> empty a `lpts_to` [])
+      (fun _ -> empty a `is_list` [])
 
-/// The lpts_to assertion on empty linked list comes with an
+/// The is_list assertion on empty linked list comes with an
 ///   inversion lemma
 val empty_pts_to_inversion (#opened:_) (a:Type0) (l:list a)
   : STGhost unit opened
-      (empty a `lpts_to` l)
-      (fun _ -> empty a `lpts_to` l)
+      (empty a `is_list` l)
+      (fun _ -> empty a `is_list` l)
       (requires True)
       (ensures fun _ -> l == [])
 
@@ -71,8 +71,8 @@ val empty_pts_to_inversion (#opened:_) (a:Type0) (l:list a)
 inline_for_extraction
 val cons (#a:Type0) (#l:G.erased (list a)) (x:a) (ll:llist a)
   : STT (llist a)
-        (ll `lpts_to` l)
-        (fun ll -> ll `lpts_to` (x::l))
+        (ll `is_list` l)
+        (fun ll -> ll `is_list` (x::l))
 
 /// Reading the head element of the linked list
 inline_for_extraction
@@ -80,8 +80,8 @@ val peek (#a:Type0) (#l:G.erased (list a))
   (ll:llist a)
   (_:squash (Cons? l))
   : ST a
-       (ll `lpts_to` l)
-       (fun _ -> ll `lpts_to` l)
+       (ll `is_list` l)
+       (fun _ -> ll `is_list` l)
        (requires True)
        (ensures fun x -> x == Cons?.hd l)
 
@@ -93,8 +93,8 @@ val intro (#opened:_) (#a:Type0)
   : STGhost unit opened
       (pts_to ll full_perm node
          `star`
-       lpts_to node.next (Cons?.tl l))
-      (fun _ -> lpts_to ll l)
+       is_list node.next (Cons?.tl l))
+      (fun _ -> is_list ll l)
       (requires node.data == Cons?.hd l)
       (ensures fun _ -> True)
 
@@ -103,10 +103,10 @@ val elim (#opened:_) (#a:Type0)
   (ll:llist a)
   (_:squash (Cons? l))
   : STGhost (llist_node a) opened
-      (lpts_to ll l)
+      (is_list ll l)
       (fun node ->
        pts_to ll full_perm node
          `star`
-       lpts_to node.next (Cons?.tl l))
+       is_list node.next (Cons?.tl l))
       (requires True)
       (ensures fun node -> node.data == Cons?.hd l)

@@ -26,7 +26,7 @@ open Steel.ST.Reference
 
 #set-options "--ide_id_info_off"
 
-let rec lpts_to #a ll l : Tot vprop (decreases l) =
+let rec is_list #a ll l : Tot vprop (decreases l) =
   match l with
   | [] -> pure (ll == null)
   | hd::tl ->
@@ -35,11 +35,11 @@ let rec lpts_to #a ll l : Tot vprop (decreases l) =
                `star`
              pure (node.data == hd)
                `star`
-             lpts_to node.next tl)
+             is_list node.next tl)
 
 module T = FStar.Tactics
 
-let intro_lpts_to (#opened:_) (#a:Type0)
+let intro_is_list (#opened:_) (#a:Type0)
   (hd:G.erased a)
   (tl:G.erased (list a))
   (node:G.erased (llist_node a))
@@ -47,8 +47,8 @@ let intro_lpts_to (#opened:_) (#a:Type0)
   : STGhost unit opened
       (pts_to ll full_perm node
          `star`
-       lpts_to node.next tl)
-      (fun _ -> lpts_to ll (G.reveal hd::tl))
+       is_list node.next tl)
+      (fun _ -> is_list ll (G.reveal hd::tl))
       (requires eq2 #a node.data hd)
       (ensures fun _ -> True)
   = intro_pure (eq2 #a node.data hd);
@@ -58,90 +58,90 @@ let intro_lpts_to (#opened:_) (#a:Type0)
                   `star`
                 pure (eq2 #a node.data hd)
                   `star`
-                lpts_to node.next tl);
+                is_list node.next tl);
     assert (exists_ (fun node -> pts_to ll full_perm node
                                 `star`
                               pure (eq2 #a node.data hd)
                                 `star`
-                              lpts_to node.next tl) ==
-            lpts_to ll (G.reveal hd::tl))
-      by (T.norm [delta_only [`%lpts_to]; zeta; iota]);
+                              is_list node.next tl) ==
+            is_list ll (G.reveal hd::tl))
+      by (T.norm [delta_only [`%is_list]; zeta; iota]);
 
     rewrite 
      (exists_ (fun node -> pts_to ll full_perm node
                           `star`
                         pure (eq2 #a node.data hd)
                           `star`
-                        lpts_to node.next tl))
+                        is_list node.next tl))
 
-     (lpts_to ll (G.reveal hd::tl))
+     (is_list ll (G.reveal hd::tl))
 
-let elim_lpts_to (#opened:_) (#a:Type0)
+let elim_is_list (#opened:_) (#a:Type0)
   (hd:G.erased a)
   (tl:G.erased (list a))
   (ll:llist a)
   : STGhost (G.erased (llist_node a)) opened
-      (lpts_to ll (G.reveal hd::tl))
+      (is_list ll (G.reveal hd::tl))
       (fun node ->
        pts_to ll full_perm node
          `star`
-       lpts_to node.next tl)
+       is_list node.next tl)
       (requires True)
       (ensures fun node -> eq2 #a node.data hd)
-  = assert (lpts_to ll (G.reveal hd::tl) ==
+  = assert (is_list ll (G.reveal hd::tl) ==
             exists_ (fun node -> pts_to ll full_perm node
                                 `star`
                               pure (eq2 #a node.data hd)
                                 `star`
-                              lpts_to node.next tl))
-      by (T.norm [delta_only [`%lpts_to]; zeta; iota]);
+                              is_list node.next tl))
+      by (T.norm [delta_only [`%is_list]; zeta; iota]);
 
-    rewrite (lpts_to ll (G.reveal hd::tl))
+    rewrite (is_list ll (G.reveal hd::tl))
             (exists_ (fun node -> pts_to ll full_perm node
                                  `star`
                                pure (eq2 #a node.data hd)
                                  `star`
-                               lpts_to node.next tl));
+                               is_list node.next tl));
     let node = elim_exists () in
     elim_pure (eq2 _ _);
     node
 
-let elim_lpts_to_aux (#opened:_) (#a:Type0)
+let elim_is_list_aux (#opened:_) (#a:Type0)
   (l:G.erased (list a))
   (ll:llist a)
   (_:squash (Cons? l))
   : STGhost (G.erased (llist_node a)) opened
-      (lpts_to ll l)
+      (is_list ll l)
       (fun node ->
        pts_to ll full_perm node
          `star`
-       lpts_to node.next (Cons?.tl l))
+       is_list node.next (Cons?.tl l))
       (requires True)
       (ensures fun node -> eq2 #a node.data (Cons?.hd l))
   = rewrite
-      (lpts_to ll l)
-      (lpts_to ll (Cons?.hd l::Cons?.tl l));
-    elim_lpts_to (Cons?.hd l) (Cons?.tl l) ll
+      (is_list ll l)
+      (is_list ll (Cons?.hd l::Cons?.tl l));
+    elim_is_list (Cons?.hd l) (Cons?.tl l) ll
 
 let empty a = null
 
 let empty_pts_to #_ a =
   intro_pure (empty a == null);
   rewrite (pure _)
-          (lpts_to (empty a) [])
+          (is_list (empty a) [])
 
 let empty_pts_to_inversion #_ a l =
   match l with
   | [] -> noop ()
   | hd::tl ->
-    rewrite (lpts_to (empty a) l)
-            (lpts_to (empty a) (hd::tl));
-    let node = elim_lpts_to hd tl (empty a) in
+    rewrite (is_list (empty a) l)
+            (is_list (empty a) (hd::tl));
+    let node = elim_is_list hd tl (empty a) in
     pts_to_not_null (empty a);
     assert (l == []);
-    intro_lpts_to hd tl node (empty a);
-    rewrite (lpts_to (empty a) (hd::tl))
-            (lpts_to (empty a) l)
+    intro_is_list hd tl node (empty a);
+    rewrite (is_list (empty a) (hd::tl))
+            (is_list (empty a) l)
 
 let cons #_ #l x ll =
   let node = {
@@ -149,24 +149,24 @@ let cons #_ #l x ll =
     next = ll;
   } in
   let head = alloc node in
-  rewrite (ll `lpts_to` l)
-          (node.next `lpts_to` l);
-  intro_lpts_to (G.hide x) l (G.hide node) head;
+  rewrite (ll `is_list` l)
+          (node.next `is_list` l);
+  intro_is_list (G.hide x) l (G.hide node) head;
   return head
 
 let peek #_ #l ll p =
-  let w = elim_lpts_to_aux l ll p in
+  let w = elim_is_list_aux l ll p in
   let node = read ll in
-  intro_lpts_to (Cons?.hd l) (Cons?.tl l) w ll;
-  rewrite (ll `lpts_to` (Cons?.hd l::Cons?.tl l))
-          (ll `lpts_to` l);
+  intro_is_list (Cons?.hd l) (Cons?.tl l) w ll;
+  rewrite (ll `is_list` (Cons?.hd l::Cons?.tl l))
+          (ll `is_list` l);
   return node.data
 
 let intro #_ #_ l node ll _ =
-  intro_lpts_to (Cons?.hd l) (Cons?.tl l) node ll;
-  rewrite (lpts_to ll (Cons?.hd l::Cons?.tl l))
-          (lpts_to ll l)
+  intro_is_list (Cons?.hd l) (Cons?.tl l) node ll;
+  rewrite (is_list ll (Cons?.hd l::Cons?.tl l))
+          (is_list ll l)
 
 let elim #opened #a l ll p =
-  let n = elim_lpts_to_aux l ll p in
+  let n = elim_is_list_aux l ll p in
   G.reveal n
