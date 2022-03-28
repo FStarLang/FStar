@@ -162,10 +162,11 @@ let peek #_ #l ll p =
           (ll `lpts_to` l);
   return node.data
 
-let destruct #_ #l ll p =
-  let w = elim_lpts_to_aux l ll p in
-  let node = read ll in
-  rewrite (lpts_to w.next (Cons?.tl l))
-          (lpts_to node.next (Cons?.tl l));
-  free ll;
-  return (node.data, node.next)
+let intro #_ #_ l node ll _ =
+  intro_lpts_to (Cons?.hd l) (Cons?.tl l) node ll;
+  rewrite (lpts_to ll (Cons?.hd l::Cons?.tl l))
+          (lpts_to ll l)
+
+let elim #opened #a l ll p =
+  let n = elim_lpts_to_aux l ll p in
+  G.reveal n
