@@ -8,7 +8,6 @@ module SS = FStar.Syntax.Subst
 module U = FStar.Syntax.Util
 module BU = FStar.Compiler.Util
 
-[<EntryPoint>] // JUST FSHARP
 let main argv =
     BU.print_string "Initializing ...\n";
     try

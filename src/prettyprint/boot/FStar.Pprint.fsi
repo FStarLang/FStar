@@ -32,7 +32,6 @@ open FStar.BaseTypes
 
 (** This is the abstract type of documents. *)
 type document
-  = FSharp.PPrint.Engine.document // JUST FSHARP
 
 (** The following basic (low-level) combinators allow constructing documents. *)
 

@@ -318,8 +318,7 @@ let compare_times l_int l_nbe =
                     (BU.string_of_int t1)
                     (BU.string_of_float time_nbe)
                     (BU.string_of_float time_int)
-                    //IN F*: (BU.string_of_float (time_nbe /. time_int))
-                    //(BU.string_of_float (time_nbe / time_int)) //JUST FSHARP
+                    (BU.string_of_float (time_nbe /. time_int))
                 else
                   BU.print_string "Test numbers do not match...\n"
               ) l_int l_nbe

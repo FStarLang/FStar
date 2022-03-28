@@ -4,12 +4,10 @@ open FStar.Compiler.Effect module List = FStar.Compiler.List
 open FStar.Compiler.Effect module List = FStar.Compiler.List
 open FStar.BaseTypes
 
-type array<'a> = 'a[] // JUST FSHARP
 type bytes = array<byte>
 val length : bytes -> int
 val get: bytes -> int -> int
 val zero_create : int -> bytes
-val of_intarray: int[] -> bytes // JUST FSHARP
 val string_as_unicode_bytes: string -> bytes
 val unicode_bytes_as_string: bytes -> string
 val utf8_bytes_as_string: bytes -> string

@@ -69,12 +69,6 @@ val concat : (list<(list<'_6116>)>) -> Tot<(list<'_6116>)>
 val unzip : (list<('_36948 * '_36947)>) -> Tot<((list<'_36948>) * (list<'_36947>))>
 val filter_map: ('a -> option<'b>) -> list<'a> -> list<'b>
 
-
-(* Functions with eqtypes, they require the annotation for F#, we delete it for F* *)
-(* It would be nice to just put the type annotation in a "JUST FSHARP" line,
- * but F# will then complain that there is whitespace between the name and
- * its parameters. Oh well. *)
-
 val count: #a:eqtype -> a -> (list<a>) -> Tot<nat>
 
 val mem: #a:eqtype -> a -> (list<a>) -> Tot<bool>

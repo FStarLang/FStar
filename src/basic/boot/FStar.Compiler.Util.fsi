@@ -28,7 +28,6 @@ val max_int: int
 val return_all: 'a -> ML<'a>
 
 type time
-  = System.DateTime // JUST FSHARP
 val now : unit -> time
 val now_ms : unit -> int
 val time_diff: time -> time -> float*int
@@ -40,7 +39,6 @@ val string_of_time: time -> string
 (* generic utils *)
 (* Functional sets *)
 type set<'a>
-  = (list<'a> * ('a -> 'a -> bool)) // JUST FSHARP
 val as_set : list<'a> -> ('a -> 'a -> int) -> set<'a>
 val set_elements: set<'a> -> list<'a>
 val new_set: ('a -> 'a -> int) -> set<'a>
@@ -56,26 +54,8 @@ val set_difference: set<'a> -> set<'a> -> set<'a>
 val set_symmetric_difference: set<'a> -> set<'a> -> set<'a>
 val set_eq: set<'a> -> set<'a> -> bool
 
-(* A fifo_set is a set preserving the insertion order *)
-//type fifo_set<'a>
-//  = set<'a> // JUST FSHARP
-//val new_fifo_set: ('a -> 'a -> int) -> fifo_set<'a>
-//val as_fifo_set: list<'a> -> ('a -> 'a -> int) -> fifo_set<'a>
-//val fifo_set_is_empty: fifo_set<'a> -> bool
-//(* [fifo_set_add x s] pushes an element [x] at the end of the set [s] *)
-//val fifo_set_add: 'a -> fifo_set<'a> -> fifo_set<'a>
-//(* [fifo_set_remove x s] removes [x]from [s] *)
-//val fifo_set_remove: 'a -> fifo_set<'a> -> fifo_set<'a>
-//val fifo_set_mem: 'a -> fifo_set<'a> -> bool
-//(* [fifo_set s1 s2] is the set with all elements in [s1] inserted before those of [s2] *)
-//val fifo_set_union: fifo_set<'a> -> fifo_set<'a> -> fifo_set<'a>
-//val fifo_set_count: fifo_set<'a> -> int
-//val fifo_set_difference: fifo_set<'a> -> fifo_set<'a> -> fifo_set<'a>
-//val fifo_set_elements: fifo_set<'a> -> list<'a>
-
 (* not relying on representation *)
 type smap<'value>
-  = System.Collections.Generic.Dictionary<string,'value> // JUST FSHARP
 val smap_create: int -> smap<'value>
 val smap_clear:smap<'value> -> unit
 val smap_add: smap<'value> -> string -> 'value -> unit
@@ -91,7 +71,6 @@ val smap_iter: smap<'value> -> (string -> 'value -> unit) -> unit
 
 (* pure version *)
 type psmap<'value>
-  = Collections.Map<string,'value> // JUST FSHARP
 val psmap_empty: unit -> psmap<'value> // GH-1161
 val psmap_add: psmap<'value> -> string -> 'value -> psmap<'value>
 val psmap_find_default: psmap<'value> -> string -> 'value -> 'value
@@ -103,7 +82,6 @@ val psmap_merge: psmap<'value> -> psmap<'value> -> psmap<'value>
 
 (* not relying on representation *)
 type imap<'value>
-  = System.Collections.Generic.Dictionary<int,'value> // JUST FSHARP
 val imap_create: int -> imap<'value>
 val imap_clear:imap<'value> -> unit
 val imap_add: imap<'value> -> int -> 'value -> unit
@@ -117,7 +95,6 @@ val imap_copy: imap<'value> -> imap<'value>
 
 (* pure version *)
 type pimap<'value>
-  = Collections.Map<int,'value> // JUST FSHARP
 val pimap_empty: unit -> pimap<'value> // GH-1161
 val pimap_add: pimap<'value> -> int -> 'value -> pimap<'value>
 val pimap_find_default: pimap<'value> -> int -> 'value -> 'value
@@ -163,7 +140,6 @@ val colorize_cyan: string -> string
 
 (* Clients of this module should *NOT* rely on this representation *)
 type out_channel
-  = System.IO.TextWriter // JUST FSHARP
 val stderr: out_channel
 val stdout: out_channel
 val fprint: out_channel -> string -> list<string> -> unit
@@ -195,7 +171,6 @@ val concat_l : string -> list<string> -> string
 
 (* not relying on representation *)
 type file_handle
-  = System.IO.TextWriter// JUST FSHARP
 val open_file_for_writing: string -> file_handle
 val append_to_file: file_handle -> string -> unit
 val close_file: file_handle -> unit
@@ -210,14 +185,12 @@ val concat_dir_filename: string -> string -> string
 
 (* not relying on representation *)
 type stream_reader
-  = System.IO.StreamReader// JUST FSHARP
 val open_stdin : unit -> stream_reader
 val read_line: stream_reader -> option<string>
 val nread : stream_reader -> int -> option<string>
 
 (* not relying on representation *)
 type string_builder
-  = System.Text.StringBuilder// JUST FSHARP
 val new_string_builder: unit -> string_builder
 val clear_string_builder: string_builder -> unit
 val string_of_string_builder: string_builder -> string
