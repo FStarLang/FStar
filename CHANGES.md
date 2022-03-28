@@ -272,6 +272,11 @@ Guidelines for the changelog:
 
 ## Extraction
 
+   * [PR #2489] Due to the renaming of KReMLin into KaRaMeL,
+     `--codegen Kremlin` has been turned into `--codegen krml`, and
+     the `(noextract_to "Kremlin")` attribute has been turned into
+     `(noextract_to "krml")`. This is a breaking change.
+
    * Cross-module inlining: Declarations in interfaces marked with the
      `inline_for_extraction` qualifier have their definitions inlined
      in client code. Currently guarded by the --cmi flag, this will
