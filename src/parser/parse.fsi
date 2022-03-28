@@ -34,6 +34,7 @@ type token =
   | SEMICOLON_SEMICOLON
   | SEMICOLON
   | RPAREN
+  | RETURNS_EQ
   | RETURNS
   | REQUIRES
   | REIFY
@@ -126,6 +127,7 @@ type token =
   | FALSE
   | EXISTS
   | EXCEPTION
+  | EQUALTYPE
   | EQUALS
   | EOF
   | ENSURES
@@ -164,6 +166,7 @@ type token =
   | ATTRIBUTES
   | ASSUME
   | ASSERT
+  | AS
   | AND
   | AMP
 type tokenId = 
@@ -199,6 +202,7 @@ type tokenId =
     | TOKEN_SEMICOLON_SEMICOLON
     | TOKEN_SEMICOLON
     | TOKEN_RPAREN
+    | TOKEN_RETURNS_EQ
     | TOKEN_RETURNS
     | TOKEN_REQUIRES
     | TOKEN_REIFY
@@ -291,6 +295,7 @@ type tokenId =
     | TOKEN_FALSE
     | TOKEN_EXISTS
     | TOKEN_EXCEPTION
+    | TOKEN_EQUALTYPE
     | TOKEN_EQUALS
     | TOKEN_EOF
     | TOKEN_ENSURES
@@ -329,6 +334,7 @@ type tokenId =
     | TOKEN_ATTRIBUTES
     | TOKEN_ASSUME
     | TOKEN_ASSERT
+    | TOKEN_AS
     | TOKEN_AND
     | TOKEN_AMP
     | TOKEN_end_of_input
@@ -338,9 +344,12 @@ type nonTerminalId =
     | NONTERM__startterm
     | NONTERM__startinputFragment
     | NONTERM_option___anonymous_1_
+    | NONTERM_option___anonymous_11_
+    | NONTERM_option___anonymous_12_
     | NONTERM_option___anonymous_2_
     | NONTERM_option___anonymous_5_
     | NONTERM_option___anonymous_6_
+    | NONTERM_option___anonymous_7_
     | NONTERM_option___anonymous_8_
     | NONTERM_option___anonymous_9_
     | NONTERM_option_ascribeKind_
@@ -355,7 +364,7 @@ type nonTerminalId =
     | NONTERM_loption_separated_nonempty_list_COMMA_appTerm__
     | NONTERM_loption_separated_nonempty_list_SEMICOLON_ident__
     | NONTERM_loption_separated_nonempty_list_SEMICOLON_tuplePattern__
-    | NONTERM_list___anonymous_10_
+    | NONTERM_list___anonymous_13_
     | NONTERM_list___anonymous_4_
     | NONTERM_list_argTerm_
     | NONTERM_list_atomicTerm_
@@ -505,7 +514,7 @@ type nonTerminalId =
     | NONTERM_right_flexible_nonempty_list_SEMICOLON_fieldPattern_
     | NONTERM_right_flexible_nonempty_list_SEMICOLON_recordFieldDecl_
     | NONTERM_right_flexible_nonempty_list_SEMICOLON_simpleDef_
-    | NONTERM_reverse_left_flexible_list_BAR___anonymous_7_
+    | NONTERM_reverse_left_flexible_list_BAR___anonymous_10_
     | NONTERM_reverse_left_flexible_nonempty_list_BAR_patternBranch_
 /// This function maps tokens to integer indexes
 val tagOfToken: token -> int

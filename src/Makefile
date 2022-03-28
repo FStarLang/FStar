@@ -2,39 +2,17 @@
 include Makefile.config
 export FSTAR_HOME # because of the recursive calls to `make`
 
-FSLYDIR := VS/packages/FsLexYacc.6.1.0
-FSYACC  := $(RUNTIME) $(FSLYDIR)/build/fsyacc.exe
-FSLEX   := $(RUNTIME) $(FSLYDIR)/build/fslex.exe
-
 # --------------------------------------------------------------------
 .SUFFIXES:
 MAKEFLAGS += --no-builtin-rules
 
-.PHONY: fstar-in-fsharp clean boot ocaml nuget-restore nuget-clean
+.PHONY: clean boot ocaml
 
-# --------------------------------------------------------------------
-# An artefact of the build process is that parse.fsi is auto-generated
-fstar-in-fsharp: nuget-restore
-	+$(MAKE) -C VS install-packages
-	$(MSBUILD) VS/FStar.sln
-	$(DOS2UNIX) parser/parse.fsi
-	chmod a+x $(BIN)/tests.exe
-	chmod a+x $(BIN)/fstar.exe
-	chmod a-x $(BIN)/*.dll
-	cp $(BIN)/fstar.exe $(BIN)/fstar.fsharp
+$(BIN)/fstar.exe:
+	+$(MAKE) -C ocaml-output all
 
-# SAD! Can't make clean if fslex and fsyacc haven't be restored... what...
-clean: clean-ocaml nuget-restore
+clean: clean-ocaml
 	$(MSBUILD) /t:clean VS/FStar.sln
-
-# --------------------------------------------------------------------
-nuget-restore:
-	$(RUNTIME) VS/.nuget/NuGet.exe restore VS/FStar.sln
-
-nuget-clean:
-	rm -r VS/packages
-
-$(FSYACC) $(FSLEX): nuget-restore
 
 # --------------------------------------------------------------------
 # Bootstrapping in OCaml: The main logic is in Makefile.boot. Here, we
@@ -99,16 +77,13 @@ clean_boot:
 ocaml: boot
 	$(Q)+$(MAKE) -f Makefile.boot all-ml
 
-boot-ocaml:
-	+$(MAKE) -C ocaml-output all
-
 fstar-ocaml: ocaml
-	+$(MAKE) boot-ocaml
+	+$(MAKE) $(BIN)/fstar.exe
 
 # Fastest way to refresh the snapshot (if it works)
-ocaml-fstar-ocaml: boot-ocaml
+ocaml-fstar-ocaml: $(BIN)/fstar.exe
 	+$(MAKE) ocaml
-	+$(MAKE) boot-ocaml
+	+$(MAKE) $(BIN)/fstar.exe
 
 clean-ocaml: clean_boot
 	+$(MAKE) -C ocaml-output clean
@@ -125,36 +100,23 @@ rebuild:
 # --------------------------------------------------------------------
 # Testing
 # --------------------------------------------------------------------
-
-# The regressions to be run with a working F# build of F*
-fsharp-unit-tests:
-ifeq ($(OS),Windows_NT)
-	$(RUNTIME) $(BIN)/tests.exe
-else
-	@# On Linux, we need to increase the maximum stack size, or we overflow
-	ulimit -s unlimited; $(RUNTIME) $(BIN)/tests.exe
-endif
-
-fsharp-build-and-test:
-	+$(MAKE) fstar-in-fsharp
-	+$(MAKE) fsharp-unit-tests
-
 utest:
 	+$(MAKE) utest-prelude
 	+$(MAKE) uregressions
 
 # The first tests have to be performed sequentially (but each one may use some parallelism)
-# Adding the F# build and F# tests also here
-#   since in the uregressions target it may not be a good idea to override the fstar.exe binary?
-utest-prelude: fsharp-build-and-test
-	+$(MAKE) boot-ocaml        #build the ocaml-snapshot
+utest-prelude: $(BIN)/fstar.exe
 	+$(MAKE) clean_extracted   #ensures that there is no leftover from previous extraction
 	+$(MAKE) fstar-ocaml       #extract the compiler again and build the result
 	+$(MAKE) ocaml-unit-tests  #run the unit tests
 	+$(MAKE) .fstarlib
+	+$(MAKE) ulib-in-fsharp    #build ulibfs
 
 ocaml-unit-tests:
 	$(BIN)/tests.exe
+
+ulib-in-fsharp: $(BIN)/fstar.exe
+	$(MSBUILD) VS/FStar.sln
 
 # Getting parallelism from this target
 uregressions: ulib-extra tutorial utests uexamples
