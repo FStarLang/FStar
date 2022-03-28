@@ -5,7 +5,7 @@ KREMLIN_HOME ?= $(FSTAR_HOME)/../kremlin
 
 # List the files that should be verified by verify-core and verify-all
 # Those files are the roots from where all dependencies are computed
-FSTAR_FILES = LList.ST.UInt32.fsti LList.ST.UInt32.fst
+FSTAR_FILES = LList32.fst
 
 # 271: theory symbols in smt patters
 WARN_ERROR=--warn_error -271
@@ -53,12 +53,16 @@ $(OUTPUT_DIRECTORY)/%.krml:
 
 verify: $(ALL_CHECKED_FILES)
 
-STEEL_KRML_FILES=
+STEEL_KRML_FILES=Steel_ST_Reference.krml
 
 extract: $(addprefix $(OUTPUT_DIRECTORY)/,$(STEEL_KRML_FILES)) $(filter-out $(OUTPUT_DIRECTORY)/FStar_NMST% $(OUTPUT_DIRECTORY)/FStar_MST% $(OUTPUT_DIRECTORY)/Steel_%, $(ALL_KRML_FILES))
 
-KRML_BUNDLING_OPTIONS=-bundle 'LList.ST.UInt32=LList.ST.*,Prims,FStar.*,Steel.*' -dast \
-  -no-prefix LList.ST.UInt32 \
+KRML_BUNDLING_OPTIONS=-bundle 'LList32=Steel.*' \
+  -library Steel.ST.Reference \
+  -static-header Steel.ST.Reference \
+  -hand-written Steel.ST.Reference \
+  -no-prefix LList32 \
+  -no-prefix LList.ST
 
 compile:
 	$(KREMLIN_HOME)/krml -warn-error +9 -skip-compilation \
