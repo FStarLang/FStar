@@ -16,7 +16,7 @@
    Author: Aseem Rastogi
 *)
 
-module LList.ST.UInt32
+module LList32
 
 open Steel.Memory
 open Steel.ST.Effect
@@ -39,9 +39,6 @@ let repr = repr u32
 
 inline_for_extraction
 let lpts_to (ll:llist) (l:repr) = lpts_to ll l
-
-inline_for_extraction
-let empty = empty u32
 
 inline_for_extraction
 let cons (#l:G.erased repr) (x:u32) (ll:llist)
