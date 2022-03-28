@@ -22,20 +22,32 @@ open Steel.Memory
 open Steel.ST.Effect
 open Steel.ST.Util
 
+open Steel.ST.Reference
+
 module G = FStar.Ghost
 
 /// This module provides a singly linked list in the
 ///   Steel sepearation logic framework
 
 
+inline_for_extraction
+noeq
+type llist_node (a:Type0) : Type0 = {
+  data : a;
+  next : ref (llist_node a)
+}
+
+
 /// The main list type, parametric in the element type
-val llist (a:Type0) : Type0
+
+inline_for_extraction
+type llist (a:Type0) : Type0 = ref (llist_node a)
+
 
 /// The module provides a logical view of the linked list
 ///   as a functional list, related by the lpts_to vprop
-type repr (a:Type0) = list a
 
-val lpts_to (#a:Type0) (ll:llist a) (l:repr a) : vprop
+val lpts_to (#a:Type0) (ll:llist a) (l:list a) : vprop
 
 /// Empty linked list is a value
 val empty (a:Type0) : llist a
@@ -56,13 +68,15 @@ val empty_pts_to_inversion (#opened:_) (a:Type0) (l:list a)
       (ensures fun _ -> l == [])
 
 /// Adding an element to the head of the linked list
-val cons (#a:Type0) (#l:G.erased (repr a)) (x:a) (ll:llist a)
+inline_for_extraction
+val cons (#a:Type0) (#l:G.erased (list a)) (x:a) (ll:llist a)
   : STT (llist a)
         (ll `lpts_to` l)
         (fun ll -> ll `lpts_to` (x::l))
 
 /// Reading the head element of the linked list
-val peek (#a:Type0) (#l:G.erased (repr a))
+inline_for_extraction
+val peek (#a:Type0) (#l:G.erased (list a))
   (ll:llist a)
   (_:squash (Cons? l))
   : ST a
@@ -74,7 +88,8 @@ val peek (#a:Type0) (#l:G.erased (repr a))
 /// Destructing the linked list
 ///   Returns the head element and the tail of the linked list
 ///   Frees up any resources associated with the (previous) head
-val destruct (#a:Type0) (#l:G.erased (repr a))
+inline_for_extraction
+val destruct (#a:Type0) (#l:G.erased (list a))
   (ll:llist a)
   (_:squash (Cons? l))
   : ST (a & llist a)

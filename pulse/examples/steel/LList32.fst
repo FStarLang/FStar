@@ -32,23 +32,20 @@ module G = FStar.Ghost
 type u32 = FStar.UInt32.t
 
 inline_for_extraction
+let llist_node = llist_node u32
+
+inline_for_extraction
 let llist = llist u32
 
-inline_for_extraction
-let repr = repr u32
+let lpts_to (ll:llist) (l:list u32) = lpts_to ll l
 
-inline_for_extraction
-let lpts_to (ll:llist) (l:repr) = lpts_to ll l
-
-inline_for_extraction
-let cons (#l:G.erased repr) (x:u32) (ll:llist)
+let cons (#l:G.erased (list u32)) (x:u32) (ll:llist)
   : STT llist
         (ll `lpts_to` l)
         (fun ll -> ll `lpts_to` (x::l))
   = cons x ll
 
-inline_for_extraction
-let peek (#l:G.erased repr) (ll:llist) (_:squash (Cons? l))
+let peek (#l:G.erased (list u32)) (ll:llist) (_:squash (Cons? l))
   : ST u32
        (ll `lpts_to` l)
        (fun _ -> ll `lpts_to` l)
@@ -56,8 +53,7 @@ let peek (#l:G.erased repr) (ll:llist) (_:squash (Cons? l))
        (ensures fun x -> x == Cons?.hd l)
   = peek ll ()
 
-inline_for_extraction
-let destruct (#l:G.erased repr) (ll:llist) (_:squash (Cons? l))
+let destruct (#l:G.erased (list u32)) (ll:llist) (_:squash (Cons? l))
   : ST (u32 & llist)
        (ll `lpts_to` l)
        (fun (_, ll) -> ll `lpts_to` Cons?.tl l)

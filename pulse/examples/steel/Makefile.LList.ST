@@ -57,7 +57,7 @@ STEEL_KRML_FILES=Steel_ST_Reference.krml
 
 extract: $(addprefix $(OUTPUT_DIRECTORY)/,$(STEEL_KRML_FILES)) $(filter-out $(OUTPUT_DIRECTORY)/FStar_NMST% $(OUTPUT_DIRECTORY)/FStar_MST% $(OUTPUT_DIRECTORY)/Steel_%, $(ALL_KRML_FILES))
 
-KRML_BUNDLING_OPTIONS=-bundle 'LList32=Steel.*' \
+KRML_BUNDLING_OPTIONS=-bundle 'LList32=LList.ST.*,Steel.*' \
   -library Steel.ST.Reference \
   -static-header Steel.ST.Reference \
   -hand-written Steel.ST.Reference \

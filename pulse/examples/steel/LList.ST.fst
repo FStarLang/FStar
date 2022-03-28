@@ -26,14 +26,6 @@ open Steel.ST.Reference
 
 #set-options "--ide_id_info_off"
 
-noeq
-type llist_node (a:Type0) : Type0 = {
-  data : a;
-  next : ref (llist_node a);
-}
-
-type llist a = ref (llist_node a)
-
 let rec lpts_to #a ll l : Tot vprop (decreases l) =
   match l with
   | [] -> pure (ll == null)
