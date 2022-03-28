@@ -85,15 +85,28 @@ val peek (#a:Type0) (#l:G.erased (list a))
        (requires True)
        (ensures fun x -> x == Cons?.hd l)
 
-/// Destructing the linked list
-///   Returns the head element and the tail of the linked list
-///   Frees up any resources associated with the (previous) head
-inline_for_extraction
-val destruct (#a:Type0) (#l:G.erased (list a))
+val intro (#opened:_) (#a:Type0)
+  (l:list a)
+  (node:llist_node a)
   (ll:llist a)
   (_:squash (Cons? l))
-  : ST (a & llist a)
-       (ll `lpts_to` l)
-       (fun (_, ll) -> ll `lpts_to` Cons?.tl l)
-       (requires True)
-       (ensures fun (x, _) -> x == Cons?.hd l)
+  : STGhost unit opened
+      (pts_to ll full_perm node
+         `star`
+       lpts_to node.next (Cons?.tl l))
+      (fun _ -> lpts_to ll l)
+      (requires node.data == Cons?.hd l)
+      (ensures fun _ -> True)
+
+val elim (#opened:_) (#a:Type0)
+  (l:list a)
+  (ll:llist a)
+  (_:squash (Cons? l))
+  : STGhost (llist_node a) opened
+      (lpts_to ll l)
+      (fun node ->
+       pts_to ll full_perm node
+         `star`
+       lpts_to node.next (Cons?.tl l))
+      (requires True)
+      (ensures fun node -> node.data == Cons?.hd l)
