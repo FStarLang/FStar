@@ -3,8 +3,8 @@ module Steel.C.StdInt.Base
 module I64 = FStar.Int64
 module Cast = FStar.Int.Cast
 
-(* FIXME: this could be defined as U64.t, but KReMLin currently demands U32.t.
-   NS: A long-term proposal would be to make KReMLin platform-aware and introduce
+(* FIXME: this could be defined as U64.t, but KaRaMeL currently demands U32.t.
+   NS: A long-term proposal would be to make KaRaMeL platform-aware and introduce
    a platform switch in this library here.
 *)
 

@@ -70,7 +70,7 @@ let point_pcm = struct_pcm point_tag point_fields
 noextract inline_for_extraction
 let c_point: typedef = typedef_struct point_tag point_fields
 
-(** Define the point struct. Kremlin detects this definition and
+(** Define the point struct. Karamel detects this definition and
     emits a corresponding C typedef at extraction time.  See
     Steel.C.StructLiteral.mk_c_struct for more information. *)
 let _ = norm norm_c_typedef (mk_c_struct point_tag point_fields)
@@ -81,10 +81,10 @@ let _ = norm norm_c_typedef (mk_c_struct point_tag point_fields)
     but split the list of (field name, typedef) pairs across two
     definitions: .second is declared in the definition below, while
     .first is declared "inline" in the call to mk_c_struct parsed by
-    Kremlin.
+    Karamel.
 
     This code is just to illustrate that extraction is fairly
-    flexible: all Kremlin cares about is that the call to mk_c_struct
+    flexible: all Karamel cares about is that the call to mk_c_struct
     normalizes (under rules norm_c_typedef) to a valid struct
     definition. In practice, it isn't recommended to split the list of
     fields like this. *)
