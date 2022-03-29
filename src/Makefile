@@ -12,7 +12,6 @@ $(BIN)/fstar.exe:
 	+$(MAKE) -C ocaml-output all
 
 clean: clean-ocaml
-	$(MSBUILD) /t:clean VS/FStar.sln
 
 # --------------------------------------------------------------------
 # Bootstrapping in OCaml: The main logic is in Makefile.boot. Here, we
@@ -116,7 +115,7 @@ ocaml-unit-tests:
 	$(BIN)/tests.exe
 
 ulib-in-fsharp: $(BIN)/fstar.exe
-	$(MSBUILD) VS/FStar.sln
+	$(MAKE) -C ../ulib ulib-in-fsharp
 
 # Getting parallelism from this target
 uregressions: ulib-extra tutorial utests uexamples

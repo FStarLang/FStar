@@ -46,6 +46,10 @@ fstartaclib.mgen: fstarlib.mgen
 	cp $(FSTARLIB_LEFTOVERS) tactics_ml/fstarlib_leftovers
 	touch fstartaclib.mgen
 
+ulib-in-fsharp:
+	+$(MAKE) -f Makefile.extract.fsharp all-fs
+	+$(MAKE) -C fs
+
 ######################################################
 # OCaml extraction of fstarlib and fstar-tactics-lib #
 ######################################################

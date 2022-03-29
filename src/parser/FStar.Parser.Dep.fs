@@ -1642,6 +1642,7 @@ let print_full (deps:deps) : unit =
         Options.prepend_output_dir (ml_base_name ^ ext)
     in
     let norm_path s = replace_chars (replace_chars s '\\' "/") ' ' "\\ " in
+    let output_fs_file f = norm_path (output_file ".fs" f) in    
     let output_ml_file f = norm_path (output_file ".ml" f) in
     let output_krml_file f = norm_path (output_file ".krml" f) in
     let output_cmx_file f = norm_path (output_file ".cmx" f) in
@@ -1748,10 +1749,18 @@ let print_full (deps:deps) : unit =
               if Options.cmi()
               && widened
               then begin
+                     let mname = lowercase_module_name file_name in
+
                      print_entry
                         (output_ml_file file_name)
                         cache_file_name
                         all_checked_fst_dep_files_string;
+
+                     if Options.should_extract mname Options.FSharp
+                     then print_entry
+                            (output_fs_file file_name)
+                            cache_file_name
+                            all_checked_fst_dep_files_string;
 
                      print_entry
                         (output_krml_file file_name)
@@ -1759,10 +1768,18 @@ let print_full (deps:deps) : unit =
                         all_checked_fst_dep_files_string
               end
               else begin
+                     let mname = lowercase_module_name file_name in
+              
                      print_entry
                         (output_ml_file file_name)
                         cache_file_name
                         "";
+
+                     if Options.should_extract mname Options.FSharp
+                     then print_entry
+                            (output_fs_file file_name)
+                            cache_file_name
+                            "";
 
                      print_entry
                         (output_krml_file file_name)
@@ -1828,6 +1845,15 @@ let print_full (deps:deps) : unit =
                        then BU.smap_add ml_file_map mname (output_ml_file fst_file));
         sort_output_files ml_file_map
     in
+    let all_fs_files =
+        let fs_file_map = BU.smap_create 41 in
+        all_fst_files
+        |> List.iter (fun fst_file ->
+                       let mname = lowercase_module_name fst_file in
+                       if Options.should_extract mname Options.FSharp
+                       then BU.smap_add fs_file_map mname (output_fs_file fst_file));
+        sort_output_files fs_file_map
+    in
     let all_krml_files =
         let krml_file_map = BU.smap_create 41 in
         keys
@@ -1860,8 +1886,10 @@ let print_full (deps:deps) : unit =
     print_all "ALL_FST_FILES" all_fst_files;
     print_all "ALL_FSTI_FILES" all_fsti_files;
     print_all "ALL_CHECKED_FILES" all_checked_files;
+    print_all "ALL_FS_FILES" all_fs_files;    
     print_all "ALL_ML_FILES" all_ml_files;
     print_all "ALL_KRML_FILES" all_krml_files;
+
 
     FStar.StringBuffer.output_channel BU.stdout sb
 
