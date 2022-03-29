@@ -982,12 +982,12 @@ and translate_expr env e: expr =
     translate_expr env e
 
 (* BEGIN support for the Steel null pointer. Here, we "piggyback" to
-the current Low* operators for the null pointer, which KReMLin will
+the current Low* operators for the null pointer, which KaRaMeL will
 extract to C later.
 
 TODO: these should be removed and those operators should be directly
-supported by KReMLin (in src/Builtin.ml) Or alternatively Null and
-IsNull nodes should be added to the KReMLin AST *)
+supported by KaRaMeL (in src/Builtin.ml) Or alternatively Null and
+IsNull nodes should be added to the KaRaMeL AST *)
 
   | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, _)}, [_ (* opened *); e; _ (* a' *); _ (* sq *) ])
     when string_of_mlpath p = "Steel.C.Array.Base.is_null_from"

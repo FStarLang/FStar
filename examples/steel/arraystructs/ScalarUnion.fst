@@ -62,7 +62,7 @@ let u32_or_u16_pcm = union_pcm u32_or_u16_tag u32_or_u16_fields
 noextract inline_for_extraction
 let c_u32_or_u16: typedef = typedef_union u32_or_u16_tag u32_or_u16_fields
 
-(** Define the union. Like with mk_c_struct, Kremlin detects this
+(** Define the union. Like with mk_c_struct, Karamel detects this
     definition at extraction type and emits the corresponding typedef. *)
 let _ = norm norm_c_typedef (mk_c_union u32_or_u16_tag u32_or_u16_fields)
 

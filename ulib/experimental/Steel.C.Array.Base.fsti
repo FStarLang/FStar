@@ -57,7 +57,7 @@ val array_view (t: Type u#0) (n: size_t)
 /// We model it as three parts:
 /// - a pure part, which represents the beginning of the array, and should extract to t*
 /// - a ghost part, which represents the end of the array, and should be erased at extraction
-/// - a refinement, because KReMLin does not support inlining of dependent pair types where one part is ghost.
+/// - a refinement, because KaRaMeL does not support inlining of dependent pair types where one part is ghost.
 val array_or_null_from (base: Type0) (t: Type0) : Tot Type0
 [@@erasable]
 val array_or_null_to (base: Type0) (t: Type0) : Tot Type0

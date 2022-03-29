@@ -55,7 +55,7 @@ noeq type c_fields = {
 
 (** The following combinators encode c_fields as a F* type, which
     allows struct field information to stick around after erasure for
-    Kremlin. For more details about why we need this, see
+    Karamel. For more details about why we need this, see
     Steel.C.Typestring.fsti and Steel.C.Typenat.fsti *)
 
 val c_fields_t_nil: Type0

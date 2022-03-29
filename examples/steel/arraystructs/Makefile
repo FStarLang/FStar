@@ -5,8 +5,8 @@ FSTAR_EXE = $(FSTAR_HOME)/bin/fstar.exe
 
 INCLUDE_PATH = $(FSTAR_HOME)/ulib/.cache $(FSTAR_HOME)/ulib/experimental
 
-ifdef KREMLIN_HOME
-KRML_EXE = $(KREMLIN_HOME)/krml
+ifdef KRML_HOME
+KRML_EXE = $(KRML_HOME)/krml
 endif
 
 world: verify test
@@ -22,8 +22,8 @@ FSTAR = $(FSTAR_EXE) $(FSTAR_OPTIONS)
 ALL_SOURCE_FILES = $(wildcard *.fst *.fsti)
 
 # We need to add some Low* files to the dependency roots, because F* extracts Steel.C null to LowStar null
-# since the KReMLin AST does not have a node for null
-# TODO: This should be removed, and support for Steel.C null should be directly added to KReMLin instead
+# since the KaRaMeL AST does not have a node for null
+# TODO: This should be removed, and support for Steel.C null should be directly added to KaRaMeL instead
 SOME_LOWSTAR_FILES = $(FSTAR_HOME)/ulib/LowStar.Monotonic.Buffer.fst $(FSTAR_HOME)/ulib/LowStar.Buffer.fst
 
 .depend: $(ALL_SOURCE_FILES) Makefile
@@ -50,13 +50,13 @@ verify: $(ALL_CHECKED_FILES)
 	--extract_module $(basename $(notdir $(subst .checked,,$<)))
 
 clean:
-	-rm -rf *.checked *.krml .depend kremlin.rsp .depend.tmp *.c *.h *.o compile_flags.txt extract
+	-rm -rf *.checked *.krml .depend .depend.tmp *.c *.h *.o compile_flags.txt extract
 
-ifdef KREMLIN_HOME
+ifdef KRML_HOME
 
 .PRECIOUS: %.krml
 %.krml:
-	$(FSTAR) $(notdir $(subst .checked,,$<)) --codegen Kremlin \
+	$(FSTAR) $(notdir $(subst .checked,,$<)) --codegen krml \
 	--extract_module $(basename $(notdir $(subst .checked,,$<)))
 
 ALL_MODULE_NAMES=$(basename $(ALL_SOURCE_FILES))
@@ -75,15 +75,15 @@ $(ALL_C_FILES): %.c: extract
 ALL_O_FILES=$(subst .c,.o,$(ALL_C_FILES))
 
 $(ALL_O_FILES): %.o: %.c
-	$(CC) $(CFLAGS) -DKRML_VERIFIED_UINT128 -I $(KREMLIN_HOME)/include -I $(KREMLIN_HOME)/kremlib/dist/minimal -o $@ -c $<
+	$(CC) $(CFLAGS) -DKRML_VERIFIED_UINT128 -I $(KRML_HOME)/include -I $(KRML_HOME)/krmllib/dist/minimal -o $@ -c $<
 
 test: $(ALL_O_FILES)
 
-else # no KREMLIN_HOME
+else # no KRML_HOME
 
 test:
-	echo KReMLin is not installed, skipping test
+	echo KaRaMeL is not installed, skipping test
 
-endif # KREMLIN_HOME
+endif # KRML_HOME
 
 .PHONY: all world verify clean depend test

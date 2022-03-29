@@ -28,7 +28,7 @@ val mk_struct_def (tag: Type0) (field_descriptions: Type0): Type0
     This normalizes to a type (mk_struct_def t fs), where
       t is an embedding of the struct tag name as a Type0 (see Steel.C.Typestring), and
       fs is an embedding of the struct fields as a Type0
-    Kremlin then parses this embedding and emits a C struct definition. *)
+    Karamel then parses this embedding and emits a C struct definition. *)
 let mk_c_struct (tag: Type0) (fields: c_fields) =
   mk_struct_def tag (c_fields_t fields)
 
