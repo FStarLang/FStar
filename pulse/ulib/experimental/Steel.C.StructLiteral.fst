@@ -300,6 +300,7 @@ let struct'_with_field
 = on_dom (struct_dom fields (remove field excluded))
     (fun field' -> if field = field' then w else v field')
 
+#push-options "--z3rlimit 30"
 let struct_with_field_to_carrier'
   (tag: Type0) (fields: c_fields) (excluded: excluded_fields) (field: field_of fields)
   (s: struct_pcm_carrier tag fields)
@@ -317,6 +318,7 @@ let struct_with_field_to_carrier'
     (struct_with_field (struct_pcms fields) field t s
       `feq` (struct_view tag fields (remove field excluded)).to_carrier
            (struct'_with_field tag fields excluded field w v))
+#pop-options
 
 let extract_field_with_field
   (tag: Type0) (fields: c_fields) (excluded: excluded_fields)
