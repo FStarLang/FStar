@@ -9,7 +9,10 @@ endif
 
 FSTAR_FILES = $(filter-out $(EXCLUDED_FSTAR_FILES), $(wildcard *.fst))
 
-all: verify-all #stringprintertest
+all: verify-all eci19.all #stringprintertest
+
+%.all: %
+	+$(MAKE) -C $^ all
 
 $(CACHE_DIR):
 	mkdir -p $@
