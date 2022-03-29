@@ -439,7 +439,7 @@ let translate_cc flags =
   | [ "cdecl" ] -> Some CDecl
   | _ -> None
 
-let translate_type_without_decay env t: typ =
+let rec translate_type_without_decay env t: typ =
   match t with
   | MLTY_Tuple []
   | MLTY_Top ->
