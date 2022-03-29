@@ -29,7 +29,7 @@ all: install-packages
 	$(MSBUILD) UlibFS.sln
 
 install-packages:
-	[ -d packages ] || $(MAKE) update-nuget
+	mkdir -p packages
 	$(NUGET) restore UlibFS.sln
 	find packages -name '*.exe' -exec chmod +x '{}' ';'
 
