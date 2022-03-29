@@ -26,7 +26,7 @@ open FStar.Seq
 open FStar.HyperStack
 open FStar.HyperStack.ST
 module C = C
-// special kremlin support for looping
+// special karamel support for looping
 open C.Loops
 
 module B = FStar.Buffer

@@ -65,8 +65,8 @@
     <Compile Include="FStar.Extraction.ML.Modul.fsi" />
     <Compile Include="FStar.Extraction.ML.Modul.fs" />
     <Content Include="app.config" />
-    <Compile Include="FStar.Extraction.Kremlin.fsi" />
-    <Compile Include="FStar.Extraction.Kremlin.fs" />
+    <Compile Include="FStar.Extraction.Krml.fsi" />
+    <Compile Include="FStar.Extraction.Krml.fs" />
     <Content Include="packages.config" />
   </ItemGroup>
   <ItemGroup>

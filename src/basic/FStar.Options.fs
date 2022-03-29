@@ -575,7 +575,7 @@ exception InvalidArgument of string // option name
 
 For example, to parse the value "OCaml" for the option "--codegen", this
 function is called as ``parse_opt_val "codegen" (EnumStr ["OCaml"; "FSharp";
-"Kremlin"]) "OCaml"`` and returns ``String "OCaml"``.
+"krml"]) "OCaml"`` and returns ``String "OCaml"``.
 
 `opt_name` is only used in error messages. **)
 let rec parse_opt_val (opt_name: string) (typ: opt_type) (str_val: string) : option_val =
@@ -717,7 +717,7 @@ let rec specs_with_types warn_unsafe : list<(char * string * opt_type * string)>
 
       ( noshort,
         "codegen",
-        EnumStr ["OCaml"; "FSharp"; "Kremlin"; "Plugin"],
+        EnumStr ["OCaml"; "FSharp"; "krml"; "Plugin"],
         "Generate code for further compilation to executable code, or build a compiler plugin");
 
       ( noshort,
@@ -782,11 +782,11 @@ let rec specs_with_types warn_unsafe : list<(char * string * opt_type * string)>
          "extract",
          Accumulated (SimpleStr "One or more semicolon separated occurrences of '[TargetName:]ModuleSelector'"),
         "\n\t\tExtract only those modules whose names or namespaces match the provided options.\n\t\t\t\
-         'TargetName' ranges over {OCaml, Kremlin, FSharp, Plugin}.\n\t\t\t\
+         'TargetName' ranges over {OCaml, krml, FSharp, Plugin}.\n\t\t\t\
          A 'ModuleSelector' is a space or comma-separated list of '[+|-]( * | namespace | module)'.\n\t\t\t\
-         For example --extract 'OCaml:A -A.B' --extract 'Kremlin:A -A.C' --extract '*' means\n\t\t\t\t\
+         For example --extract 'OCaml:A -A.B' --extract 'krml:A -A.C' --extract '*' means\n\t\t\t\t\
          for OCaml, extract everything in the A namespace only except A.B;\n\t\t\t\t\
-         for Kremlin, extract everything in the A namespace only except A.C;\n\t\t\t\t\
+         for krml, extract everything in the A namespace only except A.C;\n\t\t\t\t\
          for everything else, extract everything.\n\t\t\t\
          Note, the '+' is optional: --extract '+A' and --extract 'A' mean the same thing.\n\t\t\t\
          Note also that '--extract A' applies both to a module named 'A' and to any module in the 'A' namespace\n\t\t\
@@ -1683,13 +1683,13 @@ let cache_checked_modules        () = get_cache_checked_modules       ()
 let cache_off                    () = get_cache_off                   ()
 let print_cache_version          () = get_print_cache_version         ()
 let cmi                          () = get_cmi                         ()
-type codegen_t = | OCaml | FSharp | Kremlin | Plugin
+type codegen_t = | OCaml | FSharp | Krml | Plugin
 
 let parse_codegen =
   function
   | "OCaml" -> Some OCaml
   | "FSharp" -> Some FSharp
-  | "Kremlin" -> Some Kremlin
+  | "krml" -> Some Krml
   | "Plugin" -> Some Plugin
   | _ -> None
 
@@ -1697,7 +1697,7 @@ let print_codegen =
   function
   | OCaml -> "OCaml"
   | FSharp -> "FSharp"
-  | Kremlin -> "Kremlin"
+  | Krml -> "krml"
   | Plugin -> "Plugin"
 
 let codegen                      () =
@@ -1921,7 +1921,7 @@ let extract_settings
         | Some x -> [tgt,x]
       in
       {
-        target_specific_settings = List.collect merge_target [OCaml;FSharp;Kremlin;Plugin];
+        target_specific_settings = List.collect merge_target [OCaml;FSharp;Krml;Plugin];
         default_settings = merge_setting p0.default_settings p1.default_settings
       }
     in

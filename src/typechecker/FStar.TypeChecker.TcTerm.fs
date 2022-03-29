@@ -105,13 +105,16 @@ let check_expected_aqual_for_binder aq b pos =
     | None, None -> aq
     | None, Some eaq ->
       if eaq.aqual_implicit //programmer should have written #
-      then raise_error (Errors.Fatal_InconsistentImplicitQualifier, "Inconsistent implicit qualifiers") pos
+      then raise_error (Errors.Fatal_InconsistentImplicitQualifier,
+                        "Inconsistent implicit qualifiers (expected implicit annotation on the argument)") pos
       else expected_aq //keep the attributes
     | Some aq, None ->
-      raise_error (Errors.Fatal_InconsistentImplicitQualifier, "Inconsistent implicit qualifiers") pos
+      raise_error (Errors.Fatal_InconsistentImplicitQualifier,
+                   "Inconsistent implicit qualifiers (did not expect argument aquals)") pos
     | Some aq, Some eaq ->
       if aq.aqual_implicit <> eaq.aqual_implicit
-      then raise_error (Errors.Fatal_InconsistentImplicitQualifier, "Inconsistent implicit qualifiers") pos
+      then raise_error (Errors.Fatal_InconsistentImplicitQualifier,
+                        "Inconsistent implicit qualifiers (mismatch)") pos
       else expected_aq //keep the attributes
 
 let check_erasable_binder_attributes env attrs (binder_ty:typ) =

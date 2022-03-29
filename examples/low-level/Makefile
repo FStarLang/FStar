@@ -9,9 +9,9 @@ include $(FSTAR_HOME)/ulib/ml/Makefile.include
 FSTAR_ARGS=$(OTHERFLAGS)
 CODEGEN_ARGS=--lax --codegen OCaml --no_location_info $(FSTAR_DEFAULT_ARGS)
 
-KREMLIN_HOME?=../../../kremlin
-KREMLIN=$(KREMLIN_HOME)/Kremlin.native
-KREMLIN_ARGS=-tmpdir kremlin -cc clang
+KRML_HOME?=../../../karamel
+KRML=$(KRML_HOME)/Karamel.native
+KRML_ARGS=-tmpdir karamel -cc clang
 
 CHACHA_ODIR=chacha
 POLY_ODIR=poly
@@ -99,31 +99,31 @@ aead-compile: aead-extract
 aead-test: aead-compile
 	./test_aead.exe
 
-chacha-kremlin-extract:
-	mkdir -p kremlin
-	$(KREMLIN) $(KREMLIN_ARGS) -I crypto crypto/Crypto.Symmetric.Chacha20.fst -skip-compilation
+chacha-karamel-extract:
+	mkdir -p karamel
+	$(KRML) $(KRML_ARGS) -I crypto crypto/Crypto.Symmetric.Chacha20.fst -skip-compilation
 
-chacha-kremlin-test:
-	mkdir -p kremlin
-	$(KREMLIN) $(KREMLIN_ARGS) -I crypto crypto/Crypto.Symmetric.Chacha20.fst $(addprefix $(KREMLIN_HOME)/test/, main-Chacha.c ../kremlib/testlib.c) -o test_chacha.exe
+chacha-karamel-test:
+	mkdir -p karamel
+	$(KRML) $(KRML_ARGS) -I crypto crypto/Crypto.Symmetric.Chacha20.fst $(addprefix $(KRML_HOME)/test/, main-Chacha.c ../krmllib/testlib.c) -o test_chacha.exe
 	./test_chacha.exe
 
-poly-kremlin-extract:
-	mkdir -p kremlin
-	$(KREMLIN) $(KREMLIN_ARGS) -I crypto crypto/real/Flag.fst crypto/Crypto.Symmetric.Poly1305.fst -skip-compilation
+poly-karamel-extract:
+	mkdir -p karamel
+	$(KRML) $(KRML_ARGS) -I crypto crypto/real/Flag.fst crypto/Crypto.Symmetric.Poly1305.fst -skip-compilation
 
-poly-kremlin-test:
-	mkdir -p kremlin
-	$(KREMLIN) $(KREMLIN_ARGS) -I crypto crypto/real/Flag.fst crypto/Crypto.Symmetric.Poly1305.fst $(addprefix $(KREMLIN_HOME)/test/, main-Poly1305.c ../kremlib/testlib.c) -o test_poly.exe
+poly-karamel-test:
+	mkdir -p karamel
+	$(KRML) $(KRML_ARGS) -I crypto crypto/real/Flag.fst crypto/Crypto.Symmetric.Poly1305.fst $(addprefix $(KRML_HOME)/test/, main-Poly1305.c ../krmllib/testlib.c) -o test_poly.exe
 	./test_poly.exe
 
-aead-kremlin-extract:
-	mkdir -p kremlin
-	$(KREMLIN) $(KREMLIN_ARGS) -I crypto crypto/Crypto.AEAD.Chacha20Poly1305.fst -skip-compilation
+aead-karamel-extract:
+	mkdir -p karamel
+	$(KRML) $(KRML_ARGS) -I crypto crypto/Crypto.AEAD.Chacha20Poly1305.fst -skip-compilation
 
-aead-kremlin-test:
-	mkdir -p kremlin
-	$(KREMLIN) $(KREMLIN_ARGS) -I crypto crypto/Crypto.AEAD.Chacha20Poly1305.fst $(addprefix $(KREMLIN_HOME)/test/, main-Aead.c ../kremlib/testlib.c) -o test_aead.exe
+aead-karamel-test:
+	mkdir -p karamel
+	$(KRML) $(KRML_ARGS) -I crypto crypto/Crypto.AEAD.Chacha20Poly1305.fst $(addprefix $(KRML_HOME)/test/, main-Aead.c ../krmllib/testlib.c) -o test_aead.exe
 	./test_aead.exe
 
 aes-ver:
@@ -185,19 +185,19 @@ bignum-ver:
 	$(FSTAR) --use_hints crypto/Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part6.fst --include crypto
 	$(FSTAR) --use_hints --include crypto crypto/Crypto.Symmetric.Poly1305.Bignum.fst
 
-KRML_INCLUDES=$(addprefix -I ,spartan_aes crypto $(KREMLIN_HOME)/kremlib $(KREMLIN_HOME)/test)
+KRML_INCLUDES=$(addprefix -I ,spartan_aes crypto $(KRML_HOME)/krmllib $(KRML_HOME)/test)
 ifeq ($(OS),Windows_NT)
   KRML_ARGS=-ccopts -maes $(KOPTS)
 else
   KRML_ARGS=-ccopts -maes,-fPIC $(KOPTS)
 endif
-KRML=$(KREMLIN_HOME)/krml $(KRML_ARGS) $(KRML_INCLUDES) 
+KRML=$(KRML_HOME)/krml $(KRML_ARGS) $(KRML_INCLUDES) 
 
 spartan_aes/aes.o:
 	make -C spartan_aes
 
 extract-krml-test:
-	$(FSTAR) --no_extract FStar.Math.Lib --no_extract FStar.HyperHeap --no_extract FStar.HyperStack --no_extract FStar.ST --no_extract FStar.Seq --no_extract FStar.UInt128 --no_extract FStar.Int128 --no_extract FStar.UInt64 --no_extract FStar.Int64 --no_extract FStar.UInt32 --no_extract FStar.Int32 --no_extract FStar.UInt16 --no_extract FStar.Int16 --no_extract FStar.UInt8 --no_extract FStar.Int8 --no_extract Crypto.AEAD.MAC_Wrapper.Invariant --trace_error --include spartan_aes --include crypto --include ../../../../everest/kremlin/kremlib --include ../../../../everest/kremlin/test --include D:/workspace/everest/kremlin/kremlib crypto/spartan/Crypto.Config.fst crypto/real/Flag.fst crypto/Crypto.KrmlTest.fst
+	$(FSTAR) --no_extract FStar.Math.Lib --no_extract FStar.HyperHeap --no_extract FStar.HyperStack --no_extract FStar.ST --no_extract FStar.Seq --no_extract FStar.UInt128 --no_extract FStar.Int128 --no_extract FStar.UInt64 --no_extract FStar.Int64 --no_extract FStar.UInt32 --no_extract FStar.Int32 --no_extract FStar.UInt16 --no_extract FStar.Int16 --no_extract FStar.UInt8 --no_extract FStar.Int8 --no_extract Crypto.AEAD.MAC_Wrapper.Invariant --trace_error --include spartan_aes --include crypto --include ../../../../everest/karamel/krmllib --include ../../../../everest/karamel/test --include D:/workspace/everest/karamel/krmllib crypto/spartan/Crypto.Config.fst crypto/real/Flag.fst crypto/Crypto.KrmlTest.fst
 
 krml-test.exe: spartan_aes/aes.o crypto/*.fst
 	# -bundle Crypto_KrmlTest=Flag,Crypto.*
@@ -205,7 +205,7 @@ krml-test.exe: spartan_aes/aes.o crypto/*.fst
                 -no-prefix Crypto.KrmlTest \
 		-dast \
 	        -drop Crypto.Symmetric.GF128.Spec -drop Crypto.Symmetric.PRF \
-                $(KREMLIN_HOME)/test/../kremlib/testlib.c crypto/test_hacks.c \
+                $(KRML_HOME)/test/../krmllib/testlib.c crypto/test_hacks.c \
                 -tmpdir tmp -add-include '"testlib.h"' -o $@ \
                 crypto/spartan/Crypto.Config.fst crypto/real/Flag.fst crypto/Crypto.KrmlTest.fst
 	-./krml-test.exe #AR: 04/27: this fails, but the tests don't apparently use it. will raise a bug for this too.
@@ -224,11 +224,11 @@ test-perf.exe: crypto/test_perf.c krml-test.exe
 	# LowCProvider (which does ar ../tmp/*.o) would pick up the wrong main
 	$(KRML) tmp/out.krml -drop Crypto.KrmlTest \
                   -tmpdir tmp-test-perf -add-include '"testlib.h"' -o $@ \
-                  $(KREMLIN_HOME)/kremlib/testlib.c crypto/test_hacks.c \
+                  $(KRML_HOME)/krmllib/testlib.c crypto/test_hacks.c \
                   crypto/test_perf.c spartan_aes/aes.o crypto/spartan_stub.c \
                   -ldopt -flto \
                   -ccopts -Ofast,-m64,-march=native,-mtune=native,-funroll-loops,-fomit-frame-pointer,-Wno-int-conversion \
-                  -I $(KREMLIN_HOME)/kremlib -I $(KREMLIN_HOME)/test \
+                  -I $(KRML_HOME)/krmllib -I $(KRML_HOME)/test \
                   -I $(OPENSSL_HOME)/include -ldopts -L,$(OPENSSL_HOME)/lib,-L,$(OPENSSL_HOME),-lcrypto$(WINSOCK) $(CFLAGS)
 	PATH=$(OPENSSL_HOME):"$(PATH)" \
 	  LD_LIBRARY_PATH=$(OPENSSL_HOME):"$(LD_LIBRARY_PATH)" \
@@ -274,8 +274,8 @@ OCAML_FILES=tmp/FStar_Squash.ml tmp/FStar_StrongExcludedMiddle.ml tmp/FStar_List
 		tmp/Crypto_AEAD_Lemmas_Part2.ml \
 		tmp/Crypto_AEAD_Lemmas.ml \
 		tmp/Crypto_AEAD.ml \
-		$(KREMLIN_HOME)/kremlib/TestLib.ml \
-		$(KREMLIN_HOME)/kremlib/C.ml \
+		$(KRML_HOME)/krmllib/TestLib.ml \
+		$(KRML_HOME)/krmllib/C.ml \
 		tmp/Crypto_KrmlTest.ml
 
 
@@ -320,7 +320,7 @@ OBJ_FILES=$(addprefix tmp/, \
 ocaml-test-extract: ulib
 	mkdir -p tmp
 	$(FSTAR_EXTRACT) --include crypto/hacl/ \
-		--include $(KREMLIN_HOME)/kremlib --include $(KREMLIN_HOME)/test/ \
+		--include $(KRML_HOME)/krmllib --include $(KRML_HOME)/test/ \
 		--odir tmp crypto/Crypto.KrmlTest.fst
 	echo "let _ = main()" >> tmp/Crypto_KrmlTest.ml
 
@@ -335,4 +335,4 @@ OPENSSL_HOME=../../ucontrib/CoreCrypto/ml/openssl
 # Cleaning
 clean:
 	@rm -f $(addprefix crypto/ml/, *.cmx *.o *.cmi *~)
-	@rm -rf $(CHACHA_ODIR) $(POLY_ODIR) $(AEAD_ODIR) $(AES_ODIR) $(AESGCM_ODIR) $(CHACHA_AEAD_ODIR) tmp kremlin *~ *.exe ./crypto/*~
+	@rm -rf $(CHACHA_ODIR) $(POLY_ODIR) $(AEAD_ODIR) $(AES_ODIR) $(AESGCM_ODIR) $(CHACHA_AEAD_ODIR) tmp karamel *~ *.exe ./crypto/*~

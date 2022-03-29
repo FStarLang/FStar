@@ -31,7 +31,7 @@ let uint128_to_uint8 (a:UInt128.t) : Tot (b:UInt8.t{UInt8.v b = UInt128.v a % po
   Math.Lemmas.pow2_modulo_modulo_lemma_2 (UInt128.v a) 64 8;
   uint64_to_uint8 (FStar.UInt128.uint128_to_uint64 a)
 
-(* TODO: Add to FStar.Int.Cast and Kremlin and OCaml implementations *)
+(* TODO: Add to FStar.Int.Cast and Karamel and OCaml implementations *)
 val uint8_to_uint128: a:UInt8.t -> Tot (b:UInt128.t{UInt128.v b == UInt8.v a})
 let uint8_to_uint128 a = FStar.UInt128.uint64_to_uint128 (uint8_to_uint64 a)
 
@@ -439,7 +439,7 @@ let store_bytes l buf b = store_bytes_aux l buf 0ul b
 
 // TODO: Dummy.
 // Should be external and relocated in some library with a crypto-grade
-// implementation in both OCaml and KreMLin,
+// implementation in both OCaml and KaRaMeL,
 val random: len:nat -> b:lbuffer len -> Stack unit
   (requires (fun h -> live h b))
   (ensures  (fun h0 _ h1 -> live h1 b /\ modifies_1 b h0 h1))

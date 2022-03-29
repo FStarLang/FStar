@@ -66,3 +66,15 @@ val insert_sorted_cons_false: #a:eqtype ->
   (requires (l == hd::tl /\ f i hd == false))
   (ensures (sorted f (hd::insert_tl)))
 let insert_sorted_cons_false #a f i l hd tl insert_tl = ()
+
+val insert_alt : #a:eqtype -> f:(a -> a -> Tot bool){total_order f} -> i:a ->
+             l:list a{sorted f l} ->
+             Tot (r:list a {sorted f r /\ permutation r (i::l) /\
+                            (Cons? r /\ (let hd::_ = r in hd == i \/ (Cons? l /\ hd == Cons?.hd l)))
+                            })
+let rec insert_alt #a f i l =
+  match l with
+  | [] -> [i]
+  | hd::tl ->
+     if f i hd then i::l
+     else hd :: insert_alt f i tl
