@@ -112,7 +112,7 @@ type m (st:Type u#s) : a:Type u#a -> p:mpre st -> q:mpost st a -> Type =
 ///   later we will give a semantic model and prove soundness of the logic
 ///   with a definitional interpreter
 
-/// Underlying represetation is a thunked tree
+/// Underlying representation is a thunked tree
 ///
 /// Our free monad is parametric in the state (and also its universe),
 ///   for defining an effect we fix the state type

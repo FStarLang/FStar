@@ -69,6 +69,7 @@ type step =
   | Unascribe
   | NBE
   | ForExtraction //marking an invocation of the normalizer for extraction
+  | Unrefine
 and steps = list<step>
 
 let rec eq_step s1 s2 =
@@ -94,7 +95,8 @@ let rec eq_step s1 s2 =
   | CheckNoUvars, CheckNoUvars
   | Unmeta, Unmeta
   | Unascribe, Unascribe
-  | NBE, NBE -> true
+  | NBE, NBE
+  | Unrefine, Unrefine -> true
   | Exclude s1, Exclude s2 -> eq_step s1 s2
   | UnfoldUntil s1, UnfoldUntil s2 -> s1 = s2
   | UnfoldOnly lids1, UnfoldOnly lids2
@@ -157,7 +159,8 @@ and env = {
   gamma_sig      :list<sig_binding>;            (* and signature elements *)
   gamma_cache    :BU.smap<cached_elt>;          (* Memo table for the local environment *)
   modules        :list<modul>;                  (* already fully type checked modules *)
-  expected_typ   :option<typ>;                  (* type expected by the context *)
+  expected_typ   :option<(typ * bool)>;         (* type expected by the context *)
+                                                (* a true bool will check for type equality (else subtyping) *)
   sigtab         :BU.smap<sigelt>;              (* a dictionary of long-names to sigelts *)
   attrtab        :BU.smap<list<sigelt>>;        (* a dictionary of attribute( name)s to sigelts, mostly in support of typeclasses *)
   instantiate_imp:bool;                         (* instantiate implicit arguments? default=true *)
@@ -166,11 +169,8 @@ and env = {
   letrecs        :list<(lbname * int * typ * univ_names)>;  (* mutually recursive names, with recursion arity and their types (for termination checking), adding universes, see the note in TcTerm.fs:build_let_rec_env about usage of this field *)
   top_level      :bool;                         (* is this a top-level term? if so, then discharge guards *)
   check_uvars    :bool;                         (* paranoid: re-typecheck unification variables *)
-  use_eq         :bool;                         (* generate an equality constraint, rather than subtyping/subkinding *)
-  use_eq_strict  :bool;                         (* this flag is a stricter version of use_eq *)
-                                                (* use_eq is not sticky, it is reset on set_expected_typ and clear_expected_typ *)
-                                                (* at least, whereas use_eq_strict does not change as we traverse the term *)
-                                                (* during typechecking *)
+  use_eq_strict  :bool;                         (* this flag runs the typechecker in non-subtyping mode *)
+                                                (* i.e. using type equality instead of subtyping *)
   is_iface       :bool;                         (* is the module we're currently checking an interface? *)
   admit          :bool;                         (* admit VCs in the current module *)
   lax            :bool;                         (* don't even generate VCs *)
@@ -208,16 +208,17 @@ and env = {
 }
 and solver_depth_t = int * int * int
 and solver_t = {
-    init         :env -> unit;
-    push         :string -> unit;
-    pop          :string -> unit;
-    snapshot     :string -> (solver_depth_t * unit);
-    rollback     :string -> option<solver_depth_t> -> unit;
-    encode_sig   :env -> sigelt -> unit;
-    preprocess   :env -> goal -> list<(env * goal * FStar.Options.optionstate)>;
-    solve        :option<(unit -> string)> -> env -> typ -> unit;
-    finish       :unit -> unit;
-    refresh      :unit -> unit;
+    init            :env -> unit;
+    push            :string -> unit;
+    pop             :string -> unit;
+    snapshot        :string -> (solver_depth_t * unit);
+    rollback        :string -> option<solver_depth_t> -> unit;
+    encode_sig      :env -> sigelt -> unit;
+    preprocess      :env -> goal -> list<(env * goal * FStar.Options.optionstate)>;
+    handle_smt_goal :env -> goal -> list<(env * goal)>;
+    solve           :option<(unit -> string)> -> env -> typ -> unit;
+    finish          :unit -> unit;
+    refresh         :unit -> unit;
 }
 and tcenv_hooks =
   { tc_push_in_gamma_hook : (env -> either<binding, sig_binding> -> unit) }
@@ -292,7 +293,6 @@ let initial_env deps
     letrecs=[];
     top_level=false;
     check_uvars=false;
-    use_eq=false;
     use_eq_strict=false;
     is_iface=false;
     admit=false;
@@ -859,7 +859,7 @@ let delta_depth_of_qninfo (fv:fv) (qn:qninfo) : option<delta_depth> =
     let lid = fv.fv_name.v in
     if nsstr lid = "Prims" then Some fv.fv_delta //NS delta: too many special cases in existing code
     else delta_depth_of_qninfo_lid lid qn
-    
+
 let delta_depth_of_fv env fv =
   let lid = fv.fv_name.v in
   if nsstr lid = "Prims" then fv.fv_delta //NS delta: too many special cases in existing code for prims; FIXME!
@@ -1489,7 +1489,7 @@ let update_effect_lattice env src tgt st_mlift =
          | Some e -> e::edges
          | None -> edges) [] in
 
-  let check_cycle src tgt = 
+  let check_cycle src tgt =
     if lid_equals src tgt
     then raise_error (Errors.Fatal_Effects_Ordering_Coherence,
            BU.format3 "Adding an edge %s~>%s induces a cycle %s"
@@ -1549,7 +1549,7 @@ let update_effect_lattice env src tgt st_mlift =
         match smap_try_find ubs key with
         | Some ubs -> (i, j, k, ik, jk)::ubs
         | None -> [i, j, k, ik, jk] in
-        
+
       smap_add ubs key v in
 
     //Populate ubs
@@ -1575,7 +1575,7 @@ let update_effect_lattice env src tgt st_mlift =
       //Make sure there is only one such entry
       if List.length lubs <> 1
       then raise_error (Errors.Fatal_Effects_Ordering_Coherence,
-                        BU.format1 "Effects %s have incomparable upper bounds" s) 
+                        BU.format1 "Effects %s have incomparable upper bounds" s)
                        env.range
       else lubs@joins) [] in
 
@@ -1634,14 +1634,18 @@ let open_universes_in env uvs terms =
     env', univ_vars, List.map (Subst.subst univ_subst) terms
 
 let set_expected_typ env t =
-  {env with expected_typ = Some t; use_eq=false}
+  //false bit says that use subtyping
+  {env with expected_typ = Some (t, false)}
+
+let set_expected_typ_maybe_eq env t use_eq =
+  {env with expected_typ = Some (t, use_eq)}
 
 let expected_typ env = match env.expected_typ with
   | None -> None
   | Some t -> Some t
 
-let clear_expected_typ (env_: env): env * option<typ> =
-    {env_ with expected_typ=None; use_eq=false}, expected_typ env_
+let clear_expected_typ (env_: env): env * option<(typ * bool)> =
+    {env_ with expected_typ=None}, expected_typ env_
 
 let finish_module =
     let empty_lid = lid_of_ids [id_of_text ""] in
@@ -2006,6 +2010,7 @@ let dummy_solver = {
     rollback=(fun _ _ -> ());
     encode_sig=(fun _ _ -> ());
     preprocess=(fun e g -> [e,g, FStar.Options.peek ()]);
+    handle_smt_goal=(fun e g -> [e,g]);
     solve=(fun _ _ _ -> ());
     finish=(fun () -> ());
     refresh=(fun () -> ());

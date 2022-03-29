@@ -33,7 +33,7 @@ type goal = {
     goal_main_env : env;
     goal_ctx_uvar : ctx_uvar;
     opts    : O.optionstate; // option state for this particular goal
-    is_guard : bool; // Marks whether this goal arised from a guard during tactic runtime
+    is_guard : bool; // Marks whether this goal arose from a guard during tactic runtime
                      // We make the distinction to be more user-friendly at times
     label : string; // A user-defined description
 }

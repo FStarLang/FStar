@@ -10,11 +10,12 @@
         "@MaxIFuel_assumption", "@query",
         "binder_x_374b44ccfcb77ed85d505dbc44265913_1",
         "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
-        "equality_tok_Prims.LexTop@tok", "equation_Prims.eqtype",
-        "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
+        "equation_Prims.eqtype", "equation_Prims.op_Equals_Equals_Equals",
+        "fuel_guarded_inversion_Prims.list",
+        "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "824bbc958124b138ad97b9b841809b3b"
+      "affa09933893865f08a12952ed75ec9d"
     ],
     [
       "FStar.Set.lemma_disjoint_subset",
@@ -31,7 +32,7 @@
         "typing_FStar.Set.mem"
       ],
       0,
-      "a201e68232e5f3e50ac48e14857fd35a"
+      "156174da43448043e8d408938feb85d6"
     ]
   ]
 ]

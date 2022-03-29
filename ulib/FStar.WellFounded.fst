@@ -24,10 +24,14 @@ open FStar.Preorder
 
 (*
  * The accessibility relation
+ * -- Marked erasable, since this is a singleton type anyway
+ * -- Erasability also simplifies proofs that use accessibility in
+ *    with axioms like indefinitedescription
  *)
+[@@ erasable]
 noeq
 type acc (#a:Type) (r:relation a) (x:a) : Type =
-  | AccIntro : (y:a -> r y x -> acc r y) -> acc r x
+  | AccIntro : access_smaller:(y:a -> r y x -> acc r y) -> acc r x
 
 (*
  * A relation r is well-founded if every element is accessible
@@ -38,15 +42,11 @@ let well_founded (#a:Type) (r:relation a) = x:a -> acc r x
  * Accessibility predicates can be used for implementing
  *   total fix points
  *)
-let acc_inv (#aa:Type) (#r:relation aa) (x:aa) (a:acc r x)
-  : (e:(y:aa -> r y x -> acc r y){e << a})
-  = match a with | AccIntro h1 -> h1
-
 let rec fix_F (#aa:Type) (#r:relation aa) (#p:(aa -> Type))
               (f: (x:aa -> (y:aa -> r y x -> p y) -> p x))
               (x:aa) (a:acc r x)
   : Tot (p x) (decreases a)
-  = f x (fun y h -> fix_F f y (acc_inv x a y h))
+  = f x (fun y h -> fix_F f y (a.access_smaller y h))
 
 let fix (#aa:Type) (#r:relation aa) (rwf:well_founded r)
         (p:aa -> Type) (f:(x:aa -> (y:aa -> r y x -> p y) -> p x))
@@ -54,29 +54,17 @@ let fix (#aa:Type) (#r:relation aa) (rwf:well_founded r)
   : p x
   = fix_F f x (rwf x)
 
+let is_well_founded (#a:Type) (rel:relation a) =
+  forall (x:a). squash (acc rel x)
 
-(*
- * An erasable version of the accessibility relation,
- *   may be well-suited when the relation is in squashed form,
- *   and when you want to use the internalized support for
- *   accessibility-based termination proofs in F*
- *)
-[@@ erasable]
-noeq
-type acc_g (#a:Type) (r:relation a) (x:a) : Type =
-  | AccIntro_g : (y:a -> r y x -> acc_g r y) -> acc_g r x
-
-type is_well_founded (#a:Type) (rel:relation a) =
-  forall (x:a). squash (acc_g rel x)
-
-type well_founded_relation (a:Type) = rel:relation a{is_well_founded rel}
+let well_founded_relation (a:Type) = rel:relation a{is_well_founded rel}
 
 #push-options "--warn_error -271"
 unfold
-let as_well_founded (#a:Type) (#rel:relation a) (f:(x:a -> acc_g rel x))
+let as_well_founded (#a:Type) (#rel:relation a) (f:(x:a -> acc rel x))
   : well_founded_relation a
   = let aux (x:a)
-      : Lemma (squash (acc_g rel x))
+      : Lemma (squash (acc rel x))
               [SMTPat ()]
       = FStar.Squash.return_squash (f x) in
     rel
@@ -107,15 +95,15 @@ let subrelation_squash_wf (#a:Type) (#r #sub_r:relation a)
   (r_wf:well_founded r)
   : Lemma (is_well_founded sub_r)
   = let aux (x:a)
-      : Lemma (squash (acc_g sub_r x))
+      : Lemma (squash (acc sub_r x))
               [SMTPat ()]
       = let rec acc_y (x:a) (acc_r:acc r x) (y:a) (p:sub_r y x)
-          : Tot (acc_g sub_r y)
+          : Tot (acc sub_r y)
                 (decreases acc_r)
-          = AccIntro_g (acc_y y
-              (match acc_r with
-               | AccIntro f -> f y (elim_squash (sub_w y x p)))) in
-        Squash.return_squash (AccIntro_g (acc_y x (r_wf x)))
+          = AccIntro (acc_y y (acc_r.access_smaller
+                                   y
+                                   (elim_squash (sub_w y x p)))) in
+        Squash.return_squash (AccIntro (acc_y x (r_wf x)))
     in
     ()
 #pop-options
@@ -142,5 +130,5 @@ let inverse_image_wf (#a #b:Type) (#r_b:relation b)
         : Tot (acc_r_b_y:acc r_b (f y){acc_r_b_y << acc_r_b})
         = match acc_r_b with
           | AccIntro g -> g (f y) p in
-      AccIntro (fun y p -> aux y (get_acc_r_b_y y p)) in
+      AccIntro (fun y p -> aux y (acc_r_b.access_smaller (f y) p)) in
     fun x -> aux x (r_b_wf (f x))

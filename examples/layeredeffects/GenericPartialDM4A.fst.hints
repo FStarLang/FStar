@@ -11,7 +11,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "9908970d8263324d5c29faa046eb2d03"
+      "6d23e9ccbf2584a97418a5e6eb5236d6"
     ],
     [
       "GenericPartialDM4A.return",
@@ -20,7 +20,7 @@
       1,
       [ "@query", "equation_GenericPartialDM4A.equiv" ],
       0,
-      "71865056ebcee9d71f57865b9e062b15"
+      "c58e8669557521c5db29d1e717fa1029"
     ],
     [
       "GenericPartialDM4A.and_elim_2",
@@ -28,12 +28,11 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.l_and",
-        "equation_Prims.squash", "l_and-interp",
-        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_b88b26704ce5354755b4f9e280b3a2d9"
       ],
       0,
-      "2a968e44716cf07994d9ad86aef3c8bc"
+      "9d85ea9f5ec858e6d004f07c1d0e78ee"
     ],
     [
       "GenericPartialDM4A.iw_bind",
@@ -41,12 +40,11 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.l_and",
-        "equation_Prims.squash", "l_and-interp",
-        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_1744e69bca1517e683508841df6d9c49"
       ],
       0,
-      "cf6ecb2a6a99ec8f8235655d981a5cbb"
+      "4c8f81d50bfadeb4d75dfa9298de58df"
     ],
     [
       "GenericPartialDM4A.bind",
@@ -64,21 +62,21 @@
         "equation_GenericPartialDM4A.equiv",
         "equation_GenericPartialDM4A.iw_bind",
         "equation_GenericPartialDM4A.op_Less_Less_Equals",
-        "equation_GenericPartialDM4A.repr", "equation_Prims.l_and",
-        "equation_Prims.squash",
+        "equation_GenericPartialDM4A.repr", "equation_Prims.squash",
         "function_token_typing_GenericPartialDM4A.op_Less_Less_Equals",
-        "interpretation_Tm_abs_8f24b79611474204e733ee095e5c454b",
-        "l_and-interp", "l_quant_interp_b318409532d0e00e9125f72f3b997468",
+        "interpretation_Tm_abs_8089e240ad4081a80ba04f47cc7e76a0",
+        "refinement_interpretation_Tm_refine_1744e69bca1517e683508841df6d9c49",
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
         "refinement_interpretation_Tm_refine_741bf4048d874502c2e1a313e5db9687",
         "refinement_interpretation_Tm_refine_bd10f09297e0e7dc08314f7d9211801c",
+        "refinement_interpretation_Tm_refine_eee646ed2c0261b2e37307734e5990b8",
         "token_correspondence_GenericPartialDM4A.iw_bind",
         "token_correspondence_GenericPartialDM4A.op_Less_Less_Equals",
         "token_correspondence_GenericPartialDM4A.stronger", "true_interp",
         "unit_typing"
       ],
       0,
-      "0e20fb451738c311d16da5dca719de41"
+      "d9d4faaed005c973b7058f06fb5744dd"
     ],
     [
       "GenericPartialDM4A.weaken",
@@ -90,7 +88,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "dd0da7d78c5393b7625457ad5ae2282a"
+      "23b667571ebed12186e112c9b09bfc49"
     ],
     [
       "GenericPartialDM4A.subcomp",
@@ -115,7 +113,7 @@
         "typing_GenericPartialDM4A.weaken", "unit_inversion"
       ],
       0,
-      "4d15282926ce2a8b1c019082b5068c98"
+      "b6aabad86e61f52237f0127265a4b692"
     ],
     [
       "GenericPartialDM4A.DM4A",
@@ -124,7 +122,7 @@
       1,
       [ "@query" ],
       0,
-      "304039c20862244650262eceadf487bf"
+      "6519a3e76b427470d6051bfbe4324095"
     ],
     [
       "GenericPartialDM4A.DM4A",
@@ -146,7 +144,7 @@
         "typing_GenericPartialDM4A.weaken", "unit_inversion"
       ],
       0,
-      "b2aa82705007461488878d81297e7f33"
+      "e34ffbd018b60287c451da8cad134a12"
     ],
     [
       "GenericPartialDM4A.DM4A",
@@ -170,7 +168,7 @@
         "typing_GenericPartialDM4A.weaken", "unit_inversion"
       ],
       0,
-      "ee11dd01b120098ad6b31a9fac8421fd"
+      "f075a0ccdf4f919a3ee2bfb893787c61"
     ],
     [
       "GenericPartialDM4A.lift_pure_dm4a",
@@ -194,10 +192,10 @@
         "typing_Tm_abs_dbf003a9879e111684205aae0ef8682e"
       ],
       0,
-      "a28431b6cf9793e646bbeb01331f4634"
+      "100a8c0ffc74f2887fed5e177137161a"
     ],
     [
-      "GenericPartialDM4A.16830",
+      "GenericPartialDM4A.16773",
       1,
       2,
       1,
@@ -206,7 +204,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "156bafc5cd6eec8270c354f4992c3bd3"
+      "f9e1664f0859ac39d97a5d27ad1e0b56"
     ]
   ]
 ]

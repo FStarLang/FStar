@@ -71,9 +71,9 @@ type term_view =
   | Tv_Const  : vconst -> term_view
   | Tv_Uvar   : int -> ctx_uvar_and_subst -> term_view
   | Tv_Let    : recf:bool -> attrs:(list term) -> bv:bv -> def:term -> body:term -> term_view
-  | Tv_Match  : scrutinee:term -> ret:option (either term comp & option term) -> brs:(list branch) -> term_view
-  | Tv_AscribedT : e:term -> t:term -> tac:option term -> term_view
-  | Tv_AscribedC : e:term -> c:comp -> tac:option term -> term_view
+  | Tv_Match  : scrutinee:term -> ret:option match_returns_ascription -> brs:(list branch) -> term_view
+  | Tv_AscribedT : e:term -> t:term -> tac:option term -> use_eq:bool -> term_view
+  | Tv_AscribedC : e:term -> c:comp -> tac:option term -> use_eq:bool -> term_view
   | Tv_Unknown  : term_view // Baked in "None"
 
 // Very basic for now
@@ -110,7 +110,7 @@ type sigelt_view =
       (lbs:list letbinding) ->
       sigelt_view
 
-  // Sg_Inductive basically coallesces the Sig_bundle used internally,
+  // Sg_Inductive basically coalesces the Sig_bundle used internally,
   // where the type definition and its constructors are split.
   // While that might be better for typechecking, this is probably better for metaprogrammers
   // (no mutually defined types for now)
@@ -192,10 +192,10 @@ let smaller (tv:term_view) (t:term) : Type0 =
     | Tv_Match t1 ret_opt brs ->
         t1 << t /\ ret_opt << t /\ (forall_list (fun (b, t') -> t' << t) brs)
 
-    | Tv_AscribedT e ty tac ->
+    | Tv_AscribedT e ty tac _use_eq ->
       e << t /\ ty << t /\ tac << t
 
-    | Tv_AscribedC e c tac ->
+    | Tv_AscribedC e c tac _use_eq ->
       e << t /\ c << t /\ tac << t
 
     | Tv_Type _

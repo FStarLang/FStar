@@ -115,7 +115,7 @@ let add4 x y : prog = [
     Add (R 1) (R 0) (R 0);
 ]
 
-(* All of these identies are quite easy by normalization. Once we fix
+(* All of these identities are quite easy by normalization. Once we fix
  * #1482, they will not even require SMT. *)
 let _ = assert_norm (forall x y. equiv (add1 x y) (add2 x y))
 let _ = assert_norm (forall x y. equiv (add1 x y) (add3 x y))

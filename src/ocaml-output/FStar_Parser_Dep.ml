@@ -1444,20 +1444,26 @@ let (collect_one :
                  (collect_term t1; collect_term t2)
              | FStar_Parser_AST.If (t1, ret_opt, t2, t3) ->
                  (collect_term t1;
-                  FStar_Compiler_Util.iter_opt ret_opt collect_term;
+                  (match ret_opt with
+                   | FStar_Pervasives_Native.None -> ()
+                   | FStar_Pervasives_Native.Some (uu___5, ret, uu___6) ->
+                       collect_term ret);
                   collect_term t2;
                   collect_term t3)
              | FStar_Parser_AST.Match (t, ret_opt, bs) ->
                  (collect_term t;
-                  FStar_Compiler_Util.iter_opt ret_opt collect_term;
+                  (match ret_opt with
+                   | FStar_Pervasives_Native.None -> ()
+                   | FStar_Pervasives_Native.Some (uu___5, ret, uu___6) ->
+                       collect_term ret);
                   collect_branches bs)
              | FStar_Parser_AST.TryWith (t, bs) ->
                  (collect_term t; collect_branches bs)
              | FStar_Parser_AST.Ascribed
-                 (t1, t2, FStar_Pervasives_Native.None) ->
+                 (t1, t2, FStar_Pervasives_Native.None, uu___3) ->
                  (collect_term t1; collect_term t2)
              | FStar_Parser_AST.Ascribed
-                 (t1, t2, FStar_Pervasives_Native.Some tac) ->
+                 (t1, t2, FStar_Pervasives_Native.Some tac, uu___3) ->
                  (collect_term t1; collect_term t2; collect_term tac)
              | FStar_Parser_AST.Record (t, idterms) ->
                  (FStar_Compiler_Util.iter_opt t collect_term;

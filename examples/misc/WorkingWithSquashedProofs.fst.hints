@@ -1,5 +1,5 @@
 [
-  "|ƒ\u0016Üá>K\u0014Àõ§yé!\u0015„",
+  "aïPÙV¿ùÉ\u0006¥îÖ≤5\u0007@",
   [
     [
       "WorkingWithSquashedProofs.lemma_as_squash",
@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "a324ca15c2ccb2933d111042b4e45593"
+      "5668526d4f7e8d5074154d2e20958e27"
     ],
     [
       "WorkingWithSquashedProofs.foo_implies_bar",
@@ -21,7 +21,7 @@
         "refinement_interpretation_Tm_refine_460b166284656e401cd2507f30d7a622"
       ],
       0,
-      "b3e0f7bf6388b7cf8a95c7b5eed77482"
+      "e78b1f0f00d74775e5e0b3d3ca47227e"
     ],
     [
       "WorkingWithSquashedProofs.valid_baz",
@@ -31,12 +31,12 @@
       [
         "@MaxIFuel_assumption", "@query", "disc_equation_Prims.Left",
         "disc_equation_Prims.Right", "equation_Prims.squash",
-        "fuel_guarded_inversion_Prims.c_or",
+        "fuel_guarded_inversion_Prims.sum",
         "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "21da8437a434bf3c7730830a40248be0"
+      "02e52519065d05be708e14dbf0b2fbf8"
     ],
     [
       "WorkingWithSquashedProofs.valid_baz_alt",
@@ -46,12 +46,12 @@
       [
         "@MaxIFuel_assumption", "@query", "disc_equation_Prims.Left",
         "disc_equation_Prims.Right", "equation_Prims.squash",
-        "fuel_guarded_inversion_Prims.c_or",
+        "fuel_guarded_inversion_Prims.sum",
         "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "ce747412b210e8c5f81da0c9549f02c5"
+      "8c9fcad8181142f7fbea89a7512d10f6"
     ],
     [
       "WorkingWithSquashedProofs.elim_squash_or",
@@ -60,11 +60,11 @@
       1,
       [
         "@MaxIFuel_assumption", "@query", "disc_equation_Prims.Left",
-        "disc_equation_Prims.Right", "fuel_guarded_inversion_Prims.c_or",
+        "disc_equation_Prims.Right", "fuel_guarded_inversion_Prims.sum",
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "210b24313cfd40647d978a08c9425793"
+      "6d5c62c57743d370d5e6a69262feea0c"
     ]
   ]
 ]

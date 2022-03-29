@@ -67,15 +67,14 @@ let (b2t_lid : FStar_Ident.lident) = pconst "b2t"
 let (admit_lid : FStar_Ident.lident) = pconst "admit"
 let (magic_lid : FStar_Ident.lident) = pconst "magic"
 let (has_type_lid : FStar_Ident.lident) = pconst "has_type"
-let (c_true_lid : FStar_Ident.lident) = pconst "c_True"
-let (c_false_lid : FStar_Ident.lident) = pconst "c_False"
-let (c_and_lid : FStar_Ident.lident) = pconst "c_and"
-let (c_or_lid : FStar_Ident.lident) = pconst "c_or"
+let (c_true_lid : FStar_Ident.lident) = pconst "trivial"
+let (empty_type_lid : FStar_Ident.lident) = pconst "empty"
+let (c_and_lid : FStar_Ident.lident) = pconst "pair"
+let (c_or_lid : FStar_Ident.lident) = pconst "sum"
 let (dtuple2_lid : FStar_Ident.lident) = pconst "dtuple2"
 let (eq2_lid : FStar_Ident.lident) = pconst "eq2"
-let (eq3_lid : FStar_Ident.lident) = pconst "eq3"
+let (eq3_lid : FStar_Ident.lident) = pconst "op_Equals_Equals_Equals"
 let (c_eq2_lid : FStar_Ident.lident) = pconst "equals"
-let (c_eq3_lid : FStar_Ident.lident) = pconst "h_equals"
 let (cons_lid : FStar_Ident.lident) = pconst "Cons"
 let (nil_lid : FStar_Ident.lident) = pconst "Nil"
 let (some_lid : FStar_Ident.lident) = psnconst "Some"
@@ -289,6 +288,9 @@ let (strict_on_arguments_attr : FStar_Ident.lident) =
   p2l ["FStar"; "Pervasives"; "strict_on_arguments"]
 let (resolve_implicits_attr_string : Prims.string) =
   "FStar.Pervasives.resolve_implicits"
+let (handle_smt_goals_attr : FStar_Ident.lident) = psconst "handle_smt_goals"
+let (handle_smt_goals_attr_string : Prims.string) =
+  "FStar.Pervasives.handle_smt_goals"
 let (erasable_attr : FStar_Ident.lident) =
   p2l ["FStar"; "Pervasives"; "erasable"]
 let (comment_attr : FStar_Ident.lident) =
@@ -297,8 +299,6 @@ let (fail_attr : FStar_Ident.lident) = psconst "expect_failure"
 let (fail_lax_attr : FStar_Ident.lident) = psconst "expect_lax_failure"
 let (tcdecltime_attr : FStar_Ident.lident) = psconst "tcdecltime"
 let (noextract_to_attr : FStar_Ident.lident) = psconst "noextract_to"
-let (assume_strictly_positive_attr_lid : FStar_Ident.lident) =
-  psconst "assume_strictly_positive"
 let (unifier_hint_injective_lid : FStar_Ident.lident) =
   psconst "unifier_hint_injective"
 let (normalize_for_extraction_lid : FStar_Ident.lident) =
@@ -321,6 +321,8 @@ let (remove_unused_type_parameters_lid : FStar_Ident.lident) =
 let (ite_soundness_by_attr : FStar_Ident.lident) = psconst "ite_soundness_by"
 let (binder_strictly_positive_attr : FStar_Ident.lident) =
   psconst "strictly_positive"
+let (no_auto_projectors_attr : FStar_Ident.lident) =
+  psconst "no_auto_projectors"
 let (well_founded_relation_lid : FStar_Ident.lident) =
   p2l ["FStar"; "WellFounded"; "well_founded_relation"]
 let (gen_reset : ((unit -> Prims.int) * (unit -> unit))) =
@@ -370,6 +372,8 @@ let (mk_tuple_lid :
       let uu___ = psnconst t in FStar_Ident.set_lid_range uu___ r
 let (lid_tuple2 : FStar_Ident.lident) =
   mk_tuple_lid (Prims.of_int (2)) FStar_Compiler_Range.dummyRange
+let (lid_tuple3 : FStar_Ident.lident) =
+  mk_tuple_lid (Prims.of_int (3)) FStar_Compiler_Range.dummyRange
 let (is_tuple_constructor_string : Prims.string -> Prims.bool) =
   fun s -> FStar_Compiler_Util.starts_with s "FStar.Pervasives.Native.tuple"
 let (is_tuple_constructor_id : FStar_Ident.ident -> Prims.bool) =
@@ -390,6 +394,8 @@ let (mk_tuple_data_lid :
       let uu___ = psnconst t in FStar_Ident.set_lid_range uu___ r
 let (lid_Mktuple2 : FStar_Ident.lident) =
   mk_tuple_data_lid (Prims.of_int (2)) FStar_Compiler_Range.dummyRange
+let (lid_Mktuple3 : FStar_Ident.lident) =
+  mk_tuple_data_lid (Prims.of_int (3)) FStar_Compiler_Range.dummyRange
 let (is_tuple_datacon_string : Prims.string -> Prims.bool) =
   fun s ->
     FStar_Compiler_Util.starts_with s "FStar.Pervasives.Native.Mktuple"
@@ -522,3 +528,5 @@ let (exists_elim_lid : FStar_Ident.lid) = classical_sugar_lid "exists_elim"
 let (implies_elim_lid : FStar_Ident.lid) = classical_sugar_lid "implies_elim"
 let (or_elim_lid : FStar_Ident.lid) = classical_sugar_lid "or_elim"
 let (and_elim_lid : FStar_Ident.lid) = classical_sugar_lid "and_elim"
+let (match_returns_def_name : Prims.string) =
+  FStar_String.op_Hat FStar_Ident.reserved_prefix "_ret_"

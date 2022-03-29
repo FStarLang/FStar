@@ -63,7 +63,7 @@ type atom
        // 1. the scrutinee
        t *
        // 2. reconstruct the returns annotation
-       (unit -> option<ascription>) *
+       (unit -> option<match_returns_ascription>) *
        // 3. reconstructs the pattern matching
        (unit -> list<branch>) *
        // 4. reconstruct the residual comp if set
@@ -230,7 +230,7 @@ let mkConstruct i us ts = mk_t <| Construct(i, us, ts)
 let mkFV i us ts = mk_rt (S.range_of_fv i) (FV(i, us, ts))
 
 let mkAccuVar (v:var) = mk_rt (S.range_of_bv v) (Accu(Var v, []))
-let mkAccuMatch (s:t) (ret:(unit -> option<ascription>)) (bs:(unit -> list<branch>))
+let mkAccuMatch (s:t) (ret:(unit -> option<match_returns_ascription>)) (bs:(unit -> list<branch>))
   (rc:unit -> option<S.residual_comp>) =
   mk_t <| Accu(Match (s, ret, bs, rc), [])
 
@@ -559,6 +559,33 @@ let e_tuple2 (ea:embedding<'a>) (eb:embedding<'b>) =
     in
     mk_emb em un (lid_as_typ PC.lid_tuple2 [U_zero;U_zero] [as_arg (type_of eb); as_arg (type_of ea)]) etyp
 
+let e_tuple3 (ea:embedding<'a>) (eb:embedding<'b>) (ec:embedding<'c>) =
+    let etyp =
+        ET_app(PC.lid_tuple3 |> Ident.string_of_lid, [ea.emb_typ; eb.emb_typ; ec.emb_typ])
+    in
+    let em cb ((x1, x2, x3):('a * 'b * 'c)) : t =
+        lazy_embed etyp (x1, x2, x3) (fun () ->
+        lid_as_constr (PC.lid_Mktuple3)
+                      [U_zero; U_zero; U_zero]
+                      [as_arg (embed ec cb x3);
+                       as_arg (embed eb cb x2);
+                       as_arg (embed ea cb x1);
+                       as_iarg (type_of ec);
+                       as_iarg (type_of eb);
+                       as_iarg (type_of ea)])
+    in
+    let un cb (trm:t) : option<('a * 'b * 'c)> =
+        lazy_unembed cb etyp trm (fun trm ->
+        match trm.nbe_t with
+        | Construct (fvar, us, [(c, _); (b, _); (a, _); _; _]) when S.fv_eq_lid fvar PC.lid_Mktuple3 ->
+          BU.bind_opt (unembed ea cb a) (fun a ->
+          BU.bind_opt (unembed eb cb b) (fun b ->
+          BU.bind_opt (unembed ec cb c) (fun c ->
+          Some (a, b, c))))
+        | _ -> None)
+    in
+    mk_emb em un (lid_as_typ PC.lid_tuple3 [U_zero;U_zero;U_zero] [as_arg (type_of ec); as_arg (type_of eb); as_arg (type_of ea)]) etyp
+
 let e_either (ea:embedding<'a>) (eb:embedding<'b>) =
     let etyp =
         ET_app(PC.either_lid |> Ident.string_of_lid, [ea.emb_typ; eb.emb_typ])
@@ -875,19 +902,8 @@ let interp_prop_eq2 (args:args) : option<t> =
       end
    | _ -> failwith "Unexpected number of arguments"
 
-let interp_prop_eq3 (args:args) : option<t> =
-    match args with
-    | [(_u, _); (_v, _); (t1, _); (t2, _); (a1, _); (a2, _)] ->  //eq3
-      begin match U.eq_inj (eq_t t1 t2) (eq_t a1 a2) with
-      | U.Equal -> Some (embed e_bool bogus_cbs true)
-      | U.NotEqual -> Some (embed e_bool bogus_cbs false)
-      | U.Unknown -> None
-      end
-   | _ -> failwith "Unexpected number of arguments"
-
 let dummy_interp (lid : Ident.lid) (args : args) : option<t> =
     failwith ("No interpretation for " ^ (Ident.string_of_lid lid))
-
 
 let prims_to_fstar_range_step (args:args) : option<t> =
     match args with

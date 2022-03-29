@@ -228,10 +228,6 @@ let (destruct_eq' :
         (FStar_Ident.lid_equals l FStar_Parser_Const.eq2_lid) ||
           (FStar_Ident.lid_equals l FStar_Parser_Const.c_eq2_lid)
         -> FStar_Pervasives_Native.Some (e1, e2)
-    | FStar_Pervasives_Native.Some (FStar_Syntax_Util.BaseConn
-        (l, uu___1::uu___2::(e1, uu___3)::(e2, uu___4)::[])) when
-        FStar_Ident.lid_equals l FStar_Parser_Const.eq3_lid ->
-        FStar_Pervasives_Native.Some (e1, e2)
     | uu___1 ->
         let uu___2 = FStar_Syntax_Util.unb2t typ in
         (match uu___2 with
@@ -686,8 +682,6 @@ let (__tc :
                       (e.FStar_TypeChecker_Env.top_level);
                     FStar_TypeChecker_Env.check_uvars =
                       (e.FStar_TypeChecker_Env.check_uvars);
-                    FStar_TypeChecker_Env.use_eq =
-                      (e.FStar_TypeChecker_Env.use_eq);
                     FStar_TypeChecker_Env.use_eq_strict =
                       (e.FStar_TypeChecker_Env.use_eq_strict);
                     FStar_TypeChecker_Env.is_iface =
@@ -825,8 +819,6 @@ let (__tc_ghost :
                       (e.FStar_TypeChecker_Env.top_level);
                     FStar_TypeChecker_Env.check_uvars =
                       (e.FStar_TypeChecker_Env.check_uvars);
-                    FStar_TypeChecker_Env.use_eq =
-                      (e.FStar_TypeChecker_Env.use_eq);
                     FStar_TypeChecker_Env.use_eq_strict =
                       (e.FStar_TypeChecker_Env.use_eq_strict);
                     FStar_TypeChecker_Env.is_iface =
@@ -967,8 +959,6 @@ let (__tc_lax :
                       (e.FStar_TypeChecker_Env.top_level);
                     FStar_TypeChecker_Env.check_uvars =
                       (e.FStar_TypeChecker_Env.check_uvars);
-                    FStar_TypeChecker_Env.use_eq =
-                      (e.FStar_TypeChecker_Env.use_eq);
                     FStar_TypeChecker_Env.use_eq_strict =
                       (e.FStar_TypeChecker_Env.use_eq_strict);
                     FStar_TypeChecker_Env.is_iface =
@@ -1066,8 +1056,6 @@ let (__tc_lax :
                       (e1.FStar_TypeChecker_Env.top_level);
                     FStar_TypeChecker_Env.check_uvars =
                       (e1.FStar_TypeChecker_Env.check_uvars);
-                    FStar_TypeChecker_Env.use_eq =
-                      (e1.FStar_TypeChecker_Env.use_eq);
                     FStar_TypeChecker_Env.use_eq_strict =
                       (e1.FStar_TypeChecker_Env.use_eq_strict);
                     FStar_TypeChecker_Env.is_iface =
@@ -2306,8 +2294,6 @@ let (check_lemma_implicits_solution :
                 (env1.FStar_TypeChecker_Env.top_level);
               FStar_TypeChecker_Env.check_uvars =
                 (env1.FStar_TypeChecker_Env.check_uvars);
-              FStar_TypeChecker_Env.use_eq =
-                (env1.FStar_TypeChecker_Env.use_eq);
               FStar_TypeChecker_Env.use_eq_strict =
                 (env1.FStar_TypeChecker_Env.use_eq_strict);
               FStar_TypeChecker_Env.is_iface =
@@ -3662,8 +3648,6 @@ let (join_goals :
                                     (uu___7.FStar_TypeChecker_Env.top_level);
                                   FStar_TypeChecker_Env.check_uvars =
                                     (uu___7.FStar_TypeChecker_Env.check_uvars);
-                                  FStar_TypeChecker_Env.use_eq =
-                                    (uu___7.FStar_TypeChecker_Env.use_eq);
                                   FStar_TypeChecker_Env.use_eq_strict =
                                     (uu___7.FStar_TypeChecker_Env.use_eq_strict);
                                   FStar_TypeChecker_Env.is_iface =
@@ -3901,7 +3885,19 @@ let (uvar_env :
            let uu___ =
              match ty with
              | FStar_Pervasives_Native.Some ty1 ->
-                 FStar_Tactics_Monad.ret ty1
+                 let env2 =
+                   let uu___1 =
+                     let uu___2 = FStar_Syntax_Util.type_u () in
+                     FStar_Compiler_Effect.op_Bar_Greater uu___2
+                       FStar_Pervasives_Native.fst in
+                   FStar_TypeChecker_Env.set_expected_typ env1 uu___1 in
+                 let uu___1 = __tc_ghost env2 ty1 in
+                 FStar_Tactics_Monad.bind uu___1
+                   (fun uu___2 ->
+                      match uu___2 with
+                      | (ty2, uu___3, g) ->
+                          FStar_Tactics_Monad.ret
+                            (ty2, g, (ty2.FStar_Syntax_Syntax.pos)))
              | FStar_Pervasives_Native.None ->
                  let uu___1 =
                    let uu___2 =
@@ -3913,16 +3909,24 @@ let (uvar_env :
                  FStar_Tactics_Monad.bind uu___1
                    (fun uu___2 ->
                       match uu___2 with
-                      | (typ, uvar_typ) -> FStar_Tactics_Monad.ret typ) in
+                      | (typ, uvar_typ) ->
+                          FStar_Tactics_Monad.ret
+                            (typ, FStar_TypeChecker_Env.trivial_guard,
+                              FStar_Compiler_Range.dummyRange)) in
            FStar_Tactics_Monad.bind uu___
-             (fun typ ->
-                let uu___1 =
-                  FStar_Tactics_Monad.new_uvar "uvar_env" env1 typ
-                    ps.FStar_Tactics_Types.entry_range in
-                FStar_Tactics_Monad.bind uu___1
-                  (fun uu___2 ->
-                     match uu___2 with
-                     | (t, uvar_t) -> FStar_Tactics_Monad.ret t)))
+             (fun uu___1 ->
+                match uu___1 with
+                | (typ, g, r) ->
+                    let uu___2 = proc_guard "uvar_env_typ" env1 g r in
+                    FStar_Tactics_Monad.bind uu___2
+                      (fun uu___3 ->
+                         let uu___4 =
+                           FStar_Tactics_Monad.new_uvar "uvar_env" env1 typ
+                             ps.FStar_Tactics_Types.entry_range in
+                         FStar_Tactics_Monad.bind uu___4
+                           (fun uu___5 ->
+                              match uu___5 with
+                              | (t, uvar_t) -> FStar_Tactics_Monad.ret t))))
 let (unshelve : FStar_Syntax_Syntax.term -> unit FStar_Tactics_Monad.tac) =
   fun t ->
     let uu___ =
@@ -3975,8 +3979,6 @@ let (unshelve : FStar_Syntax_Syntax.term -> unit FStar_Tactics_Monad.tac) =
                      (env1.FStar_TypeChecker_Env.top_level);
                    FStar_TypeChecker_Env.check_uvars =
                      (env1.FStar_TypeChecker_Env.check_uvars);
-                   FStar_TypeChecker_Env.use_eq =
-                     (env1.FStar_TypeChecker_Env.use_eq);
                    FStar_TypeChecker_Env.use_eq_strict =
                      (env1.FStar_TypeChecker_Env.use_eq_strict);
                    FStar_TypeChecker_Env.is_iface =
@@ -4839,9 +4841,6 @@ let (t_destruct :
                                                                     FStar_TypeChecker_Env.check_uvars
                                                                     =
                                                                     (env1.FStar_TypeChecker_Env.check_uvars);
-                                                                    FStar_TypeChecker_Env.use_eq
-                                                                    =
-                                                                    (env1.FStar_TypeChecker_Env.use_eq);
                                                                     FStar_TypeChecker_Env.use_eq_strict
                                                                     =
                                                                     (env1.FStar_TypeChecker_Env.use_eq_strict);
@@ -5444,19 +5443,19 @@ let (pack :
                (t, ret_opt, brs2, FStar_Pervasives_Native.None))
             FStar_Compiler_Range.dummyRange in
         FStar_Compiler_Effect.op_Less_Bar FStar_Tactics_Monad.ret uu___
-    | FStar_Reflection_Data.Tv_AscribedT (e, t, tacopt) ->
+    | FStar_Reflection_Data.Tv_AscribedT (e, t, tacopt, use_eq) ->
         let uu___ =
           FStar_Syntax_Syntax.mk
             (FStar_Syntax_Syntax.Tm_ascribed
-               (e, ((FStar_Pervasives.Inl t), tacopt),
+               (e, ((FStar_Pervasives.Inl t), tacopt, use_eq),
                  FStar_Pervasives_Native.None))
             FStar_Compiler_Range.dummyRange in
         FStar_Compiler_Effect.op_Less_Bar FStar_Tactics_Monad.ret uu___
-    | FStar_Reflection_Data.Tv_AscribedC (e, c, tacopt) ->
+    | FStar_Reflection_Data.Tv_AscribedC (e, c, tacopt, use_eq) ->
         let uu___ =
           FStar_Syntax_Syntax.mk
             (FStar_Syntax_Syntax.Tm_ascribed
-               (e, ((FStar_Pervasives.Inr c), tacopt),
+               (e, ((FStar_Pervasives.Inr c), tacopt, use_eq),
                  FStar_Pervasives_Native.None))
             FStar_Compiler_Range.dummyRange in
         FStar_Compiler_Effect.op_Less_Bar FStar_Tactics_Monad.ret uu___
@@ -5651,8 +5650,6 @@ let (tac_env : FStar_TypeChecker_Env.env -> FStar_TypeChecker_Env.env) =
               (env2.FStar_TypeChecker_Env.top_level);
             FStar_TypeChecker_Env.check_uvars =
               (env2.FStar_TypeChecker_Env.check_uvars);
-            FStar_TypeChecker_Env.use_eq =
-              (env2.FStar_TypeChecker_Env.use_eq);
             FStar_TypeChecker_Env.use_eq_strict =
               (env2.FStar_TypeChecker_Env.use_eq_strict);
             FStar_TypeChecker_Env.is_iface =
@@ -5746,8 +5743,6 @@ let (tac_env : FStar_TypeChecker_Env.env -> FStar_TypeChecker_Env.env) =
               (env3.FStar_TypeChecker_Env.top_level);
             FStar_TypeChecker_Env.check_uvars =
               (env3.FStar_TypeChecker_Env.check_uvars);
-            FStar_TypeChecker_Env.use_eq =
-              (env3.FStar_TypeChecker_Env.use_eq);
             FStar_TypeChecker_Env.use_eq_strict =
               (env3.FStar_TypeChecker_Env.use_eq_strict);
             FStar_TypeChecker_Env.is_iface =
@@ -5840,8 +5835,6 @@ let (tac_env : FStar_TypeChecker_Env.env -> FStar_TypeChecker_Env.env) =
               (env4.FStar_TypeChecker_Env.top_level);
             FStar_TypeChecker_Env.check_uvars =
               (env4.FStar_TypeChecker_Env.check_uvars);
-            FStar_TypeChecker_Env.use_eq =
-              (env4.FStar_TypeChecker_Env.use_eq);
             FStar_TypeChecker_Env.use_eq_strict =
               (env4.FStar_TypeChecker_Env.use_eq_strict);
             FStar_TypeChecker_Env.is_iface =

@@ -57,6 +57,7 @@ type step =
   | Unascribe
   | NBE
   | ForExtraction   //marking an invocation of the normalizer for extraction
+  | Unrefine
 and steps = list<step>
 
 val eq_step : step -> step -> bool
@@ -107,7 +108,7 @@ and mlift = {
   mlift_term:option<(universe -> typ -> term -> term)>
 }
 
-(* 
+(*
  * Edge in the effect lattice
  *
  * May have been computed by composing other "edges"
@@ -152,7 +153,8 @@ and env = {
   gamma_sig      :list<sig_binding>;            (* and signature elements *)
   gamma_cache    :FStar.Compiler.Util.smap<cached_elt>;  (* Memo table for the local environment *)
   modules        :list<modul>;                  (* already fully type checked modules *)
-  expected_typ   :option<typ>;                  (* type expected by the context *)
+  expected_typ   :option<(typ * bool)>;         (* type expected by the context *)
+                                                (* a true bool will check for type equality (else subtyping) *)
   sigtab         :BU.smap<sigelt>;              (* a dictionary of long-names to sigelts *)
   attrtab        :BU.smap<list<sigelt>>;        (* a dictionary of attribute( name)s to sigelts, mostly in support of typeclasses *)
   instantiate_imp:bool;                         (* instantiate implicit arguments? default=true *)
@@ -161,11 +163,8 @@ and env = {
   letrecs        :list<(lbname * int * typ * univ_names)>;  (* mutually recursive names, with recursion arity and their types (for termination checking), adding universes, see the note in TcTerm.fs:build_let_rec_env about usage of this field *)
   top_level      :bool;                         (* is this a top-level term? if so, then discharge guards *)
   check_uvars    :bool;                         (* paranoid: re-typecheck unification variables *)
-  use_eq         :bool;                         (* generate an equality constraint, rather than subtyping/subkinding *)
-  use_eq_strict  :bool;                         (* this flag is a stricter version of use_eq *)
-                                                (* use_eq is not sticky, it is reset on set_expected_typ and clear_expected_typ *)
-                                                (* at least, whereas use_eq_strict does not change as we traverse the term *)
-                                                (* during typechecking, it also implies no smt *)
+  use_eq_strict  :bool;                         (* this flag runs the typechecker in non-subtyping mode *)
+                                                (* i.e. using type equality instead of subtyping *)
   is_iface       :bool;                         (* is the module we're currently checking an interface? *)
   admit          :bool;                         (* admit VCs in the current module *)
   lax            :bool;                         (* don't even generate VCs *)
@@ -204,16 +203,17 @@ and env = {
 
 and solver_depth_t = int * int * int
 and solver_t = {
-    init         :env -> unit;
-    push         :string -> unit;
-    pop          :string -> unit;
-    snapshot     :string -> (solver_depth_t * unit);
-    rollback     :string -> option<solver_depth_t> -> unit;
-    encode_sig   :env -> sigelt -> unit;
-    preprocess   :env -> goal -> list<(env * goal * FStar.Options.optionstate)>;
-    solve        :option<(unit -> string)> -> env -> goal -> unit; //call to the smt solver
-    finish       :unit -> unit;
-    refresh      :unit -> unit;
+    init            :env -> unit;
+    push            :string -> unit;
+    pop             :string -> unit;
+    snapshot        :string -> (solver_depth_t * unit);
+    rollback        :string -> option<solver_depth_t> -> unit;
+    encode_sig      :env -> sigelt -> unit;
+    preprocess      :env -> goal -> list<(env * goal * FStar.Options.optionstate)>;
+    handle_smt_goal :env -> goal -> list<(env * goal)>;
+    solve           :option<(unit -> string)> -> env -> goal -> unit; //call to the smt solver
+    finish          :unit -> unit;
+    refresh         :unit -> unit;
 }
 and tcenv_hooks =
   { tc_push_in_gamma_hook : (env -> either<binding, sig_binding> -> unit) }
@@ -357,8 +357,13 @@ val push_binders          : env -> binders -> env
 val push_univ_vars        : env -> univ_names -> env
 val open_universes_in     : env -> univ_names -> list<term> -> env * univ_names * list<term>
 val set_expected_typ      : env -> typ -> env
-val expected_typ          : env -> option<typ>
-val clear_expected_typ    : env -> env*option<typ>
+val set_expected_typ_maybe_eq
+                          : env -> typ -> bool -> env  //boolean true will check for type equality
+
+//the returns boolean true means check for type equality
+val expected_typ          : env -> option<(typ * bool)>
+val clear_expected_typ    : env -> env*option<(typ * bool)>
+
 val set_current_module    : env -> lident -> env
 val finish_module         : (env -> modul -> env)
 

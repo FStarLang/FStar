@@ -7,11 +7,7 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query",
-        "MRefST_interpretation_Tm_arrow_fddf70d42854bcd0aeeb74533f06ee86",
-        "Prims_interpretation_Tm_arrow_2eaa01e78f73e9bab5d0955fc1a662da",
-        "b2t_def", "equation_FStar.Preorder.predicate",
-        "equation_FStar.Preorder.preorder",
+        "@MaxIFuel_assumption", "@query", "b2t_def",
         "equation_FStar.Preorder.preorder_rel",
         "equation_FStar.Preorder.reflexive",
         "equation_FStar.Preorder.stable",
@@ -31,17 +27,15 @@
         "refinement_interpretation_Tm_refine_3568bcf9133bbe8512b3c2560361e2a6",
         "refinement_interpretation_Tm_refine_36453e3eb6145226f640e16ed9612466",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "refinement_interpretation_Tm_refine_aa392cfb19a7bef11def16af498eb713",
-        "refinement_interpretation_Tm_refine_bd10f09297e0e7dc08314f7d9211801c",
+        "refinement_interpretation_Tm_refine_b1c28aa58737bfc2dbda63f66ce3b895",
         "refinement_interpretation_Tm_refine_da9cbab0485332770e2f963089e2dda6",
-        "refinement_interpretation_Tm_refine_deef6248c9cb1ee1196561ef08ad1dda",
         "refinement_interpretation_Tm_refine_f07337a29cfe3dbf224739cd84fc5577",
         "refinement_kinding_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "token_correspondence_MRefST.heap_rel", "typing_MRefHeap.alloc_ref",
         "typing_MRefHeap.upd"
       ],
       0,
-      "34afeada270aad59a9b0aa9b59cf55dd"
+      "434655370c848bd773e1d90f7636fcc1"
     ]
   ]
 ]

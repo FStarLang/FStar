@@ -740,6 +740,8 @@ let delete_file (fn:string) =
   System.IO.File.Delete fn
 let file_get_contents f =
   File.ReadAllText f
+let file_get_lines f =
+  Array.toList (File.ReadAllLines f)
 let mkdir clean dname =
   if System.IO.Directory.Exists(dname) then
     let srcDir = new System.IO.DirectoryInfo(dname)

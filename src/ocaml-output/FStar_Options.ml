@@ -206,8 +206,7 @@ let (add_light_off_file : Prims.string -> unit) =
         :: uu___1 in
     FStar_Compiler_Effect.op_Colon_Equals light_off_files uu___
 let (defaults : (Prims.string * option_val) Prims.list) =
-  [("__temp_no_proj", (List []));
-  ("__temp_fast_implicits", (Bool false));
+  [("__temp_fast_implicits", (Bool false));
   ("abort_on", (Int Prims.int_zero));
   ("admit_smt_queries", (Bool false));
   ("admit_except", Unset);
@@ -593,8 +592,6 @@ let (get_vcgen_optimize_bind_as_seq :
   fun uu___ -> lookup_opt "vcgen.optimize_bind_as_seq" (as_option as_string)
 let (get_verify_module : unit -> Prims.string Prims.list) =
   fun uu___ -> lookup_opt "verify_module" (as_list as_string)
-let (get___temp_no_proj : unit -> Prims.string Prims.list) =
-  fun uu___ -> lookup_opt "__temp_no_proj" (as_list as_string)
 let (get_version : unit -> Prims.bool) =
   fun uu___ -> lookup_opt "version" as_bool
 let (get_warn_default_effects : unit -> Prims.bool) =
@@ -691,39 +688,45 @@ let display_usage_aux :
       Prims.list -> unit
   =
   fun specs ->
-    FStar_Compiler_Util.print_string "fstar.exe [options] file[s]\n";
+    FStar_Compiler_Util.print_string
+      "fstar.exe [options] file[s] [@respfile...]\n";
+    (let uu___2 =
+       let uu___3 = FStar_Compiler_Util.colorize_bold "@" in
+       FStar_Compiler_Util.format1
+         "  %srespfile  read options from respfile\n" uu___3 in
+     FStar_Compiler_Util.print_string uu___2);
     FStar_Compiler_List.iter
-      (fun uu___1 ->
-         match uu___1 with
-         | (uu___2, flag, p, doc) ->
+      (fun uu___2 ->
+         match uu___2 with
+         | (uu___3, flag, p, doc) ->
              (match p with
               | FStar_Getopt.ZeroArgs ig ->
                   if doc = ""
                   then
-                    let uu___3 =
-                      let uu___4 = FStar_Compiler_Util.colorize_bold flag in
-                      FStar_Compiler_Util.format1 "  --%s\n" uu___4 in
-                    FStar_Compiler_Util.print_string uu___3
-                  else
-                    (let uu___4 =
-                       let uu___5 = FStar_Compiler_Util.colorize_bold flag in
-                       FStar_Compiler_Util.format2 "  --%s  %s\n" uu___5 doc in
-                     FStar_Compiler_Util.print_string uu___4)
-              | FStar_Getopt.OneArg (uu___3, argname) ->
-                  if doc = ""
-                  then
                     let uu___4 =
                       let uu___5 = FStar_Compiler_Util.colorize_bold flag in
-                      let uu___6 = FStar_Compiler_Util.colorize_bold argname in
-                      FStar_Compiler_Util.format2 "  --%s %s\n" uu___5 uu___6 in
+                      FStar_Compiler_Util.format1 "  --%s\n" uu___5 in
                     FStar_Compiler_Util.print_string uu___4
                   else
                     (let uu___5 =
                        let uu___6 = FStar_Compiler_Util.colorize_bold flag in
-                       let uu___7 = FStar_Compiler_Util.colorize_bold argname in
-                       FStar_Compiler_Util.format3 "  --%s %s  %s\n" uu___6
-                         uu___7 doc in
-                     FStar_Compiler_Util.print_string uu___5))) specs
+                       FStar_Compiler_Util.format2 "  --%s  %s\n" uu___6 doc in
+                     FStar_Compiler_Util.print_string uu___5)
+              | FStar_Getopt.OneArg (uu___4, argname) ->
+                  if doc = ""
+                  then
+                    let uu___5 =
+                      let uu___6 = FStar_Compiler_Util.colorize_bold flag in
+                      let uu___7 = FStar_Compiler_Util.colorize_bold argname in
+                      FStar_Compiler_Util.format2 "  --%s %s\n" uu___6 uu___7 in
+                    FStar_Compiler_Util.print_string uu___5
+                  else
+                    (let uu___6 =
+                       let uu___7 = FStar_Compiler_Util.colorize_bold flag in
+                       let uu___8 = FStar_Compiler_Util.colorize_bold argname in
+                       FStar_Compiler_Util.format3 "  --%s %s  %s\n" uu___7
+                         uu___8 doc in
+                     FStar_Compiler_Util.print_string uu___6))) specs
 let (mk_spec :
   (FStar_BaseTypes.char * Prims.string * option_val FStar_Getopt.opt_variant
     * Prims.string) -> FStar_Getopt.opt)
@@ -1290,9 +1293,6 @@ let rec (specs_with_types :
     (FStar_Getopt.noshort, "vcgen.optimize_bind_as_seq",
       (EnumStr ["off"; "without_type"; "with_type"]),
       "\n\t\tOptimize the generation of verification conditions, \n\t\t\tspecifically the construction of monadic `bind`,\n\t\t\tgenerating `seq` instead of `bind` when the first computation as a trivial post-condition.\n\t\t\tBy default, this optimization does not apply.\n\t\t\tWhen the `without_type` option is chosen, this imposes a cost on the SMT solver\n\t\t\tto reconstruct type information.\n\t\t\tWhen `with_type` is chosen, type information is provided to the SMT solver,\n\t\t\tbut at the cost of VC bloat, which may often be redundant.");
-    (FStar_Getopt.noshort, "__temp_no_proj",
-      (Accumulated (SimpleStr "module_name")),
-      "Don't generate projectors for this module");
     (FStar_Getopt.noshort, "__temp_fast_implicits", (Const (Bool true)),
       "Don't use this option yet");
     (118, "version",
@@ -1429,7 +1429,6 @@ let (settable : Prims.string -> Prims.bool) =
     | "tactic_trace_d" -> true
     | "tcnorm" -> true
     | "__temp_fast_implicits" -> true
-    | "__temp_no_proj" -> true
     | "timing" -> true
     | "trace_error" -> true
     | "ugly" -> true
@@ -1460,7 +1459,7 @@ let (settable_specs :
     (FStar_Compiler_List.filter
        (fun uu___ ->
           match uu___ with | (uu___1, x, uu___2, uu___3) -> settable x))
-let (uu___587 :
+let (uu___586 :
   (((unit -> FStar_Getopt.parse_cmdline_res) -> unit) *
     (unit -> FStar_Getopt.parse_cmdline_res)))
   =
@@ -1477,11 +1476,11 @@ let (uu___587 :
   (set1, call)
 let (set_error_flags_callback_aux :
   (unit -> FStar_Getopt.parse_cmdline_res) -> unit) =
-  match uu___587 with
+  match uu___586 with
   | (set_error_flags_callback_aux1, set_error_flags) ->
       set_error_flags_callback_aux1
 let (set_error_flags : unit -> FStar_Getopt.parse_cmdline_res) =
-  match uu___587 with
+  match uu___586 with
   | (set_error_flags_callback_aux1, set_error_flags1) -> set_error_flags1
 let (set_error_flags_callback :
   (unit -> FStar_Getopt.parse_cmdline_res) -> unit) =
@@ -1491,16 +1490,34 @@ let (fstar_bin_directory : Prims.string) =
   FStar_Compiler_Util.get_exec_dir ()
 let (file_list_ : Prims.string Prims.list FStar_Compiler_Effect.ref) =
   FStar_Compiler_Util.mk_ref []
+let rec (parse_filename_arg :
+  FStar_Getopt.opt Prims.list ->
+    Prims.bool -> Prims.string -> FStar_Getopt.parse_cmdline_res)
+  =
+  fun specs1 ->
+    fun enable_filenames ->
+      fun arg ->
+        if FStar_Compiler_Util.starts_with arg "@"
+        then
+          let filename = FStar_Compiler_Util.substring_from arg Prims.int_one in
+          let lines = FStar_Compiler_Util.file_get_lines filename in
+          FStar_Getopt.parse_list specs1
+            (parse_filename_arg specs1 enable_filenames) lines
+        else
+          (if enable_filenames
+           then
+             (let uu___2 =
+                let uu___3 = FStar_Compiler_Effect.op_Bang file_list_ in
+                FStar_Compiler_List.op_At uu___3 [arg] in
+              FStar_Compiler_Effect.op_Colon_Equals file_list_ uu___2)
+           else ();
+           FStar_Getopt.Success)
 let (parse_cmd_line :
   unit -> (FStar_Getopt.parse_cmdline_res * Prims.string Prims.list)) =
   fun uu___ ->
     let res =
       FStar_Getopt.parse_cmdline all_specs
-        (fun i ->
-           let uu___1 =
-             let uu___2 = FStar_Compiler_Effect.op_Bang file_list_ in
-             FStar_Compiler_List.op_At uu___2 [i] in
-           FStar_Compiler_Effect.op_Colon_Equals file_list_ uu___1) in
+        (parse_filename_arg all_specs true) in
     let res1 = if res = FStar_Getopt.Success then set_error_flags () else res in
     let uu___1 =
       let uu___2 = FStar_Compiler_Effect.op_Bang file_list_ in
@@ -1514,9 +1531,9 @@ let (restore_cmd_line_options : Prims.bool -> FStar_Getopt.parse_cmdline_res)
   fun should_clear ->
     let old_verify_module = get_verify_module () in
     if should_clear then clear () else init ();
-    (let r =
-       let uu___1 = specs false in
-       FStar_Getopt.parse_cmdline uu___1 (fun x -> ()) in
+    (let specs1 = specs false in
+     let r =
+       FStar_Getopt.parse_cmdline specs1 (parse_filename_arg specs1 false) in
      (let uu___2 =
         let uu___3 =
           let uu___4 =
@@ -1553,11 +1570,6 @@ let (should_verify_file : Prims.string -> Prims.bool) =
 let (module_name_eq : Prims.string -> Prims.string -> Prims.bool) =
   fun m1 ->
     fun m2 -> (FStar_String.lowercase m1) = (FStar_String.lowercase m2)
-let (dont_gen_projectors : Prims.string -> Prims.bool) =
-  fun m ->
-    let uu___ = get___temp_no_proj () in
-    FStar_Compiler_Effect.op_Bar_Greater uu___
-      (FStar_Compiler_List.existsb (module_name_eq m))
 let (should_print_message : Prims.string -> Prims.bool) =
   fun m ->
     let uu___ = should_verify m in if uu___ then m <> "Prims" else false
@@ -1748,11 +1760,6 @@ let (parse_settings :
                      FStar_Compiler_Effect.op_Bar_Greater uu___2
                        (FStar_Compiler_List.map parse_one_setting)) s1)) in
     FStar_Compiler_Effect.op_Bar_Greater uu___ FStar_Compiler_List.rev
-let (__temp_no_proj : Prims.string -> Prims.bool) =
-  fun s ->
-    let uu___ = get___temp_no_proj () in
-    FStar_Compiler_Effect.op_Bar_Greater uu___
-      (FStar_Compiler_List.contains s)
 let (__temp_fast_implicits : unit -> Prims.bool) =
   fun uu___ -> lookup_opt "__temp_fast_implicits" as_bool
 let (admit_smt_queries : unit -> Prims.bool) =
@@ -2351,8 +2358,9 @@ let (set_options : Prims.string -> FStar_Getopt.parse_cmdline_res) =
              else
                (let res =
                   FStar_Getopt.parse_string settable_specs
-                    (fun s1 -> FStar_Compiler_Effect.raise (File_argument s1))
-                    s in
+                    (fun s1 ->
+                       FStar_Compiler_Effect.raise (File_argument s1);
+                       FStar_Getopt.Error "set_options with file argument") s in
                 if res = FStar_Getopt.Success
                 then set_error_flags ()
                 else res)) ()

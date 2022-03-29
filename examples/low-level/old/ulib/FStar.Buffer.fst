@@ -76,7 +76,6 @@ let equal #a h0 (b:buffer a) h1 (c:buffer a) : GTot Type0 =
   (forall (i:nat). {:pattern (get h0 b i) \/ (get h1 c i)} i < length b ==> get h0 b i = get h1 c i)
 
 (* Abstraction of buffers of any type *)
-#set-options "--__temp_no_proj SBuffer"
 type abuffer = | Buff: #t:Type -> b:buffer t -> abuffer
 
 // JK: these should be GTot, but painful in lemma calls

@@ -16,11 +16,11 @@
 #light "off"
 // (c) Microsoft Corporation. All rights reserved
 module FStar.Syntax.Util
+open Prims
 open FStar.Pervasives
 open FStar.Compiler.Effect
 open FStar.Compiler.List
 
-open Prims
 open FStar
 open FStar.Compiler
 open FStar.Compiler.Util
@@ -629,7 +629,7 @@ let rec eq_tm (t1:term) (t2:term) : eq_result =
         eq_and (eq_tm h1 h2) (fun () -> eq_args args1 args2)
       end
 
-    | Tm_match (t1, None, bs1, _), Tm_match (t2, None, bs2, _) ->  //AR: note: no return annotations
+    | Tm_match (t1, _, bs1, _), Tm_match (t2, _, bs2, _) ->  //AR: note: no return annotations
         if List.length bs1 = List.length bs2
         then List.fold_right (fun (b1, b2) a -> eq_and a (fun () -> branch_matches b1 b2))
                              (List.zip bs1 bs2)
@@ -1282,11 +1282,11 @@ let mk_eq2 (u:universe) (t:typ) (e1:term) (e2:term) : term =
     let eq_inst = mk_Tm_uinst teq [u] in
     mk (Tm_app(eq_inst, [iarg t; as_arg e1; as_arg e2])) (Range.union_ranges e1.pos e2.pos)
 
-let teq3 = fvar_const PC.eq3_lid
-let mk_eq3_no_univ t1 t2 e1 e2 =
-  mk (Tm_app(teq3, [iarg t1; iarg t2; as_arg e1; as_arg e2])) (Range.union_ranges e1.pos e2.pos)
-let mk_untyped_eq3 e1 e2 = mk (Tm_app(teq3, [as_arg e1; as_arg e2])) (Range.union_ranges e1.pos e2.pos)
-
+let mk_eq3_no_univ =
+  let teq3 = fvar_const PC.eq3_lid in
+  fun t1 t2 e1 e2 ->
+    mk (Tm_app(teq3, [iarg t1; iarg t2; as_arg e1; as_arg e2]))
+       (Range.union_ranges e1.pos e2.pos)
 
 let mk_has_type t x t' =
     let t_has_type = fvar_const PC.has_type_lid in //TODO: Fix the U_zeroes below!
@@ -1437,7 +1437,6 @@ let is_sub_singleton t =
         || Syntax.fv_eq_lid fv PC.true_lid
         || Syntax.fv_eq_lid fv PC.false_lid
         || Syntax.fv_eq_lid fv PC.eq2_lid
-        || Syntax.fv_eq_lid fv PC.eq3_lid
         || Syntax.fv_eq_lid fv PC.b2t_lid
         //these are an uninterpreted predicates
         //which we are better off treating as sub-singleton
@@ -1487,18 +1486,17 @@ type connective =
 let destruct_base_table =
   let f x = (x,x) in
   [ (0, [f PC.true_lid; f PC.false_lid]);
-    (2, [f PC.and_lid; f PC.or_lid; f PC.imp_lid; f PC.iff_lid; f PC.eq2_lid; f PC.eq3_lid]);
+    (2, [f PC.and_lid; f PC.or_lid; f PC.imp_lid; f PC.iff_lid; f PC.eq2_lid]);
     (1, [f PC.not_lid]);
     (3, [f PC.ite_lid; f PC.eq2_lid]);
-    (4, [f PC.eq3_lid])
   ]
 
 let destruct_sq_base_table =
-  [ (2, [(PC.c_and_lid, PC.and_lid); (PC.c_or_lid, PC.or_lid);
-         (PC.c_eq2_lid, PC.c_eq2_lid); (PC.c_eq3_lid, PC.c_eq3_lid)]);
+  [ (2, [(PC.c_and_lid, PC.and_lid);
+         (PC.c_or_lid, PC.or_lid);
+         (PC.c_eq2_lid, PC.c_eq2_lid)]);
     (3, [(PC.c_eq2_lid, PC.c_eq2_lid)]);
-    (4, [(PC.c_eq3_lid, PC.c_eq3_lid)]);
-    (0, [(PC.c_true_lid, PC.true_lid); (PC.c_false_lid, PC.false_lid)])
+    (0, [(PC.c_true_lid, PC.true_lid); (PC.empty_type_lid, PC.false_lid)])
   ]
 
 let destruct_typ_as_formula f : option<connective> =
@@ -2030,7 +2028,10 @@ let rec unbound_variables tm :  list<bv> =
         unbound_variables t
         @ (match asc_opt with
            | None -> []
-           | Some asc -> unbound_variables_ascription asc)
+           | Some (b, asc) ->
+             let bs, asc = Subst.open_ascription [b] asc in
+             List.collect (fun b -> unbound_variables b.binder_bv.sort) bs
+             @ unbound_variables_ascription asc)
         @ (pats |> List.collect (fun br ->
                  let p, wopt, t = Subst.open_branch br in
                  unbound_variables t
@@ -2073,10 +2074,11 @@ let rec unbound_variables tm :  list<bv> =
            | Meta_named _ -> [])
 
 and unbound_variables_ascription asc =
-  (match fst asc with
+  let asc, topt, _ = asc in
+  (match asc with
    | Inl t2 -> unbound_variables t2
    | Inr c2 -> unbound_variables_comp c2) @
-  (match snd asc with
+  (match topt with
    | None -> []
    | Some tac -> unbound_variables tac)
 

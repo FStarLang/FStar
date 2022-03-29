@@ -74,7 +74,7 @@ let close_guard_implicits env solve_deferred (xs:binders) (g:guard_t) : guard_t 
       List.iter (fun (_, s, p) -> BU.print2 "%s: %s\n" s (Rel.prob_to_string env p)) defer;
       BU.print_string "END\n"
     end;
-    let g = Rel.solve_non_tactic_deferred_constraints env ({g with deferred=solve_now}) in
+    let g = Rel.solve_non_tactic_deferred_constraints false env ({g with deferred=solve_now}) in
     let g = {g with deferred=defer} in
     g
   else g
@@ -257,19 +257,19 @@ let extract_let_rec_annotation env {lbname=lbname; lbunivs=univ_vars; lbtyp=t; l
             let t, e', recheck = aux_lbdef e' in
             t, { e with n = Tm_meta(e', m) }, recheck
 
-          | Tm_ascribed(e', (Inr c, tac_opt), lopt) ->
+          | Tm_ascribed(e', (Inr c, tac_opt, use_eq), lopt) ->
             if U.is_total_comp c
             then let t, lbtyp, recheck = reconcile_let_rec_ascription_and_body_type (U.comp_result c) lbtyp_opt in
-                 let e = { e with n = Tm_ascribed(e', (Inr (S.mk_Total t), tac_opt), lopt) } in
+                 let e = { e with n = Tm_ascribed(e', (Inr (S.mk_Total t), tac_opt, use_eq), lopt) } in
                  lbtyp, e, recheck
             else raise_error (Errors.Fatal_UnexpectedComputationTypeForLetRec,
                               BU.format1 "Expected a 'let rec' to be annotated with a value type; got a computation type %s"
                                                    (Print.comp_to_string c))
                               rng
 
-          | Tm_ascribed(e', (Inl t, tac_opt), lopt) ->
+          | Tm_ascribed(e', (Inl t, tac_opt, use_eq), lopt) ->
             let t, lbtyp, recheck = reconcile_let_rec_ascription_and_body_type t lbtyp_opt in
-            let e = { e with n = Tm_ascribed(e', (Inl t, tac_opt), lopt) } in
+            let e = { e with n = Tm_ascribed(e', (Inl t, tac_opt, use_eq), lopt) } in
             lbtyp, e, recheck
 
           | Tm_abs _ ->
@@ -288,7 +288,18 @@ let extract_let_rec_annotation env {lbname=lbname; lbunivs=univ_vars; lbtyp=t; l
                 let body = { body with n = Tm_meta(body', m) } in
                 t, body, recheck
 
-              | Tm_ascribed (_, (Inl t, _), _) -> //no decreases clause here
+              | Tm_ascribed (_, (Inl t, _, use_eq), _) -> //no decreases clause here
+                //
+                //AR: In this case, the type in the ascription is moving to lbtyp
+                //    if use_eq is true, then we are in trouble
+                //    since we don't yet support equality in lbtyp
+                //
+                if use_eq
+                then raise_error
+                       (Errors.Fatal_NotSupported,
+                        BU.format1 "Equality ascription in this case (%s) is not yet supported, \
+                                    please use subtyping"
+                                   (Print.term_to_string t)) t.pos;
                 begin
                 match lbtyp_opt with
                 | Some lbtyp ->
@@ -299,7 +310,7 @@ let extract_let_rec_annotation env {lbname=lbname; lbunivs=univ_vars; lbtyp=t; l
                   t, body, true
                 end
 
-              | Tm_ascribed (body', (Inr c, tac_opt), lopt) ->
+              | Tm_ascribed (body', (Inr c, tac_opt, use_eq), lopt) ->
                 let tarr = mk_arrow c in
                 let tarr, lbtyp, recheck = reconcile_let_rec_ascription_and_body_type tarr lbtyp_opt in
                 let bs', c = un_arrow tarr in
@@ -307,7 +318,7 @@ let extract_let_rec_annotation env {lbname=lbname; lbunivs=univ_vars; lbtyp=t; l
                 then failwith "Impossible"
                 else let subst = U.rename_binders bs' bs in
                      let c = SS.subst_comp subst c in
-                     let body = { body with n = Tm_ascribed(body', (Inr c, tac_opt), lopt) } in
+                     let body = { body with n = Tm_ascribed(body', (Inr c, tac_opt, use_eq), lopt) } in
                      lbtyp, body, recheck
 
               | _ ->
@@ -321,6 +332,12 @@ let extract_let_rec_annotation env {lbname=lbname; lbunivs=univ_vars; lbtyp=t; l
             in
             let lbtyp, body, recheck = aux_abs_body body in
             lbtyp, U.abs bs body rcopt, recheck
+            
+          | _ ->
+            raise_error (Errors.Fatal_UnexpectedComputationTypeForLetRec,
+                         BU.format1 "Expected the definition of a 'let rec' to be a function literal; got %s"
+                                                   (Print.term_to_string e))
+                              e.pos
       in
       aux_lbdef e
     in
@@ -1874,15 +1891,17 @@ let bind_cases env0 (res_t:typ)
     in
     TcComm.mk_lcomp eff res_t bind_cases_flags bind_cases
 
-let check_comp env (e:term) (c:comp) (c':comp) : term * comp * guard_t =
-  if false then
-    BU.print3 "Checking sub_comp:\n%s has type %s\n\t<:\n%s\n"
+let check_comp env (use_eq:bool) (e:term) (c:comp) (c':comp) : term * comp * guard_t =
+  if Env.debug env <| Options.Extreme then
+    BU.print4 "Checking comp relation:\n%s has type %s\n\t %s \n%s\n"
             (Print.term_to_string e)
             (Print.comp_to_string c)
+            (if use_eq then "$:" else "<:")
             (Print.comp_to_string c');
-  match Rel.sub_comp env c c' with
+  let f = if use_eq then Rel.eq_comp else Rel.sub_comp in
+  match f env c c' with
     | None ->
-        if env.use_eq
+        if use_eq
         then raise_error (Err.computed_computation_type_does_not_match_annotation_eq env e c c') (Env.get_range env)
         else raise_error (Err.computed_computation_type_does_not_match_annotation env e c c') (Env.get_range env)
     | Some g -> e, c', g
@@ -2101,15 +2120,15 @@ let coerce_views (env:Env.env) (e:term) (lc:lcomp) : option<(term * lcomp)> =
     | _ ->
         None
 
-let weaken_result_typ env (e:term) (lc:lcomp) (t:typ) : term * lcomp * guard_t =
+let weaken_result_typ env (e:term) (lc:lcomp) (t:typ) (use_eq:bool) : term * lcomp * guard_t =
   if Env.debug env Options.High then
     BU.print3 "weaken_result_typ e=(%s) lc=(%s) t=(%s)\n"
             (Print.term_to_string e)
             (TcComm.lcomp_to_string lc)
             (Print.term_to_string t);
   let use_eq =
+    use_eq            ||  //caller wants to check equality
     env.use_eq_strict ||
-    env.use_eq        ||
     (match Env.effect_decl_opt env lc.eff_name with
      // See issue #881 for why weakening result type of a reifiable computation is problematic
      | Some (ed, qualifiers) -> qualifiers |> List.contains Reifiable
@@ -2329,7 +2348,10 @@ let maybe_instantiate (env:Env.env) e t =
   else begin
        if Env.debug env Options.High then
          BU.print3 "maybe_instantiate: starting check for (%s) of type (%s), expected type is %s\n"
-                 (Print.term_to_string e) (Print.term_to_string t) (FStar.Common.string_of_option Print.term_to_string (Env.expected_typ env));
+                 (Print.term_to_string e) (Print.term_to_string t)
+                 (match Env.expected_typ env with
+                  | None -> "None"
+                  | Some (t, _) -> Print.term_to_string t);
        (* Similar to U.arrow_formals, but makes sure to unfold
         * recursively to catch all the binders across type
         * definitions. TODO: Move to library? Revise other uses
@@ -2355,7 +2377,7 @@ let maybe_instantiate (env:Env.env) e t =
        let inst_n_binders t =
            match Env.expected_typ env with
            | None -> None
-           | Some expected_t ->
+           | Some (expected_t, _) ->  //the use_eq flag is irrelevant for instantiation
              let n_expected = number_of_implicits expected_t in
              let n_available = number_of_implicits t in
              if n_available < n_expected
@@ -2443,7 +2465,7 @@ let maybe_instantiate (env:Env.env) e t =
 //check_has_type env e t1 t2
 //checks is e:t1 has type t2, subject to some guard.
 
-let check_has_type env (e:term) (t1:typ) (t2:typ) : guard_t =
+let check_has_type env (e:term) (t1:typ) (t2:typ) (use_eq:bool) : guard_t =
   let env = Env.set_range env e.pos in
 
   let g_opt =
@@ -2451,7 +2473,7 @@ let check_has_type env (e:term) (t1:typ) (t2:typ) : guard_t =
     then match Rel.teq_nosmt_force env t1 t2 with
        | false -> None
        | true -> Env.trivial_guard |> Some
-    else if env.use_eq
+    else if use_eq
     then Rel.try_teq true env t1 t2
     else match Rel.get_subtyping_predicate env t1 t2 with
              | None -> None
@@ -2461,10 +2483,10 @@ let check_has_type env (e:term) (t1:typ) (t2:typ) : guard_t =
   | None -> raise_error (Err.expected_expression_of_type env t2 e t1) (Env.get_range env)
   | Some g -> g
 
-let check_has_type_maybe_coerce env (e:term) (lc:lcomp) (t2:typ) : term * lcomp * guard_t =
+let check_has_type_maybe_coerce env (e:term) (lc:lcomp) (t2:typ) use_eq : term * lcomp * guard_t =
   let env = Env.set_range env e.pos in
   let e, lc, g_c = maybe_coerce_lc env e lc t2 in
-  let g = check_has_type env e lc.res_typ t2 in
+  let g = check_has_type env e lc.res_typ t2 use_eq in
   if debug env <| Options.Other "Rel" then
     BU.print1 "Applied guard is %s\n" <| guard_to_string env g;
   e, lc, (Env.conj_guard g g_c)
@@ -2542,32 +2564,42 @@ let short_circuit_head l =
 
 (************************************************************************)
 (* maybe_add_implicit_binders (env:env) (bs:binders)                    *)
-(* Adding implicit binders for ticked variables                         *)
-(* in case the expected type is of the form #'a1 -> ... -> #'an -> t    *)
+(* Adding implicit binders                                              *)
+(* in case the expected type is of the form #a1 -> ... -> #an -> t      *)
 (* and bs does not begin with any implicit binders                      *)
-(* add #'a1 ... #'an to bs                                              *)
+(* add #a1 ... #an to bs                                                *)
+(* Note that there may be other implicit binders in t that bs don't     *)
+(* We don't add them here, so in that sense it is best case effort      *)
+(* This helps us sometimes to build a better decreases clause           *)
+(*   since it helps us count the arity by including implicits           *)
 (************************************************************************)
-let maybe_add_implicit_binders (env:env) (bs:binders)  : binders =
+let maybe_add_implicit_binders (env:env) (bs:binders) : binders =
+    let is_implicit_binder ({binder_qual=q}) : bool =
+        match q with
+        | Some (Implicit _)
+        | Some (Meta _) -> true
+        | _ -> false in
+
     let pos bs = match bs with
         | ({binder_bv=hd})::_ -> S.range_of_bv hd
         | _ -> Env.get_range env in
+
     match bs with
-        | ({binder_qual=Some (Implicit _)})::_ -> bs //bs begins with an implicit binder; don't add any
+        | b :: _ when is_implicit_binder b -> bs // bs begins with an implicit binder; don't add any
         | _ ->
           match Env.expected_typ env with
             | None -> bs
-            | Some t ->
+            | Some (t, _) ->  //the use_eq flag is not relevant
                 match (SS.compress t).n with
                     | Tm_arrow(bs', _) ->
-                      begin match BU.prefix_until (function ({binder_qual=Some (Implicit _)}) -> false | _ -> true) bs' with
+                      begin match BU.prefix_until (fun b -> not (is_implicit_binder b)) bs' with
                         | None -> bs
-                        | Some ([], _, _) -> bs //no implicits
+                        | Some ([], _, _) -> bs // no implicits in the prefix
                         | Some (imps, _,  _) ->
-                          if imps |> BU.for_all (fun ({binder_bv=x}) -> BU.starts_with (string_of_id x.ppname) "'")
-                          then let r = pos bs in
-                               let imps = imps |> List.map (fun b -> { b with binder_bv = (S.set_range_of_bv b.binder_bv r) }) in
-                               imps@bs //we have a prefix of ticked variables
-                          else bs
+                          let r = pos bs in
+                          let imps =
+                            imps |> List.map (fun b -> { b with binder_bv = (S.set_range_of_bv b.binder_bv r) }) in
+                          imps@bs // we have a prefix of implicits
                       end
 
                     | _ -> bs
@@ -3183,7 +3215,9 @@ let find_record_or_dc_from_typ env (t:option<typ>) (uc:unresolved_constructor) r
       match t with
       | None -> default_rdc()
       | Some t ->
-        let thead, _ = U.head_and_args (U.unmeta (N.unfold_whnf env t)) in
+        let thead, _ = 
+          U.head_and_args (N.unfold_whnf' [Unascribe; Unmeta; Unrefine] env t)
+        in
         match (SS.compress (U.un_uinst thead)).n with
         | Tm_fvar type_name ->
           begin
@@ -3363,8 +3397,39 @@ let debug_positivity (env:env_t) (msg:unit -> string) : unit =
   if Env.debug env <| Options.Other "Positivity"
   then BU.print_string ("Positivity::" ^ msg () ^ "\n")
 
+(*
+ * We are checking for positive occurrences of ty_lid in a term
+ *   (head args), and we know ty_lid occurs somewhere in args
+ * In some env, we also have    env |- head : Tot t
+ *
+ * This function checks that whereever ty_lid appears in the args,
+ *   the corresponding parameter in t is marked strictly positive
+ *)
+let rec check_strictly_positive_argument
+  env
+  (ty_lid:lident)
+  (t:typ)
+  (args:args)
+  (unfolded:unfolded_memo_t)
+  : bool =
+  let bs, _ = U.arrow_formals t in
+  let rec aux (bs:binders) args : bool =
+    match bs, args with
+    | _, [] -> true
+    | [], _ ->
+      List.for_all (fun (arg, _) -> not (ty_occurs_in ty_lid arg)) args
+    | b::bs, (arg, _)::args ->
+      ((not (ty_occurs_in ty_lid arg)) ||
+       (ty_strictly_positive_in_type env ty_lid arg unfolded &&
+        U.has_attribute
+          b.binder_attrs
+          FStar.Parser.Const.binder_strictly_positive_attr))
+      && aux bs args
+  in
+  aux bs args
+
 //check if ty_lid occurs strictly positively in some binder type btype
-let rec ty_strictly_positive_in_type env (ty_lid:lident) (btype:term) (unfolded:unfolded_memo_t) : bool =
+and ty_strictly_positive_in_type env (ty_lid:lident) (btype:term) (unfolded:unfolded_memo_t) : bool =
   debug_positivity env (fun () -> "Checking strict positivity in type: " ^ (Print.term_to_string btype));
   //normalize the type to unfold any type abbreviations
   let btype = N.normalize
@@ -3376,64 +3441,74 @@ let rec ty_strictly_positive_in_type env (ty_lid:lident) (btype:term) (unfolded:
      Env.ForExtraction;
      Env.Unascribe;
      Env.AllowUnboundUniverses] env btype in
-  debug_positivity env (fun () -> "Checking strict positivity in type, after normalization: " ^ (Print.term_to_string btype));
-  not (ty_occurs_in ty_lid btype) ||  //true if ty does not occur in btype
-    (debug_positivity env (fun () -> "ty does occur in this type, pressing ahead");
-     match (SS.compress btype).n with
-     | Tm_app (t, args) ->  //the binder type is an application
-       //get the head node fv
-       let fv_us_opt = try_get_fv t in
-       if fv_us_opt |> is_none then begin
-         debug_positivity env (fun () -> "ty is an app node with head that is not an fv, returning false");
-         false  //head is not an fv, ok
-       end
+  debug_positivity env
+    (fun () -> "Checking strict positivity in type, after normalization: " ^
+            (Print.term_to_string btype));
+  not (ty_occurs_in ty_lid btype) ||  //ty does not occur in btype
+  (debug_positivity env (fun () -> "ty does occur in this type, pressing ahead");
+   match (SS.compress btype).n with
+   | Tm_app (t, args) ->  //the binder type is an application
+     //get the head node fv
+     let fv_us_opt = try_get_fv t in
+     if fv_us_opt |> is_none then begin
+       debug_positivity env (fun () -> "ty is an app node with head that is not an fv");
+       //
+       // AR: note that we are dropping the guard here
+       //     the inductive has already been typechecked, so things are well-typed
+       //
+       let t_ty, _ = env.typeof_well_typed_tot_or_gtot_term
+         env
+         t
+         (let must_tot = false in must_tot) in
+       check_strictly_positive_argument env ty_lid t_ty args unfolded
+     end
+     else
+       let fv, us = fv_us_opt |> must in
+       //if it's same as ty_lid, then check that ty_lid does not occur in the arguments
+       if Ident.lid_equals fv.fv_name.v ty_lid then
+         let _ = debug_positivity env (fun () -> "Checking strict positivity in the Tm_app node where head lid is ty itself, checking that ty does not occur in the arguments") in
+         List.for_all (fun (t, _) -> not (ty_occurs_in ty_lid t)) args
+         //else it must be another inductive type, and we would check nested positivity, ty_nested_positive fails if fv is not another inductive
+         //that case could arise when, for example, it's a type constructor that we could not unfold in normalization
        else
-         let fv, us = fv_us_opt |> must in
-         //if it's same as ty_lid, then check that ty_lid does not occur in the arguments
-         if Ident.lid_equals fv.fv_name.v ty_lid then
-           let _ = debug_positivity env (fun () -> "Checking strict positivity in the Tm_app node where head lid is ty itself, checking that ty does not occur in the arguments") in
-           List.for_all (fun (t, _) -> not (ty_occurs_in ty_lid t)) args
-           //else it must be another inductive type, and we would check nested positivity, ty_nested_positive fails if fv is not another inductive
-           //that case could arise when, for example, it's a type constructor that we could not unfold in normalization
-         else
-           let _ = debug_positivity env (fun () -> "Checking strict positivity in the Tm_app node, head lid is not ty, so checking nested positivity") in
-           ty_nested_positive_in_inductive env ty_lid fv.fv_name.v us args unfolded
+         let _ = debug_positivity env (fun () -> "Checking strict positivity in the Tm_app node, head lid is not ty, so checking nested positivity") in
+         ty_nested_positive_in_inductive env ty_lid fv.fv_name.v us args unfolded
 
-     | Tm_arrow (sbs, c) ->  //binder type is an arrow type
-       debug_positivity env (fun () -> "Checking strict positivity in Tm_arrow");
-       let check_comp =
-         let c = Env.unfold_effect_abbrev env c |> mk_Comp in
-         U.is_pure_or_ghost_comp c || (Env.lookup_effect_quals env (U.comp_effect_name c) |> List.existsb (fun q -> q = S.TotalEffect))
-       in
-       if not check_comp then
-         let _ = debug_positivity env (fun () -> "Checking strict positivity , the arrow is impure, so return true") in
-         true
-       else
-         let _ = debug_positivity env (fun () -> "Checking struict positivity, Pure arrow, checking that ty does not occur in the binders, and that it is strictly positive in the return type") in
-         List.for_all (fun ({binder_bv=b}) -> not (ty_occurs_in ty_lid b.sort)) sbs &&  //ty must not occur on the left of any arrow
-           (let _, return_type = SS.open_term sbs (FStar.Syntax.Util.comp_result c) in  //and it must occur strictly positive in the result type
-            ty_strictly_positive_in_type (push_binders env sbs) ty_lid return_type unfolded)
-     | Tm_fvar _
-     | Tm_uinst _ 
-     | Tm_type _ ->
-       debug_positivity env (fun () -> "Checking strict positivity in an fvar/Tm_uinst/Tm_type, return true");
-       true  //if it's just an fvar, should be fine
-     | Tm_refine (bv, _) ->
-       debug_positivity env (fun () -> "Checking strict positivity in an Tm_refine, recur in the bv sort)");
-       ty_strictly_positive_in_type env ty_lid bv.sort unfolded
-     | Tm_match (_, _, branches, _) ->
-       debug_positivity env (fun () -> "Checking strict positivity in an Tm_match, recur in the branches)");
-       List.for_all (fun (p, _, t) ->
-         let bs = List.map mk_binder (pat_bvs p) in
-         let bs, t = SS.open_term bs t in
-         ty_strictly_positive_in_type (push_binders env bs) ty_lid t unfolded 
-       ) branches
-     | Tm_ascribed (t, _, _) ->
-       debug_positivity env (fun () -> "Checking strict positivity in an Tm_ascribed, recur)");
-       ty_strictly_positive_in_type env ty_lid t unfolded
-     | _ ->
-       debug_positivity env (fun () -> "Checking strict positivity, unexpected tag: " ^ (Print.tag_of_term btype) ^ " and term: " ^ (Print.term_to_string btype));
-       false)  //remaining cases, will handle as they come up
+   | Tm_arrow (sbs, c) ->  //binder type is an arrow type
+     debug_positivity env (fun () -> "Checking strict positivity in Tm_arrow");
+     let check_comp =
+       let c = Env.unfold_effect_abbrev env c |> mk_Comp in
+       U.is_pure_or_ghost_comp c || (Env.lookup_effect_quals env (U.comp_effect_name c) |> List.existsb (fun q -> q = S.TotalEffect))
+     in
+     if not check_comp then
+       let _ = debug_positivity env (fun () -> "Checking strict positivity , the arrow is impure, so return true") in
+       true
+     else
+       let _ = debug_positivity env (fun () -> "Checking struict positivity, Pure arrow, checking that ty does not occur in the binders, and that it is strictly positive in the return type") in
+       List.for_all (fun ({binder_bv=b}) -> not (ty_occurs_in ty_lid b.sort)) sbs &&  //ty must not occur on the left of any arrow
+         (let _, return_type = SS.open_term sbs (FStar.Syntax.Util.comp_result c) in  //and it must occur strictly positive in the result type
+          ty_strictly_positive_in_type (push_binders env sbs) ty_lid return_type unfolded)
+   | Tm_fvar _
+   | Tm_uinst _ 
+   | Tm_type _ ->
+     debug_positivity env (fun () -> "Checking strict positivity in an fvar/Tm_uinst/Tm_type, return true");
+     true  //if it's just an fvar, should be fine
+   | Tm_refine (bv, _) ->
+     debug_positivity env (fun () -> "Checking strict positivity in an Tm_refine, recur in the bv sort)");
+     ty_strictly_positive_in_type env ty_lid bv.sort unfolded
+   | Tm_match (_, _, branches, _) ->
+     debug_positivity env (fun () -> "Checking strict positivity in an Tm_match, recur in the branches)");
+     List.for_all (fun (p, _, t) ->
+       let bs = List.map mk_binder (pat_bvs p) in
+       let bs, t = SS.open_term bs t in
+       ty_strictly_positive_in_type (push_binders env bs) ty_lid t unfolded 
+     ) branches
+   | Tm_ascribed (t, _, _) ->
+     debug_positivity env (fun () -> "Checking strict positivity in an Tm_ascribed, recur)");
+     ty_strictly_positive_in_type env ty_lid t unfolded
+   | _ ->
+     debug_positivity env (fun () -> "Checking strict positivity, unexpected tag: " ^ (Print.tag_of_term btype) ^ " and term: " ^ (Print.term_to_string btype));
+     false)  //remaining cases, will handle as they come up
 
 //some binder of some data constructor is an application of ilid to the args
 //ilid may not be an inductive, in which case we simply return false
@@ -3443,37 +3518,15 @@ and ty_nested_positive_in_inductive env (ty_lid:lident) (ilid:lident) (us:univer
   let b, idatas = datacons_of_typ env ilid in
 
   (*
-   * Two special cases:
-   *   -- If ilid is marked with an escape hatch "assume_strictly_positive"
-   *   -- If ilid's corresponding binder is marked "strictly_positive", note this is checked by F*
+   * Check if ilid's corresponding binder is marked "strictly_positive"
    *)
   if not b then begin
-    if Env.fv_has_attr
-         env
-         (S.lid_as_fv ilid delta_constant None)
-         FStar.Parser.Const.assume_strictly_positive_attr_lid
-    then (debug_positivity env (fun () -> BU.format1
-                                         "Checking nested positivity, special case decorated with `assume_strictly_positive` %s; return true"
-                                         (Ident.string_of_lid ilid));
-          true)
-
-    else match Env.try_lookup_lid env ilid with
-         | Some ((_, t), _) ->
-           let bs, _ = U.arrow_formals t in
-           let rec aux (bs:binders) args : bool =
-             match bs, args with
-             | _, [] -> true
-             | [], _ ->
-               List.for_all (fun (arg, _) -> not (ty_occurs_in ty_lid arg)) args
-             | b::bs, (arg, _)::args ->
-               ((not (ty_occurs_in ty_lid arg)) ||
-                U.has_attribute b.binder_attrs FStar.Parser.Const.binder_strictly_positive_attr) &&
-               aux bs args 
-           in
-           aux bs args
-         | None ->
-           debug_positivity env (fun () -> "Checking nested positivity, no attrs or type, return false");
-           false
+    match Env.try_lookup_lid env ilid with
+    | Some ((_, t), _) ->
+      check_strictly_positive_argument env ty_lid t args unfolded
+    | None ->
+      debug_positivity env (fun () -> "Checking nested positivity, no type, return false");
+      false
   end
   //if ilid has already been unfolded with same arguments, return true
   else
@@ -3551,6 +3604,12 @@ and ty_nested_positive_in_type (ty_lid:lident) (t:term') (ilid:lident) (num_ibs:
 | _ -> failwith "Nested positive check, unhandled case"
 
 
+let name_strictly_positive_in_type env bv t =
+  let fv_lid = lid_of_str "__fv_lid_for_positivity_checking__" in
+  let fv = S.tconst fv_lid in
+  let t = SS.subst [NT (bv, fv)] t in
+  ty_strictly_positive_in_type env fv_lid t (BU.mk_ref [])
+
 //ty_bs are the opended type parameters of the inductive, and ty_usubst is the universe substitution, again from the ty_lid type
 let ty_positive_in_datacon env (ty_lid:lident) (dlid:lident) (ty_bs:binders) (us:universes) (unfolded:unfolded_memo_t) : bool =
   //get the type of the data constructor
@@ -3581,9 +3640,30 @@ let ty_positive_in_datacon env (ty_lid:lident) (dlid:lident) (ty_bs:binders) (us
     let b, _ =
       List.fold_left (fun (r, env) b ->
         if not r then r, env  //if we have already found some binder that does not satisfy the condition, short circuit
-        else ty_strictly_positive_in_type env ty_lid b.binder_bv.sort unfolded, push_binders env [b]  //push the binder in the environment, we do some normalization, so might be better to keep env good
-      ) (true, env) dbs
-    in
+        else begin
+          //
+          // AR: iterate over all the inductive type parameters,
+          //     and see if they are marked strictly positive,
+          //       and if so, they are indeed strictly positive in the
+          //       data constructor binder type
+          //
+          (List.iter (fun {binder_bv=ty_bv; binder_attrs=ty_b_attrs} ->
+             if U.has_attribute ty_b_attrs C.binder_strictly_positive_attr &&
+                not (name_strictly_positive_in_type env ty_bv b.binder_bv.sort)
+             then raise_error (Error_InductiveTypeNotSatisfyPositivityCondition,
+                    BU.format1 "Binder %s is marked strictly positive, \
+                                but its use in the definition is not"
+                               (Print.bv_to_string ty_bv)) (S.range_of_bv ty_bv)) ty_bs);
+
+          //
+          // AR: And now check that the inductive type itself is 
+          //     strictly positive in this data constructor binder type
+          //
+          ty_strictly_positive_in_type env ty_lid b.binder_bv.sort unfolded,
+          push_binders env [b]  //push the binder in the environment,
+                                //we do some normalization, so better to keep env good
+        end
+      ) (true, env) dbs in
     b
 
   | Tm_app (_, _) ->
@@ -3623,12 +3703,6 @@ let check_positivity (env:env_t) (ty:sigelt) :bool =
       ty_bs
       (List.map U_name ty_us)
       unfolded_inductives) (snd (datacons_of_typ env ty_lid))
-
-let name_strictly_positive_in_type env bv t =
-  let fv_lid = lid_of_str "__fv_lid_for_positivity_checking__" in
-  let fv = S.tconst fv_lid in
-  let t = SS.subst [NT (bv, fv)] t in
-  ty_strictly_positive_in_type env fv_lid t (BU.mk_ref [])
 
 (* Special-casing the check for exceptions, the single open inductive type we handle. *)
 let check_exn_positivity (env:env_t) (data_ctor_lid:lid) : bool =

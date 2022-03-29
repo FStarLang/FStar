@@ -1243,10 +1243,10 @@ and p_noSeqTerm ps pb e = with_comment_sep (p_noSeqTerm' ps pb) e e.range
 and p_noSeqTermAndComment ps pb e = with_comment (p_noSeqTerm' ps pb) e e.range
 
 and p_noSeqTerm' ps pb e = match e.tm with
-  | Ascribed (e, t, None) ->
-      group (p_tmIff e ^/^ langle ^^ colon ^/^ p_typ ps pb t)
-  | Ascribed (e, t, Some tac) ->
-      group (p_tmIff e ^/^ langle ^^ colon ^/^ p_typ false false t ^/^ str "by" ^/^ p_typ ps pb (maybe_unthunk tac))
+  | Ascribed (e, t, None, use_eq) ->
+      group (p_tmIff e ^/^ (if use_eq then dollar else langle) ^^ colon ^/^ p_typ ps pb t)
+  | Ascribed (e, t, Some tac, use_eq) ->
+      group (p_tmIff e ^/^ (if use_eq then dollar else langle) ^^ colon ^/^ p_typ false false t ^/^ str "by" ^/^ p_typ ps pb (maybe_unthunk tac))
   | Op (id, [ e1; e2; e3 ]) when string_of_id id = ".()<-" ->
       group (
         group (p_atomicTermNotQUident e1 ^^ dot ^^ soft_parens_with_nesting (p_term false false e2)
@@ -1292,10 +1292,14 @@ and p_noSeqTerm' ps pb e = match e.tm with
                (str "if" ^/+^ p_noSeqTermAndComment false false e1) ^/^
                (str "then" ^/+^ e2_doc) ^/^
                (str "else" ^/+^ p_noSeqTermAndComment ps pb e3))
-           | Some ret ->
+           | Some (as_opt, ret, use_eq) ->
               group (
                 (str "if" ^/+^ p_noSeqTermAndComment false false e1) ^/^
-                (str "ret" ^/+^ p_tmIff ret) ^/^
+                ((match as_opt with
+                  | None -> empty
+                  | Some as_ident -> str "as" ^/^ p_ident as_ident)
+                   ^/^
+                 (str (if use_eq then "returns$" else "returns") ^/+^ p_tmIff ret)) ^/^
                 (str "then" ^/+^ e2_doc) ^/^
                 (str "else" ^/+^ p_noSeqTermAndComment ps pb e3)))
   | TryWith(e, branches) ->
@@ -1308,10 +1312,14 @@ and p_noSeqTerm' ps pb e = match e.tm with
       (match ret_opt with
        | None ->
         group (surround 2 1 (str "match") (p_noSeqTermAndComment false false e) (str "with"))
-       | Some ret ->
-        group (surround 2 1 (str "match")
-                            ((p_noSeqTermAndComment false false e) ^/+^ (str "returns" ^/+^ p_tmIff ret))
-                            (str "with")))
+       | Some (as_opt, ret, use_eq) ->
+         group (surround 2 1 (str "match")
+                             ((p_noSeqTermAndComment false false e) ^/+^
+                              (match as_opt with
+                               | None -> empty
+                               | Some as_ident -> str "as" ^/+^ (p_ident as_ident)) ^/+^
+                              (str (if use_eq then "returns$" else "returns") ^/+^ p_tmIff ret))
+                             (str "with")))
 
       ^/^
 

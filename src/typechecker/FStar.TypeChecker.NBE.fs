@@ -438,6 +438,7 @@ let rec translate (cfg:config) (bs:list<t>) (e:term) : t =
 
     | Tm_refine (bv, tm) ->
       if cfg.core_cfg.steps.for_extraction
+      ||  cfg.core_cfg.steps.unrefine
       then translate cfg bs bv.sort //if we're only extracting, then drop the refinement
       else mk_t <| Refinement ((fun (y:t) -> translate cfg (y::bs) tm),
                               (fun () -> as_arg (translate cfg bs bv.sort))) // XXX: Bogus type?
@@ -529,11 +530,20 @@ let rec translate (cfg:config) (bs:list<t>) (e:term) : t =
 
     | Tm_match(scrut, ret_opt, branches, rc) ->
       (* Thunked computation to reconstrct the returns annotation *)
-      let make_returns () : option<ascription> =
+      let make_returns () : option<match_returns_ascription> =
         match ret_opt with
         | None -> None
-        | Some (Inl t, tacopt) -> Some (Inl (readback cfg (translate cfg bs t)), tacopt)
-        | Some (Inr c, tacopt) -> Some (Inr (readback_comp cfg (translate_comp cfg bs c)), tacopt) in
+        | Some (b, asc) ->
+          let b, bs =
+            let x = new_bv None (readback cfg (translate cfg bs b.binder_bv.sort)) in
+            mk_binder x, mkAccuVar x::bs in
+          let asc =
+            match asc with
+            | Inl t, tacopt, use_eq -> Inl (readback cfg (translate cfg bs t)), tacopt, use_eq
+            | Inr c, tacopt, use_eq -> Inr (readback_comp cfg (translate_comp cfg bs c)), tacopt, use_eq in
+          let asc = SS.close_ascription [b] asc in
+          let b = List.hd (SS.close_binders [b]) in
+          Some (b, asc) in
 
       (* Thunked computation to reconstruct residual comp *)
       let make_rc () : option<S.residual_comp> =

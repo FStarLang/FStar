@@ -2,61 +2,13 @@
   "’$‹ÔêïÔ\u0003ó§\u0005A \u0003V‚",
   [
     [
-      "LowStar.Lens.__proj__Mklens__item__lens_laws",
-      1,
-      2,
-      1,
-      [
-        "@query", "proj_equation_LowStar.Lens.Mklens_get",
-        "proj_equation_LowStar.Lens.Mklens_put",
-        "projection_inverse_LowStar.Lens.Mklens_get",
-        "projection_inverse_LowStar.Lens.Mklens_put"
-      ],
-      0,
-      "d8907e33ec0522cbf004391b1abcb845"
-    ],
-    [
-      "LowStar.Lens.__proj__Mkhs_lens__item__snapshot",
-      1,
-      2,
-      1,
-      [
-        "@query", "proj_equation_LowStar.Lens.Mkhs_lens_invariant",
-        "proj_equation_LowStar.Lens.Mkhs_lens_x",
-        "projection_inverse_LowStar.Lens.Mkhs_lens_invariant",
-        "projection_inverse_LowStar.Lens.Mkhs_lens_x",
-        "token_correspondence_LowStar.Lens.__proj__Mkhs_lens__item__invariant"
-      ],
-      0,
-      "8686b1d88489d480f02c43ff72eb7df7"
-    ],
-    [
-      "LowStar.Lens.__proj__Mkhs_lens__item__l",
-      1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_LowStar.Lens.imem_lens",
-        "proj_equation_LowStar.Lens.Mkhs_lens_footprint",
-        "proj_equation_LowStar.Lens.Mkhs_lens_invariant",
-        "proj_equation_LowStar.Lens.Mkhs_lens_x",
-        "projection_inverse_LowStar.Lens.Mkhs_lens_footprint",
-        "projection_inverse_LowStar.Lens.Mkhs_lens_invariant",
-        "projection_inverse_LowStar.Lens.Mkhs_lens_x",
-        "refinement_interpretation_Tm_refine_cb27e7e01c1acdd661219052e523b42b",
-        "token_correspondence_LowStar.Lens.__proj__Mkhs_lens__item__invariant"
-      ],
-      0,
-      "fd51151d0f241ffdd574c28b10cc5562"
-    ],
-    [
       "LowStar.Lens.view",
       1,
       2,
       1,
       [ "@query", "equation_LowStar.Lens.inv" ],
       0,
-      "2d13924678914df8c14e03556e9f55a9"
+      "65e6373194acc6350979f0fc2a1c430b"
     ],
     [
       "LowStar.Lens.LensST",
@@ -65,7 +17,7 @@
       1,
       [ "@query" ],
       0,
-      "edbec028643105b4d003437902d9a693"
+      "b381961c0ef895d06752f690486e2b39"
     ],
     [
       "LowStar.Lens.reveal_inv",
@@ -78,7 +30,7 @@
         "fuel_guarded_inversion_LowStar.Lens.hs_lens"
       ],
       0,
-      "33e149cbcec4c4c292c1bcebc9412443"
+      "d1474501590c427fec776c25eee9cc58"
     ],
     [
       "LowStar.Lens.reveal_inv",
@@ -91,7 +43,7 @@
         "fuel_guarded_inversion_LowStar.Lens.hs_lens"
       ],
       0,
-      "f7b356ade8cc3be96cadc51342677030"
+      "b14800557e4e9047468d19c22878440c"
     ],
     [
       "LowStar.Lens.for_n",
@@ -106,7 +58,7 @@
         "refinement_interpretation_Tm_refine_c1424615841f28cac7fc34e92b7ff33c"
       ],
       0,
-      "6fc8e21fc2981e7f3f4f13859992c06d"
+      "1165c1efa0247252cc30b2d3e25dd820"
     ],
     [
       "LowStar.Lens.for_n",
@@ -135,7 +87,7 @@
         "typing_FStar.Monotonic.HyperStack.get_tip"
       ],
       0,
-      "20db264387ada0a3b83d42628d2cd8d8"
+      "eb61ca8e529f220e8651327abea67e37"
     ]
   ]
 ]

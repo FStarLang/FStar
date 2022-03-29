@@ -105,13 +105,16 @@ let check_expected_aqual_for_binder aq b pos =
     | None, None -> aq
     | None, Some eaq ->
       if eaq.aqual_implicit //programmer should have written #
-      then raise_error (Errors.Fatal_InconsistentImplicitQualifier, "Inconsistent implicit qualifiers") pos
+      then raise_error (Errors.Fatal_InconsistentImplicitQualifier,
+                        "Inconsistent implicit qualifiers (expected implicit annotation on the argument)") pos
       else expected_aq //keep the attributes
     | Some aq, None ->
-      raise_error (Errors.Fatal_InconsistentImplicitQualifier, "Inconsistent implicit qualifiers") pos
+      raise_error (Errors.Fatal_InconsistentImplicitQualifier,
+                   "Inconsistent implicit qualifiers (did not expect argument aquals)") pos
     | Some aq, Some eaq ->
       if aq.aqual_implicit <> eaq.aqual_implicit
-      then raise_error (Errors.Fatal_InconsistentImplicitQualifier, "Inconsistent implicit qualifiers") pos
+      then raise_error (Errors.Fatal_InconsistentImplicitQualifier,
+                        "Inconsistent implicit qualifiers (mismatch)") pos
       else expected_aq //keep the attributes
 
 let check_erasable_binder_attributes env attrs (binder_ty:typ) =
@@ -196,8 +199,8 @@ let value_check_expected_typ env (e:term) (tlc:either<term,lcomp>) (guard:guard_
   let e, lc, g =
    match Env.expected_typ env with
    | None -> memo_tk e t, lc, guard
-   | Some t' ->
-     let e, lc, g = TcUtil.check_has_type_maybe_coerce env e lc t' in
+   | Some (t', use_eq) ->
+     let e, lc, g = TcUtil.check_has_type_maybe_coerce env e lc t' use_eq in
      if debug env Options.Medium
      then BU.print4 "value_check_expected_typ: type is %s<:%s \tguard is %s, %s\n"
                 (TcComm.lcomp_to_string lc) (Print.term_to_string t')
@@ -218,15 +221,16 @@ let value_check_expected_typ env (e:term) (tlc:either<term,lcomp>) (guard:guard_
 let comp_check_expected_typ env e lc : term * lcomp * guard_t =
   match Env.expected_typ env with
    | None -> e, lc, Env.trivial_guard
-   | Some t ->
+   | Some (t, use_eq) ->
      let e, lc, g_c = TcUtil.maybe_coerce_lc env e lc t in
-     let e, lc, g = TcUtil.weaken_result_typ env e lc t in
+     let e, lc, g = TcUtil.weaken_result_typ env e lc t use_eq in
      e, lc, Env.conj_guard g g_c
 
 (************************************************************************************************************)
 (* check_expected_effect: triggers a sub-effecting, WP implication, etc. if needed                          *)
 (************************************************************************************************************)
-let check_expected_effect env (copt:option<comp>) (ec : term * comp) : term * comp * guard_t =
+let check_expected_effect env (use_eq:bool) (copt:option<comp>) (ec : term * comp)
+  : term * comp * guard_t =
   let e, c = ec in
   let tot_or_gtot c = //expects U.is_pure_or_ghost_comp c
      if U.is_pure_comp c
@@ -274,9 +278,12 @@ let check_expected_effect env (copt:option<comp>) (ec : term * comp) : term * co
        let c = TcUtil.maybe_assume_result_eq_pure_term env e (TcComm.lcomp_of_comp c) in
        let c, g_c = TcComm.lcomp_comp c in
        if debug env <| Options.Medium then
-       BU.print3 "In check_expected_effect, asking rel to solve the problem on e=(%s) and c=(%s) and expected_c=(%s)\n"
-                 (Print.term_to_string e) (Print.comp_to_string c) (Print.comp_to_string expected_c);
-       let e, _, g = TcUtil.check_comp env e c expected_c in
+       BU.print4 "In check_expected_effect, asking rel to solve the problem on e=(%s) and c=(%s), expected_c=(%s), and use_eq=%s\n"
+                 (Print.term_to_string e)
+                 (Print.comp_to_string c)
+                 (Print.comp_to_string expected_c)
+                 (string_of_bool use_eq);
+       let e, _, g = TcUtil.check_comp env use_eq e c expected_c in
        let g = TcUtil.label_guard (Env.get_range env) "could not prove post-condition" g in
        if debug env Options.Medium
        then BU.print2 "(%s) DONE check_expected_effect;\n\tguard is: %s\n"
@@ -290,9 +297,17 @@ let no_logical_guard env (te, kt, f) =
     | Trivial -> te, kt, f
     | NonTrivial f -> raise_error (Err.unexpected_non_trivial_precondition_on_term env f) (Env.get_range env)
 
-let print_expected_ty env = match Env.expected_typ env with
-    | None -> BU.print_string "Expected type is None\n"
-    | Some t -> BU.print1 "Expected type is %s" (Print.term_to_string t)
+let print_expected_ty_str env =
+  match Env.expected_typ env with
+  | None -> "Expected type is None"
+  | Some (t, use_eq) ->
+    BU.format2
+      "Expected type is (%s, use_eq = %s)"
+      (Print.term_to_string t)
+      (string_of_bool use_eq)
+           
+
+let print_expected_ty env = BU.print1 "%s\n" (print_expected_ty_str env)
 
 (************************************************************************************************************)
 (* check the patterns in an SMT lemma to make sure all bound vars are mentiond *)
@@ -572,7 +587,7 @@ let wrap_guard_with_tactic_opt topt g =
  *)
 let is_comp_ascribed_reflect (e:term) : option<(lident * term * aqual)> =
   match (SS.compress e).n with
-  | Tm_ascribed (e, (Inr _, _), _) ->
+  | Tm_ascribed (e, (Inr _, _, _), _) ->
     (match (SS.compress e).n with
      | Tm_app (head, args) when List.length args = 1 ->
        (match (SS.compress head).n with
@@ -587,12 +602,12 @@ let is_comp_ascribed_reflect (e:term) : option<(lident * term * aqual)> =
 (************************************************************************************************************)
 let rec tc_term env e =
     if Env.debug env Options.Medium then
-        BU.print5 "(%s) Starting tc_term (phase1=%s) of %s (%s) with expected type: %s {\n"
+        BU.print5 "(%s) Starting tc_term (phase1=%s) of %s (%s), %s {\n"
           (Range.string_of_range <| Env.get_range env)
           (string_of_bool env.phase1)
           (Print.term_to_string e)
           (Print.tag_of_term (SS.compress e))
-          (match Env.expected_typ env with | None -> "None" | Some t -> Print.term_to_string t);
+          (print_expected_ty_str env);
 
     let r, ms = BU.record_time (fun () ->
                     tc_maybe_toplevel_term ({env with top_level=false}) e) in
@@ -723,27 +738,12 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
     Env.conj_guard g g' //but don't drop g' altogether, since it also contains unification constraints
 
   | Tm_meta(e, Meta_desugared Sequence) ->
-    begin match (SS.compress e).n with
-        | Tm_let((_,[{lbname=x; lbdef=e1}]), e2) -> //NS: Why not handle this specially in the deugaring phase, adding a unit annotation on x?
-          let e1, c1, g1 = tc_term (Env.set_expected_typ env t_unit) e1 in
-          let e2, c2, g2 = tc_term env e2 in
-          let c = TcUtil.maybe_return_e2_and_bind e1.pos env (Some e1) c1 e2 (None, c2) in
-          let e1 = TcUtil.maybe_lift env e1 c1.eff_name c.eff_name c1.res_typ in
-          let e2 = TcUtil.maybe_lift env e2 c2.eff_name c.eff_name c2.res_typ in
-          let attrs =
-            if TcUtil.is_pure_or_ghost_effect env c1.eff_name
-            then [U.inline_let_attr]
-            else []
-          in
-          let e = mk (Tm_let((false, [mk_lb (x, [], c.eff_name, t_unit, e1, attrs, e1.pos)]), e2)) e.pos in
-          let e = TcUtil.maybe_monadic env e c.eff_name c.res_typ in
-          let e = mk (Tm_meta(e, Meta_desugared Sequence)) top.pos in
-          e, c, Env.conj_guard g1 g2
-        | _ ->
-          let e, c, g = tc_term env e in
-          let e = mk (Tm_meta(e, Meta_desugared Sequence)) top.pos in
-          e, c, g
-    end
+    //
+    // Sequence is only relevant for pretty printing
+    //
+    let e, c, g = tc_term env e in
+    let e = mk (Tm_meta (e, Meta_desugared Sequence)) top.pos in
+    e, c, g
 
   | Tm_meta(e, Meta_monadic _)
   | Tm_meta(e, Meta_monadic_lift _) ->
@@ -756,7 +756,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
     let e = mk (Tm_meta(e, m)) top.pos in
     e, c, g
 
-  | Tm_ascribed (e, (asc, Some tac), labopt) ->
+  | Tm_ascribed (e, (asc, Some tac, use_eq), labopt) ->
     (* Ascription with an associated tactic for its guard. We typecheck
      * the ascribed term without the tactic by recursively calling tc_term,
      * and then we wrap the returned guard with the tactic. We must also return
@@ -764,14 +764,15 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
 
     let tac, _, g_tac = tc_tactic t_unit t_unit env tac in
 
-    let t' = mk (Tm_ascribed (e, (asc, None), labopt)) top.pos in
+    let t' = mk (Tm_ascribed (e, (asc, None, use_eq), labopt)) top.pos in
     let t', c, g = tc_term env t' in
 
     (* Set the tac ascription on the elaborated term *)
     let t' =
       match (SS.compress t').n with
-      | Tm_ascribed (e, (asc, None), labopt) ->
-        mk (Tm_ascribed (e, (asc, Some tac), labopt)) t'.pos
+      | Tm_ascribed (e, (asc, None, _use_eq), labopt) ->
+        //assert (use_eq = _use_eq);
+        mk (Tm_ascribed (e, (asc, Some tac, use_eq), labopt)) t'.pos
       | _ ->
         failwith "impossible"
     in
@@ -790,7 +791,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
    *       a trivial precondition
    *)
 
-  | Tm_ascribed (_, (Inr expected_c, None), _)
+  | Tm_ascribed (_, (Inr expected_c, None, use_eq), _)
     when top |> is_comp_ascribed_reflect |> is_some ->
 
     let (effect_lid, e, aqual) = top |> is_comp_ascribed_reflect |> must in
@@ -813,7 +814,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
     let repr = Env.effect_repr env0 (expected_ct |> S.mk_Comp) u_c |> must in
 
     // e <: Tot repr
-    let e = S.mk (Tm_ascribed (e, (Inr (S.mk_Total' repr (Some u_c)), None), None)) e.pos in
+    let e = S.mk (Tm_ascribed (e, (Inr (S.mk_Total' repr (Some u_c)), None, use_eq), None)) e.pos in
 
     if Env.debug env0 <| Options.Extreme
     then BU.print1 "Typechecking ascribed reflect, inner ascribed term: %s\n"
@@ -831,34 +832,38 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
       let r = top.pos in
       let tm = mk (Tm_constant (Const_reflect effect_lid)) r in
       let tm = mk (Tm_app (tm, [e, aqual])) r in
-      mk (Tm_ascribed (tm, (Inr expected_c, None), expected_c |> U.comp_effect_name |> Some)) r in
+      mk (Tm_ascribed (tm, (Inr expected_c, None, use_eq), expected_c |> U.comp_effect_name |> Some)) r in
 
     //check the expected type in the env, if present
     let top, c, g_env = comp_check_expected_typ env top (expected_c |> TcComm.lcomp_of_comp) in
 
     top, c, Env.conj_guards [g_c; g_e; g_env]
 
-  | Tm_ascribed (e, (Inr expected_c, None), _) ->
+  | Tm_ascribed (e, (Inr expected_c, None, use_eq), _) ->
     let env0, _ = Env.clear_expected_typ env in
     let expected_c, _, g = tc_comp env0 expected_c in
-    let e, c', g' = tc_term (U.comp_result expected_c |> Env.set_expected_typ env0) e in
+    let e, c', g' = tc_term
+      (U.comp_result expected_c |> (fun t -> Env.set_expected_typ_maybe_eq env0 t use_eq))
+      e in
     let e, expected_c, g'' =
       let c', g_c' = TcComm.lcomp_comp c' in
-      let e, expected_c, g'' = check_expected_effect env0 (Some expected_c) (e, c') in
+      let e, expected_c, g'' = check_expected_effect env0 use_eq
+        (Some expected_c)
+        (e, c') in
       e, expected_c, Env.conj_guard g_c' g'' in
-    let e = mk (Tm_ascribed(e, (Inr expected_c, None), Some (U.comp_effect_name expected_c))) top.pos in  //AR: this used to be Inr t_res, which meant it lost annotation for the second phase
+    let e = mk (Tm_ascribed(e, (Inr expected_c, None, use_eq), Some (U.comp_effect_name expected_c))) top.pos in  //AR: this used to be Inr t_res, which meant it lost annotation for the second phase
     let lc = TcComm.lcomp_of_comp expected_c in
     let f = Env.conj_guard g (Env.conj_guard g' g'') in
     let e, c, f2 = comp_check_expected_typ env e lc in
     e, c, Env.conj_guard f f2
 
-  | Tm_ascribed (e, (Inl t, None), _) ->
+  | Tm_ascribed (e, (Inl t, None, use_eq), _) ->
     let k, u = U.type_u () in
     let t, _, f = tc_check_tot_or_gtot_term env t k "" in
-    let e, c, g = tc_term (Env.set_expected_typ env t) e in
+    let e, c, g = tc_term (Env.set_expected_typ_maybe_eq env t use_eq) e in
     //NS: Maybe redundant strengthen
     let c, f = TcUtil.strengthen_precondition (Some (fun () -> return_all Err.ill_kinded_type)) (Env.set_range env t.pos) e c f in
-    let e, c, f2 = comp_check_expected_typ env (mk (Tm_ascribed(e, (Inl t, None), Some c.eff_name)) top.pos) c in
+    let e, c, f2 = comp_check_expected_typ env (mk (Tm_ascribed(e, (Inl t, None, use_eq), Some c.eff_name)) top.pos) c in
     e, c, Env.conj_guard f (Env.conj_guard g f2)
 
   (* Unary operators. Explicitly curry extra arguments *)
@@ -997,7 +1002,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
     in
     let (rdc, constrname, constructor), topt =
       match Env.expected_typ env with
-      | Some t ->
+      | Some (t, _) ->
         //first, prefer the expected type from the context, if any
         TcUtil.find_record_or_dc_from_typ env (Some t) uc top.pos, Some (Inl t)
 
@@ -1055,8 +1060,8 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
       tc_term env e
     in
     begin
-    let t0 = N.unfold_whnf env lc.res_typ in
-    let thead, _ = U.head_and_args (U.unmeta t0) in
+    let t0 = N.unfold_whnf' [Unascribe; Unmeta; Unrefine] env lc.res_typ in
+    let thead, _ = U.head_and_args t0 in
     if Env.debug env <| Options.Other "RFD"
     then (
       BU.print3 "Got lc.res_typ=%s; t0 = %s; thead = %s\n"
@@ -1123,10 +1128,10 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
     let env0 = env in
     let env = Env.clear_expected_typ env |> fst |> instantiate_both in
     if debug env Options.High
-    then BU.print3 "(%s) Checking app %s, expected type is %s\n"
+    then BU.print3 "(%s) Checking app %s, %s\n"
                     (Range.string_of_range top.pos)
                     (Print.term_to_string top)
-                    (Env.expected_typ env0 |> (function None -> "none" | Some t -> Print.term_to_string t));
+                    (print_expected_ty_str env0);
 
     //Don't instantiate head; instantiations will be computed below, accounting for implicits/explicits
     let head, chead, g_head = tc_term (no_inst env) head in
@@ -1180,37 +1185,44 @@ and tc_match (env : Env.env) (top : term) : term * lcomp * guard_t =
   (*
    * AR: Typechecking of match expression:
    *
-   * match expressions may be optionally annotated with a `return` annotation
+   * match expressions may be optionally annotated with a `returns` annotation
    *   for dependent pattern matching
    *
    * When the return annotation is not supplied, we:
    *   -- typecheck the scrutinee
    *   -- typecheck the branches with
    *      -- if the expected type is not set in the env, then create a new uvar for it
-   *      -- a new bv, guard_x below, as the scrutinee expression
+   *      -- a new bv, guard_x below, as the scrutinee expression in the logic,
+   *         guard_x is not in the scope of the branch, but it may appear in the
+   *         computation type of the branch and branch condition
    *   -- combine the computation types of the branches (TcUtil.bind_cases)
    *      -- with the if_the_else combinator, also adding pattern exhaustiveness checks
-   *   -- bind the scrutinee computation type with the combined branches (using guard_x as the bv in bind)
+   *   -- bind the scrutinee computation type with the combined branches using guard_x as the bv in bind
+   *      this is where guard_x gets captured
    *
-   * When the return annotation is supplied:
+   * When the returns annotation is supplied:
    *   -- typecheck the scrutinee
-   *   -- typecheck the return annotation
+   *   -- typecheck the returns annotation
    *   -- typecheck the branches with
    *      -- env with expected type unset
-   *      -- a new bv, guard_x, as the scrutinee expression
-   *      -- substituting scrutinee bv by guard_x in the return annotation
-   *      -- in tc_eqn: substituting guard_x with the pattern expression, and ascribing it on the branch exp
-   *   -- if the return annotation was a type:
+   *      -- guard_x, as the scrutinee expression in the logic, as above
+   *      -- in tc_eqn: substituting the binder in the returns annotation with the scrutinee expression
+   *         and ascribing it on the branch expression
+   *      -- once the branch expression is typechecked, we also remove this ascription
+   *   -- if the returns annotation is a type:
+   *      -- (in tc_match) set the result type of the branches to it (is this step redundant?)
    *      -- TcUtil.bind_cases as before
+   *      -- bind with the scrutinee computation type, capturing guard_x as the bind variable
    *   -- if the return annotation was a computation type:
-   *      -- no need to bind cases, take the comp annotation as is
-   *      -- but add the pattern exhaustiveness check in the guard
-   *      -- need to substitute guard_x by scrutinee bv back
-   *   -- bind the scrutinee computation type with the combined branches (using guard_x as the bv in bind)
+   *      -- tc_eqn may return branch guard (different from branch condition), containing guard_x
+   *      -- no need to bind cases, since we can take the computation type as is
+   *      -- but we need to add pattern exhaustiveness check, and get rid of guard_x in the guard
+   *      -- we close the guard as: forall guard_x. guard_x == scrutinee ==> ...
+   *      -- bind with the scrutinee computation type
    *)
 
   match (SS.compress top).n with
-  | Tm_match(e1, ret_opt, eqns, _) ->  //ret_opt is the return annotation
+  | Tm_match(e1, ret_opt, eqns, _) ->  //ret_opt is the returns annotation
     let e1, c1, g1 = tc_term
       (env |> Env.clear_expected_typ |> fst |> instantiate_both)
       e1 in
@@ -1220,91 +1232,137 @@ and tc_match (env : Env.env) (top : term) : term * lcomp * guard_t =
         | Some (e1, c1) -> e1, c1
         | None -> e1, c1 in
 
-    //ret_or_res_typ has type either<either<typ, comp>, typ>
-    let env_branches, ret_or_res_typ, ret_opt, g1 =
+    let env_branches, ret_opt, g1 =
       match ret_opt with
-      | None ->  //no return annotation, set an expected type either from env or a new uvar
+      | None ->
         (match Env.expected_typ env with
-         | Some t -> env, Inr t, None, g1
+         | Some _ -> env, None, g1
          | None ->
            let k, _ = U.type_u() in
            let res_t, _, g = TcUtil.new_implicit_var "match result" e1.pos env k in
-           Env.set_expected_typ env res_t, Inr res_t, None, Env.conj_guard g1 g)
-      | Some (t_or_c, None) ->
-        //typecheck the return annotation and unset expected type in the env if exists,
-        //  (we will check the expected type at the end)
-        //the branch typechecking (tc_eqn) will typecheck the branch with an ascription
-        let env, _ = Env.clear_expected_typ env in
-        let t_or_c, g =
-          match t_or_c with
-           | Inl t -> let k, _ = U.type_u () in
-                     let t, _, g = tc_check_tot_or_gtot_term env t k "" in
-                     Inl t, g
-           | Inr c -> let c, _, g = tc_comp env c in
-                     Inr c, g in
-        env, Inl t_or_c, Some (t_or_c, None), Env.conj_guard g1 g
-      | _ ->
-        raise_error (Errors.Fatal_UnexpectedTerm,
-          "Tactic is not yet supported with match return") (Env.get_range env) in
+           Env.set_expected_typ env res_t,
+           None,
+           Env.conj_guard g1 g)
+      | Some (b, asc) ->
+        //We have a returns annotation
 
-    let guard_x, t_eqns =
-      let guard_x =
-        match ret_opt with
-        | None -> S.new_bv (Some e1.pos) c1.res_typ
-        | Some _ ->
-          (match (e1 |> U.unascribe |> SS.compress).n with
-           | Tm_name scrutinee_bv -> scrutinee_bv
-           | _ ->
-             raise_error (Errors.Fatal_UnexpectedTerm,
-               "The scrutinee must be a variable when a return annotation is supplied with a match") e1.pos) in
-      guard_x,
-      eqns |> List.map (tc_eqn guard_x env_branches ret_opt) in
+        //First check that e1 is pure or ghost
+        //The reason is that, we will compute the final type/comp
+        // of match result by substituting b with e1
+        //
+        //We could do an optimization here:
+        //  if b does not occur free in asc, then we don't need to do this check
+        //Is it worth doing?
+        if not (TcUtil.is_pure_or_ghost_effect env c1.eff_name)
+        then raise_error (Errors.Fatal_UnexpectedEffect,
+               BU.format2
+                 "For a match with returns annotation, the scrutinee should be pure/ghost, \
+                  found %s with effect %s"
+                 (Print.term_to_string e1)
+                 (string_of_lid c1.eff_name)) e1.pos;
+
+        //Clear the expected type in the environment for the branches
+        //  we will check the expected type for the whole match at the end
+        let env, _ = Env.clear_expected_typ env in
+        let b, asc =
+          let bs, asc = SS.open_ascription [b] asc in
+          let b = List.hd bs in
+          //we set the sort of the binder to be the type of e1
+          {b with binder_bv={b.binder_bv with sort=c1.res_typ}}, asc in
+        //b is in scope for asc
+        let env_asc = Env.push_binders env [b] in
+        let asc, g_asc =
+          match asc with  //at this point, we just pack back the use_eq bit
+          | Inl t, None, use_eq ->
+            let k, _ = U.type_u () in
+            let t, _, g = tc_check_tot_or_gtot_term env_asc t k "" in
+            (Inl t, None, use_eq), g
+          | Inr c, None, use_eq ->
+            let c, _, g = tc_comp env_asc c in
+            (Inr c, None, use_eq), g
+          | _ -> 
+            raise_error (Errors.Fatal_UnexpectedTerm,
+              "Tactic is not yet supported with match returns") (Env.get_range env) in
+
+        //we need to close g_asc with the binder b
+        env,
+        Some (b, asc),
+        Env.conj_guard g1 (Env.close_guard env_asc [b] g_asc) in
+
+    //g1 is now the guard for the scrutinee and the ascription
+    //  and it is well-formed in env
+
+    //the logical variable for the scrutinee
+    let guard_x = S.new_bv (Some e1.pos) c1.res_typ in
+    let t_eqns = eqns |> List.map (tc_eqn guard_x env_branches ret_opt) in
 
     let c_branches, g_branches, erasable =
-      let cases, g, erasable =
-          List.fold_right
-                (fun (branch, f, eff_label, cflags, c, g, erasable_branch) (caccum, gaccum, erasable) ->
-                     (f, eff_label, cflags, c)::caccum,
-                     Env.conj_guard g gaccum,
-                     erasable || erasable_branch)
-                t_eqns
-                ([], Env.trivial_guard, false) in
+      match ret_opt with
+      | Some (b, (Inr c, _, _)) ->  //a return annotation, with computation type
 
-      (* note that bind_cases adds an exhaustiveness check *)
-      match ret_or_res_typ with
-      | Inr res_t ->
-        //no return annotation, just bind_cases
-        TcUtil.bind_cases env res_t cases guard_x, g, erasable
+        //c has b free, so substitute it with the scrutinee
+        let c = SS.subst_comp [NT (b.binder_bv, e1)] c in
 
-      | Inl (Inl t) ->  //a return annotation, with type
-        //set the type in the lcomp of the branches, and then bind_cases
-
-        let cases = List.map
-          (fun (f, eff_label, cflags, c) ->
-             (f, eff_label, cflags, (fun b -> TcComm.set_result_typ_lc (c b) t))) cases in
-
-        TcUtil.bind_cases env t cases guard_x, g, erasable
-
-      | Inl (Inr c) ->  //a return annotation, with computation type
         //we don't need to bind the cases
-        //but we still need to weaken the guards for the branches with the
-        //negation of the branch conditions that come before this branch
-        let fmls, gs =  //branch conditions, branch guards
+        //but we still need to
+        //  (a) weaken the guards for the branches with the
+        //      negation of the branch conditions that come before this branch
+        //  (b) add exhaustiveness check
+        //  (c) close guard_x
+
+        let fmls, gs, erasables =  //branch conditions, branch guards, erasable bits
           t_eqns
-          |> List.map (fun (_, f, _, _, _, g, _) -> (f, g))
-          |> List.unzip in
+          |> List.map (fun (_, f, _, _, _, g, b) -> (f, g, b))
+          |> List.unzip3 in
         let neg_conds, exhaustiveness_cond = TcUtil.get_neg_branch_conds fmls in
         let g =
           List.map2 TcComm.weaken_guard_formula gs neg_conds
-          |> List.fold_left Env.conj_guard Env.trivial_guard in
+          |> Env.conj_guards in
         let g_exhaustiveness =
           U.mk_imp exhaustiveness_cond U.t_false
           |> TcUtil.label Err.exhaustiveness_check (Env.get_range env)  //label
           |> NonTrivial
           |> Env.guard_of_guard_formula in
-        TcComm.lcomp_of_comp c, Env.conj_guard g g_exhaustiveness, erasable in
+        let g = Env.conj_guard g g_exhaustiveness in
+        //weaken with guard_x == scrutinee
+        let g = TcComm.weaken_guard_formula g
+          (U.mk_eq2 (env.universe_of env c1.res_typ) c1.res_typ (S.bv_to_name guard_x) e1) in
+        //close guard_x
+        let g = Env.close_guard env [S.mk_binder guard_x] g in 
+        TcComm.lcomp_of_comp c,
+        g,
+        erasables |> List.fold_left (fun acc b -> acc || b) false
 
-    //combine with e1's computation type
+      | _ ->
+        let cases, g, erasable =
+          List.fold_right
+            (fun (branch, f, eff_label, cflags, c, g, erasable_branch) (caccum, gaccum, erasable) ->
+               (f, eff_label, cflags |> must, c |> must)::caccum,
+               Env.conj_guard g gaccum,
+               erasable || erasable_branch) t_eqns ([], Env.trivial_guard, false) in
+        match ret_opt with
+        | None ->
+          //no returns annotation, just bind_cases
+          //when the returns annotation is absent, env_branches contains the expected type
+          // (which may either be coming from top, or a new uvar)
+          let res_t = Env.expected_typ env_branches |> must |> fst in
+          TcUtil.bind_cases env res_t cases guard_x, g, erasable
+
+        | Some (b, (Inl t, _, _)) ->  //a returns annotation, with type
+
+          //t has b free, so substitute it with the scrutinee
+          let t = SS.subst [NT (b.binder_bv, e1)] t in
+
+          //set the type in the lcomp of the branches, and then bind_cases
+          //AR: is this step redundant? should check
+          let cases = List.map
+            (fun (f, eff_label, cflags, c) ->
+               (f, eff_label, cflags, (fun b -> TcComm.set_result_typ_lc (c b) t))) cases in
+
+          TcUtil.bind_cases env t cases guard_x, g, erasable
+    in
+
+    //bind with e1's computation type
     let cres = TcUtil.bind e1.pos env (Some e1) c1 (Some guard_x, c_branches) in
 
     let cres =
@@ -1317,9 +1375,18 @@ and tc_match (env : Env.env) (top : term) : term * lcomp * guard_t =
     in
 
     let e =
+      //repack the returns ascription
+      let ret_opt =
+        match ret_opt with
+        | None -> None
+        | Some (b, asc) ->
+          let asc = SS.close_ascription [b] asc in
+          let b = List.hd (SS.close_binders [b]) in
+          //we make the binder sort as tun,
+          //  since we always use the type of the scrutinee
+          let b = {b with binder_bv={b.binder_bv with sort=tun}} in
+          Some (b, asc) in
       let mk_match scrutinee =
-        (* TODO (KM) : I have the impression that lifting here is useless/wrong : the scrutinee should always be pure... *)
-        (* let scrutinee = TypeChecker.Util.maybe_lift env scrutinee c1.eff_name cres.eff_name c1.res_typ in *)
         let branches = t_eqns |> List.map (fun ((pat, wopt, br), _, eff_label, _, _, _, _) ->
           pat, wopt, TcUtil.maybe_lift env br eff_label cres.eff_name cres.res_typ
         ) in
@@ -1331,13 +1398,14 @@ and tc_match (env : Env.env) (top : term) : term * lcomp * guard_t =
         let e = TcUtil.maybe_monadic env e cres.eff_name cres.res_typ in
         //The ascription with the result type is useful for re-checking a term, translating it to Lean etc.
         //AR: revisit, for now doing only if return annotation is not provided
-        match ret_or_res_typ with
-        | Inr _ -> mk (Tm_ascribed(e, (Inl cres.res_typ, None), Some cres.eff_name)) e.pos
-        | Inl _ -> e
+        match ret_opt with
+        | None -> mk (Tm_ascribed(e, (Inl cres.res_typ, None, false), Some cres.eff_name)) e.pos
+        | _ -> e
       in
 
-      //see issue #594: if the scrutinee is impure, then explicitly sequence it with an impure let binding
-      //                to protect it from the normalizer optimizing it away
+      //see issue #594:
+      //if the scrutinee is impure, then explicitly sequence it with an impure let binding
+      //to protect it from the normalizer optimizing it away
       if TcUtil.is_pure_or_ghost_effect env c1.eff_name
       then mk_match e1
       else
@@ -1353,7 +1421,7 @@ and tc_match (env : Env.env) (top : term) : term * lcomp * guard_t =
     let e, cres, g_expected_type =
       match ret_opt with
       | None -> e, cres, Env.trivial_guard
-      | Some _ -> comp_check_expected_typ env e cres in
+      | _ -> comp_check_expected_typ env e cres in
 
     if debug env Options.Extreme
     then BU.print2 "(%s) Typechecked Tm_match, comp type = %s\n"
@@ -1379,7 +1447,14 @@ and tc_synth head env args rng =
         match atyp with
         | Some t -> t
         | None -> begin match Env.expected_typ env with
-                  | Some t -> t
+                  | Some (t, use_eq) ->
+                    if use_eq
+                    then raise_error
+                           (Errors.Fatal_NotSupported,
+                            BU.format1 "Equality ascription in synth (%s) is not yet supported, \
+                                        please use subtyping"
+                                       (Print.term_to_string t)) t.pos;
+                    t
                   | None -> raise_error (Errors.Fatal_SynthByTacticError, "synth_by_tactic: need a type annotation when no expected type is present") (Env.get_range env)
                   end
     in
@@ -1463,7 +1538,14 @@ and tc_value env (e:term) : term
         | None ->
           let k, u = U.type_u () in
           TcUtil.new_implicit_var "type of user-provided implicit term" r env k
-        | Some t -> t, [], Env.trivial_guard in
+        | Some (t, use_eq) ->
+          if use_eq
+          then raise_error
+                 (Errors.Fatal_NotSupported,
+                  BU.format1 "Equality ascription as an expected type for unk (:%s) is not yet supported, \
+                              please use subtyping"
+                             (Print.term_to_string t)) e.pos;
+          t, [], Env.trivial_guard in
 
     let e, _, g1 = TcUtil.new_implicit_var
           ("user-provided implicit term at " ^ (Range.string_of_range r))
@@ -1744,8 +1826,9 @@ and tc_universe env u : universe =
  * Called when typechecking a Tm_abs node
  *
  * t0 is the expected type in the environment for the Tm_abs node
+ *   and the use_eq bit (whether to use type equality)
  *)
-and tc_abs_expected_function_typ env (bs:binders) t0 (body:term)
+and tc_abs_expected_function_typ env (bs:binders) (t0:option<(typ * bool)>) (body:term)
 : (option<typ>        (* any remaining expected type to check against *)
 * binders             (* binders from the abstraction checked against the binders in the corresponding Typ_fun, if any *)
 * binders             (* let rec binders, suitably guarded with termination check, if any *)
@@ -1763,7 +1846,7 @@ and tc_abs_expected_function_typ env (bs:binders) t0 (body:term)
     let bs, envbody, g_env, _ = tc_binders env bs in
     None, bs, [], None, envbody, body, g_env
 
-  | Some t ->
+  | Some (t, use_eq) ->
     let t = SS.compress t in
     let rec as_function_typ norm t =
       match (SS.compress t).n with
@@ -1814,7 +1897,7 @@ and tc_abs_expected_function_typ env (bs:binders) t0 (body:term)
                   match t.n with
                   | Tm_arrow(bs_expected, c_expected) ->
                     let bs_expected, c_expected = SS.open_comp bs_expected c_expected in
-                    let (env_bs_bs', bs', more, guard'_env_bs, subst) = tc_abs_check_binders env_bs more_bs bs_expected in
+                    let (env_bs_bs', bs', more, guard'_env_bs, subst) = tc_abs_check_binders env_bs more_bs bs_expected use_eq in
                     let guard'_env = Env.close_guard env_bs bs guard'_env_bs in
                     handle_more (env_bs_bs', bs@bs', more, Env.conj_guard guard_env guard'_env, subst) c_expected body
                   | _ ->
@@ -1823,8 +1906,7 @@ and tc_abs_expected_function_typ env (bs:binders) t0 (body:term)
                 else let body = U.abs more_bs body None in
                      env_bs, bs, guard_env, c, body
             in  //end let rec handle_more
-
-            handle_more (tc_abs_check_binders env bs bs_expected) c_expected body
+            handle_more (tc_abs_check_binders env bs bs_expected use_eq) c_expected body
         in  //end let rec check_actuals_against_formals
 
         let mk_letrec_env envbody bs c =
@@ -1850,7 +1932,7 @@ and tc_abs_expected_function_typ env (bs:binders) t0 (body:term)
         let envbody, bs, g_env, c, body = check_actuals_against_formals envbody bs bs_expected body in
         let envbody = { envbody with letrecs = env.letrecs } in
         let envbody, letrecs, g_annots = mk_letrec_env envbody bs c in
-        let envbody = Env.set_expected_typ envbody (U.comp_result c) in
+        let envbody = Env.set_expected_typ_maybe_eq envbody (U.comp_result c) use_eq in
         Some t, bs, letrecs, Some c, envbody, body, Env.conj_guard g_env g_annots
 
       | _ -> (* expected type is not a function;
@@ -1858,8 +1940,9 @@ and tc_abs_expected_function_typ env (bs:binders) t0 (body:term)
                otherwise synthesize a type and check it against the given type *)
         if not norm
         then as_function_typ true (t |> N.unfold_whnf env |> U.unascribe)  //AR: without the unascribe we lose out on some arrows
-        else let _, bs, _, c_opt, envbody, body, g_env = tc_abs_expected_function_typ env bs None body in
-            Some t, bs, [], c_opt, envbody, body, g_env
+        else
+          let _, bs, _, c_opt, envbody, body, g_env = tc_abs_expected_function_typ env bs None body in
+          Some t, bs, [], c_opt, envbody, body, g_env
     in
     as_function_typ false t
 
@@ -1868,13 +1951,15 @@ and tc_abs_expected_function_typ env (bs:binders) t0 (body:term)
     (*               are compatible with the binders of the function typ expected by the context                   *)
     (*               If there are more bs than bs_expected, we only check a prefix and the suffix is returned Inl  *)
     (*               If there are more bs_expected than bs, the suffix of bs_expected is returned Inr              *)
+    (*               If use_eq flag is set, we check type equality for the binder types                            *)
 (***************************************************************************************************************)
-and tc_abs_check_binders env bs bs_expected  : Env.env                         (* env extended with a prefix of bs  *)
-                                             * binders                         (* the type-checked prefix of bs     *)
-                                             * option<either<binders,binders>> (* suffix of either bs or bs_expected*)
-                                             * guard_t                         (* accumulated logical guard
-                                                                                  well-formed in argument env *)
-                                             * subst_t =                       (* alpha conv. of bs_expected to bs  *)
+and tc_abs_check_binders env bs bs_expected use_eq
+  : Env.env                         (* env extended with a prefix of bs  *)
+  * binders                         (* the type-checked prefix of bs     *)
+  * option<either<binders,binders>> (* suffix of either bs or bs_expected*)
+  * guard_t                         (* accumulated logical guard
+                                       well-formed in argument env *)
+  * subst_t =                       (* alpha conv. of bs_expected to bs  *)
   let rec aux (env, subst) (bs:binders) (bs_expected:binders)
     : Env.env
     * binders
@@ -1919,18 +2004,24 @@ and tc_abs_check_binders env bs bs_expected  : Env.env                         (
             if Env.debug env Options.High then BU.print1 "Checking binder %s\n" (Print.bv_to_string hd);
             let t, _, g1_env = tc_tot_or_gtot_term env hd.sort in
             let g2_env =
+              let label_guard g =
+                TcUtil.label_guard
+                  hd.sort.pos
+                  "Type annotation on parameter incompatible with the expected type"
+                  g in
+
               //cf issue #57 (the discussion at the end about subtyping vs. equality in check_binders)
               //check that the context is more demanding of the argument type
+
               match Rel.teq_nosmt env t expected_t with
-              | Some g -> g |> Rel.resolve_implicits env
+              | Some g -> g |> Rel.resolve_implicits env  //AR: why resolve here?
               | None ->
-                match Rel.get_subtyping_prop env expected_t t with
-                | None -> raise_error (Err.basic_type_error env None expected_t t) (Env.get_range env)
-                | Some g_env ->
-                  TcUtil.label_guard
-                    hd.sort.pos
-                    "Type annotation on parameter incompatible with the expected type"
-                    g_env in
+                if use_eq
+                then Rel.teq env t expected_t |> label_guard
+                else match Rel.get_subtyping_prop env expected_t t with
+                     | None ->
+                       raise_error (Err.basic_type_error env None expected_t t) (Env.get_range env)
+                     | Some g_env -> label_guard g_env in
             t, Env.conj_guard g1_env g2_env in
 
         let hd = {hd with sort=t} in
@@ -1965,14 +2056,15 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
     let fail :string -> typ -> 'a = fun msg t ->
         raise_error (Err.expected_a_term_of_type_t_got_a_function env msg t top) (top.pos) in
 
-    (* whether to try first to use unification for solving sub-typing constraints or only propagate to the SMT solver *)
-    let use_eq = env.use_eq in
+    let env0 = env in
     (* topt is the expected type of the expression obtained from the env *)
     let env, topt = Env.clear_expected_typ env in
 
     if Env.debug env Options.High
-    then BU.print2 "!!!!!!!!!!!!!!!Expected type is %s, top_level=%s\n"
-          (match topt with | None -> "None" | Some t -> Print.term_to_string t)
+    then BU.print2 "!!!!!!!!!!!!!!!Expected type is (%s), top_level=%s\n"
+          (match topt with
+           | None -> "None"
+           | Some (t, use_eq) -> Print.term_to_string t ^ ", use_eq = " ^ string_of_bool use_eq)
           (if env.top_level then "true" else "false");
 
     let tfun_opt, bs, letrec_binders, c_opt, envbody, body, g_env =
@@ -1988,7 +2080,7 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
             | Some t -> Print.comp_to_string t)
            (match Env.expected_typ envbody with
             | None -> "None"
-            | Some t -> Print.term_to_string t);
+            | Some (t, use_eq) -> Print.term_to_string t ^ ", use_eq = " ^ string_of_bool use_eq);
 
     if Env.debug env <| Options.Other "NYC"
     then BU.print2 "!!!!!!!!!!!!!!!Guard for function with binders %s is %s\n"
@@ -2003,8 +2095,18 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
        *       we make the body as (M.reflect e) <: c_opt
        *     Basically, typechecking a reflect can be made better by the effect indices
        *     See also special casing of M.reflect <: C in the same file
+       *
+       * AR: the type of should_check_expected_effect is
+       *       either<bool, unit>
+       *
+       *     where Inl b means do check expected effect, with use_eq = b
+       *     and Inr _ means don't check expected effect
        *)
       let envbody, body, should_check_expected_effect =
+        let use_eq_opt =
+          match topt with
+          | Some (_, use_eq) -> use_eq |> Some
+          | _ -> None in
         if c_opt |> is_some &&
            (match (SS.compress body).n with  //body is an M.reflect
             | Tm_app (head, args) when List.length args = 1 ->
@@ -2015,40 +2117,45 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
         then
           Env.clear_expected_typ envbody |> fst,
           S.mk
-            (Tm_ascribed (body, (Inr (c_opt |> must), None), None))
+            //since copt is Some, topt, and hence use_eq_opt must also be Some
+            (Tm_ascribed (body, (Inr (c_opt |> must), None, use_eq_opt |> must), None))
             Range.dummyRange,
-          false
+          Inr ()  //no need to check expected type
         else
           envbody,
           body,
           (match c_opt, (SS.compress body).n with
-           | None, Tm_ascribed (_, (Inr expected_c, _), _) ->
+           | None, Tm_ascribed (_, (Inr expected_c, _, _), _) ->
              //body is already ascribed a computation type;
              //don't check it again
              //Not only is it redundant and inefficient, it also sometimes leads to bizarre errors
              //e.g., Issue #1208
-             false
-           | _ -> true)
+             Inr ()
+           | _ -> Inl (BU.dflt false use_eq_opt))
       in
       let body, cbody, guard_body =
-        tc_term ({envbody with top_level=false; use_eq=use_eq}) body in
+        tc_term ({envbody with top_level=false}) body in
 
       //we don't abstract over subtyping constraints; so solve them now
       //but leave out the tactics constraints for later so that the tactic
       //can have a more global view of all the constraints
-      let guard_body = Rel.solve_non_tactic_deferred_constraints envbody guard_body in
+      let guard_body = Rel.solve_non_tactic_deferred_constraints true envbody guard_body in
 
-      if should_check_expected_effect
-      then let cbody, g_lc = TcComm.lcomp_comp cbody in
-           let body, cbody, guard = check_expected_effect
-             ({envbody with use_eq=use_eq})
-             c_opt (body, cbody) in
-           body, cbody, Env.conj_guard guard_body (Env.conj_guard g_lc guard)
-      else let cbody, g_lc = TcComm.lcomp_comp cbody in
-           body, cbody, Env.conj_guard guard_body g_lc
+      match should_check_expected_effect with
+      | Inl use_eq ->
+        let cbody, g_lc = TcComm.lcomp_comp cbody in
+        let body, cbody, guard = check_expected_effect
+          envbody
+          use_eq
+          c_opt (body, cbody) in
+        body, cbody, Env.conj_guard guard_body (Env.conj_guard g_lc guard)
+      | Inr _ ->
+        let cbody, g_lc = TcComm.lcomp_comp cbody in
+        body, cbody, Env.conj_guard guard_body g_lc
     in
 
-    let guard = if env.top_level || not(Env.should_verify env)
+    let guard = if env.top_level
+                || not (Options.should_verify (string_of_lid env.curmodule))
                 then Env.conj_guard (Rel.discharge_guard env g_env)
                                     (Rel.discharge_guard envbody guard_body)
                 else let guard = Env.conj_guard g_env (Env.close_guard env (bs@letrec_binders) guard_body) in
@@ -2088,9 +2195,9 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
     let e, tfun, guard = match tfun_opt with
         | Some t ->
            let t = SS.compress t in
-           let t_annot =
+           let t_annot, use_eq =
              match topt with
-             | Some t -> t
+             | Some (t, use_eq) -> t, use_eq
              | None -> failwith "Impossible! tc_abs: if tfun_computed is Some, expected topt to also be Some" in
            begin match t.n with
                 | Tm_arrow _ ->
@@ -2099,7 +2206,7 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
                     e, t_annot, guard
                 | _ ->
                     let lc = S.mk_Total tfun_computed |> TcComm.lcomp_of_comp in
-                    let e, _, guard' = TcUtil.check_has_type_maybe_coerce env e lc t in  //QUESTION: t should also probably be t_annot here
+                    let e, _, guard' = TcUtil.check_has_type_maybe_coerce env e lc t use_eq in  //QUESTION: t should also probably be t_annot here
                     e, t_annot, Env.conj_guard guard guard'
            end
 
@@ -2416,11 +2523,13 @@ and check_application_args env head (chead:comp) ghead args expected_topt : term
                            (Print.subst_to_string subst)
                            (Print.term_to_string targ);
             let targ, g_ex = check_no_escape (Some head) env fvs targ in
-            let env = Env.set_expected_typ env targ in
-            let env = {env with use_eq=is_eq bqual} in
+            let env = Env.set_expected_typ_maybe_eq env targ (is_eq bqual) in
             if debug env Options.High
             then BU.print4 "Checking arg (%s) %s at type %s with use_eq:%s\n"
-                   (Print.tag_of_term e) (Print.term_to_string e) (Print.term_to_string targ) (string_of_bool env.use_eq);
+                   (Print.tag_of_term e)
+                   (Print.term_to_string e)
+                   (Print.term_to_string targ)
+                   (bqual |> is_eq |> string_of_bool);
             let e, c, g_e = tc_term env e in
             let g = Env.conj_guard g_ex <| Env.conj_guard g g_e in
 //                if debug env Options.High then BU.print2 "Guard on this arg is %s;\naccumulated guard is %s\n" (guard_to_string env g_e) (guard_to_string env g);
@@ -2693,9 +2802,26 @@ and tc_pat env (pat_t:typ) (p0:pat) :
                   (a, imp_a), subst, bvs@[x], Env.trivial_guard
 
                 | Tm_uvar _ ->
-                  let env = Env.set_expected_typ env t_f in
-                  let a, _, g = tc_tot_or_gtot_term env a in
-                  let g = Rel.discharge_guard_no_smt env g in
+                  let use_eq = true in
+                  let env = Env.set_expected_typ_maybe_eq env t_f use_eq in
+                  //
+                  //AR: 03/03: When typechecking these uvar args,
+                  //  we don't want to solve the deferred constraints here,
+                  //  since solving them here may mean solving flex-flex equations
+                  //  among them
+                  //
+                  //  Whereas if we wait for unification of these dot pattern uvars
+                  //  with the type of the scrutinee (in pat_typ_ok), we have a good
+                  //  chance of solving these uvars as flex-rigid equations
+                  //
+                  //  Therefore, ask tc_tot to not solve deferred, and return the
+                  //  guard as is
+                  //
+                  let a, _, g = tc_tot_or_gtot_term_maybe_solve_deferred
+                    env
+                    a
+                    ""
+                    false in  //don't solve the deferred constraints in the guard
                   let subst = NT(f, a)::subst in
                   (a, imp_a), subst, bvs, g
 
@@ -2839,10 +2965,18 @@ and tc_pat env (pat_t:typ) (p0:pat) :
                                           (BU.string_of_int (List.length sub_pats))
                                           (BU.string_of_int (List.length simple_bvs)));
           let simple_pat_e, simple_bvs, g1, erasable =
+              //
+              //guard is the typechecking guard
+              //it contains some deferred constraints for dot pattern uvars
+              //we will solve them after pat_typ_ok
+              //
               let simple_pat_e, simple_pat_t, simple_bvs, guard, erasable =
                   type_of_simple_pat env simple_pat_e
               in
               let g' = pat_typ_ok env simple_pat_t (expected_pat_typ env p0.p t) in
+              //Now solve guard
+              let guard = Rel.discharge_guard_no_smt env guard in
+              //And combine with g' (the guard from pat_typ_ok)
               let guard = Env.conj_guard guard g' in
               if Env.debug env <| Options.Other "Patterns"
               then BU.print3 "$$$$$$$$$$$$Checked simple pattern %s at type %s with bvs=%s\n"
@@ -2906,7 +3040,7 @@ and tc_pat env (pat_t:typ) (p0:pat) :
     then BU.print1 "Checking pattern: %s\n" (Print.pat_to_string p0);
     let bvs, tms, pat_e, pat, g, erasable =
         check_nested_pattern
-            ({(Env.clear_expected_typ env |> fst) with use_eq=true})
+            (Env.clear_expected_typ env |> fst)
             (PatternUtils.elaborate_pat env p0)
             pat_t
     in
@@ -2919,9 +3053,10 @@ and tc_pat env (pat_t:typ) (p0:pat) :
 
 (********************************************************************************************************************)
 (* Type-checking a pattern-matching branch                                                                          *)
+(* scrutinee_expr is the scrutinee expression, used when we also have a returns annotation                          *)
 (* the pattern, when_clause and branch are closed                                                                   *)
 (* scrutinee is the logical name of the expression being matched; it is not in scope in the branch                  *)
-(*           but it is in scope for the VC of the branch                                                            *)
+(*   but it is in scope for the VC of the branch                                                                    *)
 (* env does not contain scrutinee, or any of the pattern-bound variables                                            *)
 (* the returned terms are well-formed in an environment extended with the scrutinee only                            *)
 
@@ -2932,13 +3067,16 @@ and tc_pat env (pat_t:typ) (p0:pat) :
  *)
 (********************************************************************************************************************)
 and tc_eqn scrutinee env ret_opt branch
-        : (pat * option<term> * term)                                                             (* checked branch *)
-        * term       (* the guard condition for taking this branch, used by the caller for the exhaustiveness check *)
-        * lident                                                                 (* effect label of the lcomp below *)
-        * list<cflag>                                                                       (* flags for each lcomp *)
-        * (bool -> lcomp)                     (* computation type of the branch, with or without a "return" equation *)
-        * guard_t                                                                      (* well-formedness condition *)
-        * bool                                                      (* true if the pattern matches an erasable type *)
+        : (pat * option<term> * term)  (* checked branch *)
+        * term                         (* the guard condition for taking this branch,
+                                          used by the caller for the exhaustiveness check *)
+        * lident                       (* effect label of the branch lcomp *)
+        * option<list<cflag> >         (* flags for the branch lcomp,
+                                          None if typechecked with a returns comp annotation *)
+        * option<(bool -> lcomp)>       (* computation type of the branch, with or without a "return" equation,
+                                          None if typechecked with a returns comp annotation *)
+        * guard_t                      (* guard for well-typedness of the branch *)
+        * bool                         (* true if the pattern matches an erasable type *)
         =
   let pattern, when_clause, branch_exp = SS.open_branch branch in
   let cpat, _, cbr = branch in
@@ -2963,27 +3101,29 @@ and tc_eqn scrutinee env ret_opt branch
   let when_clause, g_when = match when_clause with
     | None -> None, Env.trivial_guard
     | Some e ->
-        if Env.should_verify env
-        then raise_error (Errors.Fatal_WhenClauseNotSupported, "When clauses are not yet supported in --verify mode; they will be some day") e.pos
+      if Env.should_verify env
+      then raise_error
+             (Errors.Fatal_WhenClauseNotSupported,
+              "When clauses are not yet supported in --verify mode; they will be some day") e.pos
         //             let e, c, g = no_logical_guard pat_env <| tc_total_exp (Env.set_expected_typ pat_env TcUtil.t_bool) e in
         //             Some e, g
-        else let e, c, g = tc_term (Env.set_expected_typ pat_env t_bool) e in
-             Some e, g in
+      else let e, c, g = tc_term (Env.set_expected_typ pat_env t_bool) e in
+           Some e, g in
 
   (* 3. Check the branch *)
   let branch_exp, c, g_branch =
     let branch_exp =  //ascribe with the return annotation, if it exists
       match ret_opt with
       | None -> branch_exp
-      | Some asc ->
+      | Some (b, asc) ->
         asc
-        |> SS.subst_ascription [NT (scrutinee, norm_pat_exp)]
+        |> SS.subst_ascription [NT (b.binder_bv, norm_pat_exp)]
         |> U.ascribe branch_exp in
     let branch_exp, c, g_branch = tc_term pat_env branch_exp in
     let branch_exp =  //unascribe if we added ascription
       match ret_opt with
       | None -> branch_exp
-      | Some _ ->
+      | _ ->
         match (SS.compress branch_exp).n with
         | Tm_ascribed (branch_exp, _, _) -> branch_exp
         | _ -> failwith "Impossible (expected the match branch with an ascription)" in
@@ -3010,7 +3150,7 @@ and tc_eqn scrutinee env ret_opt branch
   (*                                                                                                    *)
   (* (b) Type-check the condition computed in 5 (a)                                                     *)
   (*                                                                                                    *)
-  (* (c) Make a disjunctive formula out of 5 (b) for each arm of the pattern                             *)
+  (* (c) Make a disjunctive formula out of 5 (b) for each arm of the pattern                            *)
   (*                                                                                                    *)
   (* (d) Strengthen 5 (c) with the when condition, if there is one                                      *)
 
@@ -3160,7 +3300,7 @@ and tc_eqn scrutinee env ret_opt branch
       else let e = SS.compress pat_exp in
            Some (U.mk_eq2 (env.universe_of env pat_t) pat_t scrutinee_tm e) in
     match ret_opt with
-    | Some (Inr c, _) ->
+    | Some (_, (Inr c, _, _)) ->
       let pat_bs = List.map S.mk_binder pat_bvs in
       let g_branch =
         (if eqs |> is_some
@@ -3168,7 +3308,7 @@ and tc_eqn scrutinee env ret_opt branch
          else g_branch)
         |> Env.close_guard env pat_bs
         |> TcUtil.close_guard_implicits env true pat_bs in
-      U.comp_effect_name c, U.comp_flags c, (fun _ -> TcComm.lcomp_of_comp c), g_when, g_branch
+      U.comp_effect_name c, None, None, g_when, g_branch
     | _ ->
      let c, g_branch = TcUtil.strengthen_precondition None env branch_exp c g_branch in
 
@@ -3278,8 +3418,8 @@ and tc_eqn scrutinee env ret_opt branch
        else TcUtil.close_wp_lcomp env pat_bvs c_weak in
 
     c_weak.eff_name,
-    c_weak.cflags,
-    maybe_return_c_weak,
+    Some c_weak.cflags,
+    Some maybe_return_c_weak,
     Env.close_guard env binders g_when_weak,
     Env.conj_guard guard_pat g_branch in
 
@@ -3509,7 +3649,7 @@ and check_inner_let env e =
        let guard = Env.conj_guard g1 g2 in
 
        if Option.isSome (Env.expected_typ env)
-       then (let tt = Env.expected_typ env |> Option.get in
+       then (let tt = Env.expected_typ env |> Option.get |> fst in
              if Env.debug env <| Options.Other "Exports"
              then BU.print2 "Got expected type from env %s\ncres.res_typ=%s\n"
                         (Print.term_to_string tt)
@@ -3713,6 +3853,9 @@ and build_let_rec_env _top_level env lbs : list<letbinding> * env_t * guard_t =
             // tc_abs adding universes here so that when we add the let binding, we
             // can add a typescheme with these universes
             | Some (arity, lbdef) ->
+              if Env.debug env <| Options.Extreme
+              then BU.print2 "termination_check_enabled returned arity: %s and lbdef: %s\n"
+                     (string_of_int arity) (Print.term_to_string lbdef);
               let lb = {lb with lbtyp=lbtyp; lbunivs=univ_vars; lbdef=lbdef} in
               let env = {env with letrecs=(lb.lbname, arity, lbtyp, univ_vars)::env.letrecs} in
               lb, env
@@ -3902,12 +4045,15 @@ and tc_smt_pats en pats =
       let args, g' = tc_args en p in
       (args::pats, Env.conj_guard g g')) pats ([], Env.trivial_guard)
 
-and tc_tot_or_gtot_term' (env:env) (e:term) (msg:string)
+and tc_tot_or_gtot_term_maybe_solve_deferred (env:env) (e:term) (msg:string) (solve_deferred:bool)
 : term * lcomp * guard_t
 = let e, c, g = tc_maybe_toplevel_term env e in
   if TcComm.is_tot_or_gtot_lcomp c
   then e, c, g
-  else let g = Rel.solve_deferred_constraints env g in
+  else let g =
+         if solve_deferred
+         then Rel.solve_deferred_constraints env g
+         else g in
        let c, g_c = TcComm.lcomp_comp c in
        let c = norm_c env c in
        let target_comp, allow_ghost =
@@ -3920,6 +4066,10 @@ and tc_tot_or_gtot_term' (env:env) (e:term) (msg:string)
           if allow_ghost
           then raise_error (Err.expected_ghost_expression e c msg) e.pos
           else raise_error (Err.expected_pure_expression e c msg) e.pos
+
+and tc_tot_or_gtot_term' (env:env) (e:term) (msg:string)
+: term * lcomp * guard_t
+= tc_tot_or_gtot_term_maybe_solve_deferred env e msg true
 
 and tc_tot_or_gtot_term env e = tc_tot_or_gtot_term' env e ""
 
@@ -4046,7 +4196,9 @@ let rec universe_of_aux env e =
    match (SS.compress e).n with
    | Tm_bvar _
    | Tm_unknown
-   | Tm_delayed _ -> failwith "Impossible"
+   | Tm_delayed _ ->
+     failwith ("TcTerm.universe_of:Impossible (bvar/unknown/lazy) " ^
+               (Print.term_to_string e))
    //normalize let bindings away and then compute the universe
    | Tm_let _ ->
      let e = N.normalize [] env e in
@@ -4062,8 +4214,8 @@ let rec universe_of_aux env e =
      let (_, t), _ = Env.lookup_lid env fv.fv_name.v in
      t
    | Tm_lazy i -> universe_of_aux env (U.unfold_lazy i)
-   | Tm_ascribed(_, (Inl t, _), _) -> t
-   | Tm_ascribed(_, (Inr c, _), _) -> U.comp_result c
+   | Tm_ascribed(_, (Inl t, _, _), _) -> t
+   | Tm_ascribed(_, (Inr c, _, _), _) -> U.comp_result c
    //also easy, since we can quickly recompute the type
    | Tm_type u -> S.mk (Tm_type (U_succ u)) e.pos
    | Tm_quoted _ -> U.ktype0
@@ -4266,12 +4418,12 @@ let rec typeof_tot_or_gtot_term_fastpath (env:env) (t:term) (must_tot:bool) : op
         then Some t
         else None))
 
-  | Tm_ascribed(t, (Inl k, _), _) ->
+  | Tm_ascribed(t, (Inl k, _, _), _) ->
     if effect_ok k
     then Some k
     else typeof_tot_or_gtot_term_fastpath env t must_tot
 
-  | Tm_ascribed(_, (Inr c, _), _) ->
+  | Tm_ascribed(_, (Inr c, _, _), _) ->
     let k = U.comp_result c in
     if (not must_tot) ||
        (c |> U.comp_effect_name |> Env.norm_eff_name env |> lid_equals Const.effect_PURE_lid) ||
@@ -4345,8 +4497,8 @@ let rec effectof_tot_or_gtot_term_fastpath (env:env) (t:term) : option<lident> =
               else U.comp_effect_name c in
             join_effects eff_hd_and_args eff_app
           | _ -> None)))
-  | Tm_ascribed (t, (Inl _, _), _) -> effectof_tot_or_gtot_term_fastpath env t
-  | Tm_ascribed (_, (Inr c, _), _) ->
+  | Tm_ascribed (t, (Inl _, _, _), _) -> effectof_tot_or_gtot_term_fastpath env t
+  | Tm_ascribed (_, (Inr c, _, _), _) ->
     let c_eff = c |> U.comp_effect_name |> Env.norm_eff_name env in
     if lid_equals c_eff Const.effect_PURE_lid ||
        lid_equals c_eff Const.effect_GHOST_lid

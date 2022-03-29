@@ -117,10 +117,6 @@ let destruct_eq' (typ : typ) : option<(term * term)> =
       ||   Ident.lid_equals l PC.c_eq2_lid
       ->
         Some (e1, e2)
-    | Some (U.BaseConn(l, [_; _; (e1, _); (e2, _)]))
-      when Ident.lid_equals l PC.eq3_lid
-      ->
-        Some (e1, e2)
     | _ ->
       match U.unb2t typ with
       | None -> None
@@ -1226,16 +1222,20 @@ let uvar_env (env : env) (ty : option<typ>) : tac<term> =
     bind
         (match ty with
         | Some ty ->
-          ret ty
+          let env = Env.set_expected_typ env (U.type_u () |> fst) in
+          bind (__tc_ghost env ty)
+               (fun (ty, _, g) -> ret (ty, g, ty.pos))
 
         | None ->
           bind (new_uvar "uvar_env.2" env (fst <| U.type_u ()) ps.entry_range)
-              (fun (typ, uvar_typ) -> //NS, FIXME discarding uvar_typ
-                   ret typ)
+               (fun (typ, uvar_typ) -> //NS, FIXME discarding uvar_typ
+                ret (typ, Env.trivial_guard, Range.dummyRange))
         )
-        (fun typ ->
-            bind (new_uvar "uvar_env" env typ ps.entry_range) (fun (t, uvar_t) ->
-            ret t)))
+        (fun (typ, g, r) ->
+            bind (proc_guard "uvar_env_typ" env g r)
+                 (fun () ->
+                  bind (new_uvar "uvar_env" env typ ps.entry_range)
+                       (fun (t, uvar_t) -> ret t))))
 
 let unshelve (t : term) : tac<unit> = wrap_err "unshelve" <|
     bind get (fun ps ->
@@ -1658,11 +1658,11 @@ let pack (tv:term_view) : tac<term> =
         let brs = List.map SS.close_branch brs in
         ret <| S.mk (Tm_match (t, ret_opt, brs, None)) Range.dummyRange
 
-    | Tv_AscribedT(e, t, tacopt) ->
-        ret <| S.mk (Tm_ascribed(e, (Inl t, tacopt), None)) Range.dummyRange
+    | Tv_AscribedT(e, t, tacopt, use_eq) ->
+        ret <| S.mk (Tm_ascribed(e, (Inl t, tacopt, use_eq), None)) Range.dummyRange
 
-    | Tv_AscribedC(e, c, tacopt) ->
-        ret <| S.mk (Tm_ascribed(e, (Inr c, tacopt), None)) Range.dummyRange
+    | Tv_AscribedC(e, c, tacopt, use_eq) ->
+        ret <| S.mk (Tm_ascribed(e, (Inr c, tacopt, use_eq), None)) Range.dummyRange
 
     | Tv_Unknown ->
         ret <| S.mk Tm_unknown Range.dummyRange

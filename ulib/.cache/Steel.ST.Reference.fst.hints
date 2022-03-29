@@ -1,5 +1,5 @@
 [
-  "˚Ú~\u001a¬ﬁì¿‡16›ñZ€Ù",
+  "ıA·Æﬂƒ)≈ıÊf\u007fß‚ê8",
   [
     [
       "Steel.ST.Reference.is_null",
@@ -8,7 +8,7 @@
       1,
       [ "@query", "equation_Steel.ST.Reference.null" ],
       0,
-      "299d461950896ed2694e7bc23f72cc84"
+      "8568a5a0c5eca396f4e04807b147f540"
     ],
     [
       "Steel.ST.Reference.pts_to_injective_eq",
@@ -17,7 +17,7 @@
       1,
       [ "@query", "lemma_FStar.Ghost.reveal_hide" ],
       0,
-      "831b94101437bc6846ee2f3653607ab2"
+      "05960b7995af4a38f6080eafa86cac0f"
     ],
     [
       "Steel.ST.Reference.pts_to_not_null",
@@ -46,7 +46,7 @@
         "typing_Steel.Reference.pts_to"
       ],
       0,
-      "f53f476ca74c98b5a967244afe579e5f"
+      "93feaaa70f064e18b5e391b27c347304"
     ],
     [
       "Steel.ST.Reference.alloc",
@@ -55,7 +55,7 @@
       1,
       [ "@query", "equation_Steel.ST.Reference.is_null" ],
       0,
-      "a66125b77951899292df55016cd2984a"
+      "02d62f39dcfe556be77fd1814a97245e"
     ],
     [
       "Steel.ST.Reference.read",
@@ -64,7 +64,7 @@
       1,
       [ "@query" ],
       0,
-      "6d458fc78d2d77ebfa4ac282f3fd0a0b"
+      "3d29587434b42f1d35d3115c18822950"
     ],
     [
       "Steel.ST.Reference.gather",
@@ -76,7 +76,16 @@
         "refinement_interpretation_Tm_refine_0dee8cb03258a67c2f7ec66427696212"
       ],
       0,
-      "2c2677238a3c4aec1b39518758b98ee0"
+      "ae84b3396ad33a0ef3aa35c04d52faa7"
+    ],
+    [
+      "Steel.ST.Reference.atomic_read_u32",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "1cb4eb451f816836f4440d933cc602b8"
     ]
   ]
 ]

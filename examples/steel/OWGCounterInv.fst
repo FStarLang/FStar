@@ -34,6 +34,7 @@ open Steel.SpinLock
 
 open Steel.Effect.Atomic
 open Steel.Effect
+open Steel.Utils
 
 module R = Steel.Reference
 module P = Steel.FractionalPermission
@@ -53,7 +54,10 @@ let ghost_gather (#uses:inames) (v1 #v2:G.erased int) (r:ghost_ref int)
       (fun _ -> True)
       (fun _ _ _ -> v1 == v2)
   = ghost_gather_pt #_ #_ #_ #_ #v1 #v2 r;
-    ()
+    rewrite_slprop
+      (ghost_pts_to _ (sum_perm (half_perm full_perm) (half_perm full_perm)) _)
+      (ghost_pts_to _ full_perm _)
+      (fun _ -> ())
 
 let ghost_share (#uses:inames) (v1 #v2:G.erased int) (r:ghost_ref int)
   : SteelGhost unit uses
@@ -108,7 +112,6 @@ let inv_pred (r:ref int) (r1 r2:ghost_ref int) =
 (*
  * The h_exists slprop that the invariant protects
  *)
-[@@ __reduce__]
 let inv_slprop (r:ref int) (r1 r2:ghost_ref int) : vprop =
   h_exists (inv_pred r r1 r2)
 
@@ -247,6 +250,7 @@ let incr_with_invariant
 (*
  * The main thread
  *)
+
 let incr_main (#v:G.erased int) (r:ref int)
   : SteelT unit
       (pts_to r full_perm v)
@@ -266,6 +270,7 @@ let incr_main (#v:G.erased int) (r:ref int)
 
     //split the invariant permission
     share i;
+
 
     //invoke the two threads
     let _ =

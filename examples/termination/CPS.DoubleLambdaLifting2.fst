@@ -13,7 +13,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-(** With greadier λ-lifting that removes mutual recursion **)
+(** With greedier λ-lifting that removes mutual recursion **)
 module CPS.DoubleLambdaLifting2
 open CPS.Expr
 

@@ -1,0 +1,336 @@
+[
+  "*8•K¶«ÍQŸı‚ìß\u0018\u0004\u0018",
+  [
+    [
+      "ProvableEquality.vec",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
+        "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
+      ],
+      0,
+      "7b25647baabb119eaf8bda12512fc050"
+    ],
+    [
+      "ProvableEquality.vec",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
+        "equation_Prims.nat", "function_token_typing_Prims.int",
+        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2", "int_inversion",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
+      ],
+      0,
+      "52d833b09eed9ff813033b939e808fcf"
+    ],
+    [
+      "ProvableEquality.__proj__Cons__item__n",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_a2365be9b7f040248516d13a6266b140"
+      ],
+      0,
+      "5aeb954e42d4572e3634e0f1bcb36d7e"
+    ],
+    [
+      "ProvableEquality.__proj__Cons__item__hd",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_a2365be9b7f040248516d13a6266b140"
+      ],
+      0,
+      "7e78e2c7a5796ed1d8ccc158372a1a77"
+    ],
+    [
+      "ProvableEquality.__proj__Cons__item__tl",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "data_elim_ProvableEquality.Cons",
+        "refinement_interpretation_Tm_refine_a2365be9b7f040248516d13a6266b140"
+      ],
+      0,
+      "e2f7ceea255fce8e8b79efce2778f419"
+    ],
+    [
+      "ProvableEquality.factorial",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_bb4e1c9af0265270f8e7a5f250f730e2_0", "equation_Prims.nat",
+        "int_inversion", "int_typing", "primitive_Prims.op_Equality",
+        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "well-founded-ordering-on-nat"
+      ],
+      0,
+      "bb0d815ba0e032aaa7587637301a015a"
+    ],
+    [
+      "ProvableEquality.equals",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "6a987b96e2f6eb2f8e570013d274f3a9"
+    ],
+    [
+      "ProvableEquality.symmetry",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "fuel_guarded_inversion_ProvableEquality.equals"
+      ],
+      0,
+      "9c50a65ed69e2350234b048b03896003"
+    ],
+    [
+      "ProvableEquality.transitivity",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "fuel_guarded_inversion_ProvableEquality.equals"
+      ],
+      0,
+      "6879fd3256ce12046f3a9114661fb11a"
+    ],
+    [
+      "ProvableEquality.uip_refl",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "fuel_guarded_inversion_ProvableEquality.equals"
+      ],
+      0,
+      "2bf0140db17585ce54efeacc7df69010"
+    ],
+    [
+      "ProvableEquality.uip_refl_explicit",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "fuel_guarded_inversion_ProvableEquality.equals"
+      ],
+      0,
+      "4ff2e1d7241998597b5816f219ba71bc"
+    ],
+    [
+      "ProvableEquality.uip",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "fuel_guarded_inversion_ProvableEquality.equals"
+      ],
+      0,
+      "8c7d9678d78c36dca24ab25f225d65ce"
+    ],
+    [
+      "ProvableEquality.pconv_vec_z",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_0cc3b8bc4390a8152398abb544530a43"
+      ],
+      0,
+      "0f1a68d208664bf16f1fa5ad7efbd39d"
+    ],
+    [
+      "ProvableEquality.pconv_vec_nm",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_0dee8cb03258a67c2f7ec66427696212"
+      ],
+      0,
+      "9cc84bd82e100de24d16ef4e4ed46f1d"
+    ],
+    [
+      "ProvableEquality.pconv_int",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_1f5ab8b59c8e7f172e4f39cbe2899a5d"
+      ],
+      0,
+      "049175d76c0cc1abc22231f46401cc7b"
+    ],
+    [
+      "ProvableEquality.pconv_ab",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_0dee8cb03258a67c2f7ec66427696212"
+      ],
+      0,
+      "d77061aa5ad21e68e2f8d926cc86fd9b"
+    ],
+    [
+      "ProvableEquality.pconv_der",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "int_inversion",
+        "primitive_Prims.op_GreaterThan",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_0da555bbe11d10924e139a6451fdb45d"
+      ],
+      0,
+      "93da62c96065cedd80f08cc381918ddf"
+    ],
+    [
+      "ProvableEquality.equals_lbz_eq",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "fuel_guarded_inversion_ProvableEquality.equals"
+      ],
+      0,
+      "63f32fc3dc01d9924a112a8791174217"
+    ],
+    [
+      "ProvableEquality.full_funext_false",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "equation_ProvableEquality.f", "equation_ProvableEquality.g",
+        "equation_ProvableEquality.pos",
+        "function_token_typing_Prims.__cache_version_number__",
+        "function_token_typing_ProvableEquality.f",
+        "function_token_typing_ProvableEquality.g",
+        "primitive_Prims.op_Equality", "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_afd51579b90d50ea23e03b743a1fa001"
+      ],
+      0,
+      "7b49fbca9861d60ea7d80de4e6fd58fe"
+    ],
+    [
+      "ProvableEquality.eta_equiv_false",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "equation_ProvableEquality.f", "equation_ProvableEquality.g",
+        "equation_ProvableEquality.pos",
+        "function_token_typing_Prims.__cache_version_number__",
+        "function_token_typing_ProvableEquality.f",
+        "function_token_typing_ProvableEquality.g",
+        "primitive_Prims.op_Equality", "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_afd51579b90d50ea23e03b743a1fa001",
+        "refinement_interpretation_Tm_refine_e4c025b9e2bb23444824553ab6c4e094"
+      ],
+      0,
+      "96124249bd4c2e44e36605afaf778b8f"
+    ],
+    [
+      "ProvableEquality.dec_equals",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "b2t_def", "equation_Prims.squash",
+        "primitive_Prims.op_Equality", "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "fbc75aea6e9cefe495dac1da0804bfaa"
+    ],
+    [
+      "ProvableEquality.equals_dec",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "fuel_guarded_inversion_ProvableEquality.equals"
+      ],
+      0,
+      "b4ec7227d89fba18ac931461a2aec116"
+    ],
+    [
+      "ProvableEquality.__proj__Node__item__hd",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_78a78ab6b86c5d95d4a09252057f5f84"
+      ],
+      0,
+      "c5be6a23a58ad2a8a988252dc8905185"
+    ],
+    [
+      "ProvableEquality.__proj__Node__item__tl",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_78a78ab6b86c5d95d4a09252057f5f84"
+      ],
+      0,
+      "58c70ead59b73ce62750cdcd6ee40671"
+    ],
+    [
+      "ProvableEquality.uu___183",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_interpretation_Tm_arrow_ef9cb512a25ee351fa5536d617490497",
+        "assumption_Prims.list__uu___haseq",
+        "assumption_ProvableEquality.t__uu___haseq", "equation_Prims.eqtype",
+        "function_token_typing_Prims.bool", "kinding_Prims.list@tok",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "token_correspondence_Prims.list@tok"
+      ],
+      0,
+      "7d409a603df3b9223c03d393b9d0721a"
+    ]
+  ]
+]

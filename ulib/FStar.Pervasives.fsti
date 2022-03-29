@@ -402,7 +402,7 @@ let st_post_h' (heap a pre: Type) = a -> _: heap{pre} -> GTot Type0
 (** Postconditions without refinements *)
 let st_post_h (heap a: Type) = st_post_h' heap a True
 
-(** The type of the main WP-transformer for stateful comptuations *)
+(** The type of the main WP-transformer for stateful computations *)
 let st_wp_h (heap a: Type) = st_post_h heap a -> Tot (st_pre_h heap)
 
 (** Returning a value does not transform the state *)
@@ -527,7 +527,7 @@ let ex_stronger (a: Type) (wp1 wp2: ex_wp a) = (forall (p: ex_post a). wp1 p ==>
 unfold
 let ex_close_wp (a b: Type) (wp: (b -> GTot (ex_wp a))) (p: ex_post a) = (forall (b: b). wp b p)
 
-(** Applying a computation with a trivial poscondition *)
+(** Applying a computation with a trivial postcondition *)
 unfold
 let ex_trivial (a: Type) (wp: ex_wp a) = wp (fun r -> True)
 
@@ -676,7 +676,7 @@ new_effect {
 val inversion (a: Type) : Type0
 
 (** To introduce [inversion t] in the SMT solver's context, call
-    [allow_inverson t]. *)
+    [allow_inversion t]. *)
 val allow_inversion (a: Type) : Pure unit (requires True) (ensures (fun x -> inversion a))
 
 (** Since the [option] type is so common, we always allow inverting
@@ -848,21 +848,6 @@ val expect_lax_failure (errs: list int) : Tot unit
 (** Print the time it took to typecheck a top-level definition *)
 val tcdecltime : unit
 
-(** **THIS ATTRIBUTE IS AN ESCAPE HATCH AND CAN BREAK SOUNDNESS**
-
-    **USE WITH CARE**
-
-    The positivity check for inductive types stops at abstraction
-    boundaries. This results in spurious errors about positivity,
-    e.g., when defining types like `type t = ref (option t)` By adding
-    this attribute to a declaration of a top-level name positivity
-    checks on applications of that name are admitted.  See, for
-    instance, FStar.Monotonic.Heap.mref We plan to decorate binders of
-    abstract types with polarities to allow us to check positivity
-    across abstraction boundaries and will eventually remove this
-    attribute.  *)
-val assume_strictly_positive : unit
-
 (** This attribute is to be used as a hint for the unifier.  A
     function-typed symbol `t` marked with this attribute will be treated
     as being injective in all its arguments by the unifier.  That is,
@@ -903,6 +888,12 @@ val strict_on_arguments (x: list int) : Tot unit
  * unsolved implicit arguments remaining at the end of type inference.
  **)
 val resolve_implicits : unit
+
+(** A tactic registered to solve implicits with the (handle_smt_goals)
+    attribute will receive the SMT goal generated during typechecking
+    just before it is passed to the SMT solver.
+   *)
+val handle_smt_goals : unit
 
 (** This attribute can be added to an inductive type definition,
     indicating that it should be erased on extraction to `unit`.
@@ -996,7 +987,7 @@ val noextract_to (backend:string) : Tot unit
 val normalize_for_extraction (steps:list norm_step) : Tot unit
 
 
-(** A layered effect definition may optionally be annoated with
+(** A layered effect definition may optionally be annotated with
     (ite_soundness_by t) attribute, where t is another attribute
     When so, the implicits and the smt guard generated when
     checking the soundness of the if-then-else combinator, are
@@ -1017,6 +1008,17 @@ val ite_soundness_by : unit
   *)
 val strictly_positive : unit
 
+(** This attribute may be added to an inductive type
+    to disable auto generated projectors
+
+    Normally there should not be any need to use this unless:
+    for some reason F* cannot typecheck the auto-generated projectors.
+    
+    Another reason to use this attribute may be to avoid generating and
+    typechecking lot of projectors, most of which are not going to be used
+    in the rest of the program
+  *)
+val no_auto_projectors : unit
 
 (** Pure and ghost inner let bindings are now always inlined during
     the wp computation, if: the return type is not unit and the head

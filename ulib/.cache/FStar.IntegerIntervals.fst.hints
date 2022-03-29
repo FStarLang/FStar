@@ -1,0 +1,99 @@
+[
+  "\u0018.5\u0002ÄkÃ \u0004˝çÓ∑\fÌG",
+  [
+    [
+      "FStar.IntegerIntervals.coerce_to_not_less_than",
+      1,
+      2,
+      1,
+      [
+        "@query", "primitive_Prims.op_Addition",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0"
+      ],
+      0,
+      "9ab35d2de43f3c87109cfdc54f2e02b6"
+    ],
+    [
+      "FStar.IntegerIntervals.closed_interval_lemma",
+      1,
+      2,
+      1,
+      [ "@query", "equation_FStar.IntegerIntervals.ifrom_ito" ],
+      0,
+      "50b05942f1a7fe21bcc12ff6736ed528"
+    ],
+    [
+      "FStar.IntegerIntervals.interval_size",
+      1,
+      2,
+      1,
+      [
+        "@query", "primitive_Prims.op_GreaterThanOrEqual",
+        "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0"
+      ],
+      0,
+      "1128fc4a340064e419142a43c678bc71"
+    ],
+    [
+      "FStar.IntegerIntervals.uu___42",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.IntegerIntervals.interval_size",
+        "primitive_Prims.op_GreaterThanOrEqual",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0"
+      ],
+      0,
+      "27f36161c1e314ececb0d60764002af9"
+    ],
+    [
+      "FStar.IntegerIntervals.uu___43",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.IntegerIntervals.interval_size",
+        "primitive_Prims.op_GreaterThanOrEqual",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0"
+      ],
+      0,
+      "48f659a19ec646cfab782b0a49e92116"
+    ],
+    [
+      "FStar.IntegerIntervals.uu___44",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.IntegerIntervals.interval_size",
+        "primitive_Prims.op_GreaterThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0"
+      ],
+      0,
+      "788cdf06d3c2707430b303a54fc498f0"
+    ],
+    [
+      "FStar.IntegerIntervals.counter_bounds_lemma",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.IntegerIntervals.counter_for",
+        "equation_FStar.IntegerIntervals.ifrom_ito",
+        "equation_FStar.IntegerIntervals.interval_size",
+        "equation_FStar.IntegerIntervals.under", "equation_Prims.nat",
+        "int_inversion", "primitive_Prims.op_Addition",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_c1424615841f28cac7fc34e92b7ff33c"
+      ],
+      0,
+      "96b1bca7c8044564589ec21a98401213"
+    ]
+  ]
+]

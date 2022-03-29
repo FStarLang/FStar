@@ -55,6 +55,7 @@ type fsteps = {
      weakly_reduce_scrutinee:bool;
      nbe_step:bool;
      for_extraction:bool;
+     unrefine:bool;
 }
 
 val default_steps : fsteps

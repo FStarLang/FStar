@@ -79,7 +79,7 @@ let (:=) (#a:Type) (#p:preorder a) (r:mref a p) v : ST unit
 
 /// Now, for the rest of the program, I suggest just revising the
 /// specs so that every function is well-typed for both cases of
-/// abstractST(). Note, the program itself never contains occurences
+/// abstractST(). Note, the program itself never contains occurrences
 /// of reify_wrapper within it, so it should make no strong
 /// assumptions about abstractST(). We will finally use reify_wrapper
 /// only on the "outside" when doing the proof of security, and in

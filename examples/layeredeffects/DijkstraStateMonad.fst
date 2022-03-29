@@ -142,7 +142,7 @@ let bind_wp #a #b #s (wp_f:wp_t s a) (wp_g: (a -> wp_t s b))
 /// First, we define a domain-restricted version of function composition
 let ( *. ) #a #b #c (f:b -> c) (g:a -> b) : (a ^-> c) = F.on _ (fun x -> f (g x))
 
-/// An prove a auxiliary lemma about it (that's needed for funcitonal
+/// An prove a auxiliary lemma about it (that's needed for functional
 /// extensionality)
 let lem_on_comp #a #b #c (f:b -> c) (g:a -> b)
   : Lemma (F.on _ (f *. g) == f *. g)

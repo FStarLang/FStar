@@ -104,17 +104,16 @@ let magic_lid  = pconst "magic"
 let has_type_lid = pconst "has_type"
 
 (* Constructive variants *)
-let c_true_lid   = pconst "c_True"
-let c_false_lid  = pconst "c_False"
-let c_and_lid    = pconst "c_and"
-let c_or_lid     = pconst "c_or"
-let dtuple2_lid  = pconst "dtuple2" // for l_Exists
+let c_true_lid      = pconst "trivial"
+let empty_type_lid  = pconst "empty"
+let c_and_lid       = pconst "pair"
+let c_or_lid        = pconst "sum"
+let dtuple2_lid     = pconst "dtuple2" // for l_Exists
 
 (* Various equality predicates *)
 let eq2_lid    = pconst  "eq2"
-let eq3_lid    = pconst  "eq3"
+let eq3_lid    = pconst  "op_Equals_Equals_Equals"
 let c_eq2_lid  = pconst "equals"
-let c_eq3_lid  = pconst "h_equals"
 
 (* Some common term constructors *)
 let cons_lid              = pconst  "Cons"
@@ -342,13 +341,14 @@ let dm4f_bind_range_attr = p2l ["FStar"; "Pervasives"; "dm4f_bind_range"]
 let must_erase_for_extraction_attr = psconst "must_erase_for_extraction"
 let strict_on_arguments_attr = p2l ["FStar"; "Pervasives"; "strict_on_arguments"]
 let resolve_implicits_attr_string = "FStar.Pervasives.resolve_implicits"
+let handle_smt_goals_attr = psconst "handle_smt_goals"
+let handle_smt_goals_attr_string = "FStar.Pervasives.handle_smt_goals"
 let erasable_attr = p2l ["FStar"; "Pervasives"; "erasable"]
 let comment_attr = p2l ["FStar"; "Pervasives"; "Comment"]
 let fail_attr      = psconst "expect_failure"
 let fail_lax_attr  = psconst "expect_lax_failure"
 let tcdecltime_attr = psconst "tcdecltime"
 let noextract_to_attr = psconst "noextract_to"
-let assume_strictly_positive_attr_lid = psconst "assume_strictly_positive"
 let unifier_hint_injective_lid = psconst "unifier_hint_injective"
 let normalize_for_extraction_lid = psconst "normalize_for_extraction"
 let postprocess_with = p2l ["FStar"; "Tactics"; "Effect"; "postprocess_with"]
@@ -360,6 +360,7 @@ let allow_informative_binders_attr = psconst "allow_informative_binders"
 let remove_unused_type_parameters_lid = psconst "remove_unused_type_parameters"
 let ite_soundness_by_attr = psconst "ite_soundness_by"
 let binder_strictly_positive_attr = psconst "strictly_positive"
+let no_auto_projectors_attr = psconst "no_auto_projectors"
 
 
 //the type of well-founded relations, used for decreases clauses with relations
@@ -401,6 +402,7 @@ let mk_tuple_lid n r =
   set_lid_range (psnconst t) r
 
 let lid_tuple2   = mk_tuple_lid 2 dummyRange
+let lid_tuple3   = mk_tuple_lid 3 dummyRange
 
 let is_tuple_constructor_string (s:string) :bool =
   U.starts_with s "FStar.Pervasives.Native.tuple"
@@ -413,6 +415,7 @@ let mk_tuple_data_lid n r =
   set_lid_range (psnconst t) r
 
 let lid_Mktuple2 = mk_tuple_data_lid 2 dummyRange
+let lid_Mktuple3 = mk_tuple_data_lid 3 dummyRange
 
 let is_tuple_datacon_string (s:string) :bool =
   U.starts_with s "FStar.Pervasives.Native.Mktuple"
@@ -503,3 +506,6 @@ let exists_elim_lid = classical_sugar_lid "exists_elim"
 let implies_elim_lid = classical_sugar_lid "implies_elim"
 let or_elim_lid = classical_sugar_lid "or_elim"
 let and_elim_lid = classical_sugar_lid "and_elim"
+
+
+let match_returns_def_name = reserved_prefix ^ "_ret_"

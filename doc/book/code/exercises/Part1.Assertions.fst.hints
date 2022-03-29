@@ -1,0 +1,44 @@
+[
+  "<29Ü)u\u0012ƒ7i#2Ç\u0006ãv",
+  [
+    [
+      "Part1.Assertions.sqr_is_nat",
+      1,
+      2,
+      1,
+      [
+        "@query", "primitive_Prims.op_Multiply",
+        "projection_inverse_BoxInt_proj_0"
+      ],
+      0,
+      "e4b12660b02b0ca8b597f3844688cb54"
+    ],
+    [
+      "Part1.Assertions.uu___5",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_Part1.Assertions.max",
+        "primitive_Prims.op_GreaterThan",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0"
+      ],
+      0,
+      "5c8ae4ef1031bd2a11fda83464414959"
+    ],
+    [
+      "Part1.Assertions.uu___6",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Part1.Assertions.max",
+        "int_inversion", "primitive_Prims.op_GreaterThan",
+        "projection_inverse_BoxBool_proj_0"
+      ],
+      0,
+      "8279e3ba921bec399f7b4536c45d2ea8"
+    ]
+  ]
+]

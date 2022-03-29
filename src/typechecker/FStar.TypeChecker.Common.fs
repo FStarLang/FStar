@@ -658,14 +658,6 @@ let simplify (debug:bool) (tm:term) : term =
               | U.NotEqual -> w U.t_false
               | _ -> tm)
            | _ -> tm
-      else if S.fv_eq_lid fv PC.eq3_lid
-      then match args with
-           | [(t1, _); (t2, _); (a1, _); (a2, _)] ->    //eq3
-            (match U.eq_inj (U.eq_tm t1 t2) (U.eq_tm a1 a2) with
-            | U.Equal -> w U.t_true
-            | U.NotEqual -> w U.t_false
-            | _ -> tm)
-           | _ -> tm
       else
       begin
         match U.is_auto_squash tm with

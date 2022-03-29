@@ -245,7 +245,7 @@ abstract type partialEquality2 (ha:heap) (a:bigint_wide{live ha a})
   (forall (i:nat). {:pattern (v (get ha a i))}
     (i < len2 /\ i >= len) ==> v (get ha a i) = v (get hb b i))
 
-(* Lemma : extends the "eval" property to the total length if apporpriate *)
+(* Lemma : extends the "eval" property to the total length if appropriate *)
 val auxiliary_lemma_5: h0:heap -> h1:heap -> a:bigint_wide{live h0 a } -> b:bigint_wide{live h1 b} ->
   c:int -> len:nat -> len2:nat{ len2 >= len /\ len2 <= length b /\ len2 <= length a } -> Lemma 
     (requires ( (eval_wide h1 b len = eval_wide h0 a len + c)

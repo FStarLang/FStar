@@ -15,14 +15,15 @@
 *)
 #light "off"
 module FStar.Syntax.Syntax
+(* Prims is used for bootstrapping *)
+open Prims
 open FStar.Pervasives
 open FStar.Compiler.Effect
 open FStar.Compiler.Effect
 (* Type definitions for the core AST *)
 
-(* Prims is used for bootstrapping *)
-open Prims
-open FStar open FStar.Compiler
+open FStar
+open FStar.Compiler
 open FStar.Compiler.Util
 open FStar.Compiler.Range
 open FStar.Ident
@@ -115,8 +116,8 @@ type term' =
   | Tm_arrow      of binders * comp                              (* (xi:ti) -> M t' wp *)
   | Tm_refine     of bv * term                                   (* x:t{phi} *)
   | Tm_app        of term * args                                 (* h tau_1 ... tau_n, args in order from left to right *)
-  | Tm_match      of term * option<ascription> * list<branch> * option<residual_comp>
-                                                                 (* (match e (returns asc?) with b1 ... bn) : (C | N)) *)
+  | Tm_match      of term * option<match_returns_ascription> * list<branch> * option<residual_comp>
+                                                                 (* (match e (as x returns asc)? with b1 ... bn) : (C | N)) *)
   | Tm_ascribed   of term * ascription * option<lident>          (* an effect label is the third arg, filled in by the type-checker *)
   | Tm_let        of letbindings * term                          (* let (rec?) x1 = e1 AND ... AND xn = en in e *)
   | Tm_uvar       of ctx_uvar_and_subst                          (* A unification variable ?u (aka meta-variable)
@@ -142,8 +143,10 @@ and ctx_uvar_meta_t =
 and ctx_uvar_and_subst = ctx_uvar * subst_ts
 and uvar = Unionfind.p_uvar<option<term>> * version * Range.range
 and uvars = set<ctx_uvar>
+and match_returns_ascription = binder * ascription               (* as x returns C|t *)
 and branch = pat * option<term> * term                           (* optional when clause in each branch *)
-and ascription = either<term, comp> * option<term>               (* e <: t [by tac] or e <: C [by tac] *)
+and ascription = either<term, comp> * option<term> * bool        (* e <: t [by tac] or e <: C [by tac] *)
+                                                                 (* the bool says whether the ascription is an equality ascription, i.e. $: *)
 and pat' =
   | Pat_constant of sconst
   | Pat_cons     of fv * list<(pat * bool)>                      (* flag marks an explicitly provided implicit *)
@@ -211,7 +214,7 @@ and metadata =
   | Meta_monadic_lift  of monad_name * monad_name * typ          (* Sub-effecting: lift the subterm of type typ *)
                                                                  (* from the first monad_name m1 to the second monad name  m2 *)
 and meta_source_info =
-  | Sequence
+  | Sequence                                    (* used when resugaring *)
   | Primop                                      (* ... add more cases here as needed for better code generation *)
   | Masked_effect
   | Meta_smt_pat
@@ -674,6 +677,7 @@ val t_tactic_unit   : term
 val t_list_of       : term -> term
 val t_option_of     : term -> term
 val t_tuple2_of     : term -> term -> term
+val t_tuple3_of     : term -> term -> term -> term
 val t_either_of     : term -> term -> term
 
 val unit_const_with_range : Range.range -> term

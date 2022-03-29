@@ -79,7 +79,11 @@ let rec inst (s:term -> fv -> term) t =
                 | Some w -> Some (inst s w) in
             let t = inst s t in
             (p, wopt, t)) in
-        let asc_opt = U.map_opt asc_opt (inst_ascription s) in
+        let asc_opt =
+          match asc_opt with
+          | None -> None
+          | Some (b, asc) ->
+            Some (inst_binder s b, inst_ascription s asc) in
         mk (Tm_match(inst s t, asc_opt, pats, inst_lcomp_opt s lopt))
 
       | Tm_ascribed(t1, asc, f) ->
@@ -98,10 +102,12 @@ let rec inst (s:term -> fv -> term) t =
       | Tm_meta(t, tag) ->
         mk (Tm_meta(inst s t, tag))
 
-and inst_binders s bs = bs |> List.map (fun b ->
+and inst_binder s b =
   { b with
     binder_bv = { b.binder_bv with sort = inst s b.binder_bv.sort };
-    binder_attrs = b.binder_attrs |> List.map (inst s) })
+    binder_attrs = b.binder_attrs |> List.map (inst s) }
+
+and inst_binders s bs = bs |> List.map (inst_binder s)
 
 and inst_args s args = args |> List.map (fun (a, imp) -> inst s a, imp)
 
@@ -125,13 +131,13 @@ and inst_lcomp_opt s l = match l with
     | Some rc -> Some ({rc with residual_typ = FStar.Compiler.Util.map_opt rc.residual_typ (inst s)})
 
 and inst_ascription s (asc:ascription) =
-  let annot, topt = asc in
+  let annot, topt, use_eq = asc in
   let annot =
     match annot with
     | Inl t -> Inl (inst s t)
     | Inr c -> Inr (inst_comp s c) in
   let topt = FStar.Compiler.Util.map_opt topt (inst s) in
-  annot, topt
+  annot, topt, use_eq
 
 let instantiate i t = match i with
     | [] -> t

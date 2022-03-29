@@ -191,14 +191,14 @@ type term' =
   | Tm_refine of (bv * term' syntax) 
   | Tm_app of (term' syntax * (term' syntax * arg_qualifier
   FStar_Pervasives_Native.option) Prims.list) 
-  | Tm_match of (term' syntax * ((term' syntax, comp' syntax)
-  FStar_Pervasives.either * term' syntax FStar_Pervasives_Native.option)
-  FStar_Pervasives_Native.option * (pat' withinfo_t * term' syntax
-  FStar_Pervasives_Native.option * term' syntax) Prims.list * residual_comp
-  FStar_Pervasives_Native.option) 
+  | Tm_match of (term' syntax * (binder * ((term' syntax, comp' syntax)
+  FStar_Pervasives.either * term' syntax FStar_Pervasives_Native.option *
+  Prims.bool)) FStar_Pervasives_Native.option * (pat' withinfo_t * term'
+  syntax FStar_Pervasives_Native.option * term' syntax) Prims.list *
+  residual_comp FStar_Pervasives_Native.option) 
   | Tm_ascribed of (term' syntax * ((term' syntax, comp' syntax)
-  FStar_Pervasives.either * term' syntax FStar_Pervasives_Native.option) *
-  FStar_Ident.lident FStar_Pervasives_Native.option) 
+  FStar_Pervasives.either * term' syntax FStar_Pervasives_Native.option *
+  Prims.bool) * FStar_Ident.lident FStar_Pervasives_Native.option) 
   | Tm_let of ((Prims.bool * letbinding Prims.list) * term' syntax) 
   | Tm_uvar of (ctx_uvar * (subst_elt Prims.list Prims.list *
   maybe_set_use_range)) 
@@ -420,10 +420,10 @@ let (uu___is_Tm_match : term' -> Prims.bool) =
     match projectee with | Tm_match _0 -> true | uu___ -> false
 let (__proj__Tm_match__item___0 :
   term' ->
-    (term' syntax * ((term' syntax, comp' syntax) FStar_Pervasives.either *
-      term' syntax FStar_Pervasives_Native.option)
-      FStar_Pervasives_Native.option * (pat' withinfo_t * term' syntax
-      FStar_Pervasives_Native.option * term' syntax) Prims.list *
+    (term' syntax * (binder * ((term' syntax, comp' syntax)
+      FStar_Pervasives.either * term' syntax FStar_Pervasives_Native.option *
+      Prims.bool)) FStar_Pervasives_Native.option * (pat' withinfo_t * term'
+      syntax FStar_Pervasives_Native.option * term' syntax) Prims.list *
       residual_comp FStar_Pervasives_Native.option))
   = fun projectee -> match projectee with | Tm_match _0 -> _0
 let (uu___is_Tm_ascribed : term' -> Prims.bool) =
@@ -432,8 +432,8 @@ let (uu___is_Tm_ascribed : term' -> Prims.bool) =
 let (__proj__Tm_ascribed__item___0 :
   term' ->
     (term' syntax * ((term' syntax, comp' syntax) FStar_Pervasives.either *
-      term' syntax FStar_Pervasives_Native.option) * FStar_Ident.lident
-      FStar_Pervasives_Native.option))
+      term' syntax FStar_Pervasives_Native.option * Prims.bool) *
+      FStar_Ident.lident FStar_Pervasives_Native.option))
   = fun projectee -> match projectee with | Tm_ascribed _0 -> _0
 let (uu___is_Tm_let : term' -> Prims.bool) =
   fun projectee -> match projectee with | Tm_let _0 -> true | uu___ -> false
@@ -959,14 +959,17 @@ type uvar =
   (term' syntax FStar_Pervasives_Native.option FStar_Unionfind.p_uvar *
     version * FStar_Compiler_Range.range)
 type uvars = ctx_uvar FStar_Compiler_Util.set
+type comp = comp' syntax
+type ascription =
+  ((term' syntax, comp' syntax) FStar_Pervasives.either * term' syntax
+    FStar_Pervasives_Native.option * Prims.bool)
+type match_returns_ascription =
+  (binder * ((term' syntax, comp' syntax) FStar_Pervasives.either * term'
+    syntax FStar_Pervasives_Native.option * Prims.bool))
 type pat = pat' withinfo_t
 type branch =
   (pat' withinfo_t * term' syntax FStar_Pervasives_Native.option * term'
     syntax)
-type comp = comp' syntax
-type ascription =
-  ((term' syntax, comp' syntax) FStar_Pervasives.either * term' syntax
-    FStar_Pervasives_Native.option)
 type antiquotations = (bv * term' syntax) Prims.list
 type typ = term' syntax
 type aqual = arg_qualifier FStar_Pervasives_Native.option
@@ -2035,6 +2038,21 @@ let (t_tuple2_of : term -> term -> term) =
         let uu___2 = as_arg t1 in
         let uu___3 = let uu___4 = as_arg t2 in [uu___4] in uu___2 :: uu___3 in
       mk_Tm_app uu___ uu___1 FStar_Compiler_Range.dummyRange
+let (t_tuple3_of : term -> term -> term -> term) =
+  fun t1 ->
+    fun t2 ->
+      fun t3 ->
+        let uu___ =
+          let uu___1 = tabbrev FStar_Parser_Const.lid_tuple3 in
+          mk_Tm_uinst uu___1 [U_zero; U_zero; U_zero] in
+        let uu___1 =
+          let uu___2 = as_arg t1 in
+          let uu___3 =
+            let uu___4 = as_arg t2 in
+            let uu___5 = let uu___6 = as_arg t3 in [uu___6] in uu___4 ::
+              uu___5 in
+          uu___2 :: uu___3 in
+        mk_Tm_app uu___ uu___1 FStar_Compiler_Range.dummyRange
 let (t_either_of : term -> term -> term) =
   fun t1 ->
     fun t2 ->

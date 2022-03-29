@@ -56,9 +56,10 @@ type term_view =
     | Tv_Const     of vconst
     | Tv_Uvar      of Z.t * ctx_uvar_and_subst
     | Tv_Let       of bool * list<term> * bv * term * term
-    | Tv_Match     of term * option<(either<term, comp> * option<term>)> * list<branch>
-    | Tv_AscribedT of term * term * option<term>
-    | Tv_AscribedC of term * comp * option<term>
+    | Tv_Match     of term * option<match_returns_ascription> * list<branch>
+    | Tv_AscribedT of term * term * option<term> * bool  //if the boolean flag is true, the ascription is an equality ascription
+                                                         //see also Syntax
+    | Tv_AscribedC of term * comp * option<term> * bool  //bool is similar to Tv_AscribedT
     | Tv_Unknown
 
 (* This is a mirror of FStar.Syntax.Syntax.qualifier *)

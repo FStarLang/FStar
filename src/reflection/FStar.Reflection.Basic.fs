@@ -279,7 +279,7 @@ let pack_comp (cv : comp_view) : comp =
     match cv with
     | C_Total (t, []) -> mk_Total t
     | C_Total (t, l) ->
-        let ct = { comp_univs=[U_zero]
+        let ct = { comp_univs=[U_unknown]
                  ; effect_name=PC.effect_Tot_lid
                  ; result_typ = t
                  ; effect_args = []
@@ -289,7 +289,7 @@ let pack_comp (cv : comp_view) : comp =
 
     | C_GTotal (t, []) -> mk_GTotal t
     | C_GTotal (t, l) ->
-        let ct = { comp_univs=[U_zero]
+        let ct = { comp_univs=[U_unknown]
                  ; effect_name=PC.effect_GTot_lid
                  ; result_typ = t
                  ; effect_args = []
@@ -380,11 +380,11 @@ let pack_ln (tv:term_view) : term =
         let brs = List.map (function (pat, t) -> (pack_pat pat, None, t)) brs in
         S.mk (Tm_match (t, ret_opt, brs, None)) Range.dummyRange
 
-    | Tv_AscribedT(e, t, tacopt) ->
-        S.mk (Tm_ascribed(e, (Inl t, tacopt), None)) Range.dummyRange
+    | Tv_AscribedT(e, t, tacopt, use_eq) ->
+        S.mk (Tm_ascribed(e, (Inl t, tacopt, use_eq), None)) Range.dummyRange
 
-    | Tv_AscribedC(e, c, tacopt) ->
-        S.mk (Tm_ascribed(e, (Inr c, tacopt), None)) Range.dummyRange
+    | Tv_AscribedC(e, c, tacopt, use_eq) ->
+        S.mk (Tm_ascribed(e, (Inr c, tacopt, use_eq), None)) Range.dummyRange
 
     | Tv_Unknown ->
         S.mk Tm_unknown Range.dummyRange

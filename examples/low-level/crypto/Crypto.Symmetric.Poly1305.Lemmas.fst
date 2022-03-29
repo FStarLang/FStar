@@ -341,7 +341,7 @@ let lemma_toField_3 n0 n1 n2 n3 n0' n1' n2' n3' n4' =
 #set-options "--initial_fuel 1 --max_fuel 1 --z3rlimit 5"
 
 (* The little_endian function but computed from the most significant bit, makes the
-   enrolling of the function to concrete values easiers for math *)
+   enrolling of the function to concrete values easier for math *)
 let rec little_endian_from_top (s:Seq.seq U8.t) (len:nat{len <= Seq.length s}) : GTot nat
   = if len = 0 then 0
     else pow2 (8 * (len - 1)) * U8.v (Seq.index s (len-1)) + little_endian_from_top s (len-1)

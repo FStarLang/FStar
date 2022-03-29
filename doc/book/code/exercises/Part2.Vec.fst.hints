@@ -1,0 +1,152 @@
+[
+  "Æžè‰T1æG\u001bjÕ\u00196Ûìå",
+  [
+    [
+      "Part2.Vec.vec",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
+        "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
+      ],
+      0,
+      "2b95cd111998683c90049b3bbc169d61"
+    ],
+    [
+      "Part2.Vec.vec",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
+        "equation_Prims.nat", "function_token_typing_Prims.int",
+        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2", "int_inversion",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
+      ],
+      0,
+      "4295278f5ceee5da06f80f8447c96d56"
+    ],
+    [
+      "Part2.Vec.__proj__Cons__item__n",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_4474f8e18622e81334247360809b690b"
+      ],
+      0,
+      "e989b0445731f8a9db4d6019305fc192"
+    ],
+    [
+      "Part2.Vec.__proj__Cons__item__hd",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_4474f8e18622e81334247360809b690b"
+      ],
+      0,
+      "09252462f5a19b7a69e5f4253386f2eb"
+    ],
+    [
+      "Part2.Vec.__proj__Cons__item__tl",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "data_elim_Part2.Vec.Cons",
+        "refinement_interpretation_Tm_refine_4474f8e18622e81334247360809b690b"
+      ],
+      0,
+      "bdba04491c2eeacda3ce3e97d9236cf2"
+    ],
+    [
+      "Part2.Vec.get",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_c1424615841f28cac7fc34e92b7ff33c"
+      ],
+      0,
+      "e7aec8f704968160481af9ed0a14e2a0"
+    ],
+    [
+      "Part2.Vec.get",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "binder_x_1a47474f6e58ad765725be06739e1610_4",
+        "binder_x_672374d0b42dedb03cc70d39558dc5d9_3",
+        "binder_x_ae567c2fb75be05905677af440075565_2",
+        "data_elim_Part2.Vec.Cons", "disc_equation_Part2.Vec.Cons",
+        "equation_Prims.nat", "fuel_guarded_inversion_Part2.Vec.vec",
+        "function_token_typing_Prims.__cache_version_number__",
+        "int_inversion", "int_typing", "primitive_Prims.op_Addition",
+        "primitive_Prims.op_Equality", "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "projection_inverse_Part2.Vec.Cons_n",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_a21d6f09caede4017908c96b90a022a4",
+        "well-founded-ordering-on-nat"
+      ],
+      0,
+      "553479bcc47c448238aff4b3e1697ef7"
+    ],
+    [
+      "Part2.Vec.append",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
+        "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
+      ],
+      0,
+      "7a9bb4b4778b845e57488c4bceb81bf0"
+    ],
+    [
+      "Part2.Vec.append",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_bb4e1c9af0265270f8e7a5f250f730e2_2",
+        "binder_x_bb4e1c9af0265270f8e7a5f250f730e2_3", "equation_Prims.nat",
+        "int_inversion", "primitive_Prims.op_Addition",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
+      ],
+      0,
+      "091abfbb6f9f53ea1bc01d70858498d4"
+    ],
+    [
+      "Part2.Vec.split_at",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
+        "int_inversion", "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_7e0b9b2dbca36eab00de093c1b701c6d"
+      ],
+      0,
+      "4984eef958dc70e94c375cacce3cfe31"
+    ]
+  ]
+]

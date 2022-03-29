@@ -160,7 +160,6 @@ let add_light_off_file (filename:string) = light_off_files := filename :: !light
 
 let defaults =
      [
-      ("__temp_no_proj"               , List []);
       ("__temp_fast_implicits"        , Bool false);
       ("abort_on"                     , Int 0);
       ("admit_smt_queries"            , Bool false);
@@ -448,7 +447,6 @@ let get_no_tactics              ()      = lookup_opt "no_tactics"               
 let get_using_facts_from        ()      = lookup_opt "using_facts_from"         (as_option (as_list as_string))
 let get_vcgen_optimize_bind_as_seq  ()  = lookup_opt "vcgen.optimize_bind_as_seq" (as_option as_string)
 let get_verify_module           ()      = lookup_opt "verify_module"            (as_list as_string)
-let get___temp_no_proj          ()      = lookup_opt "__temp_no_proj"           (as_list as_string)
 let get_version                 ()      = lookup_opt "version"                  as_bool
 let get_warn_default_effects    ()      = lookup_opt "warn_default_effects"     as_bool
 let get_z3cliopt                ()      = lookup_opt "z3cliopt"                 (as_list as_string)
@@ -501,7 +499,8 @@ let display_version () =
                                   !_version !_platform !_compiler !_date !_commit)
 
 let display_usage_aux specs =
-  Util.print_string "fstar.exe [options] file[s]\n";
+  Util.print_string "fstar.exe [options] file[s] [@respfile...]\n";
+  Util.print_string (Util.format1 "  %srespfile  read options from respfile\n" (Util.colorize_bold "@"));
   List.iter
     (fun (_, flag, p, doc) ->
        match p with
@@ -1256,11 +1255,6 @@ let rec specs_with_types warn_unsafe : list<(char * string * opt_type * string)>
            but at the cost of VC bloat, which may often be redundant.");
 
        ( noshort,
-        "__temp_no_proj",
-        Accumulated (SimpleStr "module_name"),
-        "Don't generate projectors for this module");
-
-       ( noshort,
         "__temp_fast_implicits",
         Const (Bool true),
         "Don't use this option yet");
@@ -1437,7 +1431,6 @@ let settable = function
     | "tactic_trace_d"
     | "tcnorm"
     | "__temp_fast_implicits"
-    | "__temp_no_proj"
     | "timing"
     | "trace_error"
     | "ugly"
@@ -1482,8 +1475,37 @@ let fstar_bin_directory = Util.get_exec_dir ()
 
 let file_list_ : ref<(list<string>)> = Util.mk_ref []
 
+(* In `parse_filename_arg specs arg`:
+
+   * `arg` is a filename argument to be parsed. If `arg` is of the
+     form `@file`, then `file` is a response file, from which further
+     arguments (including further options) are read. Nested response
+     files (@ response file arguments within response files) are
+     supported.
+
+   * `specs` is the list of option specifications (- and --)
+
+   * `enable_filenames` is a boolean, true if non-response file
+   * filenames should be handled.
+
+*)
+
+
+let rec parse_filename_arg specs enable_filenames arg =
+  if Util.starts_with arg "@"
+  then begin
+    // read and parse a response file
+    let filename = Util.substring_from arg 1 in
+    let lines = Util.file_get_lines filename in
+    Getopt.parse_list specs (parse_filename_arg specs enable_filenames) lines
+  end else begin
+    if enable_filenames
+    then file_list_ := !file_list_ @ [arg];
+    Success
+  end
+
 let parse_cmd_line () =
-  let res = Getopt.parse_cmdline all_specs (fun i -> file_list_ := !file_list_ @ [i]) in
+  let res = Getopt.parse_cmdline all_specs (parse_filename_arg all_specs true) in
   let res =
     if res = Success
     then set_error_flags()
@@ -1499,7 +1521,8 @@ let restore_cmd_line_options should_clear =
      * Add them here as needed. *)
     let old_verify_module = get_verify_module() in
     if should_clear then clear() else init();
-    let r = Getopt.parse_cmdline (specs false) (fun x -> ()) in
+    let specs = specs false in
+    let r = Getopt.parse_cmdline specs (parse_filename_arg specs false) in
     set_option' ("verify_module", List (List.map String old_verify_module));
     r
 
@@ -1522,8 +1545,6 @@ let should_verify_file fn =
     should_verify (module_name_of_file_name fn)
 
 let module_name_eq m1 m2 = String.lowercase m1 = String.lowercase m2
-
-let dont_gen_projectors m = get___temp_no_proj() |> List.existsb (module_name_eq m)
 
 let should_print_message m =
     if should_verify m
@@ -1655,7 +1676,6 @@ let parse_settings ns : list<(list<string> * bool)> =
              |> List.map parse_one_setting) s)
              |> List.rev
 
-let __temp_no_proj               s  = get___temp_no_proj() |> List.contains s
 let __temp_fast_implicits        () = lookup_opt "__temp_fast_implicits" as_bool
 let admit_smt_queries            () = get_admit_smt_queries           ()
 let admit_except                 () = get_admit_except                ()
@@ -2031,7 +2051,7 @@ let set_options s =
     try
         if s = ""
         then Success
-        else let res = Getopt.parse_string settable_specs (fun s -> raise (File_argument s); ()) s in
+        else let res = Getopt.parse_string settable_specs (fun s -> raise (File_argument s); Error "set_options with file argument") s in
              if res=Success
              then set_error_flags()
              else res

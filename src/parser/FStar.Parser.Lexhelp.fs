@@ -173,6 +173,7 @@ let keywords =
     ALWAYS, "let"        ,LET(false);
     ALWAYS, "logic"      ,LOGIC;
     ALWAYS, "match"      ,MATCH;
+    ALWAYS, "as"         ,AS;
     ALWAYS, "returns"    ,RETURNS;
     ALWAYS, "module"     ,MODULE;
     ALWAYS, "new"        ,NEW;
@@ -185,6 +186,7 @@ let keywords =
     ALWAYS, "open"       ,OPEN;
     ALWAYS, "opaque"     ,OPAQUE;
     ALWAYS, "private"    ,PRIVATE;
+    ALWAYS, "quote"      ,QUOTE;
     ALWAYS, "range_of"   ,RANGE_OF;
     ALWAYS, "rec"        ,REC;
     ALWAYS, "reifiable"  ,REIFIABLE;

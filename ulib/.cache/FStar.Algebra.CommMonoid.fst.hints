@@ -2,54 +2,13 @@
   "þhÎNáT\u0006|IXf]_6bŽ",
   [
     [
-      "FStar.Algebra.CommMonoid.__proj__CM__item__identity",
-      1,
-      2,
-      1,
-      [
-        "@query", "proj_equation_FStar.Algebra.CommMonoid.CM_mult",
-        "proj_equation_FStar.Algebra.CommMonoid.CM_unit",
-        "projection_inverse_FStar.Algebra.CommMonoid.CM_mult",
-        "projection_inverse_FStar.Algebra.CommMonoid.CM_unit",
-        "token_correspondence_FStar.Algebra.CommMonoid.__proj__CM__item__mult"
-      ],
-      0,
-      "b7240352ad86b78b4f010407c3866886"
-    ],
-    [
-      "FStar.Algebra.CommMonoid.__proj__CM__item__associativity",
-      1,
-      2,
-      1,
-      [
-        "@query", "proj_equation_FStar.Algebra.CommMonoid.CM_mult",
-        "projection_inverse_FStar.Algebra.CommMonoid.CM_mult",
-        "token_correspondence_FStar.Algebra.CommMonoid.__proj__CM__item__mult"
-      ],
-      0,
-      "b281aa6eedb0f8a659aabffe4e53e1d1"
-    ],
-    [
-      "FStar.Algebra.CommMonoid.__proj__CM__item__commutativity",
-      1,
-      2,
-      1,
-      [
-        "@query", "proj_equation_FStar.Algebra.CommMonoid.CM_mult",
-        "projection_inverse_FStar.Algebra.CommMonoid.CM_mult",
-        "token_correspondence_FStar.Algebra.CommMonoid.__proj__CM__item__mult"
-      ],
-      0,
-      "5f4aa225d082d4f55d91b596cd9146aa"
-    ],
-    [
       "FStar.Algebra.CommMonoid.right_identity",
       1,
       2,
       1,
       [ "@query" ],
       0,
-      "ec97522b88f4b67d26f56ed574be3556"
+      "8401613014119789c6214c53276ad0c3"
     ],
     [
       "FStar.Algebra.CommMonoid.int_plus_cm",
@@ -61,7 +20,7 @@
         "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "55b396e809dde10f246eff668ae9bf38"
+      "cc9c80d7814874d425948f916298db0e"
     ],
     [
       "FStar.Algebra.CommMonoid.int_multiply_cm",
@@ -73,7 +32,7 @@
         "primitive_Prims.op_Multiply", "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "61b665f0d5b4320849212638714d78a0"
+      "f70e0784dd26ae543bbd5cb002272e64"
     ]
   ]
 ]

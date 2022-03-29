@@ -3354,22 +3354,22 @@ and (term_as_mlexpr' :
                               FStar_Extraction_ML_Syntax.MLTY_Erased)
                         | uu___7 -> extract_app_with_instantiations ())
                    | uu___6 -> extract_app_with_instantiations ()))
-       | FStar_Syntax_Syntax.Tm_ascribed (e0, (tc, uu___1), f) ->
+       | FStar_Syntax_Syntax.Tm_ascribed (e0, (tc, uu___1, uu___2), f) ->
            let t1 =
              match tc with
              | FStar_Pervasives.Inl t2 -> term_as_mlty g t2
              | FStar_Pervasives.Inr c ->
-                 let uu___2 =
-                   let uu___3 = FStar_Extraction_ML_UEnv.tcenv_of_uenv g in
-                   maybe_reify_comp g uu___3 c in
-                 term_as_mlty g uu___2 in
+                 let uu___3 =
+                   let uu___4 = FStar_Extraction_ML_UEnv.tcenv_of_uenv g in
+                   maybe_reify_comp g uu___4 c in
+                 term_as_mlty g uu___3 in
            let f1 =
              match f with
              | FStar_Pervasives_Native.None ->
                  failwith "Ascription node with an empty effect label"
              | FStar_Pervasives_Native.Some l -> effect_as_etag g l in
-           let uu___2 = check_term_as_mlexpr g e0 f1 t1 in
-           (match uu___2 with | (e, t2) -> (e, f1, t2))
+           let uu___3 = check_term_as_mlexpr g e0 f1 t1 in
+           (match uu___3 with | (e, t2) -> (e, f1, t2))
        | FStar_Syntax_Syntax.Tm_let ((false, lb::[]), e') when
            (let uu___1 = FStar_Syntax_Syntax.is_top_level [lb] in
             Prims.op_Negation uu___1) &&

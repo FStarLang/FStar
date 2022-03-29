@@ -26,7 +26,7 @@
         "typing_FStar.UInt8.t", "typing_LowStar.Monotonic.Buffer.loc_none"
       ],
       0,
-      "1b8b14e4e5d76de596d596e6cc538c66"
+      "cff20ee81473ef1cd1d25bcf683afbe1"
     ],
     [
       "MiniParse.Impl.Int.serialize_u8_impl",
@@ -112,7 +112,7 @@
         "typing_MiniParse.Spec.Int.serialize_u8"
       ],
       0,
-      "e1282ae7129ceff2be01244ed0a1e937"
+      "bb9ee35fc29d38d3077bf1a1a3e3ab37"
     ],
     [
       "MiniParse.Impl.Int.parse_u16_impl",
@@ -135,7 +135,7 @@
         "typing_MiniParse.Spec.Int.Aux.decode_u16"
       ],
       0,
-      "1f62f6a4882b96ce133691c72c988d35"
+      "21222d64423740fae7af294f902011df"
     ],
     [
       "MiniParse.Impl.Int.serialize_u16_impl",
@@ -251,7 +251,7 @@
         "typing_MiniParse.Spec.Int.serialize_u16"
       ],
       0,
-      "fde203d77a177a7ca3986b4cfe9d02cf"
+      "1a2c27da2b36c8fe227de50f08d143b2"
     ],
     [
       "MiniParse.Impl.Int.parse_bounded_u16_impl",
@@ -359,7 +359,7 @@
         "typing_Tm_abs_ca539376a5f570dfa840a07f6c3cae8b"
       ],
       0,
-      "dd374776799c20ae173071e36e611551"
+      "645afb0279aeb1c648ba1a56ebc58e7b"
     ],
     [
       "MiniParse.Impl.Int.serialize_bounded_u16_impl",
@@ -391,7 +391,7 @@
         "token_correspondence_MiniParse.Spec.Base.__proj__Serializer__item__f"
       ],
       0,
-      "f07dbf17f86255d32041aba6f1968e18"
+      "2d4e810a72ede15999bdd92c37137e4b"
     ]
   ]
 ]
