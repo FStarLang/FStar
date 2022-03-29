@@ -48,7 +48,7 @@ fstartaclib.mgen: fstarlib.mgen
 
 ulib-in-fsharp:
 	+$(MAKE) -f Makefile.extract.fsharp all-fs
-	+$(MAKE) -C fs
+	+$(MAKE) -C fs/VS
 
 ######################################################
 # OCaml extraction of fstarlib and fstar-tactics-lib #

@@ -79,46 +79,46 @@
     <Compile Include="FStar_UInt32.fs" Link="FStar_UInt32.fs" />
     <Compile Include="FStar_UInt64.fs" Link="FStar_UInt64.fs" /> 
     <Compile Include="FStar_UInt8.fs" Link="FStar_UInt8.fs" />
-    <Compile Include="extracted\FStar_Pervasives.fs" />
-    <Compile Include="extracted\FStar_Preorder.fs" />
-    <Compile Include="extracted\FStar_Squash.fs" />
-    <Compile Include="extracted\FStar_Classical.fs" />
-    <Compile Include="extracted\FStar_FunctionalExtensionality.fs" />
-    <Compile Include="extracted\FStar_StrongExcludedMiddle.fs" />
-    <Compile Include="extracted\FStar_PropositionalExtensionality.fs" />
-    <Compile Include="extracted\FStar_PredicateExtensionality.fs" />
+    <Compile Link="FStar_Pervasives.fs" Include="extracted\FStar_Pervasives.fs" />
+    <Compile Link="FStar_Preorder.fs" Include="extracted\FStar_Preorder.fs" />
+    <Compile Link="FStar_Squash.fs" Include="extracted\FStar_Squash.fs" />
+    <Compile Link="FStar_Classical.fs" Include="extracted\FStar_Classical.fs" />
+    <Compile Link="FStar_FunctionalExtensionality.fs" Include="extracted\FStar_FunctionalExtensionality.fs" />
+    <Compile Link="FStar_StrongExcludedMiddle.fs" Include="extracted\FStar_StrongExcludedMiddle.fs" />
+    <Compile Link="FStar_PropositionalExtensionality.fs" Include="extracted\FStar_PropositionalExtensionality.fs" />
+    <Compile Link="FStar_PredicateExtensionality.fs" Include="extracted\FStar_PredicateExtensionality.fs" />
+    <Compile Link="FStar_Monotonic_Witnessed.fs" Include="extracted\FStar_Monotonic_Witnessed.fs" /> <!-- TODO: (Warning 341) Expected parameter 'state of witnessed to be unused in its definition and eliminated -->
+    <Compile Link="FStar_List_Tot_Properties.fs" Include="extracted\FStar_List_Tot_Properties.fs" />
     <Compile Include="FStar_Map.fs" Link="FStar_Map.fs" /> <!-- TODO: Map is 'almost' extracted. 
                                                                          It lacks only the constraint on the key and there's an issue 
                                                                          with erasure of 'key:eqtype implicit parameter on map_val 
                                                               -->
-    <Compile Include="extracted\FStar_Monotonic_Witnessed.fs" /> <!-- TODO: (Warning 341) Expected parameter 'state of witnessed to be unused in its definition and eliminated -->
-    <Compile Include="extracted\FStar_List_Tot_Properties.fs" />
-    <Compile Include="extracted\FStar_Monotonic_HyperHeap.fs" />
-    <Compile Include="extracted\FStar_Monotonic_HyperStack.fs" /> <!-- TODO: Produces unsafe coerce -->
-    <Compile Include="extracted\FStar_HyperStack.fs" /> 
+    <Compile Link="FStar_Monotonic_HyperHeap.fs" Include="extracted\FStar_Monotonic_HyperHeap.fs" />
+    <Compile Link="FStar_Monotonic_HyperStack.fs" Include="extracted\FStar_Monotonic_HyperStack.fs" /> <!-- TODO: Produces unsafe coerce -->
+    <Compile Link="FStar_HyperStack.fs" Include="extracted\FStar_HyperStack.fs" /> 
     <Compile Include="FStar_HyperStack_All.fs" Link="FStar_HyperStack_All.fs" />
     <Compile Include="FStar_HyperStack_ST.fs" Link="FStar_HyperStack_ST.fs" />
     <Compile Include="FStar_HyperStack_IO.fs" Link="FStar_HyperStack_IO.fs" />
-    <Compile Include="extracted\FStar_Monotonic_Map.fs" /> <!-- TODO: Produces unsafe coerce -->
-    <Compile Include="extracted\FStar_Seq_Base.fs" />
-    <Compile Include="extracted\FStar_Seq_Properties.fs" />
-    <Compile Include="extracted\FStar_Seq.fs" />
-    <Compile Include="extracted\FStar_Calc.fs" />
-    <Compile Include="extracted\FStar_Math_Lib.fs" />
-    <Compile Include="extracted\FStar_Math_Lemmas.fs" />
-    <Compile Include="extracted\FStar_BitVector.fs" />
-    <Compile Include="extracted\FStar_UInt.fs" />
-    <Compile Include="extracted\FStar_Int.fs" />
-    <Compile Include="extracted\FStar_Int_Cast.fs" />
-    <Compile Include="extracted\FStar_UInt128.fs" />
-    <Compile Include="extracted\FStar_BigOps.fs" />
-    <Compile Include="extracted\FStar_Int128.fs" />
-    <Compile Include="extracted\FStar_Integers.fs" />
-    <Compile Include="extracted\FStar_Ref.fs" />
+    <Compile Link="FStar_Monotonic_Map.fs" Include="extracted\FStar_Monotonic_Map.fs" /> <!-- TODO: Produces unsafe coerce -->
+    <Compile Link="FStar_Seq_Base.fs" Include="extracted\FStar_Seq_Base.fs" />
+    <Compile Link="FStar_Seq_Properties.fs" Include="extracted\FStar_Seq_Properties.fs" />
+    <Compile Link="FStar_Seq.fs" Include="extracted\FStar_Seq.fs" />
+    <Compile Link="FStar_Calc.fs" Include="extracted\FStar_Calc.fs" />
+    <Compile Link="FStar_Math_Lib.fs" Include="extracted\FStar_Math_Lib.fs" />
+    <Compile Link="FStar_Math_Lemmas.fs" Include="extracted\FStar_Math_Lemmas.fs" />
+    <Compile Link="FStar_BitVector.fs" Include="extracted\FStar_BitVector.fs" />
+    <Compile Link="FStar_UInt.fs" Include="extracted\FStar_UInt.fs" />
+    <Compile Link="FStar_Int.fs" Include="extracted\FStar_Int.fs" />
+    <Compile Link="FStar_Int_Cast.fs" Include="extracted\FStar_Int_Cast.fs" />
+    <Compile Link="FStar_UInt128.fs" Include="extracted\FStar_UInt128.fs" />
+    <Compile Link="FStar_BigOps.fs" Include="extracted\FStar_BigOps.fs" />
+    <Compile Link="FStar_Int128.fs" Include="extracted\FStar_Int128.fs" />
+    <Compile Link="FStar_Integers.fs" Include="extracted\FStar_Integers.fs" />
+    <Compile Link="FStar_Ref.fs" Include="extracted\FStar_Ref.fs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="FSharp.Core">
-      <HintPath>..\src\VS\packages\FSharp.Core.4.3.4\lib\net45\FSharp.Core.dll</HintPath>
+      <HintPath>.\VS\packages\FSharp.Core.4.3.4\lib\net45\FSharp.Core.dll</HintPath>
     </Reference>
     <Reference Include="mscorlib" />
     <Reference Include="System" />
