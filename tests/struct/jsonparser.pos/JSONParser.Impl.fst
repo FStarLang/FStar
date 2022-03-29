@@ -48,7 +48,7 @@ let string_ptr_valid (h: HyperStack.mem) (s: string_ptr) : GTot Type0 =
 let string_ptr_value (h: HyperStack.mem) (s: string_ptr {string_ptr_valid h s}): GTot string =
   string_ptr_struct_value h (Pointer.gread h s)
 
-(* NOTE: an out-of-date version of the code is in KreMLin branch taramana_json_parser *)
+(* NOTE: an out-of-date version of the code is in KaRaMeL branch taramana_json_parser *)
 
 (*
 inline_for_extraction

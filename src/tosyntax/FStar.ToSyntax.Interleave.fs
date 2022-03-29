@@ -130,17 +130,17 @@ let rec prefix_with_iface_decls
         (impl:decl)
    : list<decl>  //remaining iface decls
    * list<decl> =  //d prefixed with relevant bits from iface
-   let qualify_kremlin_private impl =
-       let krem_private =
+   let qualify_karamel_private impl =
+       let karamel_private =
            FStar.Parser.AST.mk_term
-                 (Const (FStar.Const.Const_string ("KremlinPrivate", impl.drange)))
+                 (Const (FStar.Const.Const_string ("KrmlPrivate", impl.drange)))
                  impl.drange
                  FStar.Parser.AST.Expr
        in
-       {impl with attrs=krem_private::impl.attrs}
+       {impl with attrs=karamel_private::impl.attrs}
    in
    match iface with
-   | [] -> [], [qualify_kremlin_private impl]
+   | [] -> [], [qualify_karamel_private impl]
    | iface_hd::iface_tl -> begin
      match iface_hd.d with
      | Tycon(_, _, tys) when (tys |> Util.for_some (function (TyconAbstract _)  -> true | _ -> false)) ->
@@ -160,7 +160,7 @@ let rec prefix_with_iface_decls
             then raise_error (Errors.Fatal_WrongDefinitionOrder, (Util.format2 "Expected the definition of %s to precede %s"
                                            (string_of_id x)
                                            (def_ids |> List.map Ident.string_of_lid |> String.concat ", "))) impl.drange
-            else iface, [qualify_kremlin_private impl]
+            else iface, [qualify_karamel_private impl]
        else let mutually_defined_with_x = def_ids |> List.filter (fun y -> not (id_eq_lid x y)) in
             let rec aux mutuals iface =
                 match mutuals, iface with

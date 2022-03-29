@@ -16,7 +16,7 @@
 (* -------------------------------------------------------------------- *)
 #light "off"
 
-module FStar.Extraction.Kremlin
+module FStar.Extraction.Krml
 open FStar.Compiler.Effect
 open FStar.Compiler.List
 open FStar
@@ -624,7 +624,7 @@ and translate_expr env e: expr =
       EMatch (translate_expr env expr, translate_branches env branches)
 
   // We recognize certain distinguished names from [FStar.HST] and other
-  // modules, and translate them into built-in Kremlin constructs
+  // modules, and translate them into built-in Karamel constructs
   | MLE_App({expr=MLE_TApp ({ expr = MLE_Name p }, [t])}, [arg])
     when string_of_mlpath p = "FStar.Dyn.undyn" ->
       ECast (translate_expr env arg, translate_type env t)
@@ -848,7 +848,7 @@ and translate_expr env e: expr =
     when (let s = string_of_mlpath p in (s = "FStar.Buffer.fill" || s = "LowStar.Monotonic.Buffer.fill" )) ->
       EBufFill (translate_expr env e1, translate_expr env e2, translate_expr env e3)
   | MLE_App ({ expr = MLE_Name p }, [ _ ]) when string_of_mlpath p = "FStar.HyperStack.ST.get" ->
-      // We need to reveal to Kremlin that FStar.HST.get is equivalent to
+      // We need to reveal to Karamel that FStar.HST.get is equivalent to
       // (void*)0 so that it can get rid of ghost calls to HST.get at the
       // beginning of functions, which is needed to enforce the push/pop
       // structure.
@@ -1337,7 +1337,7 @@ let translate_type_decl env ty: option<decl> =
           Some (DTypeAbstractStruct name)
         else if assumed then
           let name = string_of_mlpath name in
-          BU.print1_warning "Not extracting type definition %s to KreMLin (assumed type)\n" name;
+          BU.print1_warning "Not extracting type definition %s to KaRaMeL (assumed type)\n" name;
           // JP: TODO: shall we be smarter here?
           None
         else
@@ -1366,7 +1366,7 @@ let translate_type_decl env ty: option<decl> =
         ) branches))
     | {tydecl_name=name} ->
         // JP: TODO: figure out why and how this happens
-        Errors. log_issue Range.dummyRange (Errors.Warning_DefinitionNotTranslated, (BU.format1 "Error extracting type definition %s to KreMLin\n" name));
+        Errors. log_issue Range.dummyRange (Errors.Warning_DefinitionNotTranslated, (BU.format1 "Error extracting type definition %s to KaRaMeL\n" name));
         None
 
 let translate_let env flavor lb: option<decl> =
@@ -1412,7 +1412,7 @@ let translate_let env flavor lb: option<decl> =
       if List.length tvars = 0 then
         Some (DExternal (translate_cc meta, translate_flags meta, name, translate_type env t0, arg_names))
       else begin
-        BU.print1_warning "Not extracting %s to KreMLin (polymorphic assumes are not supported)\n" (Syntax.string_of_mlpath name);
+        BU.print1_warning "Not extracting %s to KaRaMeL (polymorphic assumes are not supported)\n" (Syntax.string_of_mlpath name);
         None
       end
 
@@ -1440,7 +1440,7 @@ let translate_let env flavor lb: option<decl> =
           let msg = "function type annotation has less arrows than the \
             number of arguments; please mark the return type abbreviation as \
             inline_for_extraction" in
-          BU.print2_warning "Not extracting %s to KreMLin (%s)\n" (Syntax.string_of_mlpath name) msg
+          BU.print2_warning "Not extracting %s to KaRaMeL (%s)\n" (Syntax.string_of_mlpath name) msg
         end;
         let t = translate_type env t in
         let binders = translate_binders env args in
@@ -1458,7 +1458,7 @@ let translate_let env flavor lb: option<decl> =
           // JP: TODO: figure out what are the remaining things we don't extract
           let msg = BU.print_exn e in
           Errors. log_issue Range.dummyRange
-          (Errors.Warning_FunctionNotExtacted, (BU.format2 "Error while extracting %s to KreMLin (%s)\n" (Syntax.string_of_mlpath name) msg));
+          (Errors.Warning_FunctionNotExtacted, (BU.format2 "Error while extracting %s to KaRaMeL (%s)\n" (Syntax.string_of_mlpath name) msg));
           let msg = "This function was not extracted:\n" ^ msg in
           Some (DFunction (cc, meta, List.length tvars, t, name, binders, EAbortS msg))
         end
@@ -1481,13 +1481,13 @@ let translate_let env flavor lb: option<decl> =
           let expr = translate_expr env expr in
           Some (DGlobal (meta, name, List.length tvars, t, expr))
         with e ->
-          Errors. log_issue Range.dummyRange (Errors.Warning_DefinitionNotTranslated, (BU.format2 "Error extracting %s to KreMLin (%s)\n" (Syntax.string_of_mlpath name) (BU.print_exn e)));
+          Errors. log_issue Range.dummyRange (Errors.Warning_DefinitionNotTranslated, (BU.format2 "Error extracting %s to KaRaMeL (%s)\n" (Syntax.string_of_mlpath name) (BU.print_exn e)));
           Some (DGlobal (meta, name, List.length tvars, t, EAny))
         end
 
   | { mllb_name = name; mllb_tysc = ts } ->
       // TODO JP: figure out what exactly we're hitting here...?
-      Errors. log_issue Range.dummyRange (Errors.Warning_DefinitionNotTranslated, (BU.format1 "Not extracting %s to KreMLin\n" name));
+      Errors. log_issue Range.dummyRange (Errors.Warning_DefinitionNotTranslated, (BU.format1 "Not extracting %s to KaRaMeL\n" name));
       begin match ts with
       | Some (idents, t) ->
           BU.print2 "Type scheme is: forall %s. %s\n"
@@ -1510,7 +1510,7 @@ let translate_decl env d: list<decl> =
       []
 
   | MLM_Ty tys ->
-      // We don't care about mutual recursion, since KreMLin will insert forward
+      // We don't care about mutual recursion, since KaRaMeL will insert forward
       // declarations exactly as needed, as part of its monomorphization phase
       List.choose (translate_type_decl env) tys
 
@@ -1518,7 +1518,7 @@ let translate_decl env d: list<decl> =
       failwith "todo: translate_decl [MLM_Top]"
 
   | MLM_Exn (m, _) ->
-      BU.print1_warning "Not extracting exception %s to KreMLin (exceptions unsupported)\n" m;
+      BU.print1_warning "Not extracting exception %s to KaRaMeL (exceptions unsupported)\n" m;
       []
 
 let translate_module (m : mlpath * option<(mlsig * mlmodule)> * mllib) : file =

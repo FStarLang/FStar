@@ -119,8 +119,8 @@ Compiling ``memcpy`` for execution
 F* provides several ways to compile a program to other languaegs for
 execution, including support to compile programs to OCaml, F#, C and Wasm.
 
-In this case, using a tool called `KReMLin
-<https://github.com/FStarLang/kremlin>`_, a compiler used with F*, we
+In this case, using a tool called `KaRaMeL
+<https://github.com/FStarLang/karamel>`_, a compiler used with F*, we
 get the following C code for ``memcpy``.
 
 .. literalinclude:: MemCpy.c
@@ -408,7 +408,7 @@ Part 2: F* in Action
 
    - Building on 4a and 4b.
 
-   - Integrating / referencing the Kremlin tutorial
+   - Integrating / referencing the Karamel tutorial
 
 4. A Verified Embedding of a Verified Assembly Language
 
