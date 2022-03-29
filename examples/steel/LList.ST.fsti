@@ -52,20 +52,38 @@ val is_list (#a:Type0) (ll:llist a) (l:list a) : vprop
 /// Empty linked list is a value
 val empty (a:Type0) : llist a
 
+val intro (#opened:_) (#a:Type0)
+  (l:list a)
+  (node:llist_node a)
+  (ll:llist a)
+  (_:squash (Cons? l))
+  : STGhost unit opened
+      (pts_to ll full_perm node
+         `star`
+       is_list node.next (Cons?.tl l))
+      (fun _ -> is_list ll l)
+      (requires node.data == Cons?.hd l)
+      (ensures fun _ -> True)
+
+val elim (#opened:_) (#a:Type0)
+  (l:list a)
+  (ll:llist a)
+  (_:squash (Cons? l))
+  : STGhost (G.erased (llist_node a)) opened
+      (is_list ll l)
+      (fun node ->
+       pts_to ll full_perm node
+         `star`
+       is_list node.next (Cons?.tl l))
+      (requires True)
+      (ensures fun node -> node.data == Cons?.hd l)
+
 /// empty linked list points to empty list
 val empty_pts_to (#opened:_) (a:Type0)
   : STGhostT unit opened
       emp
       (fun _ -> empty a `is_list` [])
 
-/// The is_list assertion on empty linked list comes with an
-///   inversion lemma
-val empty_pts_to_inversion (#opened:_) (a:Type0) (l:list a)
-  : STGhost unit opened
-      (empty a `is_list` l)
-      (fun _ -> empty a `is_list` l)
-      (requires True)
-      (ensures fun _ -> l == [])
 
 /// Adding an element to the head of the linked list
 inline_for_extraction
@@ -84,29 +102,3 @@ val peek (#a:Type0) (#l:G.erased (list a))
        (fun _ -> ll `is_list` l)
        (requires True)
        (ensures fun x -> x == Cons?.hd l)
-
-val intro (#opened:_) (#a:Type0)
-  (l:list a)
-  (node:llist_node a)
-  (ll:llist a)
-  (_:squash (Cons? l))
-  : STGhost unit opened
-      (pts_to ll full_perm node
-         `star`
-       is_list node.next (Cons?.tl l))
-      (fun _ -> is_list ll l)
-      (requires node.data == Cons?.hd l)
-      (ensures fun _ -> True)
-
-val elim (#opened:_) (#a:Type0)
-  (l:list a)
-  (ll:llist a)
-  (_:squash (Cons? l))
-  : STGhost (llist_node a) opened
-      (is_list ll l)
-      (fun node ->
-       pts_to ll full_perm node
-         `star`
-       is_list node.next (Cons?.tl l))
-      (requires True)
-      (ensures fun node -> node.data == Cons?.hd l)
