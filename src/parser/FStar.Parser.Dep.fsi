@@ -2,10 +2,10 @@
 module FStar.Parser.Dep
 open FStar.Compiler.Effect
 open FStar.Compiler.Effect
-open FStar open FStar.Compiler
+open FStar
+open FStar.Compiler
 open FStar.Parser
 open FStar.Parser.AST
-open FStar.Parser.Parse
 open FStar.Compiler.Util
 open FStar.Const
 open FStar.String

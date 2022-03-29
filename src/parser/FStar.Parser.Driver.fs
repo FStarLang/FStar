@@ -22,7 +22,6 @@ open FStar
 open FStar.Compiler
 open FStar.Parser
 open FStar.Parser.AST
-open FStar.Parser.Parse
 open FStar.Parser.ParseIt
 open FStar.Compiler.Util
 open FStar.Errors
