@@ -132,8 +132,22 @@ open FStar.Mul
 let rec triang (n : nat) : Tot nat =
   if n = 0 then 0 else n + triang (n - 1)
 
+(* Z3 needs a bit of help to prove this reliably... *)
+let triang_aux (n : pos) : Lemma (n + ((n-1) * n) / 2 == (n*(n+1)) / 2) =
+  calc (==) {
+    n + ((n-1) * n) / 2;
+    == { FStar.Math.Lemmas.lemma_div_plus ((n-1)*n) 2 n }
+    ((n-1) * n + n * 2) / 2;
+    == { FStar.Math.Lemmas.swap_mul n (n-1);
+         FStar.Math.Lemmas.distributivity_add_right n (n-1) 2 }
+    (n * (n+1)) / 2;
+  }
+
 let rec gauss (n : nat) : Lemma (triang n == (n * (n + 1)) / 2) =
-  if n <> 0 then gauss (n - 1)
+  if n <> 0 then (
+    gauss (n-1);
+    triang_aux n
+  )
 
 let prod_even (n : int) : Lemma ((n * (n + 1)) % 2 == 0) =
   (* z3 needs some help *)
