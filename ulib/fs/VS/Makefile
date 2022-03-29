@@ -23,14 +23,10 @@ CONFIGURATION?=Release
 MSBUILD := $(MSBUILD) /verbosity:minimal /p:Configuration=$(CONFIGURATION)
 
 # --------------------------------------------------------------------
-.PHONY: all update-nuget install-packages
+.PHONY: all install-packages
 
-all: update-nuget install-packages
+all: install-packages
 	$(MSBUILD) UlibFS.sln
-
-update-nuget:
-	[ -d packages ] || mkdir packages
-	$(NUGET) update -self
 
 install-packages:
 	[ -d packages ] || $(MAKE) update-nuget
