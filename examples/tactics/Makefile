@@ -3,7 +3,7 @@ EXCLUDED_FSTAR_FILES=Launch.fst CanonDeep.fst Poly1.fst Poly2.fst \
 		     StringPrinterTest.fst StringPrinterTest.Aux.fst NArrows.fst
 		     # ^ these last 3 should be fixed and restored
 
-ifndef KREMLIN_HOME
+ifndef KRML_HOME
   EXCLUDED_FSTAR_FILES += $(wildcard StringPrinter*)
 endif
 
@@ -14,8 +14,8 @@ all: verify-all #stringprintertest
 $(CACHE_DIR):
 	mkdir -p $@
 
-ifdef KREMLIN_HOME
-INCLUDE_PATHS+=$(KREMLIN_HOME)/kremlib
+ifdef KRML_HOME
+INCLUDE_PATHS+=$(KRML_HOME)/krmllib
 endif
 
 #shadowing of files because of implicitly opening a namespace
@@ -28,9 +28,9 @@ verify-all: $(CACHE_DIR) $(addsuffix .checked, $(addprefix $(CACHE_DIR)/, $(FSTA
 launch: Launch.fst
 	$(FSTAR) --unsafe_tactic_exec $^
 
-ifdef KREMLIN_HOME
+ifdef KRML_HOME
 stringprintertest: $(CACHE_DIR)
-	 [ ! -f $(KREMLIN_HOME)/krml ] || [ ! -x $(KREMLIN_HOME)/krml ] || $(KREMLIN_HOME)/krml -tmpdir stringprintertest -bundle 'StringPrinter.\*' -bundle StringPrinterTest.Aux -drop 'FStar.Tactics.\*' -drop 'FStar.Reflection.\*' StringPrinterTest.fst -skip-linking
+	 [ ! -f $(KRML_HOME)/krml ] || [ ! -x $(KRML_HOME)/krml ] || $(KRML_HOME)/krml -tmpdir stringprintertest -bundle 'StringPrinter.\*' -bundle StringPrinterTest.Aux -drop 'FStar.Tactics.\*' -drop 'FStar.Reflection.\*' StringPrinterTest.fst -skip-linking
 else
 stringprintertest:
 endif

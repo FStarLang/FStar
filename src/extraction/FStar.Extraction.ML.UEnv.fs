@@ -333,7 +333,7 @@ let initial_mlident_map =
               | Some Options.FSharp -> fsharpkeywords
               | Some Options.OCaml
               | Some Options.Plugin -> ocamlkeywords
-              | Some Options.Kremlin -> kremlin_keywords
+              | Some Options.Krml -> krml_keywords
               | None -> [])
           (BU.psmap_empty())
         in

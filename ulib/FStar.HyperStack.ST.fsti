@@ -238,7 +238,7 @@ let inline_stack_inv h h' : GTot Type0 =
   same_refs_in_non_tip_regions h h'
 
 (**
- * Effect that indicates to the Kremlin compiler that allocation may occur in the caller's frame.
+ * Effect that indicates to the Karamel compiler that allocation may occur in the caller's frame.
  * In other terms, the backend has to unfold the body into the caller's body.
  * This effect maintains the stack AND the heap invariant: it can be inlined in the Stack effect
  * function body as well as in a Heap effect function body
@@ -254,7 +254,7 @@ let inline_inv h h' : GTot Type0 =
   same_refs_in_non_tip_stack_regions h h'
 
 (**
- * Effect that indicates to the Kremlin compiler that allocation may occur in the caller's frame.
+ * Effect that indicates to the Karamel compiler that allocation may occur in the caller's frame.
  * In other terms, the backend has to unfold the body into the caller's body.
  * This effect only maintains the stack invariant: the tip is left unchanged and no allocation
  *  may occurs in the stack lower than the tip.

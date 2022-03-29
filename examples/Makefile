@@ -45,7 +45,7 @@ ALL_EXAMPLE_DIRS+=\
 
 endif
 
-ifdef KREMLIN_HOME
+ifdef KRML_HOME
 ALL_EXAMPLE_DIRS+=\
   kv_parsing \
   miniparse \

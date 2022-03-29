@@ -26,7 +26,7 @@ module B = FStar.Buffer
 
 open FStar.Ghost
 
-// kremlib libraries
+// krmllib libraries
 module C = C
 open C.Loops
 
