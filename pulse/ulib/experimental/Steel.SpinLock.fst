@@ -67,7 +67,7 @@ val acquire_core (#p:vprop) (#u:inames) (r:ref bool) (i:inv (lockinv p r))
 let acquire_core #p #u r i =
   let ghost = witness_exists () in
 
-  let res = cas_pt r ghost available locked in
+  let res = cas_pt_bool r ghost available locked in
 
   (* Not sure we can avoid calling an SMT here. Better force the manual call? *)
   rewrite_slprop (if (Ghost.reveal ghost) then emp else p) (if res then p else emp)
@@ -97,7 +97,7 @@ val release_core (#p:vprop) (#u:inames) (r:ref bool) (i:inv (lockinv p r))
 let release_core #p #u r i =
   let v = witness_exists () in
 
-  let res = cas_pt r v locked available in
+  let res = cas_pt_bool r v locked available in
 
   (* Not sure we can avoid calling an SMT here. Better force the manual call? *)
   rewrite_slprop (if (Ghost.reveal v) then emp else p) (if res then emp else p)

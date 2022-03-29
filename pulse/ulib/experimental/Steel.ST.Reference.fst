@@ -120,16 +120,16 @@ let gather (#a:Type0)
       (ensures fun _ -> v0 == v1)
   = coerce_ghost (fun _ -> R.gather_pt #a #uses #p0 #p1 #v0 #v1 r)
 
-let cas (#t:eqtype)
-        (#uses:inames)
-        (r:ref t)
-        (v:Ghost.erased t)
-        (v_old v_new:t)
-  : STAtomicT (b:bool{b <==> (Ghost.reveal v == v_old)})
-      uses
-      (pts_to r full_perm v)
-      (fun b -> if b then pts_to r full_perm v_new else pts_to r full_perm v)
-  = coerce_atomic (fun _ -> R.cas_pt #t #uses r v v_old v_new)
+let atomic_read_u32 r =
+  let u = coerce_atomic (fun _ -> R.atomic_read_pt_u32 r) in
+  return u
+
+let atomic_write_u32 r x =
+  coerce_atomic (fun _ -> R.atomic_write_pt_u32 r x);
+  return ()
+
+let cas_u32 #uses v r v_old v_new =
+  coerce_atomic (fun _ -> R.cas_pt_u32 #uses r v v_old v_new)
 
 let ptrp r p = R.ptrp r p
 let ptrp_sel r p = R.ptrp_sel r p

@@ -1,5 +1,5 @@
 [
-  "gWcy≤ÄN8´ÍXèZ‡ÛU",
+  "X[Öl7ﬁ]1P⁄\u0018|cK@©",
   [
     [
       "Steel.ST.EphemeralHashtbl.get_result",
@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "e0fb38fd723527789d1b1ece78085daf"
+      "0bb3085b6143e904ea306d0827961c79"
     ],
     [
       "Steel.ST.EphemeralHashtbl.__proj__Present__item___0",
@@ -20,7 +20,7 @@
         "refinement_interpretation_Tm_refine_50d0dbbf10834f0b0bed020c51110903"
       ],
       0,
-      "004f445b57a0ec38d490d5aff08bead1"
+      "e9bee0101c017e8b634d58cd1701ab66"
     ],
     [
       "Steel.ST.EphemeralHashtbl.__proj__Missing__item___0",
@@ -32,7 +32,7 @@
         "refinement_interpretation_Tm_refine_ae87ddf626d409250f9d4391f208a13e"
       ],
       0,
-      "d30ed1ebd439f10a46c613f496f843a7"
+      "0d004971f68a87aeb59395b8593ebc9a"
     ],
     [
       "Steel.ST.EphemeralHashtbl.map_contains_prop",
@@ -47,7 +47,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "48d808b726bcfcba62a9d5b27a3cf243"
+      "20dbcd0a6a028bfa5da5499aff8c6c81"
     ],
     [
       "Steel.ST.EphemeralHashtbl.get_post",
@@ -59,33 +59,7 @@
         "false_interp", "l_quant_interp_5b2993f9f2c0eba3627049a3b4167c7a"
       ],
       0,
-      "d2c33e983fb1c97be7f5032be43e5ea7"
-    ],
-    [
-      "Steel.ST.EphemeralHashtbl.with_key_post",
-      1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "disc_equation_Steel.ST.EphemeralHashtbl.Absent",
-        "disc_equation_Steel.ST.EphemeralHashtbl.Missing",
-        "disc_equation_Steel.ST.EphemeralHashtbl.Present",
-        "equation_Prims.l_False", "equation_Prims.subtype_of",
-        "equation_Steel.ST.EphemeralHashtbl.repr", "false_interp",
-        "fuel_guarded_inversion_Steel.ST.EphemeralHashtbl.get_result",
-        "l_quant_interp_5b2993f9f2c0eba3627049a3b4167c7a",
-        "lemma_FStar.Pervasives.invertOption",
-        "proj_equation_FStar.Pervasives.Native.Mktuple2__1",
-        "proj_equation_FStar.Pervasives.Native.Mktuple2__2",
-        "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
-        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
-        "typing_FStar.Ghost.reveal", "typing_FStar.PartialMap.sel",
-        "typing_Steel.ST.EphemeralHashtbl.repr"
-      ],
-      0,
-      "0dda1870cd155058395e46197d818b81"
+      "c4afd5cdb41b1eb1754f6b67fd03f6ce"
     ]
   ]
 ]
