@@ -19,9 +19,6 @@ module FStar.IntegerIntervals
  
 (* Aliases to all kinds of integer intervals *)
 
-(* Special case for naturals under k, to use in sequences, lists, arrays, etc *)
-type under (k: nat) = x:nat{x<k}
-
 (* general infinite integer intervals *)
 type less_than (k: int) = x:int{x<k}
 type greater_than (k: int) = x:int{x>k}
@@ -45,6 +42,9 @@ type efrom_eto (x y: int) = interval (x+1) y
 type efrom_ito (x y: int) = interval (x+1) (y+1)
 type ifrom_eto (x y: int) = interval x y
 type ifrom_ito (x y: int) = interval x (y+1)
+
+(* Special case for naturals under k, to use in sequences, lists, arrays, etc *)
+type under (k: nat) = interval 0 k
 
 (* If we define our intervals this way, then the following lemma comes for free: *)
 private let closed_interval_lemma (x y:int) : Lemma (interval x (y+1) == ifrom_ito x y) = ()
@@ -81,4 +81,4 @@ let indices_seq (n: nat)
        FStar.Seq.Base.length f = n /\ 
        (forall (k: under n). FStar.Seq.Base.index f k = k) 
     }) 
-  = FStar.Seq.Base.init n (fun x -> x)
+  = FStar.Seq.Base.init n (fun (x:under n) -> x)
