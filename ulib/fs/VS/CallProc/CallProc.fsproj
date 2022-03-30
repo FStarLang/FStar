@@ -9,10 +9,10 @@
     <OutputType>Exe</OutputType>
     <RootNamespace>CallProc</RootNamespace>
     <AssemblyName>CallProc</AssemblyName>
+    <OtherFlags>--nowarn:0086 --mlcompatibility --nologo</OtherFlags>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <UseStandardResourceNames>true</UseStandardResourceNames>
-    <WarningsAsErrors>3239;$(WarningsAsErrors)</WarningsAsErrors>
     <Name>CallProc</Name>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">

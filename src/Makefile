@@ -14,56 +14,19 @@ $(BIN)/fstar.exe:
 clean: clean-ocaml
 
 # --------------------------------------------------------------------
-# Bootstrapping in OCaml: The main logic is in Makefile.boot. Here, we
-# mainly prepare for bootstrapping by copying and sed'ing a few F#
-# files.
+# Bootstrapping in OCaml: The main logic is in Makefile.boot.
 # --------------------------------------------------------------------
-
-# All the files that need to be pre-processed
-
-ALL_BOOT=$(addprefix boot/FStar., Compiler.Util.fsti \
-			          Compiler.Bytes.fsti String.fsti	\
-			          BigInt.fsti Pprint.fsti		\
-			          Tests.Test.fst \
-			          StringBuffer.fsti)
-
-define from_boot_file
-	@echo "[BOOT      $(notdir $@)]"
-	$(Q)cp $^ $@
-	$(Q)$(SED) -i.bak '/\/\/ *JUST *FSHARP */d' $@
-	$(Q)$(SED) -i.bak 's,^ *// *IN *F\* *:,,g' $@
-	$(Q)rm -f $@.bak
-endef
-
-boot/%.fst: basic/boot/%.fs | boot_dir
-	$(call from_boot_file)
-
-boot/%.fsti: basic/boot/%.fsi | boot_dir
-	$(call from_boot_file)
-
-boot/%.fsti: prettyprint/boot/%.fsi | boot_dir
-	$(call from_boot_file)
-
-
-boot/FStar.Tests.Test.fst: tests/boot/FStar.Tests.Test.fs | boot_dir
-	$(call from_boot_file)
-
-boot_dir:
-	mkdir -p boot
-
-boot: $(ALL_BOOT)
 
 clean_boot:
 	rm -rf .cache.boot
 	rm -f .depend
-	rm -rf boot
 
 # --------------------------------------------------------------------------------
 # Now we have some make targets wrap calls to other makefiles,
 # Notably, Makefile.boot, to extract ocaml from the compiler sources
 # And ocaml-output/Makefile, to actually build the compiler in OCaml
 # --------------------------------------------------------------------------------
-ocaml: boot
+ocaml:
 	$(Q)+$(MAKE) -f Makefile.boot all-ml
 
 fstar-ocaml: ocaml
