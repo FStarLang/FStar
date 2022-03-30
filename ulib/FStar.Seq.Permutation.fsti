@@ -1,5 +1,5 @@
 (*
-   Copyright 2021 Microsoft Research
+   Copyright 2021-2022 Microsoft Research
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -16,7 +16,10 @@
    Authors: N. Swamy, A. Rastogi, A. Rozanov
 *)
 module FStar.Seq.Permutation
+
 open FStar.Seq
+
+open FStar.IntegerIntervals
 
 (* This module defines a permutation on sequences as a bijection among
    the sequence indices relating equal elements.
@@ -31,12 +34,9 @@ open FStar.Seq
    2. Folding the multiplication of a commutative monoid over a
       sequence and its permutation produces the equivalent results
 *)
-
-(* A bounded natural number *)
-let nat_at_most (n:nat) = m:nat { m < n }
-
+  
 (* A function from the indices of `s` to itself *)
-let index_fun #a (s:seq a) = nat_at_most (Seq.length s) -> nat_at_most (Seq.length s)
+let index_fun #a (s:seq a) = under (Seq.length s) -> under (Seq.length s)
 
 (* An abstract predicate defining when an index_fun is a permutation *)
 val is_permutation (#a:Type) (s0:seq a) (s1:seq a) (f:index_fun s0) : prop
@@ -107,26 +107,14 @@ val foldm_snoc_perm (#a:_) (#eq:_)
 /// foldm_snoc_split:  This next bit is for a lemma that proves that if
 ///   if the fold is taken over a sequence of sums, it is equal
 ///   to a sum of folds of the summand sequences
-
-(* An integer not less than x *)
-let not_less_than (x: int) = (t: int{t>=x})
-
-(* The closed interval [x,y] *)
-let in_between (x: int) (y: not_less_than x) = (t: int{t>=x && t<=y})
-
-(* A zero-based counter for the range [x,y] *)
-let counter_of_range (x: int) (y: not_less_than x) = (t: nat{t<(y+1-x)})
-
-(* The number of elements in the range [x,y] *)
-let range_count (x: int) (y: not_less_than x) : pos = (y+1)-x
-
+  
 (* This constructs a sequence init function to be used to create
    a sequence of function values in a given finite integer range *)
 let init_func_from_expr #c (#n0: int) (#nk: not_less_than n0)
-                        (expr: in_between n0 nk -> c)
-                        (a: in_between n0 nk)
-                        (b: in_between a nk)
-                        (i: counter_of_range a b)
+                        (expr: ifrom_ito n0 nk -> c)
+                        (a: ifrom_ito n0 nk)
+                        (b: ifrom_ito a nk)
+                        (i: under (closed_interval_size a b))
   : c
   = expr (n0+i)
 
@@ -135,6 +123,7 @@ let func_sum #a #c #eq (cm: CE.cm c eq) (f g: a -> c)
   : t:(a -> c){ forall (x:a). t x == f x `cm.mult` g x }
   = fun (x:a) -> cm.mult (f x) (g x)
 
+open FStar.Seq.Equiv
 
 (* The lemma itself:
      if the fold is taken over a sequence of sums, it is equal
@@ -143,7 +132,28 @@ val foldm_snoc_split (#c:_) (#eq:_)
                      (cm: CE.cm c eq)
                      (n0: int)
                      (nk: not_less_than n0)
-                     (expr1 expr2: (in_between n0 nk) -> c)
-  : Lemma (ensures (foldm_snoc cm (init (range_count n0 nk) (init_func_from_expr (func_sum cm expr1 expr2) n0 nk)) `eq.eq`
-           cm.mult (foldm_snoc cm (init (range_count n0 nk) (init_func_from_expr expr1 n0 nk)))
-                   (foldm_snoc cm (init (range_count n0 nk) (init_func_from_expr expr2 n0 nk)))))
+                     (expr1 expr2: (ifrom_ito n0 nk) -> c)
+  : Lemma (ensures (foldm_snoc cm (init (closed_interval_size n0 nk) (init_func_from_expr (func_sum cm expr1 expr2) n0 nk)) `eq.eq`
+           cm.mult (foldm_snoc cm (init (closed_interval_size n0 nk) (init_func_from_expr expr1 n0 nk)))
+                   (foldm_snoc cm (init (closed_interval_size n0 nk) (init_func_from_expr expr2 n0 nk)))))
+
+
+
+val foldm_snoc_equality (#c:_) (#eq:_) (add: CE.cm c eq) (s t: seq c)
+  : Lemma (requires length s == length t /\ eq_of_seq eq s t)
+          (ensures foldm_snoc add s `eq.eq` foldm_snoc add t) 
+
+
+val foldm_snoc_split_seq (#c:_) (#eq:_) (add: CE.cm c eq) 
+                         (s: seq c) (t: seq c{length s == length t})
+                         (sum_seq: seq c{length sum_seq == length s})
+                         (proof: (i: under (length s)) 
+                                 -> Lemma ((index s i `add.mult` index t i)
+                                          `eq.eq` (index sum_seq i)))
+  : Lemma ((foldm_snoc add s `add.mult` foldm_snoc add t) `eq.eq`
+           (foldm_snoc add sum_seq))
+           
+val foldm_snoc_of_equal_inits (#c:_) (#eq:_) (#m: pos) (cm: CE.cm c eq) 
+                              (f: (under m) -> c) (g: (under m) -> c)
+  : Lemma (requires  (forall (i: under m). f i `eq.eq` g i))
+          (ensures foldm_snoc cm (init m f) `eq.eq` foldm_snoc cm (init m g))

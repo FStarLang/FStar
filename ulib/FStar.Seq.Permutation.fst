@@ -1,5 +1,5 @@
 (*
-   Copyright 2021 Microsoft Research
+   Copyright 2021-2022 Microsoft Research
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -502,18 +502,18 @@ let elim_eq_laws #a (eq:CE.equiv a)
 let fold_decomposition_aux #c #eq (cm: CE.cm c eq)
                            (n0: int)
                            (nk: int{nk=n0})
-                           (expr1 expr2: (in_between n0 nk) -> c)
-  : Lemma (foldm_snoc cm (init (range_count n0 nk)
+                           (expr1 expr2: (ifrom_ito n0 nk) -> c)
+  : Lemma (foldm_snoc cm (init (closed_interval_size n0 nk)
                                (init_func_from_expr (func_sum cm expr1 expr2) n0 nk)) `eq.eq`
-           cm.mult (foldm_snoc cm (init (range_count n0 nk) (init_func_from_expr expr1 n0 nk)))
-                   (foldm_snoc cm (init (range_count n0 nk) (init_func_from_expr expr2 n0 nk))))
+           cm.mult (foldm_snoc cm (init (closed_interval_size n0 nk) (init_func_from_expr expr1 n0 nk)))
+                   (foldm_snoc cm (init (closed_interval_size n0 nk) (init_func_from_expr expr2 n0 nk))))
   = elim_eq_laws eq;
-    let sum_of_funcs (i: counter_of_range n0 nk)
+    let sum_of_funcs (i: under (closed_interval_size n0 nk))
       = expr1 (n0+i) `cm.mult` expr2 (n0+i) in
-    lemma_eq_elim (init (range_count n0 nk) sum_of_funcs)
+    lemma_eq_elim (init (closed_interval_size n0 nk) sum_of_funcs)
                   (create 1 (expr1 n0 `cm.mult` expr2 n0));
     foldm_snoc_singleton cm (expr1 n0 `cm.mult` expr2 n0);
-    let ts = (init (range_count n0 nk) sum_of_funcs) in
+    let ts = (init (closed_interval_size n0 nk) sum_of_funcs) in
     let ts1 = (init (nk+1-n0) (fun i -> expr1 (n0+i))) in
     let ts2 = (init (nk+1-n0) (fun i -> expr2 (n0+i))) in
     assert (foldm_snoc cm ts `eq.eq` sum_of_funcs (nk-n0)); // this assert speeds up the proof.
@@ -557,22 +557,23 @@ let aux_shuffle_lemma #c #eq (cm: CE.cm c eq)
 let rec foldm_snoc_split' #c #eq (cm: CE.cm c eq)
                            (n0: int)
                            (nk: not_less_than n0)
-                           (expr1 expr2: (in_between n0 nk) -> c)
-  : Tot (squash (foldm_snoc cm (init (range_count n0 nk) (init_func_from_expr (func_sum cm expr1 expr2) n0 nk)) `eq.eq`
-                 cm.mult (foldm_snoc cm (init (range_count n0 nk) (init_func_from_expr expr1 n0 nk)))
-                         (foldm_snoc cm (init (range_count n0 nk) (init_func_from_expr expr2 n0 nk)))))
+                           (expr1 expr2: (ifrom_ito n0 nk) -> c)
+  : Tot (squash (foldm_snoc cm (init (closed_interval_size n0 nk) (init_func_from_expr (func_sum cm expr1 expr2) n0 nk)) `eq.eq`
+                 cm.mult (foldm_snoc cm (init (closed_interval_size n0 nk) (init_func_from_expr expr1 n0 nk)))
+                         (foldm_snoc cm (init (closed_interval_size n0 nk) (init_func_from_expr expr2 n0 nk)))))
         (decreases nk-n0)
   = if (nk=n0)
     then fold_decomposition_aux cm n0 nk expr1 expr2
     else (
       cm_commutativity cm;
       elim_eq_laws eq;
-      let lfunc_up_to (nf: in_between n0 nk) = init_func_from_expr (func_sum cm expr1 expr2) n0 nf in
+      let lfunc_up_to (nf: ifrom_ito n0 nk) = init_func_from_expr (func_sum cm expr1 expr2) n0 nf in
+      let range_count = closed_interval_size in
       let full_count = range_count n0 nk in
       let sub_count = range_count n0 (nk-1) in
       let fullseq = init full_count (lfunc_up_to nk) in
-      let rfunc_1_up_to (nf: in_between n0 nk) = init_func_from_expr expr1 n0 nf in
-      let rfunc_2_up_to (nf: in_between n0 nk) = init_func_from_expr expr2 n0 nf in
+      let rfunc_1_up_to (nf: ifrom_ito n0 nk) = init_func_from_expr expr1 n0 nf in
+      let rfunc_2_up_to (nf: ifrom_ito n0 nk) = init_func_from_expr expr2 n0 nf in
       let fullseq_r1 = init full_count (rfunc_1_up_to nk) in
       let fullseq_r2 = init full_count (rfunc_2_up_to nk) in
       let subseq = init sub_count (lfunc_up_to nk) in
@@ -600,7 +601,7 @@ let rec foldm_snoc_split' #c #eq (cm: CE.cm c eq)
       let nk' = nk - 1 in
       (* here's the nasty bit with where we have to massage the proof from the induction hypothesis *)
       let ih
-        : squash ((foldm_snoc cm (init (range_count n0 nk') (init_func_from_expr #_ #n0 #nk' (func_sum #(in_between n0 nk') cm expr1 expr2) n0 nk')) `eq.eq`
+        : squash ((foldm_snoc cm (init (range_count n0 nk') (init_func_from_expr #_ #n0 #nk' (func_sum #(ifrom_ito n0 nk') cm expr1 expr2) n0 nk')) `eq.eq`
               cm.mult (foldm_snoc cm (init (range_count n0 nk') (init_func_from_expr #_ #n0 #nk' expr1 n0 nk')))
                       (foldm_snoc cm (init (range_count n0 nk') (init_func_from_expr #_ #n0 #nk' expr2 n0 nk')))))
         = foldm_snoc_split' cm n0 nk' expr1 expr2
@@ -612,10 +613,10 @@ let rec foldm_snoc_split' #c #eq (cm: CE.cm c eq)
       == { assert (Seq.equal subseq
                              (init (range_count n0 nk')
                                    (init_func_from_expr #_ #n0 #nk'
-                                      (func_sum #(in_between n0 nk') cm expr1 expr2) n0 nk'))) }
+                                      (func_sum #(ifrom_ito n0 nk') cm expr1 expr2) n0 nk'))) }
         foldm_snoc cm (init (range_count n0 nk')
                             (init_func_from_expr #_ #n0 #nk'
-                               (func_sum #(in_between n0 nk') cm expr1 expr2) n0 nk'));
+                               (func_sum #(ifrom_ito n0 nk') cm expr1 expr2) n0 nk'));
       };
       assert (Seq.equal subseq_r1 (init (range_count n0 nk') (init_func_from_expr #_ #n0 #nk' expr1 n0 nk')));
       assert (Seq.equal subseq_r2 (init (range_count n0 nk') (init_func_from_expr #_ #n0 #nk' expr2 n0 nk')));
@@ -631,5 +632,95 @@ let rec foldm_snoc_split' #c #eq (cm: CE.cm c eq)
 let foldm_snoc_split #c #eq (cm: CE.cm c eq)
                            (n0: int)
                            (nk: not_less_than n0)
-                           (expr1 expr2: (in_between n0 nk) -> c)
+                           (expr1 expr2: (ifrom_ito n0 nk) -> c)
   = foldm_snoc_split' cm n0 nk expr1 expr2
+
+open FStar.Seq.Equiv
+
+let rec foldm_snoc_equality #c #eq (add: CE.cm c eq) (s t: seq c)
+  : Lemma (requires length s == length t /\ eq_of_seq eq s t)
+          (ensures foldm_snoc add s `eq.eq` foldm_snoc add t)
+          (decreases length s) = 
+  if length s = 0 then (
+    assert_norm (foldm_snoc add s == add.unit);
+    assert_norm (foldm_snoc add t == add.unit);
+    eq.reflexivity add.unit
+  ) 
+  else (
+    let sliat, slast = un_snoc s in
+    let tliat, tlast = un_snoc t in
+    eq_of_seq_unsnoc eq (length s) s t;
+    foldm_snoc_equality add sliat tliat; 
+    add.congruence slast (foldm_snoc add sliat)
+                   tlast (foldm_snoc add tliat) 
+  )
+ 
+let foldm_snoc_split_seq #c #eq (add: CE.cm c eq) 
+                     (s: seq c) (t: seq c{length s == length t})
+                     (sum_seq: seq c{length sum_seq == length s})
+                     (proof: (i: under (length s)) -> Lemma ((index s i `add.mult` index t i)
+                       `eq.eq` (index sum_seq i)))
+  : Lemma ((foldm_snoc add s `add.mult` foldm_snoc add t) `eq.eq`
+           (foldm_snoc add sum_seq)) =
+  if length s = 0 then add.identity add.unit else  
+  let n = length s in
+  let index_1 (i:under n) = index s i in
+  let index_2 (i:under n) = index t i in
+  let nk = (n-1) in
+  assert (n == closed_interval_size 0 nk);
+  let index_sum = func_sum add index_1 index_2 in
+  let expr1 = init_func_from_expr #c #0 #(n-1) index_1 0 nk in
+  let expr2 = init_func_from_expr #c #0 #(n-1) index_2 0 nk in
+  let expr_sum = init_func_from_expr #c #0 #(n-1) index_sum 0 nk in
+  Classical.forall_intro eq.reflexivity;
+  Classical.forall_intro_2 (Classical.move_requires_2 eq.symmetry);
+  Classical.forall_intro_3 (Classical.move_requires_3 eq.transitivity);
+  foldm_snoc_split add 0 (n-1) index_1 index_2;
+  assert (foldm_snoc add (init n (expr_sum)) `eq.eq`
+          add.mult (foldm_snoc add (init n expr1)) (foldm_snoc add (init n expr2)));
+  lemma_eq_elim s (init n expr1);
+  lemma_eq_elim t (init n expr2);
+  Classical.forall_intro proof; 
+  eq_of_seq_from_element_equality eq (init n expr_sum) sum_seq;
+  foldm_snoc_equality add (init n expr_sum) sum_seq ;
+  
+  assert (eq.eq (foldm_snoc add (init n expr_sum)) 
+                (foldm_snoc add sum_seq));
+  assert (foldm_snoc add s == foldm_snoc add (init n expr1));
+  assert (foldm_snoc add t == foldm_snoc add (init n expr2));
+  assert (add.mult (foldm_snoc add s) (foldm_snoc add t) `eq.eq`
+         foldm_snoc add (init n (expr_sum)));
+  eq.transitivity (add.mult (foldm_snoc add s) (foldm_snoc add t))
+                  (foldm_snoc add (init n (expr_sum)))
+                  (foldm_snoc add sum_seq)
+
+let rec foldm_snoc_of_equal_inits #c #eq #m (cm: CE.cm c eq) 
+                                  (f: (under m) -> c) 
+                                  (g: (under m) -> c)
+  : Lemma (requires  (forall (i: under m). f i `eq.eq` g i))
+          (ensures foldm_snoc cm (init m f) `eq.eq` 
+                   foldm_snoc cm (init m g)) = 
+  if m=0 then begin
+    assert_norm (foldm_snoc cm (init m f) == cm.unit);
+    assert_norm (foldm_snoc cm (init m g) == cm.unit);
+    eq.reflexivity cm.unit 
+  end else 
+  if m=1 then begin
+    foldm_snoc_singleton cm (f 0);
+    foldm_snoc_singleton cm (g 0);
+    eq.transitivity (foldm_snoc cm (init m f)) (f 0) (g 0);
+    eq.symmetry (foldm_snoc cm (init m g)) (g 0);
+    eq.transitivity (foldm_snoc cm (init m f)) 
+                    (g 0)
+                    (foldm_snoc cm (init m g))
+  end else
+  let fliat, flast = un_snoc (init m f) in
+  let gliat, glast = un_snoc (init m g) in  
+  foldm_snoc_of_equal_inits cm (fun (i: under (m-1)) -> f i) 
+                               (fun (i: under (m-1)) -> g i);
+  lemma_eq_elim (init (m-1) (fun (i: under (m-1)) -> f i)) fliat;
+  lemma_eq_elim (init (m-1) (fun (i: under (m-1)) -> g i)) gliat;
+  cm.congruence flast (foldm_snoc cm fliat)
+                glast (foldm_snoc cm gliat)
+
+ 
