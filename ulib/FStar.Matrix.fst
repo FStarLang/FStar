@@ -133,8 +133,7 @@ let matrix_submatrix_lemma #c (#m: not_less_than 2) (#n: pos)
 
 (* This one could be probably written more efficiently -- 
    but this implementation also works. *)
-#push-options "--ifuel 0 --fuel 0 --z3rlimit 25"
-#restart-solver
+#push-options "--ifuel 1 --fuel 0 --z3rlimit 30" 
 let rec matrix_fold_equals_fold_of_seq_folds #c #eq #m #n cm generator : Lemma 
   (ensures foldm cm (init generator) `eq.eq`
            SP.foldm_snoc cm (SB.init m (fun i -> SP.foldm_snoc cm (SB.init n (generator i)))) /\ 
@@ -586,10 +585,8 @@ let rec foldm_snoc_zero_lemma #c #eq (add: CE.cm c eq) (zeroes: SB.seq c)
   eq.transitivity (SP.foldm_snoc add zeroes)                                
                   (add.mult add.unit add.unit)
                   add.unit
-
-(* right identity will soon get a fully similar proof *)
-#push-options "--z3rlimit 20 --fuel 1 --ifuel 0"
-#restart-solver
+ 
+#push-options "--z3rlimit 50 --fuel 1 --ifuel 0" 
 let matrix_mul_right_identity #c #eq #m (add: CE.cm c eq) 
                               (mul: CE.cm c eq{is_absorber add.unit mul}) 
                               (mx: matrix c m m)
@@ -659,8 +656,7 @@ let matrix_mul_right_identity #c #eq #m (add: CE.cm c eq)
       end in seq_sum_is_item m
     in Classical.forall_intro_2 aux;
   matrix_equiv_from_element_eq eq mxu mx  
-   
-#restart-solver
+    
 let matrix_mul_left_identity #c #eq #m (add: CE.cm c eq) 
                               (mul: CE.cm c eq{is_absorber add.unit mul}) 
                               (mx: matrix c m m)
