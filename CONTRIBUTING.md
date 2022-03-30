@@ -41,7 +41,7 @@ https://github.com/FStarLang/FStar/wiki/Style-guide
 
 ## Snapshots
 
-The F\* compiler is written in F\*/F#, then extracted to OCaml. We keep a copy
+The F\* compiler is written in F\*, then extracted to OCaml. We keep a copy
 of the OCaml extracted compiler under version control. We **do not** expect external
 pull requests to refresh the snapshot. However, reviewers should take it upon
 themselves to update the snapshot before merging to master when this is needed
@@ -162,7 +162,7 @@ Guido Martinez
 
 ## Tutorial
 
-Catalin Hritcu
+Nik Swamy
 
 ## Examples
 
