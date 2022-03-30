@@ -76,8 +76,8 @@ ocaml-output/%.ml:
 .depend:
 	@echo "[DEPEND]"
 	$(Q)$(FSTAR_C) $(SIL) --dep full	\
-		fstar/FStar.Main.fs		\
-		boot/FStar.Tests.Test.fs	\
+		fstar/FStar.Main.fst		\
+		boot/FStar.Tests.Test.fst	\
 		$(EXTRACT)			> ._depend
 	$(Q)mv ._depend .depend
 	$(Q)mkdir -p $(CACHE_DIR)
