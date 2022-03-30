@@ -9,6 +9,14 @@ Some files are written directly in OCaml:
  * Some basic system utilities, like FStar.Compiler.Util only has an
    interface in F* and is implemented as FStar_Compiler_Util.ml
 
+For historical reasons (see below), many compiler source files begin
+with the `#light "off"` directive. This enables a syntax mode of F*
+(not recommended for use outside the compiler sources) that allows
+writing type applications in an F#-style syntax, e.g., `list<t>`
+instead of `list t`. We are in the process of gradually migrating away
+from this syntax and progressively removing uses of the `#light "off"`
+directive.
+
 --------------------------------------------------------------------------------
 
 History:
