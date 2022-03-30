@@ -133,7 +133,7 @@ let matrix_submatrix_lemma #c (#m: not_less_than 2) (#n: pos)
 
 (* This one could be probably written more efficiently -- 
    but this implementation also works. *)
-#push-options "--ifuel 1 --fuel 0 --z3rlimit 30" 
+#push-options "--ifuel 1 --fuel 0 --z3rlimit 130" 
 let rec matrix_fold_equals_fold_of_seq_folds #c #eq #m #n cm generator : Lemma 
   (ensures foldm cm (init generator) `eq.eq`
            SP.foldm_snoc cm (SB.init m (fun i -> SP.foldm_snoc cm (SB.init n (generator i)))) /\ 
@@ -586,7 +586,7 @@ let rec foldm_snoc_zero_lemma #c #eq (add: CE.cm c eq) (zeroes: SB.seq c)
                   (add.mult add.unit add.unit)
                   add.unit
  
-#push-options "--z3rlimit 50 --fuel 1 --ifuel 0" 
+#push-options "--z3rlimit 150 --fuel 1 --ifuel 0" 
 let matrix_mul_right_identity #c #eq #m (add: CE.cm c eq) 
                               (mul: CE.cm c eq{is_absorber add.unit mul}) 
                               (mx: matrix c m m)
@@ -747,6 +747,7 @@ let dot_of_equal_sequences #c #eq (add mul: CE.cm c eq) m
   eq_of_seq_from_element_equality eq (seq_of_products mul p q) (seq_of_products mul r s);
   SP.foldm_snoc_equality add (seq_of_products mul p q) (seq_of_products mul r s)  
 
+#push-options "--z3rlimit 100 --ifuel 1 --fuel 1"
 let matrix_mul_congruence #c #eq #m #n #p (add mul: CE.cm c eq)  
                     (mx: matrix c m n) (my: matrix c n p) 
                     (mz: matrix c m n) (mw: matrix c n p)
@@ -768,7 +769,8 @@ let matrix_mul_congruence #c #eq #m #n #p (add mul: CE.cm c eq)
     eq_of_seq_from_element_equality eq sp_xy sp_zw;
     SP.foldm_snoc_equality add sp_xy sp_zw
   in matrix_equiv_from_proof eq (matrix_mul add mul mx my) (matrix_mul add mul mz mw) aux
-  
+#pop-options
+
 let matrix_mul_is_left_distributive #c #eq #m #n #p (add: CE.cm c eq)
                                     (mul: CE.cm c eq{is_fully_distributive mul add /\ is_absorber add.unit mul}) 
                                     (mx: matrix c m n) (my mz: matrix c n p)
