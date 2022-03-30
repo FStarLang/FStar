@@ -2153,7 +2153,7 @@ val write: #a:typ -> b:pointer a -> z:type_of_typ a -> HST.Stack unit
     /\ gread h1 b == z ))
 
 (** Given our model, this operation is stateful, however it should be translated
-    to a no-op by Kremlin, as the tag does not actually exist at runtime.
+    to a no-op by Karamel, as the tag does not actually exist at runtime.
 *)
 val write_union_field
   (#l: union_typ)

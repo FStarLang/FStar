@@ -25,7 +25,7 @@
    The type `raw a l`: A raw vector
 
      1. Raw vectors receive special treatment during extraction,
-        especially by KreMLin, which extracts a vector to a raw C
+        especially by KaRaMeL, which extracts a vector to a raw C
         pointer. When extracting to OCaml, a `raw a l` is a
         `Batteries.Vect t a`
 
@@ -42,12 +42,12 @@
         properties, simplifying proof obligations in client code.
 
      4. Raw vectors lack decidable equality (since that cannot be
-        implemented given the representation choice in KreMLin)
+        implemented given the representation choice in KaRaMeL)
 
    The type `t a`: A dynamically sized vector
 
      1. Conceptually, a `t a` is a pair of a `len:U32.t` and a `raw a
-        len`. They are implemented as such by KreMLin. When extracting
+        len`. They are implemented as such by KaRaMeL. When extracting
         to OCaml, `t a` is identical to `raw a _`, i.e., it is still
         extracted to a `Batteries.Vect.t a`
 
@@ -72,7 +72,7 @@ module S = FStar.Seq
 let len_t = U32.t
 
 /// A raw vector.
-///   - `vector a n` is extracted to an `a*` in C by KreMLin
+///   - `vector a n` is extracted to an `a*` in C by KaRaMeL
 ///   - Does not support decidable equality
 val raw:
     a:Type u#a
@@ -160,7 +160,7 @@ unfold let op_String_Access #a #l = index #a #l
 
 /// `update v i x`:
 ///     - a new vector that differs from `v` only at index `i`, where it contains `x`.
-///     - Incurs a full copy in KreMLin
+///     - Incurs a full copy in KaRaMeL
 ///     - In OCaml, the new vector shares as much as possible with `v`
 val update:
     #a:Type
@@ -175,7 +175,7 @@ unfold let op_String_Assignment #a #l = update #a #l
 
 /// `append v1 v2`:
 ///     - requires proving that the sum of the lengths of v1 and v2 still fit in a u32
-///     - Incurs a full copy in KreMLin
+///     - Incurs a full copy in KaRaMeL
 ///     - Amortized constant time in OCaml
 val append:
     #a:Type
@@ -190,7 +190,7 @@ unfold let (@|) #a #l1 #l2 = append #a #l1 #l2
 
 /// `sub v i j`:
 ///     - the sub-vector of `v` starting from index `i` up to, but not including, `j`
-///     - Constant time in KreMLin (just an addition on a pointer)
+///     - Constant time in KaRaMeL (just an addition on a pointer)
 ///     - Worst-case (log l) time in OCaml
 val sub:
     #a:Type
