@@ -39,11 +39,26 @@ module GR = Steel.ST.GhostReference
  *
  * See http://pm.inf.ethz.ch/publications/getpdf.php for an implementation
  *   of the OWG counters in the Chalice framework.
+ *
+ * The main idea is that the worker threads maintain ghost state
+ *   that stores their respective contributions to the counter
+ * And the invariant between the counter and their contributions is
+ *   protected by a lock
  *)
 
 #set-options "--ide_id_info_off"
 
 let half_perm = half_perm full_perm
+
+/// r1 and r2 are the ghost references for the two worker threads
+///
+/// The counter's value is the sum of values of r1 and r2
+///
+/// The lock contains full permission to the counter,
+///   and half permission each for r1 and r2
+///
+/// Rest of the half permissions for r1 and r2 are given to the
+///   two worker threads
 
 [@@ __reduce__]
 let lock_inv_predicate (r:R.ref int) (r1 r2:GR.ref int)
@@ -58,6 +73,13 @@ let lock_inv_predicate (r:R.ref int) (r1 r2:GR.ref int)
 [@@ __reduce__]
 let lock_inv (r:R.ref int) (r1 r2:GR.ref int) : vprop =
   exists_ (lock_inv_predicate r r1 r2)
+
+/// For the auxiliary functions, we maintain r1 and r2 as
+///   (if b then r1 else r2) and (if b then r2 else r1),
+///   where b is a ghost boolean
+///
+/// This allows us to write a single function that both threads
+///   can invoke by switching r1 and r2 as r_mine and r_other
 
 inline_for_extraction
 noextract
@@ -132,6 +154,14 @@ let release (r:R.ref int) (r_mine r_other:GR.ref int) (b:G.erased bool)
 
 module P = Steel.FractionalPermission
 
+
+/// The incr function that each thread invokes in parallel
+///
+/// It acquires the lock and increments the counter
+///   as well as the ghost reference
+///
+/// Finally releasing the lock after establishing the lock invariant
+
 let incr (r:R.ref int) (r_mine r_other:GR.ref int) (b:G.erased bool)
   (l:lock (lock_inv r (if b then r_mine else r_other)
                       (if b then r_other else r_mine)))
@@ -142,16 +172,31 @@ let incr (r:R.ref int) (r_mine r_other:GR.ref int) (b:G.erased bool)
         (fun _ -> GR.pts_to r_mine half_perm (n+1))
   = acquire r r_mine r_other b l;
     let w = elim_exists () in
+
+    //
+    // The lock has full permission to r,
+    //   so we can just increment it
+    //
     let v = R.read r in
     R.write r (v+1);
     rewrite
       (R.pts_to r full_perm (v+1))
       (R.pts_to r full_perm ((fst w+1) + snd w));
 
+    //
+    // The permission to the ghost reference is split
+    //   between the lock and the thread, so we need to gather
+    //   before we can increment
+    //
     GR.gather #_ #_ #_ #_ #n #(G.hide (fst w)) r_mine;
     rewrite (GR.pts_to r_mine (sum_perm half_perm half_perm) n)
             (GR.pts_to r_mine full_perm n);
     GR.write r_mine (n+1);
+
+    //
+    // Now we share back the ghost ref,
+    //   and restore the lock invariant
+    //
     GR.share r_mine;
     rewrite (GR.pts_to r_mine (P.half_perm full_perm) (n+1))
             (GR.pts_to r_mine half_perm (fst w+1));
@@ -161,11 +206,19 @@ let incr (r:R.ref int) (r_mine r_other:GR.ref int) (b:G.erased bool)
     rewrite (GR.pts_to r_mine (P.half_perm full_perm) (n+1))
             (GR.pts_to r_mine half_perm (n+1))
 
+
+/// The main function that creates the two worker threads, and
+///   runs them in parallel
+
 let incr_main (#v:G.erased int) (r:R.ref int)
   : STT unit
         (R.pts_to r full_perm v)
         (fun _ -> R.pts_to r full_perm (v+2))
-  = let r1 = GR.alloc 0 in
+  = 
+    //
+    // Allocate the ghost state and share
+    //
+    let r1 = GR.alloc 0 in
     let r2 = GR.alloc v in
 
     GR.share r1;
@@ -183,22 +236,36 @@ let incr_main (#v:G.erased int) (r:R.ref int)
                `star`
              GR.pts_to r2 half_perm v);
 
+    //
+    // Set up the lock invariant
+    //
     rewrite (R.pts_to r full_perm v)
             (R.pts_to r full_perm (fst (0, v) + snd (0, G.reveal v)));
 
     intro_exists (0, G.reveal v) (lock_inv_predicate r r1 r2);
-  
+
+    //
+    // Create the lock
+    //
     let l = new_lock (lock_inv r r1 r2) in
 
+    //
+    // Now run the two threads in parallel
+    //   Note the r1 and r2 are switched in the two calls
+    //
     let _ = par (incr r r1 r2 true l 0)
                 (incr r r2 r1 false l v) in
 
+    //
+    // Now we need to gather ghost state and establish the theorem
+    // We also free the ghost state
+    //
     Steel.ST.SpinLock.acquire l;
     let w = elim_exists () in
     GR.gather #_ #_ #_ #_ #_ #(G.hide (fst w)) r1;
     GR.gather #_ #_ #_ #_ #_ #(G.hide (snd w)) r2;
-    drop (GR.pts_to r1 _ _);
-    drop (GR.pts_to r2 _ _);
+    GR.free r1;
+    GR.free r2;
 
     rewrite (R.pts_to r full_perm (fst w+snd w))
             (R.pts_to r full_perm (v+2))
