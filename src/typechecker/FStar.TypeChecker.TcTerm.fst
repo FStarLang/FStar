@@ -701,7 +701,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
         let env', _ = Env.clear_expected_typ env in
         let env' = { env' with lax = true } in
         let qt, _, g = tc_term env' qt in
-        let g0 = Rel.discharge_guard env' g in
+        let g0 = Rel.discharge_guard env' g |> Rel.resolve_implicits env' in
 
         let t = mk (Tm_quoted (qt, qi)) top.pos in
 

@@ -1898,7 +1898,10 @@ and (tc_maybe_toplevel_term :
                      (match uu___3 with
                       | (qt1, uu___4, g) ->
                           let g0 =
-                            FStar_TypeChecker_Rel.discharge_guard env'1 g in
+                            let uu___5 =
+                              FStar_TypeChecker_Rel.discharge_guard env'1 g in
+                            FStar_Compiler_Effect.op_Bar_Greater uu___5
+                              (FStar_TypeChecker_Rel.resolve_implicits env'1) in
                           let t =
                             FStar_Syntax_Syntax.mk
                               (FStar_Syntax_Syntax.Tm_quoted (qt1, qi))
