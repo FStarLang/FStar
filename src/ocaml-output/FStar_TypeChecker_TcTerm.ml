@@ -1897,34 +1897,33 @@ and (tc_maybe_toplevel_term :
                      let uu___3 = tc_term env'1 qt in
                      (match uu___3 with
                       | (qt1, uu___4, g) ->
-                          ((let uu___6 =
-                              FStar_TypeChecker_Rel.discharge_guard env'1 g in
-                            FStar_Compiler_Effect.op_Bar_Greater uu___6
-                              (FStar_TypeChecker_Rel.force_trivial_guard
-                                 env'1));
-                           (let t =
-                              FStar_Syntax_Syntax.mk
-                                (FStar_Syntax_Syntax.Tm_quoted (qt1, qi))
-                                top.FStar_Syntax_Syntax.pos in
+                          let g0 =
+                            FStar_TypeChecker_Rel.discharge_guard env'1 g in
+                          let t =
+                            FStar_Syntax_Syntax.mk
+                              (FStar_Syntax_Syntax.Tm_quoted (qt1, qi))
+                              top.FStar_Syntax_Syntax.pos in
+                          let uu___5 =
                             let uu___6 =
                               let uu___7 =
-                                let uu___8 =
-                                  FStar_TypeChecker_Common.lcomp_of_comp c in
-                                FStar_Pervasives.Inr uu___8 in
-                              value_check_expected_typ env1 t uu___7
-                                FStar_TypeChecker_Env.trivial_guard in
-                            match uu___6 with
-                            | (t1, lc, g1) ->
-                                let t2 =
-                                  FStar_Syntax_Syntax.mk
-                                    (FStar_Syntax_Syntax.Tm_meta
-                                       (t1,
-                                         (FStar_Syntax_Syntax.Meta_monadic_lift
-                                            (FStar_Parser_Const.effect_PURE_lid,
-                                              FStar_Parser_Const.effect_TAC_lid,
-                                              FStar_Syntax_Syntax.t_term))))
-                                    t1.FStar_Syntax_Syntax.pos in
-                                (t2, lc, g1))))))
+                                FStar_TypeChecker_Common.lcomp_of_comp c in
+                              FStar_Pervasives.Inr uu___7 in
+                            value_check_expected_typ env1 t uu___6
+                              FStar_TypeChecker_Env.trivial_guard in
+                          (match uu___5 with
+                           | (t1, lc, g1) ->
+                               let t2 =
+                                 FStar_Syntax_Syntax.mk
+                                   (FStar_Syntax_Syntax.Tm_meta
+                                      (t1,
+                                        (FStar_Syntax_Syntax.Meta_monadic_lift
+                                           (FStar_Parser_Const.effect_PURE_lid,
+                                             FStar_Parser_Const.effect_TAC_lid,
+                                             FStar_Syntax_Syntax.t_term))))
+                                   t1.FStar_Syntax_Syntax.pos in
+                               let uu___6 =
+                                 FStar_TypeChecker_Env.conj_guard g0 g1 in
+                               (t2, lc, uu___6)))))
        | FStar_Syntax_Syntax.Tm_lazy
            { FStar_Syntax_Syntax.blob = uu___1;
              FStar_Syntax_Syntax.lkind = FStar_Syntax_Syntax.Lazy_embedding
