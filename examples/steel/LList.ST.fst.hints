@@ -1,0 +1,161 @@
+[
+  ">\u000f§\r²[EÀ\b\u0019`K:7\u001e\\",
+  [
+    [
+      "LList.ST.is_list",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_64bbe2e649c5e2dff004f077d943400a_2",
+        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "equation_Prims.eq2", "equation_Prims.squash",
+        "equation_Prims.subtype_of",
+        "fuel_guarded_inversion_LList.ST.llist_node",
+        "fuel_guarded_inversion_Prims.list",
+        "proj_equation_LList.ST.Mkllist_node_data",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
+        "subterm_ordering_Prims.Cons"
+      ],
+      0,
+      "4dbd9f3e07cdcede3450e1f76908959b"
+    ],
+    [
+      "LList.ST.intro",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "b2t_def", "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "0f6cc1151a288af027363542ed696b36"
+    ],
+    [
+      "LList.ST.intro",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "b2t_def",
+        "disc_equation_Prims.Cons", "equation_Prims.eq2",
+        "equation_Prims.squash", "equation_Prims.subtype_of",
+        "fuel_guarded_inversion_LList.ST.llist_node",
+        "fuel_guarded_inversion_Prims.list",
+        "proj_equation_LList.ST.Mkllist_node_data",
+        "proj_equation_Prims.Cons_hd", "proj_equation_Prims.Cons_tl",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
+        "true_interp", "typing_LList.ST.__proj__Mkllist_node__item__data"
+      ],
+      0,
+      "68aa871db9a3319d9daf67c6eafc484e"
+    ],
+    [
+      "LList.ST.elim_aux",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.eq2",
+        "equation_Prims.squash", "equation_Prims.subtype_of",
+        "kinding_LList.ST.llist_node@tok",
+        "proj_equation_LList.ST.Mkllist_node_data",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
+        "true_interp", "typing_FStar.Ghost.reveal"
+      ],
+      0,
+      "5d7a3c9cda6621fdf2e204d71449c40b"
+    ],
+    [
+      "LList.ST.elim",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "b2t_def", "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "17ca3432cd1f84b415149244efc3b8a8"
+    ],
+    [
+      "LList.ST.elim",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "b2t_def",
+        "disc_equation_Prims.Cons", "equation_Prims.squash",
+        "fuel_guarded_inversion_Prims.list", "proj_equation_Prims.Cons_hd",
+        "proj_equation_Prims.Cons_tl", "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "a255288d6b8c08cacc7f71905cfaf9dd"
+    ],
+    [
+      "LList.ST.empty_pts_to",
+      1,
+      2,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_LList.ST.is_list.fuel_instrumented", "@query",
+        "constructor_distinct_Prims.Nil", "data_typing_intro_Prims.Nil@tok",
+        "equation_LList.ST.empty", "equation_Prims.eq2",
+        "equation_Prims.squash", "equation_Prims.subtype_of",
+        "equation_with_fuel_LList.ST.is_list.fuel_instrumented",
+        "projection_inverse_Prims.Nil_a",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
+        "typing_LList.ST.empty"
+      ],
+      0,
+      "33b1a885ac486459e3e9b3a2fbc19a53"
+    ],
+    [
+      "LList.ST.cons",
+      1,
+      2,
+      1,
+      [
+        "@query", "constructor_distinct_Prims.Cons",
+        "disc_equation_Prims.Cons",
+        "proj_equation_LList.ST.Mkllist_node_data",
+        "proj_equation_LList.ST.Mkllist_node_next",
+        "proj_equation_Prims.Cons_hd", "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_LList.ST.Mkllist_node_data",
+        "projection_inverse_LList.ST.Mkllist_node_next",
+        "projection_inverse_Prims.Cons_a",
+        "projection_inverse_Prims.Cons_hd",
+        "projection_inverse_Prims.Cons_tl"
+      ],
+      0,
+      "31992484c7540df19f5c7d2e904f6ae5"
+    ],
+    [
+      "LList.ST.peek",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "b2t_def", "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "1032091673fecd9d592eb5b27b2cfc95"
+    ],
+    [
+      "LList.ST.peek",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "358bbb0cebf2b31c507bc2c1cea68d0a"
+    ]
+  ]
+]

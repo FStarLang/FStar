@@ -12,7 +12,7 @@
         "int_inversion", "kinding_BinarySearchTreeFirst.tree@tok"
       ],
       0,
-      "793743e231123b2803a9b5dcca96c887"
+      "4dc9fdea5d079649fbd668a55c263c2c"
     ],
     [
       "BinarySearchTreeFirst.leaf",
@@ -26,7 +26,7 @@
         "projection_inverse_FStar.Pervasives.Native.None_a"
       ],
       0,
-      "3f5e3a7493bffdc2732d7a116fe455da"
+      "3b0ee24d5f2a20998fd6825a5b6e77ca"
     ],
     [
       "BinarySearchTreeFirst.insert",
@@ -60,7 +60,7 @@
         "typing_FStar.Pervasives.Native.uu___is_None"
       ],
       0,
-      "cfbc0156d88a0f158c3b65a5781cdad9"
+      "dc544a8e2715195dde0064be8d9b46d7"
     ],
     [
       "BinarySearchTreeFirst.contains",
@@ -79,7 +79,7 @@
         "subterm_ordering_FStar.Pervasives.Native.Some"
       ],
       0,
-      "123b9d285a356f8f0859bfef938d382b"
+      "480fccdc51cb9156f03c963c2250b46c"
     ],
     [
       "BinarySearchTreeFirst.in_order_opt",
@@ -102,7 +102,7 @@
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "a4c841d5db03b947cb8e5b2d4f461a72"
+      "f428eea794e7253afee7a5b43b9201cc"
     ]
   ]
 ]
