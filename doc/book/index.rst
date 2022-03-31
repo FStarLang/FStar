@@ -197,7 +197,7 @@ Part 6: A User's Guide to Structuring and Maintaining F* Developments
    * Extraction
        * OCaml
        * F#
-       * Kremlin
+       * KaRaMeL
        * Partial evaluation
 
    * Command line options

@@ -1026,7 +1026,7 @@ let rec (specs_with_types :
     (FStar_Getopt.noshort, "cmi", (Const (Bool true)),
       "Inline across module interfaces during extraction (aka. cross-module inlining)");
     (FStar_Getopt.noshort, "codegen",
-      (EnumStr ["OCaml"; "FSharp"; "Kremlin"; "Plugin"]),
+      (EnumStr ["OCaml"; "FSharp"; "krml"; "Plugin"]),
       "Generate code for further compilation to executable code, or build a compiler plugin");
     (FStar_Getopt.noshort, "codegen-lib",
       (Accumulated (SimpleStr "namespace")),
@@ -1056,7 +1056,7 @@ let rec (specs_with_types :
       (Accumulated
          (SimpleStr
             "One or more semicolon separated occurrences of '[TargetName:]ModuleSelector'")),
-      "\n\t\tExtract only those modules whose names or namespaces match the provided options.\n\t\t\t'TargetName' ranges over {OCaml, Kremlin, FSharp, Plugin}.\n\t\t\tA 'ModuleSelector' is a space or comma-separated list of '[+|-]( * | namespace | module)'.\n\t\t\tFor example --extract 'OCaml:A -A.B' --extract 'Kremlin:A -A.C' --extract '*' means\n\t\t\t\tfor OCaml, extract everything in the A namespace only except A.B;\n\t\t\t\tfor Kremlin, extract everything in the A namespace only except A.C;\n\t\t\t\tfor everything else, extract everything.\n\t\t\tNote, the '+' is optional: --extract '+A' and --extract 'A' mean the same thing.\n\t\t\tNote also that '--extract A' applies both to a module named 'A' and to any module in the 'A' namespace\n\t\tMultiple uses of this option accumulate, e.g., --extract A --extract B is interpreted as --extract 'A B'.");
+      "\n\t\tExtract only those modules whose names or namespaces match the provided options.\n\t\t\t'TargetName' ranges over {OCaml, krml, FSharp, Plugin}.\n\t\t\tA 'ModuleSelector' is a space or comma-separated list of '[+|-]( * | namespace | module)'.\n\t\t\tFor example --extract 'OCaml:A -A.B' --extract 'krml:A -A.C' --extract '*' means\n\t\t\t\tfor OCaml, extract everything in the A namespace only except A.B;\n\t\t\t\tfor krml, extract everything in the A namespace only except A.C;\n\t\t\t\tfor everything else, extract everything.\n\t\t\tNote, the '+' is optional: --extract '+A' and --extract 'A' mean the same thing.\n\t\t\tNote also that '--extract A' applies both to a module named 'A' and to any module in the 'A' namespace\n\t\tMultiple uses of this option accumulate, e.g., --extract A --extract B is interpreted as --extract 'A B'.");
     (FStar_Getopt.noshort, "extract_module",
       (Accumulated (PostProcessed (pp_lowercase, (SimpleStr "module_name")))),
       "Deprecated: use --extract instead; Only extract the specified modules (instead of the possibly-partial dependency graph)");
@@ -1775,14 +1775,14 @@ let (cmi : unit -> Prims.bool) = fun uu___ -> get_cmi ()
 type codegen_t =
   | OCaml 
   | FSharp 
-  | Kremlin 
+  | Krml 
   | Plugin 
 let (uu___is_OCaml : codegen_t -> Prims.bool) =
   fun projectee -> match projectee with | OCaml -> true | uu___ -> false
 let (uu___is_FSharp : codegen_t -> Prims.bool) =
   fun projectee -> match projectee with | FSharp -> true | uu___ -> false
-let (uu___is_Kremlin : codegen_t -> Prims.bool) =
-  fun projectee -> match projectee with | Kremlin -> true | uu___ -> false
+let (uu___is_Krml : codegen_t -> Prims.bool) =
+  fun projectee -> match projectee with | Krml -> true | uu___ -> false
 let (uu___is_Plugin : codegen_t -> Prims.bool) =
   fun projectee -> match projectee with | Plugin -> true | uu___ -> false
 let (parse_codegen :
@@ -1791,7 +1791,7 @@ let (parse_codegen :
     match uu___ with
     | "OCaml" -> FStar_Pervasives_Native.Some OCaml
     | "FSharp" -> FStar_Pervasives_Native.Some FSharp
-    | "Kremlin" -> FStar_Pervasives_Native.Some Kremlin
+    | "krml" -> FStar_Pervasives_Native.Some Krml
     | "Plugin" -> FStar_Pervasives_Native.Some Plugin
     | uu___1 -> FStar_Pervasives_Native.None
 let (print_codegen : codegen_t -> Prims.string) =
@@ -1799,7 +1799,7 @@ let (print_codegen : codegen_t -> Prims.string) =
     match uu___ with
     | OCaml -> "OCaml"
     | FSharp -> "FSharp"
-    | Kremlin -> "Kremlin"
+    | Krml -> "krml"
     | Plugin -> "Plugin"
 let (codegen : unit -> codegen_t FStar_Pervasives_Native.option) =
   fun uu___ ->
@@ -2161,8 +2161,7 @@ let (extract_settings :
       | FStar_Pervasives_Native.None -> []
       | FStar_Pervasives_Native.Some x -> [(tgt, x)] in
     let uu___ =
-      FStar_Compiler_List.collect merge_target
-        [OCaml; FSharp; Kremlin; Plugin] in
+      FStar_Compiler_List.collect merge_target [OCaml; FSharp; Krml; Plugin] in
     let uu___1 = merge_setting p0.default_settings p1.default_settings in
     { target_specific_settings = uu___; default_settings = uu___1 } in
   fun uu___ ->

@@ -194,3 +194,17 @@ val with_invariant_g (#a:Type)
                                          (p `star` fp)
                                          (fun x -> p `star` fp' x))
   : STGhostT a opened_invariants fp fp'
+
+/// Parallel composition of two STT functions
+val par
+  (#aL:Type u#a)
+  (#aR:Type u#a)
+  (#preL:vprop)
+  (#postL:aL -> vprop)
+  (#preR:vprop)
+  (#postR:aR -> vprop)
+  ($f:unit -> STT aL preL postL)
+  ($g:unit -> STT aR preR postR)
+  : STT (aL & aR)
+        (preL `star` preR)
+        (fun y -> postL (fst y) `star` postR (snd y))

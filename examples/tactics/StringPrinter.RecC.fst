@@ -16,7 +16,7 @@
 module StringPrinter.RecC
 include StringPrinter.Rec
 
-(* This file depends on KreMLin. *)
+(* This file depends on KaRaMeL. *)
 
 module Loops = C.Loops
 module U32 = FStar.UInt32

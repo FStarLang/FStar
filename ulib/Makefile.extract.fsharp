@@ -1,0 +1,65 @@
+.PHONY: indent extra
+
+include ../src/Makefile.config
+
+FSTAR_FILES:=$(wildcard *.fst *.fsti) \
+	     $(wildcard experimental/*fst experimental/*fsti)
+
+OUTPUT_DIRECTORY=fs/extracted
+
+CODEGEN ?= FSharp
+
+MY_FSTAR=$(FSTAR) $(OTHERFLAGS) --lax --cache_checked_modules --odir $(OUTPUT_DIRECTORY) --cache_dir .cache.lax
+
+%.checked.lax:
+	$(MY_FSTAR) $< --already_cached '*,'-$(basename $(notdir $<))
+	touch -c $@
+
+# And then, in a separate invocation, from each .checked.lax we
+# extract an .fs file
+$(OUTPUT_DIRECTORY)/%.fs:
+	$(MY_FSTAR) $(subst .checked.lax,,$(notdir $<)) --codegen $(CODEGEN) --extract_module $(basename $(notdir $(subst .checked.lax,,$<)))
+
+.depend.extract.fsharp:
+	$(Q)mkdir -p .cache.lax
+	$(Q)$(MY_FSTAR) --extract 'FSharp:*;OCaml:None;krml:None' --dep full $(EXTRACT_MODULES) $(addprefix --include , $(INCLUDE_PATHS)) $(FSTAR_FILES) > .depend.extract.fsharp
+	@echo "[DEPEND]"
+
+depend.extract.fsharp: .depend.extract.fsharp
+
+include .depend.extract.fsharp
+
+FS_FILES= \
+	FStar_Pervasives.fs \
+	FStar_Preorder.fs \
+	FStar_Squash.fs \
+	FStar_Classical.fs \
+	FStar_FunctionalExtensionality.fs \
+	FStar_StrongExcludedMiddle.fs \
+	FStar_PropositionalExtensionality.fs \
+	FStar_PredicateExtensionality.fs \
+	FStar_List_Tot_Properties.fs \
+	FStar_Monotonic_HyperHeap.fs \
+	FStar_Monotonic_HyperStack.fs \
+	FStar_Monotonic_Witnessed.fs \
+	FStar_Monotonic_Map.fs \
+	FStar_HyperStack.fs \
+	FStar_Seq_Base.fs \
+	FStar_Seq_Properties.fs \
+	FStar_Seq.fs \
+	FStar_Calc.fs \
+	FStar_Math_Lib.fs \
+	FStar_Math_Lemmas.fs \
+	FStar_BitVector.fs \
+	FStar_UInt.fs \
+	FStar_Int.fs \
+	FStar_Int_Cast.fs \
+	FStar_UInt128.fs \
+	FStar_BigOps.fs \
+	FStar_Int128.fs \
+	FStar_Integers.fs \
+	FStar_Ref.fs
+
+all-fs: $(addprefix $(OUTPUT_DIRECTORY)/, $(FS_FILES))
+
+lax-all: $(addsuffix .checked.lax, $(FSTAR_FILES))

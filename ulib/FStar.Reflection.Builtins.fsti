@@ -48,7 +48,7 @@ val inspect_lb     : letbinding -> lb_view
 val pack_lb        : lb_view -> letbinding
 
 val inspect_binder : binder -> bv * (aqualv * list term)
-val pack_binder    : bv -> aqualv -> list term -> binder
+val pack_binder    : bv -> aqualv -> attrs:list term -> binder
 
 (* These are equivalent to [String.concat "."], [String.split ['.']]
  * and [String.compare]. We're only taking them as primitives to break

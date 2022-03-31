@@ -125,7 +125,7 @@ int openssl_aead_encrypt(unsigned char *plaintext, int plaintext_len, unsigned c
 }
 
 
-void test_kremlin_aead(void *plain, void*cipher, int alg){
+void test_karamel_aead(void *plain, void*cipher, int alg){
   clock_t c1, c2;
   double t1, t2;
 
@@ -169,10 +169,10 @@ void test_kremlin_aead(void *plain, void*cipher, int alg){
   c2 = clock();
   d1 = b - a;
   t1 = ((double)c2 - c1)/CLOCKS_PER_SEC;
-  print_results(alg == AES_GCM ? "Kremlin-C-aes256-gcm" : "Kremlin-C-chacha20-poly1305", t1, d1, rounds, PLAINLEN);
+  print_results(alg == AES_GCM ? "Karamel-C-aes256-gcm" : "Karamel-C-chacha20-poly1305", t1, d1, rounds, PLAINLEN);
 }
 
-void test_kremlin_prf(void *plain, void*cipher, int alg){
+void test_karamel_prf(void *plain, void*cipher, int alg){
   clock_t c1, c2;
   double t1, t2;
 
@@ -224,11 +224,11 @@ void test_kremlin_prf(void *plain, void*cipher, int alg){
   c2 = clock();
   d1 = b - a;
   t1 = ((double)c2 - c1)/CLOCKS_PER_SEC;
-  print_results(alg == AES_GCM ? "Kremlin-C-aes256" : "Kremlin-C-chacha20", t1, d1, rounds, PLAINLEN);
+  print_results(alg == AES_GCM ? "Karamel-C-aes256" : "Karamel-C-chacha20", t1, d1, rounds, PLAINLEN);
 }
 
 
-void test_kremlin_mac(void *plain, void*cipher, int alg){
+void test_karamel_mac(void *plain, void*cipher, int alg){
   clock_t c1, c2;
   double t1, t2;
   uint8_t tag[16];
@@ -301,7 +301,7 @@ void test_kremlin_mac(void *plain, void*cipher, int alg){
       }
     default:
       {
-        printf("KreMLin incomplete match at %s:%d\n", __FILE__, __LINE__);
+        printf("KaRaMeL incomplete match at %s:%d\n", __FILE__, __LINE__);
         exit(253);
       }
   }
@@ -371,7 +371,7 @@ void test_kremlin_mac(void *plain, void*cipher, int alg){
         }
       default:
         {
-          printf("KreMLin incomplete match at %s:%d\n", __FILE__, __LINE__);
+          printf("KaRaMeL incomplete match at %s:%d\n", __FILE__, __LINE__);
           exit(253);
         }
       }
@@ -416,7 +416,7 @@ void test_kremlin_mac(void *plain, void*cipher, int alg){
         }
       default:
         {
-          printf("KreMLin incomplete match at %s:%d\n", __FILE__, __LINE__);
+          printf("KaRaMeL incomplete match at %s:%d\n", __FILE__, __LINE__);
           exit(253);
         }
       }
@@ -440,20 +440,20 @@ void test_kremlin_mac(void *plain, void*cipher, int alg){
   c2 = clock();
   d1 = b - a;
   t1 = ((double)c2 - c1)/CLOCKS_PER_SEC;
-  print_results(alg == AES_GCM ? "Kremlin-C-gcm" : "Kremlin-C-poly1305", t1, d1, rounds, PLAINLEN);
+  print_results(alg == AES_GCM ? "Karamel-C-gcm" : "Karamel-C-poly1305", t1, d1, rounds, PLAINLEN);
 }
 
 void test_crypto_aead(){
   void *plain = malloc(PLAINLEN), *cipher = malloc(PLAINLEN+16);
   uint8_t mac[16];
-  test_kremlin_aead(plain, cipher, AES_GCM);
-  test_kremlin_aead(plain, cipher, CHACHA_POLY);
+  test_karamel_aead(plain, cipher, AES_GCM);
+  test_karamel_aead(plain, cipher, CHACHA_POLY);
   openssl_aead_encrypt(plain, PLAINLEN, aad, AADLEN, key, ivBuffer, cipher, mac, AES_GCM);
   openssl_aead_encrypt(plain, PLAINLEN, aad, AADLEN, key, ivBuffer, cipher, mac, CHACHA_POLY);
-  test_kremlin_prf(plain, cipher, AES_GCM);
-  test_kremlin_prf(plain, cipher, CHACHA_POLY);
-  test_kremlin_mac(plain, cipher, AES_GCM);
-  test_kremlin_mac(plain, cipher, CHACHA_POLY);
+  test_karamel_prf(plain, cipher, AES_GCM);
+  test_karamel_prf(plain, cipher, CHACHA_POLY);
+  test_karamel_mac(plain, cipher, AES_GCM);
+  test_karamel_mac(plain, cipher, CHACHA_POLY);
 }
 
 

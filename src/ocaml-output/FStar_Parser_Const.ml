@@ -299,8 +299,6 @@ let (fail_attr : FStar_Ident.lident) = psconst "expect_failure"
 let (fail_lax_attr : FStar_Ident.lident) = psconst "expect_lax_failure"
 let (tcdecltime_attr : FStar_Ident.lident) = psconst "tcdecltime"
 let (noextract_to_attr : FStar_Ident.lident) = psconst "noextract_to"
-let (assume_strictly_positive_attr_lid : FStar_Ident.lident) =
-  psconst "assume_strictly_positive"
 let (unifier_hint_injective_lid : FStar_Ident.lident) =
   psconst "unifier_hint_injective"
 let (normalize_for_extraction_lid : FStar_Ident.lident) =

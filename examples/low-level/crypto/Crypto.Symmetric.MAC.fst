@@ -68,7 +68,7 @@ let zero i : elem i =
 (** Private representation of a field element as a buffer *)
 
 (* 16-10-26 for the time being, we avoid value-dependent types (after
-   erasure and flag inlining) for Kremlin. We may later compile those
+   erasure and flag inlining) for Karamel. We may later compile those
    to untagged unions. We also use a top-level refinement, so that
    case analysis applies without pattern matching.
    
