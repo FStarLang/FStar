@@ -4,9 +4,9 @@ matrix:
   fast_finish: true
 
   include:
-    - env: Ubuntu=14.04
+    - env: Ubuntu=16.04
       os: linux
-      dist: trusty
+      dist: xenial
       sudo: required
 
     - env: OSX=10.11
