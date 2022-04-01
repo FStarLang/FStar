@@ -11,7 +11,8 @@ ifeq ($(OS),Windows_NT)
 else
   FSC     = fsharpc
   # If can't find msbuild, use xbuild, but throw a warning
-  MSBUILD = $(shell which msbuild || (echo '\n\n\033[0;31mWarning:\033[0m could not find "msbuild", trying (deprecated) "xbuild"\n\n'>&2; which xbuild))
+  #MSBUILD = $(shell which msbuild || (echo '\n\n\033[0;31mWarning:\033[0m could not find "msbuild", trying (deprecated) "xbuild"\n\n'>&2; which xbuild))
+  MSBUILD = dotnet msbuild
   UNAME   = $(shell uname -s)
   RUNTIME = mono
 endif
