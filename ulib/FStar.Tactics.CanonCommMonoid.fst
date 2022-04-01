@@ -412,7 +412,7 @@ let canon_monoid_with
   canon_monoid_aux a b
     (quote a) (unquote #a) (fun (x:a) -> quote x)
     (quote m) (quote (CM?.mult m)) (quote (CM?.unit m)) (CM?.unit m)
-    (quote b) (fun (x:b) -> quote x) f def (quote p) (quote pc)
+    (quote b) (fun (x:b) -> quote x) f def (quote p) (quote (pc <: permute_correct p))
 
 let canon_monoid (#a:Type) (cm:cm a) : Tac unit =
   canon_monoid_with unit (fun _ -> ()) ()
@@ -420,7 +420,7 @@ let canon_monoid (#a:Type) (cm:cm a) : Tac unit =
 
 (***** Examples *)
 
- let lem0 (a b c d : int) =
+let lem0 (a b c d : int) =
   assert (0 + 1 + a + b + c + d + 2 == (b + 0) + 2 + d + (c + a + 0) + 1)
   by (canon_monoid int_plus_cm; trefl ())
 
