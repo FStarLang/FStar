@@ -1898,10 +1898,20 @@ and (tc_maybe_toplevel_term :
                      (match uu___3 with
                       | (qt1, uu___4, g) ->
                           let g0 =
-                            let uu___5 =
-                              FStar_TypeChecker_Rel.discharge_guard env'1 g in
-                            FStar_Compiler_Effect.op_Bar_Greater uu___5
-                              (FStar_TypeChecker_Rel.resolve_implicits env'1) in
+                            {
+                              FStar_TypeChecker_Common.guard_f =
+                                FStar_TypeChecker_Common.Trivial;
+                              FStar_TypeChecker_Common.deferred_to_tac =
+                                (g.FStar_TypeChecker_Common.deferred_to_tac);
+                              FStar_TypeChecker_Common.deferred =
+                                (g.FStar_TypeChecker_Common.deferred);
+                              FStar_TypeChecker_Common.univ_ineqs =
+                                (g.FStar_TypeChecker_Common.univ_ineqs);
+                              FStar_TypeChecker_Common.implicits =
+                                (g.FStar_TypeChecker_Common.implicits)
+                            } in
+                          let g01 =
+                            FStar_TypeChecker_Rel.resolve_implicits env'1 g0 in
                           let t =
                             FStar_Syntax_Syntax.mk
                               (FStar_Syntax_Syntax.Tm_quoted (qt1, qi))
@@ -1925,7 +1935,7 @@ and (tc_maybe_toplevel_term :
                                              FStar_Syntax_Syntax.t_term))))
                                    t1.FStar_Syntax_Syntax.pos in
                                let uu___6 =
-                                 FStar_TypeChecker_Env.conj_guard g0 g1 in
+                                 FStar_TypeChecker_Env.conj_guard g01 g1 in
                                (t2, lc, uu___6)))))
        | FStar_Syntax_Syntax.Tm_lazy
            { FStar_Syntax_Syntax.blob = uu___1;
