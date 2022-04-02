@@ -109,7 +109,7 @@
         "subterm_ordering_Prims.Cons", "typing_Prims.__proj__Cons__item__tl"
       ],
       0,
-      "aa2aa169d898bc3715f86ce6e246ac61"
+      "10a1157329e1a7a6838ea8f70277f655"
     ],
     [
       "Huffman.permutation",
@@ -171,7 +171,7 @@
         "typing_Huffman.leq_trie", "unit_inversion", "unit_typing"
       ],
       0,
-      "efa1579ab719689378085b2b970b3039"
+      "3032ac95085c63efd56a98f7aee9e18e"
     ],
     [
       "Huffman.sorted_smaller",
@@ -249,7 +249,7 @@
         "subterm_ordering_Prims.Cons", "typing_Huffman.sorted"
       ],
       0,
-      "feaa355594fe4d957695fc2affd4d5ac"
+      "73774fd6b01bfce00f897775abdcf748"
     ],
     [
       "Huffman.insertion_sort",
@@ -283,7 +283,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "349ce166a819e8ed67f9bed8b6e2533e"
+      "378b992c3c90e00ca7a8afbd3202acab"
     ],
     [
       "Huffman.huffman_trie",
@@ -341,7 +341,7 @@
         "typing_Prims.__proj__Cons__item__tl", "well-founded-ordering-on-nat"
       ],
       0,
-      "0ff1bae16e1aae39dfba7430d2a91282"
+      "fcc1edea40cd575632e9450274066ceb"
     ],
     [
       "Huffman.huffman",
@@ -395,7 +395,7 @@
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "dc1886b95115c15ba9a42f166490e73b"
+      "054dc9d258b112bf59d8c4a4915e2218"
     ],
     [
       "Huffman.encode",
@@ -444,7 +444,7 @@
         "typing_FStar.Pervasives.Native.__proj__Some__item__v"
       ],
       0,
-      "37acdeadbf2d7287b6b5ceea68e6607e"
+      "96e28885f04af14fe98c1ead8fc21494"
     ],
     [
       "Huffman.encode",
@@ -494,7 +494,7 @@
         "typing_Prims.uu___is_Cons", "typing_Prims.uu___is_Nil"
       ],
       0,
-      "545041f79419a5ff6a2295a269089a19"
+      "3f2dd39177bd160f171b617fba558e1a"
     ],
     [
       "Huffman.decode_one",
@@ -539,7 +539,7 @@
         "subterm_ordering_Huffman.Node"
       ],
       0,
-      "cbbd2d0c6a6225e0ccf2704525fd9478"
+      "9ebfbd55f0e8faea4b71e61f9311f318"
     ],
     [
       "Huffman.decode_one",
@@ -587,7 +587,7 @@
         "subterm_ordering_Huffman.Node"
       ],
       0,
-      "692b08e948de1a32ef967e5df0308d22"
+      "d77cd1f8f5b66e5283e312f5d5fcb486"
     ],
     [
       "Huffman.decode'",
@@ -638,7 +638,7 @@
         "typing_Huffman.symbol", "well-founded-ordering-on-nat"
       ],
       0,
-      "ff890814afff1a5a350d68c7aad55946"
+      "66a896f5f9843053eee2858ef151746b"
     ],
     [
       "Huffman.decode_aux",
@@ -695,7 +695,7 @@
         "typing_Huffman.uu___is_Node", "well-founded-ordering-on-nat"
       ],
       0,
-      "c015cea69d35a1f78fd4c7d10acddc43"
+      "7594b19eae8866421269e9ab89bf2cff"
     ],
     [
       "Huffman.decode",
@@ -725,12 +725,12 @@
         "lemma_FStar.Pervasives.invertOption",
         "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-        "refinement_interpretation_Tm_refine_b72c8e67b78aaa8f862741ddb33411e8",
+        "refinement_interpretation_Tm_refine_b0d27d96db80985c009fd5fcfac06563",
         "token_correspondence_Huffman.encode_one.fuel_instrumented",
         "typing_Huffman.symbol", "typing_Huffman.uu___is_Node"
       ],
       0,
-      "b098c91f0eff0fc07d4975c476a49a14"
+      "5bb8b622ed8b57e28f852ef58be3dac2"
     ],
     [
       "Huffman.cancelation_one",
@@ -812,7 +812,7 @@
         "typing_Huffman.symbol"
       ],
       0,
-      "fdc5afdd550d342f8bbab9ebe0097a2e"
+      "951d3af16327f7480b260b7813b241c1"
     ],
     [
       "Huffman.decode_prefix_aux",
@@ -904,7 +904,7 @@
         "typing_Huffman.symbol"
       ],
       0,
-      "012902c2a33e6f1903c4b16f761b9329"
+      "23a9522f94330ad70f135f7bb3516a68"
     ],
     [
       "Huffman.decode_prefix",
@@ -959,7 +959,7 @@
         "typing_Huffman.symbol"
       ],
       0,
-      "98e010481c69db8706732a5de01b9a07"
+      "d30cdc55de3c4e70dabedce1c93116ed"
     ],
     [
       "Huffman.cancelation_aux",
@@ -1039,7 +1039,7 @@
         "typing_Huffman.symbol"
       ],
       0,
-      "bd79587cd81f33a79720b29e3f69cd77"
+      "ce6d889226ffc49ea69ce3d3227ed79e"
     ],
     [
       "Huffman.cancelation",

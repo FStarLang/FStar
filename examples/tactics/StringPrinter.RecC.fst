@@ -54,7 +54,7 @@ let do_while_sz_inv
   (#a:Type)
   (tin tout: Type)
   (decrease:tin -> GTot a)
-  (body: ((x: tin) -> Tot (m (c_or (tin_decr tin decrease x) tout))))
+  (body: ((x: tin) -> Tot (m (c_or (tin_decr _ tin decrease x) tout))))
   (x0: tin)
   (continue: bool)
   (x: do_while_sz_interm tin tout)
@@ -78,7 +78,7 @@ let do_while_sz_body
   (#a:Type)
   (tin tout: Type)
   (decrease:tin -> GTot a)
-  (body: ((x: tin) -> Tot (m (c_or (tin_decr tin decrease x) tout))))
+  (body: ((x: tin) -> Tot (m (c_or (tin_decr _ tin decrease x) tout))))
   (body_sz: ((x: tin) -> Tot (m_sz (body x))))
   (x0: tin)
   (x: do_while_sz_interm tin tout)
@@ -110,7 +110,7 @@ let do_while_sz
   (#a:Type)
   (tin tout: Type)
   (decrease:tin -> GTot a)
-  (body: ((x: tin) -> Tot (m (c_or (tin_decr tin decrease x) tout))))
+  (body: ((x: tin) -> Tot (m (c_or (tin_decr _ tin decrease x) tout))))
   (body_sz: ((x: tin) -> Tot (m_sz (body x))))
   (x: tin)
  : Tot (m_sz (do_while tin tout decrease body x))
@@ -146,7 +146,7 @@ let do_while_st_inv
   (#a:Type)
   (tin tout: Type)
   (decrease:tin -> GTot a)
-  (body: ((x: tin) -> Tot (m (c_or (tin_decr tin decrease x) tout))))
+  (body: ((x: tin) -> Tot (m (c_or (tin_decr _ tin decrease x) tout))))
   (h0: G.erased HS.mem)
   (x0: tin)
   (blog: B.buffer U8.t)
@@ -190,7 +190,7 @@ let do_while_st_body
   (#a:Type)
   (tin tout: Type)
   (decrease:tin -> GTot a)
-  (body: ((x: tin) -> Tot (m (c_or (tin_decr tin decrease x) tout))))
+  (body: ((x: tin) -> Tot (m (c_or (tin_decr _ tin decrease x) tout))))
   (body_st: ((x: tin) -> Tot (m_st (body x))))
   (h0: G.erased HS.mem)
   (x0: tin)
@@ -267,7 +267,7 @@ let do_while_st
   (#a:Type)
   (tin tout: Type)
   (decrease:tin -> GTot a)
-  (body: ((x: tin) -> Tot (m (c_or (tin_decr tin decrease x) tout))))
+  (body: ((x: tin) -> Tot (m (c_or (tin_decr _ tin decrease x) tout))))
   (body_st: ((x: tin) -> Tot (m_st (body x))))
   (x: tin)
 : Tot (m_st (do_while tin tout decrease body x))
@@ -296,7 +296,7 @@ let do_while_st
 
 module T = FStar.Tactics
 
-let do_while_tm () : T.Tac T.term = quote do_while
+let do_while_tm () : T.Tac T.term = quote (fun #a -> do_while #a)
 
 let compile_do_while
   (do_while_sz_tm: T.term)
@@ -377,12 +377,12 @@ let mk_sz'
   (ty: T.term) (t: T.term)
 : T.Tac T.term
 = compile
-    (quote ret_sz)
-    (quote bind_sz)
+    (quote (fun #a -> ret_sz #a))
+    (quote (fun #t1 #t2 #x -> bind_sz #t1 #t2 #x))
     (quote print_char_sz)
     (quote coerce_sz)
     (quote ifthenelse_sz)
-    (quote do_while_sz)
+    (quote (fun #a -> do_while_sz #a))
     env
     ty
     t
@@ -399,12 +399,12 @@ let mk_st'
   (ty: T.term) (t: T.term)
 : T.Tac T.term
 = compile
-    (quote ret_st)
-    (quote bind_st)
+    (quote (fun #a -> ret_st #a))
+    (quote (fun #t1 #t2 #x -> bind_st #t1 #t2 #x))
     (quote print_char_st)
     (quote coerce_st)
     (quote ifthenelse_st)
-    (quote do_while_st)
+    (quote (fun #t -> do_while_st #t))
     env
     ty
     t
