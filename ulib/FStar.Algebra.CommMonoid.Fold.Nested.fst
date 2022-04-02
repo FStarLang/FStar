@@ -28,32 +28,20 @@ module CE = FStar.Algebra.CommMonoid.Equiv
 
 open FStar.IntegerIntervals
 open FStar.Matrix 
-
-(* This constructs a generator function that has its arguments in reverse 
-   order. Useful when reasoning about nested folds, transposed matrices, etc. 
-   
-   Note how this utility is more general than transposed_matrix_gen 
-   found in FStar.Seq.Matrix -- but for zero-based domains, latter is 
-   more convenient. *)
-let transpose_generator #c (#m0 #mk: int)
-                          (#n0 #nk: int)
-                          (gen: ifrom_ito m0 mk -> ifrom_ito n0 nk -> c)
-  : (f: (ifrom_ito n0 nk -> ifrom_ito m0 mk -> c) { forall i j. f j i == gen i j })
-  = fun j i -> gen i j
   
-let double_fold #c #eq #a0 (#ak: not_less_than a0) #b0 (#bk:not_less_than b0)
-                (cm: CE.cm c eq)
-                (g: ifrom_ito a0 ak -> ifrom_ito b0 bk -> c) = 
-  CF.fold cm a0 ak (fun (i: ifrom_ito a0 ak) -> CF.fold cm b0 bk (g i))  
-
 (* Auxiliary utility that casts (matrix c m n) to seq of length (m*n) *)
 private let matrix_seq #c #m #r (generator: matrix_generator c m r) = 
   seq_of_matrix (Matrix.init generator)
 
-(* Most general form of nested fold swap theorem. Here we prove that we can 
+(*
+   Most general form of nested fold swap theorem. Here we prove that we can 
    exchange the order of nested foldings over any suitable generator function.
+   
    We use the previously proved weaker version (for zero-based indices) in 
-   order to prove this, because this way the two proofs together are way shorter. *)
+   order to prove this, because this way the two proofs together are way shorter.
+
+   I keep the argument types explicit in order to make the proof easier to read.
+*)
 let double_fold_transpose_lemma #c #eq 
                                 (#m0: int) (#mk: not_less_than m0)
                                 (#n0: int) (#nk: not_less_than n0)

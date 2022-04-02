@@ -722,5 +722,4 @@ let rec foldm_snoc_of_equal_inits #c #eq #m (cm: CE.cm c eq)
   lemma_eq_elim (init (m-1) (fun (i: under (m-1)) -> g i)) gliat;
   cm.congruence flast (foldm_snoc cm fliat)
                 glast (foldm_snoc cm gliat)
-
- 
+                

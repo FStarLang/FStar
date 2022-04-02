@@ -157,3 +157,9 @@ val foldm_snoc_of_equal_inits (#c:_) (#eq:_) (#m: pos) (cm: CE.cm c eq)
                               (f: (under m) -> c) (g: (under m) -> c)
   : Lemma (requires  (forall (i: under m). f i `eq.eq` g i))
           (ensures foldm_snoc cm (init m f) `eq.eq` foldm_snoc cm (init m g))
+
+(* this one turns out to be quite useful to speed up big proofs *)
+let foldm_snoc_decomposition #c #eq (cm: CE.cm c eq) 
+                             (s: seq c{length s > 0})
+  : Lemma (foldm_snoc cm s == 
+           cm.mult (snd (un_snoc s)) (foldm_snoc cm (fst (un_snoc s)))) = ()
