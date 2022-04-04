@@ -35,7 +35,7 @@ module BU = FStar.Compiler.Util
 *)
 let _z3version_checked : ref<bool> = BU.mk_ref false
 
-let _z3version_expected = "Z3 version 4.8.5"
+let _z3version_expected = "Z3 version 4.8.15"
 
 let _z3url = "https://github.com/FStarLang/binaries/tree/master/z3-tested"
 
