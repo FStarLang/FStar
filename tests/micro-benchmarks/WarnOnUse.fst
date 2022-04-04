@@ -8,6 +8,16 @@ module WarnOnUse
 let f (x:int) : False = admit()
 #pop-options
 
+
+//
+// __no_positivity is an unsafe option,
+//   if report_assumes error is set, this should fail
+//
+#push-options "--report_assumes error"
+[@@ expect_failure [335]]
+#set-options "--__no_positivity"
+#pop-options
+
 #push-options "--report_assumes error"
 #push-options "--warn_error -335" //this is accepted, but is a noop
                                   //cannot be overridden if report_assumes is set
