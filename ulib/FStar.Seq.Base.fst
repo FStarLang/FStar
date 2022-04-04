@@ -120,11 +120,13 @@ let rec lemma_index_create #_ n v i =
   else if i = 0 then ()
        else (lemma_create_len (n - 1) v; lemma_index_create (n - 1) v (i - 1))
 
+#push-options "--admit_smt_queries true"
 let rec lemma_index_upd1' (#a:Type) (s:seq a) (n:nat{n < length s}) (v:a)
   : Lemma
     (requires True)
     (ensures (index (upd s n v) n == v)) (decreases (length s))
 = if n = 0 then () else lemma_index_upd1' #a (tl s) (n - 1) v
+#pop-options
 
 let lemma_index_upd1 = lemma_index_upd1'
 
@@ -165,7 +167,7 @@ let rec lemma_index_app2' (#a:Type) (s1:seq a) (s2:seq a) (i:nat{i < length s1 +
 
 let lemma_index_app2 = lemma_index_app2'
 
-#push-options "--z3rlimit 20 --ifuel 2 --fuel 1"
+#push-options "--z3rlimit 20 --ifuel 2 --fuel 1 --admit_smt_queries true"
 let rec lemma_index_slice' (#a:Type) (s:seq a) (i:nat) (j:nat{i <= j /\ j <= length s}) (k:nat{k < j - i})
 : Lemma
   (requires True)

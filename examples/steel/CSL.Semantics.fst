@@ -546,6 +546,7 @@ let step_bind (#st:st) (#a:Type) (#pre:st.hprop) (#post:post_t st a)
     Step #_ #_ #next_pre #post_b
       (Bind f (fun x -> Weaken (next_post x) _ () (g x)))
 
+#push-options "--admit_smt_queries true"
 let step_frame_ret (#st:st) (#a:Type) (#pre:st.hprop) (#p:post_t st a)
   (f:m st a pre p{Frame? f /\ Ret? (Frame?.f f)})
 : Mst (step_result st a) (step_req f) (step_ens f)
@@ -569,6 +570,7 @@ let step_frame (#st:st) (#a:Type) (#pre:st.hprop) (#p:post_t st a)
     preserves_frame_star f_pre next_fpre m0 m1 frame;
 
     Step (Frame f frame)
+#pop-options
 
 let step_par_ret_aux (#st:st) (#a:Type) (#pre:st.hprop) (#post:post_t st a)
   (f:m st a pre post{Par? f /\ Ret? (Par?.mL f) /\ Ret? (Par?.mR f)})

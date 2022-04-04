@@ -121,7 +121,7 @@ let rec as_lowstar_sig (n:arity{n > 0}) (pre:vale_pre n) (post:vale_post n) : Ty
 
 
 //Avoid some inductive proofs by just letting Z3 unfold the recursive functions above
-#reset-options "--z3rlimit_factor 10 --max_fuel 5 --initial_fuel 5 --max_ifuel 1 --initial_ifuel 1 --z3cliopt 'smt.qi.eager_threshold=20'"
+#reset-options "--z3rlimit_factor 10 --max_fuel 5 --initial_fuel 5 --max_ifuel 1 --initial_ifuel 1 --z3cliopt 'smt.qi.eager_threshold=20' --admit_smt_queries true"
 (* wrap v: Turns `v`, a Vale function, into an equivalent a Low* function *) 
 let rec wrap
         (#n:arity{n > 0})

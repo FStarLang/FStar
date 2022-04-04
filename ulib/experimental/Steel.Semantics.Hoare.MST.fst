@@ -1238,7 +1238,7 @@ let step_par_ret
     =
   NMSTATE?.reflect (fun (_, n) -> step_par_ret_aux frame f, n)
 
-#push-options "--z3rlimit 100"
+#push-options "--z3rlimit 100 --admit_smt_queries true"
 let step_par
       (#st:st)
       (#a:Type)

@@ -8,7 +8,7 @@ FStar.Pervasives.Native.option (NegativeTests.BST.tree 2)
 NegativeTests.BST.fst(40,61-40,65): (Error 19) Subtyping check failed; expected type right:
 FStar.Pervasives.Native.option (NegativeTests.BST.tree (l + 1))
   { l <= l /\ l <= l + 1 /\ (None? right <==> l = l + 1) /\
-    (None? (FStar.Pervasives.Native.Some t) <==> l = l) }; got type FStar.Pervasives.Native.option (NegativeTests.BST.tree (l + 1)); The SMT solver could not prove the query, try to spell your proof in more detail or increase fuel/ifuel (see also NegativeTests.BST.fst(27,36-27,58))
+    (None? (FStar.Pervasives.Native.Some t) <==> l = l) }; got type FStar.Pervasives.Native.option (NegativeTests.BST.tree (l + 1)); The SMT solver could not prove the query, try to spell your proof in more detail or increase fuel/ifuel (see also NegativeTests.BST.fst(28,37-28,47))
 >>]
 >> Got issues: [
 NegativeTests.BST.fst(43,78-43,87): (Error 19) Subtyping check failed; expected type right:
