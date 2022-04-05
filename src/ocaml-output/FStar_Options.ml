@@ -667,7 +667,7 @@ let (_platform : Prims.string FStar_Compiler_Effect.ref) =
 let (_compiler : Prims.string FStar_Compiler_Effect.ref) =
   FStar_Compiler_Util.mk_ref ""
 let (_date : Prims.string FStar_Compiler_Effect.ref) =
-  FStar_Compiler_Util.mk_ref "<not set>"
+  FStar_Compiler_Util.mk_ref " not set"
 let (_commit : Prims.string FStar_Compiler_Effect.ref) =
   FStar_Compiler_Util.mk_ref ""
 let (display_version : unit -> unit) =
@@ -1008,7 +1008,7 @@ let rec (specs_with_types :
               if warn_unsafe
               then option_warning_callback "admit_except"
               else ())), (SimpleStr "[symbol|(symbol, id)]"))),
-      "Admit all queries, except those with label (<symbol>, <id>)) (e.g. --admit_except '(FStar.Fin.pigeonhole, 1)' or --admit_except FStar.Fin.pigeonhole)");
+      "Admit all queries, except those with label ( symbol,  id)) (e.g. --admit_except '(FStar.Fin.pigeonhole, 1)' or --admit_except FStar.Fin.pigeonhole)");
     (FStar_Getopt.noshort, "already_cached",
       (Accumulated
          (SimpleStr
@@ -1018,7 +1018,7 @@ let rec (specs_with_types :
       "Write a '.checked' file for each module after verification and read from it if present, instead of re-verifying");
     (FStar_Getopt.noshort, "cache_dir",
       (PostProcessed (pp_validate_dir, (PathStr "dir"))),
-      "Read and write .checked and .checked.lax in directory <dir>");
+      "Read and write .checked and .checked.lax in directory  dir");
     (FStar_Getopt.noshort, "cache_off", (Const (Bool true)),
       "Do not read or write any .checked files");
     (FStar_Getopt.noshort, "print_cache_version", (Const (Bool true)),
@@ -1069,9 +1069,9 @@ let rec (specs_with_types :
     (FStar_Getopt.noshort, "hide_uvar_nums", (Const (Bool true)),
       "Don't print unification variable numbers");
     (FStar_Getopt.noshort, "hint_dir", (PathStr "path"),
-      "Read/write hints to <dir>/module_name.hints (instead of placing hint-file alongside source file)");
+      "Read/write hints to  dir/module_name.hints (instead of placing hint-file alongside source file)");
     (FStar_Getopt.noshort, "hint_file", (PathStr "path"),
-      "Read/write hints to <path> (instead of module-specific hints files; overrides hint_dir)");
+      "Read/write hints to  path (instead of module-specific hints files; overrides hint_dir)");
     (FStar_Getopt.noshort, "hint_info", (Const (Bool true)),
       "Print information regarding hints (deprecated; use --query_stats instead)");
     (FStar_Getopt.noshort, "in", (Const (Bool true)),
@@ -1177,7 +1177,7 @@ let rec (specs_with_types :
       "Extract top-level pure terms after normalizing them. This can lead to very large code, but can result in more partial evaluation and compile-time specialization.");
     (FStar_Getopt.noshort, "odir",
       (PostProcessed (pp_validate_dir, (PathStr "dir"))),
-      "Place output in directory <dir>");
+      "Place output in directory  dir");
     (FStar_Getopt.noshort, "prims", (PathStr "file"), "");
     (FStar_Getopt.noshort, "print_bound_var_types", (Const (Bool true)),
       "Print the types of bound variables");
@@ -1230,7 +1230,7 @@ let rec (specs_with_types :
               | uu___1 -> failwith "impos")), (IntStr "positive integer"))),
       "Retry each SMT query N times and succeed on the first try. Using --retry disables --quake.");
     (FStar_Getopt.noshort, "reuse_hint_for", (SimpleStr "toplevel_name"),
-      "Optimistically, attempt using the recorded hint for <toplevel_name> (a top-level name in the current module) when trying to verify some other term 'g'");
+      "Optimistically, attempt using the recorded hint for  toplevel_name (a top-level name in the current module) when trying to verify some other term 'g'");
     (FStar_Getopt.noshort, "report_assumes", (EnumStr ["warn"; "error"]),
       "Report every use of an escape hatch, include assume, admit, etc.");
     (FStar_Getopt.noshort, "silent", (Const (Bool true)),
@@ -1280,7 +1280,7 @@ let rec (specs_with_types :
     (FStar_Getopt.noshort, "use_hint_hashes", (Const (Bool true)),
       "Admit queries if their hash matches the hash recorded in the hints database");
     (FStar_Getopt.noshort, "use_native_tactics", (PathStr "path"),
-      "Use compiled tactics from <path>");
+      "Use compiled tactics from  path");
     (FStar_Getopt.noshort, "no_plugins", (Const (Bool true)),
       "Do not run plugins natively and interpret them as usual instead");
     (FStar_Getopt.noshort, "no_tactics", (Const (Bool true)),

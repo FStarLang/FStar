@@ -13,7 +13,6 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-#light "off"
 
 module FStar.Interactive.Ide
 open FStar.Pervasives
@@ -100,7 +99,7 @@ type push_query =
 
 type env_t = TcEnv.env
 
-let repl_current_qid : ref<option<string>> = Util.mk_ref None // For messages
+let repl_current_qid : ref (option string) = Util.mk_ref None // For messages
 
 (** Check whether users can issue further ``pop`` commands. **)
 let nothing_left_to_pop st =
@@ -166,7 +165,7 @@ already completed tasks.
 This function is stateful: it uses ``push_repl`` and ``pop_repl``.
 
 `progress_callback` is called once per task, right before the task is run. **)
-let run_repl_ld_transactions (st: repl_state) (tasks: list<repl_task>)
+let run_repl_ld_transactions (st: repl_state) (tasks: list repl_task)
                              (progress_callback: repl_task -> unit) =
   let debug verb task =
     if Options.debug_any () then
@@ -187,8 +186,8 @@ let run_repl_ld_transactions (st: repl_state) (tasks: list<repl_task>)
       revert_many st' entries in
 
   let rec aux (st: repl_state)
-              (tasks: list<repl_task>)
-              (previous: list<repl_stack_entry_t>) =
+              (tasks: list repl_task)
+              (previous: list repl_stack_entry_t) =
     match tasks, previous with
     // All done: return the final state.
     | [], [] ->
@@ -292,10 +291,10 @@ type query' =
 | Segment of string (* File contents *)
 | Pop
 | Push of push_query
-| VfsAdd of option<string> (* fname *) * string (* contents *)
+| VfsAdd of option string (* fname *) * string (* contents *)
 | AutoComplete of string * completion_context
-| Lookup of string * lookup_context * option<position> * list<string>
-| Compute of string * option<list<FStar.TypeChecker.Env.step>>
+| Lookup of string * lookup_context * option position * list string
+| Compute of string * option (list FStar.TypeChecker.Env.step)
 | Search of string
 | GenericError of string
 | ProtocolViolation of string
@@ -446,8 +445,8 @@ type fstar_option =
     opt_value: Options.option_val;
     opt_default: Options.option_val;
     opt_type: Options.opt_type;
-    opt_snippets: list<string>;
-    opt_documentation: option<string>;
+    opt_snippets: list string;
+    opt_documentation: option string;
     opt_permission_level: fstar_option_permission_level }
 
 let rec kind_of_fstar_option_type = function
@@ -623,7 +622,7 @@ let run_segment (st: repl_state) (code: string) =
   // Unfortunately, frag_fname is a special case in the interactive mode,
   // while in LSP, it is the only mode. To cope with this difference,
   // pass a frag_fname that is expected by the Interactive mode.
-  let frag = { frag_fname = "<input>"; frag_text = code; frag_line = 1; frag_col = 0 } in
+  let frag = { frag_fname = " input"; frag_text = code; frag_line = 1; frag_col = 0 } in
 
   let collect_decls () =
     match Parser.Driver.parse_fragment frag with
@@ -694,7 +693,7 @@ let run_push_without_deps st query =
   let { push_code = text; push_line = line; push_column = column;
         push_peek_only = peek_only; push_kind = push_kind } = query in
 
-  let frag = { frag_fname = "<input>"; frag_text = text; frag_line = line; frag_col = column } in
+  let frag = { frag_fname = " input"; frag_text = text; frag_line = line; frag_col = column } in
 
   let _ =
     if FStar.Options.ide_id_info_off()
@@ -835,7 +834,7 @@ let run_and_rewind st sigint_default task =
 let run_with_parsed_and_tc_term st term line column continuation =
   let dummy_let_fragment term =
     let dummy_decl = Util.format1 "let __compute_dummy__ = (%s)" term in
-    { frag_fname = "<input>"; frag_text = dummy_decl; frag_line = 0; frag_col = 0 } in
+    { frag_fname = " input"; frag_text = dummy_decl; frag_line = 0; frag_col = 0 } in
 
   let find_let_body ses =
     match ses with
@@ -909,8 +908,8 @@ let st_cost = function
 | TypeContainsLid lid -> 1
 
 type search_candidate = { sc_lid: lid; sc_typ:
-                          ref<option<Syntax.Syntax.typ>>;
-                          sc_fvars: ref<option<set<lid>>> }
+                          ref (option Syntax.Syntax.typ);
+                          sc_fvars: ref (option (set lid)) }
 
 let sc_of_lid lid = { sc_lid = lid;
                       sc_typ = Util.mk_ref None;
@@ -998,7 +997,7 @@ let run_search st search_str =
     with InvalidSearch s -> (QueryNOK, JsonStr s) in
   (results, Inl st)
 
-let run_query st (q: query') : (query_status * json) * either<repl_state, int> =
+let run_query st (q: query') : (query_status * json) * either repl_state int =
   match q with
   | Exit -> run_exit st
   | DescribeProtocol -> run_describe_protocol st
@@ -1066,7 +1065,7 @@ let rec go st : int =
   | Inr exitcode -> exitcode
 
 let interactive_error_handler = // No printing here — collect everything for future use
-  let issues : ref<list<issue>> = Util.mk_ref [] in
+  let issues : ref (list issue) = Util.mk_ref [] in
   let add_one (e: issue) = issues := e :: !issues in
   let count_errors () =
     let issues = Util.remove_dups (fun i0 i1 -> i0=i1) !issues in
@@ -1093,7 +1092,7 @@ let install_ide_mode_hooks printer =
   FStar.Errors.set_handler interactive_error_handler
 
 let initial_range =
-  Range.mk_range "<input>" (Range.mk_pos 1 0) (Range.mk_pos 1 0)
+  Range.mk_range " input" (Range.mk_pos 1 0) (Range.mk_pos 1 0)
 
 let build_initial_repl_state (filename: string) =
   let env = init_env FStar.Parser.Dep.empty_deps in

@@ -16,7 +16,6 @@
 
 (* FStar.Interactive.Lsp needs to construct responses to various *
  * queries; this file collects helpers for them                  *)
-#light "off"
 
 module FStar.Interactive.QueryHelper
 open FStar.Compiler.Effect
@@ -40,10 +39,10 @@ module CTable = FStar.Interactive.CompletionTable
 
 type position = string * int * int
 type sl_reponse = { slr_name: string;
-                    slr_def_range: option<Range.range>;
-                    slr_typ: option<string>;
-                    slr_doc: option<string>;
-                    slr_def: option<string> }
+                    slr_def_range: option Range.range;
+                    slr_typ: option string;
+                    slr_doc: option string;
+                    slr_def: option string }
 
 let with_printed_effect_args k =
   Options.with_saved_options
@@ -108,20 +107,20 @@ let mod_filter = function
   | pth, CTable.Module md ->
     Some (pth, CTable.Module ({ md with CTable.mod_name = CTable.mod_name md ^ "." }))
 
-let ck_completion (st: repl_state) (search_term: string) : list<CTable.completion_result> =
+let ck_completion (st: repl_state) (search_term: string) : list CTable.completion_result =
   let needle = U.split search_term "." in
   let mods_and_nss = CTable.autocomplete_mod_or_ns st.repl_names needle mod_filter in
   let lids = CTable.autocomplete_lid st.repl_names needle in
   lids @ mods_and_nss
 
-let deflookup (env: TcEnv.env) (pos: txdoc_pos) : option<assoct> =
+let deflookup (env: TcEnv.env) (pos: txdoc_pos) : option assoct =
   match symlookup env "" (Some (pos_munge pos)) ["defined-at"] with
   | Some { slr_name = _; slr_def_range = (Some r); slr_typ = _; slr_doc = _; slr_def = _ } ->
       resultResponse (js_loclink r)
   | _ -> nullResponse
 
 // A hover-provider provides both the type and the definition of a given symbol
-let hoverlookup (env: TcEnv.env) (pos: txdoc_pos) : option<assoct> =
+let hoverlookup (env: TcEnv.env) (pos: txdoc_pos) : option assoct =
   match symlookup env "" (Some (pos_munge pos)) ["type"; "definition"] with
   | Some { slr_name = n; slr_def_range = _; slr_typ = (Some t); slr_doc = _; slr_def = (Some d) } ->
     let hovertxt = U.format2 "```fstar\n%s\n````\n---\n```fstar\n%s\n```" t d in
@@ -129,7 +128,7 @@ let hoverlookup (env: TcEnv.env) (pos: txdoc_pos) : option<assoct> =
                                                        ("value", JsonStr hovertxt)])])
   | _ -> nullResponse
 
-let complookup (st: repl_state) (pos: txdoc_pos) : option<assoct> =
+let complookup (st: repl_state) (pos: txdoc_pos) : option assoct =
   // current_col corresponds to the current cursor position of the incomplete identifier
   let (file, row, current_col) = pos_munge pos in
   let (Some (_, text)) = PI.read_vfs_entry file in
