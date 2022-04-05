@@ -77,5 +77,3 @@ assume val write_string : fd_write -> string -> ML unit
    the compiler may re-order or replicate it.
 *)
 assume val debug_print_string : string -> Tot bool
-
-let stdout = print_string
