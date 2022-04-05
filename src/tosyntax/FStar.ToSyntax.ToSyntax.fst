@@ -13,7 +13,6 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 *)
-#light "off"
 module FStar.ToSyntax.ToSyntax
 open FStar.Pervasives
 open FStar.Compiler.Effect
@@ -43,7 +42,7 @@ module SS = FStar.Syntax.Subst
 
 let tun_r (r:Range.range) : S.term = { tun with pos = r }
 
-type annotated_pat = Syntax.pat * list<(bv * Syntax.typ * list<S.term>)>
+type annotated_pat = Syntax.pat * list (bv * Syntax.typ * list S.term)
 
 let mk_thunk e =
   let b = S.mk_binder (S.new_bv None S.tun) in
@@ -188,9 +187,9 @@ let rec is_comp_type env t =
 let unit_ty rng = mk_term (Name C.unit_lid) rng Type_level
 
 type env_t = Env.env
-type lenv_t = list<bv>
+type lenv_t = list bv
 
-let desugar_name' setpos (env: env_t) (resolve: bool) (l: lid) : option<S.term> =
+let desugar_name' setpos (env: env_t) (resolve: bool) (l: lid) : option S.term =
     let tm_attrs_opt =
         if resolve
         then Env.try_lookup_lid_with_attributes env l
@@ -207,7 +206,7 @@ let desugar_name mk setpos env resolve l =
 
 let compile_op_lid n s r = [mk_ident(compile_op n s r, r)] |> lid_of_ids
 
-let op_as_term env arity op : option<S.term> =
+let op_as_term env arity op : option S.term =
   let r l dd = Some (S.lid_as_fv (set_lid_range l (range_of_id op)) dd None |> S.fv_to_tm) in
   let fallback () =
     match Ident.string_of_id op with
@@ -465,9 +464,9 @@ let replace_unit_pattern p = match p.pat with
   | _ -> p
 
 let rec destruct_app_pattern (env:env_t) (is_top_level:bool) (p:pattern)
-  : either<ident,lid>              // name at the head
-  * list<pattern>                  // arguments the head is applied to
-  * option<(term * option<term>)>  // a possible (outermost) ascription on the pattern
+  : either ident lid              // name at the head
+  * list pattern                  // arguments the head is applied to
+  * option (term * option term)  // a possible (outermost) ascription on the pattern
   =
   match p.pat with
   | PatAscribed(p,t) ->
@@ -498,13 +497,13 @@ let rec gather_pattern_bound_vars_maybe_top acc p =
   | PatRecord guarded_pats -> gather_pattern_bound_vars_from_list (List.map snd guarded_pats)
   | PatAscribed (pat, _) -> gather_pattern_bound_vars_maybe_top acc pat
 
-let gather_pattern_bound_vars : pattern -> set<Ident.ident> =
+let gather_pattern_bound_vars : pattern -> set Ident.ident =
   let acc = new_set (fun id1 id2 -> if (string_of_id id1) = (string_of_id id2) then 0 else 1) in
   fun p -> gather_pattern_bound_vars_maybe_top acc p
 
 type bnd =
-  | LocalBinder of bv     * S.bqual * list<S.term>  //binder attributes
-  | LetBinder   of lident * (S.term * option<S.term>)
+  | LocalBinder of bv     * S.bqual * list S.term  //binder attributes
+  | LetBinder   of lident * (S.term * option S.term)
 
 let is_implicit (b:bnd) : bool =
   match b with
@@ -549,7 +548,7 @@ let mk_ref_assign t1 t2 pos =
  * Collect the explicitly annotated universes in the sigelt, close the sigelt with them, and stash them appropriately in the sigelt
  *)
 let rec generalize_annotated_univs (s:sigelt) :sigelt =
-  let bs_univnames (bs:binders) :BU.set<univ_name> =
+  let bs_univnames (bs:binders) :BU.set univ_name =
     bs |> List.fold_left (fun uvs b -> BU.set_union uvs (Free.univnames b.binder_bv.sort)) (BU.new_set Syntax.order_univ_name)
   in
   let empty_set = BU.new_set Syntax.order_univ_name in
@@ -580,7 +579,7 @@ let rec generalize_annotated_univs (s:sigelt) :sigelt =
     let uvs = Free.univnames t |> BU.set_elements in
     { s with sigel = Sig_declare_typ (lid, uvs, Subst.close_univ_vars uvs t) }
   | Sig_let ((b, lbs), lids) ->
-    let lb_univnames (lb:letbinding) :BU.set<univ_name> =
+    let lb_univnames (lb:letbinding) :BU.set univ_name =
       BU.set_union (Free.univnames lb.lbtyp)
       (match lb.lbdef.n with
        | Tm_abs (bs, e, _) ->
@@ -652,7 +651,7 @@ let rec sum_to_universe u n =
 let int_to_universe n = sum_to_universe U_zero n
 
 let rec desugar_maybe_non_constant_universe t
-  : either<int, Syntax.universe>  (* level of universe or desugared universe *)
+  : either int Syntax.universe  (* level of universe or desugared universe *)
 =
   match (unparen t).tm with
   | Wild -> Inr U_unknown
@@ -763,7 +762,7 @@ let rec desugar_data_pat
     (top_level_ascr_allowed : bool)
     (env:env_t)
     (p:pattern)
-    : (env_t * bnd * list<annotated_pat>) =
+    : (env_t * bnd * list annotated_pat) =
   let resolvex (l:lenv_t) e x =
     (* This resolution function will be shared across
      * the cases of a PatOr, so different ocurrences of
@@ -781,7 +780,7 @@ let rec desugar_data_pat
     * env_t                                   (* env updated with the BVs pushed in *)
     * bnd                                     (* a binder for the pattern *)
     * pat                                     (* elaborated pattern *)
-    * list<(bv * Syntax.typ * list<S.term>)>  (* ascripted pattern variables (collected) with attributes *)
+    * list (bv * Syntax.typ * list S.term)  (* ascripted pattern variables (collected) with attributes *)
     =
     let pos q = Syntax.withinfo q p.prange in
     let pos_r r q = Syntax.withinfo q r in
@@ -947,11 +946,11 @@ let rec desugar_data_pat
 and desugar_binding_pat_maybe_top top env p
   : env_t                   (* environment with patterns variables pushed in *)
   * bnd                     (* a binder for the pattern *)
-  * list<annotated_pat>     (* elaborated patterns with their variable annotations *)
+  * list annotated_pat     (* elaborated patterns with their variable annotations *)
   =
 
   if top then
-    let mklet x ty (tacopt : option<S.term>) : (env_t * bnd * list<annotated_pat>) =
+    let mklet x ty (tacopt : option S.term) : (env_t * bnd * list annotated_pat) =
     // GM: ^ I seem to need the type annotation here,
     //     or F* gets confused between tuple2 and tuple3 apparently?
         env, LetBinder(qualify env x, (ty, tacopt)), []
@@ -1299,7 +1298,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
     | Abs(binders, body) ->
       (* First of all, forbid definitions such as `f x x = ...` *)
       let bvss = List.map gather_pattern_bound_vars binders in
-      let check_disjoint (sets : list<set<ident>>) : option<ident> =
+      let check_disjoint (sets : list (set ident)) : option ident =
         let rec aux acc sets =
             match sets with
             | [] -> None
@@ -1515,8 +1514,8 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
            The desugaring of let recs has to be consistent with their opening
 
             Consider
-                let rec f<u> x = g x
-                and g<u'> y = f y in
+                let rec f u x = g x
+                and g u' y = f y in
                 f 0, g 0
             In de Bruijn notation, this is
                 let rec f x = g@1 x@0
@@ -1550,7 +1549,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
                          t
                     else if Options.ml_ish () //we're type-checking the compiler itself, e.g.
                     && Option.isSome (Env.try_lookup_effect_name env (C.effect_ML_lid())) //ML is in scope (not still in prims, e.g)
-                    && (not is_rec || List.length args <> 0) //and we don't have something like `let rec f : t -> t' = fun x -> e`
+                    && (not is_rec || List.length args  > 0) //and we don't have something like `let rec f : t - t' = fun x -> e`
                     then AST.ml_comp t
                     else AST.tot_comp t
                 in
@@ -2389,7 +2388,7 @@ and desugar_comp r (allow_type_promotion:bool) env t =
 
     let no_additional_args =
         (* F# complains about not being able to use = on some types.. *)
-        let is_empty (l:list<'a>) = match l with | [] -> true | _ -> false in
+        let is_empty (l:list 'a) = match l with | [] -> true | _ -> false in
         is_empty decreases_clause &&
         is_empty rest &&
         is_empty cattributes &&
@@ -2472,8 +2471,8 @@ and desugar_formula env (f:term) : S.term =
       | _ -> failwith "impossible" in
 
  let push_quant
-      (q:(list<AST.binder> * AST.patterns * AST.term) -> AST.term')
-      (binders:list<AST.binder>)
+      (q:(list AST.binder * AST.patterns * AST.term) -> AST.term')
+      (binders:list AST.binder)
       pats (body:term) =
     match binders with
     | b::(b'::_rest) ->
@@ -2508,7 +2507,7 @@ and desugar_formula env (f:term) : S.term =
 
     | _ -> desugar_term env f
 
-and desugar_binder env b : option<ident> * S.term * list<S.attribute> =
+and desugar_binder env b : option ident * S.term * list S.attribute =
   let attrs = b.battributes |> List.map (desugar_term env) in
   match b.b with
    | TAnnotated(x, t)
@@ -2543,14 +2542,14 @@ let typars_of_binders env bs : _ * binders =
     env, List.rev tpars
 
 
-let desugar_attributes (env:env_t) (cattributes:list<term>) : list<cflag> =
+let desugar_attributes (env:env_t) (cattributes:list term) : list cflag =
     let desugar_attribute t =
         match (unparen t).tm with
             | Var lid when string_of_lid lid = "cps" -> CPS
             | _ -> raise_error (Errors.Fatal_UnknownAttribute, "Unknown attribute " ^ term_to_string t) t.range
     in List.map desugar_attribute cattributes
 
-let binder_ident (b:binder) : option<ident> =
+let binder_ident (b:binder) : option ident =
   match b.b with
   | TAnnotated (x, _)
   | Annotated (x, _)
@@ -2558,7 +2557,7 @@ let binder_ident (b:binder) : option<ident> =
   | Variable x -> Some x
   | NoName _ -> None
 
-let binder_idents (bs:list<binder>) : list<ident> =
+let binder_idents (bs:list binder) : list ident =
   List.collect (fun b -> FStar.Common.list_of_option (binder_ident b)) bs
 
 let mk_data_discriminators quals env datas =
@@ -2582,7 +2581,7 @@ let mk_data_discriminators quals env datas =
           sigopts = None;
         })
 
-let mk_indexed_projector_names iquals fvq attrs env lid (fields:list<S.binder>) =
+let mk_indexed_projector_names iquals fvq attrs env lid (fields:list S.binder) =
     let p = range_of_lid lid in
 
     fields |> List.mapi (fun i fld ->
@@ -2634,7 +2633,7 @@ let mk_indexed_projector_names iquals fvq attrs env lid (fields:list<S.binder>) 
                          sigopts = None; } in
             if no_decl then [impl] else [decl;impl]) |> List.flatten
 
-let mk_data_projector_names iquals env se : list<sigelt> =
+let mk_data_projector_names iquals env se : list sigelt =
   match se.sigel with
   | Sig_datacon(lid, _, t, _, n, _) ->
     let formals, _ = U.arrow_formals t in
@@ -2946,7 +2945,7 @@ let push_reflect_effect env quals (effect_name:Ident.lid) range =
          Env.push_sigelt env refl_decl // FIXME: Add docs to refl_decl?
     else env
 
-let parse_attr_with_list warn (at:S.term) (head:lident) : option<(list<int>)> * bool =
+let parse_attr_with_list warn (at:S.term) (head:lident) : option (list int) * bool =
   let warn () =
     if warn then
       Errors.log_issue
@@ -2980,7 +2979,7 @@ let parse_attr_with_list warn (at:S.term) (head:lident) : option<(list<int>)> * 
 
 
 // If this is an expect_failure attribute, return the listed errors and whether it's a expect_lax_failure or not
-let get_fail_attr1 warn (at : S.term) : option<(list<int> * bool)> =
+let get_fail_attr1 warn (at : S.term) : option (list int * bool) =
     let rebind res b =
       match res with
       | None -> None
@@ -2992,7 +2991,7 @@ let get_fail_attr1 warn (at : S.term) : option<(list<int> * bool)> =
          rebind res true
 
 // Traverse a list of attributes to find all expect_failures and combine them
-let get_fail_attr warn (ats : list<S.term>) : option<(list<int> * bool)> =
+let get_fail_attr warn (ats : list S.term) : option (list int * bool) =
     let comb f1 f2 =
       match f1, f2 with
       | Some (e1, l1), Some (e2, l2) ->
@@ -3282,7 +3281,7 @@ and desugar_redefine_effect env d trans_qual quals eff_name eff_binders defn =
 
 
 and desugar_decl_aux env (d: decl): (env_t * sigelts) =
-  let no_fail_attrs (ats : list<S.term>) : list<S.term> =
+  let no_fail_attrs (ats : list S.term) : list S.term =
       List.filter (fun at -> Option.isNone (get_fail_attr1 false at)) ats
   in
 
@@ -3342,7 +3341,7 @@ and desugar_decl_aux env (d: decl): (env_t * sigelts) =
       desugar_decl_noattrs env d
   in
 
-  let rec val_attrs (ses:list<sigelt>) : list<S.term> =
+  let rec val_attrs (ses:list sigelt) : list S.term =
     match ses with
     | [{ sigel = Sig_let _}]
     |  { sigel = Sig_inductive_typ _ } :: _ ->
@@ -3555,7 +3554,7 @@ and desugar_decl_noattrs env (d:decl) : (env_t * sigelts) =
 
       let main : term = mk_term (Var (lid_of_ids [fresh_toplevel_name])) pat.prange Expr in
 
-      let build_generic_projection (env, ses) (id_opt : option<ident>) =
+      let build_generic_projection (env, ses) (id_opt : option ident) =
         (* When id_opt = Some id, we build a new toplevel definition
          * as follows and then desugar it
          *
@@ -3772,7 +3771,7 @@ let open_prims_all =
 (* Top-level functionality: from AST to a module
    Keeps track of the name of variables and so on (in the context)
  *)
-let desugar_modul_common (curmod: option<S.modul>) env (m:AST.modul) : env_t * Syntax.modul * bool =
+let desugar_modul_common (curmod: option S.modul) env (m:AST.modul) : env_t * Syntax.modul * bool =
   let env = match curmod, m with
     | None, _ ->
         env
@@ -3831,19 +3830,19 @@ let with_options (f:unit -> 'a) : 'a =
     if light then FStar.Options.set_ml_ish();
     res
 
-let ast_modul_to_modul modul : withenv<S.modul> =
+let ast_modul_to_modul modul : withenv S.modul =
     fun env ->
         with_options (fun () ->
         let e, m = desugar_modul env modul in
         m, e)
 
-let decls_to_sigelts decls : withenv<S.sigelts> =
+let decls_to_sigelts decls : withenv S.sigelts =
     fun env ->
         with_options (fun () ->
         let env, sigelts = desugar_decls env decls in
         sigelts, env)
 
-let partial_ast_modul_to_modul modul a_modul : withenv<S.modul> =
+let partial_ast_modul_to_modul modul a_modul : withenv S.modul =
     fun env ->
         with_options (fun () ->
         let env, modul = desugar_partial_modul modul env a_modul in
@@ -3851,7 +3850,7 @@ let partial_ast_modul_to_modul modul a_modul : withenv<S.modul> =
 
 let add_modul_to_env (m:Syntax.modul)
                      (mii:module_inclusion_info)
-                     (erase_univs:S.term -> S.term) : withenv<unit> =
+                     (erase_univs:S.term -> S.term) : withenv unit =
   fun en ->
       let erase_univs_ed ed =
           let erase_binders bs =
