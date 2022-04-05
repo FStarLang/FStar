@@ -13,7 +13,6 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-#light "off"
 module FStar.Extraction.ML.Term
 open FStar.Pervasives
 open FStar.Compiler.Effect
@@ -336,9 +335,9 @@ let unit_binder () = S.mk_binder <| S.new_bv None t_unit
 
 //check_pats_for_ite l:
 //    A helper to enable translating boolean matches back to if/then/else
-let check_pats_for_ite (l:list<(pat * option<term> * term)>) : (bool   //if l is pair of boolean branches
-                                                             * option<term>  //the 'then' case
-                                                             * option<term>) = //the 'else' case
+let check_pats_for_ite (l:list (pat * option term * term)) : (bool   //if l is pair of boolean branches
+                                                             * option term  //the 'then' case
+                                                             * option term) = //the 'else' case
     let def = false, None, None in
     if List.length l <> 2 then def
     else
@@ -373,9 +372,9 @@ let check_pats_for_ite (l:list<(pat * option<term> * term)>) : (bool   //if l is
 //instantiate_tyscheme s args:
 //      only handles fully applied types,
 //      pre-condition: List.length (fst s) = List.length args
-let instantiate_tyscheme (s:mltyscheme) (args:list<mlty>) : mlty = Util.subst s args
+let instantiate_tyscheme (s:mltyscheme) (args:list mlty) : mlty = Util.subst s args
 
-let fresh_mlidents (ts:list<mlty>) (g:uenv) : list<(mlident * mlty)> * uenv =
+let fresh_mlidents (ts:list mlty) (g:uenv) : list (mlident * mlty) * uenv =
    let g, vs_ts =
      List.fold_right
         (fun t (uenv, vs) ->
@@ -390,7 +389,7 @@ let fresh_mlidents (ts:list<mlty>) (g:uenv) : list<(mlident * mlty)> * uenv =
 //  and isn't instantiated in F* (e.g., because of first-class polymorphism)
 //  we extract e to a type application in ML by instantiating all its
 //  type arguments to MLTY_Erased (later, perhaps, being forced to insert magics)
-let instantiate_maybe_partial (g:uenv) (e:mlexpr) (s:mltyscheme) (tyargs:list<mlty>) : (mlexpr * e_tag * mlty) =
+let instantiate_maybe_partial (g:uenv) (e:mlexpr) (s:mltyscheme) (tyargs:list mlty) : (mlexpr * e_tag * mlty) =
     let vars, t = s in
     let n_vars = List.length vars in
     let n_args = List.length tyargs in
@@ -749,7 +748,7 @@ let rec translate_term_to_mlty (g:uenv) (t0:term) : mlty =
          else mlt
 
 
-and binders_as_ml_binders (g:uenv) (bs:binders) : list<(mlident * mlty)> * uenv =
+and binders_as_ml_binders (g:uenv) (bs:binders) : list (mlident * mlty) * uenv =
     let ml_bs, env = bs |> List.fold_left (fun (ml_bs, env) b ->
             if is_type_binder g b
             then //no first-class polymorphism; so type-binders get wiped out
@@ -807,7 +806,7 @@ let mk_MLE_Let top_level (lbs:mlletbinding) (body:mlexpr) =
           | _ -> MLE_Let(lbs, body))
        | _ -> MLE_Let(lbs, body)
 
-let record_fields (g:uenv) (ty:lident) (fns:list<ident>) (xs:list<'a>) =
+let record_fields (g:uenv) (ty:lident) (fns:list ident) (xs:list 'a) =
   let fns = List.map (fun x -> UEnv.lookup_record_field_name g (ty, x)) fns in
   List.map2 (fun (p, s) x -> (s, x)) fns xs
 
@@ -832,9 +831,9 @@ let resugar_pat g q p = match p with
 let rec extract_one_pat (imp : bool)
                         (g:uenv)
                         (p:S.pat)
-                        (expected_topt:option<mlty>)
+                        (expected_topt:option mlty)
                         (term_as_mlexpr:uenv -> S.term -> (mlexpr * e_tag * mlty))
-    : uenv * option<(mlpattern * list<mlexpr>)> * bool =
+    : uenv * option (mlpattern * list mlexpr) * bool =
     let ok t =
         match expected_topt with
         | None -> true
@@ -927,7 +926,7 @@ let rec extract_one_pat (imp : bool)
 
 let extract_pat (g:uenv) (p:S.pat) (expected_t:mlty)
                 (term_as_mlexpr: uenv -> S.term -> (mlexpr * e_tag * mlty))
-    : (uenv * list<(mlpattern * option<mlexpr>)> * bool) =
+    : (uenv * list (mlpattern * option mlexpr) * bool) =
     let extract_one_pat g p expected_t =
         match extract_one_pat false g p expected_t term_as_mlexpr with
         | g, Some (x, v), b -> g, (x, v), b
@@ -958,7 +957,7 @@ let extract_pat (g:uenv) (p:S.pat) (expected_t:mlty)
        3) In case qual is record projector and mlAppExpr is of the form (f e),
           emits e.f instead, since record projection is primitive in ML
 *)
-let maybe_eta_data_and_project_record (g:uenv) (qual : option<fv_qual>) (residualType : mlty)  (mlAppExpr : mlexpr) : mlexpr =
+let maybe_eta_data_and_project_record (g:uenv) (qual : option fv_qual) (residualType : mlty)  (mlAppExpr : mlexpr) : mlexpr =
     let rec eta_args g more_args t = match t with
       | MLTY_Fun (t0, _, t1) ->
         let g, x = UEnv.new_mlident g in
@@ -1134,7 +1133,7 @@ let extract_lb_sig (g:uenv) (lbs:letbindings) =
     snd lbs |> List.map maybe_generalize
 
 let extract_lb_iface (g:uenv) (lbs:letbindings)
-    : uenv * list<(fv * exp_binding)> =
+    : uenv * list (fv * exp_binding) =
     let is_top = FStar.Syntax.Syntax.is_top_level (snd lbs) in
     let is_rec = not is_top && fst lbs in
     let lbs = extract_lb_sig g lbs in
@@ -1774,7 +1773,7 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
                     let when_clause = conjoin_opt wopt when_opt in
                     p, (when_clause, f_when), (mlbranch, f_branch, t_branch)))
                 true in
-             let mlbranches : list<(mlpattern * (option<mlexpr> * e_tag) * (mlexpr * e_tag * mlty))>
+             let mlbranches : list (mlpattern * (option mlexpr * e_tag) * (mlexpr * e_tag * mlty))
                = List.flatten mlbranches in
              //if the type of the pattern isn't compatible with the type of the scrutinee
              //    insert a magic around the scrutinee

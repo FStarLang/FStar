@@ -13,7 +13,6 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-#light "off"
 module FStar.Extraction.ML.UEnv
 
 (** This module provides a typing environment used for extracting
@@ -85,7 +84,7 @@ type exp_binding = {
   exp_b_tscheme: mltyscheme
 }
 
-type ty_or_exp_b = either<ty_binding, exp_binding>
+type ty_or_exp_b = either ty_binding exp_binding
 
 (**
     [Bv]: An F* local binding [bv] can either correspond to an ML
@@ -114,7 +113,7 @@ type binding =
  *)
 type tydef = {
   tydef_fv:fv;
-  tydef_mlmodule_name:list<mlsymbol>;
+  tydef_mlmodule_name:list mlsymbol;
   tydef_name:mlsymbol;
   tydef_meta:FStar.Extraction.ML.Syntax.metadata;
   tydef_def:mltyscheme
@@ -140,15 +139,15 @@ let tydef_mlpath (td : tydef) : mlpath = td.tydef_mlmodule_name, td.tydef_name
  *)
 type uenv = {
   env_tcenv:TypeChecker.Env.env;
-  env_bindings:list<binding>;
-  env_mlident_map:psmap<mlident>;
+  env_bindings:list binding;
+  env_mlident_map:psmap mlident;
   env_remove_typars:RemoveUnusedParameters.env_t;
-  mlpath_of_lid:psmap<mlpath>;
-  env_fieldname_map:psmap<mlident>;
-  mlpath_of_fieldname:psmap<mlpath>;
-  tydefs:list<tydef>;
-  type_names:list<(fv*mlpath)>;
-  tydef_declarations:psmap<bool>;
+  mlpath_of_lid:psmap mlpath;
+  env_fieldname_map:psmap mlident;
+  mlpath_of_fieldname:psmap mlpath;
+  tydefs:list tydef;
+  type_names:list (fv*mlpath);
+  tydef_declarations:psmap bool;
   currentModule: mlpath // needed to properly translate the definitions in the current file
 }
 
@@ -195,7 +194,7 @@ let print_mlpath_map (g:uenv) =
 // Inr b: success
 // Inl true: was erased
 // Inl false: not found
-let lookup_fv_generic (g:uenv) (fv:fv) : either<bool, exp_binding> =
+let lookup_fv_generic (g:uenv) (fv:fv) : either bool exp_binding =
   let v =
     BU.find_map g.env_bindings
       (function
@@ -207,7 +206,7 @@ let lookup_fv_generic (g:uenv) (fv:fv) : either<bool, exp_binding> =
   | Some r -> r
   | None -> Inl false
 
-let try_lookup_fv (r:Range.range) (g:uenv) (fv:fv) : option<exp_binding> =
+let try_lookup_fv (r:Range.range) (g:uenv) (fv:fv) : option exp_binding =
   match lookup_fv_generic g fv with
   | Inr r -> Some r
   | Inl true ->
@@ -263,7 +262,7 @@ let lookup_ty (g:uenv) (x:bv) : ty_binding =
 
 (** Lookup a type abbreviation *)
 let lookup_tydef (env:uenv) ((module_name, ty_name):mlpath)
-  : option<mltyscheme>
+  : option mltyscheme
   = BU.find_map env.tydefs  (fun tydef ->
         if ty_name = tydef.tydef_name
         && module_name = tydef.tydef_mlmodule_name
@@ -503,7 +502,7 @@ let extend_fv (g:uenv) (x:fv) (t_x:mltyscheme) (add_unit:bool)
     : uenv
     * mlident
     * exp_binding =
-    let rec mltyFvars (t: mlty) : list<mlident>  =
+    let rec mltyFvars (t: mlty) : list mlident  =
       match t with
       | MLTY_Var  x -> [x]
       | MLTY_Fun (t1, f, t2) -> List.append (mltyFvars t1) (mltyFvars t2)
@@ -512,7 +511,7 @@ let extend_fv (g:uenv) (x:fv) (t_x:mltyscheme) (add_unit:bool)
       | MLTY_Top
       | MLTY_Erased -> []
     in
-    let rec subsetMlidents (la : list<mlident>) (lb : list<mlident>)  : bool =
+    let rec subsetMlidents (la : list mlident) (lb : list mlident)  : bool =
       match la with
       | h::tla -> List.contains h lb && subsetMlidents tla lb
       | [] -> true
