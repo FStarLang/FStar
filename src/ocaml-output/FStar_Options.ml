@@ -1312,7 +1312,12 @@ let rec (specs_with_types :
       "Set the Z3 per-query resource limit multiplier. This is useful when, say, regenerating hints and you want to be more lax. (default 1)");
     (FStar_Getopt.noshort, "z3seed", (IntStr "positive_integer"),
       "Set the Z3 random seed (default 0)");
-    (FStar_Getopt.noshort, "__no_positivity", (Const (Bool true)),
+    (FStar_Getopt.noshort, "__no_positivity",
+      (WithSideEffect
+         (((fun uu___ ->
+              if warn_unsafe
+              then option_warning_callback "__no_positivity"
+              else ())), (Const (Bool true)))),
       "Don't check positivity of inductive types");
     (FStar_Getopt.noshort, "warn_error", (Accumulated (SimpleStr "")),
       "The [-warn_error] option follows the OCaml syntax, namely:\n\t\t- [r] is a range of warnings (either a number [n], or a range [n..n])\n\t\t- [-r] silences range [r]\n\t\t- [+r] enables range [r]\n\t\t- [@r] makes range [r] fatal.");
@@ -1459,7 +1464,7 @@ let (settable_specs :
     (FStar_Compiler_List.filter
        (fun uu___ ->
           match uu___ with | (uu___1, x, uu___2, uu___3) -> settable x))
-let (uu___586 :
+let (uu___588 :
   (((unit -> FStar_Getopt.parse_cmdline_res) -> unit) *
     (unit -> FStar_Getopt.parse_cmdline_res)))
   =
@@ -1476,11 +1481,11 @@ let (uu___586 :
   (set1, call)
 let (set_error_flags_callback_aux :
   (unit -> FStar_Getopt.parse_cmdline_res) -> unit) =
-  match uu___586 with
+  match uu___588 with
   | (set_error_flags_callback_aux1, set_error_flags) ->
       set_error_flags_callback_aux1
 let (set_error_flags : unit -> FStar_Getopt.parse_cmdline_res) =
-  match uu___586 with
+  match uu___588 with
   | (set_error_flags_callback_aux1, set_error_flags1) -> set_error_flags1
 let (set_error_flags_callback :
   (unit -> FStar_Getopt.parse_cmdline_res) -> unit) =
