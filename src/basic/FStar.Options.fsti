@@ -13,9 +13,6 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-#light "off"
-
-// (c) Microsoft Corporation. All rights reserved
 module FStar.Options
 open FStar.Compiler.Effect
 open FStar.Getopt
@@ -38,16 +35,16 @@ type option_val =
   | String of string
   | Path of string
   | Int of int
-  | List of list<option_val>
+  | List of list option_val
   | Unset
 
-val defaults                    : list<(string * option_val)>
+val defaults                    : list (string * option_val)
 
 val init                        : unit    -> unit  //sets the current options to their defaults
 val clear                       : unit    -> unit  //wipes the stack of options, and then inits
 val restore_cmd_line_options    : bool -> parse_cmdline_res //inits or clears (if the flag is set) the current options and then sets it to the cmd line
 
-type optionstate = FStar.Compiler.Util.smap<option_val>
+type optionstate = FStar.Compiler.Util.smap option_val
 (* Control the option stack *)
 (* Briefly, push/pop are used by the interactive mode and internal_*
  * by #push-options/#pop-options. Read the comment in the .fs for more
@@ -57,7 +54,7 @@ val pop                         : unit -> unit
 val internal_push               : unit -> unit
 val internal_pop                : unit -> bool (* returns whether it worked or not, false should be taken as a hard error *)
 val snapshot                    : unit -> (int * unit)
-val rollback                    : option<int> -> unit
+val rollback                    : option int -> unit
 val peek                        : unit -> optionstate
 val set                         : optionstate -> unit
 val set_verification_options    : optionstate -> unit
@@ -65,7 +62,7 @@ val set_verification_options    : optionstate -> unit
 val __unit_tests                : unit    -> bool
 val __set_unit_tests            : unit    -> unit
 val __clear_unit_tests          : unit    -> unit
-val parse_cmd_line              : unit    -> parse_cmdline_res * list<string>
+val parse_cmd_line              : unit    -> parse_cmdline_res * list string
 val add_verify_module           : string  -> unit
 val add_light_off_file          : string  -> unit
 
@@ -80,9 +77,9 @@ type opt_type =
   // --fstar_home /build/fstar
 | SimpleStr of string (* label *)
   // --admit_except xyz
-| EnumStr of list<string>
+| EnumStr of list string
   // --codegen OCaml
-| OpenEnumStr of list<string> (* suggested values (not exhaustive) *) * string (* label *)
+| OpenEnumStr of list string (* suggested values (not exhaustive) *) * string (* label *)
   // --debug_level …
 | PostProcessed of ((option_val -> option_val) (* validator *) * opt_type (* elem spec *))
   // For options like --extract_module that require post-processing or validation
@@ -94,31 +91,31 @@ type opt_type =
   // For options like --version that have side effects
 
 val set_option_warning_callback : (string -> unit) -> unit
-val desc_of_opt_type            : opt_type -> option<string>
-val all_specs_with_types        : list<(char * string * opt_type * string)>
+val desc_of_opt_type            : opt_type -> option string
+val all_specs_with_types        : list (char * string * opt_type * string)
 val settable                    : string -> bool
 
-val abort_counter : ref<int>
+val abort_counter : ref int
 
 val __temp_fast_implicits       : unit    -> bool
 val admit_smt_queries           : unit    -> bool
 val set_admit_smt_queries       : bool    -> unit
-val admit_except                : unit    -> option<string>
+val admit_except                : unit    -> option string
 val cache_checked_modules       : unit    -> bool
 val cache_off                   : unit    -> bool
 val print_cache_version         : unit    -> bool
 val cmi                         : unit    -> bool
 type codegen_t =
     | OCaml | FSharp | Krml | Plugin
-val codegen                     : unit    -> option<codegen_t>
-val parse_codegen               : string  -> option<codegen_t>
-val codegen_libs                : unit    -> list<list<string>>
-val profile_enabled             : module_name:option<string> -> profile_phase:string -> bool
+val codegen                     : unit    -> option codegen_t
+val parse_codegen               : string  -> option codegen_t
+val codegen_libs                : unit    -> list (list string)
+val profile_enabled             : module_name:option string -> profile_phase:string -> bool
 val profile_group_by_decls      : unit    -> bool
 val defensive                   : unit    -> bool // true if checks should be performed
 val defensive_error             : unit    -> bool // true if "error"
 val defensive_abort             : unit    -> bool // true if "abort"
-val dep                         : unit    -> option<string>
+val dep                         : unit    -> option string
 val detail_errors               : unit    -> bool
 val detail_hint_replay          : unit    -> bool
 val display_usage               : unit    -> unit
@@ -126,8 +123,8 @@ val dump_module                 : string  -> bool
 val eager_subtyping             : unit    -> bool
 val error_contexts              : unit    -> bool
 val expose_interfaces           : unit    -> bool
-val file_list                   : unit    -> list<string>
-val find_file                   : (string  -> option<string>)
+val file_list                   : unit    -> list string
+val find_file                   : (string  -> option string)
 val force                       : unit    -> bool
 val fs_typ_app                  : string  -> bool
 val fstar_bin_directory         : string
@@ -138,7 +135,7 @@ val hint_info                   : unit    -> bool
 val hint_file_for_src           : string  -> string
 val ide                         : unit    -> bool
 val ide_id_info_off             : unit    -> bool
-val include_path                : unit    -> list<string>
+val include_path                : unit    -> list string
 val print                       : unit    -> bool
 val print_in_place              : unit    -> bool
 val initial_fuel                : unit    -> int
@@ -146,8 +143,8 @@ val initial_ifuel               : unit    -> int
 val interactive                 : unit    -> bool
 val keep_query_captions         : unit    -> bool
 val lax                         : unit    -> bool
-val load                        : unit    -> list<string>
-val load_cmxs                   : unit    -> list<string>
+val load                        : unit    -> list string
+val load_cmxs                   : unit    -> list string
 val legacy_interactive          : unit    -> bool
 val lsp_server                  : unit    -> bool
 val log_queries                 : unit    -> bool
@@ -164,7 +161,7 @@ val no_plugins                  : unit    -> bool
 val no_smt                      : unit    -> bool
 val normalize_pure_terms_for_extraction
                                 : unit    -> bool
-val output_dir                  : unit    -> option<string>
+val output_dir                  : unit    -> option string
 val prepend_cache_dir           : string  -> string
 val prepend_output_dir          : string  -> string
 val prims                       : unit    -> string
@@ -186,8 +183,8 @@ val query_stats                 : unit    -> bool
 val record_hints                : unit    -> bool
 val record_options              : unit    -> bool
 val retry                       : unit    -> bool
-val reuse_hint_for              : unit    -> option<string>
-val report_assumes              : unit    -> option<string>
+val reuse_hint_for              : unit    -> option string
+val report_assumes              : unit    -> option string
 val set_option                  : string  -> option_val -> unit
 val set_options                 : string -> parse_cmdline_res
 val should_be_already_cached    : string  -> bool
@@ -221,15 +218,15 @@ val unsafe_tactic_exec          : unit    -> bool
 val use_eq_at_higher_order      : unit    -> bool
 val use_hints                   : unit    -> bool
 val use_hint_hashes             : unit    -> bool
-val use_native_tactics          : unit    -> option<string>
+val use_native_tactics          : unit    -> option string
 val use_tactics                 : unit    -> bool
-val using_facts_from            : unit    -> list<(list<string> * bool)>
+val using_facts_from            : unit    -> list (list string * bool)
 val vcgen_optimize_bind_as_seq  : unit    -> bool
 val vcgen_decorate_with_type    : unit    -> bool
 val warn_default_effects        : unit    -> bool
 val with_saved_options          : (unit -> 'a) -> 'a
 val z3_exe                      : unit    -> string
-val z3_cliopt                   : unit    -> list<string>
+val z3_cliopt                   : unit    -> list string
 val z3_refresh                  : unit    -> bool
 val z3_rlimit                   : unit    -> int
 val z3_rlimit_factor            : unit    -> int
@@ -259,14 +256,14 @@ val debug_at_level_no_module    : debug_level_t -> bool
 // HACK ALERT! This is to ensure we have no dependency from Options to Version,
 // otherwise, since Version is regenerated all the time, this invalidates the
 // whole build tree. A classy technique I learned from the OCaml compiler.
-val _version: ref<string>
-val _platform: ref<string>
-val _compiler: ref<string>
-val _date: ref<string>
-val _commit: ref<string>
+val _version: ref string
+val _platform: ref string
+val _compiler: ref string
+val _date: ref string
+val _commit: ref string
 
-val debug_embedding: ref<bool>
-val eager_embedding: ref<bool>
+val debug_embedding: ref bool
+val eager_embedding: ref bool
 
 val get_vconfig : unit -> vconfig
 val set_vconfig : vconfig -> unit

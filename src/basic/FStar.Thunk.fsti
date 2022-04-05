@@ -15,23 +15,23 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-#light "off"
 module FStar.Thunk
 open FStar.Pervasives
-open FStar.Compiler.Effect module List = FStar.Compiler.List
+open FStar.Compiler.Effect
+module List = FStar.Compiler.List
 
 // GM: I get an F# error if I don't expose the definition of `thunk`,
 //     please ignore it :)
-type thunk<'a> = ref<(either<(unit -> 'a), 'a>)>
+type thunk 'a = ref (either (unit -> 'a) 'a)
 
-type t<'a> = thunk<'a>
+type t 'a = thunk 'a
 
 (* Creating thunks *)
-val mk : (unit -> 'a) -> thunk<'a>
-val mkv : 'a -> thunk<'a>
+val mk : (unit -> 'a) -> thunk 'a
+val mkv : 'a -> thunk 'a
 
 (* Forcing *)
-val force : thunk<'a> -> 'a
+val force : thunk 'a -> 'a
 
 (* Mapping an operation over the thunk, lazily *)
-val map : ('a -> 'b) -> thunk<'a> -> thunk<'b>
+val map : ('a -> 'b) -> thunk 'a -> thunk 'b

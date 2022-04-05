@@ -13,9 +13,6 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-#light "off"
-
-// (c) Microsoft Corporation. All rights reserved
 module FStar.Options
 open FStar.Compiler
 open FStar.Compiler.List
@@ -49,7 +46,7 @@ type option_val =
   | String of string
   | Path of string
   | Int of int
-  | List of list<option_val>
+  | List of list option_val
   | Unset
 
 (* A FLAG TO INDICATE THAT WE'RE RUNNING UNIT TESTS *)
@@ -80,7 +77,7 @@ let as_comma_string_list = function
   | List ls -> List.flatten <| List.map (fun l -> split (as_string l) ",") ls
   | _ -> failwith "Impos: expected String (comma list)"
 
-type optionstate = Util.smap<option_val>
+type optionstate = Util.smap option_val
 let copy_optionstate m = Util.smap_copy m
 
 (* The option state is a stack of stacks. Why? First, we need to
@@ -109,7 +106,7 @@ let copy_optionstate m = Util.smap_copy m
  * No stack should ever be empty! Any of these failwiths should never be
  * triggered externally. IOW, the API should protect this invariant.
  *)
-let fstar_options : ref<list<list<optionstate>>> = Util.mk_ref []
+let fstar_options : ref (list (list optionstate)) = Util.mk_ref []
 
 let internal_peek () = List.hd (List.hd !fstar_options)
 let peek () = copy_optionstate (internal_peek())
@@ -155,7 +152,7 @@ let set_option k v =
 let set_option' (k,v) =  set_option k v
 let set_admit_smt_queries (b:bool) = set_option "admit_smt_queries" (Bool b)
 
-let light_off_files : ref<list<string>> = Util.mk_ref []
+let light_off_files : ref (list string) = Util.mk_ref []
 let add_light_off_file (filename:string) = light_off_files := filename :: !light_off_files
 
 let defaults =
@@ -491,7 +488,7 @@ let universe_include_path_base_dirs =
 let _version = Util.mk_ref ""
 let _platform = Util.mk_ref ""
 let _compiler = Util.mk_ref ""
-let _date = Util.mk_ref "<not set>"
+let _date = Util.mk_ref " not set"
 let _commit = Util.mk_ref ""
 
 let display_version () =
@@ -556,9 +553,9 @@ type opt_type =
   // --fstar_home /build/fstar
 | SimpleStr of string (* label *)
   // --admit_except xyz
-| EnumStr of list<string>
+| EnumStr of list string
   // --codegen OCaml
-| OpenEnumStr of list<string> (* suggested values (not exhaustive) *) * string (* label *)
+| OpenEnumStr of list string (* suggested values (not exhaustive) *) * string (* label *)
   // --debug_level …
 | PostProcessed of ((option_val -> option_val) (* validator *) * opt_type (* elem spec *))
   // For options like --extract_module that require post-processing or validation
@@ -604,7 +601,7 @@ let rec parse_opt_val (opt_name: string) (typ: opt_type) (str_val: string) : opt
   | InvalidArgument opt_name ->
     failwith (Util.format1 "Invalid argument to --%s" opt_name)
 
-let rec desc_of_opt_type typ : option<string> =
+let rec desc_of_opt_type typ : option string =
   let desc_of_enum cases =
     Some ("[" ^ (String.concat "|" cases) ^ "]") in
   match typ with
@@ -620,7 +617,7 @@ let rec desc_of_opt_type typ : option<string> =
   | ReverseAccumulated elem_spec
   | WithSideEffect (_, elem_spec) -> desc_of_opt_type elem_spec
 
-let arg_spec_of_opt_type opt_name typ : opt_variant<option_val> =
+let arg_spec_of_opt_type opt_name typ : opt_variant option_val =
   let parser = parse_opt_val opt_name typ in
   match desc_of_opt_type typ with
   | None -> ZeroArgs (fun () -> parser "")
@@ -634,7 +631,7 @@ let pp_validate_dir p =
 let pp_lowercase s =
   String (String.lowercase (as_string s))
 
-let abort_counter : ref<int> =
+let abort_counter : ref int =
     mk_ref 0
 
 let interp_quake_arg (s:string)
@@ -667,7 +664,7 @@ let set_option_warning_callback_aux,
     set, call
 let set_option_warning_callback f = set_option_warning_callback_aux f
 
-let rec specs_with_types warn_unsafe : list<(char * string * opt_type * string)> =
+let rec specs_with_types warn_unsafe : list (char * string * opt_type * string) =
      [( noshort,
         "abort_on",
         PostProcessed ((function Int x -> abort_counter := x; Int x
@@ -682,7 +679,7 @@ let rec specs_with_types warn_unsafe : list<(char * string * opt_type * string)>
       ( noshort,
         "admit_except",
         WithSideEffect ((fun _ -> if warn_unsafe then option_warning_callback "admit_except"), SimpleStr "[symbol|(symbol, id)]"),
-        "Admit all queries, except those with label (<symbol>, <id>)) (e.g. --admit_except '(FStar.Fin.pigeonhole, 1)' or --admit_except FStar.Fin.pigeonhole)");
+        "Admit all queries, except those with label ( symbol,  id)) (e.g. --admit_except '(FStar.Fin.pigeonhole, 1)' or --admit_except FStar.Fin.pigeonhole)");
 
        ( noshort,
          "already_cached",
@@ -698,7 +695,7 @@ let rec specs_with_types warn_unsafe : list<(char * string * opt_type * string)>
       ( noshort,
         "cache_dir",
         PostProcessed (pp_validate_dir, PathStr "dir"),
-        "Read and write .checked and .checked.lax in directory <dir>");
+        "Read and write .checked and .checked.lax in directory  dir");
 
       ( noshort,
         "cache_off",
@@ -815,12 +812,12 @@ let rec specs_with_types warn_unsafe : list<(char * string * opt_type * string)>
        ( noshort,
          "hint_dir",
          PathStr "path",
-        "Read/write hints to <dir>/module_name.hints (instead of placing hint-file alongside source file)");
+        "Read/write hints to  dir/module_name.hints (instead of placing hint-file alongside source file)");
 
        ( noshort,
          "hint_file",
          PathStr "path",
-        "Read/write hints to <path> (instead of module-specific hints files; overrides hint_dir)");
+        "Read/write hints to  path (instead of module-specific hints files; overrides hint_dir)");
 
        ( noshort,
         "hint_info",
@@ -991,7 +988,7 @@ let rec specs_with_types warn_unsafe : list<(char * string * opt_type * string)>
        ( noshort,
         "odir",
         PostProcessed (pp_validate_dir, PathStr "dir"),
-        "Place output in directory <dir>");
+        "Place output in directory  dir");
 
        ( noshort,
         "prims",
@@ -1089,7 +1086,7 @@ let rec specs_with_types warn_unsafe : list<(char * string * opt_type * string)>
        ( noshort,
         "reuse_hint_for",
         SimpleStr "toplevel_name",
-        "Optimistically, attempt using the recorded hint for <toplevel_name> (a top-level name in the current module) when trying to verify some other term 'g'");
+        "Optimistically, attempt using the recorded hint for  toplevel_name (a top-level name in the current module) when trying to verify some other term 'g'");
 
        ( noshort,
          "report_assumes",
@@ -1217,7 +1214,7 @@ let rec specs_with_types warn_unsafe : list<(char * string * opt_type * string)>
        ( noshort,
          "use_native_tactics",
          PathStr "path",
-        "Use compiled tactics from <path>");
+        "Use compiled tactics from  path");
 
        ( noshort,
         "no_plugins",
@@ -1360,7 +1357,7 @@ let rec specs_with_types warn_unsafe : list<(char * string * opt_type * string)>
                                 (Const (Bool true))),
         "Display this information")]
 
-and specs (warn_unsafe:bool) : list<FStar.Getopt.opt> = // FIXME: Why does the interactive mode log the type of opt_specs_with_types as a triple??
+and specs (warn_unsafe:bool) : list FStar.Getopt.opt = // FIXME: Why does the interactive mode log the type of opt_specs_with_types as a triple??
   List.map (fun (short, long, typ, doc) ->
             mk_spec (short, long, arg_spec_of_opt_type long typ, doc))
            (specs_with_types warn_unsafe)
@@ -1459,7 +1456,7 @@ let settable_specs = all_specs |> List.filter (fun (_, x, _, _) -> settable x)
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 let set_error_flags_callback_aux,
     set_error_flags =
-    let callback : ref<(option<(unit -> parse_cmdline_res)>)> = mk_ref None in
+    let callback : ref (option (unit -> parse_cmdline_res)) = mk_ref None in
     let set f = callback := Some f in
     let call () =
       match !callback with
@@ -1473,7 +1470,7 @@ let display_usage () = display_usage_aux all_specs
 
 let fstar_bin_directory = Util.get_exec_dir ()
 
-let file_list_ : ref<(list<string>)> = Util.mk_ref []
+let file_list_ : ref (list string) = Util.mk_ref []
 
 (* In `parse_filename_arg specs arg`:
 
@@ -1593,7 +1590,7 @@ let find_file =
                     Some path
                   else
                     None)
-           with | _ -> //to deal with issues like passing bogus strings as paths like "<input>"
+           with | _ -> //to deal with issues like passing bogus strings as paths like " input"
                   None)
        in
        if Option.isSome result
@@ -1644,7 +1641,7 @@ let prepend_cache_dir fpath =
 //   --already_cached
 let path_of_text text = String.split ['.'] text
 
-let parse_settings ns : list<(list<string> * bool)> =
+let parse_settings ns : list (list string * bool) =
     let cache = Util.smap_create 31 in
     let with_cache f s =
       match Util.smap_try_find cache s with
@@ -1877,8 +1874,8 @@ let matches_namespace_filter_opt m =
   | Some filter -> module_matches_namespace_filter m filter
 
 type parsed_extract_setting = {
-  target_specific_settings: list<(codegen_t * string)>;
-  default_settings:option<string>
+  target_specific_settings: list (codegen_t * string);
+  default_settings:option string
 }
 
 let print_pes pes =
@@ -1894,15 +1891,15 @@ let print_pes pes =
              | None -> "None"
              | Some s -> s)
 
-let find_setting_for_target tgt (s:list<(codegen_t * string)>)
-  : option<string>
+let find_setting_for_target tgt (s:list (codegen_t * string))
+  : option string
   = match Util.try_find (fun (x, _) -> x = tgt) s with
     | Some (_, s) -> Some s
     | _ -> None
 
 let extract_settings
-  : unit -> option<parsed_extract_setting>
-  = let memo:ref<(option<parsed_extract_setting> * bool)> = Util.mk_ref (None, false) in
+  : unit -> option parsed_extract_setting
+  = let memo:ref (option parsed_extract_setting * bool) = Util.mk_ref (None, false) in
     let merge_parsed_extract_settings p0 p1 : parsed_extract_setting =
       let merge_setting s0 s1 =
         match s0, s1 with
@@ -2093,7 +2090,7 @@ let get_vconfig () =
   vcfg
 
 let set_vconfig (vcfg:vconfig) : unit =
-  let option_as (tag : 'a -> option_val) (o : option<'a>) : option_val =
+  let option_as (tag : 'a -> option_val) (o : option 'a) : option_val =
     match o with
     | None -> Unset
     | Some s -> tag s
