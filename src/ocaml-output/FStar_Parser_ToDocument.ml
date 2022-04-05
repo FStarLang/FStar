@@ -659,7 +659,7 @@ let (handleable_args_length : FStar_Ident.ident -> Prims.int) =
       (let uu___2 =
          ((is_operatorInfix0ad12 op) || (is_operatorInfix34 op)) ||
            (FStar_Compiler_List.mem op_s
-              ["<==>"; "==>"; "\\/"; "/\\"; "="; "|>"; ":="; ".()"; ".[]"]) in
+              [" =="; "==>"; "\\/"; "/\\"; "="; "|>"; ":="; ".()"; ".[]"]) in
        if uu___2
        then (Prims.of_int (2))
        else
@@ -680,7 +680,7 @@ let handleable_op :
           ((is_operatorInfix0ad12 op) || (is_operatorInfix34 op)) ||
             (let uu___1 = FStar_Ident.string_of_id op in
              FStar_Compiler_List.mem uu___1
-               ["<==>"; "==>"; "\\/"; "/\\"; "="; "|>"; ":="; ".()"; ".[]"])
+               [" =="; "==>"; "\\/"; "/\\"; "="; "|>"; ":="; ".()"; ".[]"])
       | uu___ when uu___ = (Prims.of_int (3)) ->
           let uu___1 = FStar_Ident.string_of_id op in
           FStar_Compiler_List.mem uu___1 [".()<-"; ".[]<-"]
@@ -3640,8 +3640,8 @@ and (p_tmIff : FStar_Parser_AST.term -> FStar_Pprint.document) =
   fun e ->
     match e.FStar_Parser_AST.tm with
     | FStar_Parser_AST.Op (id, e1::e2::[]) when
-        let uu___ = FStar_Ident.string_of_id id in uu___ = "<==>" ->
-        let uu___ = str "<==>" in
+        let uu___ = FStar_Ident.string_of_id id in uu___ = " ==" ->
+        let uu___ = str " ==" in
         let uu___1 = p_tmImplies e1 in
         let uu___2 = p_tmIff e2 in infix0 uu___ uu___1 uu___2
     | uu___ -> p_tmImplies e
@@ -3935,7 +3935,7 @@ and (p_tmEqWith' :
             (let uu___ =
                (let uu___1 = FStar_Ident.string_of_id op in uu___1 = "==>")
                  ||
-                 (let uu___1 = FStar_Ident.string_of_id op in uu___1 = "<==>") in
+                 (let uu___1 = FStar_Ident.string_of_id op in uu___1 = " ==") in
              Prims.op_Negation uu___) &&
               (((is_operatorInfix0ad12 op) ||
                   (let uu___ = FStar_Ident.string_of_id op in uu___ = "="))
