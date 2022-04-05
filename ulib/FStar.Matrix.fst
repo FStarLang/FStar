@@ -854,7 +854,7 @@ let dot_of_equal_sequences #c #eq (add mul: CE.cm c eq) m
   SP.foldm_snoc_equality add (seq_of_products mul p q) (seq_of_products mul r s)  
 #pop-options
 
-#push-options "--z3rlimit 10 --ifuel 0 --fuel 0"
+#push-options "--z3rlimit 30 --ifuel 0 --fuel 0"
 let matrix_mul_congruence #c #eq #m #n #p (add mul: CE.cm c eq)  
                     (mx: matrix c m n) (my: matrix c n p) 
                     (mz: matrix c m n) (mw: matrix c n p)
