@@ -3302,7 +3302,7 @@ and (desugar_term_maybe_top :
                                        &&
                                        ((Prims.op_Negation is_rec) ||
                                           ((FStar_Compiler_List.length args1)
-                                             <> Prims.int_zero)) in
+                                             > Prims.int_zero)) in
                                    if uu___7
                                    then FStar_Parser_AST.ml_comp t
                                    else FStar_Parser_AST.tot_comp t) in
