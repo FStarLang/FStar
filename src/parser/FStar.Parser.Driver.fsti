@@ -1,4 +1,18 @@
-#light "off"
+(*
+   Copyright 2008-2014 Nikhil Swamy and Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
 module FStar.Parser.Driver
 
 module Range      = FStar.Compiler.Range
@@ -10,9 +24,9 @@ val is_cache_file : string -> bool
 type fragment =
     | Empty
     | Modul of AST.modul // an entire module or interface -- unspecified
-    | Decls of list<AST.decl> // a partial set of declarations
+    | Decls of list AST.decl // a partial set of declarations
 
 val parse_fragment : ParseIt.input_frag -> fragment
 
 (* Returns a non-desugared AST (as in [parser/ast.fs]) or aborts. *)
-val parse_file : string -> AST.file * list<(string * Range.range)>
+val parse_file : string -> AST.file * list (string * Range.range)

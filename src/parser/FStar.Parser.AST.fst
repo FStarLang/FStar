@@ -13,7 +13,6 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-#light "off"
 module FStar.Parser.AST
 open FStar.Pervasives
 open FStar.Compiler.Effect
@@ -44,7 +43,7 @@ type quote_kind =
 type term' =
   | Wild
   | Const     of sconst
-  | Op        of ident * list<term>
+  | Op        of ident * list term
   | Tvar      of ident
   | Uvar      of ident                                (* universe variable *)
   | Var       of lid // a qualified identifier that starts with a lowercase (Foo.Bar.baz)
@@ -53,60 +52,60 @@ type term' =
                                 its formal parameters, or an effect
                                 followed by one  of its actions or
                                 "fields" *)
-  | Construct of lid * list<(term*imp)>               (* data, type: bool in each arg records an implicit *)
-  | Abs       of list<pattern> * term
+  | Construct of lid * list (term*imp)               (* data, type: bool in each arg records an implicit *)
+  | Abs       of list pattern * term
   | App       of term * term * imp                    (* aqual marks an explicitly provided implicit parameter *)
-  | Let       of let_qualifier * list<(option<attributes_> * (pattern * term))> * term
+  | Let       of let_qualifier * list (option attributes_ * (pattern * term)) * term
   | LetOpen   of lid * term
   | LetOpenRecord of term * term * term
   | Seq       of term * term
   | Bind      of ident * term * term
-  | If        of term * option<match_returns_annotation> * term * term
-  | Match     of term * option<match_returns_annotation> * list<branch>
-  | TryWith   of term * list<branch>
-  | Ascribed  of term * term * option<term> * bool  (* bool says whether equality ascription $: *)
-  | Record    of option<term> * list<(lid * term)>
+  | If        of term * option match_returns_annotation * term * term
+  | Match     of term * option match_returns_annotation * list branch
+  | TryWith   of term * list branch
+  | Ascribed  of term * term * option term * bool  (* bool says whether equality ascription $: *)
+  | Record    of option term * list (lid * term)
   | Project   of term * lid
-  | Product   of list<binder> * term                (* function space *)
-  | Sum       of list<(either<binder,term>)> * term (* dependent tuple *)
-  | QForall   of list<binder> * patterns * term
-  | QExists   of list<binder> * patterns * term
+  | Product   of list binder * term                (* function space *)
+  | Sum       of list (either binder term) * term (* dependent tuple *)
+  | QForall   of list binder * patterns * term
+  | QExists   of list binder * patterns * term
   | Refine    of binder * term
   | NamedTyp  of ident * term
   | Paren     of term
-  | Requires  of term * option<string>
-  | Ensures   of term * option<string>
-  | LexList   of list<term>  (* a decreases clause mentions either a lexicographically ordered list, *)
+  | Requires  of term * option string
+  | Ensures   of term * option string
+  | LexList   of list term  (* a decreases clause mentions either a lexicographically ordered list, *)
   | WFOrder   of term * term  (* or a well-founded relation or some type and an expression of the same type *)
-  | Decreases of term * option<string>
+  | Decreases of term * option string
   | Labeled   of term * string * bool
   | Discrim   of lid   (* Some?  (formerly is_Some) *)
-  | Attributes of list<term>   (* attributes decorating a term *)
+  | Attributes of list term   (* attributes decorating a term *)
   | Antiquote of term  (* Antiquotation within a quoted term *)
   | Quote     of term * quote_kind
   | VQuote    of term        (* Quoting an lid, this gets removed by the desugarer *)
-  | CalcProof of term * term * list<calc_step> (* A calculational proof with relation, initial expression, and steps *)
-  | IntroForall of list<binder> * term * term                     (* intro_forall x1..xn. P with e *)
-  | IntroExists of list<binder> * term * list<term> * term        (* intro_exists x1...xn.P using v1..vn with e *)
+  | CalcProof of term * term * list calc_step (* A calculational proof with relation, initial expression, and steps *)
+  | IntroForall of list binder * term * term                     (* intro_forall x1..xn. P with e *)
+  | IntroExists of list binder * term * list term * term        (* intro_exists x1...xn.P using v1..vn with e *)
   | IntroImplies of term * term * binder * term                   (* intro_implies P Q with x. e *)
   | IntroOr of bool * term * term * term                          (* intro_or_{left ,right} P Q with e *)
   | IntroAnd of term * term * term * term                         (* intro_and P Q with e1 and e2 *)
-  | ElimForall  of list<binder> * term * list<term>               (* elim_forall x1..xn. P using v1..vn *)
-  | ElimExists  of list<binder> * term * term * binder * term     (* elim_exists x1...xn.P to Q with e *)
+  | ElimForall  of list binder * term * list term               (* elim_forall x1..xn. P using v1..vn *)
+  | ElimExists  of list binder * term * term * binder * term     (* elim_exists x1...xn.P to Q with e *)
   | ElimImplies of term * term * term                             (* elim_implies P Q with e *)
   | ElimOr of term * term * term * binder * term * binder * term  (* elim_or P Q to R with x.e1 and y.e2 *)
   | ElimAnd of term * term * term * binder * binder * term        (* elim_and P Q to R with x y. e *)
 and term = {tm:term'; range:range; level:level}
 
 (* (as y)? returns t *)
-and match_returns_annotation = option<ident> * term * bool
+and match_returns_annotation = option ident * term * bool
 
-and patterns = list<ident> * list<list<term>>
+and patterns = list ident * list (list term)
 
 and calc_step =
   | CalcStep of term * term * term (* Relation, justification and next expression *)
 
-and attributes_ = list<term>
+and attributes_ = list term
 
 and binder' =
   | Variable of ident
@@ -120,24 +119,24 @@ and binder = {b:binder'; brange:range; blevel:level; aqual:aqual; battributes:at
 and pattern' =
   | PatWild     of aqual * attributes_
   | PatConst    of sconst
-  | PatApp      of pattern * list<pattern>
+  | PatApp      of pattern * list pattern
   | PatVar      of ident * aqual * attributes_
   | PatName     of lid
   | PatTvar     of ident * aqual * attributes_
-  | PatList     of list<pattern>
-  | PatTuple    of list<pattern> * bool (* dependent if flag is set *)
-  | PatRecord   of list<(lid * pattern)>
-  | PatAscribed of pattern * (term * option<term>)
-  | PatOr       of list<pattern>
+  | PatList     of list pattern
+  | PatTuple    of list pattern * bool (* dependent if flag is set *)
+  | PatRecord   of list (lid * pattern)
+  | PatAscribed of pattern * (term * option term)
+  | PatOr       of list pattern
   | PatOp       of ident
 and pattern = {pat:pattern'; prange:range}
 
-and branch = (pattern * option<term> * term)
+and branch = (pattern * option term * term)
 and arg_qualifier =
     | Implicit
     | Equality
     | Meta of term
-and aqual = option<arg_qualifier>
+and aqual = option arg_qualifier
 and imp =
     | FsTypApp
     | Hash
@@ -152,10 +151,10 @@ type expr = term
 
 (* TODO (KM) : it would be useful for the printer to have range information for those *)
 type tycon =
-  | TyconAbstract of ident * list<binder> * option<knd>
-  | TyconAbbrev   of ident * list<binder> * option<knd> * term
-  | TyconRecord   of ident * list<binder> * option<knd> * list<(ident * aqual * attributes_ * term)>
-  | TyconVariant  of ident * list<binder> * option<knd> * list<(ident * option<term> * bool)> (* bool is whether it's using 'of' notation *)
+  | TyconAbstract of ident * list binder * option knd
+  | TyconAbbrev   of ident * list binder * option knd * term
+  | TyconRecord   of ident * list binder * option knd * list (ident * aqual * attributes_ * term)
+  | TyconVariant  of ident * list binder * option knd * list (ident * option term * bool) (* bool is whether it's using 'of' notation *)
 
 type qualifier =
   | Private
@@ -178,11 +177,11 @@ type qualifier =
   | Opaque
   | Logic
 
-type qualifiers = list<qualifier>
+type qualifiers = list qualifier
 
 type decoration =
   | Qualifier of qualifier
-  | DeclAttributes of list<term>
+  | DeclAttributes of list term
 
 type lift_op =
   | NonReifiableLift of term
@@ -197,8 +196,8 @@ type lift = {
 
 type pragma =
   | SetOptions of string
-  | ResetOptions of option<string>
-  | PushOptions of option<string>
+  | ResetOptions of option string
+  | PushOptions of option string
   | PopOptions
   | RestartSolver
   | LightOff
@@ -210,12 +209,12 @@ type decl' =
   | Friend of lid
   | Include of lid
   | ModuleAbbrev of ident * lid
-  | TopLevelLet of let_qualifier * list<(pattern * term)>
-  | Tycon of bool * bool * list<tycon>
+  | TopLevelLet of let_qualifier * list (pattern * term)
+  | Tycon of bool * bool * list tycon
     (* first bool is for effect *)
     (* second bool is for typeclass *)
   | Val of ident * term  (* bool is for logic val *)
-  | Exception of ident * option<term>
+  | Exception of ident * option term
   | NewEffect of effect_decl
   | LayeredEffect of effect_decl
   | SubEffect of lift
@@ -223,7 +222,7 @@ type decl' =
   | Polymonadic_subcomp of lid * lid * term
   | Pragma of pragma
   | Assume of ident * term
-  | Splice of list<ident> * term
+  | Splice of list ident * term
 
 and decl = {
   d:decl';
@@ -233,14 +232,14 @@ and decl = {
 }
 and effect_decl =
   (* KM : Is there really need of the generality of decl here instead of e.g. lid * term ? *)
-  | DefineEffect   of ident * list<binder> * term * list<decl>
-  | RedefineEffect of ident * list<binder> * term
+  | DefineEffect   of ident * list binder * term * list decl
+  | RedefineEffect of ident * list binder * term
 
 type modul =
-  | Module of lid * list<decl>
-  | Interface of lid * list<decl> * bool (* flag to mark admitted interfaces *)
+  | Module of lid * list decl
+  | Interface of lid * list decl * bool (* flag to mark admitted interfaces *)
 type file = modul
-type inputFragment = either<file,list<decl>>
+type inputFragment = either file (list decl)
 
 let decl_drange decl = decl.drange
 
@@ -450,7 +449,7 @@ let rec extract_named_refinement t1  =
 
 //NS: needed to hoist this to workaround a bootstrapping bug
 //    leaving it within as_frag causes the type-checker to take a very long time, perhaps looping
-let rec as_mlist (cur: (lid * decl) * list<decl>) (ds:list<decl>) : modul =
+let rec as_mlist (cur: (lid * decl) * list decl) (ds:list decl) : modul =
     let ((m_name, m_decl), cur) = cur in
     match ds with
     | [] -> Module(m_name, m_decl :: List.rev cur)
@@ -462,7 +461,7 @@ let rec as_mlist (cur: (lid * decl) * list<decl>) (ds:list<decl>) : modul =
             as_mlist ((m_name, m_decl), d::cur) ds
         end
 
-let as_frag is_light (light_range:Range.range) (ds:list<decl>) : inputFragment =
+let as_frag is_light (light_range:Range.range) (ds:list decl) : inputFragment =
   let d, ds = match ds with
     | d :: ds -> d, ds
     | [] -> raise Empty_frag

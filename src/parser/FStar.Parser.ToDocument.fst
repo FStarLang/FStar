@@ -14,8 +14,6 @@
   limitations under the License.
 *)
 
-#light "off"
-
 (** Convert Parser.Ast to Pprint.document for prettyprinting. *)
 module FStar.Parser.ToDocument
 open FStar.Pervasives
@@ -50,15 +48,15 @@ let min x y = if x > y then y else x
 let max x y = if x > y then x else y
 
 // VD: copied over from NBE, should both probably go in FStar.Compiler.List
-let map_rev (f: 'a -> 'b) (l: list<'a>): list<'b> =
-  let rec aux (l:list<'a>) (acc:list<'b>) =
+let map_rev (f: 'a -> 'b) (l: list 'a): list 'b =
+  let rec aux (l:list 'a) (acc:list 'b) =
     match l with
     | [] -> acc
     | x :: xs -> aux xs (f x :: acc)
   in
   aux l []
 
-let map_if_all (f: 'a -> option<'b>) (l: list<'a>): option<list<'b>> =
+let map_if_all (f: 'a -> option 'b) (l: list 'a): option (list 'b) =
   let rec aux l acc =
     match l with
     | [] -> acc
@@ -72,12 +70,12 @@ let map_if_all (f: 'a -> option<'b>) (l: list<'a>): option<list<'b>> =
     Some r
   else None
 
-let rec all (f: 'a -> bool) (l: list<'a>): bool =
+let rec all (f: 'a -> bool) (l: list 'a): bool =
   match l with
   | [] -> true
   | x :: xs -> if f x then all f xs else false
 
-let all1_explicit (args:list<(term*imp)>) : bool =
+let all1_explicit (args:list (term*imp)) : bool =
     not (List.isEmpty args) &&
     BU.for_all (function
                 | (_, Nothing) -> true
@@ -301,9 +299,9 @@ type associativity =
     | NonAssoc
 
 (* A token is either a character c representing any string beginning with c or a complete string *)
-type token = either<FStar.Char.char, string>
+type token = either FStar.Char.char string
 
-type associativity_level = associativity * list<token>
+type associativity_level = associativity * list token
 
 let token_to_string = function
     | Inl c -> string_of_char c ^ ".*"
@@ -336,7 +334,7 @@ let amp : associativity_level = Right, [Inr "&"]
 let colon_colon : associativity_level = Right, [Inr "::"]
 
 (* The latter the element, the tighter it binds *)
-let level_associativity_spec : list<associativity_level> =
+let level_associativity_spec : list associativity_level =
   [
     opinfix4 ;
     opinfix3 ;
@@ -360,7 +358,7 @@ let level_table =
   in
   List.mapi (fun i (assoc, tokens) -> (levels_from_associativity i assoc, tokens)) level_associativity_spec
 
-let assign_levels (token_associativity_spec : list<associativity_level>) (s:string) : int * int * int =
+let assign_levels (token_associativity_spec : list associativity_level) (s:string) : int * int * int =
     match List.tryFind (matches_level s) level_table with
         | Some (assoc_levels, _) -> assoc_levels
         | _ -> failwith ("Unrecognized operator " ^ s)
@@ -404,7 +402,7 @@ let handleable_args_length (op:ident) =
   if is_general_prefix_op op || List.mem op_s [ "-" ; "~" ] then 1
   else if (is_operatorInfix0ad12 op ||
     is_operatorInfix34 op ||
-    List.mem op_s ["<==>" ; "==>" ; "\\/" ; "/\\" ; "=" ; "|>" ; ":=" ; ".()" ; ".[]"])
+    List.mem op_s [" ==" ; "==>" ; "\\/" ; "/\\" ; "=" ; "|>" ; ":=" ; ".()" ; ".[]"])
   then 2
   else if (List.mem op_s [".()<-" ; ".[]<-"]) then 3
   else 0
@@ -416,7 +414,7 @@ let handleable_op op args =
   | 2 ->
     is_operatorInfix0ad12 op ||
     is_operatorInfix34 op ||
-    List.mem (Ident.string_of_id op) ["<==>" ; "==>" ; "\\/" ; "/\\" ; "=" ; "|>" ; ":=" ; ".()" ; ".[]"]
+    List.mem (Ident.string_of_id op) [" ==" ; "==>" ; "\\/" ; "/\\" ; "=" ; "|>" ; ":=" ; ".()" ; ".[]"]
   | 3 -> List.mem (Ident.string_of_id op) [".()<-" ; ".[]<-"]
   | _ -> false
 
@@ -494,7 +492,7 @@ let cat_with_colon x y = x ^^ colon ^/^ y
 (* that all printed AST nodes that could eventually contain a comment are printed in the *)
 (* sequential order of the document. *)
 
-let comment_stack : ref<(list<(string*range)>)>= BU.mk_ref []
+let comment_stack : ref (list (string*range))= BU.mk_ref []
 
 (* some meta-information that informs spacing and the placement of comments around a declaration *)
 type decl_meta =
@@ -768,7 +766,7 @@ and p_pragma = function
       str "#light \"off\""
 
 (* TODO : needs to take the F# specific type instantiation *)
-and p_typars (bs: list<binder>): document = p_binders true bs
+and p_typars (bs: list binder): document = p_binders true bs
 
 and p_typeDeclWithKw kw typedecl =
   let comm, decl, body, pre = p_typeDecl kw typedecl in
@@ -1073,7 +1071,7 @@ and p_binder is_atomic b =
   | None -> b'
 
 (* is_atomic is true if the binder must be parsed atomically *)
-and p_binder' (is_atomic: bool) (b: binder): document * option<document> * catf =
+and p_binder' (is_atomic: bool) (b: binder): document * option document * catf =
   match b.b with
   | Variable lid -> optional p_aqual b.aqual ^^ p_lident lid, None, cat_with_colon
   | TVariable lid -> p_lident lid, None, cat_with_colon
@@ -1134,11 +1132,11 @@ and p_refinement' aqual_opt attrs binder t phi =
 
 (* TODO : we may prefer to flow if there are more than 15 binders *)
 (* Note: also skipping multiBinder here. *)
-and p_binders_list (is_atomic: bool) (bs: list<binder>): list<document> = List.map (p_binder is_atomic) bs
+and p_binders_list (is_atomic: bool) (bs: list binder): list document = List.map (p_binder is_atomic) bs
 
-and p_binders (is_atomic: bool) (bs: list<binder>): document = separate_or_flow break1 (p_binders_list is_atomic bs)
+and p_binders (is_atomic: bool) (bs: list binder): document = separate_or_flow break1 (p_binders_list is_atomic bs)
 
-and p_binders_sep (bs: list<binder>): document = separate_map space (fun x -> x) (p_binders_list true bs)
+and p_binders_sep (bs: list binder): document = separate_map space (fun x -> x) (p_binders_list true bs)
 
 
 (* ****************************************************************************)
@@ -1529,8 +1527,8 @@ and sig_as_binders_if_possible t extra_space =
   else
     group (colon ^^ s ^^ p_typ_top (Arrows (2, 2)) false false t)
 
-and collapse_pats (pats: list<(document * document)>): list<document> =
-  let fold_fun (bs: list<(list<document> * document)>) (x: document * document) =
+and collapse_pats (pats: list (document * document)): list document =
+  let fold_fun (bs: list (list document * document)) (x: document * document) =
     let b1, t1 = x in
     match bs with
     | [] -> [([b1], t1)]
@@ -1541,7 +1539,7 @@ and collapse_pats (pats: list<(document * document)>): list<document> =
       else
         ([b1], t1) :: hd :: tl
   in
-  let p_collapsed_binder (cb: list<document> * document): document =
+  let p_collapsed_binder (cb: list document * document): document =
     let bs, typ = cb in
     match bs with
     | [] -> failwith "Impossible" // can't have dangling type
@@ -1650,8 +1648,8 @@ and p_patternBranch pb (pat, when_opt, e) =
 
 (* Nothing underneath tmIff is at risk of swallowing a semicolon. *)
 and p_tmIff e = match e.tm with
-    | Op(id, [e1;e2]) when string_of_id id = "<==>" ->
-        infix0 (str "<==>") (p_tmImplies e1) (p_tmIff e2)
+    | Op(id, [e1;e2]) when string_of_id id = " ==" ->
+        infix0 (str " ==") (p_tmImplies e1) (p_tmIff e2)
     | _ -> p_tmImplies e
 
 and p_tmImplies e = match e.tm with
@@ -1713,13 +1711,13 @@ and p_tmArrow' p_Tm e =
 // For this, we use the generalised version of p_binder, which returns
 // the binder, its type (as an optional) and a function which
 // concatenates them.
-and collapse_binders (p_Tm: term -> document) (e: term): list<document> =
-  let rec accumulate_binders p_Tm e: list<(document * option<document> * catf)> =
+and collapse_binders (p_Tm: term -> document) (e: term): list document =
+  let rec accumulate_binders p_Tm e: list (document * option document * catf) =
     match e.tm with
     | Product(bs, tgt) -> (List.map (fun b -> p_binder' false b) bs) @ (accumulate_binders p_Tm tgt)
     | _ -> [(p_Tm e, None, cat_with_colon)]
   in
-  let fold_fun (bs: list<(list<document> * option<document> * catf)>) (x: document * option<document> * catf) =
+  let fold_fun (bs: list (list document * option document * catf)) (x: document * option document * catf) =
     let b1, t1, f1 = x in
     match bs with
     | [] -> [([b1], t1, f1)]
@@ -1733,7 +1731,7 @@ and collapse_binders (p_Tm: term -> document) (e: term): list<document> =
           ([b1], t1, f1) :: hd :: tl
       | _ -> ([b1], t1, f1) :: bs
   in
-  let p_collapsed_binder (cb: list<document> * option<document> * catf): document =
+  let p_collapsed_binder (cb: list document * option document * catf): document =
     let bs, t, f = cb in
     match t with
     | None -> begin
@@ -1789,7 +1787,7 @@ and p_tmEqWith' p_X curr e = match e.tm with
   (* We don't have any information to print `infix` aplication *)
   | Op (op, [e1; e2]) when (* Implications and iffs are handled specially by the parser *)
                            not (Ident.string_of_id op = "==>"
-                                || Ident.string_of_id op = "<==>")
+                                || Ident.string_of_id op = " ==")
                            && (is_operatorInfix0ad12 op
                                || Ident.string_of_id op = "="
                                || Ident.string_of_id op = "|>") ->
@@ -1910,7 +1908,7 @@ and p_appTerm e = match e.tm with
 and p_argTerm arg_imp = match arg_imp with
   | (u, UnivApp) -> p_universe u
   | (e, FsTypApp) ->
-      (* This case should not happen since it might lead to badly formed type applications (e.g t<a><b>)*)
+      (* This case should not happen since it might lead to badly formed type applications (e.g t a b)*)
       Errors.log_issue e.range (Errors.Warning_UnexpectedFsTypApp, "Unexpected FsTypApp, output might not be formatted correctly.") ;
       surround 2 1 langle (p_indexingTerm e) rangle
   | (e, Hash) -> str "#" ^^ p_indexingTerm e
@@ -2131,7 +2129,7 @@ let modul_to_document (m:modul) =
   in  should_print_fs_typ_app := false ;
   res
 
-let comments_to_document (comments : list<(string * FStar.Compiler.Range.range)>) =
+let comments_to_document (comments : list (string * FStar.Compiler.Range.range)) =
     separate_map hardline (fun (comment, range) -> str comment) comments
 
 let extract_decl_range (d: decl): decl_meta =

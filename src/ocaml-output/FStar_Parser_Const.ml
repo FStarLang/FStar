@@ -349,7 +349,7 @@ let (const_to_string : FStar_Const.sconst -> Prims.string) =
     | FStar_Const.Const_float x1 -> FStar_Compiler_Util.string_of_float x1
     | FStar_Const.Const_string (s, uu___) ->
         FStar_Compiler_Util.format1 "\"%s\"" s
-    | FStar_Const.Const_bytearray uu___ -> "<bytearray>"
+    | FStar_Const.Const_bytearray uu___ -> " bytearray"
     | FStar_Const.Const_int (x1, uu___) -> x1
     | FStar_Const.Const_char c ->
         let uu___ =

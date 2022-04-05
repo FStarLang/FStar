@@ -13,7 +13,6 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-#light "off"
 module FStar.Parser.Const
 open FStar.String
 open FStar.Compiler.Effect
@@ -385,7 +384,7 @@ let const_to_string x = match x with
   | Const_real r -> r^"R"
   | Const_float x ->      U.string_of_float x
   | Const_string(s, _) -> U.format1 "\"%s\"" s
-  | Const_bytearray _  ->  "<bytearray>"
+  | Const_bytearray _  ->  " bytearray"
   | Const_int (x, _) -> x
   | Const_char c -> "'" ^ U.string_of_char c ^ "'"
   | Const_range r -> FStar.Compiler.Range.string_of_range r
