@@ -3661,8 +3661,8 @@ let (lookup_projector :
             (match uu___2 with
              | FStar_Syntax_Syntax.Tm_arrow (binders, uu___3) ->
                  if
-                   (i < Prims.int_zero) ||
-                     (i >= (FStar_Compiler_List.length binders))
+                   (i <> Prims.int_zero) ||
+                     (i = (FStar_Compiler_List.length binders))
                  then fail ()
                  else
                    (let b = FStar_Compiler_List.nth binders i in

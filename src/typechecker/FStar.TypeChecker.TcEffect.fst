@@ -13,7 +13,6 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-#light "off"
 module FStar.TypeChecker.TcEffect
 open FStar.Pervasives
 open FStar.Compiler.Effect
@@ -110,7 +109,7 @@ let pure_wp_uvar env (t:typ) (reason:string) (r:Range.range) : term * guard_t =
  * Essentially we want to ensure that uvars are not introduces at a type different than
  *   what they are used at
  *)
-let check_no_subtyping_for_layered_combinator env (t:term) (k:option<typ>) =
+let check_no_subtyping_for_layered_combinator env (t:term) (k:option typ) =
   if Env.debug env <| Options.Other "LayeredEffectsTc"
   then BU.print2 "Checking that %s is well typed with no subtyping (k:%s)\n"
          (Print.term_to_string t)
@@ -136,7 +135,7 @@ let check_no_subtyping_for_layered_combinator env (t:term) (k:option<typ>) =
  * Precondition: repr_terms may not be well-typed in env but bs must be well-typed (properly closed etc.)
  * To check for non_informativeness, we do some normalization, so bs well-typedness is required
  *)
-let validate_layered_effect_binders env (bs:binders) (repr_terms:list<term>) (check_non_informatve_binders:bool) (r:Range.range)
+let validate_layered_effect_binders env (bs:binders) (repr_terms:list term) (check_non_informatve_binders:bool) (r:Range.range)
 : unit
 = //repr can be (repr a is) or unit -> M a wp for wp effects
   let repr_args repr =
@@ -203,7 +202,7 @@ let validate_layered_effect_binders env (bs:binders) (repr_terms:list<term>) (ch
 (*
  * Typechecking of layered effects
  *)
-let tc_layered_eff_decl env0 (ed : S.eff_decl) (quals : list<qualifier>) (attrs : list<S.attribute>) =
+let tc_layered_eff_decl env0 (ed : S.eff_decl) (quals : list qualifier) (attrs : list S.attribute) =
 Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (string_of_lid ed.mname)) (fun () ->
   if Env.debug env0 <| Options.Other "LayeredEffectsTc" then
     BU.print1 "Typechecking layered effect: \n\t%s\n" (Print.eff_decl_to_string false ed);
@@ -242,7 +241,7 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
    * Effect signature
    *
    * The signature term must have the form:
-   *   a:Type -> <some binders> -> Effect  //polymorphic in one universe (that of a)
+   *   a:Type ->  some binders> - Effect  //polymorphic in one universe (that of a)
    *
    * The binders become the effect indices
    *)
@@ -267,7 +266,7 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
    * Effect repr
    *
    * The repr must have the type:
-   *   a:Type -> <binders for effect indices> -> Type  //polymorphic in one universe (that of a)
+   *   a:Type ->  binders for effect indices> - Type  //polymorphic in one universe (that of a)
    *)
   let repr =
     let repr_ts = ed |> U.get_eff_repr |> must in
@@ -291,7 +290,7 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
 
   log_combinator "repr" repr;
 
-  //helper function that creates an application node (repr<u> a_tm ?u1 ... ?un)
+  //helper function that creates an application node (repr u a_tm ?u1 ... ?un)
   //returns the application term and the guard for the introduced uvars (see TcUtil.fresh_layered_effect_repr)
   let fresh_repr r env u a_tm =
     let signature_ts = let us, t, _ = signature in (us, t) in
@@ -312,7 +311,7 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
    * return_repr
    *
    * return_repr must have type:
-   *   a:Type -> x:a -> <some binders> -> repr a i_1 ... i_n  //polymorphic in one universe (that of a)
+   *   a:Type -> x:a ->  some binders> - repr a i_1 ... i_n  //polymorphic in one universe (that of a)
    *   where i_1 ... i_n are terms of effect indices types (as in the signature)
    *
    * The binders have arbitrary sorts
@@ -365,7 +364,7 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
    * bind_repr
    *
    * bind_repr must have type:
-   *   a:Type -> b:Type -> <some binders> -> f:repr a i_1 ... i_n -> (g:a -> repr a j_1 ... j_n)
+   *   a:Type -> b:Type ->  some binders> -> f:repr a i_1 ... i_n -> (g:a - repr a j_1 ... j_n)
    *   : repr a k_1 ... k_n  //polymorphic in two universes (that of a and b)
    *   where i, j, k are terms of effect indices types (as in the signature)
    *
@@ -446,7 +445,7 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
    * stronger_repr
    *
    * stronger_repr must have type:
-   *   a:Type -> <some binders> -> f:repr a i_1 ... i_n -> PURE (repr a j_1 ... j_n) wp //polymorphic in one universe (that of a)
+   *   a:Type ->  some binders> -> f:repr a i_1 ... i_n - PURE (repr a j_1 ... j_n) wp //polymorphic in one universe (that of a)
    *   where i, j are terms of effect indices types (as in the signature)
    *
    * The binders have arbitrary sorts
@@ -792,7 +791,7 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
    * Actions
    *
    * Actions must have type:
-   *   <some binders> -> repr a i_1 ... i_n
+   *    some binders> - repr a i_1 ... i_n
    *   so that we can inject them into the effect
    *
    * Other than this, no polymorphism etc. restrictions
@@ -868,7 +867,7 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
     
     let act_typ =
       let err_msg t = BU.format3
-        "Unexpected (k-)type of action %s:%s, expected bs -> repr<u> i_1 ... i_n, found: %s"
+        "Unexpected (k-)type of action %s:%s, expected bs -> repr u i_1 ... i_n, found: %s"
         (string_of_lid ed.mname) (string_of_lid act.action_name) (Print.term_to_string t) in
       let repr_args t : universes * term * args =
         match (SS.compress t).n with
@@ -932,7 +931,7 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
     actions       = List.map (tc_action env0) ed.actions }
 )
 
-let tc_non_layered_eff_decl env0 (ed:S.eff_decl) (_quals : list<qualifier>) (_attrs : list<S.attribute>) : S.eff_decl =
+let tc_non_layered_eff_decl env0 (ed:S.eff_decl) (_quals : list qualifier) (_attrs : list S.attribute) : S.eff_decl =
 Errors.with_ctx (BU.format1 "While checking effect definition `%s`" (string_of_lid ed.mname)) (fun () ->
   if Env.debug env0 <| Options.Other "ED" then
     BU.print1 "Typechecking eff_decl: \n\t%s\n" (Print.eff_decl_to_string false ed);
@@ -1394,7 +1393,7 @@ let tc_layered_lift env0 (sub:S.sub_eff) : S.sub_eff =
 
   (*
    * Construct the expected lift type k as:
-   *   a:Type -> <some binders> -> f:source_repr a f_i_1 ... f_i_n : PURE (target_repr a i_1 ... i_m) wp
+   *   a:Type ->  some binders> - f:source_repr a f_i_1 ... f_i_n : PURE (target_repr a i_1 ... i_m) wp
    *
    * Note the PURE effect and the wp
    *   It is a bit unusual, most of the times this is just Tot (target_repr a ...)
@@ -1436,7 +1435,7 @@ let tc_layered_lift env0 (sub:S.sub_eff) : S.sub_eff =
 
     let bs = a::rest_bs in
 
-    //repr<?u> ?u_i ... ?u_n
+    //repr ?u ?u_i ... ?u_n
     let repr, g_repr = TcUtil.fresh_effect_repr_en
       (Env.push_binders env bs)
       r sub.target u_a (a.binder_bv |> S.bv_to_name) in
@@ -1725,7 +1724,7 @@ let tc_polymonadic_bind env (m:lident) (n:lident) (p:lident) (ts:S.tscheme) : (S
   check_no_subtyping_for_layered_combinator env ty None;
 
   //construct the expected type k to be:
-  //a:Type -> b:Type -> <some binders> -> m_repr a is -> (x:a -> n_repr b js) -> p_repr b ks
+  //a:Type -> b:Type ->  some binders> -> m_repr a is -> (x:a -> n_repr b js) - p_repr b ks
 
   let a, u_a = U.type_u () |> (fun (t, u) -> S.gen_bv "a" None t |> S.mk_binder, u) in
   let b, u_b = U.type_u () |> (fun (t, u) -> S.gen_bv "b" None t |> S.mk_binder, u) in
@@ -1822,7 +1821,7 @@ let tc_polymonadic_subcomp env0 (m:lident) (n:lident) (ts:S.tscheme) : (S.tschem
   check_no_subtyping_for_layered_combinator env ty None;
 
   //construct the expected type k to be:
-  //a:Type -> <some binders> -> m_repr a is -> PURE (n_repr a js) wp
+  //a:Type ->  some binders> -> m_repr a is - PURE (n_repr a js) wp
 
   let a, u = U.type_u () |> (fun (t, u) -> S.gen_bv "a" None t |> S.mk_binder, u) in
   let rest_bs =

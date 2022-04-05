@@ -1622,7 +1622,7 @@ let (mk_indexed_bind :
                                                                     | 
                                                                     uu___16
                                                                     ->
-                                                                    "<no attr>" in
+                                                                    " no attr" in
                                                                     FStar_Compiler_Util.print2
                                                                     "Generated uvar %s with attribute %s\n"
                                                                     uu___14

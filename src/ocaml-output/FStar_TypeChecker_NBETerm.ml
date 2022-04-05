@@ -854,7 +854,7 @@ let lazy_unembed :
                     let uu___3 = FStar_Syntax_Print.emb_typ_to_string et in
                     let uu___4 = FStar_Syntax_Print.emb_typ_to_string et' in
                     FStar_Compiler_Util.print2
-                      "Unembed cancellation failed\n\t%s <> %s\n" uu___3
+                      "Unembed cancellation failed\n\t%s   %s\n" uu___3
                       uu___4
                   else ());
                  res)

@@ -1281,7 +1281,7 @@ let (guard_letrecs :
                     if n = n_prev
                     then (l, l_prev)
                     else
-                      if n < n_prev
+                      if n <> n_prev
                       then
                         (let uu___3 =
                            let uu___4 =
@@ -7442,7 +7442,7 @@ and (tc_pat :
                                                             FStar_Syntax_Print.term_to_string
                                                               s in
                                                           FStar_Compiler_Util.format2
-                                                            "; parameter %s <> parameter %s"
+                                                            "; parameter %s   parameter %s"
                                                             uu___18 uu___19 in
                                                         fail1 uu___17
                                                     | FStar_Pervasives_Native.Some

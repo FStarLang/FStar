@@ -424,7 +424,7 @@ let (term_to_string : FStar_Syntax_Syntax.term -> Prims.string) =
                    let uu___3 =
                      let uu___4 = FStar_Compiler_List.hd s1 in
                      FStar_Syntax_Print.subst_to_string uu___4 in
-                   FStar_Compiler_Util.format1 "@<%s>" uu___3 in
+                   FStar_Compiler_Util.format1 "@ %s" uu___3 in
              let uu___3 = FStar_Syntax_Print.args_to_string args in
              FStar_Compiler_Util.format3 "%s%s %s" uu___1 uu___2 uu___3
          | uu___1 -> FStar_Syntax_Print.term_to_string t)
@@ -10337,7 +10337,7 @@ and (solve_c :
                       FStar_Syntax_Print.lid_to_string
                         c2_comp.FStar_Syntax_Syntax.effect_name in
                     FStar_Compiler_Util.format2
-                      "incompatible effects: %s <> %s" uu___4 uu___5) in
+                      "incompatible effects: %s   %s" uu___4 uu___5) in
              giveup env uu___2 orig
            else
              if
@@ -10357,7 +10357,7 @@ and (solve_c :
                          FStar_Syntax_Print.args_to_string
                            c2_comp.FStar_Syntax_Syntax.effect_args in
                        FStar_Compiler_Util.format2
-                         "incompatible effect arguments: %s <> %s" uu___5
+                         "incompatible effect arguments: %s   %s" uu___5
                          uu___6) in
                 giveup env uu___3 orig)
              else

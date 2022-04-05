@@ -13,7 +13,6 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-#light "off"
 
 module FStar.TypeChecker.Generalize
 
@@ -24,8 +23,8 @@ open FStar.TypeChecker.Env
 val generalize:
   env ->
   bool -> (* is_rec *)
-  list<(lbname * term * comp)> ->
-  list<(lbname * univ_names * term * comp * list<binder>)>
+  list (lbname * term * comp) ->
+  list (lbname * univ_names * term * comp * list binder)
 
 val generalize_universes:
   env ->
