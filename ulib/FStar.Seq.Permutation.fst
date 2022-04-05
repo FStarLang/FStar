@@ -662,37 +662,38 @@ let foldm_snoc_split_seq #c #eq (add: CE.cm c eq)
                        `eq.eq` (index sum_seq i)))
   : Lemma ((foldm_snoc add s `add.mult` foldm_snoc add t) `eq.eq`
            (foldm_snoc add sum_seq)) =
-  if length s = 0 then add.identity add.unit else  
-  let n = length s in
-  let index_1 (i:under n) = index s i in
-  let index_2 (i:under n) = index t i in
-  let nk = (n-1) in
-  assert (n == closed_interval_size 0 nk);
-  let index_sum = func_sum add index_1 index_2 in
-  let expr1 = init_func_from_expr #c #0 #(n-1) index_1 0 nk in
-  let expr2 = init_func_from_expr #c #0 #(n-1) index_2 0 nk in
-  let expr_sum = init_func_from_expr #c #0 #(n-1) index_sum 0 nk in
-  Classical.forall_intro eq.reflexivity;
-  Classical.forall_intro_2 (Classical.move_requires_2 eq.symmetry);
-  Classical.forall_intro_3 (Classical.move_requires_3 eq.transitivity);
-  foldm_snoc_split add 0 (n-1) index_1 index_2;
-  assert (foldm_snoc add (init n (expr_sum)) `eq.eq`
-          add.mult (foldm_snoc add (init n expr1)) (foldm_snoc add (init n expr2)));
-  lemma_eq_elim s (init n expr1);
-  lemma_eq_elim t (init n expr2);
-  Classical.forall_intro proof; 
-  eq_of_seq_from_element_equality eq (init n expr_sum) sum_seq;
-  foldm_snoc_equality add (init n expr_sum) sum_seq ;
-  
-  assert (eq.eq (foldm_snoc add (init n expr_sum)) 
-                (foldm_snoc add sum_seq));
-  assert (foldm_snoc add s == foldm_snoc add (init n expr1));
-  assert (foldm_snoc add t == foldm_snoc add (init n expr2));
-  assert (add.mult (foldm_snoc add s) (foldm_snoc add t) `eq.eq`
-         foldm_snoc add (init n (expr_sum)));
-  eq.transitivity (add.mult (foldm_snoc add s) (foldm_snoc add t))
-                  (foldm_snoc add (init n (expr_sum)))
-                  (foldm_snoc add sum_seq)
+  if length s = 0 then add.identity add.unit 
+  else  
+    let n = length s in
+    let index_1 (i:under n) = index s i in
+    let index_2 (i:under n) = index t i in
+    let nk = (n-1) in
+    assert (n == closed_interval_size 0 nk);
+    let index_sum = func_sum add index_1 index_2 in
+    let expr1 = init_func_from_expr #c #0 #(n-1) index_1 0 nk in
+    let expr2 = init_func_from_expr #c #0 #(n-1) index_2 0 nk in
+    let expr_sum = init_func_from_expr #c #0 #(n-1) index_sum 0 nk in
+    Classical.forall_intro eq.reflexivity;
+    Classical.forall_intro_2 (Classical.move_requires_2 eq.symmetry);
+    Classical.forall_intro_3 (Classical.move_requires_3 eq.transitivity);
+    foldm_snoc_split add 0 (n-1) index_1 index_2;
+    assert (foldm_snoc add (init n (expr_sum)) `eq.eq`
+           add.mult (foldm_snoc add (init n expr1)) (foldm_snoc add (init n expr2)));
+    lemma_eq_elim s (init n expr1);
+    lemma_eq_elim t (init n expr2);
+    Classical.forall_intro proof; 
+    eq_of_seq_from_element_equality eq (init n expr_sum) sum_seq;
+    foldm_snoc_equality add (init n expr_sum) sum_seq ;
+    
+    assert (eq.eq (foldm_snoc add (init n expr_sum)) 
+                  (foldm_snoc add sum_seq));
+    assert (foldm_snoc add s == foldm_snoc add (init n expr1));
+    assert (foldm_snoc add t == foldm_snoc add (init n expr2));
+    assert (add.mult (foldm_snoc add s) (foldm_snoc add t) `eq.eq`
+           foldm_snoc add (init n (expr_sum)));
+    eq.transitivity (add.mult (foldm_snoc add s) (foldm_snoc add t))
+                    (foldm_snoc add (init n (expr_sum)))
+                    (foldm_snoc add sum_seq)
 
 let rec foldm_snoc_of_equal_inits #c #eq #m (cm: CE.cm c eq) 
                                   (f: (under m) -> c) 
@@ -714,12 +715,12 @@ let rec foldm_snoc_of_equal_inits #c #eq #m (cm: CE.cm c eq)
                     (g 0)
                     (foldm_snoc cm (init m g))
   end else
-  let fliat, flast = un_snoc (init m f) in
-  let gliat, glast = un_snoc (init m g) in  
-  foldm_snoc_of_equal_inits cm (fun (i: under (m-1)) -> f i) 
-                               (fun (i: under (m-1)) -> g i);
-  lemma_eq_elim (init (m-1) (fun (i: under (m-1)) -> f i)) fliat;
-  lemma_eq_elim (init (m-1) (fun (i: under (m-1)) -> g i)) gliat;
-  cm.congruence flast (foldm_snoc cm fliat)
-                glast (foldm_snoc cm gliat)
+    let fliat, flast = un_snoc (init m f) in
+    let gliat, glast = un_snoc (init m g) in  
+    foldm_snoc_of_equal_inits cm (fun (i: under (m-1)) -> f i) 
+                                 (fun (i: under (m-1)) -> g i);
+    lemma_eq_elim (init (m-1) (fun (i: under (m-1)) -> f i)) fliat;
+    lemma_eq_elim (init (m-1) (fun (i: under (m-1)) -> g i)) gliat;
+    cm.congruence flast (foldm_snoc cm fliat)
+                  glast (foldm_snoc cm gliat)
                 
