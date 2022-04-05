@@ -654,7 +654,7 @@ let liat_equals_init #c (m:pos) (gen: under m -> c)
   SB.lemma_eq_elim (fst (SProp.un_snoc (SB.init m gen))) (SB.init (m-1) gen)
 
 
-#push-options "--z3rlimit 20 --fuel 0 --ifuel 0"
+#push-options "--z3rlimit 50 --fuel 0 --ifuel 0"
 let rec matrix_right_identity_aux #c #eq #m 
                                  (add: CE.cm c eq) 
                                  (mul: CE.cm c eq{is_absorber add.unit mul}) 
