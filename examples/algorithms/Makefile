@@ -1,5 +1,7 @@
 include ../Makefile.include
 
+include $(FSTAR_ULIB)/ml/Makefile.include
+
 all: uall
 
 uall: BinarySearch.uver IntSort.uver InsertionSort.uver MergeSort.uver QuickSort.List.uver QuickSort.Seq.uver GC.uver Unification.uver Huffman.uver QuickSort.Array.uver IntervalIntersect.uver #downgrade  //TODO
@@ -21,10 +23,9 @@ huffman-ocaml-repl: out Huffman.fst
 	utop -I out -I $(ULIB_ML) Huffman.repl
 
 intersect-ocaml: out IntervalIntersect.fst
-	$(MAKE) -C $(ULIB_ML)
-	$(FSTAR) $(FSTAR_DEFAULT_ARGS) --odir out --codegen OCaml IntervalIntersect.fst
-	$(OCAMLC) -I out out/IntervalIntersect.ml -o Intersect.exe
-	./Intersect.exe
+	$(FSTAR) $(FSTAR_DEFAULT_ARGS) --odir out --codegen OCaml --extract 'IntervalIntersect' IntervalIntersect.fst
+	$(OCAMLOPT) out/IntervalIntersect.ml -o IntervalIntersect.exe
+	./IntervalIntersect.exe
 
 out:
 	mkdir -p out

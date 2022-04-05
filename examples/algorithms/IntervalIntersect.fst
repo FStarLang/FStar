@@ -581,16 +581,19 @@ let ppInterval (I f t) = sprintf "0x%d-0x%d" (v f) (v t)
 
 let rec ppIntervals' (is:intervals): ML unit =
   match is with
-  | [] -> stdout <| "."
+  | [] -> print_string "."
   | i::is ->
-      stdout <| ppInterval i;
-      stdout <| " ";
+      print_string (ppInterval i);
+      print_string " ";
       ppIntervals' is
 
 let toI f t = I (int_to_t f) (int_to_t t)
 
 let ppIntervals is : ML string = FStar.List.Tot.fold_left (sprintf "%s %s") "" (FStar.List.map ppInterval is)
-let main = stdout <| ppIntervals (intersect [toI 3 10; toI 10 15] [toI 1 4; toI 10 14])
+let main =
+  print_string
+    (ppIntervals (intersect [toI 3 10; toI 10 15] [toI 1 4; toI 10 14]));
+  print_newline ()
 
 /// And the winner is!
 /// ==================
@@ -664,7 +667,7 @@ let main = stdout <| ppIntervals (intersect [toI 3 10; toI 10 15] [toI 1 4; toI 
 /// by F\*, just like programmers rarely have to look at assembly code.
 ///
 /// Of course there is an exception to every rule. `Jonathan Protzenko`_ developed a
-/// powerful extraction mechanism called KreMLin_ from a subset of F\* to C. C is
+/// powerful extraction mechanism called KaraMeL_ from a subset of F\* to C. C is
 /// the lingua-franca for, among others, efficient cryptographic code. An important
 /// property of that translation is that it preserves comments and readability. This
 /// is necessary as cryptographic code has to be audited, and the experts with the
@@ -677,5 +680,5 @@ let main = stdout <| ppIntervals (intersect [toI 3 10; toI 10 15] [toI 1 4; toI 
 ///   they are very probably wrong.
 ///
 /// .. _`Jonathan Protzenko`: https://jonathan.protzenko.fr/
-/// .. _KreMLin: https://github.com/FStarLang/kremlin/
+/// .. _KaraMeL: https://github.com/FStarLang/karamel/
 /// 
