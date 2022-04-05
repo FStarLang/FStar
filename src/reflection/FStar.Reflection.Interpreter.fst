@@ -1,4 +1,18 @@
-#light "off"
+(*
+   Copyright 2008-2022 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
 module FStar.Reflection.Interpreter
 open FStar.Compiler
 open FStar.Compiler.Effect
@@ -33,16 +47,16 @@ let embed ea r x norm_cb = embed ea x r None norm_cb
  * we cannot ignore this case. So, use `try_` so we don't generate
  * spurious warnings. *)
 
-let int1 (m:lid) (f:'a -> 'r) (ea:embedding<'a>) (er:embedding<'r>)
-                 (psc:Cfg.psc) n (args : args) : option<term> =
+let int1 (m:lid) (f:'a -> 'r) (ea:embedding 'a) (er:embedding 'r)
+                 (psc:Cfg.psc) n (args : args) : option term =
     match args with
     | [(a, _)] ->
         BU.bind_opt (try_unembed ea a n) (fun a ->
         Some (embed er (Cfg.psc_range psc) (f a) n))
     | _ -> None
 
-let int2 (m:lid) (f:'a -> 'b -> 'r) (ea:embedding<'a>) (eb:embedding<'b>) (er:embedding<'r>)
-                 (psc:Cfg.psc) n (args : args) : option<term> =
+let int2 (m:lid) (f:'a -> 'b -> 'r) (ea:embedding 'a) (eb:embedding 'b) (er:embedding 'r)
+                 (psc:Cfg.psc) n (args : args) : option term =
     match args with
     | [(a, _); (b, _)] ->
         BU.bind_opt (try_unembed ea a n) (fun a ->
@@ -50,8 +64,8 @@ let int2 (m:lid) (f:'a -> 'b -> 'r) (ea:embedding<'a>) (eb:embedding<'b>) (er:em
         Some (embed er (Cfg.psc_range psc) (f a b) n)))
     | _ -> None
 
-let int3 (m:lid) (f:'a -> 'b -> 'c -> 'r) (ea:embedding<'a>) (eb:embedding<'b>) (ec:embedding<'c>) (er:embedding<'r>)
-                 (psc:Cfg.psc) n (args : args) : option<term> =
+let int3 (m:lid) (f:'a -> 'b -> 'c -> 'r) (ea:embedding 'a) (eb:embedding 'b) (ec:embedding 'c) (er:embedding 'r)
+                 (psc:Cfg.psc) n (args : args) : option term =
     match args with
     | [(a, _); (b, _); (c, _)] ->
         BU.bind_opt (try_unembed ea a n) (fun a ->
@@ -60,16 +74,16 @@ let int3 (m:lid) (f:'a -> 'b -> 'c -> 'r) (ea:embedding<'a>) (eb:embedding<'b>) 
         Some (embed er (Cfg.psc_range psc) (f a b c) n))))
     | _ -> None
 
-let nbe_int1 (m:lid) (f:'a -> 'r) (ea:NBET.embedding<'a>) (er:NBET.embedding<'r>)
-                     (cb:NBET.nbe_cbs) (args : NBET.args) : option<NBET.t> =
+let nbe_int1 (m:lid) (f:'a -> 'r) (ea:NBET.embedding 'a) (er:NBET.embedding 'r)
+                     (cb:NBET.nbe_cbs) (args : NBET.args) : option NBET.t =
     match args with
     | [(a, _)] ->
         BU.bind_opt (NBET.unembed ea cb a) (fun a ->
         Some (NBET.embed er cb (f a)))
     | _ -> None
 
-let nbe_int2 (m:lid) (f:'a -> 'b -> 'r) (ea:NBET.embedding<'a>) (eb:NBET.embedding<'b>) (er:NBET.embedding<'r>)
-                     (cb:NBET.nbe_cbs) (args : NBET.args) : option<NBET.t> =
+let nbe_int2 (m:lid) (f:'a -> 'b -> 'r) (ea:NBET.embedding 'a) (eb:NBET.embedding 'b) (er:NBET.embedding 'r)
+                     (cb:NBET.nbe_cbs) (args : NBET.args) : option NBET.t =
     match args with
     | [(a, _); (b, _)] ->
         BU.bind_opt (NBET.unembed ea cb a) (fun a ->
@@ -77,8 +91,8 @@ let nbe_int2 (m:lid) (f:'a -> 'b -> 'r) (ea:NBET.embedding<'a>) (eb:NBET.embeddi
         Some (NBET.embed er cb (f a b))))
     | _ -> None
 
-let nbe_int3 (m:lid) (f:'a -> 'b -> 'c -> 'r) (ea:NBET.embedding<'a>) (eb:NBET.embedding<'b>) (ec:NBET.embedding<'c>) (er:NBET.embedding<'r>)
-                     (cb:NBET.nbe_cbs) (args : NBET.args) : option<NBET.t> =
+let nbe_int3 (m:lid) (f:'a -> 'b -> 'c -> 'r) (ea:NBET.embedding 'a) (eb:NBET.embedding 'b) (ec:NBET.embedding 'c) (er:NBET.embedding 'r)
+                     (cb:NBET.nbe_cbs) (args : NBET.args) : option NBET.t =
     match args with
     | [(a, _); (b, _); (c, _)] ->
         BU.bind_opt (NBET.unembed ea cb a) (fun a ->
@@ -89,8 +103,8 @@ let nbe_int3 (m:lid) (f:'a -> 'b -> 'c -> 'r) (ea:NBET.embedding<'a>) (eb:NBET.e
 
 let mklid (nm : string) : lid = fstar_refl_builtins_lid nm
 
-let mk (l : lid) (arity : int) (fn     : Cfg.psc -> norm_cb -> args -> option<term>)
-                               (nbe_fn : NBET.nbe_cbs -> NBET.args -> option<NBET.t>) : Cfg.primitive_step
+let mk (l : lid) (arity : int) (fn     : Cfg.psc -> norm_cb -> args -> option term)
+                               (nbe_fn : NBET.nbe_cbs -> NBET.args -> option NBET.t) : Cfg.primitive_step
   =
   { Cfg.name                         = l
   ; Cfg.arity                        = arity
@@ -102,25 +116,25 @@ let mk (l : lid) (arity : int) (fn     : Cfg.psc -> norm_cb -> args -> option<te
   ; Cfg.interpretation_nbe           = nbe_fn
   }
 
-let mk1 nm (f  : 'a  -> 'r)  (ea  : embedding<'a>)       (er  : embedding<'r>)
-           (nf : 'na -> 'nr) (ena : NBET.embedding<'na>) (enr : NBET.embedding<'nr>) : Cfg.primitive_step =
+let mk1 nm (f  : 'a  -> 'r)  (ea  : embedding 'a)       (er  : embedding 'r)
+           (nf : 'na -> 'nr) (ena : NBET.embedding 'na) (enr : NBET.embedding 'nr) : Cfg.primitive_step =
     let l = mklid nm in
     mk l 1 (int1     l  f  ea  er)
            (nbe_int1 l nf ena enr)
 
-let mk2 nm (f  : 'a  -> 'b  -> 'r)  (ea  : embedding<'a>)       (eb  : embedding<'b>)       (er  : embedding<'r>)
-           (nf : 'na -> 'nb -> 'nr) (ena : NBET.embedding<'na>) (enb : NBET.embedding<'nb>) (enr : NBET.embedding<'nr>) : Cfg.primitive_step =
+let mk2 nm (f  : 'a  -> 'b  -> 'r)  (ea  : embedding 'a)       (eb  : embedding 'b)       (er  : embedding 'r)
+           (nf : 'na -> 'nb -> 'nr) (ena : NBET.embedding 'na) (enb : NBET.embedding 'nb) (enr : NBET.embedding 'nr) : Cfg.primitive_step =
     let l = mklid nm in
     mk l 2 (int2     l  f  ea  eb  er)
            (nbe_int2 l nf ena enb enr)
 
-let mk3 nm (f  : 'a  -> 'b  -> 'c  -> 'r)  (ea  : embedding<'a>)       (eb  : embedding<'b>)       (ec  : embedding<'c>)       (er  : embedding<'r>)
-           (nf : 'na -> 'nb -> 'nc -> 'nr) (ena : NBET.embedding<'na>) (enb : NBET.embedding<'nb>) (enc : NBET.embedding<'nc>) (enr : NBET.embedding<'nr>) : Cfg.primitive_step =
+let mk3 nm (f  : 'a  -> 'b  -> 'c  -> 'r)  (ea  : embedding 'a)       (eb  : embedding 'b)       (ec  : embedding 'c)       (er  : embedding 'r)
+           (nf : 'na -> 'nb -> 'nc -> 'nr) (ena : NBET.embedding 'na) (enb : NBET.embedding 'nb) (enc : NBET.embedding 'nc) (enr : NBET.embedding 'nr) : Cfg.primitive_step =
     let l = mklid nm in
     mk l 3 (int3     l  f  ea  eb  ec  er)
            (nbe_int3 l nf ena enb enc enr)
 
-let reflection_primops : list<Cfg.primitive_step> = [
+let reflection_primops : list Cfg.primitive_step = [
     mk1 "inspect_ln"            inspect_ln            E.e_term            E.e_term_view
                                 inspect_ln            NRE.e_term          NRE.e_term_view;
 

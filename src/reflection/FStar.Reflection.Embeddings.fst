@@ -1,4 +1,18 @@
-#light "off"
+(*
+   Copyright 2008-2022 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
 module FStar.Reflection.Embeddings
 
 open FStar.Compiler.Effect
@@ -47,7 +61,7 @@ let e_bv =
     let embed_bv (rng:Range.range) (bv:bv) : term =
         U.mk_lazy bv fstar_refl_bv Lazy_bv (Some rng)
     in
-    let unembed_bv w (t:term) : option<bv> =
+    let unembed_bv w (t:term) : option bv =
         match (SS.compress t).n with
         | Tm_lazy {blob=b; lkind=Lazy_bv} ->
             Some (undyn b)
@@ -62,7 +76,7 @@ let e_binder =
     let embed_binder (rng:Range.range) (b:binder) : term =
         U.mk_lazy b fstar_refl_binder Lazy_binder (Some rng)
     in
-    let unembed_binder w (t:term) : option<binder> =
+    let unembed_binder w (t:term) : option binder =
         match (SS.compress t).n with
         | Tm_lazy {blob=b; lkind=Lazy_binder} ->
             Some (undyn b)
@@ -73,7 +87,7 @@ let e_binder =
     in
     mk_emb embed_binder unembed_binder fstar_refl_binder
 
-let rec mapM_opt (f : ('a -> option<'b>)) (l : list<'a>) : option<list<'b>> =
+let rec mapM_opt (f : ('a -> option 'b)) (l : list 'a) : option (list 'b) =
     match l with
     | [] -> Some []
     | x::xs ->
@@ -86,8 +100,8 @@ let e_term_aq aq =
         let qi = { qkind = Quote_static; antiquotes = aq } in
         S.mk (Tm_quoted (t, qi)) rng
     in
-    let rec unembed_term w (t:term) : option<term> =
-        let apply_antiquotes (t:term) (aq:antiquotations) : option<term> =
+    let rec unembed_term w (t:term) : option term =
+        let apply_antiquotes (t:term) (aq:antiquotations) : option term =
             BU.bind_opt (mapM_opt (fun (bv, e) -> BU.bind_opt (unembed_term w e) (fun e -> Some (NT (bv, e))))
                                    aq) (fun s ->
             Some (SS.subst s t))
@@ -116,7 +130,7 @@ let e_aqualv =
                         Range.dummyRange
         in { r with pos = rng }
     in
-    let unembed_aqualv w (t : term) : option<aqualv> =
+    let unembed_aqualv w (t : term) : option aqualv =
         let t = U.unascribe t in
         let hd, args = U.head_and_args t in
         match (U.un_uinst hd).n, args with
@@ -139,7 +153,7 @@ let e_fv =
     let embed_fv (rng:Range.range) (fv:fv) : term =
         U.mk_lazy fv fstar_refl_fv Lazy_fvar (Some rng)
     in
-    let unembed_fv w (t:term) : option<fv> =
+    let unembed_fv w (t:term) : option fv =
         match (SS.compress t).n with
         | Tm_lazy {blob=b; lkind=Lazy_fvar} ->
             Some (undyn b)
@@ -154,7 +168,7 @@ let e_comp =
     let embed_comp (rng:Range.range) (c:comp) : term =
         U.mk_lazy c fstar_refl_comp Lazy_comp (Some rng)
     in
-    let unembed_comp w (t:term) : option<comp> =
+    let unembed_comp w (t:term) : option comp =
         match (SS.compress t).n with
         | Tm_lazy {blob=b; lkind=Lazy_comp} ->
             Some (undyn b)
@@ -169,7 +183,7 @@ let e_env =
     let embed_env (rng:Range.range) (e:Env.env) : term =
         U.mk_lazy e fstar_refl_env Lazy_env (Some rng)
     in
-    let unembed_env w (t:term) : option<Env.env> =
+    let unembed_env w (t:term) : option Env.env =
         match (SS.compress t).n with
         | Tm_lazy {blob=b; lkind=Lazy_env} ->
             Some (undyn b)
@@ -207,7 +221,7 @@ let e_const =
 
         in { r with pos = rng }
     in
-    let unembed_const w (t:term) : option<vconst> =
+    let unembed_const w (t:term) : option vconst =
         let t = U.unascribe t in
         let hd, args = U.head_and_args t in
         match (U.un_uinst hd).n, args with
@@ -262,7 +276,7 @@ let rec e_pattern' () =
                                             S.as_arg (embed e_term rng t)]
                         rng
     in
-    let rec unembed_pattern w (t : term) : option<pattern> =
+    let rec unembed_pattern w (t : term) : option pattern =
         let t = U.unascribe t in
         let hd, args = U.head_and_args t in
         match (U.un_uinst hd).n, args with
@@ -387,7 +401,7 @@ let e_term_view_aq aq =
         | Tv_Unknown ->
             { ref_Tv_Unknown.t with pos = rng }
     in
-    let unembed_term_view w (t:term) : option<term_view> =
+    let unembed_term_view w (t:term) : option term_view =
         let hd, args = U.head_and_args t in
         match (U.un_uinst hd).n, args with
         | Tm_fvar fv, [(b, _)] when S.fv_eq_lid fv ref_Tv_Var.lid ->
@@ -478,11 +492,11 @@ let e_term_view = e_term_view_aq []
 
 
 (* embeds as a string list *)
-let e_lid : embedding<I.lid> =
+let e_lid : embedding I.lid =
     let embed rng lid : term =
         embed e_string_list rng (I.path_of_lid lid)
     in
-    let unembed w t : option<I.lid> =
+    let unembed w t : option I.lid =
         BU.map_opt (unembed' w e_string_list t) (fun p -> I.lid_of_path p t.pos)
     in
     EMB.mk_emb_full (fun x r _ _ -> embed r x)
@@ -499,7 +513,7 @@ let e_bv_view =
                                  S.as_arg (embed e_term   rng bvv.bv_sort)]
                     rng
     in
-    let unembed_bv_view w (t : term) : option<bv_view> =
+    let unembed_bv_view w (t : term) : option bv_view =
         let t = U.unascribe t in
         let hd, args = U.head_and_args t in
         match (U.un_uinst hd).n, args with
@@ -542,7 +556,7 @@ let e_comp_view =
 
 
     in
-    let unembed_comp_view w (t : term) : option<comp_view> =
+    let unembed_comp_view w (t : term) : option comp_view =
         let t = U.unascribe t in
         let hd, args = U.head_and_args t in
         match (U.un_uinst hd).n, args with
@@ -588,7 +602,7 @@ let e_order =
         | Gt -> ord_Gt
         in { r with pos = rng }
     in
-    let unembed_order w (t:term) : option<order> =
+    let unembed_order w (t:term) : option order =
         let t = U.unascribe t in
         let hd, args = U.head_and_args t in
         match (U.un_uinst hd).n, args with
@@ -606,7 +620,7 @@ let e_sigelt =
     let embed_sigelt (rng:Range.range) (se:sigelt) : term =
         U.mk_lazy se fstar_refl_sigelt Lazy_sigelt (Some rng)
     in
-    let unembed_sigelt w (t:term) : option<sigelt> =
+    let unembed_sigelt w (t:term) : option sigelt =
         match (SS.compress t).n with
         | Tm_lazy {blob=b; lkind=Lazy_sigelt} ->
             Some (undyn b)
@@ -617,7 +631,7 @@ let e_sigelt =
     in
     mk_emb embed_sigelt unembed_sigelt fstar_refl_sigelt
 
-let e_ident : embedding<I.ident> =
+let e_ident : embedding I.ident =
     let repr = e_tuple2 e_string e_range in
     embed_as repr
              I.mk_ident
@@ -639,7 +653,7 @@ let e_lb_view =
                                  S.as_arg (embed e_term       rng lbv.lb_def)]
                     rng
     in
-    let unembed_lb_view w (t : term) : option<lb_view> =
+    let unembed_lb_view w (t : term) : option lb_view =
         let t = U.unascribe t in
         let hd, args = U.head_and_args t in
         match (U.un_uinst hd).n, args with
@@ -666,7 +680,7 @@ let e_letbinding =
     let embed_letbinding (rng:Range.range) (lb:letbinding) : term =
         U.mk_lazy lb fstar_refl_letbinding Lazy_letbinding (Some rng)
     in
-    let unembed_letbinding w (t : term) : option<letbinding> =
+    let unembed_letbinding w (t : term) : option letbinding =
         match (SS.compress t).n with
         | Tm_lazy {blob=lb; lkind=Lazy_letbinding} ->
             Some (undyn lb)
@@ -705,7 +719,7 @@ let e_sigelt_view =
         | Unk ->
             { ref_Unk.t with pos = rng }
     in
-    let unembed_sigelt_view w (t:term) : option<sigelt_view> =
+    let unembed_sigelt_view w (t:term) : option sigelt_view =
         let t = U.unascribe t in
         let hd, args = U.head_and_args t in
         match (U.un_uinst hd).n, args with
@@ -751,7 +765,7 @@ let e_exp =
                         Range.dummyRange
         in { r with pos = rng }
     in
-    let rec unembed_exp w (t: term) : option<exp> =
+    let rec unembed_exp w (t: term) : option exp =
         let t = U.unascribe t in
         let hd, args = U.head_and_args t in
         match (U.un_uinst hd).n, args with
@@ -826,7 +840,7 @@ let e_qualifier =
 
         in { r with pos = rng }
     in
-    let unembed w (t: term) : option<RD.qualifier> =
+    let unembed w (t: term) : option RD.qualifier =
         let t = U.unascribe t in
         let hd, args = U.head_and_args t in
         match (U.un_uinst hd).n, args with
