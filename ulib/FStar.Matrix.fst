@@ -159,50 +159,41 @@ let rec matrix_fold_equals_fold_of_seq_folds #c #eq #m #n cm generator : Lemma
   let lhs = SP.foldm_snoc cm (matrix_seq generator) in
   let rhs = SP.foldm_snoc cm rhs_seq in
   if m=1 then one_row_matrix_fold_aux cm generator else 
-  let matrix = matrix_seq generator in 
-  let subgen = (fun (i:under (m-1)) (j:under n) -> generator i j) in 
-  let submatrix = SB.slice (matrix_seq generator) 0 ((m-1)*n) in
-  let last_row = SB.slice (matrix_seq #c #m #n generator) ((m-1)*n) (m*n) in
-  Classical.forall_intro_2 (Classical.move_requires_2 eq.symmetry);
-  matrix_fold_snoc_lemma cm generator;
-  Math.Lemmas.multiplication_order_lemma (m) (m-1) n;
-  assert ((m-1)*n < m*n);
-  SB.lemma_len_slice (matrix_seq generator) ((m-1)*n) (m*n); 
-  SB.lemma_eq_elim (matrix_seq subgen) submatrix;
-  matrix_fold_equals_fold_of_seq_folds cm subgen;    
-  SB.lemma_eq_elim last_row (SB.init n (generator (m-1))); 
-  matrix_submatrix_lemma generator;
-  let rec_seq = SB.init (m-1) (fun i -> SP.foldm_snoc cm (SB.init n (subgen i))) in
-  let rec_subseq = SB.init (m-1) (fun i -> SP.foldm_snoc cm (SB.init n (generator i))) in
-  let aux_eq (i: under (m-1)) : Lemma (SB.index rec_seq i == SB.index rec_subseq i) = 
-    SB.lemma_eq_elim (SB.init n (subgen i)) (SB.init n (generator i));
-  () in 
-  Classical.forall_intro aux_eq;
-  matrix_append_snoc_lemma generator;
-  SP.foldm_snoc_append cm (matrix_seq subgen) last_row;
-  SB.lemma_eq_elim rhs_seq (SProp.snoc rec_subseq (SP.foldm_snoc cm (SB.init n (generator (m-1)))));
-  let liat_rhs_seq, last_rhs_seq = SProp.un_snoc rhs_seq in
-  SB.lemma_eq_elim liat_rhs_seq rec_seq;
-  SP.foldm_snoc_decomposition cm rhs_seq;
-  SB.lemma_eq_elim rec_subseq liat_rhs_seq; 
-  eq.reflexivity (SP.foldm_snoc cm last_row);
-  cm.congruence (SP.foldm_snoc cm (matrix_seq subgen)) (SP.foldm_snoc cm last_row)
-                (SP.foldm_snoc cm liat_rhs_seq) (last_rhs_seq);
-  eq.transitivity lhs 
-                  (SP.foldm_snoc cm (matrix_seq subgen) `cm.mult` SP.foldm_snoc cm last_row)
-                  (SP.foldm_snoc cm liat_rhs_seq `cm.mult` last_rhs_seq); 
-  cm.commutativity (SP.foldm_snoc cm liat_rhs_seq) last_rhs_seq;
-  eq.transitivity lhs (SP.foldm_snoc cm liat_rhs_seq `cm.mult` last_rhs_seq) rhs;
-  matrix_fold_equals_fold_of_seq cm (init generator)
-(* These are not needed anymore
-  ;
-  assert (SP.foldm_snoc cm (matrix_seq generator) `eq.eq` rhs);
-  assert (lhs == SP.foldm_snoc cm (matrix_seq generator));
-  assert (lhs `eq.eq` rhs);
-  assert_spinoff (foldm cm (init generator) == lhs);
-  assert (SP.foldm_snoc cm (init generator) `eq.eq` rhs);
-  () 
-*)
+    let matrix = matrix_seq generator in 
+    let subgen = (fun (i:under (m-1)) (j:under n) -> generator i j) in 
+    let submatrix = SB.slice (matrix_seq generator) 0 ((m-1)*n) in
+    let last_row = SB.slice (matrix_seq #c #m #n generator) ((m-1)*n) (m*n) in
+    Classical.forall_intro_2 (Classical.move_requires_2 eq.symmetry);
+    matrix_fold_snoc_lemma cm generator;
+    Math.Lemmas.multiplication_order_lemma (m) (m-1) n;
+    assert ((m-1)*n < m*n);
+    SB.lemma_len_slice (matrix_seq generator) ((m-1)*n) (m*n); 
+    SB.lemma_eq_elim (matrix_seq subgen) submatrix;
+    matrix_fold_equals_fold_of_seq_folds cm subgen;    
+    SB.lemma_eq_elim last_row (SB.init n (generator (m-1))); 
+    matrix_submatrix_lemma generator;
+    let rec_seq = SB.init (m-1) (fun i -> SP.foldm_snoc cm (SB.init n (subgen i))) in
+    let rec_subseq = SB.init (m-1) (fun i -> SP.foldm_snoc cm (SB.init n (generator i))) in
+    let aux_eq (i: under (m-1)) : Lemma (SB.index rec_seq i == SB.index rec_subseq i) = 
+      SB.lemma_eq_elim (SB.init n (subgen i)) (SB.init n (generator i));
+    () in 
+    Classical.forall_intro aux_eq;
+    matrix_append_snoc_lemma generator;
+    SP.foldm_snoc_append cm (matrix_seq subgen) last_row;
+    SB.lemma_eq_elim rhs_seq (SProp.snoc rec_subseq (SP.foldm_snoc cm (SB.init n (generator (m-1)))));
+    let liat_rhs_seq, last_rhs_seq = SProp.un_snoc rhs_seq in
+    SB.lemma_eq_elim liat_rhs_seq rec_seq;
+    SP.foldm_snoc_decomposition cm rhs_seq;
+    SB.lemma_eq_elim rec_subseq liat_rhs_seq; 
+    eq.reflexivity (SP.foldm_snoc cm last_row);
+    cm.congruence (SP.foldm_snoc cm (matrix_seq subgen)) (SP.foldm_snoc cm last_row)
+                  (SP.foldm_snoc cm liat_rhs_seq) (last_rhs_seq);
+    eq.transitivity lhs 
+                    (SP.foldm_snoc cm (matrix_seq subgen) `cm.mult` SP.foldm_snoc cm last_row)
+                    (SP.foldm_snoc cm liat_rhs_seq `cm.mult` last_rhs_seq); 
+    cm.commutativity (SP.foldm_snoc cm liat_rhs_seq) last_rhs_seq;
+    eq.transitivity lhs (SP.foldm_snoc cm liat_rhs_seq `cm.mult` last_rhs_seq) rhs;
+    matrix_fold_equals_fold_of_seq cm (init generator)
 #pop-options 
 
 (* This auxiliary lemma shows that the fold of the last line of a matrix
@@ -253,8 +244,7 @@ let rec matrix_fold_aux #c #eq // lemma needed for precise generator domain cont
     matrix_last_line_equals_gen_fold #c #eq #m #n cm generator;  
     CF.fold_singleton_lemma cm 0 (fun (i:under m) -> CF.fold cm 0 (n-1) (generator i));
     assert (CF.fold cm 0 (m-1) (fun (i: under m) -> CF.fold cm 0 (n-1) (generator i)) 
-            == CF.fold cm 0 (n-1) (generator 0));
-    ()
+            == CF.fold cm 0 (n-1) (generator 0)) 
   end else begin     
     Classical.forall_intro_3 (Classical.move_requires_3 eq.transitivity);  
     matrix_fold_aux cm (m-1) n generator;    
@@ -275,12 +265,8 @@ let rec matrix_fold_aux #c #eq // lemma needed for precise generator domain cont
    nested Algebra.CommMonoid.Fold.fold over the matrix generator *)
 let matrix_fold_equals_func_double_fold #c #eq #m #n cm generator
   : Lemma (foldm cm (init generator) `eq.eq` 
-           CF.fold cm 0 (m-1) (fun (i:under m) -> CF.fold cm 0 (n-1) (generator i)))
-  = let slice = SB.slice #c in
-    let foldm_snoc = SP.foldm_snoc #c #eq in
-    let init = SB.init #c in
-    let lemma_eq_elim = SB.lemma_eq_elim #c in 
-    matrix_fold_aux cm m n generator
+           CF.fold cm 0 (m-1) (fun (i:under m) -> CF.fold cm 0 (n-1) (generator i))) 
+  = matrix_fold_aux cm m n generator
  
 open FStar.Seq.Equiv
 
@@ -438,15 +424,15 @@ let rec foldm_snoc_distributivity_left #c #eq (mul add: CE.cm c eq) (a: c) (s: S
                    SP.foldm_snoc add (const_op_seq mul a s))
           (decreases SB.length s) = 
   if SB.length s > 0 then 
-  let ((+), ( * ), (=)) = add.mult, mul.mult, eq.eq in
-  let sum s = SP.foldm_snoc add s in
-  let liat, last = SProp.un_snoc s in 
-  let rhs_liat, rhs_last = SProp.un_snoc (const_op_seq mul a s) in
-  foldm_snoc_distributivity_left mul add a liat; 
-  SB.lemma_eq_elim rhs_liat (const_op_seq mul a liat);
-  eq.reflexivity rhs_last;
-  add.congruence rhs_last (a*sum liat) rhs_last (sum rhs_liat);
-  eq.transitivity (a*sum s) (rhs_last + a*sum liat) (rhs_last + sum rhs_liat) 
+    let ((+), ( * ), (=)) = add.mult, mul.mult, eq.eq in
+    let sum s = SP.foldm_snoc add s in
+    let liat, last = SProp.un_snoc s in 
+    let rhs_liat, rhs_last = SProp.un_snoc (const_op_seq mul a s) in
+    foldm_snoc_distributivity_left mul add a liat; 
+    SB.lemma_eq_elim rhs_liat (const_op_seq mul a liat);
+    eq.reflexivity rhs_last;
+    add.congruence rhs_last (a*sum liat) rhs_last (sum rhs_liat);
+    eq.transitivity (a*sum s) (rhs_last + a*sum liat) (rhs_last + sum rhs_liat) 
 
 let rec foldm_snoc_distributivity_right #c #eq (mul add: CE.cm c eq) (s: SB.seq c) (a: c)
   : Lemma (requires is_fully_distributive mul add /\ is_absorber add.unit mul) 
@@ -454,15 +440,15 @@ let rec foldm_snoc_distributivity_right #c #eq (mul add: CE.cm c eq) (s: SB.seq 
                    SP.foldm_snoc add (seq_op_const mul s a))
           (decreases SB.length s) = 
   if SB.length s > 0 then 
-  let ((+), ( * ), (=)) = add.mult, mul.mult, eq.eq in
-  let sum s = SP.foldm_snoc add s in
-  let liat, last = SProp.un_snoc s in
-  let rhs_liat, rhs_last = SProp.un_snoc (seq_op_const mul s a) in
-  foldm_snoc_distributivity_right mul add liat a; 
-  SB.lemma_eq_elim rhs_liat (seq_op_const mul liat a);
-  eq.reflexivity rhs_last;
-  add.congruence rhs_last (sum liat*a) rhs_last (sum rhs_liat);
-  eq.transitivity (sum s*a) (rhs_last + sum liat*a) (rhs_last + sum rhs_liat) 
+    let ((+), ( * ), (=)) = add.mult, mul.mult, eq.eq in
+    let sum s = SP.foldm_snoc add s in
+    let liat, last = SProp.un_snoc s in
+    let rhs_liat, rhs_last = SProp.un_snoc (seq_op_const mul s a) in
+    foldm_snoc_distributivity_right mul add liat a; 
+    SB.lemma_eq_elim rhs_liat (seq_op_const mul liat a);
+    eq.reflexivity rhs_last;
+    add.congruence rhs_last (sum liat*a) rhs_last (sum rhs_liat);
+    eq.transitivity (sum s*a) (rhs_last + sum liat*a) (rhs_last + sum rhs_liat) 
 
 let foldm_snoc_distributivity_right_eq #c #eq (mul add: CE.cm c eq) (s: SB.seq c) (a: c) (r: SB.seq c)
   : Lemma (requires is_fully_distributive mul add /\ is_absorber add.unit mul /\
@@ -654,14 +640,14 @@ let rec foldm_snoc_zero_lemma #c #eq (add: CE.cm c eq) (zeroes: SB.seq c)
     assert_norm (SP.foldm_snoc add zeroes == add.unit);
     eq.reflexivity add.unit    
   end else
-  let liat, last = SProp.un_snoc zeroes in
-  foldm_snoc_zero_lemma add liat;
-  add.congruence last (SP.foldm_snoc add liat) add.unit add.unit;
-  add.identity add.unit;
-  SP.foldm_snoc_decomposition add zeroes;
-  eq.transitivity (SP.foldm_snoc add zeroes)                                
-                  (add.mult add.unit add.unit)
-                  add.unit
+    let liat, last = SProp.un_snoc zeroes in
+    foldm_snoc_zero_lemma add liat;
+    add.congruence last (SP.foldm_snoc add liat) add.unit add.unit;
+    add.identity add.unit;
+    SP.foldm_snoc_decomposition add zeroes;
+    eq.transitivity (SP.foldm_snoc add zeroes)                                
+                    (add.mult add.unit add.unit)
+                    add.unit
 
 let liat_equals_init #c (m:pos) (gen: under m -> c)
   : Lemma (fst (SProp.un_snoc (SB.init m gen)) == SB.init (m-1) gen) = 
