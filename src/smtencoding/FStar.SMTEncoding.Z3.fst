@@ -13,8 +13,6 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-#light "off"
-
 module FStar.SMTEncoding.Z3
 open FStar.Compiler.Effect
 open FStar.Compiler.List
@@ -33,7 +31,7 @@ module BU = FStar.Compiler.Util
 (* Check the Z3 commit hash once, and issue a warning if it is not
    equal to the one that we are expecting from the Z3 url below
 *)
-let _z3version_checked : ref<bool> = BU.mk_ref false
+let _z3version_checked : ref bool = BU.mk_ref false
 
 let _z3version_expected = "Z3 version 4.8.5"
 
@@ -95,14 +93,14 @@ let check_z3version () =
     end
 
 type label = string
-type unsat_core = option<list<string>>
+type unsat_core = option (list string)
 type z3status =
     | UNSAT   of unsat_core
-    | SAT     of error_labels * option<string>         //error labels
-    | UNKNOWN of error_labels * option<string>         //error labels
-    | TIMEOUT of error_labels * option<string>         //error labels
+    | SAT     of error_labels * option string         //error labels
+    | UNKNOWN of error_labels * option string         //error labels
+    | TIMEOUT of error_labels * option string         //error labels
     | KILLED
-type z3statistics = BU.smap<string>
+type z3statistics = BU.smap string
 
 let status_tag = function
     | SAT  _ -> "sat"
@@ -131,10 +129,10 @@ type query_log = {
 
 let query_logging =
     let query_number = BU.mk_ref 0 in
-    let log_file_opt : ref<option<(file_handle * string)>> = BU.mk_ref None in
-    let used_file_names : ref<list<(string * int)>> = BU.mk_ref [] in
-    let current_module_name : ref<option<string>> = BU.mk_ref None in
-    let current_file_name : ref<option<string>> = BU.mk_ref None in
+    let log_file_opt : ref (option (file_handle * string)) = BU.mk_ref None in
+    let used_file_names : ref (list (string * int)) = BU.mk_ref [] in
+    let current_module_name : ref (option string) = BU.mk_ref None in
+    let current_file_name : ref (option string) = BU.mk_ref None in
     let set_module_name n = current_module_name := Some n in
     let get_module_name () =
         match !current_module_name with
@@ -286,22 +284,22 @@ let bg_z3_proc =
         let next_params = z3_cmd_and_args () in
         make_new_z3_proc next_params
     in
-    let x : list<unit> = [] in
+    let x : list unit = [] in
     BU.mk_ref ({ask = BU.with_monitor x ask;
                 refresh = BU.with_monitor x refresh;
                 restart = BU.with_monitor x restart})
 
 
-type smt_output_section = list<string>
+type smt_output_section = list string
 type smt_output = {
   smt_result:         smt_output_section;
-  smt_reason_unknown: option<smt_output_section>;
-  smt_unsat_core:     option<smt_output_section>;
-  smt_statistics:     option<smt_output_section>;
-  smt_labels:         option<smt_output_section>;
+  smt_reason_unknown: option smt_output_section;
+  smt_unsat_core:     option smt_output_section;
+  smt_statistics:     option smt_output_section;
+  smt_labels:         option smt_output_section;
 }
 
-let smt_output_sections (log_file:option<string>) (r:Range.range) (lines:list<string>) : smt_output =
+let smt_output_sections (log_file:option string) (r:Range.range) (lines:list string) : smt_output =
     let rec until tag lines =
         match lines with
         | [] -> None
@@ -310,9 +308,9 @@ let smt_output_sections (log_file:option<string>) (r:Range.range) (lines:list<st
           else BU.map_opt (until tag lines) (fun (until_tag, rest) ->
                           (l::until_tag, rest))
     in
-    let start_tag tag = "<" ^ tag ^ ">" in
-    let end_tag tag = "</" ^ tag ^ ">" in
-    let find_section tag lines : option<(list<string>)> * list<string> =
+    let start_tag tag = " " ^ tag ^ "" in
+    let end_tag tag = " /" ^ tag ^ "" in
+    let find_section tag lines : option (list string) * list string =
        match until (start_tag tag) lines with
        | None -> None, lines
        | Some (prefix, suffix) ->
@@ -451,8 +449,8 @@ type z3result = {
       z3result_status      : z3status;
       z3result_time        : int;
       z3result_statistics  : z3statistics;
-      z3result_query_hash  : option<string>;
-      z3result_log_file    : option<string>
+      z3result_query_hash  : option string;
+      z3result_log_file    : option string
 }
 
 let init () =
@@ -463,7 +461,7 @@ let finish () =
     (* A no-op now that there's no concurrency *)
     ()
 
-type scope_t = list<list<decl>>
+type scope_t = list (list decl)
 
 // bg_scope is a global, mutable variable that keeps a list of the declarations
 // that we have given to z3 so far. In order to allow rollback of history,
@@ -471,14 +469,14 @@ type scope_t = list<list<decl>>
 // on fresh_scope (a stack) -- one can then, for instance, verify these
 // declarations immediately, then call pop so that subsequent queries will not
 // reverify or use these declarations
-let fresh_scope : ref<scope_t> = BU.mk_ref [[]]
+let fresh_scope : ref scope_t = BU.mk_ref [[]]
 let mk_fresh_scope () = !fresh_scope
 let flatten_fresh_scope () = List.flatten (List.rev !fresh_scope)
 
 // bg_scope: Is the flat sequence of declarations already given to Z3
 //           When refreshing the solver, the bg_scope is set to
 //           a flattened version of fresh_scope
-let bg_scope : ref<list<decl>> = BU.mk_ref []
+let bg_scope : ref (list decl) = BU.mk_ref []
 
 // fresh_scope is a mutable reference; this pushes a new list at the front;
 // then, givez3 modifies the reference so that within the new list at the front,
@@ -512,7 +510,7 @@ let refresh () =
     (!bg_z3_proc).refresh();
     bg_scope := flatten_fresh_scope ()
 
-let context_profile (theory:list<decl>) =
+let context_profile (theory:list decl) =
     let modules, total_decls =
         List.fold_left (fun (out, _total) d ->
             match d with
@@ -584,9 +582,9 @@ let mk_input fresh theory =
     r, hash, log_file_name
 
 let cache_hit
-    (log_file:option<string>)
-    (cache:option<string>)
-    (qhash:option<string>) : option<z3result> =
+    (log_file:option string)
+    (cache:option string)
+    (qhash:option string) : option z3result =
     if Options.use_hints() && Options.use_hint_hashes() then
         match qhash with
         | Some (x) when qhash = cache ->
@@ -632,11 +630,11 @@ let z3_job (log_file:_) (r:Range.range) fresh (label_messages:error_labels) inpu
 
 let ask
     (r:Range.range)
-    (filter_theory:list<decl> -> list<decl> * bool)
-    (cache:option<string>)
+    (filter_theory:list decl -> list decl * bool)
+    (cache:option string)
     (label_messages:error_labels)
-    (qry:list<decl>)
-    (_scope : option<scope_t>) // GM: This was only used in ask_n_cores
+    (qry:list decl)
+    (_scope : option scope_t) // GM: This was only used in ask_n_cores
     (fresh:bool) : z3result
   = let theory =
         if fresh

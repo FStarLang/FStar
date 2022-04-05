@@ -1511,14 +1511,14 @@ let (constructor_to_decl :
           let uu___1 =
             let uu___2 =
               let uu___3 =
-                FStar_Compiler_Util.format1 "<start constructor %s>" name in
+                FStar_Compiler_Util.format1 " start constructor %s" name in
               Caption uu___3 in
             uu___2 :: cdecl :: cid :: projs in
           let uu___2 =
             let uu___3 =
               let uu___4 =
                 let uu___5 =
-                  FStar_Compiler_Util.format1 "</end constructor %s>" name in
+                  FStar_Compiler_Util.format1 " /end constructor %s" name in
                 Caption uu___5 in
               [uu___4] in
             FStar_Compiler_List.op_At [disc] uu___3 in
@@ -1821,18 +1821,17 @@ let rec (declToSmt' : Prims.bool -> Prims.string -> decl -> Prims.string) =
             FStar_Compiler_Util.format1 "(eval %s)" uu___
         | Echo s -> FStar_Compiler_Util.format1 "(echo \"%s\")" s
         | RetainAssumptions uu___ -> ""
-        | CheckSat ->
-            "(echo \"<result>\")\n(check-sat)\n(echo \"</result>\")"
+        | CheckSat -> "(echo \" result\")\n(check-sat)\n(echo \" /result\")"
         | GetUnsatCore ->
-            "(echo \"<unsat-core>\")\n(get-unsat-core)\n(echo \"</unsat-core>\")"
+            "(echo \" unsat-core\")\n(get-unsat-core)\n(echo \" /unsat-core\")"
         | Push -> "(push)"
         | Pop -> "(pop)"
         | SetOption (s, v) ->
             FStar_Compiler_Util.format2 "(set-option :%s %s)" s v
         | GetStatistics ->
-            "(echo \"<statistics>\")\n(get-info :all-statistics)\n(echo \"</statistics>\")"
+            "(echo \" statistics\")\n(get-info :all-statistics)\n(echo \" /statistics\")"
         | GetReasonUnknown ->
-            "(echo \"<reason-unknown>\")\n(get-info :reason-unknown)\n(echo \"</reason-unknown>\")"
+            "(echo \" reason-unknown\")\n(get-info :reason-unknown)\n(echo \" /reason-unknown\")"
 and (declToSmt : Prims.string -> decl -> Prims.string) =
   fun z3options ->
     fun decl1 ->

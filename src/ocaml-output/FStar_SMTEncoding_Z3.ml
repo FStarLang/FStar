@@ -462,8 +462,8 @@ let (smt_output_sections :
                    (fun uu___2 ->
                       match uu___2 with
                       | (until_tag, rest) -> ((l :: until_tag), rest))) in
-        let start_tag tag = Prims.op_Hat "<" (Prims.op_Hat tag ">") in
-        let end_tag tag = Prims.op_Hat "</" (Prims.op_Hat tag ">") in
+        let start_tag tag = Prims.op_Hat " " (Prims.op_Hat tag "") in
+        let end_tag tag = Prims.op_Hat " /" (Prims.op_Hat tag "") in
         let find_section tag lines1 =
           let uu___ = until (start_tag tag) lines1 in
           match uu___ with

@@ -1,7 +1,5 @@
 open Prims
-type z3_replay_result =
-  (FStar_SMTEncoding_Z3.unsat_core, FStar_SMTEncoding_Term.error_labels)
-    FStar_Pervasives.either
+let (z3_replay_result : (unit * unit)) = ((), ())
 let z3_result_as_replay_result :
   'uuuuu 'uuuuu1 'uuuuu2 .
     ('uuuuu, ('uuuuu1 * 'uuuuu2)) FStar_Pervasives.either ->
@@ -420,8 +418,7 @@ let (with_fuel_and_diagnostics :
           let uu___2 =
             let uu___3 = FStar_Compiler_Util.string_of_int n in
             let uu___4 = FStar_Compiler_Util.string_of_int i in
-            FStar_Compiler_Util.format2 "<fuel='%s' ifuel='%s'>" uu___3
-              uu___4 in
+            FStar_Compiler_Util.format2 " fuel='%s' ifuel='%s'" uu___3 uu___4 in
           FStar_SMTEncoding_Term.Caption uu___2 in
         let uu___2 =
           let uu___3 =
