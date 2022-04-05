@@ -1,4 +1,19 @@
-﻿#light "off"
+﻿(*
+   Copyright 2008-2016 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
+
 module FStar.Tactics.Interpreter
 
 open FStar
@@ -72,12 +87,12 @@ let mk_total_step_2' uarity nm f ea eb er nf ena enb enr =
     with Cfg.name = Ident.lid_of_str ("FStar.Tactics.Types." ^ nm) }
 
 (* Set below in the file, to avoid a huge recursive group *)
-let __primitive_steps_ref : ref<option<list<Cfg.primitive_step>>> = BU.mk_ref None
-let primitive_steps () : list<Cfg.primitive_step> =
+let __primitive_steps_ref : ref (option (list Cfg.primitive_step)) = BU.mk_ref None
+let primitive_steps () : list Cfg.primitive_step =
     BU.must (!__primitive_steps_ref)
     @ (native_tactics_steps ())
 
-let unembed_tactic_0 (eb:embedding<'b>) (embedded_tac_b:term) (ncb:norm_cb) : tac<'b> =
+let unembed_tactic_0 (eb:embedding 'b) (embedded_tac_b:term) (ncb:norm_cb) : tac 'b =
     bind get (fun proof_state ->
     let rng = embedded_tac_b.pos in
 
@@ -122,7 +137,7 @@ let unembed_tactic_0 (eb:embedding<'b>) (embedded_tac_b:term) (ncb:norm_cb) : ta
         Err.raise_error (Err.Fatal_TacticGotStuck, (BU.format1 "Tactic got stuck! Please file a bug report with a minimal reproduction of this issue.\n%s" (Print.term_to_string result))) proof_state.main_context.range
     )
 
-let unembed_tactic_nbe_0 (eb:NBET.embedding<'b>) (cb:NBET.nbe_cbs) (embedded_tac_b:NBET.t) : tac<'b> =
+let unembed_tactic_nbe_0 (eb:NBET.embedding 'b) (cb:NBET.nbe_cbs) (embedded_tac_b:NBET.t) : tac 'b =
     bind get (fun proof_state ->
 
     (* Applying is normalizing!!! *)
@@ -140,26 +155,26 @@ let unembed_tactic_nbe_0 (eb:NBET.embedding<'b>) (cb:NBET.nbe_cbs) (embedded_tac
         Err.raise_error (Err.Fatal_TacticGotStuck, (BU.format1 "Tactic got stuck (in NBE)! Please file a bug report with a minimal reproduction of this issue.\n%s" (NBET.t_to_string result))) proof_state.main_context.range
     )
 
-let unembed_tactic_1 (ea:embedding<'a>) (er:embedding<'r>) (f:term) (ncb:norm_cb) : 'a -> tac<'r> =
+let unembed_tactic_1 (ea:embedding 'a) (er:embedding 'r) (f:term) (ncb:norm_cb) : 'a -> tac 'r =
     fun x ->
       let rng = FStar.Compiler.Range.dummyRange  in
       let x_tm = embed ea rng x ncb in
       let app = S.mk_Tm_app f [as_arg x_tm] rng in
       unembed_tactic_0 er app ncb
 
-let unembed_tactic_nbe_1 (ea:NBET.embedding<'a>) (er:NBET.embedding<'r>) (cb:NBET.nbe_cbs) (f:NBET.t) : 'a -> tac<'r> =
+let unembed_tactic_nbe_1 (ea:NBET.embedding 'a) (er:NBET.embedding 'r) (cb:NBET.nbe_cbs) (f:NBET.t) : 'a -> tac 'r =
     fun x ->
       let x_tm = NBET.embed ea cb x in
       let app = NBET.iapp_cb cb f [NBET.as_arg x_tm] in
       unembed_tactic_nbe_0 er cb app
 
-let e_tactic_thunk (er : embedding<'r>) : embedding<(tac<'r>)>
+let e_tactic_thunk (er : embedding 'r) : embedding (tac 'r)
     =
     mk_emb (fun _ _ _ _ -> failwith "Impossible: embedding tactic (thunk)?")
            (fun t w cb -> Some (unembed_tactic_1 e_unit er t cb ()))
            (FStar.Syntax.Embeddings.term_as_fv S.t_unit)
 
-let e_tactic_nbe_thunk (er : NBET.embedding<'r>) : NBET.embedding<tac<'r>>
+let e_tactic_nbe_thunk (er : NBET.embedding 'r) : NBET.embedding (tac 'r)
     =
     NBET.mk_emb
            (fun cb _ -> failwith "Impossible: NBE embedding tactic (thunk)?")
@@ -167,13 +182,13 @@ let e_tactic_nbe_thunk (er : NBET.embedding<'r>) : NBET.embedding<tac<'r>>
            (NBET.mk_t (NBET.Constant NBET.Unit))
            (emb_typ_of e_unit)
 
-let e_tactic_1 (ea : embedding<'a>) (er : embedding<'r>) : embedding<('a -> tac<'r>)>
+let e_tactic_1 (ea : embedding 'a) (er : embedding 'r) : embedding ('a -> tac 'r)
     =
     mk_emb (fun _ _ _ _ -> failwith "Impossible: embedding tactic (1)?")
            (fun t w cb -> Some (unembed_tactic_1 ea er t cb))
            (FStar.Syntax.Embeddings.term_as_fv S.t_unit)
 
-let e_tactic_nbe_1 (ea : NBET.embedding<'a>) (er : NBET.embedding<'r>) : NBET.embedding<('a -> tac<'r>)>
+let e_tactic_nbe_1 (ea : NBET.embedding 'a) (er : NBET.embedding 'r) : NBET.embedding ('a -> tac 'r)
     =
     NBET.mk_emb
            (fun cb _ -> failwith "Impossible: NBE embedding tactic (1)?")
@@ -470,16 +485,16 @@ let () =
 
     ]
 
-let unembed_tactic_1_alt (ea:embedding<'a>) (er:embedding<'r>) (f:term) (ncb:norm_cb) : option<('a -> tac<'r>)> =
+let unembed_tactic_1_alt (ea:embedding 'a) (er:embedding 'r) (f:term) (ncb:norm_cb) : option ('a -> tac 'r) =
     Some (fun x ->
       let rng = FStar.Compiler.Range.dummyRange  in
       let x_tm = embed ea rng x ncb in
       let app = S.mk_Tm_app f [as_arg x_tm] rng in
       unembed_tactic_0 er app ncb)
 
-let e_tactic_1_alt (ea: embedding<'a>) (er:embedding<'r>): embedding<('a -> (proofstate -> __result<'r>))> =
+let e_tactic_1_alt (ea: embedding 'a) (er:embedding 'r): embedding ('a -> (proofstate -> __result 'r)) =
     let em = (fun _ _ _ _ -> failwith "Impossible: embedding tactic (1)?") in
-    let un (t0: term) (w: bool) (n: norm_cb): option<('a -> (proofstate -> __result<'r>))> =
+    let un (t0: term) (w: bool) (n: norm_cb): option ('a -> (proofstate -> __result 'r)) =
         match unembed_tactic_1_alt ea er t0 n with
         | Some f -> Some (fun x -> run (f x))
         | None -> None
@@ -501,12 +516,12 @@ let run_tactic_on_ps'
   (rng_call : Range.range)
   (rng_goal : Range.range)
   (background : bool)
-  (e_arg : embedding<'a>)
+  (e_arg : embedding 'a)
   (arg : 'a)
-  (e_res : embedding<'b>)
+  (e_res : embedding 'b)
   (tactic:term)
   (ps:proofstate)
-  : list<goal> // remaining goals
+  : list goal // remaining goals
   * 'b // return value
   = let env = ps.main_context in
     if !tacdbg then
@@ -596,9 +611,9 @@ let run_tactic_on_ps
           (rng_call : Range.range)
           (rng_goal : Range.range)
           (background : bool)
-          (e_arg : embedding<'a>)
+          (e_arg : embedding 'a)
           (arg : 'a)
-          (e_res : embedding<'b>)
+          (e_res : embedding 'b)
           (tactic:term)
           (ps:proofstate) =
     Profiling.profile

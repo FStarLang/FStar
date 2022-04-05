@@ -1311,7 +1311,7 @@ let run_segment :
     fun code ->
       let frag =
         {
-          FStar_Parser_ParseIt.frag_fname = "<input>";
+          FStar_Parser_ParseIt.frag_fname = " input";
           FStar_Parser_ParseIt.frag_text = code;
           FStar_Parser_ParseIt.frag_line = Prims.int_one;
           FStar_Parser_ParseIt.frag_col = Prims.int_zero
@@ -1618,7 +1618,7 @@ let run_push_without_deps :
           push_column = column; push_peek_only = peek_only;_} ->
           let frag =
             {
-              FStar_Parser_ParseIt.frag_fname = "<input>";
+              FStar_Parser_ParseIt.frag_fname = " input";
               FStar_Parser_ParseIt.frag_text = text;
               FStar_Parser_ParseIt.frag_line = line;
               FStar_Parser_ParseIt.frag_col = column
@@ -2073,7 +2073,7 @@ let run_with_parsed_and_tc_term :
                 FStar_Compiler_Util.format1 "let __compute_dummy__ = (%s)"
                   term1 in
               {
-                FStar_Parser_ParseIt.frag_fname = "<input>";
+                FStar_Parser_ParseIt.frag_fname = " input";
                 FStar_Parser_ParseIt.frag_text = dummy_decl;
                 FStar_Parser_ParseIt.frag_line = Prims.int_zero;
                 FStar_Parser_ParseIt.frag_col = Prims.int_zero
@@ -2614,7 +2614,7 @@ let (install_ide_mode_hooks : (FStar_Compiler_Util.json -> unit) -> unit) =
 let (initial_range : FStar_Compiler_Range.range) =
   let uu___ = FStar_Compiler_Range.mk_pos Prims.int_one Prims.int_zero in
   let uu___1 = FStar_Compiler_Range.mk_pos Prims.int_one Prims.int_zero in
-  FStar_Compiler_Range.mk_range "<input>" uu___ uu___1
+  FStar_Compiler_Range.mk_range " input" uu___ uu___1
 let (build_initial_repl_state :
   Prims.string -> FStar_Interactive_JsonHelper.repl_state) =
   fun filename ->

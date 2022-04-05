@@ -1,4 +1,19 @@
-#light "off"
+(*
+   Copyright 2008-2016 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
+
 module FStar.Tactics.Hooks
 
 open FStar
@@ -33,7 +48,7 @@ module RE      = FStar.Reflection.Embeddings
 let run_tactic_on_typ
         (rng_tac : Range.range) (rng_goal : Range.range)
         (tactic:term) (env:Env.env) (typ:term)
-                    : list<goal> // remaining goals
+                    : list goal // remaining goals
                     * term // witness
                     =
     let rng = range_of_rng (use_range rng_goal) (use_range rng_tac) in
@@ -44,7 +59,7 @@ let run_tactic_on_typ
 let run_tactic_on_all_implicits
         (rng_tac : Range.range) (rng_goal : Range.range)
         (tactic:term) (env:Env.env) (imps:Env.implicits)
-    : list<goal> // remaining goals
+    : list goal // remaining goals
     =
     let ps, _ = proofstate_of_all_implicits rng_goal env imps in
     let goals, () =
@@ -67,12 +82,12 @@ type pol =
     | Both // traversing both polarities at once
 
 // Result of traversal
-type tres_m<'a> =
+type tres_m 'a =
     | Unchanged of 'a
-    | Simplified of 'a * list<goal>
-    | Dual of 'a * 'a * list<goal>
+    | Simplified of 'a * list goal
+    | Dual of 'a * 'a * list goal
 
-type tres = tres_m<term>
+type tres = tres_m term
 
 let tpure x = Unchanged x
 
@@ -81,7 +96,7 @@ let flip p = match p with
     | Neg -> Pos
     | Both -> Both
 
-let getprop (e:Env.env) (t:term) : option<term> =
+let getprop (e:Env.env) (t:term) : option term =
     let tn = N.normalize [Env.Weak; Env.HNF; Env.UnfoldUntil delta_constant] e t in
     U.un_squash tn
 
@@ -152,18 +167,18 @@ let by_tactic_interp (pol:pol) (e:Env.env) (t:term) : tres =
     | _ ->
         Unchanged t
 
-let explode (t : tres_m<'a>) : 'a * 'a * list<goal> =
+let explode (t : tres_m 'a) : 'a * 'a * list goal =
     match t with
     | Unchanged t -> (t, t, [])
     | Simplified (t, gs) -> (t, t, gs)
     | Dual (tn, tp, gs) -> (tn, tp, gs)
 
-let comb1 (f : 'a -> 'b) : tres_m<'a> -> tres_m<'b> = function
+let comb1 (f : 'a -> 'b) : tres_m 'a -> tres_m 'b = function
     | Unchanged t -> Unchanged (f t)
     | Simplified (t, gs) -> Simplified (f t, gs)
     | Dual (tn, tp, gs) -> Dual (f tn, f tp, gs)
 
-let comb2 (f : 'a -> 'b -> 'c ) (x : tres_m<'a>) (y : tres_m<'b>) : tres_m<'c> =
+let comb2 (f : 'a -> 'b -> 'c ) (x : tres_m 'a) (y : tres_m 'b) : tres_m 'c =
     match x, y with
     | Unchanged t1, Unchanged t2 ->
         Unchanged (f t1 t2)
@@ -180,7 +195,7 @@ let comb2 (f : 'a -> 'b -> 'c ) (x : tres_m<'a>) (y : tres_m<'b>) : tres_m<'c> =
         let (n2, p2, gs2) = explode y in
         Dual (f n1 n2, f p1 p2, gs1@gs2)
 
-let comb_list (rs : list<tres_m<'a>>) : tres_m<list<'a>> =
+let comb_list (rs : list (tres_m 'a)) : tres_m (list 'a) =
     let rec aux rs acc =
         match rs with
         | [] -> acc
@@ -188,7 +203,7 @@ let comb_list (rs : list<tres_m<'a>>) : tres_m<list<'a>> =
     in
     aux (List.rev rs) (tpure [])
 
-let emit (gs : list<goal>) (m : tres_m<'a>) : tres_m<'a> =
+let emit (gs : list goal) (m : tres_m 'a) : tres_m 'a =
     comb2 (fun () x -> x) (Simplified ((), gs)) m
 
 let rec traverse (f: pol -> Env.env -> term -> tres) (pol:pol) (e:Env.env) (t:term) : tres =
@@ -207,13 +222,13 @@ let rec traverse (f: pol -> Env.env -> term -> tres) (pol:pol) (e:Env.env) (t:te
                let r2 = traverse f       pol  (Env.push_bv e x) q in
                comb2 (fun l r -> (U.mk_imp l r).n) r1 r2
 
-        (* p <==> q is special, each side is bipolar *)
+        (* p  == q is special, each side is bipolar *)
         (* So we traverse its arguments with pol = Both, and negative and positive versions *)
         (* of p and q *)
         (* then we return (in general) (p- ==> q+) /\ (q- ==> p+) *)
-        (* But if neither side ran tactics, we just keep p <==> q *)
+        (* But if neither side ran tactics, we just keep p  == q *)
         | Tm_app ({ n = Tm_fvar fv }, [(p,_); (q,_)]) when S.fv_eq_lid fv PC.iff_lid ->
-               // <==> is specialized to U_zero
+               //  == is specialized to U_zero
                let xp = S.new_bv None p in
                let xq = S.new_bv None q in
                let r1 = traverse f Both (Env.push_bv e xq) p in
@@ -277,7 +292,7 @@ let rec traverse (f: pol -> Env.env -> term -> tres) (pol:pol) (e:Env.env) (t:te
         let (_, p', gs') = explode rp in
         Dual ({t with n = tn}, p', gs@gs')
 
-let preprocess (env:Env.env) (goal:term) : list<(Env.env * term * O.optionstate)> =
+let preprocess (env:Env.env) (goal:term) : list (Env.env * term * O.optionstate) =
   Errors.with_ctx "While preprocessing VC with a tactic" (fun () ->
     tacdbg := Env.debug env (O.Other "Tac");
     if !tacdbg then
@@ -381,7 +396,7 @@ let solve_implicits (env:Env.env) (tau:term) (imps:Env.implicits) : unit =
   )
 
 (* Retrieves a tactic associated to a given attribute, if any *)
-let find_user_tac_for_attr env (a:term) : option<sigelt> =
+let find_user_tac_for_attr env (a:term) : option sigelt =
   let hooks = Env.lookup_attr env PC.handle_smt_goals_attr_string in
   hooks |> BU.try_find (fun _ -> true)
 
@@ -436,7 +451,7 @@ let handle_smt_goal env goal =
     (* No such tactic was available in the current context *)
     | None -> [env, goal]
 
-let splice (env:Env.env) (rng:Range.range) (tau:term) : list<sigelt> =
+let splice (env:Env.env) (rng:Range.range) (tau:term) : list sigelt =
   Errors.with_ctx "While running splice with a tactic" (fun () ->
     if env.nosynth then [] else begin
     tacdbg := Env.debug env (O.Other "Tac");
