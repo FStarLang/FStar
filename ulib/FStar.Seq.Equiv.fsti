@@ -44,8 +44,7 @@ val eq_of_seq_condition (#c:_) (eq: CE.equiv c) (s1 s2: seq c)
             eq_of_seq eq s1 s2)
 
 val eq_of_seq_reflexivity (#c:_) (eq: CE.equiv c) (s: seq c)
-  : Lemma (ensures eq_of_seq eq s s) 
-          (decreases length s) 
+  : Lemma (ensures eq_of_seq eq s s)
 
 val eq_of_seq_symmetry (#c:_) (eq: CE.equiv c) (s1 s2: seq c)
   : Lemma (requires eq_of_seq eq s1 s2) 
