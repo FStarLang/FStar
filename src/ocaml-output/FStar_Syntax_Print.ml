@@ -65,7 +65,7 @@ let (infix_prim_ops : (FStar_Ident.lident * Prims.string) Prims.list) =
   (FStar_Parser_Const.and_lid, "/\\");
   (FStar_Parser_Const.or_lid, "\\/");
   (FStar_Parser_Const.imp_lid, "==>");
-  (FStar_Parser_Const.iff_lid, "<==>");
+  (FStar_Parser_Const.iff_lid, " ==");
   (FStar_Parser_Const.precedes_lid, "<<");
   (FStar_Parser_Const.eq2_lid, "==")]
 let (unary_prim_ops : (FStar_Ident.lident * Prims.string) Prims.list) =
@@ -692,7 +692,7 @@ and (term_to_string : FStar_Syntax_Syntax.term -> Prims.string) =
                then
                  let uu___4 = term_to_string t in
                  let uu___5 = univs_to_string us in
-                 FStar_Compiler_Util.format2 "%s<%s>" uu___4 uu___5
+                 FStar_Compiler_Util.format2 "%s %s" uu___4 uu___5
                else term_to_string t
            | FStar_Syntax_Syntax.Tm_unknown -> "_")
 and (branch_to_string : FStar_Syntax_Syntax.branch -> Prims.string) =
@@ -841,8 +841,8 @@ and (lbs_to_string :
                       let uu___7 =
                         let uu___8 =
                           univ_names_to_string lb.FStar_Syntax_Syntax.lbunivs in
-                        Prims.op_Hat uu___8 ">" in
-                      Prims.op_Hat "<" uu___7
+                        Prims.op_Hat uu___8 "" in
+                      Prims.op_Hat " " uu___7
                     else "" in
                   let uu___6 = term_to_string lb.FStar_Syntax_Syntax.lbtyp in
                   let uu___7 =
@@ -1026,7 +1026,7 @@ and (comp_to_string : FStar_Syntax_Syntax.comp -> Prims.string) =
                          FStar_Options.print_universes () ->
                          let uu___5 = univ_to_string u in
                          let uu___6 = term_to_string t in
-                         FStar_Compiler_Util.format2 "Tot<%s> %s" uu___5
+                         FStar_Compiler_Util.format2 "Tot %s %s" uu___5
                            uu___6
                      | uu___5 ->
                          let uu___6 = term_to_string t in
@@ -1047,7 +1047,7 @@ and (comp_to_string : FStar_Syntax_Syntax.comp -> Prims.string) =
                          FStar_Options.print_universes () ->
                          let uu___5 = univ_to_string u in
                          let uu___6 = term_to_string t in
-                         FStar_Compiler_Util.format2 "GTot<%s> %s" uu___5
+                         FStar_Compiler_Util.format2 "GTot %s %s" uu___5
                            uu___6
                      | uu___5 ->
                          let uu___6 = term_to_string t in
@@ -1076,7 +1076,7 @@ and (comp_to_string : FStar_Syntax_Syntax.comp -> Prims.string) =
                        (FStar_String.concat ", ") in
                    let uu___8 = cflags_to_string c1.FStar_Syntax_Syntax.flags in
                    FStar_Compiler_Util.format5
-                     "%s<%s> (%s) %s (attributes %s)" uu___4 uu___5 uu___6
+                     "%s %s (%s) %s (attributes %s)" uu___4 uu___5 uu___6
                      uu___7 uu___8
                  else
                    (let uu___5 =
@@ -1288,7 +1288,7 @@ let (binders_to_json :
 let (enclose_universes : Prims.string -> Prims.string) =
   fun s ->
     let uu___ = FStar_Options.print_universes () in
-    if uu___ then Prims.op_Hat "<" (Prims.op_Hat s ">") else ""
+    if uu___ then Prims.op_Hat " " (Prims.op_Hat s "") else ""
 let (tscheme_to_string : FStar_Syntax_Syntax.tscheme -> Prims.string) =
   fun s ->
     let uu___ =
@@ -1482,7 +1482,7 @@ let (sub_eff_to_string : FStar_Syntax_Syntax.sub_eff -> Prims.string) =
           FStar_Compiler_Effect.op_Bar_Greater ts_opt
             FStar_Compiler_Util.must in
         FStar_Compiler_Effect.op_Bar_Greater uu___ tscheme_to_string
-      else "<None>" in
+      else " None" in
     let uu___ = lid_to_string se.FStar_Syntax_Syntax.source in
     let uu___1 = lid_to_string se.FStar_Syntax_Syntax.target in
     let uu___2 = tsopt_to_string se.FStar_Syntax_Syntax.lift in
@@ -1522,7 +1522,7 @@ let rec (sigelt_to_string : FStar_Syntax_Syntax.sigelt -> Prims.string) =
           then
             let uu___3 = FStar_Ident.string_of_lid lid in
             let uu___4 = univ_names_to_string univs in
-            FStar_Compiler_Util.format5 "%stype %s<%s> %s : %s" quals_str
+            FStar_Compiler_Util.format5 "%stype %s %s %s : %s" quals_str
               uu___3 uu___4 binders_str term_str
           else
             (let uu___4 = FStar_Ident.string_of_lid lid in
@@ -1536,7 +1536,7 @@ let rec (sigelt_to_string : FStar_Syntax_Syntax.sigelt -> Prims.string) =
             let uu___4 = univ_names_to_string univs in
             let uu___5 = FStar_Ident.string_of_lid lid in
             let uu___6 = term_to_string t in
-            FStar_Compiler_Util.format3 "datacon<%s> %s : %s" uu___4 uu___5
+            FStar_Compiler_Util.format3 "datacon %s %s : %s" uu___4 uu___5
               uu___6
           else
             (let uu___5 = FStar_Ident.string_of_lid lid in
@@ -1550,7 +1550,7 @@ let rec (sigelt_to_string : FStar_Syntax_Syntax.sigelt -> Prims.string) =
             if uu___3
             then
               let uu___4 = univ_names_to_string univs in
-              FStar_Compiler_Util.format1 "<%s>" uu___4
+              FStar_Compiler_Util.format1 " %s" uu___4
             else "" in
           let uu___3 = term_to_string t in
           FStar_Compiler_Util.format4 "%sval %s %s : %s" uu___ uu___1 uu___2
@@ -1562,7 +1562,7 @@ let rec (sigelt_to_string : FStar_Syntax_Syntax.sigelt -> Prims.string) =
             let uu___1 = FStar_Ident.string_of_lid lid in
             let uu___2 = univ_names_to_string us in
             let uu___3 = term_to_string f in
-            FStar_Compiler_Util.format3 "assume %s<%s> : %s" uu___1 uu___2
+            FStar_Compiler_Util.format3 "assume %s %s : %s" uu___1 uu___2
               uu___3
           else
             (let uu___2 = FStar_Ident.string_of_lid lid in
@@ -1617,7 +1617,7 @@ let rec (sigelt_to_string : FStar_Syntax_Syntax.sigelt -> Prims.string) =
                       let uu___4 = univ_names_to_string univs1 in
                       let uu___5 = binders_to_string " " tps1 in
                       let uu___6 = comp_to_string c1 in
-                      FStar_Compiler_Util.format4 "effect %s<%s> %s = %s"
+                      FStar_Compiler_Util.format4 "effect %s %s %s = %s"
                         uu___3 uu___4 uu___5 uu___6))
           else
             (let uu___2 = sli l in

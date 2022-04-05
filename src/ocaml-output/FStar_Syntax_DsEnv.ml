@@ -2316,8 +2316,8 @@ let (push_sigelt' : Prims.bool -> env -> FStar_Syntax_Syntax.sigelt -> env) =
                      let uu___2 = FStar_Ident.range_of_lid l1 in
                      FStar_Compiler_Effect.op_Less_Bar
                        FStar_Compiler_Range.string_of_range uu___2
-                 | FStar_Pervasives_Native.None -> "<unknown>")
-            | FStar_Pervasives_Native.None -> "<unknown>" in
+                 | FStar_Pervasives_Native.None -> " unknown")
+            | FStar_Pervasives_Native.None -> " unknown" in
           let uu___ =
             let uu___1 =
               let uu___2 = FStar_Ident.string_of_lid l in

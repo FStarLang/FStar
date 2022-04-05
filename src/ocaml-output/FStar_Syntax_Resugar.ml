@@ -316,7 +316,7 @@ let rec (resugar_term_as_op :
       (FStar_Parser_Const.and_lid, "/\\");
       (FStar_Parser_Const.or_lid, "\\/");
       (FStar_Parser_Const.imp_lid, "==>");
-      (FStar_Parser_Const.iff_lid, "<==>");
+      (FStar_Parser_Const.iff_lid, " ==");
       (FStar_Parser_Const.precedes_lid, "<<");
       (FStar_Parser_Const.eq2_lid, "==");
       (FStar_Parser_Const.forall_lid, "forall");

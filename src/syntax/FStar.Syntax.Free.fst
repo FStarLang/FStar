@@ -13,8 +13,6 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-#light "off"
-// (c) Microsoft Corporation. All rights reserved
 module FStar.Syntax.Free
 open Prims
 open FStar.Pervasives
@@ -39,7 +37,7 @@ type use_cache_t =
   | NoCache
   | Full
 
-type free_vars_and_fvars = free_vars * set<Ident.lident>
+type free_vars_and_fvars = free_vars * set Ident.lident
 
 let no_free_vars = {
     free_names=[];
@@ -77,7 +75,7 @@ let rec free_univs u = match Subst.compress_univ u with
 //the interface of Syntax.Free now supports getting fvars in a term also
 //however, fvars are added unlike free names, free uvars, etc. which are part of a record free_vars, that is memoized at **every** AST node
 //if we added fvars also to the record, it would affect every AST node
-//instead of doing that, the functions below compute a tuple, free_vars * set<lident>, where the second component is the fvars lids
+//instead of doing that, the functions below compute a tuple, free_vars * set lident, where the second component is the fvars lids
 //but this raises a compilication, what should happen when the functions below just return from the cache from the AST nodes
 //to handle that, use_cache flag is UNSET when asking for free_fvars, so that all the terms are traversed completely
 //on the other hand, for earlier interface use_cache is true
@@ -205,7 +203,7 @@ and free_names_and_uvars t use_cache =
       if use_cache <> Full then t.vars := Some (fst n);
       n
 
-and free_names_and_uvars_args args (acc:free_vars * set<Ident.lident>) use_cache =
+and free_names_and_uvars_args args (acc:free_vars * set Ident.lident) use_cache =
         args |> List.fold_left (fun n (x, _) -> union n (free_names_and_uvars x use_cache)) acc
 
 and free_names_and_uvars_comp c use_cache =
@@ -267,7 +265,7 @@ let compare_uv uv1 uv2 = UF.uvar_id uv1.ctx_uvar_head - UF.uvar_id uv2.ctx_uvar_
 let new_uv_set () : uvars = Util.new_set compare_uv
 
 let compare_universe_uvar x y = UF.univ_uvar_id x - UF.univ_uvar_id y
-let new_universe_uvar_set () : set<universe_uvar> =
+let new_universe_uvar_set () : set universe_uvar =
     Util.new_set compare_universe_uvar
 
 let empty = Util.new_set Syntax.order_bv

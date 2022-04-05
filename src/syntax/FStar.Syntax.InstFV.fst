@@ -13,8 +13,6 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-#light "off"
-// (c) Microsoft Corporation. All rights reserved
 module FStar.Syntax.InstFV
 open FStar.Pervasives
 open FStar.Compiler.Effect
@@ -27,7 +25,7 @@ open FStar.Compiler
 module S = FStar.Syntax.Syntax
 module SS = FStar.Syntax.Subst
 module U = FStar.Compiler.Util
-type inst_t = list<(lident * universes)>
+type inst_t = list (lident * universes)
 
 
 

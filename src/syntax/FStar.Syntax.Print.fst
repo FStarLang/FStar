@@ -13,8 +13,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-#light "off"
-// (c) Microsoft Corporation. All rights reserved
+
 module FStar.Syntax.Print
 open FStar.Pervasives
 open FStar.Compiler.Effect
@@ -83,7 +82,7 @@ let infix_prim_ops = [
     (C.and_lid     , "/\\");
     (C.or_lid      , "\\/");
     (C.imp_lid     , "==>");
-    (C.iff_lid     , "<==>");
+    (C.iff_lid     , " ==");
     (C.precedes_lid, "<<");
     (C.eq2_lid     , "==");
 ]
@@ -129,7 +128,7 @@ let filter_imp_binders bs =
   bs |> List.filter (fun b -> b.binder_qual |> filter_imp)
 
 (* CH: F# List.find has a different type from find in list.fst ... so just a hack for now *)
-let rec find  (f:'a -> bool) (l:list<'a>) : 'a = match l with
+let rec find  (f:'a -> bool) (l:list 'a) : 'a = match l with
   | [] -> failwith "blah"
   | hd::tl -> if f hd then hd else find f tl
 
@@ -366,7 +365,7 @@ and term_to_string x =
           lc_str
       | Tm_uinst(t, us) ->
         if (Options.print_universes())
-        then U.format2 "%s<%s>" (term_to_string t) (univs_to_string us)
+        then U.format2 "%s %s" (term_to_string t) (univs_to_string us)
         else term_to_string t
 
       | Tm_unknown -> "_"
@@ -439,7 +438,7 @@ and lbs_to_string quals lbs =
                                                             (attrs_to_string lb.lbattrs)
                                                             (lbname_to_string lb.lbname)
                                                             (if (Options.print_universes())
-                                                             then "<"^univ_names_to_string lb.lbunivs^">"
+                                                             then " "^univ_names_to_string lb.lbunivs^""
                                                              else "")
                                                             (term_to_string lb.lbtyp)
                                                             (lb.lbdef |> term_to_string))))
@@ -518,7 +517,7 @@ and comp_to_string c =
         | Tm_type _ when not (Options.print_implicits() || Options.print_universes()) -> term_to_string t
         | _ ->
           match uopt with
-          | Some u when Options.print_universes() -> U.format2 "Tot<%s> %s" (univ_to_string u) (term_to_string t)
+          | Some u when Options.print_universes() -> U.format2 "Tot %s %s" (univ_to_string u) (term_to_string t)
           | _ -> U.format1 "Tot %s" (term_to_string t)
       end
     | GTotal (t, uopt) ->
@@ -526,13 +525,13 @@ and comp_to_string c =
         | Tm_type _ when not (Options.print_implicits() || Options.print_universes()) -> term_to_string t
         | _ ->
           match uopt with
-          | Some u when Options.print_universes() -> U.format2 "GTot<%s> %s" (univ_to_string u) (term_to_string t)
+          | Some u when Options.print_universes() -> U.format2 "GTot %s %s" (univ_to_string u) (term_to_string t)
           | _ -> U.format1 "GTot %s" (term_to_string t)
       end
     | Comp c ->
         let basic =
           if (Options.print_effect_args())
-          then U.format5 "%s<%s> (%s) %s (attributes %s)"
+          then U.format5 "%s %s (%s) %s (attributes %s)"
                             (sli c.effect_name)
                             (c.comp_univs |> List.map univ_to_string |> String.concat ", ")
                             (term_to_string c.result_typ)
@@ -638,13 +637,13 @@ let binders_to_json env bs =
 //        | Inl (a, t) -> U.format2 "(%s -> %s)" (strBvd a) (typ_to_string t)
 //        | Inr (x, e) -> U.format2 "(%s -> %s)" (strBvd x) (exp_to_string e)) subst |> String.concat ", ")
 //let freevars_to_string (fvs:freevars) =
-//    let f (l:set<bvar<'a,'b>>) = l |> U.set_elements |> List.map (fun t -> strBvd t.v) |> String.concat ", " in
+//    let f (l:set bvar 'a,'b) = l |> U.set_elements |> List.map (fun t -> strBvd t.v) |> String.concat ", " in
 //    U.format2 "ftvs={%s}, fxvs={%s}" (f fvs.ftvs) (f fvs.fxvs)
 
 
 let enclose_universes s =
     if Options.print_universes ()
-    then "<" ^ s ^ ">"
+    then " " ^ s ^ ""
     else ""
 
 let tscheme_to_string s =
@@ -745,7 +744,7 @@ let eff_decl_to_string for_free ed =
 let sub_eff_to_string se =
   let tsopt_to_string ts_opt =
     if is_some ts_opt then ts_opt |> must |> tscheme_to_string
-    else "<None>" in
+    else " None" in
   U.format4 "sub_effect %s ~> %s : lift = %s ;; lift_wp = %s"
     (lid_to_string se.source) (lid_to_string se.target)
     (tsopt_to_string se.lift) (tsopt_to_string se.lift_wp)
@@ -779,22 +778,22 @@ let rec sigelt_to_string (x: sigelt) =
         let quals_str = quals_to_string' x.sigquals in
         let binders_str = binders_to_string " " tps in
         let term_str = term_to_string k in
-        if Options.print_universes () then U.format5 "%stype %s<%s> %s : %s" quals_str (string_of_lid lid) (univ_names_to_string univs) binders_str term_str
+        if Options.print_universes () then U.format5 "%stype %s %s %s : %s" quals_str (string_of_lid lid) (univ_names_to_string univs) binders_str term_str
         else U.format4 "%stype %s %s : %s" quals_str (string_of_lid lid) binders_str term_str
       | Sig_datacon(lid, univs, t, _, _, _) ->
         if (Options.print_universes())
         then //let univs, t = Subst.open_univ_vars univs t in (* AR: don't open the universes, else it's a bit confusing *)
-             U.format3 "datacon<%s> %s : %s" (univ_names_to_string univs) (string_of_lid lid) (term_to_string t)
+             U.format3 "datacon %s %s : %s" (univ_names_to_string univs) (string_of_lid lid) (term_to_string t)
         else U.format2 "datacon %s : %s" (string_of_lid lid) (term_to_string t)
       | Sig_declare_typ(lid, univs, t) ->
         //let univs, t = Subst.open_univ_vars univs t in
         U.format4 "%sval %s %s : %s" (quals_to_string' x.sigquals) (string_of_lid lid)
             (if (Options.print_universes())
-             then U.format1 "<%s>" (univ_names_to_string univs)
+             then U.format1 " %s" (univ_names_to_string univs)
              else "")
             (term_to_string t)
       | Sig_assume(lid, us, f) ->
-        if Options.print_universes () then U.format3 "assume %s<%s> : %s" (string_of_lid lid) (univ_names_to_string us) (term_to_string f)
+        if Options.print_universes () then U.format3 "assume %s %s : %s" (string_of_lid lid) (univ_names_to_string us) (term_to_string f)
         else U.format2 "assume %s : %s" (string_of_lid lid) (term_to_string f)
       | Sig_let(lbs, _) -> lbs_to_string x.sigquals lbs
       | Sig_bundle(ses, _) -> "(* Sig_bundle *)" ^ (List.map sigelt_to_string ses |> String.concat "\n")
@@ -812,7 +811,7 @@ let rec sigelt_to_string (x: sigelt) =
              let tps, c = match (Subst.compress t).n with
                 | Tm_arrow(bs, c) -> bs, c
                 | _ -> failwith "impossible" in
-             U.format4 "effect %s<%s> %s = %s" (sli l) (univ_names_to_string univs) (binders_to_string " " tps) (comp_to_string c)
+             U.format4 "effect %s %s %s = %s" (sli l) (univ_names_to_string univs) (binders_to_string " " tps) (comp_to_string c)
         else U.format3 "effect %s %s = %s" (sli l) (binders_to_string " " tps) (comp_to_string c)
       | Sig_splice (lids, t) ->
         U.format2 "splice[%s] (%s)" (String.concat "; " <| List.map Ident.string_of_lid lids) (term_to_string t)

@@ -13,8 +13,6 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-#light "off"
-// (c) Microsoft Corporation. All rights reserved
 
 module FStar.Syntax.DsEnv
 open FStar.Pervasives
@@ -34,7 +32,7 @@ module U = FStar.Syntax.Util
 module BU = FStar.Compiler.Util
 module Const = FStar.Parser.Const
 
-type used_marker = ref<bool>
+type used_marker = ref bool
 
 type local_binding = (ident * bv * used_marker)           (* local name binding for name resolution, paired with an env-generated unique name *)
 type rec_binding   = (ident * lid * delta_depth *         (* name bound by recursive type and top-level let-bindings definitions only *)
@@ -51,7 +49,7 @@ type record_or_dc = {
   typename: lident; (* the namespace part applies to the constructor and fields as well *)
   constrname: ident;
   parms: binders;
-  fields: list<(ident * typ)>;
+  fields: list (ident * typ);
   is_private: bool;
   is_record:bool
 }
@@ -64,19 +62,19 @@ type scope_mod =
 | Top_level_def            of ident           (* top-level definition for an unqualified identifier x to be resolved as curmodule.x. *)
 | Record_or_dc             of record_or_dc    (* to honor interleavings of "open" and record definitions *)
 
-type string_set = set<string>
+type string_set = set string
 
 type exported_id_kind = (* kinds of identifiers exported by a module *)
 | Exported_id_term_type (* term and type identifiers *)
 | Exported_id_field     (* field identifiers *)
-type exported_id_set = exported_id_kind -> ref<string_set>
+type exported_id_set = exported_id_kind -> ref string_set
 
 type env = {
-  curmodule:            option<lident>;                   (* name of the module being desugared *)
-  curmonad:             option<ident>;                    (* current monad being desugared *)
-  modules:              list<(lident * modul)>;           (* previously desugared modules *)
-  scope_mods:           list<scope_mod>;                  (* a STACK of toplevel or definition-local scope modifiers *)
-  exported_ids:         BU.smap<exported_id_set>;         (* identifiers (stored as strings for efficiency)
+  curmodule:            option lident;                   (* name of the module being desugared *)
+  curmonad:             option ident;                    (* current monad being desugared *)
+  modules:              list (lident * modul);           (* previously desugared modules *)
+  scope_mods:           list scope_mod;                  (* a STACK of toplevel or definition-local scope modifiers *)
+  exported_ids:         BU.smap exported_id_set;         (* identifiers (stored as strings for efficiency)
                                                              reachable in a module, not shadowed by "include"
                                                              declarations. Used only to handle such shadowings,
                                                              not "private"/"abstract" definitions which it is
@@ -84,17 +82,17 @@ type env = {
                                                              iden is in exported_ids[ModulA] if, and only if,
                                                              there is no 'include ModulB' (with ModulB.iden
                                                              defined or reachable) after iden in ModulA. *)
-  trans_exported_ids:   BU.smap<exported_id_set>;         (* transitive version of exported_ids along the
+  trans_exported_ids:   BU.smap exported_id_set;         (* transitive version of exported_ids along the
                                                              "include" relation: an identifier is in this set
                                                              for a module if and only if it is defined either
                                                              in this module or in one of its included modules. *)
-  includes:             BU.smap<(ref<(list<lident>)>)>;   (* list of "includes" declarations for each module. *)
+  includes:             BU.smap (ref (list lident));   (* list of "includes" declarations for each module. *)
   sigaccum:             sigelts;                          (* type declarations being accumulated for the current module *)
-  sigmap:               BU.smap<(sigelt * bool)>;         (* bool indicates that this was declared in an interface file *)
+  sigmap:               BU.smap (sigelt * bool);         (* bool indicates that this was declared in an interface file *)
   iface:                bool;                             (* whether or not we're desugaring an interface; different scoping rules apply *)
   admitted_iface:       bool;                             (* is it an admitted interface; different scoping rules apply *)
   expect_typ:           bool;                             (* syntactically, expect a type at this position in the term *)
-  remaining_iface_decls:list<(lident*list<Parser.AST.decl>)>;  (* A map from interface names to their stil-to-be-processed top-level decls *)
+  remaining_iface_decls:list (lident*list Parser.AST.decl);  (* A map from interface names to their stil-to-be-processed top-level decls *)
   syntax_only:          bool;                             (* Whether next push should skip type-checking *)
   ds_hooks:             dsenv_hooks;                       (* hooks that the interactive more relies onto for symbol tracking *)
   dep_graph:            FStar.Parser.Dep.deps
@@ -104,7 +102,7 @@ and dsenv_hooks =
     ds_push_include_hook : env -> lident -> unit;
     ds_push_module_abbrev_hook : env -> ident -> lident -> unit }
 
-type withenv<'a> = env -> 'a * env
+type withenv 'a = env -> 'a * env
 
 let default_ds_hooks =
   { ds_push_open_hook = (fun _ _ -> ());
@@ -112,7 +110,7 @@ let default_ds_hooks =
     ds_push_module_abbrev_hook = (fun _ _ _ -> ()) }
 
 type foundname =
-  | Term_name of typ * list<attribute>
+  | Term_name of typ * list attribute
   | Eff_name  of sigelt * lident
 
 let set_iface env b = {env with iface=b}
@@ -121,7 +119,7 @@ let set_admitted_iface e b = {e with admitted_iface=b}
 let admitted_iface e = e.admitted_iface
 let set_expect_typ e b = {e with expect_typ=b}
 let expect_typ e = e.expect_typ
-let all_exported_id_kinds: list<exported_id_kind> = [ Exported_id_field; Exported_id_term_type ]
+let all_exported_id_kinds: list exported_id_kind = [ Exported_id_field; Exported_id_term_type ]
 let transitive_exported_ids env lid =
     let module_name = Ident.string_of_lid lid in
     match BU.smap_try_find env.trans_exported_ids module_name with
@@ -190,18 +188,18 @@ let bv_to_name bv r = bv_to_name (set_bv_range bv r)
 let unmangleMap = [("op_ColonColon", "Cons", delta_constant, Some Data_ctor);
                    ("not", "op_Negation", delta_equational, None)]
 
-let unmangleOpName (id:ident) : option<term> =
+let unmangleOpName (id:ident) : option term =
   find_map unmangleMap (fun (x,y,dd,dq) ->
     if string_of_id id = x
     then Some (S.fvar (lid_of_path ["Prims"; y] (range_of_id id)) dd dq) //NS delta ok
     else None)
 
-type cont_t<'a> =
+type cont_t 'a =
     | Cont_ok of 'a  (* found *)
     | Cont_fail      (* not found, do not retry *)
     | Cont_ignore    (* not found, retry *)
 
-let option_of_cont (k_ignore: unit -> option<'a>) = function
+let option_of_cont (k_ignore: unit -> option 'a) = function
     | Cont_ok a -> Some a
     | Cont_fail -> None
     | Cont_ignore -> k_ignore ()
@@ -224,10 +222,10 @@ let find_in_record ns id record cont =
  else
       Cont_ignore
 
-let get_exported_id_set (e: env) (mname: string) : option<(exported_id_kind -> ref<string_set>)> =
+let get_exported_id_set (e: env) (mname: string) : option (exported_id_kind -> ref string_set) =
     BU.smap_try_find e.exported_ids mname
 
-let get_trans_exported_id_set (e: env) (mname: string) : option<(exported_id_kind -> ref<string_set>)> =
+let get_trans_exported_id_set (e: env) (mname: string) : option (exported_id_kind -> ref string_set) =
     BU.smap_try_find e.trans_exported_ids mname
 
 let string_of_exported_id_kind = function
@@ -245,12 +243,12 @@ let is_exported_id_field = function
 
 let find_in_module_with_includes
     (eikind: exported_id_kind)
-    (find_in_module: lident -> cont_t<'a>)
-    (find_in_module_default: cont_t<'a>)
+    (find_in_module: lident -> cont_t 'a)
+    (find_in_module_default: cont_t 'a)
     env
     (ns: lident)
     (id: ident)
-    : cont_t<'a> =
+    : cont_t 'a =
   let idstr = string_of_id id in
   let rec aux = function
   | [] ->
@@ -284,11 +282,11 @@ let try_lookup_id''
   env
   (id: ident)
   (eikind: exported_id_kind)
-  (k_local_binding: local_binding -> cont_t<'a>)
-  (k_rec_binding:   rec_binding   -> cont_t<'a>)
-  (k_record: (record_or_dc) -> cont_t<'a>)
-  (find_in_module: lident -> cont_t<'a>)
-  (lookup_default_id: cont_t<'a> -> ident -> cont_t<'a>) : option<'a>
+  (k_local_binding: local_binding -> cont_t 'a)
+  (k_rec_binding:   rec_binding   -> cont_t 'a)
+  (k_record: (record_or_dc) -> cont_t 'a)
+  (find_in_module: lident -> cont_t 'a)
+  (lookup_default_id: cont_t 'a -> ident -> cont_t 'a) : option 'a
   =
     let check_local_binding_id : local_binding -> bool = function
       (id', _, _) -> string_of_id id' = string_of_id id
@@ -356,7 +354,7 @@ let find_in_module env lid k_global_def k_not_found =
         | None -> k_not_found
     end
 
-let try_lookup_id env (id:ident) : option<term> =
+let try_lookup_id env (id:ident) : option term =
   match unmangleOpName id with
   | Some f -> Some f
   | _ ->
@@ -367,8 +365,8 @@ let try_lookup_id env (id:ident) : option<term> =
 let lookup_default_id
     env
     (id: ident)
-    (k_global_def: lident -> sigelt * bool -> cont_t<'a>)
-    (k_not_found: cont_t<'a>)
+    (k_global_def: lident -> sigelt * bool -> cont_t 'a)
+    (k_not_found: cont_t 'a)
   =
   let find_in_monad = match env.curmonad with
   | Some _ ->
@@ -394,7 +392,7 @@ let module_is_defined env lid =
     lid_is_curmod env lid ||
     List.existsb (fun x -> lid_equals lid (fst x)) env.modules
 
-let resolve_module_name env lid (honor_ns: bool) : option<lident> =
+let resolve_module_name env lid (honor_ns: bool) : option lident =
     let nslen = List.length (ns_of_lid lid) in
     let rec aux = function
         | [] ->
@@ -467,12 +465,12 @@ let resolve_in_open_namespaces''
   env
   lid
   (eikind: exported_id_kind)
-  (k_local_binding: local_binding -> cont_t<'a>)
-  (k_rec_binding:   rec_binding   -> cont_t<'a>)
-  (k_record: (record_or_dc) -> cont_t<'a>)
-  (f_module: lident -> cont_t<'a>)
-  (l_default: cont_t<'a> -> ident -> cont_t<'a>)
-  : option<'a> =
+  (k_local_binding: local_binding -> cont_t 'a)
+  (k_rec_binding:   rec_binding   -> cont_t 'a)
+  (k_record: (record_or_dc) -> cont_t 'a)
+  (f_module: lident -> cont_t 'a)
+  (l_default: cont_t 'a -> ident -> cont_t 'a)
+  : option 'a =
   match ns_of_lid lid with
   | _ :: _ ->
     begin match resolve_module_name env (set_lid_range (lid_of_ids (ns_of_lid lid)) (range_of_lid lid)) true with
@@ -483,17 +481,17 @@ let resolve_in_open_namespaces''
   | [] ->
     try_lookup_id'' env (ident_of_lid lid) eikind k_local_binding k_rec_binding k_record f_module l_default
 
-let cont_of_option (k_none: cont_t<'a>) = function
+let cont_of_option (k_none: cont_t 'a) = function
     | Some v -> Cont_ok v
     | None -> k_none
 
 let resolve_in_open_namespaces'
   env
   lid
-  (k_local_binding: local_binding -> option<'a>)
-  (k_rec_binding:   rec_binding   -> option<'a>)
-  (k_global_def: lident -> (sigelt * bool) -> option<'a>)
-  : option<'a> =
+  (k_local_binding: local_binding -> option 'a)
+  (k_rec_binding:   rec_binding   -> option 'a)
+  (k_global_def: lident -> (sigelt * bool) -> option 'a)
+  : option 'a =
   let k_global_def' k lid def = cont_of_option k (k_global_def lid def) in
   let f_module lid' = let k = Cont_ignore in find_in_module env lid' (k_global_def' k) k in
   let l_default k i = lookup_default_id env i (k_global_def' k) k in
@@ -526,7 +524,7 @@ let ns_of_lid_equals (lid: lident) (ns: lident) =
     List.length (ns_of_lid lid) = List.length (ids_of_lid ns) &&
     lid_equals (lid_of_ids (ns_of_lid lid)) ns
 
-let delta_depth_of_declaration (lid:lident) (quals:list<qualifier>) =
+let delta_depth_of_declaration (lid:lident) (quals:list qualifier) =
     let dd = if U.is_primop_lid lid
             || (quals |> BU.for_some (function Projector _ | Discriminator _ -> true | _ -> false))
             then delta_equational
@@ -536,7 +534,7 @@ let delta_depth_of_declaration (lid:lident) (quals:list<qualifier>) =
     then Delta_abstract dd
     else dd
 
-let try_lookup_name any_val exclude_interf env (lid:lident) : option<foundname> =
+let try_lookup_name any_val exclude_interf env (lid:lident) : option foundname =
   let occurrence_range = Ident.range_of_lid lid in
 
   let k_global_def source_lid = function
@@ -591,7 +589,7 @@ let try_lookup_name any_val exclude_interf env (lid:lident) : option<foundname> 
   | None -> resolve_in_open_namespaces'  env lid k_local_binding k_rec_binding k_global_def
   | x -> x
 
-let try_lookup_effect_name' exclude_interf env (lid:lident) : option<(sigelt*lident)> =
+let try_lookup_effect_name' exclude_interf env (lid:lident) : option (sigelt*lident) =
   match try_lookup_name true exclude_interf env lid with
     | Some (Eff_name(o, l)) -> Some (o,l)
     | _ -> None
@@ -669,20 +667,20 @@ let try_lookup_definition env (lid:lident) =
   resolve_in_open_namespaces' env lid (fun _ -> None) (fun _ -> None) k_global_def
 
 
-let empty_include_smap : BU.smap<(ref<(list<lident>)>)> = new_sigmap()
-let empty_exported_id_smap : BU.smap<exported_id_set> = new_sigmap()
+let empty_include_smap : BU.smap (ref (list lident)) = new_sigmap()
+let empty_exported_id_smap : BU.smap exported_id_set = new_sigmap()
 
-let try_lookup_lid' any_val exclude_interface env (lid:lident) : option<(term * list<attribute>)> =
+let try_lookup_lid' any_val exclude_interface env (lid:lident) : option (term * list attribute) =
   match try_lookup_name any_val exclude_interface env lid with
     | Some (Term_name (e, attrs)) -> Some (e, attrs)
     | _ -> None
 
-let drop_attributes (x:option<(term * list<attribute>)>) :option<(term)> =
+let drop_attributes (x:option (term * list attribute)) :option (term) =
   match x with
   | Some (t, _) -> Some t
   | None        -> None
 
-let try_lookup_lid_with_attributes (env:env) (l:lident) :(option<(term * list<attribute>)>) = try_lookup_lid' env.iface false env l
+let try_lookup_lid_with_attributes (env:env) (l:lident) :(option (term * list attribute)) = try_lookup_lid' env.iface false env l
 let try_lookup_lid (env:env) l = try_lookup_lid_with_attributes env l |> drop_attributes
 let resolve_to_fully_qualified_name (env:env) (l:lident) =
     match try_lookup_lid env l with
@@ -706,12 +704,12 @@ let shorten_lid env lid =
     | Some lid' when string_of_lid lid' = string_of_lid lid -> lid_without_ns
     | _ -> shorten_lid' env lid
 
-let try_lookup_lid_with_attributes_no_resolve (env: env) l :option<(term * list<attribute>)> =
+let try_lookup_lid_with_attributes_no_resolve (env: env) l :option (term * list attribute) =
   let env' = {env with scope_mods = [] ; exported_ids=empty_exported_id_smap; includes=empty_include_smap }
   in
   try_lookup_lid_with_attributes env' l
 
-let try_lookup_lid_no_resolve (env: env) l :option<term> = try_lookup_lid_with_attributes_no_resolve env l |> drop_attributes
+let try_lookup_lid_no_resolve (env: env) l :option term = try_lookup_lid_with_attributes_no_resolve env l |> drop_attributes
 
 let try_lookup_datacon env (lid:lident) =
   let k_global_def lid se =
@@ -735,7 +733,7 @@ let find_all_datacons env (lid:lident) =
 
 let record_cache_aux_with_filter =
     // push, pop, etc. already signal-atomic: no need for BU.atomically
-    let record_cache : ref<list<list<record_or_dc>>> = BU.mk_ref [[]] in
+    let record_cache : ref (list (list record_or_dc)) = BU.mk_ref [[]] in
     let push () =
         record_cache := List.hd !record_cache::!record_cache in
     let pop () =
@@ -763,7 +761,7 @@ let rollback_record_cache = snd (fst (snd record_cache_aux))
 let peek_record_cache = fst (snd (snd record_cache_aux))
 let insert_record_cache = snd (snd (snd record_cache_aux))
 
-let extract_record (e:env) (new_globs: ref<(list<scope_mod>)>) = fun se -> match se.sigel with
+let extract_record (e:env) (new_globs: ref (list scope_mod)) = fun se -> match se.sigel with
   | Sig_bundle(sigs, _) ->
     let is_record = BU.for_some (function
       | RecordType _
@@ -852,8 +850,8 @@ let try_lookup_record_by_field_name env (fieldname:lident) =
         | Some r when r.is_record -> Some r
         | _ -> None
 
-let try_lookup_record_type env (typename:lident) : option<record_or_dc> =
-  let find_in_cache (name:lident) : option<record_or_dc> =
+let try_lookup_record_type env (typename:lident) : option record_or_dc =
+  let find_in_cache (name:lident) : option record_or_dc =
     let ns, id = ns_of_lid name, ident_of_lid name in
     BU.find_map (peek_record_cache()) (fun record ->
       if ident_equals (ident_of_lid record.typename) id
@@ -921,7 +919,7 @@ let push_bv env x =
   let (env, bv, _) = push_bv' env x in
   (env, bv)
 
-let push_top_level_rec_binding env0 (x:ident) dd : env * ref<bool> =
+let push_top_level_rec_binding env0 (x:ident) dd : env * ref bool =
   let l = qualify env0 x in
   if unique false true env0 l || Options.interactive ()
   then
@@ -936,9 +934,9 @@ let push_sigelt' fail_on_dup env s =
       | Some (se, _) ->
         begin match BU.find_opt (lid_equals l) (lids_of_sigelt se) with
           | Some l -> Range.string_of_range <| range_of_lid l
-          | None -> "<unknown>"
+          | None -> " unknown"
         end
-      | None -> "<unknown>" in
+      | None -> " unknown" in
     raise_error (Errors.Fatal_DuplicateTopLevelNames, (BU.format2 "Duplicate top-level names [%s]; previously declared at %s" (string_of_lid l) r)) (range_of_lid l) in
   let globals = BU.mk_ref env.scope_mods in
   let env =
@@ -1121,7 +1119,7 @@ let finish env modul =
     sigaccum=[];
   }
 
-let stack: ref<(list<env>)> = BU.mk_ref []
+let stack: ref (list env) = BU.mk_ref []
 let push env = BU.atomically (fun () ->
   push_record_cache();
   stack := env::!stack;
@@ -1169,8 +1167,8 @@ let finish_module_or_interface env modul =
   finish env modul, modul
 
 type exported_ids = {
-    exported_id_terms:list<string>;
-    exported_id_fields:list<string>
+    exported_id_terms:list string;
+    exported_id_fields:list string
 }
 let as_exported_ids (e:exported_id_set) =
     let terms = FStar.Compiler.Util.set_elements (!(e Exported_id_term_type)) in
@@ -1178,7 +1176,7 @@ let as_exported_ids (e:exported_id_set) =
     {exported_id_terms=terms;
      exported_id_fields=fields}
 
-let as_exported_id_set (e:option<exported_ids>) =
+let as_exported_id_set (e:option exported_ids) =
     match e with
     | None -> exported_id_set_new ()
     | Some e ->
@@ -1192,9 +1190,9 @@ let as_exported_id_set (e:option<exported_ids>) =
 
 
 type module_inclusion_info = {
-    mii_exported_ids:option<exported_ids>;
-    mii_trans_exported_ids:option<exported_ids>;
-    mii_includes:option<list<lident>>
+    mii_exported_ids:option exported_ids;
+    mii_trans_exported_ids:option exported_ids;
+    mii_includes:option (list lident)
 }
 
 let default_mii = {

@@ -13,8 +13,6 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-#light "off"
-// (c) Microsoft Corporation. All rights reserved
 module FStar.Syntax.Subst
 open FStar.Pervasives
 open FStar.Compiler.Effect
@@ -197,7 +195,7 @@ let mk_range r (s:subst_ts) =
      immediately if it is a variable
      or builds a delayed node otherwise *)
 let rec subst' (s:subst_ts) (t:term) : term =
-  let subst_tail (tl:list<list<subst_elt>>) = subst' (tl, snd s) in
+  let subst_tail (tl:list (list subst_elt)) = subst' (tl, snd s) in
   match s with
   | [], NoUseRange
   | [[]], NoUseRange -> t
@@ -690,8 +688,8 @@ let open_let_rec lbs (t:term) =
               (0, [], [])
     in
       (* Consider
-                let rec f<u> x = g x
-                and g<u> y = f y in
+                let rec f u x = g x
+                and g u y = f y in
                 f 0, g 0
             In de Bruijn notation, this is
                 let rec f x = g@1 x@0
@@ -761,7 +759,7 @@ let close_univ_vars_tscheme (us:univ_names) ((us', t):tscheme) =
    let s = List.mapi (fun i x -> UD(x, k + (n - i))) us in
    (us', subst s t)
 
-let subst_tscheme (s:list<subst_elt>) ((us, t):tscheme) =
+let subst_tscheme (s:list subst_elt) ((us, t):tscheme) =
     let s = shift_subst (List.length us) s in
     (us, subst s t)
 

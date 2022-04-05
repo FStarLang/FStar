@@ -2314,9 +2314,9 @@ let e_arrow : 'a 'b . 'a embedding -> 'b embedding -> ('a -> 'b) embedding =
         FStar_Syntax_Syntax.mk uu___ FStar_Compiler_Range.dummyRange in
       let emb_t_arr_a_b =
         FStar_Syntax_Syntax.ET_fun ((ea.emb_typ), (eb.emb_typ)) in
-      let printer1 f = "<fun>" in
+      let printer1 f = " fun" in
       let em f rng shadow_f norm =
-        lazy_embed (fun uu___ -> "<fun>") emb_t_arr_a_b rng t_arrow f
+        lazy_embed (fun uu___ -> " fun") emb_t_arr_a_b rng t_arrow f
           (fun uu___ ->
              let uu___1 = force_shadow shadow_f in
              match uu___1 with
