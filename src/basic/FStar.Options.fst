@@ -1297,7 +1297,7 @@ let rec specs_with_types warn_unsafe : list<(char * string * opt_type * string)>
 
        ( noshort,
         "__no_positivity",
-        Const (Bool true),
+        WithSideEffect ((fun _ -> if warn_unsafe then option_warning_callback "__no_positivity"), Const (Bool true)),
         "Don't check positivity of inductive types");
 
         ( noshort,

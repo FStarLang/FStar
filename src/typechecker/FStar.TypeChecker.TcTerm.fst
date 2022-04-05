@@ -699,13 +699,18 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
 
         (* Typechecked the quoted term just to elaborate it *)
         let env', _ = Env.clear_expected_typ env in
-        let qt, _, _ = tc_term ({ env' with lax = true }) qt in
+        let env' = { env' with lax = true } in
+        let qt, _, g = tc_term env' qt in
+        let g0 = { g with guard_f = Trivial } in //explicitly dropping the logical guard; this is just a quotation
+        let g0 = Rel.resolve_implicits env' g0 in
+
+
         let t = mk (Tm_quoted (qt, qi)) top.pos in
 
-        let t, lc, g = value_check_expected_typ env top (Inr (TcComm.lcomp_of_comp c)) Env.trivial_guard in
+        let t, lc, g = value_check_expected_typ env t (Inr (TcComm.lcomp_of_comp c)) Env.trivial_guard in
         let t = mk (Tm_meta(t, Meta_monadic_lift (Const.effect_PURE_lid, Const.effect_TAC_lid, S.t_term)))
                    t.pos in
-        t, lc, g
+        t, lc, Env.conj_guard g0 g
     end
 
   | Tm_lazy ({lkind=Lazy_embedding _ }) ->
