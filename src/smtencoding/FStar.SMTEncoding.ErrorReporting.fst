@@ -13,7 +13,6 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-#light "off"
 
 module FStar.SMTEncoding.ErrorReporting
 open FStar.Compiler.Effect
@@ -32,10 +31,10 @@ module BU = FStar.Compiler.Util
 exception Not_a_wp_implication of string
 type label = error_label
 type labels = error_labels
-let sort_labels (l:(list<(error_label * bool)>)) = List.sortWith (fun ((_, _, r1), _) ((_, _, r2), _) -> Range.compare r1 r2) l
+let sort_labels (l:(list (error_label * bool))) = List.sortWith (fun ((_, _, r1), _) ((_, _, r2), _) -> Range.compare r1 r2) l
 let remove_dups (l:labels) = BU.remove_dups (fun (_, m1, r1) (_, m2, r2) -> r1=r2 && m1=m2) l
 type msg = string * Range.range
-type ranges = list<(option<string> * Range.range)>
+type ranges = list (option string * Range.range)
 
 //decorate a term with an error label
 let fresh_label : string -> Range.range -> term -> label * term =
@@ -104,9 +103,9 @@ let label_goals use_env_msg  //when present, provides an alternate error message
         fresh_label msg rng t
     in
     let rec aux (default_msg:string) //the error message text to generate at a label
-                (ropt:option<Range.range>) //an optional position, if there was an enclosing Labeled node
-                (post_name_opt:option<string>) //the name of the current post-condition variable --- it is left uninstrumented
-                (labels:list<label>) //the labels accumulated so far
+                (ropt:option Range.range) //an optional position, if there was an enclosing Labeled node
+                (post_name_opt:option string) //the name of the current post-condition variable --- it is left uninstrumented
+                (labels:list label) //the labels accumulated so far
                 (q:term) //the term being instrumented
      =  match q.tm with
         | BoundV _
@@ -306,7 +305,7 @@ let label_goals use_env_msg  //when present, provides an alternate error message
 let detail_errors hint_replay
                   env
                  (all_labels:labels)
-                 (askZ3:list<decl> -> Z3.z3result)
+                 (askZ3:list decl -> Z3.z3result)
     : unit =
 
     let print_banner () =

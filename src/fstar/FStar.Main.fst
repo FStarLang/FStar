@@ -13,7 +13,6 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-#light "off"
 module FStar.Main
 open FStar.Compiler.Effect
 open FStar.Compiler.List
@@ -30,7 +29,7 @@ let _ = FStar.Version.dummy ()
 
 (* process_args:  parses command line arguments, setting FStar.Options *)
 (*                returns an error status and list of filenames        *)
-let process_args () : parse_cmdline_res * list<string> =
+let process_args () : parse_cmdline_res * list string =
   Options.parse_cmd_line ()
 
 (* cleanup: kills background Z3 processes; relevant when --n_cores > 1 *)
@@ -102,7 +101,7 @@ let load_native_tactics () =
 (* Need to keep names of input files for a second pass when prettyprinting *)
 (* This reference is set once in `go` and read in `main` if the print or *)
 (* print_in_place options are passed *)
-let fstar_files: ref<option<list<string>>> = Util.mk_ref None
+let fstar_files: ref (option (list string)) = Util.mk_ref None
 
 (****************************************************************************)
 (* Main function                                                            *)

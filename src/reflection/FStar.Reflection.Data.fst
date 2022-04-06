@@ -1,4 +1,18 @@
-#light "off"
+(*
+   Copyright 2008-2022 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
 module FStar.Reflection.Data
 
 open FStar.Pervasives
@@ -18,9 +32,9 @@ module Z     = FStar.BigInt
 open FStar.Ident
 module PC = FStar.Parser.Const
 
-type name = list<string>
+type name = list string
 type typ  = term
-type binders = list<binder>
+type binders = list binder
 
 type vconst =
     | C_Unit
@@ -34,7 +48,7 @@ type vconst =
 
 type pattern =
     | Pat_Constant of vconst
-    | Pat_Cons     of fv * list<(pattern * bool)>
+    | Pat_Cons     of fv * list (pattern * bool)
     | Pat_Var      of bv
     | Pat_Wild     of bv
     | Pat_Dot_Term of bv * term
@@ -59,10 +73,10 @@ type term_view =
     | Tv_Refine    of bv * term
     | Tv_Const     of vconst
     | Tv_Uvar      of Z.t * ctx_uvar_and_subst
-    | Tv_Let       of bool * list<term> * bv * term * term
-    | Tv_Match     of term * option<match_returns_ascription> * list<branch>
-    | Tv_AscribedT of term * term * option<term> * bool
-    | Tv_AscribedC of term * comp * option<term> * bool
+    | Tv_Let       of bool * list term * bv * term * term
+    | Tv_Match     of term * option match_returns_ascription * list branch
+    | Tv_AscribedT of term * term * option term * bool
+    | Tv_AscribedC of term * comp * option term * bool
     | Tv_Unknown
 
 (* This is a mirror of FStar.Syntax.Syntax.qualifier *)
@@ -83,8 +97,8 @@ type qualifier =
   | Reflectable of lid
   | Discriminator of lid
   | Projector of lid * ident
-  | RecordType of (list<ident> * list<ident>)
-  | RecordConstructor of (list<ident> * list<ident>)
+  | RecordType of (list ident * list ident)
+  | RecordConstructor of (list ident * list ident)
   | Action of lid
   | ExceptionConstructor
   | HasMaskedEffect
@@ -97,29 +111,29 @@ type bv_view = {
     bv_sort : typ;
 }
 
-type binder_view = bv * (aqualv * list<term>)
+type binder_view = bv * (aqualv * list term)
 
 type comp_view =
-    | C_Total of typ * list<term>  //decreases clause
-    | C_GTotal of typ * list<term> //idem
+    | C_Total of typ * list term  //decreases clause
+    | C_GTotal of typ * list term //idem
     | C_Lemma of term * term * term
-    | C_Eff of list<unit> * name * term * list<argv>
+    | C_Eff of list unit * name * term * list argv
 
 type ctor = name * typ
 
 type lb_view = {
     lb_fv : fv;
-    lb_us : list<univ_name>;
+    lb_us : list univ_name;
     lb_typ : typ;
     lb_def : term;
 }
 
 type sigelt_view =
-    | Sg_Let of bool * list<letbinding>
+    | Sg_Let of bool * list letbinding
         // The bool indicates if it's a let rec
         // Non-empty list of (possibly) mutually recursive let-bindings
-    | Sg_Inductive of name * list<univ_name> * list<binder> * typ * list<ctor> // name, params, type, constructors
-    | Sg_Val of name * list<univ_name> * typ
+    | Sg_Inductive of name * list univ_name * list binder * typ * list ctor // name, params, type, constructors
+    | Sg_Val of name * list univ_name * typ
     | Unk
 
 type var = Z.t
@@ -359,4 +373,4 @@ let ord_Eq_fv = lid_as_fv ord_Eq_lid delta_constant (Some Data_ctor)
 let ord_Gt_fv = lid_as_fv ord_Gt_lid delta_constant (Some Data_ctor)
 
 (* Needed so this appears in the ocaml output for fstar-tactics-lib *)
-type decls = list<sigelt>
+type decls = list sigelt

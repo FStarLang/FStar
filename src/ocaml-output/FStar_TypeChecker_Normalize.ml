@@ -1426,7 +1426,7 @@ let (reduce_primops :
                                                 FStar_Syntax_Print.term_to_string
                                                   reduced in
                                               FStar_Compiler_Util.print2
-                                                "primop: <%s> reduced to <%s>\n"
+                                                "primop: <%s> reduced to  %s\n"
                                                 uu___9 uu___10);
                                          FStar_Syntax_Util.mk_app reduced
                                            args_2))))

@@ -13,7 +13,6 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-#light "off"
 
 //Top-level invocations into the universal type-checker FStar.TypeChecker
 module FStar.Universal
@@ -34,7 +33,7 @@ and an lid for its name. *)
 val module_or_interface_name : Syntax.modul -> bool * lid
 
 (* Uses the dsenv inside the TcEnv.env to run the computation. *)
-val with_dsenv_of_tcenv : TcEnv.env -> DsEnv.withenv<'a> -> 'a * TcEnv.env
+val with_dsenv_of_tcenv : TcEnv.env -> DsEnv.withenv 'a -> 'a * TcEnv.env
 
 (* Initialize a clean environment, built from a dependency graph. The
 graph is used to populate the internal dsenv of the tcenv. *)
@@ -42,10 +41,10 @@ val init_env : Dep.deps -> TcEnv.env
 
 (* Interactive mode: checking a fragment of code. *)
 val tc_one_fragment :
-    option<Syntax.modul> ->
+    option Syntax.modul ->
     TcEnv.env_t ->
     FStar.Parser.ParseIt.input_frag ->
-    option<Syntax.modul> * TcEnv.env
+    option Syntax.modul * TcEnv.env
 
 (* Load an interface file into the dsenv. *)
 val load_interface_decls :
@@ -56,16 +55,16 @@ val load_interface_decls :
 (* Batch mode: check one file. *)
 val tc_one_file :
     uenv ->
-    option<string> ->
+    option string ->
     string ->
     FStar.Parser.Dep.parsing_data ->
-    tc_result * option<FStar.Extraction.ML.Syntax.mllib> * uenv
+    tc_result * option FStar.Extraction.ML.Syntax.mllib * uenv
 
 (* A thin wrapper for tc_one_file, called by the interactive mode.
 Basically discards any information about extraction. *)
 val tc_one_file_for_ide :
     TcEnv.env_t ->
-    option<string> ->
+    option string ->
     string ->
     FStar.Parser.Dep.parsing_data ->
     tc_result * TcEnv.env_t
@@ -79,6 +78,6 @@ val needs_interleaving :
 
 (* Batch mode: check multiple files. *)
 val batch_mode_tc :
-    list<string> ->
+    list string ->
     FStar.Parser.Dep.deps ->
-    list<tc_result> * uenv * (uenv -> uenv)
+    list tc_result * uenv * (uenv -> uenv)

@@ -13,7 +13,6 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-#light "off"
 module FStar.Getopt
 open FStar.Compiler.Effect module List = FStar.Compiler.List
 open FStar.Compiler.Effect module List = FStar.Compiler.List
@@ -21,19 +20,19 @@ open FStar.BaseTypes
 
 val noshort : char
 val nolong : string
-type opt_variant<'a> =
+type opt_variant 'a =
   | ZeroArgs of (unit -> 'a)
   | OneArg of (string -> 'a) * string
 
-type opt'<'a> = char * string * opt_variant<'a> * string
-type opt = opt'<unit>
+type opt' 'a = char * string * opt_variant 'a * string
+type opt = opt' unit
 
 type parse_cmdline_res =
   | Help
   | Error of string
   | Success
 
-val parse_cmdline: list<opt> -> (string -> parse_cmdline_res) -> parse_cmdline_res
-val parse_string: list<opt> -> (string -> parse_cmdline_res) -> string -> parse_cmdline_res
-val parse_list: list<opt> -> (string -> parse_cmdline_res) -> list<string> -> parse_cmdline_res
-val cmdline: unit -> list<string>
+val parse_cmdline: list opt -> (string -> parse_cmdline_res) -> parse_cmdline_res
+val parse_string: list opt -> (string -> parse_cmdline_res) -> string -> parse_cmdline_res
+val parse_list: list opt -> (string -> parse_cmdline_res) -> list string -> parse_cmdline_res
+val cmdline: unit -> list string

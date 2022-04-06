@@ -15,7 +15,6 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-#light "off"
 (* -------------------------------------------------------------------- *)
 module FStar.Extraction.ML.Syntax
 open FStar.Compiler.Effect
@@ -30,7 +29,7 @@ open FStar.BaseTypes
 (* -------------------------------------------------------------------- *)
 type mlsymbol = string
 type mlident  = mlsymbol
-type mlpath   = list<mlsymbol> * mlsymbol //Path and name of a module
+type mlpath   = list mlsymbol * mlsymbol //Path and name of a module
 
 (* -------------------------------------------------------------------- *)
 let krml_keywords = []
@@ -76,8 +75,8 @@ let string_of_mlpath ((p, s) : mlpath) : mlsymbol =
 
 
 (* -------------------------------------------------------------------- *)
-type mlidents  = list<mlident>
-type mlsymbols = list<mlsymbol>
+type mlidents  = list mlident
+type mlsymbols = list mlsymbol
 
 (* -------------------------------------------------------------------- *)
 type e_tag =
@@ -92,8 +91,8 @@ let dummy_loc: mlloc = 0, ""
 type mlty =
 | MLTY_Var   of mlident
 | MLTY_Fun   of mlty * e_tag * mlty
-| MLTY_Named of list<mlty> * mlpath
-| MLTY_Tuple of list<mlty>
+| MLTY_Named of list mlty * mlpath
+| MLTY_Tuple of list mlty
 | MLTY_Top  (* \mathbb{T} type in the thesis, to be used when OCaml is not expressive enough for the source type *)
 | MLTY_Erased //a type that extracts to unit
 
@@ -102,21 +101,21 @@ type mltyscheme = mlidents * mlty   //forall a1..an. t  (the list of binders can
 type mlconstant =
 | MLC_Unit
 | MLC_Bool   of bool
-| MLC_Int    of string * option<(signedness * width)>
+| MLC_Int    of string * option (signedness * width)
 | MLC_Float  of float
 | MLC_Char   of char
 | MLC_String of string
-| MLC_Bytes  of array<byte>
+| MLC_Bytes  of array byte
 
 type mlpattern =
 | MLP_Wild
 | MLP_Const  of mlconstant
 | MLP_Var    of mlident
-| MLP_CTor   of mlpath * list<mlpattern>
-| MLP_Branch of list<mlpattern>
+| MLP_CTor   of mlpath * list mlpattern
+| MLP_Branch of list mlpattern
 (* SUGAR *)
-| MLP_Record of list<mlsymbol> * list<(mlsymbol * mlpattern)>
-| MLP_Tuple  of list<mlpattern>
+| MLP_Record of list mlsymbol * list (mlsymbol * mlpattern)
+| MLP_Tuple  of list mlpattern
 
 
 (* metadata, suitable for either the C or the OCaml backend *)
@@ -142,11 +141,11 @@ type meta =
   | CIfDef
   | CMacro
   | Deprecated of string
-  | RemoveUnusedTypeParameters of list<int> * FStar.Compiler.Range.range //positional
+  | RemoveUnusedTypeParameters of list int * FStar.Compiler.Range.range //positional
   | HasValDecl of FStar.Compiler.Range.range //this symbol appears in the interface of a module
 
 // rename
-type metadata = list<meta>
+type metadata = list meta
 
 type mlletflavor =
   | Rec
@@ -157,20 +156,20 @@ type mlexpr' =
 | MLE_Var    of mlident
 | MLE_Name   of mlpath
 | MLE_Let    of mlletbinding * mlexpr //tyscheme for polymorphic recursion
-| MLE_App    of mlexpr * list<mlexpr> //why are function types curried, but the applications not curried
-| MLE_TApp   of mlexpr * list<mlty>
-| MLE_Fun    of list<(mlident * mlty)> * mlexpr
-| MLE_Match  of mlexpr * list<mlbranch>
+| MLE_App    of mlexpr * list mlexpr //why are function types curried, but the applications not curried
+| MLE_TApp   of mlexpr * list mlty
+| MLE_Fun    of list (mlident * mlty) * mlexpr
+| MLE_Match  of mlexpr * list mlbranch
 | MLE_Coerce of mlexpr * mlty * mlty
 (* SUGAR *)
-| MLE_CTor   of mlpath * list<mlexpr>
-| MLE_Seq    of list<mlexpr>
-| MLE_Tuple  of list<mlexpr>
-| MLE_Record of list<mlsymbol> * list<(mlsymbol * mlexpr)>
+| MLE_CTor   of mlpath * list mlexpr
+| MLE_Seq    of list mlexpr
+| MLE_Tuple  of list mlexpr
+| MLE_Record of list mlsymbol * list (mlsymbol * mlexpr)
 | MLE_Proj   of mlexpr * mlpath
-| MLE_If     of mlexpr * mlexpr * option<mlexpr>
-| MLE_Raise  of mlpath * list<mlexpr>
-| MLE_Try    of mlexpr * list<mlbranch>
+| MLE_If     of mlexpr * mlexpr * option mlexpr
+| MLE_Raise  of mlpath * list mlexpr
+| MLE_Try    of mlexpr * list mlbranch
 
 and mlexpr = {
     expr:mlexpr';
@@ -178,24 +177,24 @@ and mlexpr = {
     loc: mlloc;
 }
 
-and mlbranch = mlpattern * option<mlexpr> * mlexpr
+and mlbranch = mlpattern * option mlexpr * mlexpr
 
 and mllb = {
     mllb_name:mlident;
-    mllb_tysc:option<mltyscheme>; // May be None for top-level bindings only
+    mllb_tysc:option mltyscheme; // May be None for top-level bindings only
     mllb_add_unit:bool;
     mllb_def:mlexpr;
     mllb_meta:metadata;
     print_typ:bool;
 }
 
-and mlletbinding = mlletflavor * list<mllb>
+and mlletbinding = mlletflavor * list mllb
 
 type mltybody =
 | MLTD_Abbrev of mlty
-| MLTD_Record of list<(mlsymbol * mlty)>
-| MLTD_DType  of list<(mlsymbol * list<(mlsymbol * mlty)>)>
-    (*list of constructors? list<mlty> is the list of arguments of the constructors?
+| MLTD_Record of list (mlsymbol * mlty)
+| MLTD_DType  of list (mlsymbol * list (mlsymbol * mlty))
+    (*list of constructors? list mlty is the list of arguments of the constructors?
         One could have instead used a mlty and tupled the argument types?
      *)
 
@@ -203,22 +202,22 @@ type mltybody =
 type one_mltydecl = {
   tydecl_assumed : bool; // bool: this was assumed (C backend)
   tydecl_name    : mlsymbol;
-  tydecl_ignored : option<mlsymbol>;
+  tydecl_ignored : option mlsymbol;
   tydecl_parameters : mlidents;
   tydecl_meta    : metadata;
-  tydecl_defn    : option<mltybody>
+  tydecl_defn    : option mltybody
 }
 
-type mltydecl = list<one_mltydecl> // each element of this list is one among a collection of mutually defined types
+type mltydecl = list one_mltydecl // each element of this list is one among a collection of mutually defined types
 
 type mlmodule1 =
 | MLM_Ty  of mltydecl
 | MLM_Let of mlletbinding
-| MLM_Exn of mlsymbol * list<(mlsymbol * mlty)>
+| MLM_Exn of mlsymbol * list (mlsymbol * mlty)
 | MLM_Top of mlexpr // this seems outdated
 | MLM_Loc of mlloc // Location information; line number + file; only for the OCaml backend
 
-type mlmodule = list<mlmodule1>
+type mlmodule = list mlmodule1
 
 type mlsig1 =
 | MLS_Mod of mlsymbol * mlsig
@@ -226,16 +225,16 @@ type mlsig1 =
     (*used for both type schemes and inductive types. Even inductives are defined in OCaml using type ....,
         unlike data in Haskell *)
 | MLS_Val of mlsymbol * mltyscheme
-| MLS_Exn of mlsymbol * list<mlty>
+| MLS_Exn of mlsymbol * list mlty
 
-and mlsig = list<mlsig1>
+and mlsig = list mlsig1
 
 let with_ty_loc t e l = {expr=e; mlty=t; loc = l }
 let with_ty t e = with_ty_loc t e dummy_loc
 
 (* -------------------------------------------------------------------- *)
 type mllib =
-  | MLLib of list<(mlpath * option<(mlsig * mlmodule)> * mllib)> //Last field never seems to be used. Refactor?
+  | MLLib of list (mlpath * option (mlsig * mlmodule) * mllib) //Last field never seems to be used. Refactor?
 
 (* -------------------------------------------------------------------- *)
 // do NOT remove Prims, because all mentions of unit/bool in F* are actually Prims.unit/bool.

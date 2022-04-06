@@ -14,7 +14,6 @@
    limitations under the License.
 *)
 
-#light "off"
 module FStar.Prettyprint
 open FStar.Compiler.Effect
 open FStar.Compiler.List

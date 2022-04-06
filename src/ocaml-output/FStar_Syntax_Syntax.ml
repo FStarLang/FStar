@@ -15,7 +15,6 @@ type pragma =
   | PushOptions of Prims.string FStar_Pervasives_Native.option 
   | PopOptions 
   | RestartSolver 
-  | LightOff 
   | PrintEffectsGraph [@@deriving yojson,show]
 let (uu___is_SetOptions : pragma -> Prims.bool) =
   fun projectee ->
@@ -39,8 +38,6 @@ let (uu___is_PopOptions : pragma -> Prims.bool) =
 let (uu___is_RestartSolver : pragma -> Prims.bool) =
   fun projectee ->
     match projectee with | RestartSolver -> true | uu___ -> false
-let (uu___is_LightOff : pragma -> Prims.bool) =
-  fun projectee -> match projectee with | LightOff -> true | uu___ -> false
 let (uu___is_PrintEffectsGraph : pragma -> Prims.bool) =
   fun projectee ->
     match projectee with | PrintEffectsGraph -> true | uu___ -> false

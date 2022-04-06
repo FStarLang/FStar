@@ -13,8 +13,6 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-#light "off"
-// (c) Microsoft Corporation. All rights reserved
 
 module FStar.TypeChecker.Util
 open FStar.Pervasives
@@ -36,7 +34,7 @@ open FStar.TypeChecker.Common
 open FStar.Syntax
 open FStar.Compiler.Dyn
 
-type lcomp_with_binder = option<bv> * lcomp
+type lcomp_with_binder = option bv * lcomp
 
 module SS = FStar.Syntax.Subst
 module S = FStar.Syntax.Syntax
@@ -177,7 +175,7 @@ let check_uvars r t =
 *)
 (************************************************************************)
 let extract_let_rec_annotation env {lbname=lbname; lbunivs=univ_vars; lbtyp=t; lbdef=e} :
-    list<univ_name>
+    list univ_name
    * typ
    * term
    * bool //true indicates that the type needs to be checked; false indicates that it is already checked
@@ -245,7 +243,7 @@ let extract_let_rec_annotation env {lbname=lbname; lbunivs=univ_vars; lbtyp=t; l
           move_decreases d (pfx@sfx) (U.comp_flags c')
         | _ -> failwith "Impossible"
   in
-  let extract_annot_from_body (lbtyp_opt:option<typ>)
+  let extract_annot_from_body (lbtyp_opt:option typ)
     : typ
     * term
     * bool
@@ -428,7 +426,7 @@ let extract_let_rec_annotation env {lbname=lbname; lbunivs=univ_vars; lbtyp=t; l
 //    in
 //    aux p exp
 
- let rec decorated_pattern_as_term (pat:pat) : list<bv> * term =
+ let rec decorated_pattern_as_term (pat:pat) : list bv * term =
     let mk f : term = mk f pat.p in
 
     let pat_as_arg (p, i) =
@@ -478,7 +476,7 @@ let mk_comp_l mname u_result result wp flags =
 
 let mk_comp md = mk_comp_l md.mname
 
-let effect_args_from_repr (repr:term) (is_layered:bool) (r:Range.range) : list<term> =
+let effect_args_from_repr (repr:term) (is_layered:bool) (r:Range.range) : list term =
   let err () =
     raise_error (Errors.Fatal_UnexpectedEffect,
       BU.format2 "Could not get effect args from repr %s with is_layered %s"
@@ -618,7 +616,7 @@ let join_lcomp env c1 c2 =
  * The separate guards are important when it is called from the pattern matching code (bind_cases)
  *   where the two guards are weakened using different branch conditions
  *)
-let lift_comps_sep_guards env c1 c2 (b:option<bv>) (for_bind:bool)
+let lift_comps_sep_guards env c1 c2 (b:option bv) (for_bind:bool)
 : lident * comp * comp * guard_t * guard_t =
   let c1 = Env.unfold_effect_abbrev env c1 in
   let c2 = Env.unfold_effect_abbrev env c2 in
@@ -641,7 +639,7 @@ let lift_comps_sep_guards env c1 c2 (b:option<bv>) (for_bind:bool)
       (BU.format2 "Effects %s and %s cannot be composed"
         (Print.lid_to_string c1.effect_name) (Print.lid_to_string c2.effect_name))) env.range
 
-let lift_comps env c1 c2 (b:option<bv>) (for_bind:bool)
+let lift_comps env c1 c2 (b:option bv) (for_bind:bool)
 : lident * comp * comp * guard_t
 = let l, c1, c2, g1, g2 = lift_comps_sep_guards env c1 c2 b for_bind in
   l, c1, c2, Env.conj_guard g1 g2
@@ -816,8 +814,8 @@ let return_value env eff_lid u_t_opt t v =
  *)
 let mk_indexed_bind env
   (m:lident) (n:lident) (p:lident) (bind_t:tscheme)
-  (ct1:comp_typ) (b:option<bv>) (ct2:comp_typ)
-  (flags:list<cflag>) (r1:Range.range) : comp * guard_t =
+  (ct1:comp_typ) (b:option bv) (ct2:comp_typ)
+  (flags:list cflag) (r1:Range.range) : comp * guard_t =
 
   let bind_name = BU.format3 "(%s, %s) |> %s"
     (m |> Ident.ident_of_lid |> string_of_id)
@@ -908,7 +906,7 @@ let mk_indexed_bind env
       | None -> S.null_binder ct1.result_typ
       | Some x -> S.mk_binder x in
 
-    let g_sort_is : list<term> =
+    let g_sort_is : list term =
       match (SS.compress g_b.binder_bv.sort).n with
       | Tm_arrow (bs, c) ->
         let bs, c = SS.open_comp bs c in
@@ -938,7 +936,7 @@ let mk_indexed_bind env
     let u, wp = List.hd bind_ct.comp_univs, fst (List.hd bind_ct.effect_args) in
     Env.pure_precondition_for_trivial_post env u bind_ct.result_typ wp Range.dummyRange in
 
-  let is : list<term> =  //indices of the resultant computation
+  let is : list term =  //indices of the resultant computation
     effect_args_from_repr (SS.compress bind_ct.result_typ) (U.is_layered p_ed) r1 in
 
   let c = mk_Comp ({
@@ -969,7 +967,7 @@ let mk_indexed_bind env
 
   c, guard
 
-let mk_wp_bind env (m:lident) (ct1:comp_typ) (b:option<bv>) (ct2:comp_typ) (flags:list<cflag>) (r1:Range.range)
+let mk_wp_bind env (m:lident) (ct1:comp_typ) (b:option bv) (ct2:comp_typ) (flags:list cflag) (r1:Range.range)
   : comp =
 
   let (md, a, kwp), (u_t1, t1, wp1), (u_t2, t2, wp2) =
@@ -996,7 +994,7 @@ let mk_wp_bind env (m:lident) (ct1:comp_typ) (b:option<bv>) (ct2:comp_typ) (flag
   let wp = mk_Tm_app (inst_effect_fun_with [u_t1;u_t2] env md bind_wp) wp_args t2.pos in
   mk_comp md u_t2 t2 wp flags
 
-let mk_bind env (c1:comp) (b:option<bv>) (c2:comp) (flags:list<cflag>) (r1:Range.range) : comp * guard_t =
+let mk_bind env (c1:comp) (b:option bv) (c2:comp) (flags:list cflag) (r1:Range.range) : comp * guard_t =
   let ct1, ct2 = Env.unfold_effect_abbrev env c1, Env.unfold_effect_abbrev env c2 in
 
   match Env.exists_polymonadic_bind env ct1.effect_name ct2.effect_name with
@@ -1021,7 +1019,7 @@ let mk_bind env (c1:comp) (b:option<bv>) (c2:comp) (flags:list<cflag>) (r1:Range
       else mk_wp_bind env m ct1 b ct2 flags r1, Env.trivial_guard in
     c, Env.conj_guard g_lift g_bind
 
-let bind_pure_wp_with env (wp1:typ) (c:comp) (flags:list<cflag>) : comp * guard_t =
+let bind_pure_wp_with env (wp1:typ) (c:comp) (flags:list cflag) : comp * guard_t =
   let r = Env.get_range env in
 
   let pure_c = S.mk_Comp ({
@@ -1083,7 +1081,7 @@ let weaken_precondition env lc (f:guard_formula) : lcomp =
   TcComm.mk_lcomp lc.eff_name lc.res_typ (weaken_flags lc.cflags) weaken
 
 
-let strengthen_comp env (reason:option<(unit -> string)>) (c:comp) (f:formula) flags : comp * guard_t =
+let strengthen_comp env (reason:option (unit -> string)) (c:comp) (f:formula) flags : comp * guard_t =
     if env.lax
     then c, Env.trivial_guard
     else let r = Env.get_range env in
@@ -1109,7 +1107,7 @@ let strengthen_comp env (reason:option<(unit -> string)>) (c:comp) (f:formula) f
          bind_pure_wp_with env pure_assert_wp c flags
 
 let strengthen_precondition
-            (reason:option<(unit -> string)>)
+            (reason:option (unit -> string))
             env
             (e_for_debugging_only:term)
             (lc:lcomp)
@@ -1273,7 +1271,7 @@ let bind r1 env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
             then Inl (c2, "both ml")
             else Inr "c1 not trivial, and both are not ML"
           in
-          let try_simplify () : either<(comp * guard_t * string), string> =
+          let try_simplify () : either (comp * guard_t * string) string =
             let aux_with_trivial_guard () =
               match aux () with
               | Inl (c, reason) -> Inl (c, trivial_guard, reason)
@@ -1485,7 +1483,7 @@ let weaken_guard g1 g2 = match g1, g2 with
  *
  * This forces the lcomp thunk and recreates it to keep the callers same
  *)
-let assume_result_eq_pure_term_in_m env (m_opt:option<lident>) (e:term) (lc:lcomp) : lcomp =
+let assume_result_eq_pure_term_in_m env (m_opt:option lident) (e:term) (lc:lcomp) : lcomp =
   (*
    * AR: m is the effect that we are going to do return in
    *)
@@ -1535,7 +1533,7 @@ let assume_result_eq_pure_term_in_m env (m_opt:option<lident>) (e:term) (lc:lcom
   else let c, g = refine () in
        TcComm.lcomp_of_comp_guard c g
 
-let maybe_assume_result_eq_pure_term_in_m env (m_opt:option<lident>) (e:term) (lc:lcomp) : lcomp =
+let maybe_assume_result_eq_pure_term_in_m env (m_opt:option lident) (e:term) (lc:lcomp) : lcomp =
   let should_return =
       not (env.lax)
    && not (Env.too_early_in_prims env) //we're not too early in prims
@@ -1551,7 +1549,7 @@ let maybe_assume_result_eq_pure_term env e lc =
 let maybe_return_e2_and_bind
         (r:Range.range)
         (env:env)
-        (e1opt:option<term>)
+        (e1opt:option term)
         (lc1:lcomp)
         (e2:term)
         (x, lc2)
@@ -1727,8 +1725,8 @@ let comp_pure_wp_false env (u:universe) (t:typ) =
  * (The last element of the list becomes the branch condition for the
      unreachable branch to check for pattern exhaustiveness)
  *)
-let get_neg_branch_conds (branch_conds:list<formula>)
-  : list<formula> * formula
+let get_neg_branch_conds (branch_conds:list formula)
+  : list formula * formula
   = branch_conds
     |> List.fold_left (fun (conds, acc) g ->
         let cond = U.mk_conj acc (g |> U.b2t |> U.mk_neg) in
@@ -1741,7 +1739,7 @@ let get_neg_branch_conds (branch_conds:list<formula>)
  * The formula in lcases is the individual branch guard, a boolean
  *)
 let bind_cases env0 (res_t:typ)
-  (lcases:list<(formula * lident * list<cflag> * (bool -> lcomp))>)
+  (lcases:list (formula * lident * list cflag * (bool -> lcomp)))
   (scrutinee:bv) : lcomp =
 
     let env = Env.push_binders env0 [scrutinee |> S.mk_binder] in
@@ -2110,7 +2108,7 @@ let maybe_coerce_lc env (e:term) (lc:lcomp) (exp_t:term) : term * lcomp * guard_
 
 (* Coerces regardless of expected type if a view exists, useful for matches *)
 (* Returns `None` if no coercion was applied. *)
-let coerce_views (env:Env.env) (e:term) (lc:lcomp) : option<(term * lcomp)> =
+let coerce_views (env:Env.env) (e:term) (lc:lcomp) : option (term * lcomp) =
     let rt = lc.res_typ in
     let rt = U.unrefine rt in
     let hd, args = U.head_and_args rt in
@@ -2335,7 +2333,7 @@ let remove_reify (t: S.term): S.term =
 (*********************************************************************************************)
 (* Instantiation and generalization *)
 (*********************************************************************************************)
-let maybe_implicit_with_meta_or_attr aq (attrs:list<attribute>) =
+let maybe_implicit_with_meta_or_attr aq (attrs:list attribute) =
   match aq, attrs with
   | Some (Meta _), _
   | Some (Implicit _), _::_ -> true
@@ -2356,8 +2354,8 @@ let maybe_instantiate (env:Env.env) e t =
         * recursively to catch all the binders across type
         * definitions. TODO: Move to library? Revise other uses
         * of arrow_formals{,_comp}?*)
-       let unfolded_arrow_formals (t:term) : list<binder> =
-         let rec aux (bs:list<binder>) (t:term) : list<binder> =
+       let unfolded_arrow_formals (t:term) : list binder =
+         let rec aux (bs:list binder) (t:term) : list binder =
            let t = N.unfold_whnf env t in
            let bs', t = U.arrow_formals t in
            match bs' with
@@ -2975,7 +2973,7 @@ let lift_tf_layered_effect (tgt:lident) (lift_ts:tscheme) env (c:comp) : comp * 
 
   let u, a, c_is = List.hd ct.comp_univs, ct.result_typ, ct.effect_args |> List.map fst in
 
-  //lift_ts has the arrow type: <u>a:Type -> ..bs.. -> f -> repr a is
+  //lift_ts has the arrow type:  <u>a:Type -> ..bs.. -> f -> repr a is
 
   let _, lift_t = Env.inst_tscheme_with lift_ts [u] in
 
@@ -3145,7 +3143,7 @@ let update_env_polymonadic_bind env m n p ty =
    and the field names of that constructor
  *)
 let try_lookup_record_type env (typename:lident)
-  : option<DsEnv.record_or_dc>
+  : option DsEnv.record_or_dc
   = try
       match Env.datacons_of_typ env typename with
       | _, [dc] ->
@@ -3188,13 +3186,13 @@ let try_lookup_record_type env (typename:lident)
 
 (*
    If ToSyntax guessed `uc`
-   and the typechecker decided that type `t: option<typ>` was the type
+   and the typechecker decided that type `t: option typ` was the type
    to be used for disambiguation, then if
 
     - t is None, the uc is used
     - otherwise t overrides uc
  *)
-let find_record_or_dc_from_typ env (t:option<typ>) (uc:unresolved_constructor) rng =
+let find_record_or_dc_from_typ env (t:option typ) (uc:unresolved_constructor) rng =
     let default_rdc () =
       match uc.uc_typename with
       | None ->
@@ -3276,10 +3274,10 @@ let field_name_matches (field_name:lident) (rdc:DsEnv.record_or_dc) (field:ident
 *)
 let make_record_fields_in_order env uc topt
        (rdc : DsEnv.record_or_dc)
-       (fas : list<(lident * 'a)>)
-       (not_found:ident -> option<'a>)
+       (fas : list (lident * 'a))
+       (not_found:ident -> option 'a)
        (rng : Range.range)
-  : list<'a>
+  : list 'a
   = let debug () =
       let print_rdc (rdc:DsEnv.record_or_dc) =
         BU.format3 "{typename=%s; constrname=%s; fields=[%s]}"
@@ -3368,7 +3366,7 @@ let ty_occurs_in (ty_lid:lident) (t:term) :bool = FStar.Compiler.Util.set_mem ty
 
 //this function is called during the positivity check, when we have a binder type that is a Tm_app, and t is the head node of Tm_app
 //it tries to get fvar from this t, since the type is already normalized, other cases should have been handled
-let rec try_get_fv (t:term) :option<(fv * universes)> =
+let rec try_get_fv (t:term) :option (fv * universes) =
   match (SS.compress t).n with
   | Tm_name _ -> None  //names are ok, e.g. some parameter or binder
   | Tm_fvar fv -> Some (fv, [])
@@ -3380,8 +3378,8 @@ let rec try_get_fv (t:term) :option<(fv * universes)> =
   | _ ->
     failwith ("try_get_fv: did not expect t to be a : " ^ (Print.tag_of_term t))
 
-type unfolded_memo_elt = list<(lident * args)>
-type unfolded_memo_t = ref<unfolded_memo_elt>
+type unfolded_memo_elt = list (lident * args)
+type unfolded_memo_t = ref unfolded_memo_elt
 
 //check if ilid applied to args has already been unfolded
 //in the memo table we only keep the type parameters, not indexes, but the passed args also contain indexes

@@ -15,7 +15,6 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 *)
-#light "off"
 module FStar.Syntax.Resugar //we should rename FStar.ToSyntax to something else
 open FStar
 open FStar.Compiler
@@ -192,11 +191,11 @@ let string_to_op s =
     end else
       None
 
-type expected_arity = option<int>
+type expected_arity = option int
 
 (* GM: This almost never actually returns an expected arity. It does so
 only for subtraction, I think. *)
-let rec resugar_term_as_op (t:S.term) : option<(string*expected_arity)> =
+let rec resugar_term_as_op (t:S.term) : option (string*expected_arity) =
   let infix_prim_ops = [
     (C.op_Addition    , "+" );
     (C.op_Subtraction , "-" );
@@ -237,7 +236,7 @@ let rec resugar_term_as_op (t:S.term) : option<(string*expected_arity)> =
       let length = String.length (nsstr fv.fv_name.v) in
       let str = if length=0 then (string_of_lid fv.fv_name.v)
           else BU.substring_from (string_of_lid fv.fv_name.v) (length+1) in
-      (* Check that it is of the shape dtuple<int>, and return that arity *)
+      (* Check that it is of the shape dtuple int, and return that arity *)
       if BU.starts_with str "dtuple"
          && Option.isSome (BU.safe_int_of_string (BU.substring_from str 6))
       then Some ("dtuple", BU.safe_int_of_string (BU.substring_from str 6))
@@ -450,7 +449,7 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
         | e ->
           List.fold_left (fun acc (x, qual) -> mk (A.App (acc, x, qual))) e args
       in
-      let args : list<(S.term * S.aqual)> =
+      let args : list (S.term * S.aqual) =
         if Options.print_implicits ()
         then args
         else filter_imp_args args in
@@ -574,7 +573,7 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
           resugar_as_app e args
 
         | Some (op, _) when op = "forall" || op = "exists" ->
-          (* desugared from QForall(binders * patterns * body) to Tm_app(forall, Tm_abs(binders, Tm_meta(body, meta_pattern(list<args>)*)
+          (* desugared from QForall(binders * patterns * body) to Tm_app(forall, Tm_abs(binders, Tm_meta(body, meta_pattern(list args)*)
           let rec uncurry xs pats (t:A.term) = match t.tm with
             | A.QExists(xs', (_, pats'), body)
             | A.QForall(xs', (_, pats'), body) ->
@@ -817,12 +816,12 @@ and resugar_ascription env (asc, tac_opt, b) =
 (* This entire function is of course very tied to the the desugaring
 of calc expressions in ToSyntax. This only really works for fully
 elaborated terms, sorry. *)
-and resugar_calc (env:DsEnv.env) (t0:S.term) : option<A.term> =
+and resugar_calc (env:DsEnv.env) (t0:S.term) : option A.term =
   let mk (a:A.term') : A.term =
     A.mk_term a t0.pos A.Un
   in
   (* Returns the non-resugared final relation and the calc_pack *)
-  let resugar_calc_finish (t:S.term) : option<(S.term * S.term)> =
+  let resugar_calc_finish (t:S.term) : option (S.term * S.term) =
     let hd, args = U.head_and_args t in
     match (SS.compress (U.un_uinst hd)).n, args with
     | Tm_fvar fv, [(_, Some { aqual_implicit = true }); // type
@@ -838,7 +837,7 @@ and resugar_calc (env:DsEnv.env) (t0:S.term) : option<A.term> =
         None
   in
   (* Un-eta expand a relation. Return it as-is if cannot be done. *)
-  let un_eta_rel (rel:S.term) : option<S.term> =
+  let un_eta_rel (rel:S.term) : option S.term =
     let bv_eq_tm (b:bv) (t:S.term) : bool =
       match (SS.compress t).n with
       | Tm_name b' when S.bv_eq b b' -> true
@@ -870,7 +869,7 @@ and resugar_calc (env:DsEnv.env) (t0:S.term) : option<A.term> =
   in
   (* Resugars an application of calc_step, returning the term, the relation,
    * the justifcation, and the rest of the proof. *)
-  let resugar_step (pack:S.term) : option<(S.term * S.term * S.term * S.term)> =
+  let resugar_step (pack:S.term) : option (S.term * S.term * S.term * S.term) =
     let hd, args = U.head_and_args pack in
     match (SS.compress (U.un_uinst hd)).n, args with
     | Tm_fvar fv, [(_, Some ({ aqual_implicit = true })); // type
@@ -889,7 +888,7 @@ and resugar_calc (env:DsEnv.env) (t0:S.term) : option<A.term> =
         None
   in
   (* Resugar an application of calc_init *)
-  let resugar_init (pack:S.term) : option<S.term> =
+  let resugar_init (pack:S.term) : option S.term =
     let hd, args = U.head_and_args pack in
     match (SS.compress (U.un_uinst hd)).n, args with
     | Tm_fvar fv, [(_, Some ({ aqual_implicit = true })); // type
@@ -901,7 +900,7 @@ and resugar_calc (env:DsEnv.env) (t0:S.term) : option<A.term> =
         None
   in
   (* Repeats the above function until it returns none; what remains should be a calc_init *)
-  let rec resugar_all_steps (pack:S.term) : option<(list<(S.term * S.term * S.term)> * S.term)> =
+  let rec resugar_all_steps (pack:S.term) : option (list (S.term * S.term * S.term) * S.term) =
     match resugar_step pack with
     | Some (t, r, j, k) ->
         BU.bind_opt (resugar_all_steps k) (fun (steps, k) ->
@@ -929,7 +928,7 @@ and resugar_calc (env:DsEnv.env) (t0:S.term) : option<A.term> =
       | _ -> fallback ()
       end
   in
-  let build_calc (rel:S.term) (x0:S.term) (steps : list<(S.term * S.term * S.term)>) : A.term =
+  let build_calc (rel:S.term) (x0:S.term) (steps : list (S.term * S.term * S.term)) : A.term =
     let r = resugar_term' env in
     mk (CalcProof (resugar_rel rel, r x0,
                     List.map (fun (z, rel, j) -> CalcStep (resugar_rel rel, r j, r z)) steps))
@@ -1060,7 +1059,7 @@ and resugar_comp' (env: DsEnv.env) (c:S.comp) : A.term =
     else
       mk (A.Construct(c.effect_name, [result]))
 
-and resugar_binder' env (b:S.binder) r : option<A.binder> =
+and resugar_binder' env (b:S.binder) r : option A.binder =
   BU.map_opt (resugar_bqual env b.binder_qual) begin fun imp ->
     let e = resugar_term' env b.binder_bv.sort in
     match (e.tm) with
@@ -1073,7 +1072,7 @@ and resugar_binder' env (b:S.binder) r : option<A.binder> =
         A.mk_binder (A.Annotated (bv_as_unique_ident b.binder_bv, e)) r A.Type_level imp
   end
 
-and resugar_bv_as_pat' env (v: S.bv) aqual (body_bv: BU.set<bv>) typ_opt =
+and resugar_bv_as_pat' env (v: S.bv) aqual (body_bv: BU.set bv) typ_opt =
   let mk a = A.mk_pattern a (S.range_of_bv v) in
   let used = BU.set_mem v body_bv in
   let pat =
@@ -1086,12 +1085,12 @@ and resugar_bv_as_pat' env (v: S.bv) aqual (body_bv: BU.set<bv>) typ_opt =
                then mk (A.PatAscribed (pat, (resugar_term' env typ, None)))
                else pat
 
-and resugar_bv_as_pat env (x:S.bv) qual body_bv: option<A.pattern> =
+and resugar_bv_as_pat env (x:S.bv) qual body_bv: option A.pattern =
   BU.map_opt
    (resugar_bqual env qual)
    (fun bq -> resugar_bv_as_pat' env x bq body_bv (Some <| SS.compress x.sort))
 
-and resugar_pat' env (p:S.pat) (branch_bv: set<bv>) : A.pattern =
+and resugar_pat' env (p:S.pat) (branch_bv: set bv) : A.pattern =
   (* We lose information when desugar PatAscribed to able to resugar it back *)
   let mk a = A.mk_pattern a p.p in
   let to_arg_qual bopt = // FIXME do (Some false) and None mean the same thing?
@@ -1115,7 +1114,7 @@ and resugar_pat' env (p:S.pat) (branch_bv: set<bv>) : A.pattern =
       else args in
     let args = List.map (fun (p, b) -> aux p (Some b)) args in
     resugar_plain_pat_cons' fv args
-  and aux (p:S.pat) (imp_opt:option<bool>)=
+  and aux (p:S.pat) (imp_opt:option bool)=
     match p.v with
     | Pat_constant c -> mk (A.PatConst c)
 
@@ -1188,7 +1187,7 @@ and resugar_pat' env (p:S.pat) (branch_bv: set<bv>) : A.pattern =
   aux p None
 // FIXME inspect uses of resugar_arg_qual and resugar_imp
 (* If resugar_arg_qual returns None, the corresponding binder should *not* be resugared *)
-and resugar_bqual env (q:S.bqual) : option<(option<A.arg_qualifier>)> =
+and resugar_bqual env (q:S.bqual) : option (option A.arg_qualifier) =
   match q with
   | None -> Some None
   | Some (S.Implicit b) ->
@@ -1204,7 +1203,7 @@ and resugar_aqual env (q:S.aqual) : A.imp =
   | None -> A.Nothing
   | Some a -> if a.aqual_implicit then A.Hash else A.Nothing
 
-let resugar_qualifier : S.qualifier -> option<A.qualifier> = function
+let resugar_qualifier : S.qualifier -> option A.qualifier = function
   | S.Assumption -> Some A.Assumption
   | S.New -> Some A.New
   | S.Private -> Some A.Private
@@ -1238,7 +1237,6 @@ let resugar_pragma = function
   | S.PushOptions s -> A.PushOptions s
   | S.PopOptions -> A.PopOptions
   | S.RestartSolver -> A.RestartSolver
-  | S.LightOff -> A.LightOff
   | S.PrintEffectsGraph -> A.PrintEffectsGraph
 
 let resugar_typ env datacon_ses se : sigelts * A.tycon =
@@ -1384,7 +1382,7 @@ let resugar_eff_decl' env r q ed =
   let decls = mandatory_members_decls@actions in
   mk_decl r q (A.NewEffect(DefineEffect(eff_name, eff_binders, eff_typ, decls)))
 
-let resugar_sigelt' env se : option<A.decl> =
+let resugar_sigelt' env se : option A.decl =
   match se.sigel with
   | Sig_bundle (ses, _) ->
     let decl_typ_ses, datacon_ses = ses |> List.partition
@@ -1507,16 +1505,16 @@ let noenv (f: DsEnv.env -> 'a) : 'a =
 let resugar_term (t : S.term) : A.term =
   noenv resugar_term' t
 
-let resugar_sigelt se : option<A.decl> =
+let resugar_sigelt se : option A.decl =
   noenv resugar_sigelt' se
 
 let resugar_comp (c:S.comp) : A.term =
   noenv resugar_comp' c
 
-let resugar_pat (p:S.pat) (branch_bv: set<bv>) : A.pattern =
+let resugar_pat (p:S.pat) (branch_bv: set bv) : A.pattern =
   noenv resugar_pat' p branch_bv
 
-let resugar_binder (b:S.binder) r : option<A.binder> =
+let resugar_binder (b:S.binder) r : option A.binder =
   noenv resugar_binder' b r
 
 let resugar_tscheme (ts:S.tscheme) =

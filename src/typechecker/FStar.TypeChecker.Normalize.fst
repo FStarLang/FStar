@@ -13,8 +13,6 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-#light "off"
-// (c) Microsoft Corporation. All rights reserved
 
 module FStar.TypeChecker.Normalize
 open FStar.Pervasives
@@ -58,7 +56,7 @@ module TcComm = FStar.TypeChecker.Common
  * Higher-Order Symb Comput (2007) 20: 209–230
  **********************************************************************************************)
 
-let maybe_debug (cfg:Cfg.cfg) (t:term) (dbg:option<(term * BU.time)>) =
+let maybe_debug (cfg:Cfg.cfg) (t:term) (dbg:option (term * BU.time)) =
   if cfg.debug.print_normalized
   then match dbg with
        | Some (tm, time_then) ->
@@ -77,31 +75,31 @@ let cases f d = function
   | None -> d
 
 type closure =
-  | Clos of env * term * memo<(env * term)> * bool //memo for lazy evaluation; bool marks whether or not this is a fixpoint
+  | Clos of env * term * memo (env * term) * bool //memo for lazy evaluation; bool marks whether or not this is a fixpoint
   | Univ of universe                               //universe terms do not have free variables
   | Dummy                                          //Dummy is a placeholder for a binder when doing strong reduction
-and env = list<(option<binder>*closure)>
+and env = list (option binder*closure)
 
-let dummy : option<binder> * closure = None,Dummy
+let dummy : option binder * closure = None,Dummy
 
-type branches = list<(pat * option<term> * term)>
+type branches = list (pat * option term * term)
 
 type stack_elt =
  | Arg      of closure * aqual * Range.range
- | UnivArgs of list<universe> * Range.range
- | MemoLazy of memo<(env * term)>
- | Match    of env * option<match_returns_ascription> * branches * option<residual_comp> * cfg * Range.range
- | Abs      of env * binders * env * option<residual_comp> * Range.range //the second env is the first one extended with the binders, for reducing the option<lcomp>
+ | UnivArgs of list universe * Range.range
+ | MemoLazy of memo (env * term)
+ | Match    of env * option match_returns_ascription * branches * option residual_comp * cfg * Range.range
+ | Abs      of env * binders * env * option residual_comp * Range.range //the second env is the first one extended with the binders, for reducing the option lcomp
  | App      of env * term * aqual * Range.range
  | CBVApp   of env * term * aqual * Range.range
  | Meta     of env * S.metadata * Range.range
  | Let      of env * binders * letbinding * Range.range
- | Cfg      of cfg * option<(term * BU.time)>
-type stack = list<stack_elt>
+ | Cfg      of cfg * option (term * BU.time)
+type stack = list stack_elt
 
 let head_of t = let hd, _ = U.head_and_args_full t in hd
 
-let set_memo cfg (r:memo<'a>) (t:'a) =
+let set_memo cfg (r:memo 'a) (t:'a) =
   if cfg.memoize_lazy then
     match !r with
     | Some _ -> failwith "Unexpected set_memo: thunk already evaluated"
@@ -155,10 +153,10 @@ let downgrade_ghost_effect_name l =
 
 (********************************************************************************************************************)
 (* Normal form of a universe u is                                                                                   *)
-(*  either u, where u <> U_max                                                                                      *)
-(*  or     U_max [k;                        --constant                                                              *)
-(*               S^n1 u1 ; ...; S^nm um;    --offsets of distinct names, in order of the names                      *)
-(*               S^p1 ?v1; ...; S^pq ?vq]   --offsets of distinct unification variables, in order of the variables  *)
+(*  either u, where u <> U_max *)
+(*  or     U_max [k;                         --constant *)
+(*                S^n1 u1 ; ...; S^nm um;    --offsets of distinct names, in order of the names                      *)
+(*                S^p1 ?v1; ...; S^pq ?vq]   --offsets of distinct unification variables, in order of the variables  *)
 (*          where the size of the list is at least 2                                                                *)
 (********************************************************************************************************************)
 let norm_universe cfg (env:env) u =
@@ -181,7 +179,7 @@ let norm_universe cfg (env:env) u =
     (*   1. flattening all max nodes                                   *)
     (*   2. pushing all S nodes under a single top-level max node      *)
     (*   3. sorting the terms in a max node, and partially evaluate it *)
-    let rec aux (u:universe) : list<universe> =
+    let rec aux (u:universe) : list universe =
         let u = Subst.compress_univ u in
         match u with
           | U_bvar x ->
@@ -591,8 +589,8 @@ let filter_out_lcomp_cflags flags =
 let closure_as_term cfg env t = non_tail_inline_closure_env cfg env t
 
 (* A hacky knot, set by FStar.Main *)
-let unembed_binder_knot : ref<option<EMB.embedding<binder>>> = BU.mk_ref None
-let unembed_binder (t : term) : option<S.binder> =
+let unembed_binder_knot : ref (option (EMB.embedding binder)) = BU.mk_ref None
+let unembed_binder (t : term) : option S.binder =
     match !unembed_binder_knot with
     | Some e -> EMB.unembed e t false EMB.id_norm_cb
     | None ->
@@ -665,7 +663,7 @@ let reduce_primops norm_cb cfg env tm =
                       log_primops cfg (fun () -> BU.print1 "primop: <%s> did not reduce\n" (Print.term_to_string tm));
                       tm
                   | Some reduced ->
-                      log_primops cfg (fun () -> BU.print2 "primop: <%s> reduced to <%s>\n"
+                      log_primops cfg (fun () -> BU.print2 "primop: <%s> reduced to  %s\n"
                                               (Print.term_to_string tm)
                                               (Print.term_to_string reduced));
                       U.mk_app reduced args_2
@@ -869,7 +867,7 @@ type should_unfold_res =
 
 (* Max number of warnings to print in a single run.
 Initialized below in normalize *)
-let plugin_unfold_warn_ctr : ref<int> = BU.mk_ref 0
+let plugin_unfold_warn_ctr : ref int = BU.mk_ref 0
 
 let should_unfold cfg should_reify fv qninfo : should_unfold_res =
     let attrs =
@@ -1014,7 +1012,7 @@ let should_unfold cfg should_reify fv qninfo : should_unfold_res =
       plugin_unfold_warn_ctr := !plugin_unfold_warn_ctr - 1
     end;
     r
-let decide_unfolding cfg env stack rng fv qninfo (* : option<(cfg * stack)> *) =
+let decide_unfolding cfg env stack rng fv qninfo (* : option (cfg * stack) *) =
     let res =
         should_unfold cfg (fun cfg -> should_reify cfg stack) fv qninfo
     in
@@ -1063,7 +1061,7 @@ let on_domain_lids =
   let fext_lid (s:string) = Ident.lid_of_path ["FStar"; "FunctionalExtensionality"; s] Range.dummyRange in
   ["on_domain"; "on_dom"; "on_domain_g"; "on_dom_g"] |> List.map fext_lid
 
-let is_fext_on_domain (t:term) :option<term> =
+let is_fext_on_domain (t:term) :option term =
   let is_on_dom fv = on_domain_lids |> List.existsb (fun l -> S.fv_eq_lid fv l) in
 
   match (SS.compress t).n with
@@ -1642,7 +1640,7 @@ and do_unfold_fv cfg env stack (t0:term) (qninfo : qninfo) (f:fv) : term =
          end
 
 and reduce_impure_comp cfg env stack (head : term) // monadic term
-                                     (m : either<monad_name,(monad_name * monad_name)>)
+                                     (m : either monad_name (monad_name * monad_name))
                                         // relevant monads.
                                         // Inl m - this is a Meta_monadic with monad m
                                         // Inr (m, m') - this is a Meta_monadic_lift with monad m
@@ -2108,7 +2106,7 @@ and maybe_simplify_aux (cfg:cfg) (env:env) (stack:stack) (tm:term) : term =
         | [], [] -> true
         | _, _ -> false
     in
-    let is_applied (bs:binders) (t : term) : option<bv> =
+    let is_applied (bs:binders) (t : term) : option bv =
         if cfg.debug.wpe then
             BU.print2 "WPE> is_applied %s -- %s\n"  (Print.term_to_string t) (Print.tag_of_term t);
         let hd, args = U.head_and_args_full t in
@@ -2122,7 +2120,7 @@ and maybe_simplify_aux (cfg:cfg) (env:env) (stack:stack) (tm:term) : term =
             Some bv
         | _ -> None
     in
-    let is_applied_maybe_squashed (bs : binders) (t : term) : option<bv> =
+    let is_applied_maybe_squashed (bs : binders) (t : term) : option bv =
         if cfg.debug.wpe then
             BU.print2 "WPE> is_applied_maybe_squashed %s -- %s\n"  (Print.term_to_string t) (Print.tag_of_term t);
         match is_squash t with
@@ -2137,7 +2135,7 @@ and maybe_simplify_aux (cfg:cfg) (env:env) (stack:stack) (tm:term) : term =
     //  2)  forall p.                      (~p ==> E[p])     ~>     E[False]
     //  3)  forall p. (forall j1 j2 ... jn. p j1 j2 ... jn)    ==> E[p]    ~>    E[(fun j1 j2 ... jn -> True)]
     //  4)  forall p. (forall j1 j2 ... jn. ~(p j1 j2 ... jn)) ==> E[p]    ~>    E[(fun j1 j2 ... jn -> False)]
-    let is_quantified_const (bv:bv) (phi : term) : option<term> =
+    let is_quantified_const (bv:bv) (phi : term) : option term =
         match U.destruct_typ_as_formula phi with
         | Some (BaseConn (lid, [(p, _); (q, _)])) when Ident.lid_equals lid PC.imp_lid ->
             if cfg.debug.wpe then
@@ -2196,7 +2194,7 @@ and maybe_simplify_aux (cfg:cfg) (env:env) (stack:stack) (tm:term) : term =
             end
         | _ -> None
     in
-    let is_forall_const (phi : term) : option<term> =
+    let is_forall_const (phi : term) : option term =
         match U.destruct_typ_as_formula phi with
         | Some (QAll ([b], _, phi')) ->
             if cfg.debug.wpe then
@@ -2204,7 +2202,7 @@ and maybe_simplify_aux (cfg:cfg) (env:env) (stack:stack) (tm:term) : term =
             is_quantified_const b.binder_bv phi'
         | _ -> None
     in
-    let is_const_match (phi : term) : option<bool> =
+    let is_const_match (phi : term) : option bool =
         match (SS.compress phi).n with
         (* Trying to be efficient, but just checking if they all agree *)
         (* Note, if we wanted to do this for any term instead of just True/False
@@ -2718,7 +2716,7 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
 
 
         let rec matches_pat (scrutinee_orig:term) (p:pat)
-          : either<list<(bv * term)>, bool>
+          : either (list (bv * term)) bool
             (* Inl ts: p matches t and ts are bindings for the branch *)
             (* Inr false: p definitely does not match t *)
             (* Inr true: p may match t, but p is an open term and we cannot decide for sure *)
@@ -2743,7 +2741,7 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
                 | _ -> Inr (not (is_cons head)) //if it's not a constant, it may match
               end
 
-        and matches_args out (a:args) (p:list<(pat * bool)>) : either<list<(bv * term)>, bool> = match a, p with
+        and matches_args out (a:args) (p:list (pat * bool)) : either (list (bv * term)) bool = match a, p with
           | [], [] -> Inl out
           | (t, _)::rest_a, (p, _)::rest_p ->
               begin match matches_pat t p with
@@ -3040,7 +3038,7 @@ let eta_expand (env:Env.env) (t:term) : term =
         eta_expand_with_type env t ty
       end
 
-let elim_uvars_aux_tc (env:Env.env) (univ_names:univ_names) (binders:binders) (tc:either<typ, comp>) =
+let elim_uvars_aux_tc (env:Env.env) (univ_names:univ_names) (binders:binders) (tc:either typ comp) =
     let t =
       match binders, tc with
       | [], Inl t -> t
@@ -3228,8 +3226,8 @@ let unfold_head_once env t =
   | Tm_uinst({n=Tm_fvar fv}, us) -> aux fv us args
   | _ -> None
 
-let get_n_binders (env:Env.env) (n:int) (t:term) : list<binder> * comp =
-  let rec aux (retry:bool) (n:int) (t:term) : list<binder> * comp =
+let get_n_binders (env:Env.env) (n:int) (t:term) : list binder * comp =
+  let rec aux (retry:bool) (n:int) (t:term) : list binder * comp =
     let bs, c = U.arrow_formals_comp t in
     let len = List.length bs in
     match bs, c with

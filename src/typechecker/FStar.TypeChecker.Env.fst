@@ -13,8 +13,6 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-#light "off"
-
 module FStar.TypeChecker.Env
 open FStar.Pervasives
 open FStar.Compiler.Effect
@@ -52,10 +50,10 @@ type step =
   | Inlining
   | DoNotUnfoldPureLets
   | UnfoldUntil of S.delta_depth
-  | UnfoldOnly  of list<FStar.Ident.lid>
-  | UnfoldFully of list<FStar.Ident.lid>
-  | UnfoldAttr  of list<FStar.Ident.lid>
-  | UnfoldQual  of list<string>
+  | UnfoldOnly  of list FStar.Ident.lid
+  | UnfoldFully of list FStar.Ident.lid
+  | UnfoldAttr  of list FStar.Ident.lid
+  | UnfoldQual  of list string
   | UnfoldTac
   | PureSubtermsWithinComputations
   | Simplify        //Simplifies some basic logical tautologies: not part of definitional equality!
@@ -70,7 +68,7 @@ type step =
   | NBE
   | ForExtraction //marking an invocation of the normalizer for extraction
   | Unrefine
-and steps = list<step>
+and steps = list step
 
 let rec eq_step s1 s2 =
   match s1, s2 with
@@ -106,7 +104,7 @@ let rec eq_step s1 s2 =
   | UnfoldQual strs1, UnfoldQual strs2 -> strs1 = strs2
   | _ -> false
 
-type sig_binding = list<lident> * sigelt
+type sig_binding = list lident * sigelt
 
 type delta_level =
   | NoDelta
@@ -115,58 +113,58 @@ type delta_level =
   | Unfold of delta_depth
 
 // A name prefix, such as ["FStar";"Math"]
-type name_prefix = list<string>
+type name_prefix = list string
 // A choice of which name prefixes are enabled/disabled
 // The leftmost match takes precedence. Empty list means everything is off.
 // To turn off everything, one can prepend `([], false)` to this (since [] is a prefix of everything)
-type proof_namespace = list<(name_prefix * bool)>
+type proof_namespace = list (name_prefix * bool)
 
 // A stack of namespace choices. Provides sim
-type cached_elt = either<(universes * typ), (sigelt * option<universes>)> * Range.range
+type cached_elt = (either (universes * typ) (sigelt * option universes)) * Range.range
 type goal = term
 
 type must_tot = bool
 
 type lift_comp_t = env -> comp -> comp * guard_t
 
-and polymonadic_bind_t = env -> comp_typ -> option<bv> -> comp_typ -> list<cflag> -> Range.range -> comp * guard_t
+and polymonadic_bind_t = env -> comp_typ -> option bv -> comp_typ -> list cflag -> Range.range -> comp * guard_t
 
 and mlift = {
   mlift_wp:lift_comp_t;
-  mlift_term:option<(universe -> typ -> term -> term)>
+  mlift_term:option (universe -> typ -> term -> term)
 }
 
 and edge = {
   msource : lident;
   mtarget : lident;
   mlift   : mlift;
-  mpath   : list<lident>;
+  mpath   : list lident;
 }
 
 and effects = {
-  decls :list<(eff_decl * list<qualifier>)>;
-  order :list<edge>;                                       (* transitive closure of the order in the signature *)
-  joins :list<(lident * lident * lident * mlift * mlift)>; (* least upper bounds *)
-  polymonadic_binds :list<(lident * lident * lident * polymonadic_bind_t)>;
-  polymonadic_subcomps :list<(lident * lident * tscheme)>;  (* m <: n *)
+  decls :list (eff_decl * list qualifier);
+  order :list edge;                                       (* transitive closure of the order in the signature *)
+  joins :list (lident * lident * lident * mlift * mlift); (* least upper bounds *)
+  polymonadic_binds :list (lident * lident * lident * polymonadic_bind_t);
+  polymonadic_subcomps :list (lident * lident * tscheme);  (* m <: n *)
 }
 
 and env = {
   solver         :solver_t;                     (* interface to the SMT solver *)
   range          :Range.range;                  (* the source location of the term being checked *)
   curmodule      :lident;                       (* Name of this module *)
-  gamma          :list<binding>;                (* Local typing environment *)
-  gamma_sig      :list<sig_binding>;            (* and signature elements *)
-  gamma_cache    :BU.smap<cached_elt>;          (* Memo table for the local environment *)
-  modules        :list<modul>;                  (* already fully type checked modules *)
-  expected_typ   :option<(typ * bool)>;         (* type expected by the context *)
+  gamma          :list binding;                (* Local typing environment *)
+  gamma_sig      :list sig_binding;            (* and signature elements *)
+  gamma_cache    :BU.smap cached_elt;          (* Memo table for the local environment *)
+  modules        :list modul;                  (* already fully type checked modules *)
+  expected_typ   :option (typ * bool);         (* type expected by the context *)
                                                 (* a true bool will check for type equality (else subtyping) *)
-  sigtab         :BU.smap<sigelt>;              (* a dictionary of long-names to sigelts *)
-  attrtab        :BU.smap<list<sigelt>>;        (* a dictionary of attribute( name)s to sigelts, mostly in support of typeclasses *)
+  sigtab         :BU.smap sigelt;              (* a dictionary of long-names to sigelts *)
+  attrtab        :BU.smap (list sigelt);        (* a dictionary of attribute( name)s to sigelts, mostly in support of typeclasses *)
   instantiate_imp:bool;                         (* instantiate implicit arguments? default=true *)
   effects        :effects;                      (* monad lattice *)
   generalize     :bool;                         (* should we generalize let bindings? *)
-  letrecs        :list<(lbname * int * typ * univ_names)>;  (* mutually recursive names, with recursion arity and their types (for termination checking), adding universes, see the note in TcTerm.fs:build_let_rec_env about usage of this field *)
+  letrecs        :list (lbname * int * typ * univ_names);  (* mutually recursive names, with recursion arity and their types (for termination checking), adding universes, see the note in TcTerm.fs:build_let_rec_env about usage of this field *)
   top_level      :bool;                         (* is this a top-level term? if so, then discharge guards *)
   check_uvars    :bool;                         (* paranoid: re-typecheck unification variables *)
   use_eq_strict  :bool;                         (* this flag runs the typechecker in non-subtyping mode *)
@@ -186,21 +184,21 @@ and env = {
   typeof_well_typed_tot_or_gtot_term :env -> term -> must_tot -> typ * guard_t; (* typechecker callback, uses fast path, with a fallback on the slow path *)
 
   use_bv_sorts   :bool;                              (* use bv.sort for a bound-variable's type rather than consulting gamma *)
-  qtbl_name_and_index:BU.smap<int> * option<(lident*int)>;  (* the top-level term we're currently processing and the nth query for it *)
-  normalized_eff_names:BU.smap<lident>;              (* cache for normalized effect names, used to be captured in the function norm_eff_name, which made it harder to roll back etc. *)
-  fv_delta_depths:BU.smap<delta_depth>;              (* cache for fv delta depths, its preferable to use Env.delta_depth_of_fv, soon fv.delta_depth should be removed *)
+  qtbl_name_and_index:BU.smap int * option (lident*int);  (* the top-level term we're currently processing and the nth query for it *)
+  normalized_eff_names:BU.smap lident;              (* cache for normalized effect names, used to be captured in the function norm_eff_name, which made it harder to roll back etc. *)
+  fv_delta_depths:BU.smap delta_depth;              (* cache for fv delta depths, its preferable to use Env.delta_depth_of_fv, soon fv.delta_depth should be removed *)
   proof_ns       :proof_namespace;                   (* the current names that will be encoded to SMT *)
   synth_hook     :env -> typ -> term -> term;        (* hook for synthesizing terms via tactics, third arg is tactic term *)
   try_solve_implicits_hook: env -> term -> implicits -> unit;
-  splice         :env -> Range.range -> term -> list<sigelt>; (* splicing hook, points to FStar.Tactics.Interpreter.splice *)
+  splice         :env -> Range.range -> term -> list sigelt; (* splicing hook, points to FStar.Tactics.Interpreter.splice *)
   mpreprocess     :env -> term -> term -> term;       (* hook for postprocessing typechecked terms via metaprograms *)
   postprocess    :env -> term -> typ -> term -> term; (* hook for postprocessing typechecked terms via metaprograms *)
-  identifier_info: ref<FStar.TypeChecker.Common.id_info_table>; (* information on identifiers *)
+  identifier_info: ref FStar.TypeChecker.Common.id_info_table; (* information on identifiers *)
   tc_hooks       : tcenv_hooks;                        (* hooks that the interactive more relies onto for symbol tracking *)
   dsenv          : FStar.Syntax.DsEnv.env;             (* The desugaring environment from the front-end *)
-  nbe            : list<step> -> env -> term -> term; (* Callback to the NBE function *)
-  strict_args_tab:BU.smap<(option<(list<int>)>)>;                (* a dictionary of fv names to strict arguments *)
-  erasable_types_tab:BU.smap<bool>;              (* a dictionary of type names to erasable types *)
+  nbe            : list step -> env -> term -> term; (* Callback to the NBE function *)
+  strict_args_tab:BU.smap (option (list int));                (* a dictionary of fv names to strict arguments *)
+  erasable_types_tab:BU.smap bool;              (* a dictionary of type names to erasable types *)
   enable_defer_to_tac: bool;                     (* Set by default; unset when running within a tactic itself, since we do not allow
                                                     a tactic to defer problems to another tactic via the attribute mechanism *)
   unif_allow_ref_guards:bool;                    (* Allow guards when unifying refinements, even when SMT is disabled *)
@@ -212,16 +210,16 @@ and solver_t = {
     push            :string -> unit;
     pop             :string -> unit;
     snapshot        :string -> (solver_depth_t * unit);
-    rollback        :string -> option<solver_depth_t> -> unit;
+    rollback        :string -> option solver_depth_t -> unit;
     encode_sig      :env -> sigelt -> unit;
-    preprocess      :env -> goal -> list<(env * goal * FStar.Options.optionstate)>;
-    handle_smt_goal :env -> goal -> list<(env * goal)>;
-    solve           :option<(unit -> string)> -> env -> typ -> unit;
+    preprocess      :env -> goal -> list (env * goal * FStar.Options.optionstate);
+    handle_smt_goal :env -> goal -> list (env * goal);
+    solve           :option (unit -> string) -> env -> typ -> unit;
     finish          :unit -> unit;
     refresh         :unit -> unit;
 }
 and tcenv_hooks =
-  { tc_push_in_gamma_hook : (env -> either<binding, sig_binding> -> unit) }
+  { tc_push_in_gamma_hook : (env -> either binding sig_binding -> unit) }
 
 type implicit = TcComm.implicit
 type implicits = TcComm.implicits
@@ -252,7 +250,7 @@ let dep_graph e = DsEnv.dep_graph e.dsenv
 
 type env_t = env
 
-type sigtable = BU.smap<sigelt>
+type sigtable = BU.smap sigelt
 
 let should_verify env =
     not env.lax
@@ -342,7 +340,7 @@ let gamma_cache env = env.gamma_cache
 
 (* Marking and resetting the environment, for the interactive mode *)
 
-let query_indices: ref<(list<(list<(lident * int)>)>)> = BU.mk_ref [[]]
+let query_indices: ref (list (list (lident * int))) = BU.mk_ref [[]]
 let push_query_indices () = match !query_indices with // already signal-atmoic
   | [] -> failwith "Empty query indices!"
   | _ -> query_indices := (List.hd !query_indices)::!query_indices
@@ -360,7 +358,7 @@ let add_query_index (l, n) = match !query_indices with
 
 let peek_query_indices () = List.hd !query_indices
 
-let stack: ref<(list<env>)> = BU.mk_ref []
+let stack: ref (list env) = BU.mk_ref []
 let push_stack env =
     stack := env::!stack;
     {env with sigtab=BU.smap_copy (sigtab env);
@@ -466,7 +464,7 @@ let variable_not_found v =
 //Construct a new universe unification variable
 let new_u_univ () = U_unif (Unionfind.univ_fresh Range.dummyRange)
 
-let mk_univ_subst (formals : list<univ_name>) (us : universes) : list<subst_elt> =
+let mk_univ_subst (formals : list univ_name) (us : universes) : list subst_elt =
     assert (List.length us = List.length formals);
     let n = List.length formals - 1 in
     us |> List.mapi (fun i u -> UN (n - i, u))
@@ -526,13 +524,13 @@ let in_cur_mod env (l:lident) : tri = (* TODO: need a more efficient namespace c
          aux cur lns
     else No
 
-type qninfo = option<(either<(universes * typ),(sigelt * option<universes>)> * Range.range)>
+type qninfo = option ((either (universes * typ) (sigelt * option universes)) * Range.range)
 
 let lookup_qname env (lid:lident) : qninfo =
   let cur_mod = in_cur_mod env lid in
   let cache t = BU.smap_add (gamma_cache env) (string_of_lid lid) t; Some t in
   let found =
-    if cur_mod<>No
+    if cur_mod <> No
     then match BU.smap_try_find (gamma_cache env) (string_of_lid lid) with
       | None ->
         BU.catch_opt
@@ -569,13 +567,13 @@ let lookup_qname env (lid:lident) : qninfo =
         | Some se -> Some (Inr (se, None), U.range_of_sigelt se)
         | None -> None
 
-let lookup_sigelt (env:env) (lid:lid) : option<sigelt> =
+let lookup_sigelt (env:env) (lid:lid) : option sigelt =
     match lookup_qname env lid with
     | None -> None
     | Some (Inl _, rng) -> None
     | Some (Inr (se, us), rng) -> Some se
 
-let lookup_attr (env:env) (attr:string) : list<sigelt> =
+let lookup_attr (env:env) (attr:string) : list sigelt =
     match BU.smap_try_find (attrtab env) attr with
     | Some ses -> ses
     | None -> []
@@ -626,7 +624,7 @@ let lookup_type_of_let us_opt se lid =
 
     | _ -> None
 
-let effect_signature (us_opt:option<universes>) (se:sigelt) rng : option<((universes * typ) * Range.range)> =
+let effect_signature (us_opt:option universes) (se:sigelt) rng : option ((universes * typ) * Range.range) =
   let inst_ts us_opt ts =
     match us_opt with
     | None -> inst_tscheme ts
@@ -702,21 +700,21 @@ let try_lookup_lid_aux us_opt env lid =
 //Provides, in order from the interface env.fsi:
 //        val lid_exists             : env -> lident -> bool
 //        val lookup_bv              : env -> bv -> typ
-//        val try_lookup_lid         : env -> lident -> option<(universes * typ)>
+//        val try_lookup_lid         : env -> lident -> option (universes * typ)
 //        val lookup_lid             : env -> lident -> (universes * typ)
 //        val lookup_univ            : env -> univ_name -> bool
-//        val try_lookup_val_decl    : env -> lident -> option<(tscheme * list<qualifier>)>
+//        val try_lookup_val_decl    : env -> lident -> option (tscheme * list qualifier)
 //        val lookup_val_decl        : env -> lident -> universes * typ
 //        val lookup_datacon         : env -> lident -> universes * typ
-//        val datacons_of_typ        : env -> lident -> list<lident>
+//        val datacons_of_typ        : env -> lident -> list lident
 //        val typ_of_datacon         : env -> lident -> lident
-//        val lookup_definition      : delta_level -> env -> lident -> option<(univ_names * term)>
-//        val lookup_attrs_of_lid    : env -> lid -> option<list<attribute>>
-//        val try_lookup_effect_lid  : env -> lident -> option<term>
+//        val lookup_definition      : delta_level -> env -> lident -> option (univ_names * term)
+//        val lookup_attrs_of_lid    : env -> lid -> option list attribute
+//        val try_lookup_effect_lid  : env -> lident -> option term
 //        val lookup_effect_lid      : env -> lident -> term
-//        val lookup_effect_abbrev   : env -> universes -> lident -> option<(binders * comp)>
+//        val lookup_effect_abbrev   : env -> universes -> lident -> option (binders * comp)
 //        val norm_eff_name          : (env -> lident -> lident)
-//        val lookup_effect_quals    : env -> lident -> list<qualifier>
+//        val lookup_effect_quals    : env -> lident -> list qualifier
 //        val lookup_projector       : env -> lident -> int -> lident
 //        val current_module         : env -> lident
 //        val is_projector           : env -> lident -> bool
@@ -825,7 +823,7 @@ let lookup_definition delta_levels env lid =
 let lookup_nonrec_definition delta_levels env lid =
     lookup_definition_qninfo_aux false delta_levels lid <| lookup_qname env lid
 
-let delta_depth_of_qninfo_lid lid (qn:qninfo) : option<delta_depth> =
+let delta_depth_of_qninfo_lid lid (qn:qninfo) : option delta_depth =
     match qn with
     | None
     | Some (Inl _, _) -> Some (Delta_constant_at_level 0)
@@ -855,7 +853,7 @@ let delta_depth_of_qninfo_lid lid (qn:qninfo) : option<delta_depth> =
       | Sig_polymonadic_subcomp _ -> None
 
 
-let delta_depth_of_qninfo (fv:fv) (qn:qninfo) : option<delta_depth> =
+let delta_depth_of_qninfo (fv:fv) (qn:qninfo) : option delta_depth =
     let lid = fv.fv_name.v in
     if nsstr lid = "Prims" then Some fv.fv_delta //NS delta: too many special cases in existing code
     else delta_depth_of_qninfo_lid lid qn
@@ -871,7 +869,7 @@ let delta_depth_of_fv env fv =
         match delta_depth_of_qninfo fv (lookup_qname env fv.fv_name.v) with
         | None -> failwith (BU.format1 "Delta depth not found for %s" (FStar.Syntax.Print.fv_to_string fv))
         | Some d ->
-          if d<>fv.fv_delta
+          if d <> fv.fv_delta
           && Options.debug_any()
           then BU.print3 "WARNING WARNING WARNING fv=%s, delta_depth=%s, env.delta_depth=%s\n"
                          (Print.fv_to_string fv)
@@ -880,17 +878,17 @@ let delta_depth_of_fv env fv =
           BU.smap_add env.fv_delta_depths (string_of_lid lid) d;
           d)
 
-let quals_of_qninfo (qninfo : qninfo) : option<list<qualifier>> =
+let quals_of_qninfo (qninfo : qninfo) : option (list qualifier) =
   match qninfo with
   | Some (Inr (se, _), _) -> Some se.sigquals
   | _ -> None
 
-let attrs_of_qninfo (qninfo : qninfo) : option<list<attribute>> =
+let attrs_of_qninfo (qninfo : qninfo) : option (list attribute) =
   match qninfo with
   | Some (Inr (se, _), _) -> Some se.sigattrs
   | _ -> None
 
-let lookup_attrs_of_lid env lid : option<list<attribute>> =
+let lookup_attrs_of_lid env lid : option (list attribute) =
   attrs_of_qninfo <| lookup_qname env lid
 
 let fv_exists_and_has_attr env fv_lid attr_lid : bool * bool =
@@ -910,7 +908,7 @@ let fv_with_lid_has_attr env fv_lid attr_lid : bool =
 let fv_has_attr env fv attr_lid =
   fv_with_lid_has_attr env fv.fv_name.v attr_lid
 
-let cache_in_fv_tab (tab:BU.smap<'a>) (fv:fv) (f:unit -> (bool * 'a)) : 'a =
+let cache_in_fv_tab (tab:BU.smap 'a) (fv:fv) (f:unit -> (bool * 'a)) : 'a =
   let s = string_of_lid (S.lid_of_fv fv) in
   match BU.smap_try_find tab s with
   | None ->
@@ -964,7 +962,7 @@ let fv_has_strict_args env fv =
   in
   cache_in_fv_tab env.strict_args_tab fv f
 
-let try_lookup_effect_lid env (ftv:lident) : option<typ> =
+let try_lookup_effect_lid env (ftv:lident) : option typ =
   match lookup_qname env ftv with
     | Some (Inr (se, None), _) ->
       begin match effect_signature None se env.range with
@@ -1152,7 +1150,7 @@ let identity_mlift : mlift =
   { mlift_wp=(fun _ c -> c, trivial_guard);
     mlift_term=Some (fun _ _ e -> return_all e) }
 
-let join_opt env (l1:lident) (l2:lident) : option<(lident * mlift * mlift)> =
+let join_opt env (l1:lident) (l2:lident) : option (lident * mlift * mlift) =
   if lid_equals l1 l2
   then Some (l1, identity_mlift, identity_mlift)
   else if lid_equals l1 Const.effect_GTot_lid && lid_equals l2 Const.effect_Tot_lid
@@ -1170,7 +1168,7 @@ let join env l1 l2 : (lident * mlift * mlift) =
         (Print.lid_to_string l1) (Print.lid_to_string l2))) env.range
   | Some t -> t
 
-let monad_leq env l1 l2 : option<edge> =
+let monad_leq env l1 l2 : option edge =
   if lid_equals l1 l2
   || (lid_equals l1 Const.effect_Tot_lid && lid_equals l2 Const.effect_GTot_lid)
   then Some ({msource=l1; mtarget=l2; mlift=identity_mlift; mpath=[]})
@@ -1245,7 +1243,7 @@ let effect_repr_aux only_reifiable env c u_res =
       check_partial_application effect_name c.effect_args;
       Some (S.mk (Tm_app (repr, ((res_typ |> S.as_arg)::c.effect_args))) (get_range env))
 
-let effect_repr env c u_res : option<term> = effect_repr_aux false env c u_res
+let effect_repr env c u_res : option term = effect_repr_aux false env c u_res
 
 (* [is_reifiable_* env x] returns true if the effect name/computational *)
 (* effect (of a body or codomain of an arrow) [x] is reifiable. *)
@@ -1358,17 +1356,17 @@ let print_effects_graph env =
   //
   //But it may be range or something else if we wanted to dump it in the dot graph
   //
-  let pbinds : smap<string> = smap_create 10 in
+  let pbinds : smap string = smap_create 10 in
 
   //
   //The keys in the map are sources
   //
   //Each source is mapped to a map, whose keys are targets, and values are the path strings
   //
-  let lifts : smap<smap<string>> = smap_create 20 in
+  let lifts : smap (smap string) = smap_create 20 in
 
   //Similar to pbinds
-  let psubcomps : smap<string> = smap_create 10 in
+  let psubcomps : smap string = smap_create 10 in
 
   //Populate the maps
 
@@ -1541,7 +1539,7 @@ let update_effect_lattice env src tgt st_mlift =
     //
     //A map where we populate all upper bounds for each pair of effects
     //
-    let ubs : smap<list<(lident * lident * lident * mlift * mlift)>> =
+    let ubs : smap (list (lident * lident * lident * mlift * mlift)) =
       BU.smap_create 10 in
     let add_ub i j k ik jk =
       let key = string_of_lid i ^ ":" ^ string_of_lid j in
@@ -1644,7 +1642,7 @@ let expected_typ env = match env.expected_typ with
   | None -> None
   | Some t -> Some t
 
-let clear_expected_typ (env_: env): env * option<(typ * bool)> =
+let clear_expected_typ (env_: env): env * option (typ * bool) =
     {env_ with expected_typ=None}, expected_typ env_
 
 let finish_module =
@@ -1725,7 +1723,7 @@ let string_of_delta_level = function
   | Eager_unfolding_only -> "Eager_unfolding_only"
   | Unfold d -> "Unfold " ^ Print.delta_depth_to_string d
 
-let lidents env : list<lident> =
+let lidents env : list lident =
   let keys = List.collect fst env.gamma_sig in
   BU.smap_fold (sigtab env) (fun _ v keys -> U.lids_of_sigelt v@keys) keys
 
@@ -1752,7 +1750,7 @@ let rem_proof_ns e path = cons_proof_ns false e path
 let get_proof_ns e = e.proof_ns
 let set_proof_ns ns e = {e with proof_ns = ns}
 
-let unbound_vars (e : env) (t : term) : BU.set<bv> =
+let unbound_vars (e : env) (t : term) : BU.set bv =
     // FV(t) \ Vars(Γ)
     List.fold_left (fun s bv -> BU.set_remove bv s) (Free.names t) (bound_vars e)
 
@@ -2017,7 +2015,7 @@ let dummy_solver = {
 }
 (* </Move> *)
 
-let get_letrec_arity (env:env) (lbname:lbname) : option<int> =
+let get_letrec_arity (env:env) (lbname:lbname) : option int =
   let compare_either f1 f2 e1 e2 : bool =
       match e1, e2 with
       | Inl v1, Inl v2 -> f1 v1 v2

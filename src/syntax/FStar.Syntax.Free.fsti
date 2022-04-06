@@ -13,8 +13,6 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-#light "off"
-// (c) Microsoft Corporation. All rights reserved
 module FStar.Syntax.Free
 open FStar.Compiler.Effect
 open FStar.Compiler.Effect
@@ -25,16 +23,16 @@ open FStar.Syntax
 open FStar.Syntax.Syntax
 
 val new_uv_set : unit -> uvars
-val new_universe_uvar_set : unit -> set<universe_uvar>
+val new_universe_uvar_set : unit -> set universe_uvar
 
-val empty: set<bv>
-val names: term -> set<bv>
-val uvars: term -> set<ctx_uvar>
-val univs: term -> set<universe_uvar>
-val univnames: term -> set<univ_name>
-val univnames_comp: comp -> set<univ_name>
-val fvars: term -> set<Ident.lident>
-val names_of_binders: binders -> set<bv>
+val empty: set bv
+val names: term -> set bv
+val uvars: term -> set ctx_uvar
+val univs: term -> set universe_uvar
+val univnames: term -> set univ_name
+val univnames_comp: comp -> set univ_name
+val fvars: term -> set Ident.lident
+val names_of_binders: binders -> set bv
 
-val uvars_uncached: term -> set<ctx_uvar>
-val uvars_full: term -> set<ctx_uvar>
+val uvars_uncached: term -> set ctx_uvar
+val uvars_full: term -> set ctx_uvar

@@ -13,12 +13,12 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-#light "off"
-// (c) Microsoft Corporation. All rights reserved
 
 module FStar.Profiling
-open FStar open FStar.Compiler
-open FStar.Compiler.Effect module List = FStar.Compiler.List
+open FStar
+open FStar.Compiler
+open FStar.Compiler.Effect
+module List = FStar.Compiler.List
 open FStar.Options
 module BU = FStar.Compiler.Util
 
@@ -31,9 +31,9 @@ module BU = FStar.Compiler.Util
 *)
 type counter = {
   cid:string;
-  total_time:ref<int>;
-  running:ref<bool>;
-  undercount:ref<bool>;
+  total_time:ref int;
+  running:ref bool;
+  undercount:ref bool;
 }
 
 (* Creating a new counter *)
@@ -45,7 +45,7 @@ let new_counter cid = {
 }
 
 (* A table of all profiling counters, indexed by their cids *)
-let all_counters : BU.smap<counter> = BU.smap_create 20
+let all_counters : BU.smap counter = BU.smap_create 20
 
 (* Returns the current counter for cid *)
 let create_or_lookup_counter cid =
@@ -57,7 +57,7 @@ let create_or_lookup_counter cid =
     c
 
 (* Time an operation, if the the profiler is enabled *)
-let profile  (f: unit -> 'a) (module_name:option<string>) (cid:string) : 'a =
+let profile  (f: unit -> 'a) (module_name:option string) (cid:string) : 'a =
   if Options.profile_enabled module_name cid
   then let c = create_or_lookup_counter cid in
        if !c.running //if the counter is already running

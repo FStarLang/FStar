@@ -13,13 +13,12 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-#light "off"
 
 // A dependency-finding routine
 module FStar.Dependencies
 open FStar.Compiler.Effect
-open FStar.Compiler.Effect
-open FStar open FStar.Compiler
+open FStar
+open FStar.Compiler
 open FStar.Compiler.Util
 open FStar.Getopt
 open FStar.Ident
@@ -33,7 +32,7 @@ open FStar.Ident
  *   getting deps from the checked files
  *)
 let find_deps_if_needed files
-  (get_parsing_data_from_cache:string -> option<Parser.Dep.parsing_data>)
+  (get_parsing_data_from_cache:string -> option Parser.Dep.parsing_data)
   = let all_files, deps = Parser.Dep.collect files get_parsing_data_from_cache in
     match all_files with
     | [] ->

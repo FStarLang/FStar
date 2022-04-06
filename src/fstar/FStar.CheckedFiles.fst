@@ -13,7 +13,6 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-#light "off"
 
 module FStar.CheckedFiles
 open FStar
@@ -47,7 +46,7 @@ type tc_result = {
   checked_module: Syntax.modul; //persisted
   mii:module_inclusion_info; //persisted
   smt_decls:(FStar.SMTEncoding.Term.decls_t *  //list of smt decls and fvbs for the module
-             list<FStar.SMTEncoding.Env.fvar_binding>); //persisted
+             list FStar.SMTEncoding.Env.fvar_binding); //persisted
 
   tc_time:int;
   extraction_time:int
@@ -75,7 +74,7 @@ type checked_file_entry_stage2 =
   //digest is that of the corresponding checked file
   //except when the entries are for the current .fst and .fsti,
   //digest is that of the source file
-  deps_dig: list<(string * string)>;
+  deps_dig: list (string * string);
 
   //typechecking result, including the smt encoding
   tc_res: tc_result
@@ -114,16 +113,16 @@ type cache_t =
 
   //either: reason why this checked file is not valid for parsing data
   //or    : parsing_data
-  either<string, Dep.parsing_data>
+  either string Dep.parsing_data
 
 //Internal cache
-let mcache : smap<cache_t> = BU.smap_create 50
+let mcache : smap cache_t = BU.smap_create 50
 
 (*
  * Either the reason because of which dependences are stale/invalid
  *   or the list of dep string, as defined in the checked_file_entry above
  *)
-let hash_dependences (deps:Dep.deps) (fn:string) :either<string, list<(string * string)>> =
+let hash_dependences (deps:Dep.deps) (fn:string) :either string (list (string * string)) =
   let fn =
     match FStar.Options.find_file fn with
     | Some fn -> fn
@@ -219,7 +218,7 @@ let load_checked_file (fn:string) (checked_fn:string) :cache_t =
     if not (BU.file_exists checked_fn)
     then let msg = BU.format1 "checked file %s does not exist" checked_fn in
          add_and_return (Invalid msg, Inl msg)
-    else let entry :option<checked_file_entry_stage1> = BU.load_value_from_file checked_fn in
+    else let entry :option checked_file_entry_stage1 = BU.load_value_from_file checked_fn in
          match entry with
          | None ->
            let msg = BU.format1 "checked file %s is corrupt" checked_fn in
@@ -246,10 +245,10 @@ let load_checked_file (fn:string) (checked_fn:string) :cache_t =
  *   or tc_result
  *)
 let load_checked_file_with_tc_result (deps:Dep.deps) (fn:string) (checked_fn:string)
-  :either<string, tc_result> =
+  :either string tc_result =
 
-  let load_tc_result (fn:string) :list<(string * string)> * tc_result =
-    let entry :option<(checked_file_entry_stage1 * checked_file_entry_stage2)> = BU.load_2values_from_file checked_fn in
+  let load_tc_result (fn:string) :list (string * string) * tc_result =
+    let entry :option (checked_file_entry_stage1 * checked_file_entry_stage2) = BU.load_2values_from_file checked_fn in
     match entry with
      | Some ((_,s2)) -> s2.deps_dig, s2.tc_res
      | _ ->

@@ -1493,7 +1493,6 @@ let (sub_eff_to_string : FStar_Syntax_Syntax.sub_eff -> Prims.string) =
 let (pragma_to_string : FStar_Syntax_Syntax.pragma -> Prims.string) =
   fun p ->
     match p with
-    | FStar_Syntax_Syntax.LightOff -> "#light \"off\""
     | FStar_Syntax_Syntax.ResetOptions (FStar_Pervasives_Native.None) ->
         "#reset-options"
     | FStar_Syntax_Syntax.ResetOptions (FStar_Pervasives_Native.Some s) ->

@@ -13,7 +13,6 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 *)
-#light "off"
 module FStar.ToSyntax.ToSyntax
 open FStar.Compiler.Effect
 open FStar.Compiler.Effect
@@ -38,16 +37,16 @@ val desugar_machine_integer: env -> repr:string
                            -> Range.range -> Syntax.term
 val close:                   env -> term -> term
 
-val ast_modul_to_modul:          AST.modul -> withenv<Syntax.modul>
-val decls_to_sigelts:            list<AST.decl> -> withenv<sigelts>
-val partial_ast_modul_to_modul:  option<S.modul> -> AST.modul -> withenv<Syntax.modul>
+val ast_modul_to_modul:          AST.modul -> withenv Syntax.modul
+val decls_to_sigelts:            list AST.decl -> withenv sigelts
+val partial_ast_modul_to_modul:  option S.modul -> AST.modul -> withenv Syntax.modul
 
 val add_modul_to_env: Syntax.modul
                     -> module_inclusion_info
                     -> erase_univs:(S.term -> S.term)
-                    -> withenv<unit>
+                    -> withenv unit
 
-val parse_attr_with_list : bool -> S.term -> lident -> option<(list<int>)> * bool
+val parse_attr_with_list : bool -> S.term -> lident -> option (list int) * bool
 
-val get_fail_attr1 : bool -> S.term       -> option<(list<int> * bool)>
-val get_fail_attr  : bool -> list<S.term> -> option<(list<int> * bool)>
+val get_fail_attr1 : bool -> S.term       -> option (list int * bool)
+val get_fail_attr  : bool -> list S.term -> option (list int * bool)

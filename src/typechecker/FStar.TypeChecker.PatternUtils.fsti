@@ -13,8 +13,6 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-#light "off"
-// (c) Microsoft Corporation. All rights reserved
 
 module FStar.TypeChecker.PatternUtils
 open FStar.Compiler.Effect
@@ -37,7 +35,7 @@ val pat_as_exp:  introduce_bv_uvars:bool
                -> inst_pat_cons_univs:bool  (* whether it should instantiate the universes for data constructor patterns, on when called from Rel *)
                -> env:Env.env
                -> p:pat
-               -> list<bv>       (* pattern-bound variables (which may appear in the branch of match) *)
+               -> list bv       (* pattern-bound variables (which may appear in the branch of match) *)
                  * term         (* expressions corresponding to the pattern *)
                  * guard_t      (* guard with all implicits introduced in the pattern *)
                  * pat          (* decorated pattern, with all the missing implicit args in p filled in *)

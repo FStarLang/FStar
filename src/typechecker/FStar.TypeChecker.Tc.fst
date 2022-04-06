@@ -13,7 +13,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-#light "off"
+
 module FStar.TypeChecker.Tc
 open FStar.Pervasives
 open FStar.Compiler.Effect
@@ -254,7 +254,7 @@ let check_must_erase_attribute env se =
 
     | _ -> ()
 
-let proc_check_with (attrs:list<attribute>) (kont : unit -> 'a) : 'a =
+let proc_check_with (attrs:list attribute) (kont : unit -> 'a) : 'a =
   match U.get_attribute PC.check_with_lid attrs with
   | None -> kont ()
   | Some [(a, None)] ->
@@ -266,8 +266,8 @@ let proc_check_with (attrs:list<attribute>) (kont : unit -> 'a) : 'a =
       kont ())
   | _ -> failwith "ill-formed `check_with`"
 
-let handle_postprocess_with_attr (env:Env.env) (ats:list<attribute>)
-    : (list<attribute> * option<term>)
+let handle_postprocess_with_attr (env:Env.env) (ats:list attribute)
+    : (list attribute * option term)
 =
     (* We find postprocess_for_extraction_with attrs, which we don't
      * have to handle here, but we typecheck the tactic
@@ -311,13 +311,13 @@ let store_sigopts (se:sigelt) : sigelt =
   { se with sigopts = Some (Options.get_vconfig ()) }
 
 (* Alternative to making a huge let rec... knot is set below in this file *)
-let tc_decls_knot : ref<option<(Env.env -> list<sigelt> -> list<sigelt> * Env.env)>> =
+let tc_decls_knot : ref (option (Env.env -> list sigelt -> list sigelt * Env.env)) =
   BU.mk_ref None
 
 let do_two_phases env : bool = Env.should_verify env
 
 (* The type checking rule for Sig_let (lbs, lids) *)
-let tc_sig_let env r se lbs lids : list<sigelt> * list<sigelt> * Env.env =
+let tc_sig_let env r se lbs lids : list sigelt * list sigelt * Env.env =
     let env0 = env in
     let env = Env.set_range env r in
     let check_quals_eq l qopt val_q = match qopt with
@@ -541,7 +541,7 @@ let tc_sig_let env r se lbs lids : list<sigelt> * list<sigelt> * Env.env =
 
     [se], [], env0
 
-let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
+let tc_decl' env0 se: list sigelt * list sigelt * Env.env =
   let env = env0 in
   TcUtil.check_sigelt_quals env se;
   proc_check_with se.sigattrs (fun () ->
@@ -813,7 +813,7 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
 (* [tc_decl env se] typechecks [se] in environment [env] and returns *
  * the list of typechecked sig_elts, and a list of new sig_elts elaborated
  * during typechecking but not yet typechecked *)
-let tc_decl env se: list<sigelt> * list<sigelt> * Env.env =
+let tc_decl env se: list sigelt * list sigelt * Env.env =
    let env = set_hint_correlator env se in
    if Options.debug_module (string_of_lid env.curmodule) then
      BU.print1 "Processing %s\n" (U.lids_of_sigelt se |> List.map string_of_lid |> String.concat ", ");
