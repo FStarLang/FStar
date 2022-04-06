@@ -107,7 +107,7 @@ let as_wl_deferred wl (d:deferred): list (int * deferred_reason * lstring * prob
   List.map (fun (reason, m, p) -> wl.ctr, reason, Thunk.mkv m, p) d
 
 (* --------------------------------------------------------- *)
-(*  new_uvar Generating new unification variables/patterns  *)
+(* <new_uvar> Generating new unification variables/patterns  *)
 (* --------------------------------------------------------- *)
 let new_uvar reason wl r gamma binders k should_check meta : ctx_uvar * term * worklist =
     let ctx_uvar = {
@@ -138,7 +138,7 @@ let copy_uvar u (bs:binders) t wl =
             (Env.all_binders env) t u.ctx_uvar_should_check u.ctx_uvar_meta
 
 (* --------------------------------------------------------- *)
-(*  /new_uvar                                               *)
+(* </new_uvar>                                               *)
 (* --------------------------------------------------------- *)
 
 (* Types used in the output of the solver *)
@@ -162,11 +162,11 @@ type cprob = problem comp
 type problem_t 'a = problem 'a
 
 (* --------------------------------------------------------- *)
-(*  /type defs                                              *)
+(* </type defs>                                              *)
 (* --------------------------------------------------------- *)
 
 (* ------------------------------------------------*)
-(*  Printing (mainly for debugging) *)
+(* <Printing> (mainly for debugging) *)
 (* ------------------------------------------------*)
 let rel_to_string = function
   | EQ -> "="
@@ -179,14 +179,14 @@ let term_to_string t =
     | Tm_uvar (u, s) ->
       BU.format3 "%s%s %s"
             (Print.ctx_uvar_to_string u)
-            (match fst s with | [] -> "" | s -> BU.format1 "@ %s" (Print.subst_to_string (List.hd s)))
+            (match fst s with | [] -> "" | s -> BU.format1 "@<%s>" (Print.subst_to_string (List.hd s)))
             (Print.args_to_string args)
     | _ -> Print.term_to_string t
 
 
 let prob_to_string env = function
   | TProb p ->
-    BU.format "\n%s:\t%s \n\t\t%s\n\t%s\n" //\twith guard %s\n\telement= %s\n" //  (guard %s)\n\t\t Reason\n\t\t\t%s\n\t\t /Reason"
+    BU.format "\n%s:\t%s \n\t\t%s\n\t%s\n" //\twith guard %s\n\telement= %s\n" //  (guard %s)\n\t\t<Reason>\n\t\t\t%s\n\t\t</Reason>"
         [(BU.string_of_int p.pid);
          (term_to_string p.lhs);
          (rel_to_string p.relation);
@@ -215,11 +215,11 @@ let names_to_string nms = BU.set_elements nms |> List.map Print.bv_to_string |> 
 let args_to_string args = args |> List.map (fun (x, _) -> Print.term_to_string x) |> String.concat " "
 
 (* ------------------------------------------------*)
-(*  /Printing *)
+(* </Printing>                                     *)
 (* ------------------------------------------------*)
 
 (* ------------------------------------------------*)
-(*  worklist ops Operations on worklists          *)
+(* <worklist ops> Operations on worklists          *)
 (* ------------------------------------------------*)
 let empty_worklist env = {
     attempting=[];
@@ -243,7 +243,7 @@ let giveup_lit env (reason : string) prob =
     giveup env (mklstr (fun () -> reason)) prob
 
 (* ------------------------------------------------*)
-(*  /worklist ops                                 *)
+(* </worklist ops>                                 *)
 (* ------------------------------------------------*)
 
 (* ------------------------------------------------*)
@@ -487,12 +487,12 @@ let explain env d (s : lstring) =
 
 
 (* ------------------------------------------------*)
-(*  /prob ops                                     *)
+(* </prob ops>                                     *)
 (* ------------------------------------------------*)
 
 
 (* ------------------------------------------------*)
-(*  uvi ops Instantiating unification variables   *)
+(* <uvi ops> Instantiating unification variables   *)
 (* ------------------------------------------------*)
 let commit uvis = uvis |> List.iter (function
     | UNIV(u, t)      ->
@@ -514,12 +514,12 @@ let find_univ_uvar u s = BU.find_map s (function
     | _ -> None)
 
 (* ------------------------------------------------*)
-(*  /uvi ops                                      *)
+(* </uvi ops>                                      *)
 (* ------------------------------------------------*)
 
 
 (* ------------------------------------------------*)
-(*  normalization                                *)
+(* <normalization>                                 *)
 (* ------------------------------------------------*)
 let whnf' env t    = SS.compress (N.normalize [Env.Beta; Env.Reify; Env.Weak; Env.HNF] env (U.unmeta t)) |> U.unlazy_emb
 let sn' env t       = SS.compress (N.normalize [Env.Beta; Env.Reify] env t) |> U.unlazy_emb
@@ -653,11 +653,11 @@ let force_refinement (t_base, refopt) : term =
     mk (Tm_refine(y, phi)) t_base.pos
 
 (* ------------------------------------------------ *)
-(*  /normalization                                 *)
+(* </normalization>                                 *)
 (* ------------------------------------------------ *)
 
 (* ------------------------------------------------ *)
-(*  printing worklists                             *)
+(* <printing worklists>                             *)
 (* ------------------------------------------------ *)
 
 let wl_prob_to_string wl prob = prob_to_string wl.tcenv prob
@@ -665,7 +665,7 @@ let wl_to_string wl =
     List.map (wl_prob_to_string wl) (wl.attempting@(wl.wl_deferred |> List.map (fun (_, _, _, x) -> x))) |> String.concat "\n\t"
 
 (* ------------------------------------------------ *)
-(*  /printing worklists                             *)
+(* </printing worklists>                            *)
 (* ------------------------------------------------ *)
 
 (* A flexible term: the full term,
@@ -838,7 +838,7 @@ let destruct_flex_t env t wl : flex_t * worklist =
   destruct_flex_t' t, wl
 
 (* ------------------------------------------------ *)
-(*  solving problems                               *)
+(* <solving problems>                               *)
 (* ------------------------------------------------ *)
 
 let u_abs (k : typ) (ys : binders) (t : term) : term =
@@ -919,12 +919,12 @@ let solve_prob (prob : prob) (logical_guard : option term) (uvis : list uvi) (wl
     solve_prob' false prob logical_guard uvis wl
 
 (* ------------------------------------------------ *)
-(*  /solving problems                              *)
+(* </solving problems>                              *)
 (* ------------------------------------------------ *)
 
 
 (* ------------------------------------------------ *)
-(*  variable ops common ops on variables           *)
+(* <variable ops> common ops on variables           *)
 (* ------------------------------------------------ *)
 let occurs (uk:ctx_uvar) t =
     let uvars =
@@ -1077,7 +1077,7 @@ let pat_vars env ctx args : option binders =
     aux [] args
 
 (* ------------------------------------------------ *)
-(*  /variable ops                                  *)
+(* </variable ops>                                  *)
 (* ------------------------------------------------ *)
 
 type match_result =
@@ -1338,8 +1338,6 @@ let rank_t_num = function
     | Flex_flex -> 5
 let rank_leq r1 r2 = rank_t_num r1 <= rank_t_num r2
 let rank_less_than r1 r2 =
-    //writing it as `rank_t_num r1 < rank_t_num r2`
-    //doesn't parse in the F# build of F* with #light "off" (!)
     r1 <> r2 &&
     rank_t_num r1 <= rank_t_num r2
 let compress_tprob tcenv p = {p with lhs=whnf tcenv p.lhs; rhs=whnf tcenv p.rhs}
@@ -1641,7 +1639,7 @@ let should_defer_flex_to_user_tac env (wl:worklist) (f:flex_t) =
 
   b
 
-(*  quasi_pattern:
+(* <quasi_pattern>:
         Given a term (?u_(bs;t) e1..en)
         returns None in case the arity of the type t is less than n
         otherwise returns Some (x1 ... xn)
@@ -2843,7 +2841,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
             end
     in
 
-    (*  try_match_heuristic:
+    (* <try_match_heuristic>:
           (match ?u with P1 -> t1 | ... | Pn -> tn) ~ t
 
           when (head t) `matches` (head ti)
@@ -2965,7 +2963,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
               Inr None
     in
 
-    (*  rigid_rigid_delta: are t1 and t2, with head symbols head1 and head2, compatible after some delta steps? *)
+    (* <rigid_rigid_delta>: are t1 and t2, with head symbols head1 and head2, compatible after some delta steps? *)
     let rigid_rigid_delta (env:Env.env) (torig:tprob) (wl:worklist)
                           (head1:term) (head2:term) (t1:term) (t2:term)
         : solution =
@@ -2982,12 +2980,12 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
             let try_reveal_hide env t1 t2 =
                 //tries to solve problems of the form
                 // 1.
-                // reveal ?u == y, where head y   hide/reveal
+                // reveal ?u == y, where head y <> hide/reveal
                 //   by generating hide (reveal ?u) == hide y
                 //   and simplifying it to       ?u == hide y
                 //
                 // 2.
-                //  hide ?u == y, where head y   hide/reveal
+                //  hide ?u == y, where head y <> hide/reveal
                 //  by generating reveal (hide ?u) == reveal y
                 //  and simplifying it to       ?u == reveal y
                 //
@@ -3106,7 +3104,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
         | (FullMatch, None) ->
             rigid_heads_match env false torig wl t1 t2
     in
-    (*  rigid_rigid_delta *)
+    (* <rigid_rigid_delta> *)
 
     let orig = TProb problem in
     def_check_prob "solve_t'.2" orig;
@@ -3312,7 +3310,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
       | _, Tm_app({n=Tm_uvar _}, _) when (problem.relation = EQ) ->
         solve_t env (invert problem) wl
 
-      (* flex-rigid: ?u _  : t1 - t2 *)
+      (* flex-rigid: ?u _ <: t1 -> t2 *)
       | Tm_uvar _, Tm_arrow _
       | Tm_app({n=Tm_uvar _}, _), Tm_arrow _ ->
         //FIXME! This is weird; it should be handled by imitate_arrow
@@ -3539,11 +3537,11 @@ and solve_c (env:Env.env) (problem:problem comp) (wl:worklist) : solution =
                             (Print.comp_to_string (mk_Comp c1_comp))
                             (Print.comp_to_string (mk_Comp c2_comp)) in
         if not (lid_equals c1_comp.effect_name c2_comp.effect_name)
-        then giveup env (mklstr (fun () -> BU.format2 "incompatible effects: %s   %s"
+        then giveup env (mklstr (fun () -> BU.format2 "incompatible effects: %s <> %s"
                                         (Print.lid_to_string c1_comp.effect_name)
                                         (Print.lid_to_string c2_comp.effect_name))) orig
         else if List.length c1_comp.effect_args <> List.length c2_comp.effect_args
-        then giveup env (mklstr (fun () -> BU.format2 "incompatible effect arguments: %s   %s"
+        then giveup env (mklstr (fun () -> BU.format2 "incompatible effect arguments: %s <> %s"
                                         (Print.args_to_string c1_comp.effect_args)
                                         (Print.args_to_string c2_comp.effect_args))) orig
         else
@@ -3602,7 +3600,7 @@ and solve_c (env:Env.env) (problem:problem comp) (wl:worklist) : solution =
        *
        * Next, we lookup M.stronger_wp
        * let M.stronger_wp =
-       *   (u, a:Type u -> (x_i:t_i) -> f:repr u> a f_i_1 ... f_i_n - PURE (repr u a g_i_1 ... g_i_n) wp)
+       *   (u, a:Type u -> (x_i:t_i) -> f:<repr u> a f_i_1 ... f_i_n -> PURE (repr<u> a g_i_1 ... g_i_n) wp)
        *
        * We first instantiate it with c2.comp_univs
        *

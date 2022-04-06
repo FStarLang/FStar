@@ -750,7 +750,7 @@ let constructor_to_decl rng (name, fields, sort, id, injective) =
         if injective
         then injective_constructor rng (name, fields, sort)
         else [] in
-    Caption (format1 " start constructor %s" name)::cdecl::cid::projs@[disc]@[Caption (format1 " /end constructor %s" name)]
+    Caption (format1 "<start constructor %s>" name)::cdecl::cid::projs@[disc]@[Caption (format1 "</end constructor %s>" name)]
 
 (****************************************************************************)
 (* Standard SMTLib prelude for F* and some term constructors                *)
@@ -936,13 +936,13 @@ let rec declToSmt' print_captions z3options decl =
     format1 "(echo \"%s\")" s
   | RetainAssumptions _ ->
     ""
-  | CheckSat -> "(echo \" result\")\n(check-sat)\n(echo \" /result\")"
-  | GetUnsatCore -> "(echo \" unsat-core\")\n(get-unsat-core)\n(echo \" /unsat-core\")"
+  | CheckSat -> "(echo \"<result>\")\n(check-sat)\n(echo \"</result>\")"
+  | GetUnsatCore -> "(echo \"<unsat-core>\")\n(get-unsat-core)\n(echo \"</unsat-core>\")"
   | Push -> "(push)"
   | Pop -> "(pop)"
   | SetOption (s, v) -> format2 "(set-option :%s %s)" s v
-  | GetStatistics -> "(echo \" statistics\")\n(get-info :all-statistics)\n(echo \" /statistics\")"
-  | GetReasonUnknown-> "(echo \" reason-unknown\")\n(get-info :reason-unknown)\n(echo \" /reason-unknown\")"
+  | GetStatistics -> "(echo \"<statistics>\")\n(get-info :all-statistics)\n(echo \"</statistics>\")"
+  | GetReasonUnknown-> "(echo \"<reason-unknown>\")\n(get-info :reason-unknown)\n(echo \"</reason-unknown>\")"
 
 and declToSmt         z3options decl = declToSmt' (Options.keep_query_captions())  z3options decl
 

@@ -688,8 +688,8 @@ let open_let_rec lbs (t:term) =
               (0, [], [])
     in
       (* Consider
-                let rec f u x = g x
-                and g u y = f y in
+                let rec f<u> x = g x
+                and g<u> y = f y in
                 f 0, g 0
             In de Bruijn notation, this is
                 let rec f x = g@1 x@0

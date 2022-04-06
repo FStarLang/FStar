@@ -308,8 +308,8 @@ let smt_output_sections (log_file:option string) (r:Range.range) (lines:list str
           else BU.map_opt (until tag lines) (fun (until_tag, rest) ->
                           (l::until_tag, rest))
     in
-    let start_tag tag = " " ^ tag ^ "" in
-    let end_tag tag = " /" ^ tag ^ "" in
+    let start_tag tag = "<" ^ tag ^ ">" in
+    let end_tag tag = "</" ^ tag ^ ">" in
     let find_section tag lines : option (list string) * list string =
        match until (start_tag tag) lines with
        | None -> None, lines

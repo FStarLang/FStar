@@ -199,7 +199,7 @@ let (check_valid_goal : FStar_Tactics_Types.goal -> unit) =
              let uu___5 =
                let uu___6 = FStar_Tactics_Printing.goal_to_string_verbose g in
                FStar_Compiler_Util.format1
-                 "The following goal is ill-formed. Keeping calm and carrying on...\n %s\n\n"
+                 "The following goal is ill-formed. Keeping calm and carrying on...\n<%s>\n\n"
                  uu___6 in
              (FStar_Errors.Warning_IllFormedGoal, uu___5) in
            FStar_Errors.log_issue uu___3 uu___4);

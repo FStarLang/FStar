@@ -152,7 +152,6 @@ let trans_pragma = function
   | AST.PopOptions -> S.PopOptions
   | AST.RestartSolver -> S.RestartSolver
   | AST.PrintEffectsGraph -> S.PrintEffectsGraph
-  | AST.LightOff -> S.LightOff
 
 let as_imp = function
     | Hash -> S.as_aqual_implicit true
@@ -1514,8 +1513,8 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
            The desugaring of let recs has to be consistent with their opening
 
             Consider
-                let rec f u x = g x
-                and g u' y = f y in
+                let rec f<u> x = g x
+                and g<u'> y = f y in
                 f 0, g 0
             In de Bruijn notation, this is
                 let rec f x = g@1 x@0
@@ -1549,7 +1548,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
                          t
                     else if Options.ml_ish () //we're type-checking the compiler itself, e.g.
                     && Option.isSome (Env.try_lookup_effect_name env (C.effect_ML_lid())) //ML is in scope (not still in prims, e.g)
-                    && (not is_rec || List.length args  > 0) //and we don't have something like `let rec f : t - t' = fun x -> e`
+                    && (not is_rec || List.length args <> 0) //and we don't have something like `let rec f : t -> t' = fun x -> e`
                     then AST.ml_comp t
                     else AST.tot_comp t
                 in

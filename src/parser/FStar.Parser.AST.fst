@@ -200,7 +200,6 @@ type pragma =
   | PushOptions of option string
   | PopOptions
   | RestartSolver
-  | LightOff
   | PrintEffectsGraph
 
 type decl' =
@@ -461,14 +460,13 @@ let rec as_mlist (cur: (lid * decl) * list decl) (ds:list decl) : modul =
             as_mlist ((m_name, m_decl), d::cur) ds
         end
 
-let as_frag is_light (light_range:Range.range) (ds:list decl) : inputFragment =
+let as_frag (ds:list decl) : inputFragment =
   let d, ds = match ds with
     | d :: ds -> d, ds
     | [] -> raise Empty_frag
   in
   match d.d with
   | TopLevelModule m ->
-      let ds = if is_light then mk_decl (Pragma LightOff) light_range [] :: ds else ds in
       let m = as_mlist ((m,d), []) ds in
       Inl m
   | _ ->

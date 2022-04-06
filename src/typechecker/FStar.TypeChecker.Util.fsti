@@ -155,7 +155,7 @@ val must_erase_for_extraction: env -> term -> bool
 //layered effect utilities
 
 (*
- * This function returns ed.repr u a ?u1 ... ?un (note that u must be the universe of a)
+ * This function returns ed.repr<u> a ?u1 ... ?un (note that u must be the universe of a)
  *   where ?u1 ... ?un are unification variables, one for each index of the layered effect
  *
  * The unification variables are resolved in the input env

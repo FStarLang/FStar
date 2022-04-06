@@ -787,16 +787,16 @@ let return_value env eff_lid u_t_opt t v =
  * Let c1 = M c1_a (t1 ... tm)
  *     c2 = N c2_a (s1 ... sn) - where b is free in (s1 ... sn)
  *
- *     bind_t = ((u_a, u_b), a:Type -> b:Type ->  some binders> -
+ *     bind_t = ((u_a, u_b), a:Type -> b:Type -> <some binders> ->
  *                           f:M.repr a i_1 ... i_n ->
  *                           g:(x:a -> N.repr b j_1 ... j_n) ->
  *                           PURE (P.repr b k_1 ... k_p) wp)
  *
  * First we instantiate bind_t with [u_c1_a, u_c2_a]
  *
- * Then we substitute [a/c1_a; b/c2_a] in  some binders
+ * Then we substitute [a/c1_a; b/c2_a] in <some binders>
  *
- * Next we create ?u1 ... ?un for each of the binders in  some binders
+ * Next we create ?u1 ... ?un for each of the binders in <some binders>
  *   while substituting [bi/?ui] in subsequent binders (so that their sorts are well-typed)
  *
  * Let substs = [a/c1_a; b/c2_a; bi/?ui]
@@ -879,7 +879,7 @@ let mk_indexed_bind env
              (Print.term_to_string t)
              (match u.ctx_uvar_meta with
               | Some (Ctx_uvar_meta_attr a) -> Print.term_to_string a
-              | _ -> " no attr")
+              | _ -> "<no attr>")
          | _ -> failwith ("Impossible, expected a uvar, got : " ^ Print.term_to_string t));
 
   let subst = List.map2
@@ -1590,11 +1590,11 @@ let fvar_const env lid =  S.fvar (Ident.set_lid_range lid (Env.get_range env)) d
  * let ct1 = M a (t1...tn)
  *     ct2 = M a (s1...sn)
  *
- *     M.conjunction = fun (a_b:Type) .. some binders>.. (f:repr a i1...in) (g:repr a j1...jn) (p_b:Type0) - repr a k1...n
+ *     M.conjunction = fun (a_b:Type) ..<some binders>.. (f:repr a i1...in) (g:repr a j1...jn) (p_b:Type0) -> repr a k1...n
  *
  * First we instantiate M.conjunction with [u_a]
  *
- * Then we create uvars ?u1..?un for each of the binders in  some binder
+ * Then we create uvars ?u1..?un for each of the binders in <some binder>
  *   while substituting [a_b/a] and [bi/?ui] in subsequent binders (handled by Env.uvars_for_binders)
  *
  * let substs = [a_b/a; bi/?ui; p_b/p]
@@ -1692,7 +1692,7 @@ let mk_non_layered_conjunction env (ed:S.eff_decl) (u_a:universe) (a:term) (p:ty
   mk_comp ed u_a a wp [], Env.trivial_guard
 
 (*
- * PURE u> t (fun _ - False)
+ * PURE<u> t (fun _ -> False)
  *
  * This is the comp type for a match with no cases (used in bind_cases)
  *)
@@ -2943,10 +2943,10 @@ let check_non_informative_type_for_lift env m1 m2 t r : unit =
 (*
  * Lifting a comp c to the layered effect eff_name
  *
- * let c = M u_c a_c wp_c
+ * let c = M<u_c> a_c wp_c
  *
  * let lift_M_eff_name = (u, lift_t) where
- *   lift_t = a:Type u -> wp:M_wp a -> (x_i:t_i) -> f:(unit -> M a wp) -> PURE (repr u a i_1 ... i_n) wp
+ *   lift_t = a:Type u -> wp:M_wp a -> (x_i:t_i) -> f:(unit -> M a wp) -> PURE (repr<u> a i_1 ... i_n) wp
  *
  * We first instantiate lift_t with u_c
  *
@@ -2954,7 +2954,7 @@ let check_non_informative_type_for_lift env m1 m2 t r : unit =
  *
  * let substs = [a/a_c; wp/wp_c; x_i/?u_i]
  *
- * We return M' u_c a_c i_i[substs]
+ * We return M'<u_c> a_c i_i[substs]
  *
  * + we add (wp[substs] (fun _ -> True)) to the returned guard
  *)
@@ -2973,7 +2973,7 @@ let lift_tf_layered_effect (tgt:lident) (lift_ts:tscheme) env (c:comp) : comp * 
 
   let u, a, c_is = List.hd ct.comp_univs, ct.result_typ, ct.effect_args |> List.map fst in
 
-  //lift_ts has the arrow type:  u>a:Type -> ..bs.. -> f - repr a is
+  //lift_ts has the arrow type:  <u>a:Type -> ..bs.. -> f -> repr a is
 
   let _, lift_t = Env.inst_tscheme_with lift_ts [u] in
 

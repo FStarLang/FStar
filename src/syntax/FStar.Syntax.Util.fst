@@ -41,7 +41,7 @@ module PC = FStar.Parser.Const
 let tts_f : ref (option (term -> string)) = U.mk_ref None
 let tts t : string =
     match !tts_f with
-    | None -> "  hook unset"
+    | None -> "<<hook unset>>"
     | Some f -> f t
 
 let mk_discriminator lid =
@@ -501,7 +501,7 @@ let canon_app t =
     mk_Tm_app hd args t.pos
 
 (* ---------------------------------------------------------------------- *)
-(*  eq_tm Syntactic equality of terms                                    *)
+(* <eq_tm> Syntactic equality of terms                                    *)
 (* ---------------------------------------------------------------------- *)
 type eq_result =
     | Equal
@@ -1946,9 +1946,6 @@ let process_pragma p r =
                 (Errors.Fatal_FailToProcessPragma, "Failed to process pragma: " ^ s) r
     in
     match p with
-    | LightOff ->
-      Options.set_ml_ish()
-
     | SetOptions o ->
       set_options o
 

@@ -446,7 +446,7 @@ let lazy_unembed cb (et:emb_typ) (x:t) (f:t -> option 'a) : option 'a =
       || !Options.eager_embedding
       then let res = f (Thunk.force thunk) in
            let _ = if !Options.debug_embedding
-                   then BU.print2 "Unembed cancellation failed\n\t%s   %s\n"
+                   then BU.print2 "Unembed cancellation failed\n\t%s <> %s\n"
                                 (P.emb_typ_to_string et)
                                 (P.emb_typ_to_string et')
            in

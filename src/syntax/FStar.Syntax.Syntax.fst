@@ -54,7 +54,6 @@ type pragma =
   | PushOptions of option string
   | PopOptions
   | RestartSolver
-  | LightOff
   | PrintEffectsGraph
 
 // IN F*: [@ PpxDerivingYoJson (PpxDerivingShowConstant "None") ]

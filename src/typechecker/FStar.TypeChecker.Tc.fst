@@ -357,7 +357,7 @@ let tc_sig_let env r se lbs lids : list sigelt * list sigelt * Env.env =
                                  binder_bv={val_b.binder_bv with
                                    ppname = mk_ident (string_of_id body_bv.ppname, range_of_id val_b.binder_bv.ppname)} }
                | false, false ->
-                 // if (string_of_id body_bv.ppname)   (string_of_id val_bv.ppname) then
+                 // if (string_of_id body_bv.ppname) <> (string_of_id val_bv.ppname) then
                  //   Errors.warn (range_of_id body_bv.ppname)
                  //     (BU.format2 "Parameter name %s doesn't match name %s used in val declaration"
                  //                  (string_of_id body_bv.ppname) (string_of_id val_bv.ppname));

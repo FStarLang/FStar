@@ -316,7 +316,7 @@ let primitive_type_axioms : env -> lident -> string -> term -> list decl =
         let valid = mkApp("Valid", [l_iff_a_b]) in
         let valid_a = mkApp("Valid", [a]) in
         let valid_b = mkApp("Valid", [b]) in
-        [Util.mkAssume(mkForall (Env.get_range env) ([[l_iff_a_b]], [aa;bb], mkIff(mkIff(valid_a, valid_b), valid)), Some " == interpretation", "l_iff-interp")] in
+        [Util.mkAssume(mkForall (Env.get_range env) ([[l_iff_a_b]], [aa;bb], mkIff(mkIff(valid_a, valid_b), valid)), Some "<==> interpretation", "l_iff-interp")] in
     let mk_not_interp : env -> string -> term -> list decl = fun env l_not tt ->
         let aa = mk_fv ("a", Term_sort) in
         let a = mkFreeV aa in
@@ -1026,12 +1026,12 @@ let rec encode_sigelt (env:env_t) (se:sigelt) : (decls_t * env_t) =
             begin
             if Env.debug env.tcenv <| Options.Other "SMTEncoding" then
               BU.print1 "Skipped encoding of %s\n" nm;
-            [Caption (BU.format1 " Skipped %s/" nm)] |> mk_decls_trivial
+            [Caption (BU.format1 "<Skipped %s/>" nm)] |> mk_decls_trivial
             end
 
-         | _ -> ([Caption (BU.format1 " Start encoding %s" nm)] |> mk_decls_trivial)
+         | _ -> ([Caption (BU.format1 "<Start encoding %s>" nm)] |> mk_decls_trivial)
                 @g
-                @([Caption (BU.format1 " /end encoding %s" nm)] |> mk_decls_trivial) in
+                @([Caption (BU.format1 "</end encoding %s>" nm)] |> mk_decls_trivial) in
     g, env
 
 and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
@@ -1962,7 +1962,7 @@ let encode_query use_env_msg tcenv q
         @(caption |> mk_decls_trivial) |> recover_caching_and_update_env env |> decls_list_of in  //recover caching and flatten
 
     let qry = Util.mkAssume(mkNot phi, Some "query", (varops.mk_unique "@query")) in
-    let suffix = [Term.Echo " labels"] @ label_suffix @ [Term.Echo " /labels"; Term.Echo "Done!"] in
+    let suffix = [Term.Echo "<labels>"] @ label_suffix @ [Term.Echo "</labels>"; Term.Echo "Done!"] in
     if debug tcenv Options.Medium
     || debug tcenv <| Options.Other "SMTEncoding"
     || debug tcenv <| Options.Other "SMTQuery"

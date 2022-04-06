@@ -197,14 +197,6 @@ let (set_option' : (Prims.string * option_val) -> unit) =
   fun uu___ -> match uu___ with | (k, v) -> set_option k v
 let (set_admit_smt_queries : Prims.bool -> unit) =
   fun b -> set_option "admit_smt_queries" (Bool b)
-let (light_off_files : Prims.string Prims.list FStar_Compiler_Effect.ref) =
-  FStar_Compiler_Util.mk_ref []
-let (add_light_off_file : Prims.string -> unit) =
-  fun filename ->
-    let uu___ =
-      let uu___1 = FStar_Compiler_Effect.op_Bang light_off_files in filename
-        :: uu___1 in
-    FStar_Compiler_Effect.op_Colon_Equals light_off_files uu___
 let (defaults : (Prims.string * option_val) Prims.list) =
   [("__temp_fast_implicits", (Bool false));
   ("abort_on", (Int Prims.int_zero));
@@ -232,7 +224,6 @@ let (defaults : (Prims.string * option_val) Prims.list) =
   ("extract_all", (Bool false));
   ("extract_module", (List []));
   ("extract_namespace", (List []));
-  ("fs_typ_app", (Bool false));
   ("full_context_dependency", (Bool true));
   ("hide_uvar_nums", (Bool false));
   ("hint_info", (Bool false));
@@ -338,9 +329,7 @@ let (init : unit -> unit) =
 let (clear : unit -> unit) =
   fun uu___ ->
     let o = FStar_Compiler_Util.smap_create (Prims.of_int (50)) in
-    FStar_Compiler_Effect.op_Colon_Equals fstar_options [[o]];
-    FStar_Compiler_Effect.op_Colon_Equals light_off_files [];
-    init ()
+    FStar_Compiler_Effect.op_Colon_Equals fstar_options [[o]]; init ()
 let (_run : unit) = clear ()
 let (get_option : Prims.string -> option_val) =
   fun s ->
@@ -441,8 +430,6 @@ let (get_extract_namespace : unit -> Prims.string Prims.list) =
   fun uu___ -> lookup_opt "extract_namespace" (as_list as_string)
 let (get_force : unit -> Prims.bool) =
   fun uu___ -> lookup_opt "force" as_bool
-let (get_fs_typ_app : unit -> Prims.bool) =
-  fun uu___ -> lookup_opt "fs_typ_app" as_bool
 let (get_hide_uvar_nums : unit -> Prims.bool) =
   fun uu___ -> lookup_opt "hide_uvar_nums" as_bool
 let (get_hint_info : unit -> Prims.bool) =
@@ -959,7 +946,7 @@ let (interp_quake_arg : Prims.string -> (Prims.int * Prims.int * Prims.bool))
           let uu___ = ios f1 in let uu___1 = ios f2 in (uu___, uu___1, true)
         else failwith "unexpected value for --quake"
     | uu___ -> failwith "unexpected value for --quake"
-let (uu___406 : (((Prims.string -> unit) -> unit) * (Prims.string -> unit)))
+let (uu___403 : (((Prims.string -> unit) -> unit) * (Prims.string -> unit)))
   =
   let cb = FStar_Compiler_Util.mk_ref FStar_Pervasives_Native.None in
   let set1 f =
@@ -971,11 +958,11 @@ let (uu___406 : (((Prims.string -> unit) -> unit) * (Prims.string -> unit)))
     | FStar_Pervasives_Native.Some f -> f msg in
   (set1, call)
 let (set_option_warning_callback_aux : (Prims.string -> unit) -> unit) =
-  match uu___406 with
+  match uu___403 with
   | (set_option_warning_callback_aux1, option_warning_callback) ->
       set_option_warning_callback_aux1
 let (option_warning_callback : Prims.string -> unit) =
-  match uu___406 with
+  match uu___403 with
   | (set_option_warning_callback_aux1, option_warning_callback1) ->
       option_warning_callback1
 let (set_option_warning_callback : (Prims.string -> unit) -> unit) =
@@ -1464,7 +1451,7 @@ let (settable_specs :
     (FStar_Compiler_List.filter
        (fun uu___ ->
           match uu___ with | (uu___1, x, uu___2, uu___3) -> settable x))
-let (uu___588 :
+let (uu___585 :
   (((unit -> FStar_Getopt.parse_cmdline_res) -> unit) *
     (unit -> FStar_Getopt.parse_cmdline_res)))
   =
@@ -1481,11 +1468,11 @@ let (uu___588 :
   (set1, call)
 let (set_error_flags_callback_aux :
   (unit -> FStar_Getopt.parse_cmdline_res) -> unit) =
-  match uu___588 with
+  match uu___585 with
   | (set_error_flags_callback_aux1, set_error_flags) ->
       set_error_flags_callback_aux1
 let (set_error_flags : unit -> FStar_Getopt.parse_cmdline_res) =
-  match uu___588 with
+  match uu___585 with
   | (set_error_flags_callback_aux1, set_error_flags1) -> set_error_flags1
 let (set_error_flags_callback :
   (unit -> FStar_Getopt.parse_cmdline_res) -> unit) =
@@ -1855,10 +1842,6 @@ let (error_contexts : unit -> Prims.bool) =
 let (expose_interfaces : unit -> Prims.bool) =
   fun uu___ -> get_expose_interfaces ()
 let (force : unit -> Prims.bool) = fun uu___ -> get_force ()
-let (fs_typ_app : Prims.string -> Prims.bool) =
-  fun filename ->
-    let uu___ = FStar_Compiler_Effect.op_Bang light_off_files in
-    FStar_Compiler_List.contains filename uu___
 let (full_context_dependency : unit -> Prims.bool) = fun uu___ -> true
 let (hide_uvar_nums : unit -> Prims.bool) =
   fun uu___ -> get_hide_uvar_nums ()

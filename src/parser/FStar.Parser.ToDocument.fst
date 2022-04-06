@@ -35,8 +35,7 @@ module BU = FStar.Compiler.Util
 
 
 (* !!! SIDE EFFECT WARNING !!! *)
-(* There are 3 uses of global side-effect in the printer for : *)
-(* - Printing F# style type application [should_print_fs_typ_app] *)
+(* There is 1 uses of global side-effect in the printer for : *)
 (* - Printing the comments [comment_stack] *)
 
 let maybe_unthunk t =
@@ -81,22 +80,9 @@ let all1_explicit (args:list (term*imp)) : bool =
                 | (_, Nothing) -> true
                 | _ -> false) args
 
-(* [should_print_fs_typ_app] is set when encountering a [LightOff] pragma and *)
-(* reset at the end of each module. If you are using individual print function you *)
-(* should wrap them in [with_fs_typ_app] *)
-let should_print_fs_typ_app = BU.mk_ref false
-
 (* Tuples which come from a resugared AST, via term_to_document are already flattened *)
 (* This reference is set to false in term_to_document and checked in p_tmNoEqWith'    *)
 let unfold_tuples = BU.mk_ref true
-
-let with_fs_typ_app b printer t =
-  let b0 = !should_print_fs_typ_app in
-  should_print_fs_typ_app := b ;
-  let res = printer t in
-  should_print_fs_typ_app := b0 ;
-  res
-
 
 // abbrev
 let str s = doc_of_string s
@@ -402,7 +388,7 @@ let handleable_args_length (op:ident) =
   if is_general_prefix_op op || List.mem op_s [ "-" ; "~" ] then 1
   else if (is_operatorInfix0ad12 op ||
     is_operatorInfix34 op ||
-    List.mem op_s [" ==" ; "==>" ; "\\/" ; "/\\" ; "=" ; "|>" ; ":=" ; ".()" ; ".[]"])
+    List.mem op_s ["<==>" ; "==>" ; "\\/" ; "/\\" ; "=" ; "|>" ; ":=" ; ".()" ; ".[]"])
   then 2
   else if (List.mem op_s [".()<-" ; ".[]<-"]) then 3
   else 0
@@ -414,7 +400,7 @@ let handleable_op op args =
   | 2 ->
     is_operatorInfix0ad12 op ||
     is_operatorInfix34 op ||
-    List.mem (Ident.string_of_id op) [" ==" ; "==>" ; "\\/" ; "/\\" ; "=" ; "|>" ; ":=" ; ".()" ; ".[]"]
+    List.mem (Ident.string_of_id op) ["<==>" ; "==>" ; "\\/" ; "/\\" ; "=" ; "|>" ; ":=" ; ".()" ; ".[]"]
   | 3 -> List.mem (Ident.string_of_id op) [".()<-" ; ".[]<-"]
   | _ -> false
 
@@ -753,7 +739,6 @@ and p_rawDecl d = match d.d with
   | Splice (ids, t) ->
     str "%splice" ^^ p_list p_uident (str ";") ids ^^ space ^^ p_term false false t
 
-(* !!! Side-effect !!! : When a [#light "off"] is printed it activates the fs_typ_app *)
 and p_pragma = function
   | SetOptions s -> str "#set-options" ^^ space ^^ dquotes (str s)
   | ResetOptions s_opt -> str "#reset-options" ^^ optional (fun s -> space ^^ dquotes (str s)) s_opt
@@ -761,9 +746,6 @@ and p_pragma = function
   | PopOptions -> str "#pop-options"
   | RestartSolver -> str "#restart-solver"
   | PrintEffectsGraph -> str "#print-effects-graph"
-  | LightOff ->
-      should_print_fs_typ_app := true ;
-      str "#light \"off\""
 
 (* TODO : needs to take the F# specific type instantiation *)
 and p_typars (bs: list binder): document = p_binders true bs
@@ -1648,8 +1630,8 @@ and p_patternBranch pb (pat, when_opt, e) =
 
 (* Nothing underneath tmIff is at risk of swallowing a semicolon. *)
 and p_tmIff e = match e.tm with
-    | Op(id, [e1;e2]) when string_of_id id = " ==" ->
-        infix0 (str " ==") (p_tmImplies e1) (p_tmIff e2)
+    | Op(id, [e1;e2]) when string_of_id id = "<==>" ->
+        infix0 (str "<==>") (p_tmImplies e1) (p_tmIff e2)
     | _ -> p_tmImplies e
 
 and p_tmImplies e = match e.tm with
@@ -1787,7 +1769,7 @@ and p_tmEqWith' p_X curr e = match e.tm with
   (* We don't have any information to print `infix` aplication *)
   | Op (op, [e1; e2]) when (* Implications and iffs are handled specially by the parser *)
                            not (Ident.string_of_id op = "==>"
-                                || Ident.string_of_id op = " ==")
+                                || Ident.string_of_id op = "<==>")
                            && (is_operatorInfix0ad12 op
                                || Ident.string_of_id op = "="
                                || Ident.string_of_id op = "|>") ->
@@ -1879,15 +1861,7 @@ and p_appTerm e = match e.tm with
       | [e1; e2] when snd e1 = Infix ->
         p_argTerm e1 ^/^ group (str "`" ^^ (p_indexingTerm head) ^^ str "`") ^/^ p_argTerm e2
       | _ ->
-        let head_doc, args =
-          if !should_print_fs_typ_app
-          then
-            let fs_typ_args, args = BU.take (fun (_,aq) -> aq = FsTypApp) args in
-            p_indexingTerm head ^^
-            soft_surround_map_or_flow 2 0 empty langle (comma ^^ break1) rangle p_fsTypArg fs_typ_args,
-            args
-          else p_indexingTerm head, args
-        in
+        let head_doc, args = p_indexingTerm head, args in
         group (soft_surround_map_or_flow 2 0 head_doc (head_doc ^^ space) break1 empty p_argTerm args)
       )
 
@@ -1916,8 +1890,6 @@ and p_argTerm arg_imp = match arg_imp with
   | (e, Infix)
   | (e, Nothing) -> p_indexingTerm e
 
-
-and p_fsTypArg (e, _) = p_indexingTerm e
 
 and p_indexingTerm_aux exit e = match e.tm with
   | Op(id, [e1 ; e2]) when string_of_id id = ".()" ->
@@ -2120,14 +2092,10 @@ let pat_to_document p = p_disjunctivePattern p
 let binder_to_document b = p_binder true b
 
 let modul_to_document (m:modul) =
-  should_print_fs_typ_app := false ;
-  let res =
-    match m with
-    | Module (_, decls)
-    | Interface (_, decls, _) ->
-        decls |> List.map decl_to_document |> separate hardline
-  in  should_print_fs_typ_app := false ;
-  res
+  match m with
+  | Module (_, decls)
+  | Interface (_, decls, _) ->
+    decls |> List.map decl_to_document |> separate hardline
 
 let comments_to_document (comments : list (string * FStar.Compiler.Range.range)) =
     separate_map hardline (fun (comment, range) -> str comment) comments
@@ -2154,23 +2122,13 @@ let modul_with_comments_to_document (m:modul) comments =
     | Module (_, decls)
     | Interface (_, decls, _) -> decls
   in
-  should_print_fs_typ_app := false ;
   match decls with
     | [] -> empty, comments
     | d :: ds ->
-      (* KM : Hack to fix the inversion that is happening in FStar.Parser.ASTs.as_frag *)
-      (* '#light "off"' is supposed to come before 'module ..' but it is swapped there *)
-      let decls, first_range =
-        match ds with
-        | { d = Pragma LightOff } :: _ ->
-            let d0 = List.hd ds in
-            d0 :: d :: List.tl ds, d0.drange
-        | _ -> d :: ds, d.drange
-      in
+      let decls, first_range = d :: ds, d.drange in
       comment_stack := comments ;
       let initial_comment = place_comments_until_pos 0 1 (start_of_range first_range) dummy_meta empty false true in
   let doc = separate_map_with_comments empty empty p_decl decls extract_decl_range in
   let comments = !comment_stack in
   comment_stack := [] ;
-  should_print_fs_typ_app := false ;
   (initial_comment ^^ doc, comments)

@@ -1387,7 +1387,7 @@ let (reduce_primops :
                                           FStar_Syntax_Print.term_to_string
                                             tm in
                                         FStar_Compiler_Util.print1
-                                          "primop: trying to reduce  %s\n"
+                                          "primop: trying to reduce <%s>\n"
                                           uu___8);
                                    (let psc =
                                       {
@@ -1412,7 +1412,7 @@ let (reduce_primops :
                                                 FStar_Syntax_Print.term_to_string
                                                   tm in
                                               FStar_Compiler_Util.print1
-                                                "primop:  %s did not reduce\n"
+                                                "primop: <%s> did not reduce\n"
                                                 uu___9);
                                          tm)
                                     | FStar_Pervasives_Native.Some reduced ->
@@ -1426,7 +1426,7 @@ let (reduce_primops :
                                                 FStar_Syntax_Print.term_to_string
                                                   reduced in
                                               FStar_Compiler_Util.print2
-                                                "primop:  %s reduced to  %s\n"
+                                                "primop: <%s> reduced to  %s\n"
                                                 uu___9 uu___10);
                                          FStar_Syntax_Util.mk_app reduced
                                            args_2))))
@@ -1436,7 +1436,7 @@ let (reduce_primops :
                                  let uu___7 =
                                    FStar_Syntax_Print.term_to_string tm in
                                  FStar_Compiler_Util.print1
-                                   "primop: not reducing  %s since we're doing strong reduction\n"
+                                   "primop: not reducing <%s> since we're doing strong reduction\n"
                                    uu___7);
                             tm)
                        | FStar_Pervasives_Native.None -> tm)
@@ -1447,7 +1447,7 @@ let (reduce_primops :
                          (fun uu___4 ->
                             let uu___5 = FStar_Syntax_Print.term_to_string tm in
                             FStar_Compiler_Util.print1
-                              "primop: reducing  %s\n" uu___5);
+                              "primop: reducing <%s>\n" uu___5);
                        (match args with
                         | (a1, uu___4)::[] ->
                             FStar_TypeChecker_Cfg.embed_simple
@@ -1462,7 +1462,7 @@ let (reduce_primops :
                          (fun uu___4 ->
                             let uu___5 = FStar_Syntax_Print.term_to_string tm in
                             FStar_Compiler_Util.print1
-                              "primop: reducing  %s\n" uu___5);
+                              "primop: reducing <%s>\n" uu___5);
                        (match args with
                         | (t, uu___4)::(r, uu___5)::[] ->
                             let uu___6 =
@@ -5259,7 +5259,7 @@ and (do_reify_monadic :
                                                     FStar_Syntax_Print.term_to_string
                                                       reified in
                                                   FStar_Compiler_Util.print2
-                                                    "Reified (1)  %s to %s\n"
+                                                    "Reified (1) <%s> to %s\n"
                                                     uu___12 uu___13);
                                              (let uu___11 =
                                                 FStar_Compiler_List.tl stack1 in
@@ -5309,7 +5309,7 @@ and (do_reify_monadic :
                                let uu___7 =
                                  FStar_Syntax_Print.term_to_string top0 in
                                FStar_Compiler_Util.print2
-                                 "Reified (2)  %s to %s\n" uu___7 "");
+                                 "Reified (2) <%s> to %s\n" uu___7 "");
                           (let uu___6 = FStar_Compiler_List.tl stack1 in
                            let uu___7 = FStar_Syntax_Util.mk_reify top2 in
                            norm cfg env1 uu___6 uu___7) in
@@ -5319,7 +5319,7 @@ and (do_reify_monadic :
                                let uu___7 =
                                  FStar_Syntax_Print.term_to_string top0 in
                                FStar_Compiler_Util.print2
-                                 "Reified (3)  %s to %s\n" uu___7 "");
+                                 "Reified (3) <%s> to %s\n" uu___7 "");
                           (let uu___6 = FStar_Compiler_List.tl stack1 in
                            let uu___7 =
                              FStar_Syntax_Syntax.mk
@@ -9310,7 +9310,7 @@ let (get_n_binders :
                           FStar_Syntax_Syntax.mk_Total uu___3 in
                         (bs_l, uu___2))
                | (bs1, c1) when
-                   ((len <> n1) && (FStar_Syntax_Util.is_total_comp c1)) &&
+                   ((len < n1) && (FStar_Syntax_Util.is_total_comp c1)) &&
                      (let uu___1 = FStar_Syntax_Util.has_decreases c1 in
                       Prims.op_Negation uu___1)
                    ->

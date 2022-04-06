@@ -418,7 +418,8 @@ let (with_fuel_and_diagnostics :
           let uu___2 =
             let uu___3 = FStar_Compiler_Util.string_of_int n in
             let uu___4 = FStar_Compiler_Util.string_of_int i in
-            FStar_Compiler_Util.format2 " fuel='%s' ifuel='%s'" uu___3 uu___4 in
+            FStar_Compiler_Util.format2 "<fuel='%s' ifuel='%s'>" uu___3
+              uu___4 in
           FStar_SMTEncoding_Term.Caption uu___2 in
         let uu___2 =
           let uu___3 =

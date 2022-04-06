@@ -960,7 +960,7 @@ let e_arrow (ea:embedding 'a) (eb:embedding 'b) : embedding ('a -> 'b) =
               Range.dummyRange
     in
     let emb_t_arr_a_b = ET_fun(ea.emb_typ, eb.emb_typ) in
-    let printer (f:'a -> 'b) = " fun" in
+    let printer (f:'a -> 'b) = "<fun>" in
     let em (f:'a -> 'b) rng shadow_f norm =
         // let f_wrapped (x:term) =
         //     let shadow_app = map_shadow shadow_f (fun f ->
@@ -975,7 +975,7 @@ let e_arrow (ea:embedding 'a) (eb:embedding 'b) : embedding ('a -> 'b) =
         //         | Some app -> norm (BU.Inr app))
         // in
         lazy_embed
-            (fun _ -> " fun")
+            (fun _ -> "<fun>")
             emb_t_arr_a_b
             rng
             t_arrow

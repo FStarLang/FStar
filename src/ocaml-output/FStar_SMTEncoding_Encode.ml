@@ -1309,7 +1309,7 @@ let (primitive_type_axioms :
               FStar_SMTEncoding_Util.mkIff uu___6 in
             ([[l_iff_a_b]], [aa; bb], uu___5) in
           FStar_SMTEncoding_Term.mkForall uu___3 uu___4 in
-        (uu___2, (FStar_Pervasives_Native.Some " == interpretation"),
+        (uu___2, (FStar_Pervasives_Native.Some "<==> interpretation"),
           "l_iff-interp") in
       FStar_SMTEncoding_Util.mkAssume uu___1 in
     [uu___] in
@@ -3893,7 +3893,7 @@ let rec (encode_sigelt :
                  (let uu___2 =
                     let uu___3 =
                       let uu___4 =
-                        FStar_Compiler_Util.format1 " Skipped %s/" nm in
+                        FStar_Compiler_Util.format1 "<Skipped %s/>" nm in
                       FStar_SMTEncoding_Term.Caption uu___4 in
                     [uu___3] in
                   FStar_Compiler_Effect.op_Bar_Greater uu___2
@@ -3903,7 +3903,7 @@ let rec (encode_sigelt :
                   let uu___3 =
                     let uu___4 =
                       let uu___5 =
-                        FStar_Compiler_Util.format1 " Start encoding %s" nm in
+                        FStar_Compiler_Util.format1 "<Start encoding %s>" nm in
                       FStar_SMTEncoding_Term.Caption uu___5 in
                     [uu___4] in
                   FStar_Compiler_Effect.op_Bar_Greater uu___3
@@ -3913,7 +3913,7 @@ let rec (encode_sigelt :
                     let uu___5 =
                       let uu___6 =
                         let uu___7 =
-                          FStar_Compiler_Util.format1 " /end encoding %s" nm in
+                          FStar_Compiler_Util.format1 "</end encoding %s>" nm in
                         FStar_SMTEncoding_Term.Caption uu___7 in
                       [uu___6] in
                     FStar_Compiler_Effect.op_Bar_Greater uu___5
@@ -7730,11 +7730,11 @@ let (encode_query :
                                        let suffix =
                                          FStar_Compiler_List.op_At
                                            [FStar_SMTEncoding_Term.Echo
-                                              " labels"]
+                                              "<labels>"]
                                            (FStar_Compiler_List.op_At
                                               label_suffix
                                               [FStar_SMTEncoding_Term.Echo
-                                                 " /labels";
+                                                 "</labels>";
                                               FStar_SMTEncoding_Term.Echo
                                                 "Done!"]) in
                                        ((let uu___9 =

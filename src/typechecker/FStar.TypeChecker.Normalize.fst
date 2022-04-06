@@ -153,10 +153,10 @@ let downgrade_ghost_effect_name l =
 
 (********************************************************************************************************************)
 (* Normal form of a universe u is                                                                                   *)
-(*  either u, where u   U_max                                                                                      *)
-(*  or     U_max [k;                        --constant                                                              *)
-(*               S^n1 u1 ; ...; S^nm um;    --offsets of distinct names, in order of the names                      *)
-(*               S^p1 ?v1; ...; S^pq ?vq]   --offsets of distinct unification variables, in order of the variables  *)
+(*  either u, where u <> U_max *)
+(*  or     U_max [k;                         --constant *)
+(*                S^n1 u1 ; ...; S^nm um;    --offsets of distinct names, in order of the names                      *)
+(*                S^p1 ?v1; ...; S^pq ?vq]   --offsets of distinct unification variables, in order of the variables  *)
 (*          where the size of the list is at least 2                                                                *)
 (********************************************************************************************************************)
 let norm_universe cfg (env:env) u =
@@ -643,7 +643,7 @@ let reduce_primops norm_cb cfg env tm =
                                        then args, []
                                        else List.splitAt prim_step.arity args
                   in
-                  log_primops cfg (fun () -> BU.print1 "primop: trying to reduce  %s\n" (Print.term_to_string tm));
+                  log_primops cfg (fun () -> BU.print1 "primop: trying to reduce <%s>\n" (Print.term_to_string tm));
                   let psc = {
                       psc_range = head.pos;
                       psc_subst = fun () -> if prim_step.requires_binder_substitution
@@ -660,23 +660,23 @@ let reduce_primops norm_cb cfg env tm =
                   in
                   match r with
                   | None ->
-                      log_primops cfg (fun () -> BU.print1 "primop:  %s did not reduce\n" (Print.term_to_string tm));
+                      log_primops cfg (fun () -> BU.print1 "primop: <%s> did not reduce\n" (Print.term_to_string tm));
                       tm
                   | Some reduced ->
-                      log_primops cfg (fun () -> BU.print2 "primop:  %s reduced to  %s\n"
+                      log_primops cfg (fun () -> BU.print2 "primop: <%s> reduced to  %s\n"
                                               (Print.term_to_string tm)
                                               (Print.term_to_string reduced));
                       U.mk_app reduced args_2
                  end
            | Some _ ->
-               log_primops cfg (fun () -> BU.print1 "primop: not reducing  %s since we're doing strong reduction\n"
+               log_primops cfg (fun () -> BU.print1 "primop: not reducing <%s> since we're doing strong reduction\n"
                                             (Print.term_to_string tm));
                tm
            | None -> tm
            end
 
          | Tm_constant Const_range_of when not cfg.strong ->
-           log_primops cfg (fun () -> BU.print1 "primop: reducing  %s\n"
+           log_primops cfg (fun () -> BU.print1 "primop: reducing <%s>\n"
                                         (Print.term_to_string tm));
            begin match args with
            | [(a1, _)] -> embed_simple EMB.e_range a1.pos tm.pos
@@ -684,7 +684,7 @@ let reduce_primops norm_cb cfg env tm =
            end
 
          | Tm_constant Const_set_range_of when not cfg.strong ->
-           log_primops cfg (fun () -> BU.print1 "primop: reducing  %s\n"
+           log_primops cfg (fun () -> BU.print1 "primop: reducing <%s>\n"
                                         (Print.term_to_string tm));
            begin match args with
            | [(t, _); (r, _)] ->
@@ -1820,7 +1820,7 @@ and do_reify_monadic fallback cfg env stack (top : term) (m : monad_name) (t : t
                      SS.close [S.mk_binder head_bv] <|
                      S.mk (Tm_app(bind_inst, bind_inst_args head)) rng)) rng in
 
-              log cfg (fun () -> BU.print2 "Reified (1)  %s to %s\n" (Print.term_to_string top0) (Print.term_to_string reified));
+              log cfg (fun () -> BU.print2 "Reified (1) <%s> to %s\n" (Print.term_to_string top0) (Print.term_to_string reified));
               norm cfg env (List.tl stack) reified
             )
       end
@@ -1861,11 +1861,11 @@ and do_reify_monadic fallback cfg env stack (top : term) (m : monad_name) (t : t
          * when trying to fixing it but these two seem super weird. Why 2 of them?
          * Why is it not calling rebuild? I'm gonna keep it for now. *)
         let fallback1 () =
-            log cfg (fun () -> BU.print2 "Reified (2)  %s to %s\n" (Print.term_to_string top0) "");
+            log cfg (fun () -> BU.print2 "Reified (2) <%s> to %s\n" (Print.term_to_string top0) "");
             norm cfg env (List.tl stack) (U.mk_reify top)
         in
         let fallback2 () =
-            log cfg (fun () -> BU.print2 "Reified (3)  %s to %s\n" (Print.term_to_string top0) "");
+            log cfg (fun () -> BU.print2 "Reified (3) <%s> to %s\n" (Print.term_to_string top0) "");
             norm cfg env (List.tl stack) (mk (Tm_meta (top, Meta_monadic(m, t))) top0.pos)
         in
 
@@ -3249,7 +3249,7 @@ let get_n_binders (env:Env.env) (n:int) (t:term) : list binder * comp =
       (bs_l, S.mk_Total (U.arrow bs_r c))
 
     (* We need more, descend if `c` is total *)
-    | bs, c when len <> n && U.is_total_comp c && not (U.has_decreases c) ->
+    | bs, c when len < n && U.is_total_comp c && not (U.has_decreases c) ->
       let (bs', c') = aux true (n-len) (U.comp_result c) in
       (bs@bs', c')
 

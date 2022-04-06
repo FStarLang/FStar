@@ -108,7 +108,7 @@ let varops =
      mk_unique=mk_unique}
 
 (* ---------------------------------------------------- *)
-(*  Environment *)
+(* <Environment> *)
 (* Each entry maps a Syntax variable to its encoding as a SMT2 term *)
 (* free variables, depending on whether or not they are fully applied ...  *)
 (* ... are mapped either to SMT2 functions, or to nullary tokens *)
@@ -368,4 +368,4 @@ let get_current_module_fvbs env = env.fvar_bindings |> snd
 let add_fvar_binding_to_env fvb env =
   { env with fvar_bindings = add_fvar_binding fvb env.fvar_bindings }
 
-(*  /Environment *)
+(* </Environment> *)

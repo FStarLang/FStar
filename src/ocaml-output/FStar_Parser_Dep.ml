@@ -24,7 +24,7 @@ let (intf_and_impl_to_string :
   fun ii ->
     match ii with
     | (FStar_Pervasives_Native.None, FStar_Pervasives_Native.None) ->
-        " None,  None"
+        "<None>, <None>"
     | (FStar_Pervasives_Native.Some intf, FStar_Pervasives_Native.None) ->
         intf
     | (FStar_Pervasives_Native.None, FStar_Pervasives_Native.Some impl) ->
@@ -38,7 +38,7 @@ let (files_for_module_name_to_string : files_for_module_name -> unit) =
     FStar_Compiler_Util.print_string "Printing the file system map {\n";
     (let str_opt_to_string sopt =
        match sopt with
-       | FStar_Pervasives_Native.None -> " None"
+       | FStar_Pervasives_Native.None -> "<None>"
        | FStar_Pervasives_Native.Some s -> s in
      FStar_Compiler_Util.smap_iter m
        (fun k ->

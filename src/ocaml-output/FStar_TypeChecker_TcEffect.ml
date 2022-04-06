@@ -2641,7 +2641,7 @@ let (tc_layered_eff_decl :
                                                       FStar_Syntax_Print.term_to_string
                                                         t in
                                                     FStar_Compiler_Util.format3
-                                                      "Unexpected (k-)type of action %s:%s, expected bs -> repr u i_1 ... i_n, found: %s"
+                                                      "Unexpected (k-)type of action %s:%s, expected bs -> repr<u> i_1 ... i_n, found: %s"
                                                       uu___21 uu___22 uu___23 in
                                                   let repr_args t =
                                                     let uu___21 =

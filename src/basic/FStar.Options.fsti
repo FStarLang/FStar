@@ -64,7 +64,6 @@ val __set_unit_tests            : unit    -> unit
 val __clear_unit_tests          : unit    -> unit
 val parse_cmd_line              : unit    -> parse_cmdline_res * list string
 val add_verify_module           : string  -> unit
-val add_light_off_file          : string  -> unit
 
 type opt_type =
 | Const of option_val
@@ -126,7 +125,6 @@ val expose_interfaces           : unit    -> bool
 val file_list                   : unit    -> list string
 val find_file                   : (string  -> option string)
 val force                       : unit    -> bool
-val fs_typ_app                  : string  -> bool
 val fstar_bin_directory         : string
 val get_option                  : string  -> option_val
 val full_context_dependency     : unit    -> bool

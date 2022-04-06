@@ -220,7 +220,7 @@ let rec resugar_term_as_op (t:S.term) : option (string*expected_arity) =
     (C.and_lid     , "/\\");
     (C.or_lid      , "\\/");
     (C.imp_lid     , "==>");
-    (C.iff_lid     , " ==");
+    (C.iff_lid     , "<==>");
     (C.precedes_lid, "<<");
     (C.eq2_lid     , "==");
     (C.forall_lid  , "forall");
@@ -1237,7 +1237,6 @@ let resugar_pragma = function
   | S.PushOptions s -> A.PushOptions s
   | S.PopOptions -> A.PopOptions
   | S.RestartSolver -> A.RestartSolver
-  | S.LightOff -> A.LightOff
   | S.PrintEffectsGraph -> A.PrintEffectsGraph
 
 let resugar_typ env datacon_ses se : sigelts * A.tycon =

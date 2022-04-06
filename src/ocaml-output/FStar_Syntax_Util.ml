@@ -7,7 +7,7 @@ let (tts : FStar_Syntax_Syntax.term -> Prims.string) =
   fun t ->
     let uu___ = FStar_Compiler_Effect.op_Bang tts_f in
     match uu___ with
-    | FStar_Pervasives_Native.None -> "  hook unset"
+    | FStar_Pervasives_Native.None -> "<<hook unset>>"
     | FStar_Pervasives_Native.Some f -> f t
 let (mk_discriminator : FStar_Ident.lident -> FStar_Ident.lident) =
   fun lid ->
@@ -3940,7 +3940,6 @@ let (process_pragma :
                (FStar_Errors.Fatal_FailToProcessPragma,
                  (Prims.op_Hat "Failed to process pragma: " s1)) r in
        match p with
-       | FStar_Syntax_Syntax.LightOff -> FStar_Options.set_ml_ish ()
        | FStar_Syntax_Syntax.SetOptions o -> set_options o
        | FStar_Syntax_Syntax.ResetOptions sopt ->
            ((let uu___2 = FStar_Options.restore_cmd_line_options false in

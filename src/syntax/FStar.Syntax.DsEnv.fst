@@ -934,9 +934,9 @@ let push_sigelt' fail_on_dup env s =
       | Some (se, _) ->
         begin match BU.find_opt (lid_equals l) (lids_of_sigelt se) with
           | Some l -> Range.string_of_range <| range_of_lid l
-          | None -> " unknown"
+          | None -> "<unknown>"
         end
-      | None -> " unknown" in
+      | None -> "<unknown>" in
     raise_error (Errors.Fatal_DuplicateTopLevelNames, (BU.format2 "Duplicate top-level names [%s]; previously declared at %s" (string_of_lid l) r)) (range_of_lid l) in
   let globals = BU.mk_ref env.scope_mods in
   let env =

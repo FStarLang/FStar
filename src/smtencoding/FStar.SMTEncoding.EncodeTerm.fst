@@ -46,7 +46,7 @@ module SE = FStar.Syntax.Embeddings
 open FStar.SMTEncoding.Env
 
 (*---------------------------------------------------------------------------------*)
-(*  Utilities *)
+(*  <Utilities> *)
 
 let mkForall_fuel' mname r n (pats, vars, body) =
     let fallback () = mkForall r (pats, vars, body) in
@@ -228,7 +228,7 @@ let check_pattern_vars env vars pats =
                               BU.format1 "SMT pattern misses at least one bound variable: %s"
                                          (Print.bv_to_string x))
 
-(*  /Utilities *)
+(*  </Utilities> *)
 
 (**********************************************************************************)
 (* The main encoding of terms and formulae: mutually recursive                    *)
@@ -699,7 +699,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
               * AR/NS: For an arrow like int -> int -> int -> GTot int, t_interp is of the form:
               *     forall x0.
               *           HasType x0 (int -> int -> int -> GTot int)
-              *          ==
+              *          <==>
               *           (forall (x1:int) (x2:int) (x3:int).
               *             HasType (ApplyTT (ApplyTT (ApplyTT (x0 x1)) x2) x3) int)
               *          /\ IsTotFun x0
@@ -840,7 +840,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
         //in that case, cvars was turning out to be empty, resulting in non well-formed encoding (e.g. of hasEq, since free variables of base_t are not captured in cvars)
         //to get around that, computing cvars separately from the components of the encoding variable
         let cvars = BU.remove_dups fv_eq (Term.free_variables refinement @ Term.free_variables tm_has_type_with_fuel) in
-        let cvars = cvars |> List.filter (fun y -> fv_name y <> x && fv_name y  <> fsym) in
+        let cvars = cvars |> List.filter (fun y -> fv_name y <> x && fv_name y <> fsym) in
 
         let xfv = mk_fv (x, Term_sort) in
         let ffv = mk_fv (fsym, Fuel_sort) in

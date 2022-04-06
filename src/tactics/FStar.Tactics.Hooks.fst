@@ -222,13 +222,13 @@ let rec traverse (f: pol -> Env.env -> term -> tres) (pol:pol) (e:Env.env) (t:te
                let r2 = traverse f       pol  (Env.push_bv e x) q in
                comb2 (fun l r -> (U.mk_imp l r).n) r1 r2
 
-        (* p  == q is special, each side is bipolar *)
+        (* p <==> q is special, each side is bipolar *)
         (* So we traverse its arguments with pol = Both, and negative and positive versions *)
         (* of p and q *)
         (* then we return (in general) (p- ==> q+) /\ (q- ==> p+) *)
-        (* But if neither side ran tactics, we just keep p  == q *)
+        (* But if neither side ran tactics, we just keep p <==> q *)
         | Tm_app ({ n = Tm_fvar fv }, [(p,_); (q,_)]) when S.fv_eq_lid fv PC.iff_lid ->
-               //  == is specialized to U_zero
+               // <==> is specialized to U_zero
                let xp = S.new_bv None p in
                let xq = S.new_bv None q in
                let r1 = traverse f Both (Env.push_bv e xq) p in

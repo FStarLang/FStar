@@ -1045,7 +1045,7 @@ let lookup_projector env lid i =
     let _, t = lookup_datacon env lid in
     match (compress t).n with
         | Tm_arrow(binders, _) ->
-          if ((i <> 0) || i = List.length binders) //this has to be within bounds!
+          if ((i < 0) || i >= List.length binders) //this has to be within bounds!
           then fail ()
           else let b = List.nth binders i in
                U.mk_field_projector_name lid b.binder_bv i
@@ -1473,14 +1473,14 @@ let update_effect_lattice env src tgt st_mlift =
    *     in other words, previous paths are overwritten
    *)
 
-  //all nodes i such that i  > src and i ~ src is an edge
+  //all nodes i such that i <> src and i ~> src is an edge
   let all_i_src = ms |> List.fold_left (fun edges i ->
     if lid_equals i edge.msource then edges
     else match find_edge env.effects.order (i, edge.msource) with
          | Some e -> e::edges
          | None -> edges) [] in
 
-  //all nodes j such that j  > tgt and tgt ~ j is an edge
+  //all nodes j such that j <> tgt and tgt ~> j is an edge
   let all_tgt_j = ms |> List.fold_left (fun edges j ->
     if lid_equals edge.mtarget j then edges
     else match find_edge env.effects.order (edge.mtarget, j) with
@@ -1771,7 +1771,7 @@ let string_of_proof_ns env =
 
 
 (* ------------------------------------------------*)
-(*  guard_formula ops Operations on guard_formula *)
+(* <guard_formula ops> Operations on guard_formula *)
 (* ------------------------------------------------*)
 let guard_of_guard_formula g = {
   guard_f=g;
@@ -1885,7 +1885,7 @@ let close_guard env binders g =
       {g with guard_f=NonTrivial (close_forall env binders f)}
 
 (* ------------------------------------------------*)
-(*  /guard_formula ops                            *)
+(* </guard_formula ops>                            *)
 (* ------------------------------------------------*)
 
 (* Generating new implicit variables *)
@@ -1999,7 +1999,7 @@ let pure_precondition_for_trivial_post env u t wp r =
     r
 
 
-(*  Move this out of here *)
+(* <Move> this out of here *)
 let dummy_solver = {
     init=(fun _ -> ());
     push=(fun _ -> ());
@@ -2013,7 +2013,7 @@ let dummy_solver = {
     finish=(fun () -> ());
     refresh=(fun () -> ());
 }
-(*  /Move *)
+(* </Move> *)
 
 let get_letrec_arity (env:env) (lbname:lbname) : option int =
   let compare_either f1 f2 e1 e2 : bool =

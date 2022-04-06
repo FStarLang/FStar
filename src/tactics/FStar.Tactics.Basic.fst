@@ -335,7 +335,7 @@ let tadmit_t (t:term) : tac unit = wrap_err "tadmit_t" <|
     bind cur_goal (fun g ->
     // should somehow taint the state instead of just printing a warning
     Err.log_issue (goal_type g).pos
-        (Errors.Warning_TacAdmit, BU.format1 "Tactics admitted goal  %s\n\n"
+        (Errors.Warning_TacAdmit, BU.format1 "Tactics admitted goal <%s>\n\n"
                     (goal_to_string "" None ps g));
     solve' g t))
 
@@ -413,7 +413,7 @@ let proc_guard (reason:string) (e : env) (g : guard_t) (rng:Range.range) : tac u
     | Drop ->
         // should somehow taint the state instead of just printing a warning
         Err.log_issue e.range
-            (Errors.Warning_TacAdmit, BU.format1 "Tactics admitted guard  %s\n\n"
+            (Errors.Warning_TacAdmit, BU.format1 "Tactics admitted guard <%s>\n\n"
                         (Rel.guard_to_string e g));
         ret ()
 

@@ -226,7 +226,7 @@ let with_fuel_and_diagnostics settings label_assumptions =
     let i = settings.query_ifuel in
     let rlimit = settings.query_rlimit in
     [  //fuel and ifuel settings
-        Term.Caption (BU.format2 " fuel='%s' ifuel='%s'"
+        Term.Caption (BU.format2 "<fuel='%s' ifuel='%s'>"
                         (string_of_int n)
                         (string_of_int i));
         Util.mkAssume(mkEq(mkApp("MaxFuel", []), n_fuel n), None, "@MaxFuel_assumption");
@@ -422,9 +422,9 @@ let query_info settings z3result =
 
           The basic structure of the name is
 
-             lowercase_prefix An F* lid, i.e., a dot-separated name beginning with upper case letter some reserved suffix
+            <lowercase_prefix><An F* lid, i.e., a dot-separated name beginning with upper case letter><some reserved suffix>
 
-          So, the code below strips off the  lowercase_prefix
+          So, the code below strips off the <lowercase_prefix>
           and any of the reserved suffixes.
 
           What's left is an F* name, which can be decomposed as usual

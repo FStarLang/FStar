@@ -512,7 +512,7 @@ let guard_letrecs env actuals expected_c : list (lbname*typ*univ_names) =
         let l, l_prev =
           let n, n_prev = List.length l, List.length l_prev in
           if n = n_prev then l, l_prev
-          else if n <> n_prev then l, l_prev |> List.splitAt n |> fst
+          else if n < n_prev then l, l_prev |> List.splitAt n |> fst
           else l |> List.splitAt n_prev |> fst, l_prev in
         aux l l_prev in
 
@@ -1785,7 +1785,7 @@ and tc_comp env c : comp                                      (* checked version
             rel.pos
             env
             t in
-          //well_founded_relation u_t t
+          //well_founded_relation<u_t> t
           let wf_t = mk_Tm_app
             (mk_Tm_uinst
                (Env.fvar_of_nonqual_lid env Const.well_founded_relation_lid)
@@ -2102,7 +2102,7 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
        *     See also special casing of M.reflect <: C in the same file
        *
        * AR: the type of should_check_expected_effect is
-       *       either bool, unit
+       *       either bool unit
        *
        *     where Inl b means do check expected effect, with use_eq = b
        *     and Inr _ means don't check expected effect
@@ -2756,7 +2756,7 @@ and tc_pat env (pat_t:typ) (p0:pat) :
                         (fun out (p, _) (s, _) ->
                             match Rel.teq_nosmt env p s with
                             | None ->
-                              fail (BU.format2 "; parameter %s   parameter %s"
+                              fail (BU.format2 "; parameter %s <> parameter %s"
                                             (Print.term_to_string p)
                                             (Print.term_to_string s))
                             | Some g ->
@@ -3975,7 +3975,7 @@ and check_lbtyp top_level env lb : option typ  (* checked version of lb.lbtyp, i
     let t = SS.compress lb.lbtyp in
     match t.n with
         | Tm_unknown ->
-          //if lb.lbunivs   [] then failwith "Impossible: non-empty universe variables but the type is unknown";  //AR: do we need this check? this situation arises in phase 2
+          //if lb.lbunivs <> [] then failwith "Impossible: non-empty universe variables but the type is unknown";  //AR: do we need this check? this situation arises in phase 2
           let univ_opening, univ_vars = univ_var_opening lb.lbunivs in
           None, Env.trivial_guard, univ_vars, univ_opening, Env.push_univ_vars env univ_vars
 
@@ -4186,7 +4186,7 @@ let rec apply_well_typed env (t_hd:typ) (args:args) : option typ =
       explicit universe instantiations.
 
       This is generally called from within TypeChecker.Util
-      when building WPs. For example, in building (return_value u t e),
+      when building WPs. For example, in building (return_value<u> t e),
       u=universe_of env t.
 
       We don't aim to compute a precise type for e.

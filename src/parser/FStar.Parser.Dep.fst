@@ -58,7 +58,7 @@ type files_for_module_name = smap intf_and_impl
 
 let intf_and_impl_to_string ii =
   match ii with
-  | None, None -> " None,  None"
+  | None, None -> "<None>, <None>"
   | Some intf, None -> intf
   | None, Some impl -> impl
   | Some intf, Some impl -> intf ^ ", " ^ impl
@@ -68,7 +68,7 @@ let files_for_module_name_to_string (m:files_for_module_name) =
   BU.print_string "Printing the file system map {\n";
   let str_opt_to_string sopt =
     match sopt with
-    | None -> " None"
+    | None -> "<None>"
     | Some s -> s in
   smap_iter m (fun k v -> BU.print2 "%s:%s\n" k (intf_and_impl_to_string v));
   BU.print_string "}\n"
@@ -148,7 +148,7 @@ type dependence_graph = //maps file names to the modules it depends on
 
 (*
  * AR: Parsing data for a file (also cached in the checked files)
- *     It is a summary of opens, includes, A. id, etc. in a module
+ *     It is a summary of opens, includes, A.<id>, etc. in a module
  *     Earlier we used to store the dependences in the checked file,
  *       however that is an image of the file system, and so, when the checked
  *       files were used in a slightly different file system, there were strange errors

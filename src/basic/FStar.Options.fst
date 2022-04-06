@@ -152,9 +152,6 @@ let set_option k v =
 let set_option' (k,v) =  set_option k v
 let set_admit_smt_queries (b:bool) = set_option "admit_smt_queries" (Bool b)
 
-let light_off_files : ref (list string) = Util.mk_ref []
-let add_light_off_file (filename:string) = light_off_files := filename :: !light_off_files
-
 let defaults =
      [
       ("__temp_fast_implicits"        , Bool false);
@@ -183,7 +180,6 @@ let defaults =
       ("extract_all"                  , Bool false);
       ("extract_module"               , List []);
       ("extract_namespace"            , List []);
-      ("fs_typ_app"                   , Bool false);
       ("full_context_dependency"      , Bool true);
       ("hide_uvar_nums"               , Bool false);
       ("hint_info"                    , Bool false);
@@ -293,7 +289,6 @@ let init () =
 let clear () =
    let o = Util.smap_create 50 in
    fstar_options := [[o]];                               //clear and reset the options stack
-   light_off_files := [];
    init()
 
 let _run = clear()
@@ -367,7 +362,6 @@ let get_extract                 ()      = lookup_opt "extract"                  
 let get_extract_module          ()      = lookup_opt "extract_module"           (as_list as_string)
 let get_extract_namespace       ()      = lookup_opt "extract_namespace"        (as_list as_string)
 let get_force                   ()      = lookup_opt "force"                    as_bool
-let get_fs_typ_app              ()      = lookup_opt "fs_typ_app"               as_bool
 let get_hide_uvar_nums          ()      = lookup_opt "hide_uvar_nums"           as_bool
 let get_hint_info               ()      = lookup_opt "hint_info"                as_bool
 let get_hint_dir                ()      = lookup_opt "hint_dir"                 (as_option as_string)
@@ -1720,7 +1714,6 @@ let eager_subtyping              () = get_eager_subtyping()
 let error_contexts               () = get_error_contexts              ()
 let expose_interfaces            () = get_expose_interfaces          ()
 let force                        () = get_force                       ()
-let fs_typ_app    (filename:string) = List.contains filename !light_off_files
 let full_context_dependency      () = true
 let hide_uvar_nums               () = get_hide_uvar_nums              ()
 let hint_info                    () = get_hint_info                   ()

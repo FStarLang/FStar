@@ -588,7 +588,7 @@ let (tadmit_t : FStar_Syntax_Syntax.term -> unit FStar_Tactics_Monad.tac) =
                        FStar_Tactics_Printing.goal_to_string ""
                          FStar_Pervasives_Native.None ps g in
                      FStar_Compiler_Util.format1
-                       "Tactics admitted goal  %s\n\n" uu___5 in
+                       "Tactics admitted goal <%s>\n\n" uu___5 in
                    (FStar_Errors.Warning_TacAdmit, uu___4) in
                  FStar_Errors.log_issue uu___2 uu___3);
                 solve' g t)) in
@@ -1233,7 +1233,7 @@ let (proc_guard :
                                          FStar_TypeChecker_Rel.guard_to_string
                                            e g in
                                        FStar_Compiler_Util.format1
-                                         "Tactics admitted guard  %s\n\n"
+                                         "Tactics admitted guard <%s>\n\n"
                                          uu___7 in
                                      (FStar_Errors.Warning_TacAdmit, uu___6) in
                                    FStar_Errors.log_issue

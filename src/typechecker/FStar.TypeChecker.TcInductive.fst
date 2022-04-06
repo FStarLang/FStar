@@ -186,7 +186,7 @@ let tc_data (env:env_t) (tcs : list (sigelt * universe))
          end;
          (*
           * AR: if the inductive type is explictly universe annotated,
-          *     we need to instantiate universes properly in head (head = tycon applied to uvars)
+          *     we need to instantiate universes properly in head (head = tycon<applied to uvars>)
           *     the following code unifies them with the annotated universes
           *)
          let g_uvs = match (SS.compress head).n with
@@ -392,7 +392,7 @@ let optimized_haseq_soundness_for_data (ty_lid:lident) (data:sigelt) (usubst:lis
 //all_datas_in_the_bundle are all data constructors, including those of mutually defined inductives
 //usubst and us are the universe variables substitution and universe names, we open each type constructor type, and data constructor type with these
 //in the type of the accumulator:
-    //list lident * term is the list of type constructor lidents and formulas of haseq axioms we are accumulating
+    //list (lident * term) is the list of type constructor lidents and formulas of haseq axioms we are accumulating
     //env is the environment in which the next two terms are well-formed (e.g. data constructors are dependent function types, so they may refer to their arguments)
     //term is the lhs of the implication for soundness formula
     //term is the soundness condition derived from all the data constructors of this type
@@ -666,7 +666,7 @@ let check_inductive_well_typedness (env:env_t) (ses:list sigelt) (quals:list qua
 
              The inductive is generalized to
 
-                T uvs> (a:Type(ua')) : b:Type(ub') - Type u'
+                T<uvs> (a:Type(ua')) : b:Type(ub') -> Type u'
 
 
          (4). We re-typecheck and elaborate the type of each constructor to
@@ -674,16 +674,16 @@ let check_inductive_well_typedness (env:env_t) (ses:list sigelt) (quals:list qua
 
               i.e., we check
 
-                G, T uvs> : a:Type(ua') -> b:Type(ub') - Type u', uvs |-
+                G, T<uvs> : a:Type(ua') -> b:Type(ub') -> Type u', uvs |-
                        xs:ts_i' -> t_i'
                   ~>   xs:ts_i'' -> t_i''
 
 
              What we get, in effect, is
 
-             type T ua, ub, uw> (a:Type(ua)) : Type(ub) - Type (max ua (ub + 1) (uw + 1)) =
-                | C1 : (ua, ub, uw) => a:Type(ua) -> y:Type(ub) -> T ua,ub,uw a y
-                | C2 : (ua, ub, uw) => a:Type(ua) -> z:Type(ub) -> w:Type(uw) -> T ua,ub,uw a z
+             type T<ua, ub, uw> (a:Type(ua)) : Type(ub) -> Type (max ua (ub + 1) (uw + 1)) =
+                | C1 : (ua, ub, uw) => a:Type(ua) -> y:Type(ub) -> T<ua,ub,uw> a y
+                | C2 : (ua, ub, uw) => a:Type(ua) -> z:Type(ub) -> w:Type(uw) -> T<ua,ub,uw> a z
     *)
   let tys, datas = ses |> List.partition (function { sigel = Sig_inductive_typ _ } -> true | _ -> false) in
   if datas |> BU.for_some (function { sigel = Sig_datacon _ } -> false | _ -> true)
