@@ -2388,7 +2388,10 @@ let ite_soundness_tac () : Tac unit =
   | _::tl -> set_goals tl;
 
   or_else (fun _ -> apply_lemma (`equiv_forall_refl)) assumption;
-  or_else (fun _ -> apply_lemma (`can_be_split_dep_refl)) assumption;
+  or_else (fun _ ->
+    or_else (fun _ -> apply_lemma (`can_be_split_dep_refl))
+            (fun _ -> apply_lemma (`can_be_split_refl)) // Different formalism in Steel.ST
+    ) assumption;
 
   // Discharging the maybe_emp by SMT
   smt ();
