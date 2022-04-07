@@ -342,7 +342,7 @@ let subcomp a opened o1 o2 #framed_f #framed_g #pre_f #post_f #req_f #ens_f #pre
 
 #pop-options
 
-`let bind_pure_steela_ a b opened o #wp f g
+let bind_pure_steela_ a b opened o #wp f g
   = FStar.Monotonic.Pure.elim_pure_wp_monotonicity wp;
     fun frame ->
       let x = f () in
