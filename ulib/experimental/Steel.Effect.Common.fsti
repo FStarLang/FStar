@@ -412,6 +412,9 @@ let frame_equalities
 
 /// More lemmas about the abstract can_be_split predicates, to be used as
 /// rewriting rules in the tactic below
+val can_be_split_dep_refl (p:vprop)
+: Lemma (can_be_split_dep True p p)
+
 val equiv_can_be_split (p1 p2:vprop) : Lemma
   (requires p1 `equiv` p2)
   (ensures p1 `can_be_split` p2)
@@ -2385,7 +2388,7 @@ let ite_soundness_tac () : Tac unit =
   | _::tl -> set_goals tl;
 
   or_else (fun _ -> apply_lemma (`equiv_forall_refl)) assumption;
-  or_else (fun _ -> apply_lemma (`can_be_split_refl)) assumption;
+  or_else (fun _ -> apply_lemma (`can_be_split_dep_refl)) assumption;
 
   // Discharging the maybe_emp by SMT
   smt ();

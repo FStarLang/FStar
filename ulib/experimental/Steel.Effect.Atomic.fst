@@ -291,8 +291,9 @@ val subcomp_opaque (a:Type)
   (#[@@@ framing_implicit] pre_g:pre_t) (#[@@@ framing_implicit] post_g:post_t a)
   (#[@@@ framing_implicit] req_g:req_t pre_g) (#[@@@ framing_implicit] ens_g:ens_t pre_g a post_g)
   (#[@@@ framing_implicit] frame:vprop)
+  (#[@@@ framing_implicit] pr : prop)
   (#[@@@ framing_implicit] _ : squash (maybe_emp framed_f frame))
-  (#[@@@ framing_implicit] p1:squash (can_be_split pre_g (pre_f `star` frame)))
+  (#[@@@ framing_implicit] p1:squash (can_be_split_dep pr pre_g (pre_f `star` frame)))
   (#[@@@ framing_implicit] p2:squash (equiv_forall post_g (fun x -> post_f x `star` frame)))
   (f:repr a framed_f opened o1 pre_f post_f req_f ens_f)
 : Pure (repr a framed_g opened o2 pre_g post_g req_g ens_g)
@@ -300,7 +301,7 @@ val subcomp_opaque (a:Type)
     subcomp_pre_opaque req_f ens_f req_g ens_g p1 p2)
   (ensures fun _ -> True)
 
-let subcomp_opaque a opened o1 o2 #framed_f #framed_g #pre_f #post_f #req_f #ens_f #pre_g #post_g #req_g #ens_g #fr #_ #p1 #p2 f =
+let subcomp_opaque a opened o1 o2 #framed_f #framed_g #pre_f #post_f #req_f #ens_f #pre_g #post_g #req_g #ens_g #fr #pr #_ #p1 #p2 f =
   fun frame ->
     let m0:full_mem = NMSTTotal.get () in
     let h0 = mk_rmem pre_g (core_mem m0) in
@@ -335,13 +336,13 @@ let subcomp_opaque a opened o1 o2 #framed_f #framed_g #pre_f #post_f #req_f #ens
 
     x
 
-let subcomp a opened o1 o2 #framed_f #framed_g #pre_f #post_f #req_f #ens_f #pre_g #post_g #req_g #ens_g #fr #_ #p1 #p2 f =
+let subcomp a opened o1 o2 #framed_f #framed_g #pre_f #post_f #req_f #ens_f #pre_g #post_g #req_g #ens_g #fr #_ #pr #p1 #p2 f =
   lemma_subcomp_pre_opaque req_f ens_f req_g ens_g p1 p2;
-  subcomp_opaque a opened o1 o2 #framed_f #framed_g #pre_f #post_f #req_f #ens_f #pre_g #post_g #req_g #ens_g #fr #_ #p1 #p2 f
+  subcomp_opaque a opened o1 o2 #framed_f #framed_g #pre_f #post_f #req_f #ens_f #pre_g #post_g #req_g #ens_g #fr #pr #_ #p1 #p2 f
 
 #pop-options
 
-let bind_pure_steela_ a b opened o #wp f g
+`let bind_pure_steela_ a b opened o #wp f g
   = FStar.Monotonic.Pure.elim_pure_wp_monotonicity wp;
     fun frame ->
       let x = f () in
