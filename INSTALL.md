@@ -137,6 +137,7 @@ commands. (Note: On Windows this requires Cygwin and `make`)
    take a long time, use a lot of resources, and there are also some quirks
    explained in the notes below.
 
+        $ export FSTAR_HOME=/path/to/fstar
         $ make -C examples -j6
         $ echo $?    # non-zero means build failed! scroll up for error message!
 
