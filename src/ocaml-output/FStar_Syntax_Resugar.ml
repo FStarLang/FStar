@@ -1475,6 +1475,9 @@ and (resugar_calc :
                 (uu___6, FStar_Pervasives_Native.Some
                  { FStar_Syntax_Syntax.aqual_implicit = true;
                    FStar_Syntax_Syntax.aqual_attributes = uu___7;_})::
+                (uu___8, FStar_Pervasives_Native.Some
+                 { FStar_Syntax_Syntax.aqual_implicit = true;
+                   FStar_Syntax_Syntax.aqual_attributes = uu___9;_})::
                 (pf, FStar_Pervasives_Native.None)::[]) when
                  FStar_Syntax_Syntax.fv_eq_lid fv
                    FStar_Parser_Const.calc_finish_lid
@@ -1556,6 +1559,9 @@ and (resugar_calc :
                    FStar_Syntax_Syntax.aqual_attributes = uu___7;_})::
                 (rel, FStar_Pervasives_Native.None)::(z,
                                                       FStar_Pervasives_Native.None)::
+                (uu___8, FStar_Pervasives_Native.Some
+                 { FStar_Syntax_Syntax.aqual_implicit = true;
+                   FStar_Syntax_Syntax.aqual_attributes = uu___9;_})::
                 (pf, FStar_Pervasives_Native.None)::(j,
                                                      FStar_Pervasives_Native.None)::[])
                  when
