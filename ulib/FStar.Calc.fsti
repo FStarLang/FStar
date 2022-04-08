@@ -42,7 +42,7 @@ let rec calc_chain_related (#a:Type) (rs:list (relation a)) (x y:a)
     | r1::rs -> exists (w:a). calc_chain_related rs x w /\ r1 w y
 
 [@@"opaque_to_smt"]
-let calc_chain_campatible (#t:Type) (rs:list (relation t)) (p:relation t)
+let calc_chain_compatible (#t:Type) (rs:list (relation t)) (p:relation t)
   : Type0
   = forall (x y:t). calc_chain_related rs x y ==> p x y
 
@@ -58,7 +58,7 @@ val calc_init (#a:Type) (x:a) : Tot (calc_pack [] x x)
 /// A single step of the calc chain
 ///
 /// Note the list of relations is reversed
-///   calc_chain_campatible accounts for it
+///   calc_chain_compatible accounts for it
 
 val calc_step
   (#a:Type)
@@ -80,12 +80,12 @@ val calc_finish
   (#rs:list (relation a))
   (pf:unit -> Tot (calc_pack rs x y))
   : Lemma
-      (requires (norm [delta_only [`%calc_chain_campatible; `%calc_chain_related];
+      (requires (norm [delta_only [`%calc_chain_compatible; `%calc_chain_related];
                        iota;
                        zeta]
                       (labeled range_0
                          "Could not prove that this calc-chain is compatible"
-                         (calc_chain_campatible rs p))))
+                         (calc_chain_compatible rs p))))
       (ensures (p x y))
 
 val calc_push_impl (#p #q:Type) (f:squash p -> GTot (squash q))
