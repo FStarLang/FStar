@@ -1908,6 +1908,7 @@ let solve_can_be_split_dep (args:list argv) : Tac bool =
         focus (fun _ ->
           let p_bind = implies_intro () in
           apply_lemma (`equiv_can_be_split);
+          dismiss_slprops ();
           or_else
             (fun _ ->
               let b = unify p (`true_p) in
