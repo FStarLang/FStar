@@ -825,10 +825,11 @@ and resugar_calc (env:DsEnv.env) (t0:S.term) : option A.term =
     let hd, args = U.head_and_args t in
     match (SS.compress (U.un_uinst hd)).n, args with
     | Tm_fvar fv, [(_, Some { aqual_implicit = true }); // type
-                   (rel, None);              // top relation
+                   (rel, None);                         // top relation
                    (_, Some { aqual_implicit = true }); // x
                    (_, Some { aqual_implicit = true }); // y
-                   (pf, None)]               // pf : unit -> GTot (calc_pack x y)
+                   (_, Some { aqual_implicit = true }); // rs
+                   (pf, None)]                          // pf : unit -> Tot (calc_pack rs x y)
         when S.fv_eq_lid fv C.calc_finish_lid ->
         let pf = U.unthunk pf in
         Some (rel, pf)
@@ -877,6 +878,7 @@ and resugar_calc (env:DsEnv.env) (t0:S.term) : option A.term =
                    (_, Some ({ aqual_implicit = true })); // y
                    (rel, None);              // relation
                    (z, None);                // z, next val
+                   (_, Some ({ aqual_implicit = true })); //rs
                    (pf, None);               // pf, rest of proof (thunked)
                    (j, None)]                // justification (thunked)
         when S.fv_eq_lid fv C.calc_step_lid ->
