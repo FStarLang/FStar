@@ -7,6 +7,7 @@ error-messages \
 friends \
 incl \
 interactive \
+lsp \
 machine_integers \
 micro-benchmarks \
 prettyprinting \

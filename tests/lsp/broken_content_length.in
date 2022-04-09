@@ -1,0 +1,4 @@
+Content-Length: a
+Content-Length: 46
+
+{"jsonrpc":"2.0","method":"exit","params":{}}
