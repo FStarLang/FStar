@@ -1,5 +1,5 @@
 [
-  "\fÏ\n\u000fÃ¸\u0001≈˙ÚS˛N\u0002./",
+  "Å¡ç4\u0005\u0017\u0013ßeêº∑îV-&",
   [
     [
       "Steel.Effect.return_ens",
@@ -12,7 +12,7 @@
         "lemma_Steel.Effect.Common.can_be_split_refl"
       ],
       0,
-      "75bb43e40849b2eddcd0c64bb59181a4"
+      "86ab21558938b89c6550da7138887072"
     ],
     [
       "Steel.Effect.bind_req",
@@ -34,7 +34,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "17e2024a106f9f4cd1e6d82b72e5055c"
+      "04c0c3e611b464f23ab453583834db99"
     ],
     [
       "Steel.Effect.bind_ens",
@@ -61,7 +61,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "37e8a05cf2bccc6b17f1691d3948a84b"
+      "1f4744e13ee1838758cf72f04d29b4c8"
     ],
     [
       "Steel.Effect.subcomp_pre",
@@ -72,6 +72,7 @@
         "@MaxIFuel_assumption", "@query",
         "Steel.Effect.Common_interpretation_Tm_arrow_bb7a711af297fead4d60d7aa8b8ddd2f",
         "equation_Prims.squash",
+        "equation_Steel.Effect.Common.can_be_split_dep",
         "equation_Steel.Effect.Common.can_be_split_forall",
         "equation_Steel.Effect.Common.equiv_forall",
         "equation_Steel.Effect.Common.post_t",
@@ -82,7 +83,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "a04f8b6341a81128ef949b23824222ac"
+      "27770d53eb60ce9eb7345ea63d41872c"
     ],
     [
       "Steel.Effect.if_then_else_req",
@@ -91,12 +92,13 @@
       1,
       [
         "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
+        "equation_Steel.Effect.Common.can_be_split_dep",
         "equation_Steel.Effect.Common.pre_t",
         "lemma_Steel.Effect.Common.can_be_split_star_l",
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "cd035b487a19dccd279b5ce7351e7de8"
+      "effff5ea54e2ab5625a9914ebdee09d4"
     ],
     [
       "Steel.Effect.if_then_else_ens",
@@ -107,6 +109,7 @@
         "@MaxIFuel_assumption", "@query",
         "Steel.Effect.Common_interpretation_Tm_arrow_bb7a711af297fead4d60d7aa8b8ddd2f",
         "equation_Prims.squash",
+        "equation_Steel.Effect.Common.can_be_split_dep",
         "equation_Steel.Effect.Common.can_be_split_forall",
         "equation_Steel.Effect.Common.equiv_forall",
         "equation_Steel.Effect.Common.post_t",
@@ -116,7 +119,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "a0f0d4312c9955758970195e70c3794a"
+      "da96f0ddda6d9b39cf1869cea0f8fc5f"
     ],
     [
       "Steel.Effect.SteelBase",
@@ -128,7 +131,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "48cc1d9b9f70b6084ab7f6a6573a604a"
+      "1e3538ece080f5932371c75cc0622e9b"
     ],
     [
       "Steel.Effect.SteelBase",
@@ -140,7 +143,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "1804eb12671acdcd40b50c68b8709954"
+      "c9a38fc736c43fae8e813b505a7bd1ee"
     ],
     [
       "Steel.Effect.SteelBase",
@@ -152,7 +155,7 @@
         "refinement_interpretation_Tm_refine_de09779676242898794a0b057d5f5bb4"
       ],
       0,
-      "2156a0b7c249c0c14841f0199f5bd867"
+      "af5bf74668c651d6e3ec4bccab635fcb"
     ],
     [
       "Steel.Effect.SteelBase",
@@ -164,7 +167,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "4d7689174a483264fe52e9f9bb33c31f"
+      "bf9934c5a2c6b9d5e3ae6da97933ce63"
     ]
   ]
 ]
