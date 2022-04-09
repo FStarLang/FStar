@@ -1,5 +1,5 @@
 [
-  "s|Nâ¤yÓhVtìûL€C\u000b",
+  "Q²¥Ð\u001a€›ƒ\rî\u0007Ç\u0019Ä\u0007ƒ",
   [
     [
       "Steel.ST.Effect.equiv_star_emp_r",
@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "c84947f088fa799608c650a29c356f6b"
+      "4f81bffbe77c42f191feb5e4f590a8c5"
     ],
     [
       "Steel.ST.Effect.weaken_repr",
@@ -17,20 +17,26 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_e8ffb7d227a1bbf69407a8d2ad2c4c83",
         "Steel.Effect.Common_interpretation_Tm_arrow_bb7a711af297fead4d60d7aa8b8ddd2f",
-        "bool_inversion", "equation_Steel.Effect.Common.maybe_emp",
+        "bool_inversion", "equality_tok_Prims.T@tok",
+        "equation_Prims.l_True", "equation_Prims.squash",
+        "equation_Prims.subtype_of",
+        "equation_Steel.Effect.Common.can_be_split_dep",
+        "equation_Steel.Effect.Common.maybe_emp",
         "equation_Steel.Effect.Common.post_t",
         "equation_Steel.Effect.Common.pre_t",
         "lemma_Steel.Effect.Common.can_be_split_refl",
         "refinement_interpretation_Tm_refine_021cb0d87026d403e1b766cfc287f6bb",
         "refinement_interpretation_Tm_refine_036a4426b88dd36e638aebc89922374a",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
         "refinement_interpretation_Tm_refine_3f762ae732d5b5138080a59ba4ea4860",
         "typing_Steel.Effect.Common.emp",
         "typing_Steel.Effect.Common.mk_rmem",
-        "typing_Steel.Effect.Common.star"
+        "typing_Steel.Effect.Common.star", "typing_tok_Prims.T@tok"
       ],
       0,
-      "84207c87cfd047061858c15fb3d5e08b"
+      "5942214df317ee478afd93bbb9f9582e"
     ],
     [
       "Steel.ST.Effect.return_",
@@ -43,7 +49,7 @@
         "lemma_Steel.Effect.Common.can_be_split_refl"
       ],
       0,
-      "00d78c6948c63cc0184f5a1ccd906dd5"
+      "dda8698e38f4805bd2a22e5370b7e670"
     ],
     [
       "Steel.ST.Effect.bind",
@@ -52,7 +58,7 @@
       1,
       [ "@query" ],
       0,
-      "2c33c86ca0dbc760427a8b801e27abae"
+      "6086364941f04e7fdfa0033158dfc0a5"
     ],
     [
       "Steel.ST.Effect.subcomp",
@@ -60,11 +66,17 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "bool_inversion",
-        "equation_Steel.ST.Effect.repr"
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_e8ffb7d227a1bbf69407a8d2ad2c4c83", "bool_inversion",
+        "equality_tok_Prims.T@tok", "equation_Prims.l_True",
+        "equation_Prims.squash", "equation_Prims.subtype_of",
+        "equation_Steel.Effect.Common.can_be_split_dep",
+        "equation_Steel.Effect.Common.star", "equation_Steel.ST.Effect.repr",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
+        "typing_tok_Prims.T@tok"
       ],
       0,
-      "d10fc2debb4f9f6782ef3676a5968e41"
+      "d0f3505a0cd80786dfecd9e6f58808f6"
     ],
     [
       "Steel.ST.Effect.STBase",
@@ -76,7 +88,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "fabb1762c356aa1562a78fcb26d51e5d"
+      "e8a2e0ba84334311e7e899580f69eb55"
     ],
     [
       "Steel.ST.Effect.STBase",
@@ -88,7 +100,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "4a85d8b9599b10eb4348a9fa4e6eb50c"
+      "31363714743a202446b63a04d846137b"
     ],
     [
       "Steel.ST.Effect.STBase",
@@ -100,7 +112,7 @@
         "refinement_interpretation_Tm_refine_de09779676242898794a0b057d5f5bb4"
       ],
       0,
-      "b9cd3781636073af31da5e4036427d5b"
+      "dbc12ff189d714d3dcf96fb5fcf8ae8b"
     ],
     [
       "Steel.ST.Effect.STBase",
@@ -112,7 +124,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "df670896046d56d7348e833a34391ead"
+      "524334dd09f60459fbcb2b3c43c61b08"
     ],
     [
       "Steel.ST.Effect.bind_pure_st_",
@@ -130,7 +142,7 @@
         "typing_Tm_abs_6ba36691ee58dee85cd144324b083848"
       ],
       0,
-      "99fed8c1baf673f6d5046fc2fc4f9a61"
+      "5c24b5a890b72f9646926736887d780e"
     ]
   ]
 ]
