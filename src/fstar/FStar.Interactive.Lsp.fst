@@ -192,7 +192,9 @@ let rec parse_header_len (stream: stream_reader) (len: int): int =
   match U.read_line stream with
   | Some s ->
     if U.starts_with s "Content-Length: " then
-      parse_header_len stream (U.int_of_string (U.substring_from s 16))
+      match U.safe_int_of_string (U.substring_from s 16) with
+      | Some new_len -> parse_header_len stream new_len
+      | None -> raise MalformedHeader
     else if U.starts_with s "Content-Type: " then
       parse_header_len stream len
     else if s = "" then
