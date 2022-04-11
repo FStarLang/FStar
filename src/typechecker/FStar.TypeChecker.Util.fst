@@ -743,28 +743,49 @@ let should_not_inline_lc (lc:lcomp) =
  * We will "return" e, adding an equality to the VC, if all of the following conditions hold
  * (a) e is a pure or ghost term
  * (b) Its return type, lc.res_typ, is not a sub-singleton (unit, squash, etc), if lc.res_typ is an arrow, then we check the comp type of the arrow
- *     An exception is made for reifiable effects -- they are useful even if they return unit
+ *     An exception is made for reifiable effects -- they are useful even if they return unit -- except when it is an layered effect, we never return layered effects
  * (c) Its head symbol is not marked irreducible (in this case inlining is not going to help, it is equivalent to having a bound variable)
  * (d) It's not a let rec, as determined by the absence of the SHOULD_NOT_INLINE flag---see issue #1362. Would be better to just encode inner let recs to the SMT solver properly
  *)
 let should_return env eopt lc =
+  let lc_is_unit_or_effectful =
     //if lc.res_typ is not an arrow, arrow_formals_comp returns Tot lc.res_typ
-    let lc_is_unit_or_effectful =
-      lc.res_typ |> U.arrow_formals_comp |> snd |> (fun c ->
-        (not (Env.is_reifiable_comp env c &&
-              not (Env.is_layered_effect env (Env.norm_eff_name env lc.eff_name)))) &&
-        (U.comp_result c |> U.is_unit || not (U.is_pure_or_ghost_comp c)))
-    in
-    match eopt with
-    | None -> false //no term to return
-    | Some e ->
-      TcComm.is_pure_or_ghost_lcomp lc                &&  //condition (a), (see above)
-      not lc_is_unit_or_effectful                &&  //condition (b)
-      (let head, _ = U.head_and_args_full e in
-       match (U.un_uinst head).n with
-       | Tm_fvar fv ->  not (Env.is_irreducible env (lid_of_fv fv)) //condition (c)
-       | _ -> true)                              &&
-     not (should_not_inline_lc lc)                   //condition (d)
+    let c = lc.res_typ |> U.arrow_formals_comp |> snd in
+    if Env.is_reifiable_comp env c
+    then
+      //
+      //if c (the comp of the result type of lc) is reifiable
+      //  we always return it, unless it is a layered effect
+      //
+      c |> U.comp_effect_name |> Env.norm_eff_name env |> Env.is_layered_effect env
+    else
+         //
+         // if c is not a reifiable effect, check that it is pure or ghost
+         //
+         if U.is_pure_or_ghost_comp c
+         then
+              //
+              // if it is pure or ghost, it must be a non-singleton
+              //
+              // adding a bit of normalization to unfold abbreviations
+              //
+              c |> U.comp_result |> N.unfold_whnf env |> U.is_unit
+         else 
+              //
+              // if it is not pure or ghost, don't return
+              //
+              true in
+
+  match eopt with
+  | None -> false //no term to return
+  | Some e ->
+    TcComm.is_pure_or_ghost_lcomp lc           &&  //condition (a), (see above)
+    not lc_is_unit_or_effectful                &&  //condition (b)
+    (let head, _ = U.head_and_args_full e in
+     match (U.un_uinst head).n with
+     | Tm_fvar fv ->  not (Env.is_irreducible env (lid_of_fv fv))  //condition (c)
+     | _ -> true)                               &&
+   not (should_not_inline_lc lc)                   //condition (d)
 
 (*
  * Return a value in eff_lid

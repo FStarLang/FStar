@@ -1275,30 +1275,37 @@ let (should_return :
     fun eopt ->
       fun lc ->
         let lc_is_unit_or_effectful =
-          let uu___ =
-            let uu___1 =
+          let c =
+            let uu___ =
               FStar_Compiler_Effect.op_Bar_Greater
                 lc.FStar_TypeChecker_Common.res_typ
                 FStar_Syntax_Util.arrow_formals_comp in
-            FStar_Compiler_Effect.op_Bar_Greater uu___1
+            FStar_Compiler_Effect.op_Bar_Greater uu___
               FStar_Pervasives_Native.snd in
-          FStar_Compiler_Effect.op_Bar_Greater uu___
-            (fun c ->
-               (let uu___1 =
-                  (FStar_TypeChecker_Env.is_reifiable_comp env c) &&
-                    (let uu___2 =
-                       let uu___3 =
-                         FStar_TypeChecker_Env.norm_eff_name env
-                           lc.FStar_TypeChecker_Common.eff_name in
-                       FStar_TypeChecker_Env.is_layered_effect env uu___3 in
-                     Prims.op_Negation uu___2) in
-                Prims.op_Negation uu___1) &&
-                 ((FStar_Compiler_Effect.op_Bar_Greater
-                     (FStar_Syntax_Util.comp_result c)
-                     FStar_Syntax_Util.is_unit)
-                    ||
-                    (let uu___1 = FStar_Syntax_Util.is_pure_or_ghost_comp c in
-                     Prims.op_Negation uu___1))) in
+          let uu___ = FStar_TypeChecker_Env.is_reifiable_comp env c in
+          if uu___
+          then
+            let uu___1 =
+              let uu___2 =
+                FStar_Compiler_Effect.op_Bar_Greater c
+                  FStar_Syntax_Util.comp_effect_name in
+              FStar_Compiler_Effect.op_Bar_Greater uu___2
+                (FStar_TypeChecker_Env.norm_eff_name env) in
+            FStar_Compiler_Effect.op_Bar_Greater uu___1
+              (FStar_TypeChecker_Env.is_layered_effect env)
+          else
+            (let uu___2 = FStar_Syntax_Util.is_pure_or_ghost_comp c in
+             if uu___2
+             then
+               let uu___3 =
+                 let uu___4 =
+                   FStar_Compiler_Effect.op_Bar_Greater c
+                     FStar_Syntax_Util.comp_result in
+                 FStar_Compiler_Effect.op_Bar_Greater uu___4
+                   (FStar_TypeChecker_Normalize.unfold_whnf env) in
+               FStar_Compiler_Effect.op_Bar_Greater uu___3
+                 FStar_Syntax_Util.is_unit
+             else true) in
         match eopt with
         | FStar_Pervasives_Native.None -> false
         | FStar_Pervasives_Native.Some e ->
