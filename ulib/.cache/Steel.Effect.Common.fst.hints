@@ -821,7 +821,7 @@
         "typing_tok_Prims.T@tok"
       ],
       0,
-      "a3a161412d61ca18a9ee8a9d2c711fa1"
+      "7b67b9a9d892a3d0d02fd7dba5712520"
     ],
     [
       "Steel.Effect.Common.can_be_split_dep_refl",
@@ -834,7 +834,7 @@
         "lemma_Steel.Effect.Common.can_be_split_refl"
       ],
       0,
-      "038d238987a80f42621b9fabb2271ec5"
+      "d6d5a92a9ab0c624e0cb75f7c55383ef"
     ],
     [
       "Steel.Effect.Common.equiv_can_be_split",

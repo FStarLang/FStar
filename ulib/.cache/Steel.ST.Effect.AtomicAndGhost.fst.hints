@@ -43,7 +43,7 @@
         "typing_Steel.Effect.Common.star", "typing_tok_Prims.T@tok"
       ],
       0,
-      "5dc9dc44a6e325e6591c0ea7ad1034de"
+      "270c94ce122f49f76c0b6ff02a235faf"
     ],
     [
       "Steel.ST.Effect.AtomicAndGhost.return_",
@@ -80,7 +80,7 @@
         "typing_tok_Prims.T@tok"
       ],
       0,
-      "314ebc9acb34d274b8e3d7b2b50b5611"
+      "1721fadff8dbef9ead94b18a7dbc1ed9"
     ],
     [
       "Steel.ST.Effect.AtomicAndGhost.STAGCommon",
