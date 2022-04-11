@@ -12,7 +12,6 @@ else
   FSC     = fsharpc
   # If can't find msbuild, use xbuild, but throw a warning
   MSBUILD = $(shell which msbuild || (echo "dotnet msbuild"))
-  #MSBUILD = dotnet msbuild
   UNAME   = $(shell uname -s)
   RUNTIME = mono
 endif
