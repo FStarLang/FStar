@@ -16,7 +16,6 @@
 
 (* FStar.Interactive.Lsp and FStar.Interactive.Ide need to push various *
  * text fragments and update state; this file collects helpers for them *)
-#light "off"
 
 module FStar.Interactive.PushHelper
 open FStar
@@ -42,19 +41,19 @@ module CTable = FStar.Interactive.CompletionTable
 type push_kind = | SyntaxCheck | LaxCheck | FullCheck
 type ctx_depth_t = int * int * solver_depth_t * int
 type deps_t = FStar.Parser.Dep.deps
-type either_replst = either<repl_state, repl_state>
+type either_replst = either repl_state repl_state
 
-let repl_stack: ref<repl_stack_t> = U.mk_ref []
+let repl_stack: ref repl_stack_t = U.mk_ref []
 
 let set_check_kind env check_kind =
   { env with lax = (check_kind = LaxCheck);
              dsenv = DsEnv.set_syntax_only env.dsenv (check_kind = SyntaxCheck)}
 
 (** Build a list of dependency loading tasks from a list of dependencies **)
-let repl_ld_tasks_of_deps (deps: list<string>) (final_tasks: list<repl_task>) =
+let repl_ld_tasks_of_deps (deps: list string) (final_tasks: list repl_task) =
   let wrap fname = { tf_fname = fname; tf_modtime = U.now () } in
-  let rec aux (deps:list<string>) (final_tasks:list<repl_task>)
-    : list<repl_task> =
+  let rec aux (deps:list string) (final_tasks:list repl_task)
+    : list repl_task =
     match deps with
     | intf :: impl :: deps' when needs_interleaving intf impl ->
       LDInterleaved (wrap intf, wrap impl) :: aux deps' final_tasks
@@ -68,8 +67,8 @@ let repl_ld_tasks_of_deps (deps: list<string>) (final_tasks: list<repl_task>) =
 The dependencies are a list of file name.  The steps are a list of
 ``repl_task`` elements, to be executed by ``run_repl_task``. **)
 let deps_and_repl_ld_tasks_of_our_file filename
-    : list<string>
-    * list<repl_task>
+    : list string
+    * list repl_task
     * FStar.Parser.Dep.deps =
   let get_mod_name fname =
     Parser.Dep.lowercase_module_name fname in
@@ -184,9 +183,9 @@ type name_tracking_event =
 | NTAlias of lid (* host *) * ident (* alias *) * lid (* aliased *)
 | NTOpen of lid (* host *) * DsEnv.open_module_or_namespace (* opened *)
 | NTInclude of lid (* host *) * lid (* included *)
-| NTBinding of either<FStar.Syntax.Syntax.binding, TcEnv.sig_binding>
+| NTBinding of either FStar.Syntax.Syntax.binding TcEnv.sig_binding
 
-let query_of_ids (ids: list<ident>) : CTable.query =
+let query_of_ids (ids: list ident) : CTable.query =
   List.map string_of_id ids
 
 let query_of_lid (lid: lident) : CTable.query =
@@ -248,7 +247,7 @@ let fresh_name_tracking_hooks () =
       (fun _ s -> push_event (NTBinding s)) }
 
 let track_name_changes (env: env_t)
-    : env_t * (env_t -> env_t * list<name_tracking_event>) =
+    : env_t * (env_t -> env_t * list name_tracking_event) =
   let set_hooks dshooks tchooks env =
     let (), tcenv' = with_dsenv_of_tcenv env (fun dsenv -> (), DsEnv.set_ds_hooks dsenv dshooks) in
     TcEnv.set_tc_hooks tcenv' tchooks in
@@ -301,7 +300,7 @@ let update_task_timestamps = function
 // The first dependencies (prims, ...) come first; the current file's
 // interface comes last. The original value of the `repl_deps_stack` field
 // in ``st`` is used to skip already completed tasks.
-let repl_ldtx (st: repl_state) (tasks: list<repl_task>) : either_replst =
+let repl_ldtx (st: repl_state) (tasks: list repl_task) : either_replst =
 
   (* Run as many ``pop_repl`` as there are entries in the input stack.
   Elements of the input stack are expected to match the topmost ones of
@@ -315,8 +314,8 @@ let repl_ldtx (st: repl_state) (tasks: list<repl_task>) : either_replst =
       revert_many st' entries in
 
   let rec aux (st: repl_state)
-              (tasks: list<repl_task>)
-              (previous: list<repl_stack_entry_t>) =
+              (tasks: list repl_task)
+              (previous: list repl_stack_entry_t) =
     match tasks, previous with
     // All done: return the final state.
     | [], [] -> Inl st

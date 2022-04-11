@@ -13,7 +13,6 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-#light "off"
 module FStar.TypeChecker.Tc
 open FStar.Compiler.Effect
 open FStar.Compiler.Effect
@@ -29,8 +28,8 @@ val load_checked_module: env -> modul -> env
 val pop_context: env -> string -> env
 val push_context: env -> string -> env
 val snapshot_context: env -> string -> ((int * int * solver_depth_t * int) * env)
-val rollback_context: solver_t -> string -> option<(int * int * solver_depth_t * int)> -> env
+val rollback_context: solver_t -> string -> option (int * int * solver_depth_t * int) -> env
 
-val tc_decls: env -> list<sigelt> -> list<sigelt> * env
+val tc_decls: env -> list sigelt -> list sigelt * env
 val tc_partial_modul: env -> modul -> modul * env
-val tc_more_partial_modul: env -> modul -> list<sigelt> -> modul * list<sigelt> * env
+val tc_more_partial_modul: env -> modul -> list sigelt -> modul * list sigelt * env

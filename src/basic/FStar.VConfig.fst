@@ -13,10 +13,10 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-#light "off"
 module FStar.VConfig
 
-open FStar.Compiler.Effect module List = FStar.Compiler.List
+open FStar.Compiler.Effect
+module List = FStar.Compiler.List
 
 (* A type storing all options relevant to verification, used as
 the "format" for sigelt_opts and check_with (in reflection). *)
@@ -41,12 +41,12 @@ type vconfig = {
   tcnorm                                    : bool;
   no_plugins                                : bool;
   no_tactics                                : bool;
-  vcgen_optimize_bind_as_seq                : option<string>;
-  z3cliopt                                  : list<string>;
+  vcgen_optimize_bind_as_seq                : option string;
+  z3cliopt                                  : list string;
   z3refresh                                 : bool;
   z3rlimit                                  : int;
   z3rlimit_factor                           : int;
   z3seed                                    : int;
   trivial_pre_for_unannotated_effectful_fns : bool;
-  reuse_hint_for                            : option<string>;
+  reuse_hint_for                            : option string;
 }

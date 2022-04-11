@@ -13,8 +13,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-#light "off"
-// (c) Microsoft Corporation. All rights reserved
+
 module FStar.Syntax.Print
 open FStar.Pervasives
 open FStar.Compiler.Effect
@@ -129,7 +128,7 @@ let filter_imp_binders bs =
   bs |> List.filter (fun b -> b.binder_qual |> filter_imp)
 
 (* CH: F# List.find has a different type from find in list.fst ... so just a hack for now *)
-let rec find  (f:'a -> bool) (l:list<'a>) : 'a = match l with
+let rec find  (f:'a -> bool) (l:list 'a) : 'a = match l with
   | [] -> failwith "blah"
   | hd::tl -> if f hd then hd else find f tl
 
@@ -638,7 +637,7 @@ let binders_to_json env bs =
 //        | Inl (a, t) -> U.format2 "(%s -> %s)" (strBvd a) (typ_to_string t)
 //        | Inr (x, e) -> U.format2 "(%s -> %s)" (strBvd x) (exp_to_string e)) subst |> String.concat ", ")
 //let freevars_to_string (fvs:freevars) =
-//    let f (l:set<bvar<'a,'b>>) = l |> U.set_elements |> List.map (fun t -> strBvd t.v) |> String.concat ", " in
+//    let f (l:set (bvar 'a 'b)) = l |> U.set_elements |> List.map (fun t -> strBvd t.v) |> String.concat ", " in
 //    U.format2 "ftvs={%s}, fxvs={%s}" (f fvs.ftvs) (f fvs.fxvs)
 
 
@@ -752,7 +751,6 @@ let sub_eff_to_string se =
 
 let pragma_to_string (p:pragma) : string =
   match p with
-  | LightOff              -> "#light \"off\""
   | ResetOptions None     -> "#reset-options"
   | ResetOptions (Some s) -> U.format1 "#reset-options \"%s\"" s
   | SetOptions s          -> U.format1 "#set-options \"%s\"" s

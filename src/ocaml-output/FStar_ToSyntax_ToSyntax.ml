@@ -178,7 +178,6 @@ let (trans_pragma : FStar_Parser_AST.pragma -> FStar_Syntax_Syntax.pragma) =
     | FStar_Parser_AST.RestartSolver -> FStar_Syntax_Syntax.RestartSolver
     | FStar_Parser_AST.PrintEffectsGraph ->
         FStar_Syntax_Syntax.PrintEffectsGraph
-    | FStar_Parser_AST.LightOff -> FStar_Syntax_Syntax.LightOff
 let (as_imp :
   FStar_Parser_AST.imp ->
     FStar_Syntax_Syntax.arg_qualifier FStar_Pervasives_Native.option)

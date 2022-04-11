@@ -13,7 +13,6 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-#light "off"
 
 module FStar.SMTEncoding.EncodeTerm
 open Prims
@@ -47,7 +46,7 @@ module SE = FStar.Syntax.Embeddings
 open FStar.SMTEncoding.Env
 
 (*---------------------------------------------------------------------------------*)
-(* <Utilities> *)
+(*  <Utilities> *)
 
 let mkForall_fuel' mname r n (pats, vars, body) =
     let fallback () = mkForall r (pats, vars, body) in
@@ -187,7 +186,7 @@ let isTotFun_axioms pos head vars guards is_pure =
     in
     is_tot_fun_axioms [] mkTrue head vars guards
 
-let maybe_curry_app rng (head:either<op, term>) (arity:int) (args:list<term>) : term =
+let maybe_curry_app rng (head:either op term) (arity:int) (args:list term) : term =
     let n_args = List.length args in
     match head with
     | Inr head -> //must curry
@@ -229,7 +228,7 @@ let check_pattern_vars env vars pats =
                               BU.format1 "SMT pattern misses at least one bound variable: %s"
                                          (Print.bv_to_string x))
 
-(* </Utilities> *)
+(*  </Utilities> *)
 
 (**********************************************************************************)
 (* The main encoding of terms and formulae: mutually recursive                    *)
@@ -252,12 +251,12 @@ let check_pattern_vars env vars pats =
  *)
 
 type label = (fv * string * Range.range)
-type labels = list<label>
+type labels = list label
 type pattern = {
-  pat_vars: list<(bv * fv)>;
+  pat_vars: list (bv * fv);
   pat_term: unit -> (term * decls_t);                   (* the pattern as a term(exp) *)
   guard: term -> term;                                  (* the guard condition of the pattern, as applied to a particular scrutinee term(exp) *)
-  projections: term -> list<(bv * term)>                (* bound variables of the pattern, and the corresponding projected components of the scrutinee *)
+  projections: term -> list (bv * term)                (* bound variables of the pattern, and the corresponding projected components of the scrutinee *)
  }
 
 let as_function_typ env t0 =
@@ -357,12 +356,12 @@ let rec encode_const c env =
     | Const_real r -> boxReal (mkReal r), []
     | c -> failwith (BU.format1 "Unhandled constant: %s" (Print.const_to_string c))
 
-and encode_binders (fuel_opt:option<term>) (bs:Syntax.binders) (env:env_t) :
-                            (list<fv>                       (* translated bound variables *)
-                            * list<term>                    (* guards *)
+and encode_binders (fuel_opt:option term) (bs:Syntax.binders) (env:env_t) :
+                            (list fv                       (* translated bound variables *)
+                            * list term                    (* guards *)
                             * env_t                         (* extended context *)
                             * decls_t                       (* top-level decls to be emitted *)
-                            * list<bv>)                     (* names *) =
+                            * list bv)                     (* names *) =
 
     if Env.debug env.tcenv Options.Medium then BU.print1 "Encoding binders %s\n" (Print.binders_to_string ", " bs);
 
@@ -390,7 +389,7 @@ and encode_binders (fuel_opt:option<term>) (bs:Syntax.binders) (env:env_t) :
     decls,
     List.rev names
 
-and encode_term_pred (fuel_opt:option<term>) (t:typ) (env:env_t) (e:term) : term * decls_t =
+and encode_term_pred (fuel_opt:option term) (t:typ) (env:env_t) (e:term) : term * decls_t =
     let t, decls = encode_term t env in
     mk_HasTypeWithFuel fuel_opt e t, decls
 
@@ -413,7 +412,7 @@ and encode_arith_term env head args_e =
         let args = fuel_args@arg_tms in
         maybe_curry_app head.pos fname arity args
     in
-    let mk_l : (term -> term) -> ('a -> term) -> (list<term> -> 'a) -> list<term> -> term =
+    let mk_l : (term -> term) -> ('a -> term) -> (list term -> 'a) -> list term -> term =
       fun box op mk_args ts ->
           if Options.smtencoding_l_arith_native () then
              op (mk_args ts) |> box
@@ -500,7 +499,7 @@ and encode_arith_term env head args_e =
         Term.unboxBitVec sz (List.hd arg_tms),
         Term.unboxInt (List.hd (List.tl arg_tms))
     in
-    let mk_bv : ('a -> term) -> (list<term> -> 'a) -> (term -> term) -> list<term> -> term =
+    let mk_bv : ('a -> term) -> (list term -> 'a) -> (term -> term) -> list term -> term =
       fun op mk_args resBox ts ->
              op (mk_args ts) |> resBox
     in
@@ -700,7 +699,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
               * AR/NS: For an arrow like int -> int -> int -> GTot int, t_interp is of the form:
               *     forall x0.
               *           HasType x0 (int -> int -> int -> GTot int)
-              *         <==>
+              *          <==>
               *           (forall (x1:int) (x2:int) (x3:int).
               *             HasType (ApplyTT (ApplyTT (ApplyTT (x0 x1)) x2) x3) int)
               *          /\ IsTotFun x0
@@ -961,7 +960,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
         | _ ->
             let args, decls = encode_args args_e env in
 
-            let encode_partial_app (ht_opt:option<(S.typ * S.binders * S.comp)>) =
+            let encode_partial_app (ht_opt:option (S.typ * S.binders * S.comp)) =
                 let smt_head, decls' = encode_term head env in
                 let app_tm = mk_Apply_args smt_head args in
                 match ht_opt with
@@ -1248,7 +1247,7 @@ and encode_let
         let ee2, decls2 = encode_body e2 env' in
         ee2, decls1@decls2
 
-and encode_match (e:S.term) (pats:list<S.branch>) (default_case:term) (env:env_t)
+and encode_match (e:S.term) (pats:list S.branch) (default_case:term) (env:env_t)
                  (encode_br:S.term -> env_t -> (term * decls_t)) : term * decls_t =
     let scrsym, scr', env = gen_term_var env (S.null_bv (S.mk S.Tm_unknown Range.dummyRange)) in
     let scr, decls = encode_term e env in
@@ -1330,13 +1329,13 @@ and encode_pat (env:env_t) (pat:S.pat) : (env_t * pattern) =
 
     env, pattern
 
-and encode_args (l:args) (env:env_t) : (list<term> * decls_t)  =
+and encode_args (l:args) (env:env_t) : (list term * decls_t)  =
     let l, decls = l |> List.fold_left
         (fun (tms, decls) (t, _) -> let t, decls' = encode_term t env in t::tms, decls@decls')
         ([], []) in
     List.rev l, decls
 
-and encode_smt_patterns (pats_l:list<(list<S.arg>)>) env : list<(list<term>)> * decls_t =
+and encode_smt_patterns (pats_l:list (list S.arg)) env : list (list term) * decls_t =
     let env = {env with use_zfuel_name=true} in
     let encode_smt_pattern t =
         let head, args = U.head_and_args t in
@@ -1378,13 +1377,13 @@ and encode_formula (phi:typ) (env:env_t) : (term * decls_t)  = (* expects phi to
        then BU.print2 "Formula (%s)  %s\n"
                      (Print.tag_of_term phi)
                      (Print.term_to_string phi) in
-    let enc (f:list<term> -> term) : Range.range -> args -> (term * decls_t) = fun r l ->
+    let enc (f:list term -> term) : Range.range -> args -> (term * decls_t) = fun r l ->
         let decls, args = BU.fold_map (fun decls x -> let t, decls' = encode_term (fst x) env in decls@decls', t) [] l in
         ({f args with rng=r}, decls) in
 
     let const_op f r _ = (f r, []) in
     let un_op f l = f <| List.hd l in
-    let bin_op : ((term * term) -> term) -> list<term> -> term = fun f -> function
+    let bin_op : ((term * term) -> term) -> list term -> term = fun f -> function
         | [t1;t2] -> f(t1,t2)
         | _ -> failwith "Impossible" in
 
@@ -1406,7 +1405,7 @@ and encode_formula (phi:typ) (env:env_t) : (term * decls_t)  = (* expects phi to
         else enc (bin_op mkEq) r rf
     in
 
-    let mk_imp r : Tot<(args -> (term * decls_t))> = function
+    let mk_imp r : Tot (args -> (term * decls_t)) = function
         | [(lhs, _); (rhs, _)] ->
           let l1, decls1 = encode_formula rhs env in
           begin match l1.tm with
@@ -1417,7 +1416,7 @@ and encode_formula (phi:typ) (env:env_t) : (term * decls_t)  = (* expects phi to
           end
          | _ -> failwith "impossible" in
 
-    let mk_ite r: Tot<(args -> (term * decls_t))> = function
+    let mk_ite r: Tot (args -> (term * decls_t)) = function
         | [(guard, _); (_then, _); (_else, _)] ->
           let (g, decls1) = encode_formula guard env in
           let (t, decls2) = encode_formula _then env in
@@ -1428,7 +1427,7 @@ and encode_formula (phi:typ) (env:env_t) : (term * decls_t)  = (* expects phi to
         | _ -> failwith "impossible" in
 
 
-    let unboxInt_l : (list<term> -> term) -> list<term> -> term = fun f l -> f (List.map Term.unboxInt l) in
+    let unboxInt_l : (list term -> term) -> list term -> term = fun f l -> f (List.map Term.unboxInt l) in
     let connectives = [
         (Const.and_lid,   enc_prop_c (bin_op mkAnd));
         (Const.or_lid,    enc_prop_c (bin_op mkOr));
@@ -1511,7 +1510,7 @@ and encode_formula (phi:typ) (env:env_t) : (term * decls_t)  = (* expects phi to
                   else {tt with rng=phi.pos} in
             mk_Valid tt, decls in
 
-    let encode_q_body env (bs:Syntax.binders) (ps:list<args>) body =
+    let encode_q_body env (bs:Syntax.binders) (ps:list args) body =
         let vars, guards, env, decls, _ = encode_binders None bs env in
         let pats, decls' = encode_smt_patterns ps env in
         let body, decls'' = encode_formula body env in

@@ -713,7 +713,6 @@ type pragma =
   | PushOptions of Prims.string FStar_Pervasives_Native.option 
   | PopOptions 
   | RestartSolver 
-  | LightOff 
   | PrintEffectsGraph 
 let (uu___is_SetOptions : pragma -> Prims.bool) =
   fun projectee ->
@@ -737,8 +736,6 @@ let (uu___is_PopOptions : pragma -> Prims.bool) =
 let (uu___is_RestartSolver : pragma -> Prims.bool) =
   fun projectee ->
     match projectee with | RestartSolver -> true | uu___ -> false
-let (uu___is_LightOff : pragma -> Prims.bool) =
-  fun projectee -> match projectee with | LightOff -> true | uu___ -> false
 let (uu___is_PrintEffectsGraph : pragma -> Prims.bool) =
   fun projectee ->
     match projectee with | PrintEffectsGraph -> true | uu___ -> false
@@ -1424,41 +1421,29 @@ let rec (as_mlist :
                       (FStar_Errors.Fatal_UnexpectedModuleDeclaration,
                         "Unexpected module declaration") d.drange
                 | uu___1 -> as_mlist ((m_name, m_decl), (d :: cur1)) ds1))
-let (as_frag :
-  Prims.bool ->
-    FStar_Compiler_Range.range -> decl Prims.list -> inputFragment)
-  =
-  fun is_light ->
-    fun light_range ->
-      fun ds ->
-        let uu___ =
-          match ds with
-          | d::ds1 -> (d, ds1)
-          | [] -> FStar_Compiler_Effect.raise FStar_Errors.Empty_frag in
-        match uu___ with
-        | (d, ds1) ->
-            (match d.d with
-             | TopLevelModule m ->
-                 let ds2 =
-                   if is_light
-                   then
-                     let uu___1 = mk_decl (Pragma LightOff) light_range [] in
-                     uu___1 :: ds1
-                   else ds1 in
-                 let m1 = as_mlist ((m, d), []) ds2 in
-                 FStar_Pervasives.Inl m1
-             | uu___1 ->
-                 let ds2 = d :: ds1 in
-                 (FStar_Compiler_List.iter
-                    (fun uu___3 ->
-                       match uu___3 with
-                       | { d = TopLevelModule uu___4; drange = r;
-                           quals = uu___5; attrs = uu___6;_} ->
-                           FStar_Errors.raise_error
-                             (FStar_Errors.Fatal_UnexpectedModuleDeclaration,
-                               "Unexpected module declaration") r
-                       | uu___4 -> ()) ds2;
-                  FStar_Pervasives.Inr ds2))
+let (as_frag : decl Prims.list -> inputFragment) =
+  fun ds ->
+    let uu___ =
+      match ds with
+      | d::ds1 -> (d, ds1)
+      | [] -> FStar_Compiler_Effect.raise FStar_Errors.Empty_frag in
+    match uu___ with
+    | (d, ds1) ->
+        (match d.d with
+         | TopLevelModule m ->
+             let m1 = as_mlist ((m, d), []) ds1 in FStar_Pervasives.Inl m1
+         | uu___1 ->
+             let ds2 = d :: ds1 in
+             (FStar_Compiler_List.iter
+                (fun uu___3 ->
+                   match uu___3 with
+                   | { d = TopLevelModule uu___4; drange = r; quals = uu___5;
+                       attrs = uu___6;_} ->
+                       FStar_Errors.raise_error
+                         (FStar_Errors.Fatal_UnexpectedModuleDeclaration,
+                           "Unexpected module declaration") r
+                   | uu___4 -> ()) ds2;
+              FStar_Pervasives.Inr ds2))
 let (compile_op :
   Prims.int -> Prims.string -> FStar_Compiler_Range.range -> Prims.string) =
   fun arity ->

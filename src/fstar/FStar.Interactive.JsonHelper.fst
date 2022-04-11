@@ -16,7 +16,6 @@
 
 (* Json helpers mainly for FStar.Interactive.Lsp; some sharing with *
  * FStar.Interactive.Ide                                            *)
-#light "off"
 
 module FStar.Interactive.JsonHelper
 open FStar
@@ -32,7 +31,7 @@ module U = FStar.Compiler.Util
 module TcEnv = FStar.TypeChecker.Env
 module CTable = FStar.Interactive.CompletionTable
 
-type assoct = list<(string * json)>
+type assoct = list (string * json)
 
 let try_assoc (key: string) (d: assoct) =
   U.map_option snd (U.try_find (fun (k, _) -> k = key) d)
@@ -97,7 +96,7 @@ let path_to_uri u = if U.char_at u 1 = ':' then
                     U.format2 "file:///%s%3A%s" (U.substring u 0 1) rest
                     else U.format1 "file://%s" u
 
-type completion_context = { trigger_kind: int; trigger_char: option<string> }
+type completion_context = { trigger_kind: int; trigger_char: option string }
 
 let js_compl_context : json -> completion_context = function
   | JsonAssoc a ->
@@ -120,12 +119,12 @@ let js_txdoc_item : json -> txdoc_item = function
 type txdoc_pos = { path: string; line: int; col: int }
 
 // May throw, argument is of the form { "textDocument" : {"uri" : ... } }
-let js_txdoc_id (r: list<(string * json)>) : string =
+let js_txdoc_id (r: list (string * json)) : string =
   uri_to_path (assoc "uri" (arg "textDocument" r |> js_assoc) |> js_str)
 
 // May throw; argument is of the form { "textDocument" : ...,
 //                                      "position" : { "line" : ..., "character" : ... } }
-let js_txdoc_pos (r: list<(string * json)>) : txdoc_pos =
+let js_txdoc_pos (r: list (string * json)) : txdoc_pos =
   let pos = arg "position" r |> js_assoc in
   { path = js_txdoc_id r;
     line = assoc "line" pos |> js_int;
@@ -210,11 +209,11 @@ type lquery =
 | FoldingRange
 | BadProtocolMsg of string
 
-type lsp_query = { query_id: option<int>; q: lquery }
+type lsp_query = { query_id: option int; q: lquery }
 
 (* Types concerning repl *)
 type repl_depth_t = TcEnv.tcenv_depth_t * int
-type optmod_t = option<Syntax.Syntax.modul>
+type optmod_t = option Syntax.Syntax.modul
 
 type timed_fname =
   { tf_fname: string;
@@ -237,9 +236,9 @@ type repl_state = { repl_line: int; repl_column: int; repl_fname: string;
                     repl_env: TcEnv.env;
                     repl_stdin: stream_reader; // unused in LSP
                     repl_names: CTable.table }
-and repl_stack_t = list<repl_stack_entry_t>
+and repl_stack_t = list repl_stack_entry_t
 and repl_stack_entry_t = repl_depth_t * (repl_task * repl_state)
-and grepl_state = { grepl_repls : U.psmap<repl_state>;
+and grepl_state = { grepl_repls : U.psmap repl_state;
                     grepl_stdin : stream_reader }
 
 type error_code =
@@ -278,7 +277,7 @@ let json_debug = function
 
 // The IDE uses a slightly different variant (wrap_js_failure)
 // because types differ (query' versus lsp_query)
-let wrap_jsfail (qid : option<int>) expected got : lsp_query =
+let wrap_jsfail (qid : option int) expected got : lsp_query =
   { query_id = qid;
     q = BadProtocolMsg (U.format2 "JSON decoding failed: expected %s, got %s"
                         expected (json_debug got)) }
@@ -286,13 +285,13 @@ let wrap_jsfail (qid : option<int>) expected got : lsp_query =
 (* Helpers for constructing the response *)
 
 // Trivial helpers
-let resultResponse (r: json) : option<assoct> = Some [("result", r)]
-let errorResponse (r: json) : option<assoct> = Some [("error", r)]
+let resultResponse (r: json) : option assoct = Some [("result", r)]
+let errorResponse (r: json) : option assoct = Some [("error", r)]
 
 // When a response is expected, but we have nothing to say (used for unimplemented bits as well)
-let nullResponse : option<assoct> = resultResponse JsonNull
+let nullResponse : option assoct = resultResponse JsonNull
 
-let json_of_response (qid: option<int>) (response: assoct) : json =
+let json_of_response (qid: option int) (response: assoct) : json =
   match qid with
   | Some i -> JsonAssoc ([("jsonrpc", JsonStr "2.0"); ("id", JsonInt i)] @ response)
   // In the case of a notification response, there is no query_id associated
@@ -345,7 +344,7 @@ let js_loclink (r: Range.range) : json =
 // Lines are 0-indexed in LSP, but 1-indexed in the F* Typechecker;
 let pos_munge (pos: txdoc_pos) = (pos.path, pos.line + 1, pos.col)
 
-let js_diag (fname: string) (msg: string) (r: option<Range.range>) : assoct =
+let js_diag (fname: string) (msg: string) (r: option Range.range) : assoct =
   let r' = match r with
            | Some r -> js_range r
            | None -> js_dummyrange in

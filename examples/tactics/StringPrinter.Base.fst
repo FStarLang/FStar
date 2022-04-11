@@ -307,13 +307,13 @@ let tm_eq_fvar (t1 t2: T.term) : T.Tac bool =
   | _ -> false
 
 let ret_tm () : T.Tac T.term =
-  quote ret
+  quote (ret #T.term)
 
 let bind_tm () : T.Tac T.term =
-  quote bind
+  quote (fun (#t1:Type) (#t2:Type) -> bind #t1 #t2)
 
 let seq_tm () : T.Tac T.term =
-  quote seq
+  quote (fun #t -> seq #t)
 
 let print_char_tm () : T.Tac T.term =
   quote print_char
@@ -494,8 +494,8 @@ let mk_sz'
   (ty: T.term) (t: T.term)
 : T.Tac T.term
 = compile
-    (quote ret_sz)
-    (quote bind_sz)
+    (quote (fun #t -> ret_sz #t))
+    (quote (fun #t1 #t2 #x -> bind_sz #t1 #t2 #x))
     (quote print_char_sz)
     (quote coerce_sz)
     (quote ifthenelse_sz)
@@ -636,8 +636,8 @@ let mk_st'
   (ty: T.term) (t: T.term)
 : T.Tac T.term
 = compile
-    (quote ret_st)
-    (quote bind_st)
+    (quote (fun #t -> ret_st #t))
+    (quote (fun #t1 #t2 #x -> bind_st #t1 #t2 #x))
     (quote print_char_st)
     (quote coerce_st)
     (quote ifthenelse_st)
@@ -767,7 +767,7 @@ let phi_tac (#ty: Type0) (m: m ty) : T.Tac unit =
     let ty' = quote ty in
     let t_sz = mk_sz' (T.cur_env ()) ty' x in
     let t_st = mk_st' (T.cur_env ()) ty' x in
-    let q = quote phi in
+    let q = quote (fun #t -> phi #t) in
     let t = mk_app q [
       ty', Q_Implicit;
       x, Q_Explicit;

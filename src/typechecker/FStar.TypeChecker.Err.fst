@@ -13,14 +13,13 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-#light "off"
-
 module FStar.TypeChecker.Err
 open FStar.Pervasives
 open FStar.Compiler.Effect
 open FStar.Compiler.Effect
 
-open FStar open FStar.Compiler
+open FStar
+open FStar.Compiler
 open FStar.Syntax
 open FStar.Syntax.Syntax
 open FStar.Compiler.Util
@@ -56,7 +55,7 @@ let print_discrepancy (f : 'a -> string) (x : 'a) (y : 'a) : string * string =
         let ys = f y in
         xs, ys, xs <> ys
     in
-    let rec blist_leq (l1 : list<bool>) (l2 : list<bool>) =
+    let rec blist_leq (l1 : list bool) (l2 : list bool) =
         match l1, l2 with
         | h1::t1, h2::t2 ->
             (not h1 || h2) && blist_leq t1 t2
@@ -65,13 +64,13 @@ let print_discrepancy (f : 'a -> string) (x : 'a) (y : 'a) : string * string =
         | _ ->
             failwith "print_discrepancy: bad lists"
     in
-    let rec succ (l : list<bool>) : list<bool> =
+    let rec succ (l : list bool) : list bool =
         match l with
         | false::t -> true::t
         | true::t -> false::(succ t)
         | [] -> failwith ""
     in
-    let full (l : list<bool>) : bool =
+    let full (l : list bool) : bool =
         List.for_all (fun b -> b) l
     in
     let get_bool_option (s:string) : bool =
@@ -82,14 +81,14 @@ let print_discrepancy (f : 'a -> string) (x : 'a) (y : 'a) : string * string =
     let set_bool_option (s:string) (b:bool) : unit =
         Options.set_option s (Options.Bool b)
     in
-    let get () : list<bool> =
+    let get () : list bool =
         let pi  = get_bool_option "print_implicits" in
         let pu  = get_bool_option "print_universes" in
         let pea = get_bool_option "print_effect_args" in
         let pf  = get_bool_option "print_full_names" in
         [pi; pu; pea; pf]
     in
-    let set (l : list<bool>) : unit =
+    let set (l : list bool) : unit =
         match l with
         | [pi; pu; pea; pf] ->
           set_bool_option "print_implicits"   pi;
@@ -99,7 +98,7 @@ let print_discrepancy (f : 'a -> string) (x : 'a) (y : 'a) : string * string =
         | _ -> failwith "impossible: print_discrepancy"
     in
     let bas = get () in
-    let rec go (cur : list<bool>) =
+    let rec go (cur : list bool) =
         match () with
         (* give up, nothing more we can do *)
         | () when full cur ->
@@ -130,9 +129,9 @@ let print_discrepancy (f : 'a -> string) (x : 'a) (y : 'a) : string * string =
  *       while in the latter, it is printed on the same line
  *)
 let errors_smt_detail env
-        (errs : list<Errors.error>)
-        (smt_detail : either<string,string>)
-: list<Errors.error>
+        (errs : list Errors.error)
+        (smt_detail : either string string)
+: list Errors.error
 =
     let maybe_add_smt_detail msg =
       match smt_detail with
@@ -163,7 +162,7 @@ let errors_smt_detail env
     in
     errs
 
-let add_errors_smt_detail env (errs:list<Errors.error>) smt_detail : unit =
+let add_errors_smt_detail env (errs:list Errors.error) smt_detail : unit =
     FStar.Errors.add_errors (errors_smt_detail env errs smt_detail)
 
 let add_errors env errs = add_errors_smt_detail env errs (Inl "")

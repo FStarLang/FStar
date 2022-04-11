@@ -15,11 +15,10 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-#light "off"
 
 module FStar.Common
-open FStar.Compiler.Effect module List = FStar.Compiler.List
-open FStar.Compiler.Effect module List = FStar.Compiler.List
+open FStar.Compiler.Effect
+module List = FStar.Compiler.List
 module BU = FStar.Compiler.Util
 
 let has_cygpath =
@@ -50,12 +49,12 @@ let try_convert_file_name_to_mixed =
     else
       s
 
-let snapshot (push: 'a -> 'b) (stackref: ref<list<'c>>) (arg: 'a) : (int * 'b) = BU.atomically (fun () ->
+let snapshot (push: 'a -> 'b) (stackref: ref (list 'c)) (arg: 'a) : (int * 'b) = BU.atomically (fun () ->
   let len = List.length !stackref in
   let arg' = push arg in
   (len, arg'))
 
-let rollback (pop: unit -> 'a) (stackref: ref<list<'c>>) (depth: option<int>) =
+let rollback (pop: unit -> 'a) (stackref: ref (list 'c)) (depth: option int) =
   let rec aux n =
     if n <= 0 then failwith "Too many pops"
     else if n = 1 then pop ()
@@ -71,10 +70,10 @@ let raise_failed_assertion msg =
 let runtime_assert b msg =
   if not b then raise_failed_assertion msg
 
-let string_of_list (f : 'a -> string) (l : list<'a>) : string =
+let string_of_list (f : 'a -> string) (l : list 'a) : string =
   "[" ^ String.concat ", " (List.map f l) ^ "]"
 
-let list_of_option (o:option<'a>) : list<'a> =
+let list_of_option (o:option 'a) : list 'a =
     match o with
     | None -> []
     | Some x -> [x]
@@ -84,7 +83,7 @@ let string_of_option f = function
   | Some x -> "Some " ^ f x
 
 (* Was List.init, but F* doesn't have this in ulib *)
-let tabulate (n:int) (f : int -> 'a) : list<'a> =
+let tabulate (n:int) (f : int -> 'a) : list 'a =
   let rec aux i =
     if i < n
     then f i :: aux (i + 1)
@@ -96,7 +95,7 @@ let tabulate (n:int) (f : int -> 'a) : list<'a> =
   * l@r == xs
   * and l is the largest list satisfying that
   *)
-let rec max_prefix (f : 'a -> bool) (xs : list<'a>) : list<'a> * list<'a> =
+let rec max_prefix (f : 'a -> bool) (xs : list 'a) : list 'a * list 'a =
   match xs with
   | [] -> [], []
   | x::xs when f x ->
@@ -110,7 +109,7 @@ let rec max_prefix (f : 'a -> bool) (xs : list<'a>) : list<'a> * list<'a> =
   * l@r == xs
   * and r is the largest list satisfying that
   *)
-let max_suffix (f : 'a -> bool) (xs : list<'a>) : list<'a> * list<'a> =
+let max_suffix (f : 'a -> bool) (xs : list 'a) : list 'a * list 'a =
   let rec aux acc xs =
     match xs with
     | [] -> acc, []

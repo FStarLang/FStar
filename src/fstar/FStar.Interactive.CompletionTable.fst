@@ -1,4 +1,19 @@
-#light "off"
+(*
+   Copyright 2008-2016 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
+
 module FStar.Interactive.CompletionTable
 
 open FStar open FStar.Compiler
@@ -9,9 +24,9 @@ let string_compare s1 s2 =
 
 (** * (Pairing) min-heaps * **)
 
-type heap<'a> =
+type heap 'a =
 | EmptyHeap
-| Heap of 'a * list<heap<'a>>
+| Heap of 'a * list (heap 'a)
 
 let heap_merge cmp h1 h2 =
   match h1, h2 with
@@ -53,14 +68,14 @@ let rec add_priorities n acc = function
 (** Merge ‘lists’, a list of increasing (according to ‘key_fn’) lists.
     Keeps a single copy of each key that appears in more than one list (earlier
     lists take precedence when chosing which value to keep). *)
-let merge_increasing_lists_rev (key_fn: 'a -> string) (lists: list<list<'a>>) =
+let merge_increasing_lists_rev (key_fn: 'a -> string) (lists: list (list 'a)) =
   let cmp v1 v2 =
     match v1, v2 with
     | (_, []), _ | _, (_, []) -> failwith "impossible"
     | (pr1, h1 :: _), (pr2, h2 :: _) ->
       let cmp_h = string_compare (key_fn h1) (key_fn h2) in
       if cmp_h <> 0 then cmp_h else pr1 - pr2 in
-  let rec aux (lists: heap<(int * list<'a>)>) (acc: list<'a>) =
+  let rec aux (lists: heap (int * list 'a)) (acc: list 'a) =
     match heap_pop cmp lists with
     | None -> acc
     | Some ((pr, []), _) -> failwith "impossible"
@@ -75,20 +90,20 @@ let merge_increasing_lists_rev (key_fn: 'a -> string) (lists: list<list<'a>>) =
 
 (** * Binary trees * **)
 
-type btree<'a> =
+type btree 'a =
 | StrEmpty
-| StrBranch of string * 'a * (btree<'a>) * (btree<'a>)
+| StrBranch of string * 'a * (btree 'a) * (btree 'a)
 (* (key: string) * (value: 'a) * (lbt: btree 'a) * (rbt: btree 'a) *)
 
-let rec btree_to_list_rev (btree:btree<'a>) (acc:list<(string * 'a)>)
-  : list<(string * 'a)> =
+let rec btree_to_list_rev (btree:btree 'a) (acc:list (string * 'a))
+  : list (string * 'a) =
   match btree with
   | StrEmpty -> acc
   | StrBranch (key, value, lbt, rbt) ->
     btree_to_list_rev rbt ((key, value) :: btree_to_list_rev lbt acc)
 
-let rec btree_from_list (nodes:list<(string * 'a)>) (size:int)
- : btree<'a> * list<(string * 'a)> =
+let rec btree_from_list (nodes:list (string * 'a)) (size:int)
+ : btree 'a * list (string * 'a) =
   if size = 0 then (StrEmpty, nodes)
   else
     let lbt_size = size / 2 in
@@ -100,7 +115,7 @@ let rec btree_from_list (nodes:list<(string * 'a)>) (size:int)
       let rbt, nodes_left = btree_from_list nodes_left rbt_size in
       StrBranch (k, v, lbt, rbt), nodes_left
 
-let rec btree_insert_replace (bt: btree<'a>) (k: string) (v: 'a) : btree<'a> =
+let rec btree_insert_replace (bt: btree 'a) (k: string) (v: 'a) : btree 'a =
   match bt with
   | StrEmpty -> StrBranch (k, v, StrEmpty, StrEmpty)
   | StrBranch (k', v', lbt, rbt) ->
@@ -112,7 +127,7 @@ let rec btree_insert_replace (bt: btree<'a>) (k: string) (v: 'a) : btree<'a> =
     else
       StrBranch (k', v, lbt, rbt)
 
-let rec btree_find_exact (bt: btree<'a>) (k: string) : option<'a> =
+let rec btree_find_exact (bt: btree 'a) (k: string) : option 'a =
   match bt with
   | StrEmpty -> None
   | StrBranch (k', v, lbt, rbt) ->
@@ -124,13 +139,13 @@ let rec btree_find_exact (bt: btree<'a>) (k: string) : option<'a> =
     else
       Some v
 
-let rec btree_extract_min (bt: btree<'a>) : option<(string * 'a * btree<'a>)> =
+let rec btree_extract_min (bt: btree 'a) : option (string * 'a * btree 'a) =
   match bt with
   | StrEmpty -> None
   | StrBranch (k, v, StrEmpty, rbt) -> Some (k, v, rbt)
   | StrBranch (_, _, lbt, _) -> btree_extract_min lbt
 
-let rec btree_remove (bt: btree<'a>) (k: string) : btree<'a> =
+let rec btree_remove (bt: btree 'a) (k: string) : btree 'a =
   match bt with
   | StrEmpty -> StrEmpty
   | StrBranch (k', v, lbt, rbt) ->
@@ -148,20 +163,20 @@ let rec btree_remove (bt: btree<'a>) (k: string) : btree<'a> =
               StrBranch (rbt_min_k, rbt_min_v, lbt, rbt')
 
 type prefix_match =
-  { prefix: option<string>;
+  { prefix: option string;
     completion: string }
 
 type path_elem =
-  { imports: list<string>;
+  { imports: list string;
     segment: prefix_match }
 
 let matched_prefix_of_path_elem (elem: path_elem) = elem.segment.prefix
 
 let mk_path_el imports segment = { imports = imports; segment = segment }
 
-let btree_find_prefix (bt: btree<'a>) (prefix: string)
-    : list<(prefix_match * 'a)> (* ↑ keys *) =
-  let rec aux (bt: btree<'a>) (prefix: string) (acc: list<(prefix_match * 'a)>) : list<(prefix_match * 'a)> =
+let btree_find_prefix (bt: btree 'a) (prefix: string)
+    : list (prefix_match * 'a) (* ↑ keys *) =
+  let rec aux (bt: btree 'a) (prefix: string) (acc: list (prefix_match * 'a)) : list (prefix_match * 'a) =
     match bt with
     | StrEmpty -> acc
     | StrBranch (k, v, lbt, rbt) ->
@@ -181,7 +196,7 @@ let btree_find_prefix (bt: btree<'a>) (prefix: string)
       matches in
   aux bt prefix []
 
-let rec btree_fold (bt: btree<'a>) (f: string -> 'a -> 'b -> 'b) (acc: 'b) =
+let rec btree_fold (bt: btree 'a) (f: string -> 'a -> 'b -> 'b) (acc: 'b) =
   match bt with
   | StrEmpty -> acc
   | StrBranch (k, v, lbt, rbt) ->
@@ -189,23 +204,23 @@ let rec btree_fold (bt: btree<'a>) (f: string -> 'a -> 'b -> 'b) (acc: 'b) =
 
 (** * Tries * **)
 
-type path = list<path_elem>
-type query = list<string>
+type path = list path_elem
+type query = list string
 
 let query_to_string q = String.concat "." q
 
-type name_collection<'a> =
-| Names of btree<'a>
-| ImportedNames of string * names<'a>
-and names<'a> = list<name_collection<'a>>
+type name_collection 'a =
+| Names of btree 'a
+| ImportedNames of string * names 'a
+and names 'a = list (name_collection 'a)
 
-type trie<'a> =
-  { bindings: names<'a>;
-    namespaces: names<trie<'a>> }
+type trie 'a =
+  { bindings: names 'a;
+    namespaces: names (trie 'a) }
 
 let trie_empty = { bindings = []; namespaces = [] }
 
-let rec names_find_exact (names: names<'a>) (ns: string) : option<'a> =
+let rec names_find_exact (names: names 'a) (ns: string) : option 'a =
   let result, names =
     match names with
     | [] -> None, None
@@ -217,14 +232,14 @@ let rec names_find_exact (names: names<'a>) (ns: string) : option<'a> =
   | None, Some scopes -> names_find_exact scopes ns
   | _ -> result
 
-let rec trie_descend_exact (tr: trie<'a>) (query: query) : option<trie<'a>> =
+let rec trie_descend_exact (tr: trie 'a) (query: query) : option (trie 'a) =
   match query with
   | [] -> Some tr
   | ns :: query ->
     Util.bind_opt (names_find_exact tr.namespaces ns)
       (fun scope -> trie_descend_exact scope query)
 
-let rec trie_find_exact (tr: trie<'a>) (query: query) : option<'a> =
+let rec trie_find_exact (tr: trie 'a) (query: query) : option 'a =
   match query with
   | [] -> failwith "Empty query in trie_find_exact"
   | [name] -> names_find_exact tr.bindings name
@@ -232,23 +247,23 @@ let rec trie_find_exact (tr: trie<'a>) (query: query) : option<'a> =
     Util.bind_opt (names_find_exact tr.namespaces ns)
       (fun scope -> trie_find_exact scope query)
 
-let names_insert (name_collections: names<'a>) (id: string) (v: 'a) : names<'a> =
+let names_insert (name_collections: names 'a) (id: string) (v: 'a) : names 'a =
   let bt, name_collections =
     match name_collections with
     | Names bt :: tl -> (bt, tl)
     | _ -> (StrEmpty, name_collections) in
   Names (btree_insert_replace bt id v) :: name_collections
 
-let rec namespaces_mutate (namespaces: names<trie<'a>>) (ns: string) (q: query)
+let rec namespaces_mutate (namespaces: names (trie 'a)) (ns: string) (q: query)
                           (rev_acc: query)
-                          (mut_node: trie<'a> -> string -> query -> query -> names<trie<'a>> -> trie<'a>)
-                          (mut_leaf: trie<'a> -> query -> trie<'a>)=
+                          (mut_node: trie 'a -> string -> query -> query -> names (trie 'a) -> trie 'a)
+                          (mut_leaf: trie 'a -> query -> trie 'a)=
   let trie = Util.dflt trie_empty (names_find_exact namespaces ns) in
   names_insert namespaces ns (trie_mutate trie q rev_acc mut_node mut_leaf)
 
-and trie_mutate (tr: trie<'a>) (q: query) (rev_acc: query)
-                (mut_node: trie<'a> -> string -> query -> query -> names<trie<'a>> -> trie<'a>)
-                (mut_leaf: trie<'a> -> query -> trie<'a>) : trie<'a> =
+and trie_mutate (tr: trie 'a) (q: query) (rev_acc: query)
+                (mut_node: trie 'a -> string -> query -> query -> names (trie 'a) -> trie 'a)
+                (mut_leaf: trie 'a -> query -> trie 'a) : trie 'a =
   match q with
   | [] ->
     mut_leaf tr rev_acc
@@ -256,30 +271,30 @@ and trie_mutate (tr: trie<'a>) (q: query) (rev_acc: query)
     let ns' = namespaces_mutate tr.namespaces id q (id :: rev_acc) mut_node mut_leaf in
     mut_node tr id q rev_acc ns'
 
-let trie_mutate_leaf (tr: trie<'a>) (query: query) =
+let trie_mutate_leaf (tr: trie 'a) (query: query) =
   trie_mutate tr query [] (fun tr _ _ _ namespaces -> { tr with namespaces = namespaces })
 
-let trie_insert (tr: trie<'a>) (ns_query: query) (id: string) (v: 'a) : trie<'a> =
+let trie_insert (tr: trie 'a) (ns_query: query) (id: string) (v: 'a) : trie 'a =
   trie_mutate_leaf tr ns_query (fun tr _ -> { tr with bindings = names_insert tr.bindings id v })
 
-let trie_import (tr: trie<'a>) (host_query: query) (included_query: query)
-                (mutator: trie<'a> -> trie<'a> -> string -> trie<'a>) =
+let trie_import (tr: trie 'a) (host_query: query) (included_query: query)
+                (mutator: trie 'a -> trie 'a -> string -> trie 'a) =
   let label = query_to_string included_query in
   let included_trie = Util.dflt trie_empty (trie_descend_exact tr included_query) in
   trie_mutate_leaf tr host_query (fun tr _ -> mutator tr included_trie label)
 
-let trie_include (tr: trie<'a>) (host_query: query) (included_query: query)
-    : trie<'a> =
+let trie_include (tr: trie 'a) (host_query: query) (included_query: query)
+    : trie 'a =
   trie_import tr host_query included_query (fun tr inc label ->
       { tr with bindings = ImportedNames (label, inc.bindings) :: tr.bindings })
 
-let trie_open_namespace (tr: trie<'a>) (host_query: query) (included_query: query)
-    : trie<'a> =
+let trie_open_namespace (tr: trie 'a) (host_query: query) (included_query: query)
+    : trie 'a =
   trie_import tr host_query included_query (fun tr inc label ->
       { tr with namespaces = ImportedNames (label, inc.namespaces) :: tr.namespaces })
 
-let trie_add_alias (tr: trie<'a>) (key: string)
-                   (host_query: query) (included_query: query) : trie<'a> =
+let trie_add_alias (tr: trie 'a) (key: string)
+                   (host_query: query) (included_query: query) : trie 'a =
   trie_import tr host_query included_query (fun tr inc label ->
       // Very similar to an include, but aliasing A.B as M in A.C entirely
       // overrides A.B.M, should that also exists.  Doing this makes sense
@@ -287,11 +302,11 @@ let trie_add_alias (tr: trie<'a>) (key: string)
       trie_mutate_leaf tr [key] (fun _ignored_overwritten_trie _ ->
           { bindings = [ImportedNames (label, inc.bindings)]; namespaces = [] }))
 
-let names_revmap (fn: btree<'a> -> 'b) (name_collections: names<'a> (* ↓ priority *))
-    : list<(list<string> (* imports *) * 'b)> (* ↑ priority *) =
-  let rec aux (acc: list<(list<string> * 'b)>)
-              (imports: list<string>) (name_collections: names<'a>)
-      : list<(list<string> * 'b)> (* #1158 *) =
+let names_revmap (fn: btree 'a -> 'b) (name_collections: names 'a (* ↓ priority *))
+    : list (list string (* imports *) * 'b) (* ↑ priority *) =
+  let rec aux (acc: list (list string * 'b))
+              (imports: list string) (name_collections: names 'a)
+      : list (list string * 'b) (* #1158 *) =
     List.fold_left (fun acc -> function
         | Names bt -> (imports, fn bt) :: acc
         | ImportedNames (nm, name_collections) ->
@@ -299,8 +314,8 @@ let names_revmap (fn: btree<'a> -> 'b) (name_collections: names<'a> (* ↓ prior
       acc name_collections in
   aux [] [] name_collections
 
-let btree_find_all (prefix: option<string>) (bt: btree<'a>)
-    : list<(prefix_match * 'a)> (* ↑ keys *) =
+let btree_find_all (prefix: option string) (bt: btree 'a)
+    : list (prefix_match * 'a) (* ↑ keys *) =
   btree_fold bt (fun k tr acc ->
       ({ prefix = prefix; completion = k }, tr) :: acc) []
 
@@ -309,7 +324,7 @@ type name_search_term =
 | NSTNone
 | NSTPrefix of string
 
-let names_find_rev (names: names<'a>) (id: name_search_term) : list<(path_elem * 'a)> =
+let names_find_rev (names: names 'a) (id: name_search_term) : list (path_elem * 'a) =
   let matching_values_per_collection_with_imports =
     match id with
     | NSTNone -> []
@@ -323,9 +338,9 @@ let names_find_rev (names: names<'a>) (id: name_search_term) : list<(path_elem *
   merge_increasing_lists_rev
     (fun (path_el, _) -> path_el.segment.completion) matching_values_per_collection
 
-let rec trie_find_prefix' (tr: trie<'a>) (path_acc: path)
-                          (query: query) (acc: list<(path * 'a)>)
-    : list<(path * 'a)> =
+let rec trie_find_prefix' (tr: trie 'a) (path_acc: path)
+                          (query: query) (acc: list (path * 'a))
+    : list (path * 'a) =
   let ns_search_term, bindings_search_term, query =
     match query with
     | [] -> NSTAll, NSTAll, []
@@ -342,7 +357,7 @@ let rec trie_find_prefix' (tr: trie<'a>) (path_acc: path)
   List.rev_map_onto (fun (path_el, v) -> (List.rev (path_el :: path_acc), v))
     matching_bindings_rev acc_with_recursive_bindings
 
-let trie_find_prefix (tr: trie<'a>) (query: query) : list<(path * 'a)> =
+let trie_find_prefix (tr: trie 'a) (query: query) : list (path * 'a) =
   trie_find_prefix' tr [] query []
 
 (** * High level interface * **)
@@ -367,8 +382,8 @@ type symbol =
 | Lid of lid_symbol
 
 type table =
-  { tbl_lids: trie<lid_symbol>;
-    tbl_mods: trie<mod_symbol> }
+  { tbl_lids: trie lid_symbol;
+    tbl_mods: trie mod_symbol }
 
 let empty : table =
   { tbl_lids = trie_empty;
@@ -440,7 +455,7 @@ let match_length_of_path (path: path) : int =
   - last_completion_length
   + (String.length last_prefix) (* match stops after last prefix *)
 
-let first_import_of_path (path: path) : option<string> =
+let first_import_of_path (path: path) : option string =
   match path with
   | [] -> None
   | { imports = imports } :: _ -> List.last imports
@@ -485,7 +500,7 @@ let find_module_or_ns (tbl:table) (query:query) =
 let autocomplete_lid (tbl: table) (query: query) =
   List.map completion_result_of_lid (trie_find_prefix tbl.tbl_lids query)
 
-let autocomplete_mod_or_ns (tbl: table) (query: query) (filter: (path * mod_symbol) -> option<(path * mod_symbol)>) =
+let autocomplete_mod_or_ns (tbl: table) (query: query) (filter: (path * mod_symbol) -> option (path * mod_symbol)) =
   trie_find_prefix tbl.tbl_mods query
   |> List.filter_map filter
   |> List.map completion_result_of_ns_or_mod

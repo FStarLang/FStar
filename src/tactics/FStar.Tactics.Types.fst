@@ -1,4 +1,18 @@
-#light "off"
+(*
+   Copyright 2008-2016 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
 module FStar.Tactics.Types
 
 open FStar open FStar.Compiler
@@ -112,8 +126,8 @@ type proofstate = {
     // to have the SMT goal set. What we should really do
     // is go full-LCF and take them as arguments, returning them
     // as values. This option stack should be user-level.
-    goals        : list<goal>;   //all the goals remaining to be solved
-    smt_goals    : list<goal>;   //goals that have been deferred to SMT
+    goals        : list goal;   //all the goals remaining to be solved
+    smt_goals    : list goal;   //goals that have been deferred to SMT
 
     depth        : int;          //depth for tracing and debugging
     __dump       : proofstate -> string -> unit; // callback to dump_proofstate, to avoid an annoying circularity
@@ -124,7 +138,7 @@ type proofstate = {
     freshness    : int;          //a simple freshness counter for the fresh tactic
     tac_verb_dbg : bool;         //whether to print verbose debugging messages
 
-    local_state  : BU.psmap<term>; // local metaprogram state
+    local_state  : BU.psmap term; // local metaprogram state
     urgency      : int;          // When printing a proofstate due to an error, this
                                  // is used by emacs to decide whether it should pop
                                  // open a buffer or not (default: 1).
@@ -162,8 +176,8 @@ let tracepoint ps : bool =
 let set_proofstate_range ps r =
     { ps with entry_range = Range.set_def_range ps.entry_range (Range.def_range r) }
 
-let goals_of     ps : list<goal> = ps.goals
-let smt_goals_of ps : list<goal> = ps.smt_goals
+let goals_of     ps : list goal = ps.goals
+let smt_goals_of ps : list goal = ps.smt_goals
 
 let is_guard g = g.is_guard
 
@@ -187,7 +201,7 @@ let check_goal_solved' goal =
 let check_goal_solved goal =
   Option.isSome (check_goal_solved' goal)
 
-let get_phi (g:goal) : option<term> =
+let get_phi (g:goal) : option term =
     U.un_squash (N.unfold_whnf (goal_env g) (goal_type g))
 
 let is_irrelevant (g:goal) : bool =

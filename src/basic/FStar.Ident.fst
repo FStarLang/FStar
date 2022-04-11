@@ -1,5 +1,4 @@
-﻿#light "off"
-module FStar.Ident
+﻿module FStar.Ident
 
 open Prims
 open FStar.Compiler.Effect
@@ -13,10 +12,10 @@ type ident = {idText:string;
               idRange:range}
 
 // IN F*: [@@ PpxDerivingYoJson; PpxDerivingShow ]
-type path = list<string>
+type path = list string
 
 // IN F*: [@@ PpxDerivingYoJson; PpxDerivingShow ]
-type ipath = list<ident>
+type ipath = list ident
 
 // IN F*: [@@ PpxDerivingYoJson; PpxDerivingShow ]
 type lident = {ns:ipath; //["FStar"; "Basic"]

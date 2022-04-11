@@ -3940,7 +3940,6 @@ let (process_pragma :
                (FStar_Errors.Fatal_FailToProcessPragma,
                  (Prims.op_Hat "Failed to process pragma: " s1)) r in
        match p with
-       | FStar_Syntax_Syntax.LightOff -> FStar_Options.set_ml_ish ()
        | FStar_Syntax_Syntax.SetOptions o -> set_options o
        | FStar_Syntax_Syntax.ResetOptions sopt ->
            ((let uu___2 = FStar_Options.restore_cmd_line_options false in

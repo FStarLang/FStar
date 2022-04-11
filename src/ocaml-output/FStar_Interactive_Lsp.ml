@@ -453,8 +453,13 @@ let rec (parse_header_len :
             let uu___1 =
               let uu___2 =
                 FStar_Compiler_Util.substring_from s (Prims.of_int (16)) in
-              FStar_Compiler_Util.int_of_string uu___2 in
-            parse_header_len stream uu___1
+              FStar_Compiler_Util.safe_int_of_string uu___2 in
+            (match uu___1 with
+             | FStar_Pervasives_Native.Some new_len ->
+                 parse_header_len stream new_len
+             | FStar_Pervasives_Native.None ->
+                 FStar_Compiler_Effect.raise
+                   FStar_Interactive_JsonHelper.MalformedHeader)
           else
             if FStar_Compiler_Util.starts_with s "Content-Type: "
             then parse_header_len stream len

@@ -13,7 +13,6 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-#light "off"
 module FStar.TypeChecker.Common
 open Prims
 open FStar.Pervasives
@@ -46,28 +45,28 @@ type rank_t =
     | Rigid_flex
     | Flex_flex
 
-type problem<'a> = {                  //Try to prove: lhs rel rhs ~> guard
+type problem 'a = {                  //Try to prove: lhs rel rhs ~ guard
     pid:int;
     lhs:'a;
     relation:rel;
     rhs:'a;
-    element:option<bv>;               //where, guard is a predicate on this term (which appears free in/is a subterm of the guard)
+    element:option bv;               //where, guard is a predicate on this term (which appears free in/is a subterm of the guard)
     logical_guard:term;               //the condition under which this problem is solveable; (?u v1..vn)
     logical_guard_uvar:ctx_uvar;
-    reason: list<string>;             //why we generated this problem, for error reporting
+    reason: list string;             //why we generated this problem, for error reporting
     loc: Range.range;                 //and the source location where this arose
-    rank: option<rank_t>;
+    rank: option rank_t;
 }
 
 type prob =
-  | TProb of problem<typ>
-  | CProb of problem<comp>
+  | TProb of problem typ
+  | CProb of problem comp
 
 let as_tprob = function
    | TProb p -> p
    | _ -> failwith "Expected a TProb"
 
-type probs = list<prob>
+type probs = list prob
 
 type guard_formula =
   | Trivial
@@ -84,7 +83,7 @@ type deferred_reason =
   | Deferred_delay_match_heuristic
   | Deferred_to_user_tac
 
-type deferred = list<(deferred_reason * string * prob)>
+type deferred = list (deferred_reason * string * prob)
 
 type univ_ineq = universe * universe
 
@@ -120,12 +119,12 @@ let rec decr_delta_depth = function
 (***********************************************************************************)
 
 type identifier_info = {
-    identifier:either<bv, fv>;
+    identifier:either bv fv;
     identifier_ty:typ;
     identifier_range:Range.range;
 }
 
-let insert_col_info (col:int) (info:identifier_info) (col_infos:list<(int * identifier_info)>) =
+let insert_col_info (col:int) (info:identifier_info) (col_infos:list (int * identifier_info)) =
     // Tail recursive helper
     let rec __insert aux rest =
         match rest with
@@ -138,7 +137,7 @@ let insert_col_info (col:int) (info:identifier_info) (col_infos:list<(int * iden
      let l, r = __insert [] col_infos
      in (List.rev l) @ r
 
-let find_nearest_preceding_col_info (col:int) (col_infos:list<(int * identifier_info)>) =
+let find_nearest_preceding_col_info (col:int) (col_infos:list (int * identifier_info)) =
     let rec aux out = function
         | [] -> out
         | (c, i)::rest ->
@@ -148,18 +147,18 @@ let find_nearest_preceding_col_info (col:int) (col_infos:list<(int * identifier_
     aux None col_infos
 
 type id_info_by_col = //sorted in ascending order of columns
-    list<(int * identifier_info)>
+    list (int * identifier_info)
 
 type col_info_by_row =
-    BU.pimap<id_info_by_col>
+    BU.pimap id_info_by_col
 
 type row_info_by_file =
-    BU.psmap<col_info_by_row>
+    BU.psmap col_info_by_row
 
 type id_info_table = {
     id_info_enabled: bool;
     id_info_db: row_info_by_file;
-    id_info_buffer: list<identifier_info>;
+    id_info_buffer: list identifier_info;
 }
 
 let id_info_table_empty =
@@ -223,7 +222,7 @@ let id_info_promote table ty_map =
       id_info_db = List.fold_left (id_info__insert ty_map)
                      table.id_info_db table.id_info_buffer }
 
-let id_info_at_pos (table: id_info_table) (fn:string) (row:int) (col:int) : option<identifier_info> =
+let id_info_at_pos (table: id_info_table) (fn:string) (row:int) (col:int) : option identifier_info =
     let rows = BU.psmap_find_default table.id_info_db fn (BU.pimap_empty ()) in
     let cols = BU.pimap_find_default rows row [] in
 
@@ -277,7 +276,7 @@ type implicit = {
     imp_tm     : term;                    // The term, made up of the ctx_uvar
     imp_range  : Range.range;             // Position where it was introduced
 }
-type implicits = list<implicit>
+type implicits = list implicit
 
 let implicits_to_string imps =
     let imp_to_string i =
@@ -290,7 +289,7 @@ type guard_t = {
   deferred_to_tac: deferred; //This field maintains problems that are to be dispatched to a tactic
                              //They are never attempted by the unification engine in Rel
   deferred:   deferred;
-  univ_ineqs: list<universe> * list<univ_ineq>;
+  univ_ineqs: list universe * list univ_ineq;
   implicits:  implicits;
 }
 
@@ -339,8 +338,8 @@ let weaken_guard_formula g fml =
 type lcomp = { //a lazy computation
     eff_name: lident;
     res_typ: typ;
-    cflags: list<cflag>;
-    comp_thunk: ref<(either<(unit -> (comp * guard_t)), comp>)>
+    cflags: list cflag;
+    comp_thunk: ref (either (unit -> (comp * guard_t)) comp)
 }
 
 let mk_lcomp eff_name res_typ cflags comp_thunk =
@@ -444,7 +443,7 @@ let simplify (debug:bool) (tm:term) : term =
         | [], [] -> true
         | _, _ -> false
     in
-    let is_applied (bs:binders) (t : term) : option<bv> =
+    let is_applied (bs:binders) (t : term) : option bv =
         if debug then
             BU.print2 "WPE> is_applied %s -- %s\n"  (Print.term_to_string t) (Print.tag_of_term t);
         let hd, args = U.head_and_args_full t in
@@ -458,7 +457,7 @@ let simplify (debug:bool) (tm:term) : term =
             Some bv
         | _ -> None
     in
-    let is_applied_maybe_squashed (bs : binders) (t : term) : option<bv> =
+    let is_applied_maybe_squashed (bs : binders) (t : term) : option bv =
         if debug then
             BU.print2 "WPE> is_applied_maybe_squashed %s -- %s\n"  (Print.term_to_string t) (Print.tag_of_term t);
         match is_squash t with
@@ -468,7 +467,7 @@ let simplify (debug:bool) (tm:term) : term =
                | _ -> is_applied bs t
                end
     in
-    let is_const_match (phi : term) : option<bool> =
+    let is_const_match (phi : term) : option bool =
         match (SS.compress phi).n with
         (* Trying to be efficient, but just checking if they all agree *)
         (* Note, if we wanted to do this for any term instead of just True/False

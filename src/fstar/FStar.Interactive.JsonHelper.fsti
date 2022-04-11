@@ -16,7 +16,6 @@
 
 (* Json helpers mainly for FStar.Interactive.Lsp; some sharing with *
  * FStar.Interactive.Ide                                            *)
-#light "off"
 
 module FStar.Interactive.JsonHelper
 open FStar
@@ -32,9 +31,9 @@ module TcEnv = FStar.TypeChecker.Env
 module CTable = FStar.Interactive.CompletionTable
 
 // Type of an associative array
-type assoct = list<(string * json)>
+type assoct = list (string * json)
 
-val try_assoc : string -> assoct -> option<json> // nothrow
+val try_assoc : string -> assoct -> option json // nothrow
 val assoc : string -> assoct -> json // throw
 
 // All exceptions are guaranteed to be caught in the LSP server implementation
@@ -50,14 +49,14 @@ val js_fail : string -> json -> 'a
 
 val js_int : json -> int
 val js_str : json -> string
-val js_list : (json -> 'a) -> json -> list<'a>
+val js_list : (json -> 'a) -> json -> list 'a
 val js_assoc : json -> assoct
 val js_str_int : json -> int
 
 val arg : string -> assoct -> json
 val uri_to_path : string -> string
 
-type completion_context = { trigger_kind: int; trigger_char: option<string> }
+type completion_context = { trigger_kind: int; trigger_char: option string }
 val js_compl_context : json -> completion_context
 
 type txdoc_item = { fname: string; langId: string; version: int; text: string }
@@ -115,11 +114,11 @@ type lquery =
 | FoldingRange
 | BadProtocolMsg of string
 
-type lsp_query = { query_id: option<int>; q: lquery }
+type lsp_query = { query_id: option int; q: lquery }
 
 (* Types concerning repl *)
 type repl_depth_t = TcEnv.tcenv_depth_t * int
-type optmod_t = option<Syntax.Syntax.modul>
+type optmod_t = option Syntax.Syntax.modul
 
 type timed_fname =
   { tf_fname: string;
@@ -142,11 +141,11 @@ type repl_state = { repl_line: int; repl_column: int; repl_fname: string;
                     repl_env: TcEnv.env;
                     repl_stdin: stream_reader;
                     repl_names: CTable.table }
-and repl_stack_t = list<repl_stack_entry_t>
+and repl_stack_t = list repl_stack_entry_t
 and repl_stack_entry_t = repl_depth_t * (repl_task * repl_state)
 
 // Global repl_state, keeping state of different buffers
-type grepl_state = { grepl_repls: U.psmap<repl_state>; grepl_stdin: stream_reader }
+type grepl_state = { grepl_repls: U.psmap repl_state; grepl_stdin: stream_reader }
 
 type error_code =
 | ParseError
@@ -168,17 +167,17 @@ val errorcode_to_int : error_code -> int
 val json_debug : json -> string
 
 // Wrap an error-code along with a description of the error in a BadProtocolMsg
-val wrap_jsfail : option<int> -> string -> json -> lsp_query
+val wrap_jsfail : option int -> string -> json -> lsp_query
 
 (* Helpers for constructing the response *)
 
 // Used by run_query heavily
-val resultResponse : json -> option<assoct>
-val errorResponse : json -> option<assoct>
-val nullResponse : option<assoct>
+val resultResponse : json -> option assoct
+val errorResponse : json -> option assoct
+val nullResponse : option assoct
 
 // Build JSON of a given response
-val json_of_response : option<int> -> assoct -> json
+val json_of_response : option int -> assoct -> json
 
 // Given an error_code and a string describing the error, build a JSON error
 val js_resperr : error_code -> string -> json
@@ -196,7 +195,7 @@ val js_loclink : Range.range -> json
 val pos_munge : txdoc_pos -> string * int * int
 
 // Build a JSON diagnostic
-val js_diag : string -> string -> option<Range.range> -> assoct
+val js_diag : string -> string -> option Range.range -> assoct
 
 // Build an empty JSON diagnostic; used for clearing diagnostic
 val js_diag_clear : string -> assoct

@@ -1,4 +1,18 @@
-#light "off"
+(*
+   Copyright 2008-2022 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
 module FStar.Reflection.NBEEmbeddings
 open FStar.Compiler
 open FStar.Compiler.Effect
@@ -67,7 +81,7 @@ let e_bv =
     let embed_bv cb (bv:bv) : t =
         mk_lazy cb bv fstar_refl_bv Lazy_bv
     in
-    let unembed_bv cb (t:t) : option<bv> =
+    let unembed_bv cb (t:t) : option bv =
         match t.nbe_t with
         | Lazy (Inl {blob=b; lkind=Lazy_bv}, _) ->
             Some <| FStar.Compiler.Dyn.undyn b
@@ -82,7 +96,7 @@ let e_binder =
     let embed_binder cb (b:binder) : t =
         mk_lazy cb b fstar_refl_binder Lazy_binder
     in
-    let unembed_binder cb (t:t) : option<binder> =
+    let unembed_binder cb (t:t) : option binder =
         match t.nbe_t with
         | Lazy (Inl {blob=b; lkind=Lazy_binder}, _) ->
             Some (undyn b)
@@ -92,7 +106,7 @@ let e_binder =
     in
     mk_emb' embed_binder unembed_binder fstar_refl_binder_fv
 
-let rec mapM_opt (f : ('a -> option<'b>)) (l : list<'a>) : option<list<'b>> =
+let rec mapM_opt (f : ('a -> option 'b)) (l : list 'a) : option (list 'b) =
     match l with
     | [] -> Some []
     | x::xs ->
@@ -105,8 +119,8 @@ let e_term_aq aq =
         let qi = { qkind = Quote_static; antiquotes = aq } in
         mk_t (NBETerm.Quote (t, qi))
     in
-    let rec unembed_term cb (t:NBETerm.t) : option<term> =
-        (* let apply_antiquotes (t:term) (aq:antiquotations) : option<term> = *)
+    let rec unembed_term cb (t:NBETerm.t) : option term =
+        (* let apply_antiquotes (t:term) (aq:antiquotations) : option term = *)
         (*     BU.bind_opt (mapM_opt (fun (bv, b, e) -> *)
         (*                            if b *)
         (*                            then Some (NT (bv, e)) *)
@@ -135,7 +149,7 @@ let e_aqualv =
         | Data.Q_Implicit -> mkConstruct ref_Q_Implicit.fv [] []
         | Data.Q_Meta t   -> mkConstruct ref_Q_Meta.fv [] [as_arg (embed e_term cb t)]
     in
-    let unembed_aqualv cb (t : t) : option<aqualv> =
+    let unembed_aqualv cb (t : t) : option aqualv =
         match t.nbe_t with
         | Construct (fv, [], []) when S.fv_eq_lid fv ref_Q_Explicit.lid -> Some Data.Q_Explicit
         | Construct (fv, [], []) when S.fv_eq_lid fv ref_Q_Implicit.lid -> Some Data.Q_Implicit
@@ -157,7 +171,7 @@ let e_fv =
     let embed_fv cb (fv:fv) : t =
         mk_lazy cb fv fstar_refl_fv Lazy_fvar
     in
-    let unembed_fv cb (t:t) : option<fv> =
+    let unembed_fv cb (t:t) : option fv =
         match t.nbe_t with
         | Lazy (Inl {blob=b; lkind=Lazy_fvar}, _) ->
             Some (undyn b)
@@ -171,7 +185,7 @@ let e_comp =
     let embed_comp cb (c:S.comp) : t =
         mk_lazy cb c fstar_refl_comp Lazy_comp
     in
-    let unembed_comp cb (t:t) : option<S.comp> =
+    let unembed_comp cb (t:t) : option S.comp =
         match t.nbe_t with
         | Lazy (Inl {blob=b; lkind=Lazy_comp}, _) ->
             Some (undyn b)
@@ -185,7 +199,7 @@ let e_env =
     let embed_env cb (e:Env.env) : t =
         mk_lazy cb e fstar_refl_env Lazy_env
     in
-    let unembed_env cb (t:t) : option<Env.env> =
+    let unembed_env cb (t:t) : option Env.env =
         match t.nbe_t with
         | Lazy (Inl {blob=b; lkind=Lazy_env}, _) ->
             Some (undyn b)
@@ -207,7 +221,7 @@ let e_const =
         | C_Reify        -> mkConstruct ref_C_Reify.fv   [] []
         | C_Reflect ns   -> mkConstruct ref_C_Reflect.fv [] [as_arg (embed e_string_list cb ns)]
     in
-    let unembed_const cb (t:t) : option<vconst> =
+    let unembed_const cb (t:t) : option vconst =
         match t.nbe_t with
         | Construct (fv, [], []) when S.fv_eq_lid fv ref_C_Unit.lid ->
             Some C_Unit
@@ -257,7 +271,7 @@ let rec e_pattern' () =
         | Pat_Dot_Term (bv, t) ->
             mkConstruct ref_Pat_Dot_Term.fv [] [as_arg (embed e_bv cb bv); as_arg (embed e_term cb t)]
     in
-    let unembed_pattern cb (t : t) : option<pattern> =
+    let unembed_pattern cb (t : t) : option pattern =
         match t.nbe_t with
         | Construct (fv, [], [(c, _)]) when S.fv_eq_lid fv ref_Pat_Constant.lid ->
             BU.bind_opt (unembed e_const cb c) (fun c ->
@@ -370,7 +384,7 @@ let e_term_view_aq aq =
         | Tv_Unknown ->
             mkConstruct ref_Tv_Unknown.fv [] []
     in
-    let unembed_term_view cb (t:t) : option<term_view> =
+    let unembed_term_view cb (t:t) : option term_view =
         match t.nbe_t with
         | Construct (fv, _, [(b, _)]) when S.fv_eq_lid fv ref_Tv_Var.lid ->
             BU.bind_opt (unembed e_bv cb b) (fun b ->
@@ -463,7 +477,7 @@ let e_bv_view =
                               as_arg (embed e_int    cb bvv.bv_index);
                               as_arg (embed e_term   cb bvv.bv_sort)]
     in
-    let unembed_bv_view cb (t : t) : option<bv_view> =
+    let unembed_bv_view cb (t : t) : option bv_view =
         match t.nbe_t with
         | Construct (fv, _, [(s, _); (idx, _); (nm, _)]) when S.fv_eq_lid fv ref_Mk_bv.lid ->
             BU.bind_opt (unembed e_string cb nm) (fun nm ->
@@ -500,7 +514,7 @@ let e_comp_view =
                 ; as_arg (embed e_term cb res)
                 ; as_arg (embed (e_list e_argv) cb args)]
     in
-    let unembed_comp_view cb (t : t) : option<comp_view> =
+    let unembed_comp_view cb (t : t) : option comp_view =
         match t.nbe_t with
         | Construct (fv, _, [(md, _); (t, _)]) when S.fv_eq_lid fv ref_C_Total.lid ->
             BU.bind_opt (unembed e_term cb t) (fun t ->
@@ -541,7 +555,7 @@ let e_order =
         | Eq -> mkConstruct ord_Eq_fv [] []
         | Gt -> mkConstruct ord_Gt_fv [] []
     in
-    let unembed_order cb (t:t) : option<order> =
+    let unembed_order cb (t:t) : option order =
         match t.nbe_t with
         | Construct (fv, _, []) when S.fv_eq_lid fv ord_Lt_lid -> Some Lt
         | Construct (fv, _, []) when S.fv_eq_lid fv ord_Eq_lid -> Some Eq
@@ -556,7 +570,7 @@ let e_sigelt =
     let embed_sigelt cb (se:sigelt) : t =
         mk_lazy cb se fstar_refl_sigelt Lazy_sigelt
     in
-    let unembed_sigelt cb (t:t) : option<sigelt> =
+    let unembed_sigelt cb (t:t) : option sigelt =
         match t.nbe_t with
         | Lazy (Inl {blob=b; lkind=Lazy_sigelt}, _) ->
             Some (undyn b)
@@ -567,14 +581,14 @@ let e_sigelt =
     mk_emb' embed_sigelt unembed_sigelt fstar_refl_sigelt_fv
 
 // TODO: It would be nice to have a
-// embed_as : ('a -> 'b) -> ('b -> 'a) -> embedding<'a> -> embedding<'b>
+// embed_as : ('a -> 'b) -> ('b -> 'a) -> embedding 'a -> embedding 'b
 // so we don't write these things
-let e_ident : embedding<I.ident> =
+let e_ident : embedding I.ident =
     let repr = e_tuple2 e_range e_string in
     let embed_ident cb (i:I.ident) : t =
         embed repr cb (I.range_of_id i, I.string_of_id i)
     in
-    let unembed_ident cb (t:t) : option<I.ident> =
+    let unembed_ident cb (t:t) : option I.ident =
         match unembed repr cb t with
         | Some (rng, s) -> Some (I.mk_ident (s, rng))
         | None -> None
@@ -610,7 +624,7 @@ let e_lb_view =
 				 as_arg (embed e_term       cb lbv.lb_typ);
                                  as_arg (embed e_term       cb lbv.lb_def)]
     in
-    let unembed_lb_view cb (t : t) : option<lb_view> =
+    let unembed_lb_view cb (t : t) : option lb_view =
        match t.nbe_t with
        | Construct (fv, _, [(fv', _); (us, _); (typ, _); (def,_)])
 	  when S.fv_eq_lid fv ref_Mk_lb.lid ->
@@ -631,11 +645,11 @@ let e_attribute  = e_term
 let e_attributes = e_list e_attribute
 
 (* embeds as a string list *)
-let e_lid : embedding<I.lid> =
+let e_lid : embedding I.lid =
     let embed rng lid : t =
         embed e_string_list rng (I.path_of_lid lid)
     in
-    let unembed cb (t : t) : option<I.lid> =
+    let unembed cb (t : t) : option I.lid =
         BU.map_opt (unembed e_string_list cb t) (fun p -> I.lid_of_path p Range.dummyRange)
     in
     mk_emb embed unembed
@@ -646,7 +660,7 @@ let e_letbinding =
     let embed_letbinding cb (lb:letbinding) : t =
         mk_lazy cb lb fstar_refl_letbinding Lazy_letbinding
     in
-    let unembed_letbinding cb (t : t) : option<letbinding> =
+    let unembed_letbinding cb (t : t) : option letbinding =
          match t.nbe_t with
         | Lazy (Inl {blob=lb; lkind=Lazy_letbinding}, _) ->
             Some (undyn lb)
@@ -680,7 +694,7 @@ let e_sigelt_view =
         | Unk ->
             mkConstruct ref_Unk.fv [] []
     in
-    let unembed_sigelt_view cb (t:t) : option<sigelt_view> =
+    let unembed_sigelt_view cb (t:t) : option sigelt_view =
         match t.nbe_t with
         | Construct (fv, _, [(dcs, _); (t, _); (bs, _); (us, _); (nm, _)]) when S.fv_eq_lid fv ref_Sg_Inductive.lid ->
             BU.bind_opt (unembed e_string_list cb nm) (fun nm ->
@@ -717,7 +731,7 @@ let e_exp =
         | Data.Var i ->         mkConstruct ref_E_Var.fv  [] [as_arg (mk_t (Constant (Int i)))]
         | Data.Mult (e1, e2) -> mkConstruct ref_E_Mult.fv [] [as_arg (embed_exp cb e1); as_arg (embed_exp cb e2)]
     in
-    let rec unembed_exp cb (t: t) : option<exp> =
+    let rec unembed_exp cb (t: t) : option exp =
         match t.nbe_t with
         | Construct (fv, _, []) when S.fv_eq_lid fv ref_E_Unit.lid ->
             Some Data.Unit
@@ -778,7 +792,7 @@ let e_qualifier =
             mkConstruct ref_qual_RecordConstructor.fv [] [as_arg (embed (e_list e_ident) cb ids1);
                                                           as_arg (embed (e_list e_ident) cb ids2)]
     in
-    let unembed cb (t:t) : option<RD.qualifier> =
+    let unembed cb (t:t) : option RD.qualifier =
         match t.nbe_t with
         | Construct (fv, [], []) when S.fv_eq_lid fv ref_qual_Assumption.lid -> Some RD.Assumption
         | Construct (fv, [], []) when S.fv_eq_lid fv ref_qual_New.lid -> Some RD.New
@@ -839,7 +853,7 @@ let e_vconfig =
     let emb cb (o:order) : t =
       failwith "emb vconfig NBE"
     in
-    let unemb cb (t:t) : option<order> =
+    let unemb cb (t:t) : option order =
       failwith "unemb vconfig NBE"
     in
     mk_emb' emb unemb (lid_as_fv PC.vconfig_lid delta_constant None)

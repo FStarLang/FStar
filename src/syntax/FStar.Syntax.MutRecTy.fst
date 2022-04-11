@@ -13,7 +13,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-#light "off"
+
 module FStar.Syntax.MutRecTy
 open FStar
 open FStar.Compiler
@@ -40,11 +40,11 @@ module U = FStar.Compiler.Util
    recursive.)  *)
 
 let disentangle_abbrevs_from_bundle
-    (sigelts: list<sigelt>)
-    (quals:   list<qualifier>)
-    (members: list<lident>)
+    (sigelts: list sigelt)
+    (quals:   list qualifier)
+    (members: list lident)
     (rng:   FStar.Compiler.Range.range)
-    : sigelt * list<sigelt> =
+    : sigelt * list sigelt =
 
    (* JP: not the best strategy... TODO think about how we want to merge
     * attributes in this case. *)
@@ -82,13 +82,13 @@ let disentangle_abbrevs_from_bundle
         (* List of type abbreviations that have been unfolded, in
         reverse order (from most recent to most ancient: the head
         depends on the tail.) *)
-        let rev_unfolded_type_abbrevs : ref<(list<sigelt>)> = U.mk_ref [] in
+        let rev_unfolded_type_abbrevs : ref (list sigelt) = U.mk_ref [] in
 
         (* List of names of type abbreviations whose unfolding has
         started. If they occur during renaming of the current type
         abbreviation, then there is a cycle. Follows a stack
         discipline. *)
-        let in_progress : ref<(list<lident>)> = U.mk_ref [] in
+        let in_progress : ref (list lident) = U.mk_ref [] in
 
         (* List of type abbreviations that have not been unfolded
         yet. Their order can change, since anyway they will be
