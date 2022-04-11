@@ -63,8 +63,8 @@
         <!-- If FSTAR_HOME is not defined then assume that fstar.exe is available on the path -->
         <FSTAR_EXE Condition="'$(FSTAR_HOME)' == ''">fstar.exe</FSTAR_EXE>
         <FSTAR_EXE Condition="'$(FSTAR_HOME)' != ''">$(FSTAR_HOME)\bin\fstar.exe</FSTAR_EXE>
-        <CALL_PROC_EXE Condition="'$(FSTAR_HOME)' == '' and '$(OS)' != 'Windows_NT' ">CallProc.exe</CALL_PROC_EXE>                
-        <CALL_PROC_EXE Condition="'$(FSTAR_HOME)' != '' and '$(OS)' != 'Windows_NT'">$(FSTAR_HOME)\bin\CallProc.exe</CALL_PROC_EXE>        
+        <CALL_PROC_EXE Condition="'$(FSTAR_HOME)' == ''">CallProc.exe</CALL_PROC_EXE>                
+        <CALL_PROC_EXE Condition="'$(FSTAR_HOME)' != ''">$(FSTAR_HOME)\bin\CallProc.exe</CALL_PROC_EXE>        
     </PropertyGroup>
 
     <Target Name="GenerateFSharpSources" BeforeTargets="BeforeBuild;BeforeRebuild">

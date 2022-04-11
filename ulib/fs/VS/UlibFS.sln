@@ -5,13 +5,6 @@ VisualStudioVersion = 16.0.30114.105
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{82253A13-6BB4-4C9F-8198-50F638EFB3EE}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{8D74F56B-3B0F-4931-9AF8-A26215B25559}"
-	ProjectSection(SolutionItems) = preProject
-		.nuget\NuGet.Config = .nuget\NuGet.Config
-		.nuget\NuGet.exe = .nuget\NuGet.exe
-		.nuget\NuGet.targets = .nuget\NuGet.targets
-	EndProjectSection
-EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "ulibfs", "..\ulibfs.fsproj", "{E3E96B71-22AB-4518-B08E-9C55C4D256DB}"
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "CallProc", "CallProc\CallProc.fsproj", "{25B60DD4-FBF7-431B-9F6B-2EF45A7306C9}"
