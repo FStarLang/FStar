@@ -50,9 +50,6 @@ queries*.smt2
 transcript
 dump
 
-# F* build infrastructure.
-extracted/
-
 # ignore .ml files on the root dir
 /*.ml
 
@@ -67,7 +64,6 @@ extracted/
 .depend
 .depend.rsp
 ._depend
-.depend.extract.fsharp
 *.a
 *.cmxa
 *.so
