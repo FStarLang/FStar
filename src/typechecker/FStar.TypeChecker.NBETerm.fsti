@@ -110,10 +110,11 @@ type atom
 
 and t'
   =
-  | Lam of (list t -> t)            //these expect their arguments in binder order (optimized for convenience beta reduction)
+  | Lam of (list (t * aqual) -> t)  //these expect their arguments in binder order (optimized for convenience beta reduction)
+                                   //we also maintain aquals so as to reconstruct the application properly for implicits
         * either (list t * binders * option S.residual_comp) (list arg) //a context, binders and residual_comp for readback
-                                                                 //or a list of arguments, for primitive unembeddings
-        * int                        // arity
+                                                                        //or a list of arguments, for primitive unembeddings
+        * int  // arity
   | Accu of atom * args
   | Construct of fv * list universe * args
   | FV of fv * list universe * args //universes and args in reverse order
