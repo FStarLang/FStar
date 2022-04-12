@@ -226,7 +226,7 @@ let matrix_last_line_equals_gen_fold #c #eq
                       (CF.fold cm 0 (n-1) (generator (m-1))) 
  
 
-#push-options "--ifuel 0 --fuel 0 --z3rlimit 4"
+#push-options "--ifuel 0 --fuel 0"
 let rec matrix_fold_aux #c #eq // lemma needed for precise generator domain control
                            (#gen_m #gen_n: pos) // full generator domain
                            (cm: CE.cm c eq) 
@@ -340,8 +340,7 @@ let matrix_equiv #c (eq: CE.equiv c) (m n: pos) : CE.equiv (matrix c m n) =
 let matrix_equiv_ijth #c (#m #n: pos) (eq: CE.equiv c) (ma mb: matrix c m n) (i: under m) (j: under n)
   : Lemma (requires (matrix_equiv eq m n).eq ma mb) (ensures ijth ma i j `eq.eq` ijth mb i j) = 
   eq_of_seq_element_equality eq (seq_of_matrix ma) (seq_of_matrix mb)
-
-#push-options "--fuel 1 --z3rlimit 2"
+ 
 let matrix_equiv_from_element_eq #c (#m #n: pos) (eq: CE.equiv c) (ma mb: matrix c m n)
   : Lemma (requires (forall (i: under m) (j: under n). ijth ma i j `eq.eq` ijth mb i j))
           (ensures matrix_eq_fun eq ma mb) = 
@@ -352,8 +351,7 @@ let matrix_equiv_from_element_eq #c (#m #n: pos) (eq: CE.equiv c) (ma mb: matrix
   assert (forall (ij: under (m*n)). SB.index s2 ij == ijth mb (get_i m n ij) (get_j m n ij));
   assert (forall (ij: under (m*n)). SB.index s1 ij `eq.eq` SB.index s2 ij);  
   eq_of_seq_from_element_equality eq (seq_of_matrix ma) (seq_of_matrix mb)
-#pop-options
-
+ 
 let matrix_add_is_associative #c #eq #m #n (add: CE.cm c eq) (ma mb mc: matrix c m n)
   : Lemma (matrix_add add (matrix_add add ma mb) mc `(matrix_equiv eq m n).eq` 
            matrix_add add ma (matrix_add add mb mc)) =  
