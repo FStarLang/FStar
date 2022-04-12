@@ -13,7 +13,6 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 *)
-#light "off"
 module FStar.Syntax.Resugar //we should rename FStar.ToSyntax to something else
 
 open FStar.Compiler.Effect
@@ -35,19 +34,19 @@ module Range = FStar.Compiler.Range
 module DsEnv = FStar.Syntax.DsEnv
 
 val resugar_term: S.term -> A.term
-val resugar_sigelt: S.sigelt -> option<A.decl>
+val resugar_sigelt: S.sigelt -> option A.decl
 val resugar_comp: S.comp -> A.term
-val resugar_pat: S.pat -> set<S.bv> -> A.pattern
+val resugar_pat: S.pat -> set S.bv -> A.pattern
 val resugar_universe: S.universe -> Range.range -> A.term
-val resugar_binder: S.binder -> Range.range -> option<A.binder>
+val resugar_binder: S.binder -> Range.range -> option A.binder
 val resugar_tscheme: S.tscheme -> A.decl
-val resugar_eff_decl: Range.range -> list<S.qualifier> -> eff_decl -> A.decl
+val resugar_eff_decl: Range.range -> list S.qualifier -> eff_decl -> A.decl
 
 val resugar_term': DsEnv.env -> S.term -> A.term
-val resugar_sigelt': DsEnv.env -> S.sigelt -> option<A.decl>
+val resugar_sigelt': DsEnv.env -> S.sigelt -> option A.decl
 val resugar_comp': DsEnv.env -> S.comp -> A.term
-val resugar_pat': DsEnv.env -> S.pat -> set<S.bv> -> A.pattern
+val resugar_pat': DsEnv.env -> S.pat -> set S.bv -> A.pattern
 val resugar_universe': DsEnv.env -> S.universe -> Range.range -> A.term
-val resugar_binder': DsEnv.env -> S.binder -> Range.range -> option<A.binder>
+val resugar_binder': DsEnv.env -> S.binder -> Range.range -> option A.binder
 val resugar_tscheme': DsEnv.env -> S.tscheme -> A.decl
-val resugar_eff_decl': DsEnv.env -> Range.range -> list<S.qualifier> -> eff_decl -> A.decl
+val resugar_eff_decl': DsEnv.env -> Range.range -> list S.qualifier -> eff_decl -> A.decl

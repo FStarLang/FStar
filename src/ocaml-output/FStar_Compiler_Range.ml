@@ -40,7 +40,7 @@ let (__proj__Mkrange__item__use_range : range -> rng) =
     match projectee with | { def_range; use_range;_} -> use_range
 let (dummy_pos : pos) = { line = Prims.int_zero; col = Prims.int_zero }
 let (dummy_rng : rng) =
-  { file_name = "<dummy>"; start_pos = dummy_pos; end_pos = dummy_pos }
+  { file_name = " dummy"; start_pos = dummy_pos; end_pos = dummy_pos }
 let (dummyRange : range) = { def_range = dummy_rng; use_range = dummy_rng }
 let (use_range : range -> rng) = fun r -> r.use_range
 let (def_range : range -> rng) = fun r -> r.def_range

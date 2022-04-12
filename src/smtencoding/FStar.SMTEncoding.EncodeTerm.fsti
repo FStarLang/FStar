@@ -13,7 +13,6 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-#light "off"
 
 module FStar.SMTEncoding.EncodeTerm
 open Prims
@@ -33,11 +32,11 @@ open FStar.SMTEncoding
 open FStar.SMTEncoding.Util
 open FStar.SMTEncoding.Env
 module BU = FStar.Compiler.Util
-val isTotFun_axioms: Range.range -> head:term -> vars:fvs -> guards:list<term> -> bool -> term
+val isTotFun_axioms: Range.range -> head:term -> vars:fvs -> guards:list term -> bool -> term
 val mk_Apply : e:term -> vars:fvs -> term
-val maybe_curry_app : rng:Range.range -> head:either<op,term> -> arity:int -> args:list<term> -> term
-val maybe_curry_fvb : rng:Range.range -> head:fvar_binding -> args:list<term> -> term
-val mkForall_fuel : string -> Range.range -> (list<(list<pat>)> * fvs * term -> term)  //first arg is the module name
+val maybe_curry_app : rng:Range.range -> head:either op term -> arity:int -> args:list term -> term
+val maybe_curry_fvb : rng:Range.range -> head:fvar_binding -> args:list term -> term
+val mkForall_fuel : string -> Range.range -> (list (list pat) * fvs * term -> term)  //first arg is the module name
 
 val head_normal : env_t -> Syntax.term -> bool
 
@@ -52,19 +51,19 @@ val encode_term : t:typ       (* expects t to be in normal form already *)
                -> env:env_t
                -> term * decls_t
 
-val encode_term_pred: fuel_opt:option<term>
+val encode_term_pred: fuel_opt:option term
                     -> t:typ
                     -> env:env_t
                     -> e:term
                     -> term * decls_t
 
-val encode_args : l:args -> env:env_t -> list<term> * decls_t
+val encode_args : l:args -> env:env_t -> list term * decls_t
 
 val encode_formula : phi:typ -> env:env_t -> term * decls_t
 
 val encode_function_type_as_formula : t:typ -> env:env_t -> term * decls_t
 
-val encode_binders : fuel_opt:option<term>
+val encode_binders : fuel_opt:option term
                   -> bs:Syntax.binders
                   -> env:env_t
-                  -> list<fv> * list<term> * env_t * decls_t * list<bv>
+                  -> list fv * list term * env_t * decls_t * list bv

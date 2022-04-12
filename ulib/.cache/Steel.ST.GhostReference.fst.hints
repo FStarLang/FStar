@@ -8,7 +8,7 @@
       1,
       [ "@query", "lemma_FStar.Ghost.reveal_hide" ],
       0,
-      "1ff2e926982796e15c38945212eaa27c"
+      "1025685602d1ad8be94fb194d34b9985"
     ],
     [
       "Steel.ST.GhostReference.read",
@@ -17,7 +17,7 @@
       1,
       [ "@query" ],
       0,
-      "f7f83a0559e02ecccb0c4a79bf692548"
+      "249ad9598c9cbdcb08ce80365adf60f7"
     ]
   ]
 ]

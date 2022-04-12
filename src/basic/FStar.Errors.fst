@@ -1,4 +1,18 @@
-#light "off"
+(*
+   Copyright 2008-2020 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
 module FStar.Errors
 open FStar.Pervasives
 open FStar.String
@@ -377,7 +391,7 @@ type raw_error =
 
 type flag = error_flag
 type error_setting = raw_error * error_flag * int
-let default_settings : list<error_setting> =
+let default_settings : list error_setting =
   [
     Error_DependencyAnalysisFailed                    , CAlwaysError, 0;
     Error_IDETooManyPops                              , CAlwaysError, 1;
@@ -752,8 +766,8 @@ let warn_on_use_errno = error_number (lookup_error default_settings Warning_Warn
 let defensive_errno   = error_number (lookup_error default_settings Warning_Defensive)
 let call_to_erased_errno = error_number (lookup_error default_settings Error_CallToErased)
 
-let update_flags (l:list<(error_flag * string)>)
-  : list<error_setting>
+let update_flags (l:list (error_flag * string))
+  : list error_setting
   = let set_one_flag i flag default_flag =
       match flag, default_flag with
       | (CWarning, CAlwaysError)
@@ -791,9 +805,9 @@ let update_flags (l:list<(error_flag * string)>)
 
 
 (* error code, message, source position, and error context *)
-type error = raw_error * string * FStar.Compiler.Range.range * list<string>
+type error = raw_error * string * FStar.Compiler.Range.range * list string
 
-exception Err     of raw_error * string * list<string>
+exception Err     of raw_error * string * list string
 exception Error   of error
 exception Warning of error
 exception Stop
@@ -812,19 +826,19 @@ type issue_level =
 type issue = {
     issue_msg: string;
     issue_level: issue_level;
-    issue_range: option<FStar.Compiler.Range.range>;
-    issue_number: option<int>;
-    issue_ctx: list<string>;
+    issue_range: option FStar.Compiler.Range.range;
+    issue_number: option int;
+    issue_ctx: list string;
 }
 
 type error_handler = {
     eh_add_one: issue -> unit;
     eh_count_errors: unit -> int;
-    eh_report: unit -> list<issue>;
+    eh_report: unit -> list issue;
     eh_clear: unit -> unit
 }
 
-let ctx_string (ctx : list<string>) : string =
+let ctx_string (ctx : list string) : string =
   if Options.error_contexts ()
   then
     ctx
@@ -881,7 +895,7 @@ let compare_issues i1 i2 =
     | Some r1, Some r2 -> FStar.Compiler.Range.compare_use_range r1 r2
 
 let mk_default_handler print =
-    let issues : ref<list<issue>> = BU.mk_ref [] in
+    let issues : ref (list issue) = BU.mk_ref [] in
     let add_one (e: issue) =
         if Options.defensive_abort () && e.issue_number = Some defensive_errno then
           failwith "Aborting due to --defensive abort";
@@ -952,7 +966,7 @@ type error_context_t = {
     push  : string -> unit;
     pop   : unit -> string;
     clear : unit -> unit;
-    get   : unit -> list<string>;
+    get   : unit -> list string;
 }
 
 let error_context : error_context_t =
@@ -971,7 +985,7 @@ let error_context : error_context_t =
     ; get   = get
     }
 
-let get_ctx () : list<string> =
+let get_ctx () : list string =
   error_context.get ()
 
 let diag r msg =
@@ -986,20 +1000,20 @@ let warn_unsafe_options rng_opt msg =
     add_one (mk_issue EError rng_opt ("Every use of this option triggers an error: " ^msg) (Some warn_on_use_errno) [])
   | _ -> ()
 
-let set_option_warning_callback_range (ropt:option<FStar.Compiler.Range.range>) =
+let set_option_warning_callback_range (ropt:option FStar.Compiler.Range.range) =
     Options.set_option_warning_callback (warn_unsafe_options ropt)
 
 let set_parse_warn_error,
     error_flags =
     (* To parse a warn_error string we expect a callback to be set in FStar.Main.setup_hooks *)
-    let parser_callback : ref<option<(string -> list<error_setting>)>> = mk_ref None in
+    let parser_callback : ref (option (string -> list error_setting)) = mk_ref None in
     (* The reporting of errors, particularly errors in the warn_error string itself
        is delicate.
        We keep a map from warn_error strings to their parsed results,
-         - Some list<error_setting> in case it parses and is interpreted successfully
+         - Some list error_setting in case it parses and is interpreted successfully
          - None in case it does not parse or is not intepretable
     *)
-    let error_flags : BU.smap<(option<(list<error_setting>)>)> = BU.smap_create 10 in
+    let error_flags : BU.smap (option (list error_setting)) = BU.smap_create 10 in
     (* set_error_flags is called by Options.set_options, parse_cmd_line etc,
        upon parsing the options.
        It parses the current warn_error string and sets the result in the
@@ -1038,7 +1052,7 @@ let set_parse_warn_error,
        and installing, in turn, callbacks in Options for
        parsing warn_error settings and also for warning on the use of
        unsafe options. *)
-    let set_callbacks (f:string -> list<error_setting>) =
+    let set_callbacks (f:string -> list error_setting) =
         parser_callback := Some f;
         Options.set_error_flags_callback set_error_flags;
         Options.set_option_warning_callback (warn_unsafe_options None)
@@ -1096,10 +1110,10 @@ let log_issue r (e, msg) =
   let ctx = error_context.get () in
   log_issue_ctx r (e, msg) ctx
 
-let add_errors (errs : list<error>) : unit =
+let add_errors (errs : list error) : unit =
     atomically (fun () -> List.iter (fun (e, msg, r, ctx) -> log_issue_ctx r (e, msg) ctx) errs)
 
-let issue_of_exn (e:exn) : option<issue> =
+let issue_of_exn (e:exn) : option issue =
   match e with
   | Error(e, msg, r, ctx) ->
     let errno = error_number (lookup e) in
@@ -1162,7 +1176,7 @@ let with_ctx_if (b:bool) (s:string) (f : unit -> 'a) : 'a =
   else
     f ()
 
-let catch_errors (f : unit -> 'a) : list<issue> * option<'a> =
+let catch_errors (f : unit -> 'a) : list issue * option 'a =
     let newh = mk_default_handler false in
     let old = !current_handler in
     current_handler := newh;
@@ -1178,9 +1192,9 @@ let catch_errors (f : unit -> 'a) : list<issue> * option<'a> =
 (* Finds a discrepancy between two multisets of ints. Result is (elem, amount1, amount2)
  * eg. find_multiset_discrepancy [1;1;3;5] [1;1;3;3;4;5] = Some (3, 1, 2)
  *     since 3 appears 1 time in l1, but 2 times in l2. *)
-let find_multiset_discrepancy (l1 : list<int>) (l2 : list<int>) : option<(int * int * int)> =
+let find_multiset_discrepancy (l1 : list int) (l2 : list int) : option (int * int * int) =
     let sort = List.sortWith (fun x y -> x - y) in
-    let rec collect (l : list<'a>) : list<('a * int)> =
+    let rec collect (l : list 'a) : list ('a * int) =
         match l with
         | [] -> []
         | hd :: tl ->

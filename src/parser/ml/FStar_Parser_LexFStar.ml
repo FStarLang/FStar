@@ -234,38 +234,6 @@ let fail lexbuf (e, msg) =
 type delimiters = { angle:int ref; paren:int ref; }
 let n_typ_apps = ref 0
 
-(* ADL: unicode identifiers won't work with --fs_typ_app
-   Since this is only used for bootstrapping I am not going to bother fixing this *)
-let is_typ_app lexbuf =
-  if not (FStar_Options.fs_typ_app (L.source_file lexbuf)) then false
-  else
-   try
-    let char_ok = function
-      | '(' | ')' | '<' | '>' | '*' | '-' | '\'' | '_' | ',' | '.' | ' ' | '\t' -> true
-      | c when c >= 'A' && c <= 'Z' -> true
-      | c when c >= 'a' && c <= 'z' -> true
-      | c when c >= '0' && c <= '9' -> true
-      | _ -> false in
-    let balanced (contents:string) pos =
-      if contents.[pos] <> '<' then (fail lexbuf (E.Fatal_SyntaxError, "Unexpected position in is_typ_lapp"));
-      let d = {angle=ref 1; paren=ref 0} in
-      let upd i = match contents.[i] with
-        | '(' -> incr d.paren
-        | ')' -> decr d.paren
-        | '<' -> incr d.angle
-        | '>' when contents.[i-1] <> '-' -> decr d.angle
-        | _ -> () in
-      let ok () = !(d.angle) >= 0 && !(d.paren) >= 0 in
-      let rec aux i =
-        if !(d.angle)=0 && !(d.paren)=0 then true
-        else if i >= String.length contents || not (ok ()) || (not (char_ok (contents.[i]))) || FStar_Compiler_Util.(starts_with (substring_from contents (Z.of_int i)) "then") then false
-        else (upd i; aux (i + 1))
-      in aux (pos + 1)
-    in
-    let res = balanced (L.lookahead lexbuf (L.get_cur lexbuf - 1)) 0 in
-    if res then incr n_typ_apps; res
-   with e -> Printf.printf "Resolving typ_app<...> syntax failed.\n"; false
-
 let is_typ_app_gt () =
   if !n_typ_apps > 0
   then (decr n_typ_apps; true)
@@ -457,7 +425,6 @@ match%sedlex lexbuf with
  | "`%" -> BACKTICK_PERC
  | "`#" -> BACKTICK_HASH
  | "`@" -> BACKTICK_AT
- | "#light" -> FStar_Options.add_light_off_file (L.source_file lexbuf); PRAGMALIGHT
  | "#set-options" -> PRAGMA_SET_OPTIONS
  | "#reset-options" -> PRAGMA_RESET_OPTIONS
  | "#push-options" -> PRAGMA_PUSH_OPTIONS
@@ -526,7 +493,7 @@ match%sedlex lexbuf with
  | op_token_4
  | op_token_5 -> L.lexeme lexbuf |> Hashtbl.find operators
 
- | "<"       -> if is_typ_app lexbuf then TYP_APP_LESS else OPINFIX0c("<")
+ | "<"       -> OPINFIX0c("<")
  | ">"       -> if is_typ_app_gt () then TYP_APP_GREATER else symbolchar_parser lexbuf
 
  (* Operators. *)

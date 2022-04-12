@@ -13,7 +13,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-#light "off"
+
 module FStar.TypeChecker.TcTerm
 open FStar.Pervasives
 open FStar.Compiler.Effect
@@ -57,7 +57,7 @@ let is_eq = function
 let steps env = [Env.Beta; Env.Eager_unfolding; Env.NoFullNorm]
 let norm   env t = N.normalize (steps env) env t
 let norm_c env c = N.normalize_comp (steps env) env c
-let check_no_escape head_opt env (fvs:list<bv>) kt : term * guard_t =
+let check_no_escape head_opt env (fvs:list bv) kt : term * guard_t =
     let rec aux try_norm t = match fvs with
         | [] -> t, Env.trivial_guard
         | _ ->
@@ -189,7 +189,7 @@ let maybe_warn_on_use env fv : unit =
 (*          subject to the guard g                                                                          *)
 (* This function compares tlc to the expected type from the context, augmenting the guard if needed         *)
 (************************************************************************************************************)
-let value_check_expected_typ env (e:term) (tlc:either<term,lcomp>) (guard:guard_t)
+let value_check_expected_typ env (e:term) (tlc:either term lcomp) (guard:guard_t)
     : term * lcomp * guard_t =
   Env.def_check_guard_wf e.pos "value_check_expected_typ" env guard;
   let lc = match tlc with
@@ -229,7 +229,7 @@ let comp_check_expected_typ env e lc : term * lcomp * guard_t =
 (************************************************************************************************************)
 (* check_expected_effect: triggers a sub-effecting, WP implication, etc. if needed                          *)
 (************************************************************************************************************)
-let check_expected_effect env (use_eq:bool) (copt:option<comp>) (ec : term * comp)
+let check_expected_effect env (use_eq:bool) (copt:option comp) (ec : term * comp)
   : term * comp * guard_t =
   let e, c = ec in
   let tot_or_gtot c = //expects U.is_pure_or_ghost_comp c
@@ -315,7 +315,7 @@ let print_expected_ty env = BU.print1 "%s\n" (print_expected_ty_str env)
 
 (* andlist: whether we're inside an SMTPatOr and we should take the
  * intersection of the sub-variables instead of the union. *)
-let rec get_pat_vars' all (andlist : bool) (pats:term) :set<bv> =
+let rec get_pat_vars' all (andlist : bool) (pats:term) :set bv =
   let pats = unmeta pats in
   let head, args = head_and_args pats in
   match (un_uinst head).n, args with
@@ -362,7 +362,7 @@ let check_pat_fvs rng env pats bs =
  *   and other terms such as abs, arrows etc.
  *)
 let check_no_smt_theory_symbols (en:env) (t:term) :unit =
-  let rec pat_terms (t:term) :list<term> =
+  let rec pat_terms (t:term) :list term =
     let t = unmeta t in
     let head, args = head_and_args t in
     match (un_uinst head).n, args with
@@ -374,7 +374,7 @@ let check_no_smt_theory_symbols (en:env) (t:term) :unit =
       pat_terms subpats
     | _ -> []  //TODO: should this be a hard error?
   in
-  let rec aux (t:term) :list<term> =
+  let rec aux (t:term) :list term =
     match (SS.compress t).n with
     //these cases are fine
     | Tm_bvar _ | Tm_name _ | Tm_constant _ | Tm_type _ | Tm_uvar _
@@ -418,7 +418,7 @@ let check_smt_pat env t bs c =
 (* Building the environment for the body of a let rec;                                                      *)
 (* guards the recursively bound names with a termination check                                              *)
 (************************************************************************************************************)
-let guard_letrecs env actuals expected_c : list<(lbname*typ*univ_names)> =
+let guard_letrecs env actuals expected_c : list (lbname*typ*univ_names) =
     match env.letrecs with
     | [] -> []
     | letrecs ->
@@ -585,7 +585,7 @@ let wrap_guard_with_tactic_opt topt g =
  *
  * Returns the (e, arg_qualifier) and the lident of M
  *)
-let is_comp_ascribed_reflect (e:term) : option<(lident * term * aqual)> =
+let is_comp_ascribed_reflect (e:term) : option (lident * term * aqual) =
   match (SS.compress e).n with
   | Tm_ascribed (e, (Inr _, _, _), _) ->
     (match (SS.compress e).n with
@@ -1485,7 +1485,7 @@ and tc_tactic (a:typ) (b:typ) (env:Env.env) (tau:term) : term * lcomp * guard_t 
     let env = { env with failhard = true } in
     tc_check_tot_or_gtot_term env tau (t_tac_of a b) ""
 
-and check_instantiated_fvar (env:Env.env) (v:S.var) (q:option<S.fv_qual>) (e:term) (t0:typ)
+and check_instantiated_fvar (env:Env.env) (v:S.var) (q:option S.fv_qual) (e:term) (t0:typ)
   : term * lcomp * guard_t
   =
   let is_data_ctor = function
@@ -1833,11 +1833,11 @@ and tc_universe env u : universe =
  * t0 is the expected type in the environment for the Tm_abs node
  *   and the use_eq bit (whether to use type equality)
  *)
-and tc_abs_expected_function_typ env (bs:binders) (t0:option<(typ * bool)>) (body:term)
-: (option<typ>        (* any remaining expected type to check against *)
+and tc_abs_expected_function_typ env (bs:binders) (t0:option (typ * bool)) (body:term)
+: (option typ        (* any remaining expected type to check against *)
 * binders             (* binders from the abstraction checked against the binders in the corresponding Typ_fun, if any *)
 * binders             (* let rec binders, suitably guarded with termination check, if any *)
-* option<comp>        (* the expected comp type for the body *)
+* option comp        (* the expected comp type for the body *)
 * Env.env             (* environment for the body *)
 * term                (* the body itself *)
 * guard_t)            (* accumulated guard from checking the binders, well-formed in the initial env *)
@@ -1961,14 +1961,14 @@ and tc_abs_expected_function_typ env (bs:binders) (t0:option<(typ * bool)>) (bod
 and tc_abs_check_binders env bs bs_expected use_eq
   : Env.env                         (* env extended with a prefix of bs  *)
   * binders                         (* the type-checked prefix of bs     *)
-  * option<either<binders,binders>> (* suffix of either bs or bs_expected*)
+  * option (either binders binders) (* suffix of either bs or bs_expected*)
   * guard_t                         (* accumulated logical guard
                                        well-formed in argument env *)
   * subst_t =                       (* alpha conv. of bs_expected to bs  *)
   let rec aux (env, subst) (bs:binders) (bs_expected:binders)
     : Env.env
     * binders
-    * option<either<binders,binders>>
+    * option (either binders binders)
     * guard_t    //guard is well-formed in the input environment
     * subst_t =
     match bs, bs_expected with
@@ -2030,7 +2030,7 @@ and tc_abs_check_binders env bs bs_expected use_eq
             t, Env.conj_guard g1_env g2_env in
 
         let hd = {hd with sort=t} in
-        let combine_attrs (attrs:list<S.attribute>) (attrs':list<S.attribute>) : list<S.attribute> =
+        let combine_attrs (attrs:list S.attribute) (attrs':list S.attribute) : list S.attribute =
           let diff = List.filter (fun attr' ->
             not (List.existsb (fun attr -> U.eq_tm attr attr' = U.Equal) attrs)
           ) attrs' in
@@ -2102,7 +2102,7 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
        *     See also special casing of M.reflect <: C in the same file
        *
        * AR: the type of should_check_expected_effect is
-       *       either<bool, unit>
+       *       either bool unit
        *
        *     where Inl b means do check expected effect, with use_eq = b
        *     and Inr _ means don't check expected effect
@@ -2188,8 +2188,8 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
 
     (*
      * AR: there are three types in the code above now:
-     *     topt : option<term> -- the original annotation
-     *     tfun_opt : option<term> -- a definitionally equal type to topt (e.g. when topt is not an arrow but can be reduced to one)
+     *     topt : option term -- the original annotation
+     *     tfun_opt : option term -- a definitionally equal type to topt (e.g. when topt is not an arrow but can be reduced to one)
      *     tfun_computed : term -- computed type of the abstraction
      *
      *     the following code has the logic for which type to package the input expression with
@@ -2251,7 +2251,7 @@ and check_application_args env head (chead:comp) ghead args expected_topt : term
     let monadic_application
       (head, chead, ghead, cres)                        (* the head of the application, its lcomp chead, and guard ghead, returning a bs -> cres *)
       subst                                             (* substituting actuals for formals seen so far, when actual is pure *)
-      (arg_comps_rev:list<(arg * option<bv> * lcomp)>)  (* type-checked actual arguments, so far; in reverse order *)
+      (arg_comps_rev:list (arg * option bv * lcomp))  (* type-checked actual arguments, so far; in reverse order *)
       arg_rets_rev                                      (* The results of each argument at the logic level, in reverse order *)
       guard                                             (* conjoined guard formula for all the actuals *)
       fvs                                               (* unsubstituted formals, to check that they do not occur free elsewhere in the type of f *)
@@ -2675,12 +2675,12 @@ and check_short_circuit_args env head chead g_head args expected_topt : term * l
 
 and tc_pat env (pat_t:typ) (p0:pat) :
         pat                          (* the type-checked, fully decorated pattern                                   *)
-      * list<bv>                     (* all its bound variables, used for closing the type of the branch term       *)
-      * list<term>                   (* for each bv in the returned bv list, this list contains a Tm_abs,
+      * list bv                     (* all its bound variables, used for closing the type of the branch term       *)
+      * list term                   (* for each bv in the returned bv list, this list contains a Tm_abs,
                                         that when applied to the scrutinee, returns an expression for bv in terms of
                                         projectors. for example, say scrutinee is of type list (option int), and the
                                         pattern is (Some hd)::_, then hd will be returned in the bv list, and the
-                                        list<term> would contain syntax for:
+                                        list term would contain syntax for:
                                           fun (x:list (option int)) -> Some?.v (Cons?.hd x)
                                         in the case of layered effects, we close over the pattern variables in the
                                         branch VC by substituting them with these expressions                       *)
@@ -2778,7 +2778,7 @@ and tc_pat env (pat_t:typ) (p0:pat) :
            let g = Rel.discharge_guard_no_smt env g in
            g
     in
-    let type_of_simple_pat env (e:term) : term * typ * list<bv> * guard_t * bool =
+    let type_of_simple_pat env (e:term) : term * typ * list bv * guard_t * bool =
         let head, args = U.head_and_args e in
         match head.n with
         | Tm_fvar f ->
@@ -2842,7 +2842,7 @@ and tc_pat env (pat_t:typ) (p0:pat) :
     in
     (*
      * This function checks the nested pattern and
-     *   builds the list<bv> and corresponding list<term> (see the comment at the signature of tc_pat)
+     *   builds the list bv and corresponding list term (see the comment at the signature of tc_pat)
      *   by checking the pattern "inside out"
      *
      * For example, taking the scrutinee of type list (option int), and the pattern as Cons (Some hd) _,
@@ -2852,8 +2852,8 @@ and tc_pat env (pat_t:typ) (p0:pat) :
      * After a bit of normalization, this is same as (fun (x:list (option int)). Some?.v (Cons?.hd x))
      *)
     let rec check_nested_pattern env (p:pat) (t:typ)
-        : list<bv>
-        * list<term>
+        : list bv
+        * list term
         * term
         * pat
         * guard_t
@@ -3072,13 +3072,13 @@ and tc_pat env (pat_t:typ) (p0:pat) :
  *)
 (********************************************************************************************************************)
 and tc_eqn scrutinee env ret_opt branch
-        : (pat * option<term> * term)  (* checked branch *)
+        : (pat * option term * term)  (* checked branch *)
         * term                         (* the guard condition for taking this branch,
                                           used by the caller for the exhaustiveness check *)
         * lident                       (* effect label of the branch lcomp *)
-        * option<list<cflag> >         (* flags for the branch lcomp,
+        * option (list cflag)          (* flags for the branch lcomp,
                                           None if typechecked with a returns comp annotation *)
-        * option<(bool -> lcomp)>       (* computation type of the branch, with or without a "return" equation,
+        * option (bool -> lcomp)       (* computation type of the branch, with or without a "return" equation,
                                           None if typechecked with a returns comp annotation *)
         * guard_t                      (* guard for well-typedness of the branch *)
         * bool                         (* true if the pattern matches an erasable type *)
@@ -3171,7 +3171,7 @@ and tc_eqn scrutinee env ret_opt branch
       if not (Env.should_verify env)
       then U.exp_true_bool
       else (* 5 (a) *)
-          let rec build_branch_guard (scrutinee_tm:option<term>) (pattern:pat) pat_exp : list<typ> =
+          let rec build_branch_guard (scrutinee_tm:option term) (pattern:pat) pat_exp : list typ =
             let discriminate scrutinee_tm f =
                 let is_induc, datacons = Env.datacons_of_typ env (Env.typ_of_datacon env f.v) in
                 (* Why the `not is_induc`? We may be checking an exception pattern. See issue #1535. *)
@@ -3785,10 +3785,10 @@ and check_inner_let_rec env top =
 (* build an environment with recursively bound names.                         *)
 (* refining the types of those names with decreases clauses is done in tc_abs *)
 (******************************************************************************)
-and build_let_rec_env _top_level env lbs : list<letbinding> * env_t * guard_t =
+and build_let_rec_env _top_level env lbs : list letbinding * env_t * guard_t =
    let env0 = env in
    let termination_check_enabled (lbname:lbname) (lbdef:term) (lbtyp:term)
-     : option<(int * term)> // when enabled returns recursion arity;
+     : option (int * term) // when enabled returns recursion arity;
                             // plus the term elaborated with implicit binders
                             // (TODO: move all that logic to desugaring)
      =
@@ -3966,10 +3966,10 @@ and check_let_bound_def top_level env lb
 
 
 (* Extracting the type of non-recursive let binding *)
-and check_lbtyp top_level env lb : option<typ>  (* checked version of lb.lbtyp, if it was not Tm_unknown *)
+and check_lbtyp top_level env lb : option typ  (* checked version of lb.lbtyp, if it was not Tm_unknown *)
                                  * guard_t      (* well-formedness condition for that type               *)
                                  * univ_names   (* explicit universe variables, if any                   *)
-                                 * list<subst_elt> (* subtistution of the opened universes               *)
+                                 * list subst_elt (* subtistution of the opened universes               *)
                                  * Env.env      (* env extended with univ_vars                           *)
                                  =
     let t = SS.compress lb.lbtyp in
@@ -4157,7 +4157,7 @@ let level_of_type env e t =
  *)
 
 (* private *)
-let rec apply_well_typed env (t_hd:typ) (args:args) : option<typ> =
+let rec apply_well_typed env (t_hd:typ) (args:args) : option typ =
   if List.length args = 0
   then Some t_hd
   else match (N.unfold_whnf env t_hd).n with
@@ -4344,7 +4344,7 @@ let tc_tparams env0 (tps:binders) : (binders * Env.env * universes) =
       in the return type
 *)
 
-let rec typeof_tot_or_gtot_term_fastpath (env:env) (t:term) (must_tot:bool) : option<typ> =
+let rec typeof_tot_or_gtot_term_fastpath (env:env) (t:term) (must_tot:bool) : option typ =
   let mk_tm_type u = S.mk (Tm_type u) t.pos in
   let effect_ok k = (not must_tot) || (N.non_info_norm env k) in
   let t = SS.compress t in
@@ -4456,7 +4456,7 @@ let rec typeof_tot_or_gtot_term_fastpath (env:env) (t:term) (must_tot:bool) : op
  *
  * It returns either PURE or GHOST (or None if fast path fails)
  *)
-let rec effectof_tot_or_gtot_term_fastpath (env:env) (t:term) : option<lident> =
+let rec effectof_tot_or_gtot_term_fastpath (env:env) (t:term) : option lident =
   match (SS.compress t).n with
   | Tm_delayed _ | Tm_bvar _ -> failwith "Impossible!"
 

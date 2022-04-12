@@ -13,7 +13,6 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-#light "off"
 module FStar.TypeChecker.TcEffect
 
 open FStar.Compiler.Effect
@@ -26,9 +25,9 @@ module S = FStar.Syntax.Syntax
 module Env = FStar.TypeChecker.Env
 
 
-val dmff_cps_and_elaborate : Env.env -> S.eff_decl -> (list<S.sigelt> * S.eff_decl * option<S.sigelt>)
+val dmff_cps_and_elaborate : Env.env -> S.eff_decl -> (list S.sigelt * S.eff_decl * option S.sigelt)
 
-val tc_eff_decl : Env.env -> S.eff_decl -> list<S.qualifier> -> list<S.attribute> -> S.eff_decl
+val tc_eff_decl : Env.env -> S.eff_decl -> list S.qualifier -> list S.attribute -> S.eff_decl
 
 val tc_lift : Env.env -> S.sub_eff -> Range.range -> S.sub_eff
 

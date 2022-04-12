@@ -13,7 +13,6 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-#light "off"
 
 module FStar.SMTEncoding.Solver
 open FStar.Pervasives
@@ -44,12 +43,12 @@ module Err = FStar.Errors
 // The type definition is now in [FStar.Compiler.Util], since it needs to be visible to
 // both the F# and OCaml implementations.
 
-type z3_replay_result = either<Z3.unsat_core, error_labels>
+type z3_replay_result = either Z3.unsat_core, error_labels
 let z3_result_as_replay_result = function
     | Inl l -> Inl l
     | Inr (r, _) -> Inr r
-let recorded_hints : ref<(option<hints>)> = BU.mk_ref None
-let replaying_hints: ref<(option<hints>)> = BU.mk_ref None
+let recorded_hints : ref (option hints) = BU.mk_ref None
+let replaying_hints: ref (option hints) = BU.mk_ref None
 
 (****************************************************************************)
 (* Hint databases (public)                                                  *)
@@ -114,8 +113,8 @@ let with_hints_db fname f =
     finalize_hints_db fname;
     result
 
-let filter_using_facts_from (e:env) (theory:list<decl>) =
-    let matches_fact_ids (include_assumption_names:BU.smap<bool>) (a:Term.assumption) =
+let filter_using_facts_from (e:env) (theory:list decl) =
+    let matches_fact_ids (include_assumption_names:BU.smap bool) (a:Term.assumption) =
       match a.assumption_fact_ids with
       | [] -> true //retaining `a` because it is not tagged with a fact id
       | _ ->
@@ -149,8 +148,8 @@ let filter_using_facts_from (e:env) (theory:list<decl>) =
     in
     pruned_theory
 
-let rec filter_assertions_with_stats (e:env) (core:Z3.unsat_core) (theory:list<decl>)
-  :(list<decl> * bool * int * int) =  //(filtered theory, if core used, retained, pruned)
+let rec filter_assertions_with_stats (e:env) (core:Z3.unsat_core) (theory:list decl)
+  :(list decl * bool * int * int) =  //(filtered theory, if core used, retained, pruned)
     match core with
     | None ->
       filter_using_facts_from e theory, false, 0, 0  //no stats if no core
@@ -172,7 +171,7 @@ let rec filter_assertions_with_stats (e:env) (core:Z3.unsat_core) (theory:list<d
             ([Caption ("UNSAT CORE: " ^ (core |> String.concat ", "))], 0, 0) theory_rev in  //start with the unsat core caption at the end
         theory', true, n_retained, n_pruned
 
-let filter_assertions (e:env) (core:Z3.unsat_core) (theory:list<decl>) =
+let filter_assertions (e:env) (core:Z3.unsat_core) (theory:list decl) =
   let (theory, b, _, _) = filter_assertions_with_stats e core theory in theory, b
 
 let filter_facts_without_core (e:env) x = filter_using_facts_from e x, false
@@ -184,8 +183,8 @@ type errors = {
     error_reason:string;
     error_fuel: int;
     error_ifuel: int;
-    error_hint: option<(list<string>)>;
-    error_messages: list<Errors.error>;
+    error_hint: option (list string);
+    error_messages: list Errors.error;
 }
 
 let error_to_short_string err =
@@ -214,10 +213,10 @@ type query_settings = {
     query_ifuel:int;
     query_rlimit:int;
     query_hint:Z3.unsat_core;
-    query_errors:list<errors>;
+    query_errors:list errors;
     query_all_labels:error_labels;
-    query_suffix:list<decl>;
-    query_hash:option<string>
+    query_suffix:list decl;
+    query_hash:option string
 }
 
 
@@ -292,10 +291,10 @@ let detail_hint_replay settings z3result =
            in
            detail_errors true settings.query_env settings.query_all_labels ask_z3
 
-let find_localized_errors (errs : list<errors>) : option<errors> =
+let find_localized_errors (errs : list errors) : option errors =
     errs |> List.tryFind (fun err -> match err.error_messages with [] -> false | _ -> true)
 
-let errors_to_report (settings : query_settings) : list<Errors.error> =
+let errors_to_report (settings : query_settings) : list Errors.error =
     let format_smt_error msg =
       BU.format1 "SMT solver says:\n\t%s;\n\t\
                   Note: 'canceled' or 'resource limits reached' means the SMT query timed out, so you might want to increase the rlimit;\n\t\
@@ -394,7 +393,7 @@ let query_info settings z3result =
         (* A generic accumulator of unique strings,
            extracted in sorted order *)
         let accumulator () =
-            let r : ref<list<string>> = BU.mk_ref [] in
+            let r : ref (list string) = BU.mk_ref [] in
             let add, get =
                 let module_names = BU.mk_ref [] in
                 (fun m ->
@@ -572,7 +571,7 @@ let record_hint settings z3result =
       | _ ->  () //the query failed, so nothing to do
     end
 
-let process_result settings result : option<errors> =
+let process_result settings result : option errors =
     let errs = query_errors settings result in
     query_info settings result;
     record_hint settings result;
@@ -587,11 +586,11 @@ let process_result settings result : option<errors> =
 // and Inl errs if all options were exhausted
 // without a success, where errs is the list of errors each query
 // returned.
-let fold_queries (qs:list<query_settings>)
+let fold_queries (qs:list query_settings)
                  (ask:query_settings -> z3result)
-                 (f:query_settings -> z3result -> option<errors>)
-                 : either<list<errors>, query_settings> =
-    let rec aux (acc : list<errors>) qs : either<list<errors>, query_settings> =
+                 (f:query_settings -> z3result -> option errors)
+                 : either (list errors) query_settings =
+    let rec aux (acc : list errors) qs : either (list errors) query_settings =
         match qs with
         | [] -> Inl acc
         | q::qs ->
@@ -607,8 +606,8 @@ let fold_queries (qs:list<query_settings>)
 let full_query_id settings =
     "(" ^ settings.query_name ^ ", " ^ (BU.string_of_int settings.query_index) ^ ")"
 
-let collect (l : list<'a>) : list<('a * int)> =
-    let acc : list<('a * int)> = [] in
+let collect (l : list 'a) : list ('a * int) =
+    let acc : list ('a * int) = [] in
     let rec add_one acc x =
         match acc with
         | [] -> [(x, 1)]
@@ -704,7 +703,7 @@ let ask_and_report_errors env all_labels prefix query suffix : unit =
                   (used_hint config)
     in
 
-    let check_all_configs configs : either<list<errors>, query_settings> =
+    let check_all_configs configs : either (list errors) query_settings =
         fold_queries configs check_one_config process_result
     in
 
@@ -879,13 +878,13 @@ let ask_and_report_errors env all_labels prefix query suffix : unit =
 
 type solver_cfg = {
   seed             : int;
-  cliopt           : list<string>;
-  facts            : list<(list<string> * bool)>;
+  cliopt           : list string;
+  facts            : list (list string * bool);
   valid_intro      : bool;
   valid_elim       : bool;
 }
 
-let _last_cfg : ref<option<solver_cfg>> = BU.mk_ref None
+let _last_cfg : ref (option solver_cfg) = BU.mk_ref None
 
 let get_cfg env : solver_cfg =
     { seed             = Options.z3_seed ()

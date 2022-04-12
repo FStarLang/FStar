@@ -1,4 +1,19 @@
-#light "off"
+(*
+   Copyright 2008-2016 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
+
 module FStar.Tactics.CtrlRewrite
 
 open FStar.Pervasives
@@ -32,15 +47,15 @@ module Errors = FStar.Errors
 let rangeof g = g.goal_ctx_uvar.ctx_uvar_range
 
 (* WHY DO I NEED TO COPY THESE? *)
-type controller_ty = term -> tac<(bool * ctrl_flag)>
-type rewriter_ty   = tac<unit>
+type controller_ty = term -> tac (bool * ctrl_flag)
+type rewriter_ty   = tac unit
 
 let __do_rewrite
     (g0:goal)
     (rewriter : rewriter_ty)
     (env : env)
     (tm : term)
-  : tac<term>
+  : tac term
 =
   (*
    * We skip certain terms. In particular if the term is a constant
@@ -116,17 +131,17 @@ let do_rewrite
     (rewriter : rewriter_ty)
     (env : env)
     (tm : term)
-  : tac<term>
+  : tac term
 = bind (catch (__do_rewrite g0 rewriter env tm)) (function
        | Inl (TacticFailure "SKIP") -> ret tm
        | Inl e -> traise e
        | Inr tm' -> ret tm')
 
-type ctac<'a> = 'a -> tac<('a * ctrl_flag)>
+type ctac 'a = 'a -> tac ('a * ctrl_flag)
 
 (* Transform a value x with c1, and continue with c2 if needed *)
-let seq_ctac (c1 : ctac<'a>) (c2 : ctac<'a>)
-  : ctac<'a>
+let seq_ctac (c1 : ctac 'a) (c2 : ctac 'a)
+  : ctac 'a
   = fun (x:'a) ->
       bind (c1 x) (fun (x', flag) ->
       match flag with
@@ -143,8 +158,8 @@ let par_combine = function
 
 (* Transform a value (x, y) with cl and cr respectively.
  * Skip on x will still run c2 on y, but Abort will abort. *)
-let par_ctac (cl : ctac<'a>) (cr : ctac<'b>)
-  : ctac<('a * 'b)>
+let par_ctac (cl : ctac 'a) (cr : ctac 'b)
+  : ctac ('a * 'b)
   = fun (x, y) ->
       bind (cl x) (fun (x, flag) ->
       match flag with
@@ -156,8 +171,8 @@ let par_ctac (cl : ctac<'a>) (cr : ctac<'b>)
         | fb ->
           ret ((x, y), par_combine (fa, fb))))
 
-let rec map_ctac (c : ctac<'a>)
-  : ctac<list<'a>>
+let rec map_ctac (c : ctac 'a)
+  : ctac (list 'a)
   = fun xs ->
       match xs with
       | [] -> ret ([], Continue)
@@ -166,15 +181,15 @@ let rec map_ctac (c : ctac<'a>)
         ret (x::xs, flag))
 
 (* let bind_ctac *)
-(*     (t : ctac<'a>) *)
-(*     (f : 'a -> ctac<'b>) *)
-(*   : ctac<'b> *)
+(*     (t : ctac 'a) *)
+(*     (f : 'a -> ctac 'b) *)
+(*   : ctac 'b *)
 (*   = fun b -> failwith "" *)
 
-let ctac_id (* : ctac<'a> *) =
+let ctac_id (* : ctac 'a *) =
   fun (x:'a) -> ret (x, Continue)
 
-let ctac_args (c : ctac<term>) : ctac<args> =
+let ctac_args (c : ctac term) : ctac args =
   map_ctac (par_ctac c ctac_id)
 
 let maybe_rewrite
@@ -183,7 +198,7 @@ let maybe_rewrite
     (rewriter   : rewriter_ty)
     (env : env)
     (tm : term)
-  : tac<(term * ctrl_flag)>
+  : tac (term * ctrl_flag)
   = bind (controller tm) (fun (rw, ctrl_flag) ->
     bind (if rw
           then do_rewrite g0 rewriter env tm
@@ -197,7 +212,7 @@ let rec ctrl_fold_env
     (rewriter : rewriter_ty)
     (env : env)
     (tm : term)
-  : tac<(term * ctrl_flag)>
+  : tac (term * ctrl_flag)
   = let recurse tm =
       ctrl_fold_env g0 d controller rewriter env tm
     in
@@ -217,7 +232,7 @@ and on_subterms
     (rewriter : rewriter_ty)
     (env : env)
     (tm : term)
-  : tac<(term * ctrl_flag)>
+  : tac (term * ctrl_flag)
   = let recurse env tm = ctrl_fold_env g0 d controller rewriter env tm in
     let rr = recurse env in (* recurse on current env *)
     let rec descend_binders orig accum_binders accum_flag env bs t rebuild =
@@ -240,7 +255,7 @@ and on_subterms
               let env = Env.push_binders env [b] in
               descend_binders orig (b::accum_binders) (par_combine (accum_flag, flag)) env bs t rebuild)
     in
-    let go () : tac<(term' * ctrl_flag)> =
+    let go () : tac (term' * ctrl_flag) =
       let tm = SS.compress tm in
       match tm.n with
       (* Run on hd and args in parallel *)
@@ -274,7 +289,7 @@ and on_subterms
        * and do not go into patterns.
        * also ignoring the return annotations *)
       | Tm_match (hd, asc_opt, brs, lopt) ->
-        let c_branch (br:S.branch) : tac<(S.branch * ctrl_flag)> =
+        let c_branch (br:S.branch) : tac (S.branch * ctrl_flag) =
           let (pat, w, e) = SS.open_branch br in
           let bvs = S.pat_bvs pat in
           bind (recurse (Env.push_bvs env bvs) e) (fun (e, flag) ->
@@ -302,7 +317,7 @@ and on_subterms
       (* Descend, in parallel, in *every* definiens and the body.
        * Again body is properly opened, and we don't go into types. *)
      | Tm_let ((true, lbs), e) ->
-       let c_lb (lb:S.letbinding) : tac<(S.letbinding * ctrl_flag)> =
+       let c_lb (lb:S.letbinding) : tac (S.letbinding * ctrl_flag) =
          bind (rr lb.lbdef) (fun (def, flag) ->
          ret ({lb with lbdef = def }, flag))
        in
@@ -334,7 +349,7 @@ let do_ctrl_rewrite
     (rewriter   : rewriter_ty)
     (env : env)
     (tm : term)
-  : tac<term>
+  : tac term
   = bind (ctrl_fold_env g0 dir controller rewriter env tm) (fun (tm', _) ->
     ret tm')
 
@@ -342,7 +357,7 @@ let ctrl_rewrite
     (dir : direction)
     (controller : controller_ty)
     (rewriter   : rewriter_ty)
-  : tac<unit>
+  : tac unit
   = wrap_err "ctrl_rewrite" <|
     bind get (fun ps ->
     let g, gs = match ps.goals with

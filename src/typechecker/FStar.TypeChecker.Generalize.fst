@@ -13,7 +13,6 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-#light "off"
 module FStar.TypeChecker.Generalize
 
 open FStar
@@ -43,7 +42,7 @@ let string_of_univs univs =
   BU.set_elements univs
   |> List.map (fun u -> UF.univ_uvar_id u |> string_of_int) |> String.concat ", "
 
-let gen_univs env (x:BU.set<universe_uvar>) : list<univ_name> =
+let gen_univs env (x:BU.set universe_uvar) : list univ_name =
     if BU.set_is_empty x then []
     else let s = BU.set_difference x (Env.univ_vars env) |> BU.set_elements in
          if Env.debug env <| Options.Other "Gen" then
@@ -60,7 +59,7 @@ let gen_univs env (x:BU.set<universe_uvar>) : list<univ_name> =
             u_name) in
          u_names
 
-let gather_free_univnames env t : BU.set<univ_name> =
+let gather_free_univnames env t : BU.set univ_name =
     let ctx_univnames = Env.univnames env in
     let tm_univnames = Free.univnames t in
     let univnames = BU.set_difference tm_univnames ctx_univnames in
@@ -72,10 +71,10 @@ let gather_free_univnames env t : BU.set<univ_name> =
     univnames
 
 let check_universe_generalization
-  (explicit_univ_names : list<univ_name>)
-  (generalized_univ_names : list<univ_name>)
+  (explicit_univ_names : list univ_name)
+  (generalized_univ_names : list univ_name)
   (t : term)
-  : list<univ_name>
+  : list univ_name
 =
   match explicit_univ_names, generalized_univ_names with
   | [], _ -> generalized_univ_names
@@ -101,7 +100,7 @@ let generalize_universes (env:env) (t0:term) : tscheme =
     univs, ts
   )
 
-let gen env (is_rec:bool) (lecs:list<(lbname * term * comp)>) : option<list<(lbname * list<univ_name> * term * comp * list<binder>)>> =
+let gen env (is_rec:bool) (lecs:list (lbname * term * comp)) : option (list (lbname * list univ_name * term * comp * list binder)) =
   if not <| (BU.for_all (fun (_, _, c) -> U.is_pure_or_ghost_comp c) lecs) //No value restriction in F*---generalize the types of pure computations
   then None
   else
@@ -153,7 +152,7 @@ let gen env (is_rec:bool) (lecs:list<(lbname * term * comp)>) : option<list<(lbn
                             (Print.lbname_to_string lb2) in
              raise_error (Errors.Fatal_IncompatibleSetOfUniverse, msg) (Env.get_range env)
      in
-     let force_uvars_eq lec2 (u1:list<ctx_uvar>) (u2:list<ctx_uvar>) =
+     let force_uvars_eq lec2 (u1:list ctx_uvar) (u2:list ctx_uvar) =
         let uvars_subseteq u1 u2 =
             u1 |> BU.for_all (fun u ->
             u2 |> BU.for_some (fun u' -> UF.equiv u.ctx_uvar_head u'.ctx_uvar_head))
@@ -182,7 +181,7 @@ let gen env (is_rec:bool) (lecs:list<(lbname * term * comp)>) : option<list<(lbn
 
      let lecs = lec_hd :: lecs in
 
-     let gen_types (uvs:list<ctx_uvar>) : list<(bv * bqual)> =
+     let gen_types (uvs:list ctx_uvar) : list (bv * bqual) =
          let fail rng k : unit =
              let lbname, e, c = lec_hd in
                raise_error (Errors.Fatal_FailToResolveImplicitArgument,
@@ -263,7 +262,7 @@ let gen env (is_rec:bool) (lecs:list<(lbname * term * comp)>) : option<list<(lbn
           (lbname, gen_univs, e, c, gvs)) in
      Some ecs
 
-let generalize' env (is_rec:bool) (lecs:list<(lbname*term*comp)>) : (list<(lbname*univ_names*term*comp*list<binder>)>) =
+let generalize' env (is_rec:bool) (lecs:list (lbname*term*comp)) : (list (lbname*univ_names*term*comp*list binder)) =
   assert (List.for_all (fun (l, _, _) -> is_right l) lecs); //only generalize top-level lets
   if debug env Options.Low
   then BU.print1 "Generalizing: %s\n"

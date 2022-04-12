@@ -14,7 +14,6 @@
    limitations under the License.
 *)
 
-#light "off"
 module FStar.Extraction.ML.UEnv
 open FStar.Pervasives
 open FStar.Compiler.Effect
@@ -46,7 +45,7 @@ type exp_binding = {
   exp_b_tscheme:mltyscheme
 }
 
-type ty_or_exp_b = either<ty_binding, exp_binding>
+type ty_or_exp_b = either ty_binding exp_binding
 
 type binding =
   | Bv  of bv * ty_or_exp_b
@@ -69,7 +68,7 @@ val set_current_module : u:uenv -> p:mlpath -> uenv
 val with_typars_env : uenv -> (RemoveUnusedParameters.env_t -> RemoveUnusedParameters.env_t * 'a) -> uenv * 'a
 
 (** Debugging only *)
-val bindings_of_uenv : uenv -> list<binding>
+val bindings_of_uenv : uenv -> list binding
 val debug: g:uenv -> f:(unit -> unit) -> unit
 
 (** Constructor *)
@@ -79,7 +78,7 @@ val new_uenv : e:TypeChecker.Env.env -> uenv
 
 (** Lookup a top-level term identifier. Raises an error/warning when the
 FV has been erased, using the given range. *)
-val try_lookup_fv: Range.range -> g:uenv -> fv:fv -> option<exp_binding>
+val try_lookup_fv: Range.range -> g:uenv -> fv:fv -> option exp_binding
 
 (* As above, but will abort if the variable is not found or was erased.
 Only use this for variables that must be in the environment, such as
@@ -90,13 +89,13 @@ val lookup_fv: Range.range -> g:uenv -> fv:fv -> exp_binding
 val lookup_bv: g:uenv -> bv: bv -> ty_or_exp_b
 
 (** Lookup a top-level term or local type variable *)
-val lookup_term: g:uenv -> t:term -> ty_or_exp_b * option<fv_qual>
+val lookup_term: g:uenv -> t:term -> ty_or_exp_b * option fv_qual
 
 (** Lookup a type variable *)
 val lookup_ty: g:uenv -> bv:bv -> ty_binding
 
 (** Lookup a type definition *)
-val lookup_tydef : uenv -> mlpath -> option<mltyscheme>
+val lookup_tydef : uenv -> mlpath -> option mltyscheme
 
 (** Does a type definition have an accompanying `val` declaration? *)
 val has_tydef_declaration : uenv -> lident -> bool

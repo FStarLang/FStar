@@ -1,4 +1,3 @@
-#light "off"
 module FStar.TypeChecker.Cfg
 open FStar.Compiler.Effect
 open FStar.Compiler.List
@@ -32,11 +31,11 @@ type fsteps = {
      hnf  : bool;
      primops : bool;
      do_not_unfold_pure_lets : bool;
-     unfold_until : option<S.delta_depth>;
-     unfold_only  : option<list<I.lid>>;
-     unfold_fully : option<list<I.lid>>;
-     unfold_attr  : option<list<I.lid>>;
-     unfold_qual  : option<list<string>>;
+     unfold_until : option S.delta_depth;
+     unfold_only  : option (list I.lid);
+     unfold_fully : option (list I.lid);
+     unfold_attr  : option (list I.lid);
+     unfold_qual  : option (list string);
      unfold_tac : bool;
      pure_subterms_within_computations : bool;
      simplify : bool;
@@ -56,7 +55,7 @@ type fsteps = {
 }
 
 let steps_to_string f =
-  let format_opt (f:'a -> string) (o:option<'a>) =
+  let format_opt (f:'a -> string) (o:option 'a) =
     match o with
     | None -> "None"
     | Some x -> "Some ("^ f x ^ ")"
@@ -195,7 +194,7 @@ let fstep_add_one s fs =
     | ForExtraction -> {fs with for_extraction = true }
     | Unrefine -> {fs with unrefine = true }
 
-let to_fsteps (s : list<step>) : fsteps =
+let to_fsteps (s : list step) : fsteps =
     List.fold_right fstep_add_one s default_steps
 
 type psc = {
@@ -239,15 +238,15 @@ type primitive_step = {
      name:Ident.lid;
      arity:int;
      univ_arity:int;
-     auto_reflect:option<int>;
+     auto_reflect:option int;
      strong_reduction_ok:bool;
      requires_binder_substitution:bool;
-     interpretation:(psc -> EMB.norm_cb -> args -> option<term>);
-     interpretation_nbe:(NBETerm.nbe_cbs -> NBETerm.args -> option<NBETerm.t>)
+     interpretation:(psc -> EMB.norm_cb -> args -> option term);
+     interpretation_nbe:(NBETerm.nbe_cbs -> NBETerm.args -> option NBETerm.t)
 }
 
 (* Primitive step sets. They are represented as a persistent string map *)
-type prim_step_set = BU.psmap<primitive_step>
+type prim_step_set = BU.psmap primitive_step
 
 let empty_prim_steps () : prim_step_set =
     BU.psmap_empty ()
@@ -258,10 +257,10 @@ let add_step (s : primitive_step) (ss : prim_step_set) =
 let merge_steps (s1 : prim_step_set) (s2 : prim_step_set) : prim_step_set =
     BU.psmap_merge s1 s2
 
-let add_steps (m : prim_step_set) (l : list<primitive_step>) : prim_step_set =
+let add_steps (m : prim_step_set) (l : list primitive_step) : prim_step_set =
     List.fold_right add_step l m
 
-let prim_from_list (l : list<primitive_step>) : prim_step_set =
+let prim_from_list (l : list primitive_step) : prim_step_set =
     add_steps (empty_prim_steps ()) l
 (* / Primitive step sets *)
 
@@ -269,7 +268,7 @@ type cfg = {
      steps: fsteps;
      tcenv: Env.env;
      debug: debug_switches;
-     delta_level: list<Env.delta_level>;  // Controls how much unfolding of definitions should be performed
+     delta_level: list Env.delta_level;  // Controls how much unfolding of definitions should be performed
      primitive_steps:prim_step_set;
      strong : bool;                       // under a binder
      memoize_lazy : bool;
@@ -313,17 +312,17 @@ let log_nbe cfg f =
 (*******************************************************************)
 (* Semantics for primitive operators (+, -, >, &&, ...)            *)
 (*******************************************************************)
-let embed_simple (emb:EMB.embedding<'a>) (r:Range.range) (x:'a) : term =
+let embed_simple (emb:EMB.embedding 'a) (r:Range.range) (x:'a) : term =
     EMB.embed emb x r None EMB.id_norm_cb
-let try_unembed_simple (emb:EMB.embedding<'a>) (x:term) : option<'a> =
+let try_unembed_simple (emb:EMB.embedding 'a) (x:term) : option 'a =
     EMB.unembed emb x false EMB.id_norm_cb
 let built_in_primitive_steps : prim_step_set =
     let arg_as_int    (a:arg) = fst a |> try_unembed_simple EMB.e_int in
     let arg_as_bool   (a:arg) = fst a |> try_unembed_simple EMB.e_bool in
     let arg_as_char   (a:arg) = fst a |> try_unembed_simple EMB.e_char in
     let arg_as_string (a:arg) = fst a |> try_unembed_simple EMB.e_string in
-    let arg_as_list   (e:EMB.embedding<'a>) a = fst a |> try_unembed_simple (EMB.e_list e) in
-    let arg_as_bounded_int (a, _) : option<(fv * Z.t * option<S.meta_source_info>)> =
+    let arg_as_list   (e:EMB.embedding 'a) a = fst a |> try_unembed_simple (EMB.e_list e) in
+    let arg_as_bounded_int (a, _) : option (fv * Z.t * option S.meta_source_info) =
         let (a, m) =
             (match (SS.compress a).n with
              | Tm_meta(t, Meta_desugared m) -> (t, Some m)
@@ -344,35 +343,35 @@ let built_in_primitive_steps : prim_step_set =
         | _ -> None
     in
     let lift_unary
-        : ('a -> 'b) -> list<option<'a>> ->option<'b>
+        : ('a -> 'b) -> list (option 'a) -> option 'b
         = fun f aopts ->
             match aopts with
             | [Some a] -> Some (f a)
             | _ -> None
     in
     let lift_binary
-        : ('a -> 'a -> 'b) -> list<option<'a>> -> option<'b>
+        : ('a -> 'a -> 'b) -> list (option 'a) -> option 'b
         = fun f aopts ->
             match aopts with
             | [Some a0; Some a1] -> Some (f a0 a1)
             | _ -> None
     in
     let unary_op
-         :  (arg -> option<'a>)
+         :  (arg -> option 'a)
          -> (Range.range -> 'a -> term)
          -> psc
          -> EMB.norm_cb
          -> args
-         -> option<term>
+         -> option term
          = fun as_a f res norm_cb args -> lift_unary (f res.psc_range) (List.map as_a args)
     in
     let binary_op
-         :  (arg -> option<'a>)
+         :  (arg -> option 'a)
          -> (Range.range -> 'a -> 'a -> term)
          -> psc
          -> EMB.norm_cb
          -> args
-         -> option<term>
+         -> option term
          = fun as_a f res n args -> lift_binary (f res.psc_range) (List.map as_a args)
     in
     let as_primitive_step is_strong (l, arity, u_arity, f, f_nbe) = {
@@ -401,14 +400,14 @@ let built_in_primitive_steps : prim_step_set =
         binary_op arg_as_string (fun r x y -> embed_simple EMB.e_string r (f x y))
     in
     let mixed_binary_op
-           :  (arg -> option<'a>)
-           -> (arg -> option<'b>)
+           :  (arg -> option 'a)
+           -> (arg -> option 'b)
            -> (Range.range -> 'c -> term)
-           -> (Range.range -> 'a -> 'b -> option<'c>)
+           -> (Range.range -> 'a -> 'b -> option 'c)
            -> psc
            -> EMB.norm_cb
            -> args
-           -> option<term>
+           -> option term
            = fun as_a as_b embed_c f res _norm_cb args ->
                  match args with
                  | [a;b] ->
@@ -428,7 +427,7 @@ let built_in_primitive_steps : prim_step_set =
         let charterm c = mk (Tm_constant (Const_char c)) rng in
         U.mk_list char_t rng <| List.map charterm (list_of_string s)
     in
-    let string_of_list' rng (l:list<char>) : term =
+    let string_of_list' rng (l:list char) : term =
         let s = string_of_list l in
         U.exp_string s
     in
@@ -436,7 +435,7 @@ let built_in_primitive_steps : prim_step_set =
         let r = String.compare s1 s2 in
         embed_simple EMB.e_int rng (Z.big_int_of_string (BU.string_of_int r))
     in
-    let string_concat' psc _n args : option<term> =
+    let string_concat' psc _n args : option term =
         match args with
         | [a1; a2] ->
             begin match arg_as_string a1 with
@@ -451,7 +450,7 @@ let built_in_primitive_steps : prim_step_set =
             end
         | _ -> None
     in
-    let string_split' psc _norm_cb args : option<term> =
+    let string_split' psc _norm_cb args : option term =
         match args with
         | [a1; a2] ->
             begin match arg_as_list EMB.e_char a1 with
@@ -466,7 +465,7 @@ let built_in_primitive_steps : prim_step_set =
             end
         | _ -> None
     in
-    let string_substring' psc _norm_cb args : option<term> =
+    let string_substring' psc _norm_cb args : option term =
         match args with
         | [a1; a2; a3] ->
             begin match arg_as_string a1, arg_as_int a2, arg_as_int a3 with
@@ -495,7 +494,7 @@ let built_in_primitive_steps : prim_step_set =
     let uppercase rng (s:string) : term =
         embed_simple EMB.e_string rng (String.uppercase s)
     in
-    let string_index psc _norm_cb args : option<term> =
+    let string_index psc _norm_cb args : option term =
         match args with
         | [a1; a2] ->
             begin match arg_as_string a1, arg_as_int a2 with
@@ -509,7 +508,7 @@ let built_in_primitive_steps : prim_step_set =
             end
         | _ -> None
     in
-    let string_index_of psc _norm_cb args : option<term> =
+    let string_index_of psc _norm_cb args : option term =
         match args with
         | [a1; a2] ->
             begin match arg_as_string a1, arg_as_char a2 with
@@ -523,7 +522,7 @@ let built_in_primitive_steps : prim_step_set =
             end
         | _ -> None
     in
-    let mk_range (psc:psc) _norm_cb args : option<term> =
+    let mk_range (psc:psc) _norm_cb args : option term =
       match args with
       | [fn; from_line; from_col; to_line; to_col] -> begin
         match arg_as_string fn,
@@ -541,7 +540,7 @@ let built_in_primitive_steps : prim_step_set =
       | _ -> None
     in
     let decidable_eq (neg:bool) (psc:psc) _norm_cb (args:args)
-        : option<term> =
+        : option term =
         let r = psc.psc_range in
         let tru = mk (Tm_constant (FC.Const_bool true)) r in
         let fal = mk (Tm_constant (FC.Const_bool false)) r in
@@ -555,7 +554,7 @@ let built_in_primitive_steps : prim_step_set =
             failwith "Unexpected number of arguments"
     in
     (* Really an identity, but only when the thing is an embedded range *)
-    let prims_to_fstar_range_step psc _norm_cb args : option<term> =
+    let prims_to_fstar_range_step psc _norm_cb args : option term =
         match args with
         | [(a1, _)] ->
             begin match try_unembed_simple EMB.e_range a1 with
@@ -566,7 +565,7 @@ let built_in_primitive_steps : prim_step_set =
     in
     (* and_op and or_op are special cased because they are short-circuting,
      * can run without unembedding its second argument. *)
-    let and_op : psc -> EMB.norm_cb -> args -> option<term>
+    let and_op : psc -> EMB.norm_cb -> args -> option term
       = fun psc _norm_cb args ->
         match args with
         | [(a1, None); (a2, None)] ->
@@ -579,7 +578,7 @@ let built_in_primitive_steps : prim_step_set =
             end
         | _ -> failwith "Unexpected number of arguments"
     in
-    let or_op : psc -> EMB.norm_cb -> args -> option<term>
+    let or_op : psc -> EMB.norm_cb -> args -> option term
       = fun psc _norm_cb args ->
         match args with
         | [(a1, None); (a2, None)] ->
@@ -594,7 +593,7 @@ let built_in_primitive_steps : prim_step_set =
     in
 
     (* division is special cased since we must avoid zero denominators *)
-    let division_op : psc -> EMB.norm_cb -> args -> option<term>
+    let division_op : psc -> EMB.norm_cb -> args -> option term
       = fun psc _norm_cb args ->
         match args with
         | [(a1, None); (a2, None)] ->
@@ -619,7 +618,7 @@ let built_in_primitive_steps : prim_step_set =
       let int_to_t = S.fv_to_tm int_to_t in
       S.mk_Tm_app int_to_t [S.as_arg c] r
     in
-    let with_meta_ds r t (m:option<meta_source_info>) =
+    let with_meta_ds r t (m:option meta_source_info) =
       match m with
       | None -> t
       | Some m -> S.mk (Tm_meta(t, Meta_desugared m)) r
@@ -627,7 +626,7 @@ let built_in_primitive_steps : prim_step_set =
     let basic_ops
       //this type annotation has to be on a single line for it to parse
       //because our support for F# style type-applications is very limited
-      : list<(Ident.lid * int * int * (psc -> EMB.norm_cb -> args -> option<term>) * (NBETerm.args -> option<NBETerm.t>))>
+      : list (Ident.lid * int * int * (psc -> EMB.norm_cb -> args -> option term) * (NBETerm.args -> option NBETerm.t))
        //name of primitive
           //arity
           //universe arity
@@ -1051,7 +1050,7 @@ let built_in_primitive_steps : prim_step_set =
     prim_from_list <| (strong_steps @ weak_steps)
 
 let equality_ops : prim_step_set =
-    let interp_prop_eq2 (psc:psc) _norm_cb (args:args) : option<term> =
+    let interp_prop_eq2 (psc:psc) _norm_cb (args:args) : option term =
         let r = psc.psc_range in
         match args with
         | [(_typ, _); (a1, _); (a2, _)]  ->         //eq2
@@ -1076,7 +1075,7 @@ let equality_ops : prim_step_set =
     prim_from_list [propositional_equality]
 
 (* Profiling the time each different primitive step consumes *)
-let primop_time_map : BU.smap<int> = BU.smap_create 50
+let primop_time_map : BU.smap int = BU.smap_create 50
 
 let primop_time_reset () =
     BU.smap_clear primop_time_map
@@ -1096,7 +1095,7 @@ let primop_time_report () : string =
     let pairs = BU.sort_with (fun (_, t1) (_, t2) -> t1 - t2) pairs in
     List.fold_right (fun (nm, ms) rest -> (BU.format2 "%sms --- %s\n" (fixto 10 (BU.string_of_int ms)) nm) ^ rest) pairs ""
 
-let extendable_primops_dirty : ref<bool> = BU.mk_ref true
+let extendable_primops_dirty : ref bool = BU.mk_ref true
 
 type register_prim_step_t = primitive_step -> unit
 type retrieve_prim_step_t = unit -> prim_step_set
@@ -1125,7 +1124,7 @@ let register_extra_step  p  = fst extra_steps p
 let retrieve_extra_steps () = snd extra_steps ()
 
 let cached_steps : unit -> prim_step_set =
-    let memo : ref<prim_step_set> = BU.mk_ref (empty_prim_steps ()) in
+    let memo : ref prim_step_set = BU.mk_ref (empty_prim_steps ()) in
     fun () ->
       if !extendable_primops_dirty
       then

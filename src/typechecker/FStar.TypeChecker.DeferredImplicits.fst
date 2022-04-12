@@ -16,7 +16,6 @@
    Authors: Nikhil Swamy
 *)
 
-#light "off"
 module FStar.TypeChecker.DeferredImplicits
 open FStar.Compiler.Effect
 open FStar.Compiler.List
@@ -60,14 +59,14 @@ type goal_dep =
     goal_dep_id:int;       //Assign each goal an id, for cycle detection
     goal_type:goal_type; //What sort of goal ...
     goal_imp:implicit;   //The entire implicit from which this was generated
-    assignees:BU.set<ctx_uvar>; //The set of uvars assigned by the goal
-    goal_dep_uvars:BU.set<ctx_uvar>; //The set of uvars this goal depends on
-    dependences:ref<goal_deps>; //NB: mutable; the goals that must precede this one in the order
-    visited:ref<int> //NB: mutable; a field to mark visited goals during the sort
+    assignees:BU.set ctx_uvar; //The set of uvars assigned by the goal
+    goal_dep_uvars:BU.set ctx_uvar; //The set of uvars this goal depends on
+    dependences:ref goal_deps; //NB: mutable; the goals that must precede this one in the order
+    visited:ref int //NB: mutable; a field to mark visited goals during the sort
   }
-and goal_deps = list<goal_dep>
+and goal_deps = list goal_dep
 
-let print_uvar_set (s:BU.set<ctx_uvar>) =
+let print_uvar_set (s:BU.set ctx_uvar) =
     (BU.set_elements s
      |> List.map (fun u -> "?" ^ (string_of_int <| Unionfind.uvar_id u.ctx_uvar_head))
      |> String.concat "; ")
@@ -80,7 +79,7 @@ let print_goal_dep gd =
      |> String.concat "; ")
     (Print.ctx_uvar_to_string gd.goal_imp.imp_uvar)
 
-let find_user_tac_for_uvar env (u:ctx_uvar) : option<sigelt> =
+let find_user_tac_for_uvar env (u:ctx_uvar) : option sigelt =
     match u.ctx_uvar_meta with
     | Some (Ctx_uvar_meta_attr a) ->
       let hooks = Env.lookup_attr env FStar.Parser.Const.resolve_implicits_attr_string in
@@ -189,8 +188,8 @@ let solve_deferred_to_tactic_goals env g =
     (** Each implicit is associated with a sigelt.
         Group them so that all implicits with the same associated sigelt
         are in the same bucket *)
-    let bucketize (is:list<(implicit * sigelt)>) : list<(implicits * sigelt)> =
-      let map : BU.smap<(implicits * sigelt)> = BU.smap_create 17 in
+    let bucketize (is:list (implicit * sigelt)) : list (implicits * sigelt) =
+      let map : BU.smap (implicits * sigelt) = BU.smap_create 17 in
       List.iter
         (fun (i, s) ->
            match U.lid_of_sigelt s with

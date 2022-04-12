@@ -410,16 +410,19 @@ unfold
 let subcomp_pre_opaque (#a:Type)
   (#pre_f:pre_t) (#post_f:post_t a) (req_f:req_t pre_f) (ens_f:ens_t pre_f a post_f)
   (#pre_g:pre_t) (#post_g:post_t a) (req_g:req_t pre_g) (ens_g:ens_t pre_g a post_g)
-  (#frame:vprop)
-  (_:squash (can_be_split pre_g (pre_f `star` frame)))
+  (#frame:vprop) (#pr:prop)
+  (_:squash (can_be_split_dep pr pre_g (pre_f `star` frame)))
   (_:squash (equiv_forall post_g (fun x -> post_f x `star` frame)))
   : pure_pre
-= can_be_split_trans pre_g (pre_f `star` frame) pre_f;
-  (forall (h0:hmem pre_g). req_g (mk_rmem pre_g h0) ==> req_f (focus_rmem (mk_rmem pre_g h0) pre_f)) /\
+= (forall (h0:hmem pre_g). req_g (mk_rmem pre_g h0) ==> pr /\ (
+    can_be_split_trans pre_g (pre_f `star` frame) pre_f;
+    req_f (focus_rmem (mk_rmem pre_g h0) pre_f))) /\
   (forall (h0:hmem pre_g) (x:a) (h1:hmem (post_g x)). (
+     pr ==> (
      can_be_split_trans (post_g x) (post_f x `star` frame) (post_f x);
      can_be_split_trans (pre_g) (pre_f `star` frame) frame;
      can_be_split_trans (post_g x) (post_f x `star` frame) frame;
+     can_be_split_trans pre_g (pre_f `star` frame) pre_f;
 
      (req_g (mk_rmem pre_g h0) /\
       ens_f (focus_rmem (mk_rmem pre_g h0) pre_f) x (focus_rmem (mk_rmem (post_g x) h1) (post_f x)) /\
@@ -427,7 +430,7 @@ let subcomp_pre_opaque (#a:Type)
         (focus_rmem (mk_rmem pre_g h0) frame)
         (focus_rmem (mk_rmem (post_g x) h1) frame))
 
-        ==> ens_g (mk_rmem pre_g h0) x (mk_rmem (post_g x) h1)
+        ==> ens_g (mk_rmem pre_g h0) x (mk_rmem (post_g x) h1))
   ))
 
 val subcomp_opaque (a:Type)
@@ -438,8 +441,9 @@ val subcomp_opaque (a:Type)
   (#[@@@ framing_implicit] pre_g:pre_t) (#[@@@ framing_implicit] post_g:post_t a)
   (#[@@@ framing_implicit] req_g:req_t pre_g) (#[@@@ framing_implicit] ens_g:ens_t pre_g a post_g)
   (#[@@@ framing_implicit] frame:vprop)
+  (#[@@@ framing_implicit] pr : prop)
   (#[@@@ framing_implicit] _ : squash (maybe_emp framed_f frame))
-  (#[@@@ framing_implicit] p1:squash (can_be_split pre_g (pre_f `star` frame)))
+  (#[@@@ framing_implicit] p1:squash (can_be_split_dep pr pre_g (pre_f `star` frame)))
   (#[@@@ framing_implicit] p2:squash (equiv_forall post_g (fun x -> post_f x `star` frame)))
   (f:repr a framed_f pre_f post_f req_f ens_f)
 : Pure (repr a framed_g pre_g post_g req_g ens_g)
@@ -448,7 +452,7 @@ val subcomp_opaque (a:Type)
 
 #push-options "--fuel 1 --ifuel 1 --z3rlimit 20"
 
-let subcomp_opaque a #framed_f #framed_g #pre_f #post_f #req_f #ens_f #pre_g #post_g #req_g #ens_g #fr #_ #p1 #p2 f =
+let subcomp_opaque a #framed_f #framed_g #pre_f #post_f #req_f #ens_f #pre_g #post_g #req_g #ens_g #fr #_ #_ #p1 #p2 f =
   fun frame ->
     let m0 = nmst_get () in
     let h0 = mk_rmem pre_g (core_mem m0) in
@@ -494,17 +498,22 @@ let lemma_subcomp_pre_opaque_aux1 (#a:Type)
   (#pre_f:pre_t) (#post_f:post_t a) (req_f:req_t pre_f) (ens_f:ens_t pre_f a post_f)
   (#pre_g:pre_t) (#post_g:post_t a) (req_g:req_t pre_g) (ens_g:ens_t pre_g a post_g)
   (#frame:vprop)
-  (p1:squash (can_be_split pre_g (pre_f `star` frame)))
+  (#pr:prop)
+  (p1:squash (can_be_split_dep pr pre_g (pre_f `star` frame)))
   (p2:squash (equiv_forall post_g (fun x -> post_f x `star` frame)))
   : Lemma
   (requires subcomp_pre req_f ens_f req_g ens_g p1 p2)
-  (ensures  (can_be_split_trans pre_g (pre_f `star` frame) pre_f;
-    (forall (h0:hmem pre_g). req_g (mk_rmem pre_g h0) ==> req_f (focus_rmem (mk_rmem pre_g h0) pre_f)) /\
+  (ensures  (
+    (forall (h0:hmem pre_g). req_g (mk_rmem pre_g h0) ==> pr /\ (
+    can_be_split_trans pre_g (pre_f `star` frame) pre_f;
+    req_f (focus_rmem (mk_rmem pre_g h0) pre_f))) /\
     (forall (h0:hmem pre_g) (x:a) (h1:hmem (post_g x)). (
+     pr ==> (
 
      can_be_split_trans (post_g x) (post_f x `star` frame) (post_f x);
      can_be_split_trans (pre_g) (pre_f `star` frame) frame;
      can_be_split_trans (post_g x) (post_f x `star` frame) frame;
+     can_be_split_trans pre_g (pre_f `star` frame) pre_f;
 
      (req_g (mk_rmem pre_g h0) /\
       ens_f (focus_rmem (mk_rmem pre_g h0) pre_f) x (focus_rmem (mk_rmem (post_g x) h1) (post_f x)) /\
@@ -512,15 +521,18 @@ let lemma_subcomp_pre_opaque_aux1 (#a:Type)
         (focus_rmem (mk_rmem pre_g h0) frame)
         (focus_rmem (mk_rmem (post_g x) h1) frame))
 
-        ==> ens_g (mk_rmem pre_g h0) x (mk_rmem (post_g x) h1)
+        ==> ens_g (mk_rmem pre_g h0) x (mk_rmem (post_g x) h1))
        ))))
   = lemma_rewrite (squash (
-      can_be_split_trans pre_g (pre_f `star` frame) pre_f;
-      (forall (h0:hmem pre_g). req_g (mk_rmem pre_g h0) ==> req_f (focus_rmem (mk_rmem pre_g h0) pre_f)) /\
+      (forall (h0:hmem pre_g). req_g (mk_rmem pre_g h0) ==> pr /\ (
+        can_be_split_trans pre_g (pre_f `star` frame) pre_f;
+        req_f (focus_rmem (mk_rmem pre_g h0) pre_f))) /\
       (forall (h0:hmem pre_g) (x:a) (h1:hmem (post_g x)). (
+         pr ==> (
          can_be_split_trans (post_g x) (post_f x `star` frame) (post_f x);
          can_be_split_trans (pre_g) (pre_f `star` frame) frame;
          can_be_split_trans (post_g x) (post_f x `star` frame) frame;
+         can_be_split_trans pre_g (pre_f `star` frame) pre_f;
 
          (req_g (mk_rmem pre_g h0) /\
           ens_f (focus_rmem (mk_rmem pre_g h0) pre_f) x (focus_rmem (mk_rmem (post_g x) h1) (post_f x)) /\
@@ -528,7 +540,7 @@ let lemma_subcomp_pre_opaque_aux1 (#a:Type)
             (focus_rmem (mk_rmem pre_g h0) frame)
             (focus_rmem (mk_rmem (post_g x) h1) frame))
 
-            ==> ens_g (mk_rmem pre_g h0) x (mk_rmem (post_g x) h1)
+            ==> ens_g (mk_rmem pre_g h0) x (mk_rmem (post_g x) h1))
       ))
     ))
 
@@ -538,16 +550,21 @@ let lemma_subcomp_pre_opaque_aux2 (#a:Type)
   (#pre_f:pre_t) (#post_f:post_t a) (req_f:req_t pre_f) (ens_f:ens_t pre_f a post_f)
   (#pre_g:pre_t) (#post_g:post_t a) (req_g:req_t pre_g) (ens_g:ens_t pre_g a post_g)
   (#frame:vprop)
-  (p1:squash (can_be_split pre_g (pre_f `star` frame)))
+  (#pr:prop)
+  (p1:squash (can_be_split_dep pr pre_g (pre_f `star` frame)))
   (p2:squash (equiv_forall post_g (fun x -> post_f x `star` frame)))
   : Lemma
-  (requires  (can_be_split_trans pre_g (pre_f `star` frame) pre_f;
-    (forall (h0:hmem pre_g). req_g (mk_rmem pre_g h0) ==> req_f (focus_rmem (mk_rmem pre_g h0) pre_f)) /\
+  (requires  (
+    (forall (h0:hmem pre_g). req_g (mk_rmem pre_g h0) ==> pr /\ (
+      can_be_split_trans pre_g (pre_f `star` frame) pre_f;
+      req_f (focus_rmem (mk_rmem pre_g h0) pre_f))) /\
     (forall (h0:hmem pre_g) (x:a) (h1:hmem (post_g x)). (
+     pr ==> (
 
      can_be_split_trans (post_g x) (post_f x `star` frame) (post_f x);
      can_be_split_trans (pre_g) (pre_f `star` frame) frame;
      can_be_split_trans (post_g x) (post_f x `star` frame) frame;
+     can_be_split_trans pre_g (pre_f `star` frame) pre_f;
 
      (req_g (mk_rmem pre_g h0) /\
       ens_f (focus_rmem (mk_rmem pre_g h0) pre_f) x (focus_rmem (mk_rmem (post_g x) h1) (post_f x)) /\
@@ -555,19 +572,23 @@ let lemma_subcomp_pre_opaque_aux2 (#a:Type)
         (focus_rmem (mk_rmem pre_g h0) frame)
         (focus_rmem (mk_rmem (post_g x) h1) frame))
 
-        ==> ens_g (mk_rmem pre_g h0) x (mk_rmem (post_g x) h1)
+        ==> ens_g (mk_rmem pre_g h0) x (mk_rmem (post_g x) h1))
        ))))
 
   (ensures subcomp_pre_opaque req_f ens_f req_g ens_g p1 p2)
   =  lemma_norm_opaque (squash (
 
-    can_be_split_trans pre_g (pre_f `star` frame) pre_f;
-    (forall (h0:hmem pre_g). req_g (mk_rmem pre_g h0) ==> req_f (focus_rmem (mk_rmem pre_g h0) pre_f)) /\
+    (forall (h0:hmem pre_g). req_g (mk_rmem pre_g h0) ==> pr /\ (
+       can_be_split_trans pre_g (pre_f `star` frame) pre_f;
+       req_f (focus_rmem (mk_rmem pre_g h0) pre_f))) /\
     (forall (h0:hmem pre_g) (x:a) (h1:hmem (post_g x)). (
+     pr ==> (
 
      can_be_split_trans (post_g x) (post_f x `star` frame) (post_f x);
      can_be_split_trans (pre_g) (pre_f `star` frame) frame;
      can_be_split_trans (post_g x) (post_f x `star` frame) frame;
+     can_be_split_trans pre_g (pre_f `star` frame) pre_f;
+
 
      (req_g (mk_rmem pre_g h0) /\
       ens_f (focus_rmem (mk_rmem pre_g h0) pre_f) x (focus_rmem (mk_rmem (post_g x) h1) (post_f x)) /\
@@ -575,7 +596,7 @@ let lemma_subcomp_pre_opaque_aux2 (#a:Type)
         (focus_rmem (mk_rmem pre_g h0) frame)
         (focus_rmem (mk_rmem (post_g x) h1) frame))
 
-        ==> ens_g (mk_rmem pre_g h0) x (mk_rmem (post_g x) h1)
+        ==> ens_g (mk_rmem pre_g h0) x (mk_rmem (post_g x) h1))
        ))
   ))
 
@@ -583,7 +604,8 @@ let lemma_subcomp_pre_opaque (#a:Type)
   (#pre_f:pre_t) (#post_f:post_t a) (req_f:req_t pre_f) (ens_f:ens_t pre_f a post_f)
   (#pre_g:pre_t) (#post_g:post_t a) (req_g:req_t pre_g) (ens_g:ens_t pre_g a post_g)
   (#frame:vprop)
-  (p1:squash (can_be_split pre_g (pre_f `star` frame)))
+  (#pr : prop)
+  (p1:squash (can_be_split_dep pr pre_g (pre_f `star` frame)))
   (p2:squash (equiv_forall post_g (fun x -> post_f x `star` frame)))
   : Lemma
   (requires subcomp_pre req_f ens_f req_g ens_g p1 p2)
@@ -595,9 +617,9 @@ let lemma_subcomp_pre_opaque (#a:Type)
 
 
 
-let subcomp a #framed_f #framed_g #pre_f #post_f #req_f #ens_f #pre_g #post_g #req_g #ens_g #fr #_ #p1 #p2 f =
+let subcomp a #framed_f #framed_g #pre_f #post_f #req_f #ens_f #pre_g #post_g #req_g #ens_g #fr #_ #pr #p1 #p2 f =
   lemma_subcomp_pre_opaque req_f ens_f req_g ens_g p1 p2;
-  subcomp_opaque a #framed_f #framed_g #pre_f #post_f #req_f #ens_f #pre_g #post_g #req_g #ens_g #fr #_ #p1 #p2 f
+  subcomp_opaque a #framed_f #framed_g #pre_f #post_f #req_f #ens_f #pre_g #post_g #req_g #ens_g #fr #pr #_ #p1 #p2 f
 
 let bind_pure_steel_ a b #wp #pre #post #req #ens f g
   = FStar.Monotonic.Pure.elim_pure_wp_monotonicity wp;

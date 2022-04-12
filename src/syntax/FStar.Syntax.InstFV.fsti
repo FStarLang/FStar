@@ -13,14 +13,12 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-#light "off"
-// (c) Microsoft Corporation. All rights reserved
 module FStar.Syntax.InstFV
 open FStar.Compiler.Effect
 open FStar.Compiler.Effect
 open FStar.Syntax.Syntax
 open FStar.Ident
-type inst_t = list<(lident * universes)>
+type inst_t = list (lident * universes)
 val inst: (term -> fv -> term) -> term -> term
 val inst_binders: (term -> fv -> term) -> binders -> binders
 val instantiate: inst_t -> term -> term
