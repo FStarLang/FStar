@@ -272,6 +272,11 @@ Guidelines for the changelog:
 
 ## Extraction
 
+   * [PR #2489] Due to the renaming of KReMLin into KaRaMeL,
+     `--codegen Kremlin` has been turned into `--codegen krml`, and
+     the `(noextract_to "Kremlin")` attribute has been turned into
+     `(noextract_to "krml")`. This is a breaking change.
+
    * Cross-module inlining: Declarations in interfaces marked with the
      `inline_for_extraction` qualifier have their definitions inlined
      in client code. Currently guarded by the --cmi flag, this will
@@ -407,7 +412,7 @@ Guidelines for the changelog:
 
    * [Issue #2385](https://github.com/FStarLang/FStar/issues/2385).
      The behavior of the --extract option was changed so that it no
-     longer treats the OCaml and Kremlin targets
+     longer treats the OCaml and Karamel targets
      differently. Previously, when used with --dep full, F* would
      disregard the --extract setting when emitting the
      `ALL_KRML_FILES` variable.
@@ -1000,7 +1005,7 @@ Expected changes in the near future:
 * [PR #1176](https://github.com/FStarLang/FStar/pull/1176)
   `inline_for_extraction` on a type annotation now unfolds it at extraction
   time. This can help to reveal first-order code for C extraction;
-  see [FStarLang/kremlin #51](https://github.com/FStarLang/kremlin/issues/51).
+  see [FStarLang/karamel #51](https://github.com/FStarLang/karamel/issues/51).
 
 ## Command line options
 

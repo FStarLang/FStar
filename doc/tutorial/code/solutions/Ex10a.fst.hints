@@ -12,7 +12,7 @@
         "refinement_interpretation_Tm_refine_43c663371132c0c847de0562111b3034"
       ],
       0,
-      "07f6b123fc1c00cee44a5c359114f140"
+      "e64693e3bc3b679a1f99dd17cd19e5ed"
     ],
     [
       "Ex10a.__proj__Writable__item___0",
@@ -25,7 +25,7 @@
         "refinement_interpretation_Tm_refine_b7c189cb365c663bbaaab1bb8e2e94da"
       ],
       0,
-      "cf2350c0d02aa501e775ea3431d5c148"
+      "381cd63378ad1427c5aa80f17292ed4f"
     ],
     [
       "Ex10a.canRead",
@@ -38,7 +38,7 @@
         "fuel_guarded_inversion_Ex10a.entry"
       ],
       0,
-      "ffb92244b4fe19faead6ba8cafb07152"
+      "45e5890fa80e995a55284493e2fec1c4"
     ],
     [
       "Ex10a.revoke",
@@ -47,7 +47,7 @@
       1,
       [ "@query", "assumption_Ex10a.entry__uu___haseq" ],
       0,
-      "ccb95a5d33f1f2f16449cf2f39b7f0ff"
+      "8e67b122d308d72ae5573d2ace4aa4bd"
     ],
     [
       "Ex10a.grant",
@@ -56,7 +56,7 @@
       1,
       [ "@query" ],
       0,
-      "0cc76f622beaed28a9dc81c978949801"
+      "cca92a5bd2a1bea44433417f68d79cfd"
     ],
     [
       "Ex10a.revoke",
@@ -77,7 +77,7 @@
         "refinement_interpretation_Tm_refine_d0e9697343d36e5e4f62e16ed173deab"
       ],
       0,
-      "a2d401ba0cac290f89153c62b44f837d"
+      "948189e3d03c49ec2300fda29cf1951e"
     ],
     [
       "Ex10a.safe_delete",
@@ -98,7 +98,7 @@
         "string_inversion", "unit_inversion", "unit_typing"
       ],
       0,
-      "8f801ca537d3e89d36b9615f4e6c0912"
+      "242126f93650d61332a832b256123810"
     ],
     [
       "Ex10a.test_acls",
@@ -110,7 +110,7 @@
         "@fuel_correspondence_FStar.List.Tot.Base.tryFind.fuel_instrumented",
         "@query",
         "Ex10a_interpretation_Tm_arrow_874ea41fef5db3d0b79dc4f1f9eea4a2",
-        "FStar.List.Tot.Base_interpretation_Tm_arrow_84543425b818e2d10a976186b8e8c250",
+        "FStar.Set_interpretation_Tm_arrow_84543425b818e2d10a976186b8e8c250",
         "constructor_distinct_Ex10a.Readable",
         "constructor_distinct_FStar.Pervasives.Native.Some",
         "constructor_distinct_Prims.Cons",
@@ -134,7 +134,7 @@
         "typing_Tm_abs_93700a44318bb4193871b2dacb8d41d6"
       ],
       0,
-      "6a2b20e92759f6a9ba280dd06c5b81e9"
+      "86996729dcddea521a068a0449a67ee5"
     ]
   ]
 ]

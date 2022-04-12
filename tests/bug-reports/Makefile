@@ -21,7 +21,7 @@ SHOULD_VERIFY_CLOSED=Bug022.fst Bug024.fst Bug025.fst Bug026.fst Bug026b.fst Bug
   Bug516.fst Bug516b.fst Bug517.fst Bug540.fst Bug552.fst Bug566.fst Bug574.fst Bug577.fst Bug579.fst Bug581.fst\
   Bug590.fst Bug601.fst Bug605.fst Bug609.fst Bug613.fst Bug686.fst Bug705.fst Bug706.fst Bug707.fst Bug709.fst\
   Bug710.fst Bug712.fst Bug713.fst Bug736.fst Bug765.fst Bug769c.fst Bug786.fst Bug836.fst Bug844.fst Bug985.fst \
-	Bug989.fst\
+  Bug989.fst\
   BugWildcardTelescopes.fst NormalizingGhostSubterms.fst UnificationCrash.fst Bug1150.fst Bug1076.fst\
   Bug1341.fst Bug1345.fst Bug1345b.fst Bug1345c.fst Bug1346.fst Bug1348.fst Bug1362.fst \
   Bug1347b.fst Bug1206.fst Bug1271.fst Bug1305.fst Bug1361.fst Bug1383.fst Bug1414.fst \
@@ -44,7 +44,9 @@ SHOULD_VERIFY_CLOSED=Bug022.fst Bug024.fst Bug025.fst Bug026.fst Bug026b.fst Bug
   Bug2138.fst Bug2146.fst Bug2074.fst Bug2125a.fst Bug2125b.fst Bug2167.fst Bug2169.fst Bug2169b.fst Bug2066.fst Bug2189.fst Bug2184.fst \
   Bug2211.fst Bug2210.fst Bug2193.fst Bug2257.fst Bug2229.fst Dec.fst Bug2269.fst Bug2352.fst Bug2366.fst Bug2331.fst \
   Bug2398.fst Bug2432.fst Bug2374.fst Bug2438.fst Bug2456.fst Bug2475.fst Bug2477.fst Bug1355.fst \
-  Bug1418.fst
+  Bug1418.fst Bug171.fst Bug2496.fst Bug2478.fst Bug2414.fst Bug2515.fst \
+  Bug2535.fst
+
 
 SHOULD_VERIFY_INTERFACE_CLOSED=Bug771.fsti Bug771b.fsti
 SHOULD_VERIFY_AND_WARN_CLOSED=Bug016.fst
@@ -53,7 +55,7 @@ SHOULD_VERIFY_AND_WARN_CLOSED=Bug016.fst
 # GitHub issue is closed. Consider re-opening.
 SHOULD_VERIFY_BROKEN=Bug092.fst Bug170b.fst Bug192.fst Bug210.fst Bug210b.fst Bug210c.fst Bug312.fst\
   Bug818.fst Bug818b.fst
-SHOULD_VERIFY_OPEN=Bug045.fst Bug057.fst Bug064.fst Bug065.fst Bug071.fst Bug121.fst Bug131.fst Bug171.fst\
+SHOULD_VERIFY_OPEN=Bug045.fst Bug057.fst Bug064.fst Bug065.fst Bug071.fst Bug121.fst Bug131.fst \
   Bug171b.fst Bug171c.fst Bug259.fst Bug282.fst Bug291.fst Bug419.fst \
   Bug442b.fst Bug484.fst Bug542.fst Bug543.fst Bug554.fst Bug604.fst Bug606.fst\
   Bug626.fst Bug682.fst Bug715.fst Bug739.fst Bug815.fst Bug815b.fst Bug851.fst Bug933.fst Bug933b.fst\

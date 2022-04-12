@@ -18,7 +18,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "10944232c610cbf6ae0bc926f09d44ae"
+      "871d93dcb5093ace2462a03ba918657c"
     ],
     [
       "Queue.emp_equiv_pure",
@@ -30,22 +30,20 @@
         "@fuel_correspondence_Steel.Effect.Common.hp_of.fuel_instrumented",
         "@query", "constructor_distinct_Steel.Effect.Common.VUnit",
         "data_typing_intro_Steel.Effect.Common.VUnit@tok",
-        "equation_Prims.l_Forall", "equation_Prims.squash",
         "equation_Queue.uu___27", "equation_Steel.Effect.Common.to_vprop_",
         "equation_with_fuel_Steel.Effect.Common.hp_of.fuel_instrumented",
         "function_token_typing_Queue.uu___27",
-        "l_quant_interp_49c7110d560c64d9e5fe3c7ed5a2687e",
         "lemma_Steel.Memory.reveal_equiv",
         "proj_equation_Steel.Effect.Common.Mkvprop__hp",
         "projection_inverse_Steel.Effect.Common.Mkvprop__hp",
         "projection_inverse_Steel.Effect.Common.VUnit__0",
-        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
+        "refinement_interpretation_Tm_refine_fd95c5fabe203635e11778185b7a39a5",
         "typing_Steel.Effect.Common.emp", "typing_Steel.Effect.Common.hp_of",
         "typing_Steel.Effect.Common.to_vprop_", "typing_Steel.Memory.emp",
         "typing_Steel.Memory.pure"
       ],
       0,
-      "4e4c374f9a8aee76ab419c8e1c190127"
+      "0727f607b05fcb2a770095fbd2ca9367"
     ],
     [
       "Queue.next_last",
@@ -60,7 +58,7 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "d289fab1170f7897194d52132c34b76b"
+      "3dbaded4e9bf1bfb1d48eee14792db5f"
     ],
     [
       "Queue.next_last_correct",
@@ -72,7 +70,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "a1a55978e05311287cc805180c6b1e10"
+      "5dd05abe93f2c4809dabea23b79a17e1"
     ],
     [
       "Queue.next_last_correct",
@@ -114,7 +112,7 @@
         "typing_Steel.Reference.ref"
       ],
       0,
-      "ce4f47929f086573e257a16b22163d33"
+      "5ba04381d690bf64be51781e9177c46a"
     ],
     [
       "Queue.fragment_append",
@@ -136,9 +134,8 @@
         "binder_x_fe28d8bcde588226b4e538b35321de05_0",
         "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Nil",
         "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
-        "equation_Prims.eq2", "equation_Prims.l_Forall",
-        "equation_Prims.squash", "equation_Prims.subtype_of",
-        "equation_Queue.uu___27",
+        "equation_Prims.eq2", "equation_Prims.squash",
+        "equation_Prims.subtype_of", "equation_Queue.uu___27",
         "equation_with_fuel_FStar.List.Tot.Base.append.fuel_instrumented",
         "equation_with_fuel_Queue.fragment.fuel_instrumented",
         "equation_with_fuel_Queue.next_last.fuel_instrumented",
@@ -146,11 +143,8 @@
         "fuel_guarded_inversion_Queue.Def.cell",
         "function_token_typing_Queue.uu___27",
         "kinding_FStar.Pervasives.Native.tuple2@tok",
-        "kinding_Queue.Def.cell@tok",
-        "l_quant_interp_49c7110d560c64d9e5fe3c7ed5a2687e",
-        "l_quant_interp_5b2993f9f2c0eba3627049a3b4167c7a",
-        "lemma_Steel.Memory.reveal_equiv", "lemma_Steel.Utils.emp_unit",
-        "proj_equation_Queue.Def.Mkcell_next",
+        "kinding_Queue.Def.cell@tok", "lemma_Steel.Memory.reveal_equiv",
+        "lemma_Steel.Utils.emp_unit", "proj_equation_Queue.Def.Mkcell_next",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
@@ -158,13 +152,14 @@
         "projection_inverse_Prims.Cons_hd",
         "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a",
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
+        "refinement_interpretation_Tm_refine_fd95c5fabe203635e11778185b7a39a5",
         "subterm_ordering_Prims.Cons", "true_interp",
         "typing_FStar.List.Tot.Base.append", "typing_Queue.fragment",
         "typing_Queue.next_last", "typing_Steel.Effect.Common.hp_of",
         "typing_Steel.Effect.Common.star", "typing_Steel.Reference.ref"
       ],
       0,
-      "72066ee4cfe1544e8212dc5032ca0583"
+      "ffc4b875366e601600b42790b9b66d10"
     ],
     [
       "Queue.intro_fragment_nil",
@@ -186,7 +181,7 @@
         "typing_Steel.Reference.ref"
       ],
       0,
-      "ea482b84a14ba640b20b07a31599bfdc"
+      "2f2e82d26e9725131ff29d12f5f9d5ae"
     ],
     [
       "Queue.intro_fragment_cons",
@@ -203,7 +198,7 @@
         "typing_tok_Prims.T@tok"
       ],
       0,
-      "5310af4b6b7d75e995b25ce307dbcf45"
+      "832f8473526679e466df0db8c23017ef"
     ],
     [
       "Queue.fragment_append_singleton",
@@ -216,15 +211,12 @@
         "@fuel_correspondence_Queue.fragment.fuel_instrumented",
         "@fuel_correspondence_Queue.next_last.fuel_instrumented",
         "@fuel_correspondence_Steel.Effect.Common.hp_of.fuel_instrumented",
-        "@fuel_irrelevance_Queue.fragment.fuel_instrumented",
         "@fuel_irrelevance_Steel.Effect.Common.hp_of.fuel_instrumented",
         "@query", "constructor_distinct_Prims.Cons",
-        "constructor_distinct_Prims.Nil",
         "constructor_distinct_Steel.Effect.Common.VStar",
         "constructor_distinct_Steel.Effect.Common.VUnit",
         "data_elim_Steel.Effect.Common.VStar",
         "data_typing_intro_Steel.Effect.Common.VStar@tok",
-        "equation_Prims.l_Forall", "equation_Prims.squash",
         "equation_Queue.pts_to", "equation_Queue.uu___27",
         "equation_Steel.Effect.Common.star",
         "equation_with_fuel_FStar.List.Tot.Base.append.fuel_instrumented",
@@ -236,10 +228,7 @@
         "fuel_guarded_inversion_Steel.Effect.Common.vprop",
         "function_token_typing_Queue.uu___27",
         "kinding_FStar.Pervasives.Native.tuple2@tok",
-        "kinding_Queue.Def.cell@tok",
-        "l_quant_interp_49c7110d560c64d9e5fe3c7ed5a2687e",
-        "lemma_FStar.Ghost.hide_reveal",
-        "lemma_Steel.Memory.affine_star_smt",
+        "kinding_Queue.Def.cell@tok", "lemma_Steel.Memory.affine_star_smt",
         "lemma_Steel.Memory.reveal_equiv",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
@@ -249,7 +238,7 @@
         "projection_inverse_Steel.Effect.Common.VStar__0",
         "projection_inverse_Steel.Effect.Common.VStar__1",
         "projection_inverse_Steel.Effect.Common.VUnit__0",
-        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
+        "refinement_interpretation_Tm_refine_fd95c5fabe203635e11778185b7a39a5",
         "token_correspondence_Queue.fragment.fuel_instrumented",
         "token_correspondence_Steel.Effect.Common.hp_of.fuel_instrumented",
         "typing_FStar.Ghost.reveal",
@@ -261,7 +250,7 @@
         "typing_Steel.Reference.ref"
       ],
       0,
-      "227c24d3c101cdc405433f26ac480ed2"
+      "4e5740c4589d860a24e8198d41c1df4f"
     ],
     [
       "Queue.queue_lc_prop",
@@ -288,7 +277,7 @@
         "typing_Steel.Reference.ref"
       ],
       0,
-      "dcfcc911465f16bd197b71135407471f"
+      "e05f8af2873ac2190c2d776dc6f370ee"
     ],
     [
       "Queue.new_queue",
@@ -358,7 +347,7 @@
         "typing_Steel.Reference.is_null", "typing_Steel.Reference.null"
       ],
       0,
-      "5202d581e0018b32693452f6c6da3ecf"
+      "767cba5e531937eaa7a874bd81521d75"
     ],
     [
       "Queue.witness_h_exists_erased",
@@ -367,7 +356,7 @@
       1,
       [ "@query", "equation_Steel.Effect.Common.true_p", "true_interp" ],
       0,
-      "badd82ba5fe26fd8f74fe07122030a96"
+      "b37ebd360295d415b90aae35d01b2a5a"
     ],
     [
       "Queue.snoc_inj",
@@ -380,7 +369,7 @@
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2"
       ],
       0,
-      "39c4b0f910f3e16acbc4db450e5f45c2"
+      "7ecd091d1f83011b73ccae960e9c2e7a"
     ],
     [
       "Queue.unsnoc",
@@ -401,7 +390,7 @@
         "token_correspondence_FStar.List.Tot.Base.length.fuel_instrumented"
       ],
       0,
-      "27568851c223960a7a118db95f7ba954"
+      "acd22d776a9a416a3d6c6a8d4ca05171"
     ],
     [
       "Queue.unsnoc_hd",
@@ -410,7 +399,7 @@
       1,
       [ "@query" ],
       0,
-      "d208de443fc9e61a83c45ddf2617c1d1"
+      "532b2ec163262e68ebf3d3f9ff6b3e9f"
     ],
     [
       "Queue.unsnoc_tl",
@@ -419,7 +408,7 @@
       1,
       [ "@query" ],
       0,
-      "2de3d5ee2432d6d56af9f940072a6af9"
+      "840d28a6e55027b42866d75e9e2bc484"
     ],
     [
       "Queue.enqueue",
@@ -455,13 +444,13 @@
         "disc_equation_Prims.Cons", "equation_FStar.List.Tot.Base.op_At",
         "equation_FStar.Pervasives.Native.fst",
         "equation_FStar.Pervasives.Native.snd", "equation_Prims.eq2",
-        "equation_Prims.l_Forall", "equation_Prims.nat",
-        "equation_Prims.squash", "equation_Prims.subtype_of",
-        "equation_Queue.Def.t", "equation_Queue.get_data",
-        "equation_Queue.pts_to", "equation_Queue.pure_upd_next",
-        "equation_Queue.queue_l", "equation_Queue.queue_lc",
-        "equation_Queue.unsnoc_hd", "equation_Queue.unsnoc_tl",
-        "equation_Queue.uu___27", "equation_Steel.Effect.Common.star",
+        "equation_Prims.nat", "equation_Prims.squash",
+        "equation_Prims.subtype_of", "equation_Queue.Def.t",
+        "equation_Queue.get_data", "equation_Queue.pts_to",
+        "equation_Queue.pure_upd_next", "equation_Queue.queue_l",
+        "equation_Queue.queue_lc", "equation_Queue.unsnoc_hd",
+        "equation_Queue.unsnoc_tl", "equation_Queue.uu___27",
+        "equation_Steel.Effect.Common.star",
         "equation_Steel.Effect.Common.to_vprop_",
         "equation_Steel.FractionalPermission.full_perm",
         "equation_Steel.Reference.pts_to",
@@ -479,8 +468,6 @@
         "function_token_typing_Queue.uu___27",
         "kinding_FStar.Pervasives.Native.tuple2@tok",
         "kinding_Prims.list@tok", "kinding_Queue.Def.cell@tok",
-        "l_quant_interp_49c7110d560c64d9e5fe3c7ed5a2687e",
-        "l_quant_interp_5b2993f9f2c0eba3627049a3b4167c7a",
         "lemma_Steel.Memory.affine_star_smt",
         "lemma_Steel.Memory.reveal_equiv",
         "primitive_FStar.Real.op_Greater_Dot", "primitive_Prims.op_Addition",
@@ -508,12 +495,12 @@
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_7aac12c24449a22c34d98a0ea8ed4a32",
         "refinement_interpretation_Tm_refine_7c3576760aabe55bd452e0ed74e31d09",
+        "refinement_interpretation_Tm_refine_fd95c5fabe203635e11778185b7a39a5",
         "token_correspondence_FStar.List.Tot.Base.length.fuel_instrumented",
         "token_correspondence_Queue.fragment.fuel_instrumented",
         "token_correspondence_Queue.get_data",
         "token_correspondence_Steel.Effect.Common.hp_of.fuel_instrumented",
-        "typing_FStar.Ghost.hide", "typing_FStar.Ghost.reveal",
-        "typing_FStar.List.Tot.Base.append",
+        "typing_FStar.Ghost.reveal", "typing_FStar.List.Tot.Base.append",
         "typing_FStar.List.Tot.Base.last", "typing_FStar.List.Tot.Base.map",
         "typing_FStar.List.Tot.Base.op_At",
         "typing_FStar.Pervasives.Native.snd", "typing_Prims.uu___is_Cons",
@@ -530,7 +517,7 @@
         "typing_Steel.Reference.pts_to_sl", "typing_Steel.Reference.ref"
       ],
       0,
-      "24d582ebf3c1edae98c0d5e49b3d2f3a"
+      "723a496f65b2a2e82fc9ed9a06be2668"
     ],
     [
       "Queue.dequeue_post_success",
@@ -547,7 +534,7 @@
         "typing_Queue.Def.t"
       ],
       0,
-      "f413bc89d8414babba3df5d9d12a1aee"
+      "c275e9f75ae94e4bbc2d75e6716e158f"
     ],
     [
       "Queue.dequeue_post",
@@ -558,7 +545,7 @@
         "@query", "lemma_FStar.Pervasives.invertOption", "typing_Queue.Def.t"
       ],
       0,
-      "a5244711965c629ad0bf05442f06ec70"
+      "ef5342be3db52b76459523abb1c067af"
     ],
     [
       "Queue.dequeue",
@@ -631,7 +618,7 @@
         "typing_Steel.Reference.ref"
       ],
       0,
-      "1024c722729c696386c715ba742812f0"
+      "04d12e152296d46c6e8e0457b40ea0f7"
     ]
   ]
 ]

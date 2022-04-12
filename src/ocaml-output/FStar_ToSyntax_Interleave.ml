@@ -58,22 +58,22 @@ let rec (prefix_with_iface_decls :
   =
   fun iface ->
     fun impl ->
-      let qualify_kremlin_private impl1 =
-        let krem_private =
+      let qualify_karamel_private impl1 =
+        let karamel_private =
           FStar_Parser_AST.mk_term
             (FStar_Parser_AST.Const
                (FStar_Const.Const_string
-                  ("KremlinPrivate", (impl1.FStar_Parser_AST.drange))))
+                  ("KrmlPrivate", (impl1.FStar_Parser_AST.drange))))
             impl1.FStar_Parser_AST.drange FStar_Parser_AST.Expr in
         {
           FStar_Parser_AST.d = (impl1.FStar_Parser_AST.d);
           FStar_Parser_AST.drange = (impl1.FStar_Parser_AST.drange);
           FStar_Parser_AST.quals = (impl1.FStar_Parser_AST.quals);
-          FStar_Parser_AST.attrs = (krem_private ::
+          FStar_Parser_AST.attrs = (karamel_private ::
             (impl1.FStar_Parser_AST.attrs))
         } in
       match iface with
-      | [] -> ([], [qualify_kremlin_private impl])
+      | [] -> ([], [qualify_karamel_private impl])
       | iface_hd::iface_tl ->
           (match iface_hd.FStar_Parser_AST.d with
            | FStar_Parser_AST.Tycon (uu___, uu___1, tys) when
@@ -123,7 +123,7 @@ let rec (prefix_with_iface_decls :
                       (FStar_Errors.Fatal_WrongDefinitionOrder, uu___2) in
                     FStar_Errors.raise_error uu___1
                       impl.FStar_Parser_AST.drange
-                  else (iface, [qualify_kremlin_private impl]))
+                  else (iface, [qualify_karamel_private impl]))
                else
                  (let mutually_defined_with_x =
                     FStar_Compiler_Effect.op_Bar_Greater def_ids

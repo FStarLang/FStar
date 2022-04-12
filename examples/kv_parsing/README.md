@@ -25,10 +25,10 @@ Experiments in low-level parsing that extracts to reasonable C code, proves corr
 
 # TODO
 
-## KreMLin features
+## KaRaMeL features
 
 * Support `must_extract` annotation to fail if something doesn't extract, and potentially block CI.
-* Backport fixes to integer functions in `C.fst` and `FStar.Kremlin.Endianness.fst` and (at least model) `C.Loops.do_while` to kremlin master for CI.
+* Backport fixes to integer functions in `C.fst` and `FStar.Krml.Endianness.fst` and (at least model) `C.Loops.do_while` to karamel master for CI.
 
 ## Extraction bugs
 

@@ -1,0 +1,68 @@
+[
+  "\f4x9Mµ\"Ž-äª\u0010X\tÓy",
+  [
+    [
+      "Metaprogramming.either",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "3c36405ffb5940260c120fd052efc1ad"
+    ],
+    [
+      "Metaprogramming.__proj__Left__item___0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_0f3a37e607a8bceb88eb8b90d75fcd39"
+      ],
+      0,
+      "399dc0cc767f60af21b26770c15baf0b"
+    ],
+    [
+      "Metaprogramming.__proj__Right__item___0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_dda24ff22658933ed5e78a00d5bb0a0d"
+      ],
+      0,
+      "687d0e9c0f7f3c51c5f7a973cd0fade4"
+    ],
+    [
+      "Metaprogramming.uu___33",
+      1,
+      2,
+      1,
+      [
+        "@query", "constructor_distinct_Metaprogramming.Left",
+        "equation_Metaprogramming.matcheither",
+        "projection_inverse_Metaprogramming.Left__0",
+        "projection_inverse_Metaprogramming.Left_a",
+        "projection_inverse_Metaprogramming.Left_b"
+      ],
+      0,
+      "66fac4cea98218a873a65cd2e1997b47"
+    ],
+    [
+      "Metaprogramming.uu___34",
+      1,
+      2,
+      1,
+      [
+        "@query", "constructor_distinct_Metaprogramming.Right",
+        "equation_Metaprogramming.matcheither",
+        "projection_inverse_Metaprogramming.Right__0",
+        "projection_inverse_Metaprogramming.Right_a",
+        "projection_inverse_Metaprogramming.Right_b"
+      ],
+      0,
+      "ad85295145b274d4a8a0db1090eb9242"
+    ]
+  ]
+]

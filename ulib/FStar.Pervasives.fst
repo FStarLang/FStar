@@ -140,8 +140,6 @@ let expect_lax_failure _ = ()
 
 let tcdecltime = ()
 
-let assume_strictly_positive = ()
-
 let unifier_hint_injective = ()
 
 let strict_on_arguments _ = ()

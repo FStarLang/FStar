@@ -11,7 +11,7 @@
         "refinement_interpretation_Tm_refine_976fbe440c65ea1a6802f2e2f85d2641"
       ],
       0,
-      "e101c86e501cb837990a3b9f92a44a00"
+      "b31c777ecfb3396eae5eaa6c5a3c492b"
     ],
     [
       "Part2.FreeFunExt.__proj__DoThen__item__act",
@@ -23,7 +23,7 @@
         "refinement_interpretation_Tm_refine_8b92ee21a145a10bf2628fc50d692aa7"
       ],
       0,
-      "0b82fd00335b778fc0b415423e8b8228"
+      "7ad62453433270a07709445d5f3d9edd"
     ],
     [
       "Part2.FreeFunExt.__proj__DoThen__item__input",
@@ -35,7 +35,7 @@
         "refinement_interpretation_Tm_refine_8b92ee21a145a10bf2628fc50d692aa7"
       ],
       0,
-      "3046b9278c91f1b44342973b8cd1aa57"
+      "a2fd8285ce5ce27ebf0c7cbb88c55649"
     ],
     [
       "Part2.FreeFunExt.__proj__DoThen__item__continue",
@@ -47,7 +47,7 @@
         "refinement_interpretation_Tm_refine_8b92ee21a145a10bf2628fc50d692aa7"
       ],
       0,
-      "8e3c529d1b19f1ac4976c5726f133264"
+      "6b9da9c72fb9f3c0db92582c16f4476a"
     ],
     [
       "Part2.FreeFunExt.bind",
@@ -68,7 +68,7 @@
         "well_founded_ordering_on_codomain_Part2.FreeFunExt.DoThen"
       ],
       0,
-      "eaa350c4a4b33bd8bc1c617189575b74"
+      "1a1d7607d0d4cfe705145dd727d8c2c4"
     ],
     [
       "Part2.FreeFunExt.equiv",
@@ -89,7 +89,7 @@
         "well_founded_ordering_on_codomain_Part2.FreeFunExt.DoThen"
       ],
       0,
-      "783f469812219dc6a6471fd92315763e"
+      "17f3b48b1a501026b2afaa0218931ce4"
     ],
     [
       "Part2.FreeFunExt.equiv_refl",
@@ -109,13 +109,11 @@
         "constructor_distinct_Part2.FreeFunExt.Return",
         "disc_equation_Part2.FreeFunExt.DoThen",
         "disc_equation_Part2.FreeFunExt.Return", "eq2-interp",
-        "equation_Prims.l_Forall", "equation_Prims.op_Equals_Equals_Equals",
-        "equation_Prims.squash",
+        "equation_Prims.op_Equals_Equals_Equals",
         "equation_with_fuel_Part2.FreeFunExt.equiv.fuel_instrumented",
         "fuel_guarded_inversion_Part2.FreeFunExt.action_class",
         "fuel_guarded_inversion_Part2.FreeFunExt.tree", "l_and-interp",
         "l_quant_interp_08c9bac2e46e56e701bee1c460718518",
-        "l_quant_interp_1f8743ba4d8a58dfd12dc8f69eb37f85",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
@@ -127,11 +125,11 @@
         "projection_inverse_Part2.FreeFunExt.Return_a",
         "projection_inverse_Part2.FreeFunExt.Return_acts",
         "projection_inverse_Part2.FreeFunExt.Return_x",
-        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
+        "refinement_interpretation_Tm_refine_a8011c46ac4d19519dca816953b1d5e6",
         "well_founded_ordering_on_codomain_Part2.FreeFunExt.DoThen"
       ],
       0,
-      "95a580587c3d69157ada0b617392723c"
+      "360bd857c31c163de59ed3ce9b65e0bf"
     ],
     [
       "Part2.FreeFunExt.equiv_sym",
@@ -152,14 +150,12 @@
         "constructor_distinct_Part2.FreeFunExt.Return",
         "disc_equation_Part2.FreeFunExt.DoThen",
         "disc_equation_Part2.FreeFunExt.Return", "eq2-interp",
-        "equation_Prims.l_Forall", "equation_Prims.l_and",
-        "equation_Prims.op_Equals_Equals_Equals", "equation_Prims.squash",
+        "equation_Prims.l_and", "equation_Prims.op_Equals_Equals_Equals",
         "equation_with_fuel_Part2.FreeFunExt.equiv.fuel_instrumented",
         "false_interp",
         "fuel_guarded_inversion_Part2.FreeFunExt.action_class",
         "fuel_guarded_inversion_Part2.FreeFunExt.tree", "l_and-interp",
         "l_quant_interp_08c9bac2e46e56e701bee1c460718518",
-        "l_quant_interp_d7b7b1f302c86838c33644125a84b61b",
         "proj_equation_FStar.Pervasives.Native.Mktuple2__1",
         "proj_equation_FStar.Pervasives.Native.Mktuple2__2",
         "proj_equation_Part2.FreeFunExt.Mkaction_class_output_of",
@@ -175,12 +171,12 @@
         "projection_inverse_Part2.FreeFunExt.Return_a",
         "projection_inverse_Part2.FreeFunExt.Return_acts",
         "projection_inverse_Part2.FreeFunExt.Return_x",
-        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
+        "refinement_interpretation_Tm_refine_3a002d3f3030bf18ae2b4f77cbba68cb",
         "token_correspondence_Part2.FreeFunExt.__proj__Mkaction_class__item__output_of",
         "well_founded_ordering_on_codomain_Part2.FreeFunExt.DoThen"
       ],
       0,
-      "b63c4c5796c5f02fc97a542bc655d73d"
+      "516e4986c80ba2f4aea3ca1888b14cd9"
     ],
     [
       "Part2.FreeFunExt.equiv_trans",
@@ -202,14 +198,12 @@
         "constructor_distinct_Part2.FreeFunExt.Return",
         "disc_equation_Part2.FreeFunExt.DoThen",
         "disc_equation_Part2.FreeFunExt.Return", "eq2-interp",
-        "equation_Prims.l_Forall", "equation_Prims.l_and",
-        "equation_Prims.op_Equals_Equals_Equals", "equation_Prims.squash",
+        "equation_Prims.l_and", "equation_Prims.op_Equals_Equals_Equals",
         "equation_with_fuel_Part2.FreeFunExt.equiv.fuel_instrumented",
         "false_interp",
         "fuel_guarded_inversion_Part2.FreeFunExt.action_class",
         "fuel_guarded_inversion_Part2.FreeFunExt.tree", "l_and-interp",
         "l_quant_interp_08c9bac2e46e56e701bee1c460718518",
-        "l_quant_interp_d7b7b1f302c86838c33644125a84b61b",
         "primitive_Prims.op_AmpAmp",
         "proj_equation_FStar.Pervasives.Native.Mktuple3__1",
         "proj_equation_FStar.Pervasives.Native.Mktuple3__2",
@@ -228,12 +222,12 @@
         "projection_inverse_Part2.FreeFunExt.DoThen_continue",
         "projection_inverse_Part2.FreeFunExt.DoThen_input",
         "projection_inverse_Part2.FreeFunExt.Return_x",
-        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
+        "refinement_interpretation_Tm_refine_3a002d3f3030bf18ae2b4f77cbba68cb",
         "token_correspondence_Part2.FreeFunExt.__proj__Mkaction_class__item__output_of",
         "well_founded_ordering_on_codomain_Part2.FreeFunExt.DoThen"
       ],
       0,
-      "5b437ed94760a3ade11891ce59a341fd"
+      "981a2c0ac2a7bf153e3997044d74a703"
     ],
     [
       "Part2.FreeFunExt.equiv_is_equal",
@@ -257,14 +251,12 @@
         "equation_FStar.FunctionalExtensionality.feq",
         "equation_FStar.FunctionalExtensionality.is_restricted",
         "equation_FStar.FunctionalExtensionality.restricted_t",
-        "equation_Prims.l_Forall", "equation_Prims.op_Equals_Equals_Equals",
-        "equation_Prims.squash",
+        "equation_Prims.op_Equals_Equals_Equals",
         "equation_with_fuel_Part2.FreeFunExt.equiv.fuel_instrumented",
         "false_interp",
         "fuel_guarded_inversion_Part2.FreeFunExt.action_class",
         "fuel_guarded_inversion_Part2.FreeFunExt.tree", "l_and-interp",
         "l_quant_interp_08c9bac2e46e56e701bee1c460718518",
-        "l_quant_interp_e31bd698a951866eb686dbc88bb3aa20",
         "proj_equation_FStar.Pervasives.Native.Mktuple2__1",
         "proj_equation_FStar.Pervasives.Native.Mktuple2__2",
         "proj_equation_Part2.FreeFunExt.Mkaction_class_output_of",
@@ -280,13 +272,13 @@
         "projection_inverse_Part2.FreeFunExt.Return_a",
         "projection_inverse_Part2.FreeFunExt.Return_acts",
         "projection_inverse_Part2.FreeFunExt.Return_x",
-        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
+        "refinement_interpretation_Tm_refine_188c181132a6c971121a794b4763bf49",
         "refinement_interpretation_Tm_refine_7e4a6c5999db731b5d17d0418dfeea3e",
         "token_correspondence_Part2.FreeFunExt.__proj__Mkaction_class__item__output_of",
         "well_founded_ordering_on_codomain_Part2.FreeFunExt.DoThen"
       ],
       0,
-      "fb79848130eaa2663bd7392e15057435"
+      "f3b145bc2d19bc51250ccb9b79259d9d"
     ],
     [
       "Part2.FreeFunExt.right_identity",
@@ -306,7 +298,7 @@
         "typing_Part2.FreeFunExt.return"
       ],
       0,
-      "c6b85cbf2d2a94daea69bd65c45460d9"
+      "8c6d552628e1482ba2698e5d2ddf6ba7"
     ],
     [
       "Part2.FreeFunExt.left_identity",
@@ -336,8 +328,8 @@
         "disc_equation_Part2.FreeFunExt.DoThen",
         "disc_equation_Part2.FreeFunExt.Return", "eq2-interp",
         "equation_FStar.FunctionalExtensionality.feq",
-        "equation_Part2.FreeFunExt.return", "equation_Prims.l_Forall",
-        "equation_Prims.op_Equals_Equals_Equals", "equation_Prims.squash",
+        "equation_Part2.FreeFunExt.return",
+        "equation_Prims.op_Equals_Equals_Equals",
         "equation_with_fuel_Part2.FreeFunExt.bind.fuel_instrumented",
         "equation_with_fuel_Part2.FreeFunExt.equiv.fuel_instrumented",
         "fuel_guarded_inversion_Part2.FreeFunExt.action_class",
@@ -346,7 +338,6 @@
         "interpretation_Tm_abs_2e0e6cee54332c21db3dc0113c152955",
         "interpretation_Tm_abs_f3dd695e9d8e4ae8a55c141caca4d6a0",
         "l_and-interp", "l_quant_interp_08c9bac2e46e56e701bee1c460718518",
-        "l_quant_interp_0b993e8cda9a9c57459495270d0e5721",
         "lemma_FStar.FunctionalExtensionality.feq_on_domain",
         "proj_equation_Part2.FreeFunExt.Mkaction_class_output_of",
         "proj_equation_Part2.FreeFunExt.Mkaction_class_t",
@@ -361,7 +352,7 @@
         "projection_inverse_Part2.FreeFunExt.Return_a",
         "projection_inverse_Part2.FreeFunExt.Return_acts",
         "projection_inverse_Part2.FreeFunExt.Return_x",
-        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
+        "refinement_interpretation_Tm_refine_4b20a0fc2b21b117c9ad5156c1e9d86f",
         "token_correspondence_Part2.FreeFunExt.__proj__Mkaction_class__item__output_of",
         "token_correspondence_Part2.FreeFunExt.return",
         "typing_Part2.FreeFunExt.bind",
@@ -370,7 +361,7 @@
         "well_founded_ordering_on_codomain_Part2.FreeFunExt.DoThen"
       ],
       0,
-      "c8fc8751acafee7bc886acbc8a1fe666"
+      "4578f18058b19bc27f2b8e1066a3d92e"
     ],
     [
       "Part2.FreeFunExt.assoc",
@@ -406,8 +397,8 @@
         "disc_equation_Part2.FreeFunExt.DoThen",
         "disc_equation_Part2.FreeFunExt.Return", "eq2-interp",
         "equation_FStar.FunctionalExtensionality.feq",
-        "equation_Part2.FreeFunExt.return", "equation_Prims.l_Forall",
-        "equation_Prims.op_Equals_Equals_Equals", "equation_Prims.squash",
+        "equation_Part2.FreeFunExt.return",
+        "equation_Prims.op_Equals_Equals_Equals",
         "equation_with_fuel_Part2.FreeFunExt.bind.fuel_instrumented",
         "equation_with_fuel_Part2.FreeFunExt.equiv.fuel_instrumented",
         "fuel_guarded_inversion_Part2.FreeFunExt.action_class",
@@ -415,7 +406,6 @@
         "interpretation_Tm_abs_2e0e6cee54332c21db3dc0113c152955",
         "interpretation_Tm_abs_f3dd695e9d8e4ae8a55c141caca4d6a0",
         "l_and-interp", "l_quant_interp_08c9bac2e46e56e701bee1c460718518",
-        "l_quant_interp_43c7d75988a060bb8538199a6f21599f",
         "lemma_FStar.FunctionalExtensionality.feq_on_domain",
         "proj_equation_Part2.FreeFunExt.Mkaction_class_output_of",
         "proj_equation_Part2.FreeFunExt.Mkaction_class_t",
@@ -430,7 +420,7 @@
         "projection_inverse_Part2.FreeFunExt.Return_a",
         "projection_inverse_Part2.FreeFunExt.Return_acts",
         "projection_inverse_Part2.FreeFunExt.Return_x",
-        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
+        "refinement_interpretation_Tm_refine_f4c6dec76c34a84cacd8da8e2b935764",
         "token_correspondence_Part2.FreeFunExt.__proj__Mkaction_class__item__output_of",
         "typing_Part2.FreeFunExt.bind",
         "typing_Tm_abs_2e0e6cee54332c21db3dc0113c152955",
@@ -439,7 +429,7 @@
         "well_founded_ordering_on_codomain_Part2.FreeFunExt.DoThen"
       ],
       0,
-      "647bff8d4942a359c84a1157a0618325"
+      "3610798f44c3e15ffbb24fb16ed140a7"
     ],
     [
       "Part2.FreeFunExt.input_of",
@@ -454,7 +444,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "f453eee6ee948cb8c24ee7353219c9c9"
+      "9b41a1985e0ae6eaf04821e860657df2"
     ],
     [
       "Part2.FreeFunExt.output_of",
@@ -469,7 +459,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "41e0881c0a3ab2e2487a5b327e0ee7f0"
+      "8fb827d7b0f8ca2ae68d567f2c4c2388"
     ],
     [
       "Part2.FreeFunExt.read",
@@ -495,7 +485,7 @@
         "token_correspondence_Part2.FreeFunExt.output_of", "unit_typing"
       ],
       0,
-      "d96ecfaca33dd900d59f844a6281aefc"
+      "6083504fbc74e5b83add62e8db3abb22"
     ],
     [
       "Part2.FreeFunExt.write",
@@ -521,7 +511,7 @@
         "token_correspondence_Part2.FreeFunExt.output_of"
       ],
       0,
-      "3c59635d9de2e4af7d01cf6b42f61f1a"
+      "0fb1277b82431ec14ece50ed8c956320"
     ],
     [
       "Part2.FreeFunExt.interp",
@@ -565,7 +555,7 @@
         "well_founded_ordering_on_codomain_Part2.FreeFunExt.DoThen"
       ],
       0,
-      "32f17d0acbd6fd9c9f8426294fe0dee7"
+      "e6427472eba3680b446688461cf3f342"
     ],
     [
       "Part2.FreeFunExt.interp_equiv",
@@ -574,7 +564,7 @@
       1,
       [ "@query", "equation_FStar.FunctionalExtensionality.feq" ],
       0,
-      "16068062f64c602426dc18591f76ca39"
+      "ec44972863cf032b5a3512442cf7880d"
     ]
   ]
 ]

@@ -8,7 +8,7 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "equation_FStar.Kremlin.Endianness.bytes", "equation_Parsing.byte",
+        "equation_FStar.Krml.Endianness.bytes", "equation_Parsing.byte",
         "equation_Parsing.bytes", "equation_Prims.eqtype",
         "equation_Slice.byte", "equation_Slice.bytes",
         "lemma_FStar.Seq.Base.hasEq_lemma",
@@ -16,7 +16,7 @@
         "typing_FStar.UInt8.t"
       ],
       0,
-      "1eba63491440107987cb02dc5b6a8e2a"
+      "112f982cdb8863df8dcb2b3dd3d34ebb"
     ],
     [
       "KeyValue.encoded_entry",
@@ -25,7 +25,7 @@
       1,
       [ "@query" ],
       0,
-      "a53a0e4266b1adf99a722d12780a4e10"
+      "c5391f3a3ef6ca8933fa6f6515e666d2"
     ],
     [
       "KeyValue.encoded_entry",
@@ -34,7 +34,7 @@
       1,
       [ "@query" ],
       0,
-      "020f7083193a3f1a772bd2d0c914a8cf"
+      "87bb64512a56a09ec99cc02c6b2a0d6e"
     ],
     [
       "KeyValue.encoded_entry",
@@ -43,7 +43,7 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "equation_FStar.Kremlin.Endianness.bytes", "equation_Parsing.byte",
+        "equation_FStar.Krml.Endianness.bytes", "equation_Parsing.byte",
         "equation_Parsing.bytes", "equation_Prims.eqtype",
         "equation_Slice.byte", "equation_Slice.bytes",
         "lemma_FStar.Seq.Base.hasEq_lemma",
@@ -52,7 +52,7 @@
         "typing_FStar.UInt8.t"
       ],
       0,
-      "1d8d9167a31a7d177986e7a0ee2eaea9"
+      "4b1f1990dabcf34fb38d9f79395c02ea"
     ],
     [
       "KeyValue.__proj__EncodedEntry__item__key",
@@ -61,19 +61,16 @@
       1,
       [ "@query" ],
       0,
-      "861c7b7daa4596dff7d379352c76b122"
+      "bc1742e7a09dc8c71f03658308accaa1"
     ],
     [
       "KeyValue.__proj__EncodedEntry__item__key",
       2,
       2,
       1,
-      [
-        "@query", "proj_equation_KeyValue.EncodedEntry_key_len",
-        "projection_inverse_KeyValue.EncodedEntry_key_len"
-      ],
+      [ "@query" ],
       0,
-      "c7c5a4df1e65aeef24101d81274b8455"
+      "670816733ffca1d33e4635f61ece4022"
     ],
     [
       "KeyValue.__proj__EncodedEntry__item__value",
@@ -82,19 +79,16 @@
       1,
       [ "@query" ],
       0,
-      "4f5721538b3908a3e9b31c29ef0a6795"
+      "f268eaed74facc8c70ac2713fdb9cfec"
     ],
     [
       "KeyValue.__proj__EncodedEntry__item__value",
       2,
       2,
       1,
-      [
-        "@query", "proj_equation_KeyValue.EncodedEntry_val_len",
-        "projection_inverse_KeyValue.EncodedEntry_val_len"
-      ],
+      [ "@query" ],
       0,
-      "c9d6160f8c301211fcdf3d19f2ba6c17"
+      "1ee6a61e3eb8a0a2825a15277a6f0dd7"
     ],
     [
       "KeyValue.store",
@@ -103,7 +97,7 @@
       1,
       [ "@query" ],
       0,
-      "7cdde86c5674d96219f43cd737b8612c"
+      "eb41c1c75cc93709e6ae0265b531080f"
     ],
     [
       "KeyValue.store",
@@ -112,7 +106,7 @@
       1,
       [ "@query" ],
       0,
-      "219909a7e4d9b98f547a882cd660e089"
+      "27d55a795db2b568376fc429d87a712b"
     ],
     [
       "KeyValue.store",
@@ -128,7 +122,7 @@
         "typing_FStar.UInt32.t"
       ],
       0,
-      "a53154fa8b111d1f82bd71b3d4c95daf"
+      "e40b05a927c538ad6be6efafe93694b9"
     ],
     [
       "KeyValue.__proj__Store__item__entries",
@@ -137,31 +131,25 @@
       1,
       [ "@query" ],
       0,
-      "06da5a343ca66d09114b162ad50c9115"
+      "be546f684e5ef11880ed3bb4442a6ac1"
     ],
     [
       "KeyValue.__proj__Store__item__entries",
       2,
       2,
       1,
-      [
-        "@query", "proj_equation_KeyValue.Store_num_entries",
-        "projection_inverse_KeyValue.Store_num_entries"
-      ],
+      [ "@query" ],
       0,
-      "0b2988891e8c652cc15275aa3061ea10"
+      "553917c31bcb3dffe9f89f776f0d11e4"
     ],
     [
       "KeyValue.as_entry",
       1,
       2,
       1,
-      [
-        "@query", "equation_FStar.UInt8.byte",
-        "equation_KeyValue.entry_live", "equation_Slice.byte"
-      ],
+      [ "@query", "equation_KeyValue.entry_live", "equation_Slice.byte" ],
       0,
-      "7cbb0a6e56be6ff5011a428338853c58"
+      "f40e3f306b11574a5b6a0561d5f5aeda"
     ]
   ]
 ]

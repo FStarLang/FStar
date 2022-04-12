@@ -22,7 +22,7 @@ module Ca = FStar.Int.Cast
 module U32 = FStar.UInt32
 
 let tin_decr
-  (#a:Type)
+  (a:Type)
   (tin: Type)
   (dec: tin -> GTot a)
   (x: tin)
@@ -35,9 +35,9 @@ let do_while_body_post
   (dec: tin -> GTot a)
   (f: ((x: tin) -> Tot (m tout)))
   (x: tin)
-  (y: m (c_or (tin_decr tin dec x) tout))
+  (y: m (c_or (tin_decr _ tin dec x) tout))
 : GTot Type0
-= f x () == bind y (fun (y' : c_or (tin_decr tin dec x) tout) -> begin match y' with
+= f x () == bind y (fun (y' : c_or (tin_decr _ tin dec x) tout) -> begin match y' with
   | Left x' -> f x'
   | Right y' -> ret y'
   end) ()
@@ -49,7 +49,7 @@ let do_while_body_res_t
   (dec: tin -> GTot a)
   (x: tin)
 : Tot Type
-= (y: m (c_or (tin_decr tin dec x) tout) { do_while_body_post tin tout dec f x y } )
+= (y: m (c_or (tin_decr _ tin dec x) tout) { do_while_body_post tin tout dec f x y } )
 
 let do_while_body_t'
   (#a:Type)
@@ -132,7 +132,7 @@ let do_while_body_res_intro
   (f: ((x: tin) -> Tot (m tout)))
   (dec: tin -> GTot a)
   (x: tin)
-  (y: m (c_or (tin_decr tin dec x) tout))
+  (y: m (c_or (tin_decr _ tin dec x) tout))
 : Pure (do_while_body_res_t tin tout f dec x)
   (requires (do_while_body_post tin tout dec f x y))
   (ensures (fun y' -> y' == y))
@@ -142,11 +142,11 @@ let rec do_while
   (#a:Type)
   (tin tout: Type)
   (decrease: tin -> GTot a)
-  (body: ((x: tin) -> Tot (m (c_or (tin_decr tin decrease x) tout))))
+  (body: ((x: tin) -> Tot (m (c_or (tin_decr _ tin decrease x) tout))))
   (x: tin)
 : Tot (m tout)
   (decreases (decrease x))
-= bind (body x) (fun (y' : c_or (tin_decr tin decrease x) tout) -> match y' with
+= bind (body x) (fun (y' : c_or (tin_decr _ tin decrease x) tout) -> match y' with
   | Left x' -> do_while tin tout decrease body x'
   | Right y' -> ret y'
   )
@@ -164,7 +164,7 @@ let rec do_while_correct
     do_while tin tout decrease body x () == f x ()
   ))
   (decreases (decrease x))
-= let g : m (c_or (tin_decr tin decrease x) tout) = body x in
+= let g : m (c_or (tin_decr _ tin decrease x) tout) = body x in
   match g () with
   | (Left x', log) -> do_while_correct tin tout f decrease body x'
   | (Right y, log) -> ()
@@ -221,14 +221,14 @@ let mk_do_while (#t: Type) (x: t) : T.Tac unit =
                     let decr_binder = T.fresh_binder decr_ty in
                     let x_tm = T.pack (T.Tv_Var (T.bv_of_binder x)) in
                     let tin_decr = T.mk_app (quote tin_decr) [
-                      decr_body_t, T.Q_Implicit;
+                      decr_body_t, T.Q_Explicit;
                       tin, T.Q_Explicit;
                       decr, T.Q_Explicit;
                       x_tm, T.Q_Explicit;
                     ]
                     in
                     let body_pre_coerce = mk_do_while_body tin_decr tout body v in
-                    let body' = T.mk_app (quote do_while_body_res_intro) [
+                    let body' = T.mk_app (quote (fun #a -> do_while_body_res_intro #a)) [
                       tin, T.Q_Explicit;
                       tout, T.Q_Explicit;
                       q, T.Q_Explicit;
@@ -238,7 +238,7 @@ let mk_do_while (#t: Type) (x: t) : T.Tac unit =
                     ]
                     in
                     let res =
-                      T.mk_app (quote rewrite_do_while) [
+                      T.mk_app (quote (fun #a -> rewrite_do_while #a)) [
                         tin, T.Q_Explicit;
                         tout, T.Q_Explicit;
                         q, T.Q_Explicit;

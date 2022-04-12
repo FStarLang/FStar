@@ -630,7 +630,7 @@ let (maybe_eta_expand_coercion :
       fun e ->
         let uu___ =
           let uu___1 = FStar_Options.codegen () in
-          uu___1 = (FStar_Pervasives_Native.Some FStar_Options.Kremlin) in
+          uu___1 = (FStar_Pervasives_Native.Some FStar_Options.Krml) in
         if uu___ then e else eta_expand g expect e
 let (apply_coercion :
   FStar_Compiler_Range.range ->
@@ -1315,8 +1315,7 @@ let rec (extract_one_pat :
             | FStar_Syntax_Syntax.Pat_constant (FStar_Const.Const_int
                 (c, swopt)) when
                 let uu___ = FStar_Options.codegen () in
-                uu___ <> (FStar_Pervasives_Native.Some FStar_Options.Kremlin)
-                ->
+                uu___ <> (FStar_Pervasives_Native.Some FStar_Options.Krml) ->
                 let uu___ =
                   match swopt with
                   | FStar_Pervasives_Native.None ->
@@ -3696,7 +3695,7 @@ and (term_as_mlexpr' :
                                              FStar_Options.codegen () in
                                            uu___11 <>
                                              (FStar_Pervasives_Native.Some
-                                                FStar_Options.Kremlin) in
+                                                FStar_Options.Krml) in
                                          if uu___10
                                          then
                                            FStar_Extraction_ML_UEnv.burn_name

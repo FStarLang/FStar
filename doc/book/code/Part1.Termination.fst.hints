@@ -21,7 +21,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "e0f1f310cf923bce3b402e0e6c270a7f"
+      "ea276b3cb3091550c17cd23d5f9c7e09"
     ],
     [
       "Part1.Termination.ackermann_flip",
@@ -41,7 +41,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "a13f1d0a4bbf6ca40443ef309349e88f"
+      "5edf6bacf3f8499ce63c7d6d99ba69c0"
     ],
     [
       "Part1.Termination.foo",
@@ -58,7 +58,7 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "30a1059002edb9c54863ebb7cb017212"
+      "72c8d60cec191903962ddb8ffbe65a6f"
     ],
     [
       "Part1.Termination.foo",
@@ -73,7 +73,7 @@
         "projection_inverse_BoxInt_proj_0", "well-founded-ordering-on-nat"
       ],
       0,
-      "fc6114e12f871398d2187ef89c66bd63"
+      "262c18c7137408f38edad8688825b84d"
     ],
     [
       "Part1.Termination.tree",
@@ -82,7 +82,7 @@
       1,
       [ "@query" ],
       0,
-      "cee930efe800ac13f9375f00441de91a"
+      "f8105e0565cfe94894a69aae114d9182"
     ],
     [
       "Part1.Termination.__proj__Internal__item___0",
@@ -94,7 +94,7 @@
         "refinement_interpretation_Tm_refine_1562eeda39b5f0555cca09e4ece39857"
       ],
       0,
-      "1bcef287215edda0f37b5c210b486a64"
+      "0388ba3b0a0472eb15fbbad46e03787f"
     ],
     [
       "Part1.Termination.incr_tree",
@@ -114,7 +114,7 @@
         "typing_tok_Part1.Termination.Terminal@tok"
       ],
       0,
-      "a858f0690faaa417d9c3d27d4dac3ab3"
+      "7a495cc0d3847dc53a62628e9a75f6ff"
     ],
     [
       "Part1.Termination.incr_tree",
@@ -134,7 +134,7 @@
         "typing_tok_Part1.Termination.Terminal@tok"
       ],
       0,
-      "43fc9af09f01b86afeddb898198f83f0"
+      "5a81490e175525c1a151dda66cfc808d"
     ],
     [
       "Part1.Termination.fib",
@@ -151,7 +151,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "ec615274b1dd0db5f4eb5df2f0ee82e9"
+      "6789d6df713d139bc4ea2fc8f3cfcced"
     ],
     [
       "Part1.Termination.rev_aux",
@@ -166,7 +166,7 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "c6e037fdad242a575c16afbf01f34c9b"
+      "98d1991a6f1f176f4f600cfc3465cd1d"
     ]
   ]
 ]

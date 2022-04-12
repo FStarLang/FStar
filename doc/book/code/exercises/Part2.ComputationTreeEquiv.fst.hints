@@ -14,7 +14,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "42470cb094c7330083fd96892f20ae6f"
+      "e1fb34f7e872d7a6b11f9157c8058457"
     ],
     [
       "Part2.ComputationTreeEquiv.output_of",
@@ -29,7 +29,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "dfdb2d24fff1774da8001654c1e57df4"
+      "a7bcbd162e86dce4d9682d2fa9ded4e7"
     ],
     [
       "Part2.ComputationTreeEquiv.__proj__Return__item__x",
@@ -41,7 +41,7 @@
         "refinement_interpretation_Tm_refine_8b9cff117f2e3f9ec7ca3e43a8a51553"
       ],
       0,
-      "a256c99d64954f611e314b576a535bf6"
+      "ff1dcf8fd13e67283b40b6ec0549128a"
     ],
     [
       "Part2.ComputationTreeEquiv.__proj__DoThen__item__act",
@@ -53,7 +53,7 @@
         "refinement_interpretation_Tm_refine_6a92965ab597df439caba7bfbd780f4b"
       ],
       0,
-      "e2d7bf1a386e7b7ac6d5512345fd528b"
+      "c1563a39b298e15c8f81ca23c62f5e56"
     ],
     [
       "Part2.ComputationTreeEquiv.__proj__DoThen__item__input",
@@ -70,7 +70,7 @@
         "token_correspondence_Part2.ComputationTreeEquiv.__proj__Mkaction_class__item__input_of"
       ],
       0,
-      "438a76349923d9e6f0c99bccb45b2992"
+      "cb968d1ea0c2631510064a3adb181da5"
     ],
     [
       "Part2.ComputationTreeEquiv.__proj__DoThen__item__continue",
@@ -85,7 +85,7 @@
         "refinement_interpretation_Tm_refine_6a92965ab597df439caba7bfbd780f4b"
       ],
       0,
-      "1e4f4bbeef3e95ca7a0ec33053daf7ad"
+      "70206f22d2de640714d97321954c4dad"
     ],
     [
       "Part2.ComputationTreeEquiv.bind",
@@ -106,7 +106,7 @@
         "well_founded_ordering_on_codomain_Part2.ComputationTreeEquiv.DoThen"
       ],
       0,
-      "44544a412b6343968a32c8b56d05e310"
+      "619cb349c35cd440ca123865733abeab"
     ],
     [
       "Part2.ComputationTreeEquiv.equiv",
@@ -127,7 +127,7 @@
         "well_founded_ordering_on_codomain_Part2.ComputationTreeEquiv.DoThen"
       ],
       0,
-      "589ebb06e47f78f1f323de022cadb347"
+      "3c097f3cca923273c17071a4c3961058"
     ],
     [
       "Part2.ComputationTreeEquiv.equiv_refl",
@@ -147,13 +147,11 @@
         "constructor_distinct_Part2.ComputationTreeEquiv.Return",
         "disc_equation_Part2.ComputationTreeEquiv.DoThen",
         "disc_equation_Part2.ComputationTreeEquiv.Return", "eq2-interp",
-        "equation_Prims.l_Forall", "equation_Prims.op_Equals_Equals_Equals",
-        "equation_Prims.squash",
+        "equation_Prims.op_Equals_Equals_Equals",
         "equation_with_fuel_Part2.ComputationTreeEquiv.equiv.fuel_instrumented",
         "fuel_guarded_inversion_Part2.ComputationTreeEquiv.action_class",
         "fuel_guarded_inversion_Part2.ComputationTreeEquiv.tree",
-        "l_and-interp", "l_quant_interp_047f4992f67e29d0d2a6e63269acd275",
-        "l_quant_interp_fcc832e3d29fabab133f9d4103b0c1ef",
+        "l_and-interp", "l_quant_interp_fcc832e3d29fabab133f9d4103b0c1ef",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
@@ -165,11 +163,11 @@
         "projection_inverse_Part2.ComputationTreeEquiv.Return_a",
         "projection_inverse_Part2.ComputationTreeEquiv.Return_acts",
         "projection_inverse_Part2.ComputationTreeEquiv.Return_x",
-        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
+        "refinement_interpretation_Tm_refine_f345ebb3a6a2a2e249ec111dde1a3570",
         "well_founded_ordering_on_codomain_Part2.ComputationTreeEquiv.DoThen"
       ],
       0,
-      "96cff6223c463f8bee2b74a0b5dc329c"
+      "35d2384958253a39e49f5abf05a38cd2"
     ],
     [
       "Part2.ComputationTreeEquiv.equiv_sym",
@@ -190,14 +188,12 @@
         "constructor_distinct_Part2.ComputationTreeEquiv.Return",
         "disc_equation_Part2.ComputationTreeEquiv.DoThen",
         "disc_equation_Part2.ComputationTreeEquiv.Return", "eq2-interp",
-        "equation_Prims.l_Forall", "equation_Prims.l_and",
-        "equation_Prims.op_Equals_Equals_Equals", "equation_Prims.squash",
+        "equation_Prims.l_and", "equation_Prims.op_Equals_Equals_Equals",
         "equation_with_fuel_Part2.ComputationTreeEquiv.equiv.fuel_instrumented",
         "false_interp",
         "fuel_guarded_inversion_Part2.ComputationTreeEquiv.action_class",
         "fuel_guarded_inversion_Part2.ComputationTreeEquiv.tree",
-        "l_and-interp", "l_quant_interp_3fc862327ffc955cc06c9e67dfeef84f",
-        "l_quant_interp_fcc832e3d29fabab133f9d4103b0c1ef",
+        "l_and-interp", "l_quant_interp_fcc832e3d29fabab133f9d4103b0c1ef",
         "proj_equation_FStar.Pervasives.Native.Mktuple2__1",
         "proj_equation_FStar.Pervasives.Native.Mktuple2__2",
         "proj_equation_Part2.ComputationTreeEquiv.Mkaction_class_output_of",
@@ -213,12 +209,12 @@
         "projection_inverse_Part2.ComputationTreeEquiv.Return_a",
         "projection_inverse_Part2.ComputationTreeEquiv.Return_acts",
         "projection_inverse_Part2.ComputationTreeEquiv.Return_x",
-        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
+        "refinement_interpretation_Tm_refine_5a937c24eb1cde40427f0bc6ebf8b6fb",
         "token_correspondence_Part2.ComputationTreeEquiv.__proj__Mkaction_class__item__output_of",
         "well_founded_ordering_on_codomain_Part2.ComputationTreeEquiv.DoThen"
       ],
       0,
-      "cdd0e19ffc995b8e0a1aef3f00328a29"
+      "6b253d3a76479eb566c31aa6ae297ebc"
     ],
     [
       "Part2.ComputationTreeEquiv.equiv_trans",
@@ -240,14 +236,12 @@
         "constructor_distinct_Part2.ComputationTreeEquiv.Return",
         "disc_equation_Part2.ComputationTreeEquiv.DoThen",
         "disc_equation_Part2.ComputationTreeEquiv.Return", "eq2-interp",
-        "equation_Prims.l_Forall", "equation_Prims.l_and",
-        "equation_Prims.op_Equals_Equals_Equals", "equation_Prims.squash",
+        "equation_Prims.l_and", "equation_Prims.op_Equals_Equals_Equals",
         "equation_with_fuel_Part2.ComputationTreeEquiv.equiv.fuel_instrumented",
         "false_interp",
         "fuel_guarded_inversion_Part2.ComputationTreeEquiv.action_class",
         "fuel_guarded_inversion_Part2.ComputationTreeEquiv.tree",
-        "l_and-interp", "l_quant_interp_3fc862327ffc955cc06c9e67dfeef84f",
-        "l_quant_interp_fcc832e3d29fabab133f9d4103b0c1ef",
+        "l_and-interp", "l_quant_interp_fcc832e3d29fabab133f9d4103b0c1ef",
         "primitive_Prims.op_AmpAmp",
         "proj_equation_FStar.Pervasives.Native.Mktuple3__1",
         "proj_equation_FStar.Pervasives.Native.Mktuple3__2",
@@ -266,12 +260,12 @@
         "projection_inverse_Part2.ComputationTreeEquiv.DoThen_continue",
         "projection_inverse_Part2.ComputationTreeEquiv.DoThen_input",
         "projection_inverse_Part2.ComputationTreeEquiv.Return_x",
-        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
+        "refinement_interpretation_Tm_refine_5a937c24eb1cde40427f0bc6ebf8b6fb",
         "token_correspondence_Part2.ComputationTreeEquiv.__proj__Mkaction_class__item__output_of",
         "well_founded_ordering_on_codomain_Part2.ComputationTreeEquiv.DoThen"
       ],
       0,
-      "7eeb11d3d5328d3357b0320e5c2e19c9"
+      "a421c6c4017cc37c19dc15774ab9fe91"
     ],
     [
       "Part2.ComputationTreeEquiv.right_identity",
@@ -291,7 +285,7 @@
         "typing_Part2.ComputationTreeEquiv.return"
       ],
       0,
-      "a9a09eafaaebb71bfdcc8af889f9eeae"
+      "7d7af0b764ba8e45e89bc786d8b01e75"
     ],
     [
       "Part2.ComputationTreeEquiv.left_identity",
@@ -316,16 +310,14 @@
         "disc_equation_Part2.ComputationTreeEquiv.DoThen",
         "disc_equation_Part2.ComputationTreeEquiv.Return", "eq2-interp",
         "equation_Part2.ComputationTreeEquiv.return",
-        "equation_Prims.l_Forall", "equation_Prims.op_Equals_Equals_Equals",
-        "equation_Prims.squash",
+        "equation_Prims.op_Equals_Equals_Equals",
         "equation_with_fuel_Part2.ComputationTreeEquiv.bind.fuel_instrumented",
         "equation_with_fuel_Part2.ComputationTreeEquiv.equiv.fuel_instrumented",
         "fuel_guarded_inversion_Part2.ComputationTreeEquiv.action_class",
         "fuel_guarded_inversion_Part2.ComputationTreeEquiv.tree",
         "function_token_typing_Part2.ComputationTreeEquiv.return",
         "interpretation_Tm_abs_934a933288aa70bc78bac2f50e7d5900",
-        "l_and-interp", "l_quant_interp_ef33a84421c0b7f87fb161c4b2610535",
-        "l_quant_interp_fcc832e3d29fabab133f9d4103b0c1ef",
+        "l_and-interp", "l_quant_interp_fcc832e3d29fabab133f9d4103b0c1ef",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
@@ -337,13 +329,13 @@
         "projection_inverse_Part2.ComputationTreeEquiv.Return_a",
         "projection_inverse_Part2.ComputationTreeEquiv.Return_acts",
         "projection_inverse_Part2.ComputationTreeEquiv.Return_x",
-        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
+        "refinement_interpretation_Tm_refine_a02ebefb063f11ee92fbd9bc157ec0c5",
         "token_correspondence_Part2.ComputationTreeEquiv.return",
         "typing_Part2.ComputationTreeEquiv.bind",
         "well_founded_ordering_on_codomain_Part2.ComputationTreeEquiv.DoThen"
       ],
       0,
-      "26cae3bbbe27910ac5feb252fefa236a"
+      "889fd204408426be3908d2b4cf4cdfca"
     ],
     [
       "Part2.ComputationTreeEquiv.assoc",
@@ -374,15 +366,13 @@
         "disc_equation_Part2.ComputationTreeEquiv.DoThen",
         "disc_equation_Part2.ComputationTreeEquiv.Return", "eq2-interp",
         "equation_Part2.ComputationTreeEquiv.return",
-        "equation_Prims.l_Forall", "equation_Prims.op_Equals_Equals_Equals",
-        "equation_Prims.squash",
+        "equation_Prims.op_Equals_Equals_Equals",
         "equation_with_fuel_Part2.ComputationTreeEquiv.bind.fuel_instrumented",
         "equation_with_fuel_Part2.ComputationTreeEquiv.equiv.fuel_instrumented",
         "fuel_guarded_inversion_Part2.ComputationTreeEquiv.action_class",
         "fuel_guarded_inversion_Part2.ComputationTreeEquiv.tree",
         "interpretation_Tm_abs_934a933288aa70bc78bac2f50e7d5900",
-        "l_and-interp", "l_quant_interp_09cc2886eeb18a53d993adc936318555",
-        "l_quant_interp_fcc832e3d29fabab133f9d4103b0c1ef",
+        "l_and-interp", "l_quant_interp_fcc832e3d29fabab133f9d4103b0c1ef",
         "proj_equation_Part2.ComputationTreeEquiv.Mkaction_class_t",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
@@ -395,13 +385,13 @@
         "projection_inverse_Part2.ComputationTreeEquiv.Return_a",
         "projection_inverse_Part2.ComputationTreeEquiv.Return_acts",
         "projection_inverse_Part2.ComputationTreeEquiv.Return_x",
-        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
+        "refinement_interpretation_Tm_refine_90bf170ec91f774f259ce69f345942c7",
         "typing_Part2.ComputationTreeEquiv.bind",
         "typing_Tm_abs_597c0b4dc1f43105aa67d556d511cc33",
         "well_founded_ordering_on_codomain_Part2.ComputationTreeEquiv.DoThen"
       ],
       0,
-      "9b1af5024c709e75fe4b91ad60cf7d13"
+      "0c820f92aebf7da10cf7422ba165165f"
     ],
     [
       "Part2.ComputationTreeEquiv.read",
@@ -428,7 +418,7 @@
         "unit_typing"
       ],
       0,
-      "46fb2eec4cb5d4e0f9d89b48d4af8e31"
+      "7755b75051992b1b357200c935b30ef9"
     ],
     [
       "Part2.ComputationTreeEquiv.write",
@@ -454,7 +444,7 @@
         "token_correspondence_Part2.ComputationTreeEquiv.output_of"
       ],
       0,
-      "d3d7dee25103a613660cc2d57d12e8e6"
+      "b24ce658ba5032198508e5d166ce3761"
     ],
     [
       "Part2.ComputationTreeEquiv.interp",
@@ -500,7 +490,7 @@
         "well_founded_ordering_on_codomain_Part2.ComputationTreeEquiv.DoThen"
       ],
       0,
-      "a0090bf5a097cbcf90b3c185cf8e81c2"
+      "e9ee3e40bdcb5546fd1dba3e80313f11"
     ]
   ]
 ]
