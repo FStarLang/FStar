@@ -1648,8 +1648,6 @@ let fill' (#t:Type) (#rrel #rel: srel t)
 
 let fill #t #rrel #rel b z len = fill' b z len
 
-module MG = FStar.ModifiesGen
-
 let abuffer' = ubuffer'
 
 let coerce (t2: Type) (#t1: Type) (x1: t1) : Pure t2 (requires (t1 == t2)) (ensures (fun y -> y == x1)) = x1

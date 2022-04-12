@@ -39,7 +39,6 @@ module Z = FStar.BigInt
 open FStar.Reflection.Basic //needed for inspect_fv, but that feels wrong
 module PC = FStar.Parser.Const
 module NBETerm = FStar.TypeChecker.NBETerm
-open FStar.TypeChecker.NBETerm
 module RD = FStar.Reflection.Data
 
 

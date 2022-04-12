@@ -44,7 +44,6 @@ module N = FStar.TypeChecker.Normalize
 module FC = FStar.Const
 module EMB = FStar.Syntax.Embeddings
 module PC = FStar.Parser.Const
-open FStar.TypeChecker.Cfg
 
 (* Broadly, the algorithm implemented here is inspired by
 

@@ -17,7 +17,6 @@
 module FStar.TypeChecker.Util
 open FStar.Pervasives
 open FStar.Compiler.Effect
-open FStar.Compiler.Effect
 
 open FStar
 open FStar.Compiler

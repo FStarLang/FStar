@@ -16,9 +16,9 @@
 
 module FStar.SMTEncoding.Term
 open FStar.Compiler.Effect
-open FStar.Compiler.Effect
 open Prims
-open FStar open FStar.Compiler
+open FStar
+open FStar.Compiler
 open FStar.Syntax.Syntax
 open FStar.Syntax
 open FStar.Compiler.Util

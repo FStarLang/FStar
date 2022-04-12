@@ -14,8 +14,8 @@
    limitations under the License.
 *)
 module FStar.Reflection.Placeholder
-open FStar open FStar.Compiler
-open FStar.Compiler.Effect
+open FStar
+open FStar.Compiler
 open FStar.Compiler.Effect
 open FStar.Syntax.Syntax
 open FStar.Compiler.Util
