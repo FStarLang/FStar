@@ -71,8 +71,6 @@ let free r = free (dsnd r)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-module AT = Steel.Effect.Atomic
-
 let read_pt (#t:_) (#p:perm)
             (a:array t)
             (#r:elseq t (length a))
