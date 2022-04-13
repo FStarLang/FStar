@@ -17,7 +17,6 @@
 *)
 module FStar.TypeChecker.DMFF
 open FStar.Compiler.Effect
-open FStar.Compiler.Effect
 open FStar.TypeChecker
 open FStar.Syntax.Syntax
 

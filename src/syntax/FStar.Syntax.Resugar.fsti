@@ -16,7 +16,6 @@
 module FStar.Syntax.Resugar //we should rename FStar.ToSyntax to something else
 
 open FStar.Compiler.Effect
-open FStar.Compiler.Effect
 open FStar.Syntax.Syntax
 open FStar.Ident
 open FStar.Compiler.Util
