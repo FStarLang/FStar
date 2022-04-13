@@ -17,9 +17,7 @@
 module LowStar.Regional.Instances
 
 open FStar.Integers
-open LowStar.Buffer
 open LowStar.Regional
-open LowStar.RVector
 
 module HS = FStar.HyperStack
 module HST = FStar.HyperStack.ST
@@ -65,17 +63,17 @@ let buffer_r_repr #a len h v = B.as_seq h v
 
 val buffer_r_sep:
   #a:Type -> len:UInt32.t{len > 0ul} ->
-  v:B.buffer a -> p:loc -> h0:HS.mem -> h1:HS.mem ->
+  v:B.buffer a -> p:B.loc -> h0:HS.mem -> h1:HS.mem ->
   Lemma (requires (buffer_r_inv len h0 v /\
-                  loc_disjoint
-                    (loc_all_regions_from false
+                  B.loc_disjoint
+                    (B.loc_all_regions_from false
                       (buffer_region_of v)) p /\
-                  modifies p h0 h1))
+                  B.modifies p h0 h1))
         (ensures (buffer_r_inv len h1 v /\
                  buffer_r_repr len h0 v == buffer_r_repr len h1 v))
 let buffer_r_sep #a len v p h0 h1 =
-  assert (loc_includes (loc_all_regions_from false (buffer_region_of v))
-                       (loc_buffer v));
+  assert (B.loc_includes (B.loc_all_regions_from false (buffer_region_of v))
+                       (B.loc_buffer v));
   B.modifies_buffer_elim v p h0 h1
 
 val buffer_irepr:
@@ -106,8 +104,8 @@ val buffer_r_alloc:
       let len = snd arg in
       Set.subset (Map.domain (HS.get_hmap h0))
                  (Map.domain (HS.get_hmap h1)) /\
-      modifies loc_none h0 h1 /\
-      fresh_loc (B.loc_buffer v) h0 h1 /\
+      B.modifies B.loc_none h0 h1 /\
+      B.fresh_loc (B.loc_buffer v) h0 h1 /\
       buffer_r_alloc_p v /\
       buffer_r_inv len h1 v /\
       buffer_region_of v = r /\
@@ -126,7 +124,7 @@ val buffer_r_free:
       let len = snd arg in
       buffer_r_inv len h0 v))
     (ensures (fun h0 _ h1 ->
-      modifies (loc_all_regions_from false (buffer_region_of v)) h0 h1))
+      B.modifies (B.loc_all_regions_from false (buffer_region_of v)) h0 h1))
 let buffer_r_free #a len v =
   B.free v
 
@@ -142,7 +140,7 @@ val buffer_copy:
       HS.disjoint (buffer_region_of src) (buffer_region_of dst)))
     (ensures (fun h0 _ h1 ->
       let len = snd arg in
-      modifies (loc_all_regions_from false (buffer_region_of dst)) h0 h1 /\
+      B.modifies (B.loc_all_regions_from false (buffer_region_of dst)) h0 h1 /\
       buffer_r_inv len h1 dst /\
       buffer_r_repr len h1 dst == buffer_r_repr len h0 src))
 let buffer_copy #a #_ (ia, len) src dst =
@@ -169,33 +167,32 @@ let buffer_regional #a ia len =
       (buffer_r_free #a #(ia, len))
 
 
-
 val buffer_copyable:
   #a:Type -> ia:a -> len:nonzero ->
-  copyable #(a & nonzero) (B.buffer a) (buffer_regional ia len)
+  RV.copyable #(a & nonzero) (B.buffer a) (buffer_regional ia len)
 let buffer_copyable #a ia len =
-  Cpy (buffer_copy #_ #(ia, len))
+  RV.Cpy (buffer_copy #_ #(ia, len))
 
 /// If `a` is regional, then `vector a` is also regional.
 ///
 /// We keep a pointer at run-time to the parent type-class.
 
 val vector_region_of:
-  #a:Type0 -> #rst:Type -> rg:regional rst a -> v:rvector rg -> GTot HS.rid
+  #a:Type0 -> #rst:Type -> rg:regional rst a -> v:RV.rvector rg -> GTot HS.rid
 let vector_region_of #a #rst rg v = V.frameOf v
 
 val vector_dummy:
-  #a:Type0 -> #rst:Type -> rg:Ghost.erased (regional rst a) -> Tot (rvector rg)
+  #a:Type0 -> #rst:Type -> rg:Ghost.erased (regional rst a) -> Tot (RV.rvector rg)
 let vector_dummy #a #_ _ = V.alloc_empty a
 
 val vector_r_inv:
   #a:Type0 -> #rst:Type -> rg:regional rst a ->
-  h:HS.mem -> v:rvector rg -> GTot Type0
+  h:HS.mem -> v:RV.rvector rg -> GTot Type0
 let vector_r_inv #a #rst rg h v = RV.rv_inv h v
 
 val vector_r_inv_reg:
   #a:Type0 -> #rst:Type -> rg:regional rst a ->
-  h:HS.mem -> v:rvector rg ->
+  h:HS.mem -> v:RV.rvector rg ->
   Lemma (requires (vector_r_inv rg h v))
         (ensures (HS.live_region h (vector_region_of rg v)))
 let vector_r_inv_reg #a #rst rg h v = ()
@@ -205,18 +202,18 @@ let vector_repr #a #rst rg = S.seq (Rgl?.repr rg)
 
 val vector_r_repr:
   #a:Type0 -> #rst:Type -> rg:regional rst a ->
-  h:HS.mem -> v:rvector rg{vector_r_inv rg h v} ->
+  h:HS.mem -> v:RV.rvector rg{vector_r_inv rg h v} ->
   GTot (vector_repr rg)
 let vector_r_repr #a #rst rg h v = RV.as_seq h v
 
 val vector_r_sep:
   #a:Type0 -> #rst:Type -> rg:regional rst a ->
-  v:rvector rg -> p:loc -> h0:HS.mem -> h1:HS.mem ->
+  v:RV.rvector rg -> p:B.loc -> h0:HS.mem -> h1:HS.mem ->
   Lemma (requires (vector_r_inv rg h0 v /\
-                  loc_disjoint
-                    (loc_all_regions_from false (vector_region_of rg v))
+                  B.loc_disjoint
+                    (B.loc_all_regions_from false (vector_region_of rg v))
                     p /\
-                  modifies p h0 h1))
+                  B.modifies p h0 h1))
         (ensures (vector_r_inv rg h1 v /\
                  vector_r_repr rg h0 v == vector_r_repr rg h1 v))
 let vector_r_sep #a #rst rg v p h0 h1 =
@@ -229,19 +226,19 @@ let vector_irepr #a #rst rg =
   Ghost.hide S.empty
 
 val vector_r_alloc_p:
-  #a:Type0 -> #rst:Type -> rg:regional rst a -> v:rvector rg -> GTot Type0
+  #a:Type0 -> #rst:Type -> rg:regional rst a -> v:RV.rvector rg -> GTot Type0
 let vector_r_alloc_p #a #rst rg v =
   V.size_of v = 0ul
 
 val vector_r_alloc:
   #a:Type0 -> #rst:Type -> rg:regional rst a -> r:HST.erid ->
-  HST.ST (rvector rg)
+  HST.ST (RV.rvector rg)
     (requires (fun h0 -> true))
     (ensures (fun h0 v h1 ->
       Set.subset (Map.domain (HS.get_hmap h0))
                  (Map.domain (HS.get_hmap h1)) /\
-      modifies loc_none h0 h1 /\
-      fresh_loc (V.loc_vector v) h0 h1 /\
+      B.modifies B.loc_none h0 h1 /\
+      B.fresh_loc (V.loc_vector v) h0 h1 /\
       vector_r_alloc_p rg v /\
       vector_r_inv rg h1 v /\
       vector_region_of rg v = r /\
@@ -251,16 +248,16 @@ let vector_r_alloc #a #rst rg r =
   V.alloc_reserve 1ul (rg_dummy rg) r
 
 val vector_r_free:
-  #a:Type0 -> #rst:Type -> #rg:Ghost.erased (regional rst a) -> (s:regional rst a{s == Ghost.reveal rg}) -> v:rvector rg ->
+  #a:Type0 -> #rst:Type -> #rg:Ghost.erased (regional rst a) -> (s:regional rst a{s == Ghost.reveal rg}) -> v:RV.rvector rg ->
   HST.ST unit
     (requires (fun h0 -> vector_r_inv rg h0 v))
     (ensures (fun h0 _ h1 ->
-      modifies (loc_all_regions_from false (vector_region_of rg v)) h0 h1))
+      B.modifies (B.loc_all_regions_from false (vector_region_of rg v)) h0 h1))
 let vector_r_free #_ #_ _ v =
   V.free v
 
 val vector_regional:
-  #a:Type0 -> #rst:Type -> rg:regional rst a -> regional (regional rst a) (rvector rg)
+  #a:Type0 -> #rst:Type -> rg:regional rst a -> regional (regional rst a) (RV.rvector rg)
 let vector_regional #a #rst rg =
   Rgl rg
       (vector_region_of #a #rst rg)
