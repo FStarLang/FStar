@@ -50,10 +50,6 @@ ulib-in-fsharp:
 	+$(MAKE) -f Makefile.extract.fsharp all-fs
 	+$(MAKE) -C fs/VS
 
-install-ulib-in-fsharp: ulib-in-fsharp
-	cp fs/bin/Release/netstandard2.0/ulibfs.dll ../bin/
-	cp fs/bin/Release/netstandard2.0/ulibfs.pdb ../bin/
-
 ######################################################
 # OCaml extraction of fstarlib and fstar-tactics-lib #
 ######################################################

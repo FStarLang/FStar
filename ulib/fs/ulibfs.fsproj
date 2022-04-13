@@ -2,6 +2,7 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <OtherFlags>--nowarn:0086 --mlcompatibility --nologo</OtherFlags>
+    <OutputPath>..\..\bin\</OutputPath>
   </PropertyGroup>
   <ItemGroup>
     <!-- Note, for now we just ignore some modules and or comment out some code in them. -->
