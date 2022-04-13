@@ -51,7 +51,7 @@ type atom =
   FStar_Syntax_Syntax.letbinding Prims.list) 
   | UVar of FStar_Syntax_Syntax.term FStar_Thunk.t 
 and t' =
-  | Lam of ((t Prims.list -> t) *
+  | Lam of (((t * FStar_Syntax_Syntax.aqual) Prims.list -> t) *
   ((t Prims.list * FStar_Syntax_Syntax.binders *
      FStar_Syntax_Syntax.residual_comp FStar_Pervasives_Native.option),
   (t * FStar_Syntax_Syntax.aqual) Prims.list) FStar_Pervasives.either *
@@ -155,7 +155,7 @@ let (uu___is_Lam : t' -> Prims.bool) =
   fun projectee -> match projectee with | Lam _0 -> true | uu___ -> false
 let (__proj__Lam__item___0 :
   t' ->
-    ((t Prims.list -> t) *
+    (((t * FStar_Syntax_Syntax.aqual) Prims.list -> t) *
       ((t Prims.list * FStar_Syntax_Syntax.binders *
          FStar_Syntax_Syntax.residual_comp FStar_Pervasives_Native.option),
       (t * FStar_Syntax_Syntax.aqual) Prims.list) FStar_Pervasives.either *
@@ -1308,7 +1308,12 @@ let e_arrow : 'a 'b . 'a embedding -> 'b embedding -> ('a -> 'b) embedding =
                    FStar_Pervasives.Inr uu___4 in
                  ((fun tas ->
                      let uu___4 =
-                       let uu___5 = FStar_Compiler_List.hd tas in
+                       let uu___5 =
+                         let uu___6 =
+                           FStar_Compiler_Effect.op_Bar_Greater tas
+                             FStar_Compiler_List.hd in
+                         FStar_Compiler_Effect.op_Bar_Greater uu___6
+                           FStar_Pervasives_Native.fst in
                        unembed ea cb uu___5 in
                      match uu___4 with
                      | FStar_Pervasives_Native.Some a1 ->
