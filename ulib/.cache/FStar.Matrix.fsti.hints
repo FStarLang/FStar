@@ -1,0 +1,887 @@
+[
+  "Λ` νάΜ<uΎ^l/fΤL",
+  [
+    [
+      "FStar.Matrix.matrix_generator",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.pos",
+        "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5"
+      ],
+      0,
+      "4823ed782d356e38374afd33c3bbba8b"
+    ],
+    [
+      "FStar.Matrix.flattened_index_is_under_flattened_size",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.pos",
+        "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5"
+      ],
+      0,
+      "26f2cdf99044f6a9341ac17db9669a81"
+    ],
+    [
+      "FStar.Matrix.flattened_index_is_under_flattened_size",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.IntegerIntervals.interval",
+        "equation_FStar.IntegerIntervals.interval_condition",
+        "equation_FStar.IntegerIntervals.under", "equation_Prims.pos",
+        "int_inversion", "int_typing", "primitive_Prims.op_Addition",
+        "primitive_Prims.op_AmpAmp", "primitive_Prims.op_LessThan",
+        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
+        "refinement_interpretation_Tm_refine_fcf1a3596fffd49dd2e91f2678358f19"
+      ],
+      0,
+      "e5974e7b035acb935b604e31d6f8916e"
+    ],
+    [
+      "FStar.Matrix.get_ij",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.pos",
+        "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5"
+      ],
+      0,
+      "ff57e2197b8cb8d4f275dba436d1afb0"
+    ],
+    [
+      "FStar.Matrix.get_ij",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.IntegerIntervals.interval",
+        "equation_FStar.IntegerIntervals.interval_condition",
+        "equation_FStar.IntegerIntervals.under", "equation_Prims.pos",
+        "int_inversion", "primitive_Prims.op_Addition",
+        "primitive_Prims.op_AmpAmp", "primitive_Prims.op_LessThan",
+        "primitive_Prims.op_LessThanOrEqual", "primitive_Prims.op_Multiply",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
+        "refinement_interpretation_Tm_refine_fcf1a3596fffd49dd2e91f2678358f19"
+      ],
+      0,
+      "c26d4dc97a24d3f97cbc27738721e25e"
+    ],
+    [
+      "FStar.Matrix.get_i",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.pos",
+        "primitive_Prims.op_Multiply", "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5"
+      ],
+      0,
+      "eb51ada9ef983643cf1aecb45964c40a"
+    ],
+    [
+      "FStar.Matrix.get_i",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.IntegerIntervals.interval",
+        "equation_FStar.IntegerIntervals.interval_condition",
+        "equation_FStar.IntegerIntervals.under", "equation_Prims.pos",
+        "int_inversion", "primitive_Prims.op_AmpAmp",
+        "primitive_Prims.op_Division", "primitive_Prims.op_LessThan",
+        "primitive_Prims.op_LessThanOrEqual", "primitive_Prims.op_Multiply",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
+        "refinement_interpretation_Tm_refine_fcf1a3596fffd49dd2e91f2678358f19"
+      ],
+      0,
+      "49e0c550ec794947653fd52e7b62b831"
+    ],
+    [
+      "FStar.Matrix.get_j",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.pos",
+        "primitive_Prims.op_Multiply", "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5"
+      ],
+      0,
+      "fbc64145651c08bf70b7f3308bae5ddd"
+    ],
+    [
+      "FStar.Matrix.get_j",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.IntegerIntervals.interval",
+        "equation_FStar.IntegerIntervals.interval_condition",
+        "equation_FStar.IntegerIntervals.under", "equation_Prims.pos",
+        "int_inversion", "primitive_Prims.op_AmpAmp",
+        "primitive_Prims.op_LessThan", "primitive_Prims.op_LessThanOrEqual",
+        "primitive_Prims.op_Modulus", "primitive_Prims.op_Multiply",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
+        "refinement_interpretation_Tm_refine_fcf1a3596fffd49dd2e91f2678358f19"
+      ],
+      0,
+      "29c7a30a33f1cb75247fd45548b3b5c6"
+    ],
+    [
+      "FStar.Matrix.consistency_of_i_j",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.pos",
+        "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5"
+      ],
+      0,
+      "543a2a8048f7d705926b93bbb0471409"
+    ],
+    [
+      "FStar.Matrix.consistency_of_i_j",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.IntegerIntervals.interval",
+        "equation_FStar.IntegerIntervals.interval_condition",
+        "equation_FStar.IntegerIntervals.under",
+        "equation_FStar.Matrix.get_i", "equation_FStar.Matrix.get_ij",
+        "equation_FStar.Matrix.get_j", "equation_Prims.eqtype",
+        "equation_Prims.pos", "function_token_typing_Prims.int",
+        "haseqTm_refine_fcf1a3596fffd49dd2e91f2678358f19", "int_inversion",
+        "primitive_Prims.op_Addition", "primitive_Prims.op_AmpAmp",
+        "primitive_Prims.op_Division", "primitive_Prims.op_LessThan",
+        "primitive_Prims.op_LessThanOrEqual", "primitive_Prims.op_Modulus",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
+        "refinement_interpretation_Tm_refine_fcf1a3596fffd49dd2e91f2678358f19"
+      ],
+      0,
+      "39438716154dec84a7d136997be992da"
+    ],
+    [
+      "FStar.Matrix.consistency_of_ij",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.pos",
+        "primitive_Prims.op_Multiply", "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5"
+      ],
+      0,
+      "49bb7ac657f20f87b22bf9bfcabc573d"
+    ],
+    [
+      "FStar.Matrix.consistency_of_ij",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.IntegerIntervals.interval",
+        "equation_FStar.IntegerIntervals.interval_condition",
+        "equation_FStar.IntegerIntervals.under",
+        "equation_FStar.Matrix.get_i", "equation_FStar.Matrix.get_ij",
+        "equation_FStar.Matrix.get_j", "equation_Prims.pos", "int_inversion",
+        "int_typing", "primitive_Prims.op_Addition",
+        "primitive_Prims.op_AmpAmp", "primitive_Prims.op_Division",
+        "primitive_Prims.op_LessThan", "primitive_Prims.op_LessThanOrEqual",
+        "primitive_Prims.op_Modulus", "primitive_Prims.op_Multiply",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
+        "refinement_interpretation_Tm_refine_fcf1a3596fffd49dd2e91f2678358f19"
+      ],
+      0,
+      "aaa52654ae114aad45d9c4019ffa4173"
+    ],
+    [
+      "FStar.Matrix.transpose_ji",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.pos",
+        "primitive_Prims.op_Multiply", "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5"
+      ],
+      0,
+      "1dd28b986291a5dcdc35d4ed66542fc9"
+    ],
+    [
+      "FStar.Matrix.transpose_ji",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.IntegerIntervals.interval",
+        "equation_FStar.IntegerIntervals.interval_condition",
+        "equation_FStar.IntegerIntervals.under",
+        "equation_FStar.Matrix.get_i", "equation_FStar.Matrix.get_j",
+        "equation_Prims.pos", "int_inversion", "primitive_Prims.op_Addition",
+        "primitive_Prims.op_AmpAmp", "primitive_Prims.op_LessThan",
+        "primitive_Prims.op_LessThanOrEqual", "primitive_Prims.op_Modulus",
+        "primitive_Prims.op_Multiply", "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
+        "refinement_interpretation_Tm_refine_fcf1a3596fffd49dd2e91f2678358f19",
+        "typing_FStar.Matrix.get_i"
+      ],
+      0,
+      "5a2bfa02a4ec66afc7c1882fb4fb0712"
+    ],
+    [
+      "FStar.Matrix.indices_transpose_lemma",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "7aabc20476992cb4bc565b767657bc6d"
+    ],
+    [
+      "FStar.Matrix.indices_transpose_lemma",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "equation_FStar.IntegerIntervals.interval",
+        "equation_FStar.IntegerIntervals.interval_condition",
+        "equation_FStar.IntegerIntervals.under", "equation_Prims.nat",
+        "equation_Prims.pos",
+        "function_token_typing_Prims.__cache_version_number__",
+        "int_inversion", "primitive_Prims.op_Addition",
+        "primitive_Prims.op_AmpAmp", "primitive_Prims.op_Division",
+        "primitive_Prims.op_Equality", "primitive_Prims.op_LessThan",
+        "primitive_Prims.op_LessThanOrEqual", "primitive_Prims.op_Modulus",
+        "primitive_Prims.op_Multiply", "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
+        "refinement_interpretation_Tm_refine_fcf1a3596fffd49dd2e91f2678358f19"
+      ],
+      0,
+      "d34f80aaf6df9d596b38f95eaaf7692e"
+    ],
+    [
+      "FStar.Matrix.ji_is_transpose_of_ij",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.pos",
+        "primitive_Prims.op_Multiply", "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5"
+      ],
+      0,
+      "96c85c07dc319b0281e293c97ef69584"
+    ],
+    [
+      "FStar.Matrix.ji_is_transpose_of_ij",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "equation_FStar.IntegerIntervals.interval",
+        "equation_FStar.IntegerIntervals.interval_condition",
+        "equation_FStar.IntegerIntervals.under",
+        "equation_FStar.Matrix.get_i", "equation_FStar.Matrix.get_j",
+        "equation_FStar.Matrix.transpose_ji", "equation_Prims.eqtype",
+        "equation_Prims.pos",
+        "function_token_typing_Prims.__cache_version_number__",
+        "function_token_typing_Prims.int",
+        "haseqTm_refine_fcf1a3596fffd49dd2e91f2678358f19", "int_inversion",
+        "int_typing", "primitive_Prims.op_Addition",
+        "primitive_Prims.op_AmpAmp", "primitive_Prims.op_Division",
+        "primitive_Prims.op_Equality", "primitive_Prims.op_LessThan",
+        "primitive_Prims.op_LessThanOrEqual", "primitive_Prims.op_Modulus",
+        "primitive_Prims.op_Multiply", "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
+        "refinement_interpretation_Tm_refine_fcf1a3596fffd49dd2e91f2678358f19"
+      ],
+      0,
+      "d09c44bfc4636fe814b68d42b077c41e"
+    ],
+    [
+      "FStar.Matrix.dual_indices",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.pos",
+        "primitive_Prims.op_Multiply", "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5"
+      ],
+      0,
+      "57afd77553e4d2ed8dd6ff18d47f1d79"
+    ],
+    [
+      "FStar.Matrix.dual_indices",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "equation_FStar.IntegerIntervals.interval",
+        "equation_FStar.IntegerIntervals.under",
+        "equation_FStar.Matrix.get_i", "equation_FStar.Matrix.get_j",
+        "equation_FStar.Matrix.transpose_ji", "equation_Prims.eqtype",
+        "equation_Prims.pos",
+        "function_token_typing_Prims.__cache_version_number__",
+        "function_token_typing_Prims.int",
+        "haseqTm_refine_6959ac18c29651968b9d17a7c939bd69", "int_inversion",
+        "primitive_Prims.op_Equality", "primitive_Prims.op_Modulus",
+        "primitive_Prims.op_Multiply", "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
+        "refinement_interpretation_Tm_refine_fcf1a3596fffd49dd2e91f2678358f19"
+      ],
+      0,
+      "154befa6eaff6f70425429961523b16e"
+    ],
+    [
+      "FStar.Matrix.seq_of_matrix",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.IntegerIntervals.interval",
+        "equation_FStar.IntegerIntervals.interval_condition",
+        "equation_FStar.IntegerIntervals.under",
+        "equation_FStar.Matrix.get_ij", "equation_Prims.nat",
+        "equation_Prims.pos", "int_inversion", "primitive_Prims.op_AmpAmp",
+        "primitive_Prims.op_LessThan", "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
+        "refinement_interpretation_Tm_refine_fcf1a3596fffd49dd2e91f2678358f19",
+        "typing_FStar.Seq.Base.length"
+      ],
+      0,
+      "40d935d926bdd157f1058f3dac18a323"
+    ],
+    [
+      "FStar.Matrix.ijth",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.IntegerIntervals.interval_condition",
+        "equation_FStar.Matrix.get_ij", "equation_Prims.pos",
+        "int_inversion", "primitive_Prims.op_AmpAmp",
+        "primitive_Prims.op_LessThan", "primitive_Prims.op_LessThanOrEqual",
+        "primitive_Prims.op_Multiply", "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
+        "refinement_interpretation_Tm_refine_d7415981d4014e1e1eaee88cb9b594b5",
+        "typing_FStar.Matrix.seq_of_matrix"
+      ],
+      0,
+      "757aa62bff4baaff4acb15a088c4d623"
+    ],
+    [
+      "FStar.Matrix.ijth_lemma",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.IntegerIntervals.interval_condition",
+        "equation_FStar.Matrix.get_ij", "equation_Prims.pos",
+        "int_inversion", "primitive_Prims.op_AmpAmp",
+        "primitive_Prims.op_LessThan", "primitive_Prims.op_LessThanOrEqual",
+        "primitive_Prims.op_Multiply", "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
+        "refinement_interpretation_Tm_refine_d7415981d4014e1e1eaee88cb9b594b5",
+        "typing_FStar.Matrix.seq_of_matrix"
+      ],
+      0,
+      "05808b2b4cfa13f060b402a0ac22348c"
+    ],
+    [
+      "FStar.Matrix.matrix_of",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.IntegerIntervals.interval_condition",
+        "equation_Prims.pos", "int_inversion", "primitive_Prims.op_AmpAmp",
+        "primitive_Prims.op_LessThan", "primitive_Prims.op_LessThanOrEqual",
+        "primitive_Prims.op_Multiply", "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
+        "refinement_interpretation_Tm_refine_d7415981d4014e1e1eaee88cb9b594b5",
+        "typing_FStar.Matrix.seq_of_matrix"
+      ],
+      0,
+      "fa335a7b10651255b9351d23f987b89e"
+    ],
+    [
+      "FStar.Matrix.matrix_fold_equals_fold_of_seq_folds",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.IntegerIntervals.interval_condition",
+        "equation_Prims.nat", "equation_Prims.pos", "int_inversion",
+        "primitive_Prims.op_AmpAmp", "primitive_Prims.op_LessThan",
+        "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
+        "refinement_interpretation_Tm_refine_c1424615841f28cac7fc34e92b7ff33c"
+      ],
+      0,
+      "682a359fc41b1f41ea768e4785dab778"
+    ],
+    [
+      "FStar.Matrix.matrix_fold_equals_func_double_fold",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.IntegerIntervals.interval_condition",
+        "equation_Prims.pos", "int_inversion", "primitive_Prims.op_Addition",
+        "primitive_Prims.op_AmpAmp", "primitive_Prims.op_LessThan",
+        "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5"
+      ],
+      0,
+      "81f9fbac0a4827f74de141a8ce11adf1"
+    ],
+    [
+      "FStar.Matrix.transposed_matrix_gen",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.pos",
+        "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5"
+      ],
+      0,
+      "24cbff3324c587338391f30d05560b5a"
+    ],
+    [
+      "FStar.Matrix.matrix_transpose_is_permutation",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.IntegerIntervals.interval_condition",
+        "equation_FStar.Matrix.matrix_of", "equation_Prims.pos",
+        "int_inversion", "primitive_Prims.op_Multiply",
+        "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
+        "refinement_interpretation_Tm_refine_ab06a28c4afb9bf873eddd3d9897a683",
+        "refinement_interpretation_Tm_refine_d7415981d4014e1e1eaee88cb9b594b5",
+        "typing_FStar.Matrix.init", "typing_FStar.Matrix.seq_of_matrix"
+      ],
+      0,
+      "02e8f729efd5a7b9c4bf50acca209595"
+    ],
+    [
+      "FStar.Matrix.matrix_equiv_ijth",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.pos",
+        "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5"
+      ],
+      0,
+      "e7a323c13166650285046e082bec32a4"
+    ],
+    [
+      "FStar.Matrix.matrix_equiv_from_element_eq",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.pos",
+        "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5"
+      ],
+      0,
+      "8175adcd965ddf57ba77cde6ab01e292"
+    ],
+    [
+      "FStar.Matrix.matrix_equiv_from_proof",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.pos",
+        "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5"
+      ],
+      0,
+      "00ac2df52eaa499734bb4da0da189240"
+    ],
+    [
+      "FStar.Matrix.matrix_equiv_from_proof",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.pos",
+        "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5"
+      ],
+      0,
+      "28e50e0eb31a1667ef38ce81818d53dd"
+    ],
+    [
+      "FStar.Matrix.matrix_add_generator",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.pos",
+        "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5"
+      ],
+      0,
+      "4faa069ba3771fd1855d0ba842bda03b"
+    ],
+    [
+      "FStar.Matrix.matrix_add_ijth",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.pos",
+        "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5"
+      ],
+      0,
+      "d5ddcb031218b1fb46fcded43252c77f"
+    ],
+    [
+      "FStar.Matrix.matrix_add_ijth",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.IntegerIntervals.interval",
+        "equation_FStar.IntegerIntervals.under",
+        "equation_FStar.Matrix.matrix_add",
+        "equation_FStar.Matrix.matrix_add_generator",
+        "equation_FStar.Matrix.matrix_of", "equation_Prims.pos",
+        "fuel_guarded_inversion_FStar.Algebra.CommMonoid.Equiv.cm",
+        "int_inversion",
+        "interpretation_Tm_abs_eeffb89185e4d4051c08f15edcec71dd",
+        "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
+        "refinement_interpretation_Tm_refine_ab06a28c4afb9bf873eddd3d9897a683",
+        "refinement_interpretation_Tm_refine_fcf1a3596fffd49dd2e91f2678358f19",
+        "typing_FStar.Matrix.matrix_add"
+      ],
+      0,
+      "60762ab2d6dde24194e6fc745ee11106"
+    ],
+    [
+      "FStar.Matrix.col",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "64d0882b9be72ab2c48f911f2baeacb5"
+    ],
+    [
+      "FStar.Matrix.col",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.IntegerIntervals.interval_condition",
+        "equation_Prims.pos", "primitive_Prims.op_AmpAmp",
+        "primitive_Prims.op_LessThan", "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
+        "refinement_interpretation_Tm_refine_c1424615841f28cac7fc34e92b7ff33c"
+      ],
+      0,
+      "26044918369054fe5fa9158ae5e2f3ab"
+    ],
+    [
+      "FStar.Matrix.row",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "b33df3febb6d2d4355c9af35e9d16e9b"
+    ],
+    [
+      "FStar.Matrix.row",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.IntegerIntervals.interval_condition",
+        "equation_Prims.pos", "primitive_Prims.op_AmpAmp",
+        "primitive_Prims.op_LessThan", "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
+        "refinement_interpretation_Tm_refine_c1424615841f28cac7fc34e92b7ff33c"
+      ],
+      0,
+      "ef5d0258b0de50804c406e2a6cee17fb"
+    ],
+    [
+      "FStar.Matrix.matrix_row_col_lemma",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "FStar.Matrix_interpretation_Tm_arrow_407505b74b874ef27378efcc7dafe696",
+        "FStar.Seq.Base_interpretation_Tm_arrow_44bb45ed5c2534b346e0f58ea5033251",
+        "bool_inversion", "bool_typing",
+        "equation_FStar.IntegerIntervals.interval",
+        "equation_FStar.IntegerIntervals.interval_condition",
+        "equation_FStar.IntegerIntervals.under", "equation_FStar.Matrix.col",
+        "equation_FStar.Matrix.row", "equation_Prims.nat",
+        "equation_Prims.pos", "int_inversion",
+        "lemma_FStar.Seq.Base.lemma_init_len", "primitive_Prims.op_AmpAmp",
+        "primitive_Prims.op_LessThan", "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
+        "refinement_interpretation_Tm_refine_c1424615841f28cac7fc34e92b7ff33c",
+        "refinement_interpretation_Tm_refine_fcf1a3596fffd49dd2e91f2678358f19",
+        "typing_Tm_abs_014362e67e4370be3d72258c35095c84",
+        "typing_Tm_abs_b746acf4c16baa9ca677ade0160d5dbf"
+      ],
+      0,
+      "f3334fb59c4252a71027b111c4ef49b1"
+    ],
+    [
+      "FStar.Matrix.seq_op_const",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.IntegerIntervals.interval_condition",
+        "primitive_Prims.op_AmpAmp", "primitive_Prims.op_LessThan",
+        "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0"
+      ],
+      0,
+      "fcc294c5ac1c67080c81e2ef9d4c3f4b"
+    ],
+    [
+      "FStar.Matrix.const_op_seq",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.IntegerIntervals.interval_condition",
+        "primitive_Prims.op_AmpAmp", "primitive_Prims.op_LessThan",
+        "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0"
+      ],
+      0,
+      "d758eacf012690768c60cc0f5f5e5f9f"
+    ],
+    [
+      "FStar.Matrix.seq_of_products",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.IntegerIntervals.interval",
+        "equation_FStar.IntegerIntervals.interval_condition",
+        "equation_FStar.IntegerIntervals.under", "int_inversion",
+        "primitive_Prims.op_AmpAmp", "primitive_Prims.op_LessThan",
+        "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_3bc3f730e8c3d9f6df5ab23aa86e1d6e",
+        "refinement_interpretation_Tm_refine_fcf1a3596fffd49dd2e91f2678358f19"
+      ],
+      0,
+      "6a0af1420d8da5c4c4efa201837109f2"
+    ],
+    [
+      "FStar.Matrix.seq_of_products_lemma",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.IntegerIntervals.interval",
+        "equation_FStar.IntegerIntervals.interval_condition",
+        "equation_FStar.IntegerIntervals.under", "int_inversion",
+        "primitive_Prims.op_AmpAmp", "primitive_Prims.op_LessThan",
+        "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_3bc3f730e8c3d9f6df5ab23aa86e1d6e",
+        "refinement_interpretation_Tm_refine_fcf1a3596fffd49dd2e91f2678358f19"
+      ],
+      0,
+      "08d07dc9281c22554d7993bef1441cad"
+    ],
+    [
+      "FStar.Matrix.matrix_mul_ijth",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "FStar.Matrix_interpretation_Tm_arrow_407505b74b874ef27378efcc7dafe696",
+        "FStar.Seq.Base_interpretation_Tm_arrow_44bb45ed5c2534b346e0f58ea5033251",
+        "equation_FStar.IntegerIntervals.interval",
+        "equation_FStar.IntegerIntervals.interval_condition",
+        "equation_FStar.IntegerIntervals.under", "equation_FStar.Matrix.col",
+        "equation_FStar.Matrix.row", "equation_Prims.nat",
+        "equation_Prims.pos",
+        "fuel_guarded_inversion_FStar.Algebra.CommMonoid.Equiv.cm",
+        "int_inversion", "lemma_FStar.Seq.Base.lemma_init_len",
+        "primitive_Prims.op_AmpAmp", "primitive_Prims.op_LessThan",
+        "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
+        "refinement_interpretation_Tm_refine_c1424615841f28cac7fc34e92b7ff33c",
+        "refinement_interpretation_Tm_refine_fcf1a3596fffd49dd2e91f2678358f19",
+        "typing_Tm_abs_014362e67e4370be3d72258c35095c84",
+        "typing_Tm_abs_b746acf4c16baa9ca677ade0160d5dbf"
+      ],
+      0,
+      "fb519fd0438aedd68963a1be68218248"
+    ],
+    [
+      "FStar.Matrix.matrix_mul_ijth_as_sum",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.IntegerIntervals.interval_condition",
+        "equation_Prims.pos", "primitive_Prims.op_AmpAmp",
+        "primitive_Prims.op_LessThan", "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
+        "refinement_interpretation_Tm_refine_c1424615841f28cac7fc34e92b7ff33c"
+      ],
+      0,
+      "7fe7fae52b1badbf3562f3cbd1b94616"
+    ],
+    [
+      "FStar.Matrix.matrix_mul_ijth_eq_sum_of_seq",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "FStar.Matrix_interpretation_Tm_arrow_407505b74b874ef27378efcc7dafe696",
+        "FStar.Seq.Base_interpretation_Tm_arrow_44bb45ed5c2534b346e0f58ea5033251",
+        "equation_FStar.IntegerIntervals.interval",
+        "equation_FStar.IntegerIntervals.interval_condition",
+        "equation_FStar.IntegerIntervals.under", "equation_FStar.Matrix.col",
+        "equation_FStar.Matrix.row", "equation_Prims.nat",
+        "equation_Prims.pos",
+        "fuel_guarded_inversion_FStar.Algebra.CommMonoid.Equiv.cm",
+        "int_inversion", "lemma_FStar.Seq.Base.lemma_init_len",
+        "primitive_Prims.op_AmpAmp", "primitive_Prims.op_LessThan",
+        "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
+        "refinement_interpretation_Tm_refine_c1424615841f28cac7fc34e92b7ff33c",
+        "refinement_interpretation_Tm_refine_fcf1a3596fffd49dd2e91f2678358f19",
+        "typing_Tm_abs_014362e67e4370be3d72258c35095c84",
+        "typing_Tm_abs_b746acf4c16baa9ca677ade0160d5dbf"
+      ],
+      0,
+      "fe7da47f6b4583cbdfd1c374c47d7488"
+    ],
+    [
+      "FStar.Matrix.matrix_mul_ijth_eq_sum_of_seq_for_init",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "FStar.Matrix_interpretation_Tm_arrow_407505b74b874ef27378efcc7dafe696",
+        "FStar.Seq.Base_interpretation_Tm_arrow_44bb45ed5c2534b346e0f58ea5033251",
+        "bool_inversion", "bool_typing",
+        "equation_FStar.IntegerIntervals.interval",
+        "equation_FStar.IntegerIntervals.interval_condition",
+        "equation_FStar.IntegerIntervals.under", "equation_FStar.Matrix.col",
+        "equation_FStar.Matrix.row", "equation_Prims.nat",
+        "equation_Prims.pos",
+        "fuel_guarded_inversion_FStar.Algebra.CommMonoid.Equiv.cm",
+        "int_inversion", "int_typing", "lemma_FStar.Seq.Base.lemma_init_len",
+        "primitive_Prims.op_AmpAmp", "primitive_Prims.op_LessThan",
+        "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
+        "refinement_interpretation_Tm_refine_c1424615841f28cac7fc34e92b7ff33c",
+        "refinement_interpretation_Tm_refine_fcf1a3596fffd49dd2e91f2678358f19",
+        "typing_FStar.IntegerIntervals.interval_condition",
+        "typing_Tm_abs_014362e67e4370be3d72258c35095c84",
+        "typing_Tm_abs_b746acf4c16baa9ca677ade0160d5dbf"
+      ],
+      0,
+      "52ab506a874f61391ea811f55693e0d0"
+    ],
+    [
+      "FStar.Matrix.matrix_mul_unit",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
+        "equation_Prims.pos", "function_token_typing_Prims.int",
+        "haseqTm_refine_6959ac18c29651968b9d17a7c939bd69",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5"
+      ],
+      0,
+      "1b213dd58773d9e51829867d5e98015c"
+    ]
+  ]
+]
