@@ -33,7 +33,16 @@ open FStar.IntegerIntervals
 (* We refine multiplication a bit to make proofs smoothier *)
 
 open FStar.Mul  
-  
+
+let rec fold #c #eq 
+             (cm: CE.cm c eq) 
+             (a: int) (b: not_less_than a) 
+             (expr: (ifrom_ito a b) -> c) 
+  // some of the lemmas want (ensures (fun (x:c) -> ((nk = n0) ==> (x == expr nk)))) 
+  : Tot (c) (decreases b-a) 
+  = if b = a then expr b
+    else (fold cm a (b-1) expr) `cm.mult` expr b
+
 let rec fold_equality #c #eq (cm: CE.cm c eq) 
   (a: int) (b: not_less_than a) 
   (expr1 expr2: (ifrom_ito a b) -> c)
