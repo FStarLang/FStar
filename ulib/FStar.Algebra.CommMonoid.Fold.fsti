@@ -50,14 +50,9 @@ let init_func_from_expr #c (#n0: int) (#nk: not_less_than n0)
    Notice how one should very strictly control the domains of 
    lambdas, otherwise the proofs easily fail. 
 *)
-let rec fold #c #eq 
-             (cm: CE.cm c eq) 
-             (a: int) (b: not_less_than a) 
-             (expr: (ifrom_ito a b) -> c) 
-  // some of the lemmas want (ensures (fun (x:c) -> ((nk = n0) ==> (x == expr nk)))) 
-  : Tot (c) (decreases b-a) 
-  = if b = a then expr b
-    else (fold cm a (b-1) expr) `cm.mult` expr b
+
+val fold (#c:_) (#eq:_) (cm: CE.cm c eq)
+         (a: int) (b: not_less_than a) (expr: ifrom_ito a b -> c) : c
   
 (* This lemma establishes the provable equality of the fold 
    given said equality for all the values from the allowed range *)

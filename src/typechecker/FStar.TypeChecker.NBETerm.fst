@@ -112,13 +112,11 @@ type atom
 
 and t'
   =
-  | Lam of
-        // 1. We represent n-ary functions that receive their arguments as a list
-        //    The arguments are in reverse binder order (optimized for convenience beta reduction)
-       (list t -> t)
-       * either (list t * binders * option S.residual_comp) (list arg) //a context, binders (in order) and residual_comp for readback
-                                                                             //or a list of arguments, for primitive unembeddings
-       * int                        // arity
+  | Lam of (list (t * aqual) -> t)  //these expect their arguments in binder order (optimized for convenience beta reduction)
+                                   //we also maintain aquals so as to reconstruct the application properly for implicits
+        * either (list t * binders * option S.residual_comp) (list arg) //a context, binders and residual_comp for readback
+                                                                        //or a list of arguments, for primitive unembeddings
+        * int  // arity
   | Accu of atom * args
   (* For simplicity represent constructors with fv as in F* *)
   | Construct of fv * list universe * args (* Zoe: Data constructors *)
@@ -685,11 +683,11 @@ let e_arrow (ea:embedding 'a) (eb:embedding 'b) : embedding ('a -> 'b) =
     let etyp = ET_fun(ea.emb_typ, eb.emb_typ) in
     let em cb (f : 'a -> 'b) : t =
         lazy_embed etyp f (fun () ->
-        mk_t <| Lam((fun tas -> match unembed ea cb (List.hd tas) with
-                        | Some a -> embed eb cb (f a)
-                        | None -> failwith "cannot unembed function argument"),
-            Inr [as_arg (type_of eb)],
-            1))
+        mk_t <| Lam ((fun tas -> match unembed ea cb (tas |> List.hd |> fst) with
+                             | Some a -> embed eb cb (f a)
+                             | None -> failwith "cannot unembed function argument"),
+               Inr [as_arg (type_of eb)],
+               1))
     in
     let un cb (lam : t) : option ('a -> 'b) =
         let k (lam:t) : option ('a -> 'b) =
