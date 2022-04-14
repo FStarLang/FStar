@@ -23,14 +23,12 @@ open FStar.Compiler
 open FStar.Compiler.Util
 open FStar.Errors
 open FStar.TypeChecker
-open FStar.Syntax
 open FStar.TypeChecker.Common
 open FStar.TypeChecker.Env
 open FStar.TypeChecker.Rel
 open FStar.Syntax.Syntax
 open FStar.Ident
 open FStar.Syntax.Subst
-open FStar.TypeChecker.Common
 open FStar.Syntax
 open FStar.Compiler.Dyn
 

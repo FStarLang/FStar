@@ -16,7 +16,6 @@
 
 module FStar.TypeChecker.PatternUtils
 open FStar.Compiler.Effect
-open FStar.Compiler.Effect
 open FStar
 open FStar.Compiler
 open FStar.Compiler.Util
@@ -28,7 +27,6 @@ open FStar.Syntax.Syntax
 open FStar.Ident
 open FStar.Syntax.Subst
 open FStar.TypeChecker.Common
-open FStar.Syntax
 
 type lcomp_with_binder = option bv * lcomp
 

@@ -1,5 +1,5 @@
 [
-  "\u0018.5\u0002ÄkÃ \u0004˝çÓ∑\fÌG",
+  "\n\nëÉ\rÆ\u0006f \u0018ÈîóZ§B",
   [
     [
       "FStar.IntegerIntervals.coerce_to_not_less_than",
@@ -11,7 +11,7 @@
         "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "fdeaee13536e63c93a5a57cad0c0075c"
+      "a0cd55d35f45ba4dc949e5f21afc8fb5"
     ],
     [
       "FStar.IntegerIntervals.closed_interval_lemma",
@@ -20,7 +20,7 @@
       1,
       [ "@query", "equation_FStar.IntegerIntervals.ifrom_ito" ],
       0,
-      "9e236298a0222d0964aef14faf91b912"
+      "e3611835dff5752eb82b7b7a543e4daf"
     ],
     [
       "FStar.IntegerIntervals.interval_size",
@@ -34,7 +34,20 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "daa28cc29fa00508b59955cebd716c91"
+      "8fc87759103e1ec1838ae777d9710c44"
+    ],
+    [
+      "FStar.IntegerIntervals.uu___41",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.IntegerIntervals.interval_size",
+        "primitive_Prims.op_GreaterThanOrEqual",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0"
+      ],
+      0,
+      "cc3c182ca8efa0e94e520fee967906cd"
     ],
     [
       "FStar.IntegerIntervals.uu___42",
@@ -47,7 +60,7 @@
         "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "a0e99903193106441f13aa195435936d"
+      "9c26a2a1de22a8b4dda5cc123394ff8a"
     ],
     [
       "FStar.IntegerIntervals.uu___43",
@@ -60,21 +73,7 @@
         "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "b72a961f087505d12013d7f60bc7b9d6"
-    ],
-    [
-      "FStar.IntegerIntervals.uu___44",
-      1,
-      2,
-      1,
-      [
-        "@query", "equation_FStar.IntegerIntervals.interval_size",
-        "primitive_Prims.op_GreaterThanOrEqual",
-        "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_BoxInt_proj_0"
-      ],
-      0,
-      "320f8d305a1bbfe4c3c91c242913d887"
+      "bd0991336f588385cd6f5a121e8c78bc"
     ],
     [
       "FStar.IntegerIntervals.counter_bounds_lemma",
@@ -85,15 +84,50 @@
         "@MaxIFuel_assumption", "@query",
         "equation_FStar.IntegerIntervals.counter_for",
         "equation_FStar.IntegerIntervals.ifrom_ito",
+        "equation_FStar.IntegerIntervals.interval",
+        "equation_FStar.IntegerIntervals.interval_condition",
         "equation_FStar.IntegerIntervals.interval_size",
-        "equation_FStar.IntegerIntervals.under", "equation_Prims.nat",
-        "int_inversion", "primitive_Prims.op_Addition",
-        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "refinement_interpretation_Tm_refine_c1424615841f28cac7fc34e92b7ff33c"
+        "equation_FStar.IntegerIntervals.under", "int_inversion",
+        "primitive_Prims.op_Addition", "primitive_Prims.op_AmpAmp",
+        "primitive_Prims.op_LessThan", "primitive_Prims.op_LessThanOrEqual",
+        "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_fcf1a3596fffd49dd2e91f2678358f19"
       ],
       0,
-      "9aead21b75dbbdf3897b08bc231b63be"
+      "4541c08d2aea83e274b85df167fa976e"
+    ],
+    [
+      "FStar.IntegerIntervals.indices_seq",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "FStar.IntegerIntervals_interpretation_Tm_arrow_228eb393a9eb9a40ceba40f3bf06b6f8",
+        "FStar.Seq.Base_interpretation_Tm_arrow_44bb45ed5c2534b346e0f58ea5033251",
+        "equation_FStar.IntegerIntervals.interval",
+        "equation_FStar.IntegerIntervals.interval_condition",
+        "equation_FStar.IntegerIntervals.interval_type",
+        "equation_FStar.IntegerIntervals.under", "equation_Prims.eqtype",
+        "equation_Prims.nat", "function_token_typing_Prims.int",
+        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "haseqTm_refine_fcf1a3596fffd49dd2e91f2678358f19", "int_inversion",
+        "interpretation_Tm_abs_07607a90cdec640007c6e8f2e5d63494",
+        "lemma_FStar.Seq.Base.init_index_",
+        "lemma_FStar.Seq.Base.lemma_init_len", "primitive_Prims.op_AmpAmp",
+        "primitive_Prims.op_LessThan", "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_3c4167b507ffe04135b47025f765c8a4",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_c1424615841f28cac7fc34e92b7ff33c",
+        "refinement_interpretation_Tm_refine_fcf1a3596fffd49dd2e91f2678358f19",
+        "typing_FStar.IntegerIntervals.under"
+      ],
+      0,
+      "c1e04a3ccea60cdb4d8e10585acdc951"
     ]
   ]
 ]

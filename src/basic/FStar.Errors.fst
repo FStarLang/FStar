@@ -22,7 +22,7 @@ open FStar.Compiler.Util
 open FStar.Compiler.Range
 open FStar.Options
 module List = FStar.Compiler.List
-module Util = FStar.Compiler.Util
+module BU = FStar.Compiler.Util
 
 (** This exception is raised in FStar.Error
     when a warn_error string could not be processed;
@@ -740,7 +740,6 @@ let default_settings : list error_setting =
     Warning_NoMagicInFSharp                           , CWarning, 345;
     Error_BadLetOpenRecord                            , CAlwaysError, 346;
     ]
-module BU = FStar.Compiler.Util
 
 let lookup_error settings e =
   match
@@ -790,7 +789,7 @@ let update_flags (l:list (error_flag * string))
     List.map (fun (v, default_flag, i) -> v, set_one_flag i flag default_flag, i) errs
    in
    let compute_range (flag, s) =
-     let r = Util.split s ".." in
+     let r = BU.split s ".." in
      let (l,h) =
          match r with
          | [r1; r2] -> (int_of_string r1, int_of_string r2)
@@ -814,8 +813,6 @@ exception Stop
 
 (* Raised when an empty fragment is parsed *)
 exception Empty_frag
-
-module BU = FStar.Compiler.Util
 
 type issue_level =
 | ENotImplemented

@@ -44,7 +44,6 @@ module N = FStar.TypeChecker.Normalize
 module FC = FStar.Const
 module EMB = FStar.Syntax.Embeddings
 module PC = FStar.Parser.Const
-open FStar.TypeChecker.Cfg
 
 (* Broadly, the algorithm implemented here is inspired by
 
@@ -469,7 +468,7 @@ let rec translate (cfg:config) (bs:list t) (e:term) : t =
     | Tm_abs ([], _, _) -> failwith "Impossible: abstraction with no binders"
 
     | Tm_abs (xs, body, resc) ->
-      mk_t <| Lam ((fun ys -> translate cfg (List.append ys bs) body),
+      mk_t <| Lam ((fun ys -> translate cfg (List.append (List.map fst ys) bs) body),
                   Inl (bs, xs, resc),
                   List.length xs)
 
@@ -720,7 +719,7 @@ and iapp (cfg : config) (f:t) (args:args) : t =
     let m = List.length args in
     if m < n then
       // partial application
-      let arg_values_rev = map_rev fst args in
+      let arg_values_rev = List.rev args in
       let binders =
         match binders with
         | Inr raw_args ->
@@ -729,7 +728,7 @@ and iapp (cfg : config) (f:t) (args:args) : t =
 
         | Inl (ctx, xs, rc) ->
           let _, xs = List.splitAt m xs in
-          let ctx = List.append arg_values_rev ctx in
+          let ctx = List.append (List.map fst arg_values_rev) ctx in
           Inl (ctx, xs, rc)
       in
       mk <|
@@ -738,12 +737,12 @@ and iapp (cfg : config) (f:t) (args:args) : t =
           n - m)
     else if m = n then
       // full application
-      let arg_values_rev = map_rev fst args in
+      let arg_values_rev = List.rev args in
       f arg_values_rev
     else
       // extra arguments
       let (args, args') = List.splitAt n args in
-      iapp cfg (f (map_rev fst args)) args'
+      iapp cfg (f (List.rev args)) args'
   | Accu (a, ts) -> mk <| Accu (a, List.rev_append args ts)
   | Construct (i, us, ts) ->
     let rec aux args us ts =
@@ -873,22 +872,21 @@ and translate_fv (cfg: config) (bs:list t) (fvar:fv): t =
          let arity = prim_step.arity + prim_step.univ_arity in
          debug (fun () -> BU.print1 "Found a primop %s\n" (P.fv_to_string fvar));
          mk_t <| Lam ((fun args_rev ->
-                 let args' = map_rev NBETerm.as_arg args_rev in
-                 let callbacks = {
-                   iapp = iapp cfg;
-                   translate = translate cfg bs;
-                 }
-                 in
-                 match prim_step.interpretation_nbe callbacks args' with
-                 | Some x ->
-                   debug (fun () -> BU.print2 "Primitive operator %s returned %s\n" (P.fv_to_string fvar) (t_to_string x));
-                   x
-                 | None ->
-                   debug (fun () -> BU.print1 "Primitive operator %s failed\n" (P.fv_to_string fvar));
-                   iapp cfg (mkFV fvar [] []) args'),
-              (let f (_:int) = S.mk_binder (S.new_bv None S.t_unit) in
-               Inl ([], FStar.Common.tabulate arity f, None)),
-              arity)
+                      let args' = List.rev args_rev in
+                      let callbacks = {
+                        iapp = iapp cfg;
+                        translate = translate cfg bs;
+                      } in
+                      match prim_step.interpretation_nbe callbacks args' with
+                      | Some x ->
+                        debug (fun () -> BU.print2 "Primitive operator %s returned %s\n" (P.fv_to_string fvar) (t_to_string x));
+                        x
+                      | None ->
+                        debug (fun () -> BU.print1 "Primitive operator %s failed\n" (P.fv_to_string fvar));
+                      iapp cfg (mkFV fvar [] []) args'),
+                     (let f (_:int) = S.mk_binder (S.new_bv None S.t_unit) in
+                      Inl ([], FStar.Common.tabulate arity f, None)),
+                     arity)
 
        | Some _ -> debug (fun () -> BU.print1 "(2) Decided to not unfold %s\n" (P.fv_to_string fvar)); mkFV fvar [] []
        | _      -> debug (fun () -> BU.print1 "(3) Decided to not unfold %s\n" (P.fv_to_string fvar)); mkFV fvar [] []
@@ -1233,7 +1231,7 @@ and readback (cfg:config) (x:t) : term =
                 let x = { S.freshen_bv x with sort = tnorm } in
                 let ax = mkAccuVar x in
                 let ctx = ax :: ctx in
-                ctx, ({b with binder_bv=x})::binders_rev, ax::accus_rev)
+                ctx, ({b with binder_bv=x})::binders_rev, (ax, U.aqual_of_binder b)::accus_rev)
               (ctx, [], [])
               binders
           in
@@ -1249,9 +1247,11 @@ and readback (cfg:config) (x:t) : term =
         | Inr args ->
           let binders, accus =
             List.fold_right
-              (fun (t, _) (binders, accus) ->
-                let x = S.new_bv None (readback cfg t) in
-                (S.mk_binder x)::binders, mkAccuVar x :: accus)
+              (fun (t, aq) (binders, accus) ->
+               let bqual, battrs = U.bqual_and_attrs_of_aqual aq in
+               let x = S.new_bv None (readback cfg t) in
+               (S.mk_binder_with_attrs x bqual battrs)::binders,
+               (mkAccuVar x, aq) :: accus)
               args
               ([],[])
           in
