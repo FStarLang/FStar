@@ -68,7 +68,7 @@ ocaml-unit-tests:
 	$(BIN)/tests.exe
 
 ulib-in-fsharp: $(BIN)/fstar.exe
-	$(MAKE) -C ../ulib install-ulib-in-fsharp
+	$(MAKE) -C ../ulib ulib-in-fsharp
 
 # Getting parallelism from this target
 uregressions: ulib-extra tutorial utests uexamples
