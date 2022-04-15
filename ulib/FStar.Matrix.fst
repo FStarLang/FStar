@@ -34,6 +34,21 @@ module ML = FStar.Math.Lemmas
 
 open FStar.IntegerIntervals   
 open FStar.Mul
+open FStar.Seq.Equiv
+
+(* 
+   A little glossary that might help reading this file
+   We don't list common terms like associativity and reflexivity.
+
+   lhs, rhs               left hand side, right hand side
+   liat                   subsequence of all elements except the last (tail read backwards)
+   snoc                   construction of sequence from a pair (liat, last) (cons read backwards)
+   un_snoc                decomposition of sequence into a pair (liat, last)
+   foldm                  sum or product of all elements in a sequence using given CommMonoid
+   foldm_snoc             recursively defined sum/product of a sequence, starting from the last element
+   congruence             respect of equivalence ( = ) by a binary operation ( * ), a=b ==> a*x = b*x
+   unit                   identity element (xu=x, ux=x) (not to be confused with invertible elements)
+*)
 
 type matrix c m n = z:SB.seq c { SB.length z = m*n }
  
@@ -117,12 +132,20 @@ let matrix_fold_snoc_lemma #c #eq
                   (SB.slice (matrix_seq generator) ((m-1)*n) (m*n)));    
     SP.foldm_snoc_append cm (matrix_seq #c #(m-1) #n generator) 
                          (SB.slice (matrix_seq generator) ((m-1)*n) (m*n)) 
- 
+
+(* 
+   There are many auxiliary lemmas like this that are extracted because
+   lemma_eq_elim invocations often impact verification speed more than
+   one might expect they would.
+*)
 let matrix_submatrix_lemma #c (#m: not_less_than 2) (#n: pos)  
                            (generator: matrix_generator c m n)
-  : Lemma ((matrix_seq generator) == (matrix_seq (fun (i:under(m-1)) (j:under n) -> generator i j) `SB.append` SB.init n (generator (m-1))))
-  = SB.lemma_eq_elim (matrix_seq (fun (i:under (m-1)) (j:under n) -> generator i j)) (matrix_seq #c #(m-1) #n generator);
-    SB.lemma_eq_elim (SB.slice (matrix_seq generator) ((m-1)*n) (m*n)) (SB.init n (generator (m-1)));
+  : Lemma ((matrix_seq generator) == (matrix_seq (fun (i:under(m-1)) (j:under n) -> generator i j) 
+                                     `SB.append` SB.init n (generator (m-1))))
+  = SB.lemma_eq_elim (matrix_seq (fun (i:under (m-1)) (j:under n) -> generator i j)) 
+                     (matrix_seq #c #(m-1) #n generator);
+    SB.lemma_eq_elim (SB.slice (matrix_seq generator) ((m-1)*n) (m*n)) 
+                     (SB.init n (generator (m-1)));
     matrix_seq_decomposition_lemma generator
 
 let matrix_seq_of_one_row_matrix #c #m #n (generator : matrix_generator c m n) 
@@ -202,30 +225,29 @@ let matrix_last_line_equals_gen_fold #c #eq
                                         (#m #n: pos)  
                                         (cm: CE.cm c eq) 
                                         (generator: matrix_generator c m n) 
-    : Lemma (SP.foldm_snoc cm (SB.slice (matrix_seq generator) ((m-1)*n) (m*n)) 
-            `eq.eq` CF.fold cm 0 (n-1) (generator (m-1)))
-    = 
-
-      let slice = SB.slice #c in
-      let foldm_snoc = SP.foldm_snoc #c #eq in
-      assert (matrix_seq generator == seq_of_matrix (init generator));
-      let init = SB.init #c in
-      let lemma_eq_elim = SB.lemma_eq_elim #c in 
-      lemma_eq_elim (slice (matrix_seq generator) ((m-1)*n) (m*n)) 
-                    (init n (generator (m-1))); 
-      let g : ifrom_ito 0 (n-1) -> c = generator (m-1) in 
-      CF.fold_equals_seq_foldm cm 0 (n-1) g;
-      let gen = CF.init_func_from_expr g 0 (n-1) in
-      eq.reflexivity (foldm_snoc cm (init (closed_interval_size 0 (n-1)) gen));  
-      lemma_eq_elim (slice (matrix_seq generator) ((m-1)*n) (m*n))    
-                    (init (closed_interval_size 0 (n-1)) gen); 
-      eq.symmetry (CF.fold cm 0 (n-1) (generator (m-1)))
-                  (foldm_snoc cm (init (closed_interval_size 0 (n-1)) gen)); 
-      eq.transitivity (foldm_snoc cm (slice (matrix_seq generator) ((m-1)*n) (m*n)))
-                      (foldm_snoc cm (init (closed_interval_size 0 (n-1)) gen))
-                      (CF.fold cm 0 (n-1) (generator (m-1))) 
+  : Lemma (SP.foldm_snoc cm (SB.slice (matrix_seq generator) ((m-1)*n) (m*n))
+           `eq.eq` CF.fold cm 0 (n-1) (generator (m-1))) = 
+  let slice = SB.slice #c in
+  let foldm_snoc = SP.foldm_snoc #c #eq in
+  assert (matrix_seq generator == seq_of_matrix (init generator));
+  let init = SB.init #c in
+  let lemma_eq_elim = SB.lemma_eq_elim #c in 
+  lemma_eq_elim (slice (matrix_seq generator) ((m-1)*n) (m*n)) 
+                (init n (generator (m-1))); 
+  let g : ifrom_ito 0 (n-1) -> c = generator (m-1) in 
+  CF.fold_equals_seq_foldm cm 0 (n-1) g;
+  let gen = CF.init_func_from_expr g 0 (n-1) in
+  eq.reflexivity (foldm_snoc cm (init (closed_interval_size 0 (n-1)) gen));  
+  lemma_eq_elim (slice (matrix_seq generator) ((m-1)*n) (m*n))    
+                (init (closed_interval_size 0 (n-1)) gen); 
+  eq.symmetry (CF.fold cm 0 (n-1) (generator (m-1)))
+              (foldm_snoc cm (init (closed_interval_size 0 (n-1)) gen)); 
+  eq.transitivity (foldm_snoc cm (slice (matrix_seq generator) ((m-1)*n) (m*n)))
+                  (foldm_snoc cm (init (closed_interval_size 0 (n-1)) gen))
+                  (CF.fold cm 0 (n-1) (generator (m-1))) 
  
-
+(* This lemma proves that a matrix fold is the same thing as double-fold of
+   its generator function against full indices ranges *)
 #push-options "--ifuel 0 --fuel 0"
 let rec matrix_fold_aux #c #eq // lemma needed for precise generator domain control
                            (#gen_m #gen_n: pos) // full generator domain
@@ -267,9 +289,6 @@ let matrix_fold_equals_func_double_fold #c #eq #m #n cm generator
   : Lemma (foldm cm (init generator) `eq.eq` 
            CF.fold cm 0 (m-1) (fun (i:under m) -> CF.fold cm 0 (n-1) (generator i))) 
   = matrix_fold_aux cm m n generator
- 
-open FStar.Seq.Equiv
-
 
 (* This function provides the transposed matrix generator, with indices swapped
    Notice how the forall property of the result function is happily proved 
@@ -331,16 +350,23 @@ let matrix_fold_equals_fold_of_transpose #c #eq #m #n
 let matrix_eq_fun #c (#m #n: pos) (eq: CE.equiv c) (ma mb: matrix c m n) =   
   eq_of_seq eq (seq_of_matrix ma) (seq_of_matrix mb)
 
+(*
+   Matrix equivalence, defined as element-wise equivalence of its underlying 
+   flattened sequence, is constructed trivially from the element equivalence
+   and the lemmas defined above.
+*)
 let matrix_equiv #c (eq: CE.equiv c) (m n: pos) : CE.equiv (matrix c m n) = 
   CE.EQ (matrix_eq_fun eq)
         (fun m -> eq_of_seq_reflexivity eq (seq_of_matrix m))
         (fun ma mb -> eq_of_seq_symmetry eq (seq_of_matrix ma) (seq_of_matrix mb))
         (fun ma mb mc -> eq_of_seq_transitivity eq (seq_of_matrix ma) (seq_of_matrix mb) (seq_of_matrix mc))
 
+(* Equivalence of matrices means equivalence of all corresponding elements *)
 let matrix_equiv_ijth #c (#m #n: pos) (eq: CE.equiv c) (ma mb: matrix c m n) (i: under m) (j: under n)
   : Lemma (requires (matrix_equiv eq m n).eq ma mb) (ensures ijth ma i j `eq.eq` ijth mb i j) = 
   eq_of_seq_element_equality eq (seq_of_matrix ma) (seq_of_matrix mb)
- 
+
+(* Equivalence of all corresponding elements means equivalence of matrices *)
 let matrix_equiv_from_element_eq #c (#m #n: pos) (eq: CE.equiv c) (ma mb: matrix c m n)
   : Lemma (requires (forall (i: under m) (j: under n). ijth ma i j `eq.eq` ijth mb i j))
           (ensures matrix_eq_fun eq ma mb) = 
@@ -351,7 +377,8 @@ let matrix_equiv_from_element_eq #c (#m #n: pos) (eq: CE.equiv c) (ma mb: matrix
   assert (forall (ij: under (m*n)). SB.index s2 ij == ijth mb (get_i m n ij) (get_j m n ij));
   assert (forall (ij: under (m*n)). SB.index s1 ij `eq.eq` SB.index s2 ij);  
   eq_of_seq_from_element_equality eq (seq_of_matrix ma) (seq_of_matrix mb)
- 
+
+(* We construct addition CommMonoid from the following definitions *)
 let matrix_add_is_associative #c #eq #m #n (add: CE.cm c eq) (ma mb mc: matrix c m n)
   : Lemma (matrix_add add (matrix_add add ma mb) mc `(matrix_equiv eq m n).eq` 
            matrix_add add ma (matrix_add add mb mc)) =  
@@ -359,7 +386,7 @@ let matrix_add_is_associative #c #eq #m #n (add: CE.cm c eq) (ma mb mc: matrix c
     (matrix_add add (matrix_add add ma mb) mc)
     (matrix_add add ma (matrix_add add mb mc))  
     (fun i j -> add.associativity (ijth ma i j) (ijth mb i j) (ijth mc i j))
- 
+
 let matrix_add_is_commutative #c #eq (#m #n: pos) (add: CE.cm c eq) (ma mb: matrix c m n)
   : Lemma (matrix_add add ma mb `(matrix_equiv eq m n).eq` matrix_add add mb ma) = 
   matrix_equiv_from_proof eq (matrix_add add ma mb) (matrix_add add mb ma)
@@ -392,10 +419,15 @@ let matrix_add_comm_monoid #c #eq (add: CE.cm c eq) (m n: pos)
           (matrix_add_is_commutative add)
           (matrix_add_congruence add)
 
- 
+(* equivalence of addressing styles *)
 let matrix_row_col_lemma #c #m #n (mx: matrix c m n) (i: under m) (j: under n) 
   : Lemma (ijth mx i j == SB.index (row mx i) j /\ ijth mx i j == SB.index (col mx j) i) = ()
 
+(* 
+   See how lemma_eq_elim is defined, note the SMTPat there.
+   Invoking this is often more efficient in big proofs than invoking 
+   lemma_eq_elim directly.
+*)
 let seq_of_products_lemma #c #eq (mul: CE.cm c eq) (s: SB.seq c) (t: SB.seq c {SB.length t == SB.length s})
   (r: SB.seq c{SB.equal r (SB.init (SB.length s) (fun (i: under (SB.length s)) -> SB.index s i `mul.mult` SB.index t i))})
   : Lemma (seq_of_products mul s t == r) = ()
@@ -410,12 +442,30 @@ let matrix_mul_gen #c #eq #m #n #p (add mul: CE.cm c eq)
 
 let matrix_mul #c #eq #m #n #p (add mul: CE.cm c eq) (mx: matrix c m n) (my: matrix c n p) 
   = init (matrix_mul_gen add mul mx my)
- 
-let seq_last_index #c (s: SB.seq c{SB.length s > 0}) : Lemma (SProp.last s == SB.index s (SB.length s - 1)) = ()
 
+(* the following lemmas improve verification performance. *) 
+(* Sometimes this fact gets lost and needs an explicit proof *)
+let seq_last_index #c (s: SB.seq c{SB.length s > 0}) 
+  : Lemma (SProp.last s == SB.index s (SB.length s - 1)) = ()
+
+(* It often takes assert_norm to obtain the fact that,
+   (fold s == last s `op` fold (slice s 0 (length s - 1))).
+   Invoking this lemma instead offers a more stable option. *)
 let seq_fold_decomposition #c #eq (cm: CE.cm c eq) (s: SB.seq c{SB.length s > 0}) 
   : Lemma (SP.foldm_snoc cm s == cm.mult (SProp.last s) (SP.foldm_snoc cm (fst (SProp.un_snoc s)))) = ()
-  
+
+
+(* 
+   A little (maybe silly) word of warning to all who might consider
+   redefining (=) similarly to how it is done in the lemmas below.
+
+   You might spend way more time than you would like to while trying
+   to grasp why something like "if (i=0) then (..." suddenly stopped working.
+
+   Other than that, using common notation for algebraic operations instead
+   of `mul` / `add` infix indeed simplifies the code and makes it more compact.
+*)
+
 let rec foldm_snoc_distributivity_left #c #eq (mul add: CE.cm c eq) (a: c) (s: SB.seq c)
   : Lemma (requires is_fully_distributive mul add /\ is_absorber add.unit mul) 
           (ensures mul.mult a (SP.foldm_snoc add s) `eq.eq`
@@ -455,7 +505,9 @@ let foldm_snoc_distributivity_right_eq #c #eq (mul add: CE.cm c eq) (s: SB.seq c
                    SP.foldm_snoc add r)
   = foldm_snoc_distributivity_right mul add s a
 
-let foldm_snoc_distributivity_left_eq #c #eq (mul add: CE.cm c eq) (a: c) (s: SB.seq c) (r: SB.seq c{SB.equal r (const_op_seq mul a s)})
+let foldm_snoc_distributivity_left_eq #c #eq (mul add: CE.cm c eq) (a: c) 
+                                             (s: SB.seq c) 
+                                             (r: SB.seq c{SB.equal r (const_op_seq mul a s)})
   : Lemma (requires is_fully_distributive mul add /\ is_absorber add.unit mul) 
           (ensures (mul.mult a(SP.foldm_snoc add s)) `eq.eq`
                    SP.foldm_snoc add r)
