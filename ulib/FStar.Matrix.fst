@@ -145,8 +145,8 @@ let one_row_matrix_fold_aux #c #eq #m #n (cm:CE.cm c eq) (generator : matrix_gen
     (SB.init m (fun i -> SP.foldm_snoc cm (SB.init n (generator i))));
   matrix_seq_of_one_row_matrix generator;
   eq.symmetry rhs lhs
-             
-#push-options "--ifuel 1 --fuel 0 --z3rlimit 20" 
+
+#push-options "--ifuel 0 --fuel 0 --z3rlimit 50 --quake 10/10" 
 #restart-solver
 let rec matrix_fold_equals_fold_of_seq_folds #c #eq #m #n cm generator : Lemma 
   (ensures foldm cm (init generator) `eq.eq`
