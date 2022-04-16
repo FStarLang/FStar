@@ -186,6 +186,7 @@ let terminal_case_aux #c #eq (#p:pos{p=1}) #n (cm:CE.cm c eq) (generator: matrix
            SP.foldm_snoc cm (SB.init m (fun (i:under m) -> SP.foldm_snoc cm (SB.init n (generator i)))))
   = one_row_matrix_fold_aux cm generator
 
+#push-options "--quake 10/10 --ifuel 0 --fuel 1 --z3rlimit 10"
 let terminal_case_two_aux #c #eq (#p:pos) #n (cm:CE.cm c eq) (generator: matrix_generator c p n) (m: pos{m=1}) : Lemma 
   (ensures SP.foldm_snoc cm (SB.slice (seq_of_matrix (init generator)) 0 (m*n)) `eq.eq`
            SP.foldm_snoc cm (SB.init m (fun (i:under m) -> SP.foldm_snoc cm (SB.init n (generator i)))))
@@ -202,6 +203,7 @@ let terminal_case_two_aux #c #eq (#p:pos) #n (cm:CE.cm c eq) (generator: matrix_
    SB.lemma_eq_elim line slice;        
    eq.symmetry (SP.foldm_snoc cm (SB.init m (fun (i:under m) -> SP.foldm_snoc cm (SB.init n (generator i)))))
                (SP.foldm_snoc cm line) 
+#pop-options
 
 let liat_equals_init #c (m:pos) (gen: under m -> c)
   : Lemma (fst (SProp.un_snoc (SB.init m gen)) == SB.init (m-1) gen) = 
