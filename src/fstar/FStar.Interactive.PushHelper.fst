@@ -349,7 +349,8 @@ let ld_deps st =
     | Inr st -> Inr st
     | Inl st -> Inl (st, deps)
   with
-  | _ -> U.print_error "[E] Failed to load deps"; Inr st
+  | Err (e, msg, ctx) -> U.print1_error "[E] Failed to load deps. %s" msg; Inr st
+  | exn -> U.print1_error "[E] Failed to load deps. Message: %s" (message_of_exn exn); Inr st
 
 let add_module_completions this_fname deps table =
   let capitalize str = if str = "" then str

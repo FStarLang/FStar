@@ -16,7 +16,6 @@
 
 module FStar.CheckedFiles
 open FStar.Compiler.Effect
-open FStar.Compiler.Effect
 open FStar
 open FStar.Compiler
 open FStar.Compiler.Util

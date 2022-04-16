@@ -18,7 +18,6 @@ module FStar.Syntax.Syntax
 open Prims
 open FStar.Pervasives
 open FStar.Compiler.Effect
-open FStar.Compiler.Effect
 (* Type definitions for the core AST *)
 
 open FStar

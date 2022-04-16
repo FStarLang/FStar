@@ -15,7 +15,6 @@
  *)
 module FStar.Compiler.List
 open FStar.Compiler.Effect
-open FStar.Compiler.Effect
 open Prims
 
 val isEmpty : (list 'a) -> Tot bool

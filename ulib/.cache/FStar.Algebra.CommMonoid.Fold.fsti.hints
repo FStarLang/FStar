@@ -1,5 +1,5 @@
 [
-  "ºglgbàH¬∆¯ÈÆ\f¬âj",
+  "10/sÄΩ–˙p˘ØB™·Èè",
   [
     [
       "FStar.Algebra.CommMonoid.Fold.init_func_from_expr",
@@ -25,33 +25,7 @@
         "refinement_interpretation_Tm_refine_fcf1a3596fffd49dd2e91f2678358f19"
       ],
       0,
-      "bbfb9ceb32cdeebe5290dc87cb3074c8"
-    ],
-    [
-      "FStar.Algebra.CommMonoid.Fold.fold",
-      1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "binder_x_64adf08d2b2db30b4ad332da089b0fde_5",
-        "binder_x_ae567c2fb75be05905677af440075565_4",
-        "equation_FStar.IntegerIntervals.greater_than",
-        "equation_FStar.IntegerIntervals.interval_condition",
-        "equation_FStar.IntegerIntervals.not_less_than",
-        "function_token_typing_Prims.__cache_version_number__",
-        "int_inversion", "int_typing", "primitive_Prims.op_Addition",
-        "primitive_Prims.op_AmpAmp", "primitive_Prims.op_Equality",
-        "primitive_Prims.op_LessThan", "primitive_Prims.op_LessThanOrEqual",
-        "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_25948cf2cb84e8edfffe30eaf3d63408",
-        "well-founded-ordering-on-nat"
-      ],
-      0,
-      "2234b4e3eb5f81c6e9b28e624627f79f"
+      "2c8bb5a1c556f4c5a38d91b6af88e611"
     ],
     [
       "FStar.Algebra.CommMonoid.Fold.fold_singleton_lemma",
@@ -69,7 +43,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "fd8a2de08a2071c0136eee6cf375d787"
+      "5a08b6493ba738831330b60b0212ad19"
     ],
     [
       "FStar.Algebra.CommMonoid.Fold.fold_snoc_decomposition",
@@ -89,7 +63,7 @@
         "refinement_interpretation_Tm_refine_25948cf2cb84e8edfffe30eaf3d63408"
       ],
       0,
-      "424e1eb37a285e22b86f109593bbd62f"
+      "7432eb0ef0679035fea65d3043e40719"
     ],
     [
       "FStar.Algebra.CommMonoid.Fold.fold_equals_seq_foldm",
@@ -110,7 +84,7 @@
         "refinement_interpretation_Tm_refine_25948cf2cb84e8edfffe30eaf3d63408"
       ],
       0,
-      "fd4fdf4f210d9dc7ef8b7ef0e248d610"
+      "355c0b0b4d826581b3a43095a50e94bb"
     ],
     [
       "FStar.Algebra.CommMonoid.Fold.fold_offset_irrelevance_lemma",
@@ -135,7 +109,7 @@
         "refinement_interpretation_Tm_refine_fcf1a3596fffd49dd2e91f2678358f19"
       ],
       0,
-      "9813c3774ed15a3d4f365455c6fc3414"
+      "bc127b8605138cddb9856ae90194e773"
     ],
     [
       "FStar.Algebra.CommMonoid.Fold.fold_offset_elimination_lemma",
@@ -161,7 +135,7 @@
         "refinement_interpretation_Tm_refine_fcf1a3596fffd49dd2e91f2678358f19"
       ],
       0,
-      "95895658d1da08c8063846befd6cd38d"
+      "11538c14c905f067874fe84aa48847da"
     ]
   ]
 ]

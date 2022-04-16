@@ -16,8 +16,8 @@
 
 module FStar.TypeChecker.TcInductive
 open FStar.Compiler.Effect
-open FStar.Compiler.Effect
-open FStar open FStar.Compiler
+open FStar
+open FStar.Compiler
 open FStar.TypeChecker
 open FStar.TypeChecker.Env
 open FStar.Compiler.Util

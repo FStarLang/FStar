@@ -16,7 +16,6 @@
 module FStar.Syntax.InstFV
 open FStar.Pervasives
 open FStar.Compiler.Effect
-open FStar.Compiler.Effect
 open FStar.Syntax.Syntax
 open FStar.Ident
 open FStar.Compiler.Util

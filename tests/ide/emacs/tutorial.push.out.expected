@@ -1,5 +1,5 @@
 {"kind": "protocol-info", "rest": "[...]"}
-{"kind": "response", "query-id": "1", "response": [{"level": "warning", "message": "Pattern uses these theory symbols or terms that should not be in an smt pattern:  Prims.op_Subtraction", "number": 271, "ranges": [{"beg": [436, 8], "end": [436, 51], "fname": "FStar.UInt.fsti"}]}], "status": "success"}
+{"kind": "response", "query-id": "1", "response": [{"level": "warning", "message": "Pattern uses these theory symbols or terms that should not be in an smt pattern:  Prims.op_Subtraction", "number": 271, "ranges": [{"beg": [434, 8], "end": [434, 51], "fname": "FStar.UInt.fsti"}]}], "status": "success"}
 {"kind": "response", "query-id": "2", "response": [], "status": "success"}
 {"kind": "response", "query-id": "3", "response": [], "status": "success"}
 {"kind": "response", "query-id": "4", "response": [], "status": "success"}

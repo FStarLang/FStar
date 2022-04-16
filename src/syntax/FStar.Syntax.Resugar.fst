@@ -20,7 +20,6 @@ open FStar
 open FStar.Compiler
 open FStar.Pervasives
 open FStar.Compiler.Effect
-open FStar.Compiler.Effect
 open FStar.Syntax.Syntax
 open FStar.Ident
 open FStar.Compiler.Util
