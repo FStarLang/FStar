@@ -222,12 +222,10 @@ let curval (#a: Type u#a) (#q:preorder a) (v:vhist q) = Cons?.hd v
   for any value of resource [z] (compatible with [x])
   the new value [y] advances the history [z] in a preorder respecting manner
 *)
-#push-options "--admit_smt_queries true"
 let frame_preserving_q (#a: Type u#a) (q:preorder a) (x y:vhist q)
   : Lemma (requires frame_preserving (pcm_of_preorder q) x y)
           (ensures (forall (z:hist q). compatible (pcm_of_preorder q) x z ==> curval z `q` curval y))
-  = ()
-#pop-options
+  = assert (forall frame. composable (pcm_of_preorder q) frame x ==> op (pcm_of_preorder q) frame y == y)
 
 (** Still given a frame-preserving update from [x] to [y], this update extends the history *)
 let frame_preserving_extends (#a: Type u#a) (q:preorder a) (x y:vhist q)
