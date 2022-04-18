@@ -125,7 +125,7 @@ let test_bigops (b1:UB.ubuffer int) (b2:IB.ibuffer int) (b3:B.buffer int) (h h0 
 
 module PF = LowStar.PrefixFreezableBuffer
 
-#push-options "--max_fuel 0 --max_ifuel 0"
+#push-options "--max_fuel 0 --max_ifuel 0 --z3rlimit 20"
 
 assume val havoc_pf (b:PF.buffer)
   : HST.ST unit (requires (fun _ -> True))
@@ -161,9 +161,9 @@ let test_pf () : HST.St unit =
 
   ()
 
-let test_witnessed_functoriality () =
-  assert (LowStar.Monotonic.Buffer.rrel_rel_always_compatible (B.trivial_preorder int) (B.trivial_preorder int));
-  assert (LowStar.Monotonic.Buffer.rrel_rel_always_compatible (IB.immutable_preorder int) (IB.immutable_preorder int))
+// let test_witnessed_functoriality () =
+//   assert (LowStar.Monotonic.Buffer.rrel_rel_always_compatible (B.trivial_preorder int) (B.trivial_preorder int));
+//   assert (LowStar.Monotonic.Buffer.rrel_rel_always_compatible (IB.immutable_preorder int) (IB.immutable_preorder int))
 
 
 // (*

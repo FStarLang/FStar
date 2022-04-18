@@ -128,7 +128,7 @@ private let rec aux_process (b:Buffer.buffer u32) (p0 p1 p:u32) (l:list (u32 * u
         else aux_process b (p1 +^ 1ul) (p1 +^ 1ul) p ((p0, p1)::l)  //else add it to the list
       else aux_process b p0 (p1 +^ 1ul) p l
 
-#set-options "--z3rlimit 16"
+#set-options "--fuel 0 --ifuel 0 --z3rlimit 32"
 
 (*
  * Main process function that client (Record) calls once it has appended some data to the input buffer
