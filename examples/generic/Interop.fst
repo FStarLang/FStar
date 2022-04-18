@@ -7,7 +7,7 @@ module Interop
    We effectively model a calling convention in which arguments are received in 
    specific registers.
 *)
-
+#push-options "--query_stats --fuel 1 --ifuel 1"
 open FStar.FunctionalExtensionality
 open FStar.Integers
 open FStar.HyperStack.ST
@@ -54,9 +54,10 @@ let rec n_arrow (n:arity) (result:Type) =
   else uint_64 -> n_arrow (n - 1) result
 
 (* `elim` is a coercion to force a bit of normalization *)
-let elim #n #result (f:n_arrow n result)
+let norm #n #result (f:n_arrow n result)
   : normalize_term (n_arrow n result)
-  = f
+  = normalize_term_spec (n_arrow n result);
+    coerce_eq () f
 
 (* `elim_1` peels off one arrow in an n_arrow *)
 let elim_1 (#n:arity{n > 0}) #r (f:n_arrow n r)
@@ -108,69 +109,125 @@ let vale_sig
         (requires (as_vale_pre pre s0))
         (ensures (fun s1 -> as_vale_post post s0 s1))
 
+#push-options "--query_stats"
 (* as_lowstar_sig n pre post: 
      Interprets a Vale signature as a Low* signature
      i.e., a stateful function with n arguments, 
      whose pre and post are the corresponding Vale pre/post
  *)
-let rec as_lowstar_sig (n:arity{n > 0}) (pre:vale_pre n) (post:vale_post n) : Type0 =
+let rec as_lowstar_sig (n:arity)
+                       (pre:vale_pre n)
+                       (post:vale_post n) : Type0 =
   match n with
-  | 1 -> x:uint_64 -> ST unit (requires (fun h0 -> elim #1 pre x h0))
-                            (ensures (fun h0 _ h1 -> elim #1 post x h0 h1))
-  | _ -> x:uint_64 -> as_lowstar_sig (n - 1) (elim_1 pre x) (elim_1 post x)
+  | 0 -> (unit -> ST unit (requires fun h0 -> norm #0 pre h0)
+                        (ensures fun h0 _ h1 -> norm #0 post h0 h1))
+  | _ ->  x:uint_64 -> as_lowstar_sig (n - 1) (elim_1 pre x) (elim_1 post x)
 
+let intro_as_lowstar_sig (m:arity{m > 0}) (pre:vale_pre m) (post:vale_post m)
+                         ($f: (x:uint_64 ->
+                               as_lowstar_sig (m - 1) (elim_1 pre x) (elim_1 post x)))
+  : as_lowstar_sig m pre post
+  = f
 
-//Avoid some inductive proofs by just letting Z3 unfold the recursive functions above
-#reset-options "--z3rlimit_factor 10 --max_fuel 5 --initial_fuel 5 --max_ifuel 1 --initial_ifuel 1 --z3cliopt 'smt.qi.eager_threshold=20' --admit_smt_queries true"
+let rec elim_m_1_equiv (#a:Type)
+                       (n:arity { n > 0 })
+                       (m:arity { 0 < m /\ m <= n })
+                       (p:n_arrow n a)
+                       (regs:registers)
+                       (x:uint_64)
+  : Lemma 
+      (ensures (
+        let i = as_reg (1 + max_arity - m) in
+        elim_m (m - 1) p (Map.upd regs i x) ==
+        elim_1 (elim_m m p regs) x))
+      (decreases (n - m))
+  = let i = as_reg (1 + max_arity - m) in
+    if n - m = 0
+    then (
+      calc (==) {
+        elim_1 (elim_m m p regs) x;
+      (==) {}
+        elim_1 p x;      
+      (==) {}
+        elim_m #(n - 1) #a (m - 1) (elim_1 p x) regs;
+      (==) {} 
+        elim_m (m - 1) p (Map.upd regs i x);
+      }
+    )
+    else (
+      let j = as_reg (1 + max_arity - n) in
+      calc (==) {
+        elim_1 (elim_m m p regs) x;
+      (==) {}
+        elim_1 (elim_m #(n - 1) #a m (elim_1 p (Map.sel regs j)) regs) x;
+      (==) { elim_m_1_equiv (n - 1) m (elim_1 p (Map.sel regs j)) regs x }
+        elim_m (m - 1) (elim_1 p (Map.sel regs j)) (Map.upd regs i x);
+      (==) { }
+        elim_m (m - 1) p (Map.upd regs i x);
+      };
+      ()
+    )
+
 (* wrap v: Turns `v`, a Vale function, into an equivalent a Low* function *) 
-let rec wrap
+let wrap
         (#n:arity{n > 0})
         (#pre:vale_pre n)
         (#post:vale_post n)
         (v:vale_sig n pre post)
   : as_lowstar_sig n pre post
   =
-  let rec aux (m:arity{0 < m /\ m <= n}) //number of arguments still to be received
+  let rec aux (m:arity{0 <= m /\ m <= n}) //number of arguments still to be received
               (regs:registers)         //arguments already received in registers
     : Tot (as_lowstar_sig m (elim_m m pre regs) (elim_m m post regs))
     = let pre0 = pre in
       let post0 = post in
-      let pre = elim_m m pre0 regs in
-      let post = elim_m m post regs in
+      let pre : n_arrow m (HS.mem -> prop) = elim_m m pre0 regs in
+      let post : n_arrow m (HS.mem -> HS.mem -> prop) = elim_m m post0 regs in
       match m with
-      | 1 -> //last argument
-        let f : x:uint_64
-              -> ST unit
-                (requires (fun h -> elim #1 pre x h))
-                (ensures (fun h0 _ h1 -> elim #1 post x h0 h1)) =
-            fun (x:uint_64) ->
-              //Get the initial Low* state
+      | 0 ->
+        let pre : HS.mem -> prop = norm #0 pre in
+        let post : HS.mem -> HS.mem -> prop = norm #0 post in
+        let f (_:unit)
+          : ST unit
+               (requires fun h -> pre h)
+               (ensures fun h0 _ h1 -> post h0 h1)
+          =   //Get the initial Low* state
               let h0 = get () in
-              //Add the last argument into the registers
               let state = {
-                registers = Map.upd regs (as_reg (1 + max_arity - m)) x;
+                registers = regs;
                 memory = h0;
               } in
               //Apply the vale function
               //and replace the Low* state
               gput (fun () -> (v state).memory)
        in
-       (f <: as_lowstar_sig 1 pre post)
+       (f <: as_lowstar_sig 0 pre post)
 
-    | _ ->
-      let f : x:uint_64
-              -> as_lowstar_sig
+      | _ -> 
+        let f (x:uint_64)
+          : as_lowstar_sig
                    (m - 1)
                    (elim_1 pre x)
-                   (elim_1 post x) =
-          fun (x:uint_64) -> 
-            let i = (1 + max_arity - m) in //`x` is the `i`th argument
-            let regs1 = (Map.upd regs (as_reg i) x) in //add it to the registers
+                   (elim_1 post x)
+          = let i = (1 + max_arity - m) in //`x` is the `i`th argument
+            let regs1 = Map.upd regs (as_reg i) x in //add it to the registers
             //explicit typing annotation to allow unfolding recursive definition
-            let v : as_lowstar_sig (m - 1) (elim_m (m - 1) pre regs1) (elim_m (m - 1) post regs1) =
+            let v : as_lowstar_sig 
+                     (m - 1) 
+                     (elim_m (m - 1) pre0 regs1)
+                     (elim_m (m - 1) post0 regs1) =
               aux (m - 1) regs1 //recurse
             in
-            v
+            elim_m_1_equiv n m pre0 regs x;
+            elim_m_1_equiv n m post0 regs x;
+            assert (elim_m (m - 1) pre0 regs1 ==
+                    elim_1 (elim_m m pre0 regs) x);
+            assert (elim_m (m - 1) post0 regs1 ==
+                    elim_1 (elim_m m post0 regs) x);                    
+            coerce_eq () v                    
+      in
+      let f : as_lowstar_sig m (elim_m m pre0 regs) (elim_m m post0 regs)
+        = intro_as_lowstar_sig m (elim_m m pre0 regs) (elim_m m post0 regs) f
       in
       f
     in
