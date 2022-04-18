@@ -31,6 +31,7 @@ module Buffer = LowStar.Buffer
 
 module ST = FStar.HyperStack.ST
 
+#set-options "--quake 20"
 
 (*
  * We currently model the reading side of TLS
@@ -110,7 +111,6 @@ let hsl_create (len:u32{len >^ 0ul})
  * Processes the buffer between p1 and p, one at a time
  * Returns new p0, and updated list of indices
  *)
-#push-options "--admit_smt_queries true"
 private let rec aux_process (b:Buffer.buffer u32) (p0 p1 p:u32) (l:list (u32 * u32))
   :ST (u32 * list (u32 * u32))
       (requires (fun h0 -> Buffer.live h0 b /\
@@ -129,7 +129,6 @@ private let rec aux_process (b:Buffer.buffer u32) (p0 p1 p:u32) (l:list (u32 * u
         if p0 = p1 then aux_process b (p1 +^ 1ul) (p1 +^ 1ul) p l  //if the subsequence is empty, just go ahead
         else aux_process b (p1 +^ 1ul) (p1 +^ 1ul) p ((p0, p1)::l)  //else add it to the list
       else aux_process b p0 (p1 +^ 1ul) p l
-#pop-options
 
 #set-options "--z3rlimit 16"
 
@@ -139,7 +138,6 @@ private let rec aux_process (b:Buffer.buffer u32) (p0 p1 p:u32) (l:list (u32 * u
  * Also updates the msgs
  * And maintains the invariant
  *)
-#push-options "--admit_smt_queries true"
 let hsl_process (st:hsl_state) (p:u32)
   :ST unit (requires (fun h0      -> hsl_invariant st h0 /\  //invariant holds
                                   p <=^ hsl_get_len st /\  //the new index upto which client wrote is in bounds
@@ -154,4 +152,3 @@ let hsl_process (st:hsl_state) (p:u32)
     p0 := new_p0;
     p1 := p;
     msgs := new_msgs
-#pop-options
