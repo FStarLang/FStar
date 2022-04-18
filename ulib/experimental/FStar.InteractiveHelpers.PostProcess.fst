@@ -1,9 +1,5 @@
 module FStar.InteractiveHelpers.PostProcess
 
-module HS = FStar.HyperStack
-module ST = FStar.HyperStack.ST
-module B = LowStar.Buffer
-
 open FStar.List
 open FStar.Tactics
 open FStar.Mul
@@ -17,7 +13,7 @@ open FStar.InteractiveHelpers.Output
 /// information from the context and generate output which can be exploited
 /// on the IDE side.
 
-#push-options "--z3rlimit 15 --fuel 0 --ifuel 1" 
+#push-options "--z3rlimit 15 --fuel 0 --ifuel 1"
 
 (*** General utilities *)
 /// We declare some identifiers that we will use to guide the meta processing
@@ -611,7 +607,7 @@ let rec strip_implicit_parameters tm =
   | _ -> tm
 
 val unfold_in_assert_or_assume : bool -> exploration_result term -> Tac unit
-#push-options "--admit_smt_queries true"
+#push-options "--z3cliopt 'smt.qi.eager_threshold=100'"
 let unfold_in_assert_or_assume dbg ares =
   print_dbg dbg ("[> unfold_in_assert_or_assume:\n" ^ term_to_string ares.res);
   (* Find the focused term inside the assert, and on which side of the
