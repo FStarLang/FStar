@@ -242,6 +242,7 @@ let ml_mode_check_initial_interface mname (iface:list decl) =
   | _ -> false)
 
 let ulib_modules = [
+  "FStar.Calc";
   "FStar.TSet";
   "FStar.Seq.Base";
   "FStar.Seq.Properties";
