@@ -31,6 +31,18 @@ function export_home() {
     fi
 }
 
+function fetch_z3 () {
+    # Fetch a new Z3
+    if [[ "$OS" != Windows_NT ]] ; then
+        Z3_SHORT=z3-4.8.15
+        Z3_FULL=$Z3_SHORT-x64-glibc-2.31
+        Z3_ZIP=$Z3_FULL_NAME.zip
+        wget https://github.com/Z3Prover/z3/releases/download/$Z3_SHORT/$Z3_ZIP
+        unzip $Z3_ZIP
+        mv $Z3_FULL $Z3_SHORT
+    fi
+}
+
 function fetch_vale() {
     if [[ ! -d vale ]]; then
         mkdir vale
@@ -305,6 +317,11 @@ function fstar_default_build () {
     fetch_everparse &
     fetch_mitls &
 
+    # Fetch a new Z3
+    fetch_z3 &
+
+    wait # for fetches above
+
     # Build F*, along with fstarlib
     if ! make -C src -j $threads utest-prelude; then
         echo Warm-up failed
@@ -313,8 +330,6 @@ function fstar_default_build () {
     fi
 
     export_home FSTAR "$(pwd)"
-
-    wait # for fetches above
 
     # The commands above were executed in sub-shells and their EXPORTs are not
     # propagated to the current shell. Re-do.
