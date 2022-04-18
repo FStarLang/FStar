@@ -1193,6 +1193,7 @@ let step_frame
 
     //To go in the other direction on the output memory m1
     commute_star_par_l next_fpre frame' frame (st.locks_invariant m1) m1;
+    weaken_fp_prop frame' frame m0 m1;
 
     Step (next_fpre `st.star` frame') (fun x -> next_fpost x `st.star` frame')
       (frame_lpre next_flpre f_frame')
