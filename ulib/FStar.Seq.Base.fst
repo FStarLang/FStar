@@ -120,7 +120,7 @@ let rec lemma_index_create #_ n v i =
   else if i = 0 then ()
        else (lemma_create_len (n - 1) v; lemma_index_create (n - 1) v (i - 1))
 
-#push-options "--admit_smt_queries true"
+#push-options "--z3rlimit 20"
 let rec lemma_index_upd1' (#a:Type) (s:seq a) (n:nat{n < length s}) (v:a)
   : Lemma
     (requires True)
