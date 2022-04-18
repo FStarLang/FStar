@@ -167,7 +167,7 @@ let rec lemma_index_app2' (#a:Type) (s1:seq a) (s2:seq a) (i:nat{i < length s1 +
 
 let lemma_index_app2 = lemma_index_app2'
 
-#push-options "--z3rlimit 20 --ifuel 2 --fuel 1 --admit_smt_queries true"
+#push-options "--z3rlimit 20 --ifuel 2 --fuel 1"
 let rec lemma_index_slice' (#a:Type) (s:seq a) (i:nat) (j:nat{i <= j /\ j <= length s}) (k:nat{k < j - i})
 : Lemma
   (requires True)
@@ -181,7 +181,11 @@ let rec lemma_index_slice' (#a:Type) (s:seq a) (i:nat) (j:nat{i <= j /\ j <= len
   )
   else (
     if j = 0 then ()
-    else if k = 0 then () else lemma_index_slice' #a (tl s) i (j - 1) (k - 1)
+    else if k = 0 then () else begin
+      lemma_index_slice' #a (tl s) i (j - 1) (k - 1);
+      assert (index (tl s) (k - 1) == index s k);
+      assert (index (slice (tl s) i (j-1)) (k-1) == index (slice s 0 j) k)
+    end
   )
 #pop-options
 
