@@ -1238,7 +1238,7 @@ let step_par_ret
     =
   NMSTATE?.reflect (fun (_, n) -> step_par_ret_aux frame f, n)
 
-#push-options "--z3rlimit 100 --admit_smt_queries true"
+#push-options "--z3rlimit 50"
 let step_par
       (#st:st)
       (#a:Type)
@@ -1270,19 +1270,24 @@ let step_par
 
       let m1 = get () in
 
+      //
+      // Rearrange frame
+      //
       commute_star_par_l next_preL preR frame (st.locks_invariant m1) m1;
+      //
+      // Weaken to get fp_prop equality just for frame
+      //
+      weaken_fp_prop preR frame m0 m1;
 
       par_weaker_lpre_and_stronger_lpost_l lpreL lpostL next_lpreL next_lpostL lpreR lpostR m0 m1;
 
       let next_post = (fun (xL, xR) -> next_postL xL `st.star` postR xR) in
 
       assert (stronger_post post next_post) by (norm [delta_only [`%stronger_post]]);
-
       Step (next_preL `st.star` preR) next_post
         (par_lpre next_lpreL lpreR)
         (par_lpost next_lpreL next_lpostL lpreR lpostR)
         (Par mL mR)
-
     end
     else begin
       let m0 = get () in
@@ -1295,6 +1300,7 @@ let step_par
       let m1 = get () in
 
       commute_star_par_r preL next_preR frame (st.locks_invariant m1) m1;
+      weaken_fp_prop preL frame m0 m1;
 
       par_weaker_lpre_and_stronger_lpost_r lpreL lpostL lpreR lpostR next_lpreR next_lpostR frame m0 m1;
 
