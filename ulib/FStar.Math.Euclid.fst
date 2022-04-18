@@ -3,7 +3,7 @@ module FStar.Math.Euclid
 open FStar.Mul
 open FStar.Math.Lemmas
 
-#set-options "--fuel 0 --ifuel 0 --z3rlimit 40"
+#set-options "--fuel 0 --ifuel 0 --z3rlimit 40 --using_facts_from '* -FStar.Tactics -FStar.Reflection -FStar.Seq -FStar.List'"
 
 ///
 /// Auxiliary lemmas
@@ -183,17 +183,63 @@ let rec egcd a b u1 u2 u3 v1 v2 v3 =
     let u3, v3 = v3, u3 - q * v3 in
     egcd a b u1 u2 u3 v1 v2 v3
     end
-#push-options "--query_stats"
-#restart-solver
+
+#push-options "--z3cliopt smt.arith.nl=false"
 let euclid_gcd a b =
-  if b >= 0 then
+  if b >= 0 then begin
+    //
+    //Two calc proofs for the two preconditions of egcd
+    //
+    calc (==) {
+      1 * a + 0 * b;
+      (==) { mul_one_left_is_same a }
+      a + 0 * b;
+      (==) { mul_zero_left_is_zero b }
+      a + 0;
+      (==) { }
+      a;
+    };
+    calc (==) {
+      0 * a + 1 * b;
+      (==) { mul_zero_left_is_zero a }
+      0 + 1 * b;
+      (==) { mul_one_left_is_same b }
+      0 + b;
+      (==) { }
+      b;
+    };
     egcd a b 1 0 a 0 1 b
+  end
   else (
     introduce forall d. is_gcd a (-b) d ==> is_gcd a b d
     with introduce _ ==> _
          with _pf. 
            (is_gcd_minus a b d;
             is_gcd_symmetric b a d);
+
+    //
+    // two calc proofs for the two preconditions of egcd
+    //
+    calc (==) {
+      1 * a + 0 * b;
+      (==) { mul_one_left_is_same a }
+      a + 0 * b;
+      (==) { mul_zero_left_is_zero b }
+      a + 0;
+      (==) { }
+      a;
+    };
+    calc (==) {
+      0 * a + (-1) * b;
+      (==) { mul_zero_left_is_zero a }
+      0 + (-1) * b;
+      (==) { }
+      (-1) * b;
+      (==) { neg_mul_left 1 b }
+      -(1 * b);
+      (==) { mul_one_left_is_same b }
+      (-b);
+    };
     let res = egcd a b 1 0 a 0 (-1) (-b) in
     let _, _, d = res in
     assert (is_gcd a b d);
@@ -207,12 +253,18 @@ val is_gcd_prime_aux (p:int) (a:pos{a < p}) (d:int) : Lemma
 let is_gcd_prime_aux p a d = ()
 
 val is_gcd_prime (p:int{is_prime p}) (a:pos{a < p}) : Lemma (is_gcd p a 1)
-#push-options "--admit_smt_queries true"
 let is_gcd_prime p a =
-  Classical.forall_intro_2 (Classical.move_requires_2 divides_minus);
-  Classical.forall_intro (Classical.move_requires (is_gcd_prime_aux p a));
-  assert (forall x. x `divides` p /\ x `divides` a ==> x = 1 \/ x = -1 /\ x `divides` 1)
-#pop-options
+  assert (1 `divides` p);
+  assert (1 `divides` a);
+  assert (1 `divides` 1);
+  assert ((-1) `divides` 1);
+
+  let aux (x:int)
+    : Lemma (requires x `divides` p /\ x `divides` a)
+            (ensures (x `divides` 1))
+            [SMTPat ()]
+    = is_gcd_prime_aux p a x in
+  ()
 
 let bezout_prime p a =
   let r, s, d = euclid_gcd p a in
