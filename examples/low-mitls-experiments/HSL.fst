@@ -31,8 +31,6 @@ module Buffer = LowStar.Buffer
 
 module ST = FStar.HyperStack.ST
 
-#set-options "--quake 20"
-
 (*
  * We currently model the reading side of TLS
  * HSL maintains a buffer, that record layer writes the incoming messages in
