@@ -695,22 +695,19 @@
         "constructor_distinct_Prims.Nil", "data_elim_Prims.Cons",
         "data_typing_intro_LatticeSpec.WR@tok",
         "data_typing_intro_Prims.Cons@tok",
-        "data_typing_intro_Prims.Nil@tok", "eq2-interp",
+        "data_typing_intro_Prims.Nil@tok",
         "equality_tok_LatticeSpec.EXN@tok",
         "equality_tok_LatticeSpec.WR@tok",
         "equation_FStar.List.Tot.Base.op_At",
         "equation_LatticeSpec.bind_pre", "equation_LatticeSpec.post_of_wp",
-        "equation_LatticeSpec.state", "equation_Prims.l_Forall",
+        "equation_LatticeSpec.state",
         "equation_with_fuel_FStar.List.Tot.Base.append.fuel_instrumented",
         "int_inversion",
         "interpretation_Tm_abs_216ec4598ed36889d15032576f3222f6",
-        "interpretation_Tm_abs_21aeebe6e722280b92b828dcc03767cf",
         "interpretation_Tm_abs_2f5d0d42bf4fb7efc0bdec26368d85c1",
-        "interpretation_Tm_abs_3c86a5e9f7e24dcdfae753664d183867",
-        "interpretation_Tm_abs_5f1695dfb94fc63ba4b1c1ee4e4bd451",
         "interpretation_Tm_abs_91fb4a8b0b71c8aefdf8cf47d96a4d86",
-        "interpretation_Tm_abs_c263b8991e82f41e80c059d39135f0a6",
         "interpretation_Tm_abs_e6eb375170fc95b1ec75defadc27fda9",
+        "interpretation_Tm_abs_ef36b8b2b7275597cdace373b85fd7f4",
         "kinding_LatticeSpec.eff_label@tok", "l_and-interp",
         "l_quant_interp_909b6640af257316af82b7dc99ecdb12",
         "l_quant_interp_9a7a37c9fb77043de516e36989f158a4",
@@ -722,7 +719,7 @@
         "unit_typing"
       ],
       0,
-      "03e22f15b81c92b321ded5b25f1c50e1"
+      "f655b84eed45b2114cdb17df98c853f3"
     ],
     [
       "LatticeSpec.test_catch2",
@@ -736,22 +733,19 @@
         "constructor_distinct_Prims.Nil", "data_elim_Prims.Cons",
         "data_typing_intro_LatticeSpec.WR@tok",
         "data_typing_intro_Prims.Cons@tok",
-        "data_typing_intro_Prims.Nil@tok", "eq2-interp",
+        "data_typing_intro_Prims.Nil@tok",
         "equality_tok_LatticeSpec.EXN@tok",
         "equality_tok_LatticeSpec.WR@tok",
         "equation_FStar.List.Tot.Base.op_At",
         "equation_LatticeSpec.bind_pre", "equation_LatticeSpec.post_of_wp",
-        "equation_LatticeSpec.state", "equation_Prims.l_Forall",
+        "equation_LatticeSpec.state",
         "equation_with_fuel_FStar.List.Tot.Base.append.fuel_instrumented",
         "int_inversion",
         "interpretation_Tm_abs_216ec4598ed36889d15032576f3222f6",
-        "interpretation_Tm_abs_21aeebe6e722280b92b828dcc03767cf",
-        "interpretation_Tm_abs_3175539b73dc6856a5b7832877fc71c6",
-        "interpretation_Tm_abs_5f1695dfb94fc63ba4b1c1ee4e4bd451",
-        "interpretation_Tm_abs_6d63f32812b1c9590f3515b16039af0f",
         "interpretation_Tm_abs_d4ea8710d847b9019631d52370f92463",
         "interpretation_Tm_abs_d9079cc295df3869c81d15d05f637af7",
         "interpretation_Tm_abs_e6eb375170fc95b1ec75defadc27fda9",
+        "interpretation_Tm_abs_f3547e72a17f96250ebd19224d319ade",
         "kinding_LatticeSpec.eff_label@tok", "l_and-interp",
         "l_quant_interp_909b6640af257316af82b7dc99ecdb12",
         "l_quant_interp_d32c14f51293b927e87ca0bd04e29586",
@@ -763,7 +757,7 @@
         "unit_typing"
       ],
       0,
-      "53928ee51bfa8e209faa24d803e7e310"
+      "6e8b2c4af8bdf0e599028233e9696970"
     ]
   ]
 ]

@@ -788,8 +788,14 @@ let (ld_deps :
                    | FStar_Pervasives.Inl st2 ->
                        FStar_Pervasives.Inl (st2, deps)))) ()
     with
-    | uu___ ->
-        (FStar_Compiler_Util.print_error "[E] Failed to load deps";
+    | FStar_Errors.Err (e, msg, ctx) ->
+        (FStar_Compiler_Util.print1_error "[E] Failed to load deps. Error %s"
+           msg;
+         FStar_Pervasives.Inr st)
+    | exn ->
+        ((let uu___2 = FStar_Compiler_Util.message_of_exn exn in
+          FStar_Compiler_Util.print1_error "[E] Failed to load deps %s"
+            uu___2);
          FStar_Pervasives.Inr st)
 let (add_module_completions :
   Prims.string ->

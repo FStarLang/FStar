@@ -20,9 +20,7 @@
 //with special treatment for higher-order patterns
 //////////////////////////////////////////////////////////////////////////
 
-#light "off"
 module FStar.TypeChecker.DeferredImplicits
-open FStar.Compiler.Effect
 open FStar.Compiler.Effect
 open FStar.Syntax.Syntax
 open FStar.TypeChecker.Env

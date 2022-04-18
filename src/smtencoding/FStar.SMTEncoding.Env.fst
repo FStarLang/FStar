@@ -13,8 +13,6 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-#light "off"
-
 module FStar.SMTEncoding.Env
 open Prims
 open FStar.Pervasives
@@ -33,7 +31,7 @@ module SS = FStar.Syntax.Subst
 module BU = FStar.Compiler.Util
 module U = FStar.Syntax.Util
 
-exception Inner_let_rec of list<(string * Range.range)> //name of the inner let-rec(s) and their locations
+exception Inner_let_rec of list (string * Range.range) //name of the inner let-rec(s) and their locations
 
 let add_fuel x tl = if (Options.unthrottle_inductives()) then tl else x::tl
 let withenv c (a, b) = (a,b,c)
@@ -66,7 +64,7 @@ type varops_t = {
     push: unit -> unit;
     pop: unit -> unit;
     snapshot: unit -> (int * unit);
-    rollback: option<int> -> unit;
+    rollback: option int -> unit;
     new_var:ident -> int -> string; (* each name is distinct and has a prefix corresponding to the name used in the program text *)
     new_fvar:lident -> string;
     fresh:string -> string -> string;  (* module name -> prefix -> name *)
@@ -77,7 +75,7 @@ type varops_t = {
 let varops =
     let initial_ctr = 100 in
     let ctr = BU.mk_ref initial_ctr in
-    let new_scope () : BU.smap<bool> = BU.smap_create 100 in (* a scope records all the names used in that scope *)
+    let new_scope () : BU.smap bool = BU.smap_create 100 in (* a scope records all the names used in that scope *)
     let scopes = BU.mk_ref [new_scope ()] in
     let mk_unique y =
         let y = escape y in
@@ -118,8 +116,8 @@ type fvar_binding = {
     fvar_lid:  lident;
     smt_arity: int;
     smt_id:    string;
-    smt_token: option<term>;
-    smt_fuel_partial_app:option<(term * term)>;
+    smt_token: option term;
+    smt_fuel_partial_app:option (term * term);
     fvb_thunked: bool
 }
 let fvb_to_string fvb =
@@ -157,8 +155,8 @@ let check_valid_fvb fvb =
 let binder_of_eithervar v = (v, None)
 
 type env_t = {
-    bvar_bindings: BU.psmap<BU.pimap<(bv * term)>>;
-    fvar_bindings: (BU.psmap<fvar_binding> * list<fvar_binding>);  //list of fvar bindings for the current module
+    bvar_bindings: BU.psmap (BU.pimap (bv * term));
+    fvar_bindings: (BU.psmap fvar_binding * list fvar_binding);  //list of fvar bindings for the current module
                                                                    //remember them so that we can store them in the checked file
     depth:int; //length of local var/tvar bindings
     tcenv:Env.env;
@@ -168,7 +166,7 @@ type env_t = {
     encode_non_total_function_typ:bool;
     current_module_name:string;
     encoding_quantifier:bool;
-    global_cache:BU.smap<decls_elt>  //cache for hashconsing -- see Encode.fs where it is used and updated
+    global_cache:BU.smap decls_elt  //cache for hashconsing -- see Encode.fs where it is used and updated
 }
 
 let print_env e =

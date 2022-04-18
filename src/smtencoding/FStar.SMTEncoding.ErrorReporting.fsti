@@ -13,12 +13,11 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-#light "off"
 
 module FStar.SMTEncoding.ErrorReporting
 open FStar.Compiler.Effect
-open FStar.Compiler.Effect
-open FStar open FStar.Compiler
+open FStar
+open FStar.Compiler
 open FStar.BaseTypes
 open FStar.Compiler.Util
 open FStar.SMTEncoding.Term
@@ -28,12 +27,12 @@ open FStar.Compiler.Range
 module BU = FStar.Compiler.Util
 
 type label = error_label
-type labels = list<label>
+type labels = list label
 
-val label_goals : option<(unit -> string)> -> range -> q:term -> labels * term
+val label_goals : option (unit -> string) -> range -> q:term -> labels * term
 
 val detail_errors :  bool //detail_hint_replay?
                   -> TypeChecker.Env.env
                   -> labels
-                  -> (list<decl> -> Z3.z3result)
+                  -> (list decl -> Z3.z3result)
                   -> unit

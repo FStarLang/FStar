@@ -14,9 +14,7 @@
    limitations under the License.
 *)
 (* -------------------------------------------------------------------- *)
-#light "off"
 module FStar.Extraction.ML.Code
-open FStar.Compiler.Effect
 open FStar.Compiler.Effect
 
 open FStar.Extraction.ML.Syntax
@@ -24,7 +22,7 @@ open FStar.Pprint
 
 type doc = | Doc of string
 
-val doc_of_mllib :    mllib -> list<(string * doc)>
+val doc_of_mllib :    mllib -> list (string * doc)
 val doc_of_sig :      mlsymbol -> mlsig -> doc
 val string_of_mlexpr: mlpath -> mlexpr -> string
 val string_of_mlty:   mlpath -> mlty -> string

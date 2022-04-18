@@ -13,7 +13,6 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-#light "off"
 module FStar.TypeChecker.TcEffect
 open FStar.Pervasives
 open FStar.Compiler.Effect
@@ -110,7 +109,7 @@ let pure_wp_uvar env (t:typ) (reason:string) (r:Range.range) : term * guard_t =
  * Essentially we want to ensure that uvars are not introduces at a type different than
  *   what they are used at
  *)
-let check_no_subtyping_for_layered_combinator env (t:term) (k:option<typ>) =
+let check_no_subtyping_for_layered_combinator env (t:term) (k:option typ) =
   if Env.debug env <| Options.Other "LayeredEffectsTc"
   then BU.print2 "Checking that %s is well typed with no subtyping (k:%s)\n"
          (Print.term_to_string t)
@@ -136,7 +135,7 @@ let check_no_subtyping_for_layered_combinator env (t:term) (k:option<typ>) =
  * Precondition: repr_terms may not be well-typed in env but bs must be well-typed (properly closed etc.)
  * To check for non_informativeness, we do some normalization, so bs well-typedness is required
  *)
-let validate_layered_effect_binders env (bs:binders) (repr_terms:list<term>) (check_non_informatve_binders:bool) (r:Range.range)
+let validate_layered_effect_binders env (bs:binders) (repr_terms:list term) (check_non_informatve_binders:bool) (r:Range.range)
 : unit
 = //repr can be (repr a is) or unit -> M a wp for wp effects
   let repr_args repr =
@@ -203,7 +202,7 @@ let validate_layered_effect_binders env (bs:binders) (repr_terms:list<term>) (ch
 (*
  * Typechecking of layered effects
  *)
-let tc_layered_eff_decl env0 (ed : S.eff_decl) (quals : list<qualifier>) (attrs : list<S.attribute>) =
+let tc_layered_eff_decl env0 (ed : S.eff_decl) (quals : list qualifier) (attrs : list S.attribute) =
 Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (string_of_lid ed.mname)) (fun () ->
   if Env.debug env0 <| Options.Other "LayeredEffectsTc" then
     BU.print1 "Typechecking layered effect: \n\t%s\n" (Print.eff_decl_to_string false ed);
@@ -792,7 +791,7 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
    * Actions
    *
    * Actions must have type:
-   *   <some binders> -> repr a i_1 ... i_n
+   *    <some binders> -> repr a i_1 ... i_n
    *   so that we can inject them into the effect
    *
    * Other than this, no polymorphism etc. restrictions
@@ -932,7 +931,7 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
     actions       = List.map (tc_action env0) ed.actions }
 )
 
-let tc_non_layered_eff_decl env0 (ed:S.eff_decl) (_quals : list<qualifier>) (_attrs : list<S.attribute>) : S.eff_decl =
+let tc_non_layered_eff_decl env0 (ed:S.eff_decl) (_quals : list qualifier) (_attrs : list S.attribute) : S.eff_decl =
 Errors.with_ctx (BU.format1 "While checking effect definition `%s`" (string_of_lid ed.mname)) (fun () ->
   if Env.debug env0 <| Options.Other "ED" then
     BU.print1 "Typechecking eff_decl: \n\t%s\n" (Print.eff_decl_to_string false ed);

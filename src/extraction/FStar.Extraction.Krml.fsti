@@ -14,14 +14,12 @@
    limitations under the License.
 *)
 (* -------------------------------------------------------------------- *)
-#light "off"
-
 module FStar.Extraction.Krml
 type decl
-type program = list<decl>
+type program = list decl
 type file = string * program
 type version = int
-type binary_format = version * list<file>
+type binary_format = version * list file
 
 val current_version: version
-val translate : FStar.Extraction.ML.Syntax.mllib -> list<file>
+val translate : FStar.Extraction.ML.Syntax.mllib -> list file

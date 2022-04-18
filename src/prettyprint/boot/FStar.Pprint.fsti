@@ -13,9 +13,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-#light "off"
 module FStar.Pprint
-open FStar.Compiler.Effect
 open FStar.Compiler.Effect
 open FStar.BaseTypes
 
@@ -228,35 +226,35 @@ val repeat: int -> document -> document
 (** {1 Lists and options} *)
 
 (** [concat docs] is the concatenation of the documents in the list [docs]. *)
-val concat: list<document> -> document
+val concat: list document -> document
 
 (** [separate sep docs] is the concatenation of the documents in the list
     [docs]. The separator [sep] is inserted between every two adjacent
     documents. *)
-val separate: document -> list<document> -> document
+val separate: document -> list document -> document
 
 (** [concat_map f xs] is equivalent to [concat (List.map f xs)]. *)
-val concat_map: ('a -> document) -> list<'a> -> document
+val concat_map: ('a -> document) -> list 'a -> document
 
 (** [separate_map sep f xs] is equivalent to [separate sep (List.map f xs)]. *)
-val separate_map: document -> ('a -> document) -> list<'a> -> document
+val separate_map: document -> ('a -> document) -> list 'a -> document
 
 (** [separate2 sep last_sep docs] is the concatenation of the documents in the
     list [docs]. The separator [sep] is inserted between every two adjacent
     documents, except between the last two documents, where the separator
     [last_sep] is used instead. *)
-val separate2: document -> document -> list<document> -> document
+val separate2: document -> document -> list document -> document
 
 (** [optional f None] is the empty document. [optional f (Some x)] is
     the document [f x]. *)
-val optional: ('a -> document) -> option<'a> -> document
+val optional: ('a -> document) -> option 'a -> document
 
 (** {1 Text} *)
 
 (** [lines s] is the list of documents obtained by splitting [s] at newline
     characters, and turning each line into a document via [substring]. This
     code is not UTF-8 aware. *)
-val lines: string -> list<document>
+val lines: string -> list document
 
 (** [arbitrary_string s] is equivalent to [separate (break 1) (lines s)].
     It is analogous to [string s], but is valid even if the string [s]
@@ -266,14 +264,14 @@ val arbitrary_string: string -> document
 (** [words s] is the list of documents obtained by splitting [s] at whitespace
     characters, and turning each word into a document via [substring]. All
     whitespace is discarded. This code is not UTF-8 aware. *)
-val words: string -> list<document>
+val words: string -> list document
 
 (** [split ok s] splits the string [s] before and after every occurrence of a
     character that satisfies the predicate [ok]. The substrings thus obtained
     are turned into documents, and a list of documents is returned. No
     information is lost: the concatenation of the documents yields the
     original string.  This code is not UTF-8 aware. *)
-val split: (FStar.Char.char -> bool) -> string -> list<document>
+val split: (FStar.Char.char -> bool) -> string -> list document
 
 (** [flow sep docs] separates the documents in the list [docs] with the
     separator [sep] and arranges for a new line to begin whenever a document
@@ -281,10 +279,10 @@ val split: (FStar.Char.char -> bool) -> string -> list<document>
     free-flowing, ragged-right text. A typical choice of [sep] is [break b],
     where [b] is the number of spaces that must be inserted between two
     consecutive words (when displayed on the same line). *)
-val flow: document -> list<document> -> document
+val flow: document -> list document -> document
 
 (** [flow_map sep f docs] is equivalent to [flow sep (List.map f docs)]. *)
-val flow_map: document -> ('a -> document) -> list<'a> -> document
+val flow_map: document -> ('a -> document) -> list 'a -> document
 
 (** [url s] is a possible way of displaying the URL [s]. A potential line
     break is inserted immediately before and immediately after every slash
@@ -360,11 +358,11 @@ val soft_surround: int -> int -> document -> document -> document -> document
 (** [surround_separate n b void opening sep closing docs] is equivalent to
     [surround n b opening (separate sep docs) closing], except when the
     list [docs] is empty, in which case it reduces to [void]. *)
-val surround_separate: int -> int -> document -> document -> document -> document -> list<document> -> document
+val surround_separate: int -> int -> document -> document -> document -> document -> list document -> document
 
 (** [surround_separate_map n b void opening sep closing f xs] is equivalent to
     [surround_separate n b void opening sep closing (List.map f xs)]. *)
-val surround_separate_map: int -> int -> document -> document -> document -> document -> ('a -> document) -> list<'a> -> document
+val surround_separate_map: int -> int -> document -> document -> document -> document -> ('a -> document) -> list 'a -> document
 
 (** {1 Short-hands} *)
 

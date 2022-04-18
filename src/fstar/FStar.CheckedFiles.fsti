@@ -13,10 +13,8 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-#light "off"
 
 module FStar.CheckedFiles
-open FStar.Compiler.Effect
 open FStar.Compiler.Effect
 open FStar
 open FStar.Compiler
@@ -36,7 +34,7 @@ type tc_result = {
   checked_module: Syntax.modul; //persisted
   mii:module_inclusion_info; //persisted
   smt_decls:(FStar.SMTEncoding.Term.decls_t *  //list of smt decls and fvbs for the module
-             list<FStar.SMTEncoding.Env.fvar_binding>); //persisted
+             list FStar.SMTEncoding.Env.fvar_binding); //persisted
 
   tc_time:int;
   extraction_time:int
@@ -49,12 +47,12 @@ type tc_result = {
  * Input is the file name, not the cache file name
  * The function computes the cache file name itself
  *)
-val load_parsing_data_from_cache: file_name:string -> option<Parser.Dep.parsing_data>
+val load_parsing_data_from_cache: file_name:string -> option Parser.Dep.parsing_data
 
 (***********************************************************************)
 (* Loading and storing cache files                                     *)
 (***********************************************************************)
 
-val load_module_from_cache: (uenv -> string -> option<tc_result>)
+val load_module_from_cache: (uenv -> string -> option tc_result)
 
-val store_module_to_cache: uenv -> file_name:string -> Dep.parsing_data -> tc_result -> unit 
+val store_module_to_cache: uenv -> file_name:string -> Dep.parsing_data -> tc_result -> unit

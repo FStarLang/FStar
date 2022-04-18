@@ -1,4 +1,18 @@
-#light "off"
+(*
+   Copyright 2008-2015 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
 module FStar.Reflection.Basic
 
 open FStar open FStar.Compiler
@@ -89,10 +103,10 @@ let pack_aqual (aqv : aqualv) : aqual =
     | Data.Q_Implicit -> S.as_aqual_implicit true
     | _ -> None
     
-let inspect_fv (fv:fv) : list<string> =
+let inspect_fv (fv:fv) : list string =
     Ident.path_of_lid (lid_of_fv fv)
 
-let pack_fv (ns:list<string>) : fv =
+let pack_fv (ns:list string) : fv =
     let lid = PC.p2l ns in
     let fallback () =
         let quals =
@@ -119,13 +133,13 @@ let pack_fv (ns:list<string>) : fv =
          fallback ()
 
 // TODO: move to library?
-let rec last (l:list<'a>) : 'a =
+let rec last (l:list 'a) : 'a =
     match l with
     | [] -> failwith "last: empty list"
     | [x] -> x
     | _::xs -> last xs
 
-let rec init (l:list<'a>) : list<'a> =
+let rec init (l:list 'a) : list 'a =
     match l with
     | [] -> failwith "init: empty list"
     | [x] -> []
@@ -239,7 +253,7 @@ let rec inspect_ln (t:term) : term_view =
         Tv_Unknown
 
 let inspect_comp (c : comp) : comp_view =
-    let get_dec (flags : list<cflag>) : list<term> =
+    let get_dec (flags : list cflag) : list term =
         match List.tryFind (function DECREASES _ -> true | _ -> false) flags with
         | None -> []
         | Some (DECREASES (Decreases_lex ts)) -> ts
@@ -398,15 +412,15 @@ let compare_bv (x:bv) (y:bv) : order =
 let is_free (x:bv) (t:term) : bool =
     U.is_free_in x t
 
-let free_bvs (t:term) : list<bv> =
+let free_bvs (t:term) : list bv =
   Syntax.Free.names t |> BU.set_elements
 
-let free_uvars (t:term) : list<Z.t> =
+let free_uvars (t:term) : list Z.t =
   Syntax.Free.uvars_uncached t
     |> BU.set_elements
     |> List.map (fun u -> Z.of_int_fs (UF.uvar_id u.ctx_uvar_head))
 
-let lookup_attr (attr:term) (env:Env.env) : list<fv> =
+let lookup_attr (attr:term) (env:Env.env) : list fv =
     match (SS.compress attr).n with
     | Tm_fvar fv ->
         let ses = Env.lookup_attr env (Ident.string_of_lid (lid_of_fv fv)) in
@@ -416,10 +430,10 @@ let lookup_attr (attr:term) (env:Env.env) : list<fv> =
                                   | Some l -> [S.lid_as_fv l (S.Delta_constant_at_level 999) None]) ses
     | _ -> []
 
-let all_defs_in_env (env:Env.env) : list<fv> =
+let all_defs_in_env (env:Env.env) : list fv =
     List.map (fun l -> S.lid_as_fv l (S.Delta_constant_at_level 999) None) (Env.lidents env) // |> take 10
 
-let defs_in_module (env:Env.env) (modul:name) : list<fv> =
+let defs_in_module (env:Env.env) (modul:name) : list fv =
     List.concatMap
         (fun l ->
                 (* must succeed, ids_of_lid always returns a non-empty list *)
@@ -429,14 +443,14 @@ let defs_in_module (env:Env.env) (modul:name) : list<fv> =
                 else [])
         (Env.lidents env)
 
-let lookup_typ (env:Env.env) (ns:list<string>) : option<sigelt> =
+let lookup_typ (env:Env.env) (ns:list string) : option sigelt =
     let lid = PC.p2l ns in
     Env.lookup_sigelt env lid
 
-let sigelt_attrs (se : sigelt) : list<attribute> =
+let sigelt_attrs (se : sigelt) : list attribute =
     se.sigattrs
 
-let set_sigelt_attrs (attrs : list<attribute>) (se : sigelt) : sigelt =
+let set_sigelt_attrs (attrs : list attribute) (se : sigelt) : sigelt =
     { se with sigattrs = attrs }
 
 (* PRIVATE, and hacky :-( *)
@@ -491,13 +505,13 @@ let syntax_to_rd_qual = function
   | OnlyName -> RD.OnlyName
 
 
-let sigelt_quals (se : sigelt) : list<RD.qualifier> =
+let sigelt_quals (se : sigelt) : list RD.qualifier =
     se.sigquals |> List.map syntax_to_rd_qual
 
-let set_sigelt_quals (quals : list<RD.qualifier>) (se : sigelt) : sigelt =
+let set_sigelt_quals (quals : list RD.qualifier) (se : sigelt) : sigelt =
     { se with sigquals = List.map rd_to_syntax_qual quals }
 
-let sigelt_opts (se : sigelt) : option<vconfig> = se.sigopts
+let sigelt_opts (se : sigelt) : option vconfig = se.sigopts
 
 let embed_vconfig (vcfg : vconfig) : term =
   EMB.embed EMB.e_vconfig vcfg Range.dummyRange None EMB.id_norm_cb
@@ -593,8 +607,8 @@ let pack_sigelt (sv:sigelt_view) : sigelt =
         mk_sigelt <| Sig_datacon (lid, us_names, ty, ind_lid, nparam, [])
       in
 
-      let ctor_ses : list<sigelt> = List.map pack_ctor ctors in
-      let c_lids : list<Ident.lid> = List.map (fun se -> BU.must (U.lid_of_sigelt se)) ctor_ses in
+      let ctor_ses : list sigelt = List.map pack_ctor ctors in
+      let c_lids : list Ident.lid = List.map (fun se -> BU.must (U.lid_of_sigelt se)) ctor_ses in
 
       let ind_se : sigelt =
         let param_bs = SS.close_binders param_bs in
@@ -648,17 +662,17 @@ let pack_bv (bvv:bv_view) : bv =
       sort = bvv.bv_sort;
     }
 
-let inspect_binder (b:binder) : bv * (aqualv * list<term>) =
+let inspect_binder (b:binder) : bv * (aqualv * list term) =
     b.binder_bv, (inspect_bqual (b.binder_qual), b.binder_attrs)
 
-let pack_binder (bv:bv) (aqv:aqualv) (attrs:list<term>) : binder =
+let pack_binder (bv:bv) (aqv:aqualv) (attrs:list term) : binder =
     { binder_bv=bv; binder_qual=pack_bqual aqv; binder_attrs=attrs }
 
 open FStar.TypeChecker.Env
-let moduleof (e : Env.env) : list<string> =
+let moduleof (e : Env.env) : list string =
     Ident.path_of_lid e.curmodule
 
-let env_open_modules (e : Env.env) : list<name> =
+let env_open_modules (e : Env.env) : list name =
     List.map (fun (l, m) -> List.map Ident.string_of_id (Ident.ids_of_lid l))
              (DsEnv.open_modules e.dsenv)
 

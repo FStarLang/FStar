@@ -13,7 +13,6 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-#light "off"
 module FStar.Syntax.Syntax
 (* Prims is used for bootstrapping *)
 open Prims
@@ -35,14 +34,14 @@ open FStar.VConfig
 
 (* Objects with metadata *)
 // IN F*: [@@ PpxDerivingYoJson; PpxDerivingShow ]
-type withinfo_t<'a> = {
+type withinfo_t 'a = {
   v:  'a;
   p: Range.range;
 }
 
 (* Free term and type variables *)
 // IN F*: [@@ PpxDerivingYoJson; PpxDerivingShow ]
-type var = withinfo_t<lident>
+type var = withinfo_t lident
 
 (* Term language *)
 // IN F*: [@@ PpxDerivingYoJson; PpxDerivingShow ]
@@ -51,15 +50,14 @@ type sconst = FStar.Const.sconst
 // IN F*: [@@ PpxDerivingYoJson; PpxDerivingShow ]
 type pragma =
   | SetOptions of string
-  | ResetOptions of option<string>
-  | PushOptions of option<string>
+  | ResetOptions of option string
+  | PushOptions of option string
   | PopOptions
   | RestartSolver
-  | LightOff
   | PrintEffectsGraph
 
 // IN F*: [@ PpxDerivingYoJson (PpxDerivingShowConstant "None") ]
-type memo<'a> = ref<option<'a>>
+type memo 'a = ref (option 'a)
 
 (* Simple types used in native compilation
  * to record the types of lazily embedded terms
@@ -67,7 +65,7 @@ type memo<'a> = ref<option<'a>>
 type emb_typ =
   | ET_abstract
   | ET_fun  of emb_typ * emb_typ
-  | ET_app  of string * list<emb_typ>
+  | ET_app  of string * list emb_typ
 
 //versioning for unification variables
 // IN F*: [@@ PpxDerivingYoJson; PpxDerivingShow ]
@@ -80,20 +78,20 @@ type version = {
 type universe =
   | U_zero
   | U_succ  of universe
-  | U_max   of list<universe>
+  | U_max   of list universe
   | U_bvar  of int
   | U_name  of univ_name
   | U_unif  of universe_uvar
   | U_unknown
 and univ_name = ident
-and universe_uvar = Unionfind.p_uvar<option<universe>> * version * Range.range
+and universe_uvar = Unionfind.p_uvar (option universe) * version * Range.range
 
 
 // IN F*: [@@ PpxDerivingYoJson; PpxDerivingShow ]
-type univ_names    = list<univ_name>
+type univ_names    = list univ_name
 
 // IN F*: [@@ PpxDerivingYoJson; PpxDerivingShow ]
-type universes     = list<universe>
+type universes     = list universe
 
 // IN F*: [@@ PpxDerivingYoJson; PpxDerivingShow ]
 type monad_name    = lident
@@ -128,13 +126,13 @@ type term' =
   | Tm_uinst      of term * universes  //universe instantiation; the first argument must be one of the three constructors above
   | Tm_constant   of sconst
   | Tm_type       of universe
-  | Tm_abs        of binders*term*option<residual_comp>          (* fun (xi:ti) -> t : (M t' wp | N) *)
+  | Tm_abs        of binders*term*option residual_comp          (* fun (xi:ti) -> t : (M t' wp | N) *)
   | Tm_arrow      of binders * comp                              (* (xi:ti) -> M t' wp *)
   | Tm_refine     of bv * term                                   (* x:t{phi} *)
   | Tm_app        of term * args                                 (* h tau_1 ... tau_n, args in order from left to right *)
-  | Tm_match      of term * option<match_returns_ascription> * list<branch> * option<residual_comp>
+  | Tm_match      of term * option match_returns_ascription * list branch * option residual_comp
                                                                  (* (match e (as x returns asc)? with b1 ... bn) : (C | N)) *)
-  | Tm_ascribed   of term * ascription * option<lident>          (* an effect label is the third arg, filled in by the type-checker *)
+  | Tm_ascribed   of term * ascription * option lident          (* an effect label is the third arg, filled in by the type-checker *)
   | Tm_let        of letbindings * term                          (* let (rec?) x1 = e1 AND ... AND xn = en in e *)
   | Tm_uvar       of ctx_uvar_and_subst                          (* A unification variable ?u (aka meta-variable)
                                                                     and a delayed substitution of only NM or NT elements *)
@@ -151,34 +149,34 @@ and ctx_uvar = {                                                 (* (G |- ?u : t
     ctx_uvar_reason:string;
     ctx_uvar_should_check:should_check_uvar;
     ctx_uvar_range:Range.range;
-    ctx_uvar_meta: option<ctx_uvar_meta_t>;
+    ctx_uvar_meta: option ctx_uvar_meta_t;
 }
 and ctx_uvar_meta_t =
   | Ctx_uvar_meta_tac of dyn * term (* the dyn is an FStar.TypeChecker.Env.env *)
   | Ctx_uvar_meta_attr of term (* An attribute associated with an implicit argument using the #[@@...] notation *)
 and ctx_uvar_and_subst = ctx_uvar * subst_ts
-and uvar = Unionfind.p_uvar<option<term>> * version * Range.range
-and uvars = set<ctx_uvar>
+and uvar = Unionfind.p_uvar (option term) * version * Range.range
+and uvars = set ctx_uvar
 and match_returns_ascription = binder * ascription               (* as x returns C|t *)
-and branch = pat * option<term> * term                           (* optional when clause in each branch *)
-and ascription = either<term, comp> * option<term> * bool        (* e <: t [by tac] or e <: C [by tac] *)
+and branch = pat * option term * term                           (* optional when clause in each branch *)
+and ascription = either term comp * option term * bool        (* e <: t [by tac] or e <: C [by tac] *)
                                                                  (* the bool says whether the ascription is an equality ascription, i.e. $: *)
 and pat' =
   | Pat_constant of sconst
-  | Pat_cons     of fv * list<(pat * bool)>                      (* flag marks an explicitly provided implicit *)
+  | Pat_cons     of fv * list (pat * bool)                      (* flag marks an explicitly provided implicit *)
   | Pat_var      of bv                                           (* a pattern bound variable (linear in a pattern) *)
   | Pat_wild     of bv                                           (* need stable names for even the wild patterns *)
   | Pat_dot_term of bv * term                                    (* dot patterns: determined by other elements in the pattern and type *)
 and letbinding = {  //let f : forall u1..un. M t = e
     lbname :lbname;          //f
-    lbunivs:list<univ_name>; //u1..un
+    lbunivs:list univ_name; //u1..un
     lbtyp  :typ;             //t
     lbeff  :lident;          //M
     lbdef  :term;            //e
-    lbattrs:list<attribute>; //attrs
+    lbattrs:list attribute; //attrs
     lbpos  :range;           //original position of 'e'
 }
-and antiquotations = list<(bv * term)>
+and antiquotations = list (bv * term)
 and quoteinfo = {
     qkind      : quote_kind;
     antiquotes : antiquotations;
@@ -188,26 +186,26 @@ and comp_typ = {
   effect_name:lident;
   result_typ:typ;
   effect_args:args;
-  flags:list<cflag>
+  flags:list cflag
 }
 and comp' =
-  | Total  of typ * option<universe>
-  | GTotal of typ * option<universe>
+  | Total  of typ * option universe
+  | GTotal of typ * option universe
   | Comp   of comp_typ
-and term = syntax<term'>
+and term = syntax term'
 and typ = term                                                   (* sometimes we use typ to emphasize that a term is a type *)
-and pat = withinfo_t<pat'>
-and comp = syntax<comp'>
+and pat = withinfo_t pat'
+and comp = syntax comp'
 and arg = term * aqual                                           (* marks an explicitly provided implicit arg *)
-and args = list<arg>
+and args = list arg
 and binder = {
   binder_bv    : bv;
   binder_qual  : bqual;
-  binder_attrs : list<attribute>
+  binder_attrs : list attribute
 }                                                                (* f:   #[@@ attr] n:nat -> vector n int -> T; f #17 v *)
-and binders = list<binder>                                       (* bool marks implicit binder *)
+and binders = list binder                                       (* bool marks implicit binder *)
 and decreases_order =
-  | Decreases_lex of list<term>  (* a decreases clause may either specify a lexicographic ordered list of terms, *)
+  | Decreases_lex of list term  (* a decreases clause may either specify a lexicographic ordered list of terms, *)
   | Decreases_wf of term * term  (* or a well-founded relation and a term *)
 and cflag =                                                        (* flags applicable to computation types, usually for optimizations *)
   | TOTAL                                                          (* computation has no real effect, can be reduced safely *)
@@ -221,7 +219,7 @@ and cflag =                                                        (* flags appl
   | CPS                                                            (* computation is marked with attribute `cps`, for DM4F, seems useless, see #1557 *)
   | DECREASES of decreases_order
 and metadata =
-  | Meta_pattern       of list<term> * list<args>                (* Patterns for SMT quantifier instantiation; the first arg is the list of names of the binders of the enclosing forall/exists *)
+  | Meta_pattern       of list term * list args                (* Patterns for SMT quantifier instantiation; the first arg is the list of names of the binders of the enclosing forall/exists *)
   | Meta_named         of lident                                 (* Useful for pretty printing to keep the type abbreviation around *)
   | Meta_labeled       of string * Range.range * bool            (* Sub-terms in a VC are labeled with error messages to be reported, used in SMT encoding *)
   | Meta_desugared     of meta_source_info                       (* Node tagged with some information about source term before desugaring *)
@@ -238,17 +236,17 @@ and meta_source_info =
 and fv_qual =
   | Data_ctor
   | Record_projector of (lident * ident)        (* the fully qualified (unmangled) name of the data constructor and the field being projected *)
-  | Record_ctor of lident * list<ident>         (* the type of the record being constructed and its (unmangled) fields in order *)
-  | Unresolved_projector of option<fv>          (* ToSyntax's best guess at what the projector is (based only on scoping rules) *)
+  | Record_ctor of lident * list ident         (* the type of the record being constructed and its (unmangled) fields in order *)
+  | Unresolved_projector of option fv          (* ToSyntax's best guess at what the projector is (based only on scoping rules) *)
   | Unresolved_constructor of unresolved_constructor (* ToSyntax's best guess at what the constructor is (based only on scoping rules) *)
 and unresolved_constructor = {
   uc_base_term : bool;      // The base term is `e` when the user writes `{ e with f1=v1; ... }`
-  uc_typename: option<lident>;      // The constructed type, as determined by the ToSyntax's scoping rules
-  uc_fields : list<lident>  // The fields names as written in the source
+  uc_typename: option lident;      // The constructed type, as determined by the ToSyntax's scoping rules
+  uc_fields : list lident  // The fields names as written in the source
 }
-and lbname = either<bv, fv>
-and letbindings = bool * list<letbinding>       (* let recs may have more than one element; top-level lets have lidents *)
-and subst_ts = list<list<subst_elt>>            (* A composition of parallel substitutions *)
+and lbname = either bv fv
+and letbindings = bool * list letbinding       (* let recs may have more than one element; top-level lets have lidents *)
+and subst_ts = list (list subst_elt)            (* A composition of parallel substitutions *)
              * maybe_set_use_range              (* and a maybe range update, Some r, to set the use_range of subterms to r.def_range *)
 and subst_elt =
    | DB of int * bv                            (* DB i t: replace a bound variable with index i with name bv                 *)
@@ -256,11 +254,11 @@ and subst_elt =
    | NT of bv  * term                          (* NT x t: replace a local name with a term t                                 *)
    | UN of int * universe                      (* UN u v: replace universes variable u with universe term v                  *)
    | UD of univ_name * int                     (* UD x i: replace universe name x with de Bruijn index i                     *)
-and freenames = set<bv>
-and syntax<'a> = {
+and freenames = set bv
+and syntax 'a = {
     n:'a;
     pos:Range.range;
-    vars:memo<free_vars>;
+    vars:memo free_vars;
 }
 and bv = {
     ppname:ident;  //programmer-provided name for pretty-printing
@@ -270,20 +268,20 @@ and bv = {
 and fv = {
     fv_name :var;
     fv_delta:delta_depth;
-    fv_qual :option<fv_qual>
+    fv_qual :option fv_qual
 }
 and free_vars = {
-    free_names:list<bv>;
-    free_uvars:list<ctx_uvar>;
-    free_univs:list<universe_uvar>;
-    free_univ_names:list<univ_name>; //fifo
+    free_names:list bv;
+    free_uvars:list ctx_uvar;
+    free_univs:list universe_uvar;
+    free_univ_names:list univ_name; //fifo
 }
 
 (* Residual of a computation type after typechecking *)
 and residual_comp = {
     residual_effect:lident;                (* first component is the effect name *)
-    residual_typ   :option<typ>;           (* second component: result type *)
-    residual_flags :list<cflag>            (* third component: contains (an approximation of) the cflags *)
+    residual_typ   :option typ;           (* second component: result type *)
+    residual_flags :list cflag            (* third component: contains (an approximation of) the cflags *)
 }
 
 and attribute = term
@@ -311,7 +309,7 @@ and lazy_kind =
   | Lazy_sigelt
   | Lazy_uvar
   | Lazy_letbinding
-  | Lazy_embedding of emb_typ * Thunk.t<term>
+  | Lazy_embedding of emb_typ * Thunk.t term
 
 and binding =
   | Binding_var      of bv
@@ -321,25 +319,25 @@ and binding =
    * we do not support universe-polymorphic recursion.
    * See #2106. *)
   | Binding_univ     of univ_name
-and tscheme = list<univ_name> * typ
-and gamma = list<binding>
+and tscheme = list univ_name * typ
+and gamma = list binding
 and binder_qualifier =
   | Implicit of bool //boolean marks an inaccessible implicit argument of a data constructor
   | Meta of term     //meta-argument that specifies a tactic term
   | Equality
-and bqual = option<binder_qualifier>
+and bqual = option binder_qualifier
 and arg_qualifier = {
   aqual_implicit : bool;
-  aqual_attributes : list<attribute>
+  aqual_attributes : list attribute
 }
-and aqual = option<arg_qualifier>
+and aqual = option arg_qualifier
 
 // This is set in FStar.Main.main, where all modules are in-scope.
-let lazy_chooser : ref<option<(lazy_kind -> lazyinfo -> term)>> = mk_ref None
+let lazy_chooser : ref (option (lazy_kind -> lazyinfo -> term)) = mk_ref None
 
-type freenames_l = list<bv>
+type freenames_l = list bv
 type formula = typ
-type formulae = list<typ>
+type formulae = list typ
 type qualifier =
   | Assumption                             //no definition provided, just a declaration
   | New                                    //a fresh type constant, distinct from all prior type constructors
@@ -358,8 +356,8 @@ type qualifier =
   //the remaining qualifiers are internal: the programmer cannot write them
   | Discriminator of lident                //discriminator for a datacon l
   | Projector of lident * ident            //projector for datacon l's argument x
-  | RecordType of (list<ident> * list<ident>)          //record type whose namespace is fst and unmangled field names are snd
-  | RecordConstructor of (list<ident> * list<ident>)   //record constructor whose namespace is fst and unmangled field names are snd
+  | RecordType of (list ident * list ident)          //record type whose namespace is fst and unmangled field names are snd
+  | RecordConstructor of (list ident * list ident)   //record constructor whose namespace is fst and unmangled field names are snd
   | Action of lident                       //action of some effect
   | ExceptionConstructor                   //a constructor of Prims.exn
   | HasMaskedEffect                        //a let binding that may have a top-level effect
@@ -378,8 +376,8 @@ type monad_abbrev = {
 type sub_eff = {
   source:lident;
   target:lident;
-  lift_wp:option<tscheme>;
-  lift:option<tscheme>
+  lift_wp:option tscheme;
+  lift:option tscheme
  }
 
 type action = {
@@ -400,9 +398,9 @@ type wp_eff_combinators = {
   close_wp     : tscheme;
   trivial      : tscheme;
 
-  repr         : option<tscheme>;
-  return_repr  : option<tscheme>;
-  bind_repr    : option<tscheme>
+  repr         : option tscheme;
+  return_repr  : option tscheme;
+  bind_repr    : option tscheme
 }
 
 type layered_eff_combinators = {
@@ -422,7 +420,7 @@ type eff_combinators =
 type eff_decl = {
   mname       : lident;
 
-  cattributes : list<cflag>;
+  cattributes : list cflag;
 
   univs       : univ_names;
   binders     : binders;
@@ -430,14 +428,14 @@ type eff_decl = {
   signature   : tscheme;
   combinators : eff_combinators;
 
-  actions     : list<action>;
+  actions     : list action;
 
-  eff_attrs   : list<attribute>
+  eff_attrs   : list attribute
 }
 
 type sig_metadata = {
     sigmeta_active:bool;
-    sigmeta_fact_db_ids:list<string>;
+    sigmeta_fact_db_ids:list string;
     sigmeta_admit:bool; //An internal flag to record that a sigelt's SMT proof should be admitted
                         //Used in DM4Free
 }
@@ -447,26 +445,26 @@ type sigelt' =
                             * univ_names                //u1..un
                             * binders                   //(x1:t1) ... (xn:tn)
                             * typ                       //t
-                            * list<lident>              //mutually defined types
-                            * list<lident>              //data constructors for this type
+                            * list lident              //mutually defined types
+                            * list lident              //data constructors for this type
 (* a datatype definition is a Sig_bundle of all mutually defined `Sig_inductive_typ`s and `Sig_datacon`s.
-   perhaps it would be nicer to let this have a 2-level structure, e.g. list<list<sigelt>>,
+   perhaps it would be nicer to let this have a 2-level structure, e.g. list list sigelt,
    where each higher level list represents one of the inductive types and its constructors.
    However, the current order is convenient as it matches the type-checking order for the mutuals;
    i.e., all the type constructors first; then all the data which may refer to the type constructors *)
-  | Sig_bundle              of list<sigelt>              //the set of mutually defined type and data constructors
-                          * list<lident>               //all the inductive types and data constructor names in this bundle
+  | Sig_bundle              of list sigelt              //the set of mutually defined type and data constructors
+                          * list lident               //all the inductive types and data constructor names in this bundle
   | Sig_datacon           of lident                    //name of the datacon
                           * univ_names                 //universe variables of the inductive type it belongs to
                           * typ                        //the constructor's type as an arrow (including parameters)
                           * lident                     //the inductive type of the value this constructs
                           * int                        //and the number of parameters of the inductive
-                          * list<lident>               //mutually defined types
+                          * list lident               //mutually defined types
   | Sig_declare_typ       of lident
                           * univ_names
                           * typ
   | Sig_let               of letbindings
-                          * list<lident>               //mutually defined
+                          * list lident               //mutually defined
   | Sig_assume            of lident
                           * univ_names
                           * formula
@@ -476,26 +474,26 @@ type sigelt' =
                           * univ_names
                           * binders
                           * comp
-                          * list<cflag>
+                          * list cflag
   | Sig_pragma            of pragma
-  | Sig_splice            of list<lident> * term
+  | Sig_splice            of list lident * term
 
   | Sig_polymonadic_bind  of lident * lident * lident * tscheme * tscheme
   | Sig_polymonadic_subcomp of lident * lident * tscheme * tscheme  //m <: n, the polymonadic subcomp term, and its type
-  | Sig_fail              of list<int>         (* Expected errors *)
+  | Sig_fail              of list int         (* Expected errors *)
                           * bool               (* true if should fail in --lax *)
-                          * list<sigelt>       (* The sigelts to be checked *)
+                          * list sigelt       (* The sigelts to be checked *)
 
 and sigelt = {
     sigel:    sigelt';
     sigrng:   Range.range;
-    sigquals: list<qualifier>;
+    sigquals: list qualifier;
     sigmeta:  sig_metadata;
-    sigattrs: list<attribute>;
-    sigopts:  option<vconfig>; (* Saving the option context where this sigelt was checked in *)
+    sigattrs: list attribute;
+    sigopts:  option vconfig; (* Saving the option context where this sigelt was checked in *)
 }
 
-type sigelts = list<sigelt>
+type sigelts = list sigelt
 
 type modul = {
   name: lident;
@@ -504,10 +502,10 @@ type modul = {
 }
 let mod_name (m: modul) = m.name
 
-type path = list<string>
-type subst_t = list<subst_elt>
+type path = list string
+type subst_t = list subst_elt
 
-let contains_reflectable (l: list<qualifier>): bool =
+let contains_reflectable (l: list qualifier): bool =
     Util.for_some (function Reflectable _ -> true | _ -> false) l
 
 (*********************************************************************************)
@@ -541,7 +539,7 @@ let on_antiquoted (f : (term -> term)) (qi : quoteinfo) : quoteinfo =
     let aq = List.map (fun (bv, t) -> (bv, f t)) qi.antiquotes in
     { qi with antiquotes = aq }
 
-let lookup_aq (bv : bv) (aq : antiquotations) : option<term> =
+let lookup_aq (bv : bv) (aq : antiquotations) : option term =
     match List.tryFind (fun (bv', _) -> bv_eq bv bv') aq with
     | Some (_, e) -> Some e
     | None -> None
@@ -549,16 +547,15 @@ let lookup_aq (bv : bv) (aq : antiquotations) : option<term> =
 (*********************************************************************************)
 (* Syntax builders *)
 (*********************************************************************************)
-open FStar.Compiler.Range
 
 let syn p k f = f k p
 let mk_fvs () = Util.mk_ref None
 let mk_uvs () = Util.mk_ref None
-let new_bv_set () : set<bv> = Util.new_set order_bv
-let new_id_set () : set<ident> = Util.new_set order_ident
-let new_fv_set () :set<lident> = Util.new_set order_fv
+let new_bv_set () : set bv = Util.new_set order_bv
+let new_id_set () : set ident = Util.new_set order_ident
+let new_fv_set () :set lident = Util.new_set order_fv
 let order_univ_name x y = String.compare (Ident.string_of_id x) (Ident.string_of_id y)
-let new_universe_names_set () : set<univ_name> = Util.new_set order_univ_name
+let new_universe_names_set () : set univ_name = Util.new_set order_univ_name
 
 let eq_binding b1 b2 =
     match b1, b2 with
@@ -584,8 +581,8 @@ let mk (t:'a) r = {
 
 let bv_to_tm   bv :term = mk (Tm_bvar bv) (range_of_bv bv)
 let bv_to_name bv :term = mk (Tm_name bv) (range_of_bv bv)
-let binders_to_names (bs:binders) : list<term> = bs |> List.map (fun b -> bv_to_name b.binder_bv)
-let mk_Tm_app (t1:typ) (args:list<arg>) p =
+let binders_to_names (bs:binders) : list term = bs |> List.map (fun b -> bv_to_name b.binder_bv)
+let mk_Tm_app (t1:typ) (args:list arg) p =
     match args with
     | [] -> t1
     | _ -> mk (Tm_app (t1, args)) p
@@ -669,7 +666,7 @@ let is_aqual_implicit = function Some { aqual_implicit = b } -> b | _ -> false
 let is_bqual_implicit_or_meta = function Some (Implicit _) | Some (Meta _) -> true | _ -> false
 let as_bqual_implicit = function true -> Some imp_tag | _ -> None
 let as_aqual_implicit = function true -> Some ({aqual_implicit=true; aqual_attributes=[]}) | _ -> None
-let pat_bvs (p:pat) : list<bv> =
+let pat_bvs (p:pat) : list bv =
     let rec aux b p = match p.v with
         | Pat_dot_term _
         | Pat_constant _ -> b
@@ -683,7 +680,7 @@ let pat_bvs (p:pat) : list<bv> =
 let range_of_ropt = function
     | None -> dummyRange
     | Some r -> r
-let gen_bv : string -> option<Range.range> -> typ -> bv = fun s r t ->
+let gen_bv : string -> option Range.range -> typ -> bv = fun s r t ->
   let id = mk_ident(s, range_of_ropt r) in
   {ppname=id; index=Ident.next_id(); sort=t}
 let new_bv ropt t = gen_bv Ident.reserved_prefix ropt t
@@ -718,7 +715,7 @@ let lid_of_fv (fv:fv) = fv.fv_name.v
 let range_of_fv (fv:fv) = range_of_lid (lid_of_fv fv)
 let set_range_of_fv (fv:fv) (r:Range.range) =
     {fv with fv_name={fv.fv_name with v=Ident.set_lid_range (lid_of_fv fv) r}}
-let has_simple_attribute (l: list<term>) s =
+let has_simple_attribute (l: list term) s =
   List.existsb (function
     | { n = Tm_constant (Const_string (data, _)) } when data = s ->
         true

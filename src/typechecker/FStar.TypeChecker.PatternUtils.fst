@@ -13,11 +13,8 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-#light "off"
-// (c) Microsoft Corporation. All rights reserved
 
 module FStar.TypeChecker.PatternUtils
-open FStar.Compiler.Effect
 open FStar.Compiler.Effect
 open FStar
 open FStar.Compiler
@@ -30,9 +27,8 @@ open FStar.Syntax.Syntax
 open FStar.Ident
 open FStar.Syntax.Subst
 open FStar.TypeChecker.Common
-open FStar.Syntax
 
-type lcomp_with_binder = option<bv> * lcomp
+type lcomp_with_binder = option bv * lcomp
 
 module SS = FStar.Syntax.Subst
 module S = FStar.Syntax.Syntax
@@ -130,7 +126,7 @@ let pat_as_exp (introduce_bv_uvars:bool)
                (inst_pat_cons_univs:bool)
                (env:Env.env)
                (p:pat)
-    : (list<bv>          (* pattern-bound variables (which may appear in the branch of match) *)
+    : (list bv          (* pattern-bound variables (which may appear in the branch of match) *)
      * term              (* expressions corresponding to the pattern *)
      * guard_t           (* guard with just the implicit variables introduced in the pattern *)
      * pat)   =          (* decorated pattern, with all the missing implicit args in p filled in *)
@@ -143,9 +139,9 @@ let pat_as_exp (introduce_bv_uvars:bool)
              x, guard, Env.push_bv env x
     in
     let rec pat_as_arg_with_env env (p:pat) :
-                                    (list<bv>    //all pattern-bound vars including wild-cards, in proper order
-                                    * list<bv>   //just the accessible vars, for the disjunctive pattern test
-                                    * list<bv>   //just the wildcards
+                                    (list bv    //all pattern-bound vars including wild-cards, in proper order
+                                    * list bv   //just the accessible vars, for the disjunctive pattern test
+                                    * list bv   //just the wildcards
                                     * Env.env    //env extending with the pattern-bound variables
                                     * term       //the pattern as a term/typ
                                     * guard_t    //guard with all new implicits

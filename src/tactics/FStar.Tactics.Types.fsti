@@ -1,4 +1,18 @@
-#light "off"
+(*
+   Copyright 2008-2016 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
 module FStar.Tactics.Types
 
 open FStar.Compiler.Effect
@@ -45,8 +59,8 @@ type proofstate = {
     // to have the SMT goal set. What we should really do
     // is go full-LCF and take them as arguments, returning them
     // as values. This goal stack should be user-level.
-    goals        : list<goal>;   //all the goals remaining to be solved
-    smt_goals    : list<goal>;   //goals that have been deferred to SMT
+    goals        : list goal;   //all the goals remaining to be solved
+    smt_goals    : list goal;   //goals that have been deferred to SMT
 
     depth        : int;          //depth for tracing and debugging
     __dump       : proofstate -> string -> unit; // callback to dump_proofstate, to avoid an annoying circularity
@@ -56,7 +70,7 @@ type proofstate = {
     freshness    : int;          //a simple freshness counter for the fresh tactic
     tac_verb_dbg : bool;         //whether to print verbose debugging messages
 
-    local_state  : BU.psmap<term>; // local metaprogram state
+    local_state  : BU.psmap term; // local metaprogram state
 
     urgency      : int;          // When printing a proofstate due to an error, this
                                  // is used by emacs to decide whether it should pop
@@ -82,8 +96,8 @@ val is_guard : goal -> bool
 val get_label : goal -> string
 val set_label : string -> goal -> goal
 
-val goals_of     : proofstate -> list<goal>
-val smt_goals_of : proofstate -> list<goal>
+val goals_of     : proofstate -> list goal
+val smt_goals_of : proofstate -> list goal
 
 val mk_goal: env -> ctx_uvar -> FStar.Options.optionstate -> bool -> string -> goal
 
@@ -100,7 +114,7 @@ type direction =
     | TopDown
     | BottomUp
 
-val check_goal_solved' : goal -> option<term>
+val check_goal_solved' : goal -> option term
 val check_goal_solved  : goal -> bool
-val get_phi            : goal -> option<term>
+val get_phi            : goal -> option term
 val is_irrelevant      : goal -> bool

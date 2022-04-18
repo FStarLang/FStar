@@ -13,7 +13,6 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-#light "off"
 module FStar.Extraction.ML.Util
 open Prims
 open FStar.Pervasives
@@ -42,7 +41,7 @@ module Env = FStar.TypeChecker.Env
 
 let codegen_fsharp () = Options.codegen () = Some Options.FSharp
 
-let pruneNones (l : list<option<'a>>) : list<'a> =
+let pruneNones (l : list (option 'a)) : list 'a =
     List.fold_right (fun  x ll -> match x with
                           | Some xs -> xs::ll
                           | None -> ll) l []
@@ -112,7 +111,7 @@ let mlexpr_of_const (p:Range.range) (c:sconst) : mlexpr' =
     | _ ->
         MLE_Const (mlconst_of_const p c)
 
-let rec subst_aux (subst:list<(mlident * mlty)>) (t:mlty)  : mlty =
+let rec subst_aux (subst:list (mlident * mlty)) (t:mlty)  : mlty =
     match t with
     | MLTY_Var  x -> (match BU.find_opt (fun (y, _) -> y=x) subst with
                      | Some ts -> snd ts
@@ -123,7 +122,7 @@ let rec subst_aux (subst:list<(mlident * mlty)>) (t:mlty)  : mlty =
     | MLTY_Top
     | MLTY_Erased -> t
 
-let try_subst ((formals, t):mltyscheme) (args:list<mlty>) : option<mlty> =
+let try_subst ((formals, t):mltyscheme) (args:list mlty) : option mlty =
     if List.length formals <> List.length args
     then None
     else Some (subst_aux (List.zip formals args) t)
@@ -179,7 +178,7 @@ let join_l r fs = List.fold_left (join r) E_PURE fs
 
 let mk_ty_fun = List.fold_right (fun (_, t0) t -> MLTY_Fun(t0, E_PURE, t))
 
-type unfold_t = mlty -> option<mlty>
+type unfold_t = mlty -> option mlty
 
 (* type_leq is essentially the lifting of the sub-effect relation, eff_leq, into function types.
    type_leq_c is a coercive variant of type_leq, which implements an optimization to erase the bodies of ghost functions.
@@ -187,7 +186,7 @@ type unfold_t = mlty -> option<mlty>
    In the case where f is a function literal, \x. e, subsuming it to (t -> Ghost t') means that we can simply
    erase e to unit right away.
 *)
-let rec type_leq_c (unfold_ty:unfold_t) (e:option<mlexpr>) (t:mlty) (t':mlty) : (bool * option<mlexpr>) =
+let rec type_leq_c (unfold_ty:unfold_t) (e:option mlexpr) (t:mlty) (t':mlty) : (bool * option mlexpr) =
     match t, t' with
     | MLTY_Var x, MLTY_Var y ->
         if x = y
@@ -377,7 +376,7 @@ let mlloc_of_range (r: Range.range) =
     let line = Range.line_of_pos pos in
     line, Range.file_of_range r
 
-let rec doms_and_cod (t:mlty) : list<mlty> * mlty =
+let rec doms_and_cod (t:mlty) : list mlty * mlty =
     match t with
       | MLTY_Fun (a,_,b) ->
         let ds, c = doms_and_cod b in
@@ -385,7 +384,7 @@ let rec doms_and_cod (t:mlty) : list<mlty> * mlty =
       | _ ->
           [], t
 
-let argTypes  (t: mlty) : list<mlty> =
+let argTypes  (t: mlty) : list mlty =
     fst (doms_and_cod t)
 
 let rec uncurry_mlty_fun t =
@@ -419,8 +418,8 @@ type emb_loc =
 
 type wrapped_term = mlexpr * mlexpr * int * bool
 
-let interpret_plugin_as_term_fun (env:UEnv.uenv) (fv:fv) (t:typ) (arity_opt:option<int>) (ml_fv:mlexpr')
-    : option<wrapped_term> =
+let interpret_plugin_as_term_fun (env:UEnv.uenv) (fv:fv) (t:typ) (arity_opt:option int) (ml_fv:mlexpr')
+    : option wrapped_term =
     let fv_lid = fv.fv_name.v in
     let tcenv = UEnv.tcenv_of_uenv env in
     let t = N.normalize [
@@ -530,7 +529,7 @@ let interpret_plugin_as_term_fun (env:UEnv.uenv) (fv:fv) (t:typ) (arity_opt:opti
            `FStar.Syntax.Embeddings.embedding [[t]]`
         where [[t]] is the ML denotation of the F* type t
     *)
-    let rec mk_embedding l (env:list<(bv * string)>) (t: term): mlexpr =
+    let rec mk_embedding l (env:list (bv * string)) (t: term): mlexpr =
         let t = FStar.TypeChecker.Normalize.unfold_whnf' [Env.ForExtraction] tcenv t in
         match (FStar.Syntax.Subst.compress t).n with
         | Tm_name bv
@@ -691,7 +690,7 @@ let interpret_plugin_as_term_fun (env:UEnv.uenv) (fv:fv) (t:typ) (arity_opt:opti
     let tvar_arity = List.length type_vars in
     let non_tvar_arity = List.length bs in
     let tvar_names = List.mapi (fun i tv -> ("tv_" ^ string_of_int i)) type_vars in
-    let tvar_context : list<(bv * string)> = List.map2 (fun b nm -> b.binder_bv, nm) type_vars tvar_names in
+    let tvar_context : list (bv * string) = List.map2 (fun b nm -> b.binder_bv, nm) type_vars tvar_names in
     // The tvar_context records all the ML type variables in scope
     // All their embeddings will be just identity embeddings
 
@@ -704,7 +703,7 @@ let interpret_plugin_as_term_fun (env:UEnv.uenv) (fv:fv) (t:typ) (arity_opt:opti
                  int,    //the arity of the compiled code (+1 for tactics)
                  bool)   //true if this is a tactic
     *)
-    let rec aux loc (accum_embeddings:list<mlexpr>) bs : (mlexpr * int * bool) =
+    let rec aux loc (accum_embeddings:list mlexpr) bs : (mlexpr * int * bool) =
         match bs with
         | [] ->
           let arg_unembeddings = List.rev accum_embeddings in

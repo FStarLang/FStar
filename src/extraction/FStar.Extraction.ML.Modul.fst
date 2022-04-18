@@ -13,7 +13,6 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-#light "off"
 module FStar.Extraction.ML.Modul
 open FStar.Pervasives
 open FStar.Compiler.Effect
@@ -172,8 +171,8 @@ type inductive_family = {
   iname  : lident;
   iparams: binders;
   ityp   : term;
-  idatas : list<data_constructor>;
-  iquals : list<S.qualifier>;
+  idatas : list data_constructor;
+  iquals : list S.qualifier;
   imetadata : metadata;
 }
 
@@ -191,7 +190,7 @@ let print_ifamily i =
 
 let bundle_as_inductive_families env ses quals
     : UEnv.uenv
-    * list<inductive_family> =
+    * list inductive_family =
     let env, ifams =
         BU.fold_map
         (fun env se -> match se.sigel with
@@ -229,9 +228,9 @@ type tydef_declaration = (mlsymbol * FStar.Extraction.ML.Syntax.metadata * int) 
 
 type iface = {
     iface_module_name: mlpath;
-    iface_bindings: list<(fv * exp_binding)>;
-    iface_tydefs: list<(either<tydef, tydef_declaration>)>;
-    iface_type_names:list<(fv * mlpath)>;
+    iface_bindings: list (fv * exp_binding);
+    iface_tydefs: list (either tydef tydef_declaration);
+    iface_type_names:list (fv * mlpath);
 }
 
 let empty_iface = {
@@ -318,13 +317,13 @@ let gamma_to_string env =
       - A tydef provides the representation of the abbreviation
         unfolded all the way to a type constant, i.e., inductive or arrow
 
-      - The list<mlmodule1> returned is the concrete definition
+      - The list mlmodule1 returned is the concrete definition
         of the abbreviation in ML, emitted only in the implementation
 *)
 let extract_typ_abbrev env quals attrs lb
     : env_t
     * iface
-    * list<mlmodule1> =
+    * list mlmodule1 =
     let tcenv, (lbdef, lbtyp) =
         let tcenv, _, def_typ =
           FStar.TypeChecker.Env.open_universes_in (tcenv_of_uenv env) lb.lbunivs [lb.lbdef; lb.lbtyp]
@@ -384,7 +383,7 @@ let extract_typ_abbrev env quals attrs lb
 let extract_let_rec_type env quals attrs lb
     : env_t
     * iface
-    * list<mlmodule1> =
+    * list mlmodule1 =
     let lbtyp =
       FStar.TypeChecker.Normalize.normalize
         [Env.Beta;
@@ -427,7 +426,7 @@ let extract_let_rec_type env quals attrs lb
 let extract_bundle_iface env se
     : env_t * iface =
     let extract_ctor (env_iparams:env_t)
-                     (ml_tyvars:list<mlsymbol>)
+                     (ml_tyvars:list mlsymbol)
                      (env:env_t)
                      (ctor: data_constructor)
         :  env_t * (fv * exp_binding) =
@@ -441,7 +440,7 @@ let extract_bundle_iface env se
     in
 
     let extract_one_family env ind
-        : env_t * list<(fv * exp_binding)> =
+        : env_t * list (fv * exp_binding) =
        let env_iparams, vars  = binders_as_mlty_binders env ind.iparams in
        let env, ctors = ind.idatas |> BU.fold_map (extract_ctor env_iparams vars) env in
        let env =
@@ -484,7 +483,7 @@ let extract_bundle_iface env se
 let extract_type_declaration (g:uenv) is_interface_val lid quals attrs univs t
     : env_t
     * iface
-    * list<mlmodule1>
+    * list mlmodule1
     = if not (quals |> BU.for_some (function Assumption -> true | _ -> false))
       then let g = UEnv.extend_with_tydef_declaration g lid in
            g, empty_iface, []
@@ -512,7 +511,7 @@ let extract_type_declaration (g:uenv) is_interface_val lid quals attrs univs t
 let extract_reifiable_effect g ed
     : uenv
     * iface
-    * list<mlmodule1> =
+    * list mlmodule1 =
     let extend_iface lid mlp exp exp_binding =
         let fv = (S.lid_as_fv lid delta_equational None) in
         let lb = {
@@ -589,7 +588,7 @@ let extract_reifiable_effect g ed
     iface_union_l (return_iface::bind_iface::actions_iface),
     return_decl::bind_decl::actions
 
-let extract_let_rec_types se (env:uenv) (lbs:list<letbinding>) =
+let extract_let_rec_types se (env:uenv) (lbs:list letbinding) =
     //extracting `let rec t .. : Type = e
     //            and ...
     if BU.for_some (fun lb -> not (Term.is_arity env lb.lbtyp)) lbs
@@ -620,7 +619,7 @@ let extract_let_rec_types se (env:uenv) (lbs:list<letbinding>) =
       List.rev impls |> List.flatten
 
 
-let get_noextract_to (se:sigelt) (backend:option<Options.codegen_t>) : bool =
+let get_noextract_to (se:sigelt) (backend:option Options.codegen_t) : bool =
   BU.for_some (function attr ->
     let hd, args = U.head_and_args attr in
     match (SS.compress hd).n, args with
@@ -776,7 +775,7 @@ let extract_iface (g:env_t) modul =
       else extract_iface' g modul)
   in
   let g, _ = UEnv.with_typars_env g (fun e ->
-    let iface_tydefs : list<RemoveUnusedParameters.tydef> =
+    let iface_tydefs : list RemoveUnusedParameters.tydef =
       List.map
         (function
           | Inl td -> snd (UEnv.tydef_mlpath td), UEnv.tydef_meta td, Inl (UEnv.tydef_def td)
@@ -795,10 +794,10 @@ let extract_iface (g:env_t) modul =
 
 let extract_bundle env se =
     let extract_ctor (env_iparams:env_t)
-                     (ml_tyvars:list<mlsymbol>)
+                     (ml_tyvars:list mlsymbol)
                      (env:env_t)
                      (ctor: data_constructor):
-        env_t * (mlsymbol * list<(mlsymbol * mlty)>)
+        env_t * (mlsymbol * list (mlsymbol * mlty))
         =
         let mlt = Util.eraseTypeDeep (Util.udelta_unfold env_iparams) (Term.term_as_mlty env_iparams ctor.dtyp) in
         let steps = [ Env.Inlining; Env.UnfoldUntil S.delta_constant; Env.EraseUniverses; Env.AllowUnboundUniverses; Env.ForExtraction ] in
@@ -873,7 +872,7 @@ let extract_bundle env se =
    is extracted along with an invocation to FStar.Tactics.Native.register_tactic or register_plugin,
    which installs the compiled term as a primitive step in the normalizer
  *)
-let maybe_register_plugin (g:env_t) (se:sigelt) : list<mlmodule1> =
+let maybe_register_plugin (g:env_t) (se:sigelt) : list mlmodule1 =
     let w = with_ty MLTY_Top in
     let plugin_with_arity attrs =
         BU.find_map attrs (fun t ->
@@ -895,7 +894,7 @@ let maybe_register_plugin (g:env_t) (se:sigelt) : list<mlmodule1> =
            begin
            match se.sigel with
            | Sig_let(lbs, lids) ->
-               let mk_registration lb : list<mlmodule1> =
+               let mk_registration lb : list mlmodule1 =
                   let fv = right lb.lbname in
                   let fv_lid = fv.fv_name.v in
                   let fv_t = lb.lbtyp in
@@ -921,7 +920,7 @@ let maybe_register_plugin (g:env_t) (se:sigelt) : list<mlmodule1> =
 (*****************************************************************************)
 (* Extracting the top-level definitions in a module                          *)
 (*****************************************************************************)
-let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
+let rec extract_sig (g:env_t) (se:sigelt) : env_t * list mlmodule1 =
   Errors.with_ctx (BU.format1 "While extracting top-level definition `%s`" (Print.sigelt_to_string_short se)) (fun () ->
      debug g (fun u -> BU.print1 ">>>> extract_sig %s \n" (Print.sigelt_to_string_short se));
 
@@ -1160,7 +1159,7 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
          g, []
   )
 
-let extract' (g:uenv) (m:modul) : uenv * option<mllib> =
+let extract' (g:uenv) (m:modul) : uenv * option mllib =
   let _ = Options.restore_cmd_line_options true in
   let name, g = UEnv.extend_with_module_name g m.name in
   let g = set_tcenv g (FStar.TypeChecker.Env.set_current_module (tcenv_of_uenv g) m.name) in

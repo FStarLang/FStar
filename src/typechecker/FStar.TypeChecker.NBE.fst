@@ -15,7 +15,6 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-#light "off"
 module FStar.TypeChecker.NBE
 open FStar.Pervasives
 open FStar.Compiler.Effect
@@ -45,7 +44,6 @@ module N = FStar.TypeChecker.Normalize
 module FC = FStar.Const
 module EMB = FStar.Syntax.Embeddings
 module PC = FStar.Parser.Const
-open FStar.TypeChecker.Cfg
 
 (* Broadly, the algorithm implemented here is inspired by
 
@@ -83,41 +81,41 @@ open FStar.TypeChecker.Cfg
 // VD: This seems necessary for the OCaml build
 let max a b = if a > b then a else b
 
-let map_rev (f : 'a -> 'b) (l : list<'a>) : list<'b> =
-  let rec aux (l:list<'a>) (acc:list<'b>) = //NS: weird, this needs an annotation to type-check in F*; cf issue #
+let map_rev (f : 'a -> 'b) (l : list 'a) : list 'b =
+  let rec aux (l:list 'a) (acc:list 'b) = //NS: weird, this needs an annotation to type-check in F*; cf issue #
     match l with
     | [] -> acc
     | x :: xs -> aux xs (f x :: acc)
   in  aux l []
 
-let map_rev_append (f : 'a -> 'b) (l1 : list<'a>) (l2 : list<'b>) : list<'b> =
-  let rec aux (l:list<'a>) (acc:list<'b>) =
+let map_rev_append (f : 'a -> 'b) (l1 : list 'a) (l2 : list 'b) : list 'b =
+  let rec aux (l:list 'a) (acc:list 'b) =
     match l with
     | [] -> l2
     | x :: xs -> aux xs (f x :: acc)
   in  aux l1 l2
 
-let rec map_append (f : 'a -> 'b)  (l1 : list<'a>) (l2 : list<'b>) : list<'b> =
+let rec map_append (f : 'a -> 'b)  (l1 : list 'a) (l2 : list 'b) : list 'b =
   match l1 with
   | [] -> l2
   | x :: xs -> (f x) :: map_append f xs l2
 
-let rec drop (p: 'a -> bool) (l: list<'a>): list<'a> =
+let rec drop (p: 'a -> bool) (l: list 'a): list 'a =
   match l with
   | [] -> []
   | x::xs -> if p x then x::xs else drop p xs
 
-let fmap_opt (f : 'a -> 'b) (x : option<'a>) : option<'b> =
+let fmap_opt (f : 'a -> 'b) (x : option 'a) : option 'b =
   BU.bind_opt x (fun x -> Some (f x))
 
-let drop_until (f : 'a -> bool) (l : list<'a>) : list<'a> =
+let drop_until (f : 'a -> bool) (l : list 'a) : list 'a =
   let rec aux l =
     match l with
     | [] -> []
     | x :: xs -> if f x then l else aux xs
   in aux l
 
-let trim (l : list<bool>) : list<bool> = (* trim a list of booleans after the last true *)
+let trim (l : list bool) : list bool = (* trim a list of booleans after the last true *)
     List.rev (drop_until id (List.rev l))
 
 
@@ -126,7 +124,7 @@ let implies b1 b2 =
   | false, _ -> true
   | true, b2 -> b2
 
-let let_rec_arity (b:letbinding) : int * list<bool> =
+let let_rec_arity (b:letbinding) : int * list bool =
   let (ar, maybe_lst) = U.let_rec_arity b in
   match maybe_lst with
   | None ->
@@ -142,7 +140,7 @@ let let_rec_arity (b:letbinding) : int * list<bool> =
 let debug_term (t : term) =
   BU.print1 "%s\n" (P.term_to_string t)
 
-let debug_sigmap (m : BU.smap<sigelt>) =
+let debug_sigmap (m : BU.smap sigelt) =
   BU.smap_fold m (fun k v u -> BU.print2 "%s -> %%s\n" k (P.sigelt_to_string_short v)) ()
 
 
@@ -151,7 +149,7 @@ let debug_sigmap (m : BU.smap<sigelt>) =
 ////////////////////////////////////////////////////////////////////////////////
 type config = {
   core_cfg:Cfg.cfg;
-  fv_cache:BU.smap<t>
+  fv_cache:BU.smap t
 }
 let new_config (cfg:Cfg.cfg) = {
   core_cfg = cfg;
@@ -175,7 +173,7 @@ let zeta_false (cfg:config) =
 let cache_add (cfg:config) (fv:fv) (v:t) =
   let lid = fv.fv_name.v in
   BU.smap_add cfg.fv_cache (string_of_lid lid) v
-let try_in_cache (cfg:config) (fv:fv) : option<t> =
+let try_in_cache (cfg:config) (fv:fv) : option t =
   let lid = fv.fv_name.v in
   BU.smap_try_find cfg.fv_cache (string_of_lid lid)
 let debug cfg f = log_nbe cfg.core_cfg f
@@ -199,12 +197,12 @@ let rec unlazy_unmeta t =
       end
     | _ -> t
 
-let pickBranch (cfg:config) (scrut : t) (branches : list<branch>) : option<(term * list<t>)> =
+let pickBranch (cfg:config) (scrut : t) (branches : list branch) : option (term * list t) =
   let all_branches = branches in
-  let rec pickBranch_aux (scrut : t) (branches : list<branch>) (branches0 : list<branch>) : option<(term * list<t>)> =
+  let rec pickBranch_aux (scrut : t) (branches : list branch) (branches0 : list branch) : option (term * list t) =
     //NS: adapted from FStar.TypeChecker.Normalize: rebuild_match
     let rec matches_pat (scrutinee0:t) (p:pat)
-        : either<list<t>, bool> =
+        : either (list t) bool =
         (* Inl ts: p matches t and ts are bindings for the branch *)
         (* Inr false: p definitely does not match t *)
         (* Inr true: p may match t, but p is an open term and we cannot decide for sure *)
@@ -235,8 +233,8 @@ let pickBranch (cfg:config) (scrut : t) (branches : list<branch>) : option<(term
             if matches_const scrutinee s then Inl [] else Inr false
 
         | Pat_cons(fv, arg_pats) ->
-            let rec matches_args out (a:list<(t * aqual)>) (p:list<(pat * bool)>)
-                : either<list<t>, bool> =
+            let rec matches_args out (a:list (t * aqual)) (p:list (pat * bool))
+                : either (list t) bool =
                 match a, p with
                 | [], [] -> Inl out
                 | (t, _)::rest_a, (p, _)::rest_p ->
@@ -283,11 +281,11 @@ let pickBranch (cfg:config) (scrut : t) (branches : list<branch>) : option<(term
 // Returns:
 //  should_unfold: bool, true, if the application is full and if none of the recursive
 //                 arguments is symbolic.
-//  arguments : list<arg>, the arguments to the recursive function in reverse order
-//  residual args: list<arg>, any additional arguments, beyond the arity of the function
+//  arguments : list arg, the arguments to the recursive function in reverse order
+//  residual args: list arg, any additional arguments, beyond the arity of the function
 let should_reduce_recursive_definition
        (arguments:args)
-       (formals_in_decreases:list<bool>)
+       (formals_in_decreases:list bool)
   : (bool * args * args) (* can unfold x full arg list x residual args *)
   =
   let rec aux ts ar_list acc =
@@ -304,7 +302,7 @@ let should_reduce_recursive_definition
   in
   aux arguments formals_in_decreases []
 
-let find_sigelt_in_gamma cfg (env: Env.env) (lid:lident): option<sigelt> =
+let find_sigelt_in_gamma cfg (env: Env.env) (lid:lident): option sigelt =
   let mapper (lr, rng) =
     match lr with
     | Inr (elt, None) -> Some elt
@@ -332,7 +330,7 @@ let is_constr (q : qninfo) : bool =
   | Some (Inr ({ sigel = Sig_datacon (_, _, _, _, _, _) }, _), _) -> true
   | _ -> false
 
-let translate_univ (cfg:config) (bs:list<t>) (u:universe) : universe =
+let translate_univ (cfg:config) (bs:list t) (u:universe) : universe =
   let rec aux u =
     let u = SS.compress_univ u in
       match u with
@@ -353,7 +351,7 @@ let translate_univ (cfg:config) (bs:list<t>) (u:universe) : universe =
     in
     aux u
 
-let find_let (lbs : list<letbinding>) (fvar : fv) =
+let find_let (lbs : list letbinding) (fvar : fv) =
   BU.find_map lbs (fun lb -> match lb.lbname with
                    | Inl _ -> failwith "find_let : impossible"
                    | Inr name ->
@@ -384,7 +382,7 @@ let mk_t t = { nbe_t = t; nbe_r = Range.dummyRange }
 /// applications. As such, the process of translation triggers
 /// call-by-value reduction of the syntax, relying on the reduction
 /// strategy of the host.
-let rec translate (cfg:config) (bs:list<t>) (e:term) : t =
+let rec translate (cfg:config) (bs:list t) (e:term) : t =
     let debug = debug cfg in
     let mk_t t = mk_rt e.pos t in
     debug (fun () -> BU.print2 "Term: %s - %s\n" (P.tag_of_term (SS.compress e)) (P.term_to_string (SS.compress e)));
@@ -470,7 +468,7 @@ let rec translate (cfg:config) (bs:list<t>) (e:term) : t =
     | Tm_abs ([], _, _) -> failwith "Impossible: abstraction with no binders"
 
     | Tm_abs (xs, body, resc) ->
-      mk_t <| Lam ((fun ys -> translate cfg (List.append ys bs) body),
+      mk_t <| Lam ((fun ys -> translate cfg (List.append (List.map fst ys) bs) body),
                   Inl (bs, xs, resc),
                   List.length xs)
 
@@ -530,7 +528,7 @@ let rec translate (cfg:config) (bs:list<t>) (e:term) : t =
 
     | Tm_match(scrut, ret_opt, branches, rc) ->
       (* Thunked computation to reconstrct the returns annotation *)
-      let make_returns () : option<match_returns_ascription> =
+      let make_returns () : option match_returns_ascription =
         match ret_opt with
         | None -> None
         | Some (b, asc) ->
@@ -546,15 +544,15 @@ let rec translate (cfg:config) (bs:list<t>) (e:term) : t =
           Some (b, asc) in
 
       (* Thunked computation to reconstruct residual comp *)
-      let make_rc () : option<S.residual_comp> =
+      let make_rc () : option S.residual_comp =
         match rc with
         | None -> None
         | Some rc -> Some (readback_residual_comp cfg (translate_residual_comp cfg bs rc)) in
 
       (* Thunked computation that reconstructs the patterns *)
-      let make_branches () : list<branch> =
+      let make_branches () : list branch =
         let cfg = zeta_false cfg in
-        let rec process_pattern bs (p:pat) : list<t> * pat = (* returns new environment and pattern *)
+        let rec process_pattern bs (p:pat) : list t * pat = (* returns new environment and pattern *)
           let (bs, p_new) =
             match p.v with
             | Pat_constant c -> (bs, Pat_constant c)
@@ -721,7 +719,7 @@ and iapp (cfg : config) (f:t) (args:args) : t =
     let m = List.length args in
     if m < n then
       // partial application
-      let arg_values_rev = map_rev fst args in
+      let arg_values_rev = List.rev args in
       let binders =
         match binders with
         | Inr raw_args ->
@@ -730,7 +728,7 @@ and iapp (cfg : config) (f:t) (args:args) : t =
 
         | Inl (ctx, xs, rc) ->
           let _, xs = List.splitAt m xs in
-          let ctx = List.append arg_values_rev ctx in
+          let ctx = List.append (List.map fst arg_values_rev) ctx in
           Inl (ctx, xs, rc)
       in
       mk <|
@@ -739,12 +737,12 @@ and iapp (cfg : config) (f:t) (args:args) : t =
           n - m)
     else if m = n then
       // full application
-      let arg_values_rev = map_rev fst args in
+      let arg_values_rev = List.rev args in
       f arg_values_rev
     else
       // extra arguments
       let (args, args') = List.splitAt n args in
-      iapp cfg (f (map_rev fst args)) args'
+      iapp cfg (f (List.rev args)) args'
   | Accu (a, ts) -> mk <| Accu (a, List.rev_append args ts)
   | Construct (i, us, ts) ->
     let rec aux args us ts =
@@ -858,7 +856,7 @@ and iapp (cfg : config) (f:t) (args:args) : t =
     failwith ("NBE ill-typed application: " ^ t_to_string f)
 
 
-and translate_fv (cfg: config) (bs:list<t>) (fvar:fv): t =
+and translate_fv (cfg: config) (bs:list t) (fvar:fv): t =
    let debug = debug cfg in
    let qninfo = Env.lookup_qname (Cfg.cfg_env cfg.core_cfg) (S.lid_of_fv fvar) in
    if is_constr qninfo || is_constr_fv fvar then mkConstruct fvar [] []
@@ -874,22 +872,21 @@ and translate_fv (cfg: config) (bs:list<t>) (fvar:fv): t =
          let arity = prim_step.arity + prim_step.univ_arity in
          debug (fun () -> BU.print1 "Found a primop %s\n" (P.fv_to_string fvar));
          mk_t <| Lam ((fun args_rev ->
-                 let args' = map_rev NBETerm.as_arg args_rev in
-                 let callbacks = {
-                   iapp = iapp cfg;
-                   translate = translate cfg bs;
-                 }
-                 in
-                 match prim_step.interpretation_nbe callbacks args' with
-                 | Some x ->
-                   debug (fun () -> BU.print2 "Primitive operator %s returned %s\n" (P.fv_to_string fvar) (t_to_string x));
-                   x
-                 | None ->
-                   debug (fun () -> BU.print1 "Primitive operator %s failed\n" (P.fv_to_string fvar));
-                   iapp cfg (mkFV fvar [] []) args'),
-              (let f (_:int) = S.mk_binder (S.new_bv None S.t_unit) in
-               Inl ([], FStar.Common.tabulate arity f, None)),
-              arity)
+                      let args' = List.rev args_rev in
+                      let callbacks = {
+                        iapp = iapp cfg;
+                        translate = translate cfg bs;
+                      } in
+                      match prim_step.interpretation_nbe callbacks args' with
+                      | Some x ->
+                        debug (fun () -> BU.print2 "Primitive operator %s returned %s\n" (P.fv_to_string fvar) (t_to_string x));
+                        x
+                      | None ->
+                        debug (fun () -> BU.print1 "Primitive operator %s failed\n" (P.fv_to_string fvar));
+                      iapp cfg (mkFV fvar [] []) args'),
+                     (let f (_:int) = S.mk_binder (S.new_bv None S.t_unit) in
+                      Inl ([], FStar.Common.tabulate arity f, None)),
+                     arity)
 
        | Some _ -> debug (fun () -> BU.print1 "(2) Decided to not unfold %s\n" (P.fv_to_string fvar)); mkFV fvar [] []
        | _      -> debug (fun () -> BU.print1 "(3) Decided to not unfold %s\n" (P.fv_to_string fvar)); mkFV fvar [] []
@@ -931,7 +928,7 @@ and translate_fv (cfg: config) (bs:list<t>) (fvar:fv): t =
        t
 
 (* translate a let-binding - local or global *)
-and translate_letbinding (cfg:config) (bs:list<t>) (lb:letbinding) : t =
+and translate_letbinding (cfg:config) (bs:list t) (lb:letbinding) : t =
   let debug = debug cfg in
   let us = lb.lbunivs in
   let formals, _ = U.arrow_formals lb.lbtyp in
@@ -947,12 +944,12 @@ and translate_letbinding (cfg:config) (bs:list<t>) (lb:letbinding) : t =
   // rather than top-level pure computation
 
 
-and mkRec i (b:letbinding) (bs:list<letbinding>) (env:list<t>) =
+and mkRec i (b:letbinding) (bs:list letbinding) (env:list t) =
   let (ar, ar_lst) = let_rec_arity b in
   mk_t <| LocalLetRec(i, b, bs, env, [], ar, ar_lst)
 
 (* Creates the environment of mutually recursive function definitions *)
-and make_rec_env (all_lbs:list<letbinding>) (all_outer_bs:list<t>) : list<t> =
+and make_rec_env (all_lbs:list letbinding) (all_outer_bs:list t) : list t =
   let rec_bindings = List.mapi (fun i lb -> mkRec i lb all_lbs all_outer_bs) all_lbs in
   List.rev_append rec_bindings all_outer_bs
 
@@ -1234,7 +1231,7 @@ and readback (cfg:config) (x:t) : term =
                 let x = { S.freshen_bv x with sort = tnorm } in
                 let ax = mkAccuVar x in
                 let ctx = ax :: ctx in
-                ctx, ({b with binder_bv=x})::binders_rev, ax::accus_rev)
+                ctx, ({b with binder_bv=x})::binders_rev, (ax, U.aqual_of_binder b)::accus_rev)
               (ctx, [], [])
               binders
           in
@@ -1250,9 +1247,11 @@ and readback (cfg:config) (x:t) : term =
         | Inr args ->
           let binders, accus =
             List.fold_right
-              (fun (t, _) (binders, accus) ->
-                let x = S.new_bv None (readback cfg t) in
-                (S.mk_binder x)::binders, mkAccuVar x :: accus)
+              (fun (t, aq) (binders, accus) ->
+               let bqual, battrs = U.bqual_and_attrs_of_aqual aq in
+               let x = S.new_bv None (readback cfg t) in
+               (S.mk_binder_with_attrs x bqual battrs)::binders,
+               (mkAccuVar x, aq) :: accus)
               args
               ([],[])
           in
@@ -1473,8 +1472,8 @@ and readback (cfg:config) (x:t) : term =
 type step =
   | Primops
   | UnfoldUntil of delta_depth
-  | UnfoldOnly  of list<FStar.Ident.lid>
-  | UnfoldAttr  of list<FStar.Ident.lid>
+  | UnfoldOnly  of list FStar.Ident.lid
+  | UnfoldAttr  of list FStar.Ident.lid
   | UnfoldTac
   | Reify
 
@@ -1489,7 +1488,7 @@ let step_as_normalizer_step = function
 let reduce_application cfg t args =
   iapp (new_config cfg) t args
 
-let normalize psteps (steps:list<Env.step>)
+let normalize psteps (steps:list Env.step)
                 (env : Env.env) (e:term) : term =
   let cfg = Cfg.config' psteps steps env in
   //debug_sigmap env.sigtab;
@@ -1505,7 +1504,7 @@ let normalize psteps (steps:list<Env.step>)
   r
 
 (* ONLY FOR UNIT TESTS! *)
-let normalize_for_unit_test (steps:list<Env.step>) (env : Env.env) (e:term) : term =
+let normalize_for_unit_test (steps:list Env.step) (env : Env.env) (e:term) : term =
   let cfg = Cfg.config steps env in
   //debug_sigmap env.sigtab;
   let cfg = {cfg with steps={cfg.steps with reify_=true}} in

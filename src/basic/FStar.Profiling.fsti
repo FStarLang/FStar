@@ -13,10 +13,9 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-#light "off"
-
 module FStar.Profiling
-open FStar.Compiler.Effect module List = FStar.Compiler.List
+open FStar.Compiler.Effect
+module List = FStar.Compiler.List
 
 // When --profile module_name
 // And  --profile_component component_name
@@ -24,7 +23,7 @@ open FStar.Compiler.Effect module List = FStar.Compiler.List
 // and accumulate it in a profiling counter
 // associated with `component_name`
 val profile : f:(unit -> 'b)
-            -> module_name:option<string>
+            -> module_name:option string
             -> component_name:string
             -> 'b
 

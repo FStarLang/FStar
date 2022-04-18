@@ -13,7 +13,6 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-#light "off"
 (* -------------------------------------------------------------------- *)
 module FStar.Extraction.ML.RemoveUnusedParameters
 open FStar.Pervasives
@@ -54,11 +53,11 @@ type argument_tag =
   | Retain
   | Omit
 
-type entry = list<argument_tag>
+type entry = list argument_tag
 
 type env_t = {
-  current_module:list<mlsymbol>;
-  tydef_map:BU.psmap<entry>;
+  current_module:list mlsymbol;
+  tydef_map:BU.psmap entry;
 }
 
 let initial_env : env_t = {
@@ -72,11 +71,11 @@ let extend_env (env:env_t) (i:mlsymbol) (e:entry) : env_t = {
 }
 
 let lookup_tyname (env:env_t) (name:mlpath)
-  : option<entry>
+  : option entry
   = BU.psmap_try_find env.tydef_map (string_of_mlpath name)
 
 (** Free variables of a type: Computed to check which parameters are used *)
-type var_set = BU.set<mlident>
+type var_set = BU.set mlident
 let empty_var_set = BU.new_set (fun x y -> String.compare x y)
 let rec freevars_of_mlty' (vars:var_set) (t:mlty) =
   match t with
@@ -165,7 +164,7 @@ and elim_branch env (pat, wopt, e) =
 and elim_mlexpr (env:env_t) (e:mlexpr) =
   { e with expr = elim_mlexpr' env e.expr; mlty = elim_mlty env e.mlty }
 
-type tydef = mlsymbol * metadata * either<mltyscheme, int>
+type tydef = mlsymbol * metadata * either mltyscheme int
 
 exception Drop_tydef
 
@@ -276,7 +275,7 @@ let elim_tydef_or_decl (env:env_t) (td:tydef)
       in
       env, (name, meta, Inl (params, mlty))
 
-let elim_tydefs (env:env_t) (tds:list<tydef>) : env_t * list<tydef> =
+let elim_tydefs (env:env_t) (tds:list tydef) : env_t * list tydef =
   if Options.codegen() <> Some Options.FSharp then env, tds else
   let env, tds =
     List.fold_left
@@ -390,5 +389,5 @@ let elim_mllib (env:env_t) (m:mllib) =
   in
   env, MLLib libs
 
-let elim_mllibs (l:list<mllib>) : list<mllib> =
+let elim_mllibs (l:list mllib) : list mllib =
   snd (BU.fold_map elim_mllib initial_env l)

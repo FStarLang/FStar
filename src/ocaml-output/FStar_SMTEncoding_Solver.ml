@@ -1,7 +1,5 @@
 open Prims
-type z3_replay_result =
-  (FStar_SMTEncoding_Z3.unsat_core, FStar_SMTEncoding_Term.error_labels)
-    FStar_Pervasives.either
+let (z3_replay_result : (unit * unit)) = ((), ())
 let z3_result_as_replay_result :
   'uuuuu 'uuuuu1 'uuuuu2 .
     ('uuuuu, ('uuuuu1 * 'uuuuu2)) FStar_Pervasives.either ->

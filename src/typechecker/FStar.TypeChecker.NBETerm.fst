@@ -1,4 +1,19 @@
-#light "off"
+(*
+   Copyright 2017-2019 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
+
 module FStar.TypeChecker.NBETerm
 open FStar.Pervasives
 open FStar.Compiler.Effect
@@ -63,11 +78,11 @@ type atom
        // 1. the scrutinee
        t *
        // 2. reconstruct the returns annotation
-       (unit -> option<match_returns_ascription>) *
+       (unit -> option match_returns_ascription) *
        // 3. reconstructs the pattern matching
-       (unit -> list<branch>) *
+       (unit -> list branch) *
        // 4. reconstruct the residual comp if set
-       (unit -> option<S.residual_comp>)
+       (unit -> option S.residual_comp)
   | UnreducedLet of
      // Especially when extracting, we do not always want to reduce let bindings
      // since that can lead to exponential code size blowup. This node represents
@@ -75,11 +90,11 @@ type atom
      // 1. The name of the let-bound term
        var *
      // 2. The type of the let-bound term
-       Thunk.t<t>   *
+       Thunk.t t   *
      // 3. Its definition
-       Thunk.t<t>   *
+       Thunk.t t   *
      // 4. The body of the let binding
-       Thunk.t<t>   *
+       Thunk.t t   *
      // 5. The source letbinding for readback (of attributes etc.)
        letbinding
   | UnreducedLetRec of
@@ -87,32 +102,30 @@ type atom
      // 1. list of names of all mutually recursive let-rec-bound terms
      //    * their types
      //    * their definitions
-        list<(var * t * t)> *
+        list (var * t * t) *
      // 2. the body of the let binding
         t *
      // 3. the source letbinding for readback (of attributes etc.)
      //    equal in length to the first list
-        list<letbinding>
-  | UVar of Thunk.t<S.term>
+        list letbinding
+  | UVar of Thunk.t S.term
 
 and t'
   =
-  | Lam of
-        // 1. We represent n-ary functions that receive their arguments as a list
-        //    The arguments are in reverse binder order (optimized for convenience beta reduction)
-       (list<t> -> t)
-       * either<(list<t> * binders * option<S.residual_comp>), list<arg>> //a context, binders (in order) and residual_comp for readback
-                                                                             //or a list of arguments, for primitive unembeddings
-       * int                        // arity
+  | Lam of (list (t * aqual) -> t)  //these expect their arguments in binder order (optimized for convenience beta reduction)
+                                   //we also maintain aquals so as to reconstruct the application properly for implicits
+        * either (list t * binders * option S.residual_comp) (list arg) //a context, binders and residual_comp for readback
+                                                                        //or a list of arguments, for primitive unembeddings
+        * int  // arity
   | Accu of atom * args
   (* For simplicity represent constructors with fv as in F* *)
-  | Construct of fv * list<universe> * args (* Zoe: Data constructors *)
-  | FV of fv * list<universe> * args (* Zoe: Free variables *)
+  | Construct of fv * list universe * args (* Zoe: Data constructors *)
+  | FV of fv * list universe * args (* Zoe: Free variables *)
   | Constant of constant
   | Type_t of universe
   | Univ of universe
   | Unknown (* For translating unknown types *)
-  | Arrow of either<Thunk.t<S.term>, (list<arg> * comp)>
+  | Arrow of either (Thunk.t S.term) (list arg * comp)
   | Refinement of
           // 1. A representation of the refinment formula in scope of its binder
           (t -> t) *
@@ -121,8 +134,8 @@ and t'
           (unit -> arg)
   | Reflect of t
   | Quote of S.term * S.quoteinfo
-  | Lazy of either<S.lazyinfo,(Dyn.dyn * emb_typ)> * Thunk.t<t>
-  | Meta of t * Thunk.t<S.metadata>
+  | Lazy of (either S.lazyinfo (Dyn.dyn * emb_typ)) * Thunk.t t
+  | Meta of t * Thunk.t S.metadata
   | TopLevelLet of
        // 1. The definition of the fv
        letbinding *
@@ -136,7 +149,7 @@ and t'
        // 3. Its natural arity including universes (see Util.let_rec_arity)
        int *
        // 4. Whether or not each argument appeats in the decreases clause (also see Util.let_rec_arity)
-       list<bool> *
+       list bool *
        // 5. Accumulated arguments in order from left-to-right (unlike Accu, these are not reversed)
        args
   | LocalLetRec of
@@ -145,17 +158,17 @@ and t'
        // 1. the definition of the let rec bound name
        letbinding *
        // 2. its mutually recursive definitions, if any
-       list<letbinding> *
+       list letbinding *
        // 3. the local environment of the recursive definition
-       list<t> *
+       list t *
        // 4. accumulated arguments (in order)
        args *
        // 5. natural arity
        int *
        // 6. whether or not a given argument decreases
-       list<bool> // *
+       list bool // *
        // // 7. callback to translate letbinding
-       // (list<t> -> letbinding -> t)
+       // (list t> -> letbinding - t)
 
 and t = {
   nbe_t : t';
@@ -163,8 +176,8 @@ and t = {
 }
 
 and comp =
-  | Tot of t * option<universe>
-  | GTot of t * option<universe>
+  | Tot of t * option universe
+  | GTot of t * option universe
   | Comp of comp_typ
 
 and comp_typ = {
@@ -172,7 +185,7 @@ and comp_typ = {
   effect_name:lident;
   result_typ:t;
   effect_args:args;
-  flags:list<cflag>
+  flags:list cflag
  }
 
 and cflag =
@@ -185,17 +198,17 @@ and cflag =
   | SHOULD_NOT_INLINE
   | LEMMA
   | CPS
-  | DECREASES_lex of list<t>
+  | DECREASES_lex of list t
   | DECREASES_wf of (t * t)
 
 and residual_comp = {
   residual_effect:lident;
-  residual_typ   :option<t>;
-  residual_flags :list<cflag>
+  residual_typ   :option t;
+  residual_flags :list cflag
 }
 
 and arg = t * aqual
-and args = list<arg>
+and args = list arg
 //NS:
 // and comp_t =
 //   | Comp of lident * universes * args * flags
@@ -209,7 +222,7 @@ and args = list<arg>
 *)
 
 type head = t
-type annot = option<t>
+type annot = option t
 
 // NBE term manipulation
 
@@ -230,8 +243,8 @@ let mkConstruct i us ts = mk_t <| Construct(i, us, ts)
 let mkFV i us ts = mk_rt (S.range_of_fv i) (FV(i, us, ts))
 
 let mkAccuVar (v:var) = mk_rt (S.range_of_bv v) (Accu(Var v, []))
-let mkAccuMatch (s:t) (ret:(unit -> option<match_returns_ascription>)) (bs:(unit -> list<branch>))
-  (rc:unit -> option<S.residual_comp>) =
+let mkAccuMatch (s:t) (ret:(unit -> option match_returns_ascription)) (bs:(unit -> list branch))
+  (rc:unit -> option S.residual_comp) =
   mk_t <| Accu(Match (s, ret, bs, rc), [])
 
 // Term equality
@@ -372,37 +385,37 @@ type nbe_cbs = {
 let iapp_cb cbs    h a = cbs.iapp h a
 let translate_cb cbs t = cbs.translate t
 
-type embedding<'a> = {
+type embedding 'a = {
   em  : nbe_cbs -> 'a -> t;
-  un  : nbe_cbs -> t -> option<'a>;
+  un  : nbe_cbs -> t -> option 'a;
   typ : t;
   emb_typ : emb_typ
 }
 
 
-let embed   (e:embedding<'a>) (cb:nbe_cbs) (x:'a) : t = e.em cb x
-let unembed (e:embedding<'a>) (cb:nbe_cbs) (trm:t) : option<'a> = e.un cb trm
-let type_of (e:embedding<'a>) : t = e.typ
+let embed   (e:embedding 'a) (cb:nbe_cbs) (x:'a) : t = e.em cb x
+let unembed (e:embedding 'a) (cb:nbe_cbs) (trm:t) : option 'a = e.un cb trm
+let type_of (e:embedding 'a) : t = e.typ
 
 
 let mk_emb em un typ et = {em = em; un = un; typ = typ; emb_typ=et}
 let mk_emb' em un = mk_emb (fun cbs t -> mk_t <| em cbs t) (fun cbs t -> un cbs t.nbe_t)
 
 
-let embed_as (ea:embedding<'a>)
+let embed_as (ea:embedding 'a)
              (ab : 'a -> 'b)
              (ba : 'b -> 'a)
-             (ot:option<t>)
-             : embedding<'b>
+             (ot:option t)
+             : embedding 'b
  = mk_emb (fun cbs (x:'b) -> embed ea cbs (ba x))
           (fun cbs t -> BU.map_opt (unembed ea cbs t) ab)
           (match ot with | Some t -> t | None -> ea.typ)
           ea.emb_typ
 
-let lid_as_constr (l:lident) (us:list<universe>) (args:args) : t =
+let lid_as_constr (l:lident) (us:list universe) (args:args) : t =
     mkConstruct (lid_as_fv l S.delta_constant (Some Data_ctor)) us args
 
-let lid_as_typ (l:lident) (us:list<universe>) (args:args) : t =
+let lid_as_typ (l:lident) (us:list universe) (args:args) : t =
     mkFV (lid_as_fv l S.delta_constant None) us args
 
 let as_iarg (a:t) : arg = (a, S.as_aqual_implicit true)
@@ -421,7 +434,7 @@ let lazy_embed (et:emb_typ) (x:'a) (f:unit -> t) =
          let li = FStar.Compiler.Dyn.mkdyn x, et in
          mk_t <| Lazy (Inr li, thunk)
 
-let lazy_unembed cb (et:emb_typ) (x:t) (f:t -> option<'a>) : option<'a> =
+let lazy_unembed cb (et:emb_typ) (x:t) (f:t -> option 'a) : option 'a =
     match x.nbe_t with
     | Lazy (Inl li, thunk) ->
       f (Thunk.force thunk)
@@ -451,25 +464,25 @@ let lazy_unembed cb (et:emb_typ) (x:t) (f:t -> option<'a>) : option<'a> =
 
 
 // Emdebbing for polymorphic types
-let mk_any_emb (ty:t) : embedding<t> =
+let mk_any_emb (ty:t) : embedding t =
     let em = (fun _cb a -> a) in
     let un = (fun _cb t -> Some t) in
     mk_emb em un ty ET_abstract
 
 // Emdebbing at abstract types
-let e_any : embedding<t> =
+let e_any : embedding t =
     let em = (fun _cb a -> a) in
     let un = (fun _cb t -> Some t) in
     mk_emb em un (lid_as_typ PC.term_lid [] []) ET_abstract
 
 // Emdebbing at type unit
-let e_unit : embedding<unit> =
+let e_unit : embedding unit =
     let em _cb a = Constant Unit in
     let un _cb t = Some () in // No runtime typecheck here
     mk_emb' em un (lid_as_typ PC.unit_lid [] []) (SE.emb_typ_of SE.e_unit)
 
 // Embedding at type bool
-let e_bool : embedding<bool> =
+let e_bool : embedding bool =
     let em _cb a = Constant (Bool a) in
     let un _cb t =
       match t with
@@ -479,7 +492,7 @@ let e_bool : embedding<bool> =
     mk_emb' em un (lid_as_typ PC.bool_lid [] []) (SE.emb_typ_of SE.e_unit)
 
 // Embeddind at type char
-let e_char : embedding<char> =
+let e_char : embedding char =
     let em _cb c = Constant (Char c) in
     let un _cb c =
       match c with
@@ -489,7 +502,7 @@ let e_char : embedding<char> =
     mk_emb' em un (lid_as_typ PC.char_lid [] []) (SE.emb_typ_of SE.e_char)
 
 // Embeddind at type string
-let e_string : embedding<string> =
+let e_string : embedding string =
   let em _cb s = Constant (String (s, Range.dummyRange)) in
   let un _cb s =
     match s with
@@ -499,7 +512,7 @@ let e_string : embedding<string> =
   mk_emb' em un (lid_as_typ PC.string_lid [] []) (SE.emb_typ_of SE.e_string)
 
 // Embeddind at type int
-let e_int : embedding<Z.t> =
+let e_int : embedding Z.t =
     let em _cb c = Constant (Int c) in
     let un _cb c =
         match c with
@@ -509,11 +522,11 @@ let e_int : embedding<Z.t> =
     mk_emb' em un (lid_as_typ PC.int_lid [] [])  (SE.emb_typ_of SE.e_int)
 
 // Embedding at option type
-let e_option (ea : embedding<'a>) =
+let e_option (ea : embedding 'a) =
     let etyp =
         ET_app(PC.option_lid |> Ident.string_of_lid, [ea.emb_typ])
     in
-    let em cb (o:option<'a>) : t =
+    let em cb (o:option 'a) : t =
         lazy_embed etyp o (fun () ->
         match o with
         | None ->
@@ -522,7 +535,7 @@ let e_option (ea : embedding<'a>) =
           lid_as_constr PC.some_lid [U_zero] [as_arg (embed ea cb x);
                                               as_iarg (type_of ea)])
     in
-    let un cb (trm:t) : option<option<'a>> =
+    let un cb (trm:t) : option (option 'a) =
         lazy_unembed cb etyp trm (fun trm ->
         match trm.nbe_t with
         | Construct (fvar, us, args) when S.fv_eq_lid fvar PC.none_lid ->
@@ -535,7 +548,7 @@ let e_option (ea : embedding<'a>) =
 
 
 // Emdedding tuples
-let e_tuple2 (ea:embedding<'a>) (eb:embedding<'b>) =
+let e_tuple2 (ea:embedding 'a) (eb:embedding 'b) =
     let etyp =
         ET_app(PC.lid_tuple2 |> Ident.string_of_lid, [ea.emb_typ; eb.emb_typ])
     in
@@ -548,7 +561,7 @@ let e_tuple2 (ea:embedding<'a>) (eb:embedding<'b>) =
                        as_iarg (type_of eb);
                        as_iarg (type_of ea)])
     in
-    let un cb (trm:t) : option<('a * 'b)> =
+    let un cb (trm:t) : option ('a * 'b) =
         lazy_unembed cb etyp trm (fun trm ->
         match trm.nbe_t with
         | Construct (fvar, us, [(b, _); (a, _); _; _]) when S.fv_eq_lid fvar PC.lid_Mktuple2 ->
@@ -559,7 +572,7 @@ let e_tuple2 (ea:embedding<'a>) (eb:embedding<'b>) =
     in
     mk_emb em un (lid_as_typ PC.lid_tuple2 [U_zero;U_zero] [as_arg (type_of eb); as_arg (type_of ea)]) etyp
 
-let e_tuple3 (ea:embedding<'a>) (eb:embedding<'b>) (ec:embedding<'c>) =
+let e_tuple3 (ea:embedding 'a) (eb:embedding 'b) (ec:embedding 'c) =
     let etyp =
         ET_app(PC.lid_tuple3 |> Ident.string_of_lid, [ea.emb_typ; eb.emb_typ; ec.emb_typ])
     in
@@ -574,7 +587,7 @@ let e_tuple3 (ea:embedding<'a>) (eb:embedding<'b>) (ec:embedding<'c>) =
                        as_iarg (type_of eb);
                        as_iarg (type_of ea)])
     in
-    let un cb (trm:t) : option<('a * 'b * 'c)> =
+    let un cb (trm:t) : option ('a * 'b * 'c) =
         lazy_unembed cb etyp trm (fun trm ->
         match trm.nbe_t with
         | Construct (fvar, us, [(c, _); (b, _); (a, _); _; _]) when S.fv_eq_lid fvar PC.lid_Mktuple3 ->
@@ -586,11 +599,11 @@ let e_tuple3 (ea:embedding<'a>) (eb:embedding<'b>) (ec:embedding<'c>) =
     in
     mk_emb em un (lid_as_typ PC.lid_tuple3 [U_zero;U_zero;U_zero] [as_arg (type_of ec); as_arg (type_of eb); as_arg (type_of ea)]) etyp
 
-let e_either (ea:embedding<'a>) (eb:embedding<'b>) =
+let e_either (ea:embedding 'a) (eb:embedding 'b) =
     let etyp =
         ET_app(PC.either_lid |> Ident.string_of_lid, [ea.emb_typ; eb.emb_typ])
     in
-    let em cb (s:either<'a,'b>) : t =
+    let em cb (s:either 'a 'b) : t =
         lazy_embed etyp s (fun () ->
         match s with
         | Inl a ->
@@ -606,7 +619,7 @@ let e_either (ea:embedding<'a>) (eb:embedding<'b>) =
                        as_iarg (type_of eb);
                        as_iarg (type_of ea)])
     in
-    let un cb (trm:t) : option<either<'a,'b>> =
+    let un cb (trm:t) : option (either 'a 'b) =
         lazy_unembed cb etyp trm (fun trm ->
         match trm.nbe_t with
         | Construct (fvar, us, [(a, _); _; _]) when S.fv_eq_lid fvar PC.inl_lid ->
@@ -620,7 +633,7 @@ let e_either (ea:embedding<'a>) (eb:embedding<'b>) =
     mk_emb em un (lid_as_typ PC.either_lid [U_zero;U_zero] [as_arg (type_of eb); as_arg (type_of ea)]) etyp
 
 // Embedding range
-let e_range : embedding<Range.range> =
+let e_range : embedding Range.range =
     let em cb r = Constant (Range r) in
     let un cb t =
     match t with
@@ -631,24 +644,24 @@ let e_range : embedding<Range.range> =
     mk_emb' em un (lid_as_typ PC.range_lid [] []) (SE.emb_typ_of SE.e_range)
 
 // vconfig, NYI
-let e_vconfig : embedding<vconfig> =
+let e_vconfig : embedding vconfig =
     let em cb r = failwith "e_vconfig NBE" in
     let un cb t = failwith "e_vconfig NBE" in
     mk_emb' em un (lid_as_typ PC.vconfig_lid [] []) (SE.emb_typ_of SE.e_vconfig)
 
 // Emdedding lists
-let e_list (ea:embedding<'a>) =
+let e_list (ea:embedding 'a) =
     let etyp =
         ET_app(PC.list_lid |> Ident.string_of_lid, [ea.emb_typ])
     in
-    let em cb (l:list<'a>) : t =
+    let em cb (l:list 'a) : t =
         lazy_embed etyp l (fun () ->
         let typ = as_iarg (type_of ea) in
         let nil = lid_as_constr PC.nil_lid [U_zero] [typ] in
         let cons hd tl = lid_as_constr PC.cons_lid [U_zero] [as_arg tl; as_arg (embed ea cb hd); typ] in
         List.fold_right cons l nil)
     in
-    let rec un cb (trm:t) : option<list<'a>> =
+    let rec un cb (trm:t) : option (list 'a) =
         lazy_unembed cb etyp trm (fun trm ->
         match trm.nbe_t with
         | Construct (fv, _, _) when S.fv_eq_lid fv PC.nil_lid -> Some []
@@ -666,18 +679,18 @@ let e_list (ea:embedding<'a>) =
 
 let e_string_list = e_list e_string
 
-let e_arrow (ea:embedding<'a>) (eb:embedding<'b>) : embedding<('a -> 'b)> =
+let e_arrow (ea:embedding 'a) (eb:embedding 'b) : embedding ('a -> 'b) =
     let etyp = ET_fun(ea.emb_typ, eb.emb_typ) in
     let em cb (f : 'a -> 'b) : t =
         lazy_embed etyp f (fun () ->
-        mk_t <| Lam((fun tas -> match unembed ea cb (List.hd tas) with
-                        | Some a -> embed eb cb (f a)
-                        | None -> failwith "cannot unembed function argument"),
-            Inr [as_arg (type_of eb)],
-            1))
+        mk_t <| Lam ((fun tas -> match unembed ea cb (tas |> List.hd |> fst) with
+                             | Some a -> embed eb cb (f a)
+                             | None -> failwith "cannot unembed function argument"),
+               Inr [as_arg (type_of eb)],
+               1))
     in
-    let un cb (lam : t) : option<('a -> 'b)> =
-        let k (lam:t) : option<('a -> 'b)> =
+    let un cb (lam : t) : option ('a -> 'b) =
+        let k (lam:t) : option ('a -> 'b) =
             Some (fun (x:'a) -> match unembed eb cb (cb.iapp lam [as_arg (embed ea cb x)]) with
                                 | Some y -> y
                                 | None -> failwith "cannot unembed function result")
@@ -709,7 +722,7 @@ let e_norm_step =
                           [] [as_arg (embed (e_list e_string) cb l)]
         | SE.ZetaFull -> mkFV (lid_as_fv PC.steps_zeta_full S.delta_constant None) [] []
     in
-    let un cb (t0:t) : option<SE.norm_step> =
+    let un cb (t0:t) : option SE.norm_step =
         match t0.nbe_t with
         | FV (fv, _, []) when S.fv_eq_lid fv PC.steps_simpl ->
             Some SE.Simpl
@@ -759,9 +772,9 @@ let arg_as_char   (a:arg) = fst a |> unembed e_char  bogus_cbs
 
 let arg_as_string (a:arg) = fst a |> unembed e_string  bogus_cbs
 
-let arg_as_list   (e:embedding<'a>) (a:arg) = fst a |> unembed (e_list e) bogus_cbs
+let arg_as_list   (e:embedding 'a) (a:arg) = fst a |> unembed (e_list e) bogus_cbs
 
-let arg_as_bounded_int ((a, _) : arg) : option<(fv * Z.t * option<S.meta_source_info>)> =
+let arg_as_bounded_int ((a, _) : arg) : option (fv * Z.t * option S.meta_source_info) =
     let (a, m) =
       (match a.nbe_t with
        | Meta(t, tm) ->
@@ -781,28 +794,28 @@ let int_as_bounded int_to_t n =
     let int_to_t args = mk_t <| FV(int_to_t, [], args) in
     int_to_t [as_arg c]
 
-let with_meta_ds t (m:option<meta_source_info>) =
+let with_meta_ds t (m:option meta_source_info) =
       match m with
       | None -> t
       | Some m -> mk_t (Meta(t, Thunk.mk (fun _ -> Meta_desugared m)))
 
 
 (* XXX a lot of code duplication. Same code as in cfg.fs *)
-let lift_unary (f : 'a -> 'b) (aopts : list<option<'a>>) : option<'b> =
+let lift_unary (f : 'a -> 'b) (aopts : list (option 'a)) : option 'b =
         match aopts with
         | [Some a] -> Some (f a)
         | _ -> None
 
 
-let lift_binary (f : 'a -> 'a -> 'b) (aopts : list<option<'a>>) : option<'b> =
+let lift_binary (f : 'a -> 'a -> 'b) (aopts : list (option 'a)) : option 'b =
         match aopts with
         | [Some a0; Some a1] -> Some (f a0 a1)
         | _ -> None
 
-let unary_op (as_a : arg -> option<'a>) (f : 'a -> t) (args : args) : option<t> =
+let unary_op (as_a : arg -> option 'a) (f : 'a -> t) (args : args) : option t =
     lift_unary f (List.map as_a args)
 
-let binary_op (as_a : arg -> option<'a>) (f : 'a -> 'a -> t) (args : args) : option<t> =
+let binary_op (as_a : arg -> option 'a) (f : 'a -> 'a -> t) (args : args) : option t =
     lift_binary f (List.map as_a args)
 
 let unary_int_op (f:Z.t -> Z.t) =
@@ -820,8 +833,8 @@ let binary_bool_op (f:bool -> bool -> bool) =
 let binary_string_op (f : string -> string -> string) =
     binary_op arg_as_string (fun x y -> embed e_string bogus_cbs (f x y))
 
-let mixed_binary_op (as_a : arg -> option<'a>) (as_b : arg -> option<'b>)
-       (embed_c : 'c -> t) (f : 'a -> 'b -> option<'c>) (args : args) : option<t> =
+let mixed_binary_op (as_a : arg -> option 'a) (as_b : arg -> option 'b)
+       (embed_c : 'c -> t) (f : 'a -> 'b -> option 'c) (args : args) : option t =
              match args with
              | [a;b] ->
                 begin
@@ -841,7 +854,7 @@ let list_of_string' (s:string) : t =
   // let charterm c = mk (Tm_constant (Const_char c)) rng in
   // U.mk_list char_t rng <| List.map charterm (list_of_string s)
 
-let string_of_list' (l:list<char>) : t =
+let string_of_list' (l:list char) : t =
     let s = string_of_list l in
     mk_t <| Constant (String (s, Range.dummyRange))
 
@@ -850,7 +863,7 @@ let string_compare' (s1:string) (s2:string) : t =
     embed e_int bogus_cbs (Z.big_int_of_string (BU.string_of_int r))
 
 
-let string_concat' args : option<t> =
+let string_concat' args : option t =
     match args with
     | [a1; a2] ->
         begin match arg_as_string a1 with
@@ -877,7 +890,7 @@ let string_lowercase (s:string) : t =
 let string_uppercase (s:string) : t =
     embed e_string bogus_cbs (String.lowercase s)
 
-let decidable_eq (neg:bool) (args:args) : option<t> =
+let decidable_eq (neg:bool) (args:args) : option t =
   let tru = embed e_bool bogus_cbs true in
   let fal = embed e_bool bogus_cbs false in
   match args with
@@ -892,7 +905,7 @@ let decidable_eq (neg:bool) (args:args) : option<t> =
    failwith "Unexpected number of arguments"
 
 
-let interp_prop_eq2 (args:args) : option<t> =
+let interp_prop_eq2 (args:args) : option t =
     match args with
     | [(_u, _); (_typ, _); (a1, _); (a2, _)] ->  //eq2
       begin match eq_t a1 a2 with
@@ -902,10 +915,10 @@ let interp_prop_eq2 (args:args) : option<t> =
       end
    | _ -> failwith "Unexpected number of arguments"
 
-let dummy_interp (lid : Ident.lid) (args : args) : option<t> =
+let dummy_interp (lid : Ident.lid) (args : args) : option t =
     failwith ("No interpretation for " ^ (Ident.string_of_lid lid))
 
-let prims_to_fstar_range_step (args:args) : option<t> =
+let prims_to_fstar_range_step (args:args) : option t =
     match args with
     | [(a1, _)] ->
       begin match unembed e_range bogus_cbs a1 with
@@ -916,7 +929,7 @@ let prims_to_fstar_range_step (args:args) : option<t> =
    | _ -> failwith "Unexpected number of arguments"
 
 
-let string_split' args : option<t> =
+let string_split' args : option t =
     match args with
     | [a1; a2] ->
         begin match arg_as_list e_char a1 with
@@ -932,7 +945,7 @@ let string_split' args : option<t> =
     | _ -> None
 
 
-let string_index args : option<t> =
+let string_index args : option t =
     match args with
     | [a1; a2] ->
         begin match arg_as_string a1, arg_as_int a2 with
@@ -948,7 +961,7 @@ let string_index args : option<t> =
         end
     | _ -> None
 
-let string_index_of args : option<t> =
+let string_index_of args : option t =
     match args with
     | [a1; a2] ->
         begin match arg_as_string a1, arg_as_char a2 with
@@ -965,7 +978,7 @@ let string_index_of args : option<t> =
     | _ -> None
 
 
-let string_substring' args : option<t> =
+let string_substring' args : option t =
   match args with
   | [a1; a2; a3] ->
       begin match arg_as_string a1, arg_as_int a2, arg_as_int a3 with
@@ -982,7 +995,7 @@ let string_substring' args : option<t> =
 
 | _ -> None
 
-let mk_range args : option<t> =
+let mk_range args : option t =
   match args with
   | [fn; from_line; from_col; to_line; to_col] -> begin
     match arg_as_string fn,
@@ -999,7 +1012,7 @@ let mk_range args : option<t> =
     end
 | _ -> None
 
-let and_op (args:args) : option<t> =
+let and_op (args:args) : option t =
   match args with
   | [a1; a2] -> begin
     match arg_as_bool a1 with
@@ -1011,7 +1024,7 @@ let and_op (args:args) : option<t> =
     end
   | _ -> failwith "Unexpected number of arguments"
 
-let or_op (args:args) : option<t> =
+let or_op (args:args) : option t =
   match args with
   | [a1; a2] -> begin
     match arg_as_bool a1 with
@@ -1023,7 +1036,7 @@ let or_op (args:args) : option<t> =
     end
   | _ -> failwith "Unexpected number of arguments"
 
-let division_op (args:args) : option<t> =
+let division_op (args:args) : option t =
   match args with
   | [a1; a2] -> begin
     match arg_as_int a1, arg_as_int a2 with
@@ -1035,13 +1048,13 @@ let division_op (args:args) : option<t> =
     end
   | _ -> failwith "Unexpected number of arguments"
 
-// let e_arrow2 (ea:embedding<'a>) (eb:embedding<'b>) (ec:embedding<'c>) =
+// let e_arrow2 (ea:embedding 'a) (eb:embedding 'b) (ec:embedding 'c) =
 //   let em (f : 'a -> 'b -> 'c) : t = Lam((fun (ta:t) -> match unembed ea ta with
 //                                            | Some a -> embed eb (f a)
 //                                            | None -> failwith "Cannot unembed argument"),
 //                                     (fun _ -> type_of ea), None)
 //   in
-//   let un (lam : t) : option<('a -> 'b)> =
+//   let un (lam : t) : option ('a -> 'b) =
 //       match lam with
 //       | Lam (ft, _, _) -> Some (fun (x:'a) -> match unembed eb (ft (embed ea x)) with
 //                                          | Some b -> b
@@ -1052,9 +1065,9 @@ let division_op (args:args) : option<t> =
 
 
 
-let arrow_as_prim_step_1 (ea:embedding<'a>) (eb:embedding<'b>)
+let arrow_as_prim_step_1 (ea:embedding 'a) (eb:embedding 'b)
                          (f:'a -> 'b) (n_tvars:int) (_fv_lid:Ident.lid) cb
-   : args -> option<t> =
+   : args -> option t =
     let f_wrapped args =
         let _tvar_args, rest_args = List.splitAt n_tvars args in
         let x, _ = List.hd rest_args in //arity mismatches are handled by code that dispatches here
@@ -1064,9 +1077,9 @@ let arrow_as_prim_step_1 (ea:embedding<'a>) (eb:embedding<'b>)
     in
     f_wrapped
 
-let arrow_as_prim_step_2 (ea:embedding<'a>) (eb:embedding<'b>) (ec:embedding<'c>)
+let arrow_as_prim_step_2 (ea:embedding 'a) (eb:embedding 'b) (ec:embedding 'c)
                          (f:'a -> 'b -> 'c) (n_tvars:int) (_fv_lid:Ident.lid) cb
-   : args -> option<t> =
+   : args -> option t =
     let f_wrapped args =
         let _tvar_args, rest_args = List.splitAt n_tvars args in
         let x, _ = List.hd rest_args in //arity mismatches are handled by code that dispatches here
@@ -1078,10 +1091,10 @@ let arrow_as_prim_step_2 (ea:embedding<'a>) (eb:embedding<'b>) (ec:embedding<'c>
     f_wrapped
 
 
-let arrow_as_prim_step_3 (ea:embedding<'a>) (eb:embedding<'b>)
-                         (ec:embedding<'c>) (ed:embedding<'d>)
+let arrow_as_prim_step_3 (ea:embedding 'a) (eb:embedding 'b)
+                         (ec:embedding 'c) (ed:embedding 'd)
                          (f:'a -> 'b -> 'c -> 'd) (n_tvars:int) (_fv_lid:Ident.lid) cb
-   : args -> option<t> =
+   : args -> option t =
     let f_wrapped args =
         let _tvar_args, rest_args = List.splitAt n_tvars args in
         let x, _ = List.hd rest_args in //arity mismatches are handled by code that dispatches here
