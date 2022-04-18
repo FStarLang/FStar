@@ -58,7 +58,7 @@
       "Steel.ST.GhostPCMReference.write",
       1,
       2,
-      1,
+      2,
       [
         "@MaxIFuel_assumption", "@query", "equation_FStar.PCM.composable",
         "equation_FStar.PCM.frame_preserving", "equation_FStar.PCM.op",
@@ -82,7 +82,7 @@
         "typing_FStar.Universe.downgrade_val"
       ],
       0,
-      "82969bf01160d7ece3ec6b162296602d"
+      "87ecfbacc9ae541ae8b3be41267c0dd9"
     ],
     [
       "Steel.ST.GhostPCMReference.share",

@@ -1714,7 +1714,7 @@
         "typing_Tm_abs_a87dd2196e6210fb991043b36784dfe9"
       ],
       0,
-      "c5d37c7bb57544e350c8585c3b96bbec"
+      "dcc2a6c63df68de9c2380390b24bfa94"
     ],
     [
       "Steel.Heap.star_congruence",
@@ -2930,14 +2930,17 @@
         "FStar.PCM_interpretation_Tm_arrow_4418db7552582748ab4bfa39672e55e0",
         "FStar.PCM_interpretation_Tm_arrow_6ee640369479b30d95d17c96f1df8c0f",
         "Prims_interpretation_Tm_arrow_2eaa01e78f73e9bab5d0955fc1a662da",
+        "Steel.FractionalPermission_pretyping_e01b0bd6c9f46bf8a816cebad841c6b2",
         "Steel.Heap_interpretation_Tm_arrow_57759e8bc81c87869c1c5a5c14008d86",
         "Steel.Heap_interpretation_Tm_arrow_66be38db55759a6b4c14f509135a0687",
         "Steel.Heap_interpretation_Tm_arrow_ca94d21e5b58078b367be57819cef3ff",
         "Steel.Heap_interpretation_Tm_arrow_cd0ae1dbcc8724d89fb0dd22439f0c3d",
+        "Steel.Heap_interpretation_Tm_arrow_db688e2310abe78afa14dd54b79fd984",
         "Steel.Heap_pretyping_9a46417d39a7b866ce3fb40024524fb7", "b2t_def",
         "bool_inversion",
         "constructor_distinct_FStar.Pervasives.Native.Some",
         "data_elim_FStar.PCM.Mkpcm", "data_elim_FStar.PCM.Mkpcm_",
+        "data_elim_Steel.Heap.Ref",
         "disc_equation_FStar.Pervasives.Native.None",
         "disc_equation_FStar.Pervasives.Native.Some",
         "disc_equation_Steel.Heap.Addr", "eq2-interp",
@@ -2971,10 +2974,12 @@
         "fuel_guarded_inversion_FStar.PCM.pcm",
         "fuel_guarded_inversion_FStar.PCM.pcm_",
         "fuel_guarded_inversion_FStar.Pervasives.Native.option",
+        "fuel_guarded_inversion_Steel.Heap.cell",
         "fuel_guarded_inversion_Steel.Heap.core_ref",
         "function_token_typing_FStar.PCM.__proj__Mkpcm___item__composable",
         "function_token_typing_Prims.int",
         "function_token_typing_Steel.Heap.heap",
+        "function_token_typing_Steel.Heap.join",
         "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2", "int_inversion",
         "interpretation_Tm_abs_04c12d46c423ddf03f687d4acb07e16f",
         "interpretation_Tm_abs_247fcb3dcafc9381685f0bf22c649302",
@@ -3050,7 +3055,7 @@
         "typing_Tm_abs_bdf915ba992f79503e6dafcc465e1af1", "unit_inversion"
       ],
       0,
-      "0cfc4dd8871dd6abf04af6bab55c1968"
+      "63366588cbe75138495654a5f7a39f05"
     ],
     [
       "Steel.Heap.upd_gen_action",

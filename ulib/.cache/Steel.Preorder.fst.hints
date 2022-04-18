@@ -1,5 +1,5 @@
 [
-  "Lß-7X\u0010õÉêÕ%p®#``",
+  "h©plO(ùõòÑäi\u0005\u0003V…",
   [
     [
       "Steel.Preorder.induces_preorder",
@@ -585,11 +585,11 @@
     [
       "Steel.Preorder.frame_preserving_q_aux",
       1,
+      4,
       2,
-      1,
       [
-        "@MaxIFuel_assumption", "@query", "data_elim_FStar.PCM.Mkpcm_",
-        "equation_FStar.PCM.compatible", "equation_FStar.PCM.composable",
+        "@MaxIFuel_assumption", "@query", "equation_FStar.PCM.compatible",
+        "equation_FStar.PCM.composable",
         "equation_FStar.PCM.frame_preserving", "equation_FStar.PCM.op",
         "equation_FStar.PCM.symrel", "equation_Steel.Preorder.hist",
         "equation_Steel.Preorder.p", "equation_Steel.Preorder.p_composable",
@@ -607,10 +607,12 @@
         "refinement_interpretation_Tm_refine_d231fcdc87ac931cd2eb3a8a90951676",
         "token_correspondence_FStar.PCM.__proj__Mkpcm___item__composable",
         "token_correspondence_FStar.PCM.__proj__Mkpcm___item__op",
-        "token_correspondence_Steel.Preorder.p_op", "typing_Steel.Preorder.p"
+        "token_correspondence_Steel.Preorder.extends",
+        "token_correspondence_Steel.Preorder.p_op",
+        "typing_Steel.Preorder.p_composable"
       ],
       0,
-      "fd9fd66e0ff2fc46d7369a228e63f384"
+      "79af851e44346b38545679c49a3bafd4"
     ],
     [
       "Steel.Preorder.curval",
@@ -667,7 +669,7 @@
         "token_correspondence_Steel.Preorder.p_op", "typing_Steel.Preorder.p"
       ],
       0,
-      "f7aa102b1007b73c045dddfc675f1b28"
+      "00a333f6385ebb19cf611a5ca483b6f5"
     ],
     [
       "Steel.Preorder.frame_preserving_extends",
@@ -698,10 +700,11 @@
         "refinement_interpretation_Tm_refine_d231fcdc87ac931cd2eb3a8a90951676",
         "token_correspondence_FStar.PCM.__proj__Mkpcm___item__composable",
         "token_correspondence_FStar.PCM.__proj__Mkpcm___item__op",
+        "token_correspondence_Steel.Preorder.extends",
         "token_correspondence_Steel.Preorder.p_op", "typing_Steel.Preorder.p"
       ],
       0,
-      "d8fdb150e0f6d164cca46075331f398c"
+      "5f6db2dcbf51c7dd275489fc0b7d1b14"
     ],
     [
       "Steel.Preorder.flip",
@@ -717,7 +720,7 @@
         "refinement_interpretation_Tm_refine_bd10f09297e0e7dc08314f7d9211801c"
       ],
       0,
-      "4fc327dfadbeb5075ba22b0788f75aff"
+      "c4c4fe91f733f91c882edbd3cccb09c0"
     ],
     [
       "Steel.Preorder.frame_preserving_extends2",
@@ -751,7 +754,7 @@
         "token_correspondence_Steel.Preorder.p_op", "typing_Steel.Preorder.p"
       ],
       0,
-      "caec7a60d56aba401c630e6735cac3cf"
+      "951c313982ae17c0faf2c71c405c84f7"
     ],
     [
       "Steel.Preorder.pcm_of_preorder_induces_extends",
@@ -813,7 +816,7 @@
         "typing_FStar.List.Tot.Base.length", "typing_Steel.Preorder.p"
       ],
       0,
-      "a7ccf0a78c844be6b9cd122e97d40182"
+      "6cabd7b0399c934570fee540f7d03203"
     ],
     [
       "Steel.Preorder.extend_history",
@@ -846,7 +849,7 @@
         "token_correspondence_Steel.Preorder.extends_"
       ],
       0,
-      "e9508daeb150bdb1e1ab5b66e4e348b8"
+      "f53b6996bced83bdd411474d1482a186"
     ]
   ]
 ]

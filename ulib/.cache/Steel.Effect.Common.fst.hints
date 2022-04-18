@@ -117,7 +117,7 @@
         "subterm_ordering_Steel.Effect.Common.VStar"
       ],
       0,
-      "74f914aa7375f6eaff2196996a0387dc"
+      "cc5e1b041542ccdc547576f3b6ec0813"
     ],
     [
       "Steel.Effect.Common.t_of",
@@ -135,7 +135,7 @@
         "subterm_ordering_Steel.Effect.Common.VStar"
       ],
       0,
-      "8024c46381acbea6ebd0790583d50a99"
+      "98914ab85145436f9ca9b49bf5073850"
     ],
     [
       "Steel.Effect.Common.sel_of",
@@ -181,7 +181,7 @@
         "typing_Steel.Effect.Common.hp_of"
       ],
       0,
-      "9f5380a7f6bc04c0710367b59e4085a7"
+      "c52cb0f6f01c7ff69b247df227a7fef8"
     ],
     [
       "Steel.Effect.Common.h_exists",
@@ -653,7 +653,7 @@
         "subterm_ordering_Steel.Effect.Common.VStar"
       ],
       0,
-      "e7f625588296bf4baf726803eebd426f"
+      "f457544e12eac9d5ae10d10c0635923c"
     ],
     [
       "Steel.Effect.Common.lemma_frame_refl'",
@@ -713,7 +713,7 @@
         "typing_Tm_abs_b4b0eb0a30c8752636aec539d6e3910e"
       ],
       0,
-      "0193451b248c5b3f117f48867a822739"
+      "6481330b2d8aaacdd08d7617bc9ac65c"
     ],
     [
       "Steel.Effect.Common.lemma_frame_equalities",
@@ -1571,7 +1571,7 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "39da1449fe9839cf4c6016f4b15629be"
+      "9844a50e440418790983cad22adb1bea"
     ],
     [
       "Steel.Effect.Common.exp",
@@ -1652,7 +1652,7 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "efcd2d946a1d929e2b1bf2c009fdeb6f"
+      "05d808f9f90d32f933787e7a6a5b7665"
     ],
     [
       "Steel.Effect.Common.trivial_cancels",
@@ -1840,7 +1840,7 @@
         "typing_tok_Steel.Effect.Common.Unit@tok"
       ],
       0,
-      "7210673987c944e8ba0859c9b1b857ca"
+      "2cd83bf68f853ab44e62475a38fa5f55"
     ],
     [
       "Steel.Effect.Common.xsdenote_gen",
@@ -1860,7 +1860,7 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "ab347c82a33bf17382ae848f6c038265"
+      "92da54b6b05a6c5f19b9c4afed1c85b0"
     ],
     [
       "Steel.Effect.Common.flatten",
@@ -1881,7 +1881,7 @@
         "typing_tok_Steel.Effect.Common.Unit@tok"
       ],
       0,
-      "ed880c6118de1134f4eee2f60b3469d9"
+      "6e22d79ce6bdcf7bfecf13bda350d0e3"
     ],
     [
       "Steel.Effect.Common.flatten_correct_aux",
@@ -2220,7 +2220,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "1e12518b1e0817a0b965654c17296f84"
+      "22bc0c900925e0e5aa5999f5851e4c0a"
     ],
     [
       "Steel.Effect.Common.fatom",
@@ -2251,7 +2251,7 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "4c538be2942ab9a259c5e614c2ae48a6"
+      "aa5fea1c6ebe7b5359eb4f561a96b0aa"
     ],
     [
       "Steel.Effect.Common.quote_exp",
@@ -2272,7 +2272,7 @@
         "typing_tok_Steel.Effect.Common.Unit@tok"
       ],
       0,
-      "e278ccee9ad0846654c859cb46a217bd"
+      "6ec7202def589a4595f5d77bd5abcd64"
     ],
     [
       "Steel.Effect.Common.quote_atoms",
@@ -2288,7 +2288,7 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "95e72582d07b3e38ad9c577f42d1b644"
+      "2f9f076e67951c729aad593df37cd014"
     ],
     [
       "Steel.Effect.Common.normal_elim",

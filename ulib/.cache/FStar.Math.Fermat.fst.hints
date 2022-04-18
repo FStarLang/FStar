@@ -1388,7 +1388,7 @@
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "equation_FStar.Math.Euclid.is_prime",
         "function_token_typing_Prims.__cache_version_number__",
-        "int_inversion", "primitive_Prims.op_Addition",
+        "int_inversion", "int_typing", "primitive_Prims.op_Addition",
         "primitive_Prims.op_Minus", "primitive_Prims.op_Modulus",
         "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
         "projection_inverse_BoxInt_proj_0",
@@ -1399,7 +1399,7 @@
         "refinement_interpretation_Tm_refine_def003bea72d0f209f83e8e581faf40d"
       ],
       0,
-      "53b2d079323b46840999c9594b92bf1d"
+      "a7159052bdb9e90d63ca8ac423dceed3"
     ],
     [
       "FStar.Math.Fermat.mod_mult_congr",

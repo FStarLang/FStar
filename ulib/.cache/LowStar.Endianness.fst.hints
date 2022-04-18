@@ -503,7 +503,7 @@
         "typing_LowStar.Monotonic.Buffer.as_seq"
       ],
       0,
-      "2043ab178327a805635e133f31a948dd"
+      "b97387a2929217002fd14a3080310fc6"
     ],
     [
       "LowStar.Endianness.load32_le",
@@ -523,7 +523,7 @@
         "typing_LowStar.Monotonic.Buffer.as_seq"
       ],
       0,
-      "1ce814b401de39fed0251504386d65a7"
+      "e5dcc9267a3215ab0f679c1e3035737e"
     ],
     [
       "LowStar.Endianness.store32_be",
@@ -547,7 +547,7 @@
         "typing_LowStar.Monotonic.Buffer.as_seq"
       ],
       0,
-      "60ed38e3641468298f1af018b99165db"
+      "34ac50f7cf538f6ff67e962f2160852b"
     ],
     [
       "LowStar.Endianness.load32_be",
@@ -567,7 +567,7 @@
         "typing_LowStar.Monotonic.Buffer.as_seq"
       ],
       0,
-      "a4c1654e11b249452966c332fa0e9f6a"
+      "7635c768e3649d17f87c3bb67f94d8ac"
     ],
     [
       "LowStar.Endianness.store64_le",
@@ -575,7 +575,9 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "equation_LowStar.Buffer.buffer",
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.Monotonic.HyperStack.mem",
+        "equation_LowStar.Buffer.buffer",
         "equation_LowStar.Buffer.trivial_preorder",
         "equation_LowStar.Endianness.u8", "equation_Prims.eqtype",
         "function_token_typing_LowStar.Buffer.trivial_preorder",
@@ -591,7 +593,7 @@
         "typing_LowStar.Monotonic.Buffer.as_seq"
       ],
       0,
-      "581dec5960a6097b4f02fa355ee904cc"
+      "42b69c7b2f0a073ef1752160548d740a"
     ],
     [
       "LowStar.Endianness.load64_le",
@@ -611,7 +613,7 @@
         "typing_LowStar.Monotonic.Buffer.as_seq"
       ],
       0,
-      "126e71a1b1dc2efc8250775de938c031"
+      "af9c7bc1d67301a68052c272a3cd890a"
     ],
     [
       "LowStar.Endianness.load64_be",
@@ -655,7 +657,7 @@
         "typing_LowStar.Monotonic.Buffer.as_seq"
       ],
       0,
-      "664086ce5f2b7ec7a53cc67d211ef735"
+      "cba39d6312024ec17b047a2ea5ccae7d"
     ],
     [
       "LowStar.Endianness.load128_le",
@@ -677,7 +679,7 @@
         "typing_LowStar.Monotonic.Buffer.as_seq"
       ],
       0,
-      "3aed6e57be95b3991f1d4b984d0900cd"
+      "6f89230664db4c174119fc2104a0f4f3"
     ],
     [
       "LowStar.Endianness.store128_le",

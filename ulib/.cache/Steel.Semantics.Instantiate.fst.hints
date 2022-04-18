@@ -39,7 +39,6 @@
         "function_token_typing_Steel.Memory.disjoint",
         "function_token_typing_Steel.Memory.join",
         "function_token_typing_Steel.Semantics.Hoare.MST.__proj__Mkst0__item__interp",
-        "function_token_typing_Steel.Semantics.Hoare.MST.__proj__Mkst0__item__star",
         "lemma_Steel.Memory.affine_star_smt",
         "lemma_Steel.Memory.disjoint_sym", "lemma_Steel.Memory.reveal_equiv",
         "proj_equation_Steel.Semantics.Hoare.MST.Mkst0_disjoint",
@@ -70,10 +69,11 @@
         "token_correspondence_Steel.Memory.join",
         "token_correspondence_Steel.Memory.star",
         "token_correspondence_Steel.Semantics.Hoare.MST.__proj__Mkst0__item__disjoint",
-        "token_correspondence_Steel.Semantics.Hoare.MST.__proj__Mkst0__item__join"
+        "token_correspondence_Steel.Semantics.Hoare.MST.__proj__Mkst0__item__join",
+        "token_correspondence_Steel.Semantics.Hoare.MST.__proj__Mkst0__item__star"
       ],
       0,
-      "4157c5bd6e431b53b66dfd47ec697c62"
+      "54a5b0775a51f3db7aa9013b86035cd1"
     ],
     [
       "Steel.Semantics.Instantiate.state_uses",
