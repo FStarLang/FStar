@@ -2113,47 +2113,56 @@ let is_return_eq (l r:term) : Tac bool =
 /// Solves indirection equalities introduced by the layered effects framework.
 /// If these equalities were introduced during a monadic return, they need to be solved
 /// at a later stage to avoid overly restricting contexts of unification variables
-let rec solve_indirection_eqs (l:list goal) : Tac unit =
-  match l with
+let rec solve_indirection_eqs (fuel: nat) : Tac unit =
+  if fuel = 0
+  then ()
+  else match goals () with
   | [] -> ()
-  | hd::tl ->
+  | hd::_ ->
     let f = term_as_formula' (goal_type hd) in
     match f with
     | Comp (Eq _) l r ->
         if is_return_eq l r then later() else trefl();
-        solve_indirection_eqs tl
-    | _ -> later(); solve_indirection_eqs tl
+        solve_indirection_eqs (fuel - 1)
+    | _ -> later(); solve_indirection_eqs (fuel - 1)
 
 /// Solve all equalities in the list of goals by calling the F* unifier
-let rec solve_all_eqs (l:list goal) : Tac unit =
-  match l with
+let rec solve_all_eqs (fuel: nat) : Tac unit =
+  if fuel = 0
+  then ()
+  else match goals () with
   | [] -> ()
-  | hd::tl ->
+  | hd::_ ->
     let f = term_as_formula' (goal_type hd) in
     match f with
     | Comp (Eq _) l r ->
         trefl();
-        solve_all_eqs tl
-    | _ -> later(); solve_all_eqs tl
+        solve_all_eqs (fuel - 1)
+    | _ -> later(); solve_all_eqs (fuel - 1)
 
 /// It is important to not normalize the return_pre eqs goals before unifying
 /// See test7 in FramingTestSuite for a detailed explanation
-let rec solve_return_eqs (l:list goal) : Tac unit =
-  match l with
+let rec solve_return_eqs (fuel: nat) : Tac unit =
+  if fuel = 0
+  then ()
+  else match goals () with
   | [] -> ()
-  | hd::tl ->
+  | hd::_ ->
     let f = term_as_formula' (goal_type hd) in
     match f with
     | Comp (Eq _) l r ->
         trefl();
-        solve_return_eqs tl
-    | _ -> later(); solve_return_eqs tl
+        solve_return_eqs (fuel - 1)
+    | _ -> later(); solve_return_eqs (fuel - 1)
 
 /// Strip annotations in a goal, to get to the underlying slprop equivalence
-let goal_to_equiv (t:term) (loc:string) : Tac unit
-  = let f = term_as_formula' t in
+let goal_to_equiv (loc:string) : Tac unit
+  = let t = cur_goal () in
+    let f = term_as_formula' t in
     match f with
-    | App _ t ->
+    | App hd0 t ->
+      if not (hd0 `term_eq` (`squash))
+      then fail (loc ^ " unexpected non-squash goal in goal_to_equiv");
       let hd, args = collect_app t in
       if term_eq hd (`can_be_split) then (
         apply_lemma (`equiv_can_be_split)
@@ -2178,12 +2187,14 @@ let goal_to_equiv (t:term) (loc:string) : Tac unit
     | _ -> fail (loc ^ " unexpected goal")
 
 /// Returns true if the goal has been solved, false if it should be delayed
-let solve_or_delay (g:goal) : Tac bool =
+let solve_or_delay () : Tac bool =
   // Beta-reduce the goal first if possible
   norm [];
   let f = term_as_formula' (cur_goal ()) in
   match f with
-  | App _ t ->
+  | App hd0 t ->
+    if hd0 `term_eq` (`squash)
+    then
       let hd, args = collect_app t in
       if term_eq hd (`can_be_split) then solve_can_be_split args
       else if term_eq hd (`can_be_split_forall) then solve_can_be_split_forall args
@@ -2193,6 +2204,9 @@ let solve_or_delay (g:goal) : Tac bool =
       else if term_eq hd (`can_be_split_dep) then solve_can_be_split_dep args
       else if term_eq hd (`can_be_split_forall_dep) then solve_can_be_split_forall_dep args
       else false
+    else
+      // TODO: handle non-squash goals here
+      false
   | Comp (Eq _) l r ->
     let lnbr = List.Tot.length (FStar.Reflection.Builtins.free_uvars l) in
     let rnbr = List.Tot.length (FStar.Reflection.Builtins.free_uvars r) in
@@ -2203,10 +2217,12 @@ let solve_or_delay (g:goal) : Tac bool =
 /// Returns true if it successfully solved a goal
 /// If it returns false, it means it didn't find any solvable goal,
 /// which should mean only delayed goals are left
-let rec pick_next (l:list goal) : Tac bool =
-  match l with
-  | [] -> false
-  | a::q -> if solve_or_delay a then true else (later (); pick_next q)
+let rec pick_next (fuel: nat) : Tac bool =
+  if fuel = 0
+  then false
+  else match goals () with
+  | [] -> true
+  | _::_ -> if solve_or_delay () then true else (later (); pick_next (fuel - 1))
 
 /// Main loop to schedule solving of goals.
 /// The goals () function fetches all current goals in the context
@@ -2216,7 +2232,7 @@ let rec resolve_tac () : Tac unit =
   | g ->
     norm [];
     // TODO: If it picks a goal it cannot solve yet, try all the other ones?
-    if pick_next g then resolve_tac ()
+    if pick_next (List.Tot.length g) then resolve_tac ()
     else fail "Could not make progress, no solvable goal found"
 
 /// Special case for logical requires/ensures goals, which correspond only to equalities
@@ -2224,13 +2240,14 @@ let rec resolve_tac_logical () : Tac unit =
   match goals () with
   | [] -> ()
   | g ->
-    if pick_next g then resolve_tac_logical ()
+    let fuel = List.Tot.length g in
+    if pick_next fuel then resolve_tac_logical ()
     else
       // This is only for requires/ensures constraints, which are equalities
       // There should always be a scheduling of constraints, but it can happen
       // that some uvar for the type of an equality is not resolved.
       // If we reach this point, we try to simply call the unifier instead of failing directly
-      solve_all_eqs g
+      solve_all_eqs fuel
 
 /// Determining whether the type represented by term [t] corresponds to one of the logical (requires/ensures) goals
 let typ_contains_req_ens (t:term) : Tac bool =
@@ -2273,32 +2290,39 @@ let is_true (t:term) () : Tac unit =
 /// Solve the maybe_emp goals:
 /// Normalize to unfold maybe_emp(_dep) and the reduce the if/then/else, and
 /// solve the goal (either an equality through trefl, or True through trivial)
-let rec solve_maybe_emps (l:list goal) : Tac unit =
-  match l with
+let rec solve_maybe_emps (fuel: nat) : Tac unit =
+  if fuel = 0
+  then ()
+  else match goals () with
   | [] -> ()
-  | hd::tl ->
+  | _::_ ->
     let f = term_as_formula' (cur_goal ()) in (
     match f with
-    | App _ t ->
-      let hd, args = collect_app t in
-      if term_eq hd (`maybe_emp) then
-        (norm [delta_only [`%maybe_emp]; iota; zeta; primops; simplify];
-         let g = cur_goal () in
-         or_else (is_true g) trefl)
-      else if term_eq hd (`maybe_emp_dep) then
-        (norm [delta_only [`%maybe_emp_dep]; iota; zeta; primops; simplify];
-         let g = cur_goal () in
-         or_else (is_true g) (fun _ -> ignore (forall_intro ()); trefl ()))
-      else later()
+    | App hd0 t ->
+      if not (hd0 `term_eq` (`squash))
+      then later ()
+      else
+        let hd, args = collect_app t in
+        if term_eq hd (`maybe_emp) then
+          (norm [delta_only [`%maybe_emp]; iota; zeta; primops; simplify];
+          let g = cur_goal () in
+          or_else (is_true g) trefl)
+        else if term_eq hd (`maybe_emp_dep) then
+          (norm [delta_only [`%maybe_emp_dep]; iota; zeta; primops; simplify];
+          let g = cur_goal () in
+          or_else (is_true g) (fun _ -> ignore (forall_intro ()); trefl ()))
+        else later()
     | _ -> later()
     );
-    solve_maybe_emps tl
+    solve_maybe_emps (fuel - 1)
 
 /// Normalizes all the return_pre annotations once they are not needed anymore
-let rec norm_return_pre (l:list goal) : Tac unit =
-  match l with
+let rec norm_return_pre (fuel: nat) : Tac unit =
+  if fuel = 0
+  then ()
+  else match goals () with
   | [] -> ()
-  | hd::tl -> norm [delta_only [`%return_pre]]; later(); norm_return_pre tl
+  | _::_ -> norm [delta_only [`%return_pre]]; later(); norm_return_pre (fuel - 1)
 
 let print_goal (g:goal) =
   let t = goal_type g in
@@ -2324,24 +2348,24 @@ let init_resolve_tac () : Tac unit =
   set_goals slgs;
 
   // We solve all the maybe_emp goals first: All "extra" frames are directly set to emp
-  solve_maybe_emps (goals ());
+  solve_maybe_emps (List.Tot.length (goals ()));
 
   // We first solve all indirection equalities that will not lead to imprecise unification
   // i.e. we can solve all equalities inserted by layered effects, except the ones corresponding
   // to the preconditions of a pure return
-  solve_indirection_eqs (goals());
+  solve_indirection_eqs (List.Tot.length (goals()));
 
   // To debug, it is best to look at the goals at this stage. Uncomment the next line
   // dump "initial goals";
 
   // We can now solve the equalities for returns
-  solve_return_eqs (goals());
+  solve_return_eqs (List.Tot.length (goals()));
 
   // It is important to not normalize the return_pre equalities before solving them
   // Else, we lose some variables dependencies, leading to the tactic being stuck
   // See test7 in FramingTestSuite for more explanations of what is failing
   // Once unification has been done, we can then safely normalize and remove all return_pre
-  norm_return_pre (goals());
+  norm_return_pre (List.Tot.length (goals()));
 
   // Finally running the core of the tactic, scheduling and solving goals
   resolve_tac ();
@@ -2380,7 +2404,7 @@ let selector_tactic () : Tac unit =
 let ite_soundness_tac () : Tac unit =
   let slgs, loggoals = filter_goals (goals ()) in
   set_goals slgs;
-  solve_indirection_eqs slgs;
+  solve_indirection_eqs (List.Tot.length slgs);
   // This is the actual subcomp goal. We can only solve it
   // once all uvars are solved
   let subcomp_goal = _cur_goal () in
