@@ -103,6 +103,20 @@ let extract_pure (#uses:_) (p:prop)
   = let _ = elim_pure p in
     intro_pure p
 
+/// Useful lemmas to make the framing tactic automatically handle `pure`
+
+[@@solve_can_be_split_lookup; (solve_can_be_split_for pure)]
+val intro_can_be_split_pure
+  (p: prop)
+  (sq: squash p)
+: Lemma (emp `can_be_split` pure p)
+
+[@@solve_can_be_split_forall_dep_lookup; (solve_can_be_split_forall_dep_for pure)]
+val intro_can_be_split_forall_dep_pure
+  (#a: Type)
+  (p: a -> Tot prop)
+: Lemma (can_be_split_forall_dep p (fun _ -> emp) (fun x -> pure (p x)))
+
 /// It's generally good practice to end a computation with a [return].
 ///
 /// It becomes necessary when combining ghost and non-ghost
@@ -125,6 +139,19 @@ val return (#a:Type u#a)
 
 /// An existential quantifier for vprop
 val exists_ (#a:Type u#a) (p:a -> vprop) : vprop
+
+/// Useful lemmas to make the framing tactic automatically handle `exists_`
+[@@solve_can_be_split_lookup; (solve_can_be_split_for exists_)]
+val intro_can_be_split_exists (a:Type) (x:a) (p: a -> vprop)
+  : Lemma
+    (ensures (p x `can_be_split` (exists_ (fun x -> p x))))
+
+[@@solve_can_be_split_forall_dep_lookup; (solve_can_be_split_forall_dep_for exists_)]
+val intro_can_be_split_forall_dep_exists (a:Type) (b:Type)
+                           (x:b -> GTot a)
+                           (p: b -> a -> vprop)
+  : Lemma
+    (ensures (fun (y:b) -> p y (x y)) `(can_be_split_forall_dep (fun _ -> True))` (fun (y:b) -> exists_ (fun x -> p y x)))
 
 /// Introducing an existential if the predicate [p] currently holds for value [x]
 val intro_exists (#a:Type) (#opened_invariants:_) (x:a) (p:a -> vprop)
