@@ -1,4 +1,4 @@
-[E] Failed to load deps. Error File /root/non-existing/fstar/FStar/src/basic/FStar.Const.fst could not be found
+[E] Failed to load deps. File /root/non-existing/fstar/FStar/src/basic/FStar.Const.fst could not be found
 Content-Length: 160
 
 {"jsonrpc": "2.0", "method": "textDocument/publishDiagnostics", "params": {"diagnostics": [], "uri": "file:///root/non-existing/fstar/FStar/src/basic/FStar.Const.fst"}}
