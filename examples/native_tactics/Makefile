@@ -1,4 +1,7 @@
 FSTAR_HOME=../..
+ifdef Z3
+  OTHERFLAGS += --smt $(Z3)
+endif
 FSTAR=$(FSTAR_HOME)/bin/fstar.exe $(OTHERFLAGS)
 FSTARTACLIB=$(FSTAR_HOME)/bin/fstar-tactics-lib/fstartaclib.cmxs
 

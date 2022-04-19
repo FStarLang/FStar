@@ -31,6 +31,28 @@ function export_home() {
     fi
 }
 
+NEW_Z3_VERSION=z3-4.8.15
+if [[ "$OS" == Windows_NT ]] ; then
+    EXE=.exe
+    NEW_Z3_PATH=$(pwd)/$NEW_Z3_VERSION
+    NEW_Z3=$NEW_Z3_PATH/z3.exe
+else
+    EXE=
+    NEW_Z3_PATH=$(pwd)/$NEW_Z3_VERSION
+    NEW_Z3=$NEW_Z3_PATH/bin/z3
+fi
+
+function fetch_z3 () {
+    # Fetch a new Z3
+    if [[ "$OS" != Windows_NT ]] ; then
+        Z3_FULL=$NEW_Z3_VERSION-x64-glibc-2.31
+        Z3_ZIP=$Z3_FULL.zip
+        wget https://github.com/Z3Prover/z3/releases/download/$NEW_Z3_VERSION/$Z3_ZIP
+        unzip $Z3_ZIP
+        mv $Z3_FULL $NEW_Z3_PATH
+    fi
+}
+
 function fetch_vale() {
     if [[ ! -d vale ]]; then
         mkdir vale
@@ -99,7 +121,7 @@ function make_karamel() {
 
     make -C karamel -j $threads $localTarget ||
         (cd karamel && git clean -fdx && make -j $threads $localTarget)
-    OTHERFLAGS='--admit_smt_queries true' make -C karamel/krmllib -j $threads
+    OTHERFLAGS="$OTHERFLAGS --admit_smt_queries true" make -C karamel/krmllib -j $threads
     export PATH="$(pwd)/karamel:$PATH"
 }
 
@@ -305,16 +327,24 @@ function fstar_default_build () {
     fetch_everparse &
     fetch_mitls &
 
+    # Fetch a new Z3
+    fetch_z3 &
+
+    wait # for fetches above
+
+    # Disable the old Z3
+    OLD_Z3_DIR="$(dirname $(which z3$EXE))"
+    mv "$OLD_Z3_DIR" "$OLD_Z3_DIR-old"
+    OLD_Z3="$OLD_Z3_DIR-old/z3$EXE"
+
     # Build F*, along with fstarlib
-    if ! make -C src -j $threads utest-prelude; then
+    if ! env Z3=$NEW_Z3 make -C src -j $threads utest-prelude; then
         echo Warm-up failed
         echo Failure >$result_file
         return 1
     fi
 
     export_home FSTAR "$(pwd)"
-
-    wait # for fetches above
 
     # The commands above were executed in sub-shells and their EXPORTs are not
     # propagated to the current shell. Re-do.
@@ -324,8 +354,8 @@ function fstar_default_build () {
     export_home EVERPARSE "$(pwd)/everparse"
 
     # Fetch and build subprojects for orange tests
-    make_karamel &
-    make_everparse &
+    OTHERFLAGS="--smt $OLD_Z3" make_karamel &
+    OTHERFLAGS="--smt $OLD_Z3" make_everparse &
     wait
 
     # fetch_vale depends on fetch_hacl for the hacl-star/vale/.vale_version file
@@ -334,12 +364,13 @@ function fstar_default_build () {
     # Once F* is built, run its main regression suite, along with more relevant
     # tests.
     {
+        Z3=$NEW_Z3 \
         $gnutime make -C src -j $threads -k $localTarget && echo true >$status_file
         echo Done building FStar
     } &
 
     {
-        OTHERFLAGS='--warn_error -276 --use_hint_hashes' \
+        OTHERFLAGS="--smt $OLD_Z3 --warn_error -276 --use_hint_hashes" \
         NOOPENSSLCHECK=1 make -C hacl-star -j $threads min-test ||
             {
                 echo "Error - Hacl.Hash.MD.fst.checked (HACL*)"
@@ -349,6 +380,7 @@ function fstar_default_build () {
 
     # The LowParse test suite is now in project-everest/everparse
     {
+        OTHERFLAGS="--smt $OLD_Z3" \
         $gnutime make -C everparse -j $threads -k lowparse-fstar-test || {
             echo "Error - LowParse"
             echo " - min-test (LowParse)" >>$ORANGE_FILE
@@ -362,15 +394,16 @@ function fstar_default_build () {
         # already does this; but it will become necessary if
         # we later decide to perform these tests in parallel,
         # to avoid races.)
+        OTHERFLAGS="--smt $OLD_Z3" \
         make -C mitls-fstar/src/tls refresh-depend
 
-        OTHERFLAGS=--use_hint_hashes make -C mitls-fstar/src/tls -j $threads StreamAE.fst-ver ||
+        OTHERFLAGS="--smt $OLD_Z3 --use_hint_hashes" make -C mitls-fstar/src/tls -j $threads StreamAE.fst-ver ||
             {
                 echo "Error - StreamAE.fst-ver (mitls)"
                 echo " - StreamAE.fst-ver (mitls)" >>$ORANGE_FILE
             }
 
-        OTHERFLAGS=--use_hint_hashes make -C mitls-fstar/src/tls -j $threads Pkg.fst-ver ||
+        OTHERFLAGS="--smt $OLD_Z3 --use_hint_hashes" make -C mitls-fstar/src/tls -j $threads Pkg.fst-ver ||
             {
                 echo "Error - Pkg.fst-ver (mitls verify)"
                 echo " - Pkg.fst-ver (mitls verify)" >>$ORANGE_FILE
@@ -391,6 +424,9 @@ function fstar_default_build () {
     if [[ $localTarget == "uregressions-ulong" && "$OS" != "Windows_NT" ]]; then
         refresh_fstar_hints || echo false >$status_file
     fi
+
+    # Re-enable the old z3
+    mv $OLD_Z3_DIR-old $OLD_Z3_DIR
 }
 
 
