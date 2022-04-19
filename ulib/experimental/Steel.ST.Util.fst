@@ -53,6 +53,23 @@ let drop #o p = coerce_ghost (fun _ -> SEA.drop p)
 let intro_pure #o p = coerce_ghost (fun _ -> SEA.intro_pure p)
 let elim_pure #o p = coerce_ghost (fun _ -> SEA.elim_pure p)
 
+let intro_can_be_split_pure'
+  (p: prop)
+: Lemma
+  (p ==> emp `can_be_split` pure p)
+= reveal_can_be_split ();
+  Classical.forall_intro (pure_interp p)
+
+let intro_can_be_split_pure
+  (p: prop)
+  (sq: squash p)
+: Tot (squash (emp `can_be_split` pure p))
+= intro_can_be_split_pure' p
+
+let intro_can_be_split_forall_dep_pure
+  p
+= Classical.forall_intro (fun x -> intro_can_be_split_pure' (p x))
+
 let return0 #a #o #p (x:a)
   : SEA.SteelAtomicBase a true o Unobservable
                         (return_pre (p x)) p
@@ -66,6 +83,24 @@ let return #a #o #p x = coerce_atomicF (fun _ -> return0 x)
 let exists_ (#a:Type u#a) (p:a -> vprop)
   : vprop
   = SEA.h_exists p
+
+let intro_can_be_split_exists
+  a x p
+=
+  SEA.reveal_can_be_split ();
+  Classical.forall_intro (Steel.Memory.intro_h_exists x (SEA.h_exists_sl' (fun x -> p x)))
+
+let intro_can_be_split_forall_dep_exists
+  a b x p
+=
+  let prf
+    (y: b)
+  : Lemma
+    (p y (x y) `can_be_split` exists_ (fun x -> p y x))
+  =
+    intro_can_be_split_exists a (x y) (p y)
+  in
+  Classical.forall_intro prf
 
 /// Introducing an existential if the predicate [p] currently holds for value [x]
 let intro_exists #a #o x p
