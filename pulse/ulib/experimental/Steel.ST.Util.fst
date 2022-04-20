@@ -99,7 +99,7 @@ let intro_can_be_split_exists
   a x p
 =
   SEA.reveal_can_be_split ();
-  Classical.forall_intro (Steel.Memory.intro_h_exists x (SEA.h_exists_sl' (fun x -> p x)))
+  Classical.forall_intro (Steel.Memory.intro_h_exists x (SEA.h_exists_sl' p))
 
 let intro_can_be_split_forall_dep_exists
   a b x p
@@ -107,7 +107,7 @@ let intro_can_be_split_forall_dep_exists
   let prf
     (y: b)
   : Lemma
-    (p y (x y) `can_be_split` exists_ (fun x -> p y x))
+    (p y (x y) `can_be_split` exists_ (p y))
   =
     intro_can_be_split_exists a (x y) (p y)
   in
