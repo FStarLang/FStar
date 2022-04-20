@@ -369,3 +369,17 @@ let vpattern_erased
 : STGhost (Ghost.erased a) opened (p x) (fun _ -> p x) True (fun res -> Ghost.reveal res == x)
 = noop ();
   x
+
+let vpattern_replace_erased
+  (#opened: _)
+  (#a: Type)
+  (#x: a)
+  (p: a -> vprop)
+: STGhost (Ghost.erased a) opened (p x) (fun res -> p (Ghost.reveal res)) True (fun res -> Ghost.reveal res == x)
+= noop ();
+  x
+
+let vpattern_replace_erased_global
+  #opened #a #x #q p
+= noop ();
+  x
