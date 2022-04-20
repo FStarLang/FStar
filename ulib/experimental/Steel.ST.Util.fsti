@@ -715,7 +715,7 @@ val gen_elim
   (#[@@@ framing_implicit] post: Ghost.erased a -> Tot prop)
   (#[@@@ framing_implicit] sq: squash (gen_elim_prop_placeholder p a q post))
   (_: unit)
-: STGhostF (Ghost.erased a) opened p q ( T.with_tactic solve_gen_elim_prop (squash (gen_elim_prop p a q post))) post
+: STGhostF (Ghost.erased a) opened p (fun x -> guard_vprop (q x)) ( T.with_tactic solve_gen_elim_prop (squash (gen_elim_prop p a q post))) post
 
 let solve_gen_elim_prop_placeholder
   ()
