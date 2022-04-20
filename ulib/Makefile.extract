@@ -15,6 +15,7 @@ FSTAR_FILES:=$(filter-out $(NOEXTRACT_FILES), \
 	$(wildcard legacy/*fst legacy/*fsti) \
 	$(wildcard experimental/*fst experimental/*fsti)) \
         Steel.Effect.Common.fst \
+        Steel.ST.Util.fst \
         $(wildcard FStar.InteractiveHelpers.*.fst)
 
 CODEGEN ?= OCaml
