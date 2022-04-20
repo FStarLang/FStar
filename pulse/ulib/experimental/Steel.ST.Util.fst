@@ -24,6 +24,9 @@ module STG = Steel.ST.Effect.Ghost
 module STAG = Steel.ST.Effect.AtomicAndGhost
 open Steel.ST.Coercions
 
+[@@ resolve_implicits; framing_implicit]
+let init_resolve_tac0 () = init_resolve_tac ()
+
 #set-options "--ide_id_info_off"
 
 let weaken #o p q l =
@@ -52,6 +55,12 @@ let assume_ #o p = admit_ ()
 let drop #o p = coerce_ghost (fun _ -> SEA.drop p)
 let intro_pure #o p = coerce_ghost (fun _ -> SEA.intro_pure p)
 let elim_pure #o p = coerce_ghost (fun _ -> SEA.elim_pure p)
+
+/// Extracting a proposition from a [pure p] while retaining [pure p]
+let extract_pure (#uses:_) (p:prop)
+  : STGhost unit uses (pure p) (fun _ -> pure p) True (fun _ -> p)
+  = let _ = elim_pure p in
+    intro_pure p
 
 let intro_can_be_split_pure'
   (p: prop)

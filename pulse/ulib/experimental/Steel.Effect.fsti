@@ -349,3 +349,6 @@ val as_action  (#a:Type)
                (#q:a -> slprop)
                (f:action_except a Set.empty p q)
   : SteelT a (to_vprop p) (fun x -> to_vprop (q x))
+
+[@@ resolve_implicits; framing_implicit]
+let init_resolve_tac () = init_resolve_tac ()

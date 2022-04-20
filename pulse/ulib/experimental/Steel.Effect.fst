@@ -23,6 +23,9 @@ module FExt = FStar.FunctionalExtensionality
 
 #set-options "--ide_id_info_off"
 
+[@@ resolve_implicits; framing_implicit]
+let init_resolve_tac0 () = init_resolve_tac ()
+
 let _:squash (forall p q. can_be_split p q == Mem.slimp (hp_of p) (hp_of q)) = reveal_can_be_split ()
 
 #set-options "--warn_error -330"  //turn off the experimental feature warning

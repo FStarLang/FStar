@@ -2555,8 +2555,21 @@ let goal_to_equiv (loc:string) : Tac unit
         fail (loc ^ " goal in unexpected position")
     | _ -> fail (loc ^ " unexpected goal")
 
+let rec term_dict_assoc
+  (#a: Type)
+  (key: term)
+  (l: list (term & a))
+: Tac (list a)
+= match l with
+  | [] -> []
+  | (k, v) :: q ->
+    let q' = term_dict_assoc key q in
+    if k `term_eq` key
+    then (v :: q')
+    else q'
+
 /// Returns true if the goal has been solved, false if it should be delayed
-let solve_or_delay () : Tac bool =
+let solve_or_delay (dict: list (term & (unit -> Tac bool))) : Tac bool =
   // Beta-reduce the goal first if possible
   norm [];
   let f = term_as_formula' (cur_goal ()) in
@@ -2573,10 +2586,18 @@ let solve_or_delay () : Tac bool =
       else if term_eq hd (`can_be_split_dep) then solve_can_be_split_dep args
       else if term_eq hd (`can_be_split_forall_dep) then solve_can_be_split_forall_dep args
       else
-        (* this is a logical goal, solve it only if it has no uvars *)
-        if List.Tot.length (FStar.Reflection.Builtins.free_uvars t) = 0
-        then (smt (); true)
-        else false
+        let candidates = term_dict_assoc hd dict in
+        let run_tac (tac: unit -> Tac bool) () : Tac bool =
+          focus tac
+        in
+        begin try
+          first (List.Tot.map run_tac candidates)
+        with _ ->
+          (* this is a logical goal, solve it only if it has no uvars *)
+          if List.Tot.length (FStar.Reflection.Builtins.free_uvars t) = 0
+          then (smt (); true)
+          else false
+        end
     else
       // TODO: handle non-squash goals here
       false
@@ -2590,31 +2611,31 @@ let solve_or_delay () : Tac bool =
 /// Returns true if it successfully solved a goal
 /// If it returns false, it means it didn't find any solvable goal,
 /// which should mean only delayed goals are left
-let rec pick_next (fuel: nat) : Tac bool =
+let rec pick_next (dict: _) (fuel: nat) : Tac bool =
   if fuel = 0
   then false
   else match goals () with
   | [] -> true
-  | _::_ -> if solve_or_delay () then true else (later (); pick_next (fuel - 1))
+  | _::_ -> if solve_or_delay dict then true else (later (); pick_next dict (fuel - 1))
 
 /// Main loop to schedule solving of goals.
 /// The goals () function fetches all current goals in the context
-let rec resolve_tac () : Tac unit =
+let rec resolve_tac (dict: _) : Tac unit =
   match goals () with
   | [] -> ()
   | g ->
     norm [];
     // TODO: If it picks a goal it cannot solve yet, try all the other ones?
-    if pick_next (List.Tot.length g) then resolve_tac ()
+    if pick_next dict (List.Tot.length g) then resolve_tac dict
     else fail "Could not make progress, no solvable goal found"
 
 /// Special case for logical requires/ensures goals, which correspond only to equalities
-let rec resolve_tac_logical () : Tac unit =
+let rec resolve_tac_logical (dict: _) : Tac unit =
   match goals () with
   | [] -> ()
   | g ->
     let fuel = List.Tot.length g in
-    if pick_next fuel then resolve_tac_logical ()
+    if pick_next dict fuel then resolve_tac_logical dict
     else
       // This is only for requires/ensures constraints, which are equalities
       // There should always be a scheduling of constraints, but it can happen
@@ -2709,8 +2730,8 @@ let print_goals (g:list goal) =
 /// The resolve_implicits; framing_implicit annotation indicates that this tactic should
 /// be called by the F* typechecker to solve all implicits annotated with the `framing_implicit` attribute.
 /// The `plugin` attribute ensures that this tactic is compiled, and executed natively for performance reasons
-[@@ resolve_implicits; framing_implicit; plugin]
-let init_resolve_tac () : Tac unit =
+
+let init_resolve_tac' (dict: _) : Tac unit =
   // We split goals between framing goals, about slprops (slgs)
   // and goals related to requires/ensures, that depend on slprops (loggs)
   let slgs, loggs = filter_goals (goals()) in
@@ -2741,13 +2762,17 @@ let init_resolve_tac () : Tac unit =
   norm_return_pre (List.Tot.length (goals()));
 
   // Finally running the core of the tactic, scheduling and solving goals
-  resolve_tac ();
+  resolve_tac dict;
 
   // We now solve the requires/ensures goals, which are all equalities
   // All slprops are resolved by now
   set_goals loggs;
 
-  resolve_tac_logical ()
+  resolve_tac_logical dict
+
+// [@@ resolve_implicits; framing_implicit]
+[@@ plugin]
+let init_resolve_tac () : Tac unit = init_resolve_tac' []
 
 (* AF: There probably is a simpler way to get from p to squash p in a tactic, so that we can use apply_lemma *)
 let squash_and p (x:squash (p /\ True)) : (p /\ True) =
@@ -2795,7 +2820,7 @@ let ite_soundness_tac () : Tac unit =
   smt ();
   // Now propagating all equalities for the requires/ensures
   set_goals loggoals;
-  resolve_tac_logical ();
+  resolve_tac_logical [];
   // Now taking care of the actual subcomp VC
   set_goals [subcomp_goal];
   norm [];
