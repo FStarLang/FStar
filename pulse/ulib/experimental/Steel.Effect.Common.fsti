@@ -1993,6 +1993,41 @@ let rec slterm_nbr_uvars (t:term) : Tac int =
 and slterm_nbr_uvars_argv (args: list argv) : Tac int =
   fold_left (fun n (x, _) -> n + slterm_nbr_uvars x) 0 args
 
+let guard_vprop (v: vprop) : Tot vprop = v
+
+let rec all_guards_solved (t: term) : Tac bool =
+  match inspect t with
+  | Tv_Abs _ t -> all_guards_solved t
+  | Tv_App _ _ ->
+    let hd, args = collect_app t in
+    if term_eq hd (`guard_vprop)
+    then
+      slterm_nbr_uvars_argv args = 0
+    else if not (all_guards_solved hd)
+    then false
+    else
+      List.Tot.fold_left
+        (fun (tac: (unit -> Tac bool)) (tm, _) ->
+          let f () : Tac bool =
+            if all_guards_solved tm
+            then tac ()
+            else false
+          in
+          f
+        )
+        (let f () : Tac bool = true in f)
+        args
+        ()
+  | _ -> true
+
+let unfold_guard () : Tac bool =
+  if all_guards_solved (cur_goal ())
+  then begin
+    focus (fun _ -> norm [delta_only [(`%guard_vprop)]]);
+    true
+  end else
+    false
+
 val solve_can_be_split_for (#a: Type u#b) : a -> Tot unit
 
 val solve_can_be_split_lookup : unit // FIXME: src/reflection/FStar.Reflection.Basic.lookup_attr only supports fvar attributes, so we cannot directly look up for (solve_can_be_split_for blabla), we need a nullary attribute to use with lookup_attr
@@ -2165,7 +2200,11 @@ let rec solve_can_be_split (args:list argv) : Tac bool =
   | [(t1, _); (t2, _)] ->
       let lnbr = slterm_nbr_uvars t1 in
       let rnbr = slterm_nbr_uvars t2 in
-      if lnbr + rnbr <= 1 then (
+      if
+        if lnbr + rnbr <= 1
+        then unfold_guard ()
+        else false
+      then (
         let open FStar.Algebra.CommMonoid.Equiv in
         try
           focus (fun _ -> apply_lemma (`equiv_can_be_split);
@@ -2201,7 +2240,11 @@ let solve_can_be_split_dep (args:list argv) : Tac bool =
   | [(p, _); (t1, _); (t2, _)] ->
       let lnbr = slterm_nbr_uvars t1 in
       let rnbr = slterm_nbr_uvars t2 in
-      if lnbr + rnbr <= 1 then (
+      if
+        if lnbr + rnbr <= 1
+        then unfold_guard ()
+        else false
+      then (
         let open FStar.Algebra.CommMonoid.Equiv in
         focus (fun _ ->
           let p_bind = implies_intro () in
@@ -2241,7 +2284,11 @@ let solve_can_be_split_forall (args:list argv) : Tac bool =
   | [_; (t1, _); (t2, _)] ->
       let lnbr = slterm_nbr_uvars t1 in
       let rnbr = slterm_nbr_uvars t2 in
-      if lnbr + rnbr <= 1 then (
+      if
+        if lnbr + rnbr <= 1
+        then unfold_guard ()
+        else false
+      then (
         let open FStar.Algebra.CommMonoid.Equiv in
         focus (fun _ ->
           ignore (forall_intro());
@@ -2335,7 +2382,11 @@ let rec solve_can_be_split_forall_dep (args:list argv) : Tac bool =
   | [_; (pr, _); (t1, _); (t2, _)] ->
       let lnbr = slterm_nbr_uvars t1 in
       let rnbr = slterm_nbr_uvars t2 in
-      if lnbr + rnbr <= 1 then (
+      if
+        if lnbr + rnbr <= 1
+        then unfold_guard ()
+        else false
+      then (
         let open FStar.Algebra.CommMonoid.Equiv in
         try
          focus (fun _ ->
@@ -2381,7 +2432,11 @@ let solve_equiv_forall (args:list argv) : Tac bool =
   | [_; (t1, _); (t2, _)] ->
       let lnbr = slterm_nbr_uvars t1 in
       let rnbr = slterm_nbr_uvars t2 in
-      if lnbr + rnbr <= 1 then (
+      if
+        if lnbr + rnbr <= 1
+        then unfold_guard ()
+        else false
+      then (
         let open FStar.Algebra.CommMonoid.Equiv in
         focus (fun _ -> apply_lemma (`equiv_forall_elim);
                       match goals () with
@@ -2414,7 +2469,11 @@ let solve_equiv (args:list argv) : Tac bool =
   | [(t1, _); (t2, _)] ->
       let lnbr = slterm_nbr_uvars t1 in
       let rnbr = slterm_nbr_uvars t2 in
-      if lnbr + rnbr <= 1 then (
+      if
+        if lnbr + rnbr <= 1
+        then unfold_guard ()
+        else false
+      then (
         let open FStar.Algebra.CommMonoid.Equiv in
         focus (fun _ ->
           or_else
@@ -2443,7 +2502,11 @@ let solve_can_be_split_post (args:list argv) : Tac bool =
   | [_; _; (t1, _); (t2, _)] ->
       let lnbr = slterm_nbr_uvars t1 in
       let rnbr = slterm_nbr_uvars t2 in
-      if lnbr + rnbr <= 1 then (
+      if
+        if lnbr + rnbr <= 1
+        then unfold_guard ()
+        else false
+      then (
         let open FStar.Algebra.CommMonoid.Equiv in
         focus (fun _ -> norm[];
                       let g = _cur_goal () in
