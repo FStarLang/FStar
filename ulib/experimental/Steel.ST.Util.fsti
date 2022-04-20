@@ -98,10 +98,8 @@ val elim_pure (#uses:_) (p:prop)
   : STGhost unit uses (pure p) (fun _ -> emp) True (fun _ -> p)
 
 /// Extracting a proposition from a [pure p] while retaining [pure p]
-let extract_pure (#uses:_) (p:prop)
+val extract_pure (#uses:_) (p:prop)
   : STGhost unit uses (pure p) (fun _ -> pure p) True (fun _ -> p)
-  = let _ = elim_pure p in
-    intro_pure p
 
 /// Useful lemmas to make the framing tactic automatically handle `pure`
 
@@ -235,3 +233,6 @@ val par
   : STT (aL & aR)
         (preL `star` preR)
         (fun y -> postL (fst y) `star` postR (snd y))
+
+[@@ resolve_implicits; framing_implicit]
+let init_resolve_tac () = init_resolve_tac ()
