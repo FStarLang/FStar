@@ -579,7 +579,10 @@ type repl_state =
   repl_line: Prims.int ;
   repl_column: Prims.int ;
   repl_fname: Prims.string ;
-  repl_deps_stack: (repl_depth_t * (repl_task * repl_state)) Prims.list ;
+  repl_deps_stack:
+    (repl_depth_t FStar_Pervasives_Native.option * (repl_task * repl_state))
+      Prims.list
+    ;
   repl_curmod: optmod_t ;
   repl_env: FStar_TypeChecker_Env.env ;
   repl_stdin: FStar_Compiler_Util.stream_reader ;
@@ -604,7 +607,10 @@ let (__proj__Mkrepl_state__item__repl_fname : repl_state -> Prims.string) =
     | { repl_line; repl_column; repl_fname; repl_deps_stack; repl_curmod;
         repl_env; repl_stdin; repl_names;_} -> repl_fname
 let (__proj__Mkrepl_state__item__repl_deps_stack :
-  repl_state -> (repl_depth_t * (repl_task * repl_state)) Prims.list) =
+  repl_state ->
+    (repl_depth_t FStar_Pervasives_Native.option * (repl_task * repl_state))
+      Prims.list)
+  =
   fun projectee ->
     match projectee with
     | { repl_line; repl_column; repl_fname; repl_deps_stack; repl_curmod;
@@ -640,8 +646,11 @@ let (__proj__Mkgrepl_state__item__grepl_stdin :
   grepl_state -> FStar_Compiler_Util.stream_reader) =
   fun projectee ->
     match projectee with | { grepl_repls; grepl_stdin;_} -> grepl_stdin
-type repl_stack_entry_t = (repl_depth_t * (repl_task * repl_state))
-type repl_stack_t = (repl_depth_t * (repl_task * repl_state)) Prims.list
+type repl_stack_entry_t =
+  (repl_depth_t FStar_Pervasives_Native.option * (repl_task * repl_state))
+type repl_stack_t =
+  (repl_depth_t FStar_Pervasives_Native.option * (repl_task * repl_state))
+    Prims.list
 type error_code =
   | ParseError 
   | InvalidRequest 

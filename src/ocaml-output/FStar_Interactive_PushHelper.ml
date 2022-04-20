@@ -216,6 +216,12 @@ let (snapshot_env :
           let uu___1 = FStar_Options.snapshot () in
           (match uu___1 with
            | (opt_depth, ()) -> ((ctx_depth, opt_depth), env1))
+let (should_snapshot_env :
+  FStar_Interactive_JsonHelper.repl_task -> Prims.bool) =
+  fun task ->
+    match task with
+    | FStar_Interactive_JsonHelper.PushFragment uu___ -> true
+    | uu___ -> false
 let (push_repl :
   Prims.string ->
     push_kind ->
@@ -228,7 +234,15 @@ let (push_repl :
       fun task ->
         fun st ->
           let uu___ =
-            snapshot_env st.FStar_Interactive_JsonHelper.repl_env msg in
+            if should_snapshot_env task
+            then
+              let uu___1 =
+                snapshot_env st.FStar_Interactive_JsonHelper.repl_env msg in
+              match uu___1 with
+              | (d, env) -> ((FStar_Pervasives_Native.Some d), env)
+            else
+              (FStar_Pervasives_Native.None,
+                (st.FStar_Interactive_JsonHelper.repl_env)) in
           match uu___ with
           | (depth, env) ->
               ((let uu___2 =
@@ -281,9 +295,15 @@ let (pop_repl :
       | [] -> failwith "Too many pops"
       | (depth, (uu___1, st'))::stack_tl ->
           let env =
-            rollback_env
-              (st.FStar_Interactive_JsonHelper.repl_env).FStar_TypeChecker_Env.solver
-              msg depth in
+            if depth = FStar_Pervasives_Native.None
+            then st.FStar_Interactive_JsonHelper.repl_env
+            else
+              (let uu___3 =
+                 FStar_Compiler_Effect.op_Bar_Greater depth
+                   FStar_Compiler_Util.must in
+               rollback_env
+                 (st.FStar_Interactive_JsonHelper.repl_env).FStar_TypeChecker_Env.solver
+                 msg uu___3) in
           (FStar_Compiler_Effect.op_Colon_Equals repl_stack stack_tl;
            (let uu___4 =
               FStar_Compiler_Util.physical_equality env
