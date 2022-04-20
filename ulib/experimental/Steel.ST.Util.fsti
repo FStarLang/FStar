@@ -761,6 +761,21 @@ val vpattern_erased
   (p: a -> vprop)
 : STGhost (Ghost.erased a) opened (p x) (fun _ -> p x) True (fun res -> Ghost.reveal res == x)
 
+val vpattern_replace_erased
+  (#opened: _)
+  (#a: Type)
+  (#x: a)
+  (p: a -> vprop)
+: STGhost (Ghost.erased a) opened (p x) (fun res -> p (Ghost.reveal res)) True (fun res -> Ghost.reveal res == x)
+
+val vpattern_replace_erased_global
+  (#opened: _)
+  (#a: Type)
+  (#x: a)
+  (#q: a -> vprop)
+  (p: a -> vprop)
+: STGhostF (Ghost.erased a) opened (p x `star` q x) (fun res -> p (Ghost.reveal res) `star` q (Ghost.reveal res)) True (fun res -> Ghost.reveal res == x)
+
 [@@ resolve_implicits; framing_implicit; plugin]
 let init_resolve_tac () = init_resolve_tac'
   [(`gen_elim_prop_placeholder), solve_gen_elim_prop_placeholder]
