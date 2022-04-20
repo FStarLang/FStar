@@ -300,7 +300,6 @@ let tc_one_file
       let mii = FStar.Syntax.DsEnv.inclusion_info (tcenv_of_uenv env).dsenv fmod.name in
       let check_mod () =
           let check env =
-              if not (Options.lax()) then FStar.SMTEncoding.Z3.refresh();
               with_tcenv_of_env env (fun tcenv ->
                  let _ = match tcenv.gamma with
                          | [] -> ()
@@ -311,7 +310,11 @@ let tc_one_file
                  maybe_restore_opts ();
                  let smt_decls =
                    if not (Options.lax())
-                   then FStar.SMTEncoding.Encode.encode_modul env modul
+                   then begin
+                     let a, b = FStar.SMTEncoding.Encode.encode_modul env modul in
+                     FStar.SMTEncoding.Z3.refresh();
+                     a, b
+                   end
                    else [], []
                  in
                  ((modul, smt_decls), env))
@@ -386,7 +389,6 @@ let tc_one_file
         then BU.print1 "Module after type checking:\n%s\n" (FStar.Syntax.Print.modul_to_string tcmod);
 
         let extend_tcenv tcmod tcenv =
-            if not (Options.lax()) then FStar.SMTEncoding.Z3.refresh();
             let _, tcenv =
                 with_dsenv_of_tcenv tcenv <|
                     FStar.ToSyntax.ToSyntax.add_modul_to_env
@@ -398,7 +400,8 @@ let tc_one_file
             maybe_restore_opts ();
             //AR: encode smt module and do post processing
             if (not (Options.lax())) then begin
-              FStar.SMTEncoding.Encode.encode_modul_from_cache env tcmod smt_decls
+              FStar.SMTEncoding.Encode.encode_modul_from_cache env tcmod smt_decls;
+              FStar.SMTEncoding.Z3.refresh()
             end;
             (), env
         in

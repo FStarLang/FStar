@@ -142,7 +142,17 @@ type repl_state = { repl_line: int; repl_column: int; repl_fname: string;
                     repl_stdin: stream_reader;
                     repl_names: CTable.table }
 and repl_stack_t = list repl_stack_entry_t
-and repl_stack_entry_t = repl_depth_t * (repl_task * repl_state)
+
+//
+// The code usually gets the repl_depth from calling the
+//   TcEnv.snapshot
+// However for tasks such as dependency loading,
+//   we don't need to call TcEnv.snapshot, since the typechecker
+//   already does it
+// For such cases, we keep the depth as None, but still add an entry
+//   in repl stack (see also PushHelper.push_repl)
+
+and repl_stack_entry_t = (option repl_depth_t) * (repl_task * repl_state)
 
 // Global repl_state, keeping state of different buffers
 type grepl_state = { grepl_repls: U.psmap repl_state; grepl_stdin: stream_reader }

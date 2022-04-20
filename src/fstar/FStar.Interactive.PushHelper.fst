@@ -110,8 +110,16 @@ let snapshot_env env msg : repl_depth_t * env_t =
   let opt_depth, () = Options.snapshot () in
   (ctx_depth, opt_depth), env
 
+let should_snapshot_env task =
+  match task with
+  | PushFragment _ -> true
+  | _ -> false
+
 let push_repl msg push_kind task st =
-  let depth, env = snapshot_env st.repl_env msg in
+  let depth, env =
+    if should_snapshot_env task
+    then let d, env = snapshot_env st.repl_env msg in Some d, env
+    else None, st.repl_env in
   repl_stack := (depth, (task, st)) :: !repl_stack;
   { st with repl_env = set_check_kind env push_kind } // repl_env is the only mutable part of st
 
@@ -146,7 +154,10 @@ let pop_repl msg st =
   match !repl_stack with
   | [] -> failwith "Too many pops"
   | (depth, (_, st')) :: stack_tl ->
-    let env = rollback_env st.repl_env.solver msg depth in
+    let env =
+      if depth = None
+      then st.repl_env
+      else rollback_env st.repl_env.solver msg (depth |> must) in
     repl_stack := stack_tl;
     // Because of the way ``snapshot`` is implemented, the `st'` and `env`
     // that we rollback to should be consistent:
