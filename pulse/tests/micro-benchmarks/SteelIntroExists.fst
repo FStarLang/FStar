@@ -131,6 +131,73 @@ assume
 val ptr : Type0
 
 assume
+val pts_to1 (p: ptr) (v: Ghost.erased nat) : vprop
+
+assume
+val pts_to2 (p: ptr) (v: Ghost.erased bool) : vprop
+
+assume
+val split
+  (#v: Ghost.erased nat)
+  (p: ptr)
+: STT ptr
+    (pts_to1 p v)
+    (fun res -> exists_ (fun vl -> pts_to1 p vl `star` exists_ (fun vr -> pts_to1 res vr)))
+
+assume
+val pts_to2_intro
+  (#opened: _)
+  (#v: Ghost.erased nat) (p: ptr)
+: STGhostT (Ghost.erased bool) opened
+    (pts_to1 p v)
+    (fun res -> pts_to2 p res)
+
+let test_split1
+  (#v: Ghost.erased nat)
+  (p: ptr)
+: STT ptr
+    (pts_to1 p v)
+    (fun res -> exists_ (fun vl -> pts_to2 p vl `star` exists_ (fun vres -> pts_to1 res vres)))
+=
+  let res = split p in
+  let _ = elim_exists () in
+  let _ = elim_exists () in
+  noop ();
+  let _ = pts_to2_intro p in
+  noop ();
+  return res
+
+let test_split2
+  (#v: Ghost.erased nat)
+  (p: ptr)
+: STT ptr
+    (pts_to1 p v)
+    (fun res -> exists_ (fun vl -> pts_to2 p vl `star` exists_ (fun vres -> pts_to1 res vres)))
+=
+  let res = split p in
+  let _ = gen_elim () in
+  noop ();
+  let _ = pts_to2_intro p in
+  intro_exists _ (fun vres -> pts_to1 res vres);
+  noop ();
+  return res
+
+// [@@expect_failure]
+let test_split
+  (#v: Ghost.erased nat)
+  (p: ptr)
+: STT ptr
+    (pts_to1 p v)
+    (fun res -> exists_ (fun vl -> pts_to2 p vl `star` exists_ (fun vres -> pts_to1 res vres)))
+=
+  let res = split p in
+  let z = gen_elim () in
+  noop ();
+  let r = pts_to2_intro p in
+  noop ();
+  return res
+
+assume
 val pts_to (p:ptr) (v:nat) : vprop
 
 assume
@@ -281,3 +348,151 @@ val pred ([@@@smt_fallback] _ : nat) : vprop
 let test (x y:nat) : ST unit (pred x) (fun _ -> pred 17 `star` pure ((x > y)==true)) (requires x == 17 /\ x > y) (ensures fun _ -> True) =
  let _ = noop () in 
  return ()
+
+(* Testing gen_elim *)
+
+let test_gen_elim
+  (#opened: _) (p q: nat -> vprop) : STGhostT unit opened (exists_ p `star` exists_ q) (fun _ -> emp)
+=
+  let _ = gen_elim () in
+  let _ = noop () in
+  let vp = vpattern_replace p in
+  let vq = vpattern_replace q in
+  drop (p vp);
+  drop (q vq);
+  ()
+
+let f
+  (p q: vprop)
+  (x: nat)
+: ST bool  (exists_ (fun n -> p `star` q `star` pure (n > 42 /\ x > 18))) (fun _ -> q) True (fun _ -> x > 18)
+= noop ();
+  let _ = gen_elim () in
+  drop p;
+  return true
+
+let f'
+  (p: ptr)
+  (q: vprop)
+  (x: nat)
+: ST bool  (exists_ (fun n -> (p `pts_to` n) `star` q `star` pure (n > 42 /\ x > 18))) (fun _ -> q) True (fun _ -> x > 18)
+= noop ();
+  let _ = gen_elim () in
+  noop ();
+  free p;
+  return true
+
+assume
+val pred' ([@@@smt_fallback] _ : nat) : vprop
+
+let g
+  ()
+: STT bool (exists_ (fun n -> exists_ (fun p -> pred n `star` pred' p `star` pure (n == 18 /\ p == 42)))) (fun _ -> pred 18 `star` pred' 42)
+= noop ();
+  let _ = gen_elim () in
+  noop ();
+  return true
+
+let h
+  (r: vprop)
+  (f: ((#opened: _) -> unit -> STGhostT unit opened
+    r
+    (fun _ -> exists_ (fun n -> exists_ (fun p -> pred n `star` pred' p `star` pure (n == 18 /\ p == 42))))))
+: STT bool r (fun _ -> pred 18 `star` pred' 42)
+= f ();
+  let _ = gen_elim () in
+  noop ();
+  return true
+
+let h'
+  (#opened: _)
+  (r: vprop)
+  (f: ((#opened: _) -> unit -> STGhostT nat opened
+    r
+    (fun res -> exists_ (fun n -> exists_ (fun p -> pred n `star` pred' p `star` pure (n == 18 /\ p == res))))))
+: STGhostT nat opened r (fun n -> pred 18 `star` pred' n)
+= let res = f () in
+  let _ = gen_elim () in
+  noop ();
+  res
+
+let h3
+  (#opened: _)
+  (r: vprop)
+  (f: ((#opened: _) -> unit -> STGhostT unit opened
+    r
+    (fun _ -> exists_ (fun n -> exists_ (fun p -> pred n `star` pred' p `star` pure (n == 18))))))
+: STGhostT nat opened r (fun n -> pred 18 `star` pred' n)
+= f ();
+  let _ = gen_elim () in
+  let res = vpattern (fun res -> pred' res) in
+  noop ();
+  res
+
+let h30
+  (#opened: _)
+: STGhostT nat opened (pred' 18) (fun n -> exists_ (fun q -> pred' q `star` pure (q == n)))
+=
+  let res = vpattern (fun res -> pred' res) in
+  noop ();
+  res
+
+let h31'
+  (#opened: _)
+: STGhostT nat opened (exists_ (fun n -> pred' n)) (fun n -> exists_ (fun q -> pred' q `star` pure (q == n)))
+= let _ = elim_exists () in
+  let res = vpattern (fun res -> pred' res) in
+  noop ();
+  res
+
+assume
+val pred0 (_ : nat) : vprop
+
+let h3f
+  (#opened: _)
+: STGhostT nat opened (exists_ (fun n -> pred0 n)) (fun n -> exists_ (fun q -> pred0 q `star` pure (q == n)))
+= let _ = elim_exists () in
+  let res = vpattern (fun res -> pred0 res) in
+  noop ();
+  res
+
+let eqprop (#a: Type) (b1 b2: a) : Tot prop = b1 == b2
+
+let h31
+  (#opened: _)
+: STGhostT nat opened (exists_ (fun n -> pred0 n)) (fun n -> exists_ (fun q -> pred0 q `star` pure (q `eqprop` n)))
+=
+  let v = gen_elim () in
+  let res = vpattern (fun res -> pred0 res) in
+  noop ();
+  res
+
+let h32
+  (#opened: _)
+: STGhostT nat opened (exists_ (fun n -> pred' n)) (fun n -> exists_ (fun q -> pred' q `star` pure (q == n)))
+= let _ = gen_elim () in
+  let res = vpattern (fun res -> pred' res) in
+  noop ();
+  res
+
+let h35
+  (#opened: _)
+: STGhostT nat opened (exists_ (fun n -> exists_ (fun p -> pred n `star` pred' p `star` pure (n == 18)))) (fun n -> pred 18 `star` exists_ (fun q -> pred' q `star` pure (q == n)))
+= noop ();
+  let _ = gen_elim () in
+  let res = vpattern (fun res -> pred' res) in
+  noop ();
+  res
+
+let h4
+  (#opened: _)
+  (r: vprop)
+  (f: ((#opened: _) -> unit -> STGhostT unit opened
+    r
+    (fun _ -> exists_ (fun n -> exists_ (fun p -> pred n `star` pred' p `star` pure (n == 18))))))
+: STGhostT nat opened r (fun n -> pred 18 `star` exists_ (fun q -> pred' q `star` pure (q == n)))
+= f ();
+  let _ = gen_elim () in
+  let res = vpattern (fun res -> pred' res) in
+  noop ();
+  res
