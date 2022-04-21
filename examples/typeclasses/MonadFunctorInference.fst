@@ -69,6 +69,27 @@ let test_st2 () =
   then put (x + y)
   else put y
 
+let get_put #s =
+  x <-- get #s;
+  put x
+
+let noop #s : st s unit = return ()
+
+open FStar.FunctionalExtensionality
+
+let get_put_identity (s:Type)
+  : Lemma (get_put #s `feq` noop #s)
+  = ()
+
+module T = FStar.Tactics
+
+let get_put_identity_alt (s:Type)
+  : Tot (squash (get_put #s == noop #s))
+    by (T.dump "A"; 
+        T.norm [delta_only [`%get_put; `%return; `%bind; `%get; `%put; `%Mkmonad?.bind; `%Mkmonad?.return;`%st_monad; `%noop]; iota];
+        T.smt()) //trefl fails here because there's an ascription on one side : (
+  = ()
+
 instance opt_monad : monad option =
 {
    return = (fun #a (x:a) -> Some x);
