@@ -89,6 +89,9 @@ val assume_ (#opened_invariants:_)
 /// and ghost vprops
 val drop (#opened:inames) (p:vprop) : STGhostT unit opened p (fun _ -> emp)
 
+/// A pure vprop
+val pure (p: prop) : vprop
+
 /// Introduce a pure vprop, when [p] is valid in the context
 val intro_pure (#uses:_) (p:prop)
   : STGhost unit uses emp (fun _ -> pure p) p (fun _ -> True)
