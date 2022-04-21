@@ -72,3 +72,5 @@ let rec zip3 l1 l2 l3 =
   | _ -> failwith "zip3"
 let unique = BatList.unique
 let map_flatten f l = flatten (map f l)
+
+let span = BatList.span

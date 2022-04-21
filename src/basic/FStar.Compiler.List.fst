@@ -299,3 +299,14 @@ let index f l =
           index tl (i + 1)
   in
   index l 0
+
+let span #a f l =
+  match l with
+  | [] -> [], []
+  | hd::tl ->
+    if f hd
+    then let pf, rest = span f tl in
+         hd::pf, rest
+    else [], l
+
+  
