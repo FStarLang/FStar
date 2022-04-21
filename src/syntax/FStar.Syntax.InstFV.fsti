@@ -15,7 +15,6 @@
 *)
 module FStar.Syntax.InstFV
 open FStar.Compiler.Effect
-open FStar.Compiler.Effect
 open FStar.Syntax.Syntax
 open FStar.Ident
 type inst_t = list (lident * universes)

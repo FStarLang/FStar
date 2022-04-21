@@ -547,7 +547,6 @@ let lookup_aq (bv : bv) (aq : antiquotations) : option term =
 (*********************************************************************************)
 (* Syntax builders *)
 (*********************************************************************************)
-open FStar.Compiler.Range
 
 let syn p k f = f k p
 let mk_fvs () = Util.mk_ref None

@@ -87,9 +87,6 @@ let from_vec_lemma_1 #n a b = ()
 
 let from_vec_lemma_2 #n a b = inverse_vec_lemma a; inverse_vec_lemma b
 
-
-open FStar.Math.Lemmas
-
 #push-options "--fuel 0 --ifuel 0"
 let from_vec_aux #n a s1 s2 =
   paren_mul_left (from_vec #s2 (slice a 0 s2)) (pow2 (s1 - s2)) (pow2 (n - s1));

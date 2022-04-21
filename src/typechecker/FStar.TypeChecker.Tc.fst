@@ -42,7 +42,6 @@ module TcComm = FStar.TypeChecker.Common
 module TcUtil = FStar.TypeChecker.Util
 module BU = FStar.Compiler.Util //basic util
 module U  = FStar.Syntax.Util
-module PP = FStar.Syntax.Print
 module Gen = FStar.TypeChecker.Generalize
 module TcInductive = FStar.TypeChecker.TcInductive
 module TcEff = FStar.TypeChecker.TcEffect

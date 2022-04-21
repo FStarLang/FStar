@@ -16,7 +16,6 @@
 (* -------------------------------------------------------------------- *)
 module FStar.Extraction.ML.Code
 open FStar.Compiler.Effect
-open FStar.Compiler.Effect
 
 open FStar.Extraction.ML.Syntax
 open FStar.Pprint

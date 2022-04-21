@@ -947,7 +947,7 @@ let solve use_env_msg tcenv q : unit =
 (**********************************************************************************************)
 (* Top-level interface *)
 (**********************************************************************************************)
-open FStar.TypeChecker.Env
+
 let solver = {
     init=(fun e -> save_cfg e; Encode.init e);
     push=Encode.push;

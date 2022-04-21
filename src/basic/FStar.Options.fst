@@ -20,7 +20,6 @@ open FStar.Pervasives
 open FStar.String
 open FStar.Compiler.Effect
 open FStar
-open FStar.Compiler
 open FStar.Compiler.Util
 open FStar.Getopt
 open FStar.BaseTypes

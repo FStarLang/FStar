@@ -33,7 +33,6 @@ open FStar.Syntax.Util
 open FStar.Const
 open FStar.Compiler.Dyn
 open FStar.TypeChecker.Rel
-open FStar.TypeChecker.Common
 
 module S  = FStar.Syntax.Syntax
 module SS = FStar.Syntax.Subst
