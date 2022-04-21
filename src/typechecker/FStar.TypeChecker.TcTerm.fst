@@ -1852,7 +1852,7 @@ and tc_abs_expected_function_typ env (bs:binders) (t0:option (typ * bool)) (body
 
   | Some (t, use_eq) ->
     let t = SS.compress t in
-    let rec as_function_typ norm t =
+    let rec as_function_typ (norm:bool) t =
       match (SS.compress t).n with
       (* we are type checking abs so all cases except arrow are required for definitional equality *)
       | Tm_uvar _

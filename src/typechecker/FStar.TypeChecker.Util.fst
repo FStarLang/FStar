@@ -2415,7 +2415,7 @@ let maybe_instantiate (env:Env.env) e t =
               //instantiate at most inst_n implicit binders, when inst_n = Some n
               //otherwise, instantate all implicits
               //See issue #807 for why this is important
-              let rec aux subst inst_n bs =
+              let rec aux (subst:list subst_elt) inst_n bs =
                   match inst_n, bs with
                   | Some 0, _ -> [], bs, subst, Env.trivial_guard //no more instantiations to do
                   | _, ({binder_bv=x; binder_qual=Some (Implicit _);binder_attrs=[]})::rest ->

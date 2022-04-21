@@ -1002,7 +1002,7 @@ let has_decreases (c:comp) : bool =
  *     flattening arrows of the form t -> Tot (t1 -> C), so that it returns two binders in this example
  *     the function also descends under the refinements (e.g. t -> Tot (f:(t1 -> C){phi}))
  *)
-let rec arrow_formals_comp_ln k =
+let rec arrow_formals_comp_ln (k:term) =
     let k = Subst.compress k in
     match k.n with
         | Tm_arrow(bs, c) ->
@@ -1044,7 +1044,7 @@ let arrow_formals k =
     This is used by NBE for detecting potential non-terminating loops
 *)
 let let_rec_arity (lb:letbinding) : int * option (list bool) =
-    let rec arrow_until_decreases k =
+    let rec arrow_until_decreases (k:term) =
         let k = Subst.compress k in
         match k.n with
         | Tm_arrow(bs, c) ->
