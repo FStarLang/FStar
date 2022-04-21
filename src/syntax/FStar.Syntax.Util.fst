@@ -537,23 +537,23 @@ let eq_inj f g =
      | Unknown, _
      | _, Unknown -> Unknown
 
+let equal_if = function
+    | true -> Equal
+    | _ -> Unknown
+
+let equal_iff = function
+    | true -> Equal
+    | _ -> NotEqual
+
+let eq_and f g =
+    match f with
+    | Equal -> g()
+    | _ -> Unknown
+
 (* Precondition: terms are well-typed in a common environment, or this can return false positives *)
 let rec eq_tm (t1:term) (t2:term) : eq_result =
     let t1 = canon_app t1 in
     let t2 = canon_app t2 in
-    let equal_if = function
-        | true -> Equal
-        | _ -> Unknown
-    in
-    let equal_iff = function
-        | true -> Equal
-        | _ -> NotEqual
-    in
-    let eq_and f g =
-      match f with
-      | Equal -> g()
-      | _ -> Unknown
-    in
     let equal_data (f1:fv) (args1:Syntax.args) (f2:fv) (args2:Syntax.args) =
         // we got constructors! we know they are injective and disjoint, so we can do some
         // good analysis on them
@@ -654,6 +654,12 @@ let rec eq_tm (t1:term) (t2:term) : eq_result =
                 Equal bs1 bs2)
              (fun () -> eq_tm body1 body2)
 
+    | Tm_arrow(bs1, c1), Tm_arrow(bs2, c2)
+          when List.length bs1 = List.length bs2 ->
+      eq_and (List.fold_left2 (fun r b1 b2 -> eq_and r (fun () -> eq_tm b1.binder_bv.sort b2.binder_bv.sort))
+                Equal bs1 bs2)
+             (fun () -> eq_comp c1 c2)
+
     | _ -> Unknown
 
 and eq_quoteinfo q1 q2 =
@@ -707,6 +713,23 @@ and eq_args (a1:args) (a2:args) : eq_result =
 and eq_univs_list (us:universes) (vs:universes) : bool =
     List.length us = List.length vs
     && List.forall2 eq_univs us vs
+
+and eq_comp (c1 c2:comp) : eq_result =
+  match c1.n, c2.n with
+  | Total (t1, u1opt), Total (t2, u2opt)
+  | GTotal (t1, u1opt), GTotal (t2, u2opt) ->
+    eq_tm t1 t2 //Rel ignores the universe annotations when comparing these comps for equality.
+                //So, ignore them here too
+                //But, this should be sorted out: Can we always populate the universe?
+  | Comp ct1, Comp ct2 ->
+    eq_and (equal_if (eq_univs_list ct1.comp_univs ct2.comp_univs))
+           (fun _ ->
+             eq_and (equal_if (Ident.lid_equals ct1.effect_name ct2.effect_name))
+                    (fun _ ->
+                      eq_and (eq_tm ct1.result_typ ct2.result_typ)
+                             (fun _ -> eq_args ct1.effect_args ct2.effect_args)))
+                             //ignoring cflags
+  | _ -> NotEqual
 
 let eq_bqual a1 a2 =
     match a1, a2 with

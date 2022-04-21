@@ -70,7 +70,7 @@ type uvi =
     | TERM of ctx_uvar * term
     | UNIV of S.universe_uvar * universe
 
-type defer_ok_t = 
+type defer_ok_t =
   | NoDefer
   | DeferAny
   | DeferFlexFlexOnly
@@ -2402,6 +2402,50 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
         [TERM(ctx_u, sol)]
     in
 
+    (*
+      LHS: ?u e1..en, if the arity of ?u is n
+           then LHS as a quasi pattern is (?u x1 ... xn)
+           for some names x1...xn
+
+           (see the comment on quasi_pattern on how these names are computed)
+
+
+      if the free vars of rhs are included in ctx(?u) ++ {x1,...,xn}
+
+      then solve by ?u <- (fun x1 .... xn -> rhs)
+
+      provided ?u does not occur in RHS
+
+      and after all uvars in the RHS (?u1 .. ?un) are restricted to the context (ctx(?u))
+
+      This has the behavior of preserving functional dependences in *some* cases.
+
+      Consider two examples:
+
+      1.
+          LHS = ?u A.x, where A.x is an fv
+          RHS = option A.x
+
+          Then quasi patern of LHS is (?u y), for some fresh y
+          since we can't abstract over the A.x
+
+          The resulting solution will be
+            ?u <- fun y -> option A.x
+
+          i.e., ?u is solved to the constant function
+                rather than `option`
+
+       2.  LHS = ?u x, where x is just a name DOES NOT APPEAR in ctx(?u)
+           RHS = option (some complicated term including x)
+
+           This time the quasi patern of LHS is (?u x) and
+           the resulting solution will be
+
+             ?u <- fun x -> option (some complicated term including x)
+
+           preserving the dependence on `x`
+
+    *)
     let try_quasi_pattern (orig:prob) (env:Env.env) (wl:worklist)
                           (lhs:flex_t) (rhs:term)
         : either string (list uvi) * worklist =
@@ -2423,6 +2467,45 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
                else Inr (mk_solution env lhs bs rhs), restrict_all_uvars env ctx_u [] uvars wl
     in
 
+    (*
+       LHS is a (?u e1..en) is a quasi pattern (?u b1...bn)
+           where bs_lhs = b1 .. bn (none of which appear in ctx(?u) (see quasi_pattern))
+           and the type of ?u is (b1..bn -> t_res_lhs)
+
+       RHS is an application (head e)    where e:t_last
+
+       Produce two new uvars:
+          ctx(?u), b1..bn, _:t_last |- ?u_head : t_last -> t_res_lhs
+          ctx(?u), b1..bn           |- ?u_arg  : t_last
+
+       Solve: ?u <- (fun b1..bn -> ?u_head ?u_arg)
+
+       And generate sub-problems
+           ?u_head = head
+           ?u_arg  = arg
+
+       Since it is based on quasi patterns, imitate_app (like
+       try_quasi_pattern) will usually not preserve functional
+       dependences
+
+       For example:
+
+       1. LHS = ?u A.x, where A.x is an fv
+          RHS = option A.x
+
+          Then quasi patern of LHS is (?u y), for some fresh y
+          since we can't abstract over the A.x
+
+          The resulting solution will be
+
+            ?u <- fun y -> ?u_head ?u_arg
+
+            and ?u_head <- option
+            and ?u_arg <- A.x
+
+          So, in a more roundabout way, we arrive at the same constant
+          function as the solution to ?u
+    *)
     let imitate_app (orig:prob) (env:Env.env) (wl:worklist)
                     (lhs:flex_t) (bs_lhs:binders) (t_res_lhs:term)
                     (rhs:term)
@@ -2442,12 +2525,18 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
         //            (Print.args_to_string [last_arg_rhs]);
         let (Flex (t_lhs, u_lhs, _lhs_args)) = lhs in
         let lhs', lhs'_last_arg, wl =
-              let t_last_arg, _ = env.typeof_well_typed_tot_or_gtot_term ({env with lax=true; use_bv_sorts=true; expected_typ=None}) (fst last_arg_rhs) false in  //AR: 03/30: WARNING: dropping the guard
+              let t_last_arg, _ =
+                env.typeof_well_typed_tot_or_gtot_term
+                  ({env with lax=true; use_bv_sorts=true; expected_typ=None})
+                  (fst last_arg_rhs)
+                  false
+              in  //AR: 03/30: WARNING: dropping the guard
               //AR: 07/20: note the type of lhs' is t_last_arg -> t_res_lhs
               let _, lhs', wl =
                 let b = S.null_binder t_last_arg in
                 copy_uvar u_lhs (bs_lhs@[b])
-                (t_res_lhs |> env.universe_of env |> Some |> S.mk_Total' t_res_lhs |> U.arrow [b]) wl in
+                (t_res_lhs |> env.universe_of env |> Some |> S.mk_Total' t_res_lhs |> U.arrow [b]) wl
+              in
               let _, lhs'_last_arg, wl = copy_uvar u_lhs bs_lhs t_last_arg wl in
               lhs', lhs'_last_arg, wl
         in
@@ -2466,11 +2555,22 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
         solve env (attempt sub_probs (solve_prob orig None sol wl))
     in
 
-    let first_order (orig:prob) (env:Env.env) (wl:worklist)
-                    (lhs:flex_t) (rhs:term)
+    (*
+       LHS: ?u e1..en, if the arity of ?u is n
+            then LHS as a quasi pattern is (?u x1 ... xn)
+            for some names x1...xn
+
+            (see the comment on quasi_pattern on how these names are computed)
+
+       If the RHS is an application (t e): imitate_app
+
+       If the RHS is an arrow (xi:ti -> C): imitate_arrow
+    *)
+    let imitate (orig:prob) (env:Env.env) (wl:worklist)
+                (lhs:flex_t) (rhs:term)
         : solution =
         if Env.debug env <| Options.Other "Rel" then
-          BU.print_string "first_order\n";
+          BU.print_string "imitate\n";
         let is_app rhs =
            let _, args = U.head_and_args rhs in
            match args with
@@ -2485,7 +2585,7 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
         match quasi_pattern env lhs with
         | None ->
            let msg = mklstr (fun () ->
-                        BU.format1 "first_order heuristic cannot solve %s; lhs not a quasi-pattern"
+                        BU.format1 "imitate heuristic cannot solve %s; lhs not a quasi-pattern"
                           (prob_to_string env orig)) in
            giveup_or_defer env orig wl Deferred_first_order_heuristic_failed msg
 
@@ -2496,11 +2596,91 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
           then imitate_arrow orig env wl lhs bs_lhs t_res_lhs EQ rhs
           else
             let msg = mklstr (fun () ->
-                                  BU.format1 "first_order heuristic cannot solve %s; rhs not an app or arrow"
+                                  BU.format1 "imitate heuristic cannot solve %s; rhs not an app or arrow"
                                   (prob_to_string env orig)) in
             giveup_or_defer env orig wl Deferred_first_order_heuristic_failed msg
     in
+    (*
+          LHS = (?u : t1..tn -> t) e1..em
+          RHS = f v1...vm
 
+          if (f: t1..tn -> t)
+
+             ?u <- f
+
+          and generate (e1 =?= v1, ..., em =?= vm)
+     *)
+    let try_first_order orig env wl lhs rhs =
+      let inapplicable msg =
+         if Env.debug env <| Options.Other "Rel"
+         then BU.print1 "try_first_order failed because: %s\n" msg;
+        Inl "first_order doesn't apply"
+      in
+      if Env.debug env <| Options.Other "Rel" then
+          BU.print2 "try_first_order\n\tlhs=%s\n\trhs=%s\n"
+                    (flex_t_to_string lhs)
+                    (Print.term_to_string rhs);
+      let (Flex (_t1, ctx_uv, args_lhs)) = lhs in
+      let n_args_lhs = List.length args_lhs in
+      let head, args_rhs = U.head_and_args rhs in
+      let n_args_rhs = List.length args_rhs in
+      if n_args_lhs > n_args_rhs
+      then inapplicable "not enough args"
+      else
+        let i = n_args_rhs - n_args_lhs in
+        let prefix, suffix = List.splitAt i args_rhs in
+        let head = S.mk_Tm_app head prefix head.pos in
+        let _, occurs_ok, _ = occurs_check ctx_uv head in
+        if not occurs_ok
+        then inapplicable "occurs check failed"
+        else if not (BU.set_is_subset_of (Free.names head)
+                                         (binders_as_bv_set ctx_uv.ctx_uvar_binders))
+        then inapplicable "free name inclusion failed"
+        else (
+          let t_head, _ =
+             env.typeof_well_typed_tot_or_gtot_term
+                  ({env with lax=true; use_bv_sorts=true; expected_typ=None})
+                  head
+                  false
+          in
+          let tx = UF.new_transaction () in
+          let typ_equality_sub_prob, wl =
+            if U.eq_tm t_head ctx_uv.ctx_uvar_typ = U.Equal
+            then [],wl
+            else (
+              if Env.debug env (Options.Other "Rel")
+              then BU.print2  "first-order: head type mismatch:\n\tlhs=%s\n\trhs=%s\n"
+                                              (Print.term_to_string ctx_uv.ctx_uvar_typ)
+                                              (Print.term_to_string t_head);
+              let p, wl = mk_t_problem wl [] orig ctx_uv.ctx_uvar_typ EQ t_head None "first-order head type" in
+              [p], wl
+            )
+          in
+          let sol = [TERM(ctx_uv, head)] in
+          let sub_probs, wl =
+              List.fold_left2
+                (fun (probs, wl) (arg_lhs, _) (arg_rhs, _) ->
+                   let p, wl = mk_t_problem wl [] orig arg_lhs EQ arg_rhs None "first-order arg" in
+                   p::probs, wl)
+                (typ_equality_sub_prob, wl)
+                args_lhs
+                args_rhs in
+          let wl' = { wl  with defer_ok = NoDefer;
+                               smt_ok = false;
+                               attempting = sub_probs;
+                               wl_deferred = [];
+                               wl_implicits = [] } in
+          match solve env wl' with
+          | Success (_, defer_to_tac, imps) ->
+            let wl = extend_wl wl [] defer_to_tac imps in
+            let wl = solve_prob orig None sol wl in
+            UF.commit tx;
+            Inr wl
+          | Failed (_, lstring) ->
+            UF.rollback tx;
+            inapplicable ("Subprobs failed: " ^Thunk.force lstring)
+      )
+    in
     match p_rel orig with
     | SUB
     | SUBINV ->
@@ -2546,17 +2726,24 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
                                            (names_to_string fvs1)
                                            (Print.binders_to_string ", " (ctx_uv.ctx_uvar_binders @ lhs_binders))) in
           giveup_or_defer env orig wl Deferred_free_names_check_failed msg
-        else first_order orig env wl lhs rhs
+        else imitate orig env wl lhs rhs
 
 
       | _ -> //Not a pattern
         if wl.defer_ok = DeferAny
         then giveup_or_defer env orig wl Deferred_not_a_pattern (Thunk.mkv "Not a pattern")
-        else match try_quasi_pattern orig env wl lhs rhs with
-            | Inr sol, wl ->
-              solve env (solve_prob orig None sol wl)
-            | Inl msg, _ -> //try first-order
-              first_order orig env wl lhs rhs
+        else match try_first_order orig env wl lhs rhs with
+             | Inr wl ->
+                solve env wl
+
+             | _ ->
+
+               match try_quasi_pattern orig env wl lhs rhs with
+               | Inr sol, wl ->
+                 solve env (solve_prob orig None sol wl)
+
+               | Inl msg, _ ->
+                 imitate orig env wl lhs rhs
 
 (* solve_t_flex-flex:
        Always delay flex-flex constraints, if possible.
@@ -2579,7 +2766,7 @@ and solve_t_flex_flex env orig wl (lhs:flex_t) (rhs:flex_t) : solution =
              (Print.term_to_string t);
       U.set_uvar uv.ctx_uvar_head t;
       solve env (attempt [orig] wl) in
-    
+
     match p_rel orig with
     | SUB
     | SUBINV ->
@@ -2592,7 +2779,7 @@ and solve_t_flex_flex env orig wl (lhs:flex_t) (rhs:flex_t) : solution =
       then defer_to_user_tac env orig (flex_reason lhs ^", "^flex_reason rhs)wl
       else
 
-      if wl.defer_ok = DeferAny
+      if (wl.defer_ok = DeferAny || wl.defer_ok = DeferFlexFlexOnly)
       && (not (is_flex_pat lhs)|| not (is_flex_pat rhs))
       then giveup_or_defer_flex_flex env orig wl Deferred_flex_flex_nonpattern (Thunk.mkv "flex-flex non-pattern")
 
@@ -2636,10 +2823,15 @@ and solve_t_flex_flex env orig wl (lhs:flex_t) (rhs:flex_t) : solution =
                  if snd (occurs u_lhs new_uvar_typ)
                  ||  (not (Unionfind.equiv u_lhs.ctx_uvar_head u_rhs.ctx_uvar_head) &&
                      snd (occurs u_rhs new_uvar_typ))
-                 then giveup_or_defer_flex_flex env orig wl Deferred_flex_flex_nonpattern 
+                 then giveup_or_defer_flex_flex env orig wl Deferred_flex_flex_nonpattern
                          (Thunk.mkv (BU.format1 "flex-flex: occurs\n defer_ok=%s\n"
                                                 (string_of_defer_ok wl.defer_ok)))
                  else begin
+                   let _ =
+                     if Env.debug env <| Options.Other "Rel"
+                     then BU.print1 "flex-flex quasi: %s\n"
+                                    (BU.stack_dump())
+                   in
                    let _, w, wl = new_uvar ("flex-flex quasi:"
                                           ^"\tlhs="  ^u_lhs.ctx_uvar_reason
                                           ^ "\trhs=" ^u_rhs.ctx_uvar_reason)
@@ -4199,7 +4391,7 @@ let solve_universe_inequalities env ineqs : unit =
     let tx = UF.new_transaction () in
     solve_universe_inequalities' tx env ineqs;
     UF.commit tx
-  
+
 let try_solve_deferred_constraints (defer_ok:defer_ok_t) smt_ok deferred_to_tac_ok env (g:guard_t) : guard_t =
   Profiling.profile (fun () ->
    let fail (d,s) =
