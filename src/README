@@ -1,24 +1,30 @@
-Most files in this folder are read and extracted by F* directly.  That is, they are written in the intersection of F* and F# and thus can be consumed by F# and F* indifferently.
+F* is written in F* and bootstrapped in OCaml.
 
-A few files need more work:
+Some files are written directly in OCaml:
 
-- Files that are valid F#, and almost-valid F*
-  These exist in e.g. src/tactics/boot.  They are massaged with sed and saved in src/boot/ as part of the build process.  There's both fsi files and fs files in this category.  These are stored in boot/ subfolders.
+ * The parser: uses the OCaml parser generator `menhir`
 
-  Updates to these usually don't require anything special, except if you're writing in F#-only syntax (e.g. defining a type alias — you can't make that abstract in F#).  In that case, you can mark a line for deletion when processing boot/ subfolders by tagging it with // JUST FSHARP.
+ * The lexer: uses the OCaml Sedlexing library
 
-  New files in this category need to be listed in ALL_BOOT in the Makefile.
+ * Some basic system utilities, like FStar.Compiler.Util only has an
+   interface in F* and is implemented as FStar_Compiler_Util.ml
 
-  Note: the parser is a special case.  `parse.fs`, `parse.fsi`, and `parse.fsy` should be in `parser/boot/`, but moving them there breaks incrementality of the F# build (fixed in b34750ad8beb813f91299da54287a716bd1137ce).
+--------------------------------------------------------------------------------
 
-- Files that are realized in F# and OCaml separately
-  These have native implementations in F# and OCaml, and an F#-friendly fsi.  When the fsi needs massaging (as explained above) these are stored in boot/ subfolders (but see below).  Otherwise, they are stored along other fs files (F# forces us to keep fsi and fs files together, so we can't put the fs files only in boot/ or in a separate folder). The ml realization is stored in either ulib/ml or src/**/ml.
+History:
 
-  Updates to these require modifying three files: the fsi, the fs, and the ml implementation.  Usually, you'll want to update any corresponding files in ulib for consistency (e.g. the compiler doesn't use FStar.List.fst from ulib, because we don't extract ulib for bootstrapping, but it's nice to keep FStar.List.fs in src consistent with FStar.List.fst in ulib. Same for FStar.String.fst.)
+F* was originally implemented in F#.
 
-  New files in this category need to be listed in FSTAR_OBJS in src/ocaml-output/Makefile.
+Then, once F* could extract F* programs to OCaml, F* was bootstrapped
+in OCaml.
 
-- Files that are realized in F# and OCaml separately with an interface in ulib
-  Some files have a separate, hand-written fsti interface that we read from ulib.  These files are stored in fs/ subfolders, and only read by F#.
+For many years, the F* implementation was written in a language that
+was the intersecton of F* and F#. So, although it was bootstrapped in
+OCaml for typical use, it could also be directly compiled in F#.
 
-  Updates to these requires modifying four files: the fsi, the fs, the ml implementation in ulib, the fsti in ulib, and possibly the fst in ulib.
+Since March 2022, the F* implementation is no longer in the shared
+subset of F* and F# and is compiled using a bootstrapped compiler in
+OCaml.
+
+We maintain an ocaml-snapshot, a last-known-good version of the F*
+compiler bootstrapped in OCaml.

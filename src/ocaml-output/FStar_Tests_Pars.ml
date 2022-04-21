@@ -300,7 +300,7 @@ let (init : unit -> FStar_TypeChecker_Env.env) =
 let (frag_of_text : Prims.string -> FStar_Parser_ParseIt.input_frag) =
   fun s ->
     {
-      FStar_Parser_ParseIt.frag_fname = "<input>";
+      FStar_Parser_ParseIt.frag_fname = " input";
       FStar_Parser_ParseIt.frag_text = s;
       FStar_Parser_ParseIt.frag_line = Prims.int_one;
       FStar_Parser_ParseIt.frag_col = Prims.int_zero

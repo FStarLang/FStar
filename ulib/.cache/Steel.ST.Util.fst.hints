@@ -1,5 +1,5 @@
 [
-  "“ç\u0001s\tΩççòêQ\u0007\u0016∆±Õ",
+  "–©\tµxÅ•ÿ\u001dàøÃÌ®∞ó",
   [
     [
       "Steel.ST.Util.rewrite",
@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "8a622c47dbdd49ce5233ffb8942ea2d2"
+      "71b741942427d98812b030511d6abc2c"
     ],
     [
       "Steel.ST.Util.rewrite_with_tactic",
@@ -20,7 +20,7 @@
         "typing_Steel.Effect.Common.hp_of"
       ],
       0,
-      "a17043c42190cc43eb1f6cd80f01b531"
+      "68caca930f3c806585c3d70b28a22aa0"
     ],
     [
       "Steel.ST.Util.rewrite_equiv",
@@ -37,7 +37,7 @@
         "typing_Steel.Effect.Common.hp_of"
       ],
       0,
-      "d0ae0ad5975d9df88fbcf71b7ea938ab"
+      "afb58ab17c31be22e2295e6d2497b947"
     ],
     [
       "Steel.ST.Util.slassert0",
@@ -46,7 +46,7 @@
       1,
       [ "@query" ],
       0,
-      "355c269776700d8fe0d7014efac6256a"
+      "9397b71accaed496918dfb7866b8047f"
     ],
     [
       "Steel.ST.Util.extract_pure",
@@ -55,7 +55,7 @@
       1,
       [ "@query" ],
       0,
-      "1ad3e1df6484f4b6e9ef56dd0c5e0a5b"
+      "63a2dd48eb65ddc2c1bb85a4f26cb915"
     ],
     [
       "Steel.ST.Util.return0",
@@ -64,7 +64,7 @@
       1,
       [ "@query" ],
       0,
-      "acff657e4f5a4e34b6958ebb7efa16d5"
+      "b192cf4e0888f8b07916bcd7ff40c276"
     ],
     [
       "Steel.ST.Util.with_invariant",
@@ -73,7 +73,7 @@
       1,
       [ "@query" ],
       0,
-      "bdf2ac04820f067bf1e71796df791ffe"
+      "dad4bf1cd687af03e29fbbfa0a3e61f9"
     ],
     [
       "Steel.ST.Util.with_invariant_g",
@@ -82,7 +82,16 @@
       1,
       [ "@query" ],
       0,
-      "8c51d759632b2fd1fe11d55ce71d237a"
+      "72ab2fe781d6841b6429f58d68e2379c"
+    ],
+    [
+      "Steel.ST.Util.par",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "69b3948bfad6c1641832735d8988b808"
     ]
   ]
 ]

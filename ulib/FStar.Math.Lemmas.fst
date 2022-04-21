@@ -572,29 +572,6 @@ val division_addition_lemma: a:int -> b:pos -> n:int ->
   Lemma ( (a + n * b) / b = a / b + n )
 let division_addition_lemma a b n = division_definition (a + n * b) b (a / b + n)
 
-let lemma_div_le_ (a:int) (b:int) (d:pos) : Lemma
-  (requires (a <= b /\ a / d > b / d))
-  (ensures  (False))
-  = lemma_div_mod a d;
-    lemma_div_mod b d;
-    cut (d * (a / d) + a % d <= d * (b / d) + b % d);
-    cut (d * (a / d) - d * (b / d) <= b % d - a % d);
-    distributivity_sub_right d (a/d) (b/d);
-    cut (b % d < d /\ a % d < d);
-    cut (d * (a/d - b/d) <= d)
-
-val lemma_div_le: a:int -> b:int -> d:pos ->
-  Lemma (requires (a <= b))
-        (ensures  (a / d <= b / d))
-let lemma_div_le a b d =
-  if a / d > b / d then lemma_div_le_ a b d
-
-(* Lemma: Division distributivity under special condition *)
-val division_sub_lemma (a:int) (n:pos) (b:nat) : Lemma ((a - b * n) / n = a / n - b)
-let division_sub_lemma (a:int) (n:pos) (b:nat) =
-  neg_mul_left b n;
-  lemma_div_plus a (-b) n
-
 (* Lemma: Modulo distributivity *)
 val modulo_distributivity: a:int -> b:int -> c:pos -> Lemma ((a + b) % c == (a % c + b % c) % c)
 let modulo_distributivity a b c =
@@ -605,6 +582,30 @@ let modulo_distributivity a b c =
     == { lemma_mod_plus_distr_r (a % c) b c }
     ((a % c) + (b % c)) % c;
   }
+
+val lemma_div_le: a:int -> b:int -> d:pos ->
+  Lemma (requires (a <= b))
+        (ensures  (a / d <= b / d))
+let lemma_div_le a b d =
+  calc (==>) {
+    (a <= b) <: Type0;
+    ==> { lemma_div_mod a d; lemma_div_mod b d }
+    d * (a/d) + a%d <= d * (b/d) + b%d;
+    ==> {}
+    d * (a/d) - d * (b/d) <= b%d - a%d;
+    ==> {}
+    d * (a/d - b/d) <= b%d - a%d;
+    ==> { (* a%d >= 0, and b%d < d*) }
+    d * (a/d - b/d) < d;
+    ==> {}
+    a/d - b/d <= 0;
+  }
+
+(* Lemma: Division distributivity under special condition *)
+val division_sub_lemma (a:int) (n:pos) (b:nat) : Lemma ((a - b * n) / n = a / n - b)
+let division_sub_lemma (a:int) (n:pos) (b:nat) =
+  neg_mul_left b n;
+  lemma_div_plus a (-b) n
 
 val lemma_mod_plus_mul_distr: a:int -> b:int -> c:int -> p:pos -> Lemma
   (((a + b) * c) % p = ((((a % p) + (b % p)) % p) * (c % p)) % p)

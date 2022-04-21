@@ -272,7 +272,8 @@ let ml_mode_check_initial_interface :
               | FStar_Parser_AST.Val uu___ -> true
               | uu___ -> false))
 let (ulib_modules : Prims.string Prims.list) =
-  ["FStar.TSet";
+  ["FStar.Calc";
+  "FStar.TSet";
   "FStar.Seq.Base";
   "FStar.Seq.Properties";
   "FStar.UInt";
