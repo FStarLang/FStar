@@ -40,22 +40,22 @@ instance monad_functor #m (d:monad m) : functor m =
              return (f x))
 }
 
-let st (a:Type) = int -> a & int
+let st (s:Type) (a:Type) = s -> a & s
 
-instance st_monad : monad st =
+instance st_monad s : monad (st s) =
 {
    return = (fun #a (x:a) -> (fun s -> x, s));
-   bind   = (fun #a #b (f: st a) (g: a -> st b) (s0:int) ->
+   bind   = (fun #a #b (f: st s a) (g: a -> st s b) (s0:s) ->
                let x, s1 = f s0 in
                g x s1)
 }
 
-let get
-  : st int
+let get #s
+  : st s s
   = fun s -> s, s
 
-let put (x:int)
-  : st unit
+let put #s (x:s)
+  : st s unit
   = fun _ -> (), x
 
 let get_inc =

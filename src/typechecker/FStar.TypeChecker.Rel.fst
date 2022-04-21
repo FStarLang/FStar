@@ -2628,7 +2628,7 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
       then inapplicable "not enough args"
       else
         let i = n_args_rhs - n_args_lhs in
-        let prefix, suffix = List.splitAt i args_rhs in
+        let prefix, args_rhs = List.splitAt i args_rhs in
         let head = S.mk_Tm_app head prefix head.pos in
         let _, occurs_ok, _ = occurs_check ctx_uv head in
         if not occurs_ok
@@ -2664,7 +2664,8 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
                    p::probs, wl)
                 (typ_equality_sub_prob, wl)
                 args_lhs
-                args_rhs in
+                args_rhs
+          in
           let wl' = { wl  with defer_ok = NoDefer;
                                smt_ok = false;
                                attempting = sub_probs;

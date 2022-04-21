@@ -5861,7 +5861,7 @@ and (solve_t_flex_rigid_eq :
                                let uu___7 =
                                  FStar_Compiler_List.splitAt i args_rhs in
                                match uu___7 with
-                               | (prefix, suffix) ->
+                               | (prefix, args_rhs1) ->
                                    let head1 =
                                      FStar_Syntax_Syntax.mk_Tm_app head
                                        prefix head.FStar_Syntax_Syntax.pos in
@@ -6122,7 +6122,7 @@ and (solve_t_flex_rigid_eq :
                                                                     wl4)))
                                                            (typ_equality_sub_prob,
                                                              wl2) args_lhs
-                                                           args_rhs in
+                                                           args_rhs1 in
                                                        (match uu___17 with
                                                         | (sub_probs, wl3) ->
                                                             let wl' =
