@@ -223,23 +223,49 @@ let ml_mode_prefix_with_iface_decls
         (impl:decl)
    : list decl    //remaining iface decls
    * list decl =  //impl prefixed with relevant bits from iface
+
+
    match impl.d with
-   | TopLevelLet(_, defs) -> //if c
-     let xs = lids_of_let defs in
-     let val_xs, rest_iface =
-        List.partition
-            (fun d -> xs |> Util.for_some (fun x -> is_val (ident_of_lid x) d))
-            iface
-     in
-     rest_iface, val_xs@[impl]
-   | _ ->
+   | TopLevelModule _
+   | Open _
+   | Friend _
+   | Include _
+   | ModuleAbbrev _ ->
      iface, [impl]
+   | _ ->
+     let iface_prefix_tycons, iface =
+       List.span (fun d -> match d.d with | Tycon _ -> true | _ -> false) iface
+     in
+
+     let maybe_get_iface_vals lids iface =
+       List.partition
+         (fun d -> lids |> Util.for_some (fun x -> is_val (ident_of_lid x) d))
+         iface in
+
+     match impl.d with
+     | TopLevelLet _
+     | Tycon _ ->
+       let xs = definition_lids impl in
+       let val_xs, rest_iface = maybe_get_iface_vals xs iface in
+       rest_iface, iface_prefix_tycons@val_xs@[impl]
+     | _ ->
+       iface, iface_prefix_tycons@[impl]
 
 let ml_mode_check_initial_interface mname (iface:list decl) =
   iface |> List.filter (fun d ->
-  match d.d with
-  | Val _ -> true //only retain the vals in --MLish mode
-  | _ -> false)
+    match d.d with
+    | Tycon(_, _, tys)
+      when (tys |> Util.for_some (function (TyconAbstract _)  -> true | _ -> false)) ->
+      raise_error (Errors.Fatal_AbstractTypeDeclarationInInterface,
+                   "Interface contains an abstract 'type' declaration; \
+                    use 'val' instead") d.drange
+    | Tycon _
+    | Val _ -> true
+    | _ -> false)
+  // iface |> List.filter (fun d ->
+  // match d.d with
+  // | Val _ -> true //only retain the vals in --MLish mode
+  // | _ -> false)
 
 let ulib_modules = [
   "FStar.Calc";
