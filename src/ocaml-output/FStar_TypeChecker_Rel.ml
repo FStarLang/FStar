@@ -5376,6 +5376,37 @@ and (try_solve_then_or_else :
                   then_solve env wl1))
             | Failed (p, s) ->
                 (FStar_Syntax_Unionfind.rollback tx; else_solve env wl)
+and (try_solve_probs_without_smt :
+  FStar_TypeChecker_Env.env ->
+    worklist ->
+      (worklist -> (FStar_TypeChecker_Common.probs * worklist)) ->
+        (worklist, lstring) FStar_Pervasives.either)
+  =
+  fun env ->
+    fun wl ->
+      fun probs ->
+        let uu___ = probs wl in
+        match uu___ with
+        | (probs1, wl') ->
+            let wl'1 =
+              {
+                attempting = probs1;
+                wl_deferred = [];
+                wl_deferred_to_tac = (wl.wl_deferred_to_tac);
+                ctr = (wl.ctr);
+                defer_ok = NoDefer;
+                smt_ok = false;
+                umax_heuristic_ok = false;
+                tcenv = (wl.tcenv);
+                wl_implicits = [];
+                repr_subcomp_allowed = (wl.repr_subcomp_allowed)
+              } in
+            let uu___1 = solve env wl'1 in
+            (match uu___1 with
+             | Success (uu___2, defer_to_tac, imps) ->
+                 let wl1 = extend_wl wl [] defer_to_tac imps in
+                 FStar_Pervasives.Inl wl1
+             | Failed (uu___2, ls) -> FStar_Pervasives.Inr ls)
 and (solve_t : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
   fun env ->
     fun problem ->
@@ -5823,15 +5854,21 @@ and (solve_t_flex_rigid_eq :
                                FStar_TypeChecker_Common.Deferred_first_order_heuristic_failed
                                msg))) in
                 let try_first_order orig1 env1 wl1 lhs1 rhs1 =
-                  let inapplicable msg =
+                  let inapplicable msg lstring_opt =
                     (let uu___4 =
                        FStar_Compiler_Effect.op_Less_Bar
                          (FStar_TypeChecker_Env.debug env1)
                          (FStar_Options.Other "Rel") in
                      if uu___4
                      then
-                       FStar_Compiler_Util.print1
-                         "try_first_order failed because: %s\n" msg
+                       let extra_msg =
+                         match lstring_opt with
+                         | FStar_Pervasives_Native.None -> ""
+                         | FStar_Pervasives_Native.Some l ->
+                             FStar_Thunk.force l in
+                       FStar_Compiler_Util.print2
+                         "try_first_order failed because: %s\n%s\n" msg
+                         extra_msg
                      else ());
                     FStar_Pervasives.Inl "first_order doesn't apply" in
                   (let uu___4 =
@@ -5855,7 +5892,9 @@ and (solve_t_flex_rigid_eq :
                             let n_args_rhs =
                               FStar_Compiler_List.length args_rhs in
                             if n_args_lhs > n_args_rhs
-                            then inapplicable "not enough args"
+                            then
+                              inapplicable "not enough args"
+                                FStar_Pervasives_Native.None
                             else
                               (let i = n_args_rhs - n_args_lhs in
                                let uu___7 =
@@ -5871,6 +5910,7 @@ and (solve_t_flex_rigid_eq :
                                         if Prims.op_Negation occurs_ok
                                         then
                                           inapplicable "occurs check failed"
+                                            FStar_Pervasives_Native.None
                                         else
                                           (let uu___12 =
                                              let uu___13 =
@@ -5887,6 +5927,7 @@ and (solve_t_flex_rigid_eq :
                                            then
                                              inapplicable
                                                "free name inclusion failed"
+                                               FStar_Pervasives_Native.None
                                            else
                                              (let uu___14 =
                                                 env1.FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term
@@ -6039,70 +6080,28 @@ and (solve_t_flex_rigid_eq :
                                                   let tx =
                                                     FStar_Syntax_Unionfind.new_transaction
                                                       () in
-                                                  let uu___16 =
-                                                    let uu___17 =
-                                                      let uu___18 =
-                                                        FStar_Syntax_Util.eq_tm
-                                                          t_head
-                                                          ctx_uv.FStar_Syntax_Syntax.ctx_uvar_typ in
-                                                      uu___18 =
-                                                        FStar_Syntax_Util.Equal in
-                                                    if uu___17
-                                                    then ([], wl1)
-                                                    else
-                                                      ((let uu___20 =
-                                                          FStar_TypeChecker_Env.debug
-                                                            env1
-                                                            (FStar_Options.Other
-                                                               "Rel") in
-                                                        if uu___20
-                                                        then
-                                                          let uu___21 =
-                                                            FStar_Syntax_Print.term_to_string
-                                                              ctx_uv.FStar_Syntax_Syntax.ctx_uvar_typ in
-                                                          let uu___22 =
-                                                            FStar_Syntax_Print.term_to_string
-                                                              t_head in
-                                                          FStar_Compiler_Util.print2
-                                                            "first-order: head type mismatch:\n\tlhs=%s\n\trhs=%s\n"
-                                                            uu___21 uu___22
-                                                        else ());
-                                                       (let uu___20 =
-                                                          mk_t_problem wl1 []
-                                                            orig1
-                                                            ctx_uv.FStar_Syntax_Syntax.ctx_uvar_typ
-                                                            FStar_TypeChecker_Common.EQ
-                                                            t_head
-                                                            FStar_Pervasives_Native.None
-                                                            "first-order head type" in
-                                                        match uu___20 with
-                                                        | (p, wl2) ->
-                                                            ([p], wl2))) in
-                                                  (match uu___16 with
-                                                   | (typ_equality_sub_prob,
-                                                      wl2) ->
-                                                       let sol =
-                                                         [TERM
-                                                            (ctx_uv, head1)] in
-                                                       let uu___17 =
-                                                         FStar_Compiler_List.fold_left2
-                                                           (fun uu___18 ->
-                                                              fun uu___19 ->
-                                                                fun uu___20
-                                                                  ->
-                                                                  match 
-                                                                    (uu___18,
-                                                                    uu___19,
-                                                                    uu___20)
-                                                                  with
-                                                                  | ((probs,
-                                                                    wl3),
-                                                                    (arg_lhs,
-                                                                    uu___21),
-                                                                    (arg_rhs,
-                                                                    uu___22))
-                                                                    ->
-                                                                    let uu___23
+                                                  let solve_sub_probs_if_head_types_equal
+                                                    wl2 =
+                                                    let sol =
+                                                      [TERM (ctx_uv, head1)] in
+                                                    let uu___16 =
+                                                      FStar_Compiler_List.fold_left2
+                                                        (fun uu___17 ->
+                                                           fun uu___18 ->
+                                                             fun uu___19 ->
+                                                               match 
+                                                                 (uu___17,
+                                                                   uu___18,
+                                                                   uu___19)
+                                                               with
+                                                               | ((probs,
+                                                                   wl3),
+                                                                  (arg_lhs,
+                                                                   uu___20),
+                                                                  (arg_rhs,
+                                                                   uu___21))
+                                                                   ->
+                                                                   let uu___22
                                                                     =
                                                                     mk_t_problem
                                                                     wl3 []
@@ -6112,7 +6111,7 @@ and (solve_t_flex_rigid_eq :
                                                                     arg_rhs
                                                                     FStar_Pervasives_Native.None
                                                                     "first-order arg" in
-                                                                    (match uu___23
+                                                                   (match uu___22
                                                                     with
                                                                     | 
                                                                     (p, wl4)
@@ -6120,77 +6119,154 @@ and (solve_t_flex_rigid_eq :
                                                                     ((p ::
                                                                     probs),
                                                                     wl4)))
-                                                           (typ_equality_sub_prob,
-                                                             wl2) args_lhs
-                                                           args_rhs1 in
-                                                       (match uu___17 with
-                                                        | (sub_probs, wl3) ->
-                                                            let wl' =
-                                                              {
-                                                                attempting =
-                                                                  sub_probs;
-                                                                wl_deferred =
-                                                                  [];
-                                                                wl_deferred_to_tac
-                                                                  =
-                                                                  (wl3.wl_deferred_to_tac);
-                                                                ctr =
-                                                                  (wl3.ctr);
-                                                                defer_ok =
-                                                                  NoDefer;
-                                                                smt_ok =
-                                                                  false;
-                                                                umax_heuristic_ok
-                                                                  =
-                                                                  (wl3.umax_heuristic_ok);
-                                                                tcenv =
-                                                                  (wl3.tcenv);
-                                                                wl_implicits
-                                                                  = [];
-                                                                repr_subcomp_allowed
-                                                                  =
-                                                                  (wl3.repr_subcomp_allowed)
-                                                              } in
-                                                            let uu___18 =
-                                                              solve env1 wl' in
-                                                            (match uu___18
-                                                             with
-                                                             | Success
-                                                                 (uu___19,
-                                                                  defer_to_tac,
-                                                                  imps)
-                                                                 ->
-                                                                 let wl4 =
-                                                                   extend_wl
-                                                                    wl3 []
-                                                                    defer_to_tac
-                                                                    imps in
-                                                                 let wl5 =
-                                                                   solve_prob
-                                                                    orig1
-                                                                    FStar_Pervasives_Native.None
-                                                                    sol wl4 in
-                                                                 (FStar_Syntax_Unionfind.commit
-                                                                    tx;
-                                                                  FStar_Pervasives.Inr
-                                                                    wl5)
-                                                             | Failed
-                                                                 (uu___19,
-                                                                  lstring1)
-                                                                 ->
-                                                                 (FStar_Syntax_Unionfind.rollback
-                                                                    tx;
-                                                                  (let uu___21
+                                                        ([], wl2) args_lhs
+                                                        args_rhs1 in
+                                                    match uu___16 with
+                                                    | (sub_probs, wl3) ->
+                                                        let wl' =
+                                                          {
+                                                            attempting =
+                                                              sub_probs;
+                                                            wl_deferred = [];
+                                                            wl_deferred_to_tac
+                                                              =
+                                                              (wl3.wl_deferred_to_tac);
+                                                            ctr = (wl3.ctr);
+                                                            defer_ok =
+                                                              NoDefer;
+                                                            smt_ok = false;
+                                                            umax_heuristic_ok
+                                                              =
+                                                              (wl3.umax_heuristic_ok);
+                                                            tcenv =
+                                                              (wl3.tcenv);
+                                                            wl_implicits = [];
+                                                            repr_subcomp_allowed
+                                                              =
+                                                              (wl3.repr_subcomp_allowed)
+                                                          } in
+                                                        let uu___17 =
+                                                          solve env1 wl' in
+                                                        (match uu___17 with
+                                                         | Success
+                                                             (uu___18,
+                                                              defer_to_tac,
+                                                              imps)
+                                                             ->
+                                                             let wl4 =
+                                                               extend_wl wl3
+                                                                 []
+                                                                 defer_to_tac
+                                                                 imps in
+                                                             let wl5 =
+                                                               solve_prob
+                                                                 orig1
+                                                                 FStar_Pervasives_Native.None
+                                                                 sol wl4 in
+                                                             (FStar_Syntax_Unionfind.commit
+                                                                tx;
+                                                              FStar_Pervasives.Inr
+                                                                wl5)
+                                                         | Failed
+                                                             (uu___18,
+                                                              lstring1)
+                                                             ->
+                                                             (FStar_Syntax_Unionfind.rollback
+                                                                tx;
+                                                              inapplicable
+                                                                "Subprobs failed: "
+                                                                (FStar_Pervasives_Native.Some
+                                                                   lstring1))) in
+                                                  let uu___16 =
+                                                    let uu___17 =
+                                                      FStar_Syntax_Util.eq_tm
+                                                        t_head
+                                                        ctx_uv.FStar_Syntax_Syntax.ctx_uvar_typ in
+                                                    uu___17 =
+                                                      FStar_Syntax_Util.Equal in
+                                                  if uu___16
+                                                  then
+                                                    solve_sub_probs_if_head_types_equal
+                                                      wl1
+                                                  else
+                                                    (let uu___18 =
+                                                       FStar_Syntax_Util.maybe_equal_term
+                                                         t_head
+                                                         ctx_uv.FStar_Syntax_Syntax.ctx_uvar_typ in
+                                                     if uu___18
+                                                     then
+                                                       ((let uu___20 =
+                                                           FStar_TypeChecker_Env.debug
+                                                             env1
+                                                             (FStar_Options.Other
+                                                                "Rel") in
+                                                         if uu___20
+                                                         then
+                                                           let uu___21 =
+                                                             FStar_Syntax_Print.term_to_string
+                                                               ctx_uv.FStar_Syntax_Syntax.ctx_uvar_typ in
+                                                           let uu___22 =
+                                                             FStar_Syntax_Print.term_to_string
+                                                               t_head in
+                                                           FStar_Compiler_Util.print2
+                                                             "first-order: head type mismatch:\n\tlhs=%s\n\trhs=%s\n"
+                                                             uu___21 uu___22
+                                                         else ());
+                                                        (let typ_equality_prob
+                                                           wl2 =
+                                                           let uu___20 =
+                                                             mk_t_problem wl2
+                                                               [] orig1
+                                                               ctx_uv.FStar_Syntax_Syntax.ctx_uvar_typ
+                                                               FStar_TypeChecker_Common.EQ
+                                                               t_head
+                                                               FStar_Pervasives_Native.None
+                                                               "first-order head type" in
+                                                           match uu___20 with
+                                                           | (p, wl3) ->
+                                                               ([p], wl3) in
+                                                         let uu___20 =
+                                                           try_solve_probs_without_smt
+                                                             env1 wl1
+                                                             typ_equality_prob in
+                                                         match uu___20 with
+                                                         | FStar_Pervasives.Inl
+                                                             wl2 ->
+                                                             solve_sub_probs_if_head_types_equal
+                                                               wl2
+                                                         | FStar_Pervasives.Inr
+                                                             msg ->
+                                                             (FStar_Syntax_Unionfind.rollback
+                                                                tx;
+                                                              inapplicable
+                                                                "first-order: head type mismatch"
+                                                                (FStar_Pervasives_Native.Some
+                                                                   msg))))
+                                                     else
+                                                       (FStar_Syntax_Unionfind.rollback
+                                                          tx;
+                                                        (let uu___21 =
+                                                           let uu___22 =
+                                                             FStar_Thunk.mk
+                                                               (fun uu___23
+                                                                  ->
+                                                                  let uu___24
                                                                     =
-                                                                    let uu___22
+                                                                    FStar_Syntax_Print.term_to_string
+                                                                    ctx_uv.FStar_Syntax_Syntax.ctx_uvar_typ in
+                                                                  let uu___25
                                                                     =
-                                                                    FStar_Thunk.force
-                                                                    lstring1 in
-                                                                    Prims.op_Hat
-                                                                    "Subprobs failed: "
-                                                                    uu___22 in
-                                                                   inapplicable
-                                                                    uu___21))))))))))) in
+                                                                    FStar_Syntax_Print.term_to_string
+                                                                    t_head in
+                                                                  FStar_Compiler_Util.format2
+                                                                    "first-order: head type mismatch:\n\tlhs=%s\n\trhs=%s\n"
+                                                                    uu___24
+                                                                    uu___25) in
+                                                           FStar_Pervasives_Native.Some
+                                                             uu___22 in
+                                                         inapplicable
+                                                           "first-order: head type mismatch"
+                                                           uu___21))))))))) in
                 match p_rel orig with
                 | FStar_TypeChecker_Common.SUB ->
                     if wl.defer_ok = DeferAny

@@ -2312,6 +2312,26 @@ and try_solve_then_or_else
       UF.rollback tx;
       else_solve env wl
 
+and try_solve_probs_without_smt
+      (env:Env.env)
+      (wl:worklist)
+      (probs:worklist -> (probs & worklist))
+  : either worklist lstring
+  = let probs, wl' = probs wl in
+    let wl' = {wl with defer_ok=NoDefer;
+                       smt_ok=false;
+                       umax_heuristic_ok=false;
+                       attempting=probs;
+                       wl_deferred=[];
+                       wl_implicits=[]} in
+    match solve env wl' with
+    | Success (_, defer_to_tac, imps) ->
+      let wl = extend_wl wl [] defer_to_tac imps in
+      Inl wl
+
+    | Failed (_, ls) -> 
+      Inr ls
+      
 and solve_t (env:Env.env) (problem:tprob) (wl:worklist) : solution =
     def_check_prob "solve_t" (TProb problem);
     solve_t' env (compress_tprob wl.tcenv problem) wl
@@ -2611,9 +2631,16 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
           and generate (e1 =?= v1, ..., em =?= vm)
      *)
     let try_first_order orig env wl lhs rhs =
-      let inapplicable msg =
+      let inapplicable msg lstring_opt =
          if Env.debug env <| Options.Other "Rel"
-         then BU.print1 "try_first_order failed because: %s\n" msg;
+         then  (
+           let extra_msg = 
+             match lstring_opt with
+             | None -> ""
+             | Some l -> Thunk.force l
+           in
+           BU.print2 "try_first_order failed because: %s\n%s\n" msg extra_msg
+         );
         Inl "first_order doesn't apply"
       in
       if Env.debug env <| Options.Other "Rel" then
@@ -2625,17 +2652,17 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
       let head, args_rhs = U.head_and_args rhs in
       let n_args_rhs = List.length args_rhs in
       if n_args_lhs > n_args_rhs
-      then inapplicable "not enough args"
+      then inapplicable "not enough args" None
       else
         let i = n_args_rhs - n_args_lhs in
         let prefix, args_rhs = List.splitAt i args_rhs in
         let head = S.mk_Tm_app head prefix head.pos in
         let _, occurs_ok, _ = occurs_check ctx_uv head in
         if not occurs_ok
-        then inapplicable "occurs check failed"
+        then inapplicable "occurs check failed" None
         else if not (BU.set_is_subset_of (Free.names head)
                                          (binders_as_bv_set ctx_uv.ctx_uvar_binders))
-        then inapplicable "free name inclusion failed"
+        then inapplicable "free name inclusion failed" None
         else (
           let t_head, _ =
              env.typeof_well_typed_tot_or_gtot_term
@@ -2644,42 +2671,59 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
                   false
           in
           let tx = UF.new_transaction () in
-          let typ_equality_sub_prob, wl =
-            if U.eq_tm t_head ctx_uv.ctx_uvar_typ = U.Equal
-            then [],wl
-            else (
+          let solve_sub_probs_if_head_types_equal wl = 
+              let sol = [TERM(ctx_uv, head)] in
+              let sub_probs, wl =
+                List.fold_left2
+                  (fun (probs, wl) (arg_lhs, _) (arg_rhs, _) ->
+                    let p, wl = mk_t_problem wl [] orig arg_lhs EQ arg_rhs None "first-order arg" in
+                    p::probs, wl)
+                  ([], wl)
+                  args_lhs
+                  args_rhs
+              in
+              let wl' = { wl  with defer_ok = NoDefer;
+                                   smt_ok = false;
+                                   attempting = sub_probs;
+                                   wl_deferred = [];
+                                   wl_implicits = [] } in
+              match solve env wl' with
+              | Success (_, defer_to_tac, imps) ->
+                let wl = extend_wl wl [] defer_to_tac imps in
+                let wl = solve_prob orig None sol wl in
+                UF.commit tx;
+                Inr wl
+              | Failed (_, lstring) ->
+                UF.rollback tx;
+                inapplicable "Subprobs failed: " (Some lstring)
+          in
+          if U.eq_tm t_head ctx_uv.ctx_uvar_typ = U.Equal
+          then solve_sub_probs_if_head_types_equal wl
+          else if U.maybe_equal_term t_head ctx_uv.ctx_uvar_typ 
+          then (
               if Env.debug env (Options.Other "Rel")
               then BU.print2  "first-order: head type mismatch:\n\tlhs=%s\n\trhs=%s\n"
                                               (Print.term_to_string ctx_uv.ctx_uvar_typ)
                                               (Print.term_to_string t_head);
-              let p, wl = mk_t_problem wl [] orig ctx_uv.ctx_uvar_typ EQ t_head None "first-order head type" in
-              [p], wl
-            )
-          in
-          let sol = [TERM(ctx_uv, head)] in
-          let sub_probs, wl =
-              List.fold_left2
-                (fun (probs, wl) (arg_lhs, _) (arg_rhs, _) ->
-                   let p, wl = mk_t_problem wl [] orig arg_lhs EQ arg_rhs None "first-order arg" in
-                   p::probs, wl)
-                (typ_equality_sub_prob, wl)
-                args_lhs
-                args_rhs
-          in
-          let wl' = { wl  with defer_ok = NoDefer;
-                               smt_ok = false;
-                               attempting = sub_probs;
-                               wl_deferred = [];
-                               wl_implicits = [] } in
-          match solve env wl' with
-          | Success (_, defer_to_tac, imps) ->
-            let wl = extend_wl wl [] defer_to_tac imps in
-            let wl = solve_prob orig None sol wl in
-            UF.commit tx;
-            Inr wl
-          | Failed (_, lstring) ->
-            UF.rollback tx;
-            inapplicable ("Subprobs failed: " ^Thunk.force lstring)
+              let typ_equality_prob wl =                                 
+                let p, wl = mk_t_problem wl [] orig ctx_uv.ctx_uvar_typ EQ t_head None "first-order head type" in
+                [p], wl
+              in
+              match try_solve_probs_without_smt env wl typ_equality_prob with
+              | Inl wl ->
+                solve_sub_probs_if_head_types_equal wl
+              | Inr msg ->
+                UF.rollback tx;
+                inapplicable "first-order: head type mismatch" (Some msg)
+          )
+          else (
+             UF.rollback tx;
+             inapplicable "first-order: head type mismatch" 
+                          (Some (Thunk.mk (fun _ ->
+                             BU.format2 "first-order: head type mismatch:\n\tlhs=%s\n\trhs=%s\n"
+                                              (Print.term_to_string ctx_uv.ctx_uvar_typ)
+                                              (Print.term_to_string t_head))))
+          )
       )
     in
     match p_rel orig with

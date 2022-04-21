@@ -41,13 +41,13 @@ instance st_graded (s:Type) : graded_monad (st s) =
 let get #s : st s monoid_nat_plus 0 s = fun s -> s, s
 let put #s (x:s) : st s monoid_nat_plus 1 unit = fun _ -> (), x
 
-// infers: st s monoid_nat_plus (op 0 1)
-let test #s = 
-  x <-- get #s ;
-  put x
+// #push-options "--debug GradedMonad --debug_level Rel --print_implicits --print_universes"
+// let test #s =
+//   x <-- get #s ;
+//   put x
 
-//SMT kicks in to simplify this to 2
-let test2 #s : st s monoid_nat_plus 2 unit =
-  x <-- get #s;
-  put x;;
-  put x
+// //SMT kicks in to simplify this to 2
+// let test2 #s : st s monoid_nat_plus 2 unit =
+//   x <-- get #s;
+//   put x;;
+//   put x
