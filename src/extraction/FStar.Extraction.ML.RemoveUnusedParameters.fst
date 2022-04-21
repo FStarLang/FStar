@@ -164,8 +164,6 @@ and elim_branch env (pat, wopt, e) =
 and elim_mlexpr (env:env_t) (e:mlexpr) =
   { e with expr = elim_mlexpr' env e.expr; mlty = elim_mlty env e.mlty }
 
-type tydef = mlsymbol * metadata * either mltyscheme int
-
 exception Drop_tydef
 
 (** This is a key helper function:

@@ -33,21 +33,6 @@ module List = FStar.Compiler.List
 let debug_embedding = mk_ref false
 let eager_embedding = mk_ref false
 
-type debug_level_t =
-  | Low
-  | Medium
-  | High
-  | Extreme
-  | Other of string
-
-type option_val =
-  | Bool of bool
-  | String of string
-  | Path of string
-  | Int of int
-  | List of list option_val
-  | Unset
-
 (* A FLAG TO INDICATE THAT WE'RE RUNNING UNIT TESTS *)
 let __unit_tests__ = Util.mk_ref false
 let __unit_tests() = !__unit_tests__
@@ -76,7 +61,6 @@ let as_comma_string_list = function
   | List ls -> List.flatten <| List.map (fun l -> split (as_string l) ",") ls
   | _ -> failwith "Impos: expected String (comma list)"
 
-type optionstate = Util.smap option_val
 let copy_optionstate m = Util.smap_copy m
 
 (* The option state is a stack of stacks. Why? First, we need to
@@ -534,30 +518,6 @@ let add_extract_namespace s =
 
 let add_verify_module s =
     accumulate_string "verify_module" String.lowercase s
-
-type opt_type =
-| Const of option_val
-  // --cache_checked_modules
-| IntStr of string (* label *)
-  // --z3rlimit 5
-| BoolStr
-  // --admit_smt_queries true
-| PathStr of string (* label *)
-  // --fstar_home /build/fstar
-| SimpleStr of string (* label *)
-  // --admit_except xyz
-| EnumStr of list string
-  // --codegen OCaml
-| OpenEnumStr of list string (* suggested values (not exhaustive) *) * string (* label *)
-  // --debug_level …
-| PostProcessed of ((option_val -> option_val) (* validator *) * opt_type (* elem spec *))
-  // For options like --extract_module that require post-processing or validation
-| Accumulated of opt_type (* elem spec *)
-  // For options like --extract_module that can be repeated (LIFO)
-| ReverseAccumulated of opt_type (* elem spec *)
-  // For options like --include that can be repeated (FIFO)
-| WithSideEffect of ((unit -> unit) * opt_type (* elem spec *))
-  // For options like --version that have side effects
 
 exception InvalidArgument of string // option name
 
@@ -1673,7 +1633,6 @@ let cache_checked_modules        () = get_cache_checked_modules       ()
 let cache_off                    () = get_cache_off                   ()
 let print_cache_version          () = get_print_cache_version         ()
 let cmi                          () = get_cmi                         ()
-type codegen_t = | OCaml | FSharp | Krml | Plugin
 
 let parse_codegen =
   function

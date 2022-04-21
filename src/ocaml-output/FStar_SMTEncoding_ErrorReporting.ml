@@ -1,4 +1,6 @@
 open Prims
+type label = FStar_SMTEncoding_Term.error_label
+type labels = label Prims.list
 exception Not_a_wp_implication of Prims.string 
 let (uu___is_Not_a_wp_implication : Prims.exn -> Prims.bool) =
   fun projectee ->
@@ -7,8 +9,6 @@ let (uu___is_Not_a_wp_implication : Prims.exn -> Prims.bool) =
     | uu___ -> false
 let (__proj__Not_a_wp_implication__item__uu___ : Prims.exn -> Prims.string) =
   fun projectee -> match projectee with | Not_a_wp_implication uu___ -> uu___
-type label = FStar_SMTEncoding_Term.error_label
-type labels = FStar_SMTEncoding_Term.error_labels
 let (sort_labels :
   (FStar_SMTEncoding_Term.error_label * Prims.bool) Prims.list ->
     ((FStar_SMTEncoding_Term.fv * Prims.string * FStar_Compiler_Range.range)

@@ -42,16 +42,6 @@ module Dep     = FStar.Parser.Dep
  *)
 let cache_version_number = 42
 
-type tc_result = {
-  checked_module: Syntax.modul; //persisted
-  mii:module_inclusion_info; //persisted
-  smt_decls:(FStar.SMTEncoding.Term.decls_t *  //list of smt decls and fvbs for the module
-             list FStar.SMTEncoding.Env.fvar_binding); //persisted
-
-  tc_time:int;
-  extraction_time:int
-}
-
 (*
  * Abbreviation for what we store in the checked files (stages as described below)
  *)

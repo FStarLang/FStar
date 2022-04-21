@@ -1,11 +1,11 @@
 open Prims
-let (rangeof : FStar_Tactics_Types.goal -> FStar_Compiler_Range.range) =
-  fun g ->
-    (g.FStar_Tactics_Types.goal_ctx_uvar).FStar_Syntax_Syntax.ctx_uvar_range
 type controller_ty =
   FStar_Syntax_Syntax.term ->
     (Prims.bool * FStar_Tactics_Types.ctrl_flag) FStar_Tactics_Monad.tac
 type rewriter_ty = unit FStar_Tactics_Monad.tac
+let (rangeof : FStar_Tactics_Types.goal -> FStar_Compiler_Range.range) =
+  fun g ->
+    (g.FStar_Tactics_Types.goal_ctx_uvar).FStar_Syntax_Syntax.ctx_uvar_range
 let (__do_rewrite :
   FStar_Tactics_Types.goal ->
     rewriter_ty ->
