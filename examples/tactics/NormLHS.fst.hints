@@ -7,12 +7,11 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "eq2-interp", "equation_Prims.eq2",
-        "equation_Prims.squash",
-        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_0dee8cb03258a67c2f7ec66427696212"
       ],
       0,
-      "c1238dce6ae14ecef9c3760d0ad85c00"
+      "8064c0a368fce52601a6e585884f2294"
     ]
   ]
 ]

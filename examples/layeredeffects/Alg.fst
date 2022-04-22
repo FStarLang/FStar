@@ -218,6 +218,18 @@ let another_raise #a (e:exn) : Alg a [Raise] =
   // good, just surprising.
   Alg?.reflect (Op Raise e Return)
 
+let rec listmap #a #b #labs
+  (f : a -> Alg b labs) (l : list a) : Alg (list b) labs =
+  match l with
+  | [] -> []
+  | x::xs -> f x :: listmap #_ #_ #labs f xs
+
+let rec listmap_read #a #b #labs
+  (f : a -> Alg b labs) (l : list a) : Alg (list b) (Read::labs) =
+  match l with
+  | [] -> let x = get () in []
+  | x::xs -> let _ = get () in f x :: listmap_read #_ #_ #labs f xs
+
 (* Running pure trees *)
 let frompure #a (t : tree a []) : a = match t with | Return x -> x
 

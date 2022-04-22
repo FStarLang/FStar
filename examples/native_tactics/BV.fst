@@ -104,10 +104,16 @@ val trans_lt: #n:pos -> (#x:bv_t n) -> (#y:bv_t n) -> (#z:bv_t n) -> (#w:bv_t n)
           Lemma (bvult #n x y)
 let trans_lt #n #x #y #z #w pf1 pf2 pf3 = ()
 
-val trans_lt2: #n:pos -> (#x:uint_t n) -> (#y:uint_t n) -> (#z:bv_t n) -> (#w:bv_t n) ->
-          squash (int2bv #n x == z) -> squash (int2bv #n y == w) -> (b2t (bvult #n z w)) ->
-          Lemma (x < y)
-let trans_lt2 #n #x #y #z #w pf1 pf2 pf3 = int2bv_lemma_ult_2 x y
+let trans_lt2 (n:pos)
+              (x:uint_t n)
+              (y:uint_t n)
+              (z:bv_t n)
+              (w:bv_t n)
+              (pf1:squash (int2bv #n x == z))
+              (pf2:squash (int2bv #n y == w))
+              (pf3:(b2t (bvult #n z w)))
+   : Lemma (x < y)
+   = int2bv_lemma_ult_2 x y
 
 let rec arith_expr_to_bv (e:expr) : Tac unit =
     match e with
@@ -193,7 +199,7 @@ let bv_tac ()  =
 let bv_tac_lt n =
   // apply_lemma (fun () -> `(lt_to_bv #n));
   // dump "after lt_to_bv";
-  apply_lemma (quote (trans_lt2 #n));
+  apply_lemma (`trans_lt2);
   arith_to_bv_tac ();
   arith_to_bv_tac ();
   set_options "--smtencoding.elim_box true";

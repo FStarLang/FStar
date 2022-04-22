@@ -2,20 +2,6 @@
   "c^é_ÆÖÅ³¸d—’-é<",
   [
     [
-      "Monad.__proj__Mkmonad__item__laws",
-      1,
-      2,
-      1,
-      [
-        "@query", "proj_equation_Monad.Mkmonad_bind",
-        "proj_equation_Monad.Mkmonad_return",
-        "projection_inverse_Monad.Mkmonad_bind",
-        "projection_inverse_Monad.Mkmonad_return"
-      ],
-      0,
-      "2c6466887805861ad7b3cc9341b09726"
-    ],
-    [
       "Monad.g",
       1,
       2,
@@ -31,7 +17,7 @@
         "token_correspondence_Monad.return"
       ],
       0,
-      "a81cdd04be011f22ee4efedb6580b57c"
+      "9599dc0f6c8607327be273da7c2ecfee"
     ],
     [
       "Monad.g'",
@@ -49,7 +35,7 @@
         "token_correspondence_Monad.return"
       ],
       0,
-      "5de55762dae75ab5bb85a0ed30ac1300"
+      "462797f321fc40900106a4c7b9ab5793"
     ]
   ]
 ]

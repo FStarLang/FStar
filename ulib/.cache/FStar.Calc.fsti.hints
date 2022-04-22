@@ -1,0 +1,21 @@
+[
+  "γο2B/Ze\u0005τ£\r₯Ά Έ\u0004",
+  [
+    [
+      "FStar.Calc.calc_chain_related",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_df47a5e1036c31f5a72fe09ed5f79d16_2",
+        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "equation_FStar.Preorder.relation",
+        "fuel_guarded_inversion_Prims.list",
+        "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
+      ],
+      0,
+      "65446d3e5d6e551b1bcac1a3a539ad7e"
+    ]
+  ]
+]

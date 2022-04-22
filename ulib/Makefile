@@ -46,6 +46,10 @@ fstartaclib.mgen: fstarlib.mgen
 	cp $(FSTARLIB_LEFTOVERS) tactics_ml/fstarlib_leftovers
 	touch fstartaclib.mgen
 
+ulib-in-fsharp:
+	+$(MAKE) -f Makefile.extract.fsharp all-fs
+	+$(MAKE) -C fs/VS
+
 ######################################################
 # OCaml extraction of fstarlib and fstar-tactics-lib #
 ######################################################
@@ -61,7 +65,7 @@ endif
 OCAMLPATH:=$(FSTAR_BIN)$(OCAMLPATH_SEP)$(OCAMLPATH)
 
 FSTAR_OCAMLBUILD_EXTRAS ?= -cflag -g
-OCAMLBUILD=cd ../ && OCAMLPATH="$(OCAMLPATH)" ocamlbuild $(FSTAR_OCAMLBUILD_EXTRAS) -use-ocamlfind
+OCAMLBUILD=cd ../ && OCAMLPATH="$(OCAMLPATH)" OCAMLFIND_IGNORE_DUPS_IN="`ocamlc -where`/compiler-libs" ocamlbuild $(FSTAR_OCAMLBUILD_EXTRAS) -use-ocamlfind
 
 # relative to ulib
 DIRS_WITH_FSTARLIB_ML_FILES = ml experimental/ml ml/extracted

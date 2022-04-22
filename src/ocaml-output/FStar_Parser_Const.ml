@@ -288,6 +288,9 @@ let (strict_on_arguments_attr : FStar_Ident.lident) =
   p2l ["FStar"; "Pervasives"; "strict_on_arguments"]
 let (resolve_implicits_attr_string : Prims.string) =
   "FStar.Pervasives.resolve_implicits"
+let (handle_smt_goals_attr : FStar_Ident.lident) = psconst "handle_smt_goals"
+let (handle_smt_goals_attr_string : Prims.string) =
+  "FStar.Pervasives.handle_smt_goals"
 let (erasable_attr : FStar_Ident.lident) =
   p2l ["FStar"; "Pervasives"; "erasable"]
 let (comment_attr : FStar_Ident.lident) =
@@ -296,8 +299,6 @@ let (fail_attr : FStar_Ident.lident) = psconst "expect_failure"
 let (fail_lax_attr : FStar_Ident.lident) = psconst "expect_lax_failure"
 let (tcdecltime_attr : FStar_Ident.lident) = psconst "tcdecltime"
 let (noextract_to_attr : FStar_Ident.lident) = psconst "noextract_to"
-let (assume_strictly_positive_attr_lid : FStar_Ident.lident) =
-  psconst "assume_strictly_positive"
 let (unifier_hint_injective_lid : FStar_Ident.lident) =
   psconst "unifier_hint_injective"
 let (normalize_for_extraction_lid : FStar_Ident.lident) =
@@ -320,6 +321,8 @@ let (remove_unused_type_parameters_lid : FStar_Ident.lident) =
 let (ite_soundness_by_attr : FStar_Ident.lident) = psconst "ite_soundness_by"
 let (binder_strictly_positive_attr : FStar_Ident.lident) =
   psconst "strictly_positive"
+let (no_auto_projectors_attr : FStar_Ident.lident) =
+  psconst "no_auto_projectors"
 let (well_founded_relation_lid : FStar_Ident.lident) =
   p2l ["FStar"; "WellFounded"; "well_founded_relation"]
 let (gen_reset : ((unit -> Prims.int) * (unit -> unit))) =
@@ -369,6 +372,8 @@ let (mk_tuple_lid :
       let uu___ = psnconst t in FStar_Ident.set_lid_range uu___ r
 let (lid_tuple2 : FStar_Ident.lident) =
   mk_tuple_lid (Prims.of_int (2)) FStar_Compiler_Range.dummyRange
+let (lid_tuple3 : FStar_Ident.lident) =
+  mk_tuple_lid (Prims.of_int (3)) FStar_Compiler_Range.dummyRange
 let (is_tuple_constructor_string : Prims.string -> Prims.bool) =
   fun s -> FStar_Compiler_Util.starts_with s "FStar.Pervasives.Native.tuple"
 let (is_tuple_constructor_id : FStar_Ident.ident -> Prims.bool) =
@@ -389,6 +394,8 @@ let (mk_tuple_data_lid :
       let uu___ = psnconst t in FStar_Ident.set_lid_range uu___ r
 let (lid_Mktuple2 : FStar_Ident.lident) =
   mk_tuple_data_lid (Prims.of_int (2)) FStar_Compiler_Range.dummyRange
+let (lid_Mktuple3 : FStar_Ident.lident) =
+  mk_tuple_data_lid (Prims.of_int (3)) FStar_Compiler_Range.dummyRange
 let (is_tuple_datacon_string : Prims.string -> Prims.bool) =
   fun s ->
     FStar_Compiler_Util.starts_with s "FStar.Pervasives.Native.Mktuple"

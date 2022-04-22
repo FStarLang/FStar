@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "324c77988fe780300503072f6acd0a76"
+      "de31d8d58af6303d503cdb4317c21800"
     ],
     [
       "Evens.__proj__US__item___0",
@@ -21,7 +21,7 @@
         "refinement_interpretation_Tm_refine_7094be438dbc16658c0caec70fa7452e"
       ],
       0,
-      "30a9aac2801e59728d334d20fc9e1d48"
+      "3a2c84d3176f6b3f3c8908d748a45eea"
     ],
     [
       "Evens.even",
@@ -30,7 +30,7 @@
       1,
       [ "@query", "assumption_Evens.unary_nat__uu___haseq" ],
       0,
-      "bc2671fc1829e1f998add56129bbf61a"
+      "9b44192b28c9fba8233edaf522617897"
     ],
     [
       "Evens.__proj__Even_SSn__item__n",
@@ -43,7 +43,7 @@
         "refinement_interpretation_Tm_refine_6b35b246e3f3e217f09d76d285c6fcd3"
       ],
       0,
-      "f91999b635534e29ce60e502fedf0db0"
+      "4fa7d4434e820695f5f8f9b4a762365b"
     ],
     [
       "Evens.__proj__Even_SSn__item___1",
@@ -51,14 +51,11 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "disc_equation_Evens.Even_SSn",
-        "proj_equation_Evens.Even_SSn_n",
-        "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_Evens.Even_SSn_n",
+        "@MaxIFuel_assumption", "@query", "data_elim_Evens.Even_SSn",
         "refinement_interpretation_Tm_refine_6b35b246e3f3e217f09d76d285c6fcd3"
       ],
       0,
-      "d641a4e999ddbca88e3fe761f1022e69"
+      "95022bfabb585882d5a3c2909574cbec"
     ],
     [
       "Evens.nat2unary",
@@ -74,7 +71,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "cb688cfdcaf50fec798f01318f88d5e1"
+      "1b43c8b00407aa0c0993f2e2037f3a5a"
     ],
     [
       "Evens.even0",
@@ -86,7 +83,7 @@
         "equality_tok_Evens.U0@tok", "typing_tok_Evens.Even0@tok"
       ],
       0,
-      "077aaa0e3ebe6d127324932250810a62"
+      "2dd791367679754a7066300d9088b633"
     ],
     [
       "Evens.evenSSn",
@@ -95,7 +92,7 @@
       1,
       [ "@query", "true_interp" ],
       0,
-      "0aeb17f7538bc97daf142f4393170d78"
+      "195b8a4e313b43a0362643846ea4928b"
     ]
   ]
 ]

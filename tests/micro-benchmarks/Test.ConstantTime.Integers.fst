@@ -83,7 +83,7 @@ type ('Asl,'Al) l_uint32 =
 //    the monomorphic `ex1`,
 //    except we have additional unit arguments for the erased
 //    lattice and lattice element.
-//    Kremlin should be able to remove these redundant arguments, though.
+//    Karamel should be able to remove these redundant arguments, though.
 let (ex_poly :
   unit ->
     unit ->

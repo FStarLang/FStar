@@ -59,25 +59,23 @@ cd fstar
 # obtained binary). FSTAR_HOME is the latter. Most examples will
 # anyway redefine and overwrite FSTAR_HOME according to their location
 # within the package, *except* one: stringprinter in examples/tactics,
-# which needs KreMLin, which needs some FSTAR_HOME defined. So we have
+# which needs KaRaMeL, which needs some FSTAR_HOME defined. So we have
 # to export it from here.
 export FSTAR_HOME="$PWD"
+
+# Copy tests and examples to the tmp directory, since they are no
+# longer included in the package. We copy them elsewhere since we
+# don't want to rely on relative paths in their Makefiles.
+rm -rf /tmp/fstar_examples /tmp/fstar_doc
+cp -r $FSTAR_HOST_HOME/examples /tmp/fstar_examples
+cp -r $FSTAR_HOST_HOME/doc /tmp/fstar_doc
 
 diag "-- Versions --"
 bin/fstar.exe --version
 bin/z3 --version
 
-diag "-- Verify micro benchmarks --"
-make -C tests/micro-benchmarks
-if [ $? -ne 0 ]; then
-  echo -e "* ${RED}FAIL!${NC} for micro benchmarks - make returned $?"
-  exit 1
-else
-  echo -e "* ${GREEN}PASSED!${NC} for micro benchmarks"
-fi
-
 diag "-- Execute examples/hello via OCaml -- should output Hello F*! --"
-make -C examples/hello hello | tee HelloOcamlOutput.log
+make -C /tmp/fstar_examples/hello hello | tee HelloOcamlOutput.log
 if [ $? -ne 0 ]; then
   echo -e "* ${RED}FAIL!${NC} for examples/hello - make failed withexit code $?"
   exit 1
@@ -98,13 +96,16 @@ else
 fi
 
 diag "-- Verify all examples --"
-make -j6 -C examples
+make -j6 -C /tmp/fstar_examples
 if [ $? -ne 0 ]; then
   echo -e "* ${RED}FAIL!${NC} for all examples - make returned $?"
   exit 1
 else
   echo -e "* ${GREEN}PASSED!${NC} for all examples"
 fi
+
+# Cleanup
+rm -rf /tmp/fstar_examples /tmp/fstar_doc
 
 # From this point on, we should no longer need FSTAR_HOME.
 export FSTAR_HOME=

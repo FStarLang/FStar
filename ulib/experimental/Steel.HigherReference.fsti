@@ -30,7 +30,7 @@ module Mem = Steel.Memory
 /// Steel.PCMReference, by instantiating a specific fractional permission PCM
 
 /// An abstract datatype for references
-val ref (a:Type u#1) : Type u#0
+val ref ([@@@strictly_positive] a:Type u#1) : Type u#0
 
 /// The null pointer
 val null (#a:Type u#1) : ref a
@@ -99,6 +99,18 @@ val read (#a:Type) (#p:perm) (#v:erased a) (r:ref a)
            (requires fun h -> True)
            (ensures fun _ x _ -> x == Ghost.reveal v)
 
+/// Atomic read
+///
+/// -- This is a little too powerful. We should only allow it on [t]'s
+///    that are small enough. E.g., word-sized
+val atomic_read (#opened:_) (#a:Type) (#p:perm) (#v:erased a)
+  (r:ref a)
+  : SteelAtomic a opened
+      (pts_to r p v)
+      (fun x -> pts_to r p x)
+      (requires fun h -> True)
+      (ensures fun _ x _ -> x == Ghost.reveal v)
+
 /// A variant of read, useful when an existentially quantified predicate
 /// depends on the value stored in the reference
 val read_refine (#a:Type) (#p:perm) (q:a -> vprop) (r:ref a)
@@ -108,6 +120,13 @@ val read_refine (#a:Type) (#p:perm) (q:a -> vprop) (r:ref a)
 /// Writes value [x] in the reference [r], as long as we have full ownership of [r]
 val write (#a:Type) (#v:erased a) (r:ref a) (x:a)
   : SteelT unit (pts_to r full_perm v) (fun _ -> pts_to r full_perm x)
+
+/// Atomic write, also requires full ownership of [r]
+///
+/// -- This is a little too powerful. We should only allow it on [t]'s
+///    that are small enough. E.g., word-sized
+val atomic_write (#opened:_) (#a:Type) (#v:erased a) (r:ref a) (x:a)
+  : SteelAtomicT unit opened (pts_to r full_perm v) (fun _ -> pts_to r full_perm x)
 
 /// Frees reference [r], as long as we have full ownership of [r]
 val free (#a:Type) (#v:erased a) (r:ref a)

@@ -11,10 +11,6 @@ type action_class = {
 }
 
 
-// A F* elaborator bug prevents typechecking the auto-generated projector 
-// for DoThen?.continue. This options disables the feature. 
-// A fix for this long-standing issue is discussed in issue #1355
-#push-options "--__temp_no_proj Part2.FreeFunExt"
 noeq
 type tree (acts:action_class) (a:Type) =
   | Return : x:a -> tree acts a
@@ -24,7 +20,6 @@ type tree (acts:action_class) (a:Type) =
              //that what `^->` does. Its defined in FStar.FunctionalExtensionality
              continue:(acts.output_of act ^-> tree acts a) ->
              tree acts a
-#pop-options
 
 let return #a #acts (x:a)
   : tree acts a

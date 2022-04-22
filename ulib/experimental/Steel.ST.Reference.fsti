@@ -18,6 +18,8 @@ module Steel.ST.Reference
 open FStar.Ghost
 open Steel.ST.Util
 
+module U32 = FStar.UInt32
+
 (** This module provides a reference whose ownership is controlled
     using fractional permissions.
     
@@ -28,7 +30,7 @@ open Steel.ST.Util
 ///
 /// It's in universe zero, so refs can be stored in the heap, you can
 /// have [ref (ref a)] etc.
-val ref (a:Type0)
+val ref ([@@@ strictly_positive] a:Type0)
   : Type0
 
 /// The null reference
@@ -142,15 +144,34 @@ val gather (#a:Type0)
       (requires True)
       (ensures fun _ -> v0 == v1)
 
-/// Atomic compare and swap on references.
-/// 
-/// -- This is a little too powerful. We should only allow it on [t]'s
-///    that are small enough. E.g., word-sized
-val cas (#t:eqtype)
-        (#uses:inames)
-        (r:ref t)
-        (v:Ghost.erased t)
-        (v_old v_new:t)
+/// Atomic operations (read, write, and cas) on references,
+///   restricted to small types
+///
+/// Currently we are exporting only for U32,
+///   other types can be similarly added
+
+val atomic_read_u32 (#opened:_)
+  (#p:perm)
+  (#v:erased U32.t)
+  (r:ref U32.t)
+  : STAtomic U32.t opened
+      (pts_to r p v)
+      (fun x -> pts_to r p v)
+      (requires True)
+      (ensures fun x -> x == Ghost.reveal v)
+
+val atomic_write_u32 (#opened:_)
+  (#v:erased U32.t)
+  (r:ref U32.t)
+  (x:U32.t)
+  : STAtomicT unit opened
+      (pts_to r full_perm v)
+      (fun _ -> pts_to r full_perm x)
+
+val cas_u32 (#uses:inames)
+        (v:Ghost.erased U32.t)
+        (r:ref U32.t)
+        (v_old v_new:U32.t)
   : STAtomicT (b:bool{b <==> (Ghost.reveal v == v_old)})
       uses
       (pts_to r full_perm v)

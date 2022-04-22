@@ -47,5 +47,5 @@ let tau b tm : Tac term =
     match inspect (quote b) with
     | Tv_App l r -> tm
     | Tv_Type _ -> tm
-    | Tv_AscribedT _ _ None -> tm
+    | Tv_AscribedT _ _ None _ -> tm
     | _ -> tm

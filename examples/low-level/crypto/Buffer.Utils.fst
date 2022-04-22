@@ -36,7 +36,7 @@ let uint32s = buffer u32
 let bytes = buffer u8
 
 // JP: 20180402 this file dropped off CI a long while ago. Retained here,
-// currently used as a testcase for KreMLin extraction, but I would love to see
+// currently used as a testcase for KaRaMeL extraction, but I would love to see
 // this re-enabled as a sanity check for F*'s long CI.
 #set-options "--lax"
 

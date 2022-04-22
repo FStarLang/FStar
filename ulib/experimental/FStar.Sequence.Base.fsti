@@ -36,7 +36,7 @@ sequences as they're modeled in Dafny.
 *)
 module FStar.Sequence.Base
 
-new val seq (a: Type u#a) : Type u#a
+new val seq ([@@@ strictly_positive] a: Type u#a) : Type u#a
 
 (**
   We translate each Dafny sequence function prefixed with `Seq#`

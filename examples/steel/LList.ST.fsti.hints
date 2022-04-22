@@ -1,0 +1,41 @@
+[
+  "[µk√Î—ÿÀ[⁄ÅkW–&≈",
+  [
+    [
+      "LList.ST.intro",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "b2t_def", "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "0e3a7bab75ad0502e26158768f3e64b2"
+    ],
+    [
+      "LList.ST.elim",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "b2t_def", "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "9a86927f544deae5804e23cf8c0bdf76"
+    ],
+    [
+      "LList.ST.peek",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "b2t_def", "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "b65ff266a16a0968e12340fec52f2baf"
+    ]
+  ]
+]

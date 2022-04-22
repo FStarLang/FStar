@@ -744,45 +744,45 @@ val false_elim (#a: Type) (u: unit{False}) : Tot a
         [@@ CInline ] let f x = UInt32.(x +%^ 1)
       ]}
 
-    is extracted to C by KReMLin to a C definition tagged with the
+    is extracted to C by KaRaMeL to a C definition tagged with the
     [inline] qualifier. *)
 type __internal_ocaml_attributes =
   | PpxDerivingShow
   | PpxDerivingShowConstant of string (* Generate [@@@ deriving show ] on the resulting OCaml type *)
   | PpxDerivingYoJson (* Similar, but for constant printers. *)
   | CInline (* Generate [@@@ deriving yojson ] on the resulting OCaml type *)
-  (* KreMLin-only: generates a C "inline" attribute on the resulting
+  (* KaRaMeL-only: generates a C "inline" attribute on the resulting
      * function declaration. *)
   | Substitute
-  (* KreMLin-only: forces KreMLin to inline the function at call-site; this is
+  (* KaRaMeL-only: forces KaRaMeL to inline the function at call-site; this is
      * deprecated and the recommended way is now to use F*'s
      * [inline_for_extraction], which now also works for stateful functions. *)
   | Gc
-  (* KreMLin-only: instructs KreMLin to heap-allocate any value of this
+  (* KaRaMeL-only: instructs KaRaMeL to heap-allocate any value of this
      * data-type; this requires running with a conservative GC as the
      * allocations are not freed. *)
   | Comment of string
-  (* KreMLin-only: attach a comment to the declaration. Note that using F*-doc
+  (* KaRaMeL-only: attach a comment to the declaration. Note that using F*-doc
      * syntax automatically fills in this attribute. *)
   | CPrologue of string
-  (* KreMLin-only: verbatim C code to be prepended to the declaration.
+  (* KaRaMeL-only: verbatim C code to be prepended to the declaration.
      * Multiple attributes are valid and accumulate, separated by newlines. *)
   | CEpilogue of string
   | CConst of string (* Ibid. *)
-  (* KreMLin-only: indicates that the parameter with that name is to be marked
-     * as C const.  This will be checked by the C compiler, not by KreMLin or F*.
+  (* KaRaMeL-only: indicates that the parameter with that name is to be marked
+     * as C const.  This will be checked by the C compiler, not by KaRaMeL or F*.
      *
      * This is deprecated and doesn't work as intended. Use
      * LowStar.ConstBuffer.fst instead! *)
   | CCConv of string
   | CAbstractStruct (* A calling convention for C, one of stdcall, cdecl, fastcall *)
-  (* KreMLin-only: for types that compile to struct types (records and
+  (* KaRaMeL-only: for types that compile to struct types (records and
      * inductives), indicate that the header file should only contain a forward
      * declaration, which in turn forces the client to only ever use this type
      * through a pointer. *)
   | CIfDef
-  | CMacro (* KreMLin-only: on a given `val foo`, compile if foo with #ifdef. *)
-(* KreMLin-only: for a top-level `let v = e`, compile as a macro *)
+  | CMacro (* KaRaMeL-only: on a given `val foo`, compile if foo with #ifdef. *)
+(* KaRaMeL-only: for a top-level `let v = e`, compile as a macro *)
 
 (** The [inline_let] attribute on a local let-binding, instructs the
     extraction pipeline to inline the definition. This may be both to
@@ -848,21 +848,6 @@ val expect_lax_failure (errs: list int) : Tot unit
 (** Print the time it took to typecheck a top-level definition *)
 val tcdecltime : unit
 
-(** **THIS ATTRIBUTE IS AN ESCAPE HATCH AND CAN BREAK SOUNDNESS**
-
-    **USE WITH CARE**
-
-    The positivity check for inductive types stops at abstraction
-    boundaries. This results in spurious errors about positivity,
-    e.g., when defining types like `type t = ref (option t)` By adding
-    this attribute to a declaration of a top-level name positivity
-    checks on applications of that name are admitted.  See, for
-    instance, FStar.Monotonic.Heap.mref We plan to decorate binders of
-    abstract types with polarities to allow us to check positivity
-    across abstraction boundaries and will eventually remove this
-    attribute.  *)
-val assume_strictly_positive : unit
-
 (** This attribute is to be used as a hint for the unifier.  A
     function-typed symbol `t` marked with this attribute will be treated
     as being injective in all its arguments by the unifier.  That is,
@@ -903,6 +888,12 @@ val strict_on_arguments (x: list int) : Tot unit
  * unsolved implicit arguments remaining at the end of type inference.
  **)
 val resolve_implicits : unit
+
+(** A tactic registered to solve implicits with the (handle_smt_goals)
+    attribute will receive the SMT goal generated during typechecking
+    just before it is passed to the SMT solver.
+   *)
+val handle_smt_goals : unit
 
 (** This attribute can be added to an inductive type definition,
     indicating that it should be erased on extraction to `unit`.
@@ -950,7 +941,7 @@ val allow_informative_binders : unit
 
     This is sometimes useful when partially evaluating code before
     extraction, particularly when aiming to obtain first-order code
-    for KReMLin. However, this attribute should be used with care,
+    for KaRaMeL. However, this attribute should be used with care,
     since if after the rewriting the inner matches do not reduce, then
     this can cause an explosion in code size.
 
@@ -1017,6 +1008,17 @@ val ite_soundness_by : unit
   *)
 val strictly_positive : unit
 
+(** This attribute may be added to an inductive type
+    to disable auto generated projectors
+
+    Normally there should not be any need to use this unless:
+    for some reason F* cannot typecheck the auto-generated projectors.
+    
+    Another reason to use this attribute may be to avoid generating and
+    typechecking lot of projectors, most of which are not going to be used
+    in the rest of the program
+  *)
+val no_auto_projectors : unit
 
 (** Pure and ghost inner let bindings are now always inlined during
     the wp computation, if: the return type is not unit and the head

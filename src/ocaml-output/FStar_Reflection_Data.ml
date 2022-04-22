@@ -102,9 +102,9 @@ type term_view =
   FStar_Syntax_Syntax.match_returns_ascription FStar_Pervasives_Native.option
   * branch Prims.list) 
   | Tv_AscribedT of (FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.term *
-  FStar_Syntax_Syntax.term FStar_Pervasives_Native.option) 
+  FStar_Syntax_Syntax.term FStar_Pervasives_Native.option * Prims.bool) 
   | Tv_AscribedC of (FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.comp *
-  FStar_Syntax_Syntax.term FStar_Pervasives_Native.option) 
+  FStar_Syntax_Syntax.term FStar_Pervasives_Native.option * Prims.bool) 
   | Tv_Unknown 
 let (uu___is_Tv_Var : term_view -> Prims.bool) =
   fun projectee -> match projectee with | Tv_Var _0 -> true | uu___ -> false
@@ -175,7 +175,7 @@ let (uu___is_Tv_AscribedT : term_view -> Prims.bool) =
 let (__proj__Tv_AscribedT__item___0 :
   term_view ->
     (FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.term *
-      FStar_Syntax_Syntax.term FStar_Pervasives_Native.option))
+      FStar_Syntax_Syntax.term FStar_Pervasives_Native.option * Prims.bool))
   = fun projectee -> match projectee with | Tv_AscribedT _0 -> _0
 let (uu___is_Tv_AscribedC : term_view -> Prims.bool) =
   fun projectee ->
@@ -183,7 +183,7 @@ let (uu___is_Tv_AscribedC : term_view -> Prims.bool) =
 let (__proj__Tv_AscribedC__item___0 :
   term_view ->
     (FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.comp *
-      FStar_Syntax_Syntax.term FStar_Pervasives_Native.option))
+      FStar_Syntax_Syntax.term FStar_Pervasives_Native.option * Prims.bool))
   = fun projectee -> match projectee with | Tv_AscribedC _0 -> _0
 let (uu___is_Tv_Unknown : term_view -> Prims.bool) =
   fun projectee -> match projectee with | Tv_Unknown -> true | uu___ -> false
@@ -409,6 +409,7 @@ let (__proj__Mkrefl_constant__item__fv :
 let (__proj__Mkrefl_constant__item__t :
   refl_constant -> FStar_Syntax_Syntax.term) =
   fun projectee -> match projectee with | { lid; fv; t;_} -> t
+type decls = FStar_Syntax_Syntax.sigelt Prims.list
 let (refl_constant_lid : refl_constant -> FStar_Ident.lid) = fun rc -> rc.lid
 let (refl_constant_term : refl_constant -> FStar_Syntax_Syntax.term) =
   fun rc -> rc.t
@@ -791,4 +792,3 @@ let (ord_Eq_fv : FStar_Syntax_Syntax.fv) =
 let (ord_Gt_fv : FStar_Syntax_Syntax.fv) =
   FStar_Syntax_Syntax.lid_as_fv ord_Gt_lid FStar_Syntax_Syntax.delta_constant
     (FStar_Pervasives_Native.Some FStar_Syntax_Syntax.Data_ctor)
-type decls = FStar_Syntax_Syntax.sigelt Prims.list
