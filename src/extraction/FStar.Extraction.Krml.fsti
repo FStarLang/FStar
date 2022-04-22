@@ -15,9 +15,12 @@
 *)
 (* -------------------------------------------------------------------- *)
 module FStar.Extraction.Krml
-type decl
+
+val decl : Type0
 type program = list decl
 type file = string * program
+
+(** Versioned binary writing/reading of ASTs *)
 type version = int
 type binary_format = version * list file
 

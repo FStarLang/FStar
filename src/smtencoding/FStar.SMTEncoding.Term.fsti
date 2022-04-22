@@ -90,10 +90,6 @@ and pat  = term
 and term = {tm:term'; freevars:Syntax.memo fvs; rng:Range.range}
 and fv = string * sort * bool
 and fvs = list fv
-val fv_name : fv -> string
-val fv_sort : fv -> sort
-val fv_force : fv -> bool
-val mk_fv : string * sort -> fv
 
 type caption = option string
 type binders = list (string * sort)
@@ -161,6 +157,12 @@ type decls_elt = {
 }
 
 type decls_t = list decls_elt
+
+val fv_name : fv -> string
+val fv_sort : fv -> sort
+val fv_force : fv -> bool
+val mk_fv : string * sort -> fv
+
 
 (*
  * AR: sym_name -> md5 -> auxiliary decls -> decls

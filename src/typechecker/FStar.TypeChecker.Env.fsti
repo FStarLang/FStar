@@ -220,6 +220,8 @@ and tcenv_hooks =
 type implicit = TcComm.implicit
 type implicits = TcComm.implicits
 type guard_t = TcComm.guard_t
+type tcenv_depth_t = int * int * solver_depth_t * int
+type qninfo = option ((either (universes * typ) (sigelt * option universes)) * Range.range)
 
 val tc_hooks : env -> tcenv_hooks
 val set_tc_hooks: env -> tcenv_hooks -> env
@@ -251,7 +253,6 @@ val dsenv : env -> FStar.Syntax.DsEnv.env
 val push : env -> string -> env
 val pop : env -> string -> env
 
-type tcenv_depth_t = int * int * solver_depth_t * int
 val snapshot : env -> string -> (tcenv_depth_t * env)
 val rollback : solver_t -> string -> option tcenv_depth_t -> env
 
@@ -264,8 +265,6 @@ val insert_bv_info : env -> bv -> typ -> unit
 val insert_fv_info : env -> fv -> typ -> unit
 val toggle_id_info : env -> bool -> unit
 val promote_id_info : env -> (typ -> typ) -> unit
-
-type qninfo = option ((either (universes * typ) (sigelt * option universes)) * Range.range)
 
 (* Querying identifiers *)
 val lid_exists             : env -> lident -> bool

@@ -29,8 +29,6 @@ open FStar.Compiler.Range
 module BU = FStar.Compiler.Util
 
 exception Not_a_wp_implication of string
-type label = error_label
-type labels = error_labels
 let sort_labels (l:(list (error_label * bool))) = List.sortWith (fun ((_, _, r1), _) ((_, _, r2), _) -> Range.compare r1 r2) l
 let remove_dups (l:labels) = BU.remove_dups (fun (_, m1, r1) (_, m2, r2) -> r1=r2 && m1=m2) l
 type msg = string * Range.range
