@@ -494,7 +494,25 @@ let explain env d (s : lstring) =
 (* ------------------------------------------------*)
 (* <uvi ops> Instantiating unification variables   *)
 (* ------------------------------------------------*)
-let commit uvis = uvis |> List.iter (function
+
+let set_uvar env u t = 
+  // Useful for debugging uvars setting bugs
+  // if Env.debug env <| Options.Other "Rel"
+  // then (
+  //   BU.print2 "Setting uvar %s to %s\n"
+  //     (Print.ctx_uvar_to_string u)
+  //     (Print.term_to_string t);
+  //   match Unionfind.find u.ctx_uvar_head with
+  //   | None -> ()
+  //   | Some t ->
+  //     BU.print2 "Uvar already set to %s\n%s\n"
+  //       (Print.term_to_string t)
+  //       (BU.stack_dump());
+  //     failwith "DIE"
+  // );
+  U.set_uvar u.ctx_uvar_head t
+
+let commit env uvis = uvis |> List.iter (function
     | UNIV(u, t)      ->
       begin match t with
         | U_unif u' -> UF.univ_union u u'
@@ -502,9 +520,9 @@ let commit uvis = uvis |> List.iter (function
       end
     | TERM(u, t) ->
       def_check_closed_in t.pos "commit" (List.map (fun b -> b.binder_bv) u.ctx_uvar_binders) t;
-      U.set_uvar u.ctx_uvar_head t
+      set_uvar env u t
     )
-
+  
 let find_term_uvar uv s = BU.find_map s (function
     | UNIV _ -> None
     | TERM(u, t) -> if UF.equiv uv u.ctx_uvar_head then Some t else None)
@@ -790,7 +808,7 @@ let ensure_no_uvar_subst env (t0:term) (wl:worklist)
         then BU.print2 "ensure_no_uvar_subst solving %s with %s\n"
                (Print.ctx_uvar_to_string uv)
                (Print.term_to_string sol);
-        U.set_uvar uv.ctx_uvar_head sol;
+        set_uvar env uv sol;
 
         (* Make a term for the new uvar, applied to the substitutions of
          * the abstracted arguments, plus all the original arguments. *)
@@ -877,7 +895,7 @@ let solve_prob' resolve_ok prob logical_guard uvis wl =
         let phi = U.abs xs phi (Some (U.residual_tot U.ktype0)) in
         def_check_closed_in (p_loc prob) ("solve_prob'.sol." ^ string_of_int (p_pid prob))
                             (List.map (fun b -> b.binder_bv) <| p_scope prob) phi;
-        U.set_uvar uv.ctx_uvar_head phi
+        set_uvar wl.tcenv uv phi
     in
     let uv = p_guard_uvar prob in
     let fail () =
@@ -906,14 +924,14 @@ let solve_prob' resolve_ok prob logical_guard uvis wl =
              assign_solution (args_as_binders args) uv phi;
              wl
     in
-    commit uvis;
+    commit wl.tcenv uvis;
     {wl with ctr=wl.ctr + 1}
 
 let extend_universe_solution pid sol wl =
     if Env.debug wl.tcenv <| Options.Other "Rel"
     then BU.print2 "Solving %s: with [%s]\n" (string_of_int pid)
                                              (uvis_to_string wl.tcenv sol);
-    commit sol;
+    commit wl.tcenv sol;
     {wl with ctr=wl.ctr+1}
 
 let solve_prob (prob : prob) (logical_guard : option term) (uvis : list uvi) (wl:worklist) : worklist =
@@ -1015,7 +1033,7 @@ let restrict_ctx env (tgt:ctx_uvar) (bs:binders) (src:ctx_uvar) wl : worklist =
     let _, src', wl = new_uvar ("restricted " ^ (Print.uvar_to_string src.ctx_uvar_head)) wl
       src.ctx_uvar_range g pfx t
       src.ctx_uvar_should_check src.ctx_uvar_meta in
-    U.set_uvar src.ctx_uvar_head (f src');
+    set_uvar env src (f src');
     wl in
 
   let bs = bs |> List.filter (fun ({binder_bv=bv1}) ->
@@ -2680,6 +2698,7 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
           let tx = UF.new_transaction () in
           let solve_sub_probs_if_head_types_equal wl = 
               let sol = [TERM(ctx_uv, head)] in
+              let wl = solve_prob orig None sol wl in
               let sub_probs, wl =
                 List.fold_left2
                   (fun (probs, wl) (arg_lhs, _) (arg_rhs, _) ->
@@ -2697,7 +2716,6 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
               match solve env wl' with
               | Success (_, defer_to_tac, imps) ->
                 let wl = extend_wl wl [] defer_to_tac imps in
-                let wl = solve_prob orig None sol wl in
                 UF.commit tx;
                 Inr wl
               | Failed (_, lstring) ->
@@ -2706,8 +2724,7 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
           in
           if U.eq_tm t_head ctx_uv.ctx_uvar_typ = U.Equal
           then solve_sub_probs_if_head_types_equal wl
-          else if true // false && U.maybe_equal_term t_head ctx_uv.ctx_uvar_typ 
-          then (
+          else (
               if Env.debug env (Options.Other "Rel")
               then BU.print2  "first-order: head type mismatch:\n\tlhs=%s\n\trhs=%s\n"
                                               (Print.term_to_string ctx_uv.ctx_uvar_typ)
@@ -2722,14 +2739,6 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
               | Inr msg ->
                 UF.rollback tx;
                 inapplicable "first-order: head type mismatch" (Some msg)
-          )
-          else (
-             UF.rollback tx;
-             inapplicable "first-order: head type mismatch" 
-                          (Some (Thunk.mk (fun _ ->
-                             BU.format2 "first-order: head type mismatch:\n\tlhs=%s\n\trhs=%s\n"
-                                              (Print.term_to_string ctx_uv.ctx_uvar_typ)
-                                              (Print.term_to_string t_head))))
           )
       )
     in
@@ -2816,7 +2825,7 @@ and solve_t_flex_flex env orig wl (lhs:flex_t) (rhs:flex_t) : solution =
       then BU.print2 "solve_t_flex_flex: solving meta arg uvar %s with %s\n"
              (Print.ctx_uvar_to_string uv)
              (Print.term_to_string t);
-      U.set_uvar uv.ctx_uvar_head t;
+      set_uvar env uv t;
       solve env (attempt [orig] wl) in
 
     match p_rel orig with
@@ -4710,7 +4719,7 @@ let try_solve_single_valued_implicits env is_tac (imps:Env.implicits) : Env.impl
     let b = List.fold_left (fun b imp ->  //check that the imp is still unsolved
       if UF.find imp.imp_uvar.ctx_uvar_head |> is_none
       then match imp_value imp with
-           | Some tm -> commit ([TERM (imp.imp_uvar, tm)]); true
+           | Some tm -> commit env ([TERM (imp.imp_uvar, tm)]); true
            | None -> b
       else b) false imps in
 
