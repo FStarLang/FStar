@@ -60,8 +60,6 @@ let max_op_prec = (max_int, Infix NonAssoc)
 
 (* Little helpers *)
 
-type doc = | Doc of string
-
 let empty    = Doc ""
 let hardline = Doc "\n"
 

@@ -66,8 +66,6 @@ type guard_formula =
   | Trivial
   | NonTrivial of formula
 
-val check_uvar_ctx_invariant : string -> Range.range -> bool -> gamma -> binders -> unit
-
 type deferred_reason =
   | Deferred_univ_constraint
   | Deferred_occur_check_failed
@@ -82,11 +80,6 @@ type deferred_reason =
 type deferred = list (deferred_reason * string * prob)
 
 type univ_ineq = universe * universe
-
-val mk_by_tactic : term -> term -> term
-
-val delta_depth_greater_than : delta_depth -> delta_depth -> bool
-val decr_delta_depth : delta_depth -> option delta_depth
 
 (***********************************************************************************)
 (* A table of file -> starting row -> starting col -> identifier info              *)
@@ -104,9 +97,6 @@ type identifier_info = {
     identifier_range:Range.range;
 }
 
-val insert_col_info : int -> identifier_info -> list (int * identifier_info) -> list (int * identifier_info)
-val find_nearest_preceding_col_info : int -> list (int * identifier_info) -> option identifier_info
-
 type id_info_by_col = //sorted in ascending order of columns
     list (int * identifier_info)
 
@@ -121,6 +111,17 @@ type id_info_table = {
     id_info_db: row_info_by_file;
     id_info_buffer: list identifier_info;
 }
+
+val check_uvar_ctx_invariant : string -> Range.range -> bool -> gamma -> binders -> unit
+
+val mk_by_tactic : term -> term -> term
+
+val delta_depth_greater_than : delta_depth -> delta_depth -> bool
+val decr_delta_depth : delta_depth -> option delta_depth
+
+val insert_col_info : int -> identifier_info -> list (int * identifier_info) -> list (int * identifier_info)
+val find_nearest_preceding_col_info : int -> list (int * identifier_info) -> option identifier_info
+
 val id_info_table_empty : id_info_table
 
 val id_info_insert_bv : id_info_table -> bv -> typ -> id_info_table

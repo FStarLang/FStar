@@ -38,32 +38,7 @@ type option_val =
   | List of list option_val
   | Unset
 
-val defaults                    : list (string * option_val)
-
-val init                        : unit    -> unit  //sets the current options to their defaults
-val clear                       : unit    -> unit  //wipes the stack of options, and then inits
-val restore_cmd_line_options    : bool -> parse_cmdline_res //inits or clears (if the flag is set) the current options and then sets it to the cmd line
-
 type optionstate = FStar.Compiler.Util.smap option_val
-(* Control the option stack *)
-(* Briefly, push/pop are used by the interactive mode and internal_*
- * by #push-options/#pop-options. Read the comment in the .fs for more
- * details. *)
-val push                        : unit -> unit
-val pop                         : unit -> unit
-val internal_push               : unit -> unit
-val internal_pop                : unit -> bool (* returns whether it worked or not, false should be taken as a hard error *)
-val snapshot                    : unit -> (int * unit)
-val rollback                    : option int -> unit
-val peek                        : unit -> optionstate
-val set                         : optionstate -> unit
-val set_verification_options    : optionstate -> unit
-
-val __unit_tests                : unit    -> bool
-val __set_unit_tests            : unit    -> unit
-val __clear_unit_tests          : unit    -> unit
-val parse_cmd_line              : unit    -> parse_cmdline_res * list string
-val add_verify_module           : string  -> unit
 
 type opt_type =
 | Const of option_val
@@ -88,6 +63,32 @@ type opt_type =
   // For options like --include that can be repeated (FIFO)
 | WithSideEffect of ((unit -> unit) * opt_type (* elem spec *))
   // For options like --version that have side effects
+
+val defaults                    : list (string * option_val)
+
+val init                        : unit    -> unit  //sets the current options to their defaults
+val clear                       : unit    -> unit  //wipes the stack of options, and then inits
+val restore_cmd_line_options    : bool -> parse_cmdline_res //inits or clears (if the flag is set) the current options and then sets it to the cmd line
+
+(* Control the option stack *)
+(* Briefly, push/pop are used by the interactive mode and internal_*
+ * by #push-options/#pop-options. Read the comment in the .fs for more
+ * details. *)
+val push                        : unit -> unit
+val pop                         : unit -> unit
+val internal_push               : unit -> unit
+val internal_pop                : unit -> bool (* returns whether it worked or not, false should be taken as a hard error *)
+val snapshot                    : unit -> (int * unit)
+val rollback                    : option int -> unit
+val peek                        : unit -> optionstate
+val set                         : optionstate -> unit
+val set_verification_options    : optionstate -> unit
+
+val __unit_tests                : unit    -> bool
+val __set_unit_tests            : unit    -> unit
+val __clear_unit_tests          : unit    -> unit
+val parse_cmd_line              : unit    -> parse_cmdline_res * list string
+val add_verify_module           : string  -> unit
 
 val set_option_warning_callback : (string -> unit) -> unit
 val desc_of_opt_type            : opt_type -> option string

@@ -24,9 +24,6 @@ open FStar.Compiler
 module S = FStar.Syntax.Syntax
 module SS = FStar.Syntax.Subst
 module U = FStar.Compiler.Util
-type inst_t = list (lident * universes)
-
-
 
 let mk t s = S.mk s t.pos
 

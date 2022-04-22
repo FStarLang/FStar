@@ -34,7 +34,14 @@ module TcEnv = FStar.TypeChecker.Env
 type push_kind = | SyntaxCheck | LaxCheck | FullCheck
 type ctx_depth_t = int * int * solver_depth_t * int
 type deps_t = FStar.Parser.Dep.deps
-type either_replst = either repl_state, repl_state
+type either_replst = either repl_state repl_state
+
+// Name tracking; taken directly from IDE
+type name_tracking_event =
+| NTAlias of lid (* host *) * ident (* alias *) * lid (* aliased *)
+| NTOpen of lid (* host *) * DsEnv.open_module_or_namespace (* opened *)
+| NTInclude of lid (* host *) * lid (* included *)
+| NTBinding of either FStar.Syntax.Syntax.binding TcEnv.sig_binding
 
 val repl_stack : ref repl_stack_t
 val set_check_kind : env_t -> push_kind -> env_t
@@ -52,13 +59,6 @@ val run_repl_task : optmod_t -> env_t -> repl_task -> optmod_t * env_t
 // Factored out from IDE for use by LSP as well
 val update_task_timestamps : repl_task -> repl_task
 val add_module_completions : string -> list string -> CTable.table -> CTable.table
-
-// Name tracking; taken directly from IDE
-type name_tracking_event =
-| NTAlias of lid (* host *) * ident (* alias *) * lid (* aliased *)
-| NTOpen of lid (* host *) * DsEnv.open_module_or_namespace (* opened *)
-| NTInclude of lid (* host *) * lid (* included *)
-| NTBinding of either FStar.Syntax.Syntax.binding TcEnv.sig_binding
 
 val track_name_changes : env_t -> env_t * (env_t -> env_t * list name_tracking_event)
 val commit_name_tracking : repl_state -> list name_tracking_event -> repl_state

@@ -32,8 +32,6 @@ open FStar.Syntax.Subst
 open FStar.Syntax
 open FStar.Compiler.Dyn
 
-type lcomp_with_binder = option bv * lcomp
-
 module SS = FStar.Syntax.Subst
 module S = FStar.Syntax.Syntax
 module BU = FStar.Compiler.Util

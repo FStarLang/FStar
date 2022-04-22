@@ -31,26 +31,6 @@ module BU      = FStar.Compiler.Util
 module S       = FStar.Syntax.Syntax
 module U       = FStar.Syntax.Util
 
-(*
-   f: x:int -> P
-   ==================
-      P
- *)
-//A goal is typically of the form
-//    G |- ?u : t
-// where context = G
-//       witness = ?u, although, more generally, witness is a partial solution and can be any term
-//       goal_ty = t
-//
-// INVARIANT: goal_main_env.gamma is EQUAL to goal_ctx_uvar.ctx_uvar_gamma
-type goal = {
-    goal_main_env : env;
-    goal_ctx_uvar : ctx_uvar;
-    opts    : O.optionstate; // option state for this particular goal
-    is_guard : bool; // Marks whether this goal arose from a guard during tactic runtime
-                     // We make the distinction to be more user-friendly at times
-    label : string; // A user-defined description
-}
 let goal_env g = g.goal_main_env
 let goal_witness g =
     FStar.Syntax.Syntax.mk (Tm_uvar (g.goal_ctx_uvar, ([], NoUseRange))) Range.dummyRange
@@ -110,40 +90,6 @@ let subst_goal subst goal =
     } in
     { goal with goal_ctx_uvar = ctx_uvar }
 
-type guard_policy =
-    | Goal
-    | SMT
-    | Force
-    | Drop // unsound
-
-type proofstate = {
-    main_context : env;          //the shared top-level context for all goals
-    all_implicits: implicits ;   //all the implicits currently open, partially resolved
-
-    // NOTE: Goals are user-settable, the "goals" we mean in
-    // the paper are the implicits above, these are simply a
-    // way for primitives to take/give goals, and a way
-    // to have the SMT goal set. What we should really do
-    // is go full-LCF and take them as arguments, returning them
-    // as values. This option stack should be user-level.
-    goals        : list goal;   //all the goals remaining to be solved
-    smt_goals    : list goal;   //goals that have been deferred to SMT
-
-    depth        : int;          //depth for tracing and debugging
-    __dump       : proofstate -> string -> unit; // callback to dump_proofstate, to avoid an annoying circularity
-
-    psc          : Cfg.psc;        //primitive step context where we started execution
-    entry_range  : Range.range;  //position of entry, set by the use
-    guard_policy : guard_policy; //guard policy: what to do with guards arising during tactic exec
-    freshness    : int;          //a simple freshness counter for the fresh tactic
-    tac_verb_dbg : bool;         //whether to print verbose debugging messages
-
-    local_state  : BU.psmap term; // local metaprogram state
-    urgency      : int;          // When printing a proofstate due to an error, this
-                                 // is used by emacs to decide whether it should pop
-                                 // open a buffer or not (default: 1).
-}
-
 let subst_proof_state subst ps =
     if O.tactic_raw_binders ()
     then ps
@@ -183,15 +129,6 @@ let is_guard g = g.is_guard
 
 let get_label g = g.label
 let set_label l g = { g with label = l }
-
-type direction =
-    | TopDown
-    | BottomUp
-
-type ctrl_flag =
-    | Continue
-    | Skip
-    | Abort
 
 let check_goal_solved' goal =
   match FStar.Syntax.Unionfind.find goal.goal_ctx_uvar.ctx_uvar_head with

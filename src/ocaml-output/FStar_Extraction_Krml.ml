@@ -573,7 +573,6 @@ let (uu___is_TConstBuf : typ -> Prims.bool) =
     match projectee with | TConstBuf _0 -> true | uu___ -> false
 let (__proj__TConstBuf__item___0 : typ -> typ) =
   fun projectee -> match projectee with | TConstBuf _0 -> _0
-type program = decl Prims.list
 type ident = Prims.string
 type fields_t = (Prims.string * (typ * Prims.bool)) Prims.list
 type branches_t =
@@ -584,10 +583,11 @@ type branches = (pattern * expr) Prims.list
 type constant = (width * Prims.string)
 type var = Prims.int
 type lident = (Prims.string Prims.list * Prims.string)
-type version = Prims.int
-let (current_version : version) = (Prims.of_int (28))
+type program = decl Prims.list
 type file = (Prims.string * program)
+type version = Prims.int
 type binary_format = (version * file Prims.list)
+let (current_version : version) = (Prims.of_int (28))
 let fst3 : 'uuuuu 'uuuuu1 'uuuuu2 . ('uuuuu * 'uuuuu1 * 'uuuuu2) -> 'uuuuu =
   fun uu___ -> match uu___ with | (x, uu___1, uu___2) -> x
 let snd3 : 'uuuuu 'uuuuu1 'uuuuu2 . ('uuuuu * 'uuuuu1 * 'uuuuu2) -> 'uuuuu1 =

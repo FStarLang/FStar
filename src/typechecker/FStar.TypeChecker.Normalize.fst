@@ -859,12 +859,6 @@ let rec maybe_weakly_reduced tm :  bool =
            | Meta_desugared _
            | Meta_named _ -> false)
 
-type should_unfold_res =
-    | Should_unfold_no
-    | Should_unfold_yes
-    | Should_unfold_fully
-    | Should_unfold_reify
-
 (* Max number of warnings to print in a single run.
 Initialized below in normalize *)
 let plugin_unfold_warn_ctr : ref int = BU.mk_ref 0
