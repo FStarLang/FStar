@@ -37,13 +37,6 @@ module TcErr = FStar.TypeChecker.Err
 module TcEnv = FStar.TypeChecker.Env
 module CTable = FStar.Interactive.CompletionTable
 
-type position = string * int * int
-type sl_reponse = { slr_name: string;
-                    slr_def_range: option Range.range;
-                    slr_typ: option string;
-                    slr_doc: option string;
-                    slr_def: option string }
-
 let with_printed_effect_args k =
   Options.with_saved_options
     (fun () -> Options.set_option "print_effect_args" (Options.Bool true); k ())

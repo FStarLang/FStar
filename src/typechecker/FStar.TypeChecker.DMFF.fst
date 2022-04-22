@@ -42,18 +42,6 @@ module U  = FStar.Syntax.Util
 module PC = FStar.Parser.Const
 
 
-type env = {
-  // The type-checking environment which we abuse to store our DMFF-style types
-  // when entering a binder.
-  tcenv: FStar.TypeChecker.Env.env;
-  // The substitution from every [x: C] to its [x^w: C*].
-  subst: list subst_elt;
-  // Hack to avoid a dependency NS: env already has a type_of, so why not reuse that?
-  tc_const: sconst -> typ;
-}
-
-
-
 let empty env tc_const = {
   tcenv = env;
   subst = [];

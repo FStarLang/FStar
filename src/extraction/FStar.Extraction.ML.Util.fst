@@ -178,8 +178,6 @@ let join_l r fs = List.fold_left (join r) E_PURE fs
 
 let mk_ty_fun = List.fold_right (fun (_, t0) t -> MLTY_Fun(t0, E_PURE, t))
 
-type unfold_t = mlty -> option mlty
-
 (* type_leq is essentially the lifting of the sub-effect relation, eff_leq, into function types.
    type_leq_c is a coercive variant of type_leq, which implements an optimization to erase the bodies of ghost functions.
    Specifically, a function (f : t -> Pure t') can be subsumed to (t -> Ghost t')

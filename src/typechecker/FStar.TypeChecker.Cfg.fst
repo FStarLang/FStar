@@ -22,38 +22,6 @@ module EMB = FStar.Syntax.Embeddings
 module Z = FStar.BigInt
 module NBE = FStar.TypeChecker.NBETerm
 
-type fsteps = {
-     beta : bool;
-     iota : bool;
-     zeta : bool;
-     zeta_full : bool;
-     weak : bool;
-     hnf  : bool;
-     primops : bool;
-     do_not_unfold_pure_lets : bool;
-     unfold_until : option S.delta_depth;
-     unfold_only  : option (list I.lid);
-     unfold_fully : option (list I.lid);
-     unfold_attr  : option (list I.lid);
-     unfold_qual  : option (list string);
-     unfold_tac : bool;
-     pure_subterms_within_computations : bool;
-     simplify : bool;
-     erase_universes : bool;
-     allow_unbound_universes : bool;
-     reify_ : bool; // fun fact: calling it 'reify' won't bootstrap :)
-     compress_uvars : bool;
-     no_full_norm : bool;
-     check_no_uvars : bool;
-     unmeta : bool;
-     unascribe : bool;
-     in_full_norm_request: bool;
-     weakly_reduce_scrutinee:bool;
-     nbe_step:bool;
-     for_extraction:bool;
-     unrefine : bool;
-}
-
 let steps_to_string f =
   let format_opt (f:'a -> string) (o:option 'a) =
     match o with
@@ -197,28 +165,9 @@ let fstep_add_one s fs =
 let to_fsteps (s : list step) : fsteps =
     List.fold_right fstep_add_one s default_steps
 
-type psc = {
-     psc_range:FStar.Compiler.Range.range;
-     psc_subst: unit -> subst_t // potentially expensive, so thunked
-}
-
 let null_psc = { psc_range = Range.dummyRange ; psc_subst = fun () -> [] }
 let psc_range psc = psc.psc_range
 let psc_subst psc = psc.psc_subst ()
-
-type debug_switches = {
-    gen              : bool;
-    top              : bool;
-    cfg              : bool;
-    primop           : bool;
-    unfolding        : bool;
-    b380             : bool;
-    wpe              : bool;
-    norm_delayed     : bool;
-    print_normalized : bool;
-    debug_nbe        : bool;
-    erase_erasable_args: bool
-}
 
 let no_debug_switches = {
     gen              = false;
@@ -232,17 +181,6 @@ let no_debug_switches = {
     print_normalized = false;
     debug_nbe        = false;
     erase_erasable_args = false;
-}
-
-type primitive_step = {
-     name:Ident.lid;
-     arity:int;
-     univ_arity:int;
-     auto_reflect:option int;
-     strong_reduction_ok:bool;
-     requires_binder_substitution:bool;
-     interpretation:(psc -> EMB.norm_cb -> args -> option term);
-     interpretation_nbe:(NBETerm.nbe_cbs -> NBETerm.args -> option NBETerm.t)
 }
 
 (* Primitive step sets. They are represented as a persistent string map *)
@@ -263,18 +201,6 @@ let add_steps (m : prim_step_set) (l : list primitive_step) : prim_step_set =
 let prim_from_list (l : list primitive_step) : prim_step_set =
     add_steps (empty_prim_steps ()) l
 (* / Primitive step sets *)
-
-type cfg = {
-     steps: fsteps;
-     tcenv: Env.env;
-     debug: debug_switches;
-     delta_level: list Env.delta_level;  // Controls how much unfolding of definitions should be performed
-     primitive_steps:prim_step_set;
-     strong : bool;                       // under a binder
-     memoize_lazy : bool;
-     normalize_pure_lets: bool;
-     reifying : bool;
-}
 
 let cfg_to_string cfg =
     String.concat "\n"

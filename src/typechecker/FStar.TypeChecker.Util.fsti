@@ -27,6 +27,8 @@ open FStar.Syntax.Syntax
 open FStar.Ident
 open FStar.TypeChecker.Common
 
+type lcomp_with_binder = option bv * lcomp
+
 //error report
 val report: env -> list string -> unit
 
@@ -50,7 +52,6 @@ val maybe_instantiate : env -> term -> typ -> (term * typ * guard_t)
 
 //operations on computation types
 (* most operations on computations are lazy *)
-type lcomp_with_binder = option bv * lcomp
 val lcomp_univ_opt: lcomp -> (option universe * guard_t)
 val is_pure_effect: env -> lident -> bool
 val is_pure_or_ghost_effect: env -> lident -> bool

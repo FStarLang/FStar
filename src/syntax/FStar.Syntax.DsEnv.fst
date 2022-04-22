@@ -32,27 +32,10 @@ module U = FStar.Syntax.Util
 module BU = FStar.Compiler.Util
 module Const = FStar.Parser.Const
 
-type used_marker = ref bool
-
 type local_binding = (ident * bv * used_marker)           (* local name binding for name resolution, paired with an env-generated unique name *)
 type rec_binding   = (ident * lid * delta_depth *         (* name bound by recursive type and top-level let-bindings definitions only *)
                       used_marker)                        (* this ref marks whether it was used, so we can warn if not *)
 type module_abbrev = (ident * lident)                     (* module X = A.B.C, where A.B.C is fully qualified and already resolved *)
-
-type open_kind =                                          (* matters only for resolving names with some module qualifier *)
-| Open_module                                             (* only opens the module, not the namespace *)
-| Open_namespace                                          (* opens the whole namespace *)
-
-type open_module_or_namespace = (lident * open_kind)      (* lident fully qualified name, already resolved. *)
-
-type record_or_dc = {
-  typename: lident; (* the namespace part applies to the constructor and fields as well *)
-  constrname: ident;
-  parms: binders;
-  fields: list (ident * typ);
-  is_private: bool;
-  is_record:bool
-}
 
 type scope_mod =
 | Local_binding            of local_binding
@@ -102,16 +85,15 @@ and dsenv_hooks =
     ds_push_include_hook : env -> lident -> unit;
     ds_push_module_abbrev_hook : env -> ident -> lident -> unit }
 
-type withenv 'a = env -> 'a * env
+let mk_dsenv_hooks open_hook include_hook module_abbrev_hook =
+  { ds_push_open_hook = open_hook;
+    ds_push_include_hook = include_hook;
+    ds_push_module_abbrev_hook = module_abbrev_hook }
 
 let default_ds_hooks =
   { ds_push_open_hook = (fun _ _ -> ());
     ds_push_include_hook = (fun _ _ -> ());
     ds_push_module_abbrev_hook = (fun _ _ _ -> ()) }
-
-type foundname =
-  | Term_name of typ * list attribute
-  | Eff_name  of sigelt * lident
 
 let set_iface env b = {env with iface=b}
 let iface e = e.iface

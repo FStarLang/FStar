@@ -27,11 +27,6 @@ open FStar.Errors
 
 let is_cache_file (fn: string) = Util.get_file_extension fn = ".cache"
 
-type fragment =
-    | Empty
-    | Modul of AST.modul // an entire module or interface -- unspecified
-    | Decls of list AST.decl // a partial set of declarations
-
 let parse_fragment (frag: ParseIt.input_frag) : fragment =
     match ParseIt.parse (Toplevel frag) with
     | ASTFragment (Inl modul, _) -> //interactive mode: module

@@ -1,5 +1,5 @@
 [
-  "&#<ŽÇÌyæþ@|W\u000f\\4B",
+  "HÓö\u0010.\u0002Á![â=é[‡±é",
   [
     [
       "FStar.Real.n_over_n2",
@@ -302,13 +302,31 @@
       "4081dac5c20c9ba0599bb0c0cbfd6b9d"
     ],
     [
+      "FStar.Real.add_assoc",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "3735c95a44ca583f1f02f5f781fd118f"
+    ],
+    [
       "FStar.Real.mul_comm",
       1,
       2,
       1,
       [ "@query" ],
       0,
-      "85deb9c83c861119ba3211039981668e"
+      "c5b55524a8fff112a4b3fab2e4bb7231"
+    ],
+    [
+      "FStar.Real.mul_assoc",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "aebe414db10d8941cd96e5127705b53c"
     ],
     [
       "FStar.Real.mul_dist",
@@ -317,7 +335,7 @@
       1,
       [ "@query" ],
       0,
-      "dc97f9e9227d95c6ce900b89f2666c4c"
+      "3beb170e964808861ecc8ca81396986e"
     ]
   ]
 ]

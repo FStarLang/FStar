@@ -75,9 +75,6 @@ let files_for_module_name_to_string (m:files_for_module_name) =
 
 type color = | White | Gray | Black
 
-(* In public interface *)
-type open_kind = | Open_module | Open_namespace
-
 let check_and_strip_suffix (f: string): option string =
   let suffixes = [ ".fsti"; ".fst"; ".fsi"; ".fs" ] in
   let matches = List.map (fun ext ->
@@ -126,7 +123,6 @@ let namespace_of_module f =
     | ns -> Some (FStar.Ident.lid_of_ids ns)
 
 type file_name = string
-type module_name = string
 type dependence =
     | UseInterface of module_name
     | PreferInterface of module_name

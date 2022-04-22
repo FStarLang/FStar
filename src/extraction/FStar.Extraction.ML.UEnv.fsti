@@ -53,14 +53,14 @@ type binding =
   | ErasedFv of fv
 
 (** Type abbreviations, aka definitions *)
-type tydef
+val tydef : Type0
 val tydef_fv : tydef -> fv
 val tydef_meta : tydef -> FStar.Extraction.ML.Syntax.metadata
 val tydef_mlpath : tydef -> mlpath
 val tydef_def: tydef -> mltyscheme
 
 (** The main type of this module *)
-type uenv 
+val uenv : Type0
 val tcenv_of_uenv : u:uenv -> TypeChecker.Env.env
 val set_tcenv : u:uenv -> t:TypeChecker.Env.env -> uenv
 val current_module_of_uenv : u:uenv -> mlpath
