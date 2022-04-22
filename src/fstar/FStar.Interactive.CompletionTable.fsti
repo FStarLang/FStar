@@ -15,7 +15,7 @@
 *)
 module FStar.Interactive.CompletionTable
 
-type path_elem
+val path_elem : Type0
 type path = list path_elem
 val matched_prefix_of_path_elem : path_elem -> option string
 
@@ -35,8 +35,9 @@ type mod_symbol =
 
 type lid_symbol = FStar.Ident.lid
 
-type trie 'a
-type table
+val trie (a:Type0) : Type0
+
+val table : Type0
 
 val empty : table
 val insert : tbl:table -> host_query:query -> id:string -> c:lid_symbol -> table

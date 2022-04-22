@@ -46,10 +46,6 @@ module Errors = FStar.Errors
 
 let rangeof g = g.goal_ctx_uvar.ctx_uvar_range
 
-(* WHY DO I NEED TO COPY THESE? *)
-type controller_ty = term -> tac (bool * ctrl_flag)
-type rewriter_ty   = tac unit
-
 let __do_rewrite
     (g0:goal)
     (rewriter : rewriter_ty)

@@ -28,6 +28,7 @@ module Const = FStar.Parser.Const
 module BU = FStar.Compiler.Util
 
 type open_kind = | Open_module | Open_namespace
+type module_name = string
 
 val module_name_of_file : string -> string
 val lowercase_module_name : string -> string
@@ -41,10 +42,13 @@ val hard_coded_dependencies : string -> list (lident * open_kind)
 
 val is_interface: string -> bool
 val is_implementation: string -> bool
-type module_name = string
-type parsing_data  //cached in the checked files
+
+val parsing_data : Type0  //cached in the checked files
+
 val empty_parsing_data: parsing_data  //for legacy ide
-type deps
+
+val deps : Type0
+
 val empty_deps : deps
 val interface_of : deps -> module_name:string -> option string  //return value is the file name
 val implementation_of : deps -> module_name:string -> option string  //return value is the file name

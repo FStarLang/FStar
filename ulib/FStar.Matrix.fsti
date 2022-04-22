@@ -163,60 +163,89 @@ val matrix_fold_equals_fold_of_transpose (#c:_) (#eq:_)
                                          (gen: matrix_generator c m n)
   : Lemma (foldm cm (init gen) `eq.eq`
            foldm cm (init (transposed_matrix_gen gen)))
-            
+
+(* The equivalence relation defined for matrices of given dimensions *)
 val matrix_equiv : (#c: Type) ->
                    (eq:  CE.equiv c) ->
                    (m: pos) -> (n: pos) ->
                    CE.equiv (matrix c m n)                   
-                   
+
+(* element-wise matrix equivalence lemma *)
 val matrix_equiv_ijth (#c:_) (#m #n: pos) (eq: CE.equiv c) 
                       (ma mb: matrix c m n) (i: under m) (j: under n)
   : Lemma (requires (matrix_equiv eq m n).eq ma mb) 
           (ensures ijth ma i j `eq.eq` ijth mb i j) 
-          
+
+(* We can always establish matrix equivalence from element-wise equivalence *)
 val matrix_equiv_from_element_eq (#c:_) (#m #n: pos) (eq: CE.equiv c) (ma mb: matrix c m n)
   : Lemma (requires (forall (i: under m) (j: under n). ijth ma i j `eq.eq` ijth mb i j))
           (ensures (matrix_equiv eq m n).eq ma mb)
- 
+
+(* 
+   Notice that even though we can (and will) construct CommMonoid for matrix addition,
+   we still publish the operations as well since as soon as we get to multiplication,
+   results usually have different dimensions, so it would be convenient to have both
+   the CommMonoid for matrix addition and the explicit addition function.
+
+   This becomes the only way with non-square matrix multiplication, since these 
+   would not constitute a monoid to begin with.
+*)
+
+(* This version of the lemma is useful if we don't want to invoke 
+   Classical.forall_intro_2 in a big proof to conserve resources *)
 let matrix_equiv_from_proof #c (#m #n: pos) (eq: CE.equiv c) (ma mb: matrix c m n)
   (proof: (i:under m) -> (j:under n) -> Lemma (eq.eq (ijth ma i j) (ijth mb i j)))
   : Lemma ((matrix_equiv eq m n).eq ma mb)
   = Classical.forall_intro_2 proof; 
     matrix_equiv_from_element_eq eq ma mb 
 
+(* This one is the generator function for sum of matrices *)
 let matrix_add_generator #c #eq (#m #n: pos) (add: CE.cm c eq) (ma mb: matrix c m n) 
   : matrix_generator c m n = fun i j -> add.mult (ijth ma i j) (ijth mb i j)
 
+(* This is the matrix sum operation given the addition CommMonoid *)
 let matrix_add #c #eq (#m #n: pos) (add: CE.cm c eq) (ma mb: matrix c m n) 
   : matrix_of (matrix_add_generator add ma mb)
   = init (matrix_add_generator add ma mb)  
-  
+
+(* Sum of matrices ijth element lemma *)
 let matrix_add_ijth #c #eq (#m #n: pos) (add: CE.cm c eq) (ma mb: matrix c m n) (i: under m) (j: under n)
   : Lemma (ijth (matrix_add add ma mb) i j == add.mult (ijth ma i j) (ijth mb i j)) = ()
-  
+
+(* m*n-sized matrix addition CommMonoid *)
 val matrix_add_comm_monoid : (#c:Type) -> 
                              (#eq:CE.equiv c) -> 
                              (add: CE.cm c eq) -> 
                              (m:pos) -> (n: pos) -> 
                              CE.cm (matrix c m n) (matrix_equiv eq m n)
 
+
+(* Sometimes we want matrix rows and columns to be accessed as sequences *)
 let col #c #m #n (mx: matrix c m n) (j: under n) = SB.init m (fun (i: under m) -> ijth mx i j) 
 
 let row #c #m #n (mx: matrix c m n) (i: under m) = SB.init n (fun (j: under n) -> ijth mx i j) 
 
+(* ijth-based and row/col-based element access methods are equivalent *)
 val matrix_row_col_lemma (#c:_) (#m #n:pos) (mx: matrix c m n) (i: under m) (j: under n) 
   : Lemma (ijth mx i j == SB.index (row mx i) j /\ ijth mx i j == SB.index (col mx j) i)  
 
-
+(* This transforms a seq X={Xi} into a seq X={Xi `op` c} *)
 let seq_op_const #c #eq (cm: CE.cm c eq) (s: SB.seq c) (const: c) 
   = SB.init (SB.length s) (fun (i: under (SB.length s)) -> cm.mult (SB.index s i) const)
-  
+
+(* Well, technically it is the same thing as above, given cm is commutative. 
+   We will still use prefix and postfix applications separately since
+   sometimes provable equality (==) rather than `eq.eq` comes in handy  *)
 let const_op_seq #c #eq (cm: CE.cm c eq) (const: c) (s: SB.seq c)                       
   = SB.init (SB.length s) (fun (i: under (SB.length s)) -> cm.mult const (SB.index s i))
 
+
+(* We can get a sequence of products (or sums) from two sequences of equal length *)
 let seq_of_products #c #eq (mul: CE.cm c eq) (s: SB.seq c) (t: SB.seq c {SB.length t == SB.length s})
   = SB.init (SB.length s) (fun (i: under (SB.length s)) -> SB.index s i `mul.mult` SB.index t i)
 
+(* As trivial as it seems to be, sometimes this lemma proves to be useful, mostly because 
+   lemma_eq_elim invocation is surprisingly costly resources-wise. *)
 val seq_of_products_lemma (#c:_) (#eq:_) (mul: CE.cm c eq) 
                           (s: SB.seq c) (t: SB.seq c {SB.length t == SB.length s})
                           (r: SB.seq c { SB.equal r (SB.init (SB.length s) 
@@ -224,15 +253,19 @@ val seq_of_products_lemma (#c:_) (#eq:_) (mul: CE.cm c eq)
                                                                     SB.index s i `mul.mult` SB.index t i))})
   : Lemma (seq_of_products mul s t == r)  
 
+(* The usual dot product of two sequences of equal lengths *)
 let dot #c #eq (add mul: CE.cm c eq) (s: SB.seq c) (t: SB.seq c{SB.length t == SB.length s}) 
   = SP.foldm_snoc add (seq_of_products mul s t) 
 
 val dot_lemma (#c:_) (#eq:_) (add mul: CE.cm c eq) (s: SB.seq c) (t: SB.seq c{SB.length t == SB.length s}) 
   : Lemma (dot add mul s t == SP.foldm_snoc add (seq_of_products mul s t)) 
- 
+
+(* Of course, it would be best to define the matrix product as a convolution,
+   but we don't have all the necessary framework for that level of generality yet. *)
 val matrix_mul (#c:_) (#eq:_) (#m #n #p:pos) (add mul: CE.cm c eq) (mx: matrix c m n) (my: matrix c n p)  
   : matrix c m p
 
+(* Both distributivity laws hold for matrices as shown below *)
 let is_left_distributive #c #eq (mul add: CE.cm c eq) = 
   forall (x y z: c). mul.mult x (add.mult y z) `eq.eq` add.mult (mul.mult x y) (mul.mult x z)
 
@@ -241,9 +274,26 @@ let is_right_distributive #c #eq (mul add: CE.cm c eq) =
 
 let is_fully_distributive #c #eq (mul add: CE.cm c eq) = is_left_distributive mul add /\ is_right_distributive mul add
 
+(* 
+   This definition is of course far more general than matrices, and should rather 
+   be a part of algebra core, as it is relevant to any magma. 
+   
+   In the process of development of F* abstract algebra framework, this definition
+   will probably take its rightful place near the most basic of grouplike structures.
+
+   Also note that this property is defined via forall. We would probably want
+   to make such properties opaque to SMT in the future, to avoid verification performance
+   issues.
+*)
 let is_absorber #c #eq (z:c) (op: CE.cm c eq) = 
   forall (x:c). op.mult z x `eq.eq` z /\ op.mult x z `eq.eq` z
 
+(* 
+   Similar lemmas to reason about matrix product elements 
+   We're going to refactor these a bit, as some are clearly redundant.
+   Might want to keep internal usages to one variant of the lemma and
+   remove the rest.
+*)
 val matrix_mul_ijth (#c:_) (#eq:_) (#m #n #k:pos) (add mul: CE.cm c eq) 
                     (mx: matrix c m n) (my: matrix c n k) (i: under m) (h: under k)
   : Lemma (ijth (matrix_mul add mul mx my) i h == dot add mul (row mx i) (col my h))
@@ -263,16 +313,20 @@ val matrix_mul_ijth_eq_sum_of_seq_for_init (#c:_) (#eq:_) (#m #n #p:pos) (add mu
     (mx: matrix c m n) (my: matrix c n p) (i: under m) (k: under p) 
     (f: under n -> c { SB.init n f `SB.equal` seq_of_products mul (row mx i) (col my k)})
   : Lemma (ijth (matrix_mul add mul mx my) i k == SP.foldm_snoc add (SB.init n f))
-  
+
+
+(* Basically, we prove that (XY)Z = X(YZ) for any matrices of compatible sizes *)
 val matrix_mul_is_associative (#c:_) (#eq:_) (#m #n #p #q: pos) (add: CE.cm c eq) 
   (mul: CE.cm c eq{is_fully_distributive mul add /\ is_absorber add.unit mul}) 
   (mx: matrix c m n) (my: matrix c n p) (mz: matrix c p q)
   : Lemma ((matrix_equiv eq m q).eq ((matrix_mul add mul mx my) `matrix_mul add mul` mz)
                             (matrix_mul add mul mx (matrix_mul add mul my mz)))
-                                                       
+
+(* Square identity matrix of size m*m *)
 let matrix_mul_unit #c #eq (add mul: CE.cm c eq) m
   : matrix c m m = init (fun i j -> if i=j then mul.unit else add.unit)
-  
+
+(* Matrix multiplicative identity lemmas *)
 val matrix_mul_right_identity (#c:_) (#eq:_) (#m: pos) (add: CE.cm c eq) 
                               (mul: CE.cm c eq{is_absorber add.unit mul}) 
                               (mx: matrix c m m)
@@ -289,6 +343,7 @@ val matrix_mul_identity (#c:_) (#eq:_) (#m: pos) (add: CE.cm c eq)
   : Lemma (matrix_mul add mul mx (matrix_mul_unit add mul m) `(matrix_equiv eq m m).eq` mx /\
            matrix_mul add mul (matrix_mul_unit add mul m) mx `(matrix_equiv eq m m).eq` mx)
 
+(* Matrix multiplication of course also respects matrix equivalence *)
 val matrix_mul_congruence (#c:_) (#eq:_) (#m #n #p:pos) (add mul: CE.cm c eq)  
                           (mx: matrix c m n) (my: matrix c n p) 
                           (mz: matrix c m n) (mw: matrix c n p)
@@ -296,6 +351,7 @@ val matrix_mul_congruence (#c:_) (#eq:_) (#m #n #p:pos) (add mul: CE.cm c eq)
           (ensures (matrix_equiv eq m p).eq (matrix_mul add mul mx my) 
                                             (matrix_mul add mul mz mw))
 
+(* Both distributivities for matrices *)
 val matrix_mul_is_left_distributive (#c:_) (#eq:_) (#m #n #p:pos) (add: CE.cm c eq)
                                     (mul: CE.cm c eq{is_fully_distributive mul add /\ is_absorber add.unit mul}) 
                                     (mx: matrix c m n) (my mz: matrix c n p)

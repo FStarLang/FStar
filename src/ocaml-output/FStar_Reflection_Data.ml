@@ -409,6 +409,7 @@ let (__proj__Mkrefl_constant__item__fv :
 let (__proj__Mkrefl_constant__item__t :
   refl_constant -> FStar_Syntax_Syntax.term) =
   fun projectee -> match projectee with | { lid; fv; t;_} -> t
+type decls = FStar_Syntax_Syntax.sigelt Prims.list
 let (refl_constant_lid : refl_constant -> FStar_Ident.lid) = fun rc -> rc.lid
 let (refl_constant_term : refl_constant -> FStar_Syntax_Syntax.term) =
   fun rc -> rc.t
@@ -791,4 +792,3 @@ let (ord_Eq_fv : FStar_Syntax_Syntax.fv) =
 let (ord_Gt_fv : FStar_Syntax_Syntax.fv) =
   FStar_Syntax_Syntax.lid_as_fv ord_Gt_lid FStar_Syntax_Syntax.delta_constant
     (FStar_Pervasives_Native.Some FStar_Syntax_Syntax.Data_ctor)
-type decls = FStar_Syntax_Syntax.sigelt Prims.list

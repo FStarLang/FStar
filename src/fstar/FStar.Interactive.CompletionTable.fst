@@ -204,8 +204,6 @@ let rec btree_fold (bt: btree 'a) (f: string -> 'a -> 'b -> 'b) (acc: 'b) =
 
 (** * Tries * **)
 
-type path = list path_elem
-type query = list string
 
 let query_to_string q = String.concat "." q
 
@@ -214,9 +212,9 @@ type name_collection 'a =
 | ImportedNames of string * names 'a
 and names 'a = list (name_collection 'a)
 
-type trie 'a =
-  { bindings: names 'a;
-    namespaces: names (trie 'a) }
+type trie (a:Type0) =
+  { bindings: names a;
+    namespaces: names (trie a) }
 
 let trie_empty = { bindings = []; namespaces = [] }
 
@@ -362,20 +360,7 @@ let trie_find_prefix (tr: trie 'a) (query: query) : list (path * 'a) =
 
 (** * High level interface * **)
 
-type ns_info = { ns_name: string;
-                 ns_loaded: bool }
-
-type mod_info = { mod_name: string;
-                  mod_path: string;
-                  mod_loaded: bool }
-
 let mod_name md = md.mod_name
-
-type mod_symbol =
-| Module of mod_info
-| Namespace of ns_info
-
-type lid_symbol = Ident.lid
 
 type symbol =
 | ModOrNs of mod_symbol
@@ -468,11 +453,6 @@ let alist_of_mod_info mod_info =
   [("name", FStar.Compiler.Util.JsonStr mod_info.mod_name);
    ("path", FStar.Compiler.Util.JsonStr mod_info.mod_path);
    ("loaded", FStar.Compiler.Util.JsonBool mod_info.mod_loaded)]
-
-type completion_result =
-  { completion_match_length: int;
-    completion_candidate: string;
-    completion_annotation: string }
 
 let json_of_completion_result (result: completion_result) =
   Util.JsonList [Util.JsonInt result.completion_match_length;

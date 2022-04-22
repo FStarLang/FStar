@@ -1,4 +1,21 @@
 open Prims
+type should_unfold_res =
+  | Should_unfold_no 
+  | Should_unfold_yes 
+  | Should_unfold_fully 
+  | Should_unfold_reify 
+let (uu___is_Should_unfold_no : should_unfold_res -> Prims.bool) =
+  fun projectee ->
+    match projectee with | Should_unfold_no -> true | uu___ -> false
+let (uu___is_Should_unfold_yes : should_unfold_res -> Prims.bool) =
+  fun projectee ->
+    match projectee with | Should_unfold_yes -> true | uu___ -> false
+let (uu___is_Should_unfold_fully : should_unfold_res -> Prims.bool) =
+  fun projectee ->
+    match projectee with | Should_unfold_fully -> true | uu___ -> false
+let (uu___is_Should_unfold_reify : should_unfold_res -> Prims.bool) =
+  fun projectee ->
+    match projectee with | Should_unfold_reify -> true | uu___ -> false
 let (maybe_debug :
   FStar_TypeChecker_Cfg.cfg ->
     FStar_Syntax_Syntax.term ->
@@ -1865,23 +1882,6 @@ let rec (maybe_weakly_reduced :
             | FStar_Syntax_Syntax.Meta_labeled uu___ -> false
             | FStar_Syntax_Syntax.Meta_desugared uu___ -> false
             | FStar_Syntax_Syntax.Meta_named uu___ -> false))
-type should_unfold_res =
-  | Should_unfold_no 
-  | Should_unfold_yes 
-  | Should_unfold_fully 
-  | Should_unfold_reify 
-let (uu___is_Should_unfold_no : should_unfold_res -> Prims.bool) =
-  fun projectee ->
-    match projectee with | Should_unfold_no -> true | uu___ -> false
-let (uu___is_Should_unfold_yes : should_unfold_res -> Prims.bool) =
-  fun projectee ->
-    match projectee with | Should_unfold_yes -> true | uu___ -> false
-let (uu___is_Should_unfold_fully : should_unfold_res -> Prims.bool) =
-  fun projectee ->
-    match projectee with | Should_unfold_fully -> true | uu___ -> false
-let (uu___is_Should_unfold_reify : should_unfold_res -> Prims.bool) =
-  fun projectee ->
-    match projectee with | Should_unfold_reify -> true | uu___ -> false
 let (plugin_unfold_warn_ctr : Prims.int FStar_Compiler_Effect.ref) =
   FStar_Compiler_Util.mk_ref Prims.int_zero
 let (should_unfold :

@@ -1,4 +1,14 @@
 open Prims
+type open_kind =
+  | Open_module 
+  | Open_namespace 
+let (uu___is_Open_module : open_kind -> Prims.bool) =
+  fun projectee ->
+    match projectee with | Open_module -> true | uu___ -> false
+let (uu___is_Open_namespace : open_kind -> Prims.bool) =
+  fun projectee ->
+    match projectee with | Open_namespace -> true | uu___ -> false
+type module_name = Prims.string
 let profile : 'uuuuu . (unit -> 'uuuuu) -> Prims.string -> 'uuuuu =
   fun f -> fun c -> FStar_Profiling.profile f FStar_Pervasives_Native.None c
 type verify_mode =
@@ -56,15 +66,6 @@ let (uu___is_Gray : color -> Prims.bool) =
   fun projectee -> match projectee with | Gray -> true | uu___ -> false
 let (uu___is_Black : color -> Prims.bool) =
   fun projectee -> match projectee with | Black -> true | uu___ -> false
-type open_kind =
-  | Open_module 
-  | Open_namespace 
-let (uu___is_Open_module : open_kind -> Prims.bool) =
-  fun projectee ->
-    match projectee with | Open_module -> true | uu___ -> false
-let (uu___is_Open_namespace : open_kind -> Prims.bool) =
-  fun projectee ->
-    match projectee with | Open_namespace -> true | uu___ -> false
 let (check_and_strip_suffix :
   Prims.string -> Prims.string FStar_Pervasives_Native.option) =
   fun f ->
@@ -138,7 +139,6 @@ let (namespace_of_module :
         let uu___1 = FStar_Ident.lid_of_ids ns in
         FStar_Pervasives_Native.Some uu___1
 type file_name = Prims.string
-type module_name = Prims.string
 type dependence =
   | UseInterface of module_name 
   | PreferInterface of module_name 
