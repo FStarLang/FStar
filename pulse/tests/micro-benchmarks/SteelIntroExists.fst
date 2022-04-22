@@ -496,3 +496,41 @@ let h4
   let res = vpattern (fun res -> pred' res) in
   noop ();
   res
+
+(* This test illustrates that guard_vprop is necessary, otherwise we have:
+
+Goal 1/1 (Instantiating meta argument in application)
+p: Ghost.erased nat
+al err ar: ptr
+uu___: Ghost.erased (x: Ghost.erased nat & (Ghost.erased nat <: Prims.Tot Type0))
+uu___'0: unit
+--------------------------------------------------------------------------------
+squash (gen_elim_prop_placeholder (VStar (pts_to1 al (dfstp (Ghost.reveal _)))
+          (VStar (exists_ (fun v -> pts_to1 err v)) (pts_to1 ar (dsndp (Ghost.reveal _)))))
+      (*?u8765*)
+      _
+      (fun x ->
+          star (star (pts_to1 al ((*?u8818*) _ x)) (pts_to1 ar ((*?u8817*) _ x)))
+            (exists_ (fun v -> pts_to1 err v)))
+      (*?u552*)
+      _)
+(*?u50*) _
+
+
+*)
+
+assume val join (#opened: _) (#pl #pr: Ghost.erased nat) (al ar: ptr) : STGhostT (Ghost.erased nat) opened (pts_to1 al pl `star` pts_to1 ar pr) (fun res -> pts_to1 al res)
+
+assume val v1 (#p: Ghost.erased nat) (a: ptr) (err: ptr) : STT unit
+  (pts_to1 a p `star` pts_to1 err 0)
+  (fun _ -> pts_to1 a p `star` exists_ (fun v -> pts_to1 err v))
+
+let v2 (#p: Ghost.erased nat) (al: ptr) (err: ptr) : STT unit
+  (pts_to1 al p `star` pts_to1 err 0)
+  (fun _ -> exists_ (fun p -> pts_to1 al p `star` exists_ (fun v -> pts_to1 err v)))
+= let ar = split al in
+  let _ = gen_elim () in
+  let _ = v1 ar err in
+  let _ = gen_elim () in
+  let _ = join al ar in
+  return ()
