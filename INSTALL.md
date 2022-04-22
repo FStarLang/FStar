@@ -246,7 +246,7 @@ Then follow step 4 in [Instructions for all OSes](#instructions-for-all-oses) be
      to see what versions are available and then `opam switch <version-number>`.
 
    - Afterwards you can also install the `depext` package if you are on OPAM version lower then 2.1,
-     to be able to install some binary dependencies below more easily. Version of OPAM after 2.1 has depext handling backed in.
+     to be able to install some binary dependencies below more easily. Version of OPAM after 2.1 has depext handling baked in.
      ```sh
      $ opam install depext
      ```
