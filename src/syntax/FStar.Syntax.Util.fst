@@ -549,13 +549,6 @@ let eq_and f g =
     match f with
     | Equal -> g()
     | _ -> Unknown
-
-
-type maybe_equal = 
-  | EQUAL
-  | NOT_EQUAL
-  | MAYBE_EQUAL
-  | UNKNOWN
   
 let rec maybe_equal_term (t1:term) (t2:term)
   : bool

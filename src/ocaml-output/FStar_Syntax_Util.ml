@@ -939,20 +939,6 @@ let (equal_iff : Prims.bool -> eq_result) =
   fun uu___ -> if uu___ then Equal else NotEqual
 let (eq_and : eq_result -> (unit -> eq_result) -> eq_result) =
   fun f -> fun g -> match f with | Equal -> g () | uu___ -> Unknown
-type maybe_equal =
-  | EQUAL 
-  | NOT_EQUAL 
-  | MAYBE_EQUAL 
-  | UNKNOWN 
-let (uu___is_EQUAL : maybe_equal -> Prims.bool) =
-  fun projectee -> match projectee with | EQUAL -> true | uu___ -> false
-let (uu___is_NOT_EQUAL : maybe_equal -> Prims.bool) =
-  fun projectee -> match projectee with | NOT_EQUAL -> true | uu___ -> false
-let (uu___is_MAYBE_EQUAL : maybe_equal -> Prims.bool) =
-  fun projectee ->
-    match projectee with | MAYBE_EQUAL -> true | uu___ -> false
-let (uu___is_UNKNOWN : maybe_equal -> Prims.bool) =
-  fun projectee -> match projectee with | UNKNOWN -> true | uu___ -> false
 let rec (maybe_equal_term :
   FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term -> Prims.bool) =
   fun t1 ->

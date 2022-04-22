@@ -662,7 +662,13 @@ let force_refinement (t_base, refopt) : term =
 
 let wl_prob_to_string wl prob = prob_to_string wl.tcenv prob
 let wl_to_string wl =
-    List.map (wl_prob_to_string wl) (wl.attempting@(wl.wl_deferred |> List.map (fun (_, _, _, x) -> x))) |> String.concat "\n\t"
+  let probs_to_string (ps:list prob) = 
+    List.map (wl_prob_to_string wl) ps |> String.concat "\n\t"
+  in
+  BU.format2 "{ attempting = [ %s ];\n\
+                deferred = [ %s ] }\n"
+              (probs_to_string wl.attempting)
+              (probs_to_string (List.map (fun (_, _, _, x) -> x) wl.wl_deferred))
 
 (* ------------------------------------------------ *)
 (* </printing worklists>                            *)
@@ -2083,6 +2089,7 @@ and solve_rigid_flex_or_flex_rigid_subtyping
       begin
       match solve_t env eq_prob ({wl' with defer_ok=NoDefer;
                                            wl_implicits = [];
+                                           wl_deferred = [];
                                            attempting=sub_probs}) with
       | Success (_, defer_to_tac, imps) ->
          let wl = {wl' with attempting=rest} in
@@ -2699,7 +2706,7 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
           in
           if U.eq_tm t_head ctx_uv.ctx_uvar_typ = U.Equal
           then solve_sub_probs_if_head_types_equal wl
-          else if U.maybe_equal_term t_head ctx_uv.ctx_uvar_typ 
+          else if true // false && U.maybe_equal_term t_head ctx_uv.ctx_uvar_typ 
           then (
               if Env.debug env (Options.Other "Rel")
               then BU.print2  "first-order: head type mismatch:\n\tlhs=%s\n\trhs=%s\n"
