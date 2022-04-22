@@ -63,9 +63,6 @@
         <!-- If FSTAR_HOME is not defined then assume that fstar.exe is available on the path -->
         <FSTAR_EXE Condition="'$(FSTAR_HOME)' == ''">fstar.exe</FSTAR_EXE>
         <FSTAR_EXE Condition="'$(FSTAR_HOME)' != ''">$(FSTAR_HOME)\bin\fstar.exe</FSTAR_EXE>
-        <CALL_PROC_EXE Condition="'$(FSTAR_HOME)' == ''">CallProc.exe</CALL_PROC_EXE>                
-        <CALL_PROC_EXE Condition="'$(FSTAR_HOME)' != ''">$(FSTAR_HOME)\bin\CallProc.exe</CALL_PROC_EXE>        
-    </PropertyGroup>
 
     <Target Name="GenerateFSharpSources" BeforeTargets="BeforeBuild;BeforeRebuild">
         <!--
@@ -89,7 +86,7 @@
         
         <!-- Run extraction for .fst files -->
         <!-- TODO: What about interfaces? Should we at least run verification for them? -->
-        <Exec ConsoleToMsBuild="true" Condition="'%(Compile.Extension)' == '.fst'" Command="$(CALL_PROC_EXE) $(FSTAR_EXE) $(FSTAR_WARN_ERROR) $(FSTAR_EXTRACTION_FLAGS) $(FSTAR_FLAGS) %(Compile.Identity) --extract &quot;+%(Compile.Filename)&quot;" IgnoreStandardErrorWarningFormat="true" />
+        <Exec ConsoleToMsBuild="true" Condition="'%(Compile.Extension)' == '.fst'" Command="$(FSTAR_EXE) $(FSTAR_WARN_ERROR) $(FSTAR_EXTRACTION_FLAGS) $(FSTAR_FLAGS) %(Compile.Identity) --extract &quot;+%(Compile.Filename)&quot;" IgnoreStandardErrorWarningFormat="true" />
 
         <TransformFStarSourceFiles Odir="$(FSTAR_EXTRACTED_PATH)" Files="@(Compile)">
             <Output ItemName="FsFilesToCompile" TaskParameter="Result" />
