@@ -186,7 +186,7 @@ let terminal_case_aux #c #eq (#p:pos{p=1}) #n (cm:CE.cm c eq) (generator: matrix
            SP.foldm_snoc cm (SB.init m (fun (i:under m) -> SP.foldm_snoc cm (SB.init n (generator i)))))
   = one_row_matrix_fold_aux cm generator
 
-#push-options "--quake 10/10 --ifuel 0 --fuel 1 --z3rlimit 10"
+#push-options "--ifuel 0 --fuel 1 --z3rlimit 10"
 let terminal_case_two_aux #c #eq (#p:pos) #n (cm:CE.cm c eq) (generator: matrix_generator c p n) (m: pos{m=1}) : Lemma 
   (ensures SP.foldm_snoc cm (SB.slice (seq_of_matrix (init generator)) 0 (m*n)) `eq.eq`
            SP.foldm_snoc cm (SB.init m (fun (i:under m) -> SP.foldm_snoc cm (SB.init n (generator i)))))
@@ -237,7 +237,7 @@ let math_wut_lemma (x: pos) : Lemma (requires x>1) (ensures x-1 > 0) = ()
    I also left intact some trivial auxiliaries and the quake option 
    in order to catch regressions the moment they happen instead of several 
    releases later -- Alex *)
-#push-options "--ifuel 0 --fuel 0 --z3rlimit 15 --quake 10/10"
+#push-options "--ifuel 0 --fuel 0 --z3rlimit 15"
 #restart-solver
 let rec matrix_fold_equals_double_fold #c #eq (#p:pos) #n (cm:CE.cm c eq) 
                                        (generator: matrix_generator c p n) (m: pos{m<=p}) 
@@ -534,17 +534,8 @@ let seq_fold_decomposition #c #eq (cm: CE.cm c eq) (s: SB.seq c{SB.length s > 0}
   : Lemma (SP.foldm_snoc cm s == cm.mult (SProp.last s) (SP.foldm_snoc cm (fst (SProp.un_snoc s)))) = ()
 
 
-(* 
-   A little (maybe silly) word of warning to all who might consider
-   redefining (=) similarly to how it is done in the lemmas below.
-
-   You might spend way more time than you would like to while trying
-   to grasp why something like "if (i=0) then (..." suddenly stopped working.
-
-   Other than that, using common notation for algebraic operations instead
-   of `mul` / `add` infix indeed simplifies the code and makes it more compact.
-*)
-
+(* Using common notation for algebraic operations instead of `mul` / `add` infix 
+   simplifies the code and makes it more compact. *)
 let rec foldm_snoc_distributivity_left #c #eq (mul add: CE.cm c eq) (a: c) (s: SB.seq c)
   : Lemma (requires is_fully_distributive mul add /\ is_absorber add.unit mul) 
           (ensures mul.mult a (SP.foldm_snoc add s) `eq.eq`
