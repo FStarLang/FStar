@@ -1,9 +1,9 @@
 open Prims
+type uenv = FStar_Extraction_ML_UEnv.uenv
 let (module_or_interface_name :
   FStar_Syntax_Syntax.modul -> (Prims.bool * FStar_Ident.lid)) =
   fun m ->
     ((m.FStar_Syntax_Syntax.is_interface), (m.FStar_Syntax_Syntax.name))
-type uenv = FStar_Extraction_ML_UEnv.uenv
 let with_dsenv_of_tcenv :
   'a .
     FStar_TypeChecker_Env.env ->

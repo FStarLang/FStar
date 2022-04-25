@@ -115,6 +115,18 @@ let (uri_to_path : Prims.string -> Prims.string) =
       let uu___2 = FStar_Compiler_Util.substring_from u (Prims.of_int (12)) in
       FStar_Compiler_Util.format2 "%s:%s" uu___1 uu___2
     else FStar_Compiler_Util.substring_from u (Prims.of_int (7))
+type completion_context =
+  {
+  trigger_kind: Prims.int ;
+  trigger_char: Prims.string FStar_Pervasives_Native.option }
+let (__proj__Mkcompletion_context__item__trigger_kind :
+  completion_context -> Prims.int) =
+  fun projectee ->
+    match projectee with | { trigger_kind; trigger_char;_} -> trigger_kind
+let (__proj__Mkcompletion_context__item__trigger_char :
+  completion_context -> Prims.string FStar_Pervasives_Native.option) =
+  fun projectee ->
+    match projectee with | { trigger_kind; trigger_char;_} -> trigger_char
 let (path_to_uri : Prims.string -> Prims.string) =
   fun u ->
     let uu___ =
@@ -128,18 +140,6 @@ let (path_to_uri : Prims.string -> Prims.string) =
         FStar_Compiler_Util.substring u Prims.int_zero Prims.int_one in
       FStar_Compiler_Util.format2 "file:///%s%3A%s" uu___1 rest
     else FStar_Compiler_Util.format1 "file://%s" u
-type completion_context =
-  {
-  trigger_kind: Prims.int ;
-  trigger_char: Prims.string FStar_Pervasives_Native.option }
-let (__proj__Mkcompletion_context__item__trigger_kind :
-  completion_context -> Prims.int) =
-  fun projectee ->
-    match projectee with | { trigger_kind; trigger_char;_} -> trigger_kind
-let (__proj__Mkcompletion_context__item__trigger_char :
-  completion_context -> Prims.string FStar_Pervasives_Native.option) =
-  fun projectee ->
-    match projectee with | { trigger_kind; trigger_char;_} -> trigger_char
 let (js_compl_context : FStar_Compiler_Util.json -> completion_context) =
   fun uu___ ->
     match uu___ with
@@ -281,49 +281,6 @@ let (js_contentch : FStar_Compiler_Util.json -> Prims.string) =
                    let uu___3 = assoc "text" a in
                    FStar_Compiler_Effect.op_Bar_Greater uu___3 js_str) l in
         FStar_Compiler_List.hd uu___1
-    | other -> js_fail "dictionary" other
-type rng =
-  {
-  rng_start: (Prims.int * Prims.int) ;
-  rng_end: (Prims.int * Prims.int) }
-let (__proj__Mkrng__item__rng_start : rng -> (Prims.int * Prims.int)) =
-  fun projectee ->
-    match projectee with | { rng_start; rng_end;_} -> rng_start
-let (__proj__Mkrng__item__rng_end : rng -> (Prims.int * Prims.int)) =
-  fun projectee -> match projectee with | { rng_start; rng_end;_} -> rng_end
-let (js_rng : FStar_Compiler_Util.json -> rng) =
-  fun uu___ ->
-    match uu___ with
-    | FStar_Compiler_Util.JsonAssoc a ->
-        let st = assoc "start" a in
-        let fin = assoc "end" a in
-        let l = assoc "line" in
-        let c = assoc "character" in
-        let uu___1 =
-          let uu___2 =
-            let uu___3 =
-              let uu___4 = FStar_Compiler_Effect.op_Bar_Greater st js_assoc in
-              l uu___4 in
-            FStar_Compiler_Effect.op_Bar_Greater uu___3 js_int in
-          let uu___3 =
-            let uu___4 =
-              let uu___5 = FStar_Compiler_Effect.op_Bar_Greater st js_assoc in
-              c uu___5 in
-            FStar_Compiler_Effect.op_Bar_Greater uu___4 js_int in
-          (uu___2, uu___3) in
-        let uu___2 =
-          let uu___3 =
-            let uu___4 =
-              let uu___5 = FStar_Compiler_Effect.op_Bar_Greater fin js_assoc in
-              l uu___5 in
-            FStar_Compiler_Effect.op_Bar_Greater uu___4 js_int in
-          let uu___4 =
-            let uu___5 =
-              let uu___6 = FStar_Compiler_Effect.op_Bar_Greater st js_assoc in
-              c uu___6 in
-            FStar_Compiler_Effect.op_Bar_Greater uu___5 js_int in
-          (uu___3, uu___4) in
-        { rng_start = uu___1; rng_end = uu___2 }
     | other -> js_fail "dictionary" other
 type lquery =
   | Initialize of (Prims.int * Prims.string) 
@@ -587,10 +544,6 @@ type repl_state =
   repl_env: FStar_TypeChecker_Env.env ;
   repl_stdin: FStar_Compiler_Util.stream_reader ;
   repl_names: FStar_Interactive_CompletionTable.table }
-and grepl_state =
-  {
-  grepl_repls: repl_state FStar_Compiler_Util.psmap ;
-  grepl_stdin: FStar_Compiler_Util.stream_reader }
 let (__proj__Mkrepl_state__item__repl_line : repl_state -> Prims.int) =
   fun projectee ->
     match projectee with
@@ -638,6 +591,15 @@ let (__proj__Mkrepl_state__item__repl_names :
     match projectee with
     | { repl_line; repl_column; repl_fname; repl_deps_stack; repl_curmod;
         repl_env; repl_stdin; repl_names;_} -> repl_names
+type repl_stack_entry_t =
+  (repl_depth_t FStar_Pervasives_Native.option * (repl_task * repl_state))
+type repl_stack_t =
+  (repl_depth_t FStar_Pervasives_Native.option * (repl_task * repl_state))
+    Prims.list
+type grepl_state =
+  {
+  grepl_repls: repl_state FStar_Compiler_Util.psmap ;
+  grepl_stdin: FStar_Compiler_Util.stream_reader }
 let (__proj__Mkgrepl_state__item__grepl_repls :
   grepl_state -> repl_state FStar_Compiler_Util.psmap) =
   fun projectee ->
@@ -646,11 +608,6 @@ let (__proj__Mkgrepl_state__item__grepl_stdin :
   grepl_state -> FStar_Compiler_Util.stream_reader) =
   fun projectee ->
     match projectee with | { grepl_repls; grepl_stdin;_} -> grepl_stdin
-type repl_stack_entry_t =
-  (repl_depth_t FStar_Pervasives_Native.option * (repl_task * repl_state))
-type repl_stack_t =
-  (repl_depth_t FStar_Pervasives_Native.option * (repl_task * repl_state))
-    Prims.list
 type error_code =
   | ParseError 
   | InvalidRequest 
@@ -695,6 +652,49 @@ let (uu___is_RequestCancelled : error_code -> Prims.bool) =
 let (uu___is_ContentModified : error_code -> Prims.bool) =
   fun projectee ->
     match projectee with | ContentModified -> true | uu___ -> false
+type rng =
+  {
+  rng_start: (Prims.int * Prims.int) ;
+  rng_end: (Prims.int * Prims.int) }
+let (__proj__Mkrng__item__rng_start : rng -> (Prims.int * Prims.int)) =
+  fun projectee ->
+    match projectee with | { rng_start; rng_end;_} -> rng_start
+let (__proj__Mkrng__item__rng_end : rng -> (Prims.int * Prims.int)) =
+  fun projectee -> match projectee with | { rng_start; rng_end;_} -> rng_end
+let (js_rng : FStar_Compiler_Util.json -> rng) =
+  fun uu___ ->
+    match uu___ with
+    | FStar_Compiler_Util.JsonAssoc a ->
+        let st = assoc "start" a in
+        let fin = assoc "end" a in
+        let l = assoc "line" in
+        let c = assoc "character" in
+        let uu___1 =
+          let uu___2 =
+            let uu___3 =
+              let uu___4 = FStar_Compiler_Effect.op_Bar_Greater st js_assoc in
+              l uu___4 in
+            FStar_Compiler_Effect.op_Bar_Greater uu___3 js_int in
+          let uu___3 =
+            let uu___4 =
+              let uu___5 = FStar_Compiler_Effect.op_Bar_Greater st js_assoc in
+              c uu___5 in
+            FStar_Compiler_Effect.op_Bar_Greater uu___4 js_int in
+          (uu___2, uu___3) in
+        let uu___2 =
+          let uu___3 =
+            let uu___4 =
+              let uu___5 = FStar_Compiler_Effect.op_Bar_Greater fin js_assoc in
+              l uu___5 in
+            FStar_Compiler_Effect.op_Bar_Greater uu___4 js_int in
+          let uu___4 =
+            let uu___5 =
+              let uu___6 = FStar_Compiler_Effect.op_Bar_Greater st js_assoc in
+              c uu___6 in
+            FStar_Compiler_Effect.op_Bar_Greater uu___5 js_int in
+          (uu___3, uu___4) in
+        { rng_start = uu___1; rng_end = uu___2 }
+    | other -> js_fail "dictionary" other
 let (errorcode_to_int : error_code -> Prims.int) =
   fun uu___ ->
     match uu___ with
