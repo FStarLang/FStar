@@ -1660,7 +1660,9 @@ let modus_ponens (#p #q:Type0) (_:squash p)
 
 let cut (p q:Type0) : Lemma (requires p /\ (p ==> q)) (ensures q) = ()
 
-let and_true (p: Type0) : Lemma (requires (p /\ True)) (ensures p) = ()
+let and_true (p: Type0) : Lemma (requires (p /\ (p ==> True))) (ensures p) = ()
+
+let solve_implies_true (p: Type0) : Lemma (p ==> True) = ()
 
 let rec unify_pr_with_true (pr: term) : Tac unit =
   let hd, tl = collect_app pr in
@@ -1746,15 +1748,16 @@ let canon_l_r (use_smt:bool)
   let am = const m_unit in (* empty map *)
   let (r1_raw, ts, am) = reification eq m [] am lhs in
   let (r2_raw,  _, am) = reification eq m ts am rhs in
+//  dump "canon_l_r";
 
   // Encapsulating this in a try/with to avoid spawning uvars for smt_fallback
   let l1_raw, l2_raw, emp_frame, uvar_terms =
     try
       let res = equivalent_lists use_smt (flatten r1_raw) (flatten r2_raw) am in
       raise (Result res) with
-    | TacticFailure m -> fail m
+    | TacticFailure m -> (* dump ("Tactic failure: " ^ m); *) fail m
     | Result res -> res
-    | _ -> fail "uncaught exception in equivalent_lists"
+    | _ -> (* dump "uncaught exception in equivalent_lists"; *) fail "uncaught exception in equivalent_lists"
   in
 
    //So now we have:
@@ -1826,7 +1829,9 @@ let canon_l_r (use_smt:bool)
 
   //Introduce a cut with the auxiliary goal
 
+//  dump "Before cut";
   apply_lemma (`cut (`#aux_goal));
+//  dump "After cut";
 
 
   //After the cut, the goal looks like: A /\ (A ==> G)
@@ -1926,24 +1931,34 @@ let canon_l_r (use_smt:bool)
 
   match uvar_terms with
   | [] -> // Closing unneeded prop uvar
+//    dump "uvar_terms nil";
     focus (fun _ ->
       try
+(*        begin match goals () with
+        | [] -> ()
+        | hd :: _ -> dump_uvars_of hd "uvar_terms nil all uvars"
+        end; *)
         apply_lemma (`and_true);
         split ();
         if emp_frame then apply_lemma (`identity_left (`#eq) (`#m))
         else apply_lemma (`(CE.EQ?.reflexivity (`#eq)));
+//        dump "unify_pr_with_true";
         unify_pr_with_true pr; // MUST be done AFTER identity_left/reflexivity, which can unify other uvars
-        trivial ()
+        apply_lemma (`solve_implies_true)
       with _ -> fail "Cannot unify pr with true"
     )
   | l ->
+//    dump "uvar_terms cons";
     if emp_frame then (
       apply_lemma (`identity_left_smt (`#eq) (`#m))
     ) else (
       apply_lemma (`smt_reflexivity (`#eq))
     );
+//    dump "before t_trefl";
     t_trefl true;
+//    dump "before close_equality_typ";
     close_equality_typ (cur_goal());
+//    dump "before set_abduction_variable";
     revert ();
     set_abduction_variable ()
 
@@ -2413,11 +2428,13 @@ let rec solve_can_be_split_forall_dep (args:list argv) : Tac bool =
                      `%fst; `%snd];
                    delta_attr [`%__reduce__];
                    primops; iota; zeta];
+//              dump "solve_can_be_split_forall_dep before canon";
               canon' true pr p_bind));
 
          true
        with
        | _ ->
+//         dump "solve_can_be_split_forall_dep before try_open_existentials_forall_dep";
          let opened = try_open_existentials_forall_dep () in
          if opened
          then solve_can_be_split_forall_dep args // we only need args for their number of uvars, which has not changed
@@ -2675,6 +2692,7 @@ let solve_or_delay (dict: list (term & (unit -> Tac bool))) : Tac bool =
 /// If it returns false, it means it didn't find any solvable goal,
 /// which should mean only delayed goals are left
 let rec pick_next (dict: _) (fuel: nat) : Tac bool =
+  dump "pick_next";
   if fuel = 0
   then false
   else match goals () with
@@ -2684,6 +2702,7 @@ let rec pick_next (dict: _) (fuel: nat) : Tac bool =
 /// Main loop to schedule solving of goals.
 /// The goals () function fetches all current goals in the context
 let rec resolve_tac (dict: _) : Tac unit =
+  dump "resolve_tac";
   match goals () with
   | [] -> ()
   | g ->
