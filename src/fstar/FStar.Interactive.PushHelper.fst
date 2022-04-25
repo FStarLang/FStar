@@ -38,11 +38,6 @@ module TcErr = FStar.TypeChecker.Err
 module TcEnv = FStar.TypeChecker.Env
 module CTable = FStar.Interactive.CompletionTable
 
-type push_kind = | SyntaxCheck | LaxCheck | FullCheck
-type ctx_depth_t = int * int * solver_depth_t * int
-type deps_t = FStar.Parser.Dep.deps
-type either_replst = either repl_state repl_state
-
 let repl_stack: ref repl_stack_t = U.mk_ref []
 
 let set_check_kind env check_kind =
@@ -190,12 +185,6 @@ let run_repl_task (curmod: optmod_t) (env: env_t) (task: repl_task) : optmod_t *
 (* Name tracking: required for completions *)
 (*******************************************)
 
-type name_tracking_event =
-| NTAlias of lid (* host *) * ident (* alias *) * lid (* aliased *)
-| NTOpen of lid (* host *) * DsEnv.open_module_or_namespace (* opened *)
-| NTInclude of lid (* host *) * lid (* included *)
-| NTBinding of either FStar.Syntax.Syntax.binding TcEnv.sig_binding
-
 let query_of_ids (ids: list ident) : CTable.query =
   List.map string_of_id ids
 
@@ -248,12 +237,10 @@ let fresh_name_tracking_hooks () =
   let events = Util.mk_ref [] in
   let push_event evt = events := evt :: !events in
   events,
-  { DsEnv.ds_push_module_abbrev_hook =
-      (fun dsenv x l -> push_event (NTAlias (DsEnv.current_module dsenv, x, l)));
-    DsEnv.ds_push_include_hook =
-      (fun dsenv ns -> push_event (NTInclude (DsEnv.current_module dsenv, ns)));
-    DsEnv.ds_push_open_hook =
-      (fun dsenv op -> push_event (NTOpen (DsEnv.current_module dsenv, op))) },
+  DsEnv.mk_dsenv_hooks
+      (fun dsenv op -> push_event (NTOpen (DsEnv.current_module dsenv, op)))
+      (fun dsenv ns -> push_event (NTInclude (DsEnv.current_module dsenv, ns)))
+      (fun dsenv x l -> push_event (NTAlias (DsEnv.current_module dsenv, x, l))),
   { TcEnv.tc_push_in_gamma_hook =
       (fun _ s -> push_event (NTBinding s)) }
 

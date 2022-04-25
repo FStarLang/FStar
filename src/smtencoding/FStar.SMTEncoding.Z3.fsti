@@ -30,9 +30,7 @@ type z3status =
     | UNKNOWN of error_labels * option string         //error labels * z3 reason
     | TIMEOUT of error_labels * option string         //error labels * z3 reason
     | KILLED
-val status_string_and_errors : z3status -> string * error_labels
 type z3statistics = BU.smap string
-val set_z3_options : string -> unit
 
 type z3result = {
       z3result_status      : z3status;
@@ -41,6 +39,16 @@ type z3result = {
       z3result_query_hash  : option string;
       z3result_log_file    : option string
 }
+
+type query_log = {
+    get_module_name: unit -> string;
+    set_module_name: string -> unit;
+    write_to_log:    bool -> string -> string;
+    close_log:       unit -> unit
+}
+
+val status_string_and_errors : z3status -> string * error_labels
+val set_z3_options : string -> unit
 val giveZ3 : list decl -> unit
 
 val ask: r:Range.range
@@ -60,11 +68,4 @@ val push : msg:string -> unit
 val pop : msg:string -> unit
 val snapshot : msg:string -> (int * unit)
 val rollback : msg:string -> option int -> unit
-
-type query_log = {
-    get_module_name: unit -> string;
-    set_module_name: string -> unit;
-    write_to_log:    bool -> string -> string;
-    close_log:       unit -> unit
-}
 val query_logging : query_log

@@ -1,6 +1,4 @@
 open Prims
-let (escape : Prims.string -> Prims.string) =
-  fun s -> FStar_Compiler_Util.replace_char s 39 95
 type sort =
   | Bool_sort 
   | Int_sort 
@@ -39,26 +37,6 @@ let (uu___is_Sort : sort -> Prims.bool) =
   fun projectee -> match projectee with | Sort _0 -> true | uu___ -> false
 let (__proj__Sort__item___0 : sort -> Prims.string) =
   fun projectee -> match projectee with | Sort _0 -> _0
-let rec (strSort : sort -> Prims.string) =
-  fun x ->
-    match x with
-    | Bool_sort -> "Bool"
-    | Int_sort -> "Int"
-    | Term_sort -> "Term"
-    | String_sort -> "FString"
-    | Fuel_sort -> "Fuel"
-    | BitVec_sort n ->
-        let uu___ = FStar_Compiler_Util.string_of_int n in
-        FStar_Compiler_Util.format1 "(_ BitVec %s)" uu___
-    | Array (s1, s2) ->
-        let uu___ = strSort s1 in
-        let uu___1 = strSort s2 in
-        FStar_Compiler_Util.format2 "(Array %s %s)" uu___ uu___1
-    | Arrow (s1, s2) ->
-        let uu___ = strSort s1 in
-        let uu___1 = strSort s2 in
-        FStar_Compiler_Util.format2 "(%s -> %s)" uu___ uu___1
-    | Sort s -> s
 type op =
   | TrueOp 
   | FalseOp 
@@ -402,6 +380,28 @@ let (__proj__Mkdecls_elt__item__a_names :
   fun projectee ->
     match projectee with | { sym_name; key; decls; a_names;_} -> a_names
 type decls_t = decls_elt Prims.list
+let (escape : Prims.string -> Prims.string) =
+  fun s -> FStar_Compiler_Util.replace_char s 39 95
+let rec (strSort : sort -> Prims.string) =
+  fun x ->
+    match x with
+    | Bool_sort -> "Bool"
+    | Int_sort -> "Int"
+    | Term_sort -> "Term"
+    | String_sort -> "FString"
+    | Fuel_sort -> "Fuel"
+    | BitVec_sort n ->
+        let uu___ = FStar_Compiler_Util.string_of_int n in
+        FStar_Compiler_Util.format1 "(_ BitVec %s)" uu___
+    | Array (s1, s2) ->
+        let uu___ = strSort s1 in
+        let uu___1 = strSort s2 in
+        FStar_Compiler_Util.format2 "(Array %s %s)" uu___ uu___1
+    | Arrow (s1, s2) ->
+        let uu___ = strSort s1 in
+        let uu___1 = strSort s2 in
+        FStar_Compiler_Util.format2 "(%s -> %s)" uu___ uu___1
+    | Sort s -> s
 let (mk_decls :
   Prims.string ->
     Prims.string -> decl Prims.list -> decls_elt Prims.list -> decls_t)
@@ -452,8 +452,6 @@ let (decls_list_of : decls_t -> decl Prims.list) =
   fun l ->
     FStar_Compiler_Effect.op_Bar_Greater l
       (FStar_Compiler_List.collect (fun elt -> elt.decls))
-type error_label = (fv * Prims.string * FStar_Compiler_Range.range)
-type error_labels = error_label Prims.list
 let (mk_fv : (Prims.string * sort) -> fv) =
   fun uu___ -> match uu___ with | (x, y) -> (x, y, false)
 let (fv_name : fv -> Prims.string) =
@@ -464,6 +462,8 @@ let (fv_sort : fv -> sort) =
 let (fv_force : fv -> Prims.bool) =
   fun x ->
     let uu___ = x in match uu___ with | (uu___1, uu___2, force) -> force
+type error_label = (fv * Prims.string * FStar_Compiler_Range.range)
+type error_labels = error_label Prims.list
 let (fv_eq : fv -> fv -> Prims.bool) =
   fun x ->
     fun y ->

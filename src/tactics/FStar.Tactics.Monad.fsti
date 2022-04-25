@@ -25,7 +25,7 @@ module BU    = FStar.Compiler.Util
 module O     = FStar.Options
 
 (* Type of tactics *)
-type tac 'a
+val tac (a:Type0) : Type0
 
 (* Simply unpack and run *)
 val run : tac 'a -> proofstate -> __result 'a

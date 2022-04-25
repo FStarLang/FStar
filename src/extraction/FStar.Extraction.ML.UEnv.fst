@@ -53,54 +53,6 @@ module Const = FStar.Parser.Const
 
 (**** Type definitions *)
 
-(** An ML identifier corresponding to an identifier in F* that binds a
-    type, e.g., [a:Type].
-
-    In the common case, [ty_b_name] is a type variable (e.g., ['a]),
-    and [ty_b_ty] is just an [(MLTY_Var 'a)]
-
-    However, there are cases where the F* identifier cannot be
-    translated to a type-identifier in OCaml, e.g., if [a:Type] does
-    not appear prenex quantified. In such cases, [ty_b_name] is a
-    ML term identifer (e.g., [a]) and [ty_b_ty] is [MLTY_Top].
-  *)
-type ty_binding = {
-  ty_b_name: mlident;
-  ty_b_ty: mlty
-}
-
-(** A term identifier in ML
-      -- [exp_b_name] is the short name
-
-      -- [exp_b_expr] is usually the long name, although in some cases
-         it could be the long name applied to a unit, in case extraction
-         needed to add a thunk to respect ML's value restriction.
-
-      -- [exp_b_tscheme] the polymorphic ML type
- *)
-type exp_binding = {
-  exp_b_name: mlident;
-  exp_b_expr: mlexpr;
-  exp_b_tscheme: mltyscheme
-}
-
-type ty_or_exp_b = either ty_binding exp_binding
-
-(**
-    [Bv]: An F* local binding [bv] can either correspond to an ML
-          type or term binding.
-
-    [Fv]: An F* top-level fv is associated with an ML term binding.
-          Type definitions are maintained separately, see [tydef].
-
-    [ErasedFv]: An F* top-level name that was erased. Only to give
-                proper errors.
-  *)
-type binding =
-  | Bv  of bv * ty_or_exp_b
-  | Fv  of fv * exp_binding
-  | ErasedFv of fv
-
 (** A top-level F* type definition, i.e., a type abbreviation,
     corresponds to a [tydef] in ML.
 

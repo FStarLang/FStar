@@ -1,7 +1,74 @@
 open Prims
+type norm_step =
+  | Simpl 
+  | Weak 
+  | HNF 
+  | Primops 
+  | Delta 
+  | Zeta 
+  | ZetaFull 
+  | Iota 
+  | Reify 
+  | UnfoldOnly of Prims.string Prims.list 
+  | UnfoldFully of Prims.string Prims.list 
+  | UnfoldAttr of Prims.string Prims.list 
+  | UnfoldQual of Prims.string Prims.list 
+  | NBE 
+  | Unmeta 
+let (uu___is_Simpl : norm_step -> Prims.bool) =
+  fun projectee -> match projectee with | Simpl -> true | uu___ -> false
+let (uu___is_Weak : norm_step -> Prims.bool) =
+  fun projectee -> match projectee with | Weak -> true | uu___ -> false
+let (uu___is_HNF : norm_step -> Prims.bool) =
+  fun projectee -> match projectee with | HNF -> true | uu___ -> false
+let (uu___is_Primops : norm_step -> Prims.bool) =
+  fun projectee -> match projectee with | Primops -> true | uu___ -> false
+let (uu___is_Delta : norm_step -> Prims.bool) =
+  fun projectee -> match projectee with | Delta -> true | uu___ -> false
+let (uu___is_Zeta : norm_step -> Prims.bool) =
+  fun projectee -> match projectee with | Zeta -> true | uu___ -> false
+let (uu___is_ZetaFull : norm_step -> Prims.bool) =
+  fun projectee -> match projectee with | ZetaFull -> true | uu___ -> false
+let (uu___is_Iota : norm_step -> Prims.bool) =
+  fun projectee -> match projectee with | Iota -> true | uu___ -> false
+let (uu___is_Reify : norm_step -> Prims.bool) =
+  fun projectee -> match projectee with | Reify -> true | uu___ -> false
+let (uu___is_UnfoldOnly : norm_step -> Prims.bool) =
+  fun projectee ->
+    match projectee with | UnfoldOnly _0 -> true | uu___ -> false
+let (__proj__UnfoldOnly__item___0 : norm_step -> Prims.string Prims.list) =
+  fun projectee -> match projectee with | UnfoldOnly _0 -> _0
+let (uu___is_UnfoldFully : norm_step -> Prims.bool) =
+  fun projectee ->
+    match projectee with | UnfoldFully _0 -> true | uu___ -> false
+let (__proj__UnfoldFully__item___0 : norm_step -> Prims.string Prims.list) =
+  fun projectee -> match projectee with | UnfoldFully _0 -> _0
+let (uu___is_UnfoldAttr : norm_step -> Prims.bool) =
+  fun projectee ->
+    match projectee with | UnfoldAttr _0 -> true | uu___ -> false
+let (__proj__UnfoldAttr__item___0 : norm_step -> Prims.string Prims.list) =
+  fun projectee -> match projectee with | UnfoldAttr _0 -> _0
+let (uu___is_UnfoldQual : norm_step -> Prims.bool) =
+  fun projectee ->
+    match projectee with | UnfoldQual _0 -> true | uu___ -> false
+let (__proj__UnfoldQual__item___0 : norm_step -> Prims.string Prims.list) =
+  fun projectee -> match projectee with | UnfoldQual _0 -> _0
+let (uu___is_NBE : norm_step -> Prims.bool) =
+  fun projectee -> match projectee with | NBE -> true | uu___ -> false
+let (uu___is_Unmeta : norm_step -> Prims.bool) =
+  fun projectee -> match projectee with | Unmeta -> true | uu___ -> false
 type norm_cb =
-  (FStar_Ident.lid, FStar_Syntax_Syntax.term) FStar_Pervasives.either ->
+  (FStar_Ident.lident, FStar_Syntax_Syntax.term) FStar_Pervasives.either ->
     FStar_Syntax_Syntax.term
+type shadow_term =
+  FStar_Syntax_Syntax.term FStar_Thunk.t FStar_Pervasives_Native.option
+type embed_t =
+  FStar_Compiler_Range.range ->
+    shadow_term -> norm_cb -> FStar_Syntax_Syntax.term
+type 'a unembed_t =
+  Prims.bool -> norm_cb -> 'a FStar_Pervasives_Native.option
+type 'a raw_embedder = 'a -> embed_t
+type 'a raw_unembedder = FStar_Syntax_Syntax.term -> 'a unembed_t
 let (id_norm_cb : norm_cb) =
   fun uu___ ->
     match uu___ with
@@ -19,8 +86,6 @@ exception Unembedding_failure
 let (uu___is_Unembedding_failure : Prims.exn -> Prims.bool) =
   fun projectee ->
     match projectee with | Unembedding_failure -> true | uu___ -> false
-type shadow_term =
-  FStar_Syntax_Syntax.term FStar_Thunk.t FStar_Pervasives_Native.option
 let (map_shadow :
   shadow_term ->
     (FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term) -> shadow_term)
@@ -28,13 +93,6 @@ let (map_shadow :
 let (force_shadow :
   shadow_term -> FStar_Syntax_Syntax.term FStar_Pervasives_Native.option) =
   fun s -> FStar_Compiler_Util.map_opt s FStar_Thunk.force
-type embed_t =
-  FStar_Compiler_Range.range ->
-    shadow_term -> norm_cb -> FStar_Syntax_Syntax.term
-type 'a unembed_t =
-  Prims.bool -> norm_cb -> 'a FStar_Pervasives_Native.option
-type 'a raw_embedder = 'a -> embed_t
-type 'a raw_unembedder = FStar_Syntax_Syntax.term -> 'a unembed_t
 type 'a printer = 'a -> Prims.string
 type 'a embedding =
   {
@@ -1274,64 +1332,6 @@ let e_list : 'a . 'a embedding -> 'a Prims.list embedding =
       let uu___1 = type_of ea in FStar_Syntax_Syntax.t_list_of uu___1 in
     mk_emb_full em un uu___ printer1 emb_t_list_a
 let (e_string_list : Prims.string Prims.list embedding) = e_list e_string
-type norm_step =
-  | Simpl 
-  | Weak 
-  | HNF 
-  | Primops 
-  | Delta 
-  | Zeta 
-  | ZetaFull 
-  | Iota 
-  | Reify 
-  | UnfoldOnly of Prims.string Prims.list 
-  | UnfoldFully of Prims.string Prims.list 
-  | UnfoldAttr of Prims.string Prims.list 
-  | UnfoldQual of Prims.string Prims.list 
-  | NBE 
-  | Unmeta 
-let (uu___is_Simpl : norm_step -> Prims.bool) =
-  fun projectee -> match projectee with | Simpl -> true | uu___ -> false
-let (uu___is_Weak : norm_step -> Prims.bool) =
-  fun projectee -> match projectee with | Weak -> true | uu___ -> false
-let (uu___is_HNF : norm_step -> Prims.bool) =
-  fun projectee -> match projectee with | HNF -> true | uu___ -> false
-let (uu___is_Primops : norm_step -> Prims.bool) =
-  fun projectee -> match projectee with | Primops -> true | uu___ -> false
-let (uu___is_Delta : norm_step -> Prims.bool) =
-  fun projectee -> match projectee with | Delta -> true | uu___ -> false
-let (uu___is_Zeta : norm_step -> Prims.bool) =
-  fun projectee -> match projectee with | Zeta -> true | uu___ -> false
-let (uu___is_ZetaFull : norm_step -> Prims.bool) =
-  fun projectee -> match projectee with | ZetaFull -> true | uu___ -> false
-let (uu___is_Iota : norm_step -> Prims.bool) =
-  fun projectee -> match projectee with | Iota -> true | uu___ -> false
-let (uu___is_Reify : norm_step -> Prims.bool) =
-  fun projectee -> match projectee with | Reify -> true | uu___ -> false
-let (uu___is_UnfoldOnly : norm_step -> Prims.bool) =
-  fun projectee ->
-    match projectee with | UnfoldOnly _0 -> true | uu___ -> false
-let (__proj__UnfoldOnly__item___0 : norm_step -> Prims.string Prims.list) =
-  fun projectee -> match projectee with | UnfoldOnly _0 -> _0
-let (uu___is_UnfoldFully : norm_step -> Prims.bool) =
-  fun projectee ->
-    match projectee with | UnfoldFully _0 -> true | uu___ -> false
-let (__proj__UnfoldFully__item___0 : norm_step -> Prims.string Prims.list) =
-  fun projectee -> match projectee with | UnfoldFully _0 -> _0
-let (uu___is_UnfoldAttr : norm_step -> Prims.bool) =
-  fun projectee ->
-    match projectee with | UnfoldAttr _0 -> true | uu___ -> false
-let (__proj__UnfoldAttr__item___0 : norm_step -> Prims.string Prims.list) =
-  fun projectee -> match projectee with | UnfoldAttr _0 -> _0
-let (uu___is_UnfoldQual : norm_step -> Prims.bool) =
-  fun projectee ->
-    match projectee with | UnfoldQual _0 -> true | uu___ -> false
-let (__proj__UnfoldQual__item___0 : norm_step -> Prims.string Prims.list) =
-  fun projectee -> match projectee with | UnfoldQual _0 -> _0
-let (uu___is_NBE : norm_step -> Prims.bool) =
-  fun projectee -> match projectee with | NBE -> true | uu___ -> false
-let (uu___is_Unmeta : norm_step -> Prims.bool) =
-  fun projectee -> match projectee with | Unmeta -> true | uu___ -> false
 let (steps_Simpl : FStar_Syntax_Syntax.term) =
   FStar_Syntax_Syntax.tconst FStar_Parser_Const.steps_simpl
 let (steps_Weak : FStar_Syntax_Syntax.term) =

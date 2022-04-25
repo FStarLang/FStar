@@ -19,7 +19,7 @@ module FStar.Seq.Properties
 open FStar.Seq.Base
 module Seq = FStar.Seq.Base
 
-let lseq (a: Type) (l: nat) : Type =
+let lseq (a: Type) (l: nat) : Tot Type =
     s: Seq.seq a { Seq.length s == l }
 
 let indexable (#a:Type) (s:Seq.seq a) (j:int) = 0 <= j /\ j < Seq.length s

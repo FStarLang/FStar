@@ -44,8 +44,8 @@ module Rel     = FStar.TypeChecker.Rel
  * A record, so we can keep it somewhat encapsulated and
  * can more easily add things to it if need be.
  *)
-type tac 'a = {
-    tac_f : proofstate -> __result 'a;
+type tac (a:Type0) = {
+    tac_f : proofstate -> __result a;
 }
 
 let mk_tac (f : proofstate -> __result 'a) : tac 'a =

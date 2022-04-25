@@ -29,8 +29,3 @@ each other. *)
 // full definition of all relevant types (from ulib, we use an different
 // interface that hides those definitions).
 open FStar.Tactics.Types
-
-type __result 'a =
-    | Success of 'a * proofstate
-    | Failed  of exn       //error
-              * proofstate //the proofstate at time of failure

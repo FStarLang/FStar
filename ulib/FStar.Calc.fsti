@@ -35,7 +35,7 @@ val calc_chain (#a:Type u#a) (rs:list (relation a)) (x y:a) : Type u#(max 1 a)
 
 [@@"opaque_to_smt"]
 let rec calc_chain_related (#a:Type) (rs:list (relation a)) (x y:a)
-  : Type0
+  : Tot Type0
   = match rs with
     | [] -> x == y
       (* GM: The `:t` annotation below matters a lot for compactness of the formula! *)
@@ -43,7 +43,7 @@ let rec calc_chain_related (#a:Type) (rs:list (relation a)) (x y:a)
 
 [@@"opaque_to_smt"]
 let calc_chain_compatible (#t:Type) (rs:list (relation t)) (p:relation t)
-  : Type0
+  : Tot Type0
   = forall (x y:t). calc_chain_related rs x y ==> p x y
 
 /// A proof irrelevant type for the calc chains
