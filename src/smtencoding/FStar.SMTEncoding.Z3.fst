@@ -447,28 +447,86 @@ let fresh_scope : ref scope_t = BU.mk_ref [[]]
 let mk_fresh_scope () = !fresh_scope
 let flatten_fresh_scope () = List.flatten (List.rev !fresh_scope)
 
-// bg_scope: Is the flat sequence of declarations already given to Z3
-//           When refreshing the solver, the bg_scope is set to
-//           a flattened version of fresh_scope
-let bg_scope : ref (list decl) = BU.mk_ref []
+//
+// bg_scope has two fields:
+//   One, a flat sequence of declarations already given to Z3
+//   Second, a scope chain maintaining pending pushes and associated
+//           decls, that are not yet given to Z3, but have been given to
+//           this module via giveZ3
+//
+// Maintaing the list of pending pushes separately allows us to remove
+//   redundant push/pop that do not have a query
+//
+// E.g. consider the following calls to this module:
+//      Push; giveZ3 d1; giveZ3 d2; Push giveZ3 d3
+//
+// In this case, the pending pushes will be:
+//   [[Push; d3]; [Push; d1; d2]]
+// I.e. order of decls is maintained inside each push, but
+//   pushes are maintained in the reverse order (in a stack like structure)
+//
+// Now say, we get Pop
+// We simply change the pending pushes to [[Push; d1; d2]]
+//
+// Thus the query-less push/pop never goes to z3
+//
+// There are two other places (other than push, giveZ3, and pop)
+//   where bg_scope is changed:
+//
+// 1. When refreshing the solver, the bg_scope is set to
+//    a flattened version of fresh_scope
+//
+// and
+//
+// 2. When asking a query, we flatten pending pushes (after reversing),
+//    and add them to the decls field
+//
+type bg_scope_t = {
+  bg_decls : list decl;
+  bg_pending_pushes : scope_t;
+}
+let bg_scope : ref bg_scope_t = BU.mk_ref ({
+  bg_decls = [];
+  bg_pending_pushes = [[]]
+})
+let decls_of_pending_pushes (pending_pushes:scope_t) : list decl =
+  pending_pushes |> List.rev |> List.flatten
 
+//
 // fresh_scope is a mutable reference; this pushes a new list at the front;
 // then, givez3 modifies the reference so that within the new list at the front,
 // new queries are pushed
+//
 let push msg    = BU.atomically (fun () ->
-    fresh_scope := [Push msg]::!fresh_scope;
-    bg_scope := !bg_scope @ [Push msg])
+  fresh_scope := [Push msg]::!fresh_scope;
+  bg_scope :=  //add push to the pending pushes in bg_scope
+    (let v = !bg_scope in
+     {v with
+      bg_pending_pushes = [Push msg]::v.bg_pending_pushes}))
 
+//
+// For bg_scope, if no pending pushes, then just add to the bg_decls
+//               else pop the revent recent push
+//
 let pop msg      = BU.atomically (fun () ->
-    fresh_scope := List.tl !fresh_scope;
-    bg_scope := !bg_scope @ [Pop msg])
+  fresh_scope := List.tl !fresh_scope;
+  bg_scope :=
+    (let v = !bg_scope in
+     match v.bg_pending_pushes with
+     | [] -> {v with bg_decls=v.bg_decls@[Pop msg]}
+     | _::tl -> {v with bg_pending_pushes=tl}))
 
 let snapshot msg = Common.snapshot push fresh_scope msg
 let rollback msg depth = Common.rollback (fun () -> pop msg) fresh_scope depth
 
+//
 //giveZ3 decls: adds decls to the stack of declarations
 //              to be actually given to Z3 only when the next
 //              query comes up
+//
+// for bg_scope, if no pending pushes, add these to bg_decls
+//               else add these to the last push decls block
+//
 let giveZ3 decls =
    decls |> List.iter (function Push _ | Pop _ -> failwith "Unexpected push/pop" | _ -> ());
    // This is where we prepend new queries to the head of the list at the head
@@ -477,12 +535,17 @@ let giveZ3 decls =
     | hd::tl -> fresh_scope := (hd@decls)::tl
     | _ -> failwith "Impossible"
    end;
-   bg_scope := !bg_scope @ decls
+   bg_scope :=
+     (let v = !bg_scope in
+      match v.bg_pending_pushes with
+      | [] -> {v with bg_decls=v.bg_decls@decls}
+      | hd::tl -> {v with bg_pending_pushes=(hd@decls)::tl})
 
 //refresh: create a new z3 process, and reset the bg_scope
 let refresh () =
     (!bg_z3_proc).refresh();
-    bg_scope := flatten_fresh_scope ()
+    bg_scope := {bg_decls=flatten_fresh_scope ();
+                bg_pending_pushes=[]}
 
 let context_profile (theory:list decl) =
     let modules, total_decls =
@@ -615,8 +678,11 @@ let ask
   = let theory =
         if fresh
         then flatten_fresh_scope()
-        else let theory = !bg_scope in
-             bg_scope := [];//now consumed
+        else let theory, _reset_bg_scope =
+               let v = !bg_scope in
+               //bg_scope is now consumed
+               bg_scope := {bg_decls=[]; bg_pending_pushes=[]};
+               v.bg_decls@(decls_of_pending_pushes v.bg_pending_pushes), () in
              theory
     in
     let theory = theory @[Push ask_push_pop_msg]@qry@[Pop ask_push_pop_msg] in
