@@ -747,7 +747,7 @@ let rec declToSmt' print_captions z3options decl =
     mkPrelude z3options
   | Module (s, decls) ->
     let res = List.map (declToSmt' print_captions z3options) decls |> String.concat "\n" in
-    if Options.keep_query_captions()
+    if print_captions
     then BU.format5 "\n;;; Start %s\n%s\n;;; End %s (%s decls; total size %s)"
                     s
                     res
@@ -801,8 +801,10 @@ let rec declToSmt' print_captions z3options decl =
     ""
   | CheckSat -> "(echo \"<result>\")\n(check-sat)\n(echo \"</result>\")"
   | GetUnsatCore -> "(echo \"<unsat-core>\")\n(get-unsat-core)\n(echo \"</unsat-core>\")"
-  | Push -> "(push)"
-  | Pop -> "(pop)"
+  | Push msg ->
+    format1 "(push)%s" (if print_captions then "  ; " ^ msg else "")
+  | Pop msg ->
+    format1 "(pop)%s" (if print_captions then "  ; " ^ msg else "")
   | SetOption (s, v) -> format2 "(set-option :%s %s)" s v
   | GetStatistics -> "(echo \"<statistics>\")\n(get-info :all-statistics)\n(echo \"</statistics>\")"
   | GetReasonUnknown-> "(echo \"<reason-unknown>\")\n(get-info :reason-unknown)\n(echo \"</reason-unknown>\")"

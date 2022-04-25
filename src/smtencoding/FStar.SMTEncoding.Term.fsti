@@ -118,8 +118,8 @@ type decl =
   | Eval       of term
   | Echo       of string
   | RetainAssumptions of list string
-  | Push
-  | Pop
+  | Push       of string
+  | Pop        of string
   | CheckSat
   | GetUnsatCore
   | SetOption  of string * string

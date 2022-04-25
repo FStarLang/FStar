@@ -456,12 +456,12 @@ let bg_scope : ref (list decl) = BU.mk_ref []
 // then, givez3 modifies the reference so that within the new list at the front,
 // new queries are pushed
 let push msg    = BU.atomically (fun () ->
-    fresh_scope := [Caption msg; Push]::!fresh_scope;
-    bg_scope := !bg_scope @ [Push; Caption msg])
+    fresh_scope := [Push msg]::!fresh_scope;
+    bg_scope := !bg_scope @ [Push msg])
 
 let pop msg      = BU.atomically (fun () ->
     fresh_scope := List.tl !fresh_scope;
-    bg_scope := !bg_scope @ [Caption msg; Pop])
+    bg_scope := !bg_scope @ [Pop msg])
 
 let snapshot msg = Common.snapshot push fresh_scope msg
 let rollback msg depth = Common.rollback (fun () -> pop msg) fresh_scope depth
@@ -470,7 +470,7 @@ let rollback msg depth = Common.rollback (fun () -> pop msg) fresh_scope depth
 //              to be actually given to Z3 only when the next
 //              query comes up
 let giveZ3 decls =
-   decls |> List.iter (function Push | Pop -> failwith "Unexpected push/pop" | _ -> ());
+   decls |> List.iter (function Push _ | Pop _ -> failwith "Unexpected push/pop" | _ -> ());
    // This is where we prepend new queries to the head of the list at the head
    // of fresh_scope
    begin match !fresh_scope with
@@ -602,6 +602,8 @@ let z3_job (log_file:_) (r:Range.range) fresh (label_messages:error_labels) inpu
     z3result_query_hash = qhash;
     z3result_log_file   = log_file }
 
+let ask_push_pop_msg = "checking query"
+
 let ask
     (r:Range.range)
     (filter_theory:list decl -> list decl * bool)
@@ -617,7 +619,7 @@ let ask
              bg_scope := [];//now consumed
              theory
     in
-    let theory = theory @[Push]@qry@[Pop] in
+    let theory = theory @[Push ask_push_pop_msg]@qry@[Pop ask_push_pop_msg] in
     let theory, _used_unsat_core = filter_theory theory in
     let input, qhash, log_file_name = mk_input fresh theory in
 
