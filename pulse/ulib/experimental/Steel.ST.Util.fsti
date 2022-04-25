@@ -149,9 +149,9 @@ val intro_can_be_split_exists (a:Type) (x:a) (p: a -> vprop)
     (ensures (p x `can_be_split` (exists_ p)))
 
 [@@solve_can_be_split_forall_dep_lookup; (solve_can_be_split_forall_dep_for exists_)]
-val intro_can_be_split_forall_dep_exists (a:Type) (b:Type)
-                           (x:b -> GTot a)
-                           (p: b -> a -> vprop)
+val intro_can_be_split_forall_dep_exists (b:Type) (a: b -> Type)
+                           (x: (u: b) -> GTot (a u))
+                           (p: (u: b) -> a u -> vprop)
   : Lemma
     (ensures (fun (y:b) -> p y (x y)) `(can_be_split_forall_dep (fun _ -> True))` (fun (y:b) -> exists_ (p y)))
 

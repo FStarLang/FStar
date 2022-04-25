@@ -103,14 +103,14 @@ let intro_can_be_split_exists
   Classical.forall_intro (Steel.Memory.intro_h_exists x (SEA.h_exists_sl' p))
 
 let intro_can_be_split_forall_dep_exists
-  a b x p
+  b a x p
 =
   let prf
     (y: b)
   : Lemma
     (p y (x y) `can_be_split` exists_ (p y))
   =
-    intro_can_be_split_exists a (x y) (p y)
+    intro_can_be_split_exists (a y) (x y) (p y)
   in
   Classical.forall_intro prf
 
