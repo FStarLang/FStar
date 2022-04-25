@@ -293,8 +293,8 @@ type decl =
   | Eval of term 
   | Echo of Prims.string 
   | RetainAssumptions of Prims.string Prims.list 
-  | Push 
-  | Pop 
+  | Push of Prims.string 
+  | Pop of Prims.string 
   | CheckSat 
   | GetUnsatCore 
   | SetOption of (Prims.string * Prims.string) 
@@ -339,9 +339,13 @@ let (uu___is_RetainAssumptions : decl -> Prims.bool) =
 let (__proj__RetainAssumptions__item___0 : decl -> Prims.string Prims.list) =
   fun projectee -> match projectee with | RetainAssumptions _0 -> _0
 let (uu___is_Push : decl -> Prims.bool) =
-  fun projectee -> match projectee with | Push -> true | uu___ -> false
+  fun projectee -> match projectee with | Push _0 -> true | uu___ -> false
+let (__proj__Push__item___0 : decl -> Prims.string) =
+  fun projectee -> match projectee with | Push _0 -> _0
 let (uu___is_Pop : decl -> Prims.bool) =
-  fun projectee -> match projectee with | Pop -> true | uu___ -> false
+  fun projectee -> match projectee with | Pop _0 -> true | uu___ -> false
+let (__proj__Pop__item___0 : decl -> Prims.string) =
+  fun projectee -> match projectee with | Pop _0 -> _0
 let (uu___is_CheckSat : decl -> Prims.bool) =
   fun projectee -> match projectee with | CheckSat -> true | uu___ -> false
 let (uu___is_GetUnsatCore : decl -> Prims.bool) =
@@ -1744,17 +1748,16 @@ let rec (declToSmt' : Prims.bool -> Prims.string -> decl -> Prims.string) =
                   decls in
               FStar_Compiler_Effect.op_Bar_Greater uu___
                 (FStar_String.concat "\n") in
-            let uu___ = FStar_Options.keep_query_captions () in
-            if uu___
+            if print_captions
             then
-              let uu___1 =
+              let uu___ =
                 FStar_Compiler_Util.string_of_int
                   (FStar_Compiler_List.length decls) in
-              let uu___2 =
+              let uu___1 =
                 FStar_Compiler_Util.string_of_int (FStar_String.length res) in
               FStar_Compiler_Util.format5
                 "\n;;; Start %s\n%s\n;;; End %s (%s decls; total size %s)" s
-                res s uu___1 uu___2
+                res s uu___ uu___1
             else res
         | Caption c ->
             if print_captions
@@ -1825,8 +1828,12 @@ let rec (declToSmt' : Prims.bool -> Prims.string -> decl -> Prims.string) =
             "(echo \"<result>\")\n(check-sat)\n(echo \"</result>\")"
         | GetUnsatCore ->
             "(echo \"<unsat-core>\")\n(get-unsat-core)\n(echo \"</unsat-core>\")"
-        | Push -> "(push)"
-        | Pop -> "(pop)"
+        | Push msg ->
+            FStar_Compiler_Util.format1 "(push)%s"
+              (if print_captions then Prims.op_Hat "  ; " msg else "")
+        | Pop msg ->
+            FStar_Compiler_Util.format1 "(pop)%s"
+              (if print_captions then Prims.op_Hat "  ; " msg else "")
         | SetOption (s, v) ->
             FStar_Compiler_Util.format2 "(set-option :%s %s)" s v
         | GetStatistics ->

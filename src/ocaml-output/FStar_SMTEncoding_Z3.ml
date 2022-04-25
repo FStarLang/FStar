@@ -755,14 +755,12 @@ let (push : Prims.string -> unit) =
       (fun uu___ ->
          (let uu___2 =
             let uu___3 = FStar_Compiler_Effect.op_Bang fresh_scope in
-            [FStar_SMTEncoding_Term.Caption msg; FStar_SMTEncoding_Term.Push]
-              :: uu___3 in
+            [FStar_SMTEncoding_Term.Push msg] :: uu___3 in
           FStar_Compiler_Effect.op_Colon_Equals fresh_scope uu___2);
          (let uu___2 =
             let uu___3 = FStar_Compiler_Effect.op_Bang bg_scope in
             FStar_Compiler_List.op_At uu___3
-              [FStar_SMTEncoding_Term.Push;
-              FStar_SMTEncoding_Term.Caption msg] in
+              [FStar_SMTEncoding_Term.Push msg] in
           FStar_Compiler_Effect.op_Colon_Equals bg_scope uu___2))
 let (pop : Prims.string -> unit) =
   fun msg ->
@@ -774,9 +772,7 @@ let (pop : Prims.string -> unit) =
           FStar_Compiler_Effect.op_Colon_Equals fresh_scope uu___2);
          (let uu___2 =
             let uu___3 = FStar_Compiler_Effect.op_Bang bg_scope in
-            FStar_Compiler_List.op_At uu___3
-              [FStar_SMTEncoding_Term.Caption msg;
-              FStar_SMTEncoding_Term.Pop] in
+            FStar_Compiler_List.op_At uu___3 [FStar_SMTEncoding_Term.Pop msg] in
           FStar_Compiler_Effect.op_Colon_Equals bg_scope uu___2))
 let (snapshot : Prims.string -> (Prims.int * unit)) =
   fun msg -> FStar_Common.snapshot push fresh_scope msg
@@ -791,8 +787,10 @@ let (giveZ3 : FStar_SMTEncoding_Term.decl Prims.list -> unit) =
       (FStar_Compiler_List.iter
          (fun uu___1 ->
             match uu___1 with
-            | FStar_SMTEncoding_Term.Push -> failwith "Unexpected push/pop"
-            | FStar_SMTEncoding_Term.Pop -> failwith "Unexpected push/pop"
+            | FStar_SMTEncoding_Term.Push uu___2 ->
+                failwith "Unexpected push/pop"
+            | FStar_SMTEncoding_Term.Pop uu___2 ->
+                failwith "Unexpected push/pop"
             | uu___2 -> ()));
     (let uu___2 = FStar_Compiler_Effect.op_Bang fresh_scope in
      match uu___2 with
@@ -994,6 +992,7 @@ let (z3_job :
                       z3result_query_hash = qhash;
                       z3result_log_file = log_file
                     }
+let (ask_push_pop_msg : Prims.string) = "checking query"
 let (ask :
   FStar_Compiler_Range.range ->
     (FStar_SMTEncoding_Term.decl Prims.list ->
@@ -1020,9 +1019,10 @@ let (ask :
                      theory1) in
                 let theory1 =
                   FStar_Compiler_List.op_At theory
-                    (FStar_Compiler_List.op_At [FStar_SMTEncoding_Term.Push]
+                    (FStar_Compiler_List.op_At
+                       [FStar_SMTEncoding_Term.Push ask_push_pop_msg]
                        (FStar_Compiler_List.op_At qry
-                          [FStar_SMTEncoding_Term.Pop])) in
+                          [FStar_SMTEncoding_Term.Pop ask_push_pop_msg])) in
                 let uu___ = filter_theory theory1 in
                 match uu___ with
                 | (theory2, _used_unsat_core) ->
