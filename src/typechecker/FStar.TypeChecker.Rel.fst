@@ -48,6 +48,10 @@ module TcComm = FStar.TypeChecker.Common
 
 let print_ctx_uvar ctx_uvar = Print.ctx_uvar_to_string ctx_uvar
 
+let binders_as_bv_set (bs:binders) =
+    FStar.Compiler.Util.as_set (List.map (fun b -> b.binder_bv) bs)
+                               Syntax.order_bv
+
 (* lazy string, for error reporting *)
 type lstring = Thunk.t string
 
@@ -1009,7 +1013,7 @@ let gamma_until (g:gamma) (bs:binders) =
  *   maximal prefix of G_s and G_t, creating a new uvar maximal_prefix(G_s, G_t) |- ?u : t_t,
  *   and assigning ?u_t = ?u
  *
- * NS: 03/22 Question:  How do we know that t_t is well-formed in maximal_prefix(G_s, G_t)?
+ * NS: 03/2022 Question:  How do we know that t_t is well-formed in maximal_prefix(G_s, G_t)?
  *
  * However simply doing this does not allow the solution of ?u to mention the binders bs
  *
@@ -1051,6 +1055,19 @@ let restrict_ctx env (tgt:ctx_uvar) (bs:binders) (src:ctx_uvar) wl : worklist =
   end
 
 let restrict_all_uvars env (tgt:ctx_uvar) (bs:binders) (sources:list ctx_uvar) wl : worklist =
+  match bs with
+  | [] ->
+    let ctx_tgt = binders_as_bv_set tgt.ctx_uvar_binders in
+    List.fold_right 
+      (fun (src:ctx_uvar) wl ->
+        let ctx_src = binders_as_bv_set src.ctx_uvar_binders in
+        if BU.set_is_subset_of ctx_src ctx_tgt
+        then wl // no need to restrict source, it's context is included in the context of the tgt
+        else restrict_ctx env tgt [] src wl)
+      sources
+      wl
+
+  | _ ->
     List.fold_right (restrict_ctx env tgt bs) sources wl
 
 let intersect_binders (g:gamma) (v1:binders) (v2:binders) : binders =
@@ -2372,11 +2389,6 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
     then defer_to_user_tac env orig (flex_reason lhs) wl
     else
 
-    let binders_as_bv_set (bs:binders) =
-        FStar.Compiler.Util.as_set (List.map (fun b -> b.binder_bv) bs)
-                          Syntax.order_bv
-    in
-
     (*
        mk_solution takes care to not introduce needless eta expansions
 
@@ -2654,6 +2666,8 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
              ?u <- f
 
           and generate (e1 =?= v1, ..., em =?= vm)
+          
+          while restricting all free uvars in f to the context of ?u
      *)
     let try_first_order orig env wl lhs rhs =
       let inapplicable msg lstring_opt =
@@ -2682,7 +2696,7 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
         let i = n_args_rhs - n_args_lhs in
         let prefix, args_rhs = List.splitAt i args_rhs in
         let head = S.mk_Tm_app head prefix head.pos in
-        let _, occurs_ok, _ = occurs_check ctx_uv head in
+        let uvars_head, occurs_ok, _ = occurs_check ctx_uv head in
         if not occurs_ok
         then inapplicable "occurs check failed" None
         else if not (BU.set_is_subset_of (Free.names head)
@@ -2698,7 +2712,9 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
           let tx = UF.new_transaction () in
           let solve_sub_probs_if_head_types_equal wl = 
               let sol = [TERM(ctx_uv, head)] in
+              let wl = restrict_all_uvars env ctx_uv [] uvars_head wl in
               let wl = solve_prob orig None sol wl in
+              
               let sub_probs, wl =
                 List.fold_left2
                   (fun (probs, wl) (arg_lhs, _) (arg_rhs, _) ->

@@ -83,11 +83,18 @@ let get_put_identity (s:Type)
 
 module T = FStar.Tactics
 
+let lem (s:Type)
+  : Lemma (eq2 #(st s unit) (fun (s0:s) -> (), s0 <: unit & s) (fun (s0:s) -> (), s0))
+  = ()
+
+#push-options "--print_implicits --print_bound_var_types"
 let get_put_identity_alt (s:Type)
   : Tot (squash (get_put #s == noop #s))
     by (T.dump "A"; 
         T.norm [delta_only [`%get_put; `%return; `%bind; `%get; `%put; `%Mkmonad?.bind; `%Mkmonad?.return;`%st_monad; `%noop]; iota];
-        T.smt()) //trefl fails here because there's an ascription on one side : (
+        T.dump "B";
+        T.mapply (`lem))
+//        T.trefl() ; somehow trefl doesn't work here
   = ()
 
 instance opt_monad : monad option =

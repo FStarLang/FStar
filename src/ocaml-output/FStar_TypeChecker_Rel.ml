@@ -1,6 +1,14 @@
 open Prims
 let (print_ctx_uvar : FStar_Syntax_Syntax.ctx_uvar -> Prims.string) =
   fun ctx_uvar -> FStar_Syntax_Print.ctx_uvar_to_string ctx_uvar
+let (binders_as_bv_set :
+  FStar_Syntax_Syntax.binders ->
+    FStar_Syntax_Syntax.bv FStar_Compiler_Util.set)
+  =
+  fun bs ->
+    let uu___ =
+      FStar_Compiler_List.map (fun b -> b.FStar_Syntax_Syntax.binder_bv) bs in
+    FStar_Compiler_Util.as_set uu___ FStar_Syntax_Syntax.order_bv
 type lstring = Prims.string FStar_Thunk.t
 let (mklstr : (unit -> Prims.string) -> Prims.string FStar_Thunk.thunk) =
   fun f ->
@@ -2322,8 +2330,23 @@ let (restrict_all_uvars :
       fun bs ->
         fun sources ->
           fun wl ->
-            FStar_Compiler_List.fold_right (restrict_ctx env tgt bs) sources
-              wl
+            match bs with
+            | [] ->
+                let ctx_tgt =
+                  binders_as_bv_set tgt.FStar_Syntax_Syntax.ctx_uvar_binders in
+                FStar_Compiler_List.fold_right
+                  (fun src ->
+                     fun wl1 ->
+                       let ctx_src =
+                         binders_as_bv_set
+                           src.FStar_Syntax_Syntax.ctx_uvar_binders in
+                       let uu___ =
+                         FStar_Compiler_Util.set_is_subset_of ctx_src ctx_tgt in
+                       if uu___ then wl1 else restrict_ctx env tgt [] src wl1)
+                  sources wl
+            | uu___ ->
+                FStar_Compiler_List.fold_right (restrict_ctx env tgt bs)
+                  sources wl
 let (intersect_binders :
   FStar_Syntax_Syntax.gamma ->
     FStar_Syntax_Syntax.binders ->
@@ -5440,13 +5463,7 @@ and (solve_t_flex_rigid_eq :
              if uu___1
              then defer_to_user_tac env orig (flex_reason lhs) wl
              else
-               (let binders_as_bv_set bs =
-                  let uu___3 =
-                    FStar_Compiler_List.map
-                      (fun b -> b.FStar_Syntax_Syntax.binder_bv) bs in
-                  FStar_Compiler_Util.as_set uu___3
-                    FStar_Syntax_Syntax.order_bv in
-                let mk_solution env1 lhs1 bs rhs1 =
+               (let mk_solution env1 lhs1 bs rhs1 =
                   let bs_orig = bs in
                   let rhs_orig = rhs1 in
                   let uu___3 = lhs1 in
@@ -5911,30 +5928,30 @@ and (solve_t_flex_rigid_eq :
                                        prefix head.FStar_Syntax_Syntax.pos in
                                    let uu___8 = occurs_check ctx_uv head1 in
                                    (match uu___8 with
-                                    | (uu___9, occurs_ok, uu___10) ->
+                                    | (uvars_head, occurs_ok, uu___9) ->
                                         if Prims.op_Negation occurs_ok
                                         then
                                           inapplicable "occurs check failed"
                                             FStar_Pervasives_Native.None
                                         else
-                                          (let uu___12 =
-                                             let uu___13 =
-                                               let uu___14 =
+                                          (let uu___11 =
+                                             let uu___12 =
+                                               let uu___13 =
                                                  FStar_Syntax_Free.names
                                                    head1 in
-                                               let uu___15 =
+                                               let uu___14 =
                                                  binders_as_bv_set
                                                    ctx_uv.FStar_Syntax_Syntax.ctx_uvar_binders in
                                                FStar_Compiler_Util.set_is_subset_of
-                                                 uu___14 uu___15 in
-                                             Prims.op_Negation uu___13 in
-                                           if uu___12
+                                                 uu___13 uu___14 in
+                                             Prims.op_Negation uu___12 in
+                                           if uu___11
                                            then
                                              inapplicable
                                                "free name inclusion failed"
                                                FStar_Pervasives_Native.None
                                            else
-                                             (let uu___14 =
+                                             (let uu___13 =
                                                 env1.FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term
                                                   {
                                                     FStar_TypeChecker_Env.solver
@@ -6080,8 +6097,8 @@ and (solve_t_flex_rigid_eq :
                                                       =
                                                       (env1.FStar_TypeChecker_Env.erase_erasable_args)
                                                   } head1 false in
-                                              match uu___14 with
-                                              | (t_head, uu___15) ->
+                                              match uu___13 with
+                                              | (t_head, uu___14) ->
                                                   let tx =
                                                     FStar_Syntax_Unionfind.new_transaction
                                                       () in
@@ -6090,48 +6107,52 @@ and (solve_t_flex_rigid_eq :
                                                     let sol =
                                                       [TERM (ctx_uv, head1)] in
                                                     let wl3 =
+                                                      restrict_all_uvars env1
+                                                        ctx_uv [] uvars_head
+                                                        wl2 in
+                                                    let wl4 =
                                                       solve_prob orig1
                                                         FStar_Pervasives_Native.None
-                                                        sol wl2 in
-                                                    let uu___16 =
+                                                        sol wl3 in
+                                                    let uu___15 =
                                                       FStar_Compiler_List.fold_left2
-                                                        (fun uu___17 ->
-                                                           fun uu___18 ->
-                                                             fun uu___19 ->
+                                                        (fun uu___16 ->
+                                                           fun uu___17 ->
+                                                             fun uu___18 ->
                                                                match 
-                                                                 (uu___17,
-                                                                   uu___18,
-                                                                   uu___19)
+                                                                 (uu___16,
+                                                                   uu___17,
+                                                                   uu___18)
                                                                with
                                                                | ((probs,
-                                                                   wl4),
+                                                                   wl5),
                                                                   (arg_lhs,
-                                                                   uu___20),
+                                                                   uu___19),
                                                                   (arg_rhs,
-                                                                   uu___21))
+                                                                   uu___20))
                                                                    ->
-                                                                   let uu___22
+                                                                   let uu___21
                                                                     =
                                                                     mk_t_problem
-                                                                    wl4 []
+                                                                    wl5 []
                                                                     orig1
                                                                     arg_lhs
                                                                     FStar_TypeChecker_Common.EQ
                                                                     arg_rhs
                                                                     FStar_Pervasives_Native.None
                                                                     "first-order arg" in
-                                                                   (match uu___22
+                                                                   (match uu___21
                                                                     with
                                                                     | 
-                                                                    (p, wl5)
+                                                                    (p, wl6)
                                                                     ->
                                                                     ((p ::
                                                                     probs),
-                                                                    wl5)))
-                                                        ([], wl3) args_lhs
+                                                                    wl6)))
+                                                        ([], wl4) args_lhs
                                                         args_rhs1 in
-                                                    match uu___16 with
-                                                    | (sub_probs, wl4) ->
+                                                    match uu___15 with
+                                                    | (sub_probs, wl5) ->
                                                         let wl' =
                                                           {
                                                             attempting =
@@ -6139,40 +6160,40 @@ and (solve_t_flex_rigid_eq :
                                                             wl_deferred = [];
                                                             wl_deferred_to_tac
                                                               =
-                                                              (wl4.wl_deferred_to_tac);
-                                                            ctr = (wl4.ctr);
+                                                              (wl5.wl_deferred_to_tac);
+                                                            ctr = (wl5.ctr);
                                                             defer_ok =
                                                               NoDefer;
                                                             smt_ok = false;
                                                             umax_heuristic_ok
                                                               =
-                                                              (wl4.umax_heuristic_ok);
+                                                              (wl5.umax_heuristic_ok);
                                                             tcenv =
-                                                              (wl4.tcenv);
+                                                              (wl5.tcenv);
                                                             wl_implicits = [];
                                                             repr_subcomp_allowed
                                                               =
-                                                              (wl4.repr_subcomp_allowed)
+                                                              (wl5.repr_subcomp_allowed)
                                                           } in
-                                                        let uu___17 =
+                                                        let uu___16 =
                                                           solve env1 wl' in
-                                                        (match uu___17 with
+                                                        (match uu___16 with
                                                          | Success
-                                                             (uu___18,
+                                                             (uu___17,
                                                               defer_to_tac,
                                                               imps)
                                                              ->
-                                                             let wl5 =
-                                                               extend_wl wl4
+                                                             let wl6 =
+                                                               extend_wl wl5
                                                                  []
                                                                  defer_to_tac
                                                                  imps in
                                                              (FStar_Syntax_Unionfind.commit
                                                                 tx;
                                                               FStar_Pervasives.Inr
-                                                                wl5)
+                                                                wl6)
                                                          | Failed
-                                                             (uu___18,
+                                                             (uu___17,
                                                               lstring1)
                                                              ->
                                                              (FStar_Syntax_Unionfind.rollback
@@ -6181,38 +6202,38 @@ and (solve_t_flex_rigid_eq :
                                                                 "Subprobs failed: "
                                                                 (FStar_Pervasives_Native.Some
                                                                    lstring1))) in
-                                                  let uu___16 =
-                                                    let uu___17 =
+                                                  let uu___15 =
+                                                    let uu___16 =
                                                       FStar_Syntax_Util.eq_tm
                                                         t_head
                                                         ctx_uv.FStar_Syntax_Syntax.ctx_uvar_typ in
-                                                    uu___17 =
+                                                    uu___16 =
                                                       FStar_Syntax_Util.Equal in
-                                                  if uu___16
+                                                  if uu___15
                                                   then
                                                     solve_sub_probs_if_head_types_equal
                                                       wl1
                                                   else
-                                                    ((let uu___19 =
+                                                    ((let uu___18 =
                                                         FStar_TypeChecker_Env.debug
                                                           env1
                                                           (FStar_Options.Other
                                                              "Rel") in
-                                                      if uu___19
+                                                      if uu___18
                                                       then
-                                                        let uu___20 =
+                                                        let uu___19 =
                                                           FStar_Syntax_Print.term_to_string
                                                             ctx_uv.FStar_Syntax_Syntax.ctx_uvar_typ in
-                                                        let uu___21 =
+                                                        let uu___20 =
                                                           FStar_Syntax_Print.term_to_string
                                                             t_head in
                                                         FStar_Compiler_Util.print2
                                                           "first-order: head type mismatch:\n\tlhs=%s\n\trhs=%s\n"
-                                                          uu___20 uu___21
+                                                          uu___19 uu___20
                                                       else ());
                                                      (let typ_equality_prob
                                                         wl2 =
-                                                        let uu___19 =
+                                                        let uu___18 =
                                                           mk_t_problem wl2 []
                                                             orig1
                                                             ctx_uv.FStar_Syntax_Syntax.ctx_uvar_typ
@@ -6220,14 +6241,14 @@ and (solve_t_flex_rigid_eq :
                                                             t_head
                                                             FStar_Pervasives_Native.None
                                                             "first-order head type" in
-                                                        match uu___19 with
+                                                        match uu___18 with
                                                         | (p, wl3) ->
                                                             ([p], wl3) in
-                                                      let uu___19 =
+                                                      let uu___18 =
                                                         try_solve_probs_without_smt
                                                           env1 wl1
                                                           typ_equality_prob in
-                                                      match uu___19 with
+                                                      match uu___18 with
                                                       | FStar_Pervasives.Inl
                                                           wl2 ->
                                                           solve_sub_probs_if_head_types_equal
