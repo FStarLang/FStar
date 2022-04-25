@@ -746,9 +746,27 @@ let (flatten_fresh_scope : unit -> FStar_SMTEncoding_Term.decl Prims.list) =
       let uu___2 = FStar_Compiler_Effect.op_Bang fresh_scope in
       FStar_Compiler_List.rev uu___2 in
     FStar_Compiler_List.flatten uu___1
-let (bg_scope :
-  FStar_SMTEncoding_Term.decl Prims.list FStar_Compiler_Effect.ref) =
-  FStar_Compiler_Util.mk_ref []
+type bg_scope_t =
+  {
+  bg_decls: FStar_SMTEncoding_Term.decl Prims.list ;
+  bg_pending_pushes: scope_t }
+let (__proj__Mkbg_scope_t__item__bg_decls :
+  bg_scope_t -> FStar_SMTEncoding_Term.decl Prims.list) =
+  fun projectee ->
+    match projectee with | { bg_decls; bg_pending_pushes;_} -> bg_decls
+let (__proj__Mkbg_scope_t__item__bg_pending_pushes : bg_scope_t -> scope_t) =
+  fun projectee ->
+    match projectee with
+    | { bg_decls; bg_pending_pushes;_} -> bg_pending_pushes
+let (bg_scope : bg_scope_t FStar_Compiler_Effect.ref) =
+  FStar_Compiler_Util.mk_ref { bg_decls = []; bg_pending_pushes = [[]] }
+let (decls_of_pending_pushes :
+  scope_t -> FStar_SMTEncoding_Term.decl Prims.list) =
+  fun pending_pushes ->
+    let uu___ =
+      FStar_Compiler_Effect.op_Bar_Greater pending_pushes
+        FStar_Compiler_List.rev in
+    FStar_Compiler_Effect.op_Bar_Greater uu___ FStar_Compiler_List.flatten
 let (push : Prims.string -> unit) =
   fun msg ->
     FStar_Compiler_Util.atomically
@@ -758,9 +776,12 @@ let (push : Prims.string -> unit) =
             [FStar_SMTEncoding_Term.Push msg] :: uu___3 in
           FStar_Compiler_Effect.op_Colon_Equals fresh_scope uu___2);
          (let uu___2 =
-            let uu___3 = FStar_Compiler_Effect.op_Bang bg_scope in
-            FStar_Compiler_List.op_At uu___3
-              [FStar_SMTEncoding_Term.Push msg] in
+            let v = FStar_Compiler_Effect.op_Bang bg_scope in
+            {
+              bg_decls = (v.bg_decls);
+              bg_pending_pushes = ([FStar_SMTEncoding_Term.Push msg] ::
+                (v.bg_pending_pushes))
+            } in
           FStar_Compiler_Effect.op_Colon_Equals bg_scope uu___2))
 let (pop : Prims.string -> unit) =
   fun msg ->
@@ -771,8 +792,17 @@ let (pop : Prims.string -> unit) =
             FStar_Compiler_List.tl uu___3 in
           FStar_Compiler_Effect.op_Colon_Equals fresh_scope uu___2);
          (let uu___2 =
-            let uu___3 = FStar_Compiler_Effect.op_Bang bg_scope in
-            FStar_Compiler_List.op_At uu___3 [FStar_SMTEncoding_Term.Pop msg] in
+            let v = FStar_Compiler_Effect.op_Bang bg_scope in
+            match v.bg_pending_pushes with
+            | [] ->
+                {
+                  bg_decls =
+                    (FStar_Compiler_List.op_At v.bg_decls
+                       [FStar_SMTEncoding_Term.Pop msg]);
+                  bg_pending_pushes = (v.bg_pending_pushes)
+                }
+            | uu___3::tl ->
+                { bg_decls = (v.bg_decls); bg_pending_pushes = tl } in
           FStar_Compiler_Effect.op_Colon_Equals bg_scope uu___2))
 let (snapshot : Prims.string -> (Prims.int * unit)) =
   fun msg -> FStar_Common.snapshot push fresh_scope msg
@@ -799,14 +829,26 @@ let (giveZ3 : FStar_SMTEncoding_Term.decl Prims.list -> unit) =
            ((FStar_Compiler_List.op_At hd decls) :: tl)
      | uu___3 -> failwith "Impossible");
     (let uu___2 =
-       let uu___3 = FStar_Compiler_Effect.op_Bang bg_scope in
-       FStar_Compiler_List.op_At uu___3 decls in
+       let v = FStar_Compiler_Effect.op_Bang bg_scope in
+       match v.bg_pending_pushes with
+       | [] ->
+           {
+             bg_decls = (FStar_Compiler_List.op_At v.bg_decls decls);
+             bg_pending_pushes = (v.bg_pending_pushes)
+           }
+       | hd::tl ->
+           {
+             bg_decls = (v.bg_decls);
+             bg_pending_pushes = ((FStar_Compiler_List.op_At hd decls) :: tl)
+           } in
      FStar_Compiler_Effect.op_Colon_Equals bg_scope uu___2)
 let (refresh : unit -> unit) =
   fun uu___ ->
     (let uu___2 = FStar_Compiler_Effect.op_Bang bg_z3_proc in
      uu___2.refresh ());
-    (let uu___2 = flatten_fresh_scope () in
+    (let uu___2 =
+       let uu___3 = flatten_fresh_scope () in
+       { bg_decls = uu___3; bg_pending_pushes = [] } in
      FStar_Compiler_Effect.op_Colon_Equals bg_scope uu___2)
 let (context_profile : FStar_SMTEncoding_Term.decl Prims.list -> unit) =
   fun theory ->
@@ -1014,9 +1056,17 @@ let (ask :
                   if fresh
                   then flatten_fresh_scope ()
                   else
-                    (let theory1 = FStar_Compiler_Effect.op_Bang bg_scope in
-                     FStar_Compiler_Effect.op_Colon_Equals bg_scope [];
-                     theory1) in
+                    (let uu___1 =
+                       let v = FStar_Compiler_Effect.op_Bang bg_scope in
+                       FStar_Compiler_Effect.op_Colon_Equals bg_scope
+                         { bg_decls = []; bg_pending_pushes = [] };
+                       (let uu___3 =
+                          let uu___4 =
+                            decls_of_pending_pushes v.bg_pending_pushes in
+                          FStar_Compiler_List.op_At v.bg_decls uu___4 in
+                        (uu___3, ())) in
+                     match uu___1 with
+                     | (theory1, _reset_bg_scope) -> theory1) in
                 let theory1 =
                   FStar_Compiler_List.op_At theory
                     (FStar_Compiler_List.op_At
