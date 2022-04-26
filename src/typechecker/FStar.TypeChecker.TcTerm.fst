@@ -1779,16 +1779,17 @@ and tc_comp env c : comp                                      (* checked version
            *)
           let env, _ = Env.clear_expected_typ env in
           let t, u_t = U.type_u () in
+          let u_r = Env.new_u_univ () in
           let a, _, g_a = TcUtil.new_implicit_var
             "implicit for type of the well-founded relation in decreases clause"
             rel.pos
             env
             t in
-          //well_founded_relation<u_t> t
+          //well_founded_relation<u_t,u_r> t
           let wf_t = mk_Tm_app
             (mk_Tm_uinst
                (Env.fvar_of_nonqual_lid env Const.well_founded_relation_lid)
-               [u_t])
+               [u_t; u_r])
             [as_arg a] rel.pos in
           let rel, _, g_rel = tc_tot_or_gtot_term (Env.set_expected_typ env wf_t) rel in
           let e, _, g_e = tc_tot_or_gtot_term (Env.set_expected_typ env a) e in

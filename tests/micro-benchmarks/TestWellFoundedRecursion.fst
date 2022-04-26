@@ -156,6 +156,7 @@ let rec lt_well_founded (n:nat) : acc lt n =
 let rec lt_dep_well_founded (m:nat) (n:nat) : acc (lt_dep m) n =
   AccIntro (fun p _ -> lt_dep_well_founded m p)
 
+unfold
 let nat_nat_lex_ordering
   : well_founded_relation (x:nat & nat)
   = lex lt_well_founded lt_dep_well_founded

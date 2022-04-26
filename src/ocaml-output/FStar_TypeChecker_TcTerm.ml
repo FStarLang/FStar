@@ -4699,6 +4699,9 @@ and (tc_comp :
                                                        () in
                                                    (match uu___11 with
                                                     | (t, u_t) ->
+                                                        let u_r =
+                                                          FStar_TypeChecker_Env.new_u_univ
+                                                            () in
                                                         let uu___12 =
                                                           FStar_TypeChecker_Util.new_implicit_var
                                                             "implicit for type of the well-founded relation in decreases clause"
@@ -4716,7 +4719,7 @@ and (tc_comp :
                                                                     FStar_Parser_Const.well_founded_relation_lid in
                                                                  FStar_Syntax_Syntax.mk_Tm_uinst
                                                                    uu___15
-                                                                   [u_t] in
+                                                                   [u_t; u_r] in
                                                                let uu___15 =
                                                                  let uu___16
                                                                    =
