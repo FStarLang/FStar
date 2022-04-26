@@ -141,15 +141,14 @@ let rec ackermann (m n:nat) : Tot nat (decreases %[m; n]) =
 //  using which we can build our own lexicographic ordering and use it
 //See ulib/FStar.LexicographicOrdering.fsti
 
-open FStar.Preorder
 open FStar.WellFounded
 open FStar.LexicographicOrdering
 
 unfold
-let lt : relation nat = fun x y -> x < y
+let lt : binrel nat = fun x y -> x < y
 
 unfold
-let lt_dep (_:nat) : relation nat = lt
+let lt_dep (_:nat) : binrel nat = lt
 
 let rec lt_well_founded (n:nat) : acc lt n =
   AccIntro (fun m _ -> lt_well_founded m)
@@ -157,10 +156,29 @@ let rec lt_well_founded (n:nat) : acc lt n =
 let rec lt_dep_well_founded (m:nat) (n:nat) : acc (lt_dep m) n =
   AccIntro (fun p _ -> lt_dep_well_founded m p)
 
+let nat_nat_lex_ordering
+  : well_founded_relation (x:nat & nat)
+  = lex lt_well_founded lt_dep_well_founded
+
+type higher_nat : Type u#1 =
+  | HZ : higher_nat
+  | HS : higher_nat -> higher_nat
+
+let higher_nat_lt
+  : binrel u#1 u#0 higher_nat
+  = fun x y -> x << y //sub-term ordering on higher nats
+
+let rec higher_nat_lt_well_founded (n:higher_nat)
+  : acc higher_nat_lt n
+  = AccIntro (fun m _ -> higher_nat_lt_well_founded m)
+
+let higher_nat_higher_nat_lex_order
+  : well_founded_relation (x:higher_nat & higher_nat)
+  = lex higher_nat_lt_well_founded (fun _ -> higher_nat_lt_well_founded)
+
 let rec ackermann_wf (m n:nat)
-  : Tot nat (decreases {:well-founded
-             (lex lt_well_founded lt_dep_well_founded)
-             (| m, n |) })
+  : Tot nat (decreases {:well-founded nat_nat_lex_ordering (| m, n |) })
   = if m = 0 then n + 1
     else if n = 0 then ackermann_wf (m - 1) 1
     else ackermann_wf (m - 1) (ackermann_wf m (n - 1))
+  
