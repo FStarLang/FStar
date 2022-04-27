@@ -844,20 +844,20 @@ let test_bt (a: Type0) (b: Type0) (c: Type0) (d: Type0) =
 /// tried in succession, until one succeeds.  The whole process is repeated as
 /// long as at least one tactic succeeds.
 
-let example (#a:Type0) (#b:Type0) (#c:Type0) :unit =
-  assert_by_tactic (a /\ b ==> c == b ==> c)
-    (fun () -> repeat' (fun () ->
-                 gpm #unit (fun (a: Type) (h: hyp (squash a)) ->
-                              clear h <: Tac unit) `or_else`
-                 (fun () -> gpm #unit (fun (a b: Type0) (g: pm_goal (squash (a ==> b))) ->
-                              implies_intro' () <: Tac unit) `or_else`
-                 (fun () -> gpm #unit (fun (a b: Type0) (h: hyp (a /\ b)) ->
-                              and_elim' h <: Tac unit) `or_else`
-                 (fun () -> gpm #unit (fun (a b: Type0) (h: hyp (a == b)) (g: pm_goal (squash a)) ->
-                              rewrite h <: Tac unit) `or_else`
-                 (fun () -> gpm #unit (fun (a: Type0) (h: hyp a) (g: pm_goal (squash a)) ->
-                              exact_hyp a h <: Tac unit) ())))));
-               qed ())
+// let example (#a:Type0) (#b:Type0) (#c:Type0) :unit =
+//   assert_by_tactic (a /\ b ==> c == b ==> c)
+//     (fun () -> repeat' (fun () ->
+//                  gpm #unit (fun (a: Type) (h: hyp (squash a)) ->
+//                               clear h <: Tac unit) `or_else`
+//                  (fun () -> gpm #unit (fun (a b: Type0) (g: pm_goal (squash (a ==> b))) ->
+//                               implies_intro' () <: Tac unit) `or_else`
+//                  (fun () -> gpm #unit (fun (a b: Type0) (h: hyp (a /\ b)) ->
+//                               and_elim' h <: Tac unit) `or_else`
+//                  (fun () -> gpm #unit (fun (a b: Type0) (h: hyp (a == b)) (g: pm_goal (squash a)) ->
+//                               rewrite h <: Tac unit) `or_else`
+//                  (fun () -> gpm #unit (fun (a: Type0) (h: hyp a) (g: pm_goal (squash a)) ->
+//                               exact_hyp a h <: Tac unit) ())))));
+//                qed ())
 
 /// Possible extensions
 /// ===================
