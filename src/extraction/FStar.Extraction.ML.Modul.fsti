@@ -14,14 +14,14 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-#light "off"
 module FStar.Extraction.ML.Modul
 open FStar.Pervasives
 open FStar.Compiler.Effect
 open FStar.Syntax.Syntax
 open FStar.Extraction.ML.Syntax
 open FStar.Extraction.ML.UEnv
-type iface
+
+val iface : Type0
 val extract_iface: uenv -> modul -> uenv * iface
-val extract : uenv -> modul -> uenv * option<mllib>
+val extract : uenv -> modul -> uenv * option mllib
 

@@ -13,13 +13,12 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-#light "off"
 module FStar.Parser.ParseIt
-open FStar.Compiler.Effect
 open FStar.Compiler.Effect
 open FStar.Parser
 open FStar.Compiler.Util
-open FStar open FStar.Compiler
+open FStar
+open FStar.Compiler
 open FStar.Errors
 
 type filename = string
@@ -31,7 +30,7 @@ type input_frag = {
     frag_col:int
 }
 
-val read_vfs_entry : string -> option<(time * string)>
+val read_vfs_entry : string -> option (time * string)
 // This lets the ide tell us about edits not (yet) reflected on disk.
 val add_vfs_entry: fname:string -> contents:string -> unit
 // This reads mtimes from the VFS as well
@@ -43,11 +42,11 @@ type parse_frag =
     | Fragment of input_frag
 
 type parse_result =
-    | ASTFragment of (AST.inputFragment * list<(string * Range.range)>)
+    | ASTFragment of (AST.inputFragment * list (string * Range.range))
     | Term of AST.term
     | ParseError of (Errors.raw_error * string * Range.range)
 
-val parse: parse_frag -> parse_result // either<(AST.inputFragment * list<(string * Range.range)>) , (string * Range.range)>
+val parse: parse_frag -> parse_result // either (AST.inputFragment * list (string * Range.range)) , (string * Range.range)
 val find_file: string -> string
 
-val parse_warn_error: string -> list<FStar.Errors.error_setting>
+val parse_warn_error: string -> list FStar.Errors.error_setting

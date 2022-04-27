@@ -14,7 +14,6 @@
    limitations under the License.
 *)
 (* -------------------------------------------------------------------- *)
-#light "off"
 
 module FStar.Extraction.Krml
 open FStar.Compiler.Effect
@@ -43,18 +42,15 @@ module FC = FStar.Const
 
 (* COPY-PASTED ****************************************************************)
 
-type program =
-  list<decl>
-
-and decl =
-  | DGlobal of list<flag> * lident * int * typ * expr
-  | DFunction of option<cc> * list<flag> * int * typ * lident * list<binder> * expr
-  | DTypeAlias of lident * list<flag> * int * typ
-  | DTypeFlat of lident * list<flag> * int * fields_t
-  | DUnusedRetainedForBackwardsCompat of option<cc> * list<flag> * lident * typ
-  | DTypeVariant of lident * list<flag> * int * branches_t
+type decl =
+  | DGlobal of list flag * lident * int * typ * expr
+  | DFunction of option cc * list flag * int * typ * lident * list binder * expr
+  | DTypeAlias of lident * list flag * int * typ
+  | DTypeFlat of lident * list flag * int * fields_t
+  | DUnusedRetainedForBackwardsCompat of option cc * list flag * lident * typ
+  | DTypeVariant of lident * list flag * int * branches_t
   | DTypeAbstractStruct of lident
-  | DExternal of option<cc> * list<flag> * lident * typ * list<ident>
+  | DExternal of option cc * list flag * lident * typ * list ident
 
 and cc =
   | StdCall
@@ -62,10 +58,10 @@ and cc =
   | FastCall
 
 and fields_t =
-  list<(ident * (typ * bool))>
+  list (ident * (typ * bool))
 
 and branches_t =
-  list<(ident * fields_t)>
+  list (ident * fields_t)
 
 and flag =
   | Private
@@ -95,11 +91,11 @@ and expr =
   | EQualified of lident
   | EConstant of constant
   | EUnit
-  | EApp of expr * list<expr>
-  | ETypApp of expr * list<typ>
+  | EApp of expr * list expr
+  | ETypApp of expr * list typ
   | ELet of binder * expr * expr
   | EIfThenElse of expr * expr * expr
-  | ESequence of list<expr>
+  | ESequence of list expr
   | EAssign of expr * expr
   | (** left expression can only be a EBound of EOpen *)
     EBufCreate of lifetime * expr * expr
@@ -116,15 +112,15 @@ and expr =
   | EAny
   | EAbort
   | EReturn of expr
-  | EFlat of typ * list<(ident * expr)>
+  | EFlat of typ * list (ident * expr)
   | EField of typ * expr * ident
   | EWhile of expr * expr
-  | EBufCreateL of lifetime * list<expr>
-  | ETuple of list<expr>
-  | ECons of typ * ident * list<expr>
+  | EBufCreateL of lifetime * list expr
+  | ETuple of list expr
+  | ECons of typ * ident * list expr
   | EBufFill of expr * expr * expr
   | EString of string
-  | EFun of list<binder> * expr * typ
+  | EFun of list binder * expr * typ
   | EAbortS of string
   | EBufFree of expr
   | EBufCreateNoInit of lifetime * expr
@@ -139,7 +135,7 @@ and op =
   | And | Or | Xor | Not
 
 and branches =
-  list<branch>
+  list branch
 
 and branch =
   pattern * expr
@@ -148,9 +144,9 @@ and pattern =
   | PUnit
   | PBool of bool
   | PVar of binder
-  | PCons of (ident * list<pattern>)
-  | PTuple of list<pattern>
-  | PRecord of list<(ident * pattern)>
+  | PCons of (ident * list pattern)
+  | PTuple of list pattern
+  | PRecord of list (ident * pattern)
   | PConstant of constant
 
 and width =
@@ -174,7 +170,7 @@ and binder = {
 and ident = string
 
 and lident =
-  list<ident> * ident
+  list ident * ident
 
 and typ =
   | TInt of width
@@ -185,18 +181,12 @@ and typ =
   | TAny
   | TArrow of typ * typ
   | TBound of int
-  | TApp of lident * list<typ>
-  | TTuple of list<typ>
+  | TApp of lident * list typ
+  | TTuple of list typ
   | TConstBuf of typ
 
-(** Versioned binary writing/reading of ASTs *)
 
-type version = int
 let current_version: version = 28
-
-type file = string * program
-type binary_format = version * list<file>
-
 
 (* Utilities *****************************************************************)
 
@@ -285,9 +275,9 @@ let is_machine_int m =
 (* Environments **************************************************************)
 
 type env = {
-  names: list<name>;
-  names_t: list<string>;
-  module_name: list<string>;
+  names: list name;
+  names_t: list string;
+  module_name: list string;
 }
 
 and name = {
@@ -1013,7 +1003,7 @@ and translate_constant c: expr =
 and mk_op_app env w op args =
   EApp (EOp (op, w), List.map (translate_expr env) args)
 
-let translate_type_decl env ty: option<decl> =
+let translate_type_decl env ty: option decl =
   if List.mem Syntax.NoExtract ty.tydecl_meta then
     None
   else
@@ -1061,7 +1051,7 @@ let translate_type_decl env ty: option<decl> =
         Errors. log_issue Range.dummyRange (Errors.Warning_DefinitionNotTranslated, (BU.format1 "Error extracting type definition %s to KaRaMeL\n" name));
         None
 
-let translate_let env flavor lb: option<decl> =
+let translate_let env flavor lb: option decl =
   match lb with
   | {
       mllb_name = name;
@@ -1163,7 +1153,7 @@ let translate_let env flavor lb: option<decl> =
       end;
       None
 
-let translate_decl env d: list<decl> =
+let translate_decl env d: list decl =
   match d with
   | MLM_Let (flavor, lbs) ->
       // We don't care about mutual recursion, since every C file will include
@@ -1186,7 +1176,7 @@ let translate_decl env d: list<decl> =
       BU.print1_warning "Not extracting exception %s to KaRaMeL (exceptions unsupported)\n" m;
       []
 
-let translate_module (m : mlpath * option<(mlsig * mlmodule)> * mllib) : file =
+let translate_module (m : mlpath * option (mlsig * mlmodule) * mllib) : file =
   let (module_name, modul, _) = m in
   let module_name = fst module_name @ [ snd module_name ] in
   let program = match modul with
@@ -1197,7 +1187,7 @@ let translate_module (m : mlpath * option<(mlsig * mlmodule)> * mllib) : file =
   in
   (String.concat "_" module_name), program
 
-let translate (MLLib modules): list<file> =
+let translate (MLLib modules): list file =
   List.filter_map (fun m ->
     let m_name =
       let path, _, _ = m in

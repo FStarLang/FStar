@@ -13,7 +13,6 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 *)
-#light "off"
 module FStar.ToSyntax.Interleave
 open FStar.Compiler.Effect
 open FStar.Compiler.List
@@ -126,10 +125,10 @@ let is_definition_of x d =
  *)
 
 let rec prefix_with_iface_decls
-        (iface:list<decl>)
+        (iface:list decl)
         (impl:decl)
-   : list<decl>  //remaining iface decls
-   * list<decl> =  //d prefixed with relevant bits from iface
+   : list decl  //remaining iface decls
+   * list decl =  //d prefixed with relevant bits from iface
    let qualify_karamel_private impl =
        let karamel_private =
            FStar.Parser.AST.mk_term
@@ -189,7 +188,7 @@ let rec prefix_with_iface_decls
        iface, iface_hd::ds
     end
 
-let check_initial_interface (iface:list<decl>) =
+let check_initial_interface (iface:list decl) =
     let rec aux iface =
         match iface with
         | [] -> ()
@@ -220,29 +219,56 @@ let check_initial_interface (iface:list<decl>) =
 //      Then prefix it with `val x : t`, if any in the interface
 //      Don't enforce any ordering constraints
 let ml_mode_prefix_with_iface_decls
-        (iface:list<decl>)
+        (iface:list decl)
         (impl:decl)
-   : list<decl>    //remaining iface decls
-   * list<decl> =  //impl prefixed with relevant bits from iface
-   match impl.d with
-   | TopLevelLet(_, defs) -> //if c
-     let xs = lids_of_let defs in
-     let val_xs, rest_iface =
-        List.partition
-            (fun d -> xs |> Util.for_some (fun x -> is_val (ident_of_lid x) d))
-            iface
-     in
-     rest_iface, val_xs@[impl]
-   | _ ->
-     iface, [impl]
+   : list decl    //remaining iface decls
+   * list decl =  //impl prefixed with relevant bits from iface
 
-let ml_mode_check_initial_interface mname (iface:list<decl>) =
+
+   match impl.d with
+   | TopLevelModule _
+   | Open _
+   | Friend _
+   | Include _
+   | ModuleAbbrev _ ->
+     iface, [impl]
+   | _ ->
+     let iface_prefix_tycons, iface =
+       List.span (fun d -> match d.d with | Tycon _ -> true | _ -> false) iface
+     in
+
+     let maybe_get_iface_vals lids iface =
+       List.partition
+         (fun d -> lids |> Util.for_some (fun x -> is_val (ident_of_lid x) d))
+         iface in
+
+     match impl.d with
+     | TopLevelLet _
+     | Tycon _ ->
+       let xs = definition_lids impl in
+       let val_xs, rest_iface = maybe_get_iface_vals xs iface in
+       rest_iface, iface_prefix_tycons@val_xs@[impl]
+     | _ ->
+       iface, iface_prefix_tycons@[impl]
+
+let ml_mode_check_initial_interface mname (iface:list decl) =
   iface |> List.filter (fun d ->
-  match d.d with
-  | Val _ -> true //only retain the vals in --MLish mode
-  | _ -> false)
+    match d.d with
+    | Tycon(_, _, tys)
+      when (tys |> Util.for_some (function (TyconAbstract _)  -> true | _ -> false)) ->
+      raise_error (Errors.Fatal_AbstractTypeDeclarationInInterface,
+                   "Interface contains an abstract 'type' declaration; \
+                    use 'val' instead") d.drange
+    | Tycon _
+    | Val _ -> true
+    | _ -> false)
+  // iface |> List.filter (fun d ->
+  // match d.d with
+  // | Val _ -> true //only retain the vals in --MLish mode
+  // | _ -> false)
 
 let ulib_modules = [
+  "FStar.Calc";
   "FStar.TSet";
   "FStar.Seq.Base";
   "FStar.Seq.Properties";
@@ -292,7 +318,7 @@ let prefix_one_decl mname iface impl =
 //Top-level interface
 //////////////////////////////////////////////////////////////////////////
 module E = FStar.Syntax.DsEnv
-let initialize_interface (mname:Ident.lid) (l:list<decl>) : E.withenv<unit> =
+let initialize_interface (mname:Ident.lid) (l:list decl) : E.withenv unit =
   fun (env:E.env) ->
     let decls =
         if apply_ml_mode_optimizations mname
@@ -307,7 +333,7 @@ let initialize_interface (mname:Ident.lid) (l:list<decl>) : E.withenv<unit> =
     | None ->
       (), E.set_iface_decls env mname decls
 
-let prefix_with_interface_decls mname (impl:decl) : E.withenv<(list<decl>)> =
+let prefix_with_interface_decls mname (impl:decl) : E.withenv (list decl) =
   fun (env:E.env) ->
     match E.iface_decls env (E.current_module env) with
     | None ->
@@ -317,7 +343,7 @@ let prefix_with_interface_decls mname (impl:decl) : E.withenv<(list<decl>)> =
       let env = E.set_iface_decls env (E.current_module env) iface in
       impl, env
 
-let interleave_module (a:modul) (expect_complete_modul:bool) : E.withenv<modul> =
+let interleave_module (a:modul) (expect_complete_modul:bool) : E.withenv modul =
   fun (env:E.env)  ->
     match a with
     | Interface _ -> a, env

@@ -1,4 +1,19 @@
-#light "off"
+(*
+   Copyright 2008-2014 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
+
 module FStar.Syntax.Unionfind
 open FStar.Compiler.Effect
 open FStar.Errors
@@ -32,9 +47,9 @@ let vops =
      next_minor=next_minor}
 
 (* private *)
-type tgraph = PU.puf<option<S.term>>
+type tgraph = PU.puf (option S.term)
 (* private *)
-type ugraph = PU.puf<option<S.universe>>
+type ugraph = PU.puf (option S.universe)
 
 (* The type of the current unionfind graph *)
 type uf = {
@@ -55,7 +70,7 @@ let empty (v:version) = {
 let version_to_string v = BU.format2 "%s.%s" (BU.string_of_int v.major) (BU.string_of_int v.minor)
 
 (* private *)
-let state : ref<uf> =
+let state : ref uf =
   BU.mk_ref (empty (vops.next_major()))
 
 type tx =
@@ -115,7 +130,7 @@ let new_transaction () =
     tx
 let commit (tx:tx) = ()
 let rollback (TX uf) = set uf
-let update_in_tx (r:ref<'a>) (x:'a) = ()
+let update_in_tx (r:ref 'a) (x:'a) = ()
 
 ////////////////////////////////////////////////////////////////////////////////
 //Interface for term unification

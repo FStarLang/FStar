@@ -13,8 +13,6 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-#light "off"
-// (c) Microsoft Corporation. All rights reserved
 module FStar.Syntax.Util
 open Prims
 open FStar.Pervasives
@@ -40,7 +38,7 @@ module PC = FStar.Parser.Const
 
 (* A hook into FStar.Syntax.Print, only for debugging.
  * The reference is set in FStar.Main *)
-let tts_f : ref<option<(term -> string)>> = U.mk_ref None
+let tts_f : ref (option (term -> string)) = U.mk_ref None
 let tts t : string =
     match !tts_f with
     | None -> "<<hook unset>>"
@@ -68,7 +66,7 @@ let aqual_of_binder (b:binder)
     | _ -> None
 
 let bqual_and_attrs_of_aqual (a:aqual)
-  : bqual * list<attribute>
+  : bqual * list attribute
   = match a with
     | None -> None, []
     | Some a -> (if a.aqual_implicit then Some imp_tag else None),
@@ -100,10 +98,10 @@ let name_function_binders t = match t.n with
     | Tm_arrow(binders, comp) -> mk (Tm_arrow(name_binders binders, comp)) t.pos
     | _ -> t
 
-let null_binders_of_tks (tks:list<(typ * bqual)>) : binders =
+let null_binders_of_tks (tks:list (typ * bqual)) : binders =
     tks |> List.map (fun (t, imp) -> { null_binder t with binder_qual = imp })
 
-let binders_of_tks (tks:list<(typ * bqual)>) : binders =
+let binders_of_tks (tks:list (typ * bqual)) : binders =
     tks |> List.map (fun (t, imp) -> mk_binder_with_attrs (new_bv (Some t.pos) t) imp [])
 
 let binders_of_freevars fvs = U.set_elements fvs |> List.map mk_binder
@@ -282,7 +280,7 @@ let comp_to_comp_typ (c:comp) : comp_typ =
  *   have this exact shape
  *)
 let effect_indices_from_repr (repr:term) (is_layered:bool) (r:Range.range) (err:string)
-: list<term> =
+: list term =
   let err () = Errors.raise_error (Errors.Fatal_UnexpectedEffect, err) r in
   let repr = compress repr in
   if is_layered
@@ -488,7 +486,7 @@ let unlazy_as_t k t =
     | _ ->
       failwith "Not a Tm_lazy of the expected kind"
 
-let mk_lazy (t : 'a) (typ : typ) (k : lazy_kind) (r : option<range>) : term =
+let mk_lazy (t : 'a) (typ : typ) (k : lazy_kind) (r : option range) : term =
     let rng = (match r with | Some r -> r | None -> dummyRange) in
     let i = {
         lkind = k;
@@ -539,23 +537,23 @@ let eq_inj f g =
      | Unknown, _
      | _, Unknown -> Unknown
 
+let equal_if = function
+    | true -> Equal
+    | _ -> Unknown
+
+let equal_iff = function
+    | true -> Equal
+    | _ -> NotEqual
+
+let eq_and f g =
+    match f with
+    | Equal -> g()
+    | _ -> Unknown
+
 (* Precondition: terms are well-typed in a common environment, or this can return false positives *)
 let rec eq_tm (t1:term) (t2:term) : eq_result =
     let t1 = canon_app t1 in
     let t2 = canon_app t2 in
-    let equal_if = function
-        | true -> Equal
-        | _ -> Unknown
-    in
-    let equal_iff = function
-        | true -> Equal
-        | _ -> NotEqual
-    in
-    let eq_and f g =
-      match f with
-      | Equal -> g()
-      | _ -> Unknown
-    in
     let equal_data (f1:fv) (args1:Syntax.args) (f2:fv) (args2:Syntax.args) =
         // we got constructors! we know they are injective and disjoint, so we can do some
         // good analysis on them
@@ -577,7 +575,7 @@ let rec eq_tm (t1:term) (t2:term) : eq_result =
       | Some (Record_ctor _) -> true
       | _ -> false
     in
-    let heads_and_args_in_case_both_data :option<(fv * args * fv * args)> =
+    let heads_and_args_in_case_both_data :option (fv * args * fv * args) =
       let head1, args1 = t1 |> unmeta |> head_and_args in
       let head2, args2 = t2 |> unmeta |> head_and_args in
       match (un_uinst head1).n, (un_uinst head2).n with
@@ -656,6 +654,12 @@ let rec eq_tm (t1:term) (t2:term) : eq_result =
                 Equal bs1 bs2)
              (fun () -> eq_tm body1 body2)
 
+    | Tm_arrow(bs1, c1), Tm_arrow(bs2, c2)
+          when List.length bs1 = List.length bs2 ->
+      eq_and (List.fold_left2 (fun r b1 b2 -> eq_and r (fun () -> eq_tm b1.binder_bv.sort b2.binder_bv.sort))
+                Equal bs1 bs2)
+             (fun () -> eq_comp c1 c2)
+
     | _ -> Unknown
 
 and eq_quoteinfo q1 q2 =
@@ -709,6 +713,23 @@ and eq_args (a1:args) (a2:args) : eq_result =
 and eq_univs_list (us:universes) (vs:universes) : bool =
     List.length us = List.length vs
     && List.forall2 eq_univs us vs
+
+and eq_comp (c1 c2:comp) : eq_result =
+  match c1.n, c2.n with
+  | Total (t1, u1opt), Total (t2, u2opt)
+  | GTotal (t1, u1opt), GTotal (t2, u2opt) ->
+    eq_tm t1 t2 //Rel ignores the universe annotations when comparing these comps for equality.
+                //So, ignore them here too
+                //But, this should be sorted out: Can we always populate the universe?
+  | Comp ct1, Comp ct2 ->
+    eq_and (equal_if (eq_univs_list ct1.comp_univs ct2.comp_univs))
+           (fun _ ->
+             eq_and (equal_if (Ident.lid_equals ct1.effect_name ct2.effect_name))
+                    (fun _ ->
+                      eq_and (eq_tm ct1.result_typ ct2.result_typ)
+                             (fun _ -> eq_args ct1.effect_args ct2.effect_args)))
+                             //ignoring cflags
+  | _ -> NotEqual
 
 let eq_bqual a1 a2 =
     match a1, a2 with
@@ -818,7 +839,7 @@ let lids_of_sigelt (se: sigelt) = match se.sigel with
   | Sig_polymonadic_bind _ -> []
   | Sig_polymonadic_subcomp _ -> []
 
-let lid_of_sigelt se : option<lident> = match lids_of_sigelt se with
+let lid_of_sigelt se : option lident = match lids_of_sigelt se with
   | [l] -> Some l
   | _ -> None
 
@@ -897,7 +918,7 @@ let mk_field_projector_name lid (x:bv) i =
              else x.ppname in
     mk_field_projector_name_from_ident lid nm
 
-let ses_of_sigbundle (se:sigelt) :list<sigelt> =
+let ses_of_sigbundle (se:sigelt) :list sigelt =
   match se.sigel with
   | Sig_bundle (ses, _) -> ses
   | _                   -> failwith "ses_of_sigbundle: not a Sig_bundle"
@@ -981,7 +1002,7 @@ let has_decreases (c:comp) : bool =
  *     flattening arrows of the form t -> Tot (t1 -> C), so that it returns two binders in this example
  *     the function also descends under the refinements (e.g. t -> Tot (f:(t1 -> C){phi}))
  *)
-let rec arrow_formals_comp_ln k =
+let rec arrow_formals_comp_ln (k:term) =
     let k = Subst.compress k in
     match k.n with
         | Tm_arrow(bs, c) ->
@@ -1022,8 +1043,8 @@ let arrow_formals k =
         3. a list of booleans, one for each argument above, where the boolean is true iff the variable appears in the f's decreases clause
     This is used by NBE for detecting potential non-terminating loops
 *)
-let let_rec_arity (lb:letbinding) : int * option<(list<bool>)> =
-    let rec arrow_until_decreases k =
+let let_rec_arity (lb:letbinding) : int * option (list bool) =
+    let rec arrow_until_decreases (k:term) =
         let k = Subst.compress k in
         match k.n with
         | Tm_arrow(bs, c) ->
@@ -1095,7 +1116,7 @@ let remove_inacc (t:term) : term =
     | [] -> t
     | _ -> mk (Tm_arrow (List.map no_acc bs, c)) t.pos
 
-let mk_letbinding (lbname : either<bv,fv>) univ_vars typ eff def lbattrs pos =
+let mk_letbinding (lbname : either bv fv) univ_vars typ eff def lbattrs pos =
     {lbname=lbname;
      lbunivs=univ_vars;
      lbtyp=typ;
@@ -1257,7 +1278,7 @@ let mk_disj_l phi = match phi with
 let mk_imp phi1 phi2 : term = mk_binop timp phi1 phi2
 let mk_iff phi1 phi2 : term = mk_binop tiff phi1 phi2
 let b2t e = mk (Tm_app(b2t_v, [as_arg e])) e.pos//implicitly coerce a boolean to a type
-let unb2t (e:term) : option<term> =
+let unb2t (e:term) : option term =
     let hd, args = head_and_args e in
     match (compress hd).n, args with
     | Tm_fvar fv, [(e, _)] when fv_eq_lid fv PC.b2t_lid -> Some e
@@ -1445,7 +1466,7 @@ let is_sub_singleton t =
         || Syntax.fv_eq_lid fv PC.precedes_lid
     | _ -> false
 
-let arrow_one_ln (t:typ) : option<(binder * comp)> =
+let arrow_one_ln (t:typ) : option (binder * comp) =
     match (compress t).n with
     | Tm_arrow ([], c) ->
         failwith "fatal: empty binders on arrow?"
@@ -1456,7 +1477,7 @@ let arrow_one_ln (t:typ) : option<(binder * comp)> =
     | _ ->
         None
 
-let arrow_one (t:typ) : option<(binder * comp)> =
+let arrow_one (t:typ) : option (binder * comp) =
     bind_opt (arrow_one_ln t) (fun (b, c) ->
     let bs, c = Subst.open_comp [b] c in
     let b = match bs with
@@ -1471,7 +1492,7 @@ let is_free_in (bv:bv) (t:term) : bool =
 (**************************************************************************************)
 (* Destructing a type as a formula *)
 (**************************************************************************************)
-type qpats = list<args>
+type qpats = list args
 type connective =
     | QAll of binders * qpats * typ
     | QEx of binders * qpats * typ
@@ -1499,7 +1520,7 @@ let destruct_sq_base_table =
     (0, [(PC.c_true_lid, PC.true_lid); (PC.empty_type_lid, PC.false_lid)])
   ]
 
-let destruct_typ_as_formula f : option<connective> =
+let destruct_typ_as_formula f : option connective =
     let rec unmeta_monadic f =
       let f = Subst.compress f in
       match f.n with
@@ -1704,20 +1725,20 @@ let dm4f_lid ed name : lident =
     let p' = apply_last (fun s -> "_dm4f_" ^ s ^ "_" ^ name) p in
     lid_of_path p' Range.dummyRange
 
-let mk_list (typ:term) (rng:range) (l:list<term>) : term =
+let mk_list (typ:term) (rng:range) (l:list term) : term =
     let ctor l = mk (Tm_fvar (lid_as_fv l delta_constant (Some Data_ctor))) rng in
     let cons args pos = mk_Tm_app (mk_Tm_uinst (ctor PC.cons_lid) [U_zero]) args pos in
     let nil  args pos = mk_Tm_app (mk_Tm_uinst (ctor PC.nil_lid)  [U_zero]) args pos in
     List.fold_right (fun t a -> cons [iarg typ; as_arg t; as_arg a] t.pos) l (nil [iarg typ] rng)
 
 // Some generic equalities
-let rec eqlist (eq : 'a -> 'a -> bool) (xs : list<'a>) (ys : list<'a>) : bool =
+let rec eqlist (eq : 'a -> 'a -> bool) (xs : list 'a) (ys : list 'a) : bool =
     match xs, ys with
     | [], [] -> true
     | x::xs, y::ys -> eq x y && eqlist eq xs ys
     | _ -> false
 
-let eqsum (e1 : 'a -> 'a -> bool) (e2 : 'b -> 'b -> bool) (x : either<'a,'b>) (y : either<'a,'b>) : bool =
+let eqsum (e1 : 'a -> 'a -> bool) (e2 : 'b -> 'b -> bool) (x : either 'a 'b) (y : either 'a 'b) : bool =
     match x, y with
     | Inl x, Inl y -> e1 x y
     | Inr x, Inr y -> e2 x y
@@ -1727,7 +1748,7 @@ let eqprod (e1 : 'a -> 'a -> bool) (e2 : 'b -> 'b -> bool) (x : 'a * 'b) (y : 'a
     match x, y with
     | (x1,x2), (y1,y2) -> e1 x1 y1 && e2 x2 y2
 
-let eqopt (e : 'a -> 'a -> bool) (x : option<'a>) (y : option<'a>) : bool =
+let eqopt (e : 'a -> 'a -> bool) (x : option 'a) (y : option 'a) : bool =
     match x, y with
     | Some x, Some y -> e x y
     | _ -> false
@@ -1914,20 +1935,20 @@ let is_fvar lid t =
 let is_synth_by_tactic t =
     is_fvar PC.synth_lid t
 
-let has_attribute (attrs:list<Syntax.attribute>) (attr:lident) =
+let has_attribute (attrs:list Syntax.attribute) (attr:lident) =
      FStar.Compiler.Util.for_some (is_fvar attr) attrs
 
 (* Checks whether the list of attrs contains an application of `attr`, and
  * returns the arguments if so. If there's more than one, the first one
  * takes precedence. *)
-let get_attribute (attr : lident) (attrs:list<Syntax.attribute>) : option<args> =
+let get_attribute (attr : lident) (attrs:list Syntax.attribute) : option args =
     List.tryPick (fun t ->
         let head, args = head_and_args t in
         match (Subst.compress head).n with
         | Tm_fvar fv when fv_eq_lid fv attr -> Some args
         | _ -> None) attrs
 
-let remove_attr (attr : lident) (attrs:list<attribute>) : list<attribute> =
+let remove_attr (attr : lident) (attrs:list attribute) : list attribute =
     List.filter (fun a -> not (is_fvar attr a)) attrs
 
 ///////////////////////////////////////////
@@ -1948,9 +1969,6 @@ let process_pragma p r =
                 (Errors.Fatal_FailToProcessPragma, "Failed to process pragma: " ^ s) r
     in
     match p with
-    | LightOff ->
-      Options.set_ml_ish()
-
     | SetOptions o ->
       set_options o
 
@@ -1979,7 +1997,7 @@ let process_pragma p r =
     | PrintEffectsGraph -> ()  //Typechecker handles it
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
-let rec unbound_variables tm :  list<bv> =
+let rec unbound_variables tm :  list bv =
     let t = Subst.compress tm in
     match t.n with
       | Tm_delayed _ -> failwith "Impossible"
@@ -2092,7 +2110,7 @@ and unbound_variables_comp c =
       unbound_variables ct.result_typ
       @ List.collect (fun (a, _) -> unbound_variables a) ct.effect_args
 
-let extract_attr' (attr_lid:lid) (attrs:list<term>) : option<(list<term> * args)> =
+let extract_attr' (attr_lid:lid) (attrs:list term) : option (list term * args) =
     let rec aux acc attrs =
         match attrs with
         | [] -> None
@@ -2108,7 +2126,7 @@ let extract_attr' (attr_lid:lid) (attrs:list<term>) : option<(list<term> * args)
     in
     aux [] attrs
 
-let extract_attr (attr_lid:lid) (se:sigelt) : option<(sigelt * args)> =
+let extract_attr (attr_lid:lid) (se:sigelt) : option (sigelt * args) =
     match extract_attr' attr_lid se.sigattrs with
     | None -> None
     | Some (attrs', t) -> Some ({ se with sigattrs = attrs' }, t)
@@ -2132,7 +2150,7 @@ let is_smt_lemma t = match (compress t).n with
       end
     | _ -> false
 
-let rec list_elements (e:term) : option<list<term>> =
+let rec list_elements (e:term) : option (list term) =
   let head, args = head_and_args (unmeta e) in
   match (un_uinst head).n, args with
   | Tm_fvar fv, _ when fv_eq_lid fv PC.nil_lid ->
@@ -2159,10 +2177,10 @@ let unthunk (t:term) : term =
 let unthunk_lemma_post t =
     unthunk t
 
-let smt_lemma_as_forall (t:term) (universe_of_binders: binders -> list<universe>)
+let smt_lemma_as_forall (t:term) (universe_of_binders: binders -> list universe)
    : term
    =
-    let list_elements (e:term) : list<term> =
+    let list_elements (e:term) : list term =
       match list_elements e with
       | Some l -> l
       | None ->
@@ -2239,7 +2257,7 @@ let smt_lemma_as_forall (t:term) (universe_of_binders: binders -> list<universe>
  * Mainly reading the combinators out of the eff_decl record
  *
  * For combinators that are present only in either wp or layered effects,
- *   their getters return option<tscheme>
+ *   their getters return option tscheme
  * Leaving it to the callers to deal with it
  *)
 
@@ -2287,13 +2305,13 @@ let apply_eff_combinators (f:tscheme -> tscheme) (combs:eff_combinators) : eff_c
   | DM4F_eff combs -> DM4F_eff (apply_wp_eff_combinators f combs)
   | Layered_eff combs -> Layered_eff (apply_layered_eff_combinators f combs)
 
-let get_wp_close_combinator (ed:eff_decl) : option<tscheme> =
+let get_wp_close_combinator (ed:eff_decl) : option tscheme =
   match ed.combinators with
   | Primitive_eff combs
   | DM4F_eff combs -> Some combs.close_wp
   | _ -> None
 
-let get_eff_repr (ed:eff_decl) : option<tscheme> =
+let get_eff_repr (ed:eff_decl) : option tscheme =
   match ed.combinators with
   | Primitive_eff combs
   | DM4F_eff combs -> combs.repr
@@ -2311,36 +2329,36 @@ let get_return_vc_combinator (ed:eff_decl) : tscheme =
   | DM4F_eff combs -> combs.ret_wp
   | Layered_eff combs -> combs.l_return |> snd
 
-let get_bind_repr (ed:eff_decl) : option<tscheme> =
+let get_bind_repr (ed:eff_decl) : option tscheme =
   match ed.combinators with
   | Primitive_eff combs
   | DM4F_eff combs -> combs.bind_repr
   | Layered_eff combs -> combs.l_bind |> fst |> Some
 
-let get_return_repr (ed:eff_decl) : option<tscheme> =
+let get_return_repr (ed:eff_decl) : option tscheme =
   match ed.combinators with
   | Primitive_eff combs
   | DM4F_eff combs -> combs.return_repr
   | Layered_eff combs -> combs.l_return |> fst |> Some
 
-let get_wp_trivial_combinator (ed:eff_decl) : option<tscheme> =
+let get_wp_trivial_combinator (ed:eff_decl) : option tscheme =
   match ed.combinators with
   | Primitive_eff combs
   | DM4F_eff combs -> combs.trivial |> Some
   | _ -> None
 
-let get_layered_if_then_else_combinator (ed:eff_decl) : option<tscheme> =
+let get_layered_if_then_else_combinator (ed:eff_decl) : option tscheme =
   match ed.combinators with
   | Layered_eff combs -> combs.l_if_then_else |> fst |> Some
   | _ -> None
 
-let get_wp_if_then_else_combinator (ed:eff_decl) : option<tscheme> =
+let get_wp_if_then_else_combinator (ed:eff_decl) : option tscheme =
   match ed.combinators with
   | Primitive_eff combs
   | DM4F_eff combs -> combs.if_then_else |> Some
   | _ -> None
 
-let get_wp_ite_combinator (ed:eff_decl) : option<tscheme> =
+let get_wp_ite_combinator (ed:eff_decl) : option tscheme =
   match ed.combinators with
   | Primitive_eff combs
   | DM4F_eff combs -> combs.ite_wp |> Some
@@ -2352,7 +2370,7 @@ let get_stronger_vc_combinator (ed:eff_decl) : tscheme =
   | DM4F_eff combs -> combs.stronger
   | Layered_eff combs -> combs.l_subcomp |> snd
 
-let get_stronger_repr (ed:eff_decl) : option<tscheme> =
+let get_stronger_repr (ed:eff_decl) : option tscheme =
   match ed.combinators with
   | Primitive_eff _
   | DM4F_eff _ -> None
@@ -2363,7 +2381,7 @@ let aqual_is_erasable (aq:aqual) =
   | None -> false
   | Some aq -> U.for_some (is_fvar PC.erasable_attr) aq.aqual_attributes
 
-let check_mutual_universes (lbs:list<letbinding>)
+let check_mutual_universes (lbs:list letbinding)
   : unit
   = let lb::lbs = lbs in
     let expected = lb.lbunivs in

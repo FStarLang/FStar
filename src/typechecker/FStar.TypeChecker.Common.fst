@@ -13,14 +13,14 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-#light "off"
 module FStar.TypeChecker.Common
 open Prims
 open FStar.Pervasives
 open FStar.Compiler.Effect
 open FStar.Compiler.List
 
-open FStar open FStar.Compiler
+open FStar
+open FStar.Compiler
 open FStar.Compiler.Util
 open FStar.Syntax
 open FStar.Syntax.Syntax
@@ -31,64 +31,12 @@ module U = FStar.Syntax.Util
 
 module BU = FStar.Compiler.Util
 module PC = FStar.Parser.Const
+module C = FStar.Parser.Const
 
-(* relations on types, kinds, etc. *)
-type rel =
-  | EQ
-  | SUB
-  | SUBINV  (* sub-typing/sub-kinding, inverted *)
-
-type rank_t =
-    | Rigid_rigid
-    | Flex_rigid_eq
-    | Flex_flex_pattern_eq
-    | Flex_rigid
-    | Rigid_flex
-    | Flex_flex
-
-type problem<'a> = {                  //Try to prove: lhs rel rhs ~> guard
-    pid:int;
-    lhs:'a;
-    relation:rel;
-    rhs:'a;
-    element:option<bv>;               //where, guard is a predicate on this term (which appears free in/is a subterm of the guard)
-    logical_guard:term;               //the condition under which this problem is solveable; (?u v1..vn)
-    logical_guard_uvar:ctx_uvar;
-    reason: list<string>;             //why we generated this problem, for error reporting
-    loc: Range.range;                 //and the source location where this arose
-    rank: option<rank_t>;
-}
-
-type prob =
-  | TProb of problem<typ>
-  | CProb of problem<comp>
 
 let as_tprob = function
    | TProb p -> p
    | _ -> failwith "Expected a TProb"
-
-type probs = list<prob>
-
-type guard_formula =
-  | Trivial
-  | NonTrivial of formula
-
-type deferred_reason =
-  | Deferred_univ_constraint
-  | Deferred_occur_check_failed
-  | Deferred_first_order_heuristic_failed
-  | Deferred_flex
-  | Deferred_free_names_check_failed
-  | Deferred_not_a_pattern
-  | Deferred_flex_flex_nonpattern
-  | Deferred_delay_match_heuristic
-  | Deferred_to_user_tac
-
-type deferred = list<(deferred_reason * string * prob)>
-
-type univ_ineq = universe * universe
-
-module C = FStar.Parser.Const
 
 let mk_by_tactic tac f =
     let t_by_tactic = S.mk_Tm_uinst (tabbrev C.by_tactic_lid) [U_zero] in
@@ -119,13 +67,7 @@ let rec decr_delta_depth = function
 (*          -- its type                                                            *)
 (***********************************************************************************)
 
-type identifier_info = {
-    identifier:either<bv, fv>;
-    identifier_ty:typ;
-    identifier_range:Range.range;
-}
-
-let insert_col_info (col:int) (info:identifier_info) (col_infos:list<(int * identifier_info)>) =
+let insert_col_info (col:int) (info:identifier_info) (col_infos:list (int * identifier_info)) =
     // Tail recursive helper
     let rec __insert aux rest =
         match rest with
@@ -138,7 +80,7 @@ let insert_col_info (col:int) (info:identifier_info) (col_infos:list<(int * iden
      let l, r = __insert [] col_infos
      in (List.rev l) @ r
 
-let find_nearest_preceding_col_info (col:int) (col_infos:list<(int * identifier_info)>) =
+let find_nearest_preceding_col_info (col:int) (col_infos:list (int * identifier_info)) =
     let rec aux out = function
         | [] -> out
         | (c, i)::rest ->
@@ -146,21 +88,6 @@ let find_nearest_preceding_col_info (col:int) (col_infos:list<(int * identifier_
           else aux (Some i) rest
     in
     aux None col_infos
-
-type id_info_by_col = //sorted in ascending order of columns
-    list<(int * identifier_info)>
-
-type col_info_by_row =
-    BU.pimap<id_info_by_col>
-
-type row_info_by_file =
-    BU.psmap<col_info_by_row>
-
-type id_info_table = {
-    id_info_enabled: bool;
-    id_info_db: row_info_by_file;
-    id_info_buffer: list<identifier_info>;
-}
 
 let id_info_table_empty =
     { id_info_enabled = false;
@@ -223,7 +150,7 @@ let id_info_promote table ty_map =
       id_info_db = List.fold_left (id_info__insert ty_map)
                      table.id_info_db table.id_info_buffer }
 
-let id_info_at_pos (table: id_info_table) (fn:string) (row:int) (col:int) : option<identifier_info> =
+let id_info_at_pos (table: id_info_table) (fn:string) (row:int) (col:int) : option identifier_info =
     let rows = BU.psmap_find_default table.id_info_db fn (BU.pimap_empty ()) in
     let cols = BU.pimap_find_default rows row [] in
 
@@ -269,30 +196,11 @@ let check_uvar_ctx_invariant (reason:string) (r:range) (should_check:bool) (g:ga
         end
      | _ -> fail()
 
-// Reason, term and uvar, and (rough) position where it is introduced
-// The term is just a Tm_uvar of the ctx_uvar
-type implicit = {
-    imp_reason : string;                  // Reason (in text) why the implicit was introduced
-    imp_uvar   : ctx_uvar;                // The ctx_uvar representing it
-    imp_tm     : term;                    // The term, made up of the ctx_uvar
-    imp_range  : Range.range;             // Position where it was introduced
-}
-type implicits = list<implicit>
-
 let implicits_to_string imps =
     let imp_to_string i =
         Print.uvar_to_string i.imp_uvar.ctx_uvar_head
     in
     FStar.Common.string_of_list imp_to_string imps
-
-type guard_t = {
-  guard_f:    guard_formula;
-  deferred_to_tac: deferred; //This field maintains problems that are to be dispatched to a tactic
-                             //They are never attempted by the unification engine in Rel
-  deferred:   deferred;
-  univ_ineqs: list<universe> * list<univ_ineq>;
-  implicits:  implicits;
-}
 
 let trivial_guard = {
   guard_f=Trivial;
@@ -335,13 +243,6 @@ let weaken_guard_formula g fml =
   | NonTrivial f ->
     { g with guard_f = check_trivial (U.mk_imp fml f) }
 
-
-type lcomp = { //a lazy computation
-    eff_name: lident;
-    res_typ: typ;
-    cflags: list<cflag>;
-    comp_thunk: ref<(either<(unit -> (comp * guard_t)), comp>)>
-}
 
 let mk_lcomp eff_name res_typ cflags comp_thunk =
     { eff_name = eff_name;
@@ -444,7 +345,7 @@ let simplify (debug:bool) (tm:term) : term =
         | [], [] -> true
         | _, _ -> false
     in
-    let is_applied (bs:binders) (t : term) : option<bv> =
+    let is_applied (bs:binders) (t : term) : option bv =
         if debug then
             BU.print2 "WPE> is_applied %s -- %s\n"  (Print.term_to_string t) (Print.tag_of_term t);
         let hd, args = U.head_and_args_full t in
@@ -458,7 +359,7 @@ let simplify (debug:bool) (tm:term) : term =
             Some bv
         | _ -> None
     in
-    let is_applied_maybe_squashed (bs : binders) (t : term) : option<bv> =
+    let is_applied_maybe_squashed (bs : binders) (t : term) : option bv =
         if debug then
             BU.print2 "WPE> is_applied_maybe_squashed %s -- %s\n"  (Print.term_to_string t) (Print.tag_of_term t);
         match is_squash t with
@@ -468,7 +369,7 @@ let simplify (debug:bool) (tm:term) : term =
                | _ -> is_applied bs t
                end
     in
-    let is_const_match (phi : term) : option<bool> =
+    let is_const_match (phi : term) : option bool =
         match (SS.compress phi).n with
         (* Trying to be efficient, but just checking if they all agree *)
         (* Note, if we wanted to do this for any term instead of just True/False

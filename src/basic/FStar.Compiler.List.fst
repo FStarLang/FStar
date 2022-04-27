@@ -1,31 +1,46 @@
-#light "off"
+(*
+   Copyright 2008-2017 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
+
 module FStar.Compiler.List
 open Prims
 open FStar.Compiler.Effect
 
-let isEmpty (l : list<'a>)
+let isEmpty (l : list 'a)
   = match l with
     | [] -> true
     | _ -> false
 
-let hd (l:list<'a>)
+let hd (l:list 'a)
   = match l with
     | hd :: tl -> hd
     | _ -> failwith "head of empty list"
 
-let tail (l:list<'a>)
+let tail (l:list 'a)
   = match l with
     | hd::tl -> tl
     | _ -> failwith "tail of empty list"
 
 let tl x = tail x
 
-let rec length (l:list<'a>)
+let rec length (l:list 'a)
   = match l with
     | [] -> 0
     | _::tl -> 1 + length tl
 
-let rec nth (l:list<'a>) (n:int)
+let rec nth (l:list 'a) (n:int)
   = if n < 0
     then failwith "nth takes a non-negative integer as input"
     else if n=0 then
@@ -43,14 +58,14 @@ let rec count x l
       if x = hd then 1 + count x tl
       else count x tl
 
-let rec rev_acc (l:list<'a>) (acc:list<'a>)
+let rec rev_acc (l:list 'a) (acc:list 'a)
   = match l with
     | [] -> acc
     | hd::tl -> rev_acc tl (hd::acc)
 
 let rev_append l a = rev_acc l a
 
-let rev (l:list<'a>) = rev_acc l []
+let rev (l:list 'a) = rev_acc l []
 
 let rec append x y =
   match x with
@@ -241,7 +256,7 @@ let rec sortWith f = function
      let lo, hi  = partition (fun x -> f pivot x > 0) tl in
      append (sortWith f lo) (pivot::sortWith f hi)
 
-let bool_of_compare (f:'a -> 'a -> Tot<int>) x y = f x y >= 0
+let bool_of_compare (f:'a -> 'a -> Tot int) x y = f x y >= 0
 
 let rec unique l =
   // this matches the semantics of BatList.unique.
@@ -258,8 +273,8 @@ let rec iteri_aux i f x = match x with
   | a::tl -> f i a; iteri_aux (i+1) f tl
 let iteri f x = iteri_aux 0 f x
 
-let filter_map (f:'a -> option<'b>) (l:list<'a>) =
-  let rec filter_map_acc (acc:list<'b>) (l:list<'a>) : list<'b> =
+let filter_map (f:'a -> option 'b) (l:list 'a) =
+  let rec filter_map_acc (acc:list 'b) (l:list 'a) : list 'b =
     match l with
     | [] ->
         rev acc
@@ -284,3 +299,14 @@ let index f l =
           index tl (i + 1)
   in
   index l 0
+
+let span #a f l =
+  match l with
+  | [] -> [], []
+  | hd::tl ->
+    if f hd
+    then let pf, rest = span f tl in
+         hd::pf, rest
+    else [], l
+
+  

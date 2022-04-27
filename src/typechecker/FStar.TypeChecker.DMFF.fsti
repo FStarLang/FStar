@@ -15,9 +15,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-#light "off"
 module FStar.TypeChecker.DMFF
-open FStar.Compiler.Effect
 open FStar.Compiler.Effect
 open FStar.TypeChecker
 open FStar.Syntax.Syntax
@@ -27,7 +25,7 @@ type env = {
   // when entering a binder.
   tcenv: FStar.TypeChecker.Env.env;
   // The substitution from every [x: C] to its [x^w: C*].
-  subst: list<subst_elt>;
+  subst: list subst_elt;
   // Hack to avoid a dependency
   tc_const: sconst -> typ;
 }
@@ -41,4 +39,4 @@ val star_type: env -> typ -> typ
 val star_expr: env -> term -> typ * term * term
 val trans_F  : env -> typ -> term -> term
 val recheck_debug : string -> FStar.TypeChecker.Env.env -> term -> term
-val cps_and_elaborate : FStar.TypeChecker.Env.env -> eff_decl -> (list<sigelt> * eff_decl * option<sigelt>)
+val cps_and_elaborate : FStar.TypeChecker.Env.env -> eff_decl -> (list sigelt * eff_decl * option sigelt)

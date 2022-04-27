@@ -22,6 +22,10 @@ let (__proj__Mkenv_t__item__tydef_map :
 let (initial_env : env_t) =
   let uu___ = FStar_Compiler_Util.psmap_empty () in
   { current_module = []; tydef_map = uu___ }
+type tydef =
+  (FStar_Extraction_ML_Syntax.mlsymbol * FStar_Extraction_ML_Syntax.metadata
+    * (FStar_Extraction_ML_Syntax.mltyscheme, Prims.int)
+    FStar_Pervasives.either)
 let (extend_env :
   env_t -> FStar_Extraction_ML_Syntax.mlsymbol -> entry -> env_t) =
   fun env ->
@@ -252,10 +256,6 @@ and (elim_mlexpr :
         FStar_Extraction_ML_Syntax.mlty = uu___1;
         FStar_Extraction_ML_Syntax.loc = (e.FStar_Extraction_ML_Syntax.loc)
       }
-type tydef =
-  (FStar_Extraction_ML_Syntax.mlsymbol * FStar_Extraction_ML_Syntax.metadata
-    * (FStar_Extraction_ML_Syntax.mltyscheme, Prims.int)
-    FStar_Pervasives.either)
 exception Drop_tydef 
 let (uu___is_Drop_tydef : Prims.exn -> Prims.bool) =
   fun projectee -> match projectee with | Drop_tydef -> true | uu___ -> false

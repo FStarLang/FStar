@@ -13,7 +13,6 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-#light "off"
 
 //Top-level invocations into the universal type-checker FStar.TypeChecker
 module FStar.Universal
@@ -53,9 +52,7 @@ module Ch      = FStar.CheckedFiles
 
 let module_or_interface_name m = m.is_interface, m.name
 
-type uenv = FStar.Extraction.ML.UEnv.uenv
-
-let with_dsenv_of_tcenv (tcenv:TcEnv.env) (f:DsEnv.withenv<'a>) : 'a * TcEnv.env =
+let with_dsenv_of_tcenv (tcenv:TcEnv.env) (f:DsEnv.withenv 'a) : 'a * TcEnv.env =
     let a, dsenv = f tcenv.dsenv in
     a, ({tcenv with dsenv = dsenv})
 
@@ -63,7 +60,7 @@ let with_tcenv_of_env (e:uenv) (f:TcEnv.env -> 'a * TcEnv.env) : 'a * uenv =
      let a, t' = f (tcenv_of_uenv e) in
      a, (set_tcenv e t')
 
-let with_dsenv_of_env (e:uenv) (f:DsEnv.withenv<'a>) : 'a * uenv =
+let with_dsenv_of_env (e:uenv) (f:DsEnv.withenv 'a) : 'a * uenv =
      let a, tcenv = with_dsenv_of_tcenv (tcenv_of_uenv e) f in
      a, (set_tcenv e tcenv)
 
@@ -87,7 +84,7 @@ let env_of_tcenv (env:TcEnv.env) =
 (***********************************************************************)
 (* Parse and desugar a file                                            *)
 (***********************************************************************)
-let parse (env:uenv) (pre_fn: option<string>) (fn:string)
+let parse (env:uenv) (pre_fn: option string) (fn:string)
   : Syntax.modul
   * uenv =
   let ast, _ = Parser.Driver.parse_file fn in
@@ -227,7 +224,7 @@ let load_interface_decls env interface_file_name : TcEnv.env_t =
 (***********************************************************************)
 
 (* Extraction to OCaml, F# or Krml *)
-let emit (mllibs:list<FStar.Extraction.ML.Syntax.mllib>) =
+let emit (mllibs:list FStar.Extraction.ML.Syntax.mllib) =
   let opt = Options.codegen () in
   if opt <> None then
     let ext = match opt with
@@ -258,11 +255,11 @@ let emit (mllibs:list<FStar.Extraction.ML.Syntax.mllib>) =
 
 let tc_one_file
         (env:uenv)
-        (pre_fn:option<string>) //interface file name
+        (pre_fn:option string) //interface file name
         (fn:string) //file name
         (parsing_data:FStar.Parser.Dep.parsing_data)  //passed by the caller, ONLY for caching purposes at this point
     : tc_result
-    * option<FStar.Extraction.ML.Syntax.mllib>
+    * option FStar.Extraction.ML.Syntax.mllib
     * uenv =
   Ident.reset_gensym();
 
@@ -435,7 +432,7 @@ let tc_one_file
 
 let tc_one_file_for_ide
         (env:TcEnv.env_t)
-        (pre_fn:option<string>) //interface file name
+        (pre_fn:option string) //interface file name
         (fn:string) //file name
         (parsing_data:FStar.Parser.Dep.parsing_data)  //threaded along, ONLY for caching purposes at this point
     : tc_result
@@ -455,7 +452,7 @@ let needs_interleaving intf impl =
   List.mem (FStar.Compiler.Util.get_file_extension intf) ["fsti"; "fsi"] &&
   List.mem (FStar.Compiler.Util.get_file_extension impl) ["fst"; "fs"]
 
-let tc_one_file_from_remaining (remaining:list<string>) (env:uenv)
+let tc_one_file_from_remaining (remaining:list string) (env:uenv)
                                (deps:FStar.Parser.Dep.deps)  //used to query parsing data
   =
   let remaining, (nmods, mllib, env) =
@@ -473,8 +470,8 @@ let tc_one_file_from_remaining (remaining:list<string>) (env:uenv)
   remaining, nmods, mllib, env
 
 let rec tc_fold_interleave (deps:FStar.Parser.Dep.deps)  //used to query parsing data
-                           (acc:list<tc_result> * list<FStar.Extraction.ML.Syntax.mllib> * uenv)
-                           (remaining:list<string>) =
+                           (acc:list tc_result * list FStar.Extraction.ML.Syntax.mllib * uenv)
+                           (remaining:list string) =
   let as_list = function None -> [] | Some l -> [l] in
   match remaining with
     | [] -> acc

@@ -15,18 +15,15 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-#light "off"
 module FStar.Thunk
 open FStar.Pervasives
-open FStar.Compiler.Effect module List = FStar.Compiler.List
+open FStar.Compiler.Effect
+module List = FStar.Compiler.List
 
-type thunk<'a> = ref<(either<(unit -> 'a), 'a>)>
-type t<'a> = thunk<'a>
+let mk (f:unit -> 'a) : thunk 'a = alloc (Inl f)
+let mkv (v:'a) : thunk 'a = alloc (Inr v)
 
-let mk (f:unit -> 'a) : thunk<'a> = alloc (Inl f)
-let mkv (v:'a) : thunk<'a> = alloc (Inr v)
-
-let force (t:thunk<'a>) =
+let force (t:thunk 'a) =
     match !t with
     | Inr a -> a
     | Inl f ->
@@ -34,5 +31,5 @@ let force (t:thunk<'a>) =
       t := Inr a;
       a
 
-let map (f : 'a -> 'b) (t:thunk<'a>) : thunk<'b> =
+let map (f : 'a -> 'b) (t:thunk 'a) : thunk 'b =
   mk (fun () -> f (force t))

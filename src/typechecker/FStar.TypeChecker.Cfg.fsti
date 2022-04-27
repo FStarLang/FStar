@@ -1,8 +1,23 @@
-#light "off"
+(*
+   Copyright 2008-2014 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
+
 module FStar.TypeChecker.Cfg
 open FStar.Compiler.Effect
-open FStar.Compiler.Effect
-open FStar open FStar.Compiler
+open FStar
+open FStar.Compiler
 open FStar.Compiler.Util
 open FStar.String
 open FStar.Const
@@ -35,11 +50,11 @@ type fsteps = {
      hnf  : bool;
      primops : bool;
      do_not_unfold_pure_lets : bool;
-     unfold_until : option<S.delta_depth>;
-     unfold_only  : option<list<I.lid>>;
-     unfold_fully : option<list<I.lid>>;
-     unfold_attr  : option<list<I.lid>>;
-     unfold_qual  : option<list<string>>;
+     unfold_until : option S.delta_depth;
+     unfold_only  : option (list I.lid);
+     unfold_fully : option (list I.lid);
+     unfold_attr  : option (list I.lid);
+     unfold_qual  : option (list string);
      unfold_tac : bool;
      pure_subterms_within_computations : bool;
      simplify : bool;
@@ -60,7 +75,7 @@ type fsteps = {
 
 val default_steps : fsteps
 val fstep_add_one : step -> fsteps -> fsteps
-val to_fsteps : list<step> -> fsteps
+val to_fsteps : list step -> fsteps
 
 type psc = {
      psc_range:FStar.Compiler.Range.range;
@@ -75,11 +90,11 @@ type primitive_step = {
     name:FStar.Ident.lid;
     arity:int;
     univ_arity:int; // universe arity
-    auto_reflect:option<int>;
+    auto_reflect:option int;
     strong_reduction_ok:bool;
     requires_binder_substitution:bool;
-    interpretation:(psc -> FStar.Syntax.Embeddings.norm_cb -> args -> option<term>);
-    interpretation_nbe:(NBE.nbe_cbs -> NBE.args -> option<NBE.t>)
+    interpretation:(psc -> FStar.Syntax.Embeddings.norm_cb -> args -> option term);
+    interpretation_nbe:(NBE.nbe_cbs -> NBE.args -> option NBE.t)
 }
 
 type debug_switches = {
@@ -100,8 +115,8 @@ type cfg = {
      steps: fsteps;
      tcenv: Env.env;
      debug: debug_switches;
-     delta_level: list<Env.delta_level>;  // Controls how much unfolding of definitions should be performed
-     primitive_steps:BU.psmap<primitive_step>;
+     delta_level: list Env.delta_level;  // Controls how much unfolding of definitions should be performed
+     primitive_steps:BU.psmap primitive_step;
      strong : bool;                       // under a binder
      memoize_lazy : bool;
      normalize_pure_lets: bool;
@@ -125,19 +140,19 @@ val log_unfolding : cfg -> (unit -> unit) -> unit
 val log_nbe : cfg -> (unit -> unit) -> unit
 
 val is_prim_step: cfg -> fv -> bool
-val find_prim_step: cfg -> fv -> option<primitive_step>
+val find_prim_step: cfg -> fv -> option primitive_step
 
-val embed_simple: EMB.embedding<'a> -> Range.range -> 'a -> term
-val try_unembed_simple: EMB.embedding<'a> -> term -> option<'a>
-val built_in_primitive_steps : BU.psmap<primitive_step>
-val equality_ops : BU.psmap<primitive_step>
+val embed_simple: EMB.embedding 'a -> Range.range -> 'a -> term
+val try_unembed_simple: EMB.embedding 'a -> term -> option 'a
+val built_in_primitive_steps : BU.psmap primitive_step
+val equality_ops : BU.psmap primitive_step
 
 val register_plugin: primitive_step -> unit
 val register_extra_step: primitive_step -> unit
 
-val config': list<primitive_step> -> list<step> -> Env.env -> cfg
-val config: list<step> -> Env.env -> cfg
+val config': list primitive_step -> list step -> Env.env -> cfg
+val config: list step -> Env.env -> cfg
 
 val should_reduce_local_let : cfg -> letbinding -> bool
 
-val translate_norm_steps: list<EMB.norm_step> -> list<Env.step>
+val translate_norm_steps: list EMB.norm_step -> list Env.step

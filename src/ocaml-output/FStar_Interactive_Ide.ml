@@ -2073,7 +2073,7 @@ let run_with_parsed_and_tc_term :
                 FStar_Compiler_Util.format1 "let __compute_dummy__ = (%s)"
                   term1 in
               {
-                FStar_Parser_ParseIt.frag_fname = "<input>";
+                FStar_Parser_ParseIt.frag_fname = " input";
                 FStar_Parser_ParseIt.frag_text = dummy_decl;
                 FStar_Parser_ParseIt.frag_line = Prims.int_zero;
                 FStar_Parser_ParseIt.frag_col = Prims.int_zero

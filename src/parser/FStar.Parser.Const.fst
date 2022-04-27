@@ -13,10 +13,8 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-#light "off"
 module FStar.Parser.Const
 open FStar.String
-open FStar.Compiler.Effect
 open FStar.Compiler.Effect
 open FStar.Compiler.Util
 open FStar.Ident

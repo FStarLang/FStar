@@ -13,13 +13,12 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-#light "off"
 
 module FStar.SMTEncoding.Term
 open FStar.Compiler.Effect
-open FStar.Compiler.Effect
 open Prims
-open FStar open FStar.Compiler
+open FStar
+open FStar.Compiler
 open FStar.Syntax.Syntax
 open FStar.Syntax
 open FStar.Compiler.Util
@@ -82,27 +81,23 @@ type term' =
   | Real       of string
   | BoundV     of int
   | FreeV      of fv
-  | App        of op  * list<term>
-  | Quant      of qop * list<list<pat>> * option<int> * list<sort> * term
-  | Let        of list<term> * term
+  | App        of op  * list term
+  | Quant      of qop * list (list pat) * option int * list sort * term
+  | Let        of list term * term
   | Labeled    of term * string * Range.range
   | LblPos     of term * string
 and pat  = term
-and term = {tm:term'; freevars:Syntax.memo<fvs>; rng:Range.range}
+and term = {tm:term'; freevars:Syntax.memo fvs; rng:Range.range}
 and fv = string * sort * bool
-and fvs = list<fv>
-val fv_name : fv -> string
-val fv_sort : fv -> sort
-val fv_force : fv -> bool
-val mk_fv : string * sort -> fv
+and fvs = list fv
 
-type caption = option<string>
-type binders = list<(string * sort)>
+type caption = option string
+type binders = list (string * sort)
 type constructor_field = string  //name of the field
                        * sort    //sort of the field
                        * bool    //true if the field is projectible
-type constructor_t = (string * list<constructor_field> * sort * int * bool)
-type constructors  = list<constructor_t>
+type constructor_t = (string * list constructor_field * sort * int * bool)
+type constructors  = list constructor_t
 type fact_db_id =
     | Name of Ident.lid
     | Namespace of Ident.lid
@@ -111,18 +106,18 @@ type assumption = {
     assumption_term: term;
     assumption_caption: caption;
     assumption_name: string;
-    assumption_fact_ids:list<fact_db_id>
+    assumption_fact_ids:list fact_db_id
 }
 type decl =
   | DefPrelude
-  | DeclFun    of string * list<sort> * sort * caption
-  | DefineFun  of string * list<sort> * sort * term * caption
+  | DeclFun    of string * list sort * sort * caption
+  | DefineFun  of string * list sort * sort * term * caption
   | Assume     of assumption
   | Caption    of string
-  | Module     of string * list<decl>
+  | Module     of string * list decl
   | Eval       of term
   | Echo       of string
-  | RetainAssumptions of list<string>
+  | RetainAssumptions of list string
   | Push
   | Pop
   | CheckSat
@@ -133,7 +128,7 @@ type decl =
 
 (*
  * AR: decls_elt captures a block of "related" decls
- *     For example, for a Tm_refine_<MD5> symbol,
+ *     For example, for a Tm_refine_ MD5 symbol,
  *       decls_elt will have its DeclFun, typing axioms,
  *       hasEq axiom, interpretation, etc.
  *
@@ -154,14 +149,20 @@ type decl =
  *     sym_name and key are options for cases when we don't care about hashconsing
  *)
 type decls_elt = {
-  sym_name:   option<string>;  //name of the main synbol, e.g. Tm_refine_<MD5>
-  key:        option<string>;  //the MD5 string
-  decls:      list<decl>;      //list of decls, e.g. typing axioms, hasEq, for a Tm_refine
-  a_names:    list<string>;    //assumption names that must be kept IF this entry has a cache hit
+  sym_name:   option string;  //name of the main synbol, e.g. Tm_refine_ MD5
+  key:        option string;  //the MD5 string
+  decls:      list decl;      //list of decls, e.g. typing axioms, hasEq, for a Tm_refine
+  a_names:    list string;    //assumption names that must be kept IF this entry has a cache hit
                                //--used to not filter them when using_facts_from
 }
 
-type decls_t = list<decls_elt>
+type decls_t = list decls_elt
+
+val fv_name : fv -> string
+val fv_sort : fv -> sort
+val fv_force : fv -> bool
+val mk_fv : string * sort -> fv
+
 
 (*
  * AR: sym_name -> md5 -> auxiliary decls -> decls
@@ -169,24 +170,24 @@ type decls_t = list<decls_elt>
  *       the symbol itself, but must be retained in case of cache hits
  *       for example, decls for argument types in the case of a Tm_arrow
  *)
-val mk_decls: string -> string -> list<decl> -> list<decls_elt> -> decls_t
+val mk_decls: string -> string -> list decl -> list decls_elt -> decls_t
 
 (*
  * AR: for when we don't hashcons the decls
  *)
-val mk_decls_trivial: list<decl> -> decls_t
+val mk_decls_trivial: list decl -> decls_t
 
 (*
  * Flatten the decls_t
  *)
-val decls_list_of: decls_t -> list<decl>
+val decls_list_of: decls_t -> list decl
 
 type error_label = (fv * string * Range.range)
-type error_labels = list<error_label>
+type error_labels = list error_label
 
 val escape: string -> string
-val abstr: list<fv> -> term -> term
-val inst: list<term> -> term -> term
+val abstr: list fv -> term -> term
+val inst: list term -> term -> term
 val subst: term -> fv -> term -> term
 val mk: term' -> Range.range -> term
 val hash_of_term: term -> string
@@ -206,8 +207,8 @@ val mkReal: string -> Range.range -> term
 val mkRealOfInt: term -> Range.range -> term
 val mkBoundV : int -> Range.range -> term
 val mkFreeV  : fv -> Range.range -> term
-val mkApp' : (op * list<term>) -> Range.range -> term
-val mkApp  : (string * list<term>) -> Range.range -> term
+val mkApp' : (op * list term) -> Range.range -> term
+val mkApp  : (string * list term) -> Range.range -> term
 val mkNot  : term -> Range.range -> term
 val mkMinus: term -> Range.range -> term
 val mkAnd  : ((term * term) -> Range.range -> term)
@@ -241,27 +242,27 @@ val mkBvMod   : (int -> (term * term) -> Range.range -> term)
 val mkBvMul   : (int -> (term * term) -> Range.range -> term)
 
 val mkITE: (term * term * term) -> Range.range -> term
-val mkCases : list<term> -> Range.range -> term
-val check_pattern_ok: term -> option<term>
-val mkForall:  Range.range -> (list<list<pat>> * fvs * term) -> term
-val mkForall': Range.range -> (list<list<pat>> * option<int> * fvs * term)  -> term
-val mkForall'': Range.range -> (list<list<pat>> * option<int> * list<sort> * term) -> term
-val mkExists: Range.range -> (list<list<pat>> * fvs * term) -> term
-val mkLet: (list<term> * term) -> Range.range -> term
-val mkLet': (list<(fv * term)> * term) -> Range.range -> term
+val mkCases : list term -> Range.range -> term
+val check_pattern_ok: term -> option term
+val mkForall:  Range.range -> (list (list pat) * fvs * term) -> term
+val mkForall': Range.range -> (list (list pat) * option int * fvs * term)  -> term
+val mkForall'': Range.range -> (list (list pat) * option int * list sort * term) -> term
+val mkExists: Range.range -> (list (list pat) * fvs * term) -> term
+val mkLet: (list term * term) -> Range.range -> term
+val mkLet': (list (fv * term) * term) -> Range.range -> term
 
 val fresh_token: (string * sort) -> int -> decl
-val fresh_constructor : Range.range -> (string * list<sort> * sort * int) -> decl
+val fresh_constructor : Range.range -> (string * list sort * sort * int) -> decl
 //val constructor_to_decl_aux: bool -> constructor_t -> decls_t
-val constructor_to_decl: Range.range -> constructor_t -> list<decl>
-val mkBvConstructor: int -> list<decl>
+val constructor_to_decl: Range.range -> constructor_t -> list decl
+val mkBvConstructor: int -> list decl
 val declToSmt: string -> decl -> string
 val declToSmt_no_caps: string -> decl -> string
 
 val mk_Term_app : term -> term -> Range.range -> term
 val mk_Term_uvar: int -> Range.range -> term
-val mk_and_l: list<term> -> Range.range -> term
-val mk_or_l: list<term> -> Range.range -> term
+val mk_and_l: list term -> Range.range -> term
+val mk_or_l: list term -> Range.range -> term
 
 val boxInt:      term -> term
 val unboxInt:    term -> term
@@ -285,7 +286,7 @@ val mk_HasTypeZ:     term -> term -> term
 val mk_IsTotFun:     term -> term
 val mk_IsTyped:      term -> term
 val mk_HasTypeFuel:  term -> term -> term -> term
-val mk_HasTypeWithFuel: option<term> -> term -> term -> term
+val mk_HasTypeWithFuel: option term -> term -> term -> term
 val mk_NoHoist:      term -> term -> term
 val mk_tester:       string -> term -> term
 val mk_Term_type:    term
@@ -302,7 +303,7 @@ val kick_partial_app: term -> term
 
 val op_to_string: op -> string
 val print_smt_term: term -> string
-val print_smt_term_list: list<term> -> string
-val print_smt_term_list_list: list<list<term>> -> string
+val print_smt_term_list: list term -> string
+val print_smt_term_list_list: list (list term) -> string
 
 val dummy_sort : sort

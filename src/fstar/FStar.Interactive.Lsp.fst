@@ -13,10 +13,10 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-#light "off"
 module FStar.Interactive.Lsp
 
-open FStar open FStar.Compiler
+open FStar
+open FStar.Compiler
 open FStar.Pervasives
 open FStar.Compiler.Effect
 open FStar.Compiler.Util
@@ -34,7 +34,7 @@ module TcEnv = FStar.TypeChecker.Env
 (* Request *)
 
 // nothrow
-let unpack_lsp_query (r : list<(string * json)>) : lsp_query =
+let unpack_lsp_query (r : list (string * json)) : lsp_query =
   let qid = try_assoc "id" r |> U.map_option js_str_int in // noexcept
 
   // If we make it this far, exceptions will come with qid info.
@@ -116,9 +116,9 @@ let repl_state_init (fname: string) : repl_state =
     repl_curmod = None; repl_env = env; repl_deps_stack = [];
     repl_stdin = open_stdin (); repl_names = CompletionTable.empty }
 
-type optresponse = option<assoct> // Contains [("result", ...)], [("error", ...)], but is not
+type optresponse = option assoct // Contains [("result", ...)], [("error", ...)], but is not
                                   // the full response; call json_of_response for that
-type either_gst_exit = either<grepl_state, int> // grepl_state is independent of exit_code
+type either_gst_exit = either grepl_state int // grepl_state is independent of exit_code
 
 let invoke_full_lax (gst: grepl_state) (fname: string) (text: string) (force: bool)
   : optresponse * either_gst_exit =
@@ -192,7 +192,9 @@ let rec parse_header_len (stream: stream_reader) (len: int): int =
   match U.read_line stream with
   | Some s ->
     if U.starts_with s "Content-Length: " then
-      parse_header_len stream (U.int_of_string (U.substring_from s 16))
+      match U.safe_int_of_string (U.substring_from s 16) with
+      | Some new_len -> parse_header_len stream new_len
+      | None -> raise MalformedHeader
     else if U.starts_with s "Content-Type: " then
       parse_header_len stream len
     else if s = "" then

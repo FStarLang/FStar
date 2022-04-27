@@ -13,7 +13,6 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-#light "off"
 module FStar.TypeChecker.DMFF
 open FStar.Pervasives
 open FStar.Compiler.Effect
@@ -41,18 +40,6 @@ module TcTerm = FStar.TypeChecker.TcTerm
 module BU = FStar.Compiler.Util //basic util
 module U  = FStar.Syntax.Util
 module PC = FStar.Parser.Const
-
-
-type env = {
-  // The type-checking environment which we abuse to store our DMFF-style types
-  // when entering a binder.
-  tcenv: FStar.TypeChecker.Env.env;
-  // The substitution from every [x: C] to its [x^w: C*].
-  subst: list<subst_elt>;
-  // Hack to avoid a dependency NS: env already has a type_of, so why not reuse that?
-  tc_const: sconst -> typ;
-}
-
 
 
 let empty env tc_const = {
@@ -1360,9 +1347,9 @@ let recheck_debug (s:string) (env:FStar.TypeChecker.Env.env) (t:S.term) : S.term
 
 
 let cps_and_elaborate (env:FStar.TypeChecker.Env.env) (ed:S.eff_decl)
-  : list<S.sigelt> *
+  : list S.sigelt *
     S.eff_decl *
-    option<S.sigelt> =
+    option S.sigelt =
   // Using [STInt: a:Type -> Effect] as an example...
   let effect_binders_un, signature_un = SS.open_term ed.binders (snd ed.signature) in
   // [binders] is the empty list (for [ST (h: heap)], there would be one binder)

@@ -13,16 +13,15 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-#light "off"
 (* -------------------------------------------------------------------- *)
 module FStar.Extraction.ML.RemoveUnusedParameters
 open FStar.Ident
 open FStar.Extraction.ML.Syntax
 
-type env_t
+val env_t : Type0
 val initial_env : env_t
+type tydef = mlsymbol * metadata * either mltyscheme int
 val set_current_module (e:env_t) (n:mlpath) : env_t
 
-type tydef = mlsymbol * metadata * either<mltyscheme, int>
-val elim_tydefs (env:env_t) (tds:list<tydef>) : env_t * list<tydef>
+val elim_tydefs (env:env_t) (tds:list tydef) : env_t * list tydef
 val elim_mllib (env:env_t) (m:mllib) : env_t * mllib

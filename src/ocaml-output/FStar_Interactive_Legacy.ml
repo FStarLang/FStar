@@ -893,7 +893,7 @@ let rec (go :
                     go line_col filename stack curmod1 tcenv ts in
                   let frag =
                     {
-                      FStar_Parser_ParseIt.frag_fname = "<input>";
+                      FStar_Parser_ParseIt.frag_fname = " input";
                       FStar_Parser_ParseIt.frag_text = text;
                       FStar_Parser_ParseIt.frag_line =
                         (FStar_Pervasives_Native.fst line_col);

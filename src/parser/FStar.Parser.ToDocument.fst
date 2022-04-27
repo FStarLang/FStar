@@ -14,8 +14,6 @@
   limitations under the License.
 *)
 
-#light "off"
-
 (** Convert Parser.Ast to Pprint.document for prettyprinting. *)
 module FStar.Parser.ToDocument
 open FStar.Pervasives
@@ -37,8 +35,7 @@ module BU = FStar.Compiler.Util
 
 
 (* !!! SIDE EFFECT WARNING !!! *)
-(* There are 3 uses of global side-effect in the printer for : *)
-(* - Printing F# style type application [should_print_fs_typ_app] *)
+(* There is 1 uses of global side-effect in the printer for : *)
 (* - Printing the comments [comment_stack] *)
 
 let maybe_unthunk t =
@@ -50,15 +47,15 @@ let min x y = if x > y then y else x
 let max x y = if x > y then x else y
 
 // VD: copied over from NBE, should both probably go in FStar.Compiler.List
-let map_rev (f: 'a -> 'b) (l: list<'a>): list<'b> =
-  let rec aux (l:list<'a>) (acc:list<'b>) =
+let map_rev (f: 'a -> 'b) (l: list 'a): list 'b =
+  let rec aux (l:list 'a) (acc:list 'b) =
     match l with
     | [] -> acc
     | x :: xs -> aux xs (f x :: acc)
   in
   aux l []
 
-let map_if_all (f: 'a -> option<'b>) (l: list<'a>): option<list<'b>> =
+let map_if_all (f: 'a -> option 'b) (l: list 'a): option (list 'b) =
   let rec aux l acc =
     match l with
     | [] -> acc
@@ -72,33 +69,20 @@ let map_if_all (f: 'a -> option<'b>) (l: list<'a>): option<list<'b>> =
     Some r
   else None
 
-let rec all (f: 'a -> bool) (l: list<'a>): bool =
+let rec all (f: 'a -> bool) (l: list 'a): bool =
   match l with
   | [] -> true
   | x :: xs -> if f x then all f xs else false
 
-let all1_explicit (args:list<(term*imp)>) : bool =
+let all1_explicit (args:list (term*imp)) : bool =
     not (List.isEmpty args) &&
     BU.for_all (function
                 | (_, Nothing) -> true
                 | _ -> false) args
 
-(* [should_print_fs_typ_app] is set when encountering a [LightOff] pragma and *)
-(* reset at the end of each module. If you are using individual print function you *)
-(* should wrap them in [with_fs_typ_app] *)
-let should_print_fs_typ_app = BU.mk_ref false
-
 (* Tuples which come from a resugared AST, via term_to_document are already flattened *)
 (* This reference is set to false in term_to_document and checked in p_tmNoEqWith'    *)
 let unfold_tuples = BU.mk_ref true
-
-let with_fs_typ_app b printer t =
-  let b0 = !should_print_fs_typ_app in
-  should_print_fs_typ_app := b ;
-  let res = printer t in
-  should_print_fs_typ_app := b0 ;
-  res
-
 
 // abbrev
 let str s = doc_of_string s
@@ -301,9 +285,9 @@ type associativity =
     | NonAssoc
 
 (* A token is either a character c representing any string beginning with c or a complete string *)
-type token = either<FStar.Char.char, string>
+type token = either FStar.Char.char string
 
-type associativity_level = associativity * list<token>
+type associativity_level = associativity * list token
 
 let token_to_string = function
     | Inl c -> string_of_char c ^ ".*"
@@ -336,7 +320,7 @@ let amp : associativity_level = Right, [Inr "&"]
 let colon_colon : associativity_level = Right, [Inr "::"]
 
 (* The latter the element, the tighter it binds *)
-let level_associativity_spec : list<associativity_level> =
+let level_associativity_spec : list associativity_level =
   [
     opinfix4 ;
     opinfix3 ;
@@ -360,7 +344,7 @@ let level_table =
   in
   List.mapi (fun i (assoc, tokens) -> (levels_from_associativity i assoc, tokens)) level_associativity_spec
 
-let assign_levels (token_associativity_spec : list<associativity_level>) (s:string) : int * int * int =
+let assign_levels (token_associativity_spec : list associativity_level) (s:string) : int * int * int =
     match List.tryFind (matches_level s) level_table with
         | Some (assoc_levels, _) -> assoc_levels
         | _ -> failwith ("Unrecognized operator " ^ s)
@@ -494,7 +478,7 @@ let cat_with_colon x y = x ^^ colon ^/^ y
 (* that all printed AST nodes that could eventually contain a comment are printed in the *)
 (* sequential order of the document. *)
 
-let comment_stack : ref<(list<(string*range)>)>= BU.mk_ref []
+let comment_stack : ref (list (string*range))= BU.mk_ref []
 
 (* some meta-information that informs spacing and the placement of comments around a declaration *)
 type decl_meta =
@@ -755,7 +739,6 @@ and p_rawDecl d = match d.d with
   | Splice (ids, t) ->
     str "%splice" ^^ p_list p_uident (str ";") ids ^^ space ^^ p_term false false t
 
-(* !!! Side-effect !!! : When a [#light "off"] is printed it activates the fs_typ_app *)
 and p_pragma = function
   | SetOptions s -> str "#set-options" ^^ space ^^ dquotes (str s)
   | ResetOptions s_opt -> str "#reset-options" ^^ optional (fun s -> space ^^ dquotes (str s)) s_opt
@@ -763,12 +746,9 @@ and p_pragma = function
   | PopOptions -> str "#pop-options"
   | RestartSolver -> str "#restart-solver"
   | PrintEffectsGraph -> str "#print-effects-graph"
-  | LightOff ->
-      should_print_fs_typ_app := true ;
-      str "#light \"off\""
 
 (* TODO : needs to take the F# specific type instantiation *)
-and p_typars (bs: list<binder>): document = p_binders true bs
+and p_typars (bs: list binder): document = p_binders true bs
 
 and p_typeDeclWithKw kw typedecl =
   let comm, decl, body, pre = p_typeDecl kw typedecl in
@@ -1073,7 +1053,7 @@ and p_binder is_atomic b =
   | None -> b'
 
 (* is_atomic is true if the binder must be parsed atomically *)
-and p_binder' (is_atomic: bool) (b: binder): document * option<document> * catf =
+and p_binder' (is_atomic: bool) (b: binder): document * option document * catf =
   match b.b with
   | Variable lid -> optional p_aqual b.aqual ^^ p_lident lid, None, cat_with_colon
   | TVariable lid -> p_lident lid, None, cat_with_colon
@@ -1134,11 +1114,11 @@ and p_refinement' aqual_opt attrs binder t phi =
 
 (* TODO : we may prefer to flow if there are more than 15 binders *)
 (* Note: also skipping multiBinder here. *)
-and p_binders_list (is_atomic: bool) (bs: list<binder>): list<document> = List.map (p_binder is_atomic) bs
+and p_binders_list (is_atomic: bool) (bs: list binder): list document = List.map (p_binder is_atomic) bs
 
-and p_binders (is_atomic: bool) (bs: list<binder>): document = separate_or_flow break1 (p_binders_list is_atomic bs)
+and p_binders (is_atomic: bool) (bs: list binder): document = separate_or_flow break1 (p_binders_list is_atomic bs)
 
-and p_binders_sep (bs: list<binder>): document = separate_map space (fun x -> x) (p_binders_list true bs)
+and p_binders_sep (bs: list binder): document = separate_map space (fun x -> x) (p_binders_list true bs)
 
 
 (* ****************************************************************************)
@@ -1529,8 +1509,8 @@ and sig_as_binders_if_possible t extra_space =
   else
     group (colon ^^ s ^^ p_typ_top (Arrows (2, 2)) false false t)
 
-and collapse_pats (pats: list<(document * document)>): list<document> =
-  let fold_fun (bs: list<(list<document> * document)>) (x: document * document) =
+and collapse_pats (pats: list (document * document)): list document =
+  let fold_fun (bs: list (list document * document)) (x: document * document) =
     let b1, t1 = x in
     match bs with
     | [] -> [([b1], t1)]
@@ -1541,7 +1521,7 @@ and collapse_pats (pats: list<(document * document)>): list<document> =
       else
         ([b1], t1) :: hd :: tl
   in
-  let p_collapsed_binder (cb: list<document> * document): document =
+  let p_collapsed_binder (cb: list document * document): document =
     let bs, typ = cb in
     match bs with
     | [] -> failwith "Impossible" // can't have dangling type
@@ -1713,13 +1693,13 @@ and p_tmArrow' p_Tm e =
 // For this, we use the generalised version of p_binder, which returns
 // the binder, its type (as an optional) and a function which
 // concatenates them.
-and collapse_binders (p_Tm: term -> document) (e: term): list<document> =
-  let rec accumulate_binders p_Tm e: list<(document * option<document> * catf)> =
+and collapse_binders (p_Tm: term -> document) (e: term): list document =
+  let rec accumulate_binders p_Tm e: list (document * option document * catf) =
     match e.tm with
     | Product(bs, tgt) -> (List.map (fun b -> p_binder' false b) bs) @ (accumulate_binders p_Tm tgt)
     | _ -> [(p_Tm e, None, cat_with_colon)]
   in
-  let fold_fun (bs: list<(list<document> * option<document> * catf)>) (x: document * option<document> * catf) =
+  let fold_fun (bs: list (list document * option document * catf)) (x: document * option document * catf) =
     let b1, t1, f1 = x in
     match bs with
     | [] -> [([b1], t1, f1)]
@@ -1733,7 +1713,7 @@ and collapse_binders (p_Tm: term -> document) (e: term): list<document> =
           ([b1], t1, f1) :: hd :: tl
       | _ -> ([b1], t1, f1) :: bs
   in
-  let p_collapsed_binder (cb: list<document> * option<document> * catf): document =
+  let p_collapsed_binder (cb: list document * option document * catf): document =
     let bs, t, f = cb in
     match t with
     | None -> begin
@@ -1881,15 +1861,7 @@ and p_appTerm e = match e.tm with
       | [e1; e2] when snd e1 = Infix ->
         p_argTerm e1 ^/^ group (str "`" ^^ (p_indexingTerm head) ^^ str "`") ^/^ p_argTerm e2
       | _ ->
-        let head_doc, args =
-          if !should_print_fs_typ_app
-          then
-            let fs_typ_args, args = BU.take (fun (_,aq) -> aq = FsTypApp) args in
-            p_indexingTerm head ^^
-            soft_surround_map_or_flow 2 0 empty langle (comma ^^ break1) rangle p_fsTypArg fs_typ_args,
-            args
-          else p_indexingTerm head, args
-        in
+        let head_doc, args = p_indexingTerm head, args in
         group (soft_surround_map_or_flow 2 0 head_doc (head_doc ^^ space) break1 empty p_argTerm args)
       )
 
@@ -1910,7 +1882,7 @@ and p_appTerm e = match e.tm with
 and p_argTerm arg_imp = match arg_imp with
   | (u, UnivApp) -> p_universe u
   | (e, FsTypApp) ->
-      (* This case should not happen since it might lead to badly formed type applications (e.g t<a><b>)*)
+      (* This case should not happen since it might lead to badly formed type applications (e.g t a b)*)
       Errors.log_issue e.range (Errors.Warning_UnexpectedFsTypApp, "Unexpected FsTypApp, output might not be formatted correctly.") ;
       surround 2 1 langle (p_indexingTerm e) rangle
   | (e, Hash) -> str "#" ^^ p_indexingTerm e
@@ -1918,8 +1890,6 @@ and p_argTerm arg_imp = match arg_imp with
   | (e, Infix)
   | (e, Nothing) -> p_indexingTerm e
 
-
-and p_fsTypArg (e, _) = p_indexingTerm e
 
 and p_indexingTerm_aux exit e = match e.tm with
   | Op(id, [e1 ; e2]) when string_of_id id = ".()" ->
@@ -2122,16 +2092,12 @@ let pat_to_document p = p_disjunctivePattern p
 let binder_to_document b = p_binder true b
 
 let modul_to_document (m:modul) =
-  should_print_fs_typ_app := false ;
-  let res =
-    match m with
-    | Module (_, decls)
-    | Interface (_, decls, _) ->
-        decls |> List.map decl_to_document |> separate hardline
-  in  should_print_fs_typ_app := false ;
-  res
+  match m with
+  | Module (_, decls)
+  | Interface (_, decls, _) ->
+    decls |> List.map decl_to_document |> separate hardline
 
-let comments_to_document (comments : list<(string * FStar.Compiler.Range.range)>) =
+let comments_to_document (comments : list (string * FStar.Compiler.Range.range)) =
     separate_map hardline (fun (comment, range) -> str comment) comments
 
 let extract_decl_range (d: decl): decl_meta =
@@ -2156,23 +2122,13 @@ let modul_with_comments_to_document (m:modul) comments =
     | Module (_, decls)
     | Interface (_, decls, _) -> decls
   in
-  should_print_fs_typ_app := false ;
   match decls with
     | [] -> empty, comments
     | d :: ds ->
-      (* KM : Hack to fix the inversion that is happening in FStar.Parser.ASTs.as_frag *)
-      (* '#light "off"' is supposed to come before 'module ..' but it is swapped there *)
-      let decls, first_range =
-        match ds with
-        | { d = Pragma LightOff } :: _ ->
-            let d0 = List.hd ds in
-            d0 :: d :: List.tl ds, d0.drange
-        | _ -> d :: ds, d.drange
-      in
+      let decls, first_range = d :: ds, d.drange in
       comment_stack := comments ;
       let initial_comment = place_comments_until_pos 0 1 (start_of_range first_range) dummy_meta empty false true in
   let doc = separate_map_with_comments empty empty p_decl decls extract_decl_range in
   let comments = !comment_stack in
   comment_stack := [] ;
-  should_print_fs_typ_app := false ;
   (initial_comment ^^ doc, comments)

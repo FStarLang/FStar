@@ -13,11 +13,9 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-#light "off"
 
 (** Convert Parser.Ast to Pprint.document for prettyprinting. *)
 module FStar.Parser.ToDocument
-open FStar.Compiler.Effect
 open FStar.Compiler.Effect
 
 val term_to_document : FStar.Parser.AST.term -> FStar.Pprint.document
@@ -26,6 +24,6 @@ val signature_to_document : FStar.Parser.AST.decl -> FStar.Pprint.document
 val pat_to_document : FStar.Parser.AST.pattern -> FStar.Pprint.document
 val binder_to_document : FStar.Parser.AST.binder -> FStar.Pprint.document
 val modul_to_document  : FStar.Parser.AST.modul -> FStar.Pprint.document
-val comments_to_document : list<(string * FStar.Compiler.Range.range)> -> FStar.Pprint.document
-val modul_with_comments_to_document : FStar.Parser.AST.modul -> list<(string * FStar.Compiler.Range.range)> -> FStar.Pprint.document * list<(string * FStar.Compiler.Range.range)>
+val comments_to_document : list (string * FStar.Compiler.Range.range) -> FStar.Pprint.document
+val modul_with_comments_to_document : FStar.Parser.AST.modul -> list (string * FStar.Compiler.Range.range) -> FStar.Pprint.document * list (string * FStar.Compiler.Range.range)
 val handleable_args_length : FStar.Ident.ident -> int

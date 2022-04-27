@@ -13,7 +13,6 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-#light "off"
 module FStar.Parser.Driver
 open FStar.Pervasives
 open FStar.Compiler.Effect
@@ -27,11 +26,6 @@ open FStar.Compiler.Util
 open FStar.Errors
 
 let is_cache_file (fn: string) = Util.get_file_extension fn = ".cache"
-
-type fragment =
-    | Empty
-    | Modul of AST.modul // an entire module or interface -- unspecified
-    | Decls of list<AST.decl> // a partial set of declarations
 
 let parse_fragment (frag: ParseIt.input_frag) : fragment =
     match ParseIt.parse (Toplevel frag) with

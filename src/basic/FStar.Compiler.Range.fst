@@ -13,8 +13,6 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-#light "off"
-// (c) Microsoft Corporation. All rights reserved
 module FStar.Compiler.Range
 open FStar.Compiler.Effect 
 module List = FStar.Compiler.List
@@ -51,7 +49,7 @@ let dummy_pos = {
   col=0;
 }
 let dummy_rng = {
-  file_name="<dummy>";
+  file_name=" dummy";
   start_pos=dummy_pos;
   end_pos=dummy_pos
 }

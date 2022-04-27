@@ -14,8 +14,6 @@
    limitations under the License.
 *)
 (* -------------------------------------------------------------------- *)
-#light "off"
-
 module FStar.Extraction.ML.Code
 open FStar.Compiler.Effect
 open FStar.Compiler.List
@@ -62,8 +60,6 @@ let max_op_prec = (max_int, Infix NonAssoc)
 
 (* Little helpers *)
 
-type doc = | Doc of string
-
 let empty    = Doc ""
 let hardline = Doc "\n"
 
@@ -80,15 +76,15 @@ let parens   (Doc d ) = enclose (text "(") (text ")") (Doc d)
 
 let cat (Doc d1) (Doc d2) = Doc (d1 ^ d2)
 
-let reduce (docs : list<doc>) =
+let reduce (docs : list doc) =
   List.fold_left cat empty docs
 
-let combine (Doc sep) (docs : list<doc>) =
+let combine (Doc sep) (docs : list doc) =
   let select (Doc d) = if d = "" then None else Some d in
   let docs = List.choose select docs in
   Doc (String.concat sep docs)
 
-let reduce1 (docs : list<doc>) =
+let reduce1 (docs : list doc) =
     combine break1 docs
 
 let hbox (d : doc) = d (* FIXME *)
@@ -96,7 +92,7 @@ let hbox (d : doc) = d (* FIXME *)
 (*copied from ocaml-asttrans.fs*)
 
 (* -------------------------------------------------------------------- *)
-let rec in_ns (x: (list<'a> * list<'a>)) : bool = match x with
+let rec in_ns (x: (list 'a * list 'a)) : bool = match x with
     | [], _ -> true
     | x1::t1, x2::t2 when (x1 = x2) -> in_ns (t1, t2)
     | _, _ -> false
@@ -185,7 +181,7 @@ let prim_constructors = [
 ]
 
 (* -------------------------------------------------------------------- *)
-let is_prims_ns (ns : list<mlsymbol>) =
+let is_prims_ns (ns : list mlsymbol) =
     ns = ["Prims"]
 
 (* -------------------------------------------------------------------- *)
@@ -274,7 +270,7 @@ let string_of_mlconstant (sctt : mlconstant) =
   | MLC_Bool false -> "false"
   | MLC_Char c -> (* Unicode characters, in OCaml we use BatUChar (wraper for int) *)
     let nc = Char.int_of_char c in (string_of_int nc)
-    ^(if nc >= 32 && nc <= 127 && nc <> 34 then " (*" ^ (string_of_char c) ^"*)" else "")
+    ^(if nc >= 32 && nc  = 127 && nc < 34 then " (*" ^ (string_of_char c) ^"*)" else "")
   | MLC_Int (s, Some (Signed, Int32)) -> s ^"l"
   | MLC_Int (s, Some (Signed, Int64)) -> s ^"L"
   | MLC_Int (s, Some (_, Int8))
@@ -646,7 +642,7 @@ and doc_of_lets (currentModule : mlsymbol) (rec_, top_level, lets) =
 
 
 and doc_of_loc (lineno, file) =
-    if (Options.no_location_info()) || Util.codegen_fsharp () || file="<dummy>" then
+    if (Options.no_location_info()) || Util.codegen_fsharp () || file=" dummy" then
         empty
     else
         let file = BU.basename file in

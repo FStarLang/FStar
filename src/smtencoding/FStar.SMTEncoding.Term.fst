@@ -13,8 +13,6 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-#light "off"
-
 module FStar.SMTEncoding.Term
 open FStar.Compiler.Effect
 open FStar.Compiler.List
@@ -28,17 +26,6 @@ module U = FStar.Syntax.Util
 
 let escape (s:string) = BU.replace_char s '\'' '_'
 
-type sort =
-  | Bool_sort
-  | Int_sort
-  | String_sort
-  | Term_sort
-  | Fuel_sort
-  | BitVec_sort of int // BitVectors parameterized by their size
-  | Array of sort * sort
-  | Arrow of sort * sort
-  | Sort of string
-
 let rec strSort x = match x with
   | Bool_sort  -> "Bool"
   | Int_sort  -> "Int"
@@ -49,82 +36,6 @@ let rec strSort x = match x with
   | Array(s1, s2) -> format2 "(Array %s %s)" (strSort s1) (strSort s2)
   | Arrow(s1, s2) -> format2 "(%s -> %s)" (strSort s1) (strSort s2)
   | Sort s -> s
-
-type op =
-  | TrueOp
-  | FalseOp
-  | Not
-  | And
-  | Or
-  | Imp
-  | Iff
-  | Eq
-  | LT
-  | LTE
-  | GT
-  | GTE
-  | Add
-  | Sub
-  | Div
-  | RealDiv //Note: whereas the other arithmetic operators are overloaded between Int and Real in Z3; Div and RealDiv are not
-  | Mul
-  | Minus
-  | Mod
-  | BvAnd
-  | BvXor
-  | BvOr
-  | BvAdd
-  | BvSub
-  | BvShl
-  | BvShr  // unsigned shift right\
-  | BvUdiv
-  | BvMod
-  | BvMul
-  | BvUlt
-  | BvUext of Prims.int
-  | NatToBv of Prims.int // need to explicitly define the size of the bitvector
-  | BvToNat
-  | ITE
-  | Var of string //Op corresponding to a user/encoding-defined uninterpreted function
-
-type qop =
-  | Forall
-  | Exists
-
-(*
-    forall (x:Term). {:pattern HasType x Int}
-            HasType x int ==> P
-
-
-*)
-//de Bruijn representation of terms in locally nameless style
-type term' =
-  | Integer    of string //unbounded mathematical integers
-  | String     of string //string constants
-                         //we keep the string constants as is in the AST (and hence in the checked files)
-                         //and convert them to integer ids just before sending them to Z3
-                         //(see termToSmt)
-  | Real       of string //real numbers
-  | BoundV     of int
-  | FreeV      of fv
-  | App        of op  * list<term> //ops are always fully applied; we're in a first-order theory
-  | Quant      of qop
-                  * list<list<pat>>  //disjunction of conjunctive patterns
-                  * option<int>      //an optional weight; seldom used
-                  * list<sort>       //sorts of each bound variable
-                  * term             //body
-  | Let        of list<term> // bound terms
-                * term       // body
-  | Labeled    of term * string * Range.range
-  | LblPos     of term * string
-and pat  = term
-and term = {tm:term'; freevars:Syntax.memo<fvs>; rng:Range.range}
-and fv = string * sort * bool
-//The bool in the fc signals if this occurrence
-//is a thunk that should be forced.
-//See note [Thunking Nullary Constants] below]
-and fvs = list<fv>
-
 
 (** Note [Thunking Nullary Constants]
 
@@ -191,53 +102,6 @@ The bool in the fv is used in termToSmt to force the thunk before
 printing.
  **)
 
-type caption = option<string>
-type binders = list<(string * sort)>
-type constructor_field = string  //name of the field
-                       * sort    //sort of the field
-                       * bool    //true if the field is projectible
-type constructor_t = (string * list<constructor_field> * sort * int * bool)
-type constructors  = list<constructor_t>
-type fact_db_id =
-    | Name of Ident.lid
-    | Namespace of Ident.lid
-    | Tag of string
-type assumption = {
-    assumption_term: term;
-    assumption_caption: caption;
-    assumption_name: string;
-    assumption_fact_ids:list<fact_db_id>
-}
-type decl =
-  | DefPrelude
-  | DeclFun    of string * list<sort> * sort * caption
-  | DefineFun  of string * list<sort> * sort * term * caption
-  | Assume     of assumption
-  | Caption    of string
-  | Module     of string * list<decl>
-  | Eval       of term
-  | Echo       of string
-  | RetainAssumptions of list<string>
-  | Push
-  | Pop
-  | CheckSat
-  | GetUnsatCore
-  | SetOption  of string * string
-  | GetStatistics
-  | GetReasonUnknown
-
-(*
- * See Term.fsi for an explanation of this type
- *)
-type decls_elt = {
-  sym_name:   option<string>;
-  key:        option<string>;
-  decls:      list<decl>;
-  a_names:    list<string>;
-}
-
-type decls_t = list<decls_elt>
-
 let mk_decls name key decls aux_decls = [{
   sym_name    = Some name;
   key         = Some key;
@@ -263,9 +127,6 @@ let mk_decls_trivial decls = [{
 }]
 
 let decls_list_of l = l |> List.collect (fun elt -> elt.decls)
-
-type error_label = (fv * string * Range.range)
-type error_labels = list<error_label>
 
 let mk_fv (x, y) : fv = x, y, false
 let fv_name (x:fv) = let nm, _, _ = x in nm
@@ -482,7 +343,7 @@ let mkCases t r = match t with
   | hd::tl -> List.fold_left (fun out t -> mkAnd (out, t) r) hd tl
 
 
-let check_pattern_ok (t:term) : option<term> =
+let check_pattern_ok (t:term) : option term =
     let rec aux t =
         match t.tm with
         | Integer _
@@ -560,9 +421,9 @@ let check_pattern_ok (t:term) : option<term> =
   | Quant (qop, l, _, _, t) -> BU.format3 "(%s %s %s)" (qop_to_string qop) (print_smt_term_list_list l) (print_smt_term t)
   | Let (es, body) -> BU.format2 "(let %s %s)" (print_smt_term_list es) (print_smt_term body)
 
-and print_smt_term_list (l:list<term>) :string = List.map print_smt_term l |> String.concat " "
+and print_smt_term_list (l:list term) :string = List.map print_smt_term l |> String.concat " "
 
-and print_smt_term_list_list (l:list<list<term>>) :string =
+and print_smt_term_list_list (l:list (list term)) :string =
     List.fold_left (fun s l -> (s ^ "; [ " ^ (print_smt_term_list l) ^ " ] ")) "" l
 
 let mkQuant r check_pats (qop, pats, wopt, vars, body) =
@@ -697,7 +558,7 @@ let fresh_constructor rng (name, arg_sorts, sort, id) =
 
 let injective_constructor
   (rng:Range.range)
-  ((name, fields, sort):(string * list<constructor_field> * sort)) :list<decl> =
+  ((name, fields, sort):(string * list constructor_field * sort)) :list decl =
     let n_bvars = List.length fields in
     let bvar_name i = "x_" ^ string_of_int i in
     let bvar_index i = n_bvars - (i + 1) in
@@ -757,7 +618,7 @@ let constructor_to_decl rng (name, fields, sort, id, injective) =
 (****************************************************************************)
 (* Standard SMTLib prelude for F* and some term constructors                *)
 (****************************************************************************)
-let name_binders_inner prefix_opt (outer_names:list<fv>) start sorts =
+let name_binders_inner prefix_opt (outer_names:list fv) start sorts =
     let names, binders, n = sorts |> List.fold_left (fun (names, binders, n) s ->
         let prefix = match s with
             | Term_sort -> "@x"
@@ -801,7 +662,7 @@ let termToSmt
             | App(Var "Prims.guard_free", [p]) -> p
             | _ -> tm))
       in
-      let rec aux' depth n (names:list<fv>) t =
+      let rec aux' depth n (names:list fv) t =
         let aux = aux (depth + 1) in
         match t.tm with
         | Integer i -> i
