@@ -64,10 +64,12 @@ let is_well_founded (#a:Type) (rel:binrel a) =
 let well_founded_relation (a:Type) = rel:binrel a{is_well_founded rel}
 
 unfold
-let as_well_founded (#a:Type) (#rel:binrel a) (f:(x:a -> acc rel x))
+let as_well_founded (#a:Type u#a)
+                    (#rel:binrel u#a u#r a)
+                    (f:well_founded rel)
   : well_founded_relation a
-  = introduce forall (x:a). acc rel x
-    with FStar.Squash.return_squash (f x);
+  = introduce forall (x:a). squash (acc rel x)
+    with FStar.Squash.return_squash (FStar.Squash.return_squash (f x));
     rel
 
 open FStar.IndefiniteDescription
@@ -124,9 +126,6 @@ let inverse_image_wf (#a:Type u#a) (#b:Type u#b) (#r_b:binrel u#b u#r b)
   = let rec aux (x:a) (acc_r_b:acc r_b (f x))
       : Tot (acc (inverse_image r_b f) x)
             (decreases acc_r_b) =
-      let get_acc_r_b_y (y:a) (p:(inverse_image r_b f) y x)
-        : Tot (acc_r_b_y:acc r_b (f y){acc_r_b_y << acc_r_b})
-        = match acc_r_b with
-          | AccIntro g -> g (f y) p in
-      AccIntro (fun y p -> aux y (acc_r_b.access_smaller (f y) p)) in
+      AccIntro (fun y p -> aux y (acc_r_b.access_smaller (f y) p))
+    in
     fun x -> aux x (r_b_wf (f x))

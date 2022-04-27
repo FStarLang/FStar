@@ -515,22 +515,38 @@ let guard_letrecs env actuals expected_c : list (lbname*typ*univ_names) =
           else l |> List.splitAt n_prev |> fst, l_prev in
         aux l l_prev in
 
-      let mk_precedes env d d_prev =
+      let mk_precedes (env:Env.env) d d_prev =
         match d, d_prev with
         | Decreases_lex l, Decreases_lex l_prev ->
           mk_precedes_lex env l l_prev
-        | Decreases_wf (rel, e), Decreases_wf (rel_prev, e_prev) ->
-          if not (U.eq_tm rel rel_prev = U.Equal)
-          then Errors.raise_error (Errors.Fatal_UnexpectedTerm,
-                 BU.format2 "Cannot build termination VC with two different well-founded \
-                   relations %s and %s"
-                   (Print.term_to_string rel)
-                   (Print.term_to_string rel_prev)) r;
+        | Decreases_wf (rel, e), Decreases_wf (rel_prev, e_prev) -> 
           (*
            * For well-founded relations based termination checking,
            *   just prove that (rel e e_prev)
            *)
-          mk_Tm_app rel [as_arg e; as_arg e_prev] r
+          let rel_guard = mk_Tm_app rel [as_arg e; as_arg e_prev] r in
+          if U.eq_tm rel rel_prev = U.Equal
+          then rel_guard
+          else (
+            (* if the relation is dependent on parameters in scope, 
+               additionally prove that those parameters are invariant, 
+               i.e., the rel and rel_prev are provably equal *)
+               let t_rel, _ = 
+                 Errors.with_ctx
+                   ("Typechecking decreases well-founded relation")
+                   (fun _ -> env.typeof_well_typed_tot_or_gtot_term env rel false)
+               in
+//               let u_rel = env.universe_of env rel in
+               let t_rel_prev, _ =
+                 Errors.with_ctx
+                   ("Typechecking previous decreases well-founded relation")                 
+                   (fun _ -> env.typeof_well_typed_tot_or_gtot_term env rel_prev false)
+               in
+//               let u_rel_prev = env.universe_of env rel_prev in
+               let eq_guard = U.mk_eq3_no_univ t_rel t_rel_prev rel rel_prev in
+               U.mk_conj eq_guard rel_guard
+          )
+
         | _, _ ->
           Errors.raise_error (Errors.Fatal_UnexpectedTerm,
             "Cannot build termination VC with a well-founded relation and lex ordering") r in
