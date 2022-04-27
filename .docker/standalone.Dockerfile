@@ -30,4 +30,8 @@ RUN opam install \
 
 
 WORKDIR FStar
-RUN eval $(opam env) && .docker/build/build-standalone.sh
+
+ARG CI_TARGET=uregressions
+ARG CI_THREADS=24
+ARG CI_BRANCH=master
+RUN eval $(opam env) && .docker/build/build-standalone.sh $CI_TARGET $CI_THREADS $CI_BRANCH
