@@ -45,6 +45,16 @@ type norm_step =
     | NBE
     | Unmeta
 
+type norm_cb = either Ident.lident term -> term // a callback to the normalizer
+
+type shadow_term = option (Thunk.t term)
+
+type embed_t = FStar.Compiler.Range.range -> shadow_term -> norm_cb -> term
+type unembed_t 'a = bool -> norm_cb -> option 'a // bool = whether we should warn on a failure
+
+type raw_embedder 'a   = 'a -> embed_t
+type raw_unembedder 'a = term -> unembed_t 'a
+
 val steps_Simpl         : term
 val steps_Weak          : term
 val steps_HNF           : term
@@ -68,19 +78,11 @@ val steps_Unmeta        : term
  * able to unembed.
  *)
 
-type norm_cb = either Ident.lident term -> term // a callback to the normalizer
 val id_norm_cb : norm_cb
 exception Embedding_failure
 exception Unembedding_failure
-type shadow_term = option (Thunk.t term)
 
-type embed_t = FStar.Compiler.Range.range -> shadow_term -> norm_cb -> term
-type unembed_t 'a = bool -> norm_cb -> option 'a // bool = whether we should warn on a failure
-
-type raw_embedder 'a   = 'a -> embed_t
-type raw_unembedder 'a = term -> unembed_t 'a
-
-type embedding 'a
+val embedding (a:Type0) : Type0
 val emb_typ_of: embedding 'a -> emb_typ
 val term_as_fv: term -> fv //partial!
 val mk_emb : raw_embedder 'a -> raw_unembedder 'a -> fv -> embedding 'a

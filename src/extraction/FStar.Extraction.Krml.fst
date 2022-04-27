@@ -42,10 +42,7 @@ module FC = FStar.Const
 
 (* COPY-PASTED ****************************************************************)
 
-type program =
-  list decl
-
-and decl =
+type decl =
   | DGlobal of list flag * lident * int * typ * expr
   | DFunction of option cc * list flag * int * typ * lident * list binder * expr
   | DTypeAlias of lident * list flag * int * typ
@@ -188,14 +185,8 @@ and typ =
   | TTuple of list typ
   | TConstBuf of typ
 
-(** Versioned binary writing/reading of ASTs *)
 
-type version = int
 let current_version: version = 28
-
-type file = string * program
-type binary_format = version * list file
-
 
 (* Utilities *****************************************************************)
 

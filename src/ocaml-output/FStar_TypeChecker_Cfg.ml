@@ -1609,95 +1609,6 @@ let (psc_range : psc -> FStar_Compiler_Range.range) =
   fun psc1 -> psc1.psc_range
 let (psc_subst : psc -> FStar_Syntax_Syntax.subst_t) =
   fun psc1 -> psc1.psc_subst ()
-type debug_switches =
-  {
-  gen: Prims.bool ;
-  top: Prims.bool ;
-  cfg: Prims.bool ;
-  primop: Prims.bool ;
-  unfolding: Prims.bool ;
-  b380: Prims.bool ;
-  wpe: Prims.bool ;
-  norm_delayed: Prims.bool ;
-  print_normalized: Prims.bool ;
-  debug_nbe: Prims.bool ;
-  erase_erasable_args: Prims.bool }
-let (__proj__Mkdebug_switches__item__gen : debug_switches -> Prims.bool) =
-  fun projectee ->
-    match projectee with
-    | { gen; top; cfg; primop; unfolding; b380; wpe; norm_delayed;
-        print_normalized; debug_nbe; erase_erasable_args;_} -> gen
-let (__proj__Mkdebug_switches__item__top : debug_switches -> Prims.bool) =
-  fun projectee ->
-    match projectee with
-    | { gen; top; cfg; primop; unfolding; b380; wpe; norm_delayed;
-        print_normalized; debug_nbe; erase_erasable_args;_} -> top
-let (__proj__Mkdebug_switches__item__cfg : debug_switches -> Prims.bool) =
-  fun projectee ->
-    match projectee with
-    | { gen; top; cfg; primop; unfolding; b380; wpe; norm_delayed;
-        print_normalized; debug_nbe; erase_erasable_args;_} -> cfg
-let (__proj__Mkdebug_switches__item__primop : debug_switches -> Prims.bool) =
-  fun projectee ->
-    match projectee with
-    | { gen; top; cfg; primop; unfolding; b380; wpe; norm_delayed;
-        print_normalized; debug_nbe; erase_erasable_args;_} -> primop
-let (__proj__Mkdebug_switches__item__unfolding :
-  debug_switches -> Prims.bool) =
-  fun projectee ->
-    match projectee with
-    | { gen; top; cfg; primop; unfolding; b380; wpe; norm_delayed;
-        print_normalized; debug_nbe; erase_erasable_args;_} -> unfolding
-let (__proj__Mkdebug_switches__item__b380 : debug_switches -> Prims.bool) =
-  fun projectee ->
-    match projectee with
-    | { gen; top; cfg; primop; unfolding; b380; wpe; norm_delayed;
-        print_normalized; debug_nbe; erase_erasable_args;_} -> b380
-let (__proj__Mkdebug_switches__item__wpe : debug_switches -> Prims.bool) =
-  fun projectee ->
-    match projectee with
-    | { gen; top; cfg; primop; unfolding; b380; wpe; norm_delayed;
-        print_normalized; debug_nbe; erase_erasable_args;_} -> wpe
-let (__proj__Mkdebug_switches__item__norm_delayed :
-  debug_switches -> Prims.bool) =
-  fun projectee ->
-    match projectee with
-    | { gen; top; cfg; primop; unfolding; b380; wpe; norm_delayed;
-        print_normalized; debug_nbe; erase_erasable_args;_} -> norm_delayed
-let (__proj__Mkdebug_switches__item__print_normalized :
-  debug_switches -> Prims.bool) =
-  fun projectee ->
-    match projectee with
-    | { gen; top; cfg; primop; unfolding; b380; wpe; norm_delayed;
-        print_normalized; debug_nbe; erase_erasable_args;_} ->
-        print_normalized
-let (__proj__Mkdebug_switches__item__debug_nbe :
-  debug_switches -> Prims.bool) =
-  fun projectee ->
-    match projectee with
-    | { gen; top; cfg; primop; unfolding; b380; wpe; norm_delayed;
-        print_normalized; debug_nbe; erase_erasable_args;_} -> debug_nbe
-let (__proj__Mkdebug_switches__item__erase_erasable_args :
-  debug_switches -> Prims.bool) =
-  fun projectee ->
-    match projectee with
-    | { gen; top; cfg; primop; unfolding; b380; wpe; norm_delayed;
-        print_normalized; debug_nbe; erase_erasable_args;_} ->
-        erase_erasable_args
-let (no_debug_switches : debug_switches) =
-  {
-    gen = false;
-    top = false;
-    cfg = false;
-    primop = false;
-    unfolding = false;
-    b380 = false;
-    wpe = false;
-    norm_delayed = false;
-    print_normalized = false;
-    debug_nbe = false;
-    erase_erasable_args = false
-  }
 type primitive_step =
   {
   name: FStar_Ident.lid ;
@@ -1781,29 +1692,88 @@ let (__proj__Mkprimitive_step__item__interpretation_nbe :
     | { name; arity; univ_arity; auto_reflect; strong_reduction_ok;
         requires_binder_substitution; interpretation; interpretation_nbe;_}
         -> interpretation_nbe
-type prim_step_set = primitive_step FStar_Compiler_Util.psmap
-let (empty_prim_steps : unit -> prim_step_set) =
-  fun uu___ -> FStar_Compiler_Util.psmap_empty ()
-let (add_step :
-  primitive_step -> prim_step_set -> primitive_step FStar_Compiler_Util.psmap)
-  =
-  fun s ->
-    fun ss ->
-      let uu___ = FStar_Ident.string_of_lid s.name in
-      FStar_Compiler_Util.psmap_add ss uu___ s
-let (merge_steps : prim_step_set -> prim_step_set -> prim_step_set) =
-  fun s1 -> fun s2 -> FStar_Compiler_Util.psmap_merge s1 s2
-let (add_steps : prim_step_set -> primitive_step Prims.list -> prim_step_set)
-  = fun m -> fun l -> FStar_Compiler_List.fold_right add_step l m
-let (prim_from_list : primitive_step Prims.list -> prim_step_set) =
-  fun l -> let uu___ = empty_prim_steps () in add_steps uu___ l
+type debug_switches =
+  {
+  gen: Prims.bool ;
+  top: Prims.bool ;
+  cfg: Prims.bool ;
+  primop: Prims.bool ;
+  unfolding: Prims.bool ;
+  b380: Prims.bool ;
+  wpe: Prims.bool ;
+  norm_delayed: Prims.bool ;
+  print_normalized: Prims.bool ;
+  debug_nbe: Prims.bool ;
+  erase_erasable_args: Prims.bool }
+let (__proj__Mkdebug_switches__item__gen : debug_switches -> Prims.bool) =
+  fun projectee ->
+    match projectee with
+    | { gen; top; cfg; primop; unfolding; b380; wpe; norm_delayed;
+        print_normalized; debug_nbe; erase_erasable_args;_} -> gen
+let (__proj__Mkdebug_switches__item__top : debug_switches -> Prims.bool) =
+  fun projectee ->
+    match projectee with
+    | { gen; top; cfg; primop; unfolding; b380; wpe; norm_delayed;
+        print_normalized; debug_nbe; erase_erasable_args;_} -> top
+let (__proj__Mkdebug_switches__item__cfg : debug_switches -> Prims.bool) =
+  fun projectee ->
+    match projectee with
+    | { gen; top; cfg; primop; unfolding; b380; wpe; norm_delayed;
+        print_normalized; debug_nbe; erase_erasable_args;_} -> cfg
+let (__proj__Mkdebug_switches__item__primop : debug_switches -> Prims.bool) =
+  fun projectee ->
+    match projectee with
+    | { gen; top; cfg; primop; unfolding; b380; wpe; norm_delayed;
+        print_normalized; debug_nbe; erase_erasable_args;_} -> primop
+let (__proj__Mkdebug_switches__item__unfolding :
+  debug_switches -> Prims.bool) =
+  fun projectee ->
+    match projectee with
+    | { gen; top; cfg; primop; unfolding; b380; wpe; norm_delayed;
+        print_normalized; debug_nbe; erase_erasable_args;_} -> unfolding
+let (__proj__Mkdebug_switches__item__b380 : debug_switches -> Prims.bool) =
+  fun projectee ->
+    match projectee with
+    | { gen; top; cfg; primop; unfolding; b380; wpe; norm_delayed;
+        print_normalized; debug_nbe; erase_erasable_args;_} -> b380
+let (__proj__Mkdebug_switches__item__wpe : debug_switches -> Prims.bool) =
+  fun projectee ->
+    match projectee with
+    | { gen; top; cfg; primop; unfolding; b380; wpe; norm_delayed;
+        print_normalized; debug_nbe; erase_erasable_args;_} -> wpe
+let (__proj__Mkdebug_switches__item__norm_delayed :
+  debug_switches -> Prims.bool) =
+  fun projectee ->
+    match projectee with
+    | { gen; top; cfg; primop; unfolding; b380; wpe; norm_delayed;
+        print_normalized; debug_nbe; erase_erasable_args;_} -> norm_delayed
+let (__proj__Mkdebug_switches__item__print_normalized :
+  debug_switches -> Prims.bool) =
+  fun projectee ->
+    match projectee with
+    | { gen; top; cfg; primop; unfolding; b380; wpe; norm_delayed;
+        print_normalized; debug_nbe; erase_erasable_args;_} ->
+        print_normalized
+let (__proj__Mkdebug_switches__item__debug_nbe :
+  debug_switches -> Prims.bool) =
+  fun projectee ->
+    match projectee with
+    | { gen; top; cfg; primop; unfolding; b380; wpe; norm_delayed;
+        print_normalized; debug_nbe; erase_erasable_args;_} -> debug_nbe
+let (__proj__Mkdebug_switches__item__erase_erasable_args :
+  debug_switches -> Prims.bool) =
+  fun projectee ->
+    match projectee with
+    | { gen; top; cfg; primop; unfolding; b380; wpe; norm_delayed;
+        print_normalized; debug_nbe; erase_erasable_args;_} ->
+        erase_erasable_args
 type cfg =
   {
   steps: fsteps ;
   tcenv: FStar_TypeChecker_Env.env ;
   debug: debug_switches ;
   delta_level: FStar_TypeChecker_Env.delta_level Prims.list ;
-  primitive_steps: prim_step_set ;
+  primitive_steps: primitive_step FStar_Compiler_Util.psmap ;
   strong: Prims.bool ;
   memoize_lazy: Prims.bool ;
   normalize_pure_lets: Prims.bool ;
@@ -1829,7 +1799,8 @@ let (__proj__Mkcfg__item__delta_level :
     match projectee with
     | { steps; tcenv; debug; delta_level; primitive_steps; strong;
         memoize_lazy; normalize_pure_lets; reifying;_} -> delta_level
-let (__proj__Mkcfg__item__primitive_steps : cfg -> prim_step_set) =
+let (__proj__Mkcfg__item__primitive_steps :
+  cfg -> primitive_step FStar_Compiler_Util.psmap) =
   fun projectee ->
     match projectee with
     | { steps; tcenv; debug; delta_level; primitive_steps; strong;
@@ -1854,6 +1825,36 @@ let (__proj__Mkcfg__item__reifying : cfg -> Prims.bool) =
     match projectee with
     | { steps; tcenv; debug; delta_level; primitive_steps; strong;
         memoize_lazy; normalize_pure_lets; reifying;_} -> reifying
+let (no_debug_switches : debug_switches) =
+  {
+    gen = false;
+    top = false;
+    cfg = false;
+    primop = false;
+    unfolding = false;
+    b380 = false;
+    wpe = false;
+    norm_delayed = false;
+    print_normalized = false;
+    debug_nbe = false;
+    erase_erasable_args = false
+  }
+type prim_step_set = primitive_step FStar_Compiler_Util.psmap
+let (empty_prim_steps : unit -> prim_step_set) =
+  fun uu___ -> FStar_Compiler_Util.psmap_empty ()
+let (add_step :
+  primitive_step -> prim_step_set -> primitive_step FStar_Compiler_Util.psmap)
+  =
+  fun s ->
+    fun ss ->
+      let uu___ = FStar_Ident.string_of_lid s.name in
+      FStar_Compiler_Util.psmap_add ss uu___ s
+let (merge_steps : prim_step_set -> prim_step_set -> prim_step_set) =
+  fun s1 -> fun s2 -> FStar_Compiler_Util.psmap_merge s1 s2
+let (add_steps : prim_step_set -> primitive_step Prims.list -> prim_step_set)
+  = fun m -> fun l -> FStar_Compiler_List.fold_right add_step l m
+let (prim_from_list : primitive_step Prims.list -> prim_step_set) =
+  fun l -> let uu___ = empty_prim_steps () in add_steps uu___ l
 let (cfg_to_string : cfg -> Prims.string) =
   fun cfg1 ->
     let uu___ =

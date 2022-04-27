@@ -37,30 +37,23 @@ module Err = FStar.Errors
 module Z = FStar.BigInt
 open FStar.Char
 
-type norm_cb = either Ident.lid S.term -> S.term
 let id_norm_cb : norm_cb = function
     | Inr x -> x
     | Inl l -> S.fv_to_tm (S.lid_as_fv l delta_equational None)
 exception Embedding_failure
 exception Unembedding_failure
-type shadow_term = option (Thunk.t term)
 
 let map_shadow (s:shadow_term) (f:term -> term) : shadow_term =
     BU.map_opt s (Thunk.map f)
 let force_shadow (s:shadow_term) = BU.map_opt s Thunk.force
 
-type embed_t = FStar.Compiler.Range.range -> shadow_term -> norm_cb -> term
-type unembed_t 'a = bool -> norm_cb -> option 'a // bool = whether we expect success, and should warn if unembedding fails
-
-type raw_embedder 'a   = 'a -> embed_t
-type raw_unembedder 'a = term -> unembed_t 'a
 type printer 'a = 'a -> string
 
-type embedding 'a = {
-  em : 'a -> embed_t;
-  un : term -> unembed_t 'a;
+type embedding (a:Type0) = {
+  em : a -> embed_t;
+  un : term -> unembed_t a;
   typ : typ;
-  print: printer 'a;
+  print: printer a;
   emb_typ: emb_typ
 }
 let emb_typ_of e = e.emb_typ
@@ -651,23 +644,6 @@ let e_list (ea:embedding 'a) =
         emb_t_list_a
 
 let e_string_list = e_list e_string
-
-type norm_step =
-    | Simpl
-    | Weak
-    | HNF
-    | Primops
-    | Delta
-    | Zeta
-    | ZetaFull
-    | Iota
-    | Reify
-    | UnfoldOnly  of list string
-    | UnfoldFully of list string
-    | UnfoldAttr  of list string
-    | UnfoldQual  of list string
-    | NBE
-    | Unmeta
 
 (* the steps as terms *)
 let steps_Simpl         = tconst PC.steps_simpl

@@ -23,7 +23,7 @@ open FStar.Compiler.Effect
 module Range = FStar.Compiler.Range
 module S = FStar.Syntax.Syntax
 
-type uf
+val uf : Type0
 val get : unit -> uf
 val set : uf -> unit
 val reset : unit -> unit
@@ -37,7 +37,7 @@ val set_rw : unit -> unit
 (* Run a function with rw mode enabled *)
 val with_uf_enabled : (unit -> 'a) -> 'a
 
-type tx
+val tx : Type0
 val new_transaction    : (unit -> tx)
 val rollback           : tx -> unit
 val commit             : tx -> unit

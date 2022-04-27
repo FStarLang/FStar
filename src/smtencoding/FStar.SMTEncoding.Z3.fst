@@ -93,14 +93,6 @@ let check_z3version () =
     end
 
 type label = string
-type unsat_core = option (list string)
-type z3status =
-    | UNSAT   of unsat_core
-    | SAT     of error_labels * option string         //error labels
-    | UNKNOWN of error_labels * option string         //error labels
-    | TIMEOUT of error_labels * option string         //error labels
-    | KILLED
-type z3statistics = BU.smap string
 
 let status_tag = function
     | SAT  _ -> "sat"
@@ -117,14 +109,6 @@ let status_string_and_errors s =
     | UNKNOWN (errs, msg)
     | TIMEOUT (errs, msg) -> BU.format2 "%s%s" (status_tag s) (match msg with None -> "" | Some msg -> " because " ^ msg), errs
                              //(match msg with None -> "unknown" | Some msg -> msg), errs
-
-
-type query_log = {
-    get_module_name: unit -> string;
-    set_module_name: string -> unit;
-    write_to_log:    bool -> string -> string;
-    close_log:       unit -> unit
-}
 
 
 let query_logging =
@@ -445,14 +429,6 @@ let z3_options = BU.mk_ref
 let set_z3_options opts =
     z3_options := opts
 
-type z3result = {
-      z3result_status      : z3status;
-      z3result_time        : int;
-      z3result_statistics  : z3statistics;
-      z3result_query_hash  : option string;
-      z3result_log_file    : option string
-}
-
 let init () =
     (* A no-op now that there's no concurrency *)
     ()
@@ -460,8 +436,6 @@ let init () =
 let finish () =
     (* A no-op now that there's no concurrency *)
     ()
-
-type scope_t = list (list decl)
 
 // bg_scope is a global, mutable variable that keeps a list of the declarations
 // that we have given to z3 so far. In order to allow rollback of history,
