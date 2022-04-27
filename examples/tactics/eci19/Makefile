@@ -2,6 +2,8 @@ FSTAR_HOME?=../../..
 EXCLUDED_FSTAR_FILES=
 FSTAR_FILES = $(filter-out $(EXCLUDED_FSTAR_FILES), $(wildcard *.fst))
 
+OTHERFLAGS += --warn_error -274-321
+
 all: verify-all
 
 $(CACHE_DIR):

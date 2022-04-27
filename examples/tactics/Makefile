@@ -22,7 +22,7 @@ INCLUDE_PATHS+=$(KRML_HOME)/krmllib
 endif
 
 #shadowing of files because of implicitly opening a namespace
-OTHERFLAGS += --warn_error -274
+OTHERFLAGS += --warn_error -274-321
 
 include ../Makefile.common
 
