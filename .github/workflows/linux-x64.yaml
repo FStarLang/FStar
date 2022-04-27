@@ -1,0 +1,11 @@
+name: Build and test FStar
+on: push
+jobs:
+  build:
+    runs-on: [self-hosted, linux, X64]
+    steps:
+      - name: Check out repo        
+        uses: actions/checkout@v2
+      - name: Build FStar and its dependencies
+        run: |
+          docker build -f .docker/standalone.Dockerfile .
