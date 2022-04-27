@@ -24,45 +24,43 @@ open FStar.Tactics.Result
 (* This module is extracted, don't add any `assume val`s or extraction
  * will break. (`synth_by_tactic` is fine) *)
 
-type wp_t0 (a:Type) = proofstate -> (__result a -> Type0) -> Type0
+type tac_wp_t0 (a:Type) = proofstate -> (__result a -> Type0) -> Type0
 
 unfold
-let monotonic (#a:Type) (wp:wp_t0 a) =
+let tac_wp_monotonic (#a:Type) (wp:tac_wp_t0 a) =
   forall (ps:proofstate) (p q:__result a -> Type0).
-    (forall x. p x ==> q x) ==>
-    (wp ps p ==> wp ps q)
+    (forall x. p x ==> q x) ==> (wp ps p ==> wp ps q)
 
-type wp_t (a:Type) = wp:wp_t0 a{monotonic wp}
+type tac_wp_t (a:Type) = wp:tac_wp_t0 a{tac_wp_monotonic wp}
 
-private
-let __tac (a:Type) (wp:wp_t a) =
+let tac_repr (a:Type) (wp:tac_wp_t a) =
   ps0:proofstate -> DIV (__result a) (as_pure_wp (wp ps0))
 
 unfold
-let return_wp (#a:Type) (x:a) : wp_t a =
+let tac_return_wp (#a:Type) (x:a) : tac_wp_t a =
   fun ps post -> post (Success x ps)
 
 (* monadic return *)
-private
-let __ret (a:Type) (x:a) : __tac a (return_wp x) =
+let tac_return (a:Type) (x:a) : tac_repr a (tac_return_wp x) =
   fun (s:proofstate) -> Success x s
 
 unfold
-let bind_wp (#a #b:Type) (wp_f:wp_t a) (wp_g:a -> wp_t b) : wp_t b =
+let tac_bind_wp (#a #b:Type) (wp_f:tac_wp_t a) (wp_g:a -> tac_wp_t b) : tac_wp_t b =
   fun ps post ->
   wp_f ps (fun r ->
            match r with
            | Success x ps -> wp_g x ps post
            | Failed ex ps -> post (Failed ex ps))
 
+val tac_bind_interleave_begin : unit
 (* monadic bind *)
-private
-let __bind (a:Type) (b:Type)
-  (wp_f:wp_t a)
-  (wp_g:a -> wp_t b)
+#push-options "--admit_smt_queries true"
+let tac_bind (a:Type) (b:Type)
+  (wp_f:tac_wp_t a)
+  (wp_g:a -> tac_wp_t b)
   (r1 r2:range)
-  (t1:__tac a wp_f)
-  (t2:(x:a -> __tac b (wp_g x))) : __tac b (bind_wp wp_f wp_g) =
+  (t1:tac_repr a wp_f)
+  (t2:(x:a -> tac_repr b (wp_g x))) : tac_repr b (tac_bind_wp wp_f wp_g) =
   fun ps ->
   let ps = set_proofstate_range ps (FStar.Range.prims_to_fstar_range r1) in
   let ps = incr_depth ps in
@@ -75,27 +73,29 @@ let __bind (a:Type) (b:Type)
           | true -> t2 a (decr_depth ps')
     end
   | Failed e ps' -> Failed e ps'
+#pop-options
+val tac_bind_interleave_end : unit
 
 unfold
-let if_then_else_wp (#a:Type) (wp_then:wp_t a) (wp_else:wp_t a) (b:bool)
-  : wp_t a
+let tac_if_then_else_wp (#a:Type) (wp_then:tac_wp_t a) (wp_else:tac_wp_t a) (b:bool)
+  : tac_wp_t a
   = fun ps post -> (b ==> wp_then ps post) /\
                 ((~ b) ==> wp_else ps post)
 
-let if_then_else (a:Type)
-  (wp_then:wp_t a)
-  (wp_else:wp_t a)
-  (f:__tac a wp_then)
-  (g:__tac a wp_else)
+let tac_if_then_else (a:Type)
+  (wp_then:tac_wp_t a)
+  (wp_else:tac_wp_t a)
+  (f:tac_repr a wp_then)
+  (g:tac_repr a wp_else)
   (b:bool)
   : Type
-  = __tac a (if_then_else_wp wp_then wp_else b)
+  = tac_repr a (tac_if_then_else_wp wp_then wp_else b)
 
-let subcomp (a:Type)
-  (wp_f:wp_t a)
-  (wp_g:wp_t a)
-  (f:__tac a wp_f)
-  : Pure (__tac a wp_g)
+let tac_subcomp (a:Type)
+  (wp_f:tac_wp_t a)
+  (wp_g:tac_wp_t a)
+  (f:tac_repr a wp_f)
+  : Pure (tac_repr a wp_g)
          (requires forall ps p. wp_g ps p ==> wp_f ps p)
          (ensures fun _ -> True)
   = f
@@ -104,8 +104,12 @@ let subcomp (a:Type)
 reifiable
 reflectable
 effect {
-  TAC (a:Type) (wp:wp_t a)
-  with { repr=__tac; return=__ret; bind=__bind; if_then_else; subcomp }
+  TAC (a:Type) (wp:tac_wp_t a)
+  with { repr=tac_repr;
+         return=tac_return;
+         bind=tac_bind;
+         if_then_else=tac_if_then_else;
+         subcomp=tac_subcomp }
 }
 
 // private
@@ -159,21 +163,15 @@ effect TacS (a:Type) = TacH a (requires (fun _ -> True)) (ensures (fun _ps r -> 
 effect TacF (a:Type) = TacH a (requires (fun _ -> False)) (ensures (fun _ _ -> True))
 
 unfold
-let lift_div_tac_wp (#a:Type) (wp:pure_wp a) : wp_t a =
+let lift_div_tac_wp (#a:Type) (wp:pure_wp a) : tac_wp_t a =
   elim_pure_wp_monotonicity wp;  
   fun ps p -> wp (fun x -> p (Success x ps))
 
 let lift_div_tac (a:Type) (wp:pure_wp a) (f:eqtype_as_type unit -> DIV a wp)
-  : __tac a (lift_div_tac_wp wp)
+  : tac_repr a (lift_div_tac_wp wp)
   = elim_pure_wp_monotonicity wp;
     fun ps -> Success (f ()) ps
 
-let lift_pure_tac (a:Type) (wp:pure_wp a) (f:eqtype_as_type unit -> PURE a wp)
-  : __tac a (lift_div_tac_wp wp)
-  = elim_pure_wp_monotonicity wp;
-    fun ps -> Success (f ()) ps
-
-//sub_effect PURE ~> TAC = lift_pure_tac
 sub_effect DIV ~> TAC = lift_div_tac
 
 let get ()
