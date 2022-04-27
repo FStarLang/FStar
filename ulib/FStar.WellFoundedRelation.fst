@@ -42,11 +42,11 @@ let default_wfr (a: Type u#a) : (wfr: wfr_t a (fun _ -> a) {forall x1 x2. preced
   } in
   wfr
 
-let empty_wfr (a: Type u#a) : (wfr: wfr_t a (fun _ -> a){forall x1 x2. ~(precedes_by_wfr wfr x1 x2)}) =
-  let r (x1: a) (x2: a) : related: Type0{related ==> x1 << x2} =
+let empty_wfr (a: Type u#a) : (wfr: wfr_t a (fun _ -> unit){forall x1 x2. ~(precedes_by_wfr wfr x1 x2)}) =
+  let r (x1: a) (x2: a) : related: Type0{~related} =
     False in
-  let wfr: wfr_t a (fun _ -> a) = {
-    decreaser = (fun x -> x);
+  let wfr: wfr_t a (fun _ -> unit) = {
+    decreaser = (fun _ -> ());
     relation = r;
   } in
   wfr

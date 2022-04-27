@@ -25,8 +25,8 @@
 
    You can then use this relatedness to show that a function is
    decreasing in a certain term.  Whenever you assert `precedes_by_wfr
-   wfr x1 x2`, this implies that `decreaser_by_wfr wfr x1 <<
-   decreaser_by_wfr wfr x2`.  So you can use `decreaser_by_wfr wfr x`
+   wfr x1 x2`, this implies that `decreaser_for_wfr wfr x1 <<
+   decreaser_for_wfr wfr x2`.  So you can use `decreaser_for_wfr wfr x`
    in your decreases clause.  For example:
 
      // Define `nat_nat_wfr` to represent the lexicographically-precedes
@@ -74,9 +74,9 @@
 
     `empty_wfr a`
 
-    This is the empty well-founded relation, which doesn't doesn't
-    relate any pair of values.  In other words, `precedes_by_wfr
-    (empty_wfr a) x1 x2` is always False.
+    This is the empty well-founded relation, which doesn't relate any
+    pair of values.  In other words, `precedes_by_wfr (empty_wfr a) x1
+    x2` is always False.
 
     `acc_to_wfr r f`
 
@@ -138,7 +138,7 @@ val precedes_by_wfr (#a: Type u#a) (#d: a -> Type u#d) (wfr: wfr_t a d) (x1: a) 
 
 val default_wfr (a: Type u#a) : (wfr: wfr_t a (fun _ -> a) {forall x1 x2. precedes_by_wfr wfr x1 x2 <==> x1 << x2})
 
-val empty_wfr (a: Type u#a) : (wfr: wfr_t a (fun _ -> a){forall x1 x2. ~(precedes_by_wfr wfr x1 x2)})
+val empty_wfr (a: Type u#a) : (wfr: wfr_t a (fun _ -> unit){forall x1 x2. ~(precedes_by_wfr wfr x1 x2)})
 
 val acc_to_wfr (#a: Type u#a) (r: a -> a -> Type0) (f: well_founded r{forall x1 x2 (p: r x1 x2). (f x2).access_smaller x1 p == f x1})
   : (wfr: wfr_t a (fun (x: a) -> acc r x) {forall x1 x2. precedes_by_wfr wfr x1 x2 <==> (exists (p: r x1 x2). True)})
