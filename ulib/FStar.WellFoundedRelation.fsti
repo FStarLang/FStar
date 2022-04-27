@@ -34,8 +34,7 @@
      // `(x1, y1)` is related to `(x2, y2)` if
      // `x1 < x2 \/ (x1 == x2 /\ y1 < y2)`.
 
-     let nat_nat_wfr: wfr_t (nat * nat) =
-        lex_nondep_wfr (default_wfr nat) (default_wfr nat)
+     let nat_nat_wfr = lex_nondep_wfr (default_wfr nat) (default_wfr nat)
 
      // To show that `f` is well-defined, we use the decreases clause
      // `decreaser_for_wfr nat_nat_wfr (x, y)`.  We then need to
@@ -77,6 +76,12 @@
     This is the empty well-founded relation, which doesn't relate any
     pair of values.  In other words, `precedes_by_wfr (empty_wfr a) x1
     x2` is always False.
+
+    `bool_wfr`
+
+    This is the well-founded relation on booleans that has false
+    preceding true.  So, `precedes_by_wfr bool_wfr b1 b2` is
+    equivalent to `b1 == false /\ b2 == true`.
 
     `acc_to_wfr r f`
 
@@ -123,10 +128,22 @@
     `precedes_by_wfr (lex_dep_wfr wfr_a wfr_b) xy1 xy2` is equivalent
     to `let (| x1, y1 |), (| x2, y2 |) = xy1, xy2 in precedes_by_wfr
     wfr_a x1 x2 \/ (x1 == x2 /\ precedes_by_wfr (wfr_b x1) y1 y2)`.
+
+    `option_wfr wfr`
+
+    This is a `wfr_t` describing precedence for an `option a`.  It's
+    built from a well-founded relation `wfr` on `a`.  It has `None`
+    precede any `Some x`, and has `Some x1` precede `Some x2` if `x1`
+    precedes `x2` according to `wfr`.  In other words,
+    `precedes_by_wfr (option_wfr wfr) opt1 opt2` is equivalent to
+    `Some? opt2 /\ (None? opt1 \/ precedes_by_wfr wfr (Some?.v opt1)
+    (Some?.v opt2)`.
+
 *)
 
 module FStar.WellFoundedRelation
 
+open FStar.Universe
 open FStar.WellFounded
 
 val wfr_t (a: Type u#a) (d: a -> Type u#d) : Type u#(max a d + 1)
@@ -156,8 +173,11 @@ noeq type lex_nondep_t (#a: Type u#a) (#b: Type u#b) (xy: a * b) : Type u#(max a
                                     u: squash(let (x', y'), (x, y) = xy', xy in x' << x \/ (a' == a /\ x' == x /\ y' << y)) ->
                                     lex_nondep_t xy') -> lex_nondep_t xy
 
+val lex_nondep_d (#a: Type u#a) (#b: Type u#b) (#da: a -> Type u#da) (#db: b -> Type u#db)
+                 (wfr_a: wfr_t a da) (wfr_b: wfr_t b db) : (a * b) -> Type u#(max da db + 1)
+
 val lex_nondep_wfr (#a: Type u#a) (#b: Type u#b) (#da: a -> Type u#da) (#db: b -> Type u#db) (wfr_a: wfr_t a da) (wfr_b: wfr_t b db)
-  : wfr: wfr_t (a * b) (fun xy -> lex_nondep_t (decreaser_for_wfr wfr_a (fst xy), decreaser_for_wfr wfr_b (snd xy)))
+  : wfr: wfr_t (a * b) (lex_nondep_d wfr_a wfr_b)
          {forall xy1 xy2. precedes_by_wfr wfr xy1 xy2 <==>
                      (let (x1, y1), (x2, y2) = xy1, xy2 in
                       precedes_by_wfr wfr_a x1 x2 \/ (x1 == x2 /\ precedes_by_wfr wfr_b y1 y2))}
@@ -167,9 +187,20 @@ noeq type lex_dep_t (#a: Type u#a) (#b: a -> Type u#b) (xy: (x: a & b x)) : Type
                                 u: squash(let (| x', y' |), (| x, y |) = xy', xy in x' << x \/ (a' == a /\ x' == x /\ y' << y)) ->
                                 lex_dep_t xy') -> lex_dep_t xy
 
+val lex_dep_d (#a: Type u#a) (#b: a -> Type u#b) (#da: a -> Type u#da) (#db: (x: a) -> (y: b x) -> Type u#db)
+              (wfr_a: wfr_t a da) (wfr_b: (x: a -> wfr_t (b x) (db x))) : (x: a) & b x -> Type u#(max da db + 1)
+
 val lex_dep_wfr (#a: Type u#a) (#b: a -> Type u#b) (#da: a -> Type u#da) (#db: (x: a) -> (y: b x) -> Type u#db)
-                (wfr_a: wfr_t a da) (wfr_b: (x: a -> wfr_t (b x) (fun y -> db x y)))
-  : wfr: wfr_t (x: a & b x) (fun xy -> lex_dep_t (| decreaser_for_wfr wfr_a (dfst xy), decreaser_for_wfr (wfr_b (dfst xy)) (dsnd xy) |))
+                (wfr_a: wfr_t a da) (wfr_b: (x: a -> wfr_t (b x) (db x)))
+  : wfr: wfr_t (x: a & b x) (lex_dep_d wfr_a wfr_b)
          {forall xy1 xy2. precedes_by_wfr wfr xy1 xy2 <==>
                      (let (| x1, y1 |), (| x2, y2 |) = xy1, xy2 in
                       precedes_by_wfr wfr_a x1 x2 \/ (x1 == x2 /\ precedes_by_wfr (wfr_b x1) y1 y2))}
+
+val bool_wfr: (wfr: wfr_t bool (fun _ -> nat){forall b1 b2. precedes_by_wfr wfr b1 b2 <==> b1 == false /\ b2 == true})
+
+val option_d (#a: Type u#a) (#d: a -> Type u#d) (wfr: wfr_t a d) : option a -> Type u#(d + 1)
+
+val option_wfr (#a: Type u#a) (#d: a -> Type u#d) (wfr: wfr_t a d) :
+  wfr': wfr_t (option a) (option_d wfr)
+        {forall opt1 opt2. precedes_by_wfr wfr' opt1 opt2 <==> Some? opt2 /\ (None? opt1 \/ precedes_by_wfr wfr (Some?.v opt1) (Some?.v opt2))}
