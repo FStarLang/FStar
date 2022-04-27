@@ -254,15 +254,46 @@ let check_expected_effect env (use_eq:bool) (copt:option comp) (ec : term * comp
         then None, tot_or_gtot c, None //but, force c to be exactly ((G)Tot t), since otherwise it may actually contain a return
         else if U.is_pure_or_ghost_comp c
         then Some (tot_or_gtot c), c, None
-        else if U.comp_effect_name c |> Env.norm_eff_name env |> Env.is_layered_effect env
-        then raise_error (Errors.Error_LayeredMissingAnnot,  //hard error if layered effects are used without annotations
-               BU.format2 "Missing annotation for a layered effect (%s) computation at %s"
-                 (c |> U.comp_effect_name |> Ident.string_of_lid) (Range.string_of_range e.pos)) e.pos
-        else if Options.trivial_pre_for_unannotated_effectful_fns ()
-        then None, c, (
-               let _, _, g = TcUtil.check_trivial_precondition env c in
-               Some g)
-        else None, c, None
+        else let norm_eff_name = U.comp_effect_name c |> Env.norm_eff_name env in
+             if norm_eff_name |> Env.is_layered_effect env
+             then begin
+               //
+               //If the layered effect has a default effect annotation,
+               //  use it
+               //We have already typechecked that the default effect
+               //  only takes as argument the result type
+               //
+               let def_eff_opt = Env.get_default_effect env norm_eff_name in
+               match def_eff_opt with
+               | None ->
+                 raise_error (Errors.Error_LayeredMissingAnnot,  //hard error if layered effects are used without annotations
+                              BU.format2 "Missing annotation for a layered effect (%s) computation at %s"
+                                (c |> U.comp_effect_name |> Ident.string_of_lid)
+                                (Range.string_of_range e.pos)) e.pos
+               | Some def_eff ->
+                 //
+                 //AR: TODO: it may be good hygiene to check that def_eff exists
+                 //
+                 let comp_univs, result_ty =
+                   match c.n with
+                   | Comp ({comp_univs=comp_univs; result_typ=result_ty}) ->
+                     comp_univs, result_ty
+                   | _ -> failwith "Impossible!" in
+                 let expected_c = {
+                   comp_univs = comp_univs;
+                   effect_name = def_eff;
+                   result_typ = result_ty;
+                   effect_args = [];
+                   flags = []} in
+                 //let expected_c, _, _ = tc_comp env expected_c in
+                 Some (S.mk_Comp expected_c),
+                 c,
+                 None                   
+             end
+             else if Options.trivial_pre_for_unannotated_effectful_fns ()
+             then None, c, (let _, _, g = TcUtil.check_trivial_precondition env c in
+                            Some g)
+             else None, c, None
   in
   let c = norm_c env c in
   match expected_c_opt with
@@ -2860,7 +2891,11 @@ and tc_pat env (pat_t:typ) (p0:pat) :
         if Env.debug env <| Options.Other "Patterns"
         then BU.print2 "Checking pattern %s at type %s\n" (Print.pat_to_string p) (Print.term_to_string t);
 
-        let id = S.fvar Const.id_lid (S.Delta_constant_at_level 1) None in
+        let id t = mk_Tm_app
+          (S.fvar Const.id_lid (S.Delta_constant_at_level 1) None)
+          [S.iarg t]
+          t.pos
+        in
 
         (*
          * Taking the example of scrutinee of type list (option int), and pattern as Cons (Some hd), _,
@@ -2871,9 +2906,22 @@ and tc_pat env (pat_t:typ) (p0:pat) :
          *)
         let mk_disc_t (disc:term) (inner_t:term) : term =
           let x_b = S.gen_bv "x" None t |> S.mk_binder in
+          let ty_args =
+            let hd, args = U.head_and_args t in
+            match (hd |> SS.compress |> U.un_uinst).n with
+            | Tm_fvar fv ->
+              fv |> lid_of_fv |> Env.num_inductive_ty_params env
+                 |> (fun nopt ->
+                    BU.dflt [] (nopt |> BU.map_option (fun n ->
+                                         if List.length args >= n
+                                         then args |> List.splitAt n |> fst
+                                         else [])))
+                 |> List.map (fun (t, _) -> S.iarg t)
+            | _ -> [] in
           let tm = S.mk_Tm_app
             disc
-            [x_b.binder_bv |> S.bv_to_name |> S.as_arg] Range.dummyRange in
+            (ty_args@[x_b.binder_bv |> S.bv_to_name |> S.as_arg])
+            Range.dummyRange in
           let tm = S.mk_Tm_app
             inner_t
             [tm |> S.as_arg] Range.dummyRange in
@@ -2886,7 +2934,7 @@ and tc_pat env (pat_t:typ) (p0:pat) :
         | Pat_wild x ->
           let x = {x with sort=t} in
           [x],
-          [id],
+          [id t],
           S.bv_to_name x,
           {p with v=Pat_wild x},
           Env.trivial_guard,
@@ -2895,7 +2943,7 @@ and tc_pat env (pat_t:typ) (p0:pat) :
         | Pat_var x ->
           let x = {x with sort=t} in
           [x],
-          [id],
+          [id t],
           S.bv_to_name x,
           {p with v=Pat_var x},
           Env.trivial_guard,
@@ -3072,15 +3120,15 @@ and tc_pat env (pat_t:typ) (p0:pat) :
 (********************************************************************************************************************)
 and tc_eqn scrutinee env ret_opt branch
         : (pat * option term * term)  (* checked branch *)
-        * term                         (* the guard condition for taking this branch,
+        * term                        (* the guard condition for taking this branch,
                                           used by the caller for the exhaustiveness check *)
-        * lident                       (* effect label of the branch lcomp *)
-        * option (list cflag)          (* flags for the branch lcomp,
-                                          None if typechecked with a returns comp annotation *)
+        * lident                      (* effect label of the branch lcomp *)
+        * option (list cflag)         (* flags for the branch lcomp,
+                                         None if typechecked with a returns comp annotation *)
         * option (bool -> lcomp)       (* computation type of the branch, with or without a "return" equation,
-                                          None if typechecked with a returns comp annotation *)
-        * guard_t                      (* guard for well-typedness of the branch *)
-        * bool                         (* true if the pattern matches an erasable type *)
+                                         None if typechecked with a returns comp annotation *)
+        * guard_t                    (* guard for well-typedness of the branch *)
+        * bool                       (* true if the pattern matches an erasable type *)
         =
   let pattern, when_clause, branch_exp = SS.open_branch branch in
   let cpat, _, cbr = branch in
@@ -3097,7 +3145,7 @@ and tc_eqn scrutinee env ret_opt branch
   in
 
   if Env.debug env <| Options.Extreme then
-    BU.print3 "tc_eqn: typechecked pattern %s with bvs %s and pat_bv_tms %s"
+    BU.print3 "tc_eqn: typechecked pattern %s with bvs %s and pat_bv_tms %s\n"
       (Print.pat_to_string pattern) (Print.bvs_to_string ";" pat_bvs)
       (List.fold_left (fun s t -> s ^ ";" ^ (Print.term_to_string t)) "" pat_bv_tms);
 
