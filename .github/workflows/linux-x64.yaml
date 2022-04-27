@@ -8,4 +8,4 @@ jobs:
         uses: actions/checkout@v2
       - name: Build FStar and its dependencies
         run: |
-          docker build -t fstar:local-branch-$GITHUB_REF_NAME -t fstar:local-commit-$GITHUB_SHA -f .docker/standalone.Dockerfile --build-arg CI_BRANCH=$GITHUB_REF_NAME .
+          docker build --pull -t fstar:local-branch-$GITHUB_REF_NAME -t fstar:local-commit-$GITHUB_SHA -f .docker/standalone.Dockerfile --build-arg CI_BRANCH=$GITHUB_REF_NAME .

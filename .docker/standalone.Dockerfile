@@ -24,6 +24,7 @@ RUN opam install \
     sudo apt update && \
     sudo apt-get --yes install --no-install-recommends \
     fsharp \
+    python \
     python3 \
     wget \
     jq
