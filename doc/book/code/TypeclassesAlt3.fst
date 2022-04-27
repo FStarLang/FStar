@@ -1,170 +1,186 @@
-module TypeclassesAlt2
-open FStar.Ghost
-let no_method = ()
+module TypeclassesAlt3
+module TC = FStar.Tactics.Typeclasses
 
+//SNIPPET_START: bounded_unsigned_int$
 class bounded_unsigned_int (a:Type) = {
    bound      : a;
    as_nat     : a -> nat;
    from_nat   : (x:nat { x <= as_nat bound }) -> a;
-   [@@@no_method]
-   bui_properties : squash (
-     (forall (x:a). as_nat x <= as_nat bound) /\
-     (forall (x:a). from_nat (as_nat x) == x) /\
+   [@@@FStar.Tactics.Typeclasses.no_method]
+   properties : squash (
+     (forall (x:a). as_nat x <= as_nat bound) /\ // the bound is really an upper bound
+     (forall (x:a). from_nat (as_nat x) == x) /\ //from_nat/as_nat form a bijection
      (forall (x:nat{ x <= as_nat bound}). as_nat (from_nat x) == x)
    )
 }
+//SNIPPET_END: bounded_unsigned_int$
 
+//SNIPPET_START: fits$
 let fits #a {| bounded_unsigned_int a |}
             (op: int -> int -> int)
             (x y:a)
   : prop
   = 0 <= op (as_nat x) (as_nat y) /\
     op (as_nat x) (as_nat y) <= as_nat #a bound
+//SNIPPET_END: fits$
 
+//SNIPPET_START: related_ops$
 let related_ops #a {| bounded_unsigned_int a |}
                 (iop: int -> int -> int)
                 (bop: (x:a -> y:a { fits iop x y } -> a))
   = forall (x y:a).  fits iop x y ==> as_nat (bop x y) = as_nat x `iop` as_nat y
-  
-let bound_subtraction_ok #a {| bounded_unsigned_int a |}
-  = forall x. fits #a op_Subtraction bound x
+//SNIPPET_END: related_ops$  
 
+//SNIPPET_START: bui_ops$
 class bounded_unsigned_int_ops (a:Type) = {
-   [@@@no_method]
+   [@@@TC.no_method]
    base       : bounded_unsigned_int a;
    add        : (x:a -> y:a { fits ( + ) x y } -> a);
    sub        : (x:a -> y:a { fits op_Subtraction x y } -> a);
-   comp       : (a -> a -> bool);
+   lt         : (a -> a -> bool);
+   [@@@TC.no_method]
    properties : squash (
      related_ops ( + ) add /\
      related_ops op_Subtraction sub /\      
-     bound_subtraction_ok #a /\
-     (forall (x y:a). comp x y <==> as_nat x < as_nat y)     
+     (forall (x y:a). lt x y <==> as_nat x < as_nat y) /\ // lt is related to <
+     (forall (x:a). fits op_Subtraction bound x) //subtracting from the maximum element never triggers underflow
    )
 }
+//SNIPPET_END: bui_ops$
 
-instance ops_base {| d : bounded_unsigned_int_ops 'a |} 
-  : bounded_unsigned_int 'a 
+//SNIPPET_START: ops_base$
+instance ops_base #a {| d : bounded_unsigned_int_ops a |} 
+  : bounded_unsigned_int a
   = d.base
+//SNIPPET_END: ops_base$
 
-let ( +^ ) {| bounded_unsigned_int_ops 'a |}
-           (x : 'a)
-           (y : 'a { fits ( + ) x y })
-  : 'a
+//SNIPPET_START: ops$
+let ( +^ ) #a {| bounded_unsigned_int_ops a |}
+           (x : a)
+           (y : a { fits ( + ) x y })
+  : a
   = add x y
 
-let ( -^ ) {| bounded_unsigned_int_ops 'a |}
-           (x : 'a)
-           (y : 'a { fits op_Subtraction x y })
-  : 'a
+let ( -^ ) #a {| bounded_unsigned_int_ops a |}
+           (x : a)
+           (y : a { fits op_Subtraction x y })
+  : a
   = sub x y
 
-let ( <^ ) {| bounded_unsigned_int_ops 'a |}
-           (x : 'a)
-           (y : 'a)
+let ( <^ ) #a {| bounded_unsigned_int_ops a |}
+           (x : a)
+           (y : a)
   : bool
-  = comp x y
+  = lt x y
+//SNIPPET_END: ops$
 
+//SNIPPET_START: eq$
 class eq (a:Type) = {
   eq_op: a -> a -> bool;
 
-  [@@@no_method]
-  eq_properties : squash (
+  [@@@TC.no_method]
+  properties : squash (
     forall x y. eq_op x y <==> x == y
   )
 }
 
-let ( = ) {| eq 'a |} (x y: 'a) = eq_op x y
+let ( =?= ) #a {| eq a |} (x y: a) = eq_op x y
+//SNIPPET_END: eq$
 
-instance bounded_unsigned_int_ops_eq {| bounded_unsigned_int_ops 'a |}
-  : eq 'a
+//SNIPPET_START: bui_eq$
+instance bounded_unsigned_int_ops_eq #a {| bounded_unsigned_int_ops a |}
+  : eq a
   = {
       eq_op = (fun x y -> not (x <^ y) && not (y <^ x));
-      eq_properties = ()
+      properties = ()
     }
 
-let ( <= ) {| bounded_unsigned_int_ops 'a |} (x y : 'a)
+let ( <=^ ) #a {| bounded_unsigned_int_ops a |} (x y : a)
   : bool
-  = x <^ y || x = y
+  = x <^ y || x =?= y
+//SNIPPET_END: bui_eq$
 
-instance u32_instance_base : bounded_unsigned_int FStar.UInt32.t =
-  let open FStar.UInt32 in
+//SNIPPET_START: ground_instances$
+module U32 = FStar.UInt32
+module U64 = FStar.UInt64
+instance u32_instance_base : bounded_unsigned_int U32.t =
+  let open U32 in
   {
     bound    = 0xfffffffful;
     as_nat   = v;
     from_nat = uint_to_t;
-    bui_properties = ()
+    properties = ()
 }
 
-instance u32_instance_ops : bounded_unsigned_int_ops FStar.UInt32.t =
-  let open FStar.UInt32 in
+instance u32_instance_ops : bounded_unsigned_int_ops U32.t =
+  let open U32 in
   {
     base = u32_instance_base;
     add  = (fun x y -> add x y);
     sub  = (fun x y -> sub x y);
-    comp = (fun x y -> x <^ y);
+    lt   = (fun x y -> lt x y);
     properties = ()
   }
 
 
-instance u64_instance_base : bounded_unsigned_int FStar.UInt64.t =
-  let open FStar.UInt64 in
+instance u64_instance_base : bounded_unsigned_int U64.t =
+  let open U64 in
   {
     bound    = 0xffffffffffffffffuL;
     as_nat   = v;
     from_nat = uint_to_t;
-    bui_properties = ()
+    properties = ()
 }
 
-instance u64_instance_ops : bounded_unsigned_int_ops FStar.UInt64.t =
-  let open FStar.UInt64 in
+instance u64_instance_ops : bounded_unsigned_int_ops U64.t =
+  let open U64 in
   {
     base = u64_instance_base;
     add  = (fun x y -> add x y);
     sub  = (fun x y -> sub x y);
-    comp = (fun x y -> x <^ y);
+    lt   = (fun x y -> lt x y);
     properties = ()
   }
+//SNIPPET_END: ground_instances$
 
-module U32 = FStar.UInt32
-module U64 = FStar.UInt64
-
+//SNIPPET_START: ground_tests$
 let test32 (x:U32.t)
            (y:U32.t)
-  = if x <= 0xffffffful &&
-       y <= 0xffffffful
+  = if x <=^ 0xffffffful &&
+       y <=^ 0xffffffful
     then Some (x +^ y)
     else None
 
 let test64 (x y:U64.t)
-  = if x <= 0xfffffffuL &&
-       y <= 0xfffffffuL
+  = if x <=^ 0xfffffffuL &&
+       y <=^ 0xfffffffuL
     then Some (x +^ y)
     else None
+//SNIPPET_END: ground_tests$
 
+//SNIPPET_START: sum$
 module L = FStar.List.Tot
+let sum #a {| bounded_unsigned_int_ops a |}
+        (l:list a) (acc:a)
+  : option a 
+  = L.fold_right
+     (fun (x:a) (acc:option a) ->
+       match acc with
+       | None -> None
+       | Some y ->
+         if x <=^ bound -^ y
+         then Some (x +^ y)
+         else None)
+     l
+     (Some acc)
 
-let try_add (x:U32.t)
-            (y:U32.t)
-  = if x <= (bound -^ y)
-    then x +^ y
-    else y
+let testsum32 : U32.t = Some?.v (sum [0x01ul; 0x02ul; 0x03ul] 0x00ul)
+let testsum64 : U64.t = Some?.v (sum [0x01uL; 0x02uL; 0x03uL] 0x00uL)
+//SNIPPET_END: sum$
 
-#push-options "--query_stats"
-let sum {| bounded_unsigned_int_ops 'a |}
-        (l:list 'a) (acc:'a)
-  = 
-  L.fold_right
-    (fun (x:'a) (acc:option 'a) ->
-      match acc with
-      | None -> None
-      | Some y ->
-        if x <= (bound -^ y)
-        then Some (x +^ y)
-        else None)
-    l
-    (Some acc)
-
-
-let testsum32 = sum [0x01ul; 0x02ul; 0x03ul] 0x00ul
-let testsum64 = sum [0x01uL; 0x02uL; 0x03uL] 0x00uL
+//SNIPPET_START: testsum32'$
+let testsum32' : U32.t =
+  let x = sum #U32.t [0x01ul; 0x02ul; 0x03ul;0x01ul; 0x02ul; 0x03ul;0x01ul; 0x02ul; 0x03ul] 0x00ul in
+  assert_norm (Some? x /\ as_nat (Some?.v x) == 18);
+  Some?.v x
+//SNIPPET_END: testsum32'$

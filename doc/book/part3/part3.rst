@@ -32,8 +32,8 @@ support typeclasses that are similar in spirit to what F* also
 provides.
 
 Typeclasses in F* are actually defined mostly by a "user-space"
-metaprogam (relying on general support for metaprogramming in
-`Meta-F* <http://fstar-lang.org/papers/metafstar/>`_), making them very
+metaprogam (relying on general support for metaprogramming in `Meta-F*
+<http://fstar-lang.org/papers/metafstar/>`_), making them very
 flexible (e.g., multi-parameter classes, overlapping instances,
 etc. are easily supported).
 
@@ -42,6 +42,9 @@ language and most of F*'s standard library does not yet use
 typeclasses. As such, they are somewhat less mature than interfaces
 and some features (e.g., typeclass inheritance) require encodings,
 rather than being supported "out of the box".
+
+Thanks especially to Guido Mart\'inez, who designed and implemented
+most of F*'s typeclass system.
 
 .. toctree::
    :hidden:

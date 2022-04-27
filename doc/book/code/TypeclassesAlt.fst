@@ -1,7 +1,5 @@
 module TypeclassesAlt
-open FStar.Ghost
-let no_method = ()
-
+open FStar.Tactics.Typeclasses
 let fits #a (bound:a)
             (as_nat: a -> nat)
             (from_nat: (x:nat { x <= as_nat bound } -> a))
@@ -21,7 +19,7 @@ class bounded_unsigned_int (a:Type) = {
    lt         : (a -> a -> bool);
 
    [@@@no_method]
-   bui_properties : squash (
+   properties : squash (
      (forall (x y:a). fits bound as_nat from_nat ( + ) x y ==> as_nat (add x y) = as_nat x + as_nat y) /\
      (forall (x y:a). fits bound as_nat from_nat ( op_Subtraction ) x y ==> as_nat (sub x y) = as_nat x - as_nat y) /\
      (forall (x:a). fits bound as_nat from_nat ( op_Subtraction ) bound x) /\
@@ -69,7 +67,7 @@ instance u32_instance : bounded_unsigned_int FStar.UInt32.t =
     sub      = (fun x y -> sub x y);
     mul      = (fun x y -> mul x y);
     lt       = ( <^ );
-    bui_properties = ()
+    properties = ()
 }
 
 
@@ -83,14 +81,14 @@ instance u64_instance : bounded_unsigned_int FStar.UInt64.t =
     sub      = (fun x y -> sub x y);
     mul      = (fun x y -> mul x y);
     lt       = ( <^ );
-    bui_properties = ()
+    properties = ()
 }
 
 class eq (a:Type) = {
   eq_op: a -> a -> bool;
 
   [@@@no_method]
-  eq_properties : squash (
+  properties : squash (
     forall x y. eq_op x y <==> x == y
   )
 }
@@ -101,7 +99,7 @@ instance bounded_unsigned_int_eq {| bounded_unsigned_int 'a |}
   : eq 'a
   = {
       eq_op = (fun x y -> not (lt x y) && not (lt y x));
-      eq_properties = ()
+      properties = ()
     }
 
 let ( <= ) {| bounded_unsigned_int 'a |} (x y : 'a)
