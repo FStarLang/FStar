@@ -6,6 +6,8 @@ u_boot_fsts
 u_ocaml-output
 .fstarlib
 
+dep.graph
+
 [Bb]in/
 [Oo]bj/
 
