@@ -1,0 +1,12 @@
+module Bug2181
+
+noeq
+type tree (a:Type) =
+  | E : tree a
+  | N : tree a -> a -> tree a -> tree a
+
+let blah = N E 1 E
+
+let e #a = E #a
+
+let blah2 = N e 1 e
