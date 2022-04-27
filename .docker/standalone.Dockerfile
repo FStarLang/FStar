@@ -6,9 +6,9 @@ FROM ocaml/opam:ubuntu-ocaml-$ocaml_version
 # FIXME: the `opam depext` command should be unnecessary with opam 2.1
 RUN opam depext conf-gmp z3.4.8.5 conf-m4
 
-ADD --chown=opam:opam ./ FStar/
+ADD --chown=opam:opam ./ $HOME/FStar/
 
-RUN opam install --deps-only FStar/fstar.opam
+RUN opam install --deps-only $HOME/FStar/fstar.opam
 
 # CI dependencies (including Mono for F# and other packages for karamel, EverParse)
 RUN opam install \
@@ -29,9 +29,12 @@ RUN opam install \
     jq
 
 
-WORKDIR FStar
+WORKDIR $HOME/FStar
 
 ARG CI_TARGET=uregressions
 ARG CI_THREADS=24
 ARG CI_BRANCH=master
 RUN eval $(opam env) && .docker/build/build-standalone.sh $CI_TARGET $CI_THREADS $CI_BRANCH
+
+WORKDIR $HOME
+ENV FSTAR_HOME $HOME/FStar
