@@ -10162,8 +10162,21 @@ and (check_inner_let_rec :
                                           FStar_TypeChecker_Env.conj_guard
                                             g_lbs uu___6 in
                                         let cres4 =
-                                          FStar_TypeChecker_Util.close_wp_lcomp
-                                            env2 bvs cres3 in
+                                          let uu___6 =
+                                            let uu___7 =
+                                              FStar_Compiler_Effect.op_Bar_Greater
+                                                cres3.FStar_TypeChecker_Common.eff_name
+                                                (FStar_TypeChecker_Env.norm_eff_name
+                                                   env2) in
+                                            FStar_Compiler_Effect.op_Bar_Greater
+                                              uu___7
+                                              (FStar_TypeChecker_Env.is_layered_effect
+                                                 env2) in
+                                          if uu___6
+                                          then cres3
+                                          else
+                                            FStar_TypeChecker_Util.close_wp_lcomp
+                                              env2 bvs cres3 in
                                         let tres =
                                           norm env2
                                             cres4.FStar_TypeChecker_Common.res_typ in

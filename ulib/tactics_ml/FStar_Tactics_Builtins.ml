@@ -15,7 +15,7 @@ module RD   = FStar_Reflection_Data
 module EMB  = FStar_Syntax_Embeddings
 module NBET = FStar_TypeChecker_NBETerm
 
-type 'a __tac = ('a, unit) E.__tac
+type 'a tac_repr = ('a, unit) E.__tac
 
 let interpret_tac (t: 'a TM.tac) (ps: proofstate): 'a __result =
   TM.run t ps
