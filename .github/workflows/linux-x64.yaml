@@ -18,7 +18,12 @@ jobs:
           echo "CI_SLACK_CHANNEL=$(jq -c -r '.NotificationChannel' .docker/build/config.json)" >> $GITHUB_ENV
       - name: Build FStar and its dependencies
         run: |
-          docker build --pull -t fstar:local-branch-$GITHUB_REF_NAME -t fstar:local-commit-$GITHUB_SHA -t fstar:local-run-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT -f .docker/standalone.Dockerfile --build-arg CI_BRANCH=$GITHUB_REF_NAME .
+          if echo $GITHUB_REF_NAME | grep '/' ; then
+            docker_local_branch_opt=
+          else
+            docker_local_branch_opt="-t fstar:local-branch-$GITHUB_REF_NAME"
+          fi
+          docker build --pull $docker_local_branch_opt -t fstar:local-commit-$GITHUB_SHA -t fstar:local-run-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT -f .docker/standalone.Dockerfile --build-arg CI_BRANCH=$GITHUB_REF_NAME .
       - name: Compute elapsed time and status message
         run: |
           CI_FINAL_TIMESTAMP=$(date '+%s')
