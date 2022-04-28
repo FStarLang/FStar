@@ -4,8 +4,77 @@ jobs:
   build:
     runs-on: [self-hosted, linux, X64]
     steps:
+      - name: Record initial timestamp
+        run: |
+          echo "CI_INITIAL_TIMESTAMP=$(date '+%s')" >> $GITHUB_ENV
       - name: Check out repo        
         uses: actions/checkout@v2
+      - name: Identify the notification channel
+        run: |
+          echo "CI_SLACK_CHANNEL=$(jq -c -r '.NotificationChannel' .docker/build/config.json)" >> $GITHUB_ENV
       - name: Build FStar and its dependencies
         run: |
-          docker build --pull -t fstar:local-branch-$GITHUB_REF_NAME -t fstar:local-commit-$GITHUB_SHA -f .docker/standalone.Dockerfile --build-arg CI_BRANCH=$GITHUB_REF_NAME .
+          docker build --pull -t fstar:local-branch-$GITHUB_REF_NAME -t fstar:local-commit-$GITHUB_SHA -t fstar:local-run-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT -f .docker/standalone.Dockerfile --build-arg CI_BRANCH=$GITHUB_REF_NAME .
+      - name: Compute elapsed time and status message
+        run: |
+          CI_FINAL_TIMESTAMP=$(date '+%s')
+          CI_TIME_DIFF=$(( $CI_FINAL_TIMESTAMP - $CI_INITIAL_TIMESTAMP ))
+          echo "CI_TIME_DIFF_S=$(( $CI_TIME_DIFF % 60 ))" >> $GITHUB_ENV
+          echo "CI_TIME_DIFF_M=$(( ($CI_TIME_DIFF / 60) % 60 ))" >> $GITHUB_ENV
+          echo "CI_TIME_DIFF_H=$(( $CI_TIME_DIFF / 3600 ))" >> $GITHUB_ENV
+          case ${{ job.status }} in
+          (success)
+            if [[ $(docker run fstar:local-run-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT /bin/bash -c 'cat $FSTAR_HOME/orange_file.txt') = '' ]] ; then
+              echo "CI_EMOJI=✅" >> $GITHUB_ENV
+            else
+              echo "CI_EMOJI=⚠" >> $GITHUB_ENV
+            fi
+            ;;
+          (cancelled)
+            echo "CI_EMOJI=⚠" >> $GITHUB_ENV
+            ;;
+          (*)
+            echo "CI_EMOJI=❌" >> $GITHUB_ENV
+            ;;
+          esac
+          echo "CI_STATUS=$(docker run fstar:local-run-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT /bin/bash -c 'cat $FSTAR_HOME/result.txt')" >> $GITHUB_ENV
+      - name: Post to the Slack channel
+        id: slack
+        uses: slackapi/slack-github-action@v1.16.0
+        with:
+          channel-id: ${{ env.CI_SLACK_CHANNEL }}
+          payload: |
+            {
+              "blocks" : [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "<${{ github.event.head_commit.url }}|${{ github.event.head_commit.id }}> on (${{ github.ref_name }}) by ${{ github.event.head_commit.author.username }}"
+                  }
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "plain_text",
+                    "text": ${{ toJSON(github.event.head_commit.message) }}
+                  }
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "${{ env.CI_EMOJI }} <https://github.com/${{github.repository}}/actions/runs/${{github.run_id}}|${{ env.CI_STATUS }}>"
+                  }
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "plain_text",
+                    "text": "Duration: ${{ env.CI_TIME_DIFF_H }} h ${{ env.CI_TIME_DIFF_M }} min ${{ env.CI_TIME_DIFF_S }} s"
+                  }
+                }
+              ]
+            }
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
