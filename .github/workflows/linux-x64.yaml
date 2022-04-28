@@ -1,5 +1,7 @@
 name: Build and test FStar
-on: push
+on:
+  push:
+    branches-ignore: _**
 jobs:
   build:
     runs-on: [self-hosted, linux, X64]
