@@ -186,9 +186,17 @@ Exercises
 Define instances of ``printable`` for ``string``, ``a & b``, ``option
 a``, and ``either a b``. Check that you can write ``to_string [Inl (0,
 1); Inr (Inl (Some true)); Inr (Inr "hello") ]`` and have F* infer the
-typeclass instance needed. Also write the typeclasss instance you need
-explicitly, just to check that you understand how things work.
+typeclass instance needed.
 
+Also write the typeclasss instance you need explicitly, just to check
+that you understand how things work. This is exercise should also
+convey that typeclasses do not increase the expressive power in any
+way---whatever is expressible with typeclasses, is also expressible by
+explicitly passing records that contain the operations needed on
+specific type parameters. However, expliciting passing this operations
+can quickly become overwhelming---typeclass inference keeps this
+complexity in check and makes it possible to build programs in an
+generic, abstract style without too much pain.
 
 .. container:: toggle
 
@@ -465,5 +473,195 @@ sufficient.
    :start-after: //SNIPPET_START: try_sub$
    :end-before: //SNIPPET_END: try_sub$
 
-Typeclasses at Higher-order
----------------------------
+Overloading Monadic Syntax
+--------------------------
+
+For a final example, we look at a few higher-order typeclasses for
+structuring computations.
+
+In :ref:`a previous chapter <Part2_par>`, we introduced syntactic
+sugar for monadic computations. In particular, F*'s syntax supports
+the following:
+
+* Instead of writing ``bind f (fun x -> e)`` you can write ``x <-- f; e``.
+
+* And, instead of writing ``bind f (fun _ -> e)``  you can write ``f;; e``.
+
+.. note ::
+
+   If you're not familiar with monads, referring back to :ref:`A First
+   Model of Computational Effects <Part2_par>` may help.
+
+Now, if we can overload the symbol ``bind`` to work with any monad,
+then the syntactic sugar described above would work for all of
+them. This is easily accomplished, as follows.
+
+We define a typeclass ``monad``, with two methods ``return`` and
+``bind``.
+
+.. literalinclude:: ../code/MonadFunctorInference.fst
+   :language: fstar
+   :start-after: //SNIPPET_START: monad$
+   :end-before: //SNIPPET_END: monad$
+
+Doing so introduces ``return`` and ``bind`` into scope at the
+following types:
+
+.. code-block:: fstar
+
+   let return #m {| d : monad m |} #a (x:a) : m a = d.return x
+   let bind #m {| d : monad m |} #a #b (f:m a) (g: a -> m b) : m b = d.bind f g
+
+That is, we now have ``bind`` in scope at a type general enough to use
+with any monad instance.
+
+The type ``st s`` is a state monad parameterized by the state ``s``,
+and ``st s`` is an instance of a ``monad``.
+
+.. literalinclude:: ../code/MonadFunctorInference.fst
+   :language: fstar
+   :start-after: //SNIPPET_START: st$
+   :end-before: //SNIPPET_END: st$
+
+With some basic actions ``get`` and ``put`` to read and write the
+state, we can implement ``st`` computations in a style resembling
+Haskell's do-notation.
+
+.. literalinclude:: ../code/MonadFunctorInference.fst
+   :language: fstar
+   :start-after: //SNIPPET_START: get_inc$
+   :end-before: //SNIPPET_END: get_inc$
+
+Of course, we can also do proofs about out ``st`` computations: here's
+a simple proof that ``get_put`` is ``noop``.
+
+.. literalinclude:: ../code/MonadFunctorInference.fst
+   :language: fstar
+   :start-after: //SNIPPET_START: get_put$
+   :end-before: //SNIPPET_END: get_put$
+
+Now, the nice thing is that since ``bind`` is monad polymorphic, we
+can define other monad instances and still use the ``bind`` syntactic
+sugar to build computations in those monads. Here's an example with
+the ``option`` monad, for computations that may fail.
+
+.. literalinclude:: ../code/MonadFunctorInference.fst
+   :language: fstar
+   :start-after: //SNIPPET_START: opt_monad$
+   :end-before: //SNIPPET_END: opt_monad$
+
+Exercise
+........
+
+Define a typeclass for functors, type functions ``m: Type -> Type``
+which support the operations ``fmap : (a -> b) -> m a -> m b``.
+
+Build instances of ``functor`` for a few basic types, e.g., ``list``.
+
+Derive an instance for functors from a monad, i.e., prove
+
+``instance monad_functor #m {| monad m |} : functor m = admit()``
+
+.. container:: toggle
+
+    .. container:: header
+
+       **Answer**
+
+    .. literalinclude:: ../code/MonadFunctorInference.fst
+       :language: fstar
+       :start-after: //SNIPPET_START: functor$
+       :end-before: //SNIPPET_END: functor$
+
+--------------------------------------------------------------------------------
+
+Beyond Monads with Do-notation
+------------------------------
+
+Many monad-like structures have been proposed to structure effectful
+computations. Each of these structures can be captured as a typeclass
+and used with F*'s syntactic sugar for ``bind``.
+
+As an example, we look at *graded monads*, a construction studied by
+Shin-Ya Katsumata and others, `in several papers
+<https://www.irif.fr/~mellies/papers/fossacs2016-final-paper.pdf>`_. The
+example illustrates the flexibility of typeclasses, included
+typeclasses for types that themselves are indexed by other
+typeclasses.
+
+The main idea of a graded monad is to index a monad with a monoid,
+where the monoid index characterizes some property of interest of the
+monadic computation.
+
+A monoid is a typeclass for an algebraic structure with a single
+associative binary operations and a unit element for that
+operations. A simple instance of a monoid is the natural numbers with
+addition and the unit being ``0``.
+
+.. literalinclude:: ../code/GradedMonad.fst
+   :language: fstar
+   :start-after: //SNIPPET_START: monoid$
+   :end-before: //SNIPPET_END: monoid$
+
+A graded monad is a type constructor ``m`` indexed by a monoid as
+described by the class below. In other words, ``m`` is equipped with
+two operations:
+
+  * a ``return``, similar to the ``return`` of a monad, but whose
+    index is the unit element of the monoid
+
+  * a ``bind``, similar to the ``bind`` of a monad, but whose action
+    on the indexes corresponds to the binary operator of the indexing
+    monoid.
+
+.. literalinclude:: ../code/GradedMonad.fst
+   :language: fstar
+   :start-after: //SNIPPET_START: graded_monad$
+   :end-before: //SNIPPET_END: graded_monad$
+
+With this class, we have overloaded the ``bind`` syntactic sugar to
+work with all graded monads. For instance, here's a graded state monad
+designed whose index counts the number of ``put`` operations.
+
+.. literalinclude:: ../code/GradedMonad.fst
+   :language: fstar
+   :start-after: //SNIPPET_START: counting$
+   :end-before: //SNIPPET_END: counting$
+
+We can build computations in our graded ``st`` monad relatively
+easily.
+
+.. literalinclude:: ../code/GradedMonad.fst
+   :language: fstar
+   :start-after: //SNIPPET_START: test$
+   :end-before: //SNIPPET_END: test$
+
+F* infers the typeclass instantiations and the type of ``test`` to be
+``st s monoid_nat_plus (op 0 1) unit``.
+
+In ``test2``, F* infers the type ``st s monoid_nat_plus (op 0 (op 1
+1)) unit``, and then automatically proves that this type is equivalent
+to the user annotation ``st s monoid_nat_plis 2 unit``.
+
+Summary
+-------
+
+Typeclasses are a flexible way to structure programs in an abstract
+and generic style. Not only can this make program construction more
+modular, in can also make proofs and reasoning more abstract,
+particularly when typeclasses contain not just methods but also
+properties characterizing how those methods ought to behave. Reasoning
+abstractly can make proofs simpler: for example, if the monoid-ness of
+natural number addition is the only property needed for a proof, it
+may be simpler to do a proof generically for all monoids, rather than
+reasoning specifically about integer arithmetic.
+
+That latter part of this chapter presented typeclasses for
+computational structures like monads and functors. Perhaps conspicuous
+in these examples were the lack of algebraic laws that characterize
+these structures. Indeed, we focused primarily on programming with
+monads and graded monads, rather than reasoning about them. Enhancing
+this typeclasses with algebraic laws is a useful, if challenging
+exercise. This also leads natually to F*'s effect system in the next
+section of this book, which is specifically concerned with doing
+proofs about programs built using monad-like structures.

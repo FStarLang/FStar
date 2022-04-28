@@ -92,35 +92,6 @@ let try_sub {| s: subtractable_bounded_unsigned_int 'a |}
   = bound `sub` acc
 //SNIPPET_END: try_sub$
 
-// let ( <^ ) {| comparable_bounded_unsigned_int 'a |}
-//            (x : 'a)
-//            (y : 'a)
-//   : bool
-//   = comp x y
-
-
-// class eq (a:Type) = {
-//   eq_op: a -> a -> bool;
-
-//   [@@@no_method]
-//   properties : squash (
-//     forall x y. eq_op x y <==> x == y
-//   )
-// }
-
-// let ( = ) {| eq 'a |} (x y: 'a) = eq_op x y
-
-// instance comparable_bounded_unsigned_int_eq {| comparable_bounded_unsigned_int 'a |}
-//   : eq 'a
-//   = {
-//       eq_op = (fun x y -> not (x <^ y) && not (y <^ x));
-//       properties = ()
-//     }
-
-// let ( <= ) {| comparable_bounded_unsigned_int 'a |} (x y : 'a)
-//   : bool
-//   = x <^ y || x = y
-
 instance u32_instance_base : bounded_unsigned_int FStar.UInt32.t =
   let open FStar.UInt32 in
   {
@@ -146,13 +117,13 @@ instance u32_instance_sub : subtractable_bounded_unsigned_int FStar.UInt32.t =
     properties = ()
   }
 
-// instance u32_instance_cmp : comparable_bounded_unsigned_int FStar.UInt32.t =
-//   let open FStar.UInt32 in
-//   {
-//     base = u32_instance_base;
-//     comp = (fun x y -> x <^ y);
-//     properties = ()
-//   }
+instance u32_instance_cmp : comparable_bounded_unsigned_int FStar.UInt32.t =
+  let open FStar.UInt32 in
+  {
+    base = u32_instance_base;
+    comp = (fun x y -> x <^ y);
+    properties = ()
+  }
 
 
 instance u64_instance_base : bounded_unsigned_int FStar.UInt64.t =
@@ -180,13 +151,13 @@ instance u64_instance_sub : subtractable_bounded_unsigned_int FStar.UInt64.t =
     properties = ()
   }
 
-// instance u64_instance_cmp : comparable_bounded_unsigned_int FStar.UInt64.t =
-//   let open FStar.UInt64 in
-//   {
-//     base = u64_instance_base;
-//     comp = (fun x y -> x <^ y);
-//     properties = ()
-//   }
+instance u64_instance_cmp : comparable_bounded_unsigned_int FStar.UInt64.t =
+  let open FStar.UInt64 in
+  {
+    base = u64_instance_base;
+    comp = (fun x y -> x <^ y);
+    properties = ()
+  }
 
 module U32 = FStar.UInt32
 module U64 = FStar.UInt64
@@ -213,17 +184,7 @@ module U64 = FStar.UInt64
 //     else y
 
 #push-options "--query_stats --fuel 0 --ifuel 1"
-
-let try_sub' {| b: bounded_unsigned_int 'a |}
-             {| s: subtractable_bounded_unsigned_int 'a |}
-             (acc:'a)
-  = bound #_ #s.base -^ acc
-
-let try_sub2 {| c: comparable_bounded_unsigned_int 'a |}
-             {| s: subtractable_bounded_unsigned_int 'a |}
-             (acc:'a { c.base == s.base })
-  = bound -^ acc
-
+module L = FStar.List.Tot
 let sum {| c : comparable_bounded_unsigned_int 'a |}
         {| a : addable_bounded_unsigned_int 'a |}
         {| s : subtractable_bounded_unsigned_int 'a |}
@@ -234,8 +195,8 @@ let sum {| c : comparable_bounded_unsigned_int 'a |}
       match acc with
       | None -> None
       | Some y ->
-        if x <= (bound -^ y)
-        then Some (x +^ y)
+        if x `comp` (bound `sub` y)
+        then Some (x `add` y)
         else None)
     l
     (Some acc)
@@ -248,6 +209,11 @@ class bounded_unsigned_int_ops (a:Type) = {
   _base_add: addable_bounded_unsigned_int a;
   _base_sub: subtractable_bounded_unsigned_int a;
   _base_comp: comparable_bounded_unsigned_int a;
+  [@@@no_method]
+  properties : squash (
+    _base_add.base == _base_sub.base /\
+    _base_sub.base == _base_comp.base
+  );
 }
 
 instance _base #a {| d : bounded_unsigned_int_ops a |}
@@ -268,4 +234,4 @@ instance __base_comp #a {| d : bounded_unsigned_int_ops a |}
 
 let try_sub3 {| bounded_unsigned_int_ops 'a |}
              (acc:'a)
-  = bound -^ acc
+  = bound `sub` acc
