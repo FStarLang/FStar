@@ -465,6 +465,5 @@ sufficient.
    :start-after: //SNIPPET_START: try_sub$
    :end-before: //SNIPPET_END: try_sub$
 
-
 Typeclasses at Higher-order
 ---------------------------
