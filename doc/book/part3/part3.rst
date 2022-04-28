@@ -1,7 +1,7 @@
 .. _Part3:
 
-Modular Abstractions
-====================
+Modularity With Interfaces and Typeclasses
+==========================================
 
 In this section, we'll learn about two abstraction techniques used to
 structure larger F* developments: *interfaces* and *typeclasses*.
