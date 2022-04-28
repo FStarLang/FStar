@@ -24,10 +24,11 @@
    well-founded relation described by `wfr`.
 
    You can then use this relatedness to show that a function is
-   decreasing in a certain term.  Whenever you assert `wfr.relation x1
-   x2`, this implies that `wfr.decreaser x1 << wfr.decreaser x2`.  So
-   you can use `wfr.decreaser x` in your decreases clause.  For
-   example:
+   decreasing in a certain term.  Whenever `wfr.relation x1 x2` holds,
+   `wfr.decreaser x1 << wfr.decreaser x2` also holds. The library has
+   an ambient lemma triggered by seeing two instances of
+   `wfr.decreaser`, so you can use `wfr.decreaser x` in your decreases
+   clause. For example:
 
      // Define `nat_nat_wfr` to represent the lexicographically-precedes
      // relation between two elements of type `nat * nat`.  That is,
