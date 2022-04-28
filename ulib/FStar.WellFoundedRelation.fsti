@@ -37,21 +37,22 @@
      let nat_nat_wfr = lex_nondep_wfr (default_wfr nat) (default_wfr nat)
 
      // To show that `f` is well-defined, we use the decreases clause
-     // `decreaser_for_wfr nat_nat_wfr (x, y)`.  We then need to
-     // show, on each recursive call, that the parameters x2 and y2
-     // to the nested call satisfy
-     // `precedes_by_wfr nat_nat_wfr (x2, y2) (x, y)`.
+     // `nat_nat_wfr.decreaser (x, y)`.  We then need to show, on each
+     // recursive call, that the parameters x2 and y2 to the nested
+     // call satisfy `nat_nat_wfr.relation (x2, y2) (x, y)`.  The
+     // assertions below aren't necessary, but are provided for ease
+     // of understanding.
 
      let rec f (x: nat) (y: nat)
-       : Tot nat (decreases (decreaser_for_wfr nat_nat_wfr (x, y))) =
+       : Tot nat (decreases (nat_nat_wfr.decreaser (x, y))) =
        if x = 0 then
          0
        else if y = 0 then (
-         assert (precedes_by_wfr nat_nat_wfr (x - 1, 100) (x, y));
+         assert (nat_nat_wfr.relation (x - 1, 100) (x, y));
          f (x - 1) 100
        )
        else (
-         assert (precedes_by_wfr nat_nat_wfr (x, y - 1) (x, y));
+         assert (nat_nat_wfr.relation (x, y - 1) (x, y));
          f x (y - 1)
        )
    
@@ -146,27 +147,33 @@ module FStar.WellFoundedRelation
 open FStar.Universe
 open FStar.WellFounded
 
-val wfr_t (a: Type u#a) (d: a -> Type u#d) : Type u#(max a d + 1)
+noeq type wfr_t (a: Type u#a) (d: a -> Type u#d) : Type u#(max a d + 1) =
+  {
+    decreaser: (x: a -> d x);
+    relation: a -> a -> Type0;
+    proof: (x1: a) -> (x2: a) -> Lemma (requires relation x1 x2) (ensures decreaser x1 << decreaser x2);
+  }
 
-val decreaser_for_wfr (#a: Type u#a) (#d: a -> Type u#d) (wfr: wfr_t a d) (x: a) : d x
+let ambient_wfr_lemma (#a: Type u#a) (#d: a -> Type u#d) (wfr: wfr_t a d) (x1: a) (x2: a)
+  : Lemma (requires wfr.relation x1 x2)
+          (ensures  wfr.decreaser x1 << wfr.decreaser x2)
+          [SMTPat (wfr.decreaser x1); SMTPat (wfr.decreaser x2)] =
+  wfr.proof x1 x2
 
-val precedes_by_wfr (#a: Type u#a) (#d: a -> Type u#d) (wfr: wfr_t a d) (x1: a) (x2: a)
-  : (related: Type0{related ==> decreaser_for_wfr wfr x1 << decreaser_for_wfr wfr x2})
+val default_wfr (a: Type u#a) : (wfr: wfr_t a (fun _ -> a){ wfr.relation == (fun x1 x2 -> x1 << x2) })
 
-val default_wfr (a: Type u#a) : (wfr: wfr_t a (fun _ -> a) {forall x1 x2. precedes_by_wfr wfr x1 x2 <==> x1 << x2})
-
-val empty_wfr (a: Type u#a) : (wfr: wfr_t a (fun _ -> unit){forall x1 x2. ~(precedes_by_wfr wfr x1 x2)})
+val empty_wfr (a: Type u#a) : (wfr: wfr_t a (fun _ -> unit){ wfr.relation == (fun x1 x2 -> False) })
 
 val acc_to_wfr (#a: Type u#a) (r: a -> a -> Type0) (f: well_founded r{forall x1 x2 (p: r x1 x2). (f x2).access_smaller x1 p == f x1})
-  : (wfr: wfr_t a (fun (x: a) -> acc r x) {forall x1 x2. precedes_by_wfr wfr x1 x2 <==> (exists (p: r x1 x2). True)})
+  : (wfr: wfr_t a (fun (x: a) -> acc r x) { wfr.relation == (fun x1 x2 -> exists (p: r x1 x2). True) })
 
 val subrelation_to_wfr (#a: Type u#a) (#d: a -> Type u#d) (r: a -> a -> Type0)
-                       (wfr: wfr_t a d{forall x1 x2. r x1 x2 ==> precedes_by_wfr wfr x1 x2})
-  : (wfr': wfr_t a d{forall x1 x2. r x1 x2 <==> precedes_by_wfr wfr' x1 x2})
+                       (wfr: wfr_t a d{forall x1 x2. r x1 x2 ==> wfr.relation x1 x2})
+  : (wfr': wfr_t a d{wfr'.relation == r})
 
 val inverse_image_to_wfr (#a: Type u#a) (#b: Type u#b) (#d: b -> Type u#d) (r: a -> a -> Type0) (f: a -> b)
-                         (wfr: wfr_t b d{forall x1 x2. r x1 x2 ==> precedes_by_wfr wfr (f x1) (f x2)})
-  : (wfr': wfr_t a (fun x -> d (f x)){forall x1 x2. precedes_by_wfr wfr' x1 x2 <==> r x1 x2})
+                         (wfr: wfr_t b d{forall x1 x2. r x1 x2 ==> wfr.relation (f x1) (f x2)})
+  : (wfr': wfr_t a (fun x -> d (f x)){ wfr'.relation == r })
 
 noeq type lex_nondep_t (#a: Type u#a) (#b: Type u#b) (xy: a * b) : Type u#(max a b + 1) =
   | LexIntroNondep: access_smaller:(#a': Type u#a -> #b': Type u#b -> xy': (a' * b') ->
@@ -176,11 +183,13 @@ noeq type lex_nondep_t (#a: Type u#a) (#b: Type u#b) (xy: a * b) : Type u#(max a
 val lex_nondep_d (#a: Type u#a) (#b: Type u#b) (#da: a -> Type u#da) (#db: b -> Type u#db)
                  (wfr_a: wfr_t a da) (wfr_b: wfr_t b db) : (a * b) -> Type u#(max da db + 1)
 
+let lex_nondep_relation (#a: Type u#a) (#b: Type u#b) (#da: a -> Type u#da) (#db: b -> Type u#db)
+                        (wfr_a: wfr_t a da) (wfr_b: wfr_t b db) (xy1: a * b) (xy2: a * b) : Type0 =
+  let (x1, y1), (x2, y2) = xy1, xy2 in
+  wfr_a.relation x1 x2 \/ (x1 == x2 /\ wfr_b.relation y1 y2)  
+
 val lex_nondep_wfr (#a: Type u#a) (#b: Type u#b) (#da: a -> Type u#da) (#db: b -> Type u#db) (wfr_a: wfr_t a da) (wfr_b: wfr_t b db)
-  : wfr: wfr_t (a * b) (lex_nondep_d wfr_a wfr_b)
-         {forall xy1 xy2. precedes_by_wfr wfr xy1 xy2 <==>
-                     (let (x1, y1), (x2, y2) = xy1, xy2 in
-                      precedes_by_wfr wfr_a x1 x2 \/ (x1 == x2 /\ precedes_by_wfr wfr_b y1 y2))}
+  : wfr: wfr_t (a * b) (lex_nondep_d wfr_a wfr_b) { wfr.relation == lex_nondep_relation wfr_a wfr_b }
 
 noeq type lex_dep_t (#a: Type u#a) (#b: a -> Type u#b) (xy: (x: a & b x)) : Type u#(max a b + 1) =
   | LexIntroDep: access_smaller:(#a': Type u#a -> #b': (a' -> Type u#b) -> xy': (x': a' & b' x') ->
@@ -190,17 +199,22 @@ noeq type lex_dep_t (#a: Type u#a) (#b: a -> Type u#b) (xy: (x: a & b x)) : Type
 val lex_dep_d (#a: Type u#a) (#b: a -> Type u#b) (#da: a -> Type u#da) (#db: (x: a) -> (y: b x) -> Type u#db)
               (wfr_a: wfr_t a da) (wfr_b: (x: a -> wfr_t (b x) (db x))) : (x: a) & b x -> Type u#(max da db + 1)
 
+let lex_dep_relation (#a: Type u#a) (#b: a -> Type u#b) (#da: a -> Type u#da) (#db: (x: a) -> (y: b x) -> Type u#db)
+                     (wfr_a: wfr_t a da) (wfr_b: (x: a -> wfr_t (b x) (db x)))
+                     (xy1: (x: a & b x)) (xy2: (x: a & b x)) : Type0 =
+  let (| x1, y1 |), (| x2, y2 |) = xy1, xy2 in
+  wfr_a.relation x1 x2 \/ (x1 == x2 /\ (wfr_b x1).relation y1 y2)
+
 val lex_dep_wfr (#a: Type u#a) (#b: a -> Type u#b) (#da: a -> Type u#da) (#db: (x: a) -> (y: b x) -> Type u#db)
                 (wfr_a: wfr_t a da) (wfr_b: (x: a -> wfr_t (b x) (db x)))
-  : wfr: wfr_t (x: a & b x) (lex_dep_d wfr_a wfr_b)
-         {forall xy1 xy2. precedes_by_wfr wfr xy1 xy2 <==>
-                     (let (| x1, y1 |), (| x2, y2 |) = xy1, xy2 in
-                      precedes_by_wfr wfr_a x1 x2 \/ (x1 == x2 /\ precedes_by_wfr (wfr_b x1) y1 y2))}
+  : wfr: wfr_t (x: a & b x) (lex_dep_d wfr_a wfr_b){ wfr.relation == lex_dep_relation wfr_a wfr_b }
 
-val bool_wfr: (wfr: wfr_t bool (fun _ -> nat){forall b1 b2. precedes_by_wfr wfr b1 b2 <==> b1 == false /\ b2 == true})
+val bool_wfr: (wfr: wfr_t bool (fun _ -> nat){ wfr.relation == (fun b1 b2 -> b1 == false /\ b2 == true) })
 
 val option_d (#a: Type u#a) (#d: a -> Type u#d) (wfr: wfr_t a d) : option a -> Type u#(d + 1)
 
+let option_relation (#a: Type u#a) (#d: a -> Type u#d) (wfr: wfr_t a d) (opt1: option a) (opt2: option a) : Type0 =
+  Some? opt2 /\ (None? opt1 \/ wfr.relation (Some?.v opt1) (Some?.v opt2))
+
 val option_wfr (#a: Type u#a) (#d: a -> Type u#d) (wfr: wfr_t a d) :
-  wfr': wfr_t (option a) (option_d wfr)
-        {forall opt1 opt2. precedes_by_wfr wfr' opt1 opt2 <==> Some? opt2 /\ (None? opt1 \/ precedes_by_wfr wfr (Some?.v opt1) (Some?.v opt2))}
+  wfr': wfr_t (option a) (option_d wfr) { wfr'.relation == option_relation wfr }
