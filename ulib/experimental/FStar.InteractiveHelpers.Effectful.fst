@@ -276,7 +276,6 @@ let compare_types (dbg : bool) (info1 info2 : type_info) :
       let _ = print_dbg dbg "types are not equal" in
       Unknown
 
-#push-options "--admit_smt_queries true"
 let compare_cast_types (dbg : bool) (p:cast_info) :
   Tac (c:type_comparison{
     ((c = Refines \/ c = Same_raw_type) ==> (Some? p.p_ty /\ Some? p.exp_ty)) /\
@@ -286,7 +285,6 @@ let compare_cast_types (dbg : bool) (p:cast_info) :
   | Some info1, Some info2 ->
     compare_types dbg info1 info2
   | _ -> Unknown
-#pop-options
 
 (*/// Retrieve the list of types from the parameters stored in ``typ_or_comp``.
 val typ_or_comp_to_param_types : typ_or_comp -> Tot (list typ)

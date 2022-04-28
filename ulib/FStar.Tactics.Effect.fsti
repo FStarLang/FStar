@@ -101,7 +101,6 @@ let tac_subcomp (a:Type)
   = f
 
 [@@ default_effect "FStar.Tactics.Effect.Tac"; bind_has_range_args]
-reifiable
 reflectable
 effect {
   TAC (a:Type) (wp:tac_wp_t a)
