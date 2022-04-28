@@ -92,31 +92,36 @@ let precedes_lex_dep_lemma (#a1: Type u#a) (#a2: Type u#a) (#b1: a1 -> Type u#b)
   assert (lex2.access_smaller #a1 #b1 xy1 u == lex1)
 
 let lex_dep_d (#a: Type u#a) (#b: a -> Type u#b) (#da: a -> Type u#da) (#db: (x: a) -> (y: b x) -> Type u#db)
-              (wfr_a: wfr_t a da) (wfr_b: (x: a -> wfr_t (b x) (db x))) (xy: (x: a) & b x) : Type u#(max da db + 1) =
+              (wfr_a: wfr_t a da) (a_to_wfr_b: (x: a -> wfr_t (b x) (db x))) (xy: (x: a) & b x) : Type u#(max da db + 1) =
   let (| x, y |) = xy in
-  lex_dep_t (| wfr_a.decreaser x, (wfr_b x).decreaser y |)
+  lex_dep_t (| wfr_a.decreaser x, (a_to_wfr_b x).decreaser y |)
 
 let lex_dep_wfr (#a: Type u#a) (#b: a -> Type u#b) (#da: a -> Type u#da) (#db: (x: a) -> (y: b x) -> Type u#db)
-                (wfr_a: wfr_t a da) (wfr_b: (x: a -> wfr_t (b x) (db x)))
-  : wfr: wfr_t (x: a & b x) (lex_dep_d wfr_a wfr_b){ wfr.relation == lex_dep_relation wfr_a wfr_b } =
-  let relation = lex_dep_relation wfr_a wfr_b in
+                (wfr_a: wfr_t a da) (a_to_wfr_b: (x: a -> wfr_t (b x) (db x)))
+  : wfr: wfr_t (x: a & b x) (lex_dep_d wfr_a a_to_wfr_b){ wfr.relation == lex_dep_relation wfr_a a_to_wfr_b } =
+  let relation = lex_dep_relation wfr_a a_to_wfr_b in
   let coerce_to_same_type (t1: Type) (t2: Type{t2 == t1}) (x: t1) : t2 = x in
-  let decreaser (xy: (x: a & b x)) : lex_dep_d wfr_a wfr_b xy =
+  let decreaser (xy: (x: a & b x)) : lex_dep_d wfr_a a_to_wfr_b xy =
     (let (| x, y |) = xy in
-     let dxy = (| wfr_a.decreaser x, (wfr_b x).decreaser y |) in
+     let dxy = (| wfr_a.decreaser x, (a_to_wfr_b x).decreaser y |) in
      let result: lex_dep_t dxy = precedes_lex_value_dep dxy in
-     assert (lex_dep_d wfr_a wfr_b xy == (let (| x, y |) = xy in lex_dep_t (| wfr_a.decreaser x, (wfr_b x).decreaser y |)));
-     coerce_to_same_type (lex_dep_t dxy) (lex_dep_d wfr_a wfr_b xy) result) in
+     assert (lex_dep_d wfr_a a_to_wfr_b xy ==
+             (let (| x, y |) = xy in lex_dep_t (| wfr_a.decreaser x, (a_to_wfr_b x).decreaser y |)));
+     coerce_to_same_type (lex_dep_t dxy) (lex_dep_d wfr_a a_to_wfr_b xy) result) in
   let proof (xy1: (x1: a) & b x1) (xy2: (x2: a) & b x2)
     : Lemma (requires relation xy1 xy2) (ensures decreaser xy1 << decreaser xy2) =
     (let (| x1, y1 |), (| x2, y2 |) = xy1, xy2 in
-     let dxy1 = (| wfr_a.decreaser x1, (wfr_b x1).decreaser y1 |) in
-     let dxy2 = (| wfr_a.decreaser x2, (wfr_b x2).decreaser y2 |) in
+     let dxy1 = (| wfr_a.decreaser x1, (a_to_wfr_b x1).decreaser y1 |) in
+     let dxy2 = (| wfr_a.decreaser x2, (a_to_wfr_b x2).decreaser y2 |) in
      precedes_lex_dep_lemma dxy1 dxy2;
-     assert (lex_dep_d wfr_a wfr_b xy1 == (let (| x1, y1 |) = xy1 in lex_dep_t (| wfr_a.decreaser x1, (wfr_b x1).decreaser y1 |)));
-     assert (lex_dep_d wfr_a wfr_b xy2 == (let (| x2, y2 |) = xy2 in lex_dep_t (| wfr_a.decreaser x2, (wfr_b x2).decreaser y2 |)));
-     assert (decreaser xy1 == coerce_to_same_type (lex_dep_t dxy1) (lex_dep_d wfr_a wfr_b xy1) (precedes_lex_value_dep dxy1));
-     assert (decreaser xy2 == coerce_to_same_type (lex_dep_t dxy2) (lex_dep_d wfr_a wfr_b xy2) (precedes_lex_value_dep dxy2))) in
+     assert (lex_dep_d wfr_a a_to_wfr_b xy1 ==
+             (let (| x1, y1 |) = xy1 in lex_dep_t (| wfr_a.decreaser x1, (a_to_wfr_b x1).decreaser y1 |)));
+     assert (lex_dep_d wfr_a a_to_wfr_b xy2 ==
+             (let (| x2, y2 |) = xy2 in lex_dep_t (| wfr_a.decreaser x2, (a_to_wfr_b x2).decreaser y2 |)));
+     assert (decreaser xy1 ==
+             coerce_to_same_type (lex_dep_t dxy1) (lex_dep_d wfr_a a_to_wfr_b xy1) (precedes_lex_value_dep dxy1));
+     assert (decreaser xy2 ==
+             coerce_to_same_type (lex_dep_t dxy2) (lex_dep_d wfr_a a_to_wfr_b xy2) (precedes_lex_value_dep dxy2))) in
   { decreaser = decreaser; relation = relation; proof = proof; }  
 
 let bool_wfr: (wfr: wfr_t bool (fun _ -> nat){ wfr.relation == (fun b1 b2 -> b1 == false /\ b2 == true) }) =

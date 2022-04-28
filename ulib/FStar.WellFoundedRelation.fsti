@@ -20,14 +20,14 @@
    The key data structure is `wfr_t`.  A `wfr_t` encapsulates a
    well-founded relation in a way that lets one establish that a pair
    of values are related by that relation.  Specifically, the
-   predicate `precedes_by_wfr wfr x1 x2` means that `x1` precedes `x2`
-   in the well-founded relation described by `wfr`.
+   predicate `wfr.relation x1 x2` means that `x1` precedes `x2` in the
+   well-founded relation described by `wfr`.
 
    You can then use this relatedness to show that a function is
-   decreasing in a certain term.  Whenever you assert `precedes_by_wfr
-   wfr x1 x2`, this implies that `decreaser_for_wfr wfr x1 <<
-   decreaser_for_wfr wfr x2`.  So you can use `decreaser_for_wfr wfr x`
-   in your decreases clause.  For example:
+   decreasing in a certain term.  Whenever you assert `wfr.relation x1
+   x2`, this implies that `wfr.decreaser x1 << wfr.decreaser x2`.  So
+   you can use `wfr.decreaser x` in your decreases clause.  For
+   example:
 
      // Define `nat_nat_wfr` to represent the lexicographically-precedes
      // relation between two elements of type `nat * nat`.  That is,
@@ -39,19 +39,19 @@
      // To show that `f` is well-defined, we use the decreases clause
      // `nat_nat_wfr.decreaser (x, y)`.  We then need to show, on each
      // recursive call, that the parameters x2 and y2 to the nested
-     // call satisfy `nat_nat_wfr.relation (x2, y2) (x, y)`.  The
-     // assertions below aren't necessary, but are provided for ease
-     // of understanding.
+     // call satisfy `nat_nat_wfr.relation (x2, y2) (x, y)`.
 
      let rec f (x: nat) (y: nat)
        : Tot nat (decreases (nat_nat_wfr.decreaser (x, y))) =
        if x = 0 then
          0
        else if y = 0 then (
+         // This assertion isn't necessary; it's just for illustration
          assert (nat_nat_wfr.relation (x - 1, 100) (x, y));
          f (x - 1) 100
        )
        else (
+         // This assertion isn't necessary; it's just for illustration
          assert (nat_nat_wfr.relation (x, y - 1) (x, y));
          f x (y - 1)
        )
@@ -60,8 +60,7 @@
   don't have to really care about that.  In case you care, `a` is the
   type of things related by the well-founded relation, like `nat *
   nat` in the example above.  `d` is a function that, when applied to
-  a value `x` of type `a`, produces the type of `decreaser_for_wfr wfr
-  x`.
+  a value `x` of type `a`, produces the type of `wfr.decreaser x`.
 
   There are a few ways to build a `wfr_t`:
 
@@ -69,76 +68,91 @@
 
     This is the well-founded relation built into F* for type `a`.  For
     instance, for `nat` it's the less-than relation.  For an inductive
-    type it's the sub-term ordering.  For instance, `precedes_by_wfr
-    (default_wfr nat) 3 4` is True.
+    type it's the sub-term ordering.  More precisely,
+
+      `(default_wfr a).relation == (fun x1 x2 -> x1 << x2)`
 
     `empty_wfr a`
 
     This is the empty well-founded relation, which doesn't relate any
-    pair of values.  In other words, `precedes_by_wfr (empty_wfr a) x1
-    x2` is always False.
+    pair of values.  More precisely,
+
+      `(empty_wfr a).relation == (fun x1 x2 -> False)`
 
     `bool_wfr`
 
     This is the well-founded relation on booleans that has false
-    preceding true.  So, `precedes_by_wfr bool_wfr b1 b2` is
-    equivalent to `b1 == false /\ b2 == true`.
+    preceding true.  More precisely,
+
+      `bool_wfr.relation == (fun b1 b2 -> b1 == false /\ b2 == true)`
 
     `acc_to_wfr r f`
 
     This is a `wfr_t` built from a relation `r` and a function `f:
     well-founded r`.  Such a function demonstrates that `r` is
     well-founded using the accessibility type `acc` described in
-    FStar.WellFounded.fst.  So, `precedes_by_wfr (acc_to_wfr r f) x1
-    x2` is true whenever there exists an object of type `r x1 x2`.
+    FStar.WellFounded.fst.  More precisely,
+
+      `(acc_to_wfr r f).relation == (fun x1 x2 -> exists (p: r x1 x2). True)`
 
     `subrelation_to_wfr r wfr`
 
     This is a `wfr_t` built from a relation `r` that's a subrelation
     of an existing well-founded relation `wfr`.  By "subrelation" we
-    mean that any pair related by `r` is also related by `wfr`.  So,
-    `precedes_by_wfr (subrelation_to_wfr r wfr) x1 x2` is equivalent
-    to `r x1 x2`.
+    mean that any pair related by `r` is also related by `wfr`.  More
+    precisely,
+
+      `(subrelation_to_wfr r wfr).relation == r`.
 
     `inverse_image_to_wfr r f wfr`
 
     This is a `wfr_t` built from a relation `r: a -> a -> Type0`, a
     function `f: a -> b`, and an existing well-founded relation `wfr`
     on `b`.  The relation `r` must be an "inverse image" of `wfr`
-    using the mapping function `f`, meaning that
-    `forall x1 x2. r x1 x2 ==> precedes_by_wfr wfr (f x1) (f x2)`.
-    So, `precedes_by_wfr (inverse_image_to_wfr r f wfr) x1 x2` is
-    equivalent to `r x1 x2`.
+    using the mapping function `f`, meaning that `forall x1 x2. r x1
+    x2 ==> wfr.relation (f x1) (f x2)`.  So,
+
+      `(inverse_image_to_wfr r f wfr).relation == r`.
 
     `lex_nondep_wfr wfr_a wfr_b`
 
     This is a `wfr_t` describing lexicographic precedence for
     non-dependent tuples of some type `a * b`.  It's built from two
     well-founded relations: `wfr_a` on type `a` and `wfr_b` on type
-    `b`.  So, `precedes_by_wfr (lex_nondep_wfr wfr_a wfr_b) xy1 xy2`
-    is equivalent to `let (x1, y1), (x2, y2) = xy1, xy2 in
-    precedes_by_wfr wfr_a x1 x2 \/ (x1 == x2 /\ precedes_by_wfr wfr_b
-    y1 y2)`.
+    `b`.  More precisely,
 
-    `lex_dep_wfr wfr_a wfr_b`
+       `(lex_nondep_wfr wfr_a wfr_b).relation ==
+           (fun x1 x2 ->
+              let (x1, y1), (x2, y2) = xy1, xy2 in
+                 wfr_a.relation x1 x2
+              \/ (x1 == x2 /\ wfr_b.relation y1 y2))`
+
+    `lex_dep_wfr wfr_a a_to_wfr_b`
 
     This is a `wfr_t` describing lexicographic precedence for
     dependent tuples of type `(x: a & b x)`.  It's built from a
-    well-founded relation `wfr_a` on type `a` and a function `wfr_b`
-    that maps each `x: a` to a `wfr_t` on type `(b x)`.  So,
-    `precedes_by_wfr (lex_dep_wfr wfr_a wfr_b) xy1 xy2` is equivalent
-    to `let (| x1, y1 |), (| x2, y2 |) = xy1, xy2 in precedes_by_wfr
-    wfr_a x1 x2 \/ (x1 == x2 /\ precedes_by_wfr (wfr_b x1) y1 y2)`.
+    well-founded relation `wfr_a` on type `a` and a function
+    `a_to_wfr_b` that maps each `x: a` to a `wfr_t` on type `(b x)`.
+    More precisely,
+    
+      `(lex_dep_wfr wfr_a a_to_wfr_b).relation ==
+          (fun x1 x2 ->
+             let (| x1, y1 |), (| x2, y2 |) = xy1, xy2 in
+                wfr_a.relation x1 x2
+             \/ (x1 == x2 /\ (a_to_wfr_b x1).relation y1 y2))`
 
     `option_wfr wfr`
 
     This is a `wfr_t` describing precedence for an `option a`.  It's
     built from a well-founded relation `wfr` on `a`.  It has `None`
     precede any `Some x`, and has `Some x1` precede `Some x2` if `x1`
-    precedes `x2` according to `wfr`.  In other words,
-    `precedes_by_wfr (option_wfr wfr) opt1 opt2` is equivalent to
-    `Some? opt2 /\ (None? opt1 \/ precedes_by_wfr wfr (Some?.v opt1)
-    (Some?.v opt2)`.
+    precedes `x2` according to `wfr`.  More precisely,
+
+       `(option_wfr wfr).relation ==
+           (fun opt1 opt2 ->
+                 Some? opt2
+              /\ (   None? opt1
+                  \/ wfr.relation (Some?.v opt1) (Some?.v opt2)))`
 
 *)
 
@@ -200,14 +214,14 @@ val lex_dep_d (#a: Type u#a) (#b: a -> Type u#b) (#da: a -> Type u#da) (#db: (x:
               (wfr_a: wfr_t a da) (wfr_b: (x: a -> wfr_t (b x) (db x))) : (x: a) & b x -> Type u#(max da db + 1)
 
 let lex_dep_relation (#a: Type u#a) (#b: a -> Type u#b) (#da: a -> Type u#da) (#db: (x: a) -> (y: b x) -> Type u#db)
-                     (wfr_a: wfr_t a da) (wfr_b: (x: a -> wfr_t (b x) (db x)))
+                     (wfr_a: wfr_t a da) (a_to_wfr_b: (x: a -> wfr_t (b x) (db x)))
                      (xy1: (x: a & b x)) (xy2: (x: a & b x)) : Type0 =
   let (| x1, y1 |), (| x2, y2 |) = xy1, xy2 in
-  wfr_a.relation x1 x2 \/ (x1 == x2 /\ (wfr_b x1).relation y1 y2)
+  wfr_a.relation x1 x2 \/ (x1 == x2 /\ (a_to_wfr_b x1).relation y1 y2)
 
 val lex_dep_wfr (#a: Type u#a) (#b: a -> Type u#b) (#da: a -> Type u#da) (#db: (x: a) -> (y: b x) -> Type u#db)
-                (wfr_a: wfr_t a da) (wfr_b: (x: a -> wfr_t (b x) (db x)))
-  : wfr: wfr_t (x: a & b x) (lex_dep_d wfr_a wfr_b){ wfr.relation == lex_dep_relation wfr_a wfr_b }
+                (wfr_a: wfr_t a da) (a_to_wfr_b: (x: a -> wfr_t (b x) (db x)))
+  : wfr: wfr_t (x: a & b x) (lex_dep_d wfr_a a_to_wfr_b){ wfr.relation == lex_dep_relation wfr_a a_to_wfr_b }
 
 val bool_wfr: (wfr: wfr_t bool (fun _ -> nat){ wfr.relation == (fun b1 b2 -> b1 == false /\ b2 == true) })
 
