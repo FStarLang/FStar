@@ -4,6 +4,7 @@ on:
     branches-ignore:
     - _**
   pull_request:
+  workflow_dispatch:
 jobs:
   build:
     runs-on: [self-hosted, linux, X64]
