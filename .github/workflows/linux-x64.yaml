@@ -23,7 +23,7 @@ jobs:
           else
             docker_local_branch_opt="-t fstar:local-branch-$GITHUB_REF_NAME"
           fi
-          # docker build --pull $docker_local_branch_opt -t fstar:local-commit-$GITHUB_SHA -t fstar:local-run-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT -f .docker/standalone.Dockerfile --build-arg CI_BRANCH=$GITHUB_REF_NAME .
+          docker build --pull $docker_local_branch_opt -t fstar:local-commit-$GITHUB_SHA -t fstar:local-run-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT -f .docker/standalone.Dockerfile --build-arg CI_BRANCH=$GITHUB_REF_NAME .
       - name: Compute elapsed time and status message
         run: |
           CI_FINAL_TIMESTAMP=$(date '+%s')
@@ -86,4 +86,5 @@ jobs:
               ]
             }
         env:
-          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
