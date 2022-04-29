@@ -16,5 +16,3 @@ result_file="result.txt"
 status_file="status.txt"
 ORANGE_FILE="orange_file.txt"
 build_fstar $target
-
-. $status_file
