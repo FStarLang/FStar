@@ -3806,16 +3806,32 @@ and check_inner_let_rec env top =
           let cres = TcUtil.maybe_assume_result_eq_pure_term env e2 cres in
           let cres = TcComm.lcomp_set_flags cres [SHOULD_NOT_INLINE] in //cf. issue #1362
           let guard = Env.conj_guard g_lbs (Env.close_guard env (List.map S.mk_binder bvs) g2) in
+          //
+          //We need to close bvs in cres
+          //If cres is a wp-effect, then we can use the close combinator
+          //If it is a layered effect, for now we check that bvs don't escape
+          //The code below only checks effect args,
+          //  return type is checked at the end of this function
+          //
           let cres =
-            //
-            //AR: FIXME: 04/27/2022
-            //    What if bvs escape in a layered effect arg?
-            //    How do we check that?
-            //    (The check for result type happens below)
-            //
             if cres.eff_name |> Env.norm_eff_name env
                              |> Env.is_layered_effect env
-            then cres
+            then let bvss = BU.as_set bvs S.order_bv in
+                 TcComm.apply_lcomp
+                   (fun c ->
+                    if (c |> U.comp_effect_args
+                          |> List.existsb (fun (t, _) ->
+                              t |> Free.names
+                                |> BU.set_intersect bvss
+                                |> set_is_empty
+                                |> not))
+                    then raise_error (Errors.Fatal_EscapedBoundVar,
+                           "One of the inner let recs escapes in the \
+                            effect argument(s), try adding a type \
+                            annotation") top.pos
+                    else c)
+                   (fun g -> g)
+                   cres
             else TcUtil.close_wp_lcomp env bvs cres in
           let tres = norm env cres.res_typ in
           let cres = {cres with res_typ=tres} in
