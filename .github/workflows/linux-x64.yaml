@@ -25,6 +25,7 @@ jobs:
           fi
           docker build --pull $docker_local_branch_opt -t fstar:local-commit-$GITHUB_SHA -t fstar:local-run-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT -f .docker/standalone.Dockerfile --build-arg CI_BRANCH=$GITHUB_REF_NAME .
       - name: Compute elapsed time and status message
+        if: ${{ always() }}
         run: |
           CI_FINAL_TIMESTAMP=$(date '+%s')
           CI_TIME_DIFF=$(( $CI_FINAL_TIMESTAMP - $CI_INITIAL_TIMESTAMP ))
@@ -46,8 +47,9 @@ jobs:
             echo "CI_EMOJI=❌" >> $GITHUB_ENV
             ;;
           esac
-          echo 'CI_STATUS=Status: '"$(docker run fstar:local-run-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT /bin/bash -c 'cat $FSTAR_HOME/result.txt')" >> $GITHUB_ENV
+          echo 'CI_STATUS=Status: '"$(docker run fstar:local-run-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT /bin/bash -c 'cat $FSTAR_HOME/result.txt' || echo Failure)" >> $GITHUB_ENV
       - name: Post to the Slack channel
+        if: ${{ always() }}
         id: slack
         uses: slackapi/slack-github-action@v1.16.0
         with:
