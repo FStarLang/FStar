@@ -10173,7 +10173,48 @@ and (check_inner_let_rec :
                                               (FStar_TypeChecker_Env.is_layered_effect
                                                  env2) in
                                           if uu___6
-                                          then cres3
+                                          then
+                                            let bvss =
+                                              FStar_Compiler_Util.as_set bvs
+                                                FStar_Syntax_Syntax.order_bv in
+                                            FStar_TypeChecker_Common.apply_lcomp
+                                              (fun c ->
+                                                 let uu___7 =
+                                                   let uu___8 =
+                                                     FStar_Compiler_Effect.op_Bar_Greater
+                                                       c
+                                                       FStar_Syntax_Util.comp_effect_args in
+                                                   FStar_Compiler_Effect.op_Bar_Greater
+                                                     uu___8
+                                                     (FStar_Compiler_List.existsb
+                                                        (fun uu___9 ->
+                                                           match uu___9 with
+                                                           | (t, uu___10) ->
+                                                               let uu___11 =
+                                                                 let uu___12
+                                                                   =
+                                                                   let uu___13
+                                                                    =
+                                                                    FStar_Compiler_Effect.op_Bar_Greater
+                                                                    t
+                                                                    FStar_Syntax_Free.names in
+                                                                   FStar_Compiler_Effect.op_Bar_Greater
+                                                                    uu___13
+                                                                    (FStar_Compiler_Util.set_intersect
+                                                                    bvss) in
+                                                                 FStar_Compiler_Effect.op_Bar_Greater
+                                                                   uu___12
+                                                                   FStar_Compiler_Util.set_is_empty in
+                                                               FStar_Compiler_Effect.op_Bar_Greater
+                                                                 uu___11
+                                                                 Prims.op_Negation)) in
+                                                 if uu___7
+                                                 then
+                                                   FStar_Errors.raise_error
+                                                     (FStar_Errors.Fatal_EscapedBoundVar,
+                                                       "One of the inner let recs escapes in the effect argument(s), try adding a type annotation")
+                                                     top.FStar_Syntax_Syntax.pos
+                                                 else c) (fun g -> g) cres3
                                           else
                                             FStar_TypeChecker_Util.close_wp_lcomp
                                               env2 bvs cres3 in
