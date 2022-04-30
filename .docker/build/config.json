@@ -11,6 +11,7 @@
     "DockerFile": ".docker/build/{agentOS}/Dockerfile",
     "DependencyFiles" : [
         ".docker/build/build_helper.sh",
+        ".docker/build/build_funs.sh",
         ".docker/build/build.sh"
     ],
 
