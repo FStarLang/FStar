@@ -245,7 +245,7 @@ let rec mem #a x = function
 element of [l]. Requires, at type-checking time, the type of elements
 of [l] to have decidable equality. It is equivalent to: [mem x
 l]. TODO: should we rather swap the order of arguments? *)
-let contains #a:eqtype (x:a) (l:list a) = mem x l
+let contains (#a:eqtype) (x:a) (l:list a) = mem x l
 
 (** [existsb f l] returns [true] if, and only if, there exists some
 element [x] in [l] such that [f x] holds. *)
