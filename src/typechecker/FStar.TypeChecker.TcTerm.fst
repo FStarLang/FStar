@@ -2362,25 +2362,76 @@ and check_application_args env head (chead:comp) ghead args expected_topt : term
       in
 
       (* 1. We compute the final computation type comp  *)
+
+      //
+      //AR: 01/05/2022: A caveat with Layered Effects:
+      //    We may have inserted a return in the cres, where the return
+      //    mentions names from arg_rets_rev
+      //    This means that cres now contains names that are not closed in
+      //    env (env is the top-level env of the application node)
+      //    The code below computed `bind`, which uses unification
+      //    for layered effects
+      //    Since unification is strict about uvar solutions being closed
+      //    in the ctx uvar env, we need to make sure that when we call bind
+      //    the computation types are closed in the environment
+      //    Meaning: add names from arg_rets_rev
+      //
+      //    Now what is arg_rets_rev: it is bv names for explicit args, and
+      //    Tm_uvar for implicits that are not specified
+      //    So we need to filter names from arg_rets_rev
+      //
+      //    (Note: The implicits in Tm_uvar are created in the top env,
+      //     therefore it should be ok to have the solutions of those uvars
+      //     appear in the computation types, those should still be closed
+      //     in the env)
+      //
+
       let comp =
-        List.fold_left
-          (fun out_c ((e, q), x, c) ->
-              if Env.debug env Options.Extreme then
-                  BU.print3 "(b) Monadic app: Binding argument %s : %s of type (%s)\n"
-                        (match x with None -> "_" | Some x -> Print.bv_to_string x)
-                        (Print.term_to_string e)
-                        (TcComm.lcomp_to_string c);
+        let arg_rets_names_opt =
+          arg_rets_rev |> List.rev
+                       |> List.map (fun (t, _) ->
+                                   match (SS.compress t).n with
+                                   | Tm_name bv -> bv |> Some
+                                   | _ -> None) in
+
+        let push_option_names_to_env =
+          List.fold_left (fun env name_opt ->
+            name_opt |> BU.map_option (Env.push_bv env)
+                     |> BU.dflt env) in
+
+        //Bind arguments
+        let _, comp =
+          List.fold_left
+            (fun (i, out_c) ((e, q), x, c) ->
+             if Env.debug env Options.Extreme then
+               BU.print3 "(b) Monadic app: Binding argument %s : %s of type (%s)\n"
+                 (match x with | None -> "_"
+                               | Some x -> Print.bv_to_string x)
+                 (Print.term_to_string e)
+                 (TcComm.lcomp_to_string c);
+             //
+             //Push first (List.length arg_rets_names_opt - i) names in the env
+             //
+             let env = push_option_names_to_env env
+               (List.splitAt (List.length arg_rets_names_opt - i) arg_rets_names_opt
+                |> fst) in
               if TcComm.is_pure_or_ghost_lcomp c
-              then TcUtil.bind e.pos env (Some e) c (x, out_c)
-              else TcUtil.bind e.pos env None c (x, out_c))
-          cres
-          arg_comps_rev
-      in
-      let comp =
-          if Env.debug env Options.Extreme then BU.print1 "(c) Monadic app: Binding head %s\n" (Print.term_to_string head);
-          if TcComm.is_pure_or_ghost_lcomp chead
-          then TcUtil.bind head.pos env (Some head) chead (None, comp)
-          else TcUtil.bind head.pos env None chead (None, comp) in
+              then i+1,TcUtil.bind e.pos env (Some e) c (x, out_c)
+              else i+1,TcUtil.bind e.pos env None c (x, out_c))
+          (1, cres)
+          arg_comps_rev in
+
+        //Bind head
+        //Push all arg ret names in the env
+        let env = push_option_names_to_env env arg_rets_names_opt in
+        if Env.debug env Options.Extreme
+        then BU.print2
+               "(c) Monadic app: Binding head %s, chead: %s\n" 
+               (Print.term_to_string head)
+               (TcComm.lcomp_to_string chead);
+        if TcComm.is_pure_or_ghost_lcomp chead
+        then TcUtil.bind head.pos env (Some head) chead (None, comp)
+        else TcUtil.bind head.pos env None chead (None, comp) in
 
       (* TODO : This is a really syntactic criterion to check if we can evaluate *)
       (* applications left-to-right, can we do better ? *)
