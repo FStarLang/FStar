@@ -45,18 +45,15 @@ let _ = assert (x == 42)
 //   let rec recursive (n: nat): Tot Type0 (decreases (10 - n))
 //     = if n>=10 then int else int * recursive (n + 1)
 //
-
 %splice[recursive] (
   let n = fresh_binder (`nat) in
   let recursive_fv = pack_fv (cur_module () @ ["recursive"]) in
   let recursive = pack (Tv_FVar recursive_fv) in
-  let decr = [`(10 - (`#(binder_to_term n)))] in
-  let lb_t = mk_arr [n] (pack_comp (C_Total (`Type0) decr)) in
   [pack_sigelt (
     Sg_Let true [pack_lb ({
       lb_fv = recursive_fv
     ; lb_us = []
-    ; lb_typ = lb_t
+    ; lb_typ = mk_arr [n] (pack_comp (C_Total (`Type0) [`(10 - (`#(binder_to_term n)))]))
     ; lb_def = `(fun n -> if n>=10 then int else int * (`#recursive) (n + 1))
     })]
     )
