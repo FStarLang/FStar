@@ -24,7 +24,8 @@ open FStar.Tactics.Result
 (* This module is extracted, don't add any `assume val`s or extraction
  * will break. (`synth_by_tactic` is fine) *)
 
-type tac_wp_t0 (a:Type) = proofstate -> (__result a -> Type0) -> Type0
+type tac_wp_t0 (a:Type) =
+  proofstate -> (__result a -> Type0) -> Type0
 
 unfold
 let tac_wp_monotonic (#a:Type) (wp:tac_wp_t0 a) =
@@ -52,7 +53,29 @@ let tac_bind_wp (#a #b:Type) (wp_f:tac_wp_t a) (wp_g:a -> tac_wp_t b) : tac_wp_t
            | Success x ps -> wp_g x ps post
            | Failed ex ps -> post (Failed ex ps))
 
+// unfold
+// let tac_bind_wp_compact0 (a:Type) (wp:tac_wp_t a) : tac_wp_t a =
+//   fun ps post ->
+//   forall k. (forall (r:__result a).{:pattern (guard_free (k r))} post r ==> k r) ==> wp ps k
+
+
+/// tac_bind_interleave_begin is an ugly hack to get interface interleaving
+/// work with admit_smt_queries true for the bind combinator
+
 val tac_bind_interleave_begin : unit
+
+
+/// We cannot verify the bind combinator, since the body of bind
+///   does some operations on the proof state, with which we cannot prove
+///   that the proofstate is sequenced. Two ways to fix it:
+///
+/// 1. We separate the "meta proofstate s.t. range, depth, etc. from the main
+///    proofstate, and then sequencing only applies to the main proofstate
+///
+/// 2. The pre and post of the TAC effect are just exception pre and post,
+///    since we can't prove much about the proofstate anyway, as it is
+///    mostly abstract
+
 (* monadic bind *)
 #push-options "--admit_smt_queries true"
 let tac_bind (a:Type) (b:Type)
@@ -74,6 +97,11 @@ let tac_bind (a:Type) (b:Type)
     end
   | Failed e ps' -> Failed e ps'
 #pop-options
+
+
+/// tac_bind_interleave_end is an ugly hack to get interface interleaving
+/// work with admit_smt_queries true for the bind combinator
+
 val tac_bind_interleave_end : unit
 
 unfold
@@ -100,6 +128,12 @@ let tac_subcomp (a:Type)
          (ensures fun _ -> True)
   = f
 
+/// default effect is Tac : meaning, unannotated TAC functions will be
+///                         typed as Tac a
+///
+/// And the bind combinator has range arguments
+///   that will be provided when the effect is reified
+
 [@@ default_effect "FStar.Tactics.Effect.Tac"; bind_has_range_args]
 reflectable
 effect {
@@ -111,42 +145,6 @@ effect {
          subcomp=tac_subcomp }
 }
 
-// private
-// let __tac_wp a = proofstate -> (__result a -> Tot Type0) -> Tot Type0
-
-// (* The DMFF-generated `bind_wp` doesn't the contain the "don't
-//  * duplicate the post-condition" optimization, which causes VCs (for
-//  * well-formedness of tactics) to blow up.
-//  *
-//  * Plus, we don't need to model the ranges and depths: they make no
-//  * difference since the proofstate type is abstract and the SMT never
-//  * sees a concrete one.
-//  *
-//  * So, override `bind_wp` for the effect with an efficient one.
-//  *)
-// private
-// unfold let g_bind (a:Type) (b:Type) (wp:__tac_wp a) (f:a -> __tac_wp b) = fun ps post ->
-//     wp ps (fun m' -> match m' with
-//                      | Success a q -> f a q post
-//                      | Failed e q -> post (Failed e q))
-
-// private
-// unfold let g_compact (a:Type) (wp:__tac_wp a) : __tac_wp a =
-//     fun ps post -> forall k. (forall (r:__result a).{:pattern (guard_free (k r))} post r ==> k r) ==> wp ps k
-
-// private
-// unfold let __TAC_eff_override_bind_wp (a:Type) (b:Type) (wp:__tac_wp a) (f:a -> __tac_wp b) =
-//     g_compact b (g_bind a b wp f)
-
-// [@@ dm4f_bind_range ]
-// new_effect {
-//   TAC : a:Type -> Effect
-//   with repr     = __tac
-//      ; bind     = __bind
-//      ; return   = __ret
-//      ; __raise  = __raise
-//      ; __get    = __get
-// }
 
 (* Hoare variant *)
 effect TacH (a:Type) (pre : proofstate -> Tot Type0) (post : proofstate -> __result a -> Tot Type0) =
@@ -181,15 +179,8 @@ let raise (#a:Type) (e:exn)
   : TAC a (fun ps post -> post (Failed e ps))
   = TAC?.reflect (fun ps -> Failed #a e ps)
 
-// (* Actions *)
-// private
-// let __get () : __tac proofstate = fun s0 -> Success s0 s0
 
-// private
-// let __raise (a:Type0) (e:exn) : __tac a = fun (ps:proofstate) -> Failed #a e ps
-
-// let get = TAC?.__get
-// let raise (#a:Type) (e:exn) = TAC?.__raise a e
+/// assert p by t
 
 val with_tactic (t : unit -> Tac unit) (p:Type u#a) : Type u#a
 
