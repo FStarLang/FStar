@@ -69,7 +69,7 @@ val tac_bind_interleave_begin : unit
 ///   does some operations on the proof state, with which we cannot prove
 ///   that the proofstate is sequenced. Two ways to fix it:
 ///
-/// 1. We separate the "meta proofstate s.t. range, depth, etc. from the main
+/// 1. We separate the "meta" proofstate s.t. range, depth, etc. from the main
 ///    proofstate, and then sequencing only applies to the main proofstate
 ///
 /// 2. The pre and post of the TAC effect are just exception pre and post,
