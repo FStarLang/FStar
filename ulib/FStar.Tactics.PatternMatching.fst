@@ -698,13 +698,23 @@ let abspat_arg_of_abspat_argspec solution_term (argspec: abspat_argspec)
 (** Specialize a continuation of type ``abspat_continuation``.
 This constructs a fully applied version of `continuation`, but it requires a
 quoted solution to be passed in. **)
+
+let rec hoist_and_apply (head:term) (arg_terms:list term) (hoisted_args:list argv)
+  : Tac term =
+  match arg_terms with
+  | [] -> mk_app head (List.rev hoisted_args)
+  | arg_term::rest ->
+    let n = List.Tot.length hoisted_args in
+    let bv = fresh_bv_named ("x" ^ (string_of_int n)) (pack Tv_Unknown) in
+    pack (Tv_Let false [] bv arg_term (hoist_and_apply head rest ((pack (Tv_Var bv), Q_Explicit)::hoisted_args)))
+  
 let specialize_abspat_continuation' (continuation: abspat_continuation)
                                     (solution_term:term)
     : Tac term =
-  let mk_arg argspec =
-    (abspat_arg_of_abspat_argspec solution_term argspec, Q_Explicit) in
+  let mk_arg_term argspec =
+    abspat_arg_of_abspat_argspec solution_term argspec in
   let argspecs, body = continuation in
-  mk_app body (map mk_arg argspecs)
+  hoist_and_apply body (map mk_arg_term argspecs) []
 
 (** Specialize a continuation of type ``abspat_continuation``.  This yields a
 quoted function taking a matching solution and running its body with appropriate
