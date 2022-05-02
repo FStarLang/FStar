@@ -6736,18 +6736,54 @@ and (rebuild :
                            msg uu___6);
                     (let t2 = FStar_Syntax_Syntax.extend_app head (t1, aq) r in
                      rebuild cfg env2 stack' t2) in
-                  let is_layered_effect m =
-                    let uu___3 =
+                  let is_non_tac_layered_effect m =
+                    let norm_m =
                       FStar_Compiler_Effect.op_Bar_Greater m
                         (FStar_TypeChecker_Env.norm_eff_name
                            cfg.FStar_TypeChecker_Cfg.tcenv) in
-                    FStar_Compiler_Effect.op_Bar_Greater uu___3
-                      (FStar_TypeChecker_Env.is_layered_effect
-                         cfg.FStar_TypeChecker_Cfg.tcenv) in
+                    (let uu___3 =
+                       FStar_Ident.lid_equals norm_m
+                         FStar_Parser_Const.effect_TAC_lid in
+                     Prims.op_Negation uu___3) &&
+                      (FStar_Compiler_Effect.op_Bar_Greater norm_m
+                         (FStar_TypeChecker_Env.is_layered_effect
+                            cfg.FStar_TypeChecker_Cfg.tcenv)) in
                   let uu___3 =
                     let uu___4 = FStar_Syntax_Subst.compress t1 in
                     uu___4.FStar_Syntax_Syntax.n in
                   (match uu___3 with
+                   | FStar_Syntax_Syntax.Tm_meta
+                       (uu___4, FStar_Syntax_Syntax.Meta_monadic (m, uu___5))
+                       when
+                       (FStar_Compiler_Effect.op_Bar_Greater m
+                          is_non_tac_layered_effect)
+                         &&
+                         (Prims.op_Negation
+                            (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.for_extraction)
+                       ->
+                       let uu___6 =
+                         let uu___7 = FStar_Ident.string_of_lid m in
+                         FStar_Compiler_Util.format1
+                           "Meta_monadic for a non-TAC layered effect %s in non-extraction mode"
+                           uu___7 in
+                       fallback uu___6 ()
+                   | FStar_Syntax_Syntax.Tm_meta
+                       (uu___4, FStar_Syntax_Syntax.Meta_monadic_lift
+                        (msrc, mtgt, uu___5))
+                       when
+                       ((is_non_tac_layered_effect msrc) ||
+                          (is_non_tac_layered_effect mtgt))
+                         &&
+                         (Prims.op_Negation
+                            (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.for_extraction)
+                       ->
+                       let uu___6 =
+                         let uu___7 = FStar_Ident.string_of_lid msrc in
+                         let uu___8 = FStar_Ident.string_of_lid mtgt in
+                         FStar_Compiler_Util.format2
+                           "Meta_monadic_lift for a non-TAC layered effect %s ~> %s in non extraction mode"
+                           uu___7 uu___8 in
+                       fallback uu___6 ()
                    | FStar_Syntax_Syntax.Tm_meta
                        (t2, FStar_Syntax_Syntax.Meta_monadic (m, ty)) ->
                        do_reify_monadic (fallback " (1)") cfg env2 stack1 t2
