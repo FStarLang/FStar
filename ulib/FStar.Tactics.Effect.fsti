@@ -16,6 +16,7 @@
 module FStar.Tactics.Effect
 
 open FStar.Monotonic.Pure
+open FStar.Calc
 
 open FStar.Reflection.Types
 open FStar.Tactics.Types
@@ -53,10 +54,12 @@ let tac_bind_wp (#a #b:Type) (wp_f:tac_wp_t a) (wp_g:a -> tac_wp_t b) : tac_wp_t
            | Success x ps -> wp_g x ps post
            | Failed ex ps -> post (Failed ex ps))
 
-// unfold
-// let tac_bind_wp_compact0 (a:Type) (wp:tac_wp_t a) : tac_wp_t a =
-//   fun ps post ->
-//   forall k. (forall (r:__result a).{:pattern (guard_free (k r))} post r ==> k r) ==> wp ps k
+/// An optimization to name the continuation
+
+unfold
+let tac_wp_compact (a:Type) (wp:tac_wp_t a) : tac_wp_t a =
+  fun ps post ->
+  forall (k:__result a -> Type0). (forall (r:__result a).{:pattern (guard_free (k r))} post r ==> k r) ==> wp ps k
 
 
 /// tac_bind_interleave_begin is an ugly hack to get interface interleaving
@@ -83,7 +86,7 @@ let tac_bind (a:Type) (b:Type)
   (wp_g:a -> tac_wp_t b)
   (r1 r2:range)
   (t1:tac_repr a wp_f)
-  (t2:(x:a -> tac_repr b (wp_g x))) : tac_repr b (tac_bind_wp wp_f wp_g) =
+  (t2:(x:a -> tac_repr b (wp_g x))) : tac_repr b (tac_wp_compact b (tac_bind_wp wp_f wp_g)) =
   fun ps ->
   let ps = set_proofstate_range ps (FStar.Range.prims_to_fstar_range r1) in
   let ps = incr_depth ps in
@@ -117,7 +120,7 @@ let tac_if_then_else (a:Type)
   (g:tac_repr a wp_else)
   (b:bool)
   : Type
-  = tac_repr a (tac_if_then_else_wp wp_then wp_else b)
+  = tac_repr a (tac_wp_compact a (tac_if_then_else_wp wp_then wp_else b))
 
 let tac_subcomp (a:Type)
   (wp_f:tac_wp_t a)
