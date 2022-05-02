@@ -19,6 +19,9 @@ open FStar.Reflection.Types
 open FStar.Tactics.Types
 open FStar.Tactics.Result
 
+/// This admit is to typecheck the bind implementation when the
+///   interface is interleaved
+
 #push-options "--admit_smt_queries true"
 let tac_bind_interleave_begin = ()
 #pop-options
