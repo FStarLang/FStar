@@ -1797,7 +1797,7 @@ and do_reify_monadic fallback cfg env stack (top : term) (m : monad_name) (t : t
                  *)
                 if U.is_layered ed then
                   //
-                  //Bind in the TAC effect has range args
+                  //Bind in the TAC effect, for example, has range args
                   //This is indicated on the effect using an attribute
                   //
                   let bind_has_range_args =
@@ -2589,20 +2589,27 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
            let t = S.extend_app head (t, aq) r in
            rebuild cfg env stack' t
         in
-        //AR: no non-extraction reification for layered effects
-        let is_layered_effect m = m |> Env.norm_eff_name cfg.tcenv |> Env.is_layered_effect cfg.tcenv in
+        //
+        //AR: no non-extraction reification for layered effects,
+        //      unless TAC
+        //
+        let is_non_tac_layered_effect m =
+          let norm_m = m |> Env.norm_eff_name cfg.tcenv in
+          (not (Ident.lid_equals norm_m PC.effect_TAC_lid)) &&
+          norm_m |> Env.is_layered_effect cfg.tcenv in
 
         begin match (SS.compress t).n with
-        // | Tm_meta (_, Meta_monadic (m, _))
-        //   when m |> is_layered_effect && not cfg.steps.for_extraction ->
-        //   fallback (BU.format1
-        //               "Meta_monadic for a layered effect %s in non-extraction mode"
-        //               (Ident.string_of_lid m)) ()
-        // | Tm_meta (_, Meta_monadic_lift (msrc, mtgt, _))
-        //   when (is_layered_effect msrc || is_layered_effect mtgt) && not cfg.steps.for_extraction ->
-        //   fallback (BU.format2
-        //             "Meta_monadic_lift for layered effect %s ~> %s in non extraction mode"
-        //             (Ident.string_of_lid msrc) (Ident.string_of_lid mtgt)) ()
+        | Tm_meta (_, Meta_monadic (m, _))
+          when m |> is_non_tac_layered_effect && not cfg.steps.for_extraction ->
+          fallback (BU.format1
+                      "Meta_monadic for a non-TAC layered effect %s in non-extraction mode"
+                      (Ident.string_of_lid m)) ()
+        | Tm_meta (_, Meta_monadic_lift (msrc, mtgt, _))
+          when (is_non_tac_layered_effect msrc || is_non_tac_layered_effect mtgt) &&
+               not cfg.steps.for_extraction ->
+          fallback (BU.format2
+                    "Meta_monadic_lift for a non-TAC layered effect %s ~> %s in non extraction mode"
+                    (Ident.string_of_lid msrc) (Ident.string_of_lid mtgt)) ()
 
         | Tm_meta (t, Meta_monadic (m, ty)) ->
            do_reify_monadic (fallback " (1)") cfg env stack t m ty

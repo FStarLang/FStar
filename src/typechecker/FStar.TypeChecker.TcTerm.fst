@@ -2962,6 +2962,10 @@ and tc_pat env (pat_t:typ) (p0:pat) :
          *)
         let mk_disc_t (disc:term) (inner_t:term) : term =
           let x_b = S.gen_bv "x" None t |> S.mk_binder in
+          //
+          //AR: 05/02/2022: Try to provide implicit type arguments to the projector,
+          //                if we can't then (lax) typechecking later will infer them
+          //
           let ty_args =
             let hd, args = U.head_and_args t in
             match (hd |> SS.compress |> U.un_uinst).n with
