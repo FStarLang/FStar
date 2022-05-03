@@ -133,7 +133,7 @@ let option_wfr (#a: Type u#a) (wfr: wfr_t a) : wfr': wfr_t (option a){wfr'.relat
   //          The precedence for the bool field should be bool_wfr (i.e., false precedes true).
   //          The precedence for the (if b then a else unit_a) field should be either wfr or empty_wfr,
   //          depending on whether b is true or false.
-  
+
   let bool_to_wfr_a (b: bool) : wfr_t (if b then a else unit_a) = if b then wfr else empty_wfr unit_a in
   let wfr_bool_a: wfr_t (b: bool & (if b then a else unit_a)) = lex_dep_wfr bool_wfr bool_to_wfr_a in
 
