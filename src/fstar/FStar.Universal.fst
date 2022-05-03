@@ -52,8 +52,6 @@ module Ch      = FStar.CheckedFiles
 
 let module_or_interface_name m = m.is_interface, m.name
 
-type uenv = FStar.Extraction.ML.UEnv.uenv
-
 let with_dsenv_of_tcenv (tcenv:TcEnv.env) (f:DsEnv.withenv 'a) : 'a * TcEnv.env =
     let a, dsenv = f tcenv.dsenv in
     a, ({tcenv with dsenv = dsenv})

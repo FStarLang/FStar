@@ -1852,7 +1852,7 @@ and tc_abs_expected_function_typ env (bs:binders) (t0:option (typ * bool)) (body
 
   | Some (t, use_eq) ->
     let t = SS.compress t in
-    let rec as_function_typ norm t =
+    let rec as_function_typ (norm:bool) t =
       match (SS.compress t).n with
       (* we are type checking abs so all cases except arrow are required for definitional equality *)
       | Tm_uvar _
@@ -2258,27 +2258,32 @@ and check_application_args env head (chead:comp) ghead args expected_topt : term
         : term   //application of head to args
         * lcomp  //its computation type
         * guard_t //and whatever guard remains
-    =
-      let rt, g0 = check_no_escape (Some head) env fvs (U.comp_result cres) in
-      let cres = U.set_result_typ cres rt in
-      let cres, guard =
-          match bs with
-          | [] -> (* full app *)
-//              let cres = TcUtil.subst_lcomp subst cres in
-              //NS 12/22 ... this comment looks stale
-              (* If we have f e1 e2
-                  where e1 or e2 is impure but f is a pure function,
-                  then refine the result to be equal to f x1 x2,
-                  where xi is the result of ei. (See the last two tests in examples/unit-tests/unit1.fst)
-              *)
-              let g = Env.conj_guard g0 <| Env.conj_guard ghead guard in
-              cres, g
+    = let cres, guard =
+        match bs with
+        | [] -> (* full app *)
+          cres, Env.conj_guard ghead guard
 
-          | _ ->  (* partial app *)
-              let g = Env.conj_guard g0 (Env.conj_guard ghead guard |> Rel.solve_deferred_constraints env) in
-              mk_Total (U.arrow bs cres), g
-      in
-      if debug env Options.Medium then BU.print1 "\t Type of result cres is %s\n" (Print.comp_to_string cres);
+        | _ ->  (* partial app *)
+          //
+          // AR: 04/29/2022: Do we need to solve these constraints here?
+          //
+          let g = Env.conj_guard ghead guard |>
+                  Rel.solve_deferred_constraints env in
+          mk_Total (U.arrow bs cres), g in
+
+      //
+      //AR: It is important that this check is done after we have
+      //    added the bs to the cres result type, to ensure that fvs
+      //    don't escape in the bs
+      //
+      let rt, g0 = check_no_escape (Some head) env fvs (U.comp_result cres) in
+      let cres, guard =
+        U.set_result_typ cres rt,
+        Env.conj_guard g0 guard in
+
+      if debug env Options.Medium
+      then BU.print1 "\t Type of result cres is %s\n"
+                     (Print.comp_to_string cres);
 
       let chead, cres = SS.subst_comp subst chead |> TcComm.lcomp_of_comp, SS.subst_comp subst cres |> TcComm.lcomp_of_comp in
 

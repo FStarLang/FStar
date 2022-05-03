@@ -178,6 +178,52 @@ let (uu___is_Deferred_to_user_tac : deferred_reason -> Prims.bool) =
 type deferred = (deferred_reason * Prims.string * prob) Prims.list
 type univ_ineq =
   (FStar_Syntax_Syntax.universe * FStar_Syntax_Syntax.universe)
+type identifier_info =
+  {
+  identifier:
+    (FStar_Syntax_Syntax.bv, FStar_Syntax_Syntax.fv) FStar_Pervasives.either ;
+  identifier_ty: FStar_Syntax_Syntax.typ ;
+  identifier_range: FStar_Compiler_Range.range }
+let (__proj__Mkidentifier_info__item__identifier :
+  identifier_info ->
+    (FStar_Syntax_Syntax.bv, FStar_Syntax_Syntax.fv) FStar_Pervasives.either)
+  =
+  fun projectee ->
+    match projectee with
+    | { identifier; identifier_ty; identifier_range;_} -> identifier
+let (__proj__Mkidentifier_info__item__identifier_ty :
+  identifier_info -> FStar_Syntax_Syntax.typ) =
+  fun projectee ->
+    match projectee with
+    | { identifier; identifier_ty; identifier_range;_} -> identifier_ty
+let (__proj__Mkidentifier_info__item__identifier_range :
+  identifier_info -> FStar_Compiler_Range.range) =
+  fun projectee ->
+    match projectee with
+    | { identifier; identifier_ty; identifier_range;_} -> identifier_range
+type id_info_by_col = (Prims.int * identifier_info) Prims.list
+type col_info_by_row = id_info_by_col FStar_Compiler_Util.pimap
+type row_info_by_file = col_info_by_row FStar_Compiler_Util.psmap
+type id_info_table =
+  {
+  id_info_enabled: Prims.bool ;
+  id_info_db: row_info_by_file ;
+  id_info_buffer: identifier_info Prims.list }
+let (__proj__Mkid_info_table__item__id_info_enabled :
+  id_info_table -> Prims.bool) =
+  fun projectee ->
+    match projectee with
+    | { id_info_enabled; id_info_db; id_info_buffer;_} -> id_info_enabled
+let (__proj__Mkid_info_table__item__id_info_db :
+  id_info_table -> row_info_by_file) =
+  fun projectee ->
+    match projectee with
+    | { id_info_enabled; id_info_db; id_info_buffer;_} -> id_info_db
+let (__proj__Mkid_info_table__item__id_info_buffer :
+  id_info_table -> identifier_info Prims.list) =
+  fun projectee ->
+    match projectee with
+    | { id_info_enabled; id_info_db; id_info_buffer;_} -> id_info_buffer
 let (mk_by_tactic :
   FStar_Syntax_Syntax.term ->
     FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term)
@@ -229,29 +275,6 @@ let rec (decr_delta_depth :
         FStar_Pervasives_Native.Some
           (FStar_Syntax_Syntax.Delta_equational_at_level (i - Prims.int_one))
     | FStar_Syntax_Syntax.Delta_abstract d -> decr_delta_depth d
-type identifier_info =
-  {
-  identifier:
-    (FStar_Syntax_Syntax.bv, FStar_Syntax_Syntax.fv) FStar_Pervasives.either ;
-  identifier_ty: FStar_Syntax_Syntax.typ ;
-  identifier_range: FStar_Compiler_Range.range }
-let (__proj__Mkidentifier_info__item__identifier :
-  identifier_info ->
-    (FStar_Syntax_Syntax.bv, FStar_Syntax_Syntax.fv) FStar_Pervasives.either)
-  =
-  fun projectee ->
-    match projectee with
-    | { identifier; identifier_ty; identifier_range;_} -> identifier
-let (__proj__Mkidentifier_info__item__identifier_ty :
-  identifier_info -> FStar_Syntax_Syntax.typ) =
-  fun projectee ->
-    match projectee with
-    | { identifier; identifier_ty; identifier_range;_} -> identifier_ty
-let (__proj__Mkidentifier_info__item__identifier_range :
-  identifier_info -> FStar_Compiler_Range.range) =
-  fun projectee ->
-    match projectee with
-    | { identifier; identifier_ty; identifier_range;_} -> identifier_range
 let (insert_col_info :
   Prims.int ->
     identifier_info ->
@@ -286,29 +309,6 @@ let (find_nearest_preceding_col_info :
             then out
             else aux (FStar_Pervasives_Native.Some i) rest in
       aux FStar_Pervasives_Native.None col_infos
-type id_info_by_col = (Prims.int * identifier_info) Prims.list
-type col_info_by_row = id_info_by_col FStar_Compiler_Util.pimap
-type row_info_by_file = col_info_by_row FStar_Compiler_Util.psmap
-type id_info_table =
-  {
-  id_info_enabled: Prims.bool ;
-  id_info_db: row_info_by_file ;
-  id_info_buffer: identifier_info Prims.list }
-let (__proj__Mkid_info_table__item__id_info_enabled :
-  id_info_table -> Prims.bool) =
-  fun projectee ->
-    match projectee with
-    | { id_info_enabled; id_info_db; id_info_buffer;_} -> id_info_enabled
-let (__proj__Mkid_info_table__item__id_info_db :
-  id_info_table -> row_info_by_file) =
-  fun projectee ->
-    match projectee with
-    | { id_info_enabled; id_info_db; id_info_buffer;_} -> id_info_db
-let (__proj__Mkid_info_table__item__id_info_buffer :
-  id_info_table -> identifier_info Prims.list) =
-  fun projectee ->
-    match projectee with
-    | { id_info_enabled; id_info_db; id_info_buffer;_} -> id_info_buffer
 let (id_info_table_empty : id_info_table) =
   let uu___ = FStar_Compiler_Util.psmap_empty () in
   { id_info_enabled = false; id_info_db = uu___; id_info_buffer = [] }

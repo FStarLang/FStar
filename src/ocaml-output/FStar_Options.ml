@@ -1,8 +1,4 @@
 open Prims
-let (debug_embedding : Prims.bool FStar_Compiler_Effect.ref) =
-  FStar_Compiler_Util.mk_ref false
-let (eager_embedding : Prims.bool FStar_Compiler_Effect.ref) =
-  FStar_Compiler_Util.mk_ref false
 type debug_level_t =
   | Low 
   | Medium 
@@ -50,6 +46,74 @@ let (__proj__List__item___0 : option_val -> option_val Prims.list) =
   fun projectee -> match projectee with | List _0 -> _0
 let (uu___is_Unset : option_val -> Prims.bool) =
   fun projectee -> match projectee with | Unset -> true | uu___ -> false
+type optionstate = option_val FStar_Compiler_Util.smap
+type opt_type =
+  | Const of option_val 
+  | IntStr of Prims.string 
+  | BoolStr 
+  | PathStr of Prims.string 
+  | SimpleStr of Prims.string 
+  | EnumStr of Prims.string Prims.list 
+  | OpenEnumStr of (Prims.string Prims.list * Prims.string) 
+  | PostProcessed of ((option_val -> option_val) * opt_type) 
+  | Accumulated of opt_type 
+  | ReverseAccumulated of opt_type 
+  | WithSideEffect of ((unit -> unit) * opt_type) 
+let (uu___is_Const : opt_type -> Prims.bool) =
+  fun projectee -> match projectee with | Const _0 -> true | uu___ -> false
+let (__proj__Const__item___0 : opt_type -> option_val) =
+  fun projectee -> match projectee with | Const _0 -> _0
+let (uu___is_IntStr : opt_type -> Prims.bool) =
+  fun projectee -> match projectee with | IntStr _0 -> true | uu___ -> false
+let (__proj__IntStr__item___0 : opt_type -> Prims.string) =
+  fun projectee -> match projectee with | IntStr _0 -> _0
+let (uu___is_BoolStr : opt_type -> Prims.bool) =
+  fun projectee -> match projectee with | BoolStr -> true | uu___ -> false
+let (uu___is_PathStr : opt_type -> Prims.bool) =
+  fun projectee -> match projectee with | PathStr _0 -> true | uu___ -> false
+let (__proj__PathStr__item___0 : opt_type -> Prims.string) =
+  fun projectee -> match projectee with | PathStr _0 -> _0
+let (uu___is_SimpleStr : opt_type -> Prims.bool) =
+  fun projectee ->
+    match projectee with | SimpleStr _0 -> true | uu___ -> false
+let (__proj__SimpleStr__item___0 : opt_type -> Prims.string) =
+  fun projectee -> match projectee with | SimpleStr _0 -> _0
+let (uu___is_EnumStr : opt_type -> Prims.bool) =
+  fun projectee -> match projectee with | EnumStr _0 -> true | uu___ -> false
+let (__proj__EnumStr__item___0 : opt_type -> Prims.string Prims.list) =
+  fun projectee -> match projectee with | EnumStr _0 -> _0
+let (uu___is_OpenEnumStr : opt_type -> Prims.bool) =
+  fun projectee ->
+    match projectee with | OpenEnumStr _0 -> true | uu___ -> false
+let (__proj__OpenEnumStr__item___0 :
+  opt_type -> (Prims.string Prims.list * Prims.string)) =
+  fun projectee -> match projectee with | OpenEnumStr _0 -> _0
+let (uu___is_PostProcessed : opt_type -> Prims.bool) =
+  fun projectee ->
+    match projectee with | PostProcessed _0 -> true | uu___ -> false
+let (__proj__PostProcessed__item___0 :
+  opt_type -> ((option_val -> option_val) * opt_type)) =
+  fun projectee -> match projectee with | PostProcessed _0 -> _0
+let (uu___is_Accumulated : opt_type -> Prims.bool) =
+  fun projectee ->
+    match projectee with | Accumulated _0 -> true | uu___ -> false
+let (__proj__Accumulated__item___0 : opt_type -> opt_type) =
+  fun projectee -> match projectee with | Accumulated _0 -> _0
+let (uu___is_ReverseAccumulated : opt_type -> Prims.bool) =
+  fun projectee ->
+    match projectee with | ReverseAccumulated _0 -> true | uu___ -> false
+let (__proj__ReverseAccumulated__item___0 : opt_type -> opt_type) =
+  fun projectee -> match projectee with | ReverseAccumulated _0 -> _0
+let (uu___is_WithSideEffect : opt_type -> Prims.bool) =
+  fun projectee ->
+    match projectee with | WithSideEffect _0 -> true | uu___ -> false
+let (__proj__WithSideEffect__item___0 :
+  opt_type -> ((unit -> unit) * opt_type)) =
+  fun projectee -> match projectee with | WithSideEffect _0 -> _0
+let (debug_embedding : Prims.bool FStar_Compiler_Effect.ref) =
+  FStar_Compiler_Util.mk_ref false
+let (eager_embedding : Prims.bool FStar_Compiler_Effect.ref) =
+  FStar_Compiler_Util.mk_ref false
 let (__unit_tests__ : Prims.bool FStar_Compiler_Effect.ref) =
   FStar_Compiler_Util.mk_ref false
 let (__unit_tests : unit -> Prims.bool) =
@@ -105,7 +169,6 @@ let (as_comma_string_list : option_val -> Prims.string Prims.list) =
                FStar_Compiler_Util.split uu___2 ",") ls in
         FStar_Compiler_Effect.op_Less_Bar FStar_Compiler_List.flatten uu___1
     | uu___1 -> failwith "Impos: expected String (comma list)"
-type optionstate = option_val FStar_Compiler_Util.smap
 let copy_optionstate :
   'uuuuu . 'uuuuu FStar_Compiler_Util.smap -> 'uuuuu FStar_Compiler_Util.smap
   = fun m -> FStar_Compiler_Util.smap_copy m
@@ -760,69 +823,6 @@ let (add_extract_namespace : Prims.string -> unit) =
   fun s -> accumulate_string "extract_namespace" FStar_String.lowercase s
 let (add_verify_module : Prims.string -> unit) =
   fun s -> accumulate_string "verify_module" FStar_String.lowercase s
-type opt_type =
-  | Const of option_val 
-  | IntStr of Prims.string 
-  | BoolStr 
-  | PathStr of Prims.string 
-  | SimpleStr of Prims.string 
-  | EnumStr of Prims.string Prims.list 
-  | OpenEnumStr of (Prims.string Prims.list * Prims.string) 
-  | PostProcessed of ((option_val -> option_val) * opt_type) 
-  | Accumulated of opt_type 
-  | ReverseAccumulated of opt_type 
-  | WithSideEffect of ((unit -> unit) * opt_type) 
-let (uu___is_Const : opt_type -> Prims.bool) =
-  fun projectee -> match projectee with | Const _0 -> true | uu___ -> false
-let (__proj__Const__item___0 : opt_type -> option_val) =
-  fun projectee -> match projectee with | Const _0 -> _0
-let (uu___is_IntStr : opt_type -> Prims.bool) =
-  fun projectee -> match projectee with | IntStr _0 -> true | uu___ -> false
-let (__proj__IntStr__item___0 : opt_type -> Prims.string) =
-  fun projectee -> match projectee with | IntStr _0 -> _0
-let (uu___is_BoolStr : opt_type -> Prims.bool) =
-  fun projectee -> match projectee with | BoolStr -> true | uu___ -> false
-let (uu___is_PathStr : opt_type -> Prims.bool) =
-  fun projectee -> match projectee with | PathStr _0 -> true | uu___ -> false
-let (__proj__PathStr__item___0 : opt_type -> Prims.string) =
-  fun projectee -> match projectee with | PathStr _0 -> _0
-let (uu___is_SimpleStr : opt_type -> Prims.bool) =
-  fun projectee ->
-    match projectee with | SimpleStr _0 -> true | uu___ -> false
-let (__proj__SimpleStr__item___0 : opt_type -> Prims.string) =
-  fun projectee -> match projectee with | SimpleStr _0 -> _0
-let (uu___is_EnumStr : opt_type -> Prims.bool) =
-  fun projectee -> match projectee with | EnumStr _0 -> true | uu___ -> false
-let (__proj__EnumStr__item___0 : opt_type -> Prims.string Prims.list) =
-  fun projectee -> match projectee with | EnumStr _0 -> _0
-let (uu___is_OpenEnumStr : opt_type -> Prims.bool) =
-  fun projectee ->
-    match projectee with | OpenEnumStr _0 -> true | uu___ -> false
-let (__proj__OpenEnumStr__item___0 :
-  opt_type -> (Prims.string Prims.list * Prims.string)) =
-  fun projectee -> match projectee with | OpenEnumStr _0 -> _0
-let (uu___is_PostProcessed : opt_type -> Prims.bool) =
-  fun projectee ->
-    match projectee with | PostProcessed _0 -> true | uu___ -> false
-let (__proj__PostProcessed__item___0 :
-  opt_type -> ((option_val -> option_val) * opt_type)) =
-  fun projectee -> match projectee with | PostProcessed _0 -> _0
-let (uu___is_Accumulated : opt_type -> Prims.bool) =
-  fun projectee ->
-    match projectee with | Accumulated _0 -> true | uu___ -> false
-let (__proj__Accumulated__item___0 : opt_type -> opt_type) =
-  fun projectee -> match projectee with | Accumulated _0 -> _0
-let (uu___is_ReverseAccumulated : opt_type -> Prims.bool) =
-  fun projectee ->
-    match projectee with | ReverseAccumulated _0 -> true | uu___ -> false
-let (__proj__ReverseAccumulated__item___0 : opt_type -> opt_type) =
-  fun projectee -> match projectee with | ReverseAccumulated _0 -> _0
-let (uu___is_WithSideEffect : opt_type -> Prims.bool) =
-  fun projectee ->
-    match projectee with | WithSideEffect _0 -> true | uu___ -> false
-let (__proj__WithSideEffect__item___0 :
-  opt_type -> ((unit -> unit) * opt_type)) =
-  fun projectee -> match projectee with | WithSideEffect _0 -> _0
 exception InvalidArgument of Prims.string 
 let (uu___is_InvalidArgument : Prims.exn -> Prims.bool) =
   fun projectee ->
@@ -946,7 +946,7 @@ let (interp_quake_arg : Prims.string -> (Prims.int * Prims.int * Prims.bool))
           let uu___ = ios f1 in let uu___1 = ios f2 in (uu___, uu___1, true)
         else failwith "unexpected value for --quake"
     | uu___ -> failwith "unexpected value for --quake"
-let (uu___403 : (((Prims.string -> unit) -> unit) * (Prims.string -> unit)))
+let (uu___405 : (((Prims.string -> unit) -> unit) * (Prims.string -> unit)))
   =
   let cb = FStar_Compiler_Util.mk_ref FStar_Pervasives_Native.None in
   let set1 f =
@@ -958,11 +958,11 @@ let (uu___403 : (((Prims.string -> unit) -> unit) * (Prims.string -> unit)))
     | FStar_Pervasives_Native.Some f -> f msg in
   (set1, call)
 let (set_option_warning_callback_aux : (Prims.string -> unit) -> unit) =
-  match uu___403 with
+  match uu___405 with
   | (set_option_warning_callback_aux1, option_warning_callback) ->
       set_option_warning_callback_aux1
 let (option_warning_callback : Prims.string -> unit) =
-  match uu___403 with
+  match uu___405 with
   | (set_option_warning_callback_aux1, option_warning_callback1) ->
       option_warning_callback1
 let (set_option_warning_callback : (Prims.string -> unit) -> unit) =
@@ -1451,7 +1451,7 @@ let (settable_specs :
     (FStar_Compiler_List.filter
        (fun uu___ ->
           match uu___ with | (uu___1, x, uu___2, uu___3) -> settable x))
-let (uu___585 :
+let (uu___587 :
   (((unit -> FStar_Getopt.parse_cmdline_res) -> unit) *
     (unit -> FStar_Getopt.parse_cmdline_res)))
   =
@@ -1468,11 +1468,11 @@ let (uu___585 :
   (set1, call)
 let (set_error_flags_callback_aux :
   (unit -> FStar_Getopt.parse_cmdline_res) -> unit) =
-  match uu___585 with
+  match uu___587 with
   | (set_error_flags_callback_aux1, set_error_flags) ->
       set_error_flags_callback_aux1
 let (set_error_flags : unit -> FStar_Getopt.parse_cmdline_res) =
-  match uu___585 with
+  match uu___587 with
   | (set_error_flags_callback_aux1, set_error_flags1) -> set_error_flags1
 let (set_error_flags_callback :
   (unit -> FStar_Getopt.parse_cmdline_res) -> unit) =

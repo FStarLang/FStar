@@ -66,15 +66,10 @@ val rev_append : (list '_5110) -> (list '_5110) -> Tot (list '_5110)
 val concat : (list (list '_6116)) -> Tot (list '_6116)
 val unzip : (list ('_36948 * '_36947)) -> Tot ((list '_36948) * (list '_36947))
 val filter_map: ('a -> option 'b) -> list 'a -> list 'b
-
 val count: #a:eqtype -> a -> (list a) -> Tot nat
-
 val mem: #a:eqtype -> a -> (list a) -> Tot bool
-
 val assoc: #a:eqtype -> #b:Type -> a -> (list (a * b)) -> Tot (option b)
-
 val contains: #a:eqtype -> a -> (list a) -> Tot bool
-
 val unique: #a:eqtype -> list a -> list a
-
 val index: #a:eqtype -> (a -> bool) -> list a -> int
+val span: #a:eqtype -> (a -> bool) -> list a -> Tot ((list a) * (list a))

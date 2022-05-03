@@ -185,7 +185,7 @@ let (uu___is_Unfold : delta_level -> Prims.bool) =
 let (__proj__Unfold__item___0 :
   delta_level -> FStar_Syntax_Syntax.delta_depth) =
   fun projectee -> match projectee with | Unfold _0 -> _0
-type name_prefix = Prims.string Prims.list
+type name_prefix = FStar_Ident.path
 type proof_namespace = (name_prefix * Prims.bool) Prims.list
 type cached_elt =
   (((FStar_Syntax_Syntax.universes * FStar_Syntax_Syntax.typ),
@@ -358,7 +358,7 @@ and solver_t =
   handle_smt_goal: env -> goal -> (env * goal) Prims.list ;
   solve:
     (unit -> Prims.string) FStar_Pervasives_Native.option ->
-      env -> FStar_Syntax_Syntax.typ -> unit
+      env -> goal -> unit
     ;
   finish: unit -> unit ;
   refresh: unit -> unit }
@@ -1250,7 +1250,7 @@ let (__proj__Mksolver_t__item__handle_smt_goal :
 let (__proj__Mksolver_t__item__solve :
   solver_t ->
     (unit -> Prims.string) FStar_Pervasives_Native.option ->
-      env -> FStar_Syntax_Syntax.typ -> unit)
+      env -> goal -> unit)
   =
   fun projectee ->
     match projectee with
@@ -1291,6 +1291,13 @@ type solver_depth_t = (Prims.int * Prims.int * Prims.int)
 type implicit = FStar_TypeChecker_Common.implicit
 type implicits = FStar_TypeChecker_Common.implicits
 type guard_t = FStar_TypeChecker_Common.guard_t
+type tcenv_depth_t = (Prims.int * Prims.int * solver_depth_t * Prims.int)
+type qninfo =
+  (((FStar_Syntax_Syntax.universes * FStar_Syntax_Syntax.typ),
+    (FStar_Syntax_Syntax.sigelt * FStar_Syntax_Syntax.universes
+      FStar_Pervasives_Native.option))
+    FStar_Pervasives.either * FStar_Compiler_Range.range)
+    FStar_Pervasives_Native.option
 let (preprocess :
   env ->
     FStar_Syntax_Syntax.term ->
@@ -1448,6 +1455,7 @@ let (set_tc_hooks : env -> tcenv_hooks -> env) =
         unif_allow_ref_guards = (env1.unif_allow_ref_guards);
         erase_erasable_args = (env1.erase_erasable_args)
       }
+type env_t = env
 let (set_dep_graph : env -> FStar_Parser_Dep.deps -> env) =
   fun e ->
     fun g ->
@@ -1505,7 +1513,6 @@ let (set_dep_graph : env -> FStar_Parser_Dep.deps -> env) =
       }
 let (dep_graph : env -> FStar_Parser_Dep.deps) =
   fun e -> FStar_Syntax_DsEnv.dep_graph e.dsenv
-type env_t = env
 type sigtable = FStar_Syntax_Syntax.sigelt FStar_Compiler_Util.smap
 let (should_verify : env -> Prims.bool) =
   fun env1 ->
@@ -1810,7 +1817,6 @@ let (snapshot_stack : env -> (Prims.int * env)) =
   fun env1 -> FStar_Common.snapshot push_stack stack env1
 let (rollback_stack : Prims.int FStar_Pervasives_Native.option -> env) =
   fun depth -> FStar_Common.rollback pop_stack stack depth
-type tcenv_depth_t = (Prims.int * Prims.int * solver_depth_t * Prims.int)
 let (snapshot : env -> Prims.string -> (tcenv_depth_t * env)) =
   fun env1 ->
     fun msg ->
@@ -2402,12 +2408,6 @@ let (in_cur_mod : env -> FStar_Ident.lident -> tri) =
              | uu___3 -> No in
            aux cur1 lns
          else No)
-type qninfo =
-  (((FStar_Syntax_Syntax.universes * FStar_Syntax_Syntax.typ),
-    (FStar_Syntax_Syntax.sigelt * FStar_Syntax_Syntax.universes
-      FStar_Pervasives_Native.option))
-    FStar_Pervasives.either * FStar_Compiler_Range.range)
-    FStar_Pervasives_Native.option
 let (lookup_qname : env -> FStar_Ident.lident -> qninfo) =
   fun env1 ->
     fun lid ->

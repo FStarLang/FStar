@@ -203,6 +203,18 @@ and args = list (arg)
 type head = t
 type annot = option t
 
+type nbe_cbs = {
+   iapp : t -> args -> t;
+   translate : term -> t;
+}
+
+type embedding 'a = {
+  em  : nbe_cbs -> 'a -> t;
+  un  : nbe_cbs -> t -> option 'a;
+  typ : t;
+  emb_typ : emb_typ
+}
+
 // Printing functions
 
 val constant_to_string : constant -> string
@@ -226,20 +238,8 @@ val mkAccuMatch : t -> (unit -> option match_returns_ascription) -> (unit -> lis
 val as_arg : t -> arg
 val as_iarg : t -> arg
 
-type nbe_cbs = {
-   iapp : t -> args -> t;
-   translate : term -> t;
-}
-
 val iapp_cb      : nbe_cbs -> t -> args -> t
 val translate_cb : nbe_cbs -> term -> t
-
-type embedding 'a = {
-  em  : nbe_cbs -> 'a -> t;
-  un  : nbe_cbs -> t -> option 'a;
-  typ : t;
-  emb_typ : emb_typ
-}
 
 val mk_emb : (nbe_cbs -> 'a -> t) ->
              (nbe_cbs -> t -> option 'a) ->

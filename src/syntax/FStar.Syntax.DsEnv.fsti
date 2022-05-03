@@ -46,13 +46,16 @@ type record_or_dc = {
   is_record:bool
 }
 
-type env
-type withenv 'a = env -> 'a * env
+val env : Type0
+val dsenv_hooks : Type0
 
-type dsenv_hooks =
-  { ds_push_open_hook : env -> open_module_or_namespace -> unit;
-    ds_push_include_hook : env -> lident -> unit;
-    ds_push_module_abbrev_hook : env -> ident -> lident -> unit }
+val mk_dsenv_hooks
+  (open_hook:env -> open_module_or_namespace -> unit)
+  (include_hook:env -> lident -> unit)
+  (module_abbrev_hook:env -> ident -> lident -> unit)
+  : dsenv_hooks
+
+type withenv 'a = env -> 'a * env
 
 type foundname =
   | Term_name of typ * list attribute
@@ -131,7 +134,7 @@ val enter_monad_scope: env -> ident -> env
 val export_interface: lident ->  env -> env
 
 val transitive_exported_ids: env -> lident -> list string
-type module_inclusion_info
+val module_inclusion_info : Type0
 val default_mii : module_inclusion_info
 val inclusion_info: env -> lident -> module_inclusion_info
 val prepare_module_or_interface: bool -> bool -> env -> lident -> module_inclusion_info -> env * bool //pop the context when done desugaring
