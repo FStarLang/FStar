@@ -1,6 +1,7 @@
 module Main
 
-let f (x:int) (y:list int) = FStar.List.Tot.mem x y
+let f (x:int) (y:list int) = 
+  FStar.List.Tot.(mem x y && contains x y)
 
 //the code below intentionally has a top-level effect
 //suppress warning 272
