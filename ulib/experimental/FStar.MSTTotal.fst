@@ -101,7 +101,7 @@ let if_then_else
     (fun s0 x s1 -> (b2t p ==> ens_then s0 x s1) /\ ((~ (b2t p)) ==> ens_else s0 x s1))
 
 total
-reifiable reflectable
+reflectable
 effect {
   MSTATETOT (a:Type) (state:Type u#2) (rel:P.preorder state) (req:pre_t state) (ens:post_t state a)
   with { repr; return; bind; subcomp; if_then_else }

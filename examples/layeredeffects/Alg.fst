@@ -355,8 +355,11 @@ let try_with #a #labs (f : (unit -> Alg a (Raise::labs))) (g:unit -> Alg a labs)
                 (function Raise -> fun _ _ -> g ()
                         | _     -> defh)
 
+let some_as_alg (#a:Type) #labs : a -> Alg (option a) labs =
+  fun x -> Some x
+
 let catchE #a #labs (f : unit -> Alg a (Raise::labs)) : Alg (option a) labs =
-  handle_with f Some (function Raise -> fun _ _ -> None
+  handle_with f some_as_alg (function Raise -> fun _ _ -> None
                                    | _     -> defh)
 
 (* Repeating the examples above *)
