@@ -1306,31 +1306,40 @@ let (guard_letrecs :
                   mk_precedes_lex env2 l l_prev
               | (FStar_Syntax_Syntax.Decreases_wf (rel, e),
                  FStar_Syntax_Syntax.Decreases_wf (rel_prev, e_prev)) ->
-                  ((let uu___1 =
+                  let rel_guard =
+                    let uu___ =
+                      let uu___1 = FStar_Syntax_Syntax.as_arg e in
                       let uu___2 =
-                        let uu___3 = FStar_Syntax_Util.eq_tm rel rel_prev in
-                        uu___3 = FStar_Syntax_Util.Equal in
-                      Prims.op_Negation uu___2 in
-                    if uu___1
-                    then
-                      let uu___2 =
-                        let uu___3 =
-                          let uu___4 = FStar_Syntax_Print.term_to_string rel in
-                          let uu___5 =
-                            FStar_Syntax_Print.term_to_string rel_prev in
-                          FStar_Compiler_Util.format2
-                            "Cannot build termination VC with two different well-founded relations %s and %s"
-                            uu___4 uu___5 in
-                        (FStar_Errors.Fatal_UnexpectedTerm, uu___3) in
-                      FStar_Errors.raise_error uu___2 r
-                    else ());
-                   (let uu___1 =
-                      let uu___2 = FStar_Syntax_Syntax.as_arg e in
-                      let uu___3 =
-                        let uu___4 = FStar_Syntax_Syntax.as_arg e_prev in
-                        [uu___4] in
-                      uu___2 :: uu___3 in
-                    FStar_Syntax_Syntax.mk_Tm_app rel uu___1 r))
+                        let uu___3 = FStar_Syntax_Syntax.as_arg e_prev in
+                        [uu___3] in
+                      uu___1 :: uu___2 in
+                    FStar_Syntax_Syntax.mk_Tm_app rel uu___ r in
+                  let uu___ =
+                    let uu___1 = FStar_Syntax_Util.eq_tm rel rel_prev in
+                    uu___1 = FStar_Syntax_Util.Equal in
+                  if uu___
+                  then rel_guard
+                  else
+                    (let uu___2 =
+                       FStar_Errors.with_ctx
+                         "Typechecking decreases well-founded relation"
+                         (fun uu___3 ->
+                            env2.FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term
+                              env2 rel false) in
+                     match uu___2 with
+                     | (t_rel, uu___3) ->
+                         let uu___4 =
+                           FStar_Errors.with_ctx
+                             "Typechecking previous decreases well-founded relation"
+                             (fun uu___5 ->
+                                env2.FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term
+                                  env2 rel_prev false) in
+                         (match uu___4 with
+                          | (t_rel_prev, uu___5) ->
+                              let eq_guard =
+                                FStar_Syntax_Util.mk_eq3_no_univ t_rel
+                                  t_rel_prev rel rel_prev in
+                              FStar_Syntax_Util.mk_conj eq_guard rel_guard))
               | (uu___, uu___1) ->
                   FStar_Errors.raise_error
                     (FStar_Errors.Fatal_UnexpectedTerm,
@@ -4699,6 +4708,9 @@ and (tc_comp :
                                                        () in
                                                    (match uu___11 with
                                                     | (t, u_t) ->
+                                                        let u_r =
+                                                          FStar_TypeChecker_Env.new_u_univ
+                                                            () in
                                                         let uu___12 =
                                                           FStar_TypeChecker_Util.new_implicit_var
                                                             "implicit for type of the well-founded relation in decreases clause"
@@ -4716,7 +4728,7 @@ and (tc_comp :
                                                                     FStar_Parser_Const.well_founded_relation_lid in
                                                                  FStar_Syntax_Syntax.mk_Tm_uinst
                                                                    uu___15
-                                                                   [u_t] in
+                                                                   [u_t; u_r] in
                                                                let uu___15 =
                                                                  let uu___16
                                                                    =
