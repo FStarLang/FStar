@@ -29,12 +29,14 @@ COPY / .
 # Remove extra files.
 RUN Invoke-BashCmd rm Dockerfile
 RUN Invoke-BashCmd rm build.sh
+RUN Invoke-BashCmd rm build_funs.sh
 RUN Invoke-BashCmd rm build_helper.sh
 RUN Invoke-BashCmd rm id_rsa
 RUN Invoke-BashCmd rm commitinfofilename.json
 WORKDIR ".."
 
 COPY build.sh build.sh
+COPY build_funs.sh build_funs.sh
 COPY build_helper.sh build_helper.sh
 
 RUN Invoke-BashCmd ./build_helper.sh $Env:BUILDTARGET $Env:BUILDLOGFILE $Env:MAXTHREADS $Env:BRANCHNAME '||' true
