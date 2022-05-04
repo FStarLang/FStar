@@ -30,11 +30,14 @@ WORKDIR ${MYHOME}
 RUN rm ${MYHOME}/FStar/Dockerfile
 RUN rm ${MYHOME}/FStar/build.sh
 RUN rm ${MYHOME}/FStar/build_helper.sh
+RUN rm ${MYHOME}/FStar/build_funs.sh
 RUN rm ${MYHOME}/FStar/id_rsa
 RUN rm ${MYHOME}/FStar/commitinfofilename.json
 
 COPY --chown=everest build.sh ${MYHOME}/build.sh
 RUN chmod +x build.sh
+COPY --chown=everest build.sh ${MYHOME}/build_funs.sh
+RUN chmod +x build_funs.sh
 COPY --chown=everest build_helper.sh ${MYHOME}/build_helper.sh
 RUN chmod +x build_helper.sh
 

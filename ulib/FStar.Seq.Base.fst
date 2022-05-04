@@ -167,7 +167,7 @@ let rec lemma_index_app2' (#a:Type) (s1:seq a) (s2:seq a) (i:nat{i < length s1 +
 
 let lemma_index_app2 = lemma_index_app2'
 
-#push-options "--z3rlimit 20 --ifuel 2 --fuel 1"
+#push-options "--fuel 1 --ifuel 0"
 let rec lemma_index_slice' (#a:Type) (s:seq a) (i:nat) (j:nat{i <= j /\ j <= length s}) (k:nat{k < j - i})
 : Lemma
   (requires True)

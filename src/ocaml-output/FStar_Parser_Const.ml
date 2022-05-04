@@ -475,8 +475,12 @@ let (mk_class_lid : FStar_Ident.lid) =
   fstar_tactics_lid' ["Typeclasses"; "mk_class"]
 let (tcresolve_lid : FStar_Ident.lid) =
   fstar_tactics_lid' ["Typeclasses"; "tcresolve"]
+let (tcclass_lid : FStar_Ident.lid) =
+  fstar_tactics_lid' ["Typeclasses"; "tcclass"]
 let (tcinstance_lid : FStar_Ident.lid) =
   fstar_tactics_lid' ["Typeclasses"; "tcinstance"]
+let (no_method_lid : FStar_Ident.lid) =
+  fstar_tactics_lid' ["Typeclasses"; "no_method"]
 let (effect_TAC_lid : FStar_Ident.lid) = fstar_tactics_lid' ["Effect"; "TAC"]
 let (effect_Tac_lid : FStar_Ident.lid) = fstar_tactics_lid' ["Effect"; "Tac"]
 let (by_tactic_lid : FStar_Ident.lid) =
