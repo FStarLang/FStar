@@ -475,6 +475,8 @@ let (mk_class_lid : FStar_Ident.lid) =
   fstar_tactics_lid' ["Typeclasses"; "mk_class"]
 let (tcresolve_lid : FStar_Ident.lid) =
   fstar_tactics_lid' ["Typeclasses"; "tcresolve"]
+let (tcclass_lid : FStar_Ident.lid) =
+  fstar_tactics_lid' ["Typeclasses"; "tcclass"]
 let (tcinstance_lid : FStar_Ident.lid) =
   fstar_tactics_lid' ["Typeclasses"; "tcinstance"]
 let (no_method_lid : FStar_Ident.lid) =
