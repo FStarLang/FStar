@@ -22,7 +22,6 @@ assume val v1 (#p: Ghost.erased nat) (a: ptr) (err: ptr) : STT unit
   (pts_to1 a p `star` pts_to1 err 0)
   (fun _ -> pts_to1 a p `star` exists_ (fun v -> pts_to1 err v))
 
-(*
 let v2 (#p: Ghost.erased nat) (al: ptr) (err: ptr) : STT unit
   (pts_to1 al p `star` pts_to1 err 0)
   (fun _ -> exists_ (fun p -> exists_ (fun v -> pts_to1 al p `star` pts_to1 err v)))
@@ -46,7 +45,6 @@ let v2' (#p: Ghost.erased nat) (al: ptr) (err: ptr) : STT unit
   let _ = noop () in
   let _ = join al ar in
   return ()
-*)
 
 #set-options "--print_implicits"
 
@@ -65,7 +63,7 @@ let v3 (#pl #pr: Ghost.erased nat) (al: ptr) (ar: ptr) (err: ptr) : STT unit
   noop ()
 
 
-let v3 (#p: Ghost.erased nat) (al: ptr) (err: ptr) : STT unit
+let v3' (#p: Ghost.erased nat) (al: ptr) (err: ptr) : STT unit
   (pts_to1 al p `star` pts_to1 err 0)
   (fun _ -> exists_ (fun p -> exists_ (fun v -> pts_to1 al p `star` pts_to1 err v)))
 = let ar = split al in
@@ -73,9 +71,11 @@ let v3 (#p: Ghost.erased nat) (al: ptr) (err: ptr) : STT unit
   let _ = v1 ar err in
   let _ = gen_elim () in
   let _ = join al ar in
+  noop ()
+
 //  let _ = gen_elim () in
 //  assert_ (exists_ (fun p -> exists_ (fun v -> pts_to1 al p `star` pts_to1 err v)));
-  admit_ ()
+
 
 (*
 [@__reduce__]

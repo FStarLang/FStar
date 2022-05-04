@@ -2043,6 +2043,13 @@ let unfold_guard () : Tac bool =
   end else
     false
 
+let rec term_is_uvar (t: term) (i: int) : Tac bool = match t with
+  | Tv_Uvar i' _ -> i = i'
+  | Tv_App _ _ ->
+      let hd, args = collect_app t in
+      term_is_uvar hd i
+  | _ -> false
+
 val solve_can_be_split_for (#a: Type u#b) : a -> Tot unit
 
 val solve_can_be_split_lookup : unit // FIXME: src/reflection/FStar.Reflection.Basic.lookup_attr only supports fvar attributes, so we cannot directly look up for (solve_can_be_split_for blabla), we need a nullary attribute to use with lookup_attr
@@ -2691,13 +2698,141 @@ let solve_or_delay (dict: list (term & (unit -> Tac bool))) : Tac bool =
 /// Returns true if it successfully solved a goal
 /// If it returns false, it means it didn't find any solvable goal,
 /// which should mean only delayed goals are left
-let rec pick_next (dict: _) (fuel: nat) : Tac bool =
+
+let rec vprop_term_uvars (t:term) : Tac (list int) =
+  match inspect t with
+  | Tv_Uvar i' _ -> [i']
+  | Tv_App _ _ ->
+    let hd, args = collect_app t in
+    if term_eq hd (`star) || term_eq hd (`VStar) || term_eq hd (`VUnit) then
+      // Only count the number of unresolved slprops, not program implicits
+      argv_uvars args
+    else
+      vprop_term_uvars hd
+  | Tv_Abs _ t -> vprop_term_uvars t
+  | _ -> []
+
+and argv_uvars (args: list argv) : Tac (list int) =
+  let t : unit -> Tac (list int) =
+    fold_left (fun (n: unit -> Tac (list int)) (x, _) -> 
+      let t () : Tac (list int) =
+        let l1 = n () in
+        let l2 = vprop_term_uvars x in
+        l1 `List.Tot.append` l2
+      in
+      t
+    )
+    (fun _ -> [])
+    args
+  in
+  t ()
+
+let rec remove_dups_from_sorted (#t: eqtype) (l: list t) : Tot (list t) = match l with
+  | [] | [_] -> l
+  | a1 :: a2 :: q -> if a1 = a2 then remove_dups_from_sorted (a2 :: q) else a1 :: remove_dups_from_sorted (a2 :: q)
+
+let simplify_list (l: list int) : Tot (list int) =
+  remove_dups_from_sorted (List.Tot.sortWith (List.Tot.compare_of_bool (<)) l)
+
+let goal_term_uvars (t: term) : Tac (list int) =
+  let hd, tl = collect_app t in
+  if hd `term_eq` (`squash)
+  then
+    match tl with
+    | [tl0, Q_Explicit] ->
+      let _, tl1 = collect_app tl0 in
+      simplify_list (argv_uvars tl1)
+    | _ -> dump "ill-formed squash"; []
+  else
+    []
+
+let rec merge_sorted (l1 l2: list int) : Tot (list int)
+  (decreases (List.Tot.length l1 + List.Tot.length l2))
+= match l1 with
+  | [] -> l2
+  | a1 :: q1 ->
+    begin match l2 with
+    | [] -> l1
+    | a2 :: q2 ->
+      if a1 < a2
+      then a1 :: merge_sorted q1 l2
+      else if a2 < a1
+      then a2 :: merge_sorted l1 q2
+      else a1 :: merge_sorted q1 q2
+  end
+
+let rec sorted_lists_intersect (l1 l2: list int) : Tot bool
+  (decreases (List.Tot.length l1 + List.Tot.length l2))
+= match l1 with
+  | [] -> false
+  | a1 :: q1 ->
+    begin match l2 with
+    | [] -> false
+    | a2 :: q2 ->
+      if a1 = a2
+      then true
+      else if a1 < a2
+      then sorted_lists_intersect q1 l2
+      else sorted_lists_intersect l1 q2
+    end
+
+/// TODO: cache the list of variables for each goal, to avoid computing them several times
+/// Compute the list of all vprop uvars that appear in the same goal as unsolved guard_vprop
+let rec compute_guarded_uvars1 (accu: list int) (g: list goal) : Tac (list int) =
+  match g with
+  | [] -> accu
+  | a :: q ->
+    let t = goal_type a in
+    let accu' =
+      if all_guards_solved t
+      then accu
+      else merge_sorted accu (goal_term_uvars t)
+    in
+    compute_guarded_uvars1 accu' q
+
+/// Enrich the list of vprop uvars with those that appear in the same goal
+let rec compute_guarded_uvars2 (accu: list int) (g: list goal) : Tac (list int) =
+  match g with
+  | [] -> accu
+  | a :: q ->
+    let t = goal_type a in
+    let l = goal_term_uvars t in
+    let accu' =
+      if sorted_lists_intersect accu l
+      then merge_sorted accu l
+      else accu
+    in
+    compute_guarded_uvars2 accu' q
+
+let rec compute_guarded_uvars3 (accu: list int) (g: list goal) : Tac (list int) =
+  let accu' = compute_guarded_uvars2 accu g in
+  if accu = accu'
+  then accu
+  else compute_guarded_uvars3 accu' g
+
+let compute_guarded_uvars () : Tac (list int) =
+  let g = goals () in
+  let accu = compute_guarded_uvars1 [] g in
+  compute_guarded_uvars3 accu g
+
+let rec pick_next (guarded_uvars: list int) (dict: _) (fuel: nat) : Tac bool =
   dump "pick_next";
   if fuel = 0
   then false
   else match goals () with
   | [] -> true
-  | _::_ -> if solve_or_delay dict then true else (later (); pick_next dict (fuel - 1))
+  | a::_ ->
+    let t = goal_type a in
+    let l = goal_term_uvars t in
+    let next () : Tac bool =
+      later ();
+      pick_next guarded_uvars dict (fuel - 1)
+    in
+    if sorted_lists_intersect guarded_uvars l
+    then next ()
+    else if solve_or_delay dict
+    then true
+    else next ()
 
 /// Main loop to schedule solving of goals.
 /// The goals () function fetches all current goals in the context
@@ -2707,9 +2842,18 @@ let rec resolve_tac (dict: _) : Tac unit =
   | [] -> ()
   | g ->
     norm [];
+    let guarded_uvars = compute_guarded_uvars () in
     // TODO: If it picks a goal it cannot solve yet, try all the other ones?
-    if pick_next dict (List.Tot.length g) then resolve_tac dict
+    if pick_next guarded_uvars dict (List.Tot.length g) then resolve_tac dict
     else fail "Could not make progress, no solvable goal found"
+
+let rec pick_next_logical (dict: _) (fuel: nat) : Tac bool =
+  dump "pick_next";
+  if fuel = 0
+  then false
+  else match goals () with
+  | [] -> true
+  | _::_ -> if solve_or_delay dict then true else (later (); pick_next_logical dict (fuel - 1))
 
 /// Special case for logical requires/ensures goals, which correspond only to equalities
 let rec resolve_tac_logical (dict: _) : Tac unit =
@@ -2717,7 +2861,7 @@ let rec resolve_tac_logical (dict: _) : Tac unit =
   | [] -> ()
   | g ->
     let fuel = List.Tot.length g in
-    if pick_next dict fuel then resolve_tac_logical dict
+    if pick_next_logical dict fuel then resolve_tac_logical dict
     else
       // This is only for requires/ensures constraints, which are equalities
       // There should always be a scheduling of constraints, but it can happen
