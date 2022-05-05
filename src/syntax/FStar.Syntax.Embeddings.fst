@@ -98,29 +98,29 @@ let mk_emb_full em un typ printer emb_typ = {
 //          code, we enforce terms to be normalized to be PURE
 //
 
-let rec unmeta t =
+let rec unmeta_div_results t =
   let open FStar.Ident in
   match (SS.compress t).n with
   | Tm_meta (t', Meta_monadic_lift (src, dst, _)) ->
     if lid_equals src PC.effect_PURE_lid &&
        lid_equals dst PC.effect_DIV_lid
-    then unmeta t'
+    then unmeta_div_results t'
     else t
 
   | Tm_meta (t', Meta_monadic (m, _)) ->
     if lid_equals m PC.effect_DIV_lid
-    then unmeta t'
+    then unmeta_div_results t'
     else t
 
-  | Tm_meta (t', _) -> unmeta t'
+  | Tm_meta (t', _) -> unmeta_div_results t'
 
-  | Tm_ascribed (t', _, _) -> unmeta t'
+  | Tm_ascribed (t', _, _) -> unmeta_div_results t'
   
   | _ -> t
 
 (* Eta-expand to make F# happy *)
 let embed        (e:embedding 'a) x   = e.em x
-let unembed      (e:embedding 'a) t   = e.un (unmeta t)  //strip meta first
+let unembed      (e:embedding 'a) t   = e.un (unmeta_div_results t)  //strip meta first
 let warn_unembed (e:embedding 'a) t n = unembed e t true n
 let try_unembed  (e:embedding 'a) t n = unembed e t false n
 let type_of      (e:embedding 'a)     = e.typ
@@ -227,7 +227,7 @@ let e_bool =
         { t with pos = rng }
     in
     let un (t0:term) (w:bool) _norm : option bool =
-        let t = unmeta t0 in
+        let t = unmeta_div_results t0 in
         match t.n with
         | Tm_constant(FStar.Const.Const_bool b) -> Some b
         | _ ->
@@ -248,7 +248,7 @@ let e_char =
         { t with pos = rng }
     in
     let un (t0:term) (w:bool) _norm : option char =
-        let t = unmeta t0 in
+        let t = unmeta_div_results t0 in
         match t.n with
         | Tm_constant(FStar.Const.Const_char c) -> Some c
         | _ ->
@@ -276,7 +276,7 @@ let e_int =
             (fun () -> U.exp_int (Z.string_of_big_int i))
     in
     let un (t0:term) (w:bool) _norm : option Z.t =
-        let t = unmeta t0 in
+        let t = unmeta_div_results t0 in
         lazy_unembed
             BigInt.string_of_big_int
             emb_t_int
@@ -307,7 +307,7 @@ let e_string =
              rng
     in
     let un (t0:term) (w:bool) _norm : option string =
-        let t = unmeta t0 in
+        let t = unmeta_div_results t0 in
         match t.n with
         | Tm_constant(FStar.Const.Const_string(s, _)) -> Some s
         | _ ->
@@ -360,7 +360,7 @@ let e_option (ea : embedding 'a) =
                               rng)
     in
     let un (t0:term) (w:bool) norm : option (option 'a) =
-        let t = unmeta t0 in
+        let t = unmeta_div_results t0 in
         lazy_unembed
             printer
             emb_t_option_a
@@ -423,7 +423,7 @@ let e_tuple2 (ea:embedding 'a) (eb:embedding 'b) =
                             rng)
     in
     let un (t0:term) (w:bool) norm : option ('a * 'b) =
-        let t = unmeta t0 in
+        let t = unmeta_div_results t0 in
         lazy_unembed
             printer
             emb_t_pair_a_b
@@ -491,7 +491,7 @@ let e_tuple3 (ea:embedding 'a) (eb:embedding 'b) (ec:embedding 'c) =
                             rng)
     in
     let un (t0:term) (w:bool) norm : option ('a * 'b * 'c) =
-        let t = unmeta t0 in
+        let t = unmeta_div_results t0 in
         lazy_unembed
             printer
             emb_t_pair_a_b_c
@@ -573,7 +573,7 @@ let e_either (ea:embedding 'a) (eb:embedding 'b) =
              )
     in
     let un (t0:term) (w:bool) norm : option (either 'a 'b) =
-        let t = unmeta t0 in
+        let t = unmeta_div_results t0 in
         lazy_unembed
             printer
             emb_t_sum_a_b
@@ -647,7 +647,7 @@ let e_list (ea:embedding 'a) =
                               rng)
     in
     let rec un (t0:term) (w:bool) norm : option (list 'a) =
-        let t = unmeta t0 in
+        let t = unmeta_div_results t0 in
         lazy_unembed
             printer
             emb_t_list_a
@@ -747,7 +747,7 @@ let e_norm_step =
                 )
     in
     let un (t0:term) (w:bool) norm : option norm_step =
-        let t = unmeta t0 in
+        let t = unmeta_div_results t0 in
         lazy_unembed
             printer
             emb_t_norm_step
@@ -807,7 +807,7 @@ let e_range =
         S.mk (Tm_constant (C.Const_range r)) rng
     in
     let un (t0:term) (w:bool) _norm : option range =
-        let t = unmeta t0 in
+        let t = unmeta_div_results t0 in
         match t.n with
         | Tm_constant (C.Const_range r) -> Some r
         | _ ->
