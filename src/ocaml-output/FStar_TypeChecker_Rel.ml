@@ -3901,7 +3901,7 @@ let rec (solve : FStar_TypeChecker_Env.env -> worklist -> solution) =
                        ((tp.FStar_TypeChecker_Common.relation =
                            FStar_TypeChecker_Common.EQ)
                           && (rank1 <> FStar_TypeChecker_Common.Flex_flex))
-                   then solve_t env tp probs1
+                   then solve_t' env tp probs1
                    else
                      if probs1.defer_ok = DeferAny
                      then
@@ -3910,7 +3910,7 @@ let rec (solve : FStar_TypeChecker_Env.env -> worklist -> solution) =
                      else
                        if rank1 = FStar_TypeChecker_Common.Flex_flex
                        then
-                         solve_t env
+                         solve_t' env
                            {
                              FStar_TypeChecker_Common.pid =
                                (tp.FStar_TypeChecker_Common.pid);
@@ -7191,7 +7191,7 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                                          let rhs =
                                            force_refinement
                                              (base2, refinement2) in
-                                         solve_t env1
+                                         solve_t' env1
                                            {
                                              FStar_TypeChecker_Common.pid =
                                                (problem.FStar_TypeChecker_Common.pid);
@@ -7787,7 +7787,7 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                           let uu___6 = try_reveal_hide env1 t1 t2 in
                           (match uu___6 with
                            | FStar_Pervasives_Native.Some (t1', t2') ->
-                               solve_t env1
+                               solve_t' env1
                                  {
                                    FStar_TypeChecker_Common.pid =
                                      (problem.FStar_TypeChecker_Common.pid);
@@ -8884,7 +8884,7 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                   let t21 =
                     let uu___9 = base_and_refinement env t2 in
                     FStar_Compiler_Effect.op_Less_Bar force_refinement uu___9 in
-                  solve_t env
+                  solve_t' env
                     {
                       FStar_TypeChecker_Common.pid =
                         (problem.FStar_TypeChecker_Common.pid);
@@ -8910,7 +8910,7 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                   let t11 =
                     let uu___9 = base_and_refinement env t1 in
                     FStar_Compiler_Effect.op_Less_Bar force_refinement uu___9 in
-                  solve_t env
+                  solve_t' env
                     {
                       FStar_TypeChecker_Common.pid =
                         (problem.FStar_TypeChecker_Common.pid);
