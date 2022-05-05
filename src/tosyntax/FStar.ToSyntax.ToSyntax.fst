@@ -3484,11 +3484,22 @@ and desugar_decl_noattrs env (d:decl) : (env_t * sigelts) =
              sigopts = None; }]
         | _ -> []
     in
-    let extra =
+    let ses, extra =
         if typeclass
         then let meths = List.concatMap get_meths ses in
-             List.concatMap (splice_decl meths) ses
-        else []
+             let rec add_class_attr se =
+               match se.sigel with
+               | Sig_bundle (ses, lids) ->
+                 let ses = List.map add_class_attr ses in
+                 { se with sigel = Sig_bundle (ses, lids) }
+
+               | Sig_inductive_typ _ ->
+                 { se with sigattrs = S.fvar FStar.Parser.Const.tcclass_lid S.delta_constant None :: se.sigattrs }
+
+               | _ -> se
+             in
+             List.map add_class_attr ses, List.concatMap (splice_decl meths) ses
+        else ses, []
     in
     let env = List.fold_left push_sigelt env extra in
     env, ses @ extra

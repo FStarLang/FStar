@@ -468,6 +468,7 @@ let tactic_lid = fstar_tactics_lid' ["Effect"; "tactic"]
 
 let mk_class_lid   = fstar_tactics_lid' ["Typeclasses"; "mk_class"]
 let tcresolve_lid  = fstar_tactics_lid' ["Typeclasses"; "tcresolve"]
+let tcclass_lid = fstar_tactics_lid' ["Typeclasses"; "tcclass"]
 let tcinstance_lid = fstar_tactics_lid' ["Typeclasses"; "tcinstance"]
 let no_method_lid = fstar_tactics_lid' ["Typeclasses"; "no_method"]
 
