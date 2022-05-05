@@ -170,7 +170,8 @@ let mk_emb_full :
       fun typ ->
         fun printer1 ->
           fun emb_typ -> { em; un; typ; print = printer1; emb_typ }
-let rec (unmeta : FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term) =
+let rec (unmeta_div_results :
+  FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term) =
   fun t ->
     let uu___ =
       let uu___1 = FStar_Syntax_Subst.compress t in
@@ -181,18 +182,19 @@ let rec (unmeta : FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term) =
         let uu___2 =
           (FStar_Ident.lid_equals src FStar_Parser_Const.effect_PURE_lid) &&
             (FStar_Ident.lid_equals dst FStar_Parser_Const.effect_DIV_lid) in
-        if uu___2 then unmeta t' else t
+        if uu___2 then unmeta_div_results t' else t
     | FStar_Syntax_Syntax.Tm_meta
         (t', FStar_Syntax_Syntax.Meta_monadic (m, uu___1)) ->
         let uu___2 =
           FStar_Ident.lid_equals m FStar_Parser_Const.effect_DIV_lid in
-        if uu___2 then unmeta t' else t
-    | FStar_Syntax_Syntax.Tm_meta (t', uu___1) -> unmeta t'
-    | FStar_Syntax_Syntax.Tm_ascribed (t', uu___1, uu___2) -> unmeta t'
+        if uu___2 then unmeta_div_results t' else t
+    | FStar_Syntax_Syntax.Tm_meta (t', uu___1) -> unmeta_div_results t'
+    | FStar_Syntax_Syntax.Tm_ascribed (t', uu___1, uu___2) ->
+        unmeta_div_results t'
     | uu___1 -> t
 let embed : 'a . 'a embedding -> 'a -> embed_t = fun e -> fun x -> e.em x
 let unembed : 'a . 'a embedding -> FStar_Syntax_Syntax.term -> 'a unembed_t =
-  fun e -> fun t -> let uu___ = unmeta t in e.un uu___
+  fun e -> fun t -> let uu___ = unmeta_div_results t in e.un uu___
 let warn_unembed :
   'a .
     'a embedding ->
@@ -437,7 +439,7 @@ let (e_bool : Prims.bool embedding) =
       FStar_Syntax_Syntax.vars = (t.FStar_Syntax_Syntax.vars)
     } in
   let un t0 w _norm =
-    let t = unmeta t0 in
+    let t = unmeta_div_results t0 in
     match t.FStar_Syntax_Syntax.n with
     | FStar_Syntax_Syntax.Tm_constant (FStar_Const.Const_bool b) ->
         FStar_Pervasives_Native.Some b
@@ -470,7 +472,7 @@ let (e_char : FStar_Char.char embedding) =
       FStar_Syntax_Syntax.vars = (t.FStar_Syntax_Syntax.vars)
     } in
   let un t0 w _norm =
-    let t = unmeta t0 in
+    let t = unmeta_div_results t0 in
     match t.FStar_Syntax_Syntax.n with
     | FStar_Syntax_Syntax.Tm_constant (FStar_Const.Const_char c) ->
         FStar_Pervasives_Native.Some c
@@ -509,7 +511,7 @@ let (e_int : FStar_BigInt.t embedding) =
          let uu___1 = FStar_BigInt.string_of_big_int i in
          FStar_Syntax_Util.exp_int uu___1) in
   let un t0 w _norm =
-    let t = unmeta t0 in
+    let t = unmeta_div_results t0 in
     lazy_unembed FStar_BigInt.string_of_big_int emb_t_int t t_int
       (fun t1 ->
          match t1.FStar_Syntax_Syntax.n with
@@ -547,7 +549,7 @@ let (e_string : Prims.string embedding) =
       (FStar_Syntax_Syntax.Tm_constant (FStar_Const.Const_string (s, rng)))
       rng in
   let un t0 w _norm =
-    let t = unmeta t0 in
+    let t = unmeta_div_results t0 in
     match t.FStar_Syntax_Syntax.n with
     | FStar_Syntax_Syntax.Tm_constant (FStar_Const.Const_string (s, uu___))
         -> FStar_Pervasives_Native.Some s
@@ -646,7 +648,7 @@ let e_option :
                  uu___3 :: uu___4 in
                FStar_Syntax_Syntax.mk_Tm_app uu___1 uu___2 rng) in
     let un t0 w norm =
-      let t = unmeta t0 in
+      let t = unmeta_div_results t0 in
       lazy_unembed printer1 emb_t_option_a t t_option_a
         (fun t1 ->
            let uu___ = FStar_Syntax_Util.head_and_args_full t1 in
@@ -780,7 +782,7 @@ let e_tuple2 : 'a 'b . 'a embedding -> 'b embedding -> ('a * 'b) embedding =
                uu___3 :: uu___4 in
              FStar_Syntax_Syntax.mk_Tm_app uu___1 uu___2 rng) in
       let un t0 w norm =
-        let t = unmeta t0 in
+        let t = unmeta_div_results t0 in
         lazy_unembed printer1 emb_t_pair_a_b t t_pair_a_b
           (fun t1 ->
              let uu___ = FStar_Syntax_Util.head_and_args_full t1 in
@@ -950,7 +952,7 @@ let e_tuple3 :
                      uu___4 :: uu___5 in
                    FStar_Syntax_Syntax.mk_Tm_app uu___2 uu___3 rng) in
         let un t0 w norm =
-          let t = unmeta t0 in
+          let t = unmeta_div_results t0 in
           lazy_unembed printer1 emb_t_pair_a_b_c t t_pair_a_b_c
             (fun t1 ->
                let uu___ = FStar_Syntax_Util.head_and_args_full t1 in
@@ -1154,7 +1156,7 @@ let e_either :
                     uu___3 :: uu___4 in
                   FStar_Syntax_Syntax.mk_Tm_app uu___1 uu___2 rng)) in
       let un t0 w norm =
-        let t = unmeta t0 in
+        let t = unmeta_div_results t0 in
         lazy_unembed printer1 emb_t_sum_a_b t t_sum_a_b
           (fun t1 ->
              let uu___ = FStar_Syntax_Util.head_and_args_full t1 in
@@ -1288,7 +1290,7 @@ let e_list : 'a . 'a embedding -> 'a Prims.list embedding =
                  t :: uu___2 in
                FStar_Syntax_Syntax.mk_Tm_app cons uu___1 rng) in
     let rec un t0 w norm =
-      let t = unmeta t0 in
+      let t = unmeta_div_results t0 in
       lazy_unembed printer1 emb_t_list_a t t_list_a
         (fun t1 ->
            let uu___ = FStar_Syntax_Util.head_and_args_full t1 in
@@ -1450,7 +1452,7 @@ let (e_norm_step : norm_step embedding) =
                [uu___2] in
              FStar_Syntax_Syntax.mk_Tm_app steps_UnfoldQual uu___1 rng) in
   let un t0 w norm =
-    let t = unmeta t0 in
+    let t = unmeta_div_results t0 in
     lazy_unembed printer1 emb_t_norm_step t t_norm_step
       (fun t1 ->
          let uu___ = FStar_Syntax_Util.head_and_args t1 in
@@ -1577,7 +1579,7 @@ let (e_range : FStar_Compiler_Range.range embedding) =
     FStar_Syntax_Syntax.mk
       (FStar_Syntax_Syntax.Tm_constant (FStar_Const.Const_range r)) rng in
   let un t0 w _norm =
-    let t = unmeta t0 in
+    let t = unmeta_div_results t0 in
     match t.FStar_Syntax_Syntax.n with
     | FStar_Syntax_Syntax.Tm_constant (FStar_Const.Const_range r) ->
         FStar_Pervasives_Native.Some r
