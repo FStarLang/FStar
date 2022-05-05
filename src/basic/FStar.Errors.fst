@@ -388,6 +388,7 @@ type raw_error =
   | Error_RemoveUnusedTypeParameter
   | Warning_NoMagicInFSharp
   | Error_BadLetOpenRecord
+  | Error_UnexpectedTypeclassInstance
 
 type flag = error_flag
 type error_setting = raw_error * error_flag * int
@@ -739,6 +740,7 @@ let default_settings : list error_setting =
     Error_RemoveUnusedTypeParameter                   , CWarning, 344;
     Warning_NoMagicInFSharp                           , CWarning, 345;
     Error_BadLetOpenRecord                            , CAlwaysError, 346;
+    Error_UnexpectedTypeclassInstance                 , CAlwaysError, 347;
     ]
 
 let lookup_error settings e =

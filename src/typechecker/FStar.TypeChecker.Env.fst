@@ -983,6 +983,21 @@ let get_effect_decl env l =
     | None -> raise_error (name_not_found l) (range_of_lid l)
     | Some md -> fst md
 
+let get_default_effect env lid =
+  lid |> norm_eff_name env
+      |> lookup_attrs_of_lid env
+      |> BU.dflt []
+      |> U.get_attribute Const.default_effect_attr
+      |> BU.map_option List.hd
+      |> BU.map_option (fun (t, _) ->
+                       match (SS.compress t).n with
+                       | Tm_constant (FStar.Const.Const_string (s, _)) -> Ident.lid_of_str s
+                       | _ ->
+                         raise_error (Errors.Fatal_UnexpectedEffect,
+                                      BU.format2 "The argument for the default effect attribute for %s is not a constant string, it is %s\n"
+                                        (string_of_lid lid)
+                                        (Print.term_to_string t)) t.pos)
+
 let is_layered_effect env l =
   l |> get_effect_decl env |> U.is_layered
 

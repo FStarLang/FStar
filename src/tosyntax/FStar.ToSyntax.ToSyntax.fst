@@ -3435,23 +3435,71 @@ and desugar_decl_noattrs env (d:decl) : (env_t * sigelts) =
         | Some id ->
             [qualify env id]
     in
+    let formals =
+      let bndl = BU.try_find (function {sigel=Sig_bundle _} -> true | _ -> false) ses in
+      match bndl with
+      | None -> None
+      | Some bndl ->
+        match bndl.sigel with
+        | Sig_bundle(ses, _) ->
+          BU.find_map
+            ses
+            (fun se ->
+              match se.sigel with
+              | Sig_datacon(_l, _u, t, _, _, _) ->
+                let formals, _ = U.arrow_formals t in
+                Some formals
+              | _ -> None)
+        | _ -> None
+    in
     let rec splice_decl meths se =
         match se.sigel with
         | Sig_bundle (ses, _) -> List.concatMap (splice_decl meths) ses
-        | Sig_inductive_typ (lid, _, _, _, _, _) ->
-           [{ sigel = Sig_splice(meths , mkclass lid);
-              sigquals = [];
-              sigrng = d.drange;
-              sigmeta = default_sigmeta;
-              sigattrs = [];
-              sigopts = None; }]
+        | Sig_inductive_typ (lid, _univs, _binders, ty, _mutuals, _datas) ->
+          let formals =
+            match formals with
+            | None -> []
+            | Some formals -> formals
+          in
+          let has_no_method_attr (meth:Ident.lident) =
+              let i = Ident.ident_of_lid meth in
+              BU.for_some
+                (fun formal ->
+                   if Ident.ident_equals i formal.binder_bv.ppname
+                   then BU.for_some
+                         (fun attr ->
+                           match (SS.compress attr).n with
+                           | Tm_fvar fv -> S.fv_eq_lid fv FStar.Parser.Const.no_method_lid
+                           | _ -> false)
+                         formal.binder_attrs
+                   else false)
+              formals
+          in
+          let meths = List.filter (fun x -> not (has_no_method_attr x)) meths in
+          [{ sigel = Sig_splice(meths , mkclass lid);
+             sigquals = [];
+             sigrng = d.drange;
+             sigmeta = default_sigmeta;
+             sigattrs = [];
+             sigopts = None; }]
         | _ -> []
     in
-    let extra =
+    let ses, extra =
         if typeclass
         then let meths = List.concatMap get_meths ses in
-             List.concatMap (splice_decl meths) ses
-        else []
+             let rec add_class_attr se =
+               match se.sigel with
+               | Sig_bundle (ses, lids) ->
+                 let ses = List.map add_class_attr ses in
+                 { se with sigel = Sig_bundle (ses, lids) }
+
+               | Sig_inductive_typ _ ->
+                 { se with sigattrs = S.fvar FStar.Parser.Const.tcclass_lid S.delta_constant None :: se.sigattrs }
+
+               | _ -> se
+             in
+             List.map add_class_attr ses, List.concatMap (splice_decl meths) ses
+        else ses, []
     in
     let env = List.fold_left push_sigelt env extra in
     env, ses @ extra

@@ -751,9 +751,13 @@ let should_return env eopt lc =
     then
       //
       //if c (the comp of the result type of lc) is reifiable
-      //  we always return it, unless it is a layered effect
-      //
-      c |> U.comp_effect_name |> Env.norm_eff_name env |> Env.is_layered_effect env
+      //  we always return it, unless it is a non TAC layered effect
+      //      
+      let c_eff_name = c |> U.comp_effect_name |> Env.norm_eff_name env in
+      if is_pure_or_ghost_lcomp lc &&  //check that lc was pure or ghost
+         lid_equals c_eff_name C.effect_TAC_lid  //and c is TAC
+      then false  //then not effectful (i.e. return)
+      else c_eff_name |> Env.is_layered_effect env
     else
          //
          // if c is not a reifiable effect, check that it is pure or ghost
@@ -832,7 +836,8 @@ let return_value env eff_lid u_t_opt t v =
 let mk_indexed_bind env
   (m:lident) (n:lident) (p:lident) (bind_t:tscheme)
   (ct1:comp_typ) (b:option bv) (ct2:comp_typ)
-  (flags:list cflag) (r1:Range.range) : comp * guard_t =
+  (flags:list cflag) (r1:Range.range) (has_range_args:bool)
+  : comp * guard_t =
 
   let bind_name = BU.format3 "(%s, %s) |> %s"
     (m |> Ident.ident_of_lid |> string_of_id)
@@ -871,12 +876,19 @@ let mk_indexed_bind env
        "bind %s (%s) does not have proper shape (reason:%s)"
        (Print.term_to_string bind_t) bind_name s) in
 
+  let num_range_args =
+    if has_range_args then 2
+    else 0 in
+
   let a_b, b_b, rest_bs, f_b, g_b, bind_c =
     match (SS.compress bind_t).n with
-    | Tm_arrow (bs, c) when List.length bs >= 4 ->
+    | Tm_arrow (bs, c) when List.length bs >= num_range_args + 4 ->
       let ((a_b::b_b::bs), c) = SS.open_comp bs c in
       let rest_bs, f_b, g_b =
-        List.splitAt (List.length bs - 2) bs |> (fun (l1, l2) -> l1, List.hd l2, List.hd (List.tl l2)) in
+        List.splitAt (List.length bs - 2 - num_range_args) bs
+        |> (fun (l1, l2) ->
+           let _, l2 = List.splitAt num_range_args l2 in
+           l1, List.hd l2, List.hd (List.tl l2)) in
       a_b, b_b, rest_bs, f_b, g_b, c
     | _ -> raise_error (bind_t_shape_error "Either not an arrow or not enough binders") r1 in
 
@@ -1031,8 +1043,10 @@ let mk_bind env (c1:comp) (b:option bv) (c2:comp) (flags:list cflag) (r1:Range.r
     let c, g_bind =
       if Env.is_layered_effect env m
       then
-        let bind_t = m |> Env.get_effect_decl env |> U.get_bind_vc_combinator in
-        mk_indexed_bind env m m m bind_t ct1 b ct2 flags r1
+        let m_ed = m |> Env.get_effect_decl env in
+        let bind_t = m_ed |> U.get_bind_vc_combinator in
+        let has_range_args = U.has_attribute m_ed.eff_attrs C.bind_has_range_args_attr in
+        mk_indexed_bind env m m m bind_t ct1 b ct2 flags r1 has_range_args
       else mk_wp_bind env m ct1 b ct2 flags r1, Env.trivial_guard in
     c, Env.conj_guard g_lift g_bind
 
@@ -1269,12 +1283,15 @@ let bind r1 env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
             | None -> g_c2) in
 
           debug (fun () ->
-            BU.print3 "(1) bind: \n\tc1=%s\n\tx=%s\n\tc2=%s\n(1. end bind)\n"
+            BU.print4 "(1) bind: \n\tc1=%s\n\tx=%s\n\tc2=%s\n\te1=%s\n(1. end bind)\n"
             (Print.comp_to_string c1)
             (match b with
                 | None -> "none"
                 | Some x -> Print.bv_to_string x)
-            (Print.comp_to_string c2));
+            (Print.comp_to_string c2)
+            (match e1opt with
+             | None -> "none"
+             | Some e1 -> Print.term_to_string e1));
           let aux () =
             if U.is_trivial_wp c1
             then match b with
@@ -2413,7 +2430,7 @@ let maybe_instantiate (env:Env.env) e t =
               //instantiate at most inst_n implicit binders, when inst_n = Some n
               //otherwise, instantate all implicits
               //See issue #807 for why this is important
-              let rec aux subst inst_n bs =
+              let rec aux (subst:list subst_elt) inst_n bs =
                   match inst_n, bs with
                   | Some 0, _ -> [], bs, subst, Env.trivial_guard //no more instantiations to do
                   | _, ({binder_bv=x; binder_qual=Some (Implicit _);binder_attrs=[]})::rest ->
@@ -3147,8 +3164,11 @@ let update_env_sub_eff env sub r =
   { env with range = r0 }
 
 let update_env_polymonadic_bind env m n p ty =
+  //
+  //false means no range support in polymonadic bind yet
+  //
   Env.add_polymonadic_bind env m n p
-    (fun env c1 bv_opt c2 flags r -> mk_indexed_bind env m n p ty c1 bv_opt c2 flags r)
+    (fun env c1 bv_opt c2 flags r -> mk_indexed_bind env m n p ty c1 bv_opt c2 flags r false)
 
 (*** Utilities for type-based record
      disambiguation ***)
