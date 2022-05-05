@@ -235,8 +235,7 @@ let (is_smt_reifiable_comp :
             FStar_Compiler_Effect.op_Bar_Greater
               ct.FStar_Syntax_Syntax.effect_name
               (FStar_TypeChecker_Env.norm_eff_name en) in
-          (is_smt_reifiable_effect en l) ||
-            (FStar_Ident.lid_equals l FStar_Parser_Const.effect_TAC_lid)
+          is_smt_reifiable_effect en l
       | uu___ -> false
 let (is_smt_reifiable_rc :
   FStar_TypeChecker_Env.env ->
@@ -265,5 +264,7 @@ let (is_smt_reifiable_function :
             FStar_Compiler_Effect.op_Bar_Greater uu___3
               (FStar_TypeChecker_Env.norm_eff_name en) in
           FStar_Compiler_Effect.op_Bar_Greater uu___2
-            (is_smt_reifiable_effect en)
+            (fun l ->
+               (is_smt_reifiable_effect en l) ||
+                 (FStar_Ident.lid_equals l FStar_Parser_Const.effect_TAC_lid))
       | uu___1 -> false
