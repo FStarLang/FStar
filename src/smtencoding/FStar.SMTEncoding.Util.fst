@@ -123,15 +123,11 @@ let is_smt_reifiable_comp (en:TcEnv.env) (c:S.comp) : bool =
   match c.n with
   | Comp ct ->
     let l = ct.effect_name |> TcEnv.norm_eff_name en in
-    is_smt_reifiable_effect en l ||
-    //
-    //Encode TAC comp types
-    //
-    Ident.lid_equals l C.effect_TAC_lid
+    is_smt_reifiable_effect en l
   | _ -> false
 
 //
-// TAC tc and functions are not smt reifiable
+// TAC rc are not smt reifiable
 //
 
 let is_smt_reifiable_rc (en:TcEnv.env) (rc:S.residual_comp) : bool =
@@ -142,5 +138,6 @@ let is_smt_reifiable_function (en:TcEnv.env) (t:S.term) : bool =
   match (SS.compress t).n with
   | Tm_arrow (_, c) ->
     c |> U.comp_effect_name |> TcEnv.norm_eff_name en
-      |> is_smt_reifiable_effect en
+      |> (fun l -> is_smt_reifiable_effect en l ||
+               Ident.lid_equals l C.effect_TAC_lid)
   | _ -> false
