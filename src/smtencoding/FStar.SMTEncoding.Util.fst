@@ -114,7 +114,8 @@ let mk_Precedes = norng4 mk_Precedes
 let is_smt_reifiable_effect (en:TcEnv.env) (l:lident) : bool =
   let l = TcEnv.norm_eff_name en l in
   TcEnv.is_reifiable_effect en l &&
-  not (l |> TcEnv.get_effect_decl en |> U.is_layered)
+  (lid_equals l C.effect_TAC_lid ||
+   not (l |> TcEnv.get_effect_decl en |> U.is_layered))
 
 let is_smt_reifiable_comp (en:TcEnv.env) (c:S.comp) : bool =
   match c.n with
