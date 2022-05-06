@@ -207,6 +207,9 @@ val assert_by_tactic (p:Type) (t:unit -> Tac unit)
          (requires (set_range_of (with_tactic t (squash p)) (range_of t)))
          (ensures (fun _ -> p))
 
+val by_tactic_seman (tau:unit -> Tac unit) (phi:Type)
+  : Lemma (with_tactic tau phi ==> phi)
+
 (* One can always bypass the well-formedness of metaprograms. It does
  * not matter as they are only run at typechecking time, and if they get
  * stuck, the compiler will simply raise an error. *)
