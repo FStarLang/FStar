@@ -612,17 +612,6 @@ let encode_top_level_vals env bindings quals =
         let decls', env = encode_top_level_val false env (BU.right lb.lbname) lb.lbtyp quals in
         decls@decls', env) ([], env)
 
-let is_tactic t =
-    let fstar_tactics_tactic_lid = FStar.Parser.Const.p2l ["FStar"; "Tactics"; "tactic"] in
-    let hd, args = U.head_and_args t in
-    match (U.un_uinst hd).n with
-    | Tm_fvar fv when S.fv_eq_lid fv fstar_tactics_tactic_lid ->
-      true
-    | Tm_arrow(_, c) ->
-      let effect_name = U.comp_effect_name c in
-      BU.starts_with "FStar.Tactics" (string_of_lid effect_name)
-    | _ -> false
-
 exception Let_rec_unencodeable
 
 let copy_env (en:env_t) = { en with global_cache = BU.smap_copy en.global_cache}  //Make a copy of all the mutable state of env_t, central place for keeping track of mutable fields in env_t
@@ -731,7 +720,7 @@ let encode_top_level_let :
 
 
     try
-      if bindings |> BU.for_all (fun lb -> U.is_lemma lb.lbtyp || is_tactic lb.lbtyp)
+      if bindings |> BU.for_all (fun lb -> U.is_lemma lb.lbtyp)
       then encode_top_level_vals env bindings quals
       else
         let toks, typs, decls, env =

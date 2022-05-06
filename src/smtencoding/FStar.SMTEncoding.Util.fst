@@ -111,19 +111,14 @@ let mk_Precedes = norng4 mk_Precedes
  *     07/02: reverting, until we preserve the indices, no smt reification
  *)
 
-//
-// is_smt_reifiable_effect is false for TAC
-//
-
 let is_smt_reifiable_effect (en:TcEnv.env) (l:lident) : bool =
+  let l = TcEnv.norm_eff_name en l in
   TcEnv.is_reifiable_effect en l &&
   not (l |> TcEnv.get_effect_decl en |> U.is_layered)
 
 let is_smt_reifiable_comp (en:TcEnv.env) (c:S.comp) : bool =
   match c.n with
-  | Comp ct ->
-    let l = ct.effect_name |> TcEnv.norm_eff_name en in
-    is_smt_reifiable_effect en l
+  | Comp ct -> is_smt_reifiable_effect en ct.effect_name
   | _ -> false
 
 //
@@ -131,13 +126,10 @@ let is_smt_reifiable_comp (en:TcEnv.env) (c:S.comp) : bool =
 //
 
 let is_smt_reifiable_rc (en:TcEnv.env) (rc:S.residual_comp) : bool =
-  rc.residual_effect |> TcEnv.norm_eff_name en
-                     |> is_smt_reifiable_effect en
+  rc.residual_effect |> is_smt_reifiable_effect en
 
 let is_smt_reifiable_function (en:TcEnv.env) (t:S.term) : bool =
   match (SS.compress t).n with
   | Tm_arrow (_, c) ->
-    c |> U.comp_effect_name |> TcEnv.norm_eff_name en
-      |> (fun l -> is_smt_reifiable_effect en l ||
-               Ident.lid_equals l C.effect_TAC_lid)
+    c |> U.comp_effect_name |> is_smt_reifiable_effect en
   | _ -> false
