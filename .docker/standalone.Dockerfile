@@ -35,7 +35,7 @@ WORKDIR $HOME/FStar
 ARG CI_TARGET=uregressions
 ARG CI_THREADS=24
 ARG CI_BRANCH=master
-RUN eval $(opam env) && .docker/build/build-standalone.sh $CI_TARGET $CI_THREADS $CI_BRANCH
+RUN --mount=type=secret,id=DZOMO_GITHUB_TOKEN eval $(opam env) && DZOMO_GITHUB_TOKEN=$(sudo cat /run/secrets/DZOMO_GITHUB_TOKEN) .docker/build/build-standalone.sh $CI_TARGET $CI_THREADS $CI_BRANCH
 
 WORKDIR $HOME
 ENV FSTAR_HOME $HOME/FStar
