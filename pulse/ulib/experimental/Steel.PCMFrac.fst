@@ -3,7 +3,7 @@ include FStar.PCM
 include Steel.FractionalPermission
 open FStar.Real
 
-let fractional (a:Type u#1) = option (a & perm)
+let fractional (a:Type u#a) = option (a & perm)
 let composable #a : symrel (fractional a) =
   fun (f0 f1:fractional a) ->
     match f0, f1 with
