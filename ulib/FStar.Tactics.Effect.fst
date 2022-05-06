@@ -37,8 +37,6 @@ let synth_by_tactic #_ _ = admit ()
 let assert_by_tactic _ _ = ()
 #pop-options
 
-let by_tactic_seman _ _ = ()
-
 let preprocess_with _ = ()
 
 let postprocess_with _ = ()
