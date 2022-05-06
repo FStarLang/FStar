@@ -543,7 +543,6 @@ let find_univ_uvar u s = BU.find_map s (function
 (* ------------------------------------------------*)
 (* <normalization>                                 *)
 (* ------------------------------------------------*)
-let whnf' env t    = SS.compress (N.normalize [Env.Beta; Env.Reify; Env.Weak; Env.HNF] env (U.unmeta t)) |> U.unlazy_emb
 let sn' env t       = SS.compress (N.normalize [Env.Beta; Env.Reify] env t) |> U.unlazy_emb
 let sn env t =
   Profiling.profile
@@ -560,17 +559,23 @@ let norm_with_steps profiling_tag steps env t =
 
 
 let should_strongly_reduce t =
-    let h, _ = U.head_and_args t in
+    let h, _ = t |> U.unascribe |> U.head_and_args in
     match (SS.compress h).n with
     | Tm_constant FStar.Const.Const_reify -> true
     | _ -> false
 
 let whnf env t =
+  let norm steps t =
+    t |> U.unmeta
+      |> N.normalize steps env
+      |> SS.compress
+      |> U.unlazy_emb in
+
   Profiling.profile
     (fun () ->
       if should_strongly_reduce t
-      then SS.compress (N.normalize [Env.Beta; Env.Reify; Env.Exclude Env.Zeta; Env.UnfoldUntil delta_constant] env t) |> U.unlazy_emb
-      else whnf' env t)
+      then norm [Env.Beta; Env.Reify; Env.Exclude Env.Zeta; Env.UnfoldUntil delta_constant] t
+      else norm [Env.Beta; Env.Reify; Env.Weak; Env.HNF] (U.unmeta t))
     (Some (Ident.string_of_lid (Env.current_module env)))
     "FStar.TypeChecker.Rel.whnf"
 
