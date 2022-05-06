@@ -217,10 +217,11 @@ let (is_smt_reifiable_effect :
   FStar_TypeChecker_Env.env -> FStar_Ident.lident -> Prims.bool) =
   fun en ->
     fun l ->
-      (FStar_TypeChecker_Env.is_reifiable_effect en l) &&
+      let l1 = FStar_TypeChecker_Env.norm_eff_name en l in
+      (FStar_TypeChecker_Env.is_reifiable_effect en l1) &&
         (let uu___ =
            let uu___1 =
-             FStar_Compiler_Effect.op_Bar_Greater l
+             FStar_Compiler_Effect.op_Bar_Greater l1
                (FStar_TypeChecker_Env.get_effect_decl en) in
            FStar_Compiler_Effect.op_Bar_Greater uu___1
              FStar_Syntax_Util.is_layered in
@@ -231,11 +232,7 @@ let (is_smt_reifiable_comp :
     fun c ->
       match c.FStar_Syntax_Syntax.n with
       | FStar_Syntax_Syntax.Comp ct ->
-          let l =
-            FStar_Compiler_Effect.op_Bar_Greater
-              ct.FStar_Syntax_Syntax.effect_name
-              (FStar_TypeChecker_Env.norm_eff_name en) in
-          is_smt_reifiable_effect en l
+          is_smt_reifiable_effect en ct.FStar_Syntax_Syntax.effect_name
       | uu___ -> false
 let (is_smt_reifiable_rc :
   FStar_TypeChecker_Env.env ->
@@ -243,11 +240,8 @@ let (is_smt_reifiable_rc :
   =
   fun en ->
     fun rc ->
-      let uu___ =
-        FStar_Compiler_Effect.op_Bar_Greater
-          rc.FStar_Syntax_Syntax.residual_effect
-          (FStar_TypeChecker_Env.norm_eff_name en) in
-      FStar_Compiler_Effect.op_Bar_Greater uu___ (is_smt_reifiable_effect en)
+      FStar_Compiler_Effect.op_Bar_Greater
+        rc.FStar_Syntax_Syntax.residual_effect (is_smt_reifiable_effect en)
 let (is_smt_reifiable_function :
   FStar_TypeChecker_Env.env -> FStar_Syntax_Syntax.term -> Prims.bool) =
   fun en ->
@@ -258,13 +252,8 @@ let (is_smt_reifiable_function :
       match uu___ with
       | FStar_Syntax_Syntax.Tm_arrow (uu___1, c) ->
           let uu___2 =
-            let uu___3 =
-              FStar_Compiler_Effect.op_Bar_Greater c
-                FStar_Syntax_Util.comp_effect_name in
-            FStar_Compiler_Effect.op_Bar_Greater uu___3
-              (FStar_TypeChecker_Env.norm_eff_name en) in
+            FStar_Compiler_Effect.op_Bar_Greater c
+              FStar_Syntax_Util.comp_effect_name in
           FStar_Compiler_Effect.op_Bar_Greater uu___2
-            (fun l ->
-               (is_smt_reifiable_effect en l) ||
-                 (FStar_Ident.lid_equals l FStar_Parser_Const.effect_TAC_lid))
+            (is_smt_reifiable_effect en)
       | uu___1 -> false

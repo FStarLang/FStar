@@ -1315,22 +1315,6 @@ let (find_univ_uvar :
                then FStar_Pervasives_Native.Some t
                else FStar_Pervasives_Native.None
            | uu___1 -> FStar_Pervasives_Native.None)
-let (whnf' :
-  FStar_TypeChecker_Env.env ->
-    FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term)
-  =
-  fun env ->
-    fun t ->
-      let uu___ =
-        let uu___1 =
-          let uu___2 = FStar_Syntax_Util.unmeta t in
-          FStar_TypeChecker_Normalize.normalize
-            [FStar_TypeChecker_Env.Beta;
-            FStar_TypeChecker_Env.Reify;
-            FStar_TypeChecker_Env.Weak;
-            FStar_TypeChecker_Env.HNF] env uu___2 in
-        FStar_Syntax_Subst.compress uu___1 in
-      FStar_Compiler_Effect.op_Bar_Greater uu___ FStar_Syntax_Util.unlazy_emb
 let (sn' :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term)
@@ -1376,7 +1360,11 @@ let (norm_with_steps :
             uu___ profiling_tag
 let (should_strongly_reduce : FStar_Syntax_Syntax.term -> Prims.bool) =
   fun t ->
-    let uu___ = FStar_Syntax_Util.head_and_args t in
+    let uu___ =
+      let uu___1 =
+        FStar_Compiler_Effect.op_Bar_Greater t FStar_Syntax_Util.unascribe in
+      FStar_Compiler_Effect.op_Bar_Greater uu___1
+        FStar_Syntax_Util.head_and_args in
     match uu___ with
     | (h, uu___1) ->
         let uu___2 =
@@ -1391,6 +1379,18 @@ let (whnf :
   =
   fun env ->
     fun t ->
+      let norm steps t1 =
+        let uu___ =
+          let uu___1 =
+            let uu___2 =
+              FStar_Compiler_Effect.op_Bar_Greater t1
+                FStar_Syntax_Util.unmeta in
+            FStar_Compiler_Effect.op_Bar_Greater uu___2
+              (FStar_TypeChecker_Normalize.normalize steps env) in
+          FStar_Compiler_Effect.op_Bar_Greater uu___1
+            FStar_Syntax_Subst.compress in
+        FStar_Compiler_Effect.op_Bar_Greater uu___
+          FStar_Syntax_Util.unlazy_emb in
       let uu___ =
         let uu___1 =
           let uu___2 = FStar_TypeChecker_Env.current_module env in
@@ -1401,18 +1401,20 @@ let (whnf :
            let uu___2 = should_strongly_reduce t in
            if uu___2
            then
-             let uu___3 =
-               let uu___4 =
-                 FStar_TypeChecker_Normalize.normalize
-                   [FStar_TypeChecker_Env.Beta;
-                   FStar_TypeChecker_Env.Reify;
-                   FStar_TypeChecker_Env.Exclude FStar_TypeChecker_Env.Zeta;
-                   FStar_TypeChecker_Env.UnfoldUntil
-                     FStar_Syntax_Syntax.delta_constant] env t in
-               FStar_Syntax_Subst.compress uu___4 in
-             FStar_Compiler_Effect.op_Bar_Greater uu___3
-               FStar_Syntax_Util.unlazy_emb
-           else whnf' env t) uu___ "FStar.TypeChecker.Rel.whnf"
+             norm
+               [FStar_TypeChecker_Env.Beta;
+               FStar_TypeChecker_Env.Reify;
+               FStar_TypeChecker_Env.Exclude FStar_TypeChecker_Env.Zeta;
+               FStar_TypeChecker_Env.UnfoldUntil
+                 FStar_Syntax_Syntax.delta_constant] t
+           else
+             (let uu___4 = FStar_Syntax_Util.unmeta t in
+              norm
+                [FStar_TypeChecker_Env.Beta;
+                FStar_TypeChecker_Env.Reify;
+                FStar_TypeChecker_Env.Weak;
+                FStar_TypeChecker_Env.HNF] uu___4)) uu___
+        "FStar.TypeChecker.Rel.whnf"
 let norm_arg :
   'uuuuu .
     FStar_TypeChecker_Env.env ->
