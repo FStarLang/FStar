@@ -760,7 +760,7 @@ let (__tc :
                       let uu___6 = FStar_TypeChecker_Env.all_binders e1 in
                       FStar_Compiler_Effect.op_Bar_Greater uu___6
                         (FStar_Syntax_Print.binders_to_string ", ") in
-                    fail3 "Cannot type %s in context (%s). Error = (%s)"
+                    fail3 "Cannot type (1) %s in context (%s). Error = (%s)"
                       uu___4 uu___5 msg
                 | FStar_Errors.Error (uu___2, msg, uu___3, uu___4) ->
                     let uu___5 = tts e1 t in
@@ -768,7 +768,7 @@ let (__tc :
                       let uu___7 = FStar_TypeChecker_Env.all_binders e1 in
                       FStar_Compiler_Effect.op_Bar_Greater uu___7
                         (FStar_Syntax_Print.binders_to_string ", ") in
-                    fail3 "Cannot type %s in context (%s). Error = (%s)"
+                    fail3 "Cannot type (1) %s in context (%s). Error = (%s)"
                       uu___5 uu___6 msg))
 let (__tc_ghost :
   env ->
@@ -900,7 +900,7 @@ let (__tc_ghost :
                       let uu___6 = FStar_TypeChecker_Env.all_binders e1 in
                       FStar_Compiler_Effect.op_Bar_Greater uu___6
                         (FStar_Syntax_Print.binders_to_string ", ") in
-                    fail3 "Cannot type %s in context (%s). Error = (%s)"
+                    fail3 "Cannot type (2) %s in context (%s). Error = (%s)"
                       uu___4 uu___5 msg
                 | FStar_Errors.Error (uu___2, msg, uu___3, uu___4) ->
                     let uu___5 = tts e1 t in
@@ -908,7 +908,7 @@ let (__tc_ghost :
                       let uu___7 = FStar_TypeChecker_Env.all_binders e1 in
                       FStar_Compiler_Effect.op_Bar_Greater uu___7
                         (FStar_Syntax_Print.binders_to_string ", ") in
-                    fail3 "Cannot type %s in context (%s). Error = (%s)"
+                    fail3 "Cannot type (2) %s in context (%s). Error = (%s)"
                       uu___5 uu___6 msg))
 let (__tc_lax :
   env ->
@@ -923,7 +923,12 @@ let (__tc_lax :
            FStar_Tactics_Monad.mlog
              (fun uu___ ->
                 let uu___1 = FStar_Syntax_Print.term_to_string t in
-                FStar_Compiler_Util.print1 "Tac> __tc_lax(%s)\n" uu___1)
+                let uu___2 =
+                  let uu___3 = FStar_TypeChecker_Env.all_binders e in
+                  FStar_Compiler_Effect.op_Bar_Greater uu___3
+                    (FStar_Syntax_Print.binders_to_string ", ") in
+                FStar_Compiler_Util.print2 "Tac> __tc_lax(%s)(Context:%s)\n"
+                  uu___1 uu___2)
              (fun uu___ ->
                 let e1 =
                   {
@@ -1134,7 +1139,7 @@ let (__tc_lax :
                       let uu___6 = FStar_TypeChecker_Env.all_binders e2 in
                       FStar_Compiler_Effect.op_Bar_Greater uu___6
                         (FStar_Syntax_Print.binders_to_string ", ") in
-                    fail3 "Cannot type %s in context (%s). Error = (%s)"
+                    fail3 "Cannot type (3) %s in context (%s). Error = (%s)"
                       uu___4 uu___5 msg
                 | FStar_Errors.Error (uu___2, msg, uu___3, uu___4) ->
                     let uu___5 = tts e2 t in
@@ -1142,7 +1147,7 @@ let (__tc_lax :
                       let uu___7 = FStar_TypeChecker_Env.all_binders e2 in
                       FStar_Compiler_Effect.op_Bar_Greater uu___7
                         (FStar_Syntax_Print.binders_to_string ", ") in
-                    fail3 "Cannot type %s in context (%s). Error = (%s)"
+                    fail3 "Cannot type (3) %s in context (%s). Error = (%s)"
                       uu___5 uu___6 msg))
 let (get_guard_policy :
   unit -> FStar_Tactics_Types.guard_policy FStar_Tactics_Monad.tac) =
