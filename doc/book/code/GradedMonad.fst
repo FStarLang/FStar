@@ -1,6 +1,6 @@
 module GradedMonad
 
-//SNIPPET_START:monoid$
+//SNIPPET_START: monoid$
 class monoid (a:Type) =
 {
    op   : a -> a -> a;
@@ -19,6 +19,7 @@ instance monoid_nat_plus : monoid nat =
 }
 //SNIPPET_END: monoid$
 
+//SNIPPET_START: graded_monad$
 class graded_monad (#index:Type)
                    (m: monoid index -> index -> Type -> Type) = 
 {
@@ -30,9 +31,11 @@ class graded_monad (#index:Type)
            m im (op ia ib) b
 
 }
+//SNIPPET_END: graded_monad$
+
 //we now have do notation for graded monads
 
-
+//SNIPPET_START: counting$
 let st (s:Type) monoid_nat_plus (count:nat) (a:Type) = s -> a & s
 instance st_graded (s:Type) : graded_monad (st s) =
 { 
@@ -43,13 +46,16 @@ instance st_graded (s:Type) : graded_monad (st s) =
 // A write-counting grade monad
 let get #s : st s monoid_nat_plus 0 s = fun s -> s, s
 let put #s (x:s) : st s monoid_nat_plus 1 unit = fun _ -> (), x
+//SNIPPET_END: counting$
 
+//SNIPPET_START: test$
 let test #s =
   x <-- get #s ;
   put x
 
-//SMT kicks in to simplify this to 2
+//F* + SMT automatically proves that the index simplifies to 2
 let test2 #s : st s monoid_nat_plus 2 unit =
   x <-- get #s;
   put x;;
   put x
+//SNIPPET_END: test$

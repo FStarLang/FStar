@@ -76,7 +76,7 @@ let test_opt_monad (i j k:nat) =
 //SNIPPET_END: opt_monad$
 
 
-//SNIPPET_START: functor
+//SNIPPET_START: functor$
 class functor (m:Type -> Type) =
 {
   fmap: (#a:Type -> #b:Type -> (a -> b) -> m a -> m b);
