@@ -3340,7 +3340,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
 
               match try_reveal_hide env t1 t2 with
               | Some (t1', t2') ->
-                solve_t' env ({problem with lhs=t1'; rhs=t2'}) wl
+                solve_t env ({problem with lhs=t1'; rhs=t2'}) wl
 
               | None ->
                 if (may_relate env problem.relation head1
@@ -3586,7 +3586,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
       (* rigid-flex: reorient if it is an equality constraint *)
       | _, Tm_uvar _
       | _, Tm_app({n=Tm_uvar _}, _) when (problem.relation = EQ) ->
-        solve_t env (invert problem) wl
+        solve_t' env (invert problem) wl
 
       (* flex-rigid: ?u _ <: t1 -> t2 *)
       | Tm_uvar _, Tm_arrow _

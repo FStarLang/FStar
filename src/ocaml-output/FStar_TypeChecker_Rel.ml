@@ -7789,7 +7789,7 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                           let uu___6 = try_reveal_hide env1 t1 t2 in
                           (match uu___6 with
                            | FStar_Pervasives_Native.Some (t1', t2') ->
-                               solve_t' env1
+                               solve_t env1
                                  {
                                    FStar_TypeChecker_Common.pid =
                                      (problem.FStar_TypeChecker_Common.pid);
@@ -8514,7 +8514,7 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
               | (uu___7, FStar_Syntax_Syntax.Tm_uvar uu___8) when
                   problem.FStar_TypeChecker_Common.relation =
                     FStar_TypeChecker_Common.EQ
-                  -> solve_t env (invert problem) wl
+                  -> solve_t' env (invert problem) wl
               | (uu___7, FStar_Syntax_Syntax.Tm_app
                  ({
                     FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_uvar
@@ -8524,7 +8524,7 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                   uu___11)) when
                   problem.FStar_TypeChecker_Common.relation =
                     FStar_TypeChecker_Common.EQ
-                  -> solve_t env (invert problem) wl
+                  -> solve_t' env (invert problem) wl
               | (FStar_Syntax_Syntax.Tm_uvar uu___7,
                  FStar_Syntax_Syntax.Tm_arrow uu___8) ->
                   solve_t' env
