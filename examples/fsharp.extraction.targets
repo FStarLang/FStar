@@ -63,6 +63,7 @@
         <!-- If FSTAR_HOME is not defined then assume that fstar.exe is available on the path -->
         <FSTAR_EXE Condition="'$(FSTAR_HOME)' == ''">fstar.exe</FSTAR_EXE>
         <FSTAR_EXE Condition="'$(FSTAR_HOME)' != ''">$(FSTAR_HOME)\bin\fstar.exe</FSTAR_EXE>
+    </PropertyGroup>
 
     <Target Name="GenerateFSharpSources" BeforeTargets="BeforeBuild;BeforeRebuild">
         <!--
