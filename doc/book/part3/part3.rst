@@ -17,13 +17,15 @@ interface-respecting implementation of ``M``.
 
 Unlike module systems in other ML-like languages (which provide more
 advanced features like signatures, functors, and first-class modules),
-F*'s modue system is relatively simple.
+F*'s module system is relatively simple.
 
-* A module can have at most one interface, where a module lacking an
-  interface reveals all its details to clients.
+* A module can have at most one interface.
 
-* An interface can have at most one implementation, where an interface
-  lacking an implementation can be seen as an assumption or an axiom.
+* An interface can have at most one implementation.
+
+* A module lacking an interface reveals all its details to clients.
+
+* An interface lacking an implementation can be seen as an assumption or an axiom.
 
 **Typeclasses**: Typeclasses cater to more complex abstraction
 patterns, e.g., where an interface may have several
@@ -40,10 +42,10 @@ etc. are easily supported).
 That said, typeclasses are a relatively recent addition to the
 language and most of F*'s standard library does not yet use
 typeclasses. As such, they are somewhat less mature than interfaces
-and some features (e.g., typeclass inheritance) require encodings,
-rather than being supported "out of the box".
+and some features require encodings (e.g., typeclass inheritance),
+rather than being supported with built-in syntax.
 
-Thanks especially to Guido Mart\'inez, who designed and implemented
+Thanks especially to Guido Martinez, who designed and implemented
 most of F*'s typeclass system.
 
 .. toctree::
