@@ -111,9 +111,20 @@ be used to model and embed other programming paradigms within F*.
 
      * Universes
 
+Part 3: Modularity with Interfaces and Typeclasses
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+We discuss two main abstraction techniques, useful in structuring
+larger developments: interfaces and typeclasses. Interfaces are a
+simple information hiding mechanism built in to F*'s module
+system. Typeclasses are suitable for more advanced developments,
+providing more flexible abstraction patterns coupled with
+custom type inference.
+
+
 .. _effects:
 
-Part 3: User-defined Effects
+Part 4: User-defined Effects
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * Ghost: An Effect for Erasable Computations
@@ -130,7 +141,7 @@ Part 3: User-defined Effects
 
 .. _MetaFStar:
 
-Part 4: Tactics and Metaprogramming
+Part 5: Tactics and Metaprogramming
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * Reflecting on syntax
@@ -154,12 +165,12 @@ Part 4: Tactics and Metaprogramming
 
 .. _corelib_prims:
 
-Part 5: F* Libraries
+Part 6: F* Libraries
 ^^^^^^^^^^^^^^^^^^^^
 
 .. _modules:
 
-Part 6: A User's Guide to Structuring and Maintaining F* Developments
+Part 7: A User's Guide to Structuring and Maintaining F* Developments
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
    * The Build System
@@ -209,21 +220,21 @@ Part 6: A User's Guide to Structuring and Maintaining F* Developments
    * FAQ
 
 
-Part 7: Application to High-assurance Cryptography
+Part 8: Application to High-assurance Cryptography
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
-Part 8: Application to Programming Language Semantics
+Part 9: Application to Programming Language Semantics
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
    * MiniVale: A verified Hoare logic for assembly language
 
 
-Part 9: Application to Parsers and Formatters
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Part 10: Application to Parsers and Formatters
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
-Part 10: Steel: A Concurrent Separation Logic Embedded in F*
+Part 11: Steel: A Concurrent Separation Logic Embedded in F*
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 

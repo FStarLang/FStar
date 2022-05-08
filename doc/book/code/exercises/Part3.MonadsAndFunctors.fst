@@ -1,14 +1,11 @@
 module Part3.MonadsAndFunctors
 
-//SNIPPET_START: monad$
 class monad (m:Type -> Type) =
 {
    return : (#a:Type -> a -> m a);
    bind   : (#a:Type -> #b:Type -> (f:m a) -> (g:(a -> m b)) -> m b);
 }
-//SNIPPET_END: monad$
 
-//SNIPPET_START: st$
 let st (s:Type) (a:Type) = s -> a & s
 
 instance st_monad s : monad (st s) =
@@ -18,9 +15,7 @@ instance st_monad s : monad (st s) =
                let x, s1 = f s0 in
                g x s1);
 }
-//SNIPPET_END: st$
 
-//SNIPPET_START: get_inc$
 let get #s
   : st s s
   = fun s -> s, s
@@ -32,7 +27,6 @@ let put #s (x:s)
 let get_inc =
   x <-- get;
   return (x + 1)
-//SNIPPET_END: get_inc$
 
 let test_st2 () =
   y <-- get;
@@ -41,7 +35,6 @@ let test_st2 () =
   then put (x + y)
   else put y
 
-//SNIPPET_START: get_put$
 let get_put #s =
   x <-- get #s;
   put x
@@ -51,9 +44,7 @@ let noop #s : st s unit = return ()
 let get_put_identity (s:Type)
   : Lemma (get_put #s `FStar.FunctionalExtensionality.feq` noop #s)
   = ()
-//SNIPPET_END: get_put$
 
-//SNIPPET_START: opt_monad$
 instance opt_monad : monad option =
 {
    return = (fun #a (x:a) -> Some x);
@@ -73,5 +64,4 @@ let test_opt_monad (i j k:nat) =
   x <-- div i j;
   y <-- div i k;
   return (x + y)
-//SNIPPET_END: opt_monad$
 
