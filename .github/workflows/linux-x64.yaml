@@ -9,6 +9,10 @@ jobs:
   build:
     runs-on: [self-hosted, linux, X64]
     steps:
+      - name: Install .NET SDK
+        uses: actions/setup-dotnet@v2
+        with:
+          dotnet-version: '6.0.x'
       - name: Record initial timestamp
         run: |
           echo "CI_INITIAL_TIMESTAMP=$(date '+%s')" >> $GITHUB_ENV
