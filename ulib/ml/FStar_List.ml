@@ -37,7 +37,11 @@ let rec init = function
   | [] -> failwith "init: empty list"
   | [h] -> []
   | h::t -> h::(init t)
-let last l = fold_left (fun _ x -> Some x) None l
+let rec last l =
+  match l with
+  | [hd] -> hd
+  | _::tl -> last tl
+  | _ -> failwith "last of empty list"
 let collect f l = BatList.flatten (BatList.map f l)
 let unzip = BatList.split
 let rec unzip3 = function
