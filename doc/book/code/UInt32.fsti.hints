@@ -1,0 +1,37 @@
+[
+  "p6ìt*Þ`®\u000f\u0013ÄÛÀê‘\f",
+  [
+    [
+      "UInt32.max",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.pos",
+        "equation_UInt32.n", "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5"
+      ],
+      0,
+      "dfd114806099deb4aa18945ad8643d51"
+    ],
+    [
+      "UInt32.add_mod",
+      1,
+      2,
+      1,
+      [ "@query", "equation_UInt32.n", "projection_inverse_BoxInt_proj_0" ],
+      0,
+      "fffa0a0de4cfa41580bf63b2006dbe26"
+    ],
+    [
+      "UInt32.sub_mod",
+      1,
+      2,
+      1,
+      [ "@query", "equation_UInt32.n", "projection_inverse_BoxInt_proj_0" ],
+      0,
+      "2d470c558c014932b65cc23383c81fc1"
+    ]
+  ]
+]
