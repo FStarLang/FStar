@@ -2204,7 +2204,7 @@ let (gamma_until :
   =
   fun g ->
     fun bs ->
-      let uu___ = FStar_Compiler_List.last bs in
+      let uu___ = FStar_Compiler_List.last_opt bs in
       match uu___ with
       | FStar_Pervasives_Native.None -> []
       | FStar_Pervasives_Native.Some
