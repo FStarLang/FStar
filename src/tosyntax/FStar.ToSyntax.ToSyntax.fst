@@ -1849,7 +1849,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
       let wild r = mk_term Wild r Expr in
       let init   = mk_term (Var C.calc_init_lid) init_expr.range Expr in
       let push_impl r = mk_term (Var C.calc_push_impl_lid) r Expr in
-      let last_expr = match List.last steps with
+      let last_expr = match List.last_opt steps with
                       | Some (CalcStep (_, _, last_expr)) -> last_expr
                       | None -> init_expr
       in

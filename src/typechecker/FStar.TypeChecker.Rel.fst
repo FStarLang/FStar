@@ -1004,7 +1004,7 @@ let extend_gamma (g:gamma) (bs:binders) =
     List.fold_left (fun g ({binder_bv=x}) -> Binding_var x::g) g bs
 
 let gamma_until (g:gamma) (bs:binders) =
-    match List.last bs with
+    match List.last_opt bs with
     | None -> []
     | Some ({binder_bv=x}) ->
       match BU.prefix_until (function Binding_var x' -> S.bv_eq x x' | _  -> false) g with
