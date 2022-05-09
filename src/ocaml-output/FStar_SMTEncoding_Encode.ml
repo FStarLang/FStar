@@ -2346,25 +2346,6 @@ let (encode_top_level_vals :
                        | (decls', env2) ->
                            ((FStar_Compiler_List.op_At decls decls'), env2)))
              ([], env))
-let (is_tactic : FStar_Syntax_Syntax.term -> Prims.bool) =
-  fun t ->
-    let fstar_tactics_tactic_lid =
-      FStar_Parser_Const.p2l ["FStar"; "Tactics"; "tactic"] in
-    let uu___ = FStar_Syntax_Util.head_and_args t in
-    match uu___ with
-    | (hd, args) ->
-        let uu___1 =
-          let uu___2 = FStar_Syntax_Util.un_uinst hd in
-          uu___2.FStar_Syntax_Syntax.n in
-        (match uu___1 with
-         | FStar_Syntax_Syntax.Tm_fvar fv when
-             FStar_Syntax_Syntax.fv_eq_lid fv fstar_tactics_tactic_lid ->
-             true
-         | FStar_Syntax_Syntax.Tm_arrow (uu___2, c) ->
-             let effect_name = FStar_Syntax_Util.comp_effect_name c in
-             let uu___3 = FStar_Ident.string_of_lid effect_name in
-             FStar_Compiler_Util.starts_with "FStar.Tactics" uu___3
-         | uu___2 -> false)
 exception Let_rec_unencodeable 
 let (uu___is_Let_rec_unencodeable : Prims.exn -> Prims.bool) =
   fun projectee ->
@@ -2682,9 +2663,8 @@ let (encode_top_level_let :
                         FStar_Compiler_Effect.op_Bar_Greater bindings
                           (FStar_Compiler_Util.for_all
                              (fun lb ->
-                                (FStar_Syntax_Util.is_lemma
-                                   lb.FStar_Syntax_Syntax.lbtyp)
-                                  || (is_tactic lb.FStar_Syntax_Syntax.lbtyp))) in
+                                FStar_Syntax_Util.is_lemma
+                                  lb.FStar_Syntax_Syntax.lbtyp)) in
                       if uu___2
                       then encode_top_level_vals env bindings quals
                       else

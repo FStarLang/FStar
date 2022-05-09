@@ -543,7 +543,6 @@ let find_univ_uvar u s = BU.find_map s (function
 (* ------------------------------------------------*)
 (* <normalization>                                 *)
 (* ------------------------------------------------*)
-let whnf' env t    = SS.compress (N.normalize [Env.Beta; Env.Reify; Env.Weak; Env.HNF] env (U.unmeta t)) |> U.unlazy_emb
 let sn' env t       = SS.compress (N.normalize [Env.Beta; Env.Reify] env t) |> U.unlazy_emb
 let sn env t =
   Profiling.profile
@@ -560,17 +559,23 @@ let norm_with_steps profiling_tag steps env t =
 
 
 let should_strongly_reduce t =
-    let h, _ = U.head_and_args t in
+    let h, _ = t |> U.unascribe |> U.head_and_args in
     match (SS.compress h).n with
     | Tm_constant FStar.Const.Const_reify -> true
     | _ -> false
 
 let whnf env t =
+  let norm steps t =
+    t |> U.unmeta
+      |> N.normalize steps env
+      |> SS.compress
+      |> U.unlazy_emb in
+
   Profiling.profile
     (fun () ->
       if should_strongly_reduce t
-      then SS.compress (N.normalize [Env.Beta; Env.Reify; Env.Exclude Env.Zeta; Env.UnfoldUntil delta_constant] env t) |> U.unlazy_emb
-      else whnf' env t)
+      then norm [Env.Beta; Env.Reify; Env.Exclude Env.Zeta; Env.UnfoldUntil delta_constant] t
+      else norm [Env.Beta; Env.Reify; Env.Weak; Env.HNF] (U.unmeta t))
     (Some (Ident.string_of_lid (Env.current_module env)))
     "FStar.TypeChecker.Rel.whnf"
 
@@ -1770,11 +1775,11 @@ let rec solve (env:Env.env) (probs:worklist) : solution =
         if BU.physical_equality tp.lhs tp.rhs then solve env (solve_prob hd None [] probs) else
         if rank=Rigid_rigid
         || (tp.relation = EQ && rank <> Flex_flex)
-        then solve_t env tp probs
+        then solve_t' env tp probs
         else if probs.defer_ok = DeferAny
         then maybe_defer_to_user_tac env tp "deferring flex_rigid or flex_flex subtyping" probs
         else if rank=Flex_flex
-        then solve_t env ({tp with relation=EQ}) probs //turn flex_flex subtyping into flex_flex eq
+        then solve_t' env ({tp with relation=EQ}) probs //turn flex_flex subtyping into flex_flex eq
         else solve_rigid_flex_or_flex_rigid_subtyping rank env tp probs
       end
 
@@ -3106,7 +3111,11 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
             | _ ->
               let lhs = force_refinement (base1, refinement1) in
               let rhs = force_refinement (base2, refinement2) in
-              solve_t env ({problem with lhs=lhs; rhs=rhs}) wl
+              //
+              //AR: force_refinement already returns the term in
+              //    whnf, so call solve_t' directly
+              //
+              solve_t' env ({problem with lhs=lhs; rhs=rhs}) wl
             end
     in
 
@@ -3577,7 +3586,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
       (* rigid-flex: reorient if it is an equality constraint *)
       | _, Tm_uvar _
       | _, Tm_app({n=Tm_uvar _}, _) when (problem.relation = EQ) ->
-        solve_t env (invert problem) wl
+        solve_t' env (invert problem) wl
 
       (* flex-rigid: ?u _ <: t1 -> t2 *)
       | Tm_uvar _, Tm_arrow _
@@ -3627,11 +3636,11 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
 
       | Tm_refine _, _ ->
         let t2 = force_refinement <| base_and_refinement env t2 in
-        solve_t env ({problem with rhs=t2}) wl
+        solve_t' env ({problem with rhs=t2}) wl
 
       | _, Tm_refine _ ->
         let t1 = force_refinement <| base_and_refinement env t1 in
-        solve_t env ({problem with lhs=t1}) wl
+        solve_t' env ({problem with lhs=t1}) wl
 
       | Tm_match (s1, _, brs1, _), Tm_match (s2, _, brs2, _) ->  //AR: note ignoring the return annotation
         let by_smt () =
