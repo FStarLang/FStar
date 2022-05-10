@@ -567,13 +567,11 @@ let guard_letrecs env actuals expected_c : list (lbname*typ*univ_names) =
                    ("Typechecking decreases well-founded relation")
                    (fun _ -> env.typeof_well_typed_tot_or_gtot_term env rel false)
                in
-//               let u_rel = env.universe_of env rel in
                let t_rel_prev, _ =
                  Errors.with_ctx
                    ("Typechecking previous decreases well-founded relation")                 
                    (fun _ -> env.typeof_well_typed_tot_or_gtot_term env rel_prev false)
                in
-//               let u_rel_prev = env.universe_of env rel_prev in
                let eq_guard = U.mk_eq3_no_univ t_rel t_rel_prev rel rel_prev in
                U.mk_conj eq_guard rel_guard
           )
