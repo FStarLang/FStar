@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "01596c901050a5ab67c2bc4e10d103e7"
+      "fcc04cc3beea606184fd9116db1766f6"
     ],
     [
       "Trees.__proj__Node__item__data",
@@ -20,7 +20,7 @@
         "refinement_interpretation_Tm_refine_b9c74408e05b80670e0198ab78cfe943"
       ],
       0,
-      "5fdc9422795286f929545d945019481c"
+      "99f2726f3b77b7ed4f0d6004c3072aa4"
     ],
     [
       "Trees.__proj__Node__item__left",
@@ -32,7 +32,7 @@
         "refinement_interpretation_Tm_refine_b9c74408e05b80670e0198ab78cfe943"
       ],
       0,
-      "95717c89d034134a3ca76429b84bfe57"
+      "ad6693d10045f74fbc899f782f827b0b"
     ],
     [
       "Trees.__proj__Node__item__right",
@@ -44,7 +44,7 @@
         "refinement_interpretation_Tm_refine_b9c74408e05b80670e0198ab78cfe943"
       ],
       0,
-      "5429f6acbadeb5646016e557b0746640"
+      "e380a6424cb3da077b73f177d0593c72"
     ],
     [
       "Trees.node_data",
@@ -53,7 +53,7 @@
       1,
       [ "@query" ],
       0,
-      "3047e788e9fd68dfdd6cfd530977dd57"
+      "29f851134639d975bdc7b339156fe99f"
     ],
     [
       "Trees.forall_keys",
@@ -68,7 +68,7 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Trees.Node"
       ],
       0,
-      "5d757f7c1d056afcdac0b703df06f1e1"
+      "26e8ef3b90718f86700561f788704e99"
     ],
     [
       "Trees.is_bst",
@@ -84,7 +84,7 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Trees.Node"
       ],
       0,
-      "250aafc8d9fa9a60c5f91e90b1f2ce39"
+      "cdf31f422718f62290144718710d2ade"
     ],
     [
       "Trees.mem",
@@ -104,7 +104,7 @@
         "subterm_ordering_Trees.Node"
       ],
       0,
-      "0887231ebf5fd401973b6cf32842c82b"
+      "8a7b3ec11be9bf5f2b1017cb80297a16"
     ],
     [
       "Trees.bst_search",
@@ -133,7 +133,7 @@
         "token_correspondence_Trees.is_bst.fuel_instrumented"
       ],
       0,
-      "9ecd2354c2d218765c7a569fd5709ebd"
+      "25426f22da800f3df813178e65169f40"
     ],
     [
       "Trees.height",
@@ -152,7 +152,7 @@
         "subterm_ordering_Trees.Node"
       ],
       0,
-      "7f8b3aec067098ea7272b44ef5cd65e4"
+      "2bc2259d841a8937cbd14bd7f2bae8a1"
     ],
     [
       "Trees.append_left",
@@ -167,7 +167,7 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Trees.Node"
       ],
       0,
-      "1a546157d5a94b240f3e2e1d38ff66f2"
+      "c95eeb07875583bdcda71e1e05789793"
     ],
     [
       "Trees.append_right",
@@ -182,7 +182,7 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Trees.Node"
       ],
       0,
-      "0c1cffa086afda27a3e6ec2ff38ddbc5"
+      "9efc2742ca4fa08f1d44c55e0a15a077"
     ],
     [
       "Trees.insert_bst",
@@ -211,7 +211,7 @@
         "token_correspondence_Trees.is_bst.fuel_instrumented"
       ],
       0,
-      "331de7bb843d415e68f30d8379e692e4"
+      "b58da166f7e4faade3125f937807c4fe"
     ],
     [
       "Trees.insert_bst_preserves_forall_keys",
@@ -254,7 +254,7 @@
         "typing_Trees.is_bst", "unit_inversion", "unit_typing"
       ],
       0,
-      "1efbea3f1d45600140b11f3dfe805826"
+      "ac61f228fa4cceebeba2bd04f4c9bc19"
     ],
     [
       "Trees.insert_bst_preserves_bst",
@@ -301,7 +301,7 @@
         "unit_typing"
       ],
       0,
-      "a312a274c9f249af1ec67076783869b5"
+      "faf1bf2c104e6f2ff6a018094978d539"
     ],
     [
       "Trees.is_balanced",
@@ -316,7 +316,7 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Trees.Node"
       ],
       0,
-      "dcacb1fefbab021c46399f9bffcdb85d"
+      "619430be7149428151b7626014106f0c"
     ],
     [
       "Trees.is_avl",
@@ -330,7 +330,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "35fa40a9ea1887fab675ff5501334884"
+      "80c75a1d928bd4d79354d8cb30954ee4"
     ],
     [
       "Trees.forall_keys_trans",
@@ -361,7 +361,7 @@
         "typing_Trees.forall_keys"
       ],
       0,
-      "cc0e5de757768705eff5d2005cd4d45a"
+      "38980450f437e33f26529ac9c550e0c4"
     ],
     [
       "Trees.rotate_left_bst",
@@ -411,7 +411,7 @@
         "typing_Trees.is_bst", "typing_Trees.rotate_left"
       ],
       0,
-      "cb330579117f1e1378a15858f3339c6f"
+      "4e0afe168f0be9b31417f631deb308c0"
     ],
     [
       "Trees.rotate_right_bst",
@@ -460,7 +460,7 @@
         "typing_Trees.is_bst", "typing_Trees.rotate_right"
       ],
       0,
-      "d4240c52495cadc9bb205d27ea8e3725"
+      "d66bd023af416ddf7148b5f50d4b3750"
     ],
     [
       "Trees.rotate_right_left_bst",
@@ -511,7 +511,7 @@
         "typing_Trees.is_bst", "typing_Trees.rotate_right_left"
       ],
       0,
-      "bcd218435f55d171ab2415c2b31e11c1"
+      "91eeca7a63676bfc6eaeaeb4e43c65e2"
     ],
     [
       "Trees.rotate_left_right_bst",
@@ -562,7 +562,7 @@
         "typing_Trees.is_bst", "typing_Trees.rotate_left_right"
       ],
       0,
-      "9c4db21408be2f7b6cf3556179dcfffd"
+      "6688568602d08ecf6c3d167f8301a9fb"
     ],
     [
       "Trees.rotate_left_key_left",
@@ -602,7 +602,7 @@
         "typing_Trees.rotate_left"
       ],
       0,
-      "35e82dc197471510dd472a177f8527fe"
+      "20f89eaf234412f9fe959992409d259b"
     ],
     [
       "Trees.rotate_left_key_right",
@@ -642,7 +642,7 @@
         "typing_Trees.rotate_left"
       ],
       0,
-      "b3b7db6e6e0f38a53540dbc58360b850"
+      "0d0764e2952898737d54cf7eda318bf6"
     ],
     [
       "Trees.rotate_right_key_left",
@@ -681,7 +681,7 @@
         "typing_Trees.rotate_right"
       ],
       0,
-      "aec4392489272a1e8f59ffecb7c747e7"
+      "de0ae5daf96421010e409e43bc5bdf46"
     ],
     [
       "Trees.rotate_right_key_right",
@@ -720,7 +720,7 @@
         "typing_Trees.rotate_right"
       ],
       0,
-      "f6ee8038326476509c3a7c98db77e522"
+      "19e3e77b94726fe6b51be0cd4e0240ae"
     ],
     [
       "Trees.rotate_right_left_key_left",
@@ -762,7 +762,7 @@
         "typing_Trees.rotate_right_left"
       ],
       0,
-      "7b5fe479eb8b4cefb3cd5007592aa863"
+      "75c9e247f85fb931dc34b3fd7fd9716e"
     ],
     [
       "Trees.rotate_right_left_key_right",
@@ -804,7 +804,7 @@
         "typing_Trees.rotate_right_left"
       ],
       0,
-      "57d50a2343cb2d329a75a330af7154f7"
+      "a2183643a67f3538483cb35bdeac8d23"
     ],
     [
       "Trees.rotate_left_right_key_left",
@@ -846,7 +846,7 @@
         "typing_Trees.rotate_left_right"
       ],
       0,
-      "d03aa5f20a6bef955b3abce66df34b05"
+      "ec1133a3601c7edf45063d91934d4e4b"
     ],
     [
       "Trees.rotate_left_right_key_right",
@@ -888,7 +888,7 @@
         "typing_Trees.rotate_left_right"
       ],
       0,
-      "5199dd8617d51335ca176178b89953fe"
+      "b7a229f86ba40f6ffd5a1cabdddb2a3a"
     ],
     [
       "Trees.rebalance_avl",
@@ -915,7 +915,7 @@
         "typing_Trees.height"
       ],
       0,
-      "4fdf1f6b37e2c2962a3744dcfff70b83"
+      "5d56cc28161ec362ee4307b3e62fa866"
     ],
     [
       "Trees.rebalance_avl_proof",
@@ -977,7 +977,7 @@
         "typing_Trees.rotate_left_right", "unit_inversion", "unit_typing"
       ],
       0,
-      "82c2876bf4fa257549b7fea8304eada4"
+      "7e5e43e01787b819176171c87b669fc9"
     ],
     [
       "Trees.insert_avl",
@@ -993,7 +993,7 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Trees.Node"
       ],
       0,
-      "feb0c1d0cbdb0477d30e71f6d1583f7e"
+      "aa5732fcdc083e44b1a46158d32c0aa8"
     ],
     [
       "Trees.insert_avl_proof_aux",
@@ -1069,7 +1069,7 @@
         "unit_typing"
       ],
       0,
-      "b899dc62daa4119f7e3271daa0408b17"
+      "cef5ecd454a338b9e7ee7082edc1058e"
     ],
     [
       "Trees.insert_avl_proof",
@@ -1078,7 +1078,7 @@
       1,
       [ "@query" ],
       0,
-      "3dbeefdeba65646c1159941a4780a539"
+      "dacef91dfdf2f3826008ae51b3f989c1"
     ]
   ]
 ]
