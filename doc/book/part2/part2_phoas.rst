@@ -66,6 +66,8 @@ progress), but would go substantially further to show that the
 reduction of all such terms always terminates producing F* values that
 model their semantics.
 
+.. _Part2_phoas_denotation:
+
 Denotation of types
 +++++++++++++++++++
 

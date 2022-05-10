@@ -130,8 +130,8 @@ Here's a next attempt at ``read_and_increment``:
 
 .. literalinclude:: ../code/Part2.STInt.fst
    :language: fstar
-   :start-after: //SNIPPET_START: read_and_increment$
-   :end-before: //SNIPPET_END: read_and_increment$
+   :start-after: //SNIPPET_START: read_and_increment_v1$
+   :end-before: //SNIPPET_END: read_and_increment_v1$
 
 Now, you're probably thinking that this version is even worse than
 ``read_and_increment_v0``! But, the program looks obscure "just"
@@ -143,7 +143,7 @@ this too.
 
 * Instead of writing ``bind f (fun x -> e)`` you can write ``x <-- f; e``.
 
-* And, instead of writeing ``bind f (fun _ -> e)``  you can write ``f;; e``.
+* And, instead of writing ``bind f (fun _ -> e)``  you can write ``f;; e``.
 
 Using this bit of syntactic sugar, we come to our final version of
 ``read_and_increment``, where now, hopefully, the imperative-looking
@@ -639,8 +639,8 @@ performance and our interpreters, though mathematically precise, are
 horribly slow.
 
 Addressing these two topics is the main purpose of F*'s user-defined
-effect system, a big part of the language which we'll cover in the
-next section. The effect system aims to address two main needs:
+effect system, a big part of the language which we'll cover in a
+subsequent section. The effect system aims to address two main needs:
 
   * Proofs of effectful programs: The effect system enables developing
     effectful programs coupled with *program logics* that enable

@@ -998,6 +998,30 @@ val normalize_for_extraction (steps:list norm_step) : Tot unit
   *)
 val ite_soundness_by : unit
 
+(** By-default functions that have a layered effect, need to have a type
+    annotation for their bodies
+    However, a layered effect definition may contain the default_effect
+    attribute to indicate to the typechecker that for missing annotations,
+    use the default effect.
+    The default effect attribute takes as argument a string, that is the name
+    of the default effect, two caveats:
+      - The argument must be a string constant (not a name, for example)
+      - The argument should be the fully qualified name
+    For example, the TAC effect in FStar.Tactics.Effect.fsti specifies
+    its default effect as FStar.Tactics.Tac
+    F* will typecheck that the default effect only takes one argument,
+      the result type of the computation
+  *)
+val default_effect (s:string) : Tot unit
+
+(** Bind definition for a layered effect may optionally contain range
+    arguments, that are provided by the typechecker during reification
+    This attribute on the effect definition indicates that the bind
+    has range arguments.
+    See for example the TAC effect in FStar.Tactics.Effect.fsti
+  *)
+val bind_has_range_args : unit
+
 (** A binder in a definition/declaration may optionally be annotated as strictly_positive
     When the let definition is used in a data constructor type in an inductive
     definition, this annotation is used to check the positivity of the inductive

@@ -287,9 +287,9 @@ and term_to_string x =
         let pats = ps |> List.map (fun args -> args |> List.map (fun (t, _) -> term_to_string t) |> String.concat "; ") |> String.concat "\/" in
         U.format2 "{:pattern %s} %s" pats (term_to_string t)
 
-      | Tm_meta(t, Meta_monadic (m, t')) -> U.format4 ("(Monadic-%s{%s %s} %s)") (tag_of_term t) (sli m) (term_to_string t') (term_to_string t)
+      | Tm_meta(t, Meta_monadic (m, t')) -> U.format4 ("(MetaMonadic-{%s %s} (%s) %s)") (sli m) (term_to_string t') (tag_of_term t) (term_to_string t)
 
-      | Tm_meta(t, Meta_monadic_lift(m0, m1, t')) -> U.format5 ("(MonadicLift-%s{%s : %s -> %s} %s)") (tag_of_term t) (term_to_string t') (sli m0) (sli m1) (term_to_string t)
+      | Tm_meta(t, Meta_monadic_lift(m0, m1, t')) -> U.format4 ("(MetaMonadicLift-{%s : %s -> %s} %s)") (term_to_string t') (sli m0) (sli m1) (term_to_string t)
 
       | Tm_meta(t, Meta_labeled(l,r,b)) ->
         U.format3 "Meta_labeled(%s, %s){%s}" l (Range.string_of_range r) (term_to_string t)

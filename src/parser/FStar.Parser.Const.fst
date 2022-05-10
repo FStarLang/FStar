@@ -357,6 +357,8 @@ let commute_nested_matches_lid = psconst "commute_nested_matches"
 let allow_informative_binders_attr = psconst "allow_informative_binders"
 let remove_unused_type_parameters_lid = psconst "remove_unused_type_parameters"
 let ite_soundness_by_attr = psconst "ite_soundness_by"
+let default_effect_attr = psconst "default_effect"
+let bind_has_range_args_attr = psconst "bind_has_range_args"
 let binder_strictly_positive_attr = psconst "strictly_positive"
 let no_auto_projectors_attr = psconst "no_auto_projectors"
 
@@ -466,6 +468,7 @@ let tactic_lid = fstar_tactics_lid' ["Effect"; "tactic"]
 
 let mk_class_lid   = fstar_tactics_lid' ["Typeclasses"; "mk_class"]
 let tcresolve_lid  = fstar_tactics_lid' ["Typeclasses"; "tcresolve"]
+let tcclass_lid = fstar_tactics_lid' ["Typeclasses"; "tcclass"]
 let tcinstance_lid = fstar_tactics_lid' ["Typeclasses"; "tcinstance"]
 let no_method_lid = fstar_tactics_lid' ["Typeclasses"; "no_method"]
 

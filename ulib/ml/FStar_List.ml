@@ -37,7 +37,8 @@ let rec init = function
   | [] -> failwith "init: empty list"
   | [h] -> []
   | h::t -> h::(init t)
-let last l = fold_left (fun _ x -> Some x) None l
+let last = BatList.last
+let last_opt l = List.fold_left (fun _ x -> Some x) None l
 let collect f l = BatList.flatten (BatList.map f l)
 let unzip = BatList.split
 let rec unzip3 = function

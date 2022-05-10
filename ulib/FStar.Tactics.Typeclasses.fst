@@ -21,6 +21,10 @@ open FStar.List.Tot
 open FStar.Tactics
 module T = FStar.Tactics
 
+(* The attribute that marks classes *)
+irreducible
+let tcclass : unit = ()
+
 (* The attribute that marks instances *)
 irreducible
 let tcinstance : unit = ()

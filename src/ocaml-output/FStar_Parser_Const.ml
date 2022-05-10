@@ -319,6 +319,9 @@ let (allow_informative_binders_attr : FStar_Ident.lident) =
 let (remove_unused_type_parameters_lid : FStar_Ident.lident) =
   psconst "remove_unused_type_parameters"
 let (ite_soundness_by_attr : FStar_Ident.lident) = psconst "ite_soundness_by"
+let (default_effect_attr : FStar_Ident.lident) = psconst "default_effect"
+let (bind_has_range_args_attr : FStar_Ident.lident) =
+  psconst "bind_has_range_args"
 let (binder_strictly_positive_attr : FStar_Ident.lident) =
   psconst "strictly_positive"
 let (no_auto_projectors_attr : FStar_Ident.lident) =
@@ -475,6 +478,8 @@ let (mk_class_lid : FStar_Ident.lid) =
   fstar_tactics_lid' ["Typeclasses"; "mk_class"]
 let (tcresolve_lid : FStar_Ident.lid) =
   fstar_tactics_lid' ["Typeclasses"; "tcresolve"]
+let (tcclass_lid : FStar_Ident.lid) =
+  fstar_tactics_lid' ["Typeclasses"; "tcclass"]
 let (tcinstance_lid : FStar_Ident.lid) =
   fstar_tactics_lid' ["Typeclasses"; "tcinstance"]
 let (no_method_lid : FStar_Ident.lid) =

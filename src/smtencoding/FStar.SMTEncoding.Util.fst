@@ -121,10 +121,15 @@ let is_smt_reifiable_comp (en:TcEnv.env) (c:S.comp) : bool =
   | Comp ct -> is_smt_reifiable_effect en ct.effect_name
   | _ -> false
 
+//
+// TAC rc are not smt reifiable
+//
+
 let is_smt_reifiable_rc (en:TcEnv.env) (rc:S.residual_comp) : bool =
-  is_smt_reifiable_effect en rc.residual_effect
+  rc.residual_effect |> is_smt_reifiable_effect en
 
 let is_smt_reifiable_function (en:TcEnv.env) (t:S.term) : bool =
   match (SS.compress t).n with
-  | Tm_arrow (_, c) -> is_smt_reifiable_comp en c
+  | Tm_arrow (_, c) ->
+    c |> U.comp_effect_name |> is_smt_reifiable_effect en
   | _ -> false

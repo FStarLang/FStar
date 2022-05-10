@@ -4011,7 +4011,7 @@ and (desugar_term_maybe_top :
                 (FStar_Parser_AST.Var FStar_Parser_Const.calc_push_impl_lid)
                 r FStar_Parser_AST.Expr in
             let last_expr =
-              let uu___1 = FStar_Compiler_List.last steps in
+              let uu___1 = FStar_Compiler_List.last_opt steps in
               match uu___1 with
               | FStar_Pervasives_Native.Some (FStar_Parser_AST.CalcStep
                   (uu___2, uu___3, last_expr1)) -> last_expr1
@@ -7950,16 +7950,62 @@ and (desugar_decl_noattrs :
                        } in
                      [uu___1]
                  | uu___1 -> [] in
-               let extra =
+               let uu___1 =
                  if typeclass
                  then
                    let meths = FStar_Compiler_List.concatMap get_meths ses in
-                   FStar_Compiler_List.concatMap (splice_decl meths) ses
-                 else [] in
-               let env2 =
-                 FStar_Compiler_List.fold_left FStar_Syntax_DsEnv.push_sigelt
-                   env1 extra in
-               (env2, (FStar_Compiler_List.op_At ses extra)))
+                   let rec add_class_attr se =
+                     match se.FStar_Syntax_Syntax.sigel with
+                     | FStar_Syntax_Syntax.Sig_bundle (ses1, lids) ->
+                         let ses2 =
+                           FStar_Compiler_List.map add_class_attr ses1 in
+                         {
+                           FStar_Syntax_Syntax.sigel =
+                             (FStar_Syntax_Syntax.Sig_bundle (ses2, lids));
+                           FStar_Syntax_Syntax.sigrng =
+                             (se.FStar_Syntax_Syntax.sigrng);
+                           FStar_Syntax_Syntax.sigquals =
+                             (se.FStar_Syntax_Syntax.sigquals);
+                           FStar_Syntax_Syntax.sigmeta =
+                             (se.FStar_Syntax_Syntax.sigmeta);
+                           FStar_Syntax_Syntax.sigattrs =
+                             (se.FStar_Syntax_Syntax.sigattrs);
+                           FStar_Syntax_Syntax.sigopts =
+                             (se.FStar_Syntax_Syntax.sigopts)
+                         }
+                     | FStar_Syntax_Syntax.Sig_inductive_typ uu___2 ->
+                         let uu___3 =
+                           let uu___4 =
+                             FStar_Syntax_Syntax.fvar
+                               FStar_Parser_Const.tcclass_lid
+                               FStar_Syntax_Syntax.delta_constant
+                               FStar_Pervasives_Native.None in
+                           uu___4 :: (se.FStar_Syntax_Syntax.sigattrs) in
+                         {
+                           FStar_Syntax_Syntax.sigel =
+                             (se.FStar_Syntax_Syntax.sigel);
+                           FStar_Syntax_Syntax.sigrng =
+                             (se.FStar_Syntax_Syntax.sigrng);
+                           FStar_Syntax_Syntax.sigquals =
+                             (se.FStar_Syntax_Syntax.sigquals);
+                           FStar_Syntax_Syntax.sigmeta =
+                             (se.FStar_Syntax_Syntax.sigmeta);
+                           FStar_Syntax_Syntax.sigattrs = uu___3;
+                           FStar_Syntax_Syntax.sigopts =
+                             (se.FStar_Syntax_Syntax.sigopts)
+                         }
+                     | uu___2 -> se in
+                   let uu___2 = FStar_Compiler_List.map add_class_attr ses in
+                   let uu___3 =
+                     FStar_Compiler_List.concatMap (splice_decl meths) ses in
+                   (uu___2, uu___3)
+                 else (ses, []) in
+               (match uu___1 with
+                | (ses1, extra) ->
+                    let env2 =
+                      FStar_Compiler_List.fold_left
+                        FStar_Syntax_DsEnv.push_sigelt env1 extra in
+                    (env2, (FStar_Compiler_List.op_At ses1 extra))))
       | FStar_Parser_AST.TopLevelLet (isrec, lets) ->
           let quals = d.FStar_Parser_AST.quals in
           let expand_toplevel_pattern =
