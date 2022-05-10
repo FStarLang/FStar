@@ -208,6 +208,4 @@ let rec rel_poly (a:Type) (r:binrel a) (wf_r:well_founded (WFU.squash_binrel r))
   = match get_previous (WFU.lift_binrel_squashed_as_well_founded_relation wf_r) (| a, x |) with
     | None -> 0
     | Some z -> 
-      assert (dfst z == a);
-      admit()
       1 + rel_poly a r wf_r (dsnd z)
