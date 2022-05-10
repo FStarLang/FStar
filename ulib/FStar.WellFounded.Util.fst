@@ -3,6 +3,22 @@ open FStar.WellFounded
 
 #push-options "--warn_error -242" //inner let recs not encoded to SMT; ok
 
+let elim_lift_binrel (#a:Type) (r:binrel a) (y:top) (x:a)
+  : Lemma 
+    (requires lift_binrel r y (| a, x |))
+    (ensures dfst y == a /\ r (dsnd y) x)
+  = let s : squash (lift_binrel r y (| a, x |)) = FStar.Squash.get_proof (lift_binrel r y (| a, x |)) in
+    let s : squash (dfst y == a /\ r (dsnd y) x) = FStar.Squash.bind_squash s (fun (pf:lift_binrel r y (|a, x|)) -> 
+      let p1 : (dfst y == a /\ a == a) = dfst pf in
+      let p2 : r (dsnd y) x = dsnd pf in
+      introduce dfst y == a /\ r (dsnd y) x
+      with eliminate dfst y == a /\ a == a
+           returns _
+           with l r. l
+      and  FStar.Squash.return_squash p2)
+    in
+    ()
+
 let lower_binrel (#a:Type)
                  (#r:binrel a)
                  (x y:top)
