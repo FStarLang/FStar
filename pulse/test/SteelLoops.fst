@@ -26,3 +26,10 @@ let sum_to_n_while (r:ref UInt32.t) : SteelT unit (vptr r) (fun _ -> vptr r) =
       write r (n `FStar.UInt32.add_mod` 1ul);
       intro_exists (Ghost.hide true) (fun _ -> vptr r)
     )
+
+let main () : SteelT Int32.t emp (fun _ -> emp) =
+  let r = malloc 0ul in
+  sum_to_n_for r;
+  sum_to_n_while r;
+  free r;
+  return 0l
