@@ -182,4 +182,13 @@ let rec ackermann_wf (m n:nat)
   = if m = 0 then n + 1
     else if n = 0 then ackermann_wf (m - 1) 1
     else ackermann_wf (m - 1) (ackermann_wf m (n - 1))
+
+assume
+val get_previous (#a:Type) (r:well_founded_relation a) (x:a)
+  : option (y:a { r y x })
   
+let rec rel_parametric (r: nat -> well_founded_relation nat) (y:nat) (x:nat)
+  : Tot unit (decreases {:well-founded r y x})
+  = match get_previous (r y) x with
+    | None -> ()
+    | Some z -> rel_parametric r y z
