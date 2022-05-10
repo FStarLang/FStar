@@ -188,7 +188,26 @@ val get_previous (#a:Type) (r:well_founded_relation a) (x:a)
   : option (y:a { r y x })
   
 let rec rel_parametric (r: nat -> well_founded_relation nat) (y:nat) (x:nat)
-  : Tot unit (decreases {:well-founded r y x})
+  : Tot nat (decreases {:well-founded r y x})
   = match get_previous (r y) x with
-    | None -> ()
-    | Some z -> rel_parametric r y z
+    | None -> 0
+    | Some z -> 1 + rel_parametric r y z
+
+module WFU = FStar.WellFounded.Util
+
+//Since rel_poly can be polymorphically recursive in `a`
+//the decreases clause is not type-correct on the recursively bound function
+[@@expect_failure]
+let rec rel_poly (a:Type) (r:well_founded_relation a) (x:a)
+  : Tot nat (decreases {:well-founded r x})
+  = 0
+
+
+let rec rel_poly (a:Type) (r:binrel a) (wf_r:well_founded (WFU.squash_binrel r)) (x:a)
+  : Tot nat (decreases {:well-founded WFU.lift_binrel_squashed_as_well_founded_relation wf_r (| a, x |)})
+  = match get_previous (WFU.lift_binrel_squashed_as_well_founded_relation wf_r) (| a, x |) with
+    | None -> 0
+    | Some z -> 
+      assert (dfst z == a);
+      admit()
+      1 + rel_poly a r wf_r (dsnd z)
