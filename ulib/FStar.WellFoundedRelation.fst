@@ -21,6 +21,8 @@
 module FStar.WellFoundedRelation
 
 open FStar.Universe
+module WF = FStar.WellFounded
+module WFU = FStar.WellFounded.Util
 
 let rec default_decreaser (#a: Type u#a) (x: a) : Tot (acc_classical (default_relation #a) x) (decreases x) =
   let smaller (y: a{default_relation y x}) : acc_classical (default_relation #a) y =
@@ -53,12 +55,30 @@ let rec acc_decreaser (#a: Type u#a) (r: a -> a -> Type0)
   ) in
   AccClassicalIntro smaller
 
-let acc_to_wfr (#a: Type u#a) (r: a -> a -> Type0)
-               (f: FStar.WellFounded.well_founded r{forall x1 x2 (p: r x1 x2). (f x2).access_smaller x1 p == f x1})
-  : (wfr: wfr_t a{wfr.relation == acc_relation r}) =
-  let proof (x1: a) (x2: a) : Lemma (requires acc_relation r x1 x2) (ensures acc_decreaser r f x1 << acc_decreaser r f x2) =
-    assert ((acc_decreaser r f x2).access_smaller x1 == acc_decreaser r f x1) in
-  { relation = acc_relation r; decreaser = acc_decreaser r f; proof = proof; }
+let rec eta_expand_well_founded
+                 (#a:Type)
+                 (r:WF.binrel a)
+                 (wf_r:WF.well_founded r)
+                 (x: a)
+  : Tot (WF.acc r x)
+        (decreases {:well-founded (WFU.lift_binrel_as_well_founded_relation wf_r) (| a, x |)})
+  = WF.AccIntro (let g_smaller (y: a) (u: r y x) : WF.acc r y =
+                     WFU.intro_lift_binrel r y x;
+                     eta_expand_well_founded r wf_r y
+                 in g_smaller)
+
+let acc_to_wfr (#a: Type u#a)
+               (r: WF.binrel u#a u#0 a)
+               (f: FStar.WellFounded.well_founded r)
+  : (wfr: wfr_t a{wfr.relation == acc_relation r})
+  = let f = eta_expand_well_founded r f in
+    let proof (x1: a) (x2: a)
+      : Lemma (requires acc_relation r x1 x2)
+              (ensures acc_decreaser r f x1 << acc_decreaser r f x2)
+      = assert ((acc_decreaser r f x2).access_smaller x1 == acc_decreaser r f x1)
+    in
+    { relation = acc_relation r; decreaser = acc_decreaser r f; proof = proof; }
+
 
 let rec subrelation_decreaser (#a: Type u#a) (r: a -> a -> Type0) (wfr: wfr_t a{forall x1 x2. r x1 x2 ==> wfr.relation x1 x2}) (x: a)
   : Tot (acc_classical r x) (decreases wfr.decreaser x) =

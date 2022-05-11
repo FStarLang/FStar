@@ -141,7 +141,7 @@ val empty_wfr (a: Type u#a) : (wfr: wfr_t a{wfr.relation == empty_relation})
 let acc_relation (#a: Type u#a) (r: a -> a -> Type0) (x1: a) (x2: a) : Type0 = exists (p: r x1 x2). True
 
 val acc_to_wfr (#a: Type u#a) (r: a -> a -> Type0)
-               (f: FStar.WellFounded.well_founded r{forall x1 x2 (p: r x1 x2). (f x2).access_smaller x1 p == f x1})
+               (f: FStar.WellFounded.well_founded r)
   : (wfr: wfr_t a{wfr.relation == acc_relation r})
 
 /// `subrelation_to_wfr r wfr` is a `wfr_t` built from a relation `r`
