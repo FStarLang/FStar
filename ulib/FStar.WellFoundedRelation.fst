@@ -56,7 +56,7 @@ let empty_wfr (a: Type u#a) : (wfr: wfr_t a{wfr.relation == empty_relation}) =
 let rec acc_decreaser
   (#a: Type u#a)
   (r: a -> a -> Type0)
-  (f: FStar.WellFounded.well_founded r{forall x1 x2 (p: r x1 x2). (f x2).access_smaller x1 p == f x1})
+  (f: WF.well_founded r{forall x1 x2 (p: r x1 x2). (f x2).access_smaller x1 p == f x1})
   (x: a)
   : Tot (acc_classical (acc_relation r) x) (decreases (f x)) =
   let smaller (y: a{(acc_relation r) y x}) : (acc_classical (acc_relation r) y) = (
@@ -75,7 +75,7 @@ let rec eta_expand_well_founded (#a: Type) (r: WF.binrel a) (wf_r: WF.well_found
                      eta_expand_well_founded r wf_r y
                  in g_smaller)
 
-let acc_to_wfr (#a: Type u#a) (r: WF.binrel u#a u#0 a) (f: FStar.WellFounded.well_founded r)
+let acc_to_wfr (#a: Type u#a) (r: WF.binrel u#a u#0 a) (f: WF.well_founded r)
   : (wfr: wfr_t a{wfr.relation == acc_relation r}) =
   let f = eta_expand_well_founded r f in
   let proof (x1: a) (x2: a)
