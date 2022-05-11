@@ -1870,6 +1870,8 @@ and (mkPrelude : Prims.string -> Prims.string) =
         FStar_Compiler_Effect.op_Bar_Greater uu___1
           (FStar_Compiler_List.map (declToSmt z3options)) in
       FStar_Compiler_Effect.op_Bar_Greater uu___ (FStar_String.concat "\n") in
+    let precedes_partial_app =
+      "\n(declare-fun Prims.precedes@tok () Term)\n(assert\n(forall ((@x0 Term) (@x1 Term) (@x2 Term) (@x3 Term))\n(! (= (ApplyTT (ApplyTT (ApplyTT (ApplyTT Prims.precedes@tok\n@x0)\n@x1)\n@x2)\n@x3)\n(Prims.precedes @x0 @x1 @x2 @x3))\n\n:pattern ((ApplyTT (ApplyTT (ApplyTT (ApplyTT Prims.precedes@tok\n@x0)\n@x1)\n@x2)\n@x3)))))\n" in
     let lex_ordering =
       "\n(declare-fun Prims.lex_t () Term)\n(assert (forall ((t1 Term) (t2 Term) (e1 Term) (e2 Term))\n(! (iff (Valid (Prims.precedes t1 t2 e1 e2))\n(Valid (Prims.precedes Prims.lex_t Prims.lex_t e1 e2)))\n:pattern (Prims.precedes t1 t2 e1 e2))))\n(assert (forall ((t1 Term) (t2 Term))\n(! (iff (Valid (Prims.precedes Prims.lex_t Prims.lex_t t1 t2)) \n(< (Rank t1) (Rank t2)))\n:pattern ((Prims.precedes Prims.lex_t Prims.lex_t t1 t2)))))\n" in
     let valid_intro =
@@ -1880,13 +1882,15 @@ and (mkPrelude : Prims.string -> Prims.string) =
       let uu___1 =
         let uu___2 =
           let uu___3 =
-            let uu___4 = FStar_Options.smtencoding_valid_intro () in
-            if uu___4 then valid_intro else "" in
-          let uu___4 =
-            let uu___5 = FStar_Options.smtencoding_valid_elim () in
-            if uu___5 then valid_elim else "" in
-          Prims.op_Hat uu___3 uu___4 in
-        Prims.op_Hat lex_ordering uu___2 in
+            let uu___4 =
+              let uu___5 = FStar_Options.smtencoding_valid_intro () in
+              if uu___5 then valid_intro else "" in
+            let uu___5 =
+              let uu___6 = FStar_Options.smtencoding_valid_elim () in
+              if uu___6 then valid_elim else "" in
+            Prims.op_Hat uu___4 uu___5 in
+          Prims.op_Hat lex_ordering uu___3 in
+        Prims.op_Hat precedes_partial_app uu___2 in
       Prims.op_Hat bcons uu___1 in
     Prims.op_Hat basic uu___
 let (declsToSmt : Prims.string -> decl Prims.list -> Prims.string) =
