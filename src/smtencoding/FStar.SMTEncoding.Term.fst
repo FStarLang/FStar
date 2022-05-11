@@ -876,6 +876,24 @@ and mkPrelude z3options =
                                  (fst boxRealFun,    [snd boxRealFun, Sort "Real", true], Term_sort, 10, true)] in
    let bcons = constrs |> List.collect (constructor_to_decl norng)
                        |> List.map (declToSmt z3options) |> String.concat "\n" in
+
+   let precedes_partial_app = "\n\
+     (declare-fun Prims.precedes@tok () Term)\n\
+     (assert\n\
+     (forall ((@x0 Term) (@x1 Term) (@x2 Term) (@x3 Term))\n\
+     (! (= (ApplyTT (ApplyTT (ApplyTT (ApplyTT Prims.precedes@tok\n\
+     @x0)\n\
+     @x1)\n\
+     @x2)\n\
+     @x3)\n\
+     (Prims.precedes @x0 @x1 @x2 @x3))\n\
+     \n\
+     :pattern ((ApplyTT (ApplyTT (ApplyTT (ApplyTT Prims.precedes@tok\n\
+     @x0)\n\
+     @x1)\n\
+     @x2)\n\
+     @x3)))))\n" in
+
    let lex_ordering = "\n(declare-fun Prims.lex_t () Term)\n\
                       (assert (forall ((t1 Term) (t2 Term) (e1 Term) (e2 Term))\n\
                                                           (! (iff (Valid (Prims.precedes t1 t2 e1 e2))\n\
@@ -885,6 +903,7 @@ and mkPrelude z3options =
                                       (! (iff (Valid (Prims.precedes Prims.lex_t Prims.lex_t t1 t2)) \n\
                                       (< (Rank t1) (Rank t2)))\n\
                                       :pattern ((Prims.precedes Prims.lex_t Prims.lex_t t1 t2)))))\n" in
+
    let valid_intro =
      "(assert (forall ((e Term) (t Term))\n\
                       (! (implies (HasType e t)\n\
@@ -902,6 +921,7 @@ and mkPrelude z3options =
    in
    basic
    ^ bcons
+   ^ precedes_partial_app
    ^ lex_ordering
    ^ (if FStar.Options.smtencoding_valid_intro()
       then valid_intro
