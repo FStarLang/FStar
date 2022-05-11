@@ -275,8 +275,7 @@ let lemma_ahead_implies_trace_prefix
               (ensures stable z)
       = Classical.forall_intro (Classical.move_requires (lemma_is_trace_prefix_extend tr y.tr))
   in Classical.forall_intro_2 (Classical.move_requires_2 aux);
-  let open FStar.ReflexiveTransitiveClosure in
-  stable_on_closure (next tag) stable ();
+  R.stable_on_closure (next tag) stable ();
   lemma_is_trace_prefix_refl tr
 
 let next_message
