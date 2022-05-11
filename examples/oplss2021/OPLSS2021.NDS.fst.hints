@@ -1,0 +1,27 @@
+[
+  "\u0014©úÅJ b}û°ˆT∞/”Ù",
+  [
+    [
+      "OPLSS2021.NDS.sample",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
+      ],
+      0,
+      "40e2d9ecbc3789594e5d9499e1345f7a"
+    ],
+    [
+      "OPLSS2021.NDS.lift_pure_nds",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "e4e76a61782fd6b10736ea046a869c4b"
+    ]
+  ]
+]

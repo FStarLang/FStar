@@ -190,7 +190,8 @@ function update_version_number () {
 }
 
 function refresh_fstar_hints() {
-    refresh_hints "git@github.com:FStarLang/FStar.git" "git ls-files src/ocaml-output/ | xargs git add" "regenerate hints + ocaml snapshot" "."
+    [[ -n "$DZOMO_GITHUB_TOKEN" ]] &&
+    refresh_hints "https://$DZOMO_GITHUB_TOKEN@github.com/FStarLang/FStar.git" "git ls-files src/ocaml-output/ | xargs git add" "regenerate hints + ocaml snapshot" "."
 }
 
 # Note: this performs an _approximate_ refresh of the hints, in the sense that
@@ -203,6 +204,10 @@ function refresh_hints() {
     local extra="$2"
     local msg="$3"
     local hints_dir="$4"
+
+    # Identify the committer
+    git config --global user.name "Dzomo, the Everest Yak"
+    git config --global user.email "everbld@microsoft.com"
 
     # Figure out the branch
     CI_BRANCH=${branchname##refs/heads/}

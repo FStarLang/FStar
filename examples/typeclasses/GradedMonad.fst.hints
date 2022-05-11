@@ -1,0 +1,19 @@
+[
+  "\u0019Å Ã∆≈\u000e?wk:À{˘(5",
+  [
+    [
+      "GradedMonad.monoid_nat_plus",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
+        "int_inversion", "primitive_Prims.op_Addition",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
+      ],
+      0,
+      "6ba4f0d67f8898c21926f6d7e606f55b"
+    ]
+  ]
+]

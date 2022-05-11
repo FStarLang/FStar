@@ -4011,7 +4011,7 @@ and (desugar_term_maybe_top :
                 (FStar_Parser_AST.Var FStar_Parser_Const.calc_push_impl_lid)
                 r FStar_Parser_AST.Expr in
             let last_expr =
-              let uu___1 = FStar_Compiler_List.last steps in
+              let uu___1 = FStar_Compiler_List.last_opt steps in
               match uu___1 with
               | FStar_Pervasives_Native.Some (FStar_Parser_AST.CalcStep
                   (uu___2, uu___3, last_expr1)) -> last_expr1
