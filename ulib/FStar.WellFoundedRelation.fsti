@@ -67,14 +67,14 @@
   a well-founded relation as input. Here's an illustrative example:
 
     let rec count_steps_to_none
-      (a: Type)
+      (#a: Type)
       (wfr: wfr_t a)
       (stepper: (x: a) -> (y: option a{Some? y ==> wfr.relation (Some?.v y) x}))
       (start: option a)
       : Tot nat (decreases (option_wfr wfr).decreaser start) =
       match start with
       | None -> 0
-      | Some x -> 1 + count_steps_to_none a wfr stepper (stepper x)
+      | Some x -> 1 + count_steps_to_none wfr stepper (stepper x)
 
   `wfr_t` is also useful when composing a well-founded relation
   produced using `acc` (from the FStar.WellFounded library) with one
