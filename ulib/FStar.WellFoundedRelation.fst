@@ -158,7 +158,7 @@ let rec lex_dep_decreaser (#a: Type u#a) (#b: a -> Type u#b) (wfr_a: wfr_t a)
 let lex_dep_wfr (#a: Type u#a) (#b: a -> Type u#b) (wfr_a: wfr_t a)
                 (a_to_wfr_b: (x: a -> wfr_t (b x)))
   : wfr: wfr_t (x: a & b x){wfr.relation == lex_dep_relation wfr_a a_to_wfr_b} =
-  let proof (x1: (v: a & b v)) (x2: (v: a) & b v)
+  let proof (x1: (v: a & b v)) (x2: (v: a & b v))
     : Lemma (requires lex_dep_relation wfr_a a_to_wfr_b x1 x2)
             (ensures  lex_dep_decreaser wfr_a a_to_wfr_b x1 <<
                       lex_dep_decreaser wfr_a a_to_wfr_b x2) =
