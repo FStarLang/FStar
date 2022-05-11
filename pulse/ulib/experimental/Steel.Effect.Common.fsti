@@ -15,7 +15,6 @@
 *)
 
 module Steel.Effect.Common
-let ( @ ) x y = FStar.List.Tot.append x y
 open Steel.Memory
 module Mem = Steel.Memory
 module FExt = FStar.FunctionalExtensionality
@@ -762,8 +761,19 @@ let amap (a:Type) = list (atom * a) * a
 let const (#a:Type) (xa:a) : amap a = ([], xa)
 
 /// Accessing an element in the atom map
+
+// We reimplement List.Tot.Base.assoc because we need our tactic to normalize it,
+// but we don't want to normalize user-provided instances
+let rec my_assoc (#key: eqtype) (#value: Type) (k: key) (dict: list (key & value)) : Pure (option value)
+  (requires True)
+  (ensures (fun res -> res == List.Tot.assoc k dict))
+= match dict with
+  | [] -> None
+  | (k', v') :: q -> if k = k' then Some v' else my_assoc k q
+
+
 let select (#a:Type) (x:atom) (am:amap a) : Tot a =
-  match List.Tot.Base.assoc #atom #a x (fst am) with
+  match my_assoc #atom #a x (fst am) with
   | Some a -> a
   | _ -> snd am
 
@@ -957,7 +967,7 @@ let rewrite_term_for_smt (env:env) (am:amap term * list term) (a:atom) : Tac (am
     let t = tc env hd in
     let new_args, uvar_terms = new_args_for_smt_attrs env args t in
     let new_term = mk_app hd new_args in
-    update a new_term am, uvar_terms@prev_uvar_terms
+    update a new_term am, List.Tot.append uvar_terms prev_uvar_terms
 
 /// User-facing error message when the framing tactic fails
 let fail_atoms (#a:Type) (l1 l2:list atom) (am:amap term) : Tac a
@@ -987,7 +997,7 @@ let rec equivalent_lists_fallback (n:nat) (l1 l2 l1_del l2_del:list atom) (am:am
       // Put all terms left at the end of l1_rem, so that they can be unified
       // with exactly the uvar because of the structure of xsdenote
       try_unifying_remaining l1 (get_head l2 am) am;
-      l1_del @ l1, l2_del @ l2, false
+      l1_del `List.Tot.append` l1, l2_del `List.Tot.append` l2, false
     ) else
       let rem1, rem2, l1_del', l2_del' = equivalent_lists_once l1 l2 l1_del l2_del am in
       let n' = List.Tot.length rem1 in
@@ -1029,7 +1039,7 @@ let rec equivalent_lists' (n:nat) (use_smt:bool) (l1 l2 l1_del l2_del:list atom)
       // Put all terms left at the end of l1_rem, so that they can be unified
       // with exactly the uvar because of the structure of xsdenote
       try_unifying_remaining l1 (get_head l2 am) am;
-      l1_del @ l1, l2_del @ l2, false, []
+      l1_del `List.Tot.append` l1, l2_del `List.Tot.append` l2, false, []
     ) else
       let rem1, rem2, l1_del', l2_del' = equivalent_lists_once l1 l2 l1_del l2_del am in
       let n' = List.Tot.length rem1 in
@@ -1070,7 +1080,7 @@ let rec most_restricted_at_top (l1 l2:list atom) (am:amap term) : Tac (list atom
   match l1 with
   | [] -> []
   | hd::tl ->
-    if unifies_with_all_uvars (select hd am) l2 am then (most_restricted_at_top tl l2 am)@[hd]
+    if unifies_with_all_uvars (select hd am) l2 am then (most_restricted_at_top tl l2 am) `List.Tot.append` [hd]
     else hd::(most_restricted_at_top tl l2 am)
 
 /// Core AC-unification tactic.
@@ -1117,14 +1127,25 @@ let xsdenote (#a:Type) (eq:CE.equiv a) (m:CE.cm a eq) (am:amap a) (xs:list atom)
   let open FStar.Algebra.CommMonoid.Equiv in
   xsdenote_gen (CM?.unit m) (CM?.mult m) am xs
 
+// We reimplement List.Tot.Base.append because we need our tactic to normalize it,
+// but we don't want to normalize user-provided instances
+
+let rec my_append (#t: Type) (l1 l2: list t) : Pure (list t)
+  (requires True)
+  (ensures (fun res -> res == l1 `List.Tot.append` l2))
+  (decreases l1)
+= match l1 with
+  | [] -> l2
+  | a :: q -> a :: my_append q l2
+
 let rec flatten (e:exp) : list atom =
   match e with
   | Unit -> []
   | Atom x -> [x]
-  | Mult e1 e2 -> flatten e1 @ flatten e2
+  | Mult e1 e2 -> flatten e1 `my_append` flatten e2
 
 let rec flatten_correct_aux (#a:Type) (eq:CE.equiv a) (m:CE.cm a eq) (am:amap a) (xs1 xs2:list atom)
-  : Lemma (xsdenote eq m am (xs1 @ xs2) `CE.EQ?.eq eq` CE.CM?.mult m (xsdenote eq m am xs1)
+  : Lemma (xsdenote eq m am (xs1 `my_append` xs2) `CE.EQ?.eq eq` CE.CM?.mult m (xsdenote eq m am xs1)
                                                                      (xsdenote eq m am xs2)) =
   let open FStar.Algebra.CommMonoid.Equiv in
   match xs1 with
@@ -1139,12 +1160,12 @@ let rec flatten_correct_aux (#a:Type) (eq:CE.equiv a) (m:CE.cm a eq) (am:amap a)
   | x::xs1' ->
       flatten_correct_aux eq m am xs1' xs2;
       EQ?.reflexivity eq (select x am);
-      CM?.congruence m (select x am) (xsdenote eq m am (xs1' @ xs2))
+      CM?.congruence m (select x am) (xsdenote eq m am (xs1' `my_append` xs2))
                        (select x am) (CM?.mult m (xsdenote eq m am xs1') (xsdenote eq m am xs2));
       CM?.associativity m (select x am) (xsdenote eq m am xs1') (xsdenote eq m am xs2);
       EQ?.symmetry eq (CM?.mult m (CM?.mult m (select x am) (xsdenote eq m am xs1')) (xsdenote eq m am xs2))
                       (CM?.mult m (select x am) (CM?.mult m (xsdenote eq m am xs1') (xsdenote eq m am xs2)));
-      EQ?.transitivity eq (CM?.mult m (select x am) (xsdenote eq m am (xs1' @ xs2)))
+      EQ?.transitivity eq (CM?.mult m (select x am) (xsdenote eq m am (xs1' `my_append` xs2)))
                           (CM?.mult m (select x am) (CM?.mult m (xsdenote eq m am xs1') (xsdenote eq m am xs2)))
                           (CM?.mult m (CM?.mult m (select x am) (xsdenote eq m am xs1')) (xsdenote eq m am xs2))
 
@@ -1156,7 +1177,7 @@ let rec flatten_correct (#a:Type) (eq:CE.equiv a) (m:CE.cm a eq) (am:amap a) (e:
   | Atom x -> EQ?.reflexivity eq (select x am)
   | Mult e1 e2 ->
       flatten_correct_aux eq m am (flatten e1) (flatten e2);
-      EQ?.symmetry eq (xsdenote eq m am (flatten e1 @ flatten e2))
+      EQ?.symmetry eq (xsdenote eq m am (flatten e1 `my_append` flatten e2))
                       (CM?.mult m (xsdenote eq m am (flatten e1)) (xsdenote eq m am (flatten e2)));
       flatten_correct eq m am e1;
       flatten_correct eq m am e2;
@@ -1164,7 +1185,7 @@ let rec flatten_correct (#a:Type) (eq:CE.equiv a) (m:CE.cm a eq) (am:amap a) (e:
                        (xsdenote eq m am (flatten e1)) (xsdenote eq m am (flatten e2));
       EQ?.transitivity eq (CM?.mult m (mdenote eq m am e1) (mdenote eq m am e2))
                           (CM?.mult m (xsdenote eq m am (flatten e1)) (xsdenote eq m am (flatten e2)))
-                          (xsdenote eq m am (flatten e1 @ flatten e2))
+                          (xsdenote eq m am (flatten e1 `my_append` flatten e2))
 
 let monoid_reflect (#a:Type) (eq:CE.equiv a) (m:CE.cm a eq) (am:amap a) (e1 e2:exp)
     (_ : squash (xsdenote eq m am (flatten e1) `CE.EQ?.eq eq` xsdenote eq m am (flatten e2)))
@@ -1183,8 +1204,34 @@ let monoid_reflect (#a:Type) (eq:CE.equiv a) (m:CE.cm a eq) (am:amap a) (e1 e2:e
 
 // Here we sort the variable numbers
 
+// We reimplement List.Tot.Base.sortWith because we need our tactic to normalize it,
+// but we don't want to normalize user-provided instances
+let rec my_partition (#a: Type) (f: (a -> Tot bool)) (l: list a)
+  : Pure (list a & list a)
+    (requires True)
+    (ensures (fun res -> res == List.Tot.partition f l))
+= match l with
+  | [] -> [], []
+  | hd::tl ->
+     let l1, l2 = my_partition f tl in
+     if f hd
+     then hd::l1, l2
+     else l1, hd::l2
+
+let rec my_sortWith (#a: Type) (f: (a -> a -> Tot int)) (l:list a)
+  : Pure (list a)
+    (requires True)
+    (ensures (fun res -> res == List.Tot.sortWith f l))
+    (decreases (List.Tot.length l))
+= match l with
+  | [] -> []
+  | pivot::tl ->
+     let hi, lo = my_partition (List.Tot.bool_of_compare f pivot) tl in
+     List.Tot.partition_length (List.Tot.bool_of_compare f pivot) tl;
+     my_append (my_sortWith f lo) (pivot::my_sortWith f hi)
+
 let permute = list atom -> list atom
-let sort : permute = List.Tot.Base.sortWith #int (List.Tot.Base.compare_of_bool (<))
+let sort : permute = my_sortWith #int (List.Tot.Base.compare_of_bool (<))
 
 #push-options "--fuel 1 --ifuel 1"
 
@@ -1526,7 +1573,7 @@ let fatom (t:term) (ts:list term) (am:amap term) : Tac (exp * list term * amap t
   | None ->
     let vfresh = List.Tot.Base.length ts in
     let t = norm_term [iota; zeta] t in
-    (Atom vfresh, ts @ [t], update vfresh t am)
+    (Atom vfresh, ts `List.Tot.append` [t], update vfresh t am)
 
 /// Transforming a term into the corresponding list of atoms
 /// If the atomic terms were already present in the map [am], then
@@ -1587,12 +1634,12 @@ let rec quote_atoms (l:list atom) = match l with
               (`Cons (`#nt) (`#(quote_atoms tl)))
 
 /// Some internal normalization steps to make reflection of vprops into atoms and atom permutation go smoothly.
-/// In particular, all the sorting/list functions are entirely reduced
+/// We reimplemented sorting/list functions to normalize our uses without normalizing those introduced by the user.
 let normal_tac_steps = [primops; iota; zeta; delta_only [
           `%mdenote; `%select;
-          `%List.Tot.Base.assoc; `%List.Tot.Base.append; `%( @ );
+          `%my_assoc; `%my_append;
           `%flatten; `%sort;
-          `%List.Tot.Base.sortWith; `%List.Tot.Base.partition;
+          `%my_sortWith; `%my_partition;
           `%List.Tot.Base.bool_of_compare; `%List.Tot.Base.compare_of_bool;
           `%fst; `%__proj__Mktuple2__item___1;
           `%snd; `%__proj__Mktuple2__item___2;
@@ -1877,9 +1924,9 @@ let canon_l_r (use_smt:bool)
     else begin
       norm [primops; iota; zeta; delta_only
         [`%xsdenote; `%select;
-         `%List.Tot.Base.assoc; `%List.Tot.Base.append; `%( @ );
+         `%my_assoc; `%my_append;
          `%flatten; `%sort;
-         `%List.Tot.Base.sortWith; `%List.Tot.Base.partition;
+         `%my_sortWith; `%my_partition;
          `%List.Tot.Base.bool_of_compare; `%List.Tot.Base.compare_of_bool;
          `%fst; `%__proj__Mktuple2__item___1;
          `%snd; `%__proj__Mktuple2__item___2;

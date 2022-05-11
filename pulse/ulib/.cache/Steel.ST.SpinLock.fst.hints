@@ -13,7 +13,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "02ff586621029e056c8ea3cc8681df03"
+      "e6fae605ff504bbd9ba742a7da7c2ad1"
     ],
     [
       "Steel.ST.SpinLock.new_lock",
@@ -38,7 +38,7 @@
         "typing_tok_Prims.T@tok"
       ],
       0,
-      "62d134289455b45f78dc0535c39f1342"
+      "b561c5c09097a48fdd9e1e1796168adc"
     ],
     [
       "Steel.ST.SpinLock.acquire_core",
@@ -79,7 +79,7 @@
         "typing_tok_Prims.T@tok"
       ],
       0,
-      "12289eee86feff03de7d76050211c19f"
+      "d1161807a2170d592e092fa2a5a38ab5"
     ],
     [
       "Steel.ST.SpinLock.acquire_loop_cond",
@@ -88,7 +88,7 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "FStar.Tactics.Effect_interpretation_Tm_ghost_arrow_44164f5e759c8937bc211b53dca29861",
+        "FStar.Ghost_interpretation_Tm_ghost_arrow_44164f5e759c8937bc211b53dca29861",
         "Prims_pretyping_f537159ed795b314b4e58c260361ae86",
         "Steel.Memory_interpretation_Tm_ghost_arrow_9795a6b43f8ada736381f0d7f06aefac",
         "equation_Prims.eqtype", "equation_Steel.Effect.Common.inv",
@@ -107,7 +107,7 @@
         "typing_Tm_abs_d716b89c7122244f867c074692bc6a31"
       ],
       0,
-      "3b1c640f9619c1c6b313146dd5c42d81"
+      "1159197f7907bc3ea91251647d2f52a1"
     ],
     [
       "Steel.ST.SpinLock.acquire",
@@ -125,7 +125,7 @@
         "token_correspondence_Steel.ST.SpinLock.acquire_loop_inv"
       ],
       0,
-      "a52f199bdb7e11da66ba7baad4fc989a"
+      "9de865c54a477798b9d073590b334da5"
     ],
     [
       "Steel.ST.SpinLock.release_core",
@@ -146,7 +146,7 @@
         "typing_tok_Prims.T@tok"
       ],
       0,
-      "c560da0e999dfb05a20d349e9be32ba0"
+      "4c4876c9c8dd05ed275dd226ff94c3b1"
     ],
     [
       "Steel.ST.SpinLock.release",
@@ -155,7 +155,7 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "FStar.Tactics.Effect_interpretation_Tm_ghost_arrow_44164f5e759c8937bc211b53dca29861",
+        "FStar.Ghost_interpretation_Tm_ghost_arrow_44164f5e759c8937bc211b53dca29861",
         "Prims_pretyping_f537159ed795b314b4e58c260361ae86",
         "Steel.Memory_interpretation_Tm_ghost_arrow_9795a6b43f8ada736381f0d7f06aefac",
         "data_elim_FStar.Pervasives.Native.Mktuple2",
@@ -185,7 +185,7 @@
         "typing_Tm_abs_d716b89c7122244f867c074692bc6a31"
       ],
       0,
-      "807510415aba85a58c495020c11f7333"
+      "f9d452c9ba2b1a4f1edb55b9dab9a41e"
     ]
   ]
 ]
