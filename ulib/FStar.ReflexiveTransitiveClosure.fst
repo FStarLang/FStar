@@ -16,23 +16,22 @@
 module FStar.ReflexiveTransitiveClosure
 
 open FStar.Tactics
-
 #set-options "--max_ifuel 1 --max_fuel 0"
 
 noeq
-type _closure (#a:Type u#a) (r:relation a) : a -> a -> Type u#a =
+type _closure (#a:Type u#a) (r:binrel u#a u#r a) : a -> a -> Type u#(max a r) =
 | Refl: x:a -> _closure r x x
-| Step: x:a -> y:a -> r x y ->_closure r x y
+| Step: x:a -> y:a -> squash (r x y) ->_closure r x y
 | Closure: x:a -> y:a -> z:a -> _closure r x y -> _closure r y z -> _closure r x z
 
-let _closure0 (#a:Type u#a) (r:relation a) (x y: a) : prop =
+let _closure0 (#a:Type) (r:binrel a) (x y: a) : prop =
   squash (_closure r x y)
 
-let get_squash (#a:Type u#a) (r:relation a) (x:a) (y:a{_closure0 r x y})
+let get_squash (#a:Type) (r:binrel a) (x:a) (y:a{_closure0 r x y})
   : Tot (squash (_closure r x y))
   = assert_norm (_closure0 r x y ==> squash (_closure r x y))
 
-val closure_reflexive: #a:Type u#a -> r:relation a -> Lemma (reflexive (_closure0 r))
+val closure_reflexive: #a:Type u#a -> r:binrel u#a u#r a -> Lemma (reflexive (_closure0 r))
 let closure_reflexive #a r =
   assert (forall x. _closure0 r x x) by
     (let x = forall_intro () in
@@ -40,7 +39,7 @@ let closure_reflexive #a r =
      mapply (`Refl))
 
 #push-options "--warn_error -271"
-val closure_transitive: #a:Type u#a -> r:relation a -> Lemma (transitive (_closure0 r))
+val closure_transitive: #a:Type u#a -> r:binrel u#a u#r a -> Lemma (transitive (_closure0 r))
 let closure_transitive #a r =
   let open FStar.Squash in
   let aux (x y z:a)
@@ -66,54 +65,53 @@ let closure #a r =
   _closure0 r
 
 let closure_step #a r x y =
-  assert (r x y ==> closure r x y) by
+  let q : squash (r x y)  = () in
+  assert (squash (r x y) ==> closure r x y) by
     (let xy = implies_intro () in
-     let xy : r x y = unquote xy in
+     let xy : squash (r x y) = unquote xy in
      squash_intro ();
      mapply (`Step);
      assumption())
 
-val closure_one_aux: #a:Type u#a -> r:relation a -> x:a -> y:a
+val closure_one_aux: #a:Type u#a -> r:binrel u#a u#r a -> x:a -> y:a
   -> xy:_closure r x y
   -> Tot (either (squash (x == y))
-                (z:a & r x z & _closure r z y))
+                (z:a & squash (r x z) & _closure r z y))
     (decreases xy)
 let rec closure_one_aux #a r x y xy =
   match xy with
   | Refl _ -> Inl ()
   | Step _ _ pr -> Inr (| y, pr, Refl y |)
-  | Closure x a y xa ay ->
-    match closure_one_aux r a y ay with
-    | Inl _ -> closure_one_aux r x y xa
-    | Inr (| z, r_a_z, c_z_y |) ->
-      match closure_one_aux r x a xa with
-      | Inl _ -> Inr (| z, r_a_z, c_z_y |)
-      | Inr (| w, r_x_w, c_w_a |) ->
-        let c_w_y : _closure r w y =
-          let c_a_y : _closure r a y =
-            Closure a z y (Step a z r_a_z) c_z_y
-          in
-          Closure w a y c_w_a c_a_y
-        in
+  | Closure x i y xi iy ->
+    match closure_one_aux r i y iy with
+    | Inl _ -> closure_one_aux r x y xi
+    | Inr (| z, r_i_z, c_z_y |) ->
+      let c_z_y : _closure r z y = c_z_y in
+      match closure_one_aux r x i xi with
+      | Inl _ -> Inr (| z, r_i_z, c_z_y |)
+      | Inr (| w, r_x_w, c_w_i |) ->
+        let step : _closure r i z = Step #a #r i z r_i_z in
+        let c_i_y : _closure r i y = Closure i z y step c_z_y in
+        let c_w_y : _closure r w y =  Closure w i y c_w_i c_i_y in
         Inr (| w, r_x_w, c_w_y |)
 
-let closure_one_aux' (#a:Type u#a) (r:relation a) (x y:a)
+let closure_one_aux' (#a:Type u#a) (r:binrel u#a u#r a) (x y:a)
                      (xy:_closure r x y)
-  : GTot (squash (x == y \/ (exists z. r x z /\ closure r z y)))
+  : GTot (squash (x == y \/ (exists z. squash (r x z) /\ closure r z y)))
   = let p = closure_one_aux r x y xy in
     match p with
     | Inl _ -> ()
     | Inr (| z, rxz, _c_zy |) ->
-      assert (r x z);
+      assert (squash (r x z));
       let s : closure r z y  = FStar.Squash.return_squash _c_zy in
       let ss = FStar.Squash.return_squash s in
       FStar.Squash.give_proof ss;
       assert (closure r z y);
       ()
 
-val closure_one: #a:Type u#a -> r:relation a -> x:a -> y:a
+val closure_one: #a:Type u#a -> r:binrel u#a u#r a -> x:a -> y:a
   -> xy:squash (closure r x y)
-  -> GTot (squash (x == y \/ (exists z. r x z /\ closure r z y)))
+  -> GTot (squash (x == y \/ (exists z. squash (r x z) /\ closure r z y)))
 let closure_one #a r x y xy =
   let open FStar.Squash in
   bind_squash xy (fun xy ->
@@ -121,8 +119,8 @@ let closure_one #a r x y xy =
 
 let closure_inversion #a r x y = closure_one r x y ()
 
-val _stable_on_closure: #a:Type u#a -> r:relation a -> p:(a -> Type0)
-  -> p_stable_on_r: squash (forall x y. p x /\ r x y ==> p y)
+val _stable_on_closure: #a:Type u#a -> r:binrel u#a u#r a -> p:(a -> Type0)
+  -> p_stable_on_r: squash (forall x y. p x /\ squash (r x y) ==> p y)
   -> x: a
   -> y: a
   -> xy: _closure r x y
