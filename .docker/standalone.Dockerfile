@@ -18,7 +18,7 @@ RUN opam install \
     fix \
     wasm \
     && \
-    sudo apt install gnupg ca-certificates wget && \
+    sudo apt install -y gnupg ca-certificates wget && \
     wget https://packages.microsoft.com/config/ubuntu/21.04/packages-microsoft-prod.deb -O packages-microsoft-prod.deb && \
     sudo dpkg -i packages-microsoft-prod.deb && \
     rm packages-microsoft-prod.deb && \
