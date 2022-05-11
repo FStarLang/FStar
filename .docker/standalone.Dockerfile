@@ -1,7 +1,7 @@
 # This Dockerfile should be run from the root FStar directory
 
 ARG ocaml_version=4.12
-FROM ocaml/opam:ubuntu-ocaml-$ocaml_version
+FROM ocaml/opam:ubuntu-21.10-ocaml-$ocaml_version
 
 # FIXME: the `opam depext` command should be unnecessary with opam 2.1
 RUN opam depext conf-gmp z3.4.8.5 conf-m4
@@ -18,7 +18,7 @@ RUN opam install \
     fix \
     wasm \
     && \
-    sudo apt install gnupg ca-certificates && \
+    sudo apt install gnupg ca-certificates wget && \
     wget https://packages.microsoft.com/config/ubuntu/21.04/packages-microsoft-prod.deb -O packages-microsoft-prod.deb && \
     sudo dpkg -i packages-microsoft-prod.deb && \
     rm packages-microsoft-prod.deb && \
