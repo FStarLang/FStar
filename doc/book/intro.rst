@@ -454,7 +454,7 @@ F* is an open source project at `GitHub
 <https://github.com/FStarLang/FStar>`_ by researchers at a number of
 institutions, including `Microsoft Research
 <http://research.microsoft.com/en-us>`_, `MSR-Inria
-<http://www.msr-inria.fr/>`_, `Inria <https://www.inria.fr/>`_,
+<https://www.microsoft.com/en-us/research/collaboration/inria-joint-centre/>`_, `Inria <https://www.inria.fr/>`_,
 `Rosario <https://www.cifasis-conicet.gov.ar/en/>`_, `Carnegie-Mellon
 <https://www.cs.cmu.edu/>`_.
 

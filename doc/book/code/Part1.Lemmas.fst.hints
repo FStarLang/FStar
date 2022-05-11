@@ -16,7 +16,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "9f1f5ac31dec893e56d0b7752e7aa21a"
+      "1ac86e687f22d1e293cd4339b03e3dc4"
     ],
     [
       "Part1.Lemmas.factorial_is_positive",
@@ -39,7 +39,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "0173a4731c4071b2a03241b75df2a369"
+      "c27228b84357786626b4f6e01d6d768f"
     ],
     [
       "Part1.Lemmas.factorial_is_pos",
@@ -53,7 +53,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "dacf01c402f3471084e64340cc5e3f49"
+      "e53247e0c1d00b6fed04e03fd1942812"
     ],
     [
       "Part1.Lemmas.factorial_is_pos",
@@ -80,7 +80,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "b4e3530fa9166fa941431ed613ba0275"
+      "2c74f304bf7b2738471e6840e57c0790"
     ],
     [
       "Part1.Lemmas.factorial_is_greater_than_arg",
@@ -95,7 +95,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "7c06077e36326b4811e08c66afb924ed"
+      "5db376104f325fd7eaf8575cee5cca9f"
     ],
     [
       "Part1.Lemmas.factorial_is_greater_than_arg",
@@ -121,7 +121,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "9fce4ff30623d0fdd5a7efdf2af9986f"
+      "94f081bf426e7d3e36383760062b01f8"
     ],
     [
       "Part1.Lemmas.fibonacci",
@@ -138,7 +138,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "697eff27ece1701290b1290332dfd578"
+      "37d21151912d90134067377da644e51f"
     ],
     [
       "Part1.Lemmas.fibonacci_greater_than_arg",
@@ -162,7 +162,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "2d67dbbe8412961ebe2eec1ae2472b4d"
+      "f9c63a892dddf162a1caf6102b65aa75"
     ],
     [
       "Part1.Lemmas.fib_greater_than_arg",
@@ -189,7 +189,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "e4aff418f72df4af3e1c4211d7389864"
+      "89e8e0d8593c608377d0c3f8d1c25ea6"
     ],
     [
       "Part1.Lemmas.app",
@@ -204,7 +204,7 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "eb29de52569bcd524b553b0ef6591deb"
+      "2867612a732ae46b11b353912786ad6d"
     ],
     [
       "Part1.Lemmas.app_length",
@@ -236,7 +236,7 @@
         "typing_Part1.Lemmas.app"
       ],
       0,
-      "d0800996577d43b4bbbae028e5a31c05"
+      "7c00cac9f64125bc7418167759acfbdc"
     ],
     [
       "Part1.Lemmas.reverse",
@@ -251,7 +251,7 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "423e6867da9b43bf8c3196054d20d09c"
+      "970ac877fd93304b6463ce411584cf81"
     ],
     [
       "Part1.Lemmas.snoc_cons",
@@ -283,7 +283,7 @@
         "typing_Part1.Lemmas.snoc"
       ],
       0,
-      "d175053cced02e8b18ac0836c1d20010"
+      "9a6e64c875c86c96ba0e2f9b781b08ea"
     ],
     [
       "Part1.Lemmas.rev_involutive",
@@ -308,7 +308,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "858b1373b9d714b1271531227b2bfe3e"
+      "6f40c3299081bb95ddc4b99970115c8c"
     ],
     [
       "Part1.Lemmas.snoc_injective",
@@ -317,7 +317,7 @@
       1,
       [ "@query" ],
       0,
-      "120463199a47bc55c673745f0b862699"
+      "0ce342f1a6215cf049232973ab3a87ee"
     ],
     [
       "Part1.Lemmas.snoc_injective",
@@ -358,7 +358,7 @@
         "typing_Part1.Lemmas.snoc"
       ],
       0,
-      "278e3062250e6d9cb95000b279fcfa80"
+      "b92a3c1f6777e4f2c6b0c21d675defc1"
     ],
     [
       "Part1.Lemmas.rev_injective",
@@ -396,7 +396,7 @@
         "typing_Part1.Lemmas.reverse"
       ],
       0,
-      "64b6e9a825579e0006fe17beee9b7855"
+      "b216d56771bcd3a26a257c328672030d"
     ],
     [
       "Part1.Lemmas.rev_injective_alt",
@@ -405,7 +405,7 @@
       1,
       [ "@query" ],
       0,
-      "a8ba4d9316e661a089ba3ea5c2910f11"
+      "3a2948902b8e2596fcf811367b790e1c"
     ],
     [
       "Part1.Lemmas.map",
@@ -420,7 +420,7 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "9e992fce0c5dea6dd46f28558fc7cc8d"
+      "134b0a1e27b24b3e5e1a641b34570af4"
     ],
     [
       "Part1.Lemmas.find",
@@ -440,7 +440,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "8d18743d17cf95961a1374ea03b57e1f"
+      "560fc16a9a0024556b394f2de1ba2fde"
     ],
     [
       "Part1.Lemmas.find_alt",
@@ -455,7 +455,7 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "e91b933aacf423a92c11db675baa62c3"
+      "f83a80dc72b60fbe0c6c29d8a545dd94"
     ],
     [
       "Part1.Lemmas.find_alt_ok",
@@ -486,7 +486,7 @@
         "subterm_ordering_Prims.Cons", "typing_Part1.Lemmas.find_alt"
       ],
       0,
-      "79e1fc6c35811299ba873c5393adad7d"
+      "fe06eefc10ca1fd300dc9994babd810e"
     ],
     [
       "Part1.Lemmas.fold_left",
@@ -501,7 +501,7 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "e57442c5abaac0ac109c9f8ade55f8a2"
+      "eb7994c19233ee2d92b530232f5d2b4b"
     ],
     [
       "Part1.Lemmas.append_assoc",
@@ -510,7 +510,7 @@
       1,
       [ "@query" ],
       0,
-      "93e88ba0c5d563c8734839dcbd727164"
+      "727f306fd692a746e1dec2c2a7dd9262"
     ],
     [
       "Part1.Lemmas.append_assoc",
@@ -537,7 +537,7 @@
         "subterm_ordering_Prims.Cons", "typing_Part1.Inductives.append"
       ],
       0,
-      "962832ad29d73329bbacce76c0a88ce2"
+      "6bf30c13ea80b68b971a1193513ac667"
     ],
     [
       "Part1.Lemmas.fold_left_Cons_is_rev_stronger",
@@ -572,7 +572,7 @@
         "typing_tok_Prims.Cons@tok"
       ],
       0,
-      "eeecd3d1d9e6a44eefcf702225179b10"
+      "ad512de1fb3bc636765dad871d3c216c"
     ],
     [
       "Part1.Lemmas.append_right_unit",
@@ -597,7 +597,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "95ce8f45b3eab3523972bd3283e1ba12"
+      "346a4592691134c385638a694d21a7f6"
     ],
     [
       "Part1.Lemmas.fold_left_Cons_is_rev",
@@ -606,7 +606,7 @@
       1,
       [ "@query" ],
       0,
-      "f73757b4307909d44762e5b3d0d7469e"
+      "d1516ed48dbd0d0c0430df222b482a00"
     ],
     [
       "Part1.Lemmas.rev_aux",
@@ -621,7 +621,7 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "7b30ed68f26beafa97198b45eaff48a8"
+      "ac9f60800b771464a005f1f35ee86a3f"
     ],
     [
       "Part1.Lemmas.rev_is_ok_aux",
@@ -653,7 +653,7 @@
         "subterm_ordering_Prims.Cons", "typing_Part1.Lemmas.reverse"
       ],
       0,
-      "2ff8c1910d17ad7d094d920745d4febc"
+      "2d1d205c16eab55f8263dda50eab0b3e"
     ],
     [
       "Part1.Lemmas.rev_is_ok",
@@ -662,7 +662,7 @@
       1,
       [ "@query", "equation_Part1.Lemmas.rev" ],
       0,
-      "4b444fd1a13a22b9e2a4dc31bcd5d0a8"
+      "fccf6231863920ee4b11568b79a9581e"
     ],
     [
       "Part1.Lemmas.fib_aux",
@@ -679,7 +679,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "ba4ab672b3d73791c7e4fa38fc5de402"
+      "eaead709bc3615297322442455c504ed"
     ],
     [
       "Part1.Lemmas.fib_is_ok_aux",
@@ -694,7 +694,7 @@
         "refinement_interpretation_Tm_refine_b653907b4915737c74f20d3e463995be"
       ],
       0,
-      "463542fbdd4ed94b1311e965f71c463c"
+      "13ae31e091f4ce98758d36dfe69ff5b4"
     ],
     [
       "Part1.Lemmas.fib_is_ok_aux",
@@ -722,7 +722,7 @@
         "typing_Part1.Lemmas.fibonacci", "well-founded-ordering-on-nat"
       ],
       0,
-      "86740298965c1cf050f8ed959e4d93b9"
+      "09fdf3ae8586e1c8290a6f24fe96d996"
     ],
     [
       "Part1.Lemmas.fib_is_ok",
@@ -741,7 +741,7 @@
         "typing_Part1.Lemmas.fibonacci"
       ],
       0,
-      "25b7184505f8399d8d6cdf160aa3f303"
+      "5b49fecae99aff3c30c595aab5fb6fc5"
     ]
   ]
 ]

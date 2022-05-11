@@ -4011,7 +4011,7 @@ and (desugar_term_maybe_top :
                 (FStar_Parser_AST.Var FStar_Parser_Const.calc_push_impl_lid)
                 r FStar_Parser_AST.Expr in
             let last_expr =
-              let uu___1 = FStar_Compiler_List.last steps in
+              let uu___1 = FStar_Compiler_List.last_opt steps in
               match uu___1 with
               | FStar_Pervasives_Native.Some (FStar_Parser_AST.CalcStep
                   (uu___2, uu___3, last_expr1)) -> last_expr1
@@ -7863,19 +7863,82 @@ and (desugar_decl_noattrs :
                  | FStar_Pervasives_Native.Some id ->
                      let uu___2 = FStar_Syntax_DsEnv.qualify env1 id in
                      [uu___2] in
+               let formals =
+                 let bndl =
+                   FStar_Compiler_Util.try_find
+                     (fun uu___1 ->
+                        match uu___1 with
+                        | {
+                            FStar_Syntax_Syntax.sigel =
+                              FStar_Syntax_Syntax.Sig_bundle uu___2;
+                            FStar_Syntax_Syntax.sigrng = uu___3;
+                            FStar_Syntax_Syntax.sigquals = uu___4;
+                            FStar_Syntax_Syntax.sigmeta = uu___5;
+                            FStar_Syntax_Syntax.sigattrs = uu___6;
+                            FStar_Syntax_Syntax.sigopts = uu___7;_} -> true
+                        | uu___2 -> false) ses in
+                 match bndl with
+                 | FStar_Pervasives_Native.None ->
+                     FStar_Pervasives_Native.None
+                 | FStar_Pervasives_Native.Some bndl1 ->
+                     (match bndl1.FStar_Syntax_Syntax.sigel with
+                      | FStar_Syntax_Syntax.Sig_bundle (ses1, uu___1) ->
+                          FStar_Compiler_Util.find_map ses1
+                            (fun se ->
+                               match se.FStar_Syntax_Syntax.sigel with
+                               | FStar_Syntax_Syntax.Sig_datacon
+                                   (_l, _u, t, uu___2, uu___3, uu___4) ->
+                                   let uu___5 =
+                                     FStar_Syntax_Util.arrow_formals t in
+                                   (match uu___5 with
+                                    | (formals1, uu___6) ->
+                                        FStar_Pervasives_Native.Some formals1)
+                               | uu___2 -> FStar_Pervasives_Native.None)
+                      | uu___1 -> FStar_Pervasives_Native.None) in
                let rec splice_decl meths se =
                  match se.FStar_Syntax_Syntax.sigel with
                  | FStar_Syntax_Syntax.Sig_bundle (ses1, uu___1) ->
                      FStar_Compiler_List.concatMap (splice_decl meths) ses1
                  | FStar_Syntax_Syntax.Sig_inductive_typ
-                     (lid, uu___1, uu___2, uu___3, uu___4, uu___5) ->
-                     let uu___6 =
-                       let uu___7 =
-                         let uu___8 =
-                           let uu___9 = mkclass lid in (meths, uu___9) in
-                         FStar_Syntax_Syntax.Sig_splice uu___8 in
+                     (lid, _univs, _binders, ty, _mutuals, _datas) ->
+                     let formals1 =
+                       match formals with
+                       | FStar_Pervasives_Native.None -> []
+                       | FStar_Pervasives_Native.Some formals2 -> formals2 in
+                     let has_no_method_attr meth =
+                       let i = FStar_Ident.ident_of_lid meth in
+                       FStar_Compiler_Util.for_some
+                         (fun formal ->
+                            let uu___1 =
+                              FStar_Ident.ident_equals i
+                                (formal.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.ppname in
+                            if uu___1
+                            then
+                              FStar_Compiler_Util.for_some
+                                (fun attr ->
+                                   let uu___2 =
+                                     let uu___3 =
+                                       FStar_Syntax_Subst.compress attr in
+                                     uu___3.FStar_Syntax_Syntax.n in
+                                   match uu___2 with
+                                   | FStar_Syntax_Syntax.Tm_fvar fv ->
+                                       FStar_Syntax_Syntax.fv_eq_lid fv
+                                         FStar_Parser_Const.no_method_lid
+                                   | uu___3 -> false)
+                                formal.FStar_Syntax_Syntax.binder_attrs
+                            else false) formals1 in
+                     let meths1 =
+                       FStar_Compiler_List.filter
+                         (fun x ->
+                            let uu___1 = has_no_method_attr x in
+                            Prims.op_Negation uu___1) meths in
+                     let uu___1 =
+                       let uu___2 =
+                         let uu___3 =
+                           let uu___4 = mkclass lid in (meths1, uu___4) in
+                         FStar_Syntax_Syntax.Sig_splice uu___3 in
                        {
-                         FStar_Syntax_Syntax.sigel = uu___7;
+                         FStar_Syntax_Syntax.sigel = uu___2;
                          FStar_Syntax_Syntax.sigrng =
                            (d.FStar_Parser_AST.drange);
                          FStar_Syntax_Syntax.sigquals = [];
@@ -7885,18 +7948,64 @@ and (desugar_decl_noattrs :
                          FStar_Syntax_Syntax.sigopts =
                            FStar_Pervasives_Native.None
                        } in
-                     [uu___6]
+                     [uu___1]
                  | uu___1 -> [] in
-               let extra =
+               let uu___1 =
                  if typeclass
                  then
                    let meths = FStar_Compiler_List.concatMap get_meths ses in
-                   FStar_Compiler_List.concatMap (splice_decl meths) ses
-                 else [] in
-               let env2 =
-                 FStar_Compiler_List.fold_left FStar_Syntax_DsEnv.push_sigelt
-                   env1 extra in
-               (env2, (FStar_Compiler_List.op_At ses extra)))
+                   let rec add_class_attr se =
+                     match se.FStar_Syntax_Syntax.sigel with
+                     | FStar_Syntax_Syntax.Sig_bundle (ses1, lids) ->
+                         let ses2 =
+                           FStar_Compiler_List.map add_class_attr ses1 in
+                         {
+                           FStar_Syntax_Syntax.sigel =
+                             (FStar_Syntax_Syntax.Sig_bundle (ses2, lids));
+                           FStar_Syntax_Syntax.sigrng =
+                             (se.FStar_Syntax_Syntax.sigrng);
+                           FStar_Syntax_Syntax.sigquals =
+                             (se.FStar_Syntax_Syntax.sigquals);
+                           FStar_Syntax_Syntax.sigmeta =
+                             (se.FStar_Syntax_Syntax.sigmeta);
+                           FStar_Syntax_Syntax.sigattrs =
+                             (se.FStar_Syntax_Syntax.sigattrs);
+                           FStar_Syntax_Syntax.sigopts =
+                             (se.FStar_Syntax_Syntax.sigopts)
+                         }
+                     | FStar_Syntax_Syntax.Sig_inductive_typ uu___2 ->
+                         let uu___3 =
+                           let uu___4 =
+                             FStar_Syntax_Syntax.fvar
+                               FStar_Parser_Const.tcclass_lid
+                               FStar_Syntax_Syntax.delta_constant
+                               FStar_Pervasives_Native.None in
+                           uu___4 :: (se.FStar_Syntax_Syntax.sigattrs) in
+                         {
+                           FStar_Syntax_Syntax.sigel =
+                             (se.FStar_Syntax_Syntax.sigel);
+                           FStar_Syntax_Syntax.sigrng =
+                             (se.FStar_Syntax_Syntax.sigrng);
+                           FStar_Syntax_Syntax.sigquals =
+                             (se.FStar_Syntax_Syntax.sigquals);
+                           FStar_Syntax_Syntax.sigmeta =
+                             (se.FStar_Syntax_Syntax.sigmeta);
+                           FStar_Syntax_Syntax.sigattrs = uu___3;
+                           FStar_Syntax_Syntax.sigopts =
+                             (se.FStar_Syntax_Syntax.sigopts)
+                         }
+                     | uu___2 -> se in
+                   let uu___2 = FStar_Compiler_List.map add_class_attr ses in
+                   let uu___3 =
+                     FStar_Compiler_List.concatMap (splice_decl meths) ses in
+                   (uu___2, uu___3)
+                 else (ses, []) in
+               (match uu___1 with
+                | (ses1, extra) ->
+                    let env2 =
+                      FStar_Compiler_List.fold_left
+                        FStar_Syntax_DsEnv.push_sigelt env1 extra in
+                    (env2, (FStar_Compiler_List.op_At ses1 extra))))
       | FStar_Parser_AST.TopLevelLet (isrec, lets) ->
           let quals = d.FStar_Parser_AST.quals in
           let expand_toplevel_pattern =

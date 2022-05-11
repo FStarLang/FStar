@@ -30,12 +30,14 @@ exception Goal_not_trivial
 let goals () : Tac (list goal) = goals_of (get ())
 let smt_goals () : Tac (list goal) = smt_goals_of (get ())
 
-let fail (#a:Type) (m:string) =
-  raise #a (TacticFailure m)
+let fail (#a:Type) (m:string)
+  : TAC a (fun ps post -> post (Failed (TacticFailure m) ps))
+  = raise #a (TacticFailure m)
 
-let fail_silently (#a:Type) (m:string) =
-  set_urgency 0;
-  raise #a (TacticFailure m)
+let fail_silently (#a:Type) (m:string)
+  : TAC a (fun _ post -> forall ps. post (Failed (TacticFailure m) ps))
+  = set_urgency 0;
+    raise #a (TacticFailure m)
 
 (** Return the current *goal*, not its type. (Ignores SMT goals) *)
 let _cur_goal () : Tac goal =

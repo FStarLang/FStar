@@ -17,7 +17,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "c982eaa940f2e86a1273c7853490fcc0"
+      "3fb21ee460599c6eb5c4fdb9db547cc5"
     ],
     [
       "Part1.Quicksort.Permutation.append",
@@ -32,7 +32,7 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "b6a9ee799c2afa1797fcf4691873e588"
+      "f2a04b1672dabd18ca494541eed44a23"
     ],
     [
       "Part1.Quicksort.Permutation.sorted",
@@ -52,7 +52,7 @@
         "subterm_ordering_Prims.Cons", "typing_Prims.__proj__Cons__item__tl"
       ],
       0,
-      "2339cc15d390306f68137657a616b19a"
+      "19359617ca40e554a915320787ab478c"
     ],
     [
       "Part1.Quicksort.Permutation.count",
@@ -72,7 +72,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "482630232bc1216b95ed4f99ee1698bd"
+      "b2f040be89eb06c26c7c41f8ad2369f8"
     ],
     [
       "Part1.Quicksort.Permutation.is_permutation",
@@ -86,7 +86,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "131093de23277e21e235bd67f80ed87f"
+      "a588b24e1aa9a44e4e24e0cfca37ff0a"
     ],
     [
       "Part1.Quicksort.Permutation.append_count",
@@ -121,7 +121,7 @@
         "typing_Part1.Quicksort.Permutation.count"
       ],
       0,
-      "f86a960b098f434637af2217d4509bd4"
+      "a22672b86e91d97f31a89257291672eb"
     ],
     [
       "Part1.Quicksort.Permutation.partition",
@@ -160,7 +160,7 @@
         "typing_Part1.Quicksort.Permutation.length"
       ],
       0,
-      "83033cf95a91daa47bb92c74b678fc16"
+      "e299ba5d228af43361dc9a0ff0776752"
     ],
     [
       "Part1.Quicksort.Permutation.sort",
@@ -205,7 +205,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "986307e63dae45ecdeaed0a8fa3e62bf"
+      "5cdb881534b39b364462dce090d11458"
     ],
     [
       "Part1.Quicksort.Permutation.sorted_concat",
@@ -258,7 +258,7 @@
         "typing_Part1.Quicksort.Permutation.sorted"
       ],
       0,
-      "eca4342be4f70ed6113ae585584de241"
+      "b24661004d77eeda570ff725a4f06177"
     ]
   ]
 ]

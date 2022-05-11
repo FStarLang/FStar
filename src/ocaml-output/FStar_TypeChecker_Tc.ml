@@ -554,6 +554,77 @@ let (check_must_erase_attribute :
                          else ())))
           else ()
       | uu___ -> ()
+let (check_typeclass_instance_attribute :
+  FStar_TypeChecker_Env.env -> FStar_Syntax_Syntax.sigelt -> unit) =
+  fun env ->
+    fun se ->
+      let is_tc_instance =
+        FStar_Compiler_Effect.op_Bar_Greater se.FStar_Syntax_Syntax.sigattrs
+          (FStar_Compiler_Util.for_some
+             (fun t ->
+                match t.FStar_Syntax_Syntax.n with
+                | FStar_Syntax_Syntax.Tm_fvar fv ->
+                    FStar_Syntax_Syntax.fv_eq_lid fv
+                      FStar_Parser_Const.tcinstance_lid
+                | uu___ -> false)) in
+      if Prims.op_Negation is_tc_instance
+      then ()
+      else
+        (match se.FStar_Syntax_Syntax.sigel with
+         | FStar_Syntax_Syntax.Sig_let ((false, lb::[]), uu___1) ->
+             let uu___2 =
+               FStar_Syntax_Util.arrow_formals_comp
+                 lb.FStar_Syntax_Syntax.lbtyp in
+             (match uu___2 with
+              | (uu___3, res) ->
+                  let uu___4 = FStar_Syntax_Util.is_total_comp res in
+                  if uu___4
+                  then
+                    let t = FStar_Syntax_Util.comp_result res in
+                    let uu___5 = FStar_Syntax_Util.head_and_args t in
+                    (match uu___5 with
+                     | (head, uu___6) ->
+                         let err uu___7 =
+                           let uu___8 =
+                             let uu___9 =
+                               let uu___10 =
+                                 FStar_Syntax_Print.term_to_string t in
+                               FStar_Compiler_Util.format1
+                                 "Instances must define instances of `class` types. Type %s is not a class"
+                                 uu___10 in
+                             (FStar_Errors.Error_UnexpectedTypeclassInstance,
+                               uu___9) in
+                           FStar_Errors.log_issue
+                             (FStar_Syntax_Util.range_of_sigelt se) uu___8 in
+                         let uu___7 =
+                           let uu___8 = FStar_Syntax_Util.un_uinst head in
+                           uu___8.FStar_Syntax_Syntax.n in
+                         (match uu___7 with
+                          | FStar_Syntax_Syntax.Tm_fvar fv ->
+                              let uu___8 =
+                                let uu___9 =
+                                  FStar_TypeChecker_Env.fv_has_attr env fv
+                                    FStar_Parser_Const.tcclass_lid in
+                                Prims.op_Negation uu___9 in
+                              if uu___8 then err () else ()
+                          | uu___8 -> err ()))
+                  else
+                    (let uu___6 =
+                       let uu___7 =
+                         let uu___8 =
+                           FStar_Ident.string_of_lid
+                             (FStar_Syntax_Util.comp_effect_name res) in
+                         FStar_Compiler_Util.format1
+                           "Instances are expected to be total. This instance has effect %s"
+                           uu___8 in
+                       (FStar_Errors.Error_UnexpectedTypeclassInstance,
+                         uu___7) in
+                     FStar_Errors.log_issue
+                       (FStar_Syntax_Util.range_of_sigelt se) uu___6))
+         | uu___1 ->
+             FStar_Errors.log_issue (FStar_Syntax_Util.range_of_sigelt se)
+               (FStar_Errors.Error_UnexpectedTypeclassInstance,
+                 "An `instance` is expected to be a non-recursive definition whose type is an instance of a `class`"))
 let proc_check_with :
   'a . FStar_Syntax_Syntax.attribute Prims.list -> (unit -> 'a) -> 'a =
   fun attrs ->
@@ -1483,6 +1554,7 @@ let (tc_sig_let :
                                     FStar_Compiler_Util.print1 "%s\n" uu___8
                                   else ());
                                  check_must_erase_attribute env0 se3;
+                                 check_typeclass_instance_attribute env0 se3;
                                  ([se3], [], env0))))))
 let (tc_decl' :
   FStar_TypeChecker_Env.env ->
@@ -3916,7 +3988,7 @@ let (tc_decls :
                ([], env) ses) in
       match uu___ with
       | (ses1, env1) -> ((FStar_Compiler_List.rev_append ses1 []), env1)
-let (uu___851 : unit) =
+let (uu___882 : unit) =
   FStar_Compiler_Effect.op_Colon_Equals tc_decls_knot
     (FStar_Pervasives_Native.Some tc_decls)
 let (snapshot_context :

@@ -15,6 +15,9 @@
 *)
 module FStar.Tactics.Effect
 
+open FStar.Monotonic.Pure
+open FStar.Calc
+
 open FStar.Reflection.Types
 open FStar.Tactics.Types
 open FStar.Tactics.Result
@@ -22,72 +25,129 @@ open FStar.Tactics.Result
 (* This module is extracted, don't add any `assume val`s or extraction
  * will break. (`synth_by_tactic` is fine) *)
 
-private
-let __tac (a:Type) = proofstate -> M (__result a)
+type tac_wp_t0 (a:Type) =
+  proofstate -> (__result a -> Type0) -> Type0
+
+unfold
+let tac_wp_monotonic (#a:Type) (wp:tac_wp_t0 a) =
+  forall (ps:proofstate) (p q:__result a -> Type0).
+    (forall x. p x ==> q x) ==> (wp ps p ==> wp ps q)
+
+type tac_wp_t (a:Type) = wp:tac_wp_t0 a{tac_wp_monotonic wp}
+
+let tac_repr (a:Type) (wp:tac_wp_t a) =
+  ps0:proofstate -> DIV (__result a) (as_pure_wp (wp ps0))
+
+unfold
+let tac_return_wp (#a:Type) (x:a) : tac_wp_t a =
+  fun ps post -> post (Success x ps)
 
 (* monadic return *)
-private
-let __ret (a:Type) (x:a) : __tac a = fun (s:proofstate) -> Success x s
+let tac_return (a:Type) (x:a) : tac_repr a (tac_return_wp x) =
+  fun (s:proofstate) -> Success x s
+
+unfold
+let tac_bind_wp (#a #b:Type) (wp_f:tac_wp_t a) (wp_g:a -> tac_wp_t b) : tac_wp_t b =
+  fun ps post ->
+  wp_f ps (fun r ->
+           match r with
+           | Success x ps -> wp_g x ps post
+           | Failed ex ps -> post (Failed ex ps))
+
+/// An optimization to name the continuation
+
+unfold
+let tac_wp_compact (a:Type) (wp:tac_wp_t a) : tac_wp_t a =
+  fun ps post ->
+  forall (k:__result a -> Type0). (forall (r:__result a).{:pattern (guard_free (k r))} post r ==> k r) ==> wp ps k
+
+
+/// tac_bind_interleave_begin is an ugly hack to get interface interleaving
+/// work with admit_smt_queries true for the bind combinator
+
+val tac_bind_interleave_begin : unit
+
+
+/// We cannot verify the bind combinator, since the body of bind
+///   does some operations on the proof state, with which we cannot prove
+///   that the proofstate is sequenced. Two ways to fix it:
+///
+/// 1. We separate the "meta" proofstate s.t. range, depth, etc. from the main
+///    proofstate, and then sequencing only applies to the main proofstate
+///
+/// 2. The pre and post of the TAC effect are just exception pre and post,
+///    since we can't prove much about the proofstate anyway, as it is
+///    mostly abstract
 
 (* monadic bind *)
-private
-let __bind (a:Type) (b:Type) (r1 r2:range) (t1:__tac a) (t2:a -> __tac b) : __tac b =
-    fun ps ->
-        let ps = set_proofstate_range ps (FStar.Range.prims_to_fstar_range r1) in
-        let ps = incr_depth ps in
-        let r = t1 ps in
-        match r with
-        | Success a ps' ->
-            let ps' = set_proofstate_range ps' (FStar.Range.prims_to_fstar_range r2) in
-            // Force evaluation of __tracepoint q even on the interpreter
-            begin match tracepoint ps' with
-            | true -> t2 a (decr_depth ps')
-            end
-        | Failed e ps' -> Failed e ps'
+#push-options "--admit_smt_queries true"
+let tac_bind (a:Type) (b:Type)
+  (wp_f:tac_wp_t a)
+  (wp_g:a -> tac_wp_t b)
+  (r1 r2:range)
+  (t1:tac_repr a wp_f)
+  (t2:(x:a -> tac_repr b (wp_g x))) : tac_repr b (tac_wp_compact b (tac_bind_wp wp_f wp_g)) =
+  fun ps ->
+  let ps = set_proofstate_range ps (FStar.Range.prims_to_fstar_range r1) in
+  let ps = incr_depth ps in
+  let r = t1 ps in
+  match r with
+  | Success a ps' ->
+    let ps' = set_proofstate_range ps' (FStar.Range.prims_to_fstar_range r2) in
+    // Force evaluation of __tracepoint q even on the interpreter
+    begin match tracepoint ps' with
+          | true -> t2 a (decr_depth ps')
+    end
+  | Failed e ps' -> Failed e ps'
+#pop-options
 
-(* Actions *)
-private
-let __get () : __tac proofstate = fun s0 -> Success s0 s0
 
-private
-let __raise (a:Type0) (e:exn) : __tac a = fun (ps:proofstate) -> Failed #a e ps
+/// tac_bind_interleave_end is an ugly hack to get interface interleaving
+/// work with admit_smt_queries true for the bind combinator
 
-private
-let __tac_wp a = proofstate -> (__result a -> Tot Type0) -> Tot Type0
+val tac_bind_interleave_end : unit
 
-(* The DMFF-generated `bind_wp` doesn't the contain the "don't
- * duplicate the post-condition" optimization, which causes VCs (for
- * well-formedness of tactics) to blow up.
- *
- * Plus, we don't need to model the ranges and depths: they make no
- * difference since the proofstate type is abstract and the SMT never
- * sees a concrete one.
- *
- * So, override `bind_wp` for the effect with an efficient one.
- *)
-private
-unfold let g_bind (a:Type) (b:Type) (wp:__tac_wp a) (f:a -> __tac_wp b) = fun ps post ->
-    wp ps (fun m' -> match m' with
-                     | Success a q -> f a q post
-                     | Failed e q -> post (Failed e q))
+unfold
+let tac_if_then_else_wp (#a:Type) (wp_then:tac_wp_t a) (wp_else:tac_wp_t a) (b:bool)
+  : tac_wp_t a
+  = fun ps post -> (b ==> wp_then ps post) /\
+                ((~ b) ==> wp_else ps post)
 
-private
-unfold let g_compact (a:Type) (wp:__tac_wp a) : __tac_wp a =
-    fun ps post -> forall k. (forall (r:__result a).{:pattern (guard_free (k r))} post r ==> k r) ==> wp ps k
+let tac_if_then_else (a:Type)
+  (wp_then:tac_wp_t a)
+  (wp_else:tac_wp_t a)
+  (f:tac_repr a wp_then)
+  (g:tac_repr a wp_else)
+  (b:bool)
+  : Type
+  = tac_repr a (tac_wp_compact a (tac_if_then_else_wp wp_then wp_else b))
 
-private
-unfold let __TAC_eff_override_bind_wp (a:Type) (b:Type) (wp:__tac_wp a) (f:a -> __tac_wp b) =
-    g_compact b (g_bind a b wp f)
+let tac_subcomp (a:Type)
+  (wp_f:tac_wp_t a)
+  (wp_g:tac_wp_t a)
+  (f:tac_repr a wp_f)
+  : Pure (tac_repr a wp_g)
+         (requires forall ps p. wp_g ps p ==> wp_f ps p)
+         (ensures fun _ -> True)
+  = f
 
-[@@ dm4f_bind_range ]
-new_effect {
-  TAC : a:Type -> Effect
-  with repr     = __tac
-     ; bind     = __bind
-     ; return   = __ret
-     ; __raise  = __raise
-     ; __get    = __get
+/// default effect is Tac : meaning, unannotated TAC functions will be
+///                         typed as Tac a
+///
+/// And the bind combinator has range arguments
+///   that will be provided when the effect is reified
+
+[@@ default_effect "FStar.Tactics.Effect.Tac"; bind_has_range_args]
+reflectable
+effect {
+  TAC (a:Type) (wp:tac_wp_t a)
+  with { repr=tac_repr;
+         return=tac_return;
+         bind=tac_bind;
+         if_then_else=tac_if_then_else;
+         subcomp=tac_subcomp }
 }
+
 
 (* Hoare variant *)
 effect TacH (a:Type) (pre : proofstate -> Tot Type0) (post : proofstate -> __result a -> Tot Type0) =
@@ -103,13 +163,27 @@ effect TacS (a:Type) = TacH a (requires (fun _ -> True)) (ensures (fun _ps r -> 
 effect TacF (a:Type) = TacH a (requires (fun _ -> False)) (ensures (fun _ _ -> True))
 
 unfold
-let lift_div_tac (a:Type) (wp:pure_wp a) : __tac_wp a =
-    fun ps p -> wp (fun x -> p (Success x ps))
+let lift_div_tac_wp (#a:Type) (wp:pure_wp a) : tac_wp_t a =
+  elim_pure_wp_monotonicity wp;  
+  fun ps p -> wp (fun x -> p (Success x ps))
+
+let lift_div_tac (a:Type) (wp:pure_wp a) (f:eqtype_as_type unit -> DIV a wp)
+  : tac_repr a (lift_div_tac_wp wp)
+  = elim_pure_wp_monotonicity wp;
+    fun ps -> Success (f ()) ps
 
 sub_effect DIV ~> TAC = lift_div_tac
 
-let get = TAC?.__get
-let raise (#a:Type) (e:exn) = TAC?.__raise a e
+let get ()
+  : TAC proofstate (fun ps post -> post (Success ps ps))
+  = TAC?.reflect (fun ps -> Success ps ps)
+
+let raise (#a:Type) (e:exn)
+  : TAC a (fun ps post -> post (Failed e ps))
+  = TAC?.reflect (fun ps -> Failed #a e ps)
+
+
+/// assert p by t
 
 val with_tactic (t : unit -> Tac unit) (p:Type u#a) : Type u#a
 
@@ -133,10 +207,8 @@ val assert_by_tactic (p:Type) (t:unit -> Tac unit)
          (requires (set_range_of (with_tactic t (squash p)) (range_of t)))
          (ensures (fun _ -> p))
 
-(* We don't peel off all `with_tactic`s in negative positions, so give
- * the SMT a way to reason about them *)
-val by_tactic_seman : tau:(unit -> Tac unit) -> phi:Type -> Lemma (with_tactic tau phi ==> phi)
-                                                                  [SMTPat (with_tactic tau phi)]
+val by_tactic_seman (tau:unit -> Tac unit) (phi:Type)
+  : Lemma (with_tactic tau phi ==> phi)
 
 (* One can always bypass the well-formedness of metaprograms. It does
  * not matter as they are only run at typechecking time, and if they get

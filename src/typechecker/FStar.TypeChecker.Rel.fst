@@ -543,7 +543,6 @@ let find_univ_uvar u s = BU.find_map s (function
 (* ------------------------------------------------*)
 (* <normalization>                                 *)
 (* ------------------------------------------------*)
-let whnf' env t    = SS.compress (N.normalize [Env.Beta; Env.Reify; Env.Weak; Env.HNF] env (U.unmeta t)) |> U.unlazy_emb
 let sn' env t       = SS.compress (N.normalize [Env.Beta; Env.Reify] env t) |> U.unlazy_emb
 let sn env t =
   Profiling.profile
@@ -560,17 +559,23 @@ let norm_with_steps profiling_tag steps env t =
 
 
 let should_strongly_reduce t =
-    let h, _ = U.head_and_args t in
+    let h, _ = t |> U.unascribe |> U.head_and_args in
     match (SS.compress h).n with
     | Tm_constant FStar.Const.Const_reify -> true
     | _ -> false
 
 let whnf env t =
+  let norm steps t =
+    t |> U.unmeta
+      |> N.normalize steps env
+      |> SS.compress
+      |> U.unlazy_emb in
+
   Profiling.profile
     (fun () ->
       if should_strongly_reduce t
-      then SS.compress (N.normalize [Env.Beta; Env.Reify; Env.Exclude Env.Zeta; Env.UnfoldUntil delta_constant] env t) |> U.unlazy_emb
-      else whnf' env t)
+      then norm [Env.Beta; Env.Reify; Env.Exclude Env.Zeta; Env.UnfoldUntil delta_constant] t
+      else norm [Env.Beta; Env.Reify; Env.Weak; Env.HNF] (U.unmeta t))
     (Some (Ident.string_of_lid (Env.current_module env)))
     "FStar.TypeChecker.Rel.whnf"
 
@@ -999,7 +1004,7 @@ let extend_gamma (g:gamma) (bs:binders) =
     List.fold_left (fun g ({binder_bv=x}) -> Binding_var x::g) g bs
 
 let gamma_until (g:gamma) (bs:binders) =
-    match List.last bs with
+    match List.last_opt bs with
     | None -> []
     | Some ({binder_bv=x}) ->
       match BU.prefix_until (function Binding_var x' -> S.bv_eq x x' | _  -> false) g with
@@ -1770,11 +1775,11 @@ let rec solve (env:Env.env) (probs:worklist) : solution =
         if BU.physical_equality tp.lhs tp.rhs then solve env (solve_prob hd None [] probs) else
         if rank=Rigid_rigid
         || (tp.relation = EQ && rank <> Flex_flex)
-        then solve_t env tp probs
+        then solve_t' env tp probs
         else if probs.defer_ok = DeferAny
         then maybe_defer_to_user_tac env tp "deferring flex_rigid or flex_flex subtyping" probs
         else if rank=Flex_flex
-        then solve_t env ({tp with relation=EQ}) probs //turn flex_flex subtyping into flex_flex eq
+        then solve_t' env ({tp with relation=EQ}) probs //turn flex_flex subtyping into flex_flex eq
         else solve_rigid_flex_or_flex_rigid_subtyping rank env tp probs
       end
 
@@ -3106,7 +3111,11 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
             | _ ->
               let lhs = force_refinement (base1, refinement1) in
               let rhs = force_refinement (base2, refinement2) in
-              solve_t env ({problem with lhs=lhs; rhs=rhs}) wl
+              //
+              //AR: force_refinement already returns the term in
+              //    whnf, so call solve_t' directly
+              //
+              solve_t' env ({problem with lhs=lhs; rhs=rhs}) wl
             end
     in
 
@@ -3577,7 +3586,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
       (* rigid-flex: reorient if it is an equality constraint *)
       | _, Tm_uvar _
       | _, Tm_app({n=Tm_uvar _}, _) when (problem.relation = EQ) ->
-        solve_t env (invert problem) wl
+        solve_t' env (invert problem) wl
 
       (* flex-rigid: ?u _ <: t1 -> t2 *)
       | Tm_uvar _, Tm_arrow _
@@ -3627,11 +3636,11 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
 
       | Tm_refine _, _ ->
         let t2 = force_refinement <| base_and_refinement env t2 in
-        solve_t env ({problem with rhs=t2}) wl
+        solve_t' env ({problem with rhs=t2}) wl
 
       | _, Tm_refine _ ->
         let t1 = force_refinement <| base_and_refinement env t1 in
-        solve_t env ({problem with lhs=t1}) wl
+        solve_t' env ({problem with lhs=t1}) wl
 
       | Tm_match (s1, _, brs1, _), Tm_match (s2, _, brs2, _) ->  //AR: note ignoring the return annotation
         let by_smt () =
@@ -3847,6 +3856,20 @@ and solve_c (env:Env.env) (problem:problem comp) (wl:worklist) : solution =
              solve env (attempt sub_probs wl)
     in
 
+    let should_fail_since_repr_subcomp_not_allowed
+      (repr_subcomp_allowed:bool)
+      (c1 c2:lid) : bool
+      = let c1, c2 = Env.norm_eff_name env c1, Env.norm_eff_name env c2 in
+        not wl.repr_subcomp_allowed
+        && not (lid_equals c1 c2)
+        && Env.is_reifiable_effect env c2 in
+                  // GM: What I would like to write instead of these two
+                  // last conjuncts is something like
+                  // [Option.isSome edge.mlift.mlift_term],
+                  // but it seems that we always carry around a Some
+                  // (fun _ _ e -> e) instead of a None even for
+                  // primitive effects.
+
     let solve_layered_sub c1 c2 =
       if Env.debug env <| Options.Other "LayeredEffectsApp" then
         BU.print2 "solve_layered_sub c1: %s and c2: %s\n"
@@ -3889,168 +3912,177 @@ and solve_c (env:Env.env) (problem:problem comp) (wl:worklist) : solution =
       else
         let r = Env.get_range env in
 
-        let subcomp_name = BU.format2 "%s <: %s"
-          (c1.effect_name |> Ident.ident_of_lid |> Ident.string_of_id)
-          (c2.effect_name |> Ident.ident_of_lid |> Ident.string_of_id) in
-
-        let lift_c1 (edge:edge) : comp_typ * guard_t =
-          c1 |> S.mk_Comp |> edge.mlift.mlift_wp env
-             |> (fun (c, g) -> U.comp_to_comp_typ c, g) in
-
-        let c1, g_lift, stronger_t_opt, is_polymonadic =
-          match Env.exists_polymonadic_subcomp env c1.effect_name c2.effect_name with
-          | None ->
-            (match Env.monad_leq env c1.effect_name c2.effect_name with
-             | None -> c1, Env.trivial_guard, None, false
-             | Some edge ->
-               let c1, g_lift = lift_c1 edge in
-               c1, g_lift,
-               c2.effect_name
-               |> Env.get_effect_decl env
-               |> U.get_stronger_vc_combinator
-               |> (fun ts -> Env.inst_tscheme_with ts c2.comp_univs |> snd |> Some),
-               false)
-          | Some t ->
-            c1, Env.trivial_guard,
-            Env.inst_tscheme_with t c2.comp_univs |> snd |> Some,
-            true in
-
-        if is_none stronger_t_opt
-        then giveup env (mklstr (fun () -> BU.format2 "incompatible monad ordering: %s </: %s"
-                                        (Print.lid_to_string c1.effect_name)
-                                        (Print.lid_to_string c2.effect_name))) orig
+        if should_fail_since_repr_subcomp_not_allowed
+             wl.repr_subcomp_allowed
+             c1.effect_name
+             c2.effect_name
+        then giveup env (mklstr (fun () -> BU.format2 "Cannot lift from %s to %s, it needs a lift\n"
+                                            (string_of_lid c1.effect_name)
+                                            (string_of_lid c2.effect_name)))
+                    orig
         else
-          let stronger_t = stronger_t_opt |> must in
-          let wl = extend_wl wl g_lift.deferred g_lift.deferred_to_tac g_lift.implicits in
+          let subcomp_name = BU.format2 "%s <: %s"
+            (c1.effect_name |> Ident.ident_of_lid |> Ident.string_of_id)
+            (c2.effect_name |> Ident.ident_of_lid |> Ident.string_of_id) in
 
-          if is_polymonadic &&
-             Env.is_erasable_effect env c1.effect_name &&
-             not (Env.is_erasable_effect env c2.effect_name) &&
-             not (N.non_info_norm env c1.result_typ)
-          then Errors.raise_error (Errors.Error_TypeError,
-                                   BU.format3 "Cannot lift erasable expression from %s ~> %s since its type %s is informative"
-                                     (string_of_lid c1.effect_name)
-                                     (string_of_lid c2.effect_name)
-                                     (Print.term_to_string c1.result_typ)) r;
+          let lift_c1 (edge:edge) : comp_typ * guard_t =
+            c1 |> S.mk_Comp |> edge.mlift.mlift_wp env
+               |> (fun (c, g) -> U.comp_to_comp_typ c, g) in
+  
+          let c1, g_lift, stronger_t_opt, is_polymonadic =
+            match Env.exists_polymonadic_subcomp env c1.effect_name c2.effect_name with
+            | None ->
+              (match Env.monad_leq env c1.effect_name c2.effect_name with
+               | None -> c1, Env.trivial_guard, None, false
+               | Some edge ->
+                 let c1, g_lift = lift_c1 edge in
+                 c1, g_lift,
+                 c2.effect_name
+                 |> Env.get_effect_decl env
+                 |> U.get_stronger_vc_combinator
+                 |> (fun ts -> Env.inst_tscheme_with ts c2.comp_univs |> snd |> Some),
+                 false)
+            | Some t ->
+              c1, Env.trivial_guard,
+              Env.inst_tscheme_with t c2.comp_univs |> snd |> Some,
+              true in
 
-          (*
-           * AR: 04/08: Suppose we have a subcomp problem of the form:
-           *            M a ?u <: M a wp or M a wp <: M a ?u
-           *
-           *            If we simply applied the stronger (subcomp) combinator,
-           *              there is a chance that the uvar would escape into the
-           *              refinements/wp and remain unresolved
-           *
-           *            So, if this is the case (i.e. an effect index on one side is a uvar)
-           *              we solve this particular index with equality ?u = wp
-           *
-           *            There are two exceptions:
-           *              If it is a polymonadic subcomp (the indices may not be symmetric)
-           *              If uvar is to be solved using a user-defined tactic
-           *
-           * TODO: apply this equality heuristic to non-layered effects also
-           *)
+          if is_none stronger_t_opt
+          then giveup env (mklstr (fun () -> BU.format2 "incompatible monad ordering: %s </: %s"
+                                          (Print.lid_to_string c1.effect_name)
+                                          (Print.lid_to_string c2.effect_name))) orig
+          else
+            let stronger_t = stronger_t_opt |> must in
+            let wl = extend_wl wl g_lift.deferred g_lift.deferred_to_tac g_lift.implicits in
 
-          //sub problems for uvar indices in c1
-          let is_sub_probs, wl =
-            if is_polymonadic then [], wl
-            else
-              let rec is_uvar t =  //t is a uvar that is not to be solved by a user tactic
-                match (SS.compress t).n with
-                | Tm_uvar (uv, _) ->
-                  not (DeferredImplicits.should_defer_uvar_to_user_tac env uv)
-                | Tm_uinst (t, _) -> is_uvar t
-                | Tm_app (t, _) -> is_uvar t
-                | _ -> false in
-              List.fold_right2 (fun (a1, _) (a2, _) (is_sub_probs, wl) ->
-                if is_uvar a1
-                then begin
-                       if Env.debug env <| Options.Other "LayeredEffectsEqns" then
-                       BU.print2 "Layered Effects teq (rel c1 index uvar) %s = %s\n"
-                         (Print.term_to_string a1) (Print.term_to_string a2);
-                       let p, wl = sub_prob wl a1 EQ a2 "l.h.s. effect index uvar" in
-                       p::is_sub_probs, wl
-                     end
-                 else is_sub_probs, wl
-              ) c1.effect_args c2.effect_args ([], wl) in
+            if is_polymonadic &&
+               Env.is_erasable_effect env c1.effect_name &&
+               not (Env.is_erasable_effect env c2.effect_name) &&
+               not (N.non_info_norm env c1.result_typ)
+            then Errors.raise_error (Errors.Error_TypeError,
+                                     BU.format3 "Cannot lift erasable expression from %s ~> %s since its type %s is informative"
+                                       (string_of_lid c1.effect_name)
+                                       (string_of_lid c2.effect_name)
+                                       (Print.term_to_string c1.result_typ)) r;
 
-          //return type sub problem
-          let ret_sub_prob, wl = sub_prob wl c1.result_typ problem.relation c2.result_typ "result type" in
+            (*
+             * AR: 04/08: Suppose we have a subcomp problem of the form:
+             *            M a ?u <: M a wp or M a wp <: M a ?u
+             *
+             *            If we simply applied the stronger (subcomp) combinator,
+             *              there is a chance that the uvar would escape into the
+             *              refinements/wp and remain unresolved
+             *
+             *            So, if this is the case (i.e. an effect index on one side is a uvar)
+             *              we solve this particular index with equality ?u = wp
+             *
+             *            There are two exceptions:
+             *              If it is a polymonadic subcomp (the indices may not be   symmetric)
+             *              If uvar is to be solved using a user-defined tactic
+             *
+             * TODO: apply this equality heuristic to non-layered effects also
+             *)
 
-          let stronger_t_shape_error s = BU.format3
-            "Unexpected shape of stronger for %s, reason: %s (t:%s)"
-            (Ident.string_of_lid c2.effect_name) s (Print.term_to_string stronger_t) in
+            //sub problems for uvar indices in c1
+            let is_sub_probs, wl =
+              if is_polymonadic then [], wl
+              else
+                let rec is_uvar t =  //t is a uvar that is not to be solved by a user   tactic
+                  match (SS.compress t).n with
+                  | Tm_uvar (uv, _) ->
+                    not (DeferredImplicits.should_defer_uvar_to_user_tac env uv)
+                  | Tm_uinst (t, _) -> is_uvar t
+                  | Tm_app (t, _) -> is_uvar t
+                  | _ -> false in
+                List.fold_right2 (fun (a1, _) (a2, _) (is_sub_probs, wl) ->
+                  if is_uvar a1
+                  then begin
+                         if Env.debug env <| Options.Other "LayeredEffectsEqns" then
+                         BU.print2 "Layered Effects teq (rel c1 index uvar) %s = %s\n"
+                           (Print.term_to_string a1) (Print.term_to_string a2);
+                         let p, wl = sub_prob wl a1 EQ a2 "l.h.s. effect index uvar" in
+                         p::is_sub_probs, wl
+                       end
+                   else is_sub_probs, wl
+                ) c1.effect_args c2.effect_args ([], wl) in
 
-          let a_b, rest_bs, f_b, stronger_c =
-            match (SS.compress stronger_t).n with
-            | Tm_arrow (bs, c) when List.length bs >= 2 ->
-              let (bs', c) = SS.open_comp bs c in
-              let a = List.hd bs' in
-              let bs = List.tail bs' in
-              let rest_bs, f_b = bs |> List.splitAt (List.length bs - 1)
-                |> (fun (l1, l2) -> l1, List.hd l2) in
-              a, rest_bs, f_b, c
-            | _ ->
-              raise_error (Errors.Fatal_UnexpectedExpressionType,
-                stronger_t_shape_error "not an arrow or not enough binders") r in
+            //return type sub problem
+            let ret_sub_prob, wl = sub_prob wl c1.result_typ problem.relation c2.result_typ "result type" in
 
-          let rest_bs_uvars, g_uvars = Env.uvars_for_binders env rest_bs
-            [NT (a_b.binder_bv, c2.result_typ)]
-            (fun b -> BU.format3 "implicit for binder %s in subcomp of %s at %s"
-              (Print.binder_to_string b) (Ident.string_of_lid c2.effect_name) (Range.string_of_range r)) r in
+            let stronger_t_shape_error s = BU.format3
+              "Unexpected shape of stronger for %s, reason: %s (t:%s)"
+              (Ident.string_of_lid c2.effect_name) s (Print.term_to_string stronger_t) in
 
-          let wl = { wl with wl_implicits = g_uvars.implicits@wl.wl_implicits } in  //AR: TODO: FIXME: using knowledge that g_uvars is only implicits
+            let a_b, rest_bs, f_b, stronger_c =
+              match (SS.compress stronger_t).n with
+              | Tm_arrow (bs, c) when List.length bs >= 2 ->
+                let (bs', c) = SS.open_comp bs c in
+                let a = List.hd bs' in
+                let bs = List.tail bs' in
+                let rest_bs, f_b = bs |> List.splitAt (List.length bs - 1)
+                  |> (fun (l1, l2) -> l1, List.hd l2) in
+                a, rest_bs, f_b, c
+              | _ ->
+                raise_error (Errors.Fatal_UnexpectedExpressionType,
+                  stronger_t_shape_error "not an arrow or not enough binders") r in
 
-          let substs = List.map2
-            (fun b t -> NT (b.binder_bv, t))
-            (a_b::rest_bs) (c2.result_typ::rest_bs_uvars) in
+            let rest_bs_uvars, g_uvars = Env.uvars_for_binders env rest_bs
+              [NT (a_b.binder_bv, c2.result_typ)]
+              (fun b -> BU.format3 "implicit for binder %s in subcomp of %s at %s"
+                (Print.binder_to_string b) (Ident.string_of_lid c2.effect_name) (Range.string_of_range r)) r in
 
-          let f_sub_probs, wl =
-            let f_sort_is = U.effect_indices_from_repr
-              f_b.binder_bv.sort
-              (Env.is_layered_effect env c1.effect_name)
-              r (stronger_t_shape_error "type of f is not a repr type")
-              |> List.map (SS.subst substs) in
+            let wl = { wl with wl_implicits = g_uvars.implicits@wl.wl_implicits } in  //AR: TODO: FIXME: using knowledge that g_uvars is only implicits
 
-            List.fold_left2 (fun (ps, wl) f_sort_i c1_i ->
-              if Env.debug env <| Options.Other "LayeredEffectsEqns"
-              then BU.print3 "Layered Effects (%s) %s = %s\n" subcomp_name
-                     (Print.term_to_string f_sort_i) (Print.term_to_string c1_i);
-              let p, wl = sub_prob wl f_sort_i EQ c1_i "indices of c1" in
-              ps@[p], wl
-            ) ([], wl) f_sort_is (c1.effect_args |> List.map fst) in
+            let substs = List.map2
+              (fun b t -> NT (b.binder_bv, t))
+              (a_b::rest_bs) (c2.result_typ::rest_bs_uvars) in
 
-          let stronger_ct = stronger_c |> SS.subst_comp substs |> U.comp_to_comp_typ in
+            let f_sub_probs, wl =
+              let f_sort_is = U.effect_indices_from_repr
+                f_b.binder_bv.sort
+                (Env.is_layered_effect env c1.effect_name)
+                r (stronger_t_shape_error "type of f is not a repr type")
+                |> List.map (SS.subst substs) in
 
-          let g_sub_probs, wl =
-            let g_sort_is = U.effect_indices_from_repr
-              stronger_ct.result_typ
-              (Env.is_layered_effect env c2.effect_name)
-              r (stronger_t_shape_error "subcomp return type is not a repr") in
+              List.fold_left2 (fun (ps, wl) f_sort_i c1_i ->
+                if Env.debug env <| Options.Other "LayeredEffectsEqns"
+                then BU.print3 "Layered Effects (%s) %s = %s\n" subcomp_name
+                       (Print.term_to_string f_sort_i) (Print.term_to_string c1_i);
+                let p, wl = sub_prob wl f_sort_i EQ c1_i "indices of c1" in
+                ps@[p], wl
+              ) ([], wl) f_sort_is (c1.effect_args |> List.map fst) in
 
-            List.fold_left2 (fun (ps, wl) g_sort_i c2_i ->
-              if Env.debug env <| Options.Other "LayeredEffectsEqns"
-              then BU.print3 "Layered Effects (%s) %s = %s\n" subcomp_name
-                     (Print.term_to_string g_sort_i) (Print.term_to_string c2_i);
-              let p, wl = sub_prob wl g_sort_i EQ c2_i "indices of c2" in
-              ps@[p], wl
-            ) ([], wl) g_sort_is (c2.effect_args |> List.map fst) in
+            let stronger_ct = stronger_c |> SS.subst_comp substs |> U.comp_to_comp_typ in
 
-          let fml =
-            let u, wp = List.hd stronger_ct.comp_univs, fst (List.hd stronger_ct.effect_args) in
-            Env.pure_precondition_for_trivial_post env u stronger_ct.result_typ wp Range.dummyRange in
+            let g_sub_probs, wl =
+              let g_sort_is = U.effect_indices_from_repr
+                stronger_ct.result_typ
+                (Env.is_layered_effect env c2.effect_name)
+                r (stronger_t_shape_error "subcomp return type is not a repr") in
 
-          let sub_probs =
-            ret_sub_prob::(is_sub_probs@
-                          f_sub_probs@
-                          g_sub_probs) in
-          let guard =
-            let guard = U.mk_conj_l (List.map p_guard sub_probs) in
-            match g_lift.guard_f with
-            | Trivial -> guard
-            | NonTrivial f -> U.mk_conj guard f in
-          let wl = solve_prob orig (Some <| U.mk_conj guard fml) [] wl in
-          solve env (attempt sub_probs wl) in
+              List.fold_left2 (fun (ps, wl) g_sort_i c2_i ->
+                if Env.debug env <| Options.Other "LayeredEffectsEqns"
+                then BU.print3 "Layered Effects (%s) %s = %s\n" subcomp_name
+                       (Print.term_to_string g_sort_i) (Print.term_to_string c2_i);
+                let p, wl = sub_prob wl g_sort_i EQ c2_i "indices of c2" in
+                ps@[p], wl
+              ) ([], wl) g_sort_is (c2.effect_args |> List.map fst) in
+
+            let fml =
+              let u, wp = List.hd stronger_ct.comp_univs, fst (List.hd stronger_ct.effect_args) in
+              Env.pure_precondition_for_trivial_post env u stronger_ct.result_typ wp Range.dummyRange in
+
+            let sub_probs =
+              ret_sub_prob::(is_sub_probs@
+                            f_sub_probs@
+                            g_sub_probs) in
+            let guard =
+              let guard = U.mk_conj_l (List.map p_guard sub_probs) in
+              match g_lift.guard_f with
+              | Trivial -> guard
+              | NonTrivial f -> U.mk_conj guard f in
+            let wl = solve_prob orig (Some <| U.mk_conj guard fml) [] wl in
+            solve env (attempt sub_probs wl) in
 
     let solve_sub c1 edge c2 =
         if problem.relation <> SUB then
@@ -4072,15 +4104,10 @@ and solve_c (env:Env.env) (problem:problem comp) (wl:worklist) : solution =
                      (Ident.string_of_lid c1.effect_name) (Ident.string_of_lid c2.effect_name)) r
                  else U.comp_to_comp_typ c)
         in
-        if not wl.repr_subcomp_allowed
-        && not (lid_equals c1.effect_name c2.effect_name)
-        && Env.is_reifiable_effect env c2.effect_name
-                  // GM: What I would like to write instead of these two
-                  // last conjuncts is something like
-                  // [Option.isSome edge.mlift.mlift_term],
-                  // but it seems that we always carry around a Some
-                  // (fun _ _ e -> e) instead of a None even for
-                  // primitive effects.
+        if should_fail_since_repr_subcomp_not_allowed
+             wl.repr_subcomp_allowed
+             c1.effect_name
+             c2.effect_name
         then giveup env (mklstr (fun () -> BU.format2 "Cannot lift from %s to %s, it needs a lift\n"
                                             (string_of_lid c1.effect_name)
                                             (string_of_lid c2.effect_name)))

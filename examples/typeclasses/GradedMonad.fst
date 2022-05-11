@@ -1,5 +1,6 @@
 module GradedMonad
 
+//SNIPPET_START:monoid$
 class monoid (a:Type) =
 {
    op   : a -> a -> a;
@@ -9,6 +10,14 @@ class monoid (a:Type) =
      (forall (x y z:a). op x (op y z) == op (op x y) z)
    );
 }
+
+instance monoid_nat_plus : monoid nat =
+{
+  op = (fun (x y:nat) -> x + y);
+  one = 0;
+  properties = ()
+}
+//SNIPPET_END: monoid$
 
 class graded_monad (#index:Type)
                    (m: monoid index -> index -> Type -> Type) = 
@@ -23,12 +32,6 @@ class graded_monad (#index:Type)
 }
 //we now have do notation for graded monads
 
-instance monoid_nat_plus : monoid nat =
-{
-  op = (fun (x y:nat) -> x + y);
-  one = 0;
-  properties = ()
-}
 
 let st (s:Type) monoid_nat_plus (count:nat) (a:Type) = s -> a & s
 instance st_graded (s:Type) : graded_monad (st s) =

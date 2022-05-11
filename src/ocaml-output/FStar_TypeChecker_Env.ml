@@ -3877,6 +3877,50 @@ let (get_effect_decl :
           let uu___2 = FStar_Ident.range_of_lid l in
           FStar_Errors.raise_error uu___1 uu___2
       | FStar_Pervasives_Native.Some md -> FStar_Pervasives_Native.fst md
+let (get_default_effect :
+  env ->
+    FStar_Ident.lident -> FStar_Ident.lident FStar_Pervasives_Native.option)
+  =
+  fun env1 ->
+    fun lid ->
+      let uu___ =
+        let uu___1 =
+          let uu___2 =
+            let uu___3 =
+              let uu___4 =
+                FStar_Compiler_Effect.op_Bar_Greater lid (norm_eff_name env1) in
+              FStar_Compiler_Effect.op_Bar_Greater uu___4
+                (lookup_attrs_of_lid env1) in
+            FStar_Compiler_Effect.op_Bar_Greater uu___3
+              (FStar_Compiler_Util.dflt []) in
+          FStar_Compiler_Effect.op_Bar_Greater uu___2
+            (FStar_Syntax_Util.get_attribute
+               FStar_Parser_Const.default_effect_attr) in
+        FStar_Compiler_Effect.op_Bar_Greater uu___1
+          (FStar_Compiler_Util.map_option FStar_Compiler_List.hd) in
+      FStar_Compiler_Effect.op_Bar_Greater uu___
+        (FStar_Compiler_Util.map_option
+           (fun uu___1 ->
+              match uu___1 with
+              | (t, uu___2) ->
+                  let uu___3 =
+                    let uu___4 = FStar_Syntax_Subst.compress t in
+                    uu___4.FStar_Syntax_Syntax.n in
+                  (match uu___3 with
+                   | FStar_Syntax_Syntax.Tm_constant
+                       (FStar_Const.Const_string (s, uu___4)) ->
+                       FStar_Ident.lid_of_str s
+                   | uu___4 ->
+                       let uu___5 =
+                         let uu___6 =
+                           let uu___7 = FStar_Ident.string_of_lid lid in
+                           let uu___8 = FStar_Syntax_Print.term_to_string t in
+                           FStar_Compiler_Util.format2
+                             "The argument for the default effect attribute for %s is not a constant string, it is %s\n"
+                             uu___7 uu___8 in
+                         (FStar_Errors.Fatal_UnexpectedEffect, uu___6) in
+                       FStar_Errors.raise_error uu___5
+                         t.FStar_Syntax_Syntax.pos)))
 let (is_layered_effect : env -> FStar_Ident.lident -> Prims.bool) =
   fun env1 ->
     fun l ->

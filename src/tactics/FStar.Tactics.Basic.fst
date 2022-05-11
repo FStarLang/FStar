@@ -357,7 +357,7 @@ let __tc (e : env) (t : term) : tac (term * typ * guard_t) =
     try ret (TcTerm.typeof_tot_or_gtot_term e t true)
     with | Errors.Err (_, msg, _)
          | Errors.Error (_, msg, _, _) -> begin
-           fail3 "Cannot type %s in context (%s). Error = (%s)" (tts e t)
+           fail3 "Cannot type (1) %s in context (%s). Error = (%s)" (tts e t)
                                                   (Env.all_binders e |> Print.binders_to_string ", ")
                                                   msg
            end))
@@ -370,20 +370,22 @@ let __tc_ghost (e : env) (t : term) : tac (term * typ * guard_t) =
         ret (t, lc.res_typ, g)
     with | Errors.Err (_, msg ,_)
          | Errors.Error (_, msg, _ ,_) -> begin
-           fail3 "Cannot type %s in context (%s). Error = (%s)" (tts e t)
+           fail3 "Cannot type (2) %s in context (%s). Error = (%s)" (tts e t)
                                                   (Env.all_binders e |> Print.binders_to_string ", ")
                                                   msg
            end))
 
 let __tc_lax (e : env) (t : term) : tac (term * lcomp * guard_t) =
     bind get (fun ps ->
-    mlog (fun () -> BU.print1 "Tac> __tc_lax(%s)\n" (Print.term_to_string t)) (fun () ->
+    mlog (fun () -> BU.print2 "Tac> __tc_lax(%s)(Context:%s)\n"
+                           (Print.term_to_string t)
+                           (Env.all_binders e |> Print.binders_to_string ", ")) (fun () ->
     let e = {e with uvar_subtyping=false} in
     let e = {e with lax = true} in
     try ret (TcTerm.tc_term e t)
     with | Errors.Err (_, msg, _)
          | Errors.Error (_, msg, _, _) -> begin
-           fail3 "Cannot type %s in context (%s). Error = (%s)" (tts e t)
+           fail3 "Cannot type (3) %s in context (%s). Error = (%s)" (tts e t)
                                                   (Env.all_binders e |> Print.binders_to_string ", ")
                                                   msg
            end))

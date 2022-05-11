@@ -253,6 +253,50 @@ let check_must_erase_attribute env se =
 
     | _ -> ()
 
+let check_typeclass_instance_attribute env se =
+    let is_tc_instance =
+        se.sigattrs |> BU.for_some
+          (fun t ->
+            match t.n with
+            | Tm_fvar fv -> S.fv_eq_lid fv FStar.Parser.Const.tcinstance_lid
+            | _ -> false)
+    in
+    if not is_tc_instance then ()
+    else (
+      match se.sigel with
+      | Sig_let((false, [lb]), _) ->
+        let _, res = U.arrow_formals_comp lb.lbtyp in
+        if is_total_comp res
+        then let t = comp_result res in
+             let head, _ = U.head_and_args t in
+             let err () =
+               FStar.Errors.log_issue
+                      (range_of_sigelt se)
+                      (FStar.Errors.Error_UnexpectedTypeclassInstance,
+                        (BU.format1 "Instances must define instances of `class` types. Type %s is not a class"
+                                               (Print.term_to_string t)))
+             in
+             match (U.un_uinst head).n with
+             | Tm_fvar fv ->
+               if not (Env.fv_has_attr env fv FStar.Parser.Const.tcclass_lid)
+               then err ()
+             | _ ->
+               err ()
+        else
+          FStar.Errors.log_issue
+            (range_of_sigelt se)
+            (FStar.Errors.Error_UnexpectedTypeclassInstance,
+                 (BU.format1 "Instances are expected to be total. This instance has effect %s"
+                             (Ident.string_of_lid (U.comp_effect_name res))))
+
+      | _ ->
+        FStar.Errors.log_issue
+          (range_of_sigelt se)
+          (FStar.Errors.Error_UnexpectedTypeclassInstance,
+                 "An `instance` is expected to be a non-recursive definition whose type is an instance of a `class`")
+    )
+
+
 let proc_check_with (attrs:list attribute) (kont : unit -> 'a) : 'a =
   match U.get_attribute PC.check_with_lid attrs with
   | None -> kont ()
@@ -395,7 +439,7 @@ let tc_sig_let env r se lbs lids : list sigelt * list sigelt * Env.env =
 
     (* Check that all the mutually recursive bindings mention the same universes *)
     U.check_mutual_universes lbs';
-    
+
     let quals = match quals_opt with
       | None -> [Visible_default]
       | Some q ->
@@ -451,7 +495,7 @@ let tc_sig_let env r se lbs lids : list sigelt * list sigelt * Env.env =
             in
             if lb_unannotated then { e_lax with n = Tm_let ((false, [ { lb with lbtyp = S.tun } ]), e2)}  //erase the type annotation
             else e_lax
-          | Tm_let ((true, lbs), _) -> 
+          | Tm_let ((true, lbs), _) ->
             U.check_mutual_universes lbs;
             //leave recursive lets as is; since the decreases clause from the ascription (if any)
             //is propagated to the lbtyp by TcUtil.extract_let_rec_annotation
@@ -492,7 +536,7 @@ let tc_sig_let env r se lbs lids : list sigelt * list sigelt * Env.env =
         let lbdef = SS.close_univ_vars univnames lbdef in
         { lb with lbdef = lbdef }
     in
-    let r = 
+    let r =
       Profiling.profile (fun () -> tc_maybe_toplevel_term env' e)
                         (Some (Ident.string_of_lid (Env.current_module env)))
                         "FStar.TypeChecker.Tc.tc_sig_let-tc-phase2"
@@ -500,7 +544,7 @@ let tc_sig_let env r se lbs lids : list sigelt * list sigelt * Env.env =
     let se, lbs = match r with
       | {n=Tm_let(lbs, e)}, _, g when Env.is_trivial g ->
         U.check_mutual_universes (snd lbs);
-        
+
         // Propagate binder names into signature
         let lbs = (fst lbs, (snd lbs) |> List.map rename_parameters) in
 
@@ -537,6 +581,7 @@ let tc_sig_let env r se lbs lids : list sigelt * list sigelt * Env.env =
           else "") |> String.concat "\n");
 
     check_must_erase_attribute env0 se;
+    check_typeclass_instance_attribute env0 se;
 
     [se], [], env0
 
@@ -654,7 +699,7 @@ let tc_decl' env0 se: list sigelt * list sigelt * Env.env =
 
       //only elaborate, the loop in tc_decls would send these back to us for typechecking
       [], ses @ effect_and_lift_ses, env0
-    else       
+    else
       let ne =
         if do_two_phases env then begin
           let ne =
@@ -763,7 +808,7 @@ let tc_decl' env0 se: list sigelt * list sigelt * Env.env =
     [], ses, env
 
   | Sig_let(lbs, lids) ->
-    Profiling.profile 
+    Profiling.profile
       (fun () -> tc_sig_let env r se lbs lids)
       (Some (Ident.string_of_lid (Env.current_module env)))
       "FStar.TypeChecker.Tc.tc_sig_let"
@@ -821,7 +866,7 @@ let tc_decl env se: list sigelt * list sigelt * Env.env =
    if se.sigmeta.sigmeta_admit
    then begin
      let old = Options.admit_smt_queries () in
-     Options.set_admit_smt_queries true;  
+     Options.set_admit_smt_queries true;
      let result = tc_decl' env se in
      Options.set_admit_smt_queries old;
      result
