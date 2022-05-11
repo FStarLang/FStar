@@ -1295,9 +1295,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                  let data_ax, decls = datas |> List.fold_left (fun (out, decls) l ->
                     let _, data_t = Env.lookup_datacon env.tcenv l in
                     let args, res = U.arrow_formals data_t in
-                    let indices = match (SS.compress res).n with
-                        | Tm_app(_, indices) -> indices
-                        | _ -> [] in
+                    let indices = res |> U.head_and_args_full |> snd in
                     let env = args |> List.fold_left
                         (fun env ({binder_bv=x}) -> push_term_var env x (mkApp(mk_term_projector_name l x, [xx])))
                         env in
