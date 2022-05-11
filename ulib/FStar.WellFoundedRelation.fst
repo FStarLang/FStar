@@ -124,46 +124,47 @@ let inverse_image_to_wfr (#a: Type u#a) (#b: Type u#b) (r: a -> a -> Type0) (f: 
   { relation = r; decreaser = inverse_image_decreaser r f wfr; proof = proof; }
 
 let rec lex_nondep_decreaser (#a: Type u#a) (#b: Type u#b) (wfr_a: wfr_t a) (wfr_b: wfr_t b)
-                             (x: a * b)
-  : Tot (acc_classical (lex_nondep_relation wfr_a wfr_b) x)
-    (decreases %[wfr_a.decreaser (fst x); wfr_b.decreaser (snd x)]) =
-  let smaller (y: a * b{lex_nondep_relation wfr_a wfr_b y x})
-    : (acc_classical (lex_nondep_relation wfr_a wfr_b) y) =
-    lex_nondep_decreaser wfr_a wfr_b y
+                             (xy: a * b)
+  : Tot (acc_classical (lex_nondep_relation wfr_a wfr_b) xy)
+    (decreases %[wfr_a.decreaser (fst xy); wfr_b.decreaser (snd xy)]) =
+  let smaller (xy': a * b{lex_nondep_relation wfr_a wfr_b xy' xy})
+    : (acc_classical (lex_nondep_relation wfr_a wfr_b) xy') =
+    lex_nondep_decreaser wfr_a wfr_b xy'
   in
   AccClassicalIntro smaller
 
 let lex_nondep_wfr (#a: Type u#a) (#b: Type u#b) (wfr_a: wfr_t a) (wfr_b: wfr_t b)
   : wfr: wfr_t (a * b){wfr.relation == lex_nondep_relation wfr_a wfr_b} =
-  let proof (x1: a * b) (x2: a * b)
-    : Lemma (requires lex_nondep_relation wfr_a wfr_b x1 x2)
-            (ensures  lex_nondep_decreaser wfr_a wfr_b x1 << lex_nondep_decreaser wfr_a wfr_b x2) =
-    assert ((lex_nondep_decreaser wfr_a wfr_b x2).access_smaller x1 ==
-            lex_nondep_decreaser wfr_a wfr_b x1)
+  let proof (xy1: a * b) (xy2: a * b)
+    : Lemma (requires lex_nondep_relation wfr_a wfr_b xy1 xy2)
+            (ensures  lex_nondep_decreaser wfr_a wfr_b xy1 <<
+                      lex_nondep_decreaser wfr_a wfr_b xy2) =
+    assert ((lex_nondep_decreaser wfr_a wfr_b xy2).access_smaller xy1 ==
+            lex_nondep_decreaser wfr_a wfr_b xy1)
   in
   { relation = lex_nondep_relation wfr_a wfr_b;
     decreaser = lex_nondep_decreaser wfr_a wfr_b;
     proof = proof; }
 
 let rec lex_dep_decreaser (#a: Type u#a) (#b: a -> Type u#b) (wfr_a: wfr_t a)
-                          (a_to_wfr_b: (x: a -> wfr_t (b x))) (x: (v: a & b v))
-  : Tot (acc_classical (lex_dep_relation wfr_a a_to_wfr_b) x)
-        (decreases %[wfr_a.decreaser (dfst x); (a_to_wfr_b (dfst x)).decreaser (dsnd x)]) =
-  let smaller (y: (v: a & b v){lex_dep_relation wfr_a a_to_wfr_b y x})
-    : (acc_classical (lex_dep_relation wfr_a a_to_wfr_b) y) =
-    lex_dep_decreaser wfr_a a_to_wfr_b y
+                          (a_to_wfr_b: (x: a -> wfr_t (b x))) (xy: (x: a & b x))
+  : Tot (acc_classical (lex_dep_relation wfr_a a_to_wfr_b) xy)
+        (decreases %[wfr_a.decreaser (dfst xy); (a_to_wfr_b (dfst xy)).decreaser (dsnd xy)]) =
+  let smaller (xy': (x: a & b x){lex_dep_relation wfr_a a_to_wfr_b xy' xy})
+    : (acc_classical (lex_dep_relation wfr_a a_to_wfr_b) xy') =
+    lex_dep_decreaser wfr_a a_to_wfr_b xy'
   in
   AccClassicalIntro smaller
 
 let lex_dep_wfr (#a: Type u#a) (#b: a -> Type u#b) (wfr_a: wfr_t a)
                 (a_to_wfr_b: (x: a -> wfr_t (b x)))
   : wfr: wfr_t (x: a & b x){wfr.relation == lex_dep_relation wfr_a a_to_wfr_b} =
-  let proof (x1: (v: a & b v)) (x2: (v: a & b v))
-    : Lemma (requires lex_dep_relation wfr_a a_to_wfr_b x1 x2)
-            (ensures  lex_dep_decreaser wfr_a a_to_wfr_b x1 <<
-                      lex_dep_decreaser wfr_a a_to_wfr_b x2) =
-    assert ((lex_dep_decreaser wfr_a a_to_wfr_b x2).access_smaller x1 ==
-            lex_dep_decreaser wfr_a a_to_wfr_b x1)
+  let proof (xy1: (x: a & b x)) (xy2: (x: a & b x))
+    : Lemma (requires lex_dep_relation wfr_a a_to_wfr_b xy1 xy2)
+            (ensures  lex_dep_decreaser wfr_a a_to_wfr_b xy1 <<
+                      lex_dep_decreaser wfr_a a_to_wfr_b xy2) =
+    assert ((lex_dep_decreaser wfr_a a_to_wfr_b xy2).access_smaller xy1 ==
+            lex_dep_decreaser wfr_a a_to_wfr_b xy1)
   in
   { relation = lex_dep_relation wfr_a a_to_wfr_b;
     decreaser = lex_dep_decreaser wfr_a a_to_wfr_b;
