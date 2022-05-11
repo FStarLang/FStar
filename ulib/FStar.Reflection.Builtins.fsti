@@ -88,7 +88,9 @@ val set_sigelt_attrs : list term -> sigelt -> sigelt
 val sigelt_quals     : sigelt -> list qualifier
 val set_sigelt_quals : list qualifier -> sigelt -> sigelt
 
-(* Reading the vconfig under which a particular sigelt was typechecked *)
+(* Reading the vconfig under which a particular sigelt was typechecked.
+   This function returns None if "--record_options" was not on when
+   typechecking the sigelt *)
 val sigelt_opts : sigelt -> option vconfig
 
 (* Embed a vconfig as a term, for instance to use it with the check_with

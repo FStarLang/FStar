@@ -24,7 +24,7 @@ type ok3 (a:int) : bool -> Type = | Mkok3 : b:int -> ok3 a true
 [@@(expect_failure [313])]
 type bad (a:int) = | Mkbad : a:int -> bad a
 
-[@@(expect_failure [313])]
+[@@(expect_failure [185])]
 type bad2 (a:int) : eqtype = | Mkbad2 : a:int -> ok2 a
 
 [@@(expect_failure [313])]

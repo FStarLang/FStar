@@ -17,7 +17,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "79c002325152090a45201c94cab04f9f"
+      "b7cfed2c0587ca1e0ac54c29aa7fd43c"
     ],
     [
       "Part1.Quicksort.Generic.append",
@@ -32,7 +32,7 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "3321b54f01a108e51dd7479ed18321b8"
+      "0df2f815d0618703496f5573487eaf58"
     ],
     [
       "Part1.Quicksort.Generic.sorted",
@@ -52,7 +52,7 @@
         "subterm_ordering_Prims.Cons", "typing_Prims.__proj__Cons__item__tl"
       ],
       0,
-      "7e45f9a57de6bb0f7cd21b6f9428145f"
+      "6bb9ddfedf4683b10a5d011e33a61c61"
     ],
     [
       "Part1.Quicksort.Generic.mem",
@@ -68,7 +68,7 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "cfb5da7d92e5ddf3223791abb5769b8d"
+      "b474b4b336d0cb7537a477e519ff23bb"
     ]
   ]
 ]

@@ -1249,6 +1249,61 @@ let rec norm : cfg -> env -> stack -> term -> term =
             end
 
           | Tm_abs(bs, body, lopt) ->
+            //
+            //AR/NS: 04/26/2022:
+            //       In the case of metaprograms, we reduce DIV computations in the
+            //       normalizer. As a result, it could be that an abs node is
+            //       wrapped in a Meta_monadic (lift or just DIV)
+            //       The following code ensures that such meta wrappers do not
+            //       block reduction
+            //       Specifically, if the stack looks like (from top):
+            //         [Meta; Meta; ..; Meta; Arg; ...]
+            //       Then we remove the meta nodes so that the following argument
+            //       can be applied to the lambda
+            //       We only remove DIV and PURE ~> DIV lifts
+            //
+
+            //
+            // Precondition for calling: top of stack should be a Meta
+            //
+            // Returns Some st, when st is some meta nodes stripped off from stack
+            //         None,    when the stack does not have the shape noted above
+            //
+            let rec maybe_strip_meta_divs stack =
+              let open FStar.Ident in
+              match stack with
+              | [] -> None
+              | Meta (_, Meta_monadic (m, _), _)::tl
+                when lid_equals m PC.effect_DIV_lid ->
+                maybe_strip_meta_divs tl
+              | Meta (_, Meta_monadic_lift (src, tgt, _), _)::tl
+                when lid_equals src PC.effect_PURE_lid &&
+                     lid_equals tgt PC.effect_DIV_lid ->
+                maybe_strip_meta_divs tl
+              | Arg _::_ -> Some stack  //due to the precondition, this case doesn't arise in the top-level call
+              | _ -> None
+            in
+
+            //
+            // Reducing lambda body if strong reduction,
+            //   rebuild otherwise
+            //
+            let fallback () =
+              if cfg.steps.weak
+              then let t = closure_as_term cfg env t in
+                   rebuild cfg env stack t
+              else let bs, body, opening = open_term' bs body in
+                   let env' = bs |> List.fold_left (fun env _ -> dummy::env) env in
+                   let lopt = lopt
+                     |> BU.map_option (maybe_drop_rc_typ cfg)
+                     |> BU.map_option (fun rc ->
+                                      {rc with
+                                       residual_typ = BU.map_option (SS.subst opening) rc.residual_typ}) in
+                   log cfg  (fun () -> BU.print1 "\tShifted %s dummies\n" (string_of_int <| List.length bs));
+                   let stack = (Cfg (cfg, None))::stack in
+                   let cfg = { cfg with strong = true } in
+                   norm cfg env' (Abs(env, bs, env', lopt, t.pos)::stack) body
+            in
             begin match stack with
                 | UnivArgs _::_ ->
                   failwith "Ill-typed term: universes cannot be applied to term abstraction"
@@ -1279,29 +1334,21 @@ let rec norm : cfg -> env -> stack -> term -> term =
                   set_memo cfg r (env, t); //We intentionally do not memoize the strong normal form; only the WHNF
                   log cfg  (fun () -> BU.print1 "\tSet memo %s\n" (Print.term_to_string t));
                   norm cfg env stack t
-
+                | Meta _::_ ->
+                  //
+                  //Top of the stack is a meta, try stripping meta DIV nodes that
+                  //  may be blocking reduction
+                  //
+                  (match maybe_strip_meta_divs stack with
+                   | None -> fallback ()
+                   | Some stack -> norm cfg env stack t)
                 | Cfg _ :: _
                 | Match _::_
-                | Meta _::_
                 | Let _ :: _
                 | App _ :: _
                 | CBVApp _ :: _
                 | Abs _ :: _
-                | [] ->
-                  if cfg.steps.weak
-                  then let t = closure_as_term cfg env t in
-                       rebuild cfg env stack t
-                  else let bs, body, opening = open_term' bs body in
-                       let env' = bs |> List.fold_left (fun env _ -> dummy::env) env in
-                       let lopt = lopt
-                         |> BU.map_option (maybe_drop_rc_typ cfg)
-                         |> BU.map_option (fun rc ->
-                                          {rc with
-                                           residual_typ = BU.map_option (SS.subst opening) rc.residual_typ}) in
-                       log cfg  (fun () -> BU.print1 "\tShifted %s dummies\n" (string_of_int <| List.length bs));
-                       let stack = (Cfg (cfg, None))::stack in
-                       let cfg = { cfg with strong = true } in
-                       norm cfg env' (Abs(env, bs, env', lopt, t.pos)::stack) body
+                | [] -> fallback ()
             end
 
           | Tm_app(head, args) ->
@@ -1749,18 +1796,40 @@ and do_reify_monadic fallback cfg env stack (top : term) (m : monad_name) (t : t
                  * For non-layered effects, as before
                  *)
                 if U.is_layered ed then
+                  //
+                  //Bind in the TAC effect, for example, has range args
+                  //This is indicated on the effect using an attribute
+                  //
+                  let bind_has_range_args =
+                    U.has_attribute ed.eff_attrs PC.bind_has_range_args_attr in
+                  let num_fixed_binders =
+                    if bind_has_range_args then 4  //the two ranges, and f and g
+                    else 2 in  //f and g
+
+                  //
+                  //for bind binders that are not fixed, we apply ()
+                  //
                   let unit_args =
                     match (ed |> U.get_bind_vc_combinator |> snd |> SS.compress).n with
-                    | Tm_arrow (_::_::bs, _) when List.length bs >= 2 ->
+                    | Tm_arrow (_::_::bs, _) when List.length bs >= num_fixed_binders ->
                       bs
-                      |> List.splitAt (List.length bs - 2)
+                      |> List.splitAt (List.length bs - num_fixed_binders)
                       |> fst
                       |> List.map (fun _ -> S.as_arg S.unit_const)
                     | _ ->
                       raise_error (Errors.Fatal_UnexpectedEffect,
-                        BU.format2 "bind_wp for layered effect %s is not an arrow with >= 4 arguments (%s)"
-                          (Ident.string_of_lid ed.mname) (ed |> U.get_bind_vc_combinator |> snd |> Print.term_to_string)) rng in
-                  (S.as_arg lb.lbtyp)::(S.as_arg t)::(unit_args@[S.as_arg f_arg; S.as_arg body])
+                        BU.format3 "bind_wp for layered effect %s is not an arrow with >= %s arguments (%s)"
+                          (Ident.string_of_lid ed.mname)
+                          (string_of_int num_fixed_binders)
+                          (ed |> U.get_bind_vc_combinator |> snd |> Print.term_to_string)) rng in
+
+                  let range_args =
+                    if bind_has_range_args
+                    then [as_arg (embed_simple EMB.e_range lb.lbpos lb.lbpos);
+                          as_arg (embed_simple EMB.e_range body.pos body.pos)]
+                    else [] in
+
+                  (S.as_arg lb.lbtyp)::(S.as_arg t)::(unit_args@range_args@[S.as_arg f_arg; S.as_arg body])
                 else
                   let maybe_range_arg =
                     if BU.for_some (U.attr_eq U.dm4f_bind_range_attr) ed.eff_attrs
@@ -2443,7 +2512,19 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
         rebuild cfg' env stack t
 
       | Meta(_, m, r)::stack ->
-        let t = mk (Tm_meta(t, m)) r in
+        let t =
+          //
+          //AR/NS: 04/22/2022: The code below collapses the towers of
+          //                   meta monadic nodes, keeping the outermost effect
+          //                   We did this optimization during a debugging session
+          //
+          match m with
+          | Meta_monadic _ ->
+            (match (SS.compress t).n with
+             | Tm_meta (t', Meta_monadic _) ->
+               mk (Tm_meta(t', m)) r
+             | _ -> mk (Tm_meta(t, m)) r)
+          | _ -> mk (Tm_meta(t, m)) r in
         rebuild cfg env stack t
 
       | MemoLazy r::stack ->
@@ -2508,19 +2589,26 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
            let t = S.extend_app head (t, aq) r in
            rebuild cfg env stack' t
         in
-        //AR: no non-extraction reification for layered effects
-        let is_layered_effect m = m |> Env.norm_eff_name cfg.tcenv |> Env.is_layered_effect cfg.tcenv in
+        //
+        //AR: no non-extraction reification for layered effects,
+        //      unless TAC
+        //
+        let is_non_tac_layered_effect m =
+          let norm_m = m |> Env.norm_eff_name cfg.tcenv in
+          (not (Ident.lid_equals norm_m PC.effect_TAC_lid)) &&
+          norm_m |> Env.is_layered_effect cfg.tcenv in
 
         begin match (SS.compress t).n with
         | Tm_meta (_, Meta_monadic (m, _))
-          when m |> is_layered_effect && not cfg.steps.for_extraction ->
+          when m |> is_non_tac_layered_effect && not cfg.steps.for_extraction ->
           fallback (BU.format1
-                      "Meta_monadic for a layered effect %s in non-extraction mode"
+                      "Meta_monadic for a non-TAC layered effect %s in non-extraction mode"
                       (Ident.string_of_lid m)) ()
         | Tm_meta (_, Meta_monadic_lift (msrc, mtgt, _))
-          when (is_layered_effect msrc || is_layered_effect mtgt) && not cfg.steps.for_extraction ->
+          when (is_non_tac_layered_effect msrc || is_non_tac_layered_effect mtgt) &&
+               not cfg.steps.for_extraction ->
           fallback (BU.format2
-                    "Meta_monadic_lift for layered effect %s ~> %s in non extraction mode"
+                    "Meta_monadic_lift for a non-TAC layered effect %s ~> %s in non extraction mode"
                     (Ident.string_of_lid msrc) (Ident.string_of_lid mtgt)) ()
 
         | Tm_meta (t, Meta_monadic (m, ty)) ->

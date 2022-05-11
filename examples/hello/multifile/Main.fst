@@ -1,7 +1,14 @@
 module Main
 
+module All = FStar.All
+
+module L = FStar.List
+
 let f (x:int) (y:list int) = 
   FStar.List.Tot.(mem x y && contains x y)
+
+let g (l:list int) : All.ML int =
+  L.last l
 
 //the code below intentionally has a top-level effect
 //suppress warning 272

@@ -178,6 +178,7 @@ let validate_layered_effect_binders env (bs:binders) (repr_terms:list term) (che
      | _ -> false) in
 
   let invalid_binders = List.filter (fun b -> not (valid_binder b)) bs in
+
   if List.length invalid_binders <> 0 then
     raise_error (Errors.Fatal_UnexpectedEffect,
       BU.format1 "Binders %s neither appear as repr indices nor have an associated tactic"
@@ -389,7 +390,23 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
         bs |> List.splitAt (List.length bs - 2) |> fst
            |> SS.subst_binders [NT (a', bv_to_name a.binder_bv); NT (b', bv_to_name b.binder_bv)] 
       | _ -> not_an_arrow_error "bind" 4 ty r in
+
+    let rest_bs, range_bs =
+      if U.has_attribute ed.eff_attrs PC.bind_has_range_args_attr
+      then if List.length rest_bs >= 2
+           then List.splitAt (List.length rest_bs - 2) rest_bs
+           else raise_error (Errors.Fatal_UnexpectedEffect,
+                  BU.format3 "Type of %s:bind is not an arrow with >= 6 binders (%s::%s)" 
+                    (string_of_lid ed.mname)
+                    (Print.tag_of_term ty)
+                    (Print.term_to_string ty)) r
+      else rest_bs, []
+    in
+
     let bs = a::b::rest_bs in
+    //
+    //f, g, and the return type cannot depend on the range binders
+    //
     let f, guard_f =
       let repr, g = fresh_repr r (Env.push_binders env bs) u_a (a.binder_bv |> S.bv_to_name) in
       S.gen_bv "f" None repr |> S.mk_binder, g in
@@ -404,7 +421,7 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
       (BU.format1 "implicit for pure_wp in checking bind for %s" (string_of_lid ed.mname))
       r in
 
-    let k = U.arrow (bs@[f; g]) (S.mk_Comp ({
+    let k = U.arrow (bs@range_bs@[f; g]) (S.mk_Comp ({
       comp_univs = [ Env.new_u_univ () ];
       effect_name = PC.effect_PURE_lid;
       result_typ = repr;
@@ -425,6 +442,12 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
           List.splitAt (List.length bs - 2) bs
           |> (fun (l1, l2) -> l1,
                           l2 |> List.hd, l2 |> List.tl |> List.hd) in
+
+        // if there are range binders, don't check for their validity
+        let bs =
+          if List.length range_bs <> 0
+          then List.splitAt (List.length bs - 2) bs |> fst
+          else bs in
         (*
          * AR: CAUTION: a little lax about opening g_b with the x:a binder
          *              g_sort is only used for repr terms, validate_layered_effect_binders does not expect
@@ -1632,11 +1655,26 @@ let tc_effect_abbrev env (lid, uvs, tps, c) r =
   let tps, c = SS.open_comp tps c in
   let tps, env, us = tc_tparams env tps in
   let c, u, g = tc_comp env c in
+  //
+  //Check if this effect is marked as a default effect in the effect decl.
+  //  of its unfolded effect
+  //If so, we need to check that it has only a type argument
+  //
+  let is_default_effect =
+    match c |> U.comp_effect_name |> Env.get_default_effect env with
+    | None -> false
+    | Some l -> lid_equals l lid in
   Rel.force_trivial_guard env g;
   let _ =
     let expected_result_typ =
       match tps with
-      | ({binder_bv=x})::_ -> S.bv_to_name x
+      | ({binder_bv=x})::tl ->
+        if is_default_effect && not (tl = [])
+        then raise_error (Errors.Fatal_UnexpectedEffect,
+                          BU.format2 "Effect %s is marked as a default effect for %s, but it has more than one arguments"
+                            (string_of_lid lid)
+                            (c |> U.comp_effect_name |> string_of_lid)) r;
+        S.bv_to_name x
       | _ -> raise_error (Errors.Fatal_NotEnoughArgumentsForEffect,
                          "Effect abbreviations must bind at least the result type")
                         r
