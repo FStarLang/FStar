@@ -103,7 +103,8 @@ noeq type wfr_t (a: Type u#a) : Type u#(a + 1) =
   {
     relation: a -> a -> Type0;
     decreaser: (x: a -> acc_classical relation x);
-    proof: (x1: a) -> (x2: a) -> Lemma (requires relation x1 x2) (ensures decreaser x1 << decreaser x2);
+    proof: (x1: a) -> (x2: a) -> 
+           Lemma (requires relation x1 x2) (ensures decreaser x1 << decreaser x2);
   }
 
 let ambient_wfr_lemma (#a: Type u#a) (wfr: wfr_t a) (x1: a) (x2: a)
@@ -140,8 +141,7 @@ val empty_wfr (a: Type u#a) : (wfr: wfr_t a{wfr.relation == empty_relation})
 
 let acc_relation (#a: Type u#a) (r: a -> a -> Type0) (x1: a) (x2: a) : Type0 = exists (p: r x1 x2). True
 
-val acc_to_wfr (#a: Type u#a) (r: a -> a -> Type0)
-               (f: FStar.WellFounded.well_founded r)
+val acc_to_wfr (#a: Type u#a) (r: a -> a -> Type0) (f: FStar.WellFounded.well_founded r)
   : (wfr: wfr_t a{wfr.relation == acc_relation r})
 
 /// `subrelation_to_wfr r wfr` is a `wfr_t` built from a relation `r`
@@ -151,7 +151,8 @@ val acc_to_wfr (#a: Type u#a) (r: a -> a -> Type0)
 ///
 /// `(subrelation_to_wfr r wfr).relation` is the parameter `r`.
 
-val subrelation_to_wfr (#a: Type u#a) (r: a -> a -> Type0) (wfr: wfr_t a{forall x1 x2. r x1 x2 ==> wfr.relation x1 x2})
+val subrelation_to_wfr (#a: Type u#a) (r: a -> a -> Type0)
+                       (wfr: wfr_t a{forall x1 x2. r x1 x2 ==> wfr.relation x1 x2})
   : (wfr': wfr_t a{wfr'.relation == r})
 
 /// `inverse_image_to_wfr r f wfr` is a `wfr_t` built from a relation
@@ -162,8 +163,12 @@ val subrelation_to_wfr (#a: Type u#a) (r: a -> a -> Type0) (wfr: wfr_t a{forall 
 ///
 /// `(inverse_image_to_wfr r f wfr).relation` is the parameter `r`.
 
-val inverse_image_to_wfr (#a: Type u#a) (#b: Type u#b) (r: a -> a -> Type0) (f: a -> b)
-                         (wfr: wfr_t b{forall x1 x2. r x1 x2 ==> wfr.relation (f x1) (f x2)})
+val inverse_image_to_wfr
+  (#a: Type u#a)
+  (#b: Type u#b)
+  (r: a -> a -> Type0)
+  (f: a -> b)
+  (wfr: wfr_t b{forall x1 x2. r x1 x2 ==> wfr.relation (f x1) (f x2)})
   : (wfr': wfr_t a{wfr'.relation == r})
 
 /// `lex_nondep_wfr wfr_a wfr_b` is a `wfr_t` describing lexicographic
@@ -174,7 +179,9 @@ val inverse_image_to_wfr (#a: Type u#a) (#b: Type u#b) (r: a -> a -> Type0) (f: 
 /// `(lex_nondep_wfr wfr_a wfr_b).relation` is `lex_nondep_relation
 /// wfr_a wfr_b` as defined below.
 
-let lex_nondep_relation (#a: Type u#a) (#b: Type u#b) (wfr_a: wfr_t a) (wfr_b: wfr_t b) (xy1: a * b) (xy2: a * b) : Type0 =
+let lex_nondep_relation (#a: Type u#a) (#b: Type u#b) (wfr_a: wfr_t a) (wfr_b: wfr_t b)
+                        (xy1: a * b) (xy2: a * b)
+  : Type0 =
   let (x1, y1), (x2, y2) = xy1, xy2 in
   wfr_a.relation x1 x2 \/ (x1 == x2 /\ wfr_b.relation y1 y2)
 
@@ -190,12 +197,14 @@ val lex_nondep_wfr (#a: Type u#a) (#b: Type u#b) (wfr_a: wfr_t a) (wfr_b: wfr_t 
 /// `(lex_dep_wfr wfr_a a_to_wfr_b).relation` is `lex_dep_relation
 /// wfr_a a_to_wfr_b` as defined below.
 
-let lex_dep_relation (#a: Type u#a) (#b: a -> Type u#b) (wfr_a: wfr_t a) (a_to_wfr_b: (x: a -> wfr_t (b x)))
-                     (xy1: (x: a & b x)) (xy2: (x: a & b x)) : Type0 =
+let lex_dep_relation (#a: Type u#a) (#b: a -> Type u#b) (wfr_a: wfr_t a)
+                     (a_to_wfr_b: (x: a -> wfr_t (b x))) (xy1: (x: a & b x)) (xy2: (x: a & b x))
+  : Type0 =
   let (| x1, y1 |), (| x2, y2 |) = xy1, xy2 in
   wfr_a.relation x1 x2 \/ (x1 == x2 /\ (a_to_wfr_b x1).relation y1 y2)
 
-val lex_dep_wfr (#a: Type u#a) (#b: a -> Type u#b) (wfr_a: wfr_t a) (a_to_wfr_b: (x: a -> wfr_t (b x)))
+val lex_dep_wfr (#a: Type u#a) (#b: a -> Type u#b) (wfr_a: wfr_t a)
+                (a_to_wfr_b: (x: a -> wfr_t (b x)))
   : wfr: wfr_t (x: a & b x){wfr.relation == lex_dep_relation wfr_a a_to_wfr_b}
 
 /// `bool_wfr` is the well-founded relation on booleans that has false
