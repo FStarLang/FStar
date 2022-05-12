@@ -21,7 +21,7 @@ open FStar.WellFounded
 (** Provides some utilities related to well-founded relations *)
 
 (* 1. Given a well-founded relation `r:binrel a`
-      turn it into a well-founded relation on `binrel top`, 
+      turn it into a well-founded relation on `binrel top`,
       by construction a relation that only relates `top` elements
       in `a` by `r`
 
@@ -30,7 +30,7 @@ open FStar.WellFounded
 
       See tests/micro-benchmarks/TestWellFoundedRecursion.rel_poly2
 *)
-      
+
 let top = (b:Type & b)
 
 let lift_binrel (#a:Type)
@@ -39,8 +39,13 @@ let lift_binrel (#a:Type)
     = fun (t0 t1:top) ->
         (_:(dfst t0==a /\ dfst t1==a) & r (dsnd t0) (dsnd t1))
 
+val intro_lift_binrel (#a:Type) (r:binrel a) (y:a) (x:a)
+  : Lemma
+    (requires r y x)
+    (ensures lift_binrel r (| a, y |) (| a, x |))
+
 val elim_lift_binrel (#a:Type) (r:binrel a) (y:top) (x:a)
-  : Lemma 
+  : Lemma
     (requires lift_binrel r y (| a, x |))
     (ensures dfst y == a /\ r (dsnd y) x)
 
@@ -62,7 +67,7 @@ let lift_binrel_as_well_founded_relation (#a:Type u#a) (#r:binrel u#a u#r a) (wf
 
 
 (* 2. Given a well-founded relation `r:binrel a`
-      turn it into a *squashed* well-founded relation on `binrel top`, 
+      turn it into a *squashed* well-founded relation on `binrel top`,
       by construction a relation that only relates `top` elements
       in `a` by `r`
 
@@ -70,7 +75,7 @@ let lift_binrel_as_well_founded_relation (#a:Type u#a) (#r:binrel u#a u#r a) (wf
       which leads to slightly better SMT automation at use sites.
 
       See tests/micro-benchmarks/TestWellFoundedRecursion.rel_poly
-      
+
 *)
 let lift_binrel_squashed (#a:Type u#a)
                          (r:binrel u#a u#r a)
@@ -111,5 +116,3 @@ val lift_binrel_squashed_intro (#a:Type)
    The converse is not true, i.e., the well-founded proof is in contravariant position here *)
 val unsquash_well_founded (#a:Type u#a) (r:binrel u#a u#r a) (wf_r:well_founded (squash_binrel r))
   : well_founded u#a u#r r
-
-
