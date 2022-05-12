@@ -207,10 +207,8 @@ val assert_by_tactic (p:Type) (t:unit -> Tac unit)
          (requires (set_range_of (with_tactic t (squash p)) (range_of t)))
          (ensures (fun _ -> p))
 
-(* We don't peel off all `with_tactic`s in negative positions, so give
- * the SMT a way to reason about them *)
-val by_tactic_seman : tau:(unit -> Tac unit) -> phi:Type -> Lemma (with_tactic tau phi ==> phi)
-                                                                  [SMTPat (with_tactic tau phi)]
+val by_tactic_seman (tau:unit -> Tac unit) (phi:Type)
+  : Lemma (with_tactic tau phi ==> phi)
 
 (* One can always bypass the well-formedness of metaprograms. It does
  * not matter as they are only run at typechecking time, and if they get

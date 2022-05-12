@@ -114,18 +114,22 @@ let mk_Precedes = norng4 mk_Precedes
 let is_smt_reifiable_effect (en:TcEnv.env) (l:lident) : bool =
   let l = TcEnv.norm_eff_name en l in
   TcEnv.is_reifiable_effect en l &&
-  (lid_equals l C.effect_TAC_lid ||
-   not (l |> TcEnv.get_effect_decl en |> U.is_layered))
+  not (l |> TcEnv.get_effect_decl en |> U.is_layered)
 
 let is_smt_reifiable_comp (en:TcEnv.env) (c:S.comp) : bool =
   match c.n with
   | Comp ct -> is_smt_reifiable_effect en ct.effect_name
   | _ -> false
 
+//
+// TAC rc are not smt reifiable
+//
+
 let is_smt_reifiable_rc (en:TcEnv.env) (rc:S.residual_comp) : bool =
-  is_smt_reifiable_effect en rc.residual_effect
+  rc.residual_effect |> is_smt_reifiable_effect en
 
 let is_smt_reifiable_function (en:TcEnv.env) (t:S.term) : bool =
   match (SS.compress t).n with
-  | Tm_arrow (_, c) -> is_smt_reifiable_comp en c
+  | Tm_arrow (_, c) ->
+    c |> U.comp_effect_name |> is_smt_reifiable_effect en
   | _ -> false

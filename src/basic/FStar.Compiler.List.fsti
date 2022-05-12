@@ -41,7 +41,8 @@ val fold_right : ('a -> 'b -> 'b) -> (list 'a) -> 'b -> 'b
 val fold_right2 : ('a -> 'b -> 'c -> 'c) -> list 'a -> list 'b -> 'c -> 'c
 val rev_map_onto : ('a -> 'b) -> (list 'a) -> (list 'b) -> (list 'b)
 val init : (list 'a) -> list 'a
-val last : (list 'a) -> option 'a
+val last : (list 'a) -> 'a
+val last_opt : list 'a -> option 'a
 val existsb : f:('a -> bool) -> (list 'a) -> bool
 val existsML : f:('a -> bool) -> (list 'a) -> bool
 val find : f:('a -> bool) -> (list 'a) -> (option 'a)

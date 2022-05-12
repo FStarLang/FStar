@@ -349,7 +349,7 @@ layeredEffectDefinition:
              raise_error (Fatal_SyntaxError,
                           "Syntax error: unexpected empty binders list in the layered effect definition")
                          (range_of_id lid)
-          | _ -> hd bs, last bs |> must in
+          | _ -> hd bs, last bs in
         let r = union_ranges first_b.brange last_b.brange in
         mk_term (Product (bs, mk_term (Name (lid_of_str "Effect")) r Type_level)) r Type_level in
       let rec decls (r:term) =

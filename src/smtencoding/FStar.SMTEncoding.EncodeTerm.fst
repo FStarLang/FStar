@@ -957,6 +957,11 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
         | Tm_constant (Const_reflect _), [(arg, _)] ->
             encode_term arg env
 
+        | Tm_fvar fv, [_; (phi, _)]
+        | Tm_uinst ({n=Tm_fvar fv}, _), [_; (phi, _)]
+          when S.fv_eq_lid fv Const.by_tactic_lid ->
+          encode_term phi env
+
         | _ ->
             let args, decls = encode_args args_e env in
 
@@ -1464,6 +1469,11 @@ and encode_formula (phi:typ) (env:env_t) : (term * decls_t)  = (* expects phi to
               let x, decls = encode_term x env in
               let t, decls' = encode_term t env in
               mk_HasType x t, decls@decls'
+
+            | Tm_fvar fv, [_; (phi, _)]
+            | Tm_uinst ({n=Tm_fvar fv}, _), [_; (phi, _)]
+              when S.fv_eq_lid fv Const.by_tactic_lid ->
+              encode_formula phi env
 
             | Tm_fvar fv, [(r, _); (msg, _); (phi, _)] when S.fv_eq_lid fv Const.labeled_lid -> //interpret (labeled r msg t) as Tm_meta(t, Meta_labeled(msg, r, false)
               begin match SE.unembed SE.e_range r false SE.id_norm_cb,

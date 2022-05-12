@@ -781,7 +781,7 @@ let (first_import_of_path :
     match path1 with
     | [] -> FStar_Pervasives_Native.None
     | { imports; segment = uu___;_}::uu___1 ->
-        FStar_Compiler_List.last imports
+        FStar_Compiler_List.last_opt imports
 let (alist_of_ns_info :
   ns_info -> (Prims.string * FStar_Compiler_Util.json) Prims.list) =
   fun ns_info1 ->

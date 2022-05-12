@@ -48,7 +48,7 @@ let copy b l = {content = Array.sub b.content b.idx l; idx = 0; length = l}
 let eqb b1 b2 (len:u32) =
   Array.sub b1.content b1.idx (FStar_UInt32.to_native_int len) = Array.sub b2.content b2.idx (FStar_UInt32.to_native_int len)
 
-type ('a, 'b, 'c, 'd) modifies_buf = ()
+type ('a, 'b, 'c, 'd) modifies_buf = unit
 let op_Plus_Plus a b = BatSet.empty
 let only a = BatSet.empty
 
