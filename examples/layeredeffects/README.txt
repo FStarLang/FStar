@@ -1,3 +1,7 @@
+These examples show how to create and use layered_effects in F*. These
+effects could be more appropriately called indexed effects (the terms are
+currently used synonymously in F*). For more information on these effects see
+the paper at https://www.fstar-lang.org/papers/indexedeffects.
 
 Section 4: correct binary formatting
 
