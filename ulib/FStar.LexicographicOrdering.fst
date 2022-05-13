@@ -17,20 +17,21 @@
 *)
 
 module FStar.LexicographicOrdering
-
-open FStar.Preorder
+#push-options "--warn_error -242" //no inner let recs in SMT
 open FStar.ReflexiveTransitiveClosure
 open FStar.WellFounded
 
 
 /// A helper lemma about reflexive transitive closure
 
-let closure_transitive (#a:Type) (#r_a:relation a) (x y z:a)
+let closure_transitive (#a:Type u#a) (#r_a:binrel u#a u#ra a) (x y z:a)
   : Lemma
-      (requires (closure r_a) x y /\ r_a y z)
-      (ensures (closure r_a) x z)
-      [SMTPat ((closure r_a) x y); SMTPat (r_a y z)]
-  = assert ((closure r_a) y z)
+      (requires closure r_a x y /\
+                squash (r_a y z))
+      (ensures  closure r_a x z)
+      [SMTPat (closure r_a x y);
+       SMTPat (r_a y z)]
+  = assert (closure r_a y z)
 
 /// The main workhorse for the proof of lex_t well-foundedness
 ///
@@ -48,12 +49,17 @@ let closure_transitive (#a:Type) (#r_a:relation a) (x y z:a)
 ///   but note that we only require it on elements of a that are related to x in the
 ///   transitive closure of r_a
 
-let rec lex_t_wf_aux (#a:Type) (#b:a -> Type) (#r_a:relation a) (#r_b:(x:a -> relation (b x)))
-  (x:a) (acc_x:acc r_a x)  //x and accessibility of x
-  (wf_b:(x0:a{(closure r_a) x0 x} -> well_founded (r_b x0)))  //well-foundedness of r_b
-  (y:b x) (acc_y:acc (r_b x) y)  //y and accessibility of y
-  (t:(x:a & b x))  //another element t,
-  (p_t:lex_t r_a r_b t (| x, y |))  //that is related to (| x, y |)
+let rec lex_t_wf_aux (#a:Type u#a)
+                     (#b:a -> Type u#b)
+                     (#r_a:binrel u#a u#ra a)
+                     (#r_b:(x:a -> binrel u#b u#rb (b x)))
+                     (x:a)
+                     (acc_x:acc r_a x)  //x and accessibility of x
+                     (wf_b:(x0:a{closure r_a x0 x} -> well_founded (r_b x0)))  //well-foundedness of r_b
+                     (y:b x)
+                     (acc_y:acc (r_b x) y)  //y and accessibility of y
+                     (t:(x:a & b x))  //another element t,
+                     (p_t:lex_t r_a r_b t (| x, y |))  //that is related to (| x, y |)
   : Tot (acc (lex_t r_a r_b) t)  //returns the accessibility proof for t
         (decreases acc_x)
   = match p_t with

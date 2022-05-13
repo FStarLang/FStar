@@ -4781,15 +4781,12 @@ and (encode_sigelt' :
                                             | (args, res) ->
                                                 let indices =
                                                   let uu___11 =
-                                                    let uu___12 =
-                                                      FStar_Syntax_Subst.compress
-                                                        res in
-                                                    uu___12.FStar_Syntax_Syntax.n in
-                                                  match uu___11 with
-                                                  | FStar_Syntax_Syntax.Tm_app
-                                                      (uu___12, indices1) ->
-                                                      indices1
-                                                  | uu___12 -> [] in
+                                                    FStar_Compiler_Effect.op_Bar_Greater
+                                                      res
+                                                      FStar_Syntax_Util.head_and_args_full in
+                                                  FStar_Compiler_Effect.op_Bar_Greater
+                                                    uu___11
+                                                    FStar_Pervasives_Native.snd in
                                                 let env1 =
                                                   FStar_Compiler_Effect.op_Bar_Greater
                                                     args
