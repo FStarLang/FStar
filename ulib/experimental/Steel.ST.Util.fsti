@@ -526,6 +526,8 @@ let solve_gen_elim_dummy
         then T.fail "not a gen_elim_dummy goal";
         begin match List.Tot.filter (fun (_, x) -> T.Q_Explicit? x) tl1 with
         | [(p, _); (i, _)] ->
+          if slterm_nbr_uvars p <> 0
+          then T.fail "pre-resource not solved yet";
           if not (T.Tv_Uvar? (T.inspect i))
           then T.fail "gen_elim_dummy is already solved";
           let i' = solve_gen_elim p in
