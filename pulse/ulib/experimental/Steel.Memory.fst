@@ -93,7 +93,7 @@ let slprop_extensionality p q =
 
 let reveal_equiv p1 p2 = ()
 
-let ref = H.ref
+let core_ref = H.core_ref
 
 let null = H.null
 
@@ -174,9 +174,12 @@ let pure_star_interp p q m = H.pure_star_interp p q (heap_of_mem m)
 //pts_to
 ////////////////////////////////////////////////////////////////////////////////
 
-let pts_to_compatible x v0 v1 m = H.pts_to_compatible x v0 v1 (heap_of_mem m)
-let pts_to_compatible_equiv #a #pcm x v0 v1 = H.pts_to_compatible_equiv x v0 v1
-let pts_to_not_null #a #pcm x v m = H.pts_to_not_null x v (heap_of_mem m)
+let pts_to_compatible #a #pcm x v0 v1 m 
+  = H.pts_to_compatible #a #pcm x v0 v1 (heap_of_mem m)
+let pts_to_compatible_equiv #a #pcm x v0 v1
+  = H.pts_to_compatible_equiv #a #pcm x v0 v1
+let pts_to_not_null #a #pcm x v m
+  = H.pts_to_not_null #a #pcm x v (heap_of_mem m)
 
 ////////////////////////////////////////////////////////////////////////////////
 // star
@@ -792,20 +795,20 @@ let lift_tot_action_with_frame #a #e #fp #fp'
     NMSTTotal.put #_ #(mem_evolves) m1;
     x
 
-let sel_action e r v0
-  = lift_tot_action (lift_heap_action e (H.sel_action r v0))
+let sel_action #a #pcm e r v0
+  = lift_tot_action (lift_heap_action e (H.sel_action #a #pcm r v0))
 
-let upd_action e r v0 v1
-  = lift_tot_action (lift_heap_action e (H.upd_action r v0 v1))
+let upd_action #a #pcm e r v0 v1
+  = lift_tot_action (lift_heap_action e (H.upd_action #a #pcm r v0 v1))
 
-let free_action e r v0
-  = lift_tot_action (lift_heap_action e (H.free_action r v0))
+let free_action #a #pcm e r v0
+  = lift_tot_action (lift_heap_action e (H.free_action #a #pcm r v0))
 
-let split_action e r v0 v1
-  = lift_tot_action (lift_heap_action e (H.split_action r v0 v1))
+let split_action #a #pcm e r v0 v1
+  = lift_tot_action (lift_heap_action e (H.split_action #a #pcm r v0 v1))
 
-let gather_action e r v0 v1
-  = lift_tot_action (lift_heap_action e (H.gather_action r v0 v1))
+let gather_action #a #pcm e r v0 v1
+  = lift_tot_action (lift_heap_action e (H.gather_action #a #pcm r v0 v1))
 
 let weaken (p q r:slprop) (h:H.hheap (p `star` q) { H.stronger q r })
   : H.hheap (p `star` r)
@@ -893,30 +896,30 @@ let alloc_action #a #pcm e x
   = let f : refined_pre_action e emp (ref a pcm) (fun r -> pts_to r x)
       = fun m0 ->
         let h = hheap_of_hmem m0 in
-        let (|r, h'|) = H.extend x m0.ctr h in
+        let (|r, h'|) = H.extend #a #pcm x m0.ctr h in
         let m' : hmem_with_inv_except e emp = inc_ctr m0 in
-        let h' : H.hheap (pts_to #a r x `star` linv e m') = weaken _ (linv e m0) (linv e m') h' in
-        let m1 : hmem_with_inv_except e (pts_to #a r x) = hmem_of_hheap m' h' in
-        assert (forall frame. H.frame_related_heaps h h' emp (pts_to r x) frame true);
+        let h' : H.hheap (pts_to #a #pcm r x `star` linv e m') = weaken _ (linv e m0) (linv e m') h' in
+        let m1 : hmem_with_inv_except e (pts_to #a #pcm r x) = hmem_of_hheap m' h' in
+        assert (forall frame. H.frame_related_heaps h h' emp (pts_to #a #pcm r x) frame true);
         let aux (frame:slprop)
           : Lemma
             (requires
                interp ((emp `star` frame) `star` linv e m0) m0)
             (ensures
-               interp ((pts_to #a r x `star` frame) `star` linv e m1) m1 /\
+               interp ((pts_to #a #pcm r x `star` frame) `star` linv e m1) m1 /\
                mem_evolves m0 m1 /\
                (forall (mp:mprop frame). mp (core_mem m0) == mp (core_mem m1)))
             [SMTPat (emp `star` frame)]
           = star_associative emp frame (linv e m0);
             assert (H.interp (emp `star` (frame `star` linv e m0)) h);
-            assert (H.interp (pts_to #a r x `star` (frame `star` linv e m0)) h');
-            star_associative (pts_to #a r x) frame (linv e m0);
-            assert (H.interp ((pts_to #a r x `star` frame) `star` linv e m0) h');
+            assert (H.interp (pts_to #a #pcm r x `star` (frame `star` linv e m0)) h');
+            star_associative (pts_to #a #pcm r x) frame (linv e m0);
+            assert (H.interp ((pts_to #a #pcm r x `star` frame) `star` linv e m0) h');
             assert (H.stronger (linv e m0) (linv e m'));
             assert (H.equiv (linv e m') (linv e m1));
             assert (H.stronger (linv e m0) (linv e m1));
-            let h' : H.hheap ((pts_to #a r x `star` frame) `star` linv e m1) = weaken _ (linv e m0) (linv e m1) h' in
-            assert (H.interp ((pts_to #a r x `star` frame) `star` linv e m1) h');
+            let h' : H.hheap ((pts_to #a #pcm r x `star` frame) `star` linv e m1) = weaken _ (linv e m0) (linv e m1) h' in
+            assert (H.interp ((pts_to #a #pcm r x `star` frame) `star` linv e m1) h');
             assert (forall (mp:H.hprop frame). mp h == mp h');
             mprop_preservation_of_hprop_preservation frame m0 m1;
             assert (forall (mp:mprop frame). mp (core_mem m0) == mp (core_mem m1))
@@ -928,7 +931,7 @@ let alloc_action #a #pcm e x
 
 
 let select_refine #a #p e r x f
-  = lift_tot_action (lift_heap_action e (H.select_refine r x f))
+  = lift_tot_action (lift_heap_action e (H.select_refine #a #p r x f))
 
 let upd_gen #a #p e r x y f
   = lift_tot_action (lift_heap_action e (H.upd_gen_action r x y f))
@@ -938,13 +941,13 @@ let upd_gen #a #p e r x y f
 ////////////////////////////////////////////////////////////////////////////////
 
 let witnessed_ref #a #pcm (r:ref a pcm) (fact:property a) (m:full_mem)
-  = H.witnessed_ref r fact (heap_of_mem m)
+  = H.witnessed_ref #a #pcm r fact (heap_of_mem m)
 
 let witnessed_ref_stability #a #pcm (r:ref a pcm) (fact:property a)
   : Lemma
     (requires FStar.Preorder.stable fact (Steel.Preorder.preorder_of_pcm pcm))
     (ensures FStar.Preorder.stable (witnessed_ref r fact) mem_evolves)
-  = H.witnessed_ref_stability r fact
+  = H.witnessed_ref_stability #a #pcm r fact
 
 let witnessed (#a:Type u#1)
               (#pcm:pcm a)
@@ -1047,8 +1050,9 @@ let witness (#a:Type) (#pcm:pcm a)
            (fun _ -> True)
            (fun _ _ _ -> True)
   = let m0 = NMSTTotal.get () in
-    let v' = H.sel_v r v (heap_of_mem m0) in
-    assert (interp (H.ptr r) m0 /\ H.sel r (heap_of_mem m0) == v');
+    let hr : H.ref a pcm = r in
+    let v' = H.sel_v hr v (heap_of_mem m0) in
+    assert (interp (H.ptr hr) m0 /\ H.sel #a #pcm hr (heap_of_mem m0) == v');
     assert (compatible pcm v v');
     assert (fact v');
     assert (witnessed_ref r fact m0);
@@ -1080,14 +1084,15 @@ let recall (#a:Type u#1) (#pcm:pcm a) (#fact:property a)
            (v:Ghost.erased a)
            (frame:slprop)
   = let m0 = NMSTTotal.get () in
+    let hr : H.ref a pcm = r in
     pure_star_interp (pts_to r v) (witnessed r fact) m0;
     assert (witnessed r fact);
     NMSTTotal.recall _ mem_evolves (witnessed_ref r fact);
     assert (witnessed_ref r fact m0);
     affine_star (pts_to r v) (pure (witnessed r fact)) m0;
-    let v1 = H.sel_v r v (heap_of_mem m0) in
+    let v1 = H.sel_v hr v (heap_of_mem m0) in
     assert (compatible pcm v v1);
-    assert (H.sel r (heap_of_mem m0) == v1);
+    assert (H.sel hr (heap_of_mem m0) == v1);
     assert (fact v1);
     rearrange_pqr_prq (pts_to r v) (pure (witnessed r fact)) (locks_invariant e m0);
     affine_star (pts_to r v `star` locks_invariant e m0) (pure (witnessed r fact)) m0;
@@ -1499,12 +1504,12 @@ let elim_pure #opened_invariants p = lift_tot_action (lift_heap_action opened_in
 let pts_to_join (#a:Type) (#pcm:pcm a) (r:ref a pcm) (x y : a) (m:mem) :
   Lemma (requires (interp (pts_to r x) m /\ interp (pts_to r y) m))
         (ensures (joinable pcm x y)) =
-  H.pts_to_join r x y (heap_of_mem m)
+  H.pts_to_join #a #pcm r x y (heap_of_mem m)
 
 let pts_to_evolve (#a:Type u#a) (#pcm:_) (r:ref a pcm) (x y : a) (m:mem)
   : Lemma (requires (interp (pts_to r x) m /\ compatible pcm y x))
           (ensures  (interp (pts_to r y) m))
-  = H.pts_to_evolve r x y (heap_of_mem m)
+  = H.pts_to_evolve #a #pcm r x y (heap_of_mem m)
 
 let id_elim_star p q m =
   let starprop (ml:mem) (mr:mem) =

@@ -1,0 +1,45 @@
+[
+  "TÛ®X).u^Éº2n\u001eå\u000eŠ",
+  [
+    [
+      "Steel.ST.Loops.Util.repeat_until_cond",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_Steel.ST.Loops.Util.repeat_until_inv",
+        "interpretation_Tm_abs_2ebd128720fc95445e963f439b53abe3",
+        "token_correspondence_Steel.ST.Loops.Util.repeat_until_inv"
+      ],
+      0,
+      "bcf6d0eb64feb37fcf82de2b0c04199e"
+    ],
+    [
+      "Steel.ST.Loops.Util.repeat_until_body",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "bool_inversion",
+        "equation_Steel.ST.Loops.Util.repeat_until_inv",
+        "interpretation_Tm_abs_2ebd128720fc95445e963f439b53abe3",
+        "token_correspondence_Steel.ST.Loops.Util.repeat_until_inv"
+      ],
+      0,
+      "fa4d3971c1d76beff45674eeeca6a270"
+    ],
+    [
+      "Steel.ST.Loops.Util.repeat_until",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_Steel.ST.Loops.Util.repeat_until_inv",
+        "interpretation_Tm_abs_2ebd128720fc95445e963f439b53abe3",
+        "token_correspondence_Steel.ST.Loops.Util.repeat_until_inv"
+      ],
+      0,
+      "5f73320862cac97aa04f9bfa1f85d753"
+    ]
+  ]
+]

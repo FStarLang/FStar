@@ -85,6 +85,7 @@ let lemma_frame_emp h0 h1 p =
 
 let elim_conjunction p1 p1' p2 p2' = ()
 
+let can_be_split_dep_refl p = ()
 let equiv_can_be_split p1 p2 = ()
 let intro_can_be_split_frame p q frame = ()
 let can_be_split_post_elim t1 t2 = ()

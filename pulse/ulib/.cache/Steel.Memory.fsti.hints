@@ -1,5 +1,5 @@
 [
-  "€—8¶\u000e90E Û(vŒ½‰¥",
+  "\u0007as§\u0002‹Ä˜š\u0005¼…ç¶\u007f§",
   [
     [
       "Steel.Memory.join_commutative",
@@ -11,7 +11,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "b5549d0dac56ae25b083238ed3487e71"
+      "83d0547d2c1333915f32c00aa6ab2ca8"
     ],
     [
       "Steel.Memory.disjoint_join",
@@ -20,7 +20,7 @@
       1,
       [ "@query" ],
       0,
-      "cf88a6cdec69c6c02ea80b82690322e5"
+      "1d3b9676a0219525274d5ad33ea6237c"
     ],
     [
       "Steel.Memory.join_associative",
@@ -28,12 +28,11 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
-        "l_and-interp",
-        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_b0e7dfa1e7af76a2bbbf2a5a03a80662"
       ],
       0,
-      "b763b321ad674f794d5d3f88af467d52"
+      "503e8385526dcfc4397954c96570a048"
     ],
     [
       "Steel.Memory.slimp",
@@ -47,7 +46,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "93f8a0c67a5252609a19a6b5b2b957f3"
+      "89ffa6558c69e0cd3158efaf98aa1996"
     ],
     [
       "Steel.Memory.pts_to_compatible",
@@ -56,7 +55,7 @@
       1,
       [ "@query" ],
       0,
-      "2902fe432d51903b469b7ee34c41f7a3"
+      "fb8c7dc90c47ec3e51eac0302559cda0"
     ],
     [
       "Steel.Memory.intro_star",
@@ -68,7 +67,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "9cdcb427d5e0606daeb4a3402e26d9e8"
+      "f6f24059bfa8077383426583d8f82191"
     ],
     [
       "Steel.Memory.interp_star",
@@ -77,7 +76,7 @@
       1,
       [ "@query" ],
       0,
-      "534728ff3c0142491cec1f301331b825"
+      "b3a8dc1004f8a8cafa8d00bdd4e9bb56"
     ],
     [
       "Steel.Memory.mem_prop_is_affine",
@@ -94,7 +93,7 @@
         "refinement_interpretation_Tm_refine_400bb352f566e46f66fa061261e6a34a"
       ],
       0,
-      "683d224df8b78b3f868ba4d57c2fb8ac"
+      "f3b7fdb0992f4c7fdec93c2739d49d04"
     ],
     [
       "Steel.Memory.interp_refine_slprop",
@@ -103,7 +102,7 @@
       1,
       [ "@query" ],
       0,
-      "d3e2e2be05f4e57c4aee39e1435205f9"
+      "13d5cff20574dd7e2f3235af4d60e8f5"
     ],
     [
       "Steel.Memory.dep_slprop_is_affine",
@@ -120,7 +119,7 @@
         "refinement_interpretation_Tm_refine_400bb352f566e46f66fa061261e6a34a"
       ],
       0,
-      "140cc2c7919b24c1128687d953ff4f6e"
+      "39dd90c80659a00cf1635a79791c9ed7"
     ],
     [
       "Steel.Memory.action_except",
@@ -137,7 +136,7 @@
         "typing_tok_Prims.T@tok"
       ],
       0,
-      "39d61496e903cecd0687558911688922"
+      "33270de4c6b95369a76efd5cc3302dd9"
     ],
     [
       "Steel.Memory.split_action",
@@ -149,7 +148,7 @@
         "refinement_interpretation_Tm_refine_782bbf7acd60ae0036bd61a1f4d3807b"
       ],
       0,
-      "f04dd9206b5a0f1decf12b4faff7fb8f"
+      "0ddf33bac49095d553202927cb819875"
     ],
     [
       "Steel.Memory.gather_action",
@@ -161,7 +160,7 @@
         "refinement_interpretation_Tm_refine_625413e9a3a548e616103efddf1886c4"
       ],
       0,
-      "2f01d861b0d04ce5a8f28668d871be03"
+      "63dcf55f95a649f5fa1b68eb5f9a7b21"
     ],
     [
       "Steel.Memory.select_refine",
@@ -170,7 +169,7 @@
       1,
       [ "@query" ],
       0,
-      "9c92b7fc024d85a52472d693267b3b49"
+      "4a9c5f0c5e8870cb8f8c7747858b5170"
     ],
     [
       "Steel.Memory.frame",
@@ -190,7 +189,7 @@
         "refinement_interpretation_Tm_refine_d13ff5e7a2dcec6ca4a9195f0dca7981"
       ],
       0,
-      "1942d16b4e7dd0e369df407f31a97380"
+      "dd952c7c71229f8eb7b0247ebad71484"
     ],
     [
       "Steel.Memory.is_frame_monotonic",
@@ -204,7 +203,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "fbccf49f288882bb1f9458620bef11e2"
+      "1bf5fb4c2854bd23bff5e14e79edb31c"
     ],
     [
       "Steel.Memory.id_elim_star",
@@ -213,7 +212,7 @@
       1,
       [ "@query" ],
       0,
-      "2096bb27e6cf69a0716f7fd753e187a5"
+      "3f0693335a943e4de1a1141a1bb9ec10"
     ]
   ]
 ]

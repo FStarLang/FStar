@@ -39,8 +39,12 @@ open FStar.PCM
 *)
 val heap  : Type u#(a + 1)
 
-(** A [ref a pcm] is a key into the [heap], containing a value of type [a] governed by the [pcm] *)
-val ref (a:Type u#a) (pcm:pcm a) : Type u#0
+(** A [core_ref] is a key into the [heap] or [null] *)
+val core_ref : Type u#0
+
+(** We index a [core_ref] by the type of its heap contents
+    and a [pcm] governing it, for ease of type inference *)
+let ref (a:Type u#a) (pcm:pcm a) : Type u#0 = core_ref
 
 (** [null] is a specific reference, that is not associated to any value
 *)

@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "251de1647081df12445ad64668be325e"
+      "fcc04cc3beea606184fd9116db1766f6"
     ],
     [
       "Trees.__proj__Node__item__data",
@@ -20,7 +20,7 @@
         "refinement_interpretation_Tm_refine_b9c74408e05b80670e0198ab78cfe943"
       ],
       0,
-      "62ff76edb5e545d7d56a81d40a0b26ef"
+      "99f2726f3b77b7ed4f0d6004c3072aa4"
     ],
     [
       "Trees.__proj__Node__item__left",
@@ -32,7 +32,7 @@
         "refinement_interpretation_Tm_refine_b9c74408e05b80670e0198ab78cfe943"
       ],
       0,
-      "12a060dcb23900a3b0f0f7c598739d20"
+      "ad6693d10045f74fbc899f782f827b0b"
     ],
     [
       "Trees.__proj__Node__item__right",
@@ -44,7 +44,7 @@
         "refinement_interpretation_Tm_refine_b9c74408e05b80670e0198ab78cfe943"
       ],
       0,
-      "648310e9a394c4a5a26345a5e1cb7cb8"
+      "e380a6424cb3da077b73f177d0593c72"
     ],
     [
       "Trees.node_data",
@@ -53,7 +53,7 @@
       1,
       [ "@query" ],
       0,
-      "7c3946be95fb1c007473addd85f5d3dc"
+      "29f851134639d975bdc7b339156fe99f"
     ],
     [
       "Trees.forall_keys",
@@ -68,7 +68,7 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Trees.Node"
       ],
       0,
-      "5c5757d60c7c92595f843d05d44dd977"
+      "26e8ef3b90718f86700561f788704e99"
     ],
     [
       "Trees.is_bst",
@@ -84,7 +84,7 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Trees.Node"
       ],
       0,
-      "d01f510b58d57612474c4c54bf35d49b"
+      "cdf31f422718f62290144718710d2ade"
     ],
     [
       "Trees.mem",
@@ -104,7 +104,7 @@
         "subterm_ordering_Trees.Node"
       ],
       0,
-      "17d3e073c904742e8ad2627446e15edb"
+      "8a7b3ec11be9bf5f2b1017cb80297a16"
     ],
     [
       "Trees.bst_search",
@@ -133,7 +133,7 @@
         "token_correspondence_Trees.is_bst.fuel_instrumented"
       ],
       0,
-      "70844ca6fddcbab66807f384b155c7b7"
+      "25426f22da800f3df813178e65169f40"
     ],
     [
       "Trees.height",
@@ -152,7 +152,7 @@
         "subterm_ordering_Trees.Node"
       ],
       0,
-      "4861021775dab324e4f6200a8bbfe11c"
+      "2bc2259d841a8937cbd14bd7f2bae8a1"
     ],
     [
       "Trees.append_left",
@@ -167,7 +167,7 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Trees.Node"
       ],
       0,
-      "c8b248ff4eed122b26a8b972c0a27977"
+      "c95eeb07875583bdcda71e1e05789793"
     ],
     [
       "Trees.append_right",
@@ -182,7 +182,7 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Trees.Node"
       ],
       0,
-      "d1b291e00eddeb910e6972dd427c8151"
+      "9efc2742ca4fa08f1d44c55e0a15a077"
     ],
     [
       "Trees.insert_bst",
@@ -211,7 +211,7 @@
         "token_correspondence_Trees.is_bst.fuel_instrumented"
       ],
       0,
-      "2e23ab49c748182591bae5a41fb31337"
+      "b58da166f7e4faade3125f937807c4fe"
     ],
     [
       "Trees.insert_bst_preserves_forall_keys",
@@ -254,7 +254,7 @@
         "typing_Trees.is_bst", "unit_inversion", "unit_typing"
       ],
       0,
-      "683e7b3e1757c58f46d67c75fc354b83"
+      "ac61f228fa4cceebeba2bd04f4c9bc19"
     ],
     [
       "Trees.insert_bst_preserves_bst",
@@ -301,7 +301,7 @@
         "unit_typing"
       ],
       0,
-      "c64a435ad94d650ab9506b777a8dedf3"
+      "faf1bf2c104e6f2ff6a018094978d539"
     ],
     [
       "Trees.is_balanced",
@@ -316,7 +316,7 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Trees.Node"
       ],
       0,
-      "67661aaa7bb79045018d424cc70d2753"
+      "619430be7149428151b7626014106f0c"
     ],
     [
       "Trees.is_avl",
@@ -330,7 +330,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "703b9f75024ade930b28a45a00af7fd1"
+      "80c75a1d928bd4d79354d8cb30954ee4"
     ],
     [
       "Trees.forall_keys_trans",
@@ -361,7 +361,7 @@
         "typing_Trees.forall_keys"
       ],
       0,
-      "edaa4b8937eaa5eb716397fe669d4cf9"
+      "38980450f437e33f26529ac9c550e0c4"
     ],
     [
       "Trees.rotate_left_bst",
@@ -377,22 +377,20 @@
         "Trees_interpretation_Tm_arrow_15fbe65d232a6771b505998b50aaaffc",
         "Trees_interpretation_Tm_arrow_84543425b818e2d10a976186b8e8c250",
         "Trees_interpretation_Tm_arrow_9877f854fbaabbcfda94f6c19b32ae3f",
-        "b2t_def", "bool_inversion", "bool_typing",
+        "bool_inversion", "bool_typing",
         "constructor_distinct_FStar.Pervasives.Native.None",
         "constructor_distinct_Trees.Node",
         "data_elim_FStar.Pervasives.Native.Some",
         "data_typing_intro_Trees.Node@tok",
         "disc_equation_FStar.Pervasives.Native.Some",
-        "disc_equation_Trees.Node", "equation_Prims.l_and",
-        "equation_Prims.squash", "equation_Trees.cmp",
+        "disc_equation_Trees.Node", "equation_Trees.cmp",
         "equation_Trees.key_left", "equation_Trees.key_right",
         "equation_Trees.rotate_left",
         "equation_with_fuel_Trees.forall_keys.fuel_instrumented",
         "equation_with_fuel_Trees.is_bst.fuel_instrumented",
         "function_token_typing_Trees.key_left",
         "function_token_typing_Trees.key_right", "int_inversion",
-        "l_and-interp", "primitive_Prims.op_AmpAmp",
-        "primitive_Prims.op_GreaterThanOrEqual",
+        "primitive_Prims.op_AmpAmp", "primitive_Prims.op_GreaterThanOrEqual",
         "primitive_Prims.op_LessThanOrEqual",
         "proj_equation_FStar.Pervasives.Native.Some_v",
         "proj_equation_Trees.Node_right",
@@ -402,7 +400,7 @@
         "projection_inverse_Trees.Node_data",
         "projection_inverse_Trees.Node_left",
         "projection_inverse_Trees.Node_right",
-        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
+        "refinement_interpretation_Tm_refine_7d86814d281c6d26f75158feb92e28fb",
         "refinement_interpretation_Tm_refine_8436a17274925ba1c0ad31a8f01a3bed",
         "refinement_interpretation_Tm_refine_b9c74408e05b80670e0198ab78cfe943",
         "token_correspondence_Trees.forall_keys.fuel_instrumented",
@@ -413,7 +411,7 @@
         "typing_Trees.is_bst", "typing_Trees.rotate_left"
       ],
       0,
-      "e538264b4dd25ea2e365a9cb78cc5edc"
+      "4e0afe168f0be9b31417f631deb308c0"
     ],
     [
       "Trees.rotate_right_bst",
@@ -429,22 +427,20 @@
         "Trees_interpretation_Tm_arrow_15fbe65d232a6771b505998b50aaaffc",
         "Trees_interpretation_Tm_arrow_84543425b818e2d10a976186b8e8c250",
         "Trees_interpretation_Tm_arrow_9877f854fbaabbcfda94f6c19b32ae3f",
-        "b2t_def", "bool_inversion", "bool_typing",
+        "bool_inversion", "bool_typing",
         "constructor_distinct_FStar.Pervasives.Native.None",
         "constructor_distinct_Trees.Node",
         "data_elim_FStar.Pervasives.Native.Some",
         "data_typing_intro_Trees.Node@tok",
         "disc_equation_FStar.Pervasives.Native.Some",
-        "disc_equation_Trees.Node", "equation_Prims.l_and",
-        "equation_Prims.squash", "equation_Trees.cmp",
+        "disc_equation_Trees.Node", "equation_Trees.cmp",
         "equation_Trees.key_left", "equation_Trees.key_right",
         "equation_Trees.rotate_right",
         "equation_with_fuel_Trees.forall_keys.fuel_instrumented",
         "equation_with_fuel_Trees.is_bst.fuel_instrumented",
         "function_token_typing_Trees.key_left",
         "function_token_typing_Trees.key_right", "int_inversion",
-        "l_and-interp", "primitive_Prims.op_AmpAmp",
-        "primitive_Prims.op_GreaterThanOrEqual",
+        "primitive_Prims.op_AmpAmp", "primitive_Prims.op_GreaterThanOrEqual",
         "primitive_Prims.op_LessThanOrEqual",
         "proj_equation_FStar.Pervasives.Native.Some_v",
         "proj_equation_Trees.Node_left", "projection_inverse_BoxBool_proj_0",
@@ -453,7 +449,7 @@
         "projection_inverse_Trees.Node_data",
         "projection_inverse_Trees.Node_left",
         "projection_inverse_Trees.Node_right",
-        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
+        "refinement_interpretation_Tm_refine_801baf4b0887417478a27049cb0d07fc",
         "refinement_interpretation_Tm_refine_8436a17274925ba1c0ad31a8f01a3bed",
         "refinement_interpretation_Tm_refine_b9c74408e05b80670e0198ab78cfe943",
         "token_correspondence_Trees.forall_keys.fuel_instrumented",
@@ -464,7 +460,7 @@
         "typing_Trees.is_bst", "typing_Trees.rotate_right"
       ],
       0,
-      "7ff76a91d7e22fe2d7350e0667549476"
+      "d66bd023af416ddf7148b5f50d4b3750"
     ],
     [
       "Trees.rotate_right_left_bst",
@@ -480,14 +476,13 @@
         "Trees_interpretation_Tm_arrow_15fbe65d232a6771b505998b50aaaffc",
         "Trees_interpretation_Tm_arrow_84543425b818e2d10a976186b8e8c250",
         "Trees_interpretation_Tm_arrow_9877f854fbaabbcfda94f6c19b32ae3f",
-        "b2t_def", "bool_inversion",
+        "bool_inversion",
         "constructor_distinct_FStar.Pervasives.Native.None",
         "constructor_distinct_Trees.Node",
         "data_elim_FStar.Pervasives.Native.Some", "data_elim_Trees.Node",
         "data_typing_intro_Trees.Node@tok",
         "disc_equation_FStar.Pervasives.Native.Some",
-        "disc_equation_Trees.Node", "equation_Prims.l_and",
-        "equation_Prims.squash", "equation_Trees.cmp",
+        "disc_equation_Trees.Node", "equation_Trees.cmp",
         "equation_Trees.key_left", "equation_Trees.key_right",
         "equation_Trees.rotate_right_left",
         "equation_with_fuel_Trees.forall_keys.fuel_instrumented",
@@ -495,8 +490,7 @@
         "fuel_guarded_inversion_Trees.tree",
         "function_token_typing_Trees.key_left",
         "function_token_typing_Trees.key_right", "int_inversion",
-        "l_and-interp", "primitive_Prims.op_AmpAmp",
-        "primitive_Prims.op_GreaterThanOrEqual",
+        "primitive_Prims.op_AmpAmp", "primitive_Prims.op_GreaterThanOrEqual",
         "primitive_Prims.op_LessThanOrEqual",
         "proj_equation_FStar.Pervasives.Native.Some_v",
         "proj_equation_Trees.Node_left", "proj_equation_Trees.Node_right",
@@ -506,8 +500,8 @@
         "projection_inverse_Trees.Node_data",
         "projection_inverse_Trees.Node_left",
         "projection_inverse_Trees.Node_right",
-        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
         "refinement_interpretation_Tm_refine_8436a17274925ba1c0ad31a8f01a3bed",
+        "refinement_interpretation_Tm_refine_94d764adf9dada5dfa917fadb1548387",
         "refinement_interpretation_Tm_refine_b9c74408e05b80670e0198ab78cfe943",
         "token_correspondence_Trees.forall_keys.fuel_instrumented",
         "token_correspondence_Trees.is_bst.fuel_instrumented",
@@ -517,7 +511,7 @@
         "typing_Trees.is_bst", "typing_Trees.rotate_right_left"
       ],
       0,
-      "811fba4fbbcee5a96b0167b92c7843d5"
+      "91eeca7a63676bfc6eaeaeb4e43c65e2"
     ],
     [
       "Trees.rotate_left_right_bst",
@@ -533,14 +527,13 @@
         "Trees_interpretation_Tm_arrow_15fbe65d232a6771b505998b50aaaffc",
         "Trees_interpretation_Tm_arrow_84543425b818e2d10a976186b8e8c250",
         "Trees_interpretation_Tm_arrow_9877f854fbaabbcfda94f6c19b32ae3f",
-        "b2t_def", "bool_inversion",
+        "bool_inversion",
         "constructor_distinct_FStar.Pervasives.Native.None",
         "constructor_distinct_Trees.Node",
         "data_elim_FStar.Pervasives.Native.Some", "data_elim_Trees.Node",
         "data_typing_intro_Trees.Node@tok",
         "disc_equation_FStar.Pervasives.Native.Some",
-        "disc_equation_Trees.Node", "equation_Prims.l_and",
-        "equation_Prims.squash", "equation_Trees.cmp",
+        "disc_equation_Trees.Node", "equation_Trees.cmp",
         "equation_Trees.key_left", "equation_Trees.key_right",
         "equation_Trees.rotate_left_right",
         "equation_with_fuel_Trees.forall_keys.fuel_instrumented",
@@ -548,8 +541,7 @@
         "fuel_guarded_inversion_Trees.tree",
         "function_token_typing_Trees.key_left",
         "function_token_typing_Trees.key_right", "int_inversion",
-        "l_and-interp", "primitive_Prims.op_AmpAmp",
-        "primitive_Prims.op_GreaterThanOrEqual",
+        "primitive_Prims.op_AmpAmp", "primitive_Prims.op_GreaterThanOrEqual",
         "primitive_Prims.op_LessThanOrEqual",
         "proj_equation_FStar.Pervasives.Native.Some_v",
         "proj_equation_Trees.Node_left", "proj_equation_Trees.Node_right",
@@ -559,7 +551,7 @@
         "projection_inverse_Trees.Node_data",
         "projection_inverse_Trees.Node_left",
         "projection_inverse_Trees.Node_right",
-        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
+        "refinement_interpretation_Tm_refine_0e04b1e7a4aaca77e4a28bd8bbd54529",
         "refinement_interpretation_Tm_refine_8436a17274925ba1c0ad31a8f01a3bed",
         "refinement_interpretation_Tm_refine_b9c74408e05b80670e0198ab78cfe943",
         "token_correspondence_Trees.forall_keys.fuel_instrumented",
@@ -570,7 +562,7 @@
         "typing_Trees.is_bst", "typing_Trees.rotate_left_right"
       ],
       0,
-      "2ee1221cbfe9ccfb765a9792eac0ce9b"
+      "6688568602d08ecf6c3d167f8301a9fb"
     ],
     [
       "Trees.rotate_left_key_left",
@@ -583,17 +575,16 @@
         "@fuel_irrelevance_Trees.forall_keys.fuel_instrumented", "@query",
         "Trees_interpretation_Tm_arrow_15fbe65d232a6771b505998b50aaaffc",
         "Trees_interpretation_Tm_arrow_84543425b818e2d10a976186b8e8c250",
-        "b2t_def", "bool_inversion", "bool_typing",
+        "bool_inversion", "bool_typing",
         "constructor_distinct_FStar.Pervasives.Native.None",
         "constructor_distinct_Trees.Node",
         "data_elim_FStar.Pervasives.Native.Some",
         "data_typing_intro_Trees.Node@tok",
         "disc_equation_FStar.Pervasives.Native.Some",
-        "disc_equation_Trees.Node", "equation_Prims.l_and",
-        "equation_Prims.squash", "equation_Trees.rotate_left",
+        "disc_equation_Trees.Node", "equation_Trees.rotate_left",
         "equation_with_fuel_Trees.forall_keys.fuel_instrumented",
         "function_token_typing_Trees.key_left", "kinding_Trees.tree@tok",
-        "l_and-interp", "primitive_Prims.op_AmpAmp",
+        "primitive_Prims.op_AmpAmp",
         "proj_equation_FStar.Pervasives.Native.Some_v",
         "proj_equation_Trees.Node_right",
         "projection_inverse_BoxBool_proj_0",
@@ -602,8 +593,8 @@
         "projection_inverse_Trees.Node_data",
         "projection_inverse_Trees.Node_left",
         "projection_inverse_Trees.Node_right",
-        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
         "refinement_interpretation_Tm_refine_b9c74408e05b80670e0198ab78cfe943",
+        "refinement_interpretation_Tm_refine_bbda13249f4fb49728742ae73fa5943f",
         "token_correspondence_Trees.forall_keys.fuel_instrumented",
         "token_correspondence_Trees.key_left",
         "typing_FStar.Pervasives.Native.uu___is_Some",
@@ -611,7 +602,7 @@
         "typing_Trees.rotate_left"
       ],
       0,
-      "f183e7eaf6a234c7a194c2cf43dcc5e7"
+      "20f89eaf234412f9fe959992409d259b"
     ],
     [
       "Trees.rotate_left_key_right",
@@ -624,17 +615,16 @@
         "@fuel_irrelevance_Trees.forall_keys.fuel_instrumented", "@query",
         "Trees_interpretation_Tm_arrow_15fbe65d232a6771b505998b50aaaffc",
         "Trees_interpretation_Tm_arrow_84543425b818e2d10a976186b8e8c250",
-        "b2t_def", "bool_inversion", "bool_typing",
+        "bool_inversion", "bool_typing",
         "constructor_distinct_FStar.Pervasives.Native.None",
         "constructor_distinct_Trees.Node",
         "data_elim_FStar.Pervasives.Native.Some",
         "data_typing_intro_Trees.Node@tok",
         "disc_equation_FStar.Pervasives.Native.Some",
-        "disc_equation_Trees.Node", "equation_Prims.l_and",
-        "equation_Prims.squash", "equation_Trees.rotate_left",
+        "disc_equation_Trees.Node", "equation_Trees.rotate_left",
         "equation_with_fuel_Trees.forall_keys.fuel_instrumented",
         "function_token_typing_Trees.key_right", "kinding_Trees.tree@tok",
-        "l_and-interp", "primitive_Prims.op_AmpAmp",
+        "primitive_Prims.op_AmpAmp",
         "proj_equation_FStar.Pervasives.Native.Some_v",
         "proj_equation_Trees.Node_right",
         "projection_inverse_BoxBool_proj_0",
@@ -643,7 +633,7 @@
         "projection_inverse_Trees.Node_data",
         "projection_inverse_Trees.Node_left",
         "projection_inverse_Trees.Node_right",
-        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
+        "refinement_interpretation_Tm_refine_6731dc50342420bb98a9c1ca803c62e5",
         "refinement_interpretation_Tm_refine_b9c74408e05b80670e0198ab78cfe943",
         "token_correspondence_Trees.forall_keys.fuel_instrumented",
         "token_correspondence_Trees.key_right",
@@ -652,7 +642,7 @@
         "typing_Trees.rotate_left"
       ],
       0,
-      "f21d6c12d0a6c3c90805f217c2604720"
+      "0d0764e2952898737d54cf7eda318bf6"
     ],
     [
       "Trees.rotate_right_key_left",
@@ -665,17 +655,16 @@
         "@fuel_irrelevance_Trees.forall_keys.fuel_instrumented", "@query",
         "Trees_interpretation_Tm_arrow_15fbe65d232a6771b505998b50aaaffc",
         "Trees_interpretation_Tm_arrow_84543425b818e2d10a976186b8e8c250",
-        "b2t_def", "bool_inversion", "bool_typing",
+        "bool_inversion", "bool_typing",
         "constructor_distinct_FStar.Pervasives.Native.None",
         "constructor_distinct_Trees.Node",
         "data_elim_FStar.Pervasives.Native.Some",
         "data_typing_intro_Trees.Node@tok",
         "disc_equation_FStar.Pervasives.Native.Some",
-        "disc_equation_Trees.Node", "equation_Prims.l_and",
-        "equation_Prims.squash", "equation_Trees.rotate_right",
+        "disc_equation_Trees.Node", "equation_Trees.rotate_right",
         "equation_with_fuel_Trees.forall_keys.fuel_instrumented",
         "function_token_typing_Trees.key_left", "kinding_Trees.tree@tok",
-        "l_and-interp", "primitive_Prims.op_AmpAmp",
+        "primitive_Prims.op_AmpAmp",
         "proj_equation_FStar.Pervasives.Native.Some_v",
         "proj_equation_Trees.Node_left", "projection_inverse_BoxBool_proj_0",
         "projection_inverse_FStar.Pervasives.Native.Some_v",
@@ -683,7 +672,7 @@
         "projection_inverse_Trees.Node_data",
         "projection_inverse_Trees.Node_left",
         "projection_inverse_Trees.Node_right",
-        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
+        "refinement_interpretation_Tm_refine_5600fb32c4921b9265c780dd7b960bd3",
         "refinement_interpretation_Tm_refine_b9c74408e05b80670e0198ab78cfe943",
         "token_correspondence_Trees.forall_keys.fuel_instrumented",
         "token_correspondence_Trees.key_left",
@@ -692,7 +681,7 @@
         "typing_Trees.rotate_right"
       ],
       0,
-      "b8b70d545068b2bb5e2292d3b9ddb40d"
+      "de0ae5daf96421010e409e43bc5bdf46"
     ],
     [
       "Trees.rotate_right_key_right",
@@ -705,17 +694,16 @@
         "@fuel_irrelevance_Trees.forall_keys.fuel_instrumented", "@query",
         "Trees_interpretation_Tm_arrow_15fbe65d232a6771b505998b50aaaffc",
         "Trees_interpretation_Tm_arrow_84543425b818e2d10a976186b8e8c250",
-        "b2t_def", "bool_inversion", "bool_typing",
+        "bool_inversion", "bool_typing",
         "constructor_distinct_FStar.Pervasives.Native.None",
         "constructor_distinct_Trees.Node",
         "data_elim_FStar.Pervasives.Native.Some",
         "data_typing_intro_Trees.Node@tok",
         "disc_equation_FStar.Pervasives.Native.Some",
-        "disc_equation_Trees.Node", "equation_Prims.l_and",
-        "equation_Prims.squash", "equation_Trees.rotate_right",
+        "disc_equation_Trees.Node", "equation_Trees.rotate_right",
         "equation_with_fuel_Trees.forall_keys.fuel_instrumented",
         "function_token_typing_Trees.key_right", "kinding_Trees.tree@tok",
-        "l_and-interp", "primitive_Prims.op_AmpAmp",
+        "primitive_Prims.op_AmpAmp",
         "proj_equation_FStar.Pervasives.Native.Some_v",
         "proj_equation_Trees.Node_left", "projection_inverse_BoxBool_proj_0",
         "projection_inverse_FStar.Pervasives.Native.Some_v",
@@ -723,7 +711,7 @@
         "projection_inverse_Trees.Node_data",
         "projection_inverse_Trees.Node_left",
         "projection_inverse_Trees.Node_right",
-        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
+        "refinement_interpretation_Tm_refine_5b1f4417bf8f9e8c239b43a17e897d7e",
         "refinement_interpretation_Tm_refine_b9c74408e05b80670e0198ab78cfe943",
         "token_correspondence_Trees.forall_keys.fuel_instrumented",
         "token_correspondence_Trees.key_right",
@@ -732,7 +720,7 @@
         "typing_Trees.rotate_right"
       ],
       0,
-      "6dbd9b4ec86dcc464837bea94e610d6f"
+      "19e3e77b94726fe6b51be0cd4e0240ae"
     ],
     [
       "Trees.rotate_right_left_key_left",
@@ -745,18 +733,17 @@
         "@fuel_irrelevance_Trees.forall_keys.fuel_instrumented", "@query",
         "Trees_interpretation_Tm_arrow_15fbe65d232a6771b505998b50aaaffc",
         "Trees_interpretation_Tm_arrow_84543425b818e2d10a976186b8e8c250",
-        "b2t_def", "bool_inversion",
+        "bool_inversion",
         "constructor_distinct_FStar.Pervasives.Native.None",
         "constructor_distinct_Trees.Node",
         "data_elim_FStar.Pervasives.Native.Some",
         "data_typing_intro_Trees.Node@tok",
         "disc_equation_FStar.Pervasives.Native.Some",
-        "disc_equation_Trees.Node", "equation_Prims.l_and",
-        "equation_Prims.squash", "equation_Trees.rotate_right_left",
+        "disc_equation_Trees.Node", "equation_Trees.rotate_right_left",
         "equation_with_fuel_Trees.forall_keys.fuel_instrumented",
         "fuel_guarded_inversion_Trees.tree",
         "function_token_typing_Trees.key_left", "kinding_Trees.tree@tok",
-        "l_and-interp", "primitive_Prims.op_AmpAmp",
+        "primitive_Prims.op_AmpAmp",
         "proj_equation_FStar.Pervasives.Native.Some_v",
         "proj_equation_Trees.Node_left", "proj_equation_Trees.Node_right",
         "projection_inverse_BoxBool_proj_0",
@@ -765,8 +752,8 @@
         "projection_inverse_Trees.Node_data",
         "projection_inverse_Trees.Node_left",
         "projection_inverse_Trees.Node_right",
-        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
         "refinement_interpretation_Tm_refine_b9c74408e05b80670e0198ab78cfe943",
+        "refinement_interpretation_Tm_refine_c01fad0d54263bd3338f05cc81675a56",
         "token_correspondence_Trees.forall_keys.fuel_instrumented",
         "token_correspondence_Trees.key_left",
         "typing_FStar.Pervasives.Native.uu___is_Some",
@@ -775,7 +762,7 @@
         "typing_Trees.rotate_right_left"
       ],
       0,
-      "8a36e7b38e413066fda1f4945a145ae1"
+      "75c9e247f85fb931dc34b3fd7fd9716e"
     ],
     [
       "Trees.rotate_right_left_key_right",
@@ -788,18 +775,17 @@
         "@fuel_irrelevance_Trees.forall_keys.fuel_instrumented", "@query",
         "Trees_interpretation_Tm_arrow_15fbe65d232a6771b505998b50aaaffc",
         "Trees_interpretation_Tm_arrow_84543425b818e2d10a976186b8e8c250",
-        "b2t_def", "bool_inversion",
+        "bool_inversion",
         "constructor_distinct_FStar.Pervasives.Native.None",
         "constructor_distinct_Trees.Node",
         "data_elim_FStar.Pervasives.Native.Some",
         "data_typing_intro_Trees.Node@tok",
         "disc_equation_FStar.Pervasives.Native.Some",
-        "disc_equation_Trees.Node", "equation_Prims.l_and",
-        "equation_Prims.squash", "equation_Trees.rotate_right_left",
+        "disc_equation_Trees.Node", "equation_Trees.rotate_right_left",
         "equation_with_fuel_Trees.forall_keys.fuel_instrumented",
         "fuel_guarded_inversion_Trees.tree",
         "function_token_typing_Trees.key_right", "kinding_Trees.tree@tok",
-        "l_and-interp", "primitive_Prims.op_AmpAmp",
+        "primitive_Prims.op_AmpAmp",
         "proj_equation_FStar.Pervasives.Native.Some_v",
         "proj_equation_Trees.Node_left", "proj_equation_Trees.Node_right",
         "projection_inverse_BoxBool_proj_0",
@@ -808,7 +794,7 @@
         "projection_inverse_Trees.Node_data",
         "projection_inverse_Trees.Node_left",
         "projection_inverse_Trees.Node_right",
-        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
+        "refinement_interpretation_Tm_refine_5c5dd3d767af1a30572b930d96915f51",
         "refinement_interpretation_Tm_refine_b9c74408e05b80670e0198ab78cfe943",
         "token_correspondence_Trees.forall_keys.fuel_instrumented",
         "token_correspondence_Trees.key_right",
@@ -818,7 +804,7 @@
         "typing_Trees.rotate_right_left"
       ],
       0,
-      "45425913d46d983a5127483263f6be99"
+      "a2183643a67f3538483cb35bdeac8d23"
     ],
     [
       "Trees.rotate_left_right_key_left",
@@ -831,18 +817,17 @@
         "@fuel_irrelevance_Trees.forall_keys.fuel_instrumented", "@query",
         "Trees_interpretation_Tm_arrow_15fbe65d232a6771b505998b50aaaffc",
         "Trees_interpretation_Tm_arrow_84543425b818e2d10a976186b8e8c250",
-        "b2t_def", "bool_inversion",
+        "bool_inversion",
         "constructor_distinct_FStar.Pervasives.Native.None",
         "constructor_distinct_Trees.Node",
         "data_elim_FStar.Pervasives.Native.Some",
         "data_typing_intro_Trees.Node@tok",
         "disc_equation_FStar.Pervasives.Native.Some",
-        "disc_equation_Trees.Node", "equation_Prims.l_and",
-        "equation_Prims.squash", "equation_Trees.rotate_left_right",
+        "disc_equation_Trees.Node", "equation_Trees.rotate_left_right",
         "equation_with_fuel_Trees.forall_keys.fuel_instrumented",
         "fuel_guarded_inversion_Trees.tree",
         "function_token_typing_Trees.key_left", "kinding_Trees.tree@tok",
-        "l_and-interp", "primitive_Prims.op_AmpAmp",
+        "primitive_Prims.op_AmpAmp",
         "proj_equation_FStar.Pervasives.Native.Some_v",
         "proj_equation_Trees.Node_left", "proj_equation_Trees.Node_right",
         "projection_inverse_BoxBool_proj_0",
@@ -851,7 +836,7 @@
         "projection_inverse_Trees.Node_data",
         "projection_inverse_Trees.Node_left",
         "projection_inverse_Trees.Node_right",
-        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
+        "refinement_interpretation_Tm_refine_8a2720e433f742162d20f548ace9420f",
         "refinement_interpretation_Tm_refine_b9c74408e05b80670e0198ab78cfe943",
         "token_correspondence_Trees.forall_keys.fuel_instrumented",
         "token_correspondence_Trees.key_left",
@@ -861,7 +846,7 @@
         "typing_Trees.rotate_left_right"
       ],
       0,
-      "943a0638bc316d3594c9440f0b50675e"
+      "ec1133a3601c7edf45063d91934d4e4b"
     ],
     [
       "Trees.rotate_left_right_key_right",
@@ -874,18 +859,17 @@
         "@fuel_irrelevance_Trees.forall_keys.fuel_instrumented", "@query",
         "Trees_interpretation_Tm_arrow_15fbe65d232a6771b505998b50aaaffc",
         "Trees_interpretation_Tm_arrow_84543425b818e2d10a976186b8e8c250",
-        "b2t_def", "bool_inversion",
+        "bool_inversion",
         "constructor_distinct_FStar.Pervasives.Native.None",
         "constructor_distinct_Trees.Node",
         "data_elim_FStar.Pervasives.Native.Some",
         "data_typing_intro_Trees.Node@tok",
         "disc_equation_FStar.Pervasives.Native.Some",
-        "disc_equation_Trees.Node", "equation_Prims.l_and",
-        "equation_Prims.squash", "equation_Trees.rotate_left_right",
+        "disc_equation_Trees.Node", "equation_Trees.rotate_left_right",
         "equation_with_fuel_Trees.forall_keys.fuel_instrumented",
         "fuel_guarded_inversion_Trees.tree",
         "function_token_typing_Trees.key_right", "kinding_Trees.tree@tok",
-        "l_and-interp", "primitive_Prims.op_AmpAmp",
+        "primitive_Prims.op_AmpAmp",
         "proj_equation_FStar.Pervasives.Native.Some_v",
         "proj_equation_Trees.Node_left", "proj_equation_Trees.Node_right",
         "projection_inverse_BoxBool_proj_0",
@@ -894,7 +878,7 @@
         "projection_inverse_Trees.Node_data",
         "projection_inverse_Trees.Node_left",
         "projection_inverse_Trees.Node_right",
-        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
+        "refinement_interpretation_Tm_refine_02d8b95e3926e9a9b80cf48a3c5b93ce",
         "refinement_interpretation_Tm_refine_b9c74408e05b80670e0198ab78cfe943",
         "token_correspondence_Trees.forall_keys.fuel_instrumented",
         "token_correspondence_Trees.key_right",
@@ -904,7 +888,7 @@
         "typing_Trees.rotate_left_right"
       ],
       0,
-      "2dcc63eda3d8a7c7b8db516ae2363014"
+      "b7a229f86ba40f6ffd5a1cabdddb2a3a"
     ],
     [
       "Trees.rebalance_avl",
@@ -931,7 +915,7 @@
         "typing_Trees.height"
       ],
       0,
-      "6ee2f12a393542f2b0635d2a0ff81213"
+      "5d56cc28161ec362ee4307b3e62fa866"
     ],
     [
       "Trees.rebalance_avl_proof",
@@ -993,7 +977,7 @@
         "typing_Trees.rotate_left_right", "unit_inversion", "unit_typing"
       ],
       0,
-      "b9c8c316586882e1f392fe0bdbad1fcb"
+      "7e5e43e01787b819176171c87b669fc9"
     ],
     [
       "Trees.insert_avl",
@@ -1009,7 +993,7 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Trees.Node"
       ],
       0,
-      "4c689004cd7ef87be47f45bcdcbfdea7"
+      "aa5732fcdc083e44b1a46158d32c0aa8"
     ],
     [
       "Trees.insert_avl_proof_aux",
@@ -1085,7 +1069,7 @@
         "unit_typing"
       ],
       0,
-      "be94290d0929ad52c75ea95cb5de7d06"
+      "cef5ecd454a338b9e7ee7082edc1058e"
     ],
     [
       "Trees.insert_avl_proof",
@@ -1094,7 +1078,7 @@
       1,
       [ "@query" ],
       0,
-      "64b3080baf111cb5a84f570ad0a47296"
+      "dacef91dfdf2f3826008ae51b3f989c1"
     ]
   ]
 ]

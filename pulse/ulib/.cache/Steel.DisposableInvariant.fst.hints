@@ -23,7 +23,7 @@
         "typing_Tm_abs_1787bbf2f632c0e9736e9a1389a00af9"
       ],
       0,
-      "f1315260169d01496a66c437046e1a07"
+      "36fd76777ecf662da4e54c930de5ebb1"
     ],
     [
       "Steel.DisposableInvariant.share",
@@ -32,7 +32,7 @@
       1,
       [ "@query" ],
       0,
-      "1d3edb8c1027e25209fe94fd11ebd4b6"
+      "e43dba4c343a0e16ee4b72bcfc05da17"
     ],
     [
       "Steel.DisposableInvariant.gather",
@@ -66,7 +66,7 @@
         "true_interp"
       ],
       0,
-      "881502132c43363a7d0e7ab8eacac827"
+      "bc10830e6002c61dddacef0b27d4774c"
     ],
     [
       "Steel.DisposableInvariant.dispose",
@@ -75,59 +75,45 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "FStar.Tactics.Effect_interpretation_Tm_ghost_arrow_44164f5e759c8937bc211b53dca29861",
+        "FStar.Ghost_interpretation_Tm_ghost_arrow_44164f5e759c8937bc211b53dca29861",
         "Prims_interpretation_Tm_arrow_2eaa01e78f73e9bab5d0955fc1a662da",
         "Prims_pretyping_f537159ed795b314b4e58c260361ae86",
         "Steel.DisposableInvariant_interpretation_Tm_arrow_a83291727d9ba3ef955779edbdcbb00e",
         "Steel.Memory_interpretation_Tm_ghost_arrow_9795a6b43f8ada736381f0d7f06aefac",
-        "bool_inversion", "bool_typing",
-        "data_elim_Steel.FractionalPermission.MkPerm",
-        "equation_FStar.Pervasives.dfst", "equation_FStar.Real.one",
-        "equation_FStar.Real.two", "equation_Prims.eqtype",
-        "equation_Steel.DisposableInvariant.gref",
+        "bool_inversion", "bool_typing", "equation_FStar.Pervasives.dfst",
+        "equation_Prims.eqtype", "equation_Steel.DisposableInvariant.gref",
         "equation_Steel.DisposableInvariant.inv",
         "equation_Steel.DisposableInvariant.mem_inv",
         "equation_Steel.DisposableInvariant.name",
         "equation_Steel.Effect.Common.inv",
         "equation_Steel.Effect.Common.mem_inv",
         "equation_Steel.FractionalPermission.full_perm",
-        "equation_Steel.FractionalPermission.half_perm",
-        "equation_Steel.FractionalPermission.sum_perm",
         "equation_Steel.Memory.inames",
         "fuel_guarded_inversion_Steel.Effect.Common.vprop",
         "function_token_typing_Prims.bool",
         "interpretation_Tm_abs_1787bbf2f632c0e9736e9a1389a00af9",
         "interpretation_Tm_abs_d716b89c7122244f867c074692bc6a31",
-        "kinding_Prims.dtuple2@tok", "lemma_FStar.Ghost.reveal_hide",
-        "primitive_FStar.Real.of_int", "primitive_FStar.Real.op_Plus_Dot",
-        "primitive_FStar.Real.op_Slash_Dot",
-        "proj_equation_Steel.FractionalPermission.MkPerm_v",
+        "kinding_Prims.dtuple2@tok", "lemma_FStar.Ghost.hide_reveal",
+        "lemma_FStar.Ghost.reveal_hide",
+        "lemma_Steel.FractionalPermission.sum_halves",
         "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_BoxInt_proj_0",
-        "projection_inverse_BoxReal_proj_0",
-        "projection_inverse_Steel.FractionalPermission.MkPerm_v",
-        "real_inversion",
         "refinement_interpretation_Tm_refine_0dd2abab70d0bfac98dbacd897f070e0",
         "refinement_interpretation_Tm_refine_30b51c86421a699c10f6925311aa63ba",
-        "refinement_interpretation_Tm_refine_3f54e9b64bb1cf73ff37c7c9d439498d",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "refinement_interpretation_Tm_refine_65079789b5ee069d4dcb71b5d5562419",
         "typing_FStar.Ghost.elift2", "typing_FStar.Ghost.reveal",
-        "typing_FStar.Pervasives.dsnd", "typing_FStar.Real.one",
-        "typing_FStar.Set.set",
+        "typing_FStar.Pervasives.dsnd", "typing_FStar.Set.set",
         "typing_Steel.DisposableInvariant.ex_conditional_inv",
         "typing_Steel.DisposableInvariant.gref",
         "typing_Steel.DisposableInvariant.name",
         "typing_Steel.Effect.Common.mem_inv",
         "typing_Steel.FractionalPermission.full_perm",
-        "typing_Steel.FractionalPermission.half_perm",
-        "typing_Steel.FractionalPermission.sum_perm",
         "typing_Steel.Memory.iname", "typing_Steel.Reference.ghost_ref",
         "typing_Tm_abs_1787bbf2f632c0e9736e9a1389a00af9",
         "typing_Tm_abs_d716b89c7122244f867c074692bc6a31"
       ],
       0,
-      "cd01a5a746f028d712f12cb4b9f2a359"
+      "30e9f9d1437f23360a6c845037d9d90d"
     ],
     [
       "Steel.DisposableInvariant.with_invariant",
@@ -136,7 +122,7 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "FStar.Tactics.Effect_interpretation_Tm_ghost_arrow_44164f5e759c8937bc211b53dca29861",
+        "FStar.Ghost_interpretation_Tm_ghost_arrow_44164f5e759c8937bc211b53dca29861",
         "Prims_interpretation_Tm_arrow_2eaa01e78f73e9bab5d0955fc1a662da",
         "Prims_pretyping_f537159ed795b314b4e58c260361ae86",
         "Steel.DisposableInvariant_interpretation_Tm_arrow_a83291727d9ba3ef955779edbdcbb00e",
@@ -170,7 +156,7 @@
         "typing_Tm_abs_d716b89c7122244f867c074692bc6a31"
       ],
       0,
-      "cc392e070fdf4767c4f9ce63412a5489"
+      "fe37c192f146c86e113a087a601d40eb"
     ],
     [
       "Steel.DisposableInvariant.with_invariant_g",
@@ -179,7 +165,7 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "FStar.Tactics.Effect_interpretation_Tm_ghost_arrow_44164f5e759c8937bc211b53dca29861",
+        "FStar.Ghost_interpretation_Tm_ghost_arrow_44164f5e759c8937bc211b53dca29861",
         "Prims_interpretation_Tm_arrow_2eaa01e78f73e9bab5d0955fc1a662da",
         "Prims_pretyping_f537159ed795b314b4e58c260361ae86",
         "Steel.DisposableInvariant_interpretation_Tm_arrow_a83291727d9ba3ef955779edbdcbb00e",
@@ -213,7 +199,7 @@
         "typing_Tm_abs_d716b89c7122244f867c074692bc6a31"
       ],
       0,
-      "14ecaa9de613e61480ce9312ff196566"
+      "4c437b48883453f309bf4a1b13029ca7"
     ]
   ]
 ]

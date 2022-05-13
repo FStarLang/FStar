@@ -457,7 +457,6 @@ let weakening_ok
 
 /// Setting the flag just to reduce the time to typecheck the type m
 
-#push-options "--__temp_no_proj Steel.Semantics.Hoare.MST"
 noeq
 type m (st:st) :
       a:Type u#a ->
@@ -541,7 +540,6 @@ type m (st:st) :
     _:squash (weakening_ok lpre lpost wlpre wlpost) ->
     m st a pre post lpre lpost ->
     m st a wpre wpost wlpre wlpost
-#pop-options
 
 (**** End definition of the computation AST ****)
 
