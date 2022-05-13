@@ -122,10 +122,10 @@ effect {
   * Whereas the tactic can instantiate them at will
  *)
 
-type mrepr (a:Type) (_:unit) = a
+type mrepr (a:Type) = a
 
-let mreturn (a:Type) (x:a) : mrepr a () = x
-let mbind (a:Type) (b:Type) (f:mrepr a ()) (g:a -> mrepr b ()) : mrepr b () = g f
+let mreturn (a:Type) (x:a) : mrepr a = x
+let mbind (a:Type) (b:Type) (f:mrepr a) (g:a -> mrepr b) : mrepr b = g f
 
 (*
  * The attribute annotations on the binders below are required,
@@ -135,16 +135,16 @@ let mbind (a:Type) (b:Type) (f:mrepr a ()) (g:a -> mrepr b ()) : mrepr b () = g 
 let mif_then_else (a:Type)
   ([@@@ an_attr] phi:Type0)
   ([@@@ an_attr] bb:squash phi) 
-  (f:mrepr a ())
-  (g:mrepr a ())
+  (f:mrepr a)
+  (g:mrepr a)
   (b:bool)
   : Type
-  = mrepr a ()
+  = mrepr a
 
 let msubcomp (a:Type)
   ([@@@ an_attr] phi:Type0)
-  ([@@@ an_attr] bb:squash phi)  (f:mrepr a ())
-  : mrepr a () = f
+  ([@@@ an_attr] bb:squash phi)  (f:mrepr a)
+  : mrepr a = f
 
 [@@ resolve_implicits; an_attr]
 let mtac1 () : Tac unit =
@@ -154,7 +154,7 @@ let mtac1 () : Tac unit =
 
 [@@ ite_soundness_by an_attr]
 effect {
-  M (a:Type) (_:unit)
+  M (a:Type)
   with {repr=mrepr; return=mreturn; bind=mbind; if_then_else=mif_then_else; subcomp=msubcomp}
 }
 
@@ -165,11 +165,11 @@ effect {
  *   to make a proof go through
  *)
 
-type mmrepr (a:Type) (_:unit) = a
-let mmreturn (a:Type) (x:a) : mmrepr a () = x
-let mmbind (a b:Type) (f:mmrepr a ()) (g:a -> mmrepr b ()) : mmrepr b () = g f
-let mmsubcomp (a:Type) (f:mmrepr a ())
-  : Pure (mmrepr a ())
+type mmrepr (a:Type) = a
+let mmreturn (a:Type) (x:a) : mmrepr a = x
+let mmbind (a b:Type) (f:mmrepr a) (g:a -> mmrepr b) : mmrepr b = g f
+let mmsubcomp (a:Type) (f:mmrepr a)
+  : Pure (mmrepr a)
       (requires False)
       (ensures fun _ -> True)
   = f
@@ -181,7 +181,7 @@ let mmsubcomp (a:Type) (f:mmrepr a ())
 
 [@@ expect_failure]
 effect {
-  N (a:Type) (_:unit)
+  N (a:Type)
   with { repr = mmrepr; return = mmreturn; bind = mmbind; subcomp = mmsubcomp }
 }
 
@@ -195,6 +195,6 @@ let mtac2 () : Tac unit =
 
 [@@ ite_soundness_by an_attr]
 effect {
-  N (a:Type) (_:unit)
+  N (a:Type)
   with { repr = mmrepr; return = mmreturn; bind = mmbind; subcomp = mmsubcomp }
 }
