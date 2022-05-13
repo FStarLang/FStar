@@ -599,12 +599,12 @@ let unfold_def (t:term) : Tac unit =
 equalities. The lemmas need to prove *propositional* equalities, that
 is, using [==]. *)
 let l_to_r (lems:list term) : Tac unit =
-    let first_or_trefl () : Tac unit =
+    let first_or_skip () : Tac unit =
         fold_left (fun k l () ->
                     (fun () -> apply_lemma_rw l)
                     `or_else` k)
-                  trefl lems () in
-    pointwise first_or_trefl
+                  (fun _ -> fail_silently "SKIP") lems () in
+    pointwise first_or_skip
 
 let mk_squash (t : term) : term =
     let sq : term = pack_ln (Tv_FVar (pack_fv squash_qn)) in
