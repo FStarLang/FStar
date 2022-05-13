@@ -79,8 +79,6 @@ let (push_with_kind :
                 (env.FStar_TypeChecker_Env.top_level);
               FStar_TypeChecker_Env.check_uvars =
                 (env.FStar_TypeChecker_Env.check_uvars);
-              FStar_TypeChecker_Env.use_eq =
-                (env.FStar_TypeChecker_Env.use_eq);
               FStar_TypeChecker_Env.use_eq_strict =
                 (env.FStar_TypeChecker_Env.use_eq_strict);
               FStar_TypeChecker_Env.is_iface =
@@ -895,7 +893,7 @@ let rec (go :
                     go line_col filename stack curmod1 tcenv ts in
                   let frag =
                     {
-                      FStar_Parser_ParseIt.frag_fname = "<input>";
+                      FStar_Parser_ParseIt.frag_fname = " input";
                       FStar_Parser_ParseIt.frag_text = text;
                       FStar_Parser_ParseIt.frag_line =
                         (FStar_Pervasives_Native.fst line_col);

@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "520ec4b38b66bc053868ef548ff1d520"
+      "cb245911dbf07acf9679e28c50e45e7e"
     ],
     [
       "FStar.SquashProperties.bool_of_or",
@@ -21,7 +21,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "82e5379823bd31efffb55702f37c465a"
+      "62ccea77bc229ec629ad552332e0de30"
     ],
     [
       "FStar.SquashProperties.excluded_middle",
@@ -30,7 +30,7 @@
       1,
       [ "@query" ],
       0,
-      "6fe809158a4850393d51fee57d09c19e"
+      "f78ccd9ea249dba5203a039ac5a69a44"
     ],
     [
       "FStar.SquashProperties.excluded_middle_squash",
@@ -43,7 +43,7 @@
         "refinement_interpretation_Tm_refine_0a072959e7be7be61159772bf968ea07"
       ],
       0,
-      "e4851d278dd745f75bd108915e0de1c0"
+      "f316174d528dbd798aa3a34bceb11451"
     ],
     [
       "FStar.SquashProperties.ifProp",
@@ -56,39 +56,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "e090733a75f5863275f7bd9850a1478a"
-    ],
-    [
-      "FStar.SquashProperties.__proj__MkR__item__inv",
-      1,
-      2,
-      1,
-      [
-        "@query", "proj_equation_FStar.SquashProperties.MkR_i",
-        "proj_equation_FStar.SquashProperties.MkR_j",
-        "projection_inverse_FStar.SquashProperties.MkR_i",
-        "projection_inverse_FStar.SquashProperties.MkR_j",
-        "token_correspondence_FStar.SquashProperties.__proj__MkR__item__i",
-        "token_correspondence_FStar.SquashProperties.__proj__MkR__item__j"
-      ],
-      0,
-      "a03a407a275ec48a87984d678140a097"
-    ],
-    [
-      "FStar.SquashProperties.__proj__MkC__item__inv2",
-      1,
-      2,
-      1,
-      [
-        "@query", "proj_equation_FStar.SquashProperties.MkC_i2",
-        "proj_equation_FStar.SquashProperties.MkC_j2",
-        "projection_inverse_FStar.SquashProperties.MkC_i2",
-        "projection_inverse_FStar.SquashProperties.MkC_j2",
-        "token_correspondence_FStar.SquashProperties.__proj__MkC__item__i2",
-        "token_correspondence_FStar.SquashProperties.__proj__MkC__item__j2"
-      ],
-      0,
-      "d5c6601beab4c370cb40f525b1e19f1a"
+      "15c06be0ac4fcc63666baa9400843616"
     ],
     [
       "FStar.SquashProperties.ac",
@@ -104,7 +72,7 @@
         "token_correspondence_FStar.SquashProperties.__proj__MkC__item__j2"
       ],
       0,
-      "6624fb6d9095dce015bdf7bfed6e198a"
+      "f0210c45a08d0246699ea65dbecb3b26"
     ],
     [
       "FStar.SquashProperties.false_elim",
@@ -116,7 +84,7 @@
         "refinement_interpretation_Tm_refine_f1ecc6ab6882a651504f328937700647"
       ],
       0,
-      "ae7210026bc978ef8bfe7b0dc9fa84b7"
+      "e781ddc693865d055567a59cc503d076"
     ],
     [
       "FStar.SquashProperties.l1",
@@ -129,7 +97,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "452eac4920ed4d7034949d020ab8dbe8"
+      "0477176fcf9a803a999beb1ffda6cdb3"
     ]
   ]
 ]

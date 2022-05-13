@@ -34,7 +34,8 @@ steel \
 steel_tutorial \
 layeredeffects \
 misc \
-sequence
+sequence \
+oplss2021
 
 HAS_OCAML := $(shell which ocamlfind 2>/dev/null)
 
@@ -45,7 +46,7 @@ ALL_EXAMPLE_DIRS+=\
 
 endif
 
-ifdef KREMLIN_HOME
+ifdef KRML_HOME
 ALL_EXAMPLE_DIRS+=\
   kv_parsing \
   miniparse \

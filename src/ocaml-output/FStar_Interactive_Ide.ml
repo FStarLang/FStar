@@ -1545,8 +1545,6 @@ let run_push_without_deps :
                  (uu___.FStar_TypeChecker_Env.top_level);
                FStar_TypeChecker_Env.check_uvars =
                  (uu___.FStar_TypeChecker_Env.check_uvars);
-               FStar_TypeChecker_Env.use_eq =
-                 (uu___.FStar_TypeChecker_Env.use_eq);
                FStar_TypeChecker_Env.use_eq_strict =
                  (uu___.FStar_TypeChecker_Env.use_eq_strict);
                FStar_TypeChecker_Env.is_iface =
@@ -2075,7 +2073,7 @@ let run_with_parsed_and_tc_term :
                 FStar_Compiler_Util.format1 "let __compute_dummy__ = (%s)"
                   term1 in
               {
-                FStar_Parser_ParseIt.frag_fname = "<input>";
+                FStar_Parser_ParseIt.frag_fname = " input";
                 FStar_Parser_ParseIt.frag_text = dummy_decl;
                 FStar_Parser_ParseIt.frag_line = Prims.int_zero;
                 FStar_Parser_ParseIt.frag_col = Prims.int_zero

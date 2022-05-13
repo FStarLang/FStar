@@ -604,15 +604,18 @@ let (e_argv_aq :
     let uu___ = e_term_aq aq in
     FStar_TypeChecker_NBETerm.e_tuple2 uu___ e_aqualv
 let (e_match_returns_annotation :
-  ((FStar_Syntax_Syntax.term, FStar_Syntax_Syntax.comp)
-    FStar_Pervasives.either * FStar_Syntax_Syntax.term
-    FStar_Pervasives_Native.option) FStar_Pervasives_Native.option
-    FStar_TypeChecker_NBETerm.embedding)
+  (FStar_Syntax_Syntax.binder * ((FStar_Syntax_Syntax.term,
+    FStar_Syntax_Syntax.comp) FStar_Pervasives.either *
+    FStar_Syntax_Syntax.term FStar_Pervasives_Native.option * Prims.bool))
+    FStar_Pervasives_Native.option FStar_TypeChecker_NBETerm.embedding)
   =
   let uu___ =
-    let uu___1 = FStar_TypeChecker_NBETerm.e_either e_term e_comp in
-    let uu___2 = FStar_TypeChecker_NBETerm.e_option e_term in
-    FStar_TypeChecker_NBETerm.e_tuple2 uu___1 uu___2 in
+    let uu___1 =
+      let uu___2 = FStar_TypeChecker_NBETerm.e_either e_term e_comp in
+      let uu___3 = FStar_TypeChecker_NBETerm.e_option e_term in
+      FStar_TypeChecker_NBETerm.e_tuple3 uu___2 uu___3
+        FStar_TypeChecker_NBETerm.e_bool in
+    FStar_TypeChecker_NBETerm.e_tuple2 e_binder uu___1 in
   FStar_TypeChecker_NBETerm.e_option uu___
 let unlazy_as_t :
   'uuuuu .
@@ -831,7 +834,7 @@ let (e_term_view_aq :
           mkConstruct
             FStar_Reflection_Data.ref_Tv_Match.FStar_Reflection_Data.fv []
             uu___
-      | FStar_Reflection_Data.Tv_AscribedT (e, t, tacopt) ->
+      | FStar_Reflection_Data.Tv_AscribedT (e, t, tacopt, use_eq) ->
           let uu___ =
             let uu___1 =
               let uu___2 =
@@ -852,13 +855,20 @@ let (e_term_view_aq :
                       FStar_TypeChecker_NBETerm.e_option uu___8 in
                     FStar_TypeChecker_NBETerm.embed uu___7 cb tacopt in
                   FStar_TypeChecker_NBETerm.as_arg uu___6 in
-                [uu___5] in
+                let uu___6 =
+                  let uu___7 =
+                    let uu___8 =
+                      FStar_TypeChecker_NBETerm.embed
+                        FStar_TypeChecker_NBETerm.e_bool cb use_eq in
+                    FStar_TypeChecker_NBETerm.as_arg uu___8 in
+                  [uu___7] in
+                uu___5 :: uu___6 in
               uu___3 :: uu___4 in
             uu___1 :: uu___2 in
           mkConstruct
             FStar_Reflection_Data.ref_Tv_AscT.FStar_Reflection_Data.fv []
             uu___
-      | FStar_Reflection_Data.Tv_AscribedC (e, c, tacopt) ->
+      | FStar_Reflection_Data.Tv_AscribedC (e, c, tacopt, use_eq) ->
           let uu___ =
             let uu___1 =
               let uu___2 =
@@ -877,7 +887,14 @@ let (e_term_view_aq :
                       FStar_TypeChecker_NBETerm.e_option uu___8 in
                     FStar_TypeChecker_NBETerm.embed uu___7 cb tacopt in
                   FStar_TypeChecker_NBETerm.as_arg uu___6 in
-                [uu___5] in
+                let uu___6 =
+                  let uu___7 =
+                    let uu___8 =
+                      FStar_TypeChecker_NBETerm.embed
+                        FStar_TypeChecker_NBETerm.e_bool cb use_eq in
+                    FStar_TypeChecker_NBETerm.as_arg uu___8 in
+                  [uu___7] in
+                uu___5 :: uu___6 in
               uu___3 :: uu___4 in
             uu___1 :: uu___2 in
           mkConstruct
@@ -1070,45 +1087,61 @@ let (e_term_view_aq :
                            (FStar_Reflection_Data.Tv_Match
                               (t2, ret_opt1, brs1)))))
       | FStar_TypeChecker_NBETerm.Construct
-          (fv, uu___, (tacopt, uu___1)::(t1, uu___2)::(e, uu___3)::[]) when
+          (fv, uu___,
+           (tacopt, uu___1)::(t1, uu___2)::(e, uu___3)::(use_eq, uu___4)::[])
+          when
           FStar_Syntax_Syntax.fv_eq_lid fv
             FStar_Reflection_Data.ref_Tv_AscT.FStar_Reflection_Data.lid
           ->
-          let uu___4 = FStar_TypeChecker_NBETerm.unembed e_term cb e in
-          FStar_Compiler_Util.bind_opt uu___4
+          let uu___5 = FStar_TypeChecker_NBETerm.unembed e_term cb e in
+          FStar_Compiler_Util.bind_opt uu___5
             (fun e1 ->
-               let uu___5 = FStar_TypeChecker_NBETerm.unembed e_term cb t1 in
-               FStar_Compiler_Util.bind_opt uu___5
+               let uu___6 = FStar_TypeChecker_NBETerm.unembed e_term cb t1 in
+               FStar_Compiler_Util.bind_opt uu___6
                  (fun t2 ->
-                    let uu___6 =
-                      let uu___7 = FStar_TypeChecker_NBETerm.e_option e_term in
-                      FStar_TypeChecker_NBETerm.unembed uu___7 cb tacopt in
-                    FStar_Compiler_Util.bind_opt uu___6
+                    let uu___7 =
+                      let uu___8 = FStar_TypeChecker_NBETerm.e_option e_term in
+                      FStar_TypeChecker_NBETerm.unembed uu___8 cb tacopt in
+                    FStar_Compiler_Util.bind_opt uu___7
                       (fun tacopt1 ->
-                         FStar_Compiler_Effect.op_Less_Bar
-                           (fun uu___7 -> FStar_Pervasives_Native.Some uu___7)
-                           (FStar_Reflection_Data.Tv_AscribedT
-                              (e1, t2, tacopt1)))))
+                         let uu___8 =
+                           FStar_TypeChecker_NBETerm.unembed
+                             FStar_TypeChecker_NBETerm.e_bool cb use_eq in
+                         FStar_Compiler_Util.bind_opt uu___8
+                           (fun use_eq1 ->
+                              FStar_Compiler_Effect.op_Less_Bar
+                                (fun uu___9 ->
+                                   FStar_Pervasives_Native.Some uu___9)
+                                (FStar_Reflection_Data.Tv_AscribedT
+                                   (e1, t2, tacopt1, use_eq1))))))
       | FStar_TypeChecker_NBETerm.Construct
-          (fv, uu___, (tacopt, uu___1)::(c, uu___2)::(e, uu___3)::[]) when
+          (fv, uu___,
+           (tacopt, uu___1)::(c, uu___2)::(e, uu___3)::(use_eq, uu___4)::[])
+          when
           FStar_Syntax_Syntax.fv_eq_lid fv
             FStar_Reflection_Data.ref_Tv_AscC.FStar_Reflection_Data.lid
           ->
-          let uu___4 = FStar_TypeChecker_NBETerm.unembed e_term cb e in
-          FStar_Compiler_Util.bind_opt uu___4
+          let uu___5 = FStar_TypeChecker_NBETerm.unembed e_term cb e in
+          FStar_Compiler_Util.bind_opt uu___5
             (fun e1 ->
-               let uu___5 = FStar_TypeChecker_NBETerm.unembed e_comp cb c in
-               FStar_Compiler_Util.bind_opt uu___5
+               let uu___6 = FStar_TypeChecker_NBETerm.unembed e_comp cb c in
+               FStar_Compiler_Util.bind_opt uu___6
                  (fun c1 ->
-                    let uu___6 =
-                      let uu___7 = FStar_TypeChecker_NBETerm.e_option e_term in
-                      FStar_TypeChecker_NBETerm.unembed uu___7 cb tacopt in
-                    FStar_Compiler_Util.bind_opt uu___6
+                    let uu___7 =
+                      let uu___8 = FStar_TypeChecker_NBETerm.e_option e_term in
+                      FStar_TypeChecker_NBETerm.unembed uu___8 cb tacopt in
+                    FStar_Compiler_Util.bind_opt uu___7
                       (fun tacopt1 ->
-                         FStar_Compiler_Effect.op_Less_Bar
-                           (fun uu___7 -> FStar_Pervasives_Native.Some uu___7)
-                           (FStar_Reflection_Data.Tv_AscribedC
-                              (e1, c1, tacopt1)))))
+                         let uu___8 =
+                           FStar_TypeChecker_NBETerm.unembed
+                             FStar_TypeChecker_NBETerm.e_bool cb use_eq in
+                         FStar_Compiler_Util.bind_opt uu___8
+                           (fun use_eq1 ->
+                              FStar_Compiler_Effect.op_Less_Bar
+                                (fun uu___9 ->
+                                   FStar_Pervasives_Native.Some uu___9)
+                                (FStar_Reflection_Data.Tv_AscribedC
+                                   (e1, c1, tacopt1, use_eq1))))))
       | FStar_TypeChecker_NBETerm.Construct (fv, uu___, []) when
           FStar_Syntax_Syntax.fv_eq_lid fv
             FStar_Reflection_Data.ref_Tv_Unknown.FStar_Reflection_Data.lid

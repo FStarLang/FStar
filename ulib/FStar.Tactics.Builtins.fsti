@@ -142,7 +142,7 @@ before solving. In that case, a goal for the refinement formula will be
 added. Second boolean is whether to set the expected type internally.
 Just use `exact` from FStar.Tactics.Derived if you don't know what's up
 with all this. *)
-val t_exact : bool -> bool -> term -> Tac unit
+val t_exact : maybe_refine:bool -> set_expected_typ:bool -> term -> Tac unit
 
 (** Inner primitive for [apply], takes a boolean specifying whether
 to not ask for implicits that appear free in posterior goals, and a
@@ -357,4 +357,4 @@ val curms : unit -> Tac int
 
 (** [set_urgency u] sets the urgency of error messages. Usually set just
 before raising an exception (see e.g. [fail_silently]). *)
-val set_urgency : int -> Tac unit
+val set_urgency : int -> TacS unit

@@ -39,8 +39,10 @@ let (__proj__SConst__item___0 : constant -> FStar_Const.sconst) =
 type atom =
   | Var of var 
   | Match of (t *
-  (unit -> FStar_Syntax_Syntax.ascription FStar_Pervasives_Native.option) *
-  (unit -> FStar_Syntax_Syntax.branch Prims.list) *
+  (unit ->
+     FStar_Syntax_Syntax.match_returns_ascription
+       FStar_Pervasives_Native.option)
+  * (unit -> FStar_Syntax_Syntax.branch Prims.list) *
   (unit -> FStar_Syntax_Syntax.residual_comp FStar_Pervasives_Native.option))
   
   | UnreducedLet of (var * t FStar_Thunk.t * t FStar_Thunk.t * t
@@ -49,7 +51,7 @@ type atom =
   FStar_Syntax_Syntax.letbinding Prims.list) 
   | UVar of FStar_Syntax_Syntax.term FStar_Thunk.t 
 and t' =
-  | Lam of ((t Prims.list -> t) *
+  | Lam of (((t * FStar_Syntax_Syntax.aqual) Prims.list -> t) *
   ((t Prims.list * FStar_Syntax_Syntax.binders *
      FStar_Syntax_Syntax.residual_comp FStar_Pervasives_Native.option),
   (t * FStar_Syntax_Syntax.aqual) Prims.list) FStar_Pervasives.either *
@@ -96,6 +98,11 @@ and comp_typ =
   result_typ: t ;
   effect_args: (t * FStar_Syntax_Syntax.aqual) Prims.list ;
   flags: cflag Prims.list }
+and residual_comp =
+  {
+  residual_effect: FStar_Ident.lident ;
+  residual_typ: t FStar_Pervasives_Native.option ;
+  residual_flags: cflag Prims.list }
 and cflag =
   | TOTAL 
   | MLEFFECT 
@@ -108,11 +115,6 @@ and cflag =
   | CPS 
   | DECREASES_lex of t Prims.list 
   | DECREASES_wf of (t * t) 
-and residual_comp =
-  {
-  residual_effect: FStar_Ident.lident ;
-  residual_typ: t FStar_Pervasives_Native.option ;
-  residual_flags: cflag Prims.list }
 let (uu___is_Var : atom -> Prims.bool) =
   fun projectee -> match projectee with | Var _0 -> true | uu___ -> false
 let (__proj__Var__item___0 : atom -> var) =
@@ -122,7 +124,9 @@ let (uu___is_Match : atom -> Prims.bool) =
 let (__proj__Match__item___0 :
   atom ->
     (t *
-      (unit -> FStar_Syntax_Syntax.ascription FStar_Pervasives_Native.option)
+      (unit ->
+         FStar_Syntax_Syntax.match_returns_ascription
+           FStar_Pervasives_Native.option)
       * (unit -> FStar_Syntax_Syntax.branch Prims.list) *
       (unit ->
          FStar_Syntax_Syntax.residual_comp FStar_Pervasives_Native.option)))
@@ -151,7 +155,7 @@ let (uu___is_Lam : t' -> Prims.bool) =
   fun projectee -> match projectee with | Lam _0 -> true | uu___ -> false
 let (__proj__Lam__item___0 :
   t' ->
-    ((t Prims.list -> t) *
+    (((t * FStar_Syntax_Syntax.aqual) Prims.list -> t) *
       ((t Prims.list * FStar_Syntax_Syntax.binders *
          FStar_Syntax_Syntax.residual_comp FStar_Pervasives_Native.option),
       (t * FStar_Syntax_Syntax.aqual) Prims.list) FStar_Pervasives.either *
@@ -299,6 +303,21 @@ let (__proj__Mkcomp_typ__item__flags : comp_typ -> cflag Prims.list) =
   fun projectee ->
     match projectee with
     | { comp_univs; effect_name; result_typ; effect_args; flags;_} -> flags
+let (__proj__Mkresidual_comp__item__residual_effect :
+  residual_comp -> FStar_Ident.lident) =
+  fun projectee ->
+    match projectee with
+    | { residual_effect; residual_typ; residual_flags;_} -> residual_effect
+let (__proj__Mkresidual_comp__item__residual_typ :
+  residual_comp -> t FStar_Pervasives_Native.option) =
+  fun projectee ->
+    match projectee with
+    | { residual_effect; residual_typ; residual_flags;_} -> residual_typ
+let (__proj__Mkresidual_comp__item__residual_flags :
+  residual_comp -> cflag Prims.list) =
+  fun projectee ->
+    match projectee with
+    | { residual_effect; residual_typ; residual_flags;_} -> residual_flags
 let (uu___is_TOTAL : cflag -> Prims.bool) =
   fun projectee -> match projectee with | TOTAL -> true | uu___ -> false
 let (uu___is_MLEFFECT : cflag -> Prims.bool) =
@@ -331,25 +350,36 @@ let (uu___is_DECREASES_wf : cflag -> Prims.bool) =
     match projectee with | DECREASES_wf _0 -> true | uu___ -> false
 let (__proj__DECREASES_wf__item___0 : cflag -> (t * t)) =
   fun projectee -> match projectee with | DECREASES_wf _0 -> _0
-let (__proj__Mkresidual_comp__item__residual_effect :
-  residual_comp -> FStar_Ident.lident) =
-  fun projectee ->
-    match projectee with
-    | { residual_effect; residual_typ; residual_flags;_} -> residual_effect
-let (__proj__Mkresidual_comp__item__residual_typ :
-  residual_comp -> t FStar_Pervasives_Native.option) =
-  fun projectee ->
-    match projectee with
-    | { residual_effect; residual_typ; residual_flags;_} -> residual_typ
-let (__proj__Mkresidual_comp__item__residual_flags :
-  residual_comp -> cflag Prims.list) =
-  fun projectee ->
-    match projectee with
-    | { residual_effect; residual_typ; residual_flags;_} -> residual_flags
 type arg = (t * FStar_Syntax_Syntax.aqual)
 type args = (t * FStar_Syntax_Syntax.aqual) Prims.list
 type head = t
 type annot = t FStar_Pervasives_Native.option
+type nbe_cbs =
+  {
+  iapp: t -> args -> t ;
+  translate: FStar_Syntax_Syntax.term -> t }
+let (__proj__Mknbe_cbs__item__iapp : nbe_cbs -> t -> args -> t) =
+  fun projectee -> match projectee with | { iapp; translate;_} -> iapp
+let (__proj__Mknbe_cbs__item__translate :
+  nbe_cbs -> FStar_Syntax_Syntax.term -> t) =
+  fun projectee -> match projectee with | { iapp; translate;_} -> translate
+type 'a embedding =
+  {
+  em: nbe_cbs -> 'a -> t ;
+  un: nbe_cbs -> t -> 'a FStar_Pervasives_Native.option ;
+  typ: t ;
+  emb_typ: FStar_Syntax_Syntax.emb_typ }
+let __proj__Mkembedding__item__em : 'a . 'a embedding -> nbe_cbs -> 'a -> t =
+  fun projectee -> match projectee with | { em; un; typ; emb_typ;_} -> em
+let __proj__Mkembedding__item__un :
+  'a . 'a embedding -> nbe_cbs -> t -> 'a FStar_Pervasives_Native.option =
+  fun projectee -> match projectee with | { em; un; typ; emb_typ;_} -> un
+let __proj__Mkembedding__item__typ : 'a . 'a embedding -> t =
+  fun projectee -> match projectee with | { em; un; typ; emb_typ;_} -> typ
+let __proj__Mkembedding__item__emb_typ :
+  'a . 'a embedding -> FStar_Syntax_Syntax.emb_typ =
+  fun projectee ->
+    match projectee with | { em; un; typ; emb_typ;_} -> emb_typ
 let (isAccu : t -> Prims.bool) =
   fun trm -> match trm.nbe_t with | Accu uu___ -> true | uu___ -> false
 let (isNotAccu : t -> Prims.bool) =
@@ -381,7 +411,9 @@ let (mkAccuVar : var -> t) =
     mk_rt uu___ (Accu ((Var v), []))
 let (mkAccuMatch :
   t ->
-    (unit -> FStar_Syntax_Syntax.ascription FStar_Pervasives_Native.option)
+    (unit ->
+       FStar_Syntax_Syntax.match_returns_ascription
+         FStar_Pervasives_Native.option)
       ->
       (unit -> FStar_Syntax_Syntax.branch Prims.list) ->
         (unit ->
@@ -692,36 +724,10 @@ let (args_to_string : args -> Prims.string) =
       FStar_Compiler_Effect.op_Bar_Greater args1
         (FStar_Compiler_List.map arg_to_string) in
     FStar_Compiler_Effect.op_Bar_Greater uu___ (FStar_String.concat " ")
-type nbe_cbs =
-  {
-  iapp: t -> args -> t ;
-  translate: FStar_Syntax_Syntax.term -> t }
-let (__proj__Mknbe_cbs__item__iapp : nbe_cbs -> t -> args -> t) =
-  fun projectee -> match projectee with | { iapp; translate;_} -> iapp
-let (__proj__Mknbe_cbs__item__translate :
-  nbe_cbs -> FStar_Syntax_Syntax.term -> t) =
-  fun projectee -> match projectee with | { iapp; translate;_} -> translate
 let (iapp_cb : nbe_cbs -> t -> args -> t) =
   fun cbs -> fun h -> fun a -> cbs.iapp h a
 let (translate_cb : nbe_cbs -> FStar_Syntax_Syntax.term -> t) =
   fun cbs -> fun t1 -> cbs.translate t1
-type 'a embedding =
-  {
-  em: nbe_cbs -> 'a -> t ;
-  un: nbe_cbs -> t -> 'a FStar_Pervasives_Native.option ;
-  typ: t ;
-  emb_typ: FStar_Syntax_Syntax.emb_typ }
-let __proj__Mkembedding__item__em : 'a . 'a embedding -> nbe_cbs -> 'a -> t =
-  fun projectee -> match projectee with | { em; un; typ; emb_typ;_} -> em
-let __proj__Mkembedding__item__un :
-  'a . 'a embedding -> nbe_cbs -> t -> 'a FStar_Pervasives_Native.option =
-  fun projectee -> match projectee with | { em; un; typ; emb_typ;_} -> un
-let __proj__Mkembedding__item__typ : 'a . 'a embedding -> t =
-  fun projectee -> match projectee with | { em; un; typ; emb_typ;_} -> typ
-let __proj__Mkembedding__item__emb_typ :
-  'a . 'a embedding -> FStar_Syntax_Syntax.emb_typ =
-  fun projectee ->
-    match projectee with | { em; un; typ; emb_typ;_} -> emb_typ
 let embed : 'a . 'a embedding -> nbe_cbs -> 'a -> t =
   fun e -> fun cb -> fun x -> e.em cb x
 let unembed :
@@ -1041,6 +1047,90 @@ let e_tuple2 : 'a 'b . 'a embedding -> 'b embedding -> ('a * 'b) embedding =
         lid_as_typ FStar_Parser_Const.lid_tuple2
           [FStar_Syntax_Syntax.U_zero; FStar_Syntax_Syntax.U_zero] uu___1 in
       mk_emb em un uu___ etyp
+let e_tuple3 :
+  'a 'b 'c .
+    'a embedding -> 'b embedding -> 'c embedding -> ('a * 'b * 'c) embedding
+  =
+  fun ea ->
+    fun eb ->
+      fun ec ->
+        let etyp =
+          let uu___ =
+            let uu___1 =
+              FStar_Compiler_Effect.op_Bar_Greater
+                FStar_Parser_Const.lid_tuple3 FStar_Ident.string_of_lid in
+            (uu___1, [ea.emb_typ; eb.emb_typ; ec.emb_typ]) in
+          FStar_Syntax_Syntax.ET_app uu___ in
+        let em cb uu___ =
+          match uu___ with
+          | (x1, x2, x3) ->
+              lazy_embed etyp (x1, x2, x3)
+                (fun uu___1 ->
+                   let uu___2 =
+                     let uu___3 =
+                       let uu___4 = embed ec cb x3 in as_arg uu___4 in
+                     let uu___4 =
+                       let uu___5 =
+                         let uu___6 = embed eb cb x2 in as_arg uu___6 in
+                       let uu___6 =
+                         let uu___7 =
+                           let uu___8 = embed ea cb x1 in as_arg uu___8 in
+                         let uu___8 =
+                           let uu___9 =
+                             let uu___10 = type_of ec in as_iarg uu___10 in
+                           let uu___10 =
+                             let uu___11 =
+                               let uu___12 = type_of eb in as_iarg uu___12 in
+                             let uu___12 =
+                               let uu___13 =
+                                 let uu___14 = type_of ea in as_iarg uu___14 in
+                               [uu___13] in
+                             uu___11 :: uu___12 in
+                           uu___9 :: uu___10 in
+                         uu___7 :: uu___8 in
+                       uu___5 :: uu___6 in
+                     uu___3 :: uu___4 in
+                   lid_as_constr FStar_Parser_Const.lid_Mktuple3
+                     [FStar_Syntax_Syntax.U_zero;
+                     FStar_Syntax_Syntax.U_zero;
+                     FStar_Syntax_Syntax.U_zero] uu___2) in
+        let un cb trm =
+          lazy_unembed cb etyp trm
+            (fun trm1 ->
+               match trm1.nbe_t with
+               | Construct
+                   (fvar, us,
+                    (c1, uu___)::(b1, uu___1)::(a1, uu___2)::uu___3::uu___4::[])
+                   when
+                   FStar_Syntax_Syntax.fv_eq_lid fvar
+                     FStar_Parser_Const.lid_Mktuple3
+                   ->
+                   let uu___5 = unembed ea cb a1 in
+                   FStar_Compiler_Util.bind_opt uu___5
+                     (fun a2 ->
+                        let uu___6 = unembed eb cb b1 in
+                        FStar_Compiler_Util.bind_opt uu___6
+                          (fun b2 ->
+                             let uu___7 = unembed ec cb c1 in
+                             FStar_Compiler_Util.bind_opt uu___7
+                               (fun c2 ->
+                                  FStar_Pervasives_Native.Some (a2, b2, c2))))
+               | uu___ -> FStar_Pervasives_Native.None) in
+        let uu___ =
+          let uu___1 =
+            let uu___2 = let uu___3 = type_of ec in as_arg uu___3 in
+            let uu___3 =
+              let uu___4 = let uu___5 = type_of eb in as_arg uu___5 in
+              let uu___5 =
+                let uu___6 = let uu___7 = type_of ea in as_arg uu___7 in
+                [uu___6] in
+              uu___4 :: uu___5 in
+            uu___2 :: uu___3 in
+          lid_as_typ FStar_Parser_Const.lid_tuple3
+            [FStar_Syntax_Syntax.U_zero;
+            FStar_Syntax_Syntax.U_zero;
+            FStar_Syntax_Syntax.U_zero] uu___1 in
+        mk_emb em un uu___ etyp
 let e_either :
   'a 'b .
     'a embedding ->
@@ -1218,7 +1308,12 @@ let e_arrow : 'a 'b . 'a embedding -> 'b embedding -> ('a -> 'b) embedding =
                    FStar_Pervasives.Inr uu___4 in
                  ((fun tas ->
                      let uu___4 =
-                       let uu___5 = FStar_Compiler_List.hd tas in
+                       let uu___5 =
+                         let uu___6 =
+                           FStar_Compiler_Effect.op_Bar_Greater tas
+                             FStar_Compiler_List.hd in
+                         FStar_Compiler_Effect.op_Bar_Greater uu___6
+                           FStar_Pervasives_Native.fst in
                        unembed ea cb uu___5 in
                      match uu___4 with
                      | FStar_Pervasives_Native.Some a1 ->

@@ -33,3 +33,9 @@ type univ_name = ident
 type typ     = term
 type binders = list binder
 
+(*
+ * match e as binder returns t|C
+ *
+ * the bool says whether returns (bool = false) or returns$ (bool = true, use type equality
+ *)
+type match_returns_ascription = binder & (either term comp & option term & bool)

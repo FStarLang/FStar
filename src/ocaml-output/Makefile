@@ -45,9 +45,6 @@ PREFIX=$(shell pwd)/fstar
 # The string "Madoko" if madoko is installed, something else otherwise.
 MADOKO = $(shell madoko --version 2>/dev/null | cut -c -6)
 DOS2UNIX=$(shell which dos2unix >/dev/null 2>&1 && echo dos2unix || echo true)
-# Set PACKAGE_DOCS to 1 if you want to include html docs into the binary package.
-# If so, then Madoko MUST be installed on the machine building the package.
-PACKAGE_DOCS?=0
 
 # Detect the GNU utilities
 INSTALL_EXEC := $(shell ginstall --version 2>/dev/null | cut -c -8 | head -n 1)
@@ -64,7 +61,7 @@ OCAML_BRANCH=$(shell ocaml get_branch.ml)
 # Complete build: generate fstar.exe and derive a fresh F#-compatible parser
 # from our reference parser (i.e. ../parser/parse.mly) using Menhir (if
 # possible).
-all:  ../parser/parse.fsy ../../bin/fstar.exe ../../bin/fstar.ocaml ../../bin/tests.exe install-compiler-lib
+all:  ../../bin/fstar.exe ../../bin/fstar.ocaml ../../bin/tests.exe install-compiler-lib
 
 # We derive parse.mly in two ways:
 # - if we have menhir, we generate it from from the Menhir parser
@@ -80,36 +77,6 @@ ifeq ($(HAS_VALID_MENHIR), 1)
 else
 	$(error Correct version of menhir not found (needs a version newer than $(MENHIR_MIN_VERSION)))
 endif
-
-# This is about the F# parser, which we sed-transform from the parse.mly
-# obtained via the rule above.
-../parser/parse.fsy: parse.mly
-	$(Q)echo "%{" > $@
-	$(Q)echo "#light \"off\"" >> $@
-	$(Q)echo "// (c) Microsoft Corporation. All rights reserved" >> $@
-	$(Q)echo "open Prims" >> $@
-	$(Q)echo "open FStar" >> $@
-	$(Q)echo "open FStar.Pervasives" >> $@
-	$(Q)echo "open FStar.Errors" >> $@
-	$(Q)echo "open FStar.Compiler.Option" >> $@
-	$(Q)echo "open FStar.Compiler.List" >> $@
-	$(Q)echo "open FStar.Compiler.Util" >> $@
-	$(Q)echo "open FStar.Compiler.Range" >> $@
-	$(Q)echo "open FStar.Parser.Const" >> $@
-	$(Q)echo "open FStar.Parser.AST" >> $@
-	$(Q)echo "open FStar.Parser.Util" >> $@
-	$(Q)echo "open FStar.Const" >> $@
-	$(Q)echo "open FStar.Ident" >> $@
-	$(Q)echo "open FStar.String" >> $@
-	$(Q)echo "module List = FStar.Compiler.List" >> $@
-	@# TODO : fsyacc seems to complain as soon as there is an arrow -> in a %type declaration...
-	$(Q)cat parse.mly | sed -e '/%{/d' \
-	                    -e '/^open /d' \
-	                    -e '/%token/s/[a-zA-Z0-9_]*\.//g' \
-	                    -e '/%type/s/[a-zA-Z0-9_]*\.//g' \
-	                    -e '/%token.*->.*/d' \
-	                    -e '/%type.*->.*/d' \
-	                  | cat -s >> $@
 
 # https://stackoverflow.com/questions/38294095/ocaml-how-to-solve-findlib-warnings-of-multiple-cmis
 FSTAR_MAIN_NATIVE=_build/src/fstar/ml/main.native
@@ -277,19 +244,7 @@ package:
 	cp ../../_tags $(PREFIX)/
 	cp ../../.common.mk $(PREFIX)/
 	@# Then the rest of the static files.
-	$(call fexport,examples)
-	$(call fexport,tests)
 	$(call fexport,ucontrib)
-	$(call fexport,doc/tutorial)
-ifeq ($(MADOKO),Madoko)
-	@# Build the tutorial
-	+$(MAKE) -C fstar/doc/tutorial
-else
-	@echo " ********** You don't have Madoko installed. Binary package will not include tutorial in html form."
-ifeq ($(PACKAGE_DOCS),1)
-	false
-endif
-endif
 	@# Documentation and licenses
 	cp ../../README.md ../../INSTALL.md ../../LICENSE ../../LICENSE-fsharp.txt $(PREFIX)
 	cp $(Z3_LICENSE) $(PREFIX)/LICENSE-z3.txt

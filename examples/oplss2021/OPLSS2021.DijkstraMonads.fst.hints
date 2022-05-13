@@ -1,0 +1,249 @@
+[
+  "ñ\u0012ghíXi\u0011”¬SÑolû—",
+  [
+    [
+      "OPLSS2021.DijkstraMonads.st_monotonic",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.l_Forall",
+        "equation_Prims.squash", "equation_Prims.subtype_of",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "364fb1880c6763a0273010bf140c1b78"
+    ],
+    [
+      "OPLSS2021.DijkstraMonads.return_wp",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_OPLSS2021.DijkstraMonads.st_monotonic",
+        "interpretation_Tm_abs_a53e7fdfe19e2acb9ae53a9cdca91170"
+      ],
+      0,
+      "00c9f3876e3fb3cd41b56de6ff3c4963"
+    ],
+    [
+      "OPLSS2021.DijkstraMonads.bind_wp",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "OPLSS2021.DijkstraMonads_interpretation_Tm_arrow_1f7382f2f1e2b135e590029034b2f255",
+        "equation_OPLSS2021.DijkstraMonads.st_monotonic",
+        "equation_OPLSS2021.DijkstraMonads.wp",
+        "interpretation_Tm_abs_811e8b5e3738987d804ef8609b0e9eff",
+        "interpretation_Tm_abs_c9e46470d33b7e79486e6e894a637d1b",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
+        "refinement_interpretation_Tm_refine_a29f6b02e81e3d0d6c56ece447f2e786",
+        "typing_Tm_abs_811e8b5e3738987d804ef8609b0e9eff"
+      ],
+      0,
+      "6412c4744e5b75aab85b98fd6bad6d4b"
+    ],
+    [
+      "OPLSS2021.DijkstraMonads.repr",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "OPLSS2021.DijkstraMonads_interpretation_Tm_arrow_e582d335e47d6840e0aed28d317c4bc1",
+        "Prims_interpretation_Tm_arrow_92458cff82f9ffee1f6e26a1c0c579f3",
+        "data_typing_intro_FStar.Pervasives.Native.Mktuple2@tok",
+        "equation_OPLSS2021.DijkstraMonads.st_monotonic",
+        "equation_OPLSS2021.DijkstraMonads.wp", "equation_Prims.l_True",
+        "equation_Prims.pure_post", "equation_Prims.pure_post_",
+        "refinement_interpretation_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
+        "refinement_interpretation_Tm_refine_a29f6b02e81e3d0d6c56ece447f2e786",
+        "true_interp"
+      ],
+      0,
+      "cb1665d9267db8b5a125ddf850c97667"
+    ],
+    [
+      "OPLSS2021.DijkstraMonads.return",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "a9dda332f446cb9ee0c89e8befdf1872"
+    ],
+    [
+      "OPLSS2021.DijkstraMonads.bind",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "OPLSS2021.DijkstraMonads_interpretation_Tm_arrow_1f7382f2f1e2b135e590029034b2f255",
+        "OPLSS2021.DijkstraMonads_interpretation_Tm_arrow_e582d335e47d6840e0aed28d317c4bc1",
+        "Prims_interpretation_Tm_arrow_92458cff82f9ffee1f6e26a1c0c579f3",
+        "eq2-interp", "equation_OPLSS2021.DijkstraMonads.st_monotonic",
+        "equation_OPLSS2021.DijkstraMonads.wp", "equation_Prims.l_True",
+        "equation_Prims.pure_post", "equation_Prims.pure_post_",
+        "interpretation_Tm_abs_2160bde7f60b176103b955fc59281315",
+        "interpretation_Tm_abs_811e8b5e3738987d804ef8609b0e9eff",
+        "interpretation_Tm_abs_ade907d0cf068369deec49e03ec454f6",
+        "l_imp-interp", "l_quant_interp_b0051d59d5e27d8f13752350dd9a2a74",
+        "l_quant_interp_e03c39cc34182dd604407aded4bc3292",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
+        "refinement_interpretation_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
+        "refinement_interpretation_Tm_refine_a29f6b02e81e3d0d6c56ece447f2e786",
+        "true_interp", "typing_Tm_abs_2160bde7f60b176103b955fc59281315",
+        "typing_Tm_abs_811e8b5e3738987d804ef8609b0e9eff",
+        "typing_Tm_abs_ade907d0cf068369deec49e03ec454f6"
+      ],
+      0,
+      "89d4c868acb25c18d1fa749fa6564c84"
+    ],
+    [
+      "OPLSS2021.DijkstraMonads.subcomp",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "OPLSS2021.DijkstraMonads_interpretation_Tm_arrow_e582d335e47d6840e0aed28d317c4bc1",
+        "Prims_interpretation_Tm_arrow_92458cff82f9ffee1f6e26a1c0c579f3",
+        "equation_OPLSS2021.DijkstraMonads.stronger",
+        "equation_Prims.l_True", "equation_Prims.pure_post",
+        "equation_Prims.pure_post_",
+        "refinement_interpretation_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
+        "true_interp"
+      ],
+      0,
+      "db5c307d20aeb9480c168202b4e11692"
+    ],
+    [
+      "OPLSS2021.DijkstraMonads.ST",
+      1,
+      2,
+      1,
+      [ "@query", "equation_OPLSS2021.DijkstraMonads.stronger" ],
+      0,
+      "cf72042fb215e8f7cd4ad2a247df86e8"
+    ],
+    [
+      "OPLSS2021.DijkstraMonads.ST",
+      2,
+      2,
+      1,
+      [ "@query", "equation_OPLSS2021.DijkstraMonads.stronger" ],
+      0,
+      "1bf7ca47a813a2ef90d90023b7ff8868"
+    ],
+    [
+      "OPLSS2021.DijkstraMonads.lift_wp",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_interpretation_Tm_arrow_2eaa01e78f73e9bab5d0955fc1a662da",
+        "Prims_interpretation_Tm_arrow_92458cff82f9ffee1f6e26a1c0c579f3",
+        "equation_OPLSS2021.DijkstraMonads.st_monotonic",
+        "equation_Prims.l_True", "equation_Prims.pure_post",
+        "equation_Prims.pure_post_",
+        "interpretation_Tm_abs_577992fc994ed74f2ceebcf0b832bbd2",
+        "interpretation_Tm_abs_963d181e5476598451a0d753ab150aec",
+        "refinement_interpretation_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
+        "typing_Tm_abs_963d181e5476598451a0d753ab150aec"
+      ],
+      0,
+      "4dc1a0c28d9ac60ffa8fa9804887a9e9"
+    ],
+    [
+      "OPLSS2021.DijkstraMonads.lift_pure_st",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_interpretation_Tm_arrow_2eaa01e78f73e9bab5d0955fc1a662da",
+        "Prims_interpretation_Tm_arrow_92458cff82f9ffee1f6e26a1c0c579f3",
+        "eq2-interp", "equation_Prims.l_True", "equation_Prims.pure_post",
+        "equation_Prims.pure_post_",
+        "interpretation_Tm_abs_963d181e5476598451a0d753ab150aec",
+        "interpretation_Tm_abs_da437716eb372fac740da22fdb123c4f",
+        "l_imp-interp", "l_quant_interp_88c8a67952914b773cd43f0fb2208112",
+        "refinement_interpretation_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
+        "typing_Tm_abs_963d181e5476598451a0d753ab150aec",
+        "typing_Tm_abs_da437716eb372fac740da22fdb123c4f"
+      ],
+      0,
+      "ec33d950d0c25c49cb6864ddfbbb3b2e"
+    ],
+    [
+      "OPLSS2021.DijkstraMonads.get",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_OPLSS2021.DijkstraMonads.st_monotonic",
+        "interpretation_Tm_abs_20a7238fd07f9d31c2887ac37e91b7a4"
+      ],
+      0,
+      "05b3f18333ff7b0fef0f2a64460ca4ad"
+    ],
+    [
+      "OPLSS2021.DijkstraMonads.put",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_OPLSS2021.DijkstraMonads.st_monotonic",
+        "interpretation_Tm_abs_bddbf1da97343ce49be9bf357977f029",
+        "unit_typing"
+      ],
+      0,
+      "7618cf1ab1196867fa0f1c154b920658"
+    ],
+    [
+      "OPLSS2021.DijkstraMonads.as_wp",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_OPLSS2021.DijkstraMonads.st_monotonic",
+        "interpretation_Tm_abs_6592360d441032b091f63245dfa901b2",
+        "l_and-interp", "l_quant_interp_617aeba1a2c47db2d75435e2f7ebe528"
+      ],
+      0,
+      "0d4aeedd349871739ae0169ccace8323"
+    ],
+    [
+      "OPLSS2021.DijkstraMonads.double",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "Prims_pretyping_e8ffb7d227a1bbf69407a8d2ad2c4c83", "eq2-interp",
+        "equality_tok_Prims.T@tok",
+        "equation_OPLSS2021.DijkstraMonads.as_wp",
+        "equation_OPLSS2021.DijkstraMonads.stronger", "equation_Prims.eq2",
+        "equation_Prims.l_True", "equation_Prims.squash",
+        "equation_Prims.subtype_of",
+        "function_token_typing_Prims.__cache_version_number__",
+        "int_inversion", "int_typing",
+        "interpretation_Tm_abs_1096d60977699e9e958fbb215c93823f",
+        "interpretation_Tm_abs_6592360d441032b091f63245dfa901b2",
+        "interpretation_Tm_abs_85c156ab626dae4553c445dfaab6e79a",
+        "l_and-interp", "l_quant_interp_617aeba1a2c47db2d75435e2f7ebe528",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
+        "typing_tok_Prims.T@tok", "unit_typing"
+      ],
+      0,
+      "177b7799dd542862409ceb0ea77a0a95"
+    ]
+  ]
+]

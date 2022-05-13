@@ -172,7 +172,7 @@ let rec (extract_meta :
          | uu___10 -> FStar_Pervasives_Native.None)
     | {
         FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_constant
-          (FStar_Const.Const_string ("KremlinPrivate", uu___1));
+          (FStar_Const.Const_string ("KrmlPrivate", uu___1));
         FStar_Syntax_Syntax.pos = uu___2;
         FStar_Syntax_Syntax.vars = uu___3;_} ->
         FStar_Pervasives_Native.Some FStar_Extraction_ML_Syntax.Private
@@ -1370,17 +1370,17 @@ let (sigelt_has_noextract : FStar_Syntax_Syntax.sigelt -> Prims.bool) =
       let uu___ = FStar_Options.codegen () in get_noextract_to se uu___ in
     let uu___ = FStar_Options.codegen () in
     match uu___ with
-    | FStar_Pervasives_Native.Some (FStar_Options.Kremlin) ->
+    | FStar_Pervasives_Native.Some (FStar_Options.Krml) ->
         has_noextract_qualifier && has_noextract_attribute
     | uu___1 -> has_noextract_qualifier || has_noextract_attribute
-let (kremlin_fixup_qual :
+let (karamel_fixup_qual :
   FStar_Syntax_Syntax.sigelt -> FStar_Syntax_Syntax.sigelt) =
   fun se ->
     let uu___ =
       ((let uu___1 = FStar_Options.codegen () in
-        uu___1 = (FStar_Pervasives_Native.Some FStar_Options.Kremlin)) &&
+        uu___1 = (FStar_Pervasives_Native.Some FStar_Options.Krml)) &&
          (get_noextract_to se
-            (FStar_Pervasives_Native.Some FStar_Options.Kremlin)))
+            (FStar_Pervasives_Native.Some FStar_Options.Krml)))
         &&
         (Prims.op_Negation
            (FStar_Compiler_List.contains FStar_Syntax_Syntax.NoExtract
@@ -1426,7 +1426,7 @@ let (extract_sigelt_iface :
       if uu___
       then let g1 = mark_sigelt_erased se g in (g1, empty_iface)
       else
-        (let se1 = kremlin_fixup_qual se in
+        (let se1 = karamel_fixup_qual se in
          match se1.FStar_Syntax_Syntax.sigel with
          | FStar_Syntax_Syntax.Sig_bundle uu___2 ->
              extract_bundle_iface g se1
@@ -1915,7 +1915,7 @@ let rec (extract_sig :
             if uu___3
             then let g1 = mark_sigelt_erased se g in (g1, [])
             else
-              (let se1 = kremlin_fixup_qual se in
+              (let se1 = karamel_fixup_qual se in
                match se1.FStar_Syntax_Syntax.sigel with
                | FStar_Syntax_Syntax.Sig_bundle uu___5 ->
                    extract_bundle g se1
@@ -2117,8 +2117,6 @@ let rec (extract_sig :
                              (env.FStar_TypeChecker_Env.top_level);
                            FStar_TypeChecker_Env.check_uvars =
                              (env.FStar_TypeChecker_Env.check_uvars);
-                           FStar_TypeChecker_Env.use_eq =
-                             (env.FStar_TypeChecker_Env.use_eq);
                            FStar_TypeChecker_Env.use_eq_strict =
                              (env.FStar_TypeChecker_Env.use_eq_strict);
                            FStar_TypeChecker_Env.is_iface =
@@ -2563,15 +2561,14 @@ let (extract' :
           (match uu___2 with
            | (g4, sigs) ->
                let mlm = FStar_Compiler_List.flatten sigs in
-               let is_kremlin =
+               let is_karamel =
                  let uu___3 = FStar_Options.codegen () in
-                 uu___3 =
-                   (FStar_Pervasives_Native.Some FStar_Options.Kremlin) in
+                 uu___3 = (FStar_Pervasives_Native.Some FStar_Options.Krml) in
                let uu___3 =
                  (let uu___4 =
                     FStar_Ident.string_of_lid m.FStar_Syntax_Syntax.name in
                   uu___4 <> "Prims") &&
-                   (is_kremlin ||
+                   (is_karamel ||
                       (Prims.op_Negation m.FStar_Syntax_Syntax.is_interface)) in
                if uu___3
                then

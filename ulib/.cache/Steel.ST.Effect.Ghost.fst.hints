@@ -11,7 +11,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "3292b3d4e0a928f3801e7a13d3b105b6"
+      "0c15fcea7697a73da6f3aa89eedf64ae"
     ],
     [
       "Steel.ST.Effect.Ghost.STGhostBase",
@@ -23,7 +23,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "9c5727c52c60a30c290b44122fc0f242"
+      "9bc1392320847ed2b8c82cb26bbf1cb8"
     ],
     [
       "Steel.ST.Effect.Ghost.STGhostBase",
@@ -35,7 +35,7 @@
         "refinement_interpretation_Tm_refine_de09779676242898794a0b057d5f5bb4"
       ],
       0,
-      "092eb44e1ef7a628b2f71ba9e7fff598"
+      "f1fc2e7870c715c60f245b81ea6dadf9"
     ],
     [
       "Steel.ST.Effect.Ghost.STGhostBase",
@@ -47,7 +47,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "4897a423e1dc4a1f00ccf7263f959504"
+      "438f62594654e4da7b42bdebf9d15091"
     ],
     [
       "Steel.ST.Effect.Ghost.extract_fact0",
@@ -59,8 +59,7 @@
         "@fuel_correspondence_Steel.Effect.Common.hp_of.fuel_instrumented",
         "@fuel_correspondence_Steel.Effect.Common.t_of.fuel_instrumented",
         "@fuel_irrelevance_Steel.Effect.Common.t_of.fuel_instrumented",
-        "@query", "equation_Prims.l_Forall", "equation_Prims.squash",
-        "equation_Steel.Effect.Atomic.ens_to_act_ens",
+        "@query", "equation_Steel.Effect.Atomic.ens_to_act_ens",
         "equation_Steel.Effect.Atomic.req_to_act_req",
         "equation_Steel.Effect.Common.hmem", "equation_Steel.Effect.uu___8",
         "equation_Steel.Memory.hmem", "equation_Steel.Memory.slimp",
@@ -72,8 +71,8 @@
         "interpretation_Tm_abs_7a19869a6d385558a0f3fd55fb3c4014",
         "interpretation_Tm_abs_9b938a2a046ecd136a6c4d718072d285",
         "interpretation_Tm_abs_cb6e753b57851b5fdc5b574326f11404",
-        "l_and-interp", "l_quant_interp_71933a4a94958928f6edd9485006d6ce",
-        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
+        "l_and-interp",
+        "refinement_interpretation_Tm_refine_26e9e7621e472b2ffd5a5803820c9dab",
         "refinement_interpretation_Tm_refine_400bb352f566e46f66fa061261e6a34a",
         "refinement_interpretation_Tm_refine_c1cb6a5ec15d3eb1281bac3fe1ecbc41",
         "token_correspondence_Steel.Effect.Atomic.ens_to_act_ens",
@@ -81,7 +80,7 @@
         "unit_inversion"
       ],
       0,
-      "c5fb7fa818d34cd2cf3a0340413f27e8"
+      "5c5cfdaf8de1c72cf953cff0855d2073"
     ]
   ]
 ]

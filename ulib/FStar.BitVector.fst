@@ -33,13 +33,13 @@ type bv_t (n: nat) = vec: seq bool {length vec = n}
 (**** Common constants *)
 
 (** A length [n] zero vector *)
-let zero_vec (#n: pos) : bv_t n = create n false
+let zero_vec (#n: pos) : Tot (bv_t n) = create n false
 
 (** A vector of length [n] whose [i]th bit is set, only *)
-let elem_vec (#n: pos) (i: nat{i < n}) : bv_t n = upd (create n false) i true
+let elem_vec (#n: pos) (i: nat{i < n}) : Tot (bv_t n) = upd (create n false) i true
 
 (** A length [n] vector all of whose bits are set *)
-let ones_vec (#n: pos) : bv_t n = create n true
+let ones_vec (#n: pos) : Tot (bv_t n) = create n true
 
 (** Bitwise logical and *)
 let rec logand_vec (#n: pos) (a b: bv_t n) : Tot (bv_t n) =
@@ -134,7 +134,7 @@ let lemma_slice_superset_vec (#n: pos) (a b: bv_t n) (i: nat) (j: nat{i < j && j
    NS: Not sure what this remark means. *)
 
 (** Shift [a] left by [s] bits, filling with zeroes *)
-let shift_left_vec (#n: pos) (a: bv_t n) (s: nat) : bv_t n =
+let shift_left_vec (#n: pos) (a: bv_t n) (s: nat) : Tot (bv_t n) =
   if s >= n then zero_vec #n else if s = 0 then a else append (slice a s n) (zero_vec #s)
 
 (** The fill bits of a shift left are zero *)
@@ -148,7 +148,7 @@ let shift_left_vec_lemma_2 (#n: pos) (a: bv_t n) (s: nat) (i: nat{i < n && i < n
       [SMTPat (index (shift_left_vec #n a s) i)] = ()
 
 (** Shift [a] right by [s] bits, filling with zeroes *)
-let shift_right_vec (#n: pos) (a: bv_t n) (s: nat) : bv_t n =
+let shift_right_vec (#n: pos) (a: bv_t n) (s: nat) : Tot (bv_t n) =
   if s >= n then zero_vec #n else if s = 0 then a else append (zero_vec #s) (slice a 0 (n - s))
 
 (** The fill bits of a shift right are zero *)
@@ -163,7 +163,7 @@ let shift_right_vec_lemma_2 (#n: pos) (a: bv_t n) (s: nat) (i: nat{i < n && i >=
 
 (** Arithmetic shift right of [a], interpreting position [0] as the
     most-significant bit, and using its value to fill *)
-let shift_arithmetic_right_vec (#n: pos) (a: bv_t n) (s: nat) : bv_t n =
+let shift_arithmetic_right_vec (#n: pos) (a: bv_t n) (s: nat) : Tot (bv_t n) =
   if index a 0
   then if s >= n then ones_vec #n else if s = 0 then a else append (ones_vec #s) (slice a 0 (n - s))
   else shift_right_vec a s

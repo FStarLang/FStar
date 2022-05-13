@@ -197,7 +197,7 @@ Part 6: A User's Guide to Structuring and Maintaining F* Developments
    * Extraction
        * OCaml
        * F#
-       * Kremlin
+       * KaRaMeL
        * Partial evaluation
 
    * Command line options
@@ -235,3 +235,7 @@ Part 10: Steel: A Concurrent Separation Logic Embedded in F*
    intro
    part1/part1
    part2/part2
+   part3/part3
+
+..
+   part4/part4

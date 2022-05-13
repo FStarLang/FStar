@@ -1,7 +1,5 @@
 open Prims
-type z3_replay_result =
-  (FStar_SMTEncoding_Z3.unsat_core, FStar_SMTEncoding_Term.error_labels)
-    FStar_Pervasives.either
+let (z3_replay_result : (unit * unit)) = ((), ())
 let z3_result_as_replay_result :
   'uuuuu 'uuuuu1 'uuuuu2 .
     ('uuuuu, ('uuuuu1 * 'uuuuu2)) FStar_Pervasives.either ->
@@ -1663,6 +1661,7 @@ let (solver : FStar_TypeChecker_Env.solver_t) =
          fun g ->
            let uu___ = let uu___1 = FStar_Options.peek () in (e, g, uu___1) in
            [uu___]);
+    FStar_TypeChecker_Env.handle_smt_goal = (fun e -> fun g -> [(e, g)]);
     FStar_TypeChecker_Env.solve = solve;
     FStar_TypeChecker_Env.finish = FStar_SMTEncoding_Z3.finish;
     FStar_TypeChecker_Env.refresh = FStar_SMTEncoding_Z3.refresh
@@ -1681,6 +1680,7 @@ let (dummy : FStar_TypeChecker_Env.solver_t) =
          fun g ->
            let uu___ = let uu___1 = FStar_Options.peek () in (e, g, uu___1) in
            [uu___]);
+    FStar_TypeChecker_Env.handle_smt_goal = (fun e -> fun g -> [(e, g)]);
     FStar_TypeChecker_Env.solve =
       (fun uu___ -> fun uu___1 -> fun uu___2 -> ());
     FStar_TypeChecker_Env.finish = (fun uu___ -> ());

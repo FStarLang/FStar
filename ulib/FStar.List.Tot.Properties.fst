@@ -361,9 +361,9 @@ let rec lemma_unsnoc_append (#a:Type) (l1 l2:list a) :
   Lemma
     (requires (length l2 > 0)) // the [length l2 = 0] is trivial
     (ensures (
-        let as, a = unsnoc (l1 @ l2) in
-        let bs, b = unsnoc l2 in
-        as == l1 @ bs /\ a == b)) =
+        let al, a = unsnoc (l1 @ l2) in
+        let bl, b = unsnoc l2 in
+        al == l1 @ bl /\ a == b)) =
   match l1 with
   | [] -> ()
   | _ :: l1' -> lemma_unsnoc_append l1' l2
@@ -399,11 +399,11 @@ let rec split_using (#t:Type) (l:list t) (x:t{x `memP` l}) :
   GTot (list t * list t) =
   match l with
   | [_] -> [], l
-  | a :: as ->
+  | a :: rest ->
     if FStar.StrongExcludedMiddle.strong_excluded_middle (a == x) then (
       [], l
     ) else (
-      let l1', l2' = split_using as x in
+      let l1', l2' = split_using rest x in
       a :: l1', l2'
     )
 
@@ -417,7 +417,7 @@ let rec lemma_split_using (#t:Type) (l:list t) (x:t{x `memP` l}) :
         append l1 l2 == l)) =
   match l with
   | [_] -> ()
-  | a :: as ->
+  | a :: rest ->
     let goal =
       let l1, l2 = split_using l x in
         length l2 > 0 /\
@@ -429,7 +429,7 @@ let rec lemma_split_using (#t:Type) (l:list t) (x:t{x `memP` l}) :
       #_ #_
       #(fun () -> goal)
       (fun (_:squash (a == x)) -> ())
-      (fun (_:squash (x `memP` as)) -> lemma_split_using as x)
+      (fun (_:squash (x `memP` rest)) -> lemma_split_using rest x)
 
 (** Definition of [index_of] *)
 
@@ -440,11 +440,11 @@ let rec index_of (#t:Type) (l:list t) (x:t{x `memP` l}) :
   GTot (i:nat{i < length l /\ index l i == x}) =
   match l with
   | [_] -> 0
-  | a :: as ->
+  | a :: rest ->
     if FStar.StrongExcludedMiddle.strong_excluded_middle (a == x) then (
       0
     ) else (
-      1 + index_of as x
+      1 + index_of rest x
     )
 
 (** Properties about partition **)
@@ -1102,3 +1102,15 @@ let init_last_inj (#a: Type) (l1: list a { Cons? l1 } ) (l2: list a { Cons? l2 }
   (ensures (l1 == l2))
 = append_init_last l1;
   append_init_last l2
+
+(* Properties of for_all *)
+
+#push-options "--fuel 1"
+let rec for_all_append #a (f: a -> Tot bool) (s1 s2: list a): Lemma
+  (ensures for_all f (s1 @ s2) <==> for_all f s1 && for_all f s2)
+=
+  let _ = allow_inversion (list a) in
+  match s1 with
+  | [] -> ()
+  | hd1 :: tl1 -> for_all_append f tl1 s2
+#pop-options

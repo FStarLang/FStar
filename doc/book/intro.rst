@@ -59,7 +59,7 @@ automation, and compilation backends. Some examples include:
 * Low*, an shallowly embedded DSL for sequential programming against a
   C-like memory model including explicit memory management on the
   stack and heap; a Hoare logic for partial correctness based on
-  implicit dynamic frames; and a custom backend (Kremlin) to compile
+  implicit dynamic frames; and a custom backend (Karamel) to compile
   Low* programs to C for further compilation by off-the-shelf C
   compilers.
 
@@ -321,8 +321,8 @@ obtain assurances about those components, and then to integrate those
 formally proven components into a larger system by compiling the F*
 program to C, OCaml, or F# and linking the pieces together.
 
-In this case, using a tool called `KReMLin
-<https://github.com/FStarLang/kremlin>`_, a compiler used with F*, we
+In this case, using a tool called `KaRaMeL
+<https://github.com/FStarLang/karamel>`_, a compiler used with F*, we
 can produce the following C code for ``memcpy``.
 
 .. literalinclude:: code/out/MemCpy.c
@@ -454,7 +454,7 @@ F* is an open source project at `GitHub
 <https://github.com/FStarLang/FStar>`_ by researchers at a number of
 institutions, including `Microsoft Research
 <http://research.microsoft.com/en-us>`_, `MSR-Inria
-<http://www.msr-inria.fr/>`_, `Inria <https://www.inria.fr/>`_,
+<https://www.microsoft.com/en-us/research/collaboration/inria-joint-centre/>`_, `Inria <https://www.inria.fr/>`_,
 `Rosario <https://www.cifasis-conicet.gov.ar/en/>`_, `Carnegie-Mellon
 <https://www.cs.cmu.edu/>`_.
 

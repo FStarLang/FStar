@@ -1,6 +1,4 @@
 open Prims
-let (escape : Prims.string -> Prims.string) =
-  fun s -> FStar_Compiler_Util.replace_char s 39 95
 type sort =
   | Bool_sort 
   | Int_sort 
@@ -39,26 +37,6 @@ let (uu___is_Sort : sort -> Prims.bool) =
   fun projectee -> match projectee with | Sort _0 -> true | uu___ -> false
 let (__proj__Sort__item___0 : sort -> Prims.string) =
   fun projectee -> match projectee with | Sort _0 -> _0
-let rec (strSort : sort -> Prims.string) =
-  fun x ->
-    match x with
-    | Bool_sort -> "Bool"
-    | Int_sort -> "Int"
-    | Term_sort -> "Term"
-    | String_sort -> "FString"
-    | Fuel_sort -> "Fuel"
-    | BitVec_sort n ->
-        let uu___ = FStar_Compiler_Util.string_of_int n in
-        FStar_Compiler_Util.format1 "(_ BitVec %s)" uu___
-    | Array (s1, s2) ->
-        let uu___ = strSort s1 in
-        let uu___1 = strSort s2 in
-        FStar_Compiler_Util.format2 "(Array %s %s)" uu___ uu___1
-    | Arrow (s1, s2) ->
-        let uu___ = strSort s1 in
-        let uu___1 = strSort s2 in
-        FStar_Compiler_Util.format2 "(%s -> %s)" uu___ uu___1
-    | Sort s -> s
 type op =
   | TrueOp 
   | FalseOp 
@@ -402,6 +380,28 @@ let (__proj__Mkdecls_elt__item__a_names :
   fun projectee ->
     match projectee with | { sym_name; key; decls; a_names;_} -> a_names
 type decls_t = decls_elt Prims.list
+let (escape : Prims.string -> Prims.string) =
+  fun s -> FStar_Compiler_Util.replace_char s 39 95
+let rec (strSort : sort -> Prims.string) =
+  fun x ->
+    match x with
+    | Bool_sort -> "Bool"
+    | Int_sort -> "Int"
+    | Term_sort -> "Term"
+    | String_sort -> "FString"
+    | Fuel_sort -> "Fuel"
+    | BitVec_sort n ->
+        let uu___ = FStar_Compiler_Util.string_of_int n in
+        FStar_Compiler_Util.format1 "(_ BitVec %s)" uu___
+    | Array (s1, s2) ->
+        let uu___ = strSort s1 in
+        let uu___1 = strSort s2 in
+        FStar_Compiler_Util.format2 "(Array %s %s)" uu___ uu___1
+    | Arrow (s1, s2) ->
+        let uu___ = strSort s1 in
+        let uu___1 = strSort s2 in
+        FStar_Compiler_Util.format2 "(%s -> %s)" uu___ uu___1
+    | Sort s -> s
 let (mk_decls :
   Prims.string ->
     Prims.string -> decl Prims.list -> decls_elt Prims.list -> decls_t)
@@ -452,8 +452,6 @@ let (decls_list_of : decls_t -> decl Prims.list) =
   fun l ->
     FStar_Compiler_Effect.op_Bar_Greater l
       (FStar_Compiler_List.collect (fun elt -> elt.decls))
-type error_label = (fv * Prims.string * FStar_Compiler_Range.range)
-type error_labels = error_label Prims.list
 let (mk_fv : (Prims.string * sort) -> fv) =
   fun uu___ -> match uu___ with | (x, y) -> (x, y, false)
 let (fv_name : fv -> Prims.string) =
@@ -464,6 +462,8 @@ let (fv_sort : fv -> sort) =
 let (fv_force : fv -> Prims.bool) =
   fun x ->
     let uu___ = x in match uu___ with | (uu___1, uu___2, force) -> force
+type error_label = (fv * Prims.string * FStar_Compiler_Range.range)
+type error_labels = error_label Prims.list
 let (fv_eq : fv -> fv -> Prims.bool) =
   fun x ->
     fun y ->
@@ -1870,6 +1870,8 @@ and (mkPrelude : Prims.string -> Prims.string) =
         FStar_Compiler_Effect.op_Bar_Greater uu___1
           (FStar_Compiler_List.map (declToSmt z3options)) in
       FStar_Compiler_Effect.op_Bar_Greater uu___ (FStar_String.concat "\n") in
+    let precedes_partial_app =
+      "\n(declare-fun Prims.precedes@tok () Term)\n(assert\n(forall ((@x0 Term) (@x1 Term) (@x2 Term) (@x3 Term))\n(! (= (ApplyTT (ApplyTT (ApplyTT (ApplyTT Prims.precedes@tok\n@x0)\n@x1)\n@x2)\n@x3)\n(Prims.precedes @x0 @x1 @x2 @x3))\n\n:pattern ((ApplyTT (ApplyTT (ApplyTT (ApplyTT Prims.precedes@tok\n@x0)\n@x1)\n@x2)\n@x3)))))\n" in
     let lex_ordering =
       "\n(declare-fun Prims.lex_t () Term)\n(assert (forall ((t1 Term) (t2 Term) (e1 Term) (e2 Term))\n(! (iff (Valid (Prims.precedes t1 t2 e1 e2))\n(Valid (Prims.precedes Prims.lex_t Prims.lex_t e1 e2)))\n:pattern (Prims.precedes t1 t2 e1 e2))))\n(assert (forall ((t1 Term) (t2 Term))\n(! (iff (Valid (Prims.precedes Prims.lex_t Prims.lex_t t1 t2)) \n(< (Rank t1) (Rank t2)))\n:pattern ((Prims.precedes Prims.lex_t Prims.lex_t t1 t2)))))\n" in
     let valid_intro =
@@ -1880,13 +1882,15 @@ and (mkPrelude : Prims.string -> Prims.string) =
       let uu___1 =
         let uu___2 =
           let uu___3 =
-            let uu___4 = FStar_Options.smtencoding_valid_intro () in
-            if uu___4 then valid_intro else "" in
-          let uu___4 =
-            let uu___5 = FStar_Options.smtencoding_valid_elim () in
-            if uu___5 then valid_elim else "" in
-          Prims.op_Hat uu___3 uu___4 in
-        Prims.op_Hat lex_ordering uu___2 in
+            let uu___4 =
+              let uu___5 = FStar_Options.smtencoding_valid_intro () in
+              if uu___5 then valid_intro else "" in
+            let uu___5 =
+              let uu___6 = FStar_Options.smtencoding_valid_elim () in
+              if uu___6 then valid_elim else "" in
+            Prims.op_Hat uu___4 uu___5 in
+          Prims.op_Hat lex_ordering uu___3 in
+        Prims.op_Hat precedes_partial_app uu___2 in
       Prims.op_Hat bcons uu___1 in
     Prims.op_Hat basic uu___
 let (declsToSmt : Prims.string -> decl Prims.list -> Prims.string) =

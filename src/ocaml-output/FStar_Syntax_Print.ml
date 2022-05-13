@@ -483,22 +483,21 @@ and (term_to_string : FStar_Syntax_Syntax.term -> Prims.string) =
                FStar_Compiler_Util.format2 "{:pattern %s} %s" pats uu___4
            | FStar_Syntax_Syntax.Tm_meta
                (t, FStar_Syntax_Syntax.Meta_monadic (m, t')) ->
-               let uu___3 = tag_of_term t in
-               let uu___4 = sli m in
-               let uu___5 = term_to_string t' in
+               let uu___3 = sli m in
+               let uu___4 = term_to_string t' in
+               let uu___5 = tag_of_term t in
                let uu___6 = term_to_string t in
-               FStar_Compiler_Util.format4 "(Monadic-%s{%s %s} %s)" uu___3
-                 uu___4 uu___5 uu___6
+               FStar_Compiler_Util.format4 "(MetaMonadic-{%s %s} (%s) %s)"
+                 uu___3 uu___4 uu___5 uu___6
            | FStar_Syntax_Syntax.Tm_meta
                (t, FStar_Syntax_Syntax.Meta_monadic_lift (m0, m1, t')) ->
-               let uu___3 = tag_of_term t in
-               let uu___4 = term_to_string t' in
-               let uu___5 = sli m0 in
-               let uu___6 = sli m1 in
-               let uu___7 = term_to_string t in
-               FStar_Compiler_Util.format5
-                 "(MonadicLift-%s{%s : %s -> %s} %s)" uu___3 uu___4 uu___5
-                 uu___6 uu___7
+               let uu___3 = term_to_string t' in
+               let uu___4 = sli m0 in
+               let uu___5 = sli m1 in
+               let uu___6 = term_to_string t in
+               FStar_Compiler_Util.format4
+                 "(MetaMonadicLift-{%s : %s -> %s} %s)" uu___3 uu___4 uu___5
+                 uu___6
            | FStar_Syntax_Syntax.Tm_meta
                (t, FStar_Syntax_Syntax.Meta_labeled (l, r, b)) ->
                let uu___3 = FStar_Compiler_Range.string_of_range r in
@@ -619,7 +618,8 @@ and (term_to_string : FStar_Syntax_Syntax.term -> Prims.string) =
                let uu___3 = lbs_to_string [] lbs in
                let uu___4 = term_to_string e in
                FStar_Compiler_Util.format2 "%s\nin\n%s" uu___3 uu___4
-           | FStar_Syntax_Syntax.Tm_ascribed (e, (annot, topt), eff_name) ->
+           | FStar_Syntax_Syntax.Tm_ascribed (e, (annot, topt, b), eff_name)
+               ->
                let annot1 =
                  match annot with
                  | FStar_Pervasives.Inl t ->
@@ -638,9 +638,10 @@ and (term_to_string : FStar_Syntax_Syntax.term -> Prims.string) =
                  | FStar_Pervasives_Native.Some t ->
                      let uu___3 = term_to_string t in
                      FStar_Compiler_Util.format1 "by %s" uu___3 in
+               let s = if b then "ascribed_eq" else "ascribed" in
                let uu___3 = term_to_string e in
-               FStar_Compiler_Util.format3 "(%s <ascribed: %s %s)" uu___3
-                 annot1 topt1
+               FStar_Compiler_Util.format4 "(%s <%s: %s %s)" uu___3 s annot1
+                 topt1
            | FStar_Syntax_Syntax.Tm_match (head, asc_opt, branches, lc) ->
                let lc_str =
                  match lc with
@@ -662,19 +663,21 @@ and (term_to_string : FStar_Syntax_Syntax.term -> Prims.string) =
                let uu___4 =
                  match asc_opt with
                  | FStar_Pervasives_Native.None -> ""
-                 | FStar_Pervasives_Native.Some (asc, tacopt) ->
-                     let uu___5 =
+                 | FStar_Pervasives_Native.Some (b, (asc, tacopt, use_eq)) ->
+                     let s = if use_eq then "returns$" else "returns" in
+                     let uu___5 = binder_to_string b in
+                     let uu___6 =
                        match asc with
                        | FStar_Pervasives.Inl t -> term_to_string t
                        | FStar_Pervasives.Inr c -> comp_to_string c in
-                     let uu___6 =
+                     let uu___7 =
                        match tacopt with
                        | FStar_Pervasives_Native.None -> ""
                        | FStar_Pervasives_Native.Some tac ->
-                           let uu___7 = term_to_string tac in
-                           FStar_Compiler_Util.format1 " by %s" uu___7 in
-                     FStar_Compiler_Util.format2 "returns %s%s " uu___5
-                       uu___6 in
+                           let uu___8 = term_to_string tac in
+                           FStar_Compiler_Util.format1 " by %s" uu___8 in
+                     FStar_Compiler_Util.format4 "as %s %s %s%s " uu___5 s
+                       uu___6 uu___7 in
                let uu___5 =
                  let uu___6 =
                    FStar_Compiler_Effect.op_Bar_Greater branches
@@ -1489,7 +1492,6 @@ let (sub_eff_to_string : FStar_Syntax_Syntax.sub_eff -> Prims.string) =
 let (pragma_to_string : FStar_Syntax_Syntax.pragma -> Prims.string) =
   fun p ->
     match p with
-    | FStar_Syntax_Syntax.LightOff -> "#light \"off\""
     | FStar_Syntax_Syntax.ResetOptions (FStar_Pervasives_Native.None) ->
         "#reset-options"
     | FStar_Syntax_Syntax.ResetOptions (FStar_Pervasives_Native.Some s) ->

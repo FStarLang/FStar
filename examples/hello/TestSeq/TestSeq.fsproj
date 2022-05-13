@@ -49,7 +49,7 @@
     <!-- Custom FStar flags used in this project -->
     <FSTAR_FLAGS>--use_hints --record_hints</FSTAR_FLAGS>
   </PropertyGroup>
-  <Import Project="$(FSTAR_HOME)\fsharp.extraction.targets" />
+  <Import Project="$(FSTAR_HOME)\examples\fsharp.extraction.targets" />
   <ItemGroup>
     <None Include="App.config" />
     <Compile Include="TestSeq.fst" />
@@ -57,15 +57,14 @@
   </ItemGroup>
   <ItemGroup>
     <Reference Include="FSharp.Core">
-      <HintPath>..\packages\FSharp.Core.4.5.2\lib\net45\FSharp.Core.dll</HintPath>
+      <HintPath>$(FSTAR_HOME)\ulib\fs\VS\packages\FSharp.Core.4.3.4\lib\net45\FSharp.Core.dll</HintPath>
     </Reference>
     <Reference Include="mscorlib" />
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Numerics" />
-    <Reference Include="System.ValueTuple">
-      <HintPath>..\packages\System.ValueTuple.4.4.0\lib\netstandard1.0\System.ValueTuple.dll</HintPath>
-      <Private>True</Private>
+    <Reference Include="FSharp.Compatibility.OCaml">
+      <HintPath>$(FSTAR_HOME)\ulib\fs\VS\packages\FSharp.Compatibility.OCaml.0.1.14\lib\net45\FSharp.Compatibility.OCaml.dll</HintPath>
     </Reference>
     <Reference Include="ulibfs">
       <HintPath>$(FSTAR_HOME)\bin\ulibfs.dll</HintPath>

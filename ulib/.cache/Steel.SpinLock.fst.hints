@@ -1,5 +1,5 @@
 [
-  "·Õñá—´`¶¨%r%√⁄\u001c\u0011",
+  "\rQÓ+HOπkÈùÑÇﬁ`˛•",
   [
     [
       "Steel.SpinLock.intro_lockinv_available",
@@ -8,7 +8,7 @@
       0,
       [ "@query" ],
       0,
-      "ecf2f3dd4ad3af639ad630697f218074"
+      "aaa03dac8082e5d123989ca2f029ab73"
     ],
     [
       "Steel.SpinLock.intro_lockinv_locked",
@@ -17,7 +17,7 @@
       0,
       [ "@query" ],
       0,
-      "8d6c53b1a0b31600902b386ea47b4255"
+      "78bbdef427d259285cf1f15c3d0aed5b"
     ],
     [
       "Steel.SpinLock.new_lock",
@@ -37,7 +37,7 @@
         "refinement_interpretation_Tm_refine_30b51c86421a699c10f6925311aa63ba"
       ],
       0,
-      "e6ad7c94fca525af671419fc047dcfca"
+      "7a1d2c06777455fb922d0fd293629dbd"
     ],
     [
       "Steel.SpinLock.acquire_core",
@@ -63,7 +63,7 @@
         "typing_FStar.Ghost.reveal"
       ],
       0,
-      "11b0432568ef09efaf8fd10c8dc8d5be"
+      "8df5a313085c8eee61faabe77a3f32e9"
     ],
     [
       "Steel.SpinLock.acquire",
@@ -72,7 +72,7 @@
       0,
       [
         "@MaxIFuel_assumption", "@query",
-        "FStar.Tactics.Effect_interpretation_Tm_ghost_arrow_44164f5e759c8937bc211b53dca29861",
+        "FStar.Ghost_interpretation_Tm_ghost_arrow_44164f5e759c8937bc211b53dca29861",
         "Prims_pretyping_f537159ed795b314b4e58c260361ae86",
         "Steel.Memory_interpretation_Tm_ghost_arrow_9795a6b43f8ada736381f0d7f06aefac",
         "equation_FStar.Pervasives.Native.snd", "equation_Prims.eqtype",
@@ -96,7 +96,7 @@
         "typing_Tm_abs_d716b89c7122244f867c074692bc6a31"
       ],
       0,
-      "57234d68506ca4a8651e1a10df498a32"
+      "d343ccebae60f2fdb4ad2c695dbea2a3"
     ],
     [
       "Steel.SpinLock.release_core",
@@ -122,7 +122,7 @@
         "typing_FStar.Ghost.reveal"
       ],
       0,
-      "1bfc840d072508e7f6e2064c300156b5"
+      "e1bed405350bd77fdbd95c4e535f7beb"
     ],
     [
       "Steel.SpinLock.release",
@@ -131,7 +131,7 @@
       0,
       [
         "@MaxIFuel_assumption", "@query",
-        "FStar.Tactics.Effect_interpretation_Tm_ghost_arrow_44164f5e759c8937bc211b53dca29861",
+        "FStar.Ghost_interpretation_Tm_ghost_arrow_44164f5e759c8937bc211b53dca29861",
         "Prims_pretyping_f537159ed795b314b4e58c260361ae86",
         "Steel.Memory_interpretation_Tm_ghost_arrow_9795a6b43f8ada736381f0d7f06aefac",
         "equation_FStar.Pervasives.Native.snd", "equation_Prims.eqtype",
@@ -155,7 +155,7 @@
         "typing_Tm_abs_d716b89c7122244f867c074692bc6a31"
       ],
       0,
-      "01b0f3c061328b4492d3aef58b124669"
+      "6f79045b127264add7898b0e17492037"
     ],
     [
       "Steel.SpinLock.new_s_lock",
@@ -164,7 +164,7 @@
       0,
       [ "@query", "lemma_Steel.Effect.Common.can_be_split_refl" ],
       0,
-      "05712343a090159013531c4b94e94a61"
+      "4850bf71205b4039af25ee85c5bc5eee"
     ],
     [
       "Steel.SpinLock.new_s_lock",
@@ -173,7 +173,7 @@
       0,
       [ "@query" ],
       0,
-      "6d5f9e68d130da069a98e1b53df0d7f7"
+      "68ea4f4abc3f249e7ab5622f731324e3"
     ],
     [
       "Steel.SpinLock.s_acquire",
@@ -182,7 +182,7 @@
       0,
       [ "@query", "lemma_Steel.Effect.Common.can_be_split_refl" ],
       0,
-      "c59c4e74e32829f2847d7cdec7c17fbc"
+      "1e960c41e5e5a68f2dc0e755aaf386b3"
     ],
     [
       "Steel.SpinLock.s_acquire",
@@ -191,7 +191,7 @@
       0,
       [ "@query" ],
       0,
-      "757c54b6fbab5a30b1021e6a34d692d4"
+      "76dafc9c0866893de1b2969ae1c8f76b"
     ],
     [
       "Steel.SpinLock.s_release",
@@ -200,7 +200,7 @@
       0,
       [ "@query", "lemma_Steel.Effect.Common.can_be_split_refl" ],
       0,
-      "967da38dee156df38187c0ff57c26b3b"
+      "a5723da8b81a1fa2c44cd263876b3d60"
     ],
     [
       "Steel.SpinLock.s_release",
@@ -209,7 +209,7 @@
       0,
       [ "@query" ],
       0,
-      "3ff005c4411c277c43276df62762e604"
+      "542c1fd8d9340013ad2403c7fcdc5952"
     ]
   ]
 ]

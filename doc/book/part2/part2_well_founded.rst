@@ -57,7 +57,7 @@ expressed in terms of an inductive type ``acc`` (short for
 
 The type ``acc`` is parameterized by a type ``a``; a binary relation
 ``r: a -> a -> Type`` on ``a``; and an element of the type
-``x:a``. Informally, one the relation ``r y x`` is provable when ``y``
+``x:a``. Informally, the relation ``r y x`` is provable when ``y``
 is "smaller" than ``x``.
 
 The ``acc`` type has just one constructor ``AccIntro``, whose only
@@ -126,8 +126,8 @@ that ``<`` is well-founded.
 
 .. literalinclude:: ../code/Part2.WellFounded.fst
    :language: fstar
-   :start-after: //SNIPPET_START: fix$
-   :end-before: //SNIPPET_END: fix$
+   :start-after: //SNIPPET_START: lt_nat$
+   :end-before: //SNIPPET_END: lt_nat$
 
 We can also define combinators to derive well-founded relations from
 other well-founded relations. For example, if a relation ``sub_r`` is

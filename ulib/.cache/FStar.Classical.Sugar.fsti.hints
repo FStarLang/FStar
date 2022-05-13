@@ -7,12 +7,11 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.l_imp",
-        "equation_Prims.squash", "l_imp-interp",
-        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_913239c2cf9dc8a14e1f047e0206138d"
       ],
       0,
-      "4ac5c6950ee575da48c3522823536fe6"
+      "bc7b5ff58cd0be7f4fa25ecb3d19797e"
     ],
     [
       "FStar.Classical.Sugar.or_elim",
@@ -20,12 +19,11 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.l_not",
-        "equation_Prims.squash", "l_not-interp",
-        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_953a6e4e702e848a7213bd619baaa22d"
       ],
       0,
-      "08623c3c94c195660e27d76b64d25465"
+      "0bc2e17fc41f1ca824c05972b3e0643a"
     ],
     [
       "FStar.Classical.Sugar.and_elim",
@@ -37,7 +35,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "18812051080549aebc1203dcbc6cd78b"
+      "c9fda7cd075407a40eb4e38955ff2c40"
     ],
     [
       "FStar.Classical.Sugar.implies_intro",
@@ -49,7 +47,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "81eb3b73db01bc8de05b2ee7aa6d75a2"
+      "406f0da5c8af922ce5026eb935d63740"
     ],
     [
       "FStar.Classical.Sugar.or_intro_right",
@@ -57,12 +55,11 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.l_not",
-        "equation_Prims.squash", "l_not-interp",
-        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_953a6e4e702e848a7213bd619baaa22d"
       ],
       0,
-      "27ece84226f21fee5ecb60a11aad7a3e"
+      "c255d708cdfba58a9def2f4fcd3521de"
     ],
     [
       "FStar.Classical.Sugar.and_intro",
@@ -74,7 +71,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "498df2fc0a8a9addd44bc511ddab6338"
+      "fc3444585cc4327e233eff2c4d6a8378"
     ]
   ]
 ]

@@ -15,7 +15,7 @@ module FStar.Endianness
 ///
 /// .. note::
 ///
-///    This module supersedes the poorly-named ``FStar.Kremlin.Endianness``.
+///    This module supersedes the poorly-named ``FStar.Krml.Endianness``.
 
 module U8 = FStar.UInt8
 module U32 = FStar.UInt32

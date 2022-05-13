@@ -118,3 +118,6 @@ let recall #inames #a #pcm fact r v =
 let select_refine #a #p r x f = as_action (Steel.Memory.select_refine Set.empty r x f)
 
 let upd_gen #a #p r x y f = as_action (Steel.Memory.upd_gen Set.empty r x y f)
+
+let atomic_read #opened #_ #_ r v0 = as_atomic_action (sel_action opened r v0)
+let atomic_write #opened #_ #_ r v0 v1 = as_atomic_action (upd_action opened r v0 v1)
