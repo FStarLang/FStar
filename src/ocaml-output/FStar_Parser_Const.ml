@@ -486,6 +486,8 @@ let (no_method_lid : FStar_Ident.lid) =
   fstar_tactics_lid' ["Typeclasses"; "no_method"]
 let (effect_TAC_lid : FStar_Ident.lid) = fstar_tactics_lid' ["Effect"; "TAC"]
 let (effect_Tac_lid : FStar_Ident.lid) = fstar_tactics_lid' ["Effect"; "Tac"]
+let (effect_MetaTC_lid : FStar_Ident.lident) =
+  FStar_Ident.lid_of_str "FStar.Meta.Tc.Effect.MetaTC"
 let (by_tactic_lid : FStar_Ident.lid) =
   fstar_tactics_lid' ["Effect"; "with_tactic"]
 let (rewrite_by_tactic_lid : FStar_Ident.lid) =

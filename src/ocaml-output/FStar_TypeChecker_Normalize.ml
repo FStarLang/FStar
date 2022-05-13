@@ -6736,15 +6736,20 @@ and (rebuild :
                            msg uu___6);
                     (let t2 = FStar_Syntax_Syntax.extend_app head (t1, aq) r in
                      rebuild cfg env2 stack' t2) in
-                  let is_non_tac_layered_effect m =
+                  let is_non_meta_layered_effect m =
                     let norm_m =
                       FStar_Compiler_Effect.op_Bar_Greater m
                         (FStar_TypeChecker_Env.norm_eff_name
                            cfg.FStar_TypeChecker_Cfg.tcenv) in
-                    (let uu___3 =
-                       FStar_Ident.lid_equals norm_m
-                         FStar_Parser_Const.effect_TAC_lid in
-                     Prims.op_Negation uu___3) &&
+                    ((let uu___3 =
+                        FStar_Ident.lid_equals norm_m
+                          FStar_Parser_Const.effect_TAC_lid in
+                      Prims.op_Negation uu___3) &&
+                       (let uu___3 =
+                          FStar_Ident.lid_equals norm_m
+                            FStar_Parser_Const.effect_MetaTC_lid in
+                        Prims.op_Negation uu___3))
+                      &&
                       (FStar_Compiler_Effect.op_Bar_Greater norm_m
                          (FStar_TypeChecker_Env.is_layered_effect
                             cfg.FStar_TypeChecker_Cfg.tcenv)) in
@@ -6756,7 +6761,7 @@ and (rebuild :
                        (uu___4, FStar_Syntax_Syntax.Meta_monadic (m, uu___5))
                        when
                        (FStar_Compiler_Effect.op_Bar_Greater m
-                          is_non_tac_layered_effect)
+                          is_non_meta_layered_effect)
                          &&
                          (Prims.op_Negation
                             (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.for_extraction)
@@ -6771,8 +6776,8 @@ and (rebuild :
                        (uu___4, FStar_Syntax_Syntax.Meta_monadic_lift
                         (msrc, mtgt, uu___5))
                        when
-                       ((is_non_tac_layered_effect msrc) ||
-                          (is_non_tac_layered_effect mtgt))
+                       ((is_non_meta_layered_effect msrc) ||
+                          (is_non_meta_layered_effect mtgt))
                          &&
                          (Prims.op_Negation
                             (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.for_extraction)

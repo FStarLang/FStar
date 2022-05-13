@@ -4246,8 +4246,12 @@ let (is_reifiable_effect : env -> FStar_Ident.lident -> Prims.bool) =
   fun env1 ->
     fun effect_lid ->
       let effect_lid1 = norm_eff_name env1 effect_lid in
-      (is_user_reifiable_effect env1 effect_lid1) ||
-        (FStar_Ident.lid_equals effect_lid1 FStar_Parser_Const.effect_TAC_lid)
+      ((is_user_reifiable_effect env1 effect_lid1) ||
+         (FStar_Ident.lid_equals effect_lid1
+            FStar_Parser_Const.effect_TAC_lid))
+        ||
+        (FStar_Ident.lid_equals effect_lid1
+           FStar_Parser_Const.effect_MetaTC_lid)
 let (is_reifiable_rc :
   env -> FStar_Syntax_Syntax.residual_comp -> Prims.bool) =
   fun env1 ->

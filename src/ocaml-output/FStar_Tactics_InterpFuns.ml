@@ -16939,3 +16939,147 @@ let mk_total_step_20 :
                                                                     ne18 ne19
                                                                     ne20 ner
                                                                     uu___)
+let (mk_metatc :
+  Prims.string ->
+    Prims.int ->
+      Prims.int ->
+        (FStar_TypeChecker_Cfg.psc ->
+           FStar_Syntax_Embeddings.norm_cb ->
+             FStar_Syntax_Syntax.args ->
+               FStar_Syntax_Syntax.term FStar_Pervasives_Native.option)
+          ->
+          (FStar_TypeChecker_NBETerm.nbe_cbs ->
+             FStar_TypeChecker_NBETerm.args ->
+               FStar_TypeChecker_NBETerm.t FStar_Pervasives_Native.option)
+            -> FStar_TypeChecker_Cfg.primitive_step)
+  =
+  fun nm ->
+    fun arity ->
+      fun nunivs ->
+        fun interp ->
+          fun nbe_interp ->
+            let nm1 =
+              FStar_Ident.lid_of_path ["FStar"; "Meta"; "Tc"; "Builtins"; nm]
+                FStar_Compiler_Range.dummyRange in
+            {
+              FStar_TypeChecker_Cfg.name = nm1;
+              FStar_TypeChecker_Cfg.arity = arity;
+              FStar_TypeChecker_Cfg.univ_arity = nunivs;
+              FStar_TypeChecker_Cfg.auto_reflect =
+                (FStar_Pervasives_Native.Some (arity - Prims.int_one));
+              FStar_TypeChecker_Cfg.strong_reduction_ok = true;
+              FStar_TypeChecker_Cfg.requires_binder_substitution = true;
+              FStar_TypeChecker_Cfg.interpretation = (timing_int nm1 interp);
+              FStar_TypeChecker_Cfg.interpretation_nbe =
+                (timing_nbe nm1 nbe_interp)
+            }
+let mk_metatc_interpretation_2 :
+  'r 't1 't2 .
+    ('t1 -> 't2 -> unit -> 'r) ->
+      't1 FStar_Syntax_Embeddings.embedding ->
+        't2 FStar_Syntax_Embeddings.embedding ->
+          'r FStar_Syntax_Embeddings.embedding ->
+            FStar_TypeChecker_Cfg.psc ->
+              FStar_Syntax_Embeddings.norm_cb ->
+                FStar_Syntax_Syntax.args ->
+                  FStar_Syntax_Syntax.term FStar_Pervasives_Native.option
+  =
+  fun t ->
+    fun e1 ->
+      fun e2 ->
+        fun er ->
+          fun psc ->
+            fun ncb ->
+              fun args ->
+                match args with
+                | (a1, uu___)::(a2, uu___1)::(a3, uu___2)::[] ->
+                    let uu___3 = unembed e1 a1 ncb in
+                    FStar_Compiler_Util.bind_opt uu___3
+                      (fun a11 ->
+                         let uu___4 = unembed e2 a2 ncb in
+                         FStar_Compiler_Util.bind_opt uu___4
+                           (fun a21 ->
+                              let uu___5 =
+                                unembed FStar_Syntax_Embeddings.e_unit a3 ncb in
+                              FStar_Compiler_Util.bind_opt uu___5
+                                (fun uu___6 ->
+                                   let r1 = t a11 a21 () in
+                                   let uu___7 =
+                                     let uu___8 =
+                                       FStar_Tactics_Embedding.e_metatc_result
+                                         er in
+                                     let uu___9 =
+                                       FStar_TypeChecker_Cfg.psc_range psc in
+                                     embed uu___8 uu___9 (Obj.magic r1) ncb in
+                                   FStar_Pervasives_Native.Some uu___7)))
+                | uu___ -> FStar_Pervasives_Native.None
+let mk_metatc_nbe_interpretation_2 :
+  'r 't1 't2 .
+    FStar_TypeChecker_NBETerm.nbe_cbs ->
+      ('t1 -> 't2 -> unit -> 'r) ->
+        't1 FStar_TypeChecker_NBETerm.embedding ->
+          't2 FStar_TypeChecker_NBETerm.embedding ->
+            'r FStar_TypeChecker_NBETerm.embedding ->
+              FStar_TypeChecker_NBETerm.args ->
+                FStar_TypeChecker_NBETerm.t FStar_Pervasives_Native.option
+  =
+  fun cb ->
+    fun t ->
+      fun e1 ->
+        fun e2 ->
+          fun er ->
+            fun args ->
+              match args with
+              | (a1, uu___)::(a2, uu___1)::(a3, uu___2)::[] ->
+                  let uu___3 = FStar_TypeChecker_NBETerm.unembed e1 cb a1 in
+                  FStar_Compiler_Util.bind_opt uu___3
+                    (fun a11 ->
+                       let uu___4 =
+                         FStar_TypeChecker_NBETerm.unembed e2 cb a2 in
+                       FStar_Compiler_Util.bind_opt uu___4
+                         (fun a21 ->
+                            let uu___5 =
+                              FStar_TypeChecker_NBETerm.unembed
+                                FStar_TypeChecker_NBETerm.e_unit cb a3 in
+                            FStar_Compiler_Util.bind_opt uu___5
+                              (fun uu___6 ->
+                                 let r1 = t a11 a21 () in
+                                 let uu___7 =
+                                   let uu___8 =
+                                     FStar_Tactics_Embedding.e_metatc_result_nbe
+                                       er in
+                                   FStar_TypeChecker_NBETerm.embed uu___8 cb
+                                     (Obj.magic r1) in
+                                 FStar_Pervasives_Native.Some uu___7)))
+              | uu___ -> FStar_Pervasives_Native.None
+let mk_metatc_step_2 :
+  'nr 'nt1 'nt2 'r 't1 't2 .
+    Prims.int ->
+      Prims.string ->
+        ('t1 -> 't2 -> unit -> 'r) ->
+          't1 FStar_Syntax_Embeddings.embedding ->
+            't2 FStar_Syntax_Embeddings.embedding ->
+              'r FStar_Syntax_Embeddings.embedding ->
+                ('nt1 -> 'nt2 -> unit -> 'nr) ->
+                  'nt1 FStar_TypeChecker_NBETerm.embedding ->
+                    'nt2 FStar_TypeChecker_NBETerm.embedding ->
+                      'nr FStar_TypeChecker_NBETerm.embedding ->
+                        FStar_TypeChecker_Cfg.primitive_step
+  =
+  fun nunivs ->
+    fun name ->
+      fun t ->
+        fun e1 ->
+          fun e2 ->
+            fun er ->
+              fun nt ->
+                fun ne1 ->
+                  fun ne2 ->
+                    fun ner ->
+                      mk_metatc name (Prims.of_int (3)) nunivs
+                        (mk_metatc_interpretation_2 t e1 e2 er)
+                        (fun cb ->
+                           fun args ->
+                             let uu___ = drop nunivs args in
+                             mk_metatc_nbe_interpretation_2 cb nt ne1 ne2 ner
+                               uu___)

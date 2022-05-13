@@ -823,3 +823,170 @@ let (e_guard_policy_nbe :
     FStar_TypeChecker_NBETerm.typ = uu___;
     FStar_TypeChecker_NBETerm.emb_typ = uu___1
   }
+let (metatc_result_lid : FStar_Ident.lident) =
+  FStar_Ident.lid_of_path ["FStar"; "Meta"; "Tc"; "Effect"; "tc_result"]
+    FStar_Compiler_Range.dummyRange
+let (metatc_result_fv : FStar_Syntax_Syntax.fv) =
+  FStar_Syntax_Syntax.lid_as_fv metatc_result_lid
+    FStar_Syntax_Syntax.delta_constant FStar_Pervasives_Native.None
+let (metatc_success_lid : FStar_Ident.lident) =
+  FStar_Ident.lid_of_path ["FStar"; "Meta"; "Tc"; "Effect"; "Tc_success"]
+    FStar_Compiler_Range.dummyRange
+let (metatc_success_fv : FStar_Syntax_Syntax.fv) =
+  FStar_Syntax_Syntax.lid_as_fv metatc_success_lid
+    FStar_Syntax_Syntax.delta_constant
+    (FStar_Pervasives_Native.Some FStar_Syntax_Syntax.Data_ctor)
+let (metatc_success_tm : FStar_Syntax_Syntax.term) =
+  FStar_Syntax_Syntax.fv_to_tm metatc_success_fv
+let (metatc_failure_lid : FStar_Ident.lident) =
+  FStar_Ident.lid_of_path ["FStar"; "Meta"; "Tc"; "Effect"; "Tc_failure"]
+    FStar_Compiler_Range.dummyRange
+let (metatc_failure_fv : FStar_Syntax_Syntax.fv) =
+  FStar_Syntax_Syntax.lid_as_fv metatc_failure_lid
+    FStar_Syntax_Syntax.delta_constant
+    (FStar_Pervasives_Native.Some FStar_Syntax_Syntax.Data_ctor)
+let (metatc_failure_tm : FStar_Syntax_Syntax.term) =
+  FStar_Syntax_Syntax.fv_to_tm metatc_failure_fv
+let e_metatc_result :
+  'a .
+    'a FStar_Syntax_Embeddings.embedding ->
+      'a FStar_Tactics_Result.tc_result FStar_Syntax_Embeddings.embedding
+  =
+  fun ea ->
+    let embed_result res rng uu___ uu___1 =
+      match res with
+      | FStar_Tactics_Result.Tc_success a1 ->
+          let uu___2 =
+            FStar_Syntax_Syntax.mk_Tm_uinst metatc_success_tm
+              [FStar_Syntax_Syntax.U_zero] in
+          let uu___3 =
+            let uu___4 =
+              let uu___5 = FStar_Syntax_Embeddings.type_of ea in
+              FStar_Syntax_Syntax.iarg uu___5 in
+            let uu___5 =
+              let uu___6 =
+                let uu___7 = embed ea rng a1 in
+                FStar_Syntax_Syntax.as_arg uu___7 in
+              [uu___6] in
+            uu___4 :: uu___5 in
+          FStar_Syntax_Syntax.mk_Tm_app uu___2 uu___3 rng
+      | FStar_Tactics_Result.Tc_failure m ->
+          let uu___2 =
+            FStar_Syntax_Syntax.mk_Tm_uinst metatc_failure_tm
+              [FStar_Syntax_Syntax.U_zero] in
+          let uu___3 =
+            let uu___4 =
+              let uu___5 = FStar_Syntax_Embeddings.type_of ea in
+              FStar_Syntax_Syntax.iarg uu___5 in
+            let uu___5 =
+              let uu___6 =
+                let uu___7 = embed FStar_Syntax_Embeddings.e_string rng m in
+                FStar_Syntax_Syntax.as_arg uu___7 in
+              [uu___6] in
+            uu___4 :: uu___5 in
+          FStar_Syntax_Syntax.mk_Tm_app uu___2 uu___3 rng in
+    let unembed_result t w uu___ =
+      let uu___1 = hd'_and_args t in
+      match uu___1 with
+      | (FStar_Syntax_Syntax.Tm_fvar fv, _t::(a1, uu___2)::[]) when
+          FStar_Syntax_Syntax.fv_eq_lid fv metatc_success_lid ->
+          let uu___3 = unembed' w ea a1 in
+          FStar_Compiler_Util.bind_opt uu___3
+            (fun a2 ->
+               FStar_Pervasives_Native.Some
+                 (FStar_Tactics_Result.Tc_success a2))
+      | (FStar_Syntax_Syntax.Tm_fvar fv, _t::(m, uu___2)::[]) when
+          FStar_Syntax_Syntax.fv_eq_lid fv metatc_failure_lid ->
+          let uu___3 = unembed' w FStar_Syntax_Embeddings.e_string m in
+          FStar_Compiler_Util.bind_opt uu___3
+            (fun m1 ->
+               FStar_Pervasives_Native.Some
+                 (FStar_Tactics_Result.Tc_failure m1))
+      | uu___2 ->
+          (if w
+           then
+             (let uu___4 =
+                let uu___5 =
+                  let uu___6 = FStar_Syntax_Print.term_to_string t in
+                  FStar_Compiler_Util.format1
+                    "Not an embedded meta result: %s" uu___6 in
+                (FStar_Errors.Warning_NotEmbedded, uu___5) in
+              FStar_Errors.log_issue t.FStar_Syntax_Syntax.pos uu___4)
+           else ();
+           FStar_Pervasives_Native.None) in
+    let uu___ =
+      let uu___1 = FStar_Syntax_Embeddings.type_of ea in t_result_of uu___1 in
+    let uu___1 =
+      let uu___2 =
+        let uu___3 =
+          FStar_Compiler_Effect.op_Bar_Greater metatc_result_lid
+            FStar_Ident.string_of_lid in
+        let uu___4 =
+          let uu___5 = FStar_Syntax_Embeddings.emb_typ_of ea in [uu___5] in
+        (uu___3, uu___4) in
+      FStar_Syntax_Syntax.ET_app uu___2 in
+    FStar_Syntax_Embeddings.mk_emb_full embed_result unembed_result uu___
+      (fun uu___2 -> "") uu___1
+let e_metatc_result_nbe :
+  'a .
+    'a FStar_TypeChecker_NBETerm.embedding ->
+      'a FStar_Tactics_Result.tc_result FStar_TypeChecker_NBETerm.embedding
+  =
+  fun ea ->
+    let embed_result cb res =
+      match res with
+      | FStar_Tactics_Result.Tc_failure m ->
+          let uu___ =
+            let uu___1 =
+              let uu___2 = FStar_TypeChecker_NBETerm.type_of ea in
+              FStar_TypeChecker_NBETerm.as_iarg uu___2 in
+            let uu___2 =
+              let uu___3 =
+                let uu___4 =
+                  FStar_TypeChecker_NBETerm.embed
+                    FStar_TypeChecker_NBETerm.e_string cb m in
+                FStar_TypeChecker_NBETerm.as_arg uu___4 in
+              [uu___3] in
+            uu___1 :: uu___2 in
+          mkConstruct metatc_failure_fv [FStar_Syntax_Syntax.U_zero] uu___
+      | FStar_Tactics_Result.Tc_success a1 ->
+          let uu___ =
+            let uu___1 =
+              let uu___2 = FStar_TypeChecker_NBETerm.type_of ea in
+              FStar_TypeChecker_NBETerm.as_iarg uu___2 in
+            let uu___2 =
+              let uu___3 =
+                let uu___4 = FStar_TypeChecker_NBETerm.embed ea cb a1 in
+                FStar_TypeChecker_NBETerm.as_arg uu___4 in
+              [uu___3] in
+            uu___1 :: uu___2 in
+          mkConstruct metatc_success_fv [FStar_Syntax_Syntax.U_zero] uu___ in
+    let unembed_result cb t =
+      let uu___ = FStar_TypeChecker_NBETerm.nbe_t_of_t t in
+      match uu___ with
+      | FStar_TypeChecker_NBETerm.Construct
+          (fv, uu___1, (a1, uu___2)::_t::[]) when
+          FStar_Syntax_Syntax.fv_eq_lid fv metatc_success_lid ->
+          let uu___3 = FStar_TypeChecker_NBETerm.unembed ea cb a1 in
+          FStar_Compiler_Util.bind_opt uu___3
+            (fun a2 ->
+               FStar_Pervasives_Native.Some
+                 (FStar_Tactics_Result.Tc_success a2))
+      | FStar_TypeChecker_NBETerm.Construct (fv, uu___1, (m, uu___2)::_t::[])
+          when FStar_Syntax_Syntax.fv_eq_lid fv metatc_failure_lid ->
+          let uu___3 =
+            FStar_TypeChecker_NBETerm.unembed
+              FStar_TypeChecker_NBETerm.e_string cb m in
+          FStar_Compiler_Util.bind_opt uu___3
+            (fun m1 ->
+               FStar_Pervasives_Native.Some
+                 (FStar_Tactics_Result.Tc_failure m1))
+      | uu___1 -> FStar_Pervasives_Native.None in
+    let uu___ = mkFV metatc_result_fv [] [] in
+    let uu___1 = fv_as_emb_typ metatc_result_fv in
+    {
+      FStar_TypeChecker_NBETerm.em = embed_result;
+      FStar_TypeChecker_NBETerm.un = unembed_result;
+      FStar_TypeChecker_NBETerm.typ = uu___;
+      FStar_TypeChecker_NBETerm.emb_typ = uu___1
+    }

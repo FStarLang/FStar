@@ -1293,8 +1293,11 @@ let (should_return :
                 (FStar_TypeChecker_Env.norm_eff_name env) in
             let uu___1 =
               (FStar_TypeChecker_Common.is_pure_or_ghost_lcomp lc) &&
-                (FStar_Ident.lid_equals c_eff_name
-                   FStar_Parser_Const.effect_TAC_lid) in
+                ((FStar_Ident.lid_equals c_eff_name
+                    FStar_Parser_Const.effect_TAC_lid)
+                   ||
+                   (FStar_Ident.lid_equals c_eff_name
+                      FStar_Parser_Const.effect_MetaTC_lid)) in
             (if uu___1
              then false
              else
