@@ -474,6 +474,7 @@ let no_method_lid = fstar_tactics_lid' ["Typeclasses"; "no_method"]
 
 let effect_TAC_lid = fstar_tactics_lid' ["Effect"; "TAC"] // actual effect
 let effect_Tac_lid = fstar_tactics_lid' ["Effect"; "Tac"] // trivial variant
+let effect_MetaTC_lid = Ident.lid_of_str "FStar.Meta.Tc.Effect.MetaTC"
 
 let by_tactic_lid = fstar_tactics_lid' ["Effect"; "with_tactic"]
 let rewrite_by_tactic_lid = fstar_tactics_lid' ["Effect"; "rewrite_with_tactic"]

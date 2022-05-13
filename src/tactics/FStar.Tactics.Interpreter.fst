@@ -53,6 +53,8 @@ module TcRel   = FStar.TypeChecker.Rel
 module TcTerm  = FStar.TypeChecker.TcTerm
 module U       = FStar.Syntax.Util
 
+module MetaTc  = FStar.Meta.Tc.Basic
+
 let tacdbg = BU.mk_ref false
 
 let unembed ea a norm_cb = unembed ea a true norm_cb
@@ -483,6 +485,13 @@ let () =
         t_commute_applied_match e_unit e_unit
         t_commute_applied_match NBET.e_unit NBET.e_unit;
 
+      //
+      //Meta TC primitive steps
+      //
+
+      mk_metatc_step_2 0 "tc_term"
+        MetaTc.tc_term RE.e_env RE.e_term RE.e_term
+        MetaTc.tc_term NRE.e_env NRE.e_term NRE.e_term;
     ]
 
 let unembed_tactic_1_alt (ea:embedding 'a) (er:embedding 'r) (f:term) (ncb:norm_cb) : option ('a -> tac 'r) =

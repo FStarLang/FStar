@@ -78,6 +78,8 @@ effect {
 effect MetaTc (a:Type) (pre:pure_pre) (post:pure_post' (tc_result a) pre) =
   MetaTC a (as_pure_wp (fun p -> pre /\ (forall r. post r ==> p r)))
 
+effect MetaTcT (a:Type) = MetaTc a True (fun _ -> True)
+
 unfold
 let lift_DIV_MetaTC_wp (#a:Type) (wp:pure_wp a) : wp_t a =
   elim_pure_wp_monotonicity wp;

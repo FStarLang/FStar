@@ -470,3 +470,94 @@ let e_guard_policy_nbe  =
     ; NBETerm.un = unembed_guard_policy
     ; NBETerm.typ = mkFV fstar_tactics_guard_policy.fv [] []
     ; NBETerm.emb_typ = fv_as_emb_typ fstar_tactics_guard_policy.fv }
+
+
+/// MetaTC embeddings
+
+let metatc_result_lid =
+  Ident.lid_of_path
+    ["FStar"; "Meta"; "Tc"; "Effect"; "tc_result"]
+    Range.dummyRange
+let metatc_result_fv = S.lid_as_fv metatc_result_lid delta_constant None
+
+let metatc_success_lid =
+  Ident.lid_of_path
+    (["FStar"; "Meta"; "Tc"; "Effect"; "Tc_success"])
+    Range.dummyRange
+let metatc_success_fv = S.lid_as_fv metatc_success_lid delta_constant (Some Data_ctor)
+let metatc_success_tm = S.fv_to_tm metatc_success_fv
+
+let metatc_failure_lid =
+  Ident.lid_of_path
+    ["FStar"; "Meta"; "Tc"; "Effect"; "Tc_failure"]
+    Range.dummyRange
+let metatc_failure_fv = S.lid_as_fv metatc_failure_lid delta_constant (Some Data_ctor)
+let metatc_failure_tm = S.fv_to_tm metatc_failure_fv
+
+let e_metatc_result (ea : embedding 'a)  =
+    let embed_result (res:tc_result 'a) (rng:Range.range) _ _ : term =
+        match res with
+        | Tc_success a ->
+          S.mk_Tm_app (S.mk_Tm_uinst metatc_success_tm [U_zero])
+                 [S.iarg (type_of ea);
+                  S.as_arg (embed ea rng a)]
+                 rng
+        | Tc_failure m ->
+          S.mk_Tm_app (S.mk_Tm_uinst metatc_failure_tm [U_zero])
+                 [S.iarg (type_of ea);
+                  S.as_arg (embed e_string rng m)]
+                 rng
+    in
+    let unembed_result (t:term) w _ : option (tc_result 'a) =
+        match hd'_and_args t with
+        | Tm_fvar fv, [_t; (a, _)] when S.fv_eq_lid fv metatc_success_lid ->
+            BU.bind_opt (unembed' w ea a) (fun a ->
+            Some (Tc_success a))
+
+        | Tm_fvar fv, [_t; (m, _)] when S.fv_eq_lid fv metatc_failure_lid ->
+            BU.bind_opt (unembed' w e_string m) (fun m ->
+            Some (Tc_failure m))
+
+        | _ ->
+            if w then
+                Err.log_issue t.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded meta result: %s" (Print.term_to_string t)));
+            None
+    in
+    mk_emb_full
+        embed_result
+        unembed_result
+        (t_result_of (type_of ea))
+        (fun _ -> "")
+        (ET_app (metatc_result_lid |> Ident.string_of_lid, [emb_typ_of ea]))
+
+
+let e_metatc_result_nbe (ea : NBET.embedding 'a)  =
+    let embed_result cb (res:tc_result 'a) : NBET.t =
+        match res with
+        | Tc_failure m ->
+            mkConstruct metatc_failure_fv
+              [U_zero]
+              [ NBETerm.as_iarg (NBETerm.type_of ea)
+              ; NBETerm.as_arg (NBETerm.embed NBETerm.e_string cb m) ]
+        | Tc_success a ->
+            mkConstruct metatc_success_fv
+              [U_zero]
+              [ NBETerm.as_iarg (NBETerm.type_of ea)
+              ; NBETerm.as_arg (NBETerm.embed ea cb a) ]
+    in
+    let unembed_result cb (t:NBET.t) : option (tc_result 'a) =
+        match NBETerm.nbe_t_of_t t with
+        | NBETerm.Construct (fv, _, [(a, _); _t]) when S.fv_eq_lid fv metatc_success_lid ->
+            BU.bind_opt (NBETerm.unembed ea cb a) (fun a ->
+            Some (Tc_success a))
+
+        | NBETerm.Construct (fv, _, [(m, _); _t]) when S.fv_eq_lid fv metatc_failure_lid ->
+            BU.bind_opt (NBETerm.unembed NBETerm.e_string cb m) (fun m ->
+            Some (Tc_failure m))
+        | _ ->
+            None
+    in
+    { NBETerm.em = embed_result
+    ; NBETerm.un = unembed_result
+    ; NBETerm.typ = mkFV metatc_result_fv [] []
+    ; NBETerm.emb_typ = fv_as_emb_typ metatc_result_fv }

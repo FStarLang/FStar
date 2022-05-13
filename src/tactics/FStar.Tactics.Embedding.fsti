@@ -41,3 +41,8 @@ val e_guard_policy_nbe       : NBETerm.embedding guard_policy
 
 val unfold_lazy_proofstate   : lazyinfo -> term
 val unfold_lazy_goal         : lazyinfo -> term
+
+/// MetaTC embedding
+
+val e_metatc_result     : embedding 'a -> embedding (tc_result 'a)
+val e_metatc_result_nbe : NBETerm.embedding 'a -> NBETerm.embedding (tc_result 'a)

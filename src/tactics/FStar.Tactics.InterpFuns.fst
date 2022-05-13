@@ -4397,3 +4397,73 @@ let mk_total_step_20
       (mk_total_interpretation_20 f e1 e2 e3 e4 e5 e6 e7 e8 e9 e10 e11 e12 e13 e14 e15 e16 e17 e18 e19 e20 er)
       (fun cb args -> mk_total_nbe_interpretation_20 cb nf ne1 ne2 ne3 ne4 ne5 ne6 ne7 ne8 ne9 ne10 ne11 ne12 ne13 ne14 ne15 ne16 ne17 ne18 ne19 ne20 ner (drop nunivs args))
 
+
+/// MetaTC steps
+
+let mk_metatc nm arity nunivs interp nbe_interp =
+  let nm = Ident.lid_of_path ["FStar"; "Meta"; "Tc"; "Builtins"; nm] Range.dummyRange in
+  { Cfg.name                         = nm
+  ; Cfg.arity                        = arity
+  ; Cfg.univ_arity                   = nunivs
+  ; Cfg.auto_reflect                 = Some (arity - 1)
+  ; Cfg.strong_reduction_ok          = true
+  ; Cfg.requires_binder_substitution = true
+  ; Cfg.interpretation               = timing_int nm interp
+  ; Cfg.interpretation_nbe           = timing_nbe nm nbe_interp
+  }
+
+let mk_metatc_interpretation_2
+    (t : 't1 -> 't2 -> unit -> 'r)
+    (e1:embedding 't1)
+    (e2:embedding 't2)
+    (er:embedding 'r)
+    (psc:Cfg.psc)
+    (ncb:norm_cb)
+    (args:args)
+  : option term
+  =
+  match args with
+  | [(a1, _); (a2, _); (a3, _)] ->
+    BU.bind_opt (unembed e1 a1 ncb) (fun a1 ->
+    BU.bind_opt (unembed e2 a2 ncb) (fun a2 ->
+    BU.bind_opt (unembed e_unit a3 ncb) (fun _ ->
+    let r = t a1 a2 () in
+    Some (embed (E.e_metatc_result er) (Cfg.psc_range psc) r ncb))))
+  | _ ->
+    None
+
+let mk_metatc_nbe_interpretation_2
+    cb
+    (t : 't1 -> 't2 -> unit -> 'r)
+    (e1:NBET.embedding 't1)
+    (e2:NBET.embedding 't2)
+    (er:NBET.embedding 'r)
+    (args:NBET.args)
+  : option NBET.t
+  =
+  match args with
+  | [(a1, _); (a2, _); (a3, _)] ->
+    BU.bind_opt (NBET.unembed e1 cb a1) (fun a1 ->
+    BU.bind_opt (NBET.unembed e2 cb a2) (fun a2 ->
+    BU.bind_opt (NBET.unembed NBETerm.e_unit cb a3) (fun _ ->
+    let r = t a1 a2 () in
+    Some (NBET.embed (E.e_metatc_result_nbe er) cb r))))
+  | _ ->
+    None
+
+let mk_metatc_step_2
+  (nunivs:int)
+  (name:string)
+  (t : 't1 -> 't2 -> unit -> 'r)
+  (e1:embedding 't1)
+  (e2:embedding 't2)
+  (er:embedding 'r)
+  (nt : 'nt1 -> 'nt2 -> unit -> 'nr)
+  (ne1:NBET.embedding 'nt1)
+  (ne2:NBET.embedding 'nt2)
+  (ner:NBET.embedding 'nr)
+  : Cfg.primitive_step
+  =
+    mk_metatc name 3 nunivs
+      (mk_metatc_interpretation_2 t e1 e2 er)
+      (fun cb args -> mk_metatc_nbe_interpretation_2 cb nt ne1 ne2 ner (drop nunivs args))

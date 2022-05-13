@@ -1250,3 +1250,18 @@ val mk_total_step_20 :
   NBET.embedding 'nr ->
   Cfg.primitive_step
 
+
+/// MetaTc steps
+
+val mk_metatc_step_2 :
+  num_univs:int ->
+  fn_name:string ->
+  ('t1 -> 't2 -> unit -> 'r) ->
+  embedding 't1 ->
+  embedding 't2 ->
+  er:embedding 'r ->
+  ('nt1 -> 'nt2 -> unit -> 'nr) ->
+  NBET.embedding 'nt1 ->
+  NBET.embedding 'nt2 ->
+  NBET.embedding 'nr ->
+  Cfg.primitive_step

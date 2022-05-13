@@ -33,3 +33,10 @@ type __result 'a =
     | Success of 'a * proofstate
     | Failed  of exn       //error
               * proofstate //the proofstate at time of failure
+
+
+/// Meta TC result
+
+type tc_result 'a =
+  | Tc_success of 'a
+  | Tc_failure of string

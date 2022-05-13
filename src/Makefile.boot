@@ -19,7 +19,8 @@ FSTAR_C=$(FSTAR_BOOT) $(FSTAR_BOOT_OPTIONS) --cache_checked_modules --odir ocaml
 EXTRACT_NAMESPACES=FStar.Extraction FStar.Parser		\
 		   FStar.Reflection FStar.SMTEncoding FStar.Syntax	\
 		   FStar.Tactics FStar.Tests FStar.ToSyntax		\
-		   FStar.TypeChecker FStar.Profiling
+		   FStar.TypeChecker FStar.Profiling \
+                   FStar.MetaTc
 
 # Except some files that want to extract are not within a particularly
 # specific namespace. So, we mention extracting those explicitly.
