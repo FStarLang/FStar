@@ -242,240 +242,122 @@ val par
 
 /// A tactic to automatically generate a unique binder
 
-let gen_elim_f
-  (p: vprop)
-  (a: Type0) // FIXME: generalize this universe
-  (q: (a -> vprop))
-  (post: (a -> prop))
-: Tot Type
-= ((opened: inames) -> STGhostF (Ghost.erased a) opened p (fun x -> q (Ghost.reveal x)) True (fun x -> post x))
-
-val frame_gen_elim_f
-  (#p: vprop)
-  (#a: Type0) // FIXME: generalize this universe
-  (#q: (a -> vprop))
-  (#post: (a -> prop))
-  (g: gen_elim_f p a q post)
-  (opened: inames)
-: STGhost (Ghost.erased a) opened p (fun x -> q (Ghost.reveal x)) True (fun x -> post x)
-
-[@@erasable]
 noeq
-type gen_elim_t
-  (p: vprop)
-= | GenElim:
-    a: Type0 ->
-    q: (a -> vprop) ->
-    post: (a -> prop) ->
-    f: gen_elim_f p a q post ->
-    gen_elim_t p
+type gen_unit_elim_i
+= | GUEId: (v: vprop) -> gen_unit_elim_i
+  | GUEPure: (p: prop) -> gen_unit_elim_i
+  | GUEStar: (left: gen_unit_elim_i) -> (right: gen_unit_elim_i) -> gen_unit_elim_i
 
-[@@__reduce__; __steel_reduce__]
-let gen_elim_a
-  (#p: vprop)
-  (g: gen_elim_t p)
-: Tot Type0
-= match g with
-  | GenElim a _ _ _ -> a
-
-[@@__reduce__]
-let gen_elim_q
-  (#p: vprop)
-  (g: gen_elim_t p)
-: Tot (gen_elim_a g -> Tot vprop)
-= match g with
-  | GenElim _ q _ _ -> q
-
-[@@__reduce__]
-let gen_elim_post
-  (#p: vprop)
-  (g: gen_elim_t p)
-: Tot (gen_elim_a g -> Tot prop)
-= match g with
-  | GenElim _ _ post _ -> post
-
-let gen_unit_elim_f
-  (p: vprop)
-  (q: vprop)
-  (post: prop)
-: Tot Type
-= gen_elim_f p unit (fun _ -> q) (fun _ -> post)
-
-[@@erasable]
 noeq
-type gen_unit_elim_t
-  (p: vprop)
-= | GenUnitElim:
-    q: vprop ->
-    post: prop ->
-    f: gen_unit_elim_f p q post ->
-    gen_unit_elim_t p
+type gen_elim_i =
+  | GEUnit: (i: gen_unit_elim_i) -> gen_elim_i
+  | GEStarL: (left: gen_elim_i) -> (right: gen_unit_elim_i) -> gen_elim_i
+  | GEStarR: (left: gen_unit_elim_i) -> (right: gen_elim_i) -> gen_elim_i
+  | GEStar: (left: gen_elim_i) -> (right: gen_elim_i) -> gen_elim_i
+  | GEExistsNoAbs: (#a: Type0) -> (body: (a -> vprop)) -> gen_elim_i // FIXME: generalize the universe
+  | GEExistsUnit: (#a: Type0) -> (body: (a -> gen_unit_elim_i)) -> gen_elim_i
+  | GEExists: (#a: Type0) -> (body: (a -> gen_elim_i)) -> gen_elim_i
 
-[@@__reduce__]
-let gen_unit_elim_q
-  (#p: vprop)
-  (g: gen_unit_elim_t p)
+[@__reduce__]
+let rec compute_gen_unit_elim_p
+  (x: gen_unit_elim_i)
 : Tot vprop
-= match g with
-  | GenUnitElim q _ _ -> q
+= match x with
+  | GUEId v -> v
+  | GUEPure p -> pure p
+  | GUEStar left right -> compute_gen_unit_elim_p left `star` compute_gen_unit_elim_p right
+
+let compute_gen_unit_elim_p' = compute_gen_unit_elim_p
+
+[@__reduce__]
+let rec compute_gen_unit_elim_q
+  (x: gen_unit_elim_i)
+: Tot vprop
+= match x with
+  | GUEId v -> v
+  | GUEPure _ -> emp
+  | GUEStar left right -> compute_gen_unit_elim_q left `star` compute_gen_unit_elim_q right
+
+let compute_gen_unit_elim_q' = compute_gen_unit_elim_q
+
+[@@__reduce__; __steel_reduce__]
+let rec compute_gen_unit_elim_post
+  (x: gen_unit_elim_i)
+: Tot prop
+= match x with
+  | GUEId _ -> True
+  | GUEPure p -> p
+  | GUEStar left right -> compute_gen_unit_elim_post left /\ compute_gen_unit_elim_post right
+
+let compute_gen_unit_elim_post' = compute_gen_unit_elim_post
 
 [@@__reduce__]
-let gen_unit_elim_post
-  (#p: vprop)
-  (g: gen_unit_elim_t p)
-: Tot prop
-= match g with
-  | GenUnitElim _ post _ -> post
-
-[@@__reduce__; __steel_reduce__]
-let gen_elim_of_gen_unit_elim
-  (#p: vprop)
-  (g: gen_unit_elim_t p)
-: Tot (gen_elim_t p)
-= GenElim unit (fun _ -> gen_unit_elim_q g) (fun _ -> gen_unit_elim_post g) (GenUnitElim?.f g)
-
-val gen_unit_elim_id'
-  (p: vprop)
-: Tot (gen_unit_elim_f p p True)
+let rec compute_gen_elim_p
+  (x: gen_elim_i)
+: Tot vprop
+= match x with
+  | GEUnit i -> compute_gen_unit_elim_p i
+  | GEStarL left right -> compute_gen_elim_p left `star` compute_gen_unit_elim_p right
+  | GEStarR left right -> compute_gen_unit_elim_p left `star` compute_gen_elim_p right
+  | GEStar left right -> compute_gen_elim_p left `star` compute_gen_elim_p right
+  | GEExistsNoAbs #a p -> exists_ p
+  | GEExistsUnit #a p -> exists_ (fun x -> compute_gen_unit_elim_p (p x))
+  | GEExists #a body -> exists_ (fun x -> compute_gen_elim_p (body x))
 
 [@@ __reduce__; __steel_reduce__]
-let gen_unit_elim_id
-  (p: vprop)
-: Tot (gen_unit_elim_t p)
-= GenUnitElim
-    _
-    _
-    (gen_unit_elim_id' p)
-
-[@@ __reduce__; __steel_reduce__]
-let gen_elim_id
-  (p: vprop)
-: Tot (gen_elim_t p)
-= gen_elim_of_gen_unit_elim (gen_unit_elim_id p)
-
-val gen_elim_exists_unit_body'
-  (a: Type0)
-  (p: a -> Tot vprop)
-  (g: (x: a) -> gen_unit_elim_t (p x))
-: Tot (gen_elim_f (exists_ p) a (fun x -> gen_unit_elim_q (g x)) (fun x -> gen_unit_elim_post (g x)))
-
-[@@__reduce__; __steel_reduce__]
-let gen_elim_exists_unit_body
-  (a: Type0)
-  (p: a -> Tot vprop)
-  (g: (x: a) -> gen_unit_elim_t (p x))
-: Tot (gen_elim_t (exists_ p))
-= GenElim
-    _
-    _
-    _
-    (gen_elim_exists_unit_body' a p g)
-
-[@@__reduce__; __steel_reduce__]
-let gen_elim_exists_simple
-  (a: Type0)
-  (p: a -> Tot vprop)
-: Tot (gen_elim_t (exists_ p))
-= gen_elim_exists_unit_body a p (fun x -> gen_unit_elim_id (p x))
+let rec compute_gen_elim_a
+  (x: gen_elim_i)
+: Tot Type0
+= match x with
+  | GEUnit _ -> unit
+  | GEStarL left _ -> compute_gen_elim_a left
+  | GEStarR _ right -> compute_gen_elim_a right
+  | GEStar left right -> (compute_gen_elim_a left & compute_gen_elim_a right)
+  | GEExistsNoAbs #a _
+  | GEExistsUnit #a _ -> a
+  | GEExists #a body -> dtuple2 a (fun x -> compute_gen_elim_a (body x))
 
 let dfstp #a #b t = dfst #a #b t
 let dsndp #a #b t = dsnd #a #b t
 let fstp #a #b t = fst #a #b t
 let sndp #a #b t = snd #a #b t
 
-val gen_elim_exists'
-  (a: Type0)
-  (p: a -> Tot vprop)
-  (g: (x: a) -> gen_elim_t (p x))
-: Tot (unit ->
-      Tot (gen_elim_f (exists_ p) (dtuple2 a (fun x -> gen_elim_a (g x))) (fun y -> gen_elim_q (g (dfstp y)) (dsndp y)) (fun y -> gen_elim_post (g (dfstp y)) (dsndp y)))
-  )
+[@@__reduce__; __steel_reduce__]
+let coerce_with_trefl (#tfrom #tto: Type) (x: tfrom) : Pure tto (requires (T.with_tactic T.trefl (tfrom == tto))) (ensures (fun _ -> True)) = x
+
+[@@__reduce__]
+let rec compute_gen_elim_q
+  (x: gen_elim_i)
+: Tot (compute_gen_elim_a x -> Tot vprop)
+  (decreases x)
+= match x as x' returns (compute_gen_elim_a x' -> Tot vprop) with
+  | GEUnit u -> fun _ -> compute_gen_unit_elim_q u
+  | GEStarL left right -> fun v -> compute_gen_elim_q left (coerce_with_trefl v) `star` compute_gen_unit_elim_q right
+  | GEStarR left right -> fun v -> compute_gen_unit_elim_q left `star` compute_gen_elim_q right (coerce_with_trefl v)
+  | GEStar left right -> fun v -> compute_gen_elim_q left (fstp #(compute_gen_elim_a left) #(compute_gen_elim_a right) (coerce_with_trefl v)) `star` compute_gen_elim_q right (sndp #(compute_gen_elim_a left) #(compute_gen_elim_a right) (coerce_with_trefl v))
+  | GEExistsNoAbs #a p -> p
+  | GEExistsUnit #a p -> fun v -> compute_gen_unit_elim_q (p v)
+  | GEExists #a body -> fun v ->
+    compute_gen_elim_q
+      (body (dfstp #a #(fun x -> compute_gen_elim_a (body x)) (coerce_with_trefl v)))
+      (dsndp #a #(fun x -> compute_gen_elim_a (body x)) (coerce_with_trefl v))
 
 [@@__reduce__; __steel_reduce__]
-let gen_elim_exists
-  (a: Type0)
-  (p: a -> Tot vprop)
-  (g: (x: a) -> gen_elim_t (p x))
-: Tot (gen_elim_t (exists_ p))
-= GenElim _ _ _ (gen_elim_exists' a p g ())
-
-#set-options "--ide_id_info_off"
-
-val gen_unit_elim_pure'
-  (p: prop)
-: Tot (gen_unit_elim_f (pure p) emp p)
-
-[@@__reduce__; __steel_reduce__]
-let gen_unit_elim_pure
-  (p: prop)
-: Tot (gen_unit_elim_t (pure p))
-= GenUnitElim _ _ (gen_unit_elim_pure' p)
-
-[@@__reduce__; __steel_reduce__]
-let gen_elim_pure
-  (p: prop)
-: Tot (gen_elim_t (pure p))
-= gen_elim_of_gen_unit_elim (gen_unit_elim_pure p)
-
-val gen_elim_star'
-  (p q: vprop)
-  (gp: gen_elim_t p)
-  (gq: gen_elim_t q)
-: unit ->
-  Tot (gen_elim_f (p `star` q) (gen_elim_a gp & gen_elim_a gq) (fun x -> gen_elim_q gp (fstp x) `star` gen_elim_q gq (sndp x)) (fun x -> gen_elim_post gp (fstp x) /\ gen_elim_post gq (sndp x)))
-
-[@@__reduce__; __steel_reduce__]
-let gen_elim_star
-  (p q: vprop)
-  (gp: gen_elim_t p)
-  (gq: gen_elim_t q)
-: Tot (gen_elim_t (p `star` q))
-= GenElim _ _ _ (gen_elim_star' p q gp gq ())
-
-val gen_elim_star_l'
-  (p q: vprop)
-  (gp: gen_elim_t p)
-  (gq: gen_unit_elim_t q)
-: unit ->
-  Tot (gen_elim_f (p `star` q) (gen_elim_a gp) (fun x -> gen_elim_q gp x `star` gen_unit_elim_q gq) (fun x -> gen_elim_post gp x /\ gen_unit_elim_post gq))
-
-[@@__reduce__; __steel_reduce__]
-let gen_elim_star_l
-  (p q: vprop)
-  (gp: gen_elim_t p)
-  (gq: gen_unit_elim_t q)
-: Tot (gen_elim_t (p `star` q))
-= GenElim _ _ _ (gen_elim_star_l' p q gp gq ())
-
-val gen_elim_star_r'
-  (p q: vprop)
-  (gp: gen_unit_elim_t p)
-  (gq: gen_elim_t q)
-: unit ->
-  Tot (gen_elim_f (p `star` q) (gen_elim_a gq) (fun x -> gen_unit_elim_q gp `star` gen_elim_q gq x) (fun x -> gen_unit_elim_post gp /\ gen_elim_post gq x))
-
-[@@__reduce__; __steel_reduce__]
-let gen_elim_star_r
-  (p q: vprop)
-  (gp: gen_unit_elim_t p)
-  (gq: gen_elim_t q)
-: Tot (gen_elim_t (p `star` q))
-= GenElim _ _ _ (gen_elim_star_r' p q gp gq ())
-
-val gen_unit_elim_star'
-  (p q: vprop)
-  (gp: gen_unit_elim_t p)
-  (gq: gen_unit_elim_t q)
-: unit ->
-  Tot (gen_unit_elim_f (p `star` q) (gen_unit_elim_q gp `star` gen_unit_elim_q gq) (gen_unit_elim_post gp /\ gen_unit_elim_post gq))
-
-[@@__reduce__; __steel_reduce__]
-let gen_unit_elim_star
-  (p q: vprop)
-  (gp: gen_unit_elim_t p)
-  (gq: gen_unit_elim_t q)
-: Tot (gen_unit_elim_t (p `star` q))
-= GenUnitElim _ _ (gen_unit_elim_star' p q gp gq ())
+let rec compute_gen_elim_post
+  (x: gen_elim_i)
+: Tot (compute_gen_elim_a x -> Tot prop)
+  (decreases x)
+= match x as x' returns (compute_gen_elim_a x' -> Tot prop) with
+  | GEUnit u -> fun _ -> compute_gen_unit_elim_post u
+  | GEStarL left right -> fun v -> compute_gen_elim_post left (coerce_with_trefl v) /\ compute_gen_unit_elim_post right
+  | GEStarR left right -> fun v -> compute_gen_unit_elim_post left /\ compute_gen_elim_post right (coerce_with_trefl v)
+  | GEStar left right -> fun v -> compute_gen_elim_post left (fstp #(compute_gen_elim_a left) #(compute_gen_elim_a right) (coerce_with_trefl v)) /\ compute_gen_elim_post right (sndp #(compute_gen_elim_a left) #(compute_gen_elim_a right) (coerce_with_trefl v))
+  | GEExistsNoAbs #a p -> fun _ -> True
+  | GEExistsUnit #a p -> fun v -> compute_gen_unit_elim_post (p v)
+  | GEExists #a body -> fun v ->
+    compute_gen_elim_post
+      (body (dfstp #a #(fun x -> compute_gen_elim_a (body x)) (coerce_with_trefl v)))
+      (dsndp #a #(fun x -> compute_gen_elim_a (body x)) (coerce_with_trefl v))
 
 module T = FStar.Tactics
 
@@ -497,36 +379,24 @@ let rec term_has_head
   else false
 
 let rec solve_gen_unit_elim
-  ()
-: T.Tac unit
+  (tl': T.term)
+: T.Tac T.term
 = 
-  T.focus (fun _ ->
-    T.norm [];
-    let g = T.cur_goal () in
-    let (hd, tl) = T.collect_app g in
-    if not (hd `T.term_eq` (`gen_unit_elim_t))
-    then T.fail "solve_gen_unit_elim: not a gen_unit_elim_t goal";
-    match tl with
-    | [tl', T.Q_Explicit] ->
       if not (term_has_head tl' (`pure))
-      then T.apply (`gen_unit_elim_id)
+      then T.mk_app (`GUEId) [tl', T.Q_Explicit]
       else
-        let (hd, _) = T.collect_app tl' in
+        let (hd, tl) = T.collect_app tl' in
         if hd `T.term_eq` (`pure)
-        then T.apply (`gen_unit_elim_pure)
+        then T.mk_app (`GUEPure) tl
         else if hd `T.term_eq` (`star) || hd `T.term_eq` (`VStar)
-        then begin
-          T.apply (`gen_unit_elim_star);
-          T.iseq [
-            solve_gen_unit_elim;
-            solve_gen_unit_elim;
-          ];
-          T.qed ()
-        end
+        then match tl with
+        | [t1, T.Q_Explicit; t2, T.Q_Explicit] ->
+          let t1' = solve_gen_unit_elim t1 in
+          let t2' = solve_gen_unit_elim t2 in
+          T.mk_app (`GUEStar) [t1', T.Q_Explicit; t2', T.Q_Explicit]
+        | _ -> T.fail "ill-formed star"
         else
-          T.apply (`gen_unit_elim_id)
-    | _ -> T.fail "ill-formed gen_unit_elim_t"
-  )
+          T.mk_app (`GUEId) [tl', T.Q_Explicit]
 
 let abstr_has_exists
   (t: T.term)
@@ -536,135 +406,110 @@ let abstr_has_exists
   | _ -> false
 
 let rec solve_gen_elim
-  ()
-: T.Tac unit
+  (tl': T.term)
+: T.Tac T.term
 = 
-  T.focus (fun _ ->
-    T.norm [];    
-    let g = T.cur_goal () in
-    let (hd, tl) = T.collect_app g in
-    if not (hd `T.term_eq` (`gen_elim_t))
-    then T.fail "solve_gen_elim: not a gen_elim_t goal";
-    match tl with
-    | [tl', T.Q_Explicit] ->
       if not (term_has_head tl' (`exists_))
       then begin
-        T.apply (`gen_elim_of_gen_unit_elim);
-        solve_gen_unit_elim ()
+        let t' = solve_gen_unit_elim tl' in
+        T.mk_app (`GEUnit) [t', T.Q_Explicit]
       end else
-        let (hd, body) = T.collect_app tl' in
+        let (hd, lbody) = T.collect_app tl' in
         if hd `T.term_eq` (`exists_)
         then
-          match body with
-          | [(_, T.Q_Implicit); (body, T.Q_Explicit)]
-          | [(body, T.Q_Explicit)] ->
-            if not (abstr_has_exists body)
-            then begin
-              T.apply (`gen_elim_exists_unit_body);
-              let _ = T.intro () in
-              solve_gen_unit_elim ()
-            end else begin
-              T.apply (`gen_elim_exists);
-              let _ = T.intro () in
-              solve_gen_elim ()
-            end
-          | _ -> T.fail "ill-formed exists_"
+          let (ty, body) =
+            match lbody with
+            | [(ty, T.Q_Implicit); (body, T.Q_Explicit)] -> ([(ty, T.Q_Implicit)], body)
+            | [(body, T.Q_Explicit)] -> ([], body)
+            | _ -> T.fail "ill-formed exists_"
+          in
+          begin match T.inspect body with
+            | T.Tv_Abs b abody ->
+              if not (term_has_head abody (`exists_))
+              then
+                let body' = solve_gen_unit_elim abody in
+                T.mk_app (`GEExistsUnit) (ty `List.Tot.append` [T.mk_abs [b] body', T.Q_Explicit])
+              else
+                let body' = solve_gen_elim abody in
+                T.mk_app (`GEExists) (ty `List.Tot.append` [T.mk_abs [b] body', T.Q_Explicit])
+            | _ ->
+              T.mk_app (`GEExistsNoAbs) lbody
+          end
         else if hd `T.term_eq` (`star) || hd `T.term_eq` (`VStar)
         then
-          match body with
+          match lbody with
           | [(tl, T.Q_Explicit); (tr, T.Q_Explicit)] ->
             if term_has_head tl (`exists_)
             then
+              let tl' = solve_gen_elim tl in
               if term_has_head tr (`exists_)
-              then begin
-                T.apply (`gen_elim_star);
-                T.iseq [
-                  solve_gen_elim;
-                  solve_gen_elim;
-                ];
-                T.qed ()
-              end else begin
-                T.apply (`gen_elim_star_l);
-                T.iseq [
-                  solve_gen_elim;
-                  solve_gen_unit_elim;
-                ];
-                T.qed ()
-              end
-            else begin (* here, term_has_head tr (`exists_) holds, because otherwise we are in case (not (term_has_head tl (`exists_))) above *)
-              T.apply (`gen_elim_star_r);
-              T.iseq [
-                solve_gen_unit_elim;
-                solve_gen_elim;
-              ];
-              T.qed ()
-            end
+              then
+                let tr' = solve_gen_elim tr in
+                T.mk_app (`GEStar) [tl', T.Q_Explicit; tr', T.Q_Explicit]
+              else
+                let tr' = solve_gen_unit_elim tr in
+                T.mk_app (`GEStarL) [tl', T.Q_Explicit; tr', T.Q_Explicit]
+            else (* here, term_has_head tr (`exists_) holds, because otherwise we are in case (not (term_has_head tl (`exists_))) above *)
+              let tl' = solve_gen_unit_elim tl in
+              let tr' = solve_gen_elim tr in
+              T.mk_app (`GEStarR) [tl', T.Q_Explicit; tr', T.Q_Explicit]
           | _ -> T.fail "ill-formed star"
         else
-          T.apply (`gen_elim_id)
-    | _ -> T.fail "ill-formed gen_elim_t"
-  )
+          T.mk_app (`GEUnit) [T.mk_app (`GUEId) lbody, T.Q_Explicit]
 
 val gen_elim_prop
   (p: vprop)
+  (i: gen_elim_i)
   (a: Type0)
   (q: Ghost.erased a -> Tot vprop)
   (post: Ghost.erased a -> Tot prop)
 : Tot prop
 
+val gen_elim_prop_intro
+  (p: vprop)
+  (i: gen_elim_i)
+  (sq_p: squash (p == compute_gen_elim_p i))
+  (a: Type0)
+  (sq_a: squash (a == compute_gen_elim_a i))
+  (post: Ghost.erased a -> Tot prop)
+  (sq_post: squash (post == (fun (x: Ghost.erased a) -> compute_gen_elim_post i x)))
+  (q: Ghost.erased a -> Tot vprop)
+  (sq_q: squash (q == (fun (x: Ghost.erased a) -> compute_gen_elim_q i x)))
+: Lemma (gen_elim_prop p i a q post)
+
+let gen_elim_prop_placeholder
+  (p: vprop)
+  (i: gen_elim_i)
+  (a: Type0)
+  (q: Ghost.erased a -> Tot vprop)
+  (post: Ghost.erased a -> Tot prop)
+: Tot prop
+= True
+
 let gen_elim_dummy
-  (#p: vprop)
-  (i: gen_elim_t p)
+  (p: vprop)
+  (i: gen_elim_i)
 : Tot prop
 = True
 
 let gen_elim_dummy_intro
-  (#p: vprop)
-  (i: gen_elim_t p)
-: Lemma (gen_elim_dummy i)
+  (p: vprop)
+  (i: gen_elim_i)
+: Tot (squash (gen_elim_dummy p i))
 = ()
-
-val gen_elim_prop_intro
-  (p: vprop)
-  (i: gen_elim_t p)
-  (dummy: squash (gen_elim_dummy i))
-  (a: Type0)
-  (sq_a: squash (a == GenElim?.a i))
-  (post: Ghost.erased a -> Tot prop)
-  (sq_post: squash (post == (fun (x: Ghost.erased a) -> GenElim?.post i x)))
-  (q: Ghost.erased a -> Tot vprop)
-  (sq_q: squash (q == (fun (x: Ghost.erased a) -> GenElim?.q i x)))
-: Lemma (gen_elim_prop p a q post)
-
-val gen_elim_prop_elim
-  (#opened: _)
-  (p: vprop)
-  (a: Type0)
-  (q: Ghost.erased a -> Tot vprop)
-  (post: Ghost.erased a -> Tot prop)
-  (sq: squash (gen_elim_prop p a q post))
-  (_: unit)
-: STGhostF (Ghost.erased a) opened p q True post
-
-let gen_elim_prop_placeholder
-  (p: vprop)
-  (a: Type0)
-  (q: Ghost.erased a -> Tot vprop)
-  (post: Ghost.erased a -> Tot prop)
-: Tot prop
-= True
 
 let gen_elim_prop_placeholder_intro
   (p: vprop)
-  (i: gen_elim_t p)
-  (dummy: squash (gen_elim_dummy i))
+  (i: gen_elim_i)
+  (dummy: squash (gen_elim_dummy p i))
+  (sq_p: squash (p == compute_gen_elim_p i))
   (a: Type0)
-  (sq_a: squash (a == GenElim?.a i))
+  (sq_a: squash (a == compute_gen_elim_a i))
   (post: Ghost.erased a -> Tot prop)
-  (sq_post: squash (post == (fun (x: Ghost.erased a) -> GenElim?.post i x)))
+  (sq_post: squash (post == (fun (x: Ghost.erased a) -> compute_gen_elim_post i x)))
   (q: Ghost.erased a -> Tot vprop)
-  (sq_q: squash (q == (fun (x: Ghost.erased a) -> GenElim?.q i x)))
-: Lemma (gen_elim_prop_placeholder p a q post)
+  (sq_q: squash (q == (fun (x: Ghost.erased a) -> compute_gen_elim_q i x)))
+: Lemma (gen_elim_prop_placeholder p i a q post)
 = ()
 
 let solve_gen_elim_dummy
@@ -680,12 +525,11 @@ let solve_gen_elim_dummy
         if not (hd1 `T.term_eq` (`gen_elim_dummy))
         then T.fail "not a gen_elim_dummy goal";
         begin match List.Tot.filter (fun (_, x) -> T.Q_Explicit? x) tl1 with
-        | [(i, _)] ->
+        | [(p, _); (i, _)] ->
           if not (T.Tv_Uvar? (T.inspect i))
           then T.fail "gen_elim_dummy is already solved";
-          T.unshelve i;
-          T.focus solve_gen_elim;
-          T.apply_lemma (`gen_elim_dummy_intro)
+          let i' = solve_gen_elim p in
+          T.exact (T.mk_app (`gen_elim_dummy_intro) [(p, T.Q_Explicit); (i', T.Q_Explicit)])
         | _ -> T.fail "ill-formed gen_elim_dummy"
         end
       | _ -> T.fail "ill-formed squash"
@@ -703,22 +547,34 @@ let solve_gen_elim_prop
     if not (hd1 `T.term_eq` (`gen_elim_prop))
     then T.fail "not a gen_elim_prop goal";
     T.apply_lemma (`gen_elim_prop_intro);
-    T.focus solve_gen_elim_dummy;
-    let norm () = T.norm [delta_attr [(`%__reduce__)]; delta_only [(`%GenElim?.a); (`%GenElim?.q); (`%GenElim?.post)]; iota] in
+    let norm () = T.norm [delta_attr [(`%__reduce__)]; zeta; iota] in
+    T.focus (fun _ -> norm (); T.trefl ());
     T.focus (fun _ -> norm (); T.trefl ());
     T.focus (fun _ -> norm (); T.trefl ());
     T.focus (fun _ -> norm (); T.trefl ())
   | _ -> T.fail "ill-formed squash"
 
+val gen_elim'
+  (#opened: _)
+  (p: vprop)
+  (i: gen_elim_i)
+  (a: Type0)
+  (q: Ghost.erased a -> Tot vprop)
+  (post: Ghost.erased a -> Tot prop)
+  (sq: squash (gen_elim_prop_placeholder p i a q post))
+  (_: unit)
+: STGhost (Ghost.erased a) opened p (fun x -> guard_vprop (q x)) (gen_elim_prop p i a q post) post
+
 val gen_elim
   (#opened: _)
   (#[@@@ framing_implicit] p: vprop)
+  (#[@@@ framing_implicit] i: gen_elim_i)
   (#[@@@ framing_implicit] a: Type0)
   (#[@@@ framing_implicit] q: Ghost.erased a -> Tot vprop)
   (#[@@@ framing_implicit] post: Ghost.erased a -> Tot prop)
-  (#[@@@ framing_implicit] sq: squash (gen_elim_prop_placeholder p a q post))
+  (#[@@@ framing_implicit] sq: squash (gen_elim_prop_placeholder p i a q post))
   (_: unit)
-: STGhostF (Ghost.erased a) opened p (fun x -> guard_vprop (q x)) ( T.with_tactic solve_gen_elim_prop (squash (gen_elim_prop p a q post))) post
+: STGhostF (Ghost.erased a) opened p (fun x -> guard_vprop (q x)) ( (T.with_tactic solve_gen_elim_prop) (squash (gen_elim_prop p i a q post))) post
 
 let solve_gen_elim_prop_placeholder
   ()
@@ -734,7 +590,8 @@ let solve_gen_elim_prop_placeholder
     then T.fail "not a gen_elim_prop_placeholder goal";
     T.apply_lemma (`gen_elim_prop_placeholder_intro);
     T.focus solve_gen_elim_dummy;
-    let norm () = T.norm [delta_attr [(`%__reduce__)]; delta_only [(`%GenElim?.a); (`%GenElim?.q); (`%GenElim?.post)]; iota] in
+    let norm () = T.norm [delta_attr [(`%__reduce__)]; zeta; iota] in
+    T.focus (fun _ -> norm (); T.trefl ());
     T.focus (fun _ -> norm (); T.trefl ());
     T.focus (fun _ -> norm (); T.trefl ());
     T.focus (fun _ -> norm (); T.trefl ());
