@@ -1126,6 +1126,7 @@ let is_reifiable_effect (env:env) (effect_lid:lident) : bool =
     let effect_lid = norm_eff_name env effect_lid in
     is_user_reifiable_effect env effect_lid
     || Ident.lid_equals effect_lid Const.effect_TAC_lid
+    || Ident.lid_equals effect_lid Const.effect_MetaTC_lid
 
 let is_reifiable_rc (env:env) (c:S.residual_comp) : bool =
     is_reifiable_effect env c.residual_effect

@@ -2593,19 +2593,20 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
         //AR: no non-extraction reification for layered effects,
         //      unless TAC
         //
-        let is_non_tac_layered_effect m =
+        let is_non_meta_layered_effect m =
           let norm_m = m |> Env.norm_eff_name cfg.tcenv in
           (not (Ident.lid_equals norm_m PC.effect_TAC_lid)) &&
+          (not (Ident.lid_equals norm_m PC.effect_MetaTC_lid)) &&
           norm_m |> Env.is_layered_effect cfg.tcenv in
 
         begin match (SS.compress t).n with
         | Tm_meta (_, Meta_monadic (m, _))
-          when m |> is_non_tac_layered_effect && not cfg.steps.for_extraction ->
+          when m |> is_non_meta_layered_effect && not cfg.steps.for_extraction ->
           fallback (BU.format1
                       "Meta_monadic for a non-TAC layered effect %s in non-extraction mode"
                       (Ident.string_of_lid m)) ()
         | Tm_meta (_, Meta_monadic_lift (msrc, mtgt, _))
-          when (is_non_tac_layered_effect msrc || is_non_tac_layered_effect mtgt) &&
+          when (is_non_meta_layered_effect msrc || is_non_meta_layered_effect mtgt) &&
                not cfg.steps.for_extraction ->
           fallback (BU.format2
                     "Meta_monadic_lift for a non-TAC layered effect %s ~> %s in non extraction mode"

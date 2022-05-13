@@ -755,7 +755,8 @@ let should_return env eopt lc =
       //      
       let c_eff_name = c |> U.comp_effect_name |> Env.norm_eff_name env in
       if is_pure_or_ghost_lcomp lc &&  //check that lc was pure or ghost
-         lid_equals c_eff_name C.effect_TAC_lid  //and c is TAC
+         (lid_equals c_eff_name C.effect_TAC_lid ||
+          lid_equals c_eff_name C.effect_MetaTC_lid) //and c is TAC or MetaTC
       then false  //then not effectful (i.e. return)
       else c_eff_name |> Env.is_layered_effect env
     else
