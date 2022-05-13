@@ -132,6 +132,32 @@ val ptr : Type0
 assume
 val pts_to0 (p: ptr) (v: nat) : vprop
 
+assume
+val write0 (p: ptr) (n: nat) : STT unit (exists_ (fun n' -> pts_to0 p n')) (fun _ -> pts_to0 p n)
+
+// This is fine
+let endure6 (p1 p2 p3 p4 p5 p6: ptr) : STT unit
+  (exists_ (fun v1 -> exists_ (fun v2 -> exists_ (fun v3 -> exists_ (fun v4 -> exists_ (fun v5 -> exists_ (fun v6 ->
+    pts_to0 p1 v1 `star`
+    pts_to0 p2 v2 `star`
+    pts_to0 p3 v3 `star`
+    pts_to0 p4 v4 `star`
+    pts_to0 p5 v5 `star`
+    pts_to0 p6 v6
+  )))))))
+  (fun _ -> exists_ (fun v1 -> exists_ (fun v2 -> exists_ (fun v3 -> exists_ (fun v4 -> exists_ (fun v5 -> exists_ (fun v6 ->
+    pts_to0 p1 v1 `star`
+    pts_to0 p2 v2 `star`
+    pts_to0 p3 v3 `star`
+    pts_to0 p4 v4 `star`
+    pts_to0 p5 v5 `star`
+    pts_to0 p6 v6
+  )))))))
+= let _ = gen_elim () in
+  write0 p2 18;
+  write0 p4 42;
+  return ()
+
 let endure_tuple3 (opened: _) (p1 p2 p3 p4 p5 p6: ptr) : STGhostT unit opened
   (exists_ (fun (res:dtuple2 nat (fun _ -> nat)) -> exists_ (fun (fres: dtuple2 nat (fun _ -> nat)) -> exists_ (fun (dres: dtuple2 nat (fun _ -> nat)) ->
     pts_to0 p1 (dfst res) `star`
@@ -272,20 +298,6 @@ let endure6_gen (opened: _) (p1 p2 p3 p4 p5 p6: ptr) : STGhostT unit opened
   )))))))
   (fun _ -> emp)
 = let _ = gen_elim_6_gen () in
-  admit_ ()
-
-// This is very slow and memory-consuming
-let endure6 (opened: _) (p1 p2 p3 p4 p5 p6: ptr) : STGhostT unit opened
-  (exists_ (fun v1 -> exists_ (fun v2 -> exists_ (fun v3 -> exists_ (fun v4 -> exists_ (fun v5 -> exists_ (fun v6 ->
-    pts_to0 p1 v1 `star`
-    pts_to0 p2 v2 `star`
-    pts_to0 p3 v3 `star`
-    pts_to0 p4 v4 `star`
-    pts_to0 p5 v5 `star`
-    pts_to0 p6 v6
-  )))))))
-  (fun _ -> emp)
-= let _ = gen_elim () in
   admit_ ()
 
 assume
