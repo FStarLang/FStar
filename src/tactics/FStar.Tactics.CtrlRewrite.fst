@@ -98,11 +98,16 @@ let __do_rewrite
     | None -> ret tm
     | Some (_, lcomp, g) ->
 
-    if not (TcComm.is_pure_or_ghost_lcomp lcomp) then 
+    if not (TcComm.is_pure_or_ghost_lcomp lcomp) then
       ret tm (* SHOULD THIS CHECK BE IN maybe_rewrite INSTEAD? *)
     else
-    let typ = lcomp.res_typ in
+    bind (
+      (* If this type is already a uvar, no need to generate one *)
+      if U.is_uvar lcomp.res_typ then ret lcomp.res_typ else
+      bind (new_uvar "do_rewrite.eq_ty" env (fst (U.type_u ())) (rangeof g0)) (fun x -> ret (fst x))
+      ) (fun typ ->
     bind (new_uvar "do_rewrite.rhs" env typ (rangeof g0)) (fun (ut, uvar_ut) ->
+
     mlog (fun () ->
        BU.print2 "do_rewrite: making equality\n\t%s ==\n\t%s\n"
          (Print.term_to_string tm) (Print.term_to_string ut)) (fun () ->
@@ -118,7 +123,7 @@ let __do_rewrite
        BU.print2 "rewrite_rec: succeeded rewriting\n\t%s to\n\t%s\n"
                    (Print.term_to_string tm)
                    (Print.term_to_string ut)) (fun () ->
-    ret ut)))))
+    ret ut))))))
   end
 
 (* If __do_rewrite fails with "SKIP" we do nothing *)
@@ -233,19 +238,19 @@ and on_subterms
     let rr = recurse env in (* recurse on current env *)
     let rec descend_binders orig accum_binders accum_flag env bs t rebuild =
         match bs with
-        | [] -> 
+        | [] ->
             bind (recurse env t) (fun (t, flag) ->
             match flag with
             | Abort -> ret (orig.n, flag) //if anything aborts, just return the original abs
-            | _ -> 
+            | _ ->
               let bs = List.rev accum_binders in
               ret (rebuild (SS.close_binders bs) (SS.close bs t),
                   par_combine (accum_flag, flag)))
         | b::bs ->
-            bind (recurse env b.binder_bv.sort) (fun (s, flag) -> 
+            bind (recurse env b.binder_bv.sort) (fun (s, flag) ->
             match flag with
             | Abort -> ret (orig.n, flag) //if anything aborts, just return the original abs
-            | _ -> 
+            | _ ->
               let bv = {b.binder_bv with sort = s} in
               let b = {b with binder_bv = bv} in
               let env = Env.push_binders env [b] in
@@ -265,17 +270,17 @@ and on_subterms
         descend_binders tm [] Continue env bs_orig t
                         (fun bs t -> Tm_abs(bs, t, k))
 
-      | Tm_refine (x, phi) -> 
+      | Tm_refine (x, phi) ->
         let bs, phi = SS.open_term [S.mk_binder x] phi in
         descend_binders tm [] Continue env bs phi
-                        (fun bs phi -> 
-                          let x = 
+                        (fun bs phi ->
+                          let x =
                             match bs with
                             | [x] -> x.binder_bv
                             | _ -> failwith "Impossible"
                           in
                           Tm_refine (x, phi))
-      
+
       (* Do nothing (FIXME) *)
       | Tm_arrow (bs, k) ->
         ret (tm.n, Continue)
