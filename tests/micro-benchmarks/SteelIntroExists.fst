@@ -129,6 +129,164 @@ module T = FStar.Tactics
 
 assume
 val ptr : Type0
+assume
+val pts_to0 (p: ptr) (v: nat) : vprop
+
+let endure_tuple3 (opened: _) (p1 p2 p3 p4 p5 p6: ptr) : STGhostT unit opened
+  (exists_ (fun (res:dtuple2 nat (fun _ -> nat)) -> exists_ (fun (fres: dtuple2 nat (fun _ -> nat)) -> exists_ (fun (dres: dtuple2 nat (fun _ -> nat)) ->
+    pts_to0 p1 (dfst res) `star`
+    pts_to0 p2 (dfst res) `star`
+    pts_to0 p3 (dfst fres) `star`
+    pts_to0 p4 (dsnd fres) `star`
+    pts_to0 p5 (dfst dres) `star`
+    pts_to0 p6 (dsnd dres)
+  ))))
+  (fun _ -> emp)
+= let _ = gen_elim () in
+  admit_ ()
+
+let endure_tuple2 (opened: _) (p1 p2 p3 p4 p5 p6: ptr) : STGhostT unit opened
+  (exists_ (fun (res:dtuple2 nat (fun _ -> dtuple2 nat (fun _ -> nat))) -> exists_ (fun (dres: dtuple2 nat (fun _ -> dtuple2 nat (fun _ -> nat))) ->
+    pts_to0 p1 (dfst res) `star`
+    pts_to0 p2 (dfst (dsnd res)) `star`
+    pts_to0 p3 (dsnd (dsnd res)) `star`
+    pts_to0 p4 (dfst dres) `star`
+    pts_to0 p5 (dfst (dsnd dres)) `star`
+    pts_to0 p6 (dsnd (dsnd dres))
+  )))
+  (fun _ -> emp)
+= let _ = gen_elim () in
+  admit_ ()
+
+let endure_tuple1 (opened: _) (p1 p2 p3 p4 p5 p6: ptr) : STGhostT unit opened
+  (exists_ (fun (res:dtuple2 nat (fun _ -> dtuple2 nat (fun _ -> dtuple2 nat (fun _ -> dtuple2 nat (fun _ -> dtuple2 nat (fun _ -> nat)))))) ->
+    pts_to0 p1 (dfst res) `star`
+    pts_to0 p2 (dfst (dsnd res)) `star`
+    pts_to0 p3 (dfst (dsnd (dsnd res))) `star`
+    pts_to0 p4 (dfst (dsnd (dsnd (dsnd res)))) `star`
+    pts_to0 p5 (dfst (dsnd (dsnd (dsnd (dsnd res))))) `star`
+    pts_to0 p6 (dsnd (dsnd (dsnd (dsnd (dsnd res)))))
+  ))
+  (fun _ -> emp)
+= let _ = gen_elim () in
+  admit_ ()
+
+let endure4 (opened: _) (p1 p2 p3 p4: ptr) : STGhostT unit opened
+  (exists_ (fun v1 -> exists_ (fun v2 -> exists_ (fun v3 -> exists_ (fun v4 ->
+    pts_to0 p1 v1 `star`
+    pts_to0 p2 v2 `star`
+    pts_to0 p3 v3 `star`
+    pts_to0 p4 v4
+  )))))
+  (fun _ -> emp)
+= let _ = gen_elim () in
+  admit_ ()
+
+let endure5 (opened: _) (p1 p2 p3 p4 p5: ptr) : STGhostT unit opened
+  (exists_ (fun v1 -> exists_ (fun v2 -> exists_ (fun v3 -> exists_ (fun v4 -> exists_ (fun v5 ->
+    pts_to0 p1 v1 `star`
+    pts_to0 p2 v2 `star`
+    pts_to0 p3 v3 `star`
+    pts_to0 p4 v4 `star`
+    pts_to0 p5 v5
+  ))))))
+  (fun _ -> emp)
+= let _ = gen_elim () in
+  admit_ ()
+
+let gen_elim_6_baseline (#opened: _) (#p1 #p2 #p3 #p4 #p5 #p6: ptr) () : STGhostT (Ghost.erased (dtuple2 nat (fun _ -> dtuple2 nat (fun _ -> dtuple2 nat (fun _ -> dtuple2 nat (fun _ -> dtuple2 nat (fun _ -> nat))))))) opened
+  (exists_ (fun v1 -> exists_ (fun v2 -> exists_ (fun v3 -> exists_ (fun v4 -> exists_ (fun v5 -> exists_ (fun v6 ->
+    pts_to0 p1 v1 `star`
+    pts_to0 p2 v2 `star`
+    pts_to0 p3 v3 `star`
+    pts_to0 p4 v4 `star`
+    pts_to0 p5 v5 `star`
+    pts_to0 p6 v6
+  )))))))
+  (fun res ->
+    pts_to0 p1 (dfst res) `star`
+    pts_to0 p2 (dfst (dsnd res)) `star`
+    pts_to0 p3 (dfst (dsnd (dsnd res))) `star`
+    pts_to0 p4 (dfst (dsnd (dsnd (dsnd res)))) `star`
+    pts_to0 p5 (dfst (dsnd (dsnd (dsnd (dsnd res))))) `star`
+    pts_to0 p6 (dsnd (dsnd (dsnd (dsnd (dsnd res)))))
+  )
+= let x1 = elim_exists () in
+  let x2 = elim_exists () in
+  let x3 = elim_exists () in
+  let x4 = elim_exists () in
+  let x5 = elim_exists () in
+  let x6 = elim_exists () in
+  let res = Ghost.hide (| Ghost.reveal x1, (| Ghost.reveal x2, (| Ghost.reveal x3, (| Ghost.reveal x4, (| Ghost.reveal x5, Ghost.reveal x6 |) |) |) |) |) in
+  res
+
+let endure6_baseline (opened: _) (p1 p2 p3 p4 p5 p6: ptr) : STGhostT unit opened
+  (exists_ (fun v1 -> exists_ (fun v2 -> exists_ (fun v3 -> exists_ (fun v4 -> exists_ (fun v5 -> exists_ (fun v6 ->
+    pts_to0 p1 v1 `star`
+    pts_to0 p2 v2 `star`
+    pts_to0 p3 v3 `star`
+    pts_to0 p4 v4 `star`
+    pts_to0 p5 v5 `star`
+    pts_to0 p6 v6
+  )))))))
+  (fun _ -> emp)
+= let _ = gen_elim_6_baseline () in
+  admit_ ()
+
+(* // Typechecking this admit() is slow
+let gen_elim_6_gen (#opened: _) (#t1: _) (#t2: t1 -> Type0) (#t3: (x1: t1) -> t2 x1 -> Type0) (#t4: (x1: t1) -> (x2: t2 x1) -> t3 x1 x2 -> Type0) (#t5: (x1: t1) -> (x2: t2 x1) -> (x3: t3 x1 x2) -> t4 x1 x2 x3 -> Type0) (#t6: (x1: t1) -> (x2: t2 x1) -> (x3: t3 x1 x2) -> (x4: t4 x1 x2 x3) -> t5 x1 x2 x3 x4 -> Type0) (#p: (x1: t1) -> (x2: t2 x1) -> (x3: t3 x1 x2) -> (x4: t4 x1 x2 x3) -> (x5: t5 x1 x2 x3 x4) -> t6 x1 x2 x3 x4 x5 -> vprop) (_: unit) : STGhostT (Ghost.erased (dtuple2 t1 (fun x1 -> dtuple2 (t2 x1) (fun x2 -> dtuple2 (t3 x1 x2) (fun x3 -> dtuple2 (t4 x1 x2 x3) (fun x4 -> dtuple2 (t5 x1 x2 x3 x4) (fun x5 -> t6 x1 x2 x3 x4 x5))))))) opened
+  (exists_ (fun v1 -> exists_ (fun v2 -> exists_ (fun v3 -> exists_ (fun v4 -> exists_ (fun v5 -> exists_ (fun v6 -> p v1 v2 v3 v4 v5 v6)))))))
+  (fun res -> p (dfst res) (dfst (dsnd res)) (dfst (dsnd (dsnd res))) (dfst (dsnd (dsnd (dsnd res)))) (dfst (dsnd (dsnd (dsnd (dsnd res))))) (dsnd (dsnd (dsnd (dsnd (dsnd res)))))
+  )
+= admit_ ()
+*)
+
+(* // Typechecking this combinator is very slow and memory-consuming
+let gen_elim_6_gen (#opened: _) (#t1: _) (#t2: t1 -> Type0) (#t3: (x1: t1) -> t2 x1 -> Type0) (#t4: (x1: t1) -> (x2: t2 x1) -> t3 x1 x2 -> Type0) (#t5: (x1: t1) -> (x2: t2 x1) -> (x3: t3 x1 x2) -> t4 x1 x2 x3 -> Type0) (#t6: (x1: t1) -> (x2: t2 x1) -> (x3: t3 x1 x2) -> (x4: t4 x1 x2 x3) -> t5 x1 x2 x3 x4 -> Type0) (#p: (x1: t1) -> (x2: t2 x1) -> (x3: t3 x1 x2) -> (x4: t4 x1 x2 x3) -> (x5: t5 x1 x2 x3 x4) -> t6 x1 x2 x3 x4 x5 -> vprop) (_: unit) : STGhostT (Ghost.erased (dtuple2 t1 (fun x1 -> dtuple2 (t2 x1) (fun x2 -> dtuple2 (t3 x1 x2) (fun x3 -> dtuple2 (t4 x1 x2 x3) (fun x4 -> dtuple2 (t5 x1 x2 x3 x4) (fun x5 -> t6 x1 x2 x3 x4 x5))))))) opened
+  (exists_ (fun v1 -> exists_ (fun v2 -> exists_ (fun v3 -> exists_ (fun v4 -> exists_ (fun v5 -> exists_ (fun v6 -> p v1 v2 v3 v4 v5 v6)))))))
+  (fun res -> p (dfst res) (dfst (dsnd res)) (dfst (dsnd (dsnd res))) (dfst (dsnd (dsnd (dsnd res)))) (dfst (dsnd (dsnd (dsnd (dsnd res))))) (dsnd (dsnd (dsnd (dsnd (dsnd res)))))
+  )
+= let x1 = elim_exists () in
+  let x2 = elim_exists () in
+  let x3 = elim_exists () in
+  let x4 = elim_exists () in
+  let x5 = elim_exists () in
+  let x6 = elim_exists () in
+  Ghost.hide (| x1, (| x2, (| x3, (| x4, (| x5, x6 |) |) |) |) |)
+*)
+
+// typechecking this assume is fairly slow
+assume val gen_elim_6_gen (#opened: _) (#t1: _) (#t2: t1 -> Type0) (#t3: (x1: t1) -> t2 x1 -> Type0) (#t4: (x1: t1) -> (x2: t2 x1) -> t3 x1 x2 -> Type0) (#t5: (x1: t1) -> (x2: t2 x1) -> (x3: t3 x1 x2) -> t4 x1 x2 x3 -> Type0) (#t6: (x1: t1) -> (x2: t2 x1) -> (x3: t3 x1 x2) -> (x4: t4 x1 x2 x3) -> t5 x1 x2 x3 x4 -> Type0) (#p: (x1: t1) -> (x2: t2 x1) -> (x3: t3 x1 x2) -> (x4: t4 x1 x2 x3) -> (x5: t5 x1 x2 x3 x4) -> t6 x1 x2 x3 x4 x5 -> vprop) (_: unit) : STGhostT (Ghost.erased (dtuple2 t1 (fun x1 -> dtuple2 (t2 x1) (fun x2 -> dtuple2 (t3 x1 x2) (fun x3 -> dtuple2 (t4 x1 x2 x3) (fun x4 -> dtuple2 (t5 x1 x2 x3 x4) (fun x5 -> t6 x1 x2 x3 x4 x5))))))) opened
+  (exists_ (fun v1 -> exists_ (fun v2 -> exists_ (fun v3 -> exists_ (fun v4 -> exists_ (fun v5 -> exists_ (fun v6 -> p v1 v2 v3 v4 v5 v6)))))))
+  (fun res -> p (dfst res) (dfst (dsnd res)) (dfst (dsnd (dsnd res))) (dfst (dsnd (dsnd (dsnd res)))) (dfst (dsnd (dsnd (dsnd (dsnd res))))) (dsnd (dsnd (dsnd (dsnd (dsnd res)))))
+  )
+
+let endure6_gen (opened: _) (p1 p2 p3 p4 p5 p6: ptr) : STGhostT unit opened
+  (exists_ (fun v1 -> exists_ (fun v2 -> exists_ (fun v3 -> exists_ (fun v4 -> exists_ (fun v5 -> exists_ (fun v6 ->
+    pts_to0 p1 v1 `star`
+    pts_to0 p2 v2 `star`
+    pts_to0 p3 v3 `star`
+    pts_to0 p4 v4 `star`
+    pts_to0 p5 v5 `star`
+    pts_to0 p6 v6
+  )))))))
+  (fun _ -> emp)
+= let _ = gen_elim_6_gen () in
+  admit_ ()
+
+// This is very slow and memory-consuming
+let endure6 (opened: _) (p1 p2 p3 p4 p5 p6: ptr) : STGhostT unit opened
+  (exists_ (fun v1 -> exists_ (fun v2 -> exists_ (fun v3 -> exists_ (fun v4 -> exists_ (fun v5 -> exists_ (fun v6 ->
+    pts_to0 p1 v1 `star`
+    pts_to0 p2 v2 `star`
+    pts_to0 p3 v3 `star`
+    pts_to0 p4 v4 `star`
+    pts_to0 p5 v5 `star`
+    pts_to0 p6 v6
+  )))))))
+  (fun _ -> emp)
+= let _ = gen_elim () in
+  admit_ ()
 
 assume
 val pts_to1 (p: ptr) (v: Ghost.erased nat) : vprop
