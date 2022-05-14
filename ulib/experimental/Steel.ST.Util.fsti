@@ -334,13 +334,21 @@ let rec compute_gen_elim_q
   | GEUnit u -> fun _ -> compute_gen_unit_elim_q u
   | GEStarL left right -> fun v -> compute_gen_elim_q left (coerce_with_trefl v) `star` compute_gen_unit_elim_q right
   | GEStarR left right -> fun v -> compute_gen_unit_elim_q left `star` compute_gen_elim_q right (coerce_with_trefl v)
-  | GEStar left right -> fun v -> compute_gen_elim_q left (fstp #(compute_gen_elim_a left) #(compute_gen_elim_a right) (coerce_with_trefl v)) `star` compute_gen_elim_q right (sndp #(compute_gen_elim_a left) #(compute_gen_elim_a right) (coerce_with_trefl v))
+  | GEStar left right ->
+    let tleft = compute_gen_elim_a left in
+    let tright = compute_gen_elim_a right in
+    fun v ->
+      let v' : (tleft & tright) = coerce_with_trefl v in
+      compute_gen_elim_q left (fstp #tleft #tright v') `star` compute_gen_elim_q right (sndp #tleft #tright v')
   | GEExistsNoAbs #a p -> p
   | GEExistsUnit #a p -> fun v -> compute_gen_unit_elim_q (p v)
-  | GEExists #a body -> fun v ->
+  | GEExists #a body ->
+    let dept = (fun x -> compute_gen_elim_a (body x)) in
+    fun v ->
+    let v' : dtuple2 a dept = coerce_with_trefl v in
     compute_gen_elim_q
-      (body (dfstp #a #(fun x -> compute_gen_elim_a (body x)) (coerce_with_trefl v)))
-      (dsndp #a #(fun x -> compute_gen_elim_a (body x)) (coerce_with_trefl v))
+      (body (dfstp #a #dept v'))
+      (dsndp #a #dept v')
 
 [@@__reduce__; __steel_reduce__]
 let rec compute_gen_elim_post
@@ -351,13 +359,21 @@ let rec compute_gen_elim_post
   | GEUnit u -> fun _ -> compute_gen_unit_elim_post u
   | GEStarL left right -> fun v -> compute_gen_elim_post left (coerce_with_trefl v) /\ compute_gen_unit_elim_post right
   | GEStarR left right -> fun v -> compute_gen_unit_elim_post left /\ compute_gen_elim_post right (coerce_with_trefl v)
-  | GEStar left right -> fun v -> compute_gen_elim_post left (fstp #(compute_gen_elim_a left) #(compute_gen_elim_a right) (coerce_with_trefl v)) /\ compute_gen_elim_post right (sndp #(compute_gen_elim_a left) #(compute_gen_elim_a right) (coerce_with_trefl v))
+  | GEStar left right ->
+    let tleft = compute_gen_elim_a left in
+    let tright = compute_gen_elim_a right in
+    fun v ->
+      let v' : (tleft & tright) = coerce_with_trefl v in
+      compute_gen_elim_post left (fstp #tleft #tright v') /\ compute_gen_elim_post right (sndp #tleft #tright v')
   | GEExistsNoAbs #a p -> fun _ -> True
   | GEExistsUnit #a p -> fun v -> compute_gen_unit_elim_post (p v)
-  | GEExists #a body -> fun v ->
+  | GEExists #a body ->
+    let dept = (fun x -> compute_gen_elim_a (body x)) in
+    fun v ->
+    let v' : dtuple2 a dept = coerce_with_trefl v in
     compute_gen_elim_post
-      (body (dfstp #a #(fun x -> compute_gen_elim_a (body x)) (coerce_with_trefl v)))
-      (dsndp #a #(fun x -> compute_gen_elim_a (body x)) (coerce_with_trefl v))
+      (body (dfstp #a #dept v'))
+      (dsndp #a #dept v')
 
 module T = FStar.Tactics
 
