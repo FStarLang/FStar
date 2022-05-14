@@ -10,9 +10,6 @@ type stlc_ty =
 let var = nat
 let index = nat
 
-assume
-val close (t:R.term) : R.term
-
 let tun = R.pack_ln R.Tv_Unknown
 
 noeq
@@ -106,59 +103,6 @@ type stlc_typing : stlc_env -> s_exp -> stlc_ty -> Type =
       stlc_typing g e1 (TArrow t t') ->
       stlc_typing g e2 t ->
       stlc_typing g (EApp e1 e2) t'
-
-module RT = Refl.Typing
-
-let rec elab_ty (t:stlc_ty) 
-  : R.term 
-  = let open R in
-    match t with
-    | TUnit -> 
-      R.pack_ln (R.Tv_FVar (R.pack_fv unit_lid))
-      
-    | TArrow t1 t2 ->
-      let t1 = elab_ty t1 in
-      let t2 = elab_ty t2 in
-
-      R.pack_ln 
-        (R.Tv_Arrow 
-          (RT.as_binder 0 t1)
-          (R.pack_comp (C_Total t2 [])))
-
-let make_bv (n:nat) (t:R.term) = R.({ bv_ppname = ""; bv_index = n; bv_sort = t})
-let bv_as_binder bv = R.pack_binder bv R.Q_Explicit []
-let bv_index_of_make_nv (n:nat) (t:R.term)
-  : Lemma (ensures RT.bv_index (R.pack_bv (make_bv n t)) == n)
-          [SMTPat (RT.bv_index (R.pack_bv (make_bv n t)))]
-  = admit()
-  
-let rec elab_exp (g:stlc_env) (e:s_exp)
-  : Tot R.term (decreases (size e))
-  = let open R in
-    match e with
-    | EUnit -> 
-      pack_ln (Tv_Const C_Unit)
-
-    | EBVar n -> 
-      let bv = R.pack_bv (make_bv n tun) in
-      R.pack_ln (Tv_BVar bv)
-      
-    | EVar n ->
-      // tun because type does not matter at a use site
-      let bv = R.pack_bv (make_bv n tun) in
-      R.pack_ln (Tv_Var bv)
-
-    | ELam t e ->
-      let x = fresh g in 
-      let g' = (x, t) :: g in
-      let t = elab_ty t in
-      let e = elab_exp g' (open_exp e x) in
-      R.pack_ln (Tv_Abs (RT.as_binder 0 t) (RT.close_term e x))
-             
-    | EApp e1 e2 ->
-      let e1 = elab_exp g e1 in
-      let e2 = elab_exp g e2 in
-      R.pack_ln (Tv_App e1 (e2, Q_Explicit))
 
 let new_hole (g:R.env)
   : T.Tac R.term
@@ -288,6 +232,57 @@ let infer_and_check (g:R.env)
     let (| e'', t', d |) = check g [] e' in
     (| e'', t' |)
 
+module RT = Refl.Typing
+
+let rec elab_ty (t:stlc_ty) 
+  : R.term 
+  = let open R in
+    match t with
+    | TUnit -> 
+      R.pack_ln (R.Tv_FVar (R.pack_fv unit_lid))
+      
+    | TArrow t1 t2 ->
+      let t1 = elab_ty t1 in
+      let t2 = elab_ty t2 in
+
+      R.pack_ln 
+        (R.Tv_Arrow 
+          (RT.as_binder 0 t1)
+          (R.pack_comp (C_Total t2 [])))
+
+let make_bv (n:nat) (t:R.term) = R.({ bv_ppname = ""; bv_index = n; bv_sort = t})
+let bv_as_binder bv = R.pack_binder bv R.Q_Explicit []
+let bv_index_of_make_nv (n:nat) (t:R.term)
+  : Lemma (ensures RT.bv_index (R.pack_bv (make_bv n t)) == n)
+          [SMTPat (RT.bv_index (R.pack_bv (make_bv n t)))]
+  = admit()
+  
+let rec elab_exp (e:s_exp)
+  : Tot R.term (decreases (size e))
+  = let open R in
+    match e with
+    | EUnit -> 
+      pack_ln (Tv_Const C_Unit)
+
+    | EBVar n -> 
+      let bv = R.pack_bv (make_bv n tun) in
+      R.pack_ln (Tv_BVar bv)
+      
+    | EVar n ->
+      // tun because type does not matter at a use site
+      let bv = R.pack_bv (make_bv n tun) in
+      R.pack_ln (Tv_Var bv)
+
+    | ELam t e ->
+      let t = elab_ty t in
+      let e = elab_exp e in
+      R.pack_ln (Tv_Abs (RT.as_binder 0 t) e)
+             
+    | EApp e1 e2 ->
+      let e1 = elab_exp e1 in
+      let e2 = elab_exp e2 in
+      R.pack_ln (Tv_App e1 (e2, Q_Explicit))
+
 let extend_env_l (g:R.env) (sg:stlc_env) = 
   L.fold_left (fun g (x, t) -> RT.extend_env g x (elab_ty t)) g sg
 
@@ -306,11 +301,31 @@ let binder_sort_lemma (x:R.var) (ty:R.term)
           [SMTPat (RT.binder_sort (RT.as_binder x ty))]
   = admit()          
 
+let elab_open_commute (e:s_exp) (x:var)
+  : Lemma (RT.open_term (elab_exp e) x == elab_exp (open_exp e x))
+          [SMTPat (RT.open_term (elab_exp e) x)]
+  = admit()
+
+let extend_env_cons (g:R.env)
+                    (sg:stlc_env)
+                    (x:var)
+                    (t:stlc_ty)
+   : Lemma 
+     (ensures (extend_env_l g ((x,t)::sg)) == RT.extend_env (extend_env_l g sg) x (elab_ty t))
+     [SMTPat (extend_env_l g ((x,t)::sg))]
+   = admit()
+
 //key lemma about STLC types
-let stlc_types_are_closed (ty:stlc_ty) (v:R.term)
+let stlc_types_are_closed1 (ty:stlc_ty) (v:R.term)
   : Lemma (RT.open_with (elab_ty ty) v == elab_ty ty)
           [SMTPat (RT.open_with (elab_ty ty) v)]
   = admit()
+
+let stlc_types_are_closed2 (ty:stlc_ty) (x:R.var)
+  : Lemma (RT.close_term (elab_ty ty) x == elab_ty ty)
+          [SMTPat (RT.close_term (elab_ty ty) x)]
+  = admit()
+
 
 let rec soundness (#sg:stlc_env) 
                   (#se:s_exp)
@@ -318,7 +333,7 @@ let rec soundness (#sg:stlc_env)
                   (dd:stlc_typing sg se st)
                   (g:R.env { forall x. None? (RT.lookup_bvar g x) } )
   : GTot (RT.typing (extend_env_l g sg)
-                    (elab_exp sg se)
+                    (elab_exp se)
                     (elab_ty st))
          (decreases dd)
   = match dd with
@@ -330,56 +345,46 @@ let rec soundness (#sg:stlc_env)
 
     | T_Lam _ t e t' x de ->
       let de : RT.typing (extend_env_l g ((x,t)::sg))
-                         (elab_exp ((x,t)::sg) (open_exp e x))
+                         (elab_exp (open_exp e x))
                          (elab_ty t')
             = soundness de g 
       in    
-      assume ((extend_env_l g ((x,t)::sg)) == RT.extend_env (extend_env_l g sg) x (elab_ty t)); //easy
-      assume (RT.close_term (elab_ty t') x == elab_ty t'); //A property of STLC type elaborations 
-      //opening and then elaborating, elaborating and then opening
-      assume ((elab_exp ((x,t)::sg) (open_exp e x)) == RT.open_term (elab_exp ((x,t)::sg) e) x);
       let de : RT.typing (RT.extend_env (extend_env_l g sg) x (elab_ty t))
-                         (elab_exp ((x,t)::sg) (open_exp e x))
+                         (elab_exp (open_exp e x))
                          (elab_ty t')
              = de
       in
       fresh_is_fresh sg;
       let dd
         : RT.typing (extend_env_l g sg)
-                    (R.pack_ln (R.Tv_Abs (RT.as_binder 0 (elab_ty t)) (elab_exp ((x,t)::sg) e)))
+                    (R.pack_ln (R.Tv_Abs (RT.as_binder 0 (elab_ty t)) (elab_exp e)))
                     (elab_ty (TArrow t t'))
         = RT.T_Abs (extend_env_l g sg)
                    x
-                   (elab_ty t) (elab_exp ((x,t)::sg) e) (elab_ty t') de
+                   (elab_ty t) 
+                   (elab_exp e)
+                   (elab_ty t')
+                   de
       in
-      calc (==) {
-       elab_exp sg (ELam t e);
-      == {}
-       R.pack_ln (R.Tv_Abs (RT.as_binder 0 (elab_ty t)) (RT.close_term (elab_exp ((x, t)::sg) (open_exp e x)) x)); 
-      == { //opening, elaborating, closing ... open/close cancel across the elab 
-           assume ((RT.close_term (elab_exp ((x, t)::sg) (open_exp e x)) x) == (elab_exp ((x,t)::sg) e))
-         }
-       R.pack_ln (R.Tv_Abs (RT.as_binder 0 (elab_ty t)) (elab_exp ((x, t)::sg) e));
-      };
       dd
-    
+
     | T_App _ e1 e2 t t' d1 d2 ->
       let dt1 
         : RT.typing (extend_env_l g sg)
-                    (elab_exp sg e1)
+                    (elab_exp e1)
                     (elab_ty (TArrow t t'))
         = soundness d1 g
       in
       let dt2
         : RT.typing (extend_env_l g sg)
-                    (elab_exp sg e2)
+                    (elab_exp e2)
                     (elab_ty t)
         = soundness d2 g
       in
       let dt :
         RT.typing (extend_env_l g sg)
-                  (elab_exp sg (EApp e1 e2))
-                  (RT.open_with (elab_ty t') (elab_exp sg e2))
+                  (elab_exp (EApp e1 e2))
+                  (RT.open_with (elab_ty t') (elab_exp e2))
         = RT.T_App _ _ _ _ _ dt1 dt2
       in
       dt
@@ -391,7 +396,7 @@ let soundness_lemma (sg:stlc_env)
   : Lemma
     (requires stlc_typing sg se st)
     (ensures  RT.typing (extend_env_l g sg)
-                        (elab_exp sg se)
+                        (elab_exp se)
                         (elab_ty st))
   = FStar.Squash.bind_squash 
       #(stlc_typing sg se st)
@@ -403,4 +408,4 @@ let main (g:R.env { forall x. None? (RT.lookup_bvar g x ) })
   : T.Tac (e:R.term & t:R.term { RT.typing g e t })
   = let (| src', src_ty |) = infer_and_check g src in
     soundness_lemma [] src' src_ty g;
-    (| elab_exp [] src', elab_ty src_ty |)
+    (| elab_exp src', elab_ty src_ty |)
