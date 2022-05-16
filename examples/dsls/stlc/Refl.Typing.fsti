@@ -7,6 +7,15 @@ val lookup_fvar (e:env) (x:fv) : option term
 
 val extend_env (e:env) (x:var) (ty:term) : env
 
+let lookup_bvar_extend_env (g:env) (x y:var) (ty:term)
+  : Lemma 
+    (ensures (
+           if x = y
+           then lookup_bvar (extend_env g x ty) y == Some ty
+           else lookup_bvar (extend_env g x ty) y == lookup_bvar g y))
+    [SMTPat (lookup_bvar (extend_env g x ty) y)]
+  = admit()
+
 //replace BV 0 in t with v
 val open_with (t:term) (v:term) : term
 val open_term (t:term) (v:var) : term
@@ -21,13 +30,28 @@ let as_binder (x:var) (ty:term)
       []
 
 let bv_index (x:bv) : int = (inspect_bv x).bv_index
-  
-let unit_exp = pack_ln (Tv_Const C_Unit)
-let unit_ty = pack_ln (Tv_FVar (pack_fv unit_lid))
+
+let make_bv (n:nat) (t:term) = { bv_ppname = "_"; bv_index = n; bv_sort = t}
+
+let bv_as_binder bv = pack_binder bv Q_Explicit []
+
+let bv_index_of_make_bv (n:nat) (t:term)
+  : Lemma (ensures bv_index (pack_bv (make_bv n t)) == n)
+          [SMTPat (bv_index (pack_bv (make_bv n t)))]
+  = admit()
+
 let binder_sort (b:binder) =
   let bv, _ = inspect_binder b in 
   (inspect_bv bv).bv_sort
-    
+
+let binder_sort_lemma (x:var) (ty:term)
+  : Lemma (binder_sort (as_binder x ty) == ty)
+          [SMTPat (binder_sort (as_binder x ty))]
+  = admit()          
+
+let unit_exp = pack_ln (Tv_Const C_Unit)
+let unit_ty = pack_ln (Tv_FVar (pack_fv unit_lid))
+
 noeq
 type typing : env -> term -> term -> Type0 =
   | T_Var : 

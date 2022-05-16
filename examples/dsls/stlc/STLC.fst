@@ -28,7 +28,18 @@ let rec size (e:stlc_exp 'a)
     | EVar _ -> 1
     | ELam _ e -> 1 + size e
     | EApp e1 e2 -> 1 + size e1 + size e2
-    
+
+let rec ln' (e:stlc_exp 'a) (n:int)
+  : bool
+  = match e with
+    | EUnit
+    | EVar _ -> true
+    | EBVar m -> m <= n
+    | ELam _ e -> ln' e (n + 1)
+    | EApp e1 e2 -> ln' e1 n && ln' e2 n
+
+let ln e = ln' e (-1)
+
 let rec open_exp' (e:stlc_exp 'a) (v:var) (n:index)
   : e':stlc_exp 'a { size e == size e'}
   = match e with
@@ -50,12 +61,51 @@ let rec close_exp' (e:stlc_exp 'a) (v:var) (n:nat)
 let open_exp e v = open_exp' e v 0
 let close_exp e v = close_exp' e v 0
 
+let rec open_close' (e:stlc_exp 'a) (x:var) (n:nat { ln' e (n - 1) })
+  : Lemma (open_exp' (close_exp' e x n) x n == e)
+  = match e with
+    | EUnit -> ()
+    | EVar _ -> ()
+    | EBVar m -> ()
+    | ELam _ e -> open_close' e x (n + 1)
+    | EApp e1 e2 -> 
+      open_close' e1 x n; 
+      open_close' e2 x n
+
 let open_close (e:stlc_exp 'a) (x:var)
-  : Lemma (open_exp (close_exp e x) x == e)
-          [SMTPat (open_exp (close_exp e x) x)]
-  = admit()
-  
-let s_exp = stlc_exp stlc_ty
+  : Lemma 
+    (requires ln e)
+    (ensures open_exp (close_exp e x) x == e)
+    [SMTPat (open_exp (close_exp e x) x)]
+  = open_close' e x 0
+
+let rec open_exp_ln (e:stlc_exp 'a) (v:var) (n:index) (m:int)
+  : Lemma 
+    (requires ln' e n /\
+              m == n - 1)
+    (ensures ln' (open_exp' e v n) m)
+    [SMTPat (ln' e n);
+     SMTPat (ln' (open_exp' e v n) m)]
+  = match e with
+    | EUnit -> ()
+    | EVar _ -> ()
+    | EBVar m -> ()
+    | ELam _ e -> open_exp_ln e v (n + 1) (m + 1)
+    | EApp e1 e2 -> open_exp_ln e1 v n m; open_exp_ln e2 v n m
+
+let rec close_exp_ln (e:stlc_exp 'a) (v:var) (n:nat)
+  : Lemma 
+    (requires ln' e (n - 1))
+    (ensures ln' (close_exp' e v n) n)
+    [SMTPat (ln' (close_exp' e v n) n)]
+  = match e with
+    | EUnit -> ()
+    | EVar _ -> ()
+    | EBVar m -> ()
+    | ELam _ e -> close_exp_ln e v (n + 1)
+    | EApp e1 e2 -> close_exp_ln e1 v n; close_exp_ln e2 v n
+    
+let s_exp = e:stlc_exp stlc_ty
 
 let stlc_env = list (var & stlc_ty)
 
@@ -65,13 +115,45 @@ let lookup (e:list (var & 'a)) (x:var)
 
 let max (n1 n2:nat) = if n1 < n2 then n2 else n1
 
-let fresh (e:list (var & 'a))
+let rec fresh (e:list (var & 'a))
   : var
-  = L.fold_right (fun (n, _) v -> max v n) e 0 + 1
+  = match e with
+    | [] -> 0
+    | hd :: tl -> 
+      max (fresh tl) (fst hd) + 1
+
+let rec fresh_not_mem (e:list (var & 'a)) (elt: (var & 'a))
+  : Lemma (ensures L.memP elt e ==> fresh e > fst elt)
+  = match e with
+    | [] -> ()
+    | hd :: tl -> fresh_not_mem tl elt
+  
+let rec lookup_mem (e:list (var & 'a)) (x:var)
+  : Lemma
+    (requires Some? (lookup e x))
+    (ensures exists elt. L.memP elt e /\ fst elt == x)
+  = match e with
+    | [] -> ()
+    | hd :: tl -> 
+      match lookup tl x with
+      | None -> assert (L.memP hd e)
+      | _ -> 
+        lookup_mem tl x;
+        eliminate exists elt. L.memP elt tl /\ fst elt == x
+        returns _
+        with _ . ( 
+          introduce exists elt. L.memP elt e /\ fst elt == x
+          with elt
+          and ()
+        )
 
 let fresh_is_fresh (e:list (var & 'a))
   : Lemma (None? (lookup e (fresh e)))
-  = admit()
+  =  match lookup e (fresh e) with
+     | None -> ()
+     | Some _ ->
+       lookup_mem e (fresh e);
+       FStar.Classical.forall_intro (fresh_not_mem e)
   
 [@@erasable]
 noeq
@@ -110,35 +192,33 @@ let new_hole (g:R.env)
     
 let rec infer (g:R.env)
               (sg:list (var & R.term))
-              (e:stlc_exp unit)
-  : T.Tac (stlc_exp R.term & R.term)
+              (e:stlc_exp unit { ln e })
+  : T.Tac (e:stlc_exp R.term { ln e } & R.term)
   = match e with
     | EUnit ->
-      EUnit, `TUnit
+      (| EUnit, `TUnit |)
 
-    | EBVar _ -> 
-      T.fail "Locally nameless"
-      
+
     | EVar x ->
       begin
       match lookup sg x with
       | None -> T.fail "Unbound variable"
-      | Some ht -> EVar x, ht
+      | Some ht -> (| EVar x, ht |)
       end
 
     | ELam _ e ->
       let t0 = new_hole g in
       let x = fresh sg in
-      let e, t = infer g ((x, t0) :: sg) (open_exp e x) in
-      ELam t e, `(TArrow (`#(t0)) (`#(t)))
+      let (| e, t |) = infer g ((x, t0) :: sg) (open_exp e x) in
+      (| ELam t (close_exp e x), `(TArrow (`#(t0)) (`#(t))) |)
 
     | EApp e1 e2 ->
-      let e1, t1 = infer g sg e1 in
-      let e2, t2 = infer g sg e2 in
+      let (| e1, t1 |) = infer g sg e1 in
+      let (| e2, t2 |) = infer g sg e2 in
       let res = new_hole g in
       let ht = (`TArrow (`#(t2)) (`#(res))) in
       if T.unify_env g t1 ht
-      then EApp e1 e2, res
+      then (| EApp e1 e2, res |)
       else T.fail ("Expected arrow type " ^ T.term_to_string res ^ 
                    " Got " ^ T.term_to_string t1)
 
@@ -182,8 +262,8 @@ let rec read_back (g:R.env) (t:R.term)
   
 let rec check (g:R.env)
               (sg:list (var & stlc_ty))
-              (e:stlc_exp R.term)
-  : T.Tac (e':s_exp &
+              (e:stlc_exp R.term { ln e })
+  : T.Tac (e':s_exp { ln e' } &
            t':stlc_ty &
            stlc_typing sg e' t')
   = match e with
@@ -191,9 +271,6 @@ let rec check (g:R.env)
       let d = T_Unit sg in
       (| EUnit, TUnit, d |)
       
-    | EBVar _ -> 
-      T.fail "Locally nameless"
-
     | EVar n ->
       begin
       match lookup sg n with
@@ -225,10 +302,10 @@ let rec check (g:R.env)
         T.fail "Inference went wrong"
 
 let infer_and_check (g:R.env)
-                    (e:stlc_exp unit)
-  : T.Tac (e':s_exp &
+                    (e:stlc_exp unit { ln e })
+  : T.Tac (e':s_exp { ln e' } &
            t :stlc_ty { stlc_typing [] e' t })
-  = let e', _ = infer g [] e in
+  = let (| e', _ |) = infer g [] e in
     let (| e'', t', d |) = check g [] e' in
     (| e'', t' |)
 
@@ -249,13 +326,6 @@ let rec elab_ty (t:stlc_ty)
         (R.Tv_Arrow 
           (RT.as_binder 0 t1)
           (R.pack_comp (C_Total t2 [])))
-
-let make_bv (n:nat) (t:R.term) = R.({ bv_ppname = ""; bv_index = n; bv_sort = t})
-let bv_as_binder bv = R.pack_binder bv R.Q_Explicit []
-let bv_index_of_make_nv (n:nat) (t:R.term)
-  : Lemma (ensures RT.bv_index (R.pack_bv (make_bv n t)) == n)
-          [SMTPat (RT.bv_index (R.pack_bv (make_bv n t)))]
-  = admit()
   
 let rec elab_exp (e:s_exp)
   : Tot R.term (decreases (size e))
@@ -265,12 +335,12 @@ let rec elab_exp (e:s_exp)
       pack_ln (Tv_Const C_Unit)
 
     | EBVar n -> 
-      let bv = R.pack_bv (make_bv n tun) in
+      let bv = R.pack_bv (RT.make_bv n tun) in
       R.pack_ln (Tv_BVar bv)
       
     | EVar n ->
       // tun because type does not matter at a use site
-      let bv = R.pack_bv (make_bv n tun) in
+      let bv = R.pack_bv (RT.make_bv n tun) in
       R.pack_ln (Tv_Var bv)
 
     | ELam t e ->
@@ -284,36 +354,25 @@ let rec elab_exp (e:s_exp)
       R.pack_ln (Tv_App e1 (e2, Q_Explicit))
 
 let extend_env_l (g:R.env) (sg:stlc_env) = 
-  L.fold_left (fun g (x, t) -> RT.extend_env g x (elab_ty t)) g sg
-
-let extend_env_l_lookup_bvar (g:R.env) (sg:stlc_env) (x:var)
+  L.fold_right (fun (x, t) g -> RT.extend_env g x (elab_ty t)) sg g
+  
+let rec extend_env_l_lookup_bvar (g:R.env) (sg:stlc_env) (x:var)
   : Lemma 
     (requires (forall x. RT.lookup_bvar g x == None))
     (ensures (
       match lookup sg x with
       | Some t -> RT.lookup_bvar (extend_env_l g sg) x == Some (elab_ty t)
       | None -> RT.lookup_bvar (extend_env_l g sg) x == None))
+    (decreases sg)
     [SMTPat (RT.lookup_bvar (extend_env_l g sg) x)]
-  = admit()
-
-let binder_sort_lemma (x:R.var) (ty:R.term)
-  : Lemma (RT.binder_sort (RT.as_binder x ty) == ty)
-          [SMTPat (RT.binder_sort (RT.as_binder x ty))]
-  = admit()          
+  = match sg with
+    | [] -> ()
+    | hd :: tl -> extend_env_l_lookup_bvar g tl x
 
 let elab_open_commute (e:s_exp) (x:var)
   : Lemma (RT.open_term (elab_exp e) x == elab_exp (open_exp e x))
           [SMTPat (RT.open_term (elab_exp e) x)]
   = admit()
-
-let extend_env_cons (g:R.env)
-                    (sg:stlc_env)
-                    (x:var)
-                    (t:stlc_ty)
-   : Lemma 
-     (ensures (extend_env_l g ((x,t)::sg)) == RT.extend_env (extend_env_l g sg) x (elab_ty t))
-     [SMTPat (extend_env_l g ((x,t)::sg))]
-   = admit()
 
 //key lemma about STLC types
 let stlc_types_are_closed1 (ty:stlc_ty) (v:R.term)
@@ -325,7 +384,6 @@ let stlc_types_are_closed2 (ty:stlc_ty) (x:R.var)
   : Lemma (RT.close_term (elab_ty ty) x == elab_ty ty)
           [SMTPat (RT.close_term (elab_ty ty) x)]
   = admit()
-
 
 let rec soundness (#sg:stlc_env) 
                   (#se:s_exp)
@@ -341,7 +399,7 @@ let rec soundness (#sg:stlc_env)
       RT.T_Const _
 
     | T_Var _ x ->
-      RT.T_Var _ (R.pack_bv (make_bv x tun))
+      RT.T_Var _ (R.pack_bv (RT.make_bv x tun))
 
     | T_Lam _ t e t' x de ->
       let de : RT.typing (extend_env_l g ((x,t)::sg))
@@ -406,6 +464,9 @@ let soundness_lemma (sg:stlc_env)
 let main (g:R.env { forall x. None? (RT.lookup_bvar g x ) })
          (src:stlc_exp unit)
   : T.Tac (e:R.term & t:R.term { RT.typing g e t })
-  = let (| src', src_ty |) = infer_and_check g src in
-    soundness_lemma [] src' src_ty g;
-    (| elab_exp src', elab_ty src_ty |)
+  = if ln src
+    then 
+      let (| src', src_ty |) = infer_and_check g src in
+      soundness_lemma [] src' src_ty g;
+      (| elab_exp src', elab_ty src_ty |)
+    else T.fail "Not locally nameless"
