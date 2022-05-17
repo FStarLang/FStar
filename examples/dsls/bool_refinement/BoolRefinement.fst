@@ -250,10 +250,32 @@ and src_ty_ok : src_env -> src_ty -> Type =
                 src_ty_ok g t ->
                 src_ty_ok g t' ->                
                 src_ty_ok g (TArrow t t')
-  | OK_Refine : g:src_env ->
+  | OK_TRefine: g:src_env ->
                 e:src_exp ->
                 src_typing [] e (TArrow TBool TBool) ->
                 src_ty_ok g (TRefineBool e)
+
+let s_height #g #t0 #t1 (d:sub_typing g t0 t1)
+  : GTot nat
+  = 1
+  
+let rec height #g #e #t (d:src_typing g e t)
+  : GTot nat (decreases d)
+  = match d with
+    | T_Bool _ _ -> 1
+    | T_Var _ _ -> 1
+    | T_Lam _ _ _ _ _ ty_ok body -> max (height body) (t_height ty_ok) + 1
+    | T_App _ _ _ _ _ _  tl tr ts -> max (max (height tl) (height tr)) (s_height ts) + 1
+    | T_If _ _ _ _ _ _ _ tb tl tr sl sr ->
+      max (max (height tl) (height tr))
+          (max (s_height sl) (s_height sr)) + 1
+    
+and t_height (#g:src_env) (#t:src_ty) (d:src_ty_ok g t)    
+  : GTot nat (decreases d)
+  = match d with
+    | OK_TBool _ -> 1
+    | OK_TArrow _ _ _ d0 d1 -> max (t_height d0) (t_height d1) + 1
+    | OK_TRefine _ _ d -> height d + 1
 
 let check_sub_typing (g:R.env) 
                      (sg:src_env)
@@ -337,11 +359,20 @@ and check_ty (g:R.env)
     | TRefineBool e ->
       let (| e, te, de |) = check g [] e in
       match te with
-      | TArrow TBool TBool -> (| TRefineBool e, OK_Refine _ _ de |)
+      | TArrow TBool TBool -> (| TRefineBool e, OK_TRefine _ _ de |)
       | _ -> T.fail "Ill-typed refinement"
   
 
 module RT = Refl.Typing
+
+
+let b2t_lid : R.name = ["Prims"; "b2t"]
+let b2t_fv : R.fv = R.pack_fv b2t_lid
+
+let r_b2t (t:R.term) 
+  : R.term 
+  = R.(pack_ln (Tv_App (pack_ln (Tv_FVar b2t_fv)) (t, Q_Explicit)))
+  
 
 let rec elab_exp (e:src_exp)
   : Tot R.term
@@ -396,7 +427,7 @@ and elab_ty (t:src_ty)
     | TRefineBool e ->
       let e = elab_exp e in
       let bv = R.pack_bv (RT.make_bv 0 RT.bool_ty) in
-      let refinement = R.pack_ln (Tv_App e (R.pack_ln (Tv_BVar bv), Q_Explicit)) in
+      let refinement = r_b2t (R.pack_ln (Tv_App e (R.pack_ln (Tv_BVar bv), Q_Explicit))) in
       R.pack_ln (Tv_Refine bv refinement)
 
 module F = FStar.Reflection.Formula
@@ -440,7 +471,7 @@ let elab_open_commute (e:src_exp) (x:var)
 //key lemma about STLC types
 let src_types_are_closed1 (ty:src_ty) (v:R.term)
   : Lemma (RT.open_with (elab_ty ty) v == elab_ty ty)
-//          [SMTPat (RT.open_with (elab_ty ty) v)]
+          [SMTPat (RT.open_with (elab_ty ty) v)]
   = admit()
 
 let src_types_are_closed2 (ty:src_ty) (x:R.var)
@@ -464,6 +495,10 @@ let fstar_top_env =
     forall x. None? (RT.lookup_bvar g x )
   }
 
+let b2t_typing (g:fstar_env) (t:R.term) (dt:RT.typing g t RT.bool_ty)
+  : RT.typing g (r_b2t t) RT.tm_type
+  = admit()
+
 let extend_env_l_lookup_fvar (g:R.env) (sg:src_env) (fv:R.fv)
   : Lemma 
     (ensures
@@ -477,18 +512,46 @@ let src_ty_ok_weakening (sg:src_env)
                         (b:binding)
                         (t:src_ty)
                         (d:src_ty_ok sg t)
-  : GTot (src_ty_ok ((x, b)::sg) t)
+  : GTot (d':src_ty_ok ((x, b)::sg) t { t_height d' == t_height d })
   = admit()
-                        
+
+let src_typing_weakening (sg:src_env) 
+                         (x:var { None? (lookup sg x) })
+                         (b:binding)
+                         (e:src_exp)
+                         (t:src_ty)                         
+                         (d:src_typing sg e t)
+  : GTot (d':src_typing ((x, b)::sg) e t { height d == height d' })
+  = admit()
+
+let src_typing_weakening_l (sg:src_env) 
+                           (sg':src_env {  //need a stronger refinement here
+                                 forall x. Some? (lookup sg' x) ==> None? (lookup sg x)
+                           })
+                           (e:src_exp)
+                           (t:src_ty)                         
+                           (d:src_typing sg e t)
+  : GTot (d':src_typing L.(sg' @ sg) e t { height d == height d' })
+  = admit()
+
+let open_with_fvar_id (fv:R.fv) (x:R.term)
+  : Lemma (RT.open_with (R.pack_ln (R.Tv_FVar fv)) x == (R.pack_ln (R.Tv_FVar fv)))
+          [SMTPat (RT.open_with (R.pack_ln (R.Tv_FVar fv)) x)]
+  = admit()
+
+let subtyping_soundness (sg:src_env) (t0 t1:src_ty) (ds:sub_typing sg t0 t1) (g:fstar_top_env)
+  : GTot (RT.sub_typing (extend_env_l g sg) (elab_ty t0) (elab_ty t1))
+  = admit()
+  
 let rec soundness (#sg:src_env) 
-                  (#se:src_exp)
+                  (#se:src_exp { ln se })
                   (#st:src_ty)
                   (dd:src_typing sg se st)
                   (g:fstar_top_env)
   : GTot (RT.typing (extend_env_l g sg)
                     (elab_exp se)
                     (elab_ty st))
-         (decreases dd)
+         (decreases (height dd))
   = match dd with
     | T_Bool _ true ->
       RT.T_Const _ _ _ RT.CT_True
@@ -528,28 +591,7 @@ let rec soundness (#sg:src_env)
       in
       dd
 
-    | _ -> admit()
-
-and src_ty_ok_soundness (g:fstar_top_env)
-                        (sg:src_env)
-                        (t:src_ty)
-                        (dt:src_ty_ok sg t)
- : GTot (RT.typing (extend_env_l g sg) (elab_ty t) RT.tm_type)
-        (decreases t)
- = match dt with
-   | OK_TBool _ -> RT.T_FVar _ RT.bool_fv
-   | OK_TArrow _ t1 t2 ok_t1 ok_t2 ->
-     let t1_ok = src_ty_ok_soundness g sg _ ok_t1 in
-     let x = fresh sg in
-     fresh_is_fresh sg;
-     let t2_ok = src_ty_ok_soundness g ((x, Inl t1)::sg) _ (src_ty_ok_weakening _ _ _ _ ok_t2) in
-     RT.T_Arrow _ x (elab_ty t1) (elab_ty t2) t1_ok t2_ok
-     
-   | _ -> admit()
-
-
-
-    | T_App _ e1 e2 t t' d1 d2 ->
+    | T_App _ e1 e2 t t' t0 d1 d2 st ->
       let dt1 
         : RT.typing (extend_env_l g sg)
                     (elab_exp e1)
@@ -559,37 +601,104 @@ and src_ty_ok_soundness (g:fstar_top_env)
       let dt2
         : RT.typing (extend_env_l g sg)
                     (elab_exp e2)
-                    (elab_ty t)
+                    (elab_ty t0)
         = soundness d2 g
       in
-      let dt :
-        RT.typing (extend_env_l g sg)
-                  (elab_exp (EApp e1 e2))
-                  (RT.open_with (elab_ty t') (elab_exp e2))
-        = RT.T_App _ _ _ _ _ dt1 dt2
+      let st
+        : RT.sub_typing (extend_env_l g sg) (elab_ty t0) (elab_ty t)
+        = subtyping_soundness _ _ _ st g
       in
-      dt
+      let dt2
+        : RT.typing (extend_env_l g sg)
+                    (elab_exp e2)
+                    (elab_ty t)
+        = RT.T_Sub _ _ _ _ dt2 st
+      in
+      RT.T_App _ _ _ _ _ dt1 dt2
 
-let soundness_lemma (sg:stlc_env) 
-                    (se:s_exp)
-                    (st:stlc_ty)
-                    (g:R.env { forall x. None? (RT.lookup_bvar g x ) })                   
+    | _ -> admit()
+
+and src_ty_ok_soundness (g:fstar_top_env)
+                        (sg:src_env)
+                        (t:src_ty { ln_ty t })
+                        (dt:src_ty_ok sg t)
+ : GTot (RT.typing (extend_env_l g sg) (elab_ty t) RT.tm_type)
+        (decreases (t_height dt))
+ = match dt with
+   | OK_TBool _ ->
+     RT.T_FVar _ RT.bool_fv
+     
+   | OK_TArrow _ t1 t2 ok_t1 ok_t2 ->
+     let t1_ok = src_ty_ok_soundness g sg _ ok_t1 in
+     let x = fresh sg in
+     fresh_is_fresh sg;
+     let t2_ok = src_ty_ok_soundness g ((x, Inl t1)::sg) _ (src_ty_ok_weakening _ _ _ _ ok_t2) in
+     RT.T_Arrow _ x (elab_ty t1) (elab_ty t2) t1_ok t2_ok
+     
+   | OK_TRefine _ e de ->
+     let x = fresh sg in
+     fresh_is_fresh sg;
+     let sg' = ((fresh sg, Inl TBool)::sg) in
+     let de = src_typing_weakening_l [] sg' _ _ de in
+     let de : RT.typing (RT.extend_env (extend_env_l g sg) x RT.bool_ty)
+                        (elab_exp e)
+                        (elab_ty (TArrow TBool TBool)) = soundness de g in
+     let arg_x = R.pack_ln (R.Tv_Var (R.pack_bv (RT.make_bv x RT.bool_ty))) in
+     let arg_x_typing
+       : RT.typing (RT.extend_env (extend_env_l g sg) x RT.bool_ty)
+                   arg_x
+                   RT.bool_ty
+       = RT.T_Var _ (R.pack_bv (RT.make_bv x RT.bool_ty))
+     in
+     let refinement = R.pack_ln (R.Tv_App (elab_exp e) (arg_x, R.Q_Explicit)) in
+     let dr : RT.typing (RT.extend_env (extend_env_l g sg) x RT.bool_ty)
+                        refinement
+                        RT.bool_ty
+            = RT.T_App (RT.extend_env (extend_env_l g sg) x RT.bool_ty)
+                       (elab_exp e)
+                       (arg_x)
+                       (RT.as_binder 0 RT.bool_ty)
+                       RT.bool_ty
+                       de
+                       arg_x_typing
+     in
+     let dr : RT.typing (RT.extend_env (extend_env_l g sg) x RT.bool_ty)
+                        (r_b2t refinement)
+                        RT.tm_type
+            = b2t_typing _ _ dr
+     in
+     let arg_bv = R.pack_ln (R.Tv_BVar (R.pack_bv (RT.make_bv 0 RT.bool_ty))) in     
+     let refinement' = r_b2t (R.pack_ln (R.Tv_App (elab_exp e) (arg_bv, R.Q_Explicit))) in
+     assert (R.pack_ln (R.Tv_Refine (R.pack_bv (RT.make_bv 0 RT.bool_ty)) refinement') ==
+             elab_ty t);
+     //need a spec for RT.open_term
+     assume (RT.open_term refinement' x == r_b2t refinement);
+     let bool_typing
+       : RT.typing (extend_env_l g sg) RT.bool_ty RT.tm_type 
+       = RT.T_FVar _ RT.bool_fv
+     in
+     RT.T_Refine (extend_env_l g sg) x RT.bool_ty refinement' bool_typing dr
+
+let soundness_lemma (sg:src_env) 
+                    (se:src_exp { ln se })
+                    (st:src_ty)
+                    (g:fstar_top_env)
   : Lemma
-    (requires stlc_typing sg se st)
+    (requires src_typing sg se st)
     (ensures  RT.typing (extend_env_l g sg)
                         (elab_exp se)
                         (elab_ty st))
   = FStar.Squash.bind_squash 
-      #(stlc_typing sg se st)
+      #(src_typing sg se st)
       ()
       (fun dd -> FStar.Squash.return_squash (soundness dd g))
 
-let main (g:R.env { forall x. None? (RT.lookup_bvar g x ) })
-         (src:stlc_exp unit)
+let main (g:fstar_top_env)
+         (src:src_exp)
   : T.Tac (e:R.term & t:R.term { RT.typing g e t })
   = if ln src
     then 
-      let (| src', src_ty |) = infer_and_check g src in
+      let (| src', src_ty, _ |) = check g [] src in
       soundness_lemma [] src' src_ty g;
       (| elab_exp src', elab_ty src_ty |)
     else T.fail "Not locally nameless"

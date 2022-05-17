@@ -65,6 +65,7 @@ type constant_typing: vconst -> term -> Type0 =
   | CT_True: constant_typing C_True bool_ty
   | CT_False: constant_typing C_False bool_ty  
   
+
 noeq
 type typing : env -> term -> term -> Type0 =
   | T_Var : 
@@ -115,4 +116,27 @@ type typing : env -> term -> term -> Type0 =
      typing g t1 tm_type ->
      typing (extend_env g x t1) (open_term t2 x) tm_type ->
      typing g (pack_ln (Tv_Arrow (as_binder 0 t1) (mk_total t2))) tm_type
-     
+
+  | T_Refine:
+     g:env ->
+     x:var { None? (lookup_bvar g x) } ->     
+     t:term ->
+     e:term ->
+     typing g t tm_type ->
+     typing (extend_env g x t) (open_term e x) tm_type ->
+     typing g (pack_ln (Tv_Refine (pack_bv (make_bv 0 t)) e)) tm_type
+
+  | T_Sub:
+     g:env ->
+     e:term ->
+     t:term ->
+     t':term ->
+     typing g e t ->
+     sub_typing g t t' ->
+     typing g e t'
+    
+and sub_typing : env -> term -> term -> Type0 =
+  | ST_Refl: 
+      g:env ->
+      t:term ->
+      sub_typing g t t
