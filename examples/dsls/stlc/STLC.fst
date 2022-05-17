@@ -2,6 +2,7 @@ module STLC
 module T = FStar.Tactics
 module R = FStar.Reflection
 module L = FStar.List.Tot
+module RT = Refl.Typing
 
 type stlc_ty =
   | TUnit
@@ -185,7 +186,7 @@ type stlc_typing : stlc_env -> s_exp -> stlc_ty -> Type =
       stlc_typing g e1 (TArrow t t') ->
       stlc_typing g e2 t ->
       stlc_typing g (EApp e1 e2) t'
-
+  
 let new_hole (g:R.env)
   : T.Tac R.term
   = T.uvar_env g (Some (`stlc_ty))
@@ -309,8 +310,6 @@ let infer_and_check (g:R.env)
     let (| e'', t', d |) = check g [] e' in
     (| e'', t' |)
 
-module RT = Refl.Typing
-
 let rec elab_ty (t:stlc_ty) 
   : R.term 
   = let open R in
@@ -385,18 +384,57 @@ let stlc_types_are_closed2 (ty:stlc_ty) (x:R.var)
           [SMTPat (RT.close_term (elab_ty ty) x)]
   = admit()
 
+let stlc_types_are_closed3 (ty:stlc_ty) (x:R.var)
+  : Lemma (RT.open_term (elab_ty ty) x == elab_ty ty)
+          [SMTPat (RT.open_term (elab_ty ty) x)]
+  = admit()
+
+let fstar_env =
+  g:R.env { 
+    RT.lookup_fvar g RT.unit_fv == Some RT.tm_type
+  }
+
+let fstar_top_env =
+  g:fstar_env { 
+    forall x. None? (RT.lookup_bvar g x )
+  }
+
+let extend_env_l_lookup_fvar (g:R.env) (sg:stlc_env) (fv:R.fv)
+  : Lemma 
+    (ensures
+      RT.lookup_fvar (extend_env_l g sg) fv ==
+      RT.lookup_fvar g fv)
+    [SMTPat (RT.lookup_fvar (extend_env_l g sg) fv)]
+  = admit()
+          
+let rec elab_ty_soundness (g:fstar_top_env)
+                          (sg:stlc_env)
+                          (t:stlc_ty)
+  : GTot (RT.typing (extend_env_l g sg) (elab_ty t) RT.tm_type)
+         (decreases t)
+  = match t with
+    | TUnit -> 
+      RT.T_FVar _ RT.unit_fv
+      
+    | TArrow t1 t2 ->
+      let t1_ok = elab_ty_soundness g sg t1 in
+      let x = fresh sg in
+      fresh_is_fresh sg;
+      let t2_ok = elab_ty_soundness g ((x, t1)::sg) t2 in
+      RT.T_Arrow _ x (elab_ty t1) (elab_ty t2) t1_ok t2_ok
+  
 let rec soundness (#sg:stlc_env) 
                   (#se:s_exp)
                   (#st:stlc_ty)
                   (dd:stlc_typing sg se st)
-                  (g:R.env { forall x. None? (RT.lookup_bvar g x) } )
+                  (g:fstar_top_env)
   : GTot (RT.typing (extend_env_l g sg)
                     (elab_exp se)
                     (elab_ty st))
          (decreases dd)
   = match dd with
     | T_Unit _ ->
-      RT.T_Const _
+      RT.T_Const _ _ _ RT.CT_Unit
 
     | T_Var _ x ->
       RT.T_Var _ (R.pack_bv (RT.make_bv x tun))
@@ -422,6 +460,7 @@ let rec soundness (#sg:stlc_env)
                    (elab_ty t) 
                    (elab_exp e)
                    (elab_ty t')
+                   (elab_ty_soundness g sg t)
                    de
       in
       dd
@@ -450,7 +489,7 @@ let rec soundness (#sg:stlc_env)
 let soundness_lemma (sg:stlc_env) 
                     (se:s_exp)
                     (st:stlc_ty)
-                    (g:R.env { forall x. None? (RT.lookup_bvar g x ) })                   
+                    (g:fstar_top_env)
   : Lemma
     (requires stlc_typing sg se st)
     (ensures  RT.typing (extend_env_l g sg)
@@ -461,7 +500,7 @@ let soundness_lemma (sg:stlc_env)
       ()
       (fun dd -> FStar.Squash.return_squash (soundness dd g))
 
-let main (g:R.env { forall x. None? (RT.lookup_bvar g x ) })
+let main (g:fstar_top_env)
          (src:stlc_exp unit)
   : T.Tac (e:R.term & t:R.term { RT.typing g e t })
   = if ln src
