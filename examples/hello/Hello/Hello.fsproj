@@ -16,6 +16,7 @@
   <ItemGroup>
     <PackageReference Update="FSharp.Core" Version="4.3.4" />
     <PackageReference Include="FSharp.Compatibility.OCaml" Version="0.1.14" />
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" PrivateAssets="All" Version="1.0.0-preview.2" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="ulibfs">
