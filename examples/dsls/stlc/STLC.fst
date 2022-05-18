@@ -173,7 +173,7 @@ type stlc_typing : stlc_env -> s_exp -> stlc_ty -> Type =
       t:stlc_ty ->
       e:s_exp ->
       t':stlc_ty ->
-      x:var { x == fresh g } ->
+      x:var { None? (lookup g x) } ->
       stlc_typing ((x,t)::g) (open_exp e x) t' ->
       stlc_typing g (ELam t e) (TArrow t t')
 
