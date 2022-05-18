@@ -59,6 +59,9 @@ let bool_ty = pack_ln (Tv_FVar bool_fv)
 let mk_total t = pack_comp (C_Total t [])
 let tm_type = pack_ln (Tv_Type ())
 
+let true_bool = pack_ln (Tv_Const C_True)
+let false_bool = pack_ln (Tv_Const C_False)
+val eq2 (t v0 v1:term) : term 
 noeq
 type constant_typing: vconst -> term -> Type0 = 
   | CT_Unit: constant_typing C_Unit unit_ty
@@ -134,9 +137,34 @@ type typing : env -> term -> term -> Type0 =
      typing g e t ->
      sub_typing g t t' ->
      typing g e t'
+
+  | T_If: 
+     g:env ->
+     scrutinee:term ->
+     then_:term ->
+     else_:term ->
+     ty:term ->
+     hyp:var { None? (lookup_bvar g hyp) } ->
+     typing g scrutinee bool_ty ->
+     typing (extend_env g hyp (eq2 bool_ty scrutinee true_bool)) then_ ty ->
+     typing (extend_env g hyp (eq2 bool_ty scrutinee false_bool)) else_ ty ->     
+     typing g (pack_ln (Tv_Match scrutinee None [(Pat_Constant C_True, then_); 
+                                                 (Pat_Constant C_False, else_)])) ty
+
+  | T_Match: 
+     g:env ->
+     scrutinee:term ->
+     i_ty:term ->
+     branches:list branch ->
+     ty:term ->
+     typing g scrutinee i_ty ->
+     branches_typing g scrutinee i_ty branches ty ->
+     typing g (pack_ln (Tv_Match scrutinee None branches)) ty
     
 and sub_typing : env -> term -> term -> Type0 =
   | ST_Refl: 
       g:env ->
       t:term ->
       sub_typing g t t
+
+and branches_typing : env -> term -> term -> list branch -> term -> Type0 =

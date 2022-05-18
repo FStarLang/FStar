@@ -240,8 +240,8 @@ type src_typing : src_env -> src_exp -> src_ty -> Type =
        src_typing g b TBool ->
        src_typing ((fresh g, Inr (b, EBool true)) :: g) e1 t1 ->
        src_typing ((fresh g, Inr (b, EBool false)) :: g) e2 t2 ->
-       sub_typing g t1 t ->
-       sub_typing g t2 t ->
+       sub_typing ((fresh g, Inr (b, EBool true)) :: g) t1 t ->
+       sub_typing ((fresh g, Inr (b, EBool false)) :: g) t2 t ->
        src_typing g (EIf b e1 e2) t
        
 and src_ty_ok : src_env -> src_ty -> Type =
@@ -267,8 +267,9 @@ let rec height #g #e #t (d:src_typing g e t)
     | T_Lam _ _ _ _ _ ty_ok body -> max (height body) (t_height ty_ok) + 1
     | T_App _ _ _ _ _ _  tl tr ts -> max (max (height tl) (height tr)) (s_height ts) + 1
     | T_If _ _ _ _ _ _ _ tb tl tr sl sr ->
-      max (max (height tl) (height tr))
-          (max (s_height sl) (s_height sr)) + 1
+      max (height tb) 
+          (max (max (height tl) (height tr))
+               (max (s_height sl) (s_height sr))) + 1
     
 and t_height (#g:src_env) (#t:src_ty) (d:src_ty_ok g t)    
   : GTot nat (decreases d)
@@ -284,8 +285,10 @@ let check_sub_typing (g:R.env)
   = if t0 = t1 then S_Refl _ t0
     else T.fail "Not subtypes"
 
-let weaken (g:R.env) (sg:src_env) (t0 t1:src_ty)
-  : T.Tac (t:src_ty & sub_typing sg t0 t & sub_typing sg t1 t)
+let weaken (g:R.env) (sg:src_env) (hyp:var) (b:src_exp) (t0 t1:src_ty)
+  : T.Tac (t:src_ty &
+           sub_typing ((hyp,Inr(b, EBool true))::sg) t0 t &
+           sub_typing ((hyp,Inr(b, EBool false))::sg) t1 t)
   = if t0 = t1
     then (| t0, S_Refl _ t0, S_Refl _ t1 |)
     else T.fail "weaken is very dumb"
@@ -338,7 +341,7 @@ let rec check (g:R.env)
       then (
         let (| e1, t1, ok_1 |) = check g ((hyp, Inr(b, EBool true))::sg) e1 in
         let (| e2, t2, ok_2 |) = check g ((hyp, Inr(b, EBool false))::sg) e2 in      
-        let (| t, w1, w2 |) = weaken g sg t1 t2 in
+        let (| t, w1, w2 |) = weaken g sg hyp b t1 t2 in
         (| EIf b e1 e2, t, T_If _ _ _ _ _ _ _ ok_b ok_1 ok_2 w1 w2 |)
       )
       else T.fail "Branching on a non-boolean"
@@ -368,11 +371,10 @@ module RT = Refl.Typing
 
 let b2t_lid : R.name = ["Prims"; "b2t"]
 let b2t_fv : R.fv = R.pack_fv b2t_lid
-
+let b2t_ty : R.term = R.(pack_ln (Tv_Arrow (RT.as_binder 0 RT.bool_ty) (RT.mk_total RT.tm_type)))
 let r_b2t (t:R.term) 
   : R.term 
   = R.(pack_ln (Tv_App (pack_ln (Tv_FVar b2t_fv)) (t, Q_Explicit)))
-  
 
 let rec elab_exp (e:src_exp)
   : Tot R.term
@@ -433,9 +435,7 @@ and elab_ty (t:src_ty)
 module F = FStar.Reflection.Formula
 let elab_eqn (e1 e2:src_exp)
   : R.term
-  =  F.formula_as_term (F.Comp (F.Eq (Some RT.bool_ty))
-                                     (elab_exp e1)
-                                     (elab_exp e2))
+  = RT.eq2 RT.bool_ty (elab_exp e1) (elab_exp e2)
 
 let binding = either src_ty src_eqn
 let elab_binding (b:binding)
@@ -480,14 +480,15 @@ let src_types_are_closed2 (ty:src_ty) (x:R.var)
   = admit()
 
 
-let stlc_types_are_closed3 (ty:src_ty) (x:R.var)
+let src_types_are_closed3 (ty:src_ty) (x:R.var)
   : Lemma (RT.open_term (elab_ty ty) x == elab_ty ty)
           [SMTPat (RT.open_term (elab_ty ty) x)]
   = admit()
 
 let fstar_env =
   g:R.env { 
-    RT.lookup_fvar g RT.bool_fv == Some RT.tm_type
+    RT.lookup_fvar g RT.bool_fv == Some RT.tm_type /\
+    RT.lookup_fvar g b2t_fv == Some b2t_ty
   }
 
 let fstar_top_env =
@@ -497,7 +498,10 @@ let fstar_top_env =
 
 let b2t_typing (g:fstar_env) (t:R.term) (dt:RT.typing g t RT.bool_ty)
   : RT.typing g (r_b2t t) RT.tm_type
-  = admit()
+  = let b2t_typing : RT.typing g _ b2t_ty = RT.T_FVar g b2t_fv in
+    let app_ty : _ = RT.T_App _ _ _ _ _ b2t_typing dt in
+    assume (RT.open_with RT.tm_type t == RT.tm_type);
+    app_ty
 
 let extend_env_l_lookup_fvar (g:R.env) (sg:src_env) (fv:R.fv)
   : Lemma 
@@ -507,22 +511,34 @@ let extend_env_l_lookup_fvar (g:R.env) (sg:src_env) (fv:R.fv)
     [SMTPat (RT.lookup_fvar (extend_env_l g sg) fv)]
   = admit()
 
-let src_ty_ok_weakening (sg:src_env) 
-                        (x:var { None? (lookup sg x) })
-                        (b:binding)
-                        (t:src_ty)
-                        (d:src_ty_ok sg t)
+let rec src_ty_ok_weakening (sg:src_env) 
+                            (x:var { None? (lookup sg x) })
+                            (b:binding)
+                            (t:src_ty)
+                            (d:src_ty_ok sg t)
   : GTot (d':src_ty_ok ((x, b)::sg) t { t_height d' == t_height d })
-  = admit()
+         (decreases d)
+  = match d with
+    | OK_TBool _ -> OK_TBool _
+    | OK_TArrow _ _ _ d1 d2 -> 
+      let d1 = src_ty_ok_weakening _ _ _ _ d1 in
+      let d2 = src_ty_ok_weakening _ _ _ _ d2 in      
+      OK_TArrow _ _ _ d1 d2
+    | OK_TRefine _ _ d -> OK_TRefine _ _ d
 
-let src_typing_weakening (sg:src_env) 
-                         (x:var { None? (lookup sg x) })
-                         (b:binding)
-                         (e:src_exp)
-                         (t:src_ty)                         
-                         (d:src_typing sg e t)
+let rec src_typing_weakening (sg:src_env) 
+                             (x:var { None? (lookup sg x) })
+                             (b:binding)
+                             (e:src_exp)
+                             (t:src_ty)                         
+                             (d:src_typing sg e t)
   : GTot (d':src_typing ((x, b)::sg) e t { height d == height d' })
-  = admit()
+         (decreases d)
+  = match d with
+    | T_Bool _ b -> T_Bool _ b
+    | T_Var _ y -> T_Var _ y
+    | T_Lam g t e t' x _ _ -> admit()
+    | _ -> admit()
 
 let src_typing_weakening_l (sg:src_env) 
                            (sg':src_env {  //need a stronger refinement here
@@ -539,7 +555,7 @@ let open_with_fvar_id (fv:R.fv) (x:R.term)
           [SMTPat (RT.open_with (R.pack_ln (R.Tv_FVar fv)) x)]
   = admit()
 
-let subtyping_soundness (sg:src_env) (t0 t1:src_ty) (ds:sub_typing sg t0 t1) (g:fstar_top_env)
+let subtyping_soundness (#sg:src_env) (#t0 #t1:src_ty) (ds:sub_typing sg t0 t1) (g:fstar_top_env)
   : GTot (RT.sub_typing (extend_env_l g sg) (elab_ty t0) (elab_ty t1))
   = admit()
   
@@ -606,7 +622,7 @@ let rec soundness (#sg:src_env)
       in
       let st
         : RT.sub_typing (extend_env_l g sg) (elab_ty t0) (elab_ty t)
-        = subtyping_soundness _ _ _ st g
+        = subtyping_soundness st g
       in
       let dt2
         : RT.typing (extend_env_l g sg)
@@ -616,7 +632,17 @@ let rec soundness (#sg:src_env)
       in
       RT.T_App _ _ _ _ _ dt1 dt2
 
-    | _ -> admit()
+    | T_If _ b e1 e2 t1 t2 t db d1 d2 s1 s2 ->
+      let db = soundness db g in
+      let d1 = soundness d1 g in
+      let d2 = soundness d2 g in
+      let s1 = subtyping_soundness s1 g in
+      let s2 = subtyping_soundness s2 g in
+      let d1 = RT.T_Sub _ _ _ _ d1 s1 in
+      let d2 = RT.T_Sub _ _ _ _ d2 s2 in      
+      fresh_is_fresh sg;
+      RT.T_If (extend_env_l g sg) (elab_exp b) (elab_exp e1) (elab_exp e2) _ (fresh sg) db d1 d2
+
 
 and src_ty_ok_soundness (g:fstar_top_env)
                         (sg:src_env)
