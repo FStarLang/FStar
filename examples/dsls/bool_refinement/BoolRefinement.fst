@@ -212,7 +212,7 @@ type src_typing : src_env -> src_exp -> src_ty -> Type =
       t:src_ty ->
       e:src_exp ->
       t':src_ty ->
-      x:var { x == fresh g } ->
+      x:var { None? (lookup g x) } ->
       src_ty_ok g t ->
       src_typing ((x, Inl t) :: g) (open_exp e x) t' ->
       src_typing g (ELam t e) (TArrow t t')
@@ -237,11 +237,12 @@ type src_typing : src_env -> src_exp -> src_ty -> Type =
        t1:src_ty ->
        t2:src_ty ->
        t:src_ty ->
+       hyp:var { None? (lookup g hyp) } ->
        src_typing g b TBool ->
-       src_typing ((fresh g, Inr (b, EBool true)) :: g) e1 t1 ->
-       src_typing ((fresh g, Inr (b, EBool false)) :: g) e2 t2 ->
-       sub_typing ((fresh g, Inr (b, EBool true)) :: g) t1 t ->
-       sub_typing ((fresh g, Inr (b, EBool false)) :: g) t2 t ->
+       src_typing ((hyp, Inr (b, EBool true)) :: g) e1 t1 ->
+       src_typing ((hyp, Inr (b, EBool false)) :: g) e2 t2 ->
+       sub_typing ((hyp, Inr (b, EBool true)) :: g) t1 t ->
+       sub_typing ((hyp, Inr (b, EBool false)) :: g) t2 t ->
        src_typing g (EIf b e1 e2) t
        
 and src_ty_ok : src_env -> src_ty -> Type =
@@ -266,7 +267,7 @@ let rec height #g #e #t (d:src_typing g e t)
     | T_Var _ _ -> 1
     | T_Lam _ _ _ _ _ ty_ok body -> max (height body) (t_height ty_ok) + 1
     | T_App _ _ _ _ _ _  tl tr ts -> max (max (height tl) (height tr)) (s_height ts) + 1
-    | T_If _ _ _ _ _ _ _ tb tl tr sl sr ->
+    | T_If _ _ _ _ _ _ _ _ tb tl tr sl sr ->
       max (height tb) 
           (max (max (height tl) (height tr))
                (max (s_height sl) (s_height sr))) + 1
@@ -337,12 +338,13 @@ let rec check (g:R.env)
     | EIf b e1 e2 ->
       let (| b, tb, ok_b |) = check g sg b in
       let hyp = fresh sg in
+      fresh_is_fresh sg;
       if tb = TBool
       then (
         let (| e1, t1, ok_1 |) = check g ((hyp, Inr(b, EBool true))::sg) e1 in
         let (| e2, t2, ok_2 |) = check g ((hyp, Inr(b, EBool false))::sg) e2 in      
         let (| t, w1, w2 |) = weaken g sg hyp b t1 t2 in
-        (| EIf b e1 e2, t, T_If _ _ _ _ _ _ _ ok_b ok_1 ok_2 w1 w2 |)
+        (| EIf b e1 e2, t, T_If _ _ _ _ _ _ _ hyp ok_b ok_1 ok_2 w1 w2 |)
       )
       else T.fail "Branching on a non-boolean"
 
@@ -432,7 +434,6 @@ and elab_ty (t:src_ty)
       let refinement = r_b2t (R.pack_ln (Tv_App e (R.pack_ln (Tv_BVar bv), Q_Explicit))) in
       R.pack_ln (Tv_Refine bv refinement)
 
-module F = FStar.Reflection.Formula
 let elab_eqn (e1 e2:src_exp)
   : R.term
   = RT.eq2 RT.bool_ty (elab_exp e1) (elab_exp e2)
@@ -510,36 +511,131 @@ let extend_env_l_lookup_fvar (g:R.env) (sg:src_env) (fv:R.fv)
       RT.lookup_fvar g fv)
     [SMTPat (RT.lookup_fvar (extend_env_l g sg) fv)]
   = admit()
-
-let rec src_ty_ok_weakening (sg:src_env) 
-                            (x:var { None? (lookup sg x) })
+open FStar.List.Tot    
+let rec src_ty_ok_weakening (sg sg':src_env) 
+                            (x:var { None? (lookup sg x) && None? (lookup sg' x) })
                             (b:binding)
                             (t:src_ty)
-                            (d:src_ty_ok sg t)
-  : GTot (d':src_ty_ok ((x, b)::sg) t { t_height d' == t_height d })
+                            (d:src_ty_ok (sg'@sg) t)
+  : GTot (d':src_ty_ok (sg'@((x, b)::sg)) t { t_height d' == t_height d })
          (decreases d)
   = match d with
     | OK_TBool _ -> OK_TBool _
     | OK_TArrow _ _ _ d1 d2 -> 
-      let d1 = src_ty_ok_weakening _ _ _ _ d1 in
-      let d2 = src_ty_ok_weakening _ _ _ _ d2 in      
+      let d1 = src_ty_ok_weakening _ _ _ _ _ d1 in
+      let d2 = src_ty_ok_weakening _ _ _ _ _ d2 in      
       OK_TArrow _ _ _ d1 d2
     | OK_TRefine _ _ d -> OK_TRefine _ _ d
 
-let rec src_typing_weakening (sg:src_env) 
-                             (x:var { None? (lookup sg x) })
-                             (b:binding)
-                             (e:src_exp)
-                             (t:src_ty)                         
-                             (d:src_typing sg e t)
-  : GTot (d':src_typing ((x, b)::sg) e t { height d == height d' })
+let rec src_ty_ok_renaming (sg:src_env)
+                           (x:var { None? (lookup sg x) })
+                           (y:var { None? (lookup sg y) })
+                           (b:binding)
+                           (t:src_ty { ln_ty t })
+                           (d:src_ty_ok ((x,b)::sg) t)
+  : GTot (d':src_ty_ok ((y,b)::sg) t { t_height d' == t_height d })
+         (decreases d)
+  = admit()
+
+let rec rename (e:src_exp) (x y:var) 
+  : src_exp
+  = match e with
+    | EBool _ -> e
+    | EBVar _ -> e
+    | EVar m -> if m = x then EVar y else EVar m
+    | EIf b e1 e2 -> EIf (rename b x y) (rename e1 x y) (rename e2 x y)
+    | ELam t e -> ELam t (rename e x y)
+    | EApp e1 e2 -> EApp (rename e1 x y) (rename e2 x y)
+
+
+let rec src_typing_renaming (sg sg':src_env)
+                            (x:var { None? (lookup sg x) && None? (lookup sg' x)})
+                            (y:var { None? (lookup sg y) && None? (lookup sg' y)})
+                            (b:binding)
+                            (e:src_exp)
+                            (t:src_ty)
+                            (d:src_typing (sg'@((x,b)::sg)) e t)
+  : GTot (d':src_typing (sg'@((y,b)::sg)) (rename e x y) t { height d' == height d })
          (decreases d)
   = match d with
-    | T_Bool _ b -> T_Bool _ b
-    | T_Var _ y -> T_Var _ y
-    | T_Lam g t e t' x _ _ -> admit()
+    | T_Bool _ b ->
+      T_Bool _ b
+      
+    | T_Var _ z -> 
+       if z = x
+       then (
+         admit();
+         T_Var _ y
+       )
+       else (
+         admit();
+         T_Var _ z
+       )
+
+    | T_Lam g t body t' z dt dbody ->
+//      let dt : src_ty_ok (s(y,b)::) t = src_ty_ok_renaming sg x y b t dt in
+      let zz = fresh ((y,b) :: sg) in
+      fresh_is_fresh ((y,b) :: sg);
+      let dbody
+        : src_typing ((z, Inl t)::g) (open_exp body z) t'
+        = dbody
+      in
+      admit()
+
     | _ -> admit()
 
+
+let rec src_typing_weakening (sg sg':src_env) 
+                             (x:var { None? (lookup sg x) && None? (lookup sg' x) })
+                             (b:binding)
+                             (e:src_exp { ln e })
+                             (t:src_ty)                         
+                             (d:src_typing (sg'@sg) e t)
+  : GTot (d':src_typing (sg'@((x, b)::sg)) e t { height d == height d' })
+         (decreases (height d))
+  = admit()
+  // match d with
+  //   | T_Bool _ b -> T_Bool _ b
+
+  //   | T_Var _ y -> 
+  //     assert (lookup (sg'@sg) y == Some (Inl t));
+  //     assume (lookup (sg'@((x,b)::sg)) y == Some (Inl t));      
+  //     T_Var _ y
+
+  //   | T_Lam g t e t' y dt de ->
+  //     assert (None? (lookup (sg'@sg) y));
+  //     let dt = src_ty_ok_weakening sg sg' x b _ dt in
+  //     let y' = fresh (sg'@((x,b) :: sg)) in
+  //     fresh_is_fresh (sg'@((x,b) :: sg));
+  //     assume (None? (lookup (sg'@sg) y'));
+  //     let de 
+  //       : src_typing ((y', Inl t)::(sg'@sg)) (open_exp e y') t'
+  //       = src_typing_renaming _ y y' (Inl t) _ _ de
+  //     in
+  //     assume ((y', Inl t)::(sg'@sg) == ((y', Inl t)::sg')@sg);
+  //     assume (None? (lookup ((y', Inl t)::sg') x));
+  //     let de
+  //       : src_typing (((y',Inl t)::sg') @ (x,b)::sg) (open_exp e y') t'
+  //       = src_typing_weakening sg ((y', Inl t)::sg') x b _ _ de 
+  //     in
+  //     assume ((((y',Inl t)::sg') @ (x,b)::sg) == (y',Inl t)::(sg' @((x,b) ::sg)));
+  //     T_Lam (sg' @((x,b) ::sg)) t e t' y' dt de
+
+  //   | T_App g e1 e2 t t' s0 d1 d2 s -> admit()
+
+  //   | T_If _ b e1 e2 t1 t2 t hyp db d1 d2 s1 s2 -> admit()
+
+// let rec src_typing_weakening_alt (sg:src_env)
+//                                  (e:src_exp)
+//                                  (t:src_ty)
+//                                  (d:src_typing [] e t)
+//   : GTot (d':src_typing sg e t { height d == height d'})
+//   = match d with
+//     | T_Bool _ b -> T_Bool _ b
+//     | T_Lam _ t e t' x dt ds ->
+//       let dt = src_ty_ok_weakening
+//     | _ -> admit()
+                         
 let src_typing_weakening_l (sg:src_env) 
                            (sg':src_env {  //need a stronger refinement here
                                  forall x. Some? (lookup sg' x) ==> None? (lookup sg x)
@@ -632,7 +728,7 @@ let rec soundness (#sg:src_env)
       in
       RT.T_App _ _ _ _ _ dt1 dt2
 
-    | T_If _ b e1 e2 t1 t2 t db d1 d2 s1 s2 ->
+    | T_If _ b e1 e2 t1 t2 t hyp db d1 d2 s1 s2 ->
       let db = soundness db g in
       let d1 = soundness d1 g in
       let d2 = soundness d2 g in
@@ -640,8 +736,7 @@ let rec soundness (#sg:src_env)
       let s2 = subtyping_soundness s2 g in
       let d1 = RT.T_Sub _ _ _ _ d1 s1 in
       let d2 = RT.T_Sub _ _ _ _ d2 s2 in      
-      fresh_is_fresh sg;
-      RT.T_If (extend_env_l g sg) (elab_exp b) (elab_exp e1) (elab_exp e2) _ (fresh sg) db d1 d2
+      RT.T_If (extend_env_l g sg) (elab_exp b) (elab_exp e1) (elab_exp e2) _ hyp db d1 d2
 
 
 and src_ty_ok_soundness (g:fstar_top_env)
@@ -658,7 +753,7 @@ and src_ty_ok_soundness (g:fstar_top_env)
      let t1_ok = src_ty_ok_soundness g sg _ ok_t1 in
      let x = fresh sg in
      fresh_is_fresh sg;
-     let t2_ok = src_ty_ok_soundness g ((x, Inl t1)::sg) _ (src_ty_ok_weakening _ _ _ _ ok_t2) in
+     let t2_ok = src_ty_ok_soundness g ((x, Inl t1)::sg) _ (src_ty_ok_weakening _ [] _ _ _ ok_t2) in
      RT.T_Arrow _ x (elab_ty t1) (elab_ty t2) t1_ok t2_ok
      
    | OK_TRefine _ e de ->
