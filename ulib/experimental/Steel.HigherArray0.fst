@@ -92,15 +92,23 @@ let ptr_base_offset_inj (#elt: Type) (p1 p2: ptr elt) : Lemma
 = ()
 
 inline_for_extraction // this will extract to ptr, erasing the length field
+                      // to enable that, we need to use standard dependent pairs
+                      // which can be properly inlined
 [@@noextract_to "krml"]
-noeq
-type array (elt: Type) = {
-  p: ptr elt;
-  length: (length: Ghost.erased nat {offset p + length <= base_len (base p)});
-}
+type array (elt: Type) =
+  (p: ptr elt & (length: Ghost.erased nat {offset p + length <= base_len (base p)}))
+
+inline_for_extraction // this will extract to "let p = a"
+[@@noextract_to "krml"]
+let ptr_of
+  (#elt: Type)
+  (a: array elt)
+: Tot (ptr elt)
+= match a with // dfst is not marked inline_for_extraction, so we need to reimplement it
+  | (| p, _ |) -> p
 
 let length (#elt: Type) (a: array elt) : GTot nat =
-  a.length
+  dsnd a
 
 let len (#elt: Type) (a: array elt) : GTot U32.t =
   U32.uint_to_t (length a)
@@ -115,9 +123,9 @@ let valid_perm
 
 [@__reduce__]
 let pts_to0 (#elt: Type u#1) (a: array elt) (p: P.perm) (s: Seq.seq elt) : Tot vprop =
-  R.pts_to a.p.base (mk_carrier (U32.v a.p.base_len) a.p.offset s p) `star`
+  R.pts_to (ptr_of a).base (mk_carrier (U32.v (ptr_of a).base_len) (ptr_of a).offset s p) `star`
   pure (
-    valid_perm (U32.v a.p.base_len) a.p.offset (Seq.length s) p /\
+    valid_perm (U32.v (ptr_of a).base_len) (ptr_of a).offset (Seq.length s) p /\
     Seq.length s == length a
   )
 
@@ -149,15 +157,15 @@ let change_r_pts_to
     (R.pts_to p' v')
 
 let intro_pts_to (#opened: _) (#elt: Type u#1) (a: array elt) (#v: _) (p: P.perm) (s: Seq.seq elt) : SteelGhost unit opened
-  (R.pts_to a.p.base v)
+  (R.pts_to (ptr_of a).base v)
   (fun _ -> pts_to a p s)
   (fun _ ->
-    v == mk_carrier (U32.v a.p.base_len) a.p.offset s p /\
-    valid_perm (U32.v a.p.base_len) a.p.offset (Seq.length s) p /\
+    v == mk_carrier (U32.v (ptr_of a).base_len) (ptr_of a).offset s p /\
+    valid_perm (U32.v (ptr_of a).base_len) (ptr_of a).offset (Seq.length s) p /\
     Seq.length s == length a
   )
   (fun _ _ _ -> True)
-= change_r_pts_to a.p.base v a.p.base (mk_carrier (U32.v a.p.base_len) a.p.offset s p);
+= change_r_pts_to (ptr_of a).base v (ptr_of a).base (mk_carrier (U32.v (ptr_of a).base_len) (ptr_of a).offset s p);
   intro_pure _;
   change_equal_slprop
     (pts_to0 a p s)
@@ -165,10 +173,10 @@ let intro_pts_to (#opened: _) (#elt: Type u#1) (a: array elt) (#v: _) (p: P.perm
 
 let elim_pts_to (#opened: _) (#elt: Type u#1) (a: array elt) (p: P.perm) (s: Seq.seq elt) : SteelGhost unit opened
   (pts_to a p s)
-  (fun _ -> R.pts_to a.p.base (mk_carrier (U32.v a.p.base_len) a.p.offset s p))
+  (fun _ -> R.pts_to (ptr_of a).base (mk_carrier (U32.v (ptr_of a).base_len) (ptr_of a).offset s p))
   (fun _ -> True)
   (fun _ _ _ ->
-    valid_perm (U32.v a.p.base_len) a.p.offset (Seq.length s) p /\
+    valid_perm (U32.v (ptr_of a).base_len) (ptr_of a).offset (Seq.length s) p /\
     Seq.length s == length a
   )
 = change_equal_slprop
@@ -195,14 +203,10 @@ let alloc
     offset = 0;
   }
   in
-  let a = {
-    p = p;
-    length = Ghost.hide (U32.v n);
-  }
-  in
+  let a = (| p, Ghost.hide (U32.v n) |) in
   change_r_pts_to
     base c
-    a.p.base c;
+    (ptr_of a).base c;
   intro_pts_to a P.full_perm (Seq.create (U32.v n) x);
   return a
 
@@ -243,10 +247,10 @@ let share
     (fun _ -> p == p1 `P.sum_perm` p2)
     (fun _ _ _ -> True)
 = elim_pts_to a p x;
-  mk_carrier_share (U32.v a.p.base_len) a.p.offset x p1 p2;
-  R.split a.p.base _
-    (mk_carrier (U32.v a.p.base_len) a.p.offset x p1)
-    (mk_carrier (U32.v a.p.base_len) a.p.offset x p2);
+  mk_carrier_share (U32.v (ptr_of a).base_len) (ptr_of a).offset x p1 p2;
+  R.split (ptr_of a).base _
+    (mk_carrier (U32.v (ptr_of a).base_len) (ptr_of a).offset x p1)
+    (mk_carrier (U32.v (ptr_of a).base_len) (ptr_of a).offset x p2);
   intro_pts_to a p1 x;
   intro_pts_to a p2 x
 
@@ -311,11 +315,11 @@ let gather
     (fun _ _ _ -> x1 == x2)
 = elim_pts_to a p1 x1;
   elim_pts_to a p2 x2;
-  R.gather a.p.base
-    (mk_carrier (U32.v a.p.base_len) (a.p.offset) x1 p1)
-    (mk_carrier (U32.v a.p.base_len) (a.p.offset) x2 p2);
-  mk_carrier_gather (U32.v a.p.base_len) (a.p.offset) x1 x2 p1 p2;
-  mk_carrier_valid_sum_perm (U32.v a.p.base_len) (a.p.offset) x1 p1 p2;
+  R.gather (ptr_of a).base
+    (mk_carrier (U32.v (ptr_of a).base_len) ((ptr_of a).offset) x1 p1)
+    (mk_carrier (U32.v (ptr_of a).base_len) ((ptr_of a).offset) x2 p2);
+  mk_carrier_gather (U32.v (ptr_of a).base_len) ((ptr_of a).offset) x1 x2 p1 p2;
+  mk_carrier_valid_sum_perm (U32.v (ptr_of a).base_len) ((ptr_of a).offset) x1 p1 p2;
   intro_pts_to a (p1 `P.sum_perm` p2) x1
 
 [@@noextract_to "krml"]
@@ -330,8 +334,8 @@ let index
     (fun _ -> U32.v i < length a)
     (fun _ res _ -> U32.v i < Seq.length s /\ res == Seq.index s (U32.v i))
 = elim_pts_to a p s;
-  let s' = R.read a.p.base _ in
-  let res = fst (Some?.v (M.sel s' (a.p.offset + U32.v i))) in
+  let s' = R.read (ptr_of a).base _ in
+  let res = fst (Some?.v (M.sel s' ((ptr_of a).offset + U32.v i))) in
   intro_pts_to a p s;
   return res
 
@@ -366,9 +370,9 @@ let upd
     (pts_to a P.full_perm s)
     (fun res -> pts_to a P.full_perm (Seq.upd s (U32.v i) v))
 = elim_pts_to a _ _;
-  mk_carrier_upd (U32.v a.p.base_len) (a.p.offset) s (U32.v i) v ();
+  mk_carrier_upd (U32.v (ptr_of a).base_len) ((ptr_of a).offset) s (U32.v i) v ();
   R.upd_gen
-    a.p.base
+    (ptr_of a).base
     _ _
     (PM.lift_frame_preserving_upd
       _ _
@@ -376,13 +380,13 @@ let upd
         (Seq.index s (U32.v i))
         v
       )
-      _ (a.p.offset + U32.v i)
+      _ ((ptr_of a).offset + U32.v i)
     );
   intro_pts_to a _ _
 
 let adjacent (#elt: Type) (a1 a2: array elt) : Tot prop =
-  base a1.p == base a2.p /\
-  offset a1.p + a1.length == offset a2.p
+  base (ptr_of a1) == base (ptr_of a2) /\
+  offset (ptr_of a1) + (length a1) == offset (ptr_of a2)
 
 inline_for_extraction // this will extract to "let y = a1"
 [@@noextract_to "krml"]
@@ -390,10 +394,7 @@ let merge (#elt: Type) (a1: array elt) (a2: Ghost.erased (array elt))
 : Pure (array elt)
   (requires (adjacent a1 a2))
   (ensures (fun y -> length y == length a1 + length a2))
-= {
-  p = a1.p;
-  length = a1.length + a2.length;
-}
+= (| ptr_of a1, Ghost.hide (length a1 + length a2) |)
 
 let merge_assoc (#elt: Type) (a1 a2 a3: array elt) : Lemma
   (requires (adjacent a1 a2 /\ adjacent a2 a3))
@@ -438,17 +439,17 @@ let ghost_join
     (fun _ res _ -> merge_into a1 a2 res)
 = elim_pts_to a1 p x1;
   elim_pts_to a2 p x2;
-  mk_carrier_merge (U32.v a1.p.base_len) (a1.p.offset) x1 x2 (p);
+  mk_carrier_merge (U32.v (ptr_of a1).base_len) ((ptr_of a1).offset) x1 x2 (p);
   change_r_pts_to
-    a2.p.base _
-    a1.p.base (mk_carrier (U32.v a1.p.base_len) (a1.p.offset + Seq.length x1) x2 p);
-  R.gather a1.p.base
-    (mk_carrier (U32.v a1.p.base_len) (a1.p.offset) x1 (p))
-    (mk_carrier (U32.v a1.p.base_len) (a1.p.offset + Seq.length x1) x2 (p));
+    (ptr_of a2).base _
+    (ptr_of a1).base (mk_carrier (U32.v (ptr_of a1).base_len) ((ptr_of a1).offset + Seq.length x1) x2 p);
+  R.gather (ptr_of a1).base
+    (mk_carrier (U32.v (ptr_of a1).base_len) ((ptr_of a1).offset) x1 (p))
+    (mk_carrier (U32.v (ptr_of a1).base_len) ((ptr_of a1).offset + Seq.length x1) x2 (p));
   let res = Ghost.hide (merge a1 a2) in
   change_r_pts_to
-    a1.p.base _
-    res.p.base (mk_carrier (U32.v res.p.base_len) (res.p.offset) (x1 `Seq.append` x2) (p));
+    (ptr_of a1).base _
+    (ptr_of res).base (mk_carrier (U32.v (ptr_of res).base_len) ((ptr_of res).offset) (x1 `Seq.append` x2) (p));
   intro_pts_to res p (Seq.append x1 x2);
   res
 
@@ -500,10 +501,7 @@ let split_l (#elt: Type) (a: array elt)
 : Pure (array elt)
   (requires (U32.v i <= length a))
   (ensures (fun y -> True))
-= {
-  p = a.p;
-  length = U32.v i;
-}
+= (| ptr_of a, Ghost.hide (U32.v i) |)
 
 // TODO: replace with Ghost, introduce pointer shifting operations in SteelAtomicBase Unobservable
 [@@noextract_to "krml"]
@@ -530,10 +528,7 @@ let split_r (#elt: Type) (a: array elt)
 : Pure (array elt)
   (requires (U32.v i <= length a))
   (ensures (fun y -> merge_into (split_l a i) y a))
-= {
-  p = ptr_shift a.p i;
-  length = a.length - U32.v i;
-}
+= (| ptr_shift (ptr_of a) i, Ghost.hide (length a - U32.v i) |)
 
 let ghost_split
   (#opened: _)
@@ -554,22 +549,22 @@ let ghost_split
 = 
   elim_pts_to a p x;
   mk_carrier_split
-    (U32.v a.p.base_len)
-    (a.p.offset)
+    (U32.v (ptr_of a).base_len)
+    ((ptr_of a).offset)
     x
     (p)
     (U32.v i);
   Seq.lemma_split x (U32.v i);
   let xl = Seq.slice x 0 (U32.v i) in
   let xr = Seq.slice x (U32.v i) (Seq.length x) in
-  let vl = mk_carrier (U32.v a.p.base_len) (a.p.offset) xl (p) in
-  let vr = mk_carrier (U32.v a.p.base_len) (a.p.offset + U32.v i) xr (p) in
-  R.split a.p.base _ vl vr;
+  let vl = mk_carrier (U32.v (ptr_of a).base_len) ((ptr_of a).offset) xl (p) in
+  let vr = mk_carrier (U32.v (ptr_of a).base_len) ((ptr_of a).offset + U32.v i) xr (p) in
+  R.split (ptr_of a).base _ vl vr;
   change_r_pts_to
-    a.p.base vl
-    (split_l a i).p.base vl;
+    (ptr_of a).base vl
+    (ptr_of (split_l a i)).base vl;
   intro_pts_to (split_l a i) #vl p (Seq.slice x 0 (U32.v i));
   change_r_pts_to
-    a.p.base vr
-    (split_r a i).p.base vr;
+    (ptr_of a).base vr
+    (ptr_of (split_r a i)).base vr;
   intro_pts_to (split_r a i) #vr p (Seq.slice x (U32.v i) (Seq.length x))
