@@ -55,9 +55,9 @@ let length (#elt: Type) (a: array elt) : GTot nat =
   dsnd a
 
 /// A Steel separation logic heap predicate to describe that an array
-/// a points to some element sequence s with some permission p.
-/// vprop limits the universe to at most 1 (because of the selector,
-/// although the latter is not used here)
+/// a points to some element sequence s with some permission p.  vprop
+/// limits the universe to at most 1 (because of the universe of the
+/// heap.)
 val pts_to
   (#elt: Type u#1) (a: array elt)
   ([@@@ smt_fallback ] p: P.perm)
@@ -76,6 +76,27 @@ val pts_to_length
     (fun _ -> pts_to a p s)
     (fun _ -> True)
     (fun _ _ _ -> Seq.length s == length a)
+
+/// An injectivity property, needed only to define a selector.  Such a
+/// selector can be only defined in universe 0, and universes are not
+/// cumulative, so we need to define a separate module for arrays of
+/// universe 0 elements with selectors, reusing definitions from this
+/// interface, but we do not want to use `friend`.
+val pts_to_inj
+  (#elt: Type u#1) (a: array elt)
+  (p1: P.perm)
+  (s1: Seq.seq elt)
+  (p2: P.perm)
+  (s2: Seq.seq elt)
+  (m: mem)
+: Lemma
+  (requires (
+    interp (hp_of (pts_to a p1 s1)) m /\
+    interp (hp_of (pts_to a p2 s2)) m
+  ))
+  (ensures (
+    s1 == s2
+  ))
 
 /// Allocating a new array of size n, where each cell is initialized
 /// with value x

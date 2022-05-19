@@ -161,6 +161,72 @@ let pts_to_length
   elim_pts_to a p s;
   intro_pts_to a p s
 
+let mk_carrier_joinable
+  (#elt: Type)
+  (len: nat)
+  (offset: nat)
+  (s1: Seq.seq elt)
+  (p1: P.perm)
+  (s2: Seq.seq elt)
+  (p2: P.perm)
+: Lemma
+  (requires (
+    offset + Seq.length s1 <= len /\
+    Seq.length s1 == Seq.length s2 /\
+    P.joinable (pcm elt len) (mk_carrier len offset s1 p1) (mk_carrier len offset s2 p2)
+  ))
+  (ensures (
+    s1 `Seq.equal` s2
+  ))
+=
+  let lem
+    (i: nat { 0 <= i /\ i < Seq.length s1 })
+  : Lemma
+    (Seq.index s1 i == Seq.index s2 i)
+    [SMTPat (Seq.index s1 i); SMTPat (Seq.index s2 i)]
+  = assert (
+      forall z . (
+        P.compatible (pcm elt len) (mk_carrier len offset s1 p1) z /\
+        P.compatible (pcm elt len) (mk_carrier len offset s2 p2) z
+      ) ==>
+      begin match M.sel z (offset + i) with
+      | None -> False
+      | Some (v, _) -> v == Seq.index s1 i /\ v == Seq.index s2 i
+      end
+    )
+  in
+  ()
+
+let pure_star_interp' (p:slprop u#a) (q:prop) (m:mem)
+   : Lemma (interp (p `Steel.Memory.star` Steel.Memory.pure q) m <==>
+            interp p m /\ q)
+= pure_star_interp p q m;
+  emp_unit p
+
+let pts_to_inj
+  a p1 s1 p2 s2 m
+=
+  pure_star_interp'
+    (hp_of (R.pts_to (ptr_of a).base (mk_carrier (U32.v (ptr_of a).base_len) (ptr_of a).offset s1 p1)))
+    (
+      valid_perm (U32.v (ptr_of a).base_len) (ptr_of a).offset (Seq.length s1) p1 /\
+      Seq.length s1 == length a
+    )
+    m;
+  pure_star_interp'
+    (hp_of (R.pts_to (ptr_of a).base (mk_carrier (U32.v (ptr_of a).base_len) (ptr_of a).offset s2 p2)))
+    (
+      valid_perm (U32.v (ptr_of a).base_len) (ptr_of a).offset (Seq.length s2) p2 /\
+      Seq.length s2 == length a
+    )
+    m;
+  pts_to_join
+    (ptr_of a).base
+    (mk_carrier (U32.v (ptr_of a).base_len) (ptr_of a).offset s1 p1)
+    (mk_carrier (U32.v (ptr_of a).base_len) (ptr_of a).offset s2 p2)
+    m;
+  mk_carrier_joinable (U32.v (ptr_of a).base_len) (ptr_of a).offset s1 p1 s2 p2
+
 [@@noextract_to "krml"]
 let alloc
   (#elt: Type)
