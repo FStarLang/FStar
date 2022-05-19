@@ -30,21 +30,18 @@ let derive_composable (#o:inames)
 *)
 
 [@@noextract_to "krml"]
-let index_t (len: nat) : Tot eqtype = (i: nat { i < len })
+let carrier (elt: Type u#a) : Tot Type =
+  PM.map nat (P.fractional elt)
 
 [@@noextract_to "krml"]
-let carrier (elt: Type u#a) (len: nat) : Tot Type =
-  PM.map (index_t len) (P.fractional elt)
+let pcm (elt: Type u#a) : Tot (P.pcm (carrier elt)) =
+  PM.pointwise nat (P.pcm_frac #elt)
 
 [@@noextract_to "krml"]
-let pcm (elt: Type u#a) (len: nat) : Tot (P.pcm (carrier elt len)) =
-  PM.pointwise (index_t len) (P.pcm_frac #elt)
-
+let one (#elt: Type) = (pcm elt).P.p.P.one
+let composable (#elt: Type) = (pcm elt).P.p.P.composable
 [@@noextract_to "krml"]
-let one (#elt: Type) (#len: nat) = (pcm elt len).P.p.P.one
-let composable (#elt: Type) (#len: nat) = (pcm elt len).P.p.P.composable
-[@@noextract_to "krml"]
-let compose (#elt: Type) (#len: nat) = (pcm elt len).P.p.P.op
+let compose (#elt: Type) = (pcm elt).P.p.P.op
 
 [@@noextract_to "krml"]
 let mk_carrier
@@ -53,8 +50,8 @@ let mk_carrier
   (offset: nat)
   (s: Seq.seq elt)
   (p: P.perm)
-: Tot (carrier elt len)
-= let f (i: index_t len) : Tot (P.fractional elt) =
+: Tot (carrier elt)
+= let f (i: nat) : Tot (P.fractional elt) =
     if offset + Seq.length s > len || i < offset || i >= offset + Seq.length s
     then None
     else Some (Seq.index s (i - offset), p)
@@ -85,9 +82,9 @@ let mk_carrier_inj
 [@@noextract_to "krml"]
 noeq
 type ptr (elt: Type) = {
-  base_len: U32.t; // cannot be erased because I need to know the size of the carrier elements.
+  base_len: Ghost.erased U32.t;
                    // U32.t to prove that A.read, A.write offset computation does not overflow. TODO: replace U32.t with size_t
-  base: ref _ (pcm elt (U32.v base_len));
+  base: ref _ (pcm elt);
   offset: (offset: nat { offset <= U32.v base_len });
 }
 
@@ -201,8 +198,8 @@ let alloc
     (fun _ -> True)
     (fun _ a _ -> len a == n)
 =
-  let c : carrier elt (U32.v n) = mk_carrier (U32.v n) 0 (Seq.create (U32.v n) x) P.full_perm in
-  let base : ref (carrier elt (U32.v n)) (pcm elt (U32.v n)) = R.alloc c in
+  let c : carrier elt = mk_carrier (U32.v n) 0 (Seq.create (U32.v n) x) P.full_perm in
+  let base : ref (carrier elt) (pcm elt) = R.alloc c in
   let p = {
     base_len = n;
     base = base;
@@ -340,11 +337,11 @@ let mk_carrier_index
   (s1: Seq.seq elt)
   (p1: P.perm)
   (i1: nat)
-  (s1': carrier elt len)
+  (s1': carrier elt)
   (_: squash (
     offset1 + Seq.length s1 <= len /\
     i1 < Seq.length s1 /\
-    P.compatible (pcm elt len) (mk_carrier len offset1 s1 p1) s1'
+    P.compatible (pcm elt) (mk_carrier len offset1 s1 p1) s1'
   ))
 : Lemma
   (ensures (
@@ -366,7 +363,7 @@ let index
     (fun _ -> U32.v i < length a)
     (fun _ res _ -> U32.v i < Seq.length s /\ res == Seq.index s (U32.v i))
 = elim_pts_to a p s;
-  let s' = R.read a.p.base _ in // here pcm needs a.p.base_len non-erased
+  let s' = R.read a.p.base _ in
   mk_carrier_index (U32.v a.p.base_len)
     (a.p.offset) s p (U32.v i) s' ();
   let res = fst (Some?.v (M.sel s' (a.p.offset + U32.v i))) in
