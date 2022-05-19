@@ -1,16 +1,9 @@
 module Steel.HigherArray0
 
-module R = Steel.PCMReference
 module P = Steel.PCMFrac
+module R = Steel.PCMReference
 module M = FStar.Map
 module PM = Steel.PCMMap
-module U32 = FStar.UInt32
-
-open Steel.Memory
-open Steel.Effect.Atomic
-open Steel.Effect
-
-/// NOTE: This module is slated to have primitive Karamel extraction.
 
 [@@noextract_to "krml"]
 let index_t (len: Ghost.erased nat) : Tot Type0 =
@@ -66,18 +59,18 @@ let mk_carrier_inj
   assert (forall (i: nat) . i < Seq.length s2 ==>
      M.sel (mk_carrier len offset s2 p2) (offset + i) == Some (Seq.index s2 i, p2))
 
+[@@erasable]
+let base_t (elt: Type u#a) : Tot Type0 = Ghost.erased (base_len: U32.t & ref _ (pcm elt (U32.v base_len)))
+let base_len (#elt: Type) (b: base_t elt) : GTot nat = U32.v (dfst b)
+
 [@@noextract_to "krml"]
 noeq
-type ptr (elt: Type) = {
+type ptr (elt: Type u#a) : Type0 = {
   base_len: Ghost.erased U32.t;
                    // U32.t to prove that A.read, A.write offset computation does not overflow. TODO: replace U32.t with size_t
   base: ref _ (pcm elt (U32.v base_len));
   offset: (offset: nat { offset <= U32.v base_len });
 }
-
-[@@erasable]
-let base_t (elt: Type) : Tot Type = Ghost.erased (base_len: U32.t & ref _ (pcm elt (U32.v base_len)))
-let base_len (#elt: Type) (b: base_t elt) : GTot nat = U32.v (dfst b)
 let base (#elt: Type) (p: ptr elt) : Tot (base_t elt) = (| Ghost.reveal p.base_len, p.base |)
 let offset (#elt: Type) (p: ptr elt) : Ghost nat (requires True) (ensures (fun offset -> offset <= base_len (base p))) = p.offset
 
@@ -90,28 +83,6 @@ let ptr_base_offset_inj (#elt: Type) (p1 p2: ptr elt) : Lemma
     p1 == p2
   ))
 = ()
-
-inline_for_extraction // this will extract to ptr, erasing the length field
-                      // to enable that, we need to use standard dependent pairs
-                      // which can be properly inlined
-[@@noextract_to "krml"]
-type array (elt: Type) =
-  (p: ptr elt & (length: Ghost.erased nat {offset p + length <= base_len (base p)}))
-
-inline_for_extraction // this will extract to "let p = a"
-[@@noextract_to "krml"]
-let ptr_of
-  (#elt: Type)
-  (a: array elt)
-: Tot (ptr elt)
-= match a with // dfst is not marked inline_for_extraction, so we need to reimplement it
-  | (| p, _ |) -> p
-
-let length (#elt: Type) (a: array elt) : GTot nat =
-  dsnd a
-
-let len (#elt: Type) (a: array elt) : GTot U32.t =
-  U32.uint_to_t (length a)
 
 let valid_perm
   (len: nat)
@@ -193,7 +164,7 @@ let alloc
     emp
     (fun a -> pts_to a P.full_perm (Seq.create (U32.v n) x))
     (fun _ -> True)
-    (fun _ a _ -> len a == n)
+    (fun _ a _ -> length a == U32.v n)
 =
   let c : carrier elt (U32.v n) = mk_carrier (U32.v n) 0 (Seq.create (U32.v n) x) P.full_perm in
   let base : ref (carrier elt (U32.v n)) (pcm elt (U32.v n)) = R.alloc c in
@@ -322,6 +293,8 @@ let gather
   mk_carrier_valid_sum_perm (U32.v (ptr_of a).base_len) ((ptr_of a).offset) x1 p1 p2;
   intro_pts_to a (p1 `P.sum_perm` p2) x1
 
+#push-options "--z3rlimit 16"
+
 [@@noextract_to "krml"]
 let index
   (#t: Type) (#p: P.perm)
@@ -338,6 +311,8 @@ let index
   let res = fst (Some?.v (M.sel s' ((ptr_of a).offset + U32.v i))) in
   intro_pts_to a p s;
   return res
+
+#pop-options
 
 let mk_carrier_upd
   (#elt: Type)
@@ -384,30 +359,6 @@ let upd
     );
   intro_pts_to a _ _
 
-let adjacent (#elt: Type) (a1 a2: array elt) : Tot prop =
-  base (ptr_of a1) == base (ptr_of a2) /\
-  offset (ptr_of a1) + (length a1) == offset (ptr_of a2)
-
-inline_for_extraction // this will extract to "let y = a1"
-[@@noextract_to "krml"]
-let merge (#elt: Type) (a1: array elt) (a2: Ghost.erased (array elt))
-: Pure (array elt)
-  (requires (adjacent a1 a2))
-  (ensures (fun y -> length y == length a1 + length a2))
-= (| ptr_of a1, Ghost.hide (length a1 + length a2) |)
-
-let merge_assoc (#elt: Type) (a1 a2 a3: array elt) : Lemma
-  (requires (adjacent a1 a2 /\ adjacent a2 a3))
-  (ensures (
-    adjacent (merge a1 a2) a3 /\ adjacent a1 (merge a2 a3) /\
-    merge (merge a1 a2) a3 == merge a1 (merge a2 a3)
-  ))
-= ()
-
-let merge_into (#elt: Type) (a1 a2 a: array elt) : Tot prop =
-  adjacent a1 a2 /\
-  merge a1 a2 == a
-
 let mk_carrier_merge
   (#elt: Type)
   (len: nat)
@@ -432,11 +383,10 @@ let ghost_join
   (#x1 #x2: Seq.seq elt)
   (#p: P.perm)
   (a1 a2: array elt)
-: SteelGhost (Ghost.erased (array elt)) opened
+  (h: squash (adjacent a1 a2))
+: SteelGhostT unit opened
     (pts_to a1 p x1 `star` pts_to a2 p x2)
-    (fun res -> pts_to res p (x1 `Seq.append` x2))
-    (fun _ -> adjacent a1 a2)
-    (fun _ res _ -> merge_into a1 a2 res)
+    (fun res -> pts_to (merge a1 a2) p (x1 `Seq.append` x2))
 = elim_pts_to a1 p x1;
   elim_pts_to a2 p x2;
   mk_carrier_merge (U32.v (ptr_of a1).base_len) ((ptr_of a1).offset) x1 x2 (p);
@@ -446,33 +396,10 @@ let ghost_join
   R.gather (ptr_of a1).base
     (mk_carrier (U32.v (ptr_of a1).base_len) ((ptr_of a1).offset) x1 (p))
     (mk_carrier (U32.v (ptr_of a1).base_len) ((ptr_of a1).offset + Seq.length x1) x2 (p));
-  let res = Ghost.hide (merge a1 a2) in
   change_r_pts_to
     (ptr_of a1).base _
-    (ptr_of res).base (mk_carrier (U32.v (ptr_of res).base_len) ((ptr_of res).offset) (x1 `Seq.append` x2) (p));
-  intro_pts_to res p (Seq.append x1 x2);
-  res
-
-inline_for_extraction // this will extract to "let res = a1"
-[@@noextract_to "krml"]
-let join
-  (#opened: _)
-  (#elt: Type)
-  (#x1 #x2: Ghost.erased (Seq.seq elt))
-  (#p: P.perm)
-  (a1: array elt)
-  (a2: Ghost.erased (array elt))
-: SteelAtomicBase (array elt) false opened Unobservable
-    (pts_to a1 p x1 `star` pts_to a2 p x2)
-    (fun res -> pts_to res p (x1 `Seq.append` x2))
-    (fun _ -> adjacent a1 a2)
-    (fun _ res _ -> merge_into a1 a2 res)
-= let g = ghost_join a1 a2 in
-  let res = merge a1 a2 in
-  change_equal_slprop
-    (pts_to g p (x1 `Seq.append` x2))
-    (pts_to res p (x1 `Seq.append` x2));
-  return res
+    (ptr_of (merge a1 a2)).base (mk_carrier (U32.v (ptr_of (merge a1 a2)).base_len) ((ptr_of (merge a1 a2)).offset) (x1 `Seq.append` x2) (p));
+  intro_pts_to (merge a1 a2) p (Seq.append x1 x2)
 
 let mk_carrier_split
   (#elt: Type)
@@ -494,15 +421,6 @@ let mk_carrier_split
   ))
 = ()
 
-inline_for_extraction // this will extract to "let y = a"
-[@@noextract_to "krml"]
-let split_l (#elt: Type) (a: array elt)
-  (i: Ghost.erased U32.t)
-: Pure (array elt)
-  (requires (U32.v i <= length a))
-  (ensures (fun y -> True))
-= (| ptr_of a, Ghost.hide (U32.v i) |)
-
 // TODO: replace with Ghost, introduce pointer shifting operations in SteelAtomicBase Unobservable
 [@@noextract_to "krml"]
 let ptr_shift
@@ -520,15 +438,6 @@ let ptr_shift
   base = p.base;
   offset = p.offset + U32.v off;
 }
-
-inline_for_extraction
-[@@noextract_to "krml"]
-let split_r (#elt: Type) (a: array elt)
-  (i: U32.t)
-: Pure (array elt)
-  (requires (U32.v i <= length a))
-  (ensures (fun y -> merge_into (split_l a i) y a))
-= (| ptr_shift (ptr_of a) i, Ghost.hide (length a - U32.v i) |)
 
 let ghost_split
   (#opened: _)
