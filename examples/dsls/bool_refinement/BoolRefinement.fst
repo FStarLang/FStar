@@ -527,16 +527,6 @@ let rec src_ty_ok_weakening (sg sg':src_env)
       OK_TArrow _ _ _ d1 d2
     | OK_TRefine _ _ d -> OK_TRefine _ _ d
 
-let rec src_ty_ok_renaming (sg:src_env)
-                           (x:var { None? (lookup sg x) })
-                           (y:var { None? (lookup sg y) })
-                           (b:binding)
-                           (t:src_ty { ln_ty t })
-                           (d:src_ty_ok ((x,b)::sg) t)
-  : GTot (d':src_ty_ok ((y,b)::sg) t { t_height d' == t_height d })
-         (decreases d)
-  = admit()
-
 let rec rename (e:src_exp) (x y:var) 
   : src_exp
   = match e with
@@ -547,94 +537,260 @@ let rec rename (e:src_exp) (x y:var)
     | ELam t e -> ELam t (rename e x y)
     | EApp e1 e2 -> EApp (rename e1 x y) (rename e2 x y)
 
+let rename_binding (b:binding) (x y:var)
+  = match b with
+    | Inl t -> Inl t
+    | Inr (e1, e2) -> Inr (rename e1 x y, rename e2 x y)
+
+let rename_env (sg:src_env) (x y:var)
+  : src_env
+  = L.map (fun (v,b) -> v, rename_binding b x y) sg
+  
+let lookup_middle (sg sg':src_env)
+                  (x:var { None? (lookup sg' x) })
+                  (b:binding)
+  : Lemma (lookup (sg'@(x,b)::sg) x == Some b)
+  = admit()
+
+let lookup_append_inverse (sg sg':src_env)
+                          (z:var)
+  : Lemma 
+    (ensures (match lookup (sg'@sg) z with
+              | None -> None? (lookup sg' z) && None? (lookup sg z)
+              | Some b -> (lookup sg' z == Some b) \/
+                         (None? (lookup sg' z) /\ lookup sg z == Some b)))
+  = admit()
+
+let cons_append_assoc (sg sg':list 'a) (x:'a)
+  : Lemma (x::(sg'@sg) == (x::sg')@sg)
+  = ()
+
+let rename_open (e:src_exp) (x y:var)
+  : Lemma (rename (open_exp e x) x y == open_exp e y)
+  = admit()
+  
+let rename_open_commute (e:src_exp) (z:var) (x y:var)
+  : Lemma
+    (requires z <> x /\ z <> y)
+    (ensures rename (open_exp e z) x y == open_exp (rename e x y) z)
+  = admit()
+
+
+let rename_lookup (sg:src_env) (a:var) (x y:var)
+  : Lemma (match lookup sg a with
+           | None -> None? (lookup (rename_env sg x y) a)
+           | Some (Inl t) -> lookup (rename_env sg x y) a == Some (Inl t)
+           | Some (Inr (e1, e2)) -> lookup (rename_env sg x y) a == Some (Inr (rename e1 x y, rename e2 x y)))
+          [SMTPat (lookup (rename_env sg x y) a)]
+  = admit()
+
+let rec src_ty_ok_renaming (sg sg':src_env)
+                           (x:var { None? (lookup sg x) /\ None? (lookup sg' x) })
+                           (y:var { None? (lookup sg y) /\ None? (lookup sg' x) })
+                           (b:binding)
+                           (t:src_ty)
+                           (d:src_ty_ok (sg'@(x,b)::sg) t)
+  : GTot (d':src_ty_ok (rename_env sg' x y@(y,b)::sg) t { t_height d' == t_height d })
+         (decreases d)
+  = admit()
+
+let sub_typing_renaming (sg sg':src_env)
+                        (x:var { None? (lookup sg x) && None? (lookup sg' x) })
+                        (y:var { None? (lookup sg y) && None? (lookup sg' y) })
+                        (b:binding)
+                        (t0 t1:src_ty)
+                        (d:sub_typing (sg'@(x,b)::sg) t0 t1)
+  : GTot (d':sub_typing (rename_env sg' x y@(y,b)::sg) t0 t1 { s_height d' == s_height d })
+         (decreases (s_height d))
+  = admit()
 
 let rec src_typing_renaming (sg sg':src_env)
-                            (x:var { None? (lookup sg x) && None? (lookup sg' x)})
-                            (y:var { None? (lookup sg y) && None? (lookup sg' y)})
+                            (x:var { None? (lookup sg x) && None? (lookup sg' x) })
+                            (y:var { None? (lookup sg y) && None? (lookup sg' y) })
                             (b:binding)
                             (e:src_exp)
                             (t:src_ty)
-                            (d:src_typing (sg'@((x,b)::sg)) e t)
-  : GTot (d':src_typing (sg'@((y,b)::sg)) (rename e x y) t { height d' == height d })
-         (decreases d)
-  = match d with
+                            (d:src_typing (sg'@(x,b)::sg) e t)
+  : GTot (d':src_typing (rename_env sg' x y@(y,b)::sg) (rename e x y) t { height d' == height d })
+         (decreases (height d))
+  = let aux (z:var { None? (lookup (sg'@(x,b)::sg) z) })
+            (b':binding)
+            (e:src_exp)
+            (t:src_ty)
+            (ds:src_typing ((z, b')::sg'@(x,b)::sg) e t { height ds < height d })
+      : GTot (
+          zz:var { None? (lookup (rename_env sg' x y@(y,b)::sg) zz) /\ zz <> x /\ zz <> y /\ zz == fresh ((y,b)::sg'@(x,b)::sg) } &
+          ds':src_typing (rename_env ((zz,b')::sg') x y@(y,b)::sg) (rename (rename e z zz) x y) t { height ds == height ds' }
+        )
+      = //pick a new opening variable zz
+        //that is fresh for both x and y (and sg, sg')
+        let zz = fresh ((y,b)::sg'@(x,b)::sg) in
+        fresh_is_fresh ((y,b)::sg'@(x,b)::sg);
+        lookup_append_inverse ((x,b)::sg) ((y,b)::sg') zz;
+        //first use the renaming lemma to rewrite the original derivation to replace z with zz
+        let ds : src_typing ((zz, b')::(sg'@(x,b)::sg)) (rename e z zz) t
+          = src_typing_renaming _ [] z zz b' _ _ ds
+        in
+        lookup_append_inverse ((y,b)::sg) (rename_env sg' x y) zz;
+        //then use the renaming lemma again t rewrite the variable in the middle, replacing x with y
+        let ds
+          : src_typing (rename_env ((zz, b')::sg') x y@(y,b)::sg) (rename (rename e z zz) x y) t
+          = src_typing_renaming sg ((zz, b')::sg') x y b _ _ ds
+        in
+        (| zz, ds |)
+    in
+    match d with
     | T_Bool _ b ->
       T_Bool _ b
-      
+
     | T_Var _ z -> 
        if z = x
        then (
-         admit();
+         lookup_middle sg sg' x b;
+         lookup_middle sg (rename_env sg' x y) y b;         
          T_Var _ y
        )
        else (
-         admit();
+         lookup_append_inverse ((x,b)::sg) sg' z;
+         lookup_append_inverse ((y,b)::sg) (rename_env sg' x y) z;
          T_Var _ z
        )
 
     | T_Lam g t body t' z dt dbody ->
-//      let dt : src_ty_ok (s(y,b)::) t = src_ty_ok_renaming sg x y b t dt in
-      let zz = fresh ((y,b) :: sg) in
-      fresh_is_fresh ((y,b) :: sg);
+      let (| zz, dbody |) = aux z (Inl t) _ _  dbody in
+      rename_open body z zz;      
+      rename_open_commute body zz x y;
       let dbody
-        : src_typing ((z, Inl t)::g) (open_exp body z) t'
+        : src_typing (rename_env ((zz, Inl t)::sg') x y@(y,b)::sg) (open_exp (rename body x y) zz) t'
         = dbody
       in
-      admit()
+      let dt
+        : src_ty_ok (rename_env sg' x y@(y,b)::sg) t
+        = src_ty_ok_renaming sg sg' x y b _ dt
+      in
+      T_Lam _ t _ _ zz dt dbody
 
-    | _ -> admit()
+    | T_App _ e1 e2 t t' t0 d1 d2 st ->
+      let d1 = src_typing_renaming sg sg' x y b _ _ d1 in
+      let d2 = src_typing_renaming sg sg' x y b _ _ d2 in
+      let st = sub_typing_renaming sg sg' x y b _ _ st in
+      T_App _ _ _ _ _ _ d1 d2 st
+
+    | T_If g eb e1 e2 t1 t2 t hyp db dt1 dt2 st1 st2 ->
+      let db = src_typing_renaming sg sg' x y b _ _ db in
+      let (| hyp', dt1 |) = aux hyp (Inr (eb , EBool true)) _ _ dt1 in
+      let (| hyp'', dt2 |) = aux hyp (Inr (eb, EBool false)) _ _ dt2 in      
+      let dt1 : src_typing _ (rename (rename e1 hyp hyp') x y) t1 = dt1 in
+      assume (rename e1 hyp hyp' == e1);
+      assume (rename e2 hyp hyp' == e2);     
+      assert (hyp' == hyp'');
+      fresh_is_fresh ((y,b)::sg'@(x,b)::sg);
+      lookup_append_inverse ((x,b)::sg) ((y,b)::sg') hyp;
+      let st1 
+        : sub_typing ((hyp', Inr (eb, EBool true))::g) t1 t
+        = sub_typing_renaming g [] hyp hyp' (Inr (eb, EBool true)) _ _ st1
+      in
+      let st1
+        : sub_typing ((hyp', Inr (rename eb x y, EBool true))::(rename_env sg' x y)@(y,b)::sg) t1 t
+        = sub_typing_renaming sg ((hyp', Inr (eb, EBool true))::sg') x y b _ _ st1
+      in
+      let st2
+        : sub_typing ((hyp', Inr (eb, EBool false))::g) t2 t
+        = sub_typing_renaming g [] hyp hyp' (Inr (eb, EBool false)) _ _ st2
+      in
+      let st2
+        : sub_typing ((hyp', Inr (rename eb x y, EBool false))::(rename_env sg' x y)@(y,b)::sg) t2 t
+        = sub_typing_renaming sg ((hyp', Inr (eb, EBool false))::sg') x y b _ _ st2
+      in 
+      T_If _ _ _ _ _ _ _ _ db dt1 dt2 st1 st2
 
 
+
+let rec sub_typing_weakening (sg sg':src_env) 
+                             (x:var { None? (lookup sg x) && None? (lookup sg' x) })
+                             (b:binding)
+                             (t1 t2:src_ty)
+                             (d:sub_typing (sg'@sg) t1 t2)
+  : GTot (d':sub_typing (sg'@((x, b)::sg)) t1 t2 { s_height d == s_height d' })
+         (decreases (s_height d))
+  = admit()
+  
 let rec src_typing_weakening (sg sg':src_env) 
                              (x:var { None? (lookup sg x) && None? (lookup sg' x) })
                              (b:binding)
-                             (e:src_exp { ln e })
+                             (e:src_exp)
                              (t:src_ty)                         
                              (d:src_typing (sg'@sg) e t)
   : GTot (d':src_typing (sg'@((x, b)::sg)) e t { height d == height d' })
          (decreases (height d))
-  = admit()
-  // match d with
-  //   | T_Bool _ b -> T_Bool _ b
+  = match d with
+    | T_Bool _ b -> T_Bool _ b
 
-  //   | T_Var _ y -> 
-  //     assert (lookup (sg'@sg) y == Some (Inl t));
-  //     assume (lookup (sg'@((x,b)::sg)) y == Some (Inl t));      
-  //     T_Var _ y
+    | T_Var _ y -> 
+      lookup_append_inverse sg sg' y;      
+      lookup_append_inverse ((x,b)::sg) sg' y;
+      T_Var _ y
 
-  //   | T_Lam g t e t' y dt de ->
-  //     assert (None? (lookup (sg'@sg) y));
-  //     let dt = src_ty_ok_weakening sg sg' x b _ dt in
-  //     let y' = fresh (sg'@((x,b) :: sg)) in
-  //     fresh_is_fresh (sg'@((x,b) :: sg));
-  //     assume (None? (lookup (sg'@sg) y'));
-  //     let de 
-  //       : src_typing ((y', Inl t)::(sg'@sg)) (open_exp e y') t'
-  //       = src_typing_renaming _ y y' (Inl t) _ _ de
-  //     in
-  //     assume ((y', Inl t)::(sg'@sg) == ((y', Inl t)::sg')@sg);
-  //     assume (None? (lookup ((y', Inl t)::sg') x));
-  //     let de
-  //       : src_typing (((y',Inl t)::sg') @ (x,b)::sg) (open_exp e y') t'
-  //       = src_typing_weakening sg ((y', Inl t)::sg') x b _ _ de 
-  //     in
-  //     assume ((((y',Inl t)::sg') @ (x,b)::sg) == (y',Inl t)::(sg' @((x,b) ::sg)));
-  //     T_Lam (sg' @((x,b) ::sg)) t e t' y' dt de
+    | T_Lam g t e t' y dt de ->
+      assert (None? (lookup (sg'@sg) y));
+      lookup_append_inverse sg sg' y;
+      let dt = src_ty_ok_weakening sg sg' x b _ dt in
+      let y' = fresh (sg'@((x,b) :: sg)) in
+      fresh_is_fresh (sg'@((x,b) :: sg));
+      lookup_append_inverse ((x,b)::sg) sg' y';
+      lookup_append_inverse sg sg' y';      
+      assert (None? (lookup (sg'@sg) y'));
+      let de 
+        : src_typing ((y', Inl t)::(sg'@sg)) (open_exp e y') t'
+        = rename_open e y y';
+          src_typing_renaming (sg'@sg) [] y y' (Inl t) _ _ de
+      in
+      let de
+        : src_typing ((y', Inl t)::sg'@(x,b)::sg) (open_exp e y') t'
+        = src_typing_weakening sg ((y', Inl t)::sg') x b _ _ de
+      in
+      T_Lam _ _ _ _ _ dt de
 
-  //   | T_App g e1 e2 t t' s0 d1 d2 s -> admit()
+    | T_App g e1 e2 t t' s0 d1 d2 s ->
+      let d1 = src_typing_weakening _ _ _ _ _ _ d1 in
+      let d2 = src_typing_weakening _ _ _ _ _ _ d2 in      
+      let s = sub_typing_weakening _ _ _ _ _ _ s in
+      T_App _ _ _ _ _ _ d1 d2 s
 
-  //   | T_If _ b e1 e2 t1 t2 t hyp db d1 d2 s1 s2 -> admit()
-
-// let rec src_typing_weakening_alt (sg:src_env)
-//                                  (e:src_exp)
-//                                  (t:src_ty)
-//                                  (d:src_typing [] e t)
-//   : GTot (d':src_typing sg e t { height d == height d'})
-//   = match d with
-//     | T_Bool _ b -> T_Bool _ b
-//     | T_Lam _ t e t' x dt ds ->
-//       let dt = src_ty_ok_weakening
-//     | _ -> admit()
+    | T_If g eb e1 e2 t1 t2 t hyp db d1 d2 s1 s2 ->
+      let db = src_typing_weakening _ _ _ _ _ _ db in
+      lookup_append_inverse sg sg' hyp;
+      let hyp' = fresh (sg'@((x,b) :: sg)) in
+      fresh_is_fresh (sg'@((x,b) :: sg));
+      lookup_append_inverse ((x,b)::sg) sg' hyp';
+      lookup_append_inverse sg sg' hyp';      
+      assume (rename e1 hyp hyp' == e1);
+      assume (rename e2 hyp hyp' == e2);
+      let d1 
+        : src_typing ((hyp', Inr (eb, EBool true))::(sg'@sg)) (rename e1 hyp hyp') t1
+        = src_typing_renaming (sg'@sg) [] hyp hyp' _ _ _ d1
+      in
+      let d1
+        : src_typing ((hyp', Inr (eb, EBool true))::sg'@(x,b)::sg) (rename e1 hyp hyp') t2
+        = src_typing_weakening sg ((hyp', Inr (eb, EBool true))::sg') x b _ _ d1
+      in
+      let d2
+        : src_typing ((hyp', Inr (eb, EBool false))::(sg'@sg)) (rename e2 hyp hyp') t1
+        = src_typing_renaming (sg'@sg) [] hyp hyp' _ _ _ d2
+      in
+      let d2
+        : src_typing ((hyp', Inr (eb, EBool false))::sg'@(x,b)::sg) (rename e2 hyp hyp') t2
+        = src_typing_weakening sg ((hyp', Inr (eb, EBool false))::sg') x b _ _ d2
+      in
+      let s1 : sub_typing ((hyp', Inr (eb, EBool true))::sg'@(x,b)::sg) t1 t
+         = sub_typing_weakening sg ((hyp', Inr (eb, EBool true))::sg') x b _ _
+                                   (sub_typing_renaming g [] hyp hyp' _ _ _ s1)
+      in
+      let s2 : sub_typing ((hyp', Inr (eb, EBool false))::sg'@(x,b)::sg) t2 t
+         = sub_typing_weakening sg ((hyp', Inr (eb, EBool false))::sg') x b _ _
+                                   (sub_typing_renaming g [] hyp hyp' _ _ _ s2)
+      in      
+      T_If _ _ _ _ _ _ _ hyp' db d1 d2 s1 s2
                          
 let src_typing_weakening_l (sg:src_env) 
                            (sg':src_env {  //need a stronger refinement here
