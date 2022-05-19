@@ -64,6 +64,19 @@ val pts_to
   ([@@@ smt_fallback ] s: Seq.seq elt)
 : Tot vprop
 
+/// A stateful lemma to relate the size of an array with the size
+/// of the element sequence it points to
+val pts_to_length
+  (#opened: _)
+  (#elt: Type u#1) (a: array elt)
+  ([@@@ smt_fallback ] p: P.perm)
+  ([@@@ smt_fallback ] s: Seq.seq elt)
+: SteelGhost unit opened
+    (pts_to a p s)
+    (fun _ -> pts_to a p s)
+    (fun _ -> True)
+    (fun _ _ _ -> Seq.length s == length a)
+
 /// Allocating a new array of size n, where each cell is initialized
 /// with value x
 [@@noextract_to "krml"] // primitive

@@ -155,6 +155,12 @@ let elim_pts_to (#opened: _) (#elt: Type u#1) (a: array elt) (p: P.perm) (s: Seq
     (pts_to0 a p s);
   elim_pure _
 
+let pts_to_length
+  a p s
+=
+  elim_pts_to a p s;
+  intro_pts_to a p s
+
 [@@noextract_to "krml"]
 let alloc
   (#elt: Type)
