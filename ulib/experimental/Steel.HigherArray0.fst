@@ -13,18 +13,22 @@ open Steel.Effect
 /// NOTE: This module is slated to have primitive Karamel extraction.
 
 [@@noextract_to "krml"]
-let carrier (elt: Type u#a) : Tot Type =
-  PM.map nat (P.fractional elt)
+let index_t (len: Ghost.erased nat) : Tot Type0 =
+  (i: nat { i < len })
 
 [@@noextract_to "krml"]
-let pcm (elt: Type u#a) : Tot (P.pcm (carrier elt)) =
-  PM.pointwise nat (P.pcm_frac #elt)
+let carrier (elt: Type u#a) (len: Ghost.erased nat) : Tot Type =
+  PM.map (index_t len) (P.fractional elt)
 
 [@@noextract_to "krml"]
-let one (#elt: Type) = (pcm elt).P.p.P.one
-let composable (#elt: Type) = (pcm elt).P.p.P.composable
+let pcm (elt: Type u#a) (len: Ghost.erased nat) : Tot (P.pcm (carrier elt len)) =
+  PM.pointwise (index_t len) (P.pcm_frac #elt)
+
 [@@noextract_to "krml"]
-let compose (#elt: Type) = (pcm elt).P.p.P.op
+let one (#elt: Type) (#len: Ghost.erased nat) = (pcm elt len).P.p.P.one
+let composable (#elt: Type) (#len: Ghost.erased nat) = (pcm elt len).P.p.P.composable
+[@@noextract_to "krml"]
+let compose (#elt: Type) (#len: Ghost.erased nat) = (pcm elt len).P.p.P.op
 
 [@@noextract_to "krml"]
 let mk_carrier
@@ -33,7 +37,7 @@ let mk_carrier
   (offset: nat)
   (s: Seq.seq elt)
   (p: P.perm)
-: Tot (carrier elt)
+: Tot (carrier elt len)
 = let f (i: nat) : Tot (P.fractional elt) =
     if offset + Seq.length s > len || i < offset || i >= offset + Seq.length s
     then None
@@ -67,14 +71,14 @@ noeq
 type ptr (elt: Type) = {
   base_len: Ghost.erased U32.t;
                    // U32.t to prove that A.read, A.write offset computation does not overflow. TODO: replace U32.t with size_t
-  base: ref _ (pcm elt);
+  base: ref _ (pcm elt (U32.v base_len));
   offset: (offset: nat { offset <= U32.v base_len });
 }
 
 [@@erasable]
-let base_t (elt: Type) : Tot Type = Ghost.erased (U32.t & ref _ (pcm elt))
-let base_len (#elt: Type) (b: base_t elt) : GTot nat = U32.v (fst b)
-let base (#elt: Type) (p: ptr elt) : Tot (base_t elt) = (Ghost.reveal p.base_len, p.base)
+let base_t (elt: Type) : Tot Type = Ghost.erased (base_len: U32.t & ref _ (pcm elt (U32.v base_len)))
+let base_len (#elt: Type) (b: base_t elt) : GTot nat = U32.v (dfst b)
+let base (#elt: Type) (p: ptr elt) : Tot (base_t elt) = (| Ghost.reveal p.base_len, p.base |)
 let offset (#elt: Type) (p: ptr elt) : Ghost nat (requires True) (ensures (fun offset -> offset <= base_len (base p))) = p.offset
 
 let ptr_base_offset_inj (#elt: Type) (p1 p2: ptr elt) : Lemma
@@ -127,12 +131,17 @@ let change_r_pts_to
   (#pcm: P.pcm carrier)
   (p: ref carrier pcm)
   (v: carrier)
-  (p': ref carrier pcm)
-  (v': carrier)
+  (#carrier': Type u#1)
+  (#pcm': P.pcm carrier')
+  (p': ref carrier' pcm')
+  (v': carrier')
 : SteelGhost unit opened
     (R.pts_to p v)
     (fun _ -> R.pts_to p' v')
-    (fun _ -> p == p' /\ // keep on 2 distinct lines for error messages
+    (fun _ ->  // keep on distinct lines for error messages
+      carrier == carrier' /\
+      pcm == pcm' /\
+      p == p' /\
       v == v')
     (fun _ _ _ -> True)
 = change_equal_slprop
@@ -178,8 +187,8 @@ let alloc
     (fun _ -> True)
     (fun _ a _ -> len a == n)
 =
-  let c : carrier elt = mk_carrier (U32.v n) 0 (Seq.create (U32.v n) x) P.full_perm in
-  let base : ref (carrier elt) (pcm elt) = R.alloc c in
+  let c : carrier elt (U32.v n) = mk_carrier (U32.v n) 0 (Seq.create (U32.v n) x) P.full_perm in
+  let base : ref (carrier elt (U32.v n)) (pcm elt (U32.v n)) = R.alloc c in
   let p = {
     base_len = n;
     base = base;
