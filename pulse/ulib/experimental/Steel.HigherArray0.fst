@@ -409,7 +409,7 @@ let mk_carrier_upd
 let upd
   (#t: Type)
   (a: array t)
-  (s: Ghost.erased (Seq.seq t))
+  (#s: Ghost.erased (Seq.seq t))
   (i: U32.t)
   (sq: squash (U32.v i < Seq.length s))
   (v: t)
