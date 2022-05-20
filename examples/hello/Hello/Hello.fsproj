@@ -3,7 +3,7 @@
     <TargetFramework>net6.0</TargetFramework>
     <OutputType>Exe</OutputType>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <NoWarn>62</NoWarn>
+    <NoWarn>$(NoWarn);62</NoWarn>
   </PropertyGroup>
   <PropertyGroup>
     <FSTAR_HOME>..\..\..</FSTAR_HOME>
