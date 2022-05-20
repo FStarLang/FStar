@@ -211,7 +211,7 @@ let rec infer (g:R.env)
       let t0 = new_hole g in
       let x = fresh sg in
       let (| e, t |) = infer g ((x, t0) :: sg) (open_exp e x) in
-      (| ELam t (close_exp e x), `(TArrow (`#(t0)) (`#(t))) |)
+      (| ELam t0 (close_exp e x), `(TArrow (`#(t0)) (`#(t))) |)
 
     | EApp e1 e2 ->
       let (| e1, t1 |) = infer g sg e1 in
