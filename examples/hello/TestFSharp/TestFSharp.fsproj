@@ -1,6 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
+    <NoWarn>$(NoWarn);62</NoWarn>
   </PropertyGroup>
   <PropertyGroup>
     <FSTAR_HOME>..\..\..</FSTAR_HOME>

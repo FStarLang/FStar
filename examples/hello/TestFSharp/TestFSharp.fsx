@@ -1,5 +1,5 @@
 ﻿#r "../../../bin/ulibfs.dll"
-#r "bin/Debug/TestFSharp.dll"
+#r "bin/Debug/netstandard2.0/TestFSharp.dll"
 
 open TestFSharp
 
