@@ -1,8 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>net462;net6.0</TargetFrameworks>
+    <TargetFramework>net6.0</TargetFramework>
     <OutputType>Exe</OutputType>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>62</NoWarn>
   </PropertyGroup>
   <PropertyGroup>
     <FSTAR_HOME>..\..\..</FSTAR_HOME>
