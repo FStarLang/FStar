@@ -1,7 +1,7 @@
 # This Dockerfile should be run from the root FStar directory
 
 ARG ocaml_version=4.12
-FROM ocaml/opam:ubuntu-21.04-ocaml-$ocaml_version
+FROM ocaml/opam:ubuntu-21.10-ocaml-$ocaml_version
 
 # FIXME: the `opam depext` command should be unnecessary with opam 2.1
 RUN opam depext conf-gmp z3.4.8.5 conf-m4
@@ -11,6 +11,8 @@ ADD --chown=opam:opam ./ $HOME/FStar/
 RUN opam install --deps-only $HOME/FStar/fstar.opam
 
 # CI dependencies (including Mono for F# and other packages for karamel, EverParse)
+# Dotnet feed should be kept in sync with Ubuntu version
+# see https://docs.microsoft.com/en-us/dotnet/core/install/linux-ubuntu
 RUN opam install \
     hex \
     visitors \
