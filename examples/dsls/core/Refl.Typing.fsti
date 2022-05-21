@@ -1,5 +1,37 @@
 module Refl.Typing
 open FStar.Reflection
+module R = FStar.Reflection
+val inspect_pack (t:R.term_view)
+  : Lemma (ensures R.(inspect_ln (pack_ln t) == t))
+          [SMTPat R.(inspect_ln (pack_ln t))]
+
+val pack_inspect (t:R.term)
+  : Lemma (ensures R.(pack_ln (inspect_ln t) == t))
+          [SMTPat R.(pack_ln (inspect_ln t))]
+
+val inspect_pack_bv (t:R.bv_view)
+  : Lemma (ensures R.(inspect_bv (pack_bv t) == t))
+          [SMTPat R.(inspect_bv (pack_bv t))]
+
+val pack_inspect_bv (t:R.bv)
+  : Lemma (ensures R.(pack_bv (inspect_bv t) == t))
+          [SMTPat R.(pack_bv (inspect_bv t))]
+
+val inspect_pack_binder (b:_) (q:_) (a:_)
+  : Lemma (ensures R.(R.inspect_binder (R.pack_binder b q a) == (b, (q, a))))
+          [SMTPat R.(inspect_binder (pack_binder b q a))]
+
+val pack_inspect_binder (t:R.binder)
+  : Lemma (ensures (let b, (q, a) = R.inspect_binder t in
+                    R.(pack_binder b q a == t)))
+
+val pack_inspect_comp (t:R.comp)
+  : Lemma (ensures (R.pack_comp (R.inspect_comp t) == t))
+          [SMTPat (R.pack_comp (R.inspect_comp t))]
+
+val inspect_pack_comp (t:R.comp_view)
+  : Lemma (ensures (R.inspect_comp (R.pack_comp t) == t))
+          [SMTPat (R.inspect_comp (R.pack_comp t))]
 
 val lookup_bvar (e:env) (x:int) : option term
 
@@ -7,14 +39,18 @@ val lookup_fvar (e:env) (x:fv) : option term
 
 val extend_env (e:env) (x:var) (ty:term) : env
 
-let lookup_bvar_extend_env (g:env) (x y:var) (ty:term)
+val lookup_bvar_extend_env (g:env) (x y:var) (ty:term)
   : Lemma 
     (ensures (
            if x = y
            then lookup_bvar (extend_env g x ty) y == Some ty
            else lookup_bvar (extend_env g x ty) y == lookup_bvar g y))
     [SMTPat (lookup_bvar (extend_env g x ty) y)]
-  = admit()
+
+val lookup_fvar_extend_env (g:env) (x:fv) (y:var) (ty:term)
+  : Lemma 
+    (ensures lookup_fvar (extend_env g y ty) x == lookup_fvar g x)
+    [SMTPat (lookup_fvar (extend_env g y ty) x)]
 
 let as_binder (x:var) (ty:term)
   : binder 
@@ -35,7 +71,7 @@ let binder_sort (b:binder) =
 let binder_sort_lemma (x:var) (ty:term)
   : Lemma (binder_sort (as_binder x ty) == ty)
           [SMTPat (binder_sort (as_binder x ty))]
-  = admit()          
+  = ()          
 
 //replace BV 0 in t with v
 noeq
@@ -257,7 +293,7 @@ let bv_as_binder bv = pack_binder bv Q_Explicit []
 let bv_index_of_make_bv (n:nat) (t:term)
   : Lemma (ensures bv_index (pack_bv (make_bv n t)) == n)
           [SMTPat (bv_index (pack_bv (make_bv n t)))]
-  = admit()
+  = ()
 
 let constant_as_term (v:vconst) = pack_ln (Tv_Const v)
 let unit_exp = constant_as_term C_Unit

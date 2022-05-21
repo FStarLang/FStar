@@ -368,44 +368,20 @@ let rec extend_env_l_lookup_bvar (g:R.env) (sg:stlc_env) (x:var)
     | [] -> ()
     | hd :: tl -> extend_env_l_lookup_bvar g tl x
 
-let inspect_pack (t:R.term_view)
-  : Lemma (ensures R.(inspect_ln (pack_ln t) == t))
-          [SMTPat R.(inspect_ln (pack_ln t))]
-  = admit()
-
-let pack_inspect (t:R.term)
-  : Lemma (ensures R.(pack_ln (inspect_ln t) == t))
-          [SMTPat R.(pack_ln (inspect_ln t))]
-  = admit()
-
-
-let inspect_pack_bv (t:R.bv_view)
-  : Lemma (ensures R.(inspect_bv (pack_bv t) == t))
-          [SMTPat R.(inspect_bv (pack_bv t))]
-  = admit()
-
-let pack_inspect_bv (t:R.bv)
-  : Lemma (ensures R.(pack_bv (inspect_bv t) == t))
-          [SMTPat R.(pack_bv (inspect_bv t))]
-  = admit()
-
-let inspect_pack_binder b q a
-  : Lemma (ensures R.(R.inspect_binder (R.pack_binder b q a) == (b, (q, a))))
-          [SMTPat R.(inspect_binder (pack_binder b q a))]
-  = admit()
-
-let pack_inspect_binder (t:R.binder)
-  : Lemma (ensures (let b, (q, a) = R.inspect_binder t in
-                    R.(pack_binder b q a == t)))
-  = admit()
 
 open FStar.Calc
 
-//key lemma about STLC types
-let stlc_types_are_closed_core (ty:stlc_ty) (x:RT.open_or_close) (n:nat)
-  : Lemma (RT.open_or_close_term' (elab_ty ty) x n == elab_ty ty)
+//key lemma about STLC types: Their elaborations are closed
+let rec stlc_types_are_closed_core (ty:stlc_ty) (x:RT.open_or_close) (n:nat)
+  : Lemma (ensures RT.open_or_close_term' (elab_ty ty) x n == elab_ty ty)
+          (decreases ty)
           [SMTPat (RT.open_or_close_term' (elab_ty ty) x n)]
-  = admit()
+
+  = match ty with
+    | TUnit -> ()
+    | TArrow t1 t2 ->
+      stlc_types_are_closed_core t1 x n;
+      stlc_types_are_closed_core t2 x (n + 1)
 
 let stlc_types_are_closed1 (ty:stlc_ty) (v:R.term)
   : Lemma (RT.open_with (elab_ty ty) v == elab_ty ty)
@@ -472,13 +448,15 @@ let fstar_top_env =
     forall x. None? (RT.lookup_bvar g x )
   }
 
-let extend_env_l_lookup_fvar (g:R.env) (sg:stlc_env) (fv:R.fv)
+let rec extend_env_l_lookup_fvar (g:R.env) (sg:stlc_env) (fv:R.fv)
   : Lemma 
     (ensures
       RT.lookup_fvar (extend_env_l g sg) fv ==
       RT.lookup_fvar g fv)
     [SMTPat (RT.lookup_fvar (extend_env_l g sg) fv)]
-  = admit()
+  = match sg with
+    | [] -> ()
+    | hd::tl -> extend_env_l_lookup_fvar g tl fv
           
 let rec elab_ty_soundness (g:fstar_top_env)
                           (sg:stlc_env)
