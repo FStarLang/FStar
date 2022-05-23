@@ -283,13 +283,16 @@ let rec term_mem x = function
   | [] -> false
   | hd::tl -> if term_eq hd x then true else term_mem x tl
 
+private
+let refl (#a:Type) (x:a) : Lemma (x == x) = ()
+
 let unfold_topdown (ts: list term) =
   let should_rewrite (s:term) : Tac (bool * int) =
     (term_mem s ts, 0)
   in
   let rewrite () : Tac unit =
     norm [delta];
-    trefl()
+    apply_lemma (`refl)
   in
   topdown_rewrite should_rewrite rewrite
 
