@@ -617,7 +617,7 @@ let mk_sq_eq (t1 t2 : term) : term =
 let grewrite (t1 t2 : term) : Tac unit =
     let e = tcut (mk_sq_eq t1 t2) in
     let e = pack_ln (Tv_Var (bv_of_binder e)) in
-    pointwise (fun () -> try exact e with | _ -> trefl ())
+    pointwise (fun () -> try exact e with | _ -> fail_silently "SKIP")
 
 private
 let __un_sq_eq (#a:Type) (x y : a) (_ : (x == y)) : Lemma (x == y) = ()
