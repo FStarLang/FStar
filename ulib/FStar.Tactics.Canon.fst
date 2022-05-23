@@ -130,9 +130,16 @@ private
 let step_lemma (lem : term) : Tac unit =
     step (fun () -> apply_lemma lem)
 
+/// When facing a goal of the shape eq2 #(?u_ty) x ?u, simply applying
+/// the tactic `trefl` does not allow to infer ?u_ty. Applying the lemma
+/// [refl] below solves this issue, as the equality is inferred to have type [a]
+let refl_lemma (#a:Type) (x:a) : Lemma (x == x) = ()
+
+let trefl () : Tac unit = apply_lemma (`refl_lemma)
+
 private val canon_point : expr -> Tac expr
 private let rec canon_point e =
-    let skip () : Tac expr = 
+    let skip () : Tac expr =
         trefl (); e
     in
     match e with
