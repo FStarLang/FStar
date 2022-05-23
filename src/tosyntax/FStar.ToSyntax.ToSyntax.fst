@@ -1849,7 +1849,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
       let wild r = mk_term Wild r Expr in
       let init   = mk_term (Var C.calc_init_lid) init_expr.range Expr in
       let push_impl r = mk_term (Var C.calc_push_impl_lid) r Expr in
-      let last_expr = match List.last steps with
+      let last_expr = match List.last_opt steps with
                       | Some (CalcStep (_, _, last_expr)) -> last_expr
                       | None -> init_expr
       in
@@ -3021,12 +3021,9 @@ let rec desugar_effect env d (quals: qualifiers) (is_layered:bool) eff_name eff_
     let eff_t = desugar_term env eff_typ in
 
     let num_indices = List.length (fst (U.arrow_formals eff_t)) in
-    if is_layered && num_indices <= 1 then
-      raise_error (Errors.Fatal_NotEnoughArgumentsForEffect,
-        "Effect " ^ Ident.string_of_id eff_name ^ "is defined as a layered effect but has no indices") d.drange;
 
     (* An effect for free has a type of the shape "a:Type -> Effect" *)
-    let for_free = num_indices = 1 in
+    let for_free = num_indices = 1 && not is_layered in
     if for_free
     then Errors.log_issue d.drange (Errors.Warning_DeprecatedGeneric,
             BU.format1 "DM4Free feature is deprecated and will be removed soon, \

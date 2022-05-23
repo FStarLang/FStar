@@ -1315,22 +1315,6 @@ let (find_univ_uvar :
                then FStar_Pervasives_Native.Some t
                else FStar_Pervasives_Native.None
            | uu___1 -> FStar_Pervasives_Native.None)
-let (whnf' :
-  FStar_TypeChecker_Env.env ->
-    FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term)
-  =
-  fun env ->
-    fun t ->
-      let uu___ =
-        let uu___1 =
-          let uu___2 = FStar_Syntax_Util.unmeta t in
-          FStar_TypeChecker_Normalize.normalize
-            [FStar_TypeChecker_Env.Beta;
-            FStar_TypeChecker_Env.Reify;
-            FStar_TypeChecker_Env.Weak;
-            FStar_TypeChecker_Env.HNF] env uu___2 in
-        FStar_Syntax_Subst.compress uu___1 in
-      FStar_Compiler_Effect.op_Bar_Greater uu___ FStar_Syntax_Util.unlazy_emb
 let (sn' :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term)
@@ -1376,7 +1360,11 @@ let (norm_with_steps :
             uu___ profiling_tag
 let (should_strongly_reduce : FStar_Syntax_Syntax.term -> Prims.bool) =
   fun t ->
-    let uu___ = FStar_Syntax_Util.head_and_args t in
+    let uu___ =
+      let uu___1 =
+        FStar_Compiler_Effect.op_Bar_Greater t FStar_Syntax_Util.unascribe in
+      FStar_Compiler_Effect.op_Bar_Greater uu___1
+        FStar_Syntax_Util.head_and_args in
     match uu___ with
     | (h, uu___1) ->
         let uu___2 =
@@ -1391,6 +1379,18 @@ let (whnf :
   =
   fun env ->
     fun t ->
+      let norm steps t1 =
+        let uu___ =
+          let uu___1 =
+            let uu___2 =
+              FStar_Compiler_Effect.op_Bar_Greater t1
+                FStar_Syntax_Util.unmeta in
+            FStar_Compiler_Effect.op_Bar_Greater uu___2
+              (FStar_TypeChecker_Normalize.normalize steps env) in
+          FStar_Compiler_Effect.op_Bar_Greater uu___1
+            FStar_Syntax_Subst.compress in
+        FStar_Compiler_Effect.op_Bar_Greater uu___
+          FStar_Syntax_Util.unlazy_emb in
       let uu___ =
         let uu___1 =
           let uu___2 = FStar_TypeChecker_Env.current_module env in
@@ -1401,18 +1401,20 @@ let (whnf :
            let uu___2 = should_strongly_reduce t in
            if uu___2
            then
-             let uu___3 =
-               let uu___4 =
-                 FStar_TypeChecker_Normalize.normalize
-                   [FStar_TypeChecker_Env.Beta;
-                   FStar_TypeChecker_Env.Reify;
-                   FStar_TypeChecker_Env.Exclude FStar_TypeChecker_Env.Zeta;
-                   FStar_TypeChecker_Env.UnfoldUntil
-                     FStar_Syntax_Syntax.delta_constant] env t in
-               FStar_Syntax_Subst.compress uu___4 in
-             FStar_Compiler_Effect.op_Bar_Greater uu___3
-               FStar_Syntax_Util.unlazy_emb
-           else whnf' env t) uu___ "FStar.TypeChecker.Rel.whnf"
+             norm
+               [FStar_TypeChecker_Env.Beta;
+               FStar_TypeChecker_Env.Reify;
+               FStar_TypeChecker_Env.Exclude FStar_TypeChecker_Env.Zeta;
+               FStar_TypeChecker_Env.UnfoldUntil
+                 FStar_Syntax_Syntax.delta_constant] t
+           else
+             (let uu___4 = FStar_Syntax_Util.unmeta t in
+              norm
+                [FStar_TypeChecker_Env.Beta;
+                FStar_TypeChecker_Env.Reify;
+                FStar_TypeChecker_Env.Weak;
+                FStar_TypeChecker_Env.HNF] uu___4)) uu___
+        "FStar.TypeChecker.Rel.whnf"
 let norm_arg :
   'uuuuu .
     FStar_TypeChecker_Env.env ->
@@ -2202,7 +2204,7 @@ let (gamma_until :
   =
   fun g ->
     fun bs ->
-      let uu___ = FStar_Compiler_List.last bs in
+      let uu___ = FStar_Compiler_List.last_opt bs in
       match uu___ with
       | FStar_Pervasives_Native.None -> []
       | FStar_Pervasives_Native.Some
@@ -3901,7 +3903,7 @@ let rec (solve : FStar_TypeChecker_Env.env -> worklist -> solution) =
                        ((tp.FStar_TypeChecker_Common.relation =
                            FStar_TypeChecker_Common.EQ)
                           && (rank1 <> FStar_TypeChecker_Common.Flex_flex))
-                   then solve_t env tp probs1
+                   then solve_t' env tp probs1
                    else
                      if probs1.defer_ok = DeferAny
                      then
@@ -3910,7 +3912,7 @@ let rec (solve : FStar_TypeChecker_Env.env -> worklist -> solution) =
                      else
                        if rank1 = FStar_TypeChecker_Common.Flex_flex
                        then
-                         solve_t env
+                         solve_t' env
                            {
                              FStar_TypeChecker_Common.pid =
                                (tp.FStar_TypeChecker_Common.pid);
@@ -7191,7 +7193,7 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                                          let rhs =
                                            force_refinement
                                              (base2, refinement2) in
-                                         solve_t env1
+                                         solve_t' env1
                                            {
                                              FStar_TypeChecker_Common.pid =
                                                (problem.FStar_TypeChecker_Common.pid);
@@ -8512,7 +8514,7 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
               | (uu___7, FStar_Syntax_Syntax.Tm_uvar uu___8) when
                   problem.FStar_TypeChecker_Common.relation =
                     FStar_TypeChecker_Common.EQ
-                  -> solve_t env (invert problem) wl
+                  -> solve_t' env (invert problem) wl
               | (uu___7, FStar_Syntax_Syntax.Tm_app
                  ({
                     FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_uvar
@@ -8522,7 +8524,7 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                   uu___11)) when
                   problem.FStar_TypeChecker_Common.relation =
                     FStar_TypeChecker_Common.EQ
-                  -> solve_t env (invert problem) wl
+                  -> solve_t' env (invert problem) wl
               | (FStar_Syntax_Syntax.Tm_uvar uu___7,
                  FStar_Syntax_Syntax.Tm_arrow uu___8) ->
                   solve_t' env
@@ -8884,7 +8886,7 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                   let t21 =
                     let uu___9 = base_and_refinement env t2 in
                     FStar_Compiler_Effect.op_Less_Bar force_refinement uu___9 in
-                  solve_t env
+                  solve_t' env
                     {
                       FStar_TypeChecker_Common.pid =
                         (problem.FStar_TypeChecker_Common.pid);
@@ -8910,7 +8912,7 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                   let t11 =
                     let uu___9 = base_and_refinement env t1 in
                     FStar_Compiler_Effect.op_Less_Bar force_refinement uu___9 in
-                  solve_t env
+                  solve_t' env
                     {
                       FStar_TypeChecker_Common.pid =
                         (problem.FStar_TypeChecker_Common.pid);

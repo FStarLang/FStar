@@ -159,6 +159,31 @@ let tc_data (env:env_t) (tcs : list (sigelt * universe))
          let result, res_lcomp = tc_trivial_guard env' result in
          let head, args = U.head_and_args_full result in (* collect nested applications too *)
 
+         (*
+          * AR: if the inductive type is explictly universe annotated,
+          *     we need to instantiate universes properly in head (head = tycon<applied to uvars>)
+          *     the following code unifies them with the annotated universes
+          *)
+         let g_uvs = match (SS.compress head).n with
+            | Tm_uinst ( { n = Tm_fvar fv }, tuvs)  when S.fv_eq_lid fv tc_lid ->  //AR: in the second phase of 2-phases, this can be a Tm_uninst too
+              if List.length _uvs = List.length tuvs then
+                List.fold_left2 (fun g u1 u2 ->
+                  //unify the two
+                  Env.conj_guard g (Rel.teq env' (mk (Tm_type u1) Range.dummyRange) (mk (Tm_type (U_name u2)) Range.dummyRange))
+                ) Env.trivial_guard tuvs _uvs
+              else Errors.raise_error (Errors.Fatal_UnexpectedConstructorType,
+                                       "Length of annotated universes does not match inferred universes")
+                                       se.sigrng
+            | Tm_fvar fv when S.fv_eq_lid fv tc_lid -> Env.trivial_guard
+            | _ -> raise_error (Errors.Fatal_UnexpectedConstructorType, (BU.format2 "Expected a constructor of type %s; got %s"
+                                        (Print.lid_to_string tc_lid)
+                                        (Print.term_to_string head))) se.sigrng in
+         let g =List.fold_left2 (fun g ({binder_bv=x}) u_x ->
+                Env.conj_guard g (Rel.universe_inequality u_x u_tc))
+            g_uvs
+            arguments
+            us in
+
          (* Make sure the parameters are respected, cf #1534 *)
          (* The first few arguments, as many as List.length tps, must exactly match the
           * bvs in tps, as they have been opened already by the code above. Must be done
@@ -184,30 +209,6 @@ let tc_data (env:env_t) (tcs : list (sigelt * universe))
                                                 (Print.term_to_string result)
                                                 (Print.term_to_string ty))) se.sigrng
          end;
-         (*
-          * AR: if the inductive type is explictly universe annotated,
-          *     we need to instantiate universes properly in head (head = tycon<applied to uvars>)
-          *     the following code unifies them with the annotated universes
-          *)
-         let g_uvs = match (SS.compress head).n with
-            | Tm_uinst ( { n = Tm_fvar fv }, tuvs)  when S.fv_eq_lid fv tc_lid ->  //AR: in the second phase of 2-phases, this can be a Tm_uninst too
-              if List.length _uvs = List.length tuvs then
-                List.fold_left2 (fun g u1 u2 ->
-                  //unify the two
-                  Env.conj_guard g (Rel.teq env' (mk (Tm_type u1) Range.dummyRange) (mk (Tm_type (U_name u2)) Range.dummyRange))
-                ) Env.trivial_guard tuvs _uvs
-              else Errors.raise_error (Errors.Fatal_UnexpectedConstructorType,
-                                       "Length of annotated universes does not match inferred universes")
-                                       se.sigrng
-            | Tm_fvar fv when S.fv_eq_lid fv tc_lid -> Env.trivial_guard
-            | _ -> raise_error (Errors.Fatal_UnexpectedConstructorType, (BU.format2 "Expected a constructor of type %s; got %s"
-                                        (Print.lid_to_string tc_lid)
-                                        (Print.term_to_string head))) se.sigrng in
-         let g =List.fold_left2 (fun g ({binder_bv=x}) u_x ->
-                Env.conj_guard g (Rel.universe_inequality u_x u_tc))
-            g_uvs
-            arguments
-            us in
 
 (*close*)let t = U.arrow ((tps |> List.map (fun b -> {b with binder_qual=Some (Implicit true)}))@arguments) (S.mk_Total result) in
                         //NB: the tps are tagged as Implicit inaccessbile arguments of the data constructor

@@ -76,7 +76,7 @@ let open_read_file = open_in
 let open_write_file = open_out
 let close_read_file = close_in
 let close_write_file = close_out
-let read_line fd = try Pervasives.input_line fd with End_of_file -> raise EOF
+let read_line fd = try Stdlib.input_line fd with End_of_file -> raise EOF
 let write_string = output_string
 
 let debug_print_string s = print_string s; false

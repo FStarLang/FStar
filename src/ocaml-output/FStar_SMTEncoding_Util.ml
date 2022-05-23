@@ -219,14 +219,13 @@ let (is_smt_reifiable_effect :
     fun l ->
       let l1 = FStar_TypeChecker_Env.norm_eff_name en l in
       (FStar_TypeChecker_Env.is_reifiable_effect en l1) &&
-        ((FStar_Ident.lid_equals l1 FStar_Parser_Const.effect_TAC_lid) ||
-           (let uu___ =
-              let uu___1 =
-                FStar_Compiler_Effect.op_Bar_Greater l1
-                  (FStar_TypeChecker_Env.get_effect_decl en) in
-              FStar_Compiler_Effect.op_Bar_Greater uu___1
-                FStar_Syntax_Util.is_layered in
-            Prims.op_Negation uu___))
+        (let uu___ =
+           let uu___1 =
+             FStar_Compiler_Effect.op_Bar_Greater l1
+               (FStar_TypeChecker_Env.get_effect_decl en) in
+           FStar_Compiler_Effect.op_Bar_Greater uu___1
+             FStar_Syntax_Util.is_layered in
+         Prims.op_Negation uu___)
 let (is_smt_reifiable_comp :
   FStar_TypeChecker_Env.env -> FStar_Syntax_Syntax.comp -> Prims.bool) =
   fun en ->
@@ -241,7 +240,8 @@ let (is_smt_reifiable_rc :
   =
   fun en ->
     fun rc ->
-      is_smt_reifiable_effect en rc.FStar_Syntax_Syntax.residual_effect
+      FStar_Compiler_Effect.op_Bar_Greater
+        rc.FStar_Syntax_Syntax.residual_effect (is_smt_reifiable_effect en)
 let (is_smt_reifiable_function :
   FStar_TypeChecker_Env.env -> FStar_Syntax_Syntax.term -> Prims.bool) =
   fun en ->
@@ -251,5 +251,9 @@ let (is_smt_reifiable_function :
         uu___1.FStar_Syntax_Syntax.n in
       match uu___ with
       | FStar_Syntax_Syntax.Tm_arrow (uu___1, c) ->
-          is_smt_reifiable_comp en c
+          let uu___2 =
+            FStar_Compiler_Effect.op_Bar_Greater c
+              FStar_Syntax_Util.comp_effect_name in
+          FStar_Compiler_Effect.op_Bar_Greater uu___2
+            (is_smt_reifiable_effect en)
       | uu___1 -> false

@@ -443,7 +443,7 @@ let match_length_of_path (path: path) : int =
 let first_import_of_path (path: path) : option string =
   match path with
   | [] -> None
-  | { imports = imports } :: _ -> List.last imports
+  | { imports = imports } :: _ -> List.last_opt imports
 
 let alist_of_ns_info ns_info =
   [("name", FStar.Compiler.Util.JsonStr ns_info.ns_name);
