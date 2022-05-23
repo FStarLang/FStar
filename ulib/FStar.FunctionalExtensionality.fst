@@ -50,7 +50,7 @@ let l_to_r (t:term) : Tac unit =
     (fun  _ -> true, Continue)
     (fun _ ->
       try t_apply_lemma false true t
-      with _ -> t_trefl false)
+      with _ -> raise (TacticFailure "SKIP"))
 
 let extensionality_1 (a:Type)
                      (b: a -> Type)
@@ -60,6 +60,7 @@ let extensionality_1 (a:Type)
   = assert (on_domain a f == on_domain a g)
        by  (norm [delta_only [`%on_domain]];
             l_to_r (quote (quantifier_as_lemma sq_feq));
+            dump "here";
             t_trefl false)
 
 let extensionality a b f g
