@@ -143,19 +143,161 @@ let (find_user_tac_for_uvar :
   =
   fun env ->
     fun u ->
+      let rec attr_list_elements e =
+        let uu___ =
+          let uu___1 = FStar_Syntax_Util.unmeta e in
+          FStar_Syntax_Util.head_and_args uu___1 in
+        match uu___ with
+        | (head, args) ->
+            let uu___1 =
+              let uu___2 =
+                let uu___3 = FStar_Syntax_Util.un_uinst head in
+                uu___3.FStar_Syntax_Syntax.n in
+              (uu___2, args) in
+            (match uu___1 with
+             | (FStar_Syntax_Syntax.Tm_fvar fv, uu___2) when
+                 FStar_Syntax_Syntax.fv_eq_lid fv FStar_Parser_Const.nil_lid
+                 -> FStar_Pervasives_Native.Some []
+             | (FStar_Syntax_Syntax.Tm_fvar fv,
+                uu___2::(hd, uu___3)::(tl, uu___4)::[]) when
+                 FStar_Syntax_Syntax.fv_eq_lid fv FStar_Parser_Const.cons_lid
+                 ->
+                 (match hd.FStar_Syntax_Syntax.n with
+                  | FStar_Syntax_Syntax.Tm_constant (FStar_Const.Const_string
+                      (s, uu___5)) ->
+                      let uu___6 = attr_list_elements tl in
+                      (match uu___6 with
+                       | FStar_Pervasives_Native.None ->
+                           FStar_Pervasives_Native.None
+                       | FStar_Pervasives_Native.Some tl1 ->
+                           FStar_Pervasives_Native.Some (s :: tl1))
+                  | uu___5 -> FStar_Pervasives_Native.None)
+             | (FStar_Syntax_Syntax.Tm_fvar fv,
+                (hd, uu___2)::(tl, uu___3)::[]) when
+                 FStar_Syntax_Syntax.fv_eq_lid fv FStar_Parser_Const.cons_lid
+                 ->
+                 (match hd.FStar_Syntax_Syntax.n with
+                  | FStar_Syntax_Syntax.Tm_constant (FStar_Const.Const_string
+                      (s, uu___4)) ->
+                      let uu___5 = attr_list_elements tl in
+                      (match uu___5 with
+                       | FStar_Pervasives_Native.None ->
+                           FStar_Pervasives_Native.None
+                       | FStar_Pervasives_Native.Some tl1 ->
+                           FStar_Pervasives_Native.Some (s :: tl1))
+                  | uu___4 -> FStar_Pervasives_Native.None)
+             | uu___2 -> FStar_Pervasives_Native.None) in
       match u.FStar_Syntax_Syntax.ctx_uvar_meta with
       | FStar_Pervasives_Native.Some (FStar_Syntax_Syntax.Ctx_uvar_meta_attr
           a) ->
           let hooks =
             FStar_TypeChecker_Env.lookup_attr env
               FStar_Parser_Const.resolve_implicits_attr_string in
-          FStar_Compiler_Effect.op_Bar_Greater hooks
-            (FStar_Compiler_Util.try_find
-               (fun hook ->
-                  FStar_Compiler_Effect.op_Bar_Greater
-                    hook.FStar_Syntax_Syntax.sigattrs
-                    (FStar_Compiler_Util.for_some
-                       (FStar_Syntax_Util.attr_eq a))))
+          let candidates =
+            FStar_Compiler_Effect.op_Bar_Greater hooks
+              (FStar_Compiler_List.filter
+                 (fun hook ->
+                    FStar_Compiler_Effect.op_Bar_Greater
+                      hook.FStar_Syntax_Syntax.sigattrs
+                      (FStar_Compiler_Util.for_some
+                         (FStar_Syntax_Util.attr_eq a)))) in
+          let is_overridden candidate =
+            let candidate_lids = FStar_Syntax_Util.lids_of_sigelt candidate in
+            FStar_Compiler_Effect.op_Bar_Greater candidates
+              (FStar_Compiler_Util.for_some
+                 (fun other ->
+                    FStar_Compiler_Effect.op_Bar_Greater
+                      other.FStar_Syntax_Syntax.sigattrs
+                      (FStar_Compiler_Util.for_some
+                         (fun attr ->
+                            let uu___ = FStar_Syntax_Util.head_and_args attr in
+                            match uu___ with
+                            | (head, args) ->
+                                let uu___1 =
+                                  let uu___2 =
+                                    let uu___3 =
+                                      FStar_Syntax_Util.un_uinst head in
+                                    uu___3.FStar_Syntax_Syntax.n in
+                                  (uu___2, args) in
+                                (match uu___1 with
+                                 | (FStar_Syntax_Syntax.Tm_fvar fv,
+                                    uu___2::(a', uu___3)::(overrides, uu___4)::[])
+                                     when
+                                     (FStar_Syntax_Syntax.fv_eq_lid fv
+                                        FStar_Parser_Const.override_resolve_implicits_handler_lid)
+                                       && (FStar_Syntax_Util.attr_eq a a')
+                                     ->
+                                     let uu___5 =
+                                       attr_list_elements overrides in
+                                     (match uu___5 with
+                                      | FStar_Pervasives_Native.None -> false
+                                      | FStar_Pervasives_Native.Some names ->
+                                          FStar_Compiler_Effect.op_Bar_Greater
+                                            names
+                                            (FStar_Compiler_Util.for_some
+                                               (fun n ->
+                                                  FStar_Compiler_Effect.op_Bar_Greater
+                                                    candidate_lids
+                                                    (FStar_Compiler_Util.for_some
+                                                       (fun l ->
+                                                          let uu___6 =
+                                                            FStar_Ident.string_of_lid
+                                                              l in
+                                                          uu___6 = n)))))
+                                 | (FStar_Syntax_Syntax.Tm_fvar fv,
+                                    (a', uu___2)::(overrides, uu___3)::[])
+                                     when
+                                     (FStar_Syntax_Syntax.fv_eq_lid fv
+                                        FStar_Parser_Const.override_resolve_implicits_handler_lid)
+                                       && (FStar_Syntax_Util.attr_eq a a')
+                                     ->
+                                     let uu___4 =
+                                       attr_list_elements overrides in
+                                     (match uu___4 with
+                                      | FStar_Pervasives_Native.None -> false
+                                      | FStar_Pervasives_Native.Some names ->
+                                          FStar_Compiler_Effect.op_Bar_Greater
+                                            names
+                                            (FStar_Compiler_Util.for_some
+                                               (fun n ->
+                                                  FStar_Compiler_Effect.op_Bar_Greater
+                                                    candidate_lids
+                                                    (FStar_Compiler_Util.for_some
+                                                       (fun l ->
+                                                          let uu___5 =
+                                                            FStar_Ident.string_of_lid
+                                                              l in
+                                                          uu___5 = n)))))
+                                 | uu___2 -> false))))) in
+          let candidates1 =
+            FStar_Compiler_Effect.op_Bar_Greater candidates
+              (FStar_Compiler_List.filter
+                 (fun c ->
+                    let uu___ = is_overridden c in Prims.op_Negation uu___)) in
+          (match candidates1 with
+           | [] -> FStar_Pervasives_Native.None
+           | c::[] -> FStar_Pervasives_Native.Some c
+           | uu___ ->
+               let candidates2 =
+                 let uu___1 =
+                   let uu___2 =
+                     FStar_Compiler_List.collect
+                       FStar_Syntax_Util.lids_of_sigelt candidates1 in
+                   FStar_Compiler_Effect.op_Bar_Greater uu___2
+                     (FStar_Compiler_List.map FStar_Ident.string_of_lid) in
+                 FStar_Compiler_Effect.op_Bar_Greater uu___1
+                   (FStar_String.concat ", ") in
+               let attr = FStar_Syntax_Print.term_to_string a in
+               ((let uu___2 =
+                   let uu___3 =
+                     FStar_Compiler_Util.format2
+                       "Multiple resolve_implicits hooks are eligible for attribute %s; \nplease resolve the ambiguity by using the `override_resolve_implicits_handler` attribute to choose among these candidates {%s}"
+                       attr candidates2 in
+                   (FStar_Errors.Warning_AmbiguousResolveImplicitsHook,
+                     uu___3) in
+                 FStar_Errors.log_issue u.FStar_Syntax_Syntax.ctx_uvar_range
+                   uu___2);
+                FStar_Pervasives_Native.None))
       | uu___ -> FStar_Pervasives_Native.None
 let (should_defer_uvar_to_user_tac :
   FStar_TypeChecker_Env.env -> FStar_Syntax_Syntax.ctx_uvar -> Prims.bool) =
