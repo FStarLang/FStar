@@ -2373,6 +2373,10 @@ let selector_tactic () : Tac unit =
        primops; iota; zeta];
   canon' false (`true_p) (`true_p)
 
+/// A small helper to force unification of the type of an equality,
+/// instead of using trefl
+let refl_lemma (#a:Type) (x:a) : Lemma (x == x) = ()
+
 /// Specific tactic used during the SteelAtomicBase and SteelBase effect definitions:
 /// This allows us to write more complex if_then_else combinators, while proving them
 /// sound with respect to subcomp
@@ -2407,7 +2411,7 @@ let ite_soundness_tac () : Tac unit =
   // Remove the `rewrite_by_tactic` nodes
   pointwise' (fun _ -> or_else
     (fun _ -> apply_lemma (`unfold_rewrite_with_tactic))
-    trefl);
+    (fun _ -> apply_lemma (`refl_lemma)));
   smt ()
 
 
