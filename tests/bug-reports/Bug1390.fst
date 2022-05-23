@@ -65,6 +65,9 @@ let rec list_sum (l:list nat) : nat =
   | n :: l' ->
     n + (list_sum l')
 
+let refl_lemma (#a:Type) (x:a) : Lemma (x == x) = ()
+let trefl () : Tac unit = apply_lemma (`refl_lemma)
+
 [@@(expect_failure [189])]
 let recursive_norm () : Tac unit =
   let ctrl (t : term) = (true, 0) in
