@@ -168,8 +168,11 @@ let (__do_rewrite :
                  else
                    (let uu___4 =
                       let uu___5 =
-                        FStar_Syntax_Util.is_uvar
-                          lcomp.FStar_TypeChecker_Common.res_typ in
+                        (FStar_Syntax_Util.is_uvar
+                           lcomp.FStar_TypeChecker_Common.res_typ)
+                          ||
+                          (FStar_Syntax_Util.is_type
+                             lcomp.FStar_TypeChecker_Common.res_typ) in
                       if uu___5
                       then
                         FStar_Tactics_Monad.ret
@@ -199,10 +202,13 @@ let (__do_rewrite :
                                        let uu___8 =
                                          FStar_Syntax_Print.term_to_string tm in
                                        let uu___9 =
+                                         FStar_Syntax_Print.term_to_string
+                                           lcomp.FStar_TypeChecker_Common.res_typ in
+                                       let uu___10 =
                                          FStar_Syntax_Print.term_to_string ut in
-                                       FStar_Compiler_Util.print2
-                                         "do_rewrite: making equality\n\t%s ==\n\t%s\n"
-                                         uu___8 uu___9)
+                                       FStar_Compiler_Util.print3
+                                         "do_rewrite: making equality\n\t%s eq2 #%s\n\t%s\n"
+                                         uu___8 uu___9 uu___10)
                                     (fun uu___7 ->
                                        let uu___8 =
                                          let uu___9 =

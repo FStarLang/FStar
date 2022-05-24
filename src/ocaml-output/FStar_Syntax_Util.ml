@@ -1360,6 +1360,14 @@ let (is_function_typ : FStar_Syntax_Syntax.term -> Prims.bool) =
     match uu___ with
     | FStar_Syntax_Syntax.Tm_arrow uu___1 -> true
     | uu___1 -> false
+let (is_type : FStar_Syntax_Syntax.term -> Prims.bool) =
+  fun t ->
+    let uu___ =
+      let uu___1 = FStar_Syntax_Subst.compress t in
+      uu___1.FStar_Syntax_Syntax.n in
+    match uu___ with
+    | FStar_Syntax_Syntax.Tm_type uu___1 -> true
+    | uu___1 -> false
 let rec (pre_typ : FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term) =
   fun t ->
     let t1 = FStar_Syntax_Subst.compress t in
