@@ -155,6 +155,7 @@ gaining a working knowledge of some core parts of F*'s type theory.
    part2_phoas
    part2_well_founded
    part2_par
+   part2_universes
 
 ..
   Vectors for basics

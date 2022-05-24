@@ -165,3 +165,50 @@ non-positive definitions can safely be used in a context where
 programs are not expected to terminate, allowing one to safely model
 things like the ``dyn`` type, without compromising the soundness of
 F*.
+
+.. _Part2_strictly_positive_annotations:
+
+Strictly Positive Annotations
+-----------------------------
+
+Sometimes it is useful to parameterize an inductive definition with a
+type function, without introducing a non-positive definition as we did
+in ``also_non_pos`` above.
+
+For example, the definition below introduces a type ``free f a``, a a
+form of a tree whose leaf nodes contain ``a`` values, and whose
+internal nodes branch according the type function ``f``. 
+
+.. literalinclude:: ../code/Part2.Positivity.fst
+   :language: fstar
+   :start-after: //SNIPPET_START: free$
+   :end-before: //SNIPPET_END: free$
+
+We can instantiate this generic ``free`` to produce various kinds of
+trees.
+
+.. literalinclude:: ../code/Part2.Positivity.fst
+   :language: fstar
+   :start-after: //SNIPPET_START: free_instances$
+   :end-before: //SNIPPET_END: free_instances$
+
+However, we should only be allowed to instantate ``f`` with type
+functions that are strictly positive in its argument, since otherwise
+we can build a proof of ``False``, as we did with
+``also_non_pos``. The ```@@@strictly_positive`` attribute on the
+formal parameter of ``f`` enforces this.
+
+If we were to try to instantiate ``free`` with non-strictly positive
+type function, 
+
+.. literalinclude:: ../code/Part2.Positivity.fst
+   :language: fstar
+   :start-after: //SNIPPET_START: free_bad$
+   :end-before: //SNIPPET_END: free_bad$
+
+then F* raises an error:
+
+.. code-block::
+
+    Binder (t: Type) is marked strictly positive, but its use in the definition is not
+   

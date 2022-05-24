@@ -6,6 +6,7 @@ Polymorphism and type inference
 In this chapter, we'll learn about defining type polymorphic
 functions, or how to work with generic types.
 
+.. _Part1_type_of_types:
 
 Type: The type of types
 ^^^^^^^^^^^^^^^^^^^^^^^
