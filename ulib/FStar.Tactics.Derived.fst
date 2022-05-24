@@ -208,7 +208,7 @@ let t_pointwise (d:direction) (tau : unit -> Tac unit) : Tac unit =
   let rw () : Tac unit =
     tau ()
   in
-  ctrl_rewrite d ctrl rw
+  ctrl_rewrite d false ctrl rw
 
 (** [topdown_rewrite ctrl rw] is used to rewrite those sub-terms [t]
     of the goal on which [fst (ctrl t)] returns true.
@@ -243,7 +243,7 @@ let topdown_rewrite (ctrl : term -> Tac (bool * int))
       in
       b, f
     in
-    ctrl_rewrite TopDown ctrl' rw
+    ctrl_rewrite TopDown false ctrl' rw
 
 let pointwise  (tau : unit -> Tac unit) : Tac unit = t_pointwise BottomUp tau
 let pointwise' (tau : unit -> Tac unit) : Tac unit = t_pointwise TopDown  tau
