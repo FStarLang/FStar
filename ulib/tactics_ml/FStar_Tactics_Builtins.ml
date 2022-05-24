@@ -95,6 +95,16 @@ let from_tac_3 (t: 'a -> 'b -> 'c -> 'd TM.tac): 'a  -> 'b -> 'c -> 'd __tac =
           let m = t x y z in
           interpret_tac m ps
 
+let from_tac_4 (t: 'a -> 'b -> 'c -> 'd -> 'e TM.tac): 'a  -> 'b -> 'c -> 'd -> 'e __tac =
+  fun (x: 'a) ->
+    fun (y: 'b) ->
+      fun (z: 'c) ->
+        fun (v: 'd) ->
+          fun (ps: proofstate) ->
+            let m = t x y z v in
+            interpret_tac m ps
+
+
 (* Pointing to the internal primitives *)
 let set_goals               = from_tac_1 TM.set_goals
 let set_smt_goals           = from_tac_1 TM.set_smt_goals
@@ -169,7 +179,8 @@ let recover (t: unit -> 'a __tac): ((exn, 'a) FStar_Pervasives.either) __tac =
 
 let ctrl_rewrite
     (d : direction)
+    (b : bool)
     (t1 : RT.term -> (bool * ctrl_flag) __tac)
     (t2 : unit -> unit __tac)
   : unit __tac
-  = from_tac_3 CTRW.ctrl_rewrite d (to_tac_1 t1) (to_tac_0 (t2 ()))
+  = from_tac_4 CTRW.ctrl_rewrite d b (to_tac_1 t1) (to_tac_0 (t2 ()))
