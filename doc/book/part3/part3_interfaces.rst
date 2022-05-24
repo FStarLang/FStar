@@ -233,7 +233,7 @@ is the following:
     contains ``val f : tf`` followed by ``val g : tg``, then the
     implementation of ``f`` must precede the implementation of ``g``.
 
-Also, remember that if you are writing ``val`` declaration in an
+Also, remember that if you are writing ``val`` declarations in an
 interface, it is a good idea to be explicit about universe levels. See
 :ref:`here for more discussion <Part2_tips_for_universes>`.
 
