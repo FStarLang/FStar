@@ -188,11 +188,33 @@ let gen_elim_prop
   p == compute_gen_elim_p' i /\
   check_gen_elim_nondep_sem i j /\ 
   a == compute_gen_elim_nondep_a i j /\
-  post == (fun (x: Ghost.erased a) -> compute_gen_elim_nondep_post i j x) /\
-  q == (fun (x: Ghost.erased a) -> compute_gen_elim_nondep_q i j x)
+  post == compute_gen_elim_nondep_post i j /\
+  q == compute_gen_elim_nondep_q i j
 
 let gen_elim_prop_intro
-  p i sq_p j sq_j a sq_a post sq_post q sq_q
+  p i sq_p j sq_j a sq_a q sq_q post sq_post
+= ()
+
+let gen_elim_prop_placeholder
+  (enable_nondep_opt: bool)
+  (p: vprop)
+  (i: gen_elim_i)
+  (j: gen_elim_nondep_t)
+  (a: Type0)
+  (q: Ghost.erased a -> Tot vprop)
+  (post: Ghost.erased a -> Tot prop)
+: Tot prop
+= True
+
+let gen_elim_prop_placeholder_intro
+  (enable_nondep_opt: bool)
+  (p: vprop)
+  (i: gen_elim_i)
+  (j: gen_elim_nondep_t)
+  (a: Type0)
+  (q: Ghost.erased a -> Tot vprop)
+  (post: Ghost.erased a -> Tot prop)
+: Tot (squash (gen_elim_prop_placeholder enable_nondep_opt p i j a q post))
 = ()
 
 let gen_elim_f

@@ -480,17 +480,25 @@ let compute_uncurry (ret_type: Type u#a) (def: ret_type) (ty: list Type0) : curr
     | _ -> fun _ _ -> def
 
 [@@gen_elim_reduce]
-let compute_gen_elim_nondep_q (i0: gen_elim_i) (i: gen_elim_nondep_t) : Tot (compute_gen_elim_nondep_a i0 i -> vprop) =
+let compute_gen_elim_nondep_q0 (i0: gen_elim_i) (i: gen_elim_nondep_t) : Tot (compute_gen_elim_nondep_a i0 i -> vprop) =
   match i with
   | GENonDep ty q post -> compute_uncurry vprop (compute_gen_elim_p' i0) ty q
       // that default value does not reduce, on purpose, to make the tactic fail if the type list is too long
   | GEDep -> compute_gen_elim_q i0
 
 [@@gen_elim_reduce]
-let compute_gen_elim_nondep_post (i0: gen_elim_i) (i: gen_elim_nondep_t) : Tot (compute_gen_elim_nondep_a i0 i -> prop) =
+let compute_gen_elim_nondep_q (i0: gen_elim_i) (i: gen_elim_nondep_t) (x: Ghost.erased (compute_gen_elim_nondep_a i0 i)) : Tot vprop =
+  compute_gen_elim_nondep_q0 i0 i (Ghost.reveal x)
+
+[@@gen_elim_reduce]
+let compute_gen_elim_nondep_post0 (i0: gen_elim_i) (i: gen_elim_nondep_t) : Tot (compute_gen_elim_nondep_a i0 i -> prop) =
   match i with
   | GENonDep ty q post -> compute_uncurry prop True ty post
   | GEDep -> compute_gen_elim_post i0
+
+[@@gen_elim_reduce]
+let compute_gen_elim_nondep_post (i0: gen_elim_i) (i: gen_elim_nondep_t) (x: Ghost.erased (compute_gen_elim_nondep_a i0 i)) : Tot prop =
+  compute_gen_elim_nondep_post0 i0 i (Ghost.reveal x)
 
 module T = FStar.Tactics
 
@@ -607,13 +615,13 @@ val gen_elim_prop_intro
   (sq_j: squash (check_gen_elim_nondep_sem i j))
   (a: Type0)
   (sq_a: squash (a == compute_gen_elim_nondep_a i j))
-  (post: Ghost.erased a -> Tot prop)
-  (sq_post: squash (post == (fun (x: Ghost.erased a) -> compute_gen_elim_nondep_post i j x)))
   (q: Ghost.erased a -> Tot vprop)
-  (sq_q: squash (q == (fun (x: Ghost.erased a) -> compute_gen_elim_nondep_q i j x)))
+  (sq_q: squash (q == compute_gen_elim_nondep_q i j))
+  (post: Ghost.erased a -> Tot prop)
+  (sq_post: squash (post == compute_gen_elim_nondep_post i j))
 : Lemma (gen_elim_prop p i j a q post)
 
-let gen_elim_prop_placeholder
+val gen_elim_prop_placeholder
   (enable_nondep_opt: bool)
   (p: vprop)
   (i: gen_elim_i)
@@ -622,40 +630,18 @@ let gen_elim_prop_placeholder
   (q: Ghost.erased a -> Tot vprop)
   (post: Ghost.erased a -> Tot prop)
 : Tot prop
-= True
+// = True
 
-let gen_elim_dummy
+val gen_elim_prop_placeholder_intro
   (enable_nondep_opt: bool)
   (p: vprop)
   (i: gen_elim_i)
   (j: gen_elim_nondep_t)
-: Tot prop
-= True
-
-let gen_elim_dummy_intro
-  (enable_nondep_opt: bool)
-  (p: vprop)
-  (i: gen_elim_i)
-  (j: gen_elim_nondep_t)
-: Tot (squash (gen_elim_dummy enable_nondep_opt p i j))
-= ()
-
-let gen_elim_prop_placeholder_intro
-  (enable_nondep_opt: bool)
-  (p: vprop)
-  (i: gen_elim_i)
-  (j: gen_elim_nondep_t)
-  (dummy: squash (gen_elim_dummy enable_nondep_opt p i j))
-  (sq_p: squash (p == compute_gen_elim_p i))
-  (sq_j: squash (check_gen_elim_nondep_sem i j))
   (a: Type0)
-  (sq_a: squash (a == compute_gen_elim_nondep_a i j))
-  (post: Ghost.erased a -> Tot prop)
-  (sq_post: squash (post == (fun (x: Ghost.erased a) -> compute_gen_elim_nondep_post i j x)))
   (q: Ghost.erased a -> Tot vprop)
-  (sq_q: squash (q == (fun (x: Ghost.erased a) -> compute_gen_elim_nondep_q i j x)))
-: Lemma (gen_elim_prop_placeholder enable_nondep_opt p i j a q post)
-= ()
+  (post: Ghost.erased a -> Tot prop)
+: Tot (squash (gen_elim_prop_placeholder enable_nondep_opt p i j a q post))
+// = ()
 
 let rec solve_gen_elim_nondep' (fuel: nat) (rev_types_and_binders: list (T.term & T.binder)) (t: T.term) : T.Tac T.term =
   if fuel = 0
@@ -713,34 +699,6 @@ let solve_gen_elim_nondep (enable_nondep_opt: bool) (t: T.term) : T.Tac T.term =
     with _ -> (`GEDep)
   else (`GEDep)
 
-let solve_gen_elim_dummy
-  ()
-: T.Tac unit
-=
-      let (hd, tl) = T.collect_app (T.cur_goal ()) in
-      if not (hd `T.term_eq` (`squash) || hd `T.term_eq` (`auto_squash))
-      then T.fail "not a squash goal";
-      match tl with
-      | [body1, T.Q_Explicit] ->
-        let (hd1, tl1) = T.collect_app body1 in
-        if not (hd1 `T.term_eq` (`gen_elim_dummy))
-        then T.fail "not a gen_elim_dummy goal";
-        begin match List.Tot.filter (fun (_, x) -> T.Q_Explicit? x) tl1 with
-        | [(enable_nondep_opt_tm, _); (p, _); (i, _); (j, _)] ->
-          if slterm_nbr_uvars p <> 0
-          then T.fail "pre-resource not solved yet";
-          let i_is_uvar = T.Tv_Uvar? (T.inspect i) in
-          let j_is_uvar = T.Tv_Uvar? (T.inspect j) in
-          if not (i_is_uvar && j_is_uvar)
-          then T.fail "gen_elim_dummy is already solved";
-          let enable_nondep_opt = enable_nondep_opt_tm `T.term_eq` (`true) in
-          let i' = solve_gen_elim p in
-          let j' = solve_gen_elim_nondep enable_nondep_opt i' in
-          T.exact (T.mk_app (`gen_elim_dummy_intro) [(enable_nondep_opt_tm, T.Q_Explicit); (p, T.Q_Explicit); (i', T.Q_Explicit); (j', T.Q_Explicit)])
-        | _ -> T.fail "ill-formed gen_elim_dummy"
-        end
-      | _ -> T.fail "ill-formed squash"
-
 let solve_gen_elim_prop
   ()
 : T.Tac unit
@@ -758,8 +716,8 @@ let solve_gen_elim_prop
     T.focus (fun _ -> norm (); T.trefl ()); // p
     T.focus (fun _ -> norm (); T.trivial (); T.qed ()); // j
     T.focus (fun _ -> norm (); T.trefl ()); // a
-    T.focus (fun _ -> norm (); T.trefl ()); // post
-    T.focus (fun _ -> norm (); T.trefl ()) // q
+    T.focus (fun _ -> norm (); T.trefl ()); // q
+    T.focus (fun _ -> norm (); T.trefl ()) // post
   | _ -> T.fail "ill-formed squash"
 
 val gen_elim'
@@ -811,15 +769,33 @@ let solve_gen_elim_prop_placeholder
     let (hd1, tl1) = T.collect_app body1 in
     if not (hd1 `T.term_eq` (`gen_elim_prop_placeholder))
     then T.fail "not a gen_elim_prop_placeholder goal";
-    T.apply_lemma (`gen_elim_prop_placeholder_intro);
-    T.focus solve_gen_elim_dummy;
-    let norm () = T.norm [delta_attr [(`%gen_elim_reduce)]; zeta; iota] in
-    T.focus (fun _ -> norm (); T.trefl ()); // p
-    T.focus (fun _ -> norm (); T.trivial (); T.qed ()); // j
-    T.focus (fun _ -> norm (); T.trefl ()); // a
-    T.focus (fun _ -> norm (); T.trefl ()); // post
-    T.focus (fun _ -> norm (); T.trefl ()); // q
-    true
+    begin match List.Tot.filter (fun (_, x) -> T.Q_Explicit? x) tl1 with
+    | [(enable_nondep_opt_tm, _); (p, _); (i, _); (j, _); (a, _); (q, _); (post, _)] ->
+      if slterm_nbr_uvars p <> 0
+      then T.fail "pre-resource not solved yet";
+      let i_is_uvar = T.Tv_Uvar? (T.inspect i) in
+      let j_is_uvar = T.Tv_Uvar? (T.inspect j) in
+      if not (i_is_uvar && j_is_uvar)
+      then T.fail "gen_elim_prop_placeholder is already solved";
+      let enable_nondep_opt = enable_nondep_opt_tm `T.term_eq` (`true) in
+      let i' = solve_gen_elim p in
+      let j' = solve_gen_elim_nondep enable_nondep_opt i' in
+      let norm_term = T.norm_term [delta_attr [(`%gen_elim_reduce)]; zeta; iota] in
+      let a' = norm_term (T.mk_app (`compute_gen_elim_nondep_a) [i', T.Q_Explicit; j', T.Q_Explicit]) in
+      let q' = norm_term (T.mk_app (`compute_gen_elim_nondep_q) [i', T.Q_Explicit; j', T.Q_Explicit]) in
+      let post' = norm_term (T.mk_app (`compute_gen_elim_nondep_post) [i', T.Q_Explicit; j', T.Q_Explicit]) in
+      T.exact (T.mk_app (`gen_elim_prop_placeholder_intro) [
+        (enable_nondep_opt_tm, T.Q_Explicit);
+        (p, T.Q_Explicit);
+        (i', T.Q_Explicit);
+        (j', T.Q_Explicit);
+        (a', T.Q_Explicit);
+        (q', T.Q_Explicit);
+        (post', T.Q_Explicit);
+      ]);
+      true
+    | _ -> T.fail "ill-formed gen_elim_prop_placeholder"
+    end
   | _ -> T.fail "ill-formed squash"
 
 /// Extracts an argument to a vprop from the context. This can be useful if we do need binders for some of the existentials opened by gen_elim.
