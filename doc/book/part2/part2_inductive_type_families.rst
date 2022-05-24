@@ -175,7 +175,7 @@ Sometimes it is useful to parameterize an inductive definition with a
 type function, without introducing a non-positive definition as we did
 in ``also_non_pos`` above.
 
-For example, the definition below introduces a type ``free f a``, a a
+For example, the definition below introduces a type ``free f a``, a 
 form of a tree whose leaf nodes contain ``a`` values, and whose
 internal nodes branch according the type function ``f``. 
 
@@ -193,12 +193,12 @@ trees.
    :end-before: //SNIPPET_END: free_instances$
 
 However, we should only be allowed to instantate ``f`` with type
-functions that are strictly positive in its argument, since otherwise
+functions that are strictly positive in their argument, since otherwise
 we can build a proof of ``False``, as we did with
-``also_non_pos``. The ```@@@strictly_positive`` attribute on the
+``also_non_pos``. The ``@@@strictly_positive`` attribute on the
 formal parameter of ``f`` enforces this.
 
-If we were to try to instantiate ``free`` with non-strictly positive
+If we were to try to instantiate ``free`` with a non-strictly positive
 type function, 
 
 .. literalinclude:: ../code/Part2.Positivity.fst
