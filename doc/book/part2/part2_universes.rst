@@ -716,7 +716,7 @@ detect and fix such problems.
        :end-before: //SNIPPET_END: tuple2$
 
   - If you must write a ``val f : t``, because, say, the type ``t`` is
-    huge, or because you are writing an inferface, it's a good idea to
+    huge, or because you are writing an interface, it's a good idea to
     be explicit about universes, so that when defining ``f``, you know
     exactly how general you have to be in terms of universes; and,
     conversely, users of ``f`` know exactly how much universe
@@ -746,7 +746,7 @@ detect and fix such problems.
   ``list_alt`` produces a type in ``u#(a + 1)``, since both ``NilAlt``
   and ``ConsAlt`` have fields of type ``a:Type u#a``. So, unless the
   index of your type varies among the constructors, use a parameter
-  intead of an index.
+  instead of an index.
   
   That said, recall that it's the fields of the constructors of the
   inductive type that count. You can index your type by a type in any
