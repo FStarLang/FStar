@@ -208,7 +208,7 @@ let t_pointwise (d:direction) (allow_eq_subtyping : bool) (tau : unit -> Tac uni
   let rw () : Tac unit =
     tau ()
   in
-  ctrl_rewrite d false ctrl rw
+  ctrl_rewrite d allow_eq_subtyping ctrl rw
 
 (** [topdown_rewrite ctrl rw] is used to rewrite those sub-terms [t]
     of the goal on which [fst (ctrl t)] returns true.
