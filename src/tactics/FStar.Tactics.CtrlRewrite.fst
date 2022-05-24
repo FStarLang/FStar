@@ -102,15 +102,16 @@ let __do_rewrite
       ret tm (* SHOULD THIS CHECK BE IN maybe_rewrite INSTEAD? *)
     else
     bind (
-      (* If this type is already a uvar, no need to generate one *)
-      if U.is_uvar lcomp.res_typ then ret lcomp.res_typ else
+      (* If this type is already a uvar, no need to generate one.
+         If this type is itself already a type, we do not need subtyping *)
+      if U.is_uvar lcomp.res_typ || U.is_type lcomp.res_typ then ret lcomp.res_typ else
       bind (new_uvar "do_rewrite.eq_ty" env (fst (U.type_u ())) (rangeof g0)) (fun x -> ret (fst x))
       ) (fun typ ->
     bind (new_uvar "do_rewrite.rhs" env typ (rangeof g0)) (fun (ut, uvar_ut) ->
 
     mlog (fun () ->
-       BU.print2 "do_rewrite: making equality\n\t%s ==\n\t%s\n"
-         (Print.term_to_string tm) (Print.term_to_string ut)) (fun () ->
+       BU.print3 "do_rewrite: making equality\n\t%s eq2 #%s\n\t%s\n"
+         (Print.term_to_string tm) (Print.term_to_string lcomp.res_typ) (Print.term_to_string ut)) (fun () ->
     bind (add_irrelevant_goal
                       g0
                       "do_rewrite.eq"

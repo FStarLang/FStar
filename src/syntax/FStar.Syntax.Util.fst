@@ -804,6 +804,10 @@ let is_function_typ t = match (compress t).n with
   | Tm_arrow _ -> true
   | _ -> false
 
+let is_type t = match (compress t).n with
+  | Tm_type _ -> true
+  | _ -> false
+
 let rec pre_typ t =
     let t = compress t in
     match t.n with
