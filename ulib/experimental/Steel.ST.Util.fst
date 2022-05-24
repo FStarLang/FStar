@@ -174,7 +174,7 @@ let par #aL #aR #preL #postL #preR #postR f g =
     = fun _ -> SE.par f g in
   coerce_steel p
 
-let compute_gen_elim_p' = compute_gen_elim_p
+irreducible let gen_elim_reduce = ()
 
 let compute_gen_elim_a' = compute_gen_elim_a
 
@@ -183,28 +183,17 @@ let compute_gen_elim_q' = compute_gen_elim_q
 let compute_gen_elim_post' = compute_gen_elim_post
 
 let gen_elim_prop
-  p i a q post
+  p i j a q post
 =
   p == compute_gen_elim_p' i /\
-  a == compute_gen_elim_a' i /\
-  post == (fun (x: Ghost.erased a) -> compute_gen_elim_post' i x) /\
-  q == (fun (x: Ghost.erased a) -> compute_gen_elim_q' i x)
-
-let eq2_trans_with_trefl (#a: Type) (u1 u2 u3: a) : Lemma
-  (requires (
-    u1 == u2 /\
-    T.with_tactic T.trefl (u2 == u3)
-  ))
-  (ensures (
-    u1 == u3
-  ))
-= ()
+  check_gen_elim_nondep_sem i j /\ 
+  a == compute_gen_elim_nondep_a i j /\
+  post == (fun (x: Ghost.erased a) -> compute_gen_elim_nondep_post i j x) /\
+  q == (fun (x: Ghost.erased a) -> compute_gen_elim_nondep_q i j x)
 
 let gen_elim_prop_intro
-  p i sq_p a sq_a post sq_post q sq_q
-= eq2_trans_with_trefl post  (fun (x: Ghost.erased a) -> compute_gen_elim_post i x) (fun (x: Ghost.erased a) -> compute_gen_elim_post' i x);
-  eq2_trans_with_trefl q (fun (x: Ghost.erased a) -> compute_gen_elim_q i x)  (fun (x: Ghost.erased a) -> compute_gen_elim_q' i x);
-  ()
+  p i sq_p j sq_j a sq_a post sq_post q sq_q
+= ()
 
 let gen_elim_f
   (p: vprop)
@@ -355,7 +344,8 @@ let rec compute_gen_elim_f
 
 let coerce_with_smt (#tfrom #tto: Type) (x: tfrom) : Pure tto (requires ( (tfrom == tto))) (ensures (fun _ -> True)) = x
 
-let gen_elim'
+let gen_elim' = admit ()
+(*
   #opened p i a q post sq _
 = rewrite p (compute_gen_elim_p' i);
   let vres' : compute_gen_elim_a' i = compute_gen_elim_f i _ in
@@ -363,10 +353,15 @@ let gen_elim'
   let res : Ghost.erased a = Ghost.hide vres in
   rewrite (compute_gen_elim_q' i vres') (q res);
   res
+*)
 
 let gen_elim
-  #opened #p #i #a #q #post #sq _
-= gen_elim' #opened p i a q post sq ()
+  #opened #p #i #j #a #q #post #sq _
+= gen_elim' #opened _ p i j a q post sq ()
+
+let gen_elim_dep
+  #opened #p #i #j #a #q #post #sq _
+= gen_elim' #opened _ p i j a q post sq ()
 
 let vpattern
   (#opened: _)

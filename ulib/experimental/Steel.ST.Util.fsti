@@ -258,7 +258,9 @@ type gen_elim_i =
   | GEExistsUnit: (#a: Type0) -> (body: (a -> gen_unit_elim_i)) -> gen_elim_i
   | GEExists: (#a: Type0) -> (body: (a -> gen_elim_i)) -> gen_elim_i
 
-[@__reduce__]
+val gen_elim_reduce: unit
+
+[@@ gen_elim_reduce]
 let rec compute_gen_unit_elim_p
   (x: gen_unit_elim_i)
 : Tot vprop
@@ -269,7 +271,7 @@ let rec compute_gen_unit_elim_p
 
 let compute_gen_unit_elim_p' = compute_gen_unit_elim_p
 
-[@__reduce__]
+[@@ gen_elim_reduce]
 let rec compute_gen_unit_elim_q
   (x: gen_unit_elim_i)
 : Tot vprop
@@ -280,7 +282,7 @@ let rec compute_gen_unit_elim_q
 
 let compute_gen_unit_elim_q' = compute_gen_unit_elim_q
 
-[@@__reduce__; __steel_reduce__]
+[@@gen_elim_reduce]
 let rec compute_gen_unit_elim_post
   (x: gen_unit_elim_i)
 : Tot prop
@@ -291,7 +293,7 @@ let rec compute_gen_unit_elim_post
 
 let compute_gen_unit_elim_post' = compute_gen_unit_elim_post
 
-[@@__reduce__]
+[@@gen_elim_reduce]
 let rec compute_gen_elim_p
   (x: gen_elim_i)
 : Tot vprop
@@ -304,7 +306,9 @@ let rec compute_gen_elim_p
   | GEExistsUnit #a p -> exists_ (fun x -> compute_gen_unit_elim_p (p x))
   | GEExists #a body -> exists_ (fun x -> compute_gen_elim_p (body x))
 
-[@@ __reduce__; __steel_reduce__]
+let compute_gen_elim_p' = compute_gen_elim_p
+
+[@@ gen_elim_reduce; __steel_reduce__]
 let rec compute_gen_elim_a
   (x: gen_elim_i)
 : Tot Type0
@@ -322,10 +326,10 @@ let dsndp #a #b t = dsnd #a #b t
 let fstp #a #b t = fst #a #b t
 let sndp #a #b t = snd #a #b t
 
-[@@__reduce__; __steel_reduce__]
+[@@gen_elim_reduce; __steel_reduce__]
 let coerce_with_trefl (#tfrom #tto: Type) (x: tfrom) : Pure tto (requires (T.with_tactic T.trefl (tfrom == tto))) (ensures (fun _ -> True)) = x
 
-[@@__reduce__]
+[@@gen_elim_reduce]
 let rec compute_gen_elim_q
   (x: gen_elim_i)
 : Tot (compute_gen_elim_a x -> Tot vprop)
@@ -350,7 +354,7 @@ let rec compute_gen_elim_q
       (body (dfstp #a #dept v'))
       (dsndp #a #dept v')
 
-[@@__reduce__; __steel_reduce__]
+[@@gen_elim_reduce]
 let rec compute_gen_elim_post
   (x: gen_elim_i)
 : Tot (compute_gen_elim_a x -> Tot prop)
@@ -374,6 +378,119 @@ let rec compute_gen_elim_post
     compute_gen_elim_post
       (body (dfstp #a #dept v'))
       (dsndp #a #dept v')
+
+[@@erasable]
+noeq
+type gen_elim_tele =
+  | TRet: vprop -> prop -> gen_elim_tele
+  | TExists: (ty: Type u#0) -> (ty -> gen_elim_tele) -> gen_elim_tele
+
+[@@gen_elim_reduce]
+let rec tele_star_vprop (i: gen_elim_tele) (v: vprop) (p: prop) : Tot gen_elim_tele (decreases i) =
+  match i with
+  | TRet v' p' -> TRet (v `star` v') (p /\ p')
+  | TExists ty f -> TExists ty (fun x -> tele_star_vprop (f x) v p)
+
+[@@gen_elim_reduce]
+let rec tele_star (i1 i2: gen_elim_tele) : Tot gen_elim_tele =
+  match i1, i2 with
+  | TRet v1 p1, _ -> tele_star_vprop i2 v1 p1
+  | _, TRet v2 p2 -> tele_star_vprop i1 v2 p2
+  | TExists ty1 f1, TExists ty2 f2 -> TExists ty1 (fun x1 -> TExists ty2 (fun x2 -> tele_star (f1 x1) (f2 x2)))
+
+[@@gen_elim_reduce]
+let rec compute_gen_elim_tele (x: gen_elim_i) : Tot gen_elim_tele =
+  match x with
+  | GEUnit v -> TRet (compute_gen_unit_elim_q v) (compute_gen_unit_elim_post v)
+  | GEStarL l ru -> tele_star_vprop (compute_gen_elim_tele l) (compute_gen_unit_elim_q ru) (compute_gen_unit_elim_post ru)
+  | GEStarR lu r -> tele_star_vprop (compute_gen_elim_tele r) (compute_gen_unit_elim_q lu) (compute_gen_unit_elim_post lu)
+  | GEStar l r -> tele_star (compute_gen_elim_tele l) (compute_gen_elim_tele r)
+  | GEExistsNoAbs #ty body -> TExists ty (fun x -> TRet (body x) True)
+  | GEExistsUnit #ty body -> TExists ty (fun x -> TRet (compute_gen_unit_elim_q (body x)) (compute_gen_unit_elim_post (body x)))
+  | GEExists #ty f -> TExists ty (fun x -> compute_gen_elim_tele (f x))
+
+[@@gen_elim_reduce; noextract_to "Plugin"]
+let rec curried_function_type (x: list (Type u#a)) (ret_t: Type u#(max a b)) : Tot (Type u#(max a b)) =
+  match x with
+  | [] -> ret_t
+  | t1 :: q -> t1 -> Tot (curried_function_type q ret_t)
+
+[@@erasable]
+noeq
+type gen_elim_nondep_t =
+| GENonDep: (ty: list Type0) -> curried_function_type ty vprop -> curried_function_type ty prop -> gen_elim_nondep_t
+| GEDep
+
+[@@gen_elim_reduce]
+let rec gen_elim_nondep_sem (ty: list Type0) : Tot (curried_function_type ty vprop -> curried_function_type ty prop -> Tot gen_elim_tele) =
+  match ty as ty' returns curried_function_type ty' vprop -> curried_function_type ty' prop -> Tot gen_elim_tele with
+  | [] -> fun q post -> TRet q post
+  | t :: tq -> fun q post -> TExists t (fun x -> gen_elim_nondep_sem tq (q x) (post x))
+
+[@@gen_elim_reduce]
+let check_gen_elim_nondep_sem (i: gen_elim_i) (nd: gen_elim_nondep_t) : Tot prop =
+  match nd with
+  | GENonDep ty q post -> compute_gen_elim_tele i == gen_elim_nondep_sem ty q post
+  | GEDep -> True
+
+[@@gen_elim_reduce; noextract_to "Plugin"]
+let compute_gen_elim_nondep_a' (ty: list Type0) : Tot Type0 =
+    match ty with
+    | [] -> unit
+    | [t1] -> t1
+    | [t1; t2] -> tuple2 t1 t2
+    | [t1; t2; t3] -> tuple3 t1 t2 t3
+    | [t1; t2; t3; t4] -> tuple4 t1 t2 t3 t4
+    | [t1; t2; t3; t4; t5] -> tuple5 t1 t2 t3 t4 t5
+    | [t1; t2; t3; t4; t5; t6] -> tuple6 t1 t2 t3 t4 t5 t6
+    | [t1; t2; t3; t4; t5; t6; t7] -> tuple7 t1 t2 t3 t4 t5 t6 t7
+    | [t1; t2; t3; t4; t5; t6; t7; t8] -> tuple8 t1 t2 t3 t4 t5 t6 t7 t8
+    | [t1; t2; t3; t4; t5; t6; t7; t8; t9] -> tuple9 t1 t2 t3 t4 t5 t6 t7 t8 t9
+    | [t1; t2; t3; t4; t5; t6; t7; t8; t9; t10] -> tuple10 t1 t2 t3 t4 t5 t6 t7 t8 t9 t10
+    | [t1; t2; t3; t4; t5; t6; t7; t8; t9; t10; t11] -> tuple11 t1 t2 t3 t4 t5 t6 t7 t8 t9 t10 t11
+    | [t1; t2; t3; t4; t5; t6; t7; t8; t9; t10; t11; t12] -> tuple12 t1 t2 t3 t4 t5 t6 t7 t8 t9 t10 t11 t12
+    | [t1; t2; t3; t4; t5; t6; t7; t8; t9; t10; t11; t12; t13] -> tuple13 t1 t2 t3 t4 t5 t6 t7 t8 t9 t10 t11 t12 t13
+    | [t1; t2; t3; t4; t5; t6; t7; t8; t9; t10; t11; t12; t13; t14] -> tuple14 t1 t2 t3 t4 t5 t6 t7 t8 t9 t10 t11 t12 t13 t14
+    | _ -> unit // unsupported
+
+[@@gen_elim_reduce; noextract_to "Plugin"]
+let compute_gen_elim_nondep_a (i0: gen_elim_i) (i: gen_elim_nondep_t) : Tot Type0 =
+  match i with
+  | GENonDep ty q post -> compute_gen_elim_nondep_a' ty
+  | GEDep -> compute_gen_elim_a i0
+
+[@@gen_elim_reduce]
+let compute_uncurry (ret_type: Type u#a) (def: ret_type) (ty: list Type0) : curried_function_type ty ret_type -> compute_gen_elim_nondep_a' ty -> ret_type =
+    match ty as ty' returns (curried_function_type ty' ret_type -> compute_gen_elim_nondep_a' ty' -> ret_type) with
+    | [] -> fun q _ -> q
+    | [t1] -> fun q -> q
+    | [t1; t2] -> fun q x -> q (fstp x) (sndp x)
+    | [t1; t2; t3] -> fun q x -> q x._1 x._2 x._3
+    | [t1; t2; t3; t4] -> fun q x -> q x._1 x._2 x._3 x._4
+    | [t1; t2; t3; t4; t5] -> fun q x -> q x._1 x._2 x._3 x._4 x._5
+    | [t1; t2; t3; t4; t5; t6] -> fun q x -> q x._1 x._2 x._3 x._4 x._5 x._6
+    | [t1; t2; t3; t4; t5; t6; t7] -> fun q x -> q x._1 x._2 x._3 x._4 x._5 x._6 x._7
+    | [t1; t2; t3; t4; t5; t6; t7; t8] -> fun q x -> q x._1 x._2 x._3 x._4 x._5 x._6 x._7 x._8
+    | [t1; t2; t3; t4; t5; t6; t7; t8; t9] -> fun q x -> q x._1 x._2 x._3 x._4 x._5 x._6 x._7 x._8 x._9
+    | [t1; t2; t3; t4; t5; t6; t7; t8; t9; t10] -> fun q x -> q x._1 x._2 x._3 x._4 x._5 x._6 x._7 x._8 x._9 x._10
+    | [t1; t2; t3; t4; t5; t6; t7; t8; t9; t10; t11] -> fun q x -> q x._1 x._2 x._3 x._4 x._5 x._6 x._7 x._8 x._9 x._10 x._11
+    | [t1; t2; t3; t4; t5; t6; t7; t8; t9; t10; t11; t12] -> fun q x -> q x._1 x._2 x._3 x._4 x._5 x._6 x._7 x._8 x._9 x._10 x._11 x._12
+    | [t1; t2; t3; t4; t5; t6; t7; t8; t9; t10; t11; t12; t13] -> fun q x -> q x._1 x._2 x._3 x._4 x._5 x._6 x._7 x._8 x._9 x._10 x._11 x._12 x._13
+    | [t1; t2; t3; t4; t5; t6; t7; t8; t9; t10; t11; t12; t13; t14] -> fun q x -> q x._1 x._2 x._3 x._4 x._5 x._6 x._7 x._8 x._9 x._10 x._11 x._12 x._13 x._14
+    | _ -> fun _ _ -> def
+
+[@@gen_elim_reduce]
+let compute_gen_elim_nondep_q (i0: gen_elim_i) (i: gen_elim_nondep_t) : Tot (compute_gen_elim_nondep_a i0 i -> vprop) =
+  match i with
+  | GENonDep ty q post -> compute_uncurry vprop (compute_gen_elim_p' i0) ty q
+      // that default value does not reduce, on purpose, to make the tactic fail if the type list is too long
+  | GEDep -> compute_gen_elim_q i0
+
+[@@gen_elim_reduce]
+let compute_gen_elim_nondep_post (i0: gen_elim_i) (i: gen_elim_nondep_t) : Tot (compute_gen_elim_nondep_a i0 i -> prop) =
+  match i with
+  | GENonDep ty q post -> compute_uncurry prop True ty post
+  | GEDep -> compute_gen_elim_post i0
 
 module T = FStar.Tactics
 
@@ -476,6 +593,7 @@ let rec solve_gen_elim
 val gen_elim_prop
   (p: vprop)
   (i: gen_elim_i)
+  (j: gen_elim_nondep_t)
   (a: Type0)
   (q: Ghost.erased a -> Tot vprop)
   (post: Ghost.erased a -> Tot prop)
@@ -485,17 +603,21 @@ val gen_elim_prop_intro
   (p: vprop)
   (i: gen_elim_i)
   (sq_p: squash (p == compute_gen_elim_p i))
+  (j: gen_elim_nondep_t)
+  (sq_j: squash (check_gen_elim_nondep_sem i j))
   (a: Type0)
-  (sq_a: squash (a == compute_gen_elim_a i))
+  (sq_a: squash (a == compute_gen_elim_nondep_a i j))
   (post: Ghost.erased a -> Tot prop)
-  (sq_post: squash (post == (fun (x: Ghost.erased a) -> compute_gen_elim_post i x)))
+  (sq_post: squash (post == (fun (x: Ghost.erased a) -> compute_gen_elim_nondep_post i j x)))
   (q: Ghost.erased a -> Tot vprop)
-  (sq_q: squash (q == (fun (x: Ghost.erased a) -> compute_gen_elim_q i x)))
-: Lemma (gen_elim_prop p i a q post)
+  (sq_q: squash (q == (fun (x: Ghost.erased a) -> compute_gen_elim_nondep_q i j x)))
+: Lemma (gen_elim_prop p i j a q post)
 
 let gen_elim_prop_placeholder
+  (enable_nondep_opt: bool)
   (p: vprop)
   (i: gen_elim_i)
+  (j: gen_elim_nondep_t)
   (a: Type0)
   (q: Ghost.erased a -> Tot vprop)
   (post: Ghost.erased a -> Tot prop)
@@ -503,30 +625,93 @@ let gen_elim_prop_placeholder
 = True
 
 let gen_elim_dummy
+  (enable_nondep_opt: bool)
   (p: vprop)
   (i: gen_elim_i)
+  (j: gen_elim_nondep_t)
 : Tot prop
 = True
 
 let gen_elim_dummy_intro
+  (enable_nondep_opt: bool)
   (p: vprop)
   (i: gen_elim_i)
-: Tot (squash (gen_elim_dummy p i))
+  (j: gen_elim_nondep_t)
+: Tot (squash (gen_elim_dummy enable_nondep_opt p i j))
 = ()
 
 let gen_elim_prop_placeholder_intro
+  (enable_nondep_opt: bool)
   (p: vprop)
   (i: gen_elim_i)
-  (dummy: squash (gen_elim_dummy p i))
+  (j: gen_elim_nondep_t)
+  (dummy: squash (gen_elim_dummy enable_nondep_opt p i j))
   (sq_p: squash (p == compute_gen_elim_p i))
+  (sq_j: squash (check_gen_elim_nondep_sem i j))
   (a: Type0)
-  (sq_a: squash (a == compute_gen_elim_a i))
+  (sq_a: squash (a == compute_gen_elim_nondep_a i j))
   (post: Ghost.erased a -> Tot prop)
-  (sq_post: squash (post == (fun (x: Ghost.erased a) -> compute_gen_elim_post i x)))
+  (sq_post: squash (post == (fun (x: Ghost.erased a) -> compute_gen_elim_nondep_post i j x)))
   (q: Ghost.erased a -> Tot vprop)
-  (sq_q: squash (q == (fun (x: Ghost.erased a) -> compute_gen_elim_q i x)))
-: Lemma (gen_elim_prop_placeholder p i a q post)
+  (sq_q: squash (q == (fun (x: Ghost.erased a) -> compute_gen_elim_nondep_q i j x)))
+: Lemma (gen_elim_prop_placeholder enable_nondep_opt p i j a q post)
 = ()
+
+let rec solve_gen_elim_nondep' (fuel: nat) (rev_types_and_binders: list (T.term & T.binder)) (t: T.term) : T.Tac T.term =
+  if fuel = 0
+  then (`GEDep)
+  else
+    let (hd, tl) = T.collect_app t in
+    if hd `T.term_eq` (`TRet)
+    then match tl with
+    | [(v, T.Q_Explicit); (p, T.Q_Explicit)] ->
+      let cons_type (accu: (unit -> T.Tac T.term)) (tb: (T.term & T.binder)) () : T.Tac T.term =
+        let (ty, _) = tb in
+        let tl = accu () in
+        T.mk_app (`Cons) [ty, T.Q_Explicit; tl, T.Q_Explicit]
+      in
+      let nil_type () : T.Tac T.term = T.mk_app (`Nil) [(`Type0), T.Q_Implicit] in
+      let type_list = List.Tot.fold_left cons_type nil_type rev_types_and_binders () in
+      let type_list_typechecks =
+        let open T in
+        try
+          let env = cur_env () in
+          let ty = tc env type_list in
+          ty `term_eq` (`(list Type0))
+        with _ -> false
+      in
+      if not type_list_typechecks
+      then (`GEDep)
+      else
+        let binders = List.Tot.map snd (List.Tot.rev rev_types_and_binders) in
+        let v' = T.mk_abs binders v in
+        let p' = T.mk_abs binders p in
+        T.mk_app (`GENonDep) [
+          type_list, T.Q_Explicit;
+          v', T.Q_Explicit;
+          p', T.Q_Explicit;
+        ]
+    | _ -> (`GEDep)
+    else if hd `T.term_eq` (`TExists)
+    then match tl with
+    | [(ty, _); (f, T.Q_Explicit)] ->
+      begin match T.inspect f with
+      | T.Tv_Abs bv body -> solve_gen_elim_nondep' (fuel - 1) ((ty, bv) :: rev_types_and_binders) body
+      | _ -> (`GEDep)
+      end
+    | _ -> (`GEDep)
+    else (`GEDep)
+
+let solve_gen_elim_nondep (enable_nondep_opt: bool) (t: T.term) : T.Tac T.term =
+  if enable_nondep_opt
+  then
+    let open T in
+    try
+      let tele = mk_app (`compute_gen_elim_tele) [t, Q_Explicit] in
+      let t' = norm_term [delta_attr [(`%gen_elim_reduce)]; zeta; iota] tele in
+      solve_gen_elim_nondep' 15 [] t'  // fuel necessary because F* standard tuple types only go from 0 up to 14 elts
+    with _ -> (`GEDep)
+  else (`GEDep)
 
 let solve_gen_elim_dummy
   ()
@@ -541,13 +726,17 @@ let solve_gen_elim_dummy
         if not (hd1 `T.term_eq` (`gen_elim_dummy))
         then T.fail "not a gen_elim_dummy goal";
         begin match List.Tot.filter (fun (_, x) -> T.Q_Explicit? x) tl1 with
-        | [(p, _); (i, _)] ->
+        | [(enable_nondep_opt_tm, _); (p, _); (i, _); (j, _)] ->
           if slterm_nbr_uvars p <> 0
           then T.fail "pre-resource not solved yet";
-          if not (T.Tv_Uvar? (T.inspect i))
+          let i_is_uvar = T.Tv_Uvar? (T.inspect i) in
+          let j_is_uvar = T.Tv_Uvar? (T.inspect j) in
+          if not (i_is_uvar && j_is_uvar)
           then T.fail "gen_elim_dummy is already solved";
+          let enable_nondep_opt = enable_nondep_opt_tm `T.term_eq` (`true) in
           let i' = solve_gen_elim p in
-          T.exact (T.mk_app (`gen_elim_dummy_intro) [(p, T.Q_Explicit); (i', T.Q_Explicit)])
+          let j' = solve_gen_elim_nondep enable_nondep_opt i' in
+          T.exact (T.mk_app (`gen_elim_dummy_intro) [(enable_nondep_opt_tm, T.Q_Explicit); (p, T.Q_Explicit); (i', T.Q_Explicit); (j', T.Q_Explicit)])
         | _ -> T.fail "ill-formed gen_elim_dummy"
         end
       | _ -> T.fail "ill-formed squash"
@@ -565,34 +754,50 @@ let solve_gen_elim_prop
     if not (hd1 `T.term_eq` (`gen_elim_prop))
     then T.fail "not a gen_elim_prop goal";
     T.apply_lemma (`gen_elim_prop_intro);
-    let norm () = T.norm [delta_attr [(`%__reduce__)]; zeta; iota] in
-    T.focus (fun _ -> norm (); T.trefl ());
-    T.focus (fun _ -> norm (); T.trefl ());
-    T.focus (fun _ -> norm (); T.trefl ());
-    T.focus (fun _ -> norm (); T.trefl ())
+    let norm () = T.norm [delta_attr [(`%gen_elim_reduce)]; zeta; iota] in
+    T.focus (fun _ -> norm (); T.trefl ()); // p
+    T.focus (fun _ -> norm (); T.trivial (); T.qed ()); // j
+    T.focus (fun _ -> norm (); T.trefl ()); // a
+    T.focus (fun _ -> norm (); T.trefl ()); // post
+    T.focus (fun _ -> norm (); T.trefl ()) // q
   | _ -> T.fail "ill-formed squash"
 
 val gen_elim'
   (#opened: _)
+  (enable_nondep_opt: bool)
   (p: vprop)
   (i: gen_elim_i)
+  (j: gen_elim_nondep_t)
   (a: Type0)
   (q: Ghost.erased a -> Tot vprop)
   (post: Ghost.erased a -> Tot prop)
-  (sq: squash (gen_elim_prop_placeholder p i a q post))
+  (sq: squash (gen_elim_prop_placeholder enable_nondep_opt p i j a q post))
   (_: unit)
-: STGhost (Ghost.erased a) opened p (fun x -> guard_vprop (q x)) (gen_elim_prop p i a q post) post
+: STGhost (Ghost.erased a) opened p (fun x -> guard_vprop (q x)) (gen_elim_prop p i j a q post) post
 
 val gen_elim
   (#opened: _)
   (#[@@@ framing_implicit] p: vprop)
   (#[@@@ framing_implicit] i: gen_elim_i)
+  (#[@@@ framing_implicit] j: gen_elim_nondep_t)
   (#[@@@ framing_implicit] a: Type0)
   (#[@@@ framing_implicit] q: Ghost.erased a -> Tot vprop)
   (#[@@@ framing_implicit] post: Ghost.erased a -> Tot prop)
-  (#[@@@ framing_implicit] sq: squash (gen_elim_prop_placeholder p i a q post))
+  (#[@@@ framing_implicit] sq: squash (gen_elim_prop_placeholder true p i j a q post))
   (_: unit)
-: STGhostF (Ghost.erased a) opened p (fun x -> guard_vprop (q x)) ( (T.with_tactic solve_gen_elim_prop) (squash (gen_elim_prop p i a q post))) post
+: STGhostF (Ghost.erased a) opened p (fun x -> guard_vprop (q x)) ( (T.with_tactic solve_gen_elim_prop) (squash (gen_elim_prop p i j a q post))) post
+
+val gen_elim_dep
+  (#opened: _)
+  (#[@@@ framing_implicit] p: vprop)
+  (#[@@@ framing_implicit] i: gen_elim_i)
+  (#[@@@ framing_implicit] j: gen_elim_nondep_t)
+  (#[@@@ framing_implicit] a: Type0)
+  (#[@@@ framing_implicit] q: Ghost.erased a -> Tot vprop)
+  (#[@@@ framing_implicit] post: Ghost.erased a -> Tot prop)
+  (#[@@@ framing_implicit] sq: squash (gen_elim_prop_placeholder false p i j a q post))
+  (_: unit)
+: STGhostF (Ghost.erased a) opened p (fun x -> guard_vprop (q x)) ( (T.with_tactic solve_gen_elim_prop) (squash (gen_elim_prop p i j a q post))) post
 
 let solve_gen_elim_prop_placeholder
   ()
@@ -608,11 +813,12 @@ let solve_gen_elim_prop_placeholder
     then T.fail "not a gen_elim_prop_placeholder goal";
     T.apply_lemma (`gen_elim_prop_placeholder_intro);
     T.focus solve_gen_elim_dummy;
-    let norm () = T.norm [delta_attr [(`%__reduce__)]; zeta; iota] in
-    T.focus (fun _ -> norm (); T.trefl ());
-    T.focus (fun _ -> norm (); T.trefl ());
-    T.focus (fun _ -> norm (); T.trefl ());
-    T.focus (fun _ -> norm (); T.trefl ());
+    let norm () = T.norm [delta_attr [(`%gen_elim_reduce)]; zeta; iota] in
+    T.focus (fun _ -> norm (); T.trefl ()); // p
+    T.focus (fun _ -> norm (); T.trivial (); T.qed ()); // j
+    T.focus (fun _ -> norm (); T.trefl ()); // a
+    T.focus (fun _ -> norm (); T.trefl ()); // post
+    T.focus (fun _ -> norm (); T.trefl ()); // q
     true
   | _ -> T.fail "ill-formed squash"
 
