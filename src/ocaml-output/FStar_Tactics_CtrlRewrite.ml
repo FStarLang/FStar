@@ -681,50 +681,53 @@ let (do_ctrl_rewrite :
                    | (tm', uu___2) -> FStar_Tactics_Monad.ret tm')
 let (ctrl_rewrite :
   FStar_Tactics_Types.direction ->
-    controller_ty -> rewriter_ty -> unit FStar_Tactics_Monad.tac)
+    Prims.bool ->
+      controller_ty -> rewriter_ty -> unit FStar_Tactics_Monad.tac)
   =
   fun dir ->
-    fun controller ->
-      fun rewriter ->
-        let uu___ =
-          FStar_Tactics_Monad.bind FStar_Tactics_Monad.get
-            (fun ps ->
-               let uu___1 =
-                 match ps.FStar_Tactics_Types.goals with
-                 | g::gs -> (g, gs)
-                 | [] -> failwith "no goals" in
-               match uu___1 with
-               | (g, gs) ->
-                   FStar_Tactics_Monad.bind FStar_Tactics_Monad.dismiss_all
-                     (fun uu___2 ->
-                        let gt = FStar_Tactics_Types.goal_type g in
-                        FStar_Tactics_Monad.log ps
-                          (fun uu___4 ->
-                             let uu___5 =
-                               FStar_Syntax_Print.term_to_string gt in
-                             FStar_Compiler_Util.print1
-                               "ctrl_rewrite starting with %s\n" uu___5);
-                        (let uu___4 =
-                           let uu___5 = FStar_Tactics_Types.goal_env g in
-                           do_ctrl_rewrite g dir controller rewriter uu___5
-                             gt in
-                         FStar_Tactics_Monad.bind uu___4
-                           (fun gt' ->
-                              FStar_Tactics_Monad.log ps
-                                (fun uu___6 ->
-                                   let uu___7 =
-                                     FStar_Syntax_Print.term_to_string gt' in
-                                   FStar_Compiler_Util.print1
-                                     "ctrl_rewrite seems to have succeded with %s\n"
-                                     uu___7);
-                              (let uu___6 = FStar_Tactics_Monad.push_goals gs in
-                               FStar_Tactics_Monad.bind uu___6
-                                 (fun uu___7 ->
-                                    let uu___8 =
-                                      let uu___9 =
-                                        FStar_Tactics_Types.goal_with_type g
-                                          gt' in
-                                      [uu___9] in
-                                    FStar_Tactics_Monad.add_goals uu___8)))))) in
-        FStar_Compiler_Effect.op_Less_Bar
-          (FStar_Tactics_Monad.wrap_err "ctrl_rewrite") uu___
+    fun allow_subtyping ->
+      fun controller ->
+        fun rewriter ->
+          let uu___ =
+            FStar_Tactics_Monad.bind FStar_Tactics_Monad.get
+              (fun ps ->
+                 let uu___1 =
+                   match ps.FStar_Tactics_Types.goals with
+                   | g::gs -> (g, gs)
+                   | [] -> failwith "no goals" in
+                 match uu___1 with
+                 | (g, gs) ->
+                     FStar_Tactics_Monad.bind FStar_Tactics_Monad.dismiss_all
+                       (fun uu___2 ->
+                          let gt = FStar_Tactics_Types.goal_type g in
+                          FStar_Tactics_Monad.log ps
+                            (fun uu___4 ->
+                               let uu___5 =
+                                 FStar_Syntax_Print.term_to_string gt in
+                               FStar_Compiler_Util.print1
+                                 "ctrl_rewrite starting with %s\n" uu___5);
+                          (let uu___4 =
+                             let uu___5 = FStar_Tactics_Types.goal_env g in
+                             do_ctrl_rewrite g dir controller rewriter uu___5
+                               gt in
+                           FStar_Tactics_Monad.bind uu___4
+                             (fun gt' ->
+                                FStar_Tactics_Monad.log ps
+                                  (fun uu___6 ->
+                                     let uu___7 =
+                                       FStar_Syntax_Print.term_to_string gt' in
+                                     FStar_Compiler_Util.print1
+                                       "ctrl_rewrite seems to have succeded with %s\n"
+                                       uu___7);
+                                (let uu___6 =
+                                   FStar_Tactics_Monad.push_goals gs in
+                                 FStar_Tactics_Monad.bind uu___6
+                                   (fun uu___7 ->
+                                      let uu___8 =
+                                        let uu___9 =
+                                          FStar_Tactics_Types.goal_with_type
+                                            g gt' in
+                                        [uu___9] in
+                                      FStar_Tactics_Monad.add_goals uu___8)))))) in
+          FStar_Compiler_Effect.op_Less_Bar
+            (FStar_Tactics_Monad.wrap_err "ctrl_rewrite") uu___
