@@ -46,7 +46,7 @@ let try_with (f : unit -> Tac 'a) (h : exn -> Tac 'a) : Tac 'a =
 
 noextract
 let l_to_r (t:term) : Tac unit =
-  ctrl_rewrite BottomUp
+  ctrl_rewrite BottomUp false
     (fun  _ -> true, Continue)
     (fun _ ->
       try t_apply_lemma false true t
