@@ -19,5 +19,8 @@ module Nest
 
 open FStar.Tactics
 
+let refl_lemma (#a:Type) (x:a) : Lemma (x == x) = ()
+let trefl () : Tac unit = apply_lemma (`refl_lemma)
+
 let _ = assert (3 == 3)
             by (pointwise (fun () -> pointwise trefl; trefl ()))
