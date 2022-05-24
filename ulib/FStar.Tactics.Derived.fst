@@ -201,7 +201,7 @@ the engine will rewrite [t'] for [?u] in the original goal type. This
 is done for every subterm, bottom-up. This allows to recurse over an
 unknown goal type. By inspecting the goal, the [tau] can then decide
 what to do (to not do anything, use [trefl]). *)
-let t_pointwise (d:direction) (tau : unit -> Tac unit) : Tac unit =
+let t_pointwise (d:direction) (allow_eq_subtyping : bool) (tau : unit -> Tac unit) : Tac unit =
   let ctrl (t:term) : Tac (bool & ctrl_flag) =
     true, Continue
   in
@@ -245,8 +245,8 @@ let topdown_rewrite (ctrl : term -> Tac (bool * int))
     in
     ctrl_rewrite TopDown false ctrl' rw
 
-let pointwise  (tau : unit -> Tac unit) : Tac unit = t_pointwise BottomUp tau
-let pointwise' (tau : unit -> Tac unit) : Tac unit = t_pointwise TopDown  tau
+let pointwise  (tau : unit -> Tac unit) : Tac unit = t_pointwise BottomUp false tau
+let pointwise' (tau : unit -> Tac unit) : Tac unit = t_pointwise TopDown  false tau
 
 let cur_module () : Tac name =
     moduleof (top_env ())
@@ -604,7 +604,7 @@ let l_to_r (lems:list term) : Tac unit =
                     (fun () -> apply_lemma_rw l)
                     `or_else` k)
                   trefl lems () in
-    pointwise first_or_trefl
+    t_pointwise BottomUp true first_or_trefl
 
 let mk_squash (t : term) : term =
     let sq : term = pack_ln (Tv_FVar (pack_fv squash_qn)) in
