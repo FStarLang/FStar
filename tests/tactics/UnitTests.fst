@@ -140,6 +140,9 @@ type tt =
     | CC : int -> bool -> tt
     | BB : tt
 
+let refl_lemma (#a:Type) (x:a) : Lemma (x == x) = ()
+let trefl () : Tac unit = apply_lemma (`refl_lemma)
+
 let pwtest x =
     assert (match x with | CC a b -> a == a /\ (b == true \/ b == false) | BB -> true)
         by (pointwise trefl)
