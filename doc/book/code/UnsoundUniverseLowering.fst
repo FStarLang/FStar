@@ -27,8 +27,8 @@ val inject (#a:Type u#a) (x:a) : lower a
 /// This is the main axiom here:
 ///   -- From a value in universe 0, (x:lower a)
 ///      we can extract a value in universe a
-assume
 //SNIPPET_START: project$
+assume
 val project (#a:Type u#a) (x:lower a) : a
 
 assume

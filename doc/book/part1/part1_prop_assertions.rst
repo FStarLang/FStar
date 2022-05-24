@@ -79,7 +79,8 @@ F*, i.e., the parts that allow it to interface with an SMT solver.
    int``, you can write ``f₁ == f₂`` but you cannot write ``f₁ = f₂``,
    since two functions cannot be decidably compared for equality.
                                  
-     
+.. _Part1_prop:
+
 Propositions
 ^^^^^^^^^^^^
 

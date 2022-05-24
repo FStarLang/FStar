@@ -36,9 +36,8 @@ let _ = assert (ty_poly == ty0)
 let _ : Type0 = nat
 let _ : Type0 = bool
 let _ : Type0 = nat -> bool
-let _ : Type0 = nat & bool
 //SNIPPET_END: some common types$
-
+let _ : Type0 = nat & bool
 let _ : Type u#1 = a:Type0 -> a -> a
 
 //SNIPPET_START: poly_id$
@@ -77,9 +76,64 @@ type top : Type u#(a + 1) =
   | Top : a:Type u#a -> v:a -> top
 //SNIPPET_END: top$  
 
-  
-type sigma (a:Type u#a) (b: a -> Type u#b) : Type u#(max a b) = 
-  | 
-type test (a:Type u#a) : Type0 -> Type u#0 = 
-  | MkTest : test a bool
 
+//SNIPPET_START: prop$
+let _ : Type u#1 = prop
+//SNIPPET_END: prop$
+
+//SNIPPET_START: prop impredicative$
+let _ : Type u#1 = a:prop -> a
+let _ : Type u#0 = squash (a:prop -> a)
+let _ : prop = forall (a:prop). a
+let _ : prop = exists (a:prop). a
+//SNIPPET_END: prop impredicative$
+
+//SNIPPET_START: id_top_level$
+let i (#a:Type) (x:a) = x
+let _ = i u#0 0, i u#1 nat, i u#2 (Type u#0)
+//SNIPPET_END: id_top_level$
+
+[@@expect_failure]
+//SNIPPET_START: no_local_poly$
+let no_universe_poly_locally () = 
+  let i (#a:Type) (x:a) = x in
+  let _ = i u#0 0, i u#1 nat, i u#2 (Type u#0) in
+  ()
+//SNIPPET_END: no_local_poly$
+
+//SNIPPET_START: type_poly$
+let type_poly_locally () = 
+  let i (#a:Type) (x:a) = x in
+  let _ = i #unit (), i #bool true, i #nat 0 in
+  ()
+//SNIPPET_END: type_poly$
+
+//SNIPPET_START: val tup2$
+val tup2 (a:Type) (b:Type) : Type
+//SNIPPET_END: val tup2$
+
+[@@expect_failure]
+//SNIPPET_START: let tup2$
+let tup2 a b = a & b
+//SNIPPET_END: let tup2$
+
+//SNIPPET_START: tuple2$
+let tuple2 (a:Type) (b:Type) : Type = a & b
+//SNIPPET_END: tuple2$
+
+//SNIPPET_START: tup2_again$
+val tup2_again (a:Type u#a) (b:Type u#b) : Type u#(max a b)
+let tup2_again a b = a & b
+//SNIPPET_END: tup2_again$
+
+//SNIPPET_START: list_alt$
+noeq
+type list_alt : Type u#a -> Type u#(a + 1) = 
+  | NilAlt: a:Type -> list_alt a
+  | ConsAlt: a:Type -> hd:a -> tl:list_alt a -> list_alt a
+//SNIPPET_END: list_alt$
+
+//SNIPPET_START: crazy_index$
+type t : Type u#100 -> Type u#0 = 
+  | T : unit -> t (FStar.Universe.raise_t unit)
+//SNIPPET_END: crazy_index$
