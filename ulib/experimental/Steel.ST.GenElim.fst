@@ -3,12 +3,6 @@ module Steel.ST.GenElim
 
 irreducible let gen_elim_reduce = ()
 
-let compute_gen_elim_a' = compute_gen_elim_a
-
-let compute_gen_elim_q' = compute_gen_elim_q
-
-let compute_gen_elim_post' = compute_gen_elim_post
-
 let gen_elim_pred
   (enable_nondep_opt: bool)
   (p: vprop)
@@ -18,7 +12,7 @@ let gen_elim_pred
   (ij: (gen_elim_i & gen_elim_nondep_t))
 : Tot prop
 = let (i, j) = ij in
-  p == compute_gen_elim_p' i /\
+  p == compute_gen_elim_p i /\
   check_gen_elim_nondep_sem i j /\ 
   a == compute_gen_elim_nondep_a i j /\
   post == compute_gen_elim_nondep_post i j /\
@@ -41,7 +35,7 @@ let gen_elim_f
 = ((opened: inames) -> STGhost a opened p q True post)
 
 let gen_unit_elim_t (i: gen_unit_elim_i) : Tot Type =
-  gen_elim_f (compute_gen_unit_elim_p' i) unit (fun _ -> compute_gen_unit_elim_q' i) (fun _ -> compute_gen_unit_elim_post' i)
+  gen_elim_f (compute_gen_unit_elim_p i) unit (fun _ -> compute_gen_unit_elim_q i) (fun _ -> compute_gen_unit_elim_post i)
 
 let compute_gen_unit_elim_f_id
   (v: vprop)
@@ -52,7 +46,7 @@ let compute_gen_unit_elim_f_pure
   (p: prop)
 : Tot (gen_unit_elim_t (GUEPure p))
 = fun _ ->
-  rewrite (compute_gen_unit_elim_p' (GUEPure p)) (pure p);
+  rewrite (compute_gen_unit_elim_p (GUEPure p)) (pure p);
   elim_pure p
 
 let compute_gen_unit_elim_f_star
@@ -61,9 +55,9 @@ let compute_gen_unit_elim_f_star
   (f2: gen_unit_elim_t i2)
 : Tot (gen_unit_elim_t (GUEStar i1 i2))
 = fun _ ->
-  rewrite (compute_gen_unit_elim_p' (GUEStar i1 i2)) (compute_gen_unit_elim_p' i1 `star` compute_gen_unit_elim_p' i2);
+  rewrite (compute_gen_unit_elim_p (GUEStar i1 i2)) (compute_gen_unit_elim_p i1 `star` compute_gen_unit_elim_p i2);
   f1 _; f2 _;
-  rewrite (compute_gen_unit_elim_q' i1 `star` compute_gen_unit_elim_q' i2) (compute_gen_unit_elim_q' (GUEStar i1 i2))
+  rewrite (compute_gen_unit_elim_q i1 `star` compute_gen_unit_elim_q i2) (compute_gen_unit_elim_q (GUEStar i1 i2))
 
 let rec compute_gen_unit_elim_f
   (i: gen_unit_elim_i)
@@ -74,7 +68,7 @@ let rec compute_gen_unit_elim_f
   | GUEStar i1 i2 -> compute_gen_unit_elim_f_star i1 i2 (compute_gen_unit_elim_f i1) (compute_gen_unit_elim_f i2)
 
 let gen_elim_t (i: gen_elim_i) : Tot Type =
-  gen_elim_f (compute_gen_elim_p' i) (compute_gen_elim_a' i) (compute_gen_elim_q' i) (compute_gen_elim_post' i)
+  gen_elim_f (compute_gen_elim_p i) (compute_gen_elim_a i) (compute_gen_elim_q i) (compute_gen_elim_post i)
 
 let compute_gen_elim_f_unit
   (i: gen_unit_elim_i)
@@ -88,11 +82,11 @@ let compute_gen_elim_f_star_l
 : Tot (gen_elim_t (GEStarL i1 i2))
 = let f2 = compute_gen_unit_elim_f i2 in
   fun _ ->
-  rewrite (compute_gen_elim_p' (GEStarL i1 i2)) (compute_gen_elim_p' i1 `star` compute_gen_unit_elim_p' i2);
+  rewrite (compute_gen_elim_p (GEStarL i1 i2)) (compute_gen_elim_p i1 `star` compute_gen_unit_elim_p i2);
   let res = f1 _ in
   f2 _;
-  let res' : compute_gen_elim_a' (GEStarL i1 i2) = coerce_with_trefl res in
-  rewrite (compute_gen_elim_q' i1 res `star` compute_gen_unit_elim_q' i2) (compute_gen_elim_q' (GEStarL i1 i2) res');
+  let res' : compute_gen_elim_a (GEStarL i1 i2) = coerce_with_trefl res in
+  rewrite (compute_gen_elim_q i1 res `star` compute_gen_unit_elim_q i2) (compute_gen_elim_q (GEStarL i1 i2) res');
   res'
 
 let compute_gen_elim_f_star_r
@@ -102,11 +96,11 @@ let compute_gen_elim_f_star_r
 : Tot (gen_elim_t (GEStarR i1 i2))
 = let f1 = compute_gen_unit_elim_f i1 in
   fun _ ->
-  rewrite (compute_gen_elim_p' (GEStarR i1 i2)) (compute_gen_unit_elim_p' i1 `star` compute_gen_elim_p' i2);
+  rewrite (compute_gen_elim_p (GEStarR i1 i2)) (compute_gen_unit_elim_p i1 `star` compute_gen_elim_p i2);
   f1 _;
   let res = f2 _ in
-  let res' : compute_gen_elim_a' (GEStarR i1 i2) = coerce_with_trefl res in
-  rewrite (compute_gen_unit_elim_q' i1 `star` compute_gen_elim_q' i2 res) (compute_gen_elim_q' (GEStarR i1 i2) res');
+  let res' : compute_gen_elim_a (GEStarR i1 i2) = coerce_with_trefl res in
+  rewrite (compute_gen_unit_elim_q i1 `star` compute_gen_elim_q i2 res) (compute_gen_elim_q (GEStarR i1 i2) res');
   res'
 
 let compute_gen_elim_f_star
@@ -116,11 +110,11 @@ let compute_gen_elim_f_star
   (f2: gen_elim_t i2)
 : Tot (gen_elim_t (GEStar i1 i2))
 = fun _ ->
-  rewrite (compute_gen_elim_p' (GEStar i1 i2)) (compute_gen_elim_p' i1 `star` compute_gen_elim_p' i2);
+  rewrite (compute_gen_elim_p (GEStar i1 i2)) (compute_gen_elim_p i1 `star` compute_gen_elim_p i2);
   let res1 = f1 _ in
   let res2 = f2 _ in
-  let res : compute_gen_elim_a' (GEStar i1 i2) = coerce_with_trefl (res1, res2) in
-  rewrite (compute_gen_elim_q' i1 res1 `star` compute_gen_elim_q' i2 res2) (compute_gen_elim_q' (GEStar i1 i2) res);
+  let res : compute_gen_elim_a (GEStar i1 i2) = coerce_with_trefl (res1, res2) in
+  rewrite (compute_gen_elim_q i1 res1 `star` compute_gen_elim_q i2 res2) (compute_gen_elim_q (GEStar i1 i2) res);
   res
 
 let compute_gen_elim_f_exists_no_abs
@@ -128,10 +122,10 @@ let compute_gen_elim_f_exists_no_abs
   (body: (a -> vprop))
 : Tot (gen_elim_t (GEExistsNoAbs body))
 = fun _ ->
-  rewrite (compute_gen_elim_p' (GEExistsNoAbs body)) (exists_ body);
+  rewrite (compute_gen_elim_p (GEExistsNoAbs body)) (exists_ body);
   let gres = elim_exists () in
-  let res : compute_gen_elim_a' (GEExistsNoAbs body) = coerce_with_trefl (Ghost.reveal gres) in
-  rewrite (body gres) (compute_gen_elim_q' (GEExistsNoAbs body) res);
+  let res : compute_gen_elim_a (GEExistsNoAbs body) = coerce_with_trefl (Ghost.reveal gres) in
+  rewrite (body gres) (compute_gen_elim_q (GEExistsNoAbs body) res);
   res
 
 let rewrite_with_trefl (#opened:_) (p q:vprop)
@@ -147,11 +141,11 @@ let compute_gen_elim_f_exists_unit
   (body: a -> gen_unit_elim_i)
 : Tot (gen_elim_t (GEExistsUnit body))
 = fun _ ->
-  rewrite_with_trefl (compute_gen_elim_p' (GEExistsUnit body)) (exists_ (fun x -> compute_gen_unit_elim_p' (body x)));
+  rewrite_with_trefl (compute_gen_elim_p (GEExistsUnit body)) (exists_ (fun x -> compute_gen_unit_elim_p (body x)));
   let gres = elim_exists () in
   compute_gen_unit_elim_f (body gres) _;
-  let res : compute_gen_elim_a' (GEExistsUnit body) = coerce_with_trefl (Ghost.reveal gres) in
-  rewrite (compute_gen_unit_elim_q' (body gres)) (compute_gen_elim_q' (GEExistsUnit body) res);
+  let res : compute_gen_elim_a (GEExistsUnit body) = coerce_with_trefl (Ghost.reveal gres) in
+  rewrite (compute_gen_unit_elim_q (body gres)) (compute_gen_elim_q (GEExistsUnit body) res);
   res
 
 let compute_gen_elim_f_exists
@@ -160,11 +154,11 @@ let compute_gen_elim_f_exists
   (f: (x: a) -> gen_elim_t (body x))
 : Tot (gen_elim_t (GEExists body))
 = fun _ ->
-  rewrite_with_trefl (compute_gen_elim_p' (GEExists body)) (exists_ (fun x -> compute_gen_elim_p' (body x)));
+  rewrite_with_trefl (compute_gen_elim_p (GEExists body)) (exists_ (fun x -> compute_gen_elim_p (body x)));
   let gres1 = elim_exists () in
   let gres2 = f gres1 _ in
-  let res : compute_gen_elim_a' (GEExists body) = coerce_with_trefl (Mkdtuple2 #a #(fun x -> compute_gen_elim_a' (body x)) (Ghost.reveal gres1) (Ghost.reveal gres2)) in
-  rewrite (compute_gen_elim_q' (body gres1) gres2) (compute_gen_elim_q' (GEExists body) res);
+  let res : compute_gen_elim_a (GEExists body) = coerce_with_trefl (Mkdtuple2 #a #(fun x -> compute_gen_elim_a (body x)) (Ghost.reveal gres1) (Ghost.reveal gres2)) in
+  rewrite (compute_gen_elim_q (body gres1) gres2) (compute_gen_elim_q (GEExists body) res);
   res
 
 let rec compute_gen_elim_f
