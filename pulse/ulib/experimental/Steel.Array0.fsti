@@ -338,8 +338,7 @@ val upd_pt
   (#t: Type)
   (a: array t)
   (#s: Ghost.erased (Seq.seq t))
-  (i: U32.t)
-  (sq: squash (U32.v i < Seq.length s))
+  (i: U32.t {U32.v i < Seq.length s})
   (v: t)
 : SteelT unit
     (pts_to a P.full_perm s)
@@ -361,7 +360,7 @@ let upd
       asel a h' == Seq.upd (asel a h) (U32.v i) v
     )
 = let _ = elim_varray a in
-  upd_pt a i () v;
+  upd_pt a i v;
   intro_varray a _
 
 /// An array a1 is adjacent to an array a2 if and only if they have

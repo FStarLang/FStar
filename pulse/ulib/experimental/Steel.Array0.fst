@@ -212,11 +212,11 @@ let index_pt #_ #p a #s i =
     (pts_to _ _ _);
   return (lower res)
 
-let upd_pt #_ a #s i sq v =
+let upd_pt #_ a #s i v =
   change_equal_slprop
     (pts_to a _ _)
     (H.pts_to a P.full_perm (seq_map raise s));
-  H.upd a i () (raise v);
+  H.upd a i (raise v);
   assert (seq_map raise (Seq.upd s (U32.v i) v) `Seq.equal` Seq.upd (seq_map raise s) (U32.v i) (raise v));
   change_equal_slprop
     (H.pts_to _ _ _)

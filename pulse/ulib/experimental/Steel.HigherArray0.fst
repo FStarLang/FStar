@@ -415,8 +415,7 @@ let upd
   (#t: Type)
   (a: array t)
   (#s: Ghost.erased (Seq.seq t))
-  (i: U32.t)
-  (sq: squash (U32.v i < Seq.length s))
+  (i: U32.t { U32.v i < Seq.length s })
   (v: t)
 : SteelT unit
     (pts_to a P.full_perm s)
