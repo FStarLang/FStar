@@ -3,12 +3,28 @@ open FStar.WellFounded
 
 #push-options "--warn_error -242" //inner let recs not encoded to SMT; ok
 
+let intro_lift_binrel (#a:Type) (r:binrel a) (y:a) (x:a)
+  : Lemma
+    (requires r y x)
+    (ensures lift_binrel r (| a, y |) (| a, x |))
+  = let t0 : top = (| a, y |) in
+    let t1 : top = (| a, x |) in
+    let pf1 : squash (dfst t0 == a /\ dfst t1 == a) = () in
+    let pf2 : squash (r (dsnd t0) (dsnd t1)) = () in
+    let pf : squash (lift_binrel r t0 t1) =
+      FStar.Squash.bind_squash pf1 (fun (pf1: (dfst t0 == a /\ dfst t1 == a)) ->
+      FStar.Squash.bind_squash pf2 (fun (pf2: (r (dsnd t0) (dsnd t1)))  ->
+      let p : lift_binrel r t0 t1 = (| pf1, pf2 |) in
+      FStar.Squash.return_squash p))
+    in
+    ()
+
 let elim_lift_binrel (#a:Type) (r:binrel a) (y:top) (x:a)
-  : Lemma 
+  : Lemma
     (requires lift_binrel r y (| a, x |))
     (ensures dfst y == a /\ r (dsnd y) x)
   = let s : squash (lift_binrel r y (| a, x |)) = FStar.Squash.get_proof (lift_binrel r y (| a, x |)) in
-    let s : squash (dfst y == a /\ r (dsnd y) x) = FStar.Squash.bind_squash s (fun (pf:lift_binrel r y (|a, x|)) -> 
+    let s : squash (dfst y == a /\ r (dsnd y) x) = FStar.Squash.bind_squash s (fun (pf:lift_binrel r y (|a, x|)) ->
       let p1 : (dfst y == a /\ a == a) = dfst pf in
       let p2 : r (dsnd y) x = dsnd pf in
       introduce dfst y == a /\ r (dsnd y) x
@@ -94,7 +110,7 @@ let lift_binrel_squashed_intro (#a:Type) (#r:binrel a)
 
 let unsquash_well_founded (#a:Type u#a) (r:binrel u#a u#r a) (wf_r:well_founded (squash_binrel r))
   : well_founded u#a u#r r
-  = let rec f (x:a) 
+  = let rec f (x:a)
       : Tot (acc r x)
             (decreases {:well-founded (lift_binrel_squashed_as_well_founded_relation wf_r) (| a, x |)})
       = AccIntro (let g_smaller (y: a) (u: r y x) : acc r y =

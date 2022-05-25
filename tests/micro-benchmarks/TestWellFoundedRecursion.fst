@@ -218,3 +218,44 @@ let rec rel_poly2 (a:Type) (r:binrel a) (wf_r:well_founded r) (x:a)
     | Some z ->
       WFU.elim_lift_binrel r z x;
       1 + rel_poly2 a r wf_r (dsnd z)
+
+//Examples from PR 2561
+open FStar.WellFoundedRelation
+
+// Define `nat_nat_wfr` to represent the lexicographically-precedes
+// relation between two elements of type `nat * nat`.  That is,
+// `(x1, y1)` is related to `(x2, y2)` if
+// `x1 < x2 \/ (x1 == x2 /\ y1 < y2)`.
+
+let nat_nat_wfr = lex_nondep_wfr (default_wfr nat) (default_wfr nat)
+
+// To show that `f` is well-defined, we use the decreases clause
+// `nat_nat_wfr.decreaser (x, y)`.  We then need to show, on each
+// recursive call, that the parameters x2 and y2 to the nested
+// call satisfy `nat_nat_wfr.relation (x2, y2) (x, y)`.
+
+let rec f (x: nat) (y: nat)
+  : Tot nat (decreases (nat_nat_wfr.decreaser (x, y)))
+  = if x = 0 then
+      0
+    else if y = 0 then (
+      // This assertion isn't necessary; it's just for illustration
+      assert (nat_nat_wfr.relation (x - 1, 100) (x, y));
+      f (x - 1) 100
+    )
+    else (
+      // This assertion isn't necessary; it's just for illustration
+      assert (nat_nat_wfr.relation (x, y - 1) (x, y));
+      f x (y - 1)
+    )
+
+
+let rec count_steps_to_none
+  (a: Type)
+  (wfr: wfr_t a)
+  (stepper: (x: a) -> (y: option a{Some? y ==> wfr.relation (Some?.v y) x}))
+  (start: option a)
+  : Tot nat (decreases (option_wfr wfr).decreaser start) =
+  match start with
+  | None -> 0
+  | Some x -> 1 + count_steps_to_none a wfr stepper (stepper x)
