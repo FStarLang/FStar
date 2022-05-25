@@ -205,24 +205,6 @@ let gen_elim_prop_intro'
   i j enable_nondep_opt p a q post sq_p sq_j sq_a sq_q sq_post
 = assert (gen_elim_pred enable_nondep_opt p a q post (i, j))
 
-let gen_elim_prop_placeholder
-  (enable_nondep_opt: bool)
-  (p: vprop)
-  (a: Type0)
-  (q: Ghost.erased a -> Tot vprop)
-  (post: Ghost.erased a -> Tot prop)
-: Tot prop
-= True
-
-let gen_elim_prop_placeholder_intro
-  (enable_nondep_opt: bool)
-  (p: vprop)
-  (a: Type0)
-  (q: Ghost.erased a -> Tot vprop)
-  (post: Ghost.erased a -> Tot prop)
-: Tot (squash (gen_elim_prop_placeholder enable_nondep_opt p a q post))
-= ()
-
 let gen_elim_f
   (p: vprop)
   (a: Type0) // FIXME: generalize this universe
