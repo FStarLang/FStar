@@ -675,23 +675,23 @@ let gen_elim_prop_intro
   (gen_elim_prop enable_nondep_opt p a q post)
 = gen_elim_prop_intro' i (mk_gen_elim_nondep ty tvprop q0 tprop post0) enable_nondep_opt p a q post sq_p sq_j sq_a sq_q sq_post
 
-val gen_elim_prop_placeholder
+let gen_elim_prop_placeholder
   (enable_nondep_opt: bool)
   (p: vprop)
   (a: Type0)
   (q: Ghost.erased a -> Tot vprop)
   (post: Ghost.erased a -> Tot prop)
 : Tot prop
-// = True
+= True
 
-val gen_elim_prop_placeholder_intro
+let gen_elim_prop_placeholder_intro
   (enable_nondep_opt: bool)
   (p: vprop)
   (a: Type0)
   (q: Ghost.erased a -> Tot vprop)
   (post: Ghost.erased a -> Tot prop)
-: Tot (squash (gen_elim_prop_placeholder enable_nondep_opt p a q post))
-// = ()
+: Lemma (gen_elim_prop_placeholder enable_nondep_opt p a q post)
+= ()
 
 let rec solve_gen_elim_nondep' (fuel: nat) (rev_types_and_binders: list (T.term & T.binder)) (t: T.term) : T.Tac (option (tuple5 T.term T.term T.term T.term T.term)) =
   if fuel = 0
@@ -874,13 +874,13 @@ let solve_gen_elim_prop_placeholder
       let a' = norm_term (T.mk_app (`compute_gen_elim_nondep_a) [i', T.Q_Explicit; j', T.Q_Explicit]) in
       let q' = norm_term (T.mk_app (`compute_gen_elim_nondep_q) [i', T.Q_Explicit; j', T.Q_Explicit]) in
       let post' = norm_term (T.mk_app (`compute_gen_elim_nondep_post) [i', T.Q_Explicit; j', T.Q_Explicit]) in
-      T.exact (T.mk_app (`gen_elim_prop_placeholder_intro) [
-        (enable_nondep_opt_tm, T.Q_Explicit);
-        (p, T.Q_Explicit);
-        (a', T.Q_Explicit);
-        (q', T.Q_Explicit);
-        (post', T.Q_Explicit);
-      ]);
+      T.unshelve a;
+      T.exact a';
+      T.unshelve q;
+      T.exact q';
+      T.unshelve post;
+      T.exact post';
+      T.apply_lemma (`gen_elim_prop_placeholder_intro);
       true
     | _ -> T.fail "ill-formed gen_elim_prop_placeholder"
     end
