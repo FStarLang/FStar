@@ -18,7 +18,7 @@ let checkno (t0:term) : Tac unit =
   let rewrite () : Tac unit =
     fail "not reached"
   in
-  ctrl_rewrite BottomUp control rewrite
+  ctrl_rewrite BottomUp false control rewrite
 
 let qname_as_term (x:string) : term =
   let qn = explode_qn x in
