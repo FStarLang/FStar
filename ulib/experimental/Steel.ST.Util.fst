@@ -125,6 +125,9 @@ let elim_exists #a #o #p _
 let lift_exists (#a:_) (#u:_) (p:a -> vprop)
   = coerce_ghost (fun _ -> SEA.lift_exists #a #u p)
 
+let exists_equiv #a p1 p2
+  = SEA.exists_equiv p1 p2
+
 let exists_cong #a #u p q
   = coerce_ghost (fun _ -> SEA.exists_cong #a #u p q)
 
