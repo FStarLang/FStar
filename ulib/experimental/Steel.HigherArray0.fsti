@@ -106,9 +106,21 @@ val pts_to_inj
   ))
 
 /// Allocating a new array of size n, where each cell is initialized
-/// with value x
+/// with value x. We expose a pointer version for extraction purposes
 [@@noextract_to "krml"] // primitive
-val malloc
+val malloc_ptr
+  (#elt: Type)
+  (x: elt)
+  (n: U32.t)
+: SteelT(a: ptr elt { base_len (base a) == U32.v n /\ offset a == 0 })
+    emp
+    (fun a -> pts_to (| a, Ghost.hide (U32.v n) |) P.full_perm (Seq.create (U32.v n) x))
+
+/// Allocating a new array of size n, where each cell is initialized
+/// with value x
+inline_for_extraction
+[@@noextract_to "krml"]
+let malloc
   (#elt: Type)
   (x: elt)
   (n: U32.t)
@@ -120,11 +132,28 @@ val malloc
       length a == U32.v n /\
       base_len (base (ptr_of a)) == U32.v n
     )
+= let p = malloc_ptr x n in
+  let a : array elt = (| p, Ghost.hide (U32.v n) |) in
+  change_equal_slprop
+    (pts_to _ _ _)
+    (pts_to a _ _);
+  return a
 
-/// Freeing a full array. 
+/// Freeing a full array. Same here, we expose a ptr version for extraction purposes only
 [@@ noextract_to "krml"; // primitive
     warn_on_use "Steel.HigherArray0.free is currently unsound in the presence of zero-size subarrays, have you collected them all?"]
-val free
+val free_ptr
+  (#elt: Type)
+  (#s: Ghost.erased (Seq.seq elt))
+  (a: ptr elt { offset a == 0 })
+: SteelT unit
+    (pts_to (| a, Ghost.hide #nat (base_len (base a)) |) P.full_perm s)
+    (fun _ -> emp)
+
+inline_for_extraction
+[@@ noextract_to "krml";
+    warn_on_use "Steel.HigherArray0.free is currently unsound in the presence of zero-size subarrays, have you collected them all?"]
+let free
   (#elt: Type)
   (#s: Ghost.erased (Seq.seq elt))
   (a: array elt)
@@ -135,6 +164,11 @@ val free
       length a == base_len (base (ptr_of a))
     )
     (fun _ _ _ -> True)
+= let (| p, _ |) = a in
+  change_equal_slprop
+    (pts_to _ _ _)
+    (pts_to (| p, Ghost.hide #nat (base_len (base p)) |) _ s);
+  free_ptr p
 
 /// Sharing and gathering permissions on an array. Those only
 /// manipulate permissions, so they are nothing more than stateful
@@ -166,7 +200,21 @@ val gather
 /// Reading the i-th element of an array a.
 /// TODO: we should also provide an atomic version for small types.
 [@@noextract_to "krml"] // primitive
-val index
+val index_ptr
+  (#t: Type) (#p: P.perm)
+  (a: ptr t)
+  (#len: Ghost.erased nat { offset a + len <= base_len (base a) })
+  (#s: Ghost.erased (Seq.seq t))
+  (i: U32.t)
+: Steel t
+    (pts_to (| a, len |) p s)
+    (fun _ -> pts_to (| a, len |) p s)
+    (fun _ -> U32.v i < Ghost.reveal len)
+    (fun _ res _ -> U32.v i < Seq.length s /\ res == Seq.index s (U32.v i))
+
+inline_for_extraction
+[@@noextract_to "krml"] // primitive
+let index
   (#t: Type) (#p: P.perm)
   (a: array t)
   (#s: Ghost.erased (Seq.seq t))
@@ -176,11 +224,33 @@ val index
     (fun _ -> pts_to a p s)
     (fun _ -> U32.v i < length a)
     (fun _ res _ -> U32.v i < Seq.length s /\ res == Seq.index s (U32.v i))
+= let (| pt, len |) = a in
+  change_equal_slprop
+    (pts_to _ _ _)
+    (pts_to (| pt, len |) p s);
+  let res = index_ptr pt i in
+  change_equal_slprop
+    (pts_to _ _ _)
+    (pts_to a p s);
+  return res
 
 /// Writing the value v at the i-th element of an array a.
 /// TODO: we should also provide an atomic version for small types.
 [@@noextract_to "krml"] // primitive
-val upd
+val upd_ptr
+  (#t: Type)
+  (a: ptr t)
+  (#len: Ghost.erased nat { offset a + len <= base_len (base a) })
+  (#s: Ghost.erased (Seq.seq t))
+  (i: U32.t { U32.v i < Seq.length s })
+  (v: t)
+: SteelT unit
+    (pts_to (| a, len |) P.full_perm s)
+    (fun res -> pts_to (| a, len |) P.full_perm (Seq.upd s (U32.v i) v))
+
+inline_for_extraction
+[@@noextract_to "krml"]
+let upd
   (#t: Type)
   (a: array t)
   (#s: Ghost.erased (Seq.seq t))
@@ -189,6 +259,14 @@ val upd
 : SteelT unit
     (pts_to a P.full_perm s)
     (fun res -> pts_to a P.full_perm (Seq.upd s (U32.v i) v))
+= let (| pt, len |) = a in
+  change_equal_slprop
+    (pts_to _ _ _)
+    (pts_to (| pt, len |) _ s);
+  upd_ptr pt i v;
+  change_equal_slprop
+    (pts_to _ _ _)
+    (pts_to _ _ _)
 
 /// An array a1 is adjacent to an array a2 if and only if they have
 /// the same base array and the end of a1 coincides with the beginning
