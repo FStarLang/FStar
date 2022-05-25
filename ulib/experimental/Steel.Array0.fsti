@@ -166,7 +166,7 @@ let elim_varray
 /// (and others) with a _pt suffix in the name.
 inline_for_extraction
 [@@noextract_to "krml"]
-val alloc_pt
+val malloc_pt
   (#elt: Type)
   (x: elt)
   (n: U32.t)
@@ -181,7 +181,7 @@ val alloc_pt
 
 inline_for_extraction
 [@@noextract_to "krml"]
-let alloc
+let malloc
   (#elt: Type)
   (x: elt)
   (n: U32.t)
@@ -194,7 +194,7 @@ let alloc
       base_len (base (ptr_of a)) == U32.v n /\
       asel a h' == Seq.create (U32.v n) x
     )
-= let res = alloc_pt x n in
+= let res = malloc_pt x n in
   intro_varray res _;
   return res
 

@@ -228,7 +228,7 @@ let pts_to_inj
   mk_carrier_joinable (U32.v (ptr_of a).base_len) (ptr_of a).offset s1 p1 s2 p2
 
 [@@noextract_to "krml"]
-let alloc
+let malloc
   (#elt: Type)
   (x: elt)
   (n: U32.t)
