@@ -31,6 +31,40 @@ let rec size (e:src_exp)
     | ELam _ e -> 1 + size e
     | EApp e1 e2 -> 1 + size e1 + size e2
 
+let rec freevars (e:src_exp) 
+  : FStar.Set.set var
+  = match e with
+    | EVar v -> Set.singleton v
+    | EBool _
+    | EBVar _ -> Set.empty
+    | EIf b e1 e2 -> Set.union (freevars b) (Set.union (freevars e1) (freevars e2))
+    | ELam t e -> Set.union (freevars_ty t) (freevars e)
+    | EApp e1 e2 -> Set.union (freevars e1) (freevars e2)
+and freevars_ty (t:src_ty)
+  : Set.set var
+  = match t with
+    | TBool -> Set.empty
+    | TArrow t1 t2 -> freevars_ty t1 `Set.union` freevars_ty t2
+    | TRefineBool e -> freevars e
+  
+let rec closed (e:src_exp) 
+  : b:bool{ b <==> freevars e `Set.equal` Set.empty }
+  = match e with
+    | EVar v -> 
+      assert (v `Set.mem` freevars e);
+      false
+    | EBool _
+    | EBVar _ -> true
+    | EIf b e1 e2 -> closed b && closed e1 && closed e2
+    | ELam t e -> closed_ty t && closed e
+    | EApp e1 e2 -> closed e1 && closed e2
+and closed_ty (t:src_ty)
+  : b:bool{ b <==> freevars_ty t `Set.equal` Set.empty }
+  = match t with
+    | TBool -> true
+    | TRefineBool e -> closed e
+    | TArrow t1 t2 -> closed_ty t1 && closed_ty t2
+  
 let rec ln' (e:src_exp) (n:int)
   : bool
   = match e with
@@ -40,15 +74,14 @@ let rec ln' (e:src_exp) (n:int)
     | EIf b e1 e2 -> ln' b n && ln' e1 n && ln' e2 n
     | ELam t e -> ln_ty t && ln' e (n + 1)
     | EApp e1 e2 -> ln' e1 n && ln' e2 n
-and ln_ty (e:src_ty )
-  : bool
+and ln_ty (e:src_ty)
+  : b:bool{ b ==> closed_ty e }
   = match e with
     | TBool -> true
-    | TRefineBool e -> ln' e (- 1)
+    | TRefineBool e -> ln' e (- 1) && closed e
     | TArrow t1 t2 -> ln_ty t1 && ln_ty t2
 
 let ln e = ln' e (-1)
-
 
 let rec open_exp' (e:src_exp) (v:var) (n:index)
   : e':src_exp { size e == size e'}
@@ -129,11 +162,25 @@ let rec close_exp_ln (e:src_exp) (v:var) (n:nat)
     | ELam _ e -> close_exp_ln e v (n + 1)
     | EApp e1 e2 -> close_exp_ln e1 v n; close_exp_ln e2 v n
 
+let open_exp_freevars (e:src_exp) (v:var) (n:nat)
+  : Lemma (freevars (open_exp' e v n) `Set.subset`
+           (freevars e `Set.union` Set.singleton v))
+          [SMTPat (freevars (open_exp' e v n))]
+  = admit()           
+
+let minus (s:Set.set 'a) (x:'a) = Set.intersect s (Set.complement (Set.singleton x))
+
+let close_exp_freevars (e:src_exp) (v:var) (n:nat)
+  : Lemma (freevars (close_exp' e v n) `Set.equal`
+           (freevars e `minus` v))
+          [SMTPat (freevars (close_exp' e v n))]
+  = admit()           
 
 let src_eqn = src_exp & src_exp
 
+let s_ty = t:src_ty { ln_ty t }
 //environment binds types or equations
-let src_env = list (var & either src_ty src_eqn) 
+let src_env = list (var & either s_ty src_eqn) 
 
 let rec lookup (e:list (var & 'a)) (x:var)
   : option 'a
@@ -191,12 +238,12 @@ let fresh_is_fresh (e:src_env)
 
 [@@erasable]
 noeq
-type sub_typing : src_env -> src_ty -> src_ty -> Type =
-  | S_Refl : g:src_env -> t:src_ty -> sub_typing g t t
+type sub_typing : src_env -> s_ty -> s_ty -> Type =
+  | S_Refl : g:src_env -> t:s_ty -> sub_typing g t t
 
 [@@erasable]
 noeq
-type src_typing : src_env -> src_exp -> src_ty -> Type =
+type src_typing : src_env -> src_exp -> s_ty -> Type =
   | T_Bool :
       g:src_env ->
       b:bool ->
@@ -209,9 +256,9 @@ type src_typing : src_env -> src_exp -> src_ty -> Type =
 
   | T_Lam  :
       g:src_env ->
-      t:src_ty ->
+      t:s_ty ->
       e:src_exp ->
-      t':src_ty ->
+      t':s_ty ->
       x:var { None? (lookup g x) } ->
       src_ty_ok g t ->
       src_typing ((x, Inl t) :: g) (open_exp e x) t' ->
@@ -221,9 +268,9 @@ type src_typing : src_env -> src_exp -> src_ty -> Type =
       g:src_env ->
       e1:src_exp ->
       e2:src_exp ->
-      t:src_ty ->
-      t':src_ty ->
-      t0:src_ty ->
+      t:s_ty ->
+      t':s_ty ->
+      t0:s_ty ->
       src_typing g e1 (TArrow t t') ->
       src_typing g e2 t0 ->
       sub_typing g t0 t ->
@@ -234,9 +281,9 @@ type src_typing : src_env -> src_exp -> src_ty -> Type =
        b:src_exp ->
        e1:src_exp ->
        e2:src_exp ->
-       t1:src_ty ->
-       t2:src_ty ->
-       t:src_ty ->
+       t1:s_ty ->
+       t2:s_ty ->
+       t:s_ty ->
        hyp:var { None? (lookup g hyp) } ->
        src_typing g b TBool ->
        src_typing ((hyp, Inr (b, EBool true)) :: g) e1 t1 ->
@@ -245,14 +292,14 @@ type src_typing : src_env -> src_exp -> src_ty -> Type =
        sub_typing ((hyp, Inr (b, EBool false)) :: g) t2 t ->
        src_typing g (EIf b e1 e2) t
        
-and src_ty_ok : src_env -> src_ty -> Type =
+and src_ty_ok : src_env -> s_ty -> Type =
   | OK_TBool  : g:src_env -> src_ty_ok g TBool
-  | OK_TArrow : g:src_env -> t:src_ty -> t':src_ty ->
+  | OK_TArrow : g:src_env -> t:s_ty -> t':s_ty ->
                 src_ty_ok g t ->
                 src_ty_ok g t' ->                
                 src_ty_ok g (TArrow t t')
   | OK_TRefine: g:src_env ->
-                e:src_exp ->
+                e:src_exp { ln e && closed e}  ->
                 src_typing [] e (TArrow TBool TBool) ->
                 src_ty_ok g (TRefineBool e)
 
@@ -272,7 +319,7 @@ let rec height #g #e #t (d:src_typing g e t)
           (max (max (height tl) (height tr))
                (max (s_height sl) (s_height sr))) + 1
     
-and t_height (#g:src_env) (#t:src_ty) (d:src_ty_ok g t)    
+and t_height (#g:src_env) (#t:s_ty) (d:src_ty_ok g t)    
   : GTot nat (decreases d)
   = match d with
     | OK_TBool _ -> 1
@@ -281,24 +328,25 @@ and t_height (#g:src_env) (#t:src_ty) (d:src_ty_ok g t)
 
 let check_sub_typing (g:R.env) 
                      (sg:src_env)
-                     (t0 t1:src_ty)
+                     (t0 t1:s_ty)
   : T.Tac (sub_typing sg t0 t1)
   = if t0 = t1 then S_Refl _ t0
     else T.fail "Not subtypes"
 
-let weaken (g:R.env) (sg:src_env) (hyp:var) (b:src_exp) (t0 t1:src_ty)
-  : T.Tac (t:src_ty &
+let weaken (g:R.env) (sg:src_env) (hyp:var) (b:src_exp) (t0 t1:s_ty)
+  : T.Tac (t:s_ty &
            sub_typing ((hyp,Inr(b, EBool true))::sg) t0 t &
            sub_typing ((hyp,Inr(b, EBool false))::sg) t1 t)
   = if t0 = t1
     then (| t0, S_Refl _ t0, S_Refl _ t1 |)
     else T.fail "weaken is very dumb"
-  
+
+#push-options "--fuel 2 --ifuel 2 --z3rlimit_factor 2"
 let rec check (g:R.env)
               (sg:src_env)
               (e:src_exp { ln e })
-  : T.Tac (e':src_exp { ln e' } &
-           t':src_ty &
+  : T.Tac (e':src_exp { ln e' /\ (freevars e' `Set.subset` freevars e) } &
+           t':s_ty &
            src_typing sg e' t')
   = match e with
     | EBool b ->
@@ -313,14 +361,25 @@ let rec check (g:R.env)
         (| EVar n, t, d |)
       end
 
-    | ELam t e ->
+    | ELam t body -> 
       let (| t, t_ok |) = check_ty g sg t in
+      assert (closed_ty t);
       let x = fresh sg in
       fresh_is_fresh sg;
-      let (| e, tbody, dbody |) = check g ((x, Inl t)::sg) (open_exp e x) in
-      (| ELam t (close_exp e x), 
-         TArrow t tbody, 
-         T_Lam sg t (close_exp e x) tbody x t_ok dbody |)
+      let (| body', tbody, dbody |) = check g ((x, Inl t)::sg) (open_exp body x) in
+      open_exp_freevars body x 0;
+      // assert (freevars body' `Set.subset` freevars (open_exp body x));
+      close_exp_freevars body' x 0;
+      // assert (freevars (close_exp body' x) `Set.equal` (freevars body' `minus` x));
+      // // assum (freevars (close_exp e' x) `Set.subset` (freevars e));
+      // assert (freevars_ty t `Set.equal` Set.empty);
+      // assert (freevars (close_exp body' x) `Set.subset` freevars body);
+      let e' = ELam t (close_exp body' x) in
+      // assert (freevars e' `Set.subset` freevars e);
+      // assert (ln_ty (TArrow t tbody));
+      let dd : src_typing sg e' (TArrow t tbody) = 
+             T_Lam sg t (close_exp body' x) tbody x t_ok dbody in
+      (| e', TArrow t tbody, dd |)
 
     | EApp e1 e2 ->
       let (| e1, t1, d1 |) = check g sg e1  in
@@ -350,8 +409,8 @@ let rec check (g:R.env)
 
 and check_ty (g:R.env)
              (sg:src_env)
-             (t:src_ty{ln_ty t})
-  : T.Tac (t':src_ty { ln_ty t' } &
+             (t:s_ty)
+  : T.Tac (t':s_ty &
            src_ty_ok sg t')
   = match t with
     | TBool -> (| t, OK_TBool _ |)
@@ -366,6 +425,7 @@ and check_ty (g:R.env)
       match te with
       | TArrow TBool TBool -> (| TRefineBool e, OK_TRefine _ _ de |)
       | _ -> T.fail "Ill-typed refinement"
+
   
 
 module RT = Refl.Typing
@@ -464,6 +524,25 @@ let rec extend_env_l_lookup_bvar (g:R.env) (sg:src_env) (x:var)
     | [] -> ()
     | hd :: tl -> extend_env_l_lookup_bvar g tl x
 
+// //key lemma about src types: Their elaborations are closed
+// let rec closed_ln_exps (ty:src_ty {ln_ty ty}) (x:RT.open_or_close) (n:nat)
+//   : Lemma (ensures RT.open_or_close_term' (elab_ty ty) x n == elab_ty ty)
+//           (decreases ty)
+//           [SMTPat (RT.open_or_close_term' (elab_ty ty) x n)]
+
+let rec src_types_are_closed_core (ty:src_ty {ln_ty ty}) (x:RT.open_or_close) (n:nat)
+  : Lemma (ensures RT.open_or_close_term' (elab_ty ty) x n == elab_ty ty)
+          (decreases ty)
+          [SMTPat (RT.open_or_close_term' (elab_ty ty) x n)]
+  = match ty with
+    | TBool -> ()
+    | TArrow t1 t2 ->
+      src_types_are_closed_core t1 x n;
+      src_types_are_closed_core t2 x (n + 1)
+    | TRefineBool e ->
+      assert (ln e);
+      admit()
+
 let elab_open_commute (e:src_exp) (x:var)
   : Lemma (RT.open_term (elab_exp e) x == elab_exp (open_exp e x))
           [SMTPat (RT.open_term (elab_exp e) x)]
@@ -504,13 +583,16 @@ let b2t_typing (g:fstar_env) (t:R.term) (dt:RT.typing g t RT.bool_ty)
     assume (RT.open_with RT.tm_type t == RT.tm_type);
     app_ty
 
-let extend_env_l_lookup_fvar (g:R.env) (sg:src_env) (fv:R.fv)
+let rec extend_env_l_lookup_fvar (g:R.env) (sg:src_env) (fv:R.fv)
   : Lemma 
     (ensures
       RT.lookup_fvar (extend_env_l g sg) fv ==
       RT.lookup_fvar g fv)
     [SMTPat (RT.lookup_fvar (extend_env_l g sg) fv)]
-  = admit()
+  = match sg with
+    | [] -> ()
+    | hd::tl -> extend_env_l_lookup_fvar g tl fv
+
 open FStar.List.Tot    
 let rec src_ty_ok_weakening (sg sg':src_env) 
                             (x:var { None? (lookup sg x) && None? (lookup sg' x) })
