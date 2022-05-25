@@ -256,6 +256,8 @@ let alloc
   intro_pts_to a P.full_perm (Seq.create (U32.v n) x);
   return a
 
+let free a = drop (pts_to a _ _)
+
 let valid_sum_perm
   (len: nat)
   (offset: nat)

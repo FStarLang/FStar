@@ -121,6 +121,21 @@ val alloc
       base_len (base (ptr_of a)) == U32.v n
     )
 
+/// Freeing a full array. 
+[@@ noextract_to "krml"; // primitive
+    warn_on_use "Steel.HigherArray0.free is currently unsound in the presence of zero-size subarrays, have you collected them all?"]
+val free
+  (#elt: Type)
+  (#s: Ghost.erased (Seq.seq elt))
+  (a: array elt)
+: Steel unit
+    (pts_to a P.full_perm s)
+    (fun _ -> emp)
+    (fun _ ->
+      length a == base_len (base (ptr_of a))
+    )
+    (fun _ _ _ -> True)
+
 /// Sharing and gathering permissions on an array. Those only
 /// manipulate permissions, so they are nothing more than stateful
 /// lemmas.
