@@ -422,6 +422,21 @@ type gen_elim_nondep_t =
 | GEDep
 
 [@@gen_elim_reduce]
+let mk_gen_elim_nondep
+  (ty: list Type0)
+  (tvprop: Type)
+  (q: tvprop)
+  (tprop: Type)
+  (post: tprop)
+: Pure gen_elim_nondep_t
+  (requires (
+    T.with_tactic (fun _ -> T.norm [delta_attr [(`%gen_elim_reduce)]; zeta; iota]; T.trefl ()) (tvprop == curried_function_type ty vprop) /\
+    T.with_tactic (fun _ -> T.norm [delta_attr [(`%gen_elim_reduce)]; zeta; iota]; T.trefl ()) (tprop == curried_function_type ty prop)
+  ))
+  (ensures (fun _ -> True))
+= GENonDep ty q post
+
+[@@gen_elim_reduce]
 let rec gen_elim_nondep_sem (ty: list Type0) : Tot (curried_function_type ty vprop -> curried_function_type ty prop -> Tot gen_elim_tele) =
   match ty as ty' returns curried_function_type ty' vprop -> curried_function_type ty' prop -> Tot gen_elim_tele with
   | [] -> fun q post -> TRet q post
@@ -670,11 +685,16 @@ let rec solve_gen_elim_nondep' (fuel: nat) (rev_types_and_binders: list (T.term 
       then (`GEDep)
       else
         let binders = List.Tot.map snd (List.Tot.rev rev_types_and_binders) in
+        let norm_term = T.norm_term [delta_attr [(`%gen_elim_reduce)]; zeta; iota] in
         let v' = T.mk_abs binders v in
+        let tv' = norm_term (T.mk_app (`curried_function_type) [type_list, T.Q_Explicit; (`vprop), T.Q_Explicit]) in
         let p' = T.mk_abs binders p in
-        T.mk_app (`GENonDep) [
+        let tp' = norm_term (T.mk_app (`curried_function_type) [type_list, T.Q_Explicit; (`prop), T.Q_Explicit]) in
+        T.mk_app (`mk_gen_elim_nondep) [
           type_list, T.Q_Explicit;
+          tv', T.Q_Explicit;
           v', T.Q_Explicit;
+          tp', T.Q_Explicit;
           p', T.Q_Explicit;
         ]
     | _ -> (`GEDep)
