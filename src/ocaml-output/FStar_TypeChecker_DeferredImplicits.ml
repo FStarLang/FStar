@@ -187,6 +187,14 @@ let (find_user_tac_for_uvar :
                            FStar_Pervasives_Native.Some (s :: tl1))
                   | uu___4 -> FStar_Pervasives_Native.None)
              | uu___2 -> FStar_Pervasives_Native.None) in
+      let candidate_names candidates =
+        let uu___ =
+          let uu___1 =
+            FStar_Compiler_List.collect FStar_Syntax_Util.lids_of_sigelt
+              candidates in
+          FStar_Compiler_Effect.op_Bar_Greater uu___1
+            (FStar_Compiler_List.map FStar_Ident.string_of_lid) in
+        FStar_Compiler_Effect.op_Bar_Greater uu___ (FStar_String.concat ", ") in
       match u.FStar_Syntax_Syntax.ctx_uvar_meta with
       | FStar_Pervasives_Native.Some (FStar_Syntax_Syntax.Ctx_uvar_meta_attr
           a) ->
@@ -201,9 +209,23 @@ let (find_user_tac_for_uvar :
                       hook.FStar_Syntax_Syntax.sigattrs
                       (FStar_Compiler_Util.for_some
                          (FStar_Syntax_Util.attr_eq a)))) in
+          let candidates1 =
+            FStar_Compiler_Util.remove_dups
+              (fun s0 ->
+                 fun s1 ->
+                   let l0 = FStar_Syntax_Util.lids_of_sigelt s0 in
+                   let l1 = FStar_Syntax_Util.lids_of_sigelt s1 in
+                   if
+                     (FStar_Compiler_List.length l0) =
+                       (FStar_Compiler_List.length l1)
+                   then
+                     FStar_Compiler_List.forall2
+                       (fun l01 -> fun l11 -> FStar_Ident.lid_equals l01 l11)
+                       l0 l1
+                   else false) candidates in
           let is_overridden candidate =
             let candidate_lids = FStar_Syntax_Util.lids_of_sigelt candidate in
-            FStar_Compiler_Effect.op_Bar_Greater candidates
+            FStar_Compiler_Effect.op_Bar_Greater candidates1
               (FStar_Compiler_Util.for_some
                  (fun other ->
                     FStar_Compiler_Effect.op_Bar_Greater
@@ -269,30 +291,22 @@ let (find_user_tac_for_uvar :
                                                               l in
                                                           uu___5 = n)))))
                                  | uu___2 -> false))))) in
-          let candidates1 =
-            FStar_Compiler_Effect.op_Bar_Greater candidates
+          let candidates2 =
+            FStar_Compiler_Effect.op_Bar_Greater candidates1
               (FStar_Compiler_List.filter
                  (fun c ->
                     let uu___ = is_overridden c in Prims.op_Negation uu___)) in
-          (match candidates1 with
+          (match candidates2 with
            | [] -> FStar_Pervasives_Native.None
            | c::[] -> FStar_Pervasives_Native.Some c
            | uu___ ->
-               let candidates2 =
-                 let uu___1 =
-                   let uu___2 =
-                     FStar_Compiler_List.collect
-                       FStar_Syntax_Util.lids_of_sigelt candidates1 in
-                   FStar_Compiler_Effect.op_Bar_Greater uu___2
-                     (FStar_Compiler_List.map FStar_Ident.string_of_lid) in
-                 FStar_Compiler_Effect.op_Bar_Greater uu___1
-                   (FStar_String.concat ", ") in
+               let candidates3 = candidate_names candidates2 in
                let attr = FStar_Syntax_Print.term_to_string a in
                ((let uu___2 =
                    let uu___3 =
                      FStar_Compiler_Util.format2
                        "Multiple resolve_implicits hooks are eligible for attribute %s; \nplease resolve the ambiguity by using the `override_resolve_implicits_handler` attribute to choose among these candidates {%s}"
-                       attr candidates2 in
+                       attr candidates3 in
                    (FStar_Errors.Warning_AmbiguousResolveImplicitsHook,
                      uu___3) in
                  FStar_Errors.log_issue u.FStar_Syntax_Syntax.ctx_uvar_range

@@ -126,6 +126,11 @@ let find_user_tac_for_uvar env (u:ctx_uvar) : option sigelt =
       | _ ->
         None
     in
+    let candidate_names candidates = 
+          List.collect U.lids_of_sigelt candidates
+          |> List.map string_of_lid
+          |> String.concat ", "
+    in
     match u.ctx_uvar_meta with
     | Some (Ctx_uvar_meta_attr a) ->
       (* hooks: all definitions with the resolve_implicits attr *)
@@ -134,6 +139,17 @@ let find_user_tac_for_uvar env (u:ctx_uvar) : option sigelt =
       let candidates = 
         hooks |> List.filter
                   (fun hook -> hook.sigattrs |> BU.for_some (U.attr_eq a))
+      in
+      (* The environment sometimes returns duplicates in the candidate list; filter out dups *)
+      let candidates =
+        BU.remove_dups
+          (fun s0 s1 -> 
+            let l0 = U.lids_of_sigelt s0 in
+            let l1 = U.lids_of_sigelt s1 in
+            if List.length l0 = List.length l1
+            then List.forall2 (fun l0 l1 -> Ident.lid_equals l0 l1) l0 l1
+            else false)
+          candidates
       in
       (* Checking if a candidate is overridden, by scanning the list of all 
          candidates and seeing if any of them override it *)
@@ -173,11 +189,7 @@ let find_user_tac_for_uvar env (u:ctx_uvar) : option sigelt =
       | [] -> None //no candidates
       | [ c ] -> Some c //if there is a unique candidate return it
       | _ -> //it is ambiguous; complain
-        let candidates = 
-          List.collect U.lids_of_sigelt candidates
-          |> List.map string_of_lid
-          |> String.concat ", "
-        in
+        let candidates = candidate_names candidates in
         let attr = Print.term_to_string a in
         FStar.Errors.log_issue u.ctx_uvar_range
                                (FStar.Errors.Warning_AmbiguousResolveImplicitsHook,
