@@ -3025,8 +3025,7 @@ let init_resolve_tac' (dict: _) : Tac unit =
 
   resolve_tac_logical dict
 
-// [@@ resolve_implicits; framing_implicit]
-[@@ plugin]
+[@@ resolve_implicits; framing_implicit; plugin]
 let init_resolve_tac () : Tac unit = init_resolve_tac' []
 
 (* AF: There probably is a simpler way to get from p to squash p in a tactic, so that we can use apply_lemma *)
