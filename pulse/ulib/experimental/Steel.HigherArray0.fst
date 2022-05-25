@@ -228,7 +228,7 @@ let pts_to_inj
   mk_carrier_joinable (U32.v (ptr_of a).base_len) (ptr_of a).offset s1 p1 s2 p2
 
 [@@noextract_to "krml"]
-let malloc
+let malloc0
   (#elt: Type)
   (x: elt)
   (n: U32.t)
@@ -256,7 +256,32 @@ let malloc
   intro_pts_to a P.full_perm (Seq.create (U32.v n) x);
   return a
 
-let free a = drop (pts_to a _ _)
+let malloc_ptr
+  x n
+=
+  let a = malloc0 x n in
+  let (| p, _ |) = a in
+  change_equal_slprop
+    (pts_to _ _ _)
+    (pts_to (| p, Ghost.hide (U32.v n) |) _ _);
+  return p
+
+[@@noextract_to "krml"]
+let free0
+  (#elt: Type)
+  (#s: Ghost.erased (Seq.seq elt))
+  (a: array elt)
+: Steel unit
+    (pts_to a P.full_perm s)
+    (fun _ -> emp)
+    (fun _ ->
+      length a == base_len (base (ptr_of a))
+    )
+    (fun _ _ _ -> True)
+= drop (pts_to a _ _)
+
+let free_ptr a =
+  free0 _
 
 let valid_sum_perm
   (len: nat)
@@ -373,7 +398,7 @@ let gather
 #push-options "--z3rlimit 16"
 
 [@@noextract_to "krml"]
-let index
+let index0
   (#t: Type) (#p: P.perm)
   (a: array t)
   (#s: Ghost.erased (Seq.seq t))
@@ -390,6 +415,9 @@ let index
   return res
 
 #pop-options
+
+let index_ptr a i =
+  index0 _ i
 
 let mk_carrier_upd
   (#elt: Type)
@@ -411,7 +439,7 @@ let mk_carrier_upd
 = ()
 
 [@@noextract_to "krml"]
-let upd
+let upd0
   (#t: Type)
   (a: array t)
   (#s: Ghost.erased (Seq.seq t))
@@ -434,6 +462,12 @@ let upd
       _ ((ptr_of a).offset + U32.v i)
     );
   intro_pts_to a _ _
+
+let upd_ptr a i v =
+  upd0 _ i v;
+  change_equal_slprop
+    (pts_to _ _ _)
+    (pts_to _ _ _)
 
 let mk_carrier_merge
   (#elt: Type)
