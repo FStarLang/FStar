@@ -108,7 +108,7 @@ val pts_to_inj
 /// Allocating a new array of size n, where each cell is initialized
 /// with value x
 [@@noextract_to "krml"] // primitive
-val alloc
+val malloc
   (#elt: Type)
   (x: elt)
   (n: U32.t)

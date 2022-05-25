@@ -162,8 +162,8 @@ let elim_varrayp
 
 /// Non-selector operations. (Their selector versions are defined in the interface)
 
-let alloc_pt x n =
-  let res = H.alloc (raise x) n in
+let malloc_pt x n =
+  let res = H.malloc (raise x) n in
   assert (seq_map raise (Seq.create (U32.v n) x) `Seq.equal` Seq.create (U32.v n) (raise x));
   change_equal_slprop
     (H.pts_to res _ _)
