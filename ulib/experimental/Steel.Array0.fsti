@@ -198,6 +198,38 @@ let alloc
   intro_varray res _;
   return res
 
+/// Freeing a full array. 
+inline_for_extraction
+[@@ noextract_to "krml";
+    warn_on_use "Steel.Array0.free_pt is currently unsound in the presence of zero-size subarrays, have you collected them all?"]
+val free_pt
+  (#elt: Type)
+  (#s: Ghost.erased (Seq.seq elt))
+  (a: array elt)
+: Steel unit
+    (pts_to a P.full_perm s)
+    (fun _ -> emp)
+    (fun _ ->
+      length a == base_len (base (ptr_of a))
+    )
+    (fun _ _ _ -> True)
+
+inline_for_extraction
+[@@ noextract_to "krml";
+    warn_on_use "Steel.Array0.free is currently unsound in the presence of zero-size subarrays, have you collected them all?"]
+let free
+  (#elt: Type)
+  (a: array elt)
+: Steel unit
+    (varray a)
+    (fun _ -> emp)
+    (fun _ ->
+      length a == base_len (base (ptr_of a))
+    )
+    (fun _ _ _ -> True)
+= let _ = elim_varray a in
+  free_pt a
+
 /// Sharing and gathering permissions on an array. Those only
 /// manipulate permissions, so they are nothing more than stateful
 /// lemmas.

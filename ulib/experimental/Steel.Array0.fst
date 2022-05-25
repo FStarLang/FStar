@@ -170,6 +170,12 @@ let alloc_pt x n =
     (pts_to res _ _);
   return res
 
+let free_pt #_ #s x =
+  change_equal_slprop
+    (pts_to x _ _)
+    (H.pts_to x P.full_perm (seq_map raise s));
+  H.free x
+
 let share_pt
   #_ #_ #x a p p1 p2
 = change_equal_slprop
