@@ -116,7 +116,10 @@ val alloc
     emp
     (fun a -> pts_to a P.full_perm (Seq.create (U32.v n) x))
     (fun _ -> True)
-    (fun _ a _ -> length a == U32.v n)
+    (fun _ a _ ->
+      length a == U32.v n /\
+      base_len (base (ptr_of a)) == U32.v n
+    )
 
 /// Sharing and gathering permissions on an array. Those only
 /// manipulate permissions, so they are nothing more than stateful

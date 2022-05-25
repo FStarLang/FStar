@@ -174,7 +174,10 @@ val alloc_pt
     emp
     (fun a -> pts_to a P.full_perm (Seq.create (U32.v n) x))
     (fun _ -> True)
-    (fun _ a _ -> length a == U32.v n)
+    (fun _ a _ ->
+      length a == U32.v n /\
+      base_len (base (ptr_of a)) == U32.v n
+    )
 
 inline_for_extraction
 [@@noextract_to "krml"]
@@ -188,6 +191,7 @@ let alloc
     (fun _ -> True)
     (fun _ a h' ->
       length a == U32.v n /\
+      base_len (base (ptr_of a)) == U32.v n /\
       asel a h' == Seq.create (U32.v n) x
     )
 = let res = alloc_pt x n in

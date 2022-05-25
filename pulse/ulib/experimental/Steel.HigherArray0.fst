@@ -236,7 +236,10 @@ let alloc
     emp
     (fun a -> pts_to a P.full_perm (Seq.create (U32.v n) x))
     (fun _ -> True)
-    (fun _ a _ -> length a == U32.v n)
+    (fun _ a _ ->
+      length a == U32.v n /\
+      base_len (base (ptr_of a)) == U32.v n
+    )
 =
   let c : carrier elt (U32.v n) = mk_carrier (U32.v n) 0 (Seq.create (U32.v n) x) P.full_perm in
   let base : ref (carrier elt (U32.v n)) (pcm elt (U32.v n)) = R.alloc c in
