@@ -430,8 +430,23 @@ let mk_gen_elim_nondep
   (post: tprop)
 : Pure gen_elim_nondep_t
   (requires (
-    T.with_tactic (fun _ -> T.norm [delta_attr [(`%gen_elim_reduce)]; zeta; iota]; T.trefl ()) (tvprop == curried_function_type ty vprop) /\
-    T.with_tactic (fun _ -> T.norm [delta_attr [(`%gen_elim_reduce)]; zeta; iota]; T.trefl ()) (tprop == curried_function_type ty prop)
+    tvprop == curried_function_type ty vprop /\
+    tprop == curried_function_type ty prop
+  ))
+  (ensures (fun _ -> True))
+= GENonDep ty q post
+
+[@@gen_elim_reduce]
+let mk_gen_elim_nondep_by_tac
+  (ty: list Type0)
+  (tvprop: Type)
+  (q: tvprop)
+  (tprop: Type)
+  (post: tprop)
+: Pure gen_elim_nondep_t
+  (requires (
+    T.with_tactic (fun _ -> T.norm [delta_attr [(`%gen_elim_reduce)]; iota; zeta]) (tvprop == curried_function_type ty vprop) /\
+    T.with_tactic (fun _ -> T.norm [delta_attr [(`%gen_elim_reduce)]; iota; zeta]) (tprop == curried_function_type ty prop)
   ))
   (ensures (fun _ -> True))
 = GENonDep ty q post
@@ -614,33 +629,55 @@ let rec solve_gen_elim
           T.mk_app (`GEUnit) [T.mk_app (`GUEId) lbody, T.Q_Explicit]
 
 val gen_elim_prop
+  (enable_nondep_opt: bool)
   (p: vprop)
-  (i: gen_elim_i)
-  (j: gen_elim_nondep_t)
   (a: Type0)
   (q: Ghost.erased a -> Tot vprop)
   (post: Ghost.erased a -> Tot prop)
 : Tot prop
 
-val gen_elim_prop_intro
-  (p: vprop)
+val gen_elim_prop_intro'
   (i: gen_elim_i)
-  (sq_p: squash (p == compute_gen_elim_p i))
   (j: gen_elim_nondep_t)
-  (sq_j: squash (check_gen_elim_nondep_sem i j))
+  (enable_nondep_opt: bool)
+  (p: vprop)
   (a: Type0)
-  (sq_a: squash (a == compute_gen_elim_nondep_a i j))
   (q: Ghost.erased a -> Tot vprop)
-  (sq_q: squash (q == compute_gen_elim_nondep_q i j))
   (post: Ghost.erased a -> Tot prop)
+  (sq_p: squash (p == compute_gen_elim_p i))
+  (sq_j: squash (check_gen_elim_nondep_sem i j))
+  (sq_a: squash (a == compute_gen_elim_nondep_a i j))
+  (sq_q: squash (q == compute_gen_elim_nondep_q i j))
   (sq_post: squash (post == compute_gen_elim_nondep_post i j))
-: Lemma (gen_elim_prop p i j a q post)
+: Lemma
+  (gen_elim_prop enable_nondep_opt p a q post)
+
+let gen_elim_prop_intro
+  (i: gen_elim_i)
+  (ty: list Type0)
+  (tvprop: Type)
+  (q0: tvprop)
+  (tprop: Type)
+  (post0: tprop)
+  (enable_nondep_opt: bool)
+  (p: vprop)
+  (a: Type0)
+  (q: Ghost.erased a -> Tot vprop)
+  (post: Ghost.erased a -> Tot prop)
+  (sq_tvprop: squash (tvprop == curried_function_type ty vprop))
+  (sq_tprop: squash (tprop == curried_function_type ty prop))
+  (sq_p: squash (p == compute_gen_elim_p i))
+  (sq_j: squash (check_gen_elim_nondep_sem i (mk_gen_elim_nondep ty tvprop q0 tprop post0)))
+  (sq_a: squash (a == compute_gen_elim_nondep_a i (mk_gen_elim_nondep ty tvprop q0 tprop post0)))
+  (sq_q: squash (q == compute_gen_elim_nondep_q i (mk_gen_elim_nondep ty tvprop q0 tprop post0)))
+  (sq_post: squash (post == compute_gen_elim_nondep_post i (mk_gen_elim_nondep ty tvprop q0 tprop post0)))
+: Lemma
+  (gen_elim_prop enable_nondep_opt p a q post)
+= gen_elim_prop_intro' i (mk_gen_elim_nondep ty tvprop q0 tprop post0) enable_nondep_opt p a q post sq_p sq_j sq_a sq_q sq_post
 
 val gen_elim_prop_placeholder
   (enable_nondep_opt: bool)
   (p: vprop)
-  (i: gen_elim_i)
-  (j: gen_elim_nondep_t)
   (a: Type0)
   (q: Ghost.erased a -> Tot vprop)
   (post: Ghost.erased a -> Tot prop)
@@ -650,17 +687,15 @@ val gen_elim_prop_placeholder
 val gen_elim_prop_placeholder_intro
   (enable_nondep_opt: bool)
   (p: vprop)
-  (i: gen_elim_i)
-  (j: gen_elim_nondep_t)
   (a: Type0)
   (q: Ghost.erased a -> Tot vprop)
   (post: Ghost.erased a -> Tot prop)
-: Tot (squash (gen_elim_prop_placeholder enable_nondep_opt p i j a q post))
+: Tot (squash (gen_elim_prop_placeholder enable_nondep_opt p a q post))
 // = ()
 
-let rec solve_gen_elim_nondep' (fuel: nat) (rev_types_and_binders: list (T.term & T.binder)) (t: T.term) : T.Tac T.term =
+let rec solve_gen_elim_nondep' (fuel: nat) (rev_types_and_binders: list (T.term & T.binder)) (t: T.term) : T.Tac (option (tuple5 T.term T.term T.term T.term T.term)) =
   if fuel = 0
-  then (`GEDep)
+  then None
   else
     let (hd, tl) = T.collect_app t in
     if hd `T.term_eq` (`TRet)
@@ -682,7 +717,7 @@ let rec solve_gen_elim_nondep' (fuel: nat) (rev_types_and_binders: list (T.term 
         with _ -> false
       in
       if not type_list_typechecks
-      then (`GEDep)
+      then None
       else
         let binders = List.Tot.map snd (List.Tot.rev rev_types_and_binders) in
         let norm_term = T.norm_term [delta_attr [(`%gen_elim_reduce)]; zeta; iota] in
@@ -690,25 +725,25 @@ let rec solve_gen_elim_nondep' (fuel: nat) (rev_types_and_binders: list (T.term 
         let tv' = norm_term (T.mk_app (`curried_function_type) [type_list, T.Q_Explicit; (`vprop), T.Q_Explicit]) in
         let p' = T.mk_abs binders p in
         let tp' = norm_term (T.mk_app (`curried_function_type) [type_list, T.Q_Explicit; (`prop), T.Q_Explicit]) in
-        T.mk_app (`mk_gen_elim_nondep) [
-          type_list, T.Q_Explicit;
-          tv', T.Q_Explicit;
-          v', T.Q_Explicit;
-          tp', T.Q_Explicit;
-          p', T.Q_Explicit;
-        ]
-    | _ -> (`GEDep)
+        Some (Mktuple5
+          type_list
+          tv'
+          v'
+          tp'
+          p'
+        )
+    | _ -> None
     else if hd `T.term_eq` (`TExists)
     then match tl with
     | [(ty, _); (f, T.Q_Explicit)] ->
       begin match T.inspect f with
       | T.Tv_Abs bv body -> solve_gen_elim_nondep' (fuel - 1) ((ty, bv) :: rev_types_and_binders) body
-      | _ -> (`GEDep)
+      | _ -> None
       end
-    | _ -> (`GEDep)
-    else (`GEDep)
+    | _ -> None
+    else None
 
-let solve_gen_elim_nondep (enable_nondep_opt: bool) (t: T.term) : T.Tac T.term =
+let solve_gen_elim_nondep0 (enable_nondep_opt: bool) (t: T.term) : T.Tac (option (tuple5 T.term T.term T.term T.term T.term)) =
   if enable_nondep_opt
   then
     let open T in
@@ -716,8 +751,25 @@ let solve_gen_elim_nondep (enable_nondep_opt: bool) (t: T.term) : T.Tac T.term =
       let tele = mk_app (`compute_gen_elim_tele) [t, Q_Explicit] in
       let t' = norm_term [delta_attr [(`%gen_elim_reduce)]; zeta; iota] tele in
       solve_gen_elim_nondep' 15 [] t'  // fuel necessary because F* standard tuple types only go from 0 up to 14 elts
-    with _ -> (`GEDep)
-  else (`GEDep)
+    with _ -> None
+  else None
+
+let solve_gen_elim_nondep (enable_nondep_opt: bool) (t: T.term) : T.Tac T.term =
+  match solve_gen_elim_nondep0 enable_nondep_opt t with
+  | None -> (`GEDep)
+  | Some (Mktuple5
+          type_list
+          tv'
+          v'
+          tp'
+          p'
+        ) -> T.mk_app (`mk_gen_elim_nondep_by_tac) [
+          type_list, T.Q_Explicit;
+          tv', T.Q_Explicit;
+          v', T.Q_Explicit;
+          tp', T.Q_Explicit;
+          p', T.Q_Explicit;
+        ]
 
 let solve_gen_elim_prop
   ()
@@ -731,51 +783,68 @@ let solve_gen_elim_prop
     let (hd1, tl1) = T.collect_app body1 in
     if not (hd1 `T.term_eq` (`gen_elim_prop))
     then T.fail "not a gen_elim_prop goal";
-    T.apply_lemma (`gen_elim_prop_intro);
-    let norm () = T.norm [delta_attr [(`%gen_elim_reduce)]; zeta; iota] in
-    T.focus (fun _ -> norm (); T.trefl ()); // p
-    T.focus (fun _ -> norm (); T.trivial (); T.qed ()); // j
-    T.focus (fun _ -> norm (); T.trefl ()); // a
-    T.focus (fun _ -> norm (); T.trefl ()); // q
-    T.focus (fun _ -> norm (); T.trefl ()) // post
+    begin match List.Tot.filter (fun (_, x) -> T.Q_Explicit? x) tl1 with
+    | [(enable_nondep_opt_tm, _); (p, _); (a, _); (q, _); (post, _)] ->
+      let enable_nondep_opt = enable_nondep_opt_tm `T.term_eq` (`true) in
+      let i' = solve_gen_elim p in
+      let norm () = T.norm [delta_attr [(`%gen_elim_reduce)]; zeta; iota] in
+      begin match solve_gen_elim_nondep0 enable_nondep_opt i' with
+      | None ->
+        T.apply_lemma (T.mk_app (`gen_elim_prop_intro') [
+          i', T.Q_Explicit;
+          (`GEDep), T.Q_Explicit;
+        ])
+      | Some (Mktuple5 type_list tvprop q0 tprop post0) ->
+        T.apply_lemma (T.mk_app (`gen_elim_prop_intro) [
+          i', T.Q_Explicit;
+          type_list, T.Q_Explicit;
+          tvprop, T.Q_Explicit;
+          q0, T.Q_Explicit;
+          tprop, T.Q_Explicit;
+          post0, T.Q_Explicit;
+        ]);
+        T.focus (fun _ -> norm (); T.trefl ()); // tvprop
+        T.focus (fun _ -> norm (); T.trefl ()) // tprop
+      end;
+      T.focus (fun _ -> norm (); T.trefl ()); // p
+      T.focus (fun _ -> norm (); T.trivial (); T.qed ()); // j
+      T.focus (fun _ -> norm (); T.trefl ()); // a
+      T.focus (fun _ -> norm (); T.trefl ()); // q
+      T.focus (fun _ -> norm (); T.trefl ()) // post
+    | _ -> T.fail "ill formed gen_elim_prop"
+    end
   | _ -> T.fail "ill-formed squash"
 
 val gen_elim'
   (#opened: _)
   (enable_nondep_opt: bool)
   (p: vprop)
-  (i: gen_elim_i)
-  (j: gen_elim_nondep_t)
   (a: Type0)
   (q: Ghost.erased a -> Tot vprop)
   (post: Ghost.erased a -> Tot prop)
-  (sq: squash (gen_elim_prop_placeholder enable_nondep_opt p i j a q post))
+  (sq: squash (gen_elim_prop_placeholder enable_nondep_opt p a q post))
   (_: unit)
-: STGhost (Ghost.erased a) opened p (fun x -> guard_vprop (q x)) (gen_elim_prop p i j a q post) post
+: STGhost (Ghost.erased a) opened p (fun x -> guard_vprop (q x)) (gen_elim_prop enable_nondep_opt p a q post) post
 
 val gen_elim
   (#opened: _)
   (#[@@@ framing_implicit] p: vprop)
-  (#[@@@ framing_implicit] i: gen_elim_i)
-  (#[@@@ framing_implicit] j: gen_elim_nondep_t)
   (#[@@@ framing_implicit] a: Type0)
   (#[@@@ framing_implicit] q: Ghost.erased a -> Tot vprop)
   (#[@@@ framing_implicit] post: Ghost.erased a -> Tot prop)
-  (#[@@@ framing_implicit] sq: squash (gen_elim_prop_placeholder true p i j a q post))
+  (#[@@@ framing_implicit] sq: squash (gen_elim_prop_placeholder true p a q post))
   (_: unit)
-: STGhostF (Ghost.erased a) opened p (fun x -> guard_vprop (q x)) ( (T.with_tactic solve_gen_elim_prop) (squash (gen_elim_prop p i j a q post))) post
+: STGhostF (Ghost.erased a) opened p (fun x -> guard_vprop (q x)) ( (T.with_tactic solve_gen_elim_prop) (squash (gen_elim_prop true p a q post))) post
 
 val gen_elim_dep
   (#opened: _)
   (#[@@@ framing_implicit] p: vprop)
-  (#[@@@ framing_implicit] i: gen_elim_i)
-  (#[@@@ framing_implicit] j: gen_elim_nondep_t)
   (#[@@@ framing_implicit] a: Type0)
   (#[@@@ framing_implicit] q: Ghost.erased a -> Tot vprop)
   (#[@@@ framing_implicit] post: Ghost.erased a -> Tot prop)
-  (#[@@@ framing_implicit] sq: squash (gen_elim_prop_placeholder false p i j a q post))
+  (#[@@@ framing_implicit] sq: squash (gen_elim_prop_placeholder false p a q post))
   (_: unit)
-: STGhostF (Ghost.erased a) opened p (fun x -> guard_vprop (q x)) ( (T.with_tactic solve_gen_elim_prop) (squash (gen_elim_prop p i j a q post))) post
+: STGhostF (Ghost.erased a) opened p (fun x -> guard_vprop (q x)) ( (T.with_tactic solve_gen_elim_prop) (squash (gen_elim_prop false p a q post))) post
 
 let solve_gen_elim_prop_placeholder
   ()
@@ -790,12 +859,13 @@ let solve_gen_elim_prop_placeholder
     if not (hd1 `T.term_eq` (`gen_elim_prop_placeholder))
     then T.fail "not a gen_elim_prop_placeholder goal";
     begin match List.Tot.filter (fun (_, x) -> T.Q_Explicit? x) tl1 with
-    | [(enable_nondep_opt_tm, _); (p, _); (i, _); (j, _); (a, _); (q, _); (post, _)] ->
+    | [(enable_nondep_opt_tm, _); (p, _); (a, _); (q, _); (post, _)] ->
       if slterm_nbr_uvars p <> 0
       then T.fail "pre-resource not solved yet";
-      let i_is_uvar = T.Tv_Uvar? (T.inspect i) in
-      let j_is_uvar = T.Tv_Uvar? (T.inspect j) in
-      if not (i_is_uvar && j_is_uvar)
+      let a_is_uvar = T.Tv_Uvar? (T.inspect a) in
+      let q_is_uvar = T.Tv_Uvar? (T.inspect q) in
+      let post_is_uvar = T.Tv_Uvar? (T.inspect post) in
+      if not (a_is_uvar && q_is_uvar && post_is_uvar)
       then T.fail "gen_elim_prop_placeholder is already solved";
       let enable_nondep_opt = enable_nondep_opt_tm `T.term_eq` (`true) in
       let i' = solve_gen_elim p in
@@ -807,8 +877,6 @@ let solve_gen_elim_prop_placeholder
       T.exact (T.mk_app (`gen_elim_prop_placeholder_intro) [
         (enable_nondep_opt_tm, T.Q_Explicit);
         (p, T.Q_Explicit);
-        (i', T.Q_Explicit);
-        (j', T.Q_Explicit);
         (a', T.Q_Explicit);
         (q', T.Q_Explicit);
         (post', T.Q_Explicit);

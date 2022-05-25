@@ -182,24 +182,32 @@ let compute_gen_elim_q' = compute_gen_elim_q
 
 let compute_gen_elim_post' = compute_gen_elim_post
 
-let gen_elim_prop
-  p i j a q post
-=
+let gen_elim_pred
+  (enable_nondep_opt: bool)
+  (p: vprop)
+  (a: Type0)
+  (q: Ghost.erased a -> Tot vprop)
+  (post: Ghost.erased a -> Tot prop)
+  (ij: (gen_elim_i & gen_elim_nondep_t))
+: Tot prop
+= let (i, j) = ij in
   p == compute_gen_elim_p' i /\
   check_gen_elim_nondep_sem i j /\ 
   a == compute_gen_elim_nondep_a i j /\
   post == compute_gen_elim_nondep_post i j /\
   q == compute_gen_elim_nondep_q i j
 
-let gen_elim_prop_intro
-  p i sq_p j sq_j a sq_a q sq_q post sq_post
-= ()
+let gen_elim_prop
+  enable_nondep_opt p a q post
+= exists ij . gen_elim_pred enable_nondep_opt p a q post ij
+
+let gen_elim_prop_intro'
+  i j enable_nondep_opt p a q post sq_p sq_j sq_a sq_q sq_post
+= assert (gen_elim_pred enable_nondep_opt p a q post (i, j))
 
 let gen_elim_prop_placeholder
   (enable_nondep_opt: bool)
   (p: vprop)
-  (i: gen_elim_i)
-  (j: gen_elim_nondep_t)
   (a: Type0)
   (q: Ghost.erased a -> Tot vprop)
   (post: Ghost.erased a -> Tot prop)
@@ -209,12 +217,10 @@ let gen_elim_prop_placeholder
 let gen_elim_prop_placeholder_intro
   (enable_nondep_opt: bool)
   (p: vprop)
-  (i: gen_elim_i)
-  (j: gen_elim_nondep_t)
   (a: Type0)
   (q: Ghost.erased a -> Tot vprop)
   (post: Ghost.erased a -> Tot prop)
-: Tot (squash (gen_elim_prop_placeholder enable_nondep_opt p i j a q post))
+: Tot (squash (gen_elim_prop_placeholder enable_nondep_opt p a q post))
 = ()
 
 let gen_elim_f
@@ -378,12 +384,12 @@ let gen_elim' = admit ()
 *)
 
 let gen_elim
-  #opened #p #i #j #a #q #post #sq _
-= gen_elim' #opened _ p i j a q post sq ()
+  #opened #p #a #q #post #sq _
+= gen_elim' #opened _ p a q post sq ()
 
 let gen_elim_dep
-  #opened #p #i #j #a #q #post #sq _
-= gen_elim' #opened _ p i j a q post sq ()
+  #opened #p #a #q #post #sq _
+= gen_elim' #opened _ p a q post sq ()
 
 let vpattern
   (#opened: _)
