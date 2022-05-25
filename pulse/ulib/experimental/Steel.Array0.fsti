@@ -101,6 +101,12 @@ let varrayp
     sel = varrayp_sel a p;
   })
 
+[@@__steel_reduce__; __reduce__]
+let varray
+  (#elt: Type) (a: array elt)
+: Tot vprop
+= varrayp a P.full_perm
+
 val intro_varrayp
   (#opened: _) (#elt: Type) (a: array elt) (p: P.perm) (s: Seq.seq elt)
 : SteelGhost unit opened
@@ -111,6 +117,17 @@ val intro_varrayp
       h' (varrayp a p) == s
     )
 
+let intro_varray
+  (#opened: _) (#elt: Type) (a: array elt) (s: Seq.seq elt)
+: SteelGhost unit opened
+    (pts_to a P.full_perm s)
+    (fun _ -> varray a)
+    (fun _ -> True)
+    (fun _ _ h' ->
+      h' (varray a) == s
+    )
+= intro_varrayp _ _ _
+
 val elim_varrayp
   (#opened: _) (#elt: Type) (a: array elt) (p: P.perm)
 : SteelGhost (Ghost.erased (Seq.seq elt)) opened
@@ -120,6 +137,17 @@ val elim_varrayp
     (fun h res _ ->
       Ghost.reveal res == h (varrayp a p)
     )
+
+let elim_varray
+  (#opened: _) (#elt: Type) (a: array elt)
+: SteelGhost (Ghost.erased (Seq.seq elt)) opened
+    (varray a)
+    (fun res -> pts_to a P.full_perm res)
+    (fun _ -> True)
+    (fun h res _ ->
+      Ghost.reveal res == h (varray a)
+    )
+= elim_varrayp _ _
 
 /// Allocating a new array of size n, where each cell is initialized
 /// with value x. We define the non-selector version of this operation
@@ -144,14 +172,14 @@ let alloc
   (n: U32.t)
 : Steel (array elt)
     emp
-    (fun a -> varrayp a P.full_perm)
+    (fun a -> varray a)
     (fun _ -> True)
     (fun _ a h' ->
       length a == U32.v n /\
-      h' (varrayp a P.full_perm) == Seq.create (U32.v n) x
+      h' (varray a) == Seq.create (U32.v n) x
     )
 = let res = alloc_pt x n in
-  intro_varrayp res P.full_perm _;
+  intro_varray res _;
   return res
 
 /// Sharing and gathering permissions on an array. Those only
@@ -277,16 +305,16 @@ let upd
   (i: U32.t)
   (v: t)
 : Steel unit
-    (varrayp a P.full_perm)
-    (fun _ -> varrayp a P.full_perm)
+    (varray a)
+    (fun _ -> varray a)
     (fun _ ->  U32.v i < length a)
     (fun h _ h' ->
       U32.v i < length a /\
-      h' (varrayp a P.full_perm) == Seq.upd (h (varrayp a P.full_perm)) (U32.v i) v
+      h' (varray a) == Seq.upd (h (varray a)) (U32.v i) v
     )
-= let _ = elim_varrayp a _ in
+= let _ = elim_varray a in
   upd_pt a i () v;
-  intro_varrayp a _ _
+  intro_varray a _
 
 /// An array a1 is adjacent to an array a2 if and only if they have
 /// the same base array and the end of a1 coincides with the beginning
