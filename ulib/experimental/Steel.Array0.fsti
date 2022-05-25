@@ -101,11 +101,23 @@ let varrayp
     sel = varrayp_sel a p;
   })
 
+[@@ __steel_reduce__]
+let aselp (#elt: Type) (#vp: vprop) (a: array elt) (p: P.perm)
+  (h: rmem vp { FStar.Tactics.with_tactic selector_tactic (can_be_split vp (varrayp a p) /\ True) })
+: GTot (Seq.lseq elt (length a))
+= h (varrayp a p)
+
 [@@__steel_reduce__; __reduce__]
 let varray
   (#elt: Type) (a: array elt)
 : Tot vprop
 = varrayp a P.full_perm
+
+[@@ __steel_reduce__]
+let asel (#elt: Type) (#vp: vprop) (a: array elt)
+  (h: rmem vp { FStar.Tactics.with_tactic selector_tactic (can_be_split vp (varray a) /\ True) })
+: GTot (Seq.lseq elt (length a))
+= h (varray a)
 
 val intro_varrayp
   (#opened: _) (#elt: Type) (a: array elt) (p: P.perm) (s: Seq.seq elt)
@@ -114,7 +126,7 @@ val intro_varrayp
     (fun _ -> varrayp a p)
     (fun _ -> True)
     (fun _ _ h' ->
-      h' (varrayp a p) == s
+      aselp a p h' == s
     )
 
 let intro_varray
@@ -124,7 +136,7 @@ let intro_varray
     (fun _ -> varray a)
     (fun _ -> True)
     (fun _ _ h' ->
-      h' (varray a) == s
+      asel a h' == s
     )
 = intro_varrayp _ _ _
 
@@ -135,7 +147,7 @@ val elim_varrayp
     (fun res -> pts_to a p res)
     (fun _ -> True)
     (fun h res _ ->
-      Ghost.reveal res == h (varrayp a p)
+      Ghost.reveal res == aselp a p h
     )
 
 let elim_varray
@@ -145,7 +157,7 @@ let elim_varray
     (fun res -> pts_to a P.full_perm res)
     (fun _ -> True)
     (fun h res _ ->
-      Ghost.reveal res == h (varray a)
+      Ghost.reveal res == asel a h
     )
 = elim_varrayp _ _
 
@@ -176,7 +188,7 @@ let alloc
     (fun _ -> True)
     (fun _ a h' ->
       length a == U32.v n /\
-      h' (varray a) == Seq.create (U32.v n) x
+      asel a h' == Seq.create (U32.v n) x
     )
 = let res = alloc_pt x n in
   intro_varray res _;
@@ -207,8 +219,8 @@ let share
     (fun _ -> varrayp a p1 `star` varrayp a p2)
     (fun _ -> p == p1 `P.sum_perm` p2)
     (fun h _ h' ->
-      h' (varrayp a p1) == h (varrayp a p) /\
-      h' (varrayp a p2) == h (varrayp a p)
+      aselp a p1 h' == aselp a p h /\
+      aselp a p2 h' == aselp a p h
     )
 = let _ = elim_varrayp a p in
   share_pt a p p1 p2;
@@ -238,8 +250,8 @@ let gather
     (fun _ -> varrayp a (p1 `P.sum_perm` p2))
     (fun _ -> True)
     (fun h _ h' ->
-      h' (varrayp a (p1 `P.sum_perm` p2)) == h (varrayp a p1) /\
-      h' (varrayp a (p1 `P.sum_perm` p2)) == h (varrayp a p2)
+      aselp a (p1 `P.sum_perm` p2) h' == aselp a p1 h /\
+      aselp a (p1 `P.sum_perm` p2) h' == aselp a p2 h
     )
 = let _ = elim_varrayp a p1 in
   let _ = elim_varrayp a p2 in
@@ -272,8 +284,8 @@ let index
     (fun _ -> varrayp a p)
     (fun _ -> U32.v i < length a)
     (fun h res h' ->
-      let s = h (varrayp a p) in
-      h' (varrayp a p) == s /\
+      let s = aselp a p h in
+      aselp a p h' == s /\
       U32.v i < Seq.length s /\
       res == Seq.index s (U32.v i)
     )
@@ -310,7 +322,7 @@ let upd
     (fun _ ->  U32.v i < length a)
     (fun h _ h' ->
       U32.v i < length a /\
-      h' (varray a) == Seq.upd (h (varray a)) (U32.v i) v
+      asel a h' == Seq.upd (asel a h) (U32.v i) v
     )
 = let _ = elim_varray a in
   upd_pt a i () v;
@@ -371,7 +383,7 @@ let ghost_join
     (fun res -> varrayp (merge a1 a2) p)
     (fun _ -> True)
     (fun h _ h' ->
-      h' (varrayp (merge a1 a2) p) == h (varrayp a1 p) `Seq.append` h (varrayp a2 p)
+      aselp (merge a1 a2) p h' == aselp a1 p h `Seq.append` aselp a2 p h
     )
 = let _ = elim_varrayp a1 p in
   let _ = elim_varrayp a2 p in
@@ -419,7 +431,7 @@ let join
     (fun _ -> adjacent a1 a2)
     (fun h res h' ->
       merge_into a1 a2 res /\
-      h' (varrayp res p) == h (varrayp a1 p) `Seq.append` h (varrayp a2 p)
+      aselp res p h' == aselp a1 p h `Seq.append` aselp a2 p h
     )
 = let _ = elim_varrayp a1 _ in
   let _ = elim_varrayp a2 _ in
@@ -499,11 +511,11 @@ let ghost_split
     (fun _ -> varrayp (split_l a i) p `star` varrayp (split_r a i) p)
     (fun _ -> True)
     (fun h _ h' ->
-      let x = h (varrayp a p) in
+      let x = aselp a p h in
       let xl = Seq.slice x 0 (U32.v i) in
       let xr = Seq.slice x (U32.v i) (Seq.length x) in
-      h' (varrayp (split_l a i) p) == xl /\
-      h' (varrayp (split_r a i) p) == xr /\
+      aselp (split_l a i) p h' == xl /\
+      aselp (split_r a i) p h' == xr /\
       x == Seq.append xl xr
     )
 = let _ = elim_varrayp a _ in
