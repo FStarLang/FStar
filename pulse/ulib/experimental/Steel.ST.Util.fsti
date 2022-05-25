@@ -185,6 +185,11 @@ val lift_exists (#a:_)
 
 /// If two predicates [p] and [q] are equivalent, then their existentially quantified versions
 /// are equivalent, and we can switch from `h_exists p` to `h_exists q`
+val exists_equiv (#a:_)
+                (p:a -> vprop)
+                (q:a -> vprop {forall x. equiv (p x) (q x) })
+  : Lemma (equiv (exists_ p) (exists_ q))
+
 val exists_cong (#a:_)
                 (#u:_)
                 (p:a -> vprop)
