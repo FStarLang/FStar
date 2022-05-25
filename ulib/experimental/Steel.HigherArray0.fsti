@@ -179,13 +179,12 @@ val index
 
 /// Writing the value v at the i-th element of an array a.
 /// TODO: we should also provide an atomic version for small types.
-[@@noextract_to "krml"]
+[@@noextract_to "krml"] // primitive
 val upd
   (#t: Type)
   (a: array t)
   (#s: Ghost.erased (Seq.seq t))
-  (i: U32.t)
-  (sq: squash (U32.v i < Seq.length s))
+  (i: U32.t { U32.v i < Seq.length s })
   (v: t)
 : SteelT unit
     (pts_to a P.full_perm s)
@@ -278,7 +277,7 @@ let split_l (#elt: Type) (a: array elt)
 /// offset off.  TODO: replace this with a Ghost definition and a
 /// SteelAtomicBase Unobservable operation with the corresponding
 /// permission.
-[@@noextract_to "krml"]
+[@@noextract_to "krml"] // primitive
 val ptr_shift
   (#elt: Type)
   (p: ptr elt)
