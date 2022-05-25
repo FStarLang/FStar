@@ -5,12 +5,14 @@ module T = FStar.Tactics
 
 /// A tactic to automatically generate a unique binder
 
+[@@erasable]
 noeq
 type gen_unit_elim_i
 = | GUEId: (v: vprop) -> gen_unit_elim_i
   | GUEPure: (p: prop) -> gen_unit_elim_i
   | GUEStar: (left: gen_unit_elim_i) -> (right: gen_unit_elim_i) -> gen_unit_elim_i
 
+[@@erasable]
 noeq
 type gen_elim_i =
   | GEUnit: (i: gen_unit_elim_i) -> gen_elim_i
@@ -32,8 +34,6 @@ let rec compute_gen_unit_elim_p
   | GUEPure p -> pure p
   | GUEStar left right -> compute_gen_unit_elim_p left `star` compute_gen_unit_elim_p right
 
-let compute_gen_unit_elim_p' = compute_gen_unit_elim_p
-
 [@@ gen_elim_reduce]
 let rec compute_gen_unit_elim_q
   (x: gen_unit_elim_i)
@@ -43,8 +43,6 @@ let rec compute_gen_unit_elim_q
   | GUEPure _ -> emp
   | GUEStar left right -> compute_gen_unit_elim_q left `star` compute_gen_unit_elim_q right
 
-let compute_gen_unit_elim_q' = compute_gen_unit_elim_q
-
 [@@gen_elim_reduce]
 let rec compute_gen_unit_elim_post
   (x: gen_unit_elim_i)
@@ -53,8 +51,6 @@ let rec compute_gen_unit_elim_post
   | GUEId _ -> True
   | GUEPure p -> p
   | GUEStar left right -> compute_gen_unit_elim_post left /\ compute_gen_unit_elim_post right
-
-let compute_gen_unit_elim_post' = compute_gen_unit_elim_post
 
 [@@gen_elim_reduce]
 let rec compute_gen_elim_p

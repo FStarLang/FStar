@@ -61,7 +61,7 @@ let compute_gen_unit_elim_f_star
 
 let rec compute_gen_unit_elim_f
   (i: gen_unit_elim_i)
-: Tot (gen_unit_elim_t i)
+: GTot (gen_unit_elim_t i)
 = match i returns (gen_unit_elim_t i) with
   | GUEId v -> compute_gen_unit_elim_f_id v
   | GUEPure p -> compute_gen_unit_elim_f_pure p
@@ -72,14 +72,14 @@ let gen_elim_t (i: gen_elim_i) : Tot Type =
 
 let compute_gen_elim_f_unit
   (i: gen_unit_elim_i)
-: Tot (gen_elim_t (GEUnit i))
+: GTot (gen_elim_t (GEUnit i))
 = compute_gen_unit_elim_f i
 
 let compute_gen_elim_f_star_l
   (i1: gen_elim_i)
   (f1: gen_elim_t i1)
   (i2: gen_unit_elim_i)
-: Tot (gen_elim_t (GEStarL i1 i2))
+: GTot (gen_elim_t (GEStarL i1 i2))
 = let f2 = compute_gen_unit_elim_f i2 in
   fun _ ->
   rewrite (compute_gen_elim_p (GEStarL i1 i2)) (compute_gen_elim_p i1 `star` compute_gen_unit_elim_p i2);
@@ -93,7 +93,7 @@ let compute_gen_elim_f_star_r
   (i1: gen_unit_elim_i)
   (i2: gen_elim_i)
   (f2: gen_elim_t i2)
-: Tot (gen_elim_t (GEStarR i1 i2))
+: GTot (gen_elim_t (GEStarR i1 i2))
 = let f1 = compute_gen_unit_elim_f i1 in
   fun _ ->
   rewrite (compute_gen_elim_p (GEStarR i1 i2)) (compute_gen_unit_elim_p i1 `star` compute_gen_elim_p i2);
@@ -108,7 +108,7 @@ let compute_gen_elim_f_star
   (f1: gen_elim_t i1)
   (i2: gen_elim_i)
   (f2: gen_elim_t i2)
-: Tot (gen_elim_t (GEStar i1 i2))
+: GTot (gen_elim_t (GEStar i1 i2))
 = fun _ ->
   rewrite (compute_gen_elim_p (GEStar i1 i2)) (compute_gen_elim_p i1 `star` compute_gen_elim_p i2);
   let res1 = f1 _ in
@@ -120,7 +120,7 @@ let compute_gen_elim_f_star
 let compute_gen_elim_f_exists_no_abs
   (a: Type0)
   (body: (a -> vprop))
-: Tot (gen_elim_t (GEExistsNoAbs body))
+: GTot (gen_elim_t (GEExistsNoAbs body))
 = fun _ ->
   rewrite (compute_gen_elim_p (GEExistsNoAbs body)) (exists_ body);
   let gres = elim_exists () in
@@ -151,7 +151,7 @@ let compute_gen_elim_f_exists_unit
 let compute_gen_elim_f_exists
   (a: Type0)
   (body: a -> gen_elim_i)
-  (f: (x: a) -> gen_elim_t (body x))
+  (f: (x: a) -> GTot (gen_elim_t (body x)))
 : Tot (gen_elim_t (GEExists body))
 = fun _ ->
   rewrite_with_trefl (compute_gen_elim_p (GEExists body)) (exists_ (fun x -> compute_gen_elim_p (body x)));
@@ -163,7 +163,7 @@ let compute_gen_elim_f_exists
 
 let rec compute_gen_elim_f
   (i: gen_elim_i)
-: Tot (gen_elim_t i)
+: GTot (gen_elim_t i)
 = match i returns (gen_elim_t i) with
   | GEUnit i -> compute_gen_elim_f_unit i
   | GEStarL i1 i2 -> compute_gen_elim_f_star_l i1 (compute_gen_elim_f i1) i2
