@@ -1866,6 +1866,7 @@ let dummy_solver = {
     preprocess=(fun e g -> [e,g, FStar.Options.peek ()]);
     handle_smt_goal=(fun e g -> [e,g]);
     solve=(fun _ _ _ -> ());
+    ask_solver=(fun _ _ -> []);
     finish=(fun () -> ());
     refresh=(fun () -> ());
 }

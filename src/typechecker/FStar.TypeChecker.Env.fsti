@@ -211,6 +211,7 @@ and solver_t = {
     preprocess      :env -> goal -> list (env * goal * FStar.Options.optionstate);
     handle_smt_goal :env -> goal -> list (env * goal);
     solve           :option (unit -> string) -> env -> goal -> unit; //call to the smt solver
+    ask_solver      :env -> goal -> list FStar.Errors.error;
     finish          :unit -> unit;
     refresh         :unit -> unit;
 }
