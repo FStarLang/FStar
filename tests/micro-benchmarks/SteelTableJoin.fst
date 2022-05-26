@@ -1,5 +1,5 @@
 module SteelTableJoin
-open Steel.ST.Util
+open Steel.ST.GenElim
 
 assume
 val ptr : Type0
