@@ -2,6 +2,7 @@ module Steel.ST.GenElim.Base
 
 irreducible let gen_elim_reduce = ()
 
+[@@noextract_to "Plugin"]
 let gen_elim_pred
   (enable_nondep_opt: bool)
   (p: vprop)

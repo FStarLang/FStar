@@ -43,7 +43,7 @@ let rec compute_gen_unit_elim_q
   | GUEPure _ -> emp
   | GUEStar left right -> compute_gen_unit_elim_q left `star` compute_gen_unit_elim_q right
 
-[@@gen_elim_reduce]
+[@@gen_elim_reduce; noextract_to "Plugin"]
 let rec compute_gen_unit_elim_post
   (x: gen_unit_elim_i)
 : Tot prop
@@ -67,7 +67,7 @@ let rec compute_gen_elim_p
 
 let compute_gen_elim_p' = compute_gen_elim_p
 
-[@@ gen_elim_reduce; __steel_reduce__]
+[@@ gen_elim_reduce; __steel_reduce__; noextract_to "Plugin"]
 let rec compute_gen_elim_a
   (x: gen_elim_i)
 : Tot Type0
@@ -80,12 +80,16 @@ let rec compute_gen_elim_a
   | GEExistsUnit #a _ -> a
   | GEExists #a body -> dtuple2 a (fun x -> compute_gen_elim_a (body x))
 
+[@@noextract_to "Plugin"]
 let dfstp #a #b t = dfst #a #b t
+[@@noextract_to "Plugin"]
 let dsndp #a #b t = dsnd #a #b t
+[@@noextract_to "Plugin"]
 let fstp #a #b t = fst #a #b t
+[@@noextract_to "Plugin"]
 let sndp #a #b t = snd #a #b t
 
-[@@gen_elim_reduce; __steel_reduce__]
+[@@gen_elim_reduce; __steel_reduce__; noextract_to "Plugin"]
 let coerce_with_trefl (#tfrom #tto: Type) (x: tfrom) : Pure tto (requires (T.with_tactic T.trefl (tfrom == tto))) (ensures (fun _ -> True)) = x
 
 [@@gen_elim_reduce]
@@ -113,7 +117,7 @@ let rec compute_gen_elim_q
       (body (dfstp #a #dept v'))
       (dsndp #a #dept v')
 
-[@@gen_elim_reduce]
+[@@gen_elim_reduce; noextract_to "Plugin"]
 let rec compute_gen_elim_post
   (x: gen_elim_i)
 : Tot (compute_gen_elim_a x -> Tot prop)
@@ -216,7 +220,7 @@ let rec gen_elim_nondep_sem (ty: list Type0) : Tot (curried_function_type ty vpr
   | [] -> fun q post -> TRet q post
   | t :: tq -> fun q post -> TExists t (fun x -> gen_elim_nondep_sem tq (q x) (post x))
 
-[@@gen_elim_reduce]
+[@@gen_elim_reduce; noextract_to "Plugin"]
 let check_gen_elim_nondep_sem (i: gen_elim_i) (nd: gen_elim_nondep_t) : Tot prop =
   match nd with
   | GENonDep ty q post -> compute_gen_elim_tele i == gen_elim_nondep_sem ty q post
@@ -248,7 +252,7 @@ let compute_gen_elim_nondep_a (i0: gen_elim_i) (i: gen_elim_nondep_t) : Tot Type
   | GENonDep ty q post -> compute_gen_elim_nondep_a' ty
   | GEDep -> compute_gen_elim_a i0
 
-[@@gen_elim_reduce]
+[@@gen_elim_reduce; noextract_to "Plugin"]
 let compute_uncurry (ret_type: Type u#a) (def: ret_type) (ty: list Type0) : curried_function_type ty ret_type -> compute_gen_elim_nondep_a' ty -> ret_type =
     match ty as ty' returns (curried_function_type ty' ret_type -> compute_gen_elim_nondep_a' ty' -> ret_type) with
     | [] -> fun q _ -> q
@@ -279,13 +283,13 @@ let compute_gen_elim_nondep_q0 (i0: gen_elim_i) (i: gen_elim_nondep_t) : Tot (co
 let compute_gen_elim_nondep_q (i0: gen_elim_i) (i: gen_elim_nondep_t) (x: Ghost.erased (compute_gen_elim_nondep_a i0 i)) : Tot vprop =
   compute_gen_elim_nondep_q0 i0 i (Ghost.reveal x)
 
-[@@gen_elim_reduce]
+[@@gen_elim_reduce; noextract_to "Plugin"]
 let compute_gen_elim_nondep_post0 (i0: gen_elim_i) (i: gen_elim_nondep_t) : Tot (compute_gen_elim_nondep_a i0 i -> prop) =
   match i with
   | GENonDep ty q post -> compute_uncurry prop True ty post
   | GEDep -> compute_gen_elim_post i0
 
-[@@gen_elim_reduce]
+[@@gen_elim_reduce; noextract_to "Plugin"]
 let compute_gen_elim_nondep_post (i0: gen_elim_i) (i: gen_elim_nondep_t) (x: Ghost.erased (compute_gen_elim_nondep_a i0 i)) : Tot prop =
   compute_gen_elim_nondep_post0 i0 i (Ghost.reveal x)
 
@@ -387,6 +391,7 @@ let rec solve_gen_elim
         else
           T.mk_app (`GEUnit) [T.mk_app (`GUEId) lbody, T.Q_Explicit]
 
+[@@ noextract_to "Plugin"]
 val gen_elim_prop
   (enable_nondep_opt: bool)
   (p: vprop)
@@ -450,6 +455,7 @@ val gen_elim_prop_elim
     post == compute_gen_elim_nondep_post i j
   ))
 
+[@@noextract_to "Plugin"]
 let gen_elim_prop_placeholder
   (enable_nondep_opt: bool)
   (p: vprop)
