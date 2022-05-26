@@ -16939,6 +16939,7 @@ let mk_total_step_20 :
                                                                     ne18 ne19
                                                                     ne20 ner
                                                                     uu___)
+type 'a metatc = unit -> 'a FStar_Tactics_Result.tc_result
 let (mk_metatc :
   Prims.string ->
     Prims.int ->
@@ -16975,7 +16976,7 @@ let (mk_metatc :
             }
 let mk_metatc_interpretation_2 :
   'r 't1 't2 .
-    ('t1 -> 't2 -> unit -> 'r) ->
+    ('t1 -> 't2 -> 'r metatc) ->
       't1 FStar_Syntax_Embeddings.embedding ->
         't2 FStar_Syntax_Embeddings.embedding ->
           'r FStar_Syntax_Embeddings.embedding ->
@@ -17003,20 +17004,21 @@ let mk_metatc_interpretation_2 :
                                 unembed FStar_Syntax_Embeddings.e_unit a3 ncb in
                               FStar_Compiler_Util.bind_opt uu___5
                                 (fun uu___6 ->
-                                   let r1 = t a11 a21 () in
+                                   let r1 =
+                                     let uu___7 = t a11 a21 in uu___7 () in
                                    let uu___7 =
                                      let uu___8 =
                                        FStar_Tactics_Embedding.e_metatc_result
                                          er in
                                      let uu___9 =
                                        FStar_TypeChecker_Cfg.psc_range psc in
-                                     embed uu___8 uu___9 (Obj.magic r1) ncb in
+                                     embed uu___8 uu___9 r1 ncb in
                                    FStar_Pervasives_Native.Some uu___7)))
                 | uu___ -> FStar_Pervasives_Native.None
 let mk_metatc_nbe_interpretation_2 :
   'r 't1 't2 .
     FStar_TypeChecker_NBETerm.nbe_cbs ->
-      ('t1 -> 't2 -> unit -> 'r) ->
+      ('t1 -> 't2 -> 'r metatc) ->
         't1 FStar_TypeChecker_NBETerm.embedding ->
           't2 FStar_TypeChecker_NBETerm.embedding ->
             'r FStar_TypeChecker_NBETerm.embedding ->
@@ -17043,24 +17045,24 @@ let mk_metatc_nbe_interpretation_2 :
                                 FStar_TypeChecker_NBETerm.e_unit cb a3 in
                             FStar_Compiler_Util.bind_opt uu___5
                               (fun uu___6 ->
-                                 let r1 = t a11 a21 () in
+                                 let r1 = let uu___7 = t a11 a21 in uu___7 () in
                                  let uu___7 =
                                    let uu___8 =
                                      FStar_Tactics_Embedding.e_metatc_result_nbe
                                        er in
                                    FStar_TypeChecker_NBETerm.embed uu___8 cb
-                                     (Obj.magic r1) in
+                                     r1 in
                                  FStar_Pervasives_Native.Some uu___7)))
               | uu___ -> FStar_Pervasives_Native.None
 let mk_metatc_step_2 :
   'nr 'nt1 'nt2 'r 't1 't2 .
     Prims.int ->
       Prims.string ->
-        ('t1 -> 't2 -> unit -> 'r) ->
+        ('t1 -> 't2 -> 'r metatc) ->
           't1 FStar_Syntax_Embeddings.embedding ->
             't2 FStar_Syntax_Embeddings.embedding ->
               'r FStar_Syntax_Embeddings.embedding ->
-                ('nt1 -> 'nt2 -> unit -> 'nr) ->
+                ('nt1 -> 'nt2 -> 'nr metatc) ->
                   'nt1 FStar_TypeChecker_NBETerm.embedding ->
                     'nt2 FStar_TypeChecker_NBETerm.embedding ->
                       'nr FStar_TypeChecker_NBETerm.embedding ->

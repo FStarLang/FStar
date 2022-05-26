@@ -1446,15 +1446,15 @@ let (uu___143 : unit) =
                                                                     =
                                                                     FStar_Tactics_InterpFuns.mk_metatc_step_2
                                                                     Prims.int_zero
-                                                                    "tc_term"
-                                                                    FStar_Meta_Tc_Basic.tc_term
+                                                                    "check_prop_validity"
+                                                                    FStar_Meta_Tc_Basic.check_prop_validity
                                                                     FStar_Reflection_Embeddings.e_env
                                                                     FStar_Reflection_Embeddings.e_term
-                                                                    FStar_Reflection_Embeddings.e_term
-                                                                    FStar_Meta_Tc_Basic.tc_term
+                                                                    FStar_Syntax_Embeddings.e_unit
+                                                                    FStar_Meta_Tc_Basic.check_prop_validity
                                                                     FStar_Reflection_NBEEmbeddings.e_env
                                                                     FStar_Reflection_NBEEmbeddings.e_term
-                                                                    FStar_Reflection_NBEEmbeddings.e_term in
+                                                                    FStar_TypeChecker_NBETerm.e_unit in
                                                                     [uu___138] in
                                                                     uu___136
                                                                     ::
