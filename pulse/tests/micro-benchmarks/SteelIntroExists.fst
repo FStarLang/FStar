@@ -121,7 +121,7 @@ In case the current unification heuristics fail, i.e.,
 *)
 module SteelIntroExists
 open Steel.Effect.Common
-open Steel.ST.Util
+open Steel.ST.GenElim
 
 module T = FStar.Tactics
 
