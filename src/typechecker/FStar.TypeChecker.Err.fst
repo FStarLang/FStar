@@ -127,47 +127,51 @@ let print_discrepancy (f : 'a -> string) (x : 'a) (y : 'a) : string * string =
  *     in the first case, we print it starting from a newline,
  *       while in the latter, it is printed on the same line
  *)
-let errors_smt_detail env
-        (errs : list Errors.error)
-        (smt_detail : either string string)
-: list Errors.error
-=
-    let maybe_add_smt_detail msg =
+
+let get_error_with_smt_detail env
+  (smt_detail:either string string)
+  ((e, msg, r, ctx):Errors.error)
+  : Errors.error
+  = let maybe_add_smt_detail msg =
       match smt_detail with
       | Inr d -> msg ^ "\n\t" ^ d
       | Inl d when BU.trim_string d <> "" -> msg ^ "; " ^ d
       | _ -> msg
     in
-    let errs =
-        errs
-        |> List.map
-          (fun (e, msg, r, ctx) ->
-            let e, msg, r, ctx =
-                if r = dummyRange
-                then e, msg, Env.get_range env, ctx
-                else let r' = Range.set_def_range r (Range.use_range r) in
-                     if Range.file_of_range r' <> Range.file_of_range (Env.get_range env) //r points to another file
-                     then e,
-                          (msg ^
-                                " (Also see: " ^ Range.string_of_use_range r ^")"
-                                ^ (if Range.use_range r <> Range.def_range r
-                                   then "(Other related locations: " ^ Range.string_of_def_range r ^")"
-                                   else "")),
-                          Env.get_range env,
-                          ctx
-                     else e, msg, r, ctx
-            in
-            e, maybe_add_smt_detail msg, r, ctx)
-    in
-    errs
+    let e, msg, r, ctx =
+      if r = dummyRange
+      then e, msg, Env.get_range env, ctx
+      else let r' = Range.set_def_range r (Range.use_range r) in
+           if Range.file_of_range r' <> Range.file_of_range (Env.get_range env) //r points to another file
+           then e,
+                (msg ^
+                 " (Also see: " ^
+                 Range.string_of_use_range r ^")" ^
+                 (if Range.use_range r <> Range.def_range r
+                  then "(Other related locations: " ^ Range.string_of_def_range r ^")"
+                  else "")),
+                Env.get_range env,
+                ctx
+           else e, msg, r, ctx in
+    e, maybe_add_smt_detail msg, r, ctx
+
+
+let errors_smt_detail env
+        (errs : list Errors.error)
+        (smt_detail : either string string)
+: list Errors.error
+= errs |> List.map (get_error_with_smt_detail env smt_detail)
 
 let add_errors_smt_detail env (errs:list Errors.error) smt_detail : unit =
-    FStar.Errors.add_errors (errors_smt_detail env errs smt_detail)
+  FStar.Errors.add_errors (errors_smt_detail env errs smt_detail)
 
 let add_errors env errs = add_errors_smt_detail env errs (Inl "")
 
 let log_issue env r (e, m) : unit =
  add_errors env [e, m, r, Errors.get_ctx ()]
+
+let detailed_error env r (e, m) : Errors.error =
+  get_error_with_smt_detail env (Inl "") (e, m, r, Errors.get_ctx ())
 
 let err_msg_type_strings env t1 t2 :(string * string) =
   print_discrepancy (N.term_to_string env) t1 t2
