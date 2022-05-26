@@ -4551,6 +4551,7 @@ let solve_non_tactic_deferred_constraints maybe_defer_flex_flex env (g:guard_t) 
     let deferred_to_tac_ok = false in
     try_solve_deferred_constraints defer_ok smt_ok deferred_to_tac_ok env g
 
+//
 // Discharge (the logical part of) a guard [g].
 //
 // The `use_smt` flag says whether to use the smt solver to discharge
@@ -4570,7 +4571,22 @@ let solve_non_tactic_deferred_constraints maybe_defer_flex_flex env (g:guard_t) 
 //
 // In every case, when this function returns [Some g], then the logical
 // part of [g] is [Trivial].
-let discharge_guard' use_env_range_msg env (g:guard_t) (use_smt:bool) : option guard_t =
+//
+// The must_be_valid flag indicates if the VC must be valid
+//   Depending on whether the flag is set, we call solve or ask_solver in env.solver
+//
+// Returns an optional guard and list of smt errors
+//  If the guard is None, that means the VC is non-trivial and use_smt was not allowed
+//  If the guard is (Some g), then its logical payload is Trivial
+//  The returned error list is empty if must_be_valid is true
+//
+let discharge_guard'
+  use_env_range_msg
+  env
+  (g:guard_t)
+  (use_smt:bool)
+  (must_be_valid:bool) : option guard_t & list FStar.Errors.error =
+  
   let debug =
       (Env.debug env <| Options.Other "Rel")
     || (Env.debug env <| Options.Other "SMTQuery")
@@ -4586,11 +4602,11 @@ let discharge_guard' use_env_range_msg env (g:guard_t) (use_smt:bool) : option g
     try_solve_deferred_constraints defer_ok use_smt deferred_to_tac_ok env g
   in
   let ret_g = {g with guard_f = Trivial} in
-  if not (Env.should_verify env) then Some ret_g
+  if not (Env.should_verify env) then Some ret_g, []
   // GM: ^ this doesn't look like the right place for this check.
   else
     match g.guard_f with
-    | Trivial -> Some ret_g
+    | Trivial -> Some ret_g, []
     | NonTrivial vc ->
       if debug
       then Errors.diag (Env.get_range env)
@@ -4606,15 +4622,15 @@ let discharge_guard' use_env_range_msg env (g:guard_t) (use_smt:bool) : option g
                        (BU.format1 "After normalization VC=\n%s\n" (Print.term_to_string vc));
       def_check_closed_in_env (Env.get_range env) "discharge_guard'" env vc;
       match check_trivial vc with
-      | Trivial -> Some ret_g
+      | Trivial -> Some ret_g, []
       | NonTrivial vc ->
         if not use_smt then (
             if debug then
                 Errors.diag (Env.get_range env)
                             (BU.format1 "Cannot solve without SMT : %s\n" (Print.term_to_string vc));
-                None
+                None, []
         ) else
-          let _ =
+          let errs =
             if debug
             then Errors.diag (Env.get_range env)
                              (BU.format1 "Checking VC=\n%s\n" (Print.term_to_string vc));
@@ -4636,12 +4652,12 @@ let discharge_guard' use_env_range_msg env (g:guard_t) (use_smt:bool) : option g
                 end
                 else [env,vc,FStar.Options.peek ()]
             in
-            vcs |> List.iter (fun (env, goal, opts) ->
+            vcs |> List.map (fun (env, goal, opts) ->
                     match check_trivial goal with
                     | Trivial ->
                         if debug
                         then BU.print_string "Goal completely solved by tactic\n";
-                        () // do nothing
+                        [] // do nothing
 
                     | NonTrivial goal ->
                         FStar.Options.push ();
@@ -4654,27 +4670,40 @@ let discharge_guard' use_env_range_msg env (g:guard_t) (use_smt:bool) : option g
                         if debug
                         then Errors.diag (Env.get_range env)
                                          (BU.format1 "Before calling solver VC=\n%s\n" (Print.term_to_string goal));
-                        let res = env.solver.solve use_env_range_msg env goal in
+                        let errs =
+                          if must_be_valid
+                          then let _ = env.solver.solve use_env_range_msg env goal in
+                               []
+                          else env.solver.ask_solver env goal in
                         FStar.Options.pop ();
-                        res
-                        )
+                        errs
+                        ) |> List.flatten
           in
-          Some ret_g
+          Some ret_g, errs
 
 let discharge_guard_no_smt env g =
-  match discharge_guard' None env g false with
+  let must_be_valid = true in
+  match discharge_guard' None env g false must_be_valid |> fst with
   | Some g -> g
   | None  -> raise_error (Errors.Fatal_ExpectTrivialPreCondition, "Expected a trivial pre-condition") (Env.get_range env)
 
 let discharge_guard env g =
-  match discharge_guard' None env g true with
+  let must_be_valid = true in
+  match discharge_guard' None env g true must_be_valid |> fst with
   | Some g -> g
   | None  -> failwith "Impossible, with use_smt = true, discharge_guard' should never have returned None"
 
+let query_formula env fml =
+  let must_be_valid = false in
+  discharge_guard' None env
+    ({trivial_guard with guard_f=NonTrivial fml})
+    true must_be_valid |> snd
+
 let teq_nosmt (env:env) (t1:typ) (t2:typ) : option guard_t =
+  let must_be_valid = true in
   match try_teq false env t1 t2 with
   | None -> None
-  | Some g -> discharge_guard' None env g false
+  | Some g -> discharge_guard' None env g false must_be_valid |> fst
 
 let subtype_nosmt env t1 t2 =
     if debug env <| Options.Other "Rel"
@@ -4685,7 +4714,8 @@ let subtype_nosmt env t1 t2 =
     | None -> None
     | Some g ->
       let g = close_guard env [S.mk_binder x] g in
-      discharge_guard' None env g false
+      let must_be_valid = true in
+      discharge_guard' None env g false must_be_valid |> fst
 
 ///////////////////////////////////////////////////////////////////
 let check_subtyping env t1 t2 =
@@ -4834,7 +4864,8 @@ let check_implicit_solution_and_discharge_guard env imp force_univ_constraints
     if (not force_univ_constraints) &&
        (List.existsb (fun (reason, _, _) -> reason = Deferred_univ_constraint) g.deferred)
     then None
-    else let g' =
+    else let must_be_valid = true in
+         let g' =
           (match discharge_guard'
                    (Some (fun () ->
                           BU.format4 "%s (Introduced at %s for %s resolved at %s)"
@@ -4842,7 +4873,7 @@ let check_implicit_solution_and_discharge_guard env imp force_univ_constraints
                             (Range.string_of_range r)
                             reason
                             (Range.string_of_range tm.pos)))
-                   env g true with
+                   env g true must_be_valid |> fst with
            | Some g -> g
            | None -> failwith "Impossible, with use_smt = true, discharge_guard' must return Some") in
          g'.implicits |> Some
