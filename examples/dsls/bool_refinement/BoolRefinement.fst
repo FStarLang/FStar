@@ -81,6 +81,24 @@ and ln_ty (e:src_ty)
     | TRefineBool e -> ln' e (- 1) && closed e
     | TArrow t1 t2 -> ln_ty t1 && ln_ty t2
 
+let rec ln_weaker (e:src_exp) (n:int) (m:int{n <= m})
+  : Lemma 
+    (requires ln' e n)
+    (ensures ln' e m)
+  = match e with
+    | EBool _
+    | EVar _
+    | EBVar _ -> ()
+    | EIf b e1 e2 -> 
+      ln_weaker b n m;
+      ln_weaker e1 n m;
+      ln_weaker e2 n m
+    | ELam t e ->
+      ln_weaker e (n + 1) (m + 1)
+    | EApp e1 e2 ->
+      ln_weaker e1 n m;
+      ln_weaker e2 n m    
+
 let ln e = ln' e (-1)
 
 let rec open_exp' (e:src_exp) (v:var) (n:index)
@@ -341,7 +359,7 @@ let weaken (g:R.env) (sg:src_env) (hyp:var) (b:src_exp) (t0 t1:s_ty)
     then (| t0, S_Refl _ t0, S_Refl _ t1 |)
     else T.fail "weaken is very dumb"
 
-#push-options "--fuel 2 --ifuel 2 --z3rlimit_factor 2"
+#push-options "--fuel 2 --ifuel 2 --z3rlimit_factor 4"
 let rec check (g:R.env)
               (sg:src_env)
               (e:src_exp { ln e })
@@ -425,7 +443,7 @@ and check_ty (g:R.env)
       match te with
       | TArrow TBool TBool -> (| TRefineBool e, OK_TRefine _ _ de |)
       | _ -> T.fail "Ill-typed refinement"
-
+#pop-options
   
 
 module RT = Refl.Typing
@@ -498,7 +516,7 @@ let elab_eqn (e1 e2:src_exp)
   : R.term
   = RT.eq2 RT.bool_ty (elab_exp e1) (elab_exp e2)
 
-let binding = either src_ty src_eqn
+let binding = either s_ty src_eqn
 let elab_binding (b:binding)
   : R.term 
   = match b with
@@ -524,16 +542,29 @@ let rec extend_env_l_lookup_bvar (g:R.env) (sg:src_env) (x:var)
     | [] -> ()
     | hd :: tl -> extend_env_l_lookup_bvar g tl x
 
-// //key lemma about src types: Their elaborations are closed
-// let rec closed_ln_exps (ty:src_ty {ln_ty ty}) (x:RT.open_or_close) (n:nat)
-//   : Lemma (ensures RT.open_or_close_term' (elab_ty ty) x n == elab_ty ty)
-//           (decreases ty)
-//           [SMTPat (RT.open_or_close_term' (elab_ty ty) x n)]
-
-let rec src_types_are_closed_core (ty:src_ty {ln_ty ty}) (x:RT.open_or_close) (n:nat)
+//key lemma about src types: Their elaborations are closed
+let rec src_refinements_are_closed_core
+                       (n:nat)
+                       (e:src_exp {ln' e (n - 1) && closed e}) 
+                       (x:RT.open_or_close)
+  : Lemma (ensures RT.open_or_close_term' (elab_exp e) x n == elab_exp e)
+          (decreases e)
+  = match e with
+    | EBool _ -> ()
+    | EBVar _ -> ()
+    | EApp e1 e2 ->
+      src_refinements_are_closed_core n e1 x;
+      src_refinements_are_closed_core n e2 x
+    | EIf b e1 e2 ->
+      src_refinements_are_closed_core n b x;    
+      src_refinements_are_closed_core n e1 x;
+      src_refinements_are_closed_core n e2 x    
+    | ELam t e1 ->
+      src_types_are_closed_core t x n;
+      src_refinements_are_closed_core (n + 1) e1 x          
+and src_types_are_closed_core (ty:s_ty) (x:RT.open_or_close) (n:nat)
   : Lemma (ensures RT.open_or_close_term' (elab_ty ty) x n == elab_ty ty)
           (decreases ty)
-          [SMTPat (RT.open_or_close_term' (elab_ty ty) x n)]
   = match ty with
     | TBool -> ()
     | TArrow t1 t2 ->
@@ -541,29 +572,83 @@ let rec src_types_are_closed_core (ty:src_ty {ln_ty ty}) (x:RT.open_or_close) (n
       src_types_are_closed_core t2 x (n + 1)
     | TRefineBool e ->
       assert (ln e);
-      admit()
+      assert (closed e);
+      ln_weaker e (-1) n;
+      src_refinements_are_closed_core (n + 1) e x 
 
-let elab_open_commute (e:src_exp) (x:var)
+let src_refinements_are_closed (e:src_exp {ln e && closed e}) 
+                               (x:RT.open_or_close)
+  : Lemma (ensures RT.open_or_close_term' (elab_exp e) x 0 == elab_exp e)
+          (decreases e)
+ =  ln_weaker e (-1) 0;
+    src_refinements_are_closed_core 0 e x 
+ 
+
+#push-options "--query_stats --fuel 8 --ifuel 2 --z3rlimit_factor 2"
+let rec elab_open_commute' (n:nat) (e:src_exp { ln' e n }) (x:var) 
+  : Lemma (ensures
+              RT.open_or_close_term' (elab_exp e) (RT.OpenWith (RT.var_as_term x)) n ==
+              elab_exp (open_exp' e x n))
+          (decreases e)
+  = match e with
+    | EBool _ -> ()
+    | EBVar _ -> ()
+    | EVar _ -> ()
+    | EApp e1 e2 -> 
+      elab_open_commute' n e1 x;
+      elab_open_commute' n e2 x
+    | EIf b e1 e2 ->
+      elab_open_commute' n b x;    
+      elab_open_commute' n e1 x;
+      elab_open_commute' n e2 x;
+      let opening = RT.OpenWith (RT.var_as_term x) in
+      assert (RT.open_or_close_term' (elab_exp e) opening n ==
+              R.(pack_ln (Tv_Match (RT.open_or_close_term' (elab_exp b) opening n)
+                                  None
+                                  [(Pat_Constant C_True, RT.open_or_close_term' (elab_exp e1) opening n);
+                                   (Pat_Constant C_False, RT.open_or_close_term' (elab_exp e2) opening n)])))
+    | ELam t e ->
+      calc (==) {
+        elab_exp (open_exp' (ELam t e) x n);
+      (==) {}
+        elab_exp (ELam t (open_exp' e x (n + 1)));      
+      (==) {  }
+        R.(pack_ln (Tv_Abs (RT.as_binder 0 (elab_ty t)) (elab_exp (open_exp' e x (n + 1)))));
+      (==) { elab_open_commute' (n + 1) e x } 
+        R.(pack_ln (Tv_Abs (RT.as_binder 0 (elab_ty t))
+                           (RT.open_or_close_term' (elab_exp e) RT.(OpenWith (var_as_term x)) (n + 1))));
+      (==) { src_types_are_closed_core t (RT.OpenWith (RT.var_as_term x)) n }
+        RT.open_or_close_term'
+          R.(pack_ln (Tv_Abs (RT.as_binder 0 (elab_ty t)) (elab_exp e)))
+          RT.(OpenWith (var_as_term x))           
+          n;
+      }
+#pop-options
+
+let elab_open_commute (e:src_exp { ln' e 0 }) (x:var)
   : Lemma (RT.open_term (elab_exp e) x == elab_exp (open_exp e x))
           [SMTPat (RT.open_term (elab_exp e) x)]
-  = admit()
+  = elab_open_commute' 0 e x;
+    RT.open_term_spec (elab_exp e) x
 
-//key lemma about STLC types
-let src_types_are_closed1 (ty:src_ty) (v:R.term)
+//key lemma about src types
+let src_types_are_closed1 (ty:s_ty) (v:R.term)
   : Lemma (RT.open_with (elab_ty ty) v == elab_ty ty)
           [SMTPat (RT.open_with (elab_ty ty) v)]
-  = admit()
+  = src_types_are_closed_core ty (RT.OpenWith v) 0;
+    RT.open_with_spec (elab_ty ty) v
 
-let src_types_are_closed2 (ty:src_ty) (x:R.var)
+let src_types_are_closed2 (ty:s_ty) (x:R.var)
   : Lemma (RT.close_term (elab_ty ty) x == elab_ty ty)
           [SMTPat (RT.close_term (elab_ty ty) x)]
-  = admit()
+  = src_types_are_closed_core ty (RT.CloseVar x) 0;
+    RT.close_term_spec (elab_ty ty) x
 
-
-let src_types_are_closed3 (ty:src_ty) (x:R.var)
+let src_types_are_closed3 (ty:s_ty) (x:R.var)
   : Lemma (RT.open_term (elab_ty ty) x == elab_ty ty)
           [SMTPat (RT.open_term (elab_ty ty) x)]
-  = admit()
+  = src_types_are_closed_core ty (RT.OpenWith (RT.var_as_term x)) 0;
+    RT.open_term_spec (elab_ty ty) x
 
 let fstar_env =
   g:R.env { 
@@ -580,7 +665,7 @@ let b2t_typing (g:fstar_env) (t:R.term) (dt:RT.typing g t RT.bool_ty)
   : RT.typing g (r_b2t t) RT.tm_type
   = let b2t_typing : RT.typing g _ b2t_ty = RT.T_FVar g b2t_fv in
     let app_ty : _ = RT.T_App _ _ _ _ _ b2t_typing dt in
-    assume (RT.open_with RT.tm_type t == RT.tm_type);
+    RT.open_with_spec RT.tm_type t;
     app_ty
 
 let rec extend_env_l_lookup_fvar (g:R.env) (sg:src_env) (fv:R.fv)
@@ -597,7 +682,7 @@ open FStar.List.Tot
 let rec src_ty_ok_weakening (sg sg':src_env) 
                             (x:var { None? (lookup sg x) && None? (lookup sg' x) })
                             (b:binding)
-                            (t:src_ty)
+                            (t:s_ty)
                             (d:src_ty_ok (sg'@sg) t)
   : GTot (d':src_ty_ok (sg'@((x, b)::sg)) t { t_height d' == t_height d })
          (decreases d)
@@ -657,7 +742,6 @@ let rename_open_commute (e:src_exp) (z:var) (x y:var)
     (ensures rename (open_exp e z) x y == open_exp (rename e x y) z)
   = admit()
 
-
 let rename_lookup (sg:src_env) (a:var) (x y:var)
   : Lemma (match lookup sg a with
            | None -> None? (lookup (rename_env sg x y) a)
@@ -670,7 +754,7 @@ let rec src_ty_ok_renaming (sg sg':src_env)
                            (x:var { None? (lookup sg x) /\ None? (lookup sg' x) })
                            (y:var { None? (lookup sg y) /\ None? (lookup sg' x) })
                            (b:binding)
-                           (t:src_ty)
+                           (t:s_ty)
                            (d:src_ty_ok (sg'@(x,b)::sg) t)
   : GTot (d':src_ty_ok (rename_env sg' x y@(y,b)::sg) t { t_height d' == t_height d })
          (decreases d)
@@ -680,7 +764,7 @@ let sub_typing_renaming (sg sg':src_env)
                         (x:var { None? (lookup sg x) && None? (lookup sg' x) })
                         (y:var { None? (lookup sg y) && None? (lookup sg' y) })
                         (b:binding)
-                        (t0 t1:src_ty)
+                        (t0 t1:s_ty)
                         (d:sub_typing (sg'@(x,b)::sg) t0 t1)
   : GTot (d':sub_typing (rename_env sg' x y@(y,b)::sg) t0 t1 { s_height d' == s_height d })
          (decreases (s_height d))
@@ -691,14 +775,14 @@ let rec src_typing_renaming (sg sg':src_env)
                             (y:var { None? (lookup sg y) && None? (lookup sg' y) })
                             (b:binding)
                             (e:src_exp)
-                            (t:src_ty)
+                            (t:s_ty)
                             (d:src_typing (sg'@(x,b)::sg) e t)
   : GTot (d':src_typing (rename_env sg' x y@(y,b)::sg) (rename e x y) t { height d' == height d })
          (decreases (height d))
   = let aux (z:var { None? (lookup (sg'@(x,b)::sg) z) })
             (b':binding)
             (e:src_exp)
-            (t:src_ty)
+            (t:s_ty)
             (ds:src_typing ((z, b')::sg'@(x,b)::sg) e t { height ds < height d })
       : GTot (
           zz:var { None? (lookup (rename_env sg' x y@(y,b)::sg) zz) /\ zz <> x /\ zz <> y /\ zz == fresh ((y,b)::sg'@(x,b)::sg) } &
@@ -791,7 +875,7 @@ let rec src_typing_renaming (sg sg':src_env)
 let rec sub_typing_weakening (sg sg':src_env) 
                              (x:var { None? (lookup sg x) && None? (lookup sg' x) })
                              (b:binding)
-                             (t1 t2:src_ty)
+                             (t1 t2:s_ty)
                              (d:sub_typing (sg'@sg) t1 t2)
   : GTot (d':sub_typing (sg'@((x, b)::sg)) t1 t2 { s_height d == s_height d' })
          (decreases (s_height d))
@@ -801,7 +885,7 @@ let rec src_typing_weakening (sg sg':src_env)
                              (x:var { None? (lookup sg x) && None? (lookup sg' x) })
                              (b:binding)
                              (e:src_exp)
-                             (t:src_ty)                         
+                             (t:s_ty)                         
                              (d:src_typing (sg'@sg) e t)
   : GTot (d':src_typing (sg'@((x, b)::sg)) e t { height d == height d' })
          (decreases (height d))
@@ -879,7 +963,7 @@ let src_typing_weakening_l (sg:src_env)
                                  forall x. Some? (lookup sg' x) ==> None? (lookup sg x)
                            })
                            (e:src_exp)
-                           (t:src_ty)                         
+                           (t:s_ty)                         
                            (d:src_typing sg e t)
   : GTot (d':src_typing L.(sg' @ sg) e t { height d == height d' })
   = admit()
@@ -887,15 +971,70 @@ let src_typing_weakening_l (sg:src_env)
 let open_with_fvar_id (fv:R.fv) (x:R.term)
   : Lemma (RT.open_with (R.pack_ln (R.Tv_FVar fv)) x == (R.pack_ln (R.Tv_FVar fv)))
           [SMTPat (RT.open_with (R.pack_ln (R.Tv_FVar fv)) x)]
-  = admit()
+  = RT.open_with_spec (R.pack_ln (R.Tv_FVar fv)) x
 
-let subtyping_soundness (#sg:src_env) (#t0 #t1:src_ty) (ds:sub_typing sg t0 t1) (g:fstar_top_env)
+
+let open_term_fvar_id (fv:R.fv) (x:var)
+  : Lemma (RT.open_term (R.pack_ln (R.Tv_FVar fv)) x == (R.pack_ln (R.Tv_FVar fv)))
+          [SMTPat (RT.open_term (R.pack_ln (R.Tv_FVar fv)) x)]
+  = RT.open_term_spec (R.pack_ln (R.Tv_FVar fv)) x
+
+let subtyping_soundness (#sg:src_env) (#t0 #t1:s_ty) (ds:sub_typing sg t0 t1) (g:fstar_top_env)
   : GTot (RT.sub_typing (extend_env_l g sg) (elab_ty t0) (elab_ty t1))
   = admit()
-  
+
+#push-options "--query_stats --z3rlimit_factor 2"
+let bv0 = R.pack_bv (RT.make_bv 0 RT.bool_ty)
+
+let bv_as_arg (x:R.bv)
+  = let open R in
+    pack_ln (Tv_BVar x), Q_Explicit
+
+let var_as_arg (x:R.bv)
+  = let open R in
+    pack_ln (Tv_Var x), Q_Explicit
+
+let apply (e:R.term) (x:_)
+  : R.term
+  = let open R in
+    pack_ln (Tv_App e x) 
+
+let mk_refine (e:R.term)
+  : R.term 
+  = let open R in
+    let ref = apply e (bv_as_arg bv0) in
+    pack_ln (Tv_Refine bv0 (r_b2t ref))
+
+let apply_refinement_closed (e:src_exp { ln e && closed e })
+                            (x:var)
+  : Lemma (RT.open_term (r_b2t (apply (elab_exp e) (bv_as_arg bv0))) x
+           ==
+           r_b2t (apply (elab_exp e) (RT.var_as_term x, R.Q_Explicit)))
+  = RT.open_term_spec (r_b2t (apply (elab_exp e) (bv_as_arg bv0))) x;
+    src_refinements_are_closed_core 0 e (RT.OpenWith (RT.var_as_term x))
+    
+let elab_refinement_closed (e:src_exp { ln e && closed e }) (x:var)
+  : Lemma (RT.open_term (elab_ty (TRefineBool e)) x == mk_refine (elab_exp e))
+  = let open R in
+    let open RT in
+    RT.open_term_spec (elab_ty (TRefineBool e)) x;
+    let x = RT.OpenWith (RT.var_as_term x) in
+    calc (==) {
+      RT.open_or_close_term' (elab_ty (TRefineBool e)) x 0;
+    (==) {}
+      RT.open_or_close_term' (mk_refine (elab_exp e)) x 0;
+    (==) {}
+      mk_refine (RT.open_or_close_term' (elab_exp e) x 1);    
+    (==) { 
+           ln_weaker e (-1) 0;
+           src_refinements_are_closed_core 1 e x
+         }
+      mk_refine (elab_exp e);
+    }
+
 let rec soundness (#sg:src_env) 
                   (#se:src_exp { ln se })
-                  (#st:src_ty)
+                  (#st:s_ty)
                   (dd:src_typing sg se st)
                   (g:fstar_top_env)
   : GTot (RT.typing (extend_env_l g sg)
@@ -979,7 +1118,7 @@ let rec soundness (#sg:src_env)
 
 and src_ty_ok_soundness (g:fstar_top_env)
                         (sg:src_env)
-                        (t:src_ty { ln_ty t })
+                        (t:s_ty)
                         (dt:src_ty_ok sg t)
  : GTot (RT.typing (extend_env_l g sg) (elab_ty t) RT.tm_type)
         (decreases (t_height dt))
@@ -1002,14 +1141,14 @@ and src_ty_ok_soundness (g:fstar_top_env)
      let de : RT.typing (RT.extend_env (extend_env_l g sg) x RT.bool_ty)
                         (elab_exp e)
                         (elab_ty (TArrow TBool TBool)) = soundness de g in
-     let arg_x = R.pack_ln (R.Tv_Var (R.pack_bv (RT.make_bv x RT.bool_ty))) in
+     let arg_x = RT.var_as_term x in
      let arg_x_typing
        : RT.typing (RT.extend_env (extend_env_l g sg) x RT.bool_ty)
                    arg_x
                    RT.bool_ty
-       = RT.T_Var _ (R.pack_bv (RT.make_bv x RT.bool_ty))
+       = RT.T_Var _ (RT.var_as_bv x)
      in
-     let refinement = R.pack_ln (R.Tv_App (elab_exp e) (arg_x, R.Q_Explicit)) in
+     let refinement = apply (elab_exp e) (arg_x, R.Q_Explicit) in
      let dr : RT.typing (RT.extend_env (extend_env_l g sg) x RT.bool_ty)
                         refinement
                         RT.bool_ty
@@ -1026,12 +1165,9 @@ and src_ty_ok_soundness (g:fstar_top_env)
                         RT.tm_type
             = b2t_typing _ _ dr
      in
-     let arg_bv = R.pack_ln (R.Tv_BVar (R.pack_bv (RT.make_bv 0 RT.bool_ty))) in     
-     let refinement' = r_b2t (R.pack_ln (R.Tv_App (elab_exp e) (arg_bv, R.Q_Explicit))) in
-     assert (R.pack_ln (R.Tv_Refine (R.pack_bv (RT.make_bv 0 RT.bool_ty)) refinement') ==
-             elab_ty t);
-     //need a spec for RT.open_term
-     assume (RT.open_term refinement' x == r_b2t refinement);
+     apply_refinement_closed e x;
+     let refinement' = r_b2t (apply (elab_exp e) (bv_as_arg bv0)) in
+     assert (RT.open_term refinement' x == r_b2t refinement);
      let bool_typing
        : RT.typing (extend_env_l g sg) RT.bool_ty RT.tm_type 
        = RT.T_FVar _ RT.bool_fv
@@ -1040,7 +1176,7 @@ and src_ty_ok_soundness (g:fstar_top_env)
 
 let soundness_lemma (sg:src_env) 
                     (se:src_exp { ln se })
-                    (st:src_ty)
+                    (st:s_ty)
                     (g:fstar_top_env)
   : Lemma
     (requires src_typing sg se st)

@@ -268,7 +268,8 @@ and open_or_close_match_returns' (m:match_returns_ascription) (v:open_or_close) 
     b, (ret, as_, eq)
 
 let make_bv (n:nat) (t:term) = { bv_ppname = "_"; bv_index = n; bv_sort = t}
-let var_as_term (v:var) = pack_ln (Tv_Var (pack_bv (make_bv v (pack_ln Tv_Unknown))))
+let var_as_bv (v:var) = pack_bv (make_bv v (pack_ln Tv_Unknown))
+let var_as_term (v:var) = pack_ln (Tv_Var (var_as_bv v))
 
 val open_with (t:term) (v:term)
   : term
