@@ -18,7 +18,8 @@ module FStar.Tactics.InterpFuns
 
 (* This module is awful, don't even look at it please. *)
 
-open FStar open FStar.Compiler
+open FStar
+open FStar.Compiler
 open FStar.Compiler.Effect
 open FStar.Syntax.Syntax
 open FStar.Compiler.Range
@@ -4413,7 +4414,7 @@ let mk_metatc nm arity nunivs interp nbe_interp =
   }
 
 let mk_metatc_interpretation_2
-    (t : 't1 -> 't2 -> unit -> 'r)
+    (t : 't1 -> 't2 -> metatc 'r)
     (e1:embedding 't1)
     (e2:embedding 't2)
     (er:embedding 'r)
@@ -4434,7 +4435,7 @@ let mk_metatc_interpretation_2
 
 let mk_metatc_nbe_interpretation_2
     cb
-    (t : 't1 -> 't2 -> unit -> 'r)
+    (t : 't1 -> 't2 -> metatc 'r)
     (e1:NBET.embedding 't1)
     (e2:NBET.embedding 't2)
     (er:NBET.embedding 'r)
@@ -4454,11 +4455,11 @@ let mk_metatc_nbe_interpretation_2
 let mk_metatc_step_2
   (nunivs:int)
   (name:string)
-  (t : 't1 -> 't2 -> unit -> 'r)
+  (t : 't1 -> 't2 -> metatc 'r)
   (e1:embedding 't1)
   (e2:embedding 't2)
   (er:embedding 'r)
-  (nt : 'nt1 -> 'nt2 -> unit -> 'nr)
+  (nt : 'nt1 -> 'nt2 -> metatc 'nr)
   (ne1:NBET.embedding 'nt1)
   (ne2:NBET.embedding 'nt2)
   (ner:NBET.embedding 'nr)

@@ -18,7 +18,8 @@ module FStar.Tactics.InterpFuns
 
 (* This module is awful, don't even look at it please. *)
 
-open FStar open FStar.Compiler
+open FStar
+open FStar.Compiler
 open FStar.Compiler.Effect
 
 open FStar.Syntax.Embeddings
@@ -1253,14 +1254,16 @@ val mk_total_step_20 :
 
 /// MetaTc steps
 
+type metatc 'a = unit -> FStar.Tactics.Result.tc_result 'a
+
 val mk_metatc_step_2 :
   num_univs:int ->
   fn_name:string ->
-  ('t1 -> 't2 -> unit -> 'r) ->
+  ('t1 -> 't2 -> metatc 'r) ->
   embedding 't1 ->
   embedding 't2 ->
   er:embedding 'r ->
-  ('nt1 -> 'nt2 -> unit -> 'nr) ->
+  ('nt1 -> 'nt2 -> metatc 'nr) ->
   NBET.embedding 'nt1 ->
   NBET.embedding 'nt2 ->
   NBET.embedding 'nr ->

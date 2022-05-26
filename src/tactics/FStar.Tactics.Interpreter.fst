@@ -489,9 +489,9 @@ let () =
       //Meta TC primitive steps
       //
 
-      mk_metatc_step_2 0 "tc_term"
-        MetaTc.tc_term RE.e_env RE.e_term RE.e_term
-        MetaTc.tc_term NRE.e_env NRE.e_term NRE.e_term;
+      mk_metatc_step_2 0 "check_prop_validity"
+        MetaTc.check_prop_validity RE.e_env RE.e_term e_unit
+        MetaTc.check_prop_validity NRE.e_env NRE.e_term NBET.e_unit;
     ]
 
 let unembed_tactic_1_alt (ea:embedding 'a) (er:embedding 'r) (f:term) (ncb:norm_cb) : option ('a -> tac 'r) =
