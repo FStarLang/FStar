@@ -383,7 +383,11 @@ let merge (#elt: Type) (a1: array elt) (a2: Ghost.erased (array elt))
 
 /// Adjacency and merging are associative.
 let merge_assoc (#elt: Type) (a1 a2 a3: array elt) : Lemma
-  (requires (adjacent a1 a2 /\ adjacent a2 a3))
+  (requires (
+    (adjacent a1 a2 /\ adjacent a2 a3) \/
+    (adjacent a1 a2 /\ adjacent (merge a1 a2) a3) \/
+    (adjacent a2 a3 /\ adjacent a1 (merge a2 a3))
+  ))
   (ensures (
     adjacent (merge a1 a2) a3 /\ adjacent a1 (merge a2 a3) /\
     merge (merge a1 a2) a3 == merge a1 (merge a2 a3)
