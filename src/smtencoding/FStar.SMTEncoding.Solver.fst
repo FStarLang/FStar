@@ -349,7 +349,6 @@ let errors_to_report (settings : query_settings) : list Errors.error =
         in
         match find_localized_errors settings.query_errors with
         | Some err ->
-          // FStar.Errors.log_issue settings.query_range (FStar.Errors.Warning_SMTErrorReason, smt_error);
           FStar.TypeChecker.Err.errors_smt_detail settings.query_env err.error_messages smt_error
         | None ->
           FStar.TypeChecker.Err.errors_smt_detail
@@ -384,9 +383,6 @@ let errors_to_report (settings : query_settings) : list Errors.error =
            detail_errors false settings.query_env settings.query_all_labels ask_z3
     in
     basic_errors
-
-let report_errors qry_settings =
-    FStar.Errors.add_errors (errors_to_report qry_settings)
 
 let query_info settings z3result =
     let process_unsat_core (core:unsat_core) =
@@ -535,7 +531,7 @@ let query_info settings z3result =
         if Options.print_z3_statistics () then process_unsat_core core;
         errs |> List.iter (fun (_, msg, range) ->
             let tag = if used_hint settings then "(Hint-replay failed): " else "" in
-            FStar.Errors.log_issue range (FStar.Errors.Warning_HitReplayFailed, (tag ^ msg)))
+            Err.log_issue range (Err.Warning_HitReplayFailed, (tag ^ msg)))
     end
 
 //caller must ensure that the recorded_hints is already initiailized
@@ -618,7 +614,13 @@ let collect (l : list 'a) : list ('a * int) =
     in
     List.fold_left add_one acc l
 
-let ask_and_report_errors env all_labels prefix query suffix : unit =
+let ask_and_return_errors
+  env
+  all_labels
+  prefix
+  query
+  suffix : list Err.error =
+
     Z3.giveZ3 prefix; //feed the context of the query to the solver
 
     let default_settings, next_hint =
@@ -707,7 +709,7 @@ let ask_and_report_errors env all_labels prefix query suffix : unit =
         fold_queries configs check_one_config process_result
     in
 
-    let quake_and_check_all_configs configs =
+    let quake_and_check_all_configs configs : list Err.error =
         let lo   = Options.quake_lo () in
         let hi   = Options.quake_hi () in
         let seed = Options.z3_seed () in
@@ -827,36 +829,44 @@ let ask_and_report_errors env all_labels prefix query suffix : unit =
                 then (e, m ^ BU.format1 " (%s times)" (string_of_int n), r, ctx)
                 else (e, m, r, ctx))
             in
-            (* Now report them *)
-            FStar.Errors.add_errors errs;
 
             (* Get the range of lid we're checking for the quake error *)
             let rng = match snd (env.qtbl_name_and_index) with
                       | Some (l, _) -> Ident.range_of_lid l
                       | _ -> Range.dummyRange
             in
-            (* Adding another error for the threshold (but not for --retry) *)
-            if quaking then
-              FStar.TypeChecker.Err.log_issue
-                env rng
-                (Errors.Error_QuakeFailed,
+
+            let quake_err =
+              if quaking
+              then 
+                let msg =
                   BU.format6
                     "Query %s failed the quake test, %s out of %s attempts succeded, \
                      but the threshold was %s out of %s%s"
-                     name
+                    name
                     (string_of_int nsuccess)
                     (string_of_int total_ran)
                     (string_of_int lo)
                     (string_of_int hi)
-                    (if total_ran < hi then " (early abort)" else ""))
-
+                    (if total_ran < hi then " (early abort)" else "") in
+                [FStar.TypeChecker.Err.detailed_error
+                   env
+                   rng
+                   (Errors.Error_QuakeFailed, msg)]
+              else [] in
+              
+            errs @ quake_err
           end
-          else begin
-            (* Just report them as usual *)
-            let report errs = report_errors ({default_settings with query_errors=errs}) in
-            List.iter report all_errs
-          end
+          else
+            //
+            //Not quaking or retrying
+            //
+            all_errs
+            |> List.map (fun err -> {default_settings with query_errors=err})
+            |> List.map errors_to_report
+            |> List.flatten
         end
+        else []
     in
 
     let skip =
@@ -870,10 +880,12 @@ let ask_and_report_errors env all_labels prefix query suffix : unit =
          | None -> false) in
 
     if skip
-    then if Options.record_hints () && next_hint |> is_some
-         //restore the hint as is, cf. #1651
-         then next_hint |> must |> store_hint
-         else ()
+    then begin
+      if Options.record_hints () && next_hint |> is_some
+      //restore the hint as is, cf. #1651
+      then next_hint |> must |> store_hint;
+      []
+    end
     else quake_and_check_all_configs all_configs
 
 type solver_cfg = {
@@ -903,7 +915,7 @@ let should_refresh env =
     | Some cfg ->
         not (cfg = get_cfg env)
 
-let do_solve use_env_msg tcenv q : unit =
+let do_solve use_env_msg tcenv q : list Err.error =
     if should_refresh tcenv then begin
       save_cfg tcenv;
       Z3.refresh ()
@@ -914,35 +926,44 @@ let do_solve use_env_msg tcenv q : unit =
       let prefix, labels, qry, suffix = Encode.encode_query use_env_msg tcenv q in
       let tcenv = incr_query_index tcenv in
       match qry with
-      | Assume({assumption_term={tm=App(FalseOp, _)}}) -> pop()
-      | _ when tcenv.admit -> pop()
+      | Assume({assumption_term={tm=App(FalseOp, _)}})
+      | _ when tcenv.admit -> pop(); []
+
       | Assume _ ->
-        ask_and_report_errors tcenv labels prefix qry suffix;
-        pop ()
+        let res = ask_and_return_errors tcenv labels prefix qry suffix in
+        pop ();
+        res
 
       | _ -> failwith "Impossible"
     with
       | FStar.SMTEncoding.Env.Inner_let_rec names ->  //can be raised by encode_query
         pop ();  //AR: Important, we push-ed before encode_query was called
-        FStar.TypeChecker.Err.log_issue
-          tcenv tcenv.range
-          (Errors.Error_NonTopRecFunctionNotFullyEncoded,
-           BU.format1
-             "Could not encode the query since F* does not support precise smtencoding of inner let-recs yet (in this case %s)"
-             (String.concat "," (List.map fst names)))
+        [FStar.TypeChecker.Err.detailed_error
+           tcenv
+           tcenv.range
+           (Err.Error_NonTopRecFunctionNotFullyEncoded,
+            BU.format1
+              "Could not encode the query since F* does not support precise smtencoding of inner let-recs yet (in this case %s)"
+              (String.concat "," (List.map fst names)))]
 
-let solve use_env_msg tcenv q : unit =
+let ask_solver use_env_msg tcenv q : list Err.error =
     if Options.no_smt () then
-        FStar.TypeChecker.Err.log_issue
-          tcenv tcenv.range
-            (Errors.Error_NoSMTButNeeded,
-             BU.format1 "Q = %s\nA query could not be solved internally, and --no_smt was given" (Print.term_to_string q))
+        [FStar.TypeChecker.Err.detailed_error
+           tcenv
+           tcenv.range
+           (Errors.Error_NoSMTButNeeded,
+            BU.format1
+              "Q = %s\nA query could not be solved internally, and --no_smt was given" 
+              (Print.term_to_string q))]
     else
-    Profiling.profile
-      (fun () -> do_solve use_env_msg tcenv q)
-      (Some (Ident.string_of_lid (Env.current_module tcenv)))
-      "FStar.SMTEncoding.solve_top_level"
+      Profiling.profile
+        (fun () -> do_solve use_env_msg tcenv q)
+        (Some (Ident.string_of_lid (Env.current_module tcenv)))
+        "FStar.SMTEncoding.solve_top_level"
 
+let solve use_env_msg tcenv q =
+  let errs = ask_solver use_env_msg tcenv q in
+  Err.add_errors errs
 
 (**********************************************************************************************)
 (* Top-level interface *)
@@ -958,6 +979,7 @@ let solver = {
     preprocess=(fun e g -> [e,g, FStar.Options.peek ()]);
     handle_smt_goal=(fun e g -> [e,g]);
     solve=solve;
+    ask_solver=ask_solver None;
     finish=Z3.finish;
     refresh=Z3.refresh;
 }
@@ -971,6 +993,7 @@ let dummy = {
     preprocess=(fun e g -> [e,g, FStar.Options.peek ()]);
     handle_smt_goal=(fun e g -> [e,g]);
     solve=(fun _ _ _ -> ());
+    ask_solver=(fun _ _ -> []);
     finish=(fun () -> ());
     refresh=(fun () -> ());
 }
