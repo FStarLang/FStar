@@ -636,6 +636,7 @@ let solve_gen_elim_prop_placeholder
     end
   | _ -> T.fail "ill-formed squash"
 
-[@@ resolve_implicits; framing_implicit; plugin]
+[@@ resolve_implicits; framing_implicit; plugin;
+    override_resolve_implicits_handler framing_implicit [`%Steel.Effect.Common.init_resolve_tac]]
 let init_resolve_tac () = init_resolve_tac'
   [(`gen_elim_prop_placeholder), solve_gen_elim_prop_placeholder]
