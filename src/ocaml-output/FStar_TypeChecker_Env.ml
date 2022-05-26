@@ -360,6 +360,7 @@ and solver_t =
     (unit -> Prims.string) FStar_Pervasives_Native.option ->
       env -> goal -> unit
     ;
+  ask_solver: env -> goal -> FStar_Errors.error Prims.list ;
   finish: unit -> unit ;
   refresh: unit -> unit }
 and tcenv_hooks =
@@ -1200,23 +1201,23 @@ let (__proj__Mksolver_t__item__init : solver_t -> env -> unit) =
   fun projectee ->
     match projectee with
     | { init; push; pop; snapshot; rollback; encode_sig; preprocess;
-        handle_smt_goal; solve; finish; refresh;_} -> init
+        handle_smt_goal; solve; ask_solver; finish; refresh;_} -> init
 let (__proj__Mksolver_t__item__push : solver_t -> Prims.string -> unit) =
   fun projectee ->
     match projectee with
     | { init; push; pop; snapshot; rollback; encode_sig; preprocess;
-        handle_smt_goal; solve; finish; refresh;_} -> push
+        handle_smt_goal; solve; ask_solver; finish; refresh;_} -> push
 let (__proj__Mksolver_t__item__pop : solver_t -> Prims.string -> unit) =
   fun projectee ->
     match projectee with
     | { init; push; pop; snapshot; rollback; encode_sig; preprocess;
-        handle_smt_goal; solve; finish; refresh;_} -> pop
+        handle_smt_goal; solve; ask_solver; finish; refresh;_} -> pop
 let (__proj__Mksolver_t__item__snapshot :
   solver_t -> Prims.string -> ((Prims.int * Prims.int * Prims.int) * unit)) =
   fun projectee ->
     match projectee with
     | { init; push; pop; snapshot; rollback; encode_sig; preprocess;
-        handle_smt_goal; solve; finish; refresh;_} -> snapshot
+        handle_smt_goal; solve; ask_solver; finish; refresh;_} -> snapshot
 let (__proj__Mksolver_t__item__rollback :
   solver_t ->
     Prims.string ->
@@ -1226,13 +1227,13 @@ let (__proj__Mksolver_t__item__rollback :
   fun projectee ->
     match projectee with
     | { init; push; pop; snapshot; rollback; encode_sig; preprocess;
-        handle_smt_goal; solve; finish; refresh;_} -> rollback
+        handle_smt_goal; solve; ask_solver; finish; refresh;_} -> rollback
 let (__proj__Mksolver_t__item__encode_sig :
   solver_t -> env -> FStar_Syntax_Syntax.sigelt -> unit) =
   fun projectee ->
     match projectee with
     | { init; push; pop; snapshot; rollback; encode_sig; preprocess;
-        handle_smt_goal; solve; finish; refresh;_} -> encode_sig
+        handle_smt_goal; solve; ask_solver; finish; refresh;_} -> encode_sig
 let (__proj__Mksolver_t__item__preprocess :
   solver_t ->
     env -> goal -> (env * goal * FStar_Options.optionstate) Prims.list)
@@ -1240,13 +1241,14 @@ let (__proj__Mksolver_t__item__preprocess :
   fun projectee ->
     match projectee with
     | { init; push; pop; snapshot; rollback; encode_sig; preprocess;
-        handle_smt_goal; solve; finish; refresh;_} -> preprocess
+        handle_smt_goal; solve; ask_solver; finish; refresh;_} -> preprocess
 let (__proj__Mksolver_t__item__handle_smt_goal :
   solver_t -> env -> goal -> (env * goal) Prims.list) =
   fun projectee ->
     match projectee with
     | { init; push; pop; snapshot; rollback; encode_sig; preprocess;
-        handle_smt_goal; solve; finish; refresh;_} -> handle_smt_goal
+        handle_smt_goal; solve; ask_solver; finish; refresh;_} ->
+        handle_smt_goal
 let (__proj__Mksolver_t__item__solve :
   solver_t ->
     (unit -> Prims.string) FStar_Pervasives_Native.option ->
@@ -1255,17 +1257,23 @@ let (__proj__Mksolver_t__item__solve :
   fun projectee ->
     match projectee with
     | { init; push; pop; snapshot; rollback; encode_sig; preprocess;
-        handle_smt_goal; solve; finish; refresh;_} -> solve
+        handle_smt_goal; solve; ask_solver; finish; refresh;_} -> solve
+let (__proj__Mksolver_t__item__ask_solver :
+  solver_t -> env -> goal -> FStar_Errors.error Prims.list) =
+  fun projectee ->
+    match projectee with
+    | { init; push; pop; snapshot; rollback; encode_sig; preprocess;
+        handle_smt_goal; solve; ask_solver; finish; refresh;_} -> ask_solver
 let (__proj__Mksolver_t__item__finish : solver_t -> unit -> unit) =
   fun projectee ->
     match projectee with
     | { init; push; pop; snapshot; rollback; encode_sig; preprocess;
-        handle_smt_goal; solve; finish; refresh;_} -> finish
+        handle_smt_goal; solve; ask_solver; finish; refresh;_} -> finish
 let (__proj__Mksolver_t__item__refresh : solver_t -> unit -> unit) =
   fun projectee ->
     match projectee with
     | { init; push; pop; snapshot; rollback; encode_sig; preprocess;
-        handle_smt_goal; solve; finish; refresh;_} -> refresh
+        handle_smt_goal; solve; ask_solver; finish; refresh;_} -> refresh
 let (__proj__Mktcenv_hooks__item__tc_push_in_gamma_hook :
   tcenv_hooks ->
     env ->
@@ -6285,6 +6293,7 @@ let (dummy_solver : solver_t) =
            [uu___]);
     handle_smt_goal = (fun e -> fun g -> [(e, g)]);
     solve = (fun uu___ -> fun uu___1 -> fun uu___2 -> ());
+    ask_solver = (fun uu___ -> fun uu___1 -> []);
     finish = (fun uu___ -> ());
     refresh = (fun uu___ -> ())
   }

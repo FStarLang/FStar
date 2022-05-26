@@ -661,10 +661,6 @@ let (errors_to_report : query_settings -> FStar_Errors.error Prims.list) =
          settings.query_env settings.query_all_labels ask_z3
      else ());
     basic_errors
-let (report_errors : query_settings -> unit) =
-  fun qry_settings ->
-    let uu___ = errors_to_report qry_settings in
-    FStar_Errors.add_errors uu___
 let (query_info : query_settings -> FStar_SMTEncoding_Z3.z3result -> unit) =
   fun settings ->
     fun z3result ->
@@ -978,12 +974,13 @@ let collect : 'a . 'a Prims.list -> ('a * Prims.int) Prims.list =
           then (h, (n + Prims.int_one)) :: t
           else (let uu___1 = add_one t x in (h, n) :: uu___1) in
     FStar_Compiler_List.fold_left add_one acc l
-let (ask_and_report_errors :
+let (ask_and_return_errors :
   FStar_TypeChecker_Env.env ->
     FStar_SMTEncoding_Term.error_labels ->
       FStar_SMTEncoding_Term.decl Prims.list ->
         FStar_SMTEncoding_Term.decl ->
-          FStar_SMTEncoding_Term.decl Prims.list -> unit)
+          FStar_SMTEncoding_Term.decl Prims.list ->
+            FStar_Errors.error Prims.list)
   =
   fun env ->
     fun all_labels ->
@@ -1395,69 +1392,79 @@ let (ask_and_report_errors :
                                                Prims.op_Hat m uu___7 in
                                              (e, uu___6, r, ctx)
                                            else (e, m, r, ctx))) in
-                             (FStar_Errors.add_errors errs2;
-                              (let rng =
-                                 match FStar_Pervasives_Native.snd
-                                         env.FStar_TypeChecker_Env.qtbl_name_and_index
-                                 with
-                                 | FStar_Pervasives_Native.Some (l, uu___6)
-                                     -> FStar_Ident.range_of_lid l
-                                 | uu___6 -> FStar_Compiler_Range.dummyRange in
+                             let rng =
+                               match FStar_Pervasives_Native.snd
+                                       env.FStar_TypeChecker_Env.qtbl_name_and_index
+                               with
+                               | FStar_Pervasives_Native.Some (l, uu___5) ->
+                                   FStar_Ident.range_of_lid l
+                               | uu___5 -> FStar_Compiler_Range.dummyRange in
+                             let quake_err =
                                if quaking
                                then
-                                 let uu___6 =
+                                 let msg =
+                                   let uu___5 =
+                                     FStar_Compiler_Util.string_of_int
+                                       nsuccess in
+                                   let uu___6 =
+                                     FStar_Compiler_Util.string_of_int
+                                       total_ran in
                                    let uu___7 =
-                                     let uu___8 =
-                                       FStar_Compiler_Util.string_of_int
-                                         nsuccess in
-                                     let uu___9 =
-                                       FStar_Compiler_Util.string_of_int
-                                         total_ran in
-                                     let uu___10 =
-                                       FStar_Compiler_Util.string_of_int lo1 in
-                                     let uu___11 =
-                                       FStar_Compiler_Util.string_of_int hi1 in
-                                     FStar_Compiler_Util.format6
-                                       "Query %s failed the quake test, %s out of %s attempts succeded, but the threshold was %s out of %s%s"
-                                       name uu___8 uu___9 uu___10 uu___11
-                                       (if total_ran < hi1
-                                        then " (early abort)"
-                                        else "") in
-                                   (FStar_Errors.Error_QuakeFailed, uu___7) in
-                                 FStar_TypeChecker_Err.log_issue env rng
-                                   uu___6
-                               else ()))
+                                     FStar_Compiler_Util.string_of_int lo1 in
+                                   let uu___8 =
+                                     FStar_Compiler_Util.string_of_int hi1 in
+                                   FStar_Compiler_Util.format6
+                                     "Query %s failed the quake test, %s out of %s attempts succeded, but the threshold was %s out of %s%s"
+                                     name uu___5 uu___6 uu___7 uu___8
+                                     (if total_ran < hi1
+                                      then " (early abort)"
+                                      else "") in
+                                 let uu___5 =
+                                   FStar_TypeChecker_Err.detailed_error env
+                                     rng
+                                     (FStar_Errors.Error_QuakeFailed, msg) in
+                                 [uu___5]
+                               else [] in
+                             FStar_Compiler_List.op_At errs2 quake_err
                            else
-                             (let report errs =
-                                report_errors
-                                  {
-                                    query_env = (default_settings.query_env);
-                                    query_decl =
-                                      (default_settings.query_decl);
-                                    query_name =
-                                      (default_settings.query_name);
-                                    query_index =
-                                      (default_settings.query_index);
-                                    query_range =
-                                      (default_settings.query_range);
-                                    query_fuel =
-                                      (default_settings.query_fuel);
-                                    query_ifuel =
-                                      (default_settings.query_ifuel);
-                                    query_rlimit =
-                                      (default_settings.query_rlimit);
-                                    query_hint =
-                                      (default_settings.query_hint);
-                                    query_errors = errs;
-                                    query_all_labels =
-                                      (default_settings.query_all_labels);
-                                    query_suffix =
-                                      (default_settings.query_suffix);
-                                    query_hash =
-                                      (default_settings.query_hash)
-                                  } in
-                              FStar_Compiler_List.iter report all_errs))
-                        else ()) in
+                             (let uu___6 =
+                                let uu___7 =
+                                  FStar_Compiler_Effect.op_Bar_Greater
+                                    all_errs
+                                    (FStar_Compiler_List.map
+                                       (fun err ->
+                                          {
+                                            query_env =
+                                              (default_settings.query_env);
+                                            query_decl =
+                                              (default_settings.query_decl);
+                                            query_name =
+                                              (default_settings.query_name);
+                                            query_index =
+                                              (default_settings.query_index);
+                                            query_range =
+                                              (default_settings.query_range);
+                                            query_fuel =
+                                              (default_settings.query_fuel);
+                                            query_ifuel =
+                                              (default_settings.query_ifuel);
+                                            query_rlimit =
+                                              (default_settings.query_rlimit);
+                                            query_hint =
+                                              (default_settings.query_hint);
+                                            query_errors = err;
+                                            query_all_labels =
+                                              (default_settings.query_all_labels);
+                                            query_suffix =
+                                              (default_settings.query_suffix);
+                                            query_hash =
+                                              (default_settings.query_hash)
+                                          })) in
+                                FStar_Compiler_Effect.op_Bar_Greater uu___7
+                                  (FStar_Compiler_List.map errors_to_report) in
+                              FStar_Compiler_Effect.op_Bar_Greater uu___6
+                                FStar_Compiler_List.flatten))
+                        else []) in
                  let skip =
                    ((FStar_Options.admit_smt_queries ()) ||
                       (FStar_TypeChecker_Env.too_early_in_prims env))
@@ -1473,17 +1480,18 @@ let (ask_and_report_errors :
                       | FStar_Pervasives_Native.None -> false) in
                  if skip
                  then
-                   let uu___2 =
-                     (FStar_Options.record_hints ()) &&
-                       (FStar_Compiler_Effect.op_Bar_Greater next_hint
-                          FStar_Compiler_Util.is_some) in
-                   (if uu___2
-                    then
-                      let uu___3 =
-                        FStar_Compiler_Effect.op_Bar_Greater next_hint
-                          FStar_Compiler_Util.must in
-                      FStar_Compiler_Effect.op_Bar_Greater uu___3 store_hint
-                    else ())
+                   ((let uu___3 =
+                       (FStar_Options.record_hints ()) &&
+                         (FStar_Compiler_Effect.op_Bar_Greater next_hint
+                            FStar_Compiler_Util.is_some) in
+                     if uu___3
+                     then
+                       let uu___4 =
+                         FStar_Compiler_Effect.op_Bar_Greater next_hint
+                           FStar_Compiler_Util.must in
+                       FStar_Compiler_Effect.op_Bar_Greater uu___4 store_hint
+                     else ());
+                    [])
                  else quake_and_check_all_configs all_configs)
 type solver_cfg =
   {
@@ -1545,7 +1553,8 @@ let (should_refresh : FStar_TypeChecker_Env.env -> Prims.bool) =
         Prims.op_Negation uu___1
 let (do_solve :
   (unit -> Prims.string) FStar_Pervasives_Native.option ->
-    FStar_TypeChecker_Env.env -> FStar_Syntax_Syntax.term -> unit)
+    FStar_TypeChecker_Env.env ->
+      FStar_Syntax_Syntax.term -> FStar_Errors.error Prims.list)
   =
   fun use_env_msg ->
     fun tcenv ->
@@ -1594,13 +1603,15 @@ let (do_solve :
                               FStar_SMTEncoding_Term.assumption_name = uu___8;
                               FStar_SMTEncoding_Term.assumption_fact_ids =
                                 uu___9;_}
-                            -> pop ()
+                            when tcenv1.FStar_TypeChecker_Env.admit ->
+                            (pop (); [])
                         | uu___4 when tcenv1.FStar_TypeChecker_Env.admit ->
-                            pop ()
+                            (pop (); [])
                         | FStar_SMTEncoding_Term.Assume uu___4 ->
-                            (ask_and_report_errors tcenv1 labels prefix qry
-                               suffix;
-                             pop ())
+                            let res =
+                              ask_and_return_errors tcenv1 labels prefix qry
+                                suffix in
+                            (pop (); res)
                         | uu___4 -> failwith "Impossible"))) ()
          with
          | FStar_SMTEncoding_Env.Inner_let_rec names ->
@@ -1609,19 +1620,22 @@ let (do_solve :
                  let uu___5 =
                    let uu___6 =
                      let uu___7 =
-                       FStar_Compiler_List.map FStar_Pervasives_Native.fst
-                         names in
-                     FStar_String.concat "," uu___7 in
-                   FStar_Compiler_Util.format1
-                     "Could not encode the query since F* does not support precise smtencoding of inner let-recs yet (in this case %s)"
-                     uu___6 in
-                 (FStar_Errors.Error_NonTopRecFunctionNotFullyEncoded,
-                   uu___5) in
-               FStar_TypeChecker_Err.log_issue tcenv
-                 tcenv.FStar_TypeChecker_Env.range uu___4)))
-let (solve :
+                       let uu___8 =
+                         FStar_Compiler_List.map FStar_Pervasives_Native.fst
+                           names in
+                       FStar_String.concat "," uu___8 in
+                     FStar_Compiler_Util.format1
+                       "Could not encode the query since F* does not support precise smtencoding of inner let-recs yet (in this case %s)"
+                       uu___7 in
+                   (FStar_Errors.Error_NonTopRecFunctionNotFullyEncoded,
+                     uu___6) in
+                 FStar_TypeChecker_Err.detailed_error tcenv
+                   tcenv.FStar_TypeChecker_Env.range uu___5 in
+               [uu___4])))
+let (ask_solver :
   (unit -> Prims.string) FStar_Pervasives_Native.option ->
-    FStar_TypeChecker_Env.env -> FStar_Syntax_Syntax.term -> unit)
+    FStar_TypeChecker_Env.env ->
+      FStar_Syntax_Syntax.term -> FStar_Errors.error Prims.list)
   =
   fun use_env_msg ->
     fun tcenv ->
@@ -1631,13 +1645,15 @@ let (solve :
         then
           let uu___1 =
             let uu___2 =
-              let uu___3 = FStar_Syntax_Print.term_to_string q in
-              FStar_Compiler_Util.format1
-                "Q = %s\nA query could not be solved internally, and --no_smt was given"
-                uu___3 in
-            (FStar_Errors.Error_NoSMTButNeeded, uu___2) in
-          FStar_TypeChecker_Err.log_issue tcenv
-            tcenv.FStar_TypeChecker_Env.range uu___1
+              let uu___3 =
+                let uu___4 = FStar_Syntax_Print.term_to_string q in
+                FStar_Compiler_Util.format1
+                  "Q = %s\nA query could not be solved internally, and --no_smt was given"
+                  uu___4 in
+              (FStar_Errors.Error_NoSMTButNeeded, uu___3) in
+            FStar_TypeChecker_Err.detailed_error tcenv
+              tcenv.FStar_TypeChecker_Env.range uu___2 in
+          [uu___1]
         else
           (let uu___2 =
              let uu___3 =
@@ -1647,6 +1663,15 @@ let (solve :
            FStar_Profiling.profile
              (fun uu___3 -> do_solve use_env_msg tcenv q) uu___2
              "FStar.SMTEncoding.solve_top_level")
+let (solve :
+  (unit -> Prims.string) FStar_Pervasives_Native.option ->
+    FStar_TypeChecker_Env.env -> FStar_Syntax_Syntax.term -> unit)
+  =
+  fun use_env_msg ->
+    fun tcenv ->
+      fun q ->
+        let errs = ask_solver use_env_msg tcenv q in
+        FStar_Errors.add_errors errs
 let (solver : FStar_TypeChecker_Env.solver_t) =
   {
     FStar_TypeChecker_Env.init =
@@ -1663,6 +1688,8 @@ let (solver : FStar_TypeChecker_Env.solver_t) =
            [uu___]);
     FStar_TypeChecker_Env.handle_smt_goal = (fun e -> fun g -> [(e, g)]);
     FStar_TypeChecker_Env.solve = solve;
+    FStar_TypeChecker_Env.ask_solver =
+      (ask_solver FStar_Pervasives_Native.None);
     FStar_TypeChecker_Env.finish = FStar_SMTEncoding_Z3.finish;
     FStar_TypeChecker_Env.refresh = FStar_SMTEncoding_Z3.refresh
   }
@@ -1683,6 +1710,7 @@ let (dummy : FStar_TypeChecker_Env.solver_t) =
     FStar_TypeChecker_Env.handle_smt_goal = (fun e -> fun g -> [(e, g)]);
     FStar_TypeChecker_Env.solve =
       (fun uu___ -> fun uu___1 -> fun uu___2 -> ());
+    FStar_TypeChecker_Env.ask_solver = (fun uu___ -> fun uu___1 -> []);
     FStar_TypeChecker_Env.finish = (fun uu___ -> ());
     FStar_TypeChecker_Env.refresh = (fun uu___ -> ())
   }

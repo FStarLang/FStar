@@ -93,6 +93,71 @@ let print_discrepancy :
                 | (xs, ys, true) -> (xs, ys)
                 | uu___2 -> let uu___3 = succ cur in go uu___3)) in
         FStar_Options.with_saved_options (fun uu___ -> go bas)
+let (get_error_with_smt_detail :
+  FStar_TypeChecker_Env.env ->
+    (Prims.string, Prims.string) FStar_Pervasives.either ->
+      FStar_Errors.error -> FStar_Errors.error)
+  =
+  fun env ->
+    fun smt_detail ->
+      fun uu___ ->
+        match uu___ with
+        | (e, msg, r, ctx) ->
+            let maybe_add_smt_detail msg1 =
+              match smt_detail with
+              | FStar_Pervasives.Inr d ->
+                  Prims.op_Hat msg1 (Prims.op_Hat "\n\t" d)
+              | FStar_Pervasives.Inl d when
+                  (FStar_Compiler_Util.trim_string d) <> "" ->
+                  Prims.op_Hat msg1 (Prims.op_Hat "; " d)
+              | uu___1 -> msg1 in
+            let uu___1 =
+              if r = FStar_Compiler_Range.dummyRange
+              then
+                let uu___2 = FStar_TypeChecker_Env.get_range env in
+                (e, msg, uu___2, ctx)
+              else
+                (let r' =
+                   let uu___3 = FStar_Compiler_Range.use_range r in
+                   FStar_Compiler_Range.set_def_range r uu___3 in
+                 let uu___3 =
+                   let uu___4 = FStar_Compiler_Range.file_of_range r' in
+                   let uu___5 =
+                     let uu___6 = FStar_TypeChecker_Env.get_range env in
+                     FStar_Compiler_Range.file_of_range uu___6 in
+                   uu___4 <> uu___5 in
+                 if uu___3
+                 then
+                   let uu___4 =
+                     let uu___5 =
+                       let uu___6 =
+                         let uu___7 =
+                           FStar_Compiler_Range.string_of_use_range r in
+                         let uu___8 =
+                           let uu___9 =
+                             let uu___10 =
+                               let uu___11 = FStar_Compiler_Range.use_range r in
+                               let uu___12 = FStar_Compiler_Range.def_range r in
+                               uu___11 <> uu___12 in
+                             if uu___10
+                             then
+                               let uu___11 =
+                                 let uu___12 =
+                                   FStar_Compiler_Range.string_of_def_range r in
+                                 Prims.op_Hat uu___12 ")" in
+                               Prims.op_Hat "(Other related locations: "
+                                 uu___11
+                             else "" in
+                           Prims.op_Hat ")" uu___9 in
+                         Prims.op_Hat uu___7 uu___8 in
+                       Prims.op_Hat " (Also see: " uu___6 in
+                     Prims.op_Hat msg uu___5 in
+                   let uu___5 = FStar_TypeChecker_Env.get_range env in
+                   (e, uu___4, uu___5, ctx)
+                 else (e, msg, r, ctx)) in
+            (match uu___1 with
+             | (e1, msg1, r1, ctx1) ->
+                 (e1, (maybe_add_smt_detail msg1), r1, ctx1))
 let (errors_smt_detail :
   FStar_TypeChecker_Env.env ->
     FStar_Errors.error Prims.list ->
@@ -102,75 +167,8 @@ let (errors_smt_detail :
   fun env ->
     fun errs ->
       fun smt_detail ->
-        let maybe_add_smt_detail msg =
-          match smt_detail with
-          | FStar_Pervasives.Inr d ->
-              Prims.op_Hat msg (Prims.op_Hat "\n\t" d)
-          | FStar_Pervasives.Inl d when
-              (FStar_Compiler_Util.trim_string d) <> "" ->
-              Prims.op_Hat msg (Prims.op_Hat "; " d)
-          | uu___ -> msg in
-        let errs1 =
-          FStar_Compiler_Effect.op_Bar_Greater errs
-            (FStar_Compiler_List.map
-               (fun uu___ ->
-                  match uu___ with
-                  | (e, msg, r, ctx) ->
-                      let uu___1 =
-                        if r = FStar_Compiler_Range.dummyRange
-                        then
-                          let uu___2 = FStar_TypeChecker_Env.get_range env in
-                          (e, msg, uu___2, ctx)
-                        else
-                          (let r' =
-                             let uu___3 = FStar_Compiler_Range.use_range r in
-                             FStar_Compiler_Range.set_def_range r uu___3 in
-                           let uu___3 =
-                             let uu___4 =
-                               FStar_Compiler_Range.file_of_range r' in
-                             let uu___5 =
-                               let uu___6 =
-                                 FStar_TypeChecker_Env.get_range env in
-                               FStar_Compiler_Range.file_of_range uu___6 in
-                             uu___4 <> uu___5 in
-                           if uu___3
-                           then
-                             let uu___4 =
-                               let uu___5 =
-                                 let uu___6 =
-                                   let uu___7 =
-                                     FStar_Compiler_Range.string_of_use_range
-                                       r in
-                                   let uu___8 =
-                                     let uu___9 =
-                                       let uu___10 =
-                                         let uu___11 =
-                                           FStar_Compiler_Range.use_range r in
-                                         let uu___12 =
-                                           FStar_Compiler_Range.def_range r in
-                                         uu___11 <> uu___12 in
-                                       if uu___10
-                                       then
-                                         let uu___11 =
-                                           let uu___12 =
-                                             FStar_Compiler_Range.string_of_def_range
-                                               r in
-                                           Prims.op_Hat uu___12 ")" in
-                                         Prims.op_Hat
-                                           "(Other related locations: "
-                                           uu___11
-                                       else "" in
-                                     Prims.op_Hat ")" uu___9 in
-                                   Prims.op_Hat uu___7 uu___8 in
-                                 Prims.op_Hat " (Also see: " uu___6 in
-                               Prims.op_Hat msg uu___5 in
-                             let uu___5 = FStar_TypeChecker_Env.get_range env in
-                             (e, uu___4, uu___5, ctx)
-                           else (e, msg, r, ctx)) in
-                      (match uu___1 with
-                       | (e1, msg1, r1, ctx1) ->
-                           (e1, (maybe_add_smt_detail msg1), r1, ctx1)))) in
-        errs1
+        FStar_Compiler_Effect.op_Bar_Greater errs
+          (FStar_Compiler_List.map (get_error_with_smt_detail env smt_detail))
 let (add_errors_smt_detail :
   FStar_TypeChecker_Env.env ->
     FStar_Errors.error Prims.list ->
@@ -200,6 +198,19 @@ let (log_issue :
                 let uu___3 = FStar_Errors.get_ctx () in (e, m, r, uu___3) in
               [uu___2] in
             add_errors env uu___1
+let (detailed_error :
+  FStar_TypeChecker_Env.env ->
+    FStar_Compiler_Range.range ->
+      (FStar_Errors.raw_error * Prims.string) -> FStar_Errors.error)
+  =
+  fun env ->
+    fun r ->
+      fun uu___ ->
+        match uu___ with
+        | (e, m) ->
+            let uu___1 =
+              let uu___2 = FStar_Errors.get_ctx () in (e, m, r, uu___2) in
+            get_error_with_smt_detail env (FStar_Pervasives.Inl "") uu___1
 let (err_msg_type_strings :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.term ->
