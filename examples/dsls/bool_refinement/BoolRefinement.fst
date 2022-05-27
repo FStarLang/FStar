@@ -2,6 +2,7 @@ module BoolRefinement
 module T = FStar.Tactics
 module R = FStar.Reflection
 module L = FStar.List.Tot
+#push-options "--z3cliopt 'smt.qi.eager_threshold=100' --z3cliopt 'smt.arith.nl=false'"
 
 let var = nat
 let index = nat
@@ -181,8 +182,8 @@ let rec close_exp_ln (e:src_exp) (v:var) (n:nat)
     | EApp e1 e2 -> close_exp_ln e1 v n; close_exp_ln e2 v n
 
 let open_exp_freevars (e:src_exp) (v:var) (n:nat)
-  : Lemma (freevars (open_exp' e v n) `Set.subset`
-           (freevars e `Set.union` Set.singleton v))
+  : Lemma ((freevars e `Set.subset` freevars (open_exp' e v n))  /\
+           (freevars (open_exp' e v n) `Set.subset` (freevars e `Set.union` Set.singleton v)))
           [SMTPat (freevars (open_exp' e v n))]
   = admit()           
 
@@ -193,6 +194,8 @@ let close_exp_freevars (e:src_exp) (v:var) (n:nat)
            (freevars e `minus` v))
           [SMTPat (freevars (close_exp' e v n))]
   = admit()           
+
+              
 
 let src_eqn = src_exp & src_exp
 
@@ -277,7 +280,7 @@ type src_typing : src_env -> src_exp -> s_ty -> Type =
       t:s_ty ->
       e:src_exp ->
       t':s_ty ->
-      x:var { None? (lookup g x) } ->
+      x:var { None? (lookup g x) /\ ~ (x `Set.mem` freevars e)} ->
       src_ty_ok g t ->
       src_typing ((x, Inl t) :: g) (open_exp e x) t' ->
       src_typing g (ELam t e) (TArrow t t')
@@ -302,7 +305,7 @@ type src_typing : src_env -> src_exp -> s_ty -> Type =
        t1:s_ty ->
        t2:s_ty ->
        t:s_ty ->
-       hyp:var { None? (lookup g hyp) } ->
+       hyp:var { None? (lookup g hyp) /\ ~ (hyp `Set.mem` freevars e1) /\ ~ (hyp `Set.mem` freevars e2) } ->
        src_typing g b TBool ->
        src_typing ((hyp, Inr (b, EBool true)) :: g) e1 t1 ->
        src_typing ((hyp, Inr (b, EBool false)) :: g) e2 t2 ->
@@ -359,11 +362,13 @@ let weaken (g:R.env) (sg:src_env) (hyp:var) (b:src_exp) (t0 t1:s_ty)
     then (| t0, S_Refl _ t0, S_Refl _ t1 |)
     else T.fail "weaken is very dumb"
 
-#push-options "--fuel 2 --ifuel 2 --z3rlimit_factor 4"
+let exp (sg:src_env) = e:src_exp { ln e /\ (forall x. x `Set.mem` freevars e ==> Some? (lookup sg x)) }
+
+#push-options "--fuel 2 --ifuel 2 --z3rlimit_factor 6 --query_stats"
 let rec check (g:R.env)
               (sg:src_env)
-              (e:src_exp { ln e })
-  : T.Tac (e':src_exp { ln e' /\ (freevars e' `Set.subset` freevars e) } &
+              (e:exp sg)
+  : T.Tac (e':exp sg { (freevars e' `Set.subset` freevars e) } &
            t':s_ty &
            src_typing sg e' t')
   = match e with
@@ -393,7 +398,8 @@ let rec check (g:R.env)
       // assert (freevars_ty t `Set.equal` Set.empty);
       // assert (freevars (close_exp body' x) `Set.subset` freevars body);
       let e' = ELam t (close_exp body' x) in
-      // assert (freevars e' `Set.subset` freevars e);
+      assert (freevars e' `Set.subset` freevars e);
+      assert (freevars_ty t `Set.equal` Set.empty);
       // assert (ln_ty (TArrow t tbody));
       let dd : src_typing sg e' (TArrow t tbody) = 
              T_Lam sg t (close_exp body' x) tbody x t_ok dbody in
@@ -712,7 +718,12 @@ let rename_binding (b:binding) (x y:var)
 let rename_env (sg:src_env) (x y:var)
   : src_env
   = L.map (fun (v,b) -> v, rename_binding b x y) sg
-  
+
+let rename_freevars (e:src_exp) (x y:var)
+  : Lemma (freevars (rename e x y) `Set.subset` (freevars e `Set.union` (Set.singleton y)))
+          [SMTPat (freevars (rename e x y))]
+  = admit()          
+
 let lookup_middle (sg sg':src_env)
                   (x:var { None? (lookup sg' x) })
                   (b:binding)
@@ -732,15 +743,78 @@ let cons_append_assoc (sg sg':list 'a) (x:'a)
   : Lemma (x::(sg'@sg) == (x::sg')@sg)
   = ()
 
-let rename_open (e:src_exp) (x y:var)
+let rec rename_open' (x y:var) 
+                     (e:src_exp { ~ (x `Set.mem` freevars e) })
+                     (n:nat)
+  : Lemma 
+    (ensures rename (open_exp' e x n) x y == open_exp' e y n)
+    (decreases e)
+  = match e with
+    | EBool _ -> ()
+    | EVar _ -> ()
+    | EBVar _ -> ()
+    | EApp e1 e2 -> 
+      rename_open' x y e1 n;
+      rename_open' x y e2 n    
+    | EIf b e1 e2 ->
+      rename_open' x y b n;    
+      rename_open' x y e1 n;
+      rename_open' x y e2 n         
+    | ELam t e ->
+      rename_open' x y e (n + 1)
+
+let rec rename_id (x y:var) 
+                  (e:src_exp { ~ (x `Set.mem` freevars e) })
+  : Lemma 
+    (ensures rename e x y == e)
+    (decreases e)
+  = match e with
+    | EBool _ -> ()
+    | EVar _ -> ()
+    | EBVar _ -> ()
+    | EApp e1 e2 -> 
+      rename_id x y e1;
+      rename_id x y e2      
+    | EIf b e1 e2 ->
+      rename_id x y b;    
+      rename_id x y e1;
+      rename_id x y e2      
+    | ELam t e ->
+      rename_id x y e
+
+let rename_open (e:src_exp) (x:var { ~(x `Set.mem` freevars e) }) (y:var)
   : Lemma (rename (open_exp e x) x y == open_exp e y)
+  = rename_open' x y e 0
+
+let rename_trivial (e:src_exp) (x:var) 
+  : Lemma (rename e x x == e)
+          [SMTPat (rename e x x)]
   = admit()
-  
+
+let rec rename_open_commute' (e:src_exp) (z:var) (x y:var) (n:nat)
+  : Lemma
+    (requires z <> x /\ z <> y)
+    (ensures rename (open_exp' e z n) x y == open_exp' (rename e x y) z n)
+    (decreases e)
+  = match e with
+    | EBool _ -> ()
+    | EVar _ -> ()
+    | EBVar _ -> ()
+    | EApp e1 e2 -> 
+      rename_open_commute' e1 z x y n;
+      rename_open_commute' e2 z x y n
+    | EIf b e1 e2 ->
+      rename_open_commute' b z x y n;    
+      rename_open_commute' e1 z x y n;
+      rename_open_commute' e2 z x y n
+    | ELam t e ->
+      rename_open_commute' e z x y (n + 1)
+
 let rename_open_commute (e:src_exp) (z:var) (x y:var)
   : Lemma
     (requires z <> x /\ z <> y)
     (ensures rename (open_exp e z) x y == open_exp (rename e x y) z)
-  = admit()
+  = rename_open_commute' e z x y 0
 
 let rename_lookup (sg:src_env) (a:var) (x y:var)
   : Lemma (match lookup sg a with
@@ -770,6 +844,17 @@ let sub_typing_renaming (sg sg':src_env)
          (decreases (s_height d))
   = admit()
 
+#push-options "--query_stats --fuel 2 --ifuel 2 --z3rlimit_factor 2"
+let freevars_included_in (e:src_exp) (sg:src_env) =
+  forall x. x `Set.mem` freevars e ==> Some? (lookup sg x)
+  
+let src_typing_freevars (sg:src_env) (e:src_exp) (t:s_ty) (d:src_typing sg e t)
+  : Lemma 
+    (ensures e `freevars_included_in` sg)
+    (decreases d)
+  = admit()
+  
+#push-options "--z3rlimit_factor 4"
 let rec src_typing_renaming (sg sg':src_env)
                             (x:var { None? (lookup sg x) && None? (lookup sg' x) })
                             (y:var { None? (lookup sg y) && None? (lookup sg' y) })
@@ -785,11 +870,19 @@ let rec src_typing_renaming (sg sg':src_env)
             (t:s_ty)
             (ds:src_typing ((z, b')::sg'@(x,b)::sg) e t { height ds < height d })
       : GTot (
-          zz:var { None? (lookup (rename_env sg' x y@(y,b)::sg) zz) /\ zz <> x /\ zz <> y /\ zz == fresh ((y,b)::sg'@(x,b)::sg) } &
+          zz:var {
+                   None? (lookup (rename_env sg' x y@(y,b)::sg) zz) /\
+                   (zz <> z ==> ~(zz `Set.mem` freevars e)) /\
+                   zz <> x /\
+                   zz <> y /\
+                   zz == fresh ((y,b)::sg'@(x,b)::sg)
+                 } &
           ds':src_typing (rename_env ((zz,b')::sg') x y@(y,b)::sg) (rename (rename e z zz) x y) t { height ds == height ds' }
         )
       = //pick a new opening variable zz
         //that is fresh for both x and y (and sg, sg')
+        src_typing_freevars  _ _ _ ds;
+        assert (freevars_included_in e (((z, b')::sg'@(x,b)::sg)));
         let zz = fresh ((y,b)::sg'@(x,b)::sg) in
         fresh_is_fresh ((y,b)::sg'@(x,b)::sg);
         lookup_append_inverse ((x,b)::sg) ((y,b)::sg') zz;
@@ -803,6 +896,7 @@ let rec src_typing_renaming (sg sg':src_env)
           : src_typing (rename_env ((zz, b')::sg') x y@(y,b)::sg) (rename (rename e z zz) x y) t
           = src_typing_renaming sg ((zz, b')::sg') x y b _ _ ds
         in
+        assert (zz <> z ==> ~(zz `Set.mem` freevars e));
         (| zz, ds |)
     in
     match d with
@@ -822,6 +916,13 @@ let rec src_typing_renaming (sg sg':src_env)
          T_Var _ z
        )
 
+
+    | T_App _ e1 e2 t t' t0 d1 d2 st ->
+      let d1 = src_typing_renaming sg sg' x y b _ _ d1 in
+      let d2 = src_typing_renaming sg sg' x y b _ _ d2 in
+      let st = sub_typing_renaming sg sg' x y b _ _ st in
+      T_App _ _ _ _ _ _ d1 d2 st
+
     | T_Lam g t body t' z dt dbody ->
       let (| zz, dbody |) = aux z (Inl t) _ _  dbody in
       rename_open body z zz;      
@@ -834,21 +935,16 @@ let rec src_typing_renaming (sg sg':src_env)
         : src_ty_ok (rename_env sg' x y@(y,b)::sg) t
         = src_ty_ok_renaming sg sg' x y b _ dt
       in
+      rename_freevars body x y;
       T_Lam _ t _ _ zz dt dbody
-
-    | T_App _ e1 e2 t t' t0 d1 d2 st ->
-      let d1 = src_typing_renaming sg sg' x y b _ _ d1 in
-      let d2 = src_typing_renaming sg sg' x y b _ _ d2 in
-      let st = sub_typing_renaming sg sg' x y b _ _ st in
-      T_App _ _ _ _ _ _ d1 d2 st
 
     | T_If g eb e1 e2 t1 t2 t hyp db dt1 dt2 st1 st2 ->
       let db = src_typing_renaming sg sg' x y b _ _ db in
       let (| hyp', dt1 |) = aux hyp (Inr (eb , EBool true)) _ _ dt1 in
       let (| hyp'', dt2 |) = aux hyp (Inr (eb, EBool false)) _ _ dt2 in      
       let dt1 : src_typing _ (rename (rename e1 hyp hyp') x y) t1 = dt1 in
-      assume (rename e1 hyp hyp' == e1);
-      assume (rename e2 hyp hyp' == e2);     
+      rename_id hyp hyp' e1;
+      rename_id hyp hyp' e2;      
       assert (hyp' == hyp'');
       fresh_is_fresh ((y,b)::sg'@(x,b)::sg);
       lookup_append_inverse ((x,b)::sg) ((y,b)::sg') hyp;
@@ -869,8 +965,6 @@ let rec src_typing_renaming (sg sg':src_env)
         = sub_typing_renaming sg ((hyp', Inr (eb, EBool false))::sg') x y b _ _ st2
       in 
       T_If _ _ _ _ _ _ _ _ db dt1 dt2 st1 st2
-
-
 
 let rec sub_typing_weakening (sg sg':src_env) 
                              (x:var { None? (lookup sg x) && None? (lookup sg' x) })
@@ -983,7 +1077,6 @@ let subtyping_soundness (#sg:src_env) (#t0 #t1:s_ty) (ds:sub_typing sg t0 t1) (g
   : GTot (RT.sub_typing (extend_env_l g sg) (elab_ty t0) (elab_ty t1))
   = admit()
 
-#push-options "--query_stats --z3rlimit_factor 2"
 let bv0 = R.pack_bv (RT.make_bv 0 RT.bool_ty)
 
 let bv_as_arg (x:R.bv)
@@ -1013,25 +1106,6 @@ let apply_refinement_closed (e:src_exp { ln e && closed e })
   = RT.open_term_spec (r_b2t (apply (elab_exp e) (bv_as_arg bv0))) x;
     src_refinements_are_closed_core 0 e (RT.OpenWith (RT.var_as_term x))
     
-let elab_refinement_closed (e:src_exp { ln e && closed e }) (x:var)
-  : Lemma (RT.open_term (elab_ty (TRefineBool e)) x == mk_refine (elab_exp e))
-  = let open R in
-    let open RT in
-    RT.open_term_spec (elab_ty (TRefineBool e)) x;
-    let x = RT.OpenWith (RT.var_as_term x) in
-    calc (==) {
-      RT.open_or_close_term' (elab_ty (TRefineBool e)) x 0;
-    (==) {}
-      RT.open_or_close_term' (mk_refine (elab_exp e)) x 0;
-    (==) {}
-      mk_refine (RT.open_or_close_term' (elab_exp e) x 1);    
-    (==) { 
-           ln_weaker e (-1) 0;
-           src_refinements_are_closed_core 1 e x
-         }
-      mk_refine (elab_exp e);
-    }
-
 let rec soundness (#sg:src_env) 
                   (#se:src_exp { ln se })
                   (#st:s_ty)
