@@ -209,6 +209,12 @@ let rec lookup (e:list (var & 'a)) (x:var)
     | [] -> None
     | (y, v) :: tl -> if x = y then Some v else lookup tl x
 
+let rec src_env_ok (s:src_env)
+  : bool
+  = match s with
+    | [] -> true
+    | (x, _)::tl -> None? (lookup tl x) && src_env_ok tl
+
 let lookup_ty (e:src_env) (x:var)
   : option src_ty
   = match lookup e x with
@@ -354,7 +360,7 @@ let check_sub_typing (g:R.env)
   = if t0 = t1 then S_Refl _ t0
     else T.fail "Not subtypes"
 
-let weaken (g:R.env) (sg:src_env) (hyp:var) (b:src_exp) (t0 t1:s_ty)
+let weaken (g:R.env) (sg:src_env) (hyp:var { None? (lookup sg hyp) } ) (b:src_exp) (t0 t1:s_ty)
   : T.Tac (t:s_ty &
            sub_typing ((hyp,Inr(b, EBool true))::sg) t0 t &
            sub_typing ((hyp,Inr(b, EBool false))::sg) t1 t)
@@ -685,7 +691,7 @@ let rec extend_env_l_lookup_fvar (g:R.env) (sg:src_env) (fv:R.fv)
     | hd::tl -> extend_env_l_lookup_fvar g tl fv
 
 open FStar.List.Tot    
-let rec src_ty_ok_weakening (sg sg':src_env) 
+let rec src_ty_ok_weakening (sg sg':src_env)
                             (x:var { None? (lookup sg x) && None? (lookup sg' x) })
                             (b:binding)
                             (t:s_ty)
@@ -1055,8 +1061,9 @@ let rec src_typing_weakening (sg sg':src_env)
       T_If _ _ _ _ _ _ _ hyp' db d1 d2 s1 s2
                          
 let src_typing_weakening_l (sg:src_env) 
-                           (sg':src_env {  //need a stronger refinement here
-                                 forall x. Some? (lookup sg' x) ==> None? (lookup sg x)
+                           (sg':src_env { 
+                                (src_env_ok sg') /\
+                                (forall x. Some? (lookup sg' x) ==> None? (lookup sg x))
                            })
                            (e:src_exp)
                            (t:s_ty)                         
@@ -1100,16 +1107,17 @@ let mk_refine (e:R.term)
     let ref = apply e (bv_as_arg bv0) in
     pack_ln (Tv_Refine bv0 (r_b2t ref))
 
+#push-options "--fuel 4"
 let apply_refinement_closed (e:src_exp { ln e && closed e })
                             (x:var)
   : Lemma (RT.open_term (r_b2t (apply (elab_exp e) (bv_as_arg bv0))) x
            ==
            r_b2t (apply (elab_exp e) (RT.var_as_term x, R.Q_Explicit)))
   = RT.open_term_spec (r_b2t (apply (elab_exp e) (bv_as_arg bv0))) x;
-    src_refinements_are_closed_core 0 e (RT.OpenWith (RT.var_as_term x));
-    admit()
-    
-let rec soundness (#sg:src_env) 
+    src_refinements_are_closed_core 0 e (RT.OpenWith (RT.var_as_term x))
+#pop-options
+
+let rec soundness (#sg:src_env { src_env_ok sg } ) 
                   (#se:src_exp { ln se })
                   (#st:s_ty)
                   (dd:src_typing sg se st)
@@ -1194,7 +1202,7 @@ let rec soundness (#sg:src_env)
 
 
 and src_ty_ok_soundness (g:fstar_top_env)
-                        (sg:src_env)
+                        (sg:src_env { src_env_ok sg })
                         (t:s_ty)
                         (dt:src_ty_ok sg t)
  : GTot (RT.typing (extend_env_l g sg) (elab_ty t) RT.tm_type)
@@ -1251,7 +1259,7 @@ and src_ty_ok_soundness (g:fstar_top_env)
      in
      RT.T_Refine (extend_env_l g sg) x RT.bool_ty refinement' bool_typing dr
 
-let soundness_lemma (sg:src_env) 
+let soundness_lemma (sg:src_env { src_env_ok sg }) 
                     (se:src_exp { ln se })
                     (st:s_ty)
                     (g:fstar_top_env)
