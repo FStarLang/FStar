@@ -485,7 +485,7 @@ let rec solve_gen_elim_nondep' (fuel: nat) (rev_types_and_binders: list (T.term 
       let cons_type (accu: (unit -> T.Tac T.term)) (tb: (T.term & T.binder)) () : T.Tac T.term =
         let (ty, _) = tb in
         let tl = accu () in
-        T.mk_app (`Cons) [ty, T.Q_Explicit; tl, T.Q_Explicit]
+        T.mk_app (`Cons) [(`Type0), T.Q_Implicit; ty, T.Q_Explicit; tl, T.Q_Explicit]
       in
       let nil_type () : T.Tac T.term = T.mk_app (`Nil) [(`Type0), T.Q_Implicit] in
       let type_list = List.Tot.fold_left cons_type nil_type rev_types_and_binders () in
