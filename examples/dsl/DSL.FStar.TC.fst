@@ -9,34 +9,6 @@ open FStar.Tactics
 
 open DSL.Reflection
 
-//
-//Callbacks to the typechecker for tc_term
-//these shouldn't be Tot
-//assume an state + exception + divergence effect, with no specs
-//
-
-// abstract typing token returned by the typechecker
-[@@ erasable]
-assume val token (env:env) (t:term) (_:comp & guard) : Type0
-
-assume val fstar_tc (env:env) (t:term)
-  : r:(comp & guard) & token env t r
-
-assume val fstar_tc_expected (env:env) (t:term) (c:comp)
-  : g:guard & token env t (c, g)
-
-assume val discharge_guard (#env:_) (#t:_) (#c:_) (#g:_) (_:token env t (c, g))
-  : token env t (c, trivial_guard)
-
-//following can be implemented using the API above
-assume val fstar_tc_trivial (env:env) (t:term)
-  : c:comp & token env t (c, trivial_guard)
-
-assume val fstar_tc_expected_trivial (env:env) (t:term) (c:comp)
-  : token env t (c, trivial_guard)
-
-// typing derivations
-
 [@@ erasable]
 noeq
 type typing_const : vconst -> typ -> Type =
@@ -46,20 +18,21 @@ type typing_const : vconst -> typ -> Type =
   | C_ty_false  : typing_const C_False t_bool
   | C_ty_string : s:string -> typing_const (C_String s) t_string
 
+type name = bv
+
 (*
  * G |- e : C, g
  *
  *)
-#set-options "--__temp_no_proj FStar.TypingJudgment"  //else takes some time to tc
-[@@ erasable]
+[@@ erasable; no_auto_projectors]
 noeq
 type typing_term : env -> term -> (comp & guard) -> Type =
   | Ty_name:
-    env:env ->
-    bv:bv   ->
-    ty:typ  ->
-    #squash (lookup_name env bv == Some ty) ->
-    typing_term env (mk_tm_name bv) (mk_tot ty, trivial_guard)
+    env:env   ->
+    name:name ->
+    ty:typ    ->
+    #squash (lookup_name env name == Some ty) ->
+    typing_term env (mk_tm_name name) (mk_tot ty, trivial_guard)
 
   | Ty_fvar:
     env:env ->
@@ -75,7 +48,7 @@ type typing_term : env -> term -> (comp & guard) -> Type =
     typing_const c ty ->
     typing_term env (mk_tm_const c) (mk_tot ty, trivial_guard)
 
-  | Ty_arrow:  //TODO: should we have n-ary binders?
+  | Ty_arrow:
     env:env   ->
     b:binder  ->
     c:comp    ->
@@ -85,7 +58,7 @@ type typing_term : env -> term -> (comp & guard) -> Type =
     typing_comp (push_binder env b) c g_c ->
     typing_term env (mk_tm_arrow b c) (mk_tot t_type, g_b ++ close_guard_binder g_c b)
 
-  | Ty_abs:  //TODO: should we have n-ary binders?
+  | Ty_abs:
     env:env    ->
     b:binder   ->
     t:term     ->
@@ -98,7 +71,7 @@ type typing_term : env -> term -> (comp & guard) -> Type =
 
   | Ty_let:
     env:env    ->
-    bv:bv      ->  //TODO: check its sort? Let's call it name
+    x:name    ->
     e1:term    ->
     e2:term    ->
     c1:comp    ->
@@ -106,12 +79,12 @@ type typing_term : env -> term -> (comp & guard) -> Type =
     c2:comp    ->
     g2:guard   ->
     typing_term env e1 (c1, g1) ->
-    typing_term (extend_env env (set_bv_sort bv (comp_result_type c1))) e2 (c2, g2) ->
+    typing_term (extend_env env (set_bv_sort x (comp_result_type c1))) e2 (c2, g2) ->
     c:comp     ->
     g:guard    ->
-    typing_bind env (Some e1, c1) (Some bv) c2 (c, g) ->
-    squash (~ (List.Tot.memP bv (free_bvs (comp_result_type c)))) ->  //x doesn't escape
-    typing_term env (mk_tm_let bv e1 e2) (c, g1 ++ close_guard g2 bv ++ g)
+    typing_bind env (Some e1, c1) x c2 (c, g) ->
+    squash (no_escape (x, c)) ->
+    typing_term env (mk_tm_let x e1 e2) (c, g1 ++ close_guard g2 bv ++ g)
 
   //TODO: could we define only Tot applications (or may be PURE/GHOST)?
 
@@ -133,6 +106,57 @@ type typing_term : env -> term -> (comp & guard) -> Type =
     _:token env t (c, g) ->
     typing_term env t (c, g)
 
+and typing_bind : env -> (term & comp) -> name -> comp -> (comp & guard) -> Type =
+  | Bind_Tot_M:
+    env:env ->
+    e1:term ->
+    t1:typ ->
+    x:name ->
+    c2:comp ->  //bv is free in c2
+    typing_bind
+      env
+      (e1, mk_tot t1)
+      x
+      c2
+      (subst_comp x e1 c2, trivial_guard)
+    
+  | Bind_M_M:
+    env:env ->
+    _e1:term ->
+    c1:comp ->
+    x:name ->
+    c2:comp ->
+    m:lid{comp_effect_label c1 == m /\
+          comp_effect_label c2 == m} ->
+    f:name{f `notin` env} ->
+    g:name{g `notin` env} ->
+    args:list term ->
+    ks:list term ->
+    _:typing_term
+        (extend_env env [{f with sort=mk_app (repr env m) [comp_result c1; comp_args c1]};
+                         {g with sort=mk_arrow x (mk_app (repr env m) (comp_result c2) (comp_args c2))}])
+        (mk_app (bind env m) [comp_result c1;
+                              comp_result c2;
+                              args;
+                              f;
+                              b])
+        
+        (mk_tot (mk_app (repr env m) [b; ks])) ->
+    typing_bind
+      env
+      (e1, c1)
+      x
+      c2
+      (mk_comp m b ks)
+        
+    // typing_bind
+    //   env
+    //   (e1, c1)
+    //   bv
+    //   c2
+    //   (apply_M_bind env e1 c1 bv c2)
+
+
 and typing_comp : env -> comp -> guard -> Type =  //tc returns a universe too
   | C_Ty_Tot:
     env:env ->
@@ -149,34 +173,6 @@ and typing_comp : env -> comp -> guard -> Type =  //tc returns a universe too
     g:guard ->
     typing_term env (mk_app (mk_tm_fvar (fv_of_name eff_name)) ((term_to_arg t)::args)) (mk_tot t_effect, g) ->
     typing_comp env (mk_comp eff_name t args) g
-
-and typing_bind : env -> (option term & comp) -> option bv -> comp -> (comp & guard) -> Type =
-  | Bind_Tot_M:
-    env:env ->
-    e1:term ->
-    t1:typ ->
-    bv:bv ->
-    c2:comp ->  //bv is free in c2
-    typing_bind
-      env
-      (Some e1, mk_tot t1)
-      (Some bv)
-      c2
-      (subst_comp bv e1 c2, trivial_guard)
-    
-  | Bind_M_M:
-    env:env ->
-    e1:option term ->
-    c1:comp ->
-    bv:option bv ->
-    c2:comp ->
-    squash (comp_effect_label env c1 == comp_effect_label env c2) ->
-    typing_bind
-      env
-      (e1, c1)
-      bv
-      c2
-      (apply_M_bind env e1 c1 bv c2)
 
 //another discharge guard function, in terms of typing relation
 
