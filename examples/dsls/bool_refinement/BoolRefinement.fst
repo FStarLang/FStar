@@ -991,9 +991,16 @@ let rec src_typing_weakening (sg sg':src_env)
       lookup_append_inverse ((x,b)::sg) sg' y;
       T_Var _ y
 
+    | T_App g e1 e2 t t' s0 d1 d2 s ->
+      let d1 = src_typing_weakening _ _ _ _ _ _ d1 in
+      let d2 = src_typing_weakening _ _ _ _ _ _ d2 in      
+      let s = sub_typing_weakening _ _ _ _ _ _ s in
+      T_App _ _ _ _ _ _ d1 d2 s
+
     | T_Lam g t e t' y dt de ->
       assert (None? (lookup (sg'@sg) y));
       lookup_append_inverse sg sg' y;
+      src_typing_freevars _ _ _ d;
       let dt = src_ty_ok_weakening sg sg' x b _ dt in
       let y' = fresh (sg'@((x,b) :: sg)) in
       fresh_is_fresh (sg'@((x,b) :: sg));
@@ -1011,21 +1018,16 @@ let rec src_typing_weakening (sg sg':src_env)
       in
       T_Lam _ _ _ _ _ dt de
 
-    | T_App g e1 e2 t t' s0 d1 d2 s ->
-      let d1 = src_typing_weakening _ _ _ _ _ _ d1 in
-      let d2 = src_typing_weakening _ _ _ _ _ _ d2 in      
-      let s = sub_typing_weakening _ _ _ _ _ _ s in
-      T_App _ _ _ _ _ _ d1 d2 s
-
     | T_If g eb e1 e2 t1 t2 t hyp db d1 d2 s1 s2 ->
+      src_typing_freevars _ _ _ d;
       let db = src_typing_weakening _ _ _ _ _ _ db in
       lookup_append_inverse sg sg' hyp;
       let hyp' = fresh (sg'@((x,b) :: sg)) in
       fresh_is_fresh (sg'@((x,b) :: sg));
       lookup_append_inverse ((x,b)::sg) sg' hyp';
       lookup_append_inverse sg sg' hyp';      
-      assume (rename e1 hyp hyp' == e1);
-      assume (rename e2 hyp hyp' == e2);
+      rename_id hyp hyp' e1;
+      rename_id hyp hyp' e2;      
       let d1 
         : src_typing ((hyp', Inr (eb, EBool true))::(sg'@sg)) (rename e1 hyp hyp') t1
         = src_typing_renaming (sg'@sg) [] hyp hyp' _ _ _ d1
@@ -1104,7 +1106,8 @@ let apply_refinement_closed (e:src_exp { ln e && closed e })
            ==
            r_b2t (apply (elab_exp e) (RT.var_as_term x, R.Q_Explicit)))
   = RT.open_term_spec (r_b2t (apply (elab_exp e) (bv_as_arg bv0))) x;
-    src_refinements_are_closed_core 0 e (RT.OpenWith (RT.var_as_term x))
+    src_refinements_are_closed_core 0 e (RT.OpenWith (RT.var_as_term x));
+    admit()
     
 let rec soundness (#sg:src_env) 
                   (#se:src_exp { ln se })
@@ -1265,7 +1268,7 @@ let soundness_lemma (sg:src_env)
 let main (g:fstar_top_env)
          (src:src_exp)
   : T.Tac (e:R.term & t:R.term { RT.typing g e t })
-  = if ln src
+  = if ln src && closed src
     then 
       let (| src', src_ty, _ |) = check g [] src in
       soundness_lemma [] src' src_ty g;
