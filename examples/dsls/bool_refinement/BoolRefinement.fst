@@ -181,21 +181,44 @@ let rec close_exp_ln (e:src_exp) (v:var) (n:nat)
     | ELam _ e -> close_exp_ln e v (n + 1)
     | EApp e1 e2 -> close_exp_ln e1 v n; close_exp_ln e2 v n
 
-let open_exp_freevars (e:src_exp) (v:var) (n:nat)
+let rec open_exp_freevars (e:src_exp) (v:var) (n:nat)
   : Lemma ((freevars e `Set.subset` freevars (open_exp' e v n))  /\
            (freevars (open_exp' e v n) `Set.subset` (freevars e `Set.union` Set.singleton v)))
           [SMTPat (freevars (open_exp' e v n))]
-  = admit()           
-
+  = match e with
+    | EBool _
+    | EBVar _ 
+    | EVar _ -> ()
+    | EApp e1 e2 ->
+      open_exp_freevars e1 v n;
+      open_exp_freevars e2 v n
+    | EIf b e1 e2 ->
+      open_exp_freevars b v n;    
+      open_exp_freevars e1 v n;
+      open_exp_freevars e2 v n
+    | ELam t e ->
+      open_exp_freevars e v (n + 1)
+      
 let minus (s:Set.set 'a) (x:'a) = Set.intersect s (Set.complement (Set.singleton x))
 
-let close_exp_freevars (e:src_exp) (v:var) (n:nat)
-  : Lemma (freevars (close_exp' e v n) `Set.equal`
-           (freevars e `minus` v))
-          [SMTPat (freevars (close_exp' e v n))]
-  = admit()           
-
-              
+let rec close_exp_freevars (m:int) (e:src_exp { ln' e m } ) (v:var) (n:nat)
+  : Lemma 
+    (ensures freevars (close_exp' e v n) `Set.equal`
+             (freevars e `minus` v))
+    (decreases e)
+  = match e with
+    | EBool _
+    | EBVar _ 
+    | EVar _ -> ()
+    | EApp e1 e2 ->
+      close_exp_freevars m e1 v n;
+      close_exp_freevars m e2 v n
+    | EIf b e1 e2 ->
+      close_exp_freevars m b v n;    
+      close_exp_freevars m e1 v n;
+      close_exp_freevars m e2 v n
+    | ELam t body ->
+      close_exp_freevars (m + 1) body v (n + 1)
 
 let src_eqn = src_exp & src_exp
 
@@ -398,9 +421,8 @@ let rec check (g:R.env)
       let (| body', tbody, dbody |) = check g ((x, Inl t)::sg) (open_exp body x) in
       open_exp_freevars body x 0;
       // assert (freevars body' `Set.subset` freevars (open_exp body x));
-      close_exp_freevars body' x 0;
+      close_exp_freevars (-1) body' x 0;
       // assert (freevars (close_exp body' x) `Set.equal` (freevars body' `minus` x));
-      // // assum (freevars (close_exp e' x) `Set.subset` (freevars e));
       // assert (freevars_ty t `Set.equal` Set.empty);
       // assert (freevars (close_exp body' x) `Set.subset` freevars body);
       let e' = ELam t (close_exp body' x) in
@@ -725,25 +747,45 @@ let rename_env (sg:src_env) (x y:var)
   : src_env
   = L.map (fun (v,b) -> v, rename_binding b x y) sg
 
-let rename_freevars (e:src_exp) (x y:var)
+let rec rename_freevars (e:src_exp) (x y:var)
   : Lemma (freevars (rename e x y) `Set.subset` (freevars e `Set.union` (Set.singleton y)))
           [SMTPat (freevars (rename e x y))]
-  = admit()          
+  = match e with
+    | EBool _
+    | EBVar _ 
+    | EVar _ -> ()
+    | EApp e1 e2 -> 
+      rename_freevars e1 x y;
+      rename_freevars e2 x y
+    | EIf b e1 e2 ->
+      rename_freevars b x y;    
+      rename_freevars e1 x y;
+      rename_freevars e2 x y    
+    | ELam t body ->
+      rename_freevars body x y        
 
-let lookup_middle (sg sg':src_env)
-                  (x:var { None? (lookup sg' x) })
-                  (b:binding)
-  : Lemma (lookup (sg'@(x,b)::sg) x == Some b)
-  = admit()
+let rec lookup_middle (sg sg':src_env)
+                      (x:var { None? (lookup sg' x) })
+                      (b:binding)
+  : Lemma 
+    (ensures lookup (sg'@(x,b)::sg) x == Some b)
+    (decreases sg')
+  = match sg' with
+    | [] -> ()
+    | hd::tl ->
+      lookup_middle sg tl x b
 
-let lookup_append_inverse (sg sg':src_env)
-                          (z:var)
+let rec lookup_append_inverse (sg sg':src_env)
+                              (z:var)
   : Lemma 
     (ensures (match lookup (sg'@sg) z with
               | None -> None? (lookup sg' z) && None? (lookup sg z)
               | Some b -> (lookup sg' z == Some b) \/
                          (None? (lookup sg' z) /\ lookup sg z == Some b)))
-  = admit()
+    (decreases sg')
+  = match sg' with
+    | [] -> ()
+    | hd::tl -> lookup_append_inverse sg tl z
 
 let cons_append_assoc (sg sg':list 'a) (x:'a)
   : Lemma (x::(sg'@sg) == (x::sg')@sg)
@@ -770,7 +812,7 @@ let rec rename_open' (x y:var)
       rename_open' x y e (n + 1)
 
 let rec rename_id (x y:var) 
-                  (e:src_exp { ~ (x `Set.mem` freevars e) })
+                  (e:src_exp { ~ (x `Set.mem` freevars e) \/ x == y })
   : Lemma 
     (ensures rename e x y == e)
     (decreases e)
@@ -795,7 +837,7 @@ let rename_open (e:src_exp) (x:var { ~(x `Set.mem` freevars e) }) (y:var)
 let rename_trivial (e:src_exp) (x:var) 
   : Lemma (rename e x x == e)
           [SMTPat (rename e x x)]
-  = admit()
+  = rename_id x x e 
 
 let rec rename_open_commute' (e:src_exp) (z:var) (x y:var) (n:nat)
   : Lemma
@@ -822,13 +864,18 @@ let rename_open_commute (e:src_exp) (z:var) (x y:var)
     (ensures rename (open_exp e z) x y == open_exp (rename e x y) z)
   = rename_open_commute' e z x y 0
 
-let rename_lookup (sg:src_env) (a:var) (x y:var)
-  : Lemma (match lookup sg a with
-           | None -> None? (lookup (rename_env sg x y) a)
-           | Some (Inl t) -> lookup (rename_env sg x y) a == Some (Inl t)
-           | Some (Inr (e1, e2)) -> lookup (rename_env sg x y) a == Some (Inr (rename e1 x y, rename e2 x y)))
-          [SMTPat (lookup (rename_env sg x y) a)]
-  = admit()
+let rec rename_lookup (sg:src_env) (a:var) (x y:var)
+  : Lemma
+    (ensures (
+      match lookup sg a with
+      | None -> None? (lookup (rename_env sg x y) a)
+      | Some (Inl t) -> lookup (rename_env sg x y) a == Some (Inl t)
+      | Some (Inr (e1, e2)) -> lookup (rename_env sg x y) a == Some (Inr (rename e1 x y, rename e2 x y))))
+    (decreases sg)
+    [SMTPat (lookup (rename_env sg x y) a)]
+  = match sg with
+    | [] -> ()
+    | hd::tl -> rename_lookup tl a x y
 
 let rec src_ty_ok_renaming (sg sg':src_env)
                            (x:var { None? (lookup sg x) /\ None? (lookup sg' x) })
@@ -838,7 +885,13 @@ let rec src_ty_ok_renaming (sg sg':src_env)
                            (d:src_ty_ok (sg'@(x,b)::sg) t)
   : GTot (d':src_ty_ok (rename_env sg' x y@(y,b)::sg) t { t_height d' == t_height d })
          (decreases d)
-  = admit()
+  = match d with
+    | OK_TBool _ -> OK_TBool _
+    | OK_TArrow g t t' d1 d2 ->
+      let d1 = src_ty_ok_renaming sg sg' x y _ _ d1 in
+      let d2 = src_ty_ok_renaming sg sg' x y _ _ d2 in
+      OK_TArrow _ _ _ d1 d2
+    | OK_TRefine _ _ d -> OK_TRefine _ _ d
 
 let sub_typing_renaming (sg sg':src_env)
                         (x:var { None? (lookup sg x) && None? (lookup sg' x) })
@@ -848,17 +901,28 @@ let sub_typing_renaming (sg sg':src_env)
                         (d:sub_typing (sg'@(x,b)::sg) t0 t1)
   : GTot (d':sub_typing (rename_env sg' x y@(y,b)::sg) t0 t1 { s_height d' == s_height d })
          (decreases (s_height d))
-  = admit()
+  = S_Refl _ _
 
 #push-options "--query_stats --fuel 2 --ifuel 2 --z3rlimit_factor 2"
 let freevars_included_in (e:src_exp) (sg:src_env) =
   forall x. x `Set.mem` freevars e ==> Some? (lookup sg x)
   
-let src_typing_freevars (sg:src_env) (e:src_exp) (t:s_ty) (d:src_typing sg e t)
+let rec src_typing_freevars (sg:src_env) (e:src_exp) (t:s_ty) (d:src_typing sg e t)
   : Lemma 
     (ensures e `freevars_included_in` sg)
     (decreases d)
-  = admit()
+  = match d with
+    | T_Bool _ _ -> ()
+    | T_Var _ _ -> ()
+    | T_App _ _ _ _ _ _ d1 d2 s ->
+      src_typing_freevars _ _ _ d1;
+      src_typing_freevars _ _ _ d2      
+    | T_If _ _ _ _ _ _ _ hyp db d1 d2 s1 s2 ->
+      src_typing_freevars _ _ _ db;
+      src_typing_freevars _ _ _ d1;
+      src_typing_freevars _ _ _ d2      
+    | T_Lam _ _ _ _ x dt dbody ->
+      src_typing_freevars _ _ _ dbody
   
 #push-options "--z3rlimit_factor 4"
 let rec src_typing_renaming (sg sg':src_env)
@@ -972,14 +1036,14 @@ let rec src_typing_renaming (sg sg':src_env)
       in 
       T_If _ _ _ _ _ _ _ _ db dt1 dt2 st1 st2
 
-let rec sub_typing_weakening (sg sg':src_env) 
+let sub_typing_weakening (sg sg':src_env) 
                              (x:var { None? (lookup sg x) && None? (lookup sg' x) })
                              (b:binding)
                              (t1 t2:s_ty)
                              (d:sub_typing (sg'@sg) t1 t2)
   : GTot (d':sub_typing (sg'@((x, b)::sg)) t1 t2 { s_height d == s_height d' })
          (decreases (s_height d))
-  = admit()
+  = S_Refl _ _ 
   
 let rec src_typing_weakening (sg sg':src_env) 
                              (x:var { None? (lookup sg x) && None? (lookup sg' x) })
@@ -1060,22 +1124,27 @@ let rec src_typing_weakening (sg sg':src_env)
       in      
       T_If _ _ _ _ _ _ _ hyp' db d1 d2 s1 s2
                          
-let src_typing_weakening_l (sg:src_env) 
-                           (sg':src_env { 
-                                (src_env_ok sg') /\
-                                (forall x. Some? (lookup sg' x) ==> None? (lookup sg x))
-                           })
+let rec src_typing_weakening_l (sg:src_env) 
+                               (sg':src_env { 
+                                 (src_env_ok sg') /\
+                                 (forall x. Some? (lookup sg' x) ==> None? (lookup sg x))
+                               })
                            (e:src_exp)
                            (t:s_ty)                         
                            (d:src_typing sg e t)
   : GTot (d':src_typing L.(sg' @ sg) e t { height d == height d' })
-  = admit()
+         (decreases sg')
+  = match sg' with
+    | [] -> d
+    | (x, b)::tl ->
+      let d = src_typing_weakening_l sg tl e t d in
+      lookup_append_inverse sg tl x;
+      src_typing_weakening (tl@sg) [] x b _ _ d
 
 let open_with_fvar_id (fv:R.fv) (x:R.term)
   : Lemma (RT.open_with (R.pack_ln (R.Tv_FVar fv)) x == (R.pack_ln (R.Tv_FVar fv)))
           [SMTPat (RT.open_with (R.pack_ln (R.Tv_FVar fv)) x)]
   = RT.open_with_spec (R.pack_ln (R.Tv_FVar fv)) x
-
 
 let open_term_fvar_id (fv:R.fv) (x:var)
   : Lemma (RT.open_term (R.pack_ln (R.Tv_FVar fv)) x == (R.pack_ln (R.Tv_FVar fv)))
@@ -1084,7 +1153,7 @@ let open_term_fvar_id (fv:R.fv) (x:var)
 
 let subtyping_soundness (#sg:src_env) (#t0 #t1:s_ty) (ds:sub_typing sg t0 t1) (g:fstar_top_env)
   : GTot (RT.sub_typing (extend_env_l g sg) (elab_ty t0) (elab_ty t1))
-  = admit()
+  = RT.ST_Refl _ _
 
 let bv0 = R.pack_bv (RT.make_bv 0 RT.bool_ty)
 
