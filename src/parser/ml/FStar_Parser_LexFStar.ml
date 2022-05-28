@@ -597,3 +597,105 @@ and ignore_endline lexbuf =
 match%sedlex lexbuf with
  | Star ' ', newline -> token lexbuf
  | _ -> assert false
+
+let is_opening_token (t: token) =
+  match t with
+  | LENS_PAREN_LEFT | LPAREN
+  | DOT_LBRACK      | DOT_LENS_PAREN_LEFT
+  | DOT_LPAREN      | DOT_LBRACK_BAR
+  | LBRACE  | PERCENT_LBRACK
+  | LBRACK_AT_AT_AT | LBRACK_AT_AT | LBRACK_AT
+  | LBRACE_BAR | LBRACK  | LBRACK_BAR
+  | LBRACE_COLON_PATTERN | BANG_LBRACE
+  | LBRACE_COLON_WELL_FOUNDED -> true
+  | _ -> false
+
+let is_closing_token (t: token) =
+  match t with
+  | LENS_PAREN_RIGHT
+  | RPAREN | RBRACK | RBRACE
+  | BAR_RBRACK | BAR_RBRACE -> true
+  | _ -> false
+
+(* Support for quasiquoters.
+
+   A quasiquote is of the form `[name|content]`, where `name` is an
+   indent, and where `content` is an arbitrary string interleaved with
+   quotations.
+*)
+
+(* A lexer can be in two different kind of states: *)
+type lexer_state =
+  (* Lexing FStarSyntax, _optionaly_ in a context of a quasiquote. If
+     the context is a quasiquote, the `int ref` field counts
+     parenthesis.  *)
+  | FStarSyntax of (((int option option) ref * lexer_state) option)
+  (* Lexing QuasiQuote. To allow nested quasiquotations, constructor
+     `QuasiQuote` takes a `lexer_state`. *)
+  | QuasiQuote of lexer_state
+
+(* `make_lexer` makes a stateful lexer, via a `lexer_state` ref. *)
+let make_lexer () =
+  (* start lexing FStarSyntax *)
+  let lexer_mode = ref (FStarSyntax None) in
+  (* `main_lexer` is the `token` main lexer defined above, but when a
+     QQ_START is lexed, we bump `lexer_mode` to lex a quasiquote. *)
+  let rec main_lexer lexbuf =
+    match%sedlex lexbuf with
+    | "[", Star(constructor, "."), ident, "|" ->
+       lexer_mode := QuasiQuote !lexer_mode;
+       let l = L.lexeme lexbuf in
+       QQ_START (String.sub l 1 (String.length l - 2))
+    | Plus anywhite -> main_lexer lexbuf
+    | newline -> L.new_line lexbuf; main_lexer lexbuf
+    | _ -> token lexbuf
+  in
+  (* `qq_lexer` lexes plain string and quoted F* terms. *)
+  let qq_lexer prev lexbuf =
+    match%sedlex lexbuf with
+    (* if we match a backtick, we enter in a F* quotation within the QQ *)
+    | "`" -> lexer_mode := FStarSyntax (Some (ref None, !lexer_mode));
+             QQ_QUOTE_START
+    | "|]" -> lexer_mode := prev; QQ_END
+    (* otherwise, if the first char is not backtick or `]`, then we
+       want to build a QQ_RAW token which consist of the first char
+       followed by any sequence of characters which are not backtick
+       or `]` *)
+    | _ -> let h = match%sedlex lexbuf with
+             | any, Star(Sub(any, ("|" | "`"))) -> QQ_RAW (L.lexeme lexbuf)
+             | _ -> assert false
+           in h (* sedlex PPX seems to be unhappy with nested
+                   `match%sedlex`, whence the let binding *)
+  in
+  (* the actual lexer is the mix of [main_lexer] and [qq_lexer] *)
+  fun lexbuf -> match !lexer_mode with
+    | QuasiQuote  prev                 -> qq_lexer prev lexbuf
+    (* lexing non-`QQ_*` tokens *)
+    | FStarSyntax None                 -> main_lexer    lexbuf
+    (* lexing non-`QQ_*` tokens in the context of a F* quote within a
+       quasiquote *)
+    | FStarSyntax (Some (state, prev)) ->
+       begin match !state with
+       | None -> (* first character *)
+          let tok = main_lexer lexbuf in
+          state := (Some (if is_opening_token tok then Some 1 else None));
+          tok
+       | Some None ->
+          ( match%sedlex lexbuf with
+            | (constructor | ident | ".") -> let _ = L.backtrack lexbuf in
+                                             main_lexer lexbuf
+            | _ -> let _ = L.backtrack lexbuf in
+                   lexer_mode := prev;
+                   QQ_QUOTE_END
+          )
+       | Some (Some paren) ->
+          let tok = main_lexer lexbuf in
+          let paren = paren + if is_opening_token tok then 1 else if is_closing_token tok then -1 else 0 in
+          (* parenthesis count *)
+          state := Some (Some paren);
+          (* when every parenthesis is closed, we restore the previous
+             `lexer_mode`, and continue lexing in a QQ context *)
+          if      paren == 0 then (let _ = L.backtrack lexbuf in tok)
+          else if paren < 0 then (lexer_mode := prev; QQ_QUOTE_END)
+          else tok
+       end
