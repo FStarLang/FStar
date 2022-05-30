@@ -5,6 +5,8 @@ open FStar.Reflection.Data
 open FStar.Reflection.Builtins
 open FStar.Reflection.Formula
 
+open FStar.Meta.Tc.Subst
+
 type guard = option typ
 
 val t_unit   : term
@@ -12,8 +14,6 @@ val t_int    : term
 val t_bool   : term
 val t_string : term
 val t_type   : term
-
-val open_with (t1 t2:term) : term
 
 val mk_conj (t1 t2:typ) : typ
 val mk_const_tm (c:vconst) : term
