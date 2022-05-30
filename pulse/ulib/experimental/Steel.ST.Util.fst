@@ -51,6 +51,7 @@ let assert_ #o p = coerce_ghost (fun _ -> slassert0 p)
 let assume_ #o p = admit_ ()
 let drop #o p = coerce_ghost (fun _ -> SEA.drop p)
 let pure = pure
+let reveal_pure _ = ()
 let intro_pure #o p = coerce_ghost (fun _ -> SEA.intro_pure p)
 let elim_pure #o p = coerce_ghost (fun _ -> SEA.elim_pure p)
 
