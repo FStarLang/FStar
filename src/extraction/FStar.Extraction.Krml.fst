@@ -426,7 +426,7 @@ let rec translate_type env t: typ =
     Syntax.string_of_mlpath p = "FStar.HyperStack.ST.mmref" ||
     Syntax.string_of_mlpath p = "Steel.Reference.ref" ||
     Syntax.string_of_mlpath p = "Steel.Array.array" ||
-    Syntax.string_of_mlpath p = "Steel.HigherArray0.ptr" ||
+    Syntax.string_of_mlpath p = "Steel.ST.HigherArray0.ptr" ||
     Syntax.string_of_mlpath p = "Steel.ST.Reference.ref" ||
     Syntax.string_of_mlpath p = "Steel.ST.Array.array"
     ->
@@ -545,7 +545,7 @@ and translate_expr env e: expr =
       EBufRead (translate_expr env e1, translate_expr env e2)
 
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ _perm; e1; _len; _seq; e2 ])
-    when string_of_mlpath p = "Steel.HigherArray0.index_ptr" ->
+    when string_of_mlpath p = "Steel.ST.HigherArray0.index_ptr" ->
       EBufRead (translate_expr env e1, translate_expr env e2)
 
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e ])
@@ -634,7 +634,7 @@ and translate_expr env e: expr =
 
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e0; e1 ])
     when string_of_mlpath p = "Steel.Array.malloc" ||
-         string_of_mlpath p = "Steel.HigherArray0.malloc_ptr" ||
+         string_of_mlpath p = "Steel.ST.HigherArray0.malloc_ptr" ||
          string_of_mlpath p = "Steel.ST.Array.alloc" ->
       EBufCreate (ManuallyManaged, translate_expr env e0, translate_expr env e1)
 
@@ -650,7 +650,7 @@ and translate_expr env e: expr =
       EBufFree (translate_expr env e2)
 
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ _v; e2 ]) when
-       string_of_mlpath p = "Steel.HigherArray0.free_ptr" ||
+       string_of_mlpath p = "Steel.ST.HigherArray0.free_ptr" ||
        string_of_mlpath p = "Steel.ST.Reference.free" ->
       EBufFree (translate_expr env e2)
 
@@ -675,7 +675,7 @@ and translate_expr env e: expr =
 
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e1; e2 ])
     when string_of_mlpath p = "FStar.Buffer.offset"
-      || string_of_mlpath p = "Steel.HigherArray0.ptr_shift" ->
+      || string_of_mlpath p = "Steel.ST.HigherArray0.ptr_shift" ->
       EBufSub (translate_expr env e1, translate_expr env e2)
 
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e1; e2 ]) when string_of_mlpath p = "LowStar.Monotonic.Buffer.moffset" ->
@@ -693,7 +693,7 @@ and translate_expr env e: expr =
       EBufWrite (translate_expr env e1, translate_expr env e2, translate_expr env e3)
 
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e1; _len; _s; e2; e3 ])
-    when string_of_mlpath p = "Steel.HigherArray0.upd_ptr" ->
+    when string_of_mlpath p = "Steel.ST.HigherArray0.upd_ptr" ->
       EBufWrite (translate_expr env e1, translate_expr env e2, translate_expr env e3)
 
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e1; e2 ])

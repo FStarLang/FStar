@@ -1,7 +1,7 @@
-module Steel.HigherArray0
+module Steel.ST.HigherArray0
 
 module P = Steel.PCMFrac
-module R = Steel.PCMReference
+module R = Steel.ST.PCMReference
 module M = FStar.Map
 module PM = Steel.PCMMap
 
@@ -114,43 +114,43 @@ let change_r_pts_to
   (#pcm': P.pcm carrier')
   (p': ref carrier' pcm')
   (v': carrier')
-: SteelGhost unit opened
+: STGhost unit opened
     (R.pts_to p v)
     (fun _ -> R.pts_to p' v')
-    (fun _ ->  // keep on distinct lines for error messages
+    (// keep on distinct lines for error messages
       carrier == carrier' /\
       pcm == pcm' /\
       p == p' /\
       v == v')
-    (fun _ _ _ -> True)
-= change_equal_slprop
+    (fun _ -> True)
+= rewrite
     (R.pts_to p v)
     (R.pts_to p' v')
 
-let intro_pts_to (#opened: _) (#elt: Type u#1) (a: array elt) (#v: _) (p: P.perm) (s: Seq.seq elt) : SteelGhost unit opened
+let intro_pts_to (#opened: _) (#elt: Type u#1) (a: array elt) (#v: _) (p: P.perm) (s: Seq.seq elt) : STGhost unit opened
   (R.pts_to (ptr_of a).base v)
   (fun _ -> pts_to a p s)
-  (fun _ ->
+  (
     v == mk_carrier (U32.v (ptr_of a).base_len) (ptr_of a).offset s p /\
     valid_perm (U32.v (ptr_of a).base_len) (ptr_of a).offset (Seq.length s) p /\
     Seq.length s == length a
   )
-  (fun _ _ _ -> True)
+  (fun _ -> True)
 = change_r_pts_to (ptr_of a).base v (ptr_of a).base (mk_carrier (U32.v (ptr_of a).base_len) (ptr_of a).offset s p);
   intro_pure _;
-  change_equal_slprop
+  rewrite
     (pts_to0 a p s)
     (pts_to a p s)
 
-let elim_pts_to (#opened: _) (#elt: Type u#1) (a: array elt) (p: P.perm) (s: Seq.seq elt) : SteelGhost unit opened
+let elim_pts_to (#opened: _) (#elt: Type u#1) (a: array elt) (p: P.perm) (s: Seq.seq elt) : STGhost unit opened
   (pts_to a p s)
   (fun _ -> R.pts_to (ptr_of a).base (mk_carrier (U32.v (ptr_of a).base_len) (ptr_of a).offset s p))
-  (fun _ -> True)
-  (fun _ _ _ ->
+  (True)
+  (fun _ ->
     valid_perm (U32.v (ptr_of a).base_len) (ptr_of a).offset (Seq.length s) p /\
     Seq.length s == length a
   )
-= change_equal_slprop
+= rewrite
     (pts_to a p s)
     (pts_to0 a p s);
   elim_pure _
@@ -232,11 +232,11 @@ let malloc0
   (#elt: Type)
   (x: elt)
   (n: U32.t)
-: Steel (array elt)
+: ST (array elt)
     emp
     (fun a -> pts_to a P.full_perm (Seq.create (U32.v n) x))
-    (fun _ -> True)
-    (fun _ a _ ->
+    (True)
+    (fun a ->
       length a == U32.v n /\
       base_len (base (ptr_of a)) == U32.v n
     )
@@ -261,7 +261,7 @@ let malloc_ptr
 =
   let a = malloc0 x n in
   let (| p, _ |) = a in
-  change_equal_slprop
+  rewrite
     (pts_to _ _ _)
     (pts_to (| p, Ghost.hide (U32.v n) |) _ _);
   return p
@@ -271,13 +271,13 @@ let free0
   (#elt: Type)
   (#s: Ghost.erased (Seq.seq elt))
   (a: array elt)
-: Steel unit
+: ST unit
     (pts_to a P.full_perm s)
     (fun _ -> emp)
-    (fun _ ->
+    (
       length a == base_len (base (ptr_of a))
     )
-    (fun _ _ _ -> True)
+    (fun _ -> True)
 = drop (pts_to a _ _)
 
 let free_ptr a =
@@ -309,16 +309,7 @@ let mk_carrier_share
 = ()
 
 let share
-  (#opened: _)
-  (#elt: Type)
-  (#x: Seq.seq elt)
-  (a: array elt)
-  (p p1 p2: P.perm)
-: SteelGhost unit opened
-    (pts_to a p x)
-    (fun _ -> pts_to a p1 x `star` pts_to a p2 x)
-    (fun _ -> p == p1 `P.sum_perm` p2)
-    (fun _ _ _ -> True)
+  #_ #_ #x a p p1 p2
 = elim_pts_to a p x;
   mk_carrier_share (U32.v (ptr_of a).base_len) (ptr_of a).offset x p1 p2;
   R.split (ptr_of a).base _
@@ -376,16 +367,7 @@ let mk_carrier_valid_sum_perm
   else ()
 
 let gather
-  (#opened: _)
-  (#elt: Type)
-  (a: array elt)
-  (#x1: Seq.seq elt) (p1: P.perm)
-  (#x2: Seq.seq elt) (p2: P.perm)
-: SteelGhost unit opened
-    (pts_to a p1 x1 `star` pts_to a p2 x2)
-    (fun _ -> pts_to a (p1 `P.sum_perm` p2) x1)
-    (fun _ -> True)
-    (fun _ _ _ -> x1 == x2)
+  a #x1 p1 #x2 p2
 = elim_pts_to a p1 x1;
   elim_pts_to a p2 x2;
   R.gather (ptr_of a).base
@@ -403,11 +385,11 @@ let index0
   (a: array t)
   (#s: Ghost.erased (Seq.seq t))
   (i: U32.t)
-: Steel t
+: ST t
     (pts_to a p s)
     (fun _ -> pts_to a p s)
-    (fun _ -> U32.v i < length a)
-    (fun _ res _ -> U32.v i < Seq.length s /\ res == Seq.index s (U32.v i))
+    (U32.v i < length a)
+    (fun res -> U32.v i < Seq.length s /\ res == Seq.index s (U32.v i))
 = elim_pts_to a p s;
   let s' = R.read (ptr_of a).base _ in
   let res = fst (Some?.v (M.sel s' ((ptr_of a).offset + U32.v i))) in
@@ -445,7 +427,7 @@ let upd0
   (#s: Ghost.erased (Seq.seq t))
   (i: U32.t { U32.v i < Seq.length s })
   (v: t)
-: SteelT unit
+: STT unit
     (pts_to a P.full_perm s)
     (fun res -> pts_to a P.full_perm (Seq.upd s (U32.v i) v))
 = elim_pts_to a _ _;
@@ -465,7 +447,7 @@ let upd0
 
 let upd_ptr a i v =
   upd0 _ i v;
-  change_equal_slprop
+  rewrite
     (pts_to _ _ _)
     (pts_to _ _ _)
 
@@ -488,15 +470,7 @@ let mk_carrier_merge
 = ()
 
 let ghost_join
-  (#opened: _)
-  (#elt: Type)
-  (#x1 #x2: Seq.seq elt)
-  (#p: P.perm)
-  (a1 a2: array elt)
-  (h: squash (adjacent a1 a2))
-: SteelGhostT unit opened
-    (pts_to a1 p x1 `star` pts_to a2 p x2)
-    (fun res -> pts_to (merge a1 a2) p (x1 `Seq.append` x2))
+  #_ #_ #x1 #x2 #p a1 a2 h
 = elim_pts_to a1 p x1;
   elim_pts_to a2 p x2;
   mk_carrier_merge (U32.v (ptr_of a1).base_len) ((ptr_of a1).offset) x1 x2 (p);
@@ -550,21 +524,7 @@ let ptr_shift
 }
 
 let ghost_split
-  (#opened: _)
-  (#elt: Type)
-  (#x: Seq.seq elt)
-  (#p: P.perm)
-  (a: array elt)
-  (i: U32.t)
-: SteelGhost (squash (U32.v i <= length a /\ U32.v i <= Seq.length x)) opened
-    (pts_to a p x)
-    (fun res ->
-      pts_to (split_l a i) p (Seq.slice x 0 (U32.v i)) `star`
-      pts_to (split_r a i) p (Seq.slice x (U32.v i) (Seq.length x)))
-    (fun _ -> U32.v i <= length a)
-    (fun _ res _ ->
-      x == Seq.append (Seq.slice x 0 (U32.v i)) (Seq.slice x (U32.v i) (Seq.length x))
-    )
+  #_ #_ #x #p a i
 = 
   elim_pts_to a p x;
   mk_carrier_split
