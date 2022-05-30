@@ -1,32 +1,30 @@
-module Steel.HigherArray0
+module Steel.ST.Array0
 
-/// C arrays of universe 1 elements.
-/// 
-/// - Due to a limitation on the universe for selectors, no selector
-///   version can be defined for universe 1.
-/// - Due to F* universes not being cumulative, arrays of universe 0
-///   elements need to be defined in a separate module.
+/// C arrays of universe 0 elements, with selectors.
 
 module P = Steel.FractionalPermission
 module U32 = FStar.UInt32
 
-open Steel.Memory
-open Steel.Effect.Atomic
-open Steel.Effect
+open Steel.ST.Util
 
-/// NOTE: This module is slated to have primitive Karamel extraction
-/// (except for definitions meant to be inlined.)
+/// NOTE: This module is defined on top of Steel.HigherArray0, so its
+/// definitions are all meant to be inlined and benefit from the
+/// latter module's primitive extraction. We seal it under an
+/// interface to avoid unpleasantly leaking the lifting of values
+/// of lower universes into the SMT context. Due to this interface,
+/// cross-module inlining must be enabled using F*'s --cmi option.
 
 /// An abstract type to represent a base array (whole allocation
 /// unit), exposed for proof purposes only
 [@@erasable]
-val base_t (elt: Type u#a) : Tot Type0
+val base_t (elt: Type0) : Tot Type0
 val base_len (#elt: Type) (b: base_t elt) : GTot nat
 
 /// An abstract type to represent a C pointer, as a base and an offset
 /// into its base
-[@@noextract_to "krml"] // primitive
-val ptr (elt: Type u#a) : Type0
+inline_for_extraction
+[@@noextract_to "krml"]
+val ptr (elt: Type0) : Type0
 val base (#elt: Type) (p: ptr elt) : Tot (base_t elt)
 val offset (#elt: Type) (p: ptr elt) : Ghost nat (requires True) (ensures (fun offset -> offset <= base_len (base p)))
 val ptr_base_offset_inj (#elt: Type) (p1 p2: ptr elt) : Lemma
@@ -45,7 +43,7 @@ val ptr_base_offset_inj (#elt: Type) (p1 p2: ptr elt) : Lemma
 /// record type.
 inline_for_extraction
 [@@noextract_to "krml"]
-let array (elt: Type u#a) : Tot Type0 =
+let array (elt: Type0) : Tot Type0 =
   (p: ptr elt & (length: Ghost.erased nat {offset p + length <= base_len (base p)}))
 
 /// This will extract to "let p = a"
@@ -62,11 +60,9 @@ let length (#elt: Type) (a: array elt) : GTot nat =
   dsnd a
 
 /// A Steel separation logic heap predicate to describe that an array
-/// a points to some element sequence s with some permission p.  vprop
-/// limits the universe to at most 1 (because of the universe of the
-/// heap.)
+/// a points to some element sequence s with some permission p.
 val pts_to
-  (#elt: Type u#1) (a: array elt)
+  (#elt: Type0) (a: array elt)
   ([@@@ smt_fallback ] p: P.perm)
   ([@@@ smt_fallback ] s: Seq.seq elt)
 : Tot vprop
@@ -75,14 +71,14 @@ val pts_to
 /// of the element sequence it points to
 val pts_to_length
   (#opened: _)
-  (#elt: Type u#1) (a: array elt)
+  (#elt: Type0) (a: array elt)
   (p: P.perm)
   (s: Seq.seq elt)
-: SteelGhost unit opened
+: STGhost unit opened
     (pts_to a p s)
     (fun _ -> pts_to a p s)
-    (fun _ -> True)
-    (fun _ _ _ -> Seq.length s == length a)
+    (True)
+    (fun _ -> Seq.length s == length a)
 
 /// An injectivity property, needed only to define a selector.  Such a
 /// selector can be only defined in universe 0, and universes are not
@@ -90,7 +86,7 @@ val pts_to_length
 /// universe 0 elements with selectors, reusing definitions from this
 /// interface, but we do not want to use `friend`.
 val pts_to_inj
-  (#elt: Type u#1) (a: array elt)
+  (#elt: Type0) (a: array elt)
   (p1: P.perm)
   (s1: Seq.seq elt)
   (p2: P.perm)
@@ -106,69 +102,38 @@ val pts_to_inj
   ))
 
 /// Allocating a new array of size n, where each cell is initialized
-/// with value x. We expose a pointer version for extraction purposes
-[@@noextract_to "krml"] // primitive
-val malloc_ptr
-  (#elt: Type)
-  (x: elt)
-  (n: U32.t)
-: SteelT(a: ptr elt { base_len (base a) == U32.v n /\ offset a == 0 })
-    emp
-    (fun a -> pts_to (| a, Ghost.hide (U32.v n) |) P.full_perm (Seq.create (U32.v n) x))
-
-/// Allocating a new array of size n, where each cell is initialized
-/// with value x
+/// with value x. We define the non-selector version of this operation
+/// (and others) with a _pt suffix in the name.
 inline_for_extraction
 [@@noextract_to "krml"]
-let malloc
+val malloc
   (#elt: Type)
   (x: elt)
   (n: U32.t)
-: Steel (array elt)
+: ST (array elt)
     emp
     (fun a -> pts_to a P.full_perm (Seq.create (U32.v n) x))
-    (fun _ -> True)
-    (fun _ a _ ->
+    (True)
+    (fun a ->
       length a == U32.v n /\
       base_len (base (ptr_of a)) == U32.v n
     )
-= let p = malloc_ptr x n in
-  let a : array elt = (| p, Ghost.hide (U32.v n) |) in
-  change_equal_slprop
-    (pts_to _ _ _)
-    (pts_to a _ _);
-  return a
 
-/// Freeing a full array. Same here, we expose a ptr version for extraction purposes only
-[@@ noextract_to "krml"; // primitive
-    warn_on_use "Steel.HigherArray0.free is currently unsound in the presence of zero-size subarrays, have you collected them all?"]
-val free_ptr
-  (#elt: Type)
-  (#s: Ghost.erased (Seq.seq elt))
-  (a: ptr elt { offset a == 0 })
-: SteelT unit
-    (pts_to (| a, Ghost.hide #nat (base_len (base a)) |) P.full_perm s)
-    (fun _ -> emp)
-
+/// Freeing a full array. 
 inline_for_extraction
 [@@ noextract_to "krml";
-    warn_on_use "Steel.HigherArray0.free is currently unsound in the presence of zero-size subarrays, have you collected them all?"]
-let free
+    warn_on_use "Steel.Array0.free_pt is currently unsound in the presence of zero-size subarrays, have you collected them all?"]
+val free
   (#elt: Type)
   (#s: Ghost.erased (Seq.seq elt))
   (a: array elt)
-: Steel unit
+: ST unit
     (pts_to a P.full_perm s)
     (fun _ -> emp)
-    (fun _ ->
+    (
       length a == base_len (base (ptr_of a))
     )
-    (fun _ _ _ -> True)
-= let (| p, _ |) = a in
-  change_equal_slprop
-    (pts_to _ _ _)
-    (pts_to (| p, Ghost.hide #nat (base_len (base p)) |) _ s);
-  free_ptr p
+    (fun _ -> True)
 
 /// Sharing and gathering permissions on an array. Those only
 /// manipulate permissions, so they are nothing more than stateful
@@ -179,11 +144,11 @@ val share
   (#x: Seq.seq elt)
   (a: array elt)
   (p p1 p2: P.perm)
-: SteelGhost unit opened
+: STGhost unit opened
     (pts_to a p x)
     (fun _ -> pts_to a p1 x `star` pts_to a p2 x)
-    (fun _ -> p == p1 `P.sum_perm` p2)
-    (fun _ _ _ -> True)
+    (p == p1 `P.sum_perm` p2)
+    (fun _ -> True)
 
 val gather
   (#opened: _)
@@ -191,82 +156,40 @@ val gather
   (a: array elt)
   (#x1: Seq.seq elt) (p1: P.perm)
   (#x2: Seq.seq elt) (p2: P.perm)
-: SteelGhost unit opened
+: STGhost unit opened
     (pts_to a p1 x1 `star` pts_to a p2 x2)
     (fun _ -> pts_to a (p1 `P.sum_perm` p2) x1)
-    (fun _ -> True)
-    (fun _ _ _ -> x1 == x2)
+    (True)
+    (fun _ -> x1 == x2)
 
 /// Reading the i-th element of an array a.
 /// TODO: we should also provide an atomic version for small types.
-[@@noextract_to "krml"] // primitive
-val index_ptr
-  (#t: Type) (#p: P.perm)
-  (a: ptr t)
-  (#len: Ghost.erased nat { offset a + len <= base_len (base a) })
-  (#s: Ghost.erased (Seq.seq t))
-  (i: U32.t)
-: Steel t
-    (pts_to (| a, len |) p s)
-    (fun _ -> pts_to (| a, len |) p s)
-    (fun _ -> U32.v i < Ghost.reveal len)
-    (fun _ res _ -> U32.v i < Seq.length s /\ res == Seq.index s (U32.v i))
-
 inline_for_extraction
-[@@noextract_to "krml"] // primitive
-let index
+[@@noextract_to "krml"]
+val index
   (#t: Type) (#p: P.perm)
   (a: array t)
   (#s: Ghost.erased (Seq.seq t))
   (i: U32.t)
-: Steel t
+: ST t
     (pts_to a p s)
     (fun _ -> pts_to a p s)
-    (fun _ -> U32.v i < length a)
-    (fun _ res _ -> U32.v i < Seq.length s /\ res == Seq.index s (U32.v i))
-= let (| pt, len |) = a in
-  change_equal_slprop
-    (pts_to _ _ _)
-    (pts_to (| pt, len |) p s);
-  let res = index_ptr pt i in
-  change_equal_slprop
-    (pts_to _ _ _)
-    (pts_to a p s);
-  return res
+    (U32.v i < length a)
+    (fun res -> U32.v i < Seq.length s /\ res == Seq.index s (U32.v i))
 
 /// Writing the value v at the i-th element of an array a.
 /// TODO: we should also provide an atomic version for small types.
-[@@noextract_to "krml"] // primitive
-val upd_ptr
-  (#t: Type)
-  (a: ptr t)
-  (#len: Ghost.erased nat { offset a + len <= base_len (base a) })
-  (#s: Ghost.erased (Seq.seq t))
-  (i: U32.t { U32.v i < Seq.length s })
-  (v: t)
-: SteelT unit
-    (pts_to (| a, len |) P.full_perm s)
-    (fun res -> pts_to (| a, len |) P.full_perm (Seq.upd s (U32.v i) v))
-
 inline_for_extraction
 [@@noextract_to "krml"]
-let upd
+val upd
   (#t: Type)
   (a: array t)
   (#s: Ghost.erased (Seq.seq t))
-  (i: U32.t { U32.v i < Seq.length s })
+  (i: U32.t {U32.v i < Seq.length s})
   (v: t)
-: SteelT unit
+: STT unit
     (pts_to a P.full_perm s)
     (fun res -> pts_to a P.full_perm (Seq.upd s (U32.v i) v))
-= let (| pt, len |) = a in
-  change_equal_slprop
-    (pts_to _ _ _)
-    (pts_to (| pt, len |) _ s);
-  upd_ptr pt i v;
-  change_equal_slprop
-    (pts_to _ _ _)
-    (pts_to _ _ _)
 
 /// An array a1 is adjacent to an array a2 if and only if they have
 /// the same base array and the end of a1 coincides with the beginning
@@ -312,7 +235,7 @@ val ghost_join
   (#p: P.perm)
   (a1 a2: array elt)
   (h: squash (adjacent a1 a2))
-: SteelGhostT unit opened
+: STGhostT unit opened
     (pts_to a1 p x1 `star` pts_to a2 p x2)
     (fun res -> pts_to (merge a1 a2) p (x1 `Seq.append` x2))
 
@@ -331,14 +254,14 @@ let join
   (#p: P.perm)
   (a1: array elt)
   (a2: Ghost.erased (array elt))
-: SteelAtomicBase (array elt) false opened Unobservable
+: STAtomicBase (array elt) false opened Unobservable
     (pts_to a1 p x1 `star` pts_to a2 p x2)
     (fun res -> pts_to res p (x1 `Seq.append` x2))
-    (fun _ -> adjacent a1 a2)
-    (fun _ res _ -> merge_into a1 a2 res)
+    (adjacent a1 a2)
+    (fun res -> merge_into a1 a2 res)
 = ghost_join a1 a2 ();
   let res = merge a1 a2 in
-  change_equal_slprop
+  rewrite
     (pts_to (merge a1 (Ghost.reveal a2)) p (x1 `Seq.append` x2))
     (pts_to res p (x1 `Seq.append` x2));
   return res
@@ -359,7 +282,8 @@ let split_l (#elt: Type) (a: array elt)
 /// offset off.  TODO: replace this with a Ghost definition and a
 /// SteelAtomicBase Unobservable operation with the corresponding
 /// permission.
-[@@noextract_to "krml"] // primitive
+inline_for_extraction
+[@@noextract_to "krml"]
 val ptr_shift
   (#elt: Type)
   (p: ptr elt)
@@ -370,13 +294,6 @@ val ptr_shift
     base p' == base p /\
     offset p' == offset p + U32.v off
   ))
-
-let ptr_shift_zero
-  (#elt: Type)
-  (p: ptr elt)
-: Lemma
-  (ptr_shift p U32.zero == p)
-= ptr_base_offset_inj (ptr_shift p U32.zero) p
 
 /// Computing the right-hand-side part of splitting an array a at
 /// offset i.
@@ -390,9 +307,9 @@ let split_r (#elt: Type) (a: array elt)
 = (| ptr_shift (ptr_of a) i, Ghost.hide (length a - U32.v i) |)
 
 /// Splitting an array a at offset i, as a stateful lemma expressed in
-/// terms of split_l, split_r. This stateful lemma returns a proof
-/// that offset i is in bounds of the value sequence, which is needed to
-/// typecheck the post-resource.
+/// terms of split_l, split_r. In the non-selector case, this stateful
+/// lemma returns a proof that offset i is in bounds of the value
+/// sequence, which is needed to typecheck the post-resource.
 val ghost_split
   (#opened: _)
   (#elt: Type)
@@ -400,13 +317,13 @@ val ghost_split
   (#p: P.perm)
   (a: array elt)
   (i: U32.t)
-: SteelGhost (squash (U32.v i <= length a /\ U32.v i <= Seq.length x)) opened
+: STGhost (squash (U32.v i <= length a /\ U32.v i <= Seq.length x)) opened
     (pts_to a p x)
     (fun res ->
       pts_to (split_l a i) p (Seq.slice x 0 (U32.v i)) `star`
       pts_to (split_r a i) p (Seq.slice x (U32.v i) (Seq.length x)))
-    (fun _ -> U32.v i <= length a)
-    (fun _ res _ ->
+    (U32.v i <= length a)
+    (fun res ->
       x == Seq.append (Seq.slice x 0 (U32.v i)) (Seq.slice x (U32.v i) (Seq.length x))
     )
 
