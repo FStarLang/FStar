@@ -78,6 +78,7 @@ noeq
 type open_or_close =
   | OpenWith of term
   | CloseVar of var
+  | Rename   : var -> var -> open_or_close
 
 val open_or_close_ctx_uvar_and_subst (c:ctx_uvar_and_subst) (v:open_or_close) (i:nat) 
   : ctx_uvar_and_subst
@@ -95,10 +96,15 @@ let rec open_or_close_term' (t:term) (v:open_or_close) (i:nat)
        | CloseVar y ->
          if bv_index x = y 
          then pack_ln (Tv_BVar (pack_bv ({ inspect_bv x with bv_index = i })))
+         else t
+       | Rename y z ->
+         if bv_index x = y
+         then pack_ln (Tv_Var (pack_bv ({ inspect_bv x with bv_index = z })))
          else t)
-    
+
     | Tv_BVar j -> 
       (match v with
+       | Rename _ _ -> t
        | CloseVar _ -> t
        | OpenWith v ->
          if i=bv_index j 
@@ -289,6 +295,12 @@ val close_term (t:term) (v:var)
 val close_term_spec (t:term) (v:var)
   : Lemma (close_term t v == open_or_close_term' t (CloseVar v) 0)
 
+val rename (t:term) (x y:var)
+  : term
+
+val rename_spec (t:term) (x y:var)
+  : Lemma (rename t x y == open_or_close_term' t (Rename x y) 0)
+  
 let bv_as_binder bv = pack_binder bv Q_Explicit []
 
 let bv_index_of_make_bv (n:nat) (t:term)
@@ -314,6 +326,10 @@ type constant_typing: vconst -> term -> Type0 =
   | CT_Unit: constant_typing C_Unit unit_ty
   | CT_True: constant_typing C_True bool_ty
   | CT_False: constant_typing C_False bool_ty  
+
+val subtyping_token (e:env) (t0 t1:term) : Type0
+val check_subtyping (e:env) (t0 t1:term)
+  : FStar.Tactics.Tac (option (subtyping_token e t0 t1))
   
 noeq
 type typing : env -> term -> term -> Type0 =
@@ -413,4 +429,43 @@ and sub_typing : env -> term -> term -> Type0 =
       t:term ->
       sub_typing g t t
 
+  | ST_Token: 
+      g:env ->
+      t0:term ->
+      t1:term ->      
+      subtyping_token g t0 t1 ->
+      sub_typing g t0 t1
+
 and branches_typing : env -> term -> term -> list branch -> term -> Type0 =
+
+let bindings = list (var & term)
+let rename_bindings bs x y = FStar.List.Tot.map (fun (v, t) -> (v, rename t x y)) bs
+
+let rec extend_env_l (g:env) (bs:bindings) 
+  : env
+  = match bs with
+    | [] -> g
+    | (x,t)::bs -> extend_env (extend_env_l g bs) x t
+
+val subtyping_token_renaming (g:env)
+                             (bs0:bindings)
+                             (bs1:bindings)
+                             (x:var { None? (lookup_bvar (extend_env_l g (bs1@bs0)) x) })
+                             (y:var { None? (lookup_bvar (extend_env_l g (bs1@bs0)) y) })
+                             (t:term)
+                             (t0 t1:term)
+                             (d:subtyping_token (extend_env_l g (bs1@(x,t)::bs0)) t0 t1)
+  : subtyping_token (extend_env_l g (rename_bindings bs1 x y@(y,t)::bs0))
+                    (rename t0 x y)
+                    (rename t1 x y)
+
+val subtyping_token_weakening (g:env)
+                              (bs0:bindings)
+                              (bs1:bindings)
+                              (x:var { None? (lookup_bvar (extend_env_l g (bs1@bs0)) x) })
+                              (t:term)
+                              (t0 t1:term)
+                             (d:subtyping_token (extend_env_l g (bs1@bs0)) t0 t1)
+  : subtyping_token (extend_env_l g (bs1@(x,t)::bs0)) t0 t1
+
+
