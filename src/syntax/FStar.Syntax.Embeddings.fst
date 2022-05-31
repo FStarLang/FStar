@@ -500,7 +500,7 @@ let e_tuple3 (ea:embedding 'a) (eb:embedding 'b) (ec:embedding 'c) =
             (fun t ->
                 let hd, args = U.head_and_args_full t in
                 match (U.un_uinst hd).n, args with
-                | Tm_fvar fv, [_; _; (a, _); (b, _); (c, _)] when S.fv_eq_lid fv PC.lid_Mktuple3 ->
+                | Tm_fvar fv, [_; _; _; (a, _); (b, _); (c, _)] when S.fv_eq_lid fv PC.lid_Mktuple3 ->
                     BU.bind_opt (unembed ea a w norm) (fun a ->
                     BU.bind_opt (unembed eb b w norm) (fun b ->
                     BU.bind_opt (unembed ec c w norm) (fun c ->
