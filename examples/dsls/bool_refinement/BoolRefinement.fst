@@ -220,8 +220,8 @@ let rec close_exp_freevars (m:int) (e:src_exp { ln' e m } ) (v:var) (n:nat)
     | ELam t body ->
       close_exp_freevars (m + 1) body v (n + 1)
 
-let s_exp = e:src_exp { ln' e (-1) }
-let src_eqn = src_exp & src_exp
+let s_exp = e:src_exp { ln e }
+let src_eqn = s_exp & s_exp
 
 let s_ty = t:src_ty { ln_ty t }
 //environment binds types or equations
@@ -451,7 +451,7 @@ type src_typing (f:fstar_top_env) : src_env -> src_exp -> s_ty -> Type =
 
    | T_If :
        g:src_env ->
-       b:src_exp ->
+       b:s_exp ->
        e1:src_exp ->
        e2:src_exp ->
        t1:s_ty ->
@@ -506,7 +506,7 @@ let check_sub_typing f
   = if t0 = t1 then S_Refl _ t0
     else T.fail "Not subtypes"
 
-let weaken (f:fstar_top_env) (sg:src_env) (hyp:var { None? (lookup sg hyp) } ) (b:src_exp) (t0 t1:s_ty)
+let weaken (f:fstar_top_env) (sg:src_env) (hyp:var { None? (lookup sg hyp) } ) (b:s_exp) (t0 t1:s_ty)
   : T.Tac (t:s_ty &
            sub_typing f ((hyp,Inr(b, EBool true))::sg) t0 t &
            sub_typing f ((hyp,Inr(b, EBool false))::sg) t1 t)
@@ -760,7 +760,7 @@ let rec src_ty_ok_weakening (#f:fstar_top_env)
     | OK_TRefine _ _ d -> OK_TRefine _ _ d
 
 let rec rename (e:src_exp) (x y:var) 
-  : src_exp
+  : e':src_exp { forall m. ln' e m ==> ln' e' m }
   = match e with
     | EBool _ -> e
     | EBVar _ -> e
@@ -770,6 +770,7 @@ let rec rename (e:src_exp) (x y:var)
     | EApp e1 e2 -> EApp (rename e1 x y) (rename e2 x y)
 
 let rename_binding (b:binding) (x y:var)
+  : either s_ty src_eqn
   = match b with
     | Inl t -> Inl t
     | Inr (e1, e2) -> Inr (rename e1 x y, rename e2 x y)
@@ -953,7 +954,7 @@ let rec as_bindings_rename_env_append (sg sg':src_env) (x y:var)
   = match sg with
     | [] -> ()
     | hd::tl -> as_bindings_rename_env_append tl sg' x y
-
+#push-options "--query_stats --fuel 8 --ifuel 4 --z3rlimit_factor 10"
 let rec rename_elab_commute_core (m:int) (e:src_exp { ln' e m } ) (x y:var) (n:nat)
   : Lemma 
     (ensures RT.open_or_close_term' (elab_exp e) (RT.Rename x y) n ==
@@ -973,15 +974,22 @@ let rec rename_elab_commute_core (m:int) (e:src_exp { ln' e m } ) (x y:var) (n:n
     | ELam t e ->
       src_types_are_closed_core t (RT.Rename x y) n;
       rename_elab_commute_core (m + 1) e x y (n + 1)
-    
-let rename_elab_commute (e:src_exp) (x y:var)
+#pop-options    
+let rename_elab_commute (e:s_exp) (x y:var)
   : Lemma (RT.rename (elab_exp e) x y ==
            elab_exp (rename e x y))
-  = assume (ln' e 100);
-    rename_elab_commute_core 100 e x y 0;
+  = rename_elab_commute_core (-1) e x y 0;
     RT.rename_spec (elab_exp e) x y
-  
-let rec rename_as_bindings_commute_1 (b:either s_ty src_eqn) (x y:var)
+
+let rename_eq2 (t e0 e1: R.term) (x y:var)
+  : Lemma (RT.rename (RT.eq2 t e0 e1) x y ==
+           RT.eq2 (RT.rename t x y) (RT.rename e0 x y) (RT.rename e1 x y))
+  = RT.rename_spec (RT.eq2 t e0 e1) x y;
+    RT.rename_spec t x y;
+    RT.rename_spec e0 x y;
+    RT.rename_spec e1 x y
+
+let rename_as_bindings_commute_1 (b:either s_ty src_eqn) (x y:var)
   : Lemma 
     (ensures 
       RT.rename (elab_binding b) x y ==
@@ -1006,12 +1014,8 @@ let rec rename_as_bindings_commute_1 (b:either s_ty src_eqn) (x y:var)
               (RT.rename (elab_exp e0) x y)
               (RT.rename (elab_exp e1) x y);
       (==) { 
-             RT.rename_spec (RT.eq2 RT.bool_ty (elab_exp e0) (elab_exp e1)) x y;
-             RT.rename_spec (elab_exp e0) x y;
-             RT.rename_spec (elab_exp e1) x y;
-             RT.rename_spec RT.bool_ty x y;             
-             assume (forall t e0 e1. RT.rename (RT.eq2 t e0 e1) x y ==
-                                RT.eq2 (RT.rename t x y) (RT.rename e0 x y) (RT.rename e1 x y))
+             rename_eq2 RT.bool_ty (elab_exp e0) (elab_exp e1) x y;
+             RT.rename_spec RT.bool_ty x y
            }
       RT.rename (RT.eq2 RT.bool_ty (elab_exp e0) (elab_exp e1)) x y;
       }

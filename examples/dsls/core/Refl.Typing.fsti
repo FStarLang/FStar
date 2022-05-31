@@ -320,7 +320,14 @@ let tm_type = pack_ln (Tv_Type ())
 
 let true_bool = pack_ln (Tv_Const C_True)
 let false_bool = pack_ln (Tv_Const C_False)
-val eq2 (t v0 v1:term) : term 
+let eq2 (t v0 v1:term) 
+  : term 
+  = let eq2 = pack_ln (Tv_FVar (pack_fv eq2_qn)) in
+    let h = pack_ln (Tv_App eq2 (t, Q_Implicit)) in
+    let h1 = pack_ln (Tv_App h (v0, Q_Explicit)) in
+    let h2 = pack_ln (Tv_App h1 (v1, Q_Explicit)) in    
+    h2
+
 noeq
 type constant_typing: vconst -> term -> Type0 = 
   | CT_Unit: constant_typing C_Unit unit_ty
