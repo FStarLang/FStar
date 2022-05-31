@@ -847,6 +847,10 @@ and translate_expr env e: expr =
       else
         EApp (EQualified ([ "FStar"; "Int"; "Cast" ], c), [ translate_expr env arg ])
 
+  | MLE_App ({expr=MLE_Name p}, [ _inv; test; body ])
+    when (string_of_mlpath p = "Steel.ST.Loops.while_loop") ->
+    EApp (EQualified (["Steel"; "Loops"], "while_loop"), [ EUnit; translate_expr env test; translate_expr env body ])
+
   | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, _)}, [_; _; e])
     when string_of_mlpath p = "Steel.Effect.Atomic.return" ||
          string_of_mlpath p = "Steel.ST.Util.return" ->
