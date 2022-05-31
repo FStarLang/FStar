@@ -875,9 +875,21 @@ let rec extract_one_pat (imp : bool)
     | Pat_var x | Pat_wild x ->
         // JP,NS: Pat_wild turns into a binder in the internal syntax because
         // the types of other terms may depend on it
-        let mlty = term_as_mlty g x.sort in
-        let g, x, _ = extend_bv g x ([], mlty) false imp in
-        g, (if imp then None else Some (MLP_Var x, [])), ok mlty
+        let computed_mlty = term_as_mlty g x.sort in
+        //In some cases, the computed_mlty based on the F* computed sort x.sort
+        //can be more precise than the type in ML. see e.g., Bug2595
+        //So, prefer to extend the environment with the expected ML type of the
+        //binder rather than the computed_mlty, so that we do not forget to put
+        //magics around the uses of the bound variable at use sites
+        let var_mlty, ok = 
+            match expected_topt with
+            | None -> computed_mlty, true
+            | Some t -> 
+              if ok computed_mlty then computed_mlty, true
+              else t, false
+        in
+        let g, x, _ = extend_bv g x ([], var_mlty) false imp in
+        g, (if imp then None else Some (MLP_Var x, [])), ok
 
     | Pat_dot_term _ ->
         g, None, true

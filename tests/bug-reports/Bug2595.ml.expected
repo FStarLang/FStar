@@ -1,0 +1,19 @@
+open Prims
+type sum_type =
+  | SumType1 of Prims.string 
+  | SumType2 of Prims.nat 
+let (uu___is_SumType1 : sum_type -> Prims.bool) =
+  fun projectee ->
+    match projectee with | SumType1 _0 -> true | uu___ -> false
+let (__proj__SumType1__item___0 : sum_type -> Prims.string) =
+  fun projectee -> match projectee with | SumType1 _0 -> _0
+let (uu___is_SumType2 : sum_type -> Prims.bool) =
+  fun projectee ->
+    match projectee with | SumType2 _0 -> true | uu___ -> false
+let (__proj__SumType2__item___0 : sum_type -> Prims.nat) =
+  fun projectee -> match projectee with | SumType2 _0 -> _0
+let (test_buggy : (Prims.bool, Obj.t) Prims.dtuple2 -> sum_type) =
+  fun x ->
+    match x with
+    | Prims.Mkdtuple2 (false, x2) -> SumType1 (Obj.magic x2)
+    | Prims.Mkdtuple2 (true, x4) -> SumType2 (Obj.magic x4)

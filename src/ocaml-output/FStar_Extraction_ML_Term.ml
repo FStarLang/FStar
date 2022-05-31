@@ -1386,33 +1386,49 @@ let rec (extract_one_pat :
                   FStar_Pervasives_Native.Some uu___1 in
                 let uu___1 = ok mlty in (g, uu___, uu___1)
             | FStar_Syntax_Syntax.Pat_var x ->
-                let mlty = term_as_mlty g x.FStar_Syntax_Syntax.sort in
+                let computed_mlty = term_as_mlty g x.FStar_Syntax_Syntax.sort in
                 let uu___ =
-                  FStar_Extraction_ML_UEnv.extend_bv g x ([], mlty) false imp in
+                  match expected_topt with
+                  | FStar_Pervasives_Native.None -> (computed_mlty, true)
+                  | FStar_Pervasives_Native.Some t ->
+                      let uu___1 = ok computed_mlty in
+                      if uu___1 then (computed_mlty, true) else (t, false) in
                 (match uu___ with
-                 | (g1, x1, uu___1) ->
-                     let uu___2 = ok mlty in
-                     (g1,
-                       (if imp
-                        then FStar_Pervasives_Native.None
-                        else
-                          FStar_Pervasives_Native.Some
-                            ((FStar_Extraction_ML_Syntax.MLP_Var x1), [])),
-                       uu___2))
+                 | (var_mlty, ok1) ->
+                     let uu___1 =
+                       FStar_Extraction_ML_UEnv.extend_bv g x ([], var_mlty)
+                         false imp in
+                     (match uu___1 with
+                      | (g1, x1, uu___2) ->
+                          (g1,
+                            (if imp
+                             then FStar_Pervasives_Native.None
+                             else
+                               FStar_Pervasives_Native.Some
+                                 ((FStar_Extraction_ML_Syntax.MLP_Var x1),
+                                   [])), ok1)))
             | FStar_Syntax_Syntax.Pat_wild x ->
-                let mlty = term_as_mlty g x.FStar_Syntax_Syntax.sort in
+                let computed_mlty = term_as_mlty g x.FStar_Syntax_Syntax.sort in
                 let uu___ =
-                  FStar_Extraction_ML_UEnv.extend_bv g x ([], mlty) false imp in
+                  match expected_topt with
+                  | FStar_Pervasives_Native.None -> (computed_mlty, true)
+                  | FStar_Pervasives_Native.Some t ->
+                      let uu___1 = ok computed_mlty in
+                      if uu___1 then (computed_mlty, true) else (t, false) in
                 (match uu___ with
-                 | (g1, x1, uu___1) ->
-                     let uu___2 = ok mlty in
-                     (g1,
-                       (if imp
-                        then FStar_Pervasives_Native.None
-                        else
-                          FStar_Pervasives_Native.Some
-                            ((FStar_Extraction_ML_Syntax.MLP_Var x1), [])),
-                       uu___2))
+                 | (var_mlty, ok1) ->
+                     let uu___1 =
+                       FStar_Extraction_ML_UEnv.extend_bv g x ([], var_mlty)
+                         false imp in
+                     (match uu___1 with
+                      | (g1, x1, uu___2) ->
+                          (g1,
+                            (if imp
+                             then FStar_Pervasives_Native.None
+                             else
+                               FStar_Pervasives_Native.Some
+                                 ((FStar_Extraction_ML_Syntax.MLP_Var x1),
+                                   [])), ok1)))
             | FStar_Syntax_Syntax.Pat_dot_term uu___ ->
                 (g, FStar_Pervasives_Native.None, true)
             | FStar_Syntax_Syntax.Pat_cons (f, pats) ->

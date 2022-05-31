@@ -581,12 +581,6 @@ let (generalize' :
   fun env ->
     fun is_rec ->
       fun lecs ->
-        (let uu___2 =
-           FStar_Compiler_List.for_all
-             (fun uu___3 ->
-                match uu___3 with
-                | (l, uu___4, uu___5) -> FStar_Compiler_Util.is_right l) lecs in
-         ());
         (let uu___2 = FStar_TypeChecker_Env.debug env FStar_Options.Low in
          if uu___2
          then
