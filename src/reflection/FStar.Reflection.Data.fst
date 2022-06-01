@@ -31,17 +31,3 @@ module Range = FStar.Compiler.Range
 module Z     = FStar.BigInt
 open FStar.Ident
 module PC = FStar.Parser.Const
-
-
-let fstar_refl_vconfig = tconst (PC.psconst "vconfig")
-
-let ref_Mkvconfig =
-    let lid = PC.psconst "Mkvconfig" in
-    let attr = Record_ctor (PC.psconst "vconfig", []) in
-    let fv = lid_as_fv lid delta_constant (Some attr) in
-    { lid = lid
-    ; fv  = fv
-    ; t   = fv_to_tm fv
-    }
-
-let ref_Q_Meta_attr = fstar_refl_data_const "Q_Meta_attr"

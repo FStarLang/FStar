@@ -65,7 +65,7 @@ type universe_view =
   | Uv_BVar : int -> universe_view
   | Uv_Name : univ_name -> universe_view
   | Uv_Unif : universe_uvar -> universe_view
-  | Uv_Unk   : universe_uvar
+  | Uv_Unk  : universe_view
 
 type term_view =
     | Tv_Var       of bv
