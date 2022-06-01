@@ -163,7 +163,7 @@ let inspect_universe u =
   | U_zero -> Uv_Zero
   | U_succ u -> Uv_Succ u
   | U_max us -> Uv_Max us
-  | U_bvar n -> Uv_BVar n
+  | U_bvar n -> Uv_BVar (Z.of_int n)
   | U_name i -> Uv_Name i
   | U_unif u -> Uv_Unif u
   | U_unknown -> Uv_Unk
@@ -173,7 +173,7 @@ let pack_universe uv =
   | Uv_Zero -> U_zero
   | Uv_Succ u -> U_succ u
   | Uv_Max us -> U_max us
-  | Uv_BVar n -> U_bvar n
+  | Uv_BVar n -> U_bvar (Z.to_int n)
   | Uv_Name i -> U_name i
   | Uv_Unif u -> U_unif u
   | Uv_Unk -> U_unknown
