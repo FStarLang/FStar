@@ -831,19 +831,19 @@ let resugar_pat g q p = match p with
 let rec extract_one_pat (imp : bool)
                         (g:uenv)
                         (p:S.pat)
-                        (expected_topt:option mlty)
+                        (expected_ty:mlty)
                         (term_as_mlexpr:uenv -> S.term -> (mlexpr * e_tag * mlty))
     : uenv * option (mlpattern * list mlexpr) * bool =
     let ok t =
-        match expected_topt with
-        | None -> true
-        | Some t' ->
-            let ok = type_leq g t t' in
-            if not ok then debug g (fun _ -> BU.print2 "Expected pattern type %s; got pattern type %s\n"
-                                                (Code.string_of_mlty (current_module_of_uenv g) t')
+        let ok = type_leq g t expected_ty in
+        if not ok then debug g (fun _ -> BU.print2 "Expected pattern type %s; got pattern type %s\n"
+                                                (Code.string_of_mlty (current_module_of_uenv g) expected_ty)
                                                 (Code.string_of_mlty (current_module_of_uenv g) t));
-            ok
+        ok
     in
+    debug g (fun () -> BU.print2 "@@@@@extract_one_pat %s with expected type = %s\n"
+                              (Print.pat_to_string p)
+                              (Code.string_of_mlty (current_module_of_uenv g) expected_ty));
     match p.v with
     | Pat_constant (Const_int (c, swopt))
       when Options.codegen() <> Some Options.Krml ->
@@ -881,15 +881,8 @@ let rec extract_one_pat (imp : bool)
         //So, prefer to extend the environment with the expected ML type of the
         //binder rather than the computed_mlty, so that we do not forget to put
         //magics around the uses of the bound variable at use sites
-        let var_mlty, ok = 
-            match expected_topt with
-            | None -> computed_mlty, true
-            | Some t -> 
-              if ok computed_mlty then computed_mlty, true
-              else t, false
-        in
-        let g, x, _ = extend_bv g x ([], var_mlty) false imp in
-        g, (if imp then None else Some (MLP_Var x, [])), ok
+        let g, x, _ = extend_bv g x ([], expected_ty) false imp in
+        g, (if imp then None else Some (MLP_Var x, [])), ok computed_mlty
 
     | Pat_dot_term _ ->
         g, None, true
@@ -907,34 +900,72 @@ let rec extract_one_pat (imp : bool)
         in
         let nTyVars = List.length (fst tys) in
         let tysVarPats, restPats =  BU.first_N nTyVars pats in
-        let f_ty_opt =
-                try
-                    let mlty_args = tysVarPats |> List.map (fun (p, _) ->
-                        match p.v with
-                        | Pat_dot_term (_, t) -> term_as_mlty g t
-                        | _ ->
-                            debug g (fun _ -> BU.print1 "Pattern %s is not extractable" (Print.pat_to_string p));
-                            raise Un_extractable) in
-                    let f_ty = subst tys mlty_args in
-                    Some (Util.uncurry_mlty_fun f_ty)
-                with Un_extractable -> None in
+        let f_ty =
+            let mlty_args =
+                tysVarPats |>
+                List.map 
+                  (fun (p, _) ->
+                    match expected_ty with
+                    | MLTY_Top -> MLTY_Top
+                    | _ ->
+                      match p.v with
+                      | Pat_dot_term (_, t) -> term_as_mlty g t
+                      | _ -> MLTY_Top)
+            in
+            let f_ty = subst tys mlty_args in
+            Util.uncurry_mlty_fun f_ty
+        in
 
-        let g, tyMLPats = BU.fold_map (fun g (p, imp) ->
-            let g, p, _ = extract_one_pat true g p None term_as_mlexpr in
-            g, p) g tysVarPats in (*not all of these were type vars in ML*)
+        debug g (fun () -> BU.print2 "@@@Expected type of pattern with head = %s is %s\n"
+                          (Print.fv_to_string f)
+                          (let args, t = f_ty in
+                           let args =
+                               List.map 
+                                 (Code.string_of_mlty (current_module_of_uenv g))
+                                 args
+                               |> String.concat " -> "
+                           in
+                           let res = Code.string_of_mlty (current_module_of_uenv g) t in
+                           BU.format2 "%s -> %s" args res));
+      
+        let g, tyMLPats =
+          BU.fold_map 
+            (fun g (p, imp) ->
+              let g, p, _ = extract_one_pat true g p MLTY_Top term_as_mlexpr in
+              g, p)
+            g
+            tysVarPats
+        in (*not all of these were type vars in ML*)
 
-        let (g, f_ty_opt), restMLPats = BU.fold_map (fun (g, f_ty_opt) (p, imp) ->
-            let f_ty_opt, expected_ty = match f_ty_opt with
-                | Some (hd::rest, res) -> Some (rest, res), Some hd
-                | _ -> None, None in
-            let g, p, _ = extract_one_pat false g p expected_ty term_as_mlexpr in
-            (g, f_ty_opt), p) (g, f_ty_opt) restPats in
+        let (g, f_ty), restMLPats =
+          BU.fold_map
+            (fun (g, f_ty) (p, imp) ->
+              let f_ty, expected_arg_ty =
+                match f_ty with
+                | (hd::rest, res) -> (rest, res), hd
+                | _ -> ([], MLTY_Top), MLTY_Top
+              in
+              let g, p, _ = extract_one_pat false g p expected_arg_ty term_as_mlexpr in
+              (g, f_ty), p)
+            (g, f_ty)
+            restPats
+        in
 
-        let mlPats, when_clauses = List.append tyMLPats restMLPats |> List.collect (function (Some x) -> [x] | _ -> []) |> List.split in
-        let pat_ty_compat = match f_ty_opt with
-            | Some ([], t) -> ok t
-            | _ -> false in
-        g, Some (resugar_pat g f.fv_qual (MLP_CTor (d, mlPats)), when_clauses |> List.flatten), pat_ty_compat
+        let mlPats, when_clauses =
+          List.append tyMLPats restMLPats
+          |> List.collect (function (Some x) -> [x] | _ -> [])
+          |> List.split
+        in
+        
+        let pat_ty_compat = 
+          match f_ty with
+          | ([], t) -> ok t
+          | _ -> false //arity mismatch, should be impossible
+        in
+        g,
+        Some (resugar_pat g f.fv_qual (MLP_CTor (d, mlPats)),
+              when_clauses |> List.flatten),
+        pat_ty_compat
 
 let extract_pat (g:uenv) (p:S.pat) (expected_t:mlty)
                 (term_as_mlexpr: uenv -> S.term -> (mlexpr * e_tag * mlty))
@@ -949,7 +980,7 @@ let extract_pat (g:uenv) (p:S.pat) (expected_t:mlty)
         | [] -> None
         | hd::tl -> Some (List.fold_left conjoin hd tl)
     in
-    let g, (p, whens), b = extract_one_pat g p (Some expected_t) in
+    let g, (p, whens), b = extract_one_pat g p expected_t in
     let when_clause = mk_when_clause whens in
     g, [(p, when_clause)], b
 

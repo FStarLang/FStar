@@ -172,9 +172,6 @@ Bug2595.ml:
 Bug2595.extract: Bug2595.ml
 	diff -u --strip-trailing-cr Bug2595.ml Bug2595.ml.expected
 
-output-accept: Bug310.ml Bug2058.ml
-	cp Bug310.ml Bug310.ml.expected
-	cp Bug2058.ml Bug2058.ml.expected
 
 RemoveUnusedTypars.B.extract: RemoveUnusedTypars.A.fst RemoveUnusedTypars.B.fst
 	$(FSTAR) $(FSTAR_DEFAULT_ARGS) --cache_checked_modules RemoveUnusedTypars.A.fst
