@@ -44,6 +44,9 @@ val pack_fv        : name -> fv
 val inspect_bv     : bv -> bv_view
 val pack_bv        : bv_view -> bv
 
+val inspect_range  : FStar.Range.range -> rng_view
+val pack_range     : rng_view -> FStar.Range.range
+
 val inspect_lb     : letbinding -> lb_view
 val pack_lb        : lb_view -> letbinding
 
@@ -73,6 +76,9 @@ val term_eq               : term -> term -> bool
 val term_to_string        : term -> string
 val comp_to_string        : comp -> string
 val env_open_modules      : env -> list name
+val range_of_term         : term -> FStar.Range.range
+val range_of_sigelt       : sigelt -> FStar.Range.range
+val term_with_range       : term -> FStar.Range.range -> term
 
 (** [push_binder] extends the environment with a single binder.
     This is useful as one traverses the syntax of a term,

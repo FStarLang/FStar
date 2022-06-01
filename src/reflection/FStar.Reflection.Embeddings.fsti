@@ -46,6 +46,7 @@ val e_letbinding  : embedding letbinding
 val e_lb_view     : embedding lb_view
 val e_sigelt_view : embedding sigelt_view
 val e_bv_view     : embedding bv_view
+val e_rng_view    : embedding rng_view
 val e_exp         : embedding exp
 val e_attribute   : embedding attribute
 val e_attributes  : embedding (list attribute) (* This seems rather silly, but `attributes` is a keyword *)

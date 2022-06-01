@@ -490,6 +490,26 @@ let e_bv_view =
     in
     mk_emb' embed_bv_view unembed_bv_view fstar_refl_bv_view_fv
 
+let e_rng_view =
+    let embed_rng_view cb (rngv:rng_view) : t =
+        mkConstruct ref_Mk_rng.fv [] [as_arg (embed e_string cb rngv.file_name);
+                                     as_arg (embed (e_tuple2 e_int e_int) cb rngv.start_pos);
+                                     as_arg (embed (e_tuple2 e_int e_int) cb rngv.end_pos)]
+    in
+    let unembed_rng_view cb (t : t) : option rng_view =
+        match t.nbe_t with
+        | Construct (fv, _, [(fl, _); (sp, _); (ep, _)]) when S.fv_eq_lid fv ref_Mk_rng.lid ->
+            BU.bind_opt (unembed e_string cb fl) (fun fl ->
+            BU.bind_opt (unembed (e_tuple2 e_int e_int) cb sp) (fun sp ->
+            BU.bind_opt (unembed (e_tuple2 e_int e_int) cb ep) (fun ep ->
+            Some <| { file_name = fl ; start_pos = sp ; end_pos = ep })))
+
+        | _ ->
+            Err.log_issue Range.dummyRange (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded rng_view: %s" (t_to_string t)));
+            None
+    in
+    mk_emb' embed_rng_view unembed_rng_view fstar_refl_rng_view_fv
+
 let e_comp_view =
     let embed_comp_view cb (cv : comp_view) : t =
         match cv with
