@@ -68,6 +68,23 @@ let rec compare_list f l1 l2 =
     | _, [] -> Gt
     | x::xs, y::ys -> lex (f x y) (fun () -> compare_list f xs ys)
 
+(*
+ * A refined version of compare list,
+ *   that promises to call the comparator in strictly smaller elements
+ * Useful when writing a comparator for an inductive type,
+ *   that contains the list of itself as an argument to one of its
+ *   data constructors
+ *)
+let rec compare_list_refined (#a:Type)
+  (l1 l2:list a)
+  (f:(x:a{x << l1} -> y:a{y << l2} -> order))
+  : order
+  = match l1, l2 with
+    | [], [] -> Eq
+    | [], _ -> Lt
+    | _, [] -> Gt
+    | x::xs, y::ys -> lex (f x y) (fun _ -> compare_list_refined xs ys f)
+
 val compare_option : ('a -> 'a -> order) -> option 'a -> option 'a -> order
 let compare_option f x y =
     match x, y with
