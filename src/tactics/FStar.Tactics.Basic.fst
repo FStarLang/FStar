@@ -1253,6 +1253,9 @@ let uvar_env (env : env) (ty : option typ) : tac term =
                   bind (new_uvar "uvar_env" env typ ps.entry_range)
                        (fun (t, uvar_t) -> ret t))))
 
+let fresh_universe_uvar () : tac term =
+  U.type_u () |> fst |> ret
+
 let unshelve (t : term) : tac unit = wrap_err "unshelve" <|
     bind get (fun ps ->
     let env = ps.main_context in
