@@ -221,6 +221,8 @@ let fstar_refl_univ_name        = mk_refl_types_lid_as_term "univ_name"
 let fstar_refl_univ_name_fv     = mk_refl_types_lid_as_fv   "univ_name"
 let fstar_refl_optionstate      = mk_refl_types_lid_as_term "optionstate"
 let fstar_refl_optionstate_fv   = mk_refl_types_lid_as_fv   "optionstate"
+let fstar_refl_universe         = mk_refl_types_lid_as_term "universe"
+let fstar_refl_universe_fv      = mk_refl_types_lid_as_fv   "universe"
 
 (* auxiliary types *)
 let fstar_refl_aqualv           = mk_refl_data_lid_as_term "aqualv"
@@ -245,6 +247,8 @@ let fstar_refl_exp              = mk_refl_data_lid_as_term "exp"
 let fstar_refl_exp_fv           = mk_refl_data_lid_as_fv   "exp"
 let fstar_refl_qualifier        = mk_refl_data_lid_as_term "qualifier"
 let fstar_refl_qualifier_fv     = mk_refl_data_lid_as_fv   "qualifier"
+let fstar_refl_universe_view    = mk_refl_data_lid_as_term "universe_view"
+let fstar_refl_universe_view_fv = mk_refl_data_lid_as_fv   "universe_view"
 
 (* bv_view, this is a record constructor *)
 
@@ -295,6 +299,15 @@ let ref_Pat_Cons     = fstar_refl_data_const "Pat_Cons"
 let ref_Pat_Var      = fstar_refl_data_const "Pat_Var"
 let ref_Pat_Wild     = fstar_refl_data_const "Pat_Wild"
 let ref_Pat_Dot_Term = fstar_refl_data_const "Pat_Dot_Term"
+
+(* universe_view *)
+let ref_Uv_Zero    = fstar_refl_data_const "Uv_Zero"
+let ref_Uv_Succ    = fstar_refl_data_const "Uv_Succ"
+let ref_Uv_Max     = fstar_refl_data_const "Uv_Max"
+let ref_Uv_BVar    = fstar_refl_data_const "Uv_BVar"
+let ref_Uv_Name    = fstar_refl_data_const "Uv_Name"
+let ref_Uv_Unif    = fstar_refl_data_const "Uv_Unif"
+let ref_Uv_Unk     = fstar_refl_data_const "Uv_Unk"
 
 (* term_view *)
 let ref_Tv_Var     = fstar_refl_data_const "Tv_Var"
