@@ -202,9 +202,9 @@ let mk_do_while (#t: Type) (x: t) : T.Tac unit =
           begin match T.inspect ty with
           | T.Tv_Arrow tin' tout' ->
             begin match T.inspect_comp tout' with
-            | T.C_GTotal _ _ -> T.fail "C_GTotal"
+            | T.C_GTotal _ _ _ -> T.fail "C_GTotal"
             | T.C_Eff _ _ _ _ -> T.fail "C_Eff"
-            | T.C_Total tout_ decr ->
+            | T.C_Total tout_ _ decr ->
               begin match T.inspect tout_ with
               | T.Tv_App m_tm (tout, T.Q_Explicit) ->
                 if tm_eq_fvar m_tm (quote m)
@@ -217,7 +217,7 @@ let mk_do_while (#t: Type) (x: t) : T.Tac unit =
                       | _ -> T.pack (T.Tv_Var (T.bv_of_binder tin')) in
                     let decr_body_t = T.fresh_uvar None in
                     let decr = T.pack (T.Tv_Abs tin' decr_body) in
-                    let decr_ty = T.pack (T.Tv_Arrow tin' (T.pack_comp (T.C_Total decr_body_t []))) in
+                    let decr_ty = T.pack (T.Tv_Arrow tin' (T.pack_comp (T.C_Total decr_body_t None []))) in
                     let decr_binder = T.fresh_binder decr_ty in
                     let x_tm = T.pack (T.Tv_Var (T.bv_of_binder x)) in
                     let tin_decr = T.mk_app (quote tin_decr) [
