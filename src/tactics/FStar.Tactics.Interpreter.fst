@@ -491,6 +491,13 @@ let () =
         gather_explicit_guards_for_resolved_goals e_unit e_unit
         gather_explicit_guards_for_resolved_goals NBET.e_unit NBET.e_unit;
 
+      mk_tac_step_2 0 "string_to_term"
+        string_to_term RE.e_env e_string RE.e_term
+        string_to_term NRE.e_env NBET.e_string NRE.e_term;
+
+      mk_tac_step_2 0 "push_bv_dsenv"
+        push_bv_dsenv RE.e_env e_string (e_tuple2 RE.e_env RE.e_bv)
+        push_bv_dsenv NRE.e_env NBET.e_string (NBET.e_tuple2 NRE.e_env NRE.e_bv);
     ]
 
 let unembed_tactic_1_alt (ea:embedding 'a) (er:embedding 'r) (f:term) (ncb:norm_cb) : option ('a -> tac 'r) =
