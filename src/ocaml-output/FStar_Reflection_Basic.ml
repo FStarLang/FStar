@@ -133,7 +133,7 @@ let (inspect_universe :
     | FStar_Syntax_Syntax.U_succ u1 -> FStar_Reflection_Data.Uv_Succ u1
     | FStar_Syntax_Syntax.U_max us -> FStar_Reflection_Data.Uv_Max us
     | FStar_Syntax_Syntax.U_bvar n ->
-        let uu___ = FStar_BigInt.of_int n in
+        let uu___ = FStar_BigInt.of_int_fs n in
         FStar_Reflection_Data.Uv_BVar uu___
     | FStar_Syntax_Syntax.U_name i -> FStar_Reflection_Data.Uv_Name i
     | FStar_Syntax_Syntax.U_unif u1 -> FStar_Reflection_Data.Uv_Unif u1
@@ -146,7 +146,8 @@ let (pack_universe :
     | FStar_Reflection_Data.Uv_Succ u -> FStar_Syntax_Syntax.U_succ u
     | FStar_Reflection_Data.Uv_Max us -> FStar_Syntax_Syntax.U_max us
     | FStar_Reflection_Data.Uv_BVar n ->
-        let uu___ = FStar_BigInt.to_int n in FStar_Syntax_Syntax.U_bvar uu___
+        let uu___ = FStar_BigInt.to_int_fs n in
+        FStar_Syntax_Syntax.U_bvar uu___
     | FStar_Reflection_Data.Uv_Name i -> FStar_Syntax_Syntax.U_name i
     | FStar_Reflection_Data.Uv_Unif u -> FStar_Syntax_Syntax.U_unif u
     | FStar_Reflection_Data.Uv_Unk -> FStar_Syntax_Syntax.U_unknown
