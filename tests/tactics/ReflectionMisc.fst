@@ -19,36 +19,36 @@ open FStar.Tactics
 
 let mk (#a: Type u#a) (u: universe_view) (#[exact (pack_ln (Tv_Type (pack_universe u)))]r: a) (): a = r
 let univs (_: Type u#a) (_: Type u#b): _ = 
-  assert (mk (Uv_name (range_of 1, "a")) () == Type u#a);
+  assert (mk (Uv_Name ("a", range_of 1)) () == Type u#a);
   assert (mk (
-    Uv_max [
-      Uv_name (range_of 1, "a")
+    Uv_Max [
+      pack_universe (Uv_Name ("a", range_of 1))
     ]
   ) () == Type u#a);
   assert (mk (
-    Uv_max [
-      Uv_name (range_of 1, "a");
-      Uv_name (range_of 1, "b")
+    Uv_Max [
+      pack_universe (Uv_Name ("a", range_of 1));
+      pack_universe (Uv_Name ("b", range_of 1));
     ]
   ) () == Type u#(max a b));
   assert (mk (
-    Uv_max [
-      Uv_succ (Uv_name (range_of 1, "a"));
-      Uv_name (range_of 1, "b")
+    Uv_Max [
+      pack_universe (Uv_Succ (pack_universe (Uv_Name ("a", range_of 1))));
+      pack_universe (Uv_Name ("b", range_of 1));
     ]
   ) () == Type u#(max (a+1) b));
   assert (mk (
-    Uv_succ (Uv_max [
-      Uv_name (range_of 1, "a");
-      Uv_name (range_of 1, "b")
-    ])
+    Uv_Succ (pack_universe (Uv_Max [
+      pack_universe (Uv_Name ("a", range_of 1));
+      pack_universe (Uv_Name ("b", range_of 1));
+    ]))
   ) () == Type u#(1+(max a b)));
   assert (mk (
-    Uv_succ (Uv_max [
-      Uv_name (range_of 1, "a");
-      Uv_name (range_of 1, "b");
-      Uv_zero
-    ])
+    Uv_Succ (pack_universe (Uv_Max [
+      pack_universe (Uv_Name ("a", range_of 1));
+      pack_universe (Uv_Name ("b", range_of 1));
+      pack_universe Uv_Zero
+    ]))
   ) () == Type u#(1+(max a b)))
 
 let tm = `(1,2)
