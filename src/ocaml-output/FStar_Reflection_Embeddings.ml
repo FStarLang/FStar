@@ -363,7 +363,12 @@ let (e_universe_view :
     | FStar_Reflection_Data.Uv_Name i ->
         let uu___ =
           let uu___1 =
-            let uu___2 = embed e_ident rng i in
+            let uu___2 =
+              let uu___3 =
+                FStar_Syntax_Embeddings.e_tuple2
+                  FStar_Syntax_Embeddings.e_string
+                  FStar_Syntax_Embeddings.e_range in
+              embed uu___3 rng i in
             FStar_Syntax_Syntax.as_arg uu___2 in
           [uu___1] in
         FStar_Syntax_Syntax.mk_Tm_app
@@ -438,7 +443,12 @@ let (e_universe_view :
              FStar_Syntax_Syntax.fv_eq_lid fv
                FStar_Reflection_Data.ref_Uv_Name.FStar_Reflection_Data.lid
              ->
-             let uu___3 = unembed' w e_ident i in
+             let uu___3 =
+               let uu___4 =
+                 FStar_Syntax_Embeddings.e_tuple2
+                   FStar_Syntax_Embeddings.e_string
+                   FStar_Syntax_Embeddings.e_range in
+               unembed' w uu___4 i in
              FStar_Compiler_Util.bind_opt uu___3
                (fun i1 ->
                   let uu___4 =

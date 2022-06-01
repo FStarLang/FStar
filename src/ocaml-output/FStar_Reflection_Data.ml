@@ -84,12 +84,13 @@ let (uu___is_Q_Meta : aqualv -> Prims.bool) =
 let (__proj__Q_Meta__item___0 : aqualv -> FStar_Syntax_Syntax.term) =
   fun projectee -> match projectee with | Q_Meta _0 -> _0
 type argv = (FStar_Syntax_Syntax.term * aqualv)
+type universes = FStar_Syntax_Syntax.universe Prims.list
 type universe_view =
   | Uv_Zero 
   | Uv_Succ of FStar_Syntax_Syntax.universe 
-  | Uv_Max of FStar_Syntax_Syntax.universes 
+  | Uv_Max of universes 
   | Uv_BVar of FStar_BigInt.t 
-  | Uv_Name of FStar_Syntax_Syntax.univ_name 
+  | Uv_Name of (Prims.string * FStar_Compiler_Range.range) 
   | Uv_Unif of FStar_Syntax_Syntax.universe_uvar 
   | Uv_Unk 
 let (uu___is_Uv_Zero : universe_view -> Prims.bool) =
@@ -101,8 +102,7 @@ let (__proj__Uv_Succ__item___0 :
   fun projectee -> match projectee with | Uv_Succ _0 -> _0
 let (uu___is_Uv_Max : universe_view -> Prims.bool) =
   fun projectee -> match projectee with | Uv_Max _0 -> true | uu___ -> false
-let (__proj__Uv_Max__item___0 :
-  universe_view -> FStar_Syntax_Syntax.universes) =
+let (__proj__Uv_Max__item___0 : universe_view -> universes) =
   fun projectee -> match projectee with | Uv_Max _0 -> _0
 let (uu___is_Uv_BVar : universe_view -> Prims.bool) =
   fun projectee -> match projectee with | Uv_BVar _0 -> true | uu___ -> false
@@ -111,7 +111,7 @@ let (__proj__Uv_BVar__item___0 : universe_view -> FStar_BigInt.t) =
 let (uu___is_Uv_Name : universe_view -> Prims.bool) =
   fun projectee -> match projectee with | Uv_Name _0 -> true | uu___ -> false
 let (__proj__Uv_Name__item___0 :
-  universe_view -> FStar_Syntax_Syntax.univ_name) =
+  universe_view -> (Prims.string * FStar_Compiler_Range.range)) =
   fun projectee -> match projectee with | Uv_Name _0 -> _0
 let (uu___is_Uv_Unif : universe_view -> Prims.bool) =
   fun projectee -> match projectee with | Uv_Unif _0 -> true | uu___ -> false
@@ -124,7 +124,7 @@ type term_view =
   | Tv_Var of FStar_Syntax_Syntax.bv 
   | Tv_BVar of FStar_Syntax_Syntax.bv 
   | Tv_FVar of FStar_Syntax_Syntax.fv 
-  | Tv_UInst of (FStar_Syntax_Syntax.fv * FStar_Syntax_Syntax.universes) 
+  | Tv_UInst of (FStar_Syntax_Syntax.fv * universes) 
   | Tv_App of (FStar_Syntax_Syntax.term * argv) 
   | Tv_Abs of (FStar_Syntax_Syntax.binder * FStar_Syntax_Syntax.term) 
   | Tv_Arrow of (FStar_Syntax_Syntax.binder * FStar_Syntax_Syntax.comp) 
@@ -159,7 +159,7 @@ let (uu___is_Tv_UInst : term_view -> Prims.bool) =
   fun projectee ->
     match projectee with | Tv_UInst _0 -> true | uu___ -> false
 let (__proj__Tv_UInst__item___0 :
-  term_view -> (FStar_Syntax_Syntax.fv * FStar_Syntax_Syntax.universes)) =
+  term_view -> (FStar_Syntax_Syntax.fv * universes)) =
   fun projectee -> match projectee with | Tv_UInst _0 -> _0
 let (uu___is_Tv_App : term_view -> Prims.bool) =
   fun projectee -> match projectee with | Tv_App _0 -> true | uu___ -> false
@@ -355,8 +355,7 @@ type comp_view =
   FStar_Pervasives_Native.option * FStar_Syntax_Syntax.term Prims.list) 
   | C_Lemma of (FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.term *
   FStar_Syntax_Syntax.term) 
-  | C_Eff of (FStar_Syntax_Syntax.universes * name * FStar_Syntax_Syntax.term
-  * argv Prims.list) 
+  | C_Eff of (universes * name * FStar_Syntax_Syntax.term * argv Prims.list) 
 let (uu___is_C_Total : comp_view -> Prims.bool) =
   fun projectee -> match projectee with | C_Total _0 -> true | uu___ -> false
 let (__proj__C_Total__item___0 :
@@ -383,8 +382,7 @@ let (uu___is_C_Eff : comp_view -> Prims.bool) =
   fun projectee -> match projectee with | C_Eff _0 -> true | uu___ -> false
 let (__proj__C_Eff__item___0 :
   comp_view ->
-    (FStar_Syntax_Syntax.universes * name * FStar_Syntax_Syntax.term * argv
-      Prims.list))
+    (universes * name * FStar_Syntax_Syntax.term * argv Prims.list))
   = fun projectee -> match projectee with | C_Eff _0 -> _0
 type ctor = (name * typ)
 type lb_view =

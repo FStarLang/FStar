@@ -135,7 +135,11 @@ let (inspect_universe :
     | FStar_Syntax_Syntax.U_bvar n ->
         let uu___ = FStar_BigInt.of_int_fs n in
         FStar_Reflection_Data.Uv_BVar uu___
-    | FStar_Syntax_Syntax.U_name i -> FStar_Reflection_Data.Uv_Name i
+    | FStar_Syntax_Syntax.U_name i ->
+        let uu___ =
+          let uu___1 = FStar_Ident.string_of_id i in
+          let uu___2 = FStar_Ident.range_of_id i in (uu___1, uu___2) in
+        FStar_Reflection_Data.Uv_Name uu___
     | FStar_Syntax_Syntax.U_unif u1 -> FStar_Reflection_Data.Uv_Unif u1
     | FStar_Syntax_Syntax.U_unknown -> FStar_Reflection_Data.Uv_Unk
 let (pack_universe :
@@ -148,7 +152,9 @@ let (pack_universe :
     | FStar_Reflection_Data.Uv_BVar n ->
         let uu___ = FStar_BigInt.to_int_fs n in
         FStar_Syntax_Syntax.U_bvar uu___
-    | FStar_Reflection_Data.Uv_Name i -> FStar_Syntax_Syntax.U_name i
+    | FStar_Reflection_Data.Uv_Name i ->
+        let uu___ = FStar_Ident.mk_ident i in
+        FStar_Syntax_Syntax.U_name uu___
     | FStar_Reflection_Data.Uv_Unif u -> FStar_Syntax_Syntax.U_unif u
     | FStar_Reflection_Data.Uv_Unk -> FStar_Syntax_Syntax.U_unknown
 let rec (inspect_ln :

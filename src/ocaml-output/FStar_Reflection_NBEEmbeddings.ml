@@ -747,7 +747,12 @@ let (e_universe_view :
     | FStar_Reflection_Data.Uv_Name i ->
         let uu___ =
           let uu___1 =
-            let uu___2 = FStar_TypeChecker_NBETerm.embed e_ident cb i in
+            let uu___2 =
+              let uu___3 =
+                FStar_TypeChecker_NBETerm.e_tuple2
+                  FStar_TypeChecker_NBETerm.e_string
+                  FStar_TypeChecker_NBETerm.e_range in
+              FStar_TypeChecker_NBETerm.embed uu___3 cb i in
             FStar_TypeChecker_NBETerm.as_arg uu___2 in
           [uu___1] in
         mkConstruct
@@ -815,7 +820,12 @@ let (e_universe_view :
         FStar_Syntax_Syntax.fv_eq_lid fv
           FStar_Reflection_Data.ref_Uv_Name.FStar_Reflection_Data.lid
         ->
-        let uu___2 = FStar_TypeChecker_NBETerm.unembed e_ident cb i in
+        let uu___2 =
+          let uu___3 =
+            FStar_TypeChecker_NBETerm.e_tuple2
+              FStar_TypeChecker_NBETerm.e_string
+              FStar_TypeChecker_NBETerm.e_range in
+          FStar_TypeChecker_NBETerm.unembed uu___3 cb i in
         FStar_Compiler_Util.bind_opt uu___2
           (fun i1 ->
              let uu___3 =

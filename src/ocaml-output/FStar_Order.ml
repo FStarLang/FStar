@@ -39,6 +39,18 @@ let rec compare_list :
         | (x::xs, y::ys) ->
             let uu___ = f x y in
             lex uu___ (fun uu___1 -> compare_list f xs ys)
+let rec compare_list_refined :
+  'a . 'a Prims.list -> 'a Prims.list -> ('a -> 'a -> order) -> order =
+  fun l1 ->
+    fun l2 ->
+      fun f ->
+        match (l1, l2) with
+        | ([], []) -> Eq
+        | ([], uu___) -> Lt
+        | (uu___, []) -> Gt
+        | (x::xs, y::ys) ->
+            let uu___ = f x y in
+            lex uu___ (fun uu___1 -> compare_list_refined xs ys f)
 let compare_option :
   'a .
     ('a -> 'a -> order) ->
