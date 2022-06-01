@@ -224,7 +224,7 @@ let e_universe_view =
     | Uv_Name i ->
       S.mk_Tm_app
         ref_Uv_Name.t
-        [S.as_arg (embed e_ident rng i)]
+        [S.as_arg (embed (e_tuple2 e_string e_range) rng i)]
         rng
     | Uv_Unif u ->
       S.mk_Tm_app
@@ -246,7 +246,7 @@ let e_universe_view =
     | Tm_fvar fv, [n, _] when S.fv_eq_lid fv ref_Uv_BVar.lid ->
       BU.bind_opt (unembed' w e_int n) (fun n -> n |> Uv_BVar |> Some)
     | Tm_fvar fv, [i, _] when S.fv_eq_lid fv ref_Uv_Name.lid ->
-      BU.bind_opt (unembed' w e_ident i) (fun i -> i |> Uv_Name |> Some)
+      BU.bind_opt (unembed' w (e_tuple2 e_string e_range) i) (fun i -> i |> Uv_Name |> Some)
     | Tm_fvar fv, [u, _] when S.fv_eq_lid fv ref_Uv_Unif.lid ->
       let u : universe_uvar = U.unlazy_as_t Lazy_universe_uvar u in
       u |> Uv_Unif |> Some

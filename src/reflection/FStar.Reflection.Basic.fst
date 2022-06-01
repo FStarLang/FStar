@@ -164,7 +164,7 @@ let inspect_universe u =
   | U_succ u -> Uv_Succ u
   | U_max us -> Uv_Max us
   | U_bvar n -> Uv_BVar (Z.of_int_fs n)
-  | U_name i -> Uv_Name i
+  | U_name i -> Uv_Name (Ident.string_of_id i, Ident.range_of_id i)
   | U_unif u -> Uv_Unif u
   | U_unknown -> Uv_Unk
 
@@ -174,7 +174,7 @@ let pack_universe uv =
   | Uv_Succ u -> U_succ u
   | Uv_Max us -> U_max us
   | Uv_BVar n -> U_bvar (Z.to_int_fs n)
-  | Uv_Name i -> U_name i
+  | Uv_Name i -> U_name (Ident.mk_ident i)
   | Uv_Unif u -> U_unif u
   | Uv_Unk -> U_unknown
 

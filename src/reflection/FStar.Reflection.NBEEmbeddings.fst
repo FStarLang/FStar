@@ -385,7 +385,7 @@ let e_universe_view =
       mkConstruct
         ref_Uv_Name.fv
         []
-        [as_arg (embed e_ident cb i)]
+        [as_arg (embed (e_tuple2 e_string e_range) cb i)]
     | Uv_Unif u ->
       mkConstruct
         ref_Uv_Unif.fv
@@ -403,7 +403,7 @@ let e_universe_view =
     | Construct (fv, _, [n, _]) when S.fv_eq_lid fv ref_Uv_BVar.lid ->
       BU.bind_opt (unembed e_int cb n) (fun n -> n |> Uv_BVar |> Some)
     | Construct (fv, _, [i, _]) when S.fv_eq_lid fv ref_Uv_Name.lid ->
-      BU.bind_opt (unembed e_ident cb i) (fun i -> i |> Uv_Name |> Some)
+      BU.bind_opt (unembed (e_tuple2 e_string e_range) cb i) (fun i -> i |> Uv_Name |> Some)
     | Construct (fv, _, [u, _]) when S.fv_eq_lid fv ref_Uv_Unif.lid ->
       let u : universe_uvar = unlazy_as_t Lazy_universe_uvar u in
       u |> Uv_Unif |> Some

@@ -58,12 +58,14 @@ type aqualv =
 
 type argv = term * aqualv
 
+type universes = list universe
+
 type universe_view =
   | Uv_Zero : universe_view
   | Uv_Succ : universe -> universe_view
   | Uv_Max  : universes -> universe_view
   | Uv_BVar : Z.t -> universe_view
-  | Uv_Name : univ_name -> universe_view
+  | Uv_Name : (string * Range.range) -> universe_view
   | Uv_Unif : universe_uvar -> universe_view
   | Uv_Unk  : universe_view
 
