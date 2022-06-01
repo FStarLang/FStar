@@ -62,7 +62,7 @@ type universe_view =
   | Uv_Zero : universe_view
   | Uv_Succ : universe -> universe_view
   | Uv_Max  : universes -> universe_view
-  | Uv_BVar : int -> universe_view
+  | Uv_BVar : Z.t -> universe_view
   | Uv_Name : univ_name -> universe_view
   | Uv_Unif : universe_uvar -> universe_view
   | Uv_Unk  : universe_view
@@ -313,6 +313,7 @@ let ref_Uv_Unk     = fstar_refl_data_const "Uv_Unk"
 let ref_Tv_Var     = fstar_refl_data_const "Tv_Var"
 let ref_Tv_BVar    = fstar_refl_data_const "Tv_BVar"
 let ref_Tv_FVar    = fstar_refl_data_const "Tv_FVar"
+let ref_Tv_UInst   = fstar_refl_data_const "Tv_UInst"
 let ref_Tv_App     = fstar_refl_data_const "Tv_App"
 let ref_Tv_Abs     = fstar_refl_data_const "Tv_Abs"
 let ref_Tv_Arrow   = fstar_refl_data_const "Tv_Arrow"

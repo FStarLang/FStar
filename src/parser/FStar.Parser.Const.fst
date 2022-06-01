@@ -296,6 +296,7 @@ let term_view_lid  = p2l ["FStar"; "Reflection"; "Data"; "term_view"]
 let decls_lid      = p2l ["FStar"; "Reflection"; "Data"; "decls"]
 
 let ctx_uvar_and_subst_lid = p2l ["FStar"; "Reflection"; "Types"; "ctx_uvar_and_subst"]
+let universe_uvar_lid      = p2l ["FStar"; "Reflection"; "Types"; "universe_uvar"]
 
 
 let range_lid      = pconst "range"
