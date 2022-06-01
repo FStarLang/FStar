@@ -2593,3 +2593,17 @@ let (unfold_lazy_sigelt :
     FStar_Syntax_Syntax.mk_Tm_app
       FStar_Reflection_Data.fstar_refl_pack_sigelt.FStar_Reflection_Data.t
       uu___ i.FStar_Syntax_Syntax.rng
+let (unfold_lazy_universe :
+  FStar_Syntax_Syntax.lazyinfo -> FStar_Syntax_Syntax.term) =
+  fun i ->
+    let u = FStar_Compiler_Dyn.undyn i.FStar_Syntax_Syntax.blob in
+    let uu___ =
+      let uu___1 =
+        let uu___2 =
+          let uu___3 = FStar_Reflection_Basic.inspect_universe u in
+          embed e_universe_view i.FStar_Syntax_Syntax.rng uu___3 in
+        FStar_Syntax_Syntax.as_arg uu___2 in
+      [uu___1] in
+    FStar_Syntax_Syntax.mk_Tm_app
+      FStar_Reflection_Data.fstar_refl_pack_universe.FStar_Reflection_Data.t
+      uu___ i.FStar_Syntax_Syntax.rng

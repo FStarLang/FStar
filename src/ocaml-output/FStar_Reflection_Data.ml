@@ -579,6 +579,16 @@ let (fstar_refl_inspect_lb : refl_constant) =
 let (fstar_refl_pack_lb : refl_constant) =
   match uu___153 with
   | (fstar_refl_inspect_lb1, fstar_refl_pack_lb1) -> fstar_refl_pack_lb1
+let (uu___160 : (refl_constant * refl_constant)) =
+  mk_inspect_pack_pair "_universe"
+let (fstar_refl_inspect_universe : refl_constant) =
+  match uu___160 with
+  | (fstar_refl_inspect_universe1, fstar_refl_pack_universe) ->
+      fstar_refl_inspect_universe1
+let (fstar_refl_pack_universe : refl_constant) =
+  match uu___160 with
+  | (fstar_refl_inspect_universe1, fstar_refl_pack_universe1) ->
+      fstar_refl_pack_universe1
 let (fstar_refl_env : FStar_Syntax_Syntax.term) =
   mk_refl_types_lid_as_term "env"
 let (fstar_refl_env_fv : FStar_Syntax_Syntax.fv) =
