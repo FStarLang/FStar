@@ -5142,6 +5142,21 @@ let rec (inspect :
            | FStar_Syntax_Syntax.Tm_fvar fv ->
                FStar_Compiler_Effect.op_Less_Bar FStar_Tactics_Monad.ret
                  (FStar_Reflection_Data.Tv_FVar fv)
+           | FStar_Syntax_Syntax.Tm_uinst (t4, us) ->
+               let uu___2 =
+                 let uu___3 =
+                   let uu___4 =
+                     FStar_Compiler_Effect.op_Bar_Greater t4
+                       FStar_Syntax_Subst.compress in
+                   FStar_Compiler_Effect.op_Bar_Greater uu___4
+                     FStar_Syntax_Util.unascribe in
+                 uu___3.FStar_Syntax_Syntax.n in
+               (match uu___2 with
+                | FStar_Syntax_Syntax.Tm_fvar fv ->
+                    FStar_Compiler_Effect.op_Less_Bar FStar_Tactics_Monad.ret
+                      (FStar_Reflection_Data.Tv_UInst (fv, us))
+                | uu___3 ->
+                    failwith "Tac::inspect: Tm_uinst head not an fvar")
            | FStar_Syntax_Syntax.Tm_app (hd, []) ->
                failwith "empty arguments on Tm_app"
            | FStar_Syntax_Syntax.Tm_app (hd, args) ->
@@ -5175,9 +5190,9 @@ let rec (inspect :
                            FStar_Reflection_Data.Tv_Abs uu___4 in
                          FStar_Compiler_Effect.op_Less_Bar
                            FStar_Tactics_Monad.ret uu___3))
-           | FStar_Syntax_Syntax.Tm_type uu___2 ->
+           | FStar_Syntax_Syntax.Tm_type u ->
                FStar_Compiler_Effect.op_Less_Bar FStar_Tactics_Monad.ret
-                 (FStar_Reflection_Data.Tv_Type ())
+                 (FStar_Reflection_Data.Tv_Type u)
            | FStar_Syntax_Syntax.Tm_arrow ([], k) ->
                failwith "empty binders on arrow"
            | FStar_Syntax_Syntax.Tm_arrow uu___2 ->
@@ -5342,6 +5357,11 @@ let (pack :
     | FStar_Reflection_Data.Tv_FVar fv ->
         let uu___ = FStar_Syntax_Syntax.fv_to_tm fv in
         FStar_Compiler_Effect.op_Less_Bar FStar_Tactics_Monad.ret uu___
+    | FStar_Reflection_Data.Tv_UInst (fv, us) ->
+        let uu___ =
+          let uu___1 = FStar_Syntax_Syntax.fv_to_tm fv in
+          FStar_Syntax_Syntax.mk_Tm_uinst uu___1 us in
+        FStar_Compiler_Effect.op_Less_Bar FStar_Tactics_Monad.ret uu___
     | FStar_Reflection_Data.Tv_App (l, (r, q)) ->
         let q' = FStar_Reflection_Basic.pack_aqual q in
         let uu___ = FStar_Syntax_Util.mk_app l [(r, q')] in
@@ -5352,9 +5372,11 @@ let (pack :
     | FStar_Reflection_Data.Tv_Arrow (b, c) ->
         let uu___ = FStar_Syntax_Util.arrow [b] c in
         FStar_Compiler_Effect.op_Less_Bar FStar_Tactics_Monad.ret uu___
-    | FStar_Reflection_Data.Tv_Type () ->
-        FStar_Compiler_Effect.op_Less_Bar FStar_Tactics_Monad.ret
-          FStar_Syntax_Util.ktype
+    | FStar_Reflection_Data.Tv_Type u ->
+        let uu___ =
+          FStar_Syntax_Syntax.mk (FStar_Syntax_Syntax.Tm_type u)
+            FStar_Compiler_Range.dummyRange in
+        FStar_Compiler_Effect.op_Less_Bar FStar_Tactics_Monad.ret uu___
     | FStar_Reflection_Data.Tv_Refine (bv, t) ->
         let uu___ = FStar_Syntax_Util.refine bv t in
         FStar_Compiler_Effect.op_Less_Bar FStar_Tactics_Monad.ret uu___
