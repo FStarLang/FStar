@@ -1081,3 +1081,8 @@ let unfold_lazy_sigelt (i : lazyinfo) : term =
     let sigelt : sigelt = undyn i.blob in
     S.mk_Tm_app fstar_refl_pack_sigelt.t [S.as_arg (embed e_sigelt_view i.rng (inspect_sigelt sigelt))]
                 i.rng
+
+let unfold_lazy_universe (i : lazyinfo) : term =
+    let u : universe = undyn i.blob in
+    S.mk_Tm_app fstar_refl_pack_universe.t [S.as_arg (embed e_universe_view i.rng (inspect_universe u))]
+                i.rng

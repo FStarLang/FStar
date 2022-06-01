@@ -192,13 +192,14 @@ let mk_inspect_pack_pair s =
     let pack        = { lid = pack_lid    ; fv = pack_fv    ; t = fv_to_tm pack_fv } in
     (inspect, pack)
 
-let fstar_refl_inspect_ln     , fstar_refl_pack_ln     = mk_inspect_pack_pair "_ln"
-let fstar_refl_inspect_fv     , fstar_refl_pack_fv     = mk_inspect_pack_pair "_fv"
-let fstar_refl_inspect_bv     , fstar_refl_pack_bv     = mk_inspect_pack_pair "_bv"
-let fstar_refl_inspect_binder , fstar_refl_pack_binder = mk_inspect_pack_pair "_binder"
-let fstar_refl_inspect_comp   , fstar_refl_pack_comp   = mk_inspect_pack_pair "_comp"
-let fstar_refl_inspect_sigelt , fstar_refl_pack_sigelt = mk_inspect_pack_pair "_sigelt"
-let fstar_refl_inspect_lb     , fstar_refl_pack_lb     = mk_inspect_pack_pair "_lb"
+let fstar_refl_inspect_ln      , fstar_refl_pack_ln     = mk_inspect_pack_pair "_ln"
+let fstar_refl_inspect_fv      , fstar_refl_pack_fv     = mk_inspect_pack_pair "_fv"
+let fstar_refl_inspect_bv      , fstar_refl_pack_bv     = mk_inspect_pack_pair "_bv"
+let fstar_refl_inspect_binder  , fstar_refl_pack_binder = mk_inspect_pack_pair "_binder"
+let fstar_refl_inspect_comp    , fstar_refl_pack_comp   = mk_inspect_pack_pair "_comp"
+let fstar_refl_inspect_sigelt  , fstar_refl_pack_sigelt = mk_inspect_pack_pair "_sigelt"
+let fstar_refl_inspect_lb      , fstar_refl_pack_lb     = mk_inspect_pack_pair "_lb"
+let fstar_refl_inspect_universe, fstar_refl_pack_universe  = mk_inspect_pack_pair "_universe"
 
 (* assumed types *)
 let fstar_refl_env              = mk_refl_types_lid_as_term "env"
