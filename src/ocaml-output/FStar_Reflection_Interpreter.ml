@@ -798,7 +798,84 @@ let (reflection_primops : FStar_TypeChecker_Cfg.primitive_step Prims.list) =
                                                                     FStar_Reflection_NBEEmbeddings.e_env
                                                                     FStar_Reflection_NBEEmbeddings.e_binder
                                                                     FStar_Reflection_NBEEmbeddings.e_env in
-                                                                    [uu___78] in
+                                                                    let uu___79
+                                                                    =
+                                                                    let uu___80
+                                                                    =
+                                                                    mk1
+                                                                    "inspect_range"
+                                                                    FStar_Reflection_Basic.inspect_range
+                                                                    FStar_Syntax_Embeddings.e_range
+                                                                    FStar_Reflection_Embeddings.e_rng_view
+                                                                    FStar_Reflection_Basic.inspect_range
+                                                                    FStar_TypeChecker_NBETerm.e_range
+                                                                    FStar_Reflection_NBEEmbeddings.e_rng_view in
+                                                                    let uu___81
+                                                                    =
+                                                                    let uu___82
+                                                                    =
+                                                                    mk1
+                                                                    "pack_range"
+                                                                    FStar_Reflection_Basic.pack_range
+                                                                    FStar_Reflection_Embeddings.e_rng_view
+                                                                    FStar_Syntax_Embeddings.e_range
+                                                                    FStar_Reflection_Basic.pack_range
+                                                                    FStar_Reflection_NBEEmbeddings.e_rng_view
+                                                                    FStar_TypeChecker_NBETerm.e_range in
+                                                                    let uu___83
+                                                                    =
+                                                                    let uu___84
+                                                                    =
+                                                                    mk1
+                                                                    "range_of_term"
+                                                                    FStar_Reflection_Basic.range_of_term
+                                                                    FStar_Reflection_Embeddings.e_term
+                                                                    FStar_Syntax_Embeddings.e_range
+                                                                    FStar_Reflection_Basic.range_of_term
+                                                                    FStar_Reflection_NBEEmbeddings.e_term
+                                                                    FStar_TypeChecker_NBETerm.e_range in
+                                                                    let uu___85
+                                                                    =
+                                                                    let uu___86
+                                                                    =
+                                                                    mk1
+                                                                    "range_of_sigelt"
+                                                                    FStar_Reflection_Basic.range_of_sigelt
+                                                                    FStar_Reflection_Embeddings.e_sigelt
+                                                                    FStar_Syntax_Embeddings.e_range
+                                                                    FStar_Reflection_Basic.range_of_sigelt
+                                                                    FStar_Reflection_NBEEmbeddings.e_sigelt
+                                                                    FStar_TypeChecker_NBETerm.e_range in
+                                                                    let uu___87
+                                                                    =
+                                                                    let uu___88
+                                                                    =
+                                                                    mk2
+                                                                    "term_with_range"
+                                                                    FStar_Reflection_Basic.term_with_range
+                                                                    FStar_Reflection_Embeddings.e_term
+                                                                    FStar_Syntax_Embeddings.e_range
+                                                                    FStar_Reflection_Embeddings.e_term
+                                                                    FStar_Reflection_Basic.term_with_range
+                                                                    FStar_Reflection_NBEEmbeddings.e_term
+                                                                    FStar_TypeChecker_NBETerm.e_range
+                                                                    FStar_Reflection_NBEEmbeddings.e_term in
+                                                                    [uu___88] in
+                                                                    uu___86
+                                                                    ::
+                                                                    uu___87 in
+                                                                    uu___84
+                                                                    ::
+                                                                    uu___85 in
+                                                                    uu___82
+                                                                    ::
+                                                                    uu___83 in
+                                                                    uu___80
+                                                                    ::
+                                                                    uu___81 in
+                                                                    uu___78
+                                                                    ::
+                                                                    uu___79 in
                                                                     uu___76
                                                                     ::
                                                                     uu___77 in
