@@ -55,34 +55,6 @@ and ln_ty' (t:src_ty) (n:int)
     | TBool -> true
     | TRefineBool e -> ln' e (n + 1)
     | TArrow t1 t2 -> ln_ty' t1 n && ln_ty' t2 (n + 1) //Pi types
-
-let rec ln_weaker (e:src_exp) (n:int) (m:int{n <= m})
-  : Lemma 
-    (requires ln' e n)
-    (ensures ln' e m)
-  = match e with
-    | EBool _
-    | EVar _
-    | EBVar _ -> ()
-    | EIf b e1 e2 -> 
-      ln_weaker b n m;
-      ln_weaker e1 n m;
-      ln_weaker e2 n m
-    | ELam t e ->
-      ln_ty_weaker t n m;
-      ln_weaker e (n + 1) (m + 1)
-    | EApp e1 e2 ->
-      ln_weaker e1 n m;
-      ln_weaker e2 n m    
-and ln_ty_weaker (e:src_ty) (n:int) (m:int { n <= m })
-  : Lemma 
-    (requires ln_ty' e n)
-    (ensures ln_ty' e m)
-  = match e with
-    | TBool -> ()
-    | TRefineBool e -> ln_weaker e (n + 1) (m + 1)
-    | TArrow t1 t2 -> ln_ty_weaker t1 n m;
-                     ln_ty_weaker t2 (n + 1) (m + 1)
   
 let ln e = ln' e (-1)
 let ln_ty t = ln_ty' t (-1)
@@ -128,107 +100,10 @@ and close_ty' (t:src_ty) (v:var) (n:index)
 let open_exp e v = open_exp' e (EVar v) 0
 let close_exp e v = close_exp' e v 0
 let open_with e e' = open_exp' e e' 0
+
 let open_ty t v = open_ty' t (EVar v) 0
 let close_ty t v = close_ty' t v 0
 let open_ty_with t e = open_ty' t e 0
-
-// let rec open_close' (e:src_exp) (x:var) (n:nat { ln' e (n - 1) })
-//   : Lemma (open_exp' (close_exp' e x n) x n == e)
-//   = match e with
-//     | EBool _ -> ()
-//     | EVar _ -> ()
-//     | EBVar m -> ()
-//     | EIf b e1 e2 -> 
-//       open_close' b x n;
-//       open_close' e1 x n;
-//       open_close' e2 x n
-//     | ELam _ e -> open_close' e x (n + 1)
-//     | EApp e1 e2 -> 
-//       open_close' e1 x n; 
-//       open_close' e2 x n
-
-// let open_close (e:src_exp) (x:var)
-//   : Lemma 
-//     (requires ln e)
-//     (ensures open_exp (close_exp e x) x == e)
-//     [SMTPat (open_exp (close_exp e x) x)]
-//   = open_close' e x 0
-
-let rec open_exp_ln (e:src_exp) (v:src_exp) (n:index) (m:int)
-  : Lemma 
-    (requires ln' e n /\
-              m == n - 1 /\
-              ln v)
-    (ensures ln' (open_exp' e v n) m)
-    (decreases e)    
-    [SMTPat (ln' e n);
-     SMTPat (ln' (open_exp' e v n) m)]
-  = match e with
-    | EBool _ -> ()
-    | EVar _ -> ()
-    | EBVar _ -> ln_weaker v (-1) m
-    | EIf b e1 e2 ->
-      open_exp_ln b v n m;
-      open_exp_ln e1 v n m;
-      open_exp_ln e2 v n m
-    | EApp e1 e2 ->
-      open_exp_ln e1 v n m;
-      open_exp_ln e2 v n m
-    | ELam t e ->    
-      open_ty_ln t v n m;
-      open_exp_ln e v (n + 1) (m + 1)
-
-and open_ty_ln (e:src_ty) (v:src_exp) (n:index) (m:int)
-  : Lemma 
-    (requires ln_ty' e n /\
-              m == n - 1 /\
-              ln v)
-    (ensures ln_ty' (open_ty' e v n) m)
-    (decreases e)
-    [SMTPat (ln_ty' e n);
-     SMTPat (ln_ty' (open_ty' e v n) m)]
-  = match e with
-    | TBool -> ()
-    | TArrow t1 t2 ->
-      open_ty_ln t1 v n m;
-      open_ty_ln t2 v (n + 1) (m + 1)
-    | TRefineBool e ->
-      open_exp_ln e v (n + 1) (m + 1)
-
-let rec close_exp_ln (e:src_exp) (v:var) (n:nat)
-  : Lemma 
-    (requires ln' e (n - 1))
-    (ensures ln' (close_exp' e v n) n)
-    (decreases e)
-    [SMTPat (ln' (close_exp' e v n) n)]
-  = match e with
-    | EBool _ -> ()
-    | EVar _ -> ()
-    | EBVar _ -> ()
-    | EIf b e1 e2 ->
-      close_exp_ln b v n;
-      close_exp_ln e1 v n;
-      close_exp_ln e2 v n
-    | EApp e1 e2 ->
-      close_exp_ln e1 v n;
-      close_exp_ln e2 v n
-    | ELam t e ->    
-      close_ty_ln t v n;
-      close_exp_ln e v (n + 1)
-
-and close_ty_ln (e:src_ty) (v:var) (n:nat)
-  : Lemma 
-    (requires ln_ty' e (n - 1))
-    (ensures ln_ty' (close_ty' e v n) n)
-    (decreases e)
-    [SMTPat (ln_ty' (close_ty' e v n) n)]
-  = match e with
-    | TBool -> ()
-    | TArrow t1 t2 ->
-      close_ty_ln t1 v n;
-      close_ty_ln t2 v (n + 1)
-    | TRefineBool e ->
-      close_exp_ln e v (n + 1)
 
 #push-options "--query_stats --fuel 4 --ifuel 2 --z3rlimit_factor 8"
 let rec open_exp_freevars (e:src_exp) (v:src_exp) (n:nat)
@@ -236,7 +111,7 @@ let rec open_exp_freevars (e:src_exp) (v:src_exp) (n:nat)
     (ensures (freevars e `Set.subset` freevars (open_exp' e v n))  /\
              (freevars (open_exp' e v n) `Set.subset` (freevars e `Set.union` freevars v)))
     (decreases e)
-    [SMTPat (freevars (open_exp' e v n))]
+    // [SMTPat (freevars (open_exp' e v n))]
   = match e with
     | EBool _
     | EBVar _ 
@@ -257,7 +132,7 @@ and open_ty_freevars (t:src_ty) (v:src_exp) (n:nat)
     (ensures (freevars_ty t `Set.subset` freevars_ty (open_ty' t v n))  /\
              (freevars_ty (open_ty' t v n) `Set.subset` (freevars_ty t `Set.union` freevars v)))
     (decreases t)
-    [SMTPat (freevars_ty (open_ty' t v n))]
+    // [SMTPat (freevars_ty (open_ty' t v n))]
   = match t with
     | TBool -> ()
     | TArrow t1 t2 ->
@@ -267,12 +142,10 @@ and open_ty_freevars (t:src_ty) (v:src_exp) (n:nat)
       open_exp_freevars e v (n + 1)
 #pop-options
 
-let s_exp = e:src_exp { ln e }
-let src_eqn = s_exp & s_exp
-
-let s_ty = t:src_ty { ln_ty t }
 //environment binds types or equations
-let src_env = list (var & either s_ty src_eqn) 
+let src_eqn = src_exp & src_exp
+let binding = either src_ty src_eqn
+let src_env = list (var & binding)
 
 let rec lookup (e:list (var & 'a)) (x:var)
   : option 'a
@@ -403,7 +276,6 @@ let elab_eqn (e1 e2:src_exp)
   : R.term
   = RT.eq2 RT.bool_ty (elab_exp e1) (elab_exp e2)
 
-let binding = either s_ty src_eqn
 let elab_binding (b:binding)
   : R.term 
   = match b with
@@ -416,31 +288,6 @@ let extend_env_l (g:R.env) (sg:src_env) =
      sg
      g
 
-let as_bindings (sg:src_env) 
-  : RT.bindings
-  = L.map (fun (x, b) -> x, elab_binding b) sg
-
-let extend_env_alt (g:R.env) (sg:src_env) = 
-  RT.extend_env_l g (as_bindings sg)
-
-let rec extend_env_equiv (g:R.env) (sg:src_env)
-  : Lemma 
-    (ensures extend_env_l g sg == extend_env_alt g sg)
-    (decreases sg)
-  = match sg with
-    | [] -> ()
-    | hd::tl -> extend_env_equiv g tl
-
-let rec extend_env_alt_append (g:R.env) (sg0 sg1:src_env)
-  : Lemma 
-    (ensures 
-      extend_env_alt g (sg0 @ sg1) == 
-      extend_env_alt (extend_env_alt g sg1) sg0)
-    (decreases sg0)
-  = match sg0 with
-    | [] -> ()
-    | hd::tl -> extend_env_alt_append g tl sg1
-           
 let fstar_env =
   g:R.env { 
     RT.lookup_fvar g RT.bool_fv == Some RT.tm_type /\
@@ -476,9 +323,9 @@ type src_typing (f:fstar_top_env) : src_env -> src_exp -> src_ty -> Type =
 
   | T_Lam  :
       g:src_env ->
-      t:s_ty ->
+      t:src_ty ->
       e:src_exp ->
-      t':s_ty ->
+      t':src_ty ->
       x:var { None? (lookup g x) /\ ~ (x `Set.mem` freevars e)} ->
       src_ty_ok f g t ->
       src_typing f ((x, Inl t) :: g) (open_exp e x) t' ->
@@ -488,9 +335,9 @@ type src_typing (f:fstar_top_env) : src_env -> src_exp -> src_ty -> Type =
       g:src_env ->
       e1:src_exp ->
       e2:src_exp ->
-      t:s_ty ->
+      t:src_ty ->
       t':src_ty ->
-      t0:s_ty ->
+      t0:src_ty ->
       src_typing f g e1 (TArrow t t') ->
       src_typing f g e2 t0 ->
       sub_typing f g t0 t ->
@@ -498,12 +345,12 @@ type src_typing (f:fstar_top_env) : src_env -> src_exp -> src_ty -> Type =
 
    | T_If :
        g:src_env ->
-       b:s_exp ->
+       b:src_exp ->
        e1:src_exp ->
        e2:src_exp ->
-       t1:s_ty ->
-       t2:s_ty ->
-       t:s_ty ->
+       t1:src_ty ->
+       t2:src_ty ->
+       t:src_ty ->
        hyp:var { None? (lookup g hyp) /\ ~ (hyp `Set.mem` freevars e1) /\ ~ (hyp `Set.mem` freevars e2) } ->
        src_typing f g b TBool ->
        src_typing f ((hyp, Inr (b, EBool true)) :: g) e1 t1 ->
@@ -516,7 +363,7 @@ and src_ty_ok (f:fstar_top_env) : src_env -> src_ty -> Type =
   | OK_TBool  : g:src_env -> src_ty_ok f g TBool
   | OK_TArrow :
       g:src_env ->
-      t:s_ty ->
+      t:src_ty ->
       t':src_ty ->
       x:var { None? (lookup g x) /\ ~ (x `Set.mem` freevars_ty t')} ->
       src_ty_ok f g t ->
@@ -560,29 +407,28 @@ let check_sub_typing f
   = if t0 = t1 then S_Refl _ t0
     else T.fail "Not subtypes"
 
-let weaken (f:fstar_top_env) (sg:src_env) (hyp:var { None? (lookup sg hyp) } ) (b:s_exp) (t0 t1:s_ty)
-  : T.Tac (t:s_ty &
+let weaken (f:fstar_top_env) (sg:src_env) (hyp:var { None? (lookup sg hyp) } ) (b:src_exp) (t0 t1:src_ty)
+  : T.Tac (t:src_ty &
            sub_typing f ((hyp,Inr(b, EBool true))::sg) t0 t &
            sub_typing f ((hyp,Inr(b, EBool false))::sg) t1 t)
   = if t0 = t1
     then (| t0, S_Refl _ t0, S_Refl _ t1 |)
     else T.fail "weaken is very dumb"
 
-let ok (sg:src_env) (e:src_exp) = ln e /\ (forall x. x `Set.mem` freevars e ==> Some? (lookup sg x))
-
-let exp (sg:src_env) = e:src_exp { ok sg e }
-
-let ok_ty (sg:src_env) (e:src_ty) = ln_ty e /\ (forall x. x `Set.mem` freevars_ty e ==> Some? (lookup sg x))
+let ok (sg:src_env) (e:src_exp) = (forall x. x `Set.mem` freevars e ==> Some? (lookup sg x))
+let ok_ty (sg:src_env) (e:src_ty) = (forall x. x `Set.mem` freevars_ty e ==> Some? (lookup sg x))
 
 #push-options "--fuel 2 --ifuel 2 --z3rlimit_factor 6 --query_stats"
-
 
 let rec check (f:fstar_top_env)
               (sg:src_env)
               (e:src_exp { ok sg e })
-  : T.Tac (t:s_ty &
+  : T.Tac (t:src_ty &
            src_typing f sg e t)
   = match e with
+    | EBVar _ ->
+      T.fail "Not locally nameless"
+    
     | EBool b ->
       (| TBool, T_Bool _ b |)
 
@@ -595,6 +441,7 @@ let rec check (f:fstar_top_env)
         (| t, d |)
       end
 
+    
     | ELam t body -> 
       let t_ok = check_ty f sg t in
       let x = fresh sg in
@@ -605,10 +452,10 @@ let rec check (f:fstar_top_env)
              T_Lam sg t body tbody x t_ok dbody in
       (| TArrow t (close_ty tbody x), dd |)
 
+
     | EApp e1 e2 ->
       let (| t1, d1 |) = check f sg e1  in
       let (| t2, d2 |) = check f sg e2 in
-      assert (ln e2);
       begin
       match t1 with
       | TArrow t_arg t_res ->
@@ -619,6 +466,7 @@ let rec check (f:fstar_top_env)
         T.fail "Expected a function"
       end
 
+    
     | EIf b e1 e2 ->
       let (| tb, ok_b |) = check f sg b in
       let hyp = fresh sg in
@@ -714,7 +562,6 @@ let elab_open_commute (e:src_exp) (x:var)
   = elab_open_commute' 0 e (EVar x);
     RT.open_term_spec (elab_exp e) x
 
-
 let b2t_typing (g:fstar_env) (t:R.term) (dt:RT.typing g t RT.bool_ty)
   : RT.typing g (r_b2t t) RT.tm_type
   = let b2t_typing : RT.typing g _ b2t_ty = RT.T_FVar g b2t_fv in
@@ -733,44 +580,13 @@ let rec extend_env_l_lookup_fvar (g:R.env) (sg:src_env) (fv:R.fv)
     | hd::tl -> extend_env_l_lookup_fvar g tl fv
 
 #push-options "--query_stats --fuel 2 --ifuel 2 --z3rlimit_factor 2"
-#push-options "--z3rlimit_factor 4"
 
-let open_with_fvar_id (fv:R.fv) (x:R.term)
-  : Lemma (RT.open_with (R.pack_ln (R.Tv_FVar fv)) x == (R.pack_ln (R.Tv_FVar fv)))
-          [SMTPat (RT.open_with (R.pack_ln (R.Tv_FVar fv)) x)]
-  = RT.open_with_spec (R.pack_ln (R.Tv_FVar fv)) x
-
-let open_term_fvar_id (fv:R.fv) (x:var)
-  : Lemma (RT.open_term (R.pack_ln (R.Tv_FVar fv)) x == (R.pack_ln (R.Tv_FVar fv)))
-          [SMTPat (RT.open_term (R.pack_ln (R.Tv_FVar fv)) x)]
-  = RT.open_term_spec (R.pack_ln (R.Tv_FVar fv)) x
-
-let subtyping_soundness #f (#sg:src_env) (#t0 #t1:s_ty) (ds:sub_typing f sg t0 t1)
+let subtyping_soundness #f (#sg:src_env) (#t0 #t1:src_ty) (ds:sub_typing f sg t0 t1)
   : GTot (RT.sub_typing (extend_env_l f sg) (elab_ty t0) (elab_ty t1))
   = match ds with
     | S_Refl _ _ -> RT.ST_Refl _ _
     | S_ELab _ _ _ d -> d
 
-// let bv0 = R.pack_bv (RT.make_bv 0 RT.bool_ty)
-
-// let bv_as_arg (x:R.bv)
-//   = let open R in
-//     pack_ln (Tv_BVar x), Q_Explicit
-
-// let var_as_arg (x:R.bv)
-//   = let open R in
-//     pack_ln (Tv_Var x), Q_Explicit
-
-// let apply (e:R.term) (x:_)
-//   : R.term
-//   = let open R in
-//     pack_ln (Tv_App e x) 
-
-// let mk_refine (e:R.term)
-//   : R.term 
-//   = let open R in
-//     let ref = apply e (bv_as_arg bv0) in
-//     pack_ln (Tv_Refine bv0 (r_b2t ref))
 #push-options "--query_stats --fuel 8 --ifuel 2 --z3rlimit_factor 2"
 let rec elab_close_commute' (n:nat) (e:src_exp) (x:var)
   : Lemma (ensures
@@ -931,8 +747,6 @@ and src_ty_ok_soundness (#f:fstar_top_env)
      RT.T_Arrow _ x (elab_ty t1) (elab_ty t2) t1_ok t2_ok
 
    | OK_TRefine _ e x de ->
-     // let x = fresh sg in
-     // fresh_is_fresh sg;
      let de 
        : RT.typing (RT.extend_env (extend_env_l f sg) x RT.bool_ty)
                    (elab_exp (open_exp e x))
@@ -960,7 +774,7 @@ and src_ty_ok_soundness (#f:fstar_top_env)
 let soundness_lemma (f:fstar_top_env)
                     (sg:src_env { src_env_ok sg }) 
                     (se:src_exp)
-                    (st:s_ty)
+                    (st:src_ty)
   : Lemma
     (requires src_typing f sg se st)
     (ensures  RT.typing (extend_env_l f sg)
@@ -980,6 +794,7 @@ let rec closed (s:src_exp)
     | EIf b e1 e2 -> closed b && closed e1 && closed e2
     | ELam t e -> closed_ty t && closed e
     | EApp e1 e2 -> closed e1 && closed e2
+
 and closed_ty (t:src_ty)
   : b:bool { b <==> (freevars_ty t `Set.equal` Set.empty) }
   = match t with
@@ -990,7 +805,7 @@ and closed_ty (t:src_ty)
 let main (f:fstar_top_env)
          (src:src_exp)
   : T.Tac (e:R.term & t:R.term { RT.typing f e t })
-  = if ln src && closed src
+  = if closed src
     then 
       let (| src_ty, _ |) = check f [] src in
       soundness_lemma f [] src src_ty;
