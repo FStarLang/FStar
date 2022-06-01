@@ -520,14 +520,11 @@ let exp (sg:src_env) = e:src_exp { ln e /\ (forall x. x `Set.mem` freevars e ==>
 let rec check (f:fstar_top_env)
               (sg:src_env)
               (e:exp sg)
-  : T.Tac (e':exp sg {
-               (freevars e' `Set.subset` freevars e) //need this in the TIf case to know that `hyp` remains unused
-            } &
-           t':s_ty &
-           src_typing f sg e' t')
+  : T.Tac (t:s_ty &
+           src_typing f sg e t)
   = match e with
     | EBool b ->
-      (| e , TBool, T_Bool _ b |)
+      (| TBool, T_Bool _ b |)
 
     | EVar n ->
       begin
@@ -535,72 +532,61 @@ let rec check (f:fstar_top_env)
       | None -> T.fail "Ill-typed"
       | Some t ->
         let d = T_Var sg n in
-        (| EVar n, t, d |)
+        (| t, d |)
       end
 
     | ELam t body -> 
-      let (| t, t_ok |) = check_ty f sg t in
-      assert (closed_ty t);
+      let t_ok = check_ty f sg t in
       let x = fresh sg in
       fresh_is_fresh sg;
-      let (| body', tbody, dbody |) = check f ((x, Inl t)::sg) (open_exp body x) in
-      open_exp_freevars body x 0;
-      // assert (freevars body' `Set.subset` freevars (open_exp body x));
-      close_exp_freevars (-1) body' x 0;
-      // assert (freevars (close_exp body' x) `Set.equal` (freevars body' `minus` x));
-      // assert (freevars_ty t `Set.equal` Set.empty);
-      // assert (freevars (close_exp body' x) `Set.subset` freevars body);
-      let e' = ELam t (close_exp body' x) in
-      // assert (freevars e' `Set.subset` freevars e);
-      // assert (freevars_ty t `Set.equal` Set.empty);
-      // assert (ln_ty (TArrow t tbody));
+      let (| tbody, dbody |) = check f ((x, Inl t)::sg) (open_exp body x) in
+      let e' = ELam t body in
       let dd : src_typing f sg e' (TArrow t tbody) = 
-             T_Lam sg t (close_exp body' x) tbody x t_ok dbody in
-      (| e', TArrow t tbody, dd |)
+             T_Lam sg t body tbody x t_ok dbody in
+      (| TArrow t tbody, dd |)
 
     | EApp e1 e2 ->
-      let (| e1, t1, d1 |) = check f sg e1  in
-      let (| e2, t2, d2 |) = check f sg e2 in
+      let (| t1, d1 |) = check f sg e1  in
+      let (| t2, d2 |) = check f sg e2 in
       begin
       match t1 with
       | TArrow t_arg t_res ->
         let st_ok = check_sub_typing f sg t2 t_arg in
-        (| EApp e1 e2, t_res, T_App _ _ _ t_arg t_res _ d1 d2 st_ok |)
+        (| t_res, T_App _ _ _ t_arg t_res _ d1 d2 st_ok |)
 
       | _ -> 
         T.fail "Expected a function"
       end
 
     | EIf b e1 e2 ->
-      let (| b, tb, ok_b |) = check f sg b in
+      let (| tb, ok_b |) = check f sg b in
       let hyp = fresh sg in
       fresh_is_fresh sg;
       if tb = TBool
       then (
-        let (| e1, t1, ok_1 |) = check f ((hyp, Inr(b, EBool true))::sg) e1 in
-        let (| e2, t2, ok_2 |) = check f ((hyp, Inr(b, EBool false))::sg) e2 in      
+        let (| t1, ok_1 |) = check f ((hyp, Inr(b, EBool true))::sg) e1 in
+        let (| t2, ok_2 |) = check f ((hyp, Inr(b, EBool false))::sg) e2 in      
         let (| t, w1, w2 |) = weaken f sg hyp b t1 t2 in
-        (| EIf b e1 e2, t, T_If _ _ _ _ _ _ _ hyp ok_b ok_1 ok_2 w1 w2 |)
+        (| t, T_If _ _ _ _ _ _ _ hyp ok_b ok_1 ok_2 w1 w2 |)
       )
       else T.fail "Branching on a non-boolean"
 
 and check_ty (f:fstar_top_env)
              (sg:src_env)
              (t:s_ty)
-  : T.Tac (t':s_ty &
-           src_ty_ok f sg t')
+  : T.Tac (src_ty_ok f sg t)
   = match t with
-    | TBool -> (| t, OK_TBool _ |)
+    | TBool -> OK_TBool _
 
     | TArrow t t' ->
-      let (| t, t_ok |) = check_ty f sg t in
-      let (| t', t'_ok |) = check_ty f sg t' in      
-      (| TArrow t t', OK_TArrow _ _ _ t_ok t'_ok |)
+      let t_ok  = check_ty f sg t in
+      let t'_ok = check_ty f sg t' in      
+      OK_TArrow _ _ _ t_ok t'_ok
       
     | TRefineBool e ->
-      let (| e, te, de |) = check f [] e in
+      let (| te, de |) = check f [] e in
       match te with
-      | TArrow TBool TBool -> (| TRefineBool e, OK_TRefine _ _ de |)
+      | TArrow TBool TBool -> OK_TRefine _ _ de
       | _ -> T.fail "Ill-typed refinement"
 #pop-options
   
@@ -1623,7 +1609,7 @@ let main (f:fstar_top_env)
   : T.Tac (e:R.term & t:R.term { RT.typing f e t })
   = if ln src && closed src
     then 
-      let (| src', src_ty, _ |) = check f [] src in
-      soundness_lemma f [] src' src_ty;
-      (| elab_exp src', elab_ty src_ty |)
+      let (| src_ty, _ |) = check f [] src in
+      soundness_lemma f [] src src_ty;
+      (| elab_exp src, elab_ty src_ty |)
     else T.fail "Not locally nameless"
