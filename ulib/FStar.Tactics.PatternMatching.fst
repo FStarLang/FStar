@@ -855,6 +855,7 @@ let test_bt (a: Type0) (b: Type0) (c: Type0) (d: Type0) =
 /// tried in succession, until one succeeds.  The whole process is repeated as
 /// long as at least one tactic succeeds.
 
+[@@ expect_failure]
 let example (#a:Type0) (#b:Type0) (#c:Type0) :unit =
   assert_by_tactic (a /\ b ==> c == b ==> c)
     (fun () -> repeat' (fun () ->
@@ -868,6 +869,7 @@ let example (#a:Type0) (#b:Type0) (#c:Type0) :unit =
                               rewrite h <: Tac unit) `or_else`
                  (fun () -> gpm #unit (fun (a: Type0) (h: hyp a) (g: pm_goal (squash a)) ->
                               exact_hyp a h <: Tac unit) ())))));
+               dump "A";
                qed ())
 
 /// Possible extensions
