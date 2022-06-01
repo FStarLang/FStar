@@ -58,14 +58,24 @@ type aqualv =
 
 type argv = term * aqualv
 
+type universe_view =
+  | Uv_Zero : universe_view
+  | Uv_Succ : universe -> universe_view
+  | Uv_Max  : universes -> universe_view
+  | Uv_BVar : int -> universe_view
+  | Uv_Name : univ_name -> universe_view
+  | Uv_Unif : universe_uvar -> universe_view
+  | Uv_Unk   : universe_uvar
+
 type term_view =
     | Tv_Var       of bv
     | Tv_BVar      of bv
     | Tv_FVar      of fv
+    | Tv_UInst     of fv * universes
     | Tv_App       of term * argv
     | Tv_Abs       of binder * term
     | Tv_Arrow     of binder * comp
-    | Tv_Type      of unit
+    | Tv_Type      of universe
     | Tv_Refine    of bv * term
     | Tv_Const     of vconst
     | Tv_Uvar      of Z.t * ctx_uvar_and_subst
@@ -111,10 +121,10 @@ type bv_view = {
 type binder_view = bv * (aqualv * list term)
 
 type comp_view =
-    | C_Total of typ * list term  //decreases clause
-    | C_GTotal of typ * list term //idem
+    | C_Total of typ * option universe * list term  //decreases clause
+    | C_GTotal of typ * option universe * list term //idem
     | C_Lemma of term * term * term
-    | C_Eff of list unit * name * term * list argv
+    | C_Eff of universes * name * term * list argv
 
 type ctor = name * typ
 
