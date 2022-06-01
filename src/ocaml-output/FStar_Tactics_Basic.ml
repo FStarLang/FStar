@@ -3932,6 +3932,13 @@ let (uvar_env :
                            (fun uu___5 ->
                               match uu___5 with
                               | (t, uvar_t) -> FStar_Tactics_Monad.ret t))))
+let (fresh_universe_uvar :
+  unit -> FStar_Syntax_Syntax.term FStar_Tactics_Monad.tac) =
+  fun uu___ ->
+    let uu___1 =
+      let uu___2 = FStar_Syntax_Util.type_u () in
+      FStar_Compiler_Effect.op_Bar_Greater uu___2 FStar_Pervasives_Native.fst in
+    FStar_Compiler_Effect.op_Bar_Greater uu___1 FStar_Tactics_Monad.ret
 let (unshelve : FStar_Syntax_Syntax.term -> unit FStar_Tactics_Monad.tac) =
   fun t ->
     let uu___ =
