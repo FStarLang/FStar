@@ -1348,23 +1348,30 @@ let rec (extract_one_pat :
                      let uu___1 = FStar_Extraction_ML_UEnv.new_mlident g in
                      (match uu___1 with
                       | (g1, x) ->
+                          let x_exp =
+                            let x_exp1 =
+                              FStar_Compiler_Effect.op_Less_Bar
+                                (FStar_Extraction_ML_Syntax.with_ty
+                                   expected_ty)
+                                (FStar_Extraction_ML_Syntax.MLE_Var x) in
+                            let coerce x1 =
+                              FStar_Compiler_Effect.op_Less_Bar
+                                (FStar_Extraction_ML_Syntax.with_ty ml_ty)
+                                (FStar_Extraction_ML_Syntax.MLE_Coerce
+                                   (x1, ml_ty, expected_ty)) in
+                            match expected_ty with
+                            | FStar_Extraction_ML_Syntax.MLTY_Top ->
+                                coerce x_exp1
+                            | uu___2 ->
+                                let uu___3 = ok ml_ty in
+                                if uu___3 then x_exp1 else coerce x_exp1 in
                           let when_clause =
-                            let uu___2 =
-                              let uu___3 =
-                                let uu___4 =
-                                  let uu___5 =
-                                    FStar_Compiler_Effect.op_Less_Bar
-                                      (FStar_Extraction_ML_Syntax.with_ty
-                                         ml_ty)
-                                      (FStar_Extraction_ML_Syntax.MLE_Var x) in
-                                  [uu___5; mlc] in
-                                (FStar_Extraction_ML_Util.prims_op_equality,
-                                  uu___4) in
-                              FStar_Extraction_ML_Syntax.MLE_App uu___3 in
                             FStar_Compiler_Effect.op_Less_Bar
                               (FStar_Extraction_ML_Syntax.with_ty
                                  FStar_Extraction_ML_Syntax.ml_bool_ty)
-                              uu___2 in
+                              (FStar_Extraction_ML_Syntax.MLE_App
+                                 (FStar_Extraction_ML_Util.prims_op_equality,
+                                   [x_exp; mlc])) in
                           let uu___2 = ok ml_ty in
                           (g1,
                             (FStar_Pervasives_Native.Some

@@ -880,8 +880,18 @@ let rec extract_one_pat (imp : bool)
         in
         //these may be extracted to bigint, in which case, we need to emit a when clause
         let g, x = UEnv.new_mlident g in
+        let x_exp = 
+          let x_exp = with_ty expected_ty <| MLE_Var x in
+          let coerce x = with_ty ml_ty <| (MLE_Coerce(x, ml_ty, expected_ty)) in
+          match expected_ty with
+          | MLTY_Top -> coerce x_exp
+          | _ ->
+            if ok ml_ty
+            then x_exp
+            else coerce x_exp
+        in
         let when_clause = with_ty ml_bool_ty <|
-            MLE_App(prims_op_equality, [with_ty ml_ty <| MLE_Var x;
+            MLE_App(prims_op_equality, [x_exp;
                                         mlc]) in
         g, Some (MLP_Var x, [when_clause]), ok ml_ty
 
