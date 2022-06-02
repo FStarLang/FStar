@@ -1288,25 +1288,30 @@ let rec (extract_one_pat :
         fun expected_ty ->
           fun term_as_mlexpr ->
             let ok t =
-              let ok1 = type_leq g t expected_ty in
-              if Prims.op_Negation ok1
-              then
-                FStar_Extraction_ML_UEnv.debug g
-                  (fun uu___1 ->
-                     let uu___2 =
-                       let uu___3 =
-                         FStar_Extraction_ML_UEnv.current_module_of_uenv g in
-                       FStar_Extraction_ML_Code.string_of_mlty uu___3
-                         expected_ty in
-                     let uu___3 =
-                       let uu___4 =
-                         FStar_Extraction_ML_UEnv.current_module_of_uenv g in
-                       FStar_Extraction_ML_Code.string_of_mlty uu___4 t in
-                     FStar_Compiler_Util.print2
-                       "Expected pattern type %s; got pattern type %s\n"
-                       uu___2 uu___3)
-              else ();
-              ok1 in
+              match expected_ty with
+              | FStar_Extraction_ML_Syntax.MLTY_Top -> true
+              | uu___ ->
+                  let ok1 = type_leq g t expected_ty in
+                  (if Prims.op_Negation ok1
+                   then
+                     FStar_Extraction_ML_UEnv.debug g
+                       (fun uu___2 ->
+                          let uu___3 =
+                            let uu___4 =
+                              FStar_Extraction_ML_UEnv.current_module_of_uenv
+                                g in
+                            FStar_Extraction_ML_Code.string_of_mlty uu___4
+                              expected_ty in
+                          let uu___4 =
+                            let uu___5 =
+                              FStar_Extraction_ML_UEnv.current_module_of_uenv
+                                g in
+                            FStar_Extraction_ML_Code.string_of_mlty uu___5 t in
+                          FStar_Compiler_Util.print2
+                            "Expected pattern type %s; got pattern type %s\n"
+                            uu___3 uu___4)
+                   else ();
+                   ok1) in
             match p.FStar_Syntax_Syntax.v with
             | FStar_Syntax_Syntax.Pat_constant (FStar_Const.Const_int
                 (c, swopt)) when
@@ -1382,35 +1387,31 @@ let rec (extract_one_pat :
                   FStar_Pervasives_Native.Some uu___1 in
                 let uu___1 = ok mlty in (g, uu___, uu___1)
             | FStar_Syntax_Syntax.Pat_var x ->
-                let computed_mlty = term_as_mlty g x.FStar_Syntax_Syntax.sort in
                 let uu___ =
                   FStar_Extraction_ML_UEnv.extend_bv g x ([], expected_ty)
                     false imp in
                 (match uu___ with
                  | (g1, x1, uu___1) ->
-                     let uu___2 = ok computed_mlty in
                      (g1,
                        (if imp
                         then FStar_Pervasives_Native.None
                         else
                           FStar_Pervasives_Native.Some
                             ((FStar_Extraction_ML_Syntax.MLP_Var x1), [])),
-                       uu___2))
+                       true))
             | FStar_Syntax_Syntax.Pat_wild x ->
-                let computed_mlty = term_as_mlty g x.FStar_Syntax_Syntax.sort in
                 let uu___ =
                   FStar_Extraction_ML_UEnv.extend_bv g x ([], expected_ty)
                     false imp in
                 (match uu___ with
                  | (g1, x1, uu___1) ->
-                     let uu___2 = ok computed_mlty in
                      (g1,
                        (if imp
                         then FStar_Pervasives_Native.None
                         else
                           FStar_Pervasives_Native.Some
                             ((FStar_Extraction_ML_Syntax.MLP_Var x1), [])),
-                       uu___2))
+                       true))
             | FStar_Syntax_Syntax.Pat_dot_term uu___ ->
                 (g, FStar_Pervasives_Native.None, true)
             | FStar_Syntax_Syntax.Pat_cons (f, pats) ->

@@ -853,6 +853,9 @@ let rec extract_one_pat (imp : bool)
     * option (mlpattern * list mlexpr)
     * bool =  //the bool indicates whether or not a magic should be inserted around the scrutinee
     let ok t =
+      match expected_ty with
+      | MLTY_Top -> true
+      | _ ->
         let ok = type_leq g t expected_ty in
         if not ok then debug g (fun _ -> BU.print2 "Expected pattern type %s; got pattern type %s\n"
                                                 (Code.string_of_mlty (current_module_of_uenv g) expected_ty)
@@ -890,14 +893,16 @@ let rec extract_one_pat (imp : bool)
     | Pat_var x | Pat_wild x ->
         // JP,NS: Pat_wild turns into a binder in the internal syntax because
         // the types of other terms may depend on it
-        let computed_mlty = term_as_mlty g x.sort in
+
         //In some cases, the computed_mlty based on the F* computed sort x.sort
         //can be more precise than the type in ML. see e.g., Bug2595
         //So, prefer to extend the environment with the expected ML type of the
         //binder rather than the computed_mlty, so that we do not forget to put
         //magics around the uses of the bound variable at use sites
         let g, x, _ = extend_bv g x ([], expected_ty) false imp in
-        g, (if imp then None else Some (MLP_Var x, [])), ok computed_mlty
+        g,
+        (if imp then None else Some (MLP_Var x, [])),
+        true //variables are always ok as patterns, no need to insert a magic on the scrutinee when matching a variable
 
     | Pat_dot_term _ ->
         g, None, true
@@ -1001,7 +1006,8 @@ let rec extract_one_pat (imp : bool)
         g,
         Some (resugar_pat g f.fv_qual (MLP_CTor (d, mlPats)),
               when_clauses |> List.flatten),
-        sub_pats_ok && pat_ty_compat
+        sub_pats_ok &&
+        pat_ty_compat
 
 let extract_pat (g:uenv) (p:S.pat) (expected_t:mlty)
                 (term_as_mlexpr: uenv -> S.term -> (mlexpr * e_tag * mlty))
