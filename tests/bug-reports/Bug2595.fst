@@ -1,5 +1,5 @@
 module Bug2595
-open FStar.Compiler.Effect
+
 noeq
 type sum_type  =
   | SumType1: string -> sum_type
@@ -40,12 +40,3 @@ let test_mixed (x:(b:bool & (if b then mixed string else mixed nat)))
   = match x with
     | (|true, Mixed s z |) -> T3_1 s z //only magic s 
     | (|false, Mixed n z |) -> T3_2 n z  // only magic n
-
-assume
-val some_fun (z:int) : ML int
-
-#push-options "--admit_smt_queries true"
-let test_assert (y:(int & int)) (z:int) = 
-  let (x, y) = y in
-  assert (some_fun z > 17);
-  z
