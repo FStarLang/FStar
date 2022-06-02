@@ -965,24 +965,23 @@ let e_tuple3 :
                      (uu___2, args) in
                    (match uu___1 with
                     | (FStar_Syntax_Syntax.Tm_fvar fv,
-                       uu___2::uu___3::(a1, uu___4)::(b1, uu___5)::(c1,
-                                                                    uu___6)::[])
-                        when
+                       uu___2::uu___3::uu___4::(a1, uu___5)::(b1, uu___6)::
+                       (c1, uu___7)::[]) when
                         FStar_Syntax_Syntax.fv_eq_lid fv
                           FStar_Parser_Const.lid_Mktuple3
                         ->
-                        let uu___7 =
-                          let uu___8 = unembed ea a1 in uu___8 w norm in
-                        FStar_Compiler_Util.bind_opt uu___7
+                        let uu___8 =
+                          let uu___9 = unembed ea a1 in uu___9 w norm in
+                        FStar_Compiler_Util.bind_opt uu___8
                           (fun a2 ->
-                             let uu___8 =
-                               let uu___9 = unembed eb b1 in uu___9 w norm in
-                             FStar_Compiler_Util.bind_opt uu___8
+                             let uu___9 =
+                               let uu___10 = unembed eb b1 in uu___10 w norm in
+                             FStar_Compiler_Util.bind_opt uu___9
                                (fun b2 ->
-                                  let uu___9 =
-                                    let uu___10 = unembed ec c1 in
-                                    uu___10 w norm in
-                                  FStar_Compiler_Util.bind_opt uu___9
+                                  let uu___10 =
+                                    let uu___11 = unembed ec c1 in
+                                    uu___11 w norm in
+                                  FStar_Compiler_Util.bind_opt uu___10
                                     (fun c2 ->
                                        FStar_Pervasives_Native.Some
                                          (a2, b2, c2))))
