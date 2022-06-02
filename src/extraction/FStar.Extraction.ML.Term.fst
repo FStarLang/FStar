@@ -828,12 +828,30 @@ let resugar_pat g q p = match p with
 //     Translates an F* pattern to an ML pattern
 //     The main work is erasing inaccessible (dot) patterns
 //     And turning F*'s curried pattern style to ML's fully applied ones
+//
+//Also, as seen in Bug2595, we need to make sure that the pattern bound
+//variables are introduced into the environment at their expected ML type
+//rather than their computed F* type, which may be more precise than what
+//is typeble in ML.
+//E.g.,  Consider
+// v: (b:bool & (if b then bool else nat))
+// and
+// match v with
+// | (| true, b |) -> ...
+//
+// In F*, the sort of b is computed to be bool, since the conditional 
+// can be eliminated
+// But, in OCaml, this should be typed as Obj.t, since the type of v itself is
+// (bool, Obj.t) dtuple2
+//
 let rec extract_one_pat (imp : bool)
                         (g:uenv)
                         (p:S.pat)
                         (expected_ty:mlty)
                         (term_as_mlexpr:uenv -> S.term -> (mlexpr * e_tag * mlty))
-    : uenv * option (mlpattern * list mlexpr) * bool =
+    : uenv
+    * option (mlpattern * list mlexpr)
+    * bool =  //the bool indicates whether or not a magic should be inserted around the scrutinee
     let ok t =
         let ok = type_leq g t expected_ty in
         if not ok then debug g (fun _ -> BU.print2 "Expected pattern type %s; got pattern type %s\n"
@@ -841,9 +859,6 @@ let rec extract_one_pat (imp : bool)
                                                 (Code.string_of_mlty (current_module_of_uenv g) t));
         ok
     in
-    debug g (fun () -> BU.print2 "@@@@@extract_one_pat %s with expected type = %s\n"
-                              (Print.pat_to_string p)
-                              (Code.string_of_mlty (current_module_of_uenv g) expected_ty));
     match p.v with
     | Pat_constant (Const_int (c, swopt))
       when Options.codegen() <> Some Options.Krml ->
@@ -888,6 +903,12 @@ let rec extract_one_pat (imp : bool)
         g, None, true
 
     | Pat_cons (f, pats) ->
+        // The main subtlety here, relative to Bug2595, is to propapate the
+        // expected type properly
+
+        //1. Lookup the ML name of the constructor d
+        //   and the type scheme of the constructor tys
+        //   parameterized by the parameters of the inductive it constructs
         let d, tys =
           match try_lookup_fv p.p g f with
           | Some ({exp_b_expr={expr=MLE_Name n}; exp_b_tscheme=ttys}) -> n, ttys
@@ -898,24 +919,35 @@ let rec extract_one_pat (imp : bool)
                                             (Print.fv_to_string f))
                                f.fv_name.p
         in
+        // The prefix of the pattern are dot patterns matching the type parameters
         let nTyVars = List.length (fst tys) in
         let tysVarPats, restPats =  BU.first_N nTyVars pats in
+        // f_ty is the instantiated type of the constructor
         let f_ty =
             let mlty_args =
                 tysVarPats |>
                 List.map 
                   (fun (p, _) ->
                     match expected_ty with
-                    | MLTY_Top -> MLTY_Top
+                    | MLTY_Top ->
+                      //if the expected_ty of the pattern is MLTY_Top
+                      //then treat all its parameters as MLTY_Top too
+                      MLTY_Top
                     | _ ->
+                      //Otherwise, if it has a dot pattern for matching the type parameters
                       match p.v with
-                      | Pat_dot_term (_, t) -> term_as_mlty g t
-                      | _ -> MLTY_Top)
+                      | Pat_dot_term (_, t) ->
+                        //use the type that the dot patterns is instantiated to
+                        term_as_mlty g t
+                      | _ ->
+                        //otherwise, we're back to useing MLTY_Top for this argument
+                        MLTY_Top)
             in
+            //The instantiated type is of the form t1 -> .. -> tn -> T
             let f_ty = subst tys mlty_args in
+            //collect the arguments and result ([t1;...;tn], T)
             Util.uncurry_mlty_fun f_ty
         in
-
         debug g (fun () -> BU.print2 "@@@Expected type of pattern with head = %s is %s\n"
                           (Print.fv_to_string f)
                           (let args, t = f_ty in
@@ -927,7 +959,9 @@ let rec extract_one_pat (imp : bool)
                            in
                            let res = Code.string_of_mlty (current_module_of_uenv g) t in
                            BU.format2 "%s -> %s" args res));
-      
+        // Now extract all the type patterns
+        // These should all come out as None, if they are dot patterns
+        // Their expected type does not matter
         let g, tyMLPats =
           BU.fold_map 
             (fun g (p, imp) ->
@@ -937,17 +971,19 @@ let rec extract_one_pat (imp : bool)
             tysVarPats
         in (*not all of these were type vars in ML*)
 
-        let (g, f_ty), restMLPats =
+        // Extract the actual pattern arguments
+        let (g, f_ty, sub_pats_ok), restMLPats =
           BU.fold_map
-            (fun (g, f_ty) (p, imp) ->
+            (fun (g, f_ty, ok) (p, imp) ->
+              //The ecpected argument type is the type of the i'th field
               let f_ty, expected_arg_ty =
                 match f_ty with
                 | (hd::rest, res) -> (rest, res), hd
                 | _ -> ([], MLTY_Top), MLTY_Top
               in
-              let g, p, _ = extract_one_pat false g p expected_arg_ty term_as_mlexpr in
-              (g, f_ty), p)
-            (g, f_ty)
+              let g, p, ok' = extract_one_pat false g p expected_arg_ty term_as_mlexpr in
+              (g, f_ty, ok && ok'), p)
+            (g, f_ty, true)
             restPats
         in
 
@@ -965,7 +1001,7 @@ let rec extract_one_pat (imp : bool)
         g,
         Some (resugar_pat g f.fv_qual (MLP_CTor (d, mlPats)),
               when_clauses |> List.flatten),
-        pat_ty_compat
+        sub_pats_ok && pat_ty_compat
 
 let extract_pat (g:uenv) (p:S.pat) (expected_t:mlty)
                 (term_as_mlexpr: uenv -> S.term -> (mlexpr * e_tag * mlty))
