@@ -215,3 +215,16 @@ let vpattern_replace_erased_global
   #opened #a #x #q p
 = noop ();
   x
+
+let vpattern_rewrite
+  (#opened: _)
+  (#a: Type)
+  (#x1: a)
+  (p: a -> vprop)
+  (x2: a)
+: STGhost unit opened
+    (p x1)
+    (fun _ -> p x2)
+    (x1 == x2)
+    (fun _ -> True)
+= rewrite (p x1) (p x2)
