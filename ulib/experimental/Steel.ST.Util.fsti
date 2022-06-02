@@ -284,3 +284,15 @@ val vpattern_replace_erased_global
   (#q: a -> vprop)
   (p: a -> vprop)
 : STGhostF (Ghost.erased a) opened (p x `star` q x) (fun res -> p (Ghost.reveal res) `star` q (Ghost.reveal res)) True (fun res -> Ghost.reveal res == x)
+
+val vpattern_rewrite
+  (#opened: _)
+  (#a: Type)
+  (#x1: a)
+  (p: a -> vprop)
+  (x2: a)
+: STGhost unit opened
+    (p x1)
+    (fun _ -> p x2)
+    (x1 == x2)
+    (fun _ -> True)
