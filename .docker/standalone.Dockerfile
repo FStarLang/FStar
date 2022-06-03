@@ -1,7 +1,7 @@
 # This Dockerfile should be run from the root FStar directory
 
 ARG ocaml_version=4.12
-FROM ocaml/opam:ubuntu-ocaml-$ocaml_version
+FROM ocaml/opam:ubuntu-22.04-ocaml-$ocaml_version
 
 # FIXME: the `opam depext` command should be unnecessary with opam 2.1
 RUN opam depext conf-gmp z3.4.8.5 conf-m4
@@ -11,6 +11,8 @@ ADD --chown=opam:opam ./ $HOME/FStar/
 RUN opam install --deps-only $HOME/FStar/fstar.opam
 
 # CI dependencies (including Mono for F# and other packages for karamel, EverParse)
+# Dotnet feed should be kept in sync with Ubuntu version
+# see https://docs.microsoft.com/en-us/dotnet/core/install/linux-ubuntu
 RUN opam install \
     hex \
     visitors \
@@ -18,14 +20,17 @@ RUN opam install \
     fix \
     wasm \
     && \
-    sudo apt install gnupg ca-certificates && \
-    sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF && \
-    { echo "deb https://download.mono-project.com/repo/ubuntu stable-focal main" | sudo tee /etc/apt/sources.list.d/mono-official-stable.list ; } && \
+    sudo apt install -y gnupg ca-certificates wget && \
+    wget https://packages.microsoft.com/config/ubuntu/22.04/packages-microsoft-prod.deb -O packages-microsoft-prod.deb && \
+    sudo dpkg -i packages-microsoft-prod.deb && \
+    rm packages-microsoft-prod.deb && \
+    sudo apt-get update && \
+    sudo apt-get install -y apt-transport-https && \
     sudo apt update && \
     sudo apt-get --yes install --no-install-recommends \
-    fsharp \
-    python \
+    dotnet-sdk-6.0 \
     python3 \
+    python-is-python3 \
     wget \
     jq
 
