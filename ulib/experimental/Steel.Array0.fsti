@@ -220,28 +220,8 @@ let upd
     )
 = let s = elim_varray a in
   A.pts_to_length a _ _;
-  [@@inline_let] // FIXME: WHY WHY WHY do I need an explicit refinement here?
-  let (i': (i': U32.t { U32.v i' < Seq.length s })) = i in
-  A.upd a i' v;
+  A.upd a i v;
   intro_varray a _
-
-let ghost_join_st // FIXME: WHY WHY WHY do I need this? just because I cannot lift A.ghost_join because of its squash argument
-  (#opened: _)
-  (#elt: Type)
-  (#x1 #x2: Seq.seq elt)
-  (#p: P.perm)
-  (a1 a2: array elt)
-: Steel.ST.Util.STGhost (Ghost.erased (array elt)) opened
-    (pts_to a1 p x1 `star` pts_to a2 p x2)
-    (fun res -> pts_to res p (x1 `Seq.append` x2))
-    (adjacent a1 a2)
-    (fun res -> merge_into a1 a2 res)
-= A.ghost_join a1 a2 ();
-  let res = Ghost.hide (merge a1 a2) in
-  Steel.ST.Util.rewrite
-    (pts_to _ _ _)
-    (pts_to res _ _);
-  res
 
 /// Spatial merging of two arrays, expressed in terms of `merge`.
 inline_for_extraction // same as above
@@ -260,11 +240,8 @@ let ghost_join
     )
 = let _ = elim_varrayp a1 p in
   let _ = elim_varrayp a2 p in
-  let res = ghost_join_st a1 a2 in
-  intro_varrayp res _ _;
-  change_equal_slprop
-    (varrayp _ _)
-    (varrayp _ _)
+  A.ghost_join a1 a2 ();
+  intro_varrayp _ _ _
 
 /// Spatial merging, combining the use of `merge` and the call to the
 /// stateful lemma. Since the only operations are calls to stateful
