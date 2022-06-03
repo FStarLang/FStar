@@ -2,6 +2,7 @@ module BoolRefinement
 module T = FStar.Tactics
 module R = FStar.Reflection
 module L = FStar.List.Tot
+open FStar.List.Tot
 #push-options "--z3cliopt 'smt.qi.eager_threshold=100' --z3cliopt 'smt.arith.nl=false'"
 
 let var = nat
