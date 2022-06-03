@@ -1970,6 +1970,24 @@ let check_trivial_precondition env c =
 
   ct, vc, Env.guard_of_guard_formula <| NonTrivial vc
 
+//Decorating terms with monadic operators
+let maybe_lift env e c1 c2 t =
+    let m1 = Env.norm_eff_name env c1 in
+    let m2 = Env.norm_eff_name env c2 in
+    if Ident.lid_equals m1 m2
+    || (U.is_pure_effect c1 && U.is_ghost_effect c2)
+    || (U.is_pure_effect c2 && U.is_ghost_effect c1)
+    then e
+    else mk (Tm_meta(e, Meta_monadic_lift(m1, m2, t))) e.pos
+
+let maybe_monadic env e c t =
+    let m = Env.norm_eff_name env c in
+    if is_pure_or_ghost_effect env m
+    || Ident.lid_equals m C.effect_Tot_lid
+    || Ident.lid_equals m C.effect_GTot_lid //for the cases in prims where Pure is not yet defined
+    then e
+    else mk (Tm_meta(e, Meta_monadic (m, t))) e.pos
+
 let coerce_with (env:Env.env)
                 (e : term) (lc : lcomp) // original term and its computation type
                 (ty : typ) // new result typ
@@ -1981,12 +1999,28 @@ let coerce_with (env:Env.env)
     | Some _ ->
         if Env.debug env (Options.Other "Coercions") then
             BU.print1 "Coercing with %s!\n" (Ident.string_of_lid f);
+        let lc2 = TcComm.lcomp_of_comp <| mkcomp ty in
+        let lc_res = bind e.pos env (Some e) lc (None, lc2) in
         let coercion = S.fvar (Ident.set_lid_range f e.pos) (Delta_constant_at_level 1) None in
         let coercion = S.mk_Tm_uinst coercion us in
-        let coercion = U.mk_app coercion eargs in
-        let lc = bind e.pos env (Some e) lc (None, TcComm.lcomp_of_comp <| mkcomp ty) in
-        let e = mk_Tm_app coercion [S.as_arg e] e.pos in
-        e, lc
+
+        //
+        //Creating the coerced term:
+        //  If lc is pure or ghost, then just create the application node
+        //  Else create let x = e in f x
+        //    with appropriate meta monadic nodes
+        //
+        let e =
+          if TcComm.is_pure_or_ghost_lcomp lc
+          then mk_Tm_app coercion (eargs@[S.as_arg e]) e.pos
+          else let x = S.new_bv (Some e.pos) lc.res_typ in
+               let e2 = mk_Tm_app coercion (eargs@[x |> S.bv_to_name |> S.as_arg]) e.pos in
+               let e = maybe_lift env e lc.eff_name lc_res.eff_name lc.res_typ in
+               let e2 = maybe_lift (Env.push_bv env x) e2 lc2.eff_name lc_res.eff_name ty in
+               let lb = U.mk_letbinding (Inl x) [] lc.res_typ lc_res.eff_name e [] e.pos in
+               let e = mk (Tm_let ((false, [lb]), SS.close [S.mk_binder x] e2)) e.pos in
+               maybe_monadic env e lc_res.eff_name lc_res.res_typ in
+        e, lc_res
     | None ->
         Errors.log_issue e.pos (Errors.Warning_CoercionNotFound,
                                 (BU.format1 "Coercion %s was not found in the environment, not coercing."
@@ -2636,24 +2670,6 @@ let maybe_add_implicit_binders (env:env) (bs:binders) : binders =
 
                     | _ -> bs
 
-
-//Decorating terms with monadic operators
-let maybe_lift env e c1 c2 t =
-    let m1 = Env.norm_eff_name env c1 in
-    let m2 = Env.norm_eff_name env c2 in
-    if Ident.lid_equals m1 m2
-    || (U.is_pure_effect c1 && U.is_ghost_effect c2)
-    || (U.is_pure_effect c2 && U.is_ghost_effect c1)
-    then e
-    else mk (Tm_meta(e, Meta_monadic_lift(m1, m2, t))) e.pos
-
-let maybe_monadic env e c t =
-    let m = Env.norm_eff_name env c in
-    if is_pure_or_ghost_effect env m
-    || Ident.lid_equals m C.effect_Tot_lid
-    || Ident.lid_equals m C.effect_GTot_lid //for the cases in prims where Pure is not yet defined
-    then e
-    else mk (Tm_meta(e, Meta_monadic (m, t))) e.pos
 
 let d s = BU.print1 "\x1b[01;36m%s\x1b[00m\n" s
 
