@@ -349,6 +349,16 @@ let check_tot (f:fstar_top_env) (g:env) (t:term)
       | None -> T.fail "Inexpressible type"
       | Some ty -> (| ty, T_Tot g t ty tok |)
 
+let try_split_vprop (f:fstar_top_env)
+                    (g:env)
+                    (ctxt:term)
+                    (ctxt_typing: tot_typing f g ctxt Tm_VProp)
+                    (req:term)
+   : T.Tac (frame:term &
+            tot_typing f g frame Tm_VProp &
+            vprop_equiv f g (Tm_Star req frame) ctxt)
+   = admit()            
+
 let try_frame_pre (#f:fstar_top_env)
                   (#g:env)
                   (#t:term)
@@ -358,7 +368,18 @@ let try_frame_pre (#f:fstar_top_env)
                   (t_typing: src_typing f g t c)
   : T.Tac (c':st_comp { c'.pre == pre } &
            src_typing f g t (C_ST c'))
-  = T.fail "NYI"
+  = let C_ST s = c in
+    let (| frame, frame_typing, ve |) = try_split_vprop f g pre pre_typing s.pre in
+    let t_typing
+      : st_typing f g t (add_frame s frame)
+      = T_Frame g t s frame frame_typing t_typing in
+    let x = fresh g in
+    let s' = add_frame s frame in
+    let ve: vprop_equiv f g s'.pre pre = ve in
+    let s'' = { s' with pre = pre } in
+    let st_equiv = ST_Equiv g s' s'' x ve (VE_Refl _ _) in
+    let t_typing = T_Equiv _ _ _ _ t_typing st_equiv in
+    (| s'', t_typing |)
 
 let rec check (f:fstar_top_env)
               (g:env)
