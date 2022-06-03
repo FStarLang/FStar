@@ -6,11 +6,6 @@ open Steel.Effect
 open Steel.ST.Util
 open Steel.ST.Coercions
 
-assume
-val steel_ghost_noop (#o:_) (_:unit)
-  : SteelGhostT unit o
-    emp (λ _ → emp)
-
 assume val phi : int -> Type0
 
 assume
