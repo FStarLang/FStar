@@ -668,6 +668,23 @@ let inspect_binder (b:binder) : bv * (aqualv * list term) =
 let pack_binder (bv:bv) (aqv:aqualv) (attrs:list term) : binder =
     { binder_bv=bv; binder_qual=pack_bqual aqv; binder_attrs=attrs }
 
+let inspect_range r
+   = let sp = Range.start_of_range r in
+     let ep = Range.end_of_range r in
+     let h p = Z.of_int_fs (Range.line_of_pos p), Z.of_int_fs (Range.col_of_pos p) in
+     { file_name = Range.file_of_range r
+     ; start_pos = h sp; end_pos = h ep }
+
+let pack_range { file_name; start_pos = (start0,start1) ; end_pos = (end0,end1) }
+  = Range.mk_range
+       file_name
+       (Range.mk_pos (Z.to_int_fs start0) (Z.to_int_fs start1))
+       (Range.mk_pos (Z.to_int_fs   end0) (Z.to_int_fs   end1))
+
+let range_of_term t = t.pos
+let range_of_sigelt t = FStar.Syntax.Util.range_of_sigelt t
+let term_with_range t pos = {t with pos}
+
 open FStar.TypeChecker.Env
 let moduleof (e : Env.env) : list string =
     Ident.path_of_lid e.curmodule

@@ -1227,6 +1227,86 @@ let (e_bv_view :
          FStar_Pervasives_Native.None) in
   mk_emb' embed_bv_view unembed_bv_view
     FStar_Reflection_Data.fstar_refl_bv_view_fv
+let (e_rng_view :
+  FStar_Reflection_Data.rng_view FStar_TypeChecker_NBETerm.embedding) =
+  let embed_rng_view cb rngv =
+    let uu___ =
+      let uu___1 =
+        let uu___2 =
+          FStar_TypeChecker_NBETerm.embed FStar_TypeChecker_NBETerm.e_string
+            cb rngv.FStar_Reflection_Data.file_name in
+        FStar_TypeChecker_NBETerm.as_arg uu___2 in
+      let uu___2 =
+        let uu___3 =
+          let uu___4 =
+            let uu___5 =
+              FStar_TypeChecker_NBETerm.e_tuple2
+                FStar_TypeChecker_NBETerm.e_int
+                FStar_TypeChecker_NBETerm.e_int in
+            FStar_TypeChecker_NBETerm.embed uu___5 cb
+              rngv.FStar_Reflection_Data.start_pos in
+          FStar_TypeChecker_NBETerm.as_arg uu___4 in
+        let uu___4 =
+          let uu___5 =
+            let uu___6 =
+              let uu___7 =
+                FStar_TypeChecker_NBETerm.e_tuple2
+                  FStar_TypeChecker_NBETerm.e_int
+                  FStar_TypeChecker_NBETerm.e_int in
+              FStar_TypeChecker_NBETerm.embed uu___7 cb
+                rngv.FStar_Reflection_Data.end_pos in
+            FStar_TypeChecker_NBETerm.as_arg uu___6 in
+          [uu___5] in
+        uu___3 :: uu___4 in
+      uu___1 :: uu___2 in
+    mkConstruct FStar_Reflection_Data.ref_Mk_rng.FStar_Reflection_Data.fv []
+      uu___ in
+  let unembed_rng_view cb t =
+    match t.FStar_TypeChecker_NBETerm.nbe_t with
+    | FStar_TypeChecker_NBETerm.Construct
+        (fv, uu___, (fl, uu___1)::(sp, uu___2)::(ep, uu___3)::[]) when
+        FStar_Syntax_Syntax.fv_eq_lid fv
+          FStar_Reflection_Data.ref_Mk_rng.FStar_Reflection_Data.lid
+        ->
+        let uu___4 =
+          FStar_TypeChecker_NBETerm.unembed
+            FStar_TypeChecker_NBETerm.e_string cb fl in
+        FStar_Compiler_Util.bind_opt uu___4
+          (fun fl1 ->
+             let uu___5 =
+               let uu___6 =
+                 FStar_TypeChecker_NBETerm.e_tuple2
+                   FStar_TypeChecker_NBETerm.e_int
+                   FStar_TypeChecker_NBETerm.e_int in
+               FStar_TypeChecker_NBETerm.unembed uu___6 cb sp in
+             FStar_Compiler_Util.bind_opt uu___5
+               (fun sp1 ->
+                  let uu___6 =
+                    let uu___7 =
+                      FStar_TypeChecker_NBETerm.e_tuple2
+                        FStar_TypeChecker_NBETerm.e_int
+                        FStar_TypeChecker_NBETerm.e_int in
+                    FStar_TypeChecker_NBETerm.unembed uu___7 cb ep in
+                  FStar_Compiler_Util.bind_opt uu___6
+                    (fun ep1 ->
+                       FStar_Compiler_Effect.op_Less_Bar
+                         (fun uu___7 -> FStar_Pervasives_Native.Some uu___7)
+                         {
+                           FStar_Reflection_Data.file_name = fl1;
+                           FStar_Reflection_Data.start_pos = sp1;
+                           FStar_Reflection_Data.end_pos = ep1
+                         })))
+    | uu___ ->
+        ((let uu___2 =
+            let uu___3 =
+              let uu___4 = FStar_TypeChecker_NBETerm.t_to_string t in
+              FStar_Compiler_Util.format1 "Not an embedded rng_view: %s"
+                uu___4 in
+            (FStar_Errors.Warning_NotEmbedded, uu___3) in
+          FStar_Errors.log_issue FStar_Compiler_Range.dummyRange uu___2);
+         FStar_Pervasives_Native.None) in
+  mk_emb' embed_rng_view unembed_rng_view
+    FStar_Reflection_Data.fstar_refl_rng_view_fv
 let (e_comp_view :
   FStar_Reflection_Data.comp_view FStar_TypeChecker_NBETerm.embedding) =
   let embed_comp_view cb cv =

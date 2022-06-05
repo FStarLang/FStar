@@ -59,6 +59,13 @@ type bv_view = {
 }
 
 noeq
+type rng_view = {
+    file_name: string;
+    start_pos: int * int;
+    end_pos:   int * int;
+}
+
+noeq
 type term_view =
   | Tv_Var    : v:bv -> term_view
   | Tv_BVar   : v:bv -> term_view

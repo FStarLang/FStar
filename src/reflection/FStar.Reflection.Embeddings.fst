@@ -530,6 +530,30 @@ let e_bv_view =
     in
     mk_emb embed_bv_view unembed_bv_view fstar_refl_bv_view
 
+let e_rng_view =
+    let embed_rng_view (rng:Range.range) (rngv:rng_view) : term =
+        S.mk_Tm_app ref_Mk_rng.t [S.as_arg (embed e_string rng rngv.file_name);
+                                  S.as_arg (embed (e_tuple2 e_int e_int) rng rngv.start_pos);
+                                  S.as_arg (embed (e_tuple2 e_int e_int) rng rngv.end_pos)]
+                    rng
+    in
+    let unembed_rng_view w (t : term) : option rng_view =
+        let t = U.unascribe t in
+        let hd, args = U.head_and_args t in
+        match (U.un_uinst hd).n, args with
+        | Tm_fvar fv, [(fl, _); (sp, _); (ep, _)] when S.fv_eq_lid fv ref_Mk_rng.lid ->
+            BU.bind_opt (unembed' w e_string fl) (fun fl ->
+            BU.bind_opt (unembed' w (e_tuple2 e_int e_int) sp) (fun sp ->
+            BU.bind_opt (unembed' w (e_tuple2 e_int e_int) ep) (fun ep ->
+            Some <| { file_name = fl ; start_pos = sp ; end_pos = ep })))
+
+        | _ ->
+            if w then
+                Err.log_issue t.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded rng_view: %s" (Print.term_to_string t)));
+            None
+    in
+    mk_emb embed_rng_view unembed_rng_view fstar_refl_rng_view
+
 let e_comp_view =
     let embed_comp_view (rng:Range.range) (cv : comp_view) : term =
         match cv with

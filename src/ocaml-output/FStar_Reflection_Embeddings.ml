@@ -1246,6 +1246,93 @@ let (e_bv_view :
               FStar_Pervasives_Native.None)) in
   mk_emb embed_bv_view unembed_bv_view
     FStar_Reflection_Data.fstar_refl_bv_view
+let (e_rng_view :
+  FStar_Reflection_Data.rng_view FStar_Syntax_Embeddings.embedding) =
+  let embed_rng_view rng rngv =
+    let uu___ =
+      let uu___1 =
+        let uu___2 =
+          embed FStar_Syntax_Embeddings.e_string rng
+            rngv.FStar_Reflection_Data.file_name in
+        FStar_Syntax_Syntax.as_arg uu___2 in
+      let uu___2 =
+        let uu___3 =
+          let uu___4 =
+            let uu___5 =
+              FStar_Syntax_Embeddings.e_tuple2 FStar_Syntax_Embeddings.e_int
+                FStar_Syntax_Embeddings.e_int in
+            embed uu___5 rng rngv.FStar_Reflection_Data.start_pos in
+          FStar_Syntax_Syntax.as_arg uu___4 in
+        let uu___4 =
+          let uu___5 =
+            let uu___6 =
+              let uu___7 =
+                FStar_Syntax_Embeddings.e_tuple2
+                  FStar_Syntax_Embeddings.e_int FStar_Syntax_Embeddings.e_int in
+              embed uu___7 rng rngv.FStar_Reflection_Data.end_pos in
+            FStar_Syntax_Syntax.as_arg uu___6 in
+          [uu___5] in
+        uu___3 :: uu___4 in
+      uu___1 :: uu___2 in
+    FStar_Syntax_Syntax.mk_Tm_app
+      FStar_Reflection_Data.ref_Mk_rng.FStar_Reflection_Data.t uu___ rng in
+  let unembed_rng_view w t =
+    let t1 = FStar_Syntax_Util.unascribe t in
+    let uu___ = FStar_Syntax_Util.head_and_args t1 in
+    match uu___ with
+    | (hd, args) ->
+        let uu___1 =
+          let uu___2 =
+            let uu___3 = FStar_Syntax_Util.un_uinst hd in
+            uu___3.FStar_Syntax_Syntax.n in
+          (uu___2, args) in
+        (match uu___1 with
+         | (FStar_Syntax_Syntax.Tm_fvar fv,
+            (fl, uu___2)::(sp, uu___3)::(ep, uu___4)::[]) when
+             FStar_Syntax_Syntax.fv_eq_lid fv
+               FStar_Reflection_Data.ref_Mk_rng.FStar_Reflection_Data.lid
+             ->
+             let uu___5 = unembed' w FStar_Syntax_Embeddings.e_string fl in
+             FStar_Compiler_Util.bind_opt uu___5
+               (fun fl1 ->
+                  let uu___6 =
+                    let uu___7 =
+                      FStar_Syntax_Embeddings.e_tuple2
+                        FStar_Syntax_Embeddings.e_int
+                        FStar_Syntax_Embeddings.e_int in
+                    unembed' w uu___7 sp in
+                  FStar_Compiler_Util.bind_opt uu___6
+                    (fun sp1 ->
+                       let uu___7 =
+                         let uu___8 =
+                           FStar_Syntax_Embeddings.e_tuple2
+                             FStar_Syntax_Embeddings.e_int
+                             FStar_Syntax_Embeddings.e_int in
+                         unembed' w uu___8 ep in
+                       FStar_Compiler_Util.bind_opt uu___7
+                         (fun ep1 ->
+                            FStar_Compiler_Effect.op_Less_Bar
+                              (fun uu___8 ->
+                                 FStar_Pervasives_Native.Some uu___8)
+                              {
+                                FStar_Reflection_Data.file_name = fl1;
+                                FStar_Reflection_Data.start_pos = sp1;
+                                FStar_Reflection_Data.end_pos = ep1
+                              })))
+         | uu___2 ->
+             (if w
+              then
+                (let uu___4 =
+                   let uu___5 =
+                     let uu___6 = FStar_Syntax_Print.term_to_string t1 in
+                     FStar_Compiler_Util.format1
+                       "Not an embedded rng_view: %s" uu___6 in
+                   (FStar_Errors.Warning_NotEmbedded, uu___5) in
+                 FStar_Errors.log_issue t1.FStar_Syntax_Syntax.pos uu___4)
+              else ();
+              FStar_Pervasives_Native.None)) in
+  mk_emb embed_rng_view unembed_rng_view
+    FStar_Reflection_Data.fstar_refl_rng_view
 let (e_comp_view :
   FStar_Reflection_Data.comp_view FStar_Syntax_Embeddings.embedding) =
   let embed_comp_view rng cv =

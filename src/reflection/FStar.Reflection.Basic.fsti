@@ -27,6 +27,7 @@ module RD  = FStar.Reflection.Data
 module EMB = FStar.Syntax.Embeddings
 module Z   = FStar.BigInt
 open FStar.VConfig
+module Range = FStar.Compiler.Range
 
 (* Primitives *)
 val compare_bv            : bv -> bv -> order
@@ -74,6 +75,9 @@ val pack_lb        : lb_view -> letbinding
 val inspect_bv     : bv -> bv_view
 val pack_bv        : bv_view -> bv
 
+val inspect_range  : Range.range -> rng_view
+val pack_range     : rng_view -> Range.range
+
 val inspect_binder : binder -> bv * (aqualv * list term)
 val pack_binder    : bv -> aqualv -> list term -> binder
 
@@ -90,3 +94,7 @@ val explode_qn     : string -> list string
 val compare_string : string -> string -> Z.t
 
 val push_binder    : Env.env -> binder -> Env.env
+
+val range_of_term   : term   -> Range.range
+val range_of_sigelt : sigelt -> Range.range
+val term_with_range : term   -> Range.range -> term

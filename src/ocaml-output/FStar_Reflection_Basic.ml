@@ -996,6 +996,59 @@ let (pack_binder :
           FStar_Syntax_Syntax.binder_qual = uu___;
           FStar_Syntax_Syntax.binder_attrs = attrs
         }
+let (inspect_range :
+  FStar_Compiler_Range.range -> FStar_Reflection_Data.rng_view) =
+  fun r ->
+    let sp = FStar_Compiler_Range.start_of_range r in
+    let ep = FStar_Compiler_Range.end_of_range r in
+    let h p =
+      let uu___ =
+        let uu___1 = FStar_Compiler_Range.line_of_pos p in
+        FStar_BigInt.of_int_fs uu___1 in
+      let uu___1 =
+        let uu___2 = FStar_Compiler_Range.col_of_pos p in
+        FStar_BigInt.of_int_fs uu___2 in
+      (uu___, uu___1) in
+    let uu___ = FStar_Compiler_Range.file_of_range r in
+    let uu___1 = h sp in
+    let uu___2 = h ep in
+    {
+      FStar_Reflection_Data.file_name = uu___;
+      FStar_Reflection_Data.start_pos = uu___1;
+      FStar_Reflection_Data.end_pos = uu___2
+    }
+let (pack_range :
+  FStar_Reflection_Data.rng_view -> FStar_Compiler_Range.range) =
+  fun uu___ ->
+    match uu___ with
+    | { FStar_Reflection_Data.file_name = file_name;
+        FStar_Reflection_Data.start_pos = (start0, start1);
+        FStar_Reflection_Data.end_pos = (end0, end1);_} ->
+        let uu___1 =
+          let uu___2 = FStar_BigInt.to_int_fs start0 in
+          let uu___3 = FStar_BigInt.to_int_fs start1 in
+          FStar_Compiler_Range.mk_pos uu___2 uu___3 in
+        let uu___2 =
+          let uu___3 = FStar_BigInt.to_int_fs end0 in
+          let uu___4 = FStar_BigInt.to_int_fs end1 in
+          FStar_Compiler_Range.mk_pos uu___3 uu___4 in
+        FStar_Compiler_Range.mk_range file_name uu___1 uu___2
+let (range_of_term : FStar_Syntax_Syntax.term -> FStar_Compiler_Range.range)
+  = fun t -> t.FStar_Syntax_Syntax.pos
+let (range_of_sigelt :
+  FStar_Syntax_Syntax.sigelt -> FStar_Compiler_Range.range) =
+  fun t -> FStar_Syntax_Util.range_of_sigelt t
+let (term_with_range :
+  FStar_Syntax_Syntax.term ->
+    FStar_Compiler_Range.range -> FStar_Syntax_Syntax.term)
+  =
+  fun t ->
+    fun pos ->
+      {
+        FStar_Syntax_Syntax.n = (t.FStar_Syntax_Syntax.n);
+        FStar_Syntax_Syntax.pos = pos;
+        FStar_Syntax_Syntax.vars = (t.FStar_Syntax_Syntax.vars)
+      }
 let (moduleof : FStar_TypeChecker_Env.env -> Prims.string Prims.list) =
   fun e -> FStar_Ident.path_of_lid e.FStar_TypeChecker_Env.curmodule
 let (env_open_modules :
