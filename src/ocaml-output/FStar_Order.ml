@@ -28,18 +28,6 @@ let (order_from_int : Prims.int -> order) =
 let (compare_int : Prims.int -> Prims.int -> order) =
   fun i -> fun j -> order_from_int (i - j)
 let rec compare_list :
-  'a . ('a -> 'a -> order) -> 'a Prims.list -> 'a Prims.list -> order =
-  fun f ->
-    fun l1 ->
-      fun l2 ->
-        match (l1, l2) with
-        | ([], []) -> Eq
-        | ([], uu___) -> Lt
-        | (uu___, []) -> Gt
-        | (x::xs, y::ys) ->
-            let uu___ = f x y in
-            lex uu___ (fun uu___1 -> compare_list f xs ys)
-let rec compare_list_refined :
   'a . 'a Prims.list -> 'a Prims.list -> ('a -> 'a -> order) -> order =
   fun l1 ->
     fun l2 ->
@@ -50,7 +38,7 @@ let rec compare_list_refined :
         | (uu___, []) -> Gt
         | (x::xs, y::ys) ->
             let uu___ = f x y in
-            lex uu___ (fun uu___1 -> compare_list_refined xs ys f)
+            lex uu___ (fun uu___1 -> compare_list xs ys f)
 let compare_option :
   'a .
     ('a -> 'a -> order) ->
