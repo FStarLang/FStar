@@ -2578,8 +2578,9 @@ and (term_as_mlexpr' :
                          let uu___4 = FStar_Syntax_Syntax.as_arg tv in
                          [uu___4] in
                        FStar_Syntax_Util.mk_app
-                         (FStar_Reflection_Data.refl_constant_term
-                            FStar_Reflection_Data.fstar_refl_pack_ln) uu___3 in
+                         (FStar_Reflection_Constants.refl_constant_term
+                            FStar_Reflection_Constants.fstar_refl_pack_ln)
+                         uu___3 in
                      term_as_mlexpr g t1)
             | tv ->
                 let tv1 =
@@ -2594,8 +2595,8 @@ and (term_as_mlexpr' :
                   let uu___2 =
                     let uu___3 = FStar_Syntax_Syntax.as_arg tv1 in [uu___3] in
                   FStar_Syntax_Util.mk_app
-                    (FStar_Reflection_Data.refl_constant_term
-                       FStar_Reflection_Data.fstar_refl_pack_ln) uu___2 in
+                    (FStar_Reflection_Constants.refl_constant_term
+                       FStar_Reflection_Constants.fstar_refl_pack_ln) uu___2 in
                 term_as_mlexpr g t1)
        | FStar_Syntax_Syntax.Tm_meta
            (t1, FStar_Syntax_Syntax.Meta_monadic (m, uu___1)) ->

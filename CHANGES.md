@@ -201,6 +201,10 @@ Guidelines for the changelog:
      provided (using UInt128).
 
 ## Syntax
+   * PR #2603 introduces universes in the reflection syntax.
+     It is a potentially breaking change for reflection clients.
+     See the PR for more description.
+
 
    * `as` is a keyword now. One use of it is to (optionally) name the
      scrutinee in dependent pattern matching, e.g.:

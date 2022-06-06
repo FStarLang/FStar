@@ -2260,6 +2260,8 @@ let (rename_let_attr : FStar_Syntax_Syntax.term) =
   fvar_const FStar_Parser_Const.rename_let_attr
 let (t_ctx_uvar_and_sust : FStar_Syntax_Syntax.term) =
   fvar_const FStar_Parser_Const.ctx_uvar_and_subst_lid
+let (t_universe_uvar : FStar_Syntax_Syntax.term) =
+  fvar_const FStar_Parser_Const.universe_uvar_lid
 let (mk_conj_opt :
   FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax
     FStar_Pervasives_Native.option ->

@@ -47,6 +47,8 @@ module EMB = FStar.Syntax.Embeddings
 module RE = FStar.Reflection.Embeddings
 module Env = FStar.TypeChecker.Env
 
+module RC = FStar.Reflection.Constants
+
 exception Un_extractable
 
 (*
@@ -1241,12 +1243,12 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
 
             | None ->
               let tv = EMB.embed (RE.e_term_view_aq aqs) (RD.Tv_Var bv) t.pos None EMB.id_norm_cb in
-              let t = U.mk_app (RD.refl_constant_term RD.fstar_refl_pack_ln) [S.as_arg tv] in
+              let t = U.mk_app (RC.refl_constant_term RC.fstar_refl_pack_ln) [S.as_arg tv] in
               term_as_mlexpr g t
             end
           | tv ->
               let tv = EMB.embed (RE.e_term_view_aq aqs) tv t.pos None EMB.id_norm_cb in
-              let t = U.mk_app (RD.refl_constant_term RD.fstar_refl_pack_ln) [S.as_arg tv] in
+              let t = U.mk_app (RC.refl_constant_term RC.fstar_refl_pack_ln) [S.as_arg tv] in
               term_as_mlexpr g t
           end
 
