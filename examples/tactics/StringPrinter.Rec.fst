@@ -217,7 +217,7 @@ let mk_do_while (#t: Type) (x: t) : T.Tac unit =
                       | _ -> T.pack (T.Tv_Var (T.bv_of_binder tin')) in
                     let decr_body_t = T.fresh_uvar None in
                     let decr = T.pack (T.Tv_Abs tin' decr_body) in
-                    let decr_ty = T.pack (T.Tv_Arrow tin' (T.pack_comp (T.C_Total decr_body_t None []))) in
+                    let decr_ty = T.pack (T.Tv_Arrow tin' (T.pack_comp (T.C_Total decr_body_t Reflection.Derived.u_unk []))) in
                     let decr_binder = T.fresh_binder decr_ty in
                     let x_tm = T.pack (T.Tv_Var (T.bv_of_binder x)) in
                     let tin_decr = T.mk_app (quote tin_decr) [

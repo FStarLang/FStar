@@ -80,10 +80,12 @@ let mk_e_app (t : term) (args : list term) : Tot term =
     let e t = (t, Q_Explicit) in
     mk_app t (List.Tot.Base.map e args)
 
+let u_unk : universe = pack_universe Uv_Unk
+
 let rec mk_tot_arr_ln (bs: list binder) (cod : term) : Tot term (decreases bs) =
     match bs with
     | [] -> cod
-    | (b::bs) -> pack_ln (Tv_Arrow b (pack_comp (C_Total (mk_tot_arr_ln bs cod) None [])))
+    | (b::bs) -> pack_ln (Tv_Arrow b (pack_comp (C_Total (mk_tot_arr_ln bs cod) u_unk [])))
 
 private
 let rec collect_arr' (bs : list binder) (c : comp) : Tot (list binder * comp) (decreases c) =
@@ -100,12 +102,12 @@ let rec collect_arr' (bs : list binder) (c : comp) : Tot (list binder * comp) (d
 
 val collect_arr_ln_bs : typ -> list binder * comp
 let collect_arr_ln_bs t =
-    let (bs, c) = collect_arr' [] (pack_comp (C_Total t None [])) in
+    let (bs, c) = collect_arr' [] (pack_comp (C_Total t u_unk [])) in
     (List.Tot.Base.rev bs, c)
 
 val collect_arr_ln : typ -> list typ * comp
 let collect_arr_ln t =
-    let (bs, c) = collect_arr' [] (pack_comp (C_Total t None [])) in
+    let (bs, c) = collect_arr' [] (pack_comp (C_Total t u_unk [])) in
     let ts = List.Tot.Base.map type_of_binder bs in
     (List.Tot.Base.rev ts, c)
 
@@ -280,7 +282,7 @@ and compare_comp (c1 c2 : comp) : Tot order (decreases c1) =
 
     | C_GTotal t1 u1 md1, C_GTotal t2 u2 md2 -> 
       lex (compare_term t1 t2)
-          (fun _ -> lex (compare_option compare_universe u1 u2)
+          (fun _ -> lex (compare_universe u1 u2)
                      (fun _ -> compare_term_list md1 md2))
 
     | C_Lemma p1 q1 s1, C_Lemma p2 q2 s2 ->

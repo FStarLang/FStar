@@ -371,7 +371,7 @@ let flush_typ_or_comp dbg e tyc =
   in
   try begin match tyc with
   | TC_Typ ty pl n ->
-    let c = pack_comp (C_Total ty None []) in
+    let c = pack_comp (C_Total ty u_unk []) in
     flush_comp pl n c
   | TC_Comp c pl n -> flush_comp pl n c
   end

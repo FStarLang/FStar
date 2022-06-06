@@ -85,13 +85,9 @@ and branch_to_ast_string (b:branch) : Tac string =
   paren ("_pat, " ^ term_to_ast_string e)
 
 and comp_to_ast_string (c:comp) : Tac string =
-  let uopt_to_string uopt =
-    match uopt with
-    | None -> " "
-    | Some u -> "<" ^ universe_to_ast_string u ^ "> " in
   match inspect_comp c with
-  | C_Total t uopt _ -> "Tot" ^ uopt_to_string uopt ^ term_to_ast_string t
-  | C_GTotal t uopt _ -> "GTot" ^ uopt_to_string uopt ^  term_to_ast_string t
+  | C_Total t u _ -> "Tot" ^ universe_to_ast_string u ^ term_to_ast_string t
+  | C_GTotal t u _ -> "GTot" ^ universe_to_ast_string u ^  term_to_ast_string t
   | C_Lemma pre post _ -> "Lemma " ^ term_to_ast_string pre ^ " " ^ term_to_ast_string post
   | C_Eff us eff res _ ->
     "Effect" ^ "<" ^ universes_to_ast_string us ^ "> " ^ paren (implode_qn eff ^ ", " ^ term_to_ast_string res)

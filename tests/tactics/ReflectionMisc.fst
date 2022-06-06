@@ -71,12 +71,7 @@ let get_u () : Tac term =
   match inspect t with
   | Tv_Arrow _ c ->
     (match inspect_comp c with
-     | C_Total _ u _ ->
-       (match u with
-        | Some u ->
-          let su = pack_universe (Uv_Succ u) in
-          pack_ln (Tv_Type su)
-        | _ -> fail "1")
+     | C_Total _ u _ -> pack_ln (Tv_Type (pack_universe (Uv_Succ u)))
      | _ -> fail "2")
   | _ -> fail "3"
 
