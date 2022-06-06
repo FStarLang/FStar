@@ -882,7 +882,7 @@ let t_apply_lemma (noinst:bool) (noinst_lhs:bool)
         bind (match (Rel.simplify_guard env (Env.guard_of_guard_formula (NonTrivial pre))).guard_f with
               | Trivial -> ret ()
               | NonTrivial _ -> add_irrelevant_goal goal "apply_lemma precondition" env pre) //AR: should we use the normalized pre instead?
-        
+
              (fun _ -> add_goals sub_goals)))))))))))
 
 let split_env (bvar : bv) (e : env) : option (env * bv * list bv) =
@@ -1637,7 +1637,7 @@ let pack (tv:term_view) : tac term =
         ret <| U.abs [b] t None // TODO: effect?
 
     | Tv_Arrow (b, c) ->
-        ret <| U.arrow [b] c
+        ret <| U.canon_arrow (U.arrow [b] c)
 
     | Tv_Type () ->
         ret <| U.ktype
