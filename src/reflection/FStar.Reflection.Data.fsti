@@ -123,8 +123,8 @@ type bv_view = {
 type binder_view = bv * (aqualv * list term)
 
 type comp_view =
-    | C_Total of typ * option universe * list term  //decreases clause
-    | C_GTotal of typ * option universe * list term //idem
+    | C_Total of typ * universe * list term  //decreases clause
+    | C_GTotal of typ * universe * list term //idem
     | C_Lemma of term * term * term
     | C_Eff of universes * name * term * list argv
 
@@ -154,3 +154,4 @@ type exp =
 
 (* Needed so this appears in the ocaml output for fstar-tactics-lib *)
 type decls = list sigelt
+

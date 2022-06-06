@@ -92,8 +92,8 @@ type term_view =
 // Very basic for now
 noeq
 type comp_view =
-  | C_Total     : ret:typ -> u:option universe -> decr:(list term) -> comp_view
-  | C_GTotal    : ret:typ -> u:option universe -> decr:(list term) -> comp_view
+  | C_Total     : ret:typ -> u:universe -> decr:(list term) -> comp_view
+  | C_GTotal    : ret:typ -> u:universe -> decr:(list term) -> comp_view
   | C_Lemma     : term -> term -> term -> comp_view // pre, post, patterns
   | C_Eff       : us:universes ->
                   eff_name:name ->
