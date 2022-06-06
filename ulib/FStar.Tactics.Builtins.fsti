@@ -332,6 +332,10 @@ val inspect : term -> Tac term_view
 (** Pack a term view on a fully-named representation back into a term *)
 val pack    : term_view -> Tac term
 
+(** Similar to [pack] above, but does not flatten arrows, it leaves
+    then in a currified form instead *)
+val pack_currified : term_view -> Tac term
+
 (** Join the first two goals, which must be irrelevant, in a single
 one by finding a maximal prefix of their environment and reverting
 appropriately. Useful to minimize SMT queries that share internal
