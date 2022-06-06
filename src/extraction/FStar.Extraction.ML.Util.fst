@@ -394,7 +394,7 @@ let rec uncurry_mlty_fun t =
 
 (* helper functions used to extract, alongside a tactic, its corresponding call
    to FStar.Tactics.Native.register_tactic *)
-module RD = FStar.Reflection.Data
+module RC = FStar.Reflection.Constants
 module SEmb = FStar.Syntax.Embeddings
 module REmb = FStar.Reflection.Embeddings
 
@@ -497,12 +497,12 @@ let interpret_plugin_as_term_fun (env:UEnv.uenv) (fv:fv) (t:typ) (arity_opt:opti
               (PC.list_lid, 1, "list"), Syntax_term;
               (PC.option_lid, 1, "option"), Syntax_term;
               (PC.mk_tuple_lid 2 Range.dummyRange, 2, "tuple2"), Syntax_term;
-              (RD.fstar_refl_types_lid "term", 0, "term"), Refl_emb;
-              (RD.fstar_refl_types_lid "sigelt", 0, "sigelt"), Refl_emb;
-              (RD.fstar_refl_types_lid "fv", 0, "fv"), Refl_emb;
-              (RD.fstar_refl_types_lid "binder", 0, "binder"), Refl_emb;
-              (RD.fstar_refl_syntax_lid "binders", 0, "binders"), Refl_emb;
-              (RD.fstar_refl_data_lid "exp", 0, "exp"), Refl_emb
+              (RC.fstar_refl_types_lid "term", 0, "term"), Refl_emb;
+              (RC.fstar_refl_types_lid "sigelt", 0, "sigelt"), Refl_emb;
+              (RC.fstar_refl_types_lid "fv", 0, "fv"), Refl_emb;
+              (RC.fstar_refl_types_lid "binder", 0, "binder"), Refl_emb;
+              (RC.fstar_refl_syntax_lid "binders", 0, "binders"), Refl_emb;
+              (RC.fstar_refl_data_lid "exp", 0, "exp"), Refl_emb
             ]
        in
        let nbe_cs =

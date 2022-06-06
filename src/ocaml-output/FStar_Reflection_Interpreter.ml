@@ -238,7 +238,7 @@ let nbe_int3 :
                                      FStar_Pervasives_Native.Some uu___6)))
                   | uu___ -> FStar_Pervasives_Native.None
 let (mklid : Prims.string -> FStar_Ident.lid) =
-  fun nm -> FStar_Reflection_Data.fstar_refl_builtins_lid nm
+  fun nm -> FStar_Reflection_Constants.fstar_refl_builtins_lid nm
 let (mk :
   FStar_Ident.lid ->
     Prims.int ->

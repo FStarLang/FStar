@@ -35,6 +35,8 @@ module Ident = FStar.Ident
 module EMB = FStar.Syntax.Embeddings
 module NBET = FStar.TypeChecker.NBETerm
 
+open FStar.Reflection.Constants
+
 let unembed ea a norm_cb = EMB.unembed ea a true norm_cb
 let try_unembed ea a norm_cb = EMB.unembed ea a false norm_cb
 let embed ea r x norm_cb = embed ea x r None norm_cb

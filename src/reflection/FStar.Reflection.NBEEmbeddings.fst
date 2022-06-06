@@ -44,6 +44,8 @@ module RD = FStar.Reflection.Data
 
 open FStar.Compiler.Dyn
 
+open FStar.Reflection.Constants
+
 (*
  * embed   : from compiler to user
  * unembed : from user to compiler
