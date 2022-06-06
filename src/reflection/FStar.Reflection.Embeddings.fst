@@ -629,15 +629,15 @@ let e_bv_view =
 let e_comp_view =
     let embed_comp_view (rng:Range.range) (cv : comp_view) : term =
         match cv with
-        | C_Total (t, uopt, md) ->
+        | C_Total (t, u, md) ->
             S.mk_Tm_app ref_C_Total.t [S.as_arg (embed e_term rng t);
-                                       S.as_arg (embed (e_option e_universe) rng uopt);
+                                       S.as_arg (embed e_universe rng u);
                                        S.as_arg (embed (e_list e_term) rng md)]
                         rng
 
-        | C_GTotal (t, uopt, md) ->
+        | C_GTotal (t, u, md) ->
             S.mk_Tm_app ref_C_GTotal.t [S.as_arg (embed e_term rng t);
-                                        S.as_arg (embed (e_option e_universe) rng uopt);
+                                        S.as_arg (embed e_universe rng u);
                                         S.as_arg (embed (e_list e_term) rng md)]
                         rng
 
@@ -658,19 +658,19 @@ let e_comp_view =
         let t = U.unascribe t in
         let hd, args = U.head_and_args t in
         match (U.un_uinst hd).n, args with
-        | Tm_fvar fv, [(t, _); (uopt, _); (md, _)]
+        | Tm_fvar fv, [(t, _); (u, _); (md, _)]
           when S.fv_eq_lid fv ref_C_Total.lid ->
             BU.bind_opt (unembed' w e_term t) (fun t ->
-            BU.bind_opt (unembed' w (e_option e_universe) uopt) (fun uopt ->
+            BU.bind_opt (unembed' w e_universe u) (fun u ->
             BU.bind_opt (unembed' w (e_list e_term) md) (fun md ->
-            Some <| C_Total (t, uopt, md))))
+            Some <| C_Total (t, u, md))))
 
-        | Tm_fvar fv, [(t, _); (uopt, _); (md, _)]
+        | Tm_fvar fv, [(t, _); (u, _); (md, _)]
           when S.fv_eq_lid fv ref_C_GTotal.lid ->
             BU.bind_opt (unembed' w e_term t) (fun t ->
-            BU.bind_opt (unembed' w (e_option e_universe) uopt) (fun uopt ->
+            BU.bind_opt (unembed' w e_universe u) (fun u ->
             BU.bind_opt (unembed' w (e_list e_term) md) (fun md ->
-            Some <| C_GTotal (t, uopt, md))))
+            Some <| C_GTotal (t, u, md))))
 
         | Tm_fvar fv, [(pre, _); (post, _); (pats, _)] when S.fv_eq_lid fv ref_C_Lemma.lid ->
             BU.bind_opt (unembed' w e_term pre) (fun pre ->

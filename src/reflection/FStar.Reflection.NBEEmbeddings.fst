@@ -601,16 +601,16 @@ let e_bv_view =
 let e_comp_view =
     let embed_comp_view cb (cv : comp_view) : t =
         match cv with
-        | C_Total (t, uopt, md) ->
+        | C_Total (t, u, md) ->
             mkConstruct ref_C_Total.fv [] [
               as_arg (embed e_term cb t);
-              as_arg (embed (e_option e_universe) cb uopt);
+              as_arg (embed e_universe cb u);
               as_arg (embed (e_list e_term) cb md)]
 
-        | C_GTotal (t, uopt, md) ->
+        | C_GTotal (t, u, md) ->
             mkConstruct ref_C_GTotal.fv [] [
               as_arg (embed e_term cb t);
-              as_arg (embed (e_option e_universe) cb uopt);
+              as_arg (embed e_universe cb u);
               as_arg (embed (e_list e_term) cb md)]
 
         | C_Lemma (pre, post, pats) ->
@@ -625,19 +625,19 @@ let e_comp_view =
     in
     let unembed_comp_view cb (t : t) : option comp_view =
         match t.nbe_t with
-        | Construct (fv, _, [(md, _); (uopt, _); (t, _)])
+        | Construct (fv, _, [(md, _); (u, _); (t, _)])
           when S.fv_eq_lid fv ref_C_Total.lid ->
             BU.bind_opt (unembed e_term cb t) (fun t ->
-            BU.bind_opt (unembed (e_option e_universe) cb uopt) (fun uopt ->
+            BU.bind_opt (unembed e_universe cb u) (fun u ->
             BU.bind_opt (unembed (e_list e_term) cb md) (fun md ->
-            Some <| C_Total (t, uopt, md))))
+            Some <| C_Total (t, u, md))))
 
-        | Construct (fv, _, [(md, _); (uopt, _); (t, _)])
+        | Construct (fv, _, [(md, _); (u, _); (t, _)])
           when S.fv_eq_lid fv ref_C_GTotal.lid ->
             BU.bind_opt (unembed e_term cb t) (fun t ->
-            BU.bind_opt (unembed (e_option e_universe) cb uopt) (fun uopt ->
+            BU.bind_opt (unembed e_universe cb u) (fun u ->
             BU.bind_opt (unembed (e_list e_term) cb md) (fun md ->
-            Some <| C_GTotal (t, uopt, md))))
+            Some <| C_GTotal (t, u, md))))
 
         | Construct (fv, _, [(post, _); (pre, _); (pats, _)]) when S.fv_eq_lid fv ref_C_Lemma.lid ->
             BU.bind_opt (unembed e_term cb pre) (fun pre ->

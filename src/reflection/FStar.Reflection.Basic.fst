@@ -293,13 +293,13 @@ let inspect_comp (c : comp) : comp_view =
         | _ -> failwith "Impossible!"
     in
     match c.n with
-    | Total (t, uopt) -> C_Total (t, uopt, [])
-    | GTotal (t, uopt) -> C_GTotal (t, uopt, [])
+    | Total (t, uopt) -> C_Total (t, BU.dflt U_unknown uopt, [])
+    | GTotal (t, uopt) -> C_GTotal (t, BU.dflt U_unknown uopt, [])
     | Comp ct -> begin
         let uopt =
           if List.length ct.comp_univs = 0
-          then None
-          else ct.comp_univs |> List.hd |> Some in
+          then U_unknown
+          else ct.comp_univs |> List.hd in
         if Ident.lid_equals ct.effect_name PC.effect_Lemma_lid then
             match ct.effect_args with
             | (pre,_)::(post,_)::(pats,_)::_ ->
@@ -321,13 +321,18 @@ let inspect_comp (c : comp) : comp_view =
       end
 
 let pack_comp (cv : comp_view) : comp =
-    let uopt_to_univs uopt =
-      uopt |> BU.map_option List.singleton
-           |> BU.dflt [] in
+    let urefl_to_univs u =
+      if u = U_unknown
+      then []
+      else [u] in
+    let urefl_to_univ_opt u =
+      if u = U_unknown
+      then None
+      else Some u in
     match cv with
-    | C_Total (t, uopt, []) -> mk_Total' t uopt
-    | C_Total (t, uopt, l) ->
-        let ct = { comp_univs=uopt_to_univs uopt
+    | C_Total (t, u, []) -> mk_Total' t (urefl_to_univ_opt u)
+    | C_Total (t, u, l) ->
+        let ct = { comp_univs=urefl_to_univs u
                  ; effect_name=PC.effect_Tot_lid
                  ; result_typ = t
                  ; effect_args = []
@@ -335,9 +340,9 @@ let pack_comp (cv : comp_view) : comp =
         in
         S.mk_Comp ct
 
-    | C_GTotal (t, uopt, []) -> mk_GTotal' t uopt
-    | C_GTotal (t, uopt, l) ->
-        let ct = { comp_univs=uopt_to_univs uopt
+    | C_GTotal (t, u, []) -> mk_GTotal' t (urefl_to_univ_opt u)
+    | C_GTotal (t, u, l) ->
+        let ct = { comp_univs=urefl_to_univs u
                  ; effect_name=PC.effect_GTot_lid
                  ; result_typ = t
                  ; effect_args = []
