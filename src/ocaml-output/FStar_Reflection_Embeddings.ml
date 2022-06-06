@@ -1491,16 +1491,14 @@ let (e_comp_view :
   FStar_Reflection_Data.comp_view FStar_Syntax_Embeddings.embedding) =
   let embed_comp_view rng cv =
     match cv with
-    | FStar_Reflection_Data.C_Total (t, uopt, md) ->
+    | FStar_Reflection_Data.C_Total (t, u, md) ->
         let uu___ =
           let uu___1 =
             let uu___2 = embed e_term rng t in
             FStar_Syntax_Syntax.as_arg uu___2 in
           let uu___2 =
             let uu___3 =
-              let uu___4 =
-                let uu___5 = FStar_Syntax_Embeddings.e_option e_universe in
-                embed uu___5 rng uopt in
+              let uu___4 = embed e_universe rng u in
               FStar_Syntax_Syntax.as_arg uu___4 in
             let uu___4 =
               let uu___5 =
@@ -1514,16 +1512,14 @@ let (e_comp_view :
         FStar_Syntax_Syntax.mk_Tm_app
           FStar_Reflection_Constants.ref_C_Total.FStar_Reflection_Constants.t
           uu___ rng
-    | FStar_Reflection_Data.C_GTotal (t, uopt, md) ->
+    | FStar_Reflection_Data.C_GTotal (t, u, md) ->
         let uu___ =
           let uu___1 =
             let uu___2 = embed e_term rng t in
             FStar_Syntax_Syntax.as_arg uu___2 in
           let uu___2 =
             let uu___3 =
-              let uu___4 =
-                let uu___5 = FStar_Syntax_Embeddings.e_option e_universe in
-                embed uu___5 rng uopt in
+              let uu___4 = embed e_universe rng u in
               FStar_Syntax_Syntax.as_arg uu___4 in
             let uu___4 =
               let uu___5 =
@@ -1597,18 +1593,16 @@ let (e_comp_view :
           (uu___2, args) in
         (match uu___1 with
          | (FStar_Syntax_Syntax.Tm_fvar fv,
-            (t2, uu___2)::(uopt, uu___3)::(md, uu___4)::[]) when
+            (t2, uu___2)::(u, uu___3)::(md, uu___4)::[]) when
              FStar_Syntax_Syntax.fv_eq_lid fv
                FStar_Reflection_Constants.ref_C_Total.FStar_Reflection_Constants.lid
              ->
              let uu___5 = unembed' w e_term t2 in
              FStar_Compiler_Util.bind_opt uu___5
                (fun t3 ->
-                  let uu___6 =
-                    let uu___7 = FStar_Syntax_Embeddings.e_option e_universe in
-                    unembed' w uu___7 uopt in
+                  let uu___6 = unembed' w e_universe u in
                   FStar_Compiler_Util.bind_opt uu___6
-                    (fun uopt1 ->
+                    (fun u1 ->
                        let uu___7 =
                          let uu___8 = FStar_Syntax_Embeddings.e_list e_term in
                          unembed' w uu___8 md in
@@ -1617,20 +1611,18 @@ let (e_comp_view :
                             FStar_Compiler_Effect.op_Less_Bar
                               (fun uu___8 ->
                                  FStar_Pervasives_Native.Some uu___8)
-                              (FStar_Reflection_Data.C_Total (t3, uopt1, md1)))))
+                              (FStar_Reflection_Data.C_Total (t3, u1, md1)))))
          | (FStar_Syntax_Syntax.Tm_fvar fv,
-            (t2, uu___2)::(uopt, uu___3)::(md, uu___4)::[]) when
+            (t2, uu___2)::(u, uu___3)::(md, uu___4)::[]) when
              FStar_Syntax_Syntax.fv_eq_lid fv
                FStar_Reflection_Constants.ref_C_GTotal.FStar_Reflection_Constants.lid
              ->
              let uu___5 = unembed' w e_term t2 in
              FStar_Compiler_Util.bind_opt uu___5
                (fun t3 ->
-                  let uu___6 =
-                    let uu___7 = FStar_Syntax_Embeddings.e_option e_universe in
-                    unembed' w uu___7 uopt in
+                  let uu___6 = unembed' w e_universe u in
                   FStar_Compiler_Util.bind_opt uu___6
-                    (fun uopt1 ->
+                    (fun u1 ->
                        let uu___7 =
                          let uu___8 = FStar_Syntax_Embeddings.e_list e_term in
                          unembed' w uu___8 md in
@@ -1639,8 +1631,7 @@ let (e_comp_view :
                             FStar_Compiler_Effect.op_Less_Bar
                               (fun uu___8 ->
                                  FStar_Pervasives_Native.Some uu___8)
-                              (FStar_Reflection_Data.C_GTotal
-                                 (t3, uopt1, md1)))))
+                              (FStar_Reflection_Data.C_GTotal (t3, u1, md1)))))
          | (FStar_Syntax_Syntax.Tm_fvar fv,
             (pre, uu___2)::(post, uu___3)::(pats, uu___4)::[]) when
              FStar_Syntax_Syntax.fv_eq_lid fv

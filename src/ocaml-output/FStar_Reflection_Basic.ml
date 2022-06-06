@@ -316,21 +316,22 @@ let (inspect_comp :
       | uu___1 -> failwith "Impossible!" in
     match c.FStar_Syntax_Syntax.n with
     | FStar_Syntax_Syntax.Total (t, uopt) ->
-        FStar_Reflection_Data.C_Total (t, uopt, [])
+        FStar_Reflection_Data.C_Total
+          (t, (FStar_Compiler_Util.dflt FStar_Syntax_Syntax.U_unknown uopt),
+            [])
     | FStar_Syntax_Syntax.GTotal (t, uopt) ->
-        FStar_Reflection_Data.C_GTotal (t, uopt, [])
+        FStar_Reflection_Data.C_GTotal
+          (t, (FStar_Compiler_Util.dflt FStar_Syntax_Syntax.U_unknown uopt),
+            [])
     | FStar_Syntax_Syntax.Comp ct ->
         let uopt =
           if
             (FStar_Compiler_List.length ct.FStar_Syntax_Syntax.comp_univs) =
               Prims.int_zero
-          then FStar_Pervasives_Native.None
+          then FStar_Syntax_Syntax.U_unknown
           else
-            (let uu___1 =
-               FStar_Compiler_Effect.op_Bar_Greater
-                 ct.FStar_Syntax_Syntax.comp_univs FStar_Compiler_List.hd in
-             FStar_Compiler_Effect.op_Bar_Greater uu___1
-               (fun uu___2 -> FStar_Pervasives_Native.Some uu___2)) in
+            FStar_Compiler_Effect.op_Bar_Greater
+              ct.FStar_Syntax_Syntax.comp_univs FStar_Compiler_List.hd in
         let uu___ =
           FStar_Ident.lid_equals ct.FStar_Syntax_Syntax.effect_name
             FStar_Parser_Const.effect_Lemma_lid in
@@ -376,20 +377,19 @@ let (inspect_comp :
 let (pack_comp : FStar_Reflection_Data.comp_view -> FStar_Syntax_Syntax.comp)
   =
   fun cv ->
-    let uopt_to_univs uopt =
-      let uu___ =
-        FStar_Compiler_Effect.op_Bar_Greater uopt
-          (FStar_Compiler_Util.map_option FStar_Compiler_List.singleton) in
-      FStar_Compiler_Effect.op_Bar_Greater uu___
-        (FStar_Compiler_Util.dflt []) in
+    let urefl_to_univs u =
+      if u = FStar_Syntax_Syntax.U_unknown then [] else [u] in
+    let urefl_to_univ_opt u =
+      if u = FStar_Syntax_Syntax.U_unknown
+      then FStar_Pervasives_Native.None
+      else FStar_Pervasives_Native.Some u in
     match cv with
-    | FStar_Reflection_Data.C_Total (t, uopt, []) ->
-        FStar_Syntax_Syntax.mk_Total' t uopt
-    | FStar_Reflection_Data.C_Total (t, uopt, l) ->
+    | FStar_Reflection_Data.C_Total (t, u, []) ->
+        FStar_Syntax_Syntax.mk_Total' t (urefl_to_univ_opt u)
+    | FStar_Reflection_Data.C_Total (t, u, l) ->
         let ct =
-          let uu___ = uopt_to_univs uopt in
           {
-            FStar_Syntax_Syntax.comp_univs = uu___;
+            FStar_Syntax_Syntax.comp_univs = (urefl_to_univs u);
             FStar_Syntax_Syntax.effect_name =
               FStar_Parser_Const.effect_Tot_lid;
             FStar_Syntax_Syntax.result_typ = t;
@@ -399,13 +399,12 @@ let (pack_comp : FStar_Reflection_Data.comp_view -> FStar_Syntax_Syntax.comp)
                  (FStar_Syntax_Syntax.Decreases_lex l)]
           } in
         FStar_Syntax_Syntax.mk_Comp ct
-    | FStar_Reflection_Data.C_GTotal (t, uopt, []) ->
-        FStar_Syntax_Syntax.mk_GTotal' t uopt
-    | FStar_Reflection_Data.C_GTotal (t, uopt, l) ->
+    | FStar_Reflection_Data.C_GTotal (t, u, []) ->
+        FStar_Syntax_Syntax.mk_GTotal' t (urefl_to_univ_opt u)
+    | FStar_Reflection_Data.C_GTotal (t, u, l) ->
         let ct =
-          let uu___ = uopt_to_univs uopt in
           {
-            FStar_Syntax_Syntax.comp_univs = uu___;
+            FStar_Syntax_Syntax.comp_univs = (urefl_to_univs u);
             FStar_Syntax_Syntax.effect_name =
               FStar_Parser_Const.effect_GTot_lid;
             FStar_Syntax_Syntax.result_typ = t;
