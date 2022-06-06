@@ -59,3 +59,30 @@ let _ = assert True
                 | Some [a;b]  -> guard (a `term_eq` (`1));
                                  guard (b `term_eq` (`2))
                 | _ -> fail "")
+
+//
+//Returns a Type u#1
+//  By reflecting on int -> Tot<0> int,
+//  Taking the universe from Tot
+//  And applying Succ to it
+//
+let get_u () : Tac term =
+  let t = `(int -> Tot u#0 int) in
+  match inspect t with
+  | Tv_Arrow _ c ->
+    (match inspect_comp c with
+     | C_Total _ u _ ->
+       (match u with
+        | Some u ->
+          let su = pack_universe (Uv_Succ u) in
+          pack_ln (Tv_Type su)
+        | _ -> fail "1")
+     | _ -> fail "2")
+  | _ -> fail "3"
+
+let test0 (#[exact (get_u ())]t:Type u#2) () : Type u#2 = t
+let test1 () = test0 ()
+
+let test2 (#[exact (get_u ())]t:Type u#1) () : Type u#1 = t
+[@@ expect_failure [228]]
+let test3 () = test2 ()
