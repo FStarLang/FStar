@@ -1506,7 +1506,6 @@ let rec init (l:list 'a) : list 'a =
 let rec inspect (t:term) : tac term_view = wrap_err "inspect" (
     bind (top_env ()) (fun e ->
     let t = U.unascribe t in
-    let t = U.un_uinst t in
     let t = U.unlazy_emb t in
     match t.n with
     | Tm_meta (t, _) ->
