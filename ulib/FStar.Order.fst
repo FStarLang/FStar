@@ -60,22 +60,13 @@ let int_of_order = function
 val compare_int : int -> int -> order
 let compare_int i j = order_from_int (i - j)
 
-val compare_list : ('a -> 'a -> order) -> list 'a -> list 'a -> order
-let rec compare_list f l1 l2 =
-    match l1, l2 with
-    | [], [] -> Eq
-    | [], _ -> Lt
-    | _, [] -> Gt
-    | x::xs, y::ys -> lex (f x y) (fun () -> compare_list f xs ys)
-
 (*
- * A refined version of compare list,
- *   that promises to call the comparator in strictly smaller elements
+ * It promises to call the comparator in strictly smaller elements
  * Useful when writing a comparator for an inductive type,
  *   that contains the list of itself as an argument to one of its
  *   data constructors
  *)
-let rec compare_list_refined (#a:Type)
+let rec compare_list (#a:Type)
   (l1 l2:list a)
   (f:(x:a{x << l1} -> y:a{y << l2} -> order))
   : order
@@ -83,7 +74,7 @@ let rec compare_list_refined (#a:Type)
     | [], [] -> Eq
     | [], _ -> Lt
     | _, [] -> Gt
-    | x::xs, y::ys -> lex (f x y) (fun _ -> compare_list_refined xs ys f)
+    | x::xs, y::ys -> lex (f x y) (fun _ -> compare_list xs ys f)
 
 val compare_option : ('a -> 'a -> order) -> option 'a -> option 'a -> order
 let compare_option f x y =
