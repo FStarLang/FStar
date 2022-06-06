@@ -124,7 +124,7 @@ let collect_abs_ln t =
 let fv_to_string (fv:fv) : string = implode_qn (inspect_fv fv)
 
 let compare_name (n1 n2 : name) : order =
-    compare_list (fun s1 s2 -> order_from_int (compare_string s1 s2)) n1 n2
+    compare_list n1 n2 (fun s1 s2 -> order_from_int (compare_string s1 s2))
 
 let compare_fv (f1 f2 : fv) : order =
     compare_name (inspect_fv f1) (inspect_fv f2)
@@ -161,7 +161,7 @@ let rec compare_universe (u1 u2:universe) : order =
   | Uv_Zero, Uv_Zero -> Eq
   | Uv_Succ u1, Uv_Succ u2 -> compare_universe u1 u2
   | Uv_Max us1, Uv_Max us2 ->
-    compare_list_refined us1 us2 (fun x y -> compare_universe x y)
+    compare_list us1 us2 (fun x y -> compare_universe x y)
   | Uv_BVar n1, Uv_BVar n2 -> compare_int n1 n2
   | Uv_Name i1, Uv_Name i2 -> compare_ident i1 i2
   | Uv_Unif u1, Uv_Unif u2 -> Eq  //AR: TODO
@@ -175,7 +175,7 @@ let rec compare_universe (u1 u2:universe) : order =
   | Uv_Unk, _ -> Lt
 
 let compare_universes (us1 us2:universes) : order =
-  compare_list compare_universe us1 us2
+  compare_list us1 us2 compare_universe
 
 let rec compare_term (s t : term) : Tot order (decreases s) =
     match inspect_ln s, inspect_ln t with
@@ -394,3 +394,8 @@ let add_check_with vcfg se =
   let vcfg_t = embed_vconfig vcfg in
   let t = `(check_with (`#vcfg_t)) in
   set_sigelt_attrs (t :: attrs) se
+
+let un_uinst (t:term) : term =
+  match inspect_ln t with
+  | Tv_UInst fv _ -> pack_ln (Tv_FVar fv)
+  | _ -> t

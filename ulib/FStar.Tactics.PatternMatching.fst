@@ -64,6 +64,7 @@ let fetch_eq_side () : Tac (term * term) =
   match inspect g with
   | Tv_App squash (g, _) ->
     (match inspect squash with
+     | Tv_UInst squash _
      | Tv_FVar squash ->
        if fv_to_string squash = flatten_name squash_qn then
          (match inspect g with
@@ -73,6 +74,7 @@ let fetch_eq_side () : Tac (term * term) =
                (match inspect eq_type with
                 | Tv_App eq (typ, _) ->
                   (match inspect eq with
+                   | Tv_UInst eq _
                    | Tv_FVar eq ->
                      if fv_to_string eq = flatten_name eq2_qn then
                        (x, y)
@@ -300,6 +302,7 @@ let rec interp_pattern_aux (pat: pattern) (cur_bindings: bindings) (tm:term)
     | None -> return ((v, tm) :: cur_bindings) in
   let interp_qn (qn: qn) cur_bindings tm =
     match inspect tm with
+    | Tv_UInst fv _
     | Tv_FVar fv ->
       if fv_to_string fv = qn then return cur_bindings
       else raise (NameMismatch (qn, (fv_to_string fv)))
@@ -509,7 +512,8 @@ let rec pattern_of_term_ex tm : Tac (match_res pattern) =
   match inspect tm with
   | Tv_Var bv ->
     return (PVar (name_of_bv bv))
-  | Tv_FVar fv ->
+  | Tv_FVar fv
+  | Tv_UInst fv _ ->
     let qn = fv_to_string fv in
     return (PQn qn)
   | Tv_Type _ ->
