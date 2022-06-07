@@ -35,6 +35,7 @@ module TcUtil = FStar.TypeChecker.Util
 module Print = FStar.Syntax.Print
 module Env = FStar.TypeChecker.Env
 module Err = FStar.Errors
+exception SplitQueryAndRetry
 
 (****************************************************************************)
 (* Hint databases for record and replay (private)                           *)
@@ -352,13 +353,24 @@ let errors_to_report (settings : query_settings) : list Errors.error =
           // FStar.Errors.log_issue settings.query_range (FStar.Errors.Warning_SMTErrorReason, smt_error);
           FStar.TypeChecker.Err.errors_smt_detail settings.query_env err.error_messages smt_error
         | None ->
-          FStar.TypeChecker.Err.errors_smt_detail
+          match settings.query_all_labels with
+          | [(_, msg, rng)] -> 
+            //if there is a unique label report it
+            FStar.TypeChecker.Err.errors_smt_detail
                    settings.query_env
-                   [(Errors.Error_UnknownFatal_AssertionFailure,
-                     "Unknown assertion failed",
-                     settings.query_range,
-                     Errors.get_ctx ())]
-                   smt_error
+                   [(Errors.Error_Z3SolverError, msg, rng, Errors.get_ctx())]
+                   (Inl "")
+
+          | _ ->
+            //otherwise, split the query into N unique queries and try again
+            raise SplitQueryAndRetry
+            // FStar.TypeChecker.Err.errors_smt_detail
+            //          settings.query_env
+            //          [(Errors.Error_UnknownFatal_AssertionFailure,
+            //            "Unknown assertion failed",
+            //            settings.query_range,
+            //            Errors.get_ctx ())]
+            //          smt_error
     in
     let detailed_errors : unit =
       if Options.detail_errors()
@@ -903,7 +915,7 @@ let should_refresh env =
     | Some cfg ->
         not (cfg = get_cfg env)
 
-let do_solve use_env_msg tcenv q : unit =
+let rec do_solve expect_singleton_query use_env_msg tcenv q : unit =
     if should_refresh tcenv then begin
       save_cfg tcenv;
       Z3.refresh ()
@@ -917,11 +929,28 @@ let do_solve use_env_msg tcenv q : unit =
       | Assume({assumption_term={tm=App(FalseOp, _)}}) -> pop()
       | _ when tcenv.admit -> pop()
       | Assume _ ->
+        if expect_singleton_query
+        && List.length labels <> 1
+        then failwith "Impossible: Queries should already have been split into singletons";
+        
         ask_and_report_errors tcenv labels prefix qry suffix;
         pop ()
 
       | _ -> failwith "Impossible"
     with
+      | SplitQueryAndRetry ->
+        pop();
+        if expect_singleton_query
+        then failwith "Impossible: singleton queries should always produce an error report and cannot be split further";
+        begin
+        match Env.split_smt_query tcenv q with
+        | None -> 
+          failwith "Impossible: split_query callback is not set"
+          
+        | Some goals ->
+          goals |> List.iter (fun (env, goal) -> do_solve true use_env_msg env goal)
+        end
+        
       | FStar.SMTEncoding.Env.Inner_let_rec names ->  //can be raised by encode_query
         pop ();  //AR: Important, we push-ed before encode_query was called
         FStar.TypeChecker.Err.log_issue
@@ -939,7 +968,7 @@ let solve use_env_msg tcenv q : unit =
              BU.format1 "Q = %s\nA query could not be solved internally, and --no_smt was given" (Print.term_to_string q))
     else
     Profiling.profile
-      (fun () -> do_solve use_env_msg tcenv q)
+      (fun () -> do_solve false use_env_msg tcenv q)
       (Some (Ident.string_of_lid (Env.current_module tcenv)))
       "FStar.SMTEncoding.solve_top_level"
 

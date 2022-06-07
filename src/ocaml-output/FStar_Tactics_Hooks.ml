@@ -1015,8 +1015,7 @@ let (pol_to_string : pol -> Prims.string) =
 let (spinoff_strictly_positive_goals :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.term ->
-      (FStar_TypeChecker_Env.env * FStar_Syntax_Syntax.term *
-        FStar_Options.optionstate) Prims.list)
+      (FStar_TypeChecker_Env.env * FStar_Syntax_Syntax.term) Prims.list)
   =
   fun env ->
     fun goal ->
@@ -1148,18 +1147,14 @@ let (spinoff_strictly_positive_goals :
                                   let uu___6 =
                                     let uu___7 =
                                       FStar_Tactics_Types.goal_env g in
-                                    (uu___7, phi,
-                                      (g.FStar_Tactics_Types.opts)) in
+                                    (uu___7, phi) in
                                   uu___6 :: gs1 in
                                 ((n + Prims.int_one), uu___5)))) s gs in
                  let uu___3 = s1 in
                  match uu___3 with
                  | (uu___4, gs1) ->
-                     let gs2 = FStar_Compiler_List.rev gs1 in
-                     let uu___5 =
-                       let uu___6 = FStar_Options.peek () in
-                       (env, t'1, uu___6) in
-                     uu___5 :: gs2)))
+                     let gs2 = FStar_Compiler_List.rev gs1 in (env, t'1) ::
+                       gs2)))
 let (synthesize :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.typ ->

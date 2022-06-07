@@ -509,7 +509,7 @@ let pol_to_string = function
   | Both -> "Both"
   
 let spinoff_strictly_positive_goals (env:Env.env) (goal:term)
-  : list (Env.env * term * O.optionstate)
+  : list (Env.env * term)
   = let debug = Env.debug env (O.Other "SpinoffAll") in
     let should_descend' enable_debug (t:term) = 
         //descend only into the following connectives
@@ -593,14 +593,13 @@ let spinoff_strictly_positive_goals (env:Env.env) (goal:term)
              let phi = goal_type g in
              if debug 
              then BU.print2 "Got goal #%s: %s\n" (string_of_int n) (Print.term_to_string (goal_type g));
-             (n+1, (goal_env g, phi, g.opts)::gs))
+             (n+1, (goal_env g, phi)::gs))
           s
           gs
       in
       let (_, gs) = s in
       let gs = List.rev gs in (* Return new VCs in same order as goals *)
-      // Use default opts for main goal
-      (env, t', O.peek ()) :: gs
+      (env, t') :: gs
   )
 
 

@@ -13168,21 +13168,30 @@ let (discharge_guard' :
                                     (env, vc2, uu___13) in
                                   [uu___12]) in
                              let vcs1 =
-                               let uu___10 =
-                                 FStar_TypeChecker_Env.debug env
-                                   (FStar_Options.Other "SpinoffAll") in
+                               let uu___10 = FStar_Options.split_queries () in
                                if uu___10
                                then
-                                 match (env.FStar_TypeChecker_Env.solver).FStar_TypeChecker_Env.spinoff_strictly_positive_goals
-                                 with
-                                 | FStar_Pervasives_Native.Some p ->
-                                     FStar_Compiler_Effect.op_Bar_Greater vcs
-                                       (FStar_Compiler_List.collect
-                                          (fun uu___11 ->
-                                             match uu___11 with
-                                             | (env1, goal, uu___12) ->
-                                                 p env1 goal))
-                                 | uu___11 -> vcs
+                                 FStar_Compiler_Effect.op_Bar_Greater vcs
+                                   (FStar_Compiler_List.collect
+                                      (fun uu___11 ->
+                                         match uu___11 with
+                                         | (env1, goal, opts) ->
+                                             let uu___12 =
+                                               FStar_TypeChecker_Env.split_smt_query
+                                                 env1 goal in
+                                             (match uu___12 with
+                                              | FStar_Pervasives_Native.None
+                                                  -> [(env1, goal, opts)]
+                                              | FStar_Pervasives_Native.Some
+                                                  goals ->
+                                                  FStar_Compiler_Effect.op_Bar_Greater
+                                                    goals
+                                                    (FStar_Compiler_List.map
+                                                       (fun uu___13 ->
+                                                          match uu___13 with
+                                                          | (env2, goal1) ->
+                                                              (env2, goal1,
+                                                                opts))))))
                                else vcs in
                              FStar_Compiler_Effect.op_Bar_Greater vcs1
                                (FStar_Compiler_List.iter

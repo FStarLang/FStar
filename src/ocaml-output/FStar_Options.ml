@@ -350,6 +350,7 @@ let (defaults : (Prims.string * option_val) Prims.list) =
   ("smtencoding.l_arith_repr", (String "boxwrap"));
   ("smtencoding.valid_intro", (Bool true));
   ("smtencoding.valid_elim", (Bool false));
+  ("split_queries", (Bool false));
   ("tactics_failhard", (Bool false));
   ("tactics_info", (Bool false));
   ("tactic_raw_binders", (Bool false));
@@ -601,6 +602,8 @@ let (get_smtencoding_valid_intro : unit -> Prims.bool) =
   fun uu___ -> lookup_opt "smtencoding.valid_intro" as_bool
 let (get_smtencoding_valid_elim : unit -> Prims.bool) =
   fun uu___ -> lookup_opt "smtencoding.valid_elim" as_bool
+let (get_split_queries : unit -> Prims.bool) =
+  fun uu___ -> lookup_opt "split_queries" as_bool
 let (get_tactic_raw_binders : unit -> Prims.bool) =
   fun uu___ -> lookup_opt "tactic_raw_binders" as_bool
 let (get_tactics_failhard : unit -> Prims.bool) =
@@ -946,7 +949,7 @@ let (interp_quake_arg : Prims.string -> (Prims.int * Prims.int * Prims.bool))
           let uu___ = ios f1 in let uu___1 = ios f2 in (uu___, uu___1, true)
         else failwith "unexpected value for --quake"
     | uu___ -> failwith "unexpected value for --quake"
-let (uu___405 : (((Prims.string -> unit) -> unit) * (Prims.string -> unit)))
+let (uu___406 : (((Prims.string -> unit) -> unit) * (Prims.string -> unit)))
   =
   let cb = FStar_Compiler_Util.mk_ref FStar_Pervasives_Native.None in
   let set1 f =
@@ -958,11 +961,11 @@ let (uu___405 : (((Prims.string -> unit) -> unit) * (Prims.string -> unit)))
     | FStar_Pervasives_Native.Some f -> f msg in
   (set1, call)
 let (set_option_warning_callback_aux : (Prims.string -> unit) -> unit) =
-  match uu___405 with
+  match uu___406 with
   | (set_option_warning_callback_aux1, option_warning_callback) ->
       set_option_warning_callback_aux1
 let (option_warning_callback : Prims.string -> unit) =
-  match uu___405 with
+  match uu___406 with
   | (set_option_warning_callback_aux1, option_warning_callback1) ->
       option_warning_callback1
 let (set_option_warning_callback : (Prims.string -> unit) -> unit) =
@@ -1236,6 +1239,8 @@ let rec (specs_with_types :
       "Include an axiom in the SMT encoding to introduce proof-irrelevance from a constructive proof");
     (FStar_Getopt.noshort, "smtencoding.valid_elim", BoolStr,
       "Include an axiom in the SMT encoding to eliminate proof-irrelevance into the existence of a proof witness");
+    (FStar_Getopt.noshort, "split_queries", (Const (Bool true)),
+      "Split SMT verification conditions into several separate queries, one per goal");
     (FStar_Getopt.noshort, "tactic_raw_binders", (Const (Bool true)),
       "Do not use the lexical scope of tactics to improve binder names");
     (FStar_Getopt.noshort, "tactics_failhard", (Const (Bool true)),
@@ -1413,6 +1418,7 @@ let (settable : Prims.string -> Prims.bool) =
     | "smtencoding.nl_arith_repr" -> true
     | "smtencoding.valid_intro" -> true
     | "smtencoding.valid_elim" -> true
+    | "split_queries" -> true
     | "tactic_raw_binders" -> true
     | "tactics_failhard" -> true
     | "tactics_info" -> true
@@ -1451,7 +1457,7 @@ let (settable_specs :
     (FStar_Compiler_List.filter
        (fun uu___ ->
           match uu___ with | (uu___1, x, uu___2, uu___3) -> settable x))
-let (uu___587 :
+let (uu___589 :
   (((unit -> FStar_Getopt.parse_cmdline_res) -> unit) *
     (unit -> FStar_Getopt.parse_cmdline_res)))
   =
@@ -1468,11 +1474,11 @@ let (uu___587 :
   (set1, call)
 let (set_error_flags_callback_aux :
   (unit -> FStar_Getopt.parse_cmdline_res) -> unit) =
-  match uu___587 with
+  match uu___589 with
   | (set_error_flags_callback_aux1, set_error_flags) ->
       set_error_flags_callback_aux1
 let (set_error_flags : unit -> FStar_Getopt.parse_cmdline_res) =
-  match uu___587 with
+  match uu___589 with
   | (set_error_flags_callback_aux1, set_error_flags1) -> set_error_flags1
 let (set_error_flags_callback :
   (unit -> FStar_Getopt.parse_cmdline_res) -> unit) =
@@ -1961,6 +1967,7 @@ let (smtencoding_valid_intro : unit -> Prims.bool) =
   fun uu___ -> get_smtencoding_valid_intro ()
 let (smtencoding_valid_elim : unit -> Prims.bool) =
   fun uu___ -> get_smtencoding_valid_elim ()
+let (split_queries : unit -> Prims.bool) = fun uu___ -> get_split_queries ()
 let (tactic_raw_binders : unit -> Prims.bool) =
   fun uu___ -> get_tactic_raw_binders ()
 let (tactics_failhard : unit -> Prims.bool) =

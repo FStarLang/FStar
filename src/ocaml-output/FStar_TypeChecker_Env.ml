@@ -356,9 +356,7 @@ and solver_t =
   preprocess:
     env -> goal -> (env * goal * FStar_Options.optionstate) Prims.list ;
   spinoff_strictly_positive_goals:
-    (env -> goal -> (env * goal * FStar_Options.optionstate) Prims.list)
-      FStar_Pervasives_Native.option
-    ;
+    (env -> goal -> (env * goal) Prims.list) FStar_Pervasives_Native.option ;
   handle_smt_goal: env -> goal -> (env * goal) Prims.list ;
   solve:
     (unit -> Prims.string) FStar_Pervasives_Native.option ->
@@ -1254,8 +1252,7 @@ let (__proj__Mksolver_t__item__preprocess :
         refresh;_} -> preprocess
 let (__proj__Mksolver_t__item__spinoff_strictly_positive_goals :
   solver_t ->
-    (env -> goal -> (env * goal * FStar_Options.optionstate) Prims.list)
-      FStar_Pervasives_Native.option)
+    (env -> goal -> (env * goal) Prims.list) FStar_Pervasives_Native.option)
   =
   fun projectee ->
     match projectee with
@@ -6344,3 +6341,15 @@ let (fvar_of_nonqual_lid :
             failwith "Unexpected no delta_depth"
         | FStar_Pervasives_Native.Some dd1 -> dd1 in
       FStar_Syntax_Syntax.fvar lid dd FStar_Pervasives_Native.None
+let (split_smt_query :
+  env ->
+    FStar_Syntax_Syntax.term ->
+      (env * FStar_Syntax_Syntax.term) Prims.list
+        FStar_Pervasives_Native.option)
+  =
+  fun e ->
+    fun q ->
+      match (e.solver).spinoff_strictly_positive_goals with
+      | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None
+      | FStar_Pervasives_Native.Some p ->
+          let uu___ = p e q in FStar_Pervasives_Native.Some uu___
