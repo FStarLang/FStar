@@ -42,10 +42,16 @@ let z x = 0
 let one = match (fun x -> x) with | f -> f 1
 
 val list_zero_to_int_assert : list zero -> Tot int
-let list_zero_to_int_assert l = match l with
-  | [] -> 0
-  | hd::tl -> assert (hd=0); hd
-
+let gg (x:int{x > 0}) : unit = ()
+#push-options "--query_stats --debug Unit1.Basic --debug_level SpinoffAll"
+// let list_zero_to_int_assert l = match l with
+//   | [] -> 0
+//   | hd::tl -> assert (hd=0); hd
+#push-options "--ugly --debug_level SMTEncoding"
+let test (x:int) :
+  Pure int (requires x > 0) (ensures fun y -> y < 1)
+  = 1 / x
+  
 val list_zero_to_zero : list zero -> Tot zero
 let list_zero_to_zero l = match l with
   | [] -> 0

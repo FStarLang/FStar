@@ -4636,6 +4636,14 @@ let discharge_guard' use_env_range_msg env (g:guard_t) (use_smt:bool) : option g
                 end
                 else [env,vc,FStar.Options.peek ()]
             in
+            let vcs =
+              if Env.debug env (Options.Other "SpinoffAll")
+              then match env.solver.spinoff_strictly_positive_goals with
+                   | Some p -> 
+                     vcs |> List.collect (fun (env, goal, _) -> p env goal)
+                   | _ -> vcs
+              else vcs
+            in
             vcs |> List.iter (fun (env, goal, opts) ->
                     match check_trivial goal with
                     | Trivial ->

@@ -114,13 +114,14 @@ let label_goals use_env_msg  //when present, provides an alternate error message
 
         | LblPos _ -> failwith "Impossible" //these get added after errorReporting instrumentation only
 
-        | Labeled(arg, "could not prove post-condition", _) ->
+        | Labeled(arg, msg, label_range)
+          when msg = "could not prove post-condition" ->
           //printfn "GOT A LABELED WP IMPLICATION\n\t%s"
           //        (Term.print_smt_term q);
-          let fallback msg =
+          let fallback debug_msg =
             //printfn "FALLING BACK: %s with range %s" msg
             //        (match ropt with None -> "None" | Some r -> Range.string_of_range r);
-            aux default_msg ropt post_name_opt labels arg in
+            aux msg (Some label_range) post_name_opt labels arg in
           begin try
               begin match arg.tm with
                 | Quant(Forall, pats, iopt, post::sorts, {tm=App(Imp, [lhs;rhs]); rng=rng}) ->

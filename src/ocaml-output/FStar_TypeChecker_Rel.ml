@@ -13167,7 +13167,24 @@ let (discharge_guard' :
                                     let uu___13 = FStar_Options.peek () in
                                     (env, vc2, uu___13) in
                                   [uu___12]) in
-                             FStar_Compiler_Effect.op_Bar_Greater vcs
+                             let vcs1 =
+                               let uu___10 =
+                                 FStar_TypeChecker_Env.debug env
+                                   (FStar_Options.Other "SpinoffAll") in
+                               if uu___10
+                               then
+                                 match (env.FStar_TypeChecker_Env.solver).FStar_TypeChecker_Env.spinoff_strictly_positive_goals
+                                 with
+                                 | FStar_Pervasives_Native.Some p ->
+                                     FStar_Compiler_Effect.op_Bar_Greater vcs
+                                       (FStar_Compiler_List.collect
+                                          (fun uu___11 ->
+                                             match uu___11 with
+                                             | (env1, goal, uu___12) ->
+                                                 p env1 goal))
+                                 | uu___11 -> vcs
+                               else vcs in
+                             FStar_Compiler_Effect.op_Bar_Greater vcs1
                                (FStar_Compiler_List.iter
                                   (fun uu___10 ->
                                      match uu___10 with
