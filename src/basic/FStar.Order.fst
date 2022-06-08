@@ -15,7 +15,9 @@
 *)
 
 module FStar.Order
-open FStar.Compiler.Effect module List = FStar.Compiler.List
+open FStar.Compiler.Effect
+module List = FStar.Compiler.List
+
 type order = | Lt | Eq | Gt
 
 // Some derived checks
@@ -42,12 +44,21 @@ let order_from_int (i : int) : order =
 
 let compare_int (i : int) (j : int) : order = order_from_int (i - j)
 
-let rec compare_list (f : 'a -> 'a -> order) (l1 : list 'a) (l2 : list 'a) : order =
-    match l1, l2 with
+(*
+ * It promises to call the comparator in strictly smaller elements
+ * Useful when writing a comparator for an inductive type,
+ *   that contains the list of itself as an argument to one of its
+ *   data constructors
+ *)
+let rec compare_list (#a:Type)
+  (l1 l2:list a)
+  (f:(x:a{x << l1} -> y:a{y << l2} -> order))
+  : order
+  = match l1, l2 with
     | [], [] -> Eq
     | [], _ -> Lt
     | _, [] -> Gt
-    | x::xs, y::ys -> lex (f x y) (fun () -> compare_list f xs ys)
+    | x::xs, y::ys -> lex (f x y) (fun _ -> compare_list xs ys f)
 
 let compare_option (f : 'a -> 'a -> order) (x : option 'a) (y : option 'a) : order =
     match x, y with

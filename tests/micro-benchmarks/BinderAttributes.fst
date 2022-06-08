@@ -67,7 +67,7 @@ let rec binders_from_arrow (ty : T.term) : T.Tac binders =
     | T.Tv_Arrow b comp -> begin
         let ba = binder_from_term b in
         match T.inspect_comp comp with
-        | T.C_Total ty2 _ -> ba :: binders_from_arrow ty2
+        | T.C_Total ty2 _ _ -> ba :: binders_from_arrow ty2
         | _ -> T.fail "Unsupported computation type"
         end
     | T.Tv_FVar fv -> [] //last part
