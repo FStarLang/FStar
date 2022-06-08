@@ -656,13 +656,14 @@ let on_sort_binder (f : term -> Tac unit) (b:binder) : Tac unit =
 let rec visit_tm (ff : term -> Tac unit) (t : term) : Tac unit =
   let tv = inspect_ln t in
   (match tv with
-  | Tv_FVar _ -> ()
+  | Tv_FVar _
+  | Tv_UInst _ _ -> ()
   | Tv_Var bv ->
       on_sort_bv ff bv
 
   | Tv_BVar bv -> on_sort_bv ff bv
 
-  | Tv_Type () -> ()
+  | Tv_Type _ -> ()
   | Tv_Const c -> ()
   | Tv_Uvar i u -> ()
   | Tv_Unknown -> ()
@@ -704,10 +705,10 @@ and visit_br (ff : term -> Tac unit) (b:branch) : Tac unit =
 and visit_comp (ff : term -> Tac unit) (c : comp) : Tac unit =
   let cv = inspect_comp c in
   match cv with
-  | C_Total ret decr ->
+  | C_Total ret _ decr ->
       visit_tm ff ret;
       iter (visit_tm ff) decr
-  | C_GTotal ret decr ->
+  | C_GTotal ret _ decr ->
       visit_tm ff ret;
       iter (visit_tm ff) decr
 
@@ -951,7 +952,7 @@ let rec new_args_for_smt_attrs (env:env) (l:list argv) (ty:typ) : Tac (list argv
     in
     begin
     match inspect_comp comp with
-    | C_Total ty2 _ ->
+    | C_Total ty2 _ _ ->
       let tl_argv, tl_terms = new_args_for_smt_attrs env tl ty2 in
       new_hd::tl_argv, (if needs_smt then arg::tl_terms else tl_terms)
     | _ -> fail "computation type not supported in definition of slprops"

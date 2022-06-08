@@ -111,10 +111,10 @@ val comp_view_to_effect_info : dbg:bool -> comp_view -> Tac (option effect_info)
 
 let comp_view_to_effect_info dbg cv =
   match cv with
-  | C_Total ret_ty decr ->
+  | C_Total ret_ty _ decr ->
     let ret_type_info = get_type_info_from_type ret_ty in
     Some (mk_effect_info E_Total ret_type_info None None)
-  | C_GTotal ret_ty decr ->
+  | C_GTotal ret_ty _ decr ->
     let ret_type_info = get_type_info_from_type ret_ty in
     Some (mk_effect_info E_Total ret_type_info None None)
   | C_Lemma pre post patterns ->
@@ -574,7 +574,7 @@ let related_term_is_effectul dbg ge tv : Tac bool =
     false
   | Tv_Abs br body -> false
   | Tv_Arrow br c0 -> false
-  | Tv_Type () -> false
+  | Tv_Type _ -> false
   | Tv_Refine bv ref ->
     false
   | Tv_Const _ -> false

@@ -43,6 +43,9 @@ let push_binder             = RB.push_binder
 let subst                   = RB.subst
 let close_term              = RB.close_term
 
+let inspect_universe        = RB.inspect_universe
+let pack_universe           = RB.pack_universe
+
 
 (* GM: Not sure if theese are needed, we don't expose them
  * in the library. *)
