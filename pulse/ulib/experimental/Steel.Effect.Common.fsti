@@ -15,7 +15,6 @@
 *)
 
 module Steel.Effect.Common
-let ( @ ) x y = FStar.List.Tot.append x y
 open Steel.Memory
 module Mem = Steel.Memory
 module FExt = FStar.FunctionalExtensionality
@@ -185,6 +184,12 @@ val can_be_split_trans (p q r:vprop)
   (requires p `can_be_split` q /\ q `can_be_split` r)
   (ensures p `can_be_split` r)
 
+let can_be_split_trans_rev (p q r:vprop)
+: Lemma
+  (requires q `can_be_split` r /\ p `can_be_split` q)
+  (ensures p `can_be_split` r)
+= can_be_split_trans p q r
+
 val can_be_split_star_l (p q:vprop)
 : Lemma
   (ensures (p `star` q) `can_be_split` p)
@@ -199,6 +204,50 @@ val can_be_split_refl (p:vprop)
 : Lemma (p `can_be_split` p)
 [SMTPat (p `can_be_split` p)]
 
+
+val can_be_split_congr_l
+  (p q r: vprop)
+: Lemma
+  (requires (p `can_be_split` q))
+  (ensures ((p `star` r) `can_be_split` (q `star` r)))
+
+val can_be_split_congr_r
+  (p q r: vprop)
+: Lemma
+  (requires (p `can_be_split` q))
+  (ensures ((r `star` p) `can_be_split` (r `star` q)))
+
+let prop_and (p1 p2: prop) : Tot prop = p1 /\ p2
+
+let can_be_split_forall_dep_trans_rev
+  (#a: Type)
+  (cond1 cond2: a -> prop)
+  (p q r: post_t a)
+: Lemma
+  (requires (can_be_split_forall_dep cond2 q r /\ can_be_split_forall_dep cond1 p q))
+  (ensures (can_be_split_forall_dep (fun x -> cond1 x `prop_and` cond2 x) p r))
+=
+  Classical.forall_intro_3 (fun x y z -> Classical.move_requires (can_be_split_trans x y) z)
+
+let can_be_split_forall_dep_congr_l
+  (#a: Type)
+  (cond: a -> prop)
+  (p q r: post_t a)
+: Lemma
+  (requires (can_be_split_forall_dep cond p q))
+  (ensures (can_be_split_forall_dep cond (fun x -> p x `star` r x) (fun x -> q x `star` r x)))
+=
+  Classical.forall_intro_3 (fun x y z -> Classical.move_requires (can_be_split_congr_l x y) z)
+
+let can_be_split_forall_dep_congr_r
+  (#a: Type)
+  (cond: a -> prop)
+  (p q r: post_t a)
+: Lemma
+  (requires (can_be_split_forall_dep cond p q))
+  (ensures (can_be_split_forall_dep cond (fun x -> r x `star` p x) (fun x -> r x `star` q x)))
+=
+  Classical.forall_intro_3 (fun x y z -> Classical.move_requires (can_be_split_congr_r x y) z)
 
 /// To simplify the implementation of the framing tactic, dependent equivalence
 /// is defined as a double dependent implication
@@ -713,8 +762,19 @@ let amap (a:Type) = list (atom * a) * a
 let const (#a:Type) (xa:a) : amap a = ([], xa)
 
 /// Accessing an element in the atom map
+
+// We reimplement List.Tot.Base.assoc because we need our tactic to normalize it,
+// but we don't want to normalize user-provided instances
+let rec my_assoc (#key: eqtype) (#value: Type) (k: key) (dict: list (key & value)) : Pure (option value)
+  (requires True)
+  (ensures (fun res -> res == List.Tot.assoc k dict))
+= match dict with
+  | [] -> None
+  | (k', v') :: q -> if k = k' then Some v' else my_assoc k q
+
+
 let select (#a:Type) (x:atom) (am:amap a) : Tot a =
-  match List.Tot.Base.assoc #atom #a x (fst am) with
+  match my_assoc #atom #a x (fst am) with
   | Some a -> a
   | _ -> snd am
 
@@ -908,7 +968,7 @@ let rewrite_term_for_smt (env:env) (am:amap term * list term) (a:atom) : Tac (am
     let t = tc env hd in
     let new_args, uvar_terms = new_args_for_smt_attrs env args t in
     let new_term = mk_app hd new_args in
-    update a new_term am, uvar_terms@prev_uvar_terms
+    update a new_term am, List.Tot.append uvar_terms prev_uvar_terms
 
 /// User-facing error message when the framing tactic fails
 let fail_atoms (#a:Type) (l1 l2:list atom) (am:amap term) : Tac a
@@ -938,7 +998,7 @@ let rec equivalent_lists_fallback (n:nat) (l1 l2 l1_del l2_del:list atom) (am:am
       // Put all terms left at the end of l1_rem, so that they can be unified
       // with exactly the uvar because of the structure of xsdenote
       try_unifying_remaining l1 (get_head l2 am) am;
-      l1_del @ l1, l2_del @ l2, false
+      l1_del `List.Tot.append` l1, l2_del `List.Tot.append` l2, false
     ) else
       let rem1, rem2, l1_del', l2_del' = equivalent_lists_once l1 l2 l1_del l2_del am in
       let n' = List.Tot.length rem1 in
@@ -980,7 +1040,7 @@ let rec equivalent_lists' (n:nat) (use_smt:bool) (l1 l2 l1_del l2_del:list atom)
       // Put all terms left at the end of l1_rem, so that they can be unified
       // with exactly the uvar because of the structure of xsdenote
       try_unifying_remaining l1 (get_head l2 am) am;
-      l1_del @ l1, l2_del @ l2, false, []
+      l1_del `List.Tot.append` l1, l2_del `List.Tot.append` l2, false, []
     ) else
       let rem1, rem2, l1_del', l2_del' = equivalent_lists_once l1 l2 l1_del l2_del am in
       let n' = List.Tot.length rem1 in
@@ -1021,7 +1081,7 @@ let rec most_restricted_at_top (l1 l2:list atom) (am:amap term) : Tac (list atom
   match l1 with
   | [] -> []
   | hd::tl ->
-    if unifies_with_all_uvars (select hd am) l2 am then (most_restricted_at_top tl l2 am)@[hd]
+    if unifies_with_all_uvars (select hd am) l2 am then (most_restricted_at_top tl l2 am) `List.Tot.append` [hd]
     else hd::(most_restricted_at_top tl l2 am)
 
 /// Core AC-unification tactic.
@@ -1068,14 +1128,25 @@ let xsdenote (#a:Type) (eq:CE.equiv a) (m:CE.cm a eq) (am:amap a) (xs:list atom)
   let open FStar.Algebra.CommMonoid.Equiv in
   xsdenote_gen (CM?.unit m) (CM?.mult m) am xs
 
+// We reimplement List.Tot.Base.append because we need our tactic to normalize it,
+// but we don't want to normalize user-provided instances
+
+let rec my_append (#t: Type) (l1 l2: list t) : Pure (list t)
+  (requires True)
+  (ensures (fun res -> res == l1 `List.Tot.append` l2))
+  (decreases l1)
+= match l1 with
+  | [] -> l2
+  | a :: q -> a :: my_append q l2
+
 let rec flatten (e:exp) : list atom =
   match e with
   | Unit -> []
   | Atom x -> [x]
-  | Mult e1 e2 -> flatten e1 @ flatten e2
+  | Mult e1 e2 -> flatten e1 `my_append` flatten e2
 
 let rec flatten_correct_aux (#a:Type) (eq:CE.equiv a) (m:CE.cm a eq) (am:amap a) (xs1 xs2:list atom)
-  : Lemma (xsdenote eq m am (xs1 @ xs2) `CE.EQ?.eq eq` CE.CM?.mult m (xsdenote eq m am xs1)
+  : Lemma (xsdenote eq m am (xs1 `my_append` xs2) `CE.EQ?.eq eq` CE.CM?.mult m (xsdenote eq m am xs1)
                                                                      (xsdenote eq m am xs2)) =
   let open FStar.Algebra.CommMonoid.Equiv in
   match xs1 with
@@ -1090,12 +1161,12 @@ let rec flatten_correct_aux (#a:Type) (eq:CE.equiv a) (m:CE.cm a eq) (am:amap a)
   | x::xs1' ->
       flatten_correct_aux eq m am xs1' xs2;
       EQ?.reflexivity eq (select x am);
-      CM?.congruence m (select x am) (xsdenote eq m am (xs1' @ xs2))
+      CM?.congruence m (select x am) (xsdenote eq m am (xs1' `my_append` xs2))
                        (select x am) (CM?.mult m (xsdenote eq m am xs1') (xsdenote eq m am xs2));
       CM?.associativity m (select x am) (xsdenote eq m am xs1') (xsdenote eq m am xs2);
       EQ?.symmetry eq (CM?.mult m (CM?.mult m (select x am) (xsdenote eq m am xs1')) (xsdenote eq m am xs2))
                       (CM?.mult m (select x am) (CM?.mult m (xsdenote eq m am xs1') (xsdenote eq m am xs2)));
-      EQ?.transitivity eq (CM?.mult m (select x am) (xsdenote eq m am (xs1' @ xs2)))
+      EQ?.transitivity eq (CM?.mult m (select x am) (xsdenote eq m am (xs1' `my_append` xs2)))
                           (CM?.mult m (select x am) (CM?.mult m (xsdenote eq m am xs1') (xsdenote eq m am xs2)))
                           (CM?.mult m (CM?.mult m (select x am) (xsdenote eq m am xs1')) (xsdenote eq m am xs2))
 
@@ -1107,7 +1178,7 @@ let rec flatten_correct (#a:Type) (eq:CE.equiv a) (m:CE.cm a eq) (am:amap a) (e:
   | Atom x -> EQ?.reflexivity eq (select x am)
   | Mult e1 e2 ->
       flatten_correct_aux eq m am (flatten e1) (flatten e2);
-      EQ?.symmetry eq (xsdenote eq m am (flatten e1 @ flatten e2))
+      EQ?.symmetry eq (xsdenote eq m am (flatten e1 `my_append` flatten e2))
                       (CM?.mult m (xsdenote eq m am (flatten e1)) (xsdenote eq m am (flatten e2)));
       flatten_correct eq m am e1;
       flatten_correct eq m am e2;
@@ -1115,7 +1186,7 @@ let rec flatten_correct (#a:Type) (eq:CE.equiv a) (m:CE.cm a eq) (am:amap a) (e:
                        (xsdenote eq m am (flatten e1)) (xsdenote eq m am (flatten e2));
       EQ?.transitivity eq (CM?.mult m (mdenote eq m am e1) (mdenote eq m am e2))
                           (CM?.mult m (xsdenote eq m am (flatten e1)) (xsdenote eq m am (flatten e2)))
-                          (xsdenote eq m am (flatten e1 @ flatten e2))
+                          (xsdenote eq m am (flatten e1 `my_append` flatten e2))
 
 let monoid_reflect (#a:Type) (eq:CE.equiv a) (m:CE.cm a eq) (am:amap a) (e1 e2:exp)
     (_ : squash (xsdenote eq m am (flatten e1) `CE.EQ?.eq eq` xsdenote eq m am (flatten e2)))
@@ -1134,8 +1205,66 @@ let monoid_reflect (#a:Type) (eq:CE.equiv a) (m:CE.cm a eq) (am:amap a) (e1 e2:e
 
 // Here we sort the variable numbers
 
+// We reimplement List.Tot.Base.sortWith because we need our tactic to normalize it,
+// but we don't want to normalize user-provided instances
+let rec my_partition (#a: Type) (f: (a -> Tot bool)) (l: list a)
+  : Pure (list a & list a)
+    (requires True)
+    (ensures (fun res -> res == List.Tot.partition f l))
+= match l with
+  | [] -> [], []
+  | hd::tl ->
+     let l1, l2 = my_partition f tl in
+     if f hd
+     then hd::l1, l2
+     else l1, hd::l2
+
+let rec partition_ext (#a: Type) (f1 f2: (a -> Tot bool)) (l: list a)
+: Lemma
+  (requires (forall x . f1 x == f2 x))
+  (ensures (List.Tot.partition f1 l == List.Tot.partition f2 l))
+= match l with
+  | [] -> ()
+  | hd::tl -> partition_ext f1 f2 tl
+
+let my_bool_of_compare (#a: Type) (f: a -> a -> Tot int) (x: a) (y: a) : Tot bool
+= f x y < 0
+
+let rec my_sortWith (#a: Type) (f: (a -> a -> Tot int)) (l:list a)
+  : Pure (list a)
+    (requires True)
+    (ensures (fun res -> res == List.Tot.sortWith f l))
+    (decreases (List.Tot.length l))
+= match l with
+  | [] -> []
+  | pivot::tl ->
+     let hi, lo = my_partition (my_bool_of_compare f pivot) tl in
+     partition_ext (my_bool_of_compare f pivot) (List.Tot.bool_of_compare f pivot) tl;
+     List.Tot.partition_length (List.Tot.bool_of_compare f pivot) tl;
+     my_append (my_sortWith f lo) (pivot::my_sortWith f hi)
+
+let rec sortWith_ext (#a: Type) (f1 f2: (a -> a -> Tot int)) (l: list a)
+: Lemma
+  (requires (forall x y . f1 x y == f2 x y))
+  (ensures (List.Tot.sortWith f1 l == List.Tot.sortWith f2 l))
+  (decreases (List.Tot.length l))
+= match l with
+  | [] -> ()
+  | pivot::tl ->
+    partition_ext (List.Tot.bool_of_compare f1 pivot) (List.Tot.bool_of_compare f2 pivot) tl;
+    List.Tot.partition_length (List.Tot.bool_of_compare f1 pivot) tl;
+    let hi, lo = List.Tot.partition (List.Tot.bool_of_compare f1 pivot) tl in
+    sortWith_ext f1 f2 lo;
+    sortWith_ext f1 f2 hi
+
 let permute = list atom -> list atom
-let sort : permute = List.Tot.Base.sortWith #int (List.Tot.Base.compare_of_bool (<))
+
+let my_compare_of_bool (#a:eqtype) (rel: a -> a -> Tot bool) (x: a) (y: a) : Tot int
+=   if x `rel` y  then -1
+    else if x = y then 0
+    else 1
+
+let sort : permute = my_sortWith #int (my_compare_of_bool (<))
 
 #push-options "--fuel 1 --ifuel 1"
 
@@ -1283,6 +1412,12 @@ let rec sort_correct_aux (#a:Type) (eq:CE.equiv a) (m:CE.cm a eq) (am:amap a) (x
   match xs with
   | [] -> EQ?.reflexivity eq (xsdenote eq m am [])
   | pivot::q ->
+      let sort0 : permute = List.Tot.sortWith #int (List.Tot.compare_of_bool (<)) in
+      let sort_eq (l: list atom) : Lemma
+        (sort l == sort0 l)
+        [SMTPat (sort l)]
+      = sortWith_ext (my_compare_of_bool (<)) (List.Tot.compare_of_bool (<)) l
+      in
       let open FStar.List.Tot.Base in
       let f:int -> int -> int = compare_of_bool (<) in
       let hi, lo = partition (bool_of_compare f pivot) q in
@@ -1477,7 +1612,7 @@ let fatom (t:term) (ts:list term) (am:amap term) : Tac (exp * list term * amap t
   | None ->
     let vfresh = List.Tot.Base.length ts in
     let t = norm_term [iota; zeta] t in
-    (Atom vfresh, ts @ [t], update vfresh t am)
+    (Atom vfresh, ts `List.Tot.append` [t], update vfresh t am)
 
 /// Transforming a term into the corresponding list of atoms
 /// If the atomic terms were already present in the map [am], then
@@ -1538,13 +1673,13 @@ let rec quote_atoms (l:list atom) = match l with
               (`Cons (`#nt) (`#(quote_atoms tl)))
 
 /// Some internal normalization steps to make reflection of vprops into atoms and atom permutation go smoothly.
-/// In particular, all the sorting/list functions are entirely reduced
+/// We reimplemented sorting/list functions to normalize our uses without normalizing those introduced by the user.
 let normal_tac_steps = [primops; iota; zeta; delta_only [
           `%mdenote; `%select;
-          `%List.Tot.Base.assoc; `%List.Tot.Base.append; `%( @ );
+          `%my_assoc; `%my_append;
           `%flatten; `%sort;
-          `%List.Tot.Base.sortWith; `%List.Tot.Base.partition;
-          `%List.Tot.Base.bool_of_compare; `%List.Tot.Base.compare_of_bool;
+          `%my_sortWith; `%my_partition;
+          `%my_bool_of_compare; `%my_compare_of_bool;
           `%fst; `%__proj__Mktuple2__item___1;
           `%snd; `%__proj__Mktuple2__item___2;
           `%CE.__proj__CM__item__unit;
@@ -1610,6 +1745,82 @@ let modus_ponens (#p #q:Type0) (_:squash p)
   = ()
 
 let cut (p q:Type0) : Lemma (requires p /\ (p ==> q)) (ensures q) = ()
+
+let and_true (p: Type0) : Lemma (requires (p /\ (p ==> True))) (ensures p) = ()
+
+let solve_implies_true (p: Type0) : Lemma (p ==> True) = ()
+
+let rec unify_pr_with_true (pr: term) : Tac unit =
+  let hd, tl = collect_app pr in
+  if hd `term_eq` (`(/\)) || hd `term_eq` (`prop_and)
+  then
+    match tl with
+    | [pr_l, _; pr_r, _] ->
+      unify_pr_with_true pr_l;
+      unify_pr_with_true pr_r
+    | _ -> fail "unify_pr_with_true: ill-formed /\\"
+  else
+    match inspect hd with
+    | Tv_Uvar _ _ -> 
+      if unify pr (`true_p)
+      then ()
+      else begin
+        fail "unify_pr_with_true: could not unify SMT prop with True"
+      end
+    | _ ->
+      if List.Tot.length (free_uvars pr) = 0
+      then ()
+      else fail "unify_pr_with_true: some uvars are still there"
+
+let elim_and_l_squash (#a #b: Type0) (#goal: Type0) (f: (a -> Tot (squash goal))) (h: (a /\ b)) : Tot (squash goal) =
+  let f' (x: squash a) : Tot (squash goal) =
+    FStar.Squash.bind_squash x f
+  in
+  let elim_impl (x: squash (a /\ b)) : Tot (squash a) = () in
+  f' (elim_impl (FStar.Squash.return_squash h))
+
+let elim_and_r_squash (#a #b: Type0) (#goal: Type0) (f: (b -> Tot (squash goal))) (h: (a /\ b)) : Tot (squash goal) =
+  let f' (x: squash b) : Tot (squash goal) =
+    FStar.Squash.bind_squash x f
+  in
+  let elim_impl (x: squash (a /\ b)) : Tot (squash b) = () in
+  f' (elim_impl (FStar.Squash.return_squash h))
+
+let _return_squash (#a: Type) () (x: a) : Tot (squash a) =
+  FStar.Squash.return_squash x
+
+let rec set_abduction_variable_term (pr: term) : Tac term =
+  let hd, tl = collect_app pr in
+  if hd `term_eq` (`(/\)) || hd `term_eq` (`prop_and)
+  then
+    match tl with
+    | (pr_l, Q_Explicit) :: (pr_r, Q_Explicit) :: [] ->
+      if List.Tot.length (free_uvars pr_r) = 0
+      then
+        let arg = set_abduction_variable_term pr_l in
+        mk_app (`elim_and_l_squash) [arg, Q_Explicit]
+      else if List.Tot.length (free_uvars pr_l) = 0
+      then
+        let arg = set_abduction_variable_term pr_r in
+        mk_app (`elim_and_r_squash) [arg, Q_Explicit]
+      else
+        fail "set_abduction_variable_term: there are still uvars on both sides of l_and"
+    | _ -> fail "set_abduction_variable: ill-formed /\\"
+  else
+    match hd with
+    | Tv_Uvar _ _ ->
+      mk_app (`_return_squash) [`(), Q_Explicit]
+    | _ -> fail "set_abduction_variable: cannot unify"
+
+let set_abduction_variable () : Tac unit =
+  let g = cur_goal () in
+  match inspect g with
+  | Tv_Arrow b _ ->
+    let (bv, _) = inspect_binder b in
+    let bv = inspect_bv bv in
+    let pr = bv.bv_sort in
+    exact (set_abduction_variable_term pr)
+  | _ -> fail "Not an arrow goal"
 
 let canon_l_r (use_smt:bool)
   (carrier_t:term)  //e.g. vprop
@@ -1752,10 +1963,10 @@ let canon_l_r (use_smt:bool)
     else begin
       norm [primops; iota; zeta; delta_only
         [`%xsdenote; `%select;
-         `%List.Tot.Base.assoc; `%List.Tot.Base.append; `%( @ );
+         `%my_assoc; `%my_append;
          `%flatten; `%sort;
-         `%List.Tot.Base.sortWith; `%List.Tot.Base.partition;
-         `%List.Tot.Base.bool_of_compare; `%List.Tot.Base.compare_of_bool;
+         `%my_sortWith; `%my_partition;
+         `%my_bool_of_compare; `%my_compare_of_bool;
          `%fst; `%__proj__Mktuple2__item___1;
          `%snd; `%__proj__Mktuple2__item___2;
          `%CE.__proj__CM__item__unit;
@@ -1803,9 +2014,16 @@ let canon_l_r (use_smt:bool)
 
   match uvar_terms with
   | [] -> // Closing unneeded prop uvar
-    if unify pr (`true_p) then () else fail "could not unify SMT prop with True";
-    if emp_frame then apply_lemma (`identity_left (`#eq) (`#m))
-    else apply_lemma (`(CE.EQ?.reflexivity (`#eq)))
+    focus (fun _ ->
+      try
+        apply_lemma (`and_true);
+        split ();
+        if emp_frame then apply_lemma (`identity_left (`#eq) (`#m))
+        else apply_lemma (`(CE.EQ?.reflexivity (`#eq)));
+        unify_pr_with_true pr; // MUST be done AFTER identity_left/reflexivity, which can unify other uvars
+        apply_lemma (`solve_implies_true)
+      with _ -> fail "Cannot unify pr with true"
+    )
   | l ->
     if emp_frame then (
       apply_lemma (`identity_left_smt (`#eq) (`#m))
@@ -1814,7 +2032,8 @@ let canon_l_r (use_smt:bool)
     );
     t_trefl true;
     close_equality_typ (cur_goal());
-    exact (`(FStar.Squash.return_squash (`#pr_bind)))
+    revert ();
+    set_abduction_variable ()
 
 /// Wrapper around the tactic above
 /// The constraint should be of the shape `squash (equiv lhs rhs)`
@@ -1852,13 +2071,215 @@ let rec slterm_nbr_uvars (t:term) : Tac int =
   | Tv_App _ _ ->
     let hd, args = collect_app t in
     if term_eq hd (`star) || term_eq hd (`VStar) || term_eq hd (`VUnit) then
-
       // Only count the number of unresolved slprops, not program implicits
-      fold_left (fun n (x, _) -> n + slterm_nbr_uvars x) 0 args
+      slterm_nbr_uvars_argv args
     else if is_uvar hd then 1
     else 0
   | Tv_Abs _ t -> slterm_nbr_uvars t
   | _ -> 0
+
+and slterm_nbr_uvars_argv (args: list argv) : Tac int =
+  fold_left (fun n (x, _) -> n + slterm_nbr_uvars x) 0 args
+
+let guard_vprop (v: vprop) : Tot vprop = v
+
+let rec all_guards_solved (t: term) : Tac bool =
+  match inspect t with
+  | Tv_Abs _ t -> all_guards_solved t
+  | Tv_App _ _ ->
+    let hd, args = collect_app t in
+    if term_eq hd (`guard_vprop)
+    then
+      slterm_nbr_uvars_argv args = 0
+    else if not (all_guards_solved hd)
+    then false
+    else
+      List.Tot.fold_left
+        (fun (tac: (unit -> Tac bool)) (tm, _) ->
+          let f () : Tac bool =
+            if all_guards_solved tm
+            then tac ()
+            else false
+          in
+          f
+        )
+        (let f () : Tac bool = true in f)
+        args
+        ()
+  | _ -> true
+
+let unfold_guard () : Tac bool =
+  if all_guards_solved (cur_goal ())
+  then begin
+    focus (fun _ -> norm [delta_only [(`%guard_vprop)]]);
+    true
+  end else
+    false
+
+let rec term_is_uvar (t: term) (i: int) : Tac bool = match t with
+  | Tv_Uvar i' _ -> i = i'
+  | Tv_App _ _ ->
+      let hd, args = collect_app t in
+      term_is_uvar hd i
+  | _ -> false
+
+val solve_can_be_split_for (#a: Type u#b) : a -> Tot unit
+
+val solve_can_be_split_lookup : unit // FIXME: src/reflection/FStar.Reflection.Basic.lookup_attr only supports fvar attributes, so we cannot directly look up for (solve_can_be_split_for blabla), we need a nullary attribute to use with lookup_attr
+
+let rec dismiss_all_but_last' (l: list goal) : Tac unit =
+  match l with 
+  | [] | [_] -> set_goals l
+  | _ :: q -> dismiss_all_but_last' q
+
+let dismiss_all_but_last () : Tac unit =
+  dismiss_all_but_last' (goals ())
+
+let rec dismiss_non_squash_goals' (keep:list goal) (goals:list goal)
+  : Tac unit
+  = match goals with
+    | [] -> set_goals (List.Tot.rev keep)
+    | hd :: tl ->
+     let f = term_as_formula' (goal_type hd) in
+     match f with
+     | App hs _ ->
+       if hs `term_eq` (`squash) || hs `term_eq` (`auto_squash)
+       then dismiss_non_squash_goals' (hd::keep) tl
+       else dismiss_non_squash_goals' keep tl
+
+     | _ ->
+       dismiss_non_squash_goals' keep tl
+
+let dismiss_non_squash_goals () =
+  let g = goals () in
+  dismiss_non_squash_goals' [] g
+
+let rec term_mem (te: term) (l: list term) : Tot bool =
+  match l with
+  | [] -> false
+  | t' :: q ->
+    if te `term_eq` t' then true else term_mem te q
+
+let rec lookup_by_term_attr' (attr: term) (e: env) (found: list fv) (l: list fv) : Tot (list fv)
+  (decreases l)
+=
+  match l with
+  | [] -> List.Tot.rev found
+  | f :: q ->
+    let n = inspect_fv f in
+    begin match lookup_typ e n with
+    | None -> lookup_by_term_attr' attr e found q
+    | Some se ->
+      let found' =
+        if attr `term_mem` sigelt_attrs se
+        then f :: found
+        else found
+      in
+      lookup_by_term_attr' attr e found' q
+    end
+
+let lookup_by_term_attr (label_attr: term) (attr: term) : Tac (list fv) =
+  let e = cur_env () in
+  let candidates = lookup_attr label_attr e in
+  lookup_by_term_attr' attr e [] candidates
+
+let rec bring_last_goal_on_top' (others: list goal) (goals: list goal) : Tac unit =
+  match goals with
+  | [] -> set_goals (List.Tot.rev others)
+  | last :: [] -> set_goals (last :: List.Tot.rev others)
+  | a :: q -> bring_last_goal_on_top' (a :: others) q
+
+let bring_last_goal_on_top () =
+  let g = goals () in
+  bring_last_goal_on_top' [] g
+
+let rec extract_contexts
+  (lemma_left lemma_right label_attr attr: term)
+  (t: term)
+: Tac (option (unit -> Tac unit))
+=
+  let hd, tl = collect_app t in
+  if hd `term_eq` (`star) || hd `term_eq` (`VStar)
+  then
+    match tl with
+    | (t_left, Q_Explicit) :: (t_right, Q_Explicit) :: [] ->
+      let extract_right () : Tac (option (unit -> Tac unit)) =
+        match extract_contexts lemma_left lemma_right label_attr attr t_right with
+        | None -> None
+        | Some f ->
+          Some (fun _ ->
+            apply_lemma lemma_right;
+            dismiss_all_but_last ();
+            f ()
+          )
+      in
+      begin match extract_contexts lemma_left lemma_right label_attr attr t_left with
+      | None -> extract_right ()
+      | Some f ->
+        Some (fun _ ->
+          try
+            apply_lemma lemma_left;
+            dismiss_all_but_last ();
+            f ()
+          with _ ->
+            begin match extract_right () with
+            | None -> fail "no context on the right either"
+            | Some g -> g ()
+            end
+        )
+      end
+    | _ -> None
+  else
+    let candidates = lookup_by_term_attr label_attr (mk_app attr [hd, Q_Explicit]) in
+    if Nil? candidates
+    then None
+    else
+      Some (fun _ ->
+        first (List.Tot.map (fun candidate _ -> apply_lemma (Tv_FVar candidate) <: Tac unit) candidates);
+        dismiss_non_squash_goals ()
+      )
+
+let extract_cbs_contexts = extract_contexts
+  (`can_be_split_congr_l)
+  (`can_be_split_congr_r)
+  (`solve_can_be_split_lookup)
+  (`solve_can_be_split_for)
+
+let open_existentials () : Tac unit
+  =
+       let e = cur_env () in
+       if Nil? (lookup_attr (`solve_can_be_split_lookup) e)
+       then fail "Tactic disabled: no available lemmas in context";
+       norm [delta_attr [`%__reduce__]];
+       let t0 = cur_goal () in
+       match collect_app t0 with
+       | _ (* squash/auto_squash *) , (t1, Q_Explicit) :: [] ->
+         let hd, tl = collect_app t1 in
+         if hd `term_eq` (`can_be_split)
+         then
+           match tl with
+           | _ (* lhs *) :: (rhs, Q_Explicit) :: [] ->
+             begin match extract_cbs_contexts rhs with
+             | None -> fail "open_existentials: no context found"
+             | Some f ->
+                 apply_lemma (`can_be_split_trans_rev);
+                 dismiss_all_but_last ();
+                 split ();
+                 focus f;
+                 bring_last_goal_on_top () // so that any preconditions for the selected lemma are scheduled for later
+             end
+           | _ -> fail "open_existentials: ill-formed can_be_split"
+         else
+           fail "open_existentials: not a can_be_split goal"
+       | _ -> fail "open_existentials: not a squash goal"
+
+let try_open_existentials () : Tac bool =
+  focus (fun _ ->
+    try
+      open_existentials ();
+      true
+    with _ -> false
+  )
 
 (* Solving the can_be_split* constraints, if they are ready to be scheduled
    A constraint is deemed ready to be scheduled if it contains only one vprop unification variable
@@ -1869,14 +2290,19 @@ let rec slterm_nbr_uvars (t:term) : Tac int =
 *)
 
 /// Solves a `can_be_split` constraint
-let solve_can_be_split (args:list argv) : Tac bool =
+let rec solve_can_be_split (args:list argv) : Tac bool =
   match args with
   | [(t1, _); (t2, _)] ->
       let lnbr = slterm_nbr_uvars t1 in
       let rnbr = slterm_nbr_uvars t2 in
-      if lnbr + rnbr <= 1 then (
+      if
+        if lnbr + rnbr <= 1
+        then unfold_guard ()
+        else false
+      then (
         let open FStar.Algebra.CommMonoid.Equiv in
-        focus (fun _ -> apply_lemma (`equiv_can_be_split);
+        try
+          focus (fun _ -> apply_lemma (`equiv_can_be_split);
                      dismiss_slprops();
                      // If we have exactly the same term on both side,
                      // equiv_sl_implies would solve the goal immediately
@@ -1893,7 +2319,12 @@ let solve_can_be_split (args:list argv) : Tac bool =
                             delta_attr [`%__reduce__];
                             primops; iota; zeta];
                        canon' false (`true_p) (`true_p)));
-        true
+          true
+        with
+        | _ ->
+          let opened_some = try_open_existentials () in
+          if opened_some then solve_can_be_split args // we only need args for their number of uvars, which has not changed
+          else false
       ) else false
 
   | _ -> false // Ill-formed can_be_split, should not happen
@@ -1904,7 +2335,11 @@ let solve_can_be_split_dep (args:list argv) : Tac bool =
   | [(p, _); (t1, _); (t2, _)] ->
       let lnbr = slterm_nbr_uvars t1 in
       let rnbr = slterm_nbr_uvars t2 in
-      if lnbr + rnbr <= 1 then (
+      if
+        if lnbr + rnbr <= 1
+        then unfold_guard ()
+        else false
+      then (
         let open FStar.Algebra.CommMonoid.Equiv in
         focus (fun _ ->
           let p_bind = implies_intro () in
@@ -1944,7 +2379,11 @@ let solve_can_be_split_forall (args:list argv) : Tac bool =
   | [_; (t1, _); (t2, _)] ->
       let lnbr = slterm_nbr_uvars t1 in
       let rnbr = slterm_nbr_uvars t2 in
-      if lnbr + rnbr <= 1 then (
+      if
+        if lnbr + rnbr <= 1
+        then unfold_guard ()
+        else false
+      then (
         let open FStar.Algebra.CommMonoid.Equiv in
         focus (fun _ ->
           ignore (forall_intro());
@@ -1968,15 +2407,85 @@ let solve_can_be_split_forall (args:list argv) : Tac bool =
 
   | _ -> fail "Ill-formed can_be_split_forall, should not happen"
 
+val solve_can_be_split_forall_dep_for (#a: Type u#b) : a -> Tot unit
+
+val solve_can_be_split_forall_dep_lookup : unit // FIXME: same as solve_can_be_split_for above
+
+let extract_cbs_forall_dep_contexts
+=
+  extract_contexts
+    (`can_be_split_forall_dep_congr_l)
+    (`can_be_split_forall_dep_congr_r)
+    (`solve_can_be_split_forall_dep_lookup)
+    (`solve_can_be_split_forall_dep_for)
+
+let open_existentials_forall_dep () : Tac unit
+=
+  let e = cur_env () in
+  if Nil? (lookup_attr (`solve_can_be_split_forall_dep_lookup) e)
+  then fail "Tactic disabled: no available lemmas in context";
+  norm [
+    delta_only [
+    `%FStar.Algebra.CommMonoid.Equiv.__proj__CM__item__unit;
+    `%FStar.Algebra.CommMonoid.Equiv.__proj__CM__item__mult;
+    `%rm;
+    ];
+    iota;
+    delta_attr [`%__reduce__];
+  ];
+  let t0 = cur_goal () in
+  match collect_app t0 with
+  | _ (* squash/auto_squash *) , (t1, Q_Explicit) :: [] ->
+    let hd, tl = collect_app t1 in
+    if hd `term_eq` (`can_be_split_forall_dep)
+    then
+      match tl with
+      | _ (* cond *) :: _ (* lhs *) :: (rhs, Q_Explicit) :: []
+      | (_, Q_Implicit) (* #a *) :: _ (* cond *) :: _ (* lhs *) :: (rhs, Q_Explicit) :: [] ->
+        begin match inspect rhs with
+        | Tv_Abs _ body ->
+          begin match extract_cbs_forall_dep_contexts body with
+          | None -> fail "open_existentials_forall_dep: no candidate"
+          | Some f ->
+            apply_lemma (`can_be_split_forall_dep_trans_rev);
+            dismiss_all_but_last ();
+            split ();
+            focus f;
+            bring_last_goal_on_top ();
+            if Cons? (goals ()) then norm []
+          end
+        | _ -> fail "open_existentials_forall_dep : not an abstraction"
+        end
+      | _ -> fail "open_existentials_forall_dep : wrong number of arguments to can_be_split_forall_dep"
+    else
+      fail "open_existentials_forall_dep : not a can_be_split_forall_dep goal"
+  | _ ->
+    fail "open_existentials_forall_dep : not a squash/auto_squash goal"
+
+let try_open_existentials_forall_dep () : Tac bool
+=
+  focus (fun _ ->
+    try
+      open_existentials_forall_dep ();
+      true
+    with _ -> false
+  )
+
 /// Solves a can_be_split_forall_dep constraint
-let solve_can_be_split_forall_dep (args:list argv) : Tac bool =
+let rec solve_can_be_split_forall_dep (args:list argv) : Tac bool =
   match args with
   | [_; (pr, _); (t1, _); (t2, _)] ->
       let lnbr = slterm_nbr_uvars t1 in
       let rnbr = slterm_nbr_uvars t2 in
-      if lnbr + rnbr <= 1 then (
+      if
+        if lnbr + rnbr <= 1
+        then unfold_guard ()
+        else false
+      then (
         let open FStar.Algebra.CommMonoid.Equiv in
-        focus (fun _ ->
+        try
+         focus (fun _ ->
+          norm [];
           let x = forall_intro () in
           let pr = mk_app pr [(binder_to_term x, Q_Explicit)] in
           let p_bind = implies_intro () in
@@ -2001,8 +2510,13 @@ let solve_can_be_split_forall_dep (args:list argv) : Tac bool =
                    primops; iota; zeta];
               canon' true pr p_bind));
 
-        true
-
+         true
+       with
+       | _ ->
+         let opened = try_open_existentials_forall_dep () in
+         if opened
+         then solve_can_be_split_forall_dep args // we only need args for their number of uvars, which has not changed
+         else false
       ) else false
 
   | _ -> fail "Ill-formed can_be_split_forall_dep, should not happen"
@@ -2013,7 +2527,11 @@ let solve_equiv_forall (args:list argv) : Tac bool =
   | [_; (t1, _); (t2, _)] ->
       let lnbr = slterm_nbr_uvars t1 in
       let rnbr = slterm_nbr_uvars t2 in
-      if lnbr + rnbr <= 1 then (
+      if
+        if lnbr + rnbr <= 1
+        then unfold_guard ()
+        else false
+      then (
         let open FStar.Algebra.CommMonoid.Equiv in
         focus (fun _ -> apply_lemma (`equiv_forall_elim);
                       match goals () with
@@ -2046,7 +2564,11 @@ let solve_equiv (args:list argv) : Tac bool =
   | [(t1, _); (t2, _)] ->
       let lnbr = slterm_nbr_uvars t1 in
       let rnbr = slterm_nbr_uvars t2 in
-      if lnbr + rnbr <= 1 then (
+      if
+        if lnbr + rnbr <= 1
+        then unfold_guard ()
+        else false
+      then (
         let open FStar.Algebra.CommMonoid.Equiv in
         focus (fun _ ->
           or_else
@@ -2075,7 +2597,11 @@ let solve_can_be_split_post (args:list argv) : Tac bool =
   | [_; _; (t1, _); (t2, _)] ->
       let lnbr = slterm_nbr_uvars t1 in
       let rnbr = slterm_nbr_uvars t2 in
-      if lnbr + rnbr <= 1 then (
+      if
+        if lnbr + rnbr <= 1
+        then unfold_guard ()
+        else false
+      then (
         let open FStar.Algebra.CommMonoid.Equiv in
         focus (fun _ -> norm[];
                       let g = _cur_goal () in
@@ -2114,47 +2640,56 @@ let is_return_eq (l r:term) : Tac bool =
 /// Solves indirection equalities introduced by the layered effects framework.
 /// If these equalities were introduced during a monadic return, they need to be solved
 /// at a later stage to avoid overly restricting contexts of unification variables
-let rec solve_indirection_eqs (l:list goal) : Tac unit =
-  match l with
+let rec solve_indirection_eqs (fuel: nat) : Tac unit =
+  if fuel = 0
+  then ()
+  else match goals () with
   | [] -> ()
-  | hd::tl ->
+  | hd::_ ->
     let f = term_as_formula' (goal_type hd) in
     match f with
     | Comp (Eq _) l r ->
         if is_return_eq l r then later() else trefl();
-        solve_indirection_eqs tl
-    | _ -> later(); solve_indirection_eqs tl
+        solve_indirection_eqs (fuel - 1)
+    | _ -> later(); solve_indirection_eqs (fuel - 1)
 
 /// Solve all equalities in the list of goals by calling the F* unifier
-let rec solve_all_eqs (l:list goal) : Tac unit =
-  match l with
+let rec solve_all_eqs (fuel: nat) : Tac unit =
+  if fuel = 0
+  then ()
+  else match goals () with
   | [] -> ()
-  | hd::tl ->
+  | hd::_ ->
     let f = term_as_formula' (goal_type hd) in
     match f with
     | Comp (Eq _) l r ->
         trefl();
-        solve_all_eqs tl
-    | _ -> later(); solve_all_eqs tl
+        solve_all_eqs (fuel - 1)
+    | _ -> later(); solve_all_eqs (fuel - 1)
 
 /// It is important to not normalize the return_pre eqs goals before unifying
 /// See test7 in FramingTestSuite for a detailed explanation
-let rec solve_return_eqs (l:list goal) : Tac unit =
-  match l with
+let rec solve_return_eqs (fuel: nat) : Tac unit =
+  if fuel = 0
+  then ()
+  else match goals () with
   | [] -> ()
-  | hd::tl ->
+  | hd::_ ->
     let f = term_as_formula' (goal_type hd) in
     match f with
     | Comp (Eq _) l r ->
         trefl();
-        solve_return_eqs tl
-    | _ -> later(); solve_return_eqs tl
+        solve_return_eqs (fuel - 1)
+    | _ -> later(); solve_return_eqs (fuel - 1)
 
 /// Strip annotations in a goal, to get to the underlying slprop equivalence
-let goal_to_equiv (t:term) (loc:string) : Tac unit
-  = let f = term_as_formula' t in
+let goal_to_equiv (loc:string) : Tac unit
+  = let t = cur_goal () in
+    let f = term_as_formula' t in
     match f with
-    | App _ t ->
+    | App hd0 t ->
+      if not (hd0 `term_eq` (`squash))
+      then fail (loc ^ " unexpected non-squash goal in goal_to_equiv");
       let hd, args = collect_app t in
       if term_eq hd (`can_be_split) then (
         apply_lemma (`equiv_can_be_split)
@@ -2178,13 +2713,28 @@ let goal_to_equiv (t:term) (loc:string) : Tac unit
         fail (loc ^ " goal in unexpected position")
     | _ -> fail (loc ^ " unexpected goal")
 
+let rec term_dict_assoc
+  (#a: Type)
+  (key: term)
+  (l: list (term & a))
+: Tac (list a)
+= match l with
+  | [] -> []
+  | (k, v) :: q ->
+    let q' = term_dict_assoc key q in
+    if k `term_eq` key
+    then (v :: q')
+    else q'
+
 /// Returns true if the goal has been solved, false if it should be delayed
-let solve_or_delay (g:goal) : Tac bool =
+let solve_or_delay (dict: list (term & (unit -> Tac bool))) : Tac bool =
   // Beta-reduce the goal first if possible
   norm [];
   let f = term_as_formula' (cur_goal ()) in
   match f with
-  | App _ t ->
+  | App hd0 t ->
+    if hd0 `term_eq` (`squash)
+    then
       let hd, args = collect_app t in
       if term_eq hd (`can_be_split) then solve_can_be_split args
       else if term_eq hd (`can_be_split_forall) then solve_can_be_split_forall args
@@ -2193,7 +2743,22 @@ let solve_or_delay (g:goal) : Tac bool =
       else if term_eq hd (`equiv) then solve_equiv args
       else if term_eq hd (`can_be_split_dep) then solve_can_be_split_dep args
       else if term_eq hd (`can_be_split_forall_dep) then solve_can_be_split_forall_dep args
-      else false
+      else
+        let candidates = term_dict_assoc hd dict in
+        let run_tac (tac: unit -> Tac bool) () : Tac bool =
+          focus tac
+        in
+        begin try
+          first (List.Tot.map run_tac candidates)
+        with _ ->
+          (* this is a logical goal, solve it only if it has no uvars *)
+          if List.Tot.length (FStar.Reflection.Builtins.free_uvars t) = 0
+          then (smt (); true)
+          else false
+        end
+    else
+      // TODO: handle non-squash goals here
+      false
   | Comp (Eq _) l r ->
     let lnbr = List.Tot.length (FStar.Reflection.Builtins.free_uvars l) in
     let rnbr = List.Tot.length (FStar.Reflection.Builtins.free_uvars r) in
@@ -2204,34 +2769,173 @@ let solve_or_delay (g:goal) : Tac bool =
 /// Returns true if it successfully solved a goal
 /// If it returns false, it means it didn't find any solvable goal,
 /// which should mean only delayed goals are left
-let rec pick_next (l:list goal) : Tac bool =
-  match l with
+
+let rec vprop_term_uvars (t:term) : Tac (list int) =
+  match inspect t with
+  | Tv_Uvar i' _ -> [i']
+  | Tv_App _ _ ->
+    let hd, args = collect_app t in
+    if term_eq hd (`star) || term_eq hd (`VStar) || term_eq hd (`VUnit) then
+      // Only count the number of unresolved slprops, not program implicits
+      argv_uvars args
+    else
+      vprop_term_uvars hd
+  | Tv_Abs _ t -> vprop_term_uvars t
+  | _ -> []
+
+and argv_uvars (args: list argv) : Tac (list int) =
+  let t : unit -> Tac (list int) =
+    fold_left (fun (n: unit -> Tac (list int)) (x, _) -> 
+      let t () : Tac (list int) =
+        let l1 = n () in
+        let l2 = vprop_term_uvars x in
+        l1 `List.Tot.append` l2
+      in
+      t
+    )
+    (fun _ -> [])
+    args
+  in
+  t ()
+
+let rec remove_dups_from_sorted (#t: eqtype) (l: list t) : Tot (list t) = match l with
+  | [] | [_] -> l
+  | a1 :: a2 :: q -> if a1 = a2 then remove_dups_from_sorted (a2 :: q) else a1 :: remove_dups_from_sorted (a2 :: q)
+
+let simplify_list (l: list int) : Tot (list int) =
+  remove_dups_from_sorted (List.Tot.sortWith (List.Tot.compare_of_bool (<)) l)
+
+let goal_term_uvars (t: term) : Tac (list int) =
+  let hd, tl = collect_app t in
+  if hd `term_eq` (`squash)
+  then
+    match tl with
+    | [tl0, Q_Explicit] ->
+      let _, tl1 = collect_app tl0 in
+      simplify_list (argv_uvars tl1)
+    | _ -> dump "ill-formed squash"; []
+  else
+    []
+
+let rec merge_sorted (l1 l2: list int) : Tot (list int)
+  (decreases (List.Tot.length l1 + List.Tot.length l2))
+= match l1 with
+  | [] -> l2
+  | a1 :: q1 ->
+    begin match l2 with
+    | [] -> l1
+    | a2 :: q2 ->
+      if a1 < a2
+      then a1 :: merge_sorted q1 l2
+      else if a2 < a1
+      then a2 :: merge_sorted l1 q2
+      else a1 :: merge_sorted q1 q2
+  end
+
+let rec sorted_lists_intersect (l1 l2: list int) : Tot bool
+  (decreases (List.Tot.length l1 + List.Tot.length l2))
+= match l1 with
   | [] -> false
-  | a::q -> if solve_or_delay a then true else (later (); pick_next q)
+  | a1 :: q1 ->
+    begin match l2 with
+    | [] -> false
+    | a2 :: q2 ->
+      if a1 = a2
+      then true
+      else if a1 < a2
+      then sorted_lists_intersect q1 l2
+      else sorted_lists_intersect l1 q2
+    end
+
+/// TODO: cache the list of variables for each goal, to avoid computing them several times
+/// Compute the list of all vprop uvars that appear in the same goal as unsolved guard_vprop
+let rec compute_guarded_uvars1 (accu: list int) (g: list goal) : Tac (list int) =
+  match g with
+  | [] -> accu
+  | a :: q ->
+    let t = goal_type a in
+    let accu' =
+      if all_guards_solved t
+      then accu
+      else merge_sorted accu (goal_term_uvars t)
+    in
+    compute_guarded_uvars1 accu' q
+
+/// Enrich the list of vprop uvars with those that appear in the same goal
+let rec compute_guarded_uvars2 (accu: list int) (g: list goal) : Tac (list int) =
+  match g with
+  | [] -> accu
+  | a :: q ->
+    let t = goal_type a in
+    let l = goal_term_uvars t in
+    let accu' =
+      if sorted_lists_intersect accu l
+      then merge_sorted accu l
+      else accu
+    in
+    compute_guarded_uvars2 accu' q
+
+let rec compute_guarded_uvars3 (accu: list int) (g: list goal) : Tac (list int) =
+  let accu' = compute_guarded_uvars2 accu g in
+  if accu = accu'
+  then accu
+  else compute_guarded_uvars3 accu' g
+
+let compute_guarded_uvars () : Tac (list int) =
+  let g = goals () in
+  let accu = compute_guarded_uvars1 [] g in
+  compute_guarded_uvars3 accu g
+
+let rec pick_next (guarded_uvars: list int) (dict: _) (fuel: nat) : Tac bool =
+  if fuel = 0
+  then false
+  else match goals () with
+  | [] -> true
+  | a::_ ->
+    let t = goal_type a in
+    let l = goal_term_uvars t in
+    let next () : Tac bool =
+      later ();
+      pick_next guarded_uvars dict (fuel - 1)
+    in
+    if sorted_lists_intersect guarded_uvars l
+    then next ()
+    else if solve_or_delay dict
+    then true
+    else next ()
 
 /// Main loop to schedule solving of goals.
 /// The goals () function fetches all current goals in the context
-let rec resolve_tac () : Tac unit =
+let rec resolve_tac (dict: _) : Tac unit =
   match goals () with
   | [] -> ()
   | g ->
     norm [];
+    let guarded_uvars = compute_guarded_uvars () in
     // TODO: If it picks a goal it cannot solve yet, try all the other ones?
-    if pick_next g then resolve_tac ()
+    if pick_next guarded_uvars dict (List.Tot.length g) then resolve_tac dict
     else fail "Could not make progress, no solvable goal found"
 
+let rec pick_next_logical (dict: _) (fuel: nat) : Tac bool =
+  if fuel = 0
+  then false
+  else match goals () with
+  | [] -> true
+  | _::_ -> if solve_or_delay dict then true else (later (); pick_next_logical dict (fuel - 1))
+
 /// Special case for logical requires/ensures goals, which correspond only to equalities
-let rec resolve_tac_logical () : Tac unit =
+let rec resolve_tac_logical (dict: _) : Tac unit =
   match goals () with
   | [] -> ()
   | g ->
-    if pick_next g then resolve_tac_logical ()
+    let fuel = List.Tot.length g in
+    if pick_next_logical dict fuel then resolve_tac_logical dict
     else
       // This is only for requires/ensures constraints, which are equalities
       // There should always be a scheduling of constraints, but it can happen
       // that some uvar for the type of an equality is not resolved.
       // If we reach this point, we try to simply call the unifier instead of failing directly
-      solve_all_eqs g
+      solve_all_eqs fuel
 
 /// Determining whether the type represented by term [t] corresponds to one of the logical (requires/ensures) goals
 let typ_contains_req_ens (t:term) : Tac bool =
@@ -2274,32 +2978,39 @@ let is_true (t:term) () : Tac unit =
 /// Solve the maybe_emp goals:
 /// Normalize to unfold maybe_emp(_dep) and the reduce the if/then/else, and
 /// solve the goal (either an equality through trefl, or True through trivial)
-let rec solve_maybe_emps (l:list goal) : Tac unit =
-  match l with
+let rec solve_maybe_emps (fuel: nat) : Tac unit =
+  if fuel = 0
+  then ()
+  else match goals () with
   | [] -> ()
-  | hd::tl ->
+  | _::_ ->
     let f = term_as_formula' (cur_goal ()) in (
     match f with
-    | App _ t ->
-      let hd, args = collect_app t in
-      if term_eq hd (`maybe_emp) then
-        (norm [delta_only [`%maybe_emp]; iota; zeta; primops; simplify];
-         let g = cur_goal () in
-         or_else (is_true g) trefl)
-      else if term_eq hd (`maybe_emp_dep) then
-        (norm [delta_only [`%maybe_emp_dep]; iota; zeta; primops; simplify];
-         let g = cur_goal () in
-         or_else (is_true g) (fun _ -> ignore (forall_intro ()); trefl ()))
-      else later()
+    | App hd0 t ->
+      if not (hd0 `term_eq` (`squash))
+      then later ()
+      else
+        let hd, args = collect_app t in
+        if term_eq hd (`maybe_emp) then
+          (norm [delta_only [`%maybe_emp]; iota; zeta; primops; simplify];
+          let g = cur_goal () in
+          or_else (is_true g) trefl)
+        else if term_eq hd (`maybe_emp_dep) then
+          (norm [delta_only [`%maybe_emp_dep]; iota; zeta; primops; simplify];
+          let g = cur_goal () in
+          or_else (is_true g) (fun _ -> ignore (forall_intro ()); trefl ()))
+        else later()
     | _ -> later()
     );
-    solve_maybe_emps tl
+    solve_maybe_emps (fuel - 1)
 
 /// Normalizes all the return_pre annotations once they are not needed anymore
-let rec norm_return_pre (l:list goal) : Tac unit =
-  match l with
+let rec norm_return_pre (fuel: nat) : Tac unit =
+  if fuel = 0
+  then ()
+  else match goals () with
   | [] -> ()
-  | hd::tl -> norm [delta_only [`%return_pre]]; later(); norm_return_pre tl
+  | _::_ -> norm [delta_only [`%return_pre]]; later(); norm_return_pre (fuel - 1)
 
 let print_goal (g:goal) =
   let t = goal_type g in
@@ -2313,8 +3024,8 @@ let print_goals (g:list goal) =
 /// The resolve_implicits; framing_implicit annotation indicates that this tactic should
 /// be called by the F* typechecker to solve all implicits annotated with the `framing_implicit` attribute.
 /// The `plugin` attribute ensures that this tactic is compiled, and executed natively for performance reasons
-[@@ resolve_implicits; framing_implicit; plugin]
-let init_resolve_tac () : Tac unit =
+
+let init_resolve_tac' (dict: _) : Tac unit =
   // We split goals between framing goals, about slprops (slgs)
   // and goals related to requires/ensures, that depend on slprops (loggs)
   let slgs, loggs = filter_goals (goals()) in
@@ -2325,33 +3036,36 @@ let init_resolve_tac () : Tac unit =
   set_goals slgs;
 
   // We solve all the maybe_emp goals first: All "extra" frames are directly set to emp
-  solve_maybe_emps (goals ());
+  solve_maybe_emps (List.Tot.length (goals ()));
 
   // We first solve all indirection equalities that will not lead to imprecise unification
   // i.e. we can solve all equalities inserted by layered effects, except the ones corresponding
   // to the preconditions of a pure return
-  solve_indirection_eqs (goals());
+  solve_indirection_eqs (List.Tot.length (goals()));
 
   // To debug, it is best to look at the goals at this stage. Uncomment the next line
   // dump "initial goals";
 
   // We can now solve the equalities for returns
-  solve_return_eqs (goals());
+  solve_return_eqs (List.Tot.length (goals()));
 
   // It is important to not normalize the return_pre equalities before solving them
   // Else, we lose some variables dependencies, leading to the tactic being stuck
   // See test7 in FramingTestSuite for more explanations of what is failing
   // Once unification has been done, we can then safely normalize and remove all return_pre
-  norm_return_pre (goals());
+  norm_return_pre (List.Tot.length (goals()));
 
   // Finally running the core of the tactic, scheduling and solving goals
-  resolve_tac ();
+  resolve_tac dict;
 
   // We now solve the requires/ensures goals, which are all equalities
   // All slprops are resolved by now
   set_goals loggs;
 
-  resolve_tac_logical ()
+  resolve_tac_logical dict
+
+[@@ resolve_implicits; framing_implicit; plugin]
+let init_resolve_tac () : Tac unit = init_resolve_tac' []
 
 (* AF: There probably is a simpler way to get from p to squash p in a tactic, so that we can use apply_lemma *)
 let squash_and p (x:squash (p /\ True)) : (p /\ True) =
@@ -2381,7 +3095,7 @@ let selector_tactic () : Tac unit =
 let ite_soundness_tac () : Tac unit =
   let slgs, loggoals = filter_goals (goals ()) in
   set_goals slgs;
-  solve_indirection_eqs slgs;
+  solve_indirection_eqs (List.Tot.length slgs);
   // This is the actual subcomp goal. We can only solve it
   // once all uvars are solved
   let subcomp_goal = _cur_goal () in
@@ -2399,7 +3113,7 @@ let ite_soundness_tac () : Tac unit =
   smt ();
   // Now propagating all equalities for the requires/ensures
   set_goals loggoals;
-  resolve_tac_logical ();
+  resolve_tac_logical [];
   // Now taking care of the actual subcomp VC
   set_goals [subcomp_goal];
   norm [];
