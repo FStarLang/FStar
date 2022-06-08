@@ -382,7 +382,9 @@ let rec traverse_for_spinoff
           | Tm_fvar fv ->
             S.fv_eq_lid fv PC.and_lid ||
             S.fv_eq_lid fv PC.imp_lid ||
-            S.fv_eq_lid fv PC.forall_lid
+            S.fv_eq_lid fv PC.forall_lid ||
+            S.fv_eq_lid fv PC.squash_lid ||
+            S.fv_eq_lid fv PC.auto_squash_lid
 
           | Tm_meta _
           | Tm_ascribed _
@@ -405,21 +407,46 @@ let rec traverse_for_spinoff
                       (e:Env.env)
                       (t:term)
       : tres = 
-        let spinoff t =
-          match pol with
-          | StrictlyPositive ->
+        let label_goal t = 
             let t = 
               match (SS.compress t).n, label_ctx with
               | Tm_meta(_, Meta_labeled _), _ -> t
               | _, Some (msg, r) -> TcUtil.label msg r t
               | _ -> t
             in
-            if debug
-            then BU.print2 "spunoff (%s) (%s)\n"
-                       (Print.tag_of_term t)
-                       (Print.term_to_string t);
+            let t =
+              if U.is_sub_singleton t
+              then t
+              else U.mk_auto_squash U_zero t
+            in
+            fst (goal_of_goal_ty e t)
+        in
+        let maybe_split_matches t = 
+            match (SS.compress t).n with
+            | Tm_match (sc, asc_opt, branches, ret) ->
+              //split a match goal into n sub-goals
+              //where each of them has only a single non-trivial branch
+              let retain_branch_i (i:int) = 
+                branches |>
+                List.mapi (fun j br ->
+                  if i = j then br
+                  else let (pat, w, exp) = br in
+                       (pat, w, U.t_true))
+              in
+              let sub_goals =
+                branches |> 
+                List.mapi (fun i _ -> 
+                  S.mk (Tm_match(sc, asc_opt, retain_branch_i i, ret)) t.pos)
+              in
+              List.map label_goal sub_goals
 
-            Simplified (FStar.Syntax.Util.t_true, [fst <| goal_of_goal_ty e t])
+            | _ -> [label_goal t]
+        in
+        let spinoff t =
+          match pol with
+          | StrictlyPositive ->
+            let sub_goals = maybe_split_matches t in
+            Simplified (FStar.Syntax.Util.t_true, sub_goals)
                       
           | _ ->
             Unchanged t

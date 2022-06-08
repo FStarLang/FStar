@@ -224,12 +224,11 @@ let label_goals use_env_msg  //when present, provides an alternate error message
           let labels, conjuncts = BU.fold_map (aux default_msg ropt post_name_opt) labels conjuncts in
           labels, Term.mk_and_l conjuncts q.rng
 
-        // | App(ITE, [hd; q1; q2]) ->
-        //   let labels, q1 = aux default_msg ropt post_name_opt labels q1 in
-        //   let labels, q2 = aux default_msg ropt post_name_opt labels q2 in
-        //   labels, Term.mkITE (hd, q1, q2) q.rng
+        | App(ITE, [hd; q1; q2]) ->
+          let labels, q1 = aux default_msg ropt post_name_opt labels q1 in
+          let labels, q2 = aux default_msg ropt post_name_opt labels q2 in
+          labels, Term.mkITE (hd, q1, q2) q.rng
 
-        | App(ITE, _)
         | Quant(Exists, _, _, _, _)
         | App(Iff, _)
         | App(Or, _) -> //non-atomic, but can't case split

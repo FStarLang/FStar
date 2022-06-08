@@ -716,14 +716,20 @@ let rec (traverse_for_spinoff :
                     uu___2.FStar_Syntax_Syntax.n in
                   match uu___1 with
                   | FStar_Syntax_Syntax.Tm_fvar fv ->
-                      ((FStar_Syntax_Syntax.fv_eq_lid fv
-                          FStar_Parser_Const.and_lid)
+                      ((((FStar_Syntax_Syntax.fv_eq_lid fv
+                            FStar_Parser_Const.and_lid)
+                           ||
+                           (FStar_Syntax_Syntax.fv_eq_lid fv
+                              FStar_Parser_Const.imp_lid))
+                          ||
+                          (FStar_Syntax_Syntax.fv_eq_lid fv
+                             FStar_Parser_Const.forall_lid))
                          ||
                          (FStar_Syntax_Syntax.fv_eq_lid fv
-                            FStar_Parser_Const.imp_lid))
+                            FStar_Parser_Const.squash_lid))
                         ||
                         (FStar_Syntax_Syntax.fv_eq_lid fv
-                           FStar_Parser_Const.forall_lid)
+                           FStar_Parser_Const.auto_squash_lid)
                   | FStar_Syntax_Syntax.Tm_meta uu___2 -> true
                   | FStar_Syntax_Syntax.Tm_ascribed uu___2 -> true
                   | FStar_Syntax_Syntax.Tm_abs uu___2 -> true
@@ -739,39 +745,66 @@ let rec (traverse_for_spinoff :
                  res) in
           let should_descend = should_descend' true in
           let maybe_spinoff pol2 label_ctx1 e1 t1 =
+            let label_goal t2 =
+              let t3 =
+                let uu___ =
+                  let uu___1 =
+                    let uu___2 = FStar_Syntax_Subst.compress t2 in
+                    uu___2.FStar_Syntax_Syntax.n in
+                  (uu___1, label_ctx1) in
+                match uu___ with
+                | (FStar_Syntax_Syntax.Tm_meta
+                   (uu___1, FStar_Syntax_Syntax.Meta_labeled uu___2), uu___3)
+                    -> t2
+                | (uu___1, FStar_Pervasives_Native.Some (msg, r)) ->
+                    FStar_TypeChecker_Util.label msg r t2
+                | uu___1 -> t2 in
+              let t4 =
+                let uu___ = FStar_Syntax_Util.is_sub_singleton t3 in
+                if uu___
+                then t3
+                else
+                  FStar_Syntax_Util.mk_auto_squash FStar_Syntax_Syntax.U_zero
+                    t3 in
+              let uu___ = FStar_Tactics_Types.goal_of_goal_ty e1 t4 in
+              FStar_Pervasives_Native.fst uu___ in
+            let maybe_split_matches t2 =
+              let uu___ =
+                let uu___1 = FStar_Syntax_Subst.compress t2 in
+                uu___1.FStar_Syntax_Syntax.n in
+              match uu___ with
+              | FStar_Syntax_Syntax.Tm_match (sc, asc_opt, branches, ret) ->
+                  let retain_branch_i i =
+                    FStar_Compiler_Effect.op_Bar_Greater branches
+                      (FStar_Compiler_List.mapi
+                         (fun j ->
+                            fun br ->
+                              if i = j
+                              then br
+                              else
+                                (let uu___2 = br in
+                                 match uu___2 with
+                                 | (pat, w, exp) ->
+                                     (pat, w, FStar_Syntax_Util.t_true)))) in
+                  let sub_goals =
+                    FStar_Compiler_Effect.op_Bar_Greater branches
+                      (FStar_Compiler_List.mapi
+                         (fun i ->
+                            fun uu___1 ->
+                              let uu___2 =
+                                let uu___3 =
+                                  let uu___4 = retain_branch_i i in
+                                  (sc, asc_opt, uu___4, ret) in
+                                FStar_Syntax_Syntax.Tm_match uu___3 in
+                              FStar_Syntax_Syntax.mk uu___2
+                                t2.FStar_Syntax_Syntax.pos)) in
+                  FStar_Compiler_List.map label_goal sub_goals
+              | uu___1 -> let uu___2 = label_goal t2 in [uu___2] in
             let spinoff t2 =
               match pol2 with
               | StrictlyPositive ->
-                  let t3 =
-                    let uu___ =
-                      let uu___1 =
-                        let uu___2 = FStar_Syntax_Subst.compress t2 in
-                        uu___2.FStar_Syntax_Syntax.n in
-                      (uu___1, label_ctx1) in
-                    match uu___ with
-                    | (FStar_Syntax_Syntax.Tm_meta
-                       (uu___1, FStar_Syntax_Syntax.Meta_labeled uu___2),
-                       uu___3) -> t2
-                    | (uu___1, FStar_Pervasives_Native.Some (msg, r)) ->
-                        FStar_TypeChecker_Util.label msg r t2
-                    | uu___1 -> t2 in
-                  (if debug
-                   then
-                     (let uu___1 = FStar_Syntax_Print.tag_of_term t3 in
-                      let uu___2 = FStar_Syntax_Print.term_to_string t3 in
-                      FStar_Compiler_Util.print2 "spunoff (%s) (%s)\n" uu___1
-                        uu___2)
-                   else ();
-                   (let uu___1 =
-                      let uu___2 =
-                        let uu___3 =
-                          let uu___4 =
-                            FStar_Tactics_Types.goal_of_goal_ty e1 t3 in
-                          FStar_Compiler_Effect.op_Less_Bar
-                            FStar_Pervasives_Native.fst uu___4 in
-                        [uu___3] in
-                      (FStar_Syntax_Util.t_true, uu___2) in
-                    Simplified uu___1))
+                  let sub_goals = maybe_split_matches t2 in
+                  Simplified (FStar_Syntax_Util.t_true, sub_goals)
               | uu___ -> Unchanged t2 in
             let t2 = FStar_Syntax_Subst.compress t1 in
             let uu___ =
