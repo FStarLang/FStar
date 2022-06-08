@@ -1219,6 +1219,17 @@ let rec my_partition (#a: Type) (f: (a -> Tot bool)) (l: list a)
      then hd::l1, l2
      else l1, hd::l2
 
+let rec partition_ext (#a: Type) (f1 f2: (a -> Tot bool)) (l: list a)
+: Lemma
+  (requires (forall x . f1 x == f2 x))
+  (ensures (List.Tot.partition f1 l == List.Tot.partition f2 l))
+= match l with
+  | [] -> ()
+  | hd::tl -> partition_ext f1 f2 tl
+
+let my_bool_of_compare (#a: Type) (f: a -> a -> Tot int) (x: a) (y: a) : Tot bool
+= f x y < 0
+
 let rec my_sortWith (#a: Type) (f: (a -> a -> Tot int)) (l:list a)
   : Pure (list a)
     (requires True)
@@ -1227,12 +1238,33 @@ let rec my_sortWith (#a: Type) (f: (a -> a -> Tot int)) (l:list a)
 = match l with
   | [] -> []
   | pivot::tl ->
-     let hi, lo = my_partition (List.Tot.bool_of_compare f pivot) tl in
+     let hi, lo = my_partition (my_bool_of_compare f pivot) tl in
+     partition_ext (my_bool_of_compare f pivot) (List.Tot.bool_of_compare f pivot) tl;
      List.Tot.partition_length (List.Tot.bool_of_compare f pivot) tl;
      my_append (my_sortWith f lo) (pivot::my_sortWith f hi)
 
+let rec sortWith_ext (#a: Type) (f1 f2: (a -> a -> Tot int)) (l: list a)
+: Lemma
+  (requires (forall x y . f1 x y == f2 x y))
+  (ensures (List.Tot.sortWith f1 l == List.Tot.sortWith f2 l))
+  (decreases (List.Tot.length l))
+= match l with
+  | [] -> ()
+  | pivot::tl ->
+    partition_ext (List.Tot.bool_of_compare f1 pivot) (List.Tot.bool_of_compare f2 pivot) tl;
+    List.Tot.partition_length (List.Tot.bool_of_compare f1 pivot) tl;
+    let hi, lo = List.Tot.partition (List.Tot.bool_of_compare f1 pivot) tl in
+    sortWith_ext f1 f2 lo;
+    sortWith_ext f1 f2 hi
+
 let permute = list atom -> list atom
-let sort : permute = my_sortWith #int (List.Tot.Base.compare_of_bool (<))
+
+let my_compare_of_bool (#a:eqtype) (rel: a -> a -> Tot bool) (x: a) (y: a) : Tot int
+=   if x `rel` y  then -1
+    else if x = y then 0
+    else 1
+
+let sort : permute = my_sortWith #int (my_compare_of_bool (<))
 
 #push-options "--fuel 1 --ifuel 1"
 
@@ -1380,6 +1412,12 @@ let rec sort_correct_aux (#a:Type) (eq:CE.equiv a) (m:CE.cm a eq) (am:amap a) (x
   match xs with
   | [] -> EQ?.reflexivity eq (xsdenote eq m am [])
   | pivot::q ->
+      let sort0 : permute = List.Tot.sortWith #int (List.Tot.compare_of_bool (<)) in
+      let sort_eq (l: list atom) : Lemma
+        (sort l == sort0 l)
+        [SMTPat (sort l)]
+      = sortWith_ext (my_compare_of_bool (<)) (List.Tot.compare_of_bool (<)) l
+      in
       let open FStar.List.Tot.Base in
       let f:int -> int -> int = compare_of_bool (<) in
       let hi, lo = partition (bool_of_compare f pivot) q in
@@ -1641,7 +1679,7 @@ let normal_tac_steps = [primops; iota; zeta; delta_only [
           `%my_assoc; `%my_append;
           `%flatten; `%sort;
           `%my_sortWith; `%my_partition;
-          `%List.Tot.Base.bool_of_compare; `%List.Tot.Base.compare_of_bool;
+          `%my_bool_of_compare; `%my_compare_of_bool;
           `%fst; `%__proj__Mktuple2__item___1;
           `%snd; `%__proj__Mktuple2__item___2;
           `%CE.__proj__CM__item__unit;
@@ -1928,7 +1966,7 @@ let canon_l_r (use_smt:bool)
          `%my_assoc; `%my_append;
          `%flatten; `%sort;
          `%my_sortWith; `%my_partition;
-         `%List.Tot.Base.bool_of_compare; `%List.Tot.Base.compare_of_bool;
+         `%my_bool_of_compare; `%my_compare_of_bool;
          `%fst; `%__proj__Mktuple2__item___1;
          `%snd; `%__proj__Mktuple2__item___2;
          `%CE.__proj__CM__item__unit;
