@@ -543,18 +543,11 @@ let (label_goals :
                            q1.FStar_SMTEncoding_Term.rng in
                        (labels2, uu___2))
               | FStar_SMTEncoding_Term.App
-                  (FStar_SMTEncoding_Term.ITE, hd::q11::q2::[]) ->
-                  let uu___1 = aux default_msg ropt post_name_opt labels1 q11 in
-                  (match uu___1 with
-                   | (labels2, q12) ->
-                       let uu___2 =
-                         aux default_msg ropt post_name_opt labels2 q2 in
-                       (match uu___2 with
-                        | (labels3, q21) ->
-                            let uu___3 =
-                              FStar_SMTEncoding_Term.mkITE (hd, q12, q21)
-                                q1.FStar_SMTEncoding_Term.rng in
-                            (labels3, uu___3)))
+                  (FStar_SMTEncoding_Term.ITE, uu___1) ->
+                  let uu___2 =
+                    fresh_label1 default_msg ropt
+                      q1.FStar_SMTEncoding_Term.rng q1 in
+                  (match uu___2 with | (lab, q2) -> ((lab :: labels1), q2))
               | FStar_SMTEncoding_Term.Quant
                   (FStar_SMTEncoding_Term.Exists, uu___1, uu___2, uu___3,
                    uu___4)

@@ -630,7 +630,7 @@ let collect (l : list 'a) : list ('a * int) =
     in
     List.fold_left add_one acc l
 
-let ask_and_report_errors env all_labels prefix query suffix : unit =
+let ask_and_report_errors use_only_default_config env all_labels prefix query suffix : unit =
     Z3.giveZ3 prefix; //feed the context of the query to the solver
 
     let default_settings, next_hint =
@@ -697,6 +697,9 @@ let ask_and_report_errors env all_labels prefix query suffix : unit =
     in
 
     let all_configs =
+      if use_only_default_config
+      then [default_settings]
+      else 
         use_hints_setting
         @ [default_settings]
         @ initial_fuel_max_ifuel
@@ -915,7 +918,7 @@ let should_refresh env =
     | Some cfg ->
         not (cfg = get_cfg env)
 
-let rec do_solve expect_singleton_query use_env_msg tcenv q : unit =
+let rec do_solve is_retry use_env_msg tcenv q : unit =
     if should_refresh tcenv then begin
       save_cfg tcenv;
       Z3.refresh ()
@@ -928,28 +931,51 @@ let rec do_solve expect_singleton_query use_env_msg tcenv q : unit =
       match qry with
       | Assume({assumption_term={tm=App(FalseOp, _)}}) -> pop()
       | _ when tcenv.admit -> pop()
+      
       | Assume _ ->
-        if expect_singleton_query
+        if (is_retry || Options.split_queries())
         && List.length labels <> 1
-        then failwith "Impossible: Queries should already have been split into singletons";
+        then (
+          FStar.Errors.diag 
+            (Env.get_range tcenv)
+            (BU.format1 "Encoded query to %s"
+                (Term.declToSmt "" qry));
+          failwith "Impossible: Queries should already have been split into singletons"
+        );
         
-        ask_and_report_errors tcenv labels prefix qry suffix;
+        ask_and_report_errors is_retry tcenv labels prefix qry suffix;
+                
         pop ()
 
       | _ -> failwith "Impossible"
     with
       | SplitQueryAndRetry ->
         pop();
-        if expect_singleton_query
-        then failwith "Impossible: singleton queries should always produce an error report and cannot be split further";
-        begin
-        match Env.split_smt_query tcenv q with
-        | None -> 
-          failwith "Impossible: split_query callback is not set"
-          
-        | Some goals ->
-          goals |> List.iter (fun (env, goal) -> do_solve true use_env_msg env goal)
-        end
+        if is_retry
+        then failwith "Impossible: retried queries should always produce an error report\
+                       and cannot be split and retried further";
+        
+        let _ = 
+          match Env.split_smt_query tcenv q with
+          | None -> 
+            failwith "Impossible: split_query callback is not set"
+            
+          | Some goals ->
+            goals |> List.iter (fun (env, goal) -> do_solve true use_env_msg env goal)
+        in
+        
+        if FStar.Errors.get_err_count() = 0
+        then ( //query succeeded after a retry
+          FStar.TypeChecker.Err.log_issue
+            tcenv
+            tcenv.range
+            (Errors.Warning_SplitAndRetryQueries, 
+             "The verification condition succeeded after splitting it to localize potential errors,\n\
+              although the original non-split verification condition failed.\n\
+              If you want to rely on splitting queries for verifying your program \n\
+              please use the --split_queries option rather than relying on it implicitly.")
+         )
+
         
       | FStar.SMTEncoding.Env.Inner_let_rec names ->  //can be raised by encode_query
         pop ();  //AR: Important, we push-ed before encode_query was called
