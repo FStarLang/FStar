@@ -856,7 +856,8 @@ let rec extract_one_pat (imp : bool)
     * bool =  //the bool indicates whether or not a magic should be inserted around the scrutinee
     let ok t =
       match expected_ty with
-      | MLTY_Top -> true
+      | MLTY_Top ->
+        false
       | _ ->
         let ok = type_leq g t expected_ty in
         if not ok then debug g (fun _ -> BU.print2 "Expected pattern type %s; got pattern type %s\n"

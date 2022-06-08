@@ -1289,7 +1289,7 @@ let rec (extract_one_pat :
           fun term_as_mlexpr ->
             let ok t =
               match expected_ty with
-              | FStar_Extraction_ML_Syntax.MLTY_Top -> true
+              | FStar_Extraction_ML_Syntax.MLTY_Top -> false
               | uu___ ->
                   let ok1 = type_leq g t expected_ty in
                   (if Prims.op_Negation ok1
