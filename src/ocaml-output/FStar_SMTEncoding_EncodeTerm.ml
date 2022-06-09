@@ -3616,7 +3616,7 @@ and (encode_formula :
             encode_formula uu___1 env
         | FStar_Syntax_Syntax.Tm_match (e, uu___, pats, uu___1) ->
             let uu___2 =
-              encode_match e pats FStar_SMTEncoding_Util.mkFalse env
+              encode_match e pats FStar_SMTEncoding_Term.mkUnreachable env
                 encode_formula in
             (match uu___2 with | (t, decls) -> (t, decls))
         | FStar_Syntax_Syntax.Tm_let

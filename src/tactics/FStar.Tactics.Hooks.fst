@@ -374,6 +374,7 @@ let rec traverse_for_spinoff
                  (e:Env.env)
                  (t:term) : tres =
     let debug = Env.debug e (O.Other "SpinoffAll") in                 
+    let traverse pol e t = traverse_for_spinoff pol label_ctx e t in
     let should_descend' enable_debug (t:term) = 
         //descend only into the following connectives
         let hd, args = U.head_and_args t in
@@ -426,17 +427,36 @@ let rec traverse_for_spinoff
             | Tm_match (sc, asc_opt, branches, ret) ->
               //split a match goal into n sub-goals
               //where each of them has only a single non-trivial branch
-              let retain_branch_i (i:int) = 
+              let retain_branch_i (i:int) br' = 
                 branches |>
                 List.mapi (fun j br ->
-                  if i = j then br
+                  if i = j then br'
                   else let (pat, w, exp) = br in
                        (pat, w, U.t_true))
               in
               let sub_goals =
-                branches |> 
-                List.mapi (fun i _ -> 
-                  S.mk (Tm_match(sc, asc_opt, retain_branch_i i, ret)) t.pos)
+                branches |>
+                List.mapi (fun i (br:(pat & option term & term)) ->
+                  let (pat, w, exp) = SS.open_branch br in
+                  let bvs = S.pat_bvs pat in
+                  let e = Env.push_bvs e bvs in
+                  match traverse pol e exp with
+                  | Unchanged t' ->
+                    let branches = retain_branch_i i br in
+                    [S.mk (Tm_match (sc, asc_opt, branches, ret)) t.pos]
+                  | Simplified (t', gs) ->
+                    let branches_l = 
+                      retain_branch_i i (SS.close_branch (pat, w, t'))
+                      :: (
+                      gs |> List.map  (fun g ->
+                      let exp = goal_type g in
+                        retain_branch_i i (SS.close_branch (pat, w, exp)))
+                      )
+                    in
+                    branches_l |>
+                    List.map (fun branches ->
+                      S.mk (Tm_match (sc, asc_opt, branches, ret)) t.pos)) |>
+                List.flatten
               in
               List.map label_goal sub_goals
 
@@ -456,7 +476,6 @@ let rec traverse_for_spinoff
         then spinoff t
         else Unchanged t
     in
-    let traverse pol e t = traverse_for_spinoff pol label_ctx e t in
     let split_boolean_conjunction t =
         let hd, args = U.head_and_args t in
         match (U.un_uinst hd).n, args with

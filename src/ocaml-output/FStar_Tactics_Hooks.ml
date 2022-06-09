@@ -706,6 +706,8 @@ let rec (traverse_for_spinoff :
         fun t ->
           let debug =
             FStar_TypeChecker_Env.debug e (FStar_Options.Other "SpinoffAll") in
+          let traverse1 pol2 e1 t1 =
+            traverse_for_spinoff pol2 label_ctx e1 t1 in
           let should_descend' enable_debug t1 =
             let uu___ = FStar_Syntax_Util.head_and_args t1 in
             match uu___ with
@@ -774,30 +776,72 @@ let rec (traverse_for_spinoff :
                 uu___1.FStar_Syntax_Syntax.n in
               match uu___ with
               | FStar_Syntax_Syntax.Tm_match (sc, asc_opt, branches, ret) ->
-                  let retain_branch_i i =
+                  let retain_branch_i i br' =
                     FStar_Compiler_Effect.op_Bar_Greater branches
                       (FStar_Compiler_List.mapi
                          (fun j ->
                             fun br ->
                               if i = j
-                              then br
+                              then br'
                               else
                                 (let uu___2 = br in
                                  match uu___2 with
                                  | (pat, w, exp) ->
                                      (pat, w, FStar_Syntax_Util.t_true)))) in
                   let sub_goals =
-                    FStar_Compiler_Effect.op_Bar_Greater branches
-                      (FStar_Compiler_List.mapi
-                         (fun i ->
-                            fun uu___1 ->
-                              let uu___2 =
-                                let uu___3 =
-                                  let uu___4 = retain_branch_i i in
-                                  (sc, asc_opt, uu___4, ret) in
-                                FStar_Syntax_Syntax.Tm_match uu___3 in
-                              FStar_Syntax_Syntax.mk uu___2
-                                t2.FStar_Syntax_Syntax.pos)) in
+                    let uu___1 =
+                      FStar_Compiler_Effect.op_Bar_Greater branches
+                        (FStar_Compiler_List.mapi
+                           (fun i ->
+                              fun br ->
+                                let uu___2 =
+                                  FStar_Syntax_Subst.open_branch br in
+                                match uu___2 with
+                                | (pat, w, exp) ->
+                                    let bvs = FStar_Syntax_Syntax.pat_bvs pat in
+                                    let e2 =
+                                      FStar_TypeChecker_Env.push_bvs e1 bvs in
+                                    let uu___3 = traverse1 pol2 e2 exp in
+                                    (match uu___3 with
+                                     | Unchanged t' ->
+                                         let branches1 = retain_branch_i i br in
+                                         let uu___4 =
+                                           FStar_Syntax_Syntax.mk
+                                             (FStar_Syntax_Syntax.Tm_match
+                                                (sc, asc_opt, branches1, ret))
+                                             t2.FStar_Syntax_Syntax.pos in
+                                         [uu___4]
+                                     | Simplified (t', gs) ->
+                                         let branches_l =
+                                           let uu___4 =
+                                             let uu___5 =
+                                               FStar_Syntax_Subst.close_branch
+                                                 (pat, w, t') in
+                                             retain_branch_i i uu___5 in
+                                           let uu___5 =
+                                             FStar_Compiler_Effect.op_Bar_Greater
+                                               gs
+                                               (FStar_Compiler_List.map
+                                                  (fun g ->
+                                                     let exp1 =
+                                                       FStar_Tactics_Types.goal_type
+                                                         g in
+                                                     let uu___6 =
+                                                       FStar_Syntax_Subst.close_branch
+                                                         (pat, w, exp1) in
+                                                     retain_branch_i i uu___6)) in
+                                           uu___4 :: uu___5 in
+                                         FStar_Compiler_Effect.op_Bar_Greater
+                                           branches_l
+                                           (FStar_Compiler_List.map
+                                              (fun branches1 ->
+                                                 FStar_Syntax_Syntax.mk
+                                                   (FStar_Syntax_Syntax.Tm_match
+                                                      (sc, asc_opt,
+                                                        branches1, ret))
+                                                   t2.FStar_Syntax_Syntax.pos))))) in
+                    FStar_Compiler_Effect.op_Bar_Greater uu___1
+                      FStar_Compiler_List.flatten in
                   FStar_Compiler_List.map label_goal sub_goals
               | uu___1 -> let uu___2 = label_goal t2 in [uu___2] in
             let spinoff t2 =
@@ -811,8 +855,6 @@ let rec (traverse_for_spinoff :
               let uu___1 = should_descend' false t2 in
               Prims.op_Negation uu___1 in
             if uu___ then spinoff t2 else Unchanged t2 in
-          let traverse1 pol2 e1 t1 =
-            traverse_for_spinoff pol2 label_ctx e1 t1 in
           let split_boolean_conjunction t1 =
             let uu___ = FStar_Syntax_Util.head_and_args t1 in
             match uu___ with

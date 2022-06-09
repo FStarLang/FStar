@@ -1645,10 +1645,16 @@ let rec (do_solve :
                                       FStar_TypeChecker_Env.get_range tcenv1 in
                                     let uu___9 =
                                       let uu___10 =
+                                        FStar_Syntax_Print.term_to_string q in
+                                      let uu___11 =
                                         FStar_SMTEncoding_Term.declToSmt ""
                                           qry in
-                                      FStar_Compiler_Util.format1
-                                        "Encoded query to %s" uu___10 in
+                                      let uu___12 =
+                                        FStar_Compiler_Util.string_of_int
+                                          (FStar_Compiler_List.length labels) in
+                                      FStar_Compiler_Util.format3
+                                        "Encoded split query %s\nto %s\nwith %s labels"
+                                        uu___10 uu___11 uu___12 in
                                     FStar_Errors.diag uu___8 uu___9);
                                    failwith
                                      "Impossible: Queries should already have been split into singletons")

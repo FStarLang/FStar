@@ -140,7 +140,8 @@ let (label_goals :
               | FStar_SMTEncoding_Term.Labeled (arg, msg1, label_range) when
                   msg1 = "could not prove post-condition" ->
                   let fallback debug_msg =
-                    aux msg1 (FStar_Pervasives_Native.Some label_range)
+                    aux default_msg
+                      (FStar_Pervasives_Native.Some label_range)
                       post_name_opt labels1 arg in
                   (try
                      (fun uu___1 ->
@@ -575,6 +576,9 @@ let (label_goals :
                     fresh_label1 default_msg ropt
                       q1.FStar_SMTEncoding_Term.rng q1 in
                   (match uu___2 with | (lab, q2) -> ((lab :: labels1), q2))
+              | FStar_SMTEncoding_Term.App
+                  (FStar_SMTEncoding_Term.Var "Unreachable", uu___1) ->
+                  (labels1, q1)
               | FStar_SMTEncoding_Term.App
                   (FStar_SMTEncoding_Term.Var uu___1, uu___2) when
                   is_a_post_condition post_name_opt q1 -> (labels1, q1)

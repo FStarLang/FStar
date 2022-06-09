@@ -938,8 +938,10 @@ let rec do_solve is_retry use_env_msg tcenv q : unit =
         then (
           FStar.Errors.diag 
             (Env.get_range tcenv)
-            (BU.format1 "Encoded query to %s"
-                (Term.declToSmt "" qry));
+            (BU.format3 "Encoded split query %s\nto %s\nwith %s labels"
+                (Print.term_to_string q)
+                (Term.declToSmt "" qry)
+                (BU.string_of_int (List.length labels)));
           failwith "Impossible: Queries should already have been split into singletons"
         );
         

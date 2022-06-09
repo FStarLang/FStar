@@ -2455,6 +2455,19 @@ and maybe_simplify_aux (cfg:cfg) (env:env) (stack:stack) (tm:term) : term =
             | _ -> tm
         else tm
       end
+      else if S.fv_eq_lid fv PC.squash_lid
+      then begin
+        //simplify squash True to True
+        //         squash False to False
+         match args with
+         | [t, _] ->
+            if U.term_eq t U.t_true
+            then w U.t_true
+            else if U.term_eq t U.t_false
+            then w U.t_false
+            else tm
+         | _ -> tm
+      end
       else begin
            match U.is_auto_squash tm with
            | Some (U_zero, t)
