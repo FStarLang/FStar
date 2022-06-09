@@ -20,21 +20,6 @@ function export_home() {
     fi
 }
 
-function fetch_vale() {
-    if [[ ! -d vale ]]; then
-        mkdir vale
-    fi
-    vale_version=$(<hacl-star/vale/.vale_version)
-    vale_version=${vale_version%$'\r'}  # remove Windows carriage return, if it exists
-    wget "https://github.com/project-everest/vale/releases/download/v${vale_version}/vale-release-${vale_version}.zip" -O vale/vale-release.zip
-    rm -rf "vale/vale-release-${vale_version}"
-    unzip -o vale/vale-release.zip -d vale
-    rm -rf "vale/bin"
-    mv "vale/vale-release-${vale_version}/bin" vale/
-    chmod +x vale/bin/*.exe
-    export_home VALE "$(pwd)/vale"
-}
-
 # By default, HACL* master works against F* stable. Can also be overridden.
 function fetch_hacl() {
     if [ ! -d hacl-star ]; then
@@ -55,6 +40,10 @@ function fetch_hacl() {
     cd ..
     export_home HACL "$(pwd)/hacl-star"
     export_home EVERCRYPT "$(pwd)/hacl-star/providers"
+
+    # fetch Vale
+    $HACL_HOME/tools/get_vale.sh
+    export_home VALE "$(pwd)/vale"
 }
 
 # By default, karamel master works against F* stable. Can also be overridden.
@@ -75,6 +64,11 @@ function fetch_karamel() {
     git reset --hard $ref
     cd ..
     export_home KRML "$(pwd)/karamel"
+
+    # Install the Karamel dependencies
+    pushd $KRML_HOME
+    .docker/build/install-other-deps.sh
+    popd
 }
 
 function make_karamel() {
@@ -110,6 +104,11 @@ function fetch_everparse() {
     git reset --hard $ref
     cd ..
     export_home EVERPARSE "$(pwd)/everparse"
+
+    # Install the EverParse dependencies
+    pushd $EVERPARSE_HOME
+    .docker/build/install-other-deps.sh
+    popd
 }
 
 function make_everparse() {
@@ -294,9 +293,10 @@ function fstar_default_build () {
     fi
 
     # Start fetching while we build F*
-    fetch_karamel &
     fetch_hacl &
-    fetch_everparse &
+    # We lose parallelism here because we need to run opam for each case
+    # we might have a race on opam
+    { fetch_karamel && fetch_everparse ; } &
     fetch_mitls &
 
     # Build F*, along with fstarlib
@@ -321,9 +321,6 @@ function fstar_default_build () {
     make_karamel &
     make_everparse &
     wait
-
-    # fetch_vale depends on fetch_hacl for the hacl-star/vale/.vale_version file
-    fetch_vale
 
     # Once F* is built, run its main regression suite, along with more relevant
     # tests.

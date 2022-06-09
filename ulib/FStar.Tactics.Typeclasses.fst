@@ -133,7 +133,7 @@ let mk_class (nm:string) : Tac decls =
     let bs, cod = collect_arr_bs ty in
     let r = inspect_comp cod in
     guard (C_Total? r);
-    let C_Total cod _ = r in (* must be total *)
+    let C_Total cod _ _ = r in (* must be total *)
 
     (* print ("n_univs = " ^ string_of_int (List.Tot.Base.length us)); *)
 

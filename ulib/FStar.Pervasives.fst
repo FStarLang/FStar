@@ -146,6 +146,8 @@ let strict_on_arguments _ = ()
 
 let resolve_implicits = ()
 
+let override_resolve_implicits_handler #a x l = ()
+
 let handle_smt_goals = ()
 
 let erasable = ()

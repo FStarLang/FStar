@@ -374,6 +374,7 @@ type raw_error =
   | Warning_NoMagicInFSharp 
   | Error_BadLetOpenRecord 
   | Error_UnexpectedTypeclassInstance 
+  | Warning_AmbiguousResolveImplicitsHook 
   | Warning_SplitAndRetryQueries 
 let (uu___is_Error_DependencyAnalysisFailed : raw_error -> Prims.bool) =
   fun projectee ->
@@ -1875,6 +1876,12 @@ let (uu___is_Error_UnexpectedTypeclassInstance : raw_error -> Prims.bool) =
     match projectee with
     | Error_UnexpectedTypeclassInstance -> true
     | uu___ -> false
+let (uu___is_Warning_AmbiguousResolveImplicitsHook : raw_error -> Prims.bool)
+  =
+  fun projectee ->
+    match projectee with
+    | Warning_AmbiguousResolveImplicitsHook -> true
+    | uu___ -> false
 let (uu___is_Warning_SplitAndRetryQueries : raw_error -> Prims.bool) =
   fun projectee ->
     match projectee with
@@ -2236,7 +2243,8 @@ let (default_settings : error_setting Prims.list) =
   (Warning_NoMagicInFSharp, CWarning, (Prims.of_int (345)));
   (Error_BadLetOpenRecord, CAlwaysError, (Prims.of_int (346)));
   (Error_UnexpectedTypeclassInstance, CAlwaysError, (Prims.of_int (347)));
-  (Warning_SplitAndRetryQueries, CWarning, (Prims.of_int (348)))]
+  (Warning_AmbiguousResolveImplicitsHook, CWarning, (Prims.of_int (348)));
+  (Warning_SplitAndRetryQueries, CWarning, (Prims.of_int (349)))]
 let lookup_error :
   'uuuuu 'uuuuu1 'uuuuu2 .
     ('uuuuu * 'uuuuu1 * 'uuuuu2) Prims.list ->

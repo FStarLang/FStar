@@ -277,6 +277,10 @@ val set_options : string -> Tac unit
 provided, a second uvar is created for the type. *)
 val uvar_env : env -> option typ -> Tac term
 
+(** Creates a new, unconstrained universe unification variable.
+The returned term is Type (U_Unif ?u). *)
+val fresh_universe_uvar : unit -> Tac term
+
 (** Call the unifier on two terms. The returned boolean specifies
 whether unification was possible. When the tactic returns true, the
 terms have been unified, instantiating uvars as needed. When false,
