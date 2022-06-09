@@ -108,7 +108,7 @@ SHOULD_NOT_VERIFY_NOT_WORKING=Bug186.fst Bug397b.fst
 SHOULD_EXTRACT_CLOSED=Bug086.fst Bug314.fst Bug540.fst Bug541.fst Bug589.fst \
 	ExtractionBug2.fst Bug1101.fst Bug1485.fst Bug734.fst Bug310.fst \
 	Bug2058.fst RemoveUnusedTypars.B.fst RemoveUnusedTyparsIFace.B.fst \
-	PushPopProjectors.fst Bug2412.fst
+	PushPopProjectors.fst Bug2412.fst Bug2595.fst
 #ExtractionBug03.fst
 
 # Bug1479.fst Crashes when in CI with "Error: Unbound module FStar_Tactics_Effect"
@@ -166,9 +166,12 @@ Bug2058.ml:
 Bug2058.extract: Bug2058.ml
 	diff -u --strip-trailing-cr Bug2058.ml Bug2058.ml.expected
 
-output-accept: Bug310.ml Bug2058.ml
-	cp Bug310.ml Bug310.ml.expected
-	cp Bug2058.ml Bug2058.ml.expected
+Bug2595.ml:
+	$(FSTAR) $(FSTAR_DEFAULT_ARGS) --extract Bug2595 --codegen OCaml Bug2595.fst
+
+Bug2595.extract: Bug2595.ml
+	diff -u --strip-trailing-cr Bug2595.ml Bug2595.ml.expected
+
 
 RemoveUnusedTypars.B.extract: RemoveUnusedTypars.A.fst RemoveUnusedTypars.B.fst
 	$(FSTAR) $(FSTAR_DEFAULT_ARGS) --cache_checked_modules RemoveUnusedTypars.A.fst
@@ -193,6 +196,7 @@ PushPopProjectors.extract: PushPopProjectors.fst
 output-accept: Bug310.ml Bug2058.ml
 	cp Bug310.ml Bug310.ml.expected
 	cp Bug2058.ml Bug2058.ml.expected
+	cp Bug2595.ml Bug2595.ml.expected
 
 %.extract: %.fst
 	mkdir -p out_$*
