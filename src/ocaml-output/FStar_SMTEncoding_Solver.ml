@@ -315,98 +315,120 @@ type query_settings =
   query_errors: errors Prims.list ;
   query_all_labels: FStar_SMTEncoding_Term.error_labels ;
   query_suffix: FStar_SMTEncoding_Term.decl Prims.list ;
-  query_hash: Prims.string FStar_Pervasives_Native.option }
+  query_hash: Prims.string FStar_Pervasives_Native.option ;
+  query_can_be_split_and_retried: Prims.bool }
 let (__proj__Mkquery_settings__item__query_env :
   query_settings -> FStar_TypeChecker_Env.env) =
   fun projectee ->
     match projectee with
     | { query_env; query_decl; query_name; query_index; query_range;
         query_fuel; query_ifuel; query_rlimit; query_hint; query_errors;
-        query_all_labels; query_suffix; query_hash;_} -> query_env
+        query_all_labels; query_suffix; query_hash;
+        query_can_be_split_and_retried;_} -> query_env
 let (__proj__Mkquery_settings__item__query_decl :
   query_settings -> FStar_SMTEncoding_Term.decl) =
   fun projectee ->
     match projectee with
     | { query_env; query_decl; query_name; query_index; query_range;
         query_fuel; query_ifuel; query_rlimit; query_hint; query_errors;
-        query_all_labels; query_suffix; query_hash;_} -> query_decl
+        query_all_labels; query_suffix; query_hash;
+        query_can_be_split_and_retried;_} -> query_decl
 let (__proj__Mkquery_settings__item__query_name :
   query_settings -> Prims.string) =
   fun projectee ->
     match projectee with
     | { query_env; query_decl; query_name; query_index; query_range;
         query_fuel; query_ifuel; query_rlimit; query_hint; query_errors;
-        query_all_labels; query_suffix; query_hash;_} -> query_name
+        query_all_labels; query_suffix; query_hash;
+        query_can_be_split_and_retried;_} -> query_name
 let (__proj__Mkquery_settings__item__query_index :
   query_settings -> Prims.int) =
   fun projectee ->
     match projectee with
     | { query_env; query_decl; query_name; query_index; query_range;
         query_fuel; query_ifuel; query_rlimit; query_hint; query_errors;
-        query_all_labels; query_suffix; query_hash;_} -> query_index
+        query_all_labels; query_suffix; query_hash;
+        query_can_be_split_and_retried;_} -> query_index
 let (__proj__Mkquery_settings__item__query_range :
   query_settings -> FStar_Compiler_Range.range) =
   fun projectee ->
     match projectee with
     | { query_env; query_decl; query_name; query_index; query_range;
         query_fuel; query_ifuel; query_rlimit; query_hint; query_errors;
-        query_all_labels; query_suffix; query_hash;_} -> query_range
+        query_all_labels; query_suffix; query_hash;
+        query_can_be_split_and_retried;_} -> query_range
 let (__proj__Mkquery_settings__item__query_fuel :
   query_settings -> Prims.int) =
   fun projectee ->
     match projectee with
     | { query_env; query_decl; query_name; query_index; query_range;
         query_fuel; query_ifuel; query_rlimit; query_hint; query_errors;
-        query_all_labels; query_suffix; query_hash;_} -> query_fuel
+        query_all_labels; query_suffix; query_hash;
+        query_can_be_split_and_retried;_} -> query_fuel
 let (__proj__Mkquery_settings__item__query_ifuel :
   query_settings -> Prims.int) =
   fun projectee ->
     match projectee with
     | { query_env; query_decl; query_name; query_index; query_range;
         query_fuel; query_ifuel; query_rlimit; query_hint; query_errors;
-        query_all_labels; query_suffix; query_hash;_} -> query_ifuel
+        query_all_labels; query_suffix; query_hash;
+        query_can_be_split_and_retried;_} -> query_ifuel
 let (__proj__Mkquery_settings__item__query_rlimit :
   query_settings -> Prims.int) =
   fun projectee ->
     match projectee with
     | { query_env; query_decl; query_name; query_index; query_range;
         query_fuel; query_ifuel; query_rlimit; query_hint; query_errors;
-        query_all_labels; query_suffix; query_hash;_} -> query_rlimit
+        query_all_labels; query_suffix; query_hash;
+        query_can_be_split_and_retried;_} -> query_rlimit
 let (__proj__Mkquery_settings__item__query_hint :
   query_settings -> FStar_SMTEncoding_Z3.unsat_core) =
   fun projectee ->
     match projectee with
     | { query_env; query_decl; query_name; query_index; query_range;
         query_fuel; query_ifuel; query_rlimit; query_hint; query_errors;
-        query_all_labels; query_suffix; query_hash;_} -> query_hint
+        query_all_labels; query_suffix; query_hash;
+        query_can_be_split_and_retried;_} -> query_hint
 let (__proj__Mkquery_settings__item__query_errors :
   query_settings -> errors Prims.list) =
   fun projectee ->
     match projectee with
     | { query_env; query_decl; query_name; query_index; query_range;
         query_fuel; query_ifuel; query_rlimit; query_hint; query_errors;
-        query_all_labels; query_suffix; query_hash;_} -> query_errors
+        query_all_labels; query_suffix; query_hash;
+        query_can_be_split_and_retried;_} -> query_errors
 let (__proj__Mkquery_settings__item__query_all_labels :
   query_settings -> FStar_SMTEncoding_Term.error_labels) =
   fun projectee ->
     match projectee with
     | { query_env; query_decl; query_name; query_index; query_range;
         query_fuel; query_ifuel; query_rlimit; query_hint; query_errors;
-        query_all_labels; query_suffix; query_hash;_} -> query_all_labels
+        query_all_labels; query_suffix; query_hash;
+        query_can_be_split_and_retried;_} -> query_all_labels
 let (__proj__Mkquery_settings__item__query_suffix :
   query_settings -> FStar_SMTEncoding_Term.decl Prims.list) =
   fun projectee ->
     match projectee with
     | { query_env; query_decl; query_name; query_index; query_range;
         query_fuel; query_ifuel; query_rlimit; query_hint; query_errors;
-        query_all_labels; query_suffix; query_hash;_} -> query_suffix
+        query_all_labels; query_suffix; query_hash;
+        query_can_be_split_and_retried;_} -> query_suffix
 let (__proj__Mkquery_settings__item__query_hash :
   query_settings -> Prims.string FStar_Pervasives_Native.option) =
   fun projectee ->
     match projectee with
     | { query_env; query_decl; query_name; query_index; query_range;
         query_fuel; query_ifuel; query_rlimit; query_hint; query_errors;
-        query_all_labels; query_suffix; query_hash;_} -> query_hash
+        query_all_labels; query_suffix; query_hash;
+        query_can_be_split_and_retried;_} -> query_hash
+let (__proj__Mkquery_settings__item__query_can_be_split_and_retried :
+  query_settings -> Prims.bool) =
+  fun projectee ->
+    match projectee with
+    | { query_env; query_decl; query_name; query_index; query_range;
+        query_fuel; query_ifuel; query_rlimit; query_hint; query_errors;
+        query_all_labels; query_suffix; query_hash;
+        query_can_be_split_and_retried;_} -> query_can_be_split_and_retried
 let (with_fuel_and_diagnostics :
   query_settings ->
     FStar_SMTEncoding_Term.decl Prims.list ->
@@ -625,16 +647,22 @@ let (errors_to_report : query_settings -> FStar_Errors.error Prims.list) =
           FStar_TypeChecker_Err.errors_smt_detail settings.query_env
             err.error_messages smt_error
       | FStar_Pervasives_Native.None ->
-          (match settings.query_all_labels with
-           | (uu___1, msg, rng)::[] ->
-               let uu___2 =
-                 let uu___3 =
-                   let uu___4 = FStar_Errors.get_ctx () in
-                   (FStar_Errors.Error_Z3SolverError, msg, rng, uu___4) in
-                 [uu___3] in
-               FStar_TypeChecker_Err.errors_smt_detail settings.query_env
-                 uu___2 (FStar_Pervasives.Inl "")
-           | uu___1 -> FStar_Compiler_Effect.raise SplitQueryAndRetry) in
+          if settings.query_can_be_split_and_retried
+          then FStar_Compiler_Effect.raise SplitQueryAndRetry
+          else
+            FStar_Compiler_Effect.op_Bar_Greater settings.query_all_labels
+              (FStar_Compiler_List.collect
+                 (fun uu___2 ->
+                    match uu___2 with
+                    | (uu___3, msg, rng) ->
+                        let uu___4 =
+                          let uu___5 =
+                            let uu___6 = FStar_Errors.get_ctx () in
+                            (FStar_Errors.Error_Z3SolverError, msg, rng,
+                              uu___6) in
+                          [uu___5] in
+                        FStar_TypeChecker_Err.errors_smt_detail
+                          settings.query_env uu___4 (FStar_Pervasives.Inl ""))) in
     (let uu___ = FStar_Options.detail_errors () in
      if uu___
      then
@@ -654,7 +682,9 @@ let (errors_to_report : query_settings -> FStar_Errors.error Prims.list) =
            query_errors = (settings.query_errors);
            query_all_labels = (settings.query_all_labels);
            query_suffix = (settings.query_suffix);
-           query_hash = (settings.query_hash)
+           query_hash = (settings.query_hash);
+           query_can_be_split_and_retried =
+             (settings.query_can_be_split_and_retried)
          } in
        let ask_z3 label_assumptions =
          let uu___1 =
@@ -992,7 +1022,7 @@ let (ask_and_report_errors :
           FStar_SMTEncoding_Term.decl ->
             FStar_SMTEncoding_Term.decl Prims.list -> unit)
   =
-  fun use_only_default_config ->
+  fun is_being_retried ->
     fun env ->
       fun all_labels ->
         fun prefix ->
@@ -1046,7 +1076,9 @@ let (ask_and_report_errors :
                                   FStar_Compiler_Util.query_elapsed_time =
                                     uu___11;
                                   FStar_Compiler_Util.hash = h;_}
-                                -> h)
+                                -> h);
+                         query_can_be_split_and_retried =
+                           (Prims.op_Negation is_being_retried)
                        } in
                      (default_settings, next_hint) in
                match uu___1 with
@@ -1085,7 +1117,9 @@ let (ask_and_report_errors :
                               query_all_labels =
                                 (default_settings.query_all_labels);
                               query_suffix = (default_settings.query_suffix);
-                              query_hash = (default_settings.query_hash)
+                              query_hash = (default_settings.query_hash);
+                              query_can_be_split_and_retried =
+                                (default_settings.query_can_be_split_and_retried)
                             }]
                      else [] in
                    let initial_fuel_max_ifuel =
@@ -1111,7 +1145,9 @@ let (ask_and_report_errors :
                            query_all_labels =
                              (default_settings.query_all_labels);
                            query_suffix = (default_settings.query_suffix);
-                           query_hash = (default_settings.query_hash)
+                           query_hash = (default_settings.query_hash);
+                           query_can_be_split_and_retried =
+                             (default_settings.query_can_be_split_and_retried)
                          } in
                        [uu___3]
                      else [] in
@@ -1143,7 +1179,9 @@ let (ask_and_report_errors :
                            query_all_labels =
                              (default_settings.query_all_labels);
                            query_suffix = (default_settings.query_suffix);
-                           query_hash = (default_settings.query_hash)
+                           query_hash = (default_settings.query_hash);
+                           query_can_be_split_and_retried =
+                             (default_settings.query_can_be_split_and_retried)
                          } in
                        [uu___3]
                      else [] in
@@ -1174,12 +1212,14 @@ let (ask_and_report_errors :
                            query_all_labels =
                              (default_settings.query_all_labels);
                            query_suffix = (default_settings.query_suffix);
-                           query_hash = (default_settings.query_hash)
+                           query_hash = (default_settings.query_hash);
+                           query_can_be_split_and_retried =
+                             (default_settings.query_can_be_split_and_retried)
                          } in
                        [uu___3]
                      else [] in
                    let all_configs =
-                     if use_only_default_config
+                     if is_being_retried
                      then [default_settings]
                      else
                        FStar_Compiler_List.op_At use_hints_setting
@@ -1391,7 +1431,9 @@ let (ask_and_report_errors :
                                      query_suffix =
                                        (default_settings.query_suffix);
                                      query_hash =
-                                       (default_settings.query_hash)
+                                       (default_settings.query_hash);
+                                     query_can_be_split_and_retried =
+                                       (default_settings.query_can_be_split_and_retried)
                                    } in
                                let errs =
                                  FStar_Compiler_List.map errors_to_report1
@@ -1483,7 +1525,9 @@ let (ask_and_report_errors :
                                       query_suffix =
                                         (default_settings.query_suffix);
                                       query_hash =
-                                        (default_settings.query_hash)
+                                        (default_settings.query_hash);
+                                      query_can_be_split_and_retried =
+                                        (default_settings.query_can_be_split_and_retried)
                                     } in
                                 FStar_Compiler_List.iter report all_errs))
                           else ()) in
@@ -1641,23 +1685,31 @@ let rec (do_solve :
                                        Prims.int_one) in
                                 if uu___6
                                 then
-                                  ((let uu___8 =
-                                      FStar_TypeChecker_Env.get_range tcenv1 in
-                                    let uu___9 =
+                                  ((let uu___8 = FStar_Options.debug_any () in
+                                    if uu___8
+                                    then
+                                      let uu___9 =
+                                        FStar_TypeChecker_Env.get_range
+                                          tcenv1 in
                                       let uu___10 =
-                                        FStar_Syntax_Print.term_to_string q in
-                                      let uu___11 =
-                                        FStar_SMTEncoding_Term.declToSmt ""
-                                          qry in
-                                      let uu___12 =
-                                        FStar_Compiler_Util.string_of_int
-                                          (FStar_Compiler_List.length labels) in
-                                      FStar_Compiler_Util.format3
-                                        "Encoded split query %s\nto %s\nwith %s labels"
-                                        uu___10 uu___11 uu___12 in
-                                    FStar_Errors.diag uu___8 uu___9);
-                                   failwith
-                                     "Impossible: Queries should already have been split into singletons")
+                                        let uu___11 =
+                                          FStar_Syntax_Print.term_to_string q in
+                                        let uu___12 =
+                                          FStar_SMTEncoding_Term.declToSmt ""
+                                            qry in
+                                        let uu___13 =
+                                          FStar_Compiler_Util.string_of_int
+                                            (FStar_Compiler_List.length
+                                               labels) in
+                                        FStar_Compiler_Util.format3
+                                          "Encoded split query %s\nto %s\nwith %s labels"
+                                          uu___11 uu___12 uu___13 in
+                                      FStar_Errors.diag uu___9 uu___10
+                                    else ());
+                                   FStar_TypeChecker_Err.log_issue tcenv1
+                                     tcenv1.FStar_TypeChecker_Env.range
+                                     (FStar_Errors.Warning_SplitAndRetryQueries,
+                                       "Verification condition was to be split into several atomic sub-goals, \nbut this query has multiple sub-goals---the error report, if any, may be \ninaccurate"))
                                 else ());
                                ask_and_report_errors is_retry tcenv1 labels
                                  prefix qry suffix;

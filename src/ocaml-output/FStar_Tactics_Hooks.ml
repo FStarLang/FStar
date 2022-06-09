@@ -718,17 +718,14 @@ let rec (traverse_for_spinoff :
                     uu___2.FStar_Syntax_Syntax.n in
                   match uu___1 with
                   | FStar_Syntax_Syntax.Tm_fvar fv ->
-                      ((((FStar_Syntax_Syntax.fv_eq_lid fv
-                            FStar_Parser_Const.and_lid)
-                           ||
-                           (FStar_Syntax_Syntax.fv_eq_lid fv
-                              FStar_Parser_Const.imp_lid))
+                      (((FStar_Syntax_Syntax.fv_eq_lid fv
+                           FStar_Parser_Const.and_lid)
                           ||
                           (FStar_Syntax_Syntax.fv_eq_lid fv
-                             FStar_Parser_Const.forall_lid))
+                             FStar_Parser_Const.imp_lid))
                          ||
                          (FStar_Syntax_Syntax.fv_eq_lid fv
-                            FStar_Parser_Const.squash_lid))
+                            FStar_Parser_Const.forall_lid))
                         ||
                         (FStar_Syntax_Syntax.fv_eq_lid fv
                            FStar_Parser_Const.auto_squash_lid)
@@ -1145,86 +1142,85 @@ let (spinoff_strictly_positive_goals :
                    [FStar_TypeChecker_Env.Eager_unfolding;
                    FStar_TypeChecker_Env.Simplify;
                    FStar_TypeChecker_Env.Primops] env t' in
-               ((let uu___3 =
-                   let uu___4 = FStar_TypeChecker_Common.check_trivial t'1 in
-                   FStar_TypeChecker_Common.uu___is_NonTrivial uu___4 in
-                 if uu___3
-                 then
-                   let s =
-                     let uu___4 =
-                       let uu___5 = FStar_TypeChecker_Env.all_binders env in
-                       FStar_Compiler_Effect.op_Bar_Greater uu___5
-                         (FStar_Syntax_Print.binders_to_string ", ") in
-                     let uu___5 = FStar_Syntax_Print.term_to_string t'1 in
-                     FStar_Compiler_Util.format2
-                       "Main goal simplified to: %s |- %s\n" uu___4 uu___5 in
-                   let uu___4 =
-                     let uu___5 = FStar_Syntax_Print.term_to_string goal in
-                     FStar_Compiler_Util.format2
-                       "Expected split_queries to trivialize the main goal;\nBut %s was simplified to\n%s\n"
-                       uu___5 s in
-                   failwith uu___4
-                 else ());
-                (let s = initial in
-                 let s1 =
-                   FStar_Compiler_List.fold_left
-                     (fun uu___3 ->
-                        fun g ->
-                          match uu___3 with
-                          | (n, gs1) ->
-                              let phi = FStar_Tactics_Types.goal_type g in
-                              (if debug
-                               then
-                                 (let uu___5 =
-                                    FStar_Compiler_Util.string_of_int n in
+               let main_goal =
+                 let t = FStar_TypeChecker_Common.check_trivial t'1 in
+                 match t with
+                 | FStar_TypeChecker_Common.Trivial -> []
+                 | FStar_TypeChecker_Common.NonTrivial t1 ->
+                     (if debug
+                      then
+                        (let uu___3 =
+                           let uu___4 = FStar_TypeChecker_Env.all_binders env in
+                           FStar_Compiler_Effect.op_Bar_Greater uu___4
+                             (FStar_Syntax_Print.binders_to_string ", ") in
+                         let uu___4 = FStar_Syntax_Print.term_to_string t'1 in
+                         FStar_Compiler_Util.print2
+                           "Main goal simplified to: %s |- %s\n" uu___3
+                           uu___4)
+                      else ();
+                      FStar_TypeChecker_Err.log_issue env
+                        env.FStar_TypeChecker_Env.range
+                        (FStar_Errors.Warning_SplitAndRetryQueries,
+                          "Verification condition was to be split into several atomic sub-goals, \nbut this query had some sub-goals that couldn't be split---the error report, if any, may be \ninaccurate");
+                      [(env, t1)]) in
+               let s = initial in
+               let s1 =
+                 FStar_Compiler_List.fold_left
+                   (fun uu___2 ->
+                      fun g ->
+                        match uu___2 with
+                        | (n, gs1) ->
+                            let phi = FStar_Tactics_Types.goal_type g in
+                            (if debug
+                             then
+                               (let uu___4 =
+                                  FStar_Compiler_Util.string_of_int n in
+                                let uu___5 =
                                   let uu___6 =
-                                    let uu___7 =
-                                      FStar_Tactics_Types.goal_type g in
-                                    FStar_Syntax_Print.term_to_string uu___7 in
-                                  FStar_Compiler_Util.print2
-                                    "Got goal #%s: %s\n" uu___5 uu___6)
-                               else ();
-                               (let uu___5 =
-                                  let uu___6 =
-                                    let uu___7 =
-                                      FStar_Tactics_Types.goal_env g in
-                                    (uu___7, phi) in
-                                  uu___6 :: gs1 in
-                                ((n + Prims.int_one), uu___5)))) s gs in
-                 let uu___3 = s1 in
-                 match uu___3 with
-                 | (uu___4, gs1) ->
-                     let gs2 = FStar_Compiler_List.rev gs1 in
-                     let gs3 =
-                       FStar_Compiler_Effect.op_Bar_Greater gs2
-                         (FStar_Compiler_List.filter_map
-                            (fun uu___5 ->
-                               match uu___5 with
-                               | (env1, t) ->
-                                   let t1 =
-                                     FStar_TypeChecker_Normalize.normalize
-                                       [FStar_TypeChecker_Env.Eager_unfolding;
-                                       FStar_TypeChecker_Env.Simplify;
-                                       FStar_TypeChecker_Env.Primops] env1 t in
-                                   let uu___6 =
-                                     FStar_TypeChecker_Common.check_trivial
-                                       t1 in
-                                   (match uu___6 with
-                                    | FStar_TypeChecker_Common.Trivial ->
-                                        FStar_Pervasives_Native.None
-                                    | FStar_TypeChecker_Common.NonTrivial t2
-                                        ->
-                                        FStar_Pervasives_Native.Some
-                                          (env1, t2)))) in
-                     ((let uu___6 = FStar_TypeChecker_Env.get_range env in
-                       let uu___7 =
-                         let uu___8 =
-                           FStar_Compiler_Util.string_of_int
-                             (FStar_Compiler_List.length gs3) in
-                         FStar_Compiler_Util.format1
-                           "Split query into %s sub-goals" uu___8 in
-                       FStar_Errors.diag uu___6 uu___7);
-                      gs3))))
+                                    FStar_Tactics_Types.goal_type g in
+                                  FStar_Syntax_Print.term_to_string uu___6 in
+                                FStar_Compiler_Util.print2
+                                  "Got goal #%s: %s\n" uu___4 uu___5)
+                             else ();
+                             (let uu___4 =
+                                let uu___5 =
+                                  let uu___6 = FStar_Tactics_Types.goal_env g in
+                                  (uu___6, phi) in
+                                uu___5 :: gs1 in
+                              ((n + Prims.int_one), uu___4)))) s gs in
+               let uu___2 = s1 in
+               (match uu___2 with
+                | (uu___3, gs1) ->
+                    let gs2 = FStar_Compiler_List.rev gs1 in
+                    let gs3 =
+                      FStar_Compiler_Effect.op_Bar_Greater gs2
+                        (FStar_Compiler_List.filter_map
+                           (fun uu___4 ->
+                              match uu___4 with
+                              | (env1, t) ->
+                                  let t1 =
+                                    FStar_TypeChecker_Normalize.normalize
+                                      [FStar_TypeChecker_Env.Eager_unfolding;
+                                      FStar_TypeChecker_Env.Simplify;
+                                      FStar_TypeChecker_Env.Primops] env1 t in
+                                  let uu___5 =
+                                    FStar_TypeChecker_Common.check_trivial t1 in
+                                  (match uu___5 with
+                                   | FStar_TypeChecker_Common.Trivial ->
+                                       FStar_Pervasives_Native.None
+                                   | FStar_TypeChecker_Common.NonTrivial t2
+                                       ->
+                                       FStar_Pervasives_Native.Some
+                                         (env1, t2)))) in
+                    ((let uu___5 = FStar_TypeChecker_Env.get_range env in
+                      let uu___6 =
+                        let uu___7 =
+                          FStar_Compiler_Util.string_of_int
+                            (FStar_Compiler_List.length gs3) in
+                        FStar_Compiler_Util.format1
+                          "Split query into %s sub-goals" uu___7 in
+                      FStar_Errors.diag uu___5 uu___6);
+                     FStar_Compiler_List.op_At main_goal gs3)))
 let (synthesize :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.typ ->

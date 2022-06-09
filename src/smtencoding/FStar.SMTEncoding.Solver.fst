@@ -217,7 +217,8 @@ type query_settings = {
     query_errors:list errors;
     query_all_labels:error_labels;
     query_suffix:list decl;
-    query_hash:option string
+    query_hash:option string;
+    query_can_be_split_and_retried:bool
 }
 
 
@@ -353,24 +354,20 @@ let errors_to_report (settings : query_settings) : list Errors.error =
           // FStar.Errors.log_issue settings.query_range (FStar.Errors.Warning_SMTErrorReason, smt_error);
           FStar.TypeChecker.Err.errors_smt_detail settings.query_env err.error_messages smt_error
         | None ->
-          match settings.query_all_labels with
-          | [(_, msg, rng)] -> 
-            //if there is a unique label report it
-            FStar.TypeChecker.Err.errors_smt_detail
-                   settings.query_env
-                   [(Errors.Error_Z3SolverError, msg, rng, Errors.get_ctx())]
-                   (Inl "")
-
-          | _ ->
-            //otherwise, split the query into N unique queries and try again
-            raise SplitQueryAndRetry
-            // FStar.TypeChecker.Err.errors_smt_detail
-            //          settings.query_env
-            //          [(Errors.Error_UnknownFatal_AssertionFailure,
-            //            "Unknown assertion failed",
-            //            settings.query_range,
-            //            Errors.get_ctx ())]
-            //          smt_error
+          //We didn't get a useful countermodel from Z3 to localize an error
+          //so, split the query into N unique queries and try again
+            if settings.query_can_be_split_and_retried
+            then raise SplitQueryAndRetry
+            else (
+              //if it can't be split further, report all its labels as potential failures
+              //typically there will be only 1 label
+              settings.query_all_labels |>
+                 List.collect (fun (_, msg, rng) ->
+                   FStar.TypeChecker.Err.errors_smt_detail
+                     settings.query_env
+                     [(Errors.Error_Z3SolverError, msg, rng, Errors.get_ctx())]
+                     (Inl ""))
+            )
     in
     let detailed_errors : unit =
       if Options.detail_errors()
@@ -630,7 +627,7 @@ let collect (l : list 'a) : list ('a * int) =
     in
     List.fold_left add_one acc l
 
-let ask_and_report_errors use_only_default_config env all_labels prefix query suffix : unit =
+let ask_and_report_errors is_being_retried env all_labels prefix query suffix : unit =
     Z3.giveZ3 prefix; //feed the context of the query to the solver
 
     let default_settings, next_hint =
@@ -660,7 +657,8 @@ let ask_and_report_errors use_only_default_config env all_labels prefix query su
             query_suffix=suffix;
             query_hash=(match next_hint with
                         | None -> None
-                        | Some {hash=h} -> h)
+                        | Some {hash=h} -> h);
+            query_can_be_split_and_retried=not is_being_retried;
         } in
         default_settings, next_hint
     in
@@ -697,7 +695,7 @@ let ask_and_report_errors use_only_default_config env all_labels prefix query su
     in
 
     let all_configs =
-      if use_only_default_config
+      if is_being_retried
       then [default_settings]
       else 
         use_hints_setting
@@ -936,13 +934,22 @@ let rec do_solve is_retry use_env_msg tcenv q : unit =
         if (is_retry || Options.split_queries())
         && List.length labels <> 1
         then (
-          FStar.Errors.diag 
-            (Env.get_range tcenv)
-            (BU.format3 "Encoded split query %s\nto %s\nwith %s labels"
-                (Print.term_to_string q)
-                (Term.declToSmt "" qry)
-                (BU.string_of_int (List.length labels)));
-          failwith "Impossible: Queries should already have been split into singletons"
+          if Options.debug_any()
+          then 
+            FStar.Errors.diag 
+              (Env.get_range tcenv)
+              (BU.format3 "Encoded split query %s\nto %s\nwith %s labels"
+                          (Print.term_to_string q)
+                          (Term.declToSmt "" qry)
+                          (BU.string_of_int (List.length labels)));
+                          
+          FStar.TypeChecker.Err.log_issue
+            tcenv
+            tcenv.range
+            (Errors.Warning_SplitAndRetryQueries, 
+             "Verification condition was to be split into several atomic sub-goals, \n\
+              but this query has multiple sub-goals---the error report, if any, may be \n\
+              inaccurate")
         );
         
         ask_and_report_errors is_retry tcenv labels prefix qry suffix;

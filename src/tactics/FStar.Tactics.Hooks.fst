@@ -384,7 +384,6 @@ let rec traverse_for_spinoff
             S.fv_eq_lid fv PC.and_lid ||
             S.fv_eq_lid fv PC.imp_lid ||
             S.fv_eq_lid fv PC.forall_lid ||
-            S.fv_eq_lid fv PC.squash_lid ||
             S.fv_eq_lid fv PC.auto_squash_lid
 
           | Tm_meta _
@@ -616,17 +615,25 @@ let spinoff_strictly_positive_goals (env:Env.env) (goal:term)
       let t' = 
           N.normalize [Env.Eager_unfolding; Env.Simplify; Env.Primops] env t'
       in
-      if NonTrivial? (FStar.TypeChecker.Common.check_trivial t')
-      then (
-        let s = 
-          BU.format2 "Main goal simplified to: %s |- %s\n"
-                (Env.all_binders env |> Print.binders_to_string ", ")
-                (Print.term_to_string t')
-        in
-        failwith (BU.format2 "Expected split_queries to trivialize the main goal;\nBut %s was simplified to\n%s\n"
-                             (Print.term_to_string goal)
-                             s)
-      );
+      let main_goal = 
+        let t = FStar.TypeChecker.Common.check_trivial t' in
+        match t with
+        | Trivial -> []
+        | NonTrivial t ->
+          if debug
+          then 
+            BU.print2 "Main goal simplified to: %s |- %s\n"
+                            (Env.all_binders env |> Print.binders_to_string ", ")
+                            (Print.term_to_string t');
+          FStar.TypeChecker.Err.log_issue
+            env
+            env.range
+            (Errors.Warning_SplitAndRetryQueries, 
+             "Verification condition was to be split into several atomic sub-goals, \n\
+              but this query had some sub-goals that couldn't be split---the error report, if any, may be \n\
+              inaccurate");
+            [(env, t)]
+      in 
       let s = initial in
       let s = 
         List.fold_left 
@@ -649,10 +656,11 @@ let spinoff_strictly_positive_goals (env:Env.env) (goal:term)
             | Trivial -> None
             | NonTrivial t -> Some (env, t))
       in
+
       FStar.Errors.diag (Env.get_range env)
               (BU.format1 "Split query into %s sub-goals" (BU.string_of_int (List.length gs)));
 
-      gs
+      main_goal@gs
   )
 
 
