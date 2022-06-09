@@ -650,19 +650,28 @@ let (errors_to_report : query_settings -> FStar_Errors.error Prims.list) =
           if settings.query_can_be_split_and_retried
           then FStar_Compiler_Effect.raise SplitQueryAndRetry
           else
-            FStar_Compiler_Effect.op_Bar_Greater settings.query_all_labels
-              (FStar_Compiler_List.collect
-                 (fun uu___2 ->
-                    match uu___2 with
-                    | (uu___3, msg, rng) ->
-                        let uu___4 =
-                          let uu___5 =
-                            let uu___6 = FStar_Errors.get_ctx () in
-                            (FStar_Errors.Error_Z3SolverError, msg, rng,
-                              uu___6) in
-                          [uu___5] in
-                        FStar_TypeChecker_Err.errors_smt_detail
-                          settings.query_env uu___4 (FStar_Pervasives.Inl ""))) in
+            ((match settings.query_all_labels with
+              | uu___3::uu___4::uu___5 ->
+                  let uu___6 =
+                    FStar_TypeChecker_Env.get_range settings.query_env in
+                  FStar_TypeChecker_Err.log_issue settings.query_env uu___6
+                    (FStar_Errors.Warning_SplitAndRetryQueries,
+                      "The verification condition was to be split into several atomic sub-goals, but this query has multiple sub-goals---the error report may be inaccurate")
+              | uu___3 -> ());
+             FStar_Compiler_Effect.op_Bar_Greater settings.query_all_labels
+               (FStar_Compiler_List.collect
+                  (fun uu___3 ->
+                     match uu___3 with
+                     | (uu___4, msg, rng) ->
+                         let uu___5 =
+                           let uu___6 =
+                             let uu___7 = FStar_Errors.get_ctx () in
+                             (FStar_Errors.Error_Z3SolverError, msg, rng,
+                               uu___7) in
+                           [uu___6] in
+                         FStar_TypeChecker_Err.errors_smt_detail
+                           settings.query_env uu___5
+                           (FStar_Pervasives.Inl "")))) in
     (let uu___ = FStar_Options.detail_errors () in
      if uu___
      then
@@ -1685,31 +1694,25 @@ let rec (do_solve :
                                        Prims.int_one) in
                                 if uu___6
                                 then
-                                  ((let uu___8 = FStar_Options.debug_any () in
-                                    if uu___8
-                                    then
-                                      let uu___9 =
-                                        FStar_TypeChecker_Env.get_range
-                                          tcenv1 in
-                                      let uu___10 =
-                                        let uu___11 =
-                                          FStar_Syntax_Print.term_to_string q in
-                                        let uu___12 =
-                                          FStar_SMTEncoding_Term.declToSmt ""
-                                            qry in
-                                        let uu___13 =
-                                          FStar_Compiler_Util.string_of_int
-                                            (FStar_Compiler_List.length
-                                               labels) in
-                                        FStar_Compiler_Util.format3
-                                          "Encoded split query %s\nto %s\nwith %s labels"
-                                          uu___11 uu___12 uu___13 in
-                                      FStar_Errors.diag uu___9 uu___10
-                                    else ());
-                                   FStar_TypeChecker_Err.log_issue tcenv1
-                                     tcenv1.FStar_TypeChecker_Env.range
-                                     (FStar_Errors.Warning_SplitAndRetryQueries,
-                                       "Verification condition was to be split into several atomic sub-goals, \nbut this query has multiple sub-goals---the error report, if any, may be \ninaccurate"))
+                                  let uu___7 = FStar_Options.debug_any () in
+                                  (if uu___7
+                                   then
+                                     let uu___8 =
+                                       FStar_TypeChecker_Env.get_range tcenv1 in
+                                     let uu___9 =
+                                       let uu___10 =
+                                         FStar_Syntax_Print.term_to_string q in
+                                       let uu___11 =
+                                         FStar_SMTEncoding_Term.declToSmt ""
+                                           qry in
+                                       let uu___12 =
+                                         FStar_Compiler_Util.string_of_int
+                                           (FStar_Compiler_List.length labels) in
+                                       FStar_Compiler_Util.format3
+                                         "Encoded split query %s\nto %s\nwith %s labels"
+                                         uu___10 uu___11 uu___12 in
+                                     FStar_Errors.diag uu___8 uu___9
+                                   else ())
                                 else ());
                                ask_and_report_errors is_retry tcenv1 labels
                                  prefix qry suffix;
@@ -1742,7 +1745,7 @@ let rec (do_solve :
                    FStar_TypeChecker_Err.log_issue tcenv
                      tcenv.FStar_TypeChecker_Env.range
                      (FStar_Errors.Warning_SplitAndRetryQueries,
-                       "The verification condition succeeded after splitting it to localize potential errors,\nalthough the original non-split verification condition failed.\nIf you want to rely on splitting queries for verifying your program \nplease use the --split_queries option rather than relying on it implicitly.")
+                       "The verification condition succeeded after splitting it to localize potential errors, although the original non-split verification condition failed. If you want to rely on splitting queries for verifying your program please use the --split_queries option rather than relying on it implicitly.")
                  else ()))
            | FStar_SMTEncoding_Env.Inner_let_rec names ->
                (pop ();

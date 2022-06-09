@@ -210,41 +210,28 @@ let comb_list (rs : list (tres_m 'a)) : tres_m (list 'a) =
 let emit (gs : list goal) (m : tres_m 'a) : tres_m 'a =
     comb2 (fun () x -> x) (Simplified ((), gs)) m
 
-let non_strict (f:pol) = 
-  match f with
-  | StrictlyPositive -> Pos
-  | _ -> f
-  
-let rec traverse (should_descend: term -> bool)
-                 (f: pol -> Env.env -> term -> tres)
-                 (pol:pol)
-                 (e:Env.env)
-                 (t:term) : tres =
-    let traverse = traverse should_descend in
+let rec traverse (f: pol -> Env.env -> term -> tres) (pol:pol) (e:Env.env) (t:term) : tres =
     let r =
-        let t = SS.compress t in
-        if not (should_descend t) then tpure t.n
-        else begin
-          match t.n with
-          | Tm_uinst (t,us) -> let tr = traverse f pol e t in
-                              comb1 (fun t' -> Tm_uinst (t', us)) tr
-    
-          | Tm_meta (t, m) -> let tr = traverse f pol e t in
-                             comb1 (fun t' -> Tm_meta (t', m)) tr
+        match (SS.compress t).n with
+        | Tm_uinst (t,us) -> let tr = traverse f pol e t in
+                             comb1 (fun t' -> Tm_uinst (t', us)) tr
 
-          | Tm_app ({ n = Tm_fvar fv }, [(p,_); (q,_)]) when S.fv_eq_lid fv PC.imp_lid ->
-                 // ==> is specialized to U_zero
+        | Tm_meta (t, m) -> let tr = traverse f pol e t in
+                            comb1 (fun t' -> Tm_meta (t', m)) tr
+
+        | Tm_app ({ n = Tm_fvar fv }, [(p,_); (q,_)]) when S.fv_eq_lid fv PC.imp_lid ->
+               // ==> is specialized to U_zero
                let x = S.new_bv None p in
                let r1 = traverse f (flip pol)  e                p in
                let r2 = traverse f       pol  (Env.push_bv e x) q in
                comb2 (fun l r -> (U.mk_imp l r).n) r1 r2
 
-          (* p <==> q is special, each side is bipolar *)
-          (* So we traverse its arguments with pol = Both, and negative and positive versions *)
-          (* of p and q *)
-          (* then we return (in general) (p- ==> q+) /\ (q- ==> p+) *)
-          (* But if neither side ran tactics, we just keep p <==> q *)
-          | Tm_app ({ n = Tm_fvar fv }, [(p,_); (q,_)]) when S.fv_eq_lid fv PC.iff_lid ->
+        (* p <==> q is special, each side is bipolar *)
+        (* So we traverse its arguments with pol = Both, and negative and positive versions *)
+        (* of p and q *)
+        (* then we return (in general) (p- ==> q+) /\ (q- ==> p+) *)
+        (* But if neither side ran tactics, we just keep p <==> q *)
+        | Tm_app ({ n = Tm_fvar fv }, [(p,_); (q,_)]) when S.fv_eq_lid fv PC.iff_lid ->
                // <==> is specialized to U_zero
                let xp = S.new_bv None p in
                let xq = S.new_bv None q in
@@ -261,30 +248,15 @@ let rec traverse (should_descend: term -> bool)
                   Simplified (t.n, gs1@gs2)
                end
 
-          | Tm_app (hd, args) ->
-            begin
-            match (U.un_uinst hd).n, args with
-            | Tm_fvar fv, [(t, Some aq0); (body, aq)]
-               when S.fv_eq_lid fv PC.forall_lid &&
-                    S.fv_eq_lid fv PC.exists_lid &&               
-                    aq0.aqual_implicit ->
-                let r0 = traverse f pol e hd in
-                let rt = traverse f (flip pol) e t in
-                let rbody = traverse f pol e body in
-                let rargs = comb2 (fun t body -> [(t, Some aq0); (body, aq)]) rt rbody in
-                comb2 (fun hd args -> Tm_app (hd, args)) r0 rargs
-
-
-            | _ -> 
+        | Tm_app (hd, args) ->
                 let r0 = traverse f pol e hd in
                 let r1 = List.fold_right (fun (a, q) r ->
                                               let r' = traverse f pol e a in
                                               comb2 (fun a args -> (a, q)::args) r' r)
                                                  args (tpure []) in
                 comb2 (fun hd args -> Tm_app (hd, args)) r0 r1
-            end
 
-          | Tm_abs (bs, t, k) ->
+        | Tm_abs (bs, t, k) ->
                 // TODO: traverse k?
                 let bs, topen = SS.open_term bs t in
                 let e' = Env.push_binders e bs in
@@ -297,11 +269,11 @@ let rec traverse (should_descend: term -> bool)
                 let rt = traverse f pol e' topen in
                 comb2 (fun bs t -> (U.abs bs t k).n) rbs rt
 
-          | Tm_ascribed (t, asc, ef) ->
+        | Tm_ascribed (t, asc, ef) ->
             // TODO: traverse the types?
             comb1 (fun t -> Tm_ascribed (t, asc, ef)) (traverse f pol e t)
 
-          | Tm_match (sc, asc_opt, brs, lopt) ->  //AR: not traversing the return annotation
+        | Tm_match (sc, asc_opt, brs, lopt) ->  //AR: not traversing the return annotation
             comb2 (fun sc brs -> Tm_match (sc, asc_opt, brs, lopt))
                   (traverse f pol e sc)
                   (comb_list (List.map (fun br -> let (pat, w, exp) = SS.open_branch br in
@@ -310,10 +282,8 @@ let rec traverse (should_descend: term -> bool)
                                                   let r = traverse f pol e exp in
                                                   comb1 (fun exp -> SS.close_branch (pat, w, exp)) r) brs))
 
-          | x ->
-            tpure x
-        end
-    in
+        | x ->
+            tpure x in
     match r with
     | Unchanged tn' ->
         f pol e ({ t with n = tn' })
@@ -336,7 +306,7 @@ let preprocess (env:Env.env) (goal:term) : list (Env.env * term * O.optionstate)
     let initial = (1, []) in
     // This match should never fail
     let (t', gs) =
-        match traverse (fun _ -> true) by_tactic_interp StrictlyPositive env goal with
+        match traverse by_tactic_interp Pos env goal with
         | Unchanged t' -> (t', [])
         | Simplified (t', gs) -> (t', gs)
         | _ -> failwith "preprocess: impossible, traverse returned a Dual"
@@ -373,12 +343,12 @@ let rec traverse_for_spinoff
                  (label_ctx:option (string & Range.range))
                  (e:Env.env)
                  (t:term) : tres =
-    let debug = Env.debug e (O.Other "SpinoffAll") in                 
+    let debug = Env.debug e (O.Other "SpinoffAll") in
     let traverse pol e t = traverse_for_spinoff pol label_ctx e t in
-    let should_descend' enable_debug (t:term) = 
+    let should_descend' enable_debug (t:term) =
         //descend only into the following connectives
         let hd, args = U.head_and_args t in
-        let res = 
+        let res =
           match (U.un_uinst hd).n with
           | Tm_fvar fv ->
             S.fv_eq_lid fv PC.and_lid ||
@@ -390,13 +360,13 @@ let rec traverse_for_spinoff
           | Tm_ascribed _
           | Tm_abs _ ->
             true
-            
+
           | _ ->
             false
           in
           if debug && enable_debug
           then BU.print3 "should_descend (%s) (%s) %s\n"
-                         (string_of_bool res)                
+                         (string_of_bool res)
                          (Print.tag_of_term hd)
                          (Print.term_to_string hd);
           res
@@ -406,9 +376,9 @@ let rec traverse_for_spinoff
                       (label_ctx:option (string & Range.range))
                       (e:Env.env)
                       (t:term)
-      : tres = 
-        let label_goal t = 
-            let t = 
+      : tres =
+        let label_goal (env, t) =
+            let t =
               match (SS.compress t).n, label_ctx with
               | Tm_meta(_, Meta_labeled _), _ -> t
               | _, Some (msg, r) -> TcUtil.label msg r t
@@ -419,54 +389,13 @@ let rec traverse_for_spinoff
               then t
               else U.mk_auto_squash U_zero t
             in
-            fst (goal_of_goal_ty e t)
-        in
-        let maybe_split_matches t = 
-            match (SS.compress t).n with
-            | Tm_match (sc, asc_opt, branches, ret) ->
-              //split a match goal into n sub-goals
-              //where each of them has only a single non-trivial branch
-              let retain_branch_i (i:int) br' = 
-                branches |>
-                List.mapi (fun j br ->
-                  if i = j then br'
-                  else let (pat, w, exp) = br in
-                       (pat, w, U.t_true))
-              in
-              let sub_goals =
-                branches |>
-                List.mapi (fun i (br:(pat & option term & term)) ->
-                  let (pat, w, exp) = SS.open_branch br in
-                  let bvs = S.pat_bvs pat in
-                  let e = Env.push_bvs e bvs in
-                  match traverse pol e exp with
-                  | Unchanged t' ->
-                    let branches = retain_branch_i i br in
-                    [S.mk (Tm_match (sc, asc_opt, branches, ret)) t.pos]
-                  | Simplified (t', gs) ->
-                    let branches_l = 
-                      retain_branch_i i (SS.close_branch (pat, w, t'))
-                      :: (
-                      gs |> List.map  (fun g ->
-                      let exp = goal_type g in
-                        retain_branch_i i (SS.close_branch (pat, w, exp)))
-                      )
-                    in
-                    branches_l |>
-                    List.map (fun branches ->
-                      S.mk (Tm_match (sc, asc_opt, branches, ret)) t.pos)) |>
-                List.flatten
-              in
-              List.map label_goal sub_goals
-
-            | _ -> [label_goal t]
+            fst (goal_of_goal_ty env t)
         in
         let spinoff t =
           match pol with
           | StrictlyPositive ->
-            let sub_goals = maybe_split_matches t in
-            Simplified (FStar.Syntax.Util.t_true, sub_goals)
-                      
+            Simplified (FStar.Syntax.Util.t_true, [label_goal (e,t)])
+
           | _ ->
             Unchanged t
         in
@@ -478,11 +407,11 @@ let rec traverse_for_spinoff
     let split_boolean_conjunction t =
         let hd, args = U.head_and_args t in
         match (U.un_uinst hd).n, args with
-        | Tm_fvar fv, [(t, _)] 
+        | Tm_fvar fv, [(t, _)]
             when S.fv_eq_lid fv PC.b2t_lid -> (
           let hd, args = U.head_and_args t in
           match (U.un_uinst hd).n, args with
-          | Tm_fvar fv, [(t0, _); (t1, _)] 
+          | Tm_fvar fv, [(t0, _); (t1, _)]
             when S.fv_eq_lid fv PC.op_And ->
             Some (t0, t1)
           | _ ->
@@ -490,7 +419,7 @@ let rec traverse_for_spinoff
         )
        | _ -> None
     in
-    let traverse_ctx pol ctx e t = 
+    let traverse_ctx pol ctx e t =
       let print_lc (msg, rng) =
         BU.format3 "(%s,%s) : %s"
           (Range.string_of_def_range rng)
@@ -504,7 +433,7 @@ let rec traverse_for_spinoff
               | Some lc -> print_lc lc)
              (print_lc ctx);
        traverse_for_spinoff pol (Some ctx) e t
-    in    
+    in
     match split_boolean_conjunction t with
     | Some (t0, t1) ->
       //rewrite b2t (a && b) as (b2t a /\ b2t b) and recurse
@@ -521,9 +450,9 @@ let rec traverse_for_spinoff
             comb1 (fun t' -> Tm_uinst (t', us)) tr
 
           | Tm_meta (t, Meta_labeled(msg, r, _)) ->
-            let tr = traverse_ctx pol (msg, r) e t in 
+            let tr = traverse_ctx pol (msg, r) e t in
             comb1 (fun t' -> Tm_meta (t', Meta_labeled(msg, r, false))) tr
-            
+
           | Tm_meta (t, m) ->
             let tr = traverse pol e t in
             comb1 (fun t' -> Tm_meta (t', m)) tr
@@ -544,7 +473,7 @@ let rec traverse_for_spinoff
             match (U.un_uinst hd).n, args with
             | Tm_fvar fv, [(t, Some aq0); (body, aq)]
                when (S.fv_eq_lid fv PC.forall_lid ||
-                     S.fv_eq_lid fv PC.exists_lid) &&              
+                     S.fv_eq_lid fv PC.exists_lid) &&
                     aq0.aqual_implicit ->
                 let r0 = traverse pol e hd in
                 let rt = traverse (flip pol) e t in
@@ -552,14 +481,14 @@ let rec traverse_for_spinoff
                 let rargs = comb2 (fun t body -> [(t, Some aq0); (body, aq)]) rt rbody in
                 comb2 (fun hd args -> Tm_app (hd, args)) r0 rargs
 
-            | _ -> 
+            | _ ->
                 let r0 = traverse pol e hd in
-                let r1 = 
-                  List.fold_right 
+                let r1 =
+                  List.fold_right
                     (fun (a, q) r ->
                        let r' = traverse pol e a in
                        comb2 (fun a args -> (a, q)::args) r' r)
-                    args 
+                    args
                     (tpure [])
                 in
                 comb2 (fun hd args -> Tm_app (hd, args)) r0 r1
@@ -599,7 +528,7 @@ let pol_to_string = function
   | Pos -> "Positive"
   | Neg -> "Negative"
   | Both -> "Both"
-  
+
 let spinoff_strictly_positive_goals (env:Env.env) (goal:term)
   : list (Env.env * term)
   = let debug = Env.debug env (O.Other "SpinoffAll") in
@@ -612,34 +541,34 @@ let spinoff_strictly_positive_goals (env:Env.env) (goal:term)
           | Simplified (t', gs) -> (t', gs)
           | _ -> failwith "preprocess: impossible, traverse returned a Dual"
       in
-      let t' = 
+      let t' =
           N.normalize [Env.Eager_unfolding; Env.Simplify; Env.Primops] env t'
       in
-      let main_goal = 
+      let main_goal =
         let t = FStar.TypeChecker.Common.check_trivial t' in
         match t with
         | Trivial -> []
         | NonTrivial t ->
           if debug
-          then 
+          then
             BU.print2 "Main goal simplified to: %s |- %s\n"
                             (Env.all_binders env |> Print.binders_to_string ", ")
                             (Print.term_to_string t');
           FStar.TypeChecker.Err.log_issue
             env
             env.range
-            (Errors.Warning_SplitAndRetryQueries, 
-             "Verification condition was to be split into several atomic sub-goals, \n\
-              but this query had some sub-goals that couldn't be split---the error report, if any, may be \n\
+            (Errors.Warning_SplitAndRetryQueries,
+             "Verification condition was to be split into several atomic sub-goals, \
+              but this query had some sub-goals that couldn't be split---the error report, if any, may be \
               inaccurate");
             [(env, t)]
-      in 
+      in
       let s = initial in
-      let s = 
-        List.fold_left 
+      let s =
+        List.fold_left
           (fun (n,gs) g ->
              let phi = goal_type g in
-             if debug 
+             if debug
              then BU.print2 "Got goal #%s: %s\n" (string_of_int n) (Print.term_to_string (goal_type g));
              (n+1, (goal_env g, phi)::gs))
           s
@@ -647,9 +576,9 @@ let spinoff_strictly_positive_goals (env:Env.env) (goal:term)
       in
       let (_, gs) = s in
       let gs = List.rev gs in (* Return new VCs in same order as goals *)
-      let gs = 
+      let gs =
         gs |>
-        List.filter_map 
+        List.filter_map
           (fun (env, t) ->
             let t = N.normalize [Env.Eager_unfolding; Env.Simplify; Env.Primops] env t in
             match FStar.TypeChecker.Common.check_trivial t with

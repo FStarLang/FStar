@@ -361,6 +361,17 @@ let errors_to_report (settings : query_settings) : list Errors.error =
             else (
               //if it can't be split further, report all its labels as potential failures
               //typically there will be only 1 label
+              let _ =
+                match settings.query_all_labels with
+                | _::_::_->
+                  FStar.TypeChecker.Err.log_issue
+                    settings.query_env
+                    (Env.get_range settings.query_env)
+                    (Errors.Warning_SplitAndRetryQueries,
+                    "The verification condition was to be split into several atomic sub-goals, \
+                      but this query has multiple sub-goals---the error report may be inaccurate")
+                | _ -> ()
+              in
               settings.query_all_labels |>
                  List.collect (fun (_, msg, rng) ->
                    FStar.TypeChecker.Err.errors_smt_detail
@@ -697,7 +708,7 @@ let ask_and_report_errors is_being_retried env all_labels prefix query suffix : 
     let all_configs =
       if is_being_retried
       then [default_settings]
-      else 
+      else
         use_hints_setting
         @ [default_settings]
         @ initial_fuel_max_ifuel
@@ -929,31 +940,23 @@ let rec do_solve is_retry use_env_msg tcenv q : unit =
       match qry with
       | Assume({assumption_term={tm=App(FalseOp, _)}}) -> pop()
       | _ when tcenv.admit -> pop()
-      
+
       | Assume _ ->
         if (is_retry || Options.split_queries())
         && List.length labels <> 1
         then (
           if Options.debug_any()
-          then 
-            FStar.Errors.diag 
+          then
+            FStar.Errors.diag
               (Env.get_range tcenv)
               (BU.format3 "Encoded split query %s\nto %s\nwith %s labels"
                           (Print.term_to_string q)
                           (Term.declToSmt "" qry)
-                          (BU.string_of_int (List.length labels)));
-                          
-          FStar.TypeChecker.Err.log_issue
-            tcenv
-            tcenv.range
-            (Errors.Warning_SplitAndRetryQueries, 
-             "Verification condition was to be split into several atomic sub-goals, \n\
-              but this query has multiple sub-goals---the error report, if any, may be \n\
-              inaccurate")
+                          (BU.string_of_int (List.length labels)))
         );
-        
+
         ask_and_report_errors is_retry tcenv labels prefix qry suffix;
-                
+
         pop ()
 
       | _ -> failwith "Impossible"
@@ -963,29 +966,29 @@ let rec do_solve is_retry use_env_msg tcenv q : unit =
         if is_retry
         then failwith "Impossible: retried queries should always produce an error report\
                        and cannot be split and retried further";
-        
-        let _ = 
+
+        let _ =
           match Env.split_smt_query tcenv q with
-          | None -> 
+          | None ->
             failwith "Impossible: split_query callback is not set"
-            
+
           | Some goals ->
             goals |> List.iter (fun (env, goal) -> do_solve true use_env_msg env goal)
         in
-        
+
         if FStar.Errors.get_err_count() = 0
         then ( //query succeeded after a retry
           FStar.TypeChecker.Err.log_issue
             tcenv
             tcenv.range
-            (Errors.Warning_SplitAndRetryQueries, 
-             "The verification condition succeeded after splitting it to localize potential errors,\n\
-              although the original non-split verification condition failed.\n\
-              If you want to rely on splitting queries for verifying your program \n\
+            (Errors.Warning_SplitAndRetryQueries,
+             "The verification condition succeeded after splitting it to localize potential errors, \
+              although the original non-split verification condition failed. \
+              If you want to rely on splitting queries for verifying your program \
               please use the --split_queries option rather than relying on it implicitly.")
          )
 
-        
+
       | FStar.SMTEncoding.Env.Inner_let_rec names ->  //can be raised by encode_query
         pop ();  //AR: Important, we push-ed before encode_query was called
         FStar.TypeChecker.Err.log_issue
@@ -1034,7 +1037,7 @@ let dummy = {
     rollback=(fun _ _ -> ());
     encode_sig=(fun _ _ -> ());
     preprocess=(fun e g -> [e,g, FStar.Options.peek ()]);
-    spinoff_strictly_positive_goals = None;    
+    spinoff_strictly_positive_goals = None;
     handle_smt_goal=(fun e g -> [e,g]);
     solve=(fun _ _ _ -> ());
     finish=(fun () -> ());
