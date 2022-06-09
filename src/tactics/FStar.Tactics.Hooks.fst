@@ -640,7 +640,15 @@ let spinoff_strictly_positive_goals (env:Env.env) (goal:term)
       in
       let (_, gs) = s in
       let gs = List.rev gs in (* Return new VCs in same order as goals *)
-
+      let gs = 
+        gs |>
+        List.filter_map 
+          (fun (env, t) ->
+            let t = N.normalize [Env.Eager_unfolding; Env.Simplify; Env.Primops] env t in
+            match FStar.TypeChecker.Common.check_trivial t with
+            | Trivial -> None
+            | NonTrivial t -> Some (env, t))
+      in
       FStar.Errors.diag (Env.get_range env)
               (BU.format1 "Split query into %s sub-goals" (BU.string_of_int (List.length gs)));
 

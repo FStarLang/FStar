@@ -1195,15 +1195,36 @@ let (spinoff_strictly_positive_goals :
                  match uu___3 with
                  | (uu___4, gs1) ->
                      let gs2 = FStar_Compiler_List.rev gs1 in
+                     let gs3 =
+                       FStar_Compiler_Effect.op_Bar_Greater gs2
+                         (FStar_Compiler_List.filter_map
+                            (fun uu___5 ->
+                               match uu___5 with
+                               | (env1, t) ->
+                                   let t1 =
+                                     FStar_TypeChecker_Normalize.normalize
+                                       [FStar_TypeChecker_Env.Eager_unfolding;
+                                       FStar_TypeChecker_Env.Simplify;
+                                       FStar_TypeChecker_Env.Primops] env1 t in
+                                   let uu___6 =
+                                     FStar_TypeChecker_Common.check_trivial
+                                       t1 in
+                                   (match uu___6 with
+                                    | FStar_TypeChecker_Common.Trivial ->
+                                        FStar_Pervasives_Native.None
+                                    | FStar_TypeChecker_Common.NonTrivial t2
+                                        ->
+                                        FStar_Pervasives_Native.Some
+                                          (env1, t2)))) in
                      ((let uu___6 = FStar_TypeChecker_Env.get_range env in
                        let uu___7 =
                          let uu___8 =
                            FStar_Compiler_Util.string_of_int
-                             (FStar_Compiler_List.length gs2) in
+                             (FStar_Compiler_List.length gs3) in
                          FStar_Compiler_Util.format1
                            "Split query into %s sub-goals" uu___8 in
                        FStar_Errors.diag uu___6 uu___7);
-                      gs2))))
+                      gs3))))
 let (synthesize :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.typ ->
