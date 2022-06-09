@@ -658,17 +658,20 @@ let rec (traverse_for_spinoff :
                     uu___2.FStar_Syntax_Syntax.n in
                   match uu___1 with
                   | FStar_Syntax_Syntax.Tm_fvar fv ->
-                      (((FStar_Syntax_Syntax.fv_eq_lid fv
-                           FStar_Parser_Const.and_lid)
+                      ((((FStar_Syntax_Syntax.fv_eq_lid fv
+                            FStar_Parser_Const.and_lid)
+                           ||
+                           (FStar_Syntax_Syntax.fv_eq_lid fv
+                              FStar_Parser_Const.imp_lid))
                           ||
                           (FStar_Syntax_Syntax.fv_eq_lid fv
-                             FStar_Parser_Const.imp_lid))
+                             FStar_Parser_Const.forall_lid))
                          ||
                          (FStar_Syntax_Syntax.fv_eq_lid fv
-                            FStar_Parser_Const.forall_lid))
+                            FStar_Parser_Const.auto_squash_lid))
                         ||
                         (FStar_Syntax_Syntax.fv_eq_lid fv
-                           FStar_Parser_Const.auto_squash_lid)
+                           FStar_Parser_Const.squash_lid)
                   | FStar_Syntax_Syntax.Tm_meta uu___2 -> true
                   | FStar_Syntax_Syntax.Tm_ascribed uu___2 -> true
                   | FStar_Syntax_Syntax.Tm_abs uu___2 -> true
@@ -889,11 +892,46 @@ let rec (traverse_for_spinoff :
                                            (fun a1 ->
                                               fun args1 -> (a1, q) :: args1)
                                            r' r2) args (tpure []) in
-                            comb2
-                              (fun hd1 ->
-                                 fun args1 ->
-                                   FStar_Syntax_Syntax.Tm_app (hd1, args1))
-                              r0 r1)
+                            let uu___6 =
+                              let uu___7 = FStar_Syntax_Util.un_uinst hd in
+                              uu___7.FStar_Syntax_Syntax.n in
+                            (match uu___6 with
+                             | FStar_Syntax_Syntax.Tm_fvar fv when
+                                 FStar_Syntax_Syntax.fv_eq_lid fv
+                                   FStar_Parser_Const.squash_lid
+                                 ->
+                                 comb2
+                                   (fun hd1 ->
+                                      fun args1 ->
+                                        let uu___7 =
+                                          let uu___8 =
+                                            let uu___9 =
+                                              FStar_Syntax_Util.un_uinst hd1 in
+                                            uu___9.FStar_Syntax_Syntax.n in
+                                          (uu___8, args1) in
+                                        match uu___7 with
+                                        | (FStar_Syntax_Syntax.Tm_fvar fv1,
+                                           (t2, uu___8)::[]) when
+                                            (FStar_Syntax_Syntax.fv_eq_lid
+                                               fv1
+                                               FStar_Parser_Const.squash_lid)
+                                              &&
+                                              (let uu___9 =
+                                                 FStar_Syntax_Util.eq_tm t2
+                                                   FStar_Syntax_Util.t_true in
+                                               uu___9 =
+                                                 FStar_Syntax_Util.Equal)
+                                            ->
+                                            FStar_Syntax_Util.t_true.FStar_Syntax_Syntax.n
+                                        | uu___8 ->
+                                            FStar_Syntax_Syntax.Tm_app
+                                              (hd1, args1)) r0 r1
+                             | uu___7 ->
+                                 comb2
+                                   (fun hd1 ->
+                                      fun args1 ->
+                                        FStar_Syntax_Syntax.Tm_app
+                                          (hd1, args1)) r0 r1))
                    | FStar_Syntax_Syntax.Tm_abs (bs, t2, k) ->
                        let uu___4 = FStar_Syntax_Subst.open_term bs t2 in
                        (match uu___4 with

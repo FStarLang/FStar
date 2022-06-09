@@ -354,7 +354,8 @@ let rec traverse_for_spinoff
             S.fv_eq_lid fv PC.and_lid ||
             S.fv_eq_lid fv PC.imp_lid ||
             S.fv_eq_lid fv PC.forall_lid ||
-            S.fv_eq_lid fv PC.auto_squash_lid
+            S.fv_eq_lid fv PC.auto_squash_lid ||
+            S.fv_eq_lid fv PC.squash_lid
 
           | Tm_meta _
           | Tm_ascribed _
@@ -491,7 +492,25 @@ let rec traverse_for_spinoff
                     args
                     (tpure [])
                 in
-                comb2 (fun hd args -> Tm_app (hd, args)) r0 r1
+                match (U.un_uinst hd).n with
+                | Tm_fvar fv
+                  when (S.fv_eq_lid fv PC.squash_lid) ->
+                  comb2
+                    (fun hd args ->
+                       match (U.un_uinst hd).n, args with
+                       | Tm_fvar fv, [(t, _)]
+                         when S.fv_eq_lid fv PC.squash_lid &&
+                              U.eq_tm t U.t_true = U.Equal ->
+                         //simplify squash True to True
+                         //important for simplifying queries to Trivial
+                         U.t_true.n
+
+                       | _ ->
+                         Tm_app (hd, args))
+                    r0 r1                  
+
+                | _ -> 
+                  comb2 (fun hd args -> Tm_app (hd, args)) r0 r1
             end
 
           | Tm_abs (bs, t, k) ->

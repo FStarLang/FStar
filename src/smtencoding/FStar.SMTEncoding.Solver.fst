@@ -218,7 +218,8 @@ type query_settings = {
     query_all_labels:error_labels;
     query_suffix:list decl;
     query_hash:option string;
-    query_can_be_split_and_retried:bool
+    query_can_be_split_and_retried:bool;
+    query_term: FStar.Syntax.Syntax.term;
 }
 
 
@@ -361,18 +362,38 @@ let errors_to_report (settings : query_settings) : list Errors.error =
             else (
               //if it can't be split further, report all its labels as potential failures
               //typically there will be only 1 label
-              let _ =
-                match settings.query_all_labels with
-                | _::_::_->
+              let l = List.length settings.query_all_labels in
+              let labels =
+                if l = 0
+                then (
+                  //this should really never happen, but if it does, we have a query
+                  //with no labeled sub-goals and so no error location to report.
+                  //So, print the source location and the query term itself
+                  let dummy_fv = Term.mk_fv ("", dummy_sort) in
+                  let msg = 
+                    BU.format1 "Failed to prove the following goal, although it appears to be trivial: %s"
+                               (Print.term_to_string settings.query_term)
+                  in
+                  let range = Env.get_range settings.query_env in
+                  [dummy_fv, msg, range]
+                )
+                else if l > 1
+                then (
+                  //we have a non-unique label despite splitting
+                  //this CAN happen, e.g., if the original query term is a `match`
+                  //In this case, we couldn't split it and then if it fails without producing a model,
+                  //we blame all the labels in the query. So warn about the imprecision.
                   FStar.TypeChecker.Err.log_issue
-                    settings.query_env
-                    (Env.get_range settings.query_env)
-                    (Errors.Warning_SplitAndRetryQueries,
-                    "The verification condition was to be split into several atomic sub-goals, \
-                      but this query has multiple sub-goals---the error report may be inaccurate")
-                | _ -> ()
+                       settings.query_env
+                       (Env.get_range settings.query_env)
+                       (Errors.Warning_SplitAndRetryQueries,
+                         "The verification condition was to be split into several atomic sub-goals, \
+                          but this query has multiple sub-goals---the error report may be inaccurate");
+                  settings.query_all_labels
+                )
+                else settings.query_all_labels
               in
-              settings.query_all_labels |>
+              labels |>
                  List.collect (fun (_, msg, rng) ->
                    FStar.TypeChecker.Err.errors_smt_detail
                      settings.query_env
@@ -638,7 +659,7 @@ let collect (l : list 'a) : list ('a * int) =
     in
     List.fold_left add_one acc l
 
-let ask_and_report_errors is_being_retried env all_labels prefix query suffix : unit =
+let ask_and_report_errors is_being_retried env all_labels prefix query query_term suffix : unit =
     Z3.giveZ3 prefix; //feed the context of the query to the solver
 
     let default_settings, next_hint =
@@ -670,6 +691,7 @@ let ask_and_report_errors is_being_retried env all_labels prefix query suffix : 
                         | None -> None
                         | Some {hash=h} -> h);
             query_can_be_split_and_retried=not is_being_retried;
+            query_term=query_term
         } in
         default_settings, next_hint
     in
@@ -955,7 +977,7 @@ let rec do_solve is_retry use_env_msg tcenv q : unit =
                           (BU.string_of_int (List.length labels)))
         );
 
-        ask_and_report_errors is_retry tcenv labels prefix qry suffix;
+        ask_and_report_errors is_retry tcenv labels prefix qry q suffix;
 
         pop ()
 
