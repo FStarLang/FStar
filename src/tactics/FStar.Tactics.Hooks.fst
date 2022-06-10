@@ -361,7 +361,7 @@ let rec traverse_for_spinoff
              (print_lc ctx);
        traverse_for_spinoff pol (Some ctx) e t
     in
-    let should_descend' enable_debug (t:term) =
+    let should_descend (t:term) =
         //descend only into the following connectives
         let hd, args = U.head_and_args t in
         let res =
@@ -381,14 +381,8 @@ let rec traverse_for_spinoff
           | _ ->
             false
           in
-          if debug && enable_debug
-          then BU.print3 "should_descend (%s) (%s) %s\n"
-                         (string_of_bool res)
-                         (Print.tag_of_term hd)
-                         (Print.term_to_string hd);
           res
     in
-    let should_descend = should_descend' true in
     let maybe_spinoff pol
                       (label_ctx:option (string & Range.range))
                       (e:Env.env)
@@ -418,7 +412,7 @@ let rec traverse_for_spinoff
             Unchanged t
         in
         let t = SS.compress t in
-        if not (should_descend' false t)
+        if not (should_descend t)
         then spinoff t
         else Unchanged t
     in
@@ -589,8 +583,6 @@ let rec traverse_for_spinoff
 
                        | _ ->
                          let t' = Tm_app (hd, args) in
-                         if debug
-                         then BU.print1 "Rebuilding term %s\n" (Print.term_to_string (S.mk t' t.pos));
                          t')
                     r0 r1                  
             end
@@ -652,18 +644,19 @@ let spinoff_strictly_positive_goals (env:Env.env) (goal:term)
         | Trivial -> []
         | NonTrivial t ->
           if debug
-          then
-            BU.print2 "Main goal simplified to: %s |- %s\n"
+          then (
+            let msg = BU.format2 "Main goal simplified to: %s |- %s\n"
                             (Env.all_binders env |> Print.binders_to_string ", ")
-                            (Print.term_to_string t);
-          FStar.TypeChecker.Err.log_issue
-            env
-            env.range
-            (Errors.Warning_SplitAndRetryQueries,
-             "Verification condition was to be split into several atomic sub-goals, \
-              but this query had some sub-goals that couldn't be split---the error report, if any, may be \
-              inaccurate");
-            [(env, t)]
+                            (Print.term_to_string t) in
+            FStar.Errors.diag
+              (Env.get_range env)
+              (BU.format1 
+               "Verification condition was to be split into several atomic sub-goals, \
+                but this query had some sub-goals that couldn't be split---the error report, if any, may be \
+                inaccurate.\n%s\n"
+               msg)
+          );
+          [(env, t)]
       in
       let s = initial in
       let s =

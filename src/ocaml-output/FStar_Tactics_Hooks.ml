@@ -669,7 +669,7 @@ let rec (traverse_for_spinoff :
             else ();
             traverse_for_spinoff pol2 (FStar_Pervasives_Native.Some ctx) e1
               t1 in
-          let should_descend' enable_debug t1 =
+          let should_descend t1 =
             let uu___ = FStar_Syntax_Util.head_and_args t1 in
             match uu___ with
             | (hd, args) ->
@@ -697,16 +697,7 @@ let rec (traverse_for_spinoff :
                   | FStar_Syntax_Syntax.Tm_ascribed uu___2 -> true
                   | FStar_Syntax_Syntax.Tm_abs uu___2 -> true
                   | uu___2 -> false in
-                (if debug && enable_debug
-                 then
-                   (let uu___2 = FStar_Compiler_Util.string_of_bool res in
-                    let uu___3 = FStar_Syntax_Print.tag_of_term hd in
-                    let uu___4 = FStar_Syntax_Print.term_to_string hd in
-                    FStar_Compiler_Util.print3
-                      "should_descend (%s) (%s) %s\n" uu___2 uu___3 uu___4)
-                 else ();
-                 res) in
-          let should_descend = should_descend' true in
+                res in
           let maybe_spinoff pol2 label_ctx1 e1 t1 =
             let label_goal uu___ =
               match uu___ with
@@ -749,8 +740,7 @@ let rec (traverse_for_spinoff :
               | uu___ -> Unchanged t2 in
             let t2 = FStar_Syntax_Subst.compress t1 in
             let uu___ =
-              let uu___1 = should_descend' false t2 in
-              Prims.op_Negation uu___1 in
+              let uu___1 = should_descend t2 in Prims.op_Negation uu___1 in
             if uu___ then spinoff t2 else Unchanged t2 in
           let rewrite_boolean_conjunction t1 =
             let uu___ = FStar_Syntax_Util.head_and_args t1 in
@@ -1173,18 +1163,7 @@ let rec (traverse_for_spinoff :
                                        let t' =
                                          FStar_Syntax_Syntax.Tm_app
                                            (hd1, args1) in
-                                       (if debug
-                                        then
-                                          (let uu___9 =
-                                             let uu___10 =
-                                               FStar_Syntax_Syntax.mk t'
-                                                 t1.FStar_Syntax_Syntax.pos in
-                                             FStar_Syntax_Print.term_to_string
-                                               uu___10 in
-                                           FStar_Compiler_Util.print1
-                                             "Rebuilding term %s\n" uu___9)
-                                        else ();
-                                        t')) r0 r1)
+                                       t') r0 r1)
                    | FStar_Syntax_Syntax.Tm_abs (bs, t2, k) ->
                        let uu___4 = FStar_Syntax_Subst.open_term bs t2 in
                        (match uu___4 with
@@ -1315,19 +1294,23 @@ let (spinoff_strictly_positive_goals :
                  | FStar_TypeChecker_Common.NonTrivial t1 ->
                      (if debug
                       then
-                        (let uu___4 =
-                           let uu___5 = FStar_TypeChecker_Env.all_binders env in
-                           FStar_Compiler_Effect.op_Bar_Greater uu___5
-                             (FStar_Syntax_Print.binders_to_string ", ") in
-                         let uu___5 = FStar_Syntax_Print.term_to_string t1 in
-                         FStar_Compiler_Util.print2
-                           "Main goal simplified to: %s |- %s\n" uu___4
-                           uu___5)
+                        (let msg =
+                           let uu___4 =
+                             let uu___5 =
+                               FStar_TypeChecker_Env.all_binders env in
+                             FStar_Compiler_Effect.op_Bar_Greater uu___5
+                               (FStar_Syntax_Print.binders_to_string ", ") in
+                           let uu___5 = FStar_Syntax_Print.term_to_string t1 in
+                           FStar_Compiler_Util.format2
+                             "Main goal simplified to: %s |- %s\n" uu___4
+                             uu___5 in
+                         let uu___4 = FStar_TypeChecker_Env.get_range env in
+                         let uu___5 =
+                           FStar_Compiler_Util.format1
+                             "Verification condition was to be split into several atomic sub-goals, but this query had some sub-goals that couldn't be split---the error report, if any, may be inaccurate.\n%s\n"
+                             msg in
+                         FStar_Errors.diag uu___4 uu___5)
                       else ();
-                      FStar_TypeChecker_Err.log_issue env
-                        env.FStar_TypeChecker_Env.range
-                        (FStar_Errors.Warning_SplitAndRetryQueries,
-                          "Verification condition was to be split into several atomic sub-goals, but this query had some sub-goals that couldn't be split---the error report, if any, may be inaccurate");
                       [(env, t1)]) in
                let s = initial in
                let s1 =
