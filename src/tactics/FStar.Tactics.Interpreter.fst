@@ -433,6 +433,10 @@ let () =
         uvar_env RE.e_env (e_option RE.e_term) RE.e_term
         uvar_env NRE.e_env (NBET.e_option NRE.e_term) NRE.e_term;
 
+      mk_tac_step_1 0 "fresh_universe_uvar"
+        fresh_universe_uvar e_unit RE.e_term
+        fresh_universe_uvar NBET.e_unit NRE.e_term;
+
       mk_tac_step_3 0 "unify_env"
         unify_env RE.e_env RE.e_term RE.e_term e_bool
         unify_env NRE.e_env NRE.e_term NRE.e_term NBET.e_bool;
