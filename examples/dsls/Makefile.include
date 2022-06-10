@@ -1,0 +1,3 @@
+%.fst-in %.fst-in:
+	@echo --include ../core
+
