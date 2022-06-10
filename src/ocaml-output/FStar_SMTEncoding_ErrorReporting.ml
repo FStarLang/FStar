@@ -137,8 +137,8 @@ let (label_goals :
               | FStar_SMTEncoding_Term.String uu___1 -> (labels1, q1)
               | FStar_SMTEncoding_Term.Real uu___1 -> (labels1, q1)
               | FStar_SMTEncoding_Term.LblPos uu___1 -> failwith "Impossible"
-              | FStar_SMTEncoding_Term.Labeled (arg, msg1, label_range) when
-                  msg1 = "could not prove post-condition" ->
+              | FStar_SMTEncoding_Term.Labeled
+                  (arg, "could not prove post-condition", label_range) ->
                   let fallback debug_msg =
                     aux default_msg
                       (FStar_Pervasives_Native.Some label_range)
@@ -379,7 +379,7 @@ let (label_goals :
                                        arg in
                                    Prims.op_Hat "arg not a quant: " uu___4 in
                                  fallback uu___3)) ()
-                   with | Not_a_wp_implication msg2 -> fallback msg2)
+                   with | Not_a_wp_implication msg1 -> fallback msg1)
               | FStar_SMTEncoding_Term.Labeled (arg, reason, r1) ->
                   aux reason (FStar_Pervasives_Native.Some r1) post_name_opt
                     labels1 arg

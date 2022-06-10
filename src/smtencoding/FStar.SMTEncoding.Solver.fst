@@ -350,14 +350,23 @@ let errors_to_report (settings : query_settings) : list Errors.error =
              | 0, _, 0 when canceled_count > 0   -> "The SMT query timed out, you might want to increase the rlimit"
              | _, _, _                           -> "Try with --query_stats to get more details") |> Inl
         in
-        match find_localized_errors settings.query_errors with
-        | Some err ->
+        match find_localized_errors settings.query_errors, settings.query_all_labels with
+        | Some err, _ ->
           // FStar.Errors.log_issue settings.query_range (FStar.Errors.Warning_SMTErrorReason, smt_error);
           FStar.TypeChecker.Err.errors_smt_detail settings.query_env err.error_messages smt_error
-        | None ->
+
+        | None, [(_, msg, rng)] ->
+          //we have a unique label already; just report it
+          FStar.TypeChecker.Err.errors_smt_detail
+                     settings.query_env
+                     [(Errors.Error_Z3SolverError, msg, rng, Errors.get_ctx())]
+                     (Inl "")
+
+        | None, _ ->
           //We didn't get a useful countermodel from Z3 to localize an error
           //so, split the query into N unique queries and try again
             if settings.query_can_be_split_and_retried
+            && not (Options.split_queries()) //queries are already split
             then raise SplitQueryAndRetry
             else (
               //if it can't be split further, report all its labels as potential failures
@@ -965,16 +974,17 @@ let rec do_solve is_retry use_env_msg tcenv q : unit =
 
       | Assume _ ->
         if (is_retry || Options.split_queries())
-        && List.length labels <> 1
+        && Options.debug_any()
         then (
-          if Options.debug_any()
-          then
+          let n = List.length labels in
+          if n <> 1
+          then 
             FStar.Errors.diag
-              (Env.get_range tcenv)
-              (BU.format3 "Encoded split query %s\nto %s\nwith %s labels"
+                (Env.get_range tcenv)
+                (BU.format3 "Encoded split query %s\nto %s\nwith %s labels"
                           (Print.term_to_string q)
                           (Term.declToSmt "" qry)
-                          (BU.string_of_int (List.length labels)))
+                          (BU.string_of_int n))
         );
 
         ask_and_report_errors is_retry tcenv labels prefix qry q suffix;

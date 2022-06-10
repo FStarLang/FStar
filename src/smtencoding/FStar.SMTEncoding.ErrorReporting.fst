@@ -40,7 +40,6 @@ let fresh_label : string -> Range.range -> term -> label * term =
     fun message range t ->
         let l = incr ctr; format1 "label_%s" (string_of_int !ctr) in
         let lvar = mk_fv (l, Bool_sort) in
-        //printfn "Generated fresh label %s for %s at range %s" (fst lvar) message (string_of_both_ranges range);
         let label = (lvar, message, range) in
         let lterm = mkFreeV lvar in
         let lt = Term.mkOr(lterm, t) range in
@@ -114,14 +113,14 @@ let label_goals use_env_msg  //when present, provides an alternate error message
 
         | LblPos _ -> failwith "Impossible" //these get added after errorReporting instrumentation only
 
-        | Labeled(arg, msg, label_range)
-          when msg = "could not prove post-condition" ->
+        | Labeled(arg, "could not prove post-condition", label_range) ->
           //printfn "GOT A LABELED WP IMPLICATION\n\t%s"
           //        (Term.print_smt_term q);
           let fallback debug_msg =
             //printfn "FALLING BACK: %s with range %s" msg
             //        (match ropt with None -> "None" | Some r -> Range.string_of_range r);
-            aux default_msg (Some label_range) post_name_opt labels arg in
+            aux default_msg (Some label_range) post_name_opt labels arg
+          in
           begin try
               begin match arg.tm with
                 | Quant(Forall, pats, iopt, post::sorts, {tm=App(Imp, [lhs;rhs]); rng=rng}) ->

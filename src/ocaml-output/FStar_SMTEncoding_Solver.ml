@@ -651,13 +651,27 @@ let (errors_to_report : query_settings -> FStar_Errors.error Prims.list) =
                   | (uu___3, uu___4, uu___5) ->
                       "Try with --query_stats to get more details")
                  (fun uu___3 -> FStar_Pervasives.Inl uu___3)) in
-      let uu___ = find_localized_errors settings.query_errors in
+      let uu___ =
+        let uu___1 = find_localized_errors settings.query_errors in
+        (uu___1, (settings.query_all_labels)) in
       match uu___ with
-      | FStar_Pervasives_Native.Some err ->
+      | (FStar_Pervasives_Native.Some err, uu___1) ->
           FStar_TypeChecker_Err.errors_smt_detail settings.query_env
             err.error_messages smt_error
-      | FStar_Pervasives_Native.None ->
-          if settings.query_can_be_split_and_retried
+      | (FStar_Pervasives_Native.None, (uu___1, msg, rng)::[]) ->
+          let uu___2 =
+            let uu___3 =
+              let uu___4 = FStar_Errors.get_ctx () in
+              (FStar_Errors.Error_Z3SolverError, msg, rng, uu___4) in
+            [uu___3] in
+          FStar_TypeChecker_Err.errors_smt_detail settings.query_env uu___2
+            (FStar_Pervasives.Inl "")
+      | (FStar_Pervasives_Native.None, uu___1) ->
+          let uu___2 =
+            settings.query_can_be_split_and_retried &&
+              (let uu___3 = FStar_Options.split_queries () in
+               Prims.op_Negation uu___3) in
+          if uu___2
           then FStar_Compiler_Effect.raise SplitQueryAndRetry
           else
             (let l = FStar_Compiler_List.length settings.query_all_labels in
@@ -668,38 +682,38 @@ let (errors_to_report : query_settings -> FStar_Errors.error Prims.list) =
                    FStar_SMTEncoding_Term.mk_fv
                      ("", FStar_SMTEncoding_Term.dummy_sort) in
                  let msg =
-                   let uu___2 =
+                   let uu___4 =
                      FStar_Syntax_Print.term_to_string settings.query_term in
                    FStar_Compiler_Util.format1
                      "Failed to prove the following goal, although it appears to be trivial: %s"
-                     uu___2 in
+                     uu___4 in
                  let range =
                    FStar_TypeChecker_Env.get_range settings.query_env in
                  [(dummy_fv, msg, range)]
                else
                  if l > Prims.int_one
                  then
-                   ((let uu___4 =
+                   ((let uu___6 =
                        FStar_TypeChecker_Env.get_range settings.query_env in
                      FStar_TypeChecker_Err.log_issue settings.query_env
-                       uu___4
+                       uu___6
                        (FStar_Errors.Warning_SplitAndRetryQueries,
                          "The verification condition was to be split into several atomic sub-goals, but this query has multiple sub-goals---the error report may be inaccurate"));
                     settings.query_all_labels)
                  else settings.query_all_labels in
              FStar_Compiler_Effect.op_Bar_Greater labels
                (FStar_Compiler_List.collect
-                  (fun uu___2 ->
-                     match uu___2 with
-                     | (uu___3, msg, rng) ->
-                         let uu___4 =
-                           let uu___5 =
-                             let uu___6 = FStar_Errors.get_ctx () in
+                  (fun uu___4 ->
+                     match uu___4 with
+                     | (uu___5, msg, rng) ->
+                         let uu___6 =
+                           let uu___7 =
+                             let uu___8 = FStar_Errors.get_ctx () in
                              (FStar_Errors.Error_Z3SolverError, msg, rng,
-                               uu___6) in
-                           [uu___5] in
+                               uu___8) in
+                           [uu___7] in
                          FStar_TypeChecker_Err.errors_smt_detail
-                           settings.query_env uu___4
+                           settings.query_env uu___6
                            (FStar_Pervasives.Inl "")))) in
     (let uu___ = FStar_Options.detail_errors () in
      if uu___
@@ -1745,29 +1759,26 @@ let rec (do_solve :
                               ((let uu___6 =
                                   (is_retry ||
                                      (FStar_Options.split_queries ()))
-                                    &&
-                                    ((FStar_Compiler_List.length labels) <>
-                                       Prims.int_one) in
+                                    && (FStar_Options.debug_any ()) in
                                 if uu___6
                                 then
-                                  let uu___7 = FStar_Options.debug_any () in
-                                  (if uu___7
+                                  let n = FStar_Compiler_List.length labels in
+                                  (if n <> Prims.int_one
                                    then
-                                     let uu___8 =
+                                     let uu___7 =
                                        FStar_TypeChecker_Env.get_range tcenv1 in
-                                     let uu___9 =
-                                       let uu___10 =
+                                     let uu___8 =
+                                       let uu___9 =
                                          FStar_Syntax_Print.term_to_string q in
-                                       let uu___11 =
+                                       let uu___10 =
                                          FStar_SMTEncoding_Term.declToSmt ""
                                            qry in
-                                       let uu___12 =
-                                         FStar_Compiler_Util.string_of_int
-                                           (FStar_Compiler_List.length labels) in
+                                       let uu___11 =
+                                         FStar_Compiler_Util.string_of_int n in
                                        FStar_Compiler_Util.format3
                                          "Encoded split query %s\nto %s\nwith %s labels"
-                                         uu___10 uu___11 uu___12 in
-                                     FStar_Errors.diag uu___8 uu___9
+                                         uu___9 uu___10 uu___11 in
+                                     FStar_Errors.diag uu___7 uu___8
                                    else ())
                                 else ());
                                ask_and_report_errors is_retry tcenv1 labels

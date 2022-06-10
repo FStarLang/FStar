@@ -343,8 +343,24 @@ let rec traverse_for_spinoff
                  (label_ctx:option (string & Range.range))
                  (e:Env.env)
                  (t:term) : tres =
+    let debug_any = Options.debug_any () in
     let debug = Env.debug e (O.Other "SpinoffAll") in
     let traverse pol e t = traverse_for_spinoff pol label_ctx e t in
+    let traverse_ctx pol ctx e t =
+      let print_lc (msg, rng) =
+        BU.format3 "(%s,%s) : %s"
+          (Range.string_of_def_range rng)
+          (Range.string_of_use_range rng)
+          msg
+      in
+       if debug
+       then BU.print2 "Changing label context from %s to %s"
+             (match label_ctx with
+              | None -> "None"
+              | Some lc -> print_lc lc)
+             (print_lc ctx);
+       traverse_for_spinoff pol (Some ctx) e t
+    in
     let should_descend' enable_debug (t:term) =
         //descend only into the following connectives
         let hd, args = U.head_and_args t in
@@ -395,6 +411,7 @@ let rec traverse_for_spinoff
         let spinoff t =
           match pol with
           | StrictlyPositive ->
+            if debug then BU.print1 "Spinning off %s\n" (Print.term_to_string t);
             Simplified (FStar.Syntax.Util.t_true, [label_goal (e,t)])
 
           | _ ->
@@ -405,40 +422,105 @@ let rec traverse_for_spinoff
         then spinoff t
         else Unchanged t
     in
-    let split_boolean_conjunction t =
+    let rewrite_boolean_conjunction t =
         let hd, args = U.head_and_args t in
         match (U.un_uinst hd).n, args with
         | Tm_fvar fv, [(t, _)]
-            when S.fv_eq_lid fv PC.b2t_lid -> (
-          let hd, args = U.head_and_args t in
-          match (U.un_uinst hd).n, args with
-          | Tm_fvar fv, [(t0, _); (t1, _)]
-            when S.fv_eq_lid fv PC.op_And ->
-            Some (t0, t1)
-          | _ ->
-            None
+                    when S.fv_eq_lid fv PC.b2t_lid -> (
+            let hd, args = U.head_and_args t in
+            match (U.un_uinst hd).n, args with
+            | Tm_fvar fv, [(t0, _); (t1, _)]
+              when S.fv_eq_lid fv PC.op_And ->
+              let t = U.mk_conj (U.b2t t0) (U.b2t t1) in
+              Some t
+            | _ ->
+              None
+            )
+        | _ -> None
+    in
+    let try_rewrite_match env t =
+        let rec pat_as_exp env p =
+          match FStar.TypeChecker.PatternUtils.raw_pat_as_exp env p with
+          | None -> None
+          | Some e ->
+            let env, _ = Env.clear_expected_typ env in
+            let e, lc =
+              FStar.TypeChecker.TcTerm.tc_trivial_guard ({env with FStar.TypeChecker.Env.admit=true}) e in
+            let u = 
+              FStar.TypeChecker.TcTerm.universe_of env lc.res_typ in
+            Some (e, lc.res_typ, u)
+        in
+        let bv_universes env bvs =
+          List.map (fun x -> x, FStar.TypeChecker.TcTerm.universe_of env x.sort) bvs
+        in
+        let mk_forall_l bv_univs term = 
+          List.fold_right
+            (fun (x,u) out -> U.mk_forall u x out)
+            bv_univs
+            term
+        in
+        let mk_exists_l bv_univs term = 
+          List.fold_right
+            (fun (x,u) out -> U.mk_exists u x out)
+            bv_univs
+            term
+        in        
+        if pol <> StrictlyPositive then None
+        else (
+          match (SS.compress t).n with
+          | Tm_match (sc, asc_opt, brs, lopt) ->  //AR: not traversing the return annotation
+            let rec rewrite_branches path_condition branches =
+              match branches with
+              | [] -> Inr (U.mk_imp path_condition U.t_false)
+              | br::branches ->
+                let pat, w, body = SS.open_branch br in
+                match w with
+                | Some _ -> 
+                  Inl "when clause" //don't handle when clauses
+                | _ -> 
+                  let bvs = S.pat_bvs pat in
+                  let env = Env.push_bvs env bvs in
+                  let bvs_univs = bv_universes env bvs in
+                  match pat_as_exp env pat with
+                  | None -> Inl "Ill-typed pattern"
+                  | Some (p_e, t, u) ->
+                    let eqn = U.mk_eq2 u t sc p_e in
+                    let branch_goal = mk_forall_l bvs_univs (U.mk_imp eqn body) in
+                    let branch_goal = U.mk_imp path_condition branch_goal in
+                    let next_path_condition = U.mk_conj path_condition (U.mk_neg (mk_exists_l bvs_univs eqn)) in
+                    match rewrite_branches next_path_condition branches with
+                    | Inl msg -> Inl msg
+                    | Inr rest -> Inr (U.mk_conj branch_goal rest)
+            in
+            let res = rewrite_branches U.t_true brs in
+            (match res with
+             | Inl msg ->
+               if debug_any
+               then FStar.Errors.diag 
+                      (Env.get_range env)
+                      (BU.format2 "Failed to split match term because %s (%s)" msg (Print.term_to_string t));
+               None
+             | Inr res ->
+               if debug_any
+               then FStar.Errors.diag 
+                      (Env.get_range env)
+                      (BU.format2 "Rewrote match term\n%s\ninto %s\n"
+                        (Print.term_to_string t)
+                        (Print.term_to_string res));
+             
+               Some res)
+          | _ -> None
         )
-       | _ -> None
     in
-    let traverse_ctx pol ctx e t =
-      let print_lc (msg, rng) =
-        BU.format3 "(%s,%s) : %s"
-          (Range.string_of_def_range rng)
-          (Range.string_of_use_range rng)
-          msg
-      in
-       if debug
-       then BU.print2 "Changing label context from %s to %s"
-             (match label_ctx with
-              | None -> "None"
-              | Some lc -> print_lc lc)
-             (print_lc ctx);
-       traverse_for_spinoff pol (Some ctx) e t
+    let maybe_rewrite_term t =
+      if pol <> StrictlyPositive then None
+      else
+        match rewrite_boolean_conjunction t with
+        | Some t -> Some t
+        | None -> try_rewrite_match e t 
     in
-    match split_boolean_conjunction t with
-    | Some (t0, t1) ->
-      //rewrite b2t (a && b) as (b2t a /\ b2t b) and recurse
-      let t = U.mk_conj (U.b2t t0) (U.b2t t1) in
+    match maybe_rewrite_term t with
+    | Some t ->
       traverse pol e t
     | _ ->
       let r =
@@ -492,25 +574,25 @@ let rec traverse_for_spinoff
                     args
                     (tpure [])
                 in
-                match (U.un_uinst hd).n with
-                | Tm_fvar fv
-                  when (S.fv_eq_lid fv PC.squash_lid) ->
-                  comb2
+                let simplified = Simplified? r0 || Simplified? r1 in
+                comb2
                     (fun hd args ->
                        match (U.un_uinst hd).n, args with
                        | Tm_fvar fv, [(t, _)]
-                         when S.fv_eq_lid fv PC.squash_lid &&
+                         when simplified &&
+                              S.fv_eq_lid fv PC.squash_lid &&
                               U.eq_tm t U.t_true = U.Equal ->
                          //simplify squash True to True
                          //important for simplifying queries to Trivial
+                         if debug then BU.print_string "Simplified squash True to True";
                          U.t_true.n
 
                        | _ ->
-                         Tm_app (hd, args))
+                         let t' = Tm_app (hd, args) in
+                         if debug
+                         then BU.print1 "Rebuilding term %s\n" (Print.term_to_string (S.mk t' t.pos));
+                         t')
                     r0 r1                  
-
-                | _ -> 
-                  comb2 (fun hd args -> Tm_app (hd, args)) r0 r1
             end
 
           | Tm_abs (bs, t, k) ->
@@ -551,6 +633,7 @@ let pol_to_string = function
 let spinoff_strictly_positive_goals (env:Env.env) (goal:term)
   : list (Env.env * term)
   = let debug = Env.debug env (O.Other "SpinoffAll") in
+    if debug then BU.print1 "spinoff_all called with %s\n" (Print.term_to_string goal);
     Errors.with_ctx "While spinning off all goals" (fun () ->
       let initial = (1, []) in
       // This match should never fail
@@ -572,7 +655,7 @@ let spinoff_strictly_positive_goals (env:Env.env) (goal:term)
           then
             BU.print2 "Main goal simplified to: %s |- %s\n"
                             (Env.all_binders env |> Print.binders_to_string ", ")
-                            (Print.term_to_string t');
+                            (Print.term_to_string t);
           FStar.TypeChecker.Err.log_issue
             env
             env.range
@@ -587,8 +670,6 @@ let spinoff_strictly_positive_goals (env:Env.env) (goal:term)
         List.fold_left
           (fun (n,gs) g ->
              let phi = goal_type g in
-             if debug
-             then BU.print2 "Got goal #%s: %s\n" (string_of_int n) (Print.term_to_string (goal_type g));
              (n+1, (goal_env g, phi)::gs))
           s
           gs
@@ -602,7 +683,10 @@ let spinoff_strictly_positive_goals (env:Env.env) (goal:term)
             let t = N.normalize [Env.Eager_unfolding; Env.Simplify; Env.Primops] env t in
             match FStar.TypeChecker.Common.check_trivial t with
             | Trivial -> None
-            | NonTrivial t -> Some (env, t))
+            | NonTrivial t ->
+              if debug
+              then BU.print1 "Got goal: %s\n" (Print.term_to_string t);
+              Some (env, t))
       in
 
       FStar.Errors.diag (Env.get_range env)
