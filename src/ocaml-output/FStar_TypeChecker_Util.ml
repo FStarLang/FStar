@@ -4143,6 +4143,57 @@ let (check_trivial_precondition :
               FStar_TypeChecker_Env.guard_of_guard_formula
               (FStar_TypeChecker_Common.NonTrivial vc) in
           (ct, vc, uu___1)
+let (maybe_lift :
+  FStar_TypeChecker_Env.env ->
+    FStar_Syntax_Syntax.term ->
+      FStar_Ident.lident ->
+        FStar_Ident.lident ->
+          FStar_Syntax_Syntax.typ -> FStar_Syntax_Syntax.term)
+  =
+  fun env ->
+    fun e ->
+      fun c1 ->
+        fun c2 ->
+          fun t ->
+            let m1 = FStar_TypeChecker_Env.norm_eff_name env c1 in
+            let m2 = FStar_TypeChecker_Env.norm_eff_name env c2 in
+            let uu___ =
+              ((FStar_Ident.lid_equals m1 m2) ||
+                 ((FStar_Syntax_Util.is_pure_effect c1) &&
+                    (FStar_Syntax_Util.is_ghost_effect c2)))
+                ||
+                ((FStar_Syntax_Util.is_pure_effect c2) &&
+                   (FStar_Syntax_Util.is_ghost_effect c1)) in
+            if uu___
+            then e
+            else
+              FStar_Syntax_Syntax.mk
+                (FStar_Syntax_Syntax.Tm_meta
+                   (e, (FStar_Syntax_Syntax.Meta_monadic_lift (m1, m2, t))))
+                e.FStar_Syntax_Syntax.pos
+let (maybe_monadic :
+  FStar_TypeChecker_Env.env ->
+    FStar_Syntax_Syntax.term ->
+      FStar_Ident.lident ->
+        FStar_Syntax_Syntax.typ -> FStar_Syntax_Syntax.term)
+  =
+  fun env ->
+    fun e ->
+      fun c ->
+        fun t ->
+          let m = FStar_TypeChecker_Env.norm_eff_name env c in
+          let uu___ =
+            ((is_pure_or_ghost_effect env m) ||
+               (FStar_Ident.lid_equals m FStar_Parser_Const.effect_Tot_lid))
+              ||
+              (FStar_Ident.lid_equals m FStar_Parser_Const.effect_GTot_lid) in
+          if uu___
+          then e
+          else
+            FStar_Syntax_Syntax.mk
+              (FStar_Syntax_Syntax.Tm_meta
+                 (e, (FStar_Syntax_Syntax.Meta_monadic (m, t))))
+              e.FStar_Syntax_Syntax.pos
 let (coerce_with :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.term ->
@@ -4174,7 +4225,15 @@ let (coerce_with :
                           FStar_Compiler_Util.print1 "Coercing with %s!\n"
                             uu___4
                         else ());
-                       (let coercion =
+                       (let lc2 =
+                          let uu___3 = mkcomp ty in
+                          FStar_Compiler_Effect.op_Less_Bar
+                            FStar_TypeChecker_Common.lcomp_of_comp uu___3 in
+                        let lc_res =
+                          bind e.FStar_Syntax_Syntax.pos env
+                            (FStar_Pervasives_Native.Some e) lc
+                            (FStar_Pervasives_Native.None, lc2) in
+                        let coercion =
                           let uu___3 =
                             FStar_Ident.set_lid_range f
                               e.FStar_Syntax_Syntax.pos in
@@ -4183,24 +4242,72 @@ let (coerce_with :
                                Prims.int_one) FStar_Pervasives_Native.None in
                         let coercion1 =
                           FStar_Syntax_Syntax.mk_Tm_uinst coercion us in
-                        let coercion2 =
-                          FStar_Syntax_Util.mk_app coercion1 eargs in
-                        let lc1 =
-                          let uu___3 =
-                            let uu___4 =
-                              let uu___5 = mkcomp ty in
-                              FStar_Compiler_Effect.op_Less_Bar
-                                FStar_TypeChecker_Common.lcomp_of_comp uu___5 in
-                            (FStar_Pervasives_Native.None, uu___4) in
-                          bind e.FStar_Syntax_Syntax.pos env
-                            (FStar_Pervasives_Native.Some e) lc uu___3 in
                         let e1 =
                           let uu___3 =
-                            let uu___4 = FStar_Syntax_Syntax.as_arg e in
-                            [uu___4] in
-                          FStar_Syntax_Syntax.mk_Tm_app coercion2 uu___3
-                            e.FStar_Syntax_Syntax.pos in
-                        (e1, lc1)))
+                            FStar_TypeChecker_Common.is_pure_or_ghost_lcomp
+                              lc in
+                          if uu___3
+                          then
+                            let uu___4 =
+                              let uu___5 =
+                                let uu___6 = FStar_Syntax_Syntax.as_arg e in
+                                [uu___6] in
+                              FStar_Compiler_List.op_At eargs uu___5 in
+                            FStar_Syntax_Syntax.mk_Tm_app coercion1 uu___4
+                              e.FStar_Syntax_Syntax.pos
+                          else
+                            (let x =
+                               FStar_Syntax_Syntax.new_bv
+                                 (FStar_Pervasives_Native.Some
+                                    (e.FStar_Syntax_Syntax.pos))
+                                 lc.FStar_TypeChecker_Common.res_typ in
+                             let e2 =
+                               let uu___5 =
+                                 let uu___6 =
+                                   let uu___7 =
+                                     let uu___8 =
+                                       FStar_Compiler_Effect.op_Bar_Greater x
+                                         FStar_Syntax_Syntax.bv_to_name in
+                                     FStar_Compiler_Effect.op_Bar_Greater
+                                       uu___8 FStar_Syntax_Syntax.as_arg in
+                                   [uu___7] in
+                                 FStar_Compiler_List.op_At eargs uu___6 in
+                               FStar_Syntax_Syntax.mk_Tm_app coercion1 uu___5
+                                 e.FStar_Syntax_Syntax.pos in
+                             let e3 =
+                               maybe_lift env e
+                                 lc.FStar_TypeChecker_Common.eff_name
+                                 lc_res.FStar_TypeChecker_Common.eff_name
+                                 lc.FStar_TypeChecker_Common.res_typ in
+                             let e21 =
+                               let uu___5 =
+                                 FStar_TypeChecker_Env.push_bv env x in
+                               maybe_lift uu___5 e2
+                                 lc2.FStar_TypeChecker_Common.eff_name
+                                 lc_res.FStar_TypeChecker_Common.eff_name ty in
+                             let lb =
+                               FStar_Syntax_Util.mk_letbinding
+                                 (FStar_Pervasives.Inl x) []
+                                 lc.FStar_TypeChecker_Common.res_typ
+                                 lc_res.FStar_TypeChecker_Common.eff_name e3
+                                 [] e3.FStar_Syntax_Syntax.pos in
+                             let e4 =
+                               let uu___5 =
+                                 let uu___6 =
+                                   let uu___7 =
+                                     let uu___8 =
+                                       let uu___9 =
+                                         FStar_Syntax_Syntax.mk_binder x in
+                                       [uu___9] in
+                                     FStar_Syntax_Subst.close uu___8 e21 in
+                                   ((false, [lb]), uu___7) in
+                                 FStar_Syntax_Syntax.Tm_let uu___6 in
+                               FStar_Syntax_Syntax.mk uu___5
+                                 e3.FStar_Syntax_Syntax.pos in
+                             maybe_monadic env e4
+                               lc_res.FStar_TypeChecker_Common.eff_name
+                               lc_res.FStar_TypeChecker_Common.res_typ) in
+                        (e1, lc_res)))
                   | FStar_Pervasives_Native.None ->
                       ((let uu___2 =
                           let uu___3 =
@@ -5706,57 +5813,6 @@ let (maybe_add_implicit_binders :
                                    })) in
                          FStar_Compiler_List.op_At imps1 bs)
                 | uu___4 -> bs))
-let (maybe_lift :
-  FStar_TypeChecker_Env.env ->
-    FStar_Syntax_Syntax.term ->
-      FStar_Ident.lident ->
-        FStar_Ident.lident ->
-          FStar_Syntax_Syntax.typ -> FStar_Syntax_Syntax.term)
-  =
-  fun env ->
-    fun e ->
-      fun c1 ->
-        fun c2 ->
-          fun t ->
-            let m1 = FStar_TypeChecker_Env.norm_eff_name env c1 in
-            let m2 = FStar_TypeChecker_Env.norm_eff_name env c2 in
-            let uu___ =
-              ((FStar_Ident.lid_equals m1 m2) ||
-                 ((FStar_Syntax_Util.is_pure_effect c1) &&
-                    (FStar_Syntax_Util.is_ghost_effect c2)))
-                ||
-                ((FStar_Syntax_Util.is_pure_effect c2) &&
-                   (FStar_Syntax_Util.is_ghost_effect c1)) in
-            if uu___
-            then e
-            else
-              FStar_Syntax_Syntax.mk
-                (FStar_Syntax_Syntax.Tm_meta
-                   (e, (FStar_Syntax_Syntax.Meta_monadic_lift (m1, m2, t))))
-                e.FStar_Syntax_Syntax.pos
-let (maybe_monadic :
-  FStar_TypeChecker_Env.env ->
-    FStar_Syntax_Syntax.term ->
-      FStar_Ident.lident ->
-        FStar_Syntax_Syntax.typ -> FStar_Syntax_Syntax.term)
-  =
-  fun env ->
-    fun e ->
-      fun c ->
-        fun t ->
-          let m = FStar_TypeChecker_Env.norm_eff_name env c in
-          let uu___ =
-            ((is_pure_or_ghost_effect env m) ||
-               (FStar_Ident.lid_equals m FStar_Parser_Const.effect_Tot_lid))
-              ||
-              (FStar_Ident.lid_equals m FStar_Parser_Const.effect_GTot_lid) in
-          if uu___
-          then e
-          else
-            FStar_Syntax_Syntax.mk
-              (FStar_Syntax_Syntax.Tm_meta
-                 (e, (FStar_Syntax_Syntax.Meta_monadic (m, t))))
-              e.FStar_Syntax_Syntax.pos
 let (d : Prims.string -> unit) =
   fun s -> FStar_Compiler_Util.print1 "\027[01;36m%s\027[00m\n" s
 let (mk_toplevel_definition :

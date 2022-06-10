@@ -3698,9 +3698,12 @@ let (should_defer_flex_to_user_tac :
                 let uu___5 =
                   FStar_Syntax_Print.ctx_uvar_to_string_no_reason u in
                 let uu___6 = FStar_Compiler_Util.string_of_bool b in
-                FStar_Compiler_Util.print2
-                  "Rel.should_defer_flex_to_user_tac for %s returning %s\n"
-                  uu___5 uu___6
+                let uu___7 =
+                  FStar_Compiler_Util.string_of_bool
+                    env.FStar_TypeChecker_Env.enable_defer_to_tac in
+                FStar_Compiler_Util.print3
+                  "Rel.should_defer_flex_to_user_tac for %s returning %s (env.enable_defer_to_tac: %s)\n"
+                  uu___5 uu___6 uu___7
               else ());
              b)
 let (quasi_pattern :
@@ -12901,14 +12904,16 @@ let (try_solve_deferred_constraints :
                       (FStar_Options.Other "Rel") in
                   if uu___3
                   then
-                    let uu___4 = wl_to_string wl in
-                    let uu___5 =
+                    let uu___4 =
+                      FStar_Compiler_Util.string_of_bool deferred_to_tac_ok in
+                    let uu___5 = wl_to_string wl in
+                    let uu___6 =
                       FStar_Compiler_Util.string_of_int
                         (FStar_Compiler_List.length
                            g.FStar_TypeChecker_Common.implicits) in
-                    FStar_Compiler_Util.print3
-                      "Trying to solve carried problems (defer_ok=%s): begin\n\t%s\nend\n and %s implicits\n"
-                      (string_of_defer_ok defer_ok) uu___4 uu___5
+                    FStar_Compiler_Util.print4
+                      "Trying to solve carried problems (defer_ok=%s) (deferred_to_tac_ok=%s): begin\n\t%s\nend\n and %s implicits\n"
+                      (string_of_defer_ok defer_ok) uu___4 uu___5 uu___6
                   else ());
                  (let g1 =
                     let uu___3 = solve_and_commit env wl fail in
@@ -12952,9 +12957,13 @@ let (try_solve_deferred_constraints :
                     if uu___5
                     then
                       let uu___6 = guard_to_string env g2 in
-                      FStar_Compiler_Util.print1
-                        "ResolveImplicitsHook: Solved deferred to tactic goals, remaining guard is\n%s\n"
-                        uu___6
+                      let uu___7 =
+                        FStar_Compiler_Util.string_of_int
+                          (FStar_Compiler_List.length
+                             g2.FStar_TypeChecker_Common.implicits) in
+                      FStar_Compiler_Util.print2
+                        "ResolveImplicitsHook: Solved deferred to tactic goals, remaining guard is\n%s (and %s implicits)\n"
+                        uu___6 uu___7
                     else ());
                    {
                      FStar_TypeChecker_Common.guard_f =
@@ -13996,9 +14005,11 @@ let (resolve_implicits' :
                             let uu___4 = FStar_Syntax_Print.term_to_string tm in
                             let uu___5 =
                               FStar_Syntax_Print.ctx_uvar_to_string ctx_u in
-                            FStar_Compiler_Util.print2
-                              "resolve_implicits' loop, imp_tm = %s and ctx_u = %s\n"
-                              uu___4 uu___5
+                            let uu___6 =
+                              FStar_Compiler_Util.string_of_bool is_tac in
+                            FStar_Compiler_Util.print3
+                              "resolve_implicits' loop, imp_tm = %s and ctx_u = %s, is_tac: %s\n"
+                              uu___4 uu___5 uu___6
                           else ());
                          if
                            ctx_u.FStar_Syntax_Syntax.ctx_uvar_should_check =
