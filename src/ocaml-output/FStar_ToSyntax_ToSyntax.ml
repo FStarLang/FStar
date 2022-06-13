@@ -4182,8 +4182,11 @@ and (desugar_term_maybe_top :
                    | (b::bs3, v::vs3) ->
                        let x = unqual_bv_of_binder b in
                        let token1 =
-                         aux bs3 vs3 ((FStar_Syntax_Syntax.NT (x, v)) :: sub)
-                           token in
+                         let uu___2 =
+                           FStar_Syntax_Subst.subst_binders
+                             ((FStar_Syntax_Syntax.NT (x, v)) :: sub) bs3 in
+                         aux uu___2 vs3 ((FStar_Syntax_Syntax.NT (x, v)) ::
+                           sub) token in
                        let token2 =
                          let uu___2 =
                            let uu___3 =
@@ -4342,7 +4345,8 @@ and (desugar_term_maybe_top :
                          mk_forall_elim x.FStar_Syntax_Syntax.sort uu___2 v
                            token in
                        let sub1 = (FStar_Syntax_Syntax.NT (x, v)) :: sub in
-                       aux bs3 vs3 sub1 token1
+                       let uu___2 = FStar_Syntax_Subst.subst_binders sub1 bs3 in
+                       aux uu___2 vs3 sub1 token1
                    | uu___2 ->
                        FStar_Errors.raise_error
                          (FStar_Errors.Fatal_UnexpectedTerm,
