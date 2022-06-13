@@ -1261,6 +1261,7 @@ let inline_let_attr = fvar_const PC.inline_let_attr
 let rename_let_attr = fvar_const PC.rename_let_attr
 
 let t_ctx_uvar_and_sust = fvar_const PC.ctx_uvar_and_subst_lid
+let t_universe_uvar     = fvar_const PC.universe_uvar_lid
 
 let mk_conj_opt phi1 phi2 = match phi1 with
   | None -> Some phi2

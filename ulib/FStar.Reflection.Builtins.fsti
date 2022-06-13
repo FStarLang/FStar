@@ -50,6 +50,10 @@ val pack_lb        : lb_view -> letbinding
 val inspect_binder : binder -> bv * (aqualv * list term)
 val pack_binder    : bv -> aqualv -> attrs:list term -> binder
 
+val inspect_universe : u:universe -> uv:universe_view{smaller_universe uv u}
+val pack_universe    : universe_view -> universe
+
+
 (* These are equivalent to [String.concat "."], [String.split ['.']]
  * and [String.compare]. We're only taking them as primitives to break
  * the dependency of Reflection/Tactics into * FStar.String, which

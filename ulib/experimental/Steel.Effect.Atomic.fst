@@ -619,10 +619,15 @@ let witness_exists #a #u #p _ =
 let lift_exists #a #u p =
   as_atomic_action_ghost (Steel.Memory.lift_h_exists #u (fun x -> hp_of (p x)))
 
+let exists_equiv p q =
+  Classical.forall_intro_2 reveal_equiv;
+  h_exists_cong (h_exists_sl' p) (h_exists_sl' q)
+
 let exists_cong p q =
   rewrite_slprop (h_exists p) (h_exists q)
-    (fun m -> Classical.forall_intro_2 reveal_equiv;
-            h_exists_cong (h_exists_sl' p) (h_exists_sl' q))
+    (fun m ->
+      reveal_equiv (h_exists p) (h_exists q);
+      exists_equiv p q)
 
 let new_invariant #uses p =
   rewrite_slprop p (to_vprop (hp_of p)) (fun _ -> ());
