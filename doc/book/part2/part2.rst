@@ -1,7 +1,9 @@
 .. _Part2:
 
+################################################################
 Representing Data, Proofs, and Computations with Inductive Types
-================================================================
+################################################################
+
 
 ..
    In this second part of the book, we'll dive deeper into F*, focusing
@@ -142,7 +144,6 @@ gaining a working knowledge of some core parts of F*'s type theory.
 
 
 .. toctree::
-   :hidden:
    :maxdepth: 1
    :caption: Contents:
 

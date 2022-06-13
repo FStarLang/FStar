@@ -28,7 +28,7 @@ def setup(app):
 
 project = u'Proof-Oriented Programming in F*'
 copyright = u'2020, Microsoft Research'
-author = u'F* development team'
+author = u'Nikhil Swamy'
 
 # The short X.Y version
 version = u''

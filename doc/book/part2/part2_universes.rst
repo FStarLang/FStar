@@ -167,7 +167,7 @@ actually also polymorphic in the universe level of its type argument.
    :end-before: //SNIPPET_END: poly_id$
 
 That is, the type of the identity function ``id`` is ``id_t`` or
-``a:Type u#i -> a -> a`` or ``id_t``---meaning, for all types ``a`` in
+``a:Type u#i -> a -> a``---meaning, for all types ``a`` in
 universe ``Type u#i``, ``id a`` is function of type ``a -> a``.
 
 Now, ``id_t`` is itself a type in universe ``Type u#(i + 1)``, and
@@ -215,13 +215,13 @@ universe :math:`\mathsf{Type~u\#l_i}`
 
 .. math::
 
-   \mathsf{type}~T_1~\overline{(x₁:p_i)} : \overline{y_1:q_1} → \mathsf{Type}~u\#l_1 = \overline{| D_1 : t_1} \\
-   \mathsf{and}~T_n~\overline{(x_n:p_n)} : \overline{y_n:q_n} → \mathsf{Type}~u\#l_n = \overline{| D_n : t_n} \\
+   \mathsf{type}~T_1~\overline{(x_1:p_i)} : \overline{y_1:q_1} \rightarrow \mathsf{Type}~u\#l_1 = \overline{\bar D_1 : t_1} \\
+   \mathsf{and}~T_n~\overline{(x_n:p_n)} : \overline{y_n:q_n} \rightarrow \mathsf{Type}~u\#l_n = \overline{\bar D_n : t_n} \\
 
 Recall that each type constructor :math:`T_i` has zero or more *data
 constructors* :math:`\overline{D_i:t_i}` and for each data constructor
 :math:`D_{ij}`, its type :math:`t_{ij}` must be of the form
-:math:`\overline{z_{ij}:s_{ij}} → Tᵢ~\bar{x_i}~\bar{e}`
+:math:`\overline{z_{ij}:s_{ij}} \rightarrow T_i~\bar{x_i}~\bar{e}`
 
 In addition to checking, as usual, that the each :math:`t_{ij}` is
 well-typed, F* also checks the universe levels according to the
@@ -230,12 +230,12 @@ following rule:
   * Assuming that each :math:`T_i` has universe level :math:`l_i`, for
     every data constructor :math:`D_{ij}`, and for each of its
     arguments :math:`z_{ijk} : s_{ijk}`, check :math:`s_{ijk} :
-    \mathsf{Type}~u\#l_{ijk}` and :math:`l_{ijk} ≤ l_i`.
+    \mathsf{Type}~u\#l_{ijk}` and :math:`l_{ijk} \leq l_i`.
 
 In other words, the universe level of each type constructor must not
 be less than the universe of any of the fields of data constructors.
 
-In practice, F* infers the universe levels :math:`l_1, …, l_n`, by
+In practice, F* infers the universe levels :math:`l_1, \ldots, l_n`, by
 collecting level-inequality constraints and solving them using the
 ``max`` operator on universe levels, i.e., :math:`l_i` is set to
 :math:`max_{jk}~l_{ijk}`, the maximum of the universe levels of all
@@ -256,10 +256,10 @@ constructs a type in the same universe.
 * The ``Nil`` constructor has no fields, so it imposes no
   constraints on the universe level of ``list a``.
 
-* The ``Cons`` constructor has two fields. Its first field ``hd``
-  has type ``a: Type u#a``: we have a constraint that ``u#a ≤ u#a``; and
+* The ``Cons`` constructor has two fields. Its first field  ``hd``
+  has type ``a: Type u#a``: we have a constraint that ``u#a`` :math:`\leq` ``u#a``; and
   the second field, by assumption, has type ``list a : Type u#a``,
-  and again we have the constraint ``u#a ≤ u#a``.
+  and again we have the constraint ``u#a`` :math:`\leq` ``u#a``.
 
 F* infers the minimum satisfiable universe level assignment, by
 default. But, there are many solutions to the inequalities, and if
@@ -290,9 +290,9 @@ The ``pair`` type below is parameterized by ``a:Type u#a`` and
    :start-after: //SNIPPET_START: pair$
    :end-before: //SNIPPET_END: pair$
 
-* The ``fst`` field is in ``u#a`` and so we have ``u#a ≤ u#(max a b)``.
+* The ``fst`` field is in ``u#a`` and so we have ``u#a`` :math:`\leq` ``u#(max a b)``.
 
-* The ``snd`` field is in ``u#b`` and so we have ``u#b ≤ u#(max a b)``.    
+* The ``snd`` field is in ``u#b`` and so we have ``u#b`` :math:`\leq` ``u#(max a b)``.    
 
 The ``top`` type
 +++++++++++++++++
@@ -466,16 +466,16 @@ Refinement types, FStar.Squash, ``prop``, and Impredicativity
 
 We've seen how universes levels are computed for arrow types and
 inductive type definitions. The other way in which types can be formed
-in F* is with refinement types: ``x:t{ϕ}``. As we've seen previously,
-a value ``v`` of type ``x:t{ϕ}`` is just a ``v:t`` where ``ϕ[v/x]`` is
+in F* is with refinement types: ``x:t{p}``. As we've seen previously,
+a value ``v`` of type ``x:t{p}`` is just a ``v:t`` where ``p[v/x]`` is
 derivable in the current scope in F*'s SMT-assisted classical
-logic—there is no way to extract a proof of ``ϕ`` from a proof of
-``x:t{ϕ}``, i.e., refinement types are F*'s mechanism for proof
+logic—there is no way to extract a proof of ``p`` from a proof of
+``x:t{p}``, i.e., refinement types are F*'s mechanism for proof
 irrelevance.
 
-**Universe of a refinement type**: The universe of a refinement type ``x:t{ϕ}`` is the universe of ``t``.
+**Universe of a refinement type**: The universe of a refinement type ``x:t{p}`` is the universe of ``t``.
 
-Since the universe of a refinement type does not depend on ``ϕ``, it
+Since the universe of a refinement type does not depend on ``p``, it
 enables a limited form of impredicativity, and we can define the
 following type (summarized here from the F* standard library
 ``FStar.Squash``):

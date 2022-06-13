@@ -1,7 +1,8 @@
 .. _Part3:
 
+##########################################
 Modularity With Interfaces and Typeclasses
-==========================================
+##########################################
 
 In this section, we'll learn about two abstraction techniques used to
 structure larger F* developments: *interfaces* and *typeclasses*.
@@ -49,7 +50,6 @@ Thanks especially to Guido Martinez, who designed and implemented
 most of F*'s typeclass system.
 
 .. toctree::
-   :hidden:
    :maxdepth: 1
    :caption: Contents:
 

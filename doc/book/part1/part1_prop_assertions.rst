@@ -57,12 +57,19 @@ F*, i.e., the parts that allow it to interface with an SMT solver.
 
    .. code-block:: fstar
 
-     forall (x₁:t₁) ... (xₙ:tₙ). p
-     exists (x₁:t₁) ... (xₙ:tₙ). p     
+     forall (x1:t1) ... (xn:tn). p
+     exists (x1:t1) ... (xn:tn). p     
 
-   You can build propositions from booleans and conjunctions (``/̀\``),
-   disjunctions (``\/``), negations (``~``), implications (``==>``),
-   and bi-implications (``<==>``) etc.
+   You can build propositions from booleans and conjunctions,
+   disjunctions, negations, implications, and bi-implications:
+
+   .. code-block:: fstar
+
+      p /\ q   //conjunction
+      p \/ q   //disjunction
+      ~p       //negation
+      p ==> q  //implication
+      p <==> q //bi-implication
 
    For example, one can say (as shown below) that for all natural
    numbers ``x`` and ``y``, if the modulus ``x % y`` is ``0``, then
@@ -75,8 +82,8 @@ F*, i.e., the parts that allow it to interface with an SMT solver.
    F* also has a notion of propositional equality, written ``==``,
    that can be used to state that two terms of any type are equal. In
    contrast, the boolean equality ``=`` can only be used on types that
-   support decidable equality. For instance, for ``f₁, f₂ : int ->
-   int``, you can write ``f₁ == f₂`` but you cannot write ``f₁ = f₂``,
+   support decidable equality. For instance, for ``f1, f2 : int ->
+   int``, you can write ``f1 == f2`` but you cannot write ``f1 = f2``,
    since two functions cannot be decidably compared for equality.
                                  
 .. _Part1_prop:
@@ -124,7 +131,7 @@ Here's another way to state it:
   forall (n:nat). factorial n > 0
 
 What about stating that ``factorial n`` can sometimes return a value
-that's greater than ``n²``?
+that's greater than ``n * n``?
 
 .. code-block:: fstar
                 
@@ -141,9 +148,9 @@ syntax has the following shape.
 
 .. code-block:: fstar
                 
-  forall (x₁:t₁) ... (xₙ:tₙ) . p
+  forall (x1:t1) ... (xn:tn) . p
 
-The ``x₁ ... xₙ`` are bound variables and signify the domain over
+The ``x1 ... xn`` are bound variables and signify the domain over
 which one the proposition ``p`` is quantified. That is, ``forall
 (x:t). p`` is valid when for all ``v : t`` the proposition ``p[v/x]``
 is valid.
@@ -153,7 +160,7 @@ keyword.
 
 .. code-block:: fstar
                 
-   exists (x₁:t₁) ... (xₙ:tₙ) . p
+   exists (x1:t1) ... (xn:tn) . p
 
 In this case, ``exists (x:t). p`` is valid when for some ``v : t`` the
 proposition ``p[v/x]`` is valid.

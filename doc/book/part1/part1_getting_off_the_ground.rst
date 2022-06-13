@@ -11,7 +11,7 @@ functions.
 Basic syntactic structure
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-An F* program is a collection of :ref:`modules<modules>`, with each
+An F* program is a collection of modules, with each
 module represented by a single file with the filename extension
 ``.fst``. Later, we'll see that a module's interface is in a separate
 ``.fsti`` file and allows hiding details of a module's implementation
@@ -51,7 +51,7 @@ Primitives
 ^^^^^^^^^^
 
 Every F* program is checked in the context of some ambient primitive
-definitions taken from the core F* module :ref:`Prims<corelib_Prims>`.
+definitions taken from the core F* module ``Prims``.
 
 False
 .....
@@ -121,7 +121,7 @@ precedence.
 Boolean refinement types
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-The F* core library, :ref:`Prims<corelib_Prims>`, defines the type of
+The F* core library, ``Prims``, defines the type of
 natural numbers as follows
 
 .. code-block:: fstar
@@ -132,7 +132,7 @@ This is an instance of a boolean refinement type, whose general form
 is ``x:t { e }`` where ``t`` is a type, and ``e`` is a ``bool``-typed term
 that may refer to the ``t``-typed bound variable ``x``. The term ``e``
 *refines* the type ``t``, in the sense that the set ``S`` denoted by ``t``
-is restricted to those elements ``x ∈ S``  for which ``e`` evaluates to
+is restricted to those elements ``x`` :math:`\in` ``S``  for which ``e`` evaluates to
 ``true``.
 
 That is, the type ``nat`` describes the set of terms that evaluate to an
@@ -265,7 +265,7 @@ any side effect, like looping forever, or printing a message etc.).
 Functions are first-class values in F*, e.g., they can be passed as
 arguments to other functions and returned as results. While F*
 provides several ways to define functions, the most basic form is the
-λ term, also called a function literal, an anonymous function, or a
+:math:`\lambda` term, also called a function literal, an anonymous function, or a
 simply a *lambda*. The syntax is largely inherited from OCaml, and
 this `OCaml tutorial
 <https://ocaml.org/learn/tutorials/basics.html#Defining-a-function>`_

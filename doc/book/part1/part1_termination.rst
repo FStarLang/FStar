@@ -40,7 +40,7 @@ In order to prove a function terminating in F\* one provides a
 arguments. F\* checks that this measure strictly decreases on each
 recursive call.  The measure for the arguments of the call is compared
 to the measure for the previous call according to a well-founded
-partial order on F\* terms. We write `v1 << v2` when `v1` _precedes_
+partial order on F\* terms. We write `v1 << v2` when `v1` precedes
 `v2` in this order.
 
 .. note::
@@ -60,26 +60,26 @@ eventually stops making recursive calls, i.e., it terminates.
 The precedes relation
 .....................
 
-Given two terms ``v₁:t₁`` and ``v₂:t₂``, we can prove ``v₁ << v₂``
+Given two terms ``v1:t1`` and ``v2:t2``, we can prove ``v1 << v2``
 if any of the following are true:
 
 1. **The ordering on integers**:
 
-   ``t₁ = nat`` and ``t₂ = nat`` and ``v₁ < v₂``
+   ``t1 = nat`` and ``t2 = nat`` and ``v1 < v₂``
 
    Negative integers are not related by the `<<` relation, which is
    only a _partial_ order.
 
 2. **The sub-term ordering on inductive types**
 
-    If ``v₂ = D u₁ ... uₙ``, where ``D`` is a constructor of an
-    inductive type fully applied to arguments ``uₙ`` to ``uₙ``, then
+    If ``v₂ = D u1 ... un``, where ``D`` is a constructor of an
+    inductive type fully applied to arguments ``u1`` to ``un``, then
     ``v1 << v2`` if either
 
-    * ``v₁ = uᵢ`` for some ``i``, i.e., ``v₁`` is a sub-term of ``v₂``
+    * ``v1 = ui`` for some ``i``, i.e., ``v1`` is a sub-term of ``v2``
 
-    * ``v₁ = uᵢ x`` for some ``i`` and ``x``, i.e., ``v₁`` is the
-      result of applying a sub-term of ``v₂`` to some argument ``x``.
+    * ``v1 = ui x`` for some ``i`` and ``x``, i.e., ``v1`` is the
+      result of applying a sub-term of ``v2`` to some argument ``x``.
 
 
 Why ``length`` terminates
@@ -144,10 +144,10 @@ Lexicographic orderings
 
 F* also provides a convenience to enhance the well-founded ordering
 ``<<`` to lexicographic combinations of ``<<``. That is, given two
-lists of terms ``v₁, ..., vₙ`` and ``u₁, ..., uₙ``, F* accepts that
+lists of terms ``v1, ..., vn`` and ``u1, ..., un``, F* accepts that
 the following lexicographic ordering::
 
-   v₁ << u₁ ‌‌\/ (v₁ == u₁ /\ (v₂ << u₂ ‌‌\/ (v₂ == u₂ /\ ( ... vₙ << uₙ))))
+   v1 << u1 ‌‌\/ (v1 == u1 /\ (v₂ << u₂ ‌‌\/ (v₂ == u₂ /\ ( ... vn << un))))
 
 is also well-founded. In fact, it is possible to prove in F* that this
 ordering is well-founded, provided ``<<`` is itself well-founded.
@@ -156,11 +156,11 @@ Lexicographic ordering are common enough that F* provides special
 support to make it convenient to use them. In particular, the
 notation::
 
-   %[v₁; v₂; ...; vₙ] << %[u₁; u₂; ...; uₙ]
+   %[v1; v2; ...; vn] << %[u1; u2; ...; un]
 
 is shorthand for::
 
-   v₁ << u₁ ‌‌\/ (v₁ == u₁ /\ (v₂ << u₂ ‌‌\/ (v₂ == u₂ /\ ( ... vₙ << uₙ))))
+   v1 << u1 ‌‌\/ (v1 == u1 /\ (v2 << u2 ‌‌\/ (v2 == u2 /\ ( ... vn << un))))
 
 Let's have a look at lexicographic orderings at work in proving that
 the classic ``ackermann`` function terminates on all inputs.
@@ -308,15 +308,15 @@ When defining a recursive function
    \mathsf{f~(\overline{x:t})~:~Tot~r~(decreases~m)~=~e}
 
 i.e., :math:`\mathsf{f}` is a function with several arguments
-:math:`\mathsf{x₁:t₁}, ..., \mathsf{xₙ:tₙ}`, returning
+:math:`\mathsf{x1:t1}, ..., \mathsf{x_n:t_n}`, returning
 :math:`\mathsf{r}` with measure :math:`\mathsf{m}`, mutually
 recursively with other functions of several arguments at type:
 
 .. math::
 
-   \mathsf{f₁~(\overline{x₁:t₁})~:~Tot~r₁~(decreases~m₁)} \\
+   \mathsf{f_1~(\overline{x_1:t_1})~:~Tot~r_1~(decreases~m_1)} \\
    \ldots \\
-   \mathsf{fₙ~(\overline{xₙ:tₙ})~:~Tot~rₙ~(decreases~mₙ)} \\
+   \mathsf{f_n~(\overline{x_n:t_n})~:~Tot~r_n~(decreases~m_n)} \\
 
 we check the definition of the function body of :math:`\mathsf{f}`
 (i.e., :math:`\mathsf{e}`) with all the mutually recursive functions
@@ -325,10 +325,10 @@ sense:
 
 .. math::
 
-   \mathsf{f~:~(\overline{y:t}\{~m[\overline{y}/\overline{x}]~≪~m~\}~→~r[\overline{y}/\overline{x}])} \\
-   \mathsf{f₁~:~(\overline{x₁:t₁}\{~m₁~≪~m~\}~→~r₁)} \\
+   \mathsf{f~:~(\overline{y:t}\{~m[\overline{y}/\overline{x}]~<<~m~\}~\rightarrow~r[\overline{y}/\overline{x}])} \\
+   \mathsf{f_1~:~(\overline{x_1:t_1}\{~m_1~<<~m~\}~\rightarrow~r_1)} \\
    \ldots \\
-   \mathsf{fₙ~:~(\overline{xₙ:tₙ}\{~mₙ~≪~m~\}~→~rₙ)} \\
+   \mathsf{f_n~:~(\overline{x_n:t_n}\{~m_n~<<~m~\}~\rightarrow~r_n)} \\
 
 That is, each function in the mutually recursive group can only be
 applied to arguments that are precede the current formal parameters of

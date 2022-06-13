@@ -49,13 +49,13 @@ The syntax of the type annotation :math:`t` is also very simple:
 
 .. math::
 
-   t~::=~\mathsf{unit}~|~t_0 → t_1
+   t~::=~\mathsf{unit}~|~t_0 \rightarrow t_1
 
 A type :math:`t` is either
 
   * the :math:`\mathsf{unit}` type constant;
 
-  * or, arrow type :math:`t_0 → t_1` formed from two smaller types
+  * or, arrow type :math:`t_0 \rightarrow t_1` formed from two smaller types
     :math:`t_0` and :math:`t_1`
 
 This language is very minimalistic, but it can be easily extended with

@@ -164,8 +164,7 @@ the job of the F* typechecker to fill in the hole.
 
    Program holes are a very powerful concept and form the basis of
    Meta-F*, the metaprogramming and tactics framework embedded in
-   F*---we'll see more about holes in a :ref:`later
-   section<MetaFStar>`.
+   F*---we'll see more about holes in a later section.
 
 Implicit arguments
 ^^^^^^^^^^^^^^^^^^
