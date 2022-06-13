@@ -206,6 +206,7 @@ let pure_star_interp' (p:slprop u#a) (q:prop) (m:mem)
 let pts_to_inj
   a p1 s1 p2 s2 m
 =
+  Classical.forall_intro reveal_pure;
   pure_star_interp'
     (hp_of (R.pts_to (ptr_of a).base (mk_carrier (U32.v (ptr_of a).base_len) (ptr_of a).offset s1 p1)))
     (
