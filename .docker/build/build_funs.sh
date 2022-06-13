@@ -64,6 +64,11 @@ function fetch_karamel() {
     git reset --hard $ref
     cd ..
     export_home KRML "$(pwd)/karamel"
+
+    # Install the Karamel dependencies
+    pushd $KRML_HOME
+    .docker/build/install-other-deps.sh
+    popd
 }
 
 function make_karamel() {
@@ -99,6 +104,11 @@ function fetch_everparse() {
     git reset --hard $ref
     cd ..
     export_home EVERPARSE "$(pwd)/everparse"
+
+    # Install the EverParse dependencies
+    pushd $EVERPARSE_HOME
+    .docker/build/install-other-deps.sh
+    popd
 }
 
 function make_everparse() {
@@ -283,9 +293,10 @@ function fstar_default_build () {
     fi
 
     # Start fetching while we build F*
-    fetch_karamel &
     fetch_hacl &
-    fetch_everparse &
+    # We lose parallelism here because we need to run opam for each case
+    # we might have a race on opam
+    { fetch_karamel && fetch_everparse ; } &
     fetch_mitls &
 
     # Build F*, along with fstarlib

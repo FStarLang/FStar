@@ -18,6 +18,7 @@ open FStar.Compiler.Effect
 open Prims
 
 val isEmpty : (list 'a) -> Tot bool
+val singleton : 'a -> list 'a
 val hd : (list 'a) -> 'a
 val length : (list 'a) -> Tot nat
 val nth : (list 'a) -> int -> 'a

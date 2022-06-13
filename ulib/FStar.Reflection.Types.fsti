@@ -27,6 +27,9 @@ assume new type sigelt // called `def` in the paper, but we keep the internal na
 assume new type ctx_uvar_and_subst
 assume new type letbinding
 
+assume new type universe_uvar
+assume new type universe
+
 type name : eqtype = list string
 type ident = string * range
 type univ_name = ident

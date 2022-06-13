@@ -889,6 +889,23 @@ val strict_on_arguments (x: list int) : Tot unit
  **)
 val resolve_implicits : unit
 
+(**
+ * Implicit arguments can be tagged with an attribute [abc] to dispatch 
+ * their solving to a user-defined tactic also tagged with the same 
+ * attribute and resolve_implicits [@@abc; resolve_implicits]. 
+ 
+ * However, sometimes it is useful to have multiple such 
+ * [abc]-tagged tactics in scope. In such a scenario, to choose among them, 
+ * one can use the attribute as shown below to declare that [t] overrides
+ * all the tactics [t1...tn] and should be used to solve [abc]-tagged 
+ * implicits, so long as [t] is not iself overridden by some other tactic.
+
+   [@@resolve_implicits; abc; override_resolve_implicits_handler abc [`%t1; ... `%tn]]
+   let t = e
+
+ **)
+val override_resolve_implicits_handler : #a:Type -> a -> list string -> Tot unit
+
 (** A tactic registered to solve implicits with the (handle_smt_goals)
     attribute will receive the SMT goal generated during typechecking
     just before it is passed to the SMT solver.
