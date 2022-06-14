@@ -240,8 +240,45 @@ let rec subset_size (#a:eqtype) #f x y = match x, y with
 
 (**********)
 
+let singleton_union_sym (#a:eqtype) #f (s: ordset a f) (x:a) 
+  : Lemma (ensures union s [x] == union [x] s)
+          (decreases s) = eq_lemma (union s [x]) (union [x] s)
+
+let rec insert_when_already_exists (#a:eqtype) #f (s: ordset a f) (x:a)
+  : Lemma (requires mem x s) (ensures insert' x s == s) = 
+  match s with
+  | h::t -> if h<>x then insert_when_already_exists #a #f t x
+  | [] -> ()
+
+let rec size_insert (#a:eqtype) #f (s: ordset a f) (x:a)
+  : Lemma (size (insert' x s) >= size s) = 
+  match s with 
+  | h::t -> size_insert #a #f t x
+  | [] -> ()
+
+let rec precise_size_insert (#a:eqtype) #f (s: ordset a f) (x:a)
+  : Lemma (ensures size (insert' x s) = (if mem x s then size s else (size s) + 1)) = 
+  match s with
+  | h::t -> precise_size_insert #a #f t x
+  | [] -> ()
+       
+let rec size_of_union_left (#a:eqtype) #f (s1 s2: ordset a f)
+  : Lemma (ensures size (union s1 s2) >= size s2) =
+  match s1 with
+  | [] -> ()
+  | hd::tl -> size_of_union_left #a #f tl (insert' hd s2);
+            precise_size_insert s2 hd;
+            if mem hd s2 then insert_when_already_exists s2 hd 
+
+let size_of_union_right (#a:eqtype) #f (s1 s2: ordset a f)
+  : Lemma (ensures size (union s1 s2) >= size s1) =
+  eq_lemma (union s1 s2) (union s2 s1);
+  size_of_union_left s2 s1
+
 (* TODO:FIXME: implement *)
-let size_union #a #f s1 s2 = admit ()
+let size_union #a #f s1 s2 =
+  size_of_union_left s1 s2;
+  size_of_union_right s1 s2
 
 (**********)
 
@@ -263,9 +300,60 @@ let rec map_internal (#a #b:eqtype) (#fa:cmp a) (#fb:cmp b) (g:a -> b) (sa:ordse
 
 let map #a #b #fa #fb g sa = map_internal #a #b #fa #fb g sa
 
-let lemma_strict_subset_size #a #f s1 s2 = admit ()
+let lemma_strict_subset_size #a #f s1 s2 = 
+  let eql (p q: ordset a f) 
+    : Lemma (requires forall x. mem x p = mem x q) 
+            (ensures p=q) 
+    = eq_lemma p q in 
+  Classical.move_requires_2 eql s1 s2;
+  eliminate exists x. mem x s2 && not (mem x s1) 
+  returns size s2 > size s1 with _.
+  begin
+    let ins_mem x s p // perhaps we should reorder parameters of insert_mem...
+      : Lemma(mem p (insert' #a #f x s) = (p=x || mem p s)) 
+      = insert_mem #a #f x p s in
+    Classical.forall_intro (ins_mem x s1);
+    precise_size_insert s1 x;
+    assert (subset (insert' x s1) s2)
+  end
 
-let lemma_minus_mem #a #f s1 s2 x = admit ()
+let aux_lemma_remove (#a:eqtype) #f (s: ordset a f) (x:a) (test:a)
+  : Lemma (mem test (remove x s) = (mem test s && not (x=test))) = ()
+
+let remove_le_empty #a #f x (s:ordset a f) : Lemma (requires s = empty) (ensures remove_le #a #f x s = empty) = ()
+ 
+private let me_empty (#a:eqtype) (#f:cmp a) (x:a) (s1 s2:ordset a f)
+  : Lemma (requires sorted f (x::s1) /\ sorted f (x::s2) /\ s2=empty) (ensures s1 = (minus' x s1 s2)) = 
+  ()
+
+let rec minus_empty (#a:eqtype) #f (s1 s2: ordset a f) : Lemma (requires s2=empty) (ensures minus s1 s2 = s1) 
+  = match s1 with
+  | [] -> ()
+  | x1 :: xs1 ->   
+    remove_le_empty #a #f x1 s2;
+    me_empty #a #f x1 xs1 s2;
+    assert (minus s1 s2 = minus' #a #f x1 xs1 s2);
+    assert (sorted f s1);
+    assert (sorted f xs1);
+    assert (sorted f (x1::xs1));
+    assert (sorted f (x1::s2));
+    assert (minus' #a #f x1 xs1 s2 = xs1);
+    assert (minus s1 s2 = xs1); 
+    admit();
+    ()
+  
+  
+
+//(ensures (mem x (minus s1 s2) = (mem x s1 && not (mem x s2))))
+let lemma_minus_mem #a #f s1 s2 x = 
+  match s2 with
+  | [] -> assert (forall p. not (mem p s2));
+         assert (minus s1 s2 == s1);
+         assert (forall p. mem p (minus s1 s2) = mem p s1);
+         admit();
+         ()
+  | hd::tl -> admit()
+  
 
 let lemma_strict_subset_minus_size #a #f s1 s2 s = admit ()
 
@@ -275,15 +363,19 @@ let lemma_subset_union #a #f s1 s2 s = admit ()
 
 let lemma_strict_subset_transitive #a #f s1 s2 s3 = admit ()
 
-let lemma_intersect_symmetric #a #f s1 s2 = admit ()
+let lemma_intersect_symmetric #a #f s1 s2 = eq_lemma (intersect s1 s2) (intersect s2 s1)
 
-let lemma_intersect_union_empty #a #f s1 s2 s3 = admit ()
+let lemma_intersect_union_empty #a #f s1 s2 s3 = eq_lemma empty (intersect (union s1 s2) s3)
 
-let lemma_intersect_union_empty' #a #f s1 s2 s3 = admit ()
+let lemma_intersect_union_empty' #a #f s1 s2 s3 = eq_lemma empty (intersect s1 s3);
+                                                  eq_lemma empty (intersect s2 s3) 
 
-let union_comm #a #f s1 s2 = admit ()
+let union_comm #a #f s1 s2 = eq_lemma (union s1 s2) (union s2 s1)
 
-let union_of_disj #a #f s1 s2 = admit ()
+let union_of_disj #a #f s1 s2 = 
+  let aux x : Lemma (mem x (minus (union s1 s2) s1) = (mem x s2)) 
+    = mem_intersect x s1 s2 in Classical.forall_intro aux;
+  eq_lemma (minus (union s1 s2) s1) s2
 
 (* Conversion from OrdSet to Set *)
 
