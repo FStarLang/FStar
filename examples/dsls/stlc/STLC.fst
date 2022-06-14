@@ -324,7 +324,7 @@ let rec elab_ty (t:stlc_ty)
       R.pack_ln 
         (R.Tv_Arrow 
           (RT.as_binder 0 t1)
-          (R.pack_comp (C_Total t2 [])))
+          (R.pack_comp (C_Total t2 u_unk [])))
   
 let rec elab_exp (e:s_exp)
   : Tot R.term (decreases (size e))
@@ -440,7 +440,7 @@ let elab_open_commute (e:s_exp) (x:var)
 
 let fstar_env =
   g:R.env { 
-    RT.lookup_fvar g RT.unit_fv == Some RT.tm_type
+    RT.lookup_fvar g RT.unit_fv == Some (RT.tm_type RT.u_zero)
   }
 
 let fstar_top_env =
@@ -457,11 +457,11 @@ let rec extend_env_l_lookup_fvar (g:R.env) (sg:stlc_env) (fv:R.fv)
   = match sg with
     | [] -> ()
     | hd::tl -> extend_env_l_lookup_fvar g tl fv
-          
+   
 let rec elab_ty_soundness (g:fstar_top_env)
                           (sg:stlc_env)
                           (t:stlc_ty)
-  : GTot (RT.typing (extend_env_l g sg) (elab_ty t) RT.tm_type)
+  : GTot (RT.typing (extend_env_l g sg) (elab_ty t) (RT.tm_type RT.u_zero))
          (decreases t)
   = match t with
     | TUnit -> 
@@ -472,7 +472,15 @@ let rec elab_ty_soundness (g:fstar_top_env)
       let x = fresh sg in
       fresh_is_fresh sg;
       let t2_ok = elab_ty_soundness g ((x, t1)::sg) t2 in
-      RT.T_Arrow _ x (elab_ty t1) (elab_ty t2) t1_ok t2_ok
+      let arr_max 
+        : RT.typing 
+               (extend_env_l g sg)
+               (elab_ty t)
+               (RT.tm_type RT.(u_max u_zero u_zero))
+            =  RT.T_Arrow _ x (elab_ty t1) (elab_ty t2) 
+                          RT.u_zero RT.u_zero t1_ok t2_ok
+      in
+      RT.simplify_umax arr_max
   
 let rec soundness (#sg:stlc_env) 
                   (#se:s_exp)
@@ -511,6 +519,7 @@ let rec soundness (#sg:stlc_env)
                    (elab_ty t) 
                    (elab_exp e)
                    (elab_ty t')
+                   _
                    (elab_ty_soundness g sg t)
                    de
       in
@@ -533,7 +542,7 @@ let rec soundness (#sg:stlc_env)
         RT.typing (extend_env_l g sg)
                   (elab_exp (EApp e1 e2))
                   (RT.open_with (elab_ty t') (elab_exp e2))
-        = RT.T_App _ _ _ _ _ dt1 dt2
+        = RT.T_App _ _ _ _ _ _ dt1 dt2
       in
       dt
 

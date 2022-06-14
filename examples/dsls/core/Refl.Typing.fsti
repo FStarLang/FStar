@@ -1,6 +1,8 @@
 module Refl.Typing
+open FStar.List.Tot
 open FStar.Reflection
 module R = FStar.Reflection
+
 val inspect_pack (t:R.term_view)
   : Lemma (ensures R.(inspect_ln (pack_ln t) == t))
           [SMTPat R.(inspect_ln (pack_ln t))]
@@ -86,6 +88,7 @@ val open_or_close_ctx_uvar_and_subst (c:ctx_uvar_and_subst) (v:open_or_close) (i
 let rec open_or_close_term' (t:term) (v:open_or_close) (i:nat)
   : GTot term (decreases t)
   = match inspect_ln t with
+    | Tv_UInst _ _
     | Tv_FVar _
     | Tv_Type _
     | Tv_Const _
@@ -183,12 +186,12 @@ and open_or_close_binder' (b:binder) (v:open_or_close) (i:nat)
 and open_or_close_comp' (c:comp) (v:open_or_close) (i:nat)
   : GTot comp (decreases c)
   = match inspect_comp c with
-    | C_Total t decr ->
-      pack_comp (C_Total (open_or_close_term' t v i)
+    | C_Total t u decr ->
+      pack_comp (C_Total (open_or_close_term' t v i) u
                          (open_or_close_terms' decr v i))
 
-    | C_GTotal t decr ->
-      pack_comp (C_GTotal (open_or_close_term' t v i)
+    | C_GTotal t u decr ->
+      pack_comp (C_GTotal (open_or_close_term' t v i) u
                           (open_or_close_terms' decr v i))
 
     | C_Lemma pre post pats ->
@@ -315,8 +318,11 @@ let unit_ty = pack_ln (Tv_FVar unit_fv)
 let bool_fv = pack_fv bool_lid
 let bool_ty = pack_ln (Tv_FVar bool_fv)
 
-let mk_total t = pack_comp (C_Total t [])
-let tm_type = pack_ln (Tv_Type ())
+let u_zero = pack_universe Uv_Zero
+let u_max u1 u2 = pack_universe (Uv_Max [u1; u2])
+let u_succ u = pack_universe (Uv_Succ u)
+let mk_total t = pack_comp (C_Total t u_unk [])
+let tm_type u = pack_ln (Tv_Type u)
 
 let true_bool = pack_ln (Tv_Const C_True)
 let false_bool = pack_ln (Tv_Const C_False)
@@ -337,7 +343,54 @@ type constant_typing: vconst -> term -> Type0 =
 val subtyping_token (e:env) (t0 t1:term) : Type0
 val check_subtyping (e:env) (t0 t1:term)
   : FStar.Tactics.Tac (option (subtyping_token e t0 t1))
-  
+
+noeq
+type univ_eq : universe -> universe -> Type0 = 
+  | UN_Refl : 
+    u:universe ->
+    univ_eq u u
+
+  | UN_MaxCongL :
+    u:universe ->
+    u':universe ->
+    v:universe ->
+    univ_eq u u' ->
+    univ_eq (u_max u v) (u_max u' v)
+
+  | UN_MaxCongR :
+    u:universe ->
+    v:universe ->
+    v':universe ->
+    univ_eq v v' ->
+    univ_eq (u_max u v) (u_max u v')
+
+  | UN_MaxComm:
+    u:universe ->
+    v:universe ->
+    univ_eq (u_max u v) (u_max v u)
+
+  | UN_MaxLeq:
+    u:universe ->
+    v:universe ->
+    univ_leq u v ->
+    univ_eq (u_max u v) v
+
+and univ_leq : universe -> universe -> Type0 = 
+  | UNLEQ_Refl:
+    u:universe ->
+    univ_leq u u
+
+  | UNLEQ_Succ:
+    u:universe ->
+    v:universe ->
+    univ_leq u v ->
+    univ_leq u (u_succ v)
+
+  | UNLEQ_Max:
+    u:universe ->
+    v:universe ->
+    univ_leq u (u_max u v)
+
 noeq
 type typing : env -> term -> term -> Type0 =
   | T_Var : 
@@ -363,7 +416,8 @@ type typing : env -> term -> term -> Type0 =
      ty:term ->
      body:term ->
      body_ty:term ->
-     typing g ty tm_type ->
+     u:universe ->
+     typing g ty (tm_type u) ->
      typing (extend_env g x ty) (open_term body x) body_ty ->
      typing g (pack_ln (Tv_Abs (as_binder 0 ty) body))
               (pack_ln (Tv_Arrow (as_binder 0 ty) 
@@ -375,7 +429,8 @@ type typing : env -> term -> term -> Type0 =
      e2:term ->
      x:binder ->
      t:term ->
-     typing g e1 (pack_ln (Tv_Arrow x (pack_comp (C_Total t [])))) ->
+     u:universe ->
+     typing g e1 (pack_ln (Tv_Arrow x (pack_comp (C_Total t u [])))) ->
      typing g e2 (binder_sort x) ->
      typing g (pack_ln (Tv_App e1 (e2, Q_Explicit)))
               (open_with t e2)
@@ -385,18 +440,23 @@ type typing : env -> term -> term -> Type0 =
      x:var { None? (lookup_bvar g x) } ->
      t1:term ->
      t2:term ->
-     typing g t1 tm_type ->
-     typing (extend_env g x t1) (open_term t2 x) tm_type ->
-     typing g (pack_ln (Tv_Arrow (as_binder 0 t1) (mk_total t2))) tm_type
+     u1:universe ->
+     u2:universe ->
+     typing g t1 (tm_type u1) ->
+     typing (extend_env g x t1) (open_term t2 x) (tm_type u2) ->
+     typing g (pack_ln (Tv_Arrow (as_binder 0 t1) (mk_total t2)))
+              (tm_type (u_max u1 u2))
 
   | T_Refine:
      g:env ->
      x:var { None? (lookup_bvar g x) } ->     
      t:term ->
      e:term ->
-     typing g t tm_type ->
-     typing (extend_env g x t) (open_term e x) tm_type ->
-     typing g (pack_ln (Tv_Refine (pack_bv (make_bv 0 t)) e)) tm_type
+     u1:universe ->
+     u2:universe ->     
+     typing g t (tm_type u1) ->
+     typing (extend_env g x t) (open_term e x) (tm_type u2) ->
+     typing g (pack_ln (Tv_Refine (pack_bv (make_bv 0 t)) e)) (tm_type u1)
 
   | T_Sub:
      g:env ->
@@ -443,6 +503,13 @@ and sub_typing : env -> term -> term -> Type0 =
       subtyping_token g t0 t1 ->
       sub_typing g t0 t1
 
+  | ST_UnivEq:
+      g:env ->
+      u:universe ->
+      v:universe ->
+      univ_eq u v ->
+      sub_typing g (tm_type u) (tm_type v)
+
 and branches_typing : env -> term -> term -> list branch -> term -> Type0 =
 
 let bindings = list (var & term)
@@ -474,5 +541,14 @@ val subtyping_token_weakening (g:env)
                               (t0 t1:term)
                              (d:subtyping_token (extend_env_l g (bs1@bs0)) t0 t1)
   : subtyping_token (extend_env_l g (bs1@(x,t)::bs0)) t0 t1
+
+let simplify_umax (#g:R.env) (#t:R.term) (#u:R.universe)
+                  (d:typing g t (tm_type (u_max u u)))
+   : typing g t (tm_type u)
+   = let ue
+       : univ_eq (u_max u u) u
+       = UN_MaxLeq u u (UNLEQ_Refl u)
+     in
+     T_Sub _ _ _ _ d (ST_UnivEq _ _ _ ue)
 
 

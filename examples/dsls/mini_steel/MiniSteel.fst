@@ -69,7 +69,7 @@ let open_comp_with c x = open_comp_with' c x 0
 
 let fstar_env =
   g:R.env { 
-    RT.lookup_fvar g RT.bool_fv == Some RT.tm_type
+    RT.lookup_fvar g RT.bool_fv == Some (RT.tm_type RT.u_zero)
     ///\ vprop etc
   }
 

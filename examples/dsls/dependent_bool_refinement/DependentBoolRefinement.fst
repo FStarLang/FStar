@@ -211,7 +211,7 @@ module RT = Refl.Typing
 
 let b2t_lid : R.name = ["Prims"; "b2t"]
 let b2t_fv : R.fv = R.pack_fv b2t_lid
-let b2t_ty : R.term = R.(pack_ln (Tv_Arrow (RT.as_binder 0 RT.bool_ty) (RT.mk_total RT.tm_type)))
+let b2t_ty : R.term = R.(pack_ln (Tv_Arrow (RT.as_binder 0 RT.bool_ty) (RT.mk_total (RT.tm_type RT.u_zero))))
 let r_b2t (t:R.term) 
   : R.term 
   = R.(pack_ln (Tv_App (pack_ln (Tv_FVar b2t_fv)) (t, Q_Explicit)))
@@ -264,7 +264,7 @@ and elab_ty (t:src_ty)
       R.pack_ln 
         (R.Tv_Arrow 
           (RT.as_binder 0 t1)
-          (R.pack_comp (C_Total t2 [])))
+          (RT.mk_total t2)) //(R.pack_comp (C_Total t2 [])))
           
     | TRefineBool e ->
       let e = elab_exp e in
@@ -290,7 +290,7 @@ let extend_env_l (g:R.env) (sg:src_env) =
 
 let fstar_env =
   g:R.env { 
-    RT.lookup_fvar g RT.bool_fv == Some RT.tm_type /\
+    RT.lookup_fvar g RT.bool_fv == Some (RT.tm_type RT.u_zero) /\
     RT.lookup_fvar g b2t_fv == Some b2t_ty
   }
 
@@ -563,10 +563,10 @@ let elab_open_commute (e:src_exp) (x:var)
     RT.open_term_spec (elab_exp e) x
 
 let b2t_typing (g:fstar_env) (t:R.term) (dt:RT.typing g t RT.bool_ty)
-  : RT.typing g (r_b2t t) RT.tm_type
+  : RT.typing g (r_b2t t) (RT.tm_type RT.u_zero)
   = let b2t_typing : RT.typing g _ b2t_ty = RT.T_FVar g b2t_fv in
-    let app_ty : _ = RT.T_App _ _ _ _ _ b2t_typing dt in
-    RT.open_with_spec RT.tm_type t;
+    let app_ty : _ = RT.T_App _ _ _ _ _ _ b2t_typing dt in
+    RT.open_with_spec (RT.tm_type RT.u_zero) t;
     app_ty
 
 let rec extend_env_l_lookup_fvar (g:R.env) (sg:src_env) (fv:R.fv)
@@ -679,7 +679,7 @@ let rec soundness (#f:fstar_top_env)
              = de
       in
       fresh_is_fresh sg;
-      let dt : RT.typing (extend_env_l f sg) (elab_ty t) RT.tm_type =
+      let dt : RT.typing (extend_env_l f sg) (elab_ty t) (RT.tm_type RT.u_zero) =
         src_ty_ok_soundness sg t dt
       in
       let dd
@@ -691,6 +691,7 @@ let rec soundness (#f:fstar_top_env)
                    (elab_ty t) 
                    (elab_exp e)
                    (elab_ty t')
+                   _
                    dt
                    de
       in
@@ -729,13 +730,13 @@ let rec soundness (#f:fstar_top_env)
                     (elab_ty t)
         = RT.T_Sub _ _ _ _ dt2 st
       in
-      RT.T_App _ _ _ _ _ dt1 dt2
+      RT.T_App _ _ _ _ _ _ dt1 dt2
 
 and src_ty_ok_soundness (#f:fstar_top_env)
                         (sg:src_env { src_env_ok sg })
                         (t:src_ty)
                         (dt:src_ty_ok f sg t)
- : GTot (RT.typing (extend_env_l f sg) (elab_ty t) RT.tm_type)
+ : GTot (RT.typing (extend_env_l f sg) (elab_ty t) (RT.tm_type RT.u_zero))
         (decreases (t_height dt))
  = match dt with
    | OK_TBool _ ->
@@ -744,7 +745,8 @@ and src_ty_ok_soundness (#f:fstar_top_env)
    | OK_TArrow _ t1 t2 x ok_t1 ok_t2 ->
      let t1_ok = src_ty_ok_soundness sg _ ok_t1 in
      let t2_ok = src_ty_ok_soundness ((x, Inl t1)::sg) _ ok_t2 in
-     RT.T_Arrow _ x (elab_ty t1) (elab_ty t2) t1_ok t2_ok
+     let arr_max = RT.T_Arrow _ x (elab_ty t1) (elab_ty t2) _ _ t1_ok t2_ok in
+     RT.simplify_umax arr_max
 
    | OK_TRefine _ e x de ->
      let de 
@@ -756,11 +758,11 @@ and src_ty_ok_soundness (#f:fstar_top_env)
      let de
        : RT.typing (RT.extend_env (extend_env_l f sg) x RT.bool_ty)
                    (r_b2t (elab_exp (open_exp e x)))
-                   RT.tm_type
+                   (RT.tm_type RT.u_zero)
        = b2t_typing _ _ de
      in
      let bool_typing
-       : RT.typing (extend_env_l f sg) RT.bool_ty RT.tm_type 
+       : RT.typing (extend_env_l f sg) RT.bool_ty (RT.tm_type RT.u_zero)
        = RT.T_FVar _ RT.bool_fv
      in
      elab_open_b2t e x;
@@ -768,6 +770,7 @@ and src_ty_ok_soundness (#f:fstar_top_env)
                  x
                  RT.bool_ty
                  (r_b2t (elab_exp e))
+                 _ _
                  bool_typing 
                  de
 
