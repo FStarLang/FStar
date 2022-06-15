@@ -2,24 +2,6 @@
 Introduction
 ############
 
-F* is a dependently typed programming language and proof
-assistant. This book describes how to use F* for *proof-oriented
-programming*, a paradigm in which one co-designs programs and proofs
-to provide mathematical guarantees about various aspects of a
-program's behavior, including properties like functional correctness
-(precisely characterizing the input/output behavior of a program),
-security properties (e.g., ensuring that a program never leaks certain
-secrets), and bounds on resource usage.
-
-Although a functional programming language at its core, F* promotes
-programming in a variety of paradigms, including programming with
-pure, total functions, low-level programming in imperative languages
-like C and assembly, concurrent programming with shared memory and
-message-passing, and distributed programming. Built on top of F*'s
-expressive, dependently typed core logic, no matter which paradigm you
-choose, proof-oriented programming in F* ensures that programs behave
-as intended.
-
 A Capsule Summary of F*
 -----------------------
 
@@ -248,8 +230,7 @@ occur. All these little proofs can quickly overwhelm a user.
 The main workhorse for proofs in F* is an automated theorem prover,
 known as a *Satisfiability Modulo Theories*, or SMT, solver. The F*
 toolchain integrates the `Z3 SMT Solver
-<https://www.microsoft.com/en-us/research/blog/the-inner-magic-behind-the-z3-theorem-prover/>`_,
-which it Z3 SMT solver, which is integrated with the F* toolchain.
+<https://www.microsoft.com/en-us/research/blog/the-inner-magic-behind-the-z3-theorem-prover/>`_.
 
 By default, the F* typechecker collects all the facts that must be
 proven in a program and encodes them to the SMT solver, an engine that
@@ -320,7 +301,7 @@ This style of proof is similar to what you might find in systems like
 Coq or Lean. An F* tactic is just an F* program that can manipulate F*
 proof states. In this case, to prove the theorem
 ``a ==> b ==> (b /\ a)``, we apply commands to transform the proof
-state by applying the rules of propositional logic, building of
+state by applying the rules of propositional logic, building a
 proof of the theorem.
 
 Tactics are an instance of a more general metaprogramming system in
@@ -475,8 +456,7 @@ F* is an open source project at `GitHub
 institutions, including `Microsoft Research
 <http://research.microsoft.com/en-us>`_, `MSR-Inria
 <https://www.microsoft.com/en-us/research/collaboration/inria-joint-centre/>`_, `Inria <https://www.inria.fr/>`_,
-`Rosario <https://www.cifasis-conicet.gov.ar/en/>`_, `Carnegie-Mellon
-<https://www.cs.cmu.edu/>`_.
+`Rosario <https://www.cifasis-conicet.gov.ar/en/>`_, and `Carnegie-Mellon <https://www.cs.cmu.edu/>`_.
 
 **The name** The F in F* is a homage to System F
 (https://en.wikipedia.org/wiki/System_F) which was the base calculus
@@ -498,6 +478,6 @@ be a sort of fixpoint of all those languages. The first version of F*
 also had affine types and part of the intention then was to use affine
 types to encode separation logic---so the "\*" was also meant to evoke
 the separation logic "\*". But, the early affine versions of F* never
-really did have separation logic in that version. It took until almost
+really did have separation logic. It took until almost
 a decade later to have a separation logic embedded in F* (see Steel),
 though without relying on affine types.

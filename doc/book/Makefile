@@ -6,7 +6,7 @@ export FSTAR_HOME?=$(realpath ../..)
 FSTARLANG_ORG_ROOT?=www
 
 # You can set these variables from the command line.
-SPHINXOPTS    = -W
+SPHINXOPTS    =
 SPHINXBUILD   = sphinx-build
 SPHINXPROJ    = FStarBook
 SOURCEDIR     = .
@@ -17,6 +17,17 @@ html: Makefile
 	find _build -name "*.html" | xargs sed -i 's/_static/static/g'
 	rm -rf _build/html/static
 	mv _build/html/_static _build/html/static
+
+LATEXFILE=proof-orientedprogramminginf.tex
+
+pdf:
+	@$(SPHINXBUILD) -M latex "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
+	sed -i -e 's|\\chapter|\\part|g' $(BUILDDIR)/latex/$(LATEXFILE)
+	sed -i -e 's|\\section|\\chapter|g' $(BUILDDIR)/latex/$(LATEXFILE)
+	sed -i -e 's|\\subsection|\\section|g' $(BUILDDIR)/latex/$(LATEXFILE)
+	sed -i -e 's|\\subsubsection|\\subsection|g' $(BUILDDIR)/latex/$(LATEXFILE)
+	sed -i -e 's|\\sphinxhref{../code/|\\sphinxhref{https://fstar-lang.org/tutorial/book/code/|g' $(BUILDDIR)/latex/$(LATEXFILE)
+	$(MAKE) -C $(BUILDDIR)/latex
 
 # Put it first so that "make" without argument is like "make help".
 help:

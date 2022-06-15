@@ -7,6 +7,7 @@
    <http://research.microsoft.com/en-us>`_, `MSR-Inria
    <http://www.msr-inria.fr/>`_, and `Inria <https://www.inria.fr/>`_.
 
+   
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
