@@ -1863,6 +1863,7 @@ let dummy_solver = {
     rollback=(fun _ _ -> ());
     encode_sig=(fun _ _ -> ());
     preprocess=(fun e g -> [e,g, FStar.Options.peek ()]);
+    spinoff_strictly_positive_goals=None;
     handle_smt_goal=(fun e g -> [e,g]);
     solve=(fun _ _ _ -> ());
     finish=(fun () -> ());
@@ -1890,3 +1891,10 @@ let fvar_of_nonqual_lid env lid =
         | Some dd -> dd
     in
     fvar lid dd None
+
+let split_smt_query (e:env) (q:term) 
+  : option (list (env & term))
+  = match e.solver.spinoff_strictly_positive_goals with
+    | None -> None
+    | Some p -> Some (p e q)
+    

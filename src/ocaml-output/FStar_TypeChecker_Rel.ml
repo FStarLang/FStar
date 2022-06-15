@@ -13176,7 +13176,33 @@ let (discharge_guard' :
                                     let uu___13 = FStar_Options.peek () in
                                     (env, vc2, uu___13) in
                                   [uu___12]) in
-                             FStar_Compiler_Effect.op_Bar_Greater vcs
+                             let vcs1 =
+                               let uu___10 = FStar_Options.split_queries () in
+                               if uu___10
+                               then
+                                 FStar_Compiler_Effect.op_Bar_Greater vcs
+                                   (FStar_Compiler_List.collect
+                                      (fun uu___11 ->
+                                         match uu___11 with
+                                         | (env1, goal, opts) ->
+                                             let uu___12 =
+                                               FStar_TypeChecker_Env.split_smt_query
+                                                 env1 goal in
+                                             (match uu___12 with
+                                              | FStar_Pervasives_Native.None
+                                                  -> [(env1, goal, opts)]
+                                              | FStar_Pervasives_Native.Some
+                                                  goals ->
+                                                  FStar_Compiler_Effect.op_Bar_Greater
+                                                    goals
+                                                    (FStar_Compiler_List.map
+                                                       (fun uu___13 ->
+                                                          match uu___13 with
+                                                          | (env2, goal1) ->
+                                                              (env2, goal1,
+                                                                opts))))))
+                               else vcs in
+                             FStar_Compiler_Effect.op_Bar_Greater vcs1
                                (FStar_Compiler_List.iter
                                   (fun uu___10 ->
                                      match uu___10 with

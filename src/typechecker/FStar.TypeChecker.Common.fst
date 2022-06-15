@@ -215,8 +215,20 @@ let conj_guard_f g1 g2 = match g1, g2 with
   | g, Trivial -> g
   | NonTrivial f1, NonTrivial f2 -> NonTrivial (U.mk_conj f1 f2)
 
-let check_trivial t = match (U.unmeta t).n with
-    | Tm_fvar tc when S.fv_eq_lid tc PC.true_lid -> Trivial
+let rec check_trivial t =
+    let hd, args = U.head_and_args (U.unmeta t) in
+    match (U.un_uinst (U.unmeta hd)).n, args with
+    | Tm_fvar tc, [] 
+      when S.fv_eq_lid tc PC.true_lid ->
+      Trivial
+      
+    | Tm_fvar sq, [v, _]
+      when S.fv_eq_lid sq PC.squash_lid 
+         || S.fv_eq_lid sq PC.auto_squash_lid ->         
+      (match check_trivial v with
+       | Trivial -> Trivial
+       | _ -> NonTrivial t)
+
     | _ -> NonTrivial t
 
 let imp_guard_f g1 g2 = match g1, g2 with

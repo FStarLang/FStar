@@ -29,6 +29,8 @@ open FStar.Syntax.Subst
 open FStar.TypeChecker.Common
 
 val elaborate_pat : env -> pat -> pat
+val raw_pat_as_exp (_:Env.env) (p:pat) : option term 
+
 val pat_as_exp:  introduce_bv_uvars:bool
                -> inst_pat_cons_univs:bool  (* whether it should instantiate the universes for data constructor patterns, on when called from Rel *)
                -> env:Env.env
