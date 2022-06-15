@@ -1253,6 +1253,9 @@ let uvar_env (env : env) (ty : option typ) : tac term =
                   bind (new_uvar "uvar_env" env typ ps.entry_range)
                        (fun (t, uvar_t) -> ret t))))
 
+let fresh_universe_uvar () : tac term =
+  U.type_u () |> fst |> ret
+
 let unshelve (t : term) : tac unit = wrap_err "unshelve" <|
     bind get (fun ps ->
     let env = ps.main_context in
@@ -1503,7 +1506,6 @@ let rec init (l:list 'a) : list 'a =
 let rec inspect (t:term) : tac term_view = wrap_err "inspect" (
     bind (top_env ()) (fun e ->
     let t = U.unascribe t in
-    let t = U.un_uinst t in
     let t = U.unlazy_emb t in
     match t.n with
     | Tm_meta (t, _) ->
@@ -1517,6 +1519,11 @@ let rec inspect (t:term) : tac term_view = wrap_err "inspect" (
 
     | Tm_fvar fv ->
         ret <| Tv_FVar fv
+
+    | Tm_uinst (t, us) ->
+      (match (t |> SS.compress |> U.unascribe).n with
+       | Tm_fvar fv -> ret <| Tv_UInst (fv, us)
+       | _ -> failwith "Tac::inspect: Tm_uinst head not an fvar")
 
     | Tm_app (hd, []) ->
         failwith "empty arguments on Tm_app"
@@ -1539,8 +1546,8 @@ let rec inspect (t:term) : tac term_view = wrap_err "inspect" (
         | b::bs -> ret <| Tv_Abs (b, U.abs bs t k)
         end
 
-    | Tm_type _ ->
-        ret <| Tv_Type ()
+    | Tm_type u ->
+        ret <| Tv_Type u
 
     | Tm_arrow ([], k) ->
         failwith "empty binders on arrow"
@@ -1629,6 +1636,9 @@ let pack (tv:term_view) : tac term =
     | Tv_FVar fv ->
         ret <| S.fv_to_tm fv
 
+    | Tv_UInst (fv, us) ->
+        ret <| S.mk_Tm_uinst (S.fv_to_tm fv) us
+
     | Tv_App (l, (r, q)) ->
         let q' = pack_aqual q in
         ret <| U.mk_app l [(r, q')]
@@ -1639,8 +1649,8 @@ let pack (tv:term_view) : tac term =
     | Tv_Arrow (b, c) ->
         ret <| U.arrow [b] c
 
-    | Tv_Type () ->
-        ret <| U.ktype
+    | Tv_Type u ->
+        ret <| S.mk (Tm_type u) Range.dummyRange
 
     | Tv_Refine (bv, t) ->
         ret <| U.refine bv t

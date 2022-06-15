@@ -944,7 +944,7 @@ let (interpret_plugin_as_term_fun :
                                 let uu___9 =
                                   let uu___10 =
                                     let uu___11 =
-                                      FStar_Reflection_Data.fstar_refl_types_lid
+                                      FStar_Reflection_Constants.fstar_refl_types_lid
                                         "term" in
                                     (uu___11, Prims.int_zero, "term") in
                                   (uu___10, Refl_emb) in
@@ -952,7 +952,7 @@ let (interpret_plugin_as_term_fun :
                                   let uu___11 =
                                     let uu___12 =
                                       let uu___13 =
-                                        FStar_Reflection_Data.fstar_refl_types_lid
+                                        FStar_Reflection_Constants.fstar_refl_types_lid
                                           "sigelt" in
                                       (uu___13, Prims.int_zero, "sigelt") in
                                     (uu___12, Refl_emb) in
@@ -960,7 +960,7 @@ let (interpret_plugin_as_term_fun :
                                     let uu___13 =
                                       let uu___14 =
                                         let uu___15 =
-                                          FStar_Reflection_Data.fstar_refl_types_lid
+                                          FStar_Reflection_Constants.fstar_refl_types_lid
                                             "fv" in
                                         (uu___15, Prims.int_zero, "fv") in
                                       (uu___14, Refl_emb) in
@@ -968,7 +968,7 @@ let (interpret_plugin_as_term_fun :
                                       let uu___15 =
                                         let uu___16 =
                                           let uu___17 =
-                                            FStar_Reflection_Data.fstar_refl_types_lid
+                                            FStar_Reflection_Constants.fstar_refl_types_lid
                                               "binder" in
                                           (uu___17, Prims.int_zero, "binder") in
                                         (uu___16, Refl_emb) in
@@ -976,7 +976,7 @@ let (interpret_plugin_as_term_fun :
                                         let uu___17 =
                                           let uu___18 =
                                             let uu___19 =
-                                              FStar_Reflection_Data.fstar_refl_syntax_lid
+                                              FStar_Reflection_Constants.fstar_refl_syntax_lid
                                                 "binders" in
                                             (uu___19, Prims.int_zero,
                                               "binders") in
@@ -985,7 +985,7 @@ let (interpret_plugin_as_term_fun :
                                           let uu___19 =
                                             let uu___20 =
                                               let uu___21 =
-                                                FStar_Reflection_Data.fstar_refl_data_lid
+                                                FStar_Reflection_Constants.fstar_refl_data_lid
                                                   "exp" in
                                               (uu___21, Prims.int_zero,
                                                 "exp") in

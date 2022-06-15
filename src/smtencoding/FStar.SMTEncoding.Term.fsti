@@ -201,6 +201,7 @@ val fvs_subset_of: fvs -> fvs -> bool
 val free_variables: term -> fvs
 val mkTrue :  (Range.range -> term)
 val mkFalse : (Range.range -> term)
+val mkUnreachable : term
 val mkInteger : string -> Range.range -> term
 val mkInteger': int -> Range.range -> term
 val mkReal: string -> Range.range -> term

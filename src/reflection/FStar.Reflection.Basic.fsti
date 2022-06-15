@@ -80,6 +80,9 @@ val pack_binder    : bv -> aqualv -> list term -> binder
 val inspect_aqual  : aqual -> aqualv
 val pack_aqual     : aqualv -> aqual
 
+val inspect_universe : universe -> universe_view
+val pack_universe    : universe_view -> universe
+
 val subst          : bv -> term -> term -> term
 val close_term     : binder -> term -> term
 

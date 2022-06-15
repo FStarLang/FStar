@@ -4639,6 +4639,16 @@ let discharge_guard' use_env_range_msg env (g:guard_t) (use_smt:bool) : option g
                 end
                 else [env,vc,FStar.Options.peek ()]
             in
+            let vcs =
+              if Options.split_queries ()
+              then vcs |>
+                   List.collect
+                     (fun (env, goal, opts) ->
+                         match Env.split_smt_query env goal with
+                         | None -> [env,goal,opts]
+                         | Some goals -> goals |> List.map (fun (env, goal) -> env,goal,opts))
+              else vcs
+            in
             vcs |> List.iter (fun (env, goal, opts) ->
                     match check_trivial goal with
                     | Trivial ->

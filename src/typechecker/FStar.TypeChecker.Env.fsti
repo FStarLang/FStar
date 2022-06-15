@@ -209,6 +209,7 @@ and solver_t = {
     rollback        :string -> option solver_depth_t -> unit;
     encode_sig      :env -> sigelt -> unit;
     preprocess      :env -> goal -> list (env * goal * FStar.Options.optionstate);
+    spinoff_strictly_positive_goals: option (env -> goal -> list (env * goal));
     handle_smt_goal :env -> goal -> list (env * goal);
     solve           :option (unit -> string) -> env -> goal -> unit; //call to the smt solver
     finish          :unit -> unit;
@@ -490,3 +491,5 @@ val get_letrec_arity : env -> lbname -> option int
       still requires special handling
 *)
 val fvar_of_nonqual_lid : env -> lident -> term
+
+val split_smt_query : env -> term -> option (list (env * term))
