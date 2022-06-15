@@ -535,8 +535,11 @@ and translate_expr env e: expr =
     when string_of_mlpath p = "FStar.Buffer.index" || string_of_mlpath p = "FStar.Buffer.op_Array_Access"
       || string_of_mlpath p = "LowStar.Monotonic.Buffer.index"
       || string_of_mlpath p = "LowStar.UninitializedBuffer.uindex"
-      || string_of_mlpath p = "LowStar.ConstBuffer.index"
-      || string_of_mlpath p = "Steel.Array.index" ->
+      || string_of_mlpath p = "LowStar.ConstBuffer.index" ->
+      EBufRead (translate_expr env e1, translate_expr env e2)
+
+  | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ _perm; e1; e2 ])
+    when string_of_mlpath p = "Steel.Array.index" ->
       EBufRead (translate_expr env e1, translate_expr env e2)
 
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ _perm; e1; _seq; e2 ])
