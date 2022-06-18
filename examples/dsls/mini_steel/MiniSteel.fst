@@ -1,7 +1,8 @@
 module MiniSteel
 module RT = Refl.Typing
 module R = FStar.Reflection
-
+open FStar.List.Tot
+  
 type lident = R.name
 
 type constant =
@@ -140,6 +141,32 @@ type vprop_equiv (f:fstar_top_env) : env -> term -> term -> Type =
      t:term ->
      vprop_equiv f g t t
 
+  | VE_Sym:
+     g:env ->
+     t1:term -> 
+     t2:term -> 
+     vprop_equiv f g t1 t2 ->
+     vprop_equiv f g t2 t1
+
+  | VE_Trans:
+     g:env ->
+     t0:term ->
+     t1:term ->
+     t2:term ->
+     vprop_equiv f g t0 t1 ->
+     vprop_equiv f g t1 t2 ->
+     vprop_equiv f g t0 t2
+
+  | VE_Ctxt:
+     g:env ->
+     t0:term -> 
+     t1:term -> 
+     t0':term -> 
+     t1':term ->
+     vprop_equiv f g t0 t0' ->
+     vprop_equiv f g t1 t1' ->
+     vprop_equiv f g (Tm_Star t0 t1) (Tm_Star t0' t1')
+     
   | VE_Unit:
      g:env ->
      t:term ->
@@ -349,15 +376,187 @@ let check_tot (f:fstar_top_env) (g:env) (t:term)
       | None -> T.fail "Inexpressible type"
       | Some ty -> (| ty, T_Tot g t ty tok |)
 
-let try_split_vprop (f:fstar_top_env)
-                    (g:env)
-                    (ctxt:term)
-                    (ctxt_typing: tot_typing f g ctxt Tm_VProp)
-                    (req:term)
+let rec vprop_as_list (vp:term)
+  : list term
+  = match vp with
+    | Tm_Star vp0 vp1 -> vprop_as_list vp0 @ vprop_as_list vp1
+    | _ -> [vp]
+
+let rec list_as_vprop (vps:list term)
+  = match vps with
+    | [] -> Tm_Emp
+    | hd::tl -> Tm_Star hd (list_as_vprop tl)
+
+let canon_vprop (vp:term)
+  : term
+  = list_as_vprop (vprop_as_list vp)
+
+let rec list_as_vprop_append f g (vp0 vp1:list term)
+  : GTot (vprop_equiv f g (list_as_vprop (vp0 @ vp1))
+                          (Tm_Star (list_as_vprop vp0) 
+                                   (list_as_vprop vp1)))
+         (decreases vp0)
+  = match vp0 with
+    | [] -> 
+      let v : vprop_equiv f g (list_as_vprop vp1)
+                              (Tm_Star Tm_Emp (list_as_vprop vp1)) = VE_Sym _ _ _ (VE_Unit _ _)
+      in
+      v
+    | hd::tl ->
+      let tl_vp1 = list_as_vprop_append f g tl vp1 in
+      let d : vprop_equiv f g (list_as_vprop (vp0 @ vp1))
+                              (Tm_Star hd (Tm_Star (list_as_vprop tl) (list_as_vprop vp1)))
+            = VE_Ctxt _ _ _ _ _ (VE_Refl _ _) tl_vp1
+      in
+      let d : vprop_equiv f g (list_as_vprop (vp0 @ vp1))
+                              (Tm_Star (Tm_Star hd (list_as_vprop tl)) (list_as_vprop vp1))
+            = VE_Trans _ _ _ _ d (VE_Assoc _ _ _ _) in
+      d
+
+let list_as_vprop_comm f g (vp0 vp1:list term)
+  : GTot (vprop_equiv f g (list_as_vprop (vp0 @ vp1))
+                          (list_as_vprop (vp1 @ vp0)))
+  = let d1 : _ = list_as_vprop_append f g vp0 vp1 in
+    let d2 : _ = VE_Sym _ _ _ (list_as_vprop_append f g vp1 vp0) in
+    let d1 : _ = VE_Trans _ _ _ _ d1 (VE_Comm _ _ _) in
+    VE_Trans _ _ _ _ d1 d2
+
+let list_as_vprop_assoc f g (vp0 vp1 vp2:list term)
+  : GTot (vprop_equiv f g (list_as_vprop (vp0 @ (vp1 @ vp2)))
+                          (list_as_vprop ((vp0 @ vp1) @ vp2)))
+  = List.Tot.append_assoc vp0 vp1 vp2;
+    VE_Refl _ _
+  
+let rec vprop_list_equiv (f:fstar_top_env)
+                         (g:env)
+                         (vp:term)
+  : GTot (vprop_equiv f g vp (canon_vprop vp))
+         (decreases vp)
+  = match vp with
+    | Tm_Star vp0 vp1 ->
+      let eq0 = vprop_list_equiv f g vp0 in
+      let eq1 = vprop_list_equiv f g vp1 in      
+      let app_eq
+        : vprop_equiv _ _ (canon_vprop vp) (Tm_Star (canon_vprop vp0) (canon_vprop vp1))
+        = list_as_vprop_append f g (vprop_as_list vp0) (vprop_as_list vp1)
+      in
+      let step
+        : vprop_equiv _ _ vp (Tm_Star (canon_vprop vp0) (canon_vprop vp1))
+        = VE_Ctxt _ _ _ _ _ eq0 eq1
+      in
+      VE_Trans _ _ _ _ step (VE_Sym _ _ _ app_eq)
+      
+    | _ -> 
+      VE_Sym _ _ _
+        (VE_Trans _ _ _ _ (VE_Comm g vp Tm_Emp) (VE_Unit _ vp))
+
+module L = FStar.List.Tot.Base
+let rec maybe_split_one_vprop (p:term) (qs:list term)
+  : option (list term & list term)
+  = match qs with
+    | [] -> None
+    | q::qs -> 
+      if p = q
+      then Some ([], qs)
+      else match maybe_split_one_vprop p qs with
+           | None -> None
+           | Some (l, r) -> Some (q::l, r)
+    
+let can_split_one_vprop p qs = Some? (maybe_split_one_vprop p qs)
+
+let split_one_vprop_l (p:term) 
+                    (qs:list term { can_split_one_vprop p qs })
+  : list term
+  = let Some (l, r) = maybe_split_one_vprop p qs in
+    l
+
+let split_one_vprop_r (p:term) 
+                    (qs:list term { can_split_one_vprop p qs })
+  : list term
+  = let Some (l, r) = maybe_split_one_vprop p qs in
+    r
+
+let vprop_equiv_swap (f:_) (g:_) (l0 l1 l2:list term)
+  : GTot (vprop_equiv f g (list_as_vprop ((l0 @ l1) @ l2))
+                          (list_as_vprop (l1 @ (l0 @ l2))))
+  = let d1 : _ = list_as_vprop_append f g (l0 @ l1) l2 in
+    let d2 = VE_Trans _ _ _ _ d1 (VE_Ctxt _ _ _ _ _ (list_as_vprop_comm _ _ _ _) (VE_Refl _ _)) in
+    let d3 = VE_Sym _ _ _ (list_as_vprop_append f g (l1 @ l0) l2) in
+    let d4 = VE_Trans _ _ _ _ d2 d3 in
+    List.Tot.append_assoc l1 l0 l2;
+    d4
+
+
+let split_one_vprop (p:term) 
+                    (qs:list term { can_split_one_vprop p qs })
+  : list term
+  = split_one_vprop_l p qs @ split_one_vprop_r p qs 
+
+let split_one_vprop_equiv f g (p:term) (qs:list term { can_split_one_vprop p qs })
+  : vprop_equiv f g (list_as_vprop qs) (Tm_Star p (list_as_vprop (split_one_vprop p qs)))
+  = let rec aux (qs:list term { can_split_one_vprop p qs })
+      : Lemma (qs == ((split_one_vprop_l p qs @ [p]) @ split_one_vprop_r p qs))
+      = match qs with
+        | q :: qs ->
+          if p = q then ()
+          else aux qs
+    in
+    aux qs;
+    vprop_equiv_swap f g (split_one_vprop_l p qs) [p] (split_one_vprop_r p qs)
+
+let rec try_split_vprop f g (req:list term) (ctxt:list term)
+  : option (frame:list term &
+            vprop_equiv f g (list_as_vprop (req @ frame)) (list_as_vprop ctxt))
+  = match req with
+    | [] -> Some (| ctxt, VE_Refl g _ |)
+    | hd::tl ->
+      match maybe_split_one_vprop hd ctxt with
+      | None -> None
+      | Some (l, r) -> 
+        let d1 : vprop_equiv f g (list_as_vprop ctxt) (list_as_vprop (hd :: (l@r))) = split_one_vprop_equiv _ _ hd ctxt in
+        match try_split_vprop f g tl (l @ r) with
+        | None -> None
+        | Some (| frame, d |) ->
+          let d : vprop_equiv f g (list_as_vprop (tl @ frame)) (list_as_vprop (l @ r)) = d in
+          let dd : vprop_equiv f g (list_as_vprop (req @ frame)) (list_as_vprop (hd :: (l @ r))) = 
+              VE_Ctxt _ _ _ _ _ (VE_Refl _ hd) d
+          in
+          let ddd = VE_Trans _ _ _ _ dd (VE_Sym _ _ _ d1) in
+          Some (| frame, ddd |)
+                       
+let split_vprop (f:fstar_top_env)
+                (g:env)
+                (ctxt:term)
+                (ctxt_typing: tot_typing f g ctxt Tm_VProp)
+                (req:term)
    : T.Tac (frame:term &
             tot_typing f g frame Tm_VProp &
             vprop_equiv f g (Tm_Star req frame) ctxt)
-   = admit()            
+   = let ctxt_l = vprop_as_list ctxt in
+     let req_l = vprop_as_list req in
+     match try_split_vprop f g req_l ctxt_l with
+     | None -> T.fail "Could not find frame"
+     | Some (| frame, veq |) ->
+       let d1 
+         : vprop_equiv _ _ (Tm_Star (canon_vprop req) (list_as_vprop frame))
+                           (list_as_vprop (req_l @ frame))
+         = VE_Sym _ _ _ (list_as_vprop_append f g req_l frame)
+       in
+       let d1 
+         : vprop_equiv _ _ (Tm_Star req (list_as_vprop frame))
+                           (list_as_vprop (req_l @ frame))
+         = VE_Trans _ _ _ _ (VE_Ctxt _ _ _ _ _ (vprop_list_equiv f g req) (VE_Refl _ _)) d1
+       in
+       let d : vprop_equiv _ _ (Tm_Star req (list_as_vprop frame))
+                               (canon_vprop ctxt) =
+           VE_Trans _ _ _ _ d1 veq
+       in
+       let d : vprop_equiv _ _ (Tm_Star req (list_as_vprop frame))
+                               ctxt =
+         VE_Trans _ _ _ _ d (VE_Sym _ _ _ (vprop_list_equiv f g ctxt))
+       in
+       let typing : tot_typing f g (list_as_vprop frame) Tm_VProp = magic () in
+       (| list_as_vprop frame, typing, d |)
 
 let try_frame_pre (#f:fstar_top_env)
                   (#g:env)
@@ -369,7 +568,7 @@ let try_frame_pre (#f:fstar_top_env)
   : T.Tac (c':st_comp { c'.pre == pre } &
            src_typing f g t (C_ST c'))
   = let C_ST s = c in
-    let (| frame, frame_typing, ve |) = try_split_vprop f g pre pre_typing s.pre in
+    let (| frame, frame_typing, ve |) = split_vprop f g pre pre_typing s.pre in
     let t_typing
       : st_typing f g t (add_frame s frame)
       = T_Frame g t s frame frame_typing t_typing in
