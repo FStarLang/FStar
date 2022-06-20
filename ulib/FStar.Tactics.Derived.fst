@@ -680,7 +680,7 @@ let rec apply_squash_or_lem d t =
        | _ ->
            fail "mapply: can't apply (1)"
        end
-    | C_Total rt _ ->
+    | C_Total rt _ _ ->
        begin match unsquash rt with
        (* If the function returns a squash, just apply it, since our goals are squashed *)
        | Some rt ->
@@ -837,7 +837,8 @@ let rec visit_tm (ff : term -> Tac term) (t : term) : Tac term =
   let tv = inspect_ln t in
   let tv' =
     match tv with
-    | Tv_FVar _ -> tv
+    | Tv_FVar _
+    | Tv_UInst _ _ -> tv
     | Tv_Var bv ->
         let bv = on_sort_bv (visit_tm ff) bv in
         Tv_Var bv
@@ -846,7 +847,7 @@ let rec visit_tm (ff : term -> Tac term) (t : term) : Tac term =
         let bv = on_sort_bv (visit_tm ff) bv in
         Tv_BVar bv
 
-    | Tv_Type () -> Tv_Type ()
+    | Tv_Type u -> Tv_Type u
     | Tv_Const c -> Tv_Const c
     | Tv_Uvar i u -> Tv_Uvar i u
     | Tv_Unknown -> Tv_Unknown
@@ -918,15 +919,15 @@ and visit_comp (ff : term -> Tac term) (c : comp) : Tac comp =
   let cv = inspect_comp c in
   let cv' =
     match cv with
-    | C_Total ret decr ->
+    | C_Total ret uopt decr ->
         let ret = visit_tm ff ret in
         let decr = map (visit_tm ff) decr in
-        C_Total ret decr
+        C_Total ret uopt decr
 
-    | C_GTotal ret decr ->
+    | C_GTotal ret uopt decr ->
         let ret = visit_tm ff ret in
         let decr = map (visit_tm ff) decr in
-        C_GTotal ret decr
+        C_GTotal ret uopt decr
 
     | C_Lemma pre post pats ->
         let pre = visit_tm ff pre in

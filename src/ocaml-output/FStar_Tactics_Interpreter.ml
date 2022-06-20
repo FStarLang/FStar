@@ -1228,6 +1228,19 @@ let (uu___143 : unit) =
                                                                     =
                                                                     let uu___112
                                                                     =
+                                                                    FStar_Tactics_InterpFuns.mk_tac_step_1
+                                                                    Prims.int_zero
+                                                                    "fresh_universe_uvar"
+                                                                    FStar_Tactics_Basic.fresh_universe_uvar
+                                                                    FStar_Syntax_Embeddings.e_unit
+                                                                    FStar_Reflection_Embeddings.e_term
+                                                                    FStar_Tactics_Basic.fresh_universe_uvar
+                                                                    FStar_TypeChecker_NBETerm.e_unit
+                                                                    FStar_Reflection_NBEEmbeddings.e_term in
+                                                                    let uu___113
+                                                                    =
+                                                                    let uu___114
+                                                                    =
                                                                     FStar_Tactics_InterpFuns.mk_tac_step_3
                                                                     Prims.int_zero
                                                                     "unify_env"
@@ -1241,9 +1254,9 @@ let (uu___143 : unit) =
                                                                     FStar_Reflection_NBEEmbeddings.e_term
                                                                     FStar_Reflection_NBEEmbeddings.e_term
                                                                     FStar_TypeChecker_NBETerm.e_bool in
-                                                                    let uu___113
+                                                                    let uu___115
                                                                     =
-                                                                    let uu___114
+                                                                    let uu___116
                                                                     =
                                                                     FStar_Tactics_InterpFuns.mk_tac_step_3
                                                                     Prims.int_zero
@@ -1258,9 +1271,9 @@ let (uu___143 : unit) =
                                                                     FStar_Reflection_NBEEmbeddings.e_term
                                                                     FStar_Reflection_NBEEmbeddings.e_term
                                                                     FStar_TypeChecker_NBETerm.e_bool in
-                                                                    let uu___115
+                                                                    let uu___117
                                                                     =
-                                                                    let uu___116
+                                                                    let uu___118
                                                                     =
                                                                     FStar_Tactics_InterpFuns.mk_tac_step_3
                                                                     Prims.int_zero
@@ -1275,15 +1288,15 @@ let (uu___143 : unit) =
                                                                     FStar_Reflection_NBEEmbeddings.e_term
                                                                     FStar_Reflection_NBEEmbeddings.e_term
                                                                     FStar_TypeChecker_NBETerm.e_bool in
-                                                                    let uu___117
-                                                                    =
-                                                                    let uu___118
-                                                                    =
                                                                     let uu___119
+                                                                    =
+                                                                    let uu___120
+                                                                    =
+                                                                    let uu___121
                                                                     =
                                                                     FStar_Syntax_Embeddings.e_list
                                                                     FStar_Syntax_Embeddings.e_string in
-                                                                    let uu___120
+                                                                    let uu___122
                                                                     =
                                                                     FStar_TypeChecker_NBETerm.e_list
                                                                     FStar_TypeChecker_NBETerm.e_string in
@@ -1292,17 +1305,17 @@ let (uu___143 : unit) =
                                                                     "launch_process"
                                                                     FStar_Tactics_Basic.launch_process
                                                                     FStar_Syntax_Embeddings.e_string
-                                                                    uu___119
+                                                                    uu___121
                                                                     FStar_Syntax_Embeddings.e_string
                                                                     FStar_Syntax_Embeddings.e_string
                                                                     FStar_Tactics_Basic.launch_process
                                                                     FStar_TypeChecker_NBETerm.e_string
-                                                                    uu___120
+                                                                    uu___122
                                                                     FStar_TypeChecker_NBETerm.e_string
                                                                     FStar_TypeChecker_NBETerm.e_string in
-                                                                    let uu___119
+                                                                    let uu___121
                                                                     =
-                                                                    let uu___120
+                                                                    let uu___122
                                                                     =
                                                                     FStar_Tactics_InterpFuns.mk_tac_step_2
                                                                     Prims.int_zero
@@ -1315,9 +1328,9 @@ let (uu___143 : unit) =
                                                                     FStar_TypeChecker_NBETerm.e_string
                                                                     FStar_Reflection_NBEEmbeddings.e_term
                                                                     FStar_Reflection_NBEEmbeddings.e_bv in
-                                                                    let uu___121
+                                                                    let uu___123
                                                                     =
-                                                                    let uu___122
+                                                                    let uu___124
                                                                     =
                                                                     FStar_Tactics_InterpFuns.mk_tac_step_1
                                                                     Prims.int_zero
@@ -1328,9 +1341,9 @@ let (uu___143 : unit) =
                                                                     FStar_Tactics_Basic.change
                                                                     FStar_Reflection_NBEEmbeddings.e_term
                                                                     FStar_TypeChecker_NBETerm.e_unit in
-                                                                    let uu___123
+                                                                    let uu___125
                                                                     =
-                                                                    let uu___124
+                                                                    let uu___126
                                                                     =
                                                                     FStar_Tactics_InterpFuns.mk_tac_step_1
                                                                     Prims.int_zero
@@ -1341,9 +1354,9 @@ let (uu___143 : unit) =
                                                                     FStar_Tactics_Basic.get_guard_policy
                                                                     FStar_TypeChecker_NBETerm.e_unit
                                                                     FStar_Tactics_Embedding.e_guard_policy_nbe in
-                                                                    let uu___125
+                                                                    let uu___127
                                                                     =
-                                                                    let uu___126
+                                                                    let uu___128
                                                                     =
                                                                     FStar_Tactics_InterpFuns.mk_tac_step_1
                                                                     Prims.int_zero
@@ -1354,9 +1367,9 @@ let (uu___143 : unit) =
                                                                     FStar_Tactics_Basic.set_guard_policy
                                                                     FStar_Tactics_Embedding.e_guard_policy_nbe
                                                                     FStar_TypeChecker_NBETerm.e_unit in
-                                                                    let uu___127
+                                                                    let uu___129
                                                                     =
-                                                                    let uu___128
+                                                                    let uu___130
                                                                     =
                                                                     FStar_Tactics_InterpFuns.mk_tac_step_1
                                                                     Prims.int_zero
@@ -1367,9 +1380,9 @@ let (uu___143 : unit) =
                                                                     FStar_Tactics_Basic.lax_on
                                                                     FStar_TypeChecker_NBETerm.e_unit
                                                                     FStar_TypeChecker_NBETerm.e_bool in
-                                                                    let uu___129
+                                                                    let uu___131
                                                                     =
-                                                                    let uu___130
+                                                                    let uu___132
                                                                     =
                                                                     FStar_Tactics_InterpFuns.mk_tac_step_2
                                                                     Prims.int_one
@@ -1379,19 +1392,19 @@ let (uu___143 : unit) =
                                                                     FStar_Syntax_Embeddings.e_string
                                                                     FStar_Syntax_Embeddings.e_any
                                                                     (fun
-                                                                    uu___131
+                                                                    uu___133
                                                                     ->
                                                                     fun
-                                                                    uu___132
+                                                                    uu___134
                                                                     ->
                                                                     FStar_Tactics_Monad.fail
                                                                     "sorry, `lget` does not work in NBE")
                                                                     FStar_TypeChecker_NBETerm.e_any
                                                                     FStar_TypeChecker_NBETerm.e_string
                                                                     FStar_TypeChecker_NBETerm.e_any in
-                                                                    let uu___131
+                                                                    let uu___133
                                                                     =
-                                                                    let uu___132
+                                                                    let uu___134
                                                                     =
                                                                     FStar_Tactics_InterpFuns.mk_tac_step_3
                                                                     Prims.int_one
@@ -1402,13 +1415,13 @@ let (uu___143 : unit) =
                                                                     FStar_Syntax_Embeddings.e_any
                                                                     FStar_Syntax_Embeddings.e_unit
                                                                     (fun
-                                                                    uu___133
-                                                                    ->
-                                                                    fun
-                                                                    uu___134
-                                                                    ->
-                                                                    fun
                                                                     uu___135
+                                                                    ->
+                                                                    fun
+                                                                    uu___136
+                                                                    ->
+                                                                    fun
+                                                                    uu___137
                                                                     ->
                                                                     FStar_Tactics_Monad.fail
                                                                     "sorry, `lset` does not work in NBE")
@@ -1416,9 +1429,9 @@ let (uu___143 : unit) =
                                                                     FStar_TypeChecker_NBETerm.e_string
                                                                     FStar_TypeChecker_NBETerm.e_any
                                                                     FStar_TypeChecker_NBETerm.e_unit in
-                                                                    let uu___133
+                                                                    let uu___135
                                                                     =
-                                                                    let uu___134
+                                                                    let uu___136
                                                                     =
                                                                     FStar_Tactics_InterpFuns.mk_tac_step_1
                                                                     Prims.int_one
@@ -1429,9 +1442,9 @@ let (uu___143 : unit) =
                                                                     FStar_Tactics_Basic.set_urgency
                                                                     FStar_TypeChecker_NBETerm.e_int
                                                                     FStar_TypeChecker_NBETerm.e_unit in
-                                                                    let uu___135
+                                                                    let uu___137
                                                                     =
-                                                                    let uu___136
+                                                                    let uu___138
                                                                     =
                                                                     FStar_Tactics_InterpFuns.mk_tac_step_1
                                                                     Prims.int_one
@@ -1442,7 +1455,10 @@ let (uu___143 : unit) =
                                                                     FStar_Tactics_Basic.t_commute_applied_match
                                                                     FStar_TypeChecker_NBETerm.e_unit
                                                                     FStar_TypeChecker_NBETerm.e_unit in
-                                                                    [uu___136] in
+                                                                    [uu___138] in
+                                                                    uu___136
+                                                                    ::
+                                                                    uu___137 in
                                                                     uu___134
                                                                     ::
                                                                     uu___135 in

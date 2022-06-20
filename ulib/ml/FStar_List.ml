@@ -3,6 +3,7 @@
 include FStar_List_Tot_Base
 
 let isEmpty l = l = []
+let singleton x = [x]
 let mem = BatList.mem
 let memT = mem
 let hd = BatList.hd

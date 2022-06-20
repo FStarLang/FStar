@@ -1938,7 +1938,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
         | [], [] -> token
         | b::bs, v::vs ->
           let x = unqual_bv_of_binder b in
-          let token = aux bs vs (NT(x, v)::sub) token in
+          let token = aux (SS.subst_binders (NT(x, v)::sub) bs) vs (NT(x, v)::sub) token in
           let token =
             mk_exists_intro
               x.sort
@@ -2022,7 +2022,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
               token
           in
           let sub = NT(x, v)::sub in
-          aux bs vs sub token
+          aux (SS.subst_binders sub bs) vs sub token
         | _ ->
           raise_error (Fatal_UnexpectedTerm, "Unexpected number of instantiations in _elim_forall_") top.range
       in

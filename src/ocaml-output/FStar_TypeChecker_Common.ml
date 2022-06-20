@@ -598,15 +598,33 @@ let (conj_guard_f : guard_formula -> guard_formula -> guard_formula) =
       | (g, Trivial) -> g
       | (NonTrivial f1, NonTrivial f2) ->
           let uu___ = FStar_Syntax_Util.mk_conj f1 f2 in NonTrivial uu___
-let (check_trivial : FStar_Syntax_Syntax.term -> guard_formula) =
+let rec (check_trivial : FStar_Syntax_Syntax.term -> guard_formula) =
   fun t ->
     let uu___ =
-      let uu___1 = FStar_Syntax_Util.unmeta t in uu___1.FStar_Syntax_Syntax.n in
+      let uu___1 = FStar_Syntax_Util.unmeta t in
+      FStar_Syntax_Util.head_and_args uu___1 in
     match uu___ with
-    | FStar_Syntax_Syntax.Tm_fvar tc when
-        FStar_Syntax_Syntax.fv_eq_lid tc FStar_Parser_Const.true_lid ->
-        Trivial
-    | uu___1 -> NonTrivial t
+    | (hd, args) ->
+        let uu___1 =
+          let uu___2 =
+            let uu___3 =
+              let uu___4 = FStar_Syntax_Util.unmeta hd in
+              FStar_Syntax_Util.un_uinst uu___4 in
+            uu___3.FStar_Syntax_Syntax.n in
+          (uu___2, args) in
+        (match uu___1 with
+         | (FStar_Syntax_Syntax.Tm_fvar tc, []) when
+             FStar_Syntax_Syntax.fv_eq_lid tc FStar_Parser_Const.true_lid ->
+             Trivial
+         | (FStar_Syntax_Syntax.Tm_fvar sq, (v, uu___2)::[]) when
+             (FStar_Syntax_Syntax.fv_eq_lid sq FStar_Parser_Const.squash_lid)
+               ||
+               (FStar_Syntax_Syntax.fv_eq_lid sq
+                  FStar_Parser_Const.auto_squash_lid)
+             ->
+             let uu___3 = check_trivial v in
+             (match uu___3 with | Trivial -> Trivial | uu___4 -> NonTrivial t)
+         | uu___2 -> NonTrivial t)
 let (imp_guard_f : guard_formula -> guard_formula -> guard_formula) =
   fun g1 ->
     fun g2 ->

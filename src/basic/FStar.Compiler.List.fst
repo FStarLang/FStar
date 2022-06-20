@@ -23,6 +23,8 @@ let isEmpty (l : list 'a)
     | [] -> true
     | _ -> false
 
+let singleton x = [x]
+
 let hd (l:list 'a)
   = match l with
     | hd :: tl -> hd

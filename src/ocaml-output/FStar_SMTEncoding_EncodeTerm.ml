@@ -1248,8 +1248,8 @@ and (encode_term :
                let uu___3 =
                  let uu___4 = FStar_Syntax_Syntax.as_arg tv in [uu___4] in
                FStar_Syntax_Util.mk_app
-                 (FStar_Reflection_Data.refl_constant_term
-                    FStar_Reflection_Data.fstar_refl_pack_ln) uu___3 in
+                 (FStar_Reflection_Constants.refl_constant_term
+                    FStar_Reflection_Constants.fstar_refl_pack_ln) uu___3 in
              encode_term t2 env))
        | FStar_Syntax_Syntax.Tm_meta
            (t2, FStar_Syntax_Syntax.Meta_pattern uu___1) ->
@@ -3616,7 +3616,7 @@ and (encode_formula :
             encode_formula uu___1 env
         | FStar_Syntax_Syntax.Tm_match (e, uu___, pats, uu___1) ->
             let uu___2 =
-              encode_match e pats FStar_SMTEncoding_Util.mkFalse env
+              encode_match e pats FStar_SMTEncoding_Term.mkUnreachable env
                 encode_formula in
             (match uu___2 with | (t, decls) -> (t, decls))
         | FStar_Syntax_Syntax.Tm_let

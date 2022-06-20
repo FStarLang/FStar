@@ -234,7 +234,19 @@ let (run_repl_ld_transactions :
           match uu___ with
           | [] -> st1
           | (_id, (task, _st'))::entries ->
-              (debug "Reverting" task;
+              ((let uu___3 =
+                  let uu___4 =
+                    let uu___5 =
+                      let uu___6 =
+                        let uu___7 =
+                          FStar_Compiler_Effect.op_Bang
+                            FStar_Interactive_PushHelper.repl_stack in
+                        FStar_Compiler_List.hd uu___7 in
+                      FStar_Pervasives_Native.snd uu___6 in
+                    FStar_Pervasives_Native.fst uu___5 in
+                  task = uu___4 in
+                ());
+               debug "Reverting" task;
                (let st' =
                   FStar_Interactive_PushHelper.pop_repl
                     "run_repl_ls_transactions" st1 in
