@@ -127,6 +127,82 @@ module T = FStar.Tactics
 
 #set-options "--ide_id_info_off"
 
+assume val test_2626_aux
+  (#opened: _)
+  (#t: Type)
+  (#t': Type)
+  (v0: t -> Ghost.erased t' -> vprop)
+  (v: t -> Ghost.erased t' -> vprop)
+  (p: t -> Ghost.erased t' -> t -> Ghost.erased t' -> prop)
+  (x1: t)
+  (v1: Ghost.erased t')
+: STGhostT (Ghost.erased t) opened
+    (v0 x1 v1)
+    (fun res -> exists_ (fun (v1': Ghost.erased t') -> v x1 v1' `star` exists_ (fun (vres: Ghost.erased t') -> v0 res vres `star` pure (p x1 v1' res vres))))
+
+assume val test_2626_elim
+  (#opened: _)
+  (#t: Type)
+  (#t': Type)
+  (v0: t -> Ghost.erased t' -> vprop)
+  (v: t -> Ghost.erased t' -> vprop)
+  (p: t -> Ghost.erased t' -> t -> Ghost.erased t' -> prop)
+  (x: t)
+  (w: Ghost.erased t')
+: STGhost (Ghost.erased t') opened
+    (v x w)
+    (fun res -> v0 x res)
+    True
+    (fun res -> forall x2 v2 . p x w x2 v2 ==> p x res x2 v2)
+
+assume val test_2626_reify
+  (#t: Type)
+  (#t': Type)
+  (v0: t -> Ghost.erased t' -> vprop)
+  (p: t -> Ghost.erased t' -> t -> Ghost.erased t' -> prop)
+  (x1: t)
+  (v1: Ghost.erased t')
+  (x2: Ghost.erased t)
+  (v2: Ghost.erased t')
+: ST t
+    (v0 x1 v1 `star` v0 x2 v2)
+    (fun res -> v0 x1 v1 `star` v0 res v2)
+    (p x1 v1 x2 v2)
+    (fun res -> res == Ghost.reveal x2)
+
+assume val test_2626_intro
+  (#opened: _)
+  (#t: Type)
+  (#t': Type)
+  (v0: t -> Ghost.erased t' -> vprop)
+  (v: t -> Ghost.erased t' -> vprop)
+  (p: t -> Ghost.erased t' -> t -> Ghost.erased t' -> prop)
+  (x: t)
+  (w: Ghost.erased t')
+: STGhost (Ghost.erased t') opened
+    (v0 x w)
+    (fun res -> v x res)
+    True
+    (fun res -> forall x2 v2 . p x w x2 v2 ==>  p x res x2 v2)
+
+let test_2626
+  (#t: Type)
+  (#t': Type)
+  (v0: t -> Ghost.erased t' -> vprop)
+  (v: t -> Ghost.erased t' -> vprop)
+  (p: t -> Ghost.erased t' -> t -> Ghost.erased t' -> prop)
+  (x1: t)
+  (v1: Ghost.erased t')
+: STT t
+    (v0 x1 v1)
+    (fun res -> exists_ (fun v1' -> v x1 v1' `star` exists_ (fun vres -> v0 res vres `star` pure (p x1 v1' res vres))))
+= let gres = test_2626_aux v0 v p x1 v1 in
+  let _ = gen_elim () in
+  let _ = test_2626_elim v0 v p x1 _ in
+  let res = test_2626_reify v0 p x1 _ gres _ in
+  let _ = test_2626_intro v0 v p x1 _ in
+  return res
+
 assume
 val ptr : Type0
 assume
