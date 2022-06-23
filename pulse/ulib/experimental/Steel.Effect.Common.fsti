@@ -1761,7 +1761,7 @@ let rec unify_pr_with_true (pr: term) : Tac unit =
     | _ -> fail "unify_pr_with_true: ill-formed /\\"
   else
     match inspect hd with
-    | Tv_Uvar _ _ -> 
+    | Tv_Uvar _ _ ->
       if unify pr (`true_p)
       then ()
       else begin
@@ -2128,7 +2128,7 @@ val solve_can_be_split_for (#a: Type u#b) : a -> Tot unit
 val solve_can_be_split_lookup : unit // FIXME: src/reflection/FStar.Reflection.Basic.lookup_attr only supports fvar attributes, so we cannot directly look up for (solve_can_be_split_for blabla), we need a nullary attribute to use with lookup_attr
 
 let rec dismiss_all_but_last' (l: list goal) : Tac unit =
-  match l with 
+  match l with
   | [] | [_] -> set_goals l
   | _ :: q -> dismiss_all_but_last' q
 
@@ -2512,11 +2512,12 @@ let rec solve_can_be_split_forall_dep (args:list argv) : Tac bool =
 
          true
        with
-       | _ ->
+       | TacticFailure msg ->
          let opened = try_open_existentials_forall_dep () in
          if opened
          then solve_can_be_split_forall_dep args // we only need args for their number of uvars, which has not changed
-         else false
+         else fail msg
+       | _ -> fail "Unexpected exception in framing tactic"
       ) else false
 
   | _ -> fail "Ill-formed can_be_split_forall_dep, should not happen"
@@ -2785,7 +2786,7 @@ let rec vprop_term_uvars (t:term) : Tac (list int) =
 
 and argv_uvars (args: list argv) : Tac (list int) =
   let t : unit -> Tac (list int) =
-    fold_left (fun (n: unit -> Tac (list int)) (x, _) -> 
+    fold_left (fun (n: unit -> Tac (list int)) (x, _) ->
       let t () : Tac (list int) =
         let l1 = n () in
         let l2 = vprop_term_uvars x in
