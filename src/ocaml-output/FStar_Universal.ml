@@ -223,6 +223,9 @@ let (init_env : FStar_Parser_Dep.deps -> FStar_TypeChecker_Env.env) =
           FStar_TypeChecker_Env.encode_sig =
             (FStar_SMTEncoding_Solver.solver.FStar_TypeChecker_Env.encode_sig);
           FStar_TypeChecker_Env.preprocess = FStar_Tactics_Hooks.preprocess;
+          FStar_TypeChecker_Env.spinoff_strictly_positive_goals =
+            (FStar_Pervasives_Native.Some
+               FStar_Tactics_Hooks.spinoff_strictly_positive_goals);
           FStar_TypeChecker_Env.handle_smt_goal =
             FStar_Tactics_Hooks.handle_smt_goal;
           FStar_TypeChecker_Env.solve =

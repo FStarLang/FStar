@@ -4665,7 +4665,7 @@ let discharge_guard'
                          | Some goals -> goals |> List.map (fun (env, goal) -> env,goal,opts))
               else vcs
             in
-            vcs |> List.iter (fun (env, goal, opts) ->
+            vcs |> List.map (fun (env, goal, opts) ->
                     match check_trivial goal with
                     | Trivial ->
                         if debug

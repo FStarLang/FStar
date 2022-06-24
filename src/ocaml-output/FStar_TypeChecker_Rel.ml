@@ -13188,8 +13188,38 @@ let (discharge_guard' :
                                         let uu___12 = FStar_Options.peek () in
                                         (env, vc2, uu___12) in
                                       [uu___11]) in
+                                 let vcs1 =
+                                   let uu___9 =
+                                     FStar_Options.split_queries () in
+                                   if uu___9
+                                   then
+                                     FStar_Compiler_Effect.op_Bar_Greater vcs
+                                       (FStar_Compiler_List.collect
+                                          (fun uu___10 ->
+                                             match uu___10 with
+                                             | (env1, goal, opts) ->
+                                                 let uu___11 =
+                                                   FStar_TypeChecker_Env.split_smt_query
+                                                     env1 goal in
+                                                 (match uu___11 with
+                                                  | FStar_Pervasives_Native.None
+                                                      -> [(env1, goal, opts)]
+                                                  | FStar_Pervasives_Native.Some
+                                                      goals ->
+                                                      FStar_Compiler_Effect.op_Bar_Greater
+                                                        goals
+                                                        (FStar_Compiler_List.map
+                                                           (fun uu___12 ->
+                                                              match uu___12
+                                                              with
+                                                              | (env2, goal1)
+                                                                  ->
+                                                                  (env2,
+                                                                    goal1,
+                                                                    opts))))))
+                                   else vcs in
                                  let uu___9 =
-                                   FStar_Compiler_Effect.op_Bar_Greater vcs
+                                   FStar_Compiler_Effect.op_Bar_Greater vcs1
                                      (FStar_Compiler_List.map
                                         (fun uu___10 ->
                                            match uu___10 with

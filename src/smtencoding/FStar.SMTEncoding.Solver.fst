@@ -671,6 +671,7 @@ let ask_and_return_errors
   all_labels
   prefix
   query
+  query_term
   suffix : list Err.error =
     Z3.giveZ3 prefix; //feed the context of the query to the solver
 
@@ -971,7 +972,7 @@ let should_refresh env =
     | Some cfg ->
         not (cfg = get_cfg env)
 
-let do_solve is_retry use_env_msg tcenv q : list Err.error =
+let rec do_solve is_retry use_env_msg tcenv q : list Err.error =
     if should_refresh tcenv then begin
       save_cfg tcenv;
       Z3.refresh ()
@@ -1000,7 +1001,7 @@ let do_solve is_retry use_env_msg tcenv q : list Err.error =
                           (BU.string_of_int n))
         );
 
-        let res = ask_and_report_errors is_retry tcenv labels prefix qry q suffix in
+        let res = ask_and_return_errors is_retry tcenv labels prefix qry q suffix in
         pop ();
         res
 
@@ -1012,27 +1013,28 @@ let do_solve is_retry use_env_msg tcenv q : list Err.error =
         then failwith "Impossible: retried queries should always produce an error report\
                        and cannot be split and retried further";
 
-        let _ =
+        let res =
           match Env.split_smt_query tcenv q with
           | None ->
             failwith "Impossible: split_query callback is not set"
 
           | Some goals ->
-            goals |> List.iter (fun (env, goal) -> do_solve true use_env_msg env goal)
+            goals |> List.map (fun (env, goal) -> do_solve true use_env_msg env goal)
+                  |> List.flatten
         in
 
-        if FStar.Errors.get_err_count() = 0
-        then ( //query succeeded after a retry
-          FStar.TypeChecker.Err.log_issue
-            tcenv
-            tcenv.range
-            (Errors.Warning_SplitAndRetryQueries,
-             "The verification condition succeeded after splitting it to localize potential errors, \
-              although the original non-split verification condition failed. \
-              If you want to rely on splitting queries for verifying your program \
-              please use the --split_queries option rather than relying on it implicitly.")
-         )
-
+        if List.length res = 0
+        then  //query succeeded after a retry
+          [FStar.TypeChecker.Err.detailed_error
+             tcenv
+             tcenv.range
+             (Errors.Warning_SplitAndRetryQueries,
+              "The verification condition succeeded after splitting it to localize potential errors, \
+               although the original non-split verification condition failed. \
+               If you want to rely on splitting queries for verifying your program \
+               please use the --split_queries option rather than relying on it implicitly.")
+          ]
+        else res
 
       | FStar.SMTEncoding.Env.Inner_let_rec names ->  //can be raised by encode_query
         pop ();  //AR: Important, we push-ed before encode_query was called
