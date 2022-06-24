@@ -1,5 +1,5 @@
 (*
-   Copyright 2008-2018 Microsoft Research
+   Copyright 2008-2022 Microsoft Research
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -78,7 +78,7 @@ let rec subset #a #f s1 s2 = match s1, s2 with
   | _, _           -> false
 
 let singleton (#a:eqtype) #f x = [x]
-
+ 
 private
 let rec remove_le #a #f x (s:ordset a f)
   : Pure (ordset a f)
@@ -88,34 +88,197 @@ let rec remove_le #a #f x (s:ordset a f)
 =
   match s with
   | [] -> []
-  | y :: ys ->
-    if f x y && x <> y
-    then s
-    else remove_le #a #f x ys
+  | y :: ys -> if f x y && x <> y
+             then s
+             else remove_le #a #f x ys
 
-private
-let rec minus' (#a:eqtype) (#f:cmp a) (x:a) (s1 s2:ordset a f)
-  : Pure (ordset a f)
-    (requires (let s1 = as_list s1 in let s2 = as_list s2 in sorted f (x::s1) /\ sorted f (x::s2)))
-    (ensures (fun r -> let r = as_list r in sorted f (x::r)))
-    (decreases s1)
-=
-  match s1 with
-  | [] -> []
-  | x1 :: xs1 ->
-    assert (sorted f xs1) ;
-    match s2 with
-    | [] -> s1
-    | x2 :: xs2 ->
-      assert (sorted f xs1) ;
-      if x1 = x2
-      then minus' #a #f x xs1 xs2
-      else x1 :: (minus' #a #f x1 xs1 (remove_le x1 s2))
+let rec not_mem_aux #a #f x (s:ordset a f)
+  : Lemma (requires (size s > 0) && (Cons?.hd s <> x) && (f x (Cons?.hd s)))
+          (ensures not (mem x s))
+          = 
+  match s with  
+  | h::t -> if t = [] then () else not_mem_aux #a #f x t 
 
-let minus #a #f s1 s2 =
-  match s1 with
+let rec tail_is_subset #a #f (s:ordset a f{size s > 0})
+  : Lemma (Cons?.tl s `subset` s) = 
+  match s with
+  | [] -> ()
+  | h::(t:ordset a f) -> if size t > 0 then tail_is_subset #a #f t
+
+let rec self_is_subset #a #f (s:ordset a f)
+  : Lemma (subset s s) = match s with 
+  | [] -> ()
+  | h::(t:ordset a f) -> self_is_subset t
+
+let rec remove_until_greater_than #a #f x (s: ordset a f)
+  : z:(ordset a f * bool) { not(mem x (fst z)) &&
+                            (subset (fst z) s) &&
+                            (snd z = mem x s) &&
+                            (match (fst z) with 
+                            | [] -> true
+                            | h::t -> (sorted f (x::(fst z)))) } =
+  match s with
+  | [] -> ([], false)
+  | h::(t:ordset a f) -> if h=x then (
+                        assert (sorted f t);   
+                        if size t > 0 then not_mem_aux x t;
+                        tail_is_subset s;
+                        (t, true)
+                      )
+          else if f x h then (
+            not_mem_aux x s;
+            self_is_subset s;
+            (s, false)
+          )
+          else remove_until_greater_than x t
+
+let rec remove_until_gt_prop #a #f (s: ordset a f) (x:a) (test:a)
+  : Lemma (f test x ==> not (mem test (fst (remove_until_greater_than x s)))) = 
+  match s with
+  | [] -> ()
+  | h::(t:ordset a f) -> 
+          let aux (test:a) 
+            : Lemma (requires f test x && h<>test) 
+                    (ensures not (mem test (fst (remove_until_greater_than x s)))) =
+            remove_until_gt_prop #a #f t x test;
+            () in Classical.move_requires aux test;
+          if h <> x then remove_until_gt_prop t x test
+
+let rec remove_until_gt_mem #a #f (s: ordset a f) (x:a) (test:a)
+  : Lemma (mem test (fst (remove_until_greater_than x s)) = (
+             mem test s &&
+             f x test &&
+             (x<>test)
+           )) = 
+  match s with
+  | [] -> ()
+  | h::(t:ordset a f) -> remove_until_gt_prop s x test;
+                       remove_until_gt_mem t x test
+
+let remove_until_gt_exclusion #a #f (s:ordset a f) (x:a) (test:a)
+  : Lemma (requires f x test && (not (mem test (fst (remove_until_greater_than x s)))))
+          (ensures x=test || not (mem test s)) = 
+  remove_until_gt_mem s x test 
+    
+private let rec remove_le_removes_x #a #f x (s:ordset a f)
+  : Lemma (not (mem x (fst (remove_until_greater_than x s)))) = 
+  match s with
+  | y::ys -> remove_le_removes_x #a #f x ys
+  | [] -> ()
+
+private val set_props_aux:
+  #a:eqtype -> #f:cmp a -> s:ordset a f{Cons? (as_list s)}
+  -> Lemma (requires True)
+          (ensures  (let s = as_list s in
+	             (forall x. List.Tot.mem x (Cons?.tl s) ==> (f (Cons?.hd s) x /\ Cons?.hd s =!= x))))
+                     
+let rec set_props_aux (#a:eqtype) #f s = match s with
+  | x::tl -> if tl = [] then () else set_props_aux #a #f tl
+
+
+private val mem_implies_subset_aux:
+  #a:eqtype -> #f:cmp a -> s1:ordset a f -> s2:ordset a f
+  -> Lemma (requires (True))
+          (ensures ((forall x. mem #a #f x s1 ==> mem #a #f x s2) ==> subset #a #f s1 s2))
+          
+let rec mem_implies_subset_aux (#a:eqtype) #f s1 s2 = match s1, s2 with
+  | [], [] -> ()
+  | _::_, [] -> ()
+  | [], _::_ -> ()
+  | hd::tl, hd'::tl' ->
+    set_props_aux #a #f s1; set_props_aux #a #f s2;
+
+    if f hd hd' && hd = hd' then
+      mem_implies_subset_aux #a #f tl tl'
+    else if f hd hd' && not (hd = hd') then
+      ()
+    else mem_implies_subset_aux #a #f s1 tl'
+
+private val subset_implies_mem_aux:
+  #a:eqtype -> #f:cmp a -> s1:ordset a f -> s2:ordset a f
+  -> Lemma (requires (True))
+          (ensures (subset #a #f s1 s2 ==> (forall x. mem #a #f x s1 ==>
+                                                mem #a #f x s2)))
+let rec subset_implies_mem_aux (#a:eqtype) #f s1 s2 = match s1, s2 with
+  | [], _          -> ()
+  | hd::tl, hd'::tl' ->
+    if f hd hd' && hd = hd' then subset_implies_mem_aux #a #f tl tl'
+    else subset_implies_mem_aux #a #f s1 tl'
+  | _, _           -> ()
+
+let subset_transitivity #a #f (p q r: ordset a f)
+  : Lemma (requires p `subset` q /\ q `subset` r)
+          (ensures p `subset` r) = 
+  subset_implies_mem_aux p q;
+  subset_implies_mem_aux q r;
+  mem_implies_subset_aux p r
+
+let rec mem_implies_f #a #f (s: ordset a f) (x:a)
+  : Lemma (requires mem x s) (ensures f (Cons?.hd s) x) = 
+  match s with 
+  | [] -> ()
+  | h::t -> if size s > 0 && x <> h then mem_implies_f #a #f t x
+
+let head_is_never_in_tail #a #f (s:ordset a f{size s > 0}) 
+  : Lemma (not (mem #a #f (Cons?.hd s) (Cons?.tl s))) = set_props_aux s
+
+let mem_of_empty #a #f (s: ordset a f{size s = 0}) (x: a)
+  : Lemma (not (mem x s)) = ()
+
+let rec smart_minus #a #f (p q: ordset a f) 
+  : z:ordset a f { ( forall x. mem x z = (mem x p && (not (mem x q)))) /\
+                   (match p,z with 
+                    | ph::pt, zh::zt -> f ph zh
+                    | ph::pt, [] -> subset p q
+                    | [], _ -> z = [])
+                 } =
+  match p with
   | [] -> []
-  | x1 :: xs1 -> minus' #a #f x1 xs1 (remove_le #a #f x1 s2)
+  | ph::(pt:ordset a f) -> match q with
+    | [] -> p
+    | qh::(qt:ordset a f) -> 
+      let q_after_ph, found = remove_until_greater_than ph q in  
+      Classical.forall_intro (remove_until_gt_mem q ph);   
+      Classical.forall_intro (Classical.move_requires (mem_implies_f p));  
+      if found then begin
+        let result = smart_minus pt q_after_ph in
+        set_props_aux p;
+        if result = [] then begin
+          subset_transitivity pt q_after_ph q;
+          subset_implies_mem_aux pt q;          
+          mem_implies_subset_aux p q
+        end;
+        result
+      end
+      else ph::(smart_minus pt q_after_ph)      
+
+let minus_empty_means_subset #a #f (p q: ordset a f)
+  : Lemma (requires size (smart_minus p q) = 0) (ensures subset p q) = ()
+
+let ncmp (x y:nat) = x <= y
+
+let _ = assert (smart_minus #nat #ncmp [1;2;3;4] [3] == [1;2;4])
+  
+let minus #a #f s1 s2 = smart_minus s1 s2 
+
+let rec remove_le_never_increases_size #a #f (s: ordset a f) (x:a)
+  : Lemma (size (remove_le x s) <= size s) = 
+  match s with
+  | [] -> ()
+  | h::t -> remove_le_never_increases_size #a #f t x
+
+let rec remove_le_decreases_size #a #f (s: ordset a f) (x:a)
+  : Lemma (requires mem x s) (ensures size (remove_le x s) < size s) = 
+  match s with
+  | [] -> ()
+  | h::t -> if x=h then () else remove_le_decreases_size #a #f t x
+    
+
+let minus_removes_s2 #a #f (p q: ordset a f) (x:a)
+  : Lemma (ensures mem x q ==> not (mem x (minus p q))) = ()
+           
+let minus_removes_all_of_s2 #a #f (s1 s2: ordset a f) (x:a{mem x s2})
+  : Lemma (not (mem x (minus s1 s2))) = ()  
 
 let strict_subset #a #f s1 s2 = s1 <> s2 && subset #a #f s1 s2
 
@@ -275,7 +438,6 @@ let size_of_union_right (#a:eqtype) #f (s1 s2: ordset a f)
   eq_lemma (union s1 s2) (union s2 s1);
   size_of_union_left s2 s1
 
-(* TODO:FIXME: implement *)
 let size_union #a #f s1 s2 =
   size_of_union_left s1 s2;
   size_of_union_right s1 s2
@@ -323,45 +485,20 @@ let aux_lemma_remove (#a:eqtype) #f (s: ordset a f) (x:a) (test:a)
 let remove_le_empty #a #f x (s:ordset a f) : Lemma (requires s = empty) (ensures remove_le #a #f x s = empty) = ()
  
 private let me_empty (#a:eqtype) (#f:cmp a) (x:a) (s1 s2:ordset a f)
-  : Lemma (requires sorted f (x::s1) /\ sorted f (x::s2) /\ s2=empty) (ensures s1 = (minus' x s1 s2)) = 
-  ()
+  : Lemma (requires sorted f (x::s1) /\ sorted f (x::s2) /\ s2=empty) 
+          (ensures s1 = (minus s1 s2)) = ()
 
-let rec minus_empty (#a:eqtype) #f (s1 s2: ordset a f) : Lemma (requires s2=empty) (ensures minus s1 s2 = s1) 
-  = match s1 with
-  | [] -> ()
-  | x1 :: xs1 ->   
-    remove_le_empty #a #f x1 s2;
-    me_empty #a #f x1 xs1 s2;
-    assert (minus s1 s2 = minus' #a #f x1 xs1 s2);
-    assert (sorted f s1);
-    assert (sorted f xs1);
-    assert (sorted f (x1::xs1));
-    assert (sorted f (x1::s2));
-    assert (minus' #a #f x1 xs1 s2 = xs1);
-    assert (minus s1 s2 = xs1); 
-    admit();
-    ()
-  
-  
-
-//(ensures (mem x (minus s1 s2) = (mem x s1 && not (mem x s2))))
-let lemma_minus_mem #a #f s1 s2 x = 
-  match s2 with
-  | [] -> assert (forall p. not (mem p s2));
-         assert (minus s1 s2 == s1);
-         assert (forall p. mem p (minus s1 s2) = mem p s1);
-         admit();
-         ()
-  | hd::tl -> admit()
-  
-
-let lemma_strict_subset_minus_size #a #f s1 s2 s = admit ()
+let minus_empty (#a:eqtype) #f (s1 s2: ordset a f) : Lemma (requires s2=empty) (ensures minus s1 s2 = s1) = ()
+    
+let lemma_minus_mem #a #f s1 s2 x = ()
+ 
+let lemma_strict_subset_minus_size #a #f s1 s2 s = admit() 
 
 let lemma_disjoint_union_subset #a #f s1 s2 = admit ()
 
-let lemma_subset_union #a #f s1 s2 s = admit ()
+let lemma_subset_union #a #f s1 s2 s = ()
 
-let lemma_strict_subset_transitive #a #f s1 s2 s3 = admit ()
+let lemma_strict_subset_transitive #a #f s1 s2 s3 = ()
 
 let lemma_intersect_symmetric #a #f s1 s2 = eq_lemma (intersect s1 s2) (intersect s2 s1)
 
