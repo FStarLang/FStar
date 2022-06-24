@@ -45,6 +45,8 @@ module Env = FStar.TypeChecker.Env
 module SE = FStar.Syntax.Embeddings
 open FStar.SMTEncoding.Env
 
+module RC = FStar.Reflection.Constants
+
 (*---------------------------------------------------------------------------------*)
 (*  <Utilities> *)
 
@@ -614,7 +616,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
         if Env.debug env.tcenv <| Options.Other "SMTEncoding" then
             BU.print2 ">> Inspected (%s) ~> (%s)\n" (Print.term_to_string t0)
                                                     (Print.term_to_string tv);
-        let t = U.mk_app (RD.refl_constant_term RD.fstar_refl_pack_ln) [S.as_arg tv] in
+        let t = U.mk_app (RC.refl_constant_term RC.fstar_refl_pack_ln) [S.as_arg tv] in
         encode_term t env
 
       | Tm_meta(t, Meta_pattern _) ->
@@ -1455,7 +1457,7 @@ and encode_formula (phi:typ) (env:env_t) : (term * decls_t)  = (* expects phi to
           encode_formula (U.unmeta phi) env
 
         | Tm_match(e, _, pats, _) ->
-           let t, decls = encode_match e pats mkFalse env encode_formula in
+           let t, decls = encode_match e pats mkUnreachable env encode_formula in
            t, decls
 
         | Tm_let((false, [{lbname=Inl x; lbtyp=t1; lbdef=e1}]), e2) ->

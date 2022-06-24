@@ -44,6 +44,8 @@ module RD = FStar.Reflection.Data
 
 open FStar.Compiler.Dyn
 
+open FStar.Reflection.Constants
+
 (*
  * embed   : from compiler to user
  * unembed : from user to compiler
@@ -320,6 +322,102 @@ let unlazy_as_t k t =
     | _ ->
       failwith "Not a Lazy of the expected kind (NBE)"
 
+// TODO: It would be nice to have a
+// embed_as : ('a -> 'b) -> ('b -> 'a) -> embedding 'a -> embedding 'b
+// so we don't write these things
+let e_ident : embedding I.ident =
+    let repr = e_tuple2 e_range e_string in
+    let embed_ident cb (i:I.ident) : t =
+        embed repr cb (I.range_of_id i, I.string_of_id i)
+    in
+    let unembed_ident cb (t:t) : option I.ident =
+        match unembed repr cb t with
+        | Some (rng, s) -> Some (I.mk_ident (s, rng))
+        | None -> None
+    in
+    let range_fv = (lid_as_fv PC.range_lid  delta_constant None) in
+    let string_fv = (lid_as_fv PC.string_lid delta_constant None) in
+    let et =
+      ET_app (FStar.Ident.string_of_lid PC.lid_tuple2,
+              [fv_as_emb_typ range_fv;
+               fv_as_emb_typ string_fv])
+    in
+    mk_emb embed_ident unembed_ident (mkFV (lid_as_fv PC.lid_tuple2 delta_constant None)
+                                           [U_zero;U_zero]
+                                           [as_arg (mkFV range_fv [] []);
+                                            as_arg (mkFV string_fv [] [])]) et
+    // TODO: again a delta depth issue, should be this
+    (* fstar_refl_ident *)
+
+let e_universe =
+  let embed_universe cb (u:universe) : t =
+    mk_lazy cb u fstar_refl_universe Lazy_universe in
+  let unembed_universe cb (t:t) : option S.universe =
+    match t.nbe_t with
+    | Lazy (Inl {blob=b; lkind=Lazy_universe}, _) ->
+      Some (undyn b)
+    | _ ->
+      Err.log_issue Range.dummyRange
+        (Err.Warning_NotEmbedded,
+         (BU.format1 "Not an embedded universe: %s" (t_to_string t)));
+      None
+    in
+    mk_emb' embed_universe unembed_universe fstar_refl_universe_fv
+
+let e_universe_view =
+  let embed_universe_view cb (uv:universe_view) : t =
+    match uv with
+    | Uv_Zero -> mkConstruct ref_Uv_Zero.fv [] []
+    | Uv_Succ u ->
+      mkConstruct
+        ref_Uv_Succ.fv
+        []
+        [as_arg (embed e_universe cb u)]
+    | Uv_Max us ->
+      mkConstruct
+        ref_Uv_Max.fv
+        []
+        [as_arg (embed (e_list e_universe) cb us)]
+    | Uv_BVar n ->
+      mkConstruct
+        ref_Uv_BVar.fv
+        []
+        [as_arg (embed e_int cb n)]
+    | Uv_Name i ->
+      mkConstruct
+        ref_Uv_Name.fv
+        []
+        [as_arg (embed (e_tuple2 e_string e_range) cb i)]
+    | Uv_Unif u ->
+      mkConstruct
+        ref_Uv_Unif.fv
+        []
+        [as_arg (mk_lazy cb u U.t_universe_uvar Lazy_universe_uvar)]
+    | Uv_Unk -> mkConstruct ref_Uv_Unk.fv [] [] in
+
+  let unembed_universe_view cb (t:t) : option universe_view =
+    match t.nbe_t with
+    | Construct (fv, _, []) when S.fv_eq_lid fv ref_Uv_Zero.lid -> Some Uv_Zero
+    | Construct (fv, _, [u, _]) when S.fv_eq_lid fv ref_Uv_Succ.lid ->
+      BU.bind_opt (unembed e_universe cb u) (fun u -> u |> Uv_Succ |> Some)
+    | Construct (fv, _, [us, _]) when S.fv_eq_lid fv ref_Uv_Max.lid ->
+      BU.bind_opt (unembed (e_list e_universe) cb us) (fun us -> us |> Uv_Max |> Some)
+    | Construct (fv, _, [n, _]) when S.fv_eq_lid fv ref_Uv_BVar.lid ->
+      BU.bind_opt (unembed e_int cb n) (fun n -> n |> Uv_BVar |> Some)
+    | Construct (fv, _, [i, _]) when S.fv_eq_lid fv ref_Uv_Name.lid ->
+      BU.bind_opt (unembed (e_tuple2 e_string e_range) cb i) (fun i -> i |> Uv_Name |> Some)
+    | Construct (fv, _, [u, _]) when S.fv_eq_lid fv ref_Uv_Unif.lid ->
+      let u : universe_uvar = unlazy_as_t Lazy_universe_uvar u in
+      u |> Uv_Unif |> Some
+    | Construct (fv, _, []) when S.fv_eq_lid fv ref_Uv_Unk.lid -> Some Uv_Unk
+    | _ ->
+      Err.log_issue Range.dummyRange
+        (Err.Warning_NotEmbedded,
+         (BU.format1 "Not an embedded universe view: %s" (t_to_string t)));
+      None in
+  
+  mk_emb' embed_universe_view unembed_universe_view fstar_refl_universe_view_fv
+
 let e_term_view_aq aq =
     let embed_term_view cb (tv:term_view) : t =
         match tv with
@@ -332,6 +430,11 @@ let e_term_view_aq aq =
         | Tv_Var bv ->
             mkConstruct ref_Tv_Var.fv [] [as_arg (embed e_bv cb bv)]
 
+        | Tv_UInst (fv, us) ->
+            mkConstruct ref_Tv_UInst.fv []
+              [as_arg (embed e_fv cb fv);
+               as_arg (embed (e_list e_universe) cb us)]
+
         | Tv_App (hd, a) ->
             mkConstruct ref_Tv_App.fv [] [as_arg (embed (e_term_aq aq) cb hd); as_arg (embed (e_argv_aq aq) cb a)]
 
@@ -342,7 +445,7 @@ let e_term_view_aq aq =
             mkConstruct ref_Tv_Arrow.fv [] [as_arg (embed e_binder cb b); as_arg (embed e_comp cb c)]
 
         | Tv_Type u ->
-            mkConstruct ref_Tv_Type.fv [] [as_arg (embed e_unit cb ())]
+            mkConstruct ref_Tv_Type.fv [] [as_arg (embed e_universe cb u)]
 
         | Tv_Refine (bv, t) ->
             mkConstruct ref_Tv_Refine.fv [] [as_arg (embed e_bv cb bv); as_arg (embed (e_term_aq aq) cb t)]
@@ -397,6 +500,11 @@ let e_term_view_aq aq =
             BU.bind_opt (unembed e_fv cb f) (fun f ->
             Some <| Tv_FVar f)
 
+        | Construct (fv, _, [(f, _); (us, _)]) when S.fv_eq_lid fv ref_Tv_UInst.lid ->
+            BU.bind_opt (unembed e_fv cb f) (fun f ->
+            BU.bind_opt (unembed (e_list e_universe) cb us) (fun us ->
+            Some <| Tv_UInst (f, us)))
+
         | Construct (fv, _, [(r, _); (l, _)]) when S.fv_eq_lid fv ref_Tv_App.lid ->
             BU.bind_opt (unembed e_term cb l) (fun l ->
             BU.bind_opt (unembed e_argv cb r) (fun r ->
@@ -413,7 +521,7 @@ let e_term_view_aq aq =
             Some <| Tv_Arrow (b, c)))
 
         | Construct (fv, _, [(u, _)]) when S.fv_eq_lid fv ref_Tv_Type.lid ->
-            BU.bind_opt (unembed e_unit cb u) (fun u ->
+            BU.bind_opt (unembed e_universe cb u) (fun u ->
             Some <| Tv_Type u)
 
         | Construct (fv, _, [(t, _); (b, _)]) when S.fv_eq_lid fv ref_Tv_Refine.lid ->
@@ -493,14 +601,16 @@ let e_bv_view =
 let e_comp_view =
     let embed_comp_view cb (cv : comp_view) : t =
         match cv with
-        | C_Total (t, md) ->
+        | C_Total (t, u, md) ->
             mkConstruct ref_C_Total.fv [] [
               as_arg (embed e_term cb t);
+              as_arg (embed e_universe cb u);
               as_arg (embed (e_list e_term) cb md)]
 
-        | C_GTotal (t, md) ->
+        | C_GTotal (t, u, md) ->
             mkConstruct ref_C_GTotal.fv [] [
               as_arg (embed e_term cb t);
+              as_arg (embed e_universe cb u);
               as_arg (embed (e_list e_term) cb md)]
 
         | C_Lemma (pre, post, pats) ->
@@ -508,22 +618,26 @@ let e_comp_view =
 
         | C_Eff (us, eff, res, args) ->
             mkConstruct ref_C_Eff.fv []
-                [ as_arg (embed (e_list e_unit) cb us)
+                [ as_arg (embed (e_list e_universe) cb us)
                 ; as_arg (embed e_string_list cb eff)
                 ; as_arg (embed e_term cb res)
                 ; as_arg (embed (e_list e_argv) cb args)]
     in
     let unembed_comp_view cb (t : t) : option comp_view =
         match t.nbe_t with
-        | Construct (fv, _, [(md, _); (t, _)]) when S.fv_eq_lid fv ref_C_Total.lid ->
+        | Construct (fv, _, [(md, _); (u, _); (t, _)])
+          when S.fv_eq_lid fv ref_C_Total.lid ->
             BU.bind_opt (unembed e_term cb t) (fun t ->
+            BU.bind_opt (unembed e_universe cb u) (fun u ->
             BU.bind_opt (unembed (e_list e_term) cb md) (fun md ->
-            Some <| C_Total (t, md)))
+            Some <| C_Total (t, u, md))))
 
-        | Construct (fv, _, [(md, _); (t, _)]) when S.fv_eq_lid fv ref_C_GTotal.lid ->
+        | Construct (fv, _, [(md, _); (u, _); (t, _)])
+          when S.fv_eq_lid fv ref_C_GTotal.lid ->
             BU.bind_opt (unembed e_term cb t) (fun t ->
+            BU.bind_opt (unembed e_universe cb u) (fun u ->
             BU.bind_opt (unembed (e_list e_term) cb md) (fun md ->
-            Some <| C_GTotal (t, md)))
+            Some <| C_GTotal (t, u, md))))
 
         | Construct (fv, _, [(post, _); (pre, _); (pats, _)]) when S.fv_eq_lid fv ref_C_Lemma.lid ->
             BU.bind_opt (unembed e_term cb pre) (fun pre ->
@@ -532,8 +646,8 @@ let e_comp_view =
             Some <| C_Lemma (pre, post, pats))))
 
         | Construct (fv, _, [(args, _); (res, _); (eff, _); (us, _)])
-                when S.fv_eq_lid fv ref_C_Eff.lid ->
-            BU.bind_opt (unembed (e_list e_unit) cb us) (fun us ->
+          when S.fv_eq_lid fv ref_C_Eff.lid ->
+            BU.bind_opt (unembed (e_list e_universe) cb us) (fun us ->
             BU.bind_opt (unembed e_string_list cb eff) (fun eff ->
             BU.bind_opt (unembed e_term cb res) (fun res->
             BU.bind_opt (unembed (e_list e_argv) cb args) (fun args ->
@@ -578,33 +692,6 @@ let e_sigelt =
             None
     in
     mk_emb' embed_sigelt unembed_sigelt fstar_refl_sigelt_fv
-
-// TODO: It would be nice to have a
-// embed_as : ('a -> 'b) -> ('b -> 'a) -> embedding 'a -> embedding 'b
-// so we don't write these things
-let e_ident : embedding I.ident =
-    let repr = e_tuple2 e_range e_string in
-    let embed_ident cb (i:I.ident) : t =
-        embed repr cb (I.range_of_id i, I.string_of_id i)
-    in
-    let unembed_ident cb (t:t) : option I.ident =
-        match unembed repr cb t with
-        | Some (rng, s) -> Some (I.mk_ident (s, rng))
-        | None -> None
-    in
-    let range_fv = (lid_as_fv PC.range_lid  delta_constant None) in
-    let string_fv = (lid_as_fv PC.string_lid delta_constant None) in
-    let et =
-      ET_app (FStar.Ident.string_of_lid PC.lid_tuple2,
-              [fv_as_emb_typ range_fv;
-               fv_as_emb_typ string_fv])
-    in
-    mk_emb embed_ident unembed_ident (mkFV (lid_as_fv PC.lid_tuple2 delta_constant None)
-                                           [U_zero;U_zero]
-                                           [as_arg (mkFV range_fv [] []);
-                                            as_arg (mkFV string_fv [] [])]) et
-    // TODO: again a delta depth issue, should be this
-    (* fstar_refl_ident *)
 
 let e_univ_name =
     (* TODO: Should be this, but there's a delta depth issue *)

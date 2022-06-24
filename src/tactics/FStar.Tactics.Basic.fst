@@ -882,7 +882,7 @@ let t_apply_lemma (noinst:bool) (noinst_lhs:bool)
         bind (match (Rel.simplify_guard env (Env.guard_of_guard_formula (NonTrivial pre))).guard_f with
               | Trivial -> ret ()
               | NonTrivial _ -> add_irrelevant_goal goal "apply_lemma precondition" env pre) //AR: should we use the normalized pre instead?
-        
+
              (fun _ -> add_goals sub_goals)))))))))))
 
 let split_env (bvar : bv) (e : env) : option (env * bv * list bv) =
@@ -1253,6 +1253,9 @@ let uvar_env (env : env) (ty : option typ) : tac term =
                   bind (new_uvar "uvar_env" env typ ps.entry_range)
                        (fun (t, uvar_t) -> ret t))))
 
+let fresh_universe_uvar () : tac term =
+  U.type_u () |> fst |> ret
+
 let unshelve (t : term) : tac unit = wrap_err "unshelve" <|
     bind get (fun ps ->
     let env = ps.main_context in
@@ -1464,7 +1467,7 @@ let t_destruct (s_tm : term) : tac (list (fv * Z.t)) = wrap_err "destruct" <|
                         let equ = env.universe_of env s_ty in
                         (* Typecheck the pattern, to fill-in the universes and get an expression out of it *)
                         let _ , _, _, _, pat_t, _, _guard_pat, _erasable = TcTerm.tc_pat ({ env with lax = true }) s_ty pat in
-                        let eq_b = S.gen_bv "breq" None (U.mk_squash equ (U.mk_eq2 equ s_ty s_tm pat_t)) in
+                        let eq_b = S.gen_bv "breq" None (U.mk_squash S.U_zero (U.mk_eq2 equ s_ty s_tm pat_t)) in
                         let cod = U.arrow [S.mk_binder eq_b] (mk_Total cod) in
 
                         let nty = U.arrow bs (mk_Total cod) in
@@ -1503,7 +1506,6 @@ let rec init (l:list 'a) : list 'a =
 let rec inspect (t:term) : tac term_view = wrap_err "inspect" (
     bind (top_env ()) (fun e ->
     let t = U.unascribe t in
-    let t = U.un_uinst t in
     let t = U.unlazy_emb t in
     match t.n with
     | Tm_meta (t, _) ->
@@ -1517,6 +1519,11 @@ let rec inspect (t:term) : tac term_view = wrap_err "inspect" (
 
     | Tm_fvar fv ->
         ret <| Tv_FVar fv
+
+    | Tm_uinst (t, us) ->
+      (match (t |> SS.compress |> U.unascribe).n with
+       | Tm_fvar fv -> ret <| Tv_UInst (fv, us)
+       | _ -> failwith "Tac::inspect: Tm_uinst head not an fvar")
 
     | Tm_app (hd, []) ->
         failwith "empty arguments on Tm_app"
@@ -1539,8 +1546,8 @@ let rec inspect (t:term) : tac term_view = wrap_err "inspect" (
         | b::bs -> ret <| Tv_Abs (b, U.abs bs t k)
         end
 
-    | Tm_type _ ->
-        ret <| Tv_Type ()
+    | Tm_type u ->
+        ret <| Tv_Type u
 
     | Tm_arrow ([], k) ->
         failwith "empty binders on arrow"
@@ -1629,6 +1636,9 @@ let pack (tv:term_view) : tac term =
     | Tv_FVar fv ->
         ret <| S.fv_to_tm fv
 
+    | Tv_UInst (fv, us) ->
+        ret <| S.mk_Tm_uinst (S.fv_to_tm fv) us
+
     | Tv_App (l, (r, q)) ->
         let q' = pack_aqual q in
         ret <| U.mk_app l [(r, q')]
@@ -1639,8 +1649,8 @@ let pack (tv:term_view) : tac term =
     | Tv_Arrow (b, c) ->
         ret <| U.arrow [b] c
 
-    | Tv_Type () ->
-        ret <| U.ktype
+    | Tv_Type u ->
+        ret <| S.mk (Tm_type u) Range.dummyRange
 
     | Tv_Refine (bv, t) ->
         ret <| U.refine bv t
