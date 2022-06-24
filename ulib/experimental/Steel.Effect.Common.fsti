@@ -1750,6 +1750,10 @@ let and_true (p: Type0) : Lemma (requires (p /\ (p ==> True))) (ensures p) = ()
 
 let solve_implies_true (p: Type0) : Lemma (p ==> True) = ()
 
+// This exception is raised for failures that should not be considered
+// hard but should allow postponing the goal instead
+exception Postpone of string
+
 let rec unify_pr_with_true (pr: term) : Tac unit =
   let hd, tl = collect_app pr in
   if hd `term_eq` (`(/\)) || hd `term_eq` (`prop_and)
@@ -1770,7 +1774,9 @@ let rec unify_pr_with_true (pr: term) : Tac unit =
     | _ ->
       if List.Tot.length (free_uvars pr) = 0
       then ()
-      else fail "unify_pr_with_true: some uvars are still there"
+      else
+        // postpone the goal instead of failing hard, to allow for other goals to solve those uvars
+        raise (Postpone "unify_pr_with_true: some uvars are still there")
 
 let elim_and_l_squash (#a #b: Type0) (#goal: Type0) (f: (a -> Tot (squash goal))) (h: (a /\ b)) : Tot (squash goal) =
   let f' (x: squash a) : Tot (squash goal) =
@@ -1804,7 +1810,8 @@ let rec set_abduction_variable_term (pr: term) : Tac term =
         let arg = set_abduction_variable_term pr_r in
         mk_app (`elim_and_r_squash) [arg, Q_Explicit]
       else
-        fail "set_abduction_variable_term: there are still uvars on both sides of l_and"
+        // postpone the goal instead of failing hard, to allow for other goals to solve those uvars
+        raise (Postpone "set_abduction_variable_term: there are still uvars on both sides of l_and")
     | _ -> fail "set_abduction_variable: ill-formed /\\"
   else
     match hd with
@@ -2022,7 +2029,9 @@ let canon_l_r (use_smt:bool)
         else apply_lemma (`(CE.EQ?.reflexivity (`#eq)));
         unify_pr_with_true pr; // MUST be done AFTER identity_left/reflexivity, which can unify other uvars
         apply_lemma (`solve_implies_true)
-      with _ -> fail "Cannot unify pr with true"
+      with
+      | TacticFailure msg -> fail ("Cannot unify pr with true: " ^ msg)
+      | e -> raise e
     )
   | l ->
     if emp_frame then (
@@ -2512,6 +2521,8 @@ let rec solve_can_be_split_forall_dep (args:list argv) : Tac bool =
 
          true
        with
+       | Postpone msg ->
+         false
        | TacticFailure msg ->
          let opened = try_open_existentials_forall_dep () in
          if opened
