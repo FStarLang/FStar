@@ -4973,7 +4973,7 @@ let (t_destruct :
                                                                     s_tm1
                                                                     pat_t in
                                                                     FStar_Syntax_Util.mk_squash
-                                                                    equ
+                                                                    FStar_Syntax_Syntax.U_zero
                                                                     uu___31 in
                                                                     FStar_Syntax_Syntax.gen_bv
                                                                     "breq"
