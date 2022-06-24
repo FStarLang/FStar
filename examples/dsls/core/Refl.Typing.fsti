@@ -445,15 +445,6 @@ and sub_typing : env -> term -> term -> Type0 =
 
 and branches_typing : env -> term -> term -> list branch -> term -> Type0 =
 
-let bindings = list (var & term)
-let rename_bindings bs x y = FStar.List.Tot.map (fun (v, t) -> (v, rename t x y)) bs
-
-let rec extend_env_l (g:env) (bs:bindings) 
-  : env
-  = match bs with
-    | [] -> g
-    | (x,t)::bs -> extend_env (extend_env_l g bs) x t
-
 val subtyping_token_renaming (g:env)
                              (bs0:bindings)
                              (bs1:bindings)
