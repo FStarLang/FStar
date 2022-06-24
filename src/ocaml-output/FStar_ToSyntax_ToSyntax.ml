@@ -1122,29 +1122,7 @@ let rec (generalize_annotated_univs :
           let uu___ =
             FStar_Syntax_Free.univnames lb.FStar_Syntax_Syntax.lbtyp in
           let uu___1 =
-            match (lb.FStar_Syntax_Syntax.lbdef).FStar_Syntax_Syntax.n with
-            | FStar_Syntax_Syntax.Tm_abs (bs, e, uu___2) ->
-                let uvs1 = bs_univnames bs in
-                let uvs2 =
-                  match e.FStar_Syntax_Syntax.n with
-                  | FStar_Syntax_Syntax.Tm_ascribed
-                      (uu___3, (FStar_Pervasives.Inl t, uu___4, uu___5),
-                       uu___6)
-                      -> FStar_Syntax_Free.univnames t
-                  | FStar_Syntax_Syntax.Tm_ascribed
-                      (uu___3, (FStar_Pervasives.Inr c, uu___4, uu___5),
-                       uu___6)
-                      -> FStar_Syntax_Free.univnames_comp c
-                  | uu___3 -> empty_set in
-                FStar_Compiler_Util.set_union uvs1 uvs2
-            | FStar_Syntax_Syntax.Tm_arrow (bs, uu___2) -> bs_univnames bs
-            | FStar_Syntax_Syntax.Tm_ascribed
-                (uu___2, (FStar_Pervasives.Inl t, uu___3, uu___4), uu___5) ->
-                FStar_Syntax_Free.univnames t
-            | FStar_Syntax_Syntax.Tm_ascribed
-                (uu___2, (FStar_Pervasives.Inr c, uu___3, uu___4), uu___5) ->
-                FStar_Syntax_Free.univnames_comp c
-            | uu___2 -> empty_set in
+            FStar_Syntax_Free.univnames lb.FStar_Syntax_Syntax.lbdef in
           FStar_Compiler_Util.set_union uu___ uu___1 in
         let all_lb_univs =
           let uu___ =
