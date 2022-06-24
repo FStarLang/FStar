@@ -2,7 +2,10 @@ module STLC
 module T = FStar.Tactics
 module R = FStar.Reflection
 module L = FStar.List.Tot
-module RT = Refl.Typing
+module RT = FStar.Reflection.Typing
+
+module RH = FStar.Reflection.Helpers
+module RS = FStar.Reflection.Subst
 
 type stlc_ty =
   | TUnit
@@ -106,7 +109,7 @@ let rec close_exp_ln (e:stlc_exp 'a) (v:var) (n:nat)
     | ELam _ e -> close_exp_ln e v (n + 1)
     | EApp e1 e2 -> close_exp_ln e1 v n; close_exp_ln e2 v n
     
-let s_exp = e:stlc_exp stlc_ty
+let s_exp = stlc_exp stlc_ty
 
 let stlc_env = list (var & stlc_ty)
 
@@ -323,8 +326,8 @@ let rec elab_ty (t:stlc_ty)
 
       R.pack_ln 
         (R.Tv_Arrow 
-          (RT.as_binder 0 t1)
-          (R.pack_comp (C_Total t2 [])))
+          (RH.as_binder 0 t1)
+          (R.pack_comp (C_Total t2 (pack_universe Uv_Zero) [])))
   
 let rec elab_exp (e:s_exp)
   : Tot R.term (decreases (size e))
@@ -334,18 +337,18 @@ let rec elab_exp (e:s_exp)
       pack_ln (Tv_Const C_Unit)
 
     | EBVar n -> 
-      let bv = R.pack_bv (RT.make_bv n tun) in
+      let bv = R.pack_bv (RH.make_bv n tun) in
       R.pack_ln (Tv_BVar bv)
       
     | EVar n ->
       // tun because type does not matter at a use site
-      let bv = R.pack_bv (RT.make_bv n tun) in
+      let bv = R.pack_bv (RH.make_bv n tun) in
       R.pack_ln (Tv_Var bv)
 
     | ELam t e ->
       let t = elab_ty t in
       let e = elab_exp e in
-      R.pack_ln (Tv_Abs (RT.as_binder 0 t) e)
+      R.pack_ln (Tv_Abs (RH.as_binder 0 t) e)
              
     | EApp e1 e2 ->
       let e1 = elab_exp e1 in
@@ -353,17 +356,17 @@ let rec elab_exp (e:s_exp)
       R.pack_ln (Tv_App e1 (e2, Q_Explicit))
 
 let extend_env_l (g:R.env) (sg:stlc_env) = 
-  L.fold_right (fun (x, t) g -> RT.extend_env g x (elab_ty t)) sg g
+  L.fold_right (fun (x, t) g -> RH.extend_env g x (elab_ty t)) sg g
   
 let rec extend_env_l_lookup_bvar (g:R.env) (sg:stlc_env) (x:var)
   : Lemma 
-    (requires (forall x. RT.lookup_bvar g x == None))
+    (requires (forall x. RH.lookup_bvar g x == None))
     (ensures (
       match lookup sg x with
-      | Some t -> RT.lookup_bvar (extend_env_l g sg) x == Some (elab_ty t)
-      | None -> RT.lookup_bvar (extend_env_l g sg) x == None))
+      | Some t -> RH.lookup_bvar (extend_env_l g sg) x == Some (elab_ty t)
+      | None -> RH.lookup_bvar (extend_env_l g sg) x == None))
     (decreases sg)
-    [SMTPat (RT.lookup_bvar (extend_env_l g sg) x)]
+    [SMTPat (RH.lookup_bvar (extend_env_l g sg) x)]
   = match sg with
     | [] -> ()
     | hd :: tl -> extend_env_l_lookup_bvar g tl x
@@ -372,10 +375,10 @@ let rec extend_env_l_lookup_bvar (g:R.env) (sg:stlc_env) (x:var)
 open FStar.Calc
 
 //key lemma about STLC types: Their elaborations are closed
-let rec stlc_types_are_closed_core (ty:stlc_ty) (x:RT.open_or_close) (n:nat)
-  : Lemma (ensures RT.open_or_close_term' (elab_ty ty) x n == elab_ty ty)
+let rec stlc_types_are_closed_core (ty:stlc_ty) (x:RS.open_or_close) (n:nat)
+  : Lemma (ensures RS.open_or_close_term' (elab_ty ty) x n == elab_ty ty)
           (decreases ty)
-          [SMTPat (RT.open_or_close_term' (elab_ty ty) x n)]
+          [SMTPat (RS.open_or_close_term' (elab_ty ty) x n)]
 
   = match ty with
     | TUnit -> ()
@@ -384,26 +387,31 @@ let rec stlc_types_are_closed_core (ty:stlc_ty) (x:RT.open_or_close) (n:nat)
       stlc_types_are_closed_core t2 x (n + 1)
 
 let stlc_types_are_closed1 (ty:stlc_ty) (v:R.term)
-  : Lemma (RT.open_with (elab_ty ty) v == elab_ty ty)
-          [SMTPat (RT.open_with (elab_ty ty) v)]
-  = stlc_types_are_closed_core ty (RT.OpenWith v) 0;
-    RT.open_with_spec (elab_ty ty) v
+  : Lemma (RS.open_with (elab_ty ty) v == elab_ty ty)
+          [SMTPat (RS.open_with (elab_ty ty) v)]
+  = stlc_types_are_closed_core ty (RS.OpenWith v) 0;
+    RS.open_with_spec (elab_ty ty) v
 
 let stlc_types_are_closed2 (ty:stlc_ty) (x:R.var)
-  : Lemma (RT.close_term (elab_ty ty) x == elab_ty ty)
-          [SMTPat (RT.close_term (elab_ty ty) x)]
-  = stlc_types_are_closed_core ty (RT.CloseVar x) 0;
-    RT.close_term_spec (elab_ty ty) x
+  : Lemma (RS.close_term (elab_ty ty) x == elab_ty ty)
+          [SMTPat (RS.close_term (elab_ty ty) x)]
+  = stlc_types_are_closed_core ty (RS.CloseVar x) 0;
+    RS.close_term_spec (elab_ty ty) x
 
 let stlc_types_are_closed3 (ty:stlc_ty) (x:R.var)
-  : Lemma (RT.open_term (elab_ty ty) x == elab_ty ty)
-          [SMTPat (RT.open_term (elab_ty ty) x)]
-  = stlc_types_are_closed_core ty (RT.OpenWith (RT.var_as_term x)) 0;
-    RT.open_term_spec (elab_ty ty) x
+  : Lemma (RS.open_term (elab_ty ty) x == elab_ty ty)
+          [SMTPat (RS.open_term (elab_ty ty) x)]
+  = stlc_types_are_closed_core ty (RS.OpenWith (RH.var_as_term x)) 0;
+    RS.open_term_spec (elab_ty ty) x
+
+let stlc_comps_are_closed4 (ty:stlc_ty) (x:R.var)
+  : Lemma (RS.open_comp (RT.mk_total (elab_ty ty)) x == RT.mk_total (elab_ty ty))
+          [SMTPat (RS.open_comp (RT.mk_total (elab_ty ty)) x)]
+  = admit ()
 
 let rec elab_open_commute' (e:s_exp) (x:var) (n:nat)
   : Lemma (ensures
-              RT.open_or_close_term' (elab_exp e) (RT.OpenWith (RT.var_as_term x)) n ==
+              RS.open_or_close_term' (elab_exp e) (RS.OpenWith (RH.var_as_term x)) n ==
               elab_exp (open_exp' e x n))
           (decreases e)
   = match e with
@@ -419,61 +427,68 @@ let rec elab_open_commute' (e:s_exp) (x:var) (n:nat)
       (==) {}
         elab_exp (ELam t (open_exp' e x (n + 1)));      
       (==) {  }
-        R.(pack_ln (Tv_Abs (RT.as_binder 0 (elab_ty t)) (elab_exp (open_exp' e x (n + 1)))));
+        R.(pack_ln (Tv_Abs (RH.as_binder 0 (elab_ty t)) (elab_exp (open_exp' e x (n + 1)))));
       (==) { elab_open_commute' e x (n + 1) } 
-        R.(pack_ln (Tv_Abs (RT.as_binder 0 (elab_ty t))
-                           (RT.open_or_close_term' (elab_exp e) RT.(OpenWith (var_as_term x)) (n + 1))));
-      (==) { stlc_types_are_closed_core t (RT.OpenWith (RT.var_as_term x)) n }
-        RT.open_or_close_term'
-          R.(pack_ln (Tv_Abs (RT.as_binder 0 (elab_ty t)) (elab_exp e)))
-          RT.(OpenWith (var_as_term x))           
+        R.(pack_ln (Tv_Abs (RH.as_binder 0 (elab_ty t))
+                           (RS.open_or_close_term' (elab_exp e) RS.(OpenWith (RH.var_as_term x)) (n + 1))));
+      (==) { stlc_types_are_closed_core t (RS.OpenWith (RH.var_as_term x)) n }
+        RS.open_or_close_term'
+          R.(pack_ln (Tv_Abs (RH.as_binder 0 (elab_ty t)) (elab_exp e)))
+          RS.(OpenWith (RH.var_as_term x))
           n;
       }
       
 
 let elab_open_commute (e:s_exp) (x:var)
-  : Lemma (RT.open_term (elab_exp e) x == elab_exp (open_exp e x))
-          [SMTPat (RT.open_term (elab_exp e) x)]
+  : Lemma (RS.open_term (elab_exp e) x == elab_exp (open_exp e x))
+          [SMTPat (RS.open_term (elab_exp e) x)]
   = elab_open_commute' e x 0;
-    RT.open_term_spec (elab_exp e) x
+    RS.open_term_spec (elab_exp e) x
 
 
 let fstar_env =
   g:R.env { 
-    RT.lookup_fvar g RT.unit_fv == Some RT.tm_type
+    RH.lookup_fvar g RH.unit_fv == Some RH.typ0
   }
 
 let fstar_top_env =
   g:fstar_env { 
-    forall x. None? (RT.lookup_bvar g x )
+    forall x. None? (RH.lookup_bvar g x )
   }
 
 let rec extend_env_l_lookup_fvar (g:R.env) (sg:stlc_env) (fv:R.fv)
   : Lemma 
     (ensures
-      RT.lookup_fvar (extend_env_l g sg) fv ==
-      RT.lookup_fvar g fv)
-    [SMTPat (RT.lookup_fvar (extend_env_l g sg) fv)]
+      RH.lookup_fvar (extend_env_l g sg) fv ==
+      RH.lookup_fvar g fv)
+    [SMTPat (RH.lookup_fvar (extend_env_l g sg) fv)]
   = match sg with
     | [] -> ()
     | hd::tl -> extend_env_l_lookup_fvar g tl fv
-          
+
+//#set-options "--log_queries --fuel 2 --ifuel 2"
+//#restart-solver
 let rec elab_ty_soundness (g:fstar_top_env)
                           (sg:stlc_env)
                           (t:stlc_ty)
-  : GTot (RT.typing (extend_env_l g sg) (elab_ty t) RT.tm_type)
+  : GTot (RT.typing (extend_env_l g sg) (elab_ty t) (RT.mk_total RH.typ0) RH.trivial_guard)
          (decreases t)
   = match t with
     | TUnit -> 
-      RT.T_FVar _ RT.unit_fv
+      RT.T_FVar _ RH.unit_fv
       
     | TArrow t1 t2 ->
       let t1_ok = elab_ty_soundness g sg t1 in
       let x = fresh sg in
       fresh_is_fresh sg;
       let t2_ok = elab_ty_soundness g ((x, t1)::sg) t2 in
-      RT.T_Arrow _ x (elab_ty t1) (elab_ty t2) t1_ok t2_ok
-  
+      assume (R.pack_universe (R.Uv_Max [RH.u_zero; RH.u_zero]) == RH.u_zero);
+      admit ();
+      //assert (elab_ty t == R.pack_ln (R.Tv_Arrow (RH.as_binder 0 (elab_ty t1)) (RT.mk_total (elab_ty t2))));
+      RT.T_Arrow _ x (elab_ty t1) RH.u_zero RH.trivial_guard
+                     (RT.mk_total (elab_ty t2)) RH.u_zero RH.trivial_guard
+                     t1_ok (RT.C_Total _ _ _ _ t2_ok)
+
 let rec soundness (#sg:stlc_env) 
                   (#se:s_exp)
                   (#st:stlc_ty)
@@ -560,5 +575,3 @@ let main (g:fstar_top_env)
       soundness_lemma [] src' src_ty g;
       (| elab_exp src', elab_ty src_ty |)
     else T.fail "Not locally nameless"
-
-

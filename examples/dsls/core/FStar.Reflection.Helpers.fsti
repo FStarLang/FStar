@@ -80,6 +80,8 @@ let binder_sort_lemma (x:var) (ty:term)
 
 type guard = option typ
 
+let trivial_guard = None
+
 let bv_as_binder bv = pack_binder bv Q_Explicit []
 
 let make_bv (n:nat) (t:term) = { bv_ppname = "_"; bv_index = n; bv_sort = t}
@@ -120,3 +122,6 @@ let rec extend_env_l (g:env) (bs:bindings)
   = match bs with
     | [] -> g
     | (x,t)::bs -> extend_env (extend_env_l g bs) x t
+
+let u_zero = pack_universe Uv_Zero
+let typ0 = tm_type u_zero

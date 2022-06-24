@@ -26,6 +26,8 @@ type typing_const : vconst -> typ -> Type =
 // TODO: should comp have universes?
 //
 
+let mk_total t = mk_total u_unk t
+
 [@@ erasable; no_auto_projectors]
 noeq
 type typing : env -> term -> comp -> guard -> Type =
@@ -33,21 +35,22 @@ type typing : env -> term -> comp -> guard -> Type =
      g:env ->
      x:bv { Some? (lookup_bvar g (bv_index x)) } ->
      typing g (pack_ln (Tv_Var x))
-              (mk_total u_unk (Some?.v (lookup_bvar g (bv_index x))))
-              None
+              (mk_total (Some?.v (lookup_bvar g (bv_index x))))
+              trivial_guard
 
   | T_FVar :
      g:env ->
      x:fv { Some? (lookup_fvar g x) } -> 
      typing g (pack_ln (Tv_FVar x))
-              (mk_total u_unk (Some?.v (lookup_fvar g x)))
-              None
+              (mk_total (Some?.v (lookup_fvar g x)))
+              trivial_guard
+
   | T_Const:
      g:env ->
      v:vconst ->
      t:term ->
      typing_const v t ->
-     typing g (constant_as_term v) (mk_total u_unk t) None
+     typing g (constant_as_term v) (mk_total t) trivial_guard
                         
   | T_Abs :
      g:env ->
@@ -58,10 +61,10 @@ type typing : env -> term -> comp -> guard -> Type =
      e:term ->
      c:comp ->
      g_e:guard ->
-     typing g t (mk_total u_unk (tm_type u_t)) g_t ->
+     typing g t (mk_total (tm_type u_t)) g_t ->
      typing (extend_env g x t) (open_term e x) c g_e ->
      typing g (pack_ln (Tv_Abs (as_binder 0 t) e))
-              (mk_total u_unk (pack_ln (Tv_Arrow (as_binder 0 t) 
+              (mk_total (pack_ln (Tv_Arrow (as_binder 0 t) 
                                        (close_comp c x))))
               (g_t ++ close_guard g_e x)
 
@@ -73,8 +76,8 @@ type typing : env -> term -> comp -> guard -> Type =
      c:comp ->
      g_e1:guard ->
      g_e2:guard ->
-     typing g e1 (mk_total u_unk (pack_ln (Tv_Arrow x c))) g_e1 ->
-     typing g e2 (mk_total u_unk (binder_sort x)) g_e2 ->
+     typing g e1 (mk_total (pack_ln (Tv_Arrow x c))) g_e1 ->
+     typing g e2 (mk_total (binder_sort x)) g_e2 ->
      typing g (pack_ln (Tv_App e1 (e2, Q_Explicit)))
               (open_comp_with c e2)
               (g_e1 ++ g_e2)
@@ -88,10 +91,10 @@ type typing : env -> term -> comp -> guard -> Type =
      c:comp ->
      u_c:universe ->
      g_c:guard ->
-     typing g t (mk_total u_unk (tm_type u_t)) g_t ->
+     typing g t (mk_total (tm_type u_t)) g_t ->
      typing_comp (extend_env g x t) (open_comp c x) u_c g_c ->
      typing g (pack_ln (Tv_Arrow (as_binder 0 t) c))
-              (mk_total u_unk (tm_type (pack_universe (Uv_Max [u_t; u_c]))))
+              (mk_total (tm_type (pack_universe (Uv_Max [u_t; u_c]))))
               (g_t ++ close_guard g_c x)
 
   | T_Refine:
@@ -103,10 +106,10 @@ type typing : env -> term -> comp -> guard -> Type =
      e:term ->
      u_e:universe ->
      g_e:guard ->
-     typing g t (mk_total u_unk (tm_type u_t)) g_t ->
-     typing (extend_env g x t) (open_term e x) (mk_total u_unk (tm_type u_e)) g_e ->
+     typing g t (mk_total (tm_type u_t)) g_t ->
+     typing (extend_env g x t) (open_term e x) (mk_total (tm_type u_e)) g_e ->
      typing g (pack_ln (Tv_Refine (pack_bv (make_bv 0 t)) e))
-              (mk_total u_unk (tm_type u_t))
+              (mk_total (tm_type u_t))
               (g_t ++ close_guard g_e x)
 
     //
@@ -134,7 +137,7 @@ type typing : env -> term -> comp -> guard -> Type =
      g_else:guard ->
      c:comp ->
      hyp:var { None? (lookup_bvar g hyp) } ->
-     typing g scrutinee (mk_total u_unk bool_ty) g_scrutinee ->
+     typing g scrutinee (mk_total bool_ty) g_scrutinee ->
      typing (extend_env g hyp (eq2 bool_ty scrutinee true_bool)) then_ c g_then ->
      typing (extend_env g hyp (eq2 bool_ty scrutinee false_bool)) else_ c g_else ->
      typing g (pack_ln (Tv_Match scrutinee None [(Pat_Constant C_True, then_); 
@@ -150,7 +153,7 @@ type typing : env -> term -> comp -> guard -> Type =
      branches:list branch ->
      c:comp ->
      g_branches:guard ->
-     typing g scrutinee (mk_total u_unk i_ty) g_scrutinee ->
+     typing g scrutinee (mk_total i_ty) g_scrutinee ->
      branches_typing g scrutinee i_ty branches c g_branches ->
      typing g (pack_ln (Tv_Match scrutinee None branches))
               c
@@ -162,21 +165,21 @@ and typing_comp : env -> comp -> universe -> guard -> Type =
      t:typ ->
      u_t:universe ->
      g_t:guard ->
-     typing g t (mk_total u_unk (tm_type u_t)) g_t ->
-     typing_comp g (mk_total u_unk t) u_t g_t
+     typing g t (mk_total (tm_type u_t)) g_t ->
+     typing_comp g (mk_total t) u_t g_t
 
 and sub_typing : env -> term -> term -> guard -> Type0 =
   | ST_Refl: 
      g:env ->
      t:term ->
-     sub_typing g t t None
+     sub_typing g t t trivial_guard
 
   | ST_Token: 
      g:env ->
      t1:term ->
      t2:term ->      
      subtyping_token g t1 t2 ->
-     sub_typing g t1 t2 None
+     sub_typing g t1 t2 trivial_guard
 
 and sub_comp : env -> comp -> comp -> guard -> Type0 =
   | SC_Total:
@@ -185,8 +188,8 @@ and sub_comp : env -> comp -> comp -> guard -> Type0 =
      t2:typ ->
      g_sub:guard ->
      sub_typing g t1 t2 g_sub ->
-     sub_comp g (mk_total u_unk t1)
-                (mk_total u_unk t2)
+     sub_comp g (mk_total t1)
+                (mk_total t2)
                 g_sub
 
 and branches_typing : env -> term -> term -> list branch -> comp -> guard -> Type0 =
