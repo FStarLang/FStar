@@ -118,6 +118,42 @@ let rec elaborate_pat env p = //Adds missing implicit patterns to constructor pa
         {p with v=Pat_cons(fv, aux f pats)}
     | _ -> p
 
+exception Raw_pat_cannot_be_translated
+let raw_pat_as_exp (env:Env.env) (p:pat)
+  : option term 
+  = let rec aux p = 
+        match p.v with
+        | Pat_constant c ->
+          let e =
+              match c with
+              | FStar.Const.Const_int(repr, Some sw) ->
+                FStar.ToSyntax.ToSyntax.desugar_machine_integer env.dsenv repr sw p.p
+              | _ ->
+                mk (Tm_constant c) p.p
+          in
+          e
+
+        | Pat_dot_term(_, t) ->
+          begin
+          let t = SS.compress t in
+          match t.n with
+          | Tm_unknown -> raise Raw_pat_cannot_be_translated
+          | _ -> t
+          end
+
+        | Pat_wild x
+        | Pat_var x ->
+          mk (Tm_name x) p.p
+
+        | Pat_cons(fv, pats) ->
+          let args = List.map (fun (p, i) -> aux p, as_aqual_implicit i) pats in
+          let hd = Syntax.fv_to_tm fv in
+          let e = mk_Tm_app hd args p.p in
+          e
+    in
+    try Some (aux p)
+    with Raw_pat_cannot_be_translated -> None
+
 (*
   pat_as_exps allow_implicits env p:
     Turns a pattern p into a triple:

@@ -4655,7 +4655,17 @@ let discharge_guard'
                 end
                 else [env,vc,FStar.Options.peek ()]
             in
-            vcs |> List.map (fun (env, goal, opts) ->
+            let vcs =
+              if Options.split_queries ()
+              then vcs |>
+                   List.collect
+                     (fun (env, goal, opts) ->
+                         match Env.split_smt_query env goal with
+                         | None -> [env,goal,opts]
+                         | Some goals -> goals |> List.map (fun (env, goal) -> env,goal,opts))
+              else vcs
+            in
+            vcs |> List.iter (fun (env, goal, opts) ->
                     match check_trivial goal with
                     | Trivial ->
                         if debug
@@ -4668,8 +4678,8 @@ let discharge_guard'
                         if debug
                         then Errors.diag (Env.get_range env)
                                          (BU.format2 "Trying to solve:\n> %s\nWith proof_ns:\n %s\n"
-                                                 (Print.term_to_string goal)
-                                                 (Env.string_of_proof_ns env));
+                                            (Print.term_to_string goal)
+                                            (Env.string_of_proof_ns env));
                         if debug
                         then Errors.diag (Env.get_range env)
                                          (BU.format1 "Before calling solver VC=\n%s\n" (Print.term_to_string goal));

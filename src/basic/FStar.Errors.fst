@@ -390,7 +390,8 @@ type raw_error =
   | Error_BadLetOpenRecord
   | Error_UnexpectedTypeclassInstance
   | Warning_AmbiguousResolveImplicitsHook
-  
+  | Warning_SplitAndRetryQueries
+
 type flag = error_flag
 type error_setting = raw_error * error_flag * int
 let default_settings : list error_setting =
@@ -743,6 +744,7 @@ let default_settings : list error_setting =
     Error_BadLetOpenRecord                            , CAlwaysError, 346;
     Error_UnexpectedTypeclassInstance                 , CAlwaysError, 347;
     Warning_AmbiguousResolveImplicitsHook             , CWarning, 348;    
+    Warning_SplitAndRetryQueries                      , CWarning, 349;
     ]
 
 let lookup_error settings e =
