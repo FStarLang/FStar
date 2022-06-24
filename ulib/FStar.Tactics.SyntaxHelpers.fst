@@ -10,7 +10,7 @@ open FStar.Tactics.Types
 private
 let rec collect_arr' (bs : list binder) (c : comp) : Tac (list binder * comp) =
     begin match inspect_comp c with
-    | C_Total t _ ->
+    | C_Total t _ _ ->
         begin match inspect t with
         | Tv_Arrow b c ->
             collect_arr' (b::bs) c
@@ -22,12 +22,12 @@ let rec collect_arr' (bs : list binder) (c : comp) : Tac (list binder * comp) =
 
 val collect_arr_bs : typ -> Tac (list binder * comp)
 let collect_arr_bs t =
-    let (bs, c) = collect_arr' [] (pack_comp (C_Total t [])) in
+    let (bs, c) = collect_arr' [] (pack_comp (C_Total t u_unk [])) in
     (List.Tot.Base.rev bs, c)
 
 val collect_arr : typ -> Tac (list typ * comp)
 let collect_arr t =
-    let (bs, c) = collect_arr' [] (pack_comp (C_Total t [])) in
+    let (bs, c) = collect_arr' [] (pack_comp (C_Total t u_unk [])) in
     let ts = List.Tot.Base.map type_of_binder bs in
     (List.Tot.Base.rev ts, c)
 
@@ -51,12 +51,14 @@ let rec mk_arr (bs: list binder) (cod : comp) : Tac term =
     match bs with
     | [] -> fail "mk_arr, empty binders"
     | [b] -> pack (Tv_Arrow b cod)
-    | (b::bs) -> pack (Tv_Arrow b (pack_comp (C_Total (mk_arr bs cod) [])))
+    | (b::bs) ->
+      pack (Tv_Arrow b (pack_comp (C_Total (mk_arr bs cod) u_unk [])))
 
 let rec mk_tot_arr (bs: list binder) (cod : term) : Tac term =
     match bs with
     | [] -> cod
-    | (b::bs) -> pack (Tv_Arrow b (pack_comp (C_Total (mk_tot_arr bs cod) [])))
+    | (b::bs) ->
+      pack (Tv_Arrow b (pack_comp (C_Total (mk_tot_arr bs cod) u_unk [])))
 
 let lookup_lb_view (lbs:list letbinding) (nm:name) : Tac lb_view =
   let o = FStar.List.Tot.Base.find

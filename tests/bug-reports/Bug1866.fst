@@ -10,7 +10,7 @@ let rec not_do_much e: Tac term =
       let es = map (fun (e, q) -> not_do_much e, q) es in
       mk_app e es
 
-  | Tv_Var _ | Tv_BVar _ | Tv_FVar _
+  | Tv_Var _ | Tv_BVar _ | Tv_FVar _ | Tv_UInst _ _
   | Tv_Const _ ->
     e
 

@@ -1680,8 +1680,9 @@ let should_defer_flex_to_user_tac env (wl:worklist) (f:flex_t) =
   let b = DeferredImplicits.should_defer_uvar_to_user_tac wl.tcenv u in
 
   if Env.debug env <| Options.Other "ResolveImplicitsHook"
-  then BU.print2 "Rel.should_defer_flex_to_user_tac for %s returning %s\n"
-         (Print.ctx_uvar_to_string_no_reason u) (string_of_bool b);
+  then BU.print3 "Rel.should_defer_flex_to_user_tac for %s returning %s (env.enable_defer_to_tac: %s)\n"
+         (Print.ctx_uvar_to_string_no_reason u) (string_of_bool b)
+         (string_of_bool env.enable_defer_to_tac);
 
   b
 
@@ -4506,8 +4507,9 @@ let try_solve_deferred_constraints (defer_ok:defer_ok_t) smt_ok deferred_to_tac_
                                            ; smt_ok=smt_ok } in
    if Env.debug env <| Options.Other "Rel"
    then begin
-         BU.print3 "Trying to solve carried problems (defer_ok=%s): begin\n\t%s\nend\n and %s implicits\n"
+         BU.print4 "Trying to solve carried problems (defer_ok=%s) (deferred_to_tac_ok=%s): begin\n\t%s\nend\n and %s implicits\n"
                   (string_of_defer_ok defer_ok)
+                  (string_of_bool deferred_to_tac_ok)
                   (wl_to_string wl)
                   (string_of_int (List.length g.implicits))
    end;
@@ -4531,8 +4533,9 @@ let try_solve_deferred_constraints (defer_ok:defer_ok_t) smt_ok deferred_to_tac_
      else g
    in
    if Env.debug env <| Options.Other "ResolveImplicitsHook"
-   then BU.print1 "ResolveImplicitsHook: Solved deferred to tactic goals, remaining guard is\n%s\n"
-          (guard_to_string env g);
+   then BU.print2 "ResolveImplicitsHook: Solved deferred to tactic goals, remaining guard is\n%s (and %s implicits)\n"
+          (guard_to_string env g)
+          (string_of_int (List.length g.implicits));
    {g with univ_ineqs=([], [])}
   )
   (Some (Ident.string_of_lid (Env.current_module env)))
@@ -4635,6 +4638,16 @@ let discharge_guard' use_env_range_msg env (g:guard_t) (use_smt:bool) : option g
                     )
                 end
                 else [env,vc,FStar.Options.peek ()]
+            in
+            let vcs =
+              if Options.split_queries ()
+              then vcs |>
+                   List.collect
+                     (fun (env, goal, opts) ->
+                         match Env.split_smt_query env goal with
+                         | None -> [env,goal,opts]
+                         | Some goals -> goals |> List.map (fun (env, goal) -> env,goal,opts))
+              else vcs
             in
             vcs |> List.iter (fun (env, goal, opts) ->
                     match check_trivial goal with
@@ -4920,9 +4933,10 @@ let resolve_implicits' env is_tac g =
     | hd::tl ->
       let { imp_reason = reason; imp_tm = tm; imp_uvar = ctx_u; imp_range = r } = hd in
       if Env.debug env <| Options.Other "Rel"
-      then BU.print2 "resolve_implicits' loop, imp_tm = %s and ctx_u = %s\n"
+      then BU.print3 "resolve_implicits' loop, imp_tm = %s and ctx_u = %s, is_tac: %s\n"
              (Print.term_to_string tm)
-             (Print.ctx_uvar_to_string ctx_u);
+             (Print.ctx_uvar_to_string ctx_u)
+             (string_of_bool is_tac);
       if ctx_u.ctx_uvar_should_check = Allow_unresolved
       then until_fixpoint (out, true) tl
       else if unresolved ctx_u

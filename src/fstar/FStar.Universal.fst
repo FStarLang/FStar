@@ -114,6 +114,7 @@ let init_env deps : TcEnv.env =
     then SMT.dummy
     else {SMT.solver with
       preprocess=FStar.Tactics.Hooks.preprocess;
+      spinoff_strictly_positive_goals=Some FStar.Tactics.Hooks.spinoff_strictly_positive_goals;
       handle_smt_goal=FStar.Tactics.Hooks.handle_smt_goal
     } in
   let env =

@@ -311,6 +311,8 @@ and lazy_kind =
   | Lazy_uvar
   | Lazy_letbinding
   | Lazy_embedding of emb_typ * Thunk.t term
+  | Lazy_universe
+  | Lazy_universe_uvar
 and binding =
   | Binding_var      of bv
   | Binding_lid      of lident * (univ_names * typ)

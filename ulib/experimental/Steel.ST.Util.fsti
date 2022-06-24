@@ -89,6 +89,11 @@ val assume_ (#opened_invariants:_)
 /// and ghost vprops
 val drop (#opened:inames) (p:vprop) : STGhostT unit opened p (fun _ -> emp)
 
+/// A pure vprop
+val pure (p: prop) : vprop
+
+val reveal_pure (p: prop) : Lemma (pure p == Steel.Effect.Common.pure p)
+
 /// Introduce a pure vprop, when [p] is valid in the context
 val intro_pure (#uses:_) (p:prop)
   : STGhost unit uses emp (fun _ -> pure p) p (fun _ -> True)
@@ -98,10 +103,22 @@ val elim_pure (#uses:_) (p:prop)
   : STGhost unit uses (pure p) (fun _ -> emp) True (fun _ -> p)
 
 /// Extracting a proposition from a [pure p] while retaining [pure p]
-let extract_pure (#uses:_) (p:prop)
+val extract_pure (#uses:_) (p:prop)
   : STGhost unit uses (pure p) (fun _ -> pure p) True (fun _ -> p)
-  = let _ = elim_pure p in
-    intro_pure p
+
+/// Useful lemmas to make the framing tactic automatically handle `pure`
+
+[@@solve_can_be_split_lookup; (solve_can_be_split_for pure)]
+val intro_can_be_split_pure
+  (p: prop)
+  (sq: squash p)
+: Lemma (emp `can_be_split` pure p)
+
+[@@solve_can_be_split_forall_dep_lookup; (solve_can_be_split_forall_dep_for pure)]
+val intro_can_be_split_forall_dep_pure
+  (#a: Type)
+  (p: a -> Tot prop)
+: Lemma (can_be_split_forall_dep p (fun _ -> emp) (fun x -> pure (p x)))
 
 /// It's generally good practice to end a computation with a [return].
 ///
@@ -114,6 +131,7 @@ let extract_pure (#uses:_) (p:prop)
 /// Else, the returned value will be given type SteelGhost, and F*
 /// will fail to typecheck the program as it will try to lift a
 /// SteelGhost computation with an informative return type
+[@@noextract_to "Plugin"]
 val return (#a:Type u#a)
            (#opened_invariants:inames)
            (#p:a -> vprop)
@@ -125,6 +143,19 @@ val return (#a:Type u#a)
 
 /// An existential quantifier for vprop
 val exists_ (#a:Type u#a) (p:a -> vprop) : vprop
+
+/// Useful lemmas to make the framing tactic automatically handle `exists_`
+[@@solve_can_be_split_lookup; (solve_can_be_split_for exists_)]
+val intro_can_be_split_exists (a:Type) (x:a) (p: a -> vprop)
+  : Lemma
+    (ensures (p x `can_be_split` (exists_ p)))
+
+[@@solve_can_be_split_forall_dep_lookup; (solve_can_be_split_forall_dep_for exists_)]
+val intro_can_be_split_forall_dep_exists (b:Type) (a: b -> Type)
+                           (x: (u: b) -> GTot (a u))
+                           (p: (u: b) -> a u -> vprop)
+  : Lemma
+    (ensures (fun (y:b) -> p y (x y)) `(can_be_split_forall_dep (fun _ -> True))` (fun (y:b) -> exists_ (p y)))
 
 /// Introducing an existential if the predicate [p] currently holds for value [x]
 val intro_exists (#a:Type) (#opened_invariants:_) (x:a) (p:a -> vprop)
@@ -156,6 +187,11 @@ val lift_exists (#a:_)
 
 /// If two predicates [p] and [q] are equivalent, then their existentially quantified versions
 /// are equivalent, and we can switch from `h_exists p` to `h_exists q`
+val exists_equiv (#a:_)
+                (p:a -> vprop)
+                (q:a -> vprop {forall x. equiv (p x) (q x) })
+  : Lemma (equiv (exists_ p) (exists_ q))
+
 val exists_cong (#a:_)
                 (#u:_)
                 (p:a -> vprop)
@@ -172,6 +208,7 @@ val new_invariant (#opened_invariants:inames) (p:vprop)
 /// Atomically executing function [f] which relies on the predicate [p] stored in invariant [i]
 /// as long as it maintains the validity of [p]
 /// This requires invariant [i] to not belong to the set of currently opened invariants.
+[@@noextract_to "Plugin"]
 val with_invariant (#a:Type)
                    (#fp:vprop)
                    (#fp':a -> vprop)
@@ -196,6 +233,7 @@ val with_invariant_g (#a:Type)
   : STGhostT a opened_invariants fp fp'
 
 /// Parallel composition of two STT functions
+[@@noextract_to "Plugin"]
 val par
   (#aL:Type u#a)
   (#aR:Type u#a)
@@ -208,3 +246,53 @@ val par
   : STT (aL & aR)
         (preL `star` preR)
         (fun y -> postL (fst y) `star` postR (snd y))
+
+/// Extracts an argument to a vprop from the context. This can be useful if we do need binders for some of the existentials opened by gen_elim.
+
+val vpattern
+  (#opened: _)
+  (#a: Type)
+  (#x: a)
+  (p: a -> vprop)
+: STGhost a opened (p x) (fun _ -> p x) True (fun res -> res == x)
+
+val vpattern_replace
+  (#opened: _)
+  (#a: Type)
+  (#x: a)
+  (p: a -> vprop)
+: STGhost a opened (p x) (fun res -> p res) True (fun res -> res == x)
+
+val vpattern_erased
+  (#opened: _)
+  (#a: Type)
+  (#x: a)
+  (p: a -> vprop)
+: STGhost (Ghost.erased a) opened (p x) (fun _ -> p x) True (fun res -> Ghost.reveal res == x)
+
+val vpattern_replace_erased
+  (#opened: _)
+  (#a: Type)
+  (#x: a)
+  (p: a -> vprop)
+: STGhost (Ghost.erased a) opened (p x) (fun res -> p (Ghost.reveal res)) True (fun res -> Ghost.reveal res == x)
+
+val vpattern_replace_erased_global
+  (#opened: _)
+  (#a: Type)
+  (#x: a)
+  (#q: a -> vprop)
+  (p: a -> vprop)
+: STGhostF (Ghost.erased a) opened (p x `star` q x) (fun res -> p (Ghost.reveal res) `star` q (Ghost.reveal res)) True (fun res -> Ghost.reveal res == x)
+
+val vpattern_rewrite
+  (#opened: _)
+  (#a: Type)
+  (#x1: a)
+  (p: a -> vprop)
+  (x2: a)
+: STGhost unit opened
+    (p x1)
+    (fun _ -> p x2)
+    (x1 == x2)
+    (fun _ -> True)
