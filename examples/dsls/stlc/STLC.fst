@@ -468,6 +468,7 @@ let rec extend_env_l_lookup_fvar (g:R.env) (sg:stlc_env) (fv:R.fv)
 
 //#set-options "--log_queries --fuel 2 --ifuel 2"
 //#restart-solver
+#set-options "--debug STLC --debug_level Extreme --debug_level SMTEncoding --debug_level SMTQuery --debug_level Rel --debug_level Rel --ugly"
 let rec elab_ty_soundness (g:fstar_top_env)
                           (sg:stlc_env)
                           (t:stlc_ty)
@@ -489,89 +490,89 @@ let rec elab_ty_soundness (g:fstar_top_env)
                      (RT.mk_total (elab_ty t2)) RH.u_zero RH.trivial_guard
                      t1_ok (RT.C_Total _ _ _ _ t2_ok)
 
-let rec soundness (#sg:stlc_env) 
-                  (#se:s_exp)
-                  (#st:stlc_ty)
-                  (dd:stlc_typing sg se st)
-                  (g:fstar_top_env)
-  : GTot (RT.typing (extend_env_l g sg)
-                    (elab_exp se)
-                    (elab_ty st))
-         (decreases dd)
-  = match dd with
-    | T_Unit _ ->
-      RT.T_Const _ _ _ RT.CT_Unit
+// let rec soundness (#sg:stlc_env) 
+//                   (#se:s_exp)
+//                   (#st:stlc_ty)
+//                   (dd:stlc_typing sg se st)
+//                   (g:fstar_top_env)
+//   : GTot (RT.typing (extend_env_l g sg)
+//                     (elab_exp se)
+//                     (elab_ty st))
+//          (decreases dd)
+//   = match dd with
+//     | T_Unit _ ->
+//       RT.T_Const _ _ _ RT.CT_Unit
 
-    | T_Var _ x ->
-      RT.T_Var _ (R.pack_bv (RT.make_bv x tun))
+//     | T_Var _ x ->
+//       RT.T_Var _ (R.pack_bv (RT.make_bv x tun))
 
-    | T_Lam _ t e t' x de ->
-      let de : RT.typing (extend_env_l g ((x,t)::sg))
-                         (elab_exp (open_exp e x))
-                         (elab_ty t')
-            = soundness de g 
-      in    
-      let de : RT.typing (RT.extend_env (extend_env_l g sg) x (elab_ty t))
-                         (elab_exp (open_exp e x))
-                         (elab_ty t')
-             = de
-      in
-      fresh_is_fresh sg;
-      let dd
-        : RT.typing (extend_env_l g sg)
-                    (R.pack_ln (R.Tv_Abs (RT.as_binder 0 (elab_ty t)) (elab_exp e)))
-                    (elab_ty (TArrow t t'))
-        = RT.T_Abs (extend_env_l g sg)
-                   x
-                   (elab_ty t) 
-                   (elab_exp e)
-                   (elab_ty t')
-                   (elab_ty_soundness g sg t)
-                   de
-      in
-      dd
+//     | T_Lam _ t e t' x de ->
+//       let de : RT.typing (extend_env_l g ((x,t)::sg))
+//                          (elab_exp (open_exp e x))
+//                          (elab_ty t')
+//             = soundness de g 
+//       in    
+//       let de : RT.typing (RT.extend_env (extend_env_l g sg) x (elab_ty t))
+//                          (elab_exp (open_exp e x))
+//                          (elab_ty t')
+//              = de
+//       in
+//       fresh_is_fresh sg;
+//       let dd
+//         : RT.typing (extend_env_l g sg)
+//                     (R.pack_ln (R.Tv_Abs (RT.as_binder 0 (elab_ty t)) (elab_exp e)))
+//                     (elab_ty (TArrow t t'))
+//         = RT.T_Abs (extend_env_l g sg)
+//                    x
+//                    (elab_ty t) 
+//                    (elab_exp e)
+//                    (elab_ty t')
+//                    (elab_ty_soundness g sg t)
+//                    de
+//       in
+//       dd
 
-    | T_App _ e1 e2 t t' d1 d2 ->
-      let dt1 
-        : RT.typing (extend_env_l g sg)
-                    (elab_exp e1)
-                    (elab_ty (TArrow t t'))
-        = soundness d1 g
-      in
-      let dt2
-        : RT.typing (extend_env_l g sg)
-                    (elab_exp e2)
-                    (elab_ty t)
-        = soundness d2 g
-      in
-      let dt :
-        RT.typing (extend_env_l g sg)
-                  (elab_exp (EApp e1 e2))
-                  (RT.open_with (elab_ty t') (elab_exp e2))
-        = RT.T_App _ _ _ _ _ dt1 dt2
-      in
-      dt
+//     | T_App _ e1 e2 t t' d1 d2 ->
+//       let dt1 
+//         : RT.typing (extend_env_l g sg)
+//                     (elab_exp e1)
+//                     (elab_ty (TArrow t t'))
+//         = soundness d1 g
+//       in
+//       let dt2
+//         : RT.typing (extend_env_l g sg)
+//                     (elab_exp e2)
+//                     (elab_ty t)
+//         = soundness d2 g
+//       in
+//       let dt :
+//         RT.typing (extend_env_l g sg)
+//                   (elab_exp (EApp e1 e2))
+//                   (RT.open_with (elab_ty t') (elab_exp e2))
+//         = RT.T_App _ _ _ _ _ dt1 dt2
+//       in
+//       dt
 
-let soundness_lemma (sg:stlc_env) 
-                    (se:s_exp)
-                    (st:stlc_ty)
-                    (g:fstar_top_env)
-  : Lemma
-    (requires stlc_typing sg se st)
-    (ensures  RT.typing (extend_env_l g sg)
-                        (elab_exp se)
-                        (elab_ty st))
-  = FStar.Squash.bind_squash 
-      #(stlc_typing sg se st)
-      ()
-      (fun dd -> FStar.Squash.return_squash (soundness dd g))
+// let soundness_lemma (sg:stlc_env) 
+//                     (se:s_exp)
+//                     (st:stlc_ty)
+//                     (g:fstar_top_env)
+//   : Lemma
+//     (requires stlc_typing sg se st)
+//     (ensures  RT.typing (extend_env_l g sg)
+//                         (elab_exp se)
+//                         (elab_ty st))
+//   = FStar.Squash.bind_squash 
+//       #(stlc_typing sg se st)
+//       ()
+//       (fun dd -> FStar.Squash.return_squash (soundness dd g))
 
-let main (g:fstar_top_env)
-         (src:stlc_exp unit)
-  : T.Tac (e:R.term & t:R.term { RT.typing g e t })
-  = if ln src
-    then 
-      let (| src', src_ty |) = infer_and_check g src in
-      soundness_lemma [] src' src_ty g;
-      (| elab_exp src', elab_ty src_ty |)
-    else T.fail "Not locally nameless"
+// let main (g:fstar_top_env)
+//          (src:stlc_exp unit)
+//   : T.Tac (e:R.term & t:R.term { RT.typing g e t })
+//   = if ln src
+//     then 
+//       let (| src', src_ty |) = infer_and_check g src in
+//       soundness_lemma [] src' src_ty g;
+//       (| elab_exp src', elab_ty src_ty |)
+//     else T.fail "Not locally nameless"
