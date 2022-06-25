@@ -39,7 +39,6 @@ module FStar.FiniteMap.Ambient
 
 open FStar.FiniteMap.Base
 
-//TODO: Specialize this to Type0, currently this isn't really ambient
-let all_finite_map_facts_ambient (b:Type u#b) : (squash (all_finite_map_facts b)) =
-  all_finite_map_facts_lemma b
+let all_finite_map_facts_ambient : squash (all_finite_map_facts) =
+  all_finite_map_facts_lemma ()
 

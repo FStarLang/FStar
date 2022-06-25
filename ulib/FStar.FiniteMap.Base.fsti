@@ -434,7 +434,8 @@ let disjoint_fact (b: Type u#b) =
   One can bring all these facts into scope with `all_finite_map_facts_lemma ()`.
 **)
 
-let all_finite_map_facts (b:Type u#b) =
+let all_finite_map_facts =
+  forall (b:Type u#b).
     cardinality_zero_iff_empty_fact b
   /\ empty_or_domain_occupied_fact b
   /\ empty_or_values_occupied_fact b
@@ -456,4 +457,4 @@ let all_finite_map_facts (b:Type u#b) =
   /\ map_extensionality_fact b
   /\ disjoint_fact b
 
-val all_finite_map_facts_lemma (b: Type u#b) : Lemma (all_finite_map_facts b)
+val all_finite_map_facts_lemma (_:unit) : Lemma (all_finite_map_facts)

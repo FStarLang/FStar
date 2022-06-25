@@ -40,6 +40,7 @@ open FStar.FunctionalExtensionality
 module FLT = FStar.List.Tot
 module FSet = FStar.FiniteSet.Base
 open FStar.FiniteSet.Ambient
+module T = FStar.Tactics
 
 // Finite maps
 type map (a: eqtype) (b: Type u#b) = (keys: FSet.set a) & (setfun_t a b keys)
@@ -267,7 +268,7 @@ let subtract_element_lemma (b:Type u#b)
 : Lemma (subtract_element_fact b) =
   ()
 
-module T = FStar.Tactics
+
 let map_equal_lemma (b:Type u#b)
 : Lemma (map_equal_fact b) //Surprising; needed to split this goal into two
 = assert (map_equal_fact b)
@@ -295,25 +296,56 @@ let disjoint_lemma (b:Type u#b)
 : Lemma (disjoint_fact b) =
   ()
 
-let all_finite_map_facts_lemma (b:Type u#b)
-: Lemma (all_finite_map_facts b) =
-  cardinality_zero_iff_empty_lemma b;
-  empty_or_domain_occupied_lemma b;
-  empty_or_values_occupied_lemma b;
-  empty_or_items_occupied_lemma b;
-  map_cardinality_matches_domain_lemma b;
-  values_contains_lemma b;
-  items_contains_lemma b;
-  empty_domain_empty_lemma b;
-  glue_domain_lemma b;
-  glue_elements_lemma b;
-  insert_elements_lemma b;
-  insert_member_cardinality_lemma b;
-  insert_nonmember_cardinality_lemma b;
-  merge_domain_is_union_lemma b;
-  merge_element_lemma b;
-  subtract_domain_lemma b;
-  subtract_element_lemma b;
-  map_equal_lemma b;
-  map_extensionality_lemma b;
-  disjoint_lemma b
+let all_finite_map_facts_b (b:Type u#b) =
+    cardinality_zero_iff_empty_fact b
+  /\ empty_or_domain_occupied_fact b
+  /\ empty_or_values_occupied_fact b
+  /\ empty_or_items_occupied_fact b
+  /\ map_cardinality_matches_domain_fact b
+  /\ values_contains_fact b
+  /\ items_contains_fact b
+  /\ empty_domain_empty_fact b
+  /\ glue_domain_fact b
+  /\ glue_elements_fact b
+  /\ insert_elements_fact b
+  /\ insert_member_cardinality_fact b
+  /\ insert_nonmember_cardinality_fact b
+  /\ merge_domain_is_union_fact b
+  /\ merge_element_fact b
+  /\ subtract_domain_fact b
+  /\ subtract_element_fact b
+  /\ map_equal_fact b 
+  /\ map_extensionality_fact b
+  /\ disjoint_fact b
+
+let all_finite_map_facts_lemma' ()
+: squash (all_finite_map_facts u#b) =
+  introduce forall (b:Type u#b). all_finite_map_facts_b b
+  with ( 
+    cardinality_zero_iff_empty_lemma b;
+    empty_or_domain_occupied_lemma b;
+    empty_or_values_occupied_lemma b;
+    empty_or_items_occupied_lemma b;
+    map_cardinality_matches_domain_lemma b;
+    values_contains_lemma b;
+    items_contains_lemma b;
+    empty_domain_empty_lemma b;
+    glue_domain_lemma b;
+    glue_elements_lemma b;
+    insert_elements_lemma b;
+    insert_member_cardinality_lemma b;
+    insert_nonmember_cardinality_lemma b;
+    merge_domain_is_union_lemma b;
+    merge_element_lemma b;
+    subtract_domain_lemma b;
+    subtract_element_lemma b;
+    map_equal_lemma b;
+    map_extensionality_lemma b;
+    disjoint_lemma b
+  )
+
+let all_finite_map_facts_lemma (_:unit)
+  : Lemma (all_finite_map_facts u#b)
+  = all_finite_map_facts_lemma' ()
+
+  
