@@ -617,6 +617,12 @@ let inspect_sigelt (se : sigelt) : sigelt_view =
         Unk
 
 let pack_sigelt (sv:sigelt_view) : sigelt =
+    let check_lid lid =
+        if List.length (Ident.path_of_lid lid) <= 1
+	then failwith ("pack_sigelt: invalid long identifier \""
+	              ^ Ident.string_of_lid lid
+		      ^ "\" (did you forget a module path?)")
+    in
     match sv with
     | Sg_Let (r, lbs) ->
         let pack_letbinding (lb:letbinding) =
@@ -626,6 +632,7 @@ let pack_sigelt (sv:sigelt_view) : sigelt =
                       | _ -> failwith
                               "impossible: pack_sigelt: bv in toplevel let binding"
             in
+            check_lid lid;
             let s = SS.univ_var_closing us in
             let typ = SS.subst s typ in
             let def = SS.subst s def in
@@ -639,6 +646,7 @@ let pack_sigelt (sv:sigelt_view) : sigelt =
 
     | Sg_Inductive (nm, us_names, param_bs, ty, ctors) ->
       let ind_lid = Ident.lid_of_path nm Range.dummyRange in
+      check_lid ind_lid;
       let s = SS.univ_var_closing us_names in
       let nparam = List.length param_bs in
       let pack_ctor (c:ctor) : sigelt =
@@ -667,6 +675,7 @@ let pack_sigelt (sv:sigelt_view) : sigelt =
 
     | Sg_Val (nm, us_names, ty) ->
         let val_lid = Ident.lid_of_path nm Range.dummyRange in
+        check_lid val_lid;
         let typ = SS.close_univ_vars us_names ty in
         mk_sigelt <| Sig_declare_typ (val_lid, us_names, typ)
 
