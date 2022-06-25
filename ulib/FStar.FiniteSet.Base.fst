@@ -174,8 +174,11 @@ let length_zero_lemma ()
     introduce cardinality s = 0 ==> s == emptyset
     with _. assert (feq s emptyset);
     introduce s == emptyset ==> cardinality s = 0
-    with _. assert (set_as_list s == [])
-  )
+    with _. assert (set_as_list s == []);
+    introduce cardinality s <> 0 ==> _
+    with _. introduce exists x. mem x s
+            with (Cons?.hd (set_as_list s))
+            and  ())
 
 let singleton_contains_argument_lemma ()
 : Lemma (singleton_contains_argument_fact) =
