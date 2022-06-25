@@ -1,0 +1,329 @@
+[
+  "kFÇ‘|ñð&ºG2«RÃ\u0007?",
+  [
+    [
+      "OPLSS2021.ValeVCNoProp.__proj__QProc__item__hasWp",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "data_elim_OPLSS2021.ValeVCNoProp.QProc"
+      ],
+      0,
+      "c5f9af38c2f5d32ab2077e7c60eaff58"
+    ],
+    [
+      "OPLSS2021.ValeVCNoProp.__proj__QSeq__item__c",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_bde8d69bfca323e07f1d84828c8f34e5"
+      ],
+      0,
+      "82c35f77416eb3b207f8102cabbba729"
+    ],
+    [
+      "OPLSS2021.ValeVCNoProp.__proj__QSeq__item__cs",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_bde8d69bfca323e07f1d84828c8f34e5"
+      ],
+      0,
+      "f927a43abf00e846264b1485683caade"
+    ],
+    [
+      "OPLSS2021.ValeVCNoProp.__proj__QSeq__item__hd",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "data_elim_OPLSS2021.ValeVCNoProp.QSeq",
+        "refinement_interpretation_Tm_refine_bde8d69bfca323e07f1d84828c8f34e5"
+      ],
+      0,
+      "4b3b5f14e190b32d9a673207423f28b4"
+    ],
+    [
+      "OPLSS2021.ValeVCNoProp.__proj__QSeq__item__tl",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "data_elim_OPLSS2021.ValeVCNoProp.QSeq",
+        "refinement_interpretation_Tm_refine_bde8d69bfca323e07f1d84828c8f34e5"
+      ],
+      0,
+      "967d050a46e1624f9cb64fc52f1523e5"
+    ],
+    [
+      "OPLSS2021.ValeVCNoProp.__proj__QLemma__item__cs",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_32c131de72c0dc160585ed06ab3126ff"
+      ],
+      0,
+      "30f8a4568c3cc088acac5bcf0b58415e"
+    ],
+    [
+      "OPLSS2021.ValeVCNoProp.__proj__QLemma__item__pre",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_32c131de72c0dc160585ed06ab3126ff"
+      ],
+      0,
+      "56c049a21eca28c3b2c4aac078c158af"
+    ],
+    [
+      "OPLSS2021.ValeVCNoProp.__proj__QLemma__item__post",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_32c131de72c0dc160585ed06ab3126ff"
+      ],
+      0,
+      "9f936aa2e7a4a2f9ee1da39c416c1ac1"
+    ],
+    [
+      "OPLSS2021.ValeVCNoProp.__proj__QLemma__item___3",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "data_elim_OPLSS2021.ValeVCNoProp.QLemma",
+        "refinement_interpretation_Tm_refine_32c131de72c0dc160585ed06ab3126ff"
+      ],
+      0,
+      "c401aa09c8a44c3b25c7cb56a843855d"
+    ],
+    [
+      "OPLSS2021.ValeVCNoProp.__proj__QLemma__item___4",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "data_elim_OPLSS2021.ValeVCNoProp.QLemma",
+        "refinement_interpretation_Tm_refine_32c131de72c0dc160585ed06ab3126ff"
+      ],
+      0,
+      "896daad42bdfde7c84d31b92449f7c80"
+    ],
+    [
+      "OPLSS2021.ValeVCNoProp.vc_gen",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_385a8f11ae151c92dd8b0c0ad29fbf62_1",
+        "constructor_distinct_Prims.Cons",
+        "data_elim_OPLSS2021.ValeVCNoProp.QLemma",
+        "data_elim_OPLSS2021.ValeVCNoProp.QSeq",
+        "disc_equation_OPLSS2021.ValeVCNoProp.QEmpty",
+        "disc_equation_OPLSS2021.ValeVCNoProp.QLemma",
+        "disc_equation_OPLSS2021.ValeVCNoProp.QSeq",
+        "disc_equation_Prims.Cons",
+        "fuel_guarded_inversion_OPLSS2021.ValeVCNoProp.with_wps",
+        "proj_equation_Prims.Cons_tl", "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_Prims.Cons_a",
+        "projection_inverse_Prims.Cons_hd",
+        "projection_inverse_Prims.Cons_tl",
+        "subterm_ordering_OPLSS2021.ValeVCNoProp.QLemma",
+        "subterm_ordering_OPLSS2021.ValeVCNoProp.QSeq"
+      ],
+      0,
+      "08660ad46e289460277d4207f3e5a502"
+    ],
+    [
+      "OPLSS2021.ValeVCNoProp.vc_sound",
+      1,
+      2,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_OPLSS2021.Vale.eval_code.fuel_instrumented",
+        "@fuel_correspondence_OPLSS2021.ValeVCNoProp.vc_gen.fuel_instrumented",
+        "@fuel_irrelevance_OPLSS2021.ValeVCNoProp.vc_gen.fuel_instrumented",
+        "@query",
+        "OPLSS2021.ValeVCNoProp_pretyping_3301456006222f672d5c6825978ae614",
+        "binder_x_1ef0b435af407be38ebd773e60bcc6cb_3",
+        "binder_x_385a8f11ae151c92dd8b0c0ad29fbf62_1",
+        "binder_x_a87a45df515da4fa9d3b482260f0fa4f_2",
+        "binder_x_b2b7cde4456e5d6ed2fa059f2eafc491_0", "bool_inversion",
+        "constructor_distinct_OPLSS2021.Vale.Block",
+        "constructor_distinct_OPLSS2021.ValeVCNoProp.QEmpty",
+        "constructor_distinct_OPLSS2021.ValeVCNoProp.QSeq",
+        "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Nil",
+        "data_elim_OPLSS2021.ValeVCNoProp.QEmpty",
+        "data_elim_OPLSS2021.ValeVCNoProp.QLemma",
+        "data_elim_OPLSS2021.ValeVCNoProp.QSeq",
+        "data_typing_intro_OPLSS2021.Vale.Block@tok",
+        "disc_equation_OPLSS2021.ValeVCNoProp.QEmpty",
+        "disc_equation_OPLSS2021.ValeVCNoProp.QLemma",
+        "disc_equation_OPLSS2021.ValeVCNoProp.QSeq",
+        "disc_equation_Prims.Cons",
+        "equality_tok_OPLSS2021.ValeVCNoProp.QEmpty@tok",
+        "equation_OPLSS2021.Vale.fuel", "equation_OPLSS2021.Vale.state",
+        "equation_OPLSS2021.ValeVCNoProp.t_post", "equation_Prims.nat",
+        "equation_Prims.op_Equals_Equals_Equals",
+        "equation_with_fuel_OPLSS2021.Vale.eval_code.fuel_instrumented",
+        "equation_with_fuel_OPLSS2021.Vale.eval_codes.fuel_instrumented",
+        "equation_with_fuel_OPLSS2021.ValeVCNoProp.vc_gen.fuel_instrumented",
+        "fuel_guarded_inversion_OPLSS2021.ValeVCNoProp.with_wp",
+        "fuel_guarded_inversion_OPLSS2021.ValeVCNoProp.with_wps",
+        "fuel_token_correspondence_OPLSS2021.ValeVCNoProp.vc_gen.fuel_instrumented_token",
+        "int_typing",
+        "interpretation_Tm_abs_73efe1ca1716bee440a2b3ee0f36f9e4",
+        "l_and-interp", "l_imp-interp",
+        "proj_equation_OPLSS2021.ValeVCNoProp.QProc_c",
+        "proj_equation_Prims.Cons_tl", "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
+        "projection_inverse_OPLSS2021.Vale.Block_block",
+        "projection_inverse_OPLSS2021.ValeVCNoProp.QLemma__4",
+        "projection_inverse_OPLSS2021.ValeVCNoProp.QLemma_post",
+        "projection_inverse_OPLSS2021.ValeVCNoProp.QLemma_pre",
+        "projection_inverse_OPLSS2021.ValeVCNoProp.QSeq_c",
+        "projection_inverse_OPLSS2021.ValeVCNoProp.QSeq_cs",
+        "projection_inverse_OPLSS2021.ValeVCNoProp.QSeq_hd",
+        "projection_inverse_OPLSS2021.ValeVCNoProp.QSeq_tl",
+        "projection_inverse_Prims.Cons_a",
+        "projection_inverse_Prims.Cons_hd",
+        "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "subterm_ordering_OPLSS2021.ValeVCNoProp.QLemma",
+        "subterm_ordering_Prims.Cons",
+        "token_correspondence_OPLSS2021.ValeVCNoProp.vc_gen",
+        "typing_OPLSS2021.ValeVCNoProp.uu___is_QSeq",
+        "typing_tok_OPLSS2021.ValeVCNoProp.QEmpty@tok"
+      ],
+      0,
+      "59eb1389926c6f86cdf7409591876807"
+    ],
+    [
+      "OPLSS2021.ValeVCNoProp.wp_Move",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "e39838c8b69ebceda6321a6c094bc3cc"
+    ],
+    [
+      "OPLSS2021.ValeVCNoProp.hasWp_Move",
+      1,
+      2,
+      1,
+      [
+        "@query", "disc_equation_OPLSS2021.Vale.OReg",
+        "equation_OPLSS2021.Vale.eval_operand",
+        "equation_OPLSS2021.Vale.update_state",
+        "equation_OPLSS2021.ValeVCNoProp.wp_Move",
+        "proj_equation_OPLSS2021.Vale.OReg_r",
+        "projection_inverse_BoxBool_proj_0",
+        "typing_OPLSS2021.Vale.eval_operand"
+      ],
+      0,
+      "8f2cd8bd5f7b67525175b5fb374d98c7"
+    ],
+    [
+      "OPLSS2021.ValeVCNoProp.wp_Add",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "c82a93dc631e0011bb17388cb6bd095c"
+    ],
+    [
+      "OPLSS2021.ValeVCNoProp.hasWp_Add",
+      1,
+      2,
+      1,
+      [
+        "@query", "disc_equation_OPLSS2021.Vale.OReg",
+        "equation_OPLSS2021.Vale.eval_operand",
+        "equation_OPLSS2021.Vale.state",
+        "equation_OPLSS2021.Vale.update_reg",
+        "equation_OPLSS2021.Vale.update_state",
+        "equation_OPLSS2021.ValeVCNoProp.wp_Add",
+        "proj_equation_OPLSS2021.Vale.OReg_r",
+        "projection_inverse_BoxBool_proj_0",
+        "typing_OPLSS2021.Vale.eval_operand",
+        "typing_Tm_abs_8faaca484d7f2c70ef2d5458c2bc4e63"
+      ],
+      0,
+      "b1299aaf5fd9cb499c3c0d6d3f8cc9f3"
+    ],
+    [
+      "OPLSS2021.ValeVCNoProp.vc_sound_norm",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "b3e389763bd4acc877e5faaa16ff2b7f"
+    ],
+    [
+      "OPLSS2021.ValeVCNoProp.state_eq",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "OPLSS2021.Vale_pretyping_38bfc0c987351cdd198f2fc697e674bf",
+        "data_typing_intro_OPLSS2021.Vale.Rbx@tok", "eq2-interp",
+        "equality_tok_OPLSS2021.Vale.Rax@tok",
+        "equality_tok_OPLSS2021.Vale.Rbx@tok",
+        "equality_tok_OPLSS2021.Vale.Rcx@tok",
+        "equality_tok_OPLSS2021.Vale.Rdx@tok",
+        "equation_FStar.FunctionalExtensionality.feq",
+        "equation_OPLSS2021.Vale.nat64",
+        "fuel_guarded_inversion_OPLSS2021.Vale.reg", "l_and-interp"
+      ],
+      0,
+      "409603efd34fe461d98f16fe10d219d1"
+    ],
+    [
+      "OPLSS2021.ValeVCNoProp.lemma_Triple_opt",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "data_elim_FStar.Pervasives.Native.Mktuple2",
+        "equality_tok_OPLSS2021.Vale.Rax@tok",
+        "equality_tok_OPLSS2021.Vale.Rbx@tok",
+        "equation_OPLSS2021.Vale.fuel", "equation_OPLSS2021.Vale.pow2_64",
+        "equation_OPLSS2021.Vale.state",
+        "equation_OPLSS2021.Vale.update_reg",
+        "equation_OPLSS2021.Vale.update_state",
+        "equation_OPLSS2021.ValeVCNoProp.state_eq", "equation_Prims.nat",
+        "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_b3c5a7af1b5524553dc82cef72baac45",
+        "typing_OPLSS2021.ValeVCNoProp.state_eq",
+        "typing_Tm_abs_8faaca484d7f2c70ef2d5458c2bc4e63"
+      ],
+      0,
+      "bb50bfc070fcd2b8aa5d0879b344495f"
+    ]
+  ]
+]

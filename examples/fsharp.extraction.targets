@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <!-- 
+        A custom 'inline-task' for translating all kinds of F* source files int expected paths for F# compilation
+        https://docs.microsoft.com/en-US/visualstudio/msbuild/msbuild-inline-tasks?view=vs-2019
+
+        Input:
+            - list of F*/F# sources: "path_to_fs/FStar_ModuleA.fs; path_to_fs/FStar_ModuleB.fs; path_to_fst/FStar.ModuleC.fst; path_to_fs/FStar_ModuleD.fs; path_to_fst/FStar.ModuleE.fst"
+        
+        Output: 
+            - List of files to pass to F# compiler
+                1. fs files are unchanged
+                2. fst files are replaced to e.g. output-dir/FStar_ModuleC.fs
+                3. fsti files are filtered out
+                4. the order of files is unchanged.
+    -->
+    <UsingTask TaskName="TransformFStarSourceFiles" TaskFactory="RoslynCodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll" >
+        <ParameterGroup>
+            <Odir ParameterType="System.String" Required="true" />
+            <Files ParameterType="Microsoft.Build.Framework.ITaskItem[]" Required="true" />
+            <Result ParameterType="Microsoft.Build.Framework.ITaskItem[]" Output="true" />
+        </ParameterGroup>
+        <Task>
+            <Code Type="Fragment" Language="cs">
+<![CDATA[
+    if (Files.Length > 0)
+    {
+        List<ITaskItem> res = new List<ITaskItem>();
+        for (int i = 0; i < Files.Length; i++)
+        {
+            ITaskItem item = Files[i];
+            string ext = item.GetMetadata("Extension");
+            if (ext == ".fs")
+            {
+                res.Add(new TaskItem(item.ItemSpec));
+            }
+            else if (ext == ".fst")
+            {
+                res.Add(new TaskItem(System.IO.Path.Combine(Odir, item.GetMetadata("Filename").Replace(".", "_") + ".fs")));
+            }
+            else if (ext == ".fsti")
+            {
+                // We simply ignore interface files
+            }
+            else 
+            {
+                throw new Exception("Unsupported extension " + ext + " used in TransformFStarSourceFiles task");
+            }
+        }
+        Result = res.ToArray();
+    }
+]]>
+            </Code>
+        </Task>
+    </UsingTask>
+
+    <PropertyGroup>
+        <!-- Path where extracted fs files should be written by default -->
+        <FSTAR_EXTRACTED_PATH Condition=" '$(FSTAR_EXTRACTED_PATH)' == '' ">$(IntermediateOutputPath)extracted</FSTAR_EXTRACTED_PATH>
+        <!-- # 271: theory symbols in smt patters -->
+        <FSTAR_WARN_ERROR Condition=" '$(FSTAR_WARN_ERROR)' == '' ">--warn_error -271</FSTAR_WARN_ERROR>
+        <FSTAR_EXTRACTION_FLAGS Condition=" '$(FSTAR_EXTRACTION_FLAGS)' == '' ">--odir $(FSTAR_EXTRACTED_PATH) --codegen FSharp</FSTAR_EXTRACTION_FLAGS>
+        <!-- If FSTAR_HOME is not defined then assume that fstar.exe is available on the path -->
+        <FSTAR_EXE Condition="'$(FSTAR_HOME)' == ''">fstar.exe</FSTAR_EXE>
+        <FSTAR_EXE Condition="'$(FSTAR_HOME)' != ''">$(FSTAR_HOME)\bin\fstar.exe</FSTAR_EXE>
+    </PropertyGroup>
+
+    <Target Name="GenerateFSharpSources" BeforeTargets="BeforeBuild;BeforeRebuild">
+        <!--
+            Assumptions:
+                - FSTAR property is defined
+
+            Entry points:
+                - Compile items will be used to pass top-level fst files to FSTAR during extraction
+                - FSTAR_FLAGS property will be used to pass non-standard flags to FSTAR during extraction
+                
+            Outputs:
+                - Generated *.fs files will be stored in EXTRACTED_PATH and added to Compile item
+                - Generated *.fs files will also be added to the list of files removed by Clean target
+
+            Note: 
+                - Compile item will be completely overriden
+        -->
+
+        <!-- Make sure the FSTAR_EXTRACTED_PATH directory exists before extraction -->
+        <MakeDir Directories="$(FSTAR_EXTRACTED_PATH)" Condition="!Exists('$(FSTAR_EXTRACTED_PATH)')" />
+        
+        <!-- Run extraction for .fst files -->
+        <!-- TODO: What about interfaces? Should we at least run verification for them? -->
+        <Exec ConsoleToMsBuild="true" Condition="'%(Compile.Extension)' == '.fst'" Command="$(FSTAR_EXE) $(FSTAR_WARN_ERROR) $(FSTAR_EXTRACTION_FLAGS) $(FSTAR_FLAGS) %(Compile.Identity) --extract &quot;+%(Compile.Filename)&quot;" IgnoreStandardErrorWarningFormat="true" />
+
+        <TransformFStarSourceFiles Odir="$(FSTAR_EXTRACTED_PATH)" Files="@(Compile)">
+            <Output ItemName="FsFilesToCompile" TaskParameter="Result" />
+        </TransformFStarSourceFiles>
+
+        <ItemGroup>
+            <GeneratedFileNames Include="@(Compile -> '%(Filename)')" Condition="'%(Extension)' == '.fst'" />
+            <GeneratedFileNamesWithUnderscores Include="@(GeneratedFileNames->Replace('.','_'))" />
+            <GeneratedFsFiles Include="$(FSTAR_EXTRACTED_PATH)\%(GeneratedFileNamesWithUnderscores.Identity).fs" />
+        </ItemGroup>
+
+        <Message Text="Generated fs files: @(GeneratedFsFiles)" />
+
+        <ItemGroup>
+            <!-- Clear the Compile ItemGroup and replace it with FsFilesToCompile -->
+            <Compile Remove="@(Compile)" />
+            <Compile Include="@(FsFilesToCompile)" />
+            <!-- To make Clean target work -->
+            <FileWrites Include="@(GeneratedFsFiles)" />
+        </ItemGroup>
+
+        <Message Text="Files included in the compilation: @(Compile)" />
+    </Target>
+</Project>

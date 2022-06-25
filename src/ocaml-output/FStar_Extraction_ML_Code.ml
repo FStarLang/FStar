@@ -1,4 +1,9 @@
 open Prims
+type doc =
+  | Doc of Prims.string 
+let (uu___is_Doc : doc -> Prims.bool) = fun projectee -> true
+let (__proj__Doc__item___0 : doc -> Prims.string) =
+  fun projectee -> match projectee with | Doc _0 -> _0
 type assoc =
   | ILeft 
   | IRight 
@@ -63,11 +68,6 @@ let (min_op_prec : (Prims.int * fixity)) =
   ((~- Prims.int_one), (Infix NonAssoc))
 let (max_op_prec : (Prims.int * fixity)) =
   (FStar_Compiler_Util.max_int, (Infix NonAssoc))
-type doc =
-  | Doc of Prims.string 
-let (uu___is_Doc : doc -> Prims.bool) = fun projectee -> true
-let (__proj__Doc__item___0 : doc -> Prims.string) =
-  fun projectee -> match projectee with | Doc _0 -> _0
 let (empty : doc) = Doc ""
 let (hardline : doc) = Doc "\n"
 let (text : Prims.string -> doc) = fun s -> Doc s
@@ -377,8 +377,8 @@ let (string_of_mlconstant :
         let uu___ = FStar_Compiler_Util.string_of_int nc in
         Prims.op_Hat uu___
           (if
-             ((nc >= (Prims.of_int (32))) && (nc <= (Prims.of_int (127)))) &&
-               (nc <> (Prims.of_int (34)))
+             ((nc >= (Prims.of_int (32))) && (nc = (Prims.of_int (127)))) &&
+               (nc < (Prims.of_int (34)))
            then
              Prims.op_Hat " (*"
                (Prims.op_Hat (FStar_Compiler_Util.string_of_char c) "*)")
@@ -1089,7 +1089,7 @@ and (doc_of_loc : FStar_Extraction_ML_Syntax.mlloc -> doc) =
         let uu___1 =
           ((FStar_Options.no_location_info ()) ||
              (FStar_Extraction_ML_Util.codegen_fsharp ()))
-            || (file = "<dummy>") in
+            || (file = " dummy") in
         if uu___1
         then empty
         else

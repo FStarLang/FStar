@@ -736,7 +736,12 @@ let rec (translate :
              FStar_Compiler_Effect.op_Less_Bar mk_t1
                (FStar_TypeChecker_NBETerm.Lam
                   ((fun ys ->
-                      translate cfg (FStar_Compiler_List.append ys bs) body),
+                      let uu___2 =
+                        let uu___3 =
+                          FStar_Compiler_List.map FStar_Pervasives_Native.fst
+                            ys in
+                        FStar_Compiler_List.append uu___3 bs in
+                      translate cfg uu___2 body),
                     (FStar_Pervasives.Inl (bs, xs, resc)),
                     (FStar_Compiler_List.length xs)))
          | FStar_Syntax_Syntax.Tm_fvar fvar ->
@@ -1336,7 +1341,7 @@ and (iapp :
             let m = FStar_Compiler_List.length args in
             if m < n
             then
-              let arg_values_rev = map_rev FStar_Pervasives_Native.fst args in
+              let arg_values_rev = FStar_Compiler_List.rev args in
               let binders1 =
                 match binders with
                 | FStar_Pervasives.Inr raw_args ->
@@ -1348,7 +1353,10 @@ and (iapp :
                     (match uu___1 with
                      | (uu___2, xs1) ->
                          let ctx1 =
-                           FStar_Compiler_List.append arg_values_rev ctx in
+                           let uu___3 =
+                             FStar_Compiler_List.map
+                               FStar_Pervasives_Native.fst arg_values_rev in
+                           FStar_Compiler_List.append uu___3 ctx in
                          FStar_Pervasives.Inl (ctx1, xs1, rc)) in
               FStar_Compiler_Effect.op_Less_Bar mk
                 (FStar_TypeChecker_NBETerm.Lam
@@ -1358,16 +1366,13 @@ and (iapp :
             else
               if m = n
               then
-                (let arg_values_rev =
-                   map_rev FStar_Pervasives_Native.fst args in
+                (let arg_values_rev = FStar_Compiler_List.rev args in
                  f1 arg_values_rev)
               else
                 (let uu___3 = FStar_Compiler_List.splitAt n args in
                  match uu___3 with
                  | (args1, args') ->
-                     let uu___4 =
-                       let uu___5 = map_rev FStar_Pervasives_Native.fst args1 in
-                       f1 uu___5 in
+                     let uu___4 = f1 (FStar_Compiler_List.rev args1) in
                      iapp cfg uu___4 args')
         | FStar_TypeChecker_NBETerm.Accu (a, ts) ->
             FStar_Compiler_Effect.op_Less_Bar mk
@@ -1697,9 +1702,7 @@ and (translate_fv :
                                ([], uu___10, FStar_Pervasives_Native.None) in
                              FStar_Pervasives.Inl uu___9 in
                            ((fun args_rev ->
-                               let args' =
-                                 map_rev FStar_TypeChecker_NBETerm.as_arg
-                                   args_rev in
+                               let args' = FStar_Compiler_List.rev args_rev in
                                let callbacks =
                                  {
                                    FStar_TypeChecker_NBETerm.iapp =
@@ -2653,6 +2656,12 @@ and (readback :
                                 } in
                               let ax = FStar_TypeChecker_NBETerm.mkAccuVar x2 in
                               let ctx2 = ax :: ctx1 in
+                              let uu___4 =
+                                let uu___5 =
+                                  let uu___6 =
+                                    FStar_Syntax_Util.aqual_of_binder b in
+                                  (ax, uu___6) in
+                                uu___5 :: accus_rev in
                               (ctx2,
                                 ({
                                    FStar_Syntax_Syntax.binder_bv = x2;
@@ -2660,8 +2669,8 @@ and (readback :
                                      (b.FStar_Syntax_Syntax.binder_qual);
                                    FStar_Syntax_Syntax.binder_attrs =
                                      (b.FStar_Syntax_Syntax.binder_attrs)
-                                 } :: binders_rev), (ax :: accus_rev)))
-                     (ctx, [], []) binders1 in
+                                 } :: binders_rev), uu___4)) (ctx, [], [])
+                     binders1 in
                  (match uu___2 with
                   | (ctx1, binders_rev, accus_rev) ->
                       let rc1 =
@@ -2681,19 +2690,28 @@ and (readback :
                      (fun uu___3 ->
                         fun uu___4 ->
                           match (uu___3, uu___4) with
-                          | ((t, uu___5), (binders1, accus)) ->
-                              let x1 =
-                                let uu___6 = readback cfg t in
-                                FStar_Syntax_Syntax.new_bv
-                                  FStar_Pervasives_Native.None uu___6 in
-                              let uu___6 =
-                                let uu___7 = FStar_Syntax_Syntax.mk_binder x1 in
-                                uu___7 :: binders1 in
-                              let uu___7 =
-                                let uu___8 =
-                                  FStar_TypeChecker_NBETerm.mkAccuVar x1 in
-                                uu___8 :: accus in
-                              (uu___6, uu___7)) args ([], []) in
+                          | ((t, aq), (binders1, accus)) ->
+                              let uu___5 =
+                                FStar_Syntax_Util.bqual_and_attrs_of_aqual aq in
+                              (match uu___5 with
+                               | (bqual, battrs) ->
+                                   let x1 =
+                                     let uu___6 = readback cfg t in
+                                     FStar_Syntax_Syntax.new_bv
+                                       FStar_Pervasives_Native.None uu___6 in
+                                   let uu___6 =
+                                     let uu___7 =
+                                       FStar_Syntax_Syntax.mk_binder_with_attrs
+                                         x1 bqual battrs in
+                                     uu___7 :: binders1 in
+                                   let uu___7 =
+                                     let uu___8 =
+                                       let uu___9 =
+                                         FStar_TypeChecker_NBETerm.mkAccuVar
+                                           x1 in
+                                       (uu___9, aq) in
+                                     uu___8 :: accus in
+                                   (uu___6, uu___7))) args ([], []) in
                  (match uu___2 with
                   | (binders1, accus) ->
                       (binders1, (FStar_Compiler_List.rev accus),

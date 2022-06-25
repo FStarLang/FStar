@@ -1,4 +1,107 @@
 open Prims
+type unsat_core = Prims.string Prims.list FStar_Pervasives_Native.option
+type scope_t = FStar_SMTEncoding_Term.decl Prims.list Prims.list
+type z3status =
+  | UNSAT of unsat_core 
+  | SAT of (FStar_SMTEncoding_Term.error_labels * Prims.string
+  FStar_Pervasives_Native.option) 
+  | UNKNOWN of (FStar_SMTEncoding_Term.error_labels * Prims.string
+  FStar_Pervasives_Native.option) 
+  | TIMEOUT of (FStar_SMTEncoding_Term.error_labels * Prims.string
+  FStar_Pervasives_Native.option) 
+  | KILLED 
+let (uu___is_UNSAT : z3status -> Prims.bool) =
+  fun projectee -> match projectee with | UNSAT _0 -> true | uu___ -> false
+let (__proj__UNSAT__item___0 : z3status -> unsat_core) =
+  fun projectee -> match projectee with | UNSAT _0 -> _0
+let (uu___is_SAT : z3status -> Prims.bool) =
+  fun projectee -> match projectee with | SAT _0 -> true | uu___ -> false
+let (__proj__SAT__item___0 :
+  z3status ->
+    (FStar_SMTEncoding_Term.error_labels * Prims.string
+      FStar_Pervasives_Native.option))
+  = fun projectee -> match projectee with | SAT _0 -> _0
+let (uu___is_UNKNOWN : z3status -> Prims.bool) =
+  fun projectee -> match projectee with | UNKNOWN _0 -> true | uu___ -> false
+let (__proj__UNKNOWN__item___0 :
+  z3status ->
+    (FStar_SMTEncoding_Term.error_labels * Prims.string
+      FStar_Pervasives_Native.option))
+  = fun projectee -> match projectee with | UNKNOWN _0 -> _0
+let (uu___is_TIMEOUT : z3status -> Prims.bool) =
+  fun projectee -> match projectee with | TIMEOUT _0 -> true | uu___ -> false
+let (__proj__TIMEOUT__item___0 :
+  z3status ->
+    (FStar_SMTEncoding_Term.error_labels * Prims.string
+      FStar_Pervasives_Native.option))
+  = fun projectee -> match projectee with | TIMEOUT _0 -> _0
+let (uu___is_KILLED : z3status -> Prims.bool) =
+  fun projectee -> match projectee with | KILLED -> true | uu___ -> false
+type z3statistics = Prims.string FStar_Compiler_Util.smap
+type z3result =
+  {
+  z3result_status: z3status ;
+  z3result_time: Prims.int ;
+  z3result_statistics: z3statistics ;
+  z3result_query_hash: Prims.string FStar_Pervasives_Native.option ;
+  z3result_log_file: Prims.string FStar_Pervasives_Native.option }
+let (__proj__Mkz3result__item__z3result_status : z3result -> z3status) =
+  fun projectee ->
+    match projectee with
+    | { z3result_status; z3result_time; z3result_statistics;
+        z3result_query_hash; z3result_log_file;_} -> z3result_status
+let (__proj__Mkz3result__item__z3result_time : z3result -> Prims.int) =
+  fun projectee ->
+    match projectee with
+    | { z3result_status; z3result_time; z3result_statistics;
+        z3result_query_hash; z3result_log_file;_} -> z3result_time
+let (__proj__Mkz3result__item__z3result_statistics :
+  z3result -> z3statistics) =
+  fun projectee ->
+    match projectee with
+    | { z3result_status; z3result_time; z3result_statistics;
+        z3result_query_hash; z3result_log_file;_} -> z3result_statistics
+let (__proj__Mkz3result__item__z3result_query_hash :
+  z3result -> Prims.string FStar_Pervasives_Native.option) =
+  fun projectee ->
+    match projectee with
+    | { z3result_status; z3result_time; z3result_statistics;
+        z3result_query_hash; z3result_log_file;_} -> z3result_query_hash
+let (__proj__Mkz3result__item__z3result_log_file :
+  z3result -> Prims.string FStar_Pervasives_Native.option) =
+  fun projectee ->
+    match projectee with
+    | { z3result_status; z3result_time; z3result_statistics;
+        z3result_query_hash; z3result_log_file;_} -> z3result_log_file
+type query_log =
+  {
+  get_module_name: unit -> Prims.string ;
+  set_module_name: Prims.string -> unit ;
+  write_to_log: Prims.bool -> Prims.string -> Prims.string ;
+  close_log: unit -> unit }
+let (__proj__Mkquery_log__item__get_module_name :
+  query_log -> unit -> Prims.string) =
+  fun projectee ->
+    match projectee with
+    | { get_module_name; set_module_name; write_to_log; close_log;_} ->
+        get_module_name
+let (__proj__Mkquery_log__item__set_module_name :
+  query_log -> Prims.string -> unit) =
+  fun projectee ->
+    match projectee with
+    | { get_module_name; set_module_name; write_to_log; close_log;_} ->
+        set_module_name
+let (__proj__Mkquery_log__item__write_to_log :
+  query_log -> Prims.bool -> Prims.string -> Prims.string) =
+  fun projectee ->
+    match projectee with
+    | { get_module_name; set_module_name; write_to_log; close_log;_} ->
+        write_to_log
+let (__proj__Mkquery_log__item__close_log : query_log -> unit -> unit) =
+  fun projectee ->
+    match projectee with
+    | { get_module_name; set_module_name; write_to_log; close_log;_} ->
+        close_log
 let (_z3version_checked : Prims.bool FStar_Compiler_Effect.ref) =
   FStar_Compiler_Util.mk_ref false
 let (_z3version_expected : Prims.string) = "Z3 version 4.8.5"
@@ -73,44 +176,6 @@ let (check_z3version : unit -> unit) =
             FStar_Errors.log_issue FStar_Compiler_Range.dummyRange (e, msg1)))
     else ()
 type label = Prims.string
-type unsat_core = Prims.string Prims.list FStar_Pervasives_Native.option
-type z3status =
-  | UNSAT of unsat_core 
-  | SAT of (FStar_SMTEncoding_Term.error_labels * Prims.string
-  FStar_Pervasives_Native.option) 
-  | UNKNOWN of (FStar_SMTEncoding_Term.error_labels * Prims.string
-  FStar_Pervasives_Native.option) 
-  | TIMEOUT of (FStar_SMTEncoding_Term.error_labels * Prims.string
-  FStar_Pervasives_Native.option) 
-  | KILLED 
-let (uu___is_UNSAT : z3status -> Prims.bool) =
-  fun projectee -> match projectee with | UNSAT _0 -> true | uu___ -> false
-let (__proj__UNSAT__item___0 : z3status -> unsat_core) =
-  fun projectee -> match projectee with | UNSAT _0 -> _0
-let (uu___is_SAT : z3status -> Prims.bool) =
-  fun projectee -> match projectee with | SAT _0 -> true | uu___ -> false
-let (__proj__SAT__item___0 :
-  z3status ->
-    (FStar_SMTEncoding_Term.error_labels * Prims.string
-      FStar_Pervasives_Native.option))
-  = fun projectee -> match projectee with | SAT _0 -> _0
-let (uu___is_UNKNOWN : z3status -> Prims.bool) =
-  fun projectee -> match projectee with | UNKNOWN _0 -> true | uu___ -> false
-let (__proj__UNKNOWN__item___0 :
-  z3status ->
-    (FStar_SMTEncoding_Term.error_labels * Prims.string
-      FStar_Pervasives_Native.option))
-  = fun projectee -> match projectee with | UNKNOWN _0 -> _0
-let (uu___is_TIMEOUT : z3status -> Prims.bool) =
-  fun projectee -> match projectee with | TIMEOUT _0 -> true | uu___ -> false
-let (__proj__TIMEOUT__item___0 :
-  z3status ->
-    (FStar_SMTEncoding_Term.error_labels * Prims.string
-      FStar_Pervasives_Native.option))
-  = fun projectee -> match projectee with | TIMEOUT _0 -> _0
-let (uu___is_KILLED : z3status -> Prims.bool) =
-  fun projectee -> match projectee with | KILLED -> true | uu___ -> false
-type z3statistics = Prims.string FStar_Compiler_Util.smap
 let (status_tag : z3status -> Prims.string) =
   fun uu___ ->
     match uu___ with
@@ -149,35 +214,6 @@ let (status_string_and_errors :
              | FStar_Pervasives_Native.Some msg1 ->
                  Prims.op_Hat " because " msg1) in
         (uu___, errs)
-type query_log =
-  {
-  get_module_name: unit -> Prims.string ;
-  set_module_name: Prims.string -> unit ;
-  write_to_log: Prims.bool -> Prims.string -> Prims.string ;
-  close_log: unit -> unit }
-let (__proj__Mkquery_log__item__get_module_name :
-  query_log -> unit -> Prims.string) =
-  fun projectee ->
-    match projectee with
-    | { get_module_name; set_module_name; write_to_log; close_log;_} ->
-        get_module_name
-let (__proj__Mkquery_log__item__set_module_name :
-  query_log -> Prims.string -> unit) =
-  fun projectee ->
-    match projectee with
-    | { get_module_name; set_module_name; write_to_log; close_log;_} ->
-        set_module_name
-let (__proj__Mkquery_log__item__write_to_log :
-  query_log -> Prims.bool -> Prims.string -> Prims.string) =
-  fun projectee ->
-    match projectee with
-    | { get_module_name; set_module_name; write_to_log; close_log;_} ->
-        write_to_log
-let (__proj__Mkquery_log__item__close_log : query_log -> unit -> unit) =
-  fun projectee ->
-    match projectee with
-    | { get_module_name; set_module_name; write_to_log; close_log;_} ->
-        close_log
 let (query_logging : query_log) =
   let query_number = FStar_Compiler_Util.mk_ref Prims.int_zero in
   let log_file_opt = FStar_Compiler_Util.mk_ref FStar_Pervasives_Native.None in
@@ -698,44 +734,8 @@ let (z3_options : Prims.string FStar_Compiler_Effect.ref) =
     "(set-option :global-decls false)\n(set-option :smt.mbqi false)\n(set-option :auto_config false)\n(set-option :produce-unsat-cores true)\n(set-option :model true)\n(set-option :smt.case_split 3)\n(set-option :smt.relevancy 2)\n"
 let (set_z3_options : Prims.string -> unit) =
   fun opts -> FStar_Compiler_Effect.op_Colon_Equals z3_options opts
-type z3result =
-  {
-  z3result_status: z3status ;
-  z3result_time: Prims.int ;
-  z3result_statistics: z3statistics ;
-  z3result_query_hash: Prims.string FStar_Pervasives_Native.option ;
-  z3result_log_file: Prims.string FStar_Pervasives_Native.option }
-let (__proj__Mkz3result__item__z3result_status : z3result -> z3status) =
-  fun projectee ->
-    match projectee with
-    | { z3result_status; z3result_time; z3result_statistics;
-        z3result_query_hash; z3result_log_file;_} -> z3result_status
-let (__proj__Mkz3result__item__z3result_time : z3result -> Prims.int) =
-  fun projectee ->
-    match projectee with
-    | { z3result_status; z3result_time; z3result_statistics;
-        z3result_query_hash; z3result_log_file;_} -> z3result_time
-let (__proj__Mkz3result__item__z3result_statistics :
-  z3result -> z3statistics) =
-  fun projectee ->
-    match projectee with
-    | { z3result_status; z3result_time; z3result_statistics;
-        z3result_query_hash; z3result_log_file;_} -> z3result_statistics
-let (__proj__Mkz3result__item__z3result_query_hash :
-  z3result -> Prims.string FStar_Pervasives_Native.option) =
-  fun projectee ->
-    match projectee with
-    | { z3result_status; z3result_time; z3result_statistics;
-        z3result_query_hash; z3result_log_file;_} -> z3result_query_hash
-let (__proj__Mkz3result__item__z3result_log_file :
-  z3result -> Prims.string FStar_Pervasives_Native.option) =
-  fun projectee ->
-    match projectee with
-    | { z3result_status; z3result_time; z3result_statistics;
-        z3result_query_hash; z3result_log_file;_} -> z3result_log_file
 let (init : unit -> unit) = fun uu___ -> ()
 let (finish : unit -> unit) = fun uu___ -> ()
-type scope_t = FStar_SMTEncoding_Term.decl Prims.list Prims.list
 let (fresh_scope : scope_t FStar_Compiler_Effect.ref) =
   FStar_Compiler_Util.mk_ref [[]]
 let (mk_fresh_scope : unit -> scope_t) =

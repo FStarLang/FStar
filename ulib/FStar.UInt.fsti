@@ -209,8 +209,6 @@ val from_vec_lemma_1: #n:nat -> a:bv_t n -> b:bv_t n ->
 val from_vec_lemma_2: #n:nat -> a:bv_t n -> b:bv_t n ->
   Lemma (requires from_vec a = from_vec b) (ensures equal a b)
 
-open FStar.Math.Lemmas
-
 val from_vec_aux: #n:nat -> a:bv_t n -> s1:nat{s1 < n} -> s2:nat{s2 < s1} ->
   Lemma (requires True)
         (ensures (from_vec #s2 (slice a 0 s2)) * pow2 (n - s2) + (from_vec #(s1 - s2) (slice a s2 s1)) * pow2 (n - s1) + (from_vec #(n - s1) (slice a s1 n)) = ((from_vec #s2 (slice a 0 s2)) * pow2 (s1 - s2) + (from_vec #(s1 - s2) (slice a s2 s1))) * pow2 (n - s1) + (from_vec #(n - s1) (slice a s1 n)))

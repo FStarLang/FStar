@@ -11,6 +11,7 @@
     "DockerFile": ".docker/build/{agentOS}/Dockerfile",
     "DependencyFiles" : [
         ".docker/build/build_helper.sh",
+        ".docker/build/build_funs.sh",
         ".docker/build/build.sh"
     ],
 
@@ -31,8 +32,8 @@
 
     "RepoVersions" : {
         "hacl_version" : "origin/master",
-        "kremlin_version" : "origin/master",
-        "qd_version" : "origin/master",
+        "karamel_version" : "origin/master",
+        "everparse_version" : "origin/master",
         "mitls_version" : "origin/master"
     }
 }

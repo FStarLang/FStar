@@ -1,0 +1,1 @@
+The examples in this directory use a deprecated approach to indexed effects. Instead look to the [examples on layered effects](https://github.com/FStarLang/FStar/tree/master/examples/layeredeffects) for examples on creating and using indexed effects. Note that the current state of the repo uses the terms layered effects and indexed effects interchangeably.

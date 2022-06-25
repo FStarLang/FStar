@@ -744,45 +744,45 @@ val false_elim (#a: Type) (u: unit{False}) : Tot a
         [@@ CInline ] let f x = UInt32.(x +%^ 1)
       ]}
 
-    is extracted to C by KReMLin to a C definition tagged with the
+    is extracted to C by KaRaMeL to a C definition tagged with the
     [inline] qualifier. *)
 type __internal_ocaml_attributes =
   | PpxDerivingShow
   | PpxDerivingShowConstant of string (* Generate [@@@ deriving show ] on the resulting OCaml type *)
   | PpxDerivingYoJson (* Similar, but for constant printers. *)
   | CInline (* Generate [@@@ deriving yojson ] on the resulting OCaml type *)
-  (* KreMLin-only: generates a C "inline" attribute on the resulting
+  (* KaRaMeL-only: generates a C "inline" attribute on the resulting
      * function declaration. *)
   | Substitute
-  (* KreMLin-only: forces KreMLin to inline the function at call-site; this is
+  (* KaRaMeL-only: forces KaRaMeL to inline the function at call-site; this is
      * deprecated and the recommended way is now to use F*'s
      * [inline_for_extraction], which now also works for stateful functions. *)
   | Gc
-  (* KreMLin-only: instructs KreMLin to heap-allocate any value of this
+  (* KaRaMeL-only: instructs KaRaMeL to heap-allocate any value of this
      * data-type; this requires running with a conservative GC as the
      * allocations are not freed. *)
   | Comment of string
-  (* KreMLin-only: attach a comment to the declaration. Note that using F*-doc
+  (* KaRaMeL-only: attach a comment to the declaration. Note that using F*-doc
      * syntax automatically fills in this attribute. *)
   | CPrologue of string
-  (* KreMLin-only: verbatim C code to be prepended to the declaration.
+  (* KaRaMeL-only: verbatim C code to be prepended to the declaration.
      * Multiple attributes are valid and accumulate, separated by newlines. *)
   | CEpilogue of string
   | CConst of string (* Ibid. *)
-  (* KreMLin-only: indicates that the parameter with that name is to be marked
-     * as C const.  This will be checked by the C compiler, not by KreMLin or F*.
+  (* KaRaMeL-only: indicates that the parameter with that name is to be marked
+     * as C const.  This will be checked by the C compiler, not by KaRaMeL or F*.
      *
      * This is deprecated and doesn't work as intended. Use
      * LowStar.ConstBuffer.fst instead! *)
   | CCConv of string
   | CAbstractStruct (* A calling convention for C, one of stdcall, cdecl, fastcall *)
-  (* KreMLin-only: for types that compile to struct types (records and
+  (* KaRaMeL-only: for types that compile to struct types (records and
      * inductives), indicate that the header file should only contain a forward
      * declaration, which in turn forces the client to only ever use this type
      * through a pointer. *)
   | CIfDef
-  | CMacro (* KreMLin-only: on a given `val foo`, compile if foo with #ifdef. *)
-(* KreMLin-only: for a top-level `let v = e`, compile as a macro *)
+  | CMacro (* KaRaMeL-only: on a given `val foo`, compile if foo with #ifdef. *)
+(* KaRaMeL-only: for a top-level `let v = e`, compile as a macro *)
 
 (** The [inline_let] attribute on a local let-binding, instructs the
     extraction pipeline to inline the definition. This may be both to
@@ -889,6 +889,23 @@ val strict_on_arguments (x: list int) : Tot unit
  **)
 val resolve_implicits : unit
 
+(**
+ * Implicit arguments can be tagged with an attribute [abc] to dispatch 
+ * their solving to a user-defined tactic also tagged with the same 
+ * attribute and resolve_implicits [@@abc; resolve_implicits]. 
+ 
+ * However, sometimes it is useful to have multiple such 
+ * [abc]-tagged tactics in scope. In such a scenario, to choose among them, 
+ * one can use the attribute as shown below to declare that [t] overrides
+ * all the tactics [t1...tn] and should be used to solve [abc]-tagged 
+ * implicits, so long as [t] is not iself overridden by some other tactic.
+
+   [@@resolve_implicits; abc; override_resolve_implicits_handler abc [`%t1; ... `%tn]]
+   let t = e
+
+ **)
+val override_resolve_implicits_handler : #a:Type -> a -> list string -> Tot unit
+
 (** A tactic registered to solve implicits with the (handle_smt_goals)
     attribute will receive the SMT goal generated during typechecking
     just before it is passed to the SMT solver.
@@ -941,7 +958,7 @@ val allow_informative_binders : unit
 
     This is sometimes useful when partially evaluating code before
     extraction, particularly when aiming to obtain first-order code
-    for KReMLin. However, this attribute should be used with care,
+    for KaRaMeL. However, this attribute should be used with care,
     since if after the rewriting the inner matches do not reduce, then
     this can cause an explosion in code size.
 
@@ -997,6 +1014,30 @@ val normalize_for_extraction (steps:list norm_step) : Tot unit
     See examples/layeredeffects/IteSoundess.fst for a few examples
   *)
 val ite_soundness_by : unit
+
+(** By-default functions that have a layered effect, need to have a type
+    annotation for their bodies
+    However, a layered effect definition may contain the default_effect
+    attribute to indicate to the typechecker that for missing annotations,
+    use the default effect.
+    The default effect attribute takes as argument a string, that is the name
+    of the default effect, two caveats:
+      - The argument must be a string constant (not a name, for example)
+      - The argument should be the fully qualified name
+    For example, the TAC effect in FStar.Tactics.Effect.fsti specifies
+    its default effect as FStar.Tactics.Tac
+    F* will typecheck that the default effect only takes one argument,
+      the result type of the computation
+  *)
+val default_effect (s:string) : Tot unit
+
+(** Bind definition for a layered effect may optionally contain range
+    arguments, that are provided by the typechecker during reification
+    This attribute on the effect definition indicates that the bind
+    has range arguments.
+    See for example the TAC effect in FStar.Tactics.Effect.fsti
+  *)
+val bind_has_range_args : unit
 
 (** A binder in a definition/declaration may optionally be annotated as strictly_positive
     When the let definition is used in a data constructor type in an inductive

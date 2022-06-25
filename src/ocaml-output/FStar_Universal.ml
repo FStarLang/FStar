@@ -1,9 +1,9 @@
 open Prims
+type uenv = FStar_Extraction_ML_UEnv.uenv
 let (module_or_interface_name :
   FStar_Syntax_Syntax.modul -> (Prims.bool * FStar_Ident.lid)) =
   fun m ->
     ((m.FStar_Syntax_Syntax.is_interface), (m.FStar_Syntax_Syntax.name))
-type uenv = FStar_Extraction_ML_UEnv.uenv
 let with_dsenv_of_tcenv :
   'a .
     FStar_TypeChecker_Env.env ->
@@ -223,6 +223,9 @@ let (init_env : FStar_Parser_Dep.deps -> FStar_TypeChecker_Env.env) =
           FStar_TypeChecker_Env.encode_sig =
             (FStar_SMTEncoding_Solver.solver.FStar_TypeChecker_Env.encode_sig);
           FStar_TypeChecker_Env.preprocess = FStar_Tactics_Hooks.preprocess;
+          FStar_TypeChecker_Env.spinoff_strictly_positive_goals =
+            (FStar_Pervasives_Native.Some
+               FStar_Tactics_Hooks.spinoff_strictly_positive_goals);
           FStar_TypeChecker_Env.handle_smt_goal =
             FStar_Tactics_Hooks.handle_smt_goal;
           FStar_TypeChecker_Env.solve =
@@ -830,7 +833,7 @@ let (emit : FStar_Extraction_ML_Syntax.mllib Prims.list -> unit) =
         | FStar_Pervasives_Native.Some (FStar_Options.FSharp) -> ".fs"
         | FStar_Pervasives_Native.Some (FStar_Options.OCaml) -> ".ml"
         | FStar_Pervasives_Native.Some (FStar_Options.Plugin) -> ".ml"
-        | FStar_Pervasives_Native.Some (FStar_Options.Kremlin) -> ".krml"
+        | FStar_Pervasives_Native.Some (FStar_Options.Krml) -> ".krml"
         | uu___ -> failwith "Unrecognized option" in
       match opt with
       | FStar_Pervasives_Native.Some (FStar_Options.FSharp) ->
@@ -845,11 +848,11 @@ let (emit : FStar_Extraction_ML_Syntax.mllib Prims.list -> unit) =
           let outdir = FStar_Options.output_dir () in
           FStar_Compiler_List.iter
             (FStar_Extraction_ML_PrintML.print outdir ext) mllibs
-      | FStar_Pervasives_Native.Some (FStar_Options.Kremlin) ->
+      | FStar_Pervasives_Native.Some (FStar_Options.Krml) ->
           let programs =
-            FStar_Compiler_List.collect FStar_Extraction_Kremlin.translate
+            FStar_Compiler_List.collect FStar_Extraction_Krml.translate
               mllibs in
-          let bin = (FStar_Extraction_Kremlin.current_version, programs) in
+          let bin = (FStar_Extraction_Krml.current_version, programs) in
           (match programs with
            | (name, uu___)::[] ->
                let uu___1 =
@@ -1116,7 +1119,7 @@ let (tc_one_file :
                             FStar_Options.should_extract uu___5 tgt) &&
                              ((Prims.op_Negation
                                  tcmod.FStar_Syntax_Syntax.is_interface)
-                                || (tgt = FStar_Options.Kremlin)) in
+                                || (tgt = FStar_Options.Krml)) in
                          if uu___4
                          then
                            let uu___5 = maybe_extract_mldefs tcmod env1 in

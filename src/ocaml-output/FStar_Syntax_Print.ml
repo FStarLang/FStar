@@ -483,22 +483,21 @@ and (term_to_string : FStar_Syntax_Syntax.term -> Prims.string) =
                FStar_Compiler_Util.format2 "{:pattern %s} %s" pats uu___4
            | FStar_Syntax_Syntax.Tm_meta
                (t, FStar_Syntax_Syntax.Meta_monadic (m, t')) ->
-               let uu___3 = tag_of_term t in
-               let uu___4 = sli m in
-               let uu___5 = term_to_string t' in
+               let uu___3 = sli m in
+               let uu___4 = term_to_string t' in
+               let uu___5 = tag_of_term t in
                let uu___6 = term_to_string t in
-               FStar_Compiler_Util.format4 "(Monadic-%s{%s %s} %s)" uu___3
-                 uu___4 uu___5 uu___6
+               FStar_Compiler_Util.format4 "(MetaMonadic-{%s %s} (%s) %s)"
+                 uu___3 uu___4 uu___5 uu___6
            | FStar_Syntax_Syntax.Tm_meta
                (t, FStar_Syntax_Syntax.Meta_monadic_lift (m0, m1, t')) ->
-               let uu___3 = tag_of_term t in
-               let uu___4 = term_to_string t' in
-               let uu___5 = sli m0 in
-               let uu___6 = sli m1 in
-               let uu___7 = term_to_string t in
-               FStar_Compiler_Util.format5
-                 "(MonadicLift-%s{%s : %s -> %s} %s)" uu___3 uu___4 uu___5
-                 uu___6 uu___7
+               let uu___3 = term_to_string t' in
+               let uu___4 = sli m0 in
+               let uu___5 = sli m1 in
+               let uu___6 = term_to_string t in
+               FStar_Compiler_Util.format4
+                 "(MetaMonadicLift-{%s : %s -> %s} %s)" uu___3 uu___4 uu___5
+                 uu___6
            | FStar_Syntax_Syntax.Tm_meta
                (t, FStar_Syntax_Syntax.Meta_labeled (l, r, b)) ->
                let uu___3 = FStar_Compiler_Range.string_of_range r in
@@ -1493,7 +1492,6 @@ let (sub_eff_to_string : FStar_Syntax_Syntax.sub_eff -> Prims.string) =
 let (pragma_to_string : FStar_Syntax_Syntax.pragma -> Prims.string) =
   fun p ->
     match p with
-    | FStar_Syntax_Syntax.LightOff -> "#light \"off\""
     | FStar_Syntax_Syntax.ResetOptions (FStar_Pervasives_Native.None) ->
         "#reset-options"
     | FStar_Syntax_Syntax.ResetOptions (FStar_Pervasives_Native.Some s) ->

@@ -65,7 +65,7 @@ let none_to_empty_list x =
 %token FORALL EXISTS ASSUME NEW LOGIC ATTRIBUTES
 %token IRREDUCIBLE UNFOLDABLE INLINE OPAQUE UNFOLD INLINE_FOR_EXTRACTION
 %token NOEXTRACT
-%token NOEQUALITY UNOPTEQUALITY PRAGMALIGHT PRAGMA_SET_OPTIONS PRAGMA_RESET_OPTIONS PRAGMA_PUSH_OPTIONS PRAGMA_POP_OPTIONS PRAGMA_RESTART_SOLVER PRAGMA_PRINT_EFFECTS_GRAPH
+%token NOEQUALITY UNOPTEQUALITY PRAGMA_SET_OPTIONS PRAGMA_RESET_OPTIONS PRAGMA_PUSH_OPTIONS PRAGMA_POP_OPTIONS PRAGMA_RESTART_SOLVER PRAGMA_PRINT_EFFECTS_GRAPH
 %token TYP_APP_LESS TYP_APP_GREATER SUBTYPE EQUALTYPE SUBKIND BY
 %token AND ASSERT SYNTH BEGIN ELSE END
 %token EXCEPTION FALSE FUN FUNCTION IF IN MODULE DEFAULT
@@ -125,9 +125,9 @@ let none_to_empty_list x =
 
 (* inputFragment is used at the same time for whole files and fragment of codes (for interactive mode) *)
 inputFragment:
-  | is_light=boption(PRAGMALIGHT STRING { }) decls=list(decl) EOF
+  | decls=list(decl) EOF
       {
-        as_frag is_light (rhs parseState 1) decls
+        as_frag decls
       }
 
 
@@ -349,7 +349,7 @@ layeredEffectDefinition:
              raise_error (Fatal_SyntaxError,
                           "Syntax error: unexpected empty binders list in the layered effect definition")
                          (range_of_id lid)
-          | _ -> hd bs, last bs |> must in
+          | _ -> hd bs, last bs in
         let r = union_ranges first_b.brange last_b.brange in
         mk_term (Product (bs, mk_term (Name (lid_of_str "Effect")) r Type_level)) r Type_level in
       let rec decls (r:term) =

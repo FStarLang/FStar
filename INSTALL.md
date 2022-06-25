@@ -107,7 +107,7 @@ itself: currently F* binary packages for 2021.x are built with OCaml
    the following command to install the packages required to compile
    OCaml programs extracted from F\* code:
 
-       $ opam install ocamlfind batteries stdint zarith ppx_deriving_yojson pprint ppxlib=0.22.0 ocaml-compiler-libs
+       $ opam install ocamlfind batteries stdint zarith ppx_deriving_yojson pprint 'ppxlib>=0.22.0' ocaml-compiler-libs
 
    For more on extracting to OCaml, check out
    [the documentation on extracting and executing F\* code](https://github.com/FStarLang/FStar/wiki/Executing-F*-code).
@@ -144,9 +144,9 @@ commands. (Note: On Windows this requires Cygwin and `make`)
          code. Thus, they require having OCaml installed. If OCaml is
          absent, then these examples will be skipped.
 
-   Note: Some of the examples currently require having [KreMLin](https://github.com/FStarLang/kremlin)
-         installed and the `KREMLIN_HOME` variable pointing to its location.
-         If KReMLin is absent, then these examples will be skipped.
+   Note: Some of the examples currently require having [KaRaMeL](https://github.com/FStarLang/karamel)
+         installed and the `KRML_HOME` variable pointing to its location.
+         If KaRaMeL is absent, then these examples will be skipped.
 
    Note: On Linux if you get a file descriptor exhaustion error that looks
          like this `Unix.Unix_error(Unix.ENOMEM, "fork", "")`
@@ -245,8 +245,8 @@ Then follow step 4 in [Instructions for all OSes](#instructions-for-all-oses) be
      type `opam switch list-available`
      to see what versions are available and then `opam switch <version-number>`.
 
-   - Afterwards you can also install the `depext` package,
-     to be able to install some binary dependencies below more easily.
+   - Afterwards you can also install the `depext` package if you are on OPAM version lower then 2.1,
+     to be able to install some binary dependencies below more easily. Version of OPAM after 2.1 has depext handling baked in.
      ```sh
      $ opam install depext
      ```
@@ -258,12 +258,11 @@ Then follow step 4 in [Instructions for all OSes](#instructions-for-all-oses) be
 4. F\* depends on a bunch of external OCaml packages which you should install using OPAM:
 
   ```sh
-  $ opam install ocamlbuild ocamlfind batteries stdint zarith yojson fileutils pprint menhir sedlex ppx_deriving ppx_deriving_yojson process ppxlib=0.22.0
+  $ opam install --deps-only .
   ```
 
-  **Note:** This list of opam packages is longer than the list in the
-  [Testing a binary package](#testing-a-binary-package) section above,
-  because the additional packages here are necessary to compile F\*.
+  **Note:** On some Linux distributions, for example Gentoo, where `opambuild` comes pre-installed, you may need run 
+  `CHECK_IF_PREINSTALLED=false opam install .` instead to prevent build failures.
 
   **Note:** Some of these opam packages depend on binary packages that you need to install locally
   (eg, using your Linux package manager). So if the command above gives you errors like this:

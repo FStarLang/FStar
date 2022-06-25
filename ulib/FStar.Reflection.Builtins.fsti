@@ -48,7 +48,11 @@ val inspect_lb     : letbinding -> lb_view
 val pack_lb        : lb_view -> letbinding
 
 val inspect_binder : binder -> bv * (aqualv * list term)
-val pack_binder    : bv -> aqualv -> list term -> binder
+val pack_binder    : bv -> aqualv -> attrs:list term -> binder
+
+val inspect_universe : u:universe -> uv:universe_view{smaller_universe uv u}
+val pack_universe    : universe_view -> universe
+
 
 (* These are equivalent to [String.concat "."], [String.split ['.']]
  * and [String.compare]. We're only taking them as primitives to break
@@ -88,7 +92,9 @@ val set_sigelt_attrs : list term -> sigelt -> sigelt
 val sigelt_quals     : sigelt -> list qualifier
 val set_sigelt_quals : list qualifier -> sigelt -> sigelt
 
-(* Reading the vconfig under which a particular sigelt was typechecked *)
+(* Reading the vconfig under which a particular sigelt was typechecked.
+   This function returns None if "--record_options" was not on when
+   typechecking the sigelt *)
 val sigelt_opts : sigelt -> option vconfig
 
 (* Embed a vconfig as a term, for instance to use it with the check_with

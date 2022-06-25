@@ -58,15 +58,28 @@ type bv_view = {
     bv_sort : typ;
 }
 
+type universes = list universe
+
+noeq
+type universe_view =
+  | Uv_Zero : universe_view
+  | Uv_Succ : universe -> universe_view
+  | Uv_Max  : universes -> universe_view
+  | Uv_BVar : int -> universe_view
+  | Uv_Name : univ_name -> universe_view
+  | Uv_Unif : universe_uvar -> universe_view
+  | Uv_Unk   : universe_view
+
 noeq
 type term_view =
   | Tv_Var    : v:bv -> term_view
   | Tv_BVar   : v:bv -> term_view
   | Tv_FVar   : v:fv -> term_view
+  | Tv_UInst  : v:fv -> us:universes -> term_view
   | Tv_App    : hd:term -> a:argv -> term_view
   | Tv_Abs    : bv:binder -> body:term -> term_view
   | Tv_Arrow  : bv:binder -> c:comp -> term_view
-  | Tv_Type   : unit -> term_view
+  | Tv_Type   : universe -> term_view
   | Tv_Refine : bv:bv -> ref:term -> term_view
   | Tv_Const  : vconst -> term_view
   | Tv_Uvar   : int -> ctx_uvar_and_subst -> term_view
@@ -79,15 +92,14 @@ type term_view =
 // Very basic for now
 noeq
 type comp_view =
-  | C_Total     : ret:typ -> decr:(list term) -> comp_view
-  | C_GTotal    : ret:typ -> decr:(list term) -> comp_view
+  | C_Total     : ret:typ -> u:universe -> decr:(list term) -> comp_view
+  | C_GTotal    : ret:typ -> u:universe -> decr:(list term) -> comp_view
   | C_Lemma     : term -> term -> term -> comp_view // pre, post, patterns
-  | C_Eff       : us:(list unit) -> (* TODO: expose universes properly,
-                                             pass them back as obtained for now, or [] *)
-                    eff_name:name ->
-                    result:term ->
-                    eff_args:(list argv) ->
-                    comp_view
+  | C_Eff       : us:universes ->
+                  eff_name:name ->
+                  result:term ->
+                  eff_args:(list argv) ->
+                  comp_view
 
 (* Constructor for an inductive type. See explanation in
 [Sg_Inductive] below. *)
@@ -204,17 +216,18 @@ let smaller (tv:term_view) (t:term) : Type0 =
     | Tv_Var _
     | Tv_BVar _
     | Tv_Uvar _ _
-    | Tv_FVar _ -> True
+    | Tv_FVar _
+    | Tv_UInst _ _ -> True
 
 [@@ remove_unused_type_parameters [0; 1]]
 let smaller_comp (cv:comp_view) (c:comp) : Type0 =
     match cv with
-    | C_Total t md -> t << c /\ md << c
-    | C_GTotal t md ->
+    | C_Total t _ md -> t << c /\ md << c
+    | C_GTotal t _ md ->
         t << c /\ md << c
     | C_Lemma pre post pats ->
         pre << c /\ post << c /\ pats << c
-    | C_Eff us eff res args ->
+    | C_Eff _us eff res args ->
         res << c
 
 [@@ remove_unused_type_parameters [0; 1]]
@@ -224,3 +237,14 @@ let smaller_bv (bvv:bv_view) (bv:bv) : Type0 =
 [@@ remove_unused_type_parameters [0; 1]]
 let smaller_binder (b:binder) ((bv, _): bv * aqualv) : Type0 =
     bv << b
+
+[@@ remove_unused_type_parameters [0; 1]]
+let smaller_universe (uv:universe_view) (u:universe) : Type0 =
+  match uv with
+  | Uv_Succ u' -> u' << u
+  | Uv_Max us -> us << u
+  | Uv_Zero
+  | Uv_BVar _
+  | Uv_Name _
+  | Uv_Unif _
+  | Uv_Unk -> True

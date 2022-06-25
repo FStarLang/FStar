@@ -78,7 +78,7 @@ type skey (rgn:rid) (i:id) =
 (** Conditionally-allocated abstract key (accessed only in this module) *)
 let akey (rgn:rid) (i:id) =
   o:option (skey rgn i) {Some? o <==> skeyed i}
-  // using a sum type for KreMLin. Was: if skeyed i then skey rgn i else unit
+  // using a sum type for KaRaMeL. Was: if skeyed i then skey rgn i else unit
 
 val get_skey: #r:rid -> #i:id{skeyed i} -> akey r i -> Tot (skey r i)
 let get_skey #rgn #i (Some k) = k
@@ -129,7 +129,7 @@ type id = MAC.id
  * could be loaded from another module.
  * This flag enables conditional idealization by keeping additional data:
  * - this should not affect the code behavior
- * - this may cause the code not to compile to KreMLin/C
+ * - this may cause the code not to compile to KaRaMeL/C
  *)
 unfold let authId (i:id) = // inline_for_extraction?
   let i = fst i in

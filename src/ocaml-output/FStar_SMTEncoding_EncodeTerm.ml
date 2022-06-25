@@ -1248,8 +1248,8 @@ and (encode_term :
                let uu___3 =
                  let uu___4 = FStar_Syntax_Syntax.as_arg tv in [uu___4] in
                FStar_Syntax_Util.mk_app
-                 (FStar_Reflection_Data.refl_constant_term
-                    FStar_Reflection_Data.fstar_refl_pack_ln) uu___3 in
+                 (FStar_Reflection_Constants.refl_constant_term
+                    FStar_Reflection_Constants.fstar_refl_pack_ln) uu___3 in
              encode_term t2 env))
        | FStar_Syntax_Syntax.Tm_meta
            (t2, FStar_Syntax_Syntax.Meta_pattern uu___1) ->
@@ -2161,6 +2161,22 @@ and (encode_term :
                       | (FStar_Syntax_Syntax.Tm_constant
                          (FStar_Const.Const_reflect uu___5),
                          (arg, uu___6)::[]) -> encode_term arg env
+                      | (FStar_Syntax_Syntax.Tm_fvar fv,
+                         uu___5::(phi, uu___6)::[]) when
+                          FStar_Syntax_Syntax.fv_eq_lid fv
+                            FStar_Parser_Const.by_tactic_lid
+                          -> encode_term phi env
+                      | (FStar_Syntax_Syntax.Tm_uinst
+                         ({
+                            FStar_Syntax_Syntax.n =
+                              FStar_Syntax_Syntax.Tm_fvar fv;
+                            FStar_Syntax_Syntax.pos = uu___5;
+                            FStar_Syntax_Syntax.vars = uu___6;_},
+                          uu___7),
+                         uu___8::(phi, uu___9)::[]) when
+                          FStar_Syntax_Syntax.fv_eq_lid fv
+                            FStar_Parser_Const.by_tactic_lid
+                          -> encode_term phi env
                       | uu___5 ->
                           let uu___6 = encode_args args_e1 env in
                           (match uu___6 with
@@ -3600,7 +3616,7 @@ and (encode_formula :
             encode_formula uu___1 env
         | FStar_Syntax_Syntax.Tm_match (e, uu___, pats, uu___1) ->
             let uu___2 =
-              encode_match e pats FStar_SMTEncoding_Util.mkFalse env
+              encode_match e pats FStar_SMTEncoding_Term.mkUnreachable env
                 encode_formula in
             (match uu___2 with | (t, decls) -> (t, decls))
         | FStar_Syntax_Syntax.Tm_let
@@ -3633,6 +3649,20 @@ and (encode_formula :
                            let uu___5 =
                              FStar_SMTEncoding_Term.mk_HasType x1 t1 in
                            (uu___5, (FStar_Compiler_List.op_At decls decls'))))
+             | (FStar_Syntax_Syntax.Tm_fvar fv, uu___::(phi2, uu___1)::[])
+                 when
+                 FStar_Syntax_Syntax.fv_eq_lid fv
+                   FStar_Parser_Const.by_tactic_lid
+                 -> encode_formula phi2 env
+             | (FStar_Syntax_Syntax.Tm_uinst
+                ({ FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_fvar fv;
+                   FStar_Syntax_Syntax.pos = uu___;
+                   FStar_Syntax_Syntax.vars = uu___1;_},
+                 uu___2),
+                uu___3::(phi2, uu___4)::[]) when
+                 FStar_Syntax_Syntax.fv_eq_lid fv
+                   FStar_Parser_Const.by_tactic_lid
+                 -> encode_formula phi2 env
              | (FStar_Syntax_Syntax.Tm_fvar fv,
                 (r, uu___)::(msg, uu___1)::(phi2, uu___2)::[]) when
                  FStar_Syntax_Syntax.fv_eq_lid fv

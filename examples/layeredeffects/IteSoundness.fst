@@ -122,10 +122,10 @@ effect {
   * Whereas the tactic can instantiate them at will
  *)
 
-type mrepr (a:Type) (_:unit) = a
+type mrepr (a:Type) = a
 
-let mreturn (a:Type) (x:a) : mrepr a () = x
-let mbind (a:Type) (b:Type) (f:mrepr a ()) (g:a -> mrepr b ()) : mrepr b () = g f
+let mreturn (a:Type) (x:a) : mrepr a = x
+let mbind (a:Type) (b:Type) (f:mrepr a) (g:a -> mrepr b) : mrepr b = g f
 
 (*
  * The attribute annotations on the binders below are required,
@@ -135,26 +135,28 @@ let mbind (a:Type) (b:Type) (f:mrepr a ()) (g:a -> mrepr b ()) : mrepr b () = g 
 let mif_then_else (a:Type)
   ([@@@ an_attr] phi:Type0)
   ([@@@ an_attr] bb:squash phi) 
-  (f:mrepr a ())
-  (g:mrepr a ())
+  (f:mrepr a)
+  (g:mrepr a)
   (b:bool)
   : Type
-  = mrepr a ()
+  = mrepr a
 
 let msubcomp (a:Type)
   ([@@@ an_attr] phi:Type0)
-  ([@@@ an_attr] bb:squash phi)  (f:mrepr a ())
-  : mrepr a () = f
+  ([@@@ an_attr] bb:squash phi)  (f:mrepr a)
+  : mrepr a = f
 
-[@@ resolve_implicits; an_attr]
+let an_attr1 = ()
+
+[@@ resolve_implicits; an_attr1]
 let mtac1 () : Tac unit =
   smt ();
   smt ();
   exact (`True)  //just solve the unconstrained phi with True
 
-[@@ ite_soundness_by an_attr]
+[@@ ite_soundness_by an_attr1]
 effect {
-  M (a:Type) (_:unit)
+  M (a:Type)
   with {repr=mrepr; return=mreturn; bind=mbind; if_then_else=mif_then_else; subcomp=msubcomp}
 }
 
@@ -165,11 +167,11 @@ effect {
  *   to make a proof go through
  *)
 
-type mmrepr (a:Type) (_:unit) = a
-let mmreturn (a:Type) (x:a) : mmrepr a () = x
-let mmbind (a b:Type) (f:mmrepr a ()) (g:a -> mmrepr b ()) : mmrepr b () = g f
-let mmsubcomp (a:Type) (f:mmrepr a ())
-  : Pure (mmrepr a ())
+type mmrepr (a:Type) = a
+let mmreturn (a:Type) (x:a) : mmrepr a = x
+let mmbind (a b:Type) (f:mmrepr a) (g:a -> mmrepr b) : mmrepr b = g f
+let mmsubcomp (a:Type) (f:mmrepr a)
+  : Pure (mmrepr a)
       (requires False)
       (ensures fun _ -> True)
   = f
@@ -181,11 +183,13 @@ let mmsubcomp (a:Type) (f:mmrepr a ())
 
 [@@ expect_failure]
 effect {
-  N (a:Type) (_:unit)
+  N (a:Type)
   with { repr = mmrepr; return = mmreturn; bind = mmbind; subcomp = mmsubcomp }
 }
 
-[@@ resolve_implicits; an_attr]
+irreducible let an_attr2 : unit = ()
+
+[@@ resolve_implicits; an_attr2]
 let mtac2 () : Tac unit =
   tadmit ()
 
@@ -193,8 +197,8 @@ let mtac2 () : Tac unit =
  * If-then-else proof is dispatched to mtac1 that admits it
  *)
 
-[@@ ite_soundness_by an_attr]
+[@@ ite_soundness_by an_attr2]
 effect {
-  N (a:Type) (_:unit)
+  N (a:Type)
   with { repr = mmrepr; return = mmreturn; bind = mmbind; subcomp = mmsubcomp }
 }

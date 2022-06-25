@@ -42,10 +42,14 @@ let z x = 0
 let one = match (fun x -> x) with | f -> f 1
 
 val list_zero_to_int_assert : list zero -> Tot int
+let gg (x:int{x > 0}) : unit = ()
 let list_zero_to_int_assert l = match l with
   | [] -> 0
   | hd::tl -> assert (hd=0); hd
-
+let test (x:int) :
+  Pure int (requires x > 0) (ensures fun y -> y <= 1)
+  = 1 / x
+  
 val list_zero_to_zero : list zero -> Tot zero
 let list_zero_to_zero l = match l with
   | [] -> 0
@@ -339,8 +343,8 @@ val logic_test5: a:Type -> Lemma (ensures ((logic_test4 a) <==> (exists (x : a).
 let logic_test5 a = ()
 
 (*
- * #1078
- *)
+//  * #1078
+//  *)
 unfold let language_1078 = string -> GTot Type
 
 noeq type star_1078 (l: string -> GTot Type) : language_1078 =
@@ -349,8 +353,8 @@ noeq type star_1078 (l: string -> GTot Type) : language_1078 =
       l s1 -> star_1078 l s2 -> star_1078 l s1
 
 (*
- * Testing bind
- *)
+//  * Testing bind
+//  *)
 assume type bind_test_p :Type0
 assume val lemma_bind_test_p (_:unit) :Tot (squash bind_test_p)
 
