@@ -2,7 +2,7 @@ open Prims
 type mlsymbol = Prims.string
 type mlident = mlsymbol
 type mlpath = (mlsymbol Prims.list * mlsymbol)
-let kremlin_keywords : 'uuuuu . unit -> 'uuuuu Prims.list = fun uu___ -> []
+let krml_keywords : 'uuuuu . unit -> 'uuuuu Prims.list = fun uu___ -> []
 let (ocamlkeywords : Prims.string Prims.list) =
   ["and";
   "as";

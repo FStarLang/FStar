@@ -1,0 +1,141 @@
+[
+  "10/sÄΩ–˙p˘ØB™·Èè",
+  [
+    [
+      "FStar.Algebra.CommMonoid.Fold.init_func_from_expr",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.IntegerIntervals.counter_for",
+        "equation_FStar.IntegerIntervals.greater_than",
+        "equation_FStar.IntegerIntervals.ifrom_ito",
+        "equation_FStar.IntegerIntervals.interval",
+        "equation_FStar.IntegerIntervals.interval_condition",
+        "equation_FStar.IntegerIntervals.interval_size",
+        "equation_FStar.IntegerIntervals.not_less_than",
+        "equation_FStar.IntegerIntervals.under", "int_inversion",
+        "primitive_Prims.op_Addition", "primitive_Prims.op_AmpAmp",
+        "primitive_Prims.op_LessThan", "primitive_Prims.op_LessThanOrEqual",
+        "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_25948cf2cb84e8edfffe30eaf3d63408",
+        "refinement_interpretation_Tm_refine_fcf1a3596fffd49dd2e91f2678358f19"
+      ],
+      0,
+      "523644db0154193a4dcfa0fd89f2375c"
+    ],
+    [
+      "FStar.Algebra.CommMonoid.Fold.fold_singleton_lemma",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.IntegerIntervals.interval_condition",
+        "int_inversion", "primitive_Prims.op_Addition",
+        "primitive_Prims.op_AmpAmp", "primitive_Prims.op_LessThan",
+        "primitive_Prims.op_LessThanOrEqual",
+        "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0"
+      ],
+      0,
+      "daa70e550a99c2ad30976c9ddf559a7d"
+    ],
+    [
+      "FStar.Algebra.CommMonoid.Fold.fold_snoc_decomposition",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.IntegerIntervals.greater_than",
+        "equation_FStar.IntegerIntervals.interval_condition",
+        "int_inversion", "primitive_Prims.op_Addition",
+        "primitive_Prims.op_AmpAmp", "primitive_Prims.op_LessThan",
+        "primitive_Prims.op_LessThanOrEqual",
+        "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_25948cf2cb84e8edfffe30eaf3d63408"
+      ],
+      0,
+      "a00d5cf693acb7214448b2be25be4fed"
+    ],
+    [
+      "FStar.Algebra.CommMonoid.Fold.fold_equals_seq_foldm",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.IntegerIntervals.closed_interval_size",
+        "equation_FStar.IntegerIntervals.greater_than",
+        "equation_FStar.IntegerIntervals.interval_condition",
+        "equation_FStar.IntegerIntervals.not_less_than", "int_inversion",
+        "primitive_Prims.op_Addition", "primitive_Prims.op_AmpAmp",
+        "primitive_Prims.op_LessThan", "primitive_Prims.op_LessThanOrEqual",
+        "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_25948cf2cb84e8edfffe30eaf3d63408"
+      ],
+      0,
+      "763ba8e6186bacdf95c6545003475d87"
+    ],
+    [
+      "FStar.Algebra.CommMonoid.Fold.fold_offset_irrelevance_lemma",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.IntegerIntervals.closed_interval_size",
+        "equation_FStar.IntegerIntervals.greater_than",
+        "equation_FStar.IntegerIntervals.interval",
+        "equation_FStar.IntegerIntervals.interval_condition",
+        "equation_FStar.IntegerIntervals.interval_size",
+        "equation_FStar.IntegerIntervals.not_less_than",
+        "equation_FStar.IntegerIntervals.under", "int_inversion",
+        "primitive_Prims.op_Addition", "primitive_Prims.op_AmpAmp",
+        "primitive_Prims.op_LessThan", "primitive_Prims.op_LessThanOrEqual",
+        "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_25948cf2cb84e8edfffe30eaf3d63408",
+        "refinement_interpretation_Tm_refine_fcf1a3596fffd49dd2e91f2678358f19"
+      ],
+      0,
+      "ad7ca29e4d52d7dd462e7140ae5f737d"
+    ],
+    [
+      "FStar.Algebra.CommMonoid.Fold.fold_offset_elimination_lemma",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.IntegerIntervals.closed_interval_size",
+        "equation_FStar.IntegerIntervals.greater_than",
+        "equation_FStar.IntegerIntervals.interval",
+        "equation_FStar.IntegerIntervals.interval_condition",
+        "equation_FStar.IntegerIntervals.interval_size",
+        "equation_FStar.IntegerIntervals.not_less_than",
+        "equation_FStar.IntegerIntervals.under", "int_inversion",
+        "primitive_Prims.op_Addition", "primitive_Prims.op_AmpAmp",
+        "primitive_Prims.op_GreaterThanOrEqual",
+        "primitive_Prims.op_LessThan", "primitive_Prims.op_LessThanOrEqual",
+        "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_25948cf2cb84e8edfffe30eaf3d63408",
+        "refinement_interpretation_Tm_refine_fcf1a3596fffd49dd2e91f2678358f19"
+      ],
+      0,
+      "681f673ff98dce2aec9bc1ab13b02a68"
+    ]
+  ]
+]

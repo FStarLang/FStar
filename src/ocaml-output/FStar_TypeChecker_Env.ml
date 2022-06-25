@@ -185,7 +185,7 @@ let (uu___is_Unfold : delta_level -> Prims.bool) =
 let (__proj__Unfold__item___0 :
   delta_level -> FStar_Syntax_Syntax.delta_depth) =
   fun projectee -> match projectee with | Unfold _0 -> _0
-type name_prefix = Prims.string Prims.list
+type name_prefix = FStar_Ident.path
 type proof_namespace = (name_prefix * Prims.bool) Prims.list
 type cached_elt =
   (((FStar_Syntax_Syntax.universes * FStar_Syntax_Syntax.typ),
@@ -355,10 +355,12 @@ and solver_t =
   encode_sig: env -> FStar_Syntax_Syntax.sigelt -> unit ;
   preprocess:
     env -> goal -> (env * goal * FStar_Options.optionstate) Prims.list ;
+  spinoff_strictly_positive_goals:
+    (env -> goal -> (env * goal) Prims.list) FStar_Pervasives_Native.option ;
   handle_smt_goal: env -> goal -> (env * goal) Prims.list ;
   solve:
     (unit -> Prims.string) FStar_Pervasives_Native.option ->
-      env -> FStar_Syntax_Syntax.typ -> unit
+      env -> goal -> unit
     ;
   finish: unit -> unit ;
   refresh: unit -> unit }
@@ -1200,23 +1202,27 @@ let (__proj__Mksolver_t__item__init : solver_t -> env -> unit) =
   fun projectee ->
     match projectee with
     | { init; push; pop; snapshot; rollback; encode_sig; preprocess;
-        handle_smt_goal; solve; finish; refresh;_} -> init
+        spinoff_strictly_positive_goals; handle_smt_goal; solve; finish;
+        refresh;_} -> init
 let (__proj__Mksolver_t__item__push : solver_t -> Prims.string -> unit) =
   fun projectee ->
     match projectee with
     | { init; push; pop; snapshot; rollback; encode_sig; preprocess;
-        handle_smt_goal; solve; finish; refresh;_} -> push
+        spinoff_strictly_positive_goals; handle_smt_goal; solve; finish;
+        refresh;_} -> push
 let (__proj__Mksolver_t__item__pop : solver_t -> Prims.string -> unit) =
   fun projectee ->
     match projectee with
     | { init; push; pop; snapshot; rollback; encode_sig; preprocess;
-        handle_smt_goal; solve; finish; refresh;_} -> pop
+        spinoff_strictly_positive_goals; handle_smt_goal; solve; finish;
+        refresh;_} -> pop
 let (__proj__Mksolver_t__item__snapshot :
   solver_t -> Prims.string -> ((Prims.int * Prims.int * Prims.int) * unit)) =
   fun projectee ->
     match projectee with
     | { init; push; pop; snapshot; rollback; encode_sig; preprocess;
-        handle_smt_goal; solve; finish; refresh;_} -> snapshot
+        spinoff_strictly_positive_goals; handle_smt_goal; solve; finish;
+        refresh;_} -> snapshot
 let (__proj__Mksolver_t__item__rollback :
   solver_t ->
     Prims.string ->
@@ -1226,13 +1232,15 @@ let (__proj__Mksolver_t__item__rollback :
   fun projectee ->
     match projectee with
     | { init; push; pop; snapshot; rollback; encode_sig; preprocess;
-        handle_smt_goal; solve; finish; refresh;_} -> rollback
+        spinoff_strictly_positive_goals; handle_smt_goal; solve; finish;
+        refresh;_} -> rollback
 let (__proj__Mksolver_t__item__encode_sig :
   solver_t -> env -> FStar_Syntax_Syntax.sigelt -> unit) =
   fun projectee ->
     match projectee with
     | { init; push; pop; snapshot; rollback; encode_sig; preprocess;
-        handle_smt_goal; solve; finish; refresh;_} -> encode_sig
+        spinoff_strictly_positive_goals; handle_smt_goal; solve; finish;
+        refresh;_} -> encode_sig
 let (__proj__Mksolver_t__item__preprocess :
   solver_t ->
     env -> goal -> (env * goal * FStar_Options.optionstate) Prims.list)
@@ -1240,32 +1248,46 @@ let (__proj__Mksolver_t__item__preprocess :
   fun projectee ->
     match projectee with
     | { init; push; pop; snapshot; rollback; encode_sig; preprocess;
-        handle_smt_goal; solve; finish; refresh;_} -> preprocess
+        spinoff_strictly_positive_goals; handle_smt_goal; solve; finish;
+        refresh;_} -> preprocess
+let (__proj__Mksolver_t__item__spinoff_strictly_positive_goals :
+  solver_t ->
+    (env -> goal -> (env * goal) Prims.list) FStar_Pervasives_Native.option)
+  =
+  fun projectee ->
+    match projectee with
+    | { init; push; pop; snapshot; rollback; encode_sig; preprocess;
+        spinoff_strictly_positive_goals; handle_smt_goal; solve; finish;
+        refresh;_} -> spinoff_strictly_positive_goals
 let (__proj__Mksolver_t__item__handle_smt_goal :
   solver_t -> env -> goal -> (env * goal) Prims.list) =
   fun projectee ->
     match projectee with
     | { init; push; pop; snapshot; rollback; encode_sig; preprocess;
-        handle_smt_goal; solve; finish; refresh;_} -> handle_smt_goal
+        spinoff_strictly_positive_goals; handle_smt_goal; solve; finish;
+        refresh;_} -> handle_smt_goal
 let (__proj__Mksolver_t__item__solve :
   solver_t ->
     (unit -> Prims.string) FStar_Pervasives_Native.option ->
-      env -> FStar_Syntax_Syntax.typ -> unit)
+      env -> goal -> unit)
   =
   fun projectee ->
     match projectee with
     | { init; push; pop; snapshot; rollback; encode_sig; preprocess;
-        handle_smt_goal; solve; finish; refresh;_} -> solve
+        spinoff_strictly_positive_goals; handle_smt_goal; solve; finish;
+        refresh;_} -> solve
 let (__proj__Mksolver_t__item__finish : solver_t -> unit -> unit) =
   fun projectee ->
     match projectee with
     | { init; push; pop; snapshot; rollback; encode_sig; preprocess;
-        handle_smt_goal; solve; finish; refresh;_} -> finish
+        spinoff_strictly_positive_goals; handle_smt_goal; solve; finish;
+        refresh;_} -> finish
 let (__proj__Mksolver_t__item__refresh : solver_t -> unit -> unit) =
   fun projectee ->
     match projectee with
     | { init; push; pop; snapshot; rollback; encode_sig; preprocess;
-        handle_smt_goal; solve; finish; refresh;_} -> refresh
+        spinoff_strictly_positive_goals; handle_smt_goal; solve; finish;
+        refresh;_} -> refresh
 let (__proj__Mktcenv_hooks__item__tc_push_in_gamma_hook :
   tcenv_hooks ->
     env ->
@@ -1291,6 +1313,13 @@ type solver_depth_t = (Prims.int * Prims.int * Prims.int)
 type implicit = FStar_TypeChecker_Common.implicit
 type implicits = FStar_TypeChecker_Common.implicits
 type guard_t = FStar_TypeChecker_Common.guard_t
+type tcenv_depth_t = (Prims.int * Prims.int * solver_depth_t * Prims.int)
+type qninfo =
+  (((FStar_Syntax_Syntax.universes * FStar_Syntax_Syntax.typ),
+    (FStar_Syntax_Syntax.sigelt * FStar_Syntax_Syntax.universes
+      FStar_Pervasives_Native.option))
+    FStar_Pervasives.either * FStar_Compiler_Range.range)
+    FStar_Pervasives_Native.option
 let (preprocess :
   env ->
     FStar_Syntax_Syntax.term ->
@@ -1448,6 +1477,7 @@ let (set_tc_hooks : env -> tcenv_hooks -> env) =
         unif_allow_ref_guards = (env1.unif_allow_ref_guards);
         erase_erasable_args = (env1.erase_erasable_args)
       }
+type env_t = env
 let (set_dep_graph : env -> FStar_Parser_Dep.deps -> env) =
   fun e ->
     fun g ->
@@ -1505,7 +1535,6 @@ let (set_dep_graph : env -> FStar_Parser_Dep.deps -> env) =
       }
 let (dep_graph : env -> FStar_Parser_Dep.deps) =
   fun e -> FStar_Syntax_DsEnv.dep_graph e.dsenv
-type env_t = env
 type sigtable = FStar_Syntax_Syntax.sigelt FStar_Compiler_Util.smap
 let (should_verify : env -> Prims.bool) =
   fun env1 ->
@@ -1810,7 +1839,6 @@ let (snapshot_stack : env -> (Prims.int * env)) =
   fun env1 -> FStar_Common.snapshot push_stack stack env1
 let (rollback_stack : Prims.int FStar_Pervasives_Native.option -> env) =
   fun depth -> FStar_Common.rollback pop_stack stack depth
-type tcenv_depth_t = (Prims.int * Prims.int * solver_depth_t * Prims.int)
 let (snapshot : env -> Prims.string -> (tcenv_depth_t * env)) =
   fun env1 ->
     fun msg ->
@@ -2402,12 +2430,6 @@ let (in_cur_mod : env -> FStar_Ident.lident -> tri) =
              | uu___3 -> No in
            aux cur1 lns
          else No)
-type qninfo =
-  (((FStar_Syntax_Syntax.universes * FStar_Syntax_Syntax.typ),
-    (FStar_Syntax_Syntax.sigelt * FStar_Syntax_Syntax.universes
-      FStar_Pervasives_Native.option))
-    FStar_Pervasives.either * FStar_Compiler_Range.range)
-    FStar_Pervasives_Native.option
 let (lookup_qname : env -> FStar_Ident.lident -> qninfo) =
   fun env1 ->
     fun lid ->
@@ -3877,6 +3899,50 @@ let (get_effect_decl :
           let uu___2 = FStar_Ident.range_of_lid l in
           FStar_Errors.raise_error uu___1 uu___2
       | FStar_Pervasives_Native.Some md -> FStar_Pervasives_Native.fst md
+let (get_default_effect :
+  env ->
+    FStar_Ident.lident -> FStar_Ident.lident FStar_Pervasives_Native.option)
+  =
+  fun env1 ->
+    fun lid ->
+      let uu___ =
+        let uu___1 =
+          let uu___2 =
+            let uu___3 =
+              let uu___4 =
+                FStar_Compiler_Effect.op_Bar_Greater lid (norm_eff_name env1) in
+              FStar_Compiler_Effect.op_Bar_Greater uu___4
+                (lookup_attrs_of_lid env1) in
+            FStar_Compiler_Effect.op_Bar_Greater uu___3
+              (FStar_Compiler_Util.dflt []) in
+          FStar_Compiler_Effect.op_Bar_Greater uu___2
+            (FStar_Syntax_Util.get_attribute
+               FStar_Parser_Const.default_effect_attr) in
+        FStar_Compiler_Effect.op_Bar_Greater uu___1
+          (FStar_Compiler_Util.map_option FStar_Compiler_List.hd) in
+      FStar_Compiler_Effect.op_Bar_Greater uu___
+        (FStar_Compiler_Util.map_option
+           (fun uu___1 ->
+              match uu___1 with
+              | (t, uu___2) ->
+                  let uu___3 =
+                    let uu___4 = FStar_Syntax_Subst.compress t in
+                    uu___4.FStar_Syntax_Syntax.n in
+                  (match uu___3 with
+                   | FStar_Syntax_Syntax.Tm_constant
+                       (FStar_Const.Const_string (s, uu___4)) ->
+                       FStar_Ident.lid_of_str s
+                   | uu___4 ->
+                       let uu___5 =
+                         let uu___6 =
+                           let uu___7 = FStar_Ident.string_of_lid lid in
+                           let uu___8 = FStar_Syntax_Print.term_to_string t in
+                           FStar_Compiler_Util.format2
+                             "The argument for the default effect attribute for %s is not a constant string, it is %s\n"
+                             uu___7 uu___8 in
+                         (FStar_Errors.Fatal_UnexpectedEffect, uu___6) in
+                       FStar_Errors.raise_error uu___5
+                         t.FStar_Syntax_Syntax.pos)))
 let (is_layered_effect : env -> FStar_Ident.lident -> Prims.bool) =
   fun env1 ->
     fun l ->
@@ -6235,6 +6301,7 @@ let (dummy_solver : solver_t) =
          fun g ->
            let uu___ = let uu___1 = FStar_Options.peek () in (e, g, uu___1) in
            [uu___]);
+    spinoff_strictly_positive_goals = FStar_Pervasives_Native.None;
     handle_smt_goal = (fun e -> fun g -> [(e, g)]);
     solve = (fun uu___ -> fun uu___1 -> fun uu___2 -> ());
     finish = (fun uu___ -> ());
@@ -6274,3 +6341,15 @@ let (fvar_of_nonqual_lid :
             failwith "Unexpected no delta_depth"
         | FStar_Pervasives_Native.Some dd1 -> dd1 in
       FStar_Syntax_Syntax.fvar lid dd FStar_Pervasives_Native.None
+let (split_smt_query :
+  env ->
+    FStar_Syntax_Syntax.term ->
+      (env * FStar_Syntax_Syntax.term) Prims.list
+        FStar_Pervasives_Native.option)
+  =
+  fun e ->
+    fun q ->
+      match (e.solver).spinoff_strictly_positive_goals with
+      | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None
+      | FStar_Pervasives_Native.Some p ->
+          let uu___ = p e q in FStar_Pervasives_Native.Some uu___

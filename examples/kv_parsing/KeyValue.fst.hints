@@ -8,7 +8,7 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "equation_FStar.Kremlin.Endianness.bytes", "equation_Parsing.byte",
+        "equation_FStar.Krml.Endianness.bytes", "equation_Parsing.byte",
         "equation_Parsing.bytes", "equation_Prims.eqtype",
         "equation_Slice.byte", "equation_Slice.bytes",
         "lemma_FStar.Seq.Base.hasEq_lemma",
@@ -16,7 +16,7 @@
         "typing_FStar.UInt8.t"
       ],
       0,
-      "7cc64a322ccd1f74a8a85b9ddf1baab6"
+      "1476b8d8a699184821fab799df26c000"
     ],
     [
       "KeyValue.encoded_entry",
@@ -25,7 +25,7 @@
       1,
       [ "@query" ],
       0,
-      "072ef7b785602efe3c1a9491f3b2fb80"
+      "f1e73d0a0d546d21327df1d731ff9502"
     ],
     [
       "KeyValue.encoded_entry",
@@ -34,7 +34,7 @@
       1,
       [ "@query" ],
       0,
-      "86ef8c4d3d69a84fa4a096e39fa1977b"
+      "e0b2aa878aa883099d70149a72e4834b"
     ],
     [
       "KeyValue.encoded_entry",
@@ -43,7 +43,7 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "equation_FStar.Kremlin.Endianness.bytes", "equation_Parsing.byte",
+        "equation_FStar.Krml.Endianness.bytes", "equation_Parsing.byte",
         "equation_Parsing.bytes", "equation_Prims.eqtype",
         "equation_Slice.byte", "equation_Slice.bytes",
         "lemma_FStar.Seq.Base.hasEq_lemma",
@@ -52,7 +52,7 @@
         "typing_FStar.UInt8.t"
       ],
       0,
-      "cb044213ef84aa745a5c4be43fe528f1"
+      "4c287b1816a2ae81fb97f32ebe41ce84"
     ],
     [
       "KeyValue.__proj__EncodedEntry__item__key",
@@ -61,19 +61,16 @@
       1,
       [ "@query" ],
       0,
-      "1ab25877d5b9a1b7f25adc47c7c1ab35"
+      "8f5a336c89eb2c438604aafa05d8187f"
     ],
     [
       "KeyValue.__proj__EncodedEntry__item__key",
       2,
       2,
       1,
-      [
-        "@query", "proj_equation_KeyValue.EncodedEntry_key_len",
-        "projection_inverse_KeyValue.EncodedEntry_key_len"
-      ],
+      [ "@query" ],
       0,
-      "f3a294aaee1719236f2996a79c7b5938"
+      "29abd49e9d0cf667ef3c223cd49271cb"
     ],
     [
       "KeyValue.__proj__EncodedEntry__item__value",
@@ -82,19 +79,16 @@
       1,
       [ "@query" ],
       0,
-      "351f1d829f501f9c8faf4670b41406f8"
+      "dc46ca7bbb146e1c637bd4e031900290"
     ],
     [
       "KeyValue.__proj__EncodedEntry__item__value",
       2,
       2,
       1,
-      [
-        "@query", "proj_equation_KeyValue.EncodedEntry_val_len",
-        "projection_inverse_KeyValue.EncodedEntry_val_len"
-      ],
+      [ "@query" ],
       0,
-      "f3775461f16f8ad81820fcab5c54290b"
+      "17550db8a1336037888fd29669c5f6cc"
     ],
     [
       "KeyValue.store",
@@ -103,7 +97,7 @@
       1,
       [ "@query" ],
       0,
-      "27d6a42a7e2e749af1cf43ef1cbf5bb1"
+      "93c6ca55e35620b5a7ec99184e0c7477"
     ],
     [
       "KeyValue.store",
@@ -112,7 +106,7 @@
       1,
       [ "@query" ],
       0,
-      "2f5cd6b7daea7206df71bdaa6beff946"
+      "c293d12d658eee274011b0e735b8c85e"
     ],
     [
       "KeyValue.store",
@@ -128,7 +122,7 @@
         "typing_FStar.UInt32.t"
       ],
       0,
-      "e0bf8a20bf54c4dd41b52614b794881b"
+      "7920267a03d4d834c4863888e9fb76a8"
     ],
     [
       "KeyValue.__proj__Store__item__entries",
@@ -137,31 +131,25 @@
       1,
       [ "@query" ],
       0,
-      "4be432fcf13169ac4a3afc1bde1ab785"
+      "69d6e4f544ccea90ccd5a63109178040"
     ],
     [
       "KeyValue.__proj__Store__item__entries",
       2,
       2,
       1,
-      [
-        "@query", "proj_equation_KeyValue.Store_num_entries",
-        "projection_inverse_KeyValue.Store_num_entries"
-      ],
+      [ "@query" ],
       0,
-      "125011dddb2a7995af5e7b4d64493435"
+      "8efc087c87187ef5230c3ace83c4b81c"
     ],
     [
       "KeyValue.as_entry",
       1,
       2,
       1,
-      [
-        "@query", "equation_FStar.UInt8.byte",
-        "equation_KeyValue.entry_live", "equation_Slice.byte"
-      ],
+      [ "@query", "equation_KeyValue.entry_live", "equation_Slice.byte" ],
       0,
-      "ffed39a3b1c7b23333778e174b2bd06e"
+      "59640467e3d06e34ab77ff92d35d3483"
     ]
   ]
 ]

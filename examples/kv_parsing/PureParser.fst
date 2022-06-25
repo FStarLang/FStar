@@ -20,7 +20,7 @@ open Parsing
 open IntegerParsing
 
 open FStar.Seq
-open FStar.Kremlin.Endianness
+open FStar.Krml.Endianness
 module U8 = FStar.UInt8
 module U16 = FStar.UInt16
 module U32 = FStar.UInt32

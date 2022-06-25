@@ -1,6 +1,4 @@
 open Prims
-let (escape : Prims.string -> Prims.string) =
-  fun s -> FStar_Compiler_Util.replace_char s 39 95
 type sort =
   | Bool_sort 
   | Int_sort 
@@ -39,26 +37,6 @@ let (uu___is_Sort : sort -> Prims.bool) =
   fun projectee -> match projectee with | Sort _0 -> true | uu___ -> false
 let (__proj__Sort__item___0 : sort -> Prims.string) =
   fun projectee -> match projectee with | Sort _0 -> _0
-let rec (strSort : sort -> Prims.string) =
-  fun x ->
-    match x with
-    | Bool_sort -> "Bool"
-    | Int_sort -> "Int"
-    | Term_sort -> "Term"
-    | String_sort -> "FString"
-    | Fuel_sort -> "Fuel"
-    | BitVec_sort n ->
-        let uu___ = FStar_Compiler_Util.string_of_int n in
-        FStar_Compiler_Util.format1 "(_ BitVec %s)" uu___
-    | Array (s1, s2) ->
-        let uu___ = strSort s1 in
-        let uu___1 = strSort s2 in
-        FStar_Compiler_Util.format2 "(Array %s %s)" uu___ uu___1
-    | Arrow (s1, s2) ->
-        let uu___ = strSort s1 in
-        let uu___1 = strSort s2 in
-        FStar_Compiler_Util.format2 "(%s -> %s)" uu___ uu___1
-    | Sort s -> s
 type op =
   | TrueOp 
   | FalseOp 
@@ -402,6 +380,28 @@ let (__proj__Mkdecls_elt__item__a_names :
   fun projectee ->
     match projectee with | { sym_name; key; decls; a_names;_} -> a_names
 type decls_t = decls_elt Prims.list
+let (escape : Prims.string -> Prims.string) =
+  fun s -> FStar_Compiler_Util.replace_char s 39 95
+let rec (strSort : sort -> Prims.string) =
+  fun x ->
+    match x with
+    | Bool_sort -> "Bool"
+    | Int_sort -> "Int"
+    | Term_sort -> "Term"
+    | String_sort -> "FString"
+    | Fuel_sort -> "Fuel"
+    | BitVec_sort n ->
+        let uu___ = FStar_Compiler_Util.string_of_int n in
+        FStar_Compiler_Util.format1 "(_ BitVec %s)" uu___
+    | Array (s1, s2) ->
+        let uu___ = strSort s1 in
+        let uu___1 = strSort s2 in
+        FStar_Compiler_Util.format2 "(Array %s %s)" uu___ uu___1
+    | Arrow (s1, s2) ->
+        let uu___ = strSort s1 in
+        let uu___1 = strSort s2 in
+        FStar_Compiler_Util.format2 "(%s -> %s)" uu___ uu___1
+    | Sort s -> s
 let (mk_decls :
   Prims.string ->
     Prims.string -> decl Prims.list -> decls_elt Prims.list -> decls_t)
@@ -452,8 +452,6 @@ let (decls_list_of : decls_t -> decl Prims.list) =
   fun l ->
     FStar_Compiler_Effect.op_Bar_Greater l
       (FStar_Compiler_List.collect (fun elt -> elt.decls))
-type error_label = (fv * Prims.string * FStar_Compiler_Range.range)
-type error_labels = error_label Prims.list
 let (mk_fv : (Prims.string * sort) -> fv) =
   fun uu___ -> match uu___ with | (x, y) -> (x, y, false)
 let (fv_name : fv -> Prims.string) =
@@ -464,6 +462,8 @@ let (fv_sort : fv -> sort) =
 let (fv_force : fv -> Prims.bool) =
   fun x ->
     let uu___ = x in match uu___ with | (uu___1, uu___2, force) -> force
+type error_label = (fv * Prims.string * FStar_Compiler_Range.range)
+type error_labels = error_label Prims.list
 let (fv_eq : fv -> fv -> Prims.bool) =
   fun x ->
     fun y ->
@@ -692,6 +692,8 @@ let (mkTrue : FStar_Compiler_Range.range -> term) =
   fun r -> mk (App (TrueOp, [])) r
 let (mkFalse : FStar_Compiler_Range.range -> term) =
   fun r -> mk (App (FalseOp, [])) r
+let (mkUnreachable : term) =
+  mk (App ((Var "Unreachable"), [])) FStar_Compiler_Range.dummyRange
 let (mkInteger : Prims.string -> FStar_Compiler_Range.range -> term) =
   fun i ->
     fun r ->
@@ -1842,7 +1844,7 @@ and (mkPrelude : Prims.string -> Prims.string) =
   fun z3options ->
     let basic =
       Prims.op_Hat z3options
-        "(declare-sort FString)\n(declare-fun FString_constr_id (FString) Int)\n\n(declare-sort Term)\n(declare-fun Term_constr_id (Term) Int)\n(declare-sort Dummy_sort)\n(declare-fun Dummy_value () Dummy_sort)\n(declare-datatypes () ((Fuel \n(ZFuel) \n(SFuel (prec Fuel)))))\n(declare-fun MaxIFuel () Fuel)\n(declare-fun MaxFuel () Fuel)\n(declare-fun PreType (Term) Term)\n(declare-fun Valid (Term) Bool)\n(declare-fun HasTypeFuel (Fuel Term Term) Bool)\n(define-fun HasTypeZ ((x Term) (t Term)) Bool\n(HasTypeFuel ZFuel x t))\n(define-fun HasType ((x Term) (t Term)) Bool\n(HasTypeFuel MaxIFuel x t))\n(declare-fun IsTotFun (Term) Bool)\n\n                ;;fuel irrelevance\n(assert (forall ((f Fuel) (x Term) (t Term))\n(! (= (HasTypeFuel (SFuel f) x t)\n(HasTypeZ x t))\n:pattern ((HasTypeFuel (SFuel f) x t)))))\n(declare-fun NoHoist (Term Bool) Bool)\n;;no-hoist\n(assert (forall ((dummy Term) (b Bool))\n(! (= (NoHoist dummy b)\nb)\n:pattern ((NoHoist dummy b)))))\n(define-fun  IsTyped ((x Term)) Bool\n(exists ((t Term)) (HasTypeZ x t)))\n(declare-fun ApplyTF (Term Fuel) Term)\n(declare-fun ApplyTT (Term Term) Term)\n(declare-fun Rank (Term) Int)\n(declare-fun Closure (Term) Term)\n(declare-fun ConsTerm (Term Term) Term)\n(declare-fun ConsFuel (Fuel Term) Term)\n(declare-fun Tm_uvar (Int) Term)\n(define-fun Reify ((x Term)) Term x)\n(declare-fun Prims.precedes (Term Term Term Term) Term)\n(declare-fun Range_const (Int) Term)\n(declare-fun _mul (Int Int) Int)\n(declare-fun _div (Int Int) Int)\n(declare-fun _mod (Int Int) Int)\n(declare-fun __uu__PartialApp () Term)\n(assert (forall ((x Int) (y Int)) (! (= (_mul x y) (* x y)) :pattern ((_mul x y)))))\n(assert (forall ((x Int) (y Int)) (! (= (_div x y) (div x y)) :pattern ((_div x y)))))\n(assert (forall ((x Int) (y Int)) (! (= (_mod x y) (mod x y)) :pattern ((_mod x y)))))\n(declare-fun _rmul (Real Real) Real)\n(declare-fun _rdiv (Real Real) Real)\n(assert (forall ((x Real) (y Real)) (! (= (_rmul x y) (* x y)) :pattern ((_rmul x y)))))\n(assert (forall ((x Real) (y Real)) (! (= (_rdiv x y) (/ x y)) :pattern ((_rdiv x y)))))" in
+        "(declare-sort FString)\n(declare-fun FString_constr_id (FString) Int)\n\n(declare-sort Term)\n(declare-fun Term_constr_id (Term) Int)\n(declare-sort Dummy_sort)\n(declare-fun Dummy_value () Dummy_sort)\n(declare-datatypes () ((Fuel \n(ZFuel) \n(SFuel (prec Fuel)))))\n(declare-fun MaxIFuel () Fuel)\n(declare-fun MaxFuel () Fuel)\n(declare-fun PreType (Term) Term)\n(declare-fun Valid (Term) Bool)\n(declare-fun HasTypeFuel (Fuel Term Term) Bool)\n(define-fun HasTypeZ ((x Term) (t Term)) Bool\n(HasTypeFuel ZFuel x t))\n(define-fun HasType ((x Term) (t Term)) Bool\n(HasTypeFuel MaxIFuel x t))\n(declare-fun IsTotFun (Term) Bool)\n\n                ;;fuel irrelevance\n(assert (forall ((f Fuel) (x Term) (t Term))\n(! (= (HasTypeFuel (SFuel f) x t)\n(HasTypeZ x t))\n:pattern ((HasTypeFuel (SFuel f) x t)))))\n(declare-fun NoHoist (Term Bool) Bool)\n;;no-hoist\n(assert (forall ((dummy Term) (b Bool))\n(! (= (NoHoist dummy b)\nb)\n:pattern ((NoHoist dummy b)))))\n(define-fun  IsTyped ((x Term)) Bool\n(exists ((t Term)) (HasTypeZ x t)))\n(declare-fun ApplyTF (Term Fuel) Term)\n(declare-fun ApplyTT (Term Term) Term)\n(declare-fun Rank (Term) Int)\n(declare-fun Closure (Term) Term)\n(declare-fun ConsTerm (Term Term) Term)\n(declare-fun ConsFuel (Fuel Term) Term)\n(declare-fun Tm_uvar (Int) Term)\n(define-fun Reify ((x Term)) Term x)\n(declare-fun Prims.precedes (Term Term Term Term) Term)\n(declare-fun Range_const (Int) Term)\n(declare-fun _mul (Int Int) Int)\n(declare-fun _div (Int Int) Int)\n(declare-fun _mod (Int Int) Int)\n(declare-fun __uu__PartialApp () Term)\n(assert (forall ((x Int) (y Int)) (! (= (_mul x y) (* x y)) :pattern ((_mul x y)))))\n(assert (forall ((x Int) (y Int)) (! (= (_div x y) (div x y)) :pattern ((_div x y)))))\n(assert (forall ((x Int) (y Int)) (! (= (_mod x y) (mod x y)) :pattern ((_mod x y)))))\n(declare-fun _rmul (Real Real) Real)\n(declare-fun _rdiv (Real Real) Real)\n(assert (forall ((x Real) (y Real)) (! (= (_rmul x y) (* x y)) :pattern ((_rmul x y)))))\n(assert (forall ((x Real) (y Real)) (! (= (_rdiv x y) (/ x y)) :pattern ((_rdiv x y)))))\n(define-fun Unreachable () Bool false)" in
     let constrs =
       [("FString_const", [("FString_const_proj_0", Int_sort, true)],
          String_sort, Prims.int_zero, true);
@@ -1870,6 +1872,8 @@ and (mkPrelude : Prims.string -> Prims.string) =
         FStar_Compiler_Effect.op_Bar_Greater uu___1
           (FStar_Compiler_List.map (declToSmt z3options)) in
       FStar_Compiler_Effect.op_Bar_Greater uu___ (FStar_String.concat "\n") in
+    let precedes_partial_app =
+      "\n(declare-fun Prims.precedes@tok () Term)\n(assert\n(forall ((@x0 Term) (@x1 Term) (@x2 Term) (@x3 Term))\n(! (= (ApplyTT (ApplyTT (ApplyTT (ApplyTT Prims.precedes@tok\n@x0)\n@x1)\n@x2)\n@x3)\n(Prims.precedes @x0 @x1 @x2 @x3))\n\n:pattern ((ApplyTT (ApplyTT (ApplyTT (ApplyTT Prims.precedes@tok\n@x0)\n@x1)\n@x2)\n@x3)))))\n" in
     let lex_ordering =
       "\n(declare-fun Prims.lex_t () Term)\n(assert (forall ((t1 Term) (t2 Term) (e1 Term) (e2 Term))\n(! (iff (Valid (Prims.precedes t1 t2 e1 e2))\n(Valid (Prims.precedes Prims.lex_t Prims.lex_t e1 e2)))\n:pattern (Prims.precedes t1 t2 e1 e2))))\n(assert (forall ((t1 Term) (t2 Term))\n(! (iff (Valid (Prims.precedes Prims.lex_t Prims.lex_t t1 t2)) \n(< (Rank t1) (Rank t2)))\n:pattern ((Prims.precedes Prims.lex_t Prims.lex_t t1 t2)))))\n" in
     let valid_intro =
@@ -1880,13 +1884,15 @@ and (mkPrelude : Prims.string -> Prims.string) =
       let uu___1 =
         let uu___2 =
           let uu___3 =
-            let uu___4 = FStar_Options.smtencoding_valid_intro () in
-            if uu___4 then valid_intro else "" in
-          let uu___4 =
-            let uu___5 = FStar_Options.smtencoding_valid_elim () in
-            if uu___5 then valid_elim else "" in
-          Prims.op_Hat uu___3 uu___4 in
-        Prims.op_Hat lex_ordering uu___2 in
+            let uu___4 =
+              let uu___5 = FStar_Options.smtencoding_valid_intro () in
+              if uu___5 then valid_intro else "" in
+            let uu___5 =
+              let uu___6 = FStar_Options.smtencoding_valid_elim () in
+              if uu___6 then valid_elim else "" in
+            Prims.op_Hat uu___4 uu___5 in
+          Prims.op_Hat lex_ordering uu___3 in
+        Prims.op_Hat precedes_partial_app uu___2 in
       Prims.op_Hat bcons uu___1 in
     Prims.op_Hat basic uu___
 let (declsToSmt : Prims.string -> decl Prims.list -> Prims.string) =

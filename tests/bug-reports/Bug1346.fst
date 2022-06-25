@@ -40,7 +40,7 @@ let test (p:(unit -> Type0)) (q:(unit -> Type0))
              norm [] ;
              dump "C" ;
              let hh = intro () in
-             apply (quote FStar.Squash.return_squash) ;
+             apply (`FStar.Squash.return_squash) ;
              dump "D" ;
              exact (pack (Tv_Var (bv_of_binder hh))) ; //USED TO FAIL
              exact (pack (Tv_Var (bv_of_binder h))))

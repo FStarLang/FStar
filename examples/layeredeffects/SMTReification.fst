@@ -16,37 +16,33 @@
 
 module SMTReification
 
-type repr (a:Type) (_:unit) = a & int
+type repr (a:Type) = a & int
 
-let return (a:Type) (x:a) : repr a () = x, 0
+let return (a:Type) (x:a) : repr a = x, 0
 
-let bind (a:Type) (b:Type) (f:repr a ()) (g:a -> repr b ()) : repr b () =
+let bind (a:Type) (b:Type) (f:repr a) (g:a -> repr b) : repr b =
   let x, n = f in
   let y, m = g x in
   y, n + m
 
-reifiable reflectable total
-layered_effect {
-  MST : a:Type -> eqtype_as_type unit -> Effect
-  with
-  repr = repr;
-  return = return;
-  bind = bind
+reifiable
+reflectable
+total
+effect {
+  MST (a:Type)
+  with {repr; return; bind}
 }
 
-assume val pure_wp_monotonic (#a:Type) (wp:pure_wp a)
-: Lemma (forall p q. (forall x. p x ==> q x) ==> (wp p ==> wp q))
-
 let lift_pure_mst (a:Type) (wp:pure_wp a) (f:eqtype_as_type unit -> PURE a wp)
-: Pure (repr a ()) (requires wp (fun _ -> True)) (ensures fun _ -> True)
-= pure_wp_monotonic wp;
+: Pure (repr a) (requires wp (fun _ -> True)) (ensures fun _ -> True)
+= FStar.Monotonic.Pure.elim_pure_wp_monotonicity wp;
   f (), 0
 
 sub_effect PURE ~> MST = lift_pure_mst
 
-let set (n:int) : MST unit () = MST?.reflect ((), n)
+let set (n:int) : MST unit = MST?.reflect ((), n)
 
-let incr_and_set (n:int) : MST unit () = set (n+1)
+let incr_and_set (n:int) : MST unit = set (n+1)
 
 //AR: 07/03: backtracking on smt reification for layered effects
 //let reify_incr_and_set () = assert (snd (reify (incr_and_set 0)) == 1)

@@ -59,7 +59,7 @@ cd fstar
 # obtained binary). FSTAR_HOME is the latter. Most examples will
 # anyway redefine and overwrite FSTAR_HOME according to their location
 # within the package, *except* one: stringprinter in examples/tactics,
-# which needs KreMLin, which needs some FSTAR_HOME defined. So we have
+# which needs KaRaMeL, which needs some FSTAR_HOME defined. So we have
 # to export it from here.
 export FSTAR_HOME="$PWD"
 

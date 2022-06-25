@@ -15,15 +15,15 @@
 *)
 module Crypto.KrmlTest
 
-(* Note: this file uses the test library from KreMLin and should extract to both
-   C (via kremlib.c) and OCaml (via jk's implementation of kremlib in
+(* Note: this file uses the test library from KaRaMeL and should extract to both
+   C (via krmllib.c) and OCaml (via jk's implementation of krmllib in
    OCaml). Here's a suggested few lines you can put in your ~/.emacs:
 
 (setq fstar-subp-prover-args '(
                                "--include" "D:/cygwin/home/protz/Code/fstar/ulib/hyperstack"
                                "--include" "D:/cygwin/home/protz/Code/fstar/examples/low-level/crypto/spartan"
-                               "--include" "D:/cygwin/home/protz/Code/kremlin/kremlib"
-                               "--include" "D:/cygwin/home/protz/Code/kremlin/test"
+                               "--include" "D:/cygwin/home/protz/Code/karamel/krmllib"
+                               "--include" "D:/cygwin/home/protz/Code/karamel/test"
                                ))
 
 *)

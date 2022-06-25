@@ -141,15 +141,14 @@ let rec ackermann (m n:nat) : Tot nat (decreases %[m; n]) =
 //  using which we can build our own lexicographic ordering and use it
 //See ulib/FStar.LexicographicOrdering.fsti
 
-open FStar.Preorder
 open FStar.WellFounded
 open FStar.LexicographicOrdering
 
 unfold
-let lt : relation nat = fun x y -> x < y
+let lt : binrel nat = fun x y -> x < y
 
 unfold
-let lt_dep (_:nat) : relation nat = lt
+let lt_dep (_:nat) : binrel nat = lt
 
 let rec lt_well_founded (n:nat) : acc lt n =
   AccIntro (fun m _ -> lt_well_founded m)
@@ -157,10 +156,106 @@ let rec lt_well_founded (n:nat) : acc lt n =
 let rec lt_dep_well_founded (m:nat) (n:nat) : acc (lt_dep m) n =
   AccIntro (fun p _ -> lt_dep_well_founded m p)
 
+unfold
+let nat_nat_lex_ordering
+  : well_founded_relation (x:nat & nat)
+  = lex lt_well_founded lt_dep_well_founded
+
+type higher_nat : Type u#1 =
+  | HZ : higher_nat
+  | HS : higher_nat -> higher_nat
+
+let higher_nat_lt
+  : binrel u#1 u#0 higher_nat
+  = fun x y -> x << y //sub-term ordering on higher nats
+
+let rec higher_nat_lt_well_founded (n:higher_nat)
+  : acc higher_nat_lt n
+  = AccIntro (fun m _ -> higher_nat_lt_well_founded m)
+
+let higher_nat_higher_nat_lex_order
+  : well_founded_relation (x:higher_nat & higher_nat)
+  = lex higher_nat_lt_well_founded (fun _ -> higher_nat_lt_well_founded)
+
 let rec ackermann_wf (m n:nat)
-  : Tot nat (decreases {:well-founded
-             (lex lt_well_founded lt_dep_well_founded)
-             (| m, n |) })
+  : Tot nat (decreases {:well-founded nat_nat_lex_ordering (| m, n |) })
   = if m = 0 then n + 1
     else if n = 0 then ackermann_wf (m - 1) 1
     else ackermann_wf (m - 1) (ackermann_wf m (n - 1))
+
+assume
+val get_previous (#a:Type) (r:well_founded_relation a) (x:a)
+  : option (y:a { r y x })
+  
+let rec rel_parametric (r: nat -> well_founded_relation nat) (y:nat) (x:nat)
+  : Tot nat (decreases {:well-founded r y x})
+  = match get_previous (r y) x with
+    | None -> 0
+    | Some z -> 1 + rel_parametric r y z
+
+module WFU = FStar.WellFounded.Util
+
+//Since rel_poly can be polymorphically recursive in `a`
+//the decreases clause is not type-correct on the recursively bound function
+[@@expect_failure]
+let rec rel_poly (a:Type) (r:well_founded_relation a) (x:a)
+  : Tot nat (decreases {:well-founded r x})
+  = 0
+
+
+let rec rel_poly (a:Type) (r:binrel a) (wf_r:well_founded (WFU.squash_binrel r)) (x:a)
+  : Tot nat (decreases {:well-founded WFU.lift_binrel_squashed_as_well_founded_relation wf_r (| a, x |)})
+  = match get_previous (WFU.lift_binrel_squashed_as_well_founded_relation wf_r) (| a, x |) with
+    | None -> 0
+    | Some z -> 
+      1 + rel_poly a r wf_r (dsnd z)
+
+
+let rec rel_poly2 (a:Type) (r:binrel a) (wf_r:well_founded r) (x:a)
+  : Tot nat (decreases {:well-founded WFU.lift_binrel_as_well_founded_relation wf_r (| a, x |)})
+  = match get_previous (WFU.lift_binrel_as_well_founded_relation wf_r) (| a, x |) with
+    | None -> 0
+    | Some z ->
+      WFU.elim_lift_binrel r z x;
+      1 + rel_poly2 a r wf_r (dsnd z)
+
+//Examples from PR 2561
+open FStar.WellFoundedRelation
+
+// Define `nat_nat_wfr` to represent the lexicographically-precedes
+// relation between two elements of type `nat * nat`.  That is,
+// `(x1, y1)` is related to `(x2, y2)` if
+// `x1 < x2 \/ (x1 == x2 /\ y1 < y2)`.
+
+let nat_nat_wfr = lex_nondep_wfr (default_wfr nat) (default_wfr nat)
+
+// To show that `f` is well-defined, we use the decreases clause
+// `nat_nat_wfr.decreaser (x, y)`.  We then need to show, on each
+// recursive call, that the parameters x2 and y2 to the nested
+// call satisfy `nat_nat_wfr.relation (x2, y2) (x, y)`.
+
+let rec f (x: nat) (y: nat)
+  : Tot nat (decreases (nat_nat_wfr.decreaser (x, y)))
+  = if x = 0 then
+      0
+    else if y = 0 then (
+      // This assertion isn't necessary; it's just for illustration
+      assert (nat_nat_wfr.relation (x - 1, 100) (x, y));
+      f (x - 1) 100
+    )
+    else (
+      // This assertion isn't necessary; it's just for illustration
+      assert (nat_nat_wfr.relation (x, y - 1) (x, y));
+      f x (y - 1)
+    )
+
+
+let rec count_steps_to_none
+  (a: Type)
+  (wfr: wfr_t a)
+  (stepper: (x: a) -> (y: option a{Some? y ==> wfr.relation (Some?.v y) x}))
+  (start: option a)
+  : Tot nat (decreases (option_wfr wfr).decreaser start) =
+  match start with
+  | None -> 0
+  | Some x -> 1 + count_steps_to_none a wfr stepper (stepper x)

@@ -17,7 +17,7 @@ OUTPUT_DIRECTORY=_output
 FSTAR=fstar.exe --cache_checked_modules --odir $(OUTPUT_DIRECTORY) --use_hints $(OTHERFLAGS)
 ML_FILES=$(addprefix $(OUTPUT_DIRECTORY)/,$(addsuffix .ml,$(subst .,_, $(subst .fst,,$(FSTAR_FILES)))))
 OCAML_EXE=$(PROGRAM).ocaml.exe
-KREMLIN_EXE=$(PROGRAM).exe
+KRML_EXE=$(PROGRAM).exe
 
 all: verify-all
 
@@ -53,16 +53,16 @@ test.ocaml: $(OCAML_EXE)
 $(OUTPUT_DIRECTORY)/c/out.krml: $(addsuffix .checked,$(FSTAR_FILES))
 	krml -fsopts --cache_checked_modules -tmpdir $(OUTPUT_DIRECTORY)/c -skip-translation $(FSTAR_FILES)
 
-$(KREMLIN_EXE): $(OUTPUT_DIRECTORY)/c/out.krml
-	krml -add-include '"kremlin/internal/compat.h"' $< -tmpdir $(OUTPUT_DIRECTORY)/c -no-prefix A -o $@ -drop WasmSupport
+$(KRML_EXE): $(OUTPUT_DIRECTORY)/c/out.krml
+	krml -add-include '"karamel/internal/compat.h"' $< -tmpdir $(OUTPUT_DIRECTORY)/c -no-prefix A -o $@ -drop WasmSupport
 
-test.kremlin: $(KREMLIN_EXE)
+test.karamel: $(KRML_EXE)
 	./$< hello
 
-test: test.kremlin test.ocaml
+test: test.karamel test.ocaml
 
 clean:
-	rm -rf _build $(OUTPUT_DIRECTORY) *~ *.checked $(OCAML_EXE) $(KREMLIN_EXE) .depend
+	rm -rf _build $(OUTPUT_DIRECTORY) *~ *.checked $(OCAML_EXE) $(KRML_EXE) .depend
 
 .depend:
 	$(FSTAR) --dep full $(FSTAR_FILES) --extract '* -FStar -Prims' > .depend

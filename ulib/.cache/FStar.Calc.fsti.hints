@@ -1,0 +1,21 @@
+[
+  "WOB\u0001?\\2ÐFR—¤ \u007fRO",
+  [
+    [
+      "FStar.Calc.calc_chain_related",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_df47a5e1036c31f5a72fe09ed5f79d16_2",
+        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "equation_FStar.Preorder.relation",
+        "fuel_guarded_inversion_Prims.list",
+        "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
+      ],
+      0,
+      "a624a97ef90f4d6ec104558245cf2f50"
+    ]
+  ]
+]

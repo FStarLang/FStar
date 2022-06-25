@@ -244,6 +244,8 @@ let (decls_lid : FStar_Ident.lident) =
   p2l ["FStar"; "Reflection"; "Data"; "decls"]
 let (ctx_uvar_and_subst_lid : FStar_Ident.lident) =
   p2l ["FStar"; "Reflection"; "Types"; "ctx_uvar_and_subst"]
+let (universe_uvar_lid : FStar_Ident.lident) =
+  p2l ["FStar"; "Reflection"; "Types"; "universe_uvar"]
 let (range_lid : FStar_Ident.lident) = pconst "range"
 let (range_of_lid : FStar_Ident.lident) = pconst "range_of"
 let (labeled_lid : FStar_Ident.lident) = pconst "labeled"
@@ -288,6 +290,8 @@ let (strict_on_arguments_attr : FStar_Ident.lident) =
   p2l ["FStar"; "Pervasives"; "strict_on_arguments"]
 let (resolve_implicits_attr_string : Prims.string) =
   "FStar.Pervasives.resolve_implicits"
+let (override_resolve_implicits_handler_lid : FStar_Ident.lident) =
+  p2l ["FStar"; "Pervasives"; "override_resolve_implicits_handler"]
 let (handle_smt_goals_attr : FStar_Ident.lident) = psconst "handle_smt_goals"
 let (handle_smt_goals_attr_string : Prims.string) =
   "FStar.Pervasives.handle_smt_goals"
@@ -319,6 +323,9 @@ let (allow_informative_binders_attr : FStar_Ident.lident) =
 let (remove_unused_type_parameters_lid : FStar_Ident.lident) =
   psconst "remove_unused_type_parameters"
 let (ite_soundness_by_attr : FStar_Ident.lident) = psconst "ite_soundness_by"
+let (default_effect_attr : FStar_Ident.lident) = psconst "default_effect"
+let (bind_has_range_args_attr : FStar_Ident.lident) =
+  psconst "bind_has_range_args"
 let (binder_strictly_positive_attr : FStar_Ident.lident) =
   psconst "strictly_positive"
 let (no_auto_projectors_attr : FStar_Ident.lident) =
@@ -475,8 +482,12 @@ let (mk_class_lid : FStar_Ident.lid) =
   fstar_tactics_lid' ["Typeclasses"; "mk_class"]
 let (tcresolve_lid : FStar_Ident.lid) =
   fstar_tactics_lid' ["Typeclasses"; "tcresolve"]
+let (tcclass_lid : FStar_Ident.lid) =
+  fstar_tactics_lid' ["Typeclasses"; "tcclass"]
 let (tcinstance_lid : FStar_Ident.lid) =
   fstar_tactics_lid' ["Typeclasses"; "tcinstance"]
+let (no_method_lid : FStar_Ident.lid) =
+  fstar_tactics_lid' ["Typeclasses"; "no_method"]
 let (effect_TAC_lid : FStar_Ident.lid) = fstar_tactics_lid' ["Effect"; "TAC"]
 let (effect_Tac_lid : FStar_Ident.lid) = fstar_tactics_lid' ["Effect"; "Tac"]
 let (by_tactic_lid : FStar_Ident.lid) =

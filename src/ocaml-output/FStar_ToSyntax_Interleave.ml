@@ -58,22 +58,22 @@ let rec (prefix_with_iface_decls :
   =
   fun iface ->
     fun impl ->
-      let qualify_kremlin_private impl1 =
-        let krem_private =
+      let qualify_karamel_private impl1 =
+        let karamel_private =
           FStar_Parser_AST.mk_term
             (FStar_Parser_AST.Const
                (FStar_Const.Const_string
-                  ("KremlinPrivate", (impl1.FStar_Parser_AST.drange))))
+                  ("KrmlPrivate", (impl1.FStar_Parser_AST.drange))))
             impl1.FStar_Parser_AST.drange FStar_Parser_AST.Expr in
         {
           FStar_Parser_AST.d = (impl1.FStar_Parser_AST.d);
           FStar_Parser_AST.drange = (impl1.FStar_Parser_AST.drange);
           FStar_Parser_AST.quals = (impl1.FStar_Parser_AST.quals);
-          FStar_Parser_AST.attrs = (krem_private ::
+          FStar_Parser_AST.attrs = (karamel_private ::
             (impl1.FStar_Parser_AST.attrs))
         } in
       match iface with
-      | [] -> ([], [qualify_kremlin_private impl])
+      | [] -> ([], [qualify_karamel_private impl])
       | iface_hd::iface_tl ->
           (match iface_hd.FStar_Parser_AST.d with
            | FStar_Parser_AST.Tycon (uu___, uu___1, tys) when
@@ -123,7 +123,7 @@ let rec (prefix_with_iface_decls :
                       (FStar_Errors.Fatal_WrongDefinitionOrder, uu___2) in
                     FStar_Errors.raise_error uu___1
                       impl.FStar_Parser_AST.drange
-                  else (iface, [qualify_kremlin_private impl]))
+                  else (iface, [qualify_karamel_private impl]))
                else
                  (let mutually_defined_with_x =
                     FStar_Compiler_Effect.op_Bar_Greater def_ids
@@ -244,20 +244,48 @@ let (ml_mode_prefix_with_iface_decls :
   fun iface ->
     fun impl ->
       match impl.FStar_Parser_AST.d with
-      | FStar_Parser_AST.TopLevelLet (uu___, defs) ->
-          let xs = FStar_Parser_AST.lids_of_let defs in
+      | FStar_Parser_AST.TopLevelModule uu___ -> (iface, [impl])
+      | FStar_Parser_AST.Open uu___ -> (iface, [impl])
+      | FStar_Parser_AST.Friend uu___ -> (iface, [impl])
+      | FStar_Parser_AST.Include uu___ -> (iface, [impl])
+      | FStar_Parser_AST.ModuleAbbrev uu___ -> (iface, [impl])
+      | uu___ ->
           let uu___1 =
-            FStar_Compiler_List.partition
+            FStar_Compiler_List.span
               (fun d ->
-                 FStar_Compiler_Effect.op_Bar_Greater xs
-                   (FStar_Compiler_Util.for_some
-                      (fun x ->
-                         let uu___2 = FStar_Ident.ident_of_lid x in
-                         is_val uu___2 d))) iface in
+                 match d.FStar_Parser_AST.d with
+                 | FStar_Parser_AST.Tycon uu___2 -> true
+                 | uu___2 -> false) iface in
           (match uu___1 with
-           | (val_xs, rest_iface) ->
-               (rest_iface, (FStar_Compiler_List.op_At val_xs [impl])))
-      | uu___ -> (iface, [impl])
+           | (iface_prefix_tycons, iface1) ->
+               let maybe_get_iface_vals lids iface2 =
+                 FStar_Compiler_List.partition
+                   (fun d ->
+                      FStar_Compiler_Effect.op_Bar_Greater lids
+                        (FStar_Compiler_Util.for_some
+                           (fun x ->
+                              let uu___2 = FStar_Ident.ident_of_lid x in
+                              is_val uu___2 d))) iface2 in
+               (match impl.FStar_Parser_AST.d with
+                | FStar_Parser_AST.TopLevelLet uu___2 ->
+                    let xs = definition_lids impl in
+                    let uu___3 = maybe_get_iface_vals xs iface1 in
+                    (match uu___3 with
+                     | (val_xs, rest_iface) ->
+                         (rest_iface,
+                           (FStar_Compiler_List.op_At iface_prefix_tycons
+                              (FStar_Compiler_List.op_At val_xs [impl]))))
+                | FStar_Parser_AST.Tycon uu___2 ->
+                    let xs = definition_lids impl in
+                    let uu___3 = maybe_get_iface_vals xs iface1 in
+                    (match uu___3 with
+                     | (val_xs, rest_iface) ->
+                         (rest_iface,
+                           (FStar_Compiler_List.op_At iface_prefix_tycons
+                              (FStar_Compiler_List.op_At val_xs [impl]))))
+                | uu___2 ->
+                    (iface1,
+                      (FStar_Compiler_List.op_At iface_prefix_tycons [impl]))))
 let ml_mode_check_initial_interface :
   'uuuuu .
     'uuuuu ->
@@ -269,10 +297,24 @@ let ml_mode_check_initial_interface :
         (FStar_Compiler_List.filter
            (fun d ->
               match d.FStar_Parser_AST.d with
+              | FStar_Parser_AST.Tycon (uu___, uu___1, tys) when
+                  FStar_Compiler_Effect.op_Bar_Greater tys
+                    (FStar_Compiler_Util.for_some
+                       (fun uu___2 ->
+                          match uu___2 with
+                          | FStar_Parser_AST.TyconAbstract uu___3 -> true
+                          | uu___3 -> false))
+                  ->
+                  FStar_Errors.raise_error
+                    (FStar_Errors.Fatal_AbstractTypeDeclarationInInterface,
+                      "Interface contains an abstract 'type' declaration; use 'val' instead")
+                    d.FStar_Parser_AST.drange
+              | FStar_Parser_AST.Tycon uu___ -> true
               | FStar_Parser_AST.Val uu___ -> true
               | uu___ -> false))
 let (ulib_modules : Prims.string Prims.list) =
-  ["FStar.TSet";
+  ["FStar.Calc";
+  "FStar.TSet";
   "FStar.Seq.Base";
   "FStar.Seq.Properties";
   "FStar.UInt";
