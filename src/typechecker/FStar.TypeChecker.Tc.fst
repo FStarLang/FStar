@@ -96,9 +96,23 @@ let tc_assume (env:env) (ts:tscheme) (r:Range.range) :tscheme =
   //AR: this might seem same as tc_declare_typ but come prop, this will change
   tc_type_common env ts (U.type_u () |> fst) r
 
+let tc_decl_attributes env se =
+  // [Substitute] (defined in Pervasives), is added as attribute
+  // by TcInductive when a type has no projector, and this
+  // happens for some types (see
+  // TcInductive.early_prims_inductives) that are defined before
+  // Substitute even exists.
+  // Thus the hack below, that typecheck attribtues only when
+  // they're not literally [Substitute]. TODO: fix this.
+  let is_substitute attr = attr_substitute = attr in
+  {se with sigattrs =      filter                is_substitute        se.sigattrs
+      @ tc_attributes env (filter (fun attr -> not (is_substitute attr)) se.sigattrs) }
+
 let tc_inductive' env ses quals attrs lids =
     if Env.debug env Options.Low then
         BU.print1 ">>>>>>>>>>>>>>tc_inductive %s\n" (FStar.Common.string_of_list Print.sigelt_to_string ses);
+
+    let ses = List.map (tc_decl_attributes env) ses in
 
     let sig_bndle, tcs, datas = TcInductive.check_inductive_well_typedness env ses quals lids in
     (* we have a well-typed inductive;
@@ -895,15 +909,18 @@ let tc_decl env se: list sigelt * list sigelt * Env.env =
      BU.print1 "Processing %s\n" (U.lids_of_sigelt se |> List.map string_of_lid |> String.concat ", ");
    if Env.debug env Options.Low then
      BU.print1 ">>>>>>>>>>>>>>tc_decl %s\n" (Print.sigelt_to_string se);
-   if se.sigmeta.sigmeta_admit
-   then begin
-     let old = Options.admit_smt_queries () in
-     Options.set_admit_smt_queries true;
-     let result = tc_decl' env se in
-     Options.set_admit_smt_queries old;
-     result
-   end
-   else tc_decl' env se
+   let tc_ses, new_ses, env'
+     = if se.sigmeta.sigmeta_admit
+       then begin
+         let old = Options.admit_smt_queries () in
+         Options.set_admit_smt_queries true;
+         let result = tc_decl' env se in
+         Options.set_admit_smt_queries old;
+         result
+       end
+       else tc_decl' env se in
+   // Typecheck attributes
+   List.map (tc_decl_attributes env) tc_ses, new_ses, env'
 
 
 (* adds the typechecked sigelt to the env, also performs any processing required in the env (such as reset options) *)
