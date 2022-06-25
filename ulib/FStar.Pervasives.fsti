@@ -1045,7 +1045,7 @@ val normalize_for_extraction (steps:list norm_step) : Tot unit
 
     See examples/layeredeffects/IteSoundess.fst for a few examples
   *)
-val ite_soundness_by : unit
+val ite_soundness_by (attribute: unit): Tot unit
 
 (** By-default functions that have a layered effect, need to have a type
     annotation for their bodies
