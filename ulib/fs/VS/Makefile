@@ -18,4 +18,4 @@ install-packages:
 	$(DOTNET) restore $(DOTNET_PARAMS) UlibFS.sln
 
 clean:
-	$(MSBUILD) clean $(DOTNET_PARAMS) UlibFS.sln
+	$(DOTNET) clean $(DOTNET_PARAMS) UlibFS.sln
