@@ -3488,6 +3488,7 @@ and ty_strictly_positive_in_type env (ty_lid:lident) (btype:term) (unfolded:unfo
      Env.HNF;
      Env.Weak;
      Env.Iota;
+     Env.Exclude Env.Zeta;
      Env.UnfoldUntil delta_constant;
      Env.ForExtraction;
      Env.Unascribe;

@@ -580,20 +580,7 @@ let rec generalize_annotated_univs (s:sigelt) :sigelt =
   | Sig_let ((b, lbs), lids) ->
     let lb_univnames (lb:letbinding) :BU.set univ_name =
       BU.set_union (Free.univnames lb.lbtyp)
-      (match lb.lbdef.n with
-       | Tm_abs (bs, e, _) ->
-         let uvs1 = bs_univnames bs in
-         let uvs2 =
-           match e.n with
-           | Tm_ascribed (_, (Inl t, _, _), _) -> Free.univnames t
-           | Tm_ascribed (_, (Inr c, _, _), _) -> Free.univnames_comp c
-           | _ -> empty_set
-         in
-         BU.set_union uvs1 uvs2
-       | Tm_arrow (bs, _) -> bs_univnames bs
-       | Tm_ascribed (_, (Inl t, _, _), _) -> Free.univnames t
-       | Tm_ascribed (_, (Inr c, _, _), _) -> Free.univnames_comp c
-       | _ -> empty_set)
+                   (Free.univnames lb.lbdef)
     in
     let all_lb_univs = lbs |> List.fold_left (fun uvs lb -> BU.set_union uvs (lb_univnames lb)) empty_set |> BU.set_elements in
     let usubst = Subst.univ_var_closing all_lb_univs in

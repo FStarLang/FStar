@@ -7701,6 +7701,7 @@ and (ty_strictly_positive_in_type :
                FStar_TypeChecker_Env.HNF;
                FStar_TypeChecker_Env.Weak;
                FStar_TypeChecker_Env.Iota;
+               FStar_TypeChecker_Env.Exclude FStar_TypeChecker_Env.Zeta;
                FStar_TypeChecker_Env.UnfoldUntil
                  FStar_Syntax_Syntax.delta_constant;
                FStar_TypeChecker_Env.ForExtraction;
