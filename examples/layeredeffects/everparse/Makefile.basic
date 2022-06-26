@@ -1,4 +1,4 @@
-# A basic Makefile that KreMLin copies in the output directory; this is not
+# A basic Makefile that KaRaMeL copies in the output directory; this is not
 # guaranteed to work and will only work well for very simple projects. This
 # Makefile uses:
 # - the custom C files passed to your krml invocation
@@ -7,11 +7,11 @@
 
 include Makefile.include
 
-ifeq (,$(KREMLIN_HOME))
-  $(error please define KREMLIN_HOME to point to the root of your KReMLin git checkout)
+ifeq (,$(KRML_HOME))
+  $(error please define KRML_HOME to point to the root of your KaRaMeL git checkout)
 endif
 
-CFLAGS 	+= -I. -I $(KREMLIN_HOME)/include -I $(KREMLIN_HOME)/kremlib/dist/minimal
+CFLAGS 	+= -I. -I $(KRML_HOME)/include -I $(KRML_HOME)/krmllib/dist/minimal
 CFLAGS 	+= -Wall -Wextra -Werror -std=c11 -Wno-unused-variable \
   -Wno-unknown-warning-option -Wno-unused-but-set-variable \
   -Wno-unused-parameter -Wno-infinite-recursion \
@@ -39,7 +39,7 @@ AR ?= ar
 	$(AR) cr $@ $^
 
 %.exe:
-	$(CC) $(CFLAGS) -o $@ $^ $(KREMLIN_HOME)/kremlib/dist/generic/libkremlib.a
+	$(CC) $(CFLAGS) -o $@ $^ $(KRML_HOME)/krmllib/dist/generic/libkrmllib.a
 
 %.so:
 	$(CC) $(CFLAGS) -shared -o $@ $^

@@ -275,8 +275,7 @@ let lemma_ahead_implies_trace_prefix
               (ensures stable z)
       = Classical.forall_intro (Classical.move_requires (lemma_is_trace_prefix_extend tr y.tr))
   in Classical.forall_intro_2 (Classical.move_requires_2 aux);
-  let open FStar.ReflexiveTransitiveClosure in
-  stable_on_closure (next tag) stable ();
+  R.stable_on_closure (next tag) stable ();
   lemma_is_trace_prefix_refl tr
 
 let next_message
@@ -1188,26 +1187,26 @@ let new_channel' (p:dprot)
   let rA = HR.alloc v in
   let rB = HR.alloc v in
   let c = new_chan p in
-  slassert (HR.pts_to rA Perm.full_perm (hide v) `star`
+  slassert (HR.pts_to rA Perm.full_perm v `star`
             pure (eq2_prop #dprot (dfst v) p) `star`
             endpoint A c p (empty_trace p) `star`
-            (HR.pts_to rB Perm.full_perm (hide v) `star`
+            (HR.pts_to rB Perm.full_perm v `star`
              pure (eq2_prop #dprot (dfst v) p) `star`
              endpoint B c p (empty_trace p)));
   let cA : channel p = (c, rA) in
   let cB : channel p = (c, rB) in
-  rewrite_slprop ((HR.pts_to rA Perm.full_perm (hide v) `star`
+  rewrite_slprop ((HR.pts_to rA Perm.full_perm v `star`
                  pure (eq2_prop #dprot (dfst v) p) `star`
                  endpoint A c p (empty_trace p)) `star`
-                (HR.pts_to rB Perm.full_perm (hide v) `star`
+                (HR.pts_to rB Perm.full_perm v `star`
                  pure (eq2_prop #dprot (dfst v) p) `star`
                  endpoint B c p (empty_trace p)))
                 (endpt_pred A cA p v `star`
                  endpt_pred B cB p v)
-                (fun _ -> reveal_equiv ((HR.pts_to rA Perm.full_perm (hide v) `star`
+                (fun _ -> reveal_equiv ((HR.pts_to rA Perm.full_perm v `star`
                  pure (eq2_prop #dprot (dfst v) p) `star`
                  endpoint A c p (empty_trace p)) `star`
-                (HR.pts_to rB Perm.full_perm (hide v) `star`
+                (HR.pts_to rB Perm.full_perm v `star`
                  pure (eq2_prop #dprot (dfst v) p) `star`
                  endpoint B c p (empty_trace p)))
                                  (endpt_pred A cA p v `star`

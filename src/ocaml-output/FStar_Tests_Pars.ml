@@ -122,8 +122,6 @@ let (init_once : unit -> unit) =
                (env.FStar_TypeChecker_Env.top_level);
              FStar_TypeChecker_Env.check_uvars =
                (env.FStar_TypeChecker_Env.check_uvars);
-             FStar_TypeChecker_Env.use_eq =
-               (env.FStar_TypeChecker_Env.use_eq);
              FStar_TypeChecker_Env.use_eq_strict =
                (env.FStar_TypeChecker_Env.use_eq_strict);
              FStar_TypeChecker_Env.is_iface =
@@ -181,7 +179,9 @@ let (init_once : unit -> unit) =
              FStar_TypeChecker_Env.enable_defer_to_tac =
                (env.FStar_TypeChecker_Env.enable_defer_to_tac);
              FStar_TypeChecker_Env.unif_allow_ref_guards =
-               (env.FStar_TypeChecker_Env.unif_allow_ref_guards)
+               (env.FStar_TypeChecker_Env.unif_allow_ref_guards);
+             FStar_TypeChecker_Env.erase_erasable_args =
+               (env.FStar_TypeChecker_Env.erase_erasable_args)
            } in
          let uu___3 = FStar_TypeChecker_Tc.check_module env1 prims_mod false in
          (match uu___3 with
@@ -220,8 +220,6 @@ let (init_once : unit -> unit) =
                     (env2.FStar_TypeChecker_Env.top_level);
                   FStar_TypeChecker_Env.check_uvars =
                     (env2.FStar_TypeChecker_Env.check_uvars);
-                  FStar_TypeChecker_Env.use_eq =
-                    (env2.FStar_TypeChecker_Env.use_eq);
                   FStar_TypeChecker_Env.use_eq_strict =
                     (env2.FStar_TypeChecker_Env.use_eq_strict);
                   FStar_TypeChecker_Env.is_iface =
@@ -282,7 +280,9 @@ let (init_once : unit -> unit) =
                   FStar_TypeChecker_Env.enable_defer_to_tac =
                     (env2.FStar_TypeChecker_Env.enable_defer_to_tac);
                   FStar_TypeChecker_Env.unif_allow_ref_guards =
-                    (env2.FStar_TypeChecker_Env.unif_allow_ref_guards)
+                    (env2.FStar_TypeChecker_Env.unif_allow_ref_guards);
+                  FStar_TypeChecker_Env.erase_erasable_args =
+                    (env2.FStar_TypeChecker_Env.erase_erasable_args)
                 } in
               let env4 =
                 FStar_TypeChecker_Env.set_current_module env3 test_lid in
@@ -300,7 +300,7 @@ let (init : unit -> FStar_TypeChecker_Env.env) =
 let (frag_of_text : Prims.string -> FStar_Parser_ParseIt.input_frag) =
   fun s ->
     {
-      FStar_Parser_ParseIt.frag_fname = "<input>";
+      FStar_Parser_ParseIt.frag_fname = " input";
       FStar_Parser_ParseIt.frag_text = s;
       FStar_Parser_ParseIt.frag_line = Prims.int_one;
       FStar_Parser_ParseIt.frag_col = Prims.int_zero
@@ -368,7 +368,6 @@ let (tc' :
         FStar_TypeChecker_Env.top_level = false;
         FStar_TypeChecker_Env.check_uvars =
           (tcenv.FStar_TypeChecker_Env.check_uvars);
-        FStar_TypeChecker_Env.use_eq = (tcenv.FStar_TypeChecker_Env.use_eq);
         FStar_TypeChecker_Env.use_eq_strict =
           (tcenv.FStar_TypeChecker_Env.use_eq_strict);
         FStar_TypeChecker_Env.is_iface =
@@ -422,7 +421,9 @@ let (tc' :
         FStar_TypeChecker_Env.enable_defer_to_tac =
           (tcenv.FStar_TypeChecker_Env.enable_defer_to_tac);
         FStar_TypeChecker_Env.unif_allow_ref_guards =
-          (tcenv.FStar_TypeChecker_Env.unif_allow_ref_guards)
+          (tcenv.FStar_TypeChecker_Env.unif_allow_ref_guards);
+        FStar_TypeChecker_Env.erase_erasable_args =
+          (tcenv.FStar_TypeChecker_Env.erase_erasable_args)
       } in
     let uu___ = FStar_TypeChecker_TcTerm.tc_tot_or_gtot_term tcenv1 tm in
     match uu___ with | (tm1, uu___1, g) -> (tm1, g, tcenv1)
@@ -462,7 +463,6 @@ let (tc_nbe_term : FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term) =
         FStar_TypeChecker_Env.top_level = false;
         FStar_TypeChecker_Env.check_uvars =
           (tcenv.FStar_TypeChecker_Env.check_uvars);
-        FStar_TypeChecker_Env.use_eq = (tcenv.FStar_TypeChecker_Env.use_eq);
         FStar_TypeChecker_Env.use_eq_strict =
           (tcenv.FStar_TypeChecker_Env.use_eq_strict);
         FStar_TypeChecker_Env.is_iface =
@@ -516,7 +516,9 @@ let (tc_nbe_term : FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term) =
         FStar_TypeChecker_Env.enable_defer_to_tac =
           (tcenv.FStar_TypeChecker_Env.enable_defer_to_tac);
         FStar_TypeChecker_Env.unif_allow_ref_guards =
-          (tcenv.FStar_TypeChecker_Env.unif_allow_ref_guards)
+          (tcenv.FStar_TypeChecker_Env.unif_allow_ref_guards);
+        FStar_TypeChecker_Env.erase_erasable_args =
+          (tcenv.FStar_TypeChecker_Env.erase_erasable_args)
       } in
     let uu___ = FStar_TypeChecker_TcTerm.tc_tot_or_gtot_term tcenv1 tm in
     match uu___ with

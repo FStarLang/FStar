@@ -40,14 +40,21 @@ val singleton (#a:eqtype) (x:a)
 val union      : #a:eqtype -> set a -> set a -> Tot (set a)
 val intersect  : #a:eqtype -> set a -> set a -> Tot (set a)
 val complement : #a:eqtype -> set a -> Tot (set a)
+val intension  : #a:eqtype -> (a -> Tot bool) -> GTot (set a)
 
-(* a property about sets *)
+(* Derived functions *)
+
 let disjoint (#a:eqtype) (s1: set a) (s2: set a) =
   equal (intersect s1 s2) empty
 
-(* ops *)
 let subset (#a:eqtype) (s1:set a) (s2:set a) =
   forall x. mem x s1 ==> mem x s2
+
+let add (#a:eqtype) (x:a) (s:set a) : set a =
+  union s (singleton x)
+
+let remove (#a:eqtype) (x:a) (s:set a) : set a =
+  intersect s (complement (singleton x))
 
 (* Properties *)
 val mem_empty: #a:eqtype -> x:a -> Lemma
@@ -74,6 +81,10 @@ val mem_complement: #a:eqtype -> x:a -> s:set a -> Lemma
    (requires True)
    (ensures (mem x (complement s) = not (mem x s)))
    [SMTPat (mem x (complement s))]
+
+val mem_intension: #a:eqtype -> x:a -> f:(a -> Tot bool) -> Lemma
+  (requires True)
+  (ensures (mem x (intension f) = f x))
 
 val mem_subset: #a:eqtype -> s1:set a -> s2:set a -> Lemma
    (requires (forall x. mem x s1 ==> mem x s2))

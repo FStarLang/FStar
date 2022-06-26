@@ -152,7 +152,7 @@ let rec map f x = match x with
   | [] -> []
   | a::tl -> f a::map f tl
 
-(** [mapi_init f n l] applies, for each [k], [f (n+k)] to the [k]-th
+(** [mapi_init f l n] applies, for each [k], [f (n+k)] to the [k]-th
 element of [l] and returns the list of results, in the order of the
 original elements in [l]. Requires, at type-checking time, [f] to be a
 pure total function. *)
@@ -245,7 +245,7 @@ let rec mem #a x = function
 element of [l]. Requires, at type-checking time, the type of elements
 of [l] to have decidable equality. It is equivalent to: [mem x
 l]. TODO: should we rather swap the order of arguments? *)
-let contains = mem
+let contains : #a:eqtype -> a -> list a -> Tot bool = mem
 
 (** [existsb f l] returns [true] if, and only if, there exists some
 element [x] in [l] such that [f x] holds. *)
@@ -469,9 +469,9 @@ let unsnoc #a l =
     element itself. *)
 val split3: #a:Type -> l:list a -> i:nat{i < length l} -> Tot (list a * a * list a)
 let split3 #a l i =
-  let a, as = splitAt i l in
+  let a, rest = splitAt i l in
   lemma_splitAt_snd_length i l;
-  let b :: c = as in
+  let b :: c = rest in
   a, b, c
 
 (** Sorting (implemented as quicksort) **)

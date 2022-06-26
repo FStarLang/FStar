@@ -58,7 +58,7 @@ sub_effect DIV ~> GST = lift_div_gst
  *     - `stable p` is a precondition for `gst_witness`
  *     - `gst_recall` does not have a precondition for `stable p`, since `gst_witness` is the only way
  *       clients would have obtained `witnessed p`, and so, `p` should already be stable
- *     - `lemma_functoriality` does not require stablility for either `p` or `q`
+ *     - `lemma_functoriality` does not require stability for either `p` or `q`
  *       Our metatheory ensures that this is sound (without requiring stability of `q`)
  *       This form is useful in defining the MRRef interface (see mr_witness)
  *)
@@ -238,7 +238,7 @@ let inline_stack_inv h h' : GTot Type0 =
   same_refs_in_non_tip_regions h h'
 
 (**
- * Effect that indicates to the Kremlin compiler that allocation may occur in the caller's frame.
+ * Effect that indicates to the Karamel compiler that allocation may occur in the caller's frame.
  * In other terms, the backend has to unfold the body into the caller's body.
  * This effect maintains the stack AND the heap invariant: it can be inlined in the Stack effect
  * function body as well as in a Heap effect function body
@@ -254,7 +254,7 @@ let inline_inv h h' : GTot Type0 =
   same_refs_in_non_tip_stack_regions h h'
 
 (**
- * Effect that indicates to the Kremlin compiler that allocation may occur in the caller's frame.
+ * Effect that indicates to the Karamel compiler that allocation may occur in the caller's frame.
  * In other terms, the backend has to unfold the body into the caller's body.
  * This effect only maintains the stack invariant: the tip is left unchanged and no allocation
  *  may occurs in the stack lower than the tip.
@@ -412,7 +412,7 @@ unfold let assign_post (#a:Type) (#rel:preorder a) (r:mreference a rel) (v:a) (m
 
 (**
  * Assigns, provided that the reference exists.
- * Guaranties the strongest low-level effect: Stack
+ * Guarantees the strongest low-level effect: Stack
  *)
 val op_Colon_Equals (#a:Type) (#rel:preorder a) (r:mreference a rel) (v:a)
   :STL unit (requires (fun m -> r `is_live_for_rw_in` m /\ rel (HS.sel m r) v))
@@ -423,7 +423,7 @@ unfold let deref_post (#a:Type) (#rel:preorder a) (r:mreference a rel) (m0:mem) 
 
 (**
  * Dereferences, provided that the reference exists.
- * Guaranties the strongest low-level effect: Stack
+ * Guarantees the strongest low-level effect: Stack
  *)
 val op_Bang (#a:Type) (#rel:preorder a) (r:mreference a rel)
   :Stack a (requires (fun m -> r `is_live_for_rw_in` m))

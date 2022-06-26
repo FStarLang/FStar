@@ -17,7 +17,7 @@ module Crypto.Symmetric.PRF
 
 (* This file models our idealization of symmetric ciphers used only in
    forward mode, including CHACHA20 and several variants of AES for
-   for GCM or CCM, modellied as a PRF to build authenticated
+   for GCM or CCM, modeled as a PRF to build authenticated
    encryption.
 
    It models (an ad hoc variant of) the PRF security assumption:

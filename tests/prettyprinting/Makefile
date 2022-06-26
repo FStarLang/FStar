@@ -29,11 +29,11 @@ inplace/%.fst: %.fst | inplace
 # Note how these two rules make an empty touch file for 
 # the target so we don't keep running diff uselessly.
 .%.test.print: %.fst.expected printed/%.fst
-	diff -u --strip-trailing-cr $^
+	diff -w -u --strip-trailing-cr $^
 	touch $@
 
 .%.test.inplace: %.fst.expected inplace/%.fst
-	diff -u --strip-trailing-cr $^
+	diff -w -u --strip-trailing-cr $^
 	touch $@
 
 %.fst.accept: printed/%.fst

@@ -7,12 +7,11 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.l_iff",
-        "equation_Prims.squash", "l_iff-interp",
-        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_0103d32d182e7a4924fcb3c14da51cc6"
       ],
       0,
-      "8feb1577f15bd5f6f643047b099632d5"
+      "eccf313b66e7b93ab788f920a7d6630e"
     ],
     [
       "FStar.Tactics.Simplifier.lem_fa_false",
@@ -21,7 +20,7 @@
       1,
       [ "@query" ],
       0,
-      "edce212bcf591bd85d2533fdddfaa96a"
+      "4160970dcc69866ce567eff749d7784d"
     ],
     [
       "FStar.Tactics.Simplifier.lem_ex_true",
@@ -30,7 +29,7 @@
       1,
       [ "@query" ],
       0,
-      "eb341a6d0b799a1030b8f2af2fbe1ce4"
+      "dac85a41f970aed3f68317b27210b86e"
     ],
     [
       "FStar.Tactics.Simplifier.and_cong",
@@ -38,12 +37,11 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.l_iff",
-        "equation_Prims.squash", "l_iff-interp",
-        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_0103d32d182e7a4924fcb3c14da51cc6"
       ],
       0,
-      "26390c9da2a26763f16266c728b4fe5c"
+      "00dd916a9baf1ff90640b6ac01693d04"
     ],
     [
       "FStar.Tactics.Simplifier.or_cong",
@@ -51,12 +49,11 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.l_iff",
-        "equation_Prims.squash", "l_iff-interp",
-        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_0103d32d182e7a4924fcb3c14da51cc6"
       ],
       0,
-      "0c0148dacbfe8180d3d4853a2cf6db23"
+      "7bbef2b01066701f7c425cb1cd4b39f5"
     ],
     [
       "FStar.Tactics.Simplifier.imp_cong",
@@ -64,12 +61,11 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.l_iff",
-        "equation_Prims.squash", "l_iff-interp",
-        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_0103d32d182e7a4924fcb3c14da51cc6"
       ],
       0,
-      "0a064bd0f33977973aca9b32a315ca16"
+      "7063a9fa26feccc3dbc05e149076d222"
     ],
     [
       "FStar.Tactics.Simplifier.neg_cong",
@@ -77,12 +73,11 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.l_iff",
-        "equation_Prims.squash", "l_iff-interp",
-        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_0103d32d182e7a4924fcb3c14da51cc6"
       ],
       0,
-      "1aa40d0bbb6a34cb3907274d92cb7a3f"
+      "931f37a2c3a35f49154317e9eeb4bbae"
     ],
     [
       "FStar.Tactics.Simplifier.iff_cong",
@@ -90,12 +85,11 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.l_iff",
-        "equation_Prims.squash", "l_iff-interp",
-        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_0103d32d182e7a4924fcb3c14da51cc6"
       ],
       0,
-      "e5a8b64de9b160affee53db25456d658"
+      "1a292792a1d4d2ac6278e23b3fce3fb1"
     ],
     [
       "FStar.Tactics.Simplifier.inhabit",
@@ -111,7 +105,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "846ef16ac339286bf6455b22085e7ab1"
+      "e7d54c8a199569a0e4d4bd81035c02ed"
     ],
     [
       "FStar.Tactics.Simplifier.equiv",
@@ -119,12 +113,12 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.l_iff",
-        "equation_Prims.squash", "l_and-interp", "l_imp-interp",
+        "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_0103d32d182e7a4924fcb3c14da51cc6",
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "29f943d48f4f87911d67df906a5e7bf3"
+      "c21508f03739681f18ddf54e33b7bc71"
     ]
   ]
 ]

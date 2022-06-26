@@ -79,7 +79,7 @@ string operations)
 [zeta] (unroll let rec bindings, but with heuristics to avoid loops)
 [zeta_full] (unroll let rec bindings fully)
 [iota] (reduce match statements over constructors)
-[delta_only] (restrict delta to only unfold this list of fully-qualfied identifiers)
+[delta_only] (restrict delta to only unfold this list of fully-qualified identifiers)
 *)
 val norm  : list norm_step -> Tac unit
 
@@ -137,12 +137,12 @@ the variable [v] for [r] everywhere in the current goal type and witness/
 *)
 val rewrite : binder -> Tac unit
 
-(** First boolean is whether to attempt to intrpoduce a refinement
+(** First boolean is whether to attempt to introduce a refinement
 before solving. In that case, a goal for the refinement formula will be
 added. Second boolean is whether to set the expected type internally.
 Just use `exact` from FStar.Tactics.Derived if you don't know what's up
 with all this. *)
-val t_exact : bool -> bool -> term -> Tac unit
+val t_exact : maybe_refine:bool -> set_expected_typ:bool -> term -> Tac unit
 
 (** Inner primitive for [apply], takes a boolean specifying whether
 to not ask for implicits that appear free in posterior goals, and a
@@ -167,7 +167,7 @@ val t_apply : uopt:bool -> noinst:bool -> term -> Tac unit
 (** [t_apply_lemma ni nilhs l] will solve a goal of type [squash phi]
 when [l] is a Lemma ensuring [phi]. The arguments to [l] and its
 requires clause are introduced as new goals. As a small optimization,
-[unit] arguments are discharged by the engine. For the meanining of
+[unit] arguments are discharged by the engine. For the meaning of
 the [noinst] boolean arg see [t_apply], briefly, it does not allow to
 instantiate uvars in the goal. The [noinst_lhs] flag is similar, it
 forbids instantiating uvars *but only on the LHS of the goal*, provided
@@ -230,7 +230,7 @@ val t_commute_applied_match : unit -> Tac unit
  * specifies how the AST of the goal is traversed (preorder or postorder).
  *
  * Note: for [BottomUp] a [Skip] means to stop trying to rewrite everything
- * from the current node up to the root, but still consider sibilings. This
+ * from the current node up to the root, but still consider siblings. This
  * means that [ctrl_rewrite BottomUp (fun _ -> (true, Skip)) t] will call [t]
  * for every leaf node in the AST.
  *
@@ -277,6 +277,10 @@ val set_options : string -> Tac unit
 provided, a second uvar is created for the type. *)
 val uvar_env : env -> option typ -> Tac term
 
+(** Creates a new, unconstrained universe unification variable.
+The returned term is Type (U_Unif ?u). *)
+val fresh_universe_uvar : unit -> Tac term
+
 (** Call the unifier on two terms. The returned boolean specifies
 whether unification was possible. When the tactic returns true, the
 terms have been unified, instantiating uvars as needed. When false,
@@ -301,7 +305,7 @@ current F* invocation. The tactic will fail if this is not so. *)
 val launch_process : string -> list string -> string -> Tac string
 
 (** Get a fresh bv of some name and type. The name is only useful
-for pretty-printing, since there is a fresh unaccessible integer within
+for pretty-printing, since there is a fresh inaccessible integer within
 the bv too. *)
 val fresh_bv_named : string -> typ -> Tac bv
 
@@ -352,9 +356,9 @@ implicits. TODO: This is a really bad name, there's no special "SMT"
 about these goals. *)
 val set_smt_goals : list goal -> Tac unit
 
-(** [curms ()] returns the current (wall) time in millseconds *)
+(** [curms ()] returns the current (wall) time in milliseconds *)
 val curms : unit -> Tac int
 
 (** [set_urgency u] sets the urgency of error messages. Usually set just
 before raising an exception (see e.g. [fail_silently]). *)
-val set_urgency : int -> Tac unit
+val set_urgency : int -> TacS unit

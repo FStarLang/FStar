@@ -42,13 +42,12 @@ let emp = {
 
 let next_addr h = h.next_addr
 
-private noeq type mref' (a:Type0) (rel:preorder a) :Type0 = {
+noeq
+type core_mref (a:Type0) : Type0 = {
   addr: (x: nat { x > 0 } );
   init: a;
   mm:   bool;  //manually managed flag
 }
-
-let mref a rel = mref' a rel
 
 let addr_of #a #rel r = r.addr
 
@@ -195,7 +194,6 @@ let lemma_sel_same_addr #a #rel h r1 r2 = ()
 let lemma_sel_upd1 #a #rel h r1 x r2 = ()
 let lemma_sel_upd2 #a #b #rel1 #rel2 h r1 r2 x = ()
 let lemma_mref_injectivity = ()
-let lemma_mref_injectivity_preorder () = ()
 let lemma_in_dom_emp #a #rel r = ()
 let lemma_upd_contains #a #rel h r x = ()
 let lemma_well_typed_upd_contains #a #b #rel1 #rel2 h r1 x r2 = ()
@@ -315,4 +313,3 @@ let sel_ref_of a t rel h1 h2 = ()
 
 let upd_ref_of a t rel h1 h2 x =
   lemma_heap_equality_upd_same_addr h1 (ref_of h2 a t rel) (gref_of a t rel) x
-

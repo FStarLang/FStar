@@ -62,6 +62,7 @@ dump
 *.o
 
 .depend
+.depend.rsp
 ._depend
 *.a
 *.cmxa

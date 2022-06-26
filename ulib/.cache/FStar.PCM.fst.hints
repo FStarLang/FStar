@@ -1,19 +1,6 @@
 [
-  "ﬂê¸ãr ‡é[≥¢Â\u001cñ",
+  "¨\b∏◊\u007fj\u0013\u0010øø‚9\\mÀv",
   [
-    [
-      "FStar.PCM.__proj__Mkpcm'__item__op",
-      1,
-      2,
-      1,
-      [
-        "@query", "proj_equation_FStar.PCM.Mkpcm__composable",
-        "projection_inverse_FStar.PCM.Mkpcm__composable",
-        "token_correspondence_FStar.PCM.__proj__Mkpcm___item__composable"
-      ],
-      0,
-      "323d7c60fc46423d60f10d824bf2e59e"
-    ],
     [
       "FStar.PCM.lem_commutative",
       1,
@@ -28,7 +15,7 @@
         "token_correspondence_FStar.PCM.__proj__Mkpcm___item__composable"
       ],
       0,
-      "3a7e115577e67942962e8b893df3296b"
+      "53f8db683ef5bf534dd0bab456a9570e"
     ],
     [
       "FStar.PCM.lem_assoc_l",
@@ -40,7 +27,7 @@
         "refinement_interpretation_Tm_refine_e8a47103e2869a2d680d6754044718fe"
       ],
       0,
-      "e10fdecf44caaba4981c5ea3e1a083e0"
+      "099a1e406337be7c138c444c7f51e685"
     ],
     [
       "FStar.PCM.lem_assoc_r",
@@ -52,7 +39,7 @@
         "refinement_interpretation_Tm_refine_3d4713c393f32d57b63b77183b22dc30"
       ],
       0,
-      "8276fb8f542fecb8b248d9740f2e11ed"
+      "375ea3d0edcb8dadad46c108e010482b"
     ],
     [
       "FStar.PCM.lem_is_unit",
@@ -61,56 +48,7 @@
       1,
       [ "@query" ],
       0,
-      "c96ac711eb656baf49de22c79a206768"
-    ],
-    [
-      "FStar.PCM.__proj__Mkpcm__item__comm",
-      1,
-      2,
-      1,
-      [
-        "@query", "proj_equation_FStar.PCM.Mkpcm_p",
-        "projection_inverse_FStar.PCM.Mkpcm_p"
-      ],
-      0,
-      "c43cf5718dee4779a4eca770da6f9d6c"
-    ],
-    [
-      "FStar.PCM.__proj__Mkpcm__item__assoc",
-      1,
-      2,
-      1,
-      [
-        "@query", "proj_equation_FStar.PCM.Mkpcm_p",
-        "projection_inverse_FStar.PCM.Mkpcm_p"
-      ],
-      0,
-      "6a0e1b27e6011120c2c8168adcb1d552"
-    ],
-    [
-      "FStar.PCM.__proj__Mkpcm__item__assoc_r",
-      1,
-      2,
-      1,
-      [
-        "@query", "proj_equation_FStar.PCM.Mkpcm_p",
-        "projection_inverse_FStar.PCM.Mkpcm_p"
-      ],
-      0,
-      "21a0e5bb5e8c9926933cff104a2a9dc4"
-    ],
-    [
-      "FStar.PCM.__proj__Mkpcm__item__is_unit",
-      1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "proj_equation_FStar.PCM.Mkpcm_p",
-        "projection_inverse_FStar.PCM.Mkpcm_p", "unit_inversion",
-        "unit_typing"
-      ],
-      0,
-      "b97eb2901d7ac784dc1b7a7d443057c1"
+      "19776f14057a2076ec7d6c49963ca0ea"
     ],
     [
       "FStar.PCM.op",
@@ -119,7 +57,7 @@
       1,
       [ "@query", "equation_FStar.PCM.composable" ],
       0,
-      "632c96051ff1df244fad06df21eb2e13"
+      "c0741e124810b1a161c7874d733cc885"
     ],
     [
       "FStar.PCM.compatible",
@@ -136,7 +74,7 @@
         "typing_FStar.PCM.__proj__Mkpcm__item__p"
       ],
       0,
-      "f397f6fc95a7520e9799eb1d15d13b96"
+      "045d4a9e8aea7ab2cb9251bac342446e"
     ],
     [
       "FStar.PCM.compatible_refl",
@@ -159,7 +97,7 @@
         "typing_FStar.PCM.__proj__Mkpcm__item__p"
       ],
       0,
-      "8aaa04e2b7224b60362593dd28ecbcf3"
+      "b3be16b3abcd498aa8f4c1911198860e"
     ],
     [
       "FStar.PCM.compatible_trans",
@@ -183,7 +121,7 @@
         "typing_FStar.PCM.__proj__Mkpcm__item__p"
       ],
       0,
-      "dc328c5d3a46ccedbdb95bfeb62dfc73"
+      "634433c3509da90a3f2b1d2ffb918d22"
     ],
     [
       "FStar.PCM.compatible_elim",
@@ -200,7 +138,7 @@
         "typing_FStar.PCM.__proj__Mkpcm__item__p"
       ],
       0,
-      "83c25409f5815b111331621f8e53483a"
+      "636c6fc20d4722a5a23d393d640dc6c5"
     ],
     [
       "FStar.PCM.compatible_elim",
@@ -218,7 +156,7 @@
         "typing_FStar.PCM.__proj__Mkpcm__item__p"
       ],
       0,
-      "da8b8f786b97f7de0612979a0858c6db"
+      "85369c9615b20345c6e71ee461fe94a9"
     ],
     [
       "FStar.PCM.compatible_intro",
@@ -236,7 +174,7 @@
         "typing_FStar.PCM.__proj__Mkpcm__item__p"
       ],
       0,
-      "667e832b24765d6765340dfbdb8ce0ff"
+      "0776cb71e630b23f22b3c70020ab9a59"
     ],
     [
       "FStar.PCM.joinable",
@@ -250,7 +188,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "4cad490021154cfb19870707dc62ea04"
+      "5a655680b738fec25a17adc4bcfd9de2"
     ],
     [
       "FStar.PCM.frame_compatible",
@@ -259,7 +197,7 @@
       1,
       [ "@query" ],
       0,
-      "8b0a023b086198cf7bf65f22974531e5"
+      "f6637a7738fb35a916b81fa75151ea13"
     ],
     [
       "FStar.PCM.frame_preserving_upd",
@@ -268,7 +206,7 @@
       1,
       [ "@query" ],
       0,
-      "3426861dac87377575df2428bee4dd5e"
+      "d94665c759505a9c97344e0384b5edd1"
     ],
     [
       "FStar.PCM.frame_preserving",
@@ -277,7 +215,7 @@
       1,
       [ "@query" ],
       0,
-      "e0b02aa7ade3570bd2b9716af35a1d20"
+      "75b4e7c426e6912e6160792c88ca1813"
     ],
     [
       "FStar.PCM.frame_preserving_val_to_fp_upd",
@@ -303,7 +241,7 @@
         "typing_FStar.PCM.__proj__Mkpcm__item__p"
       ],
       0,
-      "63ed9574bd6c89af71cbef89003465f4"
+      "d17fd34cd40289cf7c2a94abf115c2e8"
     ],
     [
       "FStar.PCM.exclusive_is_frame_preserving",
@@ -326,7 +264,7 @@
         "typing_FStar.PCM.__proj__Mkpcm__item__p"
       ],
       0,
-      "2195dcea2ba215eaf7ee6917d4ec3761"
+      "81856ccb562e81d83c18f36390b6c378"
     ],
     [
       "FStar.PCM.no_op_is_frame_preserving",
@@ -338,7 +276,7 @@
         "refinement_interpretation_Tm_refine_ce38f492787371f877c4f0015affb000"
       ],
       0,
-      "cb8992d923c6cf07cc4a8b50877fae79"
+      "fddae9ce048e592e68c3b167ee351dff"
     ],
     [
       "FStar.PCM.compose_frame_preserving_updates",
@@ -354,7 +292,7 @@
         "refinement_interpretation_Tm_refine_ce38f492787371f877c4f0015affb000"
       ],
       0,
-      "9b7aac4bf50633274f27d68a26bb5bad"
+      "306b961c50f9dae07867237f6a47acca"
     ],
     [
       "FStar.PCM.frame_preserving_subframe",
@@ -383,7 +321,7 @@
         "typing_FStar.PCM.__proj__Mkpcm__item__p"
       ],
       0,
-      "545e0c2e1893ab949696996a06d86eb9"
+      "426a36bccd80135a5383298e65ad9a35"
     ]
   ]
 ]

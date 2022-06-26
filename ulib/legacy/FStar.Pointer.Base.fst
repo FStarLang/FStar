@@ -230,7 +230,7 @@ let gtdata_extensionality
   (ensures (u1 == u2))
 = ()
 
-(* Interperets a type code (`typ`) as a FStar type (`Type0`). *)
+(* Interprets a type code (`typ`) as a FStar type (`Type0`). *)
 let rec type_of_typ'
   (t: typ)
 : Tot Type0
@@ -3226,13 +3226,13 @@ let disjoint_sym''
   (ensures (disjoint p1 p2 <==> disjoint p2 p1))
 = disjoint_sym' p1 p2
 
-let disjoint_includes_l #a #as #a' (x: pointer a) (subx:pointer as) (y:pointer a') : Lemma
+let disjoint_includes_l #a #es #a' (x: pointer a) (subx:pointer es) (y:pointer a') : Lemma
   (requires (includes x subx /\ disjoint x y))
   (ensures  (disjoint subx y))
   [SMTPat (disjoint subx y); SMTPat (includes x subx)]
   = disjoint_includes x y subx y
 
-let disjoint_includes_l_swap #a #as #a' (x:pointer a) (subx:pointer as) (y:pointer a') : Lemma
+let disjoint_includes_l_swap #a #es #a' (x:pointer a) (subx:pointer es) (y:pointer a') : Lemma
   (requires (includes x subx /\ disjoint x y))
   (ensures  (disjoint y subx))
   [SMTPat (disjoint y subx); SMTPat (includes x subx)]

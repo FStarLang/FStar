@@ -234,7 +234,19 @@ let (run_repl_ld_transactions :
           match uu___ with
           | [] -> st1
           | (_id, (task, _st'))::entries ->
-              (debug "Reverting" task;
+              ((let uu___3 =
+                  let uu___4 =
+                    let uu___5 =
+                      let uu___6 =
+                        let uu___7 =
+                          FStar_Compiler_Effect.op_Bang
+                            FStar_Interactive_PushHelper.repl_stack in
+                        FStar_Compiler_List.hd uu___7 in
+                      FStar_Pervasives_Native.snd uu___6 in
+                    FStar_Pervasives_Native.fst uu___5 in
+                  task = uu___4 in
+                ());
+               debug "Reverting" task;
                (let st' =
                   FStar_Interactive_PushHelper.pop_repl
                     "run_repl_ls_transactions" st1 in
@@ -1545,8 +1557,6 @@ let run_push_without_deps :
                  (uu___.FStar_TypeChecker_Env.top_level);
                FStar_TypeChecker_Env.check_uvars =
                  (uu___.FStar_TypeChecker_Env.check_uvars);
-               FStar_TypeChecker_Env.use_eq =
-                 (uu___.FStar_TypeChecker_Env.use_eq);
                FStar_TypeChecker_Env.use_eq_strict =
                  (uu___.FStar_TypeChecker_Env.use_eq_strict);
                FStar_TypeChecker_Env.is_iface =
@@ -1605,7 +1615,9 @@ let run_push_without_deps :
                FStar_TypeChecker_Env.enable_defer_to_tac =
                  (uu___.FStar_TypeChecker_Env.enable_defer_to_tac);
                FStar_TypeChecker_Env.unif_allow_ref_guards =
-                 (uu___.FStar_TypeChecker_Env.unif_allow_ref_guards)
+                 (uu___.FStar_TypeChecker_Env.unif_allow_ref_guards);
+               FStar_TypeChecker_Env.erase_erasable_args =
+                 (uu___.FStar_TypeChecker_Env.erase_erasable_args)
              });
           FStar_Interactive_JsonHelper.repl_stdin =
             (st1.FStar_Interactive_JsonHelper.repl_stdin);
@@ -2073,7 +2085,7 @@ let run_with_parsed_and_tc_term :
                 FStar_Compiler_Util.format1 "let __compute_dummy__ = (%s)"
                   term1 in
               {
-                FStar_Parser_ParseIt.frag_fname = "<input>";
+                FStar_Parser_ParseIt.frag_fname = " input";
                 FStar_Parser_ParseIt.frag_text = dummy_decl;
                 FStar_Parser_ParseIt.frag_line = Prims.int_zero;
                 FStar_Parser_ParseIt.frag_col = Prims.int_zero

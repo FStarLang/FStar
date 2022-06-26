@@ -121,7 +121,7 @@ Recursive Extraction polylist.
 Infact, the example above (Haskell extraction of polylist) seems to indicate an orthogonal bug in extraction 
 from Coq to Haskell. 
 In OCaml, the argument to list is Obj.t, which makes sense.
-However, in Haskell. the argument is unit, which can cause type errors lateron, similar to 
+However, in Haskell. the argument is unit, which can cause type errors later on, similar to
 the errors observed in ROSCoq:
 
 https://github.com/aa755/ROSCoq/commit/972ed9d26ac642499e60098cf0510ee9b6e0d3ea#diff-f9928ac6597fcd7e0cfbf7e9da0cdba9L2376
@@ -230,7 +230,7 @@ Defined.
 
 Recursive Extraction aSizedList.
  
-(* Coq's extraction seems to ignore the effectful OCaml reaslization of variables*)
+(* Coq's extraction seems to ignore the effectful OCaml realization of variables*)
 
 
 Variable effectfulIncr : nat -> nat.

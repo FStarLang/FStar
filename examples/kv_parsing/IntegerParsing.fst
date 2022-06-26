@@ -26,10 +26,10 @@ open FStar.HyperStack
 open FStar.HyperStack.ST
 module B = FStar.Buffer
 
-// kremlib libraries
+// krmllib libraries
 module C = C
 open C.Loops
-open FStar.Kremlin.Endianness
+open FStar.Krml.Endianness
 
 module U8 = FStar.UInt8
 module U16 = FStar.UInt16
@@ -139,7 +139,7 @@ let parse_u16_array_nochk : input:bslice -> Stack (u16_array_st * off:U32.t{U32.
                 Some? (parse_u16_array bs) /\
                 (let (v, n) = Some?.v (parse_u16_array bs) in
                   let (rv, off) = r in
-                  // BUG: ommitting this live assertion causes failure in the
+                  // BUG: omitting this live assertion causes failure in the
                   // precondition to as_u16_array, but the error reported is
                   // simply "ill-kinded type" on as_u16_array
                   live h1 rv.a16_st /\

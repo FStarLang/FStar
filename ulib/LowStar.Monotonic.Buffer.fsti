@@ -49,7 +49,7 @@ let compatible_subseq_preorder (#a:Type0)
 /// ==============
 ///
 /// The workhorse of Low*, this module allows modeling C arrays on the
-/// stack and in the heap.  At compilation time, KreMLin implements
+/// stack and in the heap.  At compilation time, KaRaMeL implements
 /// buffers using C arrays, i.e. if Low* type ``t`` is translated into C
 /// type ``u``, then Low* type ``buffer t`` is translated to C type ``u*``.
 ///
@@ -253,7 +253,7 @@ val mbuffer_injectivity_in_first_preorder (_:unit)
   : Lemma (forall (a:Type0) (rrel1 rrel2 rel1 rel2:srel a)
              (b1:mbuffer a rrel1 rel1)
 	     (b2:mbuffer a rrel2 rel2).
-	     rrel1 =!= rrel2 ==> ~ (eq3 b1 b2))
+	     rrel1 =!= rrel2 ==> ~ (b1 === b2))
 
 /// Before defining sub-buffer related API, we need to define the notion of "compatibility"
 ///
@@ -1792,7 +1792,7 @@ val pointer_distinct_sel_disjoint
 /// memory, but, as required by the C standard, they all require the
 /// buffer in question to be live.
 
-/// The nullity test, ``is_null b``, which KreMLin compiles to C as ``b == NULL``.
+/// The nullity test, ``is_null b``, which KaRaMeL compiles to C as ``b == NULL``.
 
 val is_null (#a:Type0) (#rrel #rel:srel a) (b:mbuffer a rrel rel)
   :HST.Stack bool (requires (fun h -> live h b))
@@ -1800,7 +1800,7 @@ val is_null (#a:Type0) (#rrel #rel:srel a) (b:mbuffer a rrel rel)
 
 
 /// ``sub b i len`` constructs the sub-buffer of ``b`` starting from
-/// offset ``i`` with length ``len``. KreMLin extracts this operation as
+/// offset ``i`` with length ``len``. KaRaMeL extracts this operation as
 /// ``b + i`` (or, equivalently, ``&b[i]``.)
 
 val msub (#a:Type0) (#rrel #rel:srel a) (sub_rel:srel a) (b:mbuffer a rrel rel)
@@ -1811,7 +1811,7 @@ val msub (#a:Type0) (#rrel #rel:srel a) (sub_rel:srel a) (b:mbuffer a rrel rel)
 
 /// ``offset b i`` construct the tail of the buffer ``b`` starting from
 /// offset ``i``, i.e. the sub-buffer of ``b`` starting from offset ``i``
-/// with length ``U32.sub (len b) i``. KreMLin compiles it as ``b + i`` or
+/// with length ``U32.sub (len b) i``. KaRaMeL compiles it as ``b + i`` or
 /// ``&b[i]``.
 ///
 /// This stateful operation cannot be derived from ``sub``, because the
@@ -1826,7 +1826,7 @@ val moffset (#a:Type0) (#rrel #rel:srel a) (sub_rel:srel a) (b:mbuffer a rrel re
 
 
 /// ``index b i`` reads the value of ``b`` at offset ``i`` from memory and
-/// returns it. KreMLin compiles it as b[i].
+/// returns it. KaRaMeL compiles it as b[i].
 
 val index (#a:Type0) (#rrel #rel:srel a) (b:mbuffer a rrel rel) (i:U32.t)
   :HST.Stack a (requires (fun h -> live h b /\ U32.v i < length b))
@@ -1881,7 +1881,7 @@ val g_upd_modifies_strong (#a:Type0) (#rrel #rel:srel a)
   : Lemma (modifies (loc_buffer_from_to b (U32.uint_to_t i) (U32.uint_to_t (i + 1))) h (g_upd b i v h))
 
 /// ``upd b i v`` writes ``v`` to the memory, at offset ``i`` of
-/// buffer ``b``. KreMLin compiles it as ``b[i] = v``.
+/// buffer ``b``. KaRaMeL compiles it as ``b[i] = v``.
 
 val upd'
   (#a:Type0) (#rrel #rel:srel a)
@@ -2065,7 +2065,7 @@ let freeable_disjoint' (#a1 #a2:Type0) (#rrel1 #rel1:srel a1) (#rrel2 #rel2:srel
  *   while heap dependent postconditions are provided in the ensures clause
  *
  *   One unsatisfying aspect is that these functions are duplicated in the wrappers that we write
- *   (e.g. Buffer, Immutablebuffer, etc.)
+ *   (e.g. Buffer, ImmutableBuffer, etc.)
  *   If we don't duplicate, then the clients may face type inference issues (for preorders)
  *
  *   So, if you change any of the pre- or postcondition, you should change the pre and post spec functions
@@ -2077,7 +2077,7 @@ let freeable_disjoint' (#a1 #a2:Type0) (#rrel1 #rel1:srel a1) (#rrel2 #rel2:srel
  *   For memory dependent post, alloc_post_mem_common is the one used by everyone
  *
  *   For heap allocations, the library also provides partial functions that could return null
- *     Clients need to explicitly check for non-nullness when using these functions
+ *     Clients need to explicitly check for non-null values when using these functions
  *     Partial function specs use alloc_partial_post_mem_common
  *
  *   NOTE: a useful test for the implementation of partial functions is that

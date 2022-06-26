@@ -28,7 +28,7 @@ let available = false
 let locked = true
 
 let lockinv (p:vprop) (r:ref bool) : vprop =
-  h_exists (fun b -> pts_to r full_perm (Ghost.hide b) `star` (if b then emp else p))
+  h_exists (fun b -> pts_to r full_perm b `star` (if b then emp else p))
 
 let lock_t = ref bool & erased iname
 
@@ -43,13 +43,13 @@ val intro_lockinv_locked (#uses:inames) (p:vprop) (r:ref bool)
 let intro_lockinv_available #uses p r =
   intro_exists false
     (fun (b: bool) ->
-      pts_to r full_perm (Ghost.hide b) `star`
+      pts_to r full_perm b `star`
         (if b then emp else p)
     )
 
 let intro_lockinv_locked #uses p r =
   intro_exists true
-    (fun b -> pts_to r full_perm (Ghost.hide b) `star`
+    (fun b -> pts_to r full_perm b `star`
           (if b then emp else p))
 
 let new_lock (p:vprop)
@@ -67,7 +67,7 @@ val acquire_core (#p:vprop) (#u:inames) (r:ref bool) (i:inv (lockinv p r))
 let acquire_core #p #u r i =
   let ghost = witness_exists () in
 
-  let res = cas_pt r ghost available locked in
+  let res = cas_pt_bool r ghost available locked in
 
   (* Not sure we can avoid calling an SMT here. Better force the manual call? *)
   rewrite_slprop (if (Ghost.reveal ghost) then emp else p) (if res then p else emp)
@@ -97,7 +97,7 @@ val release_core (#p:vprop) (#u:inames) (r:ref bool) (i:inv (lockinv p r))
 let release_core #p #u r i =
   let v = witness_exists () in
 
-  let res = cas_pt r v locked available in
+  let res = cas_pt_bool r v locked available in
 
   (* Not sure we can avoid calling an SMT here. Better force the manual call? *)
   rewrite_slprop (if (Ghost.reveal v) then emp else p) (if res then emp else p)
@@ -112,3 +112,17 @@ let release (#p:vprop) (l:lock p) =
   let i: inv (lockinv p r) = snd l in
   let b = with_invariant i (fun _ -> release_core r i) in
   drop (if b then emp else p)
+
+let s_lock p pred = lock (p `vrefine` pred)
+
+let new_s_lock p pred =
+  intro_vrefine p pred;
+  new_lock (p `vrefine` pred)
+
+let s_acquire #p #pred l =
+  acquire l;
+  elim_vrefine p pred
+
+let s_release #p #pred l =
+  intro_vrefine p pred;
+  release l

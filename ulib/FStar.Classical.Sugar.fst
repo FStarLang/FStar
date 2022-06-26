@@ -45,9 +45,9 @@ let or_elim_simple
     bind_squash x (fun p_or_q ->
     bind_squash p_or_q (fun p_cor_q ->
     match p_cor_q with
-    | Left p ->
+    | Prims.Left p ->
       f (return_squash p)
-    | Right q ->
+    | Prims.Right q ->
       g (return_squash q)))
 
 let or_elim
@@ -73,7 +73,7 @@ let and_elim (p:Type)
   : Tot (squash r)
   = let open FStar.Squash in
     bind_squash x (fun p_and_q ->
-    bind_squash p_and_q (fun (And p q) ->
+    bind_squash p_and_q (fun (Prims.Pair p q) ->
     f (return_squash p) (return_squash q)))
 
 let forall_intro
@@ -102,7 +102,7 @@ let exists_intro
         (a:Type)
         (p:a -> Type)
         (v:a)
-        (f: unit -> squash (p v))
+        (f: unit -> Tot (squash (p v)))
   : Tot (squash (exists x. p x))
   = exists_intro_simple a p v (f())
 
@@ -122,14 +122,14 @@ let implies_intro
 let or_intro_left
         (p:Type)
         (q:squash (~p) -> Type)
-        (f:unit -> squash p)
+        (f:unit -> Tot (squash p))
   : Tot (squash (p \/ q()))
   = f()
 
 let or_intro_right
         (p:Type)
         (q:squash (~p) -> Type)
-        (f:squash (~p) -> squash (q()))
+        (f:squash (~p) -> Tot (squash (q())))
   : Tot (squash (p \/ q()))
   = or_elim_simple p (~p)
                   (p \/ q())
@@ -140,7 +140,7 @@ let or_intro_right
 let and_intro
         (p:Type)
         (q:squash p -> Type)
-        (f:unit -> squash p)
-        (g:squash p -> squash (q()))
+        (f:unit -> Tot (squash p))
+        (g:squash p -> Tot (squash (q())))
   : Tot (squash (p /\ q()))
   = let _ = f() in g()

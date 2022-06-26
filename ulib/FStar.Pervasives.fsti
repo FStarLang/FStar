@@ -402,7 +402,7 @@ let st_post_h' (heap a pre: Type) = a -> _: heap{pre} -> GTot Type0
 (** Postconditions without refinements *)
 let st_post_h (heap a: Type) = st_post_h' heap a True
 
-(** The type of the main WP-transformer for stateful comptuations *)
+(** The type of the main WP-transformer for stateful computations *)
 let st_wp_h (heap a: Type) = st_post_h heap a -> Tot (st_pre_h heap)
 
 (** Returning a value does not transform the state *)
@@ -527,7 +527,7 @@ let ex_stronger (a: Type) (wp1 wp2: ex_wp a) = (forall (p: ex_post a). wp1 p ==>
 unfold
 let ex_close_wp (a b: Type) (wp: (b -> GTot (ex_wp a))) (p: ex_post a) = (forall (b: b). wp b p)
 
-(** Applying a computation with a trivial poscondition *)
+(** Applying a computation with a trivial postcondition *)
 unfold
 let ex_trivial (a: Type) (wp: ex_wp a) = wp (fun r -> True)
 
@@ -676,7 +676,7 @@ new_effect {
 val inversion (a: Type) : Type0
 
 (** To introduce [inversion t] in the SMT solver's context, call
-    [allow_inverson t]. *)
+    [allow_inversion t]. *)
 val allow_inversion (a: Type) : Pure unit (requires True) (ensures (fun x -> inversion a))
 
 (** Since the [option] type is so common, we always allow inverting
@@ -744,45 +744,45 @@ val false_elim (#a: Type) (u: unit{False}) : Tot a
         [@@ CInline ] let f x = UInt32.(x +%^ 1)
       ]}
 
-    is extracted to C by KReMLin to a C definition tagged with the
+    is extracted to C by KaRaMeL to a C definition tagged with the
     [inline] qualifier. *)
 type __internal_ocaml_attributes =
   | PpxDerivingShow
   | PpxDerivingShowConstant of string (* Generate [@@@ deriving show ] on the resulting OCaml type *)
   | PpxDerivingYoJson (* Similar, but for constant printers. *)
   | CInline (* Generate [@@@ deriving yojson ] on the resulting OCaml type *)
-  (* KreMLin-only: generates a C "inline" attribute on the resulting
+  (* KaRaMeL-only: generates a C "inline" attribute on the resulting
      * function declaration. *)
   | Substitute
-  (* KreMLin-only: forces KreMLin to inline the function at call-site; this is
+  (* KaRaMeL-only: forces KaRaMeL to inline the function at call-site; this is
      * deprecated and the recommended way is now to use F*'s
      * [inline_for_extraction], which now also works for stateful functions. *)
   | Gc
-  (* KreMLin-only: instructs KreMLin to heap-allocate any value of this
+  (* KaRaMeL-only: instructs KaRaMeL to heap-allocate any value of this
      * data-type; this requires running with a conservative GC as the
      * allocations are not freed. *)
   | Comment of string
-  (* KreMLin-only: attach a comment to the declaration. Note that using F*-doc
+  (* KaRaMeL-only: attach a comment to the declaration. Note that using F*-doc
      * syntax automatically fills in this attribute. *)
   | CPrologue of string
-  (* KreMLin-only: verbatim C code to be prepended to the declaration.
+  (* KaRaMeL-only: verbatim C code to be prepended to the declaration.
      * Multiple attributes are valid and accumulate, separated by newlines. *)
   | CEpilogue of string
   | CConst of string (* Ibid. *)
-  (* KreMLin-only: indicates that the parameter with that name is to be marked
-     * as C const.  This will be checked by the C compiler, not by KreMLin or F*.
+  (* KaRaMeL-only: indicates that the parameter with that name is to be marked
+     * as C const.  This will be checked by the C compiler, not by KaRaMeL or F*.
      *
      * This is deprecated and doesn't work as intended. Use
      * LowStar.ConstBuffer.fst instead! *)
   | CCConv of string
   | CAbstractStruct (* A calling convention for C, one of stdcall, cdecl, fastcall *)
-  (* KreMLin-only: for types that compile to struct types (records and
+  (* KaRaMeL-only: for types that compile to struct types (records and
      * inductives), indicate that the header file should only contain a forward
      * declaration, which in turn forces the client to only ever use this type
      * through a pointer. *)
   | CIfDef
-  | CMacro (* KreMLin-only: on a given `val foo`, compile if foo with #ifdef. *)
-(* KreMLin-only: for a top-level `let v = e`, compile as a macro *)
+  | CMacro (* KaRaMeL-only: on a given `val foo`, compile if foo with #ifdef. *)
+(* KaRaMeL-only: for a top-level `let v = e`, compile as a macro *)
 
 (** The [inline_let] attribute on a local let-binding, instructs the
     extraction pipeline to inline the definition. This may be both to
@@ -848,21 +848,6 @@ val expect_lax_failure (errs: list int) : Tot unit
 (** Print the time it took to typecheck a top-level definition *)
 val tcdecltime : unit
 
-(** **THIS ATTRIBUTE IS AN ESCAPE HATCH AND CAN BREAK SOUNDNESS**
-
-    **USE WITH CARE**
-
-    The positivity check for inductive types stops at abstraction
-    boundaries. This results in spurious errors about positivity,
-    e.g., when defining types like `type t = ref (option t)` By adding
-    this attribute to a declaration of a top-level name positivity
-    checks on applications of that name are admitted.  See, for
-    instance, FStar.Monotonic.Heap.mref We plan to decorate binders of
-    abstract types with polarities to allow us to check positivity
-    across abstraction boundaries and will eventually remove this
-    attribute.  *)
-val assume_strictly_positive : unit
-
 (** This attribute is to be used as a hint for the unifier.  A
     function-typed symbol `t` marked with this attribute will be treated
     as being injective in all its arguments by the unifier.  That is,
@@ -903,6 +888,29 @@ val strict_on_arguments (x: list int) : Tot unit
  * unsolved implicit arguments remaining at the end of type inference.
  **)
 val resolve_implicits : unit
+
+(**
+ * Implicit arguments can be tagged with an attribute [abc] to dispatch 
+ * their solving to a user-defined tactic also tagged with the same 
+ * attribute and resolve_implicits [@@abc; resolve_implicits]. 
+ 
+ * However, sometimes it is useful to have multiple such 
+ * [abc]-tagged tactics in scope. In such a scenario, to choose among them, 
+ * one can use the attribute as shown below to declare that [t] overrides
+ * all the tactics [t1...tn] and should be used to solve [abc]-tagged 
+ * implicits, so long as [t] is not iself overridden by some other tactic.
+
+   [@@resolve_implicits; abc; override_resolve_implicits_handler abc [`%t1; ... `%tn]]
+   let t = e
+
+ **)
+val override_resolve_implicits_handler : #a:Type -> a -> list string -> Tot unit
+
+(** A tactic registered to solve implicits with the (handle_smt_goals)
+    attribute will receive the SMT goal generated during typechecking
+    just before it is passed to the SMT solver.
+   *)
+val handle_smt_goals : unit
 
 (** This attribute can be added to an inductive type definition,
     indicating that it should be erased on extraction to `unit`.
@@ -950,7 +958,7 @@ val allow_informative_binders : unit
 
     This is sometimes useful when partially evaluating code before
     extraction, particularly when aiming to obtain first-order code
-    for KReMLin. However, this attribute should be used with care,
+    for KaRaMeL. However, this attribute should be used with care,
     since if after the rewriting the inner matches do not reduce, then
     this can cause an explosion in code size.
 
@@ -966,7 +974,37 @@ val commute_nested_matches : unit
   *)
 val noextract_to (backend:string) : Tot unit
 
-(** A layered effect definition may optionally be annoated with
+
+(** This attribute decorates a let binding, e.g.,
+
+    [@@normalize_for_extraction steps]
+    let f = e
+
+    The effect is that prior to extraction, F* will first reduce [e]
+    using the normalization [steps], and then proceed to extract it as
+    usual.
+
+    Almost the same behavior can be achieved by using a
+    [postprocess_for_extraction_with t] attribute, which runs tactic
+    [t] on the goal [e == ?u] and extracts the solution to [?u] in
+    place of [e]. However, using a tactic to postprocess a term is
+    more general than needed for some cases.
+
+    In particular, if we intend to only normalize [e] before
+    extraction (rather than applying some other form of equational
+    reasoning), then using [normalize_for_extraction] can be more
+    efficient, for the following reason:
+
+    Since we are reducing [e] just before extraction, F* can enable an
+    otherwise non-user-facing normalization feature that allows all
+    arguments marked [@@@erasable] to be erased to [()]---these terms
+    will anyway be extracted to [()] so erasing them during
+    normalization is a useful optimization.
+  *)
+val normalize_for_extraction (steps:list norm_step) : Tot unit
+
+
+(** A layered effect definition may optionally be annotated with
     (ite_soundness_by t) attribute, where t is another attribute
     When so, the implicits and the smt guard generated when
     checking the soundness of the if-then-else combinator, are
@@ -977,6 +1015,51 @@ val noextract_to (backend:string) : Tot unit
   *)
 val ite_soundness_by : unit
 
+(** By-default functions that have a layered effect, need to have a type
+    annotation for their bodies
+    However, a layered effect definition may contain the default_effect
+    attribute to indicate to the typechecker that for missing annotations,
+    use the default effect.
+    The default effect attribute takes as argument a string, that is the name
+    of the default effect, two caveats:
+      - The argument must be a string constant (not a name, for example)
+      - The argument should be the fully qualified name
+    For example, the TAC effect in FStar.Tactics.Effect.fsti specifies
+    its default effect as FStar.Tactics.Tac
+    F* will typecheck that the default effect only takes one argument,
+      the result type of the computation
+  *)
+val default_effect (s:string) : Tot unit
+
+(** Bind definition for a layered effect may optionally contain range
+    arguments, that are provided by the typechecker during reification
+    This attribute on the effect definition indicates that the bind
+    has range arguments.
+    See for example the TAC effect in FStar.Tactics.Effect.fsti
+  *)
+val bind_has_range_args : unit
+
+(** A binder in a definition/declaration may optionally be annotated as strictly_positive
+    When the let definition is used in a data constructor type in an inductive
+    definition, this annotation is used to check the positivity of the inductive
+
+    Further F* checks that the binder is actually positive in the let definition
+
+    See tests/micro-benchmarks/Positivity.fst and NegativeTests.Positivity.fst for a few examples
+  *)
+val strictly_positive : unit
+
+(** This attribute may be added to an inductive type
+    to disable auto generated projectors
+
+    Normally there should not be any need to use this unless:
+    for some reason F* cannot typecheck the auto-generated projectors.
+    
+    Another reason to use this attribute may be to avoid generating and
+    typechecking lot of projectors, most of which are not going to be used
+    in the rest of the program
+  *)
+val no_auto_projectors : unit
 
 (** Pure and ghost inner let bindings are now always inlined during
     the wp computation, if: the return type is not unit and the head
@@ -997,3 +1080,9 @@ val with_type (#t: Type) (e: t) : Tot t
     One of its uses is in types of layered effect combinators that
     are subjected to stricter typing discipline (no subtyping) *)
 unfold let eqtype_as_type (a:eqtype) : Type = a
+
+(** A coercion of the [x] from [a] to [b], when [a] is provably equal
+    to [b]. In most cases, F* will silently coerce from [a] to [b]
+    along a provable equality (as in the body of this
+    function). Occasionally, you may need to apply this explicitly *)
+let coerce_eq (#a:Type) (#b:Type) (_:squash (a == b)) (x:a) : b = x

@@ -73,7 +73,7 @@ assume val write_string : fd_write -> string -> ML unit
    erase this call.
 
    Note: no guarantees are provided regarding the order
-   of eassume valuation of this function; since it is marked as pure,
+   of assume valuation of this function; since it is marked as pure,
    the compiler may re-order or replicate it.
 *)
 assume val debug_print_string : string -> Tot bool

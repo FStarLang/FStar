@@ -149,7 +149,7 @@ let rec (elaborate_pat :
                            | (uu___4, imp) ->
                                let uu___5 =
                                  let uu___6 =
-                                   FStar_Syntax_Syntax.is_implicit imp in
+                                   FStar_Syntax_Syntax.is_bqual_implicit imp in
                                  (p1, uu___6) in
                                let uu___6 = aux formals' pats' in uu___5 ::
                                  uu___6) in
@@ -161,6 +161,64 @@ let rec (elaborate_pat :
                       FStar_Syntax_Syntax.p = (p.FStar_Syntax_Syntax.p)
                     }))
       | uu___ -> p
+exception Raw_pat_cannot_be_translated 
+let (uu___is_Raw_pat_cannot_be_translated : Prims.exn -> Prims.bool) =
+  fun projectee ->
+    match projectee with
+    | Raw_pat_cannot_be_translated -> true
+    | uu___ -> false
+let (raw_pat_as_exp :
+  FStar_TypeChecker_Env.env ->
+    FStar_Syntax_Syntax.pat ->
+      FStar_Syntax_Syntax.term FStar_Pervasives_Native.option)
+  =
+  fun env ->
+    fun p ->
+      let rec aux p1 =
+        match p1.FStar_Syntax_Syntax.v with
+        | FStar_Syntax_Syntax.Pat_constant c ->
+            let e =
+              match c with
+              | FStar_Const.Const_int (repr, FStar_Pervasives_Native.Some sw)
+                  ->
+                  FStar_ToSyntax_ToSyntax.desugar_machine_integer
+                    env.FStar_TypeChecker_Env.dsenv repr sw
+                    p1.FStar_Syntax_Syntax.p
+              | uu___ ->
+                  FStar_Syntax_Syntax.mk (FStar_Syntax_Syntax.Tm_constant c)
+                    p1.FStar_Syntax_Syntax.p in
+            e
+        | FStar_Syntax_Syntax.Pat_dot_term (uu___, t) ->
+            let t1 = FStar_Syntax_Subst.compress t in
+            (match t1.FStar_Syntax_Syntax.n with
+             | FStar_Syntax_Syntax.Tm_unknown ->
+                 FStar_Compiler_Effect.raise Raw_pat_cannot_be_translated
+             | uu___1 -> t1)
+        | FStar_Syntax_Syntax.Pat_wild x ->
+            FStar_Syntax_Syntax.mk (FStar_Syntax_Syntax.Tm_name x)
+              p1.FStar_Syntax_Syntax.p
+        | FStar_Syntax_Syntax.Pat_var x ->
+            FStar_Syntax_Syntax.mk (FStar_Syntax_Syntax.Tm_name x)
+              p1.FStar_Syntax_Syntax.p
+        | FStar_Syntax_Syntax.Pat_cons (fv, pats) ->
+            let args =
+              FStar_Compiler_List.map
+                (fun uu___ ->
+                   match uu___ with
+                   | (p2, i) ->
+                       let uu___1 = aux p2 in
+                       let uu___2 = FStar_Syntax_Syntax.as_aqual_implicit i in
+                       (uu___1, uu___2)) pats in
+            let hd = FStar_Syntax_Syntax.fv_to_tm fv in
+            let e =
+              FStar_Syntax_Syntax.mk_Tm_app hd args p1.FStar_Syntax_Syntax.p in
+            e in
+      try
+        (fun uu___ ->
+           match () with
+           | () -> let uu___1 = aux p in FStar_Pervasives_Native.Some uu___1)
+          ()
+      with | Raw_pat_cannot_be_translated -> FStar_Pervasives_Native.None
 let (pat_as_exp :
   Prims.bool ->
     Prims.bool ->

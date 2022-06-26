@@ -71,7 +71,13 @@ let rec (inst :
                               FStar_Pervasives_Native.Some uu___1 in
                         let t4 = inst s t3 in (p, wopt1, t4))) in
           let asc_opt1 =
-            FStar_Compiler_Util.map_opt asc_opt (inst_ascription s) in
+            match asc_opt with
+            | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None
+            | FStar_Pervasives_Native.Some (b, asc) ->
+                let uu___ =
+                  let uu___1 = inst_binder s b in
+                  let uu___2 = inst_ascription s asc in (uu___1, uu___2) in
+                FStar_Pervasives_Native.Some uu___ in
           let uu___ =
             let uu___1 =
               let uu___2 = inst s t2 in
@@ -145,6 +151,31 @@ let rec (inst :
             let uu___1 = let uu___2 = inst s t2 in (uu___2, tag) in
             FStar_Syntax_Syntax.Tm_meta uu___1 in
           mk1 uu___
+and (inst_binder :
+  (FStar_Syntax_Syntax.term ->
+     FStar_Syntax_Syntax.fv -> FStar_Syntax_Syntax.term)
+    -> FStar_Syntax_Syntax.binder -> FStar_Syntax_Syntax.binder)
+  =
+  fun s ->
+    fun b ->
+      let uu___ =
+        let uu___1 = b.FStar_Syntax_Syntax.binder_bv in
+        let uu___2 =
+          inst s (b.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort in
+        {
+          FStar_Syntax_Syntax.ppname = (uu___1.FStar_Syntax_Syntax.ppname);
+          FStar_Syntax_Syntax.index = (uu___1.FStar_Syntax_Syntax.index);
+          FStar_Syntax_Syntax.sort = uu___2
+        } in
+      let uu___1 =
+        FStar_Compiler_Effect.op_Bar_Greater
+          b.FStar_Syntax_Syntax.binder_attrs
+          (FStar_Compiler_List.map (inst s)) in
+      {
+        FStar_Syntax_Syntax.binder_bv = uu___;
+        FStar_Syntax_Syntax.binder_qual = (b.FStar_Syntax_Syntax.binder_qual);
+        FStar_Syntax_Syntax.binder_attrs = uu___1
+      }
 and (inst_binders :
   (FStar_Syntax_Syntax.term ->
      FStar_Syntax_Syntax.fv -> FStar_Syntax_Syntax.term)
@@ -153,30 +184,7 @@ and (inst_binders :
   fun s ->
     fun bs ->
       FStar_Compiler_Effect.op_Bar_Greater bs
-        (FStar_Compiler_List.map
-           (fun b ->
-              let uu___ =
-                let uu___1 = b.FStar_Syntax_Syntax.binder_bv in
-                let uu___2 =
-                  inst s
-                    (b.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort in
-                {
-                  FStar_Syntax_Syntax.ppname =
-                    (uu___1.FStar_Syntax_Syntax.ppname);
-                  FStar_Syntax_Syntax.index =
-                    (uu___1.FStar_Syntax_Syntax.index);
-                  FStar_Syntax_Syntax.sort = uu___2
-                } in
-              let uu___1 =
-                FStar_Compiler_Effect.op_Bar_Greater
-                  b.FStar_Syntax_Syntax.binder_attrs
-                  (FStar_Compiler_List.map (inst s)) in
-              {
-                FStar_Syntax_Syntax.binder_bv = uu___;
-                FStar_Syntax_Syntax.binder_qual =
-                  (b.FStar_Syntax_Syntax.binder_qual);
-                FStar_Syntax_Syntax.binder_attrs = uu___1
-              }))
+        (FStar_Compiler_List.map (inst_binder s))
 and (inst_args :
   (FStar_Syntax_Syntax.term ->
      FStar_Syntax_Syntax.fv -> FStar_Syntax_Syntax.term)
@@ -285,13 +293,14 @@ and (inst_ascription :
       ((FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax,
         FStar_Syntax_Syntax.comp' FStar_Syntax_Syntax.syntax)
         FStar_Pervasives.either * FStar_Syntax_Syntax.term'
-        FStar_Syntax_Syntax.syntax FStar_Pervasives_Native.option))
+        FStar_Syntax_Syntax.syntax FStar_Pervasives_Native.option *
+        Prims.bool))
   =
   fun s ->
     fun asc ->
       let uu___ = asc in
       match uu___ with
-      | (annot, topt) ->
+      | (annot, topt, use_eq) ->
           let annot1 =
             match annot with
             | FStar_Pervasives.Inl t ->
@@ -299,7 +308,7 @@ and (inst_ascription :
             | FStar_Pervasives.Inr c ->
                 let uu___1 = inst_comp s c in FStar_Pervasives.Inr uu___1 in
           let topt1 = FStar_Compiler_Util.map_opt topt (inst s) in
-          (annot1, topt1)
+          (annot1, topt1, use_eq)
 let (instantiate :
   inst_t -> FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term) =
   fun i ->

@@ -144,10 +144,10 @@ let parse fn =
     | FStar_Errors.Error(e, msg, r, _ctx) ->
       ParseError (e, msg, r)
 
-    | Parsing.Parse_error as e ->
+    | Parsing.Parse_error as _e ->
       let pos = FStar_Parser_Util.pos_of_lexpos lexbuf.cur_p in
       let r = FStar_Compiler_Range.mk_range filename pos pos in
-      ParseError (Fatal_SyntaxError, "Syntax error: " ^ (Printexc.to_string e), r)
+      ParseError (Fatal_SyntaxError, "Syntax error", r)
 
 (** Parsing of command-line error/warning/silent flags. *)
 let parse_warn_error s =

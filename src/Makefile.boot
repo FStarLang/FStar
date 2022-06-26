@@ -50,7 +50,7 @@ EXTRACT = $(addprefix --extract_module , $(EXTRACT_MODULES))		\
 # recent than its dependences.
 %.checked.lax:
 	@echo "[LAXCHECK  $(basename $(basename $(notdir $@)))]"
-	$(Q)$(FSTAR_C) $(SIL) $< --already_cached "* -$(basename $(notdir $<))"
+	$(Q)$(FSTAR_C) $(SIL) $< --already_cached '*,'-$(basename $(notdir $<))
 	$(Q)@touch -c $@
 
 # And then, in a separate invocation, from each .checked.lax we
@@ -76,7 +76,7 @@ ocaml-output/%.ml:
 .depend:
 	@echo "[DEPEND]"
 	$(Q)$(FSTAR_C) $(SIL) --dep full	\
-		fstar/FStar.Main.fs		\
+		fstar/FStar.Main.fst		\
 		boot/FStar.Tests.Test.fst	\
 		$(EXTRACT)			> ._depend
 	$(Q)mv ._depend .depend

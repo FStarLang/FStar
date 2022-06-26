@@ -34,12 +34,16 @@ let divides_reflexive a =
   Classical.exists_intro (fun q -> a = q * a) 1
 
 let divides_transitive a b c =
-  if a <> 0 && b <> 0 then
-    Classical.exists_elim (a `divides` c) (Squash.get_proof (exists q1. b = q1 * a))
-      (fun q1 ->
-        Classical.exists_elim (a `divides` c) (Squash.get_proof (exists q2. c = q2 * b))
-          (fun q2 ->
-            Classical.exists_intro (fun q3 -> c = q3 * a) (q1 * q2)))
+  eliminate exists q1. b == q1 * a
+  returns a `divides` c
+  with _pf. 
+    eliminate exists q2. c == q2 * b
+    returns _
+    with _pf2.
+         introduce exists q. c == q * a
+	 with (q1 * q2)
+	 and ()
+
 
 let divide_antisym a b =
   if a <> 0 then
@@ -179,23 +183,22 @@ let rec egcd a b u1 u2 u3 v1 v2 v3 =
     let u3, v3 = v3, u3 - q * v3 in
     egcd a b u1 u2 u3 v1 v2 v3
     end
-
+#push-options "--query_stats"
+#restart-solver
 let euclid_gcd a b =
-
-  let aux (a b q d : int) : Lemma
-    (requires is_gcd b (a - q * b) d)
-    (ensures is_gcd a b d)
-    [SMTPat ()]
-    = is_gcd_for_euclid a b q d in
-
   if b >= 0 then
     egcd a b 1 0 a 0 1 b
-  else
-    begin
-    Classical.forall_intro_2 (Classical.move_requires_2 divides_minus);
-    Classical.forall_intro (Classical.move_requires (is_gcd_minus a b));
-    egcd a b 1 0 a 0 (-1) (-b)
-    end
+  else (
+    introduce forall d. is_gcd a (-b) d ==> is_gcd a b d
+    with introduce _ ==> _
+         with _pf. 
+           (is_gcd_minus a b d;
+            is_gcd_symmetric b a d);
+    let res = egcd a b 1 0 a 0 (-1) (-b) in
+    let _, _, d = res in
+    assert (is_gcd a b d);
+    res
+  )
 #pop-options
 
 val is_gcd_prime_aux (p:int) (a:pos{a < p}) (d:int) : Lemma

@@ -111,10 +111,10 @@ val comp_view_to_effect_info : dbg:bool -> comp_view -> Tac (option effect_info)
 
 let comp_view_to_effect_info dbg cv =
   match cv with
-  | C_Total ret_ty decr ->
+  | C_Total ret_ty _ decr ->
     let ret_type_info = get_type_info_from_type ret_ty in
     Some (mk_effect_info E_Total ret_type_info None None)
-  | C_GTotal ret_ty decr ->
+  | C_GTotal ret_ty _ decr ->
     let ret_type_info = get_type_info_from_type ret_ty in
     Some (mk_effect_info E_Total ret_type_info None None)
   | C_Lemma pre post patterns ->
@@ -333,7 +333,7 @@ let cast_info_to_propositions dbg ge ci =
        * concerned (hence the ``has_type``), and which types should be
        * related (hence the ascription).
        *)
-      let ascr_term = pack (Tv_AscribedT ci.term p_rty None) in
+      let ascr_term = pack (Tv_AscribedT ci.term p_rty None false) in
       let has_type_params = [(p_rty, Q_Implicit); (ascr_term, Q_Explicit); (e_rty, Q_Explicit)] in
       let type_cast = mk_app (`has_type) has_type_params in
       (* Expected type's refinement *)
@@ -574,7 +574,7 @@ let related_term_is_effectul dbg ge tv : Tac bool =
     false
   | Tv_Abs br body -> false
   | Tv_Arrow br c0 -> false
-  | Tv_Type () -> false
+  | Tv_Type _ -> false
   | Tv_Refine bv ref ->
     false
   | Tv_Const _ -> false
@@ -587,8 +587,8 @@ let related_term_is_effectul dbg ge tv : Tac bool =
      * Besides, in practice it is uncommon (impossible?) to use an effectful term
      * as the scrutinee of a match *)
     is_effectful scrutinee
-  | Tv_AscribedT e ty tac -> false (* The focused term should be inside the ascription *)
-  | Tv_AscribedC e c tac -> false (* The focused term should be inside the ascription *)
+  | Tv_AscribedT e ty tac _ -> false (* The focused term should be inside the ascription *)
+  | Tv_AscribedC e c tac _ -> false (* The focused term should be inside the ascription *)
   | _ -> (* Unknown: keep things safe *) true
 
 /// Look for a term of the form ``let h = ST.get ()`` in a list of parent/children terms
@@ -778,7 +778,7 @@ let eterm_info_to_assertions dbg with_gpre with_gpost ge t is_let is_assert info
        * propositions. If the return value is of type unit, we can just use ().
        * Otherwise we need to introduce a variable.
        * For the reason why we do this: remember that the studied term might be
-       * a return value: it is not necessarily binded in a let. *)
+       * a return value: it is not necessarily bound in a let. *)
       if effect_type_is_stateful einfo.ei_type then
         if is_unit_type einfo.ei_ret_type.ty then
           ge, `(), None
@@ -796,7 +796,7 @@ let eterm_info_to_assertions dbg with_gpre with_gpost ge t is_let is_assert info
                              einfo.ei_pre einfo.ei_post parents children in
   print_dbg dbg ("- pre prop: " ^ option_to_string term_to_string pre_prop);
   print_dbg dbg ("- post prop: " ^ option_to_string term_to_string post_prop);
-  (* If the term is an assertion/asssumption, only output the postcondition -
+  (* If the term is an assertion/assumption, only output the postcondition -
    * note that in the case of an assertion, the pre and the post are the same,
    * but in the case of an assumption, only the post is interesting *)
   if is_assert then
@@ -961,6 +961,3 @@ let eterm_info_to_assertions dbg with_gpre with_gpost ge t is_let is_assert info
     if dbg then iter (fun x -> print (term_to_string x)) posts;
     ge2, { pres = pres; posts = posts }
     end
-
-
-

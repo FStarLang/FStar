@@ -1,5 +1,5 @@
 [
-  "óŸ¯\u0014~ﬁÆ66f≥ÅõûˆÓ",
+  "—ë€uñù≤‰&\t\u001cIqè◊\u0006",
   [
     [
       "FStar.Classical.Sugar.forall_elim",
@@ -7,13 +7,11 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.l_Forall",
-        "equation_Prims.squash",
-        "l_quant_interp_b318409532d0e00e9125f72f3b997468",
-        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_eee646ed2c0261b2e37307734e5990b8"
       ],
       0,
-      "b5ef09ea631ccb559dd16b5620a851c4"
+      "3867d09cf68f232c4200f90797e49de5"
     ],
     [
       "FStar.Classical.Sugar.implies_elim",
@@ -21,12 +19,11 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.l_imp",
-        "equation_Prims.squash", "l_imp-interp",
-        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_913239c2cf9dc8a14e1f047e0206138d"
       ],
       0,
-      "5226fb6bf2e5e3b289f7b7508912fb2e"
+      "4b065cbea397c456e1c1ee8ae56b5b70"
     ],
     [
       "FStar.Classical.Sugar.or_elim_simple",
@@ -35,11 +32,11 @@
       1,
       [
         "@MaxIFuel_assumption", "@query", "disc_equation_Prims.Left",
-        "disc_equation_Prims.Right", "fuel_guarded_inversion_Prims.c_or",
+        "disc_equation_Prims.Right", "fuel_guarded_inversion_Prims.sum",
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "ddaf9d77d730a88ccd0dbe17334ad53c"
+      "25696ff4d5e88447489a74189984344e"
     ],
     [
       "FStar.Classical.Sugar.or_elim",
@@ -47,12 +44,11 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.l_not",
-        "equation_Prims.squash", "l_not-interp",
-        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_953a6e4e702e848a7213bd619baaa22d"
       ],
       0,
-      "44a8fd06628a17434260f6ee0f1e22e0"
+      "44b3bb37f067555708aac352eb4ac936"
     ],
     [
       "FStar.Classical.Sugar.or_elim",
@@ -60,12 +56,11 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.l_not",
-        "equation_Prims.squash", "l_not-interp",
-        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_953a6e4e702e848a7213bd619baaa22d"
       ],
       0,
-      "b3c2e2a8eb0eb3f854d90c2c86e13b6e"
+      "21ef1c00eb955331e6ca0e1cac7f0c31"
     ],
     [
       "FStar.Classical.Sugar.or_elim",
@@ -73,12 +68,11 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.l_not",
-        "equation_Prims.squash", "l_not-interp",
-        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_953a6e4e702e848a7213bd619baaa22d"
       ],
       0,
-      "2d00a846555998a4af2d31305d730bb2"
+      "2b72f54c9dac7db4a8a3402a68af61b7"
     ],
     [
       "FStar.Classical.Sugar.and_elim",
@@ -90,7 +84,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "33ae0e78dfd4c683ffd7dfe3281b3ff7"
+      "06353c9863c56cf011008af8061fd44a"
     ],
     [
       "FStar.Classical.Sugar.and_elim",
@@ -102,7 +96,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "5d0c69726664ff5e8dad0483e18b5886"
+      "66a31e3e8ef52892255eadaf056c8e74"
     ],
     [
       "FStar.Classical.Sugar.and_elim",
@@ -111,7 +105,7 @@
       1,
       [ "@query", "l_and-interp" ],
       0,
-      "a2212788db6b5ce3b7d84deb9f9660e5"
+      "a569dabe2b5fea9143d76455565cc918"
     ],
     [
       "FStar.Classical.Sugar.exists_intro_simple",
@@ -123,7 +117,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "36cbb83871dc1ebc2684e7bcb4a5874c"
+      "9ad10212caa7be0a5eda642744687d55"
     ],
     [
       "FStar.Classical.Sugar.implies_intro",
@@ -135,7 +129,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "893ba563c4f16143afa7f95af2fdf9bf"
+      "bf134974f73dbd945ffd9659ddeac912"
     ],
     [
       "FStar.Classical.Sugar.implies_intro",
@@ -147,7 +141,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "f9f488e3022aeb7063a2fa896f6bd2a7"
+      "c0df52537325726311310e0421dec7e5"
     ],
     [
       "FStar.Classical.Sugar.implies_intro",
@@ -156,7 +150,7 @@
       1,
       [ "@query" ],
       0,
-      "74b6b39dc5016a139068b79883166a63"
+      "22ceaab916f5bd88f47c561068dc803c"
     ],
     [
       "FStar.Classical.Sugar.or_intro_left",
@@ -168,7 +162,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "e5c926877a27e130321ccff86701182c"
+      "83f7855f3b48fdb2527c8e182b81717b"
     ],
     [
       "FStar.Classical.Sugar.or_intro_right",
@@ -176,12 +170,11 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.l_not",
-        "equation_Prims.squash", "l_not-interp",
-        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_953a6e4e702e848a7213bd619baaa22d"
       ],
       0,
-      "08809ef4b50608449d490f8903b020cd"
+      "5fa3091c17cc943f2f4436033fad92b1"
     ],
     [
       "FStar.Classical.Sugar.or_intro_right",
@@ -189,12 +182,11 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.l_not",
-        "equation_Prims.squash", "l_not-interp",
-        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_953a6e4e702e848a7213bd619baaa22d"
       ],
       0,
-      "fac61365a9f9378974e8d9c01bd53502"
+      "ae892de8e3701c05e91e80feb52f381f"
     ],
     [
       "FStar.Classical.Sugar.or_intro_right",
@@ -203,7 +195,7 @@
       1,
       [ "@query" ],
       0,
-      "ac83bea8aaa9c8272d547d4db8dad420"
+      "41a51e4184430b562a39ed794946d334"
     ],
     [
       "FStar.Classical.Sugar.and_intro",
@@ -215,7 +207,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "f5fc5d9aeda99acbf3edca5ab4344a85"
+      "d6300ffbbeb8381d910c1d9f2369c050"
     ],
     [
       "FStar.Classical.Sugar.and_intro",
@@ -227,7 +219,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "0a9a350290a2951e34e23ac1e6e7af1a"
+      "9c8e9d533a1efba814a237fed7acc1e3"
     ],
     [
       "FStar.Classical.Sugar.and_intro",
@@ -239,7 +231,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "88ff32eefeb29976657fa56bacea83ed"
+      "41fdf3e4b8eea8b50ba84c7b78efc2cb"
     ]
   ]
 ]

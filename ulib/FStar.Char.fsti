@@ -33,8 +33,9 @@ new
 val char:eqtype
 
 (** A [char_code] is the representation of a UTF-8 char code in
-    an unsigned 32-bit integer whose value is at most 2^21 *)
-type char_code = n: U32.t{U32.v n < pow2 21}
+    an unsigned 32-bit integer whose value is at most 0x110000,
+    and not between 0xd800 and 0xe000 *)
+type char_code = n: U32.t{U32.v n < 0xd7ff \/ (U32.v n >= 0xe000 /\ U32.v n <= 0x10ffff)}
 
 (** A primitive to extract the [char_code] of a [char] *)
 val u32_of_char: char -> Tot char_code
@@ -53,7 +54,7 @@ val u32_of_char_of_u32 (c: char_code)
 (** A couple of utilities to use mathematical integers rather than [U32.t]
     to represent a [char_code] *)
 let int_of_char (c: char) : nat = U32.v (u32_of_char c)
-let char_of_int (i: nat{i < pow2 21}) : char = char_of_u32 (U32.uint_to_t i)
+let char_of_int (i: nat{i < 0xd7ff \/ (i >= 0xe000 /\ i <= 0x10ffff)}) : char = char_of_u32 (U32.uint_to_t i)
 
 (** Case conversion *)
 val lowercase: char -> Tot char
@@ -63,7 +64,7 @@ val uppercase: char -> Tot char
 
 (** This private primitive is used internally by the compiler to
     translate character literals with a desugaring-time check of the
-    size of the number, rather than an expensive verifiation check.
+    size of the number, rather than an expensive verification check.
     Since it is marked private, client programs cannot call it
     directly Since it is marked unfold, it eagerly reduces,
     eliminating the verification overhead of the wrapper *)

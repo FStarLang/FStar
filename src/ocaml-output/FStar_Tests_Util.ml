@@ -169,14 +169,16 @@ let rec (term_eq' :
          ({ FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_fvar fv_eq_1;
             FStar_Syntax_Syntax.pos = uu___;
             FStar_Syntax_Syntax.vars = uu___1;_},
-          (uu___2, FStar_Pervasives_Native.Some (FStar_Syntax_Syntax.Implicit
-           uu___3))::t12::t22::[]),
+          (uu___2, FStar_Pervasives_Native.Some
+           { FStar_Syntax_Syntax.aqual_implicit = true;
+             FStar_Syntax_Syntax.aqual_attributes = uu___3;_})::t12::t22::[]),
          FStar_Syntax_Syntax.Tm_app
          ({ FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_fvar fv_eq_2;
             FStar_Syntax_Syntax.pos = uu___4;
             FStar_Syntax_Syntax.vars = uu___5;_},
-          (uu___6, FStar_Pervasives_Native.Some (FStar_Syntax_Syntax.Implicit
-           uu___7))::s1::s2::[]))
+          (uu___6, FStar_Pervasives_Native.Some
+           { FStar_Syntax_Syntax.aqual_implicit = true;
+             FStar_Syntax_Syntax.aqual_attributes = uu___7;_})::s1::s2::[]))
           when
           (FStar_Syntax_Syntax.fv_eq_lid fv_eq_1 FStar_Parser_Const.eq2_lid)
             &&
@@ -199,9 +201,9 @@ let rec (term_eq' :
                          term_eq' e e') pats pats'))
             && (term_eq' t t')
       | (FStar_Syntax_Syntax.Tm_ascribed
-         (t12, (FStar_Pervasives.Inl t22, uu___), uu___1),
+         (t12, (FStar_Pervasives.Inl t22, uu___, uu___1), uu___2),
          FStar_Syntax_Syntax.Tm_ascribed
-         (s1, (FStar_Pervasives.Inl s2, uu___2), uu___3)) ->
+         (s1, (FStar_Pervasives.Inl s2, uu___3, uu___4), uu___5)) ->
           (term_eq' t12 s1) && (term_eq' t22 s2)
       | (FStar_Syntax_Syntax.Tm_let ((is_rec, lbs), t),
          FStar_Syntax_Syntax.Tm_let ((is_rec', lbs'), s)) when

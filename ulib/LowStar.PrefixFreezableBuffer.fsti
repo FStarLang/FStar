@@ -37,7 +37,7 @@ module ST = FStar.HyperStack.ST
  *   separate (ghost) reference, the library maintains the frozen-until counter (a u32)
  *   in the first four bytes of the buffer itself
  *
- * Buffer contents upto the frozen-until counter are stable and clients can witness
+ * Buffer contents up to the frozen-until counter are stable and clients can witness
  *   and recall them
  *
  *)

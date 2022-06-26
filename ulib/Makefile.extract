@@ -1,6 +1,7 @@
 .PHONY: indent extra
 
 FSTAR_HOME=..
+include $(FSTAR_HOME)/.common.mk
 include gmake/z3.mk
 include gmake/fstar.mk
 
@@ -15,19 +16,22 @@ FSTAR_FILES:=$(filter-out $(NOEXTRACT_FILES), \
 	$(wildcard legacy/*fst legacy/*fsti) \
 	$(wildcard experimental/*fst experimental/*fsti)) \
         Steel.Effect.Common.fst \
+        Steel.ST.GenElim.Base.fst \
         $(wildcard FStar.InteractiveHelpers.*.fst)
 
 CODEGEN ?= OCaml
 MY_FSTAR=$(FSTAR) $(OTHERFLAGS) --lax --cache_checked_modules --odir $(OUTPUT_DIRECTORY) --cache_dir .cache.lax
 
 %.checked.lax:
-	$(MY_FSTAR) $< --already_cached "* -$(basename $(notdir $<))"
-	touch -c $@
+	@echo "[LAXCHECK  $(basename $(notdir $@))]"
+	$(Q)$(MY_FSTAR) $(SIL) $< --already_cached '*,'-$(basename $(notdir $<))
+	$(Q)touch -c $@
 
 # And then, in a separate invocation, from each .checked.lax we
 # extract an .ml file
 $(OUTPUT_DIRECTORY)/%.ml:
-	$(MY_FSTAR) $(subst .checked.lax,,$(notdir $<)) --codegen $(CODEGEN) --extract_module $(basename $(notdir $(subst .checked.lax,,$<)))
+	@echo "[EXTRACT   $(basename $(notdir $@))]"
+	$(Q)$(MY_FSTAR) $(SIL) $(subst .checked.lax,,$(notdir $<)) --codegen $(CODEGEN) --extract_module $(basename $(notdir $(subst .checked.lax,,$<)))
 
 .depend.extract:
 	$(Q)mkdir -p .cache.lax

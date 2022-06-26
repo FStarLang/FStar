@@ -1,7 +1,7 @@
 open Prims
 type ident = {
   idText: Prims.string ;
-  idRange: FStar_Compiler_Range.range }[@@deriving yojson,show]
+  idRange: FStar_Compiler_Range.range }[@@deriving yojson,show,yojson,show]
 let (__proj__Mkident__item__idText : ident -> Prims.string) =
   fun projectee -> match projectee with | { idText; idRange;_} -> idText
 let (__proj__Mkident__item__idRange : ident -> FStar_Compiler_Range.range) =
@@ -13,7 +13,7 @@ type lident =
   ns: ipath ;
   ident: ident ;
   nsstr: Prims.string ;
-  str: Prims.string }[@@deriving yojson,show]
+  str: Prims.string }[@@deriving yojson,show,yojson,show]
 let (__proj__Mklident__item__ns : lident -> ipath) =
   fun projectee ->
     match projectee with | { ns; ident = ident1; nsstr; str;_} -> ns
@@ -26,7 +26,6 @@ let (__proj__Mklident__item__nsstr : lident -> Prims.string) =
 let (__proj__Mklident__item__str : lident -> Prims.string) =
   fun projectee ->
     match projectee with | { ns; ident = ident1; nsstr; str;_} -> str
-type lid = lident[@@deriving yojson,show]
 let (mk_ident : (Prims.string * FStar_Compiler_Range.range) -> ident) =
   fun uu___ ->
     match uu___ with | (text, range) -> { idText = text; idRange = range }
@@ -64,12 +63,12 @@ let (path_of_text : Prims.string -> path) =
 let (path_of_ns : ipath -> path) =
   fun ns -> FStar_Compiler_List.map string_of_id ns
 let (path_of_lid : lident -> path) =
-  fun lid1 ->
+  fun lid ->
     FStar_Compiler_List.map string_of_id
-      (FStar_Compiler_List.op_At lid1.ns [lid1.ident])
-let (ns_of_lid : lident -> ipath) = fun lid1 -> lid1.ns
+      (FStar_Compiler_List.op_At lid.ns [lid.ident])
+let (ns_of_lid : lident -> ipath) = fun lid -> lid.ns
 let (ids_of_lid : lident -> ipath) =
-  fun lid1 -> FStar_Compiler_List.op_At lid1.ns [lid1.ident]
+  fun lid -> FStar_Compiler_List.op_At lid.ns [lid.ident]
 let (lid_of_ns_and_id : ipath -> ident -> lident) =
   fun ns ->
     fun id ->
@@ -99,11 +98,12 @@ let (lid_of_path : path -> FStar_Compiler_Range.range -> lident) =
     fun pos ->
       let ids = FStar_Compiler_List.map (fun s -> mk_ident (s, pos)) path1 in
       lid_of_ids ids
-let (text_of_lid : lident -> Prims.string) = fun lid1 -> lid1.str
+let (text_of_lid : lident -> Prims.string) = fun lid -> lid.str
 let (lid_equals : lident -> lident -> Prims.bool) =
   fun l1 -> fun l2 -> l1.str = l2.str
 let (ident_equals : ident -> ident -> Prims.bool) =
   fun id1 -> fun id2 -> id1.idText = id2.idText
+type lid = lident[@@deriving yojson,show]
 let (range_of_lid : lident -> FStar_Compiler_Range.range) =
   fun lid1 -> range_of_id lid1.ident
 let (set_lid_range : lident -> FStar_Compiler_Range.range -> lident) =

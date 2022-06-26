@@ -84,8 +84,9 @@ Guidelines for the changelog:
     and
     https://github.com/project-everest/hacl-star/pull/442
 
-  * PR https://github.com/FStarLang/FStar/pull/2256 adds support for Coq-style
-    dependent pattern matching. F* now supports `match e returns C with |...`
+  * PR https://github.com/FStarLang/FStar/pull/2256 and
+       https://github.com/FStarLang/FStar/pull/2464 add support for Coq-style
+    dependent pattern matching. F* now supports `match e as x returns C with |...`
     syntax for typechecking the branches with `C` appropriately substituted.
     This changes the syntax of the `match` nodes to maintain an optional
     annotation. The data constructor `Tv_Match` in the reflection API changes
@@ -151,6 +152,12 @@ Guidelines for the changelog:
 
 ## Libraries
 
+   * Renamed some of the types in `Prims` in https://github.com/FStarLang/FStar/pull/2461.
+       - `c_False` became `empty`
+       - `c_True` became `trivial`
+       - `c_and` became `pair`
+       - `c_or` became `sum`
+
    * Guido Martinez found that `FStar.WellFounded.axiom1_dep` (and its
      specialization axiom1) is unsound when instantiated across
      different universe levels. The issue and fix is discussed in
@@ -194,6 +201,21 @@ Guidelines for the changelog:
      provided (using UInt128).
 
 ## Syntax
+   * PR #2603 introduces universes in the reflection syntax.
+     It is a potentially breaking change for reflection clients.
+     See the PR for more description.
+
+
+   * `as` is a keyword now. One use of it is to (optionally) name the
+     scrutinee in dependent pattern matching, e.g.:
+
+     ```
+     match e as x in t with
+     | ...
+     ```
+
+     This is a breaking change, code that uses `as` as a variable name
+     will require changes (cf. https://github.com/FStarLang/FStar/pull/2464)
 
    * Type-based disambiguation for projectors and record
      constructors. You can now write:
@@ -253,6 +275,11 @@ Guidelines for the changelog:
      https://github.com/FStarLang/FStar/pull/2192 for more details.
 
 ## Extraction
+
+   * [PR #2489] Due to the renaming of KReMLin into KaRaMeL,
+     `--codegen Kremlin` has been turned into `--codegen krml`, and
+     the `(noextract_to "Kremlin")` attribute has been turned into
+     `(noextract_to "krml")`. This is a breaking change.
 
    * Cross-module inlining: Declarations in interfaces marked with the
      `inline_for_extraction` qualifier have their definitions inlined
@@ -367,6 +394,10 @@ Guidelines for the changelog:
 
 ## Miscellaneous
 
+   * [Issue #2444](https://github.com/FStarLang/FStar/issues/2444) The
+     definition of the type `ident` exposed `FStar.Reflection.Types`
+     is now `string * range` instead of `range * string`.
+
    * Development builds of F\* no longer report the date of the build
      in `fstar --version`. This is to prevent needlessly rebuilding
      F\* even when the code does not change.
@@ -382,6 +413,13 @@ Guidelines for the changelog:
      expected output location, we raise Warning 321.
 
 ## Command line options
+
+   * [Issue #2385](https://github.com/FStarLang/FStar/issues/2385).
+     The behavior of the --extract option was changed so that it no
+     longer treats the OCaml and Karamel targets
+     differently. Previously, when used with --dep full, F* would
+     disregard the --extract setting when emitting the
+     `ALL_KRML_FILES` variable.
 
    * [PR #1711](https://github.com/FStarLang/FStar/pull/1711): Where
      options take lists of namespaces as arguments
@@ -971,7 +1009,7 @@ Expected changes in the near future:
 * [PR #1176](https://github.com/FStarLang/FStar/pull/1176)
   `inline_for_extraction` on a type annotation now unfolds it at extraction
   time. This can help to reveal first-order code for C extraction;
-  see [FStarLang/kremlin #51](https://github.com/FStarLang/kremlin/issues/51).
+  see [FStarLang/karamel #51](https://github.com/FStarLang/karamel/issues/51).
 
 ## Command line options
 

@@ -32,21 +32,24 @@ RUN tar xzf fstar.tar.gz
 ENV FSTAR_HOME /home/opam/fstar
 ENV PATH="${FSTAR_HOME}/bin:${PATH}"
 
+# Copy examples and docs
+ADD --chown=opam:opam examples/ fstar_examples/
+ADD --chown=opam:opam doc/ fstar_doc/
+
 # Test the F* binary package
 
 # Case 1: test the fresh package
 FROM fstarbin
-RUN eval $(opam env) && make -C $FSTAR_HOME/tests/micro-benchmarks -j $opamthreads
-RUN eval $(opam env) && make -C $FSTAR_HOME/examples -j $opamthreads
-RUN eval $(opam env) && make -C $FSTAR_HOME/doc/tutorial -j $opamthreads regressions
+RUN eval $(opam env) && make -C fstar_examples -j $opamthreads
+RUN eval $(opam env) && make -C fstar_doc/tutorial -j $opamthreads regressions
 
 # Case 2: rebuild ulib and test again
 FROM fstarbin
 RUN eval $(opam env) && make -C $FSTAR_HOME/ulib rebuild -j $opamthreads
-RUN eval $(opam env) && make -C $FSTAR_HOME/examples/hello -j $opamthreads
+RUN eval $(opam env) && make -C fstar_examples/hello -j $opamthreads
 RUN eval $(opam env) && make -C $FSTAR_HOME/ulib clean_checked && make -C $FSTAR_HOME/ulib -j $opamthreads
-RUN eval $(opam env) && make -C $FSTAR_HOME/examples -j $opamthreads
-RUN eval $(opam env) && make -C $FSTAR_HOME/doc/tutorial -j $opamthreads regressions
+RUN eval $(opam env) && make -C fstar_examples -j $opamthreads
+RUN eval $(opam env) && make -C fstar_doc/tutorial -j $opamthreads regressions
 
 # Test the fresh package without OCaml
 FROM ubuntu:20.04 AS fstarnoocaml
@@ -70,18 +73,20 @@ RUN tar xzf fstar.tar.gz
 ENV FSTAR_HOME /home/test/fstar
 ENV PATH="${FSTAR_HOME}/bin:${PATH}"
 
+# Copy tests, examples and docs
+ADD --chown=test:test examples/ fstar_examples/
+ADD --chown=test:test doc/ fstar_doc/
+
 # Case 3: test F* package without OCaml
 FROM fstarnoocaml
-RUN make -C $FSTAR_HOME/tests/micro-benchmarks -j $opamthreads
-RUN make -C $FSTAR_HOME/examples -j $opamthreads
-RUN make -C $FSTAR_HOME/doc/tutorial -j $opamthreads regressions
+RUN make -C fstar_examples -j $opamthreads
+RUN make -C fstar_doc/tutorial -j $opamthreads regressions
 
 # Case 4: test F* package without OCaml, but recheck ulib
 FROM fstarnoocaml
 RUN make -C $FSTAR_HOME/ulib clean_checked && make -C $FSTAR_HOME/ulib -j $opamthreads
-RUN make -C $FSTAR_HOME/tests/micro-benchmarks -j $opamthreads
-RUN make -C $FSTAR_HOME/examples -j $opamthreads
-RUN make -C $FSTAR_HOME/doc/tutorial -j $opamthreads regressions
+RUN make -C fstar_examples -j $opamthreads
+RUN make -C fstar_doc/tutorial -j $opamthreads regressions
 
 # This is the last image. So we can also copy the file that contains
 # the desired filename for the package, to be extracted via

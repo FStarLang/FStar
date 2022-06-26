@@ -22,7 +22,8 @@ open Steel.Effect
 open Steel.Reference
 open Steel.FractionalPermission
 
-let repr (r:ref int) (x:int) = pts_to r full_perm x
+[@@__reduce__]
+let repr (r:ref int) (x:int) = pts_to r full_perm (hide x)
 
 let ctr (r:ref int) = prev:erased int  -> SteelT (y:int{y == prev + 1}) (repr r prev) (repr r)
 

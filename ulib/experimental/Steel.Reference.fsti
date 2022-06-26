@@ -23,6 +23,8 @@ open Steel.Memory
 open Steel.Effect.Atomic
 open Steel.Effect
 
+
+module U32 = FStar.UInt32
 module Mem = Steel.Memory
 
 /// The main user-facing Steel library.
@@ -30,10 +32,10 @@ module Mem = Steel.Memory
 /// This library provides two versions, which can interoperate with each other.
 /// The first one uses the standard separation logic pts_to predicate, and has a non-informative selector
 /// The second one has a selector which returns the contents of the reference in memory, enabling
-/// to better separate reasoning about memory safety and functional correctness when handling refernences.
+/// to better separate reasoning about memory safety and functional correctness when handling references.
 
 /// An abstract datatype for references
-val ref (a:Type0) : Type0
+val ref ([@@@strictly_positive] a:Type0) : Type0
 
 /// The null pointer
 val null (#a:Type0) : ref a
@@ -47,13 +49,13 @@ val is_null (#a:Type0) (r:ref a) : (b:bool{b <==> r == null})
 /// The standard points to separation logic assertion, expressing that
 /// reference [r] is valid in memory, stores value [v], and that we have
 /// permission [p] on it.
-val pts_to_sl (#a:Type0) (r:ref a) (p:perm) (v:erased a) : slprop u#1
+val pts_to_sl (#a:Type0) (r:ref a) (p:perm) (v:a) : slprop u#1
 
 /// Lifting the standard points to predicate to vprop, with a non-informative selector.
 /// The permission [p] and the value [v] are annotated with the smt_fallback attribute,
 /// enabling SMT rewriting on them during frame inference
 [@@ __steel_reduce__]
-let pts_to (#a:Type0) (r:ref a) ([@@@smt_fallback] p:perm) ([@@@ smt_fallback] v:erased a)
+let pts_to (#a:Type0) (r:ref a) ([@@@smt_fallback] p:perm) ([@@@ smt_fallback] v:a)
   = to_vprop (pts_to_sl r p v)
 
 /// If two pts_to predicates on the same reference [r] are valid in the memory [m],
@@ -62,7 +64,7 @@ val pts_to_ref_injective
       (#a: Type u#0)
       (r: ref a)
       (p0 p1:perm)
-      (v0 v1: erased a)
+      (v0 v1:a)
       (m:mem)
     : Lemma
       (requires
@@ -73,7 +75,7 @@ val pts_to_ref_injective
 val pts_to_not_null (#a:Type u#0)
                     (x:ref a)
                     (p:perm)
-                    (v: erased a)
+                    (v:a)
                     (m:mem)
   : Lemma (requires interp (pts_to_sl x p v) m)
           (ensures x =!= null)
@@ -135,13 +137,40 @@ val gather_pt (#a:Type0) (#uses:_) (#p0:perm) (#p1:perm) (#v0 #v1:erased a) (r:r
     (pts_to r p0 v0 `star` pts_to r p1 v1)
     (fun _ -> pts_to r (sum_perm p0 p1) v0)
 
-/// Atomic compare and swap on references.
-val cas_pt (#t:eqtype)
-        (#uses:inames)
-        (r:ref t)
-        (v:Ghost.erased t)
-        (v_old:t)
-        (v_new:t)
+
+/// Atomic operations, read, write, and cas
+///
+/// These are not polymorphic and are allowed only for small types (e.g. word-sized)
+///   For now, exporting only for U32
+
+val atomic_read_pt_u32 (#opened:_) (#p:perm) (#v:erased U32.t) (r:ref U32.t)
+  : SteelAtomic U32.t opened
+      (pts_to r p v)
+      (fun x -> pts_to r p x)
+      (requires fun _ -> True)
+      (ensures fun _ x _ -> x == Ghost.reveal v)
+
+val atomic_write_pt_u32 (#opened:_) (#v:erased U32.t) (r:ref U32.t) (x:U32.t)
+  : SteelAtomicT unit opened
+      (pts_to r full_perm v)
+      (fun _ -> pts_to r full_perm x)
+
+val cas_pt_u32 (#uses:inames)
+        (r:ref U32.t)
+        (v:Ghost.erased U32.t)
+        (v_old:U32.t)
+        (v_new:U32.t)
+  : SteelAtomicT
+        (b:bool{b <==> (Ghost.reveal v == v_old)})
+        uses
+        (pts_to r full_perm v)
+        (fun b -> if b then pts_to r full_perm v_new else pts_to r full_perm v)
+
+val cas_pt_bool (#uses:inames)
+        (r:ref bool)
+        (v:Ghost.erased bool)
+        (v_old:bool)
+        (v_new:bool)
   : SteelAtomicT
         (b:bool{b <==> (Ghost.reveal v == v_old)})
         uses
@@ -271,7 +300,7 @@ val gather_gen (#a:Type0) (#uses:_) (r:ref a) (p0:perm) (p1:perm)
       h' (vptrp r res) == h (vptrp r p1)
     )
 
-let gather (#a: Type0) (#uses: _) (#p: perm) (r: ref a)
+val gather (#a: Type0) (#uses: _) (#p: perm) (r: ref a)
   : SteelGhost unit uses
       (vptrp r (half_perm p) `star` vptrp r (half_perm p))
       (fun _ -> vptrp r p)
@@ -279,10 +308,6 @@ let gather (#a: Type0) (#uses: _) (#p: perm) (r: ref a)
       (fun h _ h' ->
         h' (vptrp r p) == h (vptrp r (half_perm p))
       )
-= let _ = gather_gen r _ _ in
-  change_equal_slprop
-    (vptrp r _)
-    (vptrp r p)
 
 /// A stateful lemma variant of the pts_to_not_null lemma above.
 /// This stateful function is computationally irrelevant and does not modify memory
@@ -325,13 +350,13 @@ val ghost_ref (a:Type u#0) : Type u#0
 
 (* Textbook separation logic version of ghost references *)
 
-val ghost_pts_to_sl (#a:_) (r:ghost_ref a) (p:perm) (v:erased a) : slprop u#1
+val ghost_pts_to_sl (#a:_) (r:ghost_ref a) (p:perm) (v:a) : slprop u#1
 
 [@@ __steel_reduce__]
 let ghost_pts_to (#a:Type0)
   (r:ghost_ref a)
   ([@@@smt_fallback] p:perm)
-  ([@@@ smt_fallback] v:erased a)
+  ([@@@ smt_fallback] v:a)
   : vprop
   = to_vprop (ghost_pts_to_sl r p v)
 

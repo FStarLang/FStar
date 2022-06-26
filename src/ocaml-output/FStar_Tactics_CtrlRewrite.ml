@@ -1,11 +1,11 @@
 open Prims
-let (rangeof : FStar_Tactics_Types.goal -> FStar_Compiler_Range.range) =
-  fun g ->
-    (g.FStar_Tactics_Types.goal_ctx_uvar).FStar_Syntax_Syntax.ctx_uvar_range
 type controller_ty =
   FStar_Syntax_Syntax.term ->
     (Prims.bool * FStar_Tactics_Types.ctrl_flag) FStar_Tactics_Monad.tac
 type rewriter_ty = unit FStar_Tactics_Monad.tac
+let (rangeof : FStar_Tactics_Types.goal -> FStar_Compiler_Range.range) =
+  fun g ->
+    (g.FStar_Tactics_Types.goal_ctx_uvar).FStar_Syntax_Syntax.ctx_uvar_range
 let (__do_rewrite :
   FStar_Tactics_Types.goal ->
     rewriter_ty ->
@@ -77,8 +77,6 @@ let (__do_rewrite :
                                      (env.FStar_TypeChecker_Env.top_level);
                                    FStar_TypeChecker_Env.check_uvars =
                                      (env.FStar_TypeChecker_Env.check_uvars);
-                                   FStar_TypeChecker_Env.use_eq =
-                                     (env.FStar_TypeChecker_Env.use_eq);
                                    FStar_TypeChecker_Env.use_eq_strict =
                                      (env.FStar_TypeChecker_Env.use_eq_strict);
                                    FStar_TypeChecker_Env.is_iface =
@@ -146,7 +144,10 @@ let (__do_rewrite :
                                      (env.FStar_TypeChecker_Env.enable_defer_to_tac);
                                    FStar_TypeChecker_Env.unif_allow_ref_guards
                                      =
-                                     (env.FStar_TypeChecker_Env.unif_allow_ref_guards)
+                                     (env.FStar_TypeChecker_Env.unif_allow_ref_guards);
+                                   FStar_TypeChecker_Env.erase_erasable_args
+                                     =
+                                     (env.FStar_TypeChecker_Env.erase_erasable_args)
                                  } tm in
                              FStar_Pervasives_Native.Some uu___3)) ()
                with

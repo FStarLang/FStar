@@ -1,0 +1,381 @@
+[
+  "î’Ãêh\u0013Š>rQ\n\u0011ºØ\u0011ú",
+  [
+    [
+      "Part2.Par.__proj__Return__item__x",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_29b934f6ee2774a26632f3bde2a09c17"
+      ],
+      0,
+      "cfdc35bef23b0bbd49a60df1590a587a"
+    ],
+    [
+      "Part2.Par.__proj__DoThen__item__act",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_8c4583238aed48bb17c555b7c4648a23"
+      ],
+      0,
+      "55f61a3e3173378e68ba60ac6b017bf5"
+    ],
+    [
+      "Part2.Par.__proj__DoThen__item__input",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "fuel_guarded_inversion_Part2.Par.action_class",
+        "proj_equation_Part2.Par.DoThen_act",
+        "proj_equation_Part2.Par.Mkaction_class_input_of",
+        "projection_inverse_Part2.Par.DoThen_act",
+        "refinement_interpretation_Tm_refine_8c4583238aed48bb17c555b7c4648a23",
+        "token_correspondence_Part2.Par.__proj__Mkaction_class__item__input_of"
+      ],
+      0,
+      "61ae4943081c010613fc59024cbdf512"
+    ],
+    [
+      "Part2.Par.__proj__DoThen__item__continue",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "fuel_guarded_inversion_Part2.Par.action_class",
+        "proj_equation_Part2.Par.DoThen_act",
+        "projection_inverse_Part2.Par.DoThen_act",
+        "refinement_interpretation_Tm_refine_8c4583238aed48bb17c555b7c4648a23"
+      ],
+      0,
+      "6507a6c37d2d226122a8fe475a4bee49"
+    ],
+    [
+      "Part2.Par.__proj__Or__item___0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_529d5695b14b26bb804abd4cebb44862"
+      ],
+      0,
+      "603252deb990b1513718413812ab39d4"
+    ],
+    [
+      "Part2.Par.__proj__Or__item___1",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_529d5695b14b26bb804abd4cebb44862"
+      ],
+      0,
+      "e14c1d9e45ec94ba8f22f726f07541ec"
+    ],
+    [
+      "Part2.Par.bind",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Part2.Par_pretyping_363fe2561fdeef56977952824b33b68a",
+        "binder_x_363fe2561fdeef56977952824b33b68a_1",
+        "binder_x_748162525aac002977813e958964579e_4",
+        "disc_equation_Part2.Par.DoThen", "disc_equation_Part2.Par.Or",
+        "disc_equation_Part2.Par.Return",
+        "equation_Prims.op_Equals_Equals_Equals",
+        "fuel_guarded_inversion_Part2.Par.action_class",
+        "fuel_guarded_inversion_Part2.Par.tree",
+        "projection_inverse_BoxBool_proj_0", "subterm_ordering_Part2.Par.Or",
+        "well_founded_ordering_on_codomain_Part2.Par.DoThen"
+      ],
+      0,
+      "5ed4ac2fd72109919e544ceb94534985"
+    ],
+    [
+      "Part2.Par.l_par",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Part2.Par_pretyping_363fe2561fdeef56977952824b33b68a",
+        "binder_x_363fe2561fdeef56977952824b33b68a_2",
+        "binder_x_71f3769f67df77bcfa1653298bedb762_5",
+        "disc_equation_Part2.Par.DoThen", "disc_equation_Part2.Par.Or",
+        "disc_equation_Part2.Par.Return",
+        "equation_Prims.op_Equals_Equals_Equals",
+        "fuel_guarded_inversion_Part2.Par.action_class",
+        "fuel_guarded_inversion_Part2.Par.tree",
+        "projection_inverse_BoxBool_proj_0", "subterm_ordering_Part2.Par.Or",
+        "well_founded_ordering_on_codomain_Part2.Par.DoThen"
+      ],
+      0,
+      "cb00555764c76ee10c64dd2d6d1f8ff4"
+    ],
+    [
+      "Part2.Par.l_par",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Part2.Par_pretyping_363fe2561fdeef56977952824b33b68a",
+        "binder_x_363fe2561fdeef56977952824b33b68a_2",
+        "binder_x_9c117dce375a3f1584a2d66d42c37cde_6",
+        "disc_equation_Part2.Par.DoThen", "disc_equation_Part2.Par.Or",
+        "disc_equation_Part2.Par.Return",
+        "equation_Prims.op_Equals_Equals_Equals",
+        "fuel_guarded_inversion_Part2.Par.action_class",
+        "fuel_guarded_inversion_Part2.Par.tree",
+        "projection_inverse_BoxBool_proj_0", "subterm_ordering_Part2.Par.Or",
+        "well_founded_ordering_on_codomain_Part2.Par.DoThen"
+      ],
+      0,
+      "90ecfcd6f0c7f7edb70d78a8d76724f8"
+    ],
+    [
+      "Part2.Par.input_of",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Part2.Par.Read",
+        "disc_equation_Part2.Par.Write",
+        "fuel_guarded_inversion_Part2.Par.rw",
+        "projection_inverse_BoxBool_proj_0"
+      ],
+      0,
+      "b156c9e5b1e785ea344fcf13cd6df76c"
+    ],
+    [
+      "Part2.Par.output_of",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Part2.Par.Read",
+        "disc_equation_Part2.Par.Write",
+        "fuel_guarded_inversion_Part2.Par.rw",
+        "projection_inverse_BoxBool_proj_0"
+      ],
+      0,
+      "88ae75d100227ef65f2601083c0cf14c"
+    ],
+    [
+      "Part2.Par.interp",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Part2.Par_pretyping_0164e3de8a5c85e3e2c4b989dcddc887",
+        "binder_x_ae567c2fb75be05905677af440075565_4",
+        "binder_x_bb4e1c9af0265270f8e7a5f250f730e2_3",
+        "binder_x_e249bea248c293c209bc68322fb341e9_1",
+        "constructor_distinct_Part2.Par.Read",
+        "constructor_distinct_Part2.Par.Write", "data_elim_Part2.Par.DoThen",
+        "data_typing_intro_Part2.Par.Write@tok",
+        "disc_equation_Part2.Par.DoThen", "disc_equation_Part2.Par.Or",
+        "disc_equation_Part2.Par.Read", "disc_equation_Part2.Par.Return",
+        "disc_equation_Part2.Par.Write", "equality_tok_Part2.Par.Read@tok",
+        "equality_tok_Part2.Par.Write@tok", "equation_Part2.Par.input_of",
+        "equation_Part2.Par.output_of", "equation_Part2.Par.rw_actions",
+        "equation_Prims.nat", "fuel_guarded_inversion_Part2.Par.rw",
+        "fuel_guarded_inversion_Part2.Par.tree", "int_inversion",
+        "primitive_Prims.op_Addition", "proj_equation_Part2.Par.DoThen_act",
+        "proj_equation_Part2.Par.Mkaction_class_input_of",
+        "proj_equation_Part2.Par.Mkaction_class_output_of",
+        "proj_equation_Part2.Par.Mkaction_class_t",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "projection_inverse_Part2.Par.DoThen_act",
+        "projection_inverse_Part2.Par.Mkaction_class_input_of",
+        "projection_inverse_Part2.Par.Mkaction_class_output_of",
+        "projection_inverse_Part2.Par.Mkaction_class_t",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "subterm_ordering_Part2.Par.Or",
+        "token_correspondence_Part2.Par.__proj__Mkaction_class__item__input_of",
+        "token_correspondence_Part2.Par.__proj__Mkaction_class__item__output_of",
+        "token_correspondence_Part2.Par.input_of",
+        "token_correspondence_Part2.Par.output_of", "unit_typing",
+        "well_founded_ordering_on_codomain_Part2.Par.DoThen"
+      ],
+      0,
+      "32582eb1ae9de7c0c8e97b030f454156"
+    ],
+    [
+      "Part2.Par.read",
+      1,
+      2,
+      1,
+      [
+        "@query", "Part2.Par_pretyping_0164e3de8a5c85e3e2c4b989dcddc887",
+        "constructor_distinct_Part2.Par.Read",
+        "data_typing_intro_Part2.Par.Write@tok",
+        "equality_tok_Part2.Par.Read@tok", "equation_Part2.Par.input_of",
+        "equation_Part2.Par.output_of", "equation_Part2.Par.rw_actions",
+        "proj_equation_Part2.Par.Mkaction_class_input_of",
+        "proj_equation_Part2.Par.Mkaction_class_output_of",
+        "projection_inverse_Part2.Par.Mkaction_class_input_of",
+        "projection_inverse_Part2.Par.Mkaction_class_output_of",
+        "token_correspondence_Part2.Par.__proj__Mkaction_class__item__input_of",
+        "token_correspondence_Part2.Par.__proj__Mkaction_class__item__output_of",
+        "token_correspondence_Part2.Par.input_of",
+        "token_correspondence_Part2.Par.output_of", "unit_typing"
+      ],
+      0,
+      "e92d9fa23b335400f276b6ff6077ca3c"
+    ],
+    [
+      "Part2.Par.write",
+      1,
+      2,
+      1,
+      [
+        "@query", "Part2.Par_pretyping_0164e3de8a5c85e3e2c4b989dcddc887",
+        "constructor_distinct_Part2.Par.Write",
+        "data_typing_intro_Part2.Par.Write@tok",
+        "equality_tok_Part2.Par.Write@tok", "equation_Part2.Par.input_of",
+        "equation_Part2.Par.output_of", "equation_Part2.Par.rw_actions",
+        "proj_equation_Part2.Par.Mkaction_class_input_of",
+        "proj_equation_Part2.Par.Mkaction_class_output_of",
+        "projection_inverse_Part2.Par.Mkaction_class_input_of",
+        "projection_inverse_Part2.Par.Mkaction_class_output_of",
+        "token_correspondence_Part2.Par.__proj__Mkaction_class__item__input_of",
+        "token_correspondence_Part2.Par.__proj__Mkaction_class__item__output_of",
+        "token_correspondence_Part2.Par.input_of",
+        "token_correspondence_Part2.Par.output_of"
+      ],
+      0,
+      "831b038e852da061da5d5bb4a5db2967"
+    ],
+    [
+      "Part2.Par.test_prog",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "e8b562340e05f0b8a478ac20ac0389ca"
+    ],
+    [
+      "Part2.Par.input_of_rwi",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Part2.Par.Inc",
+        "disc_equation_Part2.Par.R", "disc_equation_Part2.Par.W",
+        "fuel_guarded_inversion_Part2.Par.rwi",
+        "projection_inverse_BoxBool_proj_0"
+      ],
+      0,
+      "a5fa6e1b1b640effbb6fe6ba54d26e29"
+    ],
+    [
+      "Part2.Par.output_of_rwi",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Part2.Par.Inc",
+        "disc_equation_Part2.Par.R", "disc_equation_Part2.Par.W",
+        "fuel_guarded_inversion_Part2.Par.rwi",
+        "projection_inverse_BoxBool_proj_0"
+      ],
+      0,
+      "f06e11d6783c7e51d507099a0850399d"
+    ],
+    [
+      "Part2.Par.atomic_inc",
+      1,
+      2,
+      1,
+      [
+        "@query", "Part2.Par_pretyping_4a0d8c113364957e9670f23e95fac094",
+        "constructor_distinct_Part2.Par.Inc",
+        "data_typing_intro_Part2.Par.W@tok",
+        "equality_tok_Part2.Par.Inc@tok", "equation_Part2.Par.input_of_rwi",
+        "equation_Part2.Par.output_of_rwi", "equation_Part2.Par.rwi_actions",
+        "proj_equation_Part2.Par.Mkaction_class_input_of",
+        "proj_equation_Part2.Par.Mkaction_class_output_of",
+        "projection_inverse_Part2.Par.Mkaction_class_input_of",
+        "projection_inverse_Part2.Par.Mkaction_class_output_of",
+        "token_correspondence_Part2.Par.__proj__Mkaction_class__item__input_of",
+        "token_correspondence_Part2.Par.__proj__Mkaction_class__item__output_of",
+        "token_correspondence_Part2.Par.input_of_rwi",
+        "token_correspondence_Part2.Par.output_of_rwi", "unit_typing"
+      ],
+      0,
+      "0e77a22cc7951c5490b679dd7d146c00"
+    ],
+    [
+      "Part2.Par.interp_rwi",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Part2.Par_pretyping_4a0d8c113364957e9670f23e95fac094",
+        "binder_x_ae567c2fb75be05905677af440075565_4",
+        "binder_x_bb4e1c9af0265270f8e7a5f250f730e2_3",
+        "binder_x_fd0207b18cfa0816fc807083bf20af50_1",
+        "constructor_distinct_Part2.Par.Inc",
+        "constructor_distinct_Part2.Par.R",
+        "constructor_distinct_Part2.Par.W", "data_elim_Part2.Par.DoThen",
+        "data_typing_intro_Part2.Par.W@tok",
+        "disc_equation_Part2.Par.DoThen", "disc_equation_Part2.Par.Inc",
+        "disc_equation_Part2.Par.Or", "disc_equation_Part2.Par.R",
+        "disc_equation_Part2.Par.Return", "disc_equation_Part2.Par.W",
+        "equality_tok_Part2.Par.Inc@tok", "equality_tok_Part2.Par.R@tok",
+        "equality_tok_Part2.Par.W@tok", "equation_Part2.Par.input_of_rwi",
+        "equation_Part2.Par.output_of_rwi", "equation_Part2.Par.rwi_actions",
+        "equation_Prims.nat", "fuel_guarded_inversion_Part2.Par.rwi",
+        "fuel_guarded_inversion_Part2.Par.tree", "int_inversion",
+        "primitive_Prims.op_Addition", "proj_equation_Part2.Par.DoThen_act",
+        "proj_equation_Part2.Par.Mkaction_class_input_of",
+        "proj_equation_Part2.Par.Mkaction_class_output_of",
+        "proj_equation_Part2.Par.Mkaction_class_t",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "projection_inverse_Part2.Par.DoThen_act",
+        "projection_inverse_Part2.Par.DoThen_input",
+        "projection_inverse_Part2.Par.Mkaction_class_input_of",
+        "projection_inverse_Part2.Par.Mkaction_class_output_of",
+        "projection_inverse_Part2.Par.Mkaction_class_t",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "subterm_ordering_Part2.Par.Or",
+        "token_correspondence_Part2.Par.__proj__Mkaction_class__item__input_of",
+        "token_correspondence_Part2.Par.__proj__Mkaction_class__item__output_of",
+        "token_correspondence_Part2.Par.input_of_rwi",
+        "token_correspondence_Part2.Par.output_of_rwi", "unit_typing",
+        "well_founded_ordering_on_codomain_Part2.Par.DoThen"
+      ],
+      0,
+      "e7721252880bd00ca78883c8c289b686"
+    ],
+    [
+      "Part2.Par.test_par_atomic_inc",
+      1,
+      2,
+      1,
+      [
+        "@query", "primitive_Prims.op_Addition",
+        "projection_inverse_BoxInt_proj_0"
+      ],
+      0,
+      "ff16215b3c4c4202b633c4772544e6fd"
+    ]
+  ]
+]

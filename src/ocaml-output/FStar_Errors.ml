@@ -373,6 +373,9 @@ type raw_error =
   | Error_RemoveUnusedTypeParameter 
   | Warning_NoMagicInFSharp 
   | Error_BadLetOpenRecord 
+  | Error_UnexpectedTypeclassInstance 
+  | Warning_AmbiguousResolveImplicitsHook 
+  | Warning_SplitAndRetryQueries 
 let (uu___is_Error_DependencyAnalysisFailed : raw_error -> Prims.bool) =
   fun projectee ->
     match projectee with
@@ -1868,6 +1871,22 @@ let (uu___is_Warning_NoMagicInFSharp : raw_error -> Prims.bool) =
 let (uu___is_Error_BadLetOpenRecord : raw_error -> Prims.bool) =
   fun projectee ->
     match projectee with | Error_BadLetOpenRecord -> true | uu___ -> false
+let (uu___is_Error_UnexpectedTypeclassInstance : raw_error -> Prims.bool) =
+  fun projectee ->
+    match projectee with
+    | Error_UnexpectedTypeclassInstance -> true
+    | uu___ -> false
+let (uu___is_Warning_AmbiguousResolveImplicitsHook : raw_error -> Prims.bool)
+  =
+  fun projectee ->
+    match projectee with
+    | Warning_AmbiguousResolveImplicitsHook -> true
+    | uu___ -> false
+let (uu___is_Warning_SplitAndRetryQueries : raw_error -> Prims.bool) =
+  fun projectee ->
+    match projectee with
+    | Warning_SplitAndRetryQueries -> true
+    | uu___ -> false
 type flag = error_flag
 type error_setting = (raw_error * error_flag * Prims.int)
 let (default_settings : error_setting Prims.list) =
@@ -2180,7 +2199,7 @@ let (default_settings : error_setting Prims.list) =
   (Fatal_SplicedUndef, CFatal, (Prims.of_int (300)));
   (Fatal_SpliceUnembedFail, CFatal, (Prims.of_int (301)));
   (Warning_ExtractionUnexpectedEffect, CWarning, (Prims.of_int (302)));
-  (Error_DidNotFail, CAlwaysError, (Prims.of_int (303)));
+  (Error_DidNotFail, CError, (Prims.of_int (303)));
   (Warning_UnappliedFail, CWarning, (Prims.of_int (304)));
   (Warning_QuantifierWithoutPattern, CSilent, (Prims.of_int (305)));
   (Error_EmptyFailErrs, CAlwaysError, (Prims.of_int (306)));
@@ -2222,7 +2241,10 @@ let (default_settings : error_setting Prims.list) =
   (Error_ErasedCtor, CError, (Prims.of_int (343)));
   (Error_RemoveUnusedTypeParameter, CWarning, (Prims.of_int (344)));
   (Warning_NoMagicInFSharp, CWarning, (Prims.of_int (345)));
-  (Error_BadLetOpenRecord, CAlwaysError, (Prims.of_int (346)))]
+  (Error_BadLetOpenRecord, CAlwaysError, (Prims.of_int (346)));
+  (Error_UnexpectedTypeclassInstance, CAlwaysError, (Prims.of_int (347)));
+  (Warning_AmbiguousResolveImplicitsHook, CWarning, (Prims.of_int (348)));
+  (Warning_SplitAndRetryQueries, CWarning, (Prims.of_int (349)))]
 let lookup_error :
   'uuuuu 'uuuuu1 'uuuuu2 .
     ('uuuuu * 'uuuuu1 * 'uuuuu2) Prims.list ->
@@ -2718,7 +2740,7 @@ let (set_option_warning_callback_range :
   FStar_Compiler_Range.range FStar_Pervasives_Native.option -> unit) =
   fun ropt ->
     FStar_Options.set_option_warning_callback (warn_unsafe_options ropt)
-let (uu___228 :
+let (uu___241 :
   (((Prims.string -> error_setting Prims.list) -> unit) *
     (unit -> error_setting Prims.list)))
   =
@@ -2763,10 +2785,10 @@ let (uu___228 :
   (set_callbacks, get_error_flags)
 let (set_parse_warn_error :
   (Prims.string -> error_setting Prims.list) -> unit) =
-  match uu___228 with
+  match uu___241 with
   | (set_parse_warn_error1, error_flags) -> set_parse_warn_error1
 let (error_flags : unit -> error_setting Prims.list) =
-  match uu___228 with | (set_parse_warn_error1, error_flags1) -> error_flags1
+  match uu___241 with | (set_parse_warn_error1, error_flags1) -> error_flags1
 let (lookup : raw_error -> (raw_error * error_flag * Prims.int)) =
   fun err ->
     let flags = error_flags () in

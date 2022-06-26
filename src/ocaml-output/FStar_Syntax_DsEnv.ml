@@ -1,11 +1,5 @@
 open Prims
 type used_marker = Prims.bool FStar_Compiler_Effect.ref
-type local_binding =
-  (FStar_Ident.ident * FStar_Syntax_Syntax.bv * used_marker)
-type rec_binding =
-  (FStar_Ident.ident * FStar_Ident.lid * FStar_Syntax_Syntax.delta_depth *
-    used_marker)
-type module_abbrev = (FStar_Ident.ident * FStar_Ident.lident)
 type open_kind =
   | Open_module 
   | Open_namespace 
@@ -58,6 +52,12 @@ let (__proj__Mkrecord_or_dc__item__is_record : record_or_dc -> Prims.bool) =
     match projectee with
     | { typename; constrname; parms; fields; is_private; is_record;_} ->
         is_record
+type local_binding =
+  (FStar_Ident.ident * FStar_Syntax_Syntax.bv * used_marker)
+type rec_binding =
+  (FStar_Ident.ident * FStar_Ident.lid * FStar_Syntax_Syntax.delta_depth *
+    used_marker)
+type module_abbrev = (FStar_Ident.ident * FStar_Ident.lident)
 type scope_mod =
   | Local_binding of local_binding 
   | Rec_binding of rec_binding 
@@ -281,14 +281,20 @@ let (__proj__Mkdsenv_hooks__item__ds_push_module_abbrev_hook :
     match projectee with
     | { ds_push_open_hook; ds_push_include_hook;
         ds_push_module_abbrev_hook;_} -> ds_push_module_abbrev_hook
+let (mk_dsenv_hooks :
+  (env -> open_module_or_namespace -> unit) ->
+    (env -> FStar_Ident.lident -> unit) ->
+      (env -> FStar_Ident.ident -> FStar_Ident.lident -> unit) -> dsenv_hooks)
+  =
+  fun open_hook ->
+    fun include_hook ->
+      fun module_abbrev_hook ->
+        {
+          ds_push_open_hook = open_hook;
+          ds_push_include_hook = include_hook;
+          ds_push_module_abbrev_hook = module_abbrev_hook
+        }
 type 'a withenv = env -> ('a * env)
-let (default_ds_hooks : dsenv_hooks) =
-  {
-    ds_push_open_hook = (fun uu___ -> fun uu___1 -> ());
-    ds_push_include_hook = (fun uu___ -> fun uu___1 -> ());
-    ds_push_module_abbrev_hook =
-      (fun uu___ -> fun uu___1 -> fun uu___2 -> ())
-  }
 type foundname =
   | Term_name of (FStar_Syntax_Syntax.typ * FStar_Syntax_Syntax.attribute
   Prims.list) 
@@ -306,6 +312,13 @@ let (uu___is_Eff_name : foundname -> Prims.bool) =
 let (__proj__Eff_name__item___0 :
   foundname -> (FStar_Syntax_Syntax.sigelt * FStar_Ident.lident)) =
   fun projectee -> match projectee with | Eff_name _0 -> _0
+let (default_ds_hooks : dsenv_hooks) =
+  {
+    ds_push_open_hook = (fun uu___ -> fun uu___1 -> ());
+    ds_push_include_hook = (fun uu___ -> fun uu___1 -> ());
+    ds_push_module_abbrev_hook =
+      (fun uu___ -> fun uu___1 -> fun uu___2 -> ())
+  }
 let (set_iface : env -> Prims.bool -> env) =
   fun env1 ->
     fun b ->
@@ -1973,7 +1986,7 @@ let (extract_record :
                                                       f.FStar_Syntax_Syntax.binder_bv)
                                                      ||
                                                      (is_rec &&
-                                                        (FStar_Syntax_Syntax.is_implicit
+                                                        (FStar_Syntax_Syntax.is_bqual_implicit
                                                            f.FStar_Syntax_Syntax.binder_qual)) in
                                                  if uu___20 then [] else [f])) in
                                        let fields' =

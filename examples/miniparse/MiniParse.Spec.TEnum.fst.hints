@@ -1,5 +1,5 @@
 [
-  "\n(žç#ì5Ëª\u001f´4!\n¯P",
+  "e\b\u0010Å/jÑ§æä”\b?Å0ù",
   [
     [
       "MiniParse.Spec.TEnum.mk_tenum_branches",
@@ -25,7 +25,7 @@
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "5374776f660be3ddf723801ad8ee30f3"
+      "a6d00aa404a4e0c4603d612506cf8bcc"
     ],
     [
       "MiniParse.Spec.TEnum.get_inductive_constructors",
@@ -34,16 +34,24 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
+        "FStar.Reflection.Data_pretyping_ee655bc751cef679bca813f86c407d6b",
         "FStar.Reflection.Types_pretyping_b57262eead998d474939c05a17e1ffab",
-        "bool_inversion", "data_elim_FStar.Tactics.Result.Success",
+        "bool_inversion", "bool_typing",
+        "data_elim_FStar.Tactics.Result.Success",
+        "data_typing_intro_FStar.Reflection.Data.Tv_Unknown@tok",
+        "disc_equation_FStar.Pervasives.Native.None",
+        "disc_equation_FStar.Reflection.Data.Tv_FVar",
         "fuel_guarded_inversion_FStar.Tactics.Result.__result",
         "function_token_typing_FStar.Reflection.Types.sigelt",
         "lemma_FStar.Pervasives.invertOption",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_ad0c440fdab6ffc192ca7b9c26ec7060",
         "typing_FStar.Reflection.Builtins.inspect_fv",
-        "typing_FStar.Reflection.Builtins.lookup_typ"
+        "typing_FStar.Reflection.Builtins.lookup_typ",
+        "typing_FStar.Reflection.Data.__proj__Tv_FVar__item__v"
       ],
       0,
-      "d4fd833f7e8f3ee12c047a49c965e914"
+      "724f41c687f94a56931480c1305a9075"
     ],
     [
       "MiniParse.Spec.TEnum.invert_branches_with_cascade",
@@ -64,7 +72,7 @@
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "039828c5950027455e7a24b7a9defab4"
+      "3f9e684fbdf6c1d0bf07bb20e2a2e8a5"
     ],
     [
       "MiniParse.Spec.TEnum.synth_inverse_forall_bounded_u16_intro",
@@ -82,7 +90,7 @@
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "6f64aab00a027a1f89af412025aaa2f6"
+      "c42fec7d5abb09307a37f98f85f3a623"
     ]
   ]
 ]

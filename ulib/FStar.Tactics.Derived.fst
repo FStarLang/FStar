@@ -30,12 +30,14 @@ exception Goal_not_trivial
 let goals () : Tac (list goal) = goals_of (get ())
 let smt_goals () : Tac (list goal) = smt_goals_of (get ())
 
-let fail (#a:Type) (m:string) =
-  raise #a (TacticFailure m)
+let fail (#a:Type) (m:string)
+  : TAC a (fun ps post -> post (Failed (TacticFailure m) ps))
+  = raise #a (TacticFailure m)
 
-let fail_silently (#a:Type) (m:string) =
-  set_urgency 0;
-  raise #a (TacticFailure m)
+let fail_silently (#a:Type) (m:string)
+  : TAC a (fun _ post -> forall ps. post (Failed (TacticFailure m) ps))
+  = set_urgency 0;
+    raise #a (TacticFailure m)
 
 (** Return the current *goal*, not its type. (Ignores SMT goals) *)
 let _cur_goal () : Tac goal =
@@ -192,7 +194,7 @@ under some guard [g], adding the guard as a goal. *)
 let exact_guard (t : term) : Tac unit =
     with_policy Goal (fun () -> t_exact true false t)
 
-(** (TODO: explain bettter) When running [pointwise tau] For every
+(** (TODO: explain better) When running [pointwise tau] For every
 subterm [t'] of the goal's type [t], the engine will build a goal [Gamma
 |= t' == ?u] and run [tau] on it. When the tactic proves the goal,
 the engine will rewrite [t'] for [?u] in the original goal type. This
@@ -461,7 +463,7 @@ let admit_all () : Tac unit =
     let _ = repeat tadmit in
     ()
 
-(** [is_guard] returns whether the current goal arised from a typechecking guard *)
+(** [is_guard] returns whether the current goal arose from a typechecking guard *)
 let is_guard () : Tac bool =
     Tactics.Types.is_guard (_cur_goal ())
 
@@ -649,7 +651,7 @@ private val push1' : (#p:Type) -> (#q:Type) ->
 private let push1' #p #q f u = ()
 
 (*
- * Some easier applying, which should prevent frustation
+ * Some easier applying, which should prevent frustration
  * (or cause more when it doesn't do what you wanted to)
  *)
 val apply_squash_or_lem : d:nat -> term -> Tac unit
@@ -678,7 +680,7 @@ let rec apply_squash_or_lem d t =
        | _ ->
            fail "mapply: can't apply (1)"
        end
-    | C_Total rt _ ->
+    | C_Total rt _ _ ->
        begin match unsquash rt with
        (* If the function returns a squash, just apply it, since our goals are squashed *)
        | Some rt ->
@@ -835,7 +837,8 @@ let rec visit_tm (ff : term -> Tac term) (t : term) : Tac term =
   let tv = inspect_ln t in
   let tv' =
     match tv with
-    | Tv_FVar _ -> tv
+    | Tv_FVar _
+    | Tv_UInst _ _ -> tv
     | Tv_Var bv ->
         let bv = on_sort_bv (visit_tm ff) bv in
         Tv_Var bv
@@ -844,7 +847,7 @@ let rec visit_tm (ff : term -> Tac term) (t : term) : Tac term =
         let bv = on_sort_bv (visit_tm ff) bv in
         Tv_BVar bv
 
-    | Tv_Type () -> Tv_Type ()
+    | Tv_Type u -> Tv_Type u
     | Tv_Const c -> Tv_Const c
     | Tv_Uvar i u -> Tv_Uvar i u
     | Tv_Unknown -> Tv_Unknown
@@ -871,19 +874,24 @@ let rec visit_tm (ff : term -> Tac term) (t : term) : Tac term =
         Tv_Let r attrs b def t
     | Tv_Match sc ret_opt brs ->
         let sc = visit_tm ff sc in
-        let ret_opt = map_opt (fun ret ->
-          match ret with
-          | Inl t, tacopt -> Inl (visit_tm ff t), map_opt (visit_tm ff) tacopt
-          | Inr c, tacopt -> Inr (visit_comp ff c), map_opt (visit_tm ff) tacopt) ret_opt in
+        let ret_opt = map_opt (fun (b, asc) ->
+          let b = on_sort_binder (visit_tm ff) b in
+          let asc =
+            match asc with
+            | Inl t, tacopt, use_eq ->
+              Inl (visit_tm ff t), map_opt (visit_tm ff) tacopt, use_eq
+            | Inr c, tacopt, use_eq->
+              Inr (visit_comp ff c), map_opt (visit_tm ff) tacopt, use_eq in
+          b, asc) ret_opt in
         let brs = map (visit_br ff) brs in
         Tv_Match sc ret_opt brs
-    | Tv_AscribedT e t topt ->
+    | Tv_AscribedT e t topt use_eq ->
         let e = visit_tm ff e in
         let t = visit_tm ff t in
-        Tv_AscribedT e t topt
-    | Tv_AscribedC e c topt ->
+        Tv_AscribedT e t topt use_eq
+    | Tv_AscribedC e c topt use_eq ->
         let e = visit_tm ff e in
-        Tv_AscribedC e c topt
+        Tv_AscribedC e c topt use_eq
   in
   ff (pack_ln tv')
 and visit_br (ff : term -> Tac term) (b:branch) : Tac branch =
@@ -911,15 +919,15 @@ and visit_comp (ff : term -> Tac term) (c : comp) : Tac comp =
   let cv = inspect_comp c in
   let cv' =
     match cv with
-    | C_Total ret decr ->
+    | C_Total ret uopt decr ->
         let ret = visit_tm ff ret in
         let decr = map (visit_tm ff) decr in
-        C_Total ret decr
+        C_Total ret uopt decr
 
-    | C_GTotal ret decr ->
+    | C_GTotal ret uopt decr ->
         let ret = visit_tm ff ret in
         let decr = map (visit_tm ff) decr in
-        C_GTotal ret decr
+        C_GTotal ret uopt decr
 
     | C_Lemma pre post pats ->
         let pre = visit_tm ff pre in
@@ -964,7 +972,7 @@ private let rec last (x : list 'a) : Tac 'a =
 
 (** When the goal is [match e with | p1 -> e1 ... | pn -> en],
 destruct it into [n] goals for each possible case, including an
-hypothesis for [e] matching the correposnding pattern. *)
+hypothesis for [e] matching the corresponding pattern. *)
 let branch_on_match () : Tac unit =
     focus (fun () ->
       let x = get_match_body () in

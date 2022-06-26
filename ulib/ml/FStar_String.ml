@@ -5,7 +5,7 @@ let op_Hat s t =  strcat s t
 (* restore pre-2.11 BatString.nsplit behavior,
    see https://github.com/ocaml-batteries-team/batteries-included/issues/845 *)
 let batstring_nsplit s t =
-  if s = "" then [] else BatString.nsplit s t
+  if s = "" then [] else BatString.split_on_string t s
 
 let split seps s =
   let rec repeat_split acc = function
@@ -40,3 +40,4 @@ let index_of s c =
     with Found i -> Z.of_int i
 let list_of_string s = BatList.init (BatUTF8.length s) (fun i -> BatUChar.code (BatUTF8.get s i))
 let string_of_list l = BatUTF8.init (BatList.length l) (fun i -> BatUChar.chr (BatList.at l i))
+let string_of_char = BatString.of_char

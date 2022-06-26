@@ -19,8 +19,8 @@ let _ = assert_norm (True /\ True)
 let _ = assert_norm (True \/ True)
 
 (* These fail, and probably shouldn't, but it's not too worrysome *)
-(* let _ = assert (c_and True True) *)
-(* let _ = assert (c_and c_True c_True) *)
+(* let _ = assert (pair True True) *)
+(* let _ = assert (pair trivial trivial) *)
 
 (* This fails after removing t_valid, c.f. 5ac0bd96d *)
 (* val l1 : (a : Type) -> Lemma (a ==> squash a) *)

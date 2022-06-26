@@ -10,7 +10,7 @@ let rec not_do_much e: Tac term =
       let es = map (fun (e, q) -> not_do_much e, q) es in
       mk_app e es
 
-  | Tv_Var _ | Tv_BVar _ | Tv_FVar _
+  | Tv_Var _ | Tv_BVar _ | Tv_FVar _ | Tv_UInst _ _
   | Tv_Const _ ->
     e
 
@@ -32,14 +32,14 @@ let rec not_do_much e: Tac term =
       let e = pack (Tv_Let r attrs bv e1 e2) in
       e
 
-  | Tv_AscribedT e t tac ->
+  | Tv_AscribedT e t tac use_eq ->
       let e = not_do_much e in
-      let e = pack (Tv_AscribedT e t tac) in
+      let e = pack (Tv_AscribedT e t tac use_eq) in
       e
 
-  | Tv_AscribedC e c tac ->
+  | Tv_AscribedC e c tac use_eq ->
       let e = not_do_much e in
-      let e = pack (Tv_AscribedC e c tac) in
+      let e = pack (Tv_AscribedC e c tac use_eq) in
       e
 
   | Tv_Arrow _ _

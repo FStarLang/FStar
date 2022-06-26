@@ -11,7 +11,7 @@
         "refinement_interpretation_Tm_refine_483b7906dc2866de010d2ec5a550fd4c"
       ],
       0,
-      "4290f0fb7bca1c1c9ecd2e8bef1b3c26"
+      "3b94baed739a3a76de9b2e592448be5c"
     ],
     [
       "FStar.LexicographicOrdering.__proj__Left_lex__item__x2",
@@ -23,7 +23,7 @@
         "refinement_interpretation_Tm_refine_483b7906dc2866de010d2ec5a550fd4c"
       ],
       0,
-      "402255e6a3106cd23698a8fb24921acc"
+      "89a1d833b277db9c01f4c0bae637ff3f"
     ],
     [
       "FStar.LexicographicOrdering.__proj__Left_lex__item__y1",
@@ -32,13 +32,12 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
+        "data_elim_FStar.LexicographicOrdering.Left_lex",
         "fuel_guarded_inversion_Prims.dtuple2",
-        "proj_equation_FStar.LexicographicOrdering.Left_lex_x1",
-        "projection_inverse_FStar.LexicographicOrdering.Left_lex_x1",
         "refinement_interpretation_Tm_refine_483b7906dc2866de010d2ec5a550fd4c"
       ],
       0,
-      "e2b648f69123c1bdbd86c471a45d22f1"
+      "eea1e37336157e72da98ad473588621f"
     ],
     [
       "FStar.LexicographicOrdering.__proj__Left_lex__item__y2",
@@ -47,13 +46,12 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
+        "data_elim_FStar.LexicographicOrdering.Left_lex",
         "fuel_guarded_inversion_Prims.dtuple2",
-        "proj_equation_FStar.LexicographicOrdering.Left_lex_x2",
-        "projection_inverse_FStar.LexicographicOrdering.Left_lex_x2",
         "refinement_interpretation_Tm_refine_483b7906dc2866de010d2ec5a550fd4c"
       ],
       0,
-      "0b6bfa3a86e3934ef03da647b6f8d160"
+      "412818f3c6c26c5714923b4d33d6ff5a"
     ],
     [
       "FStar.LexicographicOrdering.__proj__Left_lex__item___4",
@@ -62,15 +60,12 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
+        "data_elim_FStar.LexicographicOrdering.Left_lex",
         "fuel_guarded_inversion_Prims.dtuple2",
-        "proj_equation_FStar.LexicographicOrdering.Left_lex_x1",
-        "proj_equation_FStar.LexicographicOrdering.Left_lex_x2",
-        "projection_inverse_FStar.LexicographicOrdering.Left_lex_x1",
-        "projection_inverse_FStar.LexicographicOrdering.Left_lex_x2",
         "refinement_interpretation_Tm_refine_483b7906dc2866de010d2ec5a550fd4c"
       ],
       0,
-      "b298453d001a055b13c5a1e5bf534026"
+      "baece6c3e21c6834cf28fe4375c70e7f"
     ],
     [
       "FStar.LexicographicOrdering.__proj__Right_lex__item__x",
@@ -82,7 +77,7 @@
         "refinement_interpretation_Tm_refine_76a15698df139f661cb175245f098bdd"
       ],
       0,
-      "091c0010762e16a281ee6391c1745ec6"
+      "d535f10a8935f54e3b3d382ee051b67f"
     ],
     [
       "FStar.LexicographicOrdering.__proj__Right_lex__item__y1",
@@ -91,13 +86,12 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
+        "data_elim_FStar.LexicographicOrdering.Right_lex",
         "fuel_guarded_inversion_Prims.dtuple2",
-        "proj_equation_FStar.LexicographicOrdering.Right_lex_x",
-        "projection_inverse_FStar.LexicographicOrdering.Right_lex_x",
         "refinement_interpretation_Tm_refine_76a15698df139f661cb175245f098bdd"
       ],
       0,
-      "949aa58d09e900cd26ba1f86350f380f"
+      "cbdcb9c9f601ebf9995800ec2af7d1bb"
     ],
     [
       "FStar.LexicographicOrdering.__proj__Right_lex__item__y2",
@@ -106,13 +100,12 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
+        "data_elim_FStar.LexicographicOrdering.Right_lex",
         "fuel_guarded_inversion_Prims.dtuple2",
-        "proj_equation_FStar.LexicographicOrdering.Right_lex_x",
-        "projection_inverse_FStar.LexicographicOrdering.Right_lex_x",
         "refinement_interpretation_Tm_refine_76a15698df139f661cb175245f098bdd"
       ],
       0,
-      "4d4ec39c75f177dbfa29697719ea17a2"
+      "efcb963c0e6bb6bcd8d6882feeefb07c"
     ],
     [
       "FStar.LexicographicOrdering.__proj__Right_lex__item___3",
@@ -121,17 +114,12 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
+        "data_elim_FStar.LexicographicOrdering.Right_lex",
         "fuel_guarded_inversion_Prims.dtuple2",
-        "proj_equation_FStar.LexicographicOrdering.Right_lex_x",
-        "proj_equation_FStar.LexicographicOrdering.Right_lex_y1",
-        "proj_equation_FStar.LexicographicOrdering.Right_lex_y2",
-        "projection_inverse_FStar.LexicographicOrdering.Right_lex_x",
-        "projection_inverse_FStar.LexicographicOrdering.Right_lex_y1",
-        "projection_inverse_FStar.LexicographicOrdering.Right_lex_y2",
         "refinement_interpretation_Tm_refine_76a15698df139f661cb175245f098bdd"
       ],
       0,
-      "c0f1b49fbe36c41411ce0ac8d7228624"
+      "ae6303905deffff89e46b6c3e2bbb6ec"
     ],
     [
       "FStar.LexicographicOrdering.lex_aux",
@@ -140,7 +128,7 @@
       1,
       [ "@query" ],
       0,
-      "64c2c2b8fd803b792539946200bf1ed6"
+      "bc7da4493060121b9e7572b962f87b5f"
     ],
     [
       "FStar.LexicographicOrdering.lex",
@@ -149,7 +137,7 @@
       1,
       [ "@query" ],
       0,
-      "6890f7a88f1cfc607187285ae1951ee9"
+      "375d65a29b63a0096f64e7ab3bb26952"
     ],
     [
       "FStar.LexicographicOrdering.__proj__Left_sym__item__x1",
@@ -161,7 +149,7 @@
         "refinement_interpretation_Tm_refine_e6204610dcb2b1d0fca4f2a1766034e0"
       ],
       0,
-      "5a0de9b4af0c5aa86af5ca97682db67b"
+      "1947d4884401e7a7d80cd46fcb870e3a"
     ],
     [
       "FStar.LexicographicOrdering.__proj__Left_sym__item__x2",
@@ -173,7 +161,7 @@
         "refinement_interpretation_Tm_refine_e6204610dcb2b1d0fca4f2a1766034e0"
       ],
       0,
-      "9b4106b90fda1f2c74f47fcb402bafcf"
+      "f7012a366e93228cef8b769998e54821"
     ],
     [
       "FStar.LexicographicOrdering.__proj__Left_sym__item__y",
@@ -185,7 +173,7 @@
         "refinement_interpretation_Tm_refine_e6204610dcb2b1d0fca4f2a1766034e0"
       ],
       0,
-      "7d70338aee03d181789455f492b6c644"
+      "4b7f22090e0d3eb70df7d8d527a7789b"
     ],
     [
       "FStar.LexicographicOrdering.__proj__Left_sym__item___3",
@@ -194,15 +182,12 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
+        "data_elim_FStar.LexicographicOrdering.Left_sym",
         "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
-        "proj_equation_FStar.LexicographicOrdering.Left_sym_x1",
-        "proj_equation_FStar.LexicographicOrdering.Left_sym_x2",
-        "projection_inverse_FStar.LexicographicOrdering.Left_sym_x1",
-        "projection_inverse_FStar.LexicographicOrdering.Left_sym_x2",
         "refinement_interpretation_Tm_refine_e6204610dcb2b1d0fca4f2a1766034e0"
       ],
       0,
-      "e3f28b1d8b28e37d55cdebb5c670f849"
+      "faa0808a7168504316daf3e633d28cc4"
     ],
     [
       "FStar.LexicographicOrdering.__proj__Right_sym__item__x",
@@ -214,7 +199,7 @@
         "refinement_interpretation_Tm_refine_56d069ec247cb909bfad7100a98b8ecd"
       ],
       0,
-      "e521b46a873c941363dff12e3c0719fa"
+      "c1d45f26e46ff3930b9f948bb1f2405a"
     ],
     [
       "FStar.LexicographicOrdering.__proj__Right_sym__item__y1",
@@ -226,7 +211,7 @@
         "refinement_interpretation_Tm_refine_56d069ec247cb909bfad7100a98b8ecd"
       ],
       0,
-      "921bae73eba04745ef548ee87a90f74b"
+      "d461d66c69a48fae75399ebf06af0504"
     ],
     [
       "FStar.LexicographicOrdering.__proj__Right_sym__item__y2",
@@ -238,7 +223,7 @@
         "refinement_interpretation_Tm_refine_56d069ec247cb909bfad7100a98b8ecd"
       ],
       0,
-      "a960c056152afeb61b622e705d9e64eb"
+      "fa5f2f3fbf974d6e4f4d1b639059a20a"
     ],
     [
       "FStar.LexicographicOrdering.__proj__Right_sym__item___3",
@@ -247,15 +232,12 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
+        "data_elim_FStar.LexicographicOrdering.Right_sym",
         "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
-        "proj_equation_FStar.LexicographicOrdering.Right_sym_y1",
-        "proj_equation_FStar.LexicographicOrdering.Right_sym_y2",
-        "projection_inverse_FStar.LexicographicOrdering.Right_sym_y1",
-        "projection_inverse_FStar.LexicographicOrdering.Right_sym_y2",
         "refinement_interpretation_Tm_refine_56d069ec247cb909bfad7100a98b8ecd"
       ],
       0,
-      "cb2e05da5b1ca8ab47642a81a78f0931"
+      "7b06055a0cba107b0dd07a673b861f1e"
     ],
     [
       "FStar.LexicographicOrdering.sym_sub_lex",
@@ -279,7 +261,7 @@
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2"
       ],
       0,
-      "e1c3533eacdf5428268b59f37c90bd22"
+      "af5d8e12be3138b437f2b1d0058d89d3"
     ]
   ]
 ]

@@ -1,0 +1,44 @@
+[
+  "\u0006È∏p¨¢Ø∂ø!+\u0015z‹∆~",
+  [
+    [
+      "ConstructiveLogic.modulo_add",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.pos",
+        "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5"
+      ],
+      0,
+      "26758fc43c6b6ee4c3e75cb2bb162bfc"
+    ],
+    [
+      "ConstructiveLogic.ex11",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "5234f9c76139fd53a03aa76dd0c90990"
+    ],
+    [
+      "ConstructiveLogic.ex12",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "becbc4e1718024407cea7643ed699627"
+    ],
+    [
+      "ConstructiveLogic.ex14",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "9ffb25bd9a2216af50c287a8e97ff1b5"
+    ]
+  ]
+]

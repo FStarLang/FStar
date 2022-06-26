@@ -5,7 +5,7 @@ module FStar.Endianness
 ///
 /// The functions in this module aim to be as generic as possible, in order to
 /// facilitate compatibility with:
-/// - Vale's model of machine integers (nat64 et. al.), which does not rely on
+/// - Vale's model of machine integers (nat64 et al.), which does not rely on
 ///   FStar's machine integers
 /// - HACL*'s Lib.IntTypes module, which exposes a universal indexed integer
 ///   type but uses F* machine integers under the hood.
@@ -15,7 +15,7 @@ module FStar.Endianness
 ///
 /// .. note::
 ///
-///    This module supersedes the poorly-named ``FStar.Kremlin.Endianness``.
+///    This module supersedes the poorly-named ``FStar.Krml.Endianness``.
 
 module U8 = FStar.UInt8
 module U32 = FStar.UInt32

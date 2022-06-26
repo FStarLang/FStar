@@ -16,6 +16,39 @@ type deps_t = FStar_Parser_Dep.deps
 type either_replst =
   (FStar_Interactive_JsonHelper.repl_state,
     FStar_Interactive_JsonHelper.repl_state) FStar_Pervasives.either
+type name_tracking_event =
+  | NTAlias of (FStar_Ident.lid * FStar_Ident.ident * FStar_Ident.lid) 
+  | NTOpen of (FStar_Ident.lid * FStar_Syntax_DsEnv.open_module_or_namespace)
+  
+  | NTInclude of (FStar_Ident.lid * FStar_Ident.lid) 
+  | NTBinding of (FStar_Syntax_Syntax.binding,
+  FStar_TypeChecker_Env.sig_binding) FStar_Pervasives.either 
+let (uu___is_NTAlias : name_tracking_event -> Prims.bool) =
+  fun projectee -> match projectee with | NTAlias _0 -> true | uu___ -> false
+let (__proj__NTAlias__item___0 :
+  name_tracking_event ->
+    (FStar_Ident.lid * FStar_Ident.ident * FStar_Ident.lid))
+  = fun projectee -> match projectee with | NTAlias _0 -> _0
+let (uu___is_NTOpen : name_tracking_event -> Prims.bool) =
+  fun projectee -> match projectee with | NTOpen _0 -> true | uu___ -> false
+let (__proj__NTOpen__item___0 :
+  name_tracking_event ->
+    (FStar_Ident.lid * FStar_Syntax_DsEnv.open_module_or_namespace))
+  = fun projectee -> match projectee with | NTOpen _0 -> _0
+let (uu___is_NTInclude : name_tracking_event -> Prims.bool) =
+  fun projectee ->
+    match projectee with | NTInclude _0 -> true | uu___ -> false
+let (__proj__NTInclude__item___0 :
+  name_tracking_event -> (FStar_Ident.lid * FStar_Ident.lid)) =
+  fun projectee -> match projectee with | NTInclude _0 -> _0
+let (uu___is_NTBinding : name_tracking_event -> Prims.bool) =
+  fun projectee ->
+    match projectee with | NTBinding _0 -> true | uu___ -> false
+let (__proj__NTBinding__item___0 :
+  name_tracking_event ->
+    (FStar_Syntax_Syntax.binding, FStar_TypeChecker_Env.sig_binding)
+      FStar_Pervasives.either)
+  = fun projectee -> match projectee with | NTBinding _0 -> _0
 let (repl_stack :
   FStar_Interactive_JsonHelper.repl_stack_t FStar_Compiler_Effect.ref) =
   FStar_Compiler_Util.mk_ref []
@@ -51,7 +84,6 @@ let (set_check_kind :
           (env.FStar_TypeChecker_Env.top_level);
         FStar_TypeChecker_Env.check_uvars =
           (env.FStar_TypeChecker_Env.check_uvars);
-        FStar_TypeChecker_Env.use_eq = (env.FStar_TypeChecker_Env.use_eq);
         FStar_TypeChecker_Env.use_eq_strict =
           (env.FStar_TypeChecker_Env.use_eq_strict);
         FStar_TypeChecker_Env.is_iface = (env.FStar_TypeChecker_Env.is_iface);
@@ -101,7 +133,9 @@ let (set_check_kind :
         FStar_TypeChecker_Env.enable_defer_to_tac =
           (env.FStar_TypeChecker_Env.enable_defer_to_tac);
         FStar_TypeChecker_Env.unif_allow_ref_guards =
-          (env.FStar_TypeChecker_Env.unif_allow_ref_guards)
+          (env.FStar_TypeChecker_Env.unif_allow_ref_guards);
+        FStar_TypeChecker_Env.erase_erasable_args =
+          (env.FStar_TypeChecker_Env.erase_erasable_args)
       }
 let (repl_ld_tasks_of_deps :
   Prims.string Prims.list ->
@@ -335,39 +369,6 @@ let (run_repl_task :
         | FStar_Interactive_JsonHelper.PushFragment frag ->
             FStar_Universal.tc_one_fragment curmod env frag
         | FStar_Interactive_JsonHelper.Noop -> (curmod, env)
-type name_tracking_event =
-  | NTAlias of (FStar_Ident.lid * FStar_Ident.ident * FStar_Ident.lid) 
-  | NTOpen of (FStar_Ident.lid * FStar_Syntax_DsEnv.open_module_or_namespace)
-  
-  | NTInclude of (FStar_Ident.lid * FStar_Ident.lid) 
-  | NTBinding of (FStar_Syntax_Syntax.binding,
-  FStar_TypeChecker_Env.sig_binding) FStar_Pervasives.either 
-let (uu___is_NTAlias : name_tracking_event -> Prims.bool) =
-  fun projectee -> match projectee with | NTAlias _0 -> true | uu___ -> false
-let (__proj__NTAlias__item___0 :
-  name_tracking_event ->
-    (FStar_Ident.lid * FStar_Ident.ident * FStar_Ident.lid))
-  = fun projectee -> match projectee with | NTAlias _0 -> _0
-let (uu___is_NTOpen : name_tracking_event -> Prims.bool) =
-  fun projectee -> match projectee with | NTOpen _0 -> true | uu___ -> false
-let (__proj__NTOpen__item___0 :
-  name_tracking_event ->
-    (FStar_Ident.lid * FStar_Syntax_DsEnv.open_module_or_namespace))
-  = fun projectee -> match projectee with | NTOpen _0 -> _0
-let (uu___is_NTInclude : name_tracking_event -> Prims.bool) =
-  fun projectee ->
-    match projectee with | NTInclude _0 -> true | uu___ -> false
-let (__proj__NTInclude__item___0 :
-  name_tracking_event -> (FStar_Ident.lid * FStar_Ident.lid)) =
-  fun projectee -> match projectee with | NTInclude _0 -> _0
-let (uu___is_NTBinding : name_tracking_event -> Prims.bool) =
-  fun projectee ->
-    match projectee with | NTBinding _0 -> true | uu___ -> false
-let (__proj__NTBinding__item___0 :
-  name_tracking_event ->
-    (FStar_Syntax_Syntax.binding, FStar_TypeChecker_Env.sig_binding)
-      FStar_Pervasives.either)
-  = fun projectee -> match projectee with | NTBinding _0 -> _0
 let (query_of_ids :
   FStar_Ident.ident Prims.list -> FStar_Interactive_CompletionTable.query) =
   fun ids -> FStar_Compiler_List.map FStar_Ident.string_of_id ids
@@ -492,40 +493,37 @@ let (fresh_name_tracking_hooks :
       let uu___1 =
         let uu___2 = FStar_Compiler_Effect.op_Bang events in evt :: uu___2 in
       FStar_Compiler_Effect.op_Colon_Equals events uu___1 in
-    (events,
-      {
-        FStar_Syntax_DsEnv.ds_push_open_hook =
-          (fun dsenv ->
-             fun op ->
-               let uu___1 =
-                 let uu___2 =
-                   let uu___3 = FStar_Syntax_DsEnv.current_module dsenv in
-                   (uu___3, op) in
-                 NTOpen uu___2 in
-               push_event uu___1);
-        FStar_Syntax_DsEnv.ds_push_include_hook =
-          (fun dsenv ->
-             fun ns ->
-               let uu___1 =
-                 let uu___2 =
-                   let uu___3 = FStar_Syntax_DsEnv.current_module dsenv in
-                   (uu___3, ns) in
-                 NTInclude uu___2 in
-               push_event uu___1);
-        FStar_Syntax_DsEnv.ds_push_module_abbrev_hook =
-          (fun dsenv ->
-             fun x ->
-               fun l ->
-                 let uu___1 =
-                   let uu___2 =
-                     let uu___3 = FStar_Syntax_DsEnv.current_module dsenv in
-                     (uu___3, x, l) in
-                   NTAlias uu___2 in
-                 push_event uu___1)
-      },
+    let uu___1 =
+      FStar_Syntax_DsEnv.mk_dsenv_hooks
+        (fun dsenv ->
+           fun op ->
+             let uu___2 =
+               let uu___3 =
+                 let uu___4 = FStar_Syntax_DsEnv.current_module dsenv in
+                 (uu___4, op) in
+               NTOpen uu___3 in
+             push_event uu___2)
+        (fun dsenv ->
+           fun ns ->
+             let uu___2 =
+               let uu___3 =
+                 let uu___4 = FStar_Syntax_DsEnv.current_module dsenv in
+                 (uu___4, ns) in
+               NTInclude uu___3 in
+             push_event uu___2)
+        (fun dsenv ->
+           fun x ->
+             fun l ->
+               let uu___2 =
+                 let uu___3 =
+                   let uu___4 = FStar_Syntax_DsEnv.current_module dsenv in
+                   (uu___4, x, l) in
+                 NTAlias uu___3 in
+               push_event uu___2) in
+    (events, uu___1,
       {
         FStar_TypeChecker_Env.tc_push_in_gamma_hook =
-          (fun uu___1 -> fun s -> push_event (NTBinding s))
+          (fun uu___2 -> fun s -> push_event (NTBinding s))
       })
 let (track_name_changes :
   FStar_TypeChecker_Env.env_t ->
@@ -787,8 +785,13 @@ let (ld_deps :
                    | FStar_Pervasives.Inl st2 ->
                        FStar_Pervasives.Inl (st2, deps)))) ()
     with
-    | uu___ ->
-        (FStar_Compiler_Util.print_error "[E] Failed to load deps";
+    | FStar_Errors.Err (e, msg, ctx) ->
+        (FStar_Compiler_Util.print1_error "[E] Failed to load deps. %s" msg;
+         FStar_Pervasives.Inr st)
+    | exn ->
+        ((let uu___2 = FStar_Compiler_Util.message_of_exn exn in
+          FStar_Compiler_Util.print1_error
+            "[E] Failed to load deps. Message: %s" uu___2);
          FStar_Pervasives.Inr st)
 let (add_module_completions :
   Prims.string ->

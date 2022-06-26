@@ -20,8 +20,8 @@ let nth l i = try Some (BatList.nth l (Z.to_int i)) with _ -> None
 let index l i = BatList.nth l (Z.to_int i)
 
 let rec count x = function
-  | [] -> 0
-  | hd::tl -> if x=hd then 1 + count x tl else count x tl
+  | [] -> Prims.int_zero
+  | hd::tl -> if x=hd then Z.add Prims.int_one (count x tl) else count x tl
 
 let rev_acc l r = BatList.rev_append l r
 let rev = BatList.rev

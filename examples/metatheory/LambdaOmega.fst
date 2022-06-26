@@ -572,7 +572,7 @@ let rec typing_to_kinding #g #e #t h = match h with
     Conj?.h2 (kinding_inversion_arrow (typing_to_kinding h1))
   | TyEqu h1 eq hk -> hk
 
-(* this folows from functional extensionality *)
+(* this follows from functional extensionality *)
 val tshift_up_above_tsubst_beta_aux : x:var -> t2:typ -> y:var ->
       Lemma (tsub_comp (tsub_inc_above x) (tsub_beta_gen 0 t2) y =
              tsub_comp (tsub_beta_gen 0 (tsubst (tsub_inc_above x) t2))

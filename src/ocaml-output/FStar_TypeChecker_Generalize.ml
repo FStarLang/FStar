@@ -72,17 +72,15 @@ let (gen_univs :
           u_names))
 let (gather_free_univnames :
   FStar_TypeChecker_Env.env ->
-    FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.univ_name Prims.list)
+    FStar_Syntax_Syntax.term ->
+      FStar_Syntax_Syntax.univ_name FStar_Compiler_Util.set)
   =
   fun env ->
     fun t ->
       let ctx_univnames = FStar_TypeChecker_Env.univnames env in
       let tm_univnames = FStar_Syntax_Free.univnames t in
       let univnames =
-        let uu___ =
-          FStar_Compiler_Util.set_difference tm_univnames ctx_univnames in
-        FStar_Compiler_Effect.op_Bar_Greater uu___
-          FStar_Compiler_Util.set_elements in
+        FStar_Compiler_Util.set_difference tm_univnames ctx_univnames in
       univnames
 let (check_universe_generalization :
   FStar_Syntax_Syntax.univ_name Prims.list ->
@@ -117,7 +115,9 @@ let (generalize_universes :
                [FStar_TypeChecker_Env.NoFullNorm;
                FStar_TypeChecker_Env.Beta;
                FStar_TypeChecker_Env.DoNotUnfoldPureLets] env t0 in
-           let univnames = gather_free_univnames env t in
+           let univnames =
+             let uu___1 = gather_free_univnames env t in
+             FStar_Compiler_Util.set_elements uu___1 in
            (let uu___2 =
               FStar_Compiler_Effect.op_Less_Bar
                 (FStar_TypeChecker_Env.debug env) (FStar_Options.Other "Gen") in
@@ -466,9 +466,10 @@ let (gen :
                                                   kres)) in
                                     FStar_Syntax_Util.set_uvar
                                       u.FStar_Syntax_Syntax.ctx_uvar_head t;
-                                    (a,
-                                      (FStar_Pervasives_Native.Some
-                                         FStar_Syntax_Syntax.imp_tag))))))) in
+                                    (let uu___8 =
+                                       FStar_Syntax_Syntax.as_bqual_implicit
+                                         true in
+                                     (a, uu___8))))))) in
                let gen_univs1 = gen_univs env univs in
                let gen_tvars = gen_types uvs in
                let ecs =
@@ -580,6 +581,12 @@ let (generalize' :
   fun env ->
     fun is_rec ->
       fun lecs ->
+        (let uu___2 =
+           FStar_Compiler_List.for_all
+             (fun uu___3 ->
+                match uu___3 with
+                | (l, uu___4, uu___5) -> FStar_Compiler_Util.is_right l) lecs in
+         ());
         (let uu___2 = FStar_TypeChecker_Env.debug env FStar_Options.Low in
          if uu___2
          then
@@ -595,10 +602,18 @@ let (generalize' :
            FStar_Compiler_Util.print1 "Generalizing: %s\n" uu___3
          else ());
         (let univnames_lecs =
-           FStar_Compiler_List.map
-             (fun uu___2 ->
-                match uu___2 with | (l, t, c) -> gather_free_univnames env t)
-             lecs in
+           let empty =
+             FStar_Compiler_Util.as_set []
+               FStar_Syntax_Syntax.order_univ_name in
+           FStar_Compiler_List.fold_left
+             (fun out ->
+                fun uu___2 ->
+                  match uu___2 with
+                  | (l, t, c) ->
+                      let uu___3 = gather_free_univnames env t in
+                      FStar_Compiler_Util.set_union out uu___3) empty lecs in
+         let univnames_lecs1 =
+           FStar_Compiler_Util.set_elements univnames_lecs in
          let generalized_lecs =
            let uu___2 = gen env is_rec lecs in
            match uu___2 with
@@ -635,15 +650,14 @@ let (generalize' :
                                  uu___6 uu___7 uu___8 uu___9 uu___10))
                  else ());
                 luecs) in
-         FStar_Compiler_List.map2
-           (fun univnames ->
-              fun uu___2 ->
-                match uu___2 with
-                | (l, generalized_univs, t, c, gvs) ->
-                    let uu___3 =
-                      check_universe_generalization univnames
-                        generalized_univs t in
-                    (l, uu___3, t, c, gvs)) univnames_lecs generalized_lecs)
+         FStar_Compiler_List.map
+           (fun uu___2 ->
+              match uu___2 with
+              | (l, generalized_univs, t, c, gvs) ->
+                  let uu___3 =
+                    check_universe_generalization univnames_lecs1
+                      generalized_univs t in
+                  (l, uu___3, t, c, gvs)) generalized_lecs)
 let (generalize :
   FStar_TypeChecker_Env.env ->
     Prims.bool ->

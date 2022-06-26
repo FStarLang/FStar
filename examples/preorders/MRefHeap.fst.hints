@@ -8,7 +8,7 @@
       1,
       [ "@query", "equation_FStar.Pervasives.dfst" ],
       0,
-      "19a65670c10fb6fc68f1f5b1f7d4f0d5"
+      "858a3bb6cf4cc3665b3dec7bcae7c4d3"
     ],
     [
       "MRefHeap.contains_same_addr_lemma",
@@ -29,7 +29,7 @@
         "refinement_interpretation_Tm_refine_8f2fff72b18dc472afbc83d481143bc1"
       ],
       0,
-      "05be76761565e8c63fa437bb2089b798"
+      "befdb759c2380a34e45027ddcd3cbca5"
     ],
     [
       "MRefHeap.contains_same_addr_lemma",
@@ -50,7 +50,7 @@
         "refinement_interpretation_Tm_refine_8f2fff72b18dc472afbc83d481143bc1"
       ],
       0,
-      "fa0812e67c6be925947f7250a016e313"
+      "76a131dc5274af273da3c7161450e4df"
     ],
     [
       "MRefHeap.contains_diff_addr_lemma",
@@ -66,7 +66,7 @@
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "844479bf7e3bd810acd86a671b3e871b"
+      "4ff46427b22687d449e96c9a4022ab1c"
     ],
     [
       "MRefHeap.contains_diff_addr_lemma",
@@ -76,13 +76,14 @@
       [
         "@MaxIFuel_assumption", "@query", "equation_MRefHeap.addr_of",
         "equation_MRefHeap.mref", "equation_Prims.eqtype",
-        "equation_Prims.nat", "function_token_typing_Prims.int",
+        "equation_Prims.nat", "equation_Prims.op_Equals_Equals_Equals",
+        "function_token_typing_Prims.int",
         "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2", "int_inversion",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "c69d51776e2a4a61564a2d40100abd9d"
+      "35f6c430aab183b2c12353a674651350"
     ],
     [
       "MRefHeap.sel",
@@ -103,7 +104,7 @@
         "refinement_interpretation_Tm_refine_36453e3eb6145226f640e16ed9612466"
       ],
       0,
-      "a5bce630b235cad57f81cd682489a63c"
+      "de0fa1111ead1d60b0392138bdfba8ba"
     ],
     [
       "MRefHeap.alloc_ref",
@@ -115,7 +116,7 @@
         "refinement_interpretation_Tm_refine_36453e3eb6145226f640e16ed9612466"
       ],
       0,
-      "beb492a965164db9bc3025b80aca27a6"
+      "4e18a67c5b190b37f363587d1a086cc9"
     ],
     [
       "MRefHeap.alloc_ref",
@@ -168,7 +169,7 @@
         "typing_FStar.Pervasives.Native.snd"
       ],
       0,
-      "48b4177da4c8ff9686296bd13e6ec39d"
+      "b84e23629055d788a9b442623277f5da"
     ],
     [
       "MRefHeap.upd",
@@ -183,7 +184,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "c200f860e733a0b38cf3749dcdab4931"
+      "d144600da29aed6a45e4893894ed3c87"
     ],
     [
       "MRefHeap.upd",
@@ -201,11 +202,12 @@
         "equation_FStar.Pervasives.Native.fst",
         "equation_FStar.Pervasives.Native.snd",
         "equation_FStar.Pervasives.dfst", "equation_FStar.Pervasives.dsnd",
-        "equation_FStar.Preorder.preorder", "equation_MRefHeap.contains",
-        "equation_MRefHeap.heap", "equation_MRefHeap.heap_cell",
-        "equation_MRefHeap.mref", "equation_MRefHeap.preorder_t",
-        "equation_MRefHeap.sel", "equation_Prims.eqtype",
-        "equation_Prims.nat",
+        "equation_FStar.Preorder.preorder", "equation_MRefHeap.addr_of",
+        "equation_MRefHeap.contains", "equation_MRefHeap.heap",
+        "equation_MRefHeap.heap_cell", "equation_MRefHeap.mref",
+        "equation_MRefHeap.preorder_t", "equation_MRefHeap.sel",
+        "equation_Prims.eqtype", "equation_Prims.nat",
+        "equation_Prims.op_Equals_Equals_Equals",
         "fuel_guarded_inversion_FStar.Pervasives.Native.option",
         "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
         "fuel_guarded_inversion_Prims.dtuple2",
@@ -231,7 +233,7 @@
         "token_correspondence_FStar.Pervasives.Native.snd"
       ],
       0,
-      "9f3ba3159b080d8c39ccedc20fb74bfe"
+      "5b2d7447203ebf964fb06e14cbc50490"
     ],
     [
       "MRefHeap.emp",
@@ -252,7 +254,7 @@
         "token_correspondence_FStar.Pervasives.Native.snd"
       ],
       0,
-      "67b6f2509ba3a1d8b75880b8a82413de"
+      "5ea69e80592450cf685d6296f5236b47"
     ]
   ]
 ]

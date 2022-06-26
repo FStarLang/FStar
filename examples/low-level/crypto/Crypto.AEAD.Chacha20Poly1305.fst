@@ -30,7 +30,7 @@ module MAC = Crypto.Symmetric.Poly1305.MAC
 module Bytes = Crypto.Symmetric.Bytes
 
 
-(* If the length is not a multipile of 16, pad to 16 *)
+(* If the length is not a multiple of 16, pad to 16 *)
 val pad_16: b:Bytes.lbuffer 16 -> len:UInt32.t { v len <= 16 } -> STL unit
   (requires (fun h -> live h b))
   (ensures  (fun h0 _ h1 -> 

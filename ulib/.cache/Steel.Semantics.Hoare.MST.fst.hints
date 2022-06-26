@@ -1,143 +1,6 @@
 [
-  "îêlû†3≤’ggódFB7ı",
+  "ò,':´ö\u007fPî\u0018ª\u0005\t?}M",
   [
-    [
-      "Steel.Semantics.Hoare.MST.__proj__Mkst0__item__core",
-      1,
-      0,
-      2,
-      [
-        "@query", "proj_equation_Steel.Semantics.Hoare.MST.Mkst0_mem",
-        "projection_inverse_Steel.Semantics.Hoare.MST.Mkst0_mem"
-      ],
-      0,
-      "5d045ce5b3bd627a5c42371f6bd16597"
-    ],
-    [
-      "Steel.Semantics.Hoare.MST.__proj__Mkst0__item__full_mem_pred",
-      1,
-      0,
-      2,
-      [
-        "@query", "proj_equation_Steel.Semantics.Hoare.MST.Mkst0_mem",
-        "projection_inverse_Steel.Semantics.Hoare.MST.Mkst0_mem"
-      ],
-      0,
-      "c5581bac07fbd1f1d36f7447bc90d2b0"
-    ],
-    [
-      "Steel.Semantics.Hoare.MST.__proj__Mkst0__item__locks_preorder",
-      1,
-      0,
-      2,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_FStar.Preorder.preorder",
-        "equation_FStar.Preorder.preorder_rel",
-        "equation_FStar.Preorder.reflexive",
-        "equation_FStar.Preorder.transitive",
-        "proj_equation_Steel.Semantics.Hoare.MST.Mkst0_full_mem_pred",
-        "proj_equation_Steel.Semantics.Hoare.MST.Mkst0_mem",
-        "projection_inverse_Steel.Semantics.Hoare.MST.Mkst0_full_mem_pred",
-        "projection_inverse_Steel.Semantics.Hoare.MST.Mkst0_mem",
-        "refinement_interpretation_Tm_refine_7dd9e823cc87974f223bfb9f22291ffb",
-        "refinement_interpretation_Tm_refine_9f8cb5a84b67f50c9d5f87a914037545",
-        "refinement_interpretation_Tm_refine_bd10f09297e0e7dc08314f7d9211801c",
-        "token_correspondence_Steel.Semantics.Hoare.MST.__proj__Mkst0__item__full_mem_pred"
-      ],
-      0,
-      "2d8cc1e4132b07ca3892065e65b2ee8a"
-    ],
-    [
-      "Steel.Semantics.Hoare.MST.__proj__Mkst0__item__locks_invariant",
-      1,
-      0,
-      2,
-      [
-        "@query", "proj_equation_Steel.Semantics.Hoare.MST.Mkst0_hprop",
-        "proj_equation_Steel.Semantics.Hoare.MST.Mkst0_mem",
-        "projection_inverse_Steel.Semantics.Hoare.MST.Mkst0_hprop",
-        "projection_inverse_Steel.Semantics.Hoare.MST.Mkst0_mem"
-      ],
-      0,
-      "c12332d2fe75f44608b6066f82a8bbe7"
-    ],
-    [
-      "Steel.Semantics.Hoare.MST.__proj__Mkst0__item__disjoint",
-      1,
-      0,
-      2,
-      [
-        "@query", "proj_equation_Steel.Semantics.Hoare.MST.Mkst0_mem",
-        "projection_inverse_Steel.Semantics.Hoare.MST.Mkst0_mem"
-      ],
-      0,
-      "eee1fa3a08f0ad926ff11fe9a9bf60f7"
-    ],
-    [
-      "Steel.Semantics.Hoare.MST.__proj__Mkst0__item__join",
-      1,
-      0,
-      2,
-      [
-        "@query", "proj_equation_Steel.Semantics.Hoare.MST.Mkst0_disjoint",
-        "proj_equation_Steel.Semantics.Hoare.MST.Mkst0_mem",
-        "projection_inverse_Steel.Semantics.Hoare.MST.Mkst0_disjoint",
-        "projection_inverse_Steel.Semantics.Hoare.MST.Mkst0_mem",
-        "token_correspondence_Steel.Semantics.Hoare.MST.__proj__Mkst0__item__disjoint"
-      ],
-      0,
-      "04c357db8158dc3c84bcacc07f8eb6d9"
-    ],
-    [
-      "Steel.Semantics.Hoare.MST.__proj__Mkst0__item__interp",
-      1,
-      0,
-      2,
-      [
-        "@query", "proj_equation_Steel.Semantics.Hoare.MST.Mkst0_hprop",
-        "proj_equation_Steel.Semantics.Hoare.MST.Mkst0_mem",
-        "projection_inverse_Steel.Semantics.Hoare.MST.Mkst0_hprop",
-        "projection_inverse_Steel.Semantics.Hoare.MST.Mkst0_mem"
-      ],
-      0,
-      "af6da13e19a8cffcc41910bdfb3a8981"
-    ],
-    [
-      "Steel.Semantics.Hoare.MST.__proj__Mkst0__item__emp",
-      1,
-      0,
-      2,
-      [
-        "@query", "proj_equation_Steel.Semantics.Hoare.MST.Mkst0_hprop",
-        "projection_inverse_Steel.Semantics.Hoare.MST.Mkst0_hprop"
-      ],
-      0,
-      "16f429acbf88572df48c6e366d2ef76b"
-    ],
-    [
-      "Steel.Semantics.Hoare.MST.__proj__Mkst0__item__star",
-      1,
-      0,
-      2,
-      [
-        "@query", "proj_equation_Steel.Semantics.Hoare.MST.Mkst0_hprop",
-        "projection_inverse_Steel.Semantics.Hoare.MST.Mkst0_hprop"
-      ],
-      0,
-      "ed33c21383616dc2c5736c2569c92991"
-    ],
-    [
-      "Steel.Semantics.Hoare.MST.__proj__Mkst0__item__equals",
-      1,
-      0,
-      2,
-      [
-        "@query", "proj_equation_Steel.Semantics.Hoare.MST.Mkst0_hprop",
-        "projection_inverse_Steel.Semantics.Hoare.MST.Mkst0_hprop"
-      ],
-      0,
-      "181e7b9efbb51f0dbfa86e62544211fa"
-    ],
     [
       "Steel.Semantics.Hoare.MST.disjoint_join",
       1,
@@ -145,7 +8,7 @@
       2,
       [ "@query" ],
       0,
-      "febc5ac854c3ee0d997ee0c533744b9a"
+      "cd351ed79e6d5b6143b5c3622252c2cb"
     ],
     [
       "Steel.Semantics.Hoare.MST.join_commutative",
@@ -159,7 +22,7 @@
         "refinement_interpretation_Tm_refine_c2e491512975669ac514d6adbdd69363"
       ],
       0,
-      "2d5e78931613fe799f850ae68aa2624a"
+      "d009b1de19ea9951da4d8fab2905af7c"
     ],
     [
       "Steel.Semantics.Hoare.MST.join_associative",
@@ -168,7 +31,7 @@
       2,
       [ "@query" ],
       0,
-      "e2c77f529db184868579b3ff874bbe75"
+      "283bd8cda2f81e4b1506f7e9dd559134"
     ],
     [
       "Steel.Semantics.Hoare.MST.lemma_weaken_depends_only_on",
@@ -191,7 +54,7 @@
         "refinement_interpretation_Tm_refine_6b5cc4f05252540ee41347ac5694b55d"
       ],
       0,
-      "9295365c5645abce9ad615ca0030714d"
+      "89efccbaa7074895d3fd1c95bcd32d94"
     ],
     [
       "Steel.Semantics.Hoare.MST.st_laws",
@@ -200,7 +63,7 @@
       2,
       [ "@query" ],
       0,
-      "428e0f74b84c6a3348e5ee5fc5a6ec28"
+      "ca9a7d25a24293c0476c20fe364ead00"
     ],
     [
       "Steel.Semantics.Hoare.MST.get",
@@ -209,7 +72,7 @@
       2,
       [ "@query" ],
       0,
-      "323c8db6d36ae7a35461a590c49496ce"
+      "8b618b72216263a881038fa25ea74e2a"
     ],
     [
       "Steel.Semantics.Hoare.MST.return_lpre",
@@ -239,7 +102,7 @@
         "refinement_interpretation_Tm_refine_f6e2dd8dfb4bc549cb03e5fd018cee0d"
       ],
       0,
-      "4dadb106d69c4d84f26c89216f660fa3"
+      "22f7074d28de987aedbed7dc0fb9f28e"
     ],
     [
       "Steel.Semantics.Hoare.MST.frame_lpre",
@@ -282,7 +145,7 @@
         "unit_typing"
       ],
       0,
-      "5666e523ada237a7a8ecbe4623f033e0"
+      "9d99f518a139c07042d44193fbd164b9"
     ],
     [
       "Steel.Semantics.Hoare.MST.frame_lpost",
@@ -329,7 +192,7 @@
         "typing_Tm_abs_5a397107efe360fdca0db747cfe89c9d", "unit_typing"
       ],
       0,
-      "7db9ef08dcf9894c8e8464b5fc62a447"
+      "960b743bb0c34957790196a9f902ea38"
     ],
     [
       "Steel.Semantics.Hoare.MST.bind_lpre",
@@ -363,7 +226,7 @@
         "unit_typing"
       ],
       0,
-      "59f43b62f2a27b320b7b685ae04c7498"
+      "ea9ee8c84f7ed7931afbc3650a9d9fca"
     ],
     [
       "Steel.Semantics.Hoare.MST.bind_lpost",
@@ -398,7 +261,7 @@
         "unit_typing"
       ],
       0,
-      "54b197160ba25e289e17c6af2e124157"
+      "a276689b0b684087f7991bcefc519509"
     ],
     [
       "Steel.Semantics.Hoare.MST.par_lpre",
@@ -439,7 +302,7 @@
         "unit_typing"
       ],
       0,
-      "6290a72657e4eb57d4a71bfb6360d1e5"
+      "b4c8610f26b837631e0f97680af62a25"
     ],
     [
       "Steel.Semantics.Hoare.MST.par_lpost",
@@ -488,51 +351,667 @@
         "typing_Tm_abs_59b41591af89bbc958c3490acbd3372a", "unit_typing"
       ],
       0,
-      "0f244991be28aa154946c7897003493b"
+      "07ad620aff182d3f6ca6c45dc048fdb4"
     ],
     [
-      "Steel.Semantics.Hoare.MST.__proj__Step__item__lpre",
+      "Steel.Semantics.Hoare.MST.__proj__Ret__item__a",
       1,
       0,
       2,
       [
-        "@query", "proj_equation_Steel.Semantics.Hoare.MST.Step_next_pre",
-        "projection_inverse_Steel.Semantics.Hoare.MST.Step_next_pre"
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_81b987df71c84370a6b30995e7b7517b"
       ],
       0,
-      "4fd5f4b6207b7b1ae1a3a109f3997ba7"
+      "7496463b195f501057a3e9cc6b081f35"
     ],
     [
-      "Steel.Semantics.Hoare.MST.__proj__Step__item__lpost",
+      "Steel.Semantics.Hoare.MST.__proj__Ret__item__post",
       1,
       0,
       2,
       [
-        "@query", "proj_equation_Steel.Semantics.Hoare.MST.Step_next_post",
-        "proj_equation_Steel.Semantics.Hoare.MST.Step_next_pre",
-        "projection_inverse_Steel.Semantics.Hoare.MST.Step_next_post",
-        "projection_inverse_Steel.Semantics.Hoare.MST.Step_next_pre"
+        "@MaxIFuel_assumption", "@query",
+        "data_elim_Steel.Semantics.Hoare.MST.Ret",
+        "refinement_interpretation_Tm_refine_81b987df71c84370a6b30995e7b7517b"
       ],
       0,
-      "e5231b3ddba17a541f4a941bfacfc697"
+      "cb06dc5178b67962e90f0439390b66d5"
     ],
     [
-      "Steel.Semantics.Hoare.MST.__proj__Step__item___4",
+      "Steel.Semantics.Hoare.MST.__proj__Ret__item__x",
       1,
       0,
       2,
       [
-        "@query", "proj_equation_Steel.Semantics.Hoare.MST.Step_lpost",
-        "proj_equation_Steel.Semantics.Hoare.MST.Step_lpre",
-        "proj_equation_Steel.Semantics.Hoare.MST.Step_next_post",
-        "proj_equation_Steel.Semantics.Hoare.MST.Step_next_pre",
-        "projection_inverse_Steel.Semantics.Hoare.MST.Step_lpost",
-        "projection_inverse_Steel.Semantics.Hoare.MST.Step_lpre",
-        "projection_inverse_Steel.Semantics.Hoare.MST.Step_next_post",
-        "projection_inverse_Steel.Semantics.Hoare.MST.Step_next_pre"
+        "@MaxIFuel_assumption", "@query",
+        "data_elim_Steel.Semantics.Hoare.MST.Ret",
+        "refinement_interpretation_Tm_refine_81b987df71c84370a6b30995e7b7517b"
       ],
       0,
-      "05916857132e4842cd0363cec51ea282"
+      "2ecb9769e83c65ea3ec4484e528303d0"
+    ],
+    [
+      "Steel.Semantics.Hoare.MST.__proj__Ret__item__lpost",
+      1,
+      0,
+      2,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "data_elim_Steel.Semantics.Hoare.MST.Ret",
+        "refinement_interpretation_Tm_refine_81b987df71c84370a6b30995e7b7517b"
+      ],
+      0,
+      "32fbac9ada2a14925ca445c30b6904ec"
+    ],
+    [
+      "Steel.Semantics.Hoare.MST.__proj__Bind__item__a",
+      1,
+      0,
+      2,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_8de15f4b0b381f2c0274a97bf72deb4f"
+      ],
+      0,
+      "aa1a89aef4e1eeadb1d0b477e6f29c99"
+    ],
+    [
+      "Steel.Semantics.Hoare.MST.__proj__Bind__item__pre",
+      1,
+      0,
+      2,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_8de15f4b0b381f2c0274a97bf72deb4f"
+      ],
+      0,
+      "dd6cd849879ff891a8d03dc0b17d5d7d"
+    ],
+    [
+      "Steel.Semantics.Hoare.MST.__proj__Bind__item__post_a",
+      1,
+      0,
+      2,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "data_elim_Steel.Semantics.Hoare.MST.Bind",
+        "refinement_interpretation_Tm_refine_8de15f4b0b381f2c0274a97bf72deb4f"
+      ],
+      0,
+      "c5e804a083f32c3dd92d86211e3c3b0e"
+    ],
+    [
+      "Steel.Semantics.Hoare.MST.__proj__Bind__item__lpre_a",
+      1,
+      0,
+      2,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "data_elim_Steel.Semantics.Hoare.MST.Bind",
+        "refinement_interpretation_Tm_refine_8de15f4b0b381f2c0274a97bf72deb4f"
+      ],
+      0,
+      "e7e6c933d11e2209e0967a36483f4818"
+    ],
+    [
+      "Steel.Semantics.Hoare.MST.__proj__Bind__item__lpost_a",
+      1,
+      0,
+      2,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "data_elim_Steel.Semantics.Hoare.MST.Bind",
+        "refinement_interpretation_Tm_refine_8de15f4b0b381f2c0274a97bf72deb4f"
+      ],
+      0,
+      "be9cdca51f8d21c495e92b88408715ff"
+    ],
+    [
+      "Steel.Semantics.Hoare.MST.__proj__Bind__item__b",
+      1,
+      0,
+      2,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_8de15f4b0b381f2c0274a97bf72deb4f"
+      ],
+      0,
+      "e0ba17fafba7638cce203f270f4ad817"
+    ],
+    [
+      "Steel.Semantics.Hoare.MST.__proj__Bind__item__post_b",
+      1,
+      0,
+      2,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "data_elim_Steel.Semantics.Hoare.MST.Bind",
+        "refinement_interpretation_Tm_refine_8de15f4b0b381f2c0274a97bf72deb4f"
+      ],
+      0,
+      "60914b1aa52c2868d39da0360ac21056"
+    ],
+    [
+      "Steel.Semantics.Hoare.MST.__proj__Bind__item__lpre_b",
+      1,
+      0,
+      2,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "data_elim_Steel.Semantics.Hoare.MST.Bind",
+        "refinement_interpretation_Tm_refine_8de15f4b0b381f2c0274a97bf72deb4f"
+      ],
+      0,
+      "49b80fa54ca96ce5e93484fe83cf6aa6"
+    ],
+    [
+      "Steel.Semantics.Hoare.MST.__proj__Bind__item__lpost_b",
+      1,
+      0,
+      2,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "data_elim_Steel.Semantics.Hoare.MST.Bind",
+        "refinement_interpretation_Tm_refine_8de15f4b0b381f2c0274a97bf72deb4f"
+      ],
+      0,
+      "6eb1d3650bead49d15c38b8155d4a20c"
+    ],
+    [
+      "Steel.Semantics.Hoare.MST.__proj__Bind__item__f",
+      1,
+      0,
+      2,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "data_elim_Steel.Semantics.Hoare.MST.Bind",
+        "refinement_interpretation_Tm_refine_8de15f4b0b381f2c0274a97bf72deb4f"
+      ],
+      0,
+      "8c98435639d6c8b7bedaca7630fa0741"
+    ],
+    [
+      "Steel.Semantics.Hoare.MST.__proj__Bind__item__g",
+      1,
+      0,
+      2,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "data_elim_Steel.Semantics.Hoare.MST.Bind",
+        "refinement_interpretation_Tm_refine_8de15f4b0b381f2c0274a97bf72deb4f"
+      ],
+      0,
+      "1203dc0ffc8b33bbb0cf51617004531a"
+    ],
+    [
+      "Steel.Semantics.Hoare.MST.__proj__Act__item__a",
+      1,
+      0,
+      2,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_fd71f6896b5a763f15563bd63daf859c"
+      ],
+      0,
+      "702588072cc0b991fa00834e27c0177c"
+    ],
+    [
+      "Steel.Semantics.Hoare.MST.__proj__Act__item__pre",
+      1,
+      0,
+      2,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_fd71f6896b5a763f15563bd63daf859c"
+      ],
+      0,
+      "52de0d43053aee5ad342469c0d2e60a0"
+    ],
+    [
+      "Steel.Semantics.Hoare.MST.__proj__Act__item__post",
+      1,
+      0,
+      2,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "data_elim_Steel.Semantics.Hoare.MST.Act",
+        "refinement_interpretation_Tm_refine_fd71f6896b5a763f15563bd63daf859c"
+      ],
+      0,
+      "b091b435cf8187edc6cd0dace56ab516"
+    ],
+    [
+      "Steel.Semantics.Hoare.MST.__proj__Act__item__lpre",
+      1,
+      0,
+      2,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "data_elim_Steel.Semantics.Hoare.MST.Act",
+        "refinement_interpretation_Tm_refine_fd71f6896b5a763f15563bd63daf859c"
+      ],
+      0,
+      "2518b08dcd3c6b669f80c83cc068e13a"
+    ],
+    [
+      "Steel.Semantics.Hoare.MST.__proj__Act__item__lpost",
+      1,
+      0,
+      2,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "data_elim_Steel.Semantics.Hoare.MST.Act",
+        "refinement_interpretation_Tm_refine_fd71f6896b5a763f15563bd63daf859c"
+      ],
+      0,
+      "803e981ece7cd6acbfbf073917ca3d3c"
+    ],
+    [
+      "Steel.Semantics.Hoare.MST.__proj__Act__item__f",
+      1,
+      0,
+      2,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "data_elim_Steel.Semantics.Hoare.MST.Act",
+        "refinement_interpretation_Tm_refine_fd71f6896b5a763f15563bd63daf859c"
+      ],
+      0,
+      "26b6930e5c5c8794fb3d66d8c935f189"
+    ],
+    [
+      "Steel.Semantics.Hoare.MST.__proj__Frame__item__a",
+      1,
+      0,
+      2,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_52988b82cb19e8db7a3e2af893e6b32e"
+      ],
+      0,
+      "bf6858be7d1cb36f541b7bd05a30d455"
+    ],
+    [
+      "Steel.Semantics.Hoare.MST.__proj__Frame__item__pre",
+      1,
+      0,
+      2,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_52988b82cb19e8db7a3e2af893e6b32e"
+      ],
+      0,
+      "d5318c1a18f86f7af282723ee8a92828"
+    ],
+    [
+      "Steel.Semantics.Hoare.MST.__proj__Frame__item__post",
+      1,
+      0,
+      2,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "data_elim_Steel.Semantics.Hoare.MST.Frame",
+        "refinement_interpretation_Tm_refine_52988b82cb19e8db7a3e2af893e6b32e"
+      ],
+      0,
+      "0f4406578bf78bdd21fc728adc05a839"
+    ],
+    [
+      "Steel.Semantics.Hoare.MST.__proj__Frame__item__lpre",
+      1,
+      0,
+      2,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "data_elim_Steel.Semantics.Hoare.MST.Frame",
+        "refinement_interpretation_Tm_refine_52988b82cb19e8db7a3e2af893e6b32e"
+      ],
+      0,
+      "12aaccd542abe24c5dabac4dbde4d94c"
+    ],
+    [
+      "Steel.Semantics.Hoare.MST.__proj__Frame__item__lpost",
+      1,
+      0,
+      2,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "data_elim_Steel.Semantics.Hoare.MST.Frame",
+        "refinement_interpretation_Tm_refine_52988b82cb19e8db7a3e2af893e6b32e"
+      ],
+      0,
+      "fdfd65a084cb4b8ef8250e7b00b5b93c"
+    ],
+    [
+      "Steel.Semantics.Hoare.MST.__proj__Frame__item__f",
+      1,
+      0,
+      2,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "data_elim_Steel.Semantics.Hoare.MST.Frame",
+        "refinement_interpretation_Tm_refine_52988b82cb19e8db7a3e2af893e6b32e"
+      ],
+      0,
+      "06427131703a493ed619e746437263a7"
+    ],
+    [
+      "Steel.Semantics.Hoare.MST.__proj__Frame__item__frame",
+      1,
+      0,
+      2,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_52988b82cb19e8db7a3e2af893e6b32e"
+      ],
+      0,
+      "5f5df12e67d90afd74cd2fe09c024638"
+    ],
+    [
+      "Steel.Semantics.Hoare.MST.__proj__Frame__item__f_frame",
+      1,
+      0,
+      2,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "data_elim_Steel.Semantics.Hoare.MST.Frame",
+        "refinement_interpretation_Tm_refine_52988b82cb19e8db7a3e2af893e6b32e"
+      ],
+      0,
+      "92a45cdac457d2f443a2fb1a70750481"
+    ],
+    [
+      "Steel.Semantics.Hoare.MST.__proj__Par__item__aL",
+      1,
+      0,
+      2,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_97c4b6c368e81365f2cb2490970a277b"
+      ],
+      0,
+      "3fef190aefd56e49691afb0186354118"
+    ],
+    [
+      "Steel.Semantics.Hoare.MST.__proj__Par__item__preL",
+      1,
+      0,
+      2,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_97c4b6c368e81365f2cb2490970a277b"
+      ],
+      0,
+      "595a58c2f2fe6a7fcc7d2350abbc0728"
+    ],
+    [
+      "Steel.Semantics.Hoare.MST.__proj__Par__item__postL",
+      1,
+      0,
+      2,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "data_elim_Steel.Semantics.Hoare.MST.Par",
+        "refinement_interpretation_Tm_refine_97c4b6c368e81365f2cb2490970a277b"
+      ],
+      0,
+      "1591912fb0f87f85a863ab338108d84e"
+    ],
+    [
+      "Steel.Semantics.Hoare.MST.__proj__Par__item__lpreL",
+      1,
+      0,
+      2,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "data_elim_Steel.Semantics.Hoare.MST.Par",
+        "refinement_interpretation_Tm_refine_97c4b6c368e81365f2cb2490970a277b"
+      ],
+      0,
+      "d2d8c7d72259b83f04c97cddb858fb1e"
+    ],
+    [
+      "Steel.Semantics.Hoare.MST.__proj__Par__item__lpostL",
+      1,
+      0,
+      2,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "data_elim_Steel.Semantics.Hoare.MST.Par",
+        "refinement_interpretation_Tm_refine_97c4b6c368e81365f2cb2490970a277b"
+      ],
+      0,
+      "031075bf19cfaba9da003bd57304740b"
+    ],
+    [
+      "Steel.Semantics.Hoare.MST.__proj__Par__item__mL",
+      1,
+      0,
+      2,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "data_elim_Steel.Semantics.Hoare.MST.Par",
+        "refinement_interpretation_Tm_refine_97c4b6c368e81365f2cb2490970a277b"
+      ],
+      0,
+      "dd8937e5a1ec6d9898187139ac152313"
+    ],
+    [
+      "Steel.Semantics.Hoare.MST.__proj__Par__item__aR",
+      1,
+      0,
+      2,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_97c4b6c368e81365f2cb2490970a277b"
+      ],
+      0,
+      "7b80f1386f8b5503cc5e8f92120fb2ae"
+    ],
+    [
+      "Steel.Semantics.Hoare.MST.__proj__Par__item__preR",
+      1,
+      0,
+      2,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_97c4b6c368e81365f2cb2490970a277b"
+      ],
+      0,
+      "c29fb29551ea84250b76a52048da4326"
+    ],
+    [
+      "Steel.Semantics.Hoare.MST.__proj__Par__item__postR",
+      1,
+      0,
+      2,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "data_elim_Steel.Semantics.Hoare.MST.Par",
+        "refinement_interpretation_Tm_refine_97c4b6c368e81365f2cb2490970a277b"
+      ],
+      0,
+      "fb4b0c4e3ce1d129309dae9fbb3206a0"
+    ],
+    [
+      "Steel.Semantics.Hoare.MST.__proj__Par__item__lpreR",
+      1,
+      0,
+      2,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "data_elim_Steel.Semantics.Hoare.MST.Par",
+        "refinement_interpretation_Tm_refine_97c4b6c368e81365f2cb2490970a277b"
+      ],
+      0,
+      "e279e73c3c68f6ac9bfc0489f57d0377"
+    ],
+    [
+      "Steel.Semantics.Hoare.MST.__proj__Par__item__lpostR",
+      1,
+      0,
+      2,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "data_elim_Steel.Semantics.Hoare.MST.Par",
+        "refinement_interpretation_Tm_refine_97c4b6c368e81365f2cb2490970a277b"
+      ],
+      0,
+      "e31140b0850e548fb334ac150dc51545"
+    ],
+    [
+      "Steel.Semantics.Hoare.MST.__proj__Par__item__mR",
+      1,
+      0,
+      2,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "data_elim_Steel.Semantics.Hoare.MST.Par",
+        "refinement_interpretation_Tm_refine_97c4b6c368e81365f2cb2490970a277b"
+      ],
+      0,
+      "58e6f4999d2f8fd44f527cdeeb20eac4"
+    ],
+    [
+      "Steel.Semantics.Hoare.MST.__proj__Weaken__item__a",
+      1,
+      0,
+      2,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_c10866732d54438cc757cb0d42e01035"
+      ],
+      0,
+      "aa7d3349e3085a8335be8809113ed627"
+    ],
+    [
+      "Steel.Semantics.Hoare.MST.__proj__Weaken__item__pre",
+      1,
+      0,
+      2,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_c10866732d54438cc757cb0d42e01035"
+      ],
+      0,
+      "3a2a9679a744d40a0aba996dbbdb0918"
+    ],
+    [
+      "Steel.Semantics.Hoare.MST.__proj__Weaken__item__post",
+      1,
+      0,
+      2,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "data_elim_Steel.Semantics.Hoare.MST.Weaken",
+        "refinement_interpretation_Tm_refine_c10866732d54438cc757cb0d42e01035"
+      ],
+      0,
+      "6f14363902297c05fcf062a6ea4be6fd"
+    ],
+    [
+      "Steel.Semantics.Hoare.MST.__proj__Weaken__item__lpre",
+      1,
+      0,
+      2,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "data_elim_Steel.Semantics.Hoare.MST.Weaken",
+        "refinement_interpretation_Tm_refine_c10866732d54438cc757cb0d42e01035"
+      ],
+      0,
+      "53fd3a58706924e05080fe87c2df3ae4"
+    ],
+    [
+      "Steel.Semantics.Hoare.MST.__proj__Weaken__item__lpost",
+      1,
+      0,
+      2,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "data_elim_Steel.Semantics.Hoare.MST.Weaken",
+        "refinement_interpretation_Tm_refine_c10866732d54438cc757cb0d42e01035"
+      ],
+      0,
+      "595de24b28c48c8fdab6ba6d96caa052"
+    ],
+    [
+      "Steel.Semantics.Hoare.MST.__proj__Weaken__item__wpre",
+      1,
+      0,
+      2,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_c10866732d54438cc757cb0d42e01035"
+      ],
+      0,
+      "d977bea7bf83bdaea9a5a0517898c749"
+    ],
+    [
+      "Steel.Semantics.Hoare.MST.__proj__Weaken__item__wpost",
+      1,
+      0,
+      2,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "data_elim_Steel.Semantics.Hoare.MST.Weaken",
+        "refinement_interpretation_Tm_refine_c10866732d54438cc757cb0d42e01035"
+      ],
+      0,
+      "2cd17e76d5aab856fb8427ec68cf93f6"
+    ],
+    [
+      "Steel.Semantics.Hoare.MST.__proj__Weaken__item__wlpre",
+      1,
+      0,
+      2,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "data_elim_Steel.Semantics.Hoare.MST.Weaken",
+        "refinement_interpretation_Tm_refine_c10866732d54438cc757cb0d42e01035"
+      ],
+      0,
+      "f5f01c165117f486acc121b1f7323d85"
+    ],
+    [
+      "Steel.Semantics.Hoare.MST.__proj__Weaken__item__wlpost",
+      1,
+      0,
+      2,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "data_elim_Steel.Semantics.Hoare.MST.Weaken",
+        "refinement_interpretation_Tm_refine_c10866732d54438cc757cb0d42e01035"
+      ],
+      0,
+      "1c6f70adc84ef527aeb95dade33d07ec"
+    ],
+    [
+      "Steel.Semantics.Hoare.MST.__proj__Weaken__item__uu___0",
+      1,
+      0,
+      2,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "data_elim_Steel.Semantics.Hoare.MST.Weaken",
+        "refinement_interpretation_Tm_refine_c10866732d54438cc757cb0d42e01035"
+      ],
+      0,
+      "523a4aa0728cb74129d1916a6d7696fd"
+    ],
+    [
+      "Steel.Semantics.Hoare.MST.__proj__Weaken__item___10",
+      1,
+      0,
+      2,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "data_elim_Steel.Semantics.Hoare.MST.Weaken",
+        "refinement_interpretation_Tm_refine_c10866732d54438cc757cb0d42e01035"
+      ],
+      0,
+      "2327b4c8e05861ff26c778c33d074429"
     ],
     [
       "Steel.Semantics.Hoare.MST.apply_assoc",
@@ -550,7 +1029,7 @@
         "token_correspondence_Steel.Semantics.Hoare.MST.__proj__Mkst0__item__star"
       ],
       0,
-      "3acd149e17ea139a322d36ebc7402516"
+      "58dbaf4318e9cdf215604636fdac8569"
     ],
     [
       "Steel.Semantics.Hoare.MST.equals_ext_left",
@@ -568,7 +1047,7 @@
         "token_correspondence_Steel.Semantics.Hoare.MST.__proj__Mkst0__item__star"
       ],
       0,
-      "c6e6fc505400f12d562c712c1c304b35"
+      "a275b528f878bfe0d286562dd0bc847b"
     ],
     [
       "Steel.Semantics.Hoare.MST.equals_ext_right",
@@ -595,7 +1074,7 @@
         "typing_Steel.Semantics.Hoare.MST.__proj__Mkst0__item__star"
       ],
       0,
-      "7e19b084e63a033dcf0dd214541a5a26"
+      "f1063cfe0b74dc76aab2a7c90e8eca19"
     ],
     [
       "Steel.Semantics.Hoare.MST.commute_star_right",
@@ -614,7 +1093,7 @@
         "refinement_interpretation_Tm_refine_f6e2dd8dfb4bc549cb03e5fd018cee0d"
       ],
       0,
-      "ef5fce3d5ab1ba3cb18764d41e06cfdd"
+      "0d1d5de9c9e3bd5bbf377928ec46c556"
     ],
     [
       "Steel.Semantics.Hoare.MST.assoc_star_right",
@@ -637,7 +1116,7 @@
         "refinement_interpretation_Tm_refine_f6e2dd8dfb4bc549cb03e5fd018cee0d"
       ],
       0,
-      "8bff3aee5c830674fd857cb06d33a14e"
+      "0a2c4e7c83bd6a55f6fe3394d9850a69"
     ],
     [
       "Steel.Semantics.Hoare.MST.commute_assoc_star_right",
@@ -661,7 +1140,7 @@
         "refinement_interpretation_Tm_refine_f6e2dd8dfb4bc549cb03e5fd018cee0d"
       ],
       0,
-      "7fc5fd82e0a33858afd9ebab5e696b3f"
+      "d59fc61cf17387a6d3518a2d6448e08c"
     ],
     [
       "Steel.Semantics.Hoare.MST.commute_star_par_l",
@@ -690,7 +1169,7 @@
         "typing_Steel.Semantics.Hoare.MST.__proj__Mkst0__item__star"
       ],
       0,
-      "82ab6d8d44942dea5af4e6580f3f2858"
+      "975c75514999bd9250d6092f626c3bbd"
     ],
     [
       "Steel.Semantics.Hoare.MST.commute_star_par_r",
@@ -721,7 +1200,7 @@
         "typing_Steel.Semantics.Hoare.MST.__proj__Mkst0__item__star"
       ],
       0,
-      "33acbd81cce2c449ab98bc4d56142080"
+      "243f35921a0644ef39f84c1da724883a"
     ],
     [
       "Steel.Semantics.Hoare.MST.apply_interp_ext",
@@ -740,7 +1219,7 @@
         "token_correspondence_Steel.Semantics.Hoare.MST.__proj__Mkst0__item__interp"
       ],
       0,
-      "525e50f75945429458ba7613c99c7b75"
+      "b473db1092d99f334a23cfe643112d46"
     ],
     [
       "Steel.Semantics.Hoare.MST.weaken_fp_prop",
@@ -775,7 +1254,7 @@
         "token_correspondence_Steel.Semantics.Hoare.MST.__proj__Mkst0__item__star"
       ],
       0,
-      "86e89445b6887b851331b8b71b1e4341"
+      "372f06295b0581b3ed8dd0bc6277afde"
     ],
     [
       "Steel.Semantics.Hoare.MST.depends_only_on_commutes_with_weaker",
@@ -811,7 +1290,7 @@
         "typing_Steel.Semantics.Hoare.MST.__proj__Mkst0__item__emp"
       ],
       0,
-      "067aa7db730c52ee7aaf05d737796c5d"
+      "6ededc1ef6d022f10b77b56219477754"
     ],
     [
       "Steel.Semantics.Hoare.MST.depends_only_on2_commutes_with_weaker",
@@ -847,7 +1326,7 @@
         "typing_Steel.Semantics.Hoare.MST.__proj__Mkst0__item__emp"
       ],
       0,
-      "1931e7f5f3600e7ee2f59e3cbb4e2c46"
+      "cea651418804ca3c4fada4a4f7bed667"
     ],
     [
       "Steel.Semantics.Hoare.MST.inst_heap_prop_for_par",
@@ -877,7 +1356,7 @@
         "unit_typing"
       ],
       0,
-      "6bab8e600a28bbe1466f0765617efccb"
+      "efc935664d6ec039078182cde575faa9"
     ],
     [
       "Steel.Semantics.Hoare.MST.frame_post_for_par_tautology",
@@ -895,7 +1374,7 @@
         "token_correspondence_Steel.Semantics.Hoare.MST.inst_heap_prop_for_par"
       ],
       0,
-      "2aa31130345ec1c80e14cd93430a4e28"
+      "0cfd285644071f16ea12baa4d609d983"
     ],
     [
       "Steel.Semantics.Hoare.MST.frame_post_for_par_aux",
@@ -908,7 +1387,7 @@
         "typing_Steel.Semantics.Hoare.MST.inst_heap_prop_for_par"
       ],
       0,
-      "cdffaf51f5cd3a281683a940712d1745"
+      "e7567d1e8fbd588fcf022a692868d512"
     ],
     [
       "Steel.Semantics.Hoare.MST.frame_post_for_par",
@@ -929,7 +1408,7 @@
         "typing_Steel.Semantics.Hoare.MST.inst_heap_prop_for_par"
       ],
       0,
-      "6f7dad68da5fcad0dad5605ffbf73373"
+      "1cc2cbfd9101040a3f73656e6b8d58bf"
     ],
     [
       "Steel.Semantics.Hoare.MST.par_weaker_lpre_and_stronger_lpost_l",
@@ -946,7 +1425,7 @@
         "l_and-interp", "true_interp"
       ],
       0,
-      "fb4251f55f1ef70a424991a85de8bb16"
+      "3ba021b14be4702ed8f0f0e0bd360228"
     ],
     [
       "Steel.Semantics.Hoare.MST.par_weaker_lpre_and_stronger_lpost_l",
@@ -960,7 +1439,7 @@
         "refinement_interpretation_Tm_refine_8cd8c65d5f878c81c49fdc7f6574248b"
       ],
       0,
-      "ce87096bda03cdaf839d03189ecb4799"
+      "d70438af89f52370cb95fe57b10259fd"
     ],
     [
       "Steel.Semantics.Hoare.MST.par_weaker_lpre_and_stronger_lpost_r",
@@ -1014,7 +1493,7 @@
         "typing_Steel.Semantics.Hoare.MST.__proj__Mkst0__item__star"
       ],
       0,
-      "a6e0d3f6c30538bf0587c778f51d8ded"
+      "ce60ba14a02ec204324912a4e42be56d"
     ],
     [
       "Steel.Semantics.Hoare.MST.par_weaker_lpre_and_stronger_lpost_r",
@@ -1028,7 +1507,7 @@
         "refinement_interpretation_Tm_refine_0c8d66e9c5421dc9d5906356c2af797c"
       ],
       0,
-      "bef802b532446cfd67fd49acc0e6d17d"
+      "63398a40f2d2b46e2c2b2c68bb185bd1"
     ],
     [
       "Steel.Semantics.Hoare.MST.stronger_post_par_r",
@@ -1061,7 +1540,7 @@
         "typing_Steel.Semantics.Hoare.MST.__proj__Mkst0__item__star"
       ],
       0,
-      "3da26a63ea64e752777c3e5e0014793e"
+      "3c7c435b62dd35ae94ff096b16cace6d"
     ],
     [
       "Steel.Semantics.Hoare.MST.step_ret",
@@ -1104,7 +1583,7 @@
         "refinement_interpretation_Tm_refine_f6e2dd8dfb4bc549cb03e5fd018cee0d"
       ],
       0,
-      "814cb22019b796057b828fa9889e9987"
+      "f81a96771b5492fd9ad815083203f5ea"
     ],
     [
       "Steel.Semantics.Hoare.MST.lpost_ret_act",
@@ -1133,7 +1612,7 @@
         "token_correspondence_Steel.Semantics.Hoare.MST.__proj__Mkst0__item__core"
       ],
       0,
-      "a9933342afb896f7665813bce9095274"
+      "00035fc10051ee7e99cf023018d76626"
     ],
     [
       "Steel.Semantics.Hoare.MST.step_act",
@@ -1193,7 +1672,7 @@
         "token_correspondence_Steel.Semantics.Hoare.MST.__proj__Mkst0__item__core"
       ],
       0,
-      "ddcc04f609641707021e6e5dcc1643dc"
+      "924671fc946a1b1d5ed02d2a10dc5cad"
     ],
     [
       "Steel.Semantics.Hoare.MST.step_bind_ret_aux",
@@ -1202,7 +1681,7 @@
       2,
       [ "@query" ],
       0,
-      "2cde962e6465be572d146b2b02572d06"
+      "52197d1f06a4fa586c843ef921d45c58"
     ],
     [
       "Steel.Semantics.Hoare.MST.step_bind_ret_aux",
@@ -1276,7 +1755,7 @@
         "typing_Steel.Semantics.Hoare.MST.__proj__Mkst0__item__core"
       ],
       0,
-      "8186b22f6acc37ad29cbbdea2876e6b6"
+      "932771ea9ac8d3a8c1084efb688c3952"
     ],
     [
       "Steel.Semantics.Hoare.MST.step_bind_ret",
@@ -1285,7 +1764,7 @@
       2,
       [ "@query" ],
       0,
-      "8d617608dd49b1697f3a99288a9ad620"
+      "2c22e5cd839f80f0e8e6a99a20bb157d"
     ],
     [
       "Steel.Semantics.Hoare.MST.step_bind_ret",
@@ -1297,7 +1776,7 @@
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1"
       ],
       0,
-      "6f17d4e772cff0b984a8f08ef6a38d15"
+      "d89f8900bd381d5df80f2409fc84b52e"
     ],
     [
       "Steel.Semantics.Hoare.MST.step_bind",
@@ -1364,7 +1843,7 @@
         "true_interp"
       ],
       0,
-      "f94d183cc868473325406a779949e29e"
+      "ff9db21bfbcb60ed63a4c5f26d203bf9"
     ],
     [
       "Steel.Semantics.Hoare.MST.step_bind",
@@ -1392,13 +1871,13 @@
         "proj_equation_Steel.Semantics.Hoare.MST.Step_lpre",
         "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_Tm_refine_0bb89592faec03a9db6d80c48e1b1e1f",
-        "refinement_interpretation_Tm_refine_27b7cb03738f201d4ab64e74a06f4c57",
         "refinement_interpretation_Tm_refine_57ebc47de330e3a4aadca5a0633604b5",
         "refinement_interpretation_Tm_refine_65ef13da6fd08b56bf344cbe7a2d85b7",
         "refinement_interpretation_Tm_refine_8d1e8fbe57e4257183d9f639402e78fa",
         "refinement_interpretation_Tm_refine_8de15f4b0b381f2c0274a97bf72deb4f",
         "refinement_interpretation_Tm_refine_98d9ab680c906131a98be6687244819d",
-        "refinement_interpretation_Tm_refine_a89f07f3c39e043d8a658734a236a2ae",
+        "refinement_interpretation_Tm_refine_a15c7171e192dc71f4dbb899a733fb9b",
+        "refinement_interpretation_Tm_refine_b10003b0bcb02afe0c1d9ab31f3d0fa4",
         "refinement_interpretation_Tm_refine_cff70c4b02c331d0dccf415962ad07ad",
         "refinement_interpretation_Tm_refine_f2032a06106bae21c427b45cbe1ea730",
         "refinement_interpretation_Tm_refine_f6e2dd8dfb4bc549cb03e5fd018cee0d",
@@ -1408,7 +1887,7 @@
         "token_correspondence_Steel.Semantics.Hoare.MST.__proj__Step__item__lpre"
       ],
       0,
-      "a8dc2e5a7cffda873c2a15e58efdf006"
+      "8a90757fa1dd796e666bbcd207e49748"
     ],
     [
       "Steel.Semantics.Hoare.MST.step_frame_ret_aux",
@@ -1417,7 +1896,7 @@
       2,
       [ "@query" ],
       0,
-      "60633304a981325eb583ea883971c5bd"
+      "989d98d53b208864445052790ba9f18a"
     ],
     [
       "Steel.Semantics.Hoare.MST.step_frame_ret_aux",
@@ -1503,7 +1982,7 @@
         "token_correspondence_Steel.Semantics.Hoare.MST.__proj__Mkst0__item__locks_preorder"
       ],
       0,
-      "ecb21c7649547aec8606281ad9c9ce04"
+      "1219c213c0b34ca287f311b4755a89c7"
     ],
     [
       "Steel.Semantics.Hoare.MST.step_frame_ret",
@@ -1512,7 +1991,7 @@
       2,
       [ "@query" ],
       0,
-      "1920363f40a36d92cc1e60a81430655d"
+      "230b0cf7986b11c6261f71327aa11871"
     ],
     [
       "Steel.Semantics.Hoare.MST.step_frame_ret",
@@ -1524,7 +2003,7 @@
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1"
       ],
       0,
-      "6ea0463ef54480339f604f80f97a7894"
+      "465678d7a04583f039e537f9d2ce0f62"
     ],
     [
       "Steel.Semantics.Hoare.MST.step_frame",
@@ -1606,7 +2085,7 @@
         "typing_Tm_abs_5a397107efe360fdca0db747cfe89c9d"
       ],
       0,
-      "9983a79c94c88eabd540902f2e44cc2f"
+      "0685cd306fef4116d5026547e96b8758"
     ],
     [
       "Steel.Semantics.Hoare.MST.step_par_ret_aux",
@@ -1615,7 +2094,7 @@
       2,
       [ "@query" ],
       0,
-      "ee8f23a52e38f8b6309eee47cb8f643b"
+      "becbe6abd455357681862872f38e9135"
     ],
     [
       "Steel.Semantics.Hoare.MST.step_par_ret_aux",
@@ -1727,7 +2206,7 @@
         "token_correspondence_Steel.Semantics.Hoare.MST.__proj__Mkst0__item__star"
       ],
       0,
-      "30a4470b11124e38be0488d13e057930"
+      "5705468f43d46c5d7a5a08a5a4e3f059"
     ],
     [
       "Steel.Semantics.Hoare.MST.step_par_ret",
@@ -1736,7 +2215,7 @@
       2,
       [ "@query" ],
       0,
-      "6804bbe7eae53e941884658d3ff2e00b"
+      "2d93dff1b044745d4ebeda9aa38b2688"
     ],
     [
       "Steel.Semantics.Hoare.MST.step_par_ret",
@@ -1748,7 +2227,7 @@
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1"
       ],
       0,
-      "a2c1dfc1573c832d91f0feff7b290a3a"
+      "041e643a06a3cc78e64349fee252f67e"
     ],
     [
       "Steel.Semantics.Hoare.MST.step_par",
@@ -1757,7 +2236,7 @@
       2,
       [
         "@MaxIFuel_assumption", "@query",
-        "FStar.List.Tot.Base_interpretation_Tm_arrow_6980332764c4493a7b0df5c02f7aefbe",
+        "FStar.Classical_interpretation_Tm_arrow_6980332764c4493a7b0df5c02f7aefbe",
         "Steel.Semantics.Hoare.MST_interpretation_Tm_arrow_69502b18a9decf01266003970992a005",
         "Steel.Semantics.Hoare.MST_interpretation_Tm_arrow_72ac2ec523211f8603e00b25deb1543b",
         "data_elim_FStar.Pervasives.Native.Mktuple2",
@@ -1792,9 +2271,9 @@
         "function_token_typing_Steel.Semantics.Hoare.MST.__proj__Par__item__lpreL",
         "function_token_typing_Steel.Semantics.Hoare.MST.__proj__Par__item__postL",
         "function_token_typing_Steel.Semantics.Hoare.MST.__proj__Par__item__postR",
-        "interpretation_Tm_abs_59b41591af89bbc958c3490acbd3372a",
         "interpretation_Tm_abs_5b2ff4012128aa1f211b6d78a12729a4",
         "interpretation_Tm_abs_72b386ae1beab2e9e6588f6ef199311a",
+        "interpretation_Tm_abs_971d8981498164d553be09486b610b46",
         "l_and-interp", "primitive_Prims.op_AmpAmp",
         "proj_equation_Steel.Semantics.Hoare.MST.Mkst0_disjoint",
         "proj_equation_Steel.Semantics.Hoare.MST.Mkst0_equals",
@@ -1841,7 +2320,7 @@
         "typing_Steel.Semantics.Hoare.MST.stronger_post"
       ],
       0,
-      "699de50cbad25ae006aa85551a40dfa1"
+      "eea65fbb5fcc928aa2f4c210ffa908e3"
     ],
     [
       "Steel.Semantics.Hoare.MST.step_par",
@@ -1899,7 +2378,7 @@
         "typing_Steel.Semantics.Hoare.MST.__proj__Step__item__next_post"
       ],
       0,
-      "e2d20f256f36a4a2f4f4d3d7d9ec4a78"
+      "1decc0ed934033ea9fa2088bc2ce82bc"
     ],
     [
       "Steel.Semantics.Hoare.MST.step_weaken",
@@ -1908,7 +2387,7 @@
       2,
       [
         "@MaxIFuel_assumption", "@query",
-        "FStar.List.Tot.Base_interpretation_Tm_arrow_6980332764c4493a7b0df5c02f7aefbe",
+        "FStar.Classical_interpretation_Tm_arrow_6980332764c4493a7b0df5c02f7aefbe",
         "Steel.Semantics.Hoare.MST_interpretation_Tm_arrow_69502b18a9decf01266003970992a005",
         "Steel.Semantics.Hoare.MST_interpretation_Tm_arrow_72ac2ec523211f8603e00b25deb1543b",
         "Steel.Semantics.Hoare.MST_interpretation_Tm_arrow_fcd589b21e6efcf1e5d17b07c282a015",
@@ -1916,7 +2395,8 @@
         "data_elim_Steel.Semantics.Hoare.MST.Mkst0",
         "data_elim_Steel.Semantics.Hoare.MST.Weaken",
         "disc_equation_Steel.Semantics.Hoare.MST.Weaken",
-        "equation_NMST.tape", "equation_Prims.nat", "equation_Prims.squash",
+        "equation_FStar.NMST.tape", "equation_Prims.nat",
+        "equation_Prims.squash",
         "equation_Steel.Semantics.Hoare.MST.associative",
         "equation_Steel.Semantics.Hoare.MST.full_mem",
         "equation_Steel.Semantics.Hoare.MST.interp_extensionality",
@@ -1949,15 +2429,8 @@
         "projection_inverse_Steel.Semantics.Hoare.MST.Step_next_post",
         "projection_inverse_Steel.Semantics.Hoare.MST.Step_next_pre",
         "projection_inverse_Steel.Semantics.Hoare.MST.Weaken_a",
-        "projection_inverse_Steel.Semantics.Hoare.MST.Weaken_lpost",
-        "projection_inverse_Steel.Semantics.Hoare.MST.Weaken_lpre",
-        "projection_inverse_Steel.Semantics.Hoare.MST.Weaken_post",
         "projection_inverse_Steel.Semantics.Hoare.MST.Weaken_pre",
         "projection_inverse_Steel.Semantics.Hoare.MST.Weaken_st",
-        "projection_inverse_Steel.Semantics.Hoare.MST.Weaken_wlpost",
-        "projection_inverse_Steel.Semantics.Hoare.MST.Weaken_wlpre",
-        "projection_inverse_Steel.Semantics.Hoare.MST.Weaken_wpost",
-        "projection_inverse_Steel.Semantics.Hoare.MST.Weaken_wpre",
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_7dd9e823cc87974f223bfb9f22291ffb",
@@ -1968,7 +2441,7 @@
         "typing_Steel.Semantics.Hoare.MST.__proj__Mkst0__item__star"
       ],
       0,
-      "983f27a5e328ce14bcc16a199d029f6a"
+      "3de80e66397ad13c1e5577c0c6ce2185"
     ],
     [
       "Steel.Semantics.Hoare.MST.step",
@@ -1991,7 +2464,7 @@
         "refinement_interpretation_Tm_refine_f6e2dd8dfb4bc549cb03e5fd018cee0d"
       ],
       0,
-      "e99c245b5cee75ea824e28478f703299"
+      "ff9a1503d27bab8af62a8b8dc549187e"
     ],
     [
       "Steel.Semantics.Hoare.MST.run",
@@ -2051,7 +2524,7 @@
         "typing_Steel.Semantics.Hoare.MST.__proj__Mkst0__item__star"
       ],
       0,
-      "dd7e4caaac1577907353fe678477de96"
+      "66367bc5908a7243dc6e799fe53b5d85"
     ]
   ]
 ]

@@ -61,7 +61,7 @@
         "typing_Tm_abs_957e8ad743772cbc360e7d8acd225cc1"
       ],
       0,
-      "67e215edc32b8d3ee9c7e92045dad4a8"
+      "beae751763a5d06b53c01f0526d11988"
     ],
     [
       "MiniParse.Spec.TSum.bare_serialize_tagged_union_correct",
@@ -143,7 +143,7 @@
         "typing_Tm_abs_ffaf4a9727175bbc0400abb3f8770c92"
       ],
       0,
-      "a6eb0498c792c6d3a38e9a04ba7d9b1b"
+      "b2d71797712804907363ef443633fcb1"
     ],
     [
       "MiniParse.Spec.TSum.serialize_tagged_union",
@@ -152,73 +152,7 @@
       1,
       [ "@query" ],
       0,
-      "8ab91e01ca86a3370251ba886c544be4"
-    ],
-    [
-      "MiniParse.Spec.TSum.__proj__Case__item__p",
-      1,
-      2,
-      1,
-      [
-        "@query", "proj_equation_MiniParse.Spec.TSum.Case_ty",
-        "projection_inverse_MiniParse.Spec.TSum.Case_ty"
-      ],
-      0,
-      "fbe9e2381232178246706d67aab84a4c"
-    ],
-    [
-      "MiniParse.Spec.TSum.__proj__Case__item__s",
-      1,
-      2,
-      1,
-      [
-        "@query", "proj_equation_MiniParse.Spec.TSum.Case_p",
-        "proj_equation_MiniParse.Spec.TSum.Case_ty",
-        "projection_inverse_MiniParse.Spec.TSum.Case_p",
-        "projection_inverse_MiniParse.Spec.TSum.Case_ty"
-      ],
-      0,
-      "1f6172dd619f7c184afab90f9a2007cb"
-    ],
-    [
-      "MiniParse.Spec.TSum.__proj__Case__item__ty_to_data",
-      1,
-      2,
-      1,
-      [
-        "@query", "proj_equation_MiniParse.Spec.TSum.Case_ty",
-        "projection_inverse_MiniParse.Spec.TSum.Case_ty"
-      ],
-      0,
-      "94eebe8dce37031429c2e71183ae77db"
-    ],
-    [
-      "MiniParse.Spec.TSum.__proj__Case__item__data_to_ty",
-      1,
-      2,
-      1,
-      [
-        "@query", "proj_equation_MiniParse.Spec.TSum.Case_ty",
-        "projection_inverse_MiniParse.Spec.TSum.Case_ty"
-      ],
-      0,
-      "34f2e4f2e4655cb389aae00838d984e1"
-    ],
-    [
-      "MiniParse.Spec.TSum.__proj__Case__item__u",
-      1,
-      2,
-      1,
-      [
-        "@query", "proj_equation_MiniParse.Spec.TSum.Case_data_to_ty",
-        "proj_equation_MiniParse.Spec.TSum.Case_ty",
-        "proj_equation_MiniParse.Spec.TSum.Case_ty_to_data",
-        "projection_inverse_MiniParse.Spec.TSum.Case_data_to_ty",
-        "projection_inverse_MiniParse.Spec.TSum.Case_ty",
-        "projection_inverse_MiniParse.Spec.TSum.Case_ty_to_data"
-      ],
-      0,
-      "51fc0e662d5d809ce98e45905853a1e7"
+      "1e9a78bb90eac710213f3b0e7a57fcd0"
     ],
     [
       "MiniParse.Spec.TSum.parse_sum",
@@ -229,19 +163,18 @@
         "@MaxIFuel_assumption", "@query",
         "MiniParse.Spec.TSum_interpretation_Tm_arrow_0b46b789776527a019efb7fee4d9c7f4",
         "data_elim_MiniParse.Spec.TSum.Case",
-        "equation_MiniParse.Spec.TSum.sum_case", "equation_Prims.l_and",
-        "equation_Prims.squash",
+        "equation_MiniParse.Spec.TSum.sum_case",
         "fuel_guarded_inversion_MiniParse.Spec.Base.parser_spec",
         "fuel_guarded_inversion_MiniParse.Spec.TSum.sum_case_",
-        "l_and-interp", "proj_equation_MiniParse.Spec.TSum.Case_data_to_ty",
+        "proj_equation_MiniParse.Spec.TSum.Case_data_to_ty",
         "proj_equation_MiniParse.Spec.TSum.Case_ty",
         "proj_equation_MiniParse.Spec.TSum.Case_ty_to_data",
-        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
+        "refinement_interpretation_Tm_refine_72eb06f849a0afcad759efe38d603dc4",
         "token_correspondence_MiniParse.Spec.TSum.sum_case",
         "token_correspondence_MiniParse.Spec.TSum.sum_case_@tok"
       ],
       0,
-      "0976f5f411657466384c476fb866e886"
+      "7151bdcac1b3db1adb119b8b4d7e839d"
     ],
     [
       "MiniParse.Spec.TSum.serialize_sum",
@@ -252,19 +185,18 @@
         "@MaxIFuel_assumption", "@query",
         "MiniParse.Spec.TSum_interpretation_Tm_arrow_0b46b789776527a019efb7fee4d9c7f4",
         "data_elim_MiniParse.Spec.TSum.Case",
-        "equation_MiniParse.Spec.TSum.sum_case", "equation_Prims.l_and",
-        "equation_Prims.squash",
+        "equation_MiniParse.Spec.TSum.sum_case",
         "fuel_guarded_inversion_MiniParse.Spec.Base.serializer_spec",
         "fuel_guarded_inversion_MiniParse.Spec.TSum.sum_case_",
-        "l_and-interp", "proj_equation_MiniParse.Spec.TSum.Case_data_to_ty",
+        "proj_equation_MiniParse.Spec.TSum.Case_data_to_ty",
         "proj_equation_MiniParse.Spec.TSum.Case_ty",
         "proj_equation_MiniParse.Spec.TSum.Case_ty_to_data",
-        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
+        "refinement_interpretation_Tm_refine_72eb06f849a0afcad759efe38d603dc4",
         "token_correspondence_MiniParse.Spec.TSum.sum_case",
         "token_correspondence_MiniParse.Spec.TSum.sum_case_@tok"
       ],
       0,
-      "6b90ccf7d0cb6b3a8065c1591f50075f"
+      "15467669fb637dc6a6a85b029f1fcbff"
     ],
     [
       "MiniParse.Spec.TSum.bounded_u16_match_t_intro",
@@ -273,7 +205,7 @@
       1,
       [ "@query" ],
       0,
-      "3a297da290c018629e97617cc39bb116"
+      "371330a53a90c16135edc0ce3989adb1"
     ],
     [
       "MiniParse.Spec.TSum.bounded_u16_match_t_intro",
@@ -286,7 +218,7 @@
         "refinement_interpretation_Tm_refine_122393b221b19344c38b437c8217b781"
       ],
       0,
-      "ef19fcebaf2f867a02e2d79773d4d07e"
+      "8ac7fca86ffe6383392463c6d51bff73"
     ],
     [
       "MiniParse.Spec.TSum.bounded_u16_match_t_aux_nil",
@@ -308,7 +240,7 @@
         "typing_FStar.UInt16.v"
       ],
       0,
-      "35309b48bf8b4ef3a8c2a2b34d740dea"
+      "f4f19ac782620de02a1efde908a2f206"
     ],
     [
       "MiniParse.Spec.TSum.bounded_u16_match_t_aux_cons_nil",
@@ -320,7 +252,7 @@
         "refinement_interpretation_Tm_refine_afd51579b90d50ea23e03b743a1fa001"
       ],
       0,
-      "f942810a278621234ca2f542fe7d7677"
+      "17ce135ca059e596944e09dbeeeb5c54"
     ],
     [
       "MiniParse.Spec.TSum.bounded_u16_match_t_aux_cons_nil",
@@ -344,7 +276,7 @@
         "typing_FStar.UInt16.v"
       ],
       0,
-      "445f542bb4124aa1755ece38e2b6d330"
+      "285301729858f17dc1c5b6ce9e19dc62"
     ],
     [
       "MiniParse.Spec.TSum.bounded_u16_match_t_aux_cons",
@@ -356,7 +288,7 @@
         "refinement_interpretation_Tm_refine_a862ca15d1f0242a9d595faaa976e72f"
       ],
       0,
-      "c698b868586ffa24b3d0d91f20ec4053"
+      "08b7f001afa1e2ad4e2e9a45cc79e21a"
     ],
     [
       "MiniParse.Spec.TSum.bounded_u16_match_t_aux_cons",
@@ -384,7 +316,7 @@
         "typing_FStar.UInt16.uint_to_t", "typing_FStar.UInt16.v"
       ],
       0,
-      "680e452208512ab8d3abfd96c2e417bd"
+      "616551e1f4f6706744f532656b689265"
     ]
   ]
 ]

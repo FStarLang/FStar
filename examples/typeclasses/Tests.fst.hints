@@ -11,12 +11,13 @@
         "binder_x_029153658607d4ade672ec4c8454839e_2",
         "binder_x_0a56e3de562c08d8ab59f4ac6f626a98_3",
         "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
-        "equality_tok_Prims.LexTop@tok",
+        "equation_Prims.op_Equals_Equals_Equals",
         "fuel_guarded_inversion_Add.additive",
-        "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
+        "fuel_guarded_inversion_Prims.list",
+        "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "466c570775b60e493eee481b5924853e"
+      "9c33c8a10f16ee05d3d990cb4cc2be1f"
     ],
     [
       "Tests.uu___13",
@@ -25,7 +26,7 @@
       1,
       [ "@query" ],
       0,
-      "f3aa9ef8952becbe17b4e0396df5e298"
+      "ded5af3aaf0d2ca4b73f3a96eb4a50df"
     ],
     [
       "Tests.uu___14",
@@ -34,7 +35,7 @@
       1,
       [ "@query" ],
       0,
-      "bca4950292a7f879db76b3e91f5483d7"
+      "27a202f9ed57683eafed29fd86a2e5f2"
     ],
     [
       "Tests.test1",
@@ -71,7 +72,7 @@
         "typing_Num.num_int", "typing_Tests.sum"
       ],
       0,
-      "2a08199de86630f9eca4c1ab6028ed12"
+      "3879b83efb1670c0c10add0ec45bbced"
     ],
     [
       "Tests.test2",
@@ -99,7 +100,7 @@
         "token_correspondence_Prims.op_Addition"
       ],
       0,
-      "da954dc11e17d2728f60c5a45e19e3ec"
+      "e6c0ca8c5d0051e0e70e8e32653adc1d"
     ]
   ]
 ]
