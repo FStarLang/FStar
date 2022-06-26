@@ -1,5 +1,5 @@
 ﻿#r "../../../bin/ulibfs.dll"
-#r "bin/Debug/Lens.dll"
+#r "bin/net6.0/Debug/Lens.dll"
 open Lens
 
 let circle = { center = { x = Prims.of_int 2; y = Prims.of_int 3; z = Prims.of_int 4; }; radius = Prims.of_int 2 }

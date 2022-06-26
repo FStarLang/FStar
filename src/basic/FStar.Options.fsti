@@ -202,6 +202,7 @@ val smtencoding_l_arith_default : unit    -> bool
 val smtencoding_l_arith_native  : unit    -> bool
 val smtencoding_valid_intro     : unit    -> bool
 val smtencoding_valid_elim      : unit    -> bool
+val split_queries               : unit    -> bool
 val tactic_raw_binders          : unit    -> bool
 val tactics_failhard            : unit    -> bool
 val tactics_info                : unit    -> bool
