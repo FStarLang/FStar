@@ -222,18 +222,18 @@ val set_props_aux:
 let rec set_props_aux (#a:eqtype) #f s = match s with
   | x::tl -> if tl = [] then () else set_props_aux #a #f tl
 
-let rec same_members_eq_equal #a #f (s1 s2: ordset a f)
+let rec same_members_means_eq #a #f (s1 s2: ordset a f)
   : Lemma (requires forall x. mem x s1 = mem x s2) (ensures s1 == s2) = 
   match s1 with
   | [] -> if size s2>0 then assert (mem #a #f (Cons?.hd s2) s2) 
   | h1::t1 -> set_props_aux s1;
             set_props_aux s2;
             match s2 with 
-            | h2::t2 -> same_members_eq_equal #a #f t1 t2 
+            | h2::t2 -> same_members_means_eq #a #f t1 t2 
 
 let intersect_sym #a #f (s1 s2: ordset a f) 
   : Lemma (smart_intersect s1 s2 = smart_intersect s2 s1) = 
-  same_members_eq_equal (smart_intersect s1 s2) (smart_intersect s2 s1)
+  same_members_means_eq (smart_intersect s1 s2) (smart_intersect s2 s1)
 
 let remove_until_gt_exclusion #a #f (s:ordset a f) (x:a) (test:a)
   : Lemma (requires f x test && (not (mem test (fst (remove_until_greater_than x s)))))
@@ -626,7 +626,7 @@ let intersect_eq_where #a #f (s1 s2: ordset a f)
   let lhs = smart_intersect s1 s2 in
   assert (forall x. mem x rhs = (mem x s1 && mem x s2)); 
   assert (forall x. mem x lhs = (mem x s1 && mem x s2));
-  same_members_eq_equal lhs rhs
+  same_members_means_eq lhs rhs
 
 let minus_eq_where #a #f (s1 s2: ordset a f)
   : Lemma (smart_minus s1 s2 = where s1 (fun x -> not (mem x s2))) = 
@@ -634,7 +634,7 @@ let minus_eq_where #a #f (s1 s2: ordset a f)
   let lhs = smart_minus s1 s2 in
   assert (forall x. mem x rhs = (mem x s1 && not (mem x s2))); 
   assert (forall x. mem x lhs = (mem x s1 && not (mem x s2)));
-  same_members_eq_equal lhs rhs  
+  same_members_means_eq lhs rhs  
 
 let rec count_is_size_of_where #a #f (s: ordset a f) (cond: a -> bool)
   : Lemma (count s cond = size (where s cond)) = 
@@ -700,7 +700,7 @@ let union_with_prefix (#a:eqtype) #f (h:a) (t1 t2: (z:ordset a f{sorted f (h::z)
   : Lemma (union #a #f (h::t1) (h::t2) = h::(union t1 t2)) = 
   union_mem_forall t1 t2;
   union_sort_lemma h t1 t2;
-  same_members_eq_equal (union #a #f (h::t1) (h::t2)) (h::(union t1 t2))
+  same_members_means_eq (union #a #f (h::t1) (h::t2)) (h::(union t1 t2))
 
 let union_of_tails_size (#a:eqtype) #f (s1 s2: ordset a f)
   : Lemma (requires size s1 > 0 && size s2 > 0 && (Cons?.hd s1 <> Cons?.hd s2) && f (Cons?.hd s1) (Cons?.hd s2))
@@ -709,7 +709,7 @@ let union_of_tails_size (#a:eqtype) #f (s1 s2: ordset a f)
     union_mem_forall t1 s2;
     set_props s1;
     set_props s2;
-    same_members_eq_equal (h1::(union t1 s2)) (union s1 s2)
+    same_members_means_eq (h1::(union t1 s2)) (union s1 s2)
 
 #push-options "--z3rlimit 10"
 let rec size_of_union #a #f (s1 s2: ordset a f)
@@ -718,9 +718,9 @@ let rec size_of_union #a #f (s1 s2: ordset a f)
   let size = size #a #f in
   match s1,s2 with
   | [], _ -> union_mem_forall s1 s2;
-            same_members_eq_equal s2 (union s1 s2)
+            same_members_means_eq s2 (union s1 s2)
   | _, [] -> union_mem_forall s1 s2;
-            same_members_eq_equal s1 (union s1 s2)
+            same_members_means_eq s1 (union s1 s2)
   | h1::(t1:ordset a f), h2::(t2:ordset a f) -> size_of_union #a #f t1 t2;
                    assert (size (union t1 t2) = size t1 + size t2 - size (smart_intersect t1 t2));
                    if h1 = h2 then begin
@@ -731,6 +731,7 @@ let rec size_of_union #a #f (s1 s2: ordset a f)
 //                     assert (size t2 = size s2 - 1);
 //                     assert (size (smart_intersect t1 t2) + 1 = size (smart_intersect s1 s2));
                      ()
+                     same_members_means_eq (smart_intersect s1 s2) (smart_intersect t1 s2)
                    end else begin
                      if f h1 h2 then begin
                        size_of_union t1 s2;
@@ -739,7 +740,6 @@ let rec size_of_union #a #f (s1 s2: ordset a f)
 //                       assert (size (union s1 s2) = 1 + size (union t1 s2));
                        Classical.move_requires (mem_implies_f s2) h1;
 //                       assert (not (mem h1 s2));
-                       same_members_eq_equal (smart_intersect s1 s2) (smart_intersect t1 s2);
                        // step by damned step.
 //                       assert (size (union s1 s2) = 1 + size t1 + size s2 - size (smart_intersect t1 s2));
 //                       assert (size (union s1 s2) = size s1 + size s2 - size (smart_intersect t1 s2));
@@ -748,12 +748,12 @@ let rec size_of_union #a #f (s1 s2: ordset a f)
                      end else begin
                        size_of_union s1 t2;
                        intersect_sym s1 t2;
-                       same_members_eq_equal (union s1 s2) (union s2 s1);
-                       same_members_eq_equal (union s1 t2) (union t2 s1); 
                        union_of_tails_size s2 s1; 
-                       same_members_eq_equal (smart_intersect s1 s2) (smart_intersect t2 s1)
                      end
                    end
+                     same_members_means_eq (union s1 s2) (union s2 s1);
+                     same_members_means_eq (union s1 t2) (union t2 s1); 
+                     same_members_means_eq (smart_intersect s1 s2) (smart_intersect t2 s1)
 #pop-options
 
 let rec count_dichotomy #a #f (s: ordset a f) (cond: a -> bool)
@@ -777,9 +777,9 @@ let size_of_minus #a #f (s1 s2: ordset a f)
 let intersect_with_subset #a #f (s1 s2: ordset a f)
   : Lemma (requires subset s1 s2)
           (ensures smart_intersect s1 s2 = s1) = 
-  same_members_eq_equal (smart_intersect s1 s2) s1
 
 //(ensures  (size (minus s s2) < size (minus s s1)))
+  same_members_means_eq (smart_intersect s1 s2) s1
 let lemma_strict_subset_minus_size #a #f s1 s2 s = 
   let size_diff : pos = size s2 - size s1 in
   size_of_minus s2 s1;
