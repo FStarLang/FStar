@@ -34,8 +34,6 @@ val hasEq_ordset: a:eqtype -> f:cmp a
   -> Lemma (requires (True)) (ensures (hasEq (ordset a f)))
     [SMTPat (hasEq (ordset a f))]
 
-private val as_list (#a:eqtype) (#f:cmp a) (s:ordset a f) : Tot (l:list a{sorted f l})
-
 val empty        : #a:eqtype -> #f:cmp a -> Tot (ordset a f)
 val mem          : #a:eqtype -> #f:cmp a -> a -> s:ordset a f -> Tot bool
 

@@ -19,13 +19,14 @@ type ordset a f = l:(list a){sorted f l}
 
 let hasEq_ordset _ _ = ()
 
+val as_list (#a:eqtype) (#f:cmp a) (s:ordset a f) : Tot (l:list a{sorted f l})
 let as_list #_ #_ s = s
 
 let empty #_ #_ = []
 
 let mem #_ #_ x s = List.Tot.mem x s
 
-private val insert': #a:eqtype -> #f:cmp a -> x:a -> s:ordset a f
+val insert': #a:eqtype -> #f:cmp a -> x:a -> s:ordset a f
              -> Tot (l:(ordset a f){let s = as_list s in let l = as_list l in
 	                           (Cons? l /\
                                     (Cons?.hd l = x \/
@@ -54,7 +55,7 @@ let choose #a #f s = match s with
   | []   -> None
   | x::_ -> Some x
 
-private val remove': #a:eqtype -> #f:cmp a -> x:a -> s:ordset a f
+val remove': #a:eqtype -> #f:cmp a -> x:a -> s:ordset a f
              -> Tot (l:(ordset a f){let s = as_list s in let l = as_list l in
 	                           ((Nil? s ==> Nil? l) /\
                                     (Cons? s ==> Cons?.hd s = x ==> l = Cons?.tl s) /\
@@ -212,7 +213,7 @@ let rec smart_intersect #a #f (s1 s2: ordset a f) : Tot (z:ordset a f{
         )
       end
 
-private val set_props_aux:
+val set_props_aux:
   #a:eqtype -> #f:cmp a -> s:ordset a f{Cons? (as_list s)}
   -> Lemma (requires True)
           (ensures  (let s = as_list s in
@@ -239,14 +240,14 @@ let remove_until_gt_exclusion #a #f (s:ordset a f) (x:a) (test:a)
           (ensures x=test || not (mem test s)) = 
   remove_until_gt_mem s x test 
     
-private let rec remove_le_removes_x #a #f x (s:ordset a f)
+let rec remove_le_removes_x #a #f x (s:ordset a f)
   : Lemma (not (mem x (fst (remove_until_greater_than x s)))) = 
   match s with
   | y::ys -> remove_le_removes_x #a #f x ys
   | [] -> ()
 
 
-private val mem_implies_subset_aux:
+val mem_implies_subset_aux:
   #a:eqtype -> #f:cmp a -> s1:ordset a f -> s2:ordset a f
   -> Lemma (requires (True))
           (ensures ((forall x. mem #a #f x s1 ==> mem #a #f x s2) ==> subset #a #f s1 s2))
@@ -264,7 +265,7 @@ let rec mem_implies_subset_aux (#a:eqtype) #f s1 s2 = match s1, s2 with
       ()
     else mem_implies_subset_aux #a #f s1 tl'
 
-private val subset_implies_mem_aux:
+val subset_implies_mem_aux:
   #a:eqtype -> #f:cmp a -> s1:ordset a f -> s2:ordset a f
   -> Lemma (requires (True))
           (ensures (subset #a #f s1 s2 ==> (forall x. mem #a #f x s1 ==>
@@ -344,7 +345,7 @@ let minus_removes_all_of_s2 #a #f (s1 s2: ordset a f) (x:a{mem x s2})
 
 let strict_subset #a #f s1 s2 = s1 <> s2 && subset #a #f s1 s2
 
-private val set_props:
+val set_props:
   #a:eqtype -> #f:cmp a -> s:ordset a f{Cons? (as_list s)}
   -> Lemma (requires True)
           (ensures  (let s = as_list s in
@@ -352,13 +353,13 @@ private val set_props:
 let rec set_props (#a:eqtype) #f s = match s with
   | x::tl -> if tl = [] then () else set_props #a #f tl
 
-private val hd_unique: #a:eqtype -> #f:cmp a -> s:ordset a f
+val hd_unique: #a:eqtype -> #f:cmp a -> s:ordset a f
                -> Lemma (requires (Cons? (as_list s)))
                        (ensures (let s = as_list s in
 		                 not (List.Tot.mem (Cons?.hd s) (Cons?.tl s))))
 let hd_unique #a #f s = set_props #a #f s
 
-private val eq_helper: #a:eqtype -> #f:cmp a -> x:a -> s:ordset a f
+val eq_helper: #a:eqtype -> #f:cmp a -> x:a -> s:ordset a f
                -> Lemma (requires (let s = as_list s in Cons? s /\ f x (Cons?.hd s) /\ x =!= Cons?.hd s))
                        (ensures (not (mem #a #f x s)))
 let eq_helper (#a:eqtype) #f x s = set_props #a #f s
@@ -381,7 +382,7 @@ let mem_empty #_ #_ _ = ()
 
 let mem_singleton #_ #_ _ _ = ()
 
-private val insert_mem: #a:eqtype -> #f:cmp a -> x:a -> y:a -> s:ordset a f
+val insert_mem: #a:eqtype -> #f:cmp a -> x:a -> y:a -> s:ordset a f
                 -> Lemma (requires (True))
                          (ensures (mem #a #f y (insert' #a #f x s) =
                                    (x = y || mem #a #f y s)))
@@ -403,7 +404,7 @@ let rec mem_intersect #_ #f x s1 s2 = match s1 with
     let _ = mem_intersect #_ #f x tl s2 in
     if mem #_ #f hd s2 then insert_mem #_ #f hd x (intersect #_ #f tl s2) else ()
 
-private val subset_implies_mem:
+val subset_implies_mem:
   #a:eqtype -> #f:cmp a -> s1:ordset a f -> s2:ordset a f
   -> Lemma (requires (True))
           (ensures (subset #a #f s1 s2 ==> (forall x. mem #a #f x s1 ==>
@@ -415,7 +416,7 @@ let rec subset_implies_mem (#a:eqtype) #f s1 s2 = match s1, s2 with
     else subset_implies_mem #a #f s1 tl'
   | _, _           -> ()
 
-private val mem_implies_subset:
+val mem_implies_subset:
   #a:eqtype -> #f:cmp a -> s1:ordset a f -> s2:ordset a f
   -> Lemma (requires (True))
           (ensures ((forall x. mem #a #f x s1 ==> mem #a #f x s2) ==> subset #a #f s1 s2))
@@ -546,7 +547,7 @@ let aux_lemma_remove (#a:eqtype) #f (s: ordset a f) (x:a) (test:a)
 
 let remove_le_empty #a #f x (s:ordset a f) : Lemma (requires s = empty) (ensures remove_le #a #f x s = empty) = ()
  
-private let me_empty (#a:eqtype) (#f:cmp a) (x:a) (s1 s2:ordset a f)
+let me_empty (#a:eqtype) (#f:cmp a) (x:a) (s1 s2:ordset a f)
   : Lemma (requires sorted f (x::s1) /\ sorted f (x::s2) /\ s2=empty) 
           (ensures s1 = (minus s1 s2)) = ()
 
