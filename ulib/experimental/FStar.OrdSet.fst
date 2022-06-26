@@ -111,7 +111,8 @@ let rec self_is_subset #a #f (s:ordset a f)
   | h::(t:ordset a f) -> self_is_subset t
 
 let rec remove_until_greater_than #a #f x (s: ordset a f)
-  : z:(ordset a f * bool) { not(mem x (fst z)) &&
+  : z:(ordset a f * bool) { (size (fst z) <= size s) &&
+                            not(mem x (fst z)) &&
                             (subset (fst z) s) &&
                             (snd z = mem x s) &&
                             (match (fst z) with 
@@ -131,6 +132,7 @@ let rec remove_until_greater_than #a #f x (s: ordset a f)
             (s, false)
           )
           else remove_until_greater_than x t
+
 
 let rec remove_until_gt_prop #a #f (s: ordset a f) (x:a) (test:a)
   : Lemma (f test x ==> not (mem test (fst (remove_until_greater_than x s)))) = 
@@ -155,6 +157,83 @@ let rec remove_until_gt_mem #a #f (s: ordset a f) (x:a) (test:a)
   | h::(t:ordset a f) -> remove_until_gt_prop s x test;
                        remove_until_gt_mem t x test
 
+
+let mem_of_empty #a #f (s: ordset a f{size s = 0}) (x: a)
+  : Lemma (not (mem x s)) = ()
+
+let rec mem_implies_f #a #f (s: ordset a f) (x:a)
+  : Lemma (requires mem x s) (ensures f (Cons?.hd s) x) = 
+  match s with 
+  | [] -> ()
+  | h::t -> if size s > 0 && x <> h then mem_implies_f #a #f t x
+
+let mem_of_tail #a #f (s: ordset a f{size s > 0}) (x:a)
+  : Lemma ((mem #a #f x (Cons?.tl s) || (x = Cons?.hd s)) = mem x s) = ()
+
+let not_mem_of_tail #a #f (s: ordset a f{size s > 0}) (x:a)
+  : Lemma ((not (mem #a #f x (Cons?.tl s))) = (not (mem x s) || (x = Cons?.hd s))) = 
+ match s with
+ | h::[] -> ()
+ | h::g::t -> if x = h then Classical.move_requires (mem_implies_f #a #f (g::t)) x 
+           else mem_of_tail s x 
+
+(* 
+   Smart intersect is the set intersect that accounts for the ordering of both lists,
+   eliminating some checks by trimming leading elements of one of the input lists 
+   that are guaranteeed to not belong to the other list.
+   E.g. smart_intersect [1;2;3] [3;4;5] can safely trim [1;2;3] to just [3]
+   upon inspecting the head of [3;4;5]. 
+*)
+let rec smart_intersect #a #f (s1 s2: ordset a f) : Tot (z:ordset a f{
+    (forall x. mem x z = (mem x s1 && mem x s2)) /\
+    (forall (x:a{sorted f (x::s1)}). sorted f (x::z)) /\
+    (forall (x:a{sorted f (x::s2)}). sorted f (x::z)) 
+  }) (decreases size s1 + size s2) = 
+  match s1 with 
+  | [] -> []
+  | h1::(t1:ordset a f) -> match s2 with
+    | [] -> []
+    | h2::(t2:ordset a f) -> 
+      if h1=h2 then h1::smart_intersect t1 t2 
+      else begin 
+        if f h1 h2 then ( 
+          let skip1, found = remove_until_greater_than #a #f h2 t1 in
+          let subresult : ordset a f = smart_intersect skip1 t2 in 
+          Classical.forall_intro (remove_until_gt_mem t1 h2);
+          Classical.forall_intro (Classical.move_requires (mem_implies_f s2));
+          if found then h2::subresult else subresult
+        ) else (
+          let skip2, found = remove_until_greater_than #a #f h1 t2 in
+          let subresult = smart_intersect #a #f t1 skip2 in
+          Classical.forall_intro (remove_until_gt_mem t2 h1);
+          Classical.forall_intro (Classical.move_requires (mem_implies_f s1));
+          if found then  h1::subresult 
+          else subresult
+        )
+      end
+
+private val set_props_aux:
+  #a:eqtype -> #f:cmp a -> s:ordset a f{Cons? (as_list s)}
+  -> Lemma (requires True)
+          (ensures  (let s = as_list s in
+	             (forall x. List.Tot.mem x (Cons?.tl s) ==> (f (Cons?.hd s) x /\ Cons?.hd s =!= x))))
+                     
+let rec set_props_aux (#a:eqtype) #f s = match s with
+  | x::tl -> if tl = [] then () else set_props_aux #a #f tl
+
+let rec same_members_eq_equal #a #f (s1 s2: ordset a f)
+  : Lemma (requires forall x. mem x s1 = mem x s2) (ensures s1 == s2) = 
+  match s1 with
+  | [] -> if size s2>0 then assert (mem #a #f (Cons?.hd s2) s2) 
+  | h1::t1 -> set_props_aux s1;
+            set_props_aux s2;
+            match s2 with 
+            | h2::t2 -> same_members_eq_equal #a #f t1 t2 
+
+let intersect_sym #a #f (s1 s2: ordset a f) 
+  : Lemma (smart_intersect s1 s2 = smart_intersect s2 s1) = 
+  same_members_eq_equal (smart_intersect s1 s2) (smart_intersect s2 s1)
+
 let remove_until_gt_exclusion #a #f (s:ordset a f) (x:a) (test:a)
   : Lemma (requires f x test && (not (mem test (fst (remove_until_greater_than x s)))))
           (ensures x=test || not (mem test s)) = 
@@ -165,15 +244,6 @@ private let rec remove_le_removes_x #a #f x (s:ordset a f)
   match s with
   | y::ys -> remove_le_removes_x #a #f x ys
   | [] -> ()
-
-private val set_props_aux:
-  #a:eqtype -> #f:cmp a -> s:ordset a f{Cons? (as_list s)}
-  -> Lemma (requires True)
-          (ensures  (let s = as_list s in
-	             (forall x. List.Tot.mem x (Cons?.tl s) ==> (f (Cons?.hd s) x /\ Cons?.hd s =!= x))))
-                     
-let rec set_props_aux (#a:eqtype) #f s = match s with
-  | x::tl -> if tl = [] then () else set_props_aux #a #f tl
 
 
 private val mem_implies_subset_aux:
@@ -213,17 +283,9 @@ let subset_transitivity #a #f (p q r: ordset a f)
   subset_implies_mem_aux q r;
   mem_implies_subset_aux p r
 
-let rec mem_implies_f #a #f (s: ordset a f) (x:a)
-  : Lemma (requires mem x s) (ensures f (Cons?.hd s) x) = 
-  match s with 
-  | [] -> ()
-  | h::t -> if size s > 0 && x <> h then mem_implies_f #a #f t x
 
 let head_is_never_in_tail #a #f (s:ordset a f{size s > 0}) 
   : Lemma (not (mem #a #f (Cons?.hd s) (Cons?.tl s))) = set_props_aux s
-
-let mem_of_empty #a #f (s: ordset a f{size s = 0}) (x: a)
-  : Lemma (not (mem x s)) = ()
 
 let rec smart_minus #a #f (p q: ordset a f) 
   : z:ordset a f { ( forall x. mem x z = (mem x p && (not (mem x q)))) /\
@@ -491,10 +553,243 @@ private let me_empty (#a:eqtype) (#f:cmp a) (x:a) (s1 s2:ordset a f)
 let minus_empty (#a:eqtype) #f (s1 s2: ordset a f) : Lemma (requires s2=empty) (ensures minus s1 s2 = s1) = ()
     
 let lemma_minus_mem #a #f s1 s2 x = ()
- 
-let lemma_strict_subset_minus_size #a #f s1 s2 s = admit() 
 
-let lemma_disjoint_union_subset #a #f s1 s2 = admit ()
+
+let rec strict_subset_implies_diff_element #a #f (s1 s2: ordset a f) 
+  : Lemma (requires strict_subset s1 s2)
+          (ensures exists x. (mem x s2 /\ not (mem x s1))) = 
+  match s1,s2 with
+  | [], h::t -> ()
+  | h1::t1, h2::t2 -> if h1<>h2 then (
+                     if f h2 h1 then Classical.move_requires (mem_implies_f s1) h2 
+                   ) else begin
+                     strict_subset_implies_diff_element #a #f t1 t2; 
+                     not_mem_of_tail s2 h1 
+                   end
+
+let diff_element_implies_strict_subset #a #f (s1 s2: ordset a f)
+  : Lemma (requires subset s1 s2 /\ (exists x. (mem x s2 /\ not (mem x s1))))
+          (ensures strict_subset s1 s2) = ()
+
+let diff_element_equals_strict_subset #a #f (s1 s2: ordset a f)
+  : Lemma (requires subset s1 s2)
+          (ensures (strict_subset s1 s2) <==> (exists x. (mem x s2 /\ not (mem x s1)))) 
+  = Classical.move_requires_2 strict_subset_implies_diff_element s1 s2
+
+let rec count #a #f (s: ordset a f) (condition: a -> bool) : nat = 
+  match s with
+  | [] -> 0
+  | h::t -> if condition h 
+          then 1 + count #a #f t condition 
+          else count #a #f t condition
+
+let rec count_of_impossible_is_zero #a #f (s:ordset a f) (condition: a -> bool {forall p. not (condition p)}) : Lemma (count s condition = 0) = 
+  match s with 
+  | [] -> ()
+  | h::t -> count_of_impossible_is_zero #a #f t condition 
+
+let rec count_all #a #f (s: ordset a f) : Lemma (count s (fun x -> true) = size s) = 
+  match s with
+  | [] -> ()
+  | h::t -> count_all #a #f t
+
+let intersect_with_empty #a #f (s: ordset a f) 
+  : Lemma (smart_intersect s [] = [] /\ smart_intersect [] s = []) = ()
+
+let size_of_tail #a #f (s:ordset a f) 
+  : Lemma (requires size s > 0)
+          (ensures size s = 1 + (size #a #f (Cons?.tl s))) = ()
+
+let count_of_empty #a #f (s: ordset a f) 
+  : Lemma (requires size s = 0) (ensures forall (c: a -> bool). count s c = 0) = () 
+
+let count_of_tail #a #f (s: ordset a f{size s > 0}) (r: ordset a f{size r > 0})
+  : Lemma (requires Cons?.hd s = Cons?.hd r)
+          (ensures count s (fun x -> mem x r) = 1 + count #a #f (Cons?.tl s) (fun x -> mem x r)) = () 
+
+let rec where #a #f (s: ordset a f) (cond: a -> bool) 
+  : Pure (ordset a f) 
+         (requires True)
+         (ensures fun (z:ordset a f) -> 
+           (forall x. mem x z = (mem x s && cond x)) /\
+           (if size z > 0 && size s > 0 then f (Cons?.hd s) (Cons?.hd z) else true) )= 
+  match s with
+  | [] -> []
+  | h::[] -> if cond h then [h] else []
+  | h::g::[] -> if cond h then h::(where #a #f [g] cond) else where #a #f [g] cond
+  | h::g::(t:ordset a f) -> if cond h then h::(where #a #f (g::t) cond) else where (g::t) cond 
+
+let intersect_eq_where #a #f (s1 s2: ordset a f)
+  : Lemma (smart_intersect s1 s2 = where s1 (fun x -> mem x s2)) = 
+  let rhs = where s1 (fun x -> mem x s2) in
+  let lhs = smart_intersect s1 s2 in
+  assert (forall x. mem x rhs = (mem x s1 && mem x s2)); 
+  assert (forall x. mem x lhs = (mem x s1 && mem x s2));
+  same_members_eq_equal lhs rhs
+
+let minus_eq_where #a #f (s1 s2: ordset a f)
+  : Lemma (smart_minus s1 s2 = where s1 (fun x -> not (mem x s2))) = 
+  let rhs = where s1 (fun x -> not (mem x s2)) in
+  let lhs = smart_minus s1 s2 in
+  assert (forall x. mem x rhs = (mem x s1 && not (mem x s2))); 
+  assert (forall x. mem x lhs = (mem x s1 && not (mem x s2)));
+  same_members_eq_equal lhs rhs  
+
+let rec count_is_size_of_where #a #f (s: ordset a f) (cond: a -> bool)
+  : Lemma (count s cond = size (where s cond)) = 
+  match s with
+  | [] -> ()
+  | h::t -> count_is_size_of_where #a #f t cond
+
+let size_of_intersect #a #f (s1 s2: ordset a f)
+  : Lemma (ensures size (smart_intersect s1 s2) = count s1 (fun x -> mem x s2) /\
+                   size (smart_intersect s1 s2) = count s2 (fun x -> mem x s1))
+          (decreases size s1 + size s2) =   
+  intersect_eq_where s1 s2;
+  intersect_eq_where s2 s1;
+  intersect_sym s1 s2;
+  count_is_size_of_where s1 (fun x -> mem x s2);   
+  count_is_size_of_where s2 (fun x -> mem x s1)
+  
+let count_of_intersect #a #f (s1 s2: ordset a f) 
+  : Lemma (count s1 (fun x -> mem x s2) = count s2 (fun x -> mem x s1)) = size_of_intersect s1 s2
+
+let union_mem_forall #a #f (s1 s2: ordset a f)
+  : Lemma (forall x. (mem x (union s1 s2)) = (mem x s1 || mem x s2)) =
+  let aux x : Lemma (mem x (union s1 s2) = (mem x s1 || mem x s2)) =   
+    mem_union x s1 s2 in Classical.forall_intro aux  
+
+let union_with_empty #a #f (s: ordset a f)
+  : Lemma (union s empty = s) = 
+  let aux x : Lemma (mem x (union s empty) = mem x s) =   
+    mem_union x s empty in
+  Classical.forall_intro aux;
+  eq_lemma (union s empty) s
+
+let union_head_lemma #a #f (s1 s2: ordset a f)
+  : Lemma (match s1, s2 with 
+           | [],[] -> (union s1 s2 = [])
+           | [],h::t -> size (union s1 s2) > 0 && Cons?.hd (union s1 s2) = h
+           | h::t,[] -> size (union s1 s2) > 0 && Cons?.hd (union s1 s2) = h
+           | h1::t1, h2::t2 -> size (union s1 s2) > 0 && 
+                            (Cons?.hd (union s1 s2) = (if f h1 h2 then h1 else h2))                             
+                            ) = 
+  match s1,s2 with
+  | [],[] -> ()
+  | [],h::t -> ()
+  | h::t,[] -> union_with_empty s1
+  | h1::t1, h2::t2 -> union_mem_forall s1 s2;
+                   set_props s1;
+                   set_props s2;
+                   set_props (union s1 s2)
+           
+let union_sort_lemma (#a:eqtype) #f (h:a) (t1 t2: ordset a f)
+  : Lemma (requires sorted f (h::t1) /\ sorted f (h::t2))
+          (ensures sorted f (h::(union t1 t2))) = 
+  if size t1 = 0 then union_with_empty t2
+  else if size t2 = 0 then union_with_empty t1 
+  else begin 
+    union_mem_forall t1 t2;
+    set_props t1;
+    set_props t2;
+    set_props (union t1 t2)    
+  end
+
+let union_with_prefix (#a:eqtype) #f (h:a) (t1 t2: (z:ordset a f{sorted f (h::z)}))
+  : Lemma (union #a #f (h::t1) (h::t2) = h::(union t1 t2)) = 
+  union_mem_forall t1 t2;
+  union_sort_lemma h t1 t2;
+  same_members_eq_equal (union #a #f (h::t1) (h::t2)) (h::(union t1 t2))
+
+let union_of_tails_size (#a:eqtype) #f (s1 s2: ordset a f)
+  : Lemma (requires size s1 > 0 && size s2 > 0 && (Cons?.hd s1 <> Cons?.hd s2) && f (Cons?.hd s1) (Cons?.hd s2))
+          (ensures size (union s1 s2) = 1 + size (union #a #f (Cons?.tl s1) s2)) = 
+  match s1 with | h1::(t1:ordset a f) -> match s2 with | h2::(t2:ordset a f) ->
+    union_mem_forall t1 s2;
+    set_props s1;
+    set_props s2;
+    same_members_eq_equal (h1::(union t1 s2)) (union s1 s2)
+
+#push-options "--z3rlimit 10"
+let rec size_of_union #a #f (s1 s2: ordset a f)
+  : Lemma (ensures size (union s1 s2) = size s1 + size s2 - (size (smart_intersect s1 s2)))
+          (decreases size s1 + size s2) = 
+  let size = size #a #f in
+  match s1,s2 with
+  | [], _ -> union_mem_forall s1 s2;
+            same_members_eq_equal s2 (union s1 s2)
+  | _, [] -> union_mem_forall s1 s2;
+            same_members_eq_equal s1 (union s1 s2)
+  | h1::(t1:ordset a f), h2::(t2:ordset a f) -> size_of_union #a #f t1 t2;
+                   assert (size (union t1 t2) = size t1 + size t2 - size (smart_intersect t1 t2));
+                   if h1 = h2 then begin
+                     union_with_prefix h1 t1 t2;
+//                     assert (union s1 s2 = (h1::(union t1 t2)));
+//                     assert (size (union s1 s2) = 1 + size (union t1 t2));
+//                     assert (size t1 = size s1 - 1);
+//                     assert (size t2 = size s2 - 1);
+//                     assert (size (smart_intersect t1 t2) + 1 = size (smart_intersect s1 s2));
+                     ()
+                   end else begin
+                     if f h1 h2 then begin
+                       size_of_union t1 s2;
+//                       assert (size (union t1 s2) = size t1 + size s2 - size (smart_intersect t1 s2));
+                       union_of_tails_size s1 s2;
+//                       assert (size (union s1 s2) = 1 + size (union t1 s2));
+                       Classical.move_requires (mem_implies_f s2) h1;
+//                       assert (not (mem h1 s2));
+                       same_members_eq_equal (smart_intersect s1 s2) (smart_intersect t1 s2);
+                       // step by damned step.
+//                       assert (size (union s1 s2) = 1 + size t1 + size s2 - size (smart_intersect t1 s2));
+//                       assert (size (union s1 s2) = size s1 + size s2 - size (smart_intersect t1 s2));
+//                      assert (size (union s1 s2) = size s1 + size s2 - size (smart_intersect s1 s2));
+                       ()
+                     end else begin
+                       size_of_union s1 t2;
+                       intersect_sym s1 t2;
+                       same_members_eq_equal (union s1 s2) (union s2 s1);
+                       same_members_eq_equal (union s1 t2) (union t2 s1); 
+                       union_of_tails_size s2 s1; 
+                       same_members_eq_equal (smart_intersect s1 s2) (smart_intersect t2 s1)
+                     end
+                   end
+#pop-options
+
+let rec count_dichotomy #a #f (s: ordset a f) (cond: a -> bool)
+  : Lemma (size s = count s cond + count s (fun x -> not (cond x))) = 
+  match s with
+  | [] -> ()
+  | h::t -> count_dichotomy #a #f t cond
+
+let size_of_minus #a #f (s1 s2: ordset a f)
+  : Lemma (size (smart_minus s1 s2) = size s1 - size (smart_intersect s1 s2)) = 
+  minus_eq_where s1 s2;
+  intersect_eq_where s1 s2;
+  let mem_of_s2 x = mem x s2 in
+  let not_mem_of_s2 x = not (mem x s2) in
+  count_dichotomy s1 mem_of_s2;
+  assert ((size s1) = (count s1 mem_of_s2) + (count s1 not_mem_of_s2));
+  count_is_size_of_where s1 mem_of_s2;
+  count_is_size_of_where s1 not_mem_of_s2
+
+
+let intersect_with_subset #a #f (s1 s2: ordset a f)
+  : Lemma (requires subset s1 s2)
+          (ensures smart_intersect s1 s2 = s1) = 
+  same_members_eq_equal (smart_intersect s1 s2) s1
+
+//(ensures  (size (minus s s2) < size (minus s s1)))
+let lemma_strict_subset_minus_size #a #f s1 s2 s = 
+  let size_diff : pos = size s2 - size s1 in
+  size_of_minus s2 s1;
+  size_of_minus s s2;
+  size_of_minus s s1;
+  intersect_with_subset s2 s;
+  intersect_sym s2 s;
+  intersect_with_subset s1 s;
+  intersect_sym s1 s
+
+let lemma_disjoint_union_subset #a #f s1 s2 = size_of_union s1 s2
 
 let lemma_subset_union #a #f s1 s2 s = ()
 
