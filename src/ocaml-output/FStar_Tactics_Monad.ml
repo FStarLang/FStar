@@ -524,9 +524,22 @@ let (new_uvar :
     fun env ->
       fun typ ->
         fun rng ->
+          let is_base_typ =
+            let t = FStar_TypeChecker_Normalize.unfold_whnf env typ in
+            let uu___ = FStar_Syntax_Util.head_and_args t in
+            match uu___ with
+            | (head, args) ->
+                let uu___1 =
+                  let uu___2 = FStar_Syntax_Util.un_uinst head in
+                  uu___2.FStar_Syntax_Syntax.n in
+                (match uu___1 with
+                 | FStar_Syntax_Syntax.Tm_fvar uu___2 -> true
+                 | uu___2 -> false) in
           let uu___ =
             FStar_TypeChecker_Env.new_implicit_var_aux reason rng env typ
-              FStar_Syntax_Syntax.Allow_untyped FStar_Pervasives_Native.None in
+              (if is_base_typ
+               then FStar_Syntax_Syntax.Allow_untyped
+               else FStar_Syntax_Syntax.Strict) FStar_Pervasives_Native.None in
           match uu___ with
           | (u, ctx_uvar, g_u) ->
               let uu___1 =

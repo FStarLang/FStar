@@ -239,8 +239,15 @@ let add_implicits (i:implicits) : tac unit =
     set ({ps with all_implicits=i@ps.all_implicits}))
 
 let new_uvar (reason:string) (env:env) (typ:typ) (rng:Range.range) : tac (term * ctx_uvar) =
+    let is_base_typ =
+        let t = FStar.TypeChecker.Normalize.unfold_whnf env typ in
+        let head, args = U.head_and_args t in
+        match (U.un_uinst head).n with
+        | Tm_fvar _ -> true
+        | _ -> false
+    in
     let u, ctx_uvar, g_u =
-        Env.new_implicit_var_aux reason rng env typ Allow_untyped None
+        Env.new_implicit_var_aux reason rng env typ (if is_base_typ then Allow_untyped else Strict) None
     in
     bind (add_implicits g_u.implicits) (fun _ ->
     ret (u, fst (List.hd ctx_uvar)))

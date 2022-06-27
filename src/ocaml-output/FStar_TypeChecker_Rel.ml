@@ -14146,55 +14146,30 @@ let (resolve_implicits' :
                                        FStar_TypeChecker_Common.imp_range =
                                          (hd.FStar_TypeChecker_Common.imp_range)
                                      } in
-                                   let tm_ok_for_tac tm2 =
-                                     let uu___9 =
-                                       let uu___10 =
-                                         FStar_Compiler_Effect.op_Bar_Greater
-                                           tm2 FStar_Syntax_Free.uvars in
-                                       FStar_Compiler_Effect.op_Bar_Greater
-                                         uu___10
-                                         FStar_Compiler_Util.set_elements in
-                                     FStar_Compiler_Effect.op_Bar_Greater
-                                       uu___9
-                                       (FStar_Compiler_List.for_all
-                                          (fun uv ->
-                                             uv.FStar_Syntax_Syntax.ctx_uvar_should_check
-                                               =
-                                               FStar_Syntax_Syntax.Allow_unresolved)) in
-                                   if is_tac
-                                   then
-                                     let uu___9 = tm_ok_for_tac tm1 in
-                                     (if uu___9
-                                      then until_fixpoint (out, true) tl
-                                      else
-                                        until_fixpoint
-                                          (((hd1, Implicit_unresolved) ::
-                                            out), changed) tl)
-                                   else
-                                     (let force_univ_constraints = false in
-                                      let imps_opt =
-                                        check_implicit_solution_and_discharge_guard
-                                          env1 hd1 force_univ_constraints in
-                                      match imps_opt with
-                                      | FStar_Pervasives_Native.None ->
-                                          until_fixpoint
-                                            (((hd1,
-                                                Implicit_checking_defers_univ_constraint)
-                                              :: out), changed) tl
-                                      | FStar_Pervasives_Native.Some imps ->
-                                          let uu___10 =
-                                            let uu___11 =
-                                              let uu___12 =
-                                                FStar_Compiler_Effect.op_Bar_Greater
-                                                  imps
-                                                  (FStar_Compiler_List.map
-                                                     (fun imp ->
-                                                        (imp,
-                                                          Implicit_unresolved))) in
-                                              FStar_Compiler_List.op_At
-                                                uu___12 out in
-                                            (uu___11, true) in
-                                          until_fixpoint uu___10 tl)))))))) in
+                                   let force_univ_constraints = false in
+                                   let imps_opt =
+                                     check_implicit_solution_and_discharge_guard
+                                       env1 hd1 force_univ_constraints in
+                                   match imps_opt with
+                                   | FStar_Pervasives_Native.None ->
+                                       until_fixpoint
+                                         (((hd1,
+                                             Implicit_checking_defers_univ_constraint)
+                                           :: out), changed) tl
+                                   | FStar_Pervasives_Native.Some imps ->
+                                       let uu___9 =
+                                         let uu___10 =
+                                           let uu___11 =
+                                             FStar_Compiler_Effect.op_Bar_Greater
+                                               imps
+                                               (FStar_Compiler_List.map
+                                                  (fun imp ->
+                                                     (imp,
+                                                       Implicit_unresolved))) in
+                                           FStar_Compiler_List.op_At uu___11
+                                             out in
+                                         (uu___10, true) in
+                                       until_fixpoint uu___9 tl))))))) in
         let imps =
           FStar_Compiler_Effect.op_Bar_Greater
             g.FStar_TypeChecker_Common.implicits (until_fixpoint ([], false)) in
