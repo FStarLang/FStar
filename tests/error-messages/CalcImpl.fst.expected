@@ -254,16 +254,16 @@ assume val CalcImpl.q  : Prims.prop
 [@ ]
 assume val CalcImpl.lem  : _: Prims.unit -> FStar.Pervasives.Lemma (requires CalcImpl.p) (ensures CalcImpl.q)
 [@ ]
-visible let  test  : _: Prims.unit -> Prims.Tot Prims.unit = fun _ ->
+visible let  test  : _: Prims.unit -> Prims.unit = fun _ ->
   calc ( ==> ) {
     CalcImpl.p;
     ( ==> ) { FStar.Calc.calc_push_impl (fun _ -> CalcImpl.lem ()) }
     CalcImpl.q;
   }
 [@ ]
-visible let  any  : p: _ -> q: _ -> Prims.Tot Prims.logical = fun _ _ -> Prims.l_True
+visible let  any  : p: _ -> q: _ -> Prims.logical = fun _ _ -> Prims.l_True
 [@ ]
-visible let  test3  : _: Prims.unit -> Prims.Tot Prims.unit = fun _ ->
+visible let  test3  : _: Prims.unit -> Prims.unit = fun _ ->
   calc (CalcImpl.any) {
     CalcImpl.p /\ CalcImpl.p;
     ( <==> ) { () }
@@ -274,7 +274,7 @@ visible let  test3  : _: Prims.unit -> Prims.Tot Prims.unit = fun _ ->
     CalcImpl.q;
   }
 [@ ]
-visible let  test4  : _: Prims.unit -> Prims.Tot Prims.unit = fun _ ->
+visible let  test4  : _: Prims.unit -> Prims.unit = fun _ ->
   calc (CalcImpl.any) {
     CalcImpl.p /\ CalcImpl.p;
     ( <==> ) { () }
@@ -285,9 +285,9 @@ visible let  test4  : _: Prims.unit -> Prims.Tot Prims.unit = fun _ ->
     CalcImpl.q;
   }
 [@ ]
-visible let  op_Equals_Equals_Greater  : _: Prims.int -> _: Prims.int -> Prims.Tot Prims.bool = Prims.op_LessThan
+visible let  op_Equals_Equals_Greater  : _: Prims.int -> _: Prims.int -> Prims.bool = Prims.op_LessThan
 [@ ]
-visible let  test5  : _: Prims.unit -> Prims.Tot Prims.unit = fun _ ->
+visible let  test5  : _: Prims.unit -> Prims.unit = fun _ ->
   calc ( ==> ) {
     1;
     ( ==> ) { () }
@@ -302,16 +302,16 @@ assume val CalcImpl.q  : Prims.prop
 [@ ]
 assume val CalcImpl.lem  : _: Prims.unit -> FStar.Pervasives.Lemma (requires CalcImpl.p) (ensures CalcImpl.q)
 [@ ]
-visible let  test  : _: Prims.unit -> Prims.Tot Prims.unit = fun _ ->
+visible let  test  : _: Prims.unit -> Prims.unit = fun _ ->
   calc ( ==> ) {
     CalcImpl.p;
     ( ==> ) { FStar.Calc.calc_push_impl (fun _ -> CalcImpl.lem ()) }
     CalcImpl.q;
   }
 [@ ]
-visible let  any  : p: _ -> q: _ -> Prims.Tot Prims.logical = fun _ _ -> Prims.l_True
+visible let  any  : p: _ -> q: _ -> Prims.logical = fun _ _ -> Prims.l_True
 [@ ]
-visible let  test3  : _: Prims.unit -> Prims.Tot Prims.unit = fun _ ->
+visible let  test3  : _: Prims.unit -> Prims.unit = fun _ ->
   calc (CalcImpl.any) {
     CalcImpl.p /\ CalcImpl.p;
     ( <==> ) { () }
@@ -322,7 +322,7 @@ visible let  test3  : _: Prims.unit -> Prims.Tot Prims.unit = fun _ ->
     CalcImpl.q;
   }
 [@ ]
-visible let  test4  : _: Prims.unit -> Prims.Tot Prims.unit = fun _ ->
+visible let  test4  : _: Prims.unit -> Prims.unit = fun _ ->
   calc (CalcImpl.any) {
     CalcImpl.p /\ CalcImpl.p;
     ( <==> ) { () }
@@ -333,9 +333,9 @@ visible let  test4  : _: Prims.unit -> Prims.Tot Prims.unit = fun _ ->
     CalcImpl.q;
   }
 [@ ]
-visible let  op_Equals_Equals_Greater  : _: Prims.int -> _: Prims.int -> Prims.Tot Prims.bool = Prims.op_LessThan
+visible let  op_Equals_Equals_Greater  : _: Prims.int -> _: Prims.int -> Prims.bool = Prims.op_LessThan
 [@ ]
-visible let  test5  : _: Prims.unit -> Prims.Tot Prims.unit = fun _ ->
+visible let  test5  : _: Prims.unit -> Prims.unit = fun _ ->
   calc ( ==> ) {
     1;
     ( ==> ) { () }
