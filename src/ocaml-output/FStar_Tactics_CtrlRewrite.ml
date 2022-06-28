@@ -104,6 +104,9 @@ let (__do_rewrite :
                                    FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term
                                      =
                                      (env.FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term);
+                                   FStar_TypeChecker_Env.subtype_nosmt_force
+                                     =
+                                     (env.FStar_TypeChecker_Env.subtype_nosmt_force);
                                    FStar_TypeChecker_Env.use_bv_sorts =
                                      (env.FStar_TypeChecker_Env.use_bv_sorts);
                                    FStar_TypeChecker_Env.qtbl_name_and_index
@@ -169,7 +172,7 @@ let (__do_rewrite :
                    (let typ = lcomp.FStar_TypeChecker_Common.res_typ in
                     let uu___4 =
                       FStar_Tactics_Monad.new_uvar "do_rewrite.rhs" env typ
-                        (rangeof g0) in
+                        FStar_Pervasives_Native.None (rangeof g0) in
                     FStar_Tactics_Monad.bind uu___4
                       (fun uu___5 ->
                          match uu___5 with

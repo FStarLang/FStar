@@ -42,6 +42,8 @@ let (instantiate_both :
         (env.FStar_TypeChecker_Env.universe_of);
       FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term =
         (env.FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term);
+      FStar_TypeChecker_Env.subtype_nosmt_force =
+        (env.FStar_TypeChecker_Env.subtype_nosmt_force);
       FStar_TypeChecker_Env.use_bv_sorts =
         (env.FStar_TypeChecker_Env.use_bv_sorts);
       FStar_TypeChecker_Env.qtbl_name_and_index =
@@ -118,6 +120,8 @@ let (no_inst : FStar_TypeChecker_Env.env -> FStar_TypeChecker_Env.env) =
         (env.FStar_TypeChecker_Env.universe_of);
       FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term =
         (env.FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term);
+      FStar_TypeChecker_Env.subtype_nosmt_force =
+        (env.FStar_TypeChecker_Env.subtype_nosmt_force);
       FStar_TypeChecker_Env.use_bv_sorts =
         (env.FStar_TypeChecker_Env.use_bv_sorts);
       FStar_TypeChecker_Env.qtbl_name_and_index =
@@ -1076,6 +1080,8 @@ let (guard_letrecs :
                   (env.FStar_TypeChecker_Env.universe_of);
                 FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term =
                   (env.FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term);
+                FStar_TypeChecker_Env.subtype_nosmt_force =
+                  (env.FStar_TypeChecker_Env.subtype_nosmt_force);
                 FStar_TypeChecker_Env.use_bv_sorts =
                   (env.FStar_TypeChecker_Env.use_bv_sorts);
                 FStar_TypeChecker_Env.qtbl_name_and_index =
@@ -1620,6 +1626,8 @@ let rec (tc_term :
                     (env.FStar_TypeChecker_Env.universe_of);
                   FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term =
                     (env.FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term);
+                  FStar_TypeChecker_Env.subtype_nosmt_force =
+                    (env.FStar_TypeChecker_Env.subtype_nosmt_force);
                   FStar_TypeChecker_Env.use_bv_sorts =
                     (env.FStar_TypeChecker_Env.use_bv_sorts);
                   FStar_TypeChecker_Env.qtbl_name_and_index =
@@ -1910,6 +1918,8 @@ and (tc_maybe_toplevel_term :
                          FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term
                            =
                            (env'.FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term);
+                         FStar_TypeChecker_Env.subtype_nosmt_force =
+                           (env'.FStar_TypeChecker_Env.subtype_nosmt_force);
                          FStar_TypeChecker_Env.use_bv_sorts =
                            (env'.FStar_TypeChecker_Env.use_bv_sorts);
                          FStar_TypeChecker_Env.qtbl_name_and_index =
@@ -3962,6 +3972,8 @@ and (tc_tactic :
                 (env.FStar_TypeChecker_Env.universe_of);
               FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term =
                 (env.FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term);
+              FStar_TypeChecker_Env.subtype_nosmt_force =
+                (env.FStar_TypeChecker_Env.subtype_nosmt_force);
               FStar_TypeChecker_Env.use_bv_sorts =
                 (env.FStar_TypeChecker_Env.use_bv_sorts);
               FStar_TypeChecker_Env.qtbl_name_and_index =
@@ -4634,6 +4646,8 @@ and (tc_comp :
                   (env.FStar_TypeChecker_Env.universe_of);
                 FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term =
                   (env.FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term);
+                FStar_TypeChecker_Env.subtype_nosmt_force =
+                  (env.FStar_TypeChecker_Env.subtype_nosmt_force);
                 FStar_TypeChecker_Env.use_bv_sorts =
                   (env.FStar_TypeChecker_Env.use_bv_sorts);
                 FStar_TypeChecker_Env.qtbl_name_and_index =
@@ -5125,6 +5139,8 @@ and (tc_abs_expected_function_typ :
                                FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term
                                  =
                                  (envbody.FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term);
+                               FStar_TypeChecker_Env.subtype_nosmt_force =
+                                 (envbody.FStar_TypeChecker_Env.subtype_nosmt_force);
                                FStar_TypeChecker_Env.use_bv_sorts =
                                  (envbody.FStar_TypeChecker_Env.use_bv_sorts);
                                FStar_TypeChecker_Env.qtbl_name_and_index =
@@ -5277,6 +5293,8 @@ and (tc_abs_expected_function_typ :
                              FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term
                                =
                                (env.FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term);
+                             FStar_TypeChecker_Env.subtype_nosmt_force =
+                               (env.FStar_TypeChecker_Env.subtype_nosmt_force);
                              FStar_TypeChecker_Env.use_bv_sorts =
                                (env.FStar_TypeChecker_Env.use_bv_sorts);
                              FStar_TypeChecker_Env.qtbl_name_and_index =
@@ -5383,6 +5401,8 @@ and (tc_abs_expected_function_typ :
                                   FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term
                                     =
                                     (envbody1.FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term);
+                                  FStar_TypeChecker_Env.subtype_nosmt_force =
+                                    (envbody1.FStar_TypeChecker_Env.subtype_nosmt_force);
                                   FStar_TypeChecker_Env.use_bv_sorts =
                                     (envbody1.FStar_TypeChecker_Env.use_bv_sorts);
                                   FStar_TypeChecker_Env.qtbl_name_and_index =
@@ -5922,6 +5942,8 @@ and (tc_abs :
                                   FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term
                                     =
                                     (envbody2.FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term);
+                                  FStar_TypeChecker_Env.subtype_nosmt_force =
+                                    (envbody2.FStar_TypeChecker_Env.subtype_nosmt_force);
                                   FStar_TypeChecker_Env.use_bv_sorts =
                                     (envbody2.FStar_TypeChecker_Env.use_bv_sorts);
                                   FStar_TypeChecker_Env.qtbl_name_and_index =
@@ -9149,6 +9171,9 @@ and (tc_eqn :
                                                                     FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term
                                                                     =
                                                                     (uu___16.FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term);
+                                                                    FStar_TypeChecker_Env.subtype_nosmt_force
+                                                                    =
+                                                                    (uu___16.FStar_TypeChecker_Env.subtype_nosmt_force);
                                                                     FStar_TypeChecker_Env.use_bv_sorts
                                                                     =
                                                                     (uu___16.FStar_TypeChecker_Env.use_bv_sorts);
@@ -9799,6 +9824,8 @@ and (check_inner_let :
                 (env1.FStar_TypeChecker_Env.universe_of);
               FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term =
                 (env1.FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term);
+              FStar_TypeChecker_Env.subtype_nosmt_force =
+                (env1.FStar_TypeChecker_Env.subtype_nosmt_force);
               FStar_TypeChecker_Env.use_bv_sorts =
                 (env1.FStar_TypeChecker_Env.use_bv_sorts);
               FStar_TypeChecker_Env.qtbl_name_and_index =
@@ -10538,6 +10565,8 @@ and (build_let_rec_env :
                   (env01.FStar_TypeChecker_Env.universe_of);
                 FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term =
                   (env01.FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term);
+                FStar_TypeChecker_Env.subtype_nosmt_force =
+                  (env01.FStar_TypeChecker_Env.subtype_nosmt_force);
                 FStar_TypeChecker_Env.use_bv_sorts =
                   (env01.FStar_TypeChecker_Env.use_bv_sorts);
                 FStar_TypeChecker_Env.qtbl_name_and_index =
@@ -10722,6 +10751,9 @@ and (build_let_rec_env :
                                            FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term
                                              =
                                              (env2.FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term);
+                                           FStar_TypeChecker_Env.subtype_nosmt_force
+                                             =
+                                             (env2.FStar_TypeChecker_Env.subtype_nosmt_force);
                                            FStar_TypeChecker_Env.use_bv_sorts
                                              =
                                              (env2.FStar_TypeChecker_Env.use_bv_sorts);
@@ -11004,6 +11036,8 @@ and (check_let_bound_def :
                          FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term
                            =
                            (env11.FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term);
+                         FStar_TypeChecker_Env.subtype_nosmt_force =
+                           (env11.FStar_TypeChecker_Env.subtype_nosmt_force);
                          FStar_TypeChecker_Env.use_bv_sorts =
                            (env11.FStar_TypeChecker_Env.use_bv_sorts);
                          FStar_TypeChecker_Env.qtbl_name_and_index =
@@ -11498,6 +11532,8 @@ let (typeof_tot_or_gtot_term :
                (env.FStar_TypeChecker_Env.universe_of);
              FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term =
                (env.FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term);
+             FStar_TypeChecker_Env.subtype_nosmt_force =
+               (env.FStar_TypeChecker_Env.subtype_nosmt_force);
              FStar_TypeChecker_Env.use_bv_sorts =
                (env.FStar_TypeChecker_Env.use_bv_sorts);
              FStar_TypeChecker_Env.qtbl_name_and_index =
@@ -11669,6 +11705,8 @@ let (level_of_type :
                          FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term
                            =
                            (env.FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term);
+                         FStar_TypeChecker_Env.subtype_nosmt_force =
+                           (env.FStar_TypeChecker_Env.subtype_nosmt_force);
                          FStar_TypeChecker_Env.use_bv_sorts =
                            (env.FStar_TypeChecker_Env.use_bv_sorts);
                          FStar_TypeChecker_Env.qtbl_name_and_index =
@@ -12021,6 +12059,8 @@ let rec (universe_of_aux :
                          FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term
                            =
                            (env1.FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term);
+                         FStar_TypeChecker_Env.subtype_nosmt_force =
+                           (env1.FStar_TypeChecker_Env.subtype_nosmt_force);
                          FStar_TypeChecker_Env.use_bv_sorts = true;
                          FStar_TypeChecker_Env.qtbl_name_and_index =
                            (env1.FStar_TypeChecker_Env.qtbl_name_and_index);

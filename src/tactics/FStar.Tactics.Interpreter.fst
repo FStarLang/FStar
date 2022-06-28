@@ -554,20 +554,38 @@ let run_tactic_on_ps'
     | Success (ret, ps) ->
         (* if !tacdbg || Options.tactics_info () then *)
         (*     BU.print1 "Tactic generated proofterm %s\n" (Print.term_to_string w); *)
+        let remaining_smt_goals = ps.goals@ps.smt_goals in
         List.iter (fun g -> if is_irrelevant g
-                            then if TcRel.teq_nosmt_force (goal_env g) (goal_witness g) U.exp_unit
-                                 then ()
-                                 else failwith (BU.format1 "Irrelevant tactic witness does not unify with (): %s"
+                         then (
+                           if !tacdbg then BU.print1 "Assigning irrelevant goal %s\n" (Print.term_to_string (goal_witness g));
+                           if TcRel.teq_nosmt_force (goal_env g) (goal_witness g) U.exp_unit
+                           then ()
+                           else failwith (BU.format1 "Irrelevant tactic witness does not unify with (): %s"
                                                     (Print.term_to_string (goal_witness g)))
-                            else ())
-                  (ps.goals @ ps.smt_goals);
+                         )
+                         else ())
+                  remaining_smt_goals;
 
         // Check that all implicits were instantiated
         if !tacdbg then
             BU.print1 "About to check tactic implicits: %s\n" (FStar.Common.string_of_list
                                                                     (fun imp -> Print.ctx_uvar_to_string imp.imp_uvar)
                                                                     ps.all_implicits);
-        let g = {Env.trivial_guard with TcComm.implicits=ps.all_implicits} in
+                      
+        let is_smt_implicit (i:FStar.TypeChecker.Common.implicit) =
+            BU.for_some (fun g -> FStar.Tactics.Basic.is_implicit_for_goal g i)
+                        remaining_smt_goals
+        in
+        let all_implicits = 
+          List.map 
+            (fun i -> 
+              if i.imp_uvar.ctx_uvar_should_check <> Allow_untyped
+              && is_smt_implicit i //SMT goals will be checked separately with an SMT query, Allow_untyped here
+              then mark_implicit_as_allow_untyped i
+              else i)
+            ps.all_implicits
+        in
+        let g = {Env.trivial_guard with TcComm.implicits=all_implicits} in
         let g = TcRel.solve_deferred_constraints env g in
         if !tacdbg then
             BU.print2 "Checked %s implicits (1): %s\n"

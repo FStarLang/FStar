@@ -410,6 +410,8 @@ let solve_goals_with_tac :
                 (env.FStar_TypeChecker_Env.universe_of);
               FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term =
                 (env.FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term);
+              FStar_TypeChecker_Env.subtype_nosmt_force =
+                (env.FStar_TypeChecker_Env.subtype_nosmt_force);
               FStar_TypeChecker_Env.use_bv_sorts =
                 (env.FStar_TypeChecker_Env.use_bv_sorts);
               FStar_TypeChecker_Env.qtbl_name_and_index =
@@ -530,6 +532,8 @@ let (solve_deferred_to_tactic_goals :
                              FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term
                                =
                                (env1.FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term);
+                             FStar_TypeChecker_Env.subtype_nosmt_force =
+                               (env1.FStar_TypeChecker_Env.subtype_nosmt_force);
                              FStar_TypeChecker_Env.use_bv_sorts =
                                (env1.FStar_TypeChecker_Env.use_bv_sorts);
                              FStar_TypeChecker_Env.qtbl_name_and_index =
@@ -629,6 +633,8 @@ let (solve_deferred_to_tactic_goals :
                              FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term
                                =
                                (env2.FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term);
+                             FStar_TypeChecker_Env.subtype_nosmt_force =
+                               (env2.FStar_TypeChecker_Env.subtype_nosmt_force);
                              FStar_TypeChecker_Env.use_bv_sorts = true;
                              FStar_TypeChecker_Env.qtbl_name_and_index =
                                (env2.FStar_TypeChecker_Env.qtbl_name_and_index);

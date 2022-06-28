@@ -8139,6 +8139,8 @@ let (eta_expand :
                                   FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term
                                     =
                                     (env1.FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term);
+                                  FStar_TypeChecker_Env.subtype_nosmt_force =
+                                    (env1.FStar_TypeChecker_Env.subtype_nosmt_force);
                                   FStar_TypeChecker_Env.use_bv_sorts = true;
                                   FStar_TypeChecker_Env.qtbl_name_and_index =
                                     (env1.FStar_TypeChecker_Env.qtbl_name_and_index);
@@ -8245,6 +8247,8 @@ let (eta_expand :
                           FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term
                             =
                             (env1.FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term);
+                          FStar_TypeChecker_Env.subtype_nosmt_force =
+                            (env1.FStar_TypeChecker_Env.subtype_nosmt_force);
                           FStar_TypeChecker_Env.use_bv_sorts = true;
                           FStar_TypeChecker_Env.qtbl_name_and_index =
                             (env1.FStar_TypeChecker_Env.qtbl_name_and_index);

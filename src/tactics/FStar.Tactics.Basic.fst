@@ -257,6 +257,27 @@ let do_match_on_lhs (env:Env.env) (t1:term) (t2:term) : tac bool =
     else ret false
     ))
 
+let is_implicit_for_goal (g:goal) (i:TcComm.implicit) =
+    g.goal_ctx_uvar.ctx_uvar_head `FStar.Syntax.Unionfind.equiv` i.imp_uvar.ctx_uvar_head
+
+let mark_implicit_as_allow_untyped (i:TcComm.implicit) = 
+  let uvar = { i.imp_uvar with ctx_uvar_should_check = Allow_untyped } in
+  {i with imp_uvar = uvar}
+
+let mark_goal_implicit_allow_untyped (g:goal) 
+  : tac unit
+  = bind get (fun ps ->
+    let imps = 
+      List.map
+        (fun i -> 
+             if i.imp_uvar.ctx_uvar_should_check <> Allow_untyped
+             && is_implicit_for_goal g i
+             then mark_implicit_as_allow_untyped i
+             else i)
+        ps.all_implicits
+    in
+    set ({ps with all_implicits = imps}))
+
 (*
    set_solution:
 
@@ -279,7 +300,8 @@ let set_solution goal solution : tac unit =
       fail (BU.format1 "Goal %s is already solved" (goal_to_string_verbose goal))
     | None ->
       FStar.Syntax.Unionfind.change goal.goal_ctx_uvar.ctx_uvar_head solution;
-      ret ()
+      bind (mark_goal_implicit_allow_untyped goal) (fun _ ->
+      ret ())
 
 let trysolve (goal : goal) (solution : term) : tac bool =
     do_unify (goal_env goal) solution (goal_witness goal)
@@ -495,6 +517,8 @@ let seq (t1:tac unit) (t2:tac unit) : tac unit =
         bind (map t2) (fun _ -> ret ()))
     )
 
+let should_check_goal_uvar (g:goal) = g.goal_ctx_uvar.ctx_uvar_should_check
+
 (*
   [intro]:
 
@@ -520,7 +544,7 @@ let intro () : tac binder = wrap_err "intro" <|
              //BU.print2 "[intro]: with binder = %s, new goal = %s"
              //         (Print.binders_to_string ", " [b])
              //         (Print.term_to_string typ');
-             bind (new_uvar "intro" env' typ' (rangeof goal)) (fun (body, ctx_uvar) ->
+             bind (new_uvar "intro" env' typ' (Some (should_check_goal_uvar goal)) (rangeof goal)) (fun (body, ctx_uvar) ->
              let sol = U.abs [b] body (Some (U.residual_comp_of_comp c)) in
              //BU.print1 "[intro]: solution is %s"
              //           (Print.term_to_string sol);
@@ -565,7 +589,7 @@ let intro_rec () : tac (binder * binder) =
         else let bv = gen_bv "__recf" None (goal_type goal) in
              let bs = [S.mk_binder bv; b] in // recursively bound name and argument we're introducing
              let env' = Env.push_binders (goal_env goal) bs in
-             bind (new_uvar "intro_rec" env' (U.comp_result c) (rangeof goal)) (fun (u, ctx_uvar_u) ->
+             bind (new_uvar "intro_rec" env' (U.comp_result c) (Some (should_check_goal_uvar goal)) (rangeof goal)) (fun (u, ctx_uvar_u) ->
              let lb = U.mk_letbinding (Inl bv) [] (goal_type goal) PC.effect_Tot_lid (U.abs [b] u None) [] Range.dummyRange in
              let body = S.bv_to_name bv in
              let lbs, body = SS.close_let_rec [lb] body in
@@ -678,7 +702,7 @@ let rec  __try_unify_by_application
             fail2 "Could not instantiate, %s to %s" (term_to_string e ty1) (term_to_string e ty2)
         | Some (b, c) ->
             if not (U.is_total_comp c) then fail "Codomain is effectful" else
-            bind (new_uvar "apply arg" e b.binder_bv.sort rng) (fun (uvt, uv) ->
+            bind (new_uvar "apply arg" e b.binder_bv.sort None rng) (fun (uvt, uv) ->
             mlog (fun () -> BU.print1 "t_apply: generated uvar %s\n" (Print.ctx_uvar_to_string uv)) (fun _ ->
             let typ = U.comp_result c in
             let typ' = SS.subst [S.NT (b.binder_bv, uvt)] typ in
@@ -802,7 +826,7 @@ let t_apply_lemma (noinst:bool) (noinst_lhs:bool)
                    // Simplification: if the argument is simply unit, then don't ask for it
                    ret <| ((U.exp_unit, aq)::uvs, imps, S.NT(b, U.exp_unit)::subst)
                else
-                   bind (new_uvar "apply_lemma" env b_t (rangeof goal)) (fun (t, u) ->
+                   bind (new_uvar "apply_lemma" env b_t None (rangeof goal)) (fun (t, u) ->
                    ret <| ((t, aq)::uvs, (t, u)::imps, S.NT(b, t)::subst))
                )
        ([], [], [])
@@ -899,6 +923,7 @@ let split_env (bvar : bv) (e : env) : option (env * bv * list bv) =
 let push_bvs e bvs =
     List.fold_left (fun e b -> Env.push_bv e b) e bvs
 
+
 let subst_goal (b1 : bv) (b2 : bv) (g:goal) : tac (option (bv * goal)) =
     match split_env b1 (goal_env g) with
     | Some (e0, b1, bvs) ->
@@ -920,7 +945,7 @@ let subst_goal (b1 : bv) (b2 : bv) (g:goal) : tac (option (bv * goal)) =
 
         (* Make a new goal in the new env (with new binders) *)
         let new_env = push_bvs e0 (List.map (fun b -> b.binder_bv) bs'') in
-        bind (new_uvar "subst_goal" new_env t'' (rangeof g)) (fun (uvt, uv) ->
+        bind (new_uvar "subst_goal" new_env t'' (Some (should_check_goal_uvar g)) (rangeof g)) (fun (uvt, uv) ->
         let goal' = mk_goal new_env uv g.opts g.is_guard g.label in
 
         (* Solve the old goal with an application of the new witness *)
@@ -959,7 +984,7 @@ let rewrite (h:binder) : tac unit = wrap_err "rewrite" <|
 
              let new_env = push_bvs e0 (bv::(List.map (fun b -> b.binder_bv) bs'')) in
 
-             bind (new_uvar "rewrite" new_env t'' (rangeof goal)) (fun (uvt, uv) ->
+             bind (new_uvar "rewrite" new_env t'' (Some (should_check_goal_uvar goal)) (rangeof goal)) (fun (uvt, uv) ->
              let goal' = mk_goal new_env uv goal.opts goal.is_guard goal.label in
              let sol = U.mk_app (U.abs bs'' uvt None)
                                  (List.map (fun ({binder_bv=bv}) -> S.as_arg (S.bv_to_name bv)) bs) in
@@ -990,10 +1015,7 @@ let binder_retype (b : binder) : tac unit = wrap_err "binder_retype" <|
     | None -> fail "binder is not present in environment"
     | Some (e0, bv, bvs) ->
         let (ty, u) = U.type_u () in
-        bind (new_uvar "binder_retype" e0 ty (rangeof goal)) (fun (t', u_t') ->
-        //NS: Question ... u_t' is dropped; why?
-        //GM: No need for it... we just use t' which is approx (Tm_uvar u_t').
-        //    The uvar is tracked in the proofstate too.
+        bind (new_uvar "binder_retype" e0 ty (Some (should_check_goal_uvar goal)) (rangeof goal)) (fun (t', u_t') ->
         let bv'' = {bv with sort = t'} in
         let s = [S.NT (bv, S.bv_to_name bv'')] in
         let bvs = List.map (fun b -> { b with sort = SS.subst s b.sort }) bvs in
@@ -1030,7 +1052,7 @@ let revert () : tac unit =
     | None -> fail "Cannot revert; empty context"
     | Some (x, env') ->
         let typ' = U.arrow [S.mk_binder x] (mk_Total (goal_type goal)) in
-        bind (new_uvar "revert" env' typ' (rangeof goal)) (fun (r, u_r) ->
+        bind (new_uvar "revert" env' typ' (Some (should_check_goal_uvar goal)) (rangeof goal)) (fun (r, u_r) ->
         bind (set_solution goal (S.mk_Tm_app r [S.as_arg (S.bv_to_name x)] (goal_type goal).pos)) (fun () ->
         let g = mk_goal env' u_r goal.opts goal.is_guard goal.label in
         replace_cur g)))
@@ -1060,7 +1082,7 @@ let clear (b : binder) : tac unit =
             fail "Cannot clear; binder present in goal"
         else bind (check bvs) (fun () ->
         let env' = push_bvs e' bvs in
-        bind (new_uvar "clear.witness" env' (goal_type goal) (rangeof goal)) (fun (ut, uvar_ut) ->
+        bind (new_uvar "clear.witness" env' (goal_type goal) (Some (should_check_goal_uvar goal)) (rangeof goal)) (fun (ut, uvar_ut) ->
         bind (set_solution goal ut) (fun () ->
         replace_cur (mk_goal env' uvar_ut goal.opts goal.is_guard goal.label))))))
 
@@ -1131,7 +1153,7 @@ let t_trefl (allow_guards:bool) : tac unit = wrap_err "t_trefl" <|
 let dup () : tac unit =
     bind cur_goal (fun g ->
     let env = goal_env g in
-    bind (new_uvar "dup" env (goal_type g) (rangeof g)) (fun (u, u_uvar) ->
+    bind (new_uvar "dup" env (goal_type g) (Some (should_check_goal_uvar g)) (rangeof g)) (fun (u, u_uvar) ->
     let g' = { g with goal_ctx_uvar = u_uvar } in
     bind dismiss (fun _ ->
     let t_eq = U.mk_eq2 (env.universe_of env (goal_type g)) (goal_type g) u (goal_witness g) in
@@ -1243,14 +1265,14 @@ let uvar_env (env : env) (ty : option typ) : tac term =
                (fun (ty, _, g) -> ret (ty, g, ty.pos))
 
         | None ->
-          bind (new_uvar "uvar_env.2" env (fst <| U.type_u ()) ps.entry_range)
-               (fun (typ, uvar_typ) -> //NS, FIXME discarding uvar_typ
+          bind (new_uvar "uvar_env.2" env (fst <| U.type_u ()) None ps.entry_range)
+               (fun (typ, uvar_typ) ->
                 ret (typ, Env.trivial_guard, Range.dummyRange))
         )
         (fun (typ, g, r) ->
             bind (proc_guard "uvar_env_typ" env g r)
                  (fun () ->
-                  bind (new_uvar "uvar_env" env typ ps.entry_range)
+                  bind (new_uvar "uvar_env" env typ None ps.entry_range)
                        (fun (t, uvar_t) -> ret t))))
 
 let fresh_universe_uvar () : tac term =
@@ -1471,7 +1493,7 @@ let t_destruct (s_tm : term) : tac (list (fv * Z.t)) = wrap_err "destruct" <|
                         let cod = U.arrow [S.mk_binder eq_b] (mk_Total cod) in
 
                         let nty = U.arrow bs (mk_Total cod) in
-                        bind (new_uvar "destruct branch" env nty (rangeof g)) (fun (uvt, uv) ->
+                        bind (new_uvar "destruct branch" env nty None (rangeof g)) (fun (uvt, uv) ->
                         let g' = mk_goal env uv g.opts false g.label in
                         let brt = U.mk_app_binders uvt bs in
                         (* Provide the scrutinee equality, which is trivially provable *)

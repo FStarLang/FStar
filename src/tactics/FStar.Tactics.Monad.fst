@@ -238,23 +238,41 @@ let add_implicits (i:implicits) : tac unit =
     bind get (fun ps ->
     set ({ps with all_implicits=i@ps.all_implicits}))
 
-let new_uvar (reason:string) (env:env) (typ:typ) (rng:Range.range) : tac (term * ctx_uvar) =
-    let is_base_typ =
-        let t = FStar.TypeChecker.Normalize.unfold_whnf env typ in
-        let head, args = U.head_and_args t in
-        match (U.un_uinst head).n with
-        | Tm_fvar _ -> true
-        | _ -> false
+let new_uvar (reason:string) (env:env) (typ:typ) (sc_opt:option should_check_uvar) (rng:Range.range) : tac (term * ctx_uvar) =
+    let should_check = 
+      match sc_opt with
+      | Some sc -> sc
+      | _ -> 
+        let is_base_typ =
+          let t = FStar.TypeChecker.Normalize.unfold_whnf env typ in
+          let head, args = U.head_and_args t in
+          match (U.unascribe (U.un_uinst head)).n with
+          | Tm_name _
+          | Tm_fvar _
+          | Tm_type _ -> true
+          | _ -> false
+        in
+        if is_base_typ
+        then Allow_untyped
+        else (
+          if Env.debug env <| Options.Other "2635"
+          then (
+            BU.print2 "Tactic introduced a strict uvar for %s\n\%s\n" 
+                      (Print.term_to_string typ)
+                      (BU.stack_dump ())
+          );
+          Strict
+        )
     in
     let u, ctx_uvar, g_u =
-        Env.new_implicit_var_aux reason rng env typ (if is_base_typ then Allow_untyped else Strict) None
+        Env.new_implicit_var_aux reason rng env typ should_check None
     in
     bind (add_implicits g_u.implicits) (fun _ ->
     ret (u, fst (List.hd ctx_uvar)))
 
 let mk_irrelevant_goal (reason:string) (env:env) (phi:typ) (rng:Range.range) opts label : tac goal =
     let typ = U.mk_squash (env.universe_of env phi) phi in
-    bind (new_uvar reason env typ rng) (fun (_, ctx_uvar) ->
+    bind (new_uvar reason env typ (Some Allow_untyped) rng) (fun (_, ctx_uvar) ->
     let goal = mk_goal env ctx_uvar opts false label in
     ret goal)
 

@@ -517,41 +517,66 @@ let (new_uvar :
   Prims.string ->
     FStar_TypeChecker_Env.env ->
       FStar_Syntax_Syntax.typ ->
-        FStar_Compiler_Range.range ->
-          (FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.ctx_uvar) tac)
+        FStar_Syntax_Syntax.should_check_uvar FStar_Pervasives_Native.option
+          ->
+          FStar_Compiler_Range.range ->
+            (FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.ctx_uvar) tac)
   =
   fun reason ->
     fun env ->
       fun typ ->
-        fun rng ->
-          let is_base_typ =
-            let t = FStar_TypeChecker_Normalize.unfold_whnf env typ in
-            let uu___ = FStar_Syntax_Util.head_and_args t in
+        fun sc_opt ->
+          fun rng ->
+            let should_check =
+              match sc_opt with
+              | FStar_Pervasives_Native.Some sc -> sc
+              | uu___ ->
+                  let is_base_typ =
+                    let t = FStar_TypeChecker_Normalize.unfold_whnf env typ in
+                    let uu___1 = FStar_Syntax_Util.head_and_args t in
+                    match uu___1 with
+                    | (head, args) ->
+                        let uu___2 =
+                          let uu___3 =
+                            let uu___4 = FStar_Syntax_Util.un_uinst head in
+                            FStar_Syntax_Util.unascribe uu___4 in
+                          uu___3.FStar_Syntax_Syntax.n in
+                        (match uu___2 with
+                         | FStar_Syntax_Syntax.Tm_name uu___3 -> true
+                         | FStar_Syntax_Syntax.Tm_fvar uu___3 -> true
+                         | FStar_Syntax_Syntax.Tm_type uu___3 -> true
+                         | uu___3 -> false) in
+                  if is_base_typ
+                  then FStar_Syntax_Syntax.Allow_untyped
+                  else
+                    ((let uu___3 =
+                        FStar_Compiler_Effect.op_Less_Bar
+                          (FStar_TypeChecker_Env.debug env)
+                          (FStar_Options.Other "2635") in
+                      if uu___3
+                      then
+                        let uu___4 = FStar_Syntax_Print.term_to_string typ in
+                        let uu___5 = FStar_Compiler_Util.stack_dump () in
+                        FStar_Compiler_Util.print2
+                          "Tactic introduced a strict uvar for %s\n\\%s\n"
+                          uu___4 uu___5
+                      else ());
+                     FStar_Syntax_Syntax.Strict) in
+            let uu___ =
+              FStar_TypeChecker_Env.new_implicit_var_aux reason rng env typ
+                should_check FStar_Pervasives_Native.None in
             match uu___ with
-            | (head, args) ->
+            | (u, ctx_uvar, g_u) ->
                 let uu___1 =
-                  let uu___2 = FStar_Syntax_Util.un_uinst head in
-                  uu___2.FStar_Syntax_Syntax.n in
-                (match uu___1 with
-                 | FStar_Syntax_Syntax.Tm_fvar uu___2 -> true
-                 | uu___2 -> false) in
-          let uu___ =
-            FStar_TypeChecker_Env.new_implicit_var_aux reason rng env typ
-              (if is_base_typ
-               then FStar_Syntax_Syntax.Allow_untyped
-               else FStar_Syntax_Syntax.Strict) FStar_Pervasives_Native.None in
-          match uu___ with
-          | (u, ctx_uvar, g_u) ->
-              let uu___1 =
-                add_implicits g_u.FStar_TypeChecker_Common.implicits in
-              bind uu___1
-                (fun uu___2 ->
-                   let uu___3 =
-                     let uu___4 =
-                       let uu___5 = FStar_Compiler_List.hd ctx_uvar in
-                       FStar_Pervasives_Native.fst uu___5 in
-                     (u, uu___4) in
-                   ret uu___3)
+                  add_implicits g_u.FStar_TypeChecker_Common.implicits in
+                bind uu___1
+                  (fun uu___2 ->
+                     let uu___3 =
+                       let uu___4 =
+                         let uu___5 = FStar_Compiler_List.hd ctx_uvar in
+                         FStar_Pervasives_Native.fst uu___5 in
+                       (u, uu___4) in
+                     ret uu___3)
 let (mk_irrelevant_goal :
   Prims.string ->
     FStar_TypeChecker_Env.env ->
@@ -569,7 +594,10 @@ let (mk_irrelevant_goal :
               let typ =
                 let uu___ = env.FStar_TypeChecker_Env.universe_of env phi in
                 FStar_Syntax_Util.mk_squash uu___ phi in
-              let uu___ = new_uvar reason env typ rng in
+              let uu___ =
+                new_uvar reason env typ
+                  (FStar_Pervasives_Native.Some
+                     FStar_Syntax_Syntax.Allow_untyped) rng in
               bind uu___
                 (fun uu___1 ->
                    match uu___1 with

@@ -102,7 +102,7 @@ let __do_rewrite
       ret tm (* SHOULD THIS CHECK BE IN maybe_rewrite INSTEAD? *)
     else
     let typ = lcomp.res_typ in
-    bind (new_uvar "do_rewrite.rhs" env typ (rangeof g0)) (fun (ut, uvar_ut) ->
+    bind (new_uvar "do_rewrite.rhs" env typ None (rangeof g0)) (fun (ut, uvar_ut) ->
     mlog (fun () ->
        BU.print2 "do_rewrite: making equality\n\t%s ==\n\t%s\n"
          (Print.term_to_string tm) (Print.term_to_string ut)) (fun () ->

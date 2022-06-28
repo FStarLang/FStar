@@ -34,6 +34,7 @@ module EMB   = FStar.Syntax.Embeddings
 module O     = FStar.Options
 module Range = FStar.Compiler.Range
 module Z     = FStar.BigInt
+module TcComm = FStar.TypeChecker.Common
 
 (* Internal utilities *)
 
@@ -101,3 +102,8 @@ val lset                   : typ -> string -> term -> tac unit
 val curms                  : unit -> tac Z.t
 val set_urgency            : Z.t -> tac unit
 val t_commute_applied_match : unit -> tac unit
+
+val is_implicit_for_goal (g:goal) (i:TcComm.implicit) : bool
+val mark_implicit_as_allow_untyped (i:TcComm.implicit) : TcComm.implicit
+
+

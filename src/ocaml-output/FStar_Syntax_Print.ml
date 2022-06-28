@@ -733,8 +733,13 @@ and (ctx_uvar_to_string_aux :
         binders_to_string ", " ctx_uvar.FStar_Syntax_Syntax.ctx_uvar_binders in
       let uu___1 = uvar_to_string ctx_uvar.FStar_Syntax_Syntax.ctx_uvar_head in
       let uu___2 = term_to_string ctx_uvar.FStar_Syntax_Syntax.ctx_uvar_typ in
-      FStar_Compiler_Util.format4 "%s(%s |- %s : %s)" reason_string uu___
+      FStar_Compiler_Util.format5 "%s(%s |- %s : %s) %s" reason_string uu___
         uu___1 uu___2
+        (match ctx_uvar.FStar_Syntax_Syntax.ctx_uvar_should_check with
+         | FStar_Syntax_Syntax.Allow_unresolved -> "Allow_unresolved"
+         | FStar_Syntax_Syntax.Allow_untyped -> "Allow_untyped"
+         | FStar_Syntax_Syntax.Allow_ghost -> "Allow_ghost"
+         | FStar_Syntax_Syntax.Strict -> "Strict")
 and (subst_elt_to_string : FStar_Syntax_Syntax.subst_elt -> Prims.string) =
   fun uu___ ->
     match uu___ with

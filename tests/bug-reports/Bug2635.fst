@@ -32,3 +32,9 @@ let ugh ()
       trefl ()
     ) 
 
+
+let test2 (x:int) (_:squash (x > 0)) = 
+  assert (x >= 0 /\ x > 0)
+    by (split();
+        smt();
+        smt())

@@ -1435,6 +1435,8 @@ and (encode_term :
                               FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term
                                 =
                                 (uu___6.FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term);
+                              FStar_TypeChecker_Env.subtype_nosmt_force =
+                                (uu___6.FStar_TypeChecker_Env.subtype_nosmt_force);
                               FStar_TypeChecker_Env.use_bv_sorts =
                                 (uu___6.FStar_TypeChecker_Env.use_bv_sorts);
                               FStar_TypeChecker_Env.qtbl_name_and_index =

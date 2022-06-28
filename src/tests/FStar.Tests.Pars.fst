@@ -72,6 +72,7 @@ let init_once () : unit =
                 TcTerm.typeof_tot_or_gtot_term
                 TcTerm.typeof_tot_or_gtot_term_fastpath
                 TcTerm.universe_of
+                Rel.subtype_nosmt_force
                 solver
                 Const.prims_lid
                 NBE.normalize_for_unit_test in

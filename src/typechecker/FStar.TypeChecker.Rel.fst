@@ -4970,20 +4970,45 @@ let resolve_implicits' env is_tac g =
              (Print.term_to_string tm)
              (Print.ctx_uvar_to_string ctx_u);
         let hd = {hd with imp_tm=tm} in
-        // (*
+        (*
         //  * AR: We do not retypecheck the solutions solved by a tactic
         //  *     However we still check that any uvars remaining in those solutions
         //  *       are Allow_unresolved
         //  *)
-        // let tm_ok_for_tac tm =
-        //   tm
-        //   |> Free.uvars
-        //   |> BU.set_elements
-        //   |> List.for_all (fun uv -> uv.ctx_uvar_should_check = Allow_unresolved) in
-        // if false && is_tac then if tm_ok_for_tac tm
-        //                    then until_fixpoint (out, true) tl        //Move on to the next imp
-        //                    else until_fixpoint ((hd, Implicit_unresolved)::out, changed) tl  //Move hd to out
-        // else
+        let tm_ok_for_tac tm =
+          let no_unresolved =
+            tm
+            |> Free.uvars
+            |> BU.set_elements
+            |> List.for_all (fun uv -> uv.ctx_uvar_should_check = Allow_unresolved)
+          in
+          if no_unresolved
+          then (
+            let env = { env with gamma = ctx_u.ctx_uvar_gamma } in
+            let tm_t, _ = env.typeof_well_typed_tot_or_gtot_term env tm false in
+            if env.subtype_nosmt_force env tm_t ctx_u.ctx_uvar_typ
+            then true
+            else (
+              BU.print4 "Uvar solution for %s was not well-typed. Expected %s got %s : %s\n"
+                              (Print.uvar_to_string ctx_u.ctx_uvar_head)
+                              (Print.term_to_string ctx_u.ctx_uvar_typ)
+                              (Print.term_to_string tm)
+                              (Print.term_to_string tm_t);
+              false
+            )
+          )
+          else false
+        in
+        if is_tac then if tm_ok_for_tac tm
+                       then until_fixpoint (out, true) tl        //Move on to the next imp
+                       else until_fixpoint ((hd, Implicit_unresolved)::out, changed) tl  //Move hd to out
+        // if is_tac
+        // then (
+        //   BU.print2 "Checking solution %s and type %s\n"
+        //             (Print.term_to_string tm)
+        //             (Print.term_to_string ctx_u.ctx_uvar_typ)
+        // );
+        else
         begin
           //typecheck the solution
           let force_univ_constraints = false in
