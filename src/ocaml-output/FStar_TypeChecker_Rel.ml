@@ -14361,23 +14361,49 @@ let (resolve_implicits' :
                                                   if uu___14
                                                   then true
                                                   else
-                                                    ((let uu___17 =
-                                                        FStar_Syntax_Print.uvar_to_string
-                                                          ctx_u.FStar_Syntax_Syntax.ctx_uvar_head in
-                                                      let uu___18 =
-                                                        FStar_Syntax_Print.term_to_string
-                                                          ctx_u.FStar_Syntax_Syntax.ctx_uvar_typ in
-                                                      let uu___19 =
-                                                        FStar_Syntax_Print.term_to_string
-                                                          tm2 in
-                                                      let uu___20 =
-                                                        FStar_Syntax_Print.term_to_string
-                                                          tm_t in
-                                                      FStar_Compiler_Util.print4
-                                                        "Uvar solution for %s was not well-typed. Expected %s got %s : %s\n"
-                                                        uu___17 uu___18
-                                                        uu___19 uu___20);
-                                                     false))))
+                                                    (let compute t =
+                                                       FStar_TypeChecker_Normalize.normalize
+                                                         [FStar_TypeChecker_Env.UnfoldTac;
+                                                         FStar_TypeChecker_Env.UnfoldUntil
+                                                           FStar_Syntax_Syntax.delta_constant;
+                                                         FStar_TypeChecker_Env.Zeta;
+                                                         FStar_TypeChecker_Env.Iota;
+                                                         FStar_TypeChecker_Env.Primops]
+                                                         env2 t in
+                                                     let tm_t1 = compute tm_t in
+                                                     let uv_t =
+                                                       compute
+                                                         ctx_u.FStar_Syntax_Syntax.ctx_uvar_typ in
+                                                     let uu___16 =
+                                                       env2.FStar_TypeChecker_Env.subtype_nosmt_force
+                                                         env2 tm_t1 uv_t in
+                                                     if uu___16
+                                                     then true
+                                                     else
+                                                       ((let uu___19 =
+                                                           let uu___20 =
+                                                             FStar_TypeChecker_Env.get_range
+                                                               env2 in
+                                                           FStar_Compiler_Range.string_of_range
+                                                             uu___20 in
+                                                         let uu___20 =
+                                                           FStar_Syntax_Print.uvar_to_string
+                                                             ctx_u.FStar_Syntax_Syntax.ctx_uvar_head in
+                                                         let uu___21 =
+                                                           FStar_Syntax_Print.term_to_string
+                                                             ctx_u.FStar_Syntax_Syntax.ctx_uvar_typ in
+                                                         let uu___22 =
+                                                           FStar_Syntax_Print.term_to_string
+                                                             tm2 in
+                                                         let uu___23 =
+                                                           FStar_Syntax_Print.term_to_string
+                                                             tm_t1 in
+                                                         FStar_Compiler_Util.print5
+                                                           "(%s) Uvar solution for %s was not well-typed. Expected %s got %s : %s\n"
+                                                           uu___19 uu___20
+                                                           uu___21 uu___22
+                                                           uu___23);
+                                                        false)))))
                                      else false in
                                    if is_tac
                                    then
