@@ -259,7 +259,8 @@ let new_uvar (reason:string) (env:env) (typ:typ) (sc_opt:option should_check_uva
           then (
             BU.print2 "Tactic introduced a strict uvar for %s\n\%s\n" 
                       (Print.term_to_string typ)
-                      (BU.stack_dump ())
+                      // (BU.stack_dump ())
+                      ""
           );
           Strict
         )
