@@ -556,10 +556,9 @@ let (new_uvar :
                       if uu___3
                       then
                         let uu___4 = FStar_Syntax_Print.term_to_string typ in
-                        let uu___5 = FStar_Compiler_Util.stack_dump () in
                         FStar_Compiler_Util.print2
                           "Tactic introduced a strict uvar for %s\n\\%s\n"
-                          uu___4 uu___5
+                          uu___4 ""
                       else ());
                      FStar_Syntax_Syntax.Strict) in
             let uu___ =
