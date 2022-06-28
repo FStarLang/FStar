@@ -32,6 +32,28 @@ let ugh ()
       trefl ()
     ) 
 
+let reflexivity (#a:Type) (x: a) : Lemma (x == x) = ()
+
+[@@expect_failure]
+let alt ()
+  : squash p
+  = _ by (
+      apply (`test);
+      let _ = intro () in
+      apply_lemma (`reflexivity)
+    )
+
+let test_lemma (pr:squash p) (f: (unit -> squash (pr == ()))) : Lemma p = ()
+
+[@@expect_failure]
+let alt2 ()
+  : squash p
+  = _ by (
+      apply_lemma (`test_lemma);
+      let _ = intro () in
+      apply_lemma (`reflexivity)
+    )
+
 
 let test2 (x:int) (_:squash (x > 0)) = 
   assert (x >= 0 /\ x > 0)

@@ -466,14 +466,19 @@ let (do_match_on_lhs :
                             FStar_Tactics_Monad.ret false)
                          else FStar_Tactics_Monad.ret true)
                       else FStar_Tactics_Monad.ret false))
+let (is_ctx_uvar_for_implicit :
+  FStar_Syntax_Syntax.ctx_uvar ->
+    FStar_TypeChecker_Common.implicit -> Prims.bool)
+  =
+  fun u ->
+    fun i ->
+      FStar_Syntax_Unionfind.equiv u.FStar_Syntax_Syntax.ctx_uvar_head
+        (i.FStar_TypeChecker_Common.imp_uvar).FStar_Syntax_Syntax.ctx_uvar_head
 let (is_implicit_for_goal :
   FStar_Tactics_Types.goal -> FStar_TypeChecker_Common.implicit -> Prims.bool)
   =
   fun g ->
-    fun i ->
-      FStar_Syntax_Unionfind.equiv
-        (g.FStar_Tactics_Types.goal_ctx_uvar).FStar_Syntax_Syntax.ctx_uvar_head
-        (i.FStar_TypeChecker_Common.imp_uvar).FStar_Syntax_Syntax.ctx_uvar_head
+    fun i -> is_ctx_uvar_for_implicit g.FStar_Tactics_Types.goal_ctx_uvar i
 let (mark_implicit_as_allow_untyped :
   FStar_TypeChecker_Common.implicit -> FStar_TypeChecker_Common.implicit) =
   fun i ->
@@ -505,9 +510,9 @@ let (mark_implicit_as_allow_untyped :
       FStar_TypeChecker_Common.imp_range =
         (i.FStar_TypeChecker_Common.imp_range)
     }
-let (mark_goal_implicit_allow_untyped :
-  FStar_Tactics_Types.goal -> unit FStar_Tactics_Monad.tac) =
-  fun g ->
+let (find_and_mark_implicit_as_allow_untyped :
+  FStar_Syntax_Syntax.ctx_uvar -> unit FStar_Tactics_Monad.tac) =
+  fun u ->
     FStar_Tactics_Monad.bind FStar_Tactics_Monad.get
       (fun ps ->
          let imps =
@@ -516,7 +521,7 @@ let (mark_goal_implicit_allow_untyped :
                 let uu___ =
                   ((i.FStar_TypeChecker_Common.imp_uvar).FStar_Syntax_Syntax.ctx_uvar_should_check
                      <> FStar_Syntax_Syntax.Allow_untyped)
-                    && (is_implicit_for_goal g i) in
+                    && (is_ctx_uvar_for_implicit u i) in
                 if uu___ then mark_implicit_as_allow_untyped i else i)
              ps.FStar_Tactics_Types.all_implicits in
          FStar_Tactics_Monad.set
@@ -542,6 +547,11 @@ let (mark_goal_implicit_allow_untyped :
                (ps.FStar_Tactics_Types.local_state);
              FStar_Tactics_Types.urgency = (ps.FStar_Tactics_Types.urgency)
            })
+let (mark_goal_implicit_allow_untyped :
+  FStar_Tactics_Types.goal -> unit FStar_Tactics_Monad.tac) =
+  fun g ->
+    find_and_mark_implicit_as_allow_untyped
+      g.FStar_Tactics_Types.goal_ctx_uvar
 let (set_solution :
   FStar_Tactics_Types.goal ->
     FStar_Syntax_Syntax.term -> unit FStar_Tactics_Monad.tac)
@@ -2836,8 +2846,17 @@ let (t_apply_lemma :
                                                                     (fun
                                                                     uu___21
                                                                     ->
+                                                                    let uu___22
+                                                                    =
+                                                                    find_and_mark_implicit_as_allow_untyped
+                                                                    ctx_uvar in
+                                                                    FStar_Tactics_Monad.bind
+                                                                    uu___22
+                                                                    (fun
+                                                                    uu___23
+                                                                    ->
                                                                     FStar_Tactics_Monad.ret
-                                                                    [])))))) in
+                                                                    []))))))) in
                                                                     FStar_Tactics_Monad.bind
                                                                     uu___13
                                                                     (fun

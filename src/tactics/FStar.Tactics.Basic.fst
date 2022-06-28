@@ -257,27 +257,34 @@ let do_match_on_lhs (env:Env.env) (t1:term) (t2:term) : tac bool =
     else ret false
     ))
 
+let is_ctx_uvar_for_implicit (u:ctx_uvar) (i:TcComm.implicit) =
+    u.ctx_uvar_head `FStar.Syntax.Unionfind.equiv` i.imp_uvar.ctx_uvar_head
+    
 let is_implicit_for_goal (g:goal) (i:TcComm.implicit) =
-    g.goal_ctx_uvar.ctx_uvar_head `FStar.Syntax.Unionfind.equiv` i.imp_uvar.ctx_uvar_head
+    is_ctx_uvar_for_implicit g.goal_ctx_uvar i
 
 let mark_implicit_as_allow_untyped (i:TcComm.implicit) = 
   let uvar = { i.imp_uvar with ctx_uvar_should_check = Allow_untyped } in
   {i with imp_uvar = uvar}
 
-let mark_goal_implicit_allow_untyped (g:goal) 
+let find_and_mark_implicit_as_allow_untyped (u:ctx_uvar)
   : tac unit
   = bind get (fun ps ->
-    let imps = 
+    let imps =
       List.map
         (fun i -> 
              if i.imp_uvar.ctx_uvar_should_check <> Allow_untyped
-             && is_implicit_for_goal g i
+             && is_ctx_uvar_for_implicit u i
              then mark_implicit_as_allow_untyped i
              else i)
         ps.all_implicits
     in
     set ({ps with all_implicits = imps}))
 
+let mark_goal_implicit_allow_untyped (g:goal) 
+  : tac unit
+  = find_and_mark_implicit_as_allow_untyped g.goal_ctx_uvar
+  
 (*
    set_solution:
 
@@ -890,7 +897,10 @@ let t_apply_lemma (noinst:bool) (noinst_lhs:bool)
                                                                             (Print.term_to_string term)
                         else "apply_lemma solved arg")
                         env g_typ (rangeof goal)) (fun () ->
-                ret [])))
+                      //we've checked this implicit and added its guard as an explicit goal
+                      //no need to recheck it
+                bind (find_and_mark_implicit_as_allow_untyped ctx_uvar) (fun _ ->
+                ret []))))
             ) (fun sub_goals ->
         let sub_goals = List.flatten sub_goals in
         // Optimization: if a uvar appears in a later goal, don't ask for it, since
