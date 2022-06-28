@@ -4773,7 +4773,8 @@ let try_solve_single_valued_implicits env is_tac (imps:Env.implicits) : Env.impl
      | _ -> None in
 
     let b = List.fold_left (fun b imp ->  //check that the imp is still unsolved
-      if UF.find imp.imp_uvar.ctx_uvar_head |> is_none
+      if UF.find imp.imp_uvar.ctx_uvar_head |> is_none &&
+         imp.imp_uvar.ctx_uvar_should_check = Strict
       then match imp_value imp with
            | Some tm -> commit env ([TERM (imp.imp_uvar, tm)]); true
            | None -> b

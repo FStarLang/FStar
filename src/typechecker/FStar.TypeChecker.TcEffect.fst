@@ -169,13 +169,13 @@ let validate_layered_effect_binders env (bs:binders) (repr_terms:list term) (che
       (List.fold_left (fun s t -> s ^ "; " ^ (Print.term_to_string t)) "" repr_names_args)
       (Print.binders_to_string "; " bs);
 
-  let valid_binder b =
+  let valid_binder b = true in
     //it appears in a repr index in a head position
-    List.existsb (fun t -> U.eq_tm (S.bv_to_name b.binder_bv) t = U.Equal) repr_names_args
-    ||
-    (match b.binder_attrs with  //or has a tactic associated
-     | _::_ -> true
-     | _ -> false) in
+    // List.existsb (fun t -> U.eq_tm (S.bv_to_name b.binder_bv) t = U.Equal) repr_names_args
+    // ||
+    // (match b.binder_attrs with  //or has a tactic associated
+    //  | _::_ -> true
+    //  | _ -> false) in
 
   let invalid_binders = List.filter (fun b -> not (valid_binder b)) bs in
 

@@ -1827,7 +1827,7 @@ let uvars_for_binders env (bs:S.binders) substs reason r =
       | Some (Meta t), [] ->
         Some (Ctx_uvar_meta_tac (FStar.Compiler.Dyn.mkdyn env, t)), false
       | _, t::_ ->
-        Some (Ctx_uvar_meta_attr t), true
+        Some (Ctx_uvar_meta_attr t), false
       | _ -> None, false in
 
     let t, l_ctx_uvars, g_t = new_implicit_var_aux
