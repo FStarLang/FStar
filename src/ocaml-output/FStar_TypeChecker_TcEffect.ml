@@ -336,24 +336,10 @@ let (validate_layered_effect_binders :
                  "Checking layered effect combinator binders validity, names: %s, binders: %s\n\n"
                  uu___2 uu___3
              else ());
-            (let valid_binder b =
-               (FStar_Compiler_List.existsb
-                  (fun t ->
-                     let uu___1 =
-                       let uu___2 =
-                         FStar_Syntax_Syntax.bv_to_name
-                           b.FStar_Syntax_Syntax.binder_bv in
-                       FStar_Syntax_Util.eq_tm uu___2 t in
-                     uu___1 = FStar_Syntax_Util.Equal) repr_names_args)
-                 ||
-                 (match b.FStar_Syntax_Syntax.binder_attrs with
-                  | uu___1::uu___2 -> true
-                  | uu___1 -> false) in
+            (let valid_binder b = true in
              let invalid_binders =
                FStar_Compiler_List.filter
-                 (fun b ->
-                    let uu___1 = valid_binder b in Prims.op_Negation uu___1)
-                 bs in
+                 (fun b -> Prims.op_Negation (valid_binder b)) bs in
              if
                (FStar_Compiler_List.length invalid_binders) <> Prims.int_zero
              then

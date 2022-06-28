@@ -13493,11 +13493,14 @@ let (try_solve_single_valued_implicits :
                (fun b1 ->
                   fun imp ->
                     let uu___1 =
-                      let uu___2 =
-                        FStar_Syntax_Unionfind.find
-                          (imp.FStar_TypeChecker_Common.imp_uvar).FStar_Syntax_Syntax.ctx_uvar_head in
-                      FStar_Compiler_Effect.op_Bar_Greater uu___2
-                        FStar_Compiler_Util.is_none in
+                      (let uu___2 =
+                         FStar_Syntax_Unionfind.find
+                           (imp.FStar_TypeChecker_Common.imp_uvar).FStar_Syntax_Syntax.ctx_uvar_head in
+                       FStar_Compiler_Effect.op_Bar_Greater uu___2
+                         FStar_Compiler_Util.is_none)
+                        &&
+                        ((imp.FStar_TypeChecker_Common.imp_uvar).FStar_Syntax_Syntax.ctx_uvar_should_check
+                           = FStar_Syntax_Syntax.Strict) in
                     if uu___1
                     then
                       let uu___2 = imp_value imp in

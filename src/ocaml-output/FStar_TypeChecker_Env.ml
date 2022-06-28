@@ -6265,7 +6265,7 @@ let (uvars_for_binders :
                               | (uu___3, t::uu___4) ->
                                   ((FStar_Pervasives_Native.Some
                                       (FStar_Syntax_Syntax.Ctx_uvar_meta_attr
-                                         t)), true)
+                                         t)), false)
                               | uu___3 ->
                                   (FStar_Pervasives_Native.None, false) in
                             (match uu___2 with
