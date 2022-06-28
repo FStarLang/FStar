@@ -46,6 +46,15 @@ module Const = FStar.Parser.Const
 module FC = FStar.Const
 module TcComm = FStar.TypeChecker.Common
 
+let is_base_type env typ =
+    let t = FStar.TypeChecker.Normalize.unfold_whnf env typ in
+    let head, args = U.head_and_args t in
+    match (U.unascribe (U.un_uinst head)).n with
+    | Tm_name _
+    | Tm_fvar _
+    | Tm_type _ -> true
+    | _ -> false
+
 let print_ctx_uvar ctx_uvar = Print.ctx_uvar_to_string ctx_uvar
 
 let binders_as_bv_set (bs:binders) =
@@ -4989,16 +4998,20 @@ let resolve_implicits' env is_tac g =
             then true
             else (
               let env = { env with gamma = ctx_u.ctx_uvar_gamma } in
-              let tm_t, _ = env.typeof_well_typed_tot_or_gtot_term env tm false in
-              if env.subtype_nosmt_force env tm_t ctx_u.ctx_uvar_typ
+              if is_base_type env ctx_u.ctx_uvar_typ
               then true
               else (
-                BU.print4 "Uvar solution for %s was not well-typed. Expected %s got %s : %s\n"
-                                (Print.uvar_to_string ctx_u.ctx_uvar_head)
-                                (Print.term_to_string ctx_u.ctx_uvar_typ)
-                                (Print.term_to_string tm)
-                                (Print.term_to_string tm_t);
-                false
+                let tm_t, _ = env.typeof_well_typed_tot_or_gtot_term env tm false in
+                if env.subtype_nosmt_force env tm_t ctx_u.ctx_uvar_typ
+                then true
+                else (
+                  BU.print4 "Uvar solution for %s was not well-typed. Expected %s got %s : %s\n"
+                                  (Print.uvar_to_string ctx_u.ctx_uvar_head)
+                                  (Print.term_to_string ctx_u.ctx_uvar_typ)
+                                  (Print.term_to_string tm)
+                                  (Print.term_to_string tm_t);
+                  false
+                )
               )
             )
           end

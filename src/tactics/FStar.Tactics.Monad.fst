@@ -243,16 +243,7 @@ let new_uvar (reason:string) (env:env) (typ:typ) (sc_opt:option should_check_uva
       match sc_opt with
       | Some sc -> sc
       | _ -> 
-        let is_base_typ =
-          let t = FStar.TypeChecker.Normalize.unfold_whnf env typ in
-          let head, args = U.head_and_args t in
-          match (U.unascribe (U.un_uinst head)).n with
-          | Tm_name _
-          | Tm_fvar _
-          | Tm_type _ -> true
-          | _ -> false
-        in
-        if is_base_typ
+        if FStar.TypeChecker.Rel.is_base_type env typ
         then Allow_untyped
         else (
           if Env.debug env <| Options.Other "2635"

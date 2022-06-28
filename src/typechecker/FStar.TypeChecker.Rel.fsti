@@ -28,6 +28,7 @@ open FStar.Syntax.Syntax
 open FStar.TypeChecker.Common
 open FStar.Compiler.Range
 
+val is_base_type : env -> typ -> bool
 val prob_to_string: env -> prob -> string
 val flex_prob_closing         : env -> binders -> prob -> bool
 //val close_guard_univs         : universes -> binders -> guard_t -> guard_t

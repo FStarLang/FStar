@@ -1,4 +1,22 @@
 open Prims
+let (is_base_type :
+  FStar_TypeChecker_Env.env -> FStar_Syntax_Syntax.typ -> Prims.bool) =
+  fun env ->
+    fun typ ->
+      let t = FStar_TypeChecker_Normalize.unfold_whnf env typ in
+      let uu___ = FStar_Syntax_Util.head_and_args t in
+      match uu___ with
+      | (head, args) ->
+          let uu___1 =
+            let uu___2 =
+              let uu___3 = FStar_Syntax_Util.un_uinst head in
+              FStar_Syntax_Util.unascribe uu___3 in
+            uu___2.FStar_Syntax_Syntax.n in
+          (match uu___1 with
+           | FStar_Syntax_Syntax.Tm_name uu___2 -> true
+           | FStar_Syntax_Syntax.Tm_fvar uu___2 -> true
+           | FStar_Syntax_Syntax.Tm_type uu___2 -> true
+           | uu___2 -> false)
 let (print_ctx_uvar : FStar_Syntax_Syntax.ctx_uvar -> Prims.string) =
   fun ctx_uvar -> FStar_Syntax_Print.ctx_uvar_to_string ctx_uvar
 let (binders_as_bv_set :
@@ -14326,34 +14344,40 @@ let (resolve_implicits' :
                                                  (env1.FStar_TypeChecker_Env.erase_erasable_args)
                                              } in
                                            let uu___10 =
-                                             env2.FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term
-                                               env2 tm2 false in
-                                           match uu___10 with
-                                           | (tm_t, uu___11) ->
-                                               let uu___12 =
-                                                 env2.FStar_TypeChecker_Env.subtype_nosmt_force
-                                                   env2 tm_t
-                                                   ctx_u.FStar_Syntax_Syntax.ctx_uvar_typ in
-                                               if uu___12
-                                               then true
-                                               else
-                                                 ((let uu___15 =
-                                                     FStar_Syntax_Print.uvar_to_string
-                                                       ctx_u.FStar_Syntax_Syntax.ctx_uvar_head in
-                                                   let uu___16 =
-                                                     FStar_Syntax_Print.term_to_string
-                                                       ctx_u.FStar_Syntax_Syntax.ctx_uvar_typ in
-                                                   let uu___17 =
-                                                     FStar_Syntax_Print.term_to_string
-                                                       tm2 in
-                                                   let uu___18 =
-                                                     FStar_Syntax_Print.term_to_string
-                                                       tm_t in
-                                                   FStar_Compiler_Util.print4
-                                                     "Uvar solution for %s was not well-typed. Expected %s got %s : %s\n"
-                                                     uu___15 uu___16 uu___17
-                                                     uu___18);
-                                                  false)))
+                                             is_base_type env2
+                                               ctx_u.FStar_Syntax_Syntax.ctx_uvar_typ in
+                                           if uu___10
+                                           then true
+                                           else
+                                             (let uu___12 =
+                                                env2.FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term
+                                                  env2 tm2 false in
+                                              match uu___12 with
+                                              | (tm_t, uu___13) ->
+                                                  let uu___14 =
+                                                    env2.FStar_TypeChecker_Env.subtype_nosmt_force
+                                                      env2 tm_t
+                                                      ctx_u.FStar_Syntax_Syntax.ctx_uvar_typ in
+                                                  if uu___14
+                                                  then true
+                                                  else
+                                                    ((let uu___17 =
+                                                        FStar_Syntax_Print.uvar_to_string
+                                                          ctx_u.FStar_Syntax_Syntax.ctx_uvar_head in
+                                                      let uu___18 =
+                                                        FStar_Syntax_Print.term_to_string
+                                                          ctx_u.FStar_Syntax_Syntax.ctx_uvar_typ in
+                                                      let uu___19 =
+                                                        FStar_Syntax_Print.term_to_string
+                                                          tm2 in
+                                                      let uu___20 =
+                                                        FStar_Syntax_Print.term_to_string
+                                                          tm_t in
+                                                      FStar_Compiler_Util.print4
+                                                        "Uvar solution for %s was not well-typed. Expected %s got %s : %s\n"
+                                                        uu___17 uu___18
+                                                        uu___19 uu___20);
+                                                     false))))
                                      else false in
                                    if is_tac
                                    then

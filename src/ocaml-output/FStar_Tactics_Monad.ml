@@ -531,34 +531,20 @@ let (new_uvar :
               match sc_opt with
               | FStar_Pervasives_Native.Some sc -> sc
               | uu___ ->
-                  let is_base_typ =
-                    let t = FStar_TypeChecker_Normalize.unfold_whnf env typ in
-                    let uu___1 = FStar_Syntax_Util.head_and_args t in
-                    match uu___1 with
-                    | (head, args) ->
-                        let uu___2 =
-                          let uu___3 =
-                            let uu___4 = FStar_Syntax_Util.un_uinst head in
-                            FStar_Syntax_Util.unascribe uu___4 in
-                          uu___3.FStar_Syntax_Syntax.n in
-                        (match uu___2 with
-                         | FStar_Syntax_Syntax.Tm_name uu___3 -> true
-                         | FStar_Syntax_Syntax.Tm_fvar uu___3 -> true
-                         | FStar_Syntax_Syntax.Tm_type uu___3 -> true
-                         | uu___3 -> false) in
-                  if is_base_typ
+                  let uu___1 = FStar_TypeChecker_Rel.is_base_type env typ in
+                  if uu___1
                   then FStar_Syntax_Syntax.Allow_untyped
                   else
-                    ((let uu___3 =
+                    ((let uu___4 =
                         FStar_Compiler_Effect.op_Less_Bar
                           (FStar_TypeChecker_Env.debug env)
                           (FStar_Options.Other "2635") in
-                      if uu___3
+                      if uu___4
                       then
-                        let uu___4 = FStar_Syntax_Print.term_to_string typ in
+                        let uu___5 = FStar_Syntax_Print.term_to_string typ in
                         FStar_Compiler_Util.print2
                           "Tactic introduced a strict uvar for %s\n\\%s\n"
-                          uu___4 ""
+                          uu___5 ""
                       else ());
                      FStar_Syntax_Syntax.Strict) in
             let uu___ =
