@@ -4984,20 +4984,24 @@ let resolve_implicits' env is_tac g =
             |> List.for_all (fun uv -> uv.ctx_uvar_should_check = Allow_unresolved)
           in
           if no_unresolved
-          then (
-            let env = { env with gamma = ctx_u.ctx_uvar_gamma } in
-            let tm_t, _ = env.typeof_well_typed_tot_or_gtot_term env tm false in
-            if env.subtype_nosmt_force env tm_t ctx_u.ctx_uvar_typ
+          then begin
+            if env.phase1
             then true
             else (
-              BU.print4 "Uvar solution for %s was not well-typed. Expected %s got %s : %s\n"
-                              (Print.uvar_to_string ctx_u.ctx_uvar_head)
-                              (Print.term_to_string ctx_u.ctx_uvar_typ)
-                              (Print.term_to_string tm)
-                              (Print.term_to_string tm_t);
-              false
+              let env = { env with gamma = ctx_u.ctx_uvar_gamma } in
+              let tm_t, _ = env.typeof_well_typed_tot_or_gtot_term env tm false in
+              if env.subtype_nosmt_force env tm_t ctx_u.ctx_uvar_typ
+              then true
+              else (
+                BU.print4 "Uvar solution for %s was not well-typed. Expected %s got %s : %s\n"
+                                (Print.uvar_to_string ctx_u.ctx_uvar_head)
+                                (Print.term_to_string ctx_u.ctx_uvar_typ)
+                                (Print.term_to_string tm)
+                                (Print.term_to_string tm_t);
+                false
+              )
             )
-          )
+          end
           else false
         in
         if is_tac then if tm_ok_for_tac tm
