@@ -462,7 +462,7 @@ let frame_equalities
 /// More lemmas about the abstract can_be_split predicates, to be used as
 /// rewriting rules in the tactic below
 val can_be_split_dep_refl (p:vprop)
-: Lemma (can_be_split_dep True p p)
+: Lemma (can_be_split_dep true_p p p)
 
 val equiv_can_be_split (p1 p2:vprop) : Lemma
   (requires p1 `equiv` p2)
