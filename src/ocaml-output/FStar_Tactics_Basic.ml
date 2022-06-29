@@ -2441,130 +2441,194 @@ let (check_apply_implicits_solutions :
                 (FStar_Tactics_Monad.mapM check_one_implicit)
 let (t_apply :
   Prims.bool ->
-    Prims.bool -> FStar_Syntax_Syntax.term -> unit FStar_Tactics_Monad.tac)
+    Prims.bool ->
+      Prims.bool -> FStar_Syntax_Syntax.term -> unit FStar_Tactics_Monad.tac)
   =
   fun uopt ->
     fun only_match ->
-      fun tm ->
-        let uu___ =
-          FStar_Tactics_Monad.mlog
-            (fun uu___1 ->
-               let uu___2 = FStar_Syntax_Print.term_to_string tm in
-               FStar_Compiler_Util.print1 "t_apply: tm = %s\n" uu___2)
-            (fun uu___1 ->
-               FStar_Tactics_Monad.bind FStar_Tactics_Monad.get
-                 (fun ps ->
-                    FStar_Tactics_Monad.bind FStar_Tactics_Monad.cur_goal
-                      (fun goal ->
-                         let e = FStar_Tactics_Types.goal_env goal in
-                         FStar_Tactics_Monad.mlog
-                           (fun uu___2 ->
-                              let uu___3 =
-                                FStar_Syntax_Print.term_to_string tm in
-                              let uu___4 =
-                                FStar_Tactics_Printing.goal_to_string_verbose
-                                  goal in
-                              let uu___5 =
-                                FStar_TypeChecker_Env.print_gamma
-                                  e.FStar_TypeChecker_Env.gamma in
-                              FStar_Compiler_Util.print3
-                                "t_apply: tm = %s\nt_apply: goal = %s\nenv.gamma=%s\n"
-                                uu___3 uu___4 uu___5)
-                           (fun uu___2 ->
-                              let uu___3 = __tc e tm in
-                              FStar_Tactics_Monad.bind uu___3
-                                (fun uu___4 ->
-                                   match uu___4 with
-                                   | (tm1, typ, guard) ->
-                                       let typ1 = bnorm e typ in
-                                       let uu___5 =
-                                         let uu___6 =
-                                           FStar_Tactics_Types.goal_type goal in
-                                         try_unify_by_application only_match
-                                           e typ1 uu___6 (rangeof goal) in
-                                       FStar_Tactics_Monad.bind uu___5
-                                         (fun uvs ->
-                                            FStar_Tactics_Monad.mlog
-                                              (fun uu___6 ->
-                                                 let uu___7 =
-                                                   FStar_Common.string_of_list
-                                                     (fun uu___8 ->
-                                                        match uu___8 with
-                                                        | (t, uu___9,
-                                                           uu___10) ->
-                                                            FStar_Syntax_Print.term_to_string
-                                                              t) uvs in
-                                                 FStar_Compiler_Util.print1
-                                                   "t_apply: found args = %s\n"
-                                                   uu___7)
-                                              (fun uu___6 ->
-                                                 let w =
-                                                   FStar_Compiler_List.fold_right
-                                                     (fun uu___7 ->
-                                                        fun w1 ->
-                                                          match uu___7 with
-                                                          | (uvt, q, uu___8)
-                                                              ->
-                                                              FStar_Syntax_Util.mk_app
-                                                                w1 [(uvt, q)])
-                                                     uvs tm1 in
-                                                 let uvset =
+      fun tc_resolved_uvars ->
+        fun tm ->
+          let uu___ =
+            FStar_Tactics_Monad.mlog
+              (fun uu___1 ->
+                 let uu___2 = FStar_Compiler_Util.string_of_bool uopt in
+                 let uu___3 = FStar_Compiler_Util.string_of_bool only_match in
+                 let uu___4 =
+                   FStar_Compiler_Util.string_of_bool tc_resolved_uvars in
+                 let uu___5 = FStar_Syntax_Print.term_to_string tm in
+                 FStar_Compiler_Util.print4
+                   "t_apply: uopt %s, only_match %s, tc_resolved_uvars %s, tm = %s\n"
+                   uu___2 uu___3 uu___4 uu___5)
+              (fun uu___1 ->
+                 FStar_Tactics_Monad.bind FStar_Tactics_Monad.get
+                   (fun ps ->
+                      FStar_Tactics_Monad.bind FStar_Tactics_Monad.cur_goal
+                        (fun goal ->
+                           let e = FStar_Tactics_Types.goal_env goal in
+                           FStar_Tactics_Monad.mlog
+                             (fun uu___2 ->
+                                let uu___3 =
+                                  FStar_Syntax_Print.term_to_string tm in
+                                let uu___4 =
+                                  FStar_Tactics_Printing.goal_to_string_verbose
+                                    goal in
+                                let uu___5 =
+                                  FStar_TypeChecker_Env.print_gamma
+                                    e.FStar_TypeChecker_Env.gamma in
+                                FStar_Compiler_Util.print3
+                                  "t_apply: tm = %s\nt_apply: goal = %s\nenv.gamma=%s\n"
+                                  uu___3 uu___4 uu___5)
+                             (fun uu___2 ->
+                                let uu___3 = __tc e tm in
+                                FStar_Tactics_Monad.bind uu___3
+                                  (fun uu___4 ->
+                                     match uu___4 with
+                                     | (tm1, typ, guard) ->
+                                         let typ1 = bnorm e typ in
+                                         let uu___5 =
+                                           let uu___6 =
+                                             FStar_Tactics_Types.goal_type
+                                               goal in
+                                           try_unify_by_application
+                                             only_match e typ1 uu___6
+                                             (rangeof goal) in
+                                         FStar_Tactics_Monad.bind uu___5
+                                           (fun uvs ->
+                                              FStar_Tactics_Monad.mlog
+                                                (fun uu___6 ->
                                                    let uu___7 =
-                                                     FStar_Syntax_Free.new_uv_set
-                                                       () in
-                                                   FStar_Compiler_List.fold_right
-                                                     (fun uu___8 ->
-                                                        fun s ->
+                                                     FStar_Common.string_of_list
+                                                       (fun uu___8 ->
                                                           match uu___8 with
-                                                          | (uu___9, uu___10,
-                                                             uv) ->
-                                                              let uu___11 =
-                                                                FStar_Syntax_Free.uvars
-                                                                  uv.FStar_Syntax_Syntax.ctx_uvar_typ in
-                                                              FStar_Compiler_Util.set_union
-                                                                s uu___11)
-                                                     uvs uu___7 in
-                                                 let free_in_some_goal uv =
-                                                   FStar_Compiler_Util.set_mem
-                                                     uv uvset in
-                                                 let uu___7 = solve' goal w in
-                                                 FStar_Tactics_Monad.bind
-                                                   uu___7
-                                                   (fun uu___8 ->
-                                                      let uu___9 =
-                                                        let uu___10 =
-                                                          FStar_Compiler_Effect.op_Bar_Greater
-                                                            uvs
-                                                            (FStar_Compiler_List.map
-                                                               (fun uu___11
-                                                                  ->
-                                                                  match uu___11
-                                                                  with
-                                                                  | (uvt, _q,
+                                                          | (t, uu___9,
+                                                             uu___10) ->
+                                                              FStar_Syntax_Print.term_to_string
+                                                                t) uvs in
+                                                   FStar_Compiler_Util.print1
+                                                     "t_apply: found args = %s\n"
+                                                     uu___7)
+                                                (fun uu___6 ->
+                                                   let w =
+                                                     FStar_Compiler_List.fold_right
+                                                       (fun uu___7 ->
+                                                          fun w1 ->
+                                                            match uu___7 with
+                                                            | (uvt, q,
+                                                               uu___8) ->
+                                                                FStar_Syntax_Util.mk_app
+                                                                  w1
+                                                                  [(uvt, q)])
+                                                       uvs tm1 in
+                                                   let uvset =
+                                                     let uu___7 =
+                                                       FStar_Syntax_Free.new_uv_set
+                                                         () in
+                                                     FStar_Compiler_List.fold_right
+                                                       (fun uu___8 ->
+                                                          fun s ->
+                                                            match uu___8 with
+                                                            | (uu___9,
+                                                               uu___10, uv)
+                                                                ->
+                                                                let uu___11 =
+                                                                  FStar_Syntax_Free.uvars
+                                                                    uv.FStar_Syntax_Syntax.ctx_uvar_typ in
+                                                                FStar_Compiler_Util.set_union
+                                                                  s uu___11)
+                                                       uvs uu___7 in
+                                                   let free_in_some_goal uv =
+                                                     FStar_Compiler_Util.set_mem
+                                                       uv uvset in
+                                                   let uu___7 = solve' goal w in
+                                                   FStar_Tactics_Monad.bind
+                                                     uu___7
+                                                     (fun uu___8 ->
+                                                        let uu___9 =
+                                                          let uu___10 =
+                                                            FStar_Compiler_Effect.op_Bar_Greater
+                                                              uvs
+                                                              (FStar_Compiler_List.map
+                                                                 (fun uu___11
+                                                                    ->
+                                                                    match uu___11
+                                                                    with
+                                                                    | 
+                                                                    (uvt, _q,
                                                                     uv) ->
                                                                     (uvt, uv))) in
-                                                        FStar_Compiler_Effect.op_Bar_Greater
-                                                          uu___10
-                                                          (let must_tot =
-                                                             true in
-                                                           check_apply_implicits_solutions
-                                                             e goal
-                                                             ps.FStar_Tactics_Types.tac_verb_dbg
-                                                             "apply" must_tot) in
-                                                      FStar_Tactics_Monad.bind
-                                                        uu___9
-                                                        (fun subgoals ->
-                                                           let uu___10 =
-                                                             let uu___11 =
-                                                               let uu___12 =
+                                                          FStar_Compiler_Effect.op_Bar_Greater
+                                                            uu___10
+                                                            (if
+                                                               tc_resolved_uvars
+                                                             then
+                                                               let must_tot =
+                                                                 true in
+                                                               check_apply_implicits_solutions
+                                                                 e goal
+                                                                 ps.FStar_Tactics_Types.tac_verb_dbg
+                                                                 "apply"
+                                                                 must_tot
+                                                             else
+                                                               (fun l ->
+                                                                  let uu___12
+                                                                    =
+                                                                    FStar_Compiler_Effect.op_Bar_Greater
+                                                                    l
+                                                                    (FStar_Compiler_List.map
+                                                                    (fun
+                                                                    uu___13
+                                                                    ->
+                                                                    match uu___13
+                                                                    with
+                                                                    | 
+                                                                    (uu___14,
+                                                                    uv) ->
+                                                                    let uu___15
+                                                                    =
+                                                                    FStar_Syntax_Unionfind.find
+                                                                    uv.FStar_Syntax_Syntax.ctx_uvar_head in
+                                                                    (match uu___15
+                                                                    with
+                                                                    | 
+                                                                    FStar_Pervasives_Native.Some
+                                                                    uu___16
+                                                                    -> []
+                                                                    | 
+                                                                    FStar_Pervasives_Native.None
+                                                                    ->
+                                                                    [
+                                                                    {
+                                                                    FStar_Tactics_Types.goal_main_env
+                                                                    =
+                                                                    (goal.FStar_Tactics_Types.goal_main_env);
+                                                                    FStar_Tactics_Types.goal_ctx_uvar
+                                                                    = uv;
+                                                                    FStar_Tactics_Types.opts
+                                                                    =
+                                                                    (goal.FStar_Tactics_Types.opts);
+                                                                    FStar_Tactics_Types.is_guard
+                                                                    = false;
+                                                                    FStar_Tactics_Types.label
+                                                                    =
+                                                                    (goal.FStar_Tactics_Types.label)
+                                                                    }]))) in
+                                                                  FStar_Compiler_Effect.op_Bar_Greater
+                                                                    uu___12
+                                                                    FStar_Tactics_Monad.ret)) in
+                                                        FStar_Tactics_Monad.bind
+                                                          uu___9
+                                                          (fun subgoals ->
+                                                             let uu___10 =
+                                                               let uu___11 =
+                                                                 let uu___12
+                                                                   =
+                                                                   FStar_Compiler_Effect.op_Bar_Greater
+                                                                    subgoals
+                                                                    FStar_Compiler_List.flatten in
                                                                  FStar_Compiler_Effect.op_Bar_Greater
-                                                                   subgoals
-                                                                   FStar_Compiler_List.flatten in
-                                                               FStar_Compiler_Effect.op_Bar_Greater
-                                                                 uu___12
-                                                                 (FStar_Compiler_List.filter
-                                                                    (
-                                                                    fun g ->
+                                                                   uu___12
+                                                                   (FStar_Compiler_List.filter
+                                                                    (fun g ->
                                                                     let uu___13
                                                                     =
                                                                     uopt &&
@@ -2572,39 +2636,26 @@ let (t_apply :
                                                                     g.FStar_Tactics_Types.goal_ctx_uvar) in
                                                                     Prims.op_Negation
                                                                     uu___13)) in
-                                                             FStar_Compiler_Effect.op_Bar_Greater
-                                                               uu___11
-                                                               (FStar_Tactics_Monad.mapM
-                                                                  (fun g ->
-                                                                    bnorm_goal
-                                                                    {
-                                                                    FStar_Tactics_Types.goal_main_env
-                                                                    =
-                                                                    (g.FStar_Tactics_Types.goal_main_env);
-                                                                    FStar_Tactics_Types.goal_ctx_uvar
-                                                                    =
-                                                                    (g.FStar_Tactics_Types.goal_ctx_uvar);
-                                                                    FStar_Tactics_Types.opts
-                                                                    =
-                                                                    (g.FStar_Tactics_Types.opts);
-                                                                    FStar_Tactics_Types.is_guard
-                                                                    = false;
-                                                                    FStar_Tactics_Types.label
-                                                                    =
-                                                                    (g.FStar_Tactics_Types.label)
-                                                                    })) in
-                                                           FStar_Tactics_Monad.bind
-                                                             uu___10
-                                                             (fun subgoals1
-                                                                ->
-                                                                let uu___11 =
-                                                                  FStar_Tactics_Monad.add_goals
+                                                               FStar_Compiler_Effect.op_Bar_Greater
+                                                                 uu___11
+                                                                 (FStar_Tactics_Monad.mapM
                                                                     (
-                                                                    FStar_Compiler_List.rev
+                                                                    fun g ->
+                                                                    bnorm_goal
+                                                                    g)) in
+                                                             FStar_Tactics_Monad.bind
+                                                               uu___10
+                                                               (fun subgoals1
+                                                                  ->
+                                                                  let uu___11
+                                                                    =
+                                                                    FStar_Tactics_Monad.add_goals
+                                                                    (FStar_Compiler_List.rev
                                                                     subgoals1) in
-                                                                FStar_Tactics_Monad.bind
-                                                                  uu___11
-                                                                  (fun
+                                                                  FStar_Tactics_Monad.bind
+                                                                    uu___11
+                                                                    (
+                                                                    fun
                                                                     uu___12
                                                                     ->
                                                                     proc_guard
@@ -2612,8 +2663,8 @@ let (t_apply :
                                                                     e guard
                                                                     (rangeof
                                                                     goal)))))))))))) in
-        FStar_Compiler_Effect.op_Less_Bar
-          (FStar_Tactics_Monad.wrap_err "apply") uu___
+          FStar_Compiler_Effect.op_Less_Bar
+            (FStar_Tactics_Monad.wrap_err "apply") uu___
 let (lemma_or_sq :
   FStar_Syntax_Syntax.comp ->
     (FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.term)

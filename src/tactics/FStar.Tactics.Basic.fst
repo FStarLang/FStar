@@ -818,8 +818,12 @@ let check_apply_implicits_solutions env
 // without asking for |- ?u : Type first, which will most likely be instantiated when
 // solving any of these two goals. In any case, if ?u is not solved, we will later fail.
 // TODO: this should probably be made into a user tactic
-let t_apply (uopt:bool) (only_match:bool) (tm:term) : tac unit = wrap_err "apply" <|
-    mlog (fun () -> BU.print1 "t_apply: tm = %s\n" (Print.term_to_string tm)) (fun _ ->
+let t_apply (uopt:bool) (only_match:bool) (tc_resolved_uvars:bool) (tm:term) : tac unit = wrap_err "apply" <|
+    mlog (fun () -> BU.print4 "t_apply: uopt %s, only_match %s, tc_resolved_uvars %s, tm = %s\n"
+                   (string_of_bool uopt)
+                   (string_of_bool only_match)
+                   (string_of_bool tc_resolved_uvars)
+                   (Print.term_to_string tm)) (fun _ ->
     bind get (fun ps ->
     bind cur_goal (fun goal ->
     let e = goal_env goal in
@@ -848,9 +852,16 @@ let t_apply (uopt:bool) (only_match:bool) (tm:term) : tac unit = wrap_err "apply
     //add the rest as goals
     //
     bind (uvs |> List.map (fun (uvt, _q, uv) -> (uvt, uv))
-              |> (let must_tot = true in
-                 check_apply_implicits_solutions e goal ps.tac_verb_dbg
-                   "apply" must_tot)) (fun subgoals ->
+              |> (if tc_resolved_uvars
+                 then let must_tot = true in
+                      check_apply_implicits_solutions e goal ps.tac_verb_dbg
+                        "apply" must_tot
+                 else (fun l -> l |> List.map (fun (_, uv) ->
+                                           match UF.find uv.ctx_uvar_head with
+                                           (* Already (at least partially) solved, skip asking the user for it *)
+                                           | Some _ -> []
+                                           | None -> [{goal with goal_ctx_uvar=uv; is_guard=false}])
+                               |> ret))) (fun subgoals ->
     bind (subgoals |> List.flatten
                    |> List.filter (fun g ->
                                   //
@@ -859,7 +870,7 @@ let t_apply (uopt:bool) (only_match:bool) (tm:term) : tac unit = wrap_err "apply
                                   //filter those
                                   //
                                   not (uopt && free_in_some_goal g.goal_ctx_uvar))
-                   |> mapM (fun g -> bnorm_goal ({g with is_guard = false}))) (fun subgoals ->
+                   |> mapM (fun g -> bnorm_goal g)) (fun subgoals ->
     bind (add_goals (List.rev subgoals)) (fun _ ->
     proc_guard "apply guard" e guard (rangeof goal))))))))))))
 

@@ -162,7 +162,7 @@ instantiate [?u]. We use this in typeclass resolution.
 You may want [apply] from FStar.Tactics.Derived, or one of
 the other user facing variants.
 *)
-val t_apply : uopt:bool -> noinst:bool -> term -> Tac unit
+val t_apply : uopt:bool -> noinst:bool -> tc_resolved_uvars:bool -> term -> Tac unit
 
 (** [t_apply_lemma ni nilhs l] will solve a goal of type [squash phi]
 when [l] is a Lemma ensuring [phi]. The arguments to [l] and its

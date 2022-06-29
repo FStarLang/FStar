@@ -69,7 +69,7 @@ val clear_top              : unit -> tac unit
 val clear                  : binder -> tac unit
 val rewrite                : binder -> tac unit
 val t_exact                : bool -> bool -> term -> tac unit
-val t_apply                : bool -> bool -> term -> tac unit
+val t_apply                : bool -> bool -> bool -> term -> tac unit
 val t_apply_lemma          : bool -> bool -> term -> tac unit
 val print                  : string -> tac unit
 val debugging              : unit -> tac bool
