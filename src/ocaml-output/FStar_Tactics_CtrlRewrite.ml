@@ -725,10 +725,10 @@ let (ctrl_rewrite :
                                FStar_Tactics_Monad.bind uu___6
                                  (fun uu___7 ->
                                     let uu___8 =
-                                      let uu___9 =
-                                        FStar_Tactics_Types.goal_with_type g
-                                          gt' in
-                                      [uu___9] in
-                                    FStar_Tactics_Monad.add_goals uu___8)))))) in
+                                      FStar_Tactics_Basic.goal_with_type g
+                                        gt' in
+                                    FStar_Tactics_Monad.bind uu___8
+                                      (fun g1 ->
+                                         FStar_Tactics_Monad.add_goals [g1]))))))) in
         FStar_Compiler_Effect.op_Less_Bar
           (FStar_Tactics_Monad.wrap_err "ctrl_rewrite") uu___

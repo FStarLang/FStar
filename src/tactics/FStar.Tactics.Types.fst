@@ -36,7 +36,7 @@ let goal_witness g =
     FStar.Syntax.Syntax.mk (Tm_uvar (g.goal_ctx_uvar, ([], NoUseRange))) Range.dummyRange
 let goal_type g = g.goal_ctx_uvar.ctx_uvar_typ
 
-let goal_with_type g t : goal =
+let goal_with_type_pure g t : goal =
     let c = g.goal_ctx_uvar in
     let c' = {c with ctx_uvar_typ = t} in
     { g with goal_ctx_uvar = c' }

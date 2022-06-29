@@ -151,7 +151,7 @@ let (goal_witness : goal -> FStar_Syntax_Syntax.term) =
       FStar_Compiler_Range.dummyRange
 let (goal_type : goal -> FStar_Syntax_Syntax.term) =
   fun g -> (g.goal_ctx_uvar).FStar_Syntax_Syntax.ctx_uvar_typ
-let (goal_with_type : goal -> FStar_Syntax_Syntax.term -> goal) =
+let (goal_with_type_pure : goal -> FStar_Syntax_Syntax.term -> goal) =
   fun g ->
     fun t ->
       let c = g.goal_ctx_uvar in

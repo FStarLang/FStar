@@ -372,4 +372,5 @@ let ctrl_rewrite
         BU.print1 "ctrl_rewrite seems to have succeded with %s\n" (Print.term_to_string gt'));
 
     bind (push_goals gs) (fun _ ->
-    add_goals [goal_with_type g gt']))))
+    bind (goal_with_type g gt') (fun g ->
+    add_goals [g])))))
