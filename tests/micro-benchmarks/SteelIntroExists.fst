@@ -368,7 +368,7 @@ let test_split
   return res
 
 assume
-val pts_to (p:ptr) (v:nat) : vprop
+val pts_to (p:ptr) (v:int) : vprop
 
 assume
 val free (p:ptr) : STT unit (exists_ (fun v -> pts_to p v)) (fun _ -> emp)
@@ -704,3 +704,24 @@ let v2 (#p: Ghost.erased nat) (al: ptr) (err: ptr) : STT unit
   let _ = gen_elim () in
   let _ = join al ar in
   return ()
+
+
+assume
+val expect_pos (p:ptr) : STT unit (exists_ (λ (v:pos) → pts_to p v)) (λ _ → emp)
+
+[@@expect_failure]
+let use_zero_as_pos (p:ptr)
+  : STT unit (pts_to p 0) (λ _ → emp)
+  = let _ = expect_pos p in ()
+
+
+assume
+val expect_nat (p:ptr) : STT unit (exists_ (λ (v:nat) → pts_to p v)) (λ _ → emp)
+
+//this fails although it could succeed
+//wips: [F*] (<input>(723,4-723,30)) Uvar solution for ?2022 was not well-typed. Expected Prims.nat got 0 : Prims.int [2 times]
+//
+[@@expect_failure]
+let use_zero_as_nat (p:ptr)
+  : STT unit (pts_to p 0) (λ _ → emp)
+  = let _ = expect_nat p in ()
