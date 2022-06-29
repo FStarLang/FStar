@@ -120,11 +120,8 @@ let (find_and_map_implicit :
            let imps =
              FStar_Compiler_List.map
                (fun i ->
-                  let uu___ =
-                    ((i.FStar_TypeChecker_Common.imp_uvar).FStar_Syntax_Syntax.ctx_uvar_should_check
-                       <> FStar_Syntax_Syntax.Allow_untyped)
-                      && (is_ctx_uvar_for_implicit u i) in
-                  if uu___ then mark_implicit_as_allow_untyped i else f i)
+                  let uu___ = is_ctx_uvar_for_implicit u i in
+                  if uu___ then f i else i)
                ps.FStar_Tactics_Types.all_implicits in
            FStar_Tactics_Monad.set
              {
@@ -2859,10 +2856,9 @@ let (t_apply_lemma :
                                                                     FStar_Tactics_Monad.bind
                                                                     uu___19
                                                                     (fun
-                                                                    uu___20
-                                                                    ->
+                                                                    goal1 ->
                                                                     FStar_Tactics_Monad.ret
-                                                                    [goal])
+                                                                    [goal1])
                                                                     | 
                                                                     uu___18
                                                                     ->

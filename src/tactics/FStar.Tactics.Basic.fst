@@ -91,10 +91,9 @@ let find_and_map_implicit (u:ctx_uvar) (f:TcComm.implicit -> TcComm.implicit)
     let imps =
       List.map
         (fun i -> 
-             if i.imp_uvar.ctx_uvar_should_check <> Allow_untyped
-             && is_ctx_uvar_for_implicit u i
-             then mark_implicit_as_allow_untyped i
-             else f i)
+             if is_ctx_uvar_for_implicit u i
+             then f i
+             else i)
         ps.all_implicits
     in
     set ({ps with all_implicits = imps}))
@@ -907,7 +906,7 @@ let t_apply_lemma (noinst:bool) (noinst_lhs:bool)
             let hd, _ = U.head_and_args term in
             match (SS.compress hd).n with
             | Tm_uvar (ctx_uvar, _) ->
-                bind (bnorm_goal ({ goal with goal_ctx_uvar = ctx_uvar })) (fun _ ->
+                bind (bnorm_goal ({ goal with goal_ctx_uvar = ctx_uvar })) (fun goal ->
                 ret [goal])
             | _ ->
                 mlog (fun () -> BU.print2 "apply_lemma: arg %s unified to (%s)\n"
