@@ -749,6 +749,62 @@ let rec  __try_unify_by_application
 let try_unify_by_application (only_match:bool) (e : env) (ty1 : term) (ty2 : term) (rng:Range.range) : tac (list (term * aqual * ctx_uvar)) =
     __try_unify_by_application only_match [] e ty1 ty2 rng
 
+//
+// Checking implicit solutions that may have been solved during unification
+//   E.g. when unifying the goals in apply
+//
+let check_apply_implicits_solutions env
+  (gl:goal)
+  (debug_on:bool)
+  (debug_prefix:string)
+  (must_tot:bool)
+  (imps:list (term & ctx_uvar))
+  
+  : tac (list (list goal)) =
+
+  let check_implicits_solution env (t:term) (k:typ) (must_tot:bool) : guard_t =
+    let env = Env.set_expected_typ ({env with use_bv_sorts=true}) k in
+
+    let slow_path () =
+      //expected type is already set in the env
+      let _, _, g = TcTerm.typeof_tot_or_gtot_term env t must_tot in
+      g in
+
+    match TcTerm.typeof_tot_or_gtot_term_fastpath env t must_tot with
+    | None -> slow_path ()
+    | Some k' ->
+      match Rel.subtype_nosmt env k' k with
+      | None -> slow_path ()
+      | Some g -> g
+  in
+
+  let check_one_implicit (term, ctx_uvar) =
+    let hd, _ = U.head_and_args term in
+    match (SS.compress hd).n with
+    | Tm_uvar (ctx_uvar, _) ->
+      bind (bnorm_goal ({ gl with goal_ctx_uvar = ctx_uvar })) (fun gl ->
+      ret [gl])
+    | _ ->
+      mlog (fun () -> BU.print3 "%s: arg %s unified to (%s)\n"
+                     debug_prefix
+                     (Print.uvar_to_string ctx_uvar.ctx_uvar_head)
+                     (Print.term_to_string term)) (fun () ->
+      let g_typ = check_implicits_solution env term ctx_uvar.ctx_uvar_typ must_tot in
+      bind (proc_guard
+              (if debug_on
+               then BU.format3 "%s solved arg %s to %s\n"
+                      debug_prefix
+                      (Print.ctx_uvar_to_string ctx_uvar)
+                      (Print.term_to_string term)
+               else BU.format1 "%s solved arg" debug_prefix)
+              env g_typ (rangeof gl)) (fun () ->
+      //we've checked this implicit and added its guard as an explicit goal
+      //no need to recheck it
+      bind (find_and_mark_implicit_as_allow_untyped ctx_uvar) (fun _ ->
+      ret []))) in
+
+  imps |> mapM check_one_implicit
+
 // uopt: Don't add goals for implicits that appear free in posterior goals.
 // This is very handy for users, allowing to turn
 //
@@ -764,6 +820,7 @@ let try_unify_by_application (only_match:bool) (e : env) (ty1 : term) (ty2 : ter
 // TODO: this should probably be made into a user tactic
 let t_apply (uopt:bool) (only_match:bool) (tm:term) : tac unit = wrap_err "apply" <|
     mlog (fun () -> BU.print1 "t_apply: tm = %s\n" (Print.term_to_string tm)) (fun _ ->
+    bind get (fun ps ->
     bind cur_goal (fun goal ->
     let e = goal_env goal in
     mlog (fun () -> BU.print3 "t_apply: tm = %s\nt_apply: goal = %s\nenv.gamma=%s\n"
@@ -783,23 +840,28 @@ let t_apply (uopt:bool) (only_match:bool) (tm:term) : tac unit = wrap_err "apply
         BU.set_mem uv uvset
     in
     bind (solve' goal w) (fun () ->
-    bind (mapM (fun (uvt, q, uv) ->
-                 match UF.find uv.ctx_uvar_head with
-                 (* Already (at least partially) solved, skip asking the user for it *)
-                 | Some _ ->
-                       ret ()
-                 (* Not instantiated at all *)
-                 | None ->
-                    (* We might still not add it if uopt is on, as described above *)
-                    if uopt && free_in_some_goal uv
-                    then ret ()
-                    else bind (bnorm_goal ({ goal with
-                                                  goal_ctx_uvar = uv;
-                                                  is_guard = false; })) (fun g ->
-                         add_goals [g])
-               ) uvs) (fun _ ->
-    proc_guard "apply guard" e guard (rangeof goal)
-    ))))))))
+    //
+    //process uvs
+    //first, if some of them are solved already, perhaps during unification,
+    //  typecheck them
+    //then, if uopt is on, filter out those that appear in other goals
+    //add the rest as goals
+    //
+    bind (uvs |> List.map (fun (uvt, _q, uv) -> (uvt, uv))
+              |> (let must_tot = true in
+                 check_apply_implicits_solutions e goal ps.tac_verb_dbg
+                   "apply" must_tot)) (fun subgoals ->
+    bind (subgoals |> List.flatten
+                   |> List.filter (fun g ->
+                                  //
+                                  //if uopt is on, we don't keep uvars that
+                                  //  appear in some other goals
+                                  //filter those
+                                  //
+                                  not (uopt && free_in_some_goal g.goal_ctx_uvar))
+                   |> mapM (fun g -> bnorm_goal ({g with is_guard = false}))) (fun subgoals ->
+    bind (add_goals (List.rev subgoals)) (fun _ ->
+    proc_guard "apply guard" e guard (rangeof goal))))))))))))
 
 // returns pre and post
 let lemma_or_sq (c : comp) : option (term * term) =
@@ -822,22 +884,6 @@ let rec fold_left (f : ('a -> 'b -> tac 'b)) (e : 'b) (xs : list 'a) : tac 'b =
     match xs with
     | [] -> ret e
     | x::xs -> bind (f x e) (fun e' -> fold_left f e' xs)
-
-let check_lemma_implicits_solution env (t:term) (k:typ) : guard_t =
-  let env = Env.set_expected_typ ({env with use_bv_sorts=true}) k in
-
-  let slow_path () =
-    let must_tot = false in  //since we are typechecking lemma implicits
-    //expected type is already set in the env
-    let _, _, g = TcTerm.typeof_tot_or_gtot_term env t must_tot in
-    g in
-
-  match TcTerm.typeof_tot_or_gtot_term_fastpath env t false with
-  | None -> slow_path ()
-  | Some k' ->
-    match Rel.subtype_nosmt env k' k with
-    | None -> slow_path ()
-    | Some g -> g
 
 let t_apply_lemma (noinst:bool) (noinst_lhs:bool)
                   (tm:term) : tac unit = wrap_err "apply_lemma" <| focus (
@@ -901,36 +947,9 @@ let t_apply_lemma (noinst:bool) (noinst_lhs:bool)
             | _ -> false
             end
         in
-        bind (implicits |> mapM (fun imp ->
-            let (term, ctx_uvar) = imp in
-            let hd, _ = U.head_and_args term in
-            match (SS.compress hd).n with
-            | Tm_uvar (ctx_uvar, _) ->
-                bind (bnorm_goal ({ goal with goal_ctx_uvar = ctx_uvar })) (fun goal ->
-                ret [goal])
-            | _ ->
-                mlog (fun () -> BU.print2 "apply_lemma: arg %s unified to (%s)\n"
-                                    (Print.uvar_to_string ctx_uvar.ctx_uvar_head)
-                                    (Print.term_to_string term)) (fun () ->
-                let g_typ =
-                  // NS:01/24: use the fast path instead, knowing that term is at least well-typed
-                  // NS:05/25: protecting it under this option,
-                  //           since it causes a regression in examples/vale/*Math_i.fst
-                  // GM: Made it the default, but setting must_total to true
-                  // AR:03/17: These are lemma arguments, so we don't need to insist on must_total
-                  check_lemma_implicits_solution env term ctx_uvar.ctx_uvar_typ
-                in
-                bind (proc_guard
-                       (if ps.tac_verb_dbg
-                        then BU.format2 "apply_lemma solved arg %s to %s\n" (Print.ctx_uvar_to_string ctx_uvar)
-                                                                            (Print.term_to_string term)
-                        else "apply_lemma solved arg")
-                        env g_typ (rangeof goal)) (fun () ->
-                      //we've checked this implicit and added its guard as an explicit goal
-                      //no need to recheck it
-                bind (find_and_mark_implicit_as_allow_untyped ctx_uvar) (fun _ ->
-                ret []))))
-            ) (fun sub_goals ->
+        bind (let must_tot = false in
+              implicits |>
+              check_apply_implicits_solutions env goal ps.tac_verb_dbg "apply_lemma" must_tot) (fun sub_goals ->
         let sub_goals = List.flatten sub_goals in
         // Optimization: if a uvar appears in a later goal, don't ask for it, since
         // it will be instantiated later. It is tracked anyway in ps.implicits
