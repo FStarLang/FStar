@@ -1695,7 +1695,20 @@ let (initial_env :
                                    let uu___12 =
                                      typeof_tot_or_gtot_term env1 t must_tot1 in
                                    (match uu___12 with
-                                    | (uu___13, k, g) -> (k, g)));
+                                    | (t', k, g) ->
+                                        ((let uu___14 =
+                                            FStar_Syntax_Print.term_to_string
+                                              t in
+                                          let uu___15 =
+                                            FStar_Syntax_Print.term_to_string
+                                              t' in
+                                          let uu___16 =
+                                            FStar_Syntax_Print.term_to_string
+                                              k in
+                                          FStar_Compiler_Util.print3
+                                            "typeof_well_typed_tot_or_gtot_term took slow path: %s was types as %s at type %s\n"
+                                            uu___14 uu___15 uu___16);
+                                         (k, g))));
                       subtype_nosmt_force;
                       use_bv_sorts = false;
                       qtbl_name_and_index = uu___3;

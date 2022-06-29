@@ -12414,10 +12414,27 @@ let rec (typeof_tot_or_gtot_term_fastpath :
         | FStar_Syntax_Syntax.Tm_match
             (uu___, uu___1, uu___2, FStar_Pervasives_Native.Some rc) ->
             rc.FStar_Syntax_Syntax.residual_typ
-        | FStar_Syntax_Syntax.Tm_match uu___ -> FStar_Pervasives_Native.None
-        | FStar_Syntax_Syntax.Tm_let uu___ -> FStar_Pervasives_Native.None
-        | FStar_Syntax_Syntax.Tm_unknown -> FStar_Pervasives_Native.None
-        | FStar_Syntax_Syntax.Tm_uinst uu___ -> FStar_Pervasives_Native.None
+        | FStar_Syntax_Syntax.Tm_match uu___ ->
+            let uu___1 =
+              let uu___2 =
+                let uu___3 = FStar_Syntax_Print.tag_of_term t1 in
+                Prims.op_Hat uu___3 ")" in
+              Prims.op_Hat "Impossible! (" uu___2 in
+            failwith uu___1
+        | FStar_Syntax_Syntax.Tm_let uu___ ->
+            let uu___1 =
+              let uu___2 =
+                let uu___3 = FStar_Syntax_Print.tag_of_term t1 in
+                Prims.op_Hat uu___3 ")" in
+              Prims.op_Hat "Impossible! (" uu___2 in
+            failwith uu___1
+        | FStar_Syntax_Syntax.Tm_unknown ->
+            let uu___ =
+              let uu___1 =
+                let uu___2 = FStar_Syntax_Print.tag_of_term t1 in
+                Prims.op_Hat uu___2 ")" in
+              Prims.op_Hat "Impossible! (" uu___1 in
+            failwith uu___
         | uu___ ->
             let uu___1 =
               let uu___2 =

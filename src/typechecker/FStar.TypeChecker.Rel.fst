@@ -2275,6 +2275,14 @@ and solve_binders (env:Env.env) (bs1:binders) (bs2:binders) (orig:prob) (wl:work
                        (rel_to_string (p_rel orig))
                        (Print.binders_to_string ", " bs2);
 
+   let eq_bqual a1 a2 =
+       match a1, a2 with
+       | Some (Implicit b1), Some (Implicit b2) ->
+         U.Equal //we don't care about comparing the dot qualifier in this context
+       | _ ->
+         U.eq_bqual a1 a2
+   in
+
    (*
     * AR: adding env to the return type
     *
@@ -2296,7 +2304,7 @@ and solve_binders (env:Env.env) (bs1:binders) (bs2:binders) (orig:prob) (wl:work
           let formula = p_guard rhs_prob in
           env, Inl ([rhs_prob], formula), wl
 
-        | x::xs, y::ys when (U.eq_bqual x.binder_qual y.binder_qual = U.Equal) ->
+        | x::xs, y::ys when (eq_bqual x.binder_qual y.binder_qual = U.Equal) ->
            let hd1, imp = x.binder_bv, x.binder_qual in
            let hd2, imp' = y.binder_bv, y.binder_qual in
            let hd1 = {hd1 with sort=Subst.subst subst hd1.sort} in //open both binders
@@ -5002,6 +5010,11 @@ let resolve_implicits' env is_tac g =
               then true
               else (
                 let tm_t, _ = env.typeof_well_typed_tot_or_gtot_term env tm false in
+                BU.print4 "(%s) Computed uvar solution for %s was is %s : %s\n"
+                               (Range.string_of_range (Env.get_range env))
+                               (Print.uvar_to_string ctx_u.ctx_uvar_head)
+                               (Print.term_to_string tm)
+                               (Print.term_to_string tm_t);
                 if env.subtype_nosmt_force env tm_t ctx_u.ctx_uvar_typ
                 then true
                 else // failing at this point is fatal;
