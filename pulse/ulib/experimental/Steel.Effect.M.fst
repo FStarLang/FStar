@@ -228,6 +228,10 @@ let lift_m (#a:Type u#a) (#pre:pre_t) (#post:post_t u#a a)
 
   | _ -> admit ()
 
+assume val lift_m (#a:Type u#a) (#pre:pre_t) (#post:post_t u#a a)
+  (#req:req_t pre) (#ens:ens_t pre a post)
+  (f:repr u#a a pre post req ens)
+: repr u#(max a b) (FStar.Universe.raise_t a) pre (lift_post post) req (lift_ens ens)
 
 let lift_m_x (#a:Type u#a) (#pre:a -> slprop)
   (#b:Type u#b) (#post:post_t b) (#req:(x:a -> req_t (pre x))) (#ens:(x:a -> ens_t (pre x) b post))
