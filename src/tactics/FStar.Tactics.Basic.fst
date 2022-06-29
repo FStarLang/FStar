@@ -639,6 +639,8 @@ let refine_intro () : tac unit = wrap_err "refine_intro" <|
     match Rel.base_and_refinement (goal_env g) (goal_type g) with
     | _, None -> fail "not a refinement"
     | t, Some (bv, phi) ->
+        //Mark goal as untyped, since we're adding its refinement as a separate goal
+        bind (mark_goal_implicit_allow_untyped g) (fun _ ->
         let g1 = goal_with_type g t in
         let bv, phi = match SS.open_term [S.mk_binder bv] phi with
                       | bvs, phi -> (List.hd bvs).binder_bv, phi
@@ -646,7 +648,7 @@ let refine_intro () : tac unit = wrap_err "refine_intro" <|
         bind (mk_irrelevant_goal "refine_intro refinement" (goal_env g)
                     (SS.subst [S.NT (bv, (goal_witness g))] phi) (rangeof g) g.opts g.label) (fun g2 ->
         bind dismiss (fun _ ->
-        add_goals [g1;g2])))
+        add_goals [g1;g2]))))
 
 let __exact_now set_expected_typ (t:term) : tac unit =
     bind cur_goal (fun goal ->
@@ -661,8 +663,15 @@ let __exact_now set_expected_typ (t:term) : tac unit =
     bind (proc_guard "__exact typing" (goal_env goal) guard (rangeof goal)) (fun _ ->
     mlog (fun () -> BU.print2 "__exact_now: unifying %s and %s\n" (Print.term_to_string typ)
                                                                   (Print.term_to_string (goal_type goal))) (fun _ ->
-    bind (do_unify (goal_env goal) typ (goal_type goal)) (fun b -> if b
-    then solve goal t
+    bind (do_unify (goal_env goal) typ (goal_type goal)) (fun b ->
+    if b
+    then (
+      bind (
+        if set_expected_typ
+        then mark_goal_implicit_allow_untyped goal //we already added guard as an additional goal; no need to check it again
+        else ret ()) (fun _ -> 
+      solve goal t)
+    )
     else
       let typ, goalt = TypeChecker.Err.print_discrepancy (tts (goal_env goal)) typ (goal_type goal) in
       fail4 "%s : %s does not exactly solve the goal %s (witness = %s)"
