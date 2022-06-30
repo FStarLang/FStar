@@ -1815,31 +1815,22 @@ let new_implicit_var_aux reason r env k should_check meta =
  *   one-by-one and fixing them.
  *
  * To guard against misuses of this, we typecheck the layered effect combinator types in a strict
- *   mode (with no smt and subtyping). In addition, we make sure that the binders in the combinator type
- *   appear in repr indices directly (not as an argument application) -- see TcEffect.fs
+ *   mode (with no smt and subtyping)
  *)
 let uvars_for_binders env (bs:S.binders) substs reason r =
   bs |> List.fold_left (fun (substs, uvars, g) b ->
     let sort = SS.subst substs b.binder_bv.sort in
 
-    (*
-     * AR: If there is a tactic associated with this binder,
-     *     then create it in the Strict mode
-     *
-     *     When solving it, if the tactic is indeed found, the solution is not re-typechecked
-     *                      if the tactic is not found, then we will force the solution typechecking
-     *)
-
-    let ctx_uvar_meta_t, strict =
+    let ctx_uvar_meta_t =
       match b.binder_qual, b.binder_attrs with
       | Some (Meta t), [] ->
-        Some (Ctx_uvar_meta_tac (FStar.Compiler.Dyn.mkdyn env, t)), false
+        Some (Ctx_uvar_meta_tac (FStar.Compiler.Dyn.mkdyn env, t))
       | _, t::_ ->
-        Some (Ctx_uvar_meta_attr t), false
-      | _ -> None, false in
+        Some (Ctx_uvar_meta_attr t)
+      | _ -> None in
 
     let t, l_ctx_uvars, g_t = new_implicit_var_aux
-      (reason b) r env sort (if strict then Strict else Allow_untyped) ctx_uvar_meta_t in
+      (reason b) r env sort Allow_untyped ctx_uvar_meta_t in
 
     if debug env <| Options.Other "LayeredEffectsEqns"
     then List.iter (fun (ctx_uvar, _) -> BU.print1 "Layered Effect uvar : %s\n"
