@@ -14463,7 +14463,7 @@ let (resolve_implicits' :
                                                                   ctx_u.FStar_Syntax_Syntax.ctx_uvar_head in
                                                               let uu___22 =
                                                                 FStar_Syntax_Print.term_to_string
-                                                                  uvar_decoration_typ in
+                                                                  uv_t in
                                                               let uu___23 =
                                                                 FStar_Syntax_Print.term_to_string
                                                                   tm2 in
