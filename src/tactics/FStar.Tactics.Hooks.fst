@@ -161,8 +161,8 @@ let by_tactic_interp (pol:pol) (e:Env.env) (t:term) : tres =
         in
 
         // abort if the uvar was not solved
-        let g_imp = TcRel.resolve_implicits_tac e g_imp in
-        report_implicits tm.pos g_imp.implicits;
+        let tagged_imps = TcRel.resolve_implicits_tac e g_imp in
+        report_implicits tm.pos tagged_imps;
 
         // If the rewriting succeeded, we return the generated uvar, which is now
         // a synthesized term
@@ -881,8 +881,8 @@ let postprocess (env:Env.env) (tau:term) (typ:term) (tm:term) : term =
         | None ->
             Err.raise_error (Err.Fatal_OpenGoalsInSynthesis, "postprocessing left open goals") typ.pos) gs;
     (* abort if the uvar was not solved *)
-    let g_imp = TcRel.resolve_implicits_tac env g_imp in
-    report_implicits tm.pos g_imp.implicits;
+    let tagged_imps = TcRel.resolve_implicits_tac env g_imp in
+    report_implicits tm.pos tagged_imps;
 
     uvtm
     end

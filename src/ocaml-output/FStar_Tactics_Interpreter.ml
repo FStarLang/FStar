@@ -1650,28 +1650,74 @@ let e_tactic_1_alt :
         FStar_Syntax_Embeddings.term_as_fv FStar_Syntax_Syntax.t_unit in
       FStar_Syntax_Embeddings.mk_emb em un uu___
 let (report_implicits :
-  FStar_Compiler_Range.range -> FStar_TypeChecker_Env.implicits -> unit) =
+  FStar_Compiler_Range.range ->
+    FStar_TypeChecker_Rel.tagged_implicits -> unit)
+  =
   fun rng ->
     fun is ->
       FStar_Compiler_Effect.op_Bar_Greater is
         (FStar_Compiler_List.iter
-           (fun imp ->
-              let uu___1 =
-                let uu___2 =
-                  let uu___3 =
-                    FStar_Syntax_Print.uvar_to_string
-                      (imp.FStar_TypeChecker_Common.imp_uvar).FStar_Syntax_Syntax.ctx_uvar_head in
-                  let uu___4 =
-                    let uu___5 =
-                      FStar_Syntax_Util.ctx_uvar_typ
-                        imp.FStar_TypeChecker_Common.imp_uvar in
-                    FStar_Syntax_Print.term_to_string uu___5 in
-                  FStar_Compiler_Util.format3
-                    "Tactic left uninstantiated unification variable %s of type %s (reason = \"%s\")"
-                    uu___3 uu___4 imp.FStar_TypeChecker_Common.imp_reason in
-                (FStar_Errors.Error_UninstantiatedUnificationVarInTactic,
-                  uu___2) in
-              FStar_Errors.log_issue rng uu___1));
+           (fun uu___1 ->
+              match uu___1 with
+              | (imp, tag) ->
+                  (match tag with
+                   | FStar_TypeChecker_Rel.Implicit_unresolved ->
+                       let uu___2 =
+                         let uu___3 =
+                           let uu___4 =
+                             FStar_Syntax_Print.uvar_to_string
+                               (imp.FStar_TypeChecker_Common.imp_uvar).FStar_Syntax_Syntax.ctx_uvar_head in
+                           let uu___5 =
+                             let uu___6 =
+                               FStar_Syntax_Util.ctx_uvar_typ
+                                 imp.FStar_TypeChecker_Common.imp_uvar in
+                             FStar_Syntax_Print.term_to_string uu___6 in
+                           FStar_Compiler_Util.format3
+                             "Tactic left uninstantiated unification variable %s of type %s (reason = \"%s\")"
+                             uu___4 uu___5
+                             imp.FStar_TypeChecker_Common.imp_reason in
+                         (FStar_Errors.Error_UninstantiatedUnificationVarInTactic,
+                           uu___3) in
+                       FStar_Errors.log_issue rng uu___2
+                   | FStar_TypeChecker_Rel.Implicit_checking_defers_univ_constraint
+                       ->
+                       let uu___2 =
+                         let uu___3 =
+                           let uu___4 =
+                             FStar_Syntax_Print.uvar_to_string
+                               (imp.FStar_TypeChecker_Common.imp_uvar).FStar_Syntax_Syntax.ctx_uvar_head in
+                           let uu___5 =
+                             let uu___6 =
+                               FStar_Syntax_Util.ctx_uvar_typ
+                                 imp.FStar_TypeChecker_Common.imp_uvar in
+                             FStar_Syntax_Print.term_to_string uu___6 in
+                           FStar_Compiler_Util.format3
+                             "Tactic left uninstantiated unification variable %s of type %s (reason = \"%s\")"
+                             uu___4 uu___5
+                             imp.FStar_TypeChecker_Common.imp_reason in
+                         (FStar_Errors.Error_UninstantiatedUnificationVarInTactic,
+                           uu___3) in
+                       FStar_Errors.log_issue rng uu___2
+                   | FStar_TypeChecker_Rel.Implicit_has_typing_guard 
+                       (tm, ty) ->
+                       let uu___2 =
+                         let uu___3 =
+                           let uu___4 =
+                             FStar_Syntax_Print.uvar_to_string
+                               (imp.FStar_TypeChecker_Common.imp_uvar).FStar_Syntax_Syntax.ctx_uvar_head in
+                           let uu___5 =
+                             let uu___6 =
+                               FStar_Syntax_Util.ctx_uvar_typ
+                                 imp.FStar_TypeChecker_Common.imp_uvar in
+                             FStar_Syntax_Print.term_to_string uu___6 in
+                           let uu___6 = FStar_Syntax_Print.term_to_string tm in
+                           let uu___7 = FStar_Syntax_Print.term_to_string ty in
+                           FStar_Compiler_Util.format4
+                             "Tactic solved goal %s of type %s to %s : %s, but it has a non-trivial typing guard"
+                             uu___4 uu___5 uu___6 uu___7 in
+                         (FStar_Errors.Error_UninstantiatedUnificationVarInTactic,
+                           uu___3) in
+                       FStar_Errors.log_issue rng uu___2)));
       FStar_Errors.stop_if_err ()
 let run_tactic_on_ps' :
   'a 'b .
@@ -1850,7 +1896,7 @@ let run_tactic_on_ps' :
                                           "Checked %s implicits (1): %s\n"
                                           uu___14 uu___15
                                       else ());
-                                     (let g3 =
+                                     (let tagged_implicits =
                                         FStar_TypeChecker_Rel.resolve_implicits_tac
                                           env g2 in
                                       (let uu___14 =
@@ -1872,7 +1918,7 @@ let run_tactic_on_ps' :
                                            uu___15 uu___16
                                        else ());
                                       report_implicits rng_goal
-                                        g3.FStar_TypeChecker_Common.implicits;
+                                        tagged_implicits;
                                       (let uu___16 =
                                          FStar_Compiler_Effect.op_Bang tacdbg in
                                        if uu___16

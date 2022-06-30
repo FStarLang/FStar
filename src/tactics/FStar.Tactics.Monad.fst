@@ -306,6 +306,6 @@ let compress_implicits : tac unit =
     bind get (fun ps ->
     let imps = ps.all_implicits in
     let g = { Env.trivial_guard with implicits = imps } in
-    let g = Rel.resolve_implicits_tac ps.main_context g in
-    let ps' = { ps with all_implicits = g.implicits } in
+    let imps = Rel.resolve_implicits_tac ps.main_context g in
+    let ps' = { ps with all_implicits = List.map fst imps } in
     set ps')

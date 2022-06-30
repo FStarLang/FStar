@@ -505,15 +505,26 @@ let e_tactic_1_alt (ea: embedding 'a) (er:embedding 'r): embedding ('a -> (proof
     in
     mk_emb em un (FStar.Syntax.Embeddings.term_as_fv t_unit)
 
-
-let report_implicits rng (is : Env.implicits) : unit =
-  is |> List.iter (fun imp ->
-    Errors.log_issue rng
+let report_implicits rng (is : TcRel.tagged_implicits) : unit =
+  is |> List.iter 
+    (fun (imp, tag) ->
+      match tag with
+      | TcRel.Implicit_unresolved
+      | TcRel.Implicit_checking_defers_univ_constraint ->
+        Errors.log_issue rng
                 (Err.Error_UninstantiatedUnificationVarInTactic,
                  BU.format3 ("Tactic left uninstantiated unification variable %s of type %s (reason = \"%s\")")
                              (Print.uvar_to_string imp.imp_uvar.ctx_uvar_head)
                              (Print.term_to_string (U.ctx_uvar_typ imp.imp_uvar))
-                             imp.imp_reason));
+                             imp.imp_reason)
+      | TcRel.Implicit_has_typing_guard (tm, ty) ->
+        Errors.log_issue rng
+                (Err.Error_UninstantiatedUnificationVarInTactic,
+                 BU.format4 ("Tactic solved goal %s of type %s to %s : %s, but it has a non-trivial typing guard")
+                             (Print.uvar_to_string imp.imp_uvar.ctx_uvar_head)
+                             (Print.term_to_string (U.ctx_uvar_typ imp.imp_uvar))
+                             (Print.term_to_string tm)
+                             (Print.term_to_string ty)));
   Err.stop_if_err ()
 
 let run_tactic_on_ps'
@@ -582,14 +593,14 @@ let run_tactic_on_ps'
                         (FStar.Common.string_of_list
                                 (fun imp -> Print.ctx_uvar_to_string imp.imp_uvar)
                                 ps.all_implicits);
-        let g = TcRel.resolve_implicits_tac env g in
+        let tagged_implicits = TcRel.resolve_implicits_tac env g in
         if !tacdbg then
             BU.print2 "Checked %s implicits (2): %s\n"
                         (string_of_int (List.length ps.all_implicits))
                         (FStar.Common.string_of_list
                                 (fun imp -> Print.ctx_uvar_to_string imp.imp_uvar)
                                 ps.all_implicits);
-        report_implicits rng_goal g.implicits;
+        report_implicits rng_goal tagged_implicits;
         // /implicits
 
         if !tacdbg then

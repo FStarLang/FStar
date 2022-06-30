@@ -28,6 +28,13 @@ open FStar.Syntax.Syntax
 open FStar.TypeChecker.Common
 open FStar.Compiler.Range
 
+type implicit_checking_status =
+  | Implicit_unresolved
+  | Implicit_checking_defers_univ_constraint
+  | Implicit_has_typing_guard of term * typ
+
+type tagged_implicits = list (implicit * implicit_checking_status)
+
 val is_base_type : env -> typ -> bool
 val prob_to_string: env -> prob -> string
 val flex_prob_closing         : env -> binders -> prob -> bool
@@ -52,7 +59,8 @@ val discharge_guard_no_smt    : env -> guard_t -> guard_t
 val discharge_guard           : env -> guard_t -> guard_t
 val force_trivial_guard       : env -> guard_t -> unit
 val resolve_implicits         : env -> guard_t -> guard_t
-val resolve_implicits_tac     : env -> guard_t -> guard_t
+
+val resolve_implicits_tac     : env -> guard_t -> tagged_implicits
 val base_and_refinement_maybe_delta : bool -> env -> term -> term * option (bv * term)
 val base_and_refinement       : env -> term -> term * option (bv * term)
 

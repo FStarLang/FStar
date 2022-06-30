@@ -228,12 +228,11 @@ let (by_tactic_interp :
                                    (FStar_Errors.Fatal_OpenGoalsInSynthesis,
                                      "rewrite_with_tactic left open goals")
                                    typ.FStar_Syntax_Syntax.pos);
-                            (let g_imp1 =
+                            (let tagged_imps =
                                FStar_TypeChecker_Rel.resolve_implicits_tac e
                                  g_imp in
                              FStar_Tactics_Interpreter.report_implicits
-                               tm.FStar_Syntax_Syntax.pos
-                               g_imp1.FStar_TypeChecker_Common.implicits;
+                               tm.FStar_Syntax_Syntax.pos tagged_imps;
                              Simplified (uvtm, [])))))
              | uu___2 -> Unchanged t)
 let explode :
@@ -1819,10 +1818,9 @@ let (postprocess :
                                         (FStar_Errors.Fatal_OpenGoalsInSynthesis,
                                           "postprocessing left open goals")
                                         typ.FStar_Syntax_Syntax.pos) gs;
-                             (let g_imp1 =
+                             (let tagged_imps =
                                 FStar_TypeChecker_Rel.resolve_implicits_tac
                                   env g_imp in
                               FStar_Tactics_Interpreter.report_implicits
-                                tm.FStar_Syntax_Syntax.pos
-                                g_imp1.FStar_TypeChecker_Common.implicits;
+                                tm.FStar_Syntax_Syntax.pos tagged_imps;
                               uvtm))))))

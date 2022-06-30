@@ -1,4 +1,31 @@
 open Prims
+type implicit_checking_status =
+  | Implicit_unresolved 
+  | Implicit_checking_defers_univ_constraint 
+  | Implicit_has_typing_guard of (FStar_Syntax_Syntax.term *
+  FStar_Syntax_Syntax.typ) 
+let (uu___is_Implicit_unresolved : implicit_checking_status -> Prims.bool) =
+  fun projectee ->
+    match projectee with | Implicit_unresolved -> true | uu___ -> false
+let (uu___is_Implicit_checking_defers_univ_constraint :
+  implicit_checking_status -> Prims.bool) =
+  fun projectee ->
+    match projectee with
+    | Implicit_checking_defers_univ_constraint -> true
+    | uu___ -> false
+let (uu___is_Implicit_has_typing_guard :
+  implicit_checking_status -> Prims.bool) =
+  fun projectee ->
+    match projectee with
+    | Implicit_has_typing_guard _0 -> true
+    | uu___ -> false
+let (__proj__Implicit_has_typing_guard__item___0 :
+  implicit_checking_status ->
+    (FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.typ))
+  =
+  fun projectee -> match projectee with | Implicit_has_typing_guard _0 -> _0
+type tagged_implicits =
+  (FStar_TypeChecker_Common.implicit * implicit_checking_status) Prims.list
 let (is_base_type :
   FStar_TypeChecker_Env.env -> FStar_Syntax_Syntax.typ -> Prims.bool) =
   fun env ->
@@ -13909,23 +13936,10 @@ let rec (unresolved : FStar_Syntax_Syntax.ctx_uvar -> Prims.bool) =
                   unresolved ctx_u'
               | uu___3 -> false))
     | FStar_Pervasives_Native.None -> true
-type implicit_checking_status =
-  | Implicit_unresolved 
-  | Implicit_checking_defers_univ_constraint 
-let (uu___is_Implicit_unresolved : implicit_checking_status -> Prims.bool) =
-  fun projectee ->
-    match projectee with | Implicit_unresolved -> true | uu___ -> false
-let (uu___is_Implicit_checking_defers_univ_constraint :
-  implicit_checking_status -> Prims.bool) =
-  fun projectee ->
-    match projectee with
-    | Implicit_checking_defers_univ_constraint -> true
-    | uu___ -> false
 let (pick_a_univ_deffered_implicit :
-  (FStar_TypeChecker_Common.implicit * implicit_checking_status) Prims.list
-    ->
+  tagged_implicits ->
     (FStar_TypeChecker_Env.implicit FStar_Pervasives_Native.option *
-      FStar_TypeChecker_Env.implicits))
+      tagged_implicits))
   =
   fun out ->
     let uu___ =
@@ -13937,11 +13951,7 @@ let (pick_a_univ_deffered_implicit :
     match uu___ with
     | (imps_with_deferred_univs, rest) ->
         (match imps_with_deferred_univs with
-         | [] ->
-             let uu___1 =
-               FStar_Compiler_Effect.op_Bar_Greater out
-                 (FStar_Compiler_List.map FStar_Pervasives_Native.fst) in
-             (FStar_Pervasives_Native.None, uu___1)
+         | [] -> (FStar_Pervasives_Native.None, out)
          | hd::tl ->
              let uu___1 =
                let uu___2 =
@@ -13949,11 +13959,7 @@ let (pick_a_univ_deffered_implicit :
                    FStar_Pervasives_Native.fst in
                FStar_Compiler_Effect.op_Bar_Greater uu___2
                  (fun uu___3 -> FStar_Pervasives_Native.Some uu___3) in
-             let uu___2 =
-               FStar_Compiler_Effect.op_Bar_Greater
-                 (FStar_Compiler_List.op_At tl rest)
-                 (FStar_Compiler_List.map FStar_Pervasives_Native.fst) in
-             (uu___1, uu___2))
+             (uu___1, (FStar_Compiler_List.op_At tl rest)))
 let (is_implicit_resolved :
   FStar_TypeChecker_Env.env ->
     FStar_TypeChecker_Common.implicit -> Prims.bool)
@@ -13973,7 +13979,9 @@ let (is_implicit_resolved :
               uu___1 = FStar_Syntax_Syntax.Allow_unresolved))
 let (check_implicit_solution_for_tac :
   FStar_TypeChecker_Env.env ->
-    FStar_TypeChecker_Common.implicit -> Prims.bool)
+    FStar_TypeChecker_Common.implicit ->
+      (FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.typ)
+        FStar_Pervasives_Native.option)
   =
   fun env ->
     fun i ->
@@ -13990,7 +13998,7 @@ let (check_implicit_solution_for_tac :
             (uvar_should_check = FStar_Syntax_Syntax.Allow_untyped) ||
               (is_base_type env uvar_ty) in
           if uu___1
-          then true
+          then FStar_Pervasives_Native.None
           else
             (let env1 =
                {
@@ -14106,7 +14114,7 @@ let (check_implicit_solution_for_tac :
                           tm_t uvar_ty) FStar_Pervasives_Native.None
                      "subtype_tactic_solution" in
                  if uu___5
-                 then true
+                 then FStar_Pervasives_Native.None
                  else
                    (let compute t =
                       FStar_TypeChecker_Normalize.normalize
@@ -14123,49 +14131,31 @@ let (check_implicit_solution_for_tac :
                         tm_t1 uv_t in
                     let uu___7 = retry () in
                     if uu___7
-                    then true
-                    else
-                      ((let uu___10 = FStar_Options.debug_any () in
-                        if uu___10
-                        then
-                          let uu___11 =
-                            let uu___12 =
-                              FStar_TypeChecker_Env.get_range env1 in
-                            FStar_Compiler_Range.string_of_range uu___12 in
-                          let uu___12 =
-                            FStar_Syntax_Print.uvar_to_string
-                              ctx_u.FStar_Syntax_Syntax.ctx_uvar_head in
-                          let uu___13 =
-                            FStar_Syntax_Print.term_to_string uvar_ty in
-                          let uu___14 = FStar_Syntax_Print.term_to_string tm in
-                          let uu___15 =
-                            FStar_Syntax_Print.term_to_string tm_t in
-                          FStar_Compiler_Util.print5
-                            "(%s) Uvar solution for %s was not well-typed. Expected %s got %s : %s\n"
-                            uu___11 uu___12 uu___13 uu___14 uu___15
-                        else ());
-                       false)))
+                    then FStar_Pervasives_Native.None
+                    else FStar_Pervasives_Native.Some (tm, tm_t)))
 let (resolve_implicits' :
   FStar_TypeChecker_Env.env ->
     Prims.bool ->
-      FStar_TypeChecker_Common.guard_t -> FStar_TypeChecker_Common.guard_t)
+      FStar_TypeChecker_Env.implicits ->
+        (FStar_TypeChecker_Common.implicit * implicit_checking_status)
+          Prims.list)
   =
   fun env ->
     fun is_tac ->
-      fun g ->
-        let rec until_fixpoint acc implicits =
+      fun implicits ->
+        let rec until_fixpoint acc implicits1 =
           let uu___ = acc in
           match uu___ with
           | (out, changed) ->
-              let out_imps =
-                FStar_Compiler_Effect.op_Bar_Greater out
-                  (FStar_Compiler_List.map FStar_Pervasives_Native.fst) in
-              (match implicits with
+              (match implicits1 with
                | [] ->
                    if Prims.op_Negation changed
                    then
                      let uu___1 =
-                       try_solve_single_valued_implicits env is_tac out_imps in
+                       let uu___2 =
+                         FStar_Compiler_List.map FStar_Pervasives_Native.fst
+                           out in
+                       try_solve_single_valued_implicits env is_tac uu___2 in
                      (match uu___1 with
                       | (imps, changed1) ->
                           if changed1
@@ -14184,9 +14174,18 @@ let (resolve_implicits' :
                                             env imp force_univ_constraints in
                                         FStar_Compiler_Effect.op_Bar_Greater
                                           uu___4 FStar_Compiler_Util.must in
-                                      until_fixpoint ([], false)
-                                        (FStar_Compiler_List.op_At imps1 rest))))
-                   else until_fixpoint ([], false) out_imps
+                                      let uu___4 =
+                                        let uu___5 =
+                                          FStar_Compiler_List.map
+                                            FStar_Pervasives_Native.fst rest in
+                                        FStar_Compiler_List.op_At imps1
+                                          uu___5 in
+                                      until_fixpoint ([], false) uu___4)))
+                   else
+                     (let uu___2 =
+                        FStar_Compiler_List.map FStar_Pervasives_Native.fst
+                          out in
+                      until_fixpoint ([], false) uu___2)
                | hd::tl ->
                    let uu___1 = hd in
                    (match uu___1 with
@@ -14238,8 +14237,8 @@ let (resolve_implicits' :
                                         | FStar_Pervasives_Native.None ->
                                             failwith
                                               "resolve_implicits: unifying with an unresolved uvar failed?"
-                                        | FStar_Pervasives_Native.Some g1 ->
-                                            g1.FStar_TypeChecker_Common.implicits in
+                                        | FStar_Pervasives_Native.Some g ->
+                                            g.FStar_TypeChecker_Common.implicits in
                                       until_fixpoint (out, true)
                                         (FStar_Compiler_List.op_At extra tl)
                                     else
@@ -14397,20 +14396,24 @@ let (resolve_implicits' :
                                         then
                                           (if
                                              env1.FStar_TypeChecker_Env.phase1
-                                           then true
+                                           then FStar_Pervasives_Native.None
                                            else
                                              check_implicit_solution_for_tac
                                                env1 hd1)
-                                        else false in
+                                        else FStar_Pervasives_Native.None in
                                       if is_tac
                                       then
                                         let uu___8 = tm_ok_for_tac () in
-                                        (if uu___8
-                                         then until_fixpoint (out, true) tl
-                                         else
-                                           until_fixpoint
-                                             (((hd1, Implicit_unresolved) ::
-                                               out), changed) tl)
+                                        match uu___8 with
+                                        | FStar_Pervasives_Native.None ->
+                                            until_fixpoint (out, true) tl
+                                        | FStar_Pervasives_Native.Some
+                                            (tm2, ty) ->
+                                            until_fixpoint
+                                              (((hd1,
+                                                  (Implicit_has_typing_guard
+                                                     (tm2, ty))) :: out),
+                                                changed) tl
                                       else
                                         (let force_univ_constraints = false in
                                          let imps_opt =
@@ -14430,27 +14433,14 @@ let (resolve_implicits' :
                                                    FStar_Compiler_Effect.op_Bar_Greater
                                                      imps
                                                      (FStar_Compiler_List.map
-                                                        (fun imp ->
-                                                           (imp,
+                                                        (fun i ->
+                                                           (i,
                                                              Implicit_unresolved))) in
                                                  FStar_Compiler_List.op_At
                                                    uu___11 out in
                                                (uu___10, true) in
                                              until_fixpoint uu___9 tl))))))) in
-        let imps =
-          FStar_Compiler_Effect.op_Bar_Greater
-            g.FStar_TypeChecker_Common.implicits (until_fixpoint ([], false)) in
-        {
-          FStar_TypeChecker_Common.guard_f =
-            (g.FStar_TypeChecker_Common.guard_f);
-          FStar_TypeChecker_Common.deferred_to_tac =
-            (g.FStar_TypeChecker_Common.deferred_to_tac);
-          FStar_TypeChecker_Common.deferred =
-            (g.FStar_TypeChecker_Common.deferred);
-          FStar_TypeChecker_Common.univ_ineqs =
-            (g.FStar_TypeChecker_Common.univ_ineqs);
-          FStar_TypeChecker_Common.implicits = imps
-        }
+        until_fixpoint ([], false) implicits
 let (resolve_implicits :
   FStar_TypeChecker_Env.env ->
     FStar_TypeChecker_Common.guard_t -> FStar_TypeChecker_Common.guard_t)
@@ -14467,11 +14457,28 @@ let (resolve_implicits :
            "//////////////////////////ResolveImplicitsHook: resolve_implicits////////////\nguard = %s\n"
            uu___2
        else ());
-      resolve_implicits' env false g
+      (let tagged_implicits1 =
+         resolve_implicits' env false g.FStar_TypeChecker_Common.implicits in
+       let uu___1 =
+         FStar_Compiler_List.map FStar_Pervasives_Native.fst
+           tagged_implicits1 in
+       {
+         FStar_TypeChecker_Common.guard_f =
+           (g.FStar_TypeChecker_Common.guard_f);
+         FStar_TypeChecker_Common.deferred_to_tac =
+           (g.FStar_TypeChecker_Common.deferred_to_tac);
+         FStar_TypeChecker_Common.deferred =
+           (g.FStar_TypeChecker_Common.deferred);
+         FStar_TypeChecker_Common.univ_ineqs =
+           (g.FStar_TypeChecker_Common.univ_ineqs);
+         FStar_TypeChecker_Common.implicits = uu___1
+       })
 let (resolve_implicits_tac :
   FStar_TypeChecker_Env.env ->
-    FStar_TypeChecker_Common.guard_t -> FStar_TypeChecker_Common.guard_t)
-  = fun env -> fun g -> resolve_implicits' env true g
+    FStar_TypeChecker_Common.guard_t -> tagged_implicits)
+  =
+  fun env ->
+    fun g -> resolve_implicits' env true g.FStar_TypeChecker_Common.implicits
 let (force_trivial_guard :
   FStar_TypeChecker_Env.env -> FStar_TypeChecker_Common.guard_t -> unit) =
   fun env ->

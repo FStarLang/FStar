@@ -681,15 +681,16 @@ let (compress_implicits : unit tac) =
              (FStar_TypeChecker_Env.trivial_guard.FStar_TypeChecker_Common.univ_ineqs);
            FStar_TypeChecker_Common.implicits = imps
          } in
-       let g1 =
+       let imps1 =
          FStar_TypeChecker_Rel.resolve_implicits_tac
            ps.FStar_Tactics_Types.main_context g in
        let ps' =
+         let uu___ =
+           FStar_Compiler_List.map FStar_Pervasives_Native.fst imps1 in
          {
            FStar_Tactics_Types.main_context =
              (ps.FStar_Tactics_Types.main_context);
-           FStar_Tactics_Types.all_implicits =
-             (g1.FStar_TypeChecker_Common.implicits);
+           FStar_Tactics_Types.all_implicits = uu___;
            FStar_Tactics_Types.goals = (ps.FStar_Tactics_Types.goals);
            FStar_Tactics_Types.smt_goals = (ps.FStar_Tactics_Types.smt_goals);
            FStar_Tactics_Types.depth = (ps.FStar_Tactics_Types.depth);

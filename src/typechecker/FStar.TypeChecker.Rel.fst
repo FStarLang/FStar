@@ -4908,24 +4908,21 @@ let rec unresolved ctx_u : bool =
   | None -> true
 
 
-type implicit_checking_status =
-  | Implicit_unresolved
-  | Implicit_checking_defers_univ_constraint
-
-
 (*
  * In the fixpoint loop of resolve_implicits',
  *   when we reach a fixpoint, with some implicits still remaining,
  * try to pick an implicit whose typechecking generates a univ constraint,
  *   force it, and then repeat the fixpoint loop
  *)
-let pick_a_univ_deffered_implicit out : option Env.implicit * Env.implicits =
+let pick_a_univ_deffered_implicit (out : tagged_implicits)
+  : option Env.implicit * tagged_implicits
+  =
   let imps_with_deferred_univs, rest = List.partition
     (fun (_, status) -> status = Implicit_checking_defers_univ_constraint)
     out in
   match imps_with_deferred_univs with
-  | [] -> None, out |> List.map fst
-  | hd::tl -> hd |> fst |> Some, (tl@rest) |> List.map fst
+  | [] -> None, out
+  | hd::tl -> hd |> fst |> Some, (tl@rest)
 
 let is_implicit_resolved (env:env) (i:implicit) : bool =
     i.imp_tm
@@ -4933,13 +4930,13 @@ let is_implicit_resolved (env:env) (i:implicit) : bool =
     |> BU.set_elements
     |> List.for_all (fun uv -> U.ctx_uvar_should_check uv = Allow_unresolved)
 
-let check_implicit_solution_for_tac (env:env) (i:implicit) : bool =
+let check_implicit_solution_for_tac (env:env) (i:implicit) : option (term * typ) =
   let { imp_reason = reason; imp_tm = tm; imp_uvar = ctx_u; imp_range = r } = i in
   let uvar_ty = U.ctx_uvar_typ ctx_u in
   let uvar_should_check = U.ctx_uvar_should_check ctx_u in
   if uvar_should_check = Allow_untyped
    || is_base_type env uvar_ty
-  then true
+  then None
   else (
     let env = { env with gamma = ctx_u.ctx_uvar_gamma } in
     let tm_t, _ = 
@@ -4950,7 +4947,7 @@ let check_implicit_solution_for_tac (env:env) (i:implicit) : bool =
     if Profiling.profile (fun () -> env.subtype_nosmt_force env tm_t uvar_ty)
                          None
                          "subtype_tactic_solution"                   
-    then true
+    then None
     else 
       begin
       // failing at this point is fatal;
@@ -4971,29 +4968,19 @@ let check_implicit_solution_for_tac (env:env) (i:implicit) : bool =
           env.subtype_nosmt_force env tm_t uv_t
         in
         if retry()
-        then true
-        else (
-          if Options.debug_any () 
-          then (
-            BU.print5 "(%s) Uvar solution for %s was not well-typed. Expected %s got %s : %s\n"
-                                  (Range.string_of_range (Env.get_range env))
-                                  (Print.uvar_to_string ctx_u.ctx_uvar_head)
-                                  (Print.term_to_string uvar_ty)
-                                  (Print.term_to_string tm)
-                                  (Print.term_to_string tm_t)
-          );
-          false
-        )
+        then None
+        else Some (tm, tm_t)
       end
     )
 
-let resolve_implicits' env is_tac g =
-
-  let rec until_fixpoint (acc:list (implicit * implicit_checking_status) * bool)
-                         (implicits:Env.implicits) : Env.implicits =
+let resolve_implicits' env is_tac (implicits:Env.implicits) 
+  : list (implicit * implicit_checking_status) =
+  
+  let rec until_fixpoint (acc:tagged_implicits * bool)
+                         (implicits:Env.implicits) 
+    : tagged_implicits =
 
     let out, changed = acc in
-    let out_imps = out |> List.map fst in
 
     match implicits with
     | [] ->
@@ -5001,7 +4988,7 @@ let resolve_implicits' env is_tac g =
       then //Nothing changed in this iteration of the loop
            //We will try to make progress by either solving a single valued implicit,
            //  or solving an implicit that generates univ constraint, with force flag on
-           let imps, changed = try_solve_single_valued_implicits env is_tac out_imps in
+           let imps, changed = try_solve_single_valued_implicits env is_tac (List.map fst out) in
            if changed then until_fixpoint ([], false) imps
            else let imp_opt, rest = pick_a_univ_deffered_implicit out in
                 (match imp_opt with
@@ -5013,8 +5000,8 @@ let resolve_implicits' env is_tac g =
                        env
                        imp
                        force_univ_constraints |> must in
-                   until_fixpoint ([], false) (imps@rest))
-      else until_fixpoint ([], false) out_imps
+                   until_fixpoint ([], false) (imps@List.map fst rest))
+      else until_fixpoint ([], false) (List.map fst out)
 
     | hd::tl ->
       let { imp_reason = reason; imp_tm = tm; imp_uvar = ctx_u; imp_range = r } = hd in
@@ -5063,15 +5050,15 @@ let resolve_implicits' env is_tac g =
           if is_implicit_resolved env hd
           then begin
             if env.phase1 //phase1 is untrusted; the solution will be recomputed or checked again in phase2
-            then true
+            then None
             else check_implicit_solution_for_tac env hd
           end
-          else false
+          else None
         in
         if is_tac
-        then if tm_ok_for_tac ()
-             then until_fixpoint (out, true) tl        //Move on to the next imp
-             else until_fixpoint ((hd, Implicit_unresolved)::out, changed) tl  //Move hd to out
+        then match tm_ok_for_tac () with
+             | None ->until_fixpoint (out, true) tl        //Move on to the next imp
+             | Some (tm, ty) -> until_fixpoint ((hd, Implicit_has_typing_guard (tm, ty))::out, changed) tl  //Move hd to out
         else
         begin
           //typecheck the solution
@@ -5087,22 +5074,22 @@ let resolve_implicits' env is_tac g =
             until_fixpoint ((hd, Implicit_checking_defers_univ_constraint)::out, changed) tl  //Move hd to out
           | Some imps ->
             //add imps to out
-            until_fixpoint ((imps |> List.map (fun imp -> (imp, Implicit_unresolved)))@out, true) tl
+            until_fixpoint ((imps |> List.map (fun i -> i, Implicit_unresolved))@out, true) tl
         end
       end
   in
+  until_fixpoint ([], false) implicits
 
-  let imps = g.implicits |> until_fixpoint ([], false) in
-  {g with implicits=imps}
 
 let resolve_implicits env g =
     if Env.debug env <| Options.Other "ResolveImplicitsHook"
     then BU.print1 "//////////////////////////ResolveImplicitsHook: resolve_implicits////////////\n\
                     guard = %s\n"
                     (guard_to_string env g);
-    resolve_implicits' env false g
+    let tagged_implicits = resolve_implicits' env false g.implicits in
+    {g with implicits = List.map fst tagged_implicits}
 
-let resolve_implicits_tac env g = resolve_implicits' env true  g
+let resolve_implicits_tac env g = resolve_implicits' env true g.implicits
 
 let force_trivial_guard env g =
     if Env.debug env <| Options.Other "ResolveImplicitsHook"
