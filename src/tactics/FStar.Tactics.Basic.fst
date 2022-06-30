@@ -757,8 +757,8 @@ let check_apply_implicits_solutions env
     let hd, _ = U.head_and_args term in
     match (SS.compress hd).n with
     | Tm_uvar (ctx_uvar, _) ->
-      bind (bnorm_goal ({ gl with goal_ctx_uvar = ctx_uvar })) (fun gl ->
-      ret [gl])
+      let gl = bnorm_goal ({ gl with goal_ctx_uvar = ctx_uvar }) in
+      ret [gl]
     | _ ->
       mlog (fun () -> BU.print3 "%s: arg %s unified to (%s)\n"
                      debug_prefix
@@ -775,7 +775,7 @@ let check_apply_implicits_solutions env
               env g_typ (rangeof gl)) (fun () ->
       //we've checked this implicit and added its guard as an explicit goal
       //no need to recheck it
-      mark_implicit_as_allow_untyped ctx_uvar;
+      mark_uvar_as_allow_untyped ctx_uvar;
       ret [])) in
 
   imps |> mapM check_one_implicit
@@ -844,9 +844,10 @@ let t_apply (uopt:bool) (only_match:bool) (tc_resolved_uvars:bool) (tm:term) : t
                                   //  appear in some other goals
                                   //
                                   not (uopt && free_in_some_goal g.goal_ctx_uvar))
-                   |> mapM (fun g -> bnorm_goal g)) (fun subgoals ->
-    bind (add_goals (List.rev subgoals)) (fun _ ->
-    proc_guard "apply guard" e guard (rangeof goal))))))))))))
+                   |> List.map bnorm_goal
+                   |> List.rev
+                   |> add_goals) (fun _ ->
+    proc_guard "apply guard" e guard (rangeof goal)))))))))))
 
 // returns pre and post
 let lemma_or_sq (c : comp) : option (term * term) =
