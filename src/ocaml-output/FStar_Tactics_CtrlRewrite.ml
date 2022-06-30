@@ -375,9 +375,9 @@ and (recurse_option_residual_comp :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.residual_comp FStar_Pervasives_Native.option ->
       (FStar_TypeChecker_Env.env ->
-         FStar_Syntax_Syntax.term ->
-           (FStar_Syntax_Syntax.term * FStar_Tactics_Types.ctrl_flag)
-             FStar_Tactics_Monad.tac)
+         FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
+           (FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax *
+             FStar_Tactics_Types.ctrl_flag) FStar_Tactics_Monad.tac)
         ->
         (FStar_Syntax_Syntax.residual_comp FStar_Pervasives_Native.option *
           FStar_Tactics_Types.ctrl_flag) FStar_Tactics_Monad.tac)
@@ -385,8 +385,32 @@ and (recurse_option_residual_comp :
   fun env ->
     fun rc_opt ->
       fun recurse ->
-        FStar_Tactics_Monad.ret
-          (FStar_Pervasives_Native.None, FStar_Tactics_Types.Continue)
+        match rc_opt with
+        | FStar_Pervasives_Native.None ->
+            FStar_Tactics_Monad.ret
+              (FStar_Pervasives_Native.None, FStar_Tactics_Types.Continue)
+        | FStar_Pervasives_Native.Some rc ->
+            (match rc.FStar_Syntax_Syntax.residual_typ with
+             | FStar_Pervasives_Native.None ->
+                 FStar_Tactics_Monad.ret
+                   ((FStar_Pervasives_Native.Some rc),
+                     FStar_Tactics_Types.Continue)
+             | FStar_Pervasives_Native.Some t ->
+                 let uu___ = recurse env t in
+                 FStar_Tactics_Monad.bind uu___
+                   (fun uu___1 ->
+                      match uu___1 with
+                      | (t1, flag) ->
+                          FStar_Tactics_Monad.ret
+                            ((FStar_Pervasives_Native.Some
+                                {
+                                  FStar_Syntax_Syntax.residual_effect =
+                                    (rc.FStar_Syntax_Syntax.residual_effect);
+                                  FStar_Syntax_Syntax.residual_typ =
+                                    (FStar_Pervasives_Native.Some t1);
+                                  FStar_Syntax_Syntax.residual_flags =
+                                    (rc.FStar_Syntax_Syntax.residual_flags)
+                                }), flag)))
 and (on_subterms :
   FStar_Tactics_Types.goal ->
     FStar_Tactics_Types.direction ->
