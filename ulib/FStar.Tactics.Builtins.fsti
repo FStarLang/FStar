@@ -145,9 +145,13 @@ with all this. *)
 val t_exact : maybe_refine:bool -> set_expected_typ:bool -> term -> Tac unit
 
 (** Inner primitive for [apply], takes a boolean specifying whether
-to not ask for implicits that appear free in posterior goals, and a
+to not ask for implicits that appear free in posterior goals, a
 boolean specifying whether it's forbidden to instantiate uvars in the
-goal.
+goal, and a boolean specifying whether uvars resolved during unification
+of the goal to the term should be typechecked as part of t_apply
+
+If the third boolean is false, those uvars will be typechecked at the
+end by the tactics engine.
 
 Example: when [uopt] is true, applying transitivity to [|- a = c]
 will give two goals, [|- a = ?u] and [|- ?u = c] without asking to

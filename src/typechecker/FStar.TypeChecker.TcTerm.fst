@@ -4364,7 +4364,7 @@ let rec universe_of_aux env e =
    | Tm_meta(t, _) -> universe_of_aux env t
    | Tm_name n ->
      //
-     // AR: This is suboptimal,
+     // AR: This is unsatisfactory,
      //     We should always be able to find n in the env
      //
      (match Env.try_lookup_bv env n with
