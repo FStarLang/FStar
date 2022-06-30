@@ -1040,6 +1040,26 @@ let (subst_decreasing_order :
   =
   fun s ->
     fun dec -> subst_dec_order' ([s], FStar_Syntax_Syntax.NoUseRange) dec
+let (subst_residual_comp :
+  FStar_Syntax_Syntax.subst_elt Prims.list ->
+    FStar_Syntax_Syntax.residual_comp -> FStar_Syntax_Syntax.residual_comp)
+  =
+  fun s ->
+    fun rc ->
+      match rc.FStar_Syntax_Syntax.residual_typ with
+      | FStar_Pervasives_Native.None -> rc
+      | FStar_Pervasives_Native.Some t ->
+          let uu___ =
+            let uu___1 = subst s t in
+            FStar_Compiler_Effect.op_Bar_Greater uu___1
+              (fun uu___2 -> FStar_Pervasives_Native.Some uu___2) in
+          {
+            FStar_Syntax_Syntax.residual_effect =
+              (rc.FStar_Syntax_Syntax.residual_effect);
+            FStar_Syntax_Syntax.residual_typ = uu___;
+            FStar_Syntax_Syntax.residual_flags =
+              (rc.FStar_Syntax_Syntax.residual_flags)
+          }
 let (closing_subst :
   FStar_Syntax_Syntax.binders -> FStar_Syntax_Syntax.subst_elt Prims.list) =
   fun bs ->

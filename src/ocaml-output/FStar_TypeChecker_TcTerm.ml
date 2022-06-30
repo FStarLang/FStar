@@ -11853,7 +11853,11 @@ let rec (universe_of_aux :
       | FStar_Syntax_Syntax.Tm_uvar (u, s) ->
           FStar_Syntax_Subst.subst' s u.FStar_Syntax_Syntax.ctx_uvar_typ
       | FStar_Syntax_Syntax.Tm_meta (t, uu___1) -> universe_of_aux env t
-      | FStar_Syntax_Syntax.Tm_name n -> n.FStar_Syntax_Syntax.sort
+      | FStar_Syntax_Syntax.Tm_name n ->
+          let uu___1 = FStar_TypeChecker_Env.try_lookup_bv env n in
+          (match uu___1 with
+           | FStar_Pervasives_Native.Some (t, uu___2) -> t
+           | FStar_Pervasives_Native.None -> n.FStar_Syntax_Syntax.sort)
       | FStar_Syntax_Syntax.Tm_fvar fv ->
           let uu___1 =
             FStar_TypeChecker_Env.lookup_lid env
