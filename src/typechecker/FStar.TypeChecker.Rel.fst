@@ -4927,6 +4927,44 @@ let pick_a_univ_deffered_implicit out : option Env.implicit * Env.implicits =
   | [] -> None, out |> List.map fst
   | hd::tl -> hd |> fst |> Some, (tl@rest) |> List.map fst
 
+let is_implicit_resolved (env:env) (i:implicit) : bool =
+    i.imp_tm
+    |> Free.uvars
+    |> BU.set_elements
+    |> List.for_all (fun uv -> U.ctx_uvar_should_check uv = Allow_unresolved)
+
+let check_implicit_solution_for_tac (env:env) (i:implicit) : bool =
+  let { imp_reason = reason; imp_tm = tm; imp_uvar = ctx_u; imp_range = r } = i in
+  let uvar_ty = U.ctx_uvar_typ ctx_u in
+  let uvar_should_check = U.ctx_uvar_should_check ctx_u in
+  if uvar_should_check = Allow_untyped
+   || is_base_type env uvar_ty
+  then true
+  else (
+    let env = { env with gamma = ctx_u.ctx_uvar_gamma } in
+    let tm_t, _ = 
+        Profiling.profile (fun () -> env.typeof_well_typed_tot_or_gtot_term env tm false)
+                          None
+                          "retype_tactic_solution"
+    in
+    if Profiling.profile (fun () -> env.subtype_nosmt_force env tm_t uvar_ty)
+                         None
+                         "subtype_tactic_solution"                   
+    then true
+    else (
+     if Options.debug_any () 
+     then (
+          BU.print5 "(%s) Uvar solution for %s was not well-typed. Expected %s got %s : %s\n"
+                                  (Range.string_of_range (Env.get_range env))
+                                  (Print.uvar_to_string ctx_u.ctx_uvar_head)
+                                  (Print.term_to_string uvar_ty)
+                                  (Print.term_to_string tm)
+                                  (Print.term_to_string tm_t)
+     );
+     false
+    )
+  )
+
 let resolve_implicits' env is_tac g =
 
   let rec until_fixpoint (acc:list (implicit * implicit_checking_status) * bool)
@@ -4990,95 +5028,28 @@ let resolve_implicits' env is_tac g =
          *       we may end up normalizing an implicit solution multiple times in
          *       multiple until_fixpoint calls
          *)
-               if Env.debug env <| Options.Other "Rel"
-      then BU.print2 "resolve_implicits' loop before norm, imp_tm = %s and ctx_u = %s\n"
-             (Print.term_to_string tm)
-             (Print.ctx_uvar_to_string ctx_u);
-
         let tm = norm_with_steps "FStar.TypeChecker.Rel.norm_with_steps.8" [Env.Beta] env tm in
-               if Env.debug env <| Options.Other "Rel"
-      then BU.print2 "resolve_implicits' loop after norm, imp_tm = %s and ctx_u = %s\n"
-             (Print.term_to_string tm)
-             (Print.ctx_uvar_to_string ctx_u);
         let hd = {hd with imp_tm=tm} in
         (*
-        //  * AR: We do not retypecheck the solutions solved by a tactic
-        //  *     However we still check that any uvars remaining in those solutions
-        //  *       are Allow_unresolved
-        //  *)
-        let tm_ok_for_tac tm =
-          let no_unresolved =
-            tm
-            |> Free.uvars
-            |> BU.set_elements
-            |> List.for_all (fun uv -> U.ctx_uvar_should_check uv = Allow_unresolved)
-          in
-          if no_unresolved
+         * NS: As a fix for Bug #2635, for tactics we check that the uvar is indeed solved
+         *     and that if it is not marked Allow_untyped, then it's solution has a type
+         *     that's a subtype of the uvar's type.
+         *     This check is done without SMT enabled, since any implicit goals like that
+         *     should be handled by the tactic itself
+         *)
+        let tm_ok_for_tac () =
+          if is_implicit_resolved env hd
           then begin
-            if env.phase1
+            if env.phase1 //phase1 is untrusted; the solution will be recomputed or checked again in phase2
             then true
-            else (
-              let env = { env with gamma = ctx_u.ctx_uvar_gamma } in
-              if is_base_type env uvar_decoration_typ
-              then true
-              else (
-                let tm_t, _ = 
-                  Profiling.profile (fun () -> env.typeof_well_typed_tot_or_gtot_term env tm false)
-                    None
-                    "retype_tactic_solution"
-                in
-                if Profiling.profile (fun () -> env.subtype_nosmt_force env tm_t uvar_decoration_typ)
-                    None
-                    "subtype_tactic_solution"                   
-                then true
-                else (
-                  if Options.debug_any () 
-                  then (
-                     BU.print5 "(%s) Uvar solution for %s was not well-typed. Expected %s got %s : %s\n"
-                                  (Range.string_of_range (Env.get_range env))
-                                  (Print.uvar_to_string ctx_u.ctx_uvar_head)
-                                  (Print.term_to_string uvar_decoration_typ)
-                                  (Print.term_to_string tm)
-                                  (Print.term_to_string tm_t)
-                  );
-                  false
-                )
-                //   // failing at this point is fatal;
-                //      // and the check may have failed because we didn't unroll let recs;
-                //      // so try once more after normalizing both types 
-                //  begin
-                //    let compute t = 
-                //      N.normalize [Env.UnfoldTac; //we're in is_tac; don't unfold "tac_opaque"
-                //                   Env.UnfoldUntil delta_constant;
-                //                   Env.Zeta;
-                //                   Env.Iota; 
-                //                   Env.Primops]
-                //                  env t 
-                //    in
-                //    let tm_t = compute tm_t in
-                //    let uv_t = compute uvar_decoration_typ in
-                //    if env.subtype_nosmt_force env tm_t uv_t
-                //    then true
-                //    else
-                //    (
-                //      BU.print5 "(%s) Uvar solution for %s was not well-typed. Expected %s got %s : %s\n"
-                //                   (Range.string_of_range (Env.get_range env))
-                //                   (Print.uvar_to_string ctx_u.ctx_uvar_head)
-                //                   (Print.term_to_string uv_t)
-                //                   (Print.term_to_string tm)
-                //                   (Print.term_to_string tm_t);
-                //      false
-                //    )
-                //  end
-                // )
-              )
-            )
+            else check_implicit_solution_for_tac env hd
           end
           else false
         in
-        if is_tac then if tm_ok_for_tac tm
-                       then until_fixpoint (out, true) tl        //Move on to the next imp
-                       else until_fixpoint ((hd, Implicit_unresolved)::out, changed) tl  //Move hd to out
+        if is_tac
+        then if tm_ok_for_tac ()
+             then until_fixpoint (out, true) tl        //Move on to the next imp
+             else until_fixpoint ((hd, Implicit_unresolved)::out, changed) tl  //Move hd to out
         else
         begin
           //typecheck the solution

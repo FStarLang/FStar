@@ -1897,3 +1897,4 @@ let split_smt_query (e:env) (q:term)
     | None -> None
     | Some p -> Some (p e q)
     
+
