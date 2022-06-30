@@ -5031,35 +5031,48 @@ let resolve_implicits' env is_tac g =
                     None
                     "subtype_tactic_solution"                   
                 then true
-                else // failing at this point is fatal;
-                     // and the check may have failed because we didn't unroll let recs;
-                     // so try once more after normalizing both types 
-                 begin
-                   let compute t = 
-                     N.normalize [Env.UnfoldTac; //we're in is_tac; don't unfold "tac_opaque"
-                                  Env.UnfoldUntil delta_constant;
-                                  Env.Zeta;
-                                  Env.Iota; 
-                                  Env.Primops]
-                                 env t 
-                   in
-                   let tm_t = compute tm_t in
-                   let uv_t = compute uvar_decoration_typ in
-                   if env.subtype_nosmt_force env tm_t uv_t
-                   then true
-                   else
-                   (
+                else (
+                  if Options.debug_any () 
+                  then (
                      BU.print5 "(%s) Uvar solution for %s was not well-typed. Expected %s got %s : %s\n"
                                   (Range.string_of_range (Env.get_range env))
                                   (Print.uvar_to_string ctx_u.ctx_uvar_head)
-                                  (Print.term_to_string uv_t)
+                                  (Print.term_to_string uvar_decoration_typ)
                                   (Print.term_to_string tm)
-                                  (Print.term_to_string tm_t);
-                     false
-                   )
-                 end
+                                  (Print.term_to_string tm_t)
+                  );
+                  false
                 )
+                //   // failing at this point is fatal;
+                //      // and the check may have failed because we didn't unroll let recs;
+                //      // so try once more after normalizing both types 
+                //  begin
+                //    let compute t = 
+                //      N.normalize [Env.UnfoldTac; //we're in is_tac; don't unfold "tac_opaque"
+                //                   Env.UnfoldUntil delta_constant;
+                //                   Env.Zeta;
+                //                   Env.Iota; 
+                //                   Env.Primops]
+                //                  env t 
+                //    in
+                //    let tm_t = compute tm_t in
+                //    let uv_t = compute uvar_decoration_typ in
+                //    if env.subtype_nosmt_force env tm_t uv_t
+                //    then true
+                //    else
+                //    (
+                //      BU.print5 "(%s) Uvar solution for %s was not well-typed. Expected %s got %s : %s\n"
+                //                   (Range.string_of_range (Env.get_range env))
+                //                   (Print.uvar_to_string ctx_u.ctx_uvar_head)
+                //                   (Print.term_to_string uv_t)
+                //                   (Print.term_to_string tm)
+                //                   (Print.term_to_string tm_t);
+                //      false
+                //    )
+                //  end
+                // )
               )
+            )
           end
           else false
         in

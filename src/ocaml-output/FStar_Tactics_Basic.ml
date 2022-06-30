@@ -6178,8 +6178,7 @@ let (proofstate_of_all_implicits :
             FStar_Tactics_Types.smt_goals = [];
             FStar_Tactics_Types.depth = Prims.int_zero;
             FStar_Tactics_Types.__dump =
-              (fun ps1 ->
-                 fun msg -> FStar_Tactics_Printing.do_dump_proofstate ps1 msg);
+              FStar_Tactics_Printing.do_dump_proofstate;
             FStar_Tactics_Types.psc = FStar_TypeChecker_Cfg.null_psc;
             FStar_Tactics_Types.entry_range = rng;
             FStar_Tactics_Types.guard_policy = FStar_Tactics_Types.SMT;
