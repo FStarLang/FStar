@@ -114,8 +114,7 @@ let (do_dump_ps : Prims.string -> FStar_Tactics_Types.proofstate -> unit) =
     fun ps ->
       let psc = ps.FStar_Tactics_Types.psc in
       let subst = FStar_TypeChecker_Cfg.psc_subst psc in
-      let uu___ = FStar_Tactics_Types.subst_proof_display_state subst ps in
-      FStar_Tactics_Printing.do_dump_proofstate uu___ msg
+      FStar_Tactics_Printing.do_dump_proofstate ps msg
 let (dump : Prims.string -> unit FStar_Tactics_Monad.tac) =
   fun msg ->
     FStar_Tactics_Monad.mk_tac
@@ -1741,9 +1740,6 @@ let (intro_rec :
                                             (goal.FStar_Tactics_Types.goal_main_env);
                                           FStar_Tactics_Types.goal_ctx_uvar =
                                             ctx_uvar_u;
-                                          FStar_Tactics_Types.goal_display_type
-                                            =
-                                            (goal.FStar_Tactics_Types.goal_display_type);
                                           FStar_Tactics_Types.opts =
                                             (goal.FStar_Tactics_Types.opts);
                                           FStar_Tactics_Types.is_guard =
@@ -2281,8 +2277,6 @@ let (check_apply_implicits_solutions :
                                       (gl.FStar_Tactics_Types.goal_main_env);
                                     FStar_Tactics_Types.goal_ctx_uvar =
                                       ctx_uvar1;
-                                    FStar_Tactics_Types.goal_display_type =
-                                      (gl.FStar_Tactics_Types.goal_display_type);
                                     FStar_Tactics_Types.opts =
                                       (gl.FStar_Tactics_Types.opts);
                                     FStar_Tactics_Types.is_guard =
@@ -2501,9 +2495,6 @@ let (t_apply :
                                                                     (goal.FStar_Tactics_Types.goal_main_env);
                                                                     FStar_Tactics_Types.goal_ctx_uvar
                                                                     = uv;
-                                                                    FStar_Tactics_Types.goal_display_type
-                                                                    =
-                                                                    (goal.FStar_Tactics_Types.goal_display_type);
                                                                     FStar_Tactics_Types.opts
                                                                     =
                                                                     (goal.FStar_Tactics_Types.opts);
@@ -3675,8 +3666,6 @@ let (dup : unit -> unit FStar_Tactics_Monad.tac) =
                       FStar_Tactics_Types.goal_main_env =
                         (g.FStar_Tactics_Types.goal_main_env);
                       FStar_Tactics_Types.goal_ctx_uvar = u_uvar;
-                      FStar_Tactics_Types.goal_display_type =
-                        (g.FStar_Tactics_Types.goal_display_type);
                       FStar_Tactics_Types.opts = (g.FStar_Tactics_Types.opts);
                       FStar_Tactics_Types.is_guard =
                         (g.FStar_Tactics_Types.is_guard);
@@ -3960,8 +3949,6 @@ let (set_options : Prims.string -> unit FStar_Tactics_Monad.tac) =
                        (g.FStar_Tactics_Types.goal_main_env);
                      FStar_Tactics_Types.goal_ctx_uvar =
                        (g.FStar_Tactics_Types.goal_ctx_uvar);
-                     FStar_Tactics_Types.goal_display_type =
-                       (g.FStar_Tactics_Types.goal_display_type);
                      FStar_Tactics_Types.opts = opts';
                      FStar_Tactics_Types.is_guard =
                        (g.FStar_Tactics_Types.is_guard);

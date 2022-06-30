@@ -640,8 +640,6 @@ let (goal_of_guard :
                           (goal.FStar_Tactics_Types.goal_main_env);
                         FStar_Tactics_Types.goal_ctx_uvar =
                           (goal.FStar_Tactics_Types.goal_ctx_uvar);
-                        FStar_Tactics_Types.goal_display_type =
-                          (goal.FStar_Tactics_Types.goal_display_type);
                         FStar_Tactics_Types.opts =
                           (goal.FStar_Tactics_Types.opts);
                         FStar_Tactics_Types.is_guard = true;

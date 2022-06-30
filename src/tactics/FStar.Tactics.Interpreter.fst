@@ -593,11 +593,11 @@ let run_tactic_on_ps'
         // /implicits
 
         if !tacdbg then
-            do_dump_proofstate (subst_proof_display_state (Cfg.psc_subst ps.psc) ps) "at the finish line";
+            do_dump_proofstate ps "at the finish line";
         (ps.goals@ps.smt_goals, ret)
 
     | Failed (e, ps) ->
-        do_dump_proofstate (subst_proof_display_state (Cfg.psc_subst ps.psc) ps) "at the time of failure";
+        do_dump_proofstate ps "at the time of failure";
         let texn_to_string e =
             match e with
             | TacticFailure s ->

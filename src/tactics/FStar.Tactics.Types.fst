@@ -49,7 +49,6 @@ let goal_of_ctx_uvar (g:goal) (ctx_u : ctx_uvar) : goal =
 let mk_goal env u o b l = {
     goal_main_env=env;
     goal_ctx_uvar=u;
-    goal_display_type=U.ctx_uvar_typ u;
     opts=o;
     is_guard=b;
     label=l;
@@ -66,33 +65,6 @@ let goal_of_goal_ty env typ : goal * guard_t =
 let goal_of_implicit env (i:Env.implicit) : goal =
   mk_goal ({env with gamma=i.imp_uvar.ctx_uvar_gamma}) i.imp_uvar (FStar.Options.peek()) false i.imp_reason
 
-let rename_binders subst bs =
-    bs |> List.map (function b ->
-        let x = b.binder_bv in
-        let y = SS.subst subst (S.bv_to_name x) in
-        match (SS.compress y).n with
-        | Tm_name y ->
-            // We don't want to change the type
-            { b with binder_bv = { b.binder_bv with sort = SS.subst subst x.sort } }
-        | _ -> failwith "Not a renaming")
-
-(* This is only for show: this goal becomes ill-formed since it does
- * not satisfy the invariant on gamma *)
-let subst_goal subst goal =
-    let g = goal.goal_ctx_uvar in
-    let ctx_uvar = {
-        g with ctx_uvar_gamma=Env.rename_gamma subst g.ctx_uvar_gamma;
-               ctx_uvar_binders=rename_binders subst g.ctx_uvar_binders;
-    } in
-    { goal with goal_ctx_uvar = ctx_uvar;
-                goal_display_type = SS.subst subst goal.goal_display_type }
-
-let subst_proof_display_state subst ps =
-    if O.tactic_raw_binders ()
-    then ps
-    else { ps with goals = List.map (subst_goal subst) ps.goals
-    }
-
 let decr_depth (ps:proofstate) : proofstate =
     { ps with depth = ps.depth - 1 }
 
@@ -104,15 +76,13 @@ let set_ps_psc psc ps = { ps with psc = psc }
 let tracepoint_with_psc psc ps : bool =
     if O.tactic_trace () || (ps.depth <= O.tactic_trace_d ()) then begin
         let ps = set_ps_psc psc ps in
-        let subst = Cfg.psc_subst ps.psc in
-        ps.__dump (subst_proof_display_state subst ps) "TRACE"
+        ps.__dump ps "TRACE"
     end;
     true
 
 let tracepoint ps : bool =
     if O.tactic_trace () || (ps.depth <= O.tactic_trace_d ()) then begin
-        let subst = Cfg.psc_subst ps.psc in
-        ps.__dump (subst_proof_display_state subst ps) "TRACE"
+        ps.__dump ps "TRACE"
     end;
     true
 

@@ -1877,28 +1877,16 @@ let run_tactic_on_ps' :
                                          FStar_Compiler_Effect.op_Bang tacdbg in
                                        if uu___16
                                        then
-                                         let uu___17 =
-                                           let uu___18 =
-                                             FStar_TypeChecker_Cfg.psc_subst
-                                               ps1.FStar_Tactics_Types.psc in
-                                           FStar_Tactics_Types.subst_proof_display_state
-                                             uu___18 ps1 in
                                          FStar_Tactics_Printing.do_dump_proofstate
-                                           uu___17 "at the finish line"
+                                           ps1 "at the finish line"
                                        else ());
                                       ((FStar_Compiler_List.op_At
                                           ps1.FStar_Tactics_Types.goals
                                           ps1.FStar_Tactics_Types.smt_goals),
                                         ret))))
                                | FStar_Tactics_Result.Failed (e, ps1) ->
-                                   ((let uu___11 =
-                                       let uu___12 =
-                                         FStar_TypeChecker_Cfg.psc_subst
-                                           ps1.FStar_Tactics_Types.psc in
-                                       FStar_Tactics_Types.subst_proof_display_state
-                                         uu___12 ps1 in
-                                     FStar_Tactics_Printing.do_dump_proofstate
-                                       uu___11 "at the time of failure");
+                                   (FStar_Tactics_Printing.do_dump_proofstate
+                                      ps1 "at the time of failure";
                                     (let texn_to_string e1 =
                                        match e1 with
                                        | FStar_Tactics_Common.TacticFailure s

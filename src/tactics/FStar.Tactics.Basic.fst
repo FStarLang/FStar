@@ -110,7 +110,7 @@ let debugging () : tac bool =
 let do_dump_ps (msg:string) (ps:proofstate) : unit =
   let psc = ps.psc in
   let subst = Cfg.psc_subst psc in
-  do_dump_proofstate (subst_proof_display_state subst ps) msg
+  do_dump_proofstate ps msg
 
 let dump (msg:string) : tac unit =
   mk_tac (fun ps ->

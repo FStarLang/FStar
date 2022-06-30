@@ -3,7 +3,6 @@ type goal =
   {
   goal_main_env: FStar_TypeChecker_Env.env ;
   goal_ctx_uvar: FStar_Syntax_Syntax.ctx_uvar ;
-  goal_display_type: FStar_Syntax_Syntax.typ ;
   opts: FStar_Options.optionstate ;
   is_guard: Prims.bool ;
   label: Prims.string }
@@ -11,35 +10,26 @@ let (__proj__Mkgoal__item__goal_main_env : goal -> FStar_TypeChecker_Env.env)
   =
   fun projectee ->
     match projectee with
-    | { goal_main_env; goal_ctx_uvar; goal_display_type; opts; is_guard;
-        label;_} -> goal_main_env
+    | { goal_main_env; goal_ctx_uvar; opts; is_guard; label;_} ->
+        goal_main_env
 let (__proj__Mkgoal__item__goal_ctx_uvar :
   goal -> FStar_Syntax_Syntax.ctx_uvar) =
   fun projectee ->
     match projectee with
-    | { goal_main_env; goal_ctx_uvar; goal_display_type; opts; is_guard;
-        label;_} -> goal_ctx_uvar
-let (__proj__Mkgoal__item__goal_display_type :
-  goal -> FStar_Syntax_Syntax.typ) =
-  fun projectee ->
-    match projectee with
-    | { goal_main_env; goal_ctx_uvar; goal_display_type; opts; is_guard;
-        label;_} -> goal_display_type
+    | { goal_main_env; goal_ctx_uvar; opts; is_guard; label;_} ->
+        goal_ctx_uvar
 let (__proj__Mkgoal__item__opts : goal -> FStar_Options.optionstate) =
   fun projectee ->
     match projectee with
-    | { goal_main_env; goal_ctx_uvar; goal_display_type; opts; is_guard;
-        label;_} -> opts
+    | { goal_main_env; goal_ctx_uvar; opts; is_guard; label;_} -> opts
 let (__proj__Mkgoal__item__is_guard : goal -> Prims.bool) =
   fun projectee ->
     match projectee with
-    | { goal_main_env; goal_ctx_uvar; goal_display_type; opts; is_guard;
-        label;_} -> is_guard
+    | { goal_main_env; goal_ctx_uvar; opts; is_guard; label;_} -> is_guard
 let (__proj__Mkgoal__item__label : goal -> Prims.string) =
   fun projectee ->
     match projectee with
-    | { goal_main_env; goal_ctx_uvar; goal_display_type; opts; is_guard;
-        label;_} -> label
+    | { goal_main_env; goal_ctx_uvar; opts; is_guard; label;_} -> label
 type guard_policy =
   | Goal 
   | SMT 
@@ -183,7 +173,6 @@ let (goal_with_env : goal -> FStar_TypeChecker_Env.env -> goal) =
       {
         goal_main_env = env;
         goal_ctx_uvar = c';
-        goal_display_type = (g.goal_display_type);
         opts = (g.opts);
         is_guard = (g.is_guard);
         label = (g.label)
@@ -194,7 +183,6 @@ let (goal_of_ctx_uvar : goal -> FStar_Syntax_Syntax.ctx_uvar -> goal) =
       {
         goal_main_env = (g.goal_main_env);
         goal_ctx_uvar = ctx_u;
-        goal_display_type = (g.goal_display_type);
         opts = (g.opts);
         is_guard = (g.is_guard);
         label = (g.label)
@@ -209,11 +197,9 @@ let (mk_goal :
       fun o ->
         fun b ->
           fun l ->
-            let uu___ = FStar_Syntax_Util.ctx_uvar_typ u in
             {
               goal_main_env = env;
               goal_ctx_uvar = u;
-              goal_display_type = uu___;
               opts = o;
               is_guard = b;
               label = l
@@ -329,100 +315,6 @@ let (goal_of_implicit :
             (env.FStar_TypeChecker_Env.erase_erasable_args)
         } i.FStar_TypeChecker_Common.imp_uvar uu___ false
         i.FStar_TypeChecker_Common.imp_reason
-let (rename_binders :
-  FStar_Syntax_Syntax.subst_elt Prims.list ->
-    FStar_Syntax_Syntax.binder Prims.list ->
-      FStar_Syntax_Syntax.binder Prims.list)
-  =
-  fun subst ->
-    fun bs ->
-      FStar_Compiler_Effect.op_Bar_Greater bs
-        (FStar_Compiler_List.map
-           (fun uu___ ->
-              let x = uu___.FStar_Syntax_Syntax.binder_bv in
-              let y =
-                let uu___1 = FStar_Syntax_Syntax.bv_to_name x in
-                FStar_Syntax_Subst.subst subst uu___1 in
-              let uu___1 =
-                let uu___2 = FStar_Syntax_Subst.compress y in
-                uu___2.FStar_Syntax_Syntax.n in
-              match uu___1 with
-              | FStar_Syntax_Syntax.Tm_name y1 ->
-                  let uu___2 =
-                    let uu___3 = uu___.FStar_Syntax_Syntax.binder_bv in
-                    let uu___4 =
-                      FStar_Syntax_Subst.subst subst
-                        x.FStar_Syntax_Syntax.sort in
-                    {
-                      FStar_Syntax_Syntax.ppname =
-                        (uu___3.FStar_Syntax_Syntax.ppname);
-                      FStar_Syntax_Syntax.index =
-                        (uu___3.FStar_Syntax_Syntax.index);
-                      FStar_Syntax_Syntax.sort = uu___4
-                    } in
-                  {
-                    FStar_Syntax_Syntax.binder_bv = uu___2;
-                    FStar_Syntax_Syntax.binder_qual =
-                      (uu___.FStar_Syntax_Syntax.binder_qual);
-                    FStar_Syntax_Syntax.binder_attrs =
-                      (uu___.FStar_Syntax_Syntax.binder_attrs)
-                  }
-              | uu___2 -> failwith "Not a renaming"))
-let (subst_goal : FStar_Syntax_Syntax.subst_elt Prims.list -> goal -> goal) =
-  fun subst ->
-    fun goal1 ->
-      let g = goal1.goal_ctx_uvar in
-      let ctx_uvar =
-        let uu___ =
-          FStar_TypeChecker_Env.rename_gamma subst
-            g.FStar_Syntax_Syntax.ctx_uvar_gamma in
-        let uu___1 =
-          rename_binders subst g.FStar_Syntax_Syntax.ctx_uvar_binders in
-        {
-          FStar_Syntax_Syntax.ctx_uvar_head =
-            (g.FStar_Syntax_Syntax.ctx_uvar_head);
-          FStar_Syntax_Syntax.ctx_uvar_gamma = uu___;
-          FStar_Syntax_Syntax.ctx_uvar_binders = uu___1;
-          FStar_Syntax_Syntax.ctx_uvar_reason =
-            (g.FStar_Syntax_Syntax.ctx_uvar_reason);
-          FStar_Syntax_Syntax.ctx_uvar_range =
-            (g.FStar_Syntax_Syntax.ctx_uvar_range);
-          FStar_Syntax_Syntax.ctx_uvar_meta =
-            (g.FStar_Syntax_Syntax.ctx_uvar_meta)
-        } in
-      let uu___ = FStar_Syntax_Subst.subst subst goal1.goal_display_type in
-      {
-        goal_main_env = (goal1.goal_main_env);
-        goal_ctx_uvar = ctx_uvar;
-        goal_display_type = uu___;
-        opts = (goal1.opts);
-        is_guard = (goal1.is_guard);
-        label = (goal1.label)
-      }
-let (subst_proof_display_state :
-  FStar_Syntax_Syntax.subst_t -> proofstate -> proofstate) =
-  fun subst ->
-    fun ps ->
-      let uu___ = FStar_Options.tactic_raw_binders () in
-      if uu___
-      then ps
-      else
-        (let uu___2 = FStar_Compiler_List.map (subst_goal subst) ps.goals in
-         {
-           main_context = (ps.main_context);
-           all_implicits = (ps.all_implicits);
-           goals = uu___2;
-           smt_goals = (ps.smt_goals);
-           depth = (ps.depth);
-           __dump = (ps.__dump);
-           psc = (ps.psc);
-           entry_range = (ps.entry_range);
-           guard_policy = (ps.guard_policy);
-           freshness = (ps.freshness);
-           tac_verb_dbg = (ps.tac_verb_dbg);
-           local_state = (ps.local_state);
-           urgency = (ps.urgency)
-         })
 let (decr_depth : proofstate -> proofstate) =
   fun ps ->
     {
@@ -484,11 +376,7 @@ let (tracepoint_with_psc :
            (let uu___2 = FStar_Options.tactic_trace_d () in
             ps.depth <= uu___2) in
        if uu___1
-       then
-         let ps1 = set_ps_psc psc ps in
-         let subst = FStar_TypeChecker_Cfg.psc_subst ps1.psc in
-         let uu___2 = subst_proof_display_state subst ps1 in
-         ps1.__dump uu___2 "TRACE"
+       then let ps1 = set_ps_psc psc ps in ps1.__dump ps1 "TRACE"
        else ());
       true
 let (tracepoint : proofstate -> Prims.bool) =
@@ -496,12 +384,7 @@ let (tracepoint : proofstate -> Prims.bool) =
     (let uu___1 =
        (FStar_Options.tactic_trace ()) ||
          (let uu___2 = FStar_Options.tactic_trace_d () in ps.depth <= uu___2) in
-     if uu___1
-     then
-       let subst = FStar_TypeChecker_Cfg.psc_subst ps.psc in
-       let uu___2 = subst_proof_display_state subst ps in
-       ps.__dump uu___2 "TRACE"
-     else ());
+     if uu___1 then ps.__dump ps "TRACE" else ());
     true
 let (set_proofstate_range :
   proofstate -> FStar_Compiler_Range.range -> proofstate) =
@@ -535,7 +418,6 @@ let (set_label : Prims.string -> goal -> goal) =
       {
         goal_main_env = (g.goal_main_env);
         goal_ctx_uvar = (g.goal_ctx_uvar);
-        goal_display_type = (g.goal_display_type);
         opts = (g.opts);
         is_guard = (g.is_guard);
         label = l
