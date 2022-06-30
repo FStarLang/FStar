@@ -13961,8 +13961,7 @@ let (pick_a_univ_deffered_implicit :
                  (fun uu___3 -> FStar_Pervasives_Native.Some uu___3) in
              (uu___1, (FStar_Compiler_List.op_At tl rest)))
 let (is_implicit_resolved :
-  FStar_TypeChecker_Env.env ->
-    FStar_TypeChecker_Common.implicit -> Prims.bool)
+  FStar_TypeChecker_Env.env -> FStar_TypeChecker_Env.implicit -> Prims.bool)
   =
   fun env ->
     fun i ->
@@ -13979,7 +13978,7 @@ let (is_implicit_resolved :
               uu___1 = FStar_Syntax_Syntax.Allow_unresolved))
 let (check_implicit_solution_for_tac :
   FStar_TypeChecker_Env.env ->
-    FStar_TypeChecker_Common.implicit ->
+    FStar_TypeChecker_Env.implicit ->
       (FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.typ)
         FStar_Pervasives_Native.option)
   =

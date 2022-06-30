@@ -217,6 +217,12 @@ This is particularly useful to rewrite the expression on the left to the
 one on the right when the RHS is actually a unification variable. *)
 val t_commute_applied_match : unit -> Tac unit
 
+(** In case there are goals that are already solved which have
+    non-trivial typing guards, make those guards as explicit proof
+    obligations in the tactic state, solving any trivial ones by simplification.
+    See tests/bug-reports/Bug2635.fst for some examples *)
+val gather_or_solve_explicit_guards_for_resolved_goals : unit -> Tac unit
+
 (** [ctrl_rewrite] will traverse the current goal, and call [ctrl]
  * repeatedly on subterms. When [ctrl t] returns [(true, _)], the
  * tactic will call [rw] with a goal of type [t = ?u], which once

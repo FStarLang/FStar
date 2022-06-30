@@ -1455,7 +1455,23 @@ let (uu___143 : unit) =
                                                                     FStar_Tactics_Basic.t_commute_applied_match
                                                                     FStar_TypeChecker_NBETerm.e_unit
                                                                     FStar_TypeChecker_NBETerm.e_unit in
-                                                                    [uu___138] in
+                                                                    let uu___139
+                                                                    =
+                                                                    let uu___140
+                                                                    =
+                                                                    FStar_Tactics_InterpFuns.mk_tac_step_1
+                                                                    Prims.int_zero
+                                                                    "gather_or_solve_explicit_guards_for_resolved_goals"
+                                                                    FStar_Tactics_Basic.gather_explicit_guards_for_resolved_goals
+                                                                    FStar_Syntax_Embeddings.e_unit
+                                                                    FStar_Syntax_Embeddings.e_unit
+                                                                    FStar_Tactics_Basic.gather_explicit_guards_for_resolved_goals
+                                                                    FStar_TypeChecker_NBETerm.e_unit
+                                                                    FStar_TypeChecker_NBETerm.e_unit in
+                                                                    [uu___140] in
+                                                                    uu___138
+                                                                    ::
+                                                                    uu___139 in
                                                                     uu___136
                                                                     ::
                                                                     uu___137 in
@@ -1713,7 +1729,7 @@ let (report_implicits :
                            let uu___6 = FStar_Syntax_Print.term_to_string tm in
                            let uu___7 = FStar_Syntax_Print.term_to_string ty in
                            FStar_Compiler_Util.format4
-                             "Tactic solved goal %s of type %s to %s : %s, but it has a non-trivial typing guard"
+                             "Tactic solved goal %s of type %s to %s : %s, but it has a non-trivial typing guard. Use gather_or_solve_explicit_guards_for_resolved_goals to inspect and prove these goals"
                              uu___4 uu___5 uu___6 uu___7 in
                          (FStar_Errors.Error_UninstantiatedUnificationVarInTactic,
                            uu___3) in

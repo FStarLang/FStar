@@ -425,31 +425,36 @@ let with_policy pol (t : tac 'a) : tac 'a =
     bind (set_guard_policy old_pol) (fun () ->
     ret r))))
 
-let proc_guard (reason:string) (e : env) (g : guard_t) (rng:Range.range) : tac unit =
+let proc_guard' (simplify:bool) (reason:string) (e : env) (g : guard_t) (rng:Range.range) : tac unit =
     mlog (fun () ->
         BU.print2 "Processing guard (%s:%s)\n" reason (Rel.guard_to_string e g)) (fun () ->
-    bind (add_implicits g.implicits) (fun () ->
-    match (Rel.simplify_guard e g).guard_f with
+    add_implicits g.implicits;;
+    let guard_f = 
+      if simplify
+      then (Rel.simplify_guard e g).guard_f
+      else g.guard_f
+    in
+    match guard_f with
     | TcComm.Trivial -> ret ()
     | TcComm.NonTrivial f ->
-    bind get (fun ps ->
-    match ps.guard_policy with
-    | Drop ->
+      ps <-- get;
+      match ps.guard_policy with
+      | Drop ->
         // should somehow taint the state instead of just printing a warning
         Err.log_issue e.range
             (Errors.Warning_TacAdmit, BU.format1 "Tactics admitted guard <%s>\n\n"
                         (Rel.guard_to_string e g));
         ret ()
 
-    | Goal ->
+      | Goal ->
         mlog (fun () -> BU.print2 "Making guard (%s:%s) into a goal\n" reason (Rel.guard_to_string e g)) (fun () ->
-        bind (goal_of_guard reason e f rng) (fun g ->
-        push_goals [g]))
+        g <-- goal_of_guard reason e f rng;
+        push_goals [g])
 
     | SMT ->
         mlog (fun () -> BU.print2 "Sending guard (%s:%s) to SMT goal\n" reason (Rel.guard_to_string e g)) (fun () ->
-        bind (goal_of_guard reason e f rng) (fun g ->
-        push_smt_goals [g]))
+        g <-- goal_of_guard reason e f rng;
+        push_smt_goals [g])
 
     | Force ->
         mlog (fun () -> BU.print2 "Forcing guard (%s:%s)\n" reason (Rel.guard_to_string e g)) (fun () ->
@@ -460,7 +465,9 @@ let proc_guard (reason:string) (e : env) (g : guard_t) (rng:Range.range) : tac u
             else ret ()
         with
         | _ -> mlog (fun () -> BU.print1 "guard = %s\n" (Rel.guard_to_string e g)) (fun () ->
-               fail1 "Forcing the guard failed (%s)" reason)))))
+               fail1 "Forcing the guard failed (%s)" reason)))
+
+let proc_guard = proc_guard' true
 
 let tcc (e : env) (t : term) : tac comp = wrap_err "tcc" <|
     bind (__tc_lax e t) (fun (_, lc, _) ->
@@ -727,12 +734,14 @@ let try_unify_by_application (only_match:bool) (e : env) (ty1 : term) (ty2 : ter
 // Checking implicit solutions that may have been solved during unification
 //   E.g. when unifying the goals in apply
 //
-let check_apply_implicits_solutions env
-  (gl:goal)
-  (debug_on:bool)
-  (debug_prefix:string)
-  (must_tot:bool)
-  (imps:list (term & ctx_uvar))
+let check_apply_implicits_solutions
+    (simplify_guard:bool)
+    (env:Env.env)
+    (gl:option goal)
+    (debug_on:bool)
+    (debug_prefix:string)
+    (must_tot:bool)
+    (imps:list (term & ctx_uvar))
   
   : tac (list (list goal)) =
 
@@ -756,7 +765,11 @@ let check_apply_implicits_solutions env
     let hd, _ = U.head_and_args term in
     match (SS.compress hd).n with
     | Tm_uvar (ctx_uvar, _) ->
-      let gl = bnorm_goal ({ gl with goal_ctx_uvar = ctx_uvar }) in
+      let gl =
+        match gl with 
+        | None ->  mk_goal env ctx_uvar (FStar.Options.peek()) true "goal for unsolved implicit"
+        | Some gl -> { gl with goal_ctx_uvar = ctx_uvar } in
+      let gl = bnorm_goal gl in
       ret [gl]
     | _ ->
       mlog (fun () -> BU.print3 "%s: arg %s unified to (%s)\n"
@@ -764,14 +777,20 @@ let check_apply_implicits_solutions env
                      (Print.uvar_to_string ctx_uvar.ctx_uvar_head)
                      (Print.term_to_string term)) (fun () ->
       let g_typ = check_implicits_solution env term (U.ctx_uvar_typ ctx_uvar) must_tot in
-      bind (proc_guard
+      let rng = 
+        match gl with
+        | None ->  ctx_uvar.ctx_uvar_range
+        | Some gl -> rangeof gl
+      in
+      bind (proc_guard'
+             simplify_guard
               (if debug_on
                then BU.format3 "%s solved arg %s to %s\n"
                       debug_prefix
                       (Print.ctx_uvar_to_string ctx_uvar)
                       (Print.term_to_string term)
                else BU.format1 "%s solved arg" debug_prefix)
-              env g_typ (rangeof gl)) (fun () ->
+              env g_typ rng) (fun () ->
       //we've checked this implicit and added its guard as an explicit goal
       //no need to recheck it
       mark_uvar_as_allow_untyped ctx_uvar;
@@ -828,7 +847,7 @@ let t_apply (uopt:bool) (only_match:bool) (tc_resolved_uvars:bool) (tm:term) : t
     bind (uvs |> List.map (fun (uvt, _q, uv) -> (uvt, uv))
               |> (if tc_resolved_uvars
                  then let must_tot = true in
-                      check_apply_implicits_solutions e goal ps.tac_verb_dbg
+                      check_apply_implicits_solutions true e (Some goal) ps.tac_verb_dbg
                         "apply" must_tot
                  else (fun l -> l |> List.map (fun (_, uv) ->
                                            match UF.find uv.ctx_uvar_head with
@@ -934,7 +953,7 @@ let t_apply_lemma (noinst:bool) (noinst_lhs:bool)
         in
         bind (let must_tot = false in
               implicits |>
-              check_apply_implicits_solutions env goal ps.tac_verb_dbg "apply_lemma" must_tot) (fun sub_goals ->
+              check_apply_implicits_solutions true env (Some goal) ps.tac_verb_dbg "apply_lemma" must_tot) (fun sub_goals ->
         let sub_goals = List.flatten sub_goals in
         // Optimization: if a uvar appears in a later goal, don't ask for it, since
         // it will be instantiated later. It is tracked anyway in ps.implicits
@@ -1556,6 +1575,33 @@ let t_destruct (s_tm : term) : tac (list (fv * Z.t)) = wrap_err "destruct" <|
       ret infos)))))
 
     | _ -> fail "not an inductive type"))))
+
+let gather_explicit_guards_for_resolved_goals ()
+  : tac unit
+  = wrap_err "gather_explicit_guards_for_resolved_goals" <| (
+    with_policy Goal <| (
+    ps <-- get; 
+    let goals_of_resolved_implicits = 
+        List.filter_map 
+          (fun i -> 
+            if Rel.is_implicit_resolved ps.main_context i
+            && Some? (Rel.check_implicit_solution_for_tac ps.main_context i)
+            then let g = goal_of_implicit ps.main_context i in
+                 Some (goal_witness g, g.goal_ctx_uvar)
+            else None)
+          ps.all_implicits
+    in
+    sub_goals <--   
+      check_apply_implicits_solutions
+             false //don't simplify
+             ps.main_context
+             None 
+             ps.tac_verb_dbg
+             "gather_explicit_guards_for_resolved_goals"
+             true 
+             goals_of_resolved_implicits;
+    let sub_goals = List.flatten sub_goals in
+    add_goals sub_goals))  
 
 // TODO: move to library?
 let rec last (l:list 'a) : 'a =

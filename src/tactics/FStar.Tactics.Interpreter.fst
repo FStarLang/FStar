@@ -487,6 +487,10 @@ let () =
         t_commute_applied_match e_unit e_unit
         t_commute_applied_match NBET.e_unit NBET.e_unit;
 
+      mk_tac_step_1 0 "gather_or_solve_explicit_guards_for_resolved_goals"
+        gather_explicit_guards_for_resolved_goals e_unit e_unit
+        gather_explicit_guards_for_resolved_goals NBET.e_unit NBET.e_unit;
+
     ]
 
 let unembed_tactic_1_alt (ea:embedding 'a) (er:embedding 'r) (f:term) (ncb:norm_cb) : option ('a -> tac 'r) =
@@ -520,7 +524,7 @@ let report_implicits rng (is : TcRel.tagged_implicits) : unit =
       | TcRel.Implicit_has_typing_guard (tm, ty) ->
         Errors.log_issue rng
                 (Err.Error_UninstantiatedUnificationVarInTactic,
-                 BU.format4 ("Tactic solved goal %s of type %s to %s : %s, but it has a non-trivial typing guard")
+                 BU.format4 ("Tactic solved goal %s of type %s to %s : %s, but it has a non-trivial typing guard. Use gather_or_solve_explicit_guards_for_resolved_goals to inspect and prove these goals")
                              (Print.uvar_to_string imp.imp_uvar.ctx_uvar_head)
                              (Print.term_to_string (U.ctx_uvar_typ imp.imp_uvar))
                              (Print.term_to_string tm)

@@ -81,6 +81,7 @@ val dup                    : unit -> tac unit
 val prune                  : string -> tac unit
 val addns                  : string -> tac unit
 val t_destruct             : term -> tac (list (fv * Z.t))
+val gather_explicit_guards_for_resolved_goals : unit -> tac unit
 val set_options            : string -> tac unit
 val uvar_env               : env -> option typ -> tac term
 val fresh_universe_uvar    : unit -> tac term
@@ -104,4 +105,3 @@ val set_urgency            : Z.t -> tac unit
 val t_commute_applied_match : unit -> tac unit
 val goal_with_type : goal -> typ -> goal
 val mark_goal_implicit_allow_untyped : goal -> unit
-
