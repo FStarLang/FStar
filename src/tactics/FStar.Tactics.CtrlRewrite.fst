@@ -221,6 +221,17 @@ let rec ctrl_fold_env
       seq_ctac (on_subterms g0 d controller rewriter env)
                (maybe_rewrite g0 controller rewriter env) tm
 
+and recurse_option_residual_comp (env:env) (rc_opt:option residual_comp) recurse
+  : tac (option residual_comp & ctrl_flag)
+  = match rc_opt with
+    | None -> ret (None, Continue)
+    | Some rc ->
+      match rc.residual_typ with
+      | None -> ret (Some rc, Continue)
+      | Some t ->
+        bind (recurse env t) (fun (t, flag) ->
+        ret (Some ({rc with residual_typ=Some t}), flag))
+
 and on_subterms
     (g0 : goal)
     (d : direction)
@@ -231,25 +242,34 @@ and on_subterms
   : tac (term * ctrl_flag)
   = let recurse env tm = ctrl_fold_env g0 d controller rewriter env tm in
     let rr = recurse env in (* recurse on current env *)
-    let rec descend_binders orig accum_binders accum_flag env bs t rebuild =
-        match bs with
-        | [] -> 
-            bind (recurse env t) (fun (t, flag) ->
-            match flag with
-            | Abort -> ret (orig.n, flag) //if anything aborts, just return the original abs
-            | _ -> 
-              let bs = List.rev accum_binders in
-              ret (rebuild (SS.close_binders bs) (SS.close bs t),
-                  par_combine (accum_flag, flag)))
-        | b::bs ->
-            bind (recurse env b.binder_bv.sort) (fun (s, flag) -> 
-            match flag with
-            | Abort -> ret (orig.n, flag) //if anything aborts, just return the original abs
-            | _ -> 
-              let bv = {b.binder_bv with sort = s} in
-              let b = {b with binder_bv = bv} in
-              let env = Env.push_binders env [b] in
-              descend_binders orig (b::accum_binders) (par_combine (accum_flag, flag)) env bs t rebuild)
+
+    //
+    // t is the body and k is the option residual comp
+    //
+    let rec descend_binders orig accum_binders accum_flag env bs t k rebuild =
+      match bs with
+      | [] ->
+        bind (recurse env t) (fun (t, t_flag) ->
+        match t_flag with
+        | Abort -> ret (orig.n, t_flag) //if anything aborts, just return the original abs
+        | _ ->
+          bind (recurse_option_residual_comp env k recurse) (fun (k, k_flag) ->
+          let bs = List.rev accum_binders in
+          let subst = SS.closing_of_binders bs in
+          let bs = SS.subst_binders subst bs in
+          let t = SS.subst subst t in
+          let k = BU.map_option (SS.subst_residual_comp subst) k in
+          ret (rebuild bs t k,
+               par_combine (accum_flag, (par_combine (t_flag, k_flag))))))
+      | b::bs ->
+        bind (recurse env b.binder_bv.sort) (fun (s, flag) ->
+        match flag with
+        | Abort -> ret (orig.n, flag) //if anything aborts, just return the original abs
+        | _ ->
+          let bv = {b.binder_bv with sort = s} in
+          let b = {b with binder_bv = bv} in
+          let env = Env.push_binders env [b] in
+          descend_binders orig (b::accum_binders) (par_combine (accum_flag, flag)) env bs t k rebuild)
     in
     let go () : tac (term' * ctrl_flag) =
       let tm = SS.compress tm in
@@ -261,14 +281,15 @@ and on_subterms
 
       (* Open, descend, rebuild *)
       | Tm_abs (bs, t, k) ->
-        let bs_orig, t = SS.open_term bs t in
-        descend_binders tm [] Continue env bs_orig t
-                        (fun bs t -> Tm_abs(bs, t, k))
+        let bs_orig, t, subst = SS.open_term' bs t in
+        let k = k |> BU.map_option (SS.subst_residual_comp subst) in
+        descend_binders tm [] Continue env bs_orig t k
+                        (fun bs t k -> Tm_abs(bs, t, k))
 
       | Tm_refine (x, phi) -> 
         let bs, phi = SS.open_term [S.mk_binder x] phi in
-        descend_binders tm [] Continue env bs phi
-                        (fun bs phi -> 
+        descend_binders tm [] Continue env bs phi None  //no residual comp
+                        (fun bs phi _ ->
                           let x = 
                             match bs with
                             | [x] -> x.binder_bv
