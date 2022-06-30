@@ -124,68 +124,14 @@ let check_no_subtyping_for_layered_combinator env (t:term) (k:option typ) =
 
 
 (*
- * Check that the layered effect binders that will be solved by unification,
- *   appear in the repr indices in the combinator type in a head position
- *
- * For example, appearing in an argument position in an index term does not count
- *
- * If the flag check_non_informative_binders is set, additionally checks that the
+ * If the flag check_non_informative_binders is set, additionally checks
  *   binders have non-informative types
  *
- * Precondition: repr_terms may not be well-typed in env but bs must be well-typed (properly closed etc.)
  * To check for non_informativeness, we do some normalization, so bs well-typedness is required
  *)
-let validate_layered_effect_binders env (bs:binders) (repr_terms:list term) (check_non_informatve_binders:bool) (r:Range.range)
+let validate_layered_effect_binders env (bs:binders) (check_non_informatve_binders:bool) (r:Range.range)
 : unit
-= //repr can be (repr a is) or unit -> M a wp for wp effects
-  let repr_args repr =
-    match (SS.compress repr).n with
-    | Tm_app (_, args) -> args
-    | Tm_arrow ([_], c) -> c |> U.comp_effect_args
-    | _ ->
-      raise_error (Errors.Fatal_UnexpectedEffect,
-        BU.format1 "Unexpected repr term %s when validating layered effect combinator binders"
-          (Print.term_to_string repr)) r in
-
-  let rec head_names_in_term arg =
-    match (SS.compress arg).n with
-    | Tm_name _ -> [arg]
-    | Tm_app (head, _) ->
-      (match (SS.compress head).n with
-       | Tm_name _ -> [head]
-       | _-> [])
-    | Tm_abs (_, body, _) -> head_names_in_term body
-    | _ -> [] in
-
-  let head_names_in_args args =
-    args
-    |> List.map fst
-    |> List.collect head_names_in_term in
-
-  let repr_names_args = List.collect (fun repr -> repr |> repr_args |> head_names_in_args) repr_terms in
-
-  if Env.debug env <| Options.Other "LayeredEffectsTc" then
-    BU.print2 "Checking layered effect combinator binders validity, names: %s, binders: %s\n\n"
-      (List.fold_left (fun s t -> s ^ "; " ^ (Print.term_to_string t)) "" repr_names_args)
-      (Print.binders_to_string "; " bs);
-
-  let valid_binder b = true in
-    //it appears in a repr index in a head position
-    // List.existsb (fun t -> U.eq_tm (S.bv_to_name b.binder_bv) t = U.Equal) repr_names_args
-    // ||
-    // (match b.binder_attrs with  //or has a tactic associated
-    //  | _::_ -> true
-    //  | _ -> false) in
-
-  let invalid_binders = List.filter (fun b -> not (valid_binder b)) bs in
-
-  if List.length invalid_binders <> 0 then
-    raise_error (Errors.Fatal_UnexpectedEffect,
-      BU.format1 "Binders %s neither appear as repr indices nor have an associated tactic"
-        (Print.binders_to_string "; " invalid_binders)) r
-  else ();
-
-  if check_non_informatve_binders
+= if check_non_informatve_binders
   then
     let _, informative_binders = List.fold_left (fun (env, bs) b ->
       let env = Env.push_binders env [b] in
@@ -355,7 +301,7 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
         let a::x::bs, c = SS.open_comp bs c in
         let res_t = U.comp_result c in
         let env = Env.push_binders env [a; x] in
-        validate_layered_effect_binders env bs [res_t] check_non_informative_binders r in
+        validate_layered_effect_binders env bs check_non_informative_binders r in
 
     ret_us, ret_t, k |> SS.close_univ_vars us in
 
@@ -457,7 +403,7 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
           match (SS.compress g_b.binder_bv.sort).n with
           | Tm_arrow (_, c) -> U.comp_result c in
         let env = Env.push_binders env [a; b] in
-        validate_layered_effect_binders env bs [f_b.binder_bv.sort; g_sort; res_t]
+        validate_layered_effect_binders env bs
           check_non_informative_binders r in
 
     bind_us, bind_t, k |> SS.close_univ_vars bind_us in
@@ -556,7 +502,7 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
           List.splitAt (List.length bs - 1) bs
           |> (fun (l1, l2) -> l1, List.hd l2) in
         let env = Env.push_binders env [a] in
-        validate_layered_effect_binders env bs [f_b.binder_bv.sort; res_t]
+        validate_layered_effect_binders env bs
           check_non_informative_binders r in
 
     stronger_us, stronger_t, k |> SS.close_univ_vars stronger_us in
@@ -632,7 +578,7 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
           |> (fun (l1, l2) -> l1,
                           l2 |> List.hd, l2 |> List.tl |> List.hd) in
         let env = Env.push_binders env [a] in
-        validate_layered_effect_binders env bs [f_b.binder_bv.sort; g_b.binder_bv.sort; body]
+        validate_layered_effect_binders env bs
           check_non_informative_binders r in
 
     if_then_else_us,
@@ -1499,7 +1445,7 @@ let tc_layered_lift env0 (sub:S.sub_eff) : S.sub_eff =
         List.splitAt (List.length bs - 1) bs
         |> (fun (l1, l2) -> l1, List.hd l2) in
       let env = Env.push_binders env [a] in
-      validate_layered_effect_binders env bs [f_b.binder_bv.sort; res_t] check_non_informative_binders r in
+      validate_layered_effect_binders env bs check_non_informative_binders r in
 
   let sub = { sub with
     lift = Some (us, lift);
@@ -1829,7 +1775,7 @@ let tc_polymonadic_bind env (m:lident) (n:lident) (p:lident) (ts:S.tscheme) : (S
         match (SS.compress g_b.binder_bv.sort).n with
         | Tm_arrow (_, c) -> U.comp_result c in
       let env = Env.push_binders env [a; b] in
-      validate_layered_effect_binders env bs [f_b.binder_bv.sort; g_sort; res_t] check_non_informative_binders r in
+      validate_layered_effect_binders env bs check_non_informative_binders r in
 
 
   log_issue r (Errors.Warning_BleedingEdge_Feature,
@@ -1923,7 +1869,7 @@ let tc_polymonadic_subcomp env0 (m:lident) (n:lident) (ts:S.tscheme) : (S.tschem
         List.splitAt (List.length bs - 1) bs
         |> (fun (l1, l2) -> l1, List.hd l2) in
       let env = Env.push_binders env [a] in
-      validate_layered_effect_binders env bs [f_b.binder_bv.sort; res_t] check_non_informative_binders r in
+      validate_layered_effect_binders env bs check_non_informative_binders r in
 
 
   log_issue r (Errors.Warning_BleedingEdge_Feature,
