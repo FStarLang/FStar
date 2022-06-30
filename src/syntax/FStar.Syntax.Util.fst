@@ -2396,3 +2396,6 @@ let check_mutual_universes (lbs:list letbinding)
                    "Mutually recursive definitions do not abstract over the same universes")
                   lb.lbpos)
         lbs
+
+let ctx_uvar_should_check (u:ctx_uvar) = 
+    (Unionfind.find_decoration u.ctx_uvar_head).uvar_decoration_should_check

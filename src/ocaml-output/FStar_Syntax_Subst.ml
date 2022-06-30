@@ -91,19 +91,18 @@ let rec (force_uvar' :
            FStar_Syntax_Syntax.ctx_uvar_binders = uu___1;
            FStar_Syntax_Syntax.ctx_uvar_typ = uu___2;
            FStar_Syntax_Syntax.ctx_uvar_reason = uu___3;
-           FStar_Syntax_Syntax.ctx_uvar_should_check = uu___4;
-           FStar_Syntax_Syntax.ctx_uvar_range = uu___5;
-           FStar_Syntax_Syntax.ctx_uvar_meta = uu___6;_},
+           FStar_Syntax_Syntax.ctx_uvar_range = uu___4;
+           FStar_Syntax_Syntax.ctx_uvar_meta = uu___5;_},
          s)
         ->
-        let uu___7 = FStar_Syntax_Unionfind.find uv in
-        (match uu___7 with
+        let uu___6 = FStar_Syntax_Unionfind.find uv in
+        (match uu___6 with
          | FStar_Pervasives_Native.Some t' ->
-             let uu___8 =
-               let uu___9 = let uu___10 = delay t' s in force_uvar' uu___10 in
-               FStar_Pervasives_Native.fst uu___9 in
-             (uu___8, true)
-         | uu___8 -> (t, false))
+             let uu___7 =
+               let uu___8 = let uu___9 = delay t' s in force_uvar' uu___9 in
+               FStar_Pervasives_Native.fst uu___8 in
+             (uu___7, true)
+         | uu___7 -> (t, false))
     | uu___ -> (t, false)
 let (force_uvar :
   FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->

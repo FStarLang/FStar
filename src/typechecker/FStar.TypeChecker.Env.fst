@@ -1646,7 +1646,7 @@ let guard_form g = g.guard_f
 let is_trivial g = match g with
     | {guard_f=Trivial; deferred=[]; univ_ineqs=([], []); implicits=i} ->
       i |> BU.for_all (fun imp ->
-           (imp.imp_uvar.ctx_uvar_should_check=Allow_unresolved)
+           (U.ctx_uvar_should_check imp.imp_uvar=Allow_unresolved)
            || (match Unionfind.find imp.imp_uvar.ctx_uvar_head with
                | Some _ -> true
                | None -> false))
@@ -1758,13 +1758,17 @@ let new_implicit_var_aux reason r env k should_check meta =
      | _ ->
       let binders = all_binders env in
       let gamma = env.gamma in
+      let decoration = {
+             uvar_decoration_typ = k;
+             uvar_decoration_should_check = should_check
+          }
+      in
       let ctx_uvar = {
-          ctx_uvar_head=FStar.Syntax.Unionfind.fresh r;
+          ctx_uvar_head=FStar.Syntax.Unionfind.fresh decoration r;
           ctx_uvar_gamma=gamma;
           ctx_uvar_binders=binders;
           ctx_uvar_typ=k;
           ctx_uvar_reason=reason;
-          ctx_uvar_should_check=should_check;
           ctx_uvar_range=r;
           ctx_uvar_meta=meta;
       } in

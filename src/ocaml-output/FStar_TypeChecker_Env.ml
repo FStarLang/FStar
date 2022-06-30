@@ -5850,9 +5850,10 @@ let (is_trivial : guard_t -> Prims.bool) =
         FStar_Compiler_Effect.op_Bar_Greater i
           (FStar_Compiler_Util.for_all
              (fun imp ->
-                ((imp.FStar_TypeChecker_Common.imp_uvar).FStar_Syntax_Syntax.ctx_uvar_should_check
-                   = FStar_Syntax_Syntax.Allow_unresolved)
-                  ||
+                (let uu___1 =
+                   FStar_Syntax_Util.ctx_uvar_should_check
+                     imp.FStar_TypeChecker_Common.imp_uvar in
+                 uu___1 = FStar_Syntax_Syntax.Allow_unresolved) ||
                   (let uu___1 =
                      FStar_Syntax_Unionfind.find
                        (imp.FStar_TypeChecker_Common.imp_uvar).FStar_Syntax_Syntax.ctx_uvar_head in
@@ -6186,16 +6187,20 @@ let (new_implicit_var_aux :
               | uu___1 ->
                   let binders = all_binders env1 in
                   let gamma = env1.gamma in
+                  let decoration =
+                    {
+                      FStar_Syntax_Syntax.uvar_decoration_typ = k;
+                      FStar_Syntax_Syntax.uvar_decoration_should_check =
+                        should_check
+                    } in
                   let ctx_uvar =
-                    let uu___2 = FStar_Syntax_Unionfind.fresh r in
+                    let uu___2 = FStar_Syntax_Unionfind.fresh decoration r in
                     {
                       FStar_Syntax_Syntax.ctx_uvar_head = uu___2;
                       FStar_Syntax_Syntax.ctx_uvar_gamma = gamma;
                       FStar_Syntax_Syntax.ctx_uvar_binders = binders;
                       FStar_Syntax_Syntax.ctx_uvar_typ = k;
                       FStar_Syntax_Syntax.ctx_uvar_reason = reason;
-                      FStar_Syntax_Syntax.ctx_uvar_should_check =
-                        should_check;
                       FStar_Syntax_Syntax.ctx_uvar_range = r;
                       FStar_Syntax_Syntax.ctx_uvar_meta = meta
                     } in

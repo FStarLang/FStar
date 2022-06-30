@@ -267,12 +267,11 @@ let rec (is_type_aux :
              FStar_Syntax_Syntax.ctx_uvar_binders = uu___2;
              FStar_Syntax_Syntax.ctx_uvar_typ = t2;
              FStar_Syntax_Syntax.ctx_uvar_reason = uu___3;
-             FStar_Syntax_Syntax.ctx_uvar_should_check = uu___4;
-             FStar_Syntax_Syntax.ctx_uvar_range = uu___5;
-             FStar_Syntax_Syntax.ctx_uvar_meta = uu___6;_},
+             FStar_Syntax_Syntax.ctx_uvar_range = uu___4;
+             FStar_Syntax_Syntax.ctx_uvar_meta = uu___5;_},
            s)
           ->
-          let uu___7 = FStar_Syntax_Subst.subst' s t2 in is_arity env uu___7
+          let uu___6 = FStar_Syntax_Subst.subst' s t2 in is_arity env uu___6
       | FStar_Syntax_Syntax.Tm_bvar
           { FStar_Syntax_Syntax.ppname = uu___;
             FStar_Syntax_Syntax.index = uu___1;

@@ -30,10 +30,6 @@ open FStar.Const
 module O = FStar.Options
 open FStar.VConfig
 
-// JP: all these types are defined twice and every change has to be performed
-// twice (because of the .fs). TODO: move the type definitions into a standalone
-// fs without fsi, and move the helpers into syntaxhelpers.fs / syntaxhelpers.fsi
-
 (* Objects with metadata *)
 // IN F*: [@@ PpxDerivingYoJson; PpxDerivingShow ]
 type withinfo_t 'a = {
@@ -148,7 +144,6 @@ and ctx_uvar = {                                                 (* (G |- ?u : t
     ctx_uvar_binders:binders;                                    (* All the Tm_name bindings in G, a snoc list (most recent at the tail) *)
     ctx_uvar_typ:typ;                                            (* t *)
     ctx_uvar_reason:string;
-    ctx_uvar_should_check:should_check_uvar;
     ctx_uvar_range:Range.range;
     ctx_uvar_meta: option ctx_uvar_meta_t;
 }
@@ -156,7 +151,11 @@ and ctx_uvar_meta_t =
   | Ctx_uvar_meta_tac of dyn * term (* the dyn is an FStar.TypeChecker.Env.env *)
   | Ctx_uvar_meta_attr of term (* An attribute associated with an implicit argument using the #[@@...] notation *)
 and ctx_uvar_and_subst = ctx_uvar * subst_ts
-and uvar = Unionfind.p_uvar (option term) * version * Range.range
+and uvar_decoration = {
+  uvar_decoration_typ:typ;
+  uvar_decoration_should_check:should_check_uvar
+}
+and uvar = Unionfind.p_uvar (option term * uvar_decoration) * version * Range.range
 and uvars = set ctx_uvar
 and match_returns_ascription = binder * ascription               (* as x returns C|t *)
 and branch = pat * option term * term                           (* optional when clause in each branch *)
