@@ -223,14 +223,15 @@ let rec ctrl_fold_env
 
 and recurse_option_residual_comp (env:env) (rc_opt:option residual_comp) recurse
   : tac (option residual_comp & ctrl_flag)
-  = match rc_opt with
-    | None -> ret (None, Continue)
-    | Some rc ->
-      match rc.residual_typ with
-      | None -> ret (Some rc, Continue)
-      | Some t ->
-        bind (recurse env t) (fun (t, flag) ->
-        ret (Some ({rc with residual_typ=Some t}), flag))
+  = ret (None, Continue)
+    // match rc_opt with
+    // | None -> ret (None, Continue)
+    // | Some rc ->
+    //   match rc.residual_typ with
+    //   | None -> ret (Some rc, Continue)
+    //   | Some t ->
+    //     bind (recurse env t) (fun (t, flag) ->
+    //     ret (Some ({rc with residual_typ=Some t}), flag))
 
 and on_subterms
     (g0 : goal)
