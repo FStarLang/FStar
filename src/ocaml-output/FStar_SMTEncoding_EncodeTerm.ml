@@ -2006,8 +2006,8 @@ and (encode_term :
                  uv.FStar_Syntax_Syntax.ctx_uvar_head in
              FStar_SMTEncoding_Util.mk_Term_uvar uu___2 in
            let uu___2 =
-             encode_term_pred FStar_Pervasives_Native.None
-               uv.FStar_Syntax_Syntax.ctx_uvar_typ env ttm in
+             let uu___3 = FStar_Syntax_Util.ctx_uvar_typ uv in
+             encode_term_pred FStar_Pervasives_Native.None uu___3 env ttm in
            (match uu___2 with
             | (t_has_k, decls) ->
                 let d =

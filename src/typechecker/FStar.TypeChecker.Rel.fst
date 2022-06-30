@@ -132,7 +132,6 @@ let new_uvar reason wl r gamma binders k should_check meta : ctx_uvar * term * w
          ctx_uvar_head=UF.fresh decoration r;
          ctx_uvar_gamma=gamma;
          ctx_uvar_binders=binders;
-         ctx_uvar_typ=k;
          ctx_uvar_reason=reason;
          ctx_uvar_range=r;
          ctx_uvar_meta=meta;
@@ -820,7 +819,7 @@ let ensure_no_uvar_subst env (t0:term) (wl:worklist)
                          t0.pos
                          new_gamma
                          (Env.binders_of_bindings new_gamma)
-                         (U.arrow dom_binders (S.mk_Total uv.ctx_uvar_typ))
+                         (U.arrow dom_binders (S.mk_Total (U.ctx_uvar_typ uv)))
                          (U.ctx_uvar_should_check uv)
                          uv.ctx_uvar_meta
         in
@@ -1065,10 +1064,10 @@ let restrict_ctx env (tgt:ctx_uvar) (bs:binders) (src:ctx_uvar) wl : worklist =
     src.ctx_uvar_binders |> List.existsb (fun ({binder_bv=bv2}) -> S.bv_eq bv1 bv2) &&  //binder exists in G_t
     not (pfx |> List.existsb (fun ({binder_bv=bv2}) -> S.bv_eq bv1 bv2))) in  //but not in the maximal prefix
 
-  if List.length bs = 0 then aux src.ctx_uvar_typ (fun src' -> src')  //no abstraction over bs
+  if List.length bs = 0 then aux (U.ctx_uvar_typ src) (fun src' -> src')  //no abstraction over bs
   else begin
     aux
-      (src.ctx_uvar_typ |> env.universe_of env |> Some |> S.mk_Total' src.ctx_uvar_typ |> U.arrow bs)  //bs -> Tot t_t
+      (let t = U.ctx_uvar_typ src in t |> env.universe_of env |> Some |> S.mk_Total' t |> U.arrow bs)  //bs -> Tot t_t
       (fun src' -> S.mk_Tm_app  //?u bs
         src'
         (bs |> S.binders_to_names |> List.map S.as_arg)
@@ -1711,7 +1710,9 @@ let should_defer_flex_to_user_tac env (wl:worklist) (f:flex_t) =
             else xi is a fresh variable
     *)
 let quasi_pattern env (f:flex_t) : option (binders * typ) =
-    let (Flex (_, {ctx_uvar_binders=ctx; ctx_uvar_typ=t_hd}, args)) = f in
+    let (Flex (_, ctx_uvar, args)) = f in
+    let t_hd = U.ctx_uvar_typ ctx_uvar in
+    let ctx = ctx_uvar.ctx_uvar_binders in
     let name_exists_in x bs =
         BU.for_some (fun ({binder_bv=y}) -> S.bv_eq x y) bs
     in
@@ -1765,7 +1766,7 @@ let run_meta_arg_tac (ctx_u:ctx_uvar) : term =
     if Env.debug env (Options.Other "Tac")
     then BU.print1 "Running tactic for meta-arg %s\n" (Print.ctx_uvar_to_string ctx_u);
     Errors.with_ctx "Running tactic for meta-arg"
-      (fun () -> env.synth_hook env ctx_u.ctx_uvar_typ tau)
+      (fun () -> env.synth_hook env (U.ctx_uvar_typ ctx_u) tau)
   | _ ->
     failwith "run_meta_arg_tac must have been called with a uvar that has a meta tac"
 
@@ -2484,7 +2485,7 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
           match bs with
           | [] -> rhs
           | _ ->
-            u_abs ctx_u.ctx_uvar_typ (sn_binders env bs) rhs
+            u_abs (U.ctx_uvar_typ ctx_u) (sn_binders env bs) rhs
         in
         [TERM(ctx_u, sol)]
     in
@@ -2768,15 +2769,15 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
                 UF.rollback tx;
                 inapplicable "Subprobs failed: " (Some lstring)
           in
-          if U.eq_tm t_head ctx_uv.ctx_uvar_typ = U.Equal
+          if U.eq_tm t_head (U.ctx_uvar_typ ctx_uv) = U.Equal
           then solve_sub_probs_if_head_types_equal wl
           else (
               if Env.debug env (Options.Other "Rel")
               then BU.print2  "first-order: head type mismatch:\n\tlhs=%s\n\trhs=%s\n"
-                                              (Print.term_to_string ctx_uv.ctx_uvar_typ)
+                                              (Print.term_to_string (U.ctx_uvar_typ ctx_uv))
                                               (Print.term_to_string t_head);
               let typ_equality_prob wl =                                 
-                let p, wl = mk_t_problem wl [] orig ctx_uv.ctx_uvar_typ EQ t_head None "first-order head type" in
+                let p, wl = mk_t_problem wl [] orig (U.ctx_uvar_typ ctx_uv) EQ t_head None "first-order head type" in
                 [p], wl
               in
               match try_solve_probs_without_smt env wl typ_equality_prob with
@@ -2862,7 +2863,7 @@ and solve_t_flex_flex env orig wl (lhs:flex_t) (rhs:flex_t) : solution =
     let should_run_meta_arg_tac (flex:flex_t) =
       let uv = flex_uvar flex in
       flex_uvar_has_meta_tac uv &&
-      BU.set_is_empty (Free.uvars uv.ctx_uvar_typ) in
+      BU.set_is_empty (Free.uvars (U.ctx_uvar_typ uv)) in
 
     let run_meta_arg_tac_and_try_again (flex:flex_t) =
       let uv = flex_uvar flex in
@@ -4787,7 +4788,7 @@ let try_solve_single_valued_implicits env is_tac (imps:Env.implicits) : Env.impl
     let imp_value imp : option term =
       let ctx_u, r = imp.imp_uvar, imp.imp_range in
 
-     let t_norm = N.normalize N.whnf_steps env ctx_u.ctx_uvar_typ in
+     let t_norm = N.normalize N.whnf_steps env (U.ctx_uvar_typ ctx_u) in
 
       match (SS.compress t_norm).n with
       | Tm_fvar fv when S.fv_eq_lid fv Const.unit_lid ->
@@ -4853,7 +4854,7 @@ let check_implicit_solution_and_discharge_guard env imp force_univ_constraints
   then BU.print5 "Checking uvar %s resolved to %s at type %s, introduce for %s at %s\n"
          (Print.uvar_to_string ctx_u.ctx_uvar_head)
          (Print.term_to_string tm)
-         (Print.term_to_string ctx_u.ctx_uvar_typ)
+         (Print.term_to_string (U.ctx_uvar_typ ctx_u))
          reason
         (Range.string_of_range r);
 
@@ -4866,8 +4867,8 @@ let check_implicit_solution_and_discharge_guard env imp force_univ_constraints
       (BU.format3 "While checking implicit %s set to %s of expected type %s"
          (Print.uvar_to_string ctx_u.ctx_uvar_head)
          (N.term_to_string env tm)
-         (N.term_to_string env ctx_u.ctx_uvar_typ))
-      (fun () -> check_implicit_solution env tm ctx_u.ctx_uvar_typ must_tot) in
+         (N.term_to_string env (U.ctx_uvar_typ ctx_u)))
+      (fun () -> check_implicit_solution env tm (U.ctx_uvar_typ ctx_u) must_tot) in
 
     if (not force_univ_constraints) &&
        (List.existsb (fun (reason, _, _) -> reason = Deferred_univ_constraint) g.deferred)
@@ -5065,12 +5066,6 @@ let resolve_implicits' env is_tac g =
         if is_tac then if tm_ok_for_tac tm
                        then until_fixpoint (out, true) tl        //Move on to the next imp
                        else until_fixpoint ((hd, Implicit_unresolved)::out, changed) tl  //Move hd to out
-        // if is_tac
-        // then (
-        //   BU.print2 "Checking solution %s and type %s\n"
-        //             (Print.term_to_string tm)
-        //             (Print.term_to_string ctx_u.ctx_uvar_typ)
-        // );
         else
         begin
           //typecheck the solution
@@ -5115,7 +5110,7 @@ let force_trivial_guard env g =
     | imp::_ -> raise_error (Errors.Fatal_FailToResolveImplicitArgument,
                            BU.format3 "Failed to resolve implicit argument %s of type %s introduced for %s"
                                 (Print.uvar_to_string imp.imp_uvar.ctx_uvar_head)
-                                (N.term_to_string env imp.imp_uvar.ctx_uvar_typ)
+                                (N.term_to_string env (U.ctx_uvar_typ imp.imp_uvar))
                                 imp.imp_reason) imp.imp_range
 
 let subtype_nosmt_force env t1 t2 =

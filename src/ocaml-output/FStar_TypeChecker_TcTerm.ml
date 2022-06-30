@@ -4090,7 +4090,8 @@ and (tc_value :
       | FStar_Syntax_Syntax.Tm_uvar (u, s) ->
           let uu___ =
             let uu___1 =
-              FStar_Syntax_Subst.subst' s u.FStar_Syntax_Syntax.ctx_uvar_typ in
+              let uu___2 = FStar_Syntax_Util.ctx_uvar_typ u in
+              FStar_Syntax_Subst.subst' s uu___2 in
             FStar_Pervasives.Inl uu___1 in
           value_check_expected_typ env1 e uu___
             FStar_TypeChecker_Env.trivial_guard
@@ -11851,7 +11852,8 @@ let rec (universe_of_aux :
       | FStar_Syntax_Syntax.Tm_abs (bs, t, uu___1) ->
           level_of_type_fail env e "arrow type"
       | FStar_Syntax_Syntax.Tm_uvar (u, s) ->
-          FStar_Syntax_Subst.subst' s u.FStar_Syntax_Syntax.ctx_uvar_typ
+          let uu___1 = FStar_Syntax_Util.ctx_uvar_typ u in
+          FStar_Syntax_Subst.subst' s uu___1
       | FStar_Syntax_Syntax.Tm_meta (t, uu___1) -> universe_of_aux env t
       | FStar_Syntax_Syntax.Tm_name n ->
           let uu___1 = FStar_TypeChecker_Env.try_lookup_bv env n in
@@ -12405,8 +12407,8 @@ let rec (typeof_tot_or_gtot_term_fastpath :
             if Prims.op_Negation must_tot
             then
               let uu___ =
-                FStar_Syntax_Subst.subst' s
-                  u.FStar_Syntax_Syntax.ctx_uvar_typ in
+                let uu___1 = FStar_Syntax_Util.ctx_uvar_typ u in
+                FStar_Syntax_Subst.subst' s uu___1 in
               FStar_Pervasives_Native.Some uu___
             else FStar_Pervasives_Native.None
         | FStar_Syntax_Syntax.Tm_quoted (tm, qi) ->

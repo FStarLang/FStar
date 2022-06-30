@@ -8066,8 +8066,8 @@ let (eta_expand :
                 | FStar_Syntax_Syntax.Tm_uvar (u, s) ->
                     let uu___3 =
                       let uu___4 =
-                        FStar_Syntax_Subst.subst' s
-                          u.FStar_Syntax_Syntax.ctx_uvar_typ in
+                        let uu___5 = FStar_Syntax_Util.ctx_uvar_typ u in
+                        FStar_Syntax_Subst.subst' s uu___5 in
                       FStar_Syntax_Util.arrow_formals uu___4 in
                     (match uu___3 with
                      | (formals, _tres) ->

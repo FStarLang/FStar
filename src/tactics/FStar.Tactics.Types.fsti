@@ -38,6 +38,7 @@ module O = FStar.Options
 type goal = {
     goal_main_env: env;
     goal_ctx_uvar : ctx_uvar;
+    goal_display_type: typ; //just for display
     opts    : FStar.Options.optionstate; // option state for this particular goal
     is_guard : bool; // Marks whether this goal arose from a guard during tactic runtime
                      // We make the distinction to be more user-friendly at times
@@ -83,7 +84,7 @@ val tracepoint_with_psc : Cfg.psc -> proofstate -> bool
 val tracepoint : proofstate -> bool
 val set_proofstate_range : proofstate -> Range.range -> proofstate
 
-val subst_proof_state: subst_t -> proofstate -> proofstate
+val subst_proof_display_state: subst_t -> proofstate -> proofstate
 
 val set_ps_psc : Cfg.psc -> proofstate -> proofstate
 val goal_env: goal -> env

@@ -732,7 +732,9 @@ and (ctx_uvar_to_string_aux :
       let uu___ =
         binders_to_string ", " ctx_uvar.FStar_Syntax_Syntax.ctx_uvar_binders in
       let uu___1 = uvar_to_string ctx_uvar.FStar_Syntax_Syntax.ctx_uvar_head in
-      let uu___2 = term_to_string ctx_uvar.FStar_Syntax_Syntax.ctx_uvar_typ in
+      let uu___2 =
+        let uu___3 = FStar_Syntax_Util.ctx_uvar_typ ctx_uvar in
+        term_to_string uu___3 in
       let uu___3 =
         let uu___4 = FStar_Syntax_Util.ctx_uvar_should_check ctx_uvar in
         match uu___4 with

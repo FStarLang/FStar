@@ -261,17 +261,9 @@ let rec (is_type_aux :
           FStar_Syntax_Syntax.fv_eq_lid fv uu___ -> false
       | FStar_Syntax_Syntax.Tm_fvar fv ->
           FStar_Extraction_ML_UEnv.is_type_name env fv
-      | FStar_Syntax_Syntax.Tm_uvar
-          ({ FStar_Syntax_Syntax.ctx_uvar_head = uu___;
-             FStar_Syntax_Syntax.ctx_uvar_gamma = uu___1;
-             FStar_Syntax_Syntax.ctx_uvar_binders = uu___2;
-             FStar_Syntax_Syntax.ctx_uvar_typ = t2;
-             FStar_Syntax_Syntax.ctx_uvar_reason = uu___3;
-             FStar_Syntax_Syntax.ctx_uvar_range = uu___4;
-             FStar_Syntax_Syntax.ctx_uvar_meta = uu___5;_},
-           s)
-          ->
-          let uu___6 = FStar_Syntax_Subst.subst' s t2 in is_arity env uu___6
+      | FStar_Syntax_Syntax.Tm_uvar (u, s) ->
+          let t2 = FStar_Syntax_Util.ctx_uvar_typ u in
+          let uu___ = FStar_Syntax_Subst.subst' s t2 in is_arity env uu___
       | FStar_Syntax_Syntax.Tm_bvar
           { FStar_Syntax_Syntax.ppname = uu___;
             FStar_Syntax_Syntax.index = uu___1;

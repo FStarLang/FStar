@@ -3,6 +3,7 @@ type goal =
   {
   goal_main_env: FStar_TypeChecker_Env.env ;
   goal_ctx_uvar: FStar_Syntax_Syntax.ctx_uvar ;
+  goal_display_type: FStar_Syntax_Syntax.typ ;
   opts: FStar_Options.optionstate ;
   is_guard: Prims.bool ;
   label: Prims.string }
@@ -10,26 +11,35 @@ let (__proj__Mkgoal__item__goal_main_env : goal -> FStar_TypeChecker_Env.env)
   =
   fun projectee ->
     match projectee with
-    | { goal_main_env; goal_ctx_uvar; opts; is_guard; label;_} ->
-        goal_main_env
+    | { goal_main_env; goal_ctx_uvar; goal_display_type; opts; is_guard;
+        label;_} -> goal_main_env
 let (__proj__Mkgoal__item__goal_ctx_uvar :
   goal -> FStar_Syntax_Syntax.ctx_uvar) =
   fun projectee ->
     match projectee with
-    | { goal_main_env; goal_ctx_uvar; opts; is_guard; label;_} ->
-        goal_ctx_uvar
+    | { goal_main_env; goal_ctx_uvar; goal_display_type; opts; is_guard;
+        label;_} -> goal_ctx_uvar
+let (__proj__Mkgoal__item__goal_display_type :
+  goal -> FStar_Syntax_Syntax.typ) =
+  fun projectee ->
+    match projectee with
+    | { goal_main_env; goal_ctx_uvar; goal_display_type; opts; is_guard;
+        label;_} -> goal_display_type
 let (__proj__Mkgoal__item__opts : goal -> FStar_Options.optionstate) =
   fun projectee ->
     match projectee with
-    | { goal_main_env; goal_ctx_uvar; opts; is_guard; label;_} -> opts
+    | { goal_main_env; goal_ctx_uvar; goal_display_type; opts; is_guard;
+        label;_} -> opts
 let (__proj__Mkgoal__item__is_guard : goal -> Prims.bool) =
   fun projectee ->
     match projectee with
-    | { goal_main_env; goal_ctx_uvar; opts; is_guard; label;_} -> is_guard
+    | { goal_main_env; goal_ctx_uvar; goal_display_type; opts; is_guard;
+        label;_} -> is_guard
 let (__proj__Mkgoal__item__label : goal -> Prims.string) =
   fun projectee ->
     match projectee with
-    | { goal_main_env; goal_ctx_uvar; opts; is_guard; label;_} -> label
+    | { goal_main_env; goal_ctx_uvar; goal_display_type; opts; is_guard;
+        label;_} -> label
 type guard_policy =
   | Goal 
   | SMT 
@@ -150,7 +160,7 @@ let (goal_witness : goal -> FStar_Syntax_Syntax.term) =
          ((g.goal_ctx_uvar), ([], FStar_Syntax_Syntax.NoUseRange)))
       FStar_Compiler_Range.dummyRange
 let (goal_type : goal -> FStar_Syntax_Syntax.term) =
-  fun g -> (g.goal_ctx_uvar).FStar_Syntax_Syntax.ctx_uvar_typ
+  fun g -> FStar_Syntax_Util.ctx_uvar_typ g.goal_ctx_uvar
 let (goal_with_env : goal -> FStar_TypeChecker_Env.env -> goal) =
   fun g ->
     fun env ->
@@ -163,8 +173,6 @@ let (goal_with_env : goal -> FStar_TypeChecker_Env.env -> goal) =
           FStar_Syntax_Syntax.ctx_uvar_gamma =
             (env.FStar_TypeChecker_Env.gamma);
           FStar_Syntax_Syntax.ctx_uvar_binders = uu___;
-          FStar_Syntax_Syntax.ctx_uvar_typ =
-            (c.FStar_Syntax_Syntax.ctx_uvar_typ);
           FStar_Syntax_Syntax.ctx_uvar_reason =
             (c.FStar_Syntax_Syntax.ctx_uvar_reason);
           FStar_Syntax_Syntax.ctx_uvar_range =
@@ -175,6 +183,7 @@ let (goal_with_env : goal -> FStar_TypeChecker_Env.env -> goal) =
       {
         goal_main_env = env;
         goal_ctx_uvar = c';
+        goal_display_type = (g.goal_display_type);
         opts = (g.opts);
         is_guard = (g.is_guard);
         label = (g.label)
@@ -185,6 +194,7 @@ let (goal_of_ctx_uvar : goal -> FStar_Syntax_Syntax.ctx_uvar -> goal) =
       {
         goal_main_env = (g.goal_main_env);
         goal_ctx_uvar = ctx_u;
+        goal_display_type = (g.goal_display_type);
         opts = (g.opts);
         is_guard = (g.is_guard);
         label = (g.label)
@@ -199,9 +209,11 @@ let (mk_goal :
       fun o ->
         fun b ->
           fun l ->
+            let uu___ = FStar_Syntax_Util.ctx_uvar_typ u in
             {
               goal_main_env = env;
               goal_ctx_uvar = u;
+              goal_display_type = uu___;
               opts = o;
               is_guard = b;
               label = l
@@ -366,14 +378,11 @@ let (subst_goal : FStar_Syntax_Syntax.subst_elt Prims.list -> goal -> goal) =
             g.FStar_Syntax_Syntax.ctx_uvar_gamma in
         let uu___1 =
           rename_binders subst g.FStar_Syntax_Syntax.ctx_uvar_binders in
-        let uu___2 =
-          FStar_Syntax_Subst.subst subst g.FStar_Syntax_Syntax.ctx_uvar_typ in
         {
           FStar_Syntax_Syntax.ctx_uvar_head =
             (g.FStar_Syntax_Syntax.ctx_uvar_head);
           FStar_Syntax_Syntax.ctx_uvar_gamma = uu___;
           FStar_Syntax_Syntax.ctx_uvar_binders = uu___1;
-          FStar_Syntax_Syntax.ctx_uvar_typ = uu___2;
           FStar_Syntax_Syntax.ctx_uvar_reason =
             (g.FStar_Syntax_Syntax.ctx_uvar_reason);
           FStar_Syntax_Syntax.ctx_uvar_range =
@@ -381,14 +390,16 @@ let (subst_goal : FStar_Syntax_Syntax.subst_elt Prims.list -> goal -> goal) =
           FStar_Syntax_Syntax.ctx_uvar_meta =
             (g.FStar_Syntax_Syntax.ctx_uvar_meta)
         } in
+      let uu___ = FStar_Syntax_Subst.subst subst goal1.goal_display_type in
       {
         goal_main_env = (goal1.goal_main_env);
         goal_ctx_uvar = ctx_uvar;
+        goal_display_type = uu___;
         opts = (goal1.opts);
         is_guard = (goal1.is_guard);
         label = (goal1.label)
       }
-let (subst_proof_state :
+let (subst_proof_display_state :
   FStar_Syntax_Syntax.subst_t -> proofstate -> proofstate) =
   fun subst ->
     fun ps ->
@@ -476,7 +487,7 @@ let (tracepoint_with_psc :
        then
          let ps1 = set_ps_psc psc ps in
          let subst = FStar_TypeChecker_Cfg.psc_subst ps1.psc in
-         let uu___2 = subst_proof_state subst ps1 in
+         let uu___2 = subst_proof_display_state subst ps1 in
          ps1.__dump uu___2 "TRACE"
        else ());
       true
@@ -488,7 +499,8 @@ let (tracepoint : proofstate -> Prims.bool) =
      if uu___1
      then
        let subst = FStar_TypeChecker_Cfg.psc_subst ps.psc in
-       let uu___2 = subst_proof_state subst ps in ps.__dump uu___2 "TRACE"
+       let uu___2 = subst_proof_display_state subst ps in
+       ps.__dump uu___2 "TRACE"
      else ());
     true
 let (set_proofstate_range :
@@ -523,6 +535,7 @@ let (set_label : Prims.string -> goal -> goal) =
       {
         goal_main_env = (g.goal_main_env);
         goal_ctx_uvar = (g.goal_ctx_uvar);
+        goal_display_type = (g.goal_display_type);
         opts = (g.opts);
         is_guard = (g.is_guard);
         label = l

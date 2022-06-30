@@ -115,8 +115,7 @@ let (goal_to_string :
             | l -> Prims.op_Hat " (" (Prims.op_Hat l ")") in
           let goal_binders =
             (g.FStar_Tactics_Types.goal_ctx_uvar).FStar_Syntax_Syntax.ctx_uvar_binders in
-          let goal_ty =
-            (g.FStar_Tactics_Types.goal_ctx_uvar).FStar_Syntax_Syntax.ctx_uvar_typ in
+          let goal_ty = g.FStar_Tactics_Types.goal_display_type in
           let uu___ = unshadow goal_binders goal_ty in
           match uu___ with
           | (goal_binders1, goal_ty1) ->

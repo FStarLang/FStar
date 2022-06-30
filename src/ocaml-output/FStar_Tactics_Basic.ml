@@ -67,31 +67,7 @@ let (goal_with_type :
   fun g ->
     fun t ->
       let u = g.FStar_Tactics_Types.goal_ctx_uvar in
-      set_uvar_expected_typ u t;
-      (let u1 =
-         {
-           FStar_Syntax_Syntax.ctx_uvar_head =
-             (u.FStar_Syntax_Syntax.ctx_uvar_head);
-           FStar_Syntax_Syntax.ctx_uvar_gamma =
-             (u.FStar_Syntax_Syntax.ctx_uvar_gamma);
-           FStar_Syntax_Syntax.ctx_uvar_binders =
-             (u.FStar_Syntax_Syntax.ctx_uvar_binders);
-           FStar_Syntax_Syntax.ctx_uvar_typ = t;
-           FStar_Syntax_Syntax.ctx_uvar_reason =
-             (u.FStar_Syntax_Syntax.ctx_uvar_reason);
-           FStar_Syntax_Syntax.ctx_uvar_range =
-             (u.FStar_Syntax_Syntax.ctx_uvar_range);
-           FStar_Syntax_Syntax.ctx_uvar_meta =
-             (u.FStar_Syntax_Syntax.ctx_uvar_meta)
-         } in
-       {
-         FStar_Tactics_Types.goal_main_env =
-           (g.FStar_Tactics_Types.goal_main_env);
-         FStar_Tactics_Types.goal_ctx_uvar = u1;
-         FStar_Tactics_Types.opts = (g.FStar_Tactics_Types.opts);
-         FStar_Tactics_Types.is_guard = (g.FStar_Tactics_Types.is_guard);
-         FStar_Tactics_Types.label = (g.FStar_Tactics_Types.label)
-       })
+      set_uvar_expected_typ u t; g
 let (bnorm_goal : FStar_Tactics_Types.goal -> FStar_Tactics_Types.goal) =
   fun g ->
     let uu___ =
@@ -138,7 +114,7 @@ let (do_dump_ps : Prims.string -> FStar_Tactics_Types.proofstate -> unit) =
     fun ps ->
       let psc = ps.FStar_Tactics_Types.psc in
       let subst = FStar_TypeChecker_Cfg.psc_subst psc in
-      let uu___ = FStar_Tactics_Types.subst_proof_state subst ps in
+      let uu___ = FStar_Tactics_Types.subst_proof_display_state subst ps in
       FStar_Tactics_Printing.do_dump_proofstate uu___ msg
 let (dump : Prims.string -> unit FStar_Tactics_Monad.tac) =
   fun msg ->
@@ -1765,6 +1741,9 @@ let (intro_rec :
                                             (goal.FStar_Tactics_Types.goal_main_env);
                                           FStar_Tactics_Types.goal_ctx_uvar =
                                             ctx_uvar_u;
+                                          FStar_Tactics_Types.goal_display_type
+                                            =
+                                            (goal.FStar_Tactics_Types.goal_display_type);
                                           FStar_Tactics_Types.opts =
                                             (goal.FStar_Tactics_Types.opts);
                                           FStar_Tactics_Types.is_guard =
@@ -2302,6 +2281,8 @@ let (check_apply_implicits_solutions :
                                       (gl.FStar_Tactics_Types.goal_main_env);
                                     FStar_Tactics_Types.goal_ctx_uvar =
                                       ctx_uvar1;
+                                    FStar_Tactics_Types.goal_display_type =
+                                      (gl.FStar_Tactics_Types.goal_display_type);
                                     FStar_Tactics_Types.opts =
                                       (gl.FStar_Tactics_Types.opts);
                                     FStar_Tactics_Types.is_guard =
@@ -2323,9 +2304,11 @@ let (check_apply_implicits_solutions :
                                      debug_prefix uu___6 uu___7)
                                 (fun uu___5 ->
                                    let g_typ =
+                                     let uu___6 =
+                                       FStar_Syntax_Util.ctx_uvar_typ
+                                         ctx_uvar in
                                      check_implicits_solution env1 term
-                                       ctx_uvar.FStar_Syntax_Syntax.ctx_uvar_typ
-                                       must_tot in
+                                       uu___6 must_tot in
                                    let uu___6 =
                                      let uu___7 =
                                        if debug_on
@@ -2442,8 +2425,12 @@ let (t_apply :
                                                                uu___10, uv)
                                                                 ->
                                                                 let uu___11 =
+                                                                  let uu___12
+                                                                    =
+                                                                    FStar_Syntax_Util.ctx_uvar_typ
+                                                                    uv in
                                                                   FStar_Syntax_Free.uvars
-                                                                    uv.FStar_Syntax_Syntax.ctx_uvar_typ in
+                                                                    uu___12 in
                                                                 FStar_Compiler_Util.set_union
                                                                   s uu___11)
                                                        uvs uu___7 in
@@ -2514,6 +2501,9 @@ let (t_apply :
                                                                     (goal.FStar_Tactics_Types.goal_main_env);
                                                                     FStar_Tactics_Types.goal_ctx_uvar
                                                                     = uv;
+                                                                    FStar_Tactics_Types.goal_display_type
+                                                                    =
+                                                                    (goal.FStar_Tactics_Types.goal_display_type);
                                                                     FStar_Tactics_Types.opts
                                                                     =
                                                                     (goal.FStar_Tactics_Types.opts);
@@ -3685,6 +3675,8 @@ let (dup : unit -> unit FStar_Tactics_Monad.tac) =
                       FStar_Tactics_Types.goal_main_env =
                         (g.FStar_Tactics_Types.goal_main_env);
                       FStar_Tactics_Types.goal_ctx_uvar = u_uvar;
+                      FStar_Tactics_Types.goal_display_type =
+                        (g.FStar_Tactics_Types.goal_display_type);
                       FStar_Tactics_Types.opts = (g.FStar_Tactics_Types.opts);
                       FStar_Tactics_Types.is_guard =
                         (g.FStar_Tactics_Types.is_guard);
@@ -3968,6 +3960,8 @@ let (set_options : Prims.string -> unit FStar_Tactics_Monad.tac) =
                        (g.FStar_Tactics_Types.goal_main_env);
                      FStar_Tactics_Types.goal_ctx_uvar =
                        (g.FStar_Tactics_Types.goal_ctx_uvar);
+                     FStar_Tactics_Types.goal_display_type =
+                       (g.FStar_Tactics_Types.goal_display_type);
                      FStar_Tactics_Types.opts = opts';
                      FStar_Tactics_Types.is_guard =
                        (g.FStar_Tactics_Types.is_guard);

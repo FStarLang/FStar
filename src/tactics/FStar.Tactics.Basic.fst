@@ -88,8 +88,7 @@ let goal_with_type g t
   : goal
   = let u = g.goal_ctx_uvar in
     set_uvar_expected_typ u t;
-    let u = { u with ctx_uvar_typ = t } in
-    { g with goal_ctx_uvar = u }
+    g
 
     
 let bnorm_goal g = goal_with_type g (bnorm (goal_env g) (goal_type g))
@@ -111,7 +110,7 @@ let debugging () : tac bool =
 let do_dump_ps (msg:string) (ps:proofstate) : unit =
   let psc = ps.psc in
   let subst = Cfg.psc_subst psc in
-  do_dump_proofstate (subst_proof_state subst ps) msg
+  do_dump_proofstate (subst_proof_display_state subst ps) msg
 
 let dump (msg:string) : tac unit =
   mk_tac (fun ps ->
@@ -764,7 +763,7 @@ let check_apply_implicits_solutions env
                      debug_prefix
                      (Print.uvar_to_string ctx_uvar.ctx_uvar_head)
                      (Print.term_to_string term)) (fun () ->
-      let g_typ = check_implicits_solution env term ctx_uvar.ctx_uvar_typ must_tot in
+      let g_typ = check_implicits_solution env term (U.ctx_uvar_typ ctx_uvar) must_tot in
       bind (proc_guard
               (if debug_on
                then BU.format3 "%s solved arg %s to %s\n"
@@ -814,7 +813,7 @@ let t_apply (uopt:bool) (only_match:bool) (tc_resolved_uvars:bool) (tm:term) : t
         (FStar.Common.string_of_list (fun (t, _, _) -> Print.term_to_string t) uvs)) (fun () ->
     let w = List.fold_right (fun (uvt, q, _) w -> U.mk_app w [(uvt, q)]) uvs tm in
 
-    let uvset = List.fold_right (fun (_, _, uv) s -> BU.set_union s (SF.uvars uv.ctx_uvar_typ)) uvs (SF.new_uv_set ()) in
+    let uvset = List.fold_right (fun (_, _, uv) s -> BU.set_union s (SF.uvars (U.ctx_uvar_typ uv))) uvs (SF.new_uv_set ()) in
     let free_in_some_goal uv =
         BU.set_mem uv uvset
     in
@@ -1845,7 +1844,7 @@ let proofstate_of_all_implicits rng env imps =
         goals = goals;
         smt_goals = [];
         depth = 0;
-        __dump = (fun ps msg -> do_dump_proofstate ps msg);
+        __dump = do_dump_proofstate;
         psc = Cfg.null_psc;
         entry_range = rng;
         guard_policy = SMT;

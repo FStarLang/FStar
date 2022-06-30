@@ -213,7 +213,6 @@ and ctx_uvar =
     ;
   ctx_uvar_gamma: binding Prims.list ;
   ctx_uvar_binders: binder Prims.list ;
-  ctx_uvar_typ: term' syntax ;
   ctx_uvar_reason: Prims.string ;
   ctx_uvar_range: FStar_Compiler_Range.range ;
   ctx_uvar_meta: ctx_uvar_meta_t FStar_Pervasives_Native.option }
@@ -476,42 +475,37 @@ let (__proj__Mkctx_uvar__item__ctx_uvar_head :
   =
   fun projectee ->
     match projectee with
-    | { ctx_uvar_head; ctx_uvar_gamma; ctx_uvar_binders; ctx_uvar_typ;
-        ctx_uvar_reason; ctx_uvar_range; ctx_uvar_meta;_} -> ctx_uvar_head
+    | { ctx_uvar_head; ctx_uvar_gamma; ctx_uvar_binders; ctx_uvar_reason;
+        ctx_uvar_range; ctx_uvar_meta;_} -> ctx_uvar_head
 let (__proj__Mkctx_uvar__item__ctx_uvar_gamma :
   ctx_uvar -> binding Prims.list) =
   fun projectee ->
     match projectee with
-    | { ctx_uvar_head; ctx_uvar_gamma; ctx_uvar_binders; ctx_uvar_typ;
-        ctx_uvar_reason; ctx_uvar_range; ctx_uvar_meta;_} -> ctx_uvar_gamma
+    | { ctx_uvar_head; ctx_uvar_gamma; ctx_uvar_binders; ctx_uvar_reason;
+        ctx_uvar_range; ctx_uvar_meta;_} -> ctx_uvar_gamma
 let (__proj__Mkctx_uvar__item__ctx_uvar_binders :
   ctx_uvar -> binder Prims.list) =
   fun projectee ->
     match projectee with
-    | { ctx_uvar_head; ctx_uvar_gamma; ctx_uvar_binders; ctx_uvar_typ;
-        ctx_uvar_reason; ctx_uvar_range; ctx_uvar_meta;_} -> ctx_uvar_binders
-let (__proj__Mkctx_uvar__item__ctx_uvar_typ : ctx_uvar -> term' syntax) =
-  fun projectee ->
-    match projectee with
-    | { ctx_uvar_head; ctx_uvar_gamma; ctx_uvar_binders; ctx_uvar_typ;
-        ctx_uvar_reason; ctx_uvar_range; ctx_uvar_meta;_} -> ctx_uvar_typ
+    | { ctx_uvar_head; ctx_uvar_gamma; ctx_uvar_binders; ctx_uvar_reason;
+        ctx_uvar_range; ctx_uvar_meta;_} -> ctx_uvar_binders
 let (__proj__Mkctx_uvar__item__ctx_uvar_reason : ctx_uvar -> Prims.string) =
   fun projectee ->
     match projectee with
-    | { ctx_uvar_head; ctx_uvar_gamma; ctx_uvar_binders; ctx_uvar_typ;
-        ctx_uvar_reason; ctx_uvar_range; ctx_uvar_meta;_} -> ctx_uvar_reason
+    | { ctx_uvar_head; ctx_uvar_gamma; ctx_uvar_binders; ctx_uvar_reason;
+        ctx_uvar_range; ctx_uvar_meta;_} -> ctx_uvar_reason
 let (__proj__Mkctx_uvar__item__ctx_uvar_range :
   ctx_uvar -> FStar_Compiler_Range.range) =
   fun projectee ->
     match projectee with
-    | { ctx_uvar_head; ctx_uvar_gamma; ctx_uvar_binders; ctx_uvar_typ;
-        ctx_uvar_reason; ctx_uvar_range; ctx_uvar_meta;_} -> ctx_uvar_range
+    | { ctx_uvar_head; ctx_uvar_gamma; ctx_uvar_binders; ctx_uvar_reason;
+        ctx_uvar_range; ctx_uvar_meta;_} -> ctx_uvar_range
 let (__proj__Mkctx_uvar__item__ctx_uvar_meta :
   ctx_uvar -> ctx_uvar_meta_t FStar_Pervasives_Native.option) =
   fun projectee ->
     match projectee with
-    | { ctx_uvar_head; ctx_uvar_gamma; ctx_uvar_binders; ctx_uvar_typ;
-        ctx_uvar_reason; ctx_uvar_range; ctx_uvar_meta;_} -> ctx_uvar_meta
+    | { ctx_uvar_head; ctx_uvar_gamma; ctx_uvar_binders; ctx_uvar_reason;
+        ctx_uvar_range; ctx_uvar_meta;_} -> ctx_uvar_meta
 let (uu___is_Ctx_uvar_meta_tac : ctx_uvar_meta_t -> Prims.bool) =
   fun projectee ->
     match projectee with | Ctx_uvar_meta_tac _0 -> true | uu___ -> false

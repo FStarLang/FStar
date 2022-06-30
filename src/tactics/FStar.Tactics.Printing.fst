@@ -33,6 +33,7 @@ module Print   = FStar.Syntax.Print
 module SS      = FStar.Syntax.Subst
 module S       = FStar.Syntax.Syntax
 module Env     = FStar.TypeChecker.Env
+module U       = FStar.Syntax.Util
 
 let term_to_string (e:Env.env) (t:term) : string =
     Print.term_to_string' e.dsenv t
@@ -90,7 +91,7 @@ let goal_to_string (kind : string) (maybe_num : option (int * int)) (ps:proofsta
         | l -> " (" ^ l ^ ")"
     in
     let goal_binders = g.goal_ctx_uvar.ctx_uvar_binders in
-    let goal_ty = g.goal_ctx_uvar.ctx_uvar_typ in
+    let goal_ty = g.goal_display_type in
     let goal_binders, goal_ty = unshadow goal_binders goal_ty in
     let actual_goal =
         if ps.tac_verb_dbg

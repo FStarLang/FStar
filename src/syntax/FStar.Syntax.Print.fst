@@ -388,7 +388,7 @@ and ctx_uvar_to_string_aux print_reason ctx_uvar =
             reason_string
             (binders_to_string ", " ctx_uvar.ctx_uvar_binders)
             (uvar_to_string ctx_uvar.ctx_uvar_head)
-            (term_to_string ctx_uvar.ctx_uvar_typ)
+            (term_to_string (SU.ctx_uvar_typ ctx_uvar))
             (match SU.ctx_uvar_should_check ctx_uvar with
              | Allow_unresolved -> "Allow_unresolved"
              | Allow_untyped  -> "Allow_untyped"

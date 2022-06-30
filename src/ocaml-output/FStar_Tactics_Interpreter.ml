@@ -1662,8 +1662,10 @@ let (report_implicits :
                     FStar_Syntax_Print.uvar_to_string
                       (imp.FStar_TypeChecker_Common.imp_uvar).FStar_Syntax_Syntax.ctx_uvar_head in
                   let uu___4 =
-                    FStar_Syntax_Print.term_to_string
-                      (imp.FStar_TypeChecker_Common.imp_uvar).FStar_Syntax_Syntax.ctx_uvar_typ in
+                    let uu___5 =
+                      FStar_Syntax_Util.ctx_uvar_typ
+                        imp.FStar_TypeChecker_Common.imp_uvar in
+                    FStar_Syntax_Print.term_to_string uu___5 in
                   FStar_Compiler_Util.format3
                     "Tactic left uninstantiated unification variable %s of type %s (reason = \"%s\")"
                     uu___3 uu___4 imp.FStar_TypeChecker_Common.imp_reason in
@@ -1879,7 +1881,7 @@ let run_tactic_on_ps' :
                                            let uu___18 =
                                              FStar_TypeChecker_Cfg.psc_subst
                                                ps1.FStar_Tactics_Types.psc in
-                                           FStar_Tactics_Types.subst_proof_state
+                                           FStar_Tactics_Types.subst_proof_display_state
                                              uu___18 ps1 in
                                          FStar_Tactics_Printing.do_dump_proofstate
                                            uu___17 "at the finish line"
@@ -1893,7 +1895,7 @@ let run_tactic_on_ps' :
                                        let uu___12 =
                                          FStar_TypeChecker_Cfg.psc_subst
                                            ps1.FStar_Tactics_Types.psc in
-                                       FStar_Tactics_Types.subst_proof_state
+                                       FStar_Tactics_Types.subst_proof_display_state
                                          uu___12 ps1 in
                                      FStar_Tactics_Printing.do_dump_proofstate
                                        uu___11 "at the time of failure");

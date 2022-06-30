@@ -123,10 +123,10 @@ let gen env (is_rec:bool) (lecs:list (lbname * term * comp)) : option (list (lbn
                 (BU.set_elements univs |> List.map (fun u -> Print.univ_to_string (U_unif u)) |> String.concat ", ")
                 (BU.set_elements uvt |> List.map (fun u -> BU.format2 "(%s : %s)"
                                                                     (Print.uvar_to_string u.ctx_uvar_head)
-                                                                    (Print.term_to_string u.ctx_uvar_typ)) |> String.concat ", ");
+                                                                    (Print.term_to_string (U.ctx_uvar_typ u))) |> String.concat ", ");
           let univs =
             List.fold_left
-              (fun univs uv -> BU.set_union univs (Free.univs uv.ctx_uvar_typ))
+              (fun univs uv -> BU.set_union univs (Free.univs (U.ctx_uvar_typ uv)))
               univs
              (BU.set_elements uvt) in
           let uvs = gen_uvars uvt in
@@ -135,7 +135,7 @@ let gen env (is_rec:bool) (lecs:list (lbname * term * comp)) : option (list (lbn
                 (BU.set_elements univs |> List.map (fun u -> Print.univ_to_string (U_unif u)) |> String.concat ", ")
                 (uvs |> List.map (fun u -> BU.format2 "(%s : %s)"
                                                         (Print.uvar_to_string u.ctx_uvar_head)
-                                                        (N.term_to_string env u.ctx_uvar_typ)) |> String.concat ", ");
+                                                        (N.term_to_string env (U.ctx_uvar_typ u))) |> String.concat ", ");
 
          univs, uvs, (lbname, e, c)
      in
@@ -195,7 +195,7 @@ let gen env (is_rec:bool) (lecs:list (lbname * term * comp)) : option (list (lbn
          match UF.find u.ctx_uvar_head with
          | Some _ -> failwith "Unexpected instantiation of mutually recursive uvar"
          | _ ->
-           let k = N.normalize [Env.Beta; Env.Exclude Env.Zeta] env u.ctx_uvar_typ in
+           let k = N.normalize [Env.Beta; Env.Exclude Env.Zeta] env (U.ctx_uvar_typ u) in
            let bs, kres = U.arrow_formals k in
            let _ =
              //we only generalize variables at type k = a:Type{phi}

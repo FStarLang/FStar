@@ -2399,3 +2399,6 @@ let check_mutual_universes (lbs:list letbinding)
 
 let ctx_uvar_should_check (u:ctx_uvar) = 
     (Unionfind.find_decoration u.ctx_uvar_head).uvar_decoration_should_check
+
+let ctx_uvar_typ (u:ctx_uvar) = 
+    (Unionfind.find_decoration u.ctx_uvar_head).uvar_decoration_typ

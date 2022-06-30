@@ -512,7 +512,7 @@ let report_implicits rng (is : Env.implicits) : unit =
                 (Err.Error_UninstantiatedUnificationVarInTactic,
                  BU.format3 ("Tactic left uninstantiated unification variable %s of type %s (reason = \"%s\")")
                              (Print.uvar_to_string imp.imp_uvar.ctx_uvar_head)
-                             (Print.term_to_string imp.imp_uvar.ctx_uvar_typ)
+                             (Print.term_to_string (U.ctx_uvar_typ imp.imp_uvar))
                              imp.imp_reason));
   Err.stop_if_err ()
 
@@ -593,11 +593,11 @@ let run_tactic_on_ps'
         // /implicits
 
         if !tacdbg then
-            do_dump_proofstate (subst_proof_state (Cfg.psc_subst ps.psc) ps) "at the finish line";
+            do_dump_proofstate (subst_proof_display_state (Cfg.psc_subst ps.psc) ps) "at the finish line";
         (ps.goals@ps.smt_goals, ret)
 
     | Failed (e, ps) ->
-        do_dump_proofstate (subst_proof_state (Cfg.psc_subst ps.psc) ps) "at the time of failure";
+        do_dump_proofstate (subst_proof_display_state (Cfg.psc_subst ps.psc) ps) "at the time of failure";
         let texn_to_string e =
             match e with
             | TacticFailure s ->

@@ -1767,7 +1767,6 @@ let new_implicit_var_aux reason r env k should_check meta =
           ctx_uvar_head=FStar.Syntax.Unionfind.fresh decoration r;
           ctx_uvar_gamma=gamma;
           ctx_uvar_binders=binders;
-          ctx_uvar_typ=k;
           ctx_uvar_reason=reason;
           ctx_uvar_range=r;
           ctx_uvar_meta=meta;
