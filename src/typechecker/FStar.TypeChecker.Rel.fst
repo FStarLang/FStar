@@ -4951,19 +4951,38 @@ let check_implicit_solution_for_tac (env:env) (i:implicit) : bool =
                          None
                          "subtype_tactic_solution"                   
     then true
-    else (
-     if Options.debug_any () 
-     then (
-          BU.print5 "(%s) Uvar solution for %s was not well-typed. Expected %s got %s : %s\n"
+    else 
+      begin
+      // failing at this point is fatal;
+      // and the check may have failed because we didn't unroll let recs;
+      // so try once more after normalizing both types
+        let compute t =
+            N.normalize [Env.UnfoldTac; //we're in is_tac; don't unfold "tac_opaque"
+                         Env.UnfoldUntil delta_constant;
+                         Env.Zeta;
+                         Env.Iota;
+                         Env.Primops]
+                         env
+                         t
+        in
+        let tm_t = compute tm_t in
+        let uv_t = compute uvar_ty in
+        if env.subtype_nosmt_force env tm_t uv_t
+        then true
+        else (
+          if Options.debug_any () 
+          then (
+            BU.print5 "(%s) Uvar solution for %s was not well-typed. Expected %s got %s : %s\n"
                                   (Range.string_of_range (Env.get_range env))
                                   (Print.uvar_to_string ctx_u.ctx_uvar_head)
                                   (Print.term_to_string uvar_ty)
                                   (Print.term_to_string tm)
                                   (Print.term_to_string tm_t)
-     );
-     false
+          );
+          false
+        )
+      end
     )
-  )
 
 let resolve_implicits' env is_tac g =
 
