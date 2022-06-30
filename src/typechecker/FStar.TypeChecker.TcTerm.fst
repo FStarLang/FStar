@@ -4362,7 +4362,14 @@ let rec universe_of_aux env e =
    //these next few cases are easy; we just use the type stored at the node
    | Tm_uvar (u, s) -> SS.subst' s u.ctx_uvar_typ
    | Tm_meta(t, _) -> universe_of_aux env t
-   | Tm_name n -> n.sort
+   | Tm_name n ->
+     //
+     // AR: This is suboptimal,
+     //     We should always be able to find n in the env
+     //
+     (match Env.try_lookup_bv env n with
+      | Some (t, _) -> t
+      | None -> n.sort)
    | Tm_fvar fv ->
      let (_, t), _ = Env.lookup_lid env fv.fv_name.v in
      t
