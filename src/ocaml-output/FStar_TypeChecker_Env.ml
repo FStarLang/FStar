@@ -1695,7 +1695,20 @@ let (initial_env :
                                    let uu___12 =
                                      typeof_tot_or_gtot_term env1 t must_tot1 in
                                    (match uu___12 with
-                                    | (uu___13, k, g) -> (k, g)));
+                                    | (t', k, g) ->
+                                        ((let uu___14 =
+                                            FStar_Syntax_Print.term_to_string
+                                              t in
+                                          let uu___15 =
+                                            FStar_Syntax_Print.term_to_string
+                                              t' in
+                                          let uu___16 =
+                                            FStar_Syntax_Print.term_to_string
+                                              k in
+                                          FStar_Compiler_Util.print3
+                                            "typeof_well_typed_tot_or_gtot_term took slow path: %s was types as %s at type %s\n"
+                                            uu___14 uu___15 uu___16);
+                                         (k, g))));
                       subtype_nosmt_force;
                       use_bv_sorts = false;
                       qtbl_name_and_index = uu___3;
@@ -5837,9 +5850,10 @@ let (is_trivial : guard_t -> Prims.bool) =
         FStar_Compiler_Effect.op_Bar_Greater i
           (FStar_Compiler_Util.for_all
              (fun imp ->
-                ((imp.FStar_TypeChecker_Common.imp_uvar).FStar_Syntax_Syntax.ctx_uvar_should_check
-                   = FStar_Syntax_Syntax.Allow_unresolved)
-                  ||
+                (let uu___1 =
+                   FStar_Syntax_Util.ctx_uvar_should_check
+                     imp.FStar_TypeChecker_Common.imp_uvar in
+                 uu___1 = FStar_Syntax_Syntax.Allow_unresolved) ||
                   (let uu___1 =
                      FStar_Syntax_Unionfind.find
                        (imp.FStar_TypeChecker_Common.imp_uvar).FStar_Syntax_Syntax.ctx_uvar_head in
@@ -6173,16 +6187,20 @@ let (new_implicit_var_aux :
               | uu___1 ->
                   let binders = all_binders env1 in
                   let gamma = env1.gamma in
+                  let decoration =
+                    {
+                      FStar_Syntax_Syntax.uvar_decoration_typ = k;
+                      FStar_Syntax_Syntax.uvar_decoration_should_check =
+                        should_check
+                    } in
                   let ctx_uvar =
-                    let uu___2 = FStar_Syntax_Unionfind.fresh r in
+                    let uu___2 = FStar_Syntax_Unionfind.fresh decoration r in
                     {
                       FStar_Syntax_Syntax.ctx_uvar_head = uu___2;
                       FStar_Syntax_Syntax.ctx_uvar_gamma = gamma;
                       FStar_Syntax_Syntax.ctx_uvar_binders = binders;
                       FStar_Syntax_Syntax.ctx_uvar_typ = k;
                       FStar_Syntax_Syntax.ctx_uvar_reason = reason;
-                      FStar_Syntax_Syntax.ctx_uvar_should_check =
-                        should_check;
                       FStar_Syntax_Syntax.ctx_uvar_range = r;
                       FStar_Syntax_Syntax.ctx_uvar_meta = meta
                     } in

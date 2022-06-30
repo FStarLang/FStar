@@ -4601,7 +4601,6 @@ let rec typeof_tot_or_gtot_term_fastpath (env:env) (t:term) (must_tot:bool) : op
   | Tm_match _
   | Tm_let _
   | Tm_unknown
-  | Tm_uinst _ -> None
   | _ -> failwith ("Impossible! (" ^ (Print.tag_of_term t) ^ ")")
 
 (*

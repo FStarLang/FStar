@@ -151,35 +151,6 @@ let (goal_witness : goal -> FStar_Syntax_Syntax.term) =
       FStar_Compiler_Range.dummyRange
 let (goal_type : goal -> FStar_Syntax_Syntax.term) =
   fun g -> (g.goal_ctx_uvar).FStar_Syntax_Syntax.ctx_uvar_typ
-let (goal_with_type_pure : goal -> FStar_Syntax_Syntax.term -> goal) =
-  fun g ->
-    fun t ->
-      let c = g.goal_ctx_uvar in
-      let c' =
-        {
-          FStar_Syntax_Syntax.ctx_uvar_head =
-            (c.FStar_Syntax_Syntax.ctx_uvar_head);
-          FStar_Syntax_Syntax.ctx_uvar_gamma =
-            (c.FStar_Syntax_Syntax.ctx_uvar_gamma);
-          FStar_Syntax_Syntax.ctx_uvar_binders =
-            (c.FStar_Syntax_Syntax.ctx_uvar_binders);
-          FStar_Syntax_Syntax.ctx_uvar_typ = t;
-          FStar_Syntax_Syntax.ctx_uvar_reason =
-            (c.FStar_Syntax_Syntax.ctx_uvar_reason);
-          FStar_Syntax_Syntax.ctx_uvar_should_check =
-            (c.FStar_Syntax_Syntax.ctx_uvar_should_check);
-          FStar_Syntax_Syntax.ctx_uvar_range =
-            (c.FStar_Syntax_Syntax.ctx_uvar_range);
-          FStar_Syntax_Syntax.ctx_uvar_meta =
-            (c.FStar_Syntax_Syntax.ctx_uvar_meta)
-        } in
-      {
-        goal_main_env = (g.goal_main_env);
-        goal_ctx_uvar = c';
-        opts = (g.opts);
-        is_guard = (g.is_guard);
-        label = (g.label)
-      }
 let (goal_with_env : goal -> FStar_TypeChecker_Env.env -> goal) =
   fun g ->
     fun env ->
@@ -196,8 +167,6 @@ let (goal_with_env : goal -> FStar_TypeChecker_Env.env -> goal) =
             (c.FStar_Syntax_Syntax.ctx_uvar_typ);
           FStar_Syntax_Syntax.ctx_uvar_reason =
             (c.FStar_Syntax_Syntax.ctx_uvar_reason);
-          FStar_Syntax_Syntax.ctx_uvar_should_check =
-            (c.FStar_Syntax_Syntax.ctx_uvar_should_check);
           FStar_Syntax_Syntax.ctx_uvar_range =
             (c.FStar_Syntax_Syntax.ctx_uvar_range);
           FStar_Syntax_Syntax.ctx_uvar_meta =
@@ -407,8 +376,6 @@ let (subst_goal : FStar_Syntax_Syntax.subst_elt Prims.list -> goal -> goal) =
           FStar_Syntax_Syntax.ctx_uvar_typ = uu___2;
           FStar_Syntax_Syntax.ctx_uvar_reason =
             (g.FStar_Syntax_Syntax.ctx_uvar_reason);
-          FStar_Syntax_Syntax.ctx_uvar_should_check =
-            (g.FStar_Syntax_Syntax.ctx_uvar_should_check);
           FStar_Syntax_Syntax.ctx_uvar_range =
             (g.FStar_Syntax_Syntax.ctx_uvar_range);
           FStar_Syntax_Syntax.ctx_uvar_meta =

@@ -102,8 +102,6 @@ val lset                   : typ -> string -> term -> tac unit
 val curms                  : unit -> tac Z.t
 val set_urgency            : Z.t -> tac unit
 val t_commute_applied_match : unit -> tac unit
-
-val is_implicit_for_goal (g:goal) (i:TcComm.implicit) : bool
-val mark_implicit_as_allow_untyped (i:TcComm.implicit) : TcComm.implicit
-val goal_with_type : goal -> typ -> tac goal
+val goal_with_type : goal -> typ -> goal
+val mark_goal_implicit_allow_untyped : goal -> unit
 

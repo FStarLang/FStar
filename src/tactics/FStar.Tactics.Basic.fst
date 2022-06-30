@@ -70,47 +70,27 @@ let tts = N.term_to_string
 
 let term_to_string e t = Print.term_to_string' e.dsenv t
 
+let set_uvar_expected_typ (u:ctx_uvar) (t:typ)
+  : unit
+  = let dec = UF.find_decoration u.ctx_uvar_head in
+    UF.change_decoration u.ctx_uvar_head ({dec with uvar_decoration_typ = t })
 
-let is_ctx_uvar_for_implicit (u:ctx_uvar) (i:TcComm.implicit) =
-    u.ctx_uvar_head `FStar.Syntax.Unionfind.equiv` i.imp_uvar.ctx_uvar_head
-    
-let is_implicit_for_goal (g:goal) (i:TcComm.implicit) =
-    is_ctx_uvar_for_implicit g.goal_ctx_uvar i
-
-let mark_implicit_as_allow_untyped (i:TcComm.implicit) = 
-  let uvar = { i.imp_uvar with ctx_uvar_should_check = Allow_untyped } in
-  {i with imp_uvar = uvar}
-
-let set_implicit_uvar_typ (t:typ) (i:TcComm.implicit) = 
-  let uvar = { i.imp_uvar with ctx_uvar_typ = t } in
-  {i with imp_uvar = uvar}
-
-let find_and_map_implicit (u:ctx_uvar) (f:TcComm.implicit -> TcComm.implicit)
-  : tac unit
-  = bind get (fun ps ->
-    let imps =
-      List.map
-        (fun i -> 
-             if is_ctx_uvar_for_implicit u i
-             then f i
-             else i)
-        ps.all_implicits
-    in
-    set ({ps with all_implicits = imps}))
-
-let find_and_mark_implicit_as_allow_untyped (u:ctx_uvar)
-  : tac unit
-  = find_and_map_implicit u mark_implicit_as_allow_untyped 
+let mark_uvar_as_allow_untyped (u:ctx_uvar)
+  : unit
+  = let dec = UF.find_decoration u.ctx_uvar_head in
+    UF.change_decoration u.ctx_uvar_head ({dec with uvar_decoration_should_check = Allow_untyped})
   
 let mark_goal_implicit_allow_untyped (g:goal) 
-  : tac unit
-  = find_and_mark_implicit_as_allow_untyped g.goal_ctx_uvar
+  : unit
+  = mark_uvar_as_allow_untyped g.goal_ctx_uvar
 
 let goal_with_type g t
-  : tac goal
-  = let g' = FStar.Tactics.Types.goal_with_type_pure g t in
-    bind (find_and_map_implicit g.goal_ctx_uvar (set_implicit_uvar_typ t)) (fun _ ->
-    ret g')
+  : goal
+  = let u = g.goal_ctx_uvar in
+    set_uvar_expected_typ u t;
+    let u = { u with ctx_uvar_typ = t } in
+    { g with goal_ctx_uvar = u }
+
     
 let bnorm_goal g = goal_with_type g (bnorm (goal_env g) (goal_type g))
 
@@ -321,8 +301,8 @@ let set_solution goal solution : tac unit =
       fail (BU.format1 "Goal %s is already solved" (goal_to_string_verbose goal))
     | None ->
       FStar.Syntax.Unionfind.change goal.goal_ctx_uvar.ctx_uvar_head solution;
-      bind (mark_goal_implicit_allow_untyped goal) (fun _ ->
-      ret ())
+      mark_goal_implicit_allow_untyped goal;
+      ret ()
 
 let trysolve (goal : goal) (solution : term) : tac bool =
     do_unify (goal_env goal) solution (goal_witness goal)
@@ -538,10 +518,9 @@ let seq (t1:tac unit) (t2:tac unit) : tac unit =
         bind (map t2) (fun _ -> ret ()))
     )
 
-let should_check_goal_uvar (g:goal) = g.goal_ctx_uvar.ctx_uvar_should_check
+let should_check_goal_uvar (g:goal) = U.ctx_uvar_should_check g.goal_ctx_uvar
 
-let bnorm_and_replace g =
-    bind (bnorm_goal g) replace_cur
+let bnorm_and_replace g = replace_cur (bnorm_goal g)
 
 (*
   [intro]:
@@ -633,8 +612,7 @@ let norm (s : list EMB.norm_step) : tac unit =
     let steps = [Env.Reify; Env.UnfoldTac]@(Cfg.translate_norm_steps s) in
     //let w = normalize steps (goal_env goal) (goal_witness goal) in
     let t = normalize steps (goal_env goal) (goal_type goal) in
-    bind (goal_with_type goal t) (fun g -> 
-    replace_cur g)
+    replace_cur (goal_with_type goal t)
     ))
 
 let norm_term_env (e : env) (s : list EMB.norm_step) (t : term) : tac term = wrap_err "norm_term" <|
@@ -659,15 +637,15 @@ let refine_intro () : tac unit = wrap_err "refine_intro" <|
     | _, None -> fail "not a refinement"
     | t, Some (bv, phi) ->
         //Mark goal as untyped, since we're adding its refinement as a separate goal
-        bind (mark_goal_implicit_allow_untyped g) (fun _ ->
-        bind (goal_with_type g t) (fun g1 ->
+        mark_goal_implicit_allow_untyped g;
+        let g1 = goal_with_type g t in
         let bv, phi = match SS.open_term [S.mk_binder bv] phi with
                       | bvs, phi -> (List.hd bvs).binder_bv, phi
         in
         bind (mk_irrelevant_goal "refine_intro refinement" (goal_env g)
                     (SS.subst [S.NT (bv, (goal_witness g))] phi) (rangeof g) g.opts g.label) (fun g2 ->
         bind dismiss (fun _ ->
-        add_goals [g1;g2])))))
+        add_goals [g1;g2])))
 
 let __exact_now set_expected_typ (t:term) : tac unit =
     bind cur_goal (fun goal ->
@@ -685,11 +663,8 @@ let __exact_now set_expected_typ (t:term) : tac unit =
     bind (do_unify (goal_env goal) typ (goal_type goal)) (fun b ->
     if b
     then (
-      bind (
-        if set_expected_typ
-        then mark_goal_implicit_allow_untyped goal //we already added guard as an additional goal; no need to check it again
-        else ret ()) (fun _ -> 
-      solve goal t)
+      if set_expected_typ then mark_goal_implicit_allow_untyped goal; //we already added guard as an additional goal; no need to check it again
+      solve goal t
     )
     else
       let typ, goalt = TypeChecker.Err.print_discrepancy (tts (goal_env goal)) typ (goal_type goal) in
@@ -800,8 +775,8 @@ let check_apply_implicits_solutions env
               env g_typ (rangeof gl)) (fun () ->
       //we've checked this implicit and added its guard as an explicit goal
       //no need to recheck it
-      bind (find_and_mark_implicit_as_allow_untyped ctx_uvar) (fun _ ->
-      ret []))) in
+      mark_implicit_as_allow_untyped ctx_uvar;
+      ret [])) in
 
   imps |> mapM check_one_implicit
 
@@ -847,7 +822,7 @@ let t_apply (uopt:bool) (only_match:bool) (tc_resolved_uvars:bool) (tm:term) : t
     //
     //process uvs
     //first, if some of them are solved already, perhaps during unification,
-    //  typecheck them
+    //  typecheck them if tc_resolved_uvars is on
     //then, if uopt is on, filter out those that appear in other goals
     //add the rest as goals
     //
@@ -867,7 +842,6 @@ let t_apply (uopt:bool) (only_match:bool) (tc_resolved_uvars:bool) (tm:term) : t
                                   //
                                   //if uopt is on, we don't keep uvars that
                                   //  appear in some other goals
-                                  //filter those
                                   //
                                   not (uopt && free_in_some_goal g.goal_ctx_uvar))
                    |> mapM (fun g -> bnorm_goal g)) (fun subgoals ->
@@ -1090,12 +1064,14 @@ let binder_retype (b : binder) : tac unit = wrap_err "binder_retype" <|
         let bvs = List.map (fun b -> { b with sort = SS.subst s b.sort }) bvs in
         let env' = push_bvs e0 (bv''::bvs) in
         bind dismiss (fun _ ->
-        bind (goal_with_type
+        let new_goal = 
+          goal_with_type
                 (goal_with_env goal env')
-                (SS.subst s (goal_type goal))) (fun new_goal ->
+                (SS.subst s (goal_type goal))
+        in
         bind (add_goals [new_goal]) (fun _ ->
               add_irrelevant_goal goal "binder_retype equation" e0
-                  (U.mk_eq2 (U_succ u) ty bv.sort t')))))
+                  (U.mk_eq2 (U_succ u) ty bv.sort t'))))
     )
 
 (* TODO: move to bv *)
@@ -1357,8 +1333,8 @@ let unshelve (t : term) : tac unit = wrap_err "unshelve" <|
     | { n = Tm_uvar (ctx_uvar, _) }, _ ->
         let env = {env with gamma=ctx_uvar.ctx_uvar_gamma} in
         let g = mk_goal env ctx_uvar opts false "" in
-        bind (bnorm_goal g) (fun g ->
-        add_goals [g])
+        let g = bnorm_goal g in
+        add_goals [g]
     | _ -> fail "not a uvar")
 
 let tac_and (t1 : tac bool) (t2 : tac bool) : tac bool =
@@ -1430,7 +1406,7 @@ let change (ty : typ) : tac unit = wrap_err "change" <|
     bind (proc_guard "change" (goal_env g) guard (rangeof g)) (fun () ->
     bind (do_unify (goal_env g) (goal_type g) ty) (fun bb ->
     if bb
-    then bind (goal_with_type g ty) replace_cur 
+    then replace_cur (goal_with_type g ty)
     else begin
         (* Give it a second try, fully normalize the term the user gave
          * and unify it with the fully normalized goal. If that succeeds,
@@ -1441,7 +1417,7 @@ let change (ty : typ) : tac unit = wrap_err "change" <|
         let nty = normalize steps (goal_env g) ty in
         bind (do_unify (goal_env g) ng nty) (fun b ->
         if b
-        then bind (goal_with_type g ty) replace_cur 
+        then replace_cur (goal_with_type g ty)
         else fail "not convertible")
     end)))))
 
@@ -1575,9 +1551,9 @@ let t_destruct (s_tm : term) : tac (list (fv * Z.t)) = wrap_err "destruct" <|
       let w = mk (Tm_match (s_tm, None, brs, None)) s_tm.pos in
       bind (solve' g w) (fun () ->
       //we constructed a well-typed term to solve g; no need to recheck it
-      bind (mark_goal_implicit_allow_untyped g) (fun _ ->
+      mark_goal_implicit_allow_untyped g;
       bind (add_goals goals) (fun () ->
-      ret infos))))))
+      ret infos)))))
 
     | _ -> fail "not an inductive type"))))
 
