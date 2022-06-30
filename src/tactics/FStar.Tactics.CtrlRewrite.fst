@@ -221,7 +221,7 @@ let rec ctrl_fold_env
       seq_ctac (on_subterms g0 d controller rewriter env)
                (maybe_rewrite g0 controller rewriter env) tm
 
-and recurse_option_residual_comp (env:env) (rc_opt:option residual_comp) recurse
+and recurse_option_residual_comp (env:env) (retyping_subst:list subst_elt) (rc_opt:option residual_comp) recurse
   : tac (option residual_comp & ctrl_flag)
   = // ret (None, Continue)
     match rc_opt with
@@ -230,6 +230,7 @@ and recurse_option_residual_comp (env:env) (rc_opt:option residual_comp) recurse
       match rc.residual_typ with
       | None -> ret (Some rc, Continue)
       | Some t ->
+        let t = SS.subst retyping_subst t in
         bind (recurse env t) (fun (t, flag) ->
         ret (Some ({rc with residual_typ=Some t}), flag))
 
@@ -246,15 +247,20 @@ and on_subterms
 
     //
     // t is the body and k is the option residual comp
+    // 
+    // Note, the type of the binder sorts may change as we rewrite them
+    // The retyping_subst is an identity substitution that replaces the bound vars
+    // in the term with their new variants tagged with the rewritten bv sorts
     //
-    let rec descend_binders orig accum_binders accum_flag env bs t k rebuild =
+    let rec descend_binders orig accum_binders retyping_subst accum_flag env bs t k rebuild =
       match bs with
       | [] ->
+        let t = SS.subst retyping_subst t in
         bind (recurse env t) (fun (t, t_flag) ->
         match t_flag with
         | Abort -> ret (orig.n, t_flag) //if anything aborts, just return the original abs
         | _ ->
-          bind (recurse_option_residual_comp env k recurse) (fun (k, k_flag) ->
+          bind (recurse_option_residual_comp env retyping_subst k recurse) (fun (k, k_flag) ->
           let bs = List.rev accum_binders in
           let subst = SS.closing_of_binders bs in
           let bs = SS.subst_binders subst bs in
@@ -263,14 +269,16 @@ and on_subterms
           ret (rebuild bs t k,
                par_combine (accum_flag, (par_combine (t_flag, k_flag))))))
       | b::bs ->
-        bind (recurse env b.binder_bv.sort) (fun (s, flag) ->
+        let s = SS.subst retyping_subst b.binder_bv.sort in
+        bind (recurse env s) (fun (s, flag) ->
         match flag with
         | Abort -> ret (orig.n, flag) //if anything aborts, just return the original abs
         | _ ->
           let bv = {b.binder_bv with sort = s} in
           let b = {b with binder_bv = bv} in
           let env = Env.push_binders env [b] in
-          descend_binders orig (b::accum_binders) (par_combine (accum_flag, flag)) env bs t k rebuild)
+          let retyping_subst = NT(bv, bv_to_name bv) :: retyping_subst in
+          descend_binders orig (b::accum_binders) retyping_subst (par_combine (accum_flag, flag)) env bs t k rebuild)
     in
     let go () : tac (term' * ctrl_flag) =
       let tm = SS.compress tm in
@@ -284,12 +292,12 @@ and on_subterms
       | Tm_abs (bs, t, k) ->
         let bs_orig, t, subst = SS.open_term' bs t in
         let k = k |> BU.map_option (SS.subst_residual_comp subst) in
-        descend_binders tm [] Continue env bs_orig t k
+        descend_binders tm [] [] Continue env bs_orig t k
                         (fun bs t k -> Tm_abs(bs, t, k))
 
       | Tm_refine (x, phi) -> 
         let bs, phi = SS.open_term [S.mk_binder x] phi in
-        descend_binders tm [] Continue env bs phi None  //no residual comp
+        descend_binders tm [] [] Continue env bs phi None  //no residual comp
                         (fun bs phi _ ->
                           let x = 
                             match bs with

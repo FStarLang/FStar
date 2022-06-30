@@ -14116,11 +14116,12 @@ let (check_implicit_solution_for_tac :
                         FStar_TypeChecker_Env.Zeta;
                         FStar_TypeChecker_Env.Iota;
                         FStar_TypeChecker_Env.Primops] env1 t in
-                    let tm_t1 = compute tm_t in
-                    let uv_t = compute uvar_ty in
-                    let uu___7 =
+                    let retry uu___7 =
+                      let tm_t1 = compute tm_t in
+                      let uv_t = compute uvar_ty in
                       env1.FStar_TypeChecker_Env.subtype_nosmt_force env1
                         tm_t1 uv_t in
+                    let uu___7 = retry () in
                     if uu___7
                     then true
                     else
@@ -14138,7 +14139,7 @@ let (check_implicit_solution_for_tac :
                             FStar_Syntax_Print.term_to_string uvar_ty in
                           let uu___14 = FStar_Syntax_Print.term_to_string tm in
                           let uu___15 =
-                            FStar_Syntax_Print.term_to_string tm_t1 in
+                            FStar_Syntax_Print.term_to_string tm_t in
                           FStar_Compiler_Util.print5
                             "(%s) Uvar solution for %s was not well-typed. Expected %s got %s : %s\n"
                             uu___11 uu___12 uu___13 uu___14 uu___15

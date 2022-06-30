@@ -4965,9 +4965,12 @@ let check_implicit_solution_for_tac (env:env) (i:implicit) : bool =
                          env
                          t
         in
-        let tm_t = compute tm_t in
-        let uv_t = compute uvar_ty in
-        if env.subtype_nosmt_force env tm_t uv_t
+        let retry () = 
+          let tm_t = compute tm_t in
+          let uv_t = compute uvar_ty in
+          env.subtype_nosmt_force env tm_t uv_t
+        in
+        if retry()
         then true
         else (
           if Options.debug_any () 

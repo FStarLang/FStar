@@ -60,3 +60,14 @@ let test2 (x:int) (_:squash (x > 0)) =
     by (split();
         smt();
         smt())
+
+let rec arrow (args:list Type) (res:Type) = 
+  match args with
+  | [] -> res
+  | hd::tl -> hd -> arrow tl res
+
+let app (arg:Type) (res:Type) (f:arrow [arg] res) (x:arg) : res = f x
+
+let id_int : int -> int = fun x -> x
+
+let some_int : int = _ by (apply (`app); norm [zeta; delta; iota]; apply (`id_int); exact (`0))
