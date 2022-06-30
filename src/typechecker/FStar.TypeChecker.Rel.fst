@@ -5051,7 +5051,7 @@ let resolve_implicits' env is_tac g =
                      BU.print5 "(%s) Uvar solution for %s was not well-typed. Expected %s got %s : %s\n"
                                   (Range.string_of_range (Env.get_range env))
                                   (Print.uvar_to_string ctx_u.ctx_uvar_head)
-                                  (Print.term_to_string uvar_decoration_typ)
+                                  (Print.term_to_string uv_t)
                                   (Print.term_to_string tm)
                                   (Print.term_to_string tm_t);
                      false
