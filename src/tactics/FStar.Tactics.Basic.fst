@@ -668,8 +668,8 @@ let __exact_now set_expected_typ (t:term) : tac unit =
                                                                   (Print.term_to_string (goal_type goal))) (fun _ ->
     bind (do_unify (goal_env goal) typ (goal_type goal)) (fun b ->
     if b
-    then (
-      if set_expected_typ then mark_goal_implicit_allow_untyped goal; //we already added guard as an additional goal; no need to check it again
+    then ( // do unify succeeded with a trivial guard; so the goal is solved and we don't have to check it again
+      mark_goal_implicit_allow_untyped goal;
       solve goal t
     )
     else
@@ -1216,6 +1216,10 @@ let dup () : tac unit =
     bind cur_goal (fun g ->
     let env = goal_env g in
     bind (new_uvar "dup" env (goal_type g) (Some (should_check_goal_uvar g)) (rangeof g)) (fun (u, u_uvar) ->
+    //the new uvar is just as Strict as the original one. So, its assignement will be checked
+    //and we have a goal that requires us to prove it equal to the original uvar
+    //so we can clear the should_check status of the current uvar
+    mark_uvar_as_allow_untyped g.goal_ctx_uvar;
     let g' = { g with goal_ctx_uvar = u_uvar } in
     bind dismiss (fun _ ->
     let t_eq = U.mk_eq2 (env.universe_of env (goal_type g)) (goal_type g) u (goal_witness g) in
@@ -1837,7 +1841,11 @@ let t_commute_applied_match () : tac unit = wrap_err "t_commute_applied_match" <
       | None -> fail "discharging the equality failed"
       | Some guard ->
         if Env.is_trivial_guard_formula guard
-        then solve g U.exp_unit
+        then (
+          //we just checked that its guard is trivial; so no need to check again
+          mark_uvar_as_allow_untyped g.goal_ctx_uvar;
+          solve g U.exp_unit
+        )
         else failwith "internal error: _t_refl: guard is not trivial")
     | _ ->
       fail "lhs is not a match"

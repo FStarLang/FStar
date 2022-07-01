@@ -1953,11 +1953,8 @@ let (__exact_now :
                                      (fun b ->
                                         if b
                                         then
-                                          (if set_expected_typ
-                                           then
-                                             mark_goal_implicit_allow_untyped
-                                               goal
-                                           else ();
+                                          (mark_goal_implicit_allow_untyped
+                                             goal;
                                            solve goal t1)
                                         else
                                           (let uu___8 =
@@ -3694,34 +3691,38 @@ let (dup : unit -> unit FStar_Tactics_Monad.tac) =
            (fun uu___2 ->
               match uu___2 with
               | (u, u_uvar) ->
-                  let g' =
-                    {
-                      FStar_Tactics_Types.goal_main_env =
-                        (g.FStar_Tactics_Types.goal_main_env);
-                      FStar_Tactics_Types.goal_ctx_uvar = u_uvar;
-                      FStar_Tactics_Types.opts = (g.FStar_Tactics_Types.opts);
-                      FStar_Tactics_Types.is_guard =
-                        (g.FStar_Tactics_Types.is_guard);
-                      FStar_Tactics_Types.label =
-                        (g.FStar_Tactics_Types.label)
-                    } in
-                  FStar_Tactics_Monad.bind FStar_Tactics_Monad.dismiss
-                    (fun uu___3 ->
-                       let t_eq =
-                         let uu___4 =
-                           let uu___5 = FStar_Tactics_Types.goal_type g in
-                           env1.FStar_TypeChecker_Env.universe_of env1 uu___5 in
-                         let uu___5 = FStar_Tactics_Types.goal_type g in
-                         let uu___6 = FStar_Tactics_Types.goal_witness g in
-                         FStar_Syntax_Util.mk_eq2 uu___4 uu___5 u uu___6 in
-                       let uu___4 =
-                         FStar_Tactics_Monad.add_irrelevant_goal g
-                           "dup equation" env1 t_eq in
-                       FStar_Tactics_Monad.bind uu___4
-                         (fun uu___5 ->
-                            let uu___6 = FStar_Tactics_Monad.add_goals [g'] in
-                            FStar_Tactics_Monad.bind uu___6
-                              (fun uu___7 -> FStar_Tactics_Monad.ret ())))))
+                  (mark_uvar_as_allow_untyped
+                     g.FStar_Tactics_Types.goal_ctx_uvar;
+                   (let g' =
+                      {
+                        FStar_Tactics_Types.goal_main_env =
+                          (g.FStar_Tactics_Types.goal_main_env);
+                        FStar_Tactics_Types.goal_ctx_uvar = u_uvar;
+                        FStar_Tactics_Types.opts =
+                          (g.FStar_Tactics_Types.opts);
+                        FStar_Tactics_Types.is_guard =
+                          (g.FStar_Tactics_Types.is_guard);
+                        FStar_Tactics_Types.label =
+                          (g.FStar_Tactics_Types.label)
+                      } in
+                    FStar_Tactics_Monad.bind FStar_Tactics_Monad.dismiss
+                      (fun uu___4 ->
+                         let t_eq =
+                           let uu___5 =
+                             let uu___6 = FStar_Tactics_Types.goal_type g in
+                             env1.FStar_TypeChecker_Env.universe_of env1
+                               uu___6 in
+                           let uu___6 = FStar_Tactics_Types.goal_type g in
+                           let uu___7 = FStar_Tactics_Types.goal_witness g in
+                           FStar_Syntax_Util.mk_eq2 uu___5 uu___6 u uu___7 in
+                         let uu___5 =
+                           FStar_Tactics_Monad.add_irrelevant_goal g
+                             "dup equation" env1 t_eq in
+                         FStar_Tactics_Monad.bind uu___5
+                           (fun uu___6 ->
+                              let uu___7 = FStar_Tactics_Monad.add_goals [g'] in
+                              FStar_Tactics_Monad.bind uu___7
+                                (fun uu___8 -> FStar_Tactics_Monad.ret ())))))))
 let longest_prefix :
   'a .
     ('a -> 'a -> Prims.bool) ->
@@ -5866,7 +5867,10 @@ let (t_commute_applied_match : unit -> unit FStar_Tactics_Monad.tac) =
                                     FStar_TypeChecker_Env.is_trivial_guard_formula
                                       guard in
                                   if uu___7
-                                  then solve g FStar_Syntax_Util.exp_unit
+                                  then
+                                    (mark_uvar_as_allow_untyped
+                                       g.FStar_Tactics_Types.goal_ctx_uvar;
+                                     solve g FStar_Syntax_Util.exp_unit)
                                   else
                                     failwith
                                       "internal error: _t_refl: guard is not trivial")
