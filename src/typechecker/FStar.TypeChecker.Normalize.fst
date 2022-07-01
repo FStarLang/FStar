@@ -1001,7 +1001,6 @@ let should_unfold cfg should_reify fv qninfo : should_unfold_res =
       // then warn about it
       let msg = BU.format1 "Unfolding name which is marked as a plugin: %s"
                                     (Print.fv_to_string fv) in
-      BU.print1 "%s\n" msg;
       Errors.log_issue fv.fv_name.p
                        (Errors.Warning_UnfoldPlugin, msg);
       plugin_unfold_warn_ctr := !plugin_unfold_warn_ctr - 1

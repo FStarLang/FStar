@@ -2431,16 +2431,15 @@ let (should_unfold :
                 let uu___3 = FStar_Syntax_Print.fv_to_string fv in
                 FStar_Compiler_Util.format1
                   "Unfolding name which is marked as a plugin: %s" uu___3 in
-              (FStar_Compiler_Util.print1 "%s\n" msg;
-               FStar_Errors.log_issue
+              (FStar_Errors.log_issue
                  (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.p
                  (FStar_Errors.Warning_UnfoldPlugin, msg);
-               (let uu___5 =
-                  let uu___6 =
+               (let uu___4 =
+                  let uu___5 =
                     FStar_Compiler_Effect.op_Bang plugin_unfold_warn_ctr in
-                  uu___6 - Prims.int_one in
+                  uu___5 - Prims.int_one in
                 FStar_Compiler_Effect.op_Colon_Equals plugin_unfold_warn_ctr
-                  uu___5))
+                  uu___4))
             else ());
            r)
 let decide_unfolding :
