@@ -145,7 +145,7 @@ let by_tactic_interp (pol:pol) (e:Env.env) (t:term) : tres =
             when S.fv_eq_lid fv PC.rewrite_by_tactic_lid ->
 
         // Create a new uvar that must be equal to the initial term
-        let uvtm, _, g_imp = Env.new_implicit_var_aux "rewrite_with_tactic RHS" tm.pos e typ Allow_untyped None in
+        let uvtm, _, g_imp = Env.new_implicit_var_aux "rewrite_with_tactic RHS" tm.pos e typ Strict None in
 
         let u = e.universe_of e typ in
         // eq2 is squashed already, so it's in Type0
@@ -858,7 +858,7 @@ let postprocess (env:Env.env) (tau:term) (typ:term) (tm:term) : term =
   Errors.with_ctx "While postprocessing a definition with a tactic" (fun () ->
     if env.nosynth then tm else begin
     tacdbg := Env.debug env (O.Other "Tac");
-    let uvtm, _, g_imp = Env.new_implicit_var_aux "postprocess RHS" tm.pos env typ Allow_untyped None in
+    let uvtm, _, g_imp = Env.new_implicit_var_aux "postprocess RHS" tm.pos env typ Strict None in
 
     let u = env.universe_of env typ in
     // eq2 is squashed already, so it's in Type0
