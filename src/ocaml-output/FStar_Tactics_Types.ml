@@ -212,8 +212,8 @@ let (goal_of_goal_ty :
     fun typ ->
       let uu___ =
         FStar_TypeChecker_Env.new_implicit_var_aux "proofstate_of_goal_ty"
-          typ.FStar_Syntax_Syntax.pos env typ
-          FStar_Syntax_Syntax.Allow_untyped FStar_Pervasives_Native.None in
+          typ.FStar_Syntax_Syntax.pos env typ FStar_Syntax_Syntax.Strict
+          FStar_Pervasives_Native.None in
       match uu___ with
       | (u, ctx_uvars, g_u) ->
           let uu___1 = FStar_Compiler_List.hd ctx_uvars in

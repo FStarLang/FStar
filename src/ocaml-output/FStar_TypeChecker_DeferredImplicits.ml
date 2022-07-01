@@ -695,8 +695,7 @@ let (solve_deferred_to_tactic_goals :
                                 FStar_TypeChecker_Env.new_implicit_var_aux
                                   reason
                                   (tp.FStar_TypeChecker_Common.lhs).FStar_Syntax_Syntax.pos
-                                  env2 goal_ty
-                                  FStar_Syntax_Syntax.Allow_untyped
+                                  env2 goal_ty FStar_Syntax_Syntax.Strict
                                   FStar_Pervasives_Native.None in
                               (match uu___8 with
                                | (goal, ctx_uvar, uu___9) ->

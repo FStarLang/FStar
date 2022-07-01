@@ -581,8 +581,8 @@ let (mk_irrelevant_goal :
                 FStar_Syntax_Util.mk_squash uu___ phi in
               let uu___ =
                 new_uvar reason env typ
-                  (FStar_Pervasives_Native.Some
-                     FStar_Syntax_Syntax.Allow_untyped) rng in
+                  (FStar_Pervasives_Native.Some FStar_Syntax_Syntax.Strict)
+                  rng in
               bind uu___
                 (fun uu___1 ->
                    match uu___1 with
