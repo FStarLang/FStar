@@ -636,30 +636,28 @@ let union_is_symmetric #a #f (s1 s2: ordset a f) : Lemma (union s1 s2 = union s2
   same_members_means_eq (union s1 s2) (union s2 s1)
 
 #push-options "--z3rlimit 10"
-let rec size_of_union #a #f s1 s2 
-  : Lemma (ensures size (union s1 s2) = (size s1 + size s2 - size (smart_intersect s1 s2)))
-          (decreases size s1 + size s2) = 
+let rec size_of_union #a #f s1 s2 = 
   let size = size #a #f in
   match s1,s2 with
   | [], _ -> union_mem_forall s1 s2
   | _, [] -> union_mem_forall s1 s2;
             same_members_means_eq s1 (union s1 s2)
   | h1::(t1:ordset a f), h2::(t2:ordset a f) 
-          -> size_of_union #a #f t1 t2;
-            assert (size (union t1 t2) = size t1 + size t2 - size (smart_intersect t1 t2));
+          -> size_of_union t1 t2;
+            assert (size (union t1 t2) = size t1 + size t2 - size (intersect t1 t2));
             if h1 = h2 then union_with_prefix h1 t1 t2
             else if f h1 h2 then begin 
               size_of_union t1 s2;
               union_of_tails_size s1 s2;
               Classical.move_requires (mem_implies_f s2) h1;
-              same_members_means_eq (smart_intersect s1 s2) (smart_intersect t1 s2)
+              same_members_means_eq (intersect s1 s2) (intersect t1 s2)
             end else begin 
               size_of_union s1 t2;
               intersect_is_symmetric s1 t2;
               same_members_means_eq (union s1 s2) (union s2 s1);
               same_members_means_eq (union s1 t2) (union t2 s1); 
               union_of_tails_size s2 s1; 
-              same_members_means_eq (smart_intersect s1 s2) (smart_intersect t2 s1)
+              same_members_means_eq (intersect s1 s2) (intersect t2 s1)
             end 
 #pop-options
 
