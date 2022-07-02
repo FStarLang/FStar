@@ -125,3 +125,9 @@ let app (arg:Type) (res:Type) (f:arrow [arg] res) (x:arg) : res = f x
 let id_int : int -> int = fun x -> x
 
 let some_int : int = _ by (apply (`app); norm [zeta; delta; iota]; apply (`id_int); exact (`0))
+
+
+let pi : i:int { p } = let _ = assume p in 0
+
+[@@postprocess_with (fun () -> norm [delta]; trefl())]
+let pi_norm : i:int { p } = pi

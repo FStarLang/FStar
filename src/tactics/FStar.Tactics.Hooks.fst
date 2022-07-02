@@ -858,7 +858,10 @@ let postprocess (env:Env.env) (tau:term) (typ:term) (tm:term) : term =
   Errors.with_ctx "While postprocessing a definition with a tactic" (fun () ->
     if env.nosynth then tm else begin
     tacdbg := Env.debug env (O.Other "Tac");
-    let uvtm, _, g_imp = Env.new_implicit_var_aux "postprocess RHS" tm.pos env typ Strict None in
+    //we know that tm:typ
+    //and we have a goal that u == tm
+    //so if we solve that equality, we don't need to retype the solution of `u : typ`
+    let uvtm, _, g_imp = Env.new_implicit_var_aux "postprocess RHS" tm.pos env typ Allow_untyped None in
 
     let u = env.universe_of env typ in
     // eq2 is squashed already, so it's in Type0
