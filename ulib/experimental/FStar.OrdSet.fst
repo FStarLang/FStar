@@ -94,6 +94,28 @@ let rec insert' #_ #f x s =
     else if f x hd then x::hd::tl
     else hd::(insert' #_ #f x tl)
 
+let rec distinct' #a f l : Tot (ordset a f) = 
+  match l with 
+  | []  -> []
+  | x::t -> insert' x (distinct' f t)
+
+let rec insert_mem (#a:eqtype) #f (x:a) (s:ordset a f) 
+  : Lemma (mem x (insert' x s)) 
+  = if s<>empty then insert_mem #a #f x (tail s)
+
+let insert_sub (#a:eqtype) #f x (s:ordset a f) test
+  : Lemma (mem test (insert' x s) = (mem test s || test = x)) = 
+  simple_induction (fun p -> mem test (insert' x p) = (mem test p || test = x)) s
+
+let rec distinct_props #a (f:cmp a) (l: list a) 
+  : Lemma (forall x. (mem x (distinct' f l) = List.Tot.Base.mem x l)) = 
+  match l with 
+  | [] -> ()
+  | x::t -> distinct_props f t;
+          Classical.forall_intro (insert_sub x (distinct' f t))
+
+let distinct #a f l = distinct_props f l; distinct' f l
+
 let rec union #_ #_ s1 s2 = match s1 with
   | []     -> s2
   | hd::tl -> union tl (insert' hd s2) 
@@ -710,6 +732,8 @@ let lemma_intersect_union_empty #a #f (s1 s2 s3: ordset a f)
 let lemma_union_symmetric #a #f s1 s2 = eq_lemma (union s1 s2) (union s2 s1)
 
 let union_of_disjoint #a #f s1 s2 = eq_lemma (minus (union s1 s2) s1) s2
+
+let distinct_is_idempotent #a #f s = eq_lemma (distinct f s) s
 
 (* Conversion from OrdSet to Set *)
 

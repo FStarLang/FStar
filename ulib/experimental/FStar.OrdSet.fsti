@@ -66,6 +66,9 @@ val as_list (#a:eqtype) (#f:cmp a) (s:ordset a f) : Tot (l:list a{
   (forall x. (List.Tot.mem x l = mem x s))   
 })
 
+val distinct (#a:eqtype) (f:cmp a) (l: list a) : Pure (ordset a f) 
+  (requires True) (ensures fun z -> forall x. (mem x z = List.Tot.Base.mem x l))
+
 val union        : #a:eqtype -> #f:cmp a -> ordset a f -> ordset a f -> Tot (ordset a f)
 val intersect    : #a:eqtype -> #f:cmp a -> ordset a f -> ordset a f -> Tot (ordset a f)
 
@@ -327,6 +330,9 @@ val union_of_disjoint (#a:eqtype) (#f:cmp a) (s1:ordset a f) (s2:ordset a f)
   : Lemma (requires (disjoint s1 s2))
         (ensures (minus (union s1 s2) s1 == s2))
     [SMTPat (union s1 s2); SMTPat (disjoint s1 s2)]
+
+val distinct_is_idempotent (#a:eqtype) (#f: cmp a) (s: ordset a f)
+  : Lemma (distinct f (as_list s) = s)
 
 (* Conversion from OrdSet to Set *)
 
