@@ -277,8 +277,8 @@ let rec same_members_means_eq #a #f (s1 s2: ordset a f)
             | h2::t2 -> same_members_means_eq #a #f t1 t2 
 
 let intersect_is_symmetric #a #f (s1 s2: ordset a f) 
-  : Lemma (smart_intersect s1 s2 = smart_intersect s2 s1) 
-  = same_members_means_eq (smart_intersect s1 s2) (smart_intersect s2 s1)
+  : Lemma (intersect s1 s2 = intersect s2 s1) 
+  = same_members_means_eq (intersect s1 s2) (intersect s2 s1)
 
 let remove_until_gt_exclusion #a #f (s:ordset a f) (x:a) (test:a)
   : Lemma (requires f x test && (not (mem test (fst (remove_until_greater_than x s)))))
@@ -348,17 +348,7 @@ let _ = assert (smart_minus #nat #ncmp [1;2;3;4] [3] == [1;2;4])
   
 let minus #a #f s1 s2 = smart_minus s1 s2 
 
-let minus_removes_s2 #a #f (p q: ordset a f) (x:a)
-  : Lemma (ensures mem x q ==> not (mem x (minus p q))) = ()
-           
-let minus_removes_all_of_s2 #a #f (s1 s2: ordset a f) (x:a{mem x s2})
-  : Lemma (not (mem x (minus s1 s2))) = ()  
-
 let strict_subset #a #f s1 s2 = s1 <> s2 && subset s1 s2
-
-let hd_unique #a #f (s: ordset a f) 
-  : Lemma (requires size s > 0) 
-          (ensures not (mem (head s) (tail s))) = set_props s
 
 let eq_lemma #a #f s1 s2 = same_members_means_eq s1 s2
 
@@ -387,7 +377,7 @@ let choose_empty (#a:eqtype) #f = ()
 let choose_s (#a:eqtype) #f s = () 
 
 let rec mem_remove (#a:eqtype) #f x y s = 
-  if size s > 0 then (hd_unique s; mem_remove x y (tail s))
+  if size s > 0 then (set_props s; mem_remove x y (tail s))
 
 let eq_remove (#a:eqtype) #f x s 
   = simple_induction (fun p -> not (mem x p) ==> p = remove x p) s
