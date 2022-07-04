@@ -4940,19 +4940,25 @@ let check_implicit_solution_for_tac (env:env) (i:implicit) : option (term * typ)
   else (
     let env = { env with gamma = ctx_u.ctx_uvar_gamma } in
     let tm_t, _ = 
-        Profiling.profile (fun () -> env.typeof_well_typed_tot_or_gtot_term env tm false)
-                          None
-                          "retype_tactic_solution"
+      Profiling.profile (fun () -> env.typeof_well_typed_tot_or_gtot_term env tm false)
+                        None
+                        "retype_tactic_solution"
     in
-    if Profiling.profile (fun () -> env.subtype_nosmt_force env tm_t uvar_ty)
+    if Profiling.profile (fun () -> env.teq_nosmt_force env tm_t uvar_ty)
                          None
-                         "subtype_tactic_solution"                   
+                         "tc_tactic_solution"
+    then None
+    else if Profiling.profile (fun () -> env.subtype_nosmt_force env tm_t uvar_ty)
+                         None
+                         "tc_tactic_solution"
     then None
     else 
       begin
-      // failing at this point is fatal;
-      // and the check may have failed because we didn't unroll let recs;
-      // so try once more after normalizing both types
+        //
+        // failing at this point is fatal;
+        // and the check may have failed because we didn't unroll let recs;
+        // so try once more after normalizing both types
+        //
         let compute t =
             N.normalize [Env.UnfoldTac; //we're in is_tac; don't unfold "tac_opaque"
                          Env.UnfoldUntil delta_constant;
