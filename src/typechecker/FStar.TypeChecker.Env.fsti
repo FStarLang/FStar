@@ -177,8 +177,9 @@ and env = {
   typeof_tot_or_gtot_term :env -> term -> must_tot -> term * typ * guard_t; (* typechecker callback; G |- e : (G)Tot t <== g *)
   universe_of :env -> term -> universe; (* typechecker callback; G |- e : Tot (Type u) *)
   typeof_well_typed_tot_or_gtot_term :env -> term -> must_tot -> typ * guard_t; (* typechecker callback, uses fast path, with a fallback on the slow path *)
+  teq_nosmt_force: env -> term -> term -> bool;        (* callback to the unifier *)
   subtype_nosmt_force: env -> term -> term -> bool;    (* callback to the unifier *)
-  use_bv_sorts   :bool;                           (* use bv.sort for a bound-variable's type rather than consulting gamma *)
+  use_bv_sorts   :bool;                             (* use bv.sort for a bound-variable's type rather than consulting gamma *)
   qtbl_name_and_index:BU.smap int * option (lident*int);    (* the top-level term we're currently processing and the nth query for it, in addition we maintain a counter for query index per lid *)
   normalized_eff_names:BU.smap lident;           (* cache for normalized effect name, used to be captured in the function norm_eff_name, which made it harder to roll back etc. *)
   fv_delta_depths:BU.smap delta_depth;           (* cache for fv delta depths, its preferable to use Env.delta_depth_of_fv, soon fv.delta_depth should be removed *)
@@ -236,6 +237,7 @@ val initial_env : FStar.Parser.Dep.deps ->
                   (env -> term -> must_tot -> term * typ * guard_t) ->
                   (env -> term -> must_tot -> option typ) ->
                   (env -> term -> universe) ->
+                  (env -> term -> term -> bool) ->
                   (env -> term -> term -> bool) ->
                   solver_t -> lident ->
                   (list step -> env -> term -> term) -> env

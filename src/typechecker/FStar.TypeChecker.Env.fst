@@ -118,6 +118,7 @@ let initial_env deps
   typeof_tot_or_gtot_term
   typeof_tot_or_gtot_term_fastpath
   universe_of
+  teq_nosmt_force
   subtype_nosmt_force
   solver module_lid nbe : env =
   { solver=solver;
@@ -156,6 +157,7 @@ let initial_env deps
          let t', k, g = typeof_tot_or_gtot_term env t must_tot in
          k, g);
     universe_of=universe_of;
+    teq_nosmt_force=teq_nosmt_force;
     subtype_nosmt_force=subtype_nosmt_force;
     use_bv_sorts=false;
     qtbl_name_and_index=BU.smap_create 10, None;  //10?
