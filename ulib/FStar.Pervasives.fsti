@@ -288,53 +288,6 @@ val norm_spec (s: list norm_step) (#a: Type) (x: a) : Lemma (norm s #a x == x)
     solver as: [reveal_opaque (`%defn) defn] *)
 let reveal_opaque (s: string) = norm_spec [delta_only [s]]
 
-
-(** Wrappers over pure wp combinators that return a pure_wp type
-    (with monotonicity refinement) *)
-
-unfold
-let pure_return (a:Type) (x:a) : pure_wp a =
-  reveal_opaque (`%pure_wp_monotonic) pure_wp_monotonic;
-  pure_return0 a x
-
-unfold
-let pure_bind_wp (a b:Type) (wp1:pure_wp a) (wp2:(a -> Tot (pure_wp b))) : Tot (pure_wp b) =
-  reveal_opaque (`%pure_wp_monotonic) pure_wp_monotonic;
-  pure_bind_wp0 a b wp1 wp2
-
-unfold
-let pure_if_then_else (a p:Type) (wp_then wp_else:pure_wp a) : Tot (pure_wp a) =
-  reveal_opaque (`%pure_wp_monotonic) pure_wp_monotonic;
-  pure_if_then_else0 a p wp_then wp_else
-
-unfold
-let pure_ite_wp (a:Type) (wp:pure_wp a) : Tot (pure_wp a) =
-  reveal_opaque (`%pure_wp_monotonic) pure_wp_monotonic;
-  pure_ite_wp0 a wp
-
-unfold
-let pure_close_wp (a b:Type) (wp:b -> Tot (pure_wp a)) : Tot (pure_wp a) =
-  reveal_opaque (`%pure_wp_monotonic) pure_wp_monotonic;
-  pure_close_wp0 a b wp
-
-unfold
-let pure_null_wp (a:Type) : Tot (pure_wp a) =
-  reveal_opaque (`%pure_wp_monotonic) pure_wp_monotonic;
-  pure_null_wp0 a
-
-[@@ "opaque_to_smt"]
-unfold
-let pure_assert_wp (p:Type) : Tot (pure_wp unit) =
-  reveal_opaque (`%pure_wp_monotonic) pure_wp_monotonic;
-  pure_assert_wp0 p
-
-[@@ "opaque_to_smt"]
-unfold
-let pure_assume_wp (p:Type) : Tot (pure_wp unit) =
-  reveal_opaque (`%pure_wp_monotonic) pure_wp_monotonic;
-  pure_assume_wp0 p
-
-
 /// The [DIV] effect for divergent computations
 ///
 /// The wp-calculus for [DIV] is same as that of [PURE]
