@@ -175,6 +175,12 @@ let tm_type r = mk_term (Name (lid_of_path   [ "Type"] r)) r Kind
 //based on its head symbol
 let rec is_comp_type env t =
     match (unparen t).tm with
+    (* we're right at the beginning of Prims, when (G)Tot isn't yet fully defined *)
+    | Name l when lid_equals (Env.current_module env) C.prims_lid &&
+                  (let s = string_of_id (ident_of_lid l) in
+                   s = "Tot" || s = "GTot")
+      true
+
     | Name l
     | Construct(l, _) -> Env.try_lookup_effect_name env l |> Option.isSome
     | App(head, _, _) -> is_comp_type env head
