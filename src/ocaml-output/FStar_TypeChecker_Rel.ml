@@ -355,6 +355,8 @@ let (copy_uvar :
                 (uu___.FStar_TypeChecker_Env.universe_of);
               FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term =
                 (uu___.FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term);
+              FStar_TypeChecker_Env.teq_nosmt_force =
+                (uu___.FStar_TypeChecker_Env.teq_nosmt_force);
               FStar_TypeChecker_Env.subtype_nosmt_force =
                 (uu___.FStar_TypeChecker_Env.subtype_nosmt_force);
               FStar_TypeChecker_Env.use_bv_sorts =
@@ -5739,6 +5741,9 @@ and (solve_t_flex_rigid_eq :
                                         FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term
                                           =
                                           (env1.FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term);
+                                        FStar_TypeChecker_Env.teq_nosmt_force
+                                          =
+                                          (env1.FStar_TypeChecker_Env.teq_nosmt_force);
                                         FStar_TypeChecker_Env.subtype_nosmt_force
                                           =
                                           (env1.FStar_TypeChecker_Env.subtype_nosmt_force);
@@ -6099,6 +6104,9 @@ and (solve_t_flex_rigid_eq :
                                                     FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term
                                                       =
                                                       (env1.FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term);
+                                                    FStar_TypeChecker_Env.teq_nosmt_force
+                                                      =
+                                                      (env1.FStar_TypeChecker_Env.teq_nosmt_force);
                                                     FStar_TypeChecker_Env.subtype_nosmt_force
                                                       =
                                                       (env1.FStar_TypeChecker_Env.subtype_nosmt_force);
@@ -13673,6 +13681,8 @@ let (check_implicit_solution :
                     (env.FStar_TypeChecker_Env.universe_of);
                   FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term =
                     (env.FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term);
+                  FStar_TypeChecker_Env.teq_nosmt_force =
+                    (env.FStar_TypeChecker_Env.teq_nosmt_force);
                   FStar_TypeChecker_Env.subtype_nosmt_force =
                     (env.FStar_TypeChecker_Env.subtype_nosmt_force);
                   FStar_TypeChecker_Env.use_bv_sorts = true;
@@ -13800,6 +13810,8 @@ let (check_implicit_solution_and_discharge_guard :
                   (env.FStar_TypeChecker_Env.universe_of);
                 FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term =
                   (env.FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term);
+                FStar_TypeChecker_Env.teq_nosmt_force =
+                  (env.FStar_TypeChecker_Env.teq_nosmt_force);
                 FStar_TypeChecker_Env.subtype_nosmt_force =
                   (env.FStar_TypeChecker_Env.subtype_nosmt_force);
                 FStar_TypeChecker_Env.use_bv_sorts =
@@ -14058,6 +14070,8 @@ let (check_implicit_solution_for_tac :
                    (env.FStar_TypeChecker_Env.universe_of);
                  FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term =
                    (env.FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term);
+                 FStar_TypeChecker_Env.teq_nosmt_force =
+                   (env.FStar_TypeChecker_Env.teq_nosmt_force);
                  FStar_TypeChecker_Env.subtype_nosmt_force =
                    (env.FStar_TypeChecker_Env.subtype_nosmt_force);
                  FStar_TypeChecker_Env.use_bv_sorts =
@@ -14109,29 +14123,38 @@ let (check_implicit_solution_for_tac :
                  let uu___5 =
                    FStar_Profiling.profile
                      (fun uu___6 ->
-                        env1.FStar_TypeChecker_Env.subtype_nosmt_force env1
-                          tm_t uvar_ty) FStar_Pervasives_Native.None
-                     "subtype_tactic_solution" in
+                        env1.FStar_TypeChecker_Env.teq_nosmt_force env1 tm_t
+                          uvar_ty) FStar_Pervasives_Native.None
+                     "tc_tactic_solution" in
                  if uu___5
                  then FStar_Pervasives_Native.None
                  else
-                   (let compute t =
-                      FStar_TypeChecker_Normalize.normalize
-                        [FStar_TypeChecker_Env.UnfoldTac;
-                        FStar_TypeChecker_Env.UnfoldUntil
-                          FStar_Syntax_Syntax.delta_constant;
-                        FStar_TypeChecker_Env.Zeta;
-                        FStar_TypeChecker_Env.Iota;
-                        FStar_TypeChecker_Env.Primops] env1 t in
-                    let retry uu___7 =
-                      let tm_t1 = compute tm_t in
-                      let uv_t = compute uvar_ty in
-                      env1.FStar_TypeChecker_Env.subtype_nosmt_force env1
-                        tm_t1 uv_t in
-                    let uu___7 = retry () in
+                   (let uu___7 =
+                      FStar_Profiling.profile
+                        (fun uu___8 ->
+                           env1.FStar_TypeChecker_Env.subtype_nosmt_force
+                             env1 tm_t uvar_ty) FStar_Pervasives_Native.None
+                        "tc_tactic_solution" in
                     if uu___7
                     then FStar_Pervasives_Native.None
-                    else FStar_Pervasives_Native.Some (tm, tm_t)))
+                    else
+                      (let compute t =
+                         FStar_TypeChecker_Normalize.normalize
+                           [FStar_TypeChecker_Env.UnfoldTac;
+                           FStar_TypeChecker_Env.UnfoldUntil
+                             FStar_Syntax_Syntax.delta_constant;
+                           FStar_TypeChecker_Env.Zeta;
+                           FStar_TypeChecker_Env.Iota;
+                           FStar_TypeChecker_Env.Primops] env1 t in
+                       let retry uu___9 =
+                         let tm_t1 = compute tm_t in
+                         let uv_t = compute uvar_ty in
+                         env1.FStar_TypeChecker_Env.subtype_nosmt_force env1
+                           tm_t1 uv_t in
+                       let uu___9 = retry () in
+                       if uu___9
+                       then FStar_Pervasives_Native.None
+                       else FStar_Pervasives_Native.Some (tm, tm_t))))
 let (resolve_implicits' :
   FStar_TypeChecker_Env.env ->
     Prims.bool ->
@@ -14317,6 +14340,9 @@ let (resolve_implicits' :
                                           FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term
                                             =
                                             (env.FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term);
+                                          FStar_TypeChecker_Env.teq_nosmt_force
+                                            =
+                                            (env.FStar_TypeChecker_Env.teq_nosmt_force);
                                           FStar_TypeChecker_Env.subtype_nosmt_force
                                             =
                                             (env.FStar_TypeChecker_Env.subtype_nosmt_force);

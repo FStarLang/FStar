@@ -212,6 +212,8 @@ let (check_no_subtyping_for_layered_combinator :
                (env.FStar_TypeChecker_Env.universe_of);
              FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term =
                (env.FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term);
+             FStar_TypeChecker_Env.teq_nosmt_force =
+               (env.FStar_TypeChecker_Env.teq_nosmt_force);
              FStar_TypeChecker_Env.subtype_nosmt_force =
                (env.FStar_TypeChecker_Env.subtype_nosmt_force);
              FStar_TypeChecker_Env.use_bv_sorts =
@@ -2398,6 +2400,9 @@ let (tc_layered_eff_decl :
                                         FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term
                                           =
                                           (uu___16.FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term);
+                                        FStar_TypeChecker_Env.teq_nosmt_force
+                                          =
+                                          (uu___16.FStar_TypeChecker_Env.teq_nosmt_force);
                                         FStar_TypeChecker_Env.subtype_nosmt_force
                                           =
                                           (uu___16.FStar_TypeChecker_Env.subtype_nosmt_force);
@@ -4145,6 +4150,9 @@ let (tc_non_layered_eff_decl :
                                                                     FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term
                                                                     =
                                                                     (env1.FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term);
+                                                                    FStar_TypeChecker_Env.teq_nosmt_force
+                                                                    =
+                                                                    (env1.FStar_TypeChecker_Env.teq_nosmt_force);
                                                                     FStar_TypeChecker_Env.subtype_nosmt_force
                                                                     =
                                                                     (env1.FStar_TypeChecker_Env.subtype_nosmt_force);
@@ -4420,6 +4428,9 @@ let (tc_non_layered_eff_decl :
                                                                    FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term
                                                                     =
                                                                     (uu___24.FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term);
+                                                                   FStar_TypeChecker_Env.teq_nosmt_force
+                                                                    =
+                                                                    (uu___24.FStar_TypeChecker_Env.teq_nosmt_force);
                                                                    FStar_TypeChecker_Env.subtype_nosmt_force
                                                                     =
                                                                     (uu___24.FStar_TypeChecker_Env.subtype_nosmt_force);
@@ -5651,6 +5662,8 @@ let (tc_lift :
                                FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term
                                  =
                                  (env.FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term);
+                               FStar_TypeChecker_Env.teq_nosmt_force =
+                                 (env.FStar_TypeChecker_Env.teq_nosmt_force);
                                FStar_TypeChecker_Env.subtype_nosmt_force =
                                  (env.FStar_TypeChecker_Env.subtype_nosmt_force);
                                FStar_TypeChecker_Env.use_bv_sorts =

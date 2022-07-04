@@ -104,6 +104,8 @@ let (__do_rewrite :
                                    FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term
                                      =
                                      (env.FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term);
+                                   FStar_TypeChecker_Env.teq_nosmt_force =
+                                     (env.FStar_TypeChecker_Env.teq_nosmt_force);
                                    FStar_TypeChecker_Env.subtype_nosmt_force
                                      =
                                      (env.FStar_TypeChecker_Env.subtype_nosmt_force);
