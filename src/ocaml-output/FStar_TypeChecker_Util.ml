@@ -2260,23 +2260,27 @@ let (strengthen_comp :
             if env.FStar_TypeChecker_Env.lax
             then (c, FStar_TypeChecker_Env.trivial_guard)
             else
-              (let r = FStar_TypeChecker_Env.get_range env in
-               let pure_assert_wp =
-                 let uu___1 =
-                   FStar_Syntax_Syntax.lid_as_fv
-                     FStar_Parser_Const.pure_assert_wp_lid
-                     (FStar_Syntax_Syntax.Delta_constant_at_level
-                        Prims.int_one) FStar_Pervasives_Native.None in
-                 FStar_Syntax_Syntax.fv_to_tm uu___1 in
-               let pure_assert_wp1 =
-                 let uu___1 =
-                   let uu___2 =
-                     let uu___3 = label_opt env reason r f in
-                     FStar_Compiler_Effect.op_Less_Bar
-                       FStar_Syntax_Syntax.as_arg uu___3 in
-                   [uu___2] in
-                 FStar_Syntax_Syntax.mk_Tm_app pure_assert_wp uu___1 r in
-               bind_pure_wp_with env pure_assert_wp1 c flags)
+              (let uu___1 = FStar_TypeChecker_Env.too_early_in_prims env in
+               if uu___1
+               then (c, FStar_TypeChecker_Env.trivial_guard)
+               else
+                 (let r = FStar_TypeChecker_Env.get_range env in
+                  let pure_assert_wp =
+                    let uu___3 =
+                      FStar_Syntax_Syntax.lid_as_fv
+                        FStar_Parser_Const.pure_assert_wp_lid
+                        (FStar_Syntax_Syntax.Delta_constant_at_level
+                           Prims.int_one) FStar_Pervasives_Native.None in
+                    FStar_Syntax_Syntax.fv_to_tm uu___3 in
+                  let pure_assert_wp1 =
+                    let uu___3 =
+                      let uu___4 =
+                        let uu___5 = label_opt env reason r f in
+                        FStar_Compiler_Effect.op_Less_Bar
+                          FStar_Syntax_Syntax.as_arg uu___5 in
+                      [uu___4] in
+                    FStar_Syntax_Syntax.mk_Tm_app pure_assert_wp uu___3 r in
+                  bind_pure_wp_with env pure_assert_wp1 c flags))
 let (strengthen_precondition :
   (unit -> Prims.string) FStar_Pervasives_Native.option ->
     FStar_TypeChecker_Env.env ->

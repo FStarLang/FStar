@@ -3279,65 +3279,68 @@ let fail_or :
         let uu___ = lookup lid in
         match uu___ with
         | FStar_Pervasives_Native.None ->
-            let opened_modules =
-              FStar_Compiler_List.map
-                (fun uu___1 ->
-                   match uu___1 with
-                   | (lid1, uu___2) -> FStar_Ident.string_of_lid lid1)
-                env1.modules in
-            let msg =
-              let uu___1 = FStar_Ident.string_of_lid lid in
-              FStar_Compiler_Util.format1 "Identifier not found: [%s]" uu___1 in
-            let msg1 =
-              let uu___1 =
+            ((let uu___2 = FStar_Compiler_Util.stack_dump () in
+              FStar_Compiler_Util.print_string uu___2);
+             (let opened_modules =
+                FStar_Compiler_List.map
+                  (fun uu___2 ->
+                     match uu___2 with
+                     | (lid1, uu___3) -> FStar_Ident.string_of_lid lid1)
+                  env1.modules in
+              let msg =
+                let uu___2 = FStar_Ident.string_of_lid lid in
+                FStar_Compiler_Util.format1 "Identifier not found: [%s]"
+                  uu___2 in
+              let msg1 =
                 let uu___2 =
-                  let uu___3 = FStar_Ident.ns_of_lid lid in
-                  FStar_Compiler_List.length uu___3 in
-                uu___2 = Prims.int_zero in
-              if uu___1
-              then msg
-              else
-                (let modul =
-                   let uu___3 =
-                     let uu___4 = FStar_Ident.ns_of_lid lid in
-                     FStar_Ident.lid_of_ids uu___4 in
-                   let uu___4 = FStar_Ident.range_of_lid lid in
-                   FStar_Ident.set_lid_range uu___3 uu___4 in
-                 let uu___3 = resolve_module_name env1 modul true in
-                 match uu___3 with
-                 | FStar_Pervasives_Native.None ->
-                     let opened_modules1 =
-                       FStar_String.concat ", " opened_modules in
-                     let uu___4 = FStar_Ident.string_of_lid modul in
-                     FStar_Compiler_Util.format3
-                       "%s\nModule %s does not belong to the list of modules in scope, namely %s"
-                       msg uu___4 opened_modules1
-                 | FStar_Pervasives_Native.Some modul' when
+                  let uu___3 =
+                    let uu___4 = FStar_Ident.ns_of_lid lid in
+                    FStar_Compiler_List.length uu___4 in
+                  uu___3 = Prims.int_zero in
+                if uu___2
+                then msg
+                else
+                  (let modul =
                      let uu___4 =
-                       FStar_Compiler_List.existsb
-                         (fun m ->
-                            let uu___5 = FStar_Ident.string_of_lid modul' in
-                            m = uu___5) opened_modules in
-                     Prims.op_Negation uu___4 ->
-                     let opened_modules1 =
-                       FStar_String.concat ", " opened_modules in
-                     let uu___4 = FStar_Ident.string_of_lid modul in
-                     let uu___5 = FStar_Ident.string_of_lid modul' in
-                     FStar_Compiler_Util.format4
-                       "%s\nModule %s resolved into %s, which does not belong to the list of modules in scope, namely %s"
-                       msg uu___4 uu___5 opened_modules1
-                 | FStar_Pervasives_Native.Some modul' ->
-                     let uu___4 = FStar_Ident.string_of_lid modul in
-                     let uu___5 = FStar_Ident.string_of_lid modul' in
-                     let uu___6 =
-                       let uu___7 = FStar_Ident.ident_of_lid lid in
-                       FStar_Ident.string_of_id uu___7 in
-                     FStar_Compiler_Util.format4
-                       "%s\nModule %s resolved into %s, definition %s not found"
-                       msg uu___4 uu___5 uu___6) in
-            let uu___1 = FStar_Ident.range_of_lid lid in
-            FStar_Errors.raise_error
-              (FStar_Errors.Fatal_IdentifierNotFound, msg1) uu___1
+                       let uu___5 = FStar_Ident.ns_of_lid lid in
+                       FStar_Ident.lid_of_ids uu___5 in
+                     let uu___5 = FStar_Ident.range_of_lid lid in
+                     FStar_Ident.set_lid_range uu___4 uu___5 in
+                   let uu___4 = resolve_module_name env1 modul true in
+                   match uu___4 with
+                   | FStar_Pervasives_Native.None ->
+                       let opened_modules1 =
+                         FStar_String.concat ", " opened_modules in
+                       let uu___5 = FStar_Ident.string_of_lid modul in
+                       FStar_Compiler_Util.format3
+                         "%s\nModule %s does not belong to the list of modules in scope, namely %s"
+                         msg uu___5 opened_modules1
+                   | FStar_Pervasives_Native.Some modul' when
+                       let uu___5 =
+                         FStar_Compiler_List.existsb
+                           (fun m ->
+                              let uu___6 = FStar_Ident.string_of_lid modul' in
+                              m = uu___6) opened_modules in
+                       Prims.op_Negation uu___5 ->
+                       let opened_modules1 =
+                         FStar_String.concat ", " opened_modules in
+                       let uu___5 = FStar_Ident.string_of_lid modul in
+                       let uu___6 = FStar_Ident.string_of_lid modul' in
+                       FStar_Compiler_Util.format4
+                         "%s\nModule %s resolved into %s, which does not belong to the list of modules in scope, namely %s"
+                         msg uu___5 uu___6 opened_modules1
+                   | FStar_Pervasives_Native.Some modul' ->
+                       let uu___5 = FStar_Ident.string_of_lid modul in
+                       let uu___6 = FStar_Ident.string_of_lid modul' in
+                       let uu___7 =
+                         let uu___8 = FStar_Ident.ident_of_lid lid in
+                         FStar_Ident.string_of_id uu___8 in
+                       FStar_Compiler_Util.format4
+                         "%s\nModule %s resolved into %s, definition %s not found"
+                         msg uu___5 uu___6 uu___7) in
+              let uu___2 = FStar_Ident.range_of_lid lid in
+              FStar_Errors.raise_error
+                (FStar_Errors.Fatal_IdentifierNotFound, msg1) uu___2))
         | FStar_Pervasives_Native.Some r -> r
 let fail_or2 :
   'a .
