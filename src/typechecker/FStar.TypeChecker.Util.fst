@@ -1113,7 +1113,7 @@ let weaken_precondition env lc (f:guard_formula) : lcomp =
 
 
 let strengthen_comp env (reason:option (unit -> string)) (c:comp) (f:formula) flags : comp * guard_t =
-    if env.lax
+    if env.lax || Env.too_early_in_prims env
     then c, Env.trivial_guard
     else let r = Env.get_range env in
          (*
