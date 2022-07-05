@@ -8,8 +8,13 @@ let prove_False
   : squash False
   = pf
 
-//This fails with error 217, correctly complaining that the solved goal does not have type False
-[@@expect_failure [217]]
+//
+// This solves the uvar for the pf binder in prove_false to ()
+// But that solution is well-typed only under the squash False hypothesis
+// So we typecheck the solution again in environment for the pf uvar,
+//   which is empty, and that produces an SMT failure
+//
+[@@expect_failure [19]]
 let absurd : squash False
   = _ by (// |- ?pf : squash l_False
           apply (`prove_False);
@@ -19,15 +24,15 @@ let absurd : squash False
 
 //Using the  gather_explicit_guards_for_resolved_goals primitive
 //you can now see that goal explicitly and work on solving from your tactic
-let admit_absurd (_:unit) : squash False
-  = _ by (// |- ?pf : squash l_False
-          apply (`prove_False);
-          let pf0 = intro () in
-          // (pf0 : squash l_False) |- _ : ?pf == ()
-          trefl ();
-          gather_or_solve_explicit_guards_for_resolved_goals();
-          dump "After";
-          tadmit())
+// let admit_absurd (_:unit) : squash False
+//   = _ by (// |- ?pf : squash l_False
+//           apply (`prove_False);
+//           let pf0 = intro () in
+//           // (pf0 : squash l_False) |- _ : ?pf == ()
+//           trefl ();
+//           gather_or_solve_explicit_guards_for_resolved_goals();
+//           dump "After";
+//           tadmit())
 
 
 
@@ -131,3 +136,85 @@ let pi : i:int { p } = let _ = assume p in 0
 
 [@@postprocess_with (fun () -> norm [delta]; trefl())]
 let pi_norm : i:int { p } = pi
+
+//
+//  Few more reports by Benjamin Bonneau
+//
+
+let prove_False0
+      (e : empty)
+      // The [() : squash False] of [false_elim] depends on [e]
+      (_ : squash (e == false_elim ()))
+  : squash False
+  = ()
+
+//
+// The proof earlier would go through as follows:
+//
+// apply (`prove_False0) would create two uvars for the
+//   arguments of prove_False0
+//
+// One for the binder e, let's call it ?u_e
+// And second for the binder with squash type, let's call it ?u_sq
+//
+// (Tactic engine does an optimization where since ?u_e appears in the type
+//   of other uvars (?u_sq here), it is not shown as a goal to the user
+//   (?u_e is still tracked in the proof state))
+//
+// So now the user is presented with a goal of type (?u_e == false_elim #empty ())
+// Notice that the implicit argument to false_elim is instantiated to empty,
+//   simply by the typing of prove_False0 itself
+//
+// Then trefl () tries to solve it, and sets ?u_e = false_elim #empty ()
+//
+// EARLIER, we would then typecheck the implicit solution (false_elim #empty ()),
+//   using fastpath, it is an application, so we compute its type to be empty,
+// ?u_e also has type empty, things check out and we are done
+//
+// The bug here is that the solution (false_elim #empty ()) is well-typed in a context
+//   that has (_:empty) in it,
+// It is not well-typed in the context of the uvar ?u_e which is just empty
+//
+// Fixing this bug requires that
+//   false_elim #empty () is well-typed in the empty context,
+// Which it is not, and so the proof fails now
+//
+
+[@@ expect_failure [19]]
+let absurd : squash False
+  = _ by (
+    apply (`prove_False0);
+    dump ""; // |- _ : squash (?e == false_elim ())
+    // e does not appear as a bound variable ?
+    trefl ())
+
+let int_false_elim
+      (i : int)
+      (_ : squash False -> squash (i == false_elim ()))
+  : int
+  = i
+
+[@@ expect_failure]
+let int0 : int
+  = _ by (
+    apply (`int_false_elim);
+    let _ = intro () in trefl ())
+
+
+let absurd_omega2 (_ : squash False) : bool
+  =
+    let omega (b : bool) : bool
+      = not ((coerce_eq #bool #(bool -> bool) () b) b)
+    in
+    omega (coerce_eq #(bool -> bool) #bool () omega)
+
+let build_omega2
+      (w : bool)
+      (_ : squash False -> squash (w == absurd_omega2 ()))
+  = w
+
+[@@ expect_failure [19]]
+let omega2 : bool
+  = _ by (
+    apply (`build_omega2);
+    let _ = intro () in trefl ())

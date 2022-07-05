@@ -48,6 +48,7 @@ let new_cancellable_lock v =
 [@__reduce__]
 let can_release #v c = pts_to c.lref full_perm true
 
+//#set-options "--debug Steel.ST.CancellableSpinLock --debug_level Extreme,Rel,2635,TacVerbose --print_implicits --ugly"
 let acquire #v c =
   acquire c.llock;
   let b_erased = elim_exists () in

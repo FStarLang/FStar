@@ -150,9 +150,14 @@ and ctx_uvar_meta_t =
   | Ctx_uvar_meta_tac of dyn * term (* the dyn is an FStar.TypeChecker.Env.env *)
   | Ctx_uvar_meta_attr of term (* An attribute associated with an implicit argument using the #[@@...] notation *)
 and ctx_uvar_and_subst = ctx_uvar * subst_ts
+and uvar_solution_gamma =
+  | Solution_gamma_unknown
+  | Solution_gamma_contained_in_ctx_gamma
+  | Solution_gamma_not_contained_in_ctx_gamma of (gamma & list bv)
 and uvar_decoration = {
   uvar_decoration_typ:typ;
-  uvar_decoration_should_check:should_check_uvar
+  uvar_decoration_should_check:should_check_uvar;
+  uvar_decoration_solution_bs:uvar_solution_gamma;
 }
 and uvar = Unionfind.p_uvar (option term * uvar_decoration) * version * Range.range
 and uvars = set ctx_uvar

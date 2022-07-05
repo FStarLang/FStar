@@ -95,14 +95,6 @@ let (norm : norm_step Prims.list -> unit -> Obj.t -> Obj.t) =
 
 
 
-type ('a, 'x, 'uuuuu) pure_return = unit
-type ('a, 'b, 'wp1, 'wp2, 'uuuuu) pure_bind_wp = 'wp1
-type ('a, 'p, 'wputhen, 'wpuelse, 'uuuuu) pure_if_then_else = unit
-type ('a, 'wp, 'uuuuu) pure_ite_wp = unit
-type ('a, 'b, 'wp, 'uuuuu) pure_close_wp = unit
-type ('a, 'uuuuu) pure_null_wp = unit
-type ('p, 'uuuuu) pure_assert_wp = unit
-type ('p, 'uuuuu) pure_assume_wp = unit
 type ('a, 'pre, 'post, 'uuuuu) div_hoare_to_wp = unit
 type 'heap st_pre_h = unit
 type ('heap, 'a, 'pre) st_post_h' = unit

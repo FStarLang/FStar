@@ -125,7 +125,8 @@ let as_wl_deferred wl (d:deferred): list (int * deferred_reason * lstring * prob
 let new_uvar reason wl r gamma binders k should_check meta : ctx_uvar * term * worklist =
     let decoration = {
              uvar_decoration_typ = k;
-             uvar_decoration_should_check = should_check
+             uvar_decoration_should_check = should_check;
+             uvar_decoration_solution_bs = Solution_gamma_unknown;
         }
     in
     let ctx_uvar = {
@@ -513,6 +514,22 @@ let explain env d (s : lstring) =
 (* <uvi ops> Instantiating unification variables   *)
 (* ------------------------------------------------*)
 
+      let rec clearly_inhabited (ty : typ) : bool =
+        match (U.unmeta ty).n with
+        | Tm_uinst (t, _) -> clearly_inhabited t
+        | Tm_arrow (_, c) -> clearly_inhabited (U.comp_result c)
+        | Tm_fvar fv ->
+            let l = S.lid_of_fv fv in
+              (Ident.lid_equals l Const.int_lid)
+            || (Ident.lid_equals l Const.unit_lid)
+            || (Ident.lid_equals l Const.bool_lid)
+            || (Ident.lid_equals l Const.string_lid)
+            || (Ident.lid_equals l Const.exn_lid)
+            || (Ident.lid_equals l (lid_of_str "Steel.Effect.Common.vprop"))
+            || (Ident.lid_equals l (lid_of_str "Steel.Effect.Common.true_p"))
+            || (Ident.lid_equals l (lid_of_str "Prims.prop"))
+        | _ -> false
+
 let set_uvar env u t = 
   // Useful for debugging uvars setting bugs
   // if Env.debug env <| Options.Other "Rel"
@@ -528,6 +545,39 @@ let set_uvar env u t =
   //       (BU.stack_dump());
   //     failwith "DIE"
   // );
+
+  let sol_gamma, g =
+    let g = env.gamma |> List.filter (function
+      | Binding_var bv ->
+        not (clearly_inhabited (SS.compress bv.sort))
+      | _ -> false) in
+    let g = g |> List.filter (function
+      | Binding_var bv1 ->
+        not (u.ctx_uvar_gamma |> List.existsb (function
+               | Binding_var bv2 -> bv_eq bv1 bv2
+               | _ -> false))
+      | _ -> false) in
+    if List.length g = 0
+    then Solution_gamma_contained_in_ctx_gamma, g
+    else Solution_gamma_not_contained_in_ctx_gamma
+         (env.gamma, g |> List.map (function
+            | Binding_var id -> id
+            | _ -> failwith "Panic!")) , g in
+  (match sol_gamma with
+   | Solution_gamma_not_contained_in_ctx_gamma (_, l) ->
+     if Env.debug env <| Options.Other "2365"
+     then // let diff = env.gamma |> List.filter (function
+       //   | Binding_var id1 ->
+       //     u.ctx_uvar_gamma |> List.for_all (function
+       //       | Binding_var id2 -> not (bv_eq id1 id2)
+       //       | _ -> true)
+       //   | _ -> false) in
+      BU.print2 "Setting gamma solution for %s to not contained because %s\n"
+         (Print.ctx_uvar_to_string u)
+         (Print.bvs_to_string "; " l)
+   | _ -> ());
+  UF.change_decoration u.ctx_uvar_head
+      ({UF.find_decoration u.ctx_uvar_head with uvar_decoration_solution_bs=sol_gamma});
   U.set_uvar u.ctx_uvar_head t
 
 let commit env uvis = uvis |> List.iter (function
@@ -540,7 +590,7 @@ let commit env uvis = uvis |> List.iter (function
       def_check_closed_in t.pos "commit" (List.map (fun b -> b.binder_bv) u.ctx_uvar_binders) t;
       set_uvar env u t
     )
-  
+
 let find_term_uvar uv s = BU.find_map s (function
     | UNIV _ -> None
     | TERM(u, t) -> if UF.equiv uv u.ctx_uvar_head then Some t else None)
@@ -904,7 +954,7 @@ let u_abs (k : typ) (ys : binders) (t : term) : term =
     else let c = Subst.subst_comp (U.rename_binders xs ys) c in
          U.abs ys t (Some (U.residual_comp_of_comp c))
 
-let solve_prob' resolve_ok prob logical_guard uvis wl =
+let solve_prob' env resolve_ok prob logical_guard uvis wl =
     def_check_prob "solve_prob'" prob;
     let phi = match logical_guard with
       | None -> U.t_true
@@ -947,7 +997,7 @@ let solve_prob' resolve_ok prob logical_guard uvis wl =
              assign_solution (args_as_binders args) uv phi;
              wl
     in
-    commit wl.tcenv uvis;
+    commit (match env with | Some e -> e | None -> wl.tcenv) uvis;
     {wl with ctr=wl.ctr + 1}
 
 let extend_universe_solution pid sol wl =
@@ -957,13 +1007,13 @@ let extend_universe_solution pid sol wl =
     commit wl.tcenv sol;
     {wl with ctr=wl.ctr+1}
 
-let solve_prob (prob : prob) (logical_guard : option term) (uvis : list uvi) (wl:worklist) : worklist =
+let solve_prob env (prob : prob) (logical_guard : option term) (uvis : list uvi) (wl:worklist) : worklist =
     def_check_prob "solve_prob.prob" prob;
     BU.iter_opt logical_guard (def_check_scoped "solve_prob.guard" prob);
     if Env.debug wl.tcenv <| Options.Other "Rel"
     then BU.print2 "Solving %s: with %s\n" (string_of_int <| p_pid prob)
                                            (uvis_to_string wl.tcenv uvis);
-    solve_prob' false prob logical_guard uvis wl
+    solve_prob' env false prob logical_guard uvis wl
 
 (* ------------------------------------------------ *)
 (* </solving problems>                              *)
@@ -1790,7 +1840,7 @@ let rec solve (env:Env.env) (probs:worklist) : solution =
             solve_c env (maybe_invert cp) probs
 
       | TProb tp ->
-        if BU.physical_equality tp.lhs tp.rhs then solve env (solve_prob hd None [] probs) else
+        if BU.physical_equality tp.lhs tp.rhs then solve env (solve_prob None hd None [] probs) else
         if rank=Rigid_rigid
         || (tp.relation = EQ && rank <> Flex_flex)
         then solve_t' env tp probs
@@ -1822,7 +1872,7 @@ let rec solve (env:Env.env) (probs:worklist) : solution =
 and solve_one_universe_eq (env:Env.env) (orig:prob) (u1:universe) (u2:universe) (wl:worklist) : solution =
     match solve_universe_eq (p_pid orig) wl u1 u2 with
     | USolved wl ->
-      solve env (solve_prob orig None [] wl)
+      solve env (solve_prob None orig None [] wl)
 
     | UFailed msg ->
       giveup env msg orig
@@ -1880,7 +1930,7 @@ and giveup_or_defer_flex_flex (env:Env.env) (orig:prob) (wl:worklist) (reason:de
 and defer_to_user_tac (env:Env.env) (orig:prob) reason (wl:worklist) : solution =
   if Env.debug env <| Options.Other "Rel" then
     BU.print1 "\n\t\tDeferring %s to a tactic\n" (prob_to_string env orig);
-  let wl = solve_prob orig None [] wl in
+  let wl = solve_prob None orig None [] wl in
   let wl = {wl with wl_deferred_to_tac=(wl.ctr,
                                         Deferred_to_user_tac,
                                         Thunk.mkv reason, orig)::wl.wl_deferred_to_tac} in
@@ -2155,8 +2205,8 @@ and solve_rigid_flex_or_flex_rigid_subtyping
          let g =  List.fold_left (fun g p -> U.mk_conj g (p_guard p))
                                  eq_prob.logical_guard
                                  sub_probs in
-         let wl = solve_prob' false (TProb tp) (Some g) [] wl in
-         let _ = List.fold_left (fun wl p -> solve_prob' true p None [] wl) wl bounds_probs in
+         let wl = solve_prob' None false (TProb tp) (Some g) [] wl in
+         let _ = List.fold_left (fun wl p -> solve_prob' None true p None [] wl) wl bounds_probs in
          UF.commit tx;
          solve env wl
 
@@ -2173,7 +2223,7 @@ and solve_rigid_flex_or_flex_rigid_subtyping
             let eq_prob, wl =
                 new_problem wl env t_base EQ this_flex None tp.loc "widened subtyping" in
             def_check_prob "meet_or_join3" (TProb eq_prob);
-            let wl = solve_prob' false (TProb tp) (Some (p_guard (TProb eq_prob))) [] wl in
+            let wl = solve_prob' None false (TProb tp) (Some (p_guard (TProb eq_prob))) [] wl in
             solve env (attempt [TProb eq_prob] wl)
 
           | Flex_rigid, (t_base, Some (x, phi)) ->
@@ -2186,7 +2236,7 @@ and solve_rigid_flex_or_flex_rigid_subtyping
                 new_problem wl env t_base EQ this_flex None tp.loc "widened subtyping" in
             def_check_prob "meet_or_join4" (TProb eq_prob);
             let phi = guard_on_element wl tp x phi in
-            let wl = solve_prob' false (TProb tp) (Some (U.mk_conj phi (p_guard (TProb eq_prob)))) [] wl in
+            let wl = solve_prob' None false (TProb tp) (Some (U.mk_conj phi (p_guard (TProb eq_prob)))) [] wl in
             solve env (attempt [TProb eq_prob] wl)
 
           | _ ->
@@ -2258,7 +2308,7 @@ and imitate_arrow (orig:prob) (env:Env.env) (wl:worklist)
                   mk_t_problem wl [] orig lhs' rel arrow None "arrow imitation"
               in
               //printfn "Arrow imitation: %s =?= %s" (Print.term_to_string lhs') (Print.term_to_string rhs);
-              solve env (attempt [sub_prob] (solve_prob orig None [sol] wl))
+              solve env (attempt [sub_prob] (solve_prob None orig None [sol] wl))
 
             | ({binder_bv=x;binder_qual=imp;binder_attrs=attrs})::formals ->
               let _ctx_u_x, u_x, wl = copy_uvar u_lhs (bs_lhs@bs) (U.type_u() |> fst) wl in
@@ -2339,7 +2389,7 @@ and solve_binders (env:Env.env) (bs1:binders) (bs2:binders) (orig:prob) (wl:work
    match aux wl [] env [] bs1 bs2 with
    | env, Inr msg, wl -> giveup_lit env msg orig
    | env, Inl (sub_probs, phi), wl ->
-     let wl = solve_prob orig (Some phi) [] wl in
+     let wl = solve_prob None orig (Some phi) [] wl in
      solve env (attempt sub_probs wl)
 
 and try_solve_without_smt_or_else
@@ -2481,13 +2531,25 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
           bs,
           S.mk_Tm_app rhs_hd rhs_args rhs.pos
         in
-        let sol =
+        let sol, env =
+          let remove_binders env bs =
+            let g = env.gamma |> List.filter (function
+              | Binding_var bv ->
+                not (bs |> List.existsb (function b -> bv_eq b.binder_bv bv))
+              | _ -> true) in
+            if List.length g < List.length env.gamma &&
+               Env.debug env <| Options.Other "2365"
+            then BU.print2 "mk_solution: removed some binders from gamma: (%s) and (%s)"
+                   (Env.print_gamma env.gamma)
+                   (Env.print_gamma g);
+            {env with gamma=g} in
           match bs with
-          | [] -> rhs
+          | [] -> rhs, env
           | _ ->
-            u_abs (U.ctx_uvar_typ ctx_u) (sn_binders env bs) rhs
+            u_abs (U.ctx_uvar_typ ctx_u) (sn_binders env bs) rhs,
+            remove_binders env bs
         in
-        [TERM(ctx_u, sol)]
+        [TERM(ctx_u, sol)], env
     in
 
     (*
@@ -2552,7 +2614,7 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
                let fvs_rhs = Free.names rhs in
                if not (BU.set_is_subset_of fvs_rhs fvs_lhs)
                then Inl ("quasi-pattern, free names on the RHS are not included in the LHS"), wl
-               else Inr (mk_solution env lhs bs rhs), restrict_all_uvars env ctx_u [] uvars wl
+               else Inr (mk_solution env lhs bs rhs |> fst), restrict_all_uvars env ctx_u [] uvars wl
     in
 
     (*
@@ -2640,7 +2702,7 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
             let p2, wl = mk_t_problem wl [] orig lhs'_last_arg EQ (fst last_arg_rhs) None "first-order rhs" in
             [p1; p2], wl
         in
-        solve env (attempt sub_probs (solve_prob orig None sol wl))
+        solve env (attempt sub_probs (solve_prob None orig None sol wl))
     in
 
     (*
@@ -2744,7 +2806,7 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
           let solve_sub_probs_if_head_types_equal wl = 
               let sol = [TERM(ctx_uv, head)] in
               let wl = restrict_all_uvars env ctx_uv [] uvars_head wl in
-              let wl = solve_prob orig None sol wl in
+              let wl = solve_prob None orig None sol wl in
               
               let sub_probs, wl =
                 List.fold_left2
@@ -2823,9 +2885,9 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
                Deferred_occur_check_failed
                (Thunk.mkv <| "occurs-check failed: " ^ (Option.get msg))
         else if BU.set_is_subset_of fvs2 fvs1
-        then let sol = mk_solution env lhs lhs_binders rhs in
+        then let sol, env0 = mk_solution env lhs lhs_binders rhs in
              let wl = restrict_all_uvars env ctx_uv lhs_binders uvars wl in
-             solve env (solve_prob orig None sol wl)
+             solve env (solve_prob (Some env0) orig None sol wl)
         else if wl.defer_ok = DeferAny
         then
           let msg = mklstr (fun () ->
@@ -2848,7 +2910,7 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
 
                match try_quasi_pattern orig env wl lhs rhs with
                | Inr sol, wl ->
-                 solve env (solve_prob orig None sol wl)
+                 solve env (solve_prob None orig None sol wl)
 
                | Inl msg, _ ->
                  imitate orig env wl lhs rhs
@@ -2904,7 +2966,7 @@ and solve_t_flex_flex env orig wl (lhs:flex_t) (rhs:flex_t) : solution =
             let (Flex (_, u_rhs, _)) = rhs in
             if UF.equiv u_lhs.ctx_uvar_head u_rhs.ctx_uvar_head
             && binders_eq binders_lhs binders_rhs
-            then solve env (solve_prob orig None [] wl)
+            then solve env (solve_prob None orig None [] wl)
             else (* Given a flex-flex instance:
                     (x1..xn ..X  |- ?u : ts  -> tres) [y1  ... ym ]
                  ~  (x1..xn ..X' |- ?v : ts' -> tres) [y1' ... ym']
@@ -2969,11 +3031,11 @@ and solve_t_flex_flex env orig wl (lhs:flex_t) (rhs:flex_t) : solution =
                    let s1_sol = U.abs binders_lhs w_app (Some (U.residual_tot t_res_lhs)) in
                    let s1 = TERM(u_lhs, s1_sol) in
                    if Unionfind.equiv u_lhs.ctx_uvar_head u_rhs.ctx_uvar_head
-                   then solve env (solve_prob orig None [s1] wl)
+                   then solve env (solve_prob None orig None [s1] wl)
                    else (
                        let s2_sol = U.abs binders_rhs w_app (Some (U.residual_tot t_res_lhs)) in
                        let s2 = TERM(u_rhs, s2_sol) in
-                       solve env (solve_prob orig None [s1;s2] wl)
+                       solve env (solve_prob None orig None [s1;s2] wl)
                      )
                  end
 
@@ -3024,7 +3086,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
         then if need_unif
              then solve_t env ({problem with lhs=head1; rhs=head2}) wl
              else solve_head_then wl (fun ok wl ->
-                    if ok then solve env (solve_prob orig None [] wl)
+                    if ok then solve env (solve_prob None orig None [] wl)
                     else solve env wl)
         else//Given T t1 ..tn REL T s1..sn
             //  if T expands to a refinement, then normalize it and recurse
@@ -3068,7 +3130,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                       then solve env wl
                       else let subprobs, wl = mk_sub_probs wl in
                            let formula = U.mk_conj_l (List.map (fun p -> p_guard p) subprobs) in
-                           let wl = solve_prob orig (Some formula) [] wl in
+                           let wl = solve_prob None orig (Some formula) [] wl in
                            solve env (attempt subprobs wl))
               in
               let solve_sub_probs_no_smt env wl =
@@ -3076,7 +3138,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                       assert ok; //defer not allowed
                       let subprobs, wl = mk_sub_probs wl in
                       let formula = U.mk_conj_l (List.map (fun p -> p_guard p) subprobs) in
-                      let wl = solve_prob orig (Some formula) [] wl in
+                      let wl = solve_prob None orig (Some formula) [] wl in
                       solve env (attempt subprobs wl))
               in
               let unfold_and_retry d env wl (prob, reason) =
@@ -3373,7 +3435,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                     || may_relate env problem.relation head2)
                 && wl.smt_ok
                 then let guard, wl = guard_of_prob env wl problem t1 t2 in
-                    solve env (solve_prob orig (Some guard) [] wl)
+                    solve env (solve_prob None orig (Some guard) [] wl)
                 else giveup env (mklstr (fun () -> BU.format4 "head mismatch (%s (%s) vs %s (%s))"
                                                   (Print.term_to_string head1)
                                                   (BU.dflt ""
@@ -3392,7 +3454,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
             //so, treat as a mismatch
             if wl.smt_ok
             then let guard, wl = guard_of_prob env wl problem t1 t2 in
-                    solve env (solve_prob orig (Some guard) [] wl)
+                    solve env (solve_prob None orig (Some guard) [] wl)
             else giveup env (mklstr (fun () -> BU.format2 "head mismatch for subtyping (%s vs %s)"
                                         (Print.term_to_string t1)
                                         (Print.term_to_string t2)))
@@ -3412,7 +3474,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
 
     let orig = TProb problem in
     def_check_prob "solve_t'.2" orig;
-    if BU.physical_equality problem.lhs problem.rhs then solve env (solve_prob orig None [] wl) else
+    if BU.physical_equality problem.lhs problem.rhs then solve env (solve_prob None orig None [] wl) else
     let t1 = problem.lhs in
     let t2 = problem.rhs in
     def_check_closed_in (p_loc orig) "ref.t1" (List.map (fun b -> b.binder_bv) (p_scope orig)) t1;
@@ -3453,7 +3515,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
 
       | Tm_quoted (t1, _), Tm_quoted (t2, _) ->
         (* solve_prob orig None [] wl *)
-        solve env (solve_prob orig None [] wl)
+        solve env (solve_prob None orig None [] wl)
         (* solve_t' env ({problem with lhs = t1; rhs = t2}) wl *)
 
       | Tm_bvar _, _
@@ -3536,7 +3598,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                 let guard = U.mk_conj (p_guard base_prob) impl in
                 def_check_closed_in (p_loc orig) "ref.1" (List.map (fun b -> b.binder_bv) (p_scope orig)) (p_guard base_prob);
                 def_check_closed_in (p_loc orig) "ref.2" (List.map (fun b -> b.binder_bv) (p_scope orig)) impl;
-                let wl = solve_prob orig (Some guard) [] wl in
+                let wl = solve_prob None orig (Some guard) [] wl in
                 solve env (attempt [base_prob] wl)
              in
         let has_uvars =
@@ -3569,7 +3631,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                let guard =
                    U.mk_conj (p_guard base_prob)
                              (p_guard ref_prob |> guard_on_element wl problem x1) in
-               let wl = solve_prob orig (Some guard) [] wl in
+               let wl = solve_prob None orig (Some guard) [] wl in
                let wl = {wl with ctr=wl.ctr+1} in
                let wl = extend_wl wl [] defer_to_tac imps in
                solve env (attempt [base_prob] wl)
@@ -3653,7 +3715,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                   if wl.smt_ok
                   && may_relate env (p_rel orig) head
                   then let g, wl = mk_eq2 wl env orig t_abs not_abs in
-                       solve env (solve_prob orig (Some g) [] wl)
+                       solve env (solve_prob None orig (Some g) [] wl)
                   else giveup env (Thunk.mkv "head tag mismatch: RHS is an abstraction") orig
               end
 
@@ -3672,7 +3734,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
         let by_smt () =
             // using original WL
             let guard, wl = guard_of_prob env wl problem t1 t2 in
-            solve env (solve_prob orig (Some guard) [] wl)
+            solve env (solve_prob None orig (Some guard) [] wl)
         in
         let rec solve_branches wl brs1 brs2 : option (list (binders * prob) * worklist) =
             match brs1, brs2 with
@@ -3724,7 +3786,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
             let sub_probs = ([], sc_prob)::sub_probs in
             let formula = U.mk_conj_l (List.map (fun (scope, p) -> close_forall wl.tcenv scope (p_guard p)) sub_probs) in
             let tx = UF.new_transaction () in
-            let wl = solve_prob orig (Some formula) [] wl in
+            let wl = solve_prob None orig (Some formula) [] wl in
             begin match solve env (attempt (List.map snd sub_probs) ({wl with smt_ok = false})) with
             | Success (ds, ds', imp) ->
                 UF.commit tx;
@@ -3785,14 +3847,14 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                  else let g, wl = mk_eq2 wl env orig t1 t2 in
                       Some g, wl
              in
-             solve env (solve_prob orig guard [] wl)
+             solve env (solve_prob None orig guard [] wl)
            in
            if no_free_uvars t1 // and neither term has any free variables
            && no_free_uvars t2
            then
              if not wl.smt_ok
              then if equal t1 t2
-                  then solve env (solve_prob orig None [] wl)
+                  then solve env (solve_prob None orig None [] wl)
                   else rigid_rigid_delta env problem wl head1 head2 t1 t2
              else solve_with_smt()
            else if not wl.smt_ok
@@ -3817,7 +3879,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
       | Tm_let _, Tm_let _ ->
          // For now, just unify if they syntactically match
          if U.term_eq t1 t2
-         then solve env (solve_prob orig None [] wl)
+         then solve env (solve_prob None orig None [] wl)
          else giveup env (Thunk.mkv "Tm_let mismatch") orig
 
       | Tm_let _, _
@@ -3878,7 +3940,7 @@ and solve_c (env:Env.env) (problem:problem comp) (wl:worklist) : solution =
                | Trivial -> guard
                | NonTrivial f -> U.mk_conj guard f in
              let wl = { wl with wl_implicits = g_lift.implicits@wl.wl_implicits } in
-             let wl = solve_prob orig (Some guard) [] wl in
+             let wl = solve_prob None orig (Some guard) [] wl in
              solve env (attempt sub_probs wl)
     in
 
@@ -4107,7 +4169,7 @@ and solve_c (env:Env.env) (problem:problem comp) (wl:worklist) : solution =
               match g_lift.guard_f with
               | Trivial -> guard
               | NonTrivial f -> U.mk_conj guard f in
-            let wl = solve_prob orig (Some <| U.mk_conj guard fml) [] wl in
+            let wl = solve_prob None orig (Some <| U.mk_conj guard fml) [] wl in
             solve env (attempt sub_probs wl) in
 
     let solve_sub c1 edge c2 =
@@ -4167,7 +4229,7 @@ and solve_c (env:Env.env) (problem:problem comp) (wl:worklist) : solution =
                                                     (Print.term_to_string c1_repr)
                                                     (Print.term_to_string c2_repr))
                        in
-                       let wl = solve_prob orig (Some (p_guard prob)) [] wl in
+                       let wl = solve_prob None orig (Some (p_guard prob)) [] wl in
                        solve env (attempt [prob] wl)
                   else
                       let g =
@@ -4194,12 +4256,12 @@ and solve_c (env:Env.env) (problem:problem comp) (wl:worklist) : solution =
                       if debug env <| Options.Other "Rel" then
                           BU.print1 "WP guard (simplifed) is (%s)\n" (Print.term_to_string (N.normalize [Env.Iota; Env.Eager_unfolding; Env.Primops; Env.Simplify] env g));
                       let base_prob, wl = sub_prob wl c1.result_typ problem.relation c2.result_typ "result type" in
-                      let wl = solve_prob orig (Some <| U.mk_conj (p_guard base_prob) g) [] wl in
+                      let wl = solve_prob None orig (Some <| U.mk_conj (p_guard base_prob) g) [] wl in
                       solve env (attempt [base_prob] wl)
     in
 
     if BU.physical_equality c1 c2
-    then solve env (solve_prob orig None [] wl)
+    then solve env (solve_prob None orig None [] wl)
     else let _ = if debug env <| Options.Other "Rel"
                  then BU.print3 "solve_c %s %s %s\n"
                                     (Print.comp_to_string c1)
@@ -4377,7 +4439,8 @@ let try_teq smt_ok env t1 t2 : option guard_t =
   Profiling.profile
     (fun () ->
       if debug env <| Options.Other "Rel" then
-        BU.print2 "try_teq of %s and %s {\n" (Print.term_to_string t1) (Print.term_to_string t2);
+        BU.print3 "try_teq of %s and %s in %s {\n" (Print.term_to_string t1) (Print.term_to_string t2)
+          (Env.print_gamma env.gamma);
       let prob, wl = new_t_problem (empty_worklist env) env t1 EQ t2 None (Env.get_range env) in
       let g = with_guard env prob <| solve_and_commit env (singleton wl prob smt_ok) (fun _ -> None) in
       if debug env <| Options.Other "Rel" then
@@ -4930,30 +4993,55 @@ let is_implicit_resolved (env:env) (i:implicit) : bool =
     |> BU.set_elements
     |> List.for_all (fun uv -> U.ctx_uvar_should_check uv = Allow_unresolved)
 
-let check_implicit_solution_for_tac (env:env) (i:implicit) : option (term * typ) =
+let rec check_implicit_solution_for_tac (env:env) (i:implicit) : option (term * typ) =
   let { imp_reason = reason; imp_tm = tm; imp_uvar = ctx_u; imp_range = r } = i in
   let uvar_ty = U.ctx_uvar_typ ctx_u in
   let uvar_should_check = U.ctx_uvar_should_check ctx_u in
   if uvar_should_check = Allow_untyped
-   || is_base_type env uvar_ty
+   //|| is_base_type env uvar_ty
   then None
   else (
     let env = { env with gamma = ctx_u.ctx_uvar_gamma } in
-    let tm_t, _ = 
-      Profiling.profile (fun () -> env.typeof_well_typed_tot_or_gtot_term env tm false)
-                        None
-                        "retype_tactic_solution"
-    in
-    if Profiling.profile (fun () -> env.teq_nosmt_force env tm_t uvar_ty)
+    let sol_gamma_contained =
+      (UF.find_decoration ctx_u.ctx_uvar_head).uvar_decoration_solution_bs in
+    if sol_gamma_contained = Solution_gamma_unknown
+    then failwith "Impossible, uvar set but its solution gamma status set to unknown"
+    else if (match sol_gamma_contained with
+             | Solution_gamma_not_contained_in_ctx_gamma (g, l) ->
+               l |> List.existsb (fun bv ->
+                                 let t = SS.compress bv.sort in
+                                 let t = N.normalize [] ({env with gamma=g}) t in
+                                 let t = SS.compress t in
+                                 let b = not (clearly_inhabited t) in
+                                 if b && Env.debug env <| Options.Other "2365"
+                                 then BU.print1 "Type %s in uvar env is not clearly inhabited\n" (Print.term_to_string t);
+                                 b)
+             | _ -> false)
+    then let _ =
+           if Env.debug env <| Options.Other "2635"
+           then BU.print2 "Uvar %s solution deemed to be solved in a larger context, rechecking %s {\n"
+                  (Print.ctx_uvar_to_string ctx_u)
+                  (Print.term_to_string tm) in
+         let env = {Env.set_expected_typ env uvar_ty with enable_defer_to_tac=false} in
+         let _, _, g_t = Profiling.profile (fun () -> env.typeof_tot_or_gtot_term env tm false)
+                           None
+                           "retype_tactic_solution" in
+         force_trivial_guard env g_t;
+         if Env.debug env <| Options.Other "2635"
+         then BU.print1 "Retyped tm %s}\n" (Print.ctx_uvar_to_string ctx_u);
+         None
+    else let tm_t, _ = Profiling.profile (fun () -> env.typeof_well_typed_tot_or_gtot_term env tm false)
                          None
-                         "tc_tactic_solution"
-    then None
-    else if Profiling.profile (fun () -> env.subtype_nosmt_force env tm_t uvar_ty)
-                         None
-                         "tc_tactic_solution"
-    then None
-    else 
-      begin
+                         "retype_tactic_solution" in
+         if Profiling.profile (fun () -> env.teq_nosmt_force env tm_t uvar_ty)
+                              None
+                              "tc_tactic_solution"
+        then None
+        else if Profiling.profile (fun () -> env.subtype_nosmt_force env tm_t uvar_ty)
+                              None
+                              "tc_tactic_solution"
+       then None
+       else begin
         //
         // failing at this point is fatal;
         // and the check may have failed because we didn't unroll let recs;
@@ -4977,9 +5065,9 @@ let check_implicit_solution_for_tac (env:env) (i:implicit) : option (term * typ)
         then None
         else Some (tm, tm_t)
       end
-    )
+  )
 
-let resolve_implicits' env is_tac (implicits:Env.implicits) 
+and resolve_implicits' env is_tac (implicits:Env.implicits) 
   : list (implicit * implicit_checking_status) =
   
   let rec until_fixpoint (acc:tagged_implicits * bool)
@@ -5086,8 +5174,7 @@ let resolve_implicits' env is_tac (implicits:Env.implicits)
   in
   until_fixpoint ([], false) implicits
 
-
-let resolve_implicits env g =
+and resolve_implicits env g =
     if Env.debug env <| Options.Other "ResolveImplicitsHook"
     then BU.print1 "//////////////////////////ResolveImplicitsHook: resolve_implicits////////////\n\
                     guard = %s\n"
@@ -5095,9 +5182,8 @@ let resolve_implicits env g =
     let tagged_implicits = resolve_implicits' env false g.implicits in
     {g with implicits = List.map fst tagged_implicits}
 
-let resolve_implicits_tac env g = resolve_implicits' env true g.implicits
 
-let force_trivial_guard env g =
+and force_trivial_guard env g =
     if Env.debug env <| Options.Other "ResolveImplicitsHook"
     then BU.print1 "//////////////////////////ResolveImplicitsHook: force_trivial_guard////////////\n\
                     guard = %s\n"
@@ -5111,6 +5197,8 @@ let force_trivial_guard env g =
                                 (Print.uvar_to_string imp.imp_uvar.ctx_uvar_head)
                                 (N.term_to_string env (U.ctx_uvar_typ imp.imp_uvar))
                                 imp.imp_reason) imp.imp_range
+
+let resolve_implicits_tac env g = resolve_implicits' env true g.implicits
 
 let subtype_nosmt_force env t1 t2 =
     match subtype_nosmt env t1 t2 with

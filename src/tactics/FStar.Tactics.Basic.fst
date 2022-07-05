@@ -180,12 +180,17 @@ let __do_unify_wflags (dbg:bool) (allow_guards:bool)
     if dbg then
       BU.print2 "%%%%%%%%do_unify %s =? %s\n" (Print.term_to_string t1)
                                               (Print.term_to_string t2);
-    try
+
+    bind (trytac cur_goal) (fun gopt ->
+      try
         let res =
+          let env =
+            if is_some gopt
+            then {env with gamma=(gopt |> must).goal_ctx_uvar.ctx_uvar_gamma}
+            else env in
           if allow_guards
           then Rel.try_teq true env t1 t2
-          else Rel.teq_nosmt env t1 t2
-        in
+          else Rel.teq_nosmt env t1 t2 in
         if dbg then
           BU.print3 "%%%%%%%%do_unify (RESULT %s) %s =? %s\n"
                               (FStar.Common.string_of_option (Rel.guard_to_string env) res)
@@ -199,15 +204,15 @@ let __do_unify_wflags (dbg:bool) (allow_guards:bool)
           bind (add_implicits g.implicits) (fun () ->
           ret (Some g))
 
-    with | Errors.Err (_, msg, _) -> begin
-            mlog (fun () -> BU.print1 ">> do_unify error, (%s)\n" msg ) (fun _ ->
-            ret None)
-            end
-         | Errors.Error (_, msg, r, _) -> begin
-            mlog (fun () -> BU.print2 ">> do_unify error, (%s) at (%s)\n"
-                                msg (Range.string_of_range r)) (fun _ ->
-            ret None)
-            end
+      with | Errors.Err (_, msg, _) -> begin
+               mlog (fun () -> BU.print1 ">> do_unify error, (%s)\n" msg ) (fun _ ->
+               ret None)
+             end
+           | Errors.Error (_, msg, r, _) -> begin
+               mlog (fun () -> BU.print2 ">> do_unify error, (%s) at (%s)\n"
+                            msg (Range.string_of_range r)) (fun _ ->
+               ret None)
+             end)
 
 (* Just a wrapper over __do_unify_wflags to better debug *)
 let __do_unify (allow_guards:bool) (env : env) (t1 : term) (t2 : term)
@@ -722,6 +727,7 @@ let rec  __try_unify_by_application
             mlog (fun () -> BU.print1 "t_apply: generated uvar %s\n" (Print.ctx_uvar_to_string uv)) (fun _ ->
             let typ = U.comp_result c in
             let typ' = SS.subst [S.NT (b.binder_bv, uvt)] typ in
+            let e = Env.push_bv e (S.null_bv b.binder_bv.sort) in
             __try_unify_by_application only_match ((uvt, U.aqual_of_binder b, uv)::acc) e typ' ty2 rng))
     end)
 
@@ -1836,7 +1842,14 @@ let t_commute_applied_match () : tac unit = wrap_err "t_commute_applied_match" <
     match (SS.compress (U.unascribe lh)).n with
     | Tm_match (e, asc_opt, brs, lopt) ->
       let brs' = List.map (fun (p, w, e) -> p, w, U.mk_app e las) brs in
-      let l' = mk (Tm_match (e, asc_opt, brs', lopt)) l.pos in
+      let lopt' = lopt |> BU.map_option (fun rc -> {rc with residual_typ=
+        rc.residual_typ |> BU.map_option (fun t ->
+          let bs, c = N.get_n_binders (goal_env g) (List.length las) t in
+          let bs, c = SS.open_comp bs c in
+          let ss = List.map2 (fun b a -> NT (b.binder_bv, fst a)) bs las in
+          let c = SS.subst_comp ss c in
+          U.comp_result c)}) in
+      let l' = mk (Tm_match (e, asc_opt, brs', lopt')) l.pos in
       bind (do_unify' false (goal_env g) l' r) (function
       | None -> fail "discharging the equality failed"
       | Some guard ->

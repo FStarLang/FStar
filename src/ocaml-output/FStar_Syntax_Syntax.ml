@@ -219,10 +219,16 @@ and ctx_uvar =
 and ctx_uvar_meta_t =
   | Ctx_uvar_meta_tac of (FStar_Compiler_Dyn.dyn * term' syntax) 
   | Ctx_uvar_meta_attr of term' syntax 
+and uvar_solution_gamma =
+  | Solution_gamma_unknown 
+  | Solution_gamma_contained_in_ctx_gamma 
+  | Solution_gamma_not_contained_in_ctx_gamma of (binding Prims.list * bv
+  Prims.list) 
 and uvar_decoration =
   {
   uvar_decoration_typ: term' syntax ;
-  uvar_decoration_should_check: should_check_uvar }
+  uvar_decoration_should_check: should_check_uvar ;
+  uvar_decoration_solution_bs: uvar_solution_gamma }
 and pat' =
   | Pat_constant of sconst 
   | Pat_cons of (fv * (pat' withinfo_t * Prims.bool) Prims.list) 
@@ -517,18 +523,43 @@ let (uu___is_Ctx_uvar_meta_attr : ctx_uvar_meta_t -> Prims.bool) =
     match projectee with | Ctx_uvar_meta_attr _0 -> true | uu___ -> false
 let (__proj__Ctx_uvar_meta_attr__item___0 : ctx_uvar_meta_t -> term' syntax)
   = fun projectee -> match projectee with | Ctx_uvar_meta_attr _0 -> _0
+let (uu___is_Solution_gamma_unknown : uvar_solution_gamma -> Prims.bool) =
+  fun projectee ->
+    match projectee with | Solution_gamma_unknown -> true | uu___ -> false
+let (uu___is_Solution_gamma_contained_in_ctx_gamma :
+  uvar_solution_gamma -> Prims.bool) =
+  fun projectee ->
+    match projectee with
+    | Solution_gamma_contained_in_ctx_gamma -> true
+    | uu___ -> false
+let (uu___is_Solution_gamma_not_contained_in_ctx_gamma :
+  uvar_solution_gamma -> Prims.bool) =
+  fun projectee ->
+    match projectee with
+    | Solution_gamma_not_contained_in_ctx_gamma _0 -> true
+    | uu___ -> false
+let (__proj__Solution_gamma_not_contained_in_ctx_gamma__item___0 :
+  uvar_solution_gamma -> (binding Prims.list * bv Prims.list)) =
+  fun projectee ->
+    match projectee with | Solution_gamma_not_contained_in_ctx_gamma _0 -> _0
 let (__proj__Mkuvar_decoration__item__uvar_decoration_typ :
   uvar_decoration -> term' syntax) =
   fun projectee ->
     match projectee with
-    | { uvar_decoration_typ; uvar_decoration_should_check;_} ->
-        uvar_decoration_typ
+    | { uvar_decoration_typ; uvar_decoration_should_check;
+        uvar_decoration_solution_bs;_} -> uvar_decoration_typ
 let (__proj__Mkuvar_decoration__item__uvar_decoration_should_check :
   uvar_decoration -> should_check_uvar) =
   fun projectee ->
     match projectee with
-    | { uvar_decoration_typ; uvar_decoration_should_check;_} ->
-        uvar_decoration_should_check
+    | { uvar_decoration_typ; uvar_decoration_should_check;
+        uvar_decoration_solution_bs;_} -> uvar_decoration_should_check
+let (__proj__Mkuvar_decoration__item__uvar_decoration_solution_bs :
+  uvar_decoration -> uvar_solution_gamma) =
+  fun projectee ->
+    match projectee with
+    | { uvar_decoration_typ; uvar_decoration_should_check;
+        uvar_decoration_solution_bs;_} -> uvar_decoration_solution_bs
 let (uu___is_Pat_constant : pat' -> Prims.bool) =
   fun projectee ->
     match projectee with | Pat_constant _0 -> true | uu___ -> false

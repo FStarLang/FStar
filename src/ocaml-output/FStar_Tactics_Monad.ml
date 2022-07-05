@@ -531,22 +531,18 @@ let (new_uvar :
               match sc_opt with
               | FStar_Pervasives_Native.Some sc -> sc
               | uu___ ->
-                  let uu___1 = FStar_TypeChecker_Rel.is_base_type env typ in
-                  if uu___1
-                  then FStar_Syntax_Syntax.Allow_untyped
-                  else
-                    ((let uu___4 =
-                        FStar_Compiler_Effect.op_Less_Bar
-                          (FStar_TypeChecker_Env.debug env)
-                          (FStar_Options.Other "2635") in
-                      if uu___4
-                      then
-                        let uu___5 = FStar_Syntax_Print.term_to_string typ in
-                        FStar_Compiler_Util.print2
-                          "Tactic introduced a strict uvar for %s\n\\%s\n"
-                          uu___5 ""
-                      else ());
-                     FStar_Syntax_Syntax.Strict) in
+                  ((let uu___2 =
+                      FStar_Compiler_Effect.op_Less_Bar
+                        (FStar_TypeChecker_Env.debug env)
+                        (FStar_Options.Other "2635") in
+                    if uu___2
+                    then
+                      let uu___3 = FStar_Syntax_Print.term_to_string typ in
+                      FStar_Compiler_Util.print2
+                        "Tactic introduced a strict uvar for %s\n\\%s\n"
+                        uu___3 ""
+                    else ());
+                   FStar_Syntax_Syntax.Strict) in
             let uu___ =
               FStar_TypeChecker_Env.new_implicit_var_aux reason rng env typ
                 should_check FStar_Pervasives_Native.None in

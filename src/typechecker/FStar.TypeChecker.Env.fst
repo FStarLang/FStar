@@ -1567,13 +1567,20 @@ let all_binders env = binders_of_bindings env.gamma
 
 let print_gamma gamma =
     (gamma |> List.map (function
-        | Binding_var x -> "Binding_var " ^ (Print.bv_to_string x)
+        | Binding_var x -> "Binding_var (" ^ (Print.bv_to_string x) ^ ":" ^ (Print.term_to_string x.sort) ^ ")"
         | Binding_univ u -> "Binding_univ " ^ (string_of_id u)
         | Binding_lid (l, _) -> "Binding_lid " ^ (Ident.string_of_lid l)))//  @
     // (env.gamma_sig |> List.map (fun (ls, _) ->
     //     "Binding_sig " ^ (ls |> List.map Ident.string_of_lid |> String.concat ", ")
     // ))
     |> String.concat "::\n"
+
+let is_contained_in g1 g2 =
+  List.for_all (function
+                | Binding_var id1 -> List.existsb (function | Binding_var id2 ->
+                                                             bv_eq id1 id2
+                                                           | _ -> false) g2
+                | _ -> true) g1
 
 let string_of_delta_level = function
   | NoDelta -> "NoDelta"
@@ -1758,7 +1765,8 @@ let new_implicit_var_aux reason r env k should_check meta =
       let gamma = env.gamma in
       let decoration = {
              uvar_decoration_typ = k;
-             uvar_decoration_should_check = should_check
+             uvar_decoration_should_check = should_check;
+             uvar_decoration_solution_bs = Solution_gamma_unknown;
           }
       in
       let ctx_uvar = {
@@ -1895,4 +1903,3 @@ let split_smt_query (e:env) (q:term)
     | None -> None
     | Some p -> Some (p e q)
     
-

@@ -463,6 +463,7 @@ val new_implicit_var_aux : string ->
 
 
 val print_gamma : gamma -> string
+val is_contained_in : gamma -> gamma -> bool
 
 (* layered effect utils *)
 

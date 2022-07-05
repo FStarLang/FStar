@@ -243,7 +243,7 @@ let new_uvar (reason:string) (env:env) (typ:typ) (sc_opt:option should_check_uva
       match sc_opt with
       | Some sc -> sc
       | _ -> 
-        if FStar.TypeChecker.Rel.is_base_type env typ
+        if false
         then Allow_untyped
         else (
           if Env.debug env <| Options.Other "2635"
