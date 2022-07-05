@@ -19,7 +19,7 @@ Goal 1/1:
 (_: Prims.unit), (return_val: x: FStar.Pervasives.Native.option Prims.int {Some? x}), (_: return_val == FStar.Pervasives.Native.Some 0), (any_result: Prims.int), (_: StrictUnfolding.project (FStar.Pervasives.Native.Some 0) == any_result), (any_result'0: Prims.logical), (_: StrictUnfolding.project (FStar.Pervasives.Native.Some 0) == 0 == any_result'0) |- _ : Prims.squash (0 == 0)
 
 >> Got issues: [
-StrictUnfolding.fst(50,2-50,8): (Error 19) Could not prove goal #1; The SMT solver could not prove the query, try to spell your proof in more detail or increase fuel/ifuel (see also StrictUnfolding.fst(50,48-50,72))
+StrictUnfolding.fst(50,2-50,8): (Error 19) Could not prove goal #1; The SMT solver could not prove the query. Use --query_stats for more details. (see also StrictUnfolding.fst(50,48-50,72))
 >>]
 Verified module: StrictUnfolding
 All verification conditions discharged successfully
