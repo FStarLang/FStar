@@ -53,9 +53,6 @@ let array_literal_inv
       `star`
     pure (array_literal_inv_pure n f i s)
 
-//#set-options "--debug Steel.ST.Array.Util --debug_level Extreme,Rel,2635,2365,TacVerbose,SMTEncoding --print_full_names --print_bound_var_types --print_implicits --ugly"
-//#set-options "--log_queries --fuel 2 --ifuel 2"
-//#restart-solver
 inline_for_extraction
 let array_literal_loop_body
   (#a:Type0)

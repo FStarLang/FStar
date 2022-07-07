@@ -34,8 +34,6 @@ open FStar.All
 assume val ff : int -> int -> int
 assume val gg : int -> int -> int
 
-//#set-options "--debug CommuteMatch --debug_level Extreme,Rel,TacUnify,TacVerbose,2365,2635 --print_implicits --print_full_names --ugly"
-
 [@@postprocess_with rwtac]
 let rw_test3 () : int =
   (match x with | X -> ff | _ -> gg) 42 12
