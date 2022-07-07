@@ -3316,8 +3316,26 @@ let (subst_goal :
                         (fun uu___4 ->
                            match uu___4 with
                            | (uvt, uv) ->
+                               let uv1 =
+                                 {
+                                   FStar_Syntax_Syntax.ctx_uvar_head =
+                                     (uv.FStar_Syntax_Syntax.ctx_uvar_head);
+                                   FStar_Syntax_Syntax.ctx_uvar_gamma =
+                                     (uv.FStar_Syntax_Syntax.ctx_uvar_gamma);
+                                   FStar_Syntax_Syntax.ctx_uvar_binders =
+                                     (uv.FStar_Syntax_Syntax.ctx_uvar_binders);
+                                   FStar_Syntax_Syntax.ctx_uvar_reason =
+                                     (uv.FStar_Syntax_Syntax.ctx_uvar_reason);
+                                   FStar_Syntax_Syntax.ctx_uvar_range =
+                                     (uv.FStar_Syntax_Syntax.ctx_uvar_range);
+                                   FStar_Syntax_Syntax.ctx_uvar_meta =
+                                     (uv.FStar_Syntax_Syntax.ctx_uvar_meta);
+                                   FStar_Syntax_Syntax.ctx_uvar_apply_tac_prefix
+                                     =
+                                     ((g.FStar_Tactics_Types.goal_ctx_uvar).FStar_Syntax_Syntax.ctx_uvar_apply_tac_prefix)
+                                 } in
                                let goal' =
-                                 FStar_Tactics_Types.mk_goal new_env uv
+                                 FStar_Tactics_Types.mk_goal new_env uv1
                                    g.FStar_Tactics_Types.opts
                                    g.FStar_Tactics_Types.is_guard
                                    g.FStar_Tactics_Types.label in
@@ -3553,6 +3571,24 @@ let (binder_retype :
                       (fun uu___4 ->
                          match uu___4 with
                          | (t', u_t') ->
+                             let u_t'1 =
+                               {
+                                 FStar_Syntax_Syntax.ctx_uvar_head =
+                                   (u_t'.FStar_Syntax_Syntax.ctx_uvar_head);
+                                 FStar_Syntax_Syntax.ctx_uvar_gamma =
+                                   (u_t'.FStar_Syntax_Syntax.ctx_uvar_gamma);
+                                 FStar_Syntax_Syntax.ctx_uvar_binders =
+                                   (u_t'.FStar_Syntax_Syntax.ctx_uvar_binders);
+                                 FStar_Syntax_Syntax.ctx_uvar_reason =
+                                   (u_t'.FStar_Syntax_Syntax.ctx_uvar_reason);
+                                 FStar_Syntax_Syntax.ctx_uvar_range =
+                                   (u_t'.FStar_Syntax_Syntax.ctx_uvar_range);
+                                 FStar_Syntax_Syntax.ctx_uvar_meta =
+                                   (u_t'.FStar_Syntax_Syntax.ctx_uvar_meta);
+                                 FStar_Syntax_Syntax.ctx_uvar_apply_tac_prefix
+                                   =
+                                   ((goal.FStar_Tactics_Types.goal_ctx_uvar).FStar_Syntax_Syntax.ctx_uvar_apply_tac_prefix)
+                               } in
                              let bv'' =
                                {
                                  FStar_Syntax_Syntax.ppname =
@@ -3673,6 +3709,23 @@ let (revert : unit -> unit FStar_Tactics_Monad.tac) =
                (fun uu___3 ->
                   match uu___3 with
                   | (r, u_r) ->
+                      let u_r1 =
+                        {
+                          FStar_Syntax_Syntax.ctx_uvar_head =
+                            (u_r.FStar_Syntax_Syntax.ctx_uvar_head);
+                          FStar_Syntax_Syntax.ctx_uvar_gamma =
+                            (u_r.FStar_Syntax_Syntax.ctx_uvar_gamma);
+                          FStar_Syntax_Syntax.ctx_uvar_binders =
+                            (u_r.FStar_Syntax_Syntax.ctx_uvar_binders);
+                          FStar_Syntax_Syntax.ctx_uvar_reason =
+                            (u_r.FStar_Syntax_Syntax.ctx_uvar_reason);
+                          FStar_Syntax_Syntax.ctx_uvar_range =
+                            (u_r.FStar_Syntax_Syntax.ctx_uvar_range);
+                          FStar_Syntax_Syntax.ctx_uvar_meta =
+                            (u_r.FStar_Syntax_Syntax.ctx_uvar_meta);
+                          FStar_Syntax_Syntax.ctx_uvar_apply_tac_prefix =
+                            ((goal.FStar_Tactics_Types.goal_ctx_uvar).FStar_Syntax_Syntax.ctx_uvar_apply_tac_prefix)
+                        } in
                       let uu___4 =
                         let uu___5 =
                           let uu___6 =
@@ -3688,7 +3741,7 @@ let (revert : unit -> unit FStar_Tactics_Monad.tac) =
                       FStar_Tactics_Monad.bind uu___4
                         (fun uu___5 ->
                            let g =
-                             FStar_Tactics_Types.mk_goal env' u_r
+                             FStar_Tactics_Types.mk_goal env' u_r1
                                goal.FStar_Tactics_Types.opts
                                goal.FStar_Tactics_Types.is_guard
                                goal.FStar_Tactics_Types.label in
@@ -3764,12 +3817,30 @@ let (clear : FStar_Syntax_Syntax.binder -> unit FStar_Tactics_Monad.tac) =
                             (fun uu___7 ->
                                match uu___7 with
                                | (ut, uvar_ut) ->
+                                   let uvar_ut1 =
+                                     {
+                                       FStar_Syntax_Syntax.ctx_uvar_head =
+                                         (uvar_ut.FStar_Syntax_Syntax.ctx_uvar_head);
+                                       FStar_Syntax_Syntax.ctx_uvar_gamma =
+                                         (uvar_ut.FStar_Syntax_Syntax.ctx_uvar_gamma);
+                                       FStar_Syntax_Syntax.ctx_uvar_binders =
+                                         (uvar_ut.FStar_Syntax_Syntax.ctx_uvar_binders);
+                                       FStar_Syntax_Syntax.ctx_uvar_reason =
+                                         (uvar_ut.FStar_Syntax_Syntax.ctx_uvar_reason);
+                                       FStar_Syntax_Syntax.ctx_uvar_range =
+                                         (uvar_ut.FStar_Syntax_Syntax.ctx_uvar_range);
+                                       FStar_Syntax_Syntax.ctx_uvar_meta =
+                                         (uvar_ut.FStar_Syntax_Syntax.ctx_uvar_meta);
+                                       FStar_Syntax_Syntax.ctx_uvar_apply_tac_prefix
+                                         =
+                                         ((goal.FStar_Tactics_Types.goal_ctx_uvar).FStar_Syntax_Syntax.ctx_uvar_apply_tac_prefix)
+                                     } in
                                    let uu___8 = set_solution goal ut in
                                    FStar_Tactics_Monad.bind uu___8
                                      (fun uu___9 ->
                                         let uu___10 =
                                           FStar_Tactics_Types.mk_goal env'
-                                            uvar_ut
+                                            uvar_ut1
                                             goal.FStar_Tactics_Types.opts
                                             goal.FStar_Tactics_Types.is_guard
                                             goal.FStar_Tactics_Types.label in
@@ -3927,11 +3998,28 @@ let (dup : unit -> unit FStar_Tactics_Monad.tac) =
               | (u, u_uvar) ->
                   (mark_uvar_as_allow_untyped
                      g.FStar_Tactics_Types.goal_ctx_uvar;
-                   (let g' =
+                   (let u_uvar1 =
+                      {
+                        FStar_Syntax_Syntax.ctx_uvar_head =
+                          (u_uvar.FStar_Syntax_Syntax.ctx_uvar_head);
+                        FStar_Syntax_Syntax.ctx_uvar_gamma =
+                          (u_uvar.FStar_Syntax_Syntax.ctx_uvar_gamma);
+                        FStar_Syntax_Syntax.ctx_uvar_binders =
+                          (u_uvar.FStar_Syntax_Syntax.ctx_uvar_binders);
+                        FStar_Syntax_Syntax.ctx_uvar_reason =
+                          (u_uvar.FStar_Syntax_Syntax.ctx_uvar_reason);
+                        FStar_Syntax_Syntax.ctx_uvar_range =
+                          (u_uvar.FStar_Syntax_Syntax.ctx_uvar_range);
+                        FStar_Syntax_Syntax.ctx_uvar_meta =
+                          (u_uvar.FStar_Syntax_Syntax.ctx_uvar_meta);
+                        FStar_Syntax_Syntax.ctx_uvar_apply_tac_prefix =
+                          ((g.FStar_Tactics_Types.goal_ctx_uvar).FStar_Syntax_Syntax.ctx_uvar_apply_tac_prefix)
+                      } in
+                    let g' =
                       {
                         FStar_Tactics_Types.goal_main_env =
                           (g.FStar_Tactics_Types.goal_main_env);
-                        FStar_Tactics_Types.goal_ctx_uvar = u_uvar;
+                        FStar_Tactics_Types.goal_ctx_uvar = u_uvar1;
                         FStar_Tactics_Types.opts =
                           (g.FStar_Tactics_Types.opts);
                         FStar_Tactics_Types.is_guard =
