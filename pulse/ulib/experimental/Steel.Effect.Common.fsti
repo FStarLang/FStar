@@ -2293,7 +2293,6 @@ let try_open_existentials () : Tac bool =
 
 /// Solves a `can_be_split` constraint
 let rec solve_can_be_split (args:list argv) : Tac bool =
-  // dump "Solve can be split";
   match args with
   | [(t1, _); (t2, _)] ->
       let lnbr = slterm_nbr_uvars t1 in
@@ -2321,7 +2320,6 @@ let rec solve_can_be_split (args:list argv) : Tac bool =
                               `%fst; `%snd];
                             delta_attr [`%__reduce__];
                             primops; iota; zeta];
-                       // dump "Calling canon";
                        canon' false (`true_p) (`true_p)));
           true
         with
