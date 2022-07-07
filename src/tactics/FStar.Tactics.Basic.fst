@@ -1038,6 +1038,7 @@ let subst_goal (b1 : bv) (b2 : bv) (g:goal) : tac (option (bv * goal)) =
         (* Make a new goal in the new env (with new binders) *)
         let new_env = push_bvs e0 (List.map (fun b -> b.binder_bv) bs'') in
         bind (new_uvar "subst_goal" new_env t'' (Some (should_check_goal_uvar g)) (rangeof g)) (fun (uvt, uv) ->
+        let uv = {uv with ctx_uvar_apply_tac_prefix=g.goal_ctx_uvar.ctx_uvar_apply_tac_prefix} in
         let goal' = mk_goal new_env uv g.opts g.is_guard g.label in
 
         (* Solve the old goal with an application of the new witness *)
@@ -1108,6 +1109,7 @@ let binder_retype (b : binder) : tac unit = wrap_err "binder_retype" <|
     | Some (e0, bv, bvs) ->
         let (ty, u) = U.type_u () in
         bind (new_uvar "binder_retype" e0 ty (Some (should_check_goal_uvar goal)) (rangeof goal)) (fun (t', u_t') ->
+        let u_t' = {u_t' with ctx_uvar_apply_tac_prefix=goal.goal_ctx_uvar.ctx_uvar_apply_tac_prefix} in
         let bv'' = {bv with sort = t'} in
         let s = [S.NT (bv, S.bv_to_name bv'')] in
         let bvs = List.map (fun b -> { b with sort = SS.subst s b.sort }) bvs in
@@ -1145,6 +1147,7 @@ let revert () : tac unit =
     | Some (x, env') ->
         let typ' = U.arrow [S.mk_binder x] (mk_Total (goal_type goal)) in
         bind (new_uvar "revert" env' typ' (Some (should_check_goal_uvar goal)) (rangeof goal)) (fun (r, u_r) ->
+        let u_r = {u_r with ctx_uvar_apply_tac_prefix=goal.goal_ctx_uvar.ctx_uvar_apply_tac_prefix} in
         bind (set_solution goal (S.mk_Tm_app r [S.as_arg (S.bv_to_name x)] (goal_type goal).pos)) (fun () ->
         let g = mk_goal env' u_r goal.opts goal.is_guard goal.label in
         replace_cur g)))
@@ -1175,6 +1178,7 @@ let clear (b : binder) : tac unit =
         else bind (check bvs) (fun () ->
         let env' = push_bvs e' bvs in
         bind (new_uvar "clear.witness" env' (goal_type goal) (Some (should_check_goal_uvar goal)) (rangeof goal)) (fun (ut, uvar_ut) ->
+        let uvar_ut = {uvar_ut with ctx_uvar_apply_tac_prefix=goal.goal_ctx_uvar.ctx_uvar_apply_tac_prefix} in
         bind (set_solution goal ut) (fun () ->
         replace_cur (mk_goal env' uvar_ut goal.opts goal.is_guard goal.label))))))
 
@@ -1250,6 +1254,7 @@ let dup () : tac unit =
     //and we have a goal that requires us to prove it equal to the original uvar
     //so we can clear the should_check status of the current uvar
     mark_uvar_as_allow_untyped g.goal_ctx_uvar;
+    let u_uvar = {u_uvar with ctx_uvar_apply_tac_prefix=g.goal_ctx_uvar.ctx_uvar_apply_tac_prefix} in
     let g' = { g with goal_ctx_uvar = u_uvar } in
     bind dismiss (fun _ ->
     let t_eq = U.mk_eq2 (env.universe_of env (goal_type g)) (goal_type g) u (goal_witness g) in
