@@ -125,8 +125,7 @@ let as_wl_deferred wl (d:deferred): list (int * deferred_reason * lstring * prob
 let new_uvar reason wl r gamma binders k should_check meta : ctx_uvar * term * worklist =
     let decoration = {
              uvar_decoration_typ = k;
-             uvar_decoration_should_check = should_check;
-             uvar_decoration_solution_bs = Solution_gamma_unknown;
+             uvar_decoration_should_check = should_check
         }
     in
     let ctx_uvar = {
@@ -136,6 +135,8 @@ let new_uvar reason wl r gamma binders k should_check meta : ctx_uvar * term * w
          ctx_uvar_reason=reason;
          ctx_uvar_range=r;
          ctx_uvar_meta=meta;
+
+         ctx_uvar_apply_tac_prefix=[];
        } in
     check_uvar_ctx_invariant reason r true gamma binders;
     let t = mk (Tm_uvar (ctx_uvar, ([], NoUseRange))) r in
@@ -546,38 +547,15 @@ let set_uvar env u t =
   //     failwith "DIE"
   // );
 
-  let sol_gamma, g =
-    let g = env.gamma |> List.filter (function
-      | Binding_var bv ->
-        not (clearly_inhabited (SS.compress bv.sort))
-      | _ -> false) in
-    let g = g |> List.filter (function
-      | Binding_var bv1 ->
-        not (u.ctx_uvar_gamma |> List.existsb (function
-               | Binding_var bv2 -> bv_eq bv1 bv2
-               | _ -> false))
-      | _ -> false) in
-    if List.length g = 0
-    then Solution_gamma_contained_in_ctx_gamma, g
-    else Solution_gamma_not_contained_in_ctx_gamma
-         (env.gamma, g |> List.map (function
-            | Binding_var id -> id
-            | _ -> failwith "Panic!")) , g in
-  (match sol_gamma with
-   | Solution_gamma_not_contained_in_ctx_gamma (_, l) ->
-     if Env.debug env <| Options.Other "2365"
-     then // let diff = env.gamma |> List.filter (function
-       //   | Binding_var id1 ->
-       //     u.ctx_uvar_gamma |> List.for_all (function
-       //       | Binding_var id2 -> not (bv_eq id1 id2)
-       //       | _ -> true)
-       //   | _ -> false) in
-      BU.print2 "Setting gamma solution for %s to not contained because %s\n"
-         (Print.ctx_uvar_to_string u)
-         (Print.bvs_to_string "; " l)
-   | _ -> ());
-  UF.change_decoration u.ctx_uvar_head
-      ({UF.find_decoration u.ctx_uvar_head with uvar_decoration_solution_bs=sol_gamma});
+  (match env.rel_query_for_apply_tac_uvar with
+   | None -> ()
+   | Some u1 ->
+     if u1.ctx_uvar_apply_tac_prefix |> List.existsb (fun u2 ->
+       UF.uvar_id u.ctx_uvar_head = UF.uvar_id u2.ctx_uvar_head)
+     then 
+       UF.change_decoration u.ctx_uvar_head
+         ({UF.find_decoration u.ctx_uvar_head with uvar_decoration_should_check=Strict_no_fastpath}));
+
   U.set_uvar u.ctx_uvar_head t
 
 let commit env uvis = uvis |> List.iter (function
@@ -5002,21 +4980,7 @@ let rec check_implicit_solution_for_tac (env:env) (i:implicit) : option (term * 
   then None
   else (
     let env = { env with gamma = ctx_u.ctx_uvar_gamma } in
-    let sol_gamma_contained =
-      (UF.find_decoration ctx_u.ctx_uvar_head).uvar_decoration_solution_bs in
-    if sol_gamma_contained = Solution_gamma_unknown
-    then failwith "Impossible, uvar set but its solution gamma status set to unknown"
-    else if (match sol_gamma_contained with
-             | Solution_gamma_not_contained_in_ctx_gamma (g, l) ->
-               l |> List.existsb (fun bv ->
-                                 let t = SS.compress bv.sort in
-                                 let t = N.normalize [] ({env with gamma=g}) t in
-                                 let t = SS.compress t in
-                                 let b = not (clearly_inhabited t) in
-                                 if b && Env.debug env <| Options.Other "2365"
-                                 then BU.print1 "Type %s in uvar env is not clearly inhabited\n" (Print.term_to_string t);
-                                 b)
-             | _ -> false)
+    if uvar_should_check = Strict_no_fastpath
     then let _ =
            if Env.debug env <| Options.Other "2635"
            then BU.print2 "Uvar %s solution deemed to be solved in a larger context, rechecking %s {\n"

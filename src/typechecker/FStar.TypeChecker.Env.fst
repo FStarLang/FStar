@@ -177,7 +177,9 @@ let initial_env deps
     erasable_types_tab = BU.smap_create 20;
     enable_defer_to_tac=true;
     unif_allow_ref_guards=false;
-    erase_erasable_args = false
+    erase_erasable_args=false;
+
+    rel_query_for_apply_tac_uvar=None;
   }
 
 let dsenv env = env.dsenv
@@ -1766,7 +1768,6 @@ let new_implicit_var_aux reason r env k should_check meta =
       let decoration = {
              uvar_decoration_typ = k;
              uvar_decoration_should_check = should_check;
-             uvar_decoration_solution_bs = Solution_gamma_unknown;
           }
       in
       let ctx_uvar = {
@@ -1776,6 +1777,8 @@ let new_implicit_var_aux reason r env k should_check meta =
           ctx_uvar_reason=reason;
           ctx_uvar_range=r;
           ctx_uvar_meta=meta;
+
+          ctx_uvar_apply_tac_prefix=[];
       } in
       check_uvar_ctx_invariant reason r true gamma binders;
       let t = mk (Tm_uvar (ctx_uvar, ([], NoUseRange))) r in
@@ -1902,4 +1905,3 @@ let split_smt_query (e:env) (q:term)
   = match e.solver.spinoff_strictly_positive_goals with
     | None -> None
     | Some p -> Some (p e q)
-    

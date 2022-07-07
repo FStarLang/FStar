@@ -448,7 +448,9 @@ let solve_goals_with_tac :
               FStar_TypeChecker_Env.unif_allow_ref_guards =
                 (env.FStar_TypeChecker_Env.unif_allow_ref_guards);
               FStar_TypeChecker_Env.erase_erasable_args =
-                (env.FStar_TypeChecker_Env.erase_erasable_args)
+                (env.FStar_TypeChecker_Env.erase_erasable_args);
+              FStar_TypeChecker_Env.rel_query_for_apply_tac_uvar =
+                (env.FStar_TypeChecker_Env.rel_query_for_apply_tac_uvar)
             } in
           env1.FStar_TypeChecker_Env.try_solve_implicits_hook env1
             resolve_tac deferred_goals
@@ -575,7 +577,10 @@ let (solve_deferred_to_tactic_goals :
                              FStar_TypeChecker_Env.unif_allow_ref_guards =
                                (env1.FStar_TypeChecker_Env.unif_allow_ref_guards);
                              FStar_TypeChecker_Env.erase_erasable_args =
-                               (env1.FStar_TypeChecker_Env.erase_erasable_args)
+                               (env1.FStar_TypeChecker_Env.erase_erasable_args);
+                             FStar_TypeChecker_Env.rel_query_for_apply_tac_uvar
+                               =
+                               (env1.FStar_TypeChecker_Env.rel_query_for_apply_tac_uvar)
                            } in
                          let env_lax =
                            {
@@ -677,7 +682,10 @@ let (solve_deferred_to_tactic_goals :
                              FStar_TypeChecker_Env.unif_allow_ref_guards =
                                (env2.FStar_TypeChecker_Env.unif_allow_ref_guards);
                              FStar_TypeChecker_Env.erase_erasable_args =
-                               (env2.FStar_TypeChecker_Env.erase_erasable_args)
+                               (env2.FStar_TypeChecker_Env.erase_erasable_args);
+                             FStar_TypeChecker_Env.rel_query_for_apply_tac_uvar
+                               =
+                               (env2.FStar_TypeChecker_Env.rel_query_for_apply_tac_uvar)
                            } in
                          let uu___5 =
                            let t =

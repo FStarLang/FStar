@@ -8180,7 +8180,10 @@ let (eta_expand :
                                     =
                                     (env1.FStar_TypeChecker_Env.unif_allow_ref_guards);
                                   FStar_TypeChecker_Env.erase_erasable_args =
-                                    (env1.FStar_TypeChecker_Env.erase_erasable_args)
+                                    (env1.FStar_TypeChecker_Env.erase_erasable_args);
+                                  FStar_TypeChecker_Env.rel_query_for_apply_tac_uvar
+                                    =
+                                    (env1.FStar_TypeChecker_Env.rel_query_for_apply_tac_uvar)
                                 } t true in
                             match uu___5 with
                             | (uu___6, ty, uu___7) ->
@@ -8287,7 +8290,10 @@ let (eta_expand :
                           FStar_TypeChecker_Env.unif_allow_ref_guards =
                             (env1.FStar_TypeChecker_Env.unif_allow_ref_guards);
                           FStar_TypeChecker_Env.erase_erasable_args =
-                            (env1.FStar_TypeChecker_Env.erase_erasable_args)
+                            (env1.FStar_TypeChecker_Env.erase_erasable_args);
+                          FStar_TypeChecker_Env.rel_query_for_apply_tac_uvar
+                            =
+                            (env1.FStar_TypeChecker_Env.rel_query_for_apply_tac_uvar)
                         } t true in
                     (match uu___4 with
                      | (uu___5, ty, uu___6) -> eta_expand_with_type env1 t ty)))

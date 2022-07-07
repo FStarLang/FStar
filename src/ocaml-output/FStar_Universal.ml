@@ -112,7 +112,9 @@ let with_dsenv_of_tcenv :
               FStar_TypeChecker_Env.unif_allow_ref_guards =
                 (tcenv.FStar_TypeChecker_Env.unif_allow_ref_guards);
               FStar_TypeChecker_Env.erase_erasable_args =
-                (tcenv.FStar_TypeChecker_Env.erase_erasable_args)
+                (tcenv.FStar_TypeChecker_Env.erase_erasable_args);
+              FStar_TypeChecker_Env.rel_query_for_apply_tac_uvar =
+                (tcenv.FStar_TypeChecker_Env.rel_query_for_apply_tac_uvar)
             })
 let with_tcenv_of_env :
   'a .
@@ -330,7 +332,9 @@ let (init_env : FStar_Parser_Dep.deps -> FStar_TypeChecker_Env.env) =
         FStar_TypeChecker_Env.unif_allow_ref_guards =
           (env.FStar_TypeChecker_Env.unif_allow_ref_guards);
         FStar_TypeChecker_Env.erase_erasable_args =
-          (env.FStar_TypeChecker_Env.erase_erasable_args)
+          (env.FStar_TypeChecker_Env.erase_erasable_args);
+        FStar_TypeChecker_Env.rel_query_for_apply_tac_uvar =
+          (env.FStar_TypeChecker_Env.rel_query_for_apply_tac_uvar)
       } in
     let env2 =
       {
@@ -417,7 +421,9 @@ let (init_env : FStar_Parser_Dep.deps -> FStar_TypeChecker_Env.env) =
         FStar_TypeChecker_Env.unif_allow_ref_guards =
           (env1.FStar_TypeChecker_Env.unif_allow_ref_guards);
         FStar_TypeChecker_Env.erase_erasable_args =
-          (env1.FStar_TypeChecker_Env.erase_erasable_args)
+          (env1.FStar_TypeChecker_Env.erase_erasable_args);
+        FStar_TypeChecker_Env.rel_query_for_apply_tac_uvar =
+          (env1.FStar_TypeChecker_Env.rel_query_for_apply_tac_uvar)
       } in
     let env3 =
       {
@@ -504,7 +510,9 @@ let (init_env : FStar_Parser_Dep.deps -> FStar_TypeChecker_Env.env) =
         FStar_TypeChecker_Env.unif_allow_ref_guards =
           (env2.FStar_TypeChecker_Env.unif_allow_ref_guards);
         FStar_TypeChecker_Env.erase_erasable_args =
-          (env2.FStar_TypeChecker_Env.erase_erasable_args)
+          (env2.FStar_TypeChecker_Env.erase_erasable_args);
+        FStar_TypeChecker_Env.rel_query_for_apply_tac_uvar =
+          (env2.FStar_TypeChecker_Env.rel_query_for_apply_tac_uvar)
       } in
     let env4 =
       {
@@ -590,7 +598,9 @@ let (init_env : FStar_Parser_Dep.deps -> FStar_TypeChecker_Env.env) =
         FStar_TypeChecker_Env.unif_allow_ref_guards =
           (env3.FStar_TypeChecker_Env.unif_allow_ref_guards);
         FStar_TypeChecker_Env.erase_erasable_args =
-          (env3.FStar_TypeChecker_Env.erase_erasable_args)
+          (env3.FStar_TypeChecker_Env.erase_erasable_args);
+        FStar_TypeChecker_Env.rel_query_for_apply_tac_uvar =
+          (env3.FStar_TypeChecker_Env.rel_query_for_apply_tac_uvar)
       } in
     let env5 =
       {
@@ -676,7 +686,9 @@ let (init_env : FStar_Parser_Dep.deps -> FStar_TypeChecker_Env.env) =
         FStar_TypeChecker_Env.unif_allow_ref_guards =
           (env4.FStar_TypeChecker_Env.unif_allow_ref_guards);
         FStar_TypeChecker_Env.erase_erasable_args =
-          (env4.FStar_TypeChecker_Env.erase_erasable_args)
+          (env4.FStar_TypeChecker_Env.erase_erasable_args);
+        FStar_TypeChecker_Env.rel_query_for_apply_tac_uvar =
+          (env4.FStar_TypeChecker_Env.rel_query_for_apply_tac_uvar)
       } in
     (env5.FStar_TypeChecker_Env.solver).FStar_TypeChecker_Env.init env5; env5
 let (tc_one_fragment :

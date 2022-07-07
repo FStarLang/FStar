@@ -186,7 +186,7 @@ let __do_unify_wflags (dbg:bool) (allow_guards:bool)
         let res =
           let env =
             if is_some gopt
-            then {env with gamma=(gopt |> must).goal_ctx_uvar.ctx_uvar_gamma}
+            then {env with rel_query_for_apply_tac_uvar=(gopt |> must).goal_ctx_uvar |> Some}
             else env in
           if allow_guards
           then Rel.try_teq true env t1 t2
@@ -559,6 +559,7 @@ let intro () : tac binder = wrap_err "intro" <|
              //         (Print.binders_to_string ", " [b])
              //         (Print.term_to_string typ');
              bind (new_uvar "intro" env' typ' (Some (should_check_goal_uvar goal)) (rangeof goal)) (fun (body, ctx_uvar) ->
+             let ctx_uvar = {ctx_uvar with ctx_uvar_apply_tac_prefix=goal.goal_ctx_uvar.ctx_uvar_apply_tac_prefix} in
              let sol = U.abs [b] body (Some (U.residual_comp_of_comp c)) in
              //BU.print1 "[intro]: solution is %s"
              //           (Print.term_to_string sol);
@@ -724,10 +725,15 @@ let rec  __try_unify_by_application
         | Some (b, c) ->
             if not (U.is_total_comp c) then fail "Codomain is effectful" else
             bind (new_uvar "apply arg" e b.binder_bv.sort None rng) (fun (uvt, uv) ->
+            let bv_sort_free_uvs = FStar.Syntax.Free.uvars b.binder_bv.sort in
+            let prefix_uvs = acc
+              |> List.filter (fun (_, _, uv) -> BU.set_mem uv bv_sort_free_uvs)
+              |> List.map (fun (_, _, uv) -> uv) in
+            let uv = {uv with ctx_uvar_apply_tac_prefix=prefix_uvs} in
             mlog (fun () -> BU.print1 "t_apply: generated uvar %s\n" (Print.ctx_uvar_to_string uv)) (fun _ ->
             let typ = U.comp_result c in
             let typ' = SS.subst [S.NT (b.binder_bv, uvt)] typ in
-            let e = Env.push_bv e (S.null_bv b.binder_bv.sort) in
+            //let e = Env.push_bv e (S.null_bv b.binder_bv.sort) in
             __try_unify_by_application only_match ((uvt, U.aqual_of_binder b, uv)::acc) e typ' ty2 rng))
     end)
 

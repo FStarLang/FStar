@@ -2184,7 +2184,10 @@ let rec (extract_sig :
                              (env.FStar_TypeChecker_Env.enable_defer_to_tac);
                            FStar_TypeChecker_Env.unif_allow_ref_guards =
                              (env.FStar_TypeChecker_Env.unif_allow_ref_guards);
-                           FStar_TypeChecker_Env.erase_erasable_args = true
+                           FStar_TypeChecker_Env.erase_erasable_args = true;
+                           FStar_TypeChecker_Env.rel_query_for_apply_tac_uvar
+                             =
+                             (env.FStar_TypeChecker_Env.rel_query_for_apply_tac_uvar)
                          } in
                        let lbd =
                          let uu___6 =

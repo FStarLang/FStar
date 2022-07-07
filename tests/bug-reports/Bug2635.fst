@@ -49,22 +49,22 @@ val expect_pos (_: squash (exists (x:pos). q x)) : squash p
 
 let intro_exists (#a:Type)  (#p:a -> Type) (x:a) (_:squash (p x)) : squash (exists (x:a). p x) = ()
 
-[@@expect_failure [217]]
+//[@@expect_failure [217]]
 let use_pos (x:nat) (xpos:squash (x > 0)) (hyp:squash (q x)) =
   assert p by (
     apply (`expect_pos);
     apply (`intro_exists);
     apply (quote hyp)) //the implicit `pos` of intro_exists is solved by unification here to x:nat
 
-let use_pos (x:nat) (xpos:squash (x > 0)) (hyp:squash (q x)) =
-  assert p by (
-    apply (`expect_pos);
-    apply (`intro_exists);
-    apply (quote hyp); //the implicit `pos` of intro_exists is solved by unification here to x:nat
-    //can pick up the goal explicitly to prove that x > 0
-    gather_or_solve_explicit_guards_for_resolved_goals ();
-    let _ = implies_intro () in
-    apply (quote xpos))
+// let use_pos (x:nat) (xpos:squash (x > 0)) (hyp:squash (q x)) =
+//   assert p by (
+//     apply (`expect_pos);
+//     apply (`intro_exists);
+//     apply (quote hyp); //the implicit `pos` of intro_exists is solved by unification here to x:nat
+//     //can pick up the goal explicitly to prove that x > 0
+//     gather_or_solve_explicit_guards_for_resolved_goals ();
+//     let _ = implies_intro () in
+//     apply (quote xpos))
 
 let use_one (hyp:squash (q 1)) =
   assert p by (

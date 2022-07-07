@@ -115,6 +115,7 @@ type should_check_uvar =
   | Allow_untyped         (* Escape hatch to not re-typecheck guards in WPs and types of pattern bound vars *)
   | Allow_ghost           (* Escape hatch used for dot patterns *)
   | Strict                (* Everything else is strict *)
+  | Strict_no_fastpath
 
 type term' =
   | Tm_bvar       of bv                //bound variable, referenced by de Bruijn index
@@ -145,45 +146,17 @@ and ctx_uvar = {                                                 (* (G |- ?u : t
     ctx_uvar_reason:string;
     ctx_uvar_range:Range.range;
     ctx_uvar_meta: option ctx_uvar_meta_t;
+
+    ctx_uvar_apply_tac_prefix: list ctx_uvar;
 }
 and ctx_uvar_meta_t =
   | Ctx_uvar_meta_tac of dyn * term (* the dyn is an FStar.TypeChecker.Env.env *)
   | Ctx_uvar_meta_attr of term (* An attribute associated with an implicit argument using the #[@@...] notation *)
 and ctx_uvar_and_subst = ctx_uvar * subst_ts
 
-and uvar_solution_fastpath_bs =
-  | Uvar_solution_fastpath_bs_unknown
-  | Uvar_solution_fastpath_bs_none
-  | Uvar_solution_fastpath_bs of (gamma & list bv)
-
-//
-// Uvar decoration is additional metadata that is maintained in the
-//   unionfind graph for each uvar
-//
-// Uvar decoration type is the type of the uvar with some instrumentation
-//   for pretty printing---it is only used for pretty printing
-//
-// Uvar decoration should check maintains if the uvar is
-//   untyped or strict, depending on this bit, the final resolve_implicits loop
-//   typechecks the uvar---the tactic engine manipulates this bit
-//
-// Uvar decoration fastpath binders are additional binders, over those present
-//   in the uvar context, that may be required for
-//   well-typedness of the solution that the uvar is solved to
-//   If these binders are empty, then uvar solution is guaranteed to be well-typed
-//   in the uvar gamma, and so, typechecking uvar solution in resolve_implicits may
-//   use fastpath
-//   If these binders are not empty, but all of them are inhabited, then also
-//   fastpath is ok, since the unifier already ensures that the solution does not
-//   use any names outside of the uvar gamma
-//   But if there exists a binder that is not clearly inhabited, then fastpath
-//   cannot be used to typecheck the solution
-//
-
 and uvar_decoration = {
   uvar_decoration_typ:typ;
   uvar_decoration_should_check:should_check_uvar;
-  uvar_decoration_check_bs_before_fastpath:uvar_solution_fastpath_bs;
 }
 
 and uvar = Unionfind.p_uvar (option term * uvar_decoration) * version * Range.range
