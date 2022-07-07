@@ -1577,13 +1577,6 @@ let print_gamma gamma =
     // ))
     |> String.concat "::\n"
 
-let is_contained_in g1 g2 =
-  List.for_all (function
-                | Binding_var id1 -> List.existsb (function | Binding_var id2 ->
-                                                             bv_eq id1 id2
-                                                           | _ -> false) g2
-                | _ -> true) g1
-
 let string_of_delta_level = function
   | NoDelta -> "NoDelta"
   | InliningDelta -> "Inlining"

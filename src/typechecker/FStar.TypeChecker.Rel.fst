@@ -515,22 +515,6 @@ let explain env d (s : lstring) =
 (* <uvi ops> Instantiating unification variables   *)
 (* ------------------------------------------------*)
 
-      let rec clearly_inhabited (ty : typ) : bool =
-        match (U.unmeta ty).n with
-        | Tm_uinst (t, _) -> clearly_inhabited t
-        | Tm_arrow (_, c) -> clearly_inhabited (U.comp_result c)
-        | Tm_fvar fv ->
-            let l = S.lid_of_fv fv in
-              (Ident.lid_equals l Const.int_lid)
-            || (Ident.lid_equals l Const.unit_lid)
-            || (Ident.lid_equals l Const.bool_lid)
-            || (Ident.lid_equals l Const.string_lid)
-            || (Ident.lid_equals l Const.exn_lid)
-            || (Ident.lid_equals l (lid_of_str "Steel.Effect.Common.vprop"))
-            || (Ident.lid_equals l (lid_of_str "Steel.Effect.Common.true_p"))
-            || (Ident.lid_equals l (lid_of_str "Prims.prop"))
-        | _ -> false
-
 let set_uvar env u t = 
   // Useful for debugging uvars setting bugs
   // if Env.debug env <| Options.Other "Rel"
@@ -547,14 +531,20 @@ let set_uvar env u t =
   //     failwith "DIE"
   // );
 
-  (match env.rel_query_for_apply_tac_uvar with
-   | None -> ()
-   | Some u1 ->
-     if u1.ctx_uvar_apply_tac_prefix |> List.existsb (fun u2 ->
-       UF.uvar_id u.ctx_uvar_head = UF.uvar_id u2.ctx_uvar_head)
-     then 
-       UF.change_decoration u.ctx_uvar_head
-         ({UF.find_decoration u.ctx_uvar_head with uvar_decoration_should_check=Strict_no_fastpath}));
+  
+  (
+    match env.rel_query_for_apply_tac_uvar with
+    | None -> ()
+    | Some u1 ->
+      //
+      // We are solving this uvar u indirectly when solving an apply tac uvar u1
+      // If u1 depends on u, then u must be typechecked strictly with no fastpath
+      //
+      if u1.ctx_uvar_apply_tac_prefix |> List.existsb (fun u2 ->
+        UF.uvar_id u.ctx_uvar_head = UF.uvar_id u2.ctx_uvar_head)
+      then UF.change_decoration u.ctx_uvar_head
+             ({UF.find_decoration u.ctx_uvar_head with uvar_decoration_should_check=Strict_no_fastpath})
+  );
 
   U.set_uvar u.ctx_uvar_head t
 

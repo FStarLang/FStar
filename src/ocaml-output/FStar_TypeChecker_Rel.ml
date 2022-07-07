@@ -1308,32 +1308,6 @@ let (explain :
            | (lhs, rhs) ->
                FStar_Compiler_Util.format3
                  "%s is not %s the expected type %s" lhs rel rhs)
-let rec (clearly_inhabited : FStar_Syntax_Syntax.typ -> Prims.bool) =
-  fun ty ->
-    let uu___ =
-      let uu___1 = FStar_Syntax_Util.unmeta ty in
-      uu___1.FStar_Syntax_Syntax.n in
-    match uu___ with
-    | FStar_Syntax_Syntax.Tm_uinst (t, uu___1) -> clearly_inhabited t
-    | FStar_Syntax_Syntax.Tm_arrow (uu___1, c) ->
-        clearly_inhabited (FStar_Syntax_Util.comp_result c)
-    | FStar_Syntax_Syntax.Tm_fvar fv ->
-        let l = FStar_Syntax_Syntax.lid_of_fv fv in
-        (((((((FStar_Ident.lid_equals l FStar_Parser_Const.int_lid) ||
-                (FStar_Ident.lid_equals l FStar_Parser_Const.unit_lid))
-               || (FStar_Ident.lid_equals l FStar_Parser_Const.bool_lid))
-              || (FStar_Ident.lid_equals l FStar_Parser_Const.string_lid))
-             || (FStar_Ident.lid_equals l FStar_Parser_Const.exn_lid))
-            ||
-            (let uu___1 = FStar_Ident.lid_of_str "Steel.Effect.Common.vprop" in
-             FStar_Ident.lid_equals l uu___1))
-           ||
-           (let uu___1 = FStar_Ident.lid_of_str "Steel.Effect.Common.true_p" in
-            FStar_Ident.lid_equals l uu___1))
-          ||
-          (let uu___1 = FStar_Ident.lid_of_str "Prims.prop" in
-           FStar_Ident.lid_equals l uu___1)
-    | uu___1 -> false
 let (set_uvar :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.ctx_uvar -> FStar_Syntax_Syntax.term -> unit)

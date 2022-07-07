@@ -17,7 +17,7 @@ module Unify
 
 open FStar.Tactics
 
-//[@@plugin]
+[@@plugin]
 let tau =
   fun () ->
         let l = fresh_uvar None in // None: we don't provide a type
@@ -27,16 +27,8 @@ let tau =
         exact l;
         exact r;
         let ocho = `8 in
-        //dump_all true "AAAAAA";
-        let b = unify_env e r ocho in
-        if not b
-        then fail "BBBBB"
-        else
-          // dump_all true "AA";
-          let _ = unify_env e l r in
-          ()
+        let _ = unify_env e r ocho in
+        let _ = unify_env e l r in
+        ()
 
-//#set-options "--debug Unify --debug_level Extreme,Rel,TacVerbose,2365,2635,TacUnify,RelCheck,RelDelta --print_implicits --ugly --print_full_names"
 let h : int = synth_by_tactic tau
-
-// let _ = assert (h == 16)

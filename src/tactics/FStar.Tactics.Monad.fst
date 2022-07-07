@@ -243,18 +243,10 @@ let new_uvar (reason:string) (env:env) (typ:typ) (sc_opt:option should_check_uva
       match sc_opt with
       | Some sc -> sc
       | _ -> 
-        if false
-        then Allow_untyped
-        else (
-          if Env.debug env <| Options.Other "2635"
-          then (
-            BU.print2 "Tactic introduced a strict uvar for %s\n\%s\n" 
-                      (Print.term_to_string typ)
-                      // (BU.stack_dump ())
-                      ""
-          );
-          Strict
-        )
+        if Env.debug env <| Options.Other "2635"
+        then BU.print1 "Tactic introduced a strict uvar for %s\n" 
+               (Print.term_to_string typ);
+        Strict
     in
     let u, ctx_uvar, g_u =
         Env.new_implicit_var_aux reason rng env typ should_check None

@@ -5790,21 +5790,6 @@ let (print_gamma : FStar_Syntax_Syntax.gamma -> Prims.string) =
                   let uu___3 = FStar_Ident.string_of_lid l in
                   Prims.op_Hat "Binding_lid " uu___3)) in
     FStar_Compiler_Effect.op_Bar_Greater uu___ (FStar_String.concat "::\n")
-let (is_contained_in :
-  FStar_Syntax_Syntax.gamma -> FStar_Syntax_Syntax.gamma -> Prims.bool) =
-  fun g1 ->
-    fun g2 ->
-      FStar_Compiler_List.for_all
-        (fun uu___ ->
-           match uu___ with
-           | FStar_Syntax_Syntax.Binding_var id1 ->
-               FStar_Compiler_List.existsb
-                 (fun uu___1 ->
-                    match uu___1 with
-                    | FStar_Syntax_Syntax.Binding_var id2 ->
-                        FStar_Syntax_Syntax.bv_eq id1 id2
-                    | uu___2 -> false) g2
-           | uu___1 -> true) g1
 let (string_of_delta_level : delta_level -> Prims.string) =
   fun uu___ ->
     match uu___ with
