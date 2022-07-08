@@ -30,7 +30,7 @@ let st_wp (a:Type) = post a -> pre
 (* unfold *) let frame_wp (#a:Type) (wp:st_wp a) (post:post a) (m:memory) =
   exists (m0 m1:memory). defined (m0 <*> m1) /\ m == (m0 <*> m1) /\ wp (frame_post post m1) m0
 
-(* unfold *) let bind_wp (r:range) (a:Type) (b:Type) (wp1:st_wp a) (wp2:a -> st_wp b)
+(* unfold *) let bind_wp (a:Type) (b:Type) (wp1:st_wp a) (wp2:a -> st_wp b)
   :st_wp b
   = fun post m0 -> wp1 (fun x m1 -> wp2 x post m1) m0
 

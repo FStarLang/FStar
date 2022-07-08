@@ -39,8 +39,20 @@ open FStar.PCM
 *)
 val heap  : Type u#(a + 1)
 
-(** A [ref a pcm] is a key into the [heap], containing a value of type [a] governed by the [pcm] *)
-val ref (a:Type u#a) (pcm:pcm a) : Type u#0
+(** A [core_ref] is a key into the [heap] or [null] *)
+val core_ref : Type u#0
+
+(** We index a [core_ref] by the type of its heap contents
+    and a [pcm] governing it, for ease of type inference *)
+let ref (a:Type u#a) (pcm:pcm a) : Type u#0 = core_ref
+
+(** [null] is a specific reference, that is not associated to any value
+*)
+val null (#a:Type u#a) (#pcm:pcm a) : ref a pcm
+
+(** Checking whether [r] is the null pointer is decidable through [is_null]
+*)
+val is_null (#a:Type u#a) (#pcm:pcm a) (r:ref a pcm) : (b:bool{b <==> r == null})
 
 (** The predicate describing non-overlapping heaps *)
 val disjoint (h0 h1:heap u#h) : prop
@@ -59,7 +71,7 @@ val join_commutative (h0 h1:heap)
     (requires
       disjoint h0 h1)
     (ensures
-      (disjoint_sym h0 h1;
+      (disjoint h1 h0 /\
        join h0 h1 == join h1 h0))
 
 (** Disjointness distributes over join *)
@@ -78,7 +90,8 @@ val join_associative (h0 h1 h2:heap)
       disjoint h1 h2 /\
       disjoint h0 (join h1 h2))
     (ensures
-      (disjoint_join h0 h1 h2;
+      (disjoint h0 h1 /\
+       disjoint (join h0 h1) h2 /\
        join h0 (join h1 h2) == join (join h0 h1) h2))
 
 (**** Separation logic over heaps *)
@@ -137,6 +150,14 @@ let hheap (p:slprop u#a) = m:heap u#a {interp p m}
 *)
 let equiv (p1 p2:slprop) =
   forall m. interp p1 m <==> interp p2 m
+
+(**
+  An extensional equivalence principle for slprop
+ *)
+val slprop_extensionality (p q:slprop)
+  : Lemma
+    (requires p `equiv` q)
+    (ensures p == q)
 
 /// We can now define all the standard connectives of separation logic
 
@@ -251,6 +272,14 @@ val pts_to_compatible_equiv (#a:Type)
                             (v1:a{composable pcm v0 v1})
   : Lemma (equiv (pts_to x v0 `star` pts_to x v1)
                  (pts_to x (op pcm v0 v1)))
+
+val pts_to_not_null (#a:Type)
+                    (#pcm:_)
+                    (x:ref a pcm)
+                    (v:a)
+                    (m:heap)
+  : Lemma (requires interp (pts_to x v) m)
+          (ensures x =!= null)
 
 (***** Properties of separating conjunction *)
 
@@ -373,7 +402,7 @@ let pre_action (fp:slprop u#a) (a:Type u#b) (fp':a -> slprop u#a) =
   - evolving the heap according to the heap preorder;
   - not allocating any new references;
   - preserving the validity of any heap proposition affecting any frame
-*)  
+*)
 unfold
 let action_related_heaps (frame:slprop) (h0 h1:full_heap) =
   heap_evolves h0 h1 /\
@@ -504,6 +533,13 @@ val select_refine (#a:_) (#p:_)
             (fun v -> pts_to r (f v))
 
 
+(** Updating a ref cell for a user-defined PCM *)
+val upd_gen_action (#a:Type) (#p:pcm a) (r:ref a p) (x y:Ghost.erased a)
+                   (f:FStar.PCM.frame_preserving_upd p x y)
+  : action (pts_to r x)
+           unit
+           (fun _ -> pts_to r y)
+
 (**
   The update action needs you to prove that the mutation from [v0] to [v1] is frame-preserving
   with respect to the individual PCM governing the reference [r]. See [FStar.PCM.frame_preserving]
@@ -515,13 +551,6 @@ val upd_action
   (v0:FStar.Ghost.erased a)
   (v1:a {FStar.PCM.frame_preserving pcm v0 v1 /\ pcm.refine v1})
   : action (pts_to r v0) unit (fun _ -> pts_to r v1)
-
-(** Updating a ref cell for a user-defined PCM *)
-val upd_gen_action (#a:Type) (#p:pcm a) (r:ref a p) (x y:Ghost.erased a)
-                   (f:FStar.PCM.frame_preserving_upd p x y)
-  : action (pts_to r x)
-           unit
-           (fun _ -> pts_to r y)
 
 (** Deallocating a reference, by actually replacing its value by the unit of the PCM *)
 val free_action

@@ -36,7 +36,7 @@ let rec _split_subst_at_bv (#a : Type) (b : bv) (subst : list (bv & a)) :
       (src, tgt) :: s1, s2
 
 val subst_shadowed_with_abs_in_assertions : bool -> genv -> option bv -> assertions -> Tac (genv & assertions)
-let subst_shadowed_with_abs_in_assertions dbg ge shadowed_bv as =
+let subst_shadowed_with_abs_in_assertions dbg ge shadowed_bv es =
   (* When generating the substitution, we need to pay attention to the fact that
    * the returned value potentially bound by a let may shadow another variable.
    * We need to take this into account for the post-assertions (but not the
@@ -68,8 +68,8 @@ let subst_shadowed_with_abs_in_assertions dbg ge shadowed_bv as =
     end;
   (* Apply *)
   let apply = (fun s -> map (fun t -> apply_subst ge1.env t s)) in
-  let pres = apply pre_subst as.pres in
-  let posts = apply post_subst as.posts in
+  let pres = apply pre_subst es.pres in
+  let posts = apply post_subst es.posts in
   ge1, mk_assertions pres posts
 
 (*** Convert propositions to string *)

@@ -45,11 +45,11 @@ module B = LowStar.Buffer
 /// As a result, when we reach the extraction, we have no choice but to pass `()` for these arguments
 ///
 /// This becomes a problem if some index is crucial to determine the type of the terms,
-///   parametic state is one such example
+///   parametric state is one such example
 ///
 /// Specifically, if we have `let lift ... (state:Type0) ... : mrepr a state = e`
 ///
-/// And we pass in `()` for state, it messes up the `mrepr a ()` annotation, and the term `e` gets
+/// And we pass in `()` for state, it messes up the `mrepr a` annotation, and the term `e` gets
 ///   ascribed with `mrepr a unit` which down the line results in some `Obj.magic`s in the extracted
 ///   code
 ///
@@ -63,20 +63,18 @@ module B = LowStar.Buffer
 
 
 inline_for_extraction
-type repr (a:Type) (_:eqtype_as_type unit) =
-  unit ->
-  St (option a)
+type repr (a:Type) = unit -> St (option a)
 
 
 inline_for_extraction
 let return (a:Type) (x:a)
-: repr a ()
+: repr a
 = fun _ -> Some x
 
 inline_for_extraction
 let bind (a:Type) (b:Type)
-  (f:repr a ()) (g:(x:a -> repr b ()))
-: repr b ()
+  (f:repr a) (g:(x:a -> repr b))
+: repr b
 = fun _ ->
   let r = f () in
   match r with
@@ -87,18 +85,14 @@ let bind (a:Type) (b:Type)
 /// The effect definition
 
 reifiable reflectable
-layered_effect {
-  EXN : a:Type -> eqtype_as_type unit -> Effect
-  with
-  repr = repr;
-  return = return;
-  bind = bind
+effect {
+  EXN (a:Type)
+  with {repr; return; bind}
 }
-
 
 inline_for_extraction
 let lift_div_exn (a:Type) (wp:pure_wp a) (f:eqtype_as_type unit -> DIV a wp)
-: repr a ()
+: repr a
 = fun _ -> Some (f ())
 
 
@@ -120,11 +114,9 @@ type rcv_state = {
   id : i:uint_32{i <= B.len b}
 }
 
-
-
 inline_for_extraction
 type mrepr (a:Type) (state:Type0) =
-  state -> EXN (a & state) ()
+  state -> EXN (a & state)
 
 inline_for_extraction noextract
 let streturn (a:Type) (x:a) (state:Type0)
@@ -143,14 +135,10 @@ let stbind (a:Type) (b:Type)
 
 
 reifiable reflectable
-layered_effect {
-  STEXN : a:Type -> state:Type0 -> Effect
-  with
-  repr = mrepr;
-  return = streturn;
-  bind = stbind
+effect {
+  STEXN (a:Type) (state:Type0)
+  with {repr=mrepr; return=streturn; bind=stbind}
 }
-
 
 inline_for_extraction noextract
 let lift_div_stexn (a:Type) (wp:pure_wp a) (state:Type0) (f:eqtype_as_type unit -> DIV a wp)
@@ -164,7 +152,7 @@ let parse_common_exn (#a:Type0)
   (parser:parser_t a)
   (_:unit)
   (st:rcv_state)
-: EXN (a & rcv_state) ()
+: EXN (a & rcv_state)
 = EXN?.reflect (fun _ ->
     let r = parser st.b st.id in
     match r with

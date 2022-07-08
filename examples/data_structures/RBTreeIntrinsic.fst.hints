@@ -1,5 +1,5 @@
 [
-  "\u0019Cn±\u0001ÿã…+n.ê[)ÍB",
+  "Âÿ˜ÕB<Ã)D®¯\u007f¼y£'",
   [
     [
       "RBTreeIntrinsic.rbnode",
@@ -12,7 +12,7 @@
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "33abaf4c19416386dc24445046f6801d"
+      "bdab9d6712ea26c09f1f33472fb76c17"
     ],
     [
       "RBTreeIntrinsic.rbnode",
@@ -30,7 +30,7 @@
         "typing_tok_RBTreeIntrinsic.Black@tok"
       ],
       0,
-      "8caab57288c79b18f0e15aa04f5d8693"
+      "f4a9967962c7572769fc2e5fe6b0769e"
     ],
     [
       "RBTreeIntrinsic.__proj__R__item__h",
@@ -43,7 +43,7 @@
         "refinement_interpretation_Tm_refine_c1f886c9be054e567884f26303852b47"
       ],
       0,
-      "d8c6a876ef06599f653d000c556240ae"
+      "8c87b807259e4e16f49953dcbc4a50f5"
     ],
     [
       "RBTreeIntrinsic.__proj__R__item__left",
@@ -60,7 +60,7 @@
         "refinement_interpretation_Tm_refine_c1f886c9be054e567884f26303852b47"
       ],
       0,
-      "47eb190b7a25411da7c408c446b790a8"
+      "a0e2fb23828678aeb200ae9c556f9973"
     ],
     [
       "RBTreeIntrinsic.__proj__R__item__value",
@@ -73,7 +73,7 @@
         "refinement_interpretation_Tm_refine_c1f886c9be054e567884f26303852b47"
       ],
       0,
-      "d0234e2ad4f9e381d0b688b4e9fd7422"
+      "d1182b088f356a92b6dd4e60bbd907d4"
     ],
     [
       "RBTreeIntrinsic.__proj__R__item__right",
@@ -90,7 +90,7 @@
         "refinement_interpretation_Tm_refine_c1f886c9be054e567884f26303852b47"
       ],
       0,
-      "6edeaac7e9607c87803418e10a983758"
+      "2007ce0513e796df8fa24db9bdee574c"
     ],
     [
       "RBTreeIntrinsic.__proj__B__item__h",
@@ -103,7 +103,7 @@
         "refinement_interpretation_Tm_refine_d0956283813ca2c8607db1ebac88ef20"
       ],
       0,
-      "de36e43b9478860532100534d0cfe2f9"
+      "0334dc93308d1c5e03131674b107552e"
     ],
     [
       "RBTreeIntrinsic.__proj__B__item__cl",
@@ -116,7 +116,7 @@
         "refinement_interpretation_Tm_refine_d0956283813ca2c8607db1ebac88ef20"
       ],
       0,
-      "5bd688629e6bfaf296ccf65a3832b1bc"
+      "faab40f5dc802bc20a20796a402466e2"
     ],
     [
       "RBTreeIntrinsic.__proj__B__item__cr",
@@ -129,7 +129,7 @@
         "refinement_interpretation_Tm_refine_d0956283813ca2c8607db1ebac88ef20"
       ],
       0,
-      "b1e16ff9e4f8d996784ca42c378ff502"
+      "e931c0ef1b52ae85662df8696184c841"
     ],
     [
       "RBTreeIntrinsic.__proj__B__item__left",
@@ -149,7 +149,7 @@
         "refinement_interpretation_Tm_refine_d0956283813ca2c8607db1ebac88ef20"
       ],
       0,
-      "1815af98f1d6d314f2999cd2f803c054"
+      "7dfa9b2218d7676847798575cb822f65"
     ],
     [
       "RBTreeIntrinsic.__proj__B__item__value",
@@ -162,7 +162,7 @@
         "refinement_interpretation_Tm_refine_d0956283813ca2c8607db1ebac88ef20"
       ],
       0,
-      "c5f885690e5ebd1ae5b60071e35c3d6b"
+      "84915edb6422067eb6c57278c73e5b2a"
     ],
     [
       "RBTreeIntrinsic.__proj__B__item__right",
@@ -182,7 +182,7 @@
         "refinement_interpretation_Tm_refine_d0956283813ca2c8607db1ebac88ef20"
       ],
       0,
-      "c3d0253101dff647d0ab03dbbb931157"
+      "a9cc7c529e20b50b73ff25958c8372b4"
     ],
     [
       "RBTreeIntrinsic.reduceNode",
@@ -220,7 +220,7 @@
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "37c94ddbfdcf6794f542195ccf3a7c0a"
+      "5d7ff094a5be561ef5db1b1c49d91dcc"
     ],
     [
       "RBTreeIntrinsic.sorted",
@@ -241,7 +241,7 @@
         "subterm_ordering_RBTreeIntrinsic.R"
       ],
       0,
-      "aa61483d1f00cbe47a1511efcddaed72"
+      "a4b0b3099f31d29e5405bd9c21485b14"
     ],
     [
       "RBTreeIntrinsic.rbtree",
@@ -259,23 +259,7 @@
         "typing_tok_RBTreeIntrinsic.Black@tok"
       ],
       0,
-      "e2a3bba8e004d28da2040895ace5a0b5"
-    ],
-    [
-      "RBTreeIntrinsic.__proj__RBTree__item__root",
-      1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption",
-        "@fuel_correspondence_RBTreeIntrinsic.sorted.fuel_instrumented",
-        "@query", "equality_tok_RBTreeIntrinsic.Black@tok",
-        "proj_equation_RBTreeIntrinsic.RBTree_h",
-        "projection_inverse_RBTreeIntrinsic.RBTree_h",
-        "refinement_interpretation_Tm_refine_49e2e58859b46845e1a0e06374123d83"
-      ],
-      0,
-      "7d075c08644ba17aa7428f6ea429dc9d"
+      "3093e3d105bd15484523a496b5489830"
     ],
     [
       "RBTreeIntrinsic.hiddenTree",
@@ -288,7 +272,7 @@
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "fc18014dc4c97c535d338761146f27e8"
+      "9db11338cb9b8d73e315431c96c45c93"
     ],
     [
       "RBTreeIntrinsic.hiddenTree",
@@ -301,7 +285,7 @@
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "13daa90fdc366c9fe98fdb379cd36fb4"
+      "76cbef95e0d9e783bd64ec6d516949ed"
     ],
     [
       "RBTreeIntrinsic.hiddenTree",
@@ -314,25 +298,11 @@
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "20d4fe33ad32c63f705692a3524c0344"
+      "24f1082091d1728943b96c292f409785"
     ],
     [
       "RBTreeIntrinsic.hiddenTree",
       4,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
-        "int_inversion", "primitive_Prims.op_Addition",
-        "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
-      ],
-      0,
-      "d134a242e08cf1effbc59dbf7a34236d"
-    ],
-    [
-      "RBTreeIntrinsic.hiddenTree",
-      5,
       2,
       1,
       [
@@ -349,7 +319,7 @@
         "typing_tok_RBTreeIntrinsic.Red@tok"
       ],
       0,
-      "18181b34ae9c95c3a78fe1f0fe9b0206"
+      "1b0d3f5d4d0072b1c8bcfb7c4032712c"
     ],
     [
       "RBTreeIntrinsic.__proj__HR__item__h",
@@ -362,7 +332,7 @@
         "refinement_interpretation_Tm_refine_fe5516b6f3a411ac6ed1aade1b670e1d"
       ],
       0,
-      "2a0aaf557dbb74f5aabd3b419a09215d"
+      "db3ee07fcbd51ada7afabb567805b05a"
     ],
     [
       "RBTreeIntrinsic.__proj__HR__item__node",
@@ -379,7 +349,7 @@
         "refinement_interpretation_Tm_refine_fe5516b6f3a411ac6ed1aade1b670e1d"
       ],
       0,
-      "914ef9d397f5bbf8e283e77063d78b98"
+      "2cc3e05b5452c37708353e7c096e03b2"
     ],
     [
       "RBTreeIntrinsic.__proj__HB__item__h",
@@ -392,7 +362,7 @@
         "refinement_interpretation_Tm_refine_b1a7273a4d72e20375ad649ff728b871"
       ],
       0,
-      "7d0789c22689e9841dca0a4d35480581"
+      "02b0de6f7b65c2832b841082f2655f6b"
     ],
     [
       "RBTreeIntrinsic.__proj__HB__item__node",
@@ -407,7 +377,7 @@
         "typing_RBTreeIntrinsic.__proj__HB__item__h"
       ],
       0,
-      "62cdca94175ceccea7dfe8073d8a98aa"
+      "e27064e12bfaa5632cf7649beef2d289"
     ],
     [
       "RBTreeIntrinsic.__proj__HB__item__node",
@@ -424,7 +394,7 @@
         "refinement_interpretation_Tm_refine_b1a7273a4d72e20375ad649ff728b871"
       ],
       0,
-      "7f71999e3ff5b7c4970c0a2ad7ffdebe"
+      "c6e83b675698c9661ea369f962fc9719"
     ],
     [
       "RBTreeIntrinsic.almostNode",
@@ -443,7 +413,7 @@
         "typing_tok_RBTreeIntrinsic.Red@tok"
       ],
       0,
-      "27a2d86d0f06b1e49d15ae35a9d7aeeb"
+      "e4017680aef7de4b72e68b04dcc8ff77"
     ],
     [
       "RBTreeIntrinsic.__proj__LR__item__h",
@@ -456,7 +426,7 @@
         "refinement_interpretation_Tm_refine_42ac2be25559f509273ea07f48fae14c"
       ],
       0,
-      "2555876d2daf451461ef75f2c4f92e3c"
+      "e75cf126a6ba121b5d5b50cbc3c94110"
     ],
     [
       "RBTreeIntrinsic.__proj__LR__item__cR",
@@ -469,7 +439,7 @@
         "refinement_interpretation_Tm_refine_42ac2be25559f509273ea07f48fae14c"
       ],
       0,
-      "2ea04e01db61ec64384547ca32f619e1"
+      "0d4204beff4960eab5777fd4600ca7d3"
     ],
     [
       "RBTreeIntrinsic.__proj__LR__item__left",
@@ -486,7 +456,7 @@
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "a516d80211bb97e09cfec3d90159e719"
+      "b05d89ab6ef76a9bab5969a67e1db378"
     ],
     [
       "RBTreeIntrinsic.__proj__LR__item__value",
@@ -499,7 +469,7 @@
         "refinement_interpretation_Tm_refine_42ac2be25559f509273ea07f48fae14c"
       ],
       0,
-      "265f5ebabfd0136f3a6aeea50ad6f3be"
+      "dcfb07fb6516c70502af9111731a4167"
     ],
     [
       "RBTreeIntrinsic.__proj__LR__item__right",
@@ -507,18 +477,11 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "disc_equation_RBTreeIntrinsic.LR",
-        "equation_Prims.nat", "int_inversion",
-        "proj_equation_RBTreeIntrinsic.LR_cR",
-        "proj_equation_RBTreeIntrinsic.LR_h",
-        "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_RBTreeIntrinsic.LR_cR",
-        "projection_inverse_RBTreeIntrinsic.LR_h",
-        "refinement_interpretation_Tm_refine_42ac2be25559f509273ea07f48fae14c",
-        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
+        "@MaxIFuel_assumption", "@query", "data_elim_RBTreeIntrinsic.LR",
+        "refinement_interpretation_Tm_refine_42ac2be25559f509273ea07f48fae14c"
       ],
       0,
-      "2aca3641f491f2cd9575b76d364e7b2d"
+      "cf234dfc04f4a2a791b04ff151d570c2"
     ],
     [
       "RBTreeIntrinsic.__proj__RR__item__h",
@@ -531,7 +494,7 @@
         "refinement_interpretation_Tm_refine_d62fcfa42de73f3b52d3b5454aab81f2"
       ],
       0,
-      "0df1ba4a1d0303493fce3b7a14b49ab3"
+      "4f224daca5f6d83e9ea933ea9e9f95d7"
     ],
     [
       "RBTreeIntrinsic.__proj__RR__item__cL",
@@ -544,7 +507,7 @@
         "refinement_interpretation_Tm_refine_d62fcfa42de73f3b52d3b5454aab81f2"
       ],
       0,
-      "bde275c567c827f56405536008109e48"
+      "ce8ba28703279a3b858b809defc591fd"
     ],
     [
       "RBTreeIntrinsic.__proj__RR__item__left",
@@ -552,18 +515,11 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "disc_equation_RBTreeIntrinsic.RR",
-        "equation_Prims.nat", "int_inversion",
-        "proj_equation_RBTreeIntrinsic.RR_cL",
-        "proj_equation_RBTreeIntrinsic.RR_h",
-        "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_RBTreeIntrinsic.RR_cL",
-        "projection_inverse_RBTreeIntrinsic.RR_h",
-        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "@MaxIFuel_assumption", "@query", "data_elim_RBTreeIntrinsic.RR",
         "refinement_interpretation_Tm_refine_d62fcfa42de73f3b52d3b5454aab81f2"
       ],
       0,
-      "b47ecfca598d7e140d8e73af5a3de1bf"
+      "4abe32cf41b66c25789e1ff927a8d4ae"
     ],
     [
       "RBTreeIntrinsic.__proj__RR__item__value",
@@ -576,7 +532,7 @@
         "refinement_interpretation_Tm_refine_d62fcfa42de73f3b52d3b5454aab81f2"
       ],
       0,
-      "c61020bdde5dad36dfd3446ad20aef3c"
+      "c596099efd7661e200f1faf36659c5d5"
     ],
     [
       "RBTreeIntrinsic.__proj__RR__item__right",
@@ -593,7 +549,7 @@
         "refinement_interpretation_Tm_refine_d62fcfa42de73f3b52d3b5454aab81f2"
       ],
       0,
-      "c7b530e36800a55fe6667a75ffb55732"
+      "22cf65c5e29d0e27146dbf4efdd6b7aa"
     ],
     [
       "RBTreeIntrinsic.__proj__V__item__h",
@@ -606,7 +562,7 @@
         "refinement_interpretation_Tm_refine_f037a5ff30b5f1f597f98c66643d41bf"
       ],
       0,
-      "82bfcab12d7c139d4be26c9dd25d9a70"
+      "be5775099f761a87187b0d7928fe68e0"
     ],
     [
       "RBTreeIntrinsic.__proj__V__item__c",
@@ -619,7 +575,7 @@
         "refinement_interpretation_Tm_refine_f037a5ff30b5f1f597f98c66643d41bf"
       ],
       0,
-      "10568428573b2d59d76ee902b3d7b4eb"
+      "3ed9a927fec373354a6a7ee2c3b0202c"
     ],
     [
       "RBTreeIntrinsic.__proj__V__item__node",
@@ -627,18 +583,11 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "disc_equation_RBTreeIntrinsic.V",
-        "equation_Prims.nat", "int_inversion",
-        "proj_equation_RBTreeIntrinsic.V_c",
-        "proj_equation_RBTreeIntrinsic.V_h",
-        "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_RBTreeIntrinsic.V_c",
-        "projection_inverse_RBTreeIntrinsic.V_h",
-        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "@MaxIFuel_assumption", "@query", "data_elim_RBTreeIntrinsic.V",
         "refinement_interpretation_Tm_refine_f037a5ff30b5f1f597f98c66643d41bf"
       ],
       0,
-      "698cb03a38cc5cf140ab02f4071de1d4"
+      "7c1bfa0c225825e1c53d3c0beabe2f56"
     ],
     [
       "RBTreeIntrinsic.balanceLB",
@@ -651,7 +600,7 @@
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "5982af5a7628cc1dcf1acb55f467d009"
+      "52962f8ad00c30bee01ef2092687831e"
     ],
     [
       "RBTreeIntrinsic.balanceLB",
@@ -698,7 +647,7 @@
         "typing_RBTreeIntrinsic.__proj__RR__item__right"
       ],
       0,
-      "b0f28f45cd48f981a424e6f1ca1a895c"
+      "2256d48612f5994dc0d173611d548ad3"
     ],
     [
       "RBTreeIntrinsic.balanceRB",
@@ -711,7 +660,7 @@
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "46295c878f1e67218b2e34bd403cfcfc"
+      "27567abc63a74c4219b5d84970ccd086"
     ],
     [
       "RBTreeIntrinsic.balanceRB",
@@ -757,7 +706,7 @@
         "typing_RBTreeIntrinsic.__proj__RR__item__right"
       ],
       0,
-      "3231b62cc2595213f40015c3b189bdf0"
+      "8e286fc4f692831f87596ac5a7150cf2"
     ],
     [
       "RBTreeIntrinsic.balanceLR",
@@ -783,7 +732,7 @@
         "typing_tok_RBTreeIntrinsic.Leaf@tok"
       ],
       0,
-      "2ac97814c0cae6f97f4189f6fa2d010d"
+      "a7b3a04b6ce08594549f4ce1eaa91ca1"
     ],
     [
       "RBTreeIntrinsic.balanceRR",
@@ -809,7 +758,7 @@
         "typing_tok_RBTreeIntrinsic.Leaf@tok"
       ],
       0,
-      "453607c045b1b7bebe722740f6d74be9"
+      "162763fa71b5ef89cb970108042cf78d"
     ],
     [
       "RBTreeIntrinsic.ins",
@@ -840,7 +789,7 @@
         "typing_tok_RBTreeIntrinsic.Leaf@tok"
       ],
       0,
-      "55f186c1832048a422aa3b1f79fa0ef0"
+      "7adce7cf5a2da22ab62b8d2c33f7ffb2"
     ],
     [
       "RBTreeIntrinsic.ins",
@@ -868,7 +817,7 @@
         "typing_tok_RBTreeIntrinsic.Leaf@tok"
       ],
       0,
-      "478774109d46768928bf01fc998449ad"
+      "71a00d7ccf8ab532cdfb31d01303ee61"
     ],
     [
       "RBTreeIntrinsic.mem",
@@ -889,7 +838,7 @@
         "subterm_ordering_RBTreeIntrinsic.R"
       ],
       0,
-      "04ad9d1c5e048143e13bf49d2c1adea2"
+      "7772da4b09398707fceb8af486e379ad"
     ],
     [
       "RBTreeIntrinsic.hiddenTree_mem",
@@ -904,7 +853,7 @@
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "a33af658306c29f8a943374bfda8d701"
+      "0eb2b091a8985b3ee395828379cf4861"
     ],
     [
       "RBTreeIntrinsic.almostNode_mem",
@@ -920,7 +869,7 @@
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "61c9563b12cf83a94210b242fc9c4159"
+      "37abf0304c804ebc50346a679176bef3"
     ],
     [
       "RBTreeIntrinsic.ins_mem",
@@ -1031,7 +980,7 @@
         "typing_tok_RBTreeIntrinsic.Red@tok", "unit_inversion", "unit_typing"
       ],
       0,
-      "3f9c74fee4dc8b051b23df64e0660b99"
+      "fb918ad1ddb0f7c9d5f5c04dcb076b4e"
     ],
     [
       "RBTreeIntrinsic.ins_mem",
@@ -1130,7 +1079,7 @@
         "typing_tok_RBTreeIntrinsic.Red@tok", "unit_inversion", "unit_typing"
       ],
       0,
-      "14bbf4057d01d0ac884d2367bf9e91e4"
+      "81aaecc85f43ff0c46a76b87728a2a04"
     ],
     [
       "RBTreeIntrinsic.almostNode_sorted",
@@ -1146,7 +1095,7 @@
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "8f35be2c15f446729e1d829bac3cc9a5"
+      "42cdba5b57ba7551a39bafa4e788be5b"
     ],
     [
       "RBTreeIntrinsic.hiddenTree_sorted",
@@ -1161,7 +1110,7 @@
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "4ceba12690b57653eaa2a2c838fb5faf"
+      "a45f25683325b81d62d1fe1d67b026c4"
     ],
     [
       "RBTreeIntrinsic.hiddenTree_max",
@@ -1176,7 +1125,7 @@
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "af2374471c6f783d46dbbcac3fc05670"
+      "3803d5ac1663018a9c1e17224df5e98e"
     ],
     [
       "RBTreeIntrinsic.hiddenTree_min",
@@ -1191,7 +1140,7 @@
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "75abdb33ec8ce62cb69497d868d7189f"
+      "b4fc454cf8c07e51d5bfe959d03f6c5f"
     ],
     [
       "RBTreeIntrinsic.almostNode_max",
@@ -1217,7 +1166,7 @@
         "typing_RBTreeIntrinsic.__proj__V__item__node"
       ],
       0,
-      "3e83dc9f9e62a64584848eab6be64255"
+      "aed1d8e77f128adc1a8e97e409d2630a"
     ],
     [
       "RBTreeIntrinsic.almostNode_min",
@@ -1243,7 +1192,7 @@
         "typing_RBTreeIntrinsic.__proj__V__item__node"
       ],
       0,
-      "9b9359c37545610b902b64e33f340a52"
+      "24f0edb91efd8d25dc33783328f7acc8"
     ],
     [
       "RBTreeIntrinsic.atLeast",
@@ -1260,7 +1209,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "08935647747b6578fc5b48a452238b4b"
+      "c0f8f5aaeae8676e2dd7f15736e4414e"
     ],
     [
       "RBTreeIntrinsic.atMost",
@@ -1277,7 +1226,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "96189678f1f0dd6e7cfadbae8523e8fb"
+      "1090ad663225c0f08043f03255dbb292"
     ],
     [
       "RBTreeIntrinsic.global_upper_bound",
@@ -1353,7 +1302,7 @@
         "typing_tok_RBTreeIntrinsic.Red@tok"
       ],
       0,
-      "271c6e8cbb190eb62a7fc7ef3140e16a"
+      "202442bd4baa7f2f54ce59c9c3f23a68"
     ],
     [
       "RBTreeIntrinsic.global_lower_bound",
@@ -1438,7 +1387,7 @@
         "typing_tok_RBTreeIntrinsic.Red@tok"
       ],
       0,
-      "ca1c273b8dffafa6a62f027a6d68ccd0"
+      "007ebca2ea704e10ae7425329b32c054"
     ],
     [
       "RBTreeIntrinsic.mem_to_max",
@@ -1509,7 +1458,7 @@
         "typing_tok_RBTreeIntrinsic.Red@tok"
       ],
       0,
-      "c7b5fcc086c111c9f68901b5b184c91a"
+      "02d46c51fc44bcc660d9c61264062a71"
     ],
     [
       "RBTreeIntrinsic.mem_to_min",
@@ -1584,7 +1533,7 @@
         "typing_tok_RBTreeIntrinsic.Red@tok"
       ],
       0,
-      "0bedfd89c91dff92331ac8886172d6db"
+      "5b7007fedc4217cd2b72b184e8a85713"
     ],
     [
       "RBTreeIntrinsic.almostNode_mem_to_max",
@@ -1651,7 +1600,7 @@
         "typing_tok_RBTreeIntrinsic.Black@tok"
       ],
       0,
-      "20f69c9ce9c2a59241c9e496153e2847"
+      "4463bee7d0d8487d1dfcaae34ecd4007"
     ],
     [
       "RBTreeIntrinsic.almostNode_mem_to_min",
@@ -1718,7 +1667,7 @@
         "typing_tok_RBTreeIntrinsic.Black@tok"
       ],
       0,
-      "973ee55bfa14a682e7a8beec4d07a610"
+      "e2054b9d833ff54b3852b9fcd983525c"
     ],
     [
       "RBTreeIntrinsic.hiddenTree_mem_to_max",
@@ -1743,7 +1692,7 @@
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "5e184cad3dd5c70a6e230db11637b027"
+      "1dc3d094a2d9cb1f325a2da1ddd4b125"
     ],
     [
       "RBTreeIntrinsic.hiddenTree_mem_to_min",
@@ -1768,7 +1717,7 @@
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "4f760663e77fe89463585a1f34bee52e"
+      "b907c7bde1f8c9319f0291e6afa6c4ba"
     ],
     [
       "RBTreeIntrinsic.ins_max",
@@ -1777,7 +1726,7 @@
       1,
       [ "@query" ],
       0,
-      "451a154be72ef1a8f15b3f2429f6363f"
+      "61aaf5a3aa3832f360daf33d4f31fe26"
     ],
     [
       "RBTreeIntrinsic.ins_min",
@@ -1825,7 +1774,7 @@
         "typing_tok_RBTreeIntrinsic.Red@tok"
       ],
       0,
-      "416c6b5b1c53efe4ce0e4eee3cbebc75"
+      "1334b99a6de3046118174afd2f1fdb56"
     ],
     [
       "RBTreeIntrinsic.insB_max",
@@ -1834,7 +1783,7 @@
       1,
       [ "@query" ],
       0,
-      "d6f5a10972204c96130d71343838888d"
+      "9e12ad2774974ee6052b6acb9e043c4d"
     ],
     [
       "RBTreeIntrinsic.insB_min",
@@ -1884,7 +1833,7 @@
         "typing_tok_RBTreeIntrinsic.Red@tok"
       ],
       0,
-      "61566065bba38e4f3cae3a9ae9368349"
+      "cf90733f5628873a47f148215b69162d"
     ],
     [
       "RBTreeIntrinsic.balanceLB_preserves_sort",
@@ -1897,7 +1846,7 @@
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "70386b702bdaaf3fee2d32efa1a7848b"
+      "e62a7167dced67accc8ea72eafc15375"
     ],
     [
       "RBTreeIntrinsic.balanceLB_preserves_sort",
@@ -1997,7 +1946,7 @@
         "typing_tok_RBTreeIntrinsic.Red@tok"
       ],
       0,
-      "ec1c09b283a26910f05233375f223066"
+      "c5959af524c044ecf6de86038eb435f0"
     ],
     [
       "RBTreeIntrinsic.balanceRB_preserves_sort",
@@ -2010,7 +1959,7 @@
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "e40179c5f714a5626b0faf5a89231856"
+      "3f36119d20b646a79d5584eee2262d0a"
     ],
     [
       "RBTreeIntrinsic.balanceRB_preserves_sort",
@@ -2111,7 +2060,7 @@
         "typing_tok_RBTreeIntrinsic.Red@tok", "unit_typing"
       ],
       0,
-      "acbe537c2c704b3aeace7f5d6b547250"
+      "ca8558371b9ab0342c6864a6cd58ce1e"
     ],
     [
       "RBTreeIntrinsic.balanceLR_preserves_sort",
@@ -2183,7 +2132,7 @@
         "typing_tok_RBTreeIntrinsic.Red@tok"
       ],
       0,
-      "1e0799de6b764a7296d9ea062eef6b86"
+      "c5ee3b93190b3253d36803f4307f2383"
     ],
     [
       "RBTreeIntrinsic.balanceRR_preserves_sort",
@@ -2254,7 +2203,7 @@
         "typing_tok_RBTreeIntrinsic.Red@tok"
       ],
       0,
-      "70e2c1eb9d86955060d00d73a86f346c"
+      "67c9a8e4a8e3e88e1399896447fe12ea"
     ],
     [
       "RBTreeIntrinsic.ins_preserves_sort",
@@ -2351,7 +2300,7 @@
         "typing_tok_RBTreeIntrinsic.Red@tok", "unit_inversion", "unit_typing"
       ],
       0,
-      "9f99347084e47440ec050cbcf2aca43f"
+      "28fb6d58f2172cf3d76ac96d6c5b52d0"
     ],
     [
       "RBTreeIntrinsic.ins_preserves_sort",
@@ -2440,7 +2389,7 @@
         "typing_tok_RBTreeIntrinsic.Red@tok", "unit_inversion", "unit_typing"
       ],
       0,
-      "c3c9e2f7b0bcfe2d9595035da9cb3330"
+      "4dc12665a264205df3b689693ebd93fc"
     ],
     [
       "RBTreeIntrinsic.insert",
@@ -2547,7 +2496,7 @@
         "typing_tok_RBTreeIntrinsic.Red@tok"
       ],
       0,
-      "83a723e744d566ba8c2e25e1a81e6d1e"
+      "fc34926c9b12ef4934dcbd6a615c60e5"
     ],
     [
       "RBTreeIntrinsic.insert_mem",
@@ -2602,7 +2551,7 @@
         "typing_tok_RBTreeIntrinsic.Red@tok"
       ],
       0,
-      "a22c9c660f804d03c8c212d26e12777d"
+      "e13ac9fa8e9a252da18cfb814bd3a35e"
     ],
     [
       "RBTreeIntrinsic.sanity_check1",
@@ -2611,7 +2560,7 @@
       1,
       [ "@query" ],
       0,
-      "7bad80675ec7384fb48317fd46ec799e"
+      "e10d4451938a68e6429652b50e1b002b"
     ],
     [
       "RBTreeIntrinsic.repeat",
@@ -2621,15 +2570,15 @@
       [
         "@MaxIFuel_assumption", "@query",
         "Prims_pretyping_ce036b6b736ef4e0bc3a9ff132a12aed",
-        "binder_x_ce036b6b736ef4e0bc3a9ff132a12aed_0",
-        "equality_tok_Prims.LexTop@tok", "equation_Prims.nat",
-        "int_inversion", "int_typing", "primitive_Prims.op_Subtraction",
+        "binder_x_ce036b6b736ef4e0bc3a9ff132a12aed_0", "equation_Prims.nat",
+        "equation_Prims.op_Equals_Equals_Equals", "int_inversion",
+        "int_typing", "primitive_Prims.op_Subtraction",
         "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "string_inversion", "well-founded-ordering-on-nat"
       ],
       0,
-      "1b7c57e14016375488e9f99576b0ff71"
+      "679081896afc9aa9c572d7978acf6e8b"
     ],
     [
       "RBTreeIntrinsic.node_to_string",
@@ -2643,7 +2592,7 @@
         "fuel_guarded_inversion_RBTreeIntrinsic.color"
       ],
       0,
-      "e3198e617e1efb39cd062ad0315343e2"
+      "0211096f52c02ea9a066784f8be2b98a"
     ],
     [
       "RBTreeIntrinsic.rbnode_to_string",
@@ -2669,7 +2618,7 @@
         "subterm_ordering_RBTreeIntrinsic.R"
       ],
       0,
-      "a1f44cffda50b9e03fff27766b98c4b4"
+      "81e4874f1640d4c789867f23df7dc688"
     ],
     [
       "RBTreeIntrinsic.rbtree_to_string",
@@ -2678,7 +2627,7 @@
       1,
       [ "@query" ],
       0,
-      "0451a9196e40a4bbf009e197ab708d1c"
+      "6608576433fbb63113b1d41fe149c02c"
     ],
     [
       "RBTreeIntrinsic.test",
@@ -2699,7 +2648,7 @@
         "typing_tok_RBTreeIntrinsic.Leaf@tok"
       ],
       0,
-      "ca83a0c251910148abb2a83b30fcd896"
+      "c67e4759f499abcb9c051b3331a9fd30"
     ]
   ]
 ]

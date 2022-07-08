@@ -46,6 +46,7 @@ let rec blah (t : term) : Tac term =
              | Tv_Var b -> Tv_Var b
              | Tv_FVar f -> Tv_FVar f
              | Tv_BVar f -> Tv_BVar f
+             | Tv_UInst f us -> Tv_UInst f us
              | Tv_App l (r, q) -> let l = blah l in
                                   let r = blah r in
                                   Tv_App l (r, q)
@@ -54,13 +55,13 @@ let rec blah (t : term) : Tac term =
              | Tv_Arrow b t -> Tv_Arrow b t
              | Tv_Refine b t -> let t = blah t in
                                 Tv_Refine b t
-             | Tv_Type u -> Tv_Type ()
+             | Tv_Type u -> Tv_Type u
              | Tv_Const c -> Tv_Const c
              | Tv_Uvar u t -> Tv_Uvar u t
              | Tv_Let r attrs b t1 t2 -> Tv_Let r attrs b t1 t2
-             | Tv_Match t brs -> Tv_Match t brs
-             | Tv_AscribedT e t tac -> Tv_AscribedT e t tac
-             | Tv_AscribedC e c tac -> Tv_AscribedC e c tac
+             | Tv_Match t ret_opt brs -> Tv_Match t ret_opt brs
+             | Tv_AscribedT e t tac use_eq -> Tv_AscribedT e t tac use_eq
+             | Tv_AscribedC e c tac use_eq -> Tv_AscribedC e c tac use_eq
              | Tv_Unknown -> Tv_Unknown
     in pack tv
 

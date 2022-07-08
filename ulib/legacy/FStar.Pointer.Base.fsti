@@ -228,6 +228,7 @@ let type_of_struct_field''
   List.Tot.assoc_precedes f l y;
   type_of_typ y
 
+[@@ unifier_hint_injective]
 let type_of_struct_field'
   (l: struct_typ)
   (type_of_typ: (
@@ -241,7 +242,7 @@ let type_of_struct_field'
 val struct (l: struct_typ) : Tot Type0
 val union (l: union_typ) : Tot Type0
 
-(* Interperets a type code (`typ`) as a FStar type (`Type0`). *)
+(* Interprets a type code (`typ`) as a FStar type (`Type0`). *)
 let rec type_of_typ
   (t: typ)
 : Tot Type0
@@ -2152,7 +2153,7 @@ val write: #a:typ -> b:pointer a -> z:type_of_typ a -> HST.Stack unit
     /\ gread h1 b == z ))
 
 (** Given our model, this operation is stateful, however it should be translated
-    to a no-op by Kremlin, as the tag does not actually exist at runtime.
+    to a no-op by Karamel, as the tag does not actually exist at runtime.
 *)
 val write_union_field
   (#l: union_typ)

@@ -1,0 +1,59 @@
+[
+  "øŒ∑'\u0017\u0016D+Ê\u000fçŒØÄ:ô",
+  [
+    [
+      "MultipleAttributesBinder.__proj__String__item__v",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_bf4f065dc94b202adcf8aa9019f17109"
+      ],
+      0,
+      "49ad4bc433d37a4c9519b245c68421cc"
+    ],
+    [
+      "MultipleAttributesBinder.__proj__Int__item__v",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_2adb22eda77444787c5487a23e08fa8a"
+      ],
+      0,
+      "61255eb7bab7fe58e1af00526023406a"
+    ],
+    [
+      "MultipleAttributesBinder.binder_from_term",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_FStar.Reflection.Data.Q_Explicit",
+        "disc_equation_FStar.Reflection.Data.Q_Implicit",
+        "disc_equation_FStar.Reflection.Data.Q_Meta",
+        "fuel_guarded_inversion_FStar.Reflection.Data.aqualv",
+        "projection_inverse_BoxBool_proj_0"
+      ],
+      0,
+      "dff1aebf9e7df32b01a6889fd167858e"
+    ],
+    [
+      "MultipleAttributesBinder.binders_from_term",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.Reflection.Types.name",
+        "function_token_typing_FStar.Reflection.Types.sigelt",
+        "lemma_FStar.Pervasives.invertOption",
+        "typing_FStar.Reflection.Builtins.lookup_typ"
+      ],
+      0,
+      "5290363a5924ee9725dc84df0a6587ab"
+    ]
+  ]
+]

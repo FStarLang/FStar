@@ -482,7 +482,7 @@ val printf : s:normal format_string -> normal (interpret_format_string s)
 let printf = intro_normal_f #format_string interpret_format_string printf'
 
 
-/// `skip`: We also provide `skip`, a funcion that has the same type as printf
+/// `skip`: We also provide `skip`, a function that has the same type as printf
 ///  but normalizes to `()`, i.e., it prints nothing. This is useful for conditional
 ///  printing in debug code, for instance.
 noextract inline_for_extraction

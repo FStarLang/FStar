@@ -14,7 +14,7 @@
    limitations under the License.
 *)
 module Printers
-
+open FStar.List.Tot
 (* TODO: This is pretty much a blast-to-the-past of Meta-F*, we can do
  * much better now. *)
 
@@ -48,7 +48,7 @@ let mk_print_bv (self : name) (f : term) (bv : bv) : Tac term =
 let mk_printer_type (t : term) : Tac term =
     let b = fresh_binder_named "arg" t in
     let str = pack (Tv_FVar (pack_fv string_lid)) in
-    let c = pack_comp (C_Total str None) in
+    let c = pack_comp (C_Total str u_unk []) in
     pack (Tv_Arrow b c)
 
 
@@ -73,7 +73,7 @@ let mk_printer_fun (dom : term) : Tac term =
     in
 
     match inspect_sigelt se with
-    | Sg_Let _ _ _ _ _ -> fail "cannot create printer for let"
+    | Sg_Let _ _ -> fail "cannot create printer for let"
     | Sg_Inductive _ _ bs t ctors ->
         let br1 ctor : Tac branch =
             let (name, t) = ctor in
@@ -90,7 +90,7 @@ let mk_printer_fun (dom : term) : Tac term =
         let xi = fresh_binder_named "v_inner" dom in
 
         // Generate the match on the internal argument
-        let m = pack (Tv_Match (pack (Tv_Var (bv_of_binder xi))) branches) in
+        let m = pack (Tv_Match (pack (Tv_Var (bv_of_binder xi))) None branches) in
         (* debug ("m = " ^ term_to_string m); *)
 
         // Wrap it into an internal function
@@ -122,7 +122,11 @@ let mk_printer dom : Tac decls =
              | _ -> fail "not an fv?"
     in
     let nm = maplast (fun s -> s ^ "_print") nm in
-    let sv : sigelt_view = Sg_Let false (pack_fv nm) [] (mk_printer_type dom) (mk_printer_fun dom) in
+    let lb = pack_lb ({lb_fv = pack_fv nm;
+                       lb_us = [];
+                       lb_typ = mk_printer_type dom;
+                       lb_def = mk_printer_fun dom}) in
+    let sv : sigelt_view = Sg_Let false [lb] in
     let ses : list sigelt = [pack_sigelt sv] in
     ses
 

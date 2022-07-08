@@ -17,7 +17,8 @@ module Test.FunctionalExtensionality
 open FStar.FunctionalExtensionality
 module F = FStar.FunctionalExtensionality
 
-(* To begin with, eta is provable *)
+(* To begin with, eta is NOT provable *)
+[@@expect_failure]
 let eta_is_eq #a (#b:a -> Type) (f: (x:a -> b x)) : (f == (fun (x:a) -> f x)) =
   FStar.Squash.return_squash Refl
 

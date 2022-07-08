@@ -20,7 +20,7 @@ module StringPrinter.Base
 module S = FStar.Seq
 module U8 = FStar.UInt8
 
-(* Prims.c_or is not supported by KreMLin, so let's use ours. *)
+(* Prims.c_or is not supported by KaRaMeL, so let's use ours. *)
 type c_or   (p:Type) (q:Type) =
   | Left  : p -> c_or p q
   | Right : q -> c_or p q
@@ -49,7 +49,7 @@ let seq (#t2: Type0) (x: m unit) (y: m t2) : Tot (m t2) =
 let print_char (c: U8.t) : Tot (m unit) =
   fun () -> ((), S.create 1 c)
 
-let log (#t: Type0) (x: m t) : GTot string = 
+let log (#t: Type0) (x: m t) : GTot string =
   let (_, log) = x () in
   log
 
@@ -78,10 +78,10 @@ let m_sz_correct
   if l > 4294967295
   then y == g' ()
   else y == g r (U32.uint_to_t l) ()
- 
+
 type m_sz #t (f: m t) = (
   (t' : Type) ->
-  (g: ((x: t) -> (r: U32.t) -> (u: unit { m_sz_res_pred f x r } ) -> Tot t')) -> 
+  (g: ((x: t) -> (r: U32.t) -> (u: unit { m_sz_res_pred f x r } ) -> Tot t')) ->
   (g' : ((u: unit { S.length (log f) > 4294967295 } ) -> Tot t')) ->
   Tot (y: t' {
     m_sz_correct f t' g g' y
@@ -265,7 +265,10 @@ let unfold_fv (t: T.fv) : T.Tac T.term =
   match T.lookup_typ env n with
   | Some s ->
     begin match T.inspect_sigelt s with
-    | T.Sg_Let false _ _ _ def -> def
+    | T.Sg_Let false [lb] -> begin
+      let lbv = T.inspect_lb lb in
+      T.(lbv.lb_def)
+      end
     | _ -> tfail "Not a non-recursive let definition"
     end
   | _ -> tfail "Definition not found"
@@ -304,13 +307,13 @@ let tm_eq_fvar (t1 t2: T.term) : T.Tac bool =
   | _ -> false
 
 let ret_tm () : T.Tac T.term =
-  quote ret
+  quote (ret #T.term)
 
 let bind_tm () : T.Tac T.term =
-  quote bind
+  quote (fun (#t1:Type) (#t2:Type) -> bind #t1 #t2)
 
 let seq_tm () : T.Tac T.term =
-  quote seq
+  quote (fun #t -> seq #t)
 
 let print_char_tm () : T.Tac T.term =
   quote print_char
@@ -432,7 +435,7 @@ let compile_ifthenelse
   let (f, ar) = app_head_tail t in
   let ins = T.inspect f in
   match ins with
-  | T.Tv_Match cond [T.Pat_Constant T.C_True, tt; _, tf] ->
+  | T.Tv_Match cond _ [T.Pat_Constant T.C_True, tt; _, tf] ->
     (* ifthenelse: the second branch can be a wildcard or false *)
     let ct = quote (cond_eq true) in
     let ut = T.mk_app ct [cond, T.Q_Explicit] in
@@ -491,8 +494,8 @@ let mk_sz'
   (ty: T.term) (t: T.term)
 : T.Tac T.term
 = compile
-    (quote ret_sz)
-    (quote bind_sz)
+    (quote (fun #t -> ret_sz #t))
+    (quote (fun #t1 #t2 #x -> bind_sz #t1 #t2 #x))
     (quote print_char_sz)
     (quote coerce_sz)
     (quote ifthenelse_sz)
@@ -633,8 +636,8 @@ let mk_st'
   (ty: T.term) (t: T.term)
 : T.Tac T.term
 = compile
-    (quote ret_st)
-    (quote bind_st)
+    (quote (fun #t -> ret_st #t))
+    (quote (fun #t1 #t2 #x -> bind_st #t1 #t2 #x))
     (quote print_char_st)
     (quote coerce_st)
     (quote ifthenelse_st)
@@ -726,7 +729,7 @@ let phi_t_internal
 : Tot Type
 = (unit -> HST.ST (option (t * B.buffer U8.t)) (requires (fun h -> h == h0)) (ensures (fun _ res h' -> phi_post x h0 res h')))
 
-(* FIXME: the following does not extract to KreMLin. This was an attempt to push the CPS-style down to the effectful code as well, but does not work.
+(* FIXME: the following does not extract to KaRaMeL. This was an attempt to push the CPS-style down to the effectful code as well, but does not work.
 
 inline_for_extraction
 let phi
@@ -764,7 +767,7 @@ let phi_tac (#ty: Type0) (m: m ty) : T.Tac unit =
     let ty' = quote ty in
     let t_sz = mk_sz' (T.cur_env ()) ty' x in
     let t_st = mk_st' (T.cur_env ()) ty' x in
-    let q = quote phi in
+    let q = quote (fun #t -> phi #t) in
     let t = mk_app q [
       ty', Q_Implicit;
       x, Q_Explicit;

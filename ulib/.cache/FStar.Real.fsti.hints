@@ -1,5 +1,5 @@
 [
-  "‹tÏ’Æä\u001d™v¢½¡BqÁj",
+  "HÓö\u0010.\u0002Á![â=é[‡±é",
   [
     [
       "FStar.Real.n_over_n2",
@@ -11,7 +11,7 @@
         "refinement_interpretation_Tm_refine_c751fbfd6f4b9a39c463d906ae6adf94"
       ],
       0,
-      "62a5c91f6abbd454ae81cca9b7c1a4f7"
+      "ce55545b087e958da6b5b758bac251e6"
     ],
     [
       "FStar.Real.test",
@@ -24,7 +24,7 @@
         "projection_inverse_BoxReal_proj_0"
       ],
       0,
-      "20927fc14b49d1c748c06f3862a84f08"
+      "24bf0fc2dd29b7609ddf975add994e0a"
     ],
     [
       "FStar.Real.test1",
@@ -36,7 +36,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "995be45173057498d379561c106654a4"
+      "2dc40c5eefb3da112f6fad5a598f3941"
     ],
     [
       "FStar.Real.test_lt1",
@@ -45,7 +45,7 @@
       1,
       [ "@query" ],
       0,
-      "c436cec7bdc2e281607c9735572a8f1a"
+      "a8ab1aa8fa3e1c893c320c28f8e2f20e"
     ],
     [
       "FStar.Real.test_lt2",
@@ -54,7 +54,7 @@
       1,
       [ "@query" ],
       0,
-      "c00aa30b36f286d637f4a4e9f308d227"
+      "9304dfb8f2b355a52ea55a6c4775a10b"
     ],
     [
       "FStar.Real.test_lt3",
@@ -63,7 +63,7 @@
       1,
       [ "@query" ],
       0,
-      "5d15f5d98cd0758480b472bc4e2b5722"
+      "a967a46256242e3e1804d10d45deb93c"
     ],
     [
       "FStar.Real.test_le1",
@@ -72,7 +72,7 @@
       1,
       [ "@query" ],
       0,
-      "44e54c47fa6c2a1c4ef43e6e66ae47a9"
+      "d85d8dd50f13244aa2a0f8dc03b661ea"
     ],
     [
       "FStar.Real.test_le2",
@@ -81,7 +81,7 @@
       1,
       [ "@query" ],
       0,
-      "d52c4df8150c6ef368e6c4406fbb5828"
+      "b9ad6acb7eedb527069c470064ce6e42"
     ],
     [
       "FStar.Real.test_le3",
@@ -90,7 +90,7 @@
       1,
       [ "@query" ],
       0,
-      "a543cd7256c21be237ec4ea94c1824c9"
+      "ab6297ed088ec27acb6e9dcb5db37b13"
     ],
     [
       "FStar.Real.test_gt1",
@@ -99,7 +99,7 @@
       1,
       [ "@query" ],
       0,
-      "d4acf08676459cd656797ea71be346ca"
+      "372ea8ccad908c7ba42c81e387312982"
     ],
     [
       "FStar.Real.test_gt2",
@@ -108,7 +108,7 @@
       1,
       [ "@query" ],
       0,
-      "03936768619ab0c7e037af721b140b0d"
+      "f651c395fda813f5836db8c0b7fa7687"
     ],
     [
       "FStar.Real.test_gt3",
@@ -117,7 +117,7 @@
       1,
       [ "@query" ],
       0,
-      "984e8e49572ea0a3747c6e1eb7d3396c"
+      "6f2d7180fbdc8e234ae4b36189537471"
     ],
     [
       "FStar.Real.test_ge1",
@@ -126,7 +126,7 @@
       1,
       [ "@query" ],
       0,
-      "9ba3febd69fc5d439afbcf2b66169e12"
+      "54d2dd644a0da3cbcf9b0dd02b7ac145"
     ],
     [
       "FStar.Real.test_ge2",
@@ -135,7 +135,7 @@
       1,
       [ "@query" ],
       0,
-      "9bdc99f22c2bf2c242e0817aaab68459"
+      "545ed35f130fd4bf8f6fa242b8932a65"
     ],
     [
       "FStar.Real.test_ge3",
@@ -144,7 +144,7 @@
       1,
       [ "@query" ],
       0,
-      "bcada6e92dbdffd3700869be59e488c3"
+      "f918b1f2a38444e105bf6a6188c98a6b"
     ],
     [
       "FStar.Real.test_add_eq",
@@ -153,7 +153,7 @@
       1,
       [ "@query" ],
       0,
-      "5830c8e8594196b7ff7e40c20f67bc0c"
+      "c4d4f224d71bc93e4b4bf264f6cf2191"
     ],
     [
       "FStar.Real.test_add_eq'",
@@ -162,7 +162,7 @@
       1,
       [ "@query" ],
       0,
-      "83fd3ad595f82d280302a819a2832b64"
+      "a698bbe1dfbfefb334fe1afd32730842"
     ],
     [
       "FStar.Real.test_add_lt",
@@ -171,7 +171,7 @@
       1,
       [ "@query" ],
       0,
-      "b8fdd752aaf01d8a5c39c3d15683e68e"
+      "42cfefeb141907f88b6829ba1b26387f"
     ],
     [
       "FStar.Real.test_mul_eq",
@@ -180,7 +180,7 @@
       1,
       [ "@query" ],
       0,
-      "a437c56ca27615e173ce0305cb0e16ab"
+      "5b395a50f5d54bd37f7f4efaba95a134"
     ],
     [
       "FStar.Real.test_mul_lt",
@@ -189,7 +189,7 @@
       1,
       [ "@query" ],
       0,
-      "198a79d8ce9d5675895a48ef03c04617"
+      "7181a210114994fa0eb9738f818d26ef"
     ],
     [
       "FStar.Real.test_div_eq",
@@ -198,7 +198,7 @@
       1,
       [ "@query" ],
       0,
-      "362f1300fc9f8783f1e1027f5ddb84a4"
+      "2ebfff298663986bd1e75591bb97e94d"
     ],
     [
       "FStar.Real.test_div_lt",
@@ -207,7 +207,7 @@
       1,
       [ "@query" ],
       0,
-      "b049e50fcae6ab28fe974c961018eefc"
+      "1c4428405f784e2603bd420bab354408"
     ],
     [
       "FStar.Real.test_sqrt_2_mul",
@@ -222,7 +222,7 @@
         "typing_FStar.Real.sqrt_2"
       ],
       0,
-      "4e86d94ea85f052c451f70f95acc554d"
+      "ef7d281c7decdb14941813056d2e9cbe"
     ],
     [
       "FStar.Real.test_sqrt_2_scale",
@@ -236,7 +236,7 @@
         "refinement_interpretation_Tm_refine_3834bf9163484f4b38ebf8a6c6045a0e"
       ],
       0,
-      "c2242f4a6765c07578428ae60ac6333b"
+      "976eb7a3f7a5ce3f0e3bec4a6f6d7e69"
     ],
     [
       "FStar.Real.add_id_l",
@@ -245,7 +245,7 @@
       1,
       [ "@MaxIFuel_assumption", "@query", "real_inversion" ],
       0,
-      "0fb6a56341846e7faf6359b6018223e9"
+      "6eae3966482a29d7a6e157a87f4910ce"
     ],
     [
       "FStar.Real.add_id_r",
@@ -254,7 +254,7 @@
       1,
       [ "@MaxIFuel_assumption", "@query", "real_inversion" ],
       0,
-      "855a44fd6243de78bf945f1bf8d450ae"
+      "0d42c1f2fd2bf46898671c6d976503be"
     ],
     [
       "FStar.Real.mul_nil_l",
@@ -263,7 +263,7 @@
       1,
       [ "@query" ],
       0,
-      "48533fe75900f817e3b20b1b4b74b716"
+      "e164c94d05f38273e1c0c98afe9479a7"
     ],
     [
       "FStar.Real.mul_nil_r",
@@ -272,7 +272,7 @@
       1,
       [ "@query" ],
       0,
-      "ef74fd5d6ce1a95ac149424294516a37"
+      "7b58889656887d108d738c0d9e801964"
     ],
     [
       "FStar.Real.mul_id_l",
@@ -281,7 +281,7 @@
       1,
       [ "@MaxIFuel_assumption", "@query", "real_inversion" ],
       0,
-      "9aaee224bd5de44e9c1407bf0f33d5c7"
+      "ab7484f53dae41d6e9eb0d29fffd6b14"
     ],
     [
       "FStar.Real.mul_id_r",
@@ -290,7 +290,7 @@
       1,
       [ "@MaxIFuel_assumption", "@query", "real_inversion" ],
       0,
-      "155ecd60ae0c75abadcad1cfaf27dba9"
+      "e4a57a504fddc2d167ea449138da6827"
     ],
     [
       "FStar.Real.add_comm",
@@ -299,7 +299,16 @@
       1,
       [ "@query" ],
       0,
-      "3d287e7a93e6cfb247e2b60faeac7cfb"
+      "163e24de6cfc9dc5ef2dd0b5a1f429c7"
+    ],
+    [
+      "FStar.Real.add_assoc",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "4d47b234690c9df637da83441b3d924e"
     ],
     [
       "FStar.Real.mul_comm",
@@ -308,7 +317,16 @@
       1,
       [ "@query" ],
       0,
-      "deb71e3f0e304addca16732d62e63c1b"
+      "ec099c34f1ad072c00a6925d7f7e9405"
+    ],
+    [
+      "FStar.Real.mul_assoc",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "806405450bb21c55c47906294110660a"
     ],
     [
       "FStar.Real.mul_dist",
@@ -317,7 +335,7 @@
       1,
       [ "@query" ],
       0,
-      "a856ad2b4802a61b6e85e8b68eb4d2f6"
+      "3e36daf8dfd5267cdf65426e1d517a6c"
     ]
   ]
 ]

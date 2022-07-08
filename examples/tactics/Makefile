@@ -1,17 +1,29 @@
-FSTAR_HOME=../..
-KREMLIN_HOME?=$(FSTAR_HOME)/../Kremlin
-INCLUDE_PATHS=$(KREMLIN_HOME)/kremlib
 # Poly files are here for benchmarking, and expected to fail without tactics
 EXCLUDED_FSTAR_FILES=Launch.fst CanonDeep.fst Poly1.fst Poly2.fst \
 		     StringPrinterTest.fst StringPrinterTest.Aux.fst NArrows.fst
 		     # ^ these last 3 should be fixed and restored
 
+ifndef KRML_HOME
+  EXCLUDED_FSTAR_FILES += $(wildcard StringPrinter*)
+endif
+
 FSTAR_FILES = $(filter-out $(EXCLUDED_FSTAR_FILES), $(wildcard *.fst))
 
-all: verify-all #stringprintertest
+all: verify-all eci19.all #stringprintertest
+
+%.all: %
+	+$(MAKE) -C $^ all
 
 $(CACHE_DIR):
 	mkdir -p $@
+
+ifdef KRML_HOME
+INCLUDE_PATHS+=$(KRML_HOME)/krmllib
+endif
+
+#shadowing of files because of implicitly opening a namespace
+#321: already cached
+OTHERFLAGS += --warn_error -274-321
 
 include ../Makefile.common
 
@@ -20,9 +32,9 @@ verify-all: $(CACHE_DIR) $(addsuffix .checked, $(addprefix $(CACHE_DIR)/, $(FSTA
 launch: Launch.fst
 	$(FSTAR) --unsafe_tactic_exec $^
 
-ifdef KREMLIN_HOME
+ifdef KRML_HOME
 stringprintertest: $(CACHE_DIR)
-	 [ ! -f $(KREMLIN_HOME)/krml ] || [ ! -x $(KREMLIN_HOME)/krml ] || $(KREMLIN_HOME)/krml -tmpdir stringprintertest -bundle 'StringPrinter.\*' -bundle StringPrinterTest.Aux -drop 'FStar.Tactics.\*' -drop 'FStar.Reflection.\*' StringPrinterTest.fst -skip-linking
+	 [ ! -f $(KRML_HOME)/krml ] || [ ! -x $(KRML_HOME)/krml ] || $(KRML_HOME)/krml -tmpdir stringprintertest -bundle 'StringPrinter.\*' -bundle StringPrinterTest.Aux -drop 'FStar.Tactics.\*' -drop 'FStar.Reflection.\*' StringPrinterTest.fst -skip-linking
 else
 stringprintertest:
 endif

@@ -1,0 +1,15 @@
+.PHONY: all verify-% __force__
+
+ifdef FSTAR_HOME
+   FSTAR_ULIB=$(FSTAR_HOME)/ulib
+   FSTAR_CONTRIB=$(FSTAR_HOME)/ucontrib
+else
+   # fstar.exe assumed to be in some bin/ directory
+   # included in the PATH (e.g. opam package, /usr or /usr/local)
+   FSTAR_PREFIX=$(dir $(shell which fstar.exe))/..
+   FSTAR_ULIB=$(FSTAR_PREFIX)/lib/fstar
+   FSTAR_CONTRIB=$(FSTAR_PREFIX)/share/fstar/contrib
+endif
+
+include $(FSTAR_ULIB)/gmake/z3.mk
+include $(FSTAR_ULIB)/gmake/fstar.mk

@@ -142,15 +142,17 @@ let bind_wp #a #b #s (wp_f:wp_t s a) (wp_g: (a -> wp_t s b))
 /// First, we define a domain-restricted version of function composition
 let ( *. ) #a #b #c (f:b -> c) (g:a -> b) : (a ^-> c) = F.on _ (fun x -> f (g x))
 
-/// An prove a auxiliary lemma about it (that's needed for funcitonal
+/// An prove a auxiliary lemma about it (that's needed for functional
 /// extensionality)
 let lem_on_comp #a #b #c (f:b -> c) (g:a -> b)
   : Lemma (F.on _ (f *. g) == f *. g)
   = ()
 
 /// We also rely on eta being a provable equality
-let eta (f:'a -> 'b) : Lemma (f == (fun x -> f x)) = ()
+/// AR: 05/11, eta is no longer provable, so admitting it
+let eta (a:Type) (b:Type) (f:a -> b) : Lemma (f == (fun x -> f x)) = admit()
 
+#push-options "--print_bound_var_types --print_implicits"
 /// Now, here's the main lemma of property (b).
 ///   stating at first using extensional equality
 let rec bind_wp_lem' (#a:Type u#aa) (#b:Type u#bb) (#s:_) (f:m s a) (g: (a -> m s b))
@@ -165,9 +167,6 @@ let rec bind_wp_lem' (#a:Type u#aa) (#b:Type u#bb) (#s:_) (f:m s a) (g: (a -> m 
                T.dump "B";
                let x = T.forall_intro () in
                T.dump "C";
-               // This should just be T.mapply (`eta), but the unifier
-               // will eagerly solve universe constraints and compute a
-               // wrong for the first universe level.
                T.mapply (quote (eta u#(max bb 1) u#1));
                T.dump "D")
 

@@ -1,11 +1,11 @@
 opam-version: "2.0"
-version: "0.9.7.0-alpha1"
+version: "2022.05.06~dev"
 maintainer: "taramana@microsoft.com"
 authors: "Nik Swamy <nswamy@microsoft.com>,Jonathan Protzenko <protz@microsoft.com>,Tahina Ramananandro <taramana@microsoft.com>"
 homepage: "http://fstar-lang.org"
 license: "Apache-2.0"
 depends: [
-  "ocaml" {>= "4.04.0" & < "4.10.0" }
+  "ocaml" {>= "4.07.0"}
   "ocamlfind"
   "batteries"
   "zarith"
@@ -15,36 +15,26 @@ depends: [
   "fileutils"
   "menhir" {>= "20161115" build}
   "pprint" {build}
-  "ulex" {build}
+  "sedlex" {build}
+  "ppxlib" {>= "0.22.0"}
   "ppx_deriving"
   "ppx_deriving_yojson"
   "process"
-  "ocaml-migrate-parsetree" {< "2.1.0"}
+  "z3" {= "4.8.5"}
 ]
 depexts: ["coreutils"] {os = "macos" & os-distribution = "homebrew"}
 build: [
-  [make "PREFIX=%{prefix}%" "-C" "src/ocaml-output"]
-  [make "PREFIX=%{prefix}%" "-C" "ulib" "install-fstarlib"]
-  [make "PREFIX=%{prefix}%" "-C" "ulib" "install-fstar-tactics"]
+  [make "PREFIX=%{prefix}%" "-j" jobs]
 ]
 install: [
-  [make "PREFIX=%{prefix}%" "-C" "src/ocaml-output" "install"]
+  [make "PREFIX=%{prefix}%" "install"]
 ]
 remove: [
-  [ "rm" "-rf"
-      "%{prefix}%/lib/fstar"
-      "%{prefix}%/doc/fstar"
-      "%{prefix}%/etc/fstar"
-      "%{prefix}%/bin/fstar.exe"
-      "%{prefix}%/share/fstar" ]
-  [ "ocamlfind" "remove" "fstarlib" ]
-  [ "ocamlfind" "remove" "fstar-compiler-lib" ]
-  [ "ocamlfind" "remove" "fstar-tactics-lib" ]
+  [make "PREFIX=%{prefix}%" "uninstall"]
 ]
 dev-repo: "git://github.com/FStarLang/FStar"
 bug-reports: "https://github.com/FStarLang/FStar/issues"
 synopsis: "Verification system for effectful programs"
-flags: light-uninstall
 url {
   src: "https://github.com/FStarLang/FStar/archive/V0.9.7.0-alpha1.zip"
   checksum: "md5=78414a6a5a0ca0c7770a43a36c5f31f7"

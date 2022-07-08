@@ -74,10 +74,11 @@ let unfold_fv (t: T.fv) : T.Tac T.term =
   match T.lookup_typ env n with
   | Some s ->
     begin match T.inspect_sigelt s with
-    | T.Sg_Let false _ _ _ def ->
+    | T.Sg_Let false [lb] ->
+      let lbv = T.inspect_lb lb in
       let nm = string_of_name n in
       T.debug ("Unfolded definition: " ^ nm);
-      def
+      T.(lbv.lb_def)
     | _ ->
       let nm = string_of_name n in
       tfail (nm ^ ": not a non-recursive let definition")
@@ -124,7 +125,7 @@ let rec imm_solve_goal (l: list (unit -> T.Tac unit)) : T.Tac unit =
       T.apply (`(FStar.Squash.return_squash));
       to_all_goals (fun () -> imm_solve_goal l);
       tsuccess "return_squash imm_solve"
-    );    
+    );
   ])
 
 let tforall_intro () = T.forall_intro ()
@@ -159,10 +160,10 @@ let rec solve_goal (l: list (unit -> T.Tac unit)) : T.Tac unit =
         if n > 2
         then
           tfail "There should be only at most 2 goals here"
-(*        
+(*
           let _ = T.divide 2 (fun () -> to_all_goals solve_goal) (fun () -> to_all_goals T.tadmit) in
           ()
-*)          
+*)
         else
           to_all_goals (fun () -> solve_goal l)
       | _ ->

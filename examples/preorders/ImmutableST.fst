@@ -49,7 +49,7 @@ let heap_rel (h0:heap) (h1:heap) =
    instance, in order to make sub-effecting to work. 
    Using (heap) and (heap_rel) for the statespace and 
    the relation on it, which otherwise would be given 
-   by parameters to the preorder-idndexed state monad.
+   by parameters to the preorder-indexed state monad.
 *)
 
 
@@ -174,7 +174,7 @@ let write_nop #a r x = ()
 
 
 (* Recall operation for recalling that any reference allocated in the past will still be allocated now. *)
-(* This is a bonus feature to the basic immutable behaviour of ImmutableST, resuling from the chosen encoding. *)
+(* This is a bonus feature to the basic immutable behaviour of ImmutableST, resulting from the chosen encoding. *)
 
 val recall : #a:Type -> 
              r:ref a -> 

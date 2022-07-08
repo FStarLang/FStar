@@ -111,9 +111,9 @@ let print_binders_info (full : bool) (e:env) : Tac unit =
 
 let acomp_to_string (c:comp) : Tot string =
   match inspect_comp c with
-  | C_Total ret decr ->
+  | C_Total ret _ decr ->
     "C_Total (" ^ term_to_string ret ^ ")"
-  | C_GTotal ret decr ->
+  | C_GTotal ret _ decr ->
     "C_GTotal (" ^ term_to_string ret ^ ")"
   | C_Lemma pre post patterns ->
     "C_Lemma (" ^ term_to_string pre ^ ") (" ^ term_to_string post ^ ")"
@@ -151,9 +151,9 @@ let term_view_construct (t : term_view) : Tac string =
   | Tv_Const _ -> "Tv_Const"
   | Tv_Uvar _ _ -> "Tv_Uvar"
   | Tv_Let _ _ _ _ _ -> "Tv_Let"
-  | Tv_Match _ _ -> "Tv_Match"
-  | Tv_AscribedT _ _ _ -> "Tv_AscribedT"
-  | Tv_AscribedC _ _ _ -> "Tv_AScribedC"
+  | Tv_Match _ _ _ -> "Tv_Match"
+  | Tv_AscribedT _ _ _ _ -> "Tv_AscribedT"
+  | Tv_AscribedC _ _ _ _ -> "Tv_AScribedC"
   | _ -> "Tv_Unknown"
 
 val term_construct (t : term) : Tac string
@@ -164,7 +164,7 @@ let term_construct (t : term) : Tac string =
 (*** Pretty printing *)
 /// There are many issues linked to terms (pretty) printing.
 /// The first issue is that when parsing terms, F* automatically inserts
-/// abscriptions, which then clutter the terms printed to the user. The current
+/// ascriptions, which then clutter the terms printed to the user. The current
 /// workaround is to filter those ascriptions in the terms before exploiting them.
 /// TODO: this actually doesn't work for some unknown reason: some terms like [a /\ b]
 /// become [l_and a b]...
@@ -175,8 +175,8 @@ let filter_ascriptions dbg t =
   print_dbg dbg ("[> filter_ascriptions: " ^ term_view_construct t ^ ": " ^ term_to_string t );
   visit_tm (fun t ->
     match inspect t with
-    | Tv_AscribedT e _ _
-    | Tv_AscribedC e _ _ -> e
+    | Tv_AscribedT e _ _ _
+    | Tv_AscribedC e _ _ _ -> e
     | _ -> t) t
 
 /// Our prettification function. Apply it to all the terms which might be printed
@@ -222,7 +222,7 @@ noeq type genv =
    * the previous and new memory states, and which may not be available in the user
    * context, or where we don't always know which variable to use.
    * In this case, whenever we output the term, we write its content as an
-   * asbtraction applied to those missing parameters. For instance, in the
+   * abstraction applied to those missing parameters. For instance, in the
    * case of the assertion introduced for a post-condition:
    * [> assert((fun h1 h2 -> post) h1 h2);
    * Besides the informative goal, the user can replace those parameters (h1
@@ -398,14 +398,14 @@ let norm_apply_subst_in_comp e c subst =
     | Q_Meta t -> Q_Meta (subst t)
   in
   match inspect_comp c with
-  | C_Total ret decr ->
+  | C_Total ret uopt decr ->
     let ret = subst ret in
-    let decr = opt_tapply subst decr in
-    pack_comp (C_Total ret decr)
-  | C_GTotal ret decr ->
+    let decr = map subst decr in
+    pack_comp (C_Total ret uopt decr)
+  | C_GTotal ret uopt decr ->
     let ret = subst ret in
-    let decr = opt_tapply subst decr in
-    pack_comp (C_GTotal ret decr)
+    let decr = map subst decr in
+    pack_comp (C_GTotal ret uopt decr)
   | C_Lemma pre post patterns ->
     let pre = subst pre in
     let post = subst post in
@@ -457,7 +457,7 @@ let rec deep_apply_subst e t subst =
     let br, subst = deep_apply_subst_in_binder e br subst in
     let c = deep_apply_subst_in_comp e c subst in
     pack (Tv_Arrow br c)
-  | Tv_Type () -> t
+  | Tv_Type _ -> t
   | Tv_Refine bv ref ->
     let bv, subst = deep_apply_subst_in_bv e bv subst in
     let ref = deep_apply_subst e ref subst in
@@ -470,8 +470,21 @@ let rec deep_apply_subst e t subst =
     let def = deep_apply_subst e def subst in
     let body = deep_apply_subst e body subst in
     pack (Tv_Let recf [] bv def body)
-  | Tv_Match scrutinee branches -> (* TODO: type of pattern variables *)
+  | Tv_Match scrutinee ret_opt branches -> (* TODO: type of pattern variables *)
     let scrutinee = deep_apply_subst e scrutinee subst in
+    let ret_opt = map_opt (fun (b, asc) ->
+      let b, subst = deep_apply_subst_in_binder e b subst in
+      let asc =
+        match asc with
+        | Inl t, tacopt, use_eq ->
+          Inl (deep_apply_subst e t subst),
+          map_opt (fun tac -> deep_apply_subst e tac subst) tacopt,
+          use_eq
+        | Inr c, tacopt, use_eq ->
+          Inr (deep_apply_subst_in_comp e c subst),
+          map_opt (fun tac -> deep_apply_subst e tac subst) tacopt,
+          use_eq in
+      b, asc) ret_opt in
     (* For the branches: we don't need to explore the patterns *)
     let deep_apply_subst_in_branch branch =
       let pat, tm = branch in
@@ -480,17 +493,17 @@ let rec deep_apply_subst e t subst =
       pat, tm
     in
     let branches = map deep_apply_subst_in_branch branches in
-    pack (Tv_Match scrutinee branches)
-  | Tv_AscribedT exp ty tac ->
+    pack (Tv_Match scrutinee ret_opt branches)
+  | Tv_AscribedT exp ty tac use_eq ->
     let exp = deep_apply_subst e exp subst in
     let ty = deep_apply_subst e ty subst in
     (* no need to apply it on the tactic - that we filter for safety *)
-    pack (Tv_AscribedT exp ty None)
-  | Tv_AscribedC exp c tac ->
+    pack (Tv_AscribedT exp ty None use_eq)
+  | Tv_AscribedC exp c tac use_eq ->
     let exp = deep_apply_subst e exp subst in
     let c = deep_apply_subst_in_comp e c subst in
     (* no need to apply it on the tactic - that we filter for safety *)
-    pack (Tv_AscribedC exp c None)
+    pack (Tv_AscribedC exp c None use_eq)
   | _ ->
     (* Unknown *)
     t
@@ -518,14 +531,14 @@ and deep_apply_subst_in_comp e c subst =
     | Q_Meta t -> Q_Meta (subst t)
   in
   match inspect_comp c with
-  | C_Total ret decr ->
+  | C_Total ret uopt decr ->
     let ret = subst ret in
-    let decr = opt_tapply subst decr in
-    pack_comp (C_Total ret decr)
-  | C_GTotal ret decr ->
+    let decr = map subst decr in
+    pack_comp (C_Total ret uopt decr)
+  | C_GTotal ret uopt decr ->
     let ret = subst ret in
-    let decr = opt_tapply subst decr in
-    pack_comp (C_GTotal ret decr)
+    let decr = map subst decr in
+    pack_comp (C_GTotal ret uopt decr)
   | C_Lemma pre post patterns ->
     let pre = subst pre in
     let post = subst post in

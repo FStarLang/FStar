@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "9320a027b0b807706be0eba543f0c022"
+      "7dc63c90566ef119b6f87e6e02173bc9"
     ],
     [
       "Ex12f.TMAC.mac",
@@ -28,7 +28,7 @@
         "token_correspondence_Ex12f.TMAC.bspec", "typing_FStar.UInt8.t"
       ],
       0,
-      "2c17386400cbe8ea525b36ea73aba468"
+      "68f08656cef6462f849dff2578d181f8"
     ],
     [
       "Ex12f.TMAC.verify",
@@ -49,7 +49,7 @@
         "typing_FStar.UInt8.t"
       ],
       0,
-      "0cff2e343a909dc448a65d34b40280fc"
+      "44334e135a259aee968d9e1e0d77cfdc"
     ]
   ]
 ]

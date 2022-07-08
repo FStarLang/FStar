@@ -198,7 +198,7 @@ assume val ec_gen_key: p:ec_params
                   length k.ec_point.ecx = ec_bytelen k.ec_params.curve /\
                   length k.ec_point.ecy = ec_bytelen k.ec_params.curve})
 
-//TODO: keep also abtsract OpenSSL representation for efficiency?
+//TODO: keep also abstract OpenSSL representation for efficiency?
 type key =
   | KeyRSA of rsa_key
   | KeyDSA of dsa_key

@@ -15,6 +15,8 @@ module RD   = FStar_Reflection_Data
 module EMB  = FStar_Syntax_Embeddings
 module NBET = FStar_TypeChecker_NBETerm
 
+type 'a __tac = ('a, unit) E.tac_repr
+
 let interpret_tac (t: 'a TM.tac) (ps: proofstate): 'a __result =
   TM.run t ps
 
@@ -31,10 +33,12 @@ let tr1 = function
           | ZetaFull       -> EMB.ZetaFull
           | Iota           -> EMB.Iota
           | NBE            -> EMB.NBE
+          | Unmeta         -> EMB.Unmeta
           | Reify          -> EMB.Reify
           | UnfoldOnly  ss -> EMB.UnfoldOnly ss
           | UnfoldFully ss -> EMB.UnfoldFully ss
           | UnfoldAttr  ss -> EMB.UnfoldAttr  ss
+          | UnfoldQual  ss -> EMB.UnfoldQual  ss
 let rt1 = function
           | EMB.Simpl          -> Simpl
           | EMB.Weak           -> Weak
@@ -45,10 +49,12 @@ let rt1 = function
           | EMB.ZetaFull       -> ZetaFull
           | EMB.Iota           -> Iota
           | EMB.NBE            -> NBE
+          | EMB.Unmeta         -> Unmeta
           | EMB.Reify          -> Reify
           | EMB.UnfoldOnly  ss -> UnfoldOnly ss
           | EMB.UnfoldFully ss -> UnfoldFully ss
           | EMB.UnfoldAttr  ss -> UnfoldAttr  ss
+          | EMB.UnfoldQual  ss -> UnfoldQual  ss
 
 (* the one plugins actually use *)
 let e_norm_step' : norm_step EMB.embedding =
@@ -99,7 +105,6 @@ let tc                      = from_tac_2 B.tc
 let tcc                     = from_tac_2 B.tcc
 let unshelve                = from_tac_1 B.unshelve
 let unquote                 = fun t -> failwith "Sorry, unquote does not work in compiled tactics"
-let trivial                 = from_tac_1 B.trivial
 let norm                    = fun s ->   from_tac_1 B.norm (tr_repr_steps s) (* TODO: somehow avoid translating steps? *)
 let norm_term_env           = fun e s -> from_tac_3 B.norm_term_env e (tr_repr_steps s)
 let norm_binder_type        = fun s ->   from_tac_2 B.norm_binder_type (tr_repr_steps s)
@@ -144,10 +149,10 @@ let set_urgency             = from_tac_1 B.set_urgency
 let t_commute_applied_match = from_tac_1 B.t_commute_applied_match
 
 (* sigh *)
-let fix_either (s : ('a, 'b) FStar_Util.either) : ('a, 'b) FStar_Pervasives.either =
+let fix_either (s : ('a, 'b) either) : ('a, 'b) either =
     match s with
-    | FStar_Util.Inl a -> FStar_Pervasives.Inl a
-    | FStar_Util.Inr b -> FStar_Pervasives.Inr b
+    | Inl a -> Inl a
+    | Inr b -> Inr b
 
 (* SIGH *)
 let fmap f r =

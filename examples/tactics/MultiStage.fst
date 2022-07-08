@@ -1,11 +1,15 @@
 module MultiStage
-
+open FStar.List.Tot
 open FStar.Tactics
 
 let tau1 () : Tac decls =
-  let se = pack_sigelt (Sg_Let false (pack_fv (cur_module () @ ["test1"])) []
-                               (`int)
-                               (`(synth (fun () -> dump "Running inner tactic 1"; exact (`42))))) in
+  let lb = pack_lb ({lb_fv = (pack_fv (cur_module () @ ["test1"]));
+                     lb_us = [];
+                     lb_typ = (`int);
+                     lb_def = (`(synth (fun () -> dump "Running inner tactic 1";
+                                exact (`42))))
+                    }) in
+  let se = pack_sigelt (Sg_Let false [lb]) in
   [se]
 
 %splice[test1] (tau1 ())
@@ -13,9 +17,13 @@ let _ = assert (test1 == 42)
 
 let tau2 () : Tac decls =
   let res : term = quote 42 in
-  let se = pack_sigelt (Sg_Let false (pack_fv (cur_module () @ ["test2"])) []
-                               (`int)
-                               (`(synth (fun () -> dump "Running inner tactic 2"; exact (`@res))))) in
+  let lb = pack_lb ({lb_fv = (pack_fv (cur_module () @ ["test2"]));
+                     lb_us = [];
+                     lb_typ = (`int);
+                     lb_def = (`(synth (fun () -> dump "Running inner tactic 2";
+                               exact (`@res))))
+                    }) in
+  let se = pack_sigelt (Sg_Let false [lb]) in
   [se]
 
 %splice[test2] (tau2 ())
@@ -23,10 +31,13 @@ let _ = assert (test2 == 42)
 
 let tau3 () : Tac decls =
   let res : term = quote 42 in
-  let se = pack_sigelt (Sg_Let false (pack_fv (cur_module () @ ["test3"])) []
-                               (`int)
-                               (`(_ by (dump "Running inner tactic 3";
-                                        exact (`@res))))) in
+  let lb = pack_lb ({lb_fv = (pack_fv (cur_module () @ ["test3"]));
+                     lb_us = [];
+                     lb_typ = (`int);
+                     lb_def = (`(_ by (dump "Running inner tactic 3";
+                                       exact (`@res))))
+                    }) in
+  let se = pack_sigelt (Sg_Let false [lb]) in
   [se]
 
 %splice[test3] (tau3 ())
@@ -49,11 +60,15 @@ let string_of_name = String.concat "."
 let tau5 () : Tac decls =
   let res : term = quote 42 in
   let f_name : name = ["a";"b";"c"] in
-  let se = pack_sigelt (Sg_Let false (pack_fv (cur_module () @ ["test5"])) []
-                               (`int)
-                               (`(_ by (dump ("Running inner tactic 5: " ^ (string_of_name (`@f_name)));
+  let lb = pack_lb ({lb_fv = (pack_fv (cur_module () @ ["test5"]));
+                     lb_us = [];
+                     lb_typ = (`int);
+                     lb_def =  (`(_ by (dump ("Running inner tactic 5: " ^
+                                              (string_of_name (`@f_name)));
                                         let x = 42 in
-                                        exact (quote 42))))) in
+                                        exact (quote 42))))
+                    }) in
+  let se = pack_sigelt (Sg_Let false [lb]) in
   [se]
 %splice[test5] (tau5 ())
 let _ = assert (test5 == 42)

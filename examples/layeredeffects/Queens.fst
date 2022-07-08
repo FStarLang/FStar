@@ -1,5 +1,6 @@
 module Queens
 
+open FStar.List.Tot
 open Alg
 
 (* A hacky way to extend the operations from Alg externally. *)

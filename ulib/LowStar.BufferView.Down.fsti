@@ -23,7 +23,7 @@ module LowStar.BufferView.Down
  * A "view" on a buffer is intended for specification purposes only
  * It does not correspond to a pointer cast in C.
  *
- * Building a down view requires providing a pair of mutally inverse functions
+ * Building a down view requires providing a pair of mutually inverse functions
  * from `a` to sequences of `b`. (e.g., from a `lbuffer u32 n` to a `lbuffer u8 (4*n)`)
  *
  * I.e., a down view allows "exploding" an `a` into its component `b`'s.
@@ -79,7 +79,7 @@ val buffer_view (src:Type0) (rrel rel:B.srel src) (dest:Type u#b) : Type u#b
 /// this means, for instance, that values of `buffer b` cannot be
 /// stored in the heap.
 ///
-/// We leave its defnition transparent in case clients wish to
+/// We leave its definition transparent in case clients wish to
 /// manipulate both the `src` and `dest` types explicitly (e.g., to
 /// stay in a lower universe)
 

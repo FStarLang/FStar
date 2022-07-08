@@ -197,7 +197,7 @@ let wallet_attack [n;x_h;k;x_l] h =
  wallet_attack_loop [n;x_h;k;x_l] h
 
 (* This does not verify, as expected
-//    Howver, also does not verify wieht x_h : Low, which should be fine *)
+//    However, also does not verify with x_h : Low, which should be fine *)
 (*
 // val verify_wallet_attack (n x_h k x_l : ref int):
 //   Lemma

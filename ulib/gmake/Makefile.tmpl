@@ -1,4 +1,4 @@
-.PHONY: verify-all basic_clean test test.kremlin test.ocaml
+.PHONY: verify-all basic_clean test test.karamel test.ocaml
 ################################################################################
 # Customize these variables for your project
 ################################################################################
@@ -22,7 +22,7 @@ OUTPUT_DIRECTORY ?= _output
 MY_FSTAR=$(FSTAR) --cache_checked_modules --odir $(OUTPUT_DIRECTORY)
 ML_FILES=$(addprefix $(OUTPUT_DIRECTORY)/,$(addsuffix .ml,$(subst .,_, $(subst .fst,,$(FSTAR_FILES)))))
 OCAML_EXE=$(PROGRAM).ocaml.exe
-KREMLIN_EXE=$(PROGRAM).exe
+KRML_EXE=$(PROGRAM).exe
 
 # a.fst.checked is the binary, checked version of a.fst
 %.fst.checked: %.fst
@@ -49,7 +49,7 @@ _tags:
 # Note, by default F* will extract all files in the dependency graph
 # With the --extract_module, we instruct it to just extract A.ml
 $(OUTPUT_DIRECTORY)/%.ml:
-	$(MY_FSTAR) $(subst .checked,,$<) --codegen OCaml --extract_module $(subst .fst.checked,,$<)
+	$(MY_FSTAR) $(subst .checked,,$(notdir $<)) --codegen OCaml --extract_module $(subst .fst.checked,,$(notdir $<))
 
 $(OCAML_EXE): _tags $(ML_FILES) $(TOP_LEVEL_FILE) $(FSTAR_HOME)/bin/fstarlib/fstarlib.cmxa
 	OCAMLPATH="$(FSTAR_HOME)/bin" ocamlbuild -I $(OUTPUT_DIRECTORY) -use-ocamlfind -pkg fstarlib $(subst .ml,.native,$(TOP_LEVEL_FILE))
@@ -61,22 +61,23 @@ test.ocaml: $(OCAML_EXE)
 $(OUTPUT_DIRECTORY)/c/out.krml: $(addsuffix .checked,$(FSTAR_FILES))
 	krml -fsopts --cache_checked_modules -tmpdir $(OUTPUT_DIRECTORY)/c -skip-translation $(FSTAR_FILES)
 
-$(KREMLIN_EXE): $(OUTPUT_DIRECTORY)/c/out.krml
+$(KRML_EXE): $(OUTPUT_DIRECTORY)/c/out.krml
 	krml $< -tmpdir $(OUTPUT_DIRECTORY)/c -no-prefix A -o $@
 
-test.kremlin: $(KREMLIN_EXE)
+test.karamel: $(KRML_EXE)
 	./$< hello
 
-test: test.kremlin test.ocaml
+test: test.karamel test.ocaml
 
 $(FSTAR_HOME)/bin/fstarlib/fstarlib.cmxa:
 	+$(MAKE) -C $(FSTAR_HOME)/ulib/ml
 
 basic_clean:
-	rm -rf _build $(OUTPUT_DIRECTORY) *~ *.checked $(OCAML_EXE) $(KREMLIN_EXE) .depend
+	rm -rf _build $(OUTPUT_DIRECTORY) *~ *.checked $(OCAML_EXE) $(KRML_EXE) .depend .depend.rsp
 
 .depend: $(FSTAR_FILES)
-	$(MY_FSTAR) --dep full $(addprefix --include , $(INCLUDE_PATHS)) $(FSTAR_FILES) > .depend
+	true $(shell rm -f .depend.rsp) $(foreach f,--dep full $(addprefix --include , $(INCLUDE_PATHS)) $(FSTAR_FILES),$(shell echo $(f) >> .depend.rsp))
+	$(MY_FSTAR) @.depend.rsp > .depend
 
 depend: .depend
 

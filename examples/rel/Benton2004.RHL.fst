@@ -95,7 +95,7 @@ let exp_to_gexp_eop
   [SMTPat (exp_to_gexp (eop op e1 e2) side)]
 = ()
 
-#set-options "--z3rlimit 2048 --max_fuel 8 --max_ifuel 8"
+#set-options "--z3rlimit 50 --max_fuel 2 --max_ifuel 1 --z3cliopt smt.qi.eager_threshold=100"
 
 let holds_gand (b1 b2 : gexp bool) : Lemma
   (forall s1 s2 . holds (interp (gand b1 b2)) s1 s2 <==> holds (interp b1) s1 s2 /\ holds (interp b2) s1 s2)
@@ -261,6 +261,11 @@ let r_sub
   [SMTPat (exec_equiv p1' p2' f f'); SMTPat (exec_equiv p1 p2 f f')]
 = d_csub (interp p1) (interp p2) (interp p1') (interp p2') f f'
 
+let elim_fuel_monotonic (fc:reified_computation) (s0:heap) (f0 f1:nat)
+  : Lemma (requires f0 <= f1 /\ fst (fc f0 s0))
+          (ensures fc f0 s0 == fc f1 s0)
+  = ()
+  
 let rec r_while_terminates'
   (b b' : exp bool)
   (c c' : computation)
@@ -297,6 +302,12 @@ let rec r_while_terminates'
     = let s1 = snd (fc fuel s0) in
       let s1' = snd (fc' fuel0 s0') in
       let fuel1 = fuel + fuel0 in
+      assert (fst (fc' fuel0 s0'));      
+      assert (terminates_equiv_reified (interp phi_c) fc fc');
+      assert (holds (interp phi_c) s0 s0');
+      assert (terminates_on fc s0);
+      elim_fuel_monotonic fc s0 fuel fuel1;
+      elim_fuel_monotonic fc' s0' fuel0 fuel1;
       assert (fc fuel1 s0 == fc fuel s0);
       assert (fc' fuel1 s0' == fc' fuel0 s0');
       r_while_terminates' b b' c c' phi phi_c phi_c' s1 s1' (fuel - 1);
@@ -307,6 +318,7 @@ let rec r_while_terminates'
         (ensures (terminates_on (f') s0'))
       = let fuel3 = fuel0 + fuel2 + 1 in
         assert (f' (fuel3 - 1) s1' == f' fuel2 s1');
+        reified_computation_elim fc' fuel0 fuel3 s0';
         assert (fc' fuel3 s0' == fc' fuel0 s0');
         assert (fst (f' fuel3 s0') == true)
       in

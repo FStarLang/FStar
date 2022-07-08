@@ -5,7 +5,7 @@ module FStar.Endianness
 ///
 /// The functions in this module aim to be as generic as possible, in order to
 /// facilitate compatibility with:
-/// - Vale's model of machine integers (nat64 et. al.), which does not rely on
+/// - Vale's model of machine integers (nat64 et al.), which does not rely on
 ///   FStar's machine integers
 /// - HACL*'s Lib.IntTypes module, which exposes a universal indexed integer
 ///   type but uses F* machine integers under the hood.
@@ -19,7 +19,7 @@ module FStar.Endianness
 ///
 /// .. note::
 ///
-///    This module supersedes the poorly-named ``FStar.Kremlin.Endianness``.
+///    This module supersedes the poorly-named ``FStar.Krml.Endianness``.
 
 module U8 = FStar.UInt8
 module U32 = FStar.UInt32
@@ -27,7 +27,7 @@ module U64 = FStar.UInt64
 module Math = FStar.Math.Lemmas
 module S = FStar.Seq
 
-[@@ noextract_to "Kremlin"]
+[@@ noextract_to "krml"]
 type bytes = S.seq U8.t
 
 open FStar.Mul
@@ -39,10 +39,10 @@ open FStar.Mul
 /// This is our spec, to be audited. From bytes to nat.
 
 /// lt_to_n interprets a byte sequence as a little-endian natural number
-val le_to_n : b:bytes -> Tot nat (decreases (S.length b))
+val le_to_n : b:bytes -> Tot nat
 
 /// be_to_n interprets a byte sequence as a big-endian natural number
-val be_to_n : b:bytes -> Tot nat (decreases (S.length b))
+val be_to_n : b:bytes -> Tot nat
 
 /// Induction for le_to_n and be_to_n
 

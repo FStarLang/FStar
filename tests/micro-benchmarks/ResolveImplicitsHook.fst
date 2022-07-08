@@ -48,8 +48,8 @@ val frame_delta (pre p post q : resource) : Type
 
 assume
 val frame2
-    (#[@@marker]pre #[@@marker]post #[@@marker]p #[@@marker]q : resource)
-    (#[@@marker]delta:frame_delta pre p post q)
+    (#[@@@marker]pre #[@@@marker]post #[@@@marker]p #[@@@marker]q : resource)
+    (#[@@@marker]delta:frame_delta pre p post q)
     (f:cmd p q)
   : cmd pre post
 
@@ -97,16 +97,6 @@ let test1 (b:bool)
   frame2 f4 >>
   frame2 f5
 
-//   // >>
-//   // (if b then
-//   //   frame2 f3 >>
-//   //   frame2 f4
-//   //  else frame2 f5)
-
-
-// #set-options "--print_implicits"
-
-
 assume
 val frame3
     (#pre #post #p #q : resource)
@@ -122,3 +112,42 @@ let test2
   frame3 f3 >>
   frame3 f4 >>
   frame3 f5
+
+
+[@@resolve_implicits;
+   marker]
+let resolve_tac_alt () : Tac unit =
+  T.dump "Start!";
+  if T.ngoals() = 45 then T.fail "Got 45 goals as expected; failing intentionally"
+  else T.admit_all()
+#push-options "--warn_error @348"
+
+[@@expect_failure [348;348;348;348;348;66]] //raises 348 for ambiguity in resolve_implicits
+let test3 (b:bool)
+  : cmd (r1 ** r2 ** r3 ** r4 ** r5)
+        (r1 ** r2 ** r3 ** r4 ** r5)
+  =
+  frame2 f1 >>
+  frame2 f2 >>
+  frame2 f3 >>
+  frame2 f4 >>
+  frame2 f5
+
+[@@resolve_implicits;
+   marker;
+   override_resolve_implicits_handler marker [`%resolve_tac; `%resolve_tac_alt]]
+let resolve_tac_alt_alt () : Tac unit =
+  T.dump "Start!";
+  if T.ngoals() = 45 then T.fail "Got 45 goals as expected; failing intentionally"
+  else T.admit_all()
+
+[@@expect_failure [228]] //intentional failure in resolve_tac_alt_alt
+let test3 (b:bool)
+  : cmd (r1 ** r2 ** r3 ** r4 ** r5)
+        (r1 ** r2 ** r3 ** r4 ** r5)
+  =
+  frame2 f1 >>
+  frame2 f2 >>
+  frame2 f3 >>
+  frame2 f4 >>
+  frame2 f5

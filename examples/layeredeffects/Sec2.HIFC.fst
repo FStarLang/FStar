@@ -1,4 +1,5 @@
 module Sec2.HIFC
+open FStar.List.Tot
 open FStar.Map
 let loc = int
 type store = m:Map.t loc int{forall l. contains m l}
@@ -416,7 +417,7 @@ let pre_bind (a b:Type)
     bind_ifc_flows_ok x y;
     f
 
-(* Incidentially, The IFC indexing structure is a monoid 
+(* Incidentally, The IFC indexing structure is a monoid
    under the label_equiv equivalence relation, making
    hifc a graded Hoare monad
 *)
@@ -709,7 +710,7 @@ let lift_PURE_HIFC (a:Type) (wp:pure_wp a) (f:eqtype_as_type unit -> PURE a wp)
   : Pure (hifc a bot bot [] (fun _ -> True) (fun s0 _ s1 -> s0 == s1))
       (requires wp (fun _ -> True))
       (ensures fun _ -> True)
-  = FStar.Monotonic.Pure.wp_monotonic_pure ();
+  = FStar.Monotonic.Pure.elim_pure_wp_monotonicity_forall ();
     return a (f ())
 sub_effect PURE ~> HIFC = lift_PURE_HIFC
 

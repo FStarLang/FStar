@@ -18,7 +18,8 @@ module Steel.Channel.Protocol
 
 type tag = | Send | Recv
 
-[@@erasable]
+// AF: Make it non erasable for now to implement duplex.PCM
+//[@@erasable]
 noeq
 type prot : Type -> Type =
 | Return  : #a:Type -> v:a -> prot a
@@ -84,6 +85,7 @@ let more_msgs (p:protocol 'a) : GTot bool = Msg? (hnf p)
 let next_msg_t (p:protocol 'a) : Type = match hnf p with | Msg _ a _ -> a | Return #a _ -> a
 let step (p:protocol 'a{more_msgs p}) (x:next_msg_t p) : protocol 'a = Msg?.k (hnf p) x
 
+
 noeq
 type trace : from:protocol unit -> to:protocol unit -> Type =
   | Waiting  : p:protocol unit -> trace p p
@@ -108,7 +110,7 @@ let rec last_step_of (#from #to:protocol unit)
 
    : Tot (q:protocol unit &
           x:next_msg_t q &
-          _:squash (more_msgs q /\to == step q x))
+          squash (more_msgs q /\to == step q x))
          (decreases t)
    = match t with
      | Message _ x _ (Waiting _) -> (| from , x, () |)

@@ -1,5 +1,5 @@
 [
-  "˜¾qã¾ã^_Da>)Ï^è",
+  "·ÀÌÜ9w>òwmUw\u0013ùßI",
   [
     [
       "SL.AutoTactic.memory_cm",
@@ -11,7 +11,7 @@
         "lemma_SL.Heap.lemma_sep_comm"
       ],
       0,
-      "5532fc290e15a969f9ee64b6e5e9a4ed"
+      "015146ce1984e0099308d74f574bee8d"
     ],
     [
       "SL.AutoTactic.frame_wp_lemma",
@@ -19,13 +19,14 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "eq2-interp", "equation_Prims.eq2",
-        "equation_Prims.l_imp", "equation_Prims.squash",
-        "equation_SL.Effect.frame_wp", "l_imp-interp",
-        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+        "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
+        "equation_SL.Effect.frame_wp",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
+        "refinement_interpretation_Tm_refine_7ba88047b4ce52e343e9c9efdedc95cb",
+        "refinement_interpretation_Tm_refine_a115bf9a6290b1e76702d9ff5be08d48"
       ],
       0,
-      "1548b4511a42661da0f8cd96e71f0d0f"
+      "de6b2d64c8e6b92af0158a23f22385e9"
     ],
     [
       "SL.AutoTactic.ite_wp_lemma",
@@ -38,7 +39,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "86d4baff28c817c18c31585843f6d969"
+      "508d50f23004bc1b9a79f4353885186e"
     ],
     [
       "SL.AutoTactic.if_then_else_wp_lemma",
@@ -46,13 +47,13 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.l_imp",
-        "equation_Prims.squash", "equation_SL.Effect.st_if_then_else",
-        "l_imp-interp", "l_not-interp",
-        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+        "@MaxIFuel_assumption", "@query",
+        "equation_SL.Effect.st_if_then_else",
+        "refinement_interpretation_Tm_refine_50c0b425b242d748dce7f54c63710850",
+        "refinement_interpretation_Tm_refine_ff1b22b8b4716d687c209a89e74e279f"
       ],
       0,
-      "aeeb1be79a215b1f5abcb848b52565a2"
+      "74795b8f6901ab53be82525d4bb04a13"
     ],
     [
       "SL.AutoTactic.close_wp_lemma",
@@ -60,13 +61,11 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.l_Forall",
-        "equation_Prims.squash", "equation_SL.Effect.st_close_wp",
-        "l_quant_interp_cc2d8ea4b793d81c1d17b922877488c9",
-        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+        "@MaxIFuel_assumption", "@query", "equation_SL.Effect.st_close_wp",
+        "refinement_interpretation_Tm_refine_19c36087eec74c9606aa52d8292d1b93"
       ],
       0,
-      "f91d2f2c53473e05b3460fe92b4bca0e"
+      "2b6bc3019183774bec05d2eb66910bef"
     ],
     [
       "SL.AutoTactic.sort_sl_correct",
@@ -84,7 +83,7 @@
         "token_correspondence_FStar.Tactics.CanonCommMonoid.sortWith"
       ],
       0,
-      "8055e382c8002a2a2bb0854e518984fa"
+      "5d628c160bd6514619746cb78e700ea4"
     ],
     [
       "SL.AutoTactic.__proj__Frame__item__ta",
@@ -98,7 +97,7 @@
         "refinement_interpretation_Tm_refine_2d47d28c80466f25c27aa06b4aa5a22b"
       ],
       0,
-      "66dc9a7b0ed29d1449f582c942e1a735"
+      "0744b96623675fa0cb3eed9eed3954dc"
     ],
     [
       "SL.AutoTactic.__proj__Frame__item__twp",
@@ -112,7 +111,7 @@
         "refinement_interpretation_Tm_refine_2d47d28c80466f25c27aa06b4aa5a22b"
       ],
       0,
-      "2c369c36fc34e4ab9d3b635fca6c202e"
+      "504a38b0035dd85442166c0c13d36100"
     ],
     [
       "SL.AutoTactic.__proj__Frame__item__tpost",
@@ -126,7 +125,7 @@
         "refinement_interpretation_Tm_refine_2d47d28c80466f25c27aa06b4aa5a22b"
       ],
       0,
-      "7b7916000bf218baf3ba4f1bb1a4ec73"
+      "3f47f73e22df6f3a4687b9ee5fe77609"
     ],
     [
       "SL.AutoTactic.__proj__Frame__item__tm",
@@ -140,7 +139,7 @@
         "refinement_interpretation_Tm_refine_2d47d28c80466f25c27aa06b4aa5a22b"
       ],
       0,
-      "18558f2008db1160ba54ec3c432d4d6c"
+      "bcf50b4acf1176d6030ba81e089f0be6"
     ],
     [
       "SL.AutoTactic.__proj__ParWP__item__twpa",
@@ -154,7 +153,7 @@
         "refinement_interpretation_Tm_refine_215fd0fa36578f49ef025a1f95319e74"
       ],
       0,
-      "520676335e3d57d8217e8aee773d1507"
+      "f12843339f69db6df8ba6266bf1c9642"
     ],
     [
       "SL.AutoTactic.__proj__ParWP__item__twpb",
@@ -168,7 +167,7 @@
         "refinement_interpretation_Tm_refine_215fd0fa36578f49ef025a1f95319e74"
       ],
       0,
-      "7c1239fe97050f83141638205b2283e9"
+      "ecb84e799fac110b88b4533794e988b4"
     ],
     [
       "SL.AutoTactic.__proj__ParWP__item__th0",
@@ -182,7 +181,7 @@
         "refinement_interpretation_Tm_refine_215fd0fa36578f49ef025a1f95319e74"
       ],
       0,
-      "4ed30b04e270d456dcb86b0cfb83fb05"
+      "f12cbb346b967d51d9953803da38eb27"
     ],
     [
       "SL.AutoTactic.__proj__Unknown__item___0",
@@ -196,7 +195,7 @@
         "refinement_interpretation_Tm_refine_ef99333c406db249fc03d4edb1fd9534"
       ],
       0,
-      "488abc08c57b67f9df25bb7c2587379a"
+      "9b0bebfb83d6916f6b29ffd90e75a203"
     ],
     [
       "SL.AutoTactic.__lem_eq_sides",
@@ -204,12 +203,11 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "eq2-interp", "equation_Prims.eq2",
-        "equation_Prims.squash",
-        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_0dee8cb03258a67c2f7ec66427696212"
       ],
       0,
-      "3782684e70b536bf6a8f709752cc0e62"
+      "677864b56b5ac834f083de4104852669"
     ],
     [
       "SL.AutoTactic.__and_elim",
@@ -217,13 +215,12 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.l_imp",
-        "equation_Prims.squash", "l_imp-interp",
-        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
-        "refinement_interpretation_Tm_refine_b88b26704ce5354755b4f9e280b3a2d9"
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_b88b26704ce5354755b4f9e280b3a2d9",
+        "refinement_interpretation_Tm_refine_fcbc0459912ef1a927da34909ee1ce81"
       ],
       0,
-      "cbead1bbf63d5a6d8022f7778348ccaf"
+      "fc2a5195f8538267badfb1dbb51c866e"
     ],
     [
       "SL.AutoTactic.__tcut",
@@ -231,12 +228,12 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.l_imp",
-        "equation_Prims.squash", "l_imp-interp",
-        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+        "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
+        "refinement_interpretation_Tm_refine_913239c2cf9dc8a14e1f047e0206138d"
       ],
       0,
-      "ad67886b03ea02eb39ded535c2cf3d69"
+      "5c489b5ac0d6704d68feb79873939f45"
     ],
     [
       "SL.AutoTactic.__elim_fp",
@@ -250,7 +247,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "e1d9c1e08b521bfabb50af529fcb1b5e"
+      "09a7043f7747a40f7ac2cb6e7561b563"
     ],
     [
       "SL.AutoTactic.__unif_helper",
@@ -259,7 +256,7 @@
       1,
       [ "@query", "lemma_SL.Heap.lemma_sep_unit" ],
       0,
-      "8a536d4c642f985a2a1749a478faaca1"
+      "9e095d3c2fa3c308b27c5e7c0ce1143d"
     ],
     [
       "SL.AutoTactic.find_frame",
@@ -292,48 +289,7 @@
         "typing_FStar.UInt.fits", "unit_typing"
       ],
       0,
-      "2a3f1fa2a059067ca2e6bdc38c00750e"
-    ],
-    [
-      "SL.AutoTactic.sl",
-      1,
-      2,
-      2,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_f537159ed795b314b4e58c260361ae86",
-        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
-        "SL.AutoTactic_pretyping_e388994c890f015715a80443ef70e71e",
-        "bool_inversion", "constructor_distinct_FStar.Tactics.Result.Failed",
-        "constructor_distinct_FStar.Tactics.Result.Success",
-        "data_elim_FStar.Tactics.Result.Success",
-        "data_typing_intro_SL.AutoTactic.Read@tok",
-        "disc_equation_FStar.Tactics.Result.Failed",
-        "disc_equation_FStar.Tactics.Result.Success",
-        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
-        "equation_FStar.UInt.fits", "equation_FStar.UInt32.n",
-        "equation_Prims.nat",
-        "fuel_guarded_inversion_FStar.Tactics.Result.__result",
-        "fuel_guarded_inversion_Prims.list",
-        "function_token_typing_FStar.Tactics.Types.goal",
-        "function_token_typing_FStar.UInt32.n",
-        "function_token_typing_Prims.unit", "int_typing",
-        "kinding_Prims.list@tok", "lemma_FStar.Tactics.Result.result_split",
-        "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_BoxInt_proj_0",
-        "projection_inverse_FStar.Tactics.Result.Failed_a",
-        "projection_inverse_FStar.Tactics.Result.Failed_exn",
-        "projection_inverse_FStar.Tactics.Result.Failed_ps",
-        "projection_inverse_FStar.Tactics.Result.Success_a",
-        "projection_inverse_FStar.Tactics.Result.Success_ps",
-        "projection_inverse_FStar.Tactics.Result.Success_v",
-        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
-        "typing_FStar.Tactics.Result.uu___is_Failed",
-        "typing_FStar.Tactics.Result.uu___is_Success",
-        "typing_FStar.UInt.fits", "unit_typing"
-      ],
-      0,
-      "60f883f9733cad9ef1b5f05128bb40e4"
+      "725e76e57d1282cc12471598c841e9c0"
     ],
     [
       "SL.AutoTactic.__elim_exists_as_forall",
@@ -341,14 +297,12 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.l_Forall",
-        "equation_Prims.squash",
-        "l_quant_interp_7fe9f76bf7c72566f3585997d6df6168",
-        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_52aaf47986f8078b3fe702da8e3e43f4",
         "refinement_interpretation_Tm_refine_df2d65c00128265e81a98d1694fa32db"
       ],
       0,
-      "8281e681af7f517600acf0885b2e41e3"
+      "b9c59607ae2a00c0e834ce7d7abc8bda"
     ]
   ]
 ]

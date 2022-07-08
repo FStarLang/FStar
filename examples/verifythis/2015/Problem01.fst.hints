@@ -15,7 +15,7 @@
         "refinement_kinding_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "f4cb837d3aef59c7c83ec5145befc405"
+      "4066555c6e704bd64a619c0db504e708"
     ],
     [
       "Problem01.prefix",
@@ -31,7 +31,7 @@
         "refinement_kinding_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "ddc84dcddaac0a1eef6601431772a89d"
+      "61735673fe1ceae42ac3fbd1ea083410"
     ],
     [
       "Problem01.prefix",
@@ -66,7 +66,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "146e5435a183e27bd5e0bc096cc8d373"
+      "d25d2fd426abcbc650bb15fc0c0bf664"
     ],
     [
       "Problem01.remove_elem_from_list",
@@ -95,7 +95,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "e67e19dfd99b9f664fcbf9da37915135"
+      "60a8c91a78dba044ba50885680e635b6"
     ],
     [
       "Problem01.test_prefix",
@@ -107,7 +107,7 @@
         "refinement_interpretation_Tm_refine_500911408eb15f82fac1b31c6fbc48ba"
       ],
       0,
-      "1147fee2fd8d0e7b2aa7e52862658def"
+      "16352b3b88fb28bb0412bccb8f3e7a49"
     ],
     [
       "Problem01.test_prefix",
@@ -119,7 +119,7 @@
         "refinement_interpretation_Tm_refine_500911408eb15f82fac1b31c6fbc48ba"
       ],
       0,
-      "a5e712ba5ea0f88e4df889b0de817517"
+      "f52264522268995888c04edb661b6fd3"
     ],
     [
       "Problem01.test_prefix",
@@ -132,11 +132,12 @@
         "@query", "binder_x_b46f9febde162e476374095e6787c208_0",
         "binder_x_b46f9febde162e476374095e6787c208_2",
         "binder_x_cead0a6ed392996b481ea4c63547a885_1", "equation_Prims.nat",
+        "equation_Prims.op_Equals_Equals_Equals",
         "equation_with_fuel_FStar.List.Tot.Base.length.fuel_instrumented",
         "fuel_guarded_inversion_Prims.list", "int_inversion", "int_typing",
         "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_066ec34605b99f46d413e3ab3b1e988e",
-        "refinement_interpretation_Tm_refine_335af5c3a02c136fd065fd0818074cd6",
+        "refinement_interpretation_Tm_refine_0cb1d842cc1a8dc8c2ab9b08d2d6140b",
         "refinement_interpretation_Tm_refine_500911408eb15f82fac1b31c6fbc48ba",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_f7dce0fb4d4620c1462f9a7589022c50",
@@ -144,7 +145,7 @@
         "typing_Problem01.test_prefix", "well-founded-ordering-on-nat"
       ],
       0,
-      "27420612c28573a84709a9d8c5ea5fdb"
+      "97968d8fad5e96a8566d2a5ff49bf1c5"
     ],
     [
       "Problem01.test_prefix_exists_to_b",
@@ -156,7 +157,7 @@
         "refinement_interpretation_Tm_refine_500911408eb15f82fac1b31c6fbc48ba"
       ],
       0,
-      "94a56f78d9edcb9f1ca8c7b48b34a96f"
+      "68f78a71157c8088cc375a537e8b43ba"
     ],
     [
       "Problem01.test_prefix_exists_to_b",
@@ -195,31 +196,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "61f0a451a20b3011558f67ba6c4b2746"
-    ],
-    [
-      "Problem01.test_prefix_exists_to_b",
-      3,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "refinement_interpretation_Tm_refine_500911408eb15f82fac1b31c6fbc48ba"
-      ],
-      0,
-      "a01d15925c46d192d896519527d15bbc"
-    ],
-    [
-      "Problem01.test_prefix_exists_to_b",
-      4,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "refinement_interpretation_Tm_refine_500911408eb15f82fac1b31c6fbc48ba"
-      ],
-      0,
-      "caaee09cb4bb0597328a18b428ca0a74"
+      "57bf756797e18f1aae427d1f78d7af01"
     ],
     [
       "Problem01.test_prefix_iff",
@@ -241,7 +218,7 @@
         "typing_Problem01.test_prefix"
       ],
       0,
-      "98a4272fe518c6d75f3a9b710836386b"
+      "a93cc26c4d1696a7c554c6dd63ecfe6d"
     ],
     [
       "Problem01.test_relaxed_prefix",
@@ -277,7 +254,7 @@
         "typing_Problem01.prefix", "typing_Problem01.test_prefix"
       ],
       0,
-      "9aaa890d8ee063aa2bd12d97f57af45d"
+      "73c901cce769661daed237e4923745ac"
     ]
   ]
 ]

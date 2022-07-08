@@ -17,12 +17,12 @@ module FStar.Universe
 
 (** This module implements some basic facilities to raise the universe of a type *
   * The type [raise_t a] is supposed to be isomorphic to [a] but in a higher     *
-  * universe. The two functions [raise_val] and [dowgrade_val] allow to coerce   *
+  * universe. The two functions [raise_val] and [downgrade_val] allow to coerce   *
   * from [a] to [raise_t a] and back.                                            **)
 
 
 (** [raise_t a] is an isomorphic copy of [a] (living in universe 'ua) in universe [max 'ua 'ub] **)
-val raise_t : Type u#a -> Type u#(max a b)
+val raise_t ([@@@ strictly_positive] _ : Type u#a) : Type u#(max a b)
 
 (** [raise_val x] injects a value [x] of type [a] to [raise_t a] **)
 val raise_val : #a:Type u#a -> x:a -> raise_t u#a u#b a

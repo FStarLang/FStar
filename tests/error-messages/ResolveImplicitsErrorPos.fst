@@ -8,7 +8,7 @@ let tag : unit = ()
 let tau () : Tac unit =
   fail "oops"
 
-let f (#[@@tag] x:int) : int = x
+let f (#[@@@tag] x:int) : int = x
 
 [@@expect_failure]
 let test () =

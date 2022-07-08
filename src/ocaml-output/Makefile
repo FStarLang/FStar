@@ -45,7 +45,6 @@ PREFIX=$(shell pwd)/fstar
 # The string "Madoko" if madoko is installed, something else otherwise.
 MADOKO = $(shell madoko --version 2>/dev/null | cut -c -6)
 DOS2UNIX=$(shell which dos2unix >/dev/null 2>&1 && echo dos2unix || echo true)
-PACKAGE_DOCS?=1
 
 # Detect the GNU utilities
 INSTALL_EXEC := $(shell ginstall --version 2>/dev/null | cut -c -8 | head -n 1)
@@ -62,7 +61,7 @@ OCAML_BRANCH=$(shell ocaml get_branch.ml)
 # Complete build: generate fstar.exe and derive a fresh F#-compatible parser
 # from our reference parser (i.e. ../parser/parse.mly) using Menhir (if
 # possible).
-all:  ../parser/parse.fsy ../../bin/fstar.exe ../../bin/fstar.ocaml ../../bin/tests.exe install-compiler-lib
+all:  ../../bin/fstar.exe ../../bin/fstar.ocaml ../../bin/tests.exe install-compiler-lib
 
 # We derive parse.mly in two ways:
 # - if we have menhir, we generate it from from the Menhir parser
@@ -79,34 +78,6 @@ else
 	$(error Correct version of menhir not found (needs a version newer than $(MENHIR_MIN_VERSION)))
 endif
 
-# This is about the F# parser, which we sed-transform from the parse.mly
-# obtained via the rule above.
-../parser/parse.fsy: parse.mly
-	$(Q)echo "%{" > $@
-	$(Q)echo "#light \"off\"" >> $@
-	$(Q)echo "// (c) Microsoft Corporation. All rights reserved" >> $@
-	$(Q)echo "open Prims" >> $@
-	$(Q)echo "open FStar" >> $@
-	$(Q)echo "open FStar.Errors" >> $@
-	$(Q)echo "open FStar.List" >> $@
-	$(Q)echo "open FStar.Util" >> $@
-	$(Q)echo "open FStar.Range" >> $@
-	$(Q)echo "open FStar.Options" >> $@
-	$(Q)echo "open FStar.Parser.Const" >> $@
-	$(Q)echo "open FStar.Parser.AST" >> $@
-	$(Q)echo "open FStar.Parser.Util" >> $@
-	$(Q)echo "open FStar.Const" >> $@
-	$(Q)echo "open FStar.Ident" >> $@
-	$(Q)echo "open FStar.String" >> $@
-	@# TODO : fsyacc seems to complain as soon as there is an arrow -> in a %type declaration...
-	$(Q)cat parse.mly | sed -e '/%{/d' \
-	                    -e '/^open /d' \
-	                    -e '/%token/s/[a-zA-Z0-9_]*\.//g' \
-	                    -e '/%type/s/[a-zA-Z0-9_]*\.//g' \
-	                    -e '/%token.*->.*/d' \
-	                    -e '/%type.*->.*/d' \
-	                  | cat -s >> $@
-
 # https://stackoverflow.com/questions/38294095/ocaml-how-to-solve-findlib-warnings-of-multiple-cmis
 FSTAR_MAIN_NATIVE=_build/src/fstar/ml/main.native
 $(FSTAR_MAIN_NATIVE): export OCAMLFIND_IGNORE_DUPS_IN = $(shell ocamlfind query compiler-libs)
@@ -115,9 +86,11 @@ $(FSTAR_MAIN_NATIVE): $(GENERATED_FILES)
 	$(Q)$(OCAMLBUILD) $(notdir $(FSTAR_MAIN_NATIVE)) FStar_Syntax_Syntax.inferred.mli
 
 ../../bin/fstar.exe: $(FSTAR_MAIN_NATIVE)
+	$(Q)rm -f $@
 	$(Q)cp $^ $@
 
 ../../bin/fstar.ocaml: $(FSTAR_MAIN_NATIVE)
+	$(Q)rm -f $@
 	$(Q)cp $^ $@
 
 install-compiler-lib: $(FSTAR_MAIN_NATIVE)
@@ -134,9 +107,9 @@ FStar_Parser_Parse.ml: parse.mly
 	@# open for the definition of tokens
 	$(Q)echo "open Prims" > $@
 	$(Q)echo "open FStar_Errors" >> $@
-	$(Q)echo "open FStar_List" >> $@
-	$(Q)echo "open FStar_Util" >> $@
-	$(Q)echo "open FStar_Range" >> $@
+	$(Q)echo "open FStar_Compiler_List" >> $@
+	$(Q)echo "open FStar_Compiler_Util" >> $@
+	$(Q)echo "open FStar_Compiler_Range" >> $@
 	$(Q)echo "open FStar_Options" >> $@
 	$(Q)echo "open FStar_Syntax_Syntax" >> $@
 	$(Q)echo "open FStar_Parser_Const" >> $@
@@ -186,7 +159,6 @@ COMMITDATE = $(shell git log --pretty=format:%ci -n 1 2>/dev/null || echo unset)
 .PHONY: FStar_Version.ml
 FStar_Version.ml:
 	@echo [MAKE      FStar_Version.ml]
-	$(Q)echo 'open FStar_Util' > $@
 	$(Q)echo 'let dummy () = ();;' >> $@
 	$(Q)echo 'FStar_Options._version := "$(VERSION)";;' >> $@
 	$(Q)echo 'FStar_Options._platform := "$(PLATFORM)";;' >> $@
@@ -251,40 +223,28 @@ else
   Z3_NAME=z3
 endif
 Z3_DIR=$(shell dirname $$(which $(Z3_NAME)))
-Z3_LICENSE=$(shell dirname $(Z3_DIR))/LICENSE.txt
+# Z3_LICENSE MUST be explicitly overridden if z3 is installed from an opam package.
+# See for instance $(FSTAR_HOME)/.docker/package.Dockerfile
+Z3_LICENSE?=$(shell dirname $(Z3_DIR))/LICENSE.txt
 
 # Create a zip / tar.gz package of FStar that contains a Z3 binary and
 # proper license files.
-package: all
+package:
 	@# Clean previous packages.
+	! [ -d "$(PREFIX)" ]
 	rm -f $(NAME).zip $(NAME).tar.gz
-	if [ -d "$(PREFIX)" ]; then rm -dfr fstar; fi
+	mkdir -p $(PREFIX)
 	@# Install the F* binary
-	mkdir -p $(PREFIX)/bin/
-	$(INSTALL_EXEC) -m 755 $(FSTAR_MAIN_NATIVE) $(PREFIX)/bin/fstar.exe
+	$(call fexport-all,bin)
 	@# Then the standard library.
-	$(call fexport,ulib)
-	$(INSTALL_EXEC) -m 644 ../../ulib/ml/FStar_Int*.ml $(PREFIX)/ulib/ml
-	$(INSTALL_EXEC) -m 644 ../../ulib/ml/FStar_UInt*.ml $(PREFIX)/ulib/ml
+	$(call fexport-all,ulib)
 	mkdir -p $(PREFIX)/src/ocaml-output/
 	cp ../../src/ocaml-output/FStar_Pervasives.ml $(PREFIX)/src/ocaml-output/
 	cp ../../version.txt $(PREFIX)/
 	cp ../../_tags $(PREFIX)/
 	cp ../../.common.mk $(PREFIX)/
 	@# Then the rest of the static files.
-	$(call fexport,examples)
-	$(call fexport,tests)
 	$(call fexport,ucontrib)
-	$(call fexport,doc/tutorial)
-ifeq ($(MADOKO),Madoko)
-	@# Build the tutorial
-	+$(MAKE) -C fstar/doc/tutorial
-else
-	@echo " ********** You don't have Madoko installed. Binary package will not include tutorial in html form."
-ifeq ($(PACKAGE_DOCS),1)
-	false
-endif
-endif
 	@# Documentation and licenses
 	cp ../../README.md ../../INSTALL.md ../../LICENSE ../../LICENSE-fsharp.txt $(PREFIX)
 	cp $(Z3_LICENSE) $(PREFIX)/LICENSE-z3.txt
@@ -299,6 +259,19 @@ else
 	tar czf $(NAME).tar.gz fstar
 endif
 
+# This rule produces the package into an archive file fstar.tar.gz (or
+# fstar.zip), whose filename does not contain the version and
+# platform, and stores the original file name into
+# version_platform.txt
+
+package_unknown_platform: package
+ifeq ($(OS),Windows_NT)
+	echo $(NAME).zip > version_platform.txt
+	mv $(NAME).tar.gz fstar.zip
+else
+	echo $(NAME).tar.gz > version_platform.txt
+	mv $(NAME).tar.gz fstar.tar.gz
+endif
 
 .PHONY: clean
 # Clean up all files generated by targets in _this_ Makefile

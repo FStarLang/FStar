@@ -132,7 +132,7 @@ let innerLoop n lo li res initres =
       memwrite li (liv+1);
       mark res (lov * liv)))
 
-    (*the part below has no computaional content; why does SMTPat not work?*)
+    (*the part below has no computational content; why does SMTPat not work?*)
       //let newv = memread res in
       //let lov = memread lo in
     (*      (multiplesMarkedAsDividesIff n initres newv lo) // how to invoke this lemma now? unlike previously, we cannot read a full Seq from an array

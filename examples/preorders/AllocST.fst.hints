@@ -1,5 +1,5 @@
 [
-  "êØ\u0013ªÍˇ\u0002µC!#*Q·9®",
+  "¯Ÿ©Ñ√7rÊﬂtÿC6é%\u0017",
   [
     [
       "AllocST.contains_lemma",
@@ -8,10 +8,10 @@
       1,
       [ "@query", "equation_AllocST.contains" ],
       0,
-      "d0f65e118e4bd4219ed8a30338cf6a52"
+      "a6d01926a389e34b0bd8d6a1de5241b1"
     ],
     [
-      "AllocST.1705",
+      "AllocST.1632",
       1,
       2,
       1,
@@ -23,25 +23,25 @@
         "token_correspondence_AllocST.heap_rel"
       ],
       0,
-      "7b8f3fc4dd0bc6f7217e16204a43bbf5"
-    ],
-    [
-      "AllocST.ist_witnessed",
-      1,
-      2,
-      1,
-      [
-        "@query", "equation_AllocST.heap_rel",
-        "equation_FStar.Preorder.preorder_rel",
-        "equation_FStar.Preorder.reflexive",
-        "equation_FStar.Preorder.transitive",
-        "token_correspondence_AllocST.heap_rel"
-      ],
-      0,
-      "1369a17bcc0f46579671a36ea699abcf"
+      "ded96c19cef80e938af6ba8675e19c9c"
     ],
     [
       "AllocST.ist_witnessed",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_AllocST.heap_rel",
+        "equation_FStar.Preorder.preorder_rel",
+        "equation_FStar.Preorder.reflexive",
+        "equation_FStar.Preorder.transitive",
+        "token_correspondence_AllocST.heap_rel"
+      ],
+      0,
+      "64d495f6eb388b26b468fa9c2e92c6c8"
+    ],
+    [
+      "AllocST.ist_witnessed",
       2,
       2,
       1,
@@ -53,7 +53,7 @@
         "token_correspondence_AllocST.heap_rel"
       ],
       0,
-      "dd1b1a928f2ebe7d2bc01b26a2b14fc3"
+      "4e167d063621975246c5a10920c7d091"
     ],
     [
       "AllocST.ist_witness",
@@ -68,7 +68,7 @@
         "token_correspondence_AllocST.heap_rel"
       ],
       0,
-      "330820d50a691123f22e0455eeac4062"
+      "694c42010771562e83a69bd940f01483"
     ],
     [
       "AllocST.ist_recall",
@@ -83,7 +83,7 @@
         "token_correspondence_AllocST.heap_rel"
       ],
       0,
-      "4acd6351a06f6baab89ea5941dd5997f"
+      "ad32ae8e76806ba84ae4d1cb935059c2"
     ],
     [
       "AllocST.ref",
@@ -97,7 +97,7 @@
         "token_correspondence_AllocST.heap_rel"
       ],
       0,
-      "1d65cf42962132c862f718f75fa68163"
+      "0ac0323a051b287c25c17b48e17d8f2a"
     ],
     [
       "AllocST.alloc",
@@ -117,7 +117,7 @@
         "typing_FStar.Pervasives.Native.snd", "typing_NatHeap.ref"
       ],
       0,
-      "18c5ff0a54b78e171a9bc303a79c71ac"
+      "5cb2f23c024b9a038787d42dea5f188b"
     ],
     [
       "AllocST.read",
@@ -126,7 +126,7 @@
       1,
       [ "@query", "equation_AllocST.contains" ],
       0,
-      "df7ebe25800cbcd86c2f3a4fcf342207"
+      "01f1df8d456394b193b5839f790b671b"
     ],
     [
       "AllocST.read",
@@ -142,7 +142,7 @@
         "token_correspondence_AllocST.heap_rel"
       ],
       0,
-      "56d51c1e8518bea9b86812fe90216e94"
+      "b1205bf3e7b08a31f2e5b1aa6bba4189"
     ],
     [
       "AllocST.write",
@@ -151,7 +151,7 @@
       1,
       [ "@query", "equation_AllocST.contains" ],
       0,
-      "7a440666df2fe2d52cd7939d46833bef"
+      "e4566036d62946345cf4ff2eb54c5a8b"
     ],
     [
       "AllocST.write",
@@ -162,14 +162,14 @@
         "@MaxIFuel_assumption", "@query", "equation_AllocST.contains",
         "equation_AllocST.heap_rel", "equation_AllocST.ref",
         "equation_FStar.Preorder.stable", "lemma_AllocST.contains_lemma",
-        "refinement_interpretation_Tm_refine_85621f6b13017c7f48eb2b0b56d56485",
+        "refinement_interpretation_Tm_refine_4289597b21978a2daf74d6c05a34b053",
         "refinement_interpretation_Tm_refine_a8458d0cd2385c727af0fa1002df0eb2",
         "refinement_interpretation_Tm_refine_bd8b23217d2ca10ddfdabbb5d0948e96",
         "token_correspondence_AllocST.contains",
         "token_correspondence_AllocST.heap_rel"
       ],
       0,
-      "bcb962003d1d4465baa3777a60793af2"
+      "04f3cf8eaf84d509726c2791fed76cb6"
     ],
     [
       "AllocST.recall",
@@ -184,7 +184,7 @@
         "token_correspondence_AllocST.heap_rel"
       ],
       0,
-      "f55902b3bbe2eb4f78a35ef01a4d232c"
+      "cd604960fa9c00a492b02c292056be4c"
     ]
   ]
 ]

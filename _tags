@@ -11,10 +11,11 @@ true: \
   package(batteries), \
   package(zarith), \
   package(ppx_deriving.std), \
-  package(ppx_deriving_yojson)
+  package(ppx_deriving_yojson), \
+  package(stdint)
 
 # ADL: the new unicode lexer
-"src/parser/ml/FStar_Parser_LexFStar.ml": syntax(camlp4o)
+"src/parser/ml/FStar_Parser_LexFStar.ml": package(sedlex.ppx)
 
 # ADL: Please do not enable compiler-libs unless absolutely necessary
 <src/*/ml/*> or <src/ocaml-output/*.ml>: \
@@ -23,10 +24,10 @@ true: \
   package(menhirLib), \
   package(dynlink), \
   package(pprint), \
-  package(ulex), \
+  package(sedlex), \
   package(stdint), \
   package(yojson), \
-  package(ocaml-migrate-parsetree), \
+  package(ppxlib), \
   package(process)
 
 # This ensures that main.native bundles its dependencies, which dynlinked tactics might need.
@@ -37,11 +38,8 @@ true: \
 <src/ocaml-output/**/*.ml> or <ulib/**/extracted/*.ml> or <ulib/tactics_ml/fstarlib_leftovers/*.ml> or <ulib/ml/*.ml>: \
   warn(-8-11-20-21-26-28)
 
-<ulib/ml/FStar_{U,}Int*.ml>  or "ulib/ml/fstarlib.cma": \
+<ulib/ml/FStar_{U,}Int*.ml> or "ulib/ml/fstarlib.cma": \
   package(stdint)
-
-"ulib/ml/fstarlib.cma": \
-  linkpkg
 
 <ulib/tactics_ml/**/*.ml>: \
   package(fstar-compiler-lib)

@@ -45,7 +45,7 @@ sub_effect {
 ////////////////////////////////////////////////////////////////////////////////
 reifiable reflectable new_effect { 
   ST : a:Type -> wp:st_wp a -> Effect
-  with //repr is new; it's the reprentation of ST as a value type
+  with //repr is new; it's the representation of ST as a value type
        repr (a:Type) (wp:pure_wp a) = n0:nat -> PURE (a * nat) (fun post -> wp (fun a n -> post (a, n)) n0)
       //bind_wp is exactly as it is currently
       //produced by the *-translation of bind above

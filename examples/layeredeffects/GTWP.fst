@@ -2,6 +2,7 @@ module GTWP
 
 open FStar.Tactics
 open FStar.Universe
+open FStar.Monotonic.Pure
 
 type idx =
  | T
@@ -13,16 +14,12 @@ let coerce #a #b (x:a{a == b}) : b = x
 
 // GM: Warning: the [unfold]s here are important.
 
-unfold
-let monotonic #a (wp : pure_wp a) =
-  forall p1 p2. (forall x. p1 x ==> p2 x) ==> wp p1 ==> wp p2
-
-let wp (a:Type) =
- w:(pure_wp a){monotonic w}
+let wp (a:Type) = pure_wp a
 
 unfold
 let bind_wp #a #b (wc : wp a) (wf : a -> wp b) : wp b =
-  fun p -> wc (fun x -> wf x p)
+  elim_pure_wp_monotonicity_forall ();
+  as_pure_wp (fun p -> wc (fun x -> wf x p))
 
 let m (a:Type u#aa) (i:idx) (w : wp a) : Type u#aa =
   match i with
@@ -30,12 +27,12 @@ let m (a:Type u#aa) (i:idx) (w : wp a) : Type u#aa =
   | G -> unit -> GHOST a w
   | D -> raise_t (unit -> DIV a w)
 
-let t_return #a (x:a) : m a T (fun p -> p x) = (fun () -> x)
-let g_return #a (x:a) : m a G (fun p -> p x) = (fun () -> x)
-let d_return #a (x:a) : m a D (fun p -> p x) = raise_val (fun () -> x)
+let t_return #a (x:a) : m a T (as_pure_wp (fun p -> p x)) = (fun () -> x)
+let g_return #a (x:a) : m a G (as_pure_wp (fun p -> p x)) = (fun () -> x)
+let d_return #a (x:a) : m a D (as_pure_wp (fun p -> p x)) = raise_val (fun () -> x)
 
 let return_wp #a (x:a) : wp a =
- fun p -> p x
+  as_pure_wp (fun p -> p x)
 
 let return (a:Type) (x:a) (i:idx) : m a i (return_wp x) =
   match i with
@@ -44,14 +41,15 @@ let return (a:Type) (x:a) (i:idx) : m a i (return_wp x) =
   | D -> coerce (d_return x)
 
 // these two rely on monotonicity since the computed WP is not exactly bind_wp
-let t_bind #a #b #wc #wf (c : m a T wc) (f : (x:a -> m b T (wf x))) : m b T (bind_wp wc wf) = fun () -> f (c ()) ()
-let g_bind #a #b #wc #wf (c : m a G wc) (f : (x:a -> m b G (wf x))) : m b G (bind_wp wc wf) = fun () -> f (c ()) ()
+let t_bind #a #b #wc #wf (c : m a T wc) (f : (x:a -> m b T (wf x))) : m b T (bind_wp wc wf) = elim_pure_wp_monotonicity_forall (); fun () -> f (c ()) ()
+let g_bind #a #b #wc #wf (c : m a G wc) (f : (x:a -> m b G (wf x))) : m b G (bind_wp wc wf) = elim_pure_wp_monotonicity_forall (); fun () -> f (c ()) ()
 
 let d_bind #a #b #wc #wf (c : m a D wc) (f : (x:a -> m b D (wf x))) : m b D (bind_wp wc wf) =
   raise_val (fun () -> let y = downgrade_val c () in // cannot inline this
                     downgrade_val (f y) ())
 
 let bind (a b : Type) wc wf (i:idx) (c : m a i wc) (f : (x:a -> m b i (wf x))) : m b i (bind_wp wc wf) =
+  elim_pure_wp_monotonicity_forall ();
   match i with
   | T -> t_bind #_ #_ #wc #wf c f
   | G -> g_bind #_ #_ #wc #wf c f
@@ -70,7 +68,8 @@ let subcomp (a:Type) (i:idx) (wp1 : wp a)
      | D -> coerce f
 
 let ite_wp #a (w1 w2 : wp a) (b:bool) : wp a =
-  fun p -> if b then w1 p else w2 p
+  elim_pure_wp_monotonicity_forall ();
+  as_pure_wp (fun p -> if b then w1 p else w2 p)
 
 let if_then_else (a:Type) (i:idx) (w1 w2 : wp a)
                           (f : m a i w1)
@@ -96,14 +95,15 @@ layered_effect {
   if_then_else = if_then_else
 }
 
-let unmon #a (w:wp a) : pure_wp a = fun p -> w p
+let unmon #a (w:wp a) : pure_wp a = elim_pure_wp_monotonicity_forall (); as_pure_wp (fun p -> w p)
 
 let lift_pure_gtd (a:Type) (w : wp a) (i : idx)
                   (f : eqtype_as_type unit -> PURE a (unmon w))
                  : Pure (m a i w)
                         (requires True)
                         (ensures (fun _ -> True))
- = match i with
+ = elim_pure_wp_monotonicity_forall ();
+   match i with
    | T -> f
    | G -> f
    | D -> let f' () : DIV a w = f () in
@@ -124,11 +124,10 @@ sub_effect PURE ~> GTD = lift_pure_gtd
 //  | x::xs -> (f x)::(map f xs)
 
 unfold
-let null_wp0 (a:Type) : pure_wp a = fun p -> forall x. p x
+let null_wp0 (a:Type) : pure_wp a = as_pure_wp (fun p -> forall x. p x)
 
 unfold
 let null_wp  (a:Type) : wp a =
-  assert_norm (monotonic (null_wp0 a));
   null_wp0 a
 
 effect Gtd (a:Type) (i:idx) = GTD a i (null_wp a)

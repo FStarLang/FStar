@@ -11,3 +11,39 @@ type e_nat_3 = unit
 
 
 type e_unit_5 = unit
+type ('a, 'uuuuu) repr = 'a
+let return : 'a . 'a -> ('a, unit) repr = fun x -> x
+let bind :
+  'a 'b . ('a, unit) repr -> ('a -> ('b, unit) repr) -> ('b, unit) repr =
+  fun f -> fun g -> g f
+
+
+let lift_PURE_MPURE : 'a 'wp . (unit -> 'a) -> ('a, unit) repr =
+  fun f -> f ()
+let (f_mpure : unit -> Prims.int) =
+  fun uu___ -> failwith "Not yet implemented:f_mpure"
+let (eff_test1 : unit -> Prims.int) = fun uu___ -> f_mpure ()
+
+let (eff_test3 : unit -> Prims.int) =
+  fun n -> let uu___ = f_mpure () in uu___ + (Prims.of_int (2))
+let (eff_test4 : unit -> Prims.int) =
+  fun uu___ ->
+    let y = f_mpure () in
+    let uu___1 = let uu___2 = eff_test3 () in uu___2 + y in
+    uu___1 + (Prims.of_int (2))
+let (eff_test5 : Prims.bool -> Prims.int) =
+  fun b ->
+    if b
+    then eff_test4 ()
+    else (let uu___ = eff_test3 () in uu___ + (Prims.of_int (2)))
+let (eff_test6 : Prims.bool -> Prims.int) = fun b -> eff_test3 ()
+let lift_MGHOST_MDIV : 'a . ('a, unit) repr -> ('a, unit) repr = fun f -> f
+let (f_mdiv : unit -> Prims.int) =
+  fun uu___ -> failwith "Not yet implemented:f_mdiv"
+let (eff_test7 : unit -> Prims.int) = fun uu___ -> f_mdiv ()
+let bind_PURE_M1 :
+  'a 'b 'wp . (unit -> 'a) -> ('a -> ('b, unit) repr) -> ('b, unit) repr =
+  fun f -> fun g -> g (f ())
+let (f_m1 : unit -> Prims.int) =
+  fun uu___ -> failwith "Not yet implemented:f_m1"
+

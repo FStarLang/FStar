@@ -1,5 +1,5 @@
 [
-  "æ\u0010ÂWEà5ö\u001bã/\"I3%\r",
+  "¹\u0018ˆ|\u001a\u001bôq&?õÊQA.›",
   [
     [
       "LowParseWriters.NoHoare.read_return_conv",
@@ -25,7 +25,7 @@
         "typing_LowParseWriters.__proj__Mkmemory_invariant__item__lwrite"
       ],
       0,
-      "fc0d69efac820a6b947491c7db52aa87"
+      "f0f28f03983106811d60ec186c792af8"
     ],
     [
       "LowParseWriters.NoHoare.read_return",
@@ -51,7 +51,7 @@
         "typing_LowParseWriters.__proj__Mkmemory_invariant__item__lwrite"
       ],
       0,
-      "0caaa75a36cd4cdada79c547bc2bfdc5"
+      "6d50bb385221db159c7f6606b6c757ad"
     ],
     [
       "LowParseWriters.NoHoare.read_bind_conv",
@@ -77,7 +77,7 @@
         "typing_LowParseWriters.__proj__Mkmemory_invariant__item__lwrite"
       ],
       0,
-      "6dc42ce40f17ab0120e6781cc76b846d"
+      "1cc23d9fb52ec646bcba3bd0ce4c7f68"
     ],
     [
       "LowParseWriters.NoHoare.read_bind",
@@ -103,7 +103,7 @@
         "typing_LowParseWriters.__proj__Mkmemory_invariant__item__lwrite"
       ],
       0,
-      "03f4c695bd785996b5c122b0a514e734"
+      "703d66dc3be041791f37cdf1b936cced"
     ],
     [
       "LowParseWriters.NoHoare.read_subcomp_conv",
@@ -111,12 +111,11 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "b2t_def", "equation_Prims.l_and",
-        "equation_Prims.squash", "l_and-interp",
-        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_b8d40235e77ed96ff0ed3dc65b9756b5"
       ],
       0,
-      "f6b072e534685f63b5be9a39e0c768b2"
+      "26e5e6cc0096bba3bf8341a452643e12"
     ],
     [
       "LowParseWriters.NoHoare.read_subcomp",
@@ -140,7 +139,7 @@
         "typing_LowParseWriters.__proj__Mkmemory_invariant__item__lwrite"
       ],
       0,
-      "66aad7b32dce168357253643fbea4a89"
+      "66b49cbc5f562c07a1b44668aae3b907"
     ],
     [
       "LowParseWriters.NoHoare.TRead",
@@ -166,7 +165,7 @@
         "typing_LowParseWriters.__proj__Mkmemory_invariant__item__lwrite"
       ],
       0,
-      "9f40b69768c0de607be2e49fa79fd050"
+      "97c46195f3e6fd4015182c9393eed672"
     ],
     [
       "LowParseWriters.NoHoare.TRead",
@@ -192,7 +191,7 @@
         "typing_LowParseWriters.__proj__Mkmemory_invariant__item__lwrite"
       ],
       0,
-      "2981776daf5fc8c7cb66517dcc8d7795"
+      "5ef25b8df47102119f29e97ad64111ec"
     ],
     [
       "LowParseWriters.NoHoare.lift_pure_read_conv",
@@ -219,7 +218,7 @@
         "typing_LowParseWriters.__proj__Mkmemory_invariant__item__lwrite"
       ],
       0,
-      "4e0c95682bbdad8ece6d7d28f1eb1dc9"
+      "4e11aab9689b3c228fa27806c5a89e95"
     ],
     [
       "LowParseWriters.NoHoare.lift_pure_read'",
@@ -245,7 +244,7 @@
         "typing_LowParseWriters.__proj__Mkmemory_invariant__item__lwrite"
       ],
       0,
-      "764e213b1874166b8034d097891462a3"
+      "8bc437968c2689828bc7d6127087d257"
     ],
     [
       "LowParseWriters.NoHoare.tread_of_eread",
@@ -271,7 +270,7 @@
         "typing_LowParseWriters.__proj__Mkmemory_invariant__item__lwrite"
       ],
       0,
-      "a7f77499be7723866b666946385030ec"
+      "eb35663cb2a0f178b916aa71497cc6a4"
     ],
     [
       "LowParseWriters.NoHoare.failwith",
@@ -297,7 +296,7 @@
         "typing_LowParseWriters.__proj__Mkmemory_invariant__item__lwrite"
       ],
       0,
-      "853096fde9bf16b5c41168eb5d795d74"
+      "4475658196e6381f036972eb611c95c5"
     ],
     [
       "LowParseWriters.NoHoare.buffer_index",
@@ -323,7 +322,7 @@
         "typing_LowParseWriters.__proj__Mkmemory_invariant__item__lwrite"
       ],
       0,
-      "52cca863f3e512c365ab3110644bb89c"
+      "02c52c6297840deb0f0def12e8b6549a"
     ],
     [
       "LowParseWriters.NoHoare.buffer_sub",
@@ -349,7 +348,7 @@
         "typing_LowParseWriters.__proj__Mkmemory_invariant__item__lwrite"
       ],
       0,
-      "71ab233f9d72c49cfce943fe96387e2f"
+      "2a0a48276a8fcc35fab83ef6f3442291"
     ],
     [
       "LowParseWriters.NoHoare.return_conv",
@@ -375,7 +374,7 @@
         "typing_LowParseWriters.__proj__Mkmemory_invariant__item__lwrite"
       ],
       0,
-      "d4a7797469565c950079218b2047f0ea"
+      "4f9980040e13c6eab1475b62e74da623"
     ],
     [
       "LowParseWriters.NoHoare.returnc",
@@ -401,7 +400,7 @@
         "typing_LowParseWriters.__proj__Mkmemory_invariant__item__lwrite"
       ],
       0,
-      "f2739af0ff7e42ce1c48e500f2b02b4c"
+      "faebe128ebe05edc7fbd98051e0a8e6a"
     ],
     [
       "LowParseWriters.NoHoare.bind_conv",
@@ -427,7 +426,7 @@
         "typing_LowParseWriters.__proj__Mkmemory_invariant__item__lwrite"
       ],
       0,
-      "c21b135679396229f74875467852d5c6"
+      "d86c0dba9fd330c0c3ef231767561b4b"
     ],
     [
       "LowParseWriters.NoHoare.bind",
@@ -453,19 +452,7 @@
         "typing_LowParseWriters.__proj__Mkmemory_invariant__item__lwrite"
       ],
       0,
-      "1ead231913c1091d8a8f41f3b8d95813"
-    ],
-    [
-      "LowParseWriters.NoHoare.__proj__ValidSynth__item__v",
-      1,
-      2,
-      1,
-      [
-        "@query", "proj_equation_LowParseWriters.NoHoare.ValidSynth_f",
-        "projection_inverse_LowParseWriters.NoHoare.ValidSynth_f"
-      ],
-      0,
-      "57f68a0ebd42a0bfe6bc0b16bd2b0448"
+      "1319c5a207517a67725c7714da221832"
     ],
     [
       "LowParseWriters.NoHoare.tvalid_rewrite_of_evalid_rewrite",
@@ -479,7 +466,7 @@
         "refinement_interpretation_Tm_refine_caa5e59828280ff65970f26faf0172b5"
       ],
       0,
-      "e50ea571b534fb63360a15b314f67dc0"
+      "f569927ccf8d5c8dcafcbd6b020d69fe"
     ],
     [
       "LowParseWriters.NoHoare.evalid_rewrite_of_tvalid_rewrite_f",
@@ -500,7 +487,7 @@
         "typing_tok_Prims.T@tok"
       ],
       0,
-      "fd2580c0f9771426855e7bb20a60425a"
+      "fa6c1984f205095b0aefd9e4b731036d"
     ],
     [
       "LowParseWriters.NoHoare.evalid_rewrite_of_tvalid_rewrite",
@@ -522,7 +509,7 @@
         "typing_tok_Prims.T@tok", "unit_inversion"
       ],
       0,
-      "5ec1e04fac1156972e130a37fd11685d"
+      "c6739a98c31a4520e4bce73e3ff4cca9"
     ],
     [
       "LowParseWriters.NoHoare.valid_rewrite_refl",
@@ -534,7 +521,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "70bca665079cce1c598e3077bfd9f86e"
+      "5971ab1133fad10156678a2d82e4822d"
     ],
     [
       "LowParseWriters.NoHoare.valid_rewrite_repr",
@@ -560,7 +547,7 @@
         "typing_LowParseWriters.__proj__Mkmemory_invariant__item__lwrite"
       ],
       0,
-      "2c1b8e4c470a108cfb257cb1eca0c914"
+      "7cf1ee4b26d16b1eeb6ac1836b840b57"
     ],
     [
       "LowParseWriters.NoHoare.subcomp_conv",
@@ -568,12 +555,11 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "b2t_def", "equation_Prims.l_and",
-        "equation_Prims.squash", "l_and-interp",
-        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_b8d40235e77ed96ff0ed3dc65b9756b5"
       ],
       0,
-      "0b06bbd2205959b46f3e7eb1e9afaf00"
+      "2c6474546d4aae45ab54c8aca6feba09"
     ],
     [
       "LowParseWriters.NoHoare.subcomp1",
@@ -597,7 +583,7 @@
         "typing_LowParseWriters.__proj__Mkmemory_invariant__item__lwrite"
       ],
       0,
-      "8b33278524e3d82f8abe2b2e15cbb5fb"
+      "cf0c6f4b3c4e0626575df08c9a10de1e"
     ],
     [
       "LowParseWriters.NoHoare.subcomp2",
@@ -606,7 +592,7 @@
       1,
       [ "@query" ],
       0,
-      "74cf6944f34d82f37ab503b237af0e9b"
+      "937d197ed8e71d42ae22abbe2d38bd08"
     ],
     [
       "LowParseWriters.NoHoare.subcomp",
@@ -615,7 +601,7 @@
       1,
       [ "@query" ],
       0,
-      "20d793b0e0389f5cc392934ecd9bf824"
+      "eeb76b69aff74feb6ef4f9ecd01ec460"
     ],
     [
       "LowParseWriters.NoHoare.TWrite",
@@ -643,7 +629,7 @@
         "typing_LowParseWriters.__proj__Mkmemory_invariant__item__lwrite"
       ],
       0,
-      "bc23ad682b9e2a13b6b17ac76db4c206"
+      "5d55664e1b1df9b5f6a47cfa21347ede"
     ],
     [
       "LowParseWriters.NoHoare.TWrite",
@@ -671,7 +657,7 @@
         "typing_LowParseWriters.__proj__Mkmemory_invariant__item__lwrite"
       ],
       0,
-      "50fad3f967c53614858eb844bd462e1d"
+      "0ed39e7685823938886988d68dc53ead"
     ],
     [
       "LowParseWriters.NoHoare.lift_read_conv",
@@ -697,7 +683,7 @@
         "typing_LowParseWriters.__proj__Mkmemory_invariant__item__lwrite"
       ],
       0,
-      "61a5bd53e135f21a89e26de7759fb68f"
+      "e066bcb2c454cbba8328ec915cfc3f0b"
     ],
     [
       "LowParseWriters.NoHoare.lift_read",
@@ -723,7 +709,7 @@
         "typing_LowParseWriters.__proj__Mkmemory_invariant__item__lwrite"
       ],
       0,
-      "b6e5fb7a9202ce205a7eff589595891e"
+      "044d6678222c72b61c6863f0347e1aa6"
     ],
     [
       "LowParseWriters.NoHoare.extract_t",
@@ -732,35 +718,7 @@
       1,
       [ "@query" ],
       0,
-      "5376840bceb3f873a22f51b451b9a9d0"
-    ],
-    [
-      "LowParseWriters.NoHoare.extract",
-      1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "equation_FStar.Monotonic.HyperStack.mem",
-        "fuel_guarded_inversion_LowParseWriters.LowParse.parser",
-        "fuel_guarded_inversion_LowParseWriters.memory_invariant",
-        "function_token_typing_LowStar.Monotonic.Buffer.loc",
-        "lemma_FStar.Monotonic.HyperHeap.lemma_includes_refl",
-        "lemma_LowParseWriters.NoHoare.valid_rewrite_refl",
-        "lemma_LowStar.Monotonic.Buffer.loc_includes_refl",
-        "lemma_LowStar.Monotonic.Buffer.modifies_refl",
-        "proj_equation_LowParseWriters.Mkmemory_invariant_h0",
-        "proj_equation_LowParseWriters.Mkmemory_invariant_lwrite",
-        "refinement_interpretation_Tm_refine_05e15190c946858f68c69156f585f95a",
-        "refinement_interpretation_Tm_refine_5b9a203b368d218992597479d37abec5",
-        "refinement_kinding_Tm_refine_05e15190c946858f68c69156f585f95a",
-        "typing_FStar.Ghost.reveal",
-        "typing_FStar.Monotonic.HyperStack.get_tip",
-        "typing_LowParseWriters.__proj__Mkmemory_invariant__item__h0",
-        "typing_LowParseWriters.__proj__Mkmemory_invariant__item__lwrite"
-      ],
-      0,
-      "b3b2a2a03c6b337ef86c9cd3ea8b57b0"
+      "76a4e0696ca6dd40cf27f656e6ae2207"
     ],
     [
       "LowParseWriters.NoHoare.bind_spec'",
@@ -773,7 +731,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "f8dae6571a29570a1e77cdc163c14eab"
+      "5a35848583ea8eae5f021f9096905ad4"
     ],
     [
       "LowParseWriters.NoHoare.bind_spec2",
@@ -786,7 +744,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "856421b7bc6449e8a6a70a2ec9ca46e6"
+      "6d77faa3c4befe44aa5dc60dcbfb5e2c"
     ],
     [
       "LowParseWriters.NoHoare.bind_impl'",
@@ -814,7 +772,7 @@
         "typing_LowParseWriters.__proj__Mkmemory_invariant__item__lwrite"
       ],
       0,
-      "27df8bab3a4d3ca192e0283bbc91c135"
+      "d24cb8d685d695020aa16752c64b7d30"
     ],
     [
       "LowParseWriters.NoHoare.twrite_of_ewrite",
@@ -840,7 +798,7 @@
         "typing_LowParseWriters.__proj__Mkmemory_invariant__item__lwrite"
       ],
       0,
-      "1d6b41e02e14e0d90b3f445a977512c9"
+      "7eb8633975ac1d32f40479d9b053e4ff"
     ],
     [
       "LowParseWriters.NoHoare.wfailwith",
@@ -868,7 +826,7 @@
         "typing_LowParseWriters.__proj__Mkmemory_invariant__item__lwrite"
       ],
       0,
-      "59047f39796323c1b71a841730b224b6"
+      "c95617240f2b9cdab6657e73669f7a0c"
     ],
     [
       "LowParseWriters.NoHoare.frame",
@@ -897,7 +855,7 @@
         "typing_LowParseWriters.__proj__Mkmemory_invariant__item__lwrite"
       ],
       0,
-      "b1e484124f385f86350c8f18526aa87d"
+      "52aa7e12f6905ce6194ac4cf3c3a0029"
     ],
     [
       "LowParseWriters.NoHoare.valid_rewrite",
@@ -925,7 +883,7 @@
         "typing_LowParseWriters.__proj__Mkmemory_invariant__item__lwrite"
       ],
       0,
-      "27611dc7f49ad4321a7c6fb887412f92"
+      "744258d4bf593d1d7566ab618cab7fea"
     ],
     [
       "LowParseWriters.NoHoare.cat",
@@ -953,7 +911,7 @@
         "typing_LowParseWriters.__proj__Mkmemory_invariant__item__lwrite"
       ],
       0,
-      "51c0a1e10123abfd0c71f315c82ddc81"
+      "aa39d60558f8d0db788830cec0f5f400"
     ]
   ]
 ]

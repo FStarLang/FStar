@@ -34,6 +34,86 @@ let ambient #_ _ = True
 
 let intro_ambient #_ _ = ()
 
+let normalize_term #_ x = x
+
+let normalize a = a
+
+noeq
+type norm_step =
+  | Simpl // Logical simplification, e.g., [P /\ True ~> P]
+  | Weak // Weak reduction: Do not reduce under binders
+  | HNF // Head normal form
+  | Primops // Reduce primitive operators, e.g., [1 + 1 ~> 2]
+  | Delta // Unfold all non-recursive definitions
+  | Zeta // Unroll recursive calls
+  | ZetaFull // Unroll recursive calls fully
+  | Iota // Reduce case analysis (i.e., match)
+  | NBE // Use normalization-by-evaluation, instead of interpretation (experimental)
+  | Reify // Reify effectful definitions into their representations
+  | UnfoldOnly : list string -> norm_step // Unlike Delta, unfold definitions for only the given
+  // names, each string is a fully qualified name
+  // like `A.M.f`
+  // idem
+  | UnfoldFully : list string -> norm_step
+  | UnfoldAttr : list string -> norm_step // Unfold definitions marked with the given attributes
+  | UnfoldQual : list string -> norm_step
+  | Unmeta : norm_step
+
+irreducible
+let simplify = Simpl
+
+irreducible
+let weak = Weak
+
+irreducible
+let hnf = HNF
+
+irreducible
+let primops = Primops
+
+irreducible
+let delta = Delta
+
+irreducible
+let zeta = Zeta
+
+irreducible
+let zeta_full = ZetaFull
+
+irreducible
+let iota = Iota
+
+irreducible
+let nbe = NBE
+
+irreducible
+let reify_ = Reify
+
+irreducible
+let delta_only s = UnfoldOnly s
+
+irreducible
+let delta_fully s = UnfoldFully s
+
+irreducible
+let delta_attr s = UnfoldAttr s
+
+irreducible
+let delta_qualifier s = UnfoldAttr s
+
+irreducible
+let unmeta = Unmeta
+
+let norm _ #_ x = x
+
+let assert_norm _ = ()
+
+let normalize_term_spec #_ _ = ()
+
+let normalize_spec _ = ()
+
+let norm_spec _ #_ _ = ()
+
 let inversion _ = True
 
 let allow_inversion _ = ()
@@ -60,13 +140,15 @@ let expect_lax_failure _ = ()
 
 let tcdecltime = ()
 
-let assume_strictly_positive = ()
-
 let unifier_hint_injective = ()
 
 let strict_on_arguments _ = ()
 
 let resolve_implicits = ()
+
+let override_resolve_implicits_handler #a x l = ()
+
+let handle_smt_goals = ()
 
 let erasable = ()
 
@@ -76,64 +158,16 @@ let commute_nested_matches = ()
 
 let noextract_to _ = ()
 
-let normalize_term #_ x = x
+let normalize_for_extraction _ = ()
 
-let normalize a = a
+let ite_soundness_by = ()
 
-noeq
-type norm_step =
-  | Simpl // Logical simplification, e.g., [P /\ True ~> P]
-  | Weak // Weak reduction: Do not reduce under binders
-  | HNF // Head normal form
-  | Primops // Reduce primitive operators, e.g., [1 + 1 ~> 2]
-  | Delta // Unfold all non-recursive definitions
-  | Zeta // Unroll recursive calls
-  | ZetaFull // Unroll recursive calls fully
-  | Iota // Reduce case analysis (i.e., match)
-  | NBE // Use normalization-by-evaluation, instead of interpretation (experimental)
-  | Reify // Reify effectful definitions into their representations
-  | UnfoldOnly : list string -> norm_step // Unlike Delta, unfold definitions for only the given
-  // names, each string is a fully qualified name
-  // like `A.M.f`
-  // idem
-  | UnfoldFully : list string -> norm_step
-  | UnfoldAttr : list string -> norm_step // Unfold definitions marked with the given attributes
+let default_effect _ = ()
+let bind_has_range_args = ()
 
-let simplify = Simpl
+let strictly_positive = ()
 
-let weak = Weak
-
-let hnf = HNF
-
-let primops = Primops
-
-let delta = Delta
-
-let zeta = Zeta
-
-let zeta_full = ZetaFull
-
-let iota = Iota
-
-let nbe = NBE
-
-let reify_ = Reify
-
-let delta_only s = UnfoldOnly s
-
-let delta_fully s = UnfoldFully s
-
-let delta_attr s = UnfoldAttr s
-
-let norm _ #_ x = x
-
-let assert_norm _ = ()
-
-let normalize_term_spec #_ _ = ()
-
-let normalize_spec _ = ()
-
-let norm_spec _ #_ _ = ()
+let no_auto_projectors = ()
 
 let singleton #_ x = x
 

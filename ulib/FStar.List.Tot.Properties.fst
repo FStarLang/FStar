@@ -201,7 +201,7 @@ let rec append_length_inv_head
   (decreases left1)
 = match left1 with
   | [] -> ()
-  | _ :: left1' ->    
+  | _ :: left1' ->
     append_length_inv_head left1' right1 (tl left2) right2
 
 let append_length_inv_tail
@@ -213,6 +213,24 @@ let append_length_inv_tail
 = append_length left1 right1;
   append_length left2 right2;
   append_length_inv_head left1 right1 left2 right2
+
+let append_injective #a (l0 l0':list a)
+                        (l1 l1':list a)
+  : Lemma
+    (ensures
+      (length l0 == length l0' \/ length l1 == length l1') /\
+      append l0 l1 == append l0' l1' ==>
+      l0 == l0' /\ l1 == l1')
+   = introduce
+         ((length l0 == length l0' \/ length l1 == length l1') /\
+          append l0 l1 == append l0' l1')
+          ==>
+         (l0 == l0' /\ l1 == l1')
+     with _. eliminate (length l0 == length l0') \/
+                       (length l1 == length l1')
+     returns _
+     with _. append_length_inv_head l0 l1 l0' l1'
+     and  _. append_length_inv_tail l0 l1 l0' l1'
 
 (** The [last] element of a list remains the same, even after that list is
     [append]ed to another list. *)
@@ -343,9 +361,9 @@ let rec lemma_unsnoc_append (#a:Type) (l1 l2:list a) :
   Lemma
     (requires (length l2 > 0)) // the [length l2 = 0] is trivial
     (ensures (
-        let as, a = unsnoc (l1 @ l2) in
-        let bs, b = unsnoc l2 in
-        as == l1 @ bs /\ a == b)) =
+        let al, a = unsnoc (l1 @ l2) in
+        let bl, b = unsnoc l2 in
+        al == l1 @ bl /\ a == b)) =
   match l1 with
   | [] -> ()
   | _ :: l1' -> lemma_unsnoc_append l1' l2
@@ -381,11 +399,11 @@ let rec split_using (#t:Type) (l:list t) (x:t{x `memP` l}) :
   GTot (list t * list t) =
   match l with
   | [_] -> [], l
-  | a :: as ->
+  | a :: rest ->
     if FStar.StrongExcludedMiddle.strong_excluded_middle (a == x) then (
       [], l
     ) else (
-      let l1', l2' = split_using as x in
+      let l1', l2' = split_using rest x in
       a :: l1', l2'
     )
 
@@ -399,7 +417,7 @@ let rec lemma_split_using (#t:Type) (l:list t) (x:t{x `memP` l}) :
         append l1 l2 == l)) =
   match l with
   | [_] -> ()
-  | a :: as ->
+  | a :: rest ->
     let goal =
       let l1, l2 = split_using l x in
         length l2 > 0 /\
@@ -411,7 +429,7 @@ let rec lemma_split_using (#t:Type) (l:list t) (x:t{x `memP` l}) :
       #_ #_
       #(fun () -> goal)
       (fun (_:squash (a == x)) -> ())
-      (fun (_:squash (x `memP` as)) -> lemma_split_using as x)
+      (fun (_:squash (x `memP` rest)) -> lemma_split_using rest x)
 
 (** Definition of [index_of] *)
 
@@ -422,11 +440,11 @@ let rec index_of (#t:Type) (l:list t) (x:t{x `memP` l}) :
   GTot (i:nat{i < length l /\ index l i == x}) =
   match l with
   | [_] -> 0
-  | a :: as ->
+  | a :: rest ->
     if FStar.StrongExcludedMiddle.strong_excluded_middle (a == x) then (
       0
     ) else (
-      1 + index_of as x
+      1 + index_of rest x
     )
 
 (** Properties about partition **)
@@ -438,7 +456,7 @@ val partition_mem: #a:eqtype -> f:(a -> Tot bool)
                   -> x:a
                   -> Lemma (requires True)
                           (ensures (let l1, l2 = partition f l in
-			            mem x l = (mem x l1 || mem x l2)))
+                                    mem x l = (mem x l1 || mem x l2)))
 let rec partition_mem #a f l x = match l with
   | [] -> ()
   | hd::tl -> partition_mem f tl x
@@ -507,7 +525,8 @@ let rec sortWith_permutation #a f l = match l with
        append_count_forall (sortWith f lo) (pivot::sortWith f hi)
 
 (** [sorted f l] holds if, and only if, any two consecutive elements
-[x], [y] of [l] are such that [f x y] holds. *)
+    [x], [y] of [l] are such that [f x y] holds
+ *)
 val sorted: ('a -> 'a -> Tot bool) -> list 'a -> Tot bool
 let rec sorted f = function
   | []
@@ -876,107 +895,107 @@ let index_extensionality
   (ensures (l1 == l2))
 = index_extensionality_aux l1 l2 () (fun i -> ())
 
-(** Properties of [strict_prefix_of] *)
+(** Properties of [strict_suffix_of] *)
 
-let rec strict_prefix_of_nil (#a: Type) (x: a) (l: list a)
+let rec strict_suffix_of_nil (#a: Type) (x: a) (l: list a)
 : Lemma
   (requires True)
-  (ensures (strict_prefix_of [] (x::l)))
+  (ensures (strict_suffix_of [] (x::l)))
   (decreases l)
 = match l with
   | [] -> ()
-  | a' :: q -> strict_prefix_of_nil a' q
+  | a' :: q -> strict_suffix_of_nil a' q
 
-let strict_prefix_of_or_eq_nil (#a: Type) (l: list a)
+let strict_suffix_of_or_eq_nil (#a: Type) (l: list a)
 : Lemma
-  (ensures (strict_prefix_of [] l \/ l == []))
+  (ensures (strict_suffix_of [] l \/ l == []))
 = match l with
   | [] -> ()
-  | a :: q -> strict_prefix_of_nil a q
+  | a :: q -> strict_suffix_of_nil a q
 
-let strict_prefix_of_cons (#a: Type) (x: a) (l: list a) :
+let strict_suffix_of_cons (#a: Type) (x: a) (l: list a) :
   Lemma
-  (ensures (strict_prefix_of l (x::l)))
+  (ensures (strict_suffix_of l (x::l)))
 = ()
 
-let rec strict_prefix_of_trans (#a: Type) (l1 l2 l3: list a)
+let rec strict_suffix_of_trans (#a: Type) (l1 l2 l3: list a)
 : Lemma
   (requires True)
-  (ensures ((strict_prefix_of l1 l2 /\ strict_prefix_of l2 l3) ==> strict_prefix_of l1 l3))
+  (ensures ((strict_suffix_of l1 l2 /\ strict_suffix_of l2 l3) ==> strict_suffix_of l1 l3))
   (decreases l3)
-  [SMTPat (strict_prefix_of l1 l2); SMTPat (strict_prefix_of l2 l3)]
+  [SMTPat (strict_suffix_of l1 l2); SMTPat (strict_suffix_of l2 l3)]
 = match l3 with
   | [] -> ()
-  | _ :: q -> strict_prefix_of_trans l1 l2 q
+  | _ :: q -> strict_suffix_of_trans l1 l2 q
 
-let rec strict_prefix_of_correct (#a) (l1 l2: list a)
+let rec strict_suffix_of_correct (#a) (l1 l2: list a)
 : Lemma
   (requires True)
-  (ensures (strict_prefix_of l1 l2 ==> l1 << l2))
+  (ensures (strict_suffix_of l1 l2 ==> l1 << l2))
   (decreases l2)
 = match l2 with
   | [] -> ()
   | _ :: q ->
-    strict_prefix_of_correct l1 q
+    strict_suffix_of_correct l1 q
 
-let rec map_strict_prefix_of (#a #b: Type) (f: a -> Tot b) (l1: list a) (l2: list a) :
+let rec map_strict_suffix_of (#a #b: Type) (f: a -> Tot b) (l1: list a) (l2: list a) :
  Lemma
  (requires True)
- (ensures (strict_prefix_of l1 l2 ==> strict_prefix_of (map f l1) (map f l2)))
+ (ensures (strict_suffix_of l1 l2 ==> strict_suffix_of (map f l1) (map f l2)))
  (decreases l2)
 = match l2 with
   | [] -> ()
   | a::q ->
-    map_strict_prefix_of f l1 q
+    map_strict_suffix_of f l1 q
 
-let rec mem_strict_prefix_of (#a: eqtype) (l1: list a) (m: a) (l2: list a)
+let rec mem_strict_suffix_of (#a: eqtype) (l1: list a) (m: a) (l2: list a)
 : Lemma
   (requires True)
-  (ensures ((mem m l1 /\ strict_prefix_of l1 l2) ==> mem m l2))
+  (ensures ((mem m l1 /\ strict_suffix_of l1 l2) ==> mem m l2))
 = match l2 with
   | [] -> ()
   | a :: q ->
-    mem_strict_prefix_of l1 m q
+    mem_strict_suffix_of l1 m q
 
-let rec strict_prefix_of_exists_append
+let rec strict_suffix_of_exists_append
   (#a: Type)
   (l1 l2: list a)
 : Lemma
-  (ensures (strict_prefix_of l1 l2 ==> (exists l3 . l2 == append l3 l1)))
+  (ensures (strict_suffix_of l1 l2 ==> (exists l3 . l2 == append l3 l1)))
 = match l2 with
   | [] -> ()
   | a :: q ->
     FStar.Classical.or_elim
       #(l1 == q)
-      #(strict_prefix_of l1 q)
+      #(strict_suffix_of l1 q)
       #(fun _ -> exists l3 . l2 == append l3 l1)
       (fun _ ->
-	FStar.Classical.exists_intro (fun l3 -> l2 == append l3 l1) (a :: []))
+        FStar.Classical.exists_intro (fun l3 -> l2 == append l3 l1) (a :: []))
       (fun _ ->
-	FStar.Classical.exists_elim
-	  (exists l3 . l2 == append l3 l1)
-	  #_
-	  #(fun l3 -> q == append l3 l1)
-	  (strict_prefix_of_exists_append l1 q)
-	  (fun l3 ->
-	     FStar.Classical.exists_intro (fun l3 -> l2 == append l3 l1) (a :: l3)
-	     ))
+        FStar.Classical.exists_elim
+          (exists l3 . l2 == append l3 l1)
+          #_
+          #(fun l3 -> q == append l3 l1)
+          (strict_suffix_of_exists_append l1 q)
+          (fun l3 ->
+             FStar.Classical.exists_intro (fun l3 -> l2 == append l3 l1) (a :: l3)
+             ))
 
-let strict_prefix_of_or_eq_exists_append
+let strict_suffix_of_or_eq_exists_append
   (#a: Type)
   (l1 l2: list a)
 : Lemma
-  (ensures ((strict_prefix_of l1 l2 \/ l1 == l2) ==> (exists l3 . l2 == append l3 l1)))
+  (ensures ((strict_suffix_of l1 l2 \/ l1 == l2) ==> (exists l3 . l2 == append l3 l1)))
 = FStar.Classical.or_elim
-    #(strict_prefix_of l1 l2)
+    #(strict_suffix_of l1 l2)
     #(l1 == l2)
     #(fun _ -> exists l3 . l2 == append l3 l1)
     (fun _ ->
-      strict_prefix_of_exists_append l1 l2)
+      strict_suffix_of_exists_append l1 l2)
     (fun _ ->
-	FStar.Classical.exists_intro
-	  (fun l3 -> l2 == append l3 l1)
-	  [] )
+        FStar.Classical.exists_intro
+          (fun l3 -> l2 == append l3 l1)
+          [] )
 
 (** Properties of << with lists *)
 
@@ -1083,3 +1102,15 @@ let init_last_inj (#a: Type) (l1: list a { Cons? l1 } ) (l2: list a { Cons? l2 }
   (ensures (l1 == l2))
 = append_init_last l1;
   append_init_last l2
+
+(* Properties of for_all *)
+
+#push-options "--fuel 1"
+let rec for_all_append #a (f: a -> Tot bool) (s1 s2: list a): Lemma
+  (ensures for_all f (s1 @ s2) <==> for_all f s1 && for_all f s2)
+=
+  let _ = allow_inversion (list a) in
+  match s1 with
+  | [] -> ()
+  | hd1 :: tl1 -> for_all_append f tl1 s2
+#pop-options

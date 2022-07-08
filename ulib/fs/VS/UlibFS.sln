@@ -1,0 +1,27 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30114.105
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{82253A13-6BB4-4C9F-8198-50F638EFB3EE}"
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "ulibfs", "..\ulibfs.fsproj", "{E3E96B71-22AB-4518-B08E-9C55C4D256DB}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{E3E96B71-22AB-4518-B08E-9C55C4D256DB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E3E96B71-22AB-4518-B08E-9C55C4D256DB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E3E96B71-22AB-4518-B08E-9C55C4D256DB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E3E96B71-22AB-4518-B08E-9C55C4D256DB}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {F7F50713-93CD-494F-80BA-C050D87A05B2}
+	EndGlobalSection
+EndGlobal

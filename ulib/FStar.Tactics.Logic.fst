@@ -38,10 +38,9 @@ let rec l_revert_all (bs:binders) : Tac unit =
     | []    -> ()
     | _::tl -> begin l_revert (); l_revert_all tl end
 
-private val fa_intro_lem : (#a:Type) -> (#p : (a -> Type)) ->
-                           (x:a -> squash (p x)) ->
-                           Lemma (forall (x:a). p x)
-let fa_intro_lem #a #p f = FStar.Classical.lemma_forall_intro_gtot (fun x -> (f x) <: GTot (squash (p x)))
+private let fa_intro_lem (#a:Type) (#p:a -> Type) (f:(x:a -> squash (p x))) : Lemma (forall (x:a). p x) =
+  FStar.Classical.lemma_forall_intro_gtot
+    ((fun x -> FStar.IndefiniteDescription.elim_squash (f x)) <: (x:a -> GTot (p x)))
 
 let forall_intro () : Tac binder =
     apply_lemma (`fa_intro_lem);
@@ -239,10 +238,8 @@ let destruct_and (t : term) : Tac (binder * binder) =
     and_elim t;
     (implies_intro (), implies_intro ())
 
-private val __witness : (#a:Type) -> (x:a) -> (#p:(a -> Type)) -> squash (p x) -> squash (l_Exists p)
-private let __witness #a x #p _ =
-  let x : squash (exists x. p x) = () in
-  x
+private val __witness : (#a:Type) -> (x:a) -> (#p:(a -> Type)) -> squash (p x) -> squash (exists (x:a). p x)
+private let __witness #a x #p _ = ()
 
 let witness (t : term) : Tac unit =
     apply_raw (`__witness);
@@ -251,7 +248,7 @@ let witness (t : term) : Tac unit =
 private
 let __elim_exists' #t (#pred : t -> Type0) #goal (h : (exists x. pred x))
                           (k : (x:t -> pred x -> squash goal)) : squash goal =
-  FStar.Squash.bind_squash h (fun (|x, pf|) -> k x pf)
+  FStar.Squash.bind_squash #(x:t & pred x) h (fun (|x, pf|) -> k x pf)
 
 (* returns witness and proof as binders *)
 let elim_exists (t : term) : Tac (binder & binder) =

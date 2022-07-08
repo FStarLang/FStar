@@ -34,7 +34,7 @@ val pre_ind_cpa : b:flag{ reveal b == reveal uf_cma }
 //finally, we're idealizing encryption for secrecy, at the end
 val ind_cpa : b:flag{ reveal b ==> reveal pre_ind_cpa }
 
-//we get authenticated encryption after idealizing everyting
+//we get authenticated encryption after idealizing everything
 // -- we write it this way to make explicit 
 //    that all the idealization flags are on, 
 //    rather than just ind_cpa

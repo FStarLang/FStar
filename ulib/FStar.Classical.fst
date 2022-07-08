@@ -44,6 +44,8 @@ let arrow_to_impl #a #b f = squash_double_arrow (return_squash (fun x -> f (retu
 
 let impl_intro_gtot #p #q f = return_squash f
 
+let impl_intro_tot #p #q f = return_squash #(p -> GTot q) f
+
 let impl_intro #p #q f =
   give_witness #(p ==> q) (squash_double_arrow (return_squash (lemma_to_squash_gtot f)))
 
@@ -51,13 +53,13 @@ let move_requires #a #p #q f x =
   give_proof (bind_squash (get_proof (l_or (p x) (~(p x))))
         (fun (b: l_or (p x) (~(p x))) ->
             bind_squash b
-              (fun (b': c_or (p x) (~(p x))) ->
+              (fun (b': Prims.sum (p x) (~(p x))) ->
                   match b' with
-                  | Left hp ->
+                  | Prims.Left hp ->
                     give_witness hp;
                     f x;
                     get_proof (p x ==> q x)
-                  | Right hnp -> give_witness hnp)))
+                  | Prims.Right hnp -> give_witness hnp)))
 
 let move_requires_2 #a #b #p #q f x y = move_requires (f x) y
 
@@ -69,7 +71,9 @@ let impl_intro_gen #p #q f =
   move_requires g ()
 
 (*** Universal quantification *)
-let get_forall #a p = get_squashed #(x: a -> GTot (p x)) (forall (x: a). p x)
+let get_forall #a p =
+  assert_norm ((forall (x: a). p x) == squash ((x: a -> GTot (p x))));
+  get_squashed #(x: a -> GTot (p x)) (forall (x: a). p x)
 
 (* TODO: Maybe this should move to FStar.Squash.fst *)
 let forall_intro_gtot #a #p f =
@@ -131,13 +135,13 @@ let ghost_lemma #a #p #q f =
       give_proof (bind_squash (get_proof (l_or (p x) (~(p x))))
             (fun (b: l_or (p x) (~(p x))) ->
                 bind_squash b
-                  (fun (b': c_or (p x) (~(p x))) ->
+                  (fun (b': Prims.sum (p x) (~(p x))) ->
                       match b' with
-                      | Left hp ->
+                      | Prims.Left hp ->
                         give_witness hp;
                         f x;
                         get_proof (p x ==> q x ())
-                      | Right hnp -> give_witness hnp))))
+                      | Prims.Right hnp -> give_witness hnp))))
   in
   forall_intro lem
 
@@ -148,15 +152,15 @@ let exists_intro #a p witness = ()
 let exists_intro_not_all_not (#a:Type) (#p:a -> Type)
                              ($f: (x:a -> Lemma (~(p x))) -> Lemma False)
   : Lemma (exists x. p x)
-  = let open FStar.Squash in 
+  = let open FStar.Squash in
     let aux ()
         : Lemma (requires (forall x. ~(p x)))
                 (ensures False)
                 [SMTPat ()]
-        = bind_squash 
+        = bind_squash
            (get_proof (forall x. ~ (p x)))
            (fun (g: (forall x. ~ (p x))) ->
-             bind_squash #(x:a -> GTot (~(p x))) #c_False g 
+             bind_squash #(x:a -> GTot (~(p x))) #Prims.empty g
              (fun (h:(x:a -> GTot (~(p x)))) -> f h))
     in
     ()
@@ -180,4 +184,3 @@ let or_elim #l #r #goal hl hr =
   impl_intro_gen #r #(fun _ -> goal ()) hr
 
 let excluded_middle (p: Type) = ()
-

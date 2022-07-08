@@ -32,3 +32,10 @@ let h u : char = u.x
 
 type v = 
   | V : field1:int -> field2:nat -> v
+
+
+/// Bug #2423
+
+noeq
+type m (s:Type u#s) : a:Type u#a -> Type =
+  | Ret: a:Type u#a -> x:a -> m s a

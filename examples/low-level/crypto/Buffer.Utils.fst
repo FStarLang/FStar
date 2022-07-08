@@ -36,7 +36,7 @@ let uint32s = buffer u32
 let bytes = buffer u8
 
 // JP: 20180402 this file dropped off CI a long while ago. Retained here,
-// currently used as a testcase for KreMLin extraction, but I would love to see
+// currently used as a testcase for KaRaMeL extraction, but I would love to see
 // this re-enabled as a sanity check for F*'s long CI.
 #set-options "--lax"
 
@@ -48,7 +48,7 @@ let op_Less_Less_Less (a:u32) (s:u32{v s <= 32}) =
   let (m:u32{v m = 32}) = 32ul in
   (op_Less_Less_Hat a s) |^ (op_Greater_Greater_Hat a (m -^ s))
 
-(** Inplace xor operation on bytes *)
+(** In-place xor operation on bytes *)
 (* TODO: add functional spec *)
 val xor_bytes_inplace: output:bytes -> in1:bytes{disjoint in1 output} ->
   len:u32{v len <= length output /\ v len <= length in1} -> STL unit

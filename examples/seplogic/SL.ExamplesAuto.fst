@@ -61,9 +61,11 @@ let footprint_of (t:term) : Tac (list term) =
   //   if inspect_fv fv = read_wp_qn then [tr]
   //   else fail "not a read_wp"
   // -- generalizing the above to arbitrary "footprint expressions"
+  | Tv_UInst fv _, xs
   | Tv_FVar fv, xs ->
       let footprint_aux (a : argv) : Tac (option term) =
       match inspect (fst (collect_app (tc (cur_env ()) (fst a)))) with
+      | Tv_UInst fv _
       | Tv_FVar fv -> if inspect_fv fv = ref_qn then Some (fst a) else None
       | _ -> None
       in FStar.Tactics.Util.filter_map footprint_aux xs
@@ -99,6 +101,7 @@ let pointsto_to_string (fp_refs:list term) (t:term) : Tac string =
   let hd, tl = collect_app t in
   // dump (term_to_string hd);
   match inspect hd, tl with
+  | Tv_UInst fv _, [(ta, Q_Implicit); (tr, Q_Explicit); (tv, Q_Explicit)]
   | Tv_FVar fv, [(ta, Q_Implicit); (tr, Q_Explicit); (tv, Q_Explicit)] ->
     if inspect_fv fv = pointsto_qn then
        (if tr `term_mem` fp_refs then "0" else "1") ^ term_to_string tr
@@ -106,12 +109,12 @@ let pointsto_to_string (fp_refs:list term) (t:term) : Tac string =
   | _, _ -> "2" // have to accept at least Tv_Uvar _ here
 
 let sort_sl : permute string = fun (a:Type u#1) (vm:vmap a string) (xs:list var) ->
-  let sortf x y = FStar.String.compare (select_extra y vm) (select_extra x vm) in
+  let sortf x y = FStar.String.compare (select_extra x vm) (select_extra y vm) in
   List.Tot.sortWith #var sortf xs
 
 let sort_sl_correct : permute_correct sort_sl =
   fun #a m vm xs ->
-    let sortf x y = FStar.String.compare (select_extra y vm) (select_extra x vm) in
+    let sortf x y = FStar.String.compare (select_extra x vm) (select_extra y vm) in
     sortWith_correct sortf #a m vm xs
 
 let canon_monoid_sl (fp:list term) : Tac unit =
@@ -137,11 +140,13 @@ let peek_cmd () : Tac cmd =
   let g = cur_goal () in
   let hd, tl = collect_app g in
   match inspect hd, tl with
+  | Tv_UInst fv _, [(t1, Q_Explicit)]
   | Tv_FVar fv, [(t1, Q_Explicit)] ->
     if inspect_fv fv = squash_qn then
       (* is the goal fram_wp *)
       let hd, tl = collect_app t1 in
       (match inspect hd with
+      | Tv_UInst fv _
       | Tv_FVar fv  ->
        if inspect_fv fv = frame_wp_qn
        then match tl with
@@ -176,6 +181,7 @@ let peek_cmd () : Tac cmd =
 let unfold_first_occurrence (name:string) : Tac unit =
   let should_rewrite (hd:term) : Tac (bool * int) =
     match inspect hd with
+    | Tv_UInst fv _
     | Tv_FVar fv ->
       if flatten_name (inspect_fv fv) = name
       then true, 2
@@ -367,7 +373,7 @@ let prelude' () : Tac unit =
   //the goal might start with exists x y. to quantify over the ref values
 
   //now the goal looks something like (defined m0 * m1 /\ (m == m0 * m1 /\ (...)))
-  //do couple of implies_intro and and_elim to get these conjections
+  //do couple of implies_intro and and_elim to get these conjunctions
   let h = implies_intro () in and_elim (binder_to_term h); clear h;
   let h = implies_intro() in and_elim (binder_to_term h); clear h;
 

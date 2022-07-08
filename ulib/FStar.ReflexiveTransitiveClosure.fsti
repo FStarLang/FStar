@@ -30,20 +30,35 @@ module FStar.ReflexiveTransitiveClosure
 ///
 /// See examples/preorder/Closure.fst for usage examples.
 
-open FStar.Preorder
+let binrel (a:Type) = a -> a -> Type
 
-val closure (#a:Type u#a) (r:relation a) : preorder a
+let predicate (a:Type u#a) = a -> Type0
+
+let reflexive (#a:Type) (rel:binrel u#a u#r a) =
+  forall (x:a). squash (rel x x)
+
+let transitive (#a:Type) (rel:binrel u#a u#r a) =
+  forall (x:a) (y:a) (z:a). (squash (rel x y) /\ squash (rel y z)) ==> squash (rel x z)
+
+let preorder_rel (#a:Type) (rel:binrel u#a u#r a) =
+  reflexive rel /\ transitive rel
+
+type preorder (a:Type u#a) : Type u#(max a (1 + r)) = rel:binrel u#a u#r a{preorder_rel rel}
+
+let stable (#a:Type u#a) (p:a -> Type0) (rel:binrel u#a u#r a{preorder_rel rel}) =
+  forall (x:a) (y:a). (p x /\ squash (rel x y)) ==> p y
+
+val closure (#a:Type u#a) (r:binrel u#a u#r a) : preorder u#a u#0 a
 
 (** `closure r` includes `r` *)
-val closure_step: #a:Type u#a -> r:relation a -> x:a -> y:a
-  -> Lemma (requires r x y) (ensures closure r x y)
+val closure_step: #a:Type u#a -> r:binrel u#a u#r a -> x:a -> y:a { r x y }
+  -> Lemma (ensures closure r x y)
     [SMTPat (closure r x y)]
 
 (** `closure r` is the smallest preorder that includes `r` *)
-val closure_inversion: #a:Type u#a -> r:relation a -> x:a -> y:a
+val closure_inversion: #a:Type u#a -> r:binrel u#a u#r a -> x:a -> y:a
   -> Lemma (requires closure r x y)
-          (ensures  x == y \/ (exists z. r x z /\ closure r z y))
-          [SMTPat (closure r x y)]
+          (ensures  x == y \/ (exists z. squash (r x z) /\ closure r z y))
 
 (**
 * A predicate that is stable on `r` is stable on `closure r`
@@ -51,6 +66,6 @@ val closure_inversion: #a:Type u#a -> r:relation a -> x:a -> y:a
 * This is useful to witness properties of monotonic references where
 * the monotonicity relation is the closure of a step relation.
 *)
-val stable_on_closure: #a:Type u#a -> r:relation a -> p:(a -> Type0)
-  -> p_stable_on_r: (squash (forall x y.{:pattern (p y); (r x y)} p x /\ r x y ==> p y))
+val stable_on_closure: #a:Type u#a -> r:binrel u#a u#r a -> p:(a -> Type0)
+  -> p_stable_on_r: (squash (forall x y.{:pattern (p y); (r x y)} p x /\ squash (r x y) ==> p y))
   -> Lemma (forall x y.{:pattern (closure r x y)} p x /\ closure r x y ==> p y)

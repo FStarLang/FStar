@@ -2,54 +2,13 @@
   "þhÎNáT\u0006|IXf]_6bŽ",
   [
     [
-      "FStar.Algebra.CommMonoid.__proj__CM__item__identity",
-      1,
-      2,
-      1,
-      [
-        "@query", "proj_equation_FStar.Algebra.CommMonoid.CM_mult",
-        "proj_equation_FStar.Algebra.CommMonoid.CM_unit",
-        "projection_inverse_FStar.Algebra.CommMonoid.CM_mult",
-        "projection_inverse_FStar.Algebra.CommMonoid.CM_unit",
-        "token_correspondence_FStar.Algebra.CommMonoid.__proj__CM__item__mult"
-      ],
-      0,
-      "23ef017ba175ba7cdd610f43f04fc795"
-    ],
-    [
-      "FStar.Algebra.CommMonoid.__proj__CM__item__associativity",
-      1,
-      2,
-      1,
-      [
-        "@query", "proj_equation_FStar.Algebra.CommMonoid.CM_mult",
-        "projection_inverse_FStar.Algebra.CommMonoid.CM_mult",
-        "token_correspondence_FStar.Algebra.CommMonoid.__proj__CM__item__mult"
-      ],
-      0,
-      "394308dcd41be7815af9ed987cad918e"
-    ],
-    [
-      "FStar.Algebra.CommMonoid.__proj__CM__item__commutativity",
-      1,
-      2,
-      1,
-      [
-        "@query", "proj_equation_FStar.Algebra.CommMonoid.CM_mult",
-        "projection_inverse_FStar.Algebra.CommMonoid.CM_mult",
-        "token_correspondence_FStar.Algebra.CommMonoid.__proj__CM__item__mult"
-      ],
-      0,
-      "c4ab2add8f2378689fab5f86ffd4589d"
-    ],
-    [
       "FStar.Algebra.CommMonoid.right_identity",
       1,
       2,
       1,
       [ "@query" ],
       0,
-      "4fab67cbd60c00c65fc61604d412e1bf"
+      "76bda66fda150c0123f25bf5f06b92e2"
     ],
     [
       "FStar.Algebra.CommMonoid.int_plus_cm",
@@ -61,7 +20,7 @@
         "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "20393d288a345ac3e28583590f81b4ad"
+      "420f43f059825c99e67f9ca83aed57c0"
     ],
     [
       "FStar.Algebra.CommMonoid.int_multiply_cm",
@@ -73,7 +32,7 @@
         "primitive_Prims.op_Multiply", "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "a08f44b4756b1b0826d435a0127ff0e7"
+      "1fac57d2c1ac4ecd9a3432e0fdaa0c5d"
     ]
   ]
 ]

@@ -110,3 +110,8 @@ let rec tryPick f l = match l with
          | Some x -> Some x
          | None -> tryPick f tl
 #pop-options
+
+let map_opt (f:'a -> Tac 'b) (x:option 'a) : Tac (option 'b) =
+  match x with
+  | None -> None
+  | Some x -> Some (f x)

@@ -1,0 +1,225 @@
+[
+  "˝ÁÑª§Èª^i˜èx\u001f_\u000b˚",
+  [
+    [
+      "Part2.HOAS.typ",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "3ffc6bd4961747db1501143d85cfc1b0"
+    ],
+    [
+      "Part2.HOAS.__proj__Arrow__item___0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_30150cb5895a521f1b4b0dbda069b0b1"
+      ],
+      0,
+      "cd3d6cb461a005db1b7817d072a087c5"
+    ],
+    [
+      "Part2.HOAS.__proj__Arrow__item___1",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_30150cb5895a521f1b4b0dbda069b0b1"
+      ],
+      0,
+      "3b6d07ea20d54222842c24b4e6808186"
+    ],
+    [
+      "Part2.HOAS.denote_typ",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Part2.HOAS_pretyping_0d59847ca8d92cbb26292202f2103570",
+        "binder_x_0d59847ca8d92cbb26292202f2103570_0",
+        "data_typing_intro_Part2.HOAS.Int@tok",
+        "disc_equation_Part2.HOAS.Arrow", "disc_equation_Part2.HOAS.Bool",
+        "disc_equation_Part2.HOAS.Int",
+        "fuel_guarded_inversion_Part2.HOAS.typ",
+        "projection_inverse_BoxBool_proj_0",
+        "subterm_ordering_Part2.HOAS.Arrow"
+      ],
+      0,
+      "87a7b3e18f516b1e7e9d2f21634add30"
+    ],
+    [
+      "Part2.HOAS.__proj__Var__item__t",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_cfebae4731f3018188d6b3f7f86b69d4"
+      ],
+      0,
+      "535496116cdf92b393c304ea3b6e7a49"
+    ],
+    [
+      "Part2.HOAS.__proj__Var__item___1",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "data_elim_Part2.HOAS.Var",
+        "proj_equation_Part2.HOAS.Var_t",
+        "projection_inverse_Part2.HOAS.Var_t",
+        "refinement_interpretation_Tm_refine_cfebae4731f3018188d6b3f7f86b69d4"
+      ],
+      0,
+      "40c081ed26de317286e14a80c59388b7"
+    ],
+    [
+      "Part2.HOAS.__proj__I__item___0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_e58f9931cf5268aecc895a6360af56a0"
+      ],
+      0,
+      "d369b010a9fb441c554593b035844d78"
+    ],
+    [
+      "Part2.HOAS.__proj__App__item__t1",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_2b53c7ab1b7f4afa8fc6764f60c38c67"
+      ],
+      0,
+      "21f29b355f182ecde98936cfa28a67f8"
+    ],
+    [
+      "Part2.HOAS.__proj__App__item__t2",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_2b53c7ab1b7f4afa8fc6764f60c38c67"
+      ],
+      0,
+      "3849220c1af6743682abf3ea174eb11c"
+    ],
+    [
+      "Part2.HOAS.__proj__App__item___2",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "data_elim_Part2.HOAS.App",
+        "proj_equation_Part2.HOAS.App_t1", "proj_equation_Part2.HOAS.App_t2",
+        "projection_inverse_Part2.HOAS.App_t1",
+        "projection_inverse_Part2.HOAS.App_t2",
+        "refinement_interpretation_Tm_refine_2b53c7ab1b7f4afa8fc6764f60c38c67"
+      ],
+      0,
+      "911d152bab216210c9e03d42a2548b1e"
+    ],
+    [
+      "Part2.HOAS.__proj__App__item___3",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "data_elim_Part2.HOAS.App",
+        "refinement_interpretation_Tm_refine_2b53c7ab1b7f4afa8fc6764f60c38c67"
+      ],
+      0,
+      "27a28b64f11a02e1f6e751ca5a589faf"
+    ],
+    [
+      "Part2.HOAS.__proj__Lam__item__t1",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_3e7664717b5f72e6b4bcf6765f78f8d7"
+      ],
+      0,
+      "8bcc9993a294de6e39c5856c22578295"
+    ],
+    [
+      "Part2.HOAS.__proj__Lam__item__t2",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_3e7664717b5f72e6b4bcf6765f78f8d7"
+      ],
+      0,
+      "6af60310217c049acc2d947edd87f98d"
+    ],
+    [
+      "Part2.HOAS.__proj__Lam__item___2",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "data_elim_Part2.HOAS.Lam",
+        "proj_equation_Part2.HOAS.Lam_t1", "proj_equation_Part2.HOAS.Lam_t2",
+        "projection_inverse_Part2.HOAS.Lam_t1",
+        "projection_inverse_Part2.HOAS.Lam_t2",
+        "refinement_interpretation_Tm_refine_3e7664717b5f72e6b4bcf6765f78f8d7"
+      ],
+      0,
+      "704561cd00b7b558314e3898af055da9"
+    ],
+    [
+      "Part2.HOAS.denote_term",
+      1,
+      2,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_Part2.HOAS.denote_typ.fuel_instrumented",
+        "@query",
+        "Part2.HOAS_interpretation_Tm_arrow_143fc6bbb3e674444f4347ce6ed6de46",
+        "Part2.HOAS_interpretation_Tm_arrow_96fdf20c9456a6065e0097c6edc3212c",
+        "Part2.HOAS_pretyping_c953ce6cbe03c615206d7fccddad7c9e",
+        "binder_x_0d59847ca8d92cbb26292202f2103570_0",
+        "binder_x_9a376b73d8acd1a292693d4dea650d5b_1", "bool_inversion",
+        "bool_typing", "constructor_distinct_Part2.HOAS.Arrow",
+        "constructor_distinct_Part2.HOAS.Bool",
+        "constructor_distinct_Part2.HOAS.Int",
+        "constructor_distinct_Part2.HOAS.TT", "data_elim_Part2.HOAS.App",
+        "data_elim_Part2.HOAS.I", "data_elim_Part2.HOAS.Lam",
+        "data_elim_Part2.HOAS.TT", "data_elim_Part2.HOAS.Var",
+        "data_typing_intro_Part2.HOAS.FF@tok",
+        "data_typing_intro_Part2.HOAS.TT@tok",
+        "disc_equation_Part2.HOAS.App", "disc_equation_Part2.HOAS.FF",
+        "disc_equation_Part2.HOAS.I", "disc_equation_Part2.HOAS.Lam",
+        "disc_equation_Part2.HOAS.TT", "disc_equation_Part2.HOAS.Var",
+        "equality_tok_Part2.HOAS.Bool@tok", "equality_tok_Part2.HOAS.FF@tok",
+        "equality_tok_Part2.HOAS.Int@tok", "equality_tok_Part2.HOAS.TT@tok",
+        "equation_with_fuel_Part2.HOAS.denote_typ.fuel_instrumented",
+        "fuel_guarded_inversion_Part2.HOAS.term",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_Part2.HOAS.Arrow__0",
+        "projection_inverse_Part2.HOAS.Arrow__1",
+        "subterm_ordering_Part2.HOAS.App", "typing_Part2.HOAS.uu___is_Var",
+        "typing_Tm_abs_5df54d6e38499340e440e0241bc4f61d",
+        "typing_tok_Part2.HOAS.TT@tok",
+        "well_founded_ordering_on_codomain_Part2.HOAS.Lam"
+      ],
+      0,
+      "51c779d01457dd86a900fe65e119ad66"
+    ]
+  ]
+]

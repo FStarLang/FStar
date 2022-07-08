@@ -1,4 +1,3 @@
-FSTAR_HOME=..
 include Makefile.include
 
 # Note: native_tactics is not included in the list below, it is called
@@ -6,7 +5,7 @@ include Makefile.include
 # These examples are excluded since the binary package can't verify
 # them.
 
-ALL_EXAMPLE_DIRS=\
+ALL_EXAMPLE_DIRS :=\
 data_structures \
 algorithms \
 crypto \
@@ -19,17 +18,12 @@ printf \
 metatheory \
 verifythis \
 preorders \
-dm4free \
 tactics \
 param \
 typeclasses \
-miniparse \
-kv_parsing \
 low-mitls-experiments \
 seplogic \
 csl \
-hello \
-extraction \
 demos \
 indexed_effects \
 doublylinkedlist \
@@ -37,8 +31,27 @@ regional \
 generic \
 calc \
 steel \
+steel_tutorial \
 layeredeffects \
-misc
+misc \
+sequence \
+oplss2021
+
+HAS_OCAML := $(shell which ocamlfind 2>/dev/null)
+
+ifdef HAS_OCAML
+ALL_EXAMPLE_DIRS+=\
+  hello \
+  extraction \
+
+endif
+
+ifdef KRML_HOME
+ALL_EXAMPLE_DIRS+=\
+  kv_parsing \
+  miniparse \
+
+endif
 
 # low-level \  ... NS: removing from CI for this branch
 

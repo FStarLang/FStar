@@ -29,8 +29,8 @@ val comp_qualifier (c : comp) : Tac string
 #push-options "--ifuel 1"
 let comp_qualifier (c : comp) : Tac string =
   match inspect_comp c with
-  | C_Total _ _ -> "C_Total"
-  | C_GTotal _ _ -> "C_GTotal"
+  | C_Total _ _ _ -> "C_Total"
+  | C_GTotal _ _ _ -> "C_GTotal"
   | C_Lemma _ _ _ -> "C_Lemma"
   | C_Eff _ _ _ _ -> "C_Eff"
 #pop-options
@@ -118,13 +118,13 @@ let get_type_info (e:env) (t:term) : Tac (option type_info) =
 val get_total_or_gtotal_ret_type : comp -> Tot (option typ)
 let get_total_or_gtotal_ret_type c =
   match inspect_comp c with
-  | C_Total ret_ty _ | C_GTotal ret_ty _ -> Some ret_ty
+  | C_Total ret_ty _ _ | C_GTotal ret_ty _ _ -> Some ret_ty
   | _ -> None
 
 val get_comp_ret_type : comp -> Tot typ
 let get_comp_ret_type c =
   match inspect_comp c with
-  | C_Total ret_ty _ | C_GTotal ret_ty _
+  | C_Total ret_ty _ _ | C_GTotal ret_ty _ _
   | C_Eff _ _ ret_ty _ -> ret_ty
   | C_Lemma _ _ _ -> (`unit)
 
@@ -246,8 +246,8 @@ let rec unfold_until_arrow e ty0 =
       (* Continue with the type of bv *)
       let ty' = type_of_bv bv in
       unfold_until_arrow e ty'
-    | Tv_AscribedT body _ _
-    | Tv_AscribedC body _ _ ->
+    | Tv_AscribedT body _ _ _
+    | Tv_AscribedC body _ _ _ ->
       unfold_until_arrow e body
     | _ ->
       (* Other situations: don't know what to do *)
@@ -371,7 +371,7 @@ let flush_typ_or_comp dbg e tyc =
   in
   try begin match tyc with
   | TC_Typ ty pl n ->
-    let c = pack_comp (C_Total ty None) in
+    let c = pack_comp (C_Total ty u_unk []) in
     flush_comp pl n c
   | TC_Comp c pl n -> flush_comp pl n c
   end
@@ -493,7 +493,7 @@ let rec explore_term dbg dfs #a f x ge0 pl0 c0 t0 =
       let c1 = abs_update_opt_typ_or_comp br c0 ge1.env in
       explore_term dbg dfs f x0 ge1 pl1 c1 body
     | Tv_Arrow br c0 -> x0, Continue (* TODO: we might want to explore that *)
-    | Tv_Type () -> x0, Continue
+    | Tv_Type _ -> x0, Continue
     | Tv_Refine bv ref ->
       let bvv = inspect_bv bv in
       let x1, flag1 = explore_term dbg dfs f x0 ge0 pl1 None bvv.bv_sort in
@@ -515,7 +515,7 @@ let rec explore_term dbg dfs #a f x ge0 pl0 c0 t0 =
       (* Perform the exploration in the proper order *)
       let expl1, expl2 = if dfs then explore_next, explore_def else explore_def, explore_next in
       bind_expl x0 expl1 expl2
-    | Tv_Match scrutinee branches ->
+    | Tv_Match scrutinee _ret_opt branches ->  //AR: TODO: need to account for returns annotation here
       (* Auxiliary function to explore the branches *)
       let explore_branch (x_flag : a & ctrl_flag) (br : branch) : Tac (a & ctrl_flag)=
         let x0, flag = x_flag in
@@ -535,13 +535,13 @@ let rec explore_term dbg dfs #a f x ge0 pl0 c0 t0 =
       let x1 = explore_term dbg dfs #a f x0 ge0 pl1 scrut_c scrutinee in
       (* Explore the branches *)
       fold_left explore_branch x1 branches
-    | Tv_AscribedT e ty tac ->
+    | Tv_AscribedT e ty tac _ ->
       let c1 = Some (TC_Typ ty [] 0) in
       let x1, flag = explore_term dbg dfs #a f x0 ge0 pl1 None ty in
       if flag = Continue then
         explore_term dbg dfs #a f x1 ge0 pl1 c1 e
       else x1, convert_ctrl_flag flag
-    | Tv_AscribedC e c1 tac ->
+    | Tv_AscribedC e c1 tac _ ->
       (* TODO: explore the comp *)
       explore_term dbg dfs #a f x0 ge0 pl1 (Some (TC_Comp c1 [] 0)) e
     | _ ->

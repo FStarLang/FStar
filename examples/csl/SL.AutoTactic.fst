@@ -48,6 +48,7 @@ let fv_is (fv:fv) (name:string) = implode_qn (inspect_fv fv) = name
 let rec explode_list (t:term) : Tac (list term) =
     let hd, args = collect_app t in
     match inspect hd with
+    | Tv_UInst fv _
     | Tv_FVar fv ->
         if fv_is fv (`%Cons)
         then match args with
@@ -62,6 +63,7 @@ let rec explode_list (t:term) : Tac (list term) =
 let from_sref (t:term) : Tac term =
     let hd, args = collect_app t in
     match inspect hd, args with
+    | Tv_UInst _ _, [(_t, Q_Implicit); (r, Q_Explicit)]
     | Tv_FVar _, [(_t, Q_Implicit); (r, Q_Explicit)] -> r
     | _ -> fail ("from_sref: " ^ term_to_string t)
 
@@ -76,6 +78,7 @@ let rec footprint_of (t:term) : Tac (list term) =
   //   else fail "not a read_wp"
   // -- generalizing the above to arbitrary "footprint expressions"
   | Tv_Abs b t, [] -> footprint_of t
+  | Tv_UInst fv _, args
   | Tv_FVar fv, args ->
       if fv_is fv (`%with_fp)
       then match args with
@@ -128,6 +131,7 @@ type bdata = int * term
 let pointsto_to_bdata (fp_refs:list term) (t:term) : Tac bdata =
   let hd, tl = collect_app t in
   match inspect hd, tl with
+  | Tv_UInst fv _, [(ta, Q_Implicit); (tr, Q_Explicit); (tv, Q_Explicit)]
   | Tv_FVar fv, [(ta, Q_Implicit); (tr, Q_Explicit); (tv, Q_Explicit)] ->
     if fv_is fv (`%(op_Bar_Greater)) then
        if tr `term_mem` fp_refs
@@ -145,7 +149,7 @@ let compare_b (n1, t1) (n2, t2) : int =
   else FStar.Order.int_of_order (compare_term t1 t2)
 
 let compare_v #a (vm : vmap a bdata) (v1 v2 : var) =
-    compare_b (select_extra v1 vm) (select_extra v2 vm)
+    compare_b (select_extra v2 vm) (select_extra v1 vm)
 
 (* `a` will be instantiated with `memory`, which is a `Type u#1` *)
 let sort_sl : permute bdata =
@@ -192,6 +196,7 @@ type cmd =
 let peek_in (t:term) : Tac cmd =
     let hd, tl = collect_app t in
     match inspect hd with
+    | Tv_UInst fv _
     | Tv_FVar fv  ->
      if fv_is fv (`%frame_wp)
      then match tl with
@@ -233,6 +238,7 @@ let peek_cmd () : Tac cmd =
   let g = cur_goal () in
   let hd, tl = collect_app g in
   match inspect hd, tl with
+  | Tv_UInst fv _, [(t1, Q_Explicit)]
   | Tv_FVar fv, [(t1, Q_Explicit)] ->
     if fv_is fv (`%squash) then peek_in t1
     else fail "Unrecognized command: not a squash"
@@ -287,6 +293,7 @@ let rec proc_intro (b:binder) : Tac binders =
 let unfold_first_occurrence (name:string) : Tac unit =
   let should_rewrite (hd:term) : Tac (bool * int) =
     match inspect hd with
+    | Tv_UInst fv _
     | Tv_FVar fv ->
       if flatten_name (inspect_fv fv) = name
       then true, 2
@@ -520,7 +527,7 @@ let rec sl (i:int) : Tac unit =
   | ParWP wpa wpb th0 ->
     (* Another interesting case. We find the footprints for each process
      * and split the input heap accordingly. All of the extra parts of the heap,
-     * unneded by both processes, go arbitrarilly to the left one. *)
+     * unneeded by both processes, go arbitrarily to the left one. *)
     let fp_a = footprint_of wpa in
     let fp_b = footprint_of wpb in
     let fp = fp_a @ fp_b in
@@ -582,7 +589,7 @@ let prelude' () : Tac unit =
   //the goal might start with exists x y. to quantify over the ref values
 
   //now the goal looks something like (defined m0 * m1 /\ (m == m0 * m1 /\ (...)))
-  //do couple of implies_intro and and_elim to get these conjections
+  //do couple of implies_intro and and_elim to get these conjunctions
   let h = implies_intro () in and_elim (binder_to_term h); clear h;
   let h = implies_intro() in and_elim (binder_to_term h); clear h;
 
@@ -613,7 +620,7 @@ let prelude' () : Tac unit =
   //the first conjunct there is the m0 = ..., so inline it
   let h = implies_intro () in rewrite h; //clear h;
 
-  //push rest of the lhs implicatio in the context
+  //push rest of the left-hand-side implication in the context
   ignore (implies_intro ())
 
 let sl_auto () : Tac unit =

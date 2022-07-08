@@ -183,7 +183,7 @@ let find_focused_assert_in_current_goal dbg =
   end
 
 (*** Analyze effectful term *)
-/// Analyze a term in order to print propertly instantiated pre/postconditions
+/// Analyze a term in order to print properly instantiated pre/postconditions
 /// and type conditions.
 
 /// with_globals states whether to analyze the target pre/post together with the
@@ -329,9 +329,9 @@ let split_conjunctions_under_match dbg t =
   let t1 = remove_b2t t in
   print_dbg dbg ("[> split_conjunctions_under_match: " ^ term_construct t1);
   match inspect t1 with
-  | Tv_Match scrut [(pat, br)] ->
+  | Tv_Match scrut ret_opt [(pat, br)] ->
     let tl = split_conjunctions br in
-    map (fun x -> pack (Tv_Match scrut [(pat, x)])) tl
+    map (fun x -> pack (Tv_Match scrut ret_opt [(pat, x)])) tl
   | _ ->
     (* Not of the proper shape: return the original term *)
     [t]
@@ -399,7 +399,7 @@ let is_eq dbg t =
         Some ((Eq_Undec a), x, y)
       else None
     | [(a,Q_Implicit);(b,Q_Implicit);(x,Q_Explicit);(y,Q_Explicit)] ->
-      if name = "Prims.eq3" || name = "Prims.op_Equals_Equals_Equals" then
+      if name = "Prims.op_Equals_Equals_Equals" then
         Some ((Eq_Hetero a b), x, y)
       else None
     | _ -> None
@@ -415,8 +415,8 @@ let mk_eq k t1 t2 =
   | Eq_Undec ty ->
     mk_app (`Prims.eq2) [(ty, Q_Implicit); (t1, Q_Explicit); (t2, Q_Explicit)]
   | Eq_Hetero ty1 ty2 ->
-    mk_app (`Prims.eq3) [(ty1, Q_Implicit); (ty2, Q_Implicit);
-                            (t1, Q_Explicit); (t2, Q_Explicit)]
+    mk_app Prims.(`( === )) [(ty1, Q_Implicit); (ty2, Q_Implicit);
+                             (t1, Q_Explicit); (t2, Q_Explicit)]
 
 let formula_construct (f : formula) : Tac string =
   match f with
@@ -571,7 +571,7 @@ let rec replace_term_in dbg from_term to_term tm =
     let body' = replace_term_in dbg from_term to_term body in
     pack (Tv_Abs br body')
   | Tv_Arrow br c0 -> tm (* TODO: we might want to explore that *)
-  | Tv_Type () -> tm
+  | Tv_Type _ -> tm
   | Tv_Refine bv ref ->
     let ref' = replace_term_in dbg from_term to_term ref in
     pack (Tv_Refine bv ref')
@@ -581,7 +581,7 @@ let rec replace_term_in dbg from_term to_term tm =
     let def' = replace_term_in dbg from_term to_term def in
     let body' = replace_term_in dbg from_term to_term body in
     pack (Tv_Let recf attrs bv def' body')
-  | Tv_Match scrutinee branches ->
+  | Tv_Match scrutinee ret_opt branches ->  //AR: TODO: account for the returns annotation
     (* Auxiliary function to explore the branches *)
     let explore_branch (br : branch) : Tac branch =
       (* Only explore the branch body *)
@@ -591,14 +591,14 @@ let rec replace_term_in dbg from_term to_term tm =
     in
     let scrutinee' = replace_term_in dbg from_term to_term scrutinee in
     let branches' = map explore_branch branches in
-    pack (Tv_Match scrutinee' branches')
-  | Tv_AscribedT e ty tac ->
+    pack (Tv_Match scrutinee' ret_opt branches')
+  | Tv_AscribedT e ty tac use_eq ->
     let e' = replace_term_in dbg from_term to_term e in
     let ty' = replace_term_in dbg from_term to_term ty in
-    pack (Tv_AscribedT e' ty' tac)
-  | Tv_AscribedC e c tac ->
+    pack (Tv_AscribedT e' ty' tac use_eq)
+  | Tv_AscribedC e c tac use_eq ->
     let e' = replace_term_in dbg from_term to_term e in
-    pack (Tv_AscribedC e' c tac)
+    pack (Tv_AscribedC e' c tac use_eq)
   | _ ->
     (* Unknown *)
     tm
@@ -627,7 +627,7 @@ let unfold_in_assert_or_assume dbg ares =
   (* - subterm: the subterm of the assertion in which we found the focused term
    *   (if an equality, left or right operand, otherwise whole assertion)
    * - unf_res: the result of the exploration for the focused term inside the
-   *   assertion, which gives the term to UNFold
+   *   assertion, which gives the term to unfold
    * - rebuild: a Tot function which, given a term, rebuilds the equality by
    *   replacing the above subterm with the given term
    * - insert_before: whether to insert the new assertion before or after the
@@ -757,4 +757,3 @@ let pp_unfold_in_assert_or_assume dbg () =
     end_proof ()
   with | MetaAnalysis msg -> printout_failure msg; end_proof ()
        | err -> (* Shouldn't happen, so transmit the exception for debugging *) raise err
-

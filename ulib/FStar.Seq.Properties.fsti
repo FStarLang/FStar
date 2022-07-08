@@ -19,7 +19,7 @@ module FStar.Seq.Properties
 open FStar.Seq.Base
 module Seq = FStar.Seq.Base
 
-let lseq (a: Type) (l: nat) : Type =
+let lseq (a: Type) (l: nat) : Tot Type =
     s: Seq.seq a { Seq.length s == l }
 
 let indexable (#a:Type) (s:Seq.seq a) (j:int) = 0 <= j /\ j < Seq.length s
@@ -128,8 +128,6 @@ let rec sorted (#a:Type) (f:a -> a -> Tot bool) (s:seq a)
   then true
   else let hd = head s in
        f hd (index s 1) && sorted f (tail s)
-
-module F = FStar.FunctionalExtensionality
 
 val sorted_feq (#a:Type)
                (f g : (a -> a -> Tot bool))
@@ -310,7 +308,7 @@ val lemma_trans_perm: #a:eqtype -> s1:seq a -> s2:seq a -> s3:seq a{length s1 = 
   (ensures (permutation a (slice s1 i j) (slice s3 i j)))
 
 
-(*New addtions, please review*)
+(*New additions, please review*)
 
 let snoc (#a:Type) (s:seq a) (x:a) : Tot (seq a) = Seq.append s (Seq.create 1 x)
 
@@ -746,3 +744,28 @@ let sort_lseq (#a:eqtype) #n (f:tot_ord a) (s:lseq a n)
   perm_len s s';
   sorted_feq f (L.bool_of_compare (L.compare_of_bool f)) s';
   s'
+
+let rec foldr (#a #b:Type) (f:b -> a -> Tot a) (s:seq b) (init:a)
+  : Tot a (decreases (length s))
+  = if length s = 0 then init
+    else f (head s) (foldr f (tail s) init)
+
+let rec foldr_snoc (#a #b:Type) (f:b -> a -> Tot a) (s:seq b) (init:a)
+  : Tot a (decreases (length s))
+  = if length s = 0 then init
+    else let s, last = un_snoc s in
+         f last (foldr_snoc f s init)
+
+(****** Seq map ******)
+
+val map_seq (#a #b:Type) (f:a -> Tot b) (s:Seq.seq a) : Tot (Seq.seq b)
+
+val map_seq_len (#a #b:Type) (f:a -> Tot b) (s:Seq.seq a)
+  : Lemma (ensures Seq.length (map_seq f s) == Seq.length s)
+
+val map_seq_index (#a #b:Type) (f:a -> Tot b) (s:Seq.seq a) (i:nat{i < Seq.length s})
+  : Lemma (ensures (map_seq_len f s; Seq.index (map_seq f s) i == f (Seq.index s i)))
+
+val map_seq_append (#a #b:Type) (f:a -> Tot b) (s1 s2:Seq.seq a)
+  : Lemma (ensures (map_seq f (Seq.append s1 s2) ==
+                    Seq.append (map_seq f s1) (map_seq f s2)))

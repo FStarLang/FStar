@@ -279,7 +279,7 @@ let validate_numbers : stateful_validator (hide parse_numbers) =
     // parse_numbers_tag_st
 
     // XXX: validate_numbers_data is legitimately used to get a function
-    // pointer, but KreMLin doesn't keep track of the fact that it's curried and
+    // pointer, but KaRaMeL doesn't keep track of the fact that it's curried and
     // requires a different application in C (validate_numbers_data(tag)(input)
     // vs validate_numbers_data(tag, input)).
     and_check parse_numbers_tag parse_numbers_data parse_numbers_tag_st validate_numbers_data

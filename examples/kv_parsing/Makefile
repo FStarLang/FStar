@@ -1,5 +1,8 @@
-FSTAR_HOME=../..
 include ../Makefile.include
+
+ifndef KRML_HOME
+     $(error "Please define the `KRML_HOME` variable.")
+endif
 
 FST_FILES :=	Slice.fst \
 		Parsing.fst \
@@ -24,7 +27,7 @@ EXTRACT_FILES := IntegerParsing.fst \
 		 EnumParsing.fst \
 		 VectorParsing.fst
 
-FSTAR_INCLUDE_PATHS:=--include $(KREMLIN_HOME)/kremlib --include $(KREMLIN_HOME)/kremlib/compat
+FSTAR_INCLUDE_PATHS:=--include $(KRML_HOME)/krmllib --include $(KRML_HOME)/krmllib/compat
 
 OTHERFLAGS+=$(FSTAR_INCLUDE_PATHS) --z3rlimit_factor 4
 

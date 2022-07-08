@@ -230,7 +230,7 @@ let gtdata_extensionality
   (ensures (u1 == u2))
 = ()
 
-(* Interperets a type code (`typ`) as a FStar type (`Type0`). *)
+(* Interprets a type code (`typ`) as a FStar type (`Type0`). *)
 let rec type_of_typ'
   (t: typ)
 : Tot Type0
@@ -504,7 +504,7 @@ let ovalue_is_readable_struct_intro'
   (requires (
     let (v: ostruct l) = v in (
     Some? v /\
-    List.Tot.for_all (struct_field_is_readable l ovalue_is_readable v) (List.Tot.map fst l.fields)
+    List.Tot.for_all (struct_field_is_readable l (fun x y -> ovalue_is_readable x y) v) (List.Tot.map fst l.fields)
   )))
   (ensures (ovalue_is_readable (TStruct l) v))
 = assert_norm (ovalue_is_readable (TStruct l) v == true)
@@ -520,7 +520,7 @@ let ovalue_is_readable_struct_intro
     ovalue_is_readable (typ_of_struct_field l f) (ostruct_sel v f)
   ))))
   (ensures (ovalue_is_readable (TStruct l) v))
-= List.Tot.for_all_mem (struct_field_is_readable l ovalue_is_readable v) (List.Tot.map fst l.fields);
+= List.Tot.for_all_mem (struct_field_is_readable l (fun x y -> ovalue_is_readable x y) v) (List.Tot.map fst l.fields);
   ovalue_is_readable_struct_intro' l v
 
 let ovalue_is_readable_struct_elim
@@ -536,9 +536,9 @@ let ovalue_is_readable_struct_elim
   )))
   [SMTPat (ovalue_is_readable (typ_of_struct_field l fd) (ostruct_sel v fd))]
 = let (v: ostruct l) = v in
-  assert_norm (ovalue_is_readable (TStruct l) v == List.Tot.for_all (struct_field_is_readable l ovalue_is_readable v) (List.Tot.map fst l.fields));
-  assert (List.Tot.for_all (struct_field_is_readable l ovalue_is_readable v) (List.Tot.map fst l.fields));
-  List.Tot.for_all_mem (struct_field_is_readable l ovalue_is_readable v) (List.Tot.map fst l.fields);
+  assert_norm (ovalue_is_readable (TStruct l) v == List.Tot.for_all (struct_field_is_readable l (fun x y -> ovalue_is_readable x y) v) (List.Tot.map fst l.fields));
+  assert (List.Tot.for_all (struct_field_is_readable l (fun x y -> ovalue_is_readable x y) v) (List.Tot.map fst l.fields));
+  List.Tot.for_all_mem (struct_field_is_readable l (fun x y -> ovalue_is_readable x y) v) (List.Tot.map fst l.fields);
   assert (ovalue_is_readable (typ_of_struct_field l fd) (ostruct_sel v fd))
 
 let ovalue_is_readable_array_elim
@@ -2853,7 +2853,7 @@ let buffer_length_buffer_as_seq
   (b: buffer t)
 = ()
 
-#push-options "--ifuel 2"
+#push-options "--ifuel 2 --z3rlimit_factor 4 --retry 4"
 let buffer_as_seq_gsingleton_buffer_of_pointer #t h p =
   let Pointer from contents pth = p in
   match pth with
@@ -3226,13 +3226,13 @@ let disjoint_sym''
   (ensures (disjoint p1 p2 <==> disjoint p2 p1))
 = disjoint_sym' p1 p2
 
-let disjoint_includes_l #a #as #a' (x: pointer a) (subx:pointer as) (y:pointer a') : Lemma
+let disjoint_includes_l #a #es #a' (x: pointer a) (subx:pointer es) (y:pointer a') : Lemma
   (requires (includes x subx /\ disjoint x y))
   (ensures  (disjoint subx y))
   [SMTPat (disjoint subx y); SMTPat (includes x subx)]
   = disjoint_includes x y subx y
 
-let disjoint_includes_l_swap #a #as #a' (x:pointer a) (subx:pointer as) (y:pointer a') : Lemma
+let disjoint_includes_l_swap #a #es #a' (x:pointer a) (subx:pointer es) (y:pointer a') : Lemma
   (requires (includes x subx /\ disjoint x y))
   (ensures  (disjoint y subx))
   [SMTPat (disjoint y subx); SMTPat (includes x subx)]

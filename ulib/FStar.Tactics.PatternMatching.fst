@@ -64,6 +64,7 @@ let fetch_eq_side () : Tac (term * term) =
   match inspect g with
   | Tv_App squash (g, _) ->
     (match inspect squash with
+     | Tv_UInst squash _
      | Tv_FVar squash ->
        if fv_to_string squash = flatten_name squash_qn then
          (match inspect g with
@@ -73,6 +74,7 @@ let fetch_eq_side () : Tac (term * term) =
                (match inspect eq_type with
                 | Tv_App eq (typ, _) ->
                   (match inspect eq with
+                   | Tv_UInst eq _
                    | Tv_FVar eq ->
                      if fv_to_string eq = flatten_name eq2_qn then
                        (x, y)
@@ -166,21 +168,18 @@ type varname = string
 type qn = string
 
 type pattern =
-| PAny: pattern
 | PVar: name: varname -> pattern
 | PQn: qn: qn -> pattern
 | PType: pattern
 | PApp: hd: pattern -> arg: pattern -> pattern
 
 let desc_of_pattern = function
-| PAny -> "anything"
 | PVar _ -> "a variable"
 | PQn qn -> "a constant (" ^ qn ^ ")"
 | PType -> "Type"
 | PApp _ _ -> "a function application"
 
 let rec string_of_pattern = function
-| PAny -> "__"
 | PVar x -> "?" ^ x
 | PQn qn -> qn
 | PType -> "Type"
@@ -209,17 +208,18 @@ let term_head t : Tac string =
   | Tv_Var bv -> "Tv_Var"
   | Tv_BVar fv -> "Tv_BVar"
   | Tv_FVar fv -> "Tv_FVar"
+  | Tv_UInst _ _ -> "Tv_UInst"
   | Tv_App f x -> "Tv_App"
   | Tv_Abs x t -> "Tv_Abs"
   | Tv_Arrow x t -> "Tv_Arrow"
-  | Tv_Type () -> "Tv_Type"
+  | Tv_Type _ -> "Tv_Type"
   | Tv_Refine x t -> "Tv_Refine"
   | Tv_Const cst -> "Tv_Const"
   | Tv_Uvar i t -> "Tv_Uvar"
   | Tv_Let r attrs b t1 t2 -> "Tv_Let"
-  | Tv_Match t branches -> "Tv_Match"
-  | Tv_AscribedT _ _ _ -> "Tv_AscribedT"
-  | Tv_AscribedC _ _ _ -> "Tv_AscribedC"
+  | Tv_Match t _ branches -> "Tv_Match"
+  | Tv_AscribedT _ _ _ _ -> "Tv_AscribedT"
+  | Tv_AscribedC _ _ _ _ -> "Tv_AscribedC"
   | Tv_Unknown -> "Tv_Unknown"
 
 let string_of_match_exception = function
@@ -295,8 +295,6 @@ the pattern.  Returns a result in the exception monad. **)
 let rec interp_pattern_aux (pat: pattern) (cur_bindings: bindings) (tm:term)
     : Tac (match_res bindings) =
   admit();
-  let interp_any () cur_bindings tm =
-    return [] in
   let interp_var (v: varname) cur_bindings tm =
     match List.Tot.Base.assoc v cur_bindings with
     | Some tm' -> if term_eq tm tm' then return cur_bindings
@@ -304,13 +302,14 @@ let rec interp_pattern_aux (pat: pattern) (cur_bindings: bindings) (tm:term)
     | None -> return ((v, tm) :: cur_bindings) in
   let interp_qn (qn: qn) cur_bindings tm =
     match inspect tm with
+    | Tv_UInst fv _
     | Tv_FVar fv ->
       if fv_to_string fv = qn then return cur_bindings
       else raise (NameMismatch (qn, (fv_to_string fv)))
     | _ -> raise (SimpleMismatch (pat, tm)) in
   let interp_type cur_bindings tm =
     match inspect tm with
-    | Tv_Type () -> return cur_bindings
+    | Tv_Type _ -> return cur_bindings
     | _ -> raise (SimpleMismatch (pat, tm)) in
   let interp_app (p_hd p_arg: (p:pattern{p << pat})) cur_bindings tm =
     match inspect tm with
@@ -320,7 +319,6 @@ let rec interp_pattern_aux (pat: pattern) (cur_bindings: bindings) (tm:term)
       return with_arg
     | _ -> raise (SimpleMismatch (pat, tm)) in
     match pat with
-    | PAny -> interp_any () cur_bindings tm
     | PVar var -> interp_var var cur_bindings tm
     | PQn qn -> interp_qn qn cur_bindings tm
     | PType -> interp_type cur_bindings tm
@@ -508,27 +506,19 @@ let solve_mp #a (problem: matching_problem)
 /// variables are holes, free variables are constants, and applications are
 /// application patterns.
 
-// This is a hack to allow users to capture anything.
-assume val __ : #t:Type -> t
-let any_qn = `%__
 
 (** Compile a term `tm` into a pattern. **)
 let rec pattern_of_term_ex tm : Tac (match_res pattern) =
   match inspect tm with
   | Tv_Var bv ->
     return (PVar (name_of_bv bv))
-  | Tv_FVar fv ->
+  | Tv_FVar fv
+  | Tv_UInst fv _ ->
     let qn = fv_to_string fv in
-    return (if qn = any_qn then PAny else PQn qn)
-  | Tv_Type () ->
+    return (PQn qn)
+  | Tv_Type _ ->
     return PType
   | Tv_App f (x, _) ->
-    let is_any = match inspect f with
-                 | Tv_FVar fv -> fv_to_string fv = any_qn
-                 | _ -> false in
-    if is_any then
-      return PAny
-    else
       (fpat <-- pattern_of_term_ex f;
        xpat <-- pattern_of_term_ex x;
        return (PApp fpat xpat))
@@ -713,13 +703,23 @@ let abspat_arg_of_abspat_argspec solution_term (argspec: abspat_argspec)
 (** Specialize a continuation of type ``abspat_continuation``.
 This constructs a fully applied version of `continuation`, but it requires a
 quoted solution to be passed in. **)
+
+let rec hoist_and_apply (head:term) (arg_terms:list term) (hoisted_args:list argv)
+  : Tac term =
+  match arg_terms with
+  | [] -> mk_app head (List.rev hoisted_args)
+  | arg_term::rest ->
+    let n = List.Tot.length hoisted_args in
+    let bv = fresh_bv_named ("x" ^ (string_of_int n)) (pack Tv_Unknown) in
+    pack (Tv_Let false [] bv arg_term (hoist_and_apply head rest ((pack (Tv_Var bv), Q_Explicit)::hoisted_args)))
+  
 let specialize_abspat_continuation' (continuation: abspat_continuation)
                                     (solution_term:term)
     : Tac term =
-  let mk_arg argspec =
-    (abspat_arg_of_abspat_argspec solution_term argspec, Q_Explicit) in
+  let mk_arg_term argspec =
+    abspat_arg_of_abspat_argspec solution_term argspec in
   let argspecs, body = continuation in
-  mk_app body (map mk_arg argspecs)
+  hoist_and_apply body (map mk_arg_term argspecs) []
 
 (** Specialize a continuation of type ``abspat_continuation``.  This yields a
 quoted function taking a matching solution and running its body with appropriate

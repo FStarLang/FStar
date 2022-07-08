@@ -1,5 +1,5 @@
 [
-  "\u000fÝ¾¹¡ïculÑO\u0012‡U\u001bß",
+  "\u0007as§\u0002‹Ä˜š\u0005¼…ç¶\u007f§",
   [
     [
       "Steel.Memory.join_commutative",
@@ -11,7 +11,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "361ab98a0a3ea2bbe0a3fa118ca90f83"
+      "83d0547d2c1333915f32c00aa6ab2ca8"
     ],
     [
       "Steel.Memory.disjoint_join",
@@ -20,7 +20,7 @@
       1,
       [ "@query" ],
       0,
-      "feddb485b9625bd4465399aa348c4754"
+      "1d3b9676a0219525274d5ad33ea6237c"
     ],
     [
       "Steel.Memory.join_associative",
@@ -28,26 +28,11 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
-        "l_and-interp",
-        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_b0e7dfa1e7af76a2bbbf2a5a03a80662"
       ],
       0,
-      "432e560d4a20410e557bedd0ad3e2902"
-    ],
-    [
-      "Steel.Memory.equiv",
-      1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.l_Forall",
-        "equation_Prims.squash", "equation_Prims.subtype_of",
-        "l_quant_interp_5b2993f9f2c0eba3627049a3b4167c7a",
-        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
-      ],
-      0,
-      "b313888901d4d9b5cb5d10a472aa0d60"
+      "503e8385526dcfc4397954c96570a048"
     ],
     [
       "Steel.Memory.slimp",
@@ -61,7 +46,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "695f7031a6db61b2691765c3944b3843"
+      "89ffa6558c69e0cd3158efaf98aa1996"
     ],
     [
       "Steel.Memory.pts_to_compatible",
@@ -70,7 +55,7 @@
       1,
       [ "@query" ],
       0,
-      "83ed1d2d7d81bcbc645dd8b7033dd607"
+      "fb8c7dc90c47ec3e51eac0302559cda0"
     ],
     [
       "Steel.Memory.intro_star",
@@ -82,7 +67,76 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "3b3d376938cb3d1a6da57d6ea56d4c34"
+      "f6f24059bfa8077383426583d8f82191"
+    ],
+    [
+      "Steel.Memory.interp_star",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "b3a8dc1004f8a8cafa8d00bdd4e9bb56"
+    ],
+    [
+      "Steel.Memory.mem_prop_is_affine",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.l_Forall",
+        "equation_Prims.l_and", "equation_Prims.squash",
+        "equation_Prims.subtype_of",
+        "l_quant_interp_5b2993f9f2c0eba3627049a3b4167c7a",
+        "lemma_Steel.Memory.core_mem_interp",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
+        "refinement_interpretation_Tm_refine_400bb352f566e46f66fa061261e6a34a"
+      ],
+      0,
+      "f3b7fdb0992f4c7fdec93c2739d49d04"
+    ],
+    [
+      "Steel.Memory.interp_refine_slprop",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "13d5cff20574dd7e2f3235af4d60e8f5"
+    ],
+    [
+      "Steel.Memory.dep_slprop_is_affine",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.l_Forall",
+        "equation_Prims.squash", "equation_Prims.subtype_of",
+        "equation_Steel.Memory.hmem",
+        "l_quant_interp_5b2993f9f2c0eba3627049a3b4167c7a",
+        "lemma_Steel.Memory.core_mem_interp",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
+        "refinement_interpretation_Tm_refine_400bb352f566e46f66fa061261e6a34a"
+      ],
+      0,
+      "39dd90c80659a00cf1635a79791c9ed7"
+    ],
+    [
+      "Steel.Memory.action_except",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_0da546199211a769a972571cdb3aec67",
+        "equality_tok_Prims.T@tok", "equation_Prims.l_True",
+        "equation_Prims.squash", "equation_Prims.subtype_of",
+        "l_quant_interp_5b2993f9f2c0eba3627049a3b4167c7a",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
+        "typing_tok_Prims.T@tok"
+      ],
+      0,
+      "33270de4c6b95369a76efd5cc3302dd9"
     ],
     [
       "Steel.Memory.split_action",
@@ -94,7 +148,7 @@
         "refinement_interpretation_Tm_refine_782bbf7acd60ae0036bd61a1f4d3807b"
       ],
       0,
-      "9fce02d5ab59fd35bd60d31f1c24abf6"
+      "0ddf33bac49095d553202927cb819875"
     ],
     [
       "Steel.Memory.gather_action",
@@ -106,7 +160,7 @@
         "refinement_interpretation_Tm_refine_625413e9a3a548e616103efddf1886c4"
       ],
       0,
-      "cb6e605c6dba544042be4af586dbc838"
+      "63dcf55f95a649f5fa1b68eb5f9a7b21"
     ],
     [
       "Steel.Memory.select_refine",
@@ -115,7 +169,27 @@
       1,
       [ "@query" ],
       0,
-      "59cd9c7be304e81facd02c3d46b98afe"
+      "4a9c5f0c5e8870cb8f8c7747858b5170"
+    ],
+    [
+      "Steel.Memory.frame",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Steel.Memory_interpretation_Tm_arrow_092b7b2c3ed80803e99e850db5fba991",
+        "equation_Steel.Memory.mprop", "equation_Steel.Memory.mprop2",
+        "lemma_Steel.Memory.affine_star_smt",
+        "refinement_interpretation_Tm_refine_400bb352f566e46f66fa061261e6a34a",
+        "refinement_interpretation_Tm_refine_8f596b7f5a63f31b45e01cd0d14d3d54",
+        "refinement_interpretation_Tm_refine_9bfbdd2d6f076a7569bbeba989c22fb8",
+        "refinement_interpretation_Tm_refine_9e882fee84b0164e274effaf8057c0b1",
+        "refinement_interpretation_Tm_refine_c68ca5e5f7afafc462129b6c70fdacac",
+        "refinement_interpretation_Tm_refine_d13ff5e7a2dcec6ca4a9195f0dca7981"
+      ],
+      0,
+      "dd952c7c71229f8eb7b0247ebad71484"
     ],
     [
       "Steel.Memory.is_frame_monotonic",
@@ -129,7 +203,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "e27cc7a4a5a2a3bf9dabdc51028f3603"
+      "1bf5fb4c2854bd23bff5e14e79edb31c"
     ],
     [
       "Steel.Memory.id_elim_star",
@@ -138,7 +212,7 @@
       1,
       [ "@query" ],
       0,
-      "20c221da353db6aaf0e73e98780959b0"
+      "3f0693335a943e4de1a1141a1bb9ec10"
     ]
   ]
 ]

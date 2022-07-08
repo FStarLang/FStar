@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "a5010e94d2296c16abfbac2c3e6f9f86"
+      "579952f010fec173ef1d19811746d049"
     ],
     [
       "BinarySearchTree0.__proj__Node__item___0",
@@ -22,7 +22,7 @@
         "refinement_interpretation_Tm_refine_0f47b300bc7833c94b530c9724981898"
       ],
       0,
-      "775ebaffe7cb09f22fae72be1810706f"
+      "3e24864d5358a92efc6e85e799e3cbf4"
     ],
     [
       "BinarySearchTree0.__proj__Node__item___1",
@@ -36,7 +36,7 @@
         "refinement_interpretation_Tm_refine_0f47b300bc7833c94b530c9724981898"
       ],
       0,
-      "b8f4725d3e8323bbe556fcbc11ed38ef"
+      "762b602c7fbb1aeda4a6f379972777d6"
     ],
     [
       "BinarySearchTree0.__proj__Node__item___2",
@@ -50,7 +50,7 @@
         "refinement_interpretation_Tm_refine_0f47b300bc7833c94b530c9724981898"
       ],
       0,
-      "942ea4ff8d9d10ac152a5addf00dd62d"
+      "aa8012d707629ae48d87c1f21b037eef"
     ],
     [
       "BinarySearchTree0.search",
@@ -66,14 +66,15 @@
         "disc_equation_BinarySearchTree0.Leaf",
         "disc_equation_BinarySearchTree0.Node",
         "equality_tok_BinarySearchTree0.Leaf@tok",
-        "equality_tok_Prims.LexTop@tok",
+        "equation_Prims.op_Equals_Equals_Equals",
         "fuel_guarded_inversion_BinarySearchTree0.tree",
         "function_token_typing_Prims.__cache_version_number__",
-        "int_inversion", "subterm_ordering_BinarySearchTree0.Node",
+        "int_inversion", "projection_inverse_BoxBool_proj_0",
+        "subterm_ordering_BinarySearchTree0.Node",
         "typing_tok_BinarySearchTree0.Leaf@tok"
       ],
       0,
-      "afbbf2d5f4072cd53335106bd9da5a9e"
+      "5d828b8f2ad6cb8dc83216409ad1ae0d"
     ],
     [
       "BinarySearchTree0.insert",
@@ -89,14 +90,15 @@
         "disc_equation_BinarySearchTree0.Leaf",
         "disc_equation_BinarySearchTree0.Node",
         "equality_tok_BinarySearchTree0.Leaf@tok",
-        "equality_tok_Prims.LexTop@tok",
+        "equation_Prims.op_Equals_Equals_Equals",
         "fuel_guarded_inversion_BinarySearchTree0.tree",
         "function_token_typing_Prims.__cache_version_number__",
-        "int_inversion", "subterm_ordering_BinarySearchTree0.Node",
+        "int_inversion", "projection_inverse_BoxBool_proj_0",
+        "subterm_ordering_BinarySearchTree0.Node",
         "typing_tok_BinarySearchTree0.Leaf@tok"
       ],
       0,
-      "7ac3edac78ada2ecf585d86a65473cba"
+      "ffa4bfad1323774933858f6ee6d9665a"
     ]
   ]
 ]

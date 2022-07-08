@@ -19,7 +19,17 @@ open FStar.Reflection.Types
 open FStar.Tactics.Types
 open FStar.Tactics.Result
 
+/// This admit is to typecheck the bind implementation when the
+///   interface is interleaved
+
+#push-options "--admit_smt_queries true"
+let tac_bind_interleave_begin = ()
+#pop-options
+let tac_bind_interleave_end = ()
+
 let with_tactic _ p = p
+
+let rewrite_with_tactic _ p = p
 
 let synth_by_tactic #_ _ = admit ()
 
@@ -38,3 +48,5 @@ let postprocess_for_extraction_with _ = ()
 #set-options "--no_tactics"
 
 let unfold_with_tactic _ _ = ()
+
+let unfold_rewrite_with_tactic _ _ = ()

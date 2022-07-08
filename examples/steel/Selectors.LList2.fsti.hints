@@ -1,0 +1,31 @@
+[
+  "\u001d\u000f5‡w—\u0007:ú®\u0012\u0013jõ\u0006ï",
+  [
+    [
+      "Selectors.LList2.v_llist",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.l_True",
+        "equation_Prims.l_and", "equation_Prims.logical",
+        "equation_Prims.squash",
+        "function_token_typing_Steel.Effect.Common.selector_tactic",
+        "l_and-interp", "lemma_FStar.Tactics.Effect.by_tactic_seman",
+        "refinement_interpretation_Tm_refine_13b6088eb7985d6ce1200dc46f7ae42b",
+        "refinement_kinding_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "525b7de005b799dcf169c07ff6e68235"
+    ],
+    [
+      "Selectors.LList2.tail",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "452d3696a304d7bdeca5dd75ff6a7251"
+    ]
+  ]
+]

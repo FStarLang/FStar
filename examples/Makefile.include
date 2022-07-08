@@ -1,12 +1,19 @@
 # --------------------------------------------------------------------
-ifndef FSTAR_HOME
-   $(error "Please define the `FSTAR_HOME` variable before including this makefile.")
+ifdef FSTAR_HOME
+   FSTAR_ULIB=$(FSTAR_HOME)/ulib
+else
+   # FSTAR_HOME not defined, assume fstar.exe installed through opam
+   # or binary package, and reachable from PATH
+   FSTAR_ULIB=$(dir $(shell which fstar.exe))/../lib/fstar
 endif
 
-include $(FSTAR_HOME)/ulib/gmake/z3.mk
-include $(FSTAR_HOME)/ulib/gmake/fstar.mk
+include $(FSTAR_ULIB)/gmake/z3.mk
+include $(FSTAR_ULIB)/gmake/fstar.mk
 
 ifeq ($(OS),Windows_NT)
+  ifndef FSTAR_HOME
+     $(error "Please define the `FSTAR_HOME` variable before including this makefile.")
+  endif
   MSBUILD = $(FSTAR_HOME)/src/msbuild.bat
 else
   # If can't find msbuild, use xbuild, but throw a warning

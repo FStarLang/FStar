@@ -2,7 +2,7 @@ open Prims
 type mlsymbol = Prims.string
 type mlident = mlsymbol
 type mlpath = (mlsymbol Prims.list * mlsymbol)
-let kremlin_keywords : 'uuuuu . unit -> 'uuuuu Prims.list = fun uu___ -> []
+let krml_keywords : 'uuuuu . unit -> 'uuuuu Prims.list = fun uu___ -> []
 let (ocamlkeywords : Prims.string Prims.list) =
   ["and";
   "as";
@@ -167,17 +167,17 @@ let (fsharpkeywords : Prims.string Prims.list) =
 let (string_of_mlpath : mlpath -> mlsymbol) =
   fun uu___ ->
     match uu___ with
-    | (p, s) -> FStar_String.concat "." (FStar_List.append p [s])
+    | (p, s) -> FStar_String.concat "." (FStar_Compiler_List.op_At p [s])
 type mlidents = mlident Prims.list
 type mlsymbols = mlsymbol Prims.list
 type e_tag =
   | E_PURE 
-  | E_GHOST 
+  | E_ERASABLE 
   | E_IMPURE 
 let (uu___is_E_PURE : e_tag -> Prims.bool) =
   fun projectee -> match projectee with | E_PURE -> true | uu___ -> false
-let (uu___is_E_GHOST : e_tag -> Prims.bool) =
-  fun projectee -> match projectee with | E_GHOST -> true | uu___ -> false
+let (uu___is_E_ERASABLE : e_tag -> Prims.bool) =
+  fun projectee -> match projectee with | E_ERASABLE -> true | uu___ -> false
 let (uu___is_E_IMPURE : e_tag -> Prims.bool) =
   fun projectee -> match projectee with | E_IMPURE -> true | uu___ -> false
 type mlloc = (Prims.int * Prims.string)
@@ -322,9 +322,9 @@ type meta =
   | CIfDef 
   | CMacro 
   | Deprecated of Prims.string 
-  | RemoveUnusedTypeParameters of (Prims.int Prims.list * FStar_Range.range)
-  
-  | HasValDecl of FStar_Range.range 
+  | RemoveUnusedTypeParameters of (Prims.int Prims.list *
+  FStar_Compiler_Range.range) 
+  | HasValDecl of FStar_Compiler_Range.range 
 let (uu___is_Mutable : meta -> Prims.bool) =
   fun projectee -> match projectee with | Mutable -> true | uu___ -> false
 let (uu___is_Assumed : meta -> Prims.bool) =
@@ -396,12 +396,12 @@ let (uu___is_RemoveUnusedTypeParameters : meta -> Prims.bool) =
     | RemoveUnusedTypeParameters _0 -> true
     | uu___ -> false
 let (__proj__RemoveUnusedTypeParameters__item___0 :
-  meta -> (Prims.int Prims.list * FStar_Range.range)) =
+  meta -> (Prims.int Prims.list * FStar_Compiler_Range.range)) =
   fun projectee -> match projectee with | RemoveUnusedTypeParameters _0 -> _0
 let (uu___is_HasValDecl : meta -> Prims.bool) =
   fun projectee ->
     match projectee with | HasValDecl _0 -> true | uu___ -> false
-let (__proj__HasValDecl__item___0 : meta -> FStar_Range.range) =
+let (__proj__HasValDecl__item___0 : meta -> FStar_Compiler_Range.range) =
   fun projectee -> match projectee with | HasValDecl _0 -> _0
 type metadata = meta Prims.list
 type mlletflavor =

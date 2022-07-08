@@ -87,9 +87,6 @@ let from_vec_lemma_1 #n a b = ()
 
 let from_vec_lemma_2 #n a b = inverse_vec_lemma a; inverse_vec_lemma b
 
-
-open FStar.Math.Lemmas
-
 #push-options "--fuel 0 --ifuel 0"
 let from_vec_aux #n a s1 s2 =
   paren_mul_left (from_vec #s2 (slice a 0 s2)) (pow2 (s1 - s2)) (pow2 (n - s1));
@@ -512,6 +509,7 @@ let lemma_lognot_one_ext #n a =
   let neav_l = Seq.append hd0 nav in
   Seq.Base.lemma_eq_elim neav_l neav_r
 
+#push-options "--z3rlimit 60"
 let rec lemma_lognot_value_mod #n a =
     if n = 1 then () else
     begin
@@ -548,6 +546,7 @@ let rec lemma_lognot_value_mod #n a =
         lemma_one_extend tl
       end
     end
+#pop-options
 
 let lemma_lognot_value_zero #n a =
   let p = pow2 n in

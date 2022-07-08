@@ -14,7 +14,7 @@
    limitations under the License.
 *)
 module FStar.Reflection.Formula
-
+open FStar.List.Tot
 open FStar.Tactics.Effect
 open FStar.Tactics.Builtins
 open FStar.Reflection.Builtins
@@ -65,7 +65,8 @@ let term_as_formula' (t:term) : Tac formula =
     | Tv_Var n ->
         Name n
 
-    | Tv_FVar fv ->
+    | Tv_FVar fv
+    | Tv_UInst fv _ ->
         // Cannot use `when` clauses when verifying!
         let qn = inspect_fv fv in
         if qn = true_qn then True_
@@ -77,6 +78,7 @@ let term_as_formula' (t:term) : Tac formula =
     // TODO: b2t at this point ?
     | Tv_App h0 t -> begin
         let (h, ts) = collect_app h0 in
+        let h = un_uinst h in
         match inspect_ln h, ts@[t] with
         | Tv_FVar fv, [(a1, Q_Implicit); (a2, Q_Explicit); (a3, Q_Explicit)] ->
             let qn = inspect_fv fv in
@@ -124,7 +126,8 @@ let term_as_formula' (t:term) : Tac formula =
 
 let rec is_name_imp (nm : name) (t : term) : bool =
     begin match inspect_ln t with
-    | Tv_FVar fv ->
+    | Tv_FVar fv
+    | Tv_UInst fv _ ->
         if inspect_fv fv = nm
         then true
         else false

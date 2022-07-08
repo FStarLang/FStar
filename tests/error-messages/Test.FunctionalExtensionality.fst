@@ -17,9 +17,9 @@ module Test.FunctionalExtensionality
 open FStar.FunctionalExtensionality
 module F = FStar.FunctionalExtensionality
 
-(* To begin with, eta is provable *)
-let eta_is_eq #a (#b:a -> Type) (f: (x:a -> b x)) : (f == (fun (x:a) -> f x)) =
-  FStar.Squash.return_squash Refl
+// (* To begin with, eta is provable *)
+// let eta_is_eq #a (#b:a -> Type) (f: (x:a -> b x)) : (f == (fun (x:a) -> f x)) =
+//   FStar.Squash.return_squash Refl
 
 (** Illustrating the use of F.on_dom to restrict the domain of a
     function for use with the extensionality axiom *)

@@ -1,0 +1,53 @@
+[
+  "NÈÀ]øRÄ\u0005\u000e½¼!(ŠŽV",
+  [
+    [
+      "Steel.ST.Effect.Atomic.STAtomicBase",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "b2t_def", "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "6ec7139f27e55ab536880188bb1fbd5c"
+    ],
+    [
+      "Steel.ST.Effect.Atomic.STAtomicBase",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "ce4dec7a1827a010ff68abde1e09ec6a"
+    ],
+    [
+      "Steel.ST.Effect.Atomic.STAtomicBase",
+      3,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_de09779676242898794a0b057d5f5bb4"
+      ],
+      0,
+      "2c46e1a6f99cbbe5ec276f68753a423c"
+    ],
+    [
+      "Steel.ST.Effect.Atomic.STAtomicBase",
+      4,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "7d15ac7cfebbe475f17b78cd250f6ae7"
+    ]
+  ]
+]

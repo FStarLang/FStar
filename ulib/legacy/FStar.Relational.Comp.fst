@@ -84,7 +84,7 @@ assume val cross : #a:Type -> #b:Type -> #c:Type -> #d:Type
                                                                /\ q' h1 (R rl (R?.r r)) (R h2l (R?.r h2)))))
 
 
-(* Create a ST statment from a ST2 statement by projection *)
+(* Create a ST statement from a ST2 statement by projection *)
 val decomp_l : (a0:Type) -> (a1:Type) -> (b0:Type) -> (b1:Type) -> (al:a0) -> (wp:(rel a0 a1 -> Tot (st2_WP (rel b0 b1))))
 	     -> Tot (st_wp_h heap b0)
 let decomp_l a0 a1 b0 b1 al wp =

@@ -80,7 +80,7 @@ type id = id * UInt128.t
 // also used in miTLS ('model' may be better than 'ideal'); could be loaded from another module.
 // this flag enables conditional idealization by keeping additional data,
 // - this should not affect the code behavior
-// - this may cause the code not to compile to Kremlin/C.
+// - this may cause the code not to compile to Karamel/C.
 (* inline_for_extraction *) unfold let authId (i: id) =
   let i = fst i in
   safeHS i && mac1 i

@@ -1,5 +1,5 @@
 [
-  "*‘d…'åè\\ë∑yœÆ55}",
+  "ÈØp\u001b\u0019Ò∑\r◊ámKÉµaS",
   [
     [
       "FStar.Set.as_set'",
@@ -10,11 +10,12 @@
         "@MaxIFuel_assumption", "@query",
         "binder_x_374b44ccfcb77ed85d505dbc44265913_1",
         "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
-        "equality_tok_Prims.LexTop@tok", "equation_Prims.eqtype",
-        "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
+        "equation_Prims.eqtype", "equation_Prims.op_Equals_Equals_Equals",
+        "fuel_guarded_inversion_Prims.list",
+        "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "39e648ef5af4debfb6a87260dec8cb3a"
+      "81d4bd23dd981f170723d2897b576577"
     ],
     [
       "FStar.Set.lemma_disjoint_subset",
@@ -31,7 +32,7 @@
         "typing_FStar.Set.mem"
       ],
       0,
-      "2f99e4e32cd9e68ca6ea8ce7b7d2d48d"
+      "a4a92288adfbc917a6a6d7e6ef0335c6"
     ]
   ]
 ]

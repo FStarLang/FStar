@@ -27,7 +27,7 @@ module LowStar.ConstBuffer
    the weakest (i.e., mutability).
 
    The main type of this module is `const_buffer t`. It is extracted
-   by KreMLin to  `const t*`.
+   by KaRaMeL to  `const t*`.
 *)
 
 module U32 = FStar.UInt32
@@ -104,10 +104,12 @@ let as_mbuf (c:const_buffer 'a) : GTot _ = qbuf_mbuf (as_qbuf c)
 
 /// We now give several convenience functions that lift common
 /// notions on buffers to const_buffer, via the `as_mbuf` coercion
-let live (h:HS.mem) (c:const_buffer 'a)   = B.live h (as_mbuf c)
-let length (c:const_buffer 'a)            = B.length (as_mbuf c)
-let loc_buffer (c:const_buffer 'a)        = B.loc_buffer (as_mbuf c)
-let as_seq (h:HS.mem) (c:const_buffer 'a) = B.as_seq h (as_mbuf c)
+let live (h:HS.mem) (c:const_buffer 'a)    = B.live h (as_mbuf c)
+let length (c:const_buffer 'a)             = B.length (as_mbuf c)
+let loc_buffer (c:const_buffer 'a)         = B.loc_buffer (as_mbuf c)
+let loc_addr_of_buffer (c:const_buffer 'a) = B.loc_addr_of_buffer (as_mbuf c)
+let as_seq (h:HS.mem) (c:const_buffer 'a)  = B.as_seq h (as_mbuf c)
+let g_is_null (c:const_buffer 'a)          = B.g_is_null (as_mbuf c)
 
 (*** CONSTRUCTORS **)
 
@@ -145,8 +147,16 @@ val of_qbuf (#q:qual) (b:B.mbuffer 'a (q_preorder q 'a) (q_preorder q 'a))
       qbuf_qual c == q /\
       qbuf_mbuf c == b)
 
+/// null constant buffer
+let null 'a : const_buffer 'a = of_buffer B.null
 
 (*** OPERATIONS ON CONST POINTERS **)
+
+/// Is the buffer the null pointer?
+val is_null (c:const_buffer 'a)
+  : Stack bool (requires (fun h -> live h c))
+               (ensures  (fun h y h' -> h == h' /\ y == g_is_null c))
+
 
 /// `index c i`: Very similar to the spec for `Buffer.index`
 val index (c:const_buffer 'a) (i:U32.t)

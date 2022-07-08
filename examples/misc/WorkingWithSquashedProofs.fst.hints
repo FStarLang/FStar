@@ -1,5 +1,5 @@
 [
-  "|ƒ\u0016Üá>K\u0014Àõ§yé!\u0015„",
+  "aïPÙV¿ùÉ\u0006¥îÖ≤5\u0007@",
   [
     [
       "WorkingWithSquashedProofs.lemma_as_squash",
@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "666f08b9609c2bfc670535d3580d7c1a"
+      "d2388b3eea210c28021d15174b2ec4eb"
     ],
     [
       "WorkingWithSquashedProofs.foo_implies_bar",
@@ -21,7 +21,7 @@
         "refinement_interpretation_Tm_refine_460b166284656e401cd2507f30d7a622"
       ],
       0,
-      "d519d030f5f28e8f7f4d641b8bd4a9f7"
+      "eff68787bc73391d19c0634b69cd801b"
     ],
     [
       "WorkingWithSquashedProofs.valid_baz",
@@ -31,12 +31,12 @@
       [
         "@MaxIFuel_assumption", "@query", "disc_equation_Prims.Left",
         "disc_equation_Prims.Right", "equation_Prims.squash",
-        "fuel_guarded_inversion_Prims.c_or",
+        "fuel_guarded_inversion_Prims.sum",
         "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "28fac56a3cc375adc860e1d4a51fd883"
+      "9865c599b45a3d5ec66adce37710b6bd"
     ],
     [
       "WorkingWithSquashedProofs.valid_baz_alt",
@@ -46,12 +46,12 @@
       [
         "@MaxIFuel_assumption", "@query", "disc_equation_Prims.Left",
         "disc_equation_Prims.Right", "equation_Prims.squash",
-        "fuel_guarded_inversion_Prims.c_or",
+        "fuel_guarded_inversion_Prims.sum",
         "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "e55ba30e45f6697d891983cdd544c1f0"
+      "fe812606dfcf15fbd0003576dab7a93a"
     ],
     [
       "WorkingWithSquashedProofs.elim_squash_or",
@@ -60,11 +60,11 @@
       1,
       [
         "@MaxIFuel_assumption", "@query", "disc_equation_Prims.Left",
-        "disc_equation_Prims.Right", "fuel_guarded_inversion_Prims.c_or",
+        "disc_equation_Prims.Right", "fuel_guarded_inversion_Prims.sum",
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "bd1c894d0db12deff0d765ca6a391c43"
+      "3d4bd6de647bfeba482cbefd62df2526"
     ]
   ]
 ]

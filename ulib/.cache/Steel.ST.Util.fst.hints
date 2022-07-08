@@ -1,0 +1,97 @@
+[
+  "–©\tµxÅ•ÿ\u001dàøÃÌ®∞ó",
+  [
+    [
+      "Steel.ST.Util.rewrite",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "e314460408db5d53d0c8723a05476e67"
+    ],
+    [
+      "Steel.ST.Util.rewrite_with_tactic",
+      1,
+      2,
+      1,
+      [
+        "@query", "lemma_Steel.Memory.reveal_equiv",
+        "typing_Steel.Effect.Common.hp_of"
+      ],
+      0,
+      "c1164cc85717a12427fa1672ebbe492f"
+    ],
+    [
+      "Steel.ST.Util.rewrite_equiv",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_Steel.Effect.Common.req",
+        "function_token_typing_FStar.Algebra.CommMonoid.Equiv.__proj__EQ__item__eq",
+        "function_token_typing_Steel.Effect.Common.equiv",
+        "lemma_Steel.Memory.reveal_equiv",
+        "proj_equation_FStar.Algebra.CommMonoid.Equiv.EQ_eq",
+        "projection_inverse_FStar.Algebra.CommMonoid.Equiv.EQ_eq",
+        "typing_Steel.Effect.Common.hp_of"
+      ],
+      0,
+      "e50f5e5b3bd449e0be79b6078ddb9dc9"
+    ],
+    [
+      "Steel.ST.Util.slassert0",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "43b037c1aa5d189aec535e6805ffff49"
+    ],
+    [
+      "Steel.ST.Util.extract_pure",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "b2ee5093db8ddfa702cc964eb0399629"
+    ],
+    [
+      "Steel.ST.Util.return0",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "567f6a051b3568a7ca57a27ec72acf5c"
+    ],
+    [
+      "Steel.ST.Util.with_invariant",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "70daccca3eb5a7f6951346443db1e302"
+    ],
+    [
+      "Steel.ST.Util.with_invariant_g",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "3086edea134e4d1acc287b5d22c00029"
+    ],
+    [
+      "Steel.ST.Util.par",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "bd5869eb6d97bd2ab9ac37fde5181b43"
+    ]
+  ]
+]

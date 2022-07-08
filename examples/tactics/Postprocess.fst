@@ -64,11 +64,18 @@ let xx = C1 (function
 
 open FStar.FunctionalExtensionality
 
+let q_as_lem (#a:Type) (#b:a -> Type) (p:squash (forall x. b x)) (x:a)
+  : Lemma (b x)
+  = ()
+
+let congruence_fun #a (#b:a -> Type) (f g:(x:a -> b x)) (x:squash (forall x. f x == g x)) :
+  Lemma (ensures (fun (x:a) -> f x) == (fun (x:a) -> g x)) =
+  assert ((fun (x:a) -> f x) == (fun (x:a) -> g x))
+      by (l_to_r [quote (q_as_lem x)];
+          trefl())
 
 let apply_feq_lem #a #b ($f $g : a -> b) : Lemma (requires (forall x. f x == g x))
-                                                (ensures  (on_domain a f == on_domain a g)) =
-    assert (feq f g);
-    ()
+                                                (ensures  ((fun x -> f x) == (fun x -> g x))) = congruence_fun f g ()
 
 let fext () = apply_lemma (`apply_feq_lem); dismiss (); ignore (forall_intros ())
 
@@ -120,6 +127,7 @@ let push_lifts () : Tac unit =
   (* dump "after"; *)
   ()
 
+//#push-options "--tactic_trace_d 2"
 [@@(postprocess_with push_lifts)]
 let yy = lift xx
 

@@ -37,36 +37,36 @@ let pcm_t #a #b : pcm (t a b) = FStar.PCM.({
   refine = (fun x -> Both? x \/ Neither? x)
 })
 open Steel.Memory
+open Steel.Effect.Atomic
 open Steel.Effect
+open Steel.PCMReference
 
-let upd_first #a #b (r:ref (t a b) pcm_t) (x:Ghost.erased a) (y:a)
-  : SteelT unit
+let upd_first (#a #b:Type u#1) (r:ref (t a b) pcm_t) (x:Ghost.erased a) (y:a)
+  : SteelT unit 
            (pts_to r (First #a #b x))
            (fun _ -> pts_to r (First #a #b y))
   = let f
-      : frame_preserving_upd_0
+      : frame_preserving_upd
               pcm_t
               (Ghost.hide (First #a #b x))
               (First #a #b y)
       = fun old_v ->
           match old_v with
-          | First _ -> First y
           | Both _ z -> Both y z
     in
-    Steel.Effect.add_action (upd_gen Set.empty r (Ghost.hide (First #a #b x)) (Ghost.hide (First #a #b y)) f)
+    upd_gen r (First #a #b x) (First #a #b y) f
 
-let upd_second #a #b (r:ref (t a b) pcm_t) (x:Ghost.erased b) (y:b)
+let upd_second (#a #b:Type u#1) (r:ref (t a b) pcm_t) (x:Ghost.erased b) (y:b)
   : SteelT unit
            (pts_to r (Second #a #b x))
            (fun _ -> pts_to r (Second #a #b y))
   = let f
-      : frame_preserving_upd_0
+      : frame_preserving_upd
               pcm_t
               (Second #a #b x)
               (Second #a #b y)
       = fun old_v ->
           match old_v with
-          | Second _ -> Second y
           | Both z _ -> Both z y
     in
-    Steel.Effect.add_action (upd_gen Set.empty r (Ghost.hide (Second #a #b x)) (Ghost.hide (Second #a #b y)) f)
+    upd_gen r (Second #a #b x) (Second #a #b y) f

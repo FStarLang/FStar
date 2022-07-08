@@ -1,8 +1,8 @@
-module U = FStar_Util
+module U = FStar_Compiler_Util
 open FStar_Errors
 open FStar_Syntax_Syntax
 open Lexing
-open FStar_Ulexing
+open FStar_Sedlexing
 
 type filename = string
 
@@ -34,7 +34,7 @@ let find_file filename =
     | Some s ->
       s
     | None ->
-      raise_err (Fatal_ModuleOrFileNotFound, FStar_Util.format1 "Unable to find file: %s\n" filename)
+      raise_err (Fatal_ModuleOrFileNotFound, U.format1 "Unable to find file: %s\n" filename)
 
 let vfs_entries : (U.time * string) U.smap = U.smap_create (Z.of_int 1)
 
@@ -80,11 +80,11 @@ let valid_extensions () =
   fst_extensions @ if FStar_Options.ml_ish () then fs_extensions else []
 
 let has_extension file extensions =
-  FStar_List.existsb (FStar_Util.ends_with file) extensions
+  FStar_List.existsb (U.ends_with file) extensions
 
 let check_extension fn =
   if (not (has_extension fn (valid_extensions ()))) then
-    let message = FStar_Util.format1 "Unrecognized extension '%s'" fn in
+    let message = U.format1 "Unrecognized extension '%s'" fn in
     raise_err (Fatal_UnrecognizedExtension, if has_extension fn fs_extensions then
                   message ^ " (pass --MLish to process .fs and .fsi files)"
                 else message)
@@ -95,9 +95,9 @@ type parse_frag =
     | Fragment of input_frag
 
 type parse_result =
-    | ASTFragment of (FStar_Parser_AST.inputFragment * (string * FStar_Range.range) list)
+    | ASTFragment of (FStar_Parser_AST.inputFragment * (string * FStar_Compiler_Range.range) list)
     | Term of FStar_Parser_AST.term
-    | ParseError of (FStar_Errors.raw_error * string * FStar_Range.range)
+    | ParseError of (FStar_Errors.raw_error * string * FStar_Compiler_Range.range)
 
 let parse fn =
   FStar_Parser_Util.warningHandler := (function
@@ -108,7 +108,7 @@ let parse fn =
         check_extension f;
         let f', contents = read_file f in
         (try create contents f' 1 0, f'
-         with _ -> raise_err (Fatal_InvalidUTF8Encoding, FStar_Util.format1 "File %s has invalid UTF-8 encoding.\n" f'))
+         with _ -> raise_err (Fatal_InvalidUTF8Encoding, U.format1 "File %s has invalid UTF-8 encoding.\n" f'))
     | Toplevel s
     | Fragment s ->
       create s.frag_text s.frag_fname (Z.to_int s.frag_line) (Z.to_int s.frag_col), "<input>"
@@ -125,13 +125,13 @@ let parse fn =
     | Toplevel _ -> begin
       let fileOrFragment = MenhirLib.Convert.Simplified.traditional2revised FStar_Parser_Parse.inputFragment lexer in
       let frags = match fileOrFragment with
-          | U.Inl modul ->
+          | FStar_Pervasives.Inl modul ->
              if has_extension filename interface_extensions
              then match modul with
                   | FStar_Parser_AST.Module(l,d) ->
-                    U.Inl (FStar_Parser_AST.Interface(l, d, true))
+                    FStar_Pervasives.Inl (FStar_Parser_AST.Interface(l, d, true))
                   | _ -> failwith "Impossible"
-             else U.Inl modul
+             else FStar_Pervasives.Inl modul
           | _ -> fileOrFragment
       in ASTFragment (frags, FStar_Parser_Util.flush_comments ())
       end
@@ -139,15 +139,15 @@ let parse fn =
       Term (MenhirLib.Convert.Simplified.traditional2revised FStar_Parser_Parse.term lexer)
   with
     | FStar_Errors.Empty_frag ->
-      ASTFragment (U.Inr [], [])
+      ASTFragment (FStar_Pervasives.Inr [], [])
 
     | FStar_Errors.Error(e, msg, r, _ctx) ->
       ParseError (e, msg, r)
 
-    | Parsing.Parse_error as e ->
+    | Parsing.Parse_error as _e ->
       let pos = FStar_Parser_Util.pos_of_lexpos lexbuf.cur_p in
-      let r = FStar_Range.mk_range filename pos pos in
-      ParseError (Fatal_SyntaxError, "Syntax error: " ^ (Printexc.to_string e), r)
+      let r = FStar_Compiler_Range.mk_range filename pos pos in
+      ParseError (Fatal_SyntaxError, "Syntax error", r)
 
 (** Parsing of command-line error/warning/silent flags. *)
 let parse_warn_error s =
@@ -155,13 +155,13 @@ let parse_warn_error s =
     if s = ""
     then []
     else
-      let lexbuf = FStar_Ulexing.create s "" 0 (String.length s) in
+      let lexbuf = FStar_Sedlexing.create s "" 0 (String.length s) in
       let lexer() = let tok = FStar_Parser_LexFStar.token lexbuf in
         (tok, lexbuf.start_p, lexbuf.cur_p)
       in
       try
         MenhirLib.Convert.Simplified.traditional2revised FStar_Parser_Parse.warn_error_list lexer
       with e ->
-        failwith (FStar_Util.format1 "Malformed warn-error list: %s" s)
+        failwith (U.format1 "Malformed warn-error list: %s" s)
   in
   FStar_Errors.update_flags user_flags

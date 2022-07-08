@@ -33,7 +33,14 @@ HyE.AE.fst \
 HyE.CCA2.fst \
 HyE.HCCA2.fst \
 
-LIB = ../../ucontrib/CoreCrypto/ml
+ifdef FSTAR_HOME
+FSTAR_UCONTRIB = $(FSTAR_HOME)/ucontrib
+else
+   # FSTAR_HOME not defined, assume fstar.exe installed through opam
+   # or binary package, and reachable from PATH
+FSTAR_UCONTRIB=$(dir $(shell which fstar.exe))/../share/fstar/contrib
+endif
+LIB = $(FSTAR_UCONTRIB)/CoreCrypto/ml
 
 ifeq ($(OS),Windows_NT)
     EXTRA_PATH = PATH="/usr/x86_64-w64-mingw32/sys-root/mingw/bin/:$(PATH)"
@@ -42,11 +49,9 @@ else
     UNAME_S := $(shell uname -s)
 endif
 
-FSTAR_HOME=../..
-
 include ../Makefile.include
 
-FSTAR_INCLUDE_PATHS=--include $(FSTAR_HOME)/ucontrib/Platform/fst --include $(FSTAR_HOME)/ucontrib/CoreCrypto/fst	      
+FSTAR_INCLUDE_PATHS=--include $(FSTAR_UCONTRIB)/Platform/fst --include $(FSTAR_UCONTRIB)/CoreCrypto/fst
 
 %.fsti-in %.fst-in: 
 	@echo $(FSTAR_INCLUDE_PATHS) \
@@ -78,17 +83,17 @@ CntProtocol.ml: SHA1.fst MAC.fst CntFormat.fst CntProtocol.fst
 		CntProtocol.fst \
 		--codegen-lib Platform --codegen-lib CoreCrypto --codegen-lib Seq --codegen OCaml
 
-OCAML_INCLUDE_PATHS=$(addprefix -I , $(FSTAR_HOME)/ucontrib/Platform/ml $(FSTAR_HOME)/ucontrib/CoreCrypto/ml)
+OCAML_INCLUDE_PATHS=$(addprefix -I , $(FSTAR_UCONTRIB)/Platform/ml $(FSTAR_UCONTRIB)/CoreCrypto/ml)
 
-CONTRIB_LIBS=$(FSTAR_HOME)/ucontrib/CoreCrypto/ml/CoreCrypto.cmxa
+CONTRIB_LIBS=$(FSTAR_UCONTRIB)/CoreCrypto/ml/CoreCrypto.cmxa
 
-include $(FSTAR_HOME)/ulib/ml/Makefile.include
+include $(FSTAR_ULIB)/ml/Makefile.include
 
 #OCAMLOPT automatically contains fstarlib
 SUPPORT_LIBS=$(FSTARLIB_DIR)/fstarlib.cmxa
 
 $(CONTRIB_LIBS):
-	+$(MAKE) -C $(FSTAR_HOME)/ucontrib/
+	+$(MAKE) -C $(FSTAR_UCONTRIB)
 
 RPC.exe: RPC.ml $(CONTRIB_LIBS)
 	$(OCAMLOPT) -thread -o $@ $(OCAML_INCLUDE_PATHS) $(CONTRIB_LIBS) SHA1.ml MAC.ml Formatting.ml RPC.ml

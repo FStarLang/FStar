@@ -1,5 +1,5 @@
 module Param
-
+open FStar.List.Tot
 open FStar.Tactics
 
 type bvmap = list (bv & (binder & binder & binder))
@@ -45,7 +45,7 @@ let binder_set_qual (b:binder) (q:aqualv) : Tac binder =
 let rec param' (bvmap : bvmap) (t:term) : Tac term =
   let r =
   match inspect t with
-  | Tv_Type () ->
+  | Tv_Type _ ->
     `(fun (s t : Type) -> s -> t -> Type0)
   | Tv_Var bv ->
     let (_, _, b) = lookup bvmap bv in
@@ -53,7 +53,7 @@ let rec param' (bvmap : bvmap) (t:term) : Tac term =
   | Tv_Arrow b c ->
     let bv, (q, _attrs) = inspect_binder b in
     begin match inspect_comp c with
-    | C_Total t2 _ ->
+    | C_Total t2 _ _ ->
       let t1 = (inspect_bv bv).bv_sort in
       // bv:t1 -> t2
 

@@ -1,4 +1,3 @@
-FSTAR_HOME=../..
 EXCLUDED_FSTAR_FILES=
 FSTAR_FILES = $(filter-out $(EXCLUDED_FSTAR_FILES), $(wildcard *.fst))
 
