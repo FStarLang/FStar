@@ -3,6 +3,8 @@ open Prims
 type pattern = unit
 
 
+type 'a eqtype_as_type = 'a
+type unit_as_type = unit
 type 'p spinoff = 'p
 
 let id : 'a . 'a -> 'a = fun x -> x
@@ -286,6 +288,5 @@ let (uu___is_CMacro : __internal_ocaml_attributes -> Prims.bool) =
 
 let singleton : 'uuuuu . 'uuuuu -> 'uuuuu = fun x -> x
 let with_type : 'uuuuu . 'uuuuu -> 'uuuuu = fun e -> e
-type 'a eqtype_as_type = 'a
 let coerce_eq : 'a 'b . unit -> 'a -> 'b =
   fun uu___1 -> fun uu___ -> (fun uu___ -> fun x -> Obj.magic x) uu___1 uu___

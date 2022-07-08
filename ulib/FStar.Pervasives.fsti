@@ -100,7 +100,16 @@ val smt_pat_or (x: list (list pattern)) : Tot pattern
 effect Lemma (a: Type) (pre: Type) (post: (squash pre -> Type)) (pats: list pattern) =
   Pure a pre (fun r -> post ())
 
-(** In the default mode of operation, all proofs in a verification
+
+(** A weakening coercion from eqtype to Type.
+
+    One of its uses is in types of layered effect combinators that
+    are subjected to stricter typing discipline (no subtyping) *)
+unfold let eqtype_as_type (a:eqtype) : Type = a
+
+let unit_as_type : Type0 = unit
+
+(** IN the default mode of operation, all proofs in a verification
     condition are bundled into a single SMT query. Sub-terms marked
     with the [spinoff] below are the exception: each of them is
     spawned off into a separate SMT query *)
@@ -1029,12 +1038,6 @@ val singleton (#a: Type) (x: a) : Tot (y: a{y == x})
     an identity function, we have an SMT axiom:
     [forall t e.{:pattern (with_type t e)} has_type (with_type t e) t] *)
 val with_type (#t: Type) (e: t) : Tot t
-
-(** A weakening coercion from eqtype to Type.
-
-    One of its uses is in types of layered effect combinators that
-    are subjected to stricter typing discipline (no subtyping) *)
-unfold let eqtype_as_type (a:eqtype) : Type = a
 
 (** A coercion of the [x] from [a] to [b], when [a] is provably equal
     to [b]. In most cases, F* will silently coerce from [a] to [b]

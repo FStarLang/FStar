@@ -4799,7 +4799,8 @@ and (desugar_comp :
                      uu___1 = "Lemma" ->
                      let unit_tm =
                        ((FStar_Parser_AST.mk_term
-                           (FStar_Parser_AST.Name FStar_Parser_Const.unit_lid)
+                           (FStar_Parser_AST.Name
+                              FStar_Parser_Const.unit_as_type_lid)
                            t1.FStar_Parser_AST.range
                            FStar_Parser_AST.Type_level),
                          FStar_Parser_AST.Nothing) in

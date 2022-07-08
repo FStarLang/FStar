@@ -38,6 +38,7 @@ let fstar_ns_lid          = p2l ["FStar"]
 (* Primitive types *)
 let bool_lid         = pconst "bool"
 let unit_lid         = pconst "unit"
+let unit_as_type_lid = psconst "unit_as_type"
 let squash_lid       = pconst "squash"
 let auto_squash_lid  = pconst "auto_squash"
 let string_lid       = pconst "string"

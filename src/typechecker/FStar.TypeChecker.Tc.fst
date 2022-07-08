@@ -566,6 +566,36 @@ let tc_sig_let env r se lbs lids : list sigelt * list sigelt * Env.env =
       | _ -> failwith "impossible (typechecking should preserve Tm_let)"
     in
 
+    //
+    // if no_subtyping attribute is present, typecheck the signatures with use_eq_strict
+    //
+    if U.has_attribute se.sigattrs PC.no_subtping_attr_lid
+    then begin
+      let env' = {env' with use_eq_strict=true} in
+      let err s pos = raise_error (Errors.Fatal_InconsistentQualifierAnnotation, s) pos in
+      snd lbs |> List.iter (fun lb ->
+        if not (U.is_lemma lb.lbtyp)
+        then err ("no_subtype annotation on a non-lemma") lb.lbpos
+        else let lid_opt =
+                   Free.fvars lb.lbtyp
+                   |> BU.set_elements
+                   |> List.tryFind (fun lid ->
+                                   not (lid |> Ident.path_of_lid |> List.hd = "Prims" ||
+                                        lid_equals lid PC.unit_as_type_lid ||
+                                        lid_equals lid PC.pattern_lid)) in
+             if lid_opt |> is_some             
+             then err (BU.format1 "%s is not allowed in no_subtyping lemmas"
+                         (lid_opt |> must |> string_of_lid)) lb.lbpos
+             else let t, _ = U.type_u () in
+                  let uvs, lbtyp = SS.open_univ_vars lb.lbunivs lb.lbtyp in
+                  let _, _, g = TcTerm.tc_check_tot_or_gtot_term
+                    (Env.push_univ_vars env' uvs)
+                    lbtyp
+                    t
+                    "checking no_subtype annotation" in
+                    Rel.force_trivial_guard env' g)
+    end;
+
     (* 4. Record the type of top-level lets, and log if requested *)
     snd lbs |> List.iter (fun lb ->
         let fv = right lb.lbname in

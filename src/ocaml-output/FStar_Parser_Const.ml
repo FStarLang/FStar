@@ -13,6 +13,7 @@ let (pervasives_lid : FStar_Ident.lident) = p2l ["FStar"; "Pervasives"]
 let (fstar_ns_lid : FStar_Ident.lident) = p2l ["FStar"]
 let (bool_lid : FStar_Ident.lident) = pconst "bool"
 let (unit_lid : FStar_Ident.lident) = pconst "unit"
+let (unit_as_type_lid : FStar_Ident.lident) = psconst "unit_as_type"
 let (squash_lid : FStar_Ident.lident) = pconst "squash"
 let (auto_squash_lid : FStar_Ident.lident) = pconst "auto_squash"
 let (string_lid : FStar_Ident.lident) = pconst "string"

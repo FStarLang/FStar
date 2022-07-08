@@ -72,7 +72,7 @@ type trivial = | T
 (** [unit]: another singleton type, with its only inhabitant written [()]
     we assume it is primitive, for convenient interop with other languages *)
 assume new
-type unit : eqtype 
+type unit : eqtype
 
 (** [squash p] is a central type in F*---[squash p] is the proof
     irrelevant analog of [p] and is represented as a unit
