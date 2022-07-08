@@ -109,6 +109,7 @@ let mk (t:'a) r = {
     n=t;
     pos=r;
     vars=Util.mk_ref None;
+    hash_code=Util.mk_ref None;
 }
 
 let bv_to_tm   bv :term = mk (Tm_bvar bv) (range_of_bv bv)

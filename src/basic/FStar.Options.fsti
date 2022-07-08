@@ -150,7 +150,6 @@ val log_queries                 : unit    -> bool
 val log_types                   : unit    -> bool
 val max_fuel                    : unit    -> int
 val max_ifuel                   : unit    -> int
-val memoize_tc                  : unit    -> bool
 val ml_ish                      : unit    -> bool
 val set_ml_ish                  : unit    -> unit
 val no_default_includes         : unit    -> bool

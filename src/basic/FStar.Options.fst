@@ -188,7 +188,6 @@ let defaults =
       ("log_types"                    , Bool false);
       ("max_fuel"                     , Int 8);
       ("max_ifuel"                    , Int 2);
-      ("memoize_tc"                   , Bool false);
       ("MLish"                        , Bool false);
       ("no_default_includes"          , Bool false);
       ("no_extract"                   , List []);
@@ -368,7 +367,6 @@ let get_log_queries             ()      = lookup_opt "log_queries"              
 let get_log_types               ()      = lookup_opt "log_types"                as_bool
 let get_max_fuel                ()      = lookup_opt "max_fuel"                 as_int
 let get_max_ifuel               ()      = lookup_opt "max_ifuel"                as_int
-let get_memoize_tc              ()      = lookup_opt "memoize_tc"               as_bool
 let get_MLish                   ()      = lookup_opt "MLish"                    as_bool
 let get_no_default_includes     ()      = lookup_opt "no_default_includes"      as_bool
 let get_no_extract              ()      = lookup_opt "no_extract"               (as_list as_string)
@@ -906,11 +904,6 @@ let rec specs_with_types warn_unsafe : list (char * string * opt_type * string) 
         "max_ifuel",
         IntStr "non-negative integer",
         "Number of unrolling of inductive datatypes to try at most (default 2)");
-
-       ( noshort,
-        "memoize_tc",
-        Const (Bool true),
-        "Enable memoizing type-checker results (experimental DO NOT USE YET)");
 
        ( noshort,
         "MLish",
@@ -1722,7 +1715,6 @@ let keep_query_captions          () = log_queries                     ()
 let log_types                    () = get_log_types                   ()
 let max_fuel                     () = get_max_fuel                    ()
 let max_ifuel                    () = get_max_ifuel                   ()
-let memoize_tc                   () = get_memoize_tc                  ()
 let ml_ish                       () = get_MLish                       ()
 let set_ml_ish                   () = set_option "MLish" (Bool true)
 let no_default_includes          () = get_no_default_includes         ()

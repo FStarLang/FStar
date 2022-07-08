@@ -13,7 +13,6 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-#light "off"
 module FStar.Syntax.Hash
 open FStar.ST
 open FStar.All
@@ -25,7 +24,7 @@ module UU = FStar.Syntax.Unionfind
 
 module H = FStar.Hash
 inline_for_extraction
-let memoize (h:syntax<'a>) (f:syntax<'a> -> H.hash_code) : H.hash_code =
+let memoize (h:syntax 'a) (f:syntax 'a -> H.hash_code) : H.hash_code =
   match !h.hash_code with
   | Some c -> c
   | None ->

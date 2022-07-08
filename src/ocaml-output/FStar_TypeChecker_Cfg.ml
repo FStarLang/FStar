@@ -3203,7 +3203,9 @@ let (equality_ops : primitive_step FStar_Compiler_Util.psmap) =
                    (FStar_Syntax_Util.t_true.FStar_Syntax_Syntax.n);
                  FStar_Syntax_Syntax.pos = r;
                  FStar_Syntax_Syntax.vars =
-                   (FStar_Syntax_Util.t_true.FStar_Syntax_Syntax.vars)
+                   (FStar_Syntax_Util.t_true.FStar_Syntax_Syntax.vars);
+                 FStar_Syntax_Syntax.hash_code =
+                   (FStar_Syntax_Util.t_true.FStar_Syntax_Syntax.hash_code)
                }
          | FStar_Syntax_Util.NotEqual ->
              FStar_Pervasives_Native.Some
@@ -3212,7 +3214,9 @@ let (equality_ops : primitive_step FStar_Compiler_Util.psmap) =
                    (FStar_Syntax_Util.t_false.FStar_Syntax_Syntax.n);
                  FStar_Syntax_Syntax.pos = r;
                  FStar_Syntax_Syntax.vars =
-                   (FStar_Syntax_Util.t_false.FStar_Syntax_Syntax.vars)
+                   (FStar_Syntax_Util.t_false.FStar_Syntax_Syntax.vars);
+                 FStar_Syntax_Syntax.hash_code =
+                   (FStar_Syntax_Util.t_false.FStar_Syntax_Syntax.hash_code)
                }
          | uu___4 -> FStar_Pervasives_Native.None)
     | uu___ -> failwith "Unexpected number of arguments" in

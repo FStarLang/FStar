@@ -2869,7 +2869,9 @@ let (try_lookup_lid_aux :
                   {
                     FStar_Syntax_Syntax.n = (t.FStar_Syntax_Syntax.n);
                     FStar_Syntax_Syntax.pos = uu___4;
-                    FStar_Syntax_Syntax.vars = (t.FStar_Syntax_Syntax.vars)
+                    FStar_Syntax_Syntax.vars = (t.FStar_Syntax_Syntax.vars);
+                    FStar_Syntax_Syntax.hash_code =
+                      (t.FStar_Syntax_Syntax.hash_code)
                   } in
                 (us, uu___3) in
               (uu___2, r) in

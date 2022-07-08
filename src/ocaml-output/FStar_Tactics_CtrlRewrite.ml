@@ -657,7 +657,9 @@ and (on_subterms :
                             FStar_Syntax_Syntax.pos =
                               (tm.FStar_Syntax_Syntax.pos);
                             FStar_Syntax_Syntax.vars =
-                              (tm.FStar_Syntax_Syntax.vars)
+                              (tm.FStar_Syntax_Syntax.vars);
+                            FStar_Syntax_Syntax.hash_code =
+                              (tm.FStar_Syntax_Syntax.hash_code)
                           }, flag))
 let (do_ctrl_rewrite :
   FStar_Tactics_Types.goal ->

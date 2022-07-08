@@ -3955,8 +3955,9 @@ let (unshelve : FStar_Syntax_Syntax.term -> unit FStar_Tactics_Monad.tac) =
                 FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_uvar
                   (ctx_uvar, uu___2);
                 FStar_Syntax_Syntax.pos = uu___3;
-                FStar_Syntax_Syntax.vars = uu___4;_},
-              uu___5) ->
+                FStar_Syntax_Syntax.vars = uu___4;
+                FStar_Syntax_Syntax.hash_code = uu___5;_},
+              uu___6) ->
                let env2 =
                  {
                    FStar_TypeChecker_Env.solver =
@@ -4058,8 +4059,8 @@ let (unshelve : FStar_Syntax_Syntax.term -> unit FStar_Tactics_Monad.tac) =
                  } in
                let g =
                  FStar_Tactics_Types.mk_goal env2 ctx_uvar opts false "" in
-               let uu___6 = let uu___7 = bnorm_goal g in [uu___7] in
-               FStar_Tactics_Monad.add_goals uu___6
+               let uu___7 = let uu___8 = bnorm_goal g in [uu___8] in
+               FStar_Tactics_Monad.add_goals uu___7
            | uu___2 -> FStar_Tactics_Monad.fail "not a uvar") in
     FStar_Compiler_Effect.op_Less_Bar
       (FStar_Tactics_Monad.wrap_err "unshelve") uu___
@@ -4399,7 +4400,8 @@ let (t_destruct :
                                       FStar_Syntax_Syntax.n =
                                         FStar_Syntax_Syntax.Tm_fvar fv;
                                       FStar_Syntax_Syntax.pos = uu___8;
-                                      FStar_Syntax_Syntax.vars = uu___9;_},
+                                      FStar_Syntax_Syntax.vars = uu___9;
+                                      FStar_Syntax_Syntax.hash_code = uu___10;_},
                                     us)
                                    -> FStar_Tactics_Monad.ret (fv, us)
                                | uu___8 ->

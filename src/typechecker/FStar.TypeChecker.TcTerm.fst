@@ -671,23 +671,6 @@ let rec tc_term env e =
 and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked and elaborated version of e            *)
                                         * lcomp                 (* computation type where the WPs are lazily evaluated *)
                                         * guard_t =             (* well-formedness condition                           *)
-  if Options.lax() || env.lax || env.phase1
-  || not (Options.memoize_tc())
-  then tc_maybe_toplevel_term' env e
-  else 
-    match FStar.TypeChecker.Common.lookup e with
-    | None -> 
-      let e', lc, g = tc_maybe_toplevel_term' env e in
-      FStar.TypeChecker.Common.insert e e' lc g;
-      e', lc, g
-    | Some (e', lc, g) ->
-      let e', lc', g' = comp_check_expected_typ env e' lc in
-      e', lc', Env.conj_guard g g'
-
-  
-and tc_maybe_toplevel_term' env (e:term) : term                  (* type-checked and elaborated version of e            *)
-                                        * lcomp                 (* computation type where the WPs are lazily evaluated *)
-                                        * guard_t =             (* well-formedness condition                           *)
   let env = if e.pos=Range.dummyRange then env else Env.set_range env e.pos in
   let top = SS.compress e in
   if debug env Options.Medium then

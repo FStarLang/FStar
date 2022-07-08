@@ -788,23 +788,26 @@ let rec (resugar_term' :
       | FStar_Syntax_Syntax.Tm_app
           ({ FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_fvar fv;
              FStar_Syntax_Syntax.pos = uu___1;
-             FStar_Syntax_Syntax.vars = uu___2;_},
-           (e, uu___3)::[])
+             FStar_Syntax_Syntax.vars = uu___2;
+             FStar_Syntax_Syntax.hash_code = uu___3;_},
+           (e, uu___4)::[])
           when
-          (let uu___4 = FStar_Options.print_implicits () in
-           Prims.op_Negation uu___4) &&
+          (let uu___5 = FStar_Options.print_implicits () in
+           Prims.op_Negation uu___5) &&
             (FStar_Syntax_Syntax.fv_eq_lid fv FStar_Parser_Const.b2t_lid)
           -> resugar_term' env e
       | FStar_Syntax_Syntax.Tm_app
           ({ FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_fvar fv;
              FStar_Syntax_Syntax.pos = uu___1;
-             FStar_Syntax_Syntax.vars = uu___2;_},
+             FStar_Syntax_Syntax.vars = uu___2;
+             FStar_Syntax_Syntax.hash_code = uu___3;_},
            ({
               FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_constant
                 (FStar_Const.Const_int (i, FStar_Pervasives_Native.None));
-              FStar_Syntax_Syntax.pos = uu___3;
-              FStar_Syntax_Syntax.vars = uu___4;_},
-            uu___5)::[])
+              FStar_Syntax_Syntax.pos = uu___4;
+              FStar_Syntax_Syntax.vars = uu___5;
+              FStar_Syntax_Syntax.hash_code = uu___6;_},
+            uu___7)::[])
           when can_resugar_machine_integer fv ->
           resugar_machine_integer fv i t.FStar_Syntax_Syntax.pos
       | FStar_Syntax_Syntax.Tm_app (e, args) ->
@@ -2110,7 +2113,8 @@ and (resugar_bv_as_pat' :
             | FStar_Pervasives_Native.Some
                 { FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_unknown;
                   FStar_Syntax_Syntax.pos = uu___;
-                  FStar_Syntax_Syntax.vars = uu___1;_}
+                  FStar_Syntax_Syntax.vars = uu___1;
+                  FStar_Syntax_Syntax.hash_code = uu___2;_}
                 -> pat
             | FStar_Pervasives_Native.Some typ ->
                 let uu___ = FStar_Options.print_bound_var_types () in
