@@ -1691,20 +1691,15 @@ let (tc_sig_let :
                                                    (FStar_Compiler_List.tryFind
                                                       (fun lid ->
                                                          let uu___10 =
-                                                           ((let uu___11 =
-                                                               let uu___12 =
-                                                                 FStar_Compiler_Effect.op_Bar_Greater
-                                                                   lid
-                                                                   FStar_Ident.path_of_lid in
-                                                               FStar_Compiler_Effect.op_Bar_Greater
-                                                                 uu___12
-                                                                 FStar_Compiler_List.hd in
-                                                             uu___11 =
-                                                               "Prims")
-                                                              ||
-                                                              (FStar_Ident.lid_equals
-                                                                 lid
-                                                                 FStar_Parser_Const.unit_as_type_lid))
+                                                           (let uu___11 =
+                                                              let uu___12 =
+                                                                FStar_Compiler_Effect.op_Bar_Greater
+                                                                  lid
+                                                                  FStar_Ident.path_of_lid in
+                                                              FStar_Compiler_Effect.op_Bar_Greater
+                                                                uu___12
+                                                                FStar_Compiler_List.hd in
+                                                            uu___11 = "Prims")
                                                              ||
                                                              (FStar_Ident.lid_equals
                                                                 lid

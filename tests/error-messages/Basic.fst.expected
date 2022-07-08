@@ -26,13 +26,13 @@ Basic.fst(13,38-13,49): (Error 19) assertion failed; The SMT solver could not pr
 Basic.fst(14,38-14,49): (Error 19) assertion failed; The SMT solver could not prove the query. Use --query_stats for more details. (see also Basic.fst(14,50-14,55))
 >>]
 >> Got issues: [
-Basic.fst(17,29-17,31): (Error 19) assertion failed; The SMT solver could not prove the query. Use --query_stats for more details. (see also prims.fst(420,49-420,61))
+Basic.fst(17,29-17,31): (Error 19) assertion failed; The SMT solver could not prove the query. Use --query_stats for more details. (see also prims.fst(434,71-434,83))
 >>]
 >> Got issues: [
-Basic.fst(20,29-20,31): (Error 19) assertion failed; The SMT solver could not prove the query. Use --query_stats for more details. (see also prims.fst(420,49-420,61))
+Basic.fst(20,29-20,31): (Error 19) assertion failed; The SMT solver could not prove the query. Use --query_stats for more details. (see also prims.fst(434,71-434,83))
 >>]
 >> Got issues: [
-Basic.fst(23,46-23,48): (Error 19) assertion failed; The SMT solver could not prove the query. Use --query_stats for more details. (see also prims.fst(420,49-420,61))
+Basic.fst(23,46-23,48): (Error 19) assertion failed; The SMT solver could not prove the query. Use --query_stats for more details. (see also prims.fst(434,71-434,83))
 >>]
 Verified module: Basic
 All verification conditions discharged successfully

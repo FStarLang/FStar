@@ -2392,26 +2392,11 @@ let (restrict_ctx :
                           src.FStar_Syntax_Syntax.ctx_uvar_head in
                       Prims.op_Hat "restricted " uu___4 in
                     let uu___4 = FStar_Syntax_Util.ctx_uvar_should_check src in
-                    new_uvar_aux uu___3 wl
-                      src.FStar_Syntax_Syntax.ctx_uvar_range g pfx t uu___4
-                      src.FStar_Syntax_Syntax.ctx_uvar_meta
-                      src.FStar_Syntax_Syntax.ctx_uvar_apply_tac_prefix in
+                    new_uvar uu___3 wl src.FStar_Syntax_Syntax.ctx_uvar_range
+                      g pfx t uu___4 src.FStar_Syntax_Syntax.ctx_uvar_meta in
                   match uu___2 with
                   | (uu___3, src', wl1) ->
-                      ((let uu___5 = f src' in set_uvar env src uu___5);
-                       (let uu___6 =
-                          let uu___7 =
-                            FStar_Syntax_Unionfind.find_decoration
-                              src.FStar_Syntax_Syntax.ctx_uvar_head in
-                          {
-                            FStar_Syntax_Syntax.uvar_decoration_typ =
-                              (uu___7.FStar_Syntax_Syntax.uvar_decoration_typ);
-                            FStar_Syntax_Syntax.uvar_decoration_should_check
-                              = FStar_Syntax_Syntax.Allow_untyped
-                          } in
-                        FStar_Syntax_Unionfind.change_decoration
-                          src.FStar_Syntax_Syntax.ctx_uvar_head uu___6);
-                       wl1) in
+                      ((let uu___5 = f src' in set_uvar env src uu___5); wl1) in
                 let bs1 =
                   FStar_Compiler_Effect.op_Bar_Greater bs
                     (FStar_Compiler_List.filter

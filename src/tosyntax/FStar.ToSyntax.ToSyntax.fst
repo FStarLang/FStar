@@ -2221,7 +2221,7 @@ and desugar_comp r (allow_type_promotion:bool) env t =
       match head.tm with
       | Name lemma when ((string_of_id (ident_of_lid lemma)) = "Lemma") ->
         (* need to add the unit result type and the empty smt_pat list, if n *)
-        let unit_tm = mk_term (Name C.unit_as_type_lid) t.range Type_level, Nothing in
+        let unit_tm = mk_term (Name C.unit_lid) t.range Type_level, Nothing in
         let nil_pat = mk_term (Name C.nil_lid) t.range Expr, Nothing in
         let req_true =
           let req = Requires (mk_term (Name C.true_lid) t.range Formula, None) in

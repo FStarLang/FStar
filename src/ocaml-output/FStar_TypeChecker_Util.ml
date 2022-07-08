@@ -6144,7 +6144,7 @@ let (check_sigelt_quals :
         if uu___
         then
           FStar_Errors.raise_error
-            (FStar_Errors.Fatal_QulifierListNotPermitted,
+            (FStar_Errors.Fatal_InconsistentQualifierAnnotation,
               "Illegal attribute: no_subtyping attribute is allowed only on let-bindings")
             se1.FStar_Syntax_Syntax.sigrng
         else () in

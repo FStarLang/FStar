@@ -1085,17 +1085,11 @@ let restrict_ctx env (tgt:ctx_uvar) (bs:binders) (src:ctx_uvar) wl : worklist =
   //t is the type at which new uvar ?u should be created
   //f is a function that applied to the new uvar term should return the term that ?u_t should be solved to
   let aux (t:typ) (f:term -> term) =
-    let _, src', wl = new_uvar_aux ("restricted " ^ (Print.uvar_to_string src.ctx_uvar_head)) wl
+    let _, src', wl = new_uvar ("restricted " ^ (Print.uvar_to_string src.ctx_uvar_head)) wl
       src.ctx_uvar_range g pfx t
       (U.ctx_uvar_should_check src)
-      src.ctx_uvar_meta
-      src.ctx_uvar_apply_tac_prefix in
+      src.ctx_uvar_meta in
     set_uvar env src (f src');
-    //
-    // Change the decoration of src to Allow_untyped
-    //
-    UF.change_decoration src.ctx_uvar_head
-      ({UF.find_decoration src.ctx_uvar_head with uvar_decoration_should_check=Allow_untyped});
 
     wl in
 

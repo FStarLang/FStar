@@ -581,10 +581,9 @@ let tc_sig_let env r se lbs lids : list sigelt * list sigelt * Env.env =
                    |> BU.set_elements
                    |> List.tryFind (fun lid ->
                                    not (lid |> Ident.path_of_lid |> List.hd = "Prims" ||
-                                        lid_equals lid PC.unit_as_type_lid ||
                                         lid_equals lid PC.pattern_lid)) in
              if lid_opt |> is_some             
-             then err (BU.format1 "%s is not allowed in no_subtyping lemmas"
+             then err (BU.format1 "%s is not allowed in no_subtyping lemmas (only prims symbols)"
                          (lid_opt |> must |> string_of_lid)) lb.lbpos
              else let t, _ = U.type_u () in
                   let uvs, lbtyp = SS.open_univ_vars lb.lbunivs lb.lbtyp in

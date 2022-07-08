@@ -3,8 +3,7 @@ open Prims
 type pattern = unit
 
 
-type 'a eqtype_as_type = 'a
-type unit_as_type = unit
+type eqtype_u = unit
 type 'p spinoff = 'p
 
 let id : 'a . 'a -> 'a = fun x -> x
@@ -97,6 +96,14 @@ let (norm : norm_step Prims.list -> unit -> Obj.t -> Obj.t) =
 
 
 
+type ('a, 'x, 'uuuuu) pure_return = unit
+type ('a, 'b, 'wp1, 'wp2, 'uuuuu) pure_bind_wp = 'wp1
+type ('a, 'p, 'wputhen, 'wpuelse, 'uuuuu) pure_if_then_else = unit
+type ('a, 'wp, 'uuuuu) pure_ite_wp = unit
+type ('a, 'b, 'wp, 'uuuuu) pure_close_wp = unit
+type ('a, 'uuuuu) pure_null_wp = unit
+type ('p, 'uuuuu) pure_assert_wp = unit
+type ('p, 'uuuuu) pure_assume_wp = unit
 type ('a, 'pre, 'post, 'uuuuu) div_hoare_to_wp = unit
 type 'heap st_pre_h = unit
 type ('heap, 'a, 'pre) st_post_h' = unit
@@ -288,5 +295,6 @@ let (uu___is_CMacro : __internal_ocaml_attributes -> Prims.bool) =
 
 let singleton : 'uuuuu . 'uuuuu -> 'uuuuu = fun x -> x
 let with_type : 'uuuuu . 'uuuuu -> 'uuuuu = fun e -> e
+type 'a eqtype_as_type = 'a
 let coerce_eq : 'a 'b . unit -> 'a -> 'b =
   fun uu___1 -> fun uu___ -> (fun uu___ -> fun x -> Obj.magic x) uu___1 uu___

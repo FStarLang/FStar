@@ -97,17 +97,9 @@ val smt_pat_or (x: list (list pattern)) : Tot pattern
    the squash argument on the postcondition allows to assume the
    precondition for the *well-formedness* of the postcondition.
 *)
-effect Lemma (a: Type) (pre: Type) (post: (squash pre -> Type)) (pats: list pattern) =
+type eqtype_u = a:Type{hasEq a}
+effect Lemma (a: eqtype_u) (pre: Type) (post: (squash pre -> Type)) (pats: list pattern) =
   Pure a pre (fun r -> post ())
-
-
-(** A weakening coercion from eqtype to Type.
-
-    One of its uses is in types of layered effect combinators that
-    are subjected to stricter typing discipline (no subtyping) *)
-unfold let eqtype_as_type (a:eqtype) : Type = a
-
-let unit_as_type : Type0 = unit
 
 (** IN the default mode of operation, all proofs in a verification
     condition are bundled into a single SMT query. Sub-terms marked
@@ -296,6 +288,51 @@ val norm_spec (s: list norm_step) (#a: Type) (x: a) : Lemma (norm s #a x == x)
 (** Use the following to expose an ["opaque_to_smt"] definition to the
     solver as: [reveal_opaque (`%defn) defn] *)
 let reveal_opaque (s: string) = norm_spec [delta_only [s]]
+
+(** Wrappers over pure wp combinators that return a pure_wp type
+    (with monotonicity refinement) *)
+
+unfold
+let pure_return (a:Type) (x:a) : pure_wp a =
+  reveal_opaque (`%pure_wp_monotonic) pure_wp_monotonic;
+  pure_return0 a x
+
+unfold
+let pure_bind_wp (a b:Type) (wp1:pure_wp a) (wp2:(a -> Tot (pure_wp b))) : Tot (pure_wp b) =
+  reveal_opaque (`%pure_wp_monotonic) pure_wp_monotonic;
+  pure_bind_wp0 a b wp1 wp2
+
+unfold
+let pure_if_then_else (a p:Type) (wp_then wp_else:pure_wp a) : Tot (pure_wp a) =
+  reveal_opaque (`%pure_wp_monotonic) pure_wp_monotonic;
+  pure_if_then_else0 a p wp_then wp_else
+
+unfold
+let pure_ite_wp (a:Type) (wp:pure_wp a) : Tot (pure_wp a) =
+  reveal_opaque (`%pure_wp_monotonic) pure_wp_monotonic;
+  pure_ite_wp0 a wp
+
+unfold
+let pure_close_wp (a b:Type) (wp:b -> Tot (pure_wp a)) : Tot (pure_wp a) =
+  reveal_opaque (`%pure_wp_monotonic) pure_wp_monotonic;
+  pure_close_wp0 a b wp
+
+unfold
+let pure_null_wp (a:Type) : Tot (pure_wp a) =
+  reveal_opaque (`%pure_wp_monotonic) pure_wp_monotonic;
+  pure_null_wp0 a
+
+[@@ "opaque_to_smt"]
+unfold
+let pure_assert_wp (p:Type) : Tot (pure_wp unit) =
+  reveal_opaque (`%pure_wp_monotonic) pure_wp_monotonic;
+  pure_assert_wp0 p
+
+[@@ "opaque_to_smt"]
+unfold
+let pure_assume_wp (p:Type) : Tot (pure_wp unit) =
+  reveal_opaque (`%pure_wp_monotonic) pure_wp_monotonic;
+  pure_assume_wp0 p
 
 /// The [DIV] effect for divergent computations
 ///
@@ -1038,6 +1075,12 @@ val singleton (#a: Type) (x: a) : Tot (y: a{y == x})
     an identity function, we have an SMT axiom:
     [forall t e.{:pattern (with_type t e)} has_type (with_type t e) t] *)
 val with_type (#t: Type) (e: t) : Tot t
+
+(** A weakening coercion from eqtype to Type.
+
+    One of its uses is in types of layered effect combinators that
+    are subjected to stricter typing discipline (no subtyping) *)
+unfold let eqtype_as_type (a:eqtype) : Type = a
 
 (** A coercion of the [x] from [a] to [b], when [a] is provably equal
     to [b]. In most cases, F* will silently coerce from [a] to [b]
