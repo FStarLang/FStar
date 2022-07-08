@@ -1739,6 +1739,7 @@ let close_equality_typ (t:term) : Tac unit =
 
 /// The following three lemmas are helpers to manipulate the goal in canon_l_r
 
+[@@ no_subtyping]
 let inst_bv (#a:Type) (#p:a -> Type0) (#q:Type0) (x:a) (_:squash (p x ==> q))
   : Lemma ((forall (x:a). p x) ==> q) = ()
 

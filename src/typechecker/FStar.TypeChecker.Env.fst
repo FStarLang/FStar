@@ -1749,7 +1749,7 @@ let close_guard env binders g =
 (* ------------------------------------------------*)
 
 (* Generating new implicit variables *)
-let new_implicit_var_aux reason r env k should_check meta =
+let new_tac_implicit_var reason r env k should_check meta apply_tac_deps =
     match U.destruct k FStar.Parser.Const.range_of_lid with
      | Some [_; (tm, _)] ->
        let t = S.mk (S.Tm_constant (FStar.Const.Const_range tm.pos)) tm.pos in
@@ -1771,7 +1771,7 @@ let new_implicit_var_aux reason r env k should_check meta =
           ctx_uvar_range=r;
           ctx_uvar_meta=meta;
 
-          ctx_uvar_apply_tac_prefix=[];
+          ctx_uvar_apply_tac_prefix=apply_tac_deps;
       } in
       check_uvar_ctx_invariant reason r true gamma binders;
       let t = mk (Tm_uvar (ctx_uvar, ([], NoUseRange))) r in
@@ -1784,6 +1784,9 @@ let new_implicit_var_aux reason r env k should_check meta =
         BU.print1 "Just created uvar for implicit {%s}\n" (Print.uvar_to_string ctx_uvar.ctx_uvar_head);
       let g = {trivial_guard with implicits=[imp]} in
       t, [(ctx_uvar, r)], g
+
+let new_implicit_var_aux reason r env k should_check meta =
+  new_tac_implicit_var reason r env k should_check meta []
 
 (***************************************************)
 

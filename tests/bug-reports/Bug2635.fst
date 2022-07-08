@@ -49,14 +49,13 @@ val expect_pos (_: squash (exists (x:pos). q x)) : squash p
 
 let intro_exists (#a:Type)  (#p:a -> Type) (x:a) (_:squash (p x)) : squash (exists (x:a). p x) = ()
 
-//[@@expect_failure [217]]
 let use_pos (x:nat) (xpos:squash (x > 0)) (hyp:squash (q x)) =
   assert p by (
     apply (`expect_pos);
     apply (`intro_exists);
     apply (quote hyp)) //the implicit `pos` of intro_exists is solved by unification here to x:nat
 
-// let use_pos (x:nat) (xpos:squash (x > 0)) (hyp:squash (q x)) =
+// let use_pos2 (x:nat) (xpos:squash (x > 0)) (hyp:squash (q x)) =
 //   assert p by (
 //     apply (`expect_pos);
 //     apply (`intro_exists);
@@ -87,7 +86,7 @@ let ugh ()
   = _ by (
       apply (`test);
       let _ = intro () in
-      dump "A";
+      // dump "A";
       trefl ()
     ) 
 
@@ -143,7 +142,6 @@ let pi_norm : i:int { p } = pi
 
 let prove_False0
       (e : empty)
-      // The [() : squash False] of [false_elim] depends on [e]
       (_ : squash (e == false_elim ()))
   : squash False
   = ()
@@ -184,8 +182,6 @@ let prove_False0
 let absurd : squash False
   = _ by (
     apply (`prove_False0);
-    dump ""; // |- _ : squash (?e == false_elim ())
-    // e does not appear as a bound variable ?
     trefl ())
 
 let int_false_elim
@@ -218,3 +214,32 @@ let omega2 : bool
   = _ by (
     apply (`build_omega2);
     let _ = intro () in trefl ())
+
+
+//
+// Variants of above exploits using lemmas
+//
+
+let prove_False_lemma
+      (pf : squash False)
+      (_  : (pf0 : squash False) -> squash (eq2 #(squash False) pf ()))
+  : Lemma False
+  = pf
+
+[@@expect_failure [19]]
+let absurd : squash False
+  = _ by (apply_lemma (`prove_False_lemma);
+          let pf0 = intro () in
+          trefl ())
+
+let prove_False0_lemma
+      (e : empty)
+      (_ : squash (e == false_elim ()))
+  : Lemma False
+  = ()
+
+[@@ expect_failure [19]]
+let absurd_false0_lemma : squash False
+  = _ by (
+    apply_lemma (`prove_False0_lemma);
+    trefl ())

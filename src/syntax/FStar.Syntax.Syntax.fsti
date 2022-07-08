@@ -140,22 +140,22 @@ type term' =
   | Tm_quoted     of term * quoteinfo                            (* A quoted term, in one of its many variants *)
   | Tm_unknown                                                   (* only present initially while desugaring a term *)
 and ctx_uvar = {                                                 (* (G |- ?u : t), a uvar introduced in context G at type t *)
-    ctx_uvar_head:uvar;                                          (* ?u *)
-    ctx_uvar_gamma:gamma;                                        (* G: a cons list of bindings (most recent at the head) *)
-    ctx_uvar_binders:binders;                                    (* All the Tm_name bindings in G, a snoc list (most recent at the tail) *)
-    ctx_uvar_reason:string;
-    ctx_uvar_range:Range.range;
-    ctx_uvar_meta: option ctx_uvar_meta_t;
+  ctx_uvar_head:uvar;                                          (* ?u *)
+  ctx_uvar_gamma:gamma;                                        (* G: a cons list of bindings (most recent at the head) *)
+  ctx_uvar_binders:binders;                                    (* All the Tm_name bindings in G, a snoc list (most recent at the tail) *)
+  ctx_uvar_reason:string;
+  ctx_uvar_range:Range.range;
+  ctx_uvar_meta: option ctx_uvar_meta_t;
 
-    //
-    // If this uvar ?u:t is created by the apply tactic,
-    //   then ctx_uvar_apply_tac_prefix keeps the uvars created as part of same apply call,
-    //   that are free in t
-    //
-    // E.g. consider apply creating two uvars for the binders in (x:int -> y:int{x == 2} -> Tot int)
-    // Then ctx_uvar_apply_tac_prefix for the second uvar will contain the first uvar
-    //
-    ctx_uvar_apply_tac_prefix: list ctx_uvar;
+  //
+  // If this uvar ?u:t is created by the apply tactic,
+  //   then ctx_uvar_apply_tac_prefix keeps the uvars created as part of same apply call,
+  //   that are free in t
+  //
+  // E.g. consider apply creating two uvars for the binders in (x:int -> y:int{x == 2} -> Tot int)
+  // Then ctx_uvar_apply_tac_prefix for the second uvar will contain the first uvar
+  //
+  ctx_uvar_apply_tac_prefix: list ctx_uvar;
 }
 and ctx_uvar_meta_t =
   | Ctx_uvar_meta_tac of dyn * term (* the dyn is an FStar.TypeChecker.Env.env *)

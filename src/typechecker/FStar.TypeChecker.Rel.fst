@@ -122,7 +122,7 @@ let as_wl_deferred wl (d:deferred): list (int * deferred_reason * lstring * prob
 (* --------------------------------------------------------- *)
 (* <new_uvar> Generating new unification variables/patterns  *)
 (* --------------------------------------------------------- *)
-let new_uvar reason wl r gamma binders k should_check meta : ctx_uvar * term * worklist =
+let new_uvar_aux reason wl r gamma binders k should_check meta apply_uvar_deps : ctx_uvar * term * worklist =
     let decoration = {
              uvar_decoration_typ = k;
              uvar_decoration_should_check = should_check
@@ -136,7 +136,7 @@ let new_uvar reason wl r gamma binders k should_check meta : ctx_uvar * term * w
          ctx_uvar_range=r;
          ctx_uvar_meta=meta;
 
-         ctx_uvar_apply_tac_prefix=[];
+         ctx_uvar_apply_tac_prefix=apply_uvar_deps;
        } in
     check_uvar_ctx_invariant reason r true gamma binders;
     let t = mk (Tm_uvar (ctx_uvar, ([], NoUseRange))) r in
@@ -148,6 +148,9 @@ let new_uvar reason wl r gamma binders k should_check meta : ctx_uvar * term * w
     if Env.debug wl.tcenv (Options.Other "ImplicitTrace") then
       BU.print1 "Just created uvar (Rel) {%s}\n" (Print.uvar_to_string ctx_uvar.ctx_uvar_head);
     ctx_uvar, t, {wl with wl_implicits=imp::wl.wl_implicits}
+
+let new_uvar reason wl r gamma binders k should_check meta : ctx_uvar * term * worklist =
+  new_uvar_aux reason wl r gamma binders k should_check meta []
 
 let copy_uvar u (bs:binders) t wl =
     let env = {wl.tcenv with gamma = u.ctx_uvar_gamma } in
@@ -534,15 +537,26 @@ let set_uvar env u t =
   
   (
     match env.rel_query_for_apply_tac_uvar with
-    | None -> ()
+    | None ->
+      if Env.debug env <| Options.Other "2635"
+      then BU.print1 "Setting uvar %s and env is not solving an apply uvar\n"
+             (Print.ctx_uvar_to_string u)
     | Some u1 ->
+      if Env.debug env <| Options.Other "2635"
+      then BU.print3 "Setting uvar %s and env is solving %s that depends on %s\n"
+             (Print.ctx_uvar_to_string u)
+             (Print.ctx_uvar_to_string u1)
+             (List.fold_left (fun acc uv ->
+                BU.format2 "%s; %s" acc (Print.ctx_uvar_to_string uv))
+                "" u1.ctx_uvar_apply_tac_prefix);
       //
       // We are solving this uvar u indirectly when solving an apply tac uvar u1
       // If u1 depends on u, then u must be typechecked strictly with no fastpath
       //
       if u1.ctx_uvar_apply_tac_prefix |> List.existsb (fun u2 ->
         UF.uvar_id u.ctx_uvar_head = UF.uvar_id u2.ctx_uvar_head)
-      then UF.change_decoration u.ctx_uvar_head
+      then
+        UF.change_decoration u.ctx_uvar_head
              ({UF.find_decoration u.ctx_uvar_head with uvar_decoration_should_check=Strict_no_fastpath})
   );
 
@@ -1071,11 +1085,18 @@ let restrict_ctx env (tgt:ctx_uvar) (bs:binders) (src:ctx_uvar) wl : worklist =
   //t is the type at which new uvar ?u should be created
   //f is a function that applied to the new uvar term should return the term that ?u_t should be solved to
   let aux (t:typ) (f:term -> term) =
-    let _, src', wl = new_uvar ("restricted " ^ (Print.uvar_to_string src.ctx_uvar_head)) wl
+    let _, src', wl = new_uvar_aux ("restricted " ^ (Print.uvar_to_string src.ctx_uvar_head)) wl
       src.ctx_uvar_range g pfx t
       (U.ctx_uvar_should_check src)
-      src.ctx_uvar_meta in
+      src.ctx_uvar_meta
+      src.ctx_uvar_apply_tac_prefix in
     set_uvar env src (f src');
+    //
+    // Change the decoration of src to Allow_untyped
+    //
+    UF.change_decoration src.ctx_uvar_head
+      ({UF.find_decoration src.ctx_uvar_head with uvar_decoration_should_check=Allow_untyped});
+
     wl in
 
   let bs = bs |> List.filter (fun ({binder_bv=bv1}) ->

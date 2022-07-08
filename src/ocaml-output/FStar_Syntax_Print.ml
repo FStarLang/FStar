@@ -741,7 +741,8 @@ and (ctx_uvar_to_string_aux :
         | FStar_Syntax_Syntax.Allow_unresolved -> "Allow_unresolved"
         | FStar_Syntax_Syntax.Allow_untyped -> "Allow_untyped"
         | FStar_Syntax_Syntax.Allow_ghost -> "Allow_ghost"
-        | FStar_Syntax_Syntax.Strict -> "Strict" in
+        | FStar_Syntax_Syntax.Strict -> "Strict"
+        | FStar_Syntax_Syntax.Strict_no_fastpath -> "Strict_no_fastpath" in
       FStar_Compiler_Util.format5 "%s(%s |- %s : %s) %s" reason_string uu___
         uu___1 uu___2 uu___3
 and (subst_elt_to_string : FStar_Syntax_Syntax.subst_elt -> Prims.string) =

@@ -209,6 +209,85 @@ let (as_wl_deferred :
            | (reason, m, p) ->
                let uu___1 = FStar_Thunk.mkv m in
                ((wl.ctr), reason, uu___1, p)) d
+let (new_uvar_aux :
+  Prims.string ->
+    worklist ->
+      FStar_Compiler_Range.range ->
+        FStar_Syntax_Syntax.binding Prims.list ->
+          FStar_Syntax_Syntax.binder Prims.list ->
+            FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
+              FStar_Syntax_Syntax.should_check_uvar ->
+                FStar_Syntax_Syntax.ctx_uvar_meta_t
+                  FStar_Pervasives_Native.option ->
+                  FStar_Syntax_Syntax.ctx_uvar Prims.list ->
+                    (FStar_Syntax_Syntax.ctx_uvar * FStar_Syntax_Syntax.term
+                      * worklist))
+  =
+  fun reason ->
+    fun wl ->
+      fun r ->
+        fun gamma ->
+          fun binders ->
+            fun k ->
+              fun should_check ->
+                fun meta ->
+                  fun apply_uvar_deps ->
+                    let decoration =
+                      {
+                        FStar_Syntax_Syntax.uvar_decoration_typ = k;
+                        FStar_Syntax_Syntax.uvar_decoration_should_check =
+                          should_check
+                      } in
+                    let ctx_uvar =
+                      let uu___ = FStar_Syntax_Unionfind.fresh decoration r in
+                      {
+                        FStar_Syntax_Syntax.ctx_uvar_head = uu___;
+                        FStar_Syntax_Syntax.ctx_uvar_gamma = gamma;
+                        FStar_Syntax_Syntax.ctx_uvar_binders = binders;
+                        FStar_Syntax_Syntax.ctx_uvar_reason = reason;
+                        FStar_Syntax_Syntax.ctx_uvar_range = r;
+                        FStar_Syntax_Syntax.ctx_uvar_meta = meta;
+                        FStar_Syntax_Syntax.ctx_uvar_apply_tac_prefix =
+                          apply_uvar_deps
+                      } in
+                    FStar_TypeChecker_Common.check_uvar_ctx_invariant reason
+                      r true gamma binders;
+                    (let t =
+                       FStar_Syntax_Syntax.mk
+                         (FStar_Syntax_Syntax.Tm_uvar
+                            (ctx_uvar, ([], FStar_Syntax_Syntax.NoUseRange)))
+                         r in
+                     let imp =
+                       {
+                         FStar_TypeChecker_Common.imp_reason = reason;
+                         FStar_TypeChecker_Common.imp_uvar = ctx_uvar;
+                         FStar_TypeChecker_Common.imp_tm = t;
+                         FStar_TypeChecker_Common.imp_range = r
+                       } in
+                     (let uu___2 =
+                        FStar_TypeChecker_Env.debug wl.tcenv
+                          (FStar_Options.Other "ImplicitTrace") in
+                      if uu___2
+                      then
+                        let uu___3 =
+                          FStar_Syntax_Print.uvar_to_string
+                            ctx_uvar.FStar_Syntax_Syntax.ctx_uvar_head in
+                        FStar_Compiler_Util.print1
+                          "Just created uvar (Rel) {%s}\n" uu___3
+                      else ());
+                     (ctx_uvar, t,
+                       {
+                         attempting = (wl.attempting);
+                         wl_deferred = (wl.wl_deferred);
+                         wl_deferred_to_tac = (wl.wl_deferred_to_tac);
+                         ctr = (wl.ctr);
+                         defer_ok = (wl.defer_ok);
+                         smt_ok = (wl.smt_ok);
+                         umax_heuristic_ok = (wl.umax_heuristic_ok);
+                         tcenv = (wl.tcenv);
+                         wl_implicits = (imp :: (wl.wl_implicits));
+                         repr_subcomp_allowed = (wl.repr_subcomp_allowed)
+                       }))
 let (new_uvar :
   Prims.string ->
     worklist ->
@@ -230,60 +309,8 @@ let (new_uvar :
             fun k ->
               fun should_check ->
                 fun meta ->
-                  let decoration =
-                    {
-                      FStar_Syntax_Syntax.uvar_decoration_typ = k;
-                      FStar_Syntax_Syntax.uvar_decoration_should_check =
-                        should_check
-                    } in
-                  let ctx_uvar =
-                    let uu___ = FStar_Syntax_Unionfind.fresh decoration r in
-                    {
-                      FStar_Syntax_Syntax.ctx_uvar_head = uu___;
-                      FStar_Syntax_Syntax.ctx_uvar_gamma = gamma;
-                      FStar_Syntax_Syntax.ctx_uvar_binders = binders;
-                      FStar_Syntax_Syntax.ctx_uvar_reason = reason;
-                      FStar_Syntax_Syntax.ctx_uvar_range = r;
-                      FStar_Syntax_Syntax.ctx_uvar_meta = meta;
-                      FStar_Syntax_Syntax.ctx_uvar_apply_tac_prefix = []
-                    } in
-                  FStar_TypeChecker_Common.check_uvar_ctx_invariant reason r
-                    true gamma binders;
-                  (let t =
-                     FStar_Syntax_Syntax.mk
-                       (FStar_Syntax_Syntax.Tm_uvar
-                          (ctx_uvar, ([], FStar_Syntax_Syntax.NoUseRange))) r in
-                   let imp =
-                     {
-                       FStar_TypeChecker_Common.imp_reason = reason;
-                       FStar_TypeChecker_Common.imp_uvar = ctx_uvar;
-                       FStar_TypeChecker_Common.imp_tm = t;
-                       FStar_TypeChecker_Common.imp_range = r
-                     } in
-                   (let uu___2 =
-                      FStar_TypeChecker_Env.debug wl.tcenv
-                        (FStar_Options.Other "ImplicitTrace") in
-                    if uu___2
-                    then
-                      let uu___3 =
-                        FStar_Syntax_Print.uvar_to_string
-                          ctx_uvar.FStar_Syntax_Syntax.ctx_uvar_head in
-                      FStar_Compiler_Util.print1
-                        "Just created uvar (Rel) {%s}\n" uu___3
-                    else ());
-                   (ctx_uvar, t,
-                     {
-                       attempting = (wl.attempting);
-                       wl_deferred = (wl.wl_deferred);
-                       wl_deferred_to_tac = (wl.wl_deferred_to_tac);
-                       ctr = (wl.ctr);
-                       defer_ok = (wl.defer_ok);
-                       smt_ok = (wl.smt_ok);
-                       umax_heuristic_ok = (wl.umax_heuristic_ok);
-                       tcenv = (wl.tcenv);
-                       wl_implicits = (imp :: (wl.wl_implicits));
-                       repr_subcomp_allowed = (wl.repr_subcomp_allowed)
-                     }))
+                  new_uvar_aux reason wl r gamma binders k should_check meta
+                    []
 let (copy_uvar :
   FStar_Syntax_Syntax.ctx_uvar ->
     FStar_Syntax_Syntax.binders ->
@@ -1316,35 +1343,66 @@ let (set_uvar :
     fun u ->
       fun t ->
         (match env.FStar_TypeChecker_Env.rel_query_for_apply_tac_uvar with
-         | FStar_Pervasives_Native.None -> ()
-         | FStar_Pervasives_Native.Some u1 ->
+         | FStar_Pervasives_Native.None ->
              let uu___1 =
-               FStar_Compiler_Effect.op_Bar_Greater
-                 u1.FStar_Syntax_Syntax.ctx_uvar_apply_tac_prefix
-                 (FStar_Compiler_List.existsb
-                    (fun u2 ->
-                       let uu___2 =
-                         FStar_Syntax_Unionfind.uvar_id
-                           u.FStar_Syntax_Syntax.ctx_uvar_head in
-                       let uu___3 =
-                         FStar_Syntax_Unionfind.uvar_id
-                           u2.FStar_Syntax_Syntax.ctx_uvar_head in
-                       uu___2 = uu___3)) in
+               FStar_Compiler_Effect.op_Less_Bar
+                 (FStar_TypeChecker_Env.debug env)
+                 (FStar_Options.Other "2635") in
              if uu___1
              then
-               let uu___2 =
+               let uu___2 = FStar_Syntax_Print.ctx_uvar_to_string u in
+               FStar_Compiler_Util.print1
+                 "Setting uvar %s and env is not solving an apply uvar\n"
+                 uu___2
+             else ()
+         | FStar_Pervasives_Native.Some u1 ->
+             ((let uu___2 =
+                 FStar_Compiler_Effect.op_Less_Bar
+                   (FStar_TypeChecker_Env.debug env)
+                   (FStar_Options.Other "2635") in
+               if uu___2
+               then
+                 let uu___3 = FStar_Syntax_Print.ctx_uvar_to_string u in
+                 let uu___4 = FStar_Syntax_Print.ctx_uvar_to_string u1 in
+                 let uu___5 =
+                   FStar_Compiler_List.fold_left
+                     (fun acc ->
+                        fun uv ->
+                          let uu___6 =
+                            FStar_Syntax_Print.ctx_uvar_to_string uv in
+                          FStar_Compiler_Util.format2 "%s; %s" acc uu___6) ""
+                     u1.FStar_Syntax_Syntax.ctx_uvar_apply_tac_prefix in
+                 FStar_Compiler_Util.print3
+                   "Setting uvar %s and env is solving %s that depends on %s\n"
+                   uu___3 uu___4 uu___5
+               else ());
+              (let uu___2 =
+                 FStar_Compiler_Effect.op_Bar_Greater
+                   u1.FStar_Syntax_Syntax.ctx_uvar_apply_tac_prefix
+                   (FStar_Compiler_List.existsb
+                      (fun u2 ->
+                         let uu___3 =
+                           FStar_Syntax_Unionfind.uvar_id
+                             u.FStar_Syntax_Syntax.ctx_uvar_head in
+                         let uu___4 =
+                           FStar_Syntax_Unionfind.uvar_id
+                             u2.FStar_Syntax_Syntax.ctx_uvar_head in
+                         uu___3 = uu___4)) in
+               if uu___2
+               then
                  let uu___3 =
-                   FStar_Syntax_Unionfind.find_decoration
-                     u.FStar_Syntax_Syntax.ctx_uvar_head in
-                 {
-                   FStar_Syntax_Syntax.uvar_decoration_typ =
-                     (uu___3.FStar_Syntax_Syntax.uvar_decoration_typ);
-                   FStar_Syntax_Syntax.uvar_decoration_should_check =
-                     FStar_Syntax_Syntax.Strict_no_fastpath
-                 } in
-               FStar_Syntax_Unionfind.change_decoration
-                 u.FStar_Syntax_Syntax.ctx_uvar_head uu___2
-             else ());
+                   let uu___4 =
+                     FStar_Syntax_Unionfind.find_decoration
+                       u.FStar_Syntax_Syntax.ctx_uvar_head in
+                   {
+                     FStar_Syntax_Syntax.uvar_decoration_typ =
+                       (uu___4.FStar_Syntax_Syntax.uvar_decoration_typ);
+                     FStar_Syntax_Syntax.uvar_decoration_should_check =
+                       FStar_Syntax_Syntax.Strict_no_fastpath
+                   } in
+                 FStar_Syntax_Unionfind.change_decoration
+                   u.FStar_Syntax_Syntax.ctx_uvar_head uu___3
+               else ())));
         FStar_Syntax_Util.set_uvar u.FStar_Syntax_Syntax.ctx_uvar_head t
 let (commit : FStar_TypeChecker_Env.env -> uvi Prims.list -> unit) =
   fun env ->
@@ -2334,11 +2392,26 @@ let (restrict_ctx :
                           src.FStar_Syntax_Syntax.ctx_uvar_head in
                       Prims.op_Hat "restricted " uu___4 in
                     let uu___4 = FStar_Syntax_Util.ctx_uvar_should_check src in
-                    new_uvar uu___3 wl src.FStar_Syntax_Syntax.ctx_uvar_range
-                      g pfx t uu___4 src.FStar_Syntax_Syntax.ctx_uvar_meta in
+                    new_uvar_aux uu___3 wl
+                      src.FStar_Syntax_Syntax.ctx_uvar_range g pfx t uu___4
+                      src.FStar_Syntax_Syntax.ctx_uvar_meta
+                      src.FStar_Syntax_Syntax.ctx_uvar_apply_tac_prefix in
                   match uu___2 with
                   | (uu___3, src', wl1) ->
-                      ((let uu___5 = f src' in set_uvar env src uu___5); wl1) in
+                      ((let uu___5 = f src' in set_uvar env src uu___5);
+                       (let uu___6 =
+                          let uu___7 =
+                            FStar_Syntax_Unionfind.find_decoration
+                              src.FStar_Syntax_Syntax.ctx_uvar_head in
+                          {
+                            FStar_Syntax_Syntax.uvar_decoration_typ =
+                              (uu___7.FStar_Syntax_Syntax.uvar_decoration_typ);
+                            FStar_Syntax_Syntax.uvar_decoration_should_check
+                              = FStar_Syntax_Syntax.Allow_untyped
+                          } in
+                        FStar_Syntax_Unionfind.change_decoration
+                          src.FStar_Syntax_Syntax.ctx_uvar_head uu___6);
+                       wl1) in
                 let bs1 =
                   FStar_Compiler_Effect.op_Bar_Greater bs
                     (FStar_Compiler_List.filter

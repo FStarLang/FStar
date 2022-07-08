@@ -393,7 +393,8 @@ and ctx_uvar_to_string_aux print_reason ctx_uvar =
              | Allow_unresolved -> "Allow_unresolved"
              | Allow_untyped  -> "Allow_untyped"
              | Allow_ghost  -> "Allow_ghost"
-             | Strict   -> "Strict")
+             | Strict   -> "Strict"
+             | Strict_no_fastpath -> "Strict_no_fastpath")
 
 
 and subst_elt_to_string = function

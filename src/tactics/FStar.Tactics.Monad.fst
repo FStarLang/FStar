@@ -238,7 +238,7 @@ let add_implicits (i:implicits) : tac unit =
     bind get (fun ps ->
     set ({ps with all_implicits=i@ps.all_implicits}))
 
-let new_uvar (reason:string) (env:env) (typ:typ) (sc_opt:option should_check_uvar) (rng:Range.range) : tac (term * ctx_uvar) =
+let new_uvar (reason:string) (env:env) (typ:typ) (sc_opt:option should_check_uvar) (apply_uvar_deps:list S.ctx_uvar) (rng:Range.range) : tac (term * ctx_uvar) =
     let should_check = 
       match sc_opt with
       | Some sc -> sc
@@ -249,14 +249,14 @@ let new_uvar (reason:string) (env:env) (typ:typ) (sc_opt:option should_check_uva
         Strict
     in
     let u, ctx_uvar, g_u =
-        Env.new_implicit_var_aux reason rng env typ should_check None
+        Env.new_tac_implicit_var reason rng env typ should_check None apply_uvar_deps
     in
     bind (add_implicits g_u.implicits) (fun _ ->
     ret (u, fst (List.hd ctx_uvar)))
 
 let mk_irrelevant_goal (reason:string) (env:env) (phi:typ) (rng:Range.range) opts label : tac goal =
     let typ = U.mk_squash (env.universe_of env phi) phi in
-    bind (new_uvar reason env typ (Some Strict) rng) (fun (_, ctx_uvar) ->
+    bind (new_uvar reason env typ (Some Strict) [] rng) (fun (_, ctx_uvar) ->
     let goal = mk_goal env ctx_uvar opts false label in
     ret goal)
 
