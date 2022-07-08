@@ -122,7 +122,7 @@ let as_wl_deferred wl (d:deferred): list (int * deferred_reason * lstring * prob
 (* --------------------------------------------------------- *)
 (* <new_uvar> Generating new unification variables/patterns  *)
 (* --------------------------------------------------------- *)
-let new_uvar_aux reason wl r gamma binders k should_check meta apply_uvar_deps : ctx_uvar * term * worklist =
+let new_uvar reason wl r gamma binders k should_check meta apply_uvar_deps : ctx_uvar * term * worklist =
     let decoration = {
              uvar_decoration_typ = k;
              uvar_decoration_should_check = should_check
@@ -149,16 +149,14 @@ let new_uvar_aux reason wl r gamma binders k should_check meta apply_uvar_deps :
       BU.print1 "Just created uvar (Rel) {%s}\n" (Print.uvar_to_string ctx_uvar.ctx_uvar_head);
     ctx_uvar, t, {wl with wl_implicits=imp::wl.wl_implicits}
 
-let new_uvar reason wl r gamma binders k should_check meta : ctx_uvar * term * worklist =
-  new_uvar_aux reason wl r gamma binders k should_check meta []
-
 let copy_uvar u (bs:binders) t wl =
     let env = {wl.tcenv with gamma = u.ctx_uvar_gamma } in
     let env = Env.push_binders env bs in
     new_uvar ("copy:"^u.ctx_uvar_reason) wl u.ctx_uvar_range env.gamma
-            (Env.all_binders env) t
-            (U.ctx_uvar_should_check u)
-            u.ctx_uvar_meta
+             (Env.all_binders env) t
+             (U.ctx_uvar_should_check u)
+             u.ctx_uvar_meta
+             []
 
 (* --------------------------------------------------------- *)
 (* </new_uvar>                                               *)
@@ -371,7 +369,7 @@ let mk_eq2 wl env prob t1 t2 : term * worklist =
     *)
     let t_type, u = U.type_u () in
     let binders = Env.all_binders env in
-    let _, tt, wl = new_uvar "eq2" wl t1.pos env.gamma binders t_type Allow_unresolved None in
+    let _, tt, wl = new_uvar "eq2" wl t1.pos env.gamma binders t_type Allow_unresolved None [] in
     U.mk_eq2 u tt t1 t2, wl
 
 let p_invert = function
@@ -399,6 +397,7 @@ let mk_problem wl scope orig lhs rel rhs elt reason =
                  U.ktype0
                  Allow_untyped
                  None
+                 []
     in
     let prob =
         //logical guards are always squashed;
@@ -447,6 +446,7 @@ let new_problem wl env lhs rel rhs (subject:option bv) loc reason =
                lg_ty
                Allow_untyped
                None
+               []
   in
   let lg =
     match subject with
@@ -518,7 +518,7 @@ let explain env d (s : lstring) =
 (* <uvi ops> Instantiating unification variables   *)
 (* ------------------------------------------------*)
 
-let set_uvar env u t = 
+let set_uvar env u (should_check_opt:option S.should_check_uvar) t =
   // Useful for debugging uvars setting bugs
   // if Env.debug env <| Options.Other "Rel"
   // then (
@@ -534,31 +534,33 @@ let set_uvar env u t =
   //     failwith "DIE"
   // );
 
-  
-  (
-    match env.rel_query_for_apply_tac_uvar with
-    | None ->
-      if Env.debug env <| Options.Other "2635"
-      then BU.print1 "Setting uvar %s and env is not solving an apply uvar\n"
-             (Print.ctx_uvar_to_string u)
-    | Some u1 ->
-      if Env.debug env <| Options.Other "2635"
-      then BU.print3 "Setting uvar %s and env is solving %s that depends on %s\n"
-             (Print.ctx_uvar_to_string u)
-             (Print.ctx_uvar_to_string u1)
-             (List.fold_left (fun acc uv ->
-                BU.format2 "%s; %s" acc (Print.ctx_uvar_to_string uv))
-                "" u1.ctx_uvar_apply_tac_prefix);
-      //
-      // We are solving this uvar u indirectly when solving an apply tac uvar u1
-      // If u1 depends on u, then u must be typechecked strictly with no fastpath
-      //
-      if u1.ctx_uvar_apply_tac_prefix |> List.existsb (fun u2 ->
-        UF.uvar_id u.ctx_uvar_head = UF.uvar_id u2.ctx_uvar_head)
-      then
-        UF.change_decoration u.ctx_uvar_head
-             ({UF.find_decoration u.ctx_uvar_head with uvar_decoration_should_check=Strict_no_fastpath})
-  );
+  (match should_check_opt with
+   | None ->
+     (match env.rel_query_for_apply_tac_uvar with
+      | None ->
+        if Env.debug env <| Options.Other "2635"
+        then BU.print1 "Setting uvar %s and env is not solving an apply uvar\n"
+               (Print.ctx_uvar_to_string u)
+      | Some u1 ->
+        if Env.debug env <| Options.Other "2635"
+        then BU.print3 "Setting uvar %s and env is solving %s that depends on %s\n"
+               (Print.ctx_uvar_to_string u)
+               (Print.ctx_uvar_to_string u1)
+               (List.fold_left (fun acc uv ->
+                  BU.format2 "%s; %s" acc (Print.ctx_uvar_to_string uv))
+                  "" u1.ctx_uvar_apply_tac_prefix);
+        //
+        // We are solving this uvar u indirectly when solving an apply tac uvar u1
+        // If u1 depends on u, then u must be typechecked strictly with no fastpath
+        //
+        if u1.ctx_uvar_apply_tac_prefix |> List.existsb (fun u2 ->
+          UF.uvar_id u.ctx_uvar_head = UF.uvar_id u2.ctx_uvar_head)
+        then
+          UF.change_decoration u.ctx_uvar_head
+               ({UF.find_decoration u.ctx_uvar_head with uvar_decoration_should_check=Strict_no_fastpath}))
+   | Some should_check ->
+     UF.change_decoration u.ctx_uvar_head
+       ({UF.find_decoration u.ctx_uvar_head with uvar_decoration_should_check=should_check}));
 
   U.set_uvar u.ctx_uvar_head t
 
@@ -570,7 +572,7 @@ let commit env uvis = uvis |> List.iter (function
       end
     | TERM(u, t) ->
       def_check_closed_in t.pos "commit" (List.map (fun b -> b.binder_bv) u.ctx_uvar_binders) t;
-      set_uvar env u t
+      set_uvar env u None t
     )
 
 let find_term_uvar uv s = BU.find_map s (function
@@ -854,6 +856,7 @@ let ensure_no_uvar_subst env (t0:term) (wl:worklist)
                          (U.arrow dom_binders (S.mk_Total (U.ctx_uvar_typ uv)))
                          (U.ctx_uvar_should_check uv)
                          uv.ctx_uvar_meta
+                         uv.ctx_uvar_apply_tac_prefix
         in
 
         (* Solve the old variable *)
@@ -863,7 +866,7 @@ let ensure_no_uvar_subst env (t0:term) (wl:worklist)
         then BU.print2 "ensure_no_uvar_subst solving %s with %s\n"
                (Print.ctx_uvar_to_string uv)
                (Print.term_to_string sol);
-        set_uvar env uv sol;
+        set_uvar env uv (Some Allow_untyped) sol;
 
         (* Make a term for the new uvar, applied to the substitutions of
          * the abstracted arguments, plus all the original arguments. *)
@@ -950,7 +953,7 @@ let solve_prob' resolve_ok prob logical_guard uvis wl =
         let phi = U.abs xs phi (Some (U.residual_tot U.ktype0)) in
         def_check_closed_in (p_loc prob) ("solve_prob'.sol." ^ string_of_int (p_pid prob))
                             (List.map (fun b -> b.binder_bv) <| p_scope prob) phi;
-        set_uvar wl.tcenv uv phi
+        set_uvar wl.tcenv uv None phi
     in
     let uv = p_guard_uvar prob in
     let fail () =
@@ -1088,8 +1091,9 @@ let restrict_ctx env (tgt:ctx_uvar) (bs:binders) (src:ctx_uvar) wl : worklist =
     let _, src', wl = new_uvar ("restricted " ^ (Print.uvar_to_string src.ctx_uvar_head)) wl
       src.ctx_uvar_range g pfx t
       (U.ctx_uvar_should_check src)
-      src.ctx_uvar_meta in
-    set_uvar env src (f src');
+      src.ctx_uvar_meta
+      src.ctx_uvar_apply_tac_prefix in
+    set_uvar env src (Some Allow_untyped) (f src');
 
     wl in
 
@@ -2904,7 +2908,7 @@ and solve_t_flex_flex env orig wl (lhs:flex_t) (rhs:flex_t) : solution =
       then BU.print2 "solve_t_flex_flex: solving meta arg uvar %s with %s\n"
              (Print.ctx_uvar_to_string uv)
              (Print.term_to_string t);
-      set_uvar env uv t;
+      set_uvar env uv None t;
       solve env (attempt [orig] wl) in
 
     match p_rel orig with
@@ -2980,7 +2984,7 @@ and solve_t_flex_flex env orig wl (lhs:flex_t) (rhs:flex_t) : solution =
                                              U.ctx_uvar_should_check u_rhs = Allow_untyped
                                           then Allow_untyped
                                           else Strict)
-                                         None in
+                                         None (u_lhs.ctx_uvar_apply_tac_prefix@u_rhs.ctx_uvar_apply_tac_prefix) in
                    let w_app = S.mk_Tm_app w (List.map (fun ({binder_bv=z}) -> S.as_arg (S.bv_to_name z)) zs) w.pos in
                    let _ =
                      if Env.debug env <| Options.Other "Rel"

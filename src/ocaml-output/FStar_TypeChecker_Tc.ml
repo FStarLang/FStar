@@ -1722,7 +1722,7 @@ let (tc_sig_let :
                                                        uu___12
                                                        FStar_Ident.string_of_lid in
                                                    FStar_Compiler_Util.format1
-                                                     "%s is not allowed in no_subtyping lemmas"
+                                                     "%s is not allowed in no_subtyping lemmas (only prims symbols)"
                                                      uu___11 in
                                                  err uu___10
                                                    lb.FStar_Syntax_Syntax.lbpos
