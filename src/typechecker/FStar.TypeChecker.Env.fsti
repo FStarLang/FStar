@@ -201,7 +201,7 @@ and env = {
   erase_erasable_args: bool;                      (* This flag is set when running normalize_for_extraction, see Extraction.ML.Modul *)
 
   //
-  // When the tactics engine makes a Rel call when the goal is an apply uvar,
+  // When the tactics engine makes a Rel call while solving a goal that is an apply uvar,
   //   it sets the following field
   //
   // Rel then makes use of it to properly typecheck the indirectly solved uvars
