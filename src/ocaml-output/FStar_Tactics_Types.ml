@@ -150,36 +150,7 @@ let (goal_witness : goal -> FStar_Syntax_Syntax.term) =
          ((g.goal_ctx_uvar), ([], FStar_Syntax_Syntax.NoUseRange)))
       FStar_Compiler_Range.dummyRange
 let (goal_type : goal -> FStar_Syntax_Syntax.term) =
-  fun g -> (g.goal_ctx_uvar).FStar_Syntax_Syntax.ctx_uvar_typ
-let (goal_with_type : goal -> FStar_Syntax_Syntax.term -> goal) =
-  fun g ->
-    fun t ->
-      let c = g.goal_ctx_uvar in
-      let c' =
-        {
-          FStar_Syntax_Syntax.ctx_uvar_head =
-            (c.FStar_Syntax_Syntax.ctx_uvar_head);
-          FStar_Syntax_Syntax.ctx_uvar_gamma =
-            (c.FStar_Syntax_Syntax.ctx_uvar_gamma);
-          FStar_Syntax_Syntax.ctx_uvar_binders =
-            (c.FStar_Syntax_Syntax.ctx_uvar_binders);
-          FStar_Syntax_Syntax.ctx_uvar_typ = t;
-          FStar_Syntax_Syntax.ctx_uvar_reason =
-            (c.FStar_Syntax_Syntax.ctx_uvar_reason);
-          FStar_Syntax_Syntax.ctx_uvar_should_check =
-            (c.FStar_Syntax_Syntax.ctx_uvar_should_check);
-          FStar_Syntax_Syntax.ctx_uvar_range =
-            (c.FStar_Syntax_Syntax.ctx_uvar_range);
-          FStar_Syntax_Syntax.ctx_uvar_meta =
-            (c.FStar_Syntax_Syntax.ctx_uvar_meta)
-        } in
-      {
-        goal_main_env = (g.goal_main_env);
-        goal_ctx_uvar = c';
-        opts = (g.opts);
-        is_guard = (g.is_guard);
-        label = (g.label)
-      }
+  fun g -> FStar_Syntax_Util.ctx_uvar_typ g.goal_ctx_uvar
 let (goal_with_env : goal -> FStar_TypeChecker_Env.env -> goal) =
   fun g ->
     fun env ->
@@ -192,16 +163,14 @@ let (goal_with_env : goal -> FStar_TypeChecker_Env.env -> goal) =
           FStar_Syntax_Syntax.ctx_uvar_gamma =
             (env.FStar_TypeChecker_Env.gamma);
           FStar_Syntax_Syntax.ctx_uvar_binders = uu___;
-          FStar_Syntax_Syntax.ctx_uvar_typ =
-            (c.FStar_Syntax_Syntax.ctx_uvar_typ);
           FStar_Syntax_Syntax.ctx_uvar_reason =
             (c.FStar_Syntax_Syntax.ctx_uvar_reason);
-          FStar_Syntax_Syntax.ctx_uvar_should_check =
-            (c.FStar_Syntax_Syntax.ctx_uvar_should_check);
           FStar_Syntax_Syntax.ctx_uvar_range =
             (c.FStar_Syntax_Syntax.ctx_uvar_range);
           FStar_Syntax_Syntax.ctx_uvar_meta =
-            (c.FStar_Syntax_Syntax.ctx_uvar_meta)
+            (c.FStar_Syntax_Syntax.ctx_uvar_meta);
+          FStar_Syntax_Syntax.ctx_uvar_apply_tac_prefix =
+            (c.FStar_Syntax_Syntax.ctx_uvar_apply_tac_prefix)
         } in
       {
         goal_main_env = env;
@@ -245,8 +214,8 @@ let (goal_of_goal_ty :
     fun typ ->
       let uu___ =
         FStar_TypeChecker_Env.new_implicit_var_aux "proofstate_of_goal_ty"
-          typ.FStar_Syntax_Syntax.pos env typ
-          FStar_Syntax_Syntax.Allow_untyped FStar_Pervasives_Native.None in
+          typ.FStar_Syntax_Syntax.pos env typ FStar_Syntax_Syntax.Strict
+          FStar_Pervasives_Native.None in
       match uu___ with
       | (u, ctx_uvars, g_u) ->
           let uu___1 = FStar_Compiler_List.hd ctx_uvars in
@@ -309,6 +278,10 @@ let (goal_of_implicit :
             (env.FStar_TypeChecker_Env.universe_of);
           FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term =
             (env.FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term);
+          FStar_TypeChecker_Env.teq_nosmt_force =
+            (env.FStar_TypeChecker_Env.teq_nosmt_force);
+          FStar_TypeChecker_Env.subtype_nosmt_force =
+            (env.FStar_TypeChecker_Env.subtype_nosmt_force);
           FStar_TypeChecker_Env.use_bv_sorts =
             (env.FStar_TypeChecker_Env.use_bv_sorts);
           FStar_TypeChecker_Env.qtbl_name_and_index =
@@ -343,106 +316,11 @@ let (goal_of_implicit :
           FStar_TypeChecker_Env.unif_allow_ref_guards =
             (env.FStar_TypeChecker_Env.unif_allow_ref_guards);
           FStar_TypeChecker_Env.erase_erasable_args =
-            (env.FStar_TypeChecker_Env.erase_erasable_args)
+            (env.FStar_TypeChecker_Env.erase_erasable_args);
+          FStar_TypeChecker_Env.rel_query_for_apply_tac_uvar =
+            (env.FStar_TypeChecker_Env.rel_query_for_apply_tac_uvar)
         } i.FStar_TypeChecker_Common.imp_uvar uu___ false
         i.FStar_TypeChecker_Common.imp_reason
-let (rename_binders :
-  FStar_Syntax_Syntax.subst_elt Prims.list ->
-    FStar_Syntax_Syntax.binder Prims.list ->
-      FStar_Syntax_Syntax.binder Prims.list)
-  =
-  fun subst ->
-    fun bs ->
-      FStar_Compiler_Effect.op_Bar_Greater bs
-        (FStar_Compiler_List.map
-           (fun uu___ ->
-              let x = uu___.FStar_Syntax_Syntax.binder_bv in
-              let y =
-                let uu___1 = FStar_Syntax_Syntax.bv_to_name x in
-                FStar_Syntax_Subst.subst subst uu___1 in
-              let uu___1 =
-                let uu___2 = FStar_Syntax_Subst.compress y in
-                uu___2.FStar_Syntax_Syntax.n in
-              match uu___1 with
-              | FStar_Syntax_Syntax.Tm_name y1 ->
-                  let uu___2 =
-                    let uu___3 = uu___.FStar_Syntax_Syntax.binder_bv in
-                    let uu___4 =
-                      FStar_Syntax_Subst.subst subst
-                        x.FStar_Syntax_Syntax.sort in
-                    {
-                      FStar_Syntax_Syntax.ppname =
-                        (uu___3.FStar_Syntax_Syntax.ppname);
-                      FStar_Syntax_Syntax.index =
-                        (uu___3.FStar_Syntax_Syntax.index);
-                      FStar_Syntax_Syntax.sort = uu___4
-                    } in
-                  {
-                    FStar_Syntax_Syntax.binder_bv = uu___2;
-                    FStar_Syntax_Syntax.binder_qual =
-                      (uu___.FStar_Syntax_Syntax.binder_qual);
-                    FStar_Syntax_Syntax.binder_attrs =
-                      (uu___.FStar_Syntax_Syntax.binder_attrs)
-                  }
-              | uu___2 -> failwith "Not a renaming"))
-let (subst_goal : FStar_Syntax_Syntax.subst_elt Prims.list -> goal -> goal) =
-  fun subst ->
-    fun goal1 ->
-      let g = goal1.goal_ctx_uvar in
-      let ctx_uvar =
-        let uu___ =
-          FStar_TypeChecker_Env.rename_gamma subst
-            g.FStar_Syntax_Syntax.ctx_uvar_gamma in
-        let uu___1 =
-          rename_binders subst g.FStar_Syntax_Syntax.ctx_uvar_binders in
-        let uu___2 =
-          FStar_Syntax_Subst.subst subst g.FStar_Syntax_Syntax.ctx_uvar_typ in
-        {
-          FStar_Syntax_Syntax.ctx_uvar_head =
-            (g.FStar_Syntax_Syntax.ctx_uvar_head);
-          FStar_Syntax_Syntax.ctx_uvar_gamma = uu___;
-          FStar_Syntax_Syntax.ctx_uvar_binders = uu___1;
-          FStar_Syntax_Syntax.ctx_uvar_typ = uu___2;
-          FStar_Syntax_Syntax.ctx_uvar_reason =
-            (g.FStar_Syntax_Syntax.ctx_uvar_reason);
-          FStar_Syntax_Syntax.ctx_uvar_should_check =
-            (g.FStar_Syntax_Syntax.ctx_uvar_should_check);
-          FStar_Syntax_Syntax.ctx_uvar_range =
-            (g.FStar_Syntax_Syntax.ctx_uvar_range);
-          FStar_Syntax_Syntax.ctx_uvar_meta =
-            (g.FStar_Syntax_Syntax.ctx_uvar_meta)
-        } in
-      {
-        goal_main_env = (goal1.goal_main_env);
-        goal_ctx_uvar = ctx_uvar;
-        opts = (goal1.opts);
-        is_guard = (goal1.is_guard);
-        label = (goal1.label)
-      }
-let (subst_proof_state :
-  FStar_Syntax_Syntax.subst_t -> proofstate -> proofstate) =
-  fun subst ->
-    fun ps ->
-      let uu___ = FStar_Options.tactic_raw_binders () in
-      if uu___
-      then ps
-      else
-        (let uu___2 = FStar_Compiler_List.map (subst_goal subst) ps.goals in
-         {
-           main_context = (ps.main_context);
-           all_implicits = (ps.all_implicits);
-           goals = uu___2;
-           smt_goals = (ps.smt_goals);
-           depth = (ps.depth);
-           __dump = (ps.__dump);
-           psc = (ps.psc);
-           entry_range = (ps.entry_range);
-           guard_policy = (ps.guard_policy);
-           freshness = (ps.freshness);
-           tac_verb_dbg = (ps.tac_verb_dbg);
-           local_state = (ps.local_state);
-           urgency = (ps.urgency)
-         })
 let (decr_depth : proofstate -> proofstate) =
   fun ps ->
     {
@@ -504,11 +382,7 @@ let (tracepoint_with_psc :
            (let uu___2 = FStar_Options.tactic_trace_d () in
             ps.depth <= uu___2) in
        if uu___1
-       then
-         let ps1 = set_ps_psc psc ps in
-         let subst = FStar_TypeChecker_Cfg.psc_subst ps1.psc in
-         let uu___2 = subst_proof_state subst ps1 in
-         ps1.__dump uu___2 "TRACE"
+       then let ps1 = set_ps_psc psc ps in ps1.__dump ps1 "TRACE"
        else ());
       true
 let (tracepoint : proofstate -> Prims.bool) =
@@ -516,11 +390,7 @@ let (tracepoint : proofstate -> Prims.bool) =
     (let uu___1 =
        (FStar_Options.tactic_trace ()) ||
          (let uu___2 = FStar_Options.tactic_trace_d () in ps.depth <= uu___2) in
-     if uu___1
-     then
-       let subst = FStar_TypeChecker_Cfg.psc_subst ps.psc in
-       let uu___2 = subst_proof_state subst ps in ps.__dump uu___2 "TRACE"
-     else ());
+     if uu___1 then ps.__dump ps "TRACE" else ());
     true
 let (set_proofstate_range :
   proofstate -> FStar_Compiler_Range.range -> proofstate) =

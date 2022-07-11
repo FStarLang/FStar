@@ -1581,6 +1581,10 @@ let run_push_without_deps :
                  (uu___.FStar_TypeChecker_Env.universe_of);
                FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term =
                  (uu___.FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term);
+               FStar_TypeChecker_Env.teq_nosmt_force =
+                 (uu___.FStar_TypeChecker_Env.teq_nosmt_force);
+               FStar_TypeChecker_Env.subtype_nosmt_force =
+                 (uu___.FStar_TypeChecker_Env.subtype_nosmt_force);
                FStar_TypeChecker_Env.use_bv_sorts =
                  (uu___.FStar_TypeChecker_Env.use_bv_sorts);
                FStar_TypeChecker_Env.qtbl_name_and_index =
@@ -1617,7 +1621,9 @@ let run_push_without_deps :
                FStar_TypeChecker_Env.unif_allow_ref_guards =
                  (uu___.FStar_TypeChecker_Env.unif_allow_ref_guards);
                FStar_TypeChecker_Env.erase_erasable_args =
-                 (uu___.FStar_TypeChecker_Env.erase_erasable_args)
+                 (uu___.FStar_TypeChecker_Env.erase_erasable_args);
+               FStar_TypeChecker_Env.rel_query_for_apply_tac_uvar =
+                 (uu___.FStar_TypeChecker_Env.rel_query_for_apply_tac_uvar)
              });
           FStar_Interactive_JsonHelper.repl_stdin =
             (st1.FStar_Interactive_JsonHelper.repl_stdin);

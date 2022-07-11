@@ -127,6 +127,82 @@ module T = FStar.Tactics
 
 #set-options "--ide_id_info_off"
 
+assume val test_2626_aux
+  (#opened: _)
+  (#t: Type)
+  (#t': Type)
+  (v0: t -> Ghost.erased t' -> vprop)
+  (v: t -> Ghost.erased t' -> vprop)
+  (p: t -> Ghost.erased t' -> t -> Ghost.erased t' -> prop)
+  (x1: t)
+  (v1: Ghost.erased t')
+: STGhostT (Ghost.erased t) opened
+    (v0 x1 v1)
+    (fun res -> exists_ (fun (v1': Ghost.erased t') -> v x1 v1' `star` exists_ (fun (vres: Ghost.erased t') -> v0 res vres `star` pure (p x1 v1' res vres))))
+
+assume val test_2626_elim
+  (#opened: _)
+  (#t: Type)
+  (#t': Type)
+  (v0: t -> Ghost.erased t' -> vprop)
+  (v: t -> Ghost.erased t' -> vprop)
+  (p: t -> Ghost.erased t' -> t -> Ghost.erased t' -> prop)
+  (x: t)
+  (w: Ghost.erased t')
+: STGhost (Ghost.erased t') opened
+    (v x w)
+    (fun res -> v0 x res)
+    True
+    (fun res -> forall x2 v2 . p x w x2 v2 ==> p x res x2 v2)
+
+assume val test_2626_reify
+  (#t: Type)
+  (#t': Type)
+  (v0: t -> Ghost.erased t' -> vprop)
+  (p: t -> Ghost.erased t' -> t -> Ghost.erased t' -> prop)
+  (x1: t)
+  (v1: Ghost.erased t')
+  (x2: Ghost.erased t)
+  (v2: Ghost.erased t')
+: ST t
+    (v0 x1 v1 `star` v0 x2 v2)
+    (fun res -> v0 x1 v1 `star` v0 res v2)
+    (p x1 v1 x2 v2)
+    (fun res -> res == Ghost.reveal x2)
+
+assume val test_2626_intro
+  (#opened: _)
+  (#t: Type)
+  (#t': Type)
+  (v0: t -> Ghost.erased t' -> vprop)
+  (v: t -> Ghost.erased t' -> vprop)
+  (p: t -> Ghost.erased t' -> t -> Ghost.erased t' -> prop)
+  (x: t)
+  (w: Ghost.erased t')
+: STGhost (Ghost.erased t') opened
+    (v0 x w)
+    (fun res -> v x res)
+    True
+    (fun res -> forall x2 v2 . p x w x2 v2 ==>  p x res x2 v2)
+
+let test_2626
+  (#t: Type)
+  (#t': Type)
+  (v0: t -> Ghost.erased t' -> vprop)
+  (v: t -> Ghost.erased t' -> vprop)
+  (p: t -> Ghost.erased t' -> t -> Ghost.erased t' -> prop)
+  (x1: t)
+  (v1: Ghost.erased t')
+: STT t
+    (v0 x1 v1)
+    (fun res -> exists_ (fun v1' -> v x1 v1' `star` exists_ (fun vres -> v0 res vres `star` pure (p x1 v1' res vres))))
+= let gres = test_2626_aux v0 v p x1 v1 in
+  let _ = gen_elim () in
+  let _ = test_2626_elim v0 v p x1 _ in
+  let res = test_2626_reify v0 p x1 _ gres _ in
+  let _ = test_2626_intro v0 v p x1 _ in
+  return res
+
 assume
 val ptr : Type0
 assume
@@ -368,7 +444,7 @@ let test_split
   return res
 
 assume
-val pts_to (p:ptr) (v:nat) : vprop
+val pts_to (p:ptr) (v:int) : vprop
 
 assume
 val free (p:ptr) : STT unit (exists_ (fun v -> pts_to p v)) (fun _ -> emp)
@@ -704,3 +780,24 @@ let v2 (#p: Ghost.erased nat) (al: ptr) (err: ptr) : STT unit
   let _ = gen_elim () in
   let _ = join al ar in
   return ()
+
+
+assume
+val expect_pos (p:ptr) : STT unit (exists_ (λ (v:pos) → pts_to p v)) (λ _ → emp)
+
+[@@expect_failure]
+let use_zero_as_pos (p:ptr)
+  : STT unit (pts_to p 0) (λ _ → emp)
+  = let _ = expect_pos p in ()
+
+
+assume
+val expect_nat (p:ptr) : STT unit (exists_ (λ (v:nat) → pts_to p v)) (λ _ → emp)
+
+//this fails although it could succeed
+//wips: [F*] (<input>(723,4-723,30)) Uvar solution for ?2022 was not well-typed. Expected Prims.nat got 0 : Prims.int [2 times]
+//
+[@@expect_failure]
+let use_zero_as_nat (p:ptr)
+  : STT unit (pts_to p 0) (λ _ → emp)
+  = let _ = expect_nat p in ()

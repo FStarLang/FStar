@@ -1576,7 +1576,7 @@ and tc_value env (e:term) : term
 
   | Tm_uvar (u, s) -> //the type of a uvar is given directly with it; we do not recheck the type
     //FIXME: Check context inclusion?
-    value_check_expected_typ env e (Inl (SS.subst' s u.ctx_uvar_typ)) Env.trivial_guard
+    value_check_expected_typ env e (Inl (SS.subst' s (U.ctx_uvar_typ u))) Env.trivial_guard
 
   //only occurs where type annotations are missing in source programs
   //or the program has explicit _ for missing terms
@@ -4360,9 +4360,16 @@ let rec universe_of_aux env e =
    | Tm_abs(bs, t, _) ->
      level_of_type_fail env e "arrow type"
    //these next few cases are easy; we just use the type stored at the node
-   | Tm_uvar (u, s) -> SS.subst' s u.ctx_uvar_typ
+   | Tm_uvar (u, s) -> SS.subst' s (U.ctx_uvar_typ u)
    | Tm_meta(t, _) -> universe_of_aux env t
-   | Tm_name n -> n.sort
+   | Tm_name n ->
+     //
+     // AR: This is unsatisfactory,
+     //     We should always be able to find n in the env
+     //
+     (match Env.try_lookup_bv env n with
+      | Some (t, _) -> t
+      | None -> n.sort)
    | Tm_fvar fv ->
      let (_, t), _ = Env.lookup_lid env fv.fv_name.v in
      t
@@ -4584,7 +4591,7 @@ let rec typeof_tot_or_gtot_term_fastpath (env:env) (t:term) (must_tot:bool) : op
     then Some k
     else None
 
-  | Tm_uvar (u, s) -> if not must_tot then Some (SS.subst' s u.ctx_uvar_typ) else None
+  | Tm_uvar (u, s) -> if not must_tot then Some (SS.subst' s (U.ctx_uvar_typ u)) else None
 
   | Tm_quoted (tm, qi) -> if not must_tot then Some (S.t_term) else None
 
@@ -4594,7 +4601,6 @@ let rec typeof_tot_or_gtot_term_fastpath (env:env) (t:term) (must_tot:bool) : op
   | Tm_match _
   | Tm_let _
   | Tm_unknown
-  | Tm_uinst _ -> None
   | _ -> failwith ("Impossible! (" ^ (Print.tag_of_term t) ^ ")")
 
 (*

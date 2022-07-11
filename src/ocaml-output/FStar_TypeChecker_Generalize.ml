@@ -241,8 +241,9 @@ let (gen :
                                    FStar_Syntax_Print.uvar_to_string
                                      u.FStar_Syntax_Syntax.ctx_uvar_head in
                                  let uu___10 =
-                                   FStar_Syntax_Print.term_to_string
-                                     u.FStar_Syntax_Syntax.ctx_uvar_typ in
+                                   let uu___11 =
+                                     FStar_Syntax_Util.ctx_uvar_typ u in
+                                   FStar_Syntax_Print.term_to_string uu___11 in
                                  FStar_Compiler_Util.format2 "(%s : %s)"
                                    uu___9 uu___10)) in
                        FStar_Compiler_Effect.op_Bar_Greater uu___7
@@ -257,8 +258,8 @@ let (gen :
                        (fun univs2 ->
                           fun uv ->
                             let uu___5 =
-                              FStar_Syntax_Free.univs
-                                uv.FStar_Syntax_Syntax.ctx_uvar_typ in
+                              let uu___6 = FStar_Syntax_Util.ctx_uvar_typ uv in
+                              FStar_Syntax_Free.univs uu___6 in
                             FStar_Compiler_Util.set_union univs2 uu___5)
                        univs uu___4 in
                    let uvs = gen_uvars uvt in
@@ -288,8 +289,10 @@ let (gen :
                                     FStar_Syntax_Print.uvar_to_string
                                       u.FStar_Syntax_Syntax.ctx_uvar_head in
                                   let uu___10 =
+                                    let uu___11 =
+                                      FStar_Syntax_Util.ctx_uvar_typ u in
                                     FStar_TypeChecker_Normalize.term_to_string
-                                      env u.FStar_Syntax_Syntax.ctx_uvar_typ in
+                                      env uu___11 in
                                   FStar_Compiler_Util.format2 "(%s : %s)"
                                     uu___9 uu___10)) in
                         FStar_Compiler_Effect.op_Bar_Greater uu___8
@@ -410,11 +413,11 @@ let (gen :
                                "Unexpected instantiation of mutually recursive uvar"
                          | uu___4 ->
                              let k =
+                               let uu___5 = FStar_Syntax_Util.ctx_uvar_typ u in
                                FStar_TypeChecker_Normalize.normalize
                                  [FStar_TypeChecker_Env.Beta;
                                  FStar_TypeChecker_Env.Exclude
-                                   FStar_TypeChecker_Env.Zeta] env
-                                 u.FStar_Syntax_Syntax.ctx_uvar_typ in
+                                   FStar_TypeChecker_Env.Zeta] env uu___5 in
                              let uu___5 = FStar_Syntax_Util.arrow_formals k in
                              (match uu___5 with
                               | (bs, kres) ->

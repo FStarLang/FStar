@@ -169,6 +169,8 @@ let strictly_positive = ()
 
 let no_auto_projectors = ()
 
+let no_subtyping = ()
+
 let singleton #_ x = x
 
 let with_type #_ e = e
