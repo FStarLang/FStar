@@ -553,8 +553,8 @@ let set_uvar env u (should_check_opt:option S.should_check_uvar) t =
         // We are solving this uvar u indirectly when solving an apply tac uvar u1
         // If u1 depends on u, then u must be typechecked strictly with no fastpath
         //
-        if u1.ctx_uvar_apply_tac_prefix |> List.existsb (fun u2 ->
-          UF.uvar_id u.ctx_uvar_head = UF.uvar_id u2.ctx_uvar_head)
+        if u1.ctx_uvar_apply_tac_prefix
+          |> List.existsb (fun u2 -> UF.equiv u.ctx_uvar_head u2.ctx_uvar_head)
         then
           UF.change_decoration u.ctx_uvar_head
                ({UF.find_decoration u.ctx_uvar_head with uvar_decoration_should_check=Strict_no_fastpath}))

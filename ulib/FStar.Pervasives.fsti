@@ -73,6 +73,18 @@ val smt_pat (#a: Type) (x: a) : Tot pattern
 *)
 val smt_pat_or (x: list (list pattern)) : Tot pattern
 
+(** eqtype is defined in prims at universe 0
+    
+    Although, usually, only universe 0 types have decidable equality,
+    sometimes it is possible to define a type in a higher univese also
+    with decidable equality (e.g., type t : Type u#1 = | Unit)
+
+    Further, sometimes, as in Lemma below, we need to use a
+    universe-polymorphic equality type (although it is only ever
+    instantiated with `unit`)
+*)
+type eqtype_u = a:Type{hasEq a}
+
 (** [Lemma] is a very widely used effect abbreviation.
 
     It stands for a unit-returning [Ghost] computation, whose main
@@ -97,7 +109,6 @@ val smt_pat_or (x: list (list pattern)) : Tot pattern
    the squash argument on the postcondition allows to assume the
    precondition for the *well-formedness* of the postcondition.
 *)
-type eqtype_u = a:Type{hasEq a}
 effect Lemma (a: eqtype_u) (pre: Type) (post: (squash pre -> Type)) (pats: list pattern) =
   Pure a pre (fun r -> post ())
 
@@ -1060,6 +1071,12 @@ val strictly_positive : unit
   *)
 val no_auto_projectors : unit
 
+(** This attribute can be added to a let definition
+    and indicates to the typechecker to typecheck the signature of the definition
+    without using subtyping. This is sometimes useful for indicating that a lemma
+    can be applied by the tactic engine without requiring to check additional
+    subtyping obligations
+*)
 val no_subtyping : unit
 
 (** Pure and ghost inner let bindings are now always inlined during

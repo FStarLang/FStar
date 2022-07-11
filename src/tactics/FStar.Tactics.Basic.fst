@@ -185,7 +185,9 @@ let __do_unify_wflags (dbg:bool) (allow_guards:bool)
       try
         let res =
           //
-          // If the current goal is set (TODO: when will it not be?)
+          // If the current goal is set
+          //   (it may not be set in case the tactic engine is asked to unify two terms
+          //    even though no goals remain)
           //   set rel_query_for_apply_tac_uvar so that any uvars solved as part of this Rel call,
           //   can be typechecked properly
           //   e.g. if the current goal depends on the indirectly solver uvar ?u,
@@ -565,7 +567,11 @@ let intro () : tac binder = wrap_err "intro" <|
              //BU.print2 "[intro]: with binder = %s, new goal = %s"
              //         (Print.binders_to_string ", " [b])
              //         (Print.term_to_string typ');
-             bind (new_uvar "intro" env' typ' (Some (should_check_goal_uvar goal)) goal.goal_ctx_uvar.ctx_uvar_apply_tac_prefix (rangeof goal)) (fun (body, ctx_uvar) ->
+             bind (new_uvar "intro" env' typ' 
+                            (Some (should_check_goal_uvar goal)) 
+                            goal.goal_ctx_uvar.ctx_uvar_apply_tac_prefix
+                            (rangeof goal))
+                  (fun (body, ctx_uvar) ->
              let sol = U.abs [b] body (Some (U.residual_comp_of_comp c)) in
              //BU.print1 "[intro]: solution is %s"
              //           (Print.term_to_string sol);

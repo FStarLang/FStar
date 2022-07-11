@@ -238,7 +238,11 @@ let add_implicits (i:implicits) : tac unit =
     bind get (fun ps ->
     set ({ps with all_implicits=i@ps.all_implicits}))
 
-let new_uvar (reason:string) (env:env) (typ:typ) (sc_opt:option should_check_uvar) (apply_uvar_deps:list S.ctx_uvar) (rng:Range.range) : tac (term * ctx_uvar) =
+let new_uvar (reason:string) (env:env) (typ:typ)
+             (sc_opt:option should_check_uvar)
+             (apply_uvar_deps:list S.ctx_uvar)
+             (rng:Range.range) 
+  : tac (term * ctx_uvar) =
     let should_check = 
       match sc_opt with
       | Some sc -> sc
