@@ -1365,13 +1365,9 @@ let (set_uvar :
                           u1.FStar_Syntax_Syntax.ctx_uvar_apply_tac_prefix
                           (FStar_Compiler_List.existsb
                              (fun u2 ->
-                                let uu___3 =
-                                  FStar_Syntax_Unionfind.uvar_id
-                                    u.FStar_Syntax_Syntax.ctx_uvar_head in
-                                let uu___4 =
-                                  FStar_Syntax_Unionfind.uvar_id
-                                    u2.FStar_Syntax_Syntax.ctx_uvar_head in
-                                uu___3 = uu___4)) in
+                                FStar_Syntax_Unionfind.equiv
+                                  u.FStar_Syntax_Syntax.ctx_uvar_head
+                                  u2.FStar_Syntax_Syntax.ctx_uvar_head)) in
                       if uu___2
                       then
                         let uu___3 =
