@@ -43,10 +43,12 @@ val rollback           : tx -> unit
 val commit             : tx -> unit
 val update_in_tx       : ref 'a -> 'a -> unit
 
-val fresh              : Range.range -> S.uvar
+val fresh              : S.uvar_decoration -> Range.range -> S.uvar
 val uvar_id            : S.uvar -> int
 val find               : S.uvar -> option S.term
+val find_decoration    : S.uvar -> S.uvar_decoration
 val change             : S.uvar -> S.term -> unit
+val change_decoration  : S.uvar -> S.uvar_decoration -> unit
 val equiv              : S.uvar -> S.uvar -> bool
 val union              : S.uvar -> S.uvar -> unit
 

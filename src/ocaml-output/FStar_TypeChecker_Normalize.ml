@@ -2434,15 +2434,13 @@ let (should_unfold :
                  uu___3 > Prims.int_zero) in
             if uu___2
             then
-              ((let uu___4 =
-                  let uu___5 =
-                    let uu___6 = FStar_Syntax_Print.fv_to_string fv in
-                    FStar_Compiler_Util.format1
-                      "Unfolding name which is marked as a plugin: %s" uu___6 in
-                  (FStar_Errors.Warning_UnfoldPlugin, uu___5) in
-                FStar_Errors.log_issue
-                  (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.p
-                  uu___4);
+              let msg =
+                let uu___3 = FStar_Syntax_Print.fv_to_string fv in
+                FStar_Compiler_Util.format1
+                  "Unfolding name which is marked as a plugin: %s" uu___3 in
+              (FStar_Errors.log_issue
+                 (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.p
+                 (FStar_Errors.Warning_UnfoldPlugin, msg);
                (let uu___4 =
                   let uu___5 =
                     FStar_Compiler_Effect.op_Bang plugin_unfold_warn_ctr in
@@ -8106,8 +8104,8 @@ let (eta_expand :
                 | FStar_Syntax_Syntax.Tm_uvar (u, s) ->
                     let uu___3 =
                       let uu___4 =
-                        FStar_Syntax_Subst.subst' s
-                          u.FStar_Syntax_Syntax.ctx_uvar_typ in
+                        let uu___5 = FStar_Syntax_Util.ctx_uvar_typ u in
+                        FStar_Syntax_Subst.subst' s uu___5 in
                       FStar_Syntax_Util.arrow_formals uu___4 in
                     (match uu___3 with
                      | (formals, _tres) ->
@@ -8178,6 +8176,10 @@ let (eta_expand :
                                   FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term
                                     =
                                     (env1.FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term);
+                                  FStar_TypeChecker_Env.teq_nosmt_force =
+                                    (env1.FStar_TypeChecker_Env.teq_nosmt_force);
+                                  FStar_TypeChecker_Env.subtype_nosmt_force =
+                                    (env1.FStar_TypeChecker_Env.subtype_nosmt_force);
                                   FStar_TypeChecker_Env.use_bv_sorts = true;
                                   FStar_TypeChecker_Env.qtbl_name_and_index =
                                     (env1.FStar_TypeChecker_Env.qtbl_name_and_index);
@@ -8217,7 +8219,10 @@ let (eta_expand :
                                     =
                                     (env1.FStar_TypeChecker_Env.unif_allow_ref_guards);
                                   FStar_TypeChecker_Env.erase_erasable_args =
-                                    (env1.FStar_TypeChecker_Env.erase_erasable_args)
+                                    (env1.FStar_TypeChecker_Env.erase_erasable_args);
+                                  FStar_TypeChecker_Env.rel_query_for_apply_tac_uvar
+                                    =
+                                    (env1.FStar_TypeChecker_Env.rel_query_for_apply_tac_uvar)
                                 } t true in
                             match uu___5 with
                             | (uu___6, ty, uu___7) ->
@@ -8284,6 +8289,10 @@ let (eta_expand :
                           FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term
                             =
                             (env1.FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term);
+                          FStar_TypeChecker_Env.teq_nosmt_force =
+                            (env1.FStar_TypeChecker_Env.teq_nosmt_force);
+                          FStar_TypeChecker_Env.subtype_nosmt_force =
+                            (env1.FStar_TypeChecker_Env.subtype_nosmt_force);
                           FStar_TypeChecker_Env.use_bv_sorts = true;
                           FStar_TypeChecker_Env.qtbl_name_and_index =
                             (env1.FStar_TypeChecker_Env.qtbl_name_and_index);
@@ -8320,7 +8329,10 @@ let (eta_expand :
                           FStar_TypeChecker_Env.unif_allow_ref_guards =
                             (env1.FStar_TypeChecker_Env.unif_allow_ref_guards);
                           FStar_TypeChecker_Env.erase_erasable_args =
-                            (env1.FStar_TypeChecker_Env.erase_erasable_args)
+                            (env1.FStar_TypeChecker_Env.erase_erasable_args);
+                          FStar_TypeChecker_Env.rel_query_for_apply_tac_uvar
+                            =
+                            (env1.FStar_TypeChecker_Env.rel_query_for_apply_tac_uvar)
                         } t true in
                     (match uu___4 with
                      | (uu___5, ty, uu___6) -> eta_expand_with_type env1 t ty)))

@@ -1436,6 +1436,10 @@ and (encode_term :
                               FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term
                                 =
                                 (uu___6.FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term);
+                              FStar_TypeChecker_Env.teq_nosmt_force =
+                                (uu___6.FStar_TypeChecker_Env.teq_nosmt_force);
+                              FStar_TypeChecker_Env.subtype_nosmt_force =
+                                (uu___6.FStar_TypeChecker_Env.subtype_nosmt_force);
                               FStar_TypeChecker_Env.use_bv_sorts =
                                 (uu___6.FStar_TypeChecker_Env.use_bv_sorts);
                               FStar_TypeChecker_Env.qtbl_name_and_index =
@@ -1474,7 +1478,10 @@ and (encode_term :
                               FStar_TypeChecker_Env.unif_allow_ref_guards =
                                 (uu___6.FStar_TypeChecker_Env.unif_allow_ref_guards);
                               FStar_TypeChecker_Env.erase_erasable_args =
-                                (uu___6.FStar_TypeChecker_Env.erase_erasable_args)
+                                (uu___6.FStar_TypeChecker_Env.erase_erasable_args);
+                              FStar_TypeChecker_Env.rel_query_for_apply_tac_uvar
+                                =
+                                (uu___6.FStar_TypeChecker_Env.rel_query_for_apply_tac_uvar)
                             }) res in
                        (match uu___5 with
                         | (pre_opt, res_t) ->
@@ -2006,8 +2013,8 @@ and (encode_term :
                  uv.FStar_Syntax_Syntax.ctx_uvar_head in
              FStar_SMTEncoding_Util.mk_Term_uvar uu___2 in
            let uu___2 =
-             encode_term_pred FStar_Pervasives_Native.None
-               uv.FStar_Syntax_Syntax.ctx_uvar_typ env ttm in
+             let uu___3 = FStar_Syntax_Util.ctx_uvar_typ uv in
+             encode_term_pred FStar_Pervasives_Native.None uu___3 env ttm in
            (match uu___2 with
             | (t_has_k, decls) ->
                 let d =

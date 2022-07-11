@@ -30,7 +30,8 @@ let (vops : vops_t) =
     } in
   { next_major; next_minor }
 type tgraph =
-  FStar_Syntax_Syntax.term FStar_Pervasives_Native.option FStar_Unionfind.puf
+  (FStar_Syntax_Syntax.term FStar_Pervasives_Native.option *
+    FStar_Syntax_Syntax.uvar_decoration) FStar_Unionfind.puf
 type ugraph =
   FStar_Syntax_Syntax.universe FStar_Pervasives_Native.option
     FStar_Unionfind.puf
@@ -168,13 +169,13 @@ let (set_term_graph : tgraph -> unit) =
       } in
     set uu___
 let (chk_v_t :
-  (FStar_Syntax_Syntax.term FStar_Pervasives_Native.option
-    FStar_Unionfind.p_uvar * FStar_Syntax_Syntax.version *
-    FStar_Compiler_Range.range) ->
-    FStar_Syntax_Syntax.term FStar_Pervasives_Native.option
+  FStar_Syntax_Syntax.uvar ->
+    (FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax
+      FStar_Pervasives_Native.option * FStar_Syntax_Syntax.uvar_decoration)
       FStar_Unionfind.p_uvar)
   =
-  fun uu___ ->
+  fun su ->
+    let uu___ = su in
     match uu___ with
     | (u, v, rng) ->
         let uvar_to_string u1 =
@@ -207,29 +208,57 @@ let (uvar_id : FStar_Syntax_Syntax.uvar -> Prims.int) =
   fun u ->
     let uu___ = get_term_graph () in
     let uu___1 = chk_v_t u in FStar_Unionfind.puf_id uu___ uu___1
-let (fresh : FStar_Compiler_Range.range -> FStar_Syntax_Syntax.uvar) =
-  fun rng ->
-    fail_if_ro ();
-    (let uu___1 =
-       let uu___2 = get_term_graph () in
-       FStar_Unionfind.puf_fresh uu___2 FStar_Pervasives_Native.None in
-     let uu___2 = get_version () in (uu___1, uu___2, rng))
-let (find :
+let (fresh :
+  FStar_Syntax_Syntax.uvar_decoration ->
+    FStar_Compiler_Range.range -> FStar_Syntax_Syntax.uvar)
+  =
+  fun decoration ->
+    fun rng ->
+      fail_if_ro ();
+      (let uu___1 =
+         let uu___2 = get_term_graph () in
+         FStar_Unionfind.puf_fresh uu___2
+           (FStar_Pervasives_Native.None, decoration) in
+       let uu___2 = get_version () in (uu___1, uu___2, rng))
+let (find_core :
   FStar_Syntax_Syntax.uvar ->
-    FStar_Syntax_Syntax.term FStar_Pervasives_Native.option)
+    (FStar_Syntax_Syntax.term FStar_Pervasives_Native.option *
+      FStar_Syntax_Syntax.uvar_decoration))
   =
   fun u ->
     let uu___ = get_term_graph () in
     let uu___1 = chk_v_t u in FStar_Unionfind.puf_find uu___ uu___1
+let (find :
+  FStar_Syntax_Syntax.uvar ->
+    FStar_Syntax_Syntax.term FStar_Pervasives_Native.option)
+  = fun u -> let uu___ = find_core u in FStar_Pervasives_Native.fst uu___
+let (find_decoration :
+  FStar_Syntax_Syntax.uvar -> FStar_Syntax_Syntax.uvar_decoration) =
+  fun u -> let uu___ = find_core u in FStar_Pervasives_Native.snd uu___
 let (change : FStar_Syntax_Syntax.uvar -> FStar_Syntax_Syntax.term -> unit) =
   fun u ->
     fun t ->
-      let uu___ =
-        let uu___1 = get_term_graph () in
-        let uu___2 = chk_v_t u in
-        FStar_Unionfind.puf_change uu___1 uu___2
-          (FStar_Pervasives_Native.Some t) in
-      set_term_graph uu___
+      let uu___ = find_core u in
+      match uu___ with
+      | (uu___1, dec) ->
+          let uu___2 =
+            let uu___3 = get_term_graph () in
+            let uu___4 = chk_v_t u in
+            FStar_Unionfind.puf_change uu___3 uu___4
+              ((FStar_Pervasives_Native.Some t), dec) in
+          set_term_graph uu___2
+let (change_decoration :
+  FStar_Syntax_Syntax.uvar -> FStar_Syntax_Syntax.uvar_decoration -> unit) =
+  fun u ->
+    fun d ->
+      let uu___ = find_core u in
+      match uu___ with
+      | (t, uu___1) ->
+          let uu___2 =
+            let uu___3 = get_term_graph () in
+            let uu___4 = chk_v_t u in
+            FStar_Unionfind.puf_change uu___3 uu___4 (t, d) in
+          set_term_graph uu___2
 let (equiv :
   FStar_Syntax_Syntax.uvar -> FStar_Syntax_Syntax.uvar -> Prims.bool) =
   fun u ->

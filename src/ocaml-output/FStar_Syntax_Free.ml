@@ -1,4 +1,13 @@
 open Prims
+let (ctx_uvar_typ :
+  FStar_Syntax_Syntax.ctx_uvar ->
+    FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax)
+  =
+  fun u ->
+    let uu___ =
+      FStar_Syntax_Unionfind.find_decoration
+        u.FStar_Syntax_Syntax.ctx_uvar_head in
+    uu___.FStar_Syntax_Syntax.uvar_decoration_typ
 type use_cache_t =
   | Def 
   | NoCache 
@@ -156,8 +165,8 @@ let rec (free_names_and_uvs' :
           let uu___1 =
             if use_cache = Full
             then
-              free_names_and_uvars uv.FStar_Syntax_Syntax.ctx_uvar_typ
-                use_cache
+              let uu___2 = ctx_uvar_typ uv in
+              free_names_and_uvars uu___2 use_cache
             else no_free_vars in
           union (singleton_uv uv) uu___1
       | FStar_Syntax_Syntax.Tm_type u -> free_univs u

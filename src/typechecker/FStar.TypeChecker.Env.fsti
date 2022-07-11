@@ -177,8 +177,9 @@ and env = {
   typeof_tot_or_gtot_term :env -> term -> must_tot -> term * typ * guard_t; (* typechecker callback; G |- e : (G)Tot t <== g *)
   universe_of :env -> term -> universe; (* typechecker callback; G |- e : Tot (Type u) *)
   typeof_well_typed_tot_or_gtot_term :env -> term -> must_tot -> typ * guard_t; (* typechecker callback, uses fast path, with a fallback on the slow path *)
-
-  use_bv_sorts   :bool;                           (* use bv.sort for a bound-variable's type rather than consulting gamma *)
+  teq_nosmt_force: env -> term -> term -> bool;        (* callback to the unifier *)
+  subtype_nosmt_force: env -> term -> term -> bool;    (* callback to the unifier *)
+  use_bv_sorts   :bool;                             (* use bv.sort for a bound-variable's type rather than consulting gamma *)
   qtbl_name_and_index:BU.smap int * option (lident*int);    (* the top-level term we're currently processing and the nth query for it, in addition we maintain a counter for query index per lid *)
   normalized_eff_names:BU.smap lident;           (* cache for normalized effect name, used to be captured in the function norm_eff_name, which made it harder to roll back etc. *)
   fv_delta_depths:BU.smap delta_depth;           (* cache for fv delta depths, its preferable to use Env.delta_depth_of_fv, soon fv.delta_depth should be removed *)
@@ -196,8 +197,17 @@ and env = {
   erasable_types_tab:BU.smap bool;              (* a dictionary of type names to erasable types *)
   enable_defer_to_tac: bool;                     (* Set by default; unset when running within a tactic itself, since we do not allow
                                                     a tactic to defer problems to another tactic via the attribute mechanism *)
-  unif_allow_ref_guards:bool;                    (* Allow guards when unifying refinements, even when SMT is disabled *)
-  erase_erasable_args: bool                      (* This flag is set when running normalize_for_extraction, see Extraction.ML.Modul *)
+  unif_allow_ref_guards:bool;                     (* Allow guards when unifying refinements, even when SMT is disabled *)
+  erase_erasable_args: bool;                      (* This flag is set when running normalize_for_extraction, see Extraction.ML.Modul *)
+
+  //
+  // When the tactics engine makes a Rel call while solving a goal that is an apply uvar,
+  //   it sets the following field
+  //
+  // Rel then makes use of it to properly typecheck the indirectly solved uvars
+  //   as part of this Rel call
+  //
+  rel_query_for_apply_tac_uvar: option S.ctx_uvar;
 }
 
 and solver_depth_t = int * int * int
@@ -236,6 +246,8 @@ val initial_env : FStar.Parser.Dep.deps ->
                   (env -> term -> must_tot -> term * typ * guard_t) ->
                   (env -> term -> must_tot -> option typ) ->
                   (env -> term -> universe) ->
+                  (env -> term -> term -> bool) ->
+                  (env -> term -> term -> bool) ->
                   solver_t -> lident ->
                   (list step -> env -> term -> term) -> env
 
@@ -449,6 +461,15 @@ val def_check_closed_in       : Range.range -> msg:string -> scope:list bv -> te
 val def_check_closed_in_env   : Range.range -> msg:string -> env -> term -> unit
 val def_check_guard_wf        : Range.range -> msg:string -> env -> guard_t -> unit
 val close_forall              : env -> binders -> term -> term
+
+val new_tac_implicit_var : string ->
+                           Range.range ->
+                           env ->
+                           typ ->
+                           should_check_uvar ->
+                           option ctx_uvar_meta_t ->
+                           list S.ctx_uvar ->
+                           (term * list (ctx_uvar * Range.range) * guard_t)
 
 val new_implicit_var_aux : string ->
                            Range.range ->

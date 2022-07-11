@@ -1113,7 +1113,7 @@ let weaken_precondition env lc (f:guard_formula) : lcomp =
 
 
 let strengthen_comp env (reason:option (unit -> string)) (c:comp) (f:formula) flags : comp * guard_t =
-    if env.lax
+    if env.lax || Env.too_early_in_prims env
     then c, Env.trivial_guard
     else let r = Env.get_range env in
          (*
@@ -2832,6 +2832,17 @@ let check_sigelt_quals (env:FStar.TypeChecker.Env.env) se =
                r
         end
     in
+    let check_no_subtyping_attribute se =
+      if U.has_attribute se.sigattrs C.no_subtping_attr_lid &&
+         (match se.sigel with
+          | Sig_let _ -> false
+          | _ -> true)
+      then raise_error
+             (Errors.Fatal_InconsistentQualifierAnnotation,
+              "Illegal attribute: \
+               no_subtyping attribute is allowed only on let-bindings")
+             se.sigrng in
+    check_no_subtyping_attribute se;
     let quals = U.quals_of_sigelt se |> List.filter (fun x -> not (x = Logic)) in  //drop logic since it is deprecated
     if quals |> BU.for_some (function OnlyName -> true | _ -> false) |> not
     then

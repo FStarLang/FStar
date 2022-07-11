@@ -207,7 +207,7 @@ let (by_tactic_interp :
                  let uu___3 =
                    FStar_TypeChecker_Env.new_implicit_var_aux
                      "rewrite_with_tactic RHS" tm.FStar_Syntax_Syntax.pos e
-                     typ FStar_Syntax_Syntax.Allow_untyped
+                     typ FStar_Syntax_Syntax.Strict
                      FStar_Pervasives_Native.None in
                  (match uu___3 with
                   | (uvtm, uu___4, g_imp) ->
@@ -228,12 +228,11 @@ let (by_tactic_interp :
                                    (FStar_Errors.Fatal_OpenGoalsInSynthesis,
                                      "rewrite_with_tactic left open goals")
                                    typ.FStar_Syntax_Syntax.pos);
-                            (let g_imp1 =
+                            (let tagged_imps =
                                FStar_TypeChecker_Rel.resolve_implicits_tac e
                                  g_imp in
                              FStar_Tactics_Interpreter.report_implicits
-                               tm.FStar_Syntax_Syntax.pos
-                               g_imp1.FStar_TypeChecker_Common.implicits;
+                               tm.FStar_Syntax_Syntax.pos tagged_imps;
                              Simplified (uvtm, [])))))
              | uu___2 -> Unchanged t)
 let explode :
@@ -858,6 +857,10 @@ let rec (traverse_for_spinoff :
                              FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term
                                =
                                (env2.FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term);
+                             FStar_TypeChecker_Env.teq_nosmt_force =
+                               (env2.FStar_TypeChecker_Env.teq_nosmt_force);
+                             FStar_TypeChecker_Env.subtype_nosmt_force =
+                               (env2.FStar_TypeChecker_Env.subtype_nosmt_force);
                              FStar_TypeChecker_Env.use_bv_sorts =
                                (env2.FStar_TypeChecker_Env.use_bv_sorts);
                              FStar_TypeChecker_Env.qtbl_name_and_index =
@@ -895,7 +898,10 @@ let rec (traverse_for_spinoff :
                              FStar_TypeChecker_Env.unif_allow_ref_guards =
                                (env2.FStar_TypeChecker_Env.unif_allow_ref_guards);
                              FStar_TypeChecker_Env.erase_erasable_args =
-                               (env2.FStar_TypeChecker_Env.erase_erasable_args)
+                               (env2.FStar_TypeChecker_Env.erase_erasable_args);
+                             FStar_TypeChecker_Env.rel_query_for_apply_tac_uvar
+                               =
+                               (env2.FStar_TypeChecker_Env.rel_query_for_apply_tac_uvar)
                            } e1 in
                        (match uu___3 with
                         | (e2, lc) ->
@@ -1836,10 +1842,9 @@ let (postprocess :
                                         (FStar_Errors.Fatal_OpenGoalsInSynthesis,
                                           "postprocessing left open goals")
                                         typ.FStar_Syntax_Syntax.pos) gs;
-                             (let g_imp1 =
+                             (let tagged_imps =
                                 FStar_TypeChecker_Rel.resolve_implicits_tac
                                   env g_imp in
                               FStar_Tactics_Interpreter.report_implicits
-                                tm.FStar_Syntax_Syntax.pos
-                                g_imp1.FStar_TypeChecker_Common.implicits;
+                                tm.FStar_Syntax_Syntax.pos tagged_imps;
                               uvtm))))))
