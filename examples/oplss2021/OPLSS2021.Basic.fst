@@ -37,12 +37,14 @@ let rec factorial_increasing_lemma (n:nat)
     else factorial_increasing_lemma (n - 1)
 
 /// More sugar for lemma
+#push-options "--z3rlimit 20"
 let rec factorial_increasing_lemma' (n:int)
   : Lemma 
     (requires n >= 0)
     (ensures factorial n >= n)
   = if n <= 2 then ()
     else factorial_increasing_lemma' (n - 1)
+#pop-options
 
 ////////////////////////////////////////////////////////////////////////////////
 

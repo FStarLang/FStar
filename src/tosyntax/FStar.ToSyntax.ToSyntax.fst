@@ -175,6 +175,12 @@ let tm_type r = mk_term (Name (lid_of_path   [ "Type"] r)) r Kind
 //based on its head symbol
 let rec is_comp_type env t =
     match (unparen t).tm with
+    (* we're right at the beginning of Prims, when (G)Tot isn't yet fully defined *)
+    | Name l when lid_equals (Env.current_module env) C.prims_lid &&
+                  (let s = string_of_id (ident_of_lid l) in
+                   s = "Tot" || s = "GTot") ->
+      true
+
     | Name l
     | Construct(l, _) -> Env.try_lookup_effect_name env l |> Option.isSome
     | App(head, _, _) -> is_comp_type env head
@@ -580,20 +586,7 @@ let rec generalize_annotated_univs (s:sigelt) :sigelt =
   | Sig_let ((b, lbs), lids) ->
     let lb_univnames (lb:letbinding) :BU.set univ_name =
       BU.set_union (Free.univnames lb.lbtyp)
-      (match lb.lbdef.n with
-       | Tm_abs (bs, e, _) ->
-         let uvs1 = bs_univnames bs in
-         let uvs2 =
-           match e.n with
-           | Tm_ascribed (_, (Inl t, _, _), _) -> Free.univnames t
-           | Tm_ascribed (_, (Inr c, _, _), _) -> Free.univnames_comp c
-           | _ -> empty_set
-         in
-         BU.set_union uvs1 uvs2
-       | Tm_arrow (bs, _) -> bs_univnames bs
-       | Tm_ascribed (_, (Inl t, _, _), _) -> Free.univnames t
-       | Tm_ascribed (_, (Inr c, _, _), _) -> Free.univnames_comp c
-       | _ -> empty_set)
+                   (Free.univnames lb.lbdef)
     in
     let all_lb_univs = lbs |> List.fold_left (fun uvs lb -> BU.set_union uvs (lb_univnames lb)) empty_set |> BU.set_elements in
     let usubst = Subst.univ_var_closing all_lb_univs in

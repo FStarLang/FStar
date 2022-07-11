@@ -41,6 +41,8 @@ irreducible let ite_attr : unit = ()
 unfold
 let true_p : prop = True
 
+module T = FStar.Tactics
+
 let join_preserves_interp (hp:slprop) (m0:hmem hp) (m1:mem{disjoint m0 m1})
 : Lemma
   (interp hp (join m0 m1))
@@ -462,7 +464,7 @@ let frame_equalities
 /// More lemmas about the abstract can_be_split predicates, to be used as
 /// rewriting rules in the tactic below
 val can_be_split_dep_refl (p:vprop)
-: Lemma (can_be_split_dep True p p)
+: Lemma (can_be_split_dep true_p p p)
 
 val equiv_can_be_split (p1 p2:vprop) : Lemma
   (requires p1 `equiv` p2)
@@ -1737,6 +1739,7 @@ let close_equality_typ (t:term) : Tac unit =
 
 /// The following three lemmas are helpers to manipulate the goal in canon_l_r
 
+[@@ no_subtyping]
 let inst_bv (#a:Type) (#p:a -> Type0) (#q:Type0) (x:a) (_:squash (p x ==> q))
   : Lemma ((forall (x:a). p x) ==> q) = ()
 

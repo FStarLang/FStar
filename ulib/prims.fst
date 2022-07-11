@@ -72,7 +72,7 @@ type trivial = | T
 (** [unit]: another singleton type, with its only inhabitant written [()]
     we assume it is primitive, for convenient interop with other languages *)
 assume new
-type unit : eqtype 
+type unit : eqtype
 
 (** [squash p] is a central type in F*---[squash p] is the proof
     irrelevant analog of [p] and is represented as a unit
@@ -365,10 +365,9 @@ let pure_bind_wp0
     weakened with [p].
 
     Hence, here we only weaken [wp_else]
-    
+
     Clients should not use it directly,
     instead use FStar.Pervasives.pure_if_then_else *)
-
 unfold
 let pure_if_then_else0 (a p: Type) (wp_then wp_else: pure_wp a) (post: pure_post a) =
   wp_then post /\ (~p ==> wp_else post)
@@ -378,7 +377,7 @@ let pure_if_then_else0 (a p: Type) (wp_then wp_else: pure_wp a) (post: pure_post
 
     Note the use of [guard_free] here: [k] is just meant to be a macro
     for [post].
-    
+        
     Clients should not use it directly,
     instead use FStar.Pervasives.pure_ite_wp *)
 unfold
@@ -390,7 +389,7 @@ unfold
 let pure_stronger (a: Type) (wp1 wp2: pure_wp a) = forall (p: pure_post a). wp1 p ==> wp2 p
 
 (** Closing a PURE WP under a binder for [b]
-
+   
     Clients should not use it directly,
     instead use FStar.Pervasives.pure_close_wp *)
 unfold
@@ -429,7 +428,6 @@ effect Pure (a: Type) (pre: pure_pre) (post: pure_post' a pre) =
 effect Admit (a: Type) = PURE a (fun (p: pure_post a) -> True)
 
 (** The primitive effect [Tot] is definitionally equal to an instance of [PURE] *)
-
 
 (** Clients should not use it directly, instead use FStar.Pervasives.pure_null_wp *)
 unfold

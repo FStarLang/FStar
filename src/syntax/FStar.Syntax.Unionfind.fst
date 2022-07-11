@@ -47,7 +47,7 @@ let vops =
      next_minor=next_minor}
 
 (* private *)
-type tgraph = PU.puf (option S.term)
+type tgraph = PU.puf (option S.term & S.uvar_decoration)
 (* private *)
 type ugraph = PU.puf (option S.universe)
 
@@ -144,7 +144,8 @@ let set_term_graph tg =
   set ({get() with term_graph = tg})
 
 (*private*)
-let chk_v_t (u, v, rng) =
+let chk_v_t (su:S.uvar) = 
+    let u, v, rng = su in
     let uvar_to_string u = "?" ^ (PU.puf_id (get_term_graph ()) u |> BU.string_of_int) in
     let expected = get_version () in
     if v.major = expected.major
@@ -159,12 +160,15 @@ let chk_v_t (u, v, rng) =
                   rng
 
 let uvar_id u  = PU.puf_id (get_term_graph()) (chk_v_t u)
-let fresh (rng:Range.range)  =
+let fresh decoration (rng:Range.range)  =
     fail_if_ro ();
-    PU.puf_fresh (get_term_graph()) None, get_version(), rng
+    PU.puf_fresh (get_term_graph()) (None, decoration), get_version(), rng
 
-let find u     = PU.puf_find (get_term_graph()) (chk_v_t u)
-let change u t = set_term_graph (PU.puf_change (get_term_graph()) (chk_v_t u) (Some t))
+let find_core u = PU.puf_find (get_term_graph()) (chk_v_t u)
+let find u     = fst (find_core u)
+let find_decoration u = snd (find_core u)
+let change u t = let _, dec = find_core u in set_term_graph (PU.puf_change (get_term_graph()) (chk_v_t u) (Some t, dec))
+let change_decoration u d =  let t, _ = find_core u in set_term_graph (PU.puf_change (get_term_graph()) (chk_v_t u) (t, d))
 let equiv u v  = PU.puf_equivalent (get_term_graph()) (chk_v_t u) (chk_v_t v)
 let union  u v = set_term_graph (PU.puf_union (get_term_graph()) (chk_v_t u) (chk_v_t v))
 

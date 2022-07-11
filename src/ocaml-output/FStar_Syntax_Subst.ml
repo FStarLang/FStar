@@ -89,21 +89,20 @@ let rec (force_uvar' :
         ({ FStar_Syntax_Syntax.ctx_uvar_head = uv;
            FStar_Syntax_Syntax.ctx_uvar_gamma = uu___;
            FStar_Syntax_Syntax.ctx_uvar_binders = uu___1;
-           FStar_Syntax_Syntax.ctx_uvar_typ = uu___2;
-           FStar_Syntax_Syntax.ctx_uvar_reason = uu___3;
-           FStar_Syntax_Syntax.ctx_uvar_should_check = uu___4;
-           FStar_Syntax_Syntax.ctx_uvar_range = uu___5;
-           FStar_Syntax_Syntax.ctx_uvar_meta = uu___6;_},
+           FStar_Syntax_Syntax.ctx_uvar_reason = uu___2;
+           FStar_Syntax_Syntax.ctx_uvar_range = uu___3;
+           FStar_Syntax_Syntax.ctx_uvar_meta = uu___4;
+           FStar_Syntax_Syntax.ctx_uvar_apply_tac_prefix = uu___5;_},
          s)
         ->
-        let uu___7 = FStar_Syntax_Unionfind.find uv in
-        (match uu___7 with
+        let uu___6 = FStar_Syntax_Unionfind.find uv in
+        (match uu___6 with
          | FStar_Pervasives_Native.Some t' ->
-             let uu___8 =
-               let uu___9 = let uu___10 = delay t' s in force_uvar' uu___10 in
-               FStar_Pervasives_Native.fst uu___9 in
-             (uu___8, true)
-         | uu___8 -> (t, false))
+             let uu___7 =
+               let uu___8 = let uu___9 = delay t' s in force_uvar' uu___9 in
+               FStar_Pervasives_Native.fst uu___8 in
+             (uu___7, true)
+         | uu___7 -> (t, false))
     | uu___ -> (t, false)
 let (force_uvar :
   FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
@@ -1040,6 +1039,26 @@ let (subst_decreasing_order :
   =
   fun s ->
     fun dec -> subst_dec_order' ([s], FStar_Syntax_Syntax.NoUseRange) dec
+let (subst_residual_comp :
+  FStar_Syntax_Syntax.subst_elt Prims.list ->
+    FStar_Syntax_Syntax.residual_comp -> FStar_Syntax_Syntax.residual_comp)
+  =
+  fun s ->
+    fun rc ->
+      match rc.FStar_Syntax_Syntax.residual_typ with
+      | FStar_Pervasives_Native.None -> rc
+      | FStar_Pervasives_Native.Some t ->
+          let uu___ =
+            let uu___1 = subst s t in
+            FStar_Compiler_Effect.op_Bar_Greater uu___1
+              (fun uu___2 -> FStar_Pervasives_Native.Some uu___2) in
+          {
+            FStar_Syntax_Syntax.residual_effect =
+              (rc.FStar_Syntax_Syntax.residual_effect);
+            FStar_Syntax_Syntax.residual_typ = uu___;
+            FStar_Syntax_Syntax.residual_flags =
+              (rc.FStar_Syntax_Syntax.residual_flags)
+          }
 let (closing_subst :
   FStar_Syntax_Syntax.binders -> FStar_Syntax_Syntax.subst_elt Prims.list) =
   fun bs ->

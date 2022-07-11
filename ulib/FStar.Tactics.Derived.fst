@@ -151,10 +151,10 @@ of [f] to any amount of arguments (which need to be solved as further goals).
 The amount of arguments introduced is the least such that [f a_i] unifies
 with the goal's type. *)
 let apply (t : term) : Tac unit =
-    t_apply true false t
+    t_apply true false false t
 
 let apply_noinst (t : term) : Tac unit =
-    t_apply true true t
+    t_apply true true false t
 
 (** [apply_lemma l] will solve a goal of type [squash phi] when [l] is a
 Lemma ensuring [phi]. The arguments to [l] and its requires clause are
@@ -187,7 +187,7 @@ let apply_lemma_rw (t : term) : Tac unit =
 regardless of whether they appear free in further goals. See the
 explanation in [t_apply]. *)
 let apply_raw (t : term) : Tac unit =
-    t_apply false false t
+    t_apply false false false t
 
 (** Like [exact], but allows for the term [e] to have a type [t] only
 under some guard [g], adding the guard as a goal. *)
