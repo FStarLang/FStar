@@ -1887,7 +1887,8 @@ let (intro_rec :
                      let uu___8 = should_check_goal_uvar goal in
                      FStar_Pervasives_Native.Some uu___8 in
                    FStar_Tactics_Monad.new_uvar "intro_rec" env'
-                     (FStar_Syntax_Util.comp_result c) uu___7 []
+                     (FStar_Syntax_Util.comp_result c) uu___7
+                     (goal.FStar_Tactics_Types.goal_ctx_uvar).FStar_Syntax_Syntax.ctx_uvar_apply_tac_prefix
                      (rangeof goal) in
                  FStar_Tactics_Monad.bind uu___6
                    (fun uu___7 ->
@@ -2340,7 +2341,7 @@ let (check_apply_implicits_solutions :
           fun debug_prefix ->
             fun must_tot ->
               fun imps ->
-                let check_implicits_solution env2 uv t k must_tot1 =
+                let check_implicits_solution env2 t k must_tot1 =
                   let env3 =
                     FStar_TypeChecker_Env.set_expected_typ
                       {
@@ -2513,8 +2514,8 @@ let (check_apply_implicits_solutions :
                                        let uu___6 =
                                          FStar_Syntax_Util.ctx_uvar_typ
                                            ctx_uvar in
-                                       check_implicits_solution env1 ctx_uvar
-                                         term uu___6 must_tot in
+                                       check_implicits_solution env1 term
+                                         uu___6 must_tot in
                                      let rng =
                                        match gl with
                                        | FStar_Pervasives_Native.None ->
@@ -2897,27 +2898,12 @@ let (t_apply_lemma :
                                                       (match uu___10 with
                                                        | FStar_Syntax_Syntax.Tm_fvar
                                                            fv ->
-                                                           let fv_attrs =
-                                                             let uu___11 =
-                                                               FStar_Syntax_Syntax.lid_of_fv
-                                                                 fv in
-                                                             FStar_TypeChecker_Env.lookup_attrs_of_lid
-                                                               env1 uu___11 in
-                                                           if
-                                                             fv_attrs =
-                                                               FStar_Pervasives_Native.None
-                                                           then true
-                                                           else
-                                                             (let uu___12 =
-                                                                let uu___13 =
-                                                                  FStar_Compiler_Effect.op_Bar_Greater
-                                                                    fv_attrs
-                                                                    FStar_Compiler_Util.must in
-                                                                FStar_Syntax_Util.has_attribute
-                                                                  uu___13
-                                                                  FStar_Parser_Const.no_subtping_attr_lid in
-                                                              Prims.op_Negation
-                                                                uu___12)
+                                                           let uu___11 =
+                                                             FStar_TypeChecker_Env.fv_has_attr
+                                                               env1 fv
+                                                               FStar_Parser_Const.no_subtping_attr_lid in
+                                                           Prims.op_Negation
+                                                             uu___11
                                                        | uu___11 -> true) in
                                                 fold_left
                                                   (fun uu___8 ->
@@ -3509,7 +3495,8 @@ let (rewrite : FStar_Syntax_Syntax.binder -> unit FStar_Tactics_Monad.tac) =
                                                    uu___10 in
                                                FStar_Tactics_Monad.new_uvar
                                                  "rewrite" new_env t'' uu___9
-                                                 [] (rangeof goal) in
+                                                 (goal.FStar_Tactics_Types.goal_ctx_uvar).FStar_Syntax_Syntax.ctx_uvar_apply_tac_prefix
+                                                 (rangeof goal) in
                                              FStar_Tactics_Monad.bind uu___8
                                                (fun uu___9 ->
                                                   match uu___9 with

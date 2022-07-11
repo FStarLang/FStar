@@ -32,3 +32,5 @@ let tau =
         ()
 
 let h : int = synth_by_tactic tau
+
+let _ = assert (h == 16)

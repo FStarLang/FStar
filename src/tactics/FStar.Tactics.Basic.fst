@@ -190,8 +190,8 @@ let __do_unify_wflags (dbg:bool) (allow_guards:bool)
           //    even though no goals remain)
           //   set rel_query_for_apply_tac_uvar so that any uvars solved as part of this Rel call,
           //   can be typechecked properly
-          //   e.g. if the current goal depends on the indirectly solver uvar ?u,
-          //   ?u must be typechecked without fastpath
+          //   e.g. if the current goal depends on ?u, and ?u is solved indirectly in this Rel call,
+          //   then ?u must be typechecked without fastpath
           //
           let env =
             gopt |> BU.map_option
@@ -617,7 +617,7 @@ let intro_rec () : tac (binder * binder) =
         else let bv = gen_bv "__recf" None (goal_type goal) in
              let bs = [S.mk_binder bv; b] in // recursively bound name and argument we're introducing
              let env' = Env.push_binders (goal_env goal) bs in
-             bind (new_uvar "intro_rec" env' (U.comp_result c) (Some (should_check_goal_uvar goal)) [] (rangeof goal)) (fun (u, ctx_uvar_u) ->
+             bind (new_uvar "intro_rec" env' (U.comp_result c) (Some (should_check_goal_uvar goal)) goal.goal_ctx_uvar.ctx_uvar_apply_tac_prefix (rangeof goal)) (fun (u, ctx_uvar_u) ->
              let lb = U.mk_letbinding (Inl bv) [] (goal_type goal) PC.effect_Tot_lid (U.abs [b] u None) [] Range.dummyRange in
              let body = S.bv_to_name bv in
              let lbs, body = SS.close_let_rec [lb] body in
@@ -775,7 +775,7 @@ let check_apply_implicits_solutions
   
   : tac (list (list goal)) =
 
-  let check_implicits_solution env uv (t:term) (k:typ) (must_tot:bool) : guard_t =
+  let check_implicits_solution env (t:term) (k:typ) (must_tot:bool) : guard_t =
     let env = Env.set_expected_typ ({env with use_bv_sorts=true}) k in
 
     let slow_path () =
@@ -806,7 +806,7 @@ let check_apply_implicits_solutions
                      debug_prefix
                      (Print.uvar_to_string ctx_uvar.ctx_uvar_head)
                      (Print.term_to_string term)) (fun () ->
-      let g_typ = check_implicits_solution env ctx_uvar term (U.ctx_uvar_typ ctx_uvar) must_tot in
+      let g_typ = check_implicits_solution env term (U.ctx_uvar_typ ctx_uvar) must_tot in
       let rng = 
         match gl with
         | None ->  ctx_uvar.ctx_uvar_range
@@ -938,10 +938,7 @@ let t_apply_lemma (noinst:bool) (noinst_lhs:bool)
        let tm_uses_subtyping =
          let tm_head, _ = U.head_and_args tm in
          match (tm_head |> SS.compress |> U.unascribe |> U.un_uinst).n with
-         | Tm_fvar fv ->
-           let fv_attrs = Env.lookup_attrs_of_lid env (lid_of_fv fv) in
-           if fv_attrs = None then true
-           else not (U.has_attribute (fv_attrs |> must) PC.no_subtping_attr_lid)
+         | Tm_fvar fv -> not (Env.fv_has_attr env fv PC.no_subtping_attr_lid)
          | _ -> true in
        fold_left (fun ({binder_bv=b;binder_qual=aq}) (uvs, imps, subst) ->
                let b_t = SS.subst subst b.sort in
@@ -1098,7 +1095,7 @@ let rewrite (h:binder) : tac unit = wrap_err "rewrite" <|
              //
              // AR: TODO: what about copying apply deps here?
              //
-             bind (new_uvar "rewrite" new_env t'' (Some (should_check_goal_uvar goal)) [] (rangeof goal)) (fun (uvt, uv) ->
+             bind (new_uvar "rewrite" new_env t'' (Some (should_check_goal_uvar goal)) goal.goal_ctx_uvar.ctx_uvar_apply_tac_prefix (rangeof goal)) (fun (uvt, uv) ->
              let goal' = mk_goal new_env uv goal.opts goal.is_guard goal.label in
              let sol = U.mk_app (U.abs bs'' uvt None)
                                  (List.map (fun ({binder_bv=bv}) -> S.as_arg (S.bv_to_name bv)) bs) in
@@ -1888,6 +1885,9 @@ let t_commute_applied_match () : tac unit = wrap_err "t_commute_applied_match" <
     match (SS.compress (U.unascribe lh)).n with
     | Tm_match (e, asc_opt, brs, lopt) ->
       let brs' = List.map (fun (p, w, e) -> p, w, U.mk_app e las) brs in
+      //
+      // If residual comp is set, apply arguments to it
+      //
       let lopt' = lopt |> BU.map_option (fun rc -> {rc with residual_typ=
         rc.residual_typ |> BU.map_option (fun t ->
           let bs, c = N.get_n_binders (goal_env g) (List.length las) t in
