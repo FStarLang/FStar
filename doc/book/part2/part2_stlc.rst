@@ -224,19 +224,19 @@ variable associated with de Bruijn index ``0`` in the body of the
 function with the argument ``e`` and then remove the :math:`\lambda`
 binder---``sub_beta0`` does just that, replacing variable ``0`` with
 ``e`` and shifting other variables down by ``1``, since the
-:math:``\lambda`` binder of the function is removed.
+:math:`\lambda` binder of the function is removed.
 
 .. literalinclude:: ../code/Part2.STLC.fst
    :language: fstar
-   :start-after: //SNIPPET_START: sub0$
-   :end-before: //SNIPPET_END: sub0$
+   :start-after: //SNIPPET_START: sub_beta0$
+   :end-before: //SNIPPET_END: sub_beta0$
 
 The function ``subst s e`` applies the substitution ``s`` to ``e``:
 
 .. literalinclude:: ../code/Part2.STLC.fst
    :language: fstar
-   :start-after: //SNIPPET_START: sub0$
-   :end-before: //SNIPPET_END: sub0$
+   :start-after: //SNIPPET_START: subst0$
+   :end-before: //SNIPPET_END: subst0$
 
 * The ``EUnit`` case is trivial---there are no variables to substitute.
 

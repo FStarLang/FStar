@@ -27,6 +27,7 @@ pdf:
 	sed -i -e 's|\\subsection|\\section|g' $(BUILDDIR)/latex/$(LATEXFILE)
 	sed -i -e 's|\\subsubsection|\\subsection|g' $(BUILDDIR)/latex/$(LATEXFILE)
 	sed -i -e 's|\\sphinxhref{../code/|\\sphinxhref{https://fstar-lang.org/tutorial/book/code/|g' $(BUILDDIR)/latex/$(LATEXFILE)
+	sed -i -e 's|\\part{Structure of this book}|\\begin{center}\\bigskip{\\Large \\textbf{Structure of this book}}\\bigskip\\end{center}|g' $(BUILDDIR)/latex/$(LATEXFILE)
 	$(MAKE) -C $(BUILDDIR)/latex
 
 # Put it first so that "make" without argument is like "make help".
