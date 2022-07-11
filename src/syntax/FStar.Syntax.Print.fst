@@ -384,11 +384,18 @@ and ctx_uvar_to_string_aux print_reason ctx_uvar =
       else U.format2 "(%s-%s) "
              (Range.string_of_pos (Range.start_of_range ctx_uvar.ctx_uvar_range))
              (Range.string_of_pos (Range.end_of_range ctx_uvar.ctx_uvar_range)) in
-    format4 "%s(%s |- %s : %s)"
+    format5 "%s(%s |- %s : %s) %s"
             reason_string
             (binders_to_string ", " ctx_uvar.ctx_uvar_binders)
             (uvar_to_string ctx_uvar.ctx_uvar_head)
-            (term_to_string ctx_uvar.ctx_uvar_typ)
+            (term_to_string (SU.ctx_uvar_typ ctx_uvar))
+            (match SU.ctx_uvar_should_check ctx_uvar with
+             | Allow_unresolved -> "Allow_unresolved"
+             | Allow_untyped  -> "Allow_untyped"
+             | Allow_ghost  -> "Allow_ghost"
+             | Strict   -> "Strict"
+             | Strict_no_fastpath -> "Strict_no_fastpath")
+
 
 and subst_elt_to_string = function
    | DB(i, x) -> U.format2 "DB (%s, %s)" (string_of_int i) (bv_to_string x)

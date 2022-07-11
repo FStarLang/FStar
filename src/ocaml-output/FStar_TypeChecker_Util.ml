@@ -2257,25 +2257,28 @@ let (strengthen_comp :
       fun c ->
         fun f ->
           fun flags ->
-            if env.FStar_TypeChecker_Env.lax
+            let uu___ =
+              env.FStar_TypeChecker_Env.lax ||
+                (FStar_TypeChecker_Env.too_early_in_prims env) in
+            if uu___
             then (c, FStar_TypeChecker_Env.trivial_guard)
             else
               (let r = FStar_TypeChecker_Env.get_range env in
                let pure_assert_wp =
-                 let uu___1 =
+                 let uu___2 =
                    FStar_Syntax_Syntax.lid_as_fv
                      FStar_Parser_Const.pure_assert_wp_lid
                      (FStar_Syntax_Syntax.Delta_constant_at_level
                         Prims.int_one) FStar_Pervasives_Native.None in
-                 FStar_Syntax_Syntax.fv_to_tm uu___1 in
+                 FStar_Syntax_Syntax.fv_to_tm uu___2 in
                let pure_assert_wp1 =
-                 let uu___1 =
-                   let uu___2 =
-                     let uu___3 = label_opt env reason r f in
+                 let uu___2 =
+                   let uu___3 =
+                     let uu___4 = label_opt env reason r f in
                      FStar_Compiler_Effect.op_Less_Bar
-                       FStar_Syntax_Syntax.as_arg uu___3 in
-                   [uu___2] in
-                 FStar_Syntax_Syntax.mk_Tm_app pure_assert_wp uu___1 r in
+                       FStar_Syntax_Syntax.as_arg uu___4 in
+                   [uu___3] in
+                 FStar_Syntax_Syntax.mk_Tm_app pure_assert_wp uu___2 r in
                bind_pure_wp_with env pure_assert_wp1 c flags)
 let (strengthen_precondition :
   (unit -> Prims.string) FStar_Pervasives_Native.option ->
@@ -6130,133 +6133,150 @@ let (check_sigelt_quals :
                    "Illegal attribute: the `erasable` attribute is only permitted on inductive type definitions and abbreviations for non-informative types")
                  r)
         else () in
-      let quals =
-        FStar_Compiler_Effect.op_Bar_Greater
-          (FStar_Syntax_Util.quals_of_sigelt se)
-          (FStar_Compiler_List.filter
-             (fun x -> Prims.op_Negation (x = FStar_Syntax_Syntax.Logic))) in
-      let uu___ =
-        let uu___1 =
-          FStar_Compiler_Effect.op_Bar_Greater quals
-            (FStar_Compiler_Util.for_some
-               (fun uu___2 ->
-                  match uu___2 with
-                  | FStar_Syntax_Syntax.OnlyName -> true
-                  | uu___3 -> false)) in
-        FStar_Compiler_Effect.op_Bar_Greater uu___1 Prims.op_Negation in
-      if uu___
-      then
-        let r = FStar_Syntax_Util.range_of_sigelt se in
-        let no_dup_quals =
-          FStar_Compiler_Util.remove_dups (fun x -> fun y -> x = y) quals in
-        let err' msg =
-          let uu___1 =
-            let uu___2 =
-              let uu___3 = FStar_Syntax_Print.quals_to_string quals in
-              FStar_Compiler_Util.format2
-                "The qualifier list \"[%s]\" is not permissible for this element%s"
-                uu___3 msg in
-            (FStar_Errors.Fatal_QulifierListNotPermitted, uu___2) in
-          FStar_Errors.raise_error uu___1 r in
-        let err msg = err' (Prims.op_Hat ": " msg) in
-        let err'1 uu___1 = err' "" in
-        (if
-           (FStar_Compiler_List.length quals) <>
-             (FStar_Compiler_List.length no_dup_quals)
-         then err "duplicate qualifiers"
-         else ();
-         (let uu___3 =
-            let uu___4 =
-              FStar_Compiler_Effect.op_Bar_Greater quals
-                (FStar_Compiler_List.for_all (quals_combo_ok quals)) in
-            Prims.op_Negation uu___4 in
-          if uu___3 then err "ill-formed combination" else ());
-         check_erasable quals se r;
-         (match se.FStar_Syntax_Syntax.sigel with
-          | FStar_Syntax_Syntax.Sig_let ((is_rec, uu___4), uu___5) ->
-              ((let uu___7 =
-                  is_rec &&
-                    (FStar_Compiler_Effect.op_Bar_Greater quals
-                       (FStar_Compiler_List.contains
-                          FStar_Syntax_Syntax.Unfold_for_unification_and_vcgen)) in
-                if uu___7
-                then err "recursive definitions cannot be marked inline"
-                else ());
-               (let uu___7 =
-                  FStar_Compiler_Effect.op_Bar_Greater quals
-                    (FStar_Compiler_Util.for_some
-                       (fun x -> (assumption x) || (has_eq x))) in
-                if uu___7
-                then
-                  err
-                    "definitions cannot be assumed or marked with equality qualifiers"
-                else ()))
-          | FStar_Syntax_Syntax.Sig_bundle uu___4 ->
-              ((let uu___6 =
-                  let uu___7 =
-                    FStar_Compiler_Effect.op_Bar_Greater quals
-                      (FStar_Compiler_Util.for_all
-                         (fun x ->
-                            ((((x = FStar_Syntax_Syntax.Inline_for_extraction)
-                                 || (x = FStar_Syntax_Syntax.NoExtract))
-                                || (inferred x))
-                               || (visibility x))
-                              || (has_eq x))) in
-                  Prims.op_Negation uu___7 in
-                if uu___6 then err'1 () else ());
-               (let uu___6 =
-                  (FStar_Compiler_Effect.op_Bar_Greater quals
-                     (FStar_Compiler_List.existsb
-                        (fun uu___7 ->
-                           match uu___7 with
-                           | FStar_Syntax_Syntax.Unopteq -> true
-                           | uu___8 -> false)))
-                    &&
-                    (FStar_Syntax_Util.has_attribute
-                       se.FStar_Syntax_Syntax.sigattrs
-                       FStar_Parser_Const.erasable_attr) in
-                if uu___6
-                then
-                  err
-                    "unopteq is not allowed on an erasable inductives since they don't have decidable equality"
-                else ()))
-          | FStar_Syntax_Syntax.Sig_declare_typ uu___4 ->
-              let uu___5 =
-                FStar_Compiler_Effect.op_Bar_Greater quals
-                  (FStar_Compiler_Util.for_some has_eq) in
-              if uu___5 then err'1 () else ()
-          | FStar_Syntax_Syntax.Sig_assume uu___4 ->
-              let uu___5 =
-                let uu___6 =
-                  FStar_Compiler_Effect.op_Bar_Greater quals
-                    (FStar_Compiler_Util.for_all
-                       (fun x ->
-                          (visibility x) ||
-                            (x = FStar_Syntax_Syntax.Assumption))) in
-                Prims.op_Negation uu___6 in
-              if uu___5 then err'1 () else ()
-          | FStar_Syntax_Syntax.Sig_new_effect uu___4 ->
-              let uu___5 =
-                let uu___6 =
-                  FStar_Compiler_Effect.op_Bar_Greater quals
-                    (FStar_Compiler_Util.for_all
-                       (fun x ->
-                          (((x = FStar_Syntax_Syntax.TotalEffect) ||
-                              (inferred x))
-                             || (visibility x))
-                            || (reification x))) in
-                Prims.op_Negation uu___6 in
-              if uu___5 then err'1 () else ()
-          | FStar_Syntax_Syntax.Sig_effect_abbrev uu___4 ->
-              let uu___5 =
-                let uu___6 =
-                  FStar_Compiler_Effect.op_Bar_Greater quals
-                    (FStar_Compiler_Util.for_all
-                       (fun x -> (inferred x) || (visibility x))) in
-                Prims.op_Negation uu___6 in
-              if uu___5 then err'1 () else ()
-          | uu___4 -> ()))
-      else ()
+      let check_no_subtyping_attribute se1 =
+        let uu___ =
+          (FStar_Syntax_Util.has_attribute se1.FStar_Syntax_Syntax.sigattrs
+             FStar_Parser_Const.no_subtping_attr_lid)
+            &&
+            (match se1.FStar_Syntax_Syntax.sigel with
+             | FStar_Syntax_Syntax.Sig_let uu___1 -> false
+             | uu___1 -> true) in
+        if uu___
+        then
+          FStar_Errors.raise_error
+            (FStar_Errors.Fatal_InconsistentQualifierAnnotation,
+              "Illegal attribute: no_subtyping attribute is allowed only on let-bindings")
+            se1.FStar_Syntax_Syntax.sigrng
+        else () in
+      check_no_subtyping_attribute se;
+      (let quals =
+         FStar_Compiler_Effect.op_Bar_Greater
+           (FStar_Syntax_Util.quals_of_sigelt se)
+           (FStar_Compiler_List.filter
+              (fun x -> Prims.op_Negation (x = FStar_Syntax_Syntax.Logic))) in
+       let uu___1 =
+         let uu___2 =
+           FStar_Compiler_Effect.op_Bar_Greater quals
+             (FStar_Compiler_Util.for_some
+                (fun uu___3 ->
+                   match uu___3 with
+                   | FStar_Syntax_Syntax.OnlyName -> true
+                   | uu___4 -> false)) in
+         FStar_Compiler_Effect.op_Bar_Greater uu___2 Prims.op_Negation in
+       if uu___1
+       then
+         let r = FStar_Syntax_Util.range_of_sigelt se in
+         let no_dup_quals =
+           FStar_Compiler_Util.remove_dups (fun x -> fun y -> x = y) quals in
+         let err' msg =
+           let uu___2 =
+             let uu___3 =
+               let uu___4 = FStar_Syntax_Print.quals_to_string quals in
+               FStar_Compiler_Util.format2
+                 "The qualifier list \"[%s]\" is not permissible for this element%s"
+                 uu___4 msg in
+             (FStar_Errors.Fatal_QulifierListNotPermitted, uu___3) in
+           FStar_Errors.raise_error uu___2 r in
+         let err msg = err' (Prims.op_Hat ": " msg) in
+         let err'1 uu___2 = err' "" in
+         (if
+            (FStar_Compiler_List.length quals) <>
+              (FStar_Compiler_List.length no_dup_quals)
+          then err "duplicate qualifiers"
+          else ();
+          (let uu___4 =
+             let uu___5 =
+               FStar_Compiler_Effect.op_Bar_Greater quals
+                 (FStar_Compiler_List.for_all (quals_combo_ok quals)) in
+             Prims.op_Negation uu___5 in
+           if uu___4 then err "ill-formed combination" else ());
+          check_erasable quals se r;
+          (match se.FStar_Syntax_Syntax.sigel with
+           | FStar_Syntax_Syntax.Sig_let ((is_rec, uu___5), uu___6) ->
+               ((let uu___8 =
+                   is_rec &&
+                     (FStar_Compiler_Effect.op_Bar_Greater quals
+                        (FStar_Compiler_List.contains
+                           FStar_Syntax_Syntax.Unfold_for_unification_and_vcgen)) in
+                 if uu___8
+                 then err "recursive definitions cannot be marked inline"
+                 else ());
+                (let uu___8 =
+                   FStar_Compiler_Effect.op_Bar_Greater quals
+                     (FStar_Compiler_Util.for_some
+                        (fun x -> (assumption x) || (has_eq x))) in
+                 if uu___8
+                 then
+                   err
+                     "definitions cannot be assumed or marked with equality qualifiers"
+                 else ()))
+           | FStar_Syntax_Syntax.Sig_bundle uu___5 ->
+               ((let uu___7 =
+                   let uu___8 =
+                     FStar_Compiler_Effect.op_Bar_Greater quals
+                       (FStar_Compiler_Util.for_all
+                          (fun x ->
+                             ((((x =
+                                   FStar_Syntax_Syntax.Inline_for_extraction)
+                                  || (x = FStar_Syntax_Syntax.NoExtract))
+                                 || (inferred x))
+                                || (visibility x))
+                               || (has_eq x))) in
+                   Prims.op_Negation uu___8 in
+                 if uu___7 then err'1 () else ());
+                (let uu___7 =
+                   (FStar_Compiler_Effect.op_Bar_Greater quals
+                      (FStar_Compiler_List.existsb
+                         (fun uu___8 ->
+                            match uu___8 with
+                            | FStar_Syntax_Syntax.Unopteq -> true
+                            | uu___9 -> false)))
+                     &&
+                     (FStar_Syntax_Util.has_attribute
+                        se.FStar_Syntax_Syntax.sigattrs
+                        FStar_Parser_Const.erasable_attr) in
+                 if uu___7
+                 then
+                   err
+                     "unopteq is not allowed on an erasable inductives since they don't have decidable equality"
+                 else ()))
+           | FStar_Syntax_Syntax.Sig_declare_typ uu___5 ->
+               let uu___6 =
+                 FStar_Compiler_Effect.op_Bar_Greater quals
+                   (FStar_Compiler_Util.for_some has_eq) in
+               if uu___6 then err'1 () else ()
+           | FStar_Syntax_Syntax.Sig_assume uu___5 ->
+               let uu___6 =
+                 let uu___7 =
+                   FStar_Compiler_Effect.op_Bar_Greater quals
+                     (FStar_Compiler_Util.for_all
+                        (fun x ->
+                           (visibility x) ||
+                             (x = FStar_Syntax_Syntax.Assumption))) in
+                 Prims.op_Negation uu___7 in
+               if uu___6 then err'1 () else ()
+           | FStar_Syntax_Syntax.Sig_new_effect uu___5 ->
+               let uu___6 =
+                 let uu___7 =
+                   FStar_Compiler_Effect.op_Bar_Greater quals
+                     (FStar_Compiler_Util.for_all
+                        (fun x ->
+                           (((x = FStar_Syntax_Syntax.TotalEffect) ||
+                               (inferred x))
+                              || (visibility x))
+                             || (reification x))) in
+                 Prims.op_Negation uu___7 in
+               if uu___6 then err'1 () else ()
+           | FStar_Syntax_Syntax.Sig_effect_abbrev uu___5 ->
+               let uu___6 =
+                 let uu___7 =
+                   FStar_Compiler_Effect.op_Bar_Greater quals
+                     (FStar_Compiler_Util.for_all
+                        (fun x -> (inferred x) || (visibility x))) in
+                 Prims.op_Negation uu___7 in
+               if uu___6 then err'1 () else ()
+           | uu___5 -> ()))
+       else ())
 let (must_erase_for_extraction :
   FStar_TypeChecker_Env.env -> FStar_Syntax_Syntax.term -> Prims.bool) =
   fun g ->
@@ -7049,6 +7069,10 @@ let (update_env_sub_eff :
                 (env.FStar_TypeChecker_Env.universe_of);
               FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term =
                 (env.FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term);
+              FStar_TypeChecker_Env.teq_nosmt_force =
+                (env.FStar_TypeChecker_Env.teq_nosmt_force);
+              FStar_TypeChecker_Env.subtype_nosmt_force =
+                (env.FStar_TypeChecker_Env.subtype_nosmt_force);
               FStar_TypeChecker_Env.use_bv_sorts =
                 (env.FStar_TypeChecker_Env.use_bv_sorts);
               FStar_TypeChecker_Env.qtbl_name_and_index =
@@ -7084,7 +7108,9 @@ let (update_env_sub_eff :
               FStar_TypeChecker_Env.unif_allow_ref_guards =
                 (env.FStar_TypeChecker_Env.unif_allow_ref_guards);
               FStar_TypeChecker_Env.erase_erasable_args =
-                (env.FStar_TypeChecker_Env.erase_erasable_args)
+                (env.FStar_TypeChecker_Env.erase_erasable_args);
+              FStar_TypeChecker_Env.rel_query_for_apply_tac_uvar =
+                (env.FStar_TypeChecker_Env.rel_query_for_apply_tac_uvar)
             } sub.FStar_Syntax_Syntax.source sub.FStar_Syntax_Syntax.target
             uu___ in
         {
@@ -7139,6 +7165,10 @@ let (update_env_sub_eff :
             (env1.FStar_TypeChecker_Env.universe_of);
           FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term =
             (env1.FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term);
+          FStar_TypeChecker_Env.teq_nosmt_force =
+            (env1.FStar_TypeChecker_Env.teq_nosmt_force);
+          FStar_TypeChecker_Env.subtype_nosmt_force =
+            (env1.FStar_TypeChecker_Env.subtype_nosmt_force);
           FStar_TypeChecker_Env.use_bv_sorts =
             (env1.FStar_TypeChecker_Env.use_bv_sorts);
           FStar_TypeChecker_Env.qtbl_name_and_index =
@@ -7173,7 +7203,9 @@ let (update_env_sub_eff :
           FStar_TypeChecker_Env.unif_allow_ref_guards =
             (env1.FStar_TypeChecker_Env.unif_allow_ref_guards);
           FStar_TypeChecker_Env.erase_erasable_args =
-            (env1.FStar_TypeChecker_Env.erase_erasable_args)
+            (env1.FStar_TypeChecker_Env.erase_erasable_args);
+          FStar_TypeChecker_Env.rel_query_for_apply_tac_uvar =
+            (env1.FStar_TypeChecker_Env.rel_query_for_apply_tac_uvar)
         }
 let (update_env_polymonadic_bind :
   FStar_TypeChecker_Env.env ->
