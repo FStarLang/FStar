@@ -17,7 +17,7 @@
         "typing_Steel.Primitive.ForkJoin.maybe_p"
       ],
       0,
-      "b5fb7214f85be929860eeda289c089f6"
+      "0f59b0ea981f8dbb620f4f1e68779f2a"
     ],
     [
       "Steel.Primitive.ForkJoin.intro_maybe_p_true",
@@ -26,46 +26,7 @@
       1,
       [ "@query", "equation_Steel.Primitive.ForkJoin.maybe_p" ],
       0,
-      "74962d1f9e4bbef58558d7cce4793771"
-    ],
-    [
-      "Steel.Primitive.ForkJoin.new_thread",
-      1,
-      2,
-      1,
-      [ "@query", "equation_Steel.Effect.Common.true_p", "true_interp" ],
-      0,
-      "a0f10a9b8ce22f1ec1ade633d12f4858"
-    ],
-    [
-      "Steel.Primitive.ForkJoin.finish",
-      1,
-      2,
-      1,
-      [ "@query", "equation_Steel.Effect.Common.true_p", "true_interp" ],
-      0,
-      "48845e0c749af8efc8a30c3c875e0c75"
-    ],
-    [
-      "Steel.Primitive.ForkJoin.acquire",
-      1,
-      2,
-      1,
-      [
-        "@query", "equation_Steel.Effect.Atomic.obs_at_most_one",
-        "equation_Steel.Effect.Common.true_p", "true_interp"
-      ],
-      0,
-      "d10a57e7e4389d5d5dc77b29486b4b76"
-    ],
-    [
-      "Steel.Primitive.ForkJoin.spawn",
-      1,
-      2,
-      1,
-      [ "@query", "equation_Steel.Effect.Common.true_p", "true_interp" ],
-      0,
-      "b7ca08d86c407343662a5e7dc5e43d13"
+      "a63119c3c5c11930de453def2aced8da"
     ],
     [
       "Steel.Primitive.ForkJoin.fork",
@@ -83,7 +44,7 @@
         "true_interp", "typing_Steel.Effect.Common.true_p"
       ],
       0,
-      "6b21248566d7fcd08a03419599d7bbe2"
+      "48002edef03932ab5fcb0ab48e8cf31f"
     ],
     [
       "Steel.Primitive.ForkJoin.join",
@@ -121,7 +82,7 @@
         "typing_Steel.Reference.pts_to"
       ],
       0,
-      "2fe015b62d3f96a7ccfc2c461c4ae5cd"
+      "853b39607af203a640e038983f1bb98a"
     ]
   ]
 ]
