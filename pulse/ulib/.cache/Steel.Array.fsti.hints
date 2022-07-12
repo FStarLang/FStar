@@ -7,16 +7,11 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.l_True",
-        "equation_Prims.l_and", "equation_Prims.logical",
-        "equation_Prims.squash",
-        "function_token_typing_Steel.Effect.Common.selector_tactic",
-        "l_and-interp", "lemma_FStar.Tactics.Effect.by_tactic_seman",
-        "refinement_interpretation_Tm_refine_d40eed70ec85a6ea06bdb2cc71e8d62d",
-        "refinement_kinding_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_3efb5c28534c9bbf2b2cdb4cd4cfbffb"
       ],
       0,
-      "ebfe99cb88d15327ba2687323ae87517"
+      "3cc480b6bbe75b7e2df8b30ec9824e9e"
     ],
     [
       "Steel.Array.intro_varray_pts_to",
@@ -30,7 +25,7 @@
         "refinement_interpretation_Tm_refine_a0cd7d06c5da6444b6b51b319febde8e"
       ],
       0,
-      "d5ad9ec0ee19ee2222d65da8c3a5d351"
+      "2ea76b00e327ffd6ea2f7a2e48469b6e"
     ],
     [
       "Steel.Array.elim_varray_pts_to",
@@ -46,7 +41,7 @@
         "typing_Steel.Array.length"
       ],
       0,
-      "263c0a152dd1045dac5608d83000d09f"
+      "b46ab1a29c0083285110bc4c8ec70829"
     ],
     [
       "Steel.Array.malloc",
@@ -60,7 +55,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "66816bad465a07b7bc3681354260d7dd"
+      "48bef3e3aaff4ea0d7cab9e55d73f23c"
     ],
     [
       "Steel.Array.index",
@@ -77,7 +72,7 @@
         "refinement_interpretation_Tm_refine_a0cd7d06c5da6444b6b51b319febde8e"
       ],
       0,
-      "b1f48557c6b7d37702e2d542e96ba3c7"
+      "2c5f8e5ada36c83c14252bb297de57c5"
     ],
     [
       "Steel.Array.upd",
@@ -94,7 +89,7 @@
         "refinement_interpretation_Tm_refine_a0cd7d06c5da6444b6b51b319febde8e"
       ],
       0,
-      "8b7251bdaf4257e79299c0deeefd3d38"
+      "2b9f9dc1664d0fd3fa0f19bcd3e691d0"
     ],
     [
       "Steel.Array.memcpy",
@@ -103,7 +98,7 @@
       1,
       [ "@query" ],
       0,
-      "b311c0881db3ca2a5362e060ed3fd825"
+      "e72a50fc5eb218b6c865e0dcb8861f90"
     ],
     [
       "Steel.Array.compare",
@@ -120,7 +115,7 @@
         "refinement_interpretation_Tm_refine_83b47227979900a844226d60c4a9297d"
       ],
       0,
-      "ff747cce2ed31ed790cf7c2480702b73"
+      "54a2c8ca64b2f28e8e775c352d55df06"
     ]
   ]
 ]
