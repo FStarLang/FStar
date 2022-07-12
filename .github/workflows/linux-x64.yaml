@@ -70,7 +70,7 @@ jobs:
           echo "CI_COMMIT=$(echo ${{ github.event.head_commit.id || github.event.pull_request.head.sha }} | grep -o '^........')" >> $GITHUB_ENV
           echo 'CI_STATUS='"$(docker run fstar:local-run-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT /bin/bash -c 'cat $FSTAR_HOME/result.txt' || echo Failure)" >> $GITHUB_ENV
       - name: Post to the Slack channel
-        if: ${{ always() }}
+        if: ${{ always() && (github.event_name != 'workflow_dispatch') }}
         id: slack
         uses: slackapi/slack-github-action@v1.16.0
         with:
