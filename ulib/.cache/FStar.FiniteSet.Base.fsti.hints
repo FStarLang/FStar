@@ -1,0 +1,49 @@
+[
+  "2èüF\u001fÁ\u0013–\u001f]{a!√g",
+  [
+    [
+      "FStar.FiniteSet.Base.list_nonrepeating",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_374b44ccfcb77ed85d505dbc44265913_1",
+        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "equation_Prims.eqtype", "equation_Prims.op_Equals_Equals_Equals",
+        "fuel_guarded_inversion_Prims.list",
+        "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
+      ],
+      0,
+      "29a6ccf612c932ecc199dd1399ea3802"
+    ],
+    [
+      "FStar.FiniteSet.Base.insert_member_cardinality_fact",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
+        "equation_Prims.nat", "function_token_typing_Prims.int",
+        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "6f5447796fa04775b3f30a5d84cc79bd"
+    ],
+    [
+      "FStar.FiniteSet.Base.set_as_list_cardinality_fact",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
+        "equation_Prims.nat", "function_token_typing_Prims.int",
+        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "d556121829f3508a24457028b2eb02b4"
+    ]
+  ]
+]

@@ -7,16 +7,11 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.l_True",
-        "equation_Prims.l_and", "equation_Prims.logical",
-        "equation_Prims.squash",
-        "function_token_typing_Steel.Effect.Common.selector_tactic",
-        "l_and-interp", "lemma_FStar.Tactics.Effect.by_tactic_seman",
-        "refinement_interpretation_Tm_refine_18317c6e69cf3729c3f50cd32d64630b",
-        "refinement_kinding_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_06409d29d5fabf8dbbdeb433bc9da3bc"
       ],
       0,
-      "1a42aea224484be9de75608412b22d8f"
+      "a8b0a635fcdf5f563a4b65102f26d80f"
     ],
     [
       "Selectors.LList.tail",
@@ -25,7 +20,7 @@
       1,
       [ "@query" ],
       0,
-      "d00258f49f5f74cb5f4844994088c771"
+      "6b26a80621e495c38ea8d7d8011e0bbd"
     ],
     [
       "Selectors.LList.v_ind_llist",
@@ -33,16 +28,11 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.l_True",
-        "equation_Prims.l_and", "equation_Prims.logical",
-        "equation_Prims.squash",
-        "function_token_typing_Steel.Effect.Common.selector_tactic",
-        "l_and-interp", "lemma_FStar.Tactics.Effect.by_tactic_seman",
-        "refinement_interpretation_Tm_refine_795c4e41f9a1bae050820a2f35749c51",
-        "refinement_kinding_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_698991e353b74d3d15d981aa8acb041c"
       ],
       0,
-      "674316835b20c6378c5cd96b6710b631"
+      "a2cfa58f5b4a2e0eb6a08e81c9f79d70"
     ]
   ]
 ]
