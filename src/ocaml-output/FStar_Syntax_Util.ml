@@ -4735,3 +4735,19 @@ let (check_mutual_universes :
                    "Mutually recursive definitions do not abstract over the same universes")
                  lb1.FStar_Syntax_Syntax.lbpos
              else ()) lbs1
+let (ctx_uvar_should_check :
+  FStar_Syntax_Syntax.ctx_uvar -> FStar_Syntax_Syntax.should_check_uvar) =
+  fun u ->
+    let uu___ =
+      FStar_Syntax_Unionfind.find_decoration
+        u.FStar_Syntax_Syntax.ctx_uvar_head in
+    uu___.FStar_Syntax_Syntax.uvar_decoration_should_check
+let (ctx_uvar_typ :
+  FStar_Syntax_Syntax.ctx_uvar ->
+    FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax)
+  =
+  fun u ->
+    let uu___ =
+      FStar_Syntax_Unionfind.find_decoration
+        u.FStar_Syntax_Syntax.ctx_uvar_head in
+    uu___.FStar_Syntax_Syntax.uvar_decoration_typ

@@ -145,7 +145,7 @@ let by_tactic_interp (pol:pol) (e:Env.env) (t:term) : tres =
             when S.fv_eq_lid fv PC.rewrite_by_tactic_lid ->
 
         // Create a new uvar that must be equal to the initial term
-        let uvtm, _, g_imp = Env.new_implicit_var_aux "rewrite_with_tactic RHS" tm.pos e typ Allow_untyped None in
+        let uvtm, _, g_imp = Env.new_implicit_var_aux "rewrite_with_tactic RHS" tm.pos e typ Strict None in
 
         let u = e.universe_of e typ in
         // eq2 is squashed already, so it's in Type0
@@ -161,8 +161,8 @@ let by_tactic_interp (pol:pol) (e:Env.env) (t:term) : tres =
         in
 
         // abort if the uvar was not solved
-        let g_imp = TcRel.resolve_implicits_tac e g_imp in
-        report_implicits tm.pos g_imp.implicits;
+        let tagged_imps = TcRel.resolve_implicits_tac e g_imp in
+        report_implicits tm.pos tagged_imps;
 
         // If the rewriting succeeded, we return the generated uvar, which is now
         // a synthesized term
@@ -858,6 +858,9 @@ let postprocess (env:Env.env) (tau:term) (typ:term) (tm:term) : term =
   Errors.with_ctx "While postprocessing a definition with a tactic" (fun () ->
     if env.nosynth then tm else begin
     tacdbg := Env.debug env (O.Other "Tac");
+    //we know that tm:typ
+    //and we have a goal that u == tm
+    //so if we solve that equality, we don't need to retype the solution of `u : typ`
     let uvtm, _, g_imp = Env.new_implicit_var_aux "postprocess RHS" tm.pos env typ Allow_untyped None in
 
     let u = env.universe_of env typ in
@@ -881,8 +884,8 @@ let postprocess (env:Env.env) (tau:term) (typ:term) (tm:term) : term =
         | None ->
             Err.raise_error (Err.Fatal_OpenGoalsInSynthesis, "postprocessing left open goals") typ.pos) gs;
     (* abort if the uvar was not solved *)
-    let g_imp = TcRel.resolve_implicits_tac env g_imp in
-    report_implicits tm.pos g_imp.implicits;
+    let tagged_imps = TcRel.resolve_implicits_tac env g_imp in
+    report_implicits tm.pos tagged_imps;
 
     uvtm
     end

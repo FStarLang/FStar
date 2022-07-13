@@ -145,9 +145,13 @@ with all this. *)
 val t_exact : maybe_refine:bool -> set_expected_typ:bool -> term -> Tac unit
 
 (** Inner primitive for [apply], takes a boolean specifying whether
-to not ask for implicits that appear free in posterior goals, and a
+to not ask for implicits that appear free in posterior goals, a
 boolean specifying whether it's forbidden to instantiate uvars in the
-goal.
+goal, and a boolean specifying whether uvars resolved during unification
+of the goal to the term should be typechecked as part of t_apply
+
+If the third boolean is false, those uvars will be typechecked at the
+end by the tactics engine.
 
 Example: when [uopt] is true, applying transitivity to [|- a = c]
 will give two goals, [|- a = ?u] and [|- ?u = c] without asking to
@@ -162,7 +166,7 @@ instantiate [?u]. We use this in typeclass resolution.
 You may want [apply] from FStar.Tactics.Derived, or one of
 the other user facing variants.
 *)
-val t_apply : uopt:bool -> noinst:bool -> term -> Tac unit
+val t_apply : uopt:bool -> noinst:bool -> tc_resolved_uvars:bool -> term -> Tac unit
 
 (** [t_apply_lemma ni nilhs l] will solve a goal of type [squash phi]
 when [l] is a Lemma ensuring [phi]. The arguments to [l] and its
@@ -212,6 +216,12 @@ val t_trefl : allow_guards:bool -> Tac unit
 This is particularly useful to rewrite the expression on the left to the
 one on the right when the RHS is actually a unification variable. *)
 val t_commute_applied_match : unit -> Tac unit
+
+(** In case there are goals that are already solved which have
+    non-trivial typing guards, make those guards as explicit proof
+    obligations in the tactic state, solving any trivial ones by simplification.
+    See tests/bug-reports/Bug2635.fst for some examples *)
+val gather_or_solve_explicit_guards_for_resolved_goals : unit -> Tac unit
 
 (** [ctrl_rewrite] will traverse the current goal, and call [ctrl]
  * repeatedly on subterms. When [ctrl t] returns [(true, _)], the

@@ -40,5 +40,5 @@ let normalize (#t:Type) (x:t) : Tac unit =
   norm [delta];
   trefl ()
 
-let ser' : serializer_ty =
-  synth_by_tactic (fun () -> normalize (ser_id ser))
+let ser' : serializer_ty = _ by (normalize (ser_id ser))
+
