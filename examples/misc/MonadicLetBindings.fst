@@ -13,6 +13,10 @@ let option_example (a b: list (int * int)) (c: option bool) =
   | true  -> Some (haL + hbL)
   | false -> Some (haR + hbR)
 
+let letPunning (a: option int)
+  = let? a in // equivalent to [let? a = a in]
+    Some (a + 10)
+
 let _ = assert_norm (option_example [(1,2)] [(3,4)] (Some true) == Some 4)
 let _ = assert_norm (option_example [] [(3,4)] (Some true) == None)
 
