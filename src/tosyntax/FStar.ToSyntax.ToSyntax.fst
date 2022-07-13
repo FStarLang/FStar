@@ -1458,10 +1458,28 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
         in
         let branch = (pat, None, e) in
         let r = mk_term (Ascribed (r, rty, None, false)) r.range Expr in
-        { top with tm = Match (r, None, [branch]) }
+        { top with tm = Match (r, None, None, [branch]) }
       in
       desugar_term_maybe_top top_level env elab
 
+    | LetOperator(lets, body) ->
+      ( match lets with
+      | [] -> failwith "Impossible: a LetOperator (e.g. let+, let*...) cannot contain zero let binding"
+      | (letOp, letPat, letDef)::tl ->
+        let term_of_op op = AST.mk_term (AST.Var (Ident.lid_of_ns_and_id [] op)) (range_of_id op) AST.Expr in
+        let mproduct_def = fold_left (fun def (andOp, andPat, andDef) ->
+            AST.mkExplicitApp
+              (term_of_op andOp)
+              [def; andDef] top.range
+        ) letDef tl in
+        let mproduct_pat = fold_left (fun pat (andOp, andPat, andDef) ->
+            AST.mk_pattern (AST.PatTuple ([pat; andPat], false)) andPat.prange
+        ) letPat tl in
+        let fn = AST.mk_term (Abs([mproduct_pat], body)) body.range body.level in
+        let let_op = term_of_op letOp in
+        let t = AST.mkExplicitApp let_op [mproduct_def; fn] top.range in
+        desugar_term_aq env t
+      )
     | Let(qual, lbs, body) ->
       let is_rec = qual = Rec in
       let ds_let_rec_or_app () =

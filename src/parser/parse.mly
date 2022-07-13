@@ -61,6 +61,8 @@ let none_to_empty_list x =
 %token <string> REAL
 %token <char> CHAR
 %token <bool> LET
+%token <string> LET_OP
+%token <string> AND_OP
 
 %token FORALL EXISTS ASSUME NEW LOGIC ATTRIBUTES
 %token IRREDUCIBLE UNFOLDABLE INLINE OPAQUE UNFOLD INLINE_FOR_EXTRACTION
@@ -305,6 +307,18 @@ attr_letbinding:
   | attr=ioption(attribute) AND lb=letbinding
     { attr, lb }
 
+letoperatorbinding:
+  | pat=tuplePattern tm=option(EQUALS tm=term {tm})
+    {
+        let h tm = (pat, tm) in
+	match pat.pat, tm with
+        | _               , Some tm -> h tm
+        | PatVar (v, _, _), None    ->
+          let v = lid_of_ns_and_id [] v in
+          h (mk_term (Var v) (rhs parseState 1) Expr)
+        | _ -> raise_error (Fatal_SyntaxError, "Syntax error: let-punning expects a name, not a pattern") (rhs parseState 2)
+    }
+
 letbinding:
   | focus_opt=maybeFocus lid=lidentOrOperator lbp=nonempty_list(patternOrMultibinder) ascr_opt=ascribeTyp? EQUALS tm=term
       {
@@ -504,6 +518,10 @@ atomicPattern:
   | tv=tvar                   { mk_pattern (PatTvar (tv, None, [])) (rhs parseState 1) }
   | LPAREN op=operator RPAREN
       { mk_pattern (PatOp op) (rhs2 parseState 1 3) }
+  | LPAREN op=let_op RPAREN
+      { mk_pattern (PatVar (op, None, [])) (rhs2 parseState 1 3) }
+  | LPAREN op=and_op RPAREN
+      { mk_pattern (PatVar (op, None, [])) (rhs2 parseState 1 3) }
   | UNDERSCORE
       { mk_pattern (PatWild (None, [])) (rhs parseState 1) }
   | HASH UNDERSCORE
@@ -622,8 +640,18 @@ ident:
 lidentOrOperator:
   | id=IDENT
     { mk_ident(id, rhs parseState 1) }
+  | LPAREN op=let_op RPAREN { op }
+  | LPAREN op=and_op RPAREN { op }
   | LPAREN id=operator RPAREN
     { mk_ident (compile_op' (string_of_id id) (range_of_id id), range_of_id id) }
+
+%inline and_op:
+  | op=AND_OP { let r = rhs parseState 1 in
+                mk_ident ("and_" ^ compile_op' op r, r) }
+
+%inline let_op:
+  | op=LET_OP { let r = rhs parseState 1 in
+                mk_ident ("let_" ^ compile_op' op r, r) }
 
 lidentOrUnderscore:
   | id=IDENT { mk_ident(id, rhs parseState 1)}
@@ -762,6 +790,11 @@ noSeqTerm:
         let lbs = focusAttrLetBindings lbs (rhs2 parseState 2 3) in
         mk_term (Let(q, lbs, e)) (rhs2 parseState 1 6) Expr
       }
+  | op=let_op b=letoperatorbinding lbs=list(op=and_op b=letoperatorbinding {(op, b)}) IN e=term
+    { let lbs = (op, b)::lbs in
+      mk_term (LetOperator ( List.map (fun (op, (pat, tm)) -> (op, pat, tm)) lbs
+			   , e)) (rhs2 parseState 1 4) Expr
+    }
   | FUNCTION pbs=left_flexible_nonempty_list(BAR, patternBranch)
       {
         let branches = focusBranches pbs (rhs2 parseState 1 2) in
