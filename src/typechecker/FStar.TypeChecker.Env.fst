@@ -118,6 +118,8 @@ let initial_env deps
   typeof_tot_or_gtot_term
   typeof_tot_or_gtot_term_fastpath
   universe_of
+  teq_nosmt_force
+  subtype_nosmt_force
   solver module_lid nbe : env =
   { solver=solver;
     range=dummyRange;
@@ -152,10 +154,11 @@ let initial_env deps
        match typeof_tot_or_gtot_term_fastpath env t must_tot with
        | Some k -> k, trivial_guard
        | None ->
-         let _, k, g = typeof_tot_or_gtot_term env t must_tot in
+         let t', k, g = typeof_tot_or_gtot_term env t must_tot in
          k, g);
     universe_of=universe_of;
-
+    teq_nosmt_force=teq_nosmt_force;
+    subtype_nosmt_force=subtype_nosmt_force;
     use_bv_sorts=false;
     qtbl_name_and_index=BU.smap_create 10, None;  //10?
     normalized_eff_names=BU.smap_create 20;  //20?
@@ -174,7 +177,9 @@ let initial_env deps
     erasable_types_tab = BU.smap_create 20;
     enable_defer_to_tac=true;
     unif_allow_ref_guards=false;
-    erase_erasable_args = false
+    erase_erasable_args=false;
+
+    rel_query_for_apply_tac_uvar=None;
   }
 
 let dsenv env = env.dsenv
@@ -1564,7 +1569,7 @@ let all_binders env = binders_of_bindings env.gamma
 
 let print_gamma gamma =
     (gamma |> List.map (function
-        | Binding_var x -> "Binding_var " ^ (Print.bv_to_string x)
+        | Binding_var x -> "Binding_var (" ^ (Print.bv_to_string x) ^ ":" ^ (Print.term_to_string x.sort) ^ ")"
         | Binding_univ u -> "Binding_univ " ^ (string_of_id u)
         | Binding_lid (l, _) -> "Binding_lid " ^ (Ident.string_of_lid l)))//  @
     // (env.gamma_sig |> List.map (fun (ls, _) ->
@@ -1641,7 +1646,7 @@ let guard_form g = g.guard_f
 let is_trivial g = match g with
     | {guard_f=Trivial; deferred=[]; univ_ineqs=([], []); implicits=i} ->
       i |> BU.for_all (fun imp ->
-           (imp.imp_uvar.ctx_uvar_should_check=Allow_unresolved)
+           (U.ctx_uvar_should_check imp.imp_uvar=Allow_unresolved)
            || (match Unionfind.find imp.imp_uvar.ctx_uvar_head with
                | Some _ -> true
                | None -> false))
@@ -1744,7 +1749,7 @@ let close_guard env binders g =
 (* ------------------------------------------------*)
 
 (* Generating new implicit variables *)
-let new_implicit_var_aux reason r env k should_check meta =
+let new_tac_implicit_var reason r env k should_check meta apply_tac_deps =
     match U.destruct k FStar.Parser.Const.range_of_lid with
      | Some [_; (tm, _)] ->
        let t = S.mk (S.Tm_constant (FStar.Const.Const_range tm.pos)) tm.pos in
@@ -1753,15 +1758,20 @@ let new_implicit_var_aux reason r env k should_check meta =
      | _ ->
       let binders = all_binders env in
       let gamma = env.gamma in
+      let decoration = {
+             uvar_decoration_typ = k;
+             uvar_decoration_should_check = should_check;
+          }
+      in
       let ctx_uvar = {
-          ctx_uvar_head=FStar.Syntax.Unionfind.fresh r;
+          ctx_uvar_head=FStar.Syntax.Unionfind.fresh decoration r;
           ctx_uvar_gamma=gamma;
           ctx_uvar_binders=binders;
-          ctx_uvar_typ=k;
           ctx_uvar_reason=reason;
-          ctx_uvar_should_check=should_check;
           ctx_uvar_range=r;
           ctx_uvar_meta=meta;
+
+          ctx_uvar_apply_tac_prefix=apply_tac_deps;
       } in
       check_uvar_ctx_invariant reason r true gamma binders;
       let t = mk (Tm_uvar (ctx_uvar, ([], NoUseRange))) r in
@@ -1774,6 +1784,9 @@ let new_implicit_var_aux reason r env k should_check meta =
         BU.print1 "Just created uvar for implicit {%s}\n" (Print.uvar_to_string ctx_uvar.ctx_uvar_head);
       let g = {trivial_guard with implicits=[imp]} in
       t, [(ctx_uvar, r)], g
+
+let new_implicit_var_aux reason r env k should_check meta =
+  new_tac_implicit_var reason r env k should_check meta []
 
 (***************************************************)
 
@@ -1806,31 +1819,22 @@ let new_implicit_var_aux reason r env k should_check meta =
  *   one-by-one and fixing them.
  *
  * To guard against misuses of this, we typecheck the layered effect combinator types in a strict
- *   mode (with no smt and subtyping). In addition, we make sure that the binders in the combinator type
- *   appear in repr indices directly (not as an argument application) -- see TcEffect.fs
+ *   mode (with no smt and subtyping)
  *)
 let uvars_for_binders env (bs:S.binders) substs reason r =
   bs |> List.fold_left (fun (substs, uvars, g) b ->
     let sort = SS.subst substs b.binder_bv.sort in
 
-    (*
-     * AR: If there is a tactic associated with this binder,
-     *     then create it in the Strict mode
-     *
-     *     When solving it, if the tactic is indeed found, the solution is not re-typechecked
-     *                      if the tactic is not found, then we will force the solution typechecking
-     *)
-
-    let ctx_uvar_meta_t, strict =
+    let ctx_uvar_meta_t =
       match b.binder_qual, b.binder_attrs with
       | Some (Meta t), [] ->
-        Some (Ctx_uvar_meta_tac (FStar.Compiler.Dyn.mkdyn env, t)), false
+        Some (Ctx_uvar_meta_tac (FStar.Compiler.Dyn.mkdyn env, t))
       | _, t::_ ->
-        Some (Ctx_uvar_meta_attr t), true
-      | _ -> None, false in
+        Some (Ctx_uvar_meta_attr t)
+      | _ -> None in
 
     let t, l_ctx_uvars, g_t = new_implicit_var_aux
-      (reason b) r env sort (if strict then Strict else Allow_untyped) ctx_uvar_meta_t in
+      (reason b) r env sort Allow_untyped ctx_uvar_meta_t in
 
     if debug env <| Options.Other "LayeredEffectsEqns"
     then List.iter (fun (ctx_uvar, _) -> BU.print1 "Layered Effect uvar : %s\n"
@@ -1863,6 +1867,7 @@ let dummy_solver = {
     rollback=(fun _ _ -> ());
     encode_sig=(fun _ _ -> ());
     preprocess=(fun e g -> [e,g, FStar.Options.peek ()]);
+    spinoff_strictly_positive_goals=None;
     handle_smt_goal=(fun e g -> [e,g]);
     solve=(fun _ _ _ -> ());
     finish=(fun () -> ());
@@ -1890,3 +1895,9 @@ let fvar_of_nonqual_lid env lid =
         | Some dd -> dd
     in
     fvar lid dd None
+
+let split_smt_query (e:env) (q:term) 
+  : option (list (env & term))
+  = match e.solver.spinoff_strictly_positive_goals with
+    | None -> None
+    | Some p -> Some (p e q)

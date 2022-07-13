@@ -33,6 +33,8 @@ module Print   = FStar.Syntax.Print
 module SS      = FStar.Syntax.Subst
 module S       = FStar.Syntax.Syntax
 module Env     = FStar.TypeChecker.Env
+module U       = FStar.Syntax.Util
+module Cfg     = FStar.TypeChecker.Cfg
 
 let term_to_string (e:Env.env) (t:term) : string =
     Print.term_to_string' e.dsenv t
@@ -89,8 +91,28 @@ let goal_to_string (kind : string) (maybe_num : option (int * int)) (ps:proofsta
         | "" -> ""
         | l -> " (" ^ l ^ ")"
     in
-    let goal_binders = g.goal_ctx_uvar.ctx_uvar_binders in
-    let goal_ty = g.goal_ctx_uvar.ctx_uvar_typ in
+    let goal_binders, goal_ty =
+      let rename_binders subst bs =
+        bs |> List.map (function b ->
+          let x = b.binder_bv in
+          let y = SS.subst subst (S.bv_to_name x) in
+          match (SS.compress y).n with
+          | Tm_name y ->
+            // We don't want to change the type
+            { b with binder_bv = { b.binder_bv with sort = SS.subst subst x.sort } }
+          | _ -> failwith "Not a renaming")
+      in
+      let goal_binders = g.goal_ctx_uvar.ctx_uvar_binders in
+      let goal_ty = goal_type g in
+      if Options.tactic_raw_binders()
+      then goal_binders, goal_ty
+      else (
+        let subst = Cfg.psc_subst ps.psc in
+        let binders = rename_binders subst goal_binders in
+        let ty = SS.subst subst goal_ty in
+        binders, ty
+      )
+    in
     let goal_binders, goal_ty = unshadow goal_binders goal_ty in
     let actual_goal =
         if ps.tac_verb_dbg

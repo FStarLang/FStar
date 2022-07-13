@@ -89,3 +89,6 @@ nubuild.progress
 
 # Z3/F* nightly/weekly files
 /nightly
+
+# Nuget packages
+nuget/

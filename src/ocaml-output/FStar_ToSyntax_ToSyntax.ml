@@ -224,6 +224,14 @@ let rec (is_comp_type :
     fun t ->
       let uu___ = let uu___1 = unparen t in uu___1.FStar_Parser_AST.tm in
       match uu___ with
+      | FStar_Parser_AST.Name l when
+          (let uu___1 = FStar_Syntax_DsEnv.current_module env in
+           FStar_Ident.lid_equals uu___1 FStar_Parser_Const.prims_lid) &&
+            (let s =
+               let uu___1 = FStar_Ident.ident_of_lid l in
+               FStar_Ident.string_of_id uu___1 in
+             (s = "Tot") || (s = "GTot"))
+          -> true
       | FStar_Parser_AST.Name l ->
           let uu___1 = FStar_Syntax_DsEnv.try_lookup_effect_name env l in
           FStar_Compiler_Effect.op_Bar_Greater uu___1
@@ -1122,29 +1130,7 @@ let rec (generalize_annotated_univs :
           let uu___ =
             FStar_Syntax_Free.univnames lb.FStar_Syntax_Syntax.lbtyp in
           let uu___1 =
-            match (lb.FStar_Syntax_Syntax.lbdef).FStar_Syntax_Syntax.n with
-            | FStar_Syntax_Syntax.Tm_abs (bs, e, uu___2) ->
-                let uvs1 = bs_univnames bs in
-                let uvs2 =
-                  match e.FStar_Syntax_Syntax.n with
-                  | FStar_Syntax_Syntax.Tm_ascribed
-                      (uu___3, (FStar_Pervasives.Inl t, uu___4, uu___5),
-                       uu___6)
-                      -> FStar_Syntax_Free.univnames t
-                  | FStar_Syntax_Syntax.Tm_ascribed
-                      (uu___3, (FStar_Pervasives.Inr c, uu___4, uu___5),
-                       uu___6)
-                      -> FStar_Syntax_Free.univnames_comp c
-                  | uu___3 -> empty_set in
-                FStar_Compiler_Util.set_union uvs1 uvs2
-            | FStar_Syntax_Syntax.Tm_arrow (bs, uu___2) -> bs_univnames bs
-            | FStar_Syntax_Syntax.Tm_ascribed
-                (uu___2, (FStar_Pervasives.Inl t, uu___3, uu___4), uu___5) ->
-                FStar_Syntax_Free.univnames t
-            | FStar_Syntax_Syntax.Tm_ascribed
-                (uu___2, (FStar_Pervasives.Inr c, uu___3, uu___4), uu___5) ->
-                FStar_Syntax_Free.univnames_comp c
-            | uu___2 -> empty_set in
+            FStar_Syntax_Free.univnames lb.FStar_Syntax_Syntax.lbdef in
           FStar_Compiler_Util.set_union uu___ uu___1 in
         let all_lb_univs =
           let uu___ =
@@ -4182,8 +4168,11 @@ and (desugar_term_maybe_top :
                    | (b::bs3, v::vs3) ->
                        let x = unqual_bv_of_binder b in
                        let token1 =
-                         aux bs3 vs3 ((FStar_Syntax_Syntax.NT (x, v)) :: sub)
-                           token in
+                         let uu___2 =
+                           FStar_Syntax_Subst.subst_binders
+                             ((FStar_Syntax_Syntax.NT (x, v)) :: sub) bs3 in
+                         aux uu___2 vs3 ((FStar_Syntax_Syntax.NT (x, v)) ::
+                           sub) token in
                        let token2 =
                          let uu___2 =
                            let uu___3 =
@@ -4342,7 +4331,8 @@ and (desugar_term_maybe_top :
                          mk_forall_elim x.FStar_Syntax_Syntax.sort uu___2 v
                            token in
                        let sub1 = (FStar_Syntax_Syntax.NT (x, v)) :: sub in
-                       aux bs3 vs3 sub1 token1
+                       let uu___2 = FStar_Syntax_Subst.subst_binders sub1 bs3 in
+                       aux uu___2 vs3 sub1 token1
                    | uu___2 ->
                        FStar_Errors.raise_error
                          (FStar_Errors.Fatal_UnexpectedTerm,

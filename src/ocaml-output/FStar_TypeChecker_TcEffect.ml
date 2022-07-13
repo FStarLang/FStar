@@ -212,6 +212,10 @@ let (check_no_subtyping_for_layered_combinator :
                (env.FStar_TypeChecker_Env.universe_of);
              FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term =
                (env.FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term);
+             FStar_TypeChecker_Env.teq_nosmt_force =
+               (env.FStar_TypeChecker_Env.teq_nosmt_force);
+             FStar_TypeChecker_Env.subtype_nosmt_force =
+               (env.FStar_TypeChecker_Env.subtype_nosmt_force);
              FStar_TypeChecker_Env.use_bv_sorts =
                (env.FStar_TypeChecker_Env.use_bv_sorts);
              FStar_TypeChecker_Env.qtbl_name_and_index =
@@ -247,7 +251,9 @@ let (check_no_subtyping_for_layered_combinator :
              FStar_TypeChecker_Env.unif_allow_ref_guards =
                (env.FStar_TypeChecker_Env.unif_allow_ref_guards);
              FStar_TypeChecker_Env.erase_erasable_args =
-               (env.FStar_TypeChecker_Env.erase_erasable_args)
+               (env.FStar_TypeChecker_Env.erase_erasable_args);
+             FStar_TypeChecker_Env.rel_query_for_apply_tac_uvar =
+               (env.FStar_TypeChecker_Env.rel_query_for_apply_tac_uvar)
            } in
          match k with
          | FStar_Pervasives_Native.None ->
@@ -260,146 +266,45 @@ let (check_no_subtyping_for_layered_combinator :
 let (validate_layered_effect_binders :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.binders ->
-      FStar_Syntax_Syntax.term Prims.list ->
-        Prims.bool -> FStar_Compiler_Range.range -> unit)
+      Prims.bool -> FStar_Compiler_Range.range -> unit)
   =
   fun env ->
     fun bs ->
-      fun repr_terms ->
-        fun check_non_informatve_binders ->
-          fun r ->
-            let repr_args repr =
-              let uu___ =
-                let uu___1 = FStar_Syntax_Subst.compress repr in
-                uu___1.FStar_Syntax_Syntax.n in
-              match uu___ with
-              | FStar_Syntax_Syntax.Tm_app (uu___1, args) -> args
-              | FStar_Syntax_Syntax.Tm_arrow (uu___1::[], c) ->
-                  FStar_Compiler_Effect.op_Bar_Greater c
-                    FStar_Syntax_Util.comp_effect_args
-              | uu___1 ->
-                  let uu___2 =
-                    let uu___3 =
-                      let uu___4 = FStar_Syntax_Print.term_to_string repr in
-                      FStar_Compiler_Util.format1
-                        "Unexpected repr term %s when validating layered effect combinator binders"
-                        uu___4 in
-                    (FStar_Errors.Fatal_UnexpectedEffect, uu___3) in
-                  FStar_Errors.raise_error uu___2 r in
-            let rec head_names_in_term arg =
-              let uu___ =
-                let uu___1 = FStar_Syntax_Subst.compress arg in
-                uu___1.FStar_Syntax_Syntax.n in
-              match uu___ with
-              | FStar_Syntax_Syntax.Tm_name uu___1 -> [arg]
-              | FStar_Syntax_Syntax.Tm_app (head, uu___1) ->
-                  let uu___2 =
-                    let uu___3 = FStar_Syntax_Subst.compress head in
-                    uu___3.FStar_Syntax_Syntax.n in
-                  (match uu___2 with
-                   | FStar_Syntax_Syntax.Tm_name uu___3 -> [head]
-                   | uu___3 -> [])
-              | FStar_Syntax_Syntax.Tm_abs (uu___1, body, uu___2) ->
-                  head_names_in_term body
-              | uu___1 -> [] in
-            let head_names_in_args args =
-              let uu___ =
-                FStar_Compiler_Effect.op_Bar_Greater args
-                  (FStar_Compiler_List.map FStar_Pervasives_Native.fst) in
-              FStar_Compiler_Effect.op_Bar_Greater uu___
-                (FStar_Compiler_List.collect head_names_in_term) in
-            let repr_names_args =
-              FStar_Compiler_List.collect
-                (fun repr ->
-                   let uu___ =
-                     FStar_Compiler_Effect.op_Bar_Greater repr repr_args in
-                   FStar_Compiler_Effect.op_Bar_Greater uu___
-                     head_names_in_args) repr_terms in
-            (let uu___1 =
-               FStar_Compiler_Effect.op_Less_Bar
-                 (FStar_TypeChecker_Env.debug env)
-                 (FStar_Options.Other "LayeredEffectsTc") in
-             if uu___1
-             then
-               let uu___2 =
-                 FStar_Compiler_List.fold_left
-                   (fun s ->
-                      fun t ->
-                        let uu___3 =
-                          let uu___4 = FStar_Syntax_Print.term_to_string t in
-                          Prims.op_Hat "; " uu___4 in
-                        Prims.op_Hat s uu___3) "" repr_names_args in
-               let uu___3 = FStar_Syntax_Print.binders_to_string "; " bs in
-               FStar_Compiler_Util.print2
-                 "Checking layered effect combinator binders validity, names: %s, binders: %s\n\n"
-                 uu___2 uu___3
-             else ());
-            (let valid_binder b =
-               (FStar_Compiler_List.existsb
-                  (fun t ->
-                     let uu___1 =
-                       let uu___2 =
-                         FStar_Syntax_Syntax.bv_to_name
-                           b.FStar_Syntax_Syntax.binder_bv in
-                       FStar_Syntax_Util.eq_tm uu___2 t in
-                     uu___1 = FStar_Syntax_Util.Equal) repr_names_args)
-                 ||
-                 (match b.FStar_Syntax_Syntax.binder_attrs with
-                  | uu___1::uu___2 -> true
-                  | uu___1 -> false) in
-             let invalid_binders =
-               FStar_Compiler_List.filter
-                 (fun b ->
-                    let uu___1 = valid_binder b in Prims.op_Negation uu___1)
-                 bs in
-             if
-               (FStar_Compiler_List.length invalid_binders) <> Prims.int_zero
-             then
-               (let uu___2 =
-                  let uu___3 =
-                    let uu___4 =
-                      FStar_Syntax_Print.binders_to_string "; "
-                        invalid_binders in
-                    FStar_Compiler_Util.format1
-                      "Binders %s neither appear as repr indices nor have an associated tactic"
-                      uu___4 in
-                  (FStar_Errors.Fatal_UnexpectedEffect, uu___3) in
-                FStar_Errors.raise_error uu___2 r)
-             else ();
-             if check_non_informatve_binders
-             then
-               (let uu___2 =
-                  FStar_Compiler_List.fold_left
-                    (fun uu___3 ->
-                       fun b ->
-                         match uu___3 with
-                         | (env1, bs1) ->
-                             let env2 =
-                               FStar_TypeChecker_Env.push_binders env1 [b] in
-                             let uu___4 =
-                               FStar_TypeChecker_Normalize.non_info_norm env2
-                                 (b.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort in
-                             if uu___4
-                             then (env2, bs1)
-                             else (env2, (b :: bs1))) (env, []) bs in
-                match uu___2 with
-                | (uu___3, informative_binders) ->
-                    if
-                      (FStar_Compiler_List.length informative_binders) <>
-                        Prims.int_zero
-                    then
-                      let uu___4 =
-                        let uu___5 =
-                          let uu___6 =
-                            FStar_Syntax_Print.binders_to_string "; "
-                              informative_binders in
-                          FStar_Compiler_Util.format1
-                            "Binders %s are informative while the effect is reifiable"
-                            uu___6 in
-                        (FStar_Errors.Fatal_UnexpectedEffect, uu___5) in
-                      FStar_Errors.raise_error uu___4 r
-                    else ())
-             else ())
+      fun check_non_informatve_binders ->
+        fun r ->
+          if check_non_informatve_binders
+          then
+            let uu___ =
+              FStar_Compiler_List.fold_left
+                (fun uu___1 ->
+                   fun b ->
+                     match uu___1 with
+                     | (env1, bs1) ->
+                         let env2 =
+                           FStar_TypeChecker_Env.push_binders env1 [b] in
+                         let uu___2 =
+                           FStar_TypeChecker_Normalize.non_info_norm env2
+                             (b.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort in
+                         if uu___2 then (env2, bs1) else (env2, (b :: bs1)))
+                (env, []) bs in
+            match uu___ with
+            | (uu___1, informative_binders) ->
+                (if
+                   (FStar_Compiler_List.length informative_binders) <>
+                     Prims.int_zero
+                 then
+                   let uu___2 =
+                     let uu___3 =
+                       let uu___4 =
+                         FStar_Syntax_Print.binders_to_string "; "
+                           informative_binders in
+                       FStar_Compiler_Util.format1
+                         "Binders %s are informative while the effect is reifiable"
+                         uu___4 in
+                     (FStar_Errors.Fatal_UnexpectedEffect, uu___3) in
+                   FStar_Errors.raise_error uu___2 r
+                 else ())
+          else ()
 let (tc_layered_eff_decl :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.eff_decl ->
@@ -774,7 +679,7 @@ let (tc_layered_eff_decl :
                                                       FStar_TypeChecker_Env.push_binders
                                                         env [a1; x] in
                                                     validate_layered_effect_binders
-                                                      env1 bs2 [res_t]
+                                                      env1 bs2
                                                       check_non_informative_binders
                                                       r));
                                           (let uu___12 =
@@ -1198,10 +1103,6 @@ let (tc_layered_eff_decl :
                                                                     [a1; b1] in
                                                                     validate_layered_effect_binders
                                                                     env1 bs4
-                                                                    [
-                                                                    (f_b.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort;
-                                                                    g_sort;
-                                                                    res_t]
                                                                     check_non_informative_binders
                                                                     r)));
                                                                     (
@@ -1556,9 +1457,6 @@ let (tc_layered_eff_decl :
                                                                     [a1] in
                                                                     validate_layered_effect_binders
                                                                     env1 bs3
-                                                                    [
-                                                                    (f_b.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort;
-                                                                    res_t]
                                                                     check_non_informative_binders
                                                                     r)));
                                                         (let uu___18 =
@@ -1910,10 +1808,6 @@ let (tc_layered_eff_decl :
                                                                     [a1] in
                                                                     validate_layered_effect_binders
                                                                     env1 bs3
-                                                                    [
-                                                                    (f_b.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort;
-                                                                    (g_b.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort;
-                                                                    body1]
                                                                     check_non_informative_binders
                                                                     r)));
                                                             (let uu___19 =
@@ -2508,6 +2402,12 @@ let (tc_layered_eff_decl :
                                         FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term
                                           =
                                           (uu___16.FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term);
+                                        FStar_TypeChecker_Env.teq_nosmt_force
+                                          =
+                                          (uu___16.FStar_TypeChecker_Env.teq_nosmt_force);
+                                        FStar_TypeChecker_Env.subtype_nosmt_force
+                                          =
+                                          (uu___16.FStar_TypeChecker_Env.subtype_nosmt_force);
                                         FStar_TypeChecker_Env.use_bv_sorts =
                                           (uu___16.FStar_TypeChecker_Env.use_bv_sorts);
                                         FStar_TypeChecker_Env.qtbl_name_and_index
@@ -2555,7 +2455,10 @@ let (tc_layered_eff_decl :
                                           (uu___16.FStar_TypeChecker_Env.unif_allow_ref_guards);
                                         FStar_TypeChecker_Env.erase_erasable_args
                                           =
-                                          (uu___16.FStar_TypeChecker_Env.erase_erasable_args)
+                                          (uu___16.FStar_TypeChecker_Env.erase_erasable_args);
+                                        FStar_TypeChecker_Env.rel_query_for_apply_tac_uvar
+                                          =
+                                          (uu___16.FStar_TypeChecker_Env.rel_query_for_apply_tac_uvar)
                                       } in
                                     FStar_TypeChecker_TcTerm.tc_tot_or_gtot_term
                                       uu___15
@@ -4252,6 +4155,12 @@ let (tc_non_layered_eff_decl :
                                                                     FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term
                                                                     =
                                                                     (env1.FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term);
+                                                                    FStar_TypeChecker_Env.teq_nosmt_force
+                                                                    =
+                                                                    (env1.FStar_TypeChecker_Env.teq_nosmt_force);
+                                                                    FStar_TypeChecker_Env.subtype_nosmt_force
+                                                                    =
+                                                                    (env1.FStar_TypeChecker_Env.subtype_nosmt_force);
                                                                     FStar_TypeChecker_Env.use_bv_sorts
                                                                     =
                                                                     (env1.FStar_TypeChecker_Env.use_bv_sorts);
@@ -4308,7 +4217,10 @@ let (tc_non_layered_eff_decl :
                                                                     (env1.FStar_TypeChecker_Env.unif_allow_ref_guards);
                                                                     FStar_TypeChecker_Env.erase_erasable_args
                                                                     =
-                                                                    (env1.FStar_TypeChecker_Env.erase_erasable_args)
+                                                                    (env1.FStar_TypeChecker_Env.erase_erasable_args);
+                                                                    FStar_TypeChecker_Env.rel_query_for_apply_tac_uvar
+                                                                    =
+                                                                    (env1.FStar_TypeChecker_Env.rel_query_for_apply_tac_uvar)
                                                                     }
                                                                     (
                                                                     fun
@@ -4524,6 +4436,12 @@ let (tc_non_layered_eff_decl :
                                                                    FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term
                                                                     =
                                                                     (uu___24.FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term);
+                                                                   FStar_TypeChecker_Env.teq_nosmt_force
+                                                                    =
+                                                                    (uu___24.FStar_TypeChecker_Env.teq_nosmt_force);
+                                                                   FStar_TypeChecker_Env.subtype_nosmt_force
+                                                                    =
+                                                                    (uu___24.FStar_TypeChecker_Env.subtype_nosmt_force);
                                                                    FStar_TypeChecker_Env.use_bv_sorts
                                                                     =
                                                                     (uu___24.FStar_TypeChecker_Env.use_bv_sorts);
@@ -4580,7 +4498,10 @@ let (tc_non_layered_eff_decl :
                                                                     (uu___24.FStar_TypeChecker_Env.unif_allow_ref_guards);
                                                                    FStar_TypeChecker_Env.erase_erasable_args
                                                                     =
-                                                                    (uu___24.FStar_TypeChecker_Env.erase_erasable_args)
+                                                                    (uu___24.FStar_TypeChecker_Env.erase_erasable_args);
+                                                                   FStar_TypeChecker_Env.rel_query_for_apply_tac_uvar
+                                                                    =
+                                                                    (uu___24.FStar_TypeChecker_Env.rel_query_for_apply_tac_uvar)
                                                                  } in
                                                                ((let uu___25
                                                                    =
@@ -5367,10 +5288,8 @@ let (tc_layered_lift :
                                            FStar_TypeChecker_Env.push_binders
                                              env [a] in
                                          validate_layered_effect_binders env1
-                                           bs2
-                                           [(f_b.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort;
-                                           res_t]
-                                           check_non_informative_binders r)));
+                                           bs2 check_non_informative_binders
+                                           r)));
                           (let sub1 =
                              let uu___10 =
                                let uu___11 =
@@ -5754,6 +5673,10 @@ let (tc_lift :
                                FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term
                                  =
                                  (env.FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term);
+                               FStar_TypeChecker_Env.teq_nosmt_force =
+                                 (env.FStar_TypeChecker_Env.teq_nosmt_force);
+                               FStar_TypeChecker_Env.subtype_nosmt_force =
+                                 (env.FStar_TypeChecker_Env.subtype_nosmt_force);
                                FStar_TypeChecker_Env.use_bv_sorts =
                                  (env.FStar_TypeChecker_Env.use_bv_sorts);
                                FStar_TypeChecker_Env.qtbl_name_and_index =
@@ -5792,7 +5715,10 @@ let (tc_lift :
                                FStar_TypeChecker_Env.unif_allow_ref_guards =
                                  (env.FStar_TypeChecker_Env.unif_allow_ref_guards);
                                FStar_TypeChecker_Env.erase_erasable_args =
-                                 (env.FStar_TypeChecker_Env.erase_erasable_args)
+                                 (env.FStar_TypeChecker_Env.erase_erasable_args);
+                               FStar_TypeChecker_Env.rel_query_for_apply_tac_uvar
+                                 =
+                                 (env.FStar_TypeChecker_Env.rel_query_for_apply_tac_uvar)
                              } in
                            let lift1 =
                              match lift with
@@ -6685,10 +6611,6 @@ let (tc_polymonadic_bind :
                                                                     [a1; b1] in
                                                                     validate_layered_effect_binders
                                                                     env2 bs3
-                                                                    [
-                                                                    (f_b.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort;
-                                                                    g_sort;
-                                                                    res_t]
                                                                     check_non_informative_binders
                                                                     r)));
                                                        (let uu___13 =
@@ -6996,8 +6918,6 @@ let (tc_polymonadic_subcomp :
                                                                 env [a1] in
                                                             validate_layered_effect_binders
                                                               env1 bs3
-                                                              [(f_b.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort;
-                                                              res_t]
                                                               check_non_informative_binders
                                                               r)));
                                              (let uu___12 =

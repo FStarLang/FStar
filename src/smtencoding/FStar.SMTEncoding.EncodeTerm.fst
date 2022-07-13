@@ -898,7 +898,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
 
       | Tm_uvar (uv, _) ->
         let ttm = mk_Term_uvar (Unionfind.uvar_id uv.ctx_uvar_head) in
-        let t_has_k, decls = encode_term_pred None uv.ctx_uvar_typ env ttm in //TODO: skip encoding this if it has already been encoded before
+        let t_has_k, decls = encode_term_pred None (U.ctx_uvar_typ uv) env ttm in //TODO: skip encoding this if it has already been encoded before
         let d =
             Util.mkAssume(t_has_k,
                           Some "Uvar typing",
@@ -1457,7 +1457,7 @@ and encode_formula (phi:typ) (env:env_t) : (term * decls_t)  = (* expects phi to
           encode_formula (U.unmeta phi) env
 
         | Tm_match(e, _, pats, _) ->
-           let t, decls = encode_match e pats mkFalse env encode_formula in
+           let t, decls = encode_match e pats mkUnreachable env encode_formula in
            t, decls
 
         | Tm_let((false, [{lbname=Inl x; lbtyp=t1; lbdef=e1}]), e2) ->
