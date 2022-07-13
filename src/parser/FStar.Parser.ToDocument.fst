@@ -1291,9 +1291,15 @@ and p_noSeqTerm' ps pb e = match e.tm with
       paren_if (ps || pb) (
           group (prefix2 (str "try") (p_noSeqTermAndComment false false e) ^/^ str "with" ^/^
               separate_map_last hardline p_patternBranch branches))
-  | Match (e, ret_opt, branches) ->
+  | Match (e, op_opt, ret_opt, branches) ->
+      let match_str = "match"
+                    ^ ( match bind_opt op_opt (fun id -> strip_prefix "let_" (string_of_id id)) with
+                      | Some op -> ( match string_to_op op with
+                                  | Some (id, _) -> id
+                                  | None         -> failwith ("Malformed operator ["^op^"] on match operator"))
+                      | None    -> ""
+                      ) in
       paren_if (ps || pb) (
-
       (match ret_opt with
        | None ->
         group (surround 2 1 (str "match") (p_noSeqTermAndComment false false e) (str "with"))
@@ -1376,7 +1382,7 @@ and p_noSeqTerm' ps pb e = match e.tm with
     let lbs_doc = group (separate break1 lbs_docs) in
     paren_if ps (group (lbs_doc ^^ hardline ^^ p_term false pb e))
 
-  | Abs([{pat=PatVar(x, typ_opt, _)}], {tm=Match(maybe_x, None, branches)}) when matches_var maybe_x x ->
+  | Abs([{pat=PatVar(x, typ_opt, _)}], {tm=Match(maybe_x, None, None, branches)}) when matches_var maybe_x x ->
     paren_if (ps || pb) (
       group (str "function" ^/^ separate_map_last hardline p_patternBranch branches))
   | Quote (e, Dynamic) ->

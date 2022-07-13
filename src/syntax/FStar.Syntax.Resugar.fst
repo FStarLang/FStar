@@ -511,7 +511,7 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
             let body = resugar_term' env (decomp body) in
             let handler = resugar_term' env (decomp handler) in
             let rec resugar_body t = match (t.tm) with
-              | A.Match(e, None, [(_,_,b)]) -> b
+              | A.Match(e, None, None, [(_,_,b)]) -> b
               | A.Let(_, _, b) -> b  // One branch Match that is resugared as Let
               | A.Ascribed(t1, t2, t3, use_eq) ->
                 (* this case happens when the match is wrapped in Meta_Monadic which is resugared to Ascribe*)
@@ -519,7 +519,7 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
               | _ -> failwith("unexpected body format to try_with") in
             let e = resugar_body body in
             let rec resugar_branches t = match (t.tm) with
-              | A.Match(e, None, branches) -> branches
+              | A.Match(e, None, None, branches) -> branches
               | A.Ascribed(t1, t2, t3, _) ->
                 (* this case happens when the match is wrapped in Meta_Monadic which is resugared to Ascribe*)
                 (* TODO: where should we keep the information stored in Ascribed? *)
@@ -663,7 +663,7 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
         (pat, wopt, b) in
       let asc_opt = resugar_match_returns env e t.pos asc_opt in
       mk (A.Match(resugar_term' env e,
-                  asc_opt,
+                  None, asc_opt,
                   List.map resugar_branch branches))
 
     | Tm_ascribed(e, asc, _) ->

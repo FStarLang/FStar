@@ -62,7 +62,8 @@ type term' =
   | Seq       of term * term
   | Bind      of ident * term * term
   | If        of term * option match_returns_annotation * term * term
-  | Match     of term * option match_returns_annotation * list branch
+  | Match     of term * option ident (* is this a regular match or a match operator (i.e. [match*]) *)
+                      * option match_returns_annotation * list branch
   | TryWith   of term * list branch
   | Ascribed  of term * term * option term * bool  (* bool says whether equality ascription $: *)
   | Record    of option term * list (lid * term)
@@ -283,7 +284,7 @@ let un_curry_abs ps body = match body.tm with
 let mk_function branches r1 r2 =
   let x = Ident.gen r1 in
   mk_term (Abs([mk_pattern (PatVar(x,None,[])) r1],
-               mk_term (Match(mk_term (Var(lid_of_ids [x])) r1 Expr, None, branches)) r2 Expr))
+               mk_term (Match(mk_term (Var(lid_of_ids [x])) r1 Expr, None, None, branches)) r2 Expr))
     r2 Expr
 let un_function p tm = match p.pat, tm.tm with
     | PatVar _, Abs(pats, body) -> Some (mk_pattern (PatApp(p, pats)) p.prange, body)
@@ -416,7 +417,7 @@ let mkRefinedPattern pat t should_bind_pat phi_opt t_range range =
                             (mk_pattern (PatWild (None, [])) phi.range, None,
                              mk_term (Name (lid_of_path ["False"] phi.range)) phi.range Formula)
                         in
-                        mk_term (Match (x_var, None, [pat_branch ; otherwise_branch])) phi.range Formula
+                        mk_term (Match (x_var, None, None, [pat_branch ; otherwise_branch])) phi.range Formula
                     in
                     mk_term (Refine(mk_binder (Annotated(x, t)) t_range Type_level None, phi)) range Type_level
                 end
@@ -659,8 +660,8 @@ let rec term_to_string (x:term) = match x.tm with
       (t2|> term_to_string)
       (t3|> term_to_string)
 
-  | Match(t, ret_opt,  branches) -> try_or_match_to_string x t branches ret_opt
-  | TryWith (t, branches) -> try_or_match_to_string x t branches None
+  | Match(t, op_opt, ret_opt, branches) -> try_or_match_to_string x t branches op_opt ret_opt
+  | TryWith (t, branches) -> try_or_match_to_string x t branches None None
 
   | Ascribed(t1, t2, None, flag) ->
     let s = if flag then "$:" else "<:" in
@@ -806,14 +807,15 @@ let rec term_to_string (x:term) = match x.tm with
 and binders_to_string sep bs =
     List.map binder_to_string bs |> String.concat sep
 
-and try_or_match_to_string (x:term) scrutinee branches ret_opt =
+and try_or_match_to_string (x:term) scrutinee branches op_opt ret_opt =
   let s =
     match x.tm with
     | Match _ -> "match"
     | TryWith _ -> "try"
     | _ -> failwith "impossible" in
-  Util.format4 "%s %s %swith %s"
+  Util.format5 "%s%s %s %swith %s"
     s
+    (match op_opt with | Some op -> string_of_id op | None -> "")
     (scrutinee|> term_to_string)
     (match ret_opt with
      | None -> ""

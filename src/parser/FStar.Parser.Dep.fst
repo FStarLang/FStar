@@ -930,7 +930,7 @@ let collect_one
                collect_term ret);
             collect_term t2;
             collect_term t3
-        | Match (t, ret_opt, bs) ->
+        | Match (t, _, ret_opt, bs) ->
             collect_term t;
             (match ret_opt with
              | None -> ()

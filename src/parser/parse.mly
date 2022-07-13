@@ -63,6 +63,7 @@ let none_to_empty_list x =
 %token <bool> LET
 %token <string> LET_OP
 %token <string> AND_OP
+%token <string> MATCH_OP
 
 %token FORALL EXISTS ASSUME NEW LOGIC ATTRIBUTES
 %token IRREDUCIBLE UNFOLDABLE INLINE OPAQUE UNFOLD INLINE_FOR_EXTRACTION
@@ -653,6 +654,13 @@ lidentOrOperator:
   | op=LET_OP { let r = rhs parseState 1 in
                 mk_ident ("let_" ^ compile_op' op r, r) }
 
+matchMaybeOp:
+  | MATCH {None}
+  | op=MATCH_OP {
+	   let r = rhs parseState 1 in
+           Some (mk_ident ("let_" ^ compile_op' op r, r))
+	 }
+
 lidentOrUnderscore:
   | id=IDENT { mk_ident(id, rhs parseState 1)}
   | UNDERSCORE { gen (rhs parseState 1) }
@@ -761,12 +769,11 @@ noSeqTerm:
          let branches = focusBranches (pbs) (rhs2 parseState 1 4) in
          mk_term (TryWith(e1, branches)) (rhs2 parseState 1 4) Expr
       }
-  | MATCH e=term ret_opt=option(match_returning) WITH pbs=left_flexible_list(BAR, pb=patternBranch {pb})
+  | op=matchMaybeOp e=term ret_opt=option(match_returning) WITH pbs=left_flexible_list(BAR, pb=patternBranch {pb})
       {
         let branches = focusBranches pbs (rhs2 parseState 1 5) in
-        mk_term (Match(e, ret_opt, branches)) (rhs2 parseState 1 5) Expr
+        mk_term (Match(e, op, ret_opt, branches)) (rhs2 parseState 1 5) Expr
       }
-
   | LET OPEN t=term IN e=term
       {
             match t.tm with
