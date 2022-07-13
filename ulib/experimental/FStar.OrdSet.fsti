@@ -266,7 +266,7 @@ val where (#a:eqtype) (#f:cmp a) (s:ordset a f) (c: condition a)
   : Pure (ordset a f) 
          (requires True)
          (ensures fun (z:ordset a f) -> 
-               (as_list z == FStar.List.Tot.Base.filter c s) /\
+               (as_list #a  z == FStar.List.Tot.Base.filter c (as_list s)) /\
                (forall x. mem x z = (mem x s && c x)) /\
                (if size z > 0 && size s > 0 then f (head s) (head z) else true))
 
