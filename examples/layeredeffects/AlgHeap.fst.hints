@@ -1,5 +1,5 @@
 [
-  "µÝä³I\u001f\u000e]b\fºÚâ¨µ½",
+  "^ÐŸ(Ì\u000fpÝ)–Ó”YÁ¶m",
   [
     [
       "AlgHeap.__proj__Other__item___0",
@@ -11,7 +11,7 @@
         "refinement_interpretation_Tm_refine_4d3a727e833e34e12b62cb99ae2cfa77"
       ],
       0,
-      "143c85fa533b984149fe6020ff30815b"
+      "71066de3d4469ea27502c8bf082feae4"
     ],
     [
       "AlgHeap.op_inp",
@@ -25,7 +25,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "20dd6d50814151fdbf8e231b4394d40e"
+      "9faf75b8fb6285c0b99611b8f15603d6"
     ],
     [
       "AlgHeap.op_out",
@@ -39,7 +39,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "66dd020fe231a36dadfcf6416236ed91"
+      "5991aa090a679c706d3f4df77d93e437"
     ],
     [
       "AlgHeap.__proj__Return__item___0",
@@ -51,7 +51,7 @@
         "refinement_interpretation_Tm_refine_ccabc473ef9a933255a20d0434d5d827"
       ],
       0,
-      "a185069ada99f2dd2d9aa30c6bed8f30"
+      "466359dd2009c37e2af8921260f17efb"
     ],
     [
       "AlgHeap.__proj__Op__item__op",
@@ -63,7 +63,7 @@
         "refinement_interpretation_Tm_refine_c6e795687555a75b5b8ef75d9d66d9f5"
       ],
       0,
-      "af070783fcf0923bfd409b878c9050ab"
+      "2a05f18321fd0e192af5a053ff71a8b7"
     ],
     [
       "AlgHeap.__proj__Op__item__i",
@@ -78,7 +78,7 @@
         "refinement_interpretation_Tm_refine_c6e795687555a75b5b8ef75d9d66d9f5"
       ],
       0,
-      "7a07f4a8a1d9a0899d6148cb3c5fbd03"
+      "03764cb23b45da99e83a23d37048be54"
     ],
     [
       "AlgHeap.__proj__Op__item__k",
@@ -93,7 +93,7 @@
         "refinement_interpretation_Tm_refine_c6e795687555a75b5b8ef75d9d66d9f5"
       ],
       0,
-      "82eb90b061d63020c2cce18165204584"
+      "64d23af1d107a92c6fff8f9e082e8673"
     ],
     [
       "AlgHeap.abides",
@@ -117,7 +117,7 @@
         "well_founded_ordering_on_codomain_AlgHeap.Op"
       ],
       0,
-      "d0d0ab2273e2bcbf861deb5b26813b4b"
+      "fcf235a288be93900165854c9ab127b9"
     ],
     [
       "AlgHeap.interp_at",
@@ -126,7 +126,7 @@
       1,
       [ "@query", "assumption_AlgHeap.op__uu___haseq" ],
       0,
-      "0a4ca7b74ecd07e4577eb3189b82f30b"
+      "e6b71b141d9cd8ff35d660ba85364572"
     ],
     [
       "AlgHeap.interp_at",
@@ -161,7 +161,7 @@
         "typing_FStar.List.Tot.Base.mem", "typing_FStar.List.Tot.Base.op_At"
       ],
       0,
-      "a24c8e6e9e4c5d3f1aa32911d2384183"
+      "af7e27890a66f8bcfc9d93757b4cdf51"
     ],
     [
       "AlgHeap.sublist",
@@ -170,7 +170,7 @@
       1,
       [ "@query", "assumption_AlgHeap.op__uu___haseq" ],
       0,
-      "4ae77ca5665374dfd7b82445edccebd4"
+      "2e427ed079544334fecbafd8aed0f504"
     ],
     [
       "AlgHeap.sublist_at",
@@ -197,7 +197,7 @@
         "projection_inverse_Prims.Nil_a", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "acac4f4e468124f76f334447e491c590"
+      "f9a576936f69c9e1f8914baa678e73bb"
     ],
     [
       "AlgHeap.sublist_at_self",
@@ -206,7 +206,7 @@
       1,
       [ "@query", "lemma_AlgHeap.sublist_at" ],
       0,
-      "266ac93c6e6c85365080257aa3abf445"
+      "48339491418d4a4cc402a8c7cae50e19"
     ],
     [
       "AlgHeap.abides_sublist_nopat",
@@ -239,7 +239,7 @@
         "well_founded_ordering_on_codomain_AlgHeap.Op"
       ],
       0,
-      "078e9d4ba95e60cf8a5ac408e0a22906"
+      "294f5bd0effd09dba9c8c2fae7cc9b0e"
     ],
     [
       "AlgHeap.abides_at_self",
@@ -261,7 +261,7 @@
         "typing_FStar.List.Tot.Base.op_At"
       ],
       0,
-      "b99dae95b8b34ffd33377f5536888e13"
+      "a6a19936888355246faea04d889fec3f"
     ],
     [
       "AlgHeap.abides_app",
@@ -277,7 +277,7 @@
         "typing_FStar.List.Tot.Base.op_At"
       ],
       0,
-      "46ce6cce31d4fd5cfc4e16bdd88dc2fd"
+      "e9727c634769943c0206c68b93bc9a1b"
     ],
     [
       "AlgHeap.fold_with",
@@ -286,7 +286,7 @@
       1,
       [ "@query", "assumption_AlgHeap.op__uu___haseq" ],
       0,
-      "ecbb77ab341db091c262fffbe9f535f0"
+      "10b31ddff78f2b2ee53b00678e57a04d"
     ],
     [
       "AlgHeap.fold_with",
@@ -295,7 +295,7 @@
       1,
       [ "@query", "assumption_AlgHeap.op__uu___haseq" ],
       0,
-      "ba299710768bda667ae3109837c87a0f"
+      "4820fbdbc74bf7a6a9b105478a8e6a25"
     ],
     [
       "AlgHeap.fold_with",
@@ -323,7 +323,7 @@
         "well_founded_ordering_on_codomain_AlgHeap.Op"
       ],
       0,
-      "16891127ae83b3cefd76dab5c3236f09"
+      "b604d59f10173d8698b68b820747c5c1"
     ],
     [
       "AlgHeap.handler_ty",
@@ -332,7 +332,7 @@
       1,
       [ "@query", "assumption_AlgHeap.op__uu___haseq" ],
       0,
-      "0ff06e316698a3ba6667f8dcbc3b2a72"
+      "cb043062d27608b78d9b26dbd16711e3"
     ],
     [
       "AlgHeap.return",
@@ -350,7 +350,7 @@
         "projection_inverse_AlgHeap.Return_a", "true_interp"
       ],
       0,
-      "61a68d235aec00bf387d997f0be06931"
+      "855175608e11ee1a7e2418a13b3506ad"
     ],
     [
       "AlgHeap.bind",
@@ -385,7 +385,7 @@
         "typing_FStar.List.Tot.Base.op_At"
       ],
       0,
-      "d66eb3ef1b9ef856987f6f9852eb573a"
+      "f48e09ae7db10b8d6384cacf420b762c"
     ],
     [
       "AlgHeap.subcomp",
@@ -400,7 +400,7 @@
         "refinement_interpretation_Tm_refine_b9088dc5f5b21f291d92b72cef2689ab"
       ],
       0,
-      "c1584ea0fff5a5c9e1670147acd6747d"
+      "5dc6aa38868e0ad411d856399ffb1a2b"
     ],
     [
       "AlgHeap._get",
@@ -444,7 +444,7 @@
         "typing_tok_AlgHeap.Return@tok", "unit_typing"
       ],
       0,
-      "afa4bbe356cedacfa0fdb3cfab08920a"
+      "eb0548399930f88c987333e1fc0a09e4"
     ],
     [
       "AlgHeap._put",
@@ -489,7 +489,7 @@
         "typing_tok_AlgHeap.Write@tok"
       ],
       0,
-      "73fa4ed55d4b5e88a1d1b0ada1cff5c5"
+      "9edd65c4922b69ec7f6808bf4afd31a6"
     ],
     [
       "AlgHeap.Alg",
@@ -498,7 +498,7 @@
       1,
       [ "@query", "lemma_AlgHeap.sublist_at" ],
       0,
-      "63c579819962698583a5e0eee1cf55b0"
+      "f81eb185fb1d3c5596154468e1fc043f"
     ],
     [
       "AlgHeap.Alg",
@@ -507,7 +507,7 @@
       1,
       [ "@query", "lemma_AlgHeap.sublist_at" ],
       0,
-      "57bbecf316a6334cf3122ca40f6643cf"
+      "14a037713aa2f8609c2f91225fb9ed91"
     ],
     [
       "AlgHeap.lift_pure_eff",
@@ -532,7 +532,7 @@
         "typing_Tm_abs_f6c224848b643b0d9c86eb84a322fe89"
       ],
       0,
-      "1e15f35f333f3308304ae4bc2a868a19"
+      "b8e7f848ba2af1997f32eedc103410bd"
     ],
     [
       "AlgHeap.raise",
@@ -568,7 +568,7 @@
         "typing_tok_AlgHeap.Raise@tok"
       ],
       0,
-      "a360e8d6f02ed9dcd0c5dee0405c2d7d"
+      "fc3d54c8ed219a50e3683222a533d582"
     ],
     [
       "AlgHeap.tbind",
@@ -592,7 +592,7 @@
         "typing_tok_AlgHeap.Write@tok"
       ],
       0,
-      "cca01ce7f3fc3ebb6ae904c798fe2350"
+      "fd2f90f1c91eaa11eb59944c8031cc31"
     ],
     [
       "AlgHeap.return_wp",
@@ -604,7 +604,7 @@
         "interpretation_Tm_abs_e9710c98a0190e37235109793e10b402"
       ],
       0,
-      "25dc885fab0e2969c8455f550c5d96aa"
+      "957d334c29628c472bad99a1697ec0b0"
     ],
     [
       "AlgHeap.bind_wp",
@@ -626,7 +626,7 @@
         "typing_Tm_abs_9b395c431ada1d563eb9320e26a68f45"
       ],
       0,
-      "2057d712dae9a9ad3237e3a6c16394ba"
+      "9725a23bb8527af969f241035baee5e5"
     ],
     [
       "AlgHeap.read_wp",
@@ -638,7 +638,7 @@
         "interpretation_Tm_abs_6523b6e656ba8c181e5fba70ec0bf70a"
       ],
       0,
-      "15aacd4735f7d64fc39a165b823f6f0e"
+      "c9509ecd347957bcd81b39351dd80382"
     ],
     [
       "AlgHeap.write_wp",
@@ -651,7 +651,7 @@
         "unit_typing"
       ],
       0,
-      "e106e645568eebc697c2f402f7b07bbd"
+      "e2cceb790e314389b4938a957e1a1355"
     ],
     [
       "AlgHeap.interp_as_wp",
@@ -699,7 +699,7 @@
         "well_founded_ordering_on_codomain_AlgHeap.Op"
       ],
       0,
-      "cc2fc582cac43fa4f2c9a62851061950"
+      "05094f14746cdf208309d092d8d620bf"
     ],
     [
       "AlgHeap.interp_rdwr_tree",
@@ -746,7 +746,7 @@
         "well_founded_ordering_on_codomain_AlgHeap.Op"
       ],
       0,
-      "78fdcad9ad1d844153c772c81d8bb43b"
+      "0c2f55820b765e6cf9a7d83350367eba"
     ],
     [
       "AlgHeap.interp_ret",
@@ -767,7 +767,7 @@
         "typing_tok_AlgHeap.Read@tok", "typing_tok_AlgHeap.Write@tok"
       ],
       0,
-      "ab66bc1a20c36d59afb7c5cef01d4563"
+      "67ac3b5306491cd85517c6732f079f7d"
     ],
     [
       "AlgHeap.interp_ret",
@@ -798,7 +798,7 @@
         "typing_tok_AlgHeap.Write@tok"
       ],
       0,
-      "8a59ab0b2753ad3cf4abf3c60b3a25ff"
+      "c44d03040eab475fa7a3780320843cc8"
     ],
     [
       "AlgHeap.bind_preserves_mon",
@@ -818,7 +818,7 @@
         "typing_Tm_abs_9b395c431ada1d563eb9320e26a68f45"
       ],
       0,
-      "11a46d5676df78be142398b25ea1124f"
+      "888d65da4a9d0ac6b2fe118cbcfb26cb"
     ],
     [
       "AlgHeap.interp_monotonic",
@@ -880,7 +880,7 @@
         "well_founded_ordering_on_codomain_AlgHeap.Op"
       ],
       0,
-      "34f1867c2a2bfed6dfdd6d17b89946a2"
+      "a826ceb8af304c981e80563994217b7a"
     ],
     [
       "AlgHeap.elim_str",
@@ -894,7 +894,7 @@
         "token_correspondence_AlgHeap.stronger"
       ],
       0,
-      "97f00d0e0e595b99614a77e929c6483e"
+      "e985bcb1a6510f3ed30c8d920d8ba319"
     ],
     [
       "AlgHeap.interp_morph",
@@ -983,7 +983,7 @@
         "well_founded_ordering_on_codomain_AlgHeap.Op"
       ],
       0,
-      "7e9ea85bca2effda813acab05bb284d0"
+      "4a7d7d1bb6489be8cf0cbf7d9af5f354"
     ],
     [
       "AlgHeap.interp_bind",
@@ -1016,7 +1016,7 @@
         "typing_Tm_abs_9b395c431ada1d563eb9320e26a68f45"
       ],
       0,
-      "7cc369041d931f90ec7bd17ec8fa693c"
+      "f1e44804bbc1dae25aad97ecc5d838fd"
     ],
     [
       "AlgHeap.return2",
@@ -1037,7 +1037,7 @@
         "typing_tok_AlgHeap.Read@tok", "typing_tok_AlgHeap.Write@tok"
       ],
       0,
-      "f27850009fe1943afcfcb28af858a8f6"
+      "a7aa77b20843551684db4b025928c189"
     ],
     [
       "AlgHeap.bind2",
@@ -1056,7 +1056,7 @@
         "token_correspondence_AlgHeap.stronger"
       ],
       0,
-      "431b1a00bf6c27f04ba1139564313a6f"
+      "5ab6a282cbc2037dcf977d7c0bfd1616"
     ],
     [
       "AlgHeap.subcomp2",
@@ -1071,7 +1071,7 @@
         "refinement_interpretation_Tm_refine_439a8540195cd93d9895894c3a0a9e7f"
       ],
       0,
-      "0a0e866a7af8f44b837e11fd44c3865c"
+      "7cd968d31fa41103f99f86c2d882a0a0"
     ],
     [
       "AlgHeap.AlgWP",
@@ -1084,7 +1084,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "9c4c0f635ba5d1b94f0c4be897a83730"
+      "443da70127371fb7d4b86598328d7fb3"
     ],
     [
       "AlgHeap.AlgWP",
@@ -1097,7 +1097,7 @@
         "refinement_interpretation_Tm_refine_de09779676242898794a0b057d5f5bb4"
       ],
       0,
-      "019d6ec2f9eec4e51321d6460b7eaf95"
+      "ff0097f0a168a437d2bf4d0fc198245b"
     ],
     [
       "AlgHeap.get2",
@@ -1151,7 +1151,7 @@
         "typing_tok_AlgHeap.Return@tok", "typing_tok_AlgHeap.Write@tok"
       ],
       0,
-      "572611a2271c8f61fba2ad930ad5406a"
+      "d1f248f2362ee541caffd79c0d3acee5"
     ],
     [
       "AlgHeap.put2",
@@ -1205,7 +1205,7 @@
         "typing_tok_AlgHeap.Write@tok", "unit_inversion", "unit_typing"
       ],
       0,
-      "9a61ef1417cd6854c91ada21e4a8f025"
+      "d04945430ee9f21c7ad8ec3745ebf1ac"
     ],
     [
       "AlgHeap.lift_pure_wp",
@@ -1224,7 +1224,7 @@
         "typing_Tm_abs_42dfe9471efcf3225ddc31fa2fb93c64"
       ],
       0,
-      "965a40b252c7332c7e68921efe31a868"
+      "fe3b01ecee5f6e4f02e18c7a2641a3a6"
     ],
     [
       "AlgHeap.lift_pure_algwp",
@@ -1275,7 +1275,7 @@
         "unit_typing"
       ],
       0,
-      "7e35f43dcb298071bbf7c1fb2da60f30"
+      "19d873cd303f86ae1dcd0eee1a825199"
     ],
     [
       "AlgHeap.sel",
@@ -1293,7 +1293,7 @@
         "typing_FStar.Map.sel"
       ],
       0,
-      "c24d8651ac5f0b96c22d60332493e69d"
+      "3288bc680e984430ed8f389475f64148"
     ],
     [
       "AlgHeap.upd",
@@ -1311,7 +1311,7 @@
         "typing_FStar.Map.upd", "unit_typing"
       ],
       0,
-      "8eed6d437334f6f9bf8aa7ccc15629d7"
+      "9381ba0454550f966f17b55d4a98038a"
     ],
     [
       "AlgHeap.AlgPP",
@@ -1324,7 +1324,7 @@
         "l_and-interp", "l_quant_interp_ec2c85f73a3f856d7655b988ad1da7f3"
       ],
       0,
-      "7abb26b7ba921d818b5eba201035c369"
+      "e50883d4e0435bf19e6233fa170ddd02"
     ],
     [
       "AlgHeap.addx",
@@ -1345,7 +1345,7 @@
         "typing_FStar.Map.upd", "unit_typing"
       ],
       0,
-      "1201b8364f4caea5b4ce44e9c797f958"
+      "17a893cd1f1b17f6037bb3223a96c409"
     ],
     [
       "AlgHeap.swap",
@@ -1375,7 +1375,7 @@
         "typing_FStar.Map.sel", "typing_FStar.Map.upd", "unit_typing"
       ],
       0,
-      "83b9639e538ca74338ef56a124ba31d9"
+      "0b5216544d8d6a212e08afa29f2a7fb7"
     ],
     [
       "AlgHeap.interp_sem",
@@ -1408,46 +1408,11 @@
         "typing_AlgHeap.interp_as_wp"
       ],
       0,
-      "a2af3d801860469e88e184da968b9b43"
+      "b37b5427bff3cb9c65fd599a35490592"
     ],
     [
       "AlgHeap.interp_sem",
       2,
-      2,
-      1,
-      [
-        "@MaxFuel_assumption", "@MaxIFuel_assumption",
-        "@fuel_correspondence_AlgHeap.interp_as_wp.fuel_instrumented",
-        "@query",
-        "AlgHeap_interpretation_Tm_arrow_caf9bf294d0fc3d5597785fe4b4fe582",
-        "Prims_interpretation_Tm_arrow_92458cff82f9ffee1f6e26a1c0c579f3",
-        "binder_x_3da4ab1180eff6365ae1ee8cde712c21_3",
-        "binder_x_bb355d926ca66f42963e88290f11c6ee_2",
-        "binder_x_fe28d8bcde588226b4e538b35321de05_1",
-        "data_elim_AlgHeap.Return",
-        "data_typing_intro_FStar.Pervasives.Native.Mktuple2@tok",
-        "equation_AlgHeap.rwtree", "equation_AlgHeap.st_monotonic",
-        "equation_AlgHeap.st_wp", "equation_AlgHeap.state",
-        "equation_AlgHeap.tree", "equation_Prims.l_True",
-        "equation_Prims.logical", "equation_Prims.pure_post",
-        "equation_Prims.pure_post_",
-        "equation_with_fuel_AlgHeap.interp_as_wp.fuel_instrumented",
-        "fuel_guarded_inversion_AlgHeap.tree0",
-        "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
-        "function_token_typing_AlgHeap.state",
-        "interpretation_Tm_abs_ff5ce1f4aa9e3fa0f1e3d7034eacdd77",
-        "refinement_interpretation_Tm_refine_0bc691cd0c65bf130c382d472bcbfff6",
-        "refinement_interpretation_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
-        "refinement_interpretation_Tm_refine_b9088dc5f5b21f291d92b72cef2689ab",
-        "token_correspondence_AlgHeap.interp_as_wp", "true_interp",
-        "typing_AlgHeap.interp_as_wp"
-      ],
-      0,
-      "4d0b67cf02b45da22f89af4a020e0e71"
-    ],
-    [
-      "AlgHeap.interp_sem",
-      3,
       2,
       1,
       [
@@ -1456,89 +1421,95 @@
         "@fuel_correspondence_AlgHeap.interp_as_wp.fuel_instrumented",
         "@fuel_irrelevance_AlgHeap.abides.fuel_instrumented",
         "@fuel_irrelevance_AlgHeap.interp_as_wp.fuel_instrumented", "@query",
+        "AlgHeap_interpretation_Tm_arrow_685a4c05835ff7b01e5f71108183509a",
+        "AlgHeap_interpretation_Tm_arrow_caf9bf294d0fc3d5597785fe4b4fe582",
         "AlgHeap_pre_typing_Tm_arrow_ed465d40b09309a052c750d0c2d1a254",
         "AlgHeap_pretyping_e213638723c2b3fd4e8fc5a5771db94b",
+        "Prims_interpretation_Tm_arrow_92458cff82f9ffee1f6e26a1c0c579f3",
         "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
         "binder_x_3da4ab1180eff6365ae1ee8cde712c21_3",
         "binder_x_bb355d926ca66f42963e88290f11c6ee_2",
         "binder_x_fe28d8bcde588226b4e538b35321de05_1",
+        "constructor_distinct_AlgHeap.Op",
         "constructor_distinct_AlgHeap.Return",
-        "constructor_distinct_Prims.unit",
+        "constructor_distinct_Prims.unit", "data_elim_AlgHeap.Return",
         "data_typing_intro_AlgHeap.Write@tok",
+        "data_typing_intro_FStar.Pervasives.Native.Mktuple2@tok",
         "data_typing_intro_Prims.Cons@tok",
         "data_typing_intro_Prims.Nil@tok", "disc_equation_AlgHeap.Op",
         "disc_equation_AlgHeap.Read", "disc_equation_AlgHeap.Return",
         "disc_equation_AlgHeap.Write", "equality_tok_AlgHeap.Read@tok",
         "equality_tok_AlgHeap.Write@tok", "equation_AlgHeap.op_out",
         "equation_AlgHeap.ops", "equation_AlgHeap.rwtree",
-        "equation_AlgHeap.st_wp", "equation_AlgHeap.st_wp0",
-        "equation_AlgHeap.tree",
+        "equation_AlgHeap.st_monotonic", "equation_AlgHeap.st_wp",
+        "equation_AlgHeap.st_wp0", "equation_AlgHeap.state",
+        "equation_AlgHeap.tree", "equation_Prims.l_True",
+        "equation_Prims.logical", "equation_Prims.pure_post",
+        "equation_Prims.pure_post_",
         "equation_with_fuel_AlgHeap.abides.fuel_instrumented",
         "equation_with_fuel_AlgHeap.interp_as_wp.fuel_instrumented",
         "fuel_guarded_inversion_AlgHeap.tree0",
         "fuel_token_correspondence_AlgHeap.interp_as_wp.fuel_instrumented_token",
+        "function_token_typing_AlgHeap.interp_as_wp",
+        "function_token_typing_AlgHeap.state",
         "interpretation_Tm_abs_43f3d1d527856fe748879292772f2ef0",
         "interpretation_Tm_abs_d4c6499f7540e9fdde85852975e67fbb",
         "interpretation_Tm_abs_ff5ce1f4aa9e3fa0f1e3d7034eacdd77",
         "kinding_AlgHeap.op@tok", "l_and-interp",
         "l_quant_interp_a54c91e92db6ceaa94cb23ae6a87fe97",
         "proj_equation_AlgHeap.Op_i", "proj_equation_AlgHeap.Op_k",
-        "proj_equation_AlgHeap.Op_op",
+        "proj_equation_AlgHeap.Op_op", "projection_inverse_AlgHeap.Op_a",
+        "projection_inverse_AlgHeap.Op_i", "projection_inverse_AlgHeap.Op_k",
+        "projection_inverse_AlgHeap.Op_op",
         "projection_inverse_AlgHeap.Return__0",
         "projection_inverse_AlgHeap.Return_a",
         "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_Tm_refine_0bc691cd0c65bf130c382d472bcbfff6",
+        "refinement_interpretation_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
         "refinement_interpretation_Tm_refine_b9088dc5f5b21f291d92b72cef2689ab",
         "token_correspondence_AlgHeap.__proj__Op__item__k",
-        "token_correspondence_AlgHeap.interp_as_wp",
-        "typing_AlgHeap.interp_as_wp", "typing_tok_AlgHeap.Read@tok",
-        "typing_tok_AlgHeap.Write@tok", "unit_typing",
-        "well_founded_ordering_on_codomain_AlgHeap.Op"
+        "token_correspondence_AlgHeap.interp_as_wp", "true_interp",
+        "typing_tok_AlgHeap.Read@tok", "typing_tok_AlgHeap.Write@tok",
+        "unit_typing", "well_founded_ordering_on_codomain_AlgHeap.Op"
       ],
       0,
-      "70fc88326500d1287f8906e03f4fcbad"
+      "4f7c7e21a6a29b54f040a6d6a13a64e7"
     ],
     [
-      "AlgHeap.soundness",
+      "AlgHeap.extract",
       1,
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query",
-        "AlgHeap_interpretation_Tm_arrow_caf9bf294d0fc3d5597785fe4b4fe582",
-        "Prims_interpretation_Tm_arrow_92458cff82f9ffee1f6e26a1c0c579f3",
-        "data_typing_intro_FStar.Pervasives.Native.Mktuple2@tok",
-        "equation_AlgHeap.st_monotonic", "equation_AlgHeap.st_wp",
-        "equation_AlgHeap.state", "equation_Prims.l_True",
-        "equation_Prims.logical", "equation_Prims.pure_post",
-        "equation_Prims.pure_post_",
-        "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
-        "function_token_typing_AlgHeap.state",
-        "refinement_interpretation_Tm_refine_0bc691cd0c65bf130c382d472bcbfff6",
-        "refinement_interpretation_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
-        "true_interp"
+        "@MaxIFuel_assumption", "@query", "equation_AlgHeap.repr",
+        "refinement_interpretation_Tm_refine_439a8540195cd93d9895894c3a0a9e7f"
       ],
       0,
-      "be60785813126eea01fe0b98fb0b38e5"
+      "06358fddf8d528c33c5a33109dc9cb04"
     ],
     [
       "AlgHeap.soundness",
-      2,
+      1,
       2,
       1,
       [
         "@MaxIFuel_assumption", "@query",
         "AlgHeap_interpretation_Tm_arrow_63aa87f10f855959ce34526a9e8d45a4",
+        "AlgHeap_interpretation_Tm_arrow_caf9bf294d0fc3d5597785fe4b4fe582",
         "Prims_interpretation_Tm_arrow_92458cff82f9ffee1f6e26a1c0c579f3",
-        "equation_AlgHeap.repr", "equation_AlgHeap.state",
-        "equation_AlgHeap.stronger", "equation_Prims.l_True",
+        "data_typing_intro_FStar.Pervasives.Native.Mktuple2@tok",
+        "equation_AlgHeap.st_monotonic", "equation_AlgHeap.st_wp",
+        "equation_AlgHeap.state", "equation_AlgHeap.stronger",
+        "equation_Prims.l_True", "equation_Prims.logical",
         "equation_Prims.pure_post", "equation_Prims.pure_post_",
-        "refinement_interpretation_Tm_refine_439a8540195cd93d9895894c3a0a9e7f",
+        "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
+        "function_token_typing_AlgHeap.state",
+        "refinement_interpretation_Tm_refine_0bc691cd0c65bf130c382d472bcbfff6",
         "refinement_interpretation_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
         "token_correspondence_AlgHeap.interp_as_wp", "true_interp"
       ],
       0,
-      "3b3c00b6f2817a614d399f93c48b7187"
+      "9e2a31c0ff405963ad9625ca14fdcfde"
     ],
     [
       "AlgHeap.soundnessPP",
@@ -1564,7 +1535,7 @@
         "typing_Tm_abs_c10e8dded117afcf8f82a2d7484cc680"
       ],
       0,
-      "de233f41e8d8fb4b2a4e40907bbb0a16"
+      "1e4b0d2d71e92808dc24d5aef23bdd23"
     ]
   ]
 ]
