@@ -14,11 +14,12 @@
    limitations under the License.
 *)
 module FStar.Syntax.Hash
-open FStar.ST
-open FStar.All
-open FStar.Util
-open FStar.Const
+open FStar
+open FStar.Compiler
+open FStar.Compiler.Effect
+open FStar.Compiler.Util
 open FStar.Syntax.Syntax
+open FStar.Const
 module SS = FStar.Syntax.Subst
 module UU = FStar.Syntax.Unionfind
 
@@ -50,7 +51,6 @@ let hash_list_lit (h:'a -> H.hash_code) (ts:list 'a) : H.hash_code =
 let mix_list_lit (l:list H.hash_code) : H.hash_code =
   Pervasives.norm [zeta_full; delta_only [`%mix_list]; iota] (mix_list l)
 let hash_byte (b:FStar.BaseTypes.byte) : H.hash_code = H.of_int (UInt8.v b)
-
 let rec hash_term (t:term)
   : H.hash_code
   = memoize t hash_term'
@@ -76,7 +76,11 @@ and hash_term' (t:term)
     | Tm_arrow(bs, c) -> H.mix (H.of_int 23) (hash_comp c)
     | Tm_refine(b, t) -> H.mix (H.of_int 29) (H.mix (hash_bv b) (hash_term t))
     | Tm_app (t, args) -> H.mix (H.of_int 31) (H.mix (hash_term t) (hash_list hash_arg args))
-    | Tm_match (t, branches) -> H.mix (H.of_int 37) (H.mix (hash_term t) (hash_list hash_branch branches))
+    | Tm_match (t, asc_opt, branches, rcopt) ->
+      H.mix (H.of_int 37) 
+            (H.mix (hash_option hash_match_returns asc_opt)
+                   (H.mix (H.mix (hash_term t) (hash_list hash_branch branches))
+                          (hash_option hash_rc rcopt)))
     | Tm_ascribed(t, a, lopt) -> H.mix (H.of_int 43) (H.mix (hash_term t) (H.mix (hash_ascription a) (hash_option hash_lid lopt)))
     | Tm_let((false, [lb]), t) -> H.mix (H.of_int 47) (H.mix (hash_lb lb) (hash_term t))
     | Tm_let((_, lbs), t) -> H.mix (H.of_int 51) (H.mix (hash_list hash_lb lbs) (hash_term t))
@@ -97,6 +101,10 @@ and hash_lb lb =
       hash_term lb.lbdef;
       hash_list hash_term lb.lbattrs]
 
+and hash_match_returns (b, asc) = 
+  H.mix (hash_binder b)
+        (hash_ascription asc)
+        
 and hash_branch b =
   let p, topt, t = b in
   mix_list_lit
@@ -145,7 +153,7 @@ and hash_fv fv = H.of_string (Ident.string_of_lid fv.fv_name.v)
 and hash_binder (b:binder) =
   mix_list_lit
     [hash_bv b.binder_bv;
-     hash_option hash_arg_qualifier b.binder_qual;
+     hash_option hash_bqual b.binder_qual;
      hash_list hash_term b.binder_attrs]
 
 and hash_universe =
@@ -162,7 +170,11 @@ and hash_universe =
 and hash_arg (t, aq) =
   H.mix (hash_term t) (hash_option hash_arg_qualifier aq)
 
-and hash_arg_qualifier =
+and hash_arg_qualifier aq = 
+  H.mix (hash_bool aq.aqual_implicit)
+        (hash_list hash_term aq.aqual_attributes)
+  
+and hash_bqual =
   //Primes: 81--100
   function
   | Implicit true -> H.of_int 419
@@ -170,11 +182,11 @@ and hash_arg_qualifier =
   | Meta t -> H.mix (H.of_int 431) (hash_term t)
   | Equality -> H.of_int 433
 
-and hash_uvar (u, _) = H.of_int (FStar.Syntax.Unionfind.uvar_id u.ctx_uvar_head)
+and hash_uvar (u, _) = H.of_int (UU.uvar_id u.ctx_uvar_head)
 
-and hash_universe_uvar u = H.of_int (FStar.Syntax.Unionfind.univ_uvar_id u)
+and hash_universe_uvar u = H.of_int (UU.univ_uvar_id u)
 
-and hash_ascription (a, to) =
+and hash_ascription (a, to, b) =
   H.mix
     (match a with
     | Inl t -> hash_term t
@@ -251,7 +263,8 @@ and hash_flag =
   | TRIVIAL_POSTCONDITION -> H.of_int 991
   | SHOULD_NOT_INLINE -> H.of_int 997
   | CPS -> H.of_int 1009
-  | DECREASES t -> H.mix (H.of_int 1013) (hash_term t)
+  | DECREASES (Decreases_lex ts) -> H.mix (H.of_int 1013) (hash_list hash_term ts)
+  | DECREASES (Decreases_wf (t0, t1)) -> H.mix (H.of_int 2341) (hash_list hash_term [t0;t1])
 
 and hash_meta m =
   match m with
@@ -344,9 +357,11 @@ let rec equal_term (t1 t2:term)
     | Tm_app(t1, as1), Tm_app(t2, as2) ->
       equal_term t1 t2 &&
       equal_list equal_arg as1 as2
-    | Tm_match(t1, bs1), Tm_match(t2, bs2) ->
+    | Tm_match(t1, asc_opt1, bs1, ropt1), Tm_match(t2, asc_opt2, bs2, ropt2) ->
       equal_term t1 t2 &&
-      equal_list equal_branch bs1 bs2
+      equal_opt equal_match_returns asc_opt1 asc_opt2 &&
+      equal_list equal_branch bs1 bs2 &&
+      equal_opt equal_rc ropt1 ropt2
     | Tm_ascribed(t1, a1, l1), Tm_ascribed(t2, a2, l2) ->
       equal_term t1 t2 &&
       equal_ascription a1 a2 &&
@@ -386,18 +401,23 @@ and equal_comp c1 c2 =
 and equal_binder b1 b2 =
   if physical_equality b1 b2 then true else
   equal_bv b1.binder_bv b2.binder_bv &&
-  equal_opt equal_arg_qualifier b1.binder_qual b2.binder_qual &&
+  equal_bqual b1.binder_qual b2.binder_qual &&
   equal_list equal_term b1.binder_attrs b2.binder_attrs
 
+and equal_match_returns (b1, asc1) (b2, asc2) =
+  equal_binder b1 b2 &&
+  equal_ascription asc1 asc2
+  
 and equal_ascription x1 x2 =
   if physical_equality x1 x2 then true else
-  let a1, t1 = x1 in
-  let a2, t2 = x2 in
+  let a1, t1, b1 = x1 in
+  let a2, t2, b2 = x2 in
   (match a1, a2 with
    | Inl t1, Inl t2 -> equal_term t1 t2
    | Inr c1, Inr c2 -> equal_comp c1 c2
    | _ -> false) &&
-  equal_opt equal_term t1 t2
+  equal_opt equal_term t1 t2 &&
+  b1 = b2
 
 and equal_letbinding l1 l2 =
   if physical_equality l1 l2 then true else
@@ -409,7 +429,7 @@ and equal_letbinding l1 l2 =
   equal_list equal_term l1.lbattrs l2.lbattrs
 
 and equal_uvar (u1, (s1, _)) (u2, (s2, _)) =
-  Unionfind.equiv u1.ctx_uvar_head u2.ctx_uvar_head &&
+  UU.equiv u1.ctx_uvar_head u2.ctx_uvar_head &&
   equal_list (equal_list equal_subst_elt) s1 s2
 
 and equal_bv b1 b2 =
@@ -429,7 +449,7 @@ and equal_universe u1 u2 =
   | U_max us1, U_max us2 -> equal_list equal_universe us1 us2
   | U_bvar i1, U_bvar i2 -> i1 = i2
   | U_name x1, U_name x2 -> Ident.ident_equals x1 x2
-  | U_unif u1, U_unif u2 -> Unionfind.univ_equiv u1 u2
+  | U_unif u1, U_unif u2 -> UU.univ_equiv u1 u2
   | U_unknown, U_unknown -> true
   | _ -> false
 
@@ -459,6 +479,16 @@ and equal_arg arg1 arg2 =
   equal_term t1 t2 &&
   equal_opt equal_arg_qualifier a1 a2
 
+and equal_bqual b1 b2 = 
+  equal_opt equal_binder_qualifier b1 b2
+
+and equal_binder_qualifier b1 b2 = 
+  match b1, b2 with
+  | Implicit b1, Implicit b2 -> b1 = b2
+  | Equality, Equality -> true
+  | Meta t1, Meta t2 -> equal_term t1 t2
+  | _ -> false
+  
 and equal_branch (p1, w1, t1) (p2, w2, t2) =
   equal_pat p1 p2 &&
   equal_opt equal_term w1 w2 &&
@@ -514,13 +544,22 @@ and equal_rc r1 r2 =
 and equal_flag f1 f2 =
   match f1, f2 with
   | DECREASES t1, DECREASES t2 ->
-    equal_term t1 t2
+    equal_decreases_order t1 t2
+
   | _ -> f1 = f2
 
+and equal_decreases_order d1 d2 = 
+  match d1, d2 with
+  | Decreases_lex ts1, Decreases_lex ts2 ->
+    equal_list equal_term ts1 ts2
+
+  | Decreases_wf (t1, t1'), Decreases_wf (t2, t2') ->
+    equal_term t1 t2 &&
+    equal_term t1' t2'
+    
 and equal_arg_qualifier a1 a2 =
-  match a1, a2 with
-  | Meta t1, Meta t2 -> equal_term t1 t2
-  | _ -> a1=a2
+  a1.aqual_implicit = a2.aqual_implicit &&
+  equal_list equal_term a1.aqual_attributes a2.aqual_attributes
 
 and equal_lbname l1 l2 =
   match l1, l2 with
