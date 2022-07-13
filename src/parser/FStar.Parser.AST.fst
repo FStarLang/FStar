@@ -516,6 +516,59 @@ let compile_op arity s r =
 let compile_op' s r =
   compile_op (-1) s r
 
+let string_to_op s =
+  let name_of_op = function
+    | "Amp" ->  Some ("&", None)
+    | "At" -> Some ("@", None)
+    | "Plus" -> Some ("+", None)
+    | "Minus" -> Some ("-", None)
+    | "Subtraction" -> Some ("-", Some 2)
+    | "Tilde" -> Some ("~", None)
+    | "Slash" -> Some ("/", None)
+    | "Backslash" -> Some ("\\", None)
+    | "Less" -> Some ("<", None)
+    | "Equals" -> Some ("=", None)
+    | "Greater" -> Some (">", None)
+    | "Underscore" -> Some ("_", None)
+    | "Bar" -> Some ("|", None)
+    | "Bang" -> Some ("!", None)
+    | "Hat" -> Some ("^", None)
+    | "Percent" -> Some ("%", None)
+    | "Star" -> Some ("*", None)
+    | "Question" -> Some ("?", None)
+    | "Colon" -> Some (":", None)
+    | "Dollar" -> Some ("$", None)
+    | "Dot" -> Some (".", None)
+    | _ -> None
+  in
+  match s with
+  | "op_String_Assignment" -> Some (".[]<-", None)
+  | "op_Array_Assignment" -> Some (".()<-", None)
+  | "op_Brack_Lens_Assignment" -> Some (".[||]<-", None)
+  | "op_Lens_Assignment" -> Some (".(||)<-", None)
+  | "op_String_Access" -> Some (".[]", None)
+  | "op_Array_Access" -> Some (".()", None)
+  | "op_Brack_Lens_Access" -> Some (".[||]", None)
+  | "op_Lens_Access" -> Some (".(||)", None)
+  | _ ->
+    if starts_with s "op_"
+    then let s = split (substring_from s (String.length "op_")) "_" in
+         match s with
+         | [op] -> name_of_op op
+         | _ ->
+           let maybeop =
+             List.fold_left (fun acc x -> match acc with
+                                          | None -> None
+                                          | Some acc ->
+                                              match x with
+                                              | Some (op, _) -> Some (acc ^ op)
+                                              | None -> None)
+                            (Some "")
+                            (List.map name_of_op s)
+           in
+           map_opt maybeop (fun o -> (o, None))
+    else None
+
 //////////////////////////////////////////////////////////////////////////////////////////////
 // Printing ASTs, mostly for debugging
 //////////////////////////////////////////////////////////////////////////////////////////////
