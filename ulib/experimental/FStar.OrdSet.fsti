@@ -180,8 +180,9 @@ val fold (#a:eqtype) (#acc:Type) (#f:cmp a) (g:acc -> a -> acc) (init:acc) (s:or
 
 val map (#a #b:eqtype) (#fa:cmp a) (#fb:cmp b) (g:a -> b) (sa:ordset a fa)
   : Pure (ordset b fb)
-    (requires (forall x y. x `fa` y ==> g x `fb` g y))
-    (ensures (fun sb -> (size sb <= size sa) /\                   
+    (requires (forall x y. (x `fa` y ==> g x `fb` g y) /\ (x = y <==> g x = g y)))
+    (ensures (fun sb -> (size sb <= size sa) /\  
+                     (as_list sb == FStar.List.Tot.map g (as_list sa)) /\
                      (let sa = as_list sa in
                       let sb = as_list sb in
                       Cons? sb ==> Cons? sa /\ Cons?.hd sb == g (Cons?.hd sa))))
@@ -265,6 +266,7 @@ val where (#a:eqtype) (#f:cmp a) (s:ordset a f) (c: condition a)
   : Pure (ordset a f) 
          (requires True)
          (ensures fun (z:ordset a f) -> 
+               (as_list z == FStar.List.Tot.Base.filter c s) /\
                (forall x. mem x z = (mem x s && c x)) /\
                (if size z > 0 && size s > 0 then f (head s) (head z) else true))
 

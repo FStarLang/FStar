@@ -76,8 +76,12 @@ let liat_eq #a #f (s:ordset a f {s<>empty})
     (fun p -> if p<>[] then liat_direct p = liat_lib p else true) s
 
 let liat #a #f s = liat_eq s; liat_lib s
-
-let unsnoc #a #f s = liat s, last s
+ 
+let unsnoc #a #f s = 
+  liat_eq s;
+  last_eq s;
+  let l = List.Tot.Base.unsnoc s in
+  (fst l, snd l)
 
 let as_list (#a:eqtype) (#f:cmp a) (s:ordset a f) : Tot (l:list a{sorted f l}) = s
 
@@ -429,7 +433,7 @@ let fold #a #acc #f g init s = List.Tot.fold_left g init s
 private
 let rec map_internal (#a #b:eqtype) (#fa:cmp a) (#fb:cmp b) (g:a -> b) (sa:ordset a fa)
   : Pure (ordset b fb)
-    (requires (forall x y. x `fa` y ==> g x `fb` g y))
+    (requires (forall x y. (x `fa` y ==> g x `fb` g y) /\ (x = y <==> g x = g y)))
     (ensures (fun sb -> Cons? sb ==> Cons? sa /\ Cons?.hd sb == g (Cons?.hd sa)))
 = match sa with
   | [] -> []
@@ -441,12 +445,20 @@ let rec map_internal (#a #b:eqtype) (#fa:cmp a) (#fb:cmp b) (g:a -> b) (sa:ordse
     else ys
 
 let rec map_size (#a #b:eqtype) (#fa:cmp a) (#fb: cmp b) (g: a->b) (sa:ordset a fa)
-  : Lemma (requires (forall x y. x `fa` y ==> g x `fb` g y))
+  : Lemma (requires (forall x y. (x `fa` y ==> g x `fb` g y) /\ (x = y <==> g x = g y)))
           (ensures size (map_internal #a #b #fa #fb g sa) <= size sa) 
   = if size sa > 0 then map_size #a #b #fa #fb g (tail sa)
 
+let rec map_as_list (#a #b:eqtype) (#fa:cmp a) (#fb: cmp b) (g: a->b) (sa:ordset a fa)
+  : Lemma (requires (forall x y. (x `fa` y ==> g x `fb` g y) /\ (x = y <==> g x = g y)))
+          (ensures as_list (map_internal #a #b #fa #fb g sa) == FStar.List.Tot.map g (as_list sa)) = 
+  match sa with
+  | [] -> ()
+  | h::(t:ordset a fa) -> map_as_list #a #b #fa #fb g t 
+
 let map #a #b #fa #fb g sa = 
   map_size #a #b #fa #fb g sa;
+  map_as_list #a #b #fa #fb g sa;
   map_internal #a #b #fa #fb g sa
 
 let lemma_strict_subset_size #a #f s1 s2 = 
