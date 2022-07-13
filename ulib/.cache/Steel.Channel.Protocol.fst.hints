@@ -602,7 +602,7 @@
         "equation_Steel.Channel.Protocol.next"
       ],
       0,
-      "b9b959eee34325c270f1814e4f9b67e9"
+      "e27f196ba6e9491f3fdd144e6aab9058"
     ],
     [
       "Steel.Channel.Protocol.extend_partial_trace",
@@ -632,7 +632,7 @@
         "typing_Steel.Channel.Protocol.next"
       ],
       0,
-      "1ee05f67ff1107a78141fb51c3b4f9c8"
+      "e88d66920a0165c9cde74d6fdd8307a2"
     ],
     [
       "Steel.Channel.Protocol.tag_of",

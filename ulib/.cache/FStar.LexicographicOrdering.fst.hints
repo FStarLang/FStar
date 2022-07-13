@@ -140,7 +140,7 @@
         "typing_FStar.ReflexiveTransitiveClosure.closure"
       ],
       0,
-      "bb7017c9139d67cfb90d1e25135131a4"
+      "fb022a5e3ba9012922cd858f628ac064"
     ],
     [
       "FStar.LexicographicOrdering.lex_t_wf_aux",
@@ -181,7 +181,7 @@
         "well_founded_ordering_on_codomain_FStar.WellFounded.AccIntro"
       ],
       0,
-      "51261dec492799386f22762b4e8f5658"
+      "65b9910bf7b6630e7feeda366cafea1f"
     ],
     [
       "FStar.LexicographicOrdering.lex_t_wf",
@@ -229,7 +229,7 @@
       1,
       [ "@query" ],
       0,
-      "2f4a80322172cf000be5b36148612868"
+      "01f8b9063c4deaf18e7c0f676be69938"
     ],
     [
       "FStar.LexicographicOrdering.lex",
@@ -257,7 +257,7 @@
         "well_founded_ordering_on_codomain_FStar.WellFounded.AccIntro"
       ],
       0,
-      "d2546519db5b3d243a0c4cbb9b1ff38a"
+      "be81b010c4f18cb7d0f2fcc0795f7c3f"
     ],
     [
       "FStar.LexicographicOrdering.__proj__Left_sym__item__x1",
