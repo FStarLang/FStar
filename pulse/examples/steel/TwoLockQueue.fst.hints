@@ -21,7 +21,7 @@
         "typing_tok_Prims.T@tok"
       ],
       0,
-      "b8de62cea9d0ed4b2b3dc63091a5cae4"
+      "7c259dc375680ef6f9bf7bf2b6c29331"
     ],
     [
       "TwoLockQueue.rewrite",
@@ -41,7 +41,7 @@
         "typing_Steel.Effect.Common.hp_of"
       ],
       0,
-      "d925c88c76219ca619e5c2f1052a8e2e"
+      "38f5023dace3ffaa6d24e92086fc8e1b"
     ],
     [
       "TwoLockQueue.elim_pure",
@@ -61,16 +61,7 @@
         "true_interp", "typing_tok_Prims.T@tok"
       ],
       0,
-      "c422ac388a9268ef46dc4da32416f987"
-    ],
-    [
-      "TwoLockQueue.open_exists",
-      1,
-      2,
-      1,
-      [ "@query", "equation_Steel.Effect.Common.true_p", "true_interp" ],
-      0,
-      "8791a88cc25d881ae29a2d04dbd32c39"
+      "0c4130d04e0c5b652117bc1cd0562df0"
     ],
     [
       "TwoLockQueue.intro_lock_inv",
@@ -84,7 +75,7 @@
         "projection_inverse_Steel.Effect.Common.VUnit__0"
       ],
       0,
-      "877e98b08e6b923dcaa857fed7b11226"
+      "7e0e9a349e22a7daa544ad5e63c4a485"
     ],
     [
       "TwoLockQueue.intro_lock_inv",
@@ -93,16 +84,7 @@
       1,
       [ "@query", "equation_TwoLockQueue.lock_inv" ],
       0,
-      "1115b1c8b2e59fb568aab7747a5a417a"
-    ],
-    [
-      "TwoLockQueue.pack_queue_invariant",
-      1,
-      2,
-      1,
-      [ "@query", "equation_Steel.Effect.Common.true_p", "true_interp" ],
-      0,
-      "90f58a944c45c97d53365c172c2787fb"
+      "95fb2d44bed6e3c0e37c353a8b398a6f"
     ],
     [
       "TwoLockQueue.new_queue",
@@ -111,7 +93,7 @@
       1,
       [ "@query", "equation_Steel.Effect.Common.true_p", "true_interp" ],
       0,
-      "f2ceddb41cc9427e44f3794aa99c8fe1"
+      "4cc169852a2025b93210be418035c690"
     ],
     [
       "TwoLockQueue.enqueue",
@@ -160,7 +142,7 @@
         "typing_TwoLockQueue.queue_invariant"
       ],
       0,
-      "cc3e7e6a7141c64db768f368f8bd4901"
+      "2c874008b278785d5e8098e31ec68e11"
     ],
     [
       "TwoLockQueue.maybe_ghost_pts_to",
@@ -171,7 +153,7 @@
         "@query", "lemma_FStar.Pervasives.invertOption", "typing_Queue.Def.t"
       ],
       0,
-      "eae5dcee4fff6ec493bf60bfe0faf84a"
+      "2f7df79c1b364ddf10b61b116b8b8cb5"
     ],
     [
       "TwoLockQueue.dequeue_core",
@@ -235,7 +217,7 @@
         "typing_TwoLockQueue.maybe_ghost_pts_to"
       ],
       0,
-      "05dc78c610e589722b27df6753e30fa8"
+      "7b77443de50bb38383443c7ffd5844b5"
     ],
     [
       "TwoLockQueue.dequeue",
@@ -314,7 +296,7 @@
         "typing_TwoLockQueue.queue_invariant"
       ],
       0,
-      "381e0a0d55620b9f7d3ecbd506692133"
+      "058286375635b8050b71ba5c7a335b5a"
     ]
   ]
 ]

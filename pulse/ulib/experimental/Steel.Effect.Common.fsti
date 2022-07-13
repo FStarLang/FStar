@@ -41,6 +41,8 @@ irreducible let ite_attr : unit = ()
 unfold
 let true_p : prop = True
 
+module T = FStar.Tactics
+
 let join_preserves_interp (hp:slprop) (m0:hmem hp) (m1:mem{disjoint m0 m1})
 : Lemma
   (interp hp (join m0 m1))
@@ -462,7 +464,7 @@ let frame_equalities
 /// More lemmas about the abstract can_be_split predicates, to be used as
 /// rewriting rules in the tactic below
 val can_be_split_dep_refl (p:vprop)
-: Lemma (can_be_split_dep True p p)
+: Lemma (can_be_split_dep true_p p p)
 
 val equiv_can_be_split (p1 p2:vprop) : Lemma
   (requires p1 `equiv` p2)
@@ -1737,6 +1739,7 @@ let close_equality_typ (t:term) : Tac unit =
 
 /// The following three lemmas are helpers to manipulate the goal in canon_l_r
 
+[@@ no_subtyping]
 let inst_bv (#a:Type) (#p:a -> Type0) (#q:Type0) (x:a) (_:squash (p x ==> q))
   : Lemma ((forall (x:a). p x) ==> q) = ()
 
@@ -1750,6 +1753,10 @@ let and_true (p: Type0) : Lemma (requires (p /\ (p ==> True))) (ensures p) = ()
 
 let solve_implies_true (p: Type0) : Lemma (p ==> True) = ()
 
+// This exception is raised for failures that should not be considered
+// hard but should allow postponing the goal instead
+exception Postpone of string
+
 let rec unify_pr_with_true (pr: term) : Tac unit =
   let hd, tl = collect_app pr in
   if hd `term_eq` (`(/\)) || hd `term_eq` (`prop_and)
@@ -1761,7 +1768,7 @@ let rec unify_pr_with_true (pr: term) : Tac unit =
     | _ -> fail "unify_pr_with_true: ill-formed /\\"
   else
     match inspect hd with
-    | Tv_Uvar _ _ -> 
+    | Tv_Uvar _ _ ->
       if unify pr (`true_p)
       then ()
       else begin
@@ -1770,7 +1777,9 @@ let rec unify_pr_with_true (pr: term) : Tac unit =
     | _ ->
       if List.Tot.length (free_uvars pr) = 0
       then ()
-      else fail "unify_pr_with_true: some uvars are still there"
+      else
+        // postpone the goal instead of failing hard, to allow for other goals to solve those uvars
+        raise (Postpone "unify_pr_with_true: some uvars are still there")
 
 let elim_and_l_squash (#a #b: Type0) (#goal: Type0) (f: (a -> Tot (squash goal))) (h: (a /\ b)) : Tot (squash goal) =
   let f' (x: squash a) : Tot (squash goal) =
@@ -1804,7 +1813,8 @@ let rec set_abduction_variable_term (pr: term) : Tac term =
         let arg = set_abduction_variable_term pr_r in
         mk_app (`elim_and_r_squash) [arg, Q_Explicit]
       else
-        fail "set_abduction_variable_term: there are still uvars on both sides of l_and"
+        // postpone the goal instead of failing hard, to allow for other goals to solve those uvars
+        raise (Postpone "set_abduction_variable_term: there are still uvars on both sides of l_and")
     | _ -> fail "set_abduction_variable: ill-formed /\\"
   else
     match hd with
@@ -2022,7 +2032,9 @@ let canon_l_r (use_smt:bool)
         else apply_lemma (`(CE.EQ?.reflexivity (`#eq)));
         unify_pr_with_true pr; // MUST be done AFTER identity_left/reflexivity, which can unify other uvars
         apply_lemma (`solve_implies_true)
-      with _ -> fail "Cannot unify pr with true"
+      with
+      | TacticFailure msg -> fail ("Cannot unify pr with true: " ^ msg)
+      | e -> raise e
     )
   | l ->
     if emp_frame then (
@@ -2128,7 +2140,7 @@ val solve_can_be_split_for (#a: Type u#b) : a -> Tot unit
 val solve_can_be_split_lookup : unit // FIXME: src/reflection/FStar.Reflection.Basic.lookup_attr only supports fvar attributes, so we cannot directly look up for (solve_can_be_split_for blabla), we need a nullary attribute to use with lookup_attr
 
 let rec dismiss_all_but_last' (l: list goal) : Tac unit =
-  match l with 
+  match l with
   | [] | [_] -> set_goals l
   | _ :: q -> dismiss_all_but_last' q
 
@@ -2512,11 +2524,14 @@ let rec solve_can_be_split_forall_dep (args:list argv) : Tac bool =
 
          true
        with
-       | _ ->
+       | Postpone msg ->
+         false
+       | TacticFailure msg ->
          let opened = try_open_existentials_forall_dep () in
          if opened
          then solve_can_be_split_forall_dep args // we only need args for their number of uvars, which has not changed
-         else false
+         else fail msg
+       | _ -> fail "Unexpected exception in framing tactic"
       ) else false
 
   | _ -> fail "Ill-formed can_be_split_forall_dep, should not happen"
@@ -2785,7 +2800,7 @@ let rec vprop_term_uvars (t:term) : Tac (list int) =
 
 and argv_uvars (args: list argv) : Tac (list int) =
   let t : unit -> Tac (list int) =
-    fold_left (fun (n: unit -> Tac (list int)) (x, _) -> 
+    fold_left (fun (n: unit -> Tac (list int)) (x, _) ->
       let t () : Tac (list int) =
         let l1 = n () in
         let l2 = vprop_term_uvars x in
