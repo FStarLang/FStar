@@ -2049,7 +2049,7 @@
         "typing_Steel.Effect.Common.to_vprop_"
       ],
       0,
-      "f1f1dc8a803b315edd3f6af62ccb50e5"
+      "7da771873c16812602bd193db50ee4cc"
     ],
     [
       "Steel.Effect.Atomic.exists_cong",
@@ -2064,7 +2064,7 @@
         "typing_Tm_abs_43476be6e2b528121aa9b342a6d30d83"
       ],
       0,
-      "a8368499010607918ed71a930aa9f8cf"
+      "84ec4cf011e3ce2503bbcad83d6cec67"
     ],
     [
       "Steel.Effect.Atomic.new_invariant",
@@ -2127,7 +2127,7 @@
         "typing_Steel.Memory.locks_invariant", "typing_Steel.Memory.star"
       ],
       0,
-      "b3ee1ee559923d23d6331eb5704df27f"
+      "5b244a0d4c4edd84cb77a2a6aac0d77c"
     ],
     [
       "Steel.Effect.Atomic.with_invariant_g",

@@ -238,7 +238,7 @@
         "equation_FStar.ReflexiveTransitiveClosure.transitive"
       ],
       0,
-      "f79e2da99a1221d9da4a58c2cb46a6da"
+      "a3abe7591e7270ef13806d2ee4c0dfae"
     ],
     [
       "Duplex.PCM.__proj__V__item___0",
@@ -1212,7 +1212,7 @@
         "typing_Steel.Channel.Protocol.__proj__Mkpartial_trace_of__item__to"
       ],
       0,
-      "68600e3e938173d94164fcdd4695b268"
+      "6af89d89dd2005faeb2708a80508847e"
     ],
     [
       "Duplex.PCM.next_message",
@@ -1766,7 +1766,7 @@
         "token_correspondence_Duplex.PCM.next"
       ],
       0,
-      "aed993333b23dd25646b7fa193200716"
+      "6d57fb82fcf5f190bc8fc51325b0dfa3"
     ],
     [
       "Duplex.PCM.lemma_unique_next_common_prefix",
@@ -1922,7 +1922,7 @@
         "typing_Steel.Channel.Protocol.hnf"
       ],
       0,
-      "ba56c8c9adbba2c8c930151a503b06d2"
+      "3b74ad18e2a79d0294c116a2cf99fa42"
     ],
     [
       "Duplex.PCM.lemma_same_length_ahead_implies_eq",
@@ -2151,7 +2151,6 @@
         "@fuel_correspondence_Steel.Channel.Protocol.hnf.fuel_instrumented",
         "@fuel_irrelevance_Duplex.PCM.no_loop.fuel_instrumented", "@query",
         "Duplex.PCM_interpretation_Tm_arrow_9d49407b244d671c70bd5c0c1a4ea6a6",
-        "FStar.PCM_interpretation_Tm_arrow_4418db7552582748ab4bfa39672e55e0",
         "Steel.Channel.Protocol_pretyping_9b8928235f58509ef2e6666b80acc076",
         "b2t_def", "bool_inversion", "bool_typing",
         "constructor_distinct_Duplex.PCM.A",
@@ -2164,6 +2163,7 @@
         "constructor_distinct_Steel.Channel.Protocol.Recv",
         "data_elim_Duplex.PCM.A_Fin", "data_elim_Duplex.PCM.A_R",
         "data_elim_Duplex.PCM.A_W", "data_elim_Duplex.PCM.B_W",
+        "data_elim_FStar.PCM.Mkpcm_",
         "data_elim_Steel.Channel.Protocol.Mkpartial_trace_of",
         "data_elim_Steel.Channel.Protocol.Msg",
         "data_typing_intro_Steel.Channel.Protocol.Mkpartial_trace_of@tok",
@@ -2203,11 +2203,10 @@
         "function_token_typing_Duplex.PCM.composable",
         "function_token_typing_Duplex.PCM.extended_to",
         "function_token_typing_Duplex.PCM.next",
-        "function_token_typing_FStar.PCM.__proj__Mkpcm___item__composable",
         "function_token_typing_FStar.Pervasives.pattern",
         "interpretation_Tm_abs_cfac7fcf0d742c8a4e20e4a19e003c2a",
         "interpretation_Tm_abs_ebb074e9676f6e6b4beecd823c9be2ed",
-        "kinding_Duplex.PCM.t@tok", "l_and-interp", "l_or-interp",
+        "l_and-interp", "l_or-interp",
         "l_quant_interp_1f5cbbab0d0e7a0ff3e90c0cdbd1d699",
         "lemma_Duplex.PCM.closure_inversion", "primitive_Prims.op_AmpAmp",
         "primitive_Prims.op_GreaterThanOrEqual",
@@ -2262,9 +2261,8 @@
         "token_correspondence_Steel.Channel.Protocol.__proj__Msg__item__k",
         "typing_Duplex.PCM.is_fin", "typing_Duplex.PCM.is_recv",
         "typing_Duplex.PCM.is_send", "typing_Duplex.PCM.next_message",
-        "typing_Duplex.PCM.pcm", "typing_Duplex.PCM.trace_length",
+        "typing_Duplex.PCM.p_", "typing_Duplex.PCM.trace_length",
         "typing_Duplex.PCM.uu___is_A_R",
-        "typing_FStar.PCM.__proj__Mkpcm__item__p",
         "typing_Steel.Channel.Protocol.__proj__Mkpartial_trace_of__item__to",
         "typing_Steel.Channel.Protocol.__proj__Mkpartial_trace_of__item__tr",
         "typing_Steel.Channel.Protocol.extend",
@@ -2866,7 +2864,7 @@
         "typing_tok_Duplex.PCM.B@tok", "unit_inversion", "unit_typing"
       ],
       0,
-      "82e2ec0ef71cb19e479d4aa739a00c60"
+      "77909621a6dc405290ea7ac4dda15c8f"
     ],
     [
       "Duplex.PCM.lemma_ahead_extend_a",
@@ -2948,7 +2946,7 @@
         "typing_Steel.Channel.Protocol.more", "typing_tok_Duplex.PCM.A@tok"
       ],
       0,
-      "4285ee5da5df5685e297557fd987880b"
+      "c18484455c09a7c098cade44020b7f8d"
     ],
     [
       "Duplex.PCM.lemma_ahead_extend_b",
@@ -3030,7 +3028,7 @@
         "typing_Steel.Channel.Protocol.more", "typing_tok_Duplex.PCM.B@tok"
       ],
       0,
-      "f0b319a60910ec3c3f934002f2d197d0"
+      "3c3738272efb68c2798278e76eda027a"
     ],
     [
       "Duplex.PCM.write_a_f_lemma",
@@ -3558,7 +3556,7 @@
         "token_correspondence_Duplex.PCM.composable", "true_interp"
       ],
       0,
-      "38c5dd050335022827c0bcbaeab1f7aa"
+      "f767d8622776cc8a494dc2c3eb4187b3"
     ],
     [
       "Duplex.PCM.new_chan",

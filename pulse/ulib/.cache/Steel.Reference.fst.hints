@@ -494,7 +494,7 @@
         "refinement_interpretation_Tm_refine_cd95e4fefc69dd84cdddd10bf1795c84"
       ],
       0,
-      "22a2fd56115a0335829b72fdb5c3c97d"
+      "77fd06ff312c9ade0f76cff7e0ff3670"
     ],
     [
       "Steel.Reference.intro_vptr_lemma",
@@ -1067,7 +1067,7 @@
         "refinement_interpretation_Tm_refine_d21ad916159dd520f38e5df85a50f015"
       ],
       0,
-      "1087f5cb1972008d84742dcdac34e3cf"
+      "855584cef215e8c6f5824517a0ac2ccb"
     ],
     [
       "Steel.Reference.intro_ghost_vptr_lemma",
