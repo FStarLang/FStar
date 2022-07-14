@@ -1212,6 +1212,10 @@ atomicTermNotQUident:
     { x }
   | LPAREN op=operator RPAREN
       { mk_term (Op(op, [])) (rhs2 parseState 1 3) Un }
+  | LPAREN op=let_op RPAREN
+      { mk_term (Name(lid_of_ns_and_id [] op)) (rhs2 parseState 1 3) Un }
+  | LPAREN op=and_op RPAREN
+      { mk_term (Name(lid_of_ns_and_id [] op)) (rhs2 parseState 1 3) Un }
   | LENS_PAREN_LEFT e0=tmEq COMMA el=separated_nonempty_list(COMMA, tmEq) LENS_PAREN_RIGHT
       { mkDTuple (e0::el) (rhs2 parseState 1 5) }
   | e=projectionLHS field_projs=list(DOT id=qlident {id})
