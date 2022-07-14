@@ -87,7 +87,6 @@ let rec mk_tot_arr_ln (bs: list binder) (cod : term) : Tot term (decreases bs) =
     | [] -> cod
     | (b::bs) -> pack_ln (Tv_Arrow b (pack_comp (C_Total (mk_tot_arr_ln bs cod) u_unk [])))
 
-private
 let rec collect_arr' (bs : list binder) (c : comp) : Tot (list binder * comp) (decreases c) =
     begin match inspect_comp c with
     | C_Total t _ _ ->
@@ -107,11 +106,9 @@ let collect_arr_ln_bs t =
 
 val collect_arr_ln : typ -> list typ * comp
 let collect_arr_ln t =
-    let (bs, c) = collect_arr' [] (pack_comp (C_Total t u_unk [])) in
-    let ts = List.Tot.Base.map type_of_binder bs in
-    (List.Tot.Base.rev ts, c)
+    let bs, c = collect_arr_ln_bs t in
+    List.Tot.Base.map type_of_binder bs, c
 
-private
 let rec collect_abs' (bs : list binder) (t : term) : Tot (list binder * term) (decreases t) =
     match inspect_ln t with
     | Tv_Abs b t' ->
