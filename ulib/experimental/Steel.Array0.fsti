@@ -302,3 +302,46 @@ let ghost_split
 /// NOTE: we could implement a SteelAtomicBase Unobservable "split"
 /// operation, just like "join", but we don't want it to return a pair
 /// of arrays. For now we settle on explicit use of split_l, split_r.
+
+
+/// Copies the contents of a0 to a1
+inline_for_extraction
+let memcpy (#t:_) (#p0:P.perm)
+           (a0 a1:array t)
+           (i:U32.t)
+  : Steel unit
+    (varrayp a0 p0 `star` varray a1)
+    (fun _ -> varrayp a0 p0  `star` varray a1)
+    (requires fun _ ->
+       U32.v i == length a0 /\ length a0 == length a1)
+    (ensures fun h0 _ h1 ->
+      length a0 == length a1 /\
+      aselp a0 p0 h0 == aselp a0 p0 h1 /\
+      asel a1 h1 == aselp a0 p0 h1)
+  =
+    let _ = elim_varrayp a0 _ in
+    let _ = elim_varray a1 in
+    A.memcpy a0 a1 i;
+    intro_varrayp a0 _ _;
+    intro_varray a1 _
+
+/// Decides whether the contents of a0 and a1 are equal
+inline_for_extraction
+let compare (#t:eqtype) (#p0 #p1:P.perm)
+            (a0 a1:array t)
+            (l:U32.t { length a0 == length a1 /\ U32.v l == length a0})
+  : Steel bool
+    (varrayp a0 p0 `star` varrayp a1 p1)
+    (fun _ -> varrayp a0 p0 `star` varrayp a1 p1)
+    (requires fun _ -> True)
+    (ensures fun h0 b h1 ->
+      aselp a0 p0 h0 == aselp a0 p0 h1 /\
+      aselp a1 p1 h0 == aselp a1 p1 h1 /\
+      b = (aselp a0 p0 h1 = aselp a1 p1 h1))
+  =
+    let _ = elim_varrayp a0 _ in
+    let _ = elim_varrayp a1 _ in
+    let res = A.compare a0 a1 l in
+    intro_varrayp a0 _ _;
+    intro_varrayp a1 _ _;
+    return res

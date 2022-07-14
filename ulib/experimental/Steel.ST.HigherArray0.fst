@@ -548,3 +548,55 @@ let ghost_split
     (ptr_of a).base vr
     (ptr_of (split_r a i)).base vr;
   intro_pts_to (split_r a i) #vr p (Seq.slice x (U32.v i) (Seq.length x))
+
+////////////////////////////////////////////////////////////////////////////////
+// memcpy
+////////////////////////////////////////////////////////////////////////////////
+
+let prefix_copied #t
+                  (e0:Seq.seq t)
+                  (e1:Seq.seq t)
+                  (i:nat { i <= Seq.length e0 /\ Seq.length e0 == Seq.length e1})
+   : Seq.seq t
+   = (Seq.append (Seq.slice e0 0 i) (Seq.slice e1 i (Seq.length e1)))
+
+let memcpy
+  #t #p0 a0 a1 #e0 #e1 i
+  =
+    pts_to_length a0 _ _;
+    pts_to_length a1 _ _;
+    let inv (j:Steel.ST.Loops.nat_at_most i)
+      : vprop
+      = pts_to a0 p0 e0 `star`
+        pts_to a1 full_perm (prefix_copied e0 e1 j)
+    in
+    assert (prefix_copied e0 e1 (U32.v 0ul) `Seq.equal` e1);
+    rewrite (pts_to a1 full_perm e1)
+                           (pts_to a1 full_perm (prefix_copied e0 e1 (U32.v 0ul)));
+    rewrite (pts_to a0 _ e0 `star` pts_to a1 full_perm (prefix_copied e0 e1 (U32.v 0ul)))
+                           (inv (U32.v 0ul));
+    let body (j:Steel.ST.Loops.u32_between 0ul i)
+      : STT unit
+        (inv (U32.v j))
+        (fun _ -> inv (U32.v j + 1))
+      = rewrite
+            (inv (U32.v j))
+            (pts_to a0 p0 e0 `star`
+             pts_to a1 full_perm (prefix_copied e0 e1 (U32.v j)));
+        let z = index a0 j in
+        upd a1 j z;
+        assert (Seq.upd (prefix_copied e0 e1 (U32.v j)) (U32.v j) z `Seq.equal`
+                prefix_copied e0 e1 (U32.v j + 1));
+        rewrite (pts_to a0 _ e0 `star` pts_to a1 _ _)
+                               (inv (U32.v j + 1));
+        return ()
+    in
+    Steel.ST.Loops.for_loop 0ul i inv body;
+    assert_ (inv (U32.v i));
+    rewrite (inv (U32.v i))
+                           (pts_to a0 p0 e0 `star`
+                            pts_to a1 full_perm (prefix_copied e0 e1 (U32.v i)));
+    assert (prefix_copied e0 e1 (U32.v i) `Seq.equal` e0);
+    rewrite (pts_to a1 _ (prefix_copied e0 e1 (U32.v i)))
+                           (pts_to a1 _ e0);
+    return ()
