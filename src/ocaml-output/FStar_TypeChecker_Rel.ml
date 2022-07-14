@@ -6270,12 +6270,14 @@ and (solve_t_flex_rigid_eq :
                                                     FStar_Syntax_Unionfind.new_transaction
                                                       () in
                                                   let solve_sub_probs_if_head_types_equal
+                                                    head_uvars_to_restrict
                                                     wl2 =
                                                     let sol =
                                                       [TERM (ctx_uv, head1)] in
                                                     let wl3 =
                                                       restrict_all_uvars env1
-                                                        ctx_uv [] uvars_head
+                                                        ctx_uv []
+                                                        head_uvars_to_restrict
                                                         wl2 in
                                                     let wl4 =
                                                       solve_prob orig1
@@ -6381,7 +6383,7 @@ and (solve_t_flex_rigid_eq :
                                                   if uu___15
                                                   then
                                                     solve_sub_probs_if_head_types_equal
-                                                      wl1
+                                                      uvars_head wl1
                                                   else
                                                     ((let uu___18 =
                                                         FStar_TypeChecker_Env.debug
@@ -6425,8 +6427,16 @@ and (solve_t_flex_rigid_eq :
                                                       match uu___18 with
                                                       | FStar_Pervasives.Inl
                                                           wl2 ->
+                                                          let uu___19 =
+                                                            let uu___20 =
+                                                              FStar_Compiler_Effect.op_Bar_Greater
+                                                                head1
+                                                                FStar_Syntax_Free.uvars in
+                                                            FStar_Compiler_Effect.op_Bar_Greater
+                                                              uu___20
+                                                              FStar_Compiler_Util.set_elements in
                                                           solve_sub_probs_if_head_types_equal
-                                                            wl2
+                                                            uu___19 wl2
                                                       | FStar_Pervasives.Inr
                                                           msg ->
                                                           (FStar_Syntax_Unionfind.rollback
