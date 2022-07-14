@@ -389,8 +389,8 @@ let index0
 : ST t
     (pts_to a p s)
     (fun _ -> pts_to a p s)
-    (U32.v i < length a)
-    (fun res -> U32.v i < Seq.length s /\ res == Seq.index s (U32.v i))
+    (U32.v i < length a \/ U32.v i < Seq.length s)
+    (fun res -> Seq.length s == length a /\ U32.v i < Seq.length s /\ res == Seq.index s (U32.v i))
 = elim_pts_to a p s;
   let s' = R.read (ptr_of a).base _ in
   let res = fst (Some?.v (M.sel s' ((ptr_of a).offset + U32.v i))) in

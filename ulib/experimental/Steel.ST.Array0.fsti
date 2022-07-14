@@ -201,8 +201,8 @@ val index
 : ST t
     (pts_to a p s)
     (fun _ -> pts_to a p s)
-    (U32.v i < length a)
-    (fun res -> U32.v i < Seq.length s /\ res == Seq.index s (U32.v i))
+    (U32.v i < length a \/ U32.v i < Seq.length s)
+    (fun res -> Seq.length s == length a /\ U32.v i < Seq.length s /\ res == Seq.index s (U32.v i))
 
 inline_for_extraction
 [@@noextract_to "krml"]

@@ -212,8 +212,8 @@ val index_ptr
 : ST t
     (pts_to (| a, len |) p s)
     (fun _ -> pts_to (| a, len |) p s)
-    (U32.v i < Ghost.reveal len)
-    (fun res -> U32.v i < Seq.length s /\ res == Seq.index s (U32.v i))
+    (U32.v i < Ghost.reveal len \/ U32.v i < Seq.length s)
+    (fun res -> Seq.length s == Ghost.reveal len /\ U32.v i < Seq.length s /\ res == Seq.index s (U32.v i))
 
 inline_for_extraction
 [@@noextract_to "krml"] // primitive
@@ -225,8 +225,8 @@ let index
 : ST t
     (pts_to a p s)
     (fun _ -> pts_to a p s)
-    (U32.v i < length a)
-    (fun res -> U32.v i < Seq.length s /\ res == Seq.index s (U32.v i))
+    (U32.v i < length a \/ U32.v i < Seq.length s)
+    (fun res -> Seq.length s == length a /\ U32.v i < Seq.length s /\ res == Seq.index s (U32.v i))
 = let (| pt, len |) = a in
   rewrite
     (pts_to _ _ _)
