@@ -77,7 +77,6 @@ ocaml-output/%.ml:
 	@echo "[DEPEND]"
 	$(Q)$(FSTAR_C) $(SIL) --dep full	\
 		fstar/FStar.Main.fst		\
-                typechecker/FStar.TypeChecker.Core.fst \
 		boot/FStar.Tests.Test.fst	\
 		$(EXTRACT)			> ._depend
 	$(Q)mv ._depend .depend

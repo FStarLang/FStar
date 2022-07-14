@@ -9,21 +9,23 @@ module U = FStar.Syntax.Util
 module N = FStar.TypeChecker.Normalize
 module PC = FStar.Parser.Const
 module I = FStar.Ident
+module P = FStar.Syntax.Print
 
 let precondition = option typ
 
-let result (a:Type) = option (a & precondition)
+let success a = a & precondition
+let result (a:Type) = either (success a) string
 
 type hash_entry = {
    he_term:term;
    he_gamma:list binding;
-   he_res:result typ;
+   he_res:success typ;
 }
 
 type tc_table = FStar.Hash.hashtable term hash_entry
 let table : tc_table = FStar.Hash.create FStar.Syntax.Hash.equal_term
 let clear_memo_table () = FStar.Hash.clear table
-let insert (g:Env.env) (e:term) (res:result typ) =
+let insert (g:Env.env) (e:term) (res:success typ) =
     let entry = {
        he_term = e;
        he_gamma = g.gamma;
@@ -32,24 +34,8 @@ let insert (g:Env.env) (e:term) (res:result typ) =
     in
     FStar.Hash.insert (e, FStar.Syntax.Hash.hash_term) entry table
 
-let lookup (g:Env.env) (e:term) : option (result typ) =
-   match FStar.Hash.lookup (e, FStar.Syntax.Hash.hash_term) table with
-   | None -> None
-   | Some he ->
-     if FStar.Syntax.Hash.equal_term e he.he_term
-     && (* we should allow g.gamma to be bigger, to internalize weakening *)
-       FStar.Compiler.List.forall2 
-        (fun b1 b2  ->
-          match b1, b2 with
-          | Binding_var x1, Binding_var x2 -> 
-            x1.index = x2.index
-          | _ -> true)
-        he.he_gamma g.gamma
-     then Some he.he_res
-     else None
-
 inline_for_extraction
-let return (#a:Type) (x:a) : result a = Some (x, None)
+let return (#a:Type) (x:a) : result a = Inl (x, None)
 
 let and_pre (p1 p2:precondition) =
   match p1, p2 with
@@ -62,19 +48,19 @@ inline_for_extraction
 let bind (#a:Type) (#b:Type) (x:result a) (y:a -> result b)
   : result b
   = match x with
-    | None -> None
-    | Some (x, g1) ->
-      match y x with
-      | None -> None
-      | Some (y, g2) -> Some (y, and_pre g1 g2)
+    | Inl (x, g1) ->
+      (match y x with
+       | Inl (y, g2) -> Inl (y, and_pre g1 g2)
+       | err -> err)
+    | Inr err -> Inr err
 
-let fail #a () : result a = None
+let fail #a msg : result a = Inr msg
 
 inline_for_extraction
 let handle_with (#a:Type) (x:result a) (h: unit -> result a)
   : result a
   = match x with
-    | None -> h ()
+    | Inr _ -> h ()
     | res -> res
     
 let mk_type (u:universe) = S.mk (Tm_type (U_succ u)) R.dummyRange
@@ -87,7 +73,7 @@ let is_type (g:Env.env) (t:term)
           return u
     
         | _ -> 
-          fail ()
+          fail "Expected a type"
     in
     handle_with
       (aux t)
@@ -97,10 +83,12 @@ let is_tot_arrow (g:Env.env) (t:term)
   : result (binder & typ)
   = let aux t =
         match (SS.compress t).n with
-        | Tm_arrow ([x], c)
-           when U.is_total_comp c ->
-          let [x], c = SS.open_comp [x] c in
-          return (x, U.comp_result c)
+        | Tm_arrow ([x], c) ->
+          if U.is_total_comp c
+          then 
+            let [x], c = SS.open_comp [x] c in
+            return (x, U.comp_result c)
+          else fail "Expected total arrow"
           
         | Tm_arrow (x::xs, c) ->
           let t = S.mk (Tm_arrow(xs, c)) t.pos in
@@ -108,7 +96,7 @@ let is_tot_arrow (g:Env.env) (t:term)
           return (x, t)
 
         | _ ->
-          fail()
+          fail "Expected an arrow"
     in
     handle_with
       (aux t)
@@ -121,7 +109,7 @@ let check_arg_qual (a:aqual) (b:bqual)
     | Some (Implicit _), Some ({ aqual_implicit = true}) -> return ()
     | Some _, None
     | Some _, Some ({ aqual_implicit = false }) -> return ()
-    | _ -> fail ()
+    | _ -> fail "Arg qualfier mismatch"
 
 let check_bqual (b0 b1:bqual)
   : result unit
@@ -131,7 +119,7 @@ let check_bqual (b0 b1:bqual)
       when b0=b1 ->
       return ()
     | _ -> 
-      fail ()
+      fail "Binder qualifier mismatch"
 
 let close_guard (xs:binders) (us:universes) (g:precondition)
   : precondition
@@ -159,18 +147,18 @@ let close_guard_with_definition (x:binder) (u:universe) (t:term) (g:precondition
 let with_binders (#a:Type) (xs:binders) (us:universes) (f:result a)
   : result a
   = match f with
-    | None -> None
-    | Some (t, g) -> Some (t, close_guard xs us g)
+    | Inl (t, g) -> Inl (t, close_guard xs us g)
+    | err -> err
 
 let with_definition (#a:Type) (x:binder) (u:universe) (t:term) (f:result a)
   : result a
   = match f with
-    | None -> None
-    | Some (t, g) -> Some (t, close_guard_with_definition x u t g)
+    | Inl (a, g) -> Inl (a, close_guard_with_definition x u t g)
+    | err -> err
 
 let guard (t:typ) 
   : result unit 
-  = Some ((), Some t)
+  = Inl ((), Some t)
 
 module BU = FStar.Compiler.Util
 let abs (a:typ) (f: binder -> term) : term = 
@@ -190,13 +178,13 @@ let strengthen_subtyping_guard (p:term)
 
 let weaken (p:term) (g:result 'a)
   = match g with
-    | None -> None
-    | Some (x, q) -> Some (x, weaken_subtyping_guard p q)
+    | Inl (x, q) -> Inl (x, weaken_subtyping_guard p q)
+    | err -> err
 
 let strengthen (p:term) (g:result 'a)
   = match g with
-    | None -> None
-    | Some (x, q) -> Some (x, strengthen_subtyping_guard p q)
+    | Inl (x, q) -> Inl (x, strengthen_subtyping_guard p q)
+    | err -> err
                            
 let equatable t0 t1 =
   match (SS.compress t0).n, (SS.compress t1).n with
@@ -211,6 +199,36 @@ let curry_arrow (x:binder) (xs:binders) (c:comp) =
   S.mk (Tm_arrow([x], S.mk_Total tail)) R.dummyRange
 
 let is_gtot_comp c = U.is_tot_or_gtot_comp c && not (U.is_total_comp c)
+
+let rec context_included (g0 g1: list binding) =
+  match g0, g1 with
+  | [], _ -> true
+  
+  | b0::g0', b1::g1' ->
+     begin
+     match b0, b1 with
+     | Binding_var x0, Binding_var x1 ->
+       if x0.index = x1.index
+       then context_included g0' g1'
+       else context_included g0 g1'
+       
+     | Binding_lid _, Binding_lid _ 
+     | Binding_univ _, Binding_univ _ ->
+       true
+
+     | _ ->
+       false
+     end
+
+  | _ -> false
+
+let lookup (g:Env.env) (e:term) : result typ =
+   match FStar.Hash.lookup (e, FStar.Syntax.Hash.hash_term) table with
+   | None -> fail "not in cache"
+   | Some he ->
+     if he.he_gamma `context_included` g.gamma
+     then Inl he.he_res
+     else fail "not in cache"
 
 (*
      G |- e : t0 <: t1 | p
@@ -244,12 +262,16 @@ let rec check_subtype_whnf (g:Env.env) (e:term) (t0 t1: typ)
       check_subtype_whnf g e (curry_arrow x0 xs0 c0) (curry_arrow x1 xs1 c1)
 
     | _ ->
-      if equatable t0 t1
+      if U.eq_tm t0 t1 = U.Equal
+      then return ()
+      else if equatable t0 t1
       then (
         u <-- universe_of g t0;
         guard (U.mk_eq2 u (mk_type u) t0 t1)
       )
-      else fail ()
+      else fail (BU.format2 "Subtyping failed: %s </: %s"
+                           (P.term_to_string t0)
+                           (P.term_to_string t1))
 
 and check_subtype (g:Env.env) (e:term) (t0 t1:typ)
   = match U.eq_tm t0 t1 with
@@ -266,16 +288,19 @@ and check_subcomp (g:Env.env) (e:term) (c0 c1:comp)
     if (U.is_total_comp c0 && U.is_tot_or_gtot_comp c1)
     ||  (is_gtot_comp c0 && is_gtot_comp c1)
     then check_subtype g e (U.comp_result c0) (U.comp_result c1)
-    else fail ()
+    else fail "Subcomp failed"
 
-and check  (g:Env.env) (e:term)
+and check (g:Env.env) (e:term)
   : result typ
-  = match lookup g e with
-    | Some r -> r
-    | None -> 
-      let r = check' g e in
-      insert g e r;
-      r
+  = handle_with
+      (lookup g e)
+      (fun _ -> 
+         let r = check' g e in
+         match r with
+         | Inl res -> 
+           insert g e res;
+           r
+         | _ -> r)
       
 (*  G |- e : Tot t | pre *)
 and check' (g:Env.env) (e:term)
@@ -298,14 +323,14 @@ and check' (g:Env.env) (e:term)
       return t
       
     | _ -> //no implicit universe instantiation allowed
-      fail()
+      fail "Missing universes instantiation"
     end
     
   | Tm_uinst ({n=Tm_fvar f}, us) ->
     begin
     match Env.try_lookup_and_inst_lid g us f.fv_name.v with
     | None ->
-      fail()
+      fail "Top-level name not found"
 
     | Some (t, _) ->
       return t
@@ -383,17 +408,17 @@ and check' (g:Env.env) (e:term)
       )
     ) 
     else (
-      fail ()
+      fail "Let binding is effectful"
     )
     
   | Tm_match(sc, None, branches, Some ({ residual_typ = Some t })) ->
-    fail ()
+    fail "Match is not handled yet"
 
   | Tm_match _ ->
-    fail ()
+    fail "Match is not handled yet"  
     
   | _ -> 
-    fail ()
+    fail (BU.format1 "Unexpected term: %s" (FStar.Syntax.Print.tag_of_term e))
 
 and check_binders (g:Env.env) (xs:binders)
   : result (binders & list universe & Env.env)
@@ -418,7 +443,7 @@ and check_comp (g:Env.env) (c:comp)
       t <-- check g (U.comp_result c) ;
       is_type g t
     )
-    else fail ()
+    else fail "Computation type is not Tot or GTot"
 
 and universe_of (g:Env.env) (t:typ)
   : result universe

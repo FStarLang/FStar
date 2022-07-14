@@ -51,6 +51,34 @@ module UF     = FStar.Syntax.Unionfind
 module U      = FStar.Syntax.Util
 module Z      = FStar.BigInt
 
+let core_check env gamma sol t
+  : either (option typ) string
+  = let env = { env with gamma } in
+    let sol = U.ascribe sol (Inl t, None, false) in
+    match FStar.TypeChecker.Core.check env sol with
+    | Inl (_, None) ->
+      //checked with no guard
+      //no need to check it again
+      BU.print2 "(%s) Core checking succeeded on %s\n"
+                (Range.string_of_range (Env.get_range env))
+                (Print.term_to_string sol);
+      Inl None
+
+     | Inl (_, Some g) ->
+       BU.print3 "(%s) Core checking succeeded on %s, with guard %s\n"
+                (Range.string_of_range (Env.get_range env))              
+                (Print.term_to_string sol)
+                (Print.term_to_string g);
+       Inl (Some g)
+       
+
+     | Inr msg ->
+       BU.print3 "(%s) Core checking failed on term %s: %s\n"
+                (Range.string_of_range (Env.get_range env))              
+                (Print.term_to_string sol)
+                msg;
+       Inr msg
+
 type name = bv
 type env = Env.env
 type implicits = Env.implicits
@@ -718,7 +746,10 @@ let t_exact try_refine set_expected_typ tm : tac unit = wrap_err "exact" <|
 let rec  __try_unify_by_application
             (only_match : bool)
             (acc : list (term * aqual * ctx_uvar))
-            (e : env) (ty1 : term) (ty2 : term)
+            (e : env)
+            (ty1 : term)
+            (ty2 : term)
+            (ty2_uvars: list ctx_uvar)
             (rng : Range.range)
             : tac (list (term * aqual * ctx_uvar)) =
     let f = if only_match
@@ -727,6 +758,18 @@ let rec  __try_unify_by_application
     in
     bind (f e ty2 ty1) (function
     | true ->
+      ty2_uvars
+      |> List.iter (fun u ->
+          match UF.find u.ctx_uvar_head with
+          | None -> () //not solved yet
+          | Some sol ->  //solved, check it
+            match core_check e u.ctx_uvar_gamma sol (U.ctx_uvar_typ u) with
+            | Inl None ->
+              //checked with no guard
+              //no need to check it again
+              mark_uvar_as_allow_untyped u
+
+            | _ -> ());
         (* Done! *)
         ret acc
     | false -> begin
@@ -752,13 +795,14 @@ let rec  __try_unify_by_application
             mlog (fun () -> BU.print1 "t_apply: generated uvar %s\n" (Print.ctx_uvar_to_string uv)) (fun _ ->
             let typ = U.comp_result c in
             let typ' = SS.subst [S.NT (b.binder_bv, uvt)] typ in
-            __try_unify_by_application only_match ((uvt, U.aqual_of_binder b, uv)::acc) e typ' ty2 rng))
+            __try_unify_by_application only_match ((uvt, U.aqual_of_binder b, uv)::acc) e typ' ty2 ty2_uvars rng))
     end)
 
 (* Can t1 unify t2 if it's applied to arguments? If so return uvars for them *)
 (* NB: Result is reversed, which helps so we use fold_right instead of fold_left *)
 let try_unify_by_application (only_match:bool) (e : env) (ty1 : term) (ty2 : term) (rng:Range.range) : tac (list (term * aqual * ctx_uvar)) =
-    __try_unify_by_application only_match [] e ty1 ty2 rng
+  let ty2_uvars = FStar.Syntax.Free.uvars ty2 in
+    __try_unify_by_application only_match [] e ty1 ty2 (BU.set_elements ty2_uvars) rng
 
 //
 // Checking implicit solutions that may have been solved during unification
@@ -775,20 +819,24 @@ let check_apply_implicits_solutions
   
   : tac (list (list goal)) =
 
-  let check_implicits_solution env (t:term) (k:typ) (must_tot:bool) : guard_t =
-    let env = Env.set_expected_typ ({env with use_bv_sorts=true}) k in
-
-    let slow_path () =
-      //expected type is already set in the env
-      let _, _, g = TcTerm.typeof_tot_or_gtot_term env t must_tot in
-      g in
-
-    match TcTerm.typeof_tot_or_gtot_term_fastpath env t must_tot with
-    | None -> slow_path ()
-    | Some k' ->
-      match Rel.subtype_nosmt env k' k with
+  let check_implicits_solution env gamma (t:term) (k:typ) (must_tot:bool) : guard_t =
+      let _ = core_check env gamma t k in //just to see how much we can check
+      // we should eventually use the core computed guard, but it has a different shape and causes some
+      // tactics to fail
+      // | Inl None -> Env.trivial_guard
+      // | Inl (Some g) -> Env.guard_of_guard_formula (NonTrivial g)
+      let env = Env.set_expected_typ ({env with use_bv_sorts=true}) k in
+      let slow_path () =
+        //expected type is already set in the env
+        let _, _, g = TcTerm.typeof_tot_or_gtot_term env t must_tot in
+        g
+      in
+      match TcTerm.typeof_tot_or_gtot_term_fastpath env t must_tot with
       | None -> slow_path ()
-      | Some g -> g
+      | Some k' ->
+        match Rel.subtype_nosmt env k' k with
+        | None -> slow_path ()
+        | Some g -> g
   in
 
   let check_one_implicit (term, ctx_uvar) =
@@ -806,7 +854,7 @@ let check_apply_implicits_solutions
                      debug_prefix
                      (Print.uvar_to_string ctx_uvar.ctx_uvar_head)
                      (Print.term_to_string term)) (fun () ->
-      let g_typ = check_implicits_solution env term (U.ctx_uvar_typ ctx_uvar) must_tot in
+      let g_typ = check_implicits_solution env ctx_uvar.ctx_uvar_gamma term (U.ctx_uvar_typ ctx_uvar) must_tot in
       let rng = 
         match gl with
         | None ->  ctx_uvar.ctx_uvar_range

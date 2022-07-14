@@ -679,12 +679,16 @@ and (hash_meta : FStar_Syntax_Syntax.metadata -> FStar_Hash.hash_code) =
 and (hash_meta_source_info :
   FStar_Syntax_Syntax.meta_source_info -> FStar_Hash.hash_code) =
   fun m ->
-    FStar_Hash.of_int
-      (match m with
-       | FStar_Syntax_Syntax.Sequence -> (Prims.of_int (1049))
-       | FStar_Syntax_Syntax.Primop -> (Prims.of_int (1051))
-       | FStar_Syntax_Syntax.Masked_effect -> (Prims.of_int (1061))
-       | FStar_Syntax_Syntax.Meta_smt_pat -> (Prims.of_int (1063)))
+    match m with
+    | FStar_Syntax_Syntax.Sequence -> FStar_Hash.of_int (Prims.of_int (1049))
+    | FStar_Syntax_Syntax.Primop -> FStar_Hash.of_int (Prims.of_int (1051))
+    | FStar_Syntax_Syntax.Masked_effect ->
+        FStar_Hash.of_int (Prims.of_int (1061))
+    | FStar_Syntax_Syntax.Meta_smt_pat ->
+        FStar_Hash.of_int (Prims.of_int (1063))
+    | FStar_Syntax_Syntax.Machine_integer sw ->
+        let uu___ = FStar_Hash.of_int (Prims.of_int (1069)) in
+        let uu___1 = hash_sw sw in FStar_Hash.mix uu___ uu___1
 and (hash_lazyinfo : FStar_Syntax_Syntax.lazyinfo -> FStar_Hash.hash_code) =
   fun li -> FStar_Hash.of_int Prims.int_zero
 and (hash_quoteinfo : FStar_Syntax_Syntax.quoteinfo -> FStar_Hash.hash_code)

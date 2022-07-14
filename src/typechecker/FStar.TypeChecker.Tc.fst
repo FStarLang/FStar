@@ -1014,6 +1014,7 @@ let tc_decls env ses =
   in
   // A wrapper to (maybe) print the time taken for each sigelt
   let process_one_decl_timed acc se =
+    FStar.TypeChecker.Core.clear_memo_table();
     let (_, env) = acc in
     let r =
       Profiling.profile

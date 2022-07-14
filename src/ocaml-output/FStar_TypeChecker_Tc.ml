@@ -4299,29 +4299,31 @@ let (tc_decls :
                       (((FStar_Compiler_List.rev_append ses'1 ses1), env3),
                         ses_elaborated1))))) in
       let process_one_decl_timed acc se =
-        let uu___ = acc in
-        match uu___ with
-        | (uu___1, env1) ->
-            let r =
-              let uu___2 =
-                let uu___3 =
-                  let uu___4 = FStar_TypeChecker_Env.current_module env1 in
-                  FStar_Ident.string_of_lid uu___4 in
-                FStar_Pervasives_Native.Some uu___3 in
-              FStar_Profiling.profile (fun uu___3 -> process_one_decl acc se)
-                uu___2 "FStar.TypeChecker.Tc.process_one_decl" in
-            ((let uu___3 = FStar_Options.profile_group_by_decls () in
-              if uu___3
-              then
-                let tag =
-                  match FStar_Syntax_Util.lids_of_sigelt se with
-                  | hd::uu___4 -> FStar_Ident.string_of_lid hd
-                  | uu___4 ->
-                      FStar_Compiler_Range.string_of_range
-                        (FStar_Syntax_Util.range_of_sigelt se) in
-                FStar_Profiling.report_and_clear tag
-              else ());
-             r) in
+        FStar_TypeChecker_Core.clear_memo_table ();
+        (let uu___1 = acc in
+         match uu___1 with
+         | (uu___2, env1) ->
+             let r =
+               let uu___3 =
+                 let uu___4 =
+                   let uu___5 = FStar_TypeChecker_Env.current_module env1 in
+                   FStar_Ident.string_of_lid uu___5 in
+                 FStar_Pervasives_Native.Some uu___4 in
+               FStar_Profiling.profile
+                 (fun uu___4 -> process_one_decl acc se) uu___3
+                 "FStar.TypeChecker.Tc.process_one_decl" in
+             ((let uu___4 = FStar_Options.profile_group_by_decls () in
+               if uu___4
+               then
+                 let tag =
+                   match FStar_Syntax_Util.lids_of_sigelt se with
+                   | hd::uu___5 -> FStar_Ident.string_of_lid hd
+                   | uu___5 ->
+                       FStar_Compiler_Range.string_of_range
+                         (FStar_Syntax_Util.range_of_sigelt se) in
+                 FStar_Profiling.report_and_clear tag
+               else ());
+              r)) in
       let uu___ =
         FStar_Syntax_Unionfind.with_uf_enabled
           (fun uu___1 ->
@@ -4329,7 +4331,7 @@ let (tc_decls :
                ([], env) ses) in
       match uu___ with
       | (ses1, env1) -> ((FStar_Compiler_List.rev_append ses1 []), env1)
-let (uu___903 : unit) =
+let (uu___904 : unit) =
   FStar_Compiler_Effect.op_Colon_Equals tc_decls_knot
     (FStar_Pervasives_Native.Some tc_decls)
 let (snapshot_context :

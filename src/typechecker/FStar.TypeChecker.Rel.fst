@@ -3827,11 +3827,13 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
            && no_free_uvars t2
            then
              if not wl.smt_ok
+             || Options.ml_ish ()
              then if equal t1 t2
                   then solve env (solve_prob orig None [] wl)
                   else rigid_rigid_delta env problem wl head1 head2 t1 t2
              else solve_with_smt()
            else if not wl.smt_ok
+                || Options.ml_ish()
            then rigid_rigid_delta env problem wl head1 head2 t1 t2
            else (
             try_solve_then_or_else

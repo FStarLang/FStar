@@ -1,11 +1,12 @@
 open Prims
 type precondition = FStar_Syntax_Syntax.typ FStar_Pervasives_Native.option
-type 'a result = ('a * precondition) FStar_Pervasives_Native.option
+type 'a success = ('a * precondition)
+type 'a result = ('a success, Prims.string) FStar_Pervasives.either
 type hash_entry =
   {
   he_term: FStar_Syntax_Syntax.term ;
   he_gamma: FStar_Syntax_Syntax.binding Prims.list ;
-  he_res: FStar_Syntax_Syntax.typ result }
+  he_res: FStar_Syntax_Syntax.typ success }
 let (__proj__Mkhash_entry__item__he_term :
   hash_entry -> FStar_Syntax_Syntax.term) =
   fun projectee ->
@@ -15,7 +16,7 @@ let (__proj__Mkhash_entry__item__he_gamma :
   fun projectee ->
     match projectee with | { he_term; he_gamma; he_res;_} -> he_gamma
 let (__proj__Mkhash_entry__item__he_res :
-  hash_entry -> FStar_Syntax_Syntax.typ result) =
+  hash_entry -> FStar_Syntax_Syntax.typ success) =
   fun projectee ->
     match projectee with | { he_term; he_gamma; he_res;_} -> he_res
 type tc_table = (FStar_Syntax_Syntax.term, hash_entry) FStar_Hash.hashtable
@@ -23,7 +24,7 @@ let (table : tc_table) = FStar_Hash.create FStar_Syntax_Hash.equal_term
 let (clear_memo_table : unit -> unit) = fun uu___ -> FStar_Hash.clear table
 let (insert :
   FStar_TypeChecker_Env.env ->
-    FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.typ result -> unit)
+    FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.typ success -> unit)
   =
   fun g ->
     fun e ->
@@ -35,34 +36,8 @@ let (insert :
             he_res = res
           } in
         FStar_Hash.insert (e, FStar_Syntax_Hash.hash_term) entry table
-let (lookup :
-  FStar_TypeChecker_Env.env ->
-    FStar_Syntax_Syntax.term ->
-      FStar_Syntax_Syntax.typ result FStar_Pervasives_Native.option)
-  =
-  fun g ->
-    fun e ->
-      let uu___ = FStar_Hash.lookup (e, FStar_Syntax_Hash.hash_term) table in
-      match uu___ with
-      | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None
-      | FStar_Pervasives_Native.Some he ->
-          let uu___1 =
-            (FStar_Syntax_Hash.equal_term e he.he_term) &&
-              (FStar_Compiler_List.forall2
-                 (fun b1 ->
-                    fun b2 ->
-                      match (b1, b2) with
-                      | (FStar_Syntax_Syntax.Binding_var x1,
-                         FStar_Syntax_Syntax.Binding_var x2) ->
-                          x1.FStar_Syntax_Syntax.index =
-                            x2.FStar_Syntax_Syntax.index
-                      | uu___2 -> true) he.he_gamma
-                 g.FStar_TypeChecker_Env.gamma) in
-          if uu___1
-          then FStar_Pervasives_Native.Some (he.he_res)
-          else FStar_Pervasives_Native.None
 let return : 'a . 'a -> 'a result =
-  fun x -> FStar_Pervasives_Native.Some (x, FStar_Pervasives_Native.None)
+  fun x -> FStar_Pervasives.Inl (x, FStar_Pervasives_Native.None)
 let (and_pre :
   precondition ->
     precondition ->
@@ -86,18 +61,19 @@ let bind : 'a 'b . 'a result -> ('a -> 'b result) -> 'b result =
   fun x ->
     fun y ->
       match x with
-      | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None
-      | FStar_Pervasives_Native.Some (x1, g1) ->
+      | FStar_Pervasives.Inl (x1, g1) ->
           let uu___ = y x1 in
           (match uu___ with
-           | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None
-           | FStar_Pervasives_Native.Some (y1, g2) ->
+           | FStar_Pervasives.Inl (y1, g2) ->
                let uu___1 = let uu___2 = and_pre g1 g2 in (y1, uu___2) in
-               FStar_Pervasives_Native.Some uu___1)
-let fail : 'a . unit -> 'a result = fun uu___ -> FStar_Pervasives_Native.None
+               FStar_Pervasives.Inl uu___1
+           | err -> err)
+      | FStar_Pervasives.Inr err -> FStar_Pervasives.Inr err
+let fail : 'a . Prims.string -> 'a result =
+  fun msg -> FStar_Pervasives.Inr msg
 let handle_with : 'a . 'a result -> (unit -> 'a result) -> 'a result =
   fun x ->
-    fun h -> match x with | FStar_Pervasives_Native.None -> h () | res -> res
+    fun h -> match x with | FStar_Pervasives.Inr uu___ -> h () | res -> res
 let (mk_type :
   FStar_Syntax_Syntax.universe ->
     FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax)
@@ -118,7 +94,7 @@ let (is_type :
           uu___1.FStar_Syntax_Syntax.n in
         match uu___ with
         | FStar_Syntax_Syntax.Tm_type u -> return u
-        | uu___1 -> fail () in
+        | uu___1 -> fail "Expected a type" in
       let uu___ = aux t in
       handle_with uu___
         (fun uu___1 ->
@@ -138,19 +114,22 @@ let (is_tot_arrow :
           let uu___1 = FStar_Syntax_Subst.compress t1 in
           uu___1.FStar_Syntax_Syntax.n in
         match uu___ with
-        | FStar_Syntax_Syntax.Tm_arrow (x::[], c) when
-            FStar_Syntax_Util.is_total_comp c ->
-            let uu___1 = FStar_Syntax_Subst.open_comp [x] c in
-            (match uu___1 with
-             | (x1::[], c1) ->
-                 return (x1, (FStar_Syntax_Util.comp_result c1)))
+        | FStar_Syntax_Syntax.Tm_arrow (x::[], c) ->
+            let uu___1 = FStar_Syntax_Util.is_total_comp c in
+            if uu___1
+            then
+              let uu___2 = FStar_Syntax_Subst.open_comp [x] c in
+              (match uu___2 with
+               | (x1::[], c1) ->
+                   return (x1, (FStar_Syntax_Util.comp_result c1)))
+            else fail "Expected total arrow"
         | FStar_Syntax_Syntax.Tm_arrow (x::xs, c) ->
             let t2 =
               FStar_Syntax_Syntax.mk (FStar_Syntax_Syntax.Tm_arrow (xs, c))
                 t1.FStar_Syntax_Syntax.pos in
             let uu___1 = FStar_Syntax_Subst.open_term [x] t2 in
             (match uu___1 with | (x1::[], t3) -> return (x1, t3))
-        | uu___1 -> fail () in
+        | uu___1 -> fail "Expected an arrow" in
       let uu___ = aux t in
       handle_with uu___
         (fun uu___1 ->
@@ -174,7 +153,7 @@ let (check_arg_qual :
          { FStar_Syntax_Syntax.aqual_implicit = false;
            FStar_Syntax_Syntax.aqual_attributes = uu___1;_})
           -> return ()
-      | uu___ -> fail ()
+      | uu___ -> fail "Arg qualfier mismatch"
 let (check_bqual :
   FStar_Syntax_Syntax.bqual -> FStar_Syntax_Syntax.bqual -> unit result) =
   fun b0 ->
@@ -185,7 +164,7 @@ let (check_bqual :
       | (FStar_Pervasives_Native.Some (FStar_Syntax_Syntax.Implicit b01),
          FStar_Pervasives_Native.Some (FStar_Syntax_Syntax.Implicit b11))
           when b01 = b11 -> return ()
-      | uu___ -> fail ()
+      | uu___ -> fail "Binder qualifier mismatch"
 let (close_guard :
   FStar_Syntax_Syntax.binders ->
     FStar_Syntax_Syntax.universes -> precondition -> precondition)
@@ -238,10 +217,10 @@ let with_binders :
     fun us ->
       fun f ->
         match f with
-        | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None
-        | FStar_Pervasives_Native.Some (t, g) ->
+        | FStar_Pervasives.Inl (t, g) ->
             let uu___ = let uu___1 = close_guard xs us g in (t, uu___1) in
-            FStar_Pervasives_Native.Some uu___
+            FStar_Pervasives.Inl uu___
+        | err -> err
 let with_definition :
   'a .
     FStar_Syntax_Syntax.binder ->
@@ -253,15 +232,14 @@ let with_definition :
       fun t ->
         fun f ->
           match f with
-          | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None
-          | FStar_Pervasives_Native.Some (t1, g) ->
+          | FStar_Pervasives.Inl (a1, g) ->
               let uu___ =
-                let uu___1 = close_guard_with_definition x u (Obj.magic t1) g in
-                (t1, uu___1) in
-              FStar_Pervasives_Native.Some uu___
+                let uu___1 = close_guard_with_definition x u t g in
+                (a1, uu___1) in
+              FStar_Pervasives.Inl uu___
+          | err -> err
 let (guard : FStar_Syntax_Syntax.typ -> unit result) =
-  fun t ->
-    FStar_Pervasives_Native.Some ((), (FStar_Pervasives_Native.Some t))
+  fun t -> FStar_Pervasives.Inl ((), (FStar_Pervasives_Native.Some t))
 let (abs :
   FStar_Syntax_Syntax.typ ->
     (FStar_Syntax_Syntax.binder -> FStar_Syntax_Syntax.term) ->
@@ -291,28 +269,28 @@ let (strengthen_subtyping_guard :
 let weaken :
   'a .
     FStar_Syntax_Syntax.term ->
-      'a result -> ('a * precondition) FStar_Pervasives_Native.option
+      'a result -> ('a success, Prims.string) FStar_Pervasives.either
   =
   fun p ->
     fun g ->
       match g with
-      | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None
-      | FStar_Pervasives_Native.Some (x, q) ->
+      | FStar_Pervasives.Inl (x, q) ->
           let uu___ = let uu___1 = weaken_subtyping_guard p q in (x, uu___1) in
-          FStar_Pervasives_Native.Some uu___
+          FStar_Pervasives.Inl uu___
+      | err -> err
 let strengthen :
   'a .
     FStar_Syntax_Syntax.term ->
-      'a result -> ('a * precondition) FStar_Pervasives_Native.option
+      'a result -> ('a success, Prims.string) FStar_Pervasives.either
   =
   fun p ->
     fun g ->
       match g with
-      | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None
-      | FStar_Pervasives_Native.Some (x, q) ->
+      | FStar_Pervasives.Inl (x, q) ->
           let uu___ =
             let uu___1 = strengthen_subtyping_guard p q in (x, uu___1) in
-          FStar_Pervasives_Native.Some uu___
+          FStar_Pervasives.Inl uu___
+      | err -> err
 let (equatable :
   FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term -> Prims.bool) =
   fun t0 ->
@@ -363,6 +341,42 @@ let (is_gtot_comp :
     (FStar_Syntax_Util.is_tot_or_gtot_comp c) &&
       (let uu___ = FStar_Syntax_Util.is_total_comp c in
        Prims.op_Negation uu___)
+let rec (context_included :
+  FStar_Syntax_Syntax.binding Prims.list ->
+    FStar_Syntax_Syntax.binding Prims.list -> Prims.bool)
+  =
+  fun g0 ->
+    fun g1 ->
+      match (g0, g1) with
+      | ([], uu___) -> true
+      | (b0::g0', b1::g1') ->
+          (match (b0, b1) with
+           | (FStar_Syntax_Syntax.Binding_var x0,
+              FStar_Syntax_Syntax.Binding_var x1) ->
+               if x0.FStar_Syntax_Syntax.index = x1.FStar_Syntax_Syntax.index
+               then context_included g0' g1'
+               else context_included g0 g1'
+           | (FStar_Syntax_Syntax.Binding_lid uu___,
+              FStar_Syntax_Syntax.Binding_lid uu___1) -> true
+           | (FStar_Syntax_Syntax.Binding_univ uu___,
+              FStar_Syntax_Syntax.Binding_univ uu___1) -> true
+           | uu___ -> false)
+      | uu___ -> false
+let (lookup :
+  FStar_TypeChecker_Env.env ->
+    FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.typ result)
+  =
+  fun g ->
+    fun e ->
+      let uu___ = FStar_Hash.lookup (e, FStar_Syntax_Hash.hash_term) table in
+      match uu___ with
+      | FStar_Pervasives_Native.None -> fail "not in cache"
+      | FStar_Pervasives_Native.Some he ->
+          let uu___1 =
+            context_included he.he_gamma g.FStar_TypeChecker_Env.gamma in
+          if uu___1
+          then FStar_Pervasives.Inl (he.he_res)
+          else fail "not in cache"
 let rec (check_subtype_whnf :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.term ->
@@ -452,17 +466,29 @@ let rec (check_subtype_whnf :
               let uu___2 = curry_arrow x1 xs1 c1 in
               check_subtype_whnf g e uu___1 uu___2
           | uu___1 ->
-              let uu___2 = equatable t0 t1 in
+              let uu___2 =
+                let uu___3 = FStar_Syntax_Util.eq_tm t0 t1 in
+                uu___3 = FStar_Syntax_Util.Equal in
               if uu___2
-              then
-                let uu___3 = universe_of g t0 in
-                bind uu___3
-                  (fun u ->
-                     let uu___4 =
-                       let uu___5 = mk_type u in
-                       FStar_Syntax_Util.mk_eq2 u uu___5 t0 t1 in
-                     guard uu___4)
-              else fail ()
+              then return ()
+              else
+                (let uu___4 = equatable t0 t1 in
+                 if uu___4
+                 then
+                   let uu___5 = universe_of g t0 in
+                   bind uu___5
+                     (fun u ->
+                        let uu___6 =
+                          let uu___7 = mk_type u in
+                          FStar_Syntax_Util.mk_eq2 u uu___7 t0 t1 in
+                        guard uu___6)
+                 else
+                   (let uu___6 =
+                      let uu___7 = FStar_Syntax_Print.term_to_string t0 in
+                      let uu___8 = FStar_Syntax_Print.term_to_string t1 in
+                      FStar_Compiler_Util.format2
+                        "Subtyping failed: %s </: %s" uu___7 uu___8 in
+                    fail uu___6))
 and (check_subtype :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.term ->
@@ -508,18 +534,23 @@ and (check_subcomp :
           then
             check_subtype g e (FStar_Syntax_Util.comp_result c0)
               (FStar_Syntax_Util.comp_result c1)
-          else fail ()
+          else fail "Subcomp failed"
 and (check :
   FStar_TypeChecker_Env.env ->
-    FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.typ result)
+    FStar_Syntax_Syntax.term ->
+      ((FStar_Syntax_Syntax.typ * FStar_Syntax_Syntax.typ
+         FStar_Pervasives_Native.option),
+        Prims.string) FStar_Pervasives.either)
   =
   fun g ->
     fun e ->
       let uu___ = lookup g e in
-      match uu___ with
-      | FStar_Pervasives_Native.Some r -> r
-      | FStar_Pervasives_Native.None ->
-          let r = check' g e in (insert g e r; r)
+      handle_with uu___
+        (fun uu___1 ->
+           let r = check' g e in
+           match r with
+           | FStar_Pervasives.Inl res -> (insert g e res; r)
+           | uu___2 -> r)
 and (check' :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.typ result)
@@ -545,7 +576,7 @@ and (check' :
               (f.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v in
           (match uu___1 with
            | FStar_Pervasives_Native.Some (([], t), uu___2) -> return t
-           | uu___2 -> fail ())
+           | uu___2 -> fail "Missing universes instantiation")
       | FStar_Syntax_Syntax.Tm_uinst
           ({ FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_fvar f;
              FStar_Syntax_Syntax.pos = uu___1;
@@ -557,7 +588,7 @@ and (check' :
             FStar_TypeChecker_Env.try_lookup_and_inst_lid g us
               (f.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v in
           (match uu___4 with
-           | FStar_Pervasives_Native.None -> fail ()
+           | FStar_Pervasives_Native.None -> fail "Top-level name not found"
            | FStar_Pervasives_Native.Some (t, uu___5) -> return t)
       | FStar_Syntax_Syntax.Tm_constant c ->
           let t =
@@ -716,7 +747,7 @@ and (check' :
                                           with_definition x1 u
                                             lb.FStar_Syntax_Syntax.lbdef
                                             uu___9))))
-                    else fail ()))
+                    else fail "Let binding is effectful"))
       | FStar_Syntax_Syntax.Tm_match
           (sc, FStar_Pervasives_Native.None, branches,
            FStar_Pervasives_Native.Some
@@ -724,9 +755,14 @@ and (check' :
              FStar_Syntax_Syntax.residual_typ = FStar_Pervasives_Native.Some
                t;
              FStar_Syntax_Syntax.residual_flags = uu___2;_})
-          -> fail ()
-      | FStar_Syntax_Syntax.Tm_match uu___1 -> fail ()
-      | uu___1 -> fail ()
+          -> fail "Match is not handled yet"
+      | FStar_Syntax_Syntax.Tm_match uu___1 ->
+          fail "Match is not handled yet"
+      | uu___1 ->
+          let uu___2 =
+            let uu___3 = FStar_Syntax_Print.tag_of_term e in
+            FStar_Compiler_Util.format1 "Unexpected term: %s" uu___3 in
+          fail uu___2
 and (check_binders :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.binders ->
@@ -767,7 +803,7 @@ and (check_comp :
       then
         let uu___1 = check g (FStar_Syntax_Util.comp_result c) in
         bind uu___1 (fun t -> is_type g t)
-      else fail ()
+      else fail "Computation type is not Tot or GTot"
 and (universe_of :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.typ -> FStar_Syntax_Syntax.universe result)

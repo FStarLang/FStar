@@ -299,12 +299,12 @@ and hash_meta m =
        hash_term t]
 
 and hash_meta_source_info m =
-  H.of_int
-  (match m with
-   | Sequence -> 1049
-   | Primop -> 1051
-   | Masked_effect -> 1061
-   | Meta_smt_pat -> 1063)
+   match m with
+   | Sequence -> H.of_int 1049
+   | Primop -> H.of_int 1051
+   | Masked_effect -> H.of_int 1061
+   | Meta_smt_pat -> H.of_int 1063
+   | Machine_integer sw -> H.mix (H.of_int 1069) (hash_sw sw)
 
 and hash_lazyinfo li = H.of_int 0 //no meaningful way to hash the blob
 
