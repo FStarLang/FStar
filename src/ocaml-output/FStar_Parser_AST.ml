@@ -44,14 +44,16 @@ type term' =
   | App of (term * term * imp) 
   | Let of (let_qualifier * (term Prims.list FStar_Pervasives_Native.option *
   (pattern * term)) Prims.list * term) 
+  | LetOperator of ((FStar_Ident.ident * pattern * term) Prims.list * term) 
   | LetOpen of (FStar_Ident.lid * term) 
   | LetOpenRecord of (term * term * term) 
   | Seq of (term * term) 
   | Bind of (FStar_Ident.ident * term * term) 
   | If of (term * (FStar_Ident.ident FStar_Pervasives_Native.option * term *
   Prims.bool) FStar_Pervasives_Native.option * term * term) 
-  | Match of (term * (FStar_Ident.ident FStar_Pervasives_Native.option * term
-  * Prims.bool) FStar_Pervasives_Native.option * (pattern * term
+  | Match of (term * FStar_Ident.ident FStar_Pervasives_Native.option *
+  (FStar_Ident.ident FStar_Pervasives_Native.option * term * Prims.bool)
+  FStar_Pervasives_Native.option * (pattern * term
   FStar_Pervasives_Native.option * term) Prims.list) 
   | TryWith of (term * (pattern * term FStar_Pervasives_Native.option * term)
   Prims.list) 
@@ -193,6 +195,12 @@ let (__proj__Let__item___0 :
     (let_qualifier * (term Prims.list FStar_Pervasives_Native.option *
       (pattern * term)) Prims.list * term))
   = fun projectee -> match projectee with | Let _0 -> _0
+let (uu___is_LetOperator : term' -> Prims.bool) =
+  fun projectee ->
+    match projectee with | LetOperator _0 -> true | uu___ -> false
+let (__proj__LetOperator__item___0 :
+  term' -> ((FStar_Ident.ident * pattern * term) Prims.list * term)) =
+  fun projectee -> match projectee with | LetOperator _0 -> _0
 let (uu___is_LetOpen : term' -> Prims.bool) =
   fun projectee -> match projectee with | LetOpen _0 -> true | uu___ -> false
 let (__proj__LetOpen__item___0 : term' -> (FStar_Ident.lid * term)) =
@@ -221,8 +229,9 @@ let (uu___is_Match : term' -> Prims.bool) =
   fun projectee -> match projectee with | Match _0 -> true | uu___ -> false
 let (__proj__Match__item___0 :
   term' ->
-    (term * (FStar_Ident.ident FStar_Pervasives_Native.option * term *
-      Prims.bool) FStar_Pervasives_Native.option * (pattern * term
+    (term * FStar_Ident.ident FStar_Pervasives_Native.option *
+      (FStar_Ident.ident FStar_Pervasives_Native.option * term * Prims.bool)
+      FStar_Pervasives_Native.option * (pattern * term
       FStar_Pervasives_Native.option * term) Prims.list))
   = fun projectee -> match projectee with | Match _0 -> _0
 let (uu___is_TryWith : term' -> Prims.bool) =
@@ -1019,7 +1028,8 @@ let (mk_function :
                     let uu___6 =
                       let uu___7 = FStar_Ident.lid_of_ids [x] in Var uu___7 in
                     mk_term uu___6 r1 Expr in
-                  (uu___5, FStar_Pervasives_Native.None, branches) in
+                  (uu___5, FStar_Pervasives_Native.None,
+                    FStar_Pervasives_Native.None, branches) in
                 Match uu___4 in
               mk_term uu___3 r2 Expr in
             ([mk_pattern (PatVar (x, FStar_Pervasives_Native.None, [])) r1],
@@ -1370,6 +1380,7 @@ let (mkRefinedPattern :
                              mk_term
                                (Match
                                   (x_var, FStar_Pervasives_Native.None,
+                                    FStar_Pervasives_Native.None,
                                     [pat_branch; otherwise_branch]))
                                phi.range Formula in
                            mk_term
@@ -1497,6 +1508,107 @@ let (compile_op :
 let (compile_op' :
   Prims.string -> FStar_Compiler_Range.range -> Prims.string) =
   fun s -> fun r -> compile_op (~- Prims.int_one) s r
+let (string_to_op :
+  Prims.string ->
+    (Prims.string * Prims.int FStar_Pervasives_Native.option)
+      FStar_Pervasives_Native.option)
+  =
+  fun s ->
+    let name_of_op uu___ =
+      match uu___ with
+      | "Amp" ->
+          FStar_Pervasives_Native.Some ("&", FStar_Pervasives_Native.None)
+      | "At" ->
+          FStar_Pervasives_Native.Some ("@", FStar_Pervasives_Native.None)
+      | "Plus" ->
+          FStar_Pervasives_Native.Some ("+", FStar_Pervasives_Native.None)
+      | "Minus" ->
+          FStar_Pervasives_Native.Some ("-", FStar_Pervasives_Native.None)
+      | "Subtraction" ->
+          FStar_Pervasives_Native.Some
+            ("-", (FStar_Pervasives_Native.Some (Prims.of_int (2))))
+      | "Tilde" ->
+          FStar_Pervasives_Native.Some ("~", FStar_Pervasives_Native.None)
+      | "Slash" ->
+          FStar_Pervasives_Native.Some ("/", FStar_Pervasives_Native.None)
+      | "Backslash" ->
+          FStar_Pervasives_Native.Some ("\\", FStar_Pervasives_Native.None)
+      | "Less" ->
+          FStar_Pervasives_Native.Some ("<", FStar_Pervasives_Native.None)
+      | "Equals" ->
+          FStar_Pervasives_Native.Some ("=", FStar_Pervasives_Native.None)
+      | "Greater" ->
+          FStar_Pervasives_Native.Some (">", FStar_Pervasives_Native.None)
+      | "Underscore" ->
+          FStar_Pervasives_Native.Some ("_", FStar_Pervasives_Native.None)
+      | "Bar" ->
+          FStar_Pervasives_Native.Some ("|", FStar_Pervasives_Native.None)
+      | "Bang" ->
+          FStar_Pervasives_Native.Some ("!", FStar_Pervasives_Native.None)
+      | "Hat" ->
+          FStar_Pervasives_Native.Some ("^", FStar_Pervasives_Native.None)
+      | "Percent" ->
+          FStar_Pervasives_Native.Some ("%", FStar_Pervasives_Native.None)
+      | "Star" ->
+          FStar_Pervasives_Native.Some ("*", FStar_Pervasives_Native.None)
+      | "Question" ->
+          FStar_Pervasives_Native.Some ("?", FStar_Pervasives_Native.None)
+      | "Colon" ->
+          FStar_Pervasives_Native.Some (":", FStar_Pervasives_Native.None)
+      | "Dollar" ->
+          FStar_Pervasives_Native.Some ("$", FStar_Pervasives_Native.None)
+      | "Dot" ->
+          FStar_Pervasives_Native.Some (".", FStar_Pervasives_Native.None)
+      | uu___1 -> FStar_Pervasives_Native.None in
+    match s with
+    | "op_String_Assignment" ->
+        FStar_Pervasives_Native.Some (".[]<-", FStar_Pervasives_Native.None)
+    | "op_Array_Assignment" ->
+        FStar_Pervasives_Native.Some (".()<-", FStar_Pervasives_Native.None)
+    | "op_Brack_Lens_Assignment" ->
+        FStar_Pervasives_Native.Some
+          (".[||]<-", FStar_Pervasives_Native.None)
+    | "op_Lens_Assignment" ->
+        FStar_Pervasives_Native.Some
+          (".(||)<-", FStar_Pervasives_Native.None)
+    | "op_String_Access" ->
+        FStar_Pervasives_Native.Some (".[]", FStar_Pervasives_Native.None)
+    | "op_Array_Access" ->
+        FStar_Pervasives_Native.Some (".()", FStar_Pervasives_Native.None)
+    | "op_Brack_Lens_Access" ->
+        FStar_Pervasives_Native.Some (".[||]", FStar_Pervasives_Native.None)
+    | "op_Lens_Access" ->
+        FStar_Pervasives_Native.Some (".(||)", FStar_Pervasives_Native.None)
+    | uu___ ->
+        if FStar_Compiler_Util.starts_with s "op_"
+        then
+          let s1 =
+            let uu___1 =
+              FStar_Compiler_Util.substring_from s
+                (FStar_String.length "op_") in
+            FStar_Compiler_Util.split uu___1 "_" in
+          (match s1 with
+           | op::[] -> name_of_op op
+           | uu___1 ->
+               let maybeop =
+                 let uu___2 = FStar_Compiler_List.map name_of_op s1 in
+                 FStar_Compiler_List.fold_left
+                   (fun acc ->
+                      fun x ->
+                        match acc with
+                        | FStar_Pervasives_Native.None ->
+                            FStar_Pervasives_Native.None
+                        | FStar_Pervasives_Native.Some acc1 ->
+                            (match x with
+                             | FStar_Pervasives_Native.Some (op, uu___3) ->
+                                 FStar_Pervasives_Native.Some
+                                   (Prims.op_Hat acc1 op)
+                             | FStar_Pervasives_Native.None ->
+                                 FStar_Pervasives_Native.None))
+                   (FStar_Pervasives_Native.Some "") uu___2 in
+               FStar_Compiler_Util.map_opt maybeop
+                 (fun o -> (o, FStar_Pervasives_Native.None)))
+        else FStar_Pervasives_Native.None
 let (string_of_fsdoc :
   (Prims.string * (Prims.string * Prims.string) Prims.list) -> Prims.string)
   =
@@ -1659,10 +1771,11 @@ let rec (term_to_string : term -> Prims.string) =
         let uu___3 = FStar_Compiler_Effect.op_Bar_Greater t3 term_to_string in
         FStar_Compiler_Util.format4 "if %s %sthen %s else %s" uu___ uu___1
           uu___2 uu___3
-    | Match (t, ret_opt, branches) ->
-        try_or_match_to_string x t branches ret_opt
+    | Match (t, op_opt, ret_opt, branches) ->
+        try_or_match_to_string x t branches op_opt ret_opt
     | TryWith (t, branches) ->
         try_or_match_to_string x t branches FStar_Pervasives_Native.None
+          FStar_Pervasives_Native.None
     | Ascribed (t1, t2, FStar_Pervasives_Native.None, flag) ->
         let s = if flag then "$:" else "<:" in
         let uu___ = FStar_Compiler_Effect.op_Bar_Greater t1 term_to_string in
@@ -1898,51 +2011,60 @@ and (try_or_match_to_string :
   term ->
     term ->
       (pattern * term FStar_Pervasives_Native.option * term) Prims.list ->
-        (FStar_Ident.ident FStar_Pervasives_Native.option * term *
-          Prims.bool) FStar_Pervasives_Native.option -> Prims.string)
+        FStar_Ident.ident FStar_Pervasives_Native.option ->
+          (FStar_Ident.ident FStar_Pervasives_Native.option * term *
+            Prims.bool) FStar_Pervasives_Native.option -> Prims.string)
   =
   fun x ->
     fun scrutinee ->
       fun branches ->
-        fun ret_opt ->
-          let s =
-            match x.tm with
-            | Match uu___ -> "match"
-            | TryWith uu___ -> "try"
-            | uu___ -> failwith "impossible" in
-          let uu___ =
-            FStar_Compiler_Effect.op_Bar_Greater scrutinee term_to_string in
-          let uu___1 =
-            match ret_opt with
-            | FStar_Pervasives_Native.None -> ""
-            | FStar_Pervasives_Native.Some (as_opt, ret, use_eq) ->
-                let s1 = if use_eq then "returns$" else "returns" in
-                let uu___2 =
-                  match as_opt with
-                  | FStar_Pervasives_Native.None -> ""
-                  | FStar_Pervasives_Native.Some as_ident ->
-                      let uu___3 = FStar_Ident.string_of_id as_ident in
-                      FStar_Compiler_Util.format1 "as %s " uu___3 in
-                let uu___3 = term_to_string ret in
-                FStar_Compiler_Util.format3 "%s%s %s " s1 uu___2 uu___3 in
-          let uu___2 =
-            to_string_l " | "
-              (fun uu___3 ->
-                 match uu___3 with
-                 | (p, w, e) ->
-                     let uu___4 =
-                       FStar_Compiler_Effect.op_Bar_Greater p pat_to_string in
-                     let uu___5 =
-                       match w with
-                       | FStar_Pervasives_Native.None -> ""
-                       | FStar_Pervasives_Native.Some e1 ->
-                           let uu___6 = term_to_string e1 in
-                           FStar_Compiler_Util.format1 "when %s" uu___6 in
-                     let uu___6 =
-                       FStar_Compiler_Effect.op_Bar_Greater e term_to_string in
-                     FStar_Compiler_Util.format3 "%s %s -> %s" uu___4 uu___5
-                       uu___6) branches in
-          FStar_Compiler_Util.format4 "%s %s %swith %s" s uu___ uu___1 uu___2
+        fun op_opt ->
+          fun ret_opt ->
+            let s =
+              match x.tm with
+              | Match uu___ -> "match"
+              | TryWith uu___ -> "try"
+              | uu___ -> failwith "impossible" in
+            let uu___ =
+              match op_opt with
+              | FStar_Pervasives_Native.Some op ->
+                  FStar_Ident.string_of_id op
+              | FStar_Pervasives_Native.None -> "" in
+            let uu___1 =
+              FStar_Compiler_Effect.op_Bar_Greater scrutinee term_to_string in
+            let uu___2 =
+              match ret_opt with
+              | FStar_Pervasives_Native.None -> ""
+              | FStar_Pervasives_Native.Some (as_opt, ret, use_eq) ->
+                  let s1 = if use_eq then "returns$" else "returns" in
+                  let uu___3 =
+                    match as_opt with
+                    | FStar_Pervasives_Native.None -> ""
+                    | FStar_Pervasives_Native.Some as_ident ->
+                        let uu___4 = FStar_Ident.string_of_id as_ident in
+                        FStar_Compiler_Util.format1 "as %s " uu___4 in
+                  let uu___4 = term_to_string ret in
+                  FStar_Compiler_Util.format3 "%s%s %s " s1 uu___3 uu___4 in
+            let uu___3 =
+              to_string_l " | "
+                (fun uu___4 ->
+                   match uu___4 with
+                   | (p, w, e) ->
+                       let uu___5 =
+                         FStar_Compiler_Effect.op_Bar_Greater p pat_to_string in
+                       let uu___6 =
+                         match w with
+                         | FStar_Pervasives_Native.None -> ""
+                         | FStar_Pervasives_Native.Some e1 ->
+                             let uu___7 = term_to_string e1 in
+                             FStar_Compiler_Util.format1 "when %s" uu___7 in
+                       let uu___7 =
+                         FStar_Compiler_Effect.op_Bar_Greater e
+                           term_to_string in
+                       FStar_Compiler_Util.format3 "%s %s -> %s" uu___5
+                         uu___6 uu___7) branches in
+            FStar_Compiler_Util.format5 "%s%s %s %swith %s" s uu___ uu___1
+              uu___2 uu___3
 and (calc_step_to_string : calc_step -> Prims.string) =
   fun uu___ ->
     match uu___ with
