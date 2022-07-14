@@ -411,3 +411,14 @@ val ghost_split
 /// NOTE: we could implement a STAtomicBase Unobservable "split"
 /// operation, just like "join", but we don't want it to return a pair
 /// of arrays. For now we settle on explicit use of split_l, split_r.
+
+
+/// Copies the contents of a0 to a1
+/// TODO: extraction (currently not handled yet?)
+val memcpy (#t:_) (#p0:perm)
+           (a0 a1:array t)
+           (#s0 #s1:Ghost.erased (Seq.seq t))
+           (l:U32.t { U32.v l == length a0 /\ length a0 == length a1 } )
+  : STT unit
+    (pts_to a0 p0 s0 `star` pts_to a1 full_perm s1)
+    (fun _ -> pts_to a0 p0 s0  `star` pts_to a1 full_perm s0)
