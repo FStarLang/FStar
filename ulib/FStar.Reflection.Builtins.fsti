@@ -35,6 +35,9 @@ val inspect_pack_inv : (tv:term_view) -> Lemma (inspect_ln (pack_ln tv) == tv)
 val inspect_comp   : (c:comp) -> cv:comp_view{smaller_comp cv c}
 val pack_comp      : comp_view -> comp
 
+val pack_inspect_comp_inv : (c:comp) -> Lemma (pack_comp (inspect_comp c) == c)
+val inspect_pack_comp_inv : (cv:comp_view) -> Lemma (inspect_comp (pack_comp cv) == cv)
+
 val inspect_sigelt : sigelt -> sigelt_view
 val pack_sigelt    : sigelt_view -> sigelt
 
