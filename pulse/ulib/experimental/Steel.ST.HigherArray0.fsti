@@ -117,6 +117,10 @@ val malloc_ptr
 
 /// Allocating a new array of size n, where each cell is initialized
 /// with value x
+
+let is_full_array (#elt: Type) (a: array elt) : Tot prop =
+  length a == base_len (base (ptr_of a))
+
 inline_for_extraction
 [@@noextract_to "krml"]
 let malloc
@@ -129,7 +133,7 @@ let malloc
     (True)
     (fun a ->
       length a == U32.v n /\
-      base_len (base (ptr_of a)) == U32.v n
+      is_full_array a
     )
 = let p = malloc_ptr x n in
   let a : array elt = (| p, Ghost.hide (U32.v n) |) in
@@ -160,7 +164,7 @@ let free
     (pts_to a P.full_perm s)
     (fun _ -> emp)
     (
-      length a == base_len (base (ptr_of a))
+      is_full_array a
     )
     (fun _ -> True)
 = let (| p, _ |) = a in
