@@ -1924,7 +1924,10 @@ let string_to_term (e: Env.env) (s: string): tac term
     match parse (Fragment (frag_of_text s)) with
     | Term t ->
       let dsenv = FStar.Syntax.DsEnv.set_current_module e.dsenv (current_module e) in
-      ret <| FStar.ToSyntax.ToSyntax.desugar_term dsenv t
+      begin try ret (FStar.ToSyntax.ToSyntax.desugar_term dsenv t) with
+          | FStar.Errors.Error (_, e, _, _) -> fail ("string_of_term: " ^ e)
+          | _ -> fail ("string_of_term: Unknown error")
+      end
     | ASTFragment _ -> fail ("string_of_term: expected a Term as a result, got an ASTFragment")
     | ParseError (_, err, _) -> fail ("string_of_term: got error " ^ err)
 
