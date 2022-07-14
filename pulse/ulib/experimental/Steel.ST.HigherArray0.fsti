@@ -73,8 +73,9 @@ val pts_to
 /// of the element sequence it points to
 val pts_to_length
   (#opened: _)
-  (#elt: Type u#1) (a: array elt)
-  (p: P.perm)
+  (#elt: Type u#1)
+  (#p: P.perm)
+  (a: array elt)
   (s: Seq.seq elt)
 : STGhost unit opened
     (pts_to a p s)

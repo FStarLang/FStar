@@ -28,7 +28,7 @@ let varrayp_sel a p = mk_selector_vprop_sel _ (pts_to'_inj a p)
 let intro_varrayp
   a p s
 =
-  pts_to_length a p _;
+  pts_to_length a _;
   change_equal_slprop
     (pts_to a p s)
     (pts_to' a p s);

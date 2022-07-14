@@ -56,11 +56,27 @@ let ptr_of
 = match a with // dfst is not marked inline_for_extraction, so we need to reimplement it
   | (| p, _ |) -> p
 
+/// Returns the length of the array. Usable for specification and proof purposes,
+/// as modeled by the GTot effect
 let length (#elt: Type) (a: array elt) : GTot nat =
   dsnd a
 
+/// The main representation predicate:
 /// A Steel separation logic heap predicate to describe that an array
 /// a points to some element sequence s with some permission p.
+///
+/// A big design decision in this library was whether the second index
+/// of this predicate should be a [lseq t (length a)] or just a [seq t].
+///
+/// Making it an [lseq] forces every specification to be strongly
+/// typed, in the sense that the logical representation of an array
+/// has to be a sequence of the right length. This can be a little
+/// cumbersome in specifications, particularly as the refinement appears
+/// in some cases beneath the [erased] constructor.
+///
+/// So, we opted instead to let the index be just a [seq t], and
+/// requiring length refinements on it in certain functions, only when
+/// necessary.
 val pts_to
   (#elt: Type0) (a: array elt)
   ([@@@ smt_fallback ] p: P.perm)
@@ -69,10 +85,13 @@ val pts_to
 
 /// A stateful lemma to relate the size of an array with the size
 /// of the element sequence it points to
+/// This ghost function proves that an array always points to a
+/// sequence of the appropriate length
 val pts_to_length
   (#opened: _)
-  (#elt: Type0) (a: array elt)
-  (p: P.perm)
+  (#elt: Type0)
+  (#p: P.perm)
+  (a: array elt)
   (s: Seq.seq elt)
 : STGhost unit opened
     (pts_to a p s)
@@ -118,6 +137,10 @@ val malloc
       length a == U32.v n /\
       base_len (base (ptr_of a)) == U32.v n
     )
+
+inline_for_extraction
+[@@noextract_to "krml"]
+let alloc #elt = malloc #elt
 
 /// Freeing a full array. 
 inline_for_extraction
@@ -177,6 +200,10 @@ val index
     (U32.v i < length a)
     (fun res -> U32.v i < Seq.length s /\ res == Seq.index s (U32.v i))
 
+inline_for_extraction
+[@@noextract_to "krml"]
+let read #t #p = index #t #p
+
 /// Writing the value v at the i-th element of an array a.
 /// TODO: we should also provide an atomic version for small types.
 inline_for_extraction
@@ -190,6 +217,10 @@ val upd
 : STT unit
     (pts_to a P.full_perm s)
     (fun res -> pts_to a P.full_perm (Seq.upd s (U32.v i) v))
+
+inline_for_extraction
+[@@noextract_to "krml"]
+let write #t = upd #t
 
 /// An array a1 is adjacent to an array a2 if and only if they have
 /// the same base array and the end of a1 coincides with the beginning

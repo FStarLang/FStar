@@ -78,8 +78,8 @@ let ptr_base_offset_inj p1 p2 = H.ptr_base_offset_inj p1 p2
 
 let pts_to a p s = H.pts_to a p (seq_map raise s)
 
-let pts_to_length a p s =
-  H.pts_to_length a p _
+let pts_to_length a s =
+  H.pts_to_length a _
 
 let pts_to_inj a p1 s1 p2 s2 =
   H.pts_to_inj a p1 (seq_map raise s1) p2 (seq_map raise s2)
@@ -394,8 +394,8 @@ let init_compare_inv #o
           U32.v l == length a0
         ))
         (ensures (fun _ -> True))
-    = pts_to_length a0 _ _;
-      pts_to_length a1 _ _;
+    = pts_to_length a0 _;
+      pts_to_length a1 _;
       intro_pure (equal_up_to s0 s1 (Ghost.hide (Some 0ul)));
       rewrite
         (R.pts_to ctr Steel.FractionalPermission.full_perm (Some 0ul))
@@ -418,8 +418,8 @@ let compare_pts
     (ensures fun b ->
       b = (Ghost.reveal s0 = Ghost.reveal s1))
   =
-   pts_to_length a0 _ _;
-   pts_to_length a1 _ _;
+   pts_to_length a0 _;
+   pts_to_length a1 _;
    let ctr = R.alloc (Some 0ul) in
     let cond ()
       : STT bool
@@ -482,8 +482,8 @@ let compare_pts
 let compare
   #t #p0 #p1 a0 a1 #s0 #s1 l
   =
-    pts_to_length a0 _ _;
-    pts_to_length a1 _ _;
+    pts_to_length a0 _;
+    pts_to_length a1 _;
     if l = 0ul
     then (
       assert (Seq.equal s0 s1);
