@@ -156,10 +156,10 @@ let elim_pts_to (#opened: _) (#elt: Type u#1) (a: array elt) (p: P.perm) (s: Seq
   elim_pure _
 
 let pts_to_length
-  a p s
+  a s
 =
-  elim_pts_to a p s;
-  intro_pts_to a p s
+  elim_pts_to a _ s;
+  intro_pts_to a _ s
 
 let mk_carrier_joinable
   (#elt: Type)
@@ -560,11 +560,13 @@ let prefix_copied #t
    : Seq.seq t
    = (Seq.append (Seq.slice e0 0 i) (Seq.slice e1 i (Seq.length e1)))
 
+#push-options "--z3rlimit 16"
+
 let memcpy
   #t #p0 a0 a1 #e0 #e1 i
   =
-    pts_to_length a0 _ _;
-    pts_to_length a1 _ _;
+    pts_to_length a0 _;
+    pts_to_length a1 _;
     let inv (j:Steel.ST.Loops.nat_at_most i)
       : vprop
       = pts_to a0 p0 e0 `star`
@@ -600,3 +602,5 @@ let memcpy
     rewrite (pts_to a1 _ (prefix_copied e0 e1 (U32.v i)))
                            (pts_to a1 _ e0);
     return ()
+
+#pop-options

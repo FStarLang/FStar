@@ -19,14 +19,18 @@ module U32 = FStar.UInt32
 module A = Steel.ST.Array0
 
 /// A selector version
+
+/// Separation logic predicate indicating the validity of the array in the current memory, p is the fractional permission on the array
 val varrayp_hp
   (#elt: Type0) (a: array elt) (p: P.perm)
 : Tot (slprop u#1)
 
+/// Selector for Steel arrays. It returns the contents in memory of the array
 val varrayp_sel
   (#elt: Type) (a: array elt) (p: P.perm)
 : Tot (selector (Seq.lseq elt (length a)) (varrayp_hp a p))
 
+/// Combining the elements above to create an array vprop
 [@__steel_reduce__] // for t_of
 let varrayp
   (#elt: Type) (a: array elt) (p: P.perm)
@@ -37,6 +41,9 @@ let varrayp
     sel = varrayp_sel a p;
   })
 
+/// A wrapper to access an array selector more easily.
+/// Ensuring that the corresponding array vprop is in the context is done by
+/// calling a variant of the framing tactic, as defined in Steel.Effect.Common
 [@@ __steel_reduce__]
 let aselp (#elt: Type) (#vp: vprop) (a: array elt) (p: P.perm)
   (h: rmem vp { FStar.Tactics.with_tactic selector_tactic (can_be_split vp (varrayp a p) /\ True) })
@@ -55,6 +62,7 @@ let asel (#elt: Type) (#vp: vprop) (a: array elt)
 : GTot (Seq.lseq elt (length a))
 = h (varray a)
 
+/// Converting a `pts_to` to a `varrayp`
 val intro_varrayp
   (#opened: _) (#elt: Type) (a: array elt) (p: P.perm) (s: Seq.seq elt)
 : SteelGhost unit opened
@@ -76,6 +84,7 @@ let intro_varray
     )
 = intro_varrayp _ _ _
 
+/// Converting a `varrayp` into a `pts_to`
 val elim_varrayp
   (#opened: _) (#elt: Type) (a: array elt) (p: P.perm)
 : SteelGhost (Ghost.erased (Seq.seq elt)) opened
@@ -219,7 +228,7 @@ let upd
       asel a h' == Seq.upd (asel a h) (U32.v i) v
     )
 = let s = elim_varray a in
-  A.pts_to_length a _ _;
+  A.pts_to_length a _;
   A.upd a i v;
   intro_varray a _
 
