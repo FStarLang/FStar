@@ -121,7 +121,7 @@ let malloc
     (fun _ -> True)
     (fun _ a h' ->
       length a == U32.v n /\
-      base_len (base (ptr_of a)) == U32.v n /\
+      is_full_array a /\
       asel a h' == Seq.create (U32.v n) x
     )
 = let res = A.malloc x n in
@@ -139,7 +139,7 @@ let free
     (varray a)
     (fun _ -> emp)
     (fun _ ->
-      length a == base_len (base (ptr_of a))
+      is_full_array a
     )
     (fun _ _ _ -> True)
 = let _ = elim_varray a in

@@ -123,6 +123,10 @@ val pts_to_inj
 /// Allocating a new array of size n, where each cell is initialized
 /// with value x. We define the non-selector version of this operation
 /// (and others) with a _pt suffix in the name.
+
+let is_full_array (#elt: Type) (a: array elt) : Tot prop =
+  length a == base_len (base (ptr_of a))
+
 inline_for_extraction
 [@@noextract_to "krml"]
 val malloc
@@ -135,7 +139,7 @@ val malloc
     (True)
     (fun a ->
       length a == U32.v n /\
-      base_len (base (ptr_of a)) == U32.v n
+      is_full_array a
     )
 
 inline_for_extraction
@@ -154,7 +158,7 @@ val free
     (pts_to a P.full_perm s)
     (fun _ -> emp)
     (
-      length a == base_len (base (ptr_of a))
+      is_full_array a
     )
     (fun _ -> True)
 
