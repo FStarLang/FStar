@@ -79,7 +79,7 @@ let length (#elt: Type) (a: array elt) : GTot nat =
 /// necessary.
 val pts_to
   (#elt: Type0) (a: array elt)
-  ([@@@ smt_fallback ] p: P.perm)
+  (p: P.perm)
   ([@@@ smt_fallback ] s: Seq.seq elt)
 : Tot vprop
 
