@@ -96,7 +96,8 @@ let malloc x n =
     (pts_to res _ _);
   return res
 
-let free #_ #s x =
+let free #_ x =
+  let s = elim_exists () in
   rewrite
     (pts_to x _ _)
     (H.pts_to x P.full_perm (seq_map raise s));
