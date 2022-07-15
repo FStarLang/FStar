@@ -58,7 +58,7 @@ let rec mk_arr_curried (bs: list binder) (cod : comp) : Tac term =
     match bs with
     | [] -> fail "mk_arr, empty binders"
     | [b] -> pack_curried (Tv_Arrow b cod)
-    | (b::bs) -> pack_curried (Tv_Arrow b (pack_comp (C_Total (mk_arr_curried bs cod) [])))
+    | (b::bs) -> pack_curried (Tv_Arrow b (pack_comp (C_Total (mk_arr_curried bs cod) u_unk [])))
 
 let rec mk_tot_arr (bs: list binder) (cod : term) : Tac term =
     match bs with
