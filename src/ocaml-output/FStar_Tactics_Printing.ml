@@ -113,26 +113,71 @@ let (goal_to_string :
             match g.FStar_Tactics_Types.label with
             | "" -> ""
             | l -> Prims.op_Hat " (" (Prims.op_Hat l ")") in
-          let goal_binders =
-            (g.FStar_Tactics_Types.goal_ctx_uvar).FStar_Syntax_Syntax.ctx_uvar_binders in
-          let goal_ty =
-            (g.FStar_Tactics_Types.goal_ctx_uvar).FStar_Syntax_Syntax.ctx_uvar_typ in
-          let uu___ = unshadow goal_binders goal_ty in
+          let uu___ =
+            let rename_binders subst bs =
+              FStar_Compiler_Effect.op_Bar_Greater bs
+                (FStar_Compiler_List.map
+                   (fun uu___1 ->
+                      let x = uu___1.FStar_Syntax_Syntax.binder_bv in
+                      let y =
+                        let uu___2 = FStar_Syntax_Syntax.bv_to_name x in
+                        FStar_Syntax_Subst.subst subst uu___2 in
+                      let uu___2 =
+                        let uu___3 = FStar_Syntax_Subst.compress y in
+                        uu___3.FStar_Syntax_Syntax.n in
+                      match uu___2 with
+                      | FStar_Syntax_Syntax.Tm_name y1 ->
+                          let uu___3 =
+                            let uu___4 = uu___1.FStar_Syntax_Syntax.binder_bv in
+                            let uu___5 =
+                              FStar_Syntax_Subst.subst subst
+                                x.FStar_Syntax_Syntax.sort in
+                            {
+                              FStar_Syntax_Syntax.ppname =
+                                (uu___4.FStar_Syntax_Syntax.ppname);
+                              FStar_Syntax_Syntax.index =
+                                (uu___4.FStar_Syntax_Syntax.index);
+                              FStar_Syntax_Syntax.sort = uu___5
+                            } in
+                          {
+                            FStar_Syntax_Syntax.binder_bv = uu___3;
+                            FStar_Syntax_Syntax.binder_qual =
+                              (uu___1.FStar_Syntax_Syntax.binder_qual);
+                            FStar_Syntax_Syntax.binder_attrs =
+                              (uu___1.FStar_Syntax_Syntax.binder_attrs)
+                          }
+                      | uu___3 -> failwith "Not a renaming")) in
+            let goal_binders =
+              (g.FStar_Tactics_Types.goal_ctx_uvar).FStar_Syntax_Syntax.ctx_uvar_binders in
+            let goal_ty = FStar_Tactics_Types.goal_type g in
+            let uu___1 = FStar_Options.tactic_raw_binders () in
+            if uu___1
+            then (goal_binders, goal_ty)
+            else
+              (let subst =
+                 FStar_TypeChecker_Cfg.psc_subst ps.FStar_Tactics_Types.psc in
+               let binders = rename_binders subst goal_binders in
+               let ty = FStar_Syntax_Subst.subst subst goal_ty in
+               (binders, ty)) in
           match uu___ with
-          | (goal_binders1, goal_ty1) ->
-              let actual_goal =
-                if ps.FStar_Tactics_Types.tac_verb_dbg
-                then goal_to_string_verbose g
-                else
-                  (let uu___2 =
-                     FStar_Syntax_Print.binders_to_string ", " goal_binders1 in
-                   let uu___3 =
-                     let uu___4 = FStar_Tactics_Types.goal_env g in
-                     term_to_string uu___4 goal_ty1 in
-                   FStar_Compiler_Util.format3 "%s |- %s : %s\n" uu___2 w
-                     uu___3) in
-              FStar_Compiler_Util.format4 "%s%s%s:\n%s\n" kind num
-                maybe_label actual_goal
+          | (goal_binders, goal_ty) ->
+              let uu___1 = unshadow goal_binders goal_ty in
+              (match uu___1 with
+               | (goal_binders1, goal_ty1) ->
+                   let actual_goal =
+                     if ps.FStar_Tactics_Types.tac_verb_dbg
+                     then goal_to_string_verbose g
+                     else
+                       (let uu___3 =
+                          FStar_Syntax_Print.binders_to_string ", "
+                            goal_binders1 in
+                        let uu___4 =
+                          let uu___5 = FStar_Tactics_Types.goal_env g in
+                          term_to_string uu___5 goal_ty1 in
+                        FStar_Compiler_Util.format3 "%s |- %s : %s\n" uu___3
+                          w uu___4) in
+                   FStar_Compiler_Util.format4 "%s%s%s:\n%s\n" kind num
+                     maybe_label actual_goal)
 let (ps_to_string :
   (Prims.string * FStar_Tactics_Types.proofstate) -> Prims.string) =
   fun uu___ ->

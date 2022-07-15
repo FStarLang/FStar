@@ -26,6 +26,8 @@ open FStar.Syntax
 open FStar.Syntax.Syntax
 module Util = FStar.Compiler.Util
 module UF = FStar.Syntax.Unionfind
+let ctx_uvar_typ (u:ctx_uvar) = 
+    (UF.find_decoration u.ctx_uvar_head).uvar_decoration_typ
 
 
 (********************************************************************************)
@@ -94,7 +96,7 @@ let rec free_names_and_uvs' tm (use_cache:use_cache_t) : free_vars_and_fvars =
 
       | Tm_uvar (uv, (s, _)) ->
         union (singleton_uv uv)
-              (if use_cache = Full then free_names_and_uvars uv.ctx_uvar_typ use_cache else no_free_vars)
+              (if use_cache = Full then free_names_and_uvars (ctx_uvar_typ uv) use_cache else no_free_vars)
 
       | Tm_type u ->
         free_univs u

@@ -30,16 +30,12 @@ module Range   = FStar.Compiler.Range
 module BU      = FStar.Compiler.Util
 module S       = FStar.Syntax.Syntax
 module U       = FStar.Syntax.Util
+module UF      = FStar.Syntax.Unionfind
 
 let goal_env g = g.goal_main_env
 let goal_witness g =
     FStar.Syntax.Syntax.mk (Tm_uvar (g.goal_ctx_uvar, ([], NoUseRange))) Range.dummyRange
-let goal_type g = g.goal_ctx_uvar.ctx_uvar_typ
-
-let goal_with_type g t : goal =
-    let c = g.goal_ctx_uvar in
-    let c' = {c with ctx_uvar_typ = t} in
-    { g with goal_ctx_uvar = c' }
+let goal_type g = U.ctx_uvar_typ g.goal_ctx_uvar
 
 let goal_with_env g env : goal =
     let c = g.goal_ctx_uvar in
@@ -60,7 +56,7 @@ let mk_goal env u o b l = {
 
 let goal_of_goal_ty env typ : goal * guard_t =
     let u, ctx_uvars, g_u =
-        Env.new_implicit_var_aux "proofstate_of_goal_ty" typ.pos env typ Allow_untyped None
+        Env.new_implicit_var_aux "proofstate_of_goal_ty" typ.pos env typ Strict None
     in
     let ctx_uvar, _ = List.hd ctx_uvars in
     let g = mk_goal env ctx_uvar (FStar.Options.peek()) false "" in
@@ -68,33 +64,6 @@ let goal_of_goal_ty env typ : goal * guard_t =
 
 let goal_of_implicit env (i:Env.implicit) : goal =
   mk_goal ({env with gamma=i.imp_uvar.ctx_uvar_gamma}) i.imp_uvar (FStar.Options.peek()) false i.imp_reason
-
-let rename_binders subst bs =
-    bs |> List.map (function b ->
-        let x = b.binder_bv in
-        let y = SS.subst subst (S.bv_to_name x) in
-        match (SS.compress y).n with
-        | Tm_name y ->
-            // We don't want to change the type
-            { b with binder_bv = { b.binder_bv with sort = SS.subst subst x.sort } }
-        | _ -> failwith "Not a renaming")
-
-(* This is only for show: this goal becomes ill-formed since it does
- * not satisfy the invariant on gamma *)
-let subst_goal subst goal =
-    let g = goal.goal_ctx_uvar in
-    let ctx_uvar = {
-        g with ctx_uvar_gamma=Env.rename_gamma subst g.ctx_uvar_gamma;
-               ctx_uvar_binders=rename_binders subst g.ctx_uvar_binders;
-               ctx_uvar_typ=SS.subst subst g.ctx_uvar_typ;
-    } in
-    { goal with goal_ctx_uvar = ctx_uvar }
-
-let subst_proof_state subst ps =
-    if O.tactic_raw_binders ()
-    then ps
-    else { ps with goals = List.map (subst_goal subst) ps.goals
-    }
 
 let decr_depth (ps:proofstate) : proofstate =
     { ps with depth = ps.depth - 1 }
@@ -107,15 +76,13 @@ let set_ps_psc psc ps = { ps with psc = psc }
 let tracepoint_with_psc psc ps : bool =
     if O.tactic_trace () || (ps.depth <= O.tactic_trace_d ()) then begin
         let ps = set_ps_psc psc ps in
-        let subst = Cfg.psc_subst ps.psc in
-        ps.__dump (subst_proof_state subst ps) "TRACE"
+        ps.__dump ps "TRACE"
     end;
     true
 
 let tracepoint ps : bool =
     if O.tactic_trace () || (ps.depth <= O.tactic_trace_d ()) then begin
-        let subst = Cfg.psc_subst ps.psc in
-        ps.__dump (subst_proof_state subst ps) "TRACE"
+        ps.__dump ps "TRACE"
     end;
     true
 

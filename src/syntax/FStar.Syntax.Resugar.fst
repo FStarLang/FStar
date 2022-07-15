@@ -281,6 +281,36 @@ let maybe_shorten_fv env fv =
   let lid = fv.fv_name.v in
   if may_shorten lid then DsEnv.shorten_lid env lid else lid
 
+
+let serialize_machine_integer_desc (s,w) =
+  BU.format3 "FStar.%sInt%s.__%sint_to_t"
+    (match s with
+     | Unsigned -> "U"
+     | Signed -> "")
+    (match w with
+     | Int8 -> "8"
+     | Int16 -> "16"
+     | Int32 -> "32"
+     | Int64 -> "64")
+    (match s with
+     | Unsigned -> "u"
+     | Signed -> "")
+
+let parse_machine_integer_desc =
+  let signs = [Unsigned; Signed] in
+  let widths = [Int8; Int16; Int32; Int64] in
+  let descs = List.collect (fun s -> List.map (fun w -> (s, w), serialize_machine_integer_desc (s, w)) widths) signs in
+  fun (fv:fv) ->
+    List.tryFind (fun (_, d) -> d = Ident.string_of_lid (lid_of_fv fv)) descs
+
+let can_resugar_machine_integer fv =
+  Option.isSome (parse_machine_integer_desc fv)
+
+let resugar_machine_integer fv (i:string) pos =
+  match parse_machine_integer_desc fv with
+  | None -> failwith "Impossible: should be guarded by can_resugar_machine_integer"
+  | Some (sw, _) -> A.mk_term (A.Const (Const_int(i, Some sw))) pos A.Un
+
 let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
     (* Cannot resugar term back to NamedTyp or Paren *)
     let mk (a:A.term') : A.term =
@@ -420,6 +450,10 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
       when not (Options.print_implicits())
            && S.fv_eq_lid fv C.b2t_lid ->
       resugar_term' env e
+
+    | Tm_app({n=Tm_fvar fv}, [({n=Tm_constant (Const_int (i, None))}, _)])
+      when can_resugar_machine_integer fv ->
+      resugar_machine_integer fv i t.pos
 
     | Tm_app(e, args) ->
       (* Op("=!=", args) is desugared into Op("~", Op("==") and not resugared back as "=!=" *)
@@ -976,17 +1010,21 @@ and resugar_comp' (env: DsEnv.env) (c:S.comp) : A.term =
   match (c.n) with
   | Total (typ, u) ->
     let t = resugar_term' env typ in
-    begin match u with
-    | None ->
-      mk (A.Construct(C.effect_Tot_lid, [(t, A.Nothing)]))
-    | Some u ->
-      // add the universe as the first argument
-      if (Options.print_universes()) then
-        let u = resugar_universe u c.pos in
-        mk (A.Construct(C.effect_Tot_lid, [(u, A.UnivApp);(t, A.Nothing)]))
-      else
+    if not (Options.print_implicits())
+    then t
+    else (
+      begin match u with
+      | None ->
         mk (A.Construct(C.effect_Tot_lid, [(t, A.Nothing)]))
-    end
+      | Some u ->
+        // add the universe as the first argument
+        if (Options.print_universes()) then
+          let u = resugar_universe u c.pos in
+          mk (A.Construct(C.effect_Tot_lid, [(u, A.UnivApp);(t, A.Nothing)]))
+        else
+          mk (A.Construct(C.effect_Tot_lid, [(t, A.Nothing)]))
+      end
+    )
 
   | GTotal (typ, u) ->
     let t = resugar_term' env typ in
