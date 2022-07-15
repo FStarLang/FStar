@@ -146,6 +146,8 @@ let strict_on_arguments _ = ()
 
 let resolve_implicits = ()
 
+let override_resolve_implicits_handler #a x l = ()
+
 let handle_smt_goals = ()
 
 let erasable = ()
@@ -166,6 +168,8 @@ let bind_has_range_args = ()
 let strictly_positive = ()
 
 let no_auto_projectors = ()
+
+let no_subtyping = ()
 
 let singleton #_ x = x
 

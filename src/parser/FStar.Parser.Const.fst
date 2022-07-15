@@ -296,6 +296,7 @@ let term_view_lid  = p2l ["FStar"; "Reflection"; "Data"; "term_view"]
 let decls_lid      = p2l ["FStar"; "Reflection"; "Data"; "decls"]
 
 let ctx_uvar_and_subst_lid = p2l ["FStar"; "Reflection"; "Types"; "ctx_uvar_and_subst"]
+let universe_uvar_lid      = p2l ["FStar"; "Reflection"; "Types"; "universe_uvar"]
 
 
 let range_lid      = pconst "range"
@@ -339,6 +340,7 @@ let dm4f_bind_range_attr = p2l ["FStar"; "Pervasives"; "dm4f_bind_range"]
 let must_erase_for_extraction_attr = psconst "must_erase_for_extraction"
 let strict_on_arguments_attr = p2l ["FStar"; "Pervasives"; "strict_on_arguments"]
 let resolve_implicits_attr_string = "FStar.Pervasives.resolve_implicits"
+let override_resolve_implicits_handler_lid = p2l ["FStar"; "Pervasives"; "override_resolve_implicits_handler"]
 let handle_smt_goals_attr = psconst "handle_smt_goals"
 let handle_smt_goals_attr_string = "FStar.Pervasives.handle_smt_goals"
 let erasable_attr = p2l ["FStar"; "Pervasives"; "erasable"]
@@ -361,6 +363,7 @@ let default_effect_attr = psconst "default_effect"
 let bind_has_range_args_attr = psconst "bind_has_range_args"
 let binder_strictly_positive_attr = psconst "strictly_positive"
 let no_auto_projectors_attr = psconst "no_auto_projectors"
+let no_subtping_attr_lid = psconst "no_subtyping"
 
 
 //the type of well-founded relations, used for decreases clauses with relations

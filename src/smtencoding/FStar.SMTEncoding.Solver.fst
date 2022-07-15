@@ -35,6 +35,7 @@ module TcUtil = FStar.TypeChecker.Util
 module Print = FStar.Syntax.Print
 module Env = FStar.TypeChecker.Env
 module Err = FStar.Errors
+exception SplitQueryAndRetry
 
 (****************************************************************************)
 (* Hint databases for record and replay (private)                           *)
@@ -216,7 +217,9 @@ type query_settings = {
     query_errors:list errors;
     query_all_labels:error_labels;
     query_suffix:list decl;
-    query_hash:option string
+    query_hash:option string;
+    query_can_be_split_and_retried:bool;
+    query_term: FStar.Syntax.Syntax.term;
 }
 
 
@@ -298,7 +301,7 @@ let errors_to_report (settings : query_settings) : list Errors.error =
     let format_smt_error msg =
       BU.format1 "SMT solver says:\n\t%s;\n\t\
                   Note: 'canceled' or 'resource limits reached' means the SMT query timed out, so you might want to increase the rlimit;\n\t\
-                  'incomplete quantifiers' means Z3 could not prove the query, so try to spell your proof out in greater detail, increase fuel or ifuel\n\t\
+                  'incomplete quantifiers' means Z3 could not prove the query, so try to spell out your proof out in greater detail, increase fuel or ifuel\n\t\
                   'unknown' means Z3 provided no further reason for the proof failing"
         msg
     in
@@ -343,22 +346,69 @@ let errors_to_report (settings : query_settings) : list Errors.error =
               ) (0, 0, 0) settings.query_errors
             in
             (match incomplete_count, canceled_count, unknown_count with
-             | _, 0, 0 when incomplete_count > 0 -> "The SMT solver could not prove the query, try to spell your proof in more detail or increase fuel/ifuel"
+             | _, 0, 0 when incomplete_count > 0 -> "The SMT solver could not prove the query. Use --query_stats for more details."
              | 0, _, 0 when canceled_count > 0   -> "The SMT query timed out, you might want to increase the rlimit"
              | _, _, _                           -> "Try with --query_stats to get more details") |> Inl
         in
-        match find_localized_errors settings.query_errors with
-        | Some err ->
+        match find_localized_errors settings.query_errors, settings.query_all_labels with
+        | Some err, _ ->
           // FStar.Errors.log_issue settings.query_range (FStar.Errors.Warning_SMTErrorReason, smt_error);
           FStar.TypeChecker.Err.errors_smt_detail settings.query_env err.error_messages smt_error
-        | None ->
+
+        | None, [(_, msg, rng)] ->
+          //we have a unique label already; just report it
           FStar.TypeChecker.Err.errors_smt_detail
-                   settings.query_env
-                   [(Errors.Error_UnknownFatal_AssertionFailure,
-                     "Unknown assertion failed",
-                     settings.query_range,
-                     Errors.get_ctx ())]
-                   smt_error
+                     settings.query_env
+                     [(Errors.Error_Z3SolverError, msg, rng, Errors.get_ctx())]
+                     (Inl "")
+
+        | None, _ ->
+          //We didn't get a useful countermodel from Z3 to localize an error
+          //so, split the query into N unique queries and try again
+            if settings.query_can_be_split_and_retried
+            && not (Options.split_queries()) //queries are already split
+            then raise SplitQueryAndRetry
+            else (
+              //if it can't be split further, report all its labels as potential failures
+              //typically there will be only 1 label
+              let l = List.length settings.query_all_labels in
+              let labels =
+                if l = 0
+                then (
+                  //this should really never happen, but if it does, we have a query
+                  //with no labeled sub-goals and so no error location to report.
+                  //So, print the source location and the query term itself
+                  let dummy_fv = Term.mk_fv ("", dummy_sort) in
+                  let msg = 
+                    BU.format1 "Failed to prove the following goal, although it appears to be trivial: %s"
+                               (Print.term_to_string settings.query_term)
+                  in
+                  let range = Env.get_range settings.query_env in
+                  [dummy_fv, msg, range]
+                )
+                else if l > 1
+                then (
+                  //we have a non-unique label despite splitting
+                  //this CAN happen, e.g., if the original query term is a `match`
+                  //In this case, we couldn't split it and then if it fails without producing a model,
+                  //we blame all the labels in the query. So warn about the imprecision.
+                  FStar.TypeChecker.Err.log_issue
+                       settings.query_env
+                       (Env.get_range settings.query_env)
+                       (Errors.Warning_SplitAndRetryQueries,
+                         "The verification condition was to be split into several atomic sub-goals, \
+                          but this query has multiple sub-goals---the error report may be inaccurate");
+                  settings.query_all_labels
+                )
+                else settings.query_all_labels
+              in
+              labels |>
+                 List.collect (fun (_, msg, rng) ->
+                   FStar.TypeChecker.Err.errors_smt_detail
+                     settings.query_env
+                     [(Errors.Error_Z3SolverError, msg, rng, Errors.get_ctx())]
+                     (Inl ""))
+            )
     in
     let detailed_errors : unit =
       if Options.detail_errors()
@@ -618,7 +668,7 @@ let collect (l : list 'a) : list ('a * int) =
     in
     List.fold_left add_one acc l
 
-let ask_and_report_errors env all_labels prefix query suffix : unit =
+let ask_and_report_errors is_being_retried env all_labels prefix query query_term suffix : unit =
     Z3.giveZ3 prefix; //feed the context of the query to the solver
 
     let default_settings, next_hint =
@@ -648,7 +698,9 @@ let ask_and_report_errors env all_labels prefix query suffix : unit =
             query_suffix=suffix;
             query_hash=(match next_hint with
                         | None -> None
-                        | Some {hash=h} -> h)
+                        | Some {hash=h} -> h);
+            query_can_be_split_and_retried=not is_being_retried;
+            query_term=query_term
         } in
         default_settings, next_hint
     in
@@ -685,6 +737,9 @@ let ask_and_report_errors env all_labels prefix query suffix : unit =
     in
 
     let all_configs =
+      if is_being_retried
+      then [default_settings]
+      else
         use_hints_setting
         @ [default_settings]
         @ initial_fuel_max_ifuel
@@ -903,7 +958,7 @@ let should_refresh env =
     | Some cfg ->
         not (cfg = get_cfg env)
 
-let do_solve use_env_msg tcenv q : unit =
+let rec do_solve is_retry use_env_msg tcenv q : unit =
     if should_refresh tcenv then begin
       save_cfg tcenv;
       Z3.refresh ()
@@ -916,12 +971,56 @@ let do_solve use_env_msg tcenv q : unit =
       match qry with
       | Assume({assumption_term={tm=App(FalseOp, _)}}) -> pop()
       | _ when tcenv.admit -> pop()
+
       | Assume _ ->
-        ask_and_report_errors tcenv labels prefix qry suffix;
+        if (is_retry || Options.split_queries())
+        && Options.debug_any()
+        then (
+          let n = List.length labels in
+          if n <> 1
+          then 
+            FStar.Errors.diag
+                (Env.get_range tcenv)
+                (BU.format3 "Encoded split query %s\nto %s\nwith %s labels"
+                          (Print.term_to_string q)
+                          (Term.declToSmt "" qry)
+                          (BU.string_of_int n))
+        );
+
+        ask_and_report_errors is_retry tcenv labels prefix qry q suffix;
+
         pop ()
 
       | _ -> failwith "Impossible"
     with
+      | SplitQueryAndRetry ->
+        pop();
+        if is_retry
+        then failwith "Impossible: retried queries should always produce an error report\
+                       and cannot be split and retried further";
+
+        let _ =
+          match Env.split_smt_query tcenv q with
+          | None ->
+            failwith "Impossible: split_query callback is not set"
+
+          | Some goals ->
+            goals |> List.iter (fun (env, goal) -> do_solve true use_env_msg env goal)
+        in
+
+        if FStar.Errors.get_err_count() = 0
+        then ( //query succeeded after a retry
+          FStar.TypeChecker.Err.log_issue
+            tcenv
+            tcenv.range
+            (Errors.Warning_SplitAndRetryQueries,
+             "The verification condition succeeded after splitting it to localize potential errors, \
+              although the original non-split verification condition failed. \
+              If you want to rely on splitting queries for verifying your program \
+              please use the --split_queries option rather than relying on it implicitly.")
+         )
+
+
       | FStar.SMTEncoding.Env.Inner_let_rec names ->  //can be raised by encode_query
         pop ();  //AR: Important, we push-ed before encode_query was called
         FStar.TypeChecker.Err.log_issue
@@ -939,7 +1038,7 @@ let solve use_env_msg tcenv q : unit =
              BU.format1 "Q = %s\nA query could not be solved internally, and --no_smt was given" (Print.term_to_string q))
     else
     Profiling.profile
-      (fun () -> do_solve use_env_msg tcenv q)
+      (fun () -> do_solve false use_env_msg tcenv q)
       (Some (Ident.string_of_lid (Env.current_module tcenv)))
       "FStar.SMTEncoding.solve_top_level"
 
@@ -956,6 +1055,7 @@ let solver = {
     rollback=Encode.rollback;
     encode_sig=Encode.encode_sig;
     preprocess=(fun e g -> [e,g, FStar.Options.peek ()]);
+    spinoff_strictly_positive_goals = None;
     handle_smt_goal=(fun e g -> [e,g]);
     solve=solve;
     finish=Z3.finish;
@@ -969,6 +1069,7 @@ let dummy = {
     rollback=(fun _ _ -> ());
     encode_sig=(fun _ _ -> ());
     preprocess=(fun e g -> [e,g, FStar.Options.peek ()]);
+    spinoff_strictly_positive_goals = None;
     handle_smt_goal=(fun e g -> [e,g]);
     solve=(fun _ _ _ -> ());
     finish=(fun () -> ());

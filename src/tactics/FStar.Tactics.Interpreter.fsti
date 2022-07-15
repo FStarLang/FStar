@@ -35,7 +35,7 @@ val run_tactic_on_ps :
 
 val primitive_steps : unit -> list FStar.TypeChecker.Cfg.primitive_step
 
-val report_implicits : range -> Env.implicits -> unit
+val report_implicits : range -> FStar.TypeChecker.Rel.tagged_implicits -> unit
 
 (* For debugging only *)
 val tacdbg : ref bool

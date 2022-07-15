@@ -2144,6 +2144,10 @@ let rec (extract_sig :
                            FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term
                              =
                              (env.FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term);
+                           FStar_TypeChecker_Env.teq_nosmt_force =
+                             (env.FStar_TypeChecker_Env.teq_nosmt_force);
+                           FStar_TypeChecker_Env.subtype_nosmt_force =
+                             (env.FStar_TypeChecker_Env.subtype_nosmt_force);
                            FStar_TypeChecker_Env.use_bv_sorts =
                              (env.FStar_TypeChecker_Env.use_bv_sorts);
                            FStar_TypeChecker_Env.qtbl_name_and_index =
@@ -2180,7 +2184,10 @@ let rec (extract_sig :
                              (env.FStar_TypeChecker_Env.enable_defer_to_tac);
                            FStar_TypeChecker_Env.unif_allow_ref_guards =
                              (env.FStar_TypeChecker_Env.unif_allow_ref_guards);
-                           FStar_TypeChecker_Env.erase_erasable_args = true
+                           FStar_TypeChecker_Env.erase_erasable_args = true;
+                           FStar_TypeChecker_Env.rel_query_for_apply_tac_uvar
+                             =
+                             (env.FStar_TypeChecker_Env.rel_query_for_apply_tac_uvar)
                          } in
                        let lbd =
                          let uu___6 =

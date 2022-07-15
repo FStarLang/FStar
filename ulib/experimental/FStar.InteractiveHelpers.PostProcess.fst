@@ -571,7 +571,7 @@ let rec replace_term_in dbg from_term to_term tm =
     let body' = replace_term_in dbg from_term to_term body in
     pack (Tv_Abs br body')
   | Tv_Arrow br c0 -> tm (* TODO: we might want to explore that *)
-  | Tv_Type () -> tm
+  | Tv_Type _ -> tm
   | Tv_Refine bv ref ->
     let ref' = replace_term_in dbg from_term to_term ref in
     pack (Tv_Refine bv ref')

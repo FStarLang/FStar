@@ -244,6 +244,8 @@ let (decls_lid : FStar_Ident.lident) =
   p2l ["FStar"; "Reflection"; "Data"; "decls"]
 let (ctx_uvar_and_subst_lid : FStar_Ident.lident) =
   p2l ["FStar"; "Reflection"; "Types"; "ctx_uvar_and_subst"]
+let (universe_uvar_lid : FStar_Ident.lident) =
+  p2l ["FStar"; "Reflection"; "Types"; "universe_uvar"]
 let (range_lid : FStar_Ident.lident) = pconst "range"
 let (range_of_lid : FStar_Ident.lident) = pconst "range_of"
 let (labeled_lid : FStar_Ident.lident) = pconst "labeled"
@@ -288,6 +290,8 @@ let (strict_on_arguments_attr : FStar_Ident.lident) =
   p2l ["FStar"; "Pervasives"; "strict_on_arguments"]
 let (resolve_implicits_attr_string : Prims.string) =
   "FStar.Pervasives.resolve_implicits"
+let (override_resolve_implicits_handler_lid : FStar_Ident.lident) =
+  p2l ["FStar"; "Pervasives"; "override_resolve_implicits_handler"]
 let (handle_smt_goals_attr : FStar_Ident.lident) = psconst "handle_smt_goals"
 let (handle_smt_goals_attr_string : Prims.string) =
   "FStar.Pervasives.handle_smt_goals"
@@ -326,6 +330,7 @@ let (binder_strictly_positive_attr : FStar_Ident.lident) =
   psconst "strictly_positive"
 let (no_auto_projectors_attr : FStar_Ident.lident) =
   psconst "no_auto_projectors"
+let (no_subtping_attr_lid : FStar_Ident.lident) = psconst "no_subtyping"
 let (well_founded_relation_lid : FStar_Ident.lident) =
   p2l ["FStar"; "WellFounded"; "well_founded_relation"]
 let (gen_reset : ((unit -> Prims.int) * (unit -> unit))) =

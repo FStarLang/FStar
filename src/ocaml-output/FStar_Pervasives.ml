@@ -3,6 +3,7 @@ open Prims
 type pattern = unit
 
 
+type eqtype_u = unit
 type 'p spinoff = 'p
 
 let id : 'a . 'a -> 'a = fun x -> x
@@ -267,6 +268,8 @@ let (uu___is_CIfDef : __internal_ocaml_attributes -> Prims.bool) =
   fun projectee -> match projectee with | CIfDef -> true | uu___ -> false
 let (uu___is_CMacro : __internal_ocaml_attributes -> Prims.bool) =
   fun projectee -> match projectee with | CMacro -> true | uu___ -> false
+
+
 
 
 

@@ -298,6 +298,7 @@ let subst_binders' s bs =
         else subst_binder' (shift_subst' i s) b)
 let subst_binders s (bs:binders) = subst_binders' ([s], NoUseRange) bs
 
+
 // NOTE: We don't descend into `imp` here since one cannot *apply* a
 // `Meta t` argument, so this would always be a no-op
 let subst_arg' s (t, imp) = (subst' s t, imp)
@@ -531,6 +532,10 @@ let subst_bqual s imp = subst_bqual' ([s], NoUseRange) imp
 let subst_aqual s imp = subst_aqual' ([s], NoUseRange) imp
 let subst_ascription s (asc:ascription) = subst_ascription' ([s], NoUseRange) asc
 let subst_decreasing_order s dec = subst_dec_order' ([s], NoUseRange) dec
+let subst_residual_comp s rc =
+  match rc.residual_typ with
+  | None -> rc
+  | Some t -> {rc with residual_typ=subst s t |> Some}
 let closing_subst (bs:binders) =
     List.fold_right (fun b (subst, n)  -> (NM(b.binder_bv, n)::subst, n+1)) bs ([], 0) |> fst
 let open_binders' bs =

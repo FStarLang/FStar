@@ -36,6 +36,19 @@ Guidelines for the changelog:
      ...
     ```
 
+  * Bug2635, reported by Benjamin Bonneau, revealed an unsoundness in
+    the way the tactic engine was using the unifier. In some cases, it
+    would enable terms at a weaker type to be accepted as solutions
+    for a goal at a refinement type, without presenting any goals for
+    the refinement formula itself. This is now fixed by adding a phase
+    at the end of tactic evaluation that checks that any
+    as-yet-unchecked solution actually has the type of the goal. If
+    this check fails, F* reports Error 217 and suggests to use the new
+    primitive tactic
+    `gather_or_solve_explicit_guards_for_resolved_goals` which
+    collects all those refinement goals and presents them to the user
+    tactic for furhter processing.
+
 ## Typeclass argument syntax
 
   * The syntax for a typeclass argument (a.k.a. constraint) is now `{| ... |}`
@@ -206,6 +219,10 @@ Guidelines for the changelog:
      provided (using UInt128).
 
 ## Syntax
+   * PR #2603 introduces universes in the reflection syntax.
+     It is a potentially breaking change for reflection clients.
+     See the PR for more description.
+
 
    * `as` is a keyword now. One use of it is to (optionally) name the
      scrutinee in dependent pattern matching, e.g.:

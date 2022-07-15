@@ -1248,8 +1248,8 @@ and (encode_term :
                let uu___3 =
                  let uu___4 = FStar_Syntax_Syntax.as_arg tv in [uu___4] in
                FStar_Syntax_Util.mk_app
-                 (FStar_Reflection_Data.refl_constant_term
-                    FStar_Reflection_Data.fstar_refl_pack_ln) uu___3 in
+                 (FStar_Reflection_Constants.refl_constant_term
+                    FStar_Reflection_Constants.fstar_refl_pack_ln) uu___3 in
              encode_term t2 env))
        | FStar_Syntax_Syntax.Tm_meta
            (t2, FStar_Syntax_Syntax.Meta_pattern uu___1) ->
@@ -1435,6 +1435,10 @@ and (encode_term :
                               FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term
                                 =
                                 (uu___6.FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term);
+                              FStar_TypeChecker_Env.teq_nosmt_force =
+                                (uu___6.FStar_TypeChecker_Env.teq_nosmt_force);
+                              FStar_TypeChecker_Env.subtype_nosmt_force =
+                                (uu___6.FStar_TypeChecker_Env.subtype_nosmt_force);
                               FStar_TypeChecker_Env.use_bv_sorts =
                                 (uu___6.FStar_TypeChecker_Env.use_bv_sorts);
                               FStar_TypeChecker_Env.qtbl_name_and_index =
@@ -1473,7 +1477,10 @@ and (encode_term :
                               FStar_TypeChecker_Env.unif_allow_ref_guards =
                                 (uu___6.FStar_TypeChecker_Env.unif_allow_ref_guards);
                               FStar_TypeChecker_Env.erase_erasable_args =
-                                (uu___6.FStar_TypeChecker_Env.erase_erasable_args)
+                                (uu___6.FStar_TypeChecker_Env.erase_erasable_args);
+                              FStar_TypeChecker_Env.rel_query_for_apply_tac_uvar
+                                =
+                                (uu___6.FStar_TypeChecker_Env.rel_query_for_apply_tac_uvar)
                             }) res in
                        (match uu___5 with
                         | (pre_opt, res_t) ->
@@ -2004,8 +2011,8 @@ and (encode_term :
                  uv.FStar_Syntax_Syntax.ctx_uvar_head in
              FStar_SMTEncoding_Util.mk_Term_uvar uu___2 in
            let uu___2 =
-             encode_term_pred FStar_Pervasives_Native.None
-               uv.FStar_Syntax_Syntax.ctx_uvar_typ env ttm in
+             let uu___3 = FStar_Syntax_Util.ctx_uvar_typ uv in
+             encode_term_pred FStar_Pervasives_Native.None uu___3 env ttm in
            (match uu___2 with
             | (t_has_k, decls) ->
                 let d =
@@ -3616,7 +3623,7 @@ and (encode_formula :
             encode_formula uu___1 env
         | FStar_Syntax_Syntax.Tm_match (e, uu___, pats, uu___1) ->
             let uu___2 =
-              encode_match e pats FStar_SMTEncoding_Util.mkFalse env
+              encode_match e pats FStar_SMTEncoding_Term.mkUnreachable env
                 encode_formula in
             (match uu___2 with | (t, decls) -> (t, decls))
         | FStar_Syntax_Syntax.Tm_let

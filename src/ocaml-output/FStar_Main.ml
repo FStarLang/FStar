@@ -284,6 +284,10 @@ let (lazy_chooser :
       | FStar_Syntax_Syntax.Lazy_uvar ->
           FStar_Syntax_Util.exp_string "((uvar))"
       | FStar_Syntax_Syntax.Lazy_embedding (uu___, t) -> FStar_Thunk.force t
+      | FStar_Syntax_Syntax.Lazy_universe ->
+          FStar_Reflection_Embeddings.unfold_lazy_universe i
+      | FStar_Syntax_Syntax.Lazy_universe_uvar ->
+          FStar_Syntax_Util.exp_string "((universe_uvar))"
 let (setup_hooks : unit -> unit) =
   fun uu___ ->
     FStar_Errors.set_parse_warn_error FStar_Parser_ParseIt.parse_warn_error;

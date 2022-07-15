@@ -461,6 +461,72 @@ let (maybe_shorten_fv :
       let lid = (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v in
       let uu___ = may_shorten lid in
       if uu___ then FStar_Syntax_DsEnv.shorten_lid env lid else lid
+let (serialize_machine_integer_desc :
+  (FStar_Const.signedness * FStar_Const.width) -> Prims.string) =
+  fun uu___ ->
+    match uu___ with
+    | (s, w) ->
+        FStar_Compiler_Util.format3 "FStar.%sInt%s.__%sint_to_t"
+          (match s with
+           | FStar_Const.Unsigned -> "U"
+           | FStar_Const.Signed -> "")
+          (match w with
+           | FStar_Const.Int8 -> "8"
+           | FStar_Const.Int16 -> "16"
+           | FStar_Const.Int32 -> "32"
+           | FStar_Const.Int64 -> "64")
+          (match s with
+           | FStar_Const.Unsigned -> "u"
+           | FStar_Const.Signed -> "")
+let (parse_machine_integer_desc :
+  FStar_Syntax_Syntax.fv ->
+    ((FStar_Const.signedness * FStar_Const.width) * Prims.string)
+      FStar_Pervasives_Native.option)
+  =
+  let signs = [FStar_Const.Unsigned; FStar_Const.Signed] in
+  let widths =
+    [FStar_Const.Int8;
+    FStar_Const.Int16;
+    FStar_Const.Int32;
+    FStar_Const.Int64] in
+  let descs =
+    FStar_Compiler_List.collect
+      (fun s ->
+         FStar_Compiler_List.map
+           (fun w ->
+              let uu___ = serialize_machine_integer_desc (s, w) in
+              ((s, w), uu___)) widths) signs in
+  fun fv ->
+    FStar_Compiler_List.tryFind
+      (fun uu___ ->
+         match uu___ with
+         | (uu___1, d) ->
+             let uu___2 =
+               let uu___3 = FStar_Syntax_Syntax.lid_of_fv fv in
+               FStar_Ident.string_of_lid uu___3 in
+             d = uu___2) descs
+let (can_resugar_machine_integer : FStar_Syntax_Syntax.fv -> Prims.bool) =
+  fun fv ->
+    let uu___ = parse_machine_integer_desc fv in
+    FStar_Compiler_Option.isSome uu___
+let (resugar_machine_integer :
+  FStar_Syntax_Syntax.fv ->
+    Prims.string -> FStar_Compiler_Range.range -> FStar_Parser_AST.term)
+  =
+  fun fv ->
+    fun i ->
+      fun pos ->
+        let uu___ = parse_machine_integer_desc fv in
+        match uu___ with
+        | FStar_Pervasives_Native.None ->
+            failwith
+              "Impossible: should be guarded by can_resugar_machine_integer"
+        | FStar_Pervasives_Native.Some (sw, uu___1) ->
+            FStar_Parser_AST.mk_term
+              (FStar_Parser_AST.Const
+                 (FStar_Const.Const_int
+                    (i, (FStar_Pervasives_Native.Some sw)))) pos
+              FStar_Parser_AST.Un
 let rec (resugar_term' :
   FStar_Syntax_DsEnv.env -> FStar_Syntax_Syntax.term -> FStar_Parser_AST.term)
   =
@@ -729,6 +795,18 @@ let rec (resugar_term' :
            Prims.op_Negation uu___4) &&
             (FStar_Syntax_Syntax.fv_eq_lid fv FStar_Parser_Const.b2t_lid)
           -> resugar_term' env e
+      | FStar_Syntax_Syntax.Tm_app
+          ({ FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_fvar fv;
+             FStar_Syntax_Syntax.pos = uu___1;
+             FStar_Syntax_Syntax.vars = uu___2;_},
+           ({
+              FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_constant
+                (FStar_Const.Const_int (i, FStar_Pervasives_Native.None));
+              FStar_Syntax_Syntax.pos = uu___3;
+              FStar_Syntax_Syntax.vars = uu___4;_},
+            uu___5)::[])
+          when can_resugar_machine_integer fv ->
+          resugar_machine_integer fv i t.FStar_Syntax_Syntax.pos
       | FStar_Syntax_Syntax.Tm_app (e, args) ->
           let rec last uu___1 =
             match uu___1 with
@@ -1772,27 +1850,33 @@ and (resugar_comp' :
       match c.FStar_Syntax_Syntax.n with
       | FStar_Syntax_Syntax.Total (typ, u) ->
           let t = resugar_term' env typ in
-          (match u with
-           | FStar_Pervasives_Native.None ->
-               mk
-                 (FStar_Parser_AST.Construct
-                    (FStar_Parser_Const.effect_Tot_lid,
-                      [(t, FStar_Parser_AST.Nothing)]))
-           | FStar_Pervasives_Native.Some u1 ->
-               let uu___ = FStar_Options.print_universes () in
-               if uu___
-               then
-                 let u2 = resugar_universe u1 c.FStar_Syntax_Syntax.pos in
+          let uu___ =
+            let uu___1 = FStar_Options.print_implicits () in
+            Prims.op_Negation uu___1 in
+          if uu___
+          then t
+          else
+            (match u with
+             | FStar_Pervasives_Native.None ->
                  mk
                    (FStar_Parser_AST.Construct
                       (FStar_Parser_Const.effect_Tot_lid,
-                        [(u2, FStar_Parser_AST.UnivApp);
-                        (t, FStar_Parser_AST.Nothing)]))
-               else
-                 mk
-                   (FStar_Parser_AST.Construct
-                      (FStar_Parser_Const.effect_Tot_lid,
-                        [(t, FStar_Parser_AST.Nothing)])))
+                        [(t, FStar_Parser_AST.Nothing)]))
+             | FStar_Pervasives_Native.Some u1 ->
+                 let uu___2 = FStar_Options.print_universes () in
+                 if uu___2
+                 then
+                   let u2 = resugar_universe u1 c.FStar_Syntax_Syntax.pos in
+                   mk
+                     (FStar_Parser_AST.Construct
+                        (FStar_Parser_Const.effect_Tot_lid,
+                          [(u2, FStar_Parser_AST.UnivApp);
+                          (t, FStar_Parser_AST.Nothing)]))
+                 else
+                   mk
+                     (FStar_Parser_AST.Construct
+                        (FStar_Parser_Const.effect_Tot_lid,
+                          [(t, FStar_Parser_AST.Nothing)])))
       | FStar_Syntax_Syntax.GTotal (typ, u) ->
           let t = resugar_term' env typ in
           (match u with
