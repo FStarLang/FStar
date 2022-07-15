@@ -16,7 +16,7 @@ Guidelines for the changelog:
 ## Tactics
   * The behavior of `pack` was changed to canonize arrows by flattening them in the internal
     compiler representation (https://github.com/FStarLang/FStar/pull/2609).
-    An alternative version of `pack` called `pack_currified` which does not perform canonization,
+    An alternative version of `pack` called `pack_curried` which does not perform canonization,
     thus retrieving the previous behavior was also exposed.
 
   * Mutually recursive let bindings are now supported in the reflected syntax, using the
