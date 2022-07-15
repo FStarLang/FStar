@@ -1040,16 +1040,18 @@ let (uu___143 : unit) =
                                                                     =
                                                                     e_tactic_nbe_thunk
                                                                     FStar_TypeChecker_NBETerm.e_unit in
-                                                                    FStar_Tactics_InterpFuns.mk_tac_step_3
+                                                                    FStar_Tactics_InterpFuns.mk_tac_step_4
                                                                     Prims.int_zero
                                                                     "ctrl_rewrite"
                                                                     FStar_Tactics_CtrlRewrite.ctrl_rewrite
                                                                     FStar_Tactics_Embedding.e_direction
+                                                                    FStar_Syntax_Embeddings.e_bool
                                                                     uu___89
                                                                     uu___90
                                                                     FStar_Syntax_Embeddings.e_unit
                                                                     FStar_Tactics_CtrlRewrite.ctrl_rewrite
                                                                     FStar_Tactics_Embedding.e_direction_nbe
+                                                                    FStar_TypeChecker_NBETerm.e_bool
                                                                     uu___91
                                                                     uu___92
                                                                     FStar_TypeChecker_NBETerm.e_unit in
