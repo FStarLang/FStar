@@ -120,22 +120,17 @@ private let atom (t:term) : tm expr = fun (n, atoms) ->
 private val fail : (#a:Type) -> string -> tm a
 private let fail #a s = fun i -> Inl s
 
-let refined_list_t (#a:Type) (p:(a -> Type0)) = list (x:a{p x})
-
-val list_unref : #a:Type -> #p:(a -> Type0) -> refined_list_t p -> Tot (l:list a{forall x. List.Tot.Base.memP x l ==> p x})
-let rec list_unref #a #p l =
-    match l with
-    | [] -> []
-    | x::xs -> x :: list_unref xs
-
-let collect_app_ref (t:term) : ((h:term{h == t \/ h << t}) * refined_list_t (fun (a:argv) -> fst a << t)) =
-  collect_app_ref t
-
 val as_arith_expr : term -> tm expr
 #push-options "--initial_fuel 4 --max_fuel 4"
 let rec as_arith_expr (t:term) =
-    let hd, tl = collect_app_ref t in
-    let tl = list_unref tl in //need to be careful to instantiate list_unref at the right type to allow SMT to unfold its recursive definition properly
+    let hd, tl = collect_app t in
+    // Invoke [collect_app_order]: forall (arg, qual) ∈ tl, (arg, qual) << t
+    collect_app_order t;
+    // [precedes_fst_tl]: forall (arg, qual) ∈ tl, arg << t
+    let precedes_fst_tl (arg: term) (q: aqualv)
+      : Lemma (List.Tot.memP (arg, q) tl ==> arg << t)
+      = let _: argv = arg, q in ()
+    in Classical.forall_intro_2 (precedes_fst_tl);
     match inspect_ln hd, tl with
     | Tv_FVar fv, [(e1, Q_Implicit); (e2, Q_Explicit) ; (e3, Q_Explicit)] ->
       let qn = inspect_fv fv in
