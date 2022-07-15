@@ -158,16 +158,16 @@ inline_for_extraction
     warn_on_use "Steel.HigherArray0.free is currently unsound in the presence of zero-size subarrays, have you collected them all?"]
 let free
   (#elt: Type)
-  (#s: Ghost.erased (Seq.seq elt))
   (a: array elt)
 : ST unit
-    (pts_to a P.full_perm s)
+    (exists_ (pts_to a P.full_perm))
     (fun _ -> emp)
     (
       is_full_array a
     )
     (fun _ -> True)
 = let (| p, _ |) = a in
+  let s = elim_exists () in
   rewrite
     (pts_to _ _ _)
     (pts_to (| p, Ghost.hide #nat (base_len (base p)) |) _ s);

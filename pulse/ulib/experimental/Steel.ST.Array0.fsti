@@ -152,10 +152,9 @@ inline_for_extraction
     warn_on_use "Steel.Array0.free_pt is currently unsound in the presence of zero-size subarrays, have you collected them all?"]
 val free
   (#elt: Type)
-  (#s: Ghost.erased (Seq.seq elt))
   (a: array elt)
 : ST unit
-    (pts_to a P.full_perm s)
+    (exists_ (pts_to a P.full_perm))
     (fun _ -> emp)
     (
       is_full_array a
