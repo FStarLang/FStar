@@ -176,6 +176,8 @@ let sublist_at_self (l1 : list eff_label)
 let labpoly #labs (f g : unit -> EFF int labs) : EFF int labs =
   f () + g ()
 
+#set-options "--log_queries --fuel 2 --ifuel 2"
+#restart-solver
 (* no rollback *)
 let catch #a #labs
   (f : unit -> EFF a (EXN::labs))
