@@ -980,12 +980,23 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
                (Const.layered_effect_reify_val_lid c.effect_name e.pos |> S.tconst)
                [u_c] in
            let thunked_e =
-             S.mk (Tm_abs (
-                     [S.mk_binder (S.null_bv S.t_unit)],
-                     e,
-                     Some ({residual_effect=c.effect_name;
-                            residual_typ=None;
-                            residual_flags=[]}))) e.pos in
+             //
+             // TODO: this optimization is sound only if head has the
+             //   right type, FIX IT
+             //
+             let head, args = e |> U.unmeta |> U.head_and_args in
+             if List.length args > 0 &&
+                U.eq_tm (args |> List.last
+                              |> fst)
+                        S.unit_const = U.Equal
+             then mk_Tm_app head (args |> List.splitAt (List.length args - 1) |> fst) head.pos
+             else
+               S.mk (Tm_abs (
+                       [S.mk_binder (S.null_bv S.t_unit)],
+                       e,
+                       Some ({residual_effect=c.effect_name;
+                              residual_typ=None;
+                              residual_flags=[]}))) e.pos in
            let implicit_args =
              let a_arg = S.iarg c_res_typ in
              let indices_args =

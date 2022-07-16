@@ -308,10 +308,9 @@ let st_soundness #a #wp (t : unit -> AlgWP a [Read; Write] wp)
 
 (* This guarantees the final state is unchanged, but see below
 for an alternative statement. *)
-let ro_soundness #a #wp (t : unit -> AlgWP a [Read] wp)
+let ro_soundness #a #wp ($t : unit -> AlgWP a [Read] wp)
   : Tot (s0:state -> ID5.ID (a & state) (as_pure_wp (quotient_ro wp s0)))
   = let c = reify (t ()) in interp_ro c
-
 
 
 (****** Internalizing the relation between the labels
@@ -325,11 +324,16 @@ let quotient_lemma #a (wp : st_wp a) (s0 : state) :
   = assume (is_mono wp);
     ()
 
+let ro_soundness_wrapper #a #wp (t : unit -> AlgWP a [Read] wp)
+  (s0:state) ()
+  : ID5.ID (a & state) (as_pure_wp (quotient_ro wp s0))
+  = ro_soundness t s0
+
 let ro_soundness_pre_post #a #wp (t : unit -> AlgWP a [Read] wp)
   (s0:state)
   : ID5.Id (a & state) (requires (wp s0 (fun _ -> True)))
                        (ensures (fun (r, s1) -> s0 == s1))
-  = let reified = reify (ro_soundness #a #wp t s0) in
+  = let reified = reify (ro_soundness_wrapper #a #wp t s0 ()) in
     quotient_lemma wp s0;
     let r = reified (fun (r, s1) -> s1 == s0) () in
     r

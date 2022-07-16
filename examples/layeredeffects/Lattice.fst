@@ -176,28 +176,23 @@ let sublist_at_self (l1 : list eff_label)
 let labpoly #labs (f g : unit -> EFF int labs) : EFF int labs =
   f () + g ()
 
-#set-options "--log_queries --fuel 2 --ifuel 2"
-#restart-solver
-(* no rollback *)
+let catch0 #a #labs (f:repr a (EXN::labs)) (g:repr a labs)
+  : repr a labs
+  = fun s0 ->
+    let r0 : option a & state = f s0 in
+    let r1 : option a & state =
+      match r0 with
+      | (Some v, s1) -> (Some v, s1)
+      | (None, s1) -> g s1
+      | _ -> unreachable ()
+    in
+    r1
+
 let catch #a #labs
   (f : unit -> EFF a (EXN::labs))
   (g : unit -> EFF a labs)
   : EFF a labs
-= EFF?.reflect begin
-  let reif : repr a labs =
-    fun s0 ->
-      let reif_r : repr a (EXN::labs) = reify (f ()) in
-      let r0 : option a & state = reif_r s0 in
-      let r1 : option a & state =
-        match r0 with
-        | (Some v, s1) -> (Some v, s1)
-        | (None, s1) -> reify (g ()) s1
-        | _ -> unreachable ()
-      in
-      r1
-  in
-  reif
-  end
+= EFF?.reflect (catch0 (reify (f ())) (reify (g ())))
 
 // TODO: haskell-like runST.
 // strong update with index on state type(s)?
