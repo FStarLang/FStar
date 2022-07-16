@@ -172,7 +172,7 @@ let mk_class (nm:string) : Tac decls =
                     | b1::bs' ->
                         let (bv, aq) = inspect_binder b1 in
                         let b1 = pack_binder bv (Q_Meta tcr) [] in
-                        mk_arr (ps@(b1::bs')) cod
+                        mk_arr_curried (ps@(b1::bs')) cod
                   in
 
                   let def : term =
