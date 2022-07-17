@@ -1,5 +1,7 @@
 module Steel.ST.Array0
 
+module U32 = FStar.UInt32
+
 /// Lifting a value of universe 0 to universe 1. We could use
 /// FStar.Universe, but that module is not tailored to inlining at
 /// extraction.
