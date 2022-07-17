@@ -175,6 +175,7 @@ let pure_invariant
   : prop
   = seq_props h s /\
     store_and_repr_related s m /\
+    A.is_full_array arr.store /\
     store_and_borrows_related s borrows
 
 /// The main invariant is defined as an existential for the store sequence
