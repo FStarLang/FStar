@@ -1,4 +1,4 @@
-module Steel.ST.HigherArray0
+module Steel.ST.HigherArray
 
 module P = Steel.PCMFrac
 module R = Steel.ST.PCMReference
