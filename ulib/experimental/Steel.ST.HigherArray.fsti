@@ -1,4 +1,4 @@
-module Steel.ST.HigherArray0
+module Steel.ST.HigherArray
 
 /// C arrays of universe 1 elements.
 /// 
@@ -144,7 +144,7 @@ let malloc
 
 /// Freeing a full array. Same here, we expose a ptr version for extraction purposes only
 [@@ noextract_to "krml"; // primitive
-    warn_on_use "Steel.HigherArray0.free is currently unsound in the presence of zero-size subarrays, have you collected them all?"]
+    warn_on_use "Steel.HigherArray.free is currently unsound in the presence of zero-size subarrays, have you collected them all?"]
 val free_ptr
   (#elt: Type)
   (#s: Ghost.erased (Seq.seq elt))
@@ -155,7 +155,7 @@ val free_ptr
 
 inline_for_extraction
 [@@ noextract_to "krml";
-    warn_on_use "Steel.HigherArray0.free is currently unsound in the presence of zero-size subarrays, have you collected them all?"]
+    warn_on_use "Steel.HigherArray.free is currently unsound in the presence of zero-size subarrays, have you collected them all?"]
 let free
   (#elt: Type)
   (a: array elt)
