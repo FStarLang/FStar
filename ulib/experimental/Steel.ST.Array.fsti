@@ -61,6 +61,11 @@ let ptr_of
 let length (#elt: Type) (a: array elt) : GTot nat =
   dsnd a
 
+/// An abbreviation refining an array by its length
+inline_for_extraction
+[@@noextract_to "krml"]
+let larray (t:Type) (n:nat) = a:array t{ length a = n }
+
 /// The main representation predicate:
 /// A Steel separation logic heap predicate to describe that an array
 /// a points to some element sequence s with some permission p.
