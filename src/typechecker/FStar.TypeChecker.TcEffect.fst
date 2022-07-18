@@ -148,6 +148,8 @@ let validate_layered_effect_binders env (bs:binders) (check_non_informatve_binde
 
 (*
  * Typechecking of layered effects
+ *
+ * If the effect is reifiable, returns reify__M sigelt also
  *)
 let tc_layered_eff_decl env0 (ed : S.eff_decl) (quals : list qualifier) (attrs : list S.attribute) =
 Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (string_of_lid ed.mname)) (fun () ->
@@ -886,9 +888,11 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
 
   //
   // If the effect is reifiable, create an
-  //   assume val reify_M (a:Type) ... ($f:unit -> M a is) : M.repr a is
+  //   assume val reify_M (#a:Type) ... ($f:unit -> M a is) : M.repr a is
   //
-  let reify_sig =
+  // The toplevel tc loop will typecheck reify_sigelt
+  //
+  let reify_sigelt =
     if List.contains Reifiable quals
     then
       let env = env0 in
@@ -952,7 +956,7 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
     signature     = (let us, t, _ = signature in (us, t));
     combinators   = combinators;
     actions       = List.map (tc_action env0) ed.actions },
-  reify_sig
+  reify_sigelt
 )
 
 let tc_non_layered_eff_decl env0 (ed:S.eff_decl) (_quals : list qualifier) (_attrs : list S.attribute) : S.eff_decl =

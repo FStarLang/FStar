@@ -515,6 +515,9 @@ let and_elim_lid = classical_sugar_lid "and_elim"
 
 let match_returns_def_name = reserved_prefix ^ "_ret_"
 
+//
+// lid for the reify function assume val for an indexed effect
+//
 let layered_effect_reify_val_lid (eff_name:lident) (r:range) : lident =
   let ns = Ident.ns_of_lid eff_name in
   let reify_fn_name = "reify___" ^ (eff_name |> ident_of_lid |> string_of_id) in
