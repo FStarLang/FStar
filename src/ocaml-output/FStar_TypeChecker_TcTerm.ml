@@ -2708,9 +2708,7 @@ and (tc_maybe_toplevel_term :
                                            env1.FStar_TypeChecker_Env.phase1) in
                                     if uu___11
                                     then
-                                      let c_res_typ =
-                                        c1.FStar_Syntax_Syntax.result_typ in
-                                      let reify_tm =
+                                      let reify_val_tm =
                                         let uu___12 =
                                           let uu___13 =
                                             FStar_Parser_Const.layered_effect_reify_val_lid
@@ -2749,7 +2747,8 @@ and (tc_maybe_toplevel_term :
                                           e2.FStar_Syntax_Syntax.pos in
                                       let implicit_args =
                                         let a_arg =
-                                          FStar_Syntax_Syntax.iarg c_res_typ in
+                                          FStar_Syntax_Syntax.iarg
+                                            c1.FStar_Syntax_Syntax.result_typ in
                                         let indices_args =
                                           FStar_Compiler_Effect.op_Bar_Greater
                                             c1.FStar_Syntax_Syntax.effect_args
@@ -2768,8 +2767,9 @@ and (tc_maybe_toplevel_term :
                                           [uu___14] in
                                         FStar_Compiler_List.op_At
                                           implicit_args uu___13 in
-                                      FStar_Syntax_Syntax.mk_Tm_app reify_tm
-                                        uu___12 e2.FStar_Syntax_Syntax.pos
+                                      FStar_Syntax_Syntax.mk_Tm_app
+                                        reify_val_tm uu___12
+                                        e2.FStar_Syntax_Syntax.pos
                                     else
                                       FStar_Syntax_Syntax.mk
                                         (FStar_Syntax_Syntax.Tm_app

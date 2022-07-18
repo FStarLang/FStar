@@ -2829,7 +2829,7 @@ let (tc_layered_eff_decl :
                                                              FStar_Errors.raise_error
                                                                uu___26 r)) in
                                                  act2))))))))) in
-                      let reify_sig =
+                      let reify_sigelt =
                         if
                           FStar_Compiler_List.contains
                             FStar_Syntax_Syntax.Reifiable quals
@@ -3019,7 +3019,7 @@ let (tc_layered_eff_decl :
                           FStar_Syntax_Syntax.eff_attrs =
                             (ed.FStar_Syntax_Syntax.eff_attrs)
                         } in
-                      (uu___10, reify_sig)))))))))
+                      (uu___10, reify_sigelt)))))))))
 let (tc_non_layered_eff_decl :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.eff_decl ->
