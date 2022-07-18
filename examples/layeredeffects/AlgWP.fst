@@ -302,41 +302,34 @@ let rec interp_ro #a (t : rwtree a [Read]) (s0:state)
     | Op Read i k -> 
       interp_ro (k s0) s0
 
+let st_soundness_aux #a #wp (t : repr a [Read; Write] wp)
+  : Tot (s0:state -> ID5.ID (a & state) (as_pure_wp (wp s0)))
+  = interp_sem t
+
 let st_soundness #a #wp (t : unit -> AlgWP a [Read; Write] wp)
   : Tot (s0:state -> ID5.ID (a & state) (as_pure_wp (wp s0)))
-  = let c = reify (t ()) in interp_sem c
+  = st_soundness_aux (reify (t ()))
 
 (* This guarantees the final state is unchanged, but see below
 for an alternative statement. *)
+
+let ro_soundness_aux #a #wp ($t : repr a [Read] wp)
+  : Tot (s0:state -> ID5.ID (a & state) (as_pure_wp (quotient_ro wp s0)))
+  = interp_ro t
+
 let ro_soundness #a #wp ($t : unit -> AlgWP a [Read] wp)
   : Tot (s0:state -> ID5.ID (a & state) (as_pure_wp (quotient_ro wp s0)))
-  = let c = reify (t ()) in interp_ro c
+  = ro_soundness_aux (reify (t ()))
 
 
 (****** Internalizing the relation between the labels
 and the WP. *)
 
-(* Relies on monotonicity sadly... If we were to carry the refinement
-that every wp in an AlgWP was monotonic, then this would be trivial.
-It's the old headache in a new effect. *)
-let quotient_lemma #a (wp : st_wp a) (s0 : state) : 
-  Lemma (quotient_ro wp s0 (fun (r, s1) -> s1 == s0) <==> wp s0 (fun _ -> True))
-  = assume (is_mono wp);
-    ()
-
-let ro_soundness_wrapper #a #wp (t : unit -> AlgWP a [Read] wp)
-  (s0:state) ()
-  : ID5.ID (a & state) (as_pure_wp (quotient_ro wp s0))
-  = ro_soundness t s0
-
 let ro_soundness_pre_post #a #wp (t : unit -> AlgWP a [Read] wp)
   (s0:state)
   : ID5.Id (a & state) (requires (wp s0 (fun _ -> True)))
                        (ensures (fun (r, s1) -> s0 == s1))
-  = let reified = reify (ro_soundness_wrapper #a #wp t s0 ()) in
-    quotient_lemma wp s0;
-    let r = reified (fun (r, s1) -> s1 == s0) () in
-    r
+  = ro_soundness t s0
 
 (* Same thing here sadly *)
 let bind_ro #a #b (w : st_wp a) (f : a -> st_wp b)

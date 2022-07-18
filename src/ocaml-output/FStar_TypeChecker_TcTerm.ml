@@ -2724,75 +2724,29 @@ and (tc_maybe_toplevel_term :
                                       let thunked_e =
                                         let uu___12 =
                                           let uu___13 =
-                                            FStar_Compiler_Effect.op_Bar_Greater
-                                              e2 FStar_Syntax_Util.unmeta in
-                                          FStar_Compiler_Effect.op_Bar_Greater
-                                            uu___13
-                                            FStar_Syntax_Util.head_and_args in
-                                        match uu___12 with
-                                        | (head, args) ->
-                                            let uu___13 =
-                                              ((FStar_Compiler_List.length
-                                                  args)
-                                                 > Prims.int_zero)
-                                                &&
-                                                (let uu___14 =
-                                                   let uu___15 =
-                                                     let uu___16 =
-                                                       FStar_Compiler_Effect.op_Bar_Greater
-                                                         args
-                                                         FStar_Compiler_List.last in
-                                                     FStar_Compiler_Effect.op_Bar_Greater
-                                                       uu___16
-                                                       FStar_Pervasives_Native.fst in
-                                                   FStar_Syntax_Util.eq_tm
-                                                     uu___15
-                                                     FStar_Syntax_Syntax.unit_const in
-                                                 uu___14 =
-                                                   FStar_Syntax_Util.Equal) in
-                                            if uu___13
-                                            then
-                                              let uu___14 =
-                                                let uu___15 =
-                                                  FStar_Compiler_Effect.op_Bar_Greater
-                                                    args
-                                                    (FStar_Compiler_List.splitAt
-                                                       ((FStar_Compiler_List.length
-                                                           args)
-                                                          - Prims.int_one)) in
-                                                FStar_Compiler_Effect.op_Bar_Greater
-                                                  uu___15
-                                                  FStar_Pervasives_Native.fst in
-                                              FStar_Syntax_Syntax.mk_Tm_app
-                                                head uu___14
-                                                head.FStar_Syntax_Syntax.pos
-                                            else
-                                              (let uu___15 =
-                                                 let uu___16 =
-                                                   let uu___17 =
-                                                     let uu___18 =
-                                                       let uu___19 =
-                                                         FStar_Syntax_Syntax.null_bv
-                                                           FStar_Syntax_Syntax.t_unit in
-                                                       FStar_Syntax_Syntax.mk_binder
-                                                         uu___19 in
-                                                     [uu___18] in
-                                                   (uu___17, e2,
-                                                     (FStar_Pervasives_Native.Some
-                                                        {
-                                                          FStar_Syntax_Syntax.residual_effect
-                                                            =
-                                                            (c1.FStar_Syntax_Syntax.effect_name);
-                                                          FStar_Syntax_Syntax.residual_typ
-                                                            =
-                                                            FStar_Pervasives_Native.None;
-                                                          FStar_Syntax_Syntax.residual_flags
-                                                            = []
-                                                        })) in
-                                                 FStar_Syntax_Syntax.Tm_abs
-                                                   uu___16 in
-                                               FStar_Syntax_Syntax.mk uu___15
-                                                 e2.FStar_Syntax_Syntax.pos) in
+                                            let uu___14 =
+                                              let uu___15 =
+                                                let uu___16 =
+                                                  FStar_Syntax_Syntax.null_bv
+                                                    FStar_Syntax_Syntax.t_unit in
+                                                FStar_Syntax_Syntax.mk_binder
+                                                  uu___16 in
+                                              [uu___15] in
+                                            (uu___14, e2,
+                                              (FStar_Pervasives_Native.Some
+                                                 {
+                                                   FStar_Syntax_Syntax.residual_effect
+                                                     =
+                                                     (c1.FStar_Syntax_Syntax.effect_name);
+                                                   FStar_Syntax_Syntax.residual_typ
+                                                     =
+                                                     FStar_Pervasives_Native.None;
+                                                   FStar_Syntax_Syntax.residual_flags
+                                                     = []
+                                                 })) in
+                                          FStar_Syntax_Syntax.Tm_abs uu___13 in
+                                        FStar_Syntax_Syntax.mk uu___12
+                                          e2.FStar_Syntax_Syntax.pos in
                                       let implicit_args =
                                         let a_arg =
                                           FStar_Syntax_Syntax.iarg c_res_typ in

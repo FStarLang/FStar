@@ -156,14 +156,17 @@ let emp_locals = {
   m = Map.restrict Set.empty (Map.const (| unit, () |))
 }
 
+let run_with_locals_aux (#a:Type) (#wp:wp_t a) (f:repr a wp)
+  : PURE a (as_pure_wp (fun post -> wp (fun r _ -> post r) emp_locals))
+  = fst (f emp_locals)
+
 let run_with_locals (#a:Type)
   (#pre:locals_t -> Type0) (#post:locals_t -> a -> locals_t -> Type0)
   ($f:unit -> LV a pre post)
 : Pure a
   (requires pre emp_locals)
   (ensures fun r -> exists m. post emp_locals r m)
-= fst (reify (f ()) emp_locals)
-
+= run_with_locals_aux (reify (f ()))
 
 /// Testing some termination
 
