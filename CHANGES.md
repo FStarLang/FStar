@@ -60,6 +60,11 @@ Guidelines for the changelog:
   * Friend modules (https://github.com/FStarLang/FStar/wiki/Friend-modules)
 
 ## Core typechecker
+  * Cf. #2641, F* now supports only type-based reasoning of reification of indexed
+    effects. See https://github.com/FStarLang/FStar/issues/2641 for more discussions
+    and associated pull request. This may be a breaking change for clients relying on
+    extraction/smt reasoning of indexed effects via reification.
+
   * F* now supports accessibility predicates based termination proofs. When writing a recursive function
 
     ```
