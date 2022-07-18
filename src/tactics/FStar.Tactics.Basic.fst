@@ -1792,7 +1792,7 @@ let rec inspect (t:term) : tac term_view = wrap_err "inspect" (
 
 (* This function could actually be pure, it doesn't need freshness
  * like `inspect` does, but we mark it as Tac for uniformity. *)
-let pack (tv:term_view) : tac term =
+let pack' (tv:term_view) (leave_curried:bool) : tac term =
     match tv with
     | Tv_Var bv ->
         ret <| S.bv_to_name bv
@@ -1814,7 +1814,7 @@ let pack (tv:term_view) : tac term =
         ret <| U.abs [b] t None // TODO: effect?
 
     | Tv_Arrow (b, c) ->
-        ret <| U.arrow [b] c
+        ret <| (if leave_curried then U.arrow [b] c else U.canon_arrow (U.arrow [b] c))
 
     | Tv_Type u ->
         ret <| S.mk (Tm_type u) Range.dummyRange
@@ -1859,6 +1859,9 @@ let pack (tv:term_view) : tac term =
 
     | Tv_Unknown ->
         ret <| S.mk Tm_unknown Range.dummyRange
+
+let pack (tv:term_view) : tac term = pack' tv false
+let pack_curried (tv:term_view) : tac term = pack' tv true
 
 let lget (ty:term) (k:string) : tac term = wrap_err "lget" <|
     bind get (fun ps ->
