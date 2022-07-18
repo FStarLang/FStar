@@ -2978,7 +2978,18 @@ let (tc_layered_eff_decl :
                                        FStar_Syntax_Syntax.sigopts =
                                          FStar_Pervasives_Native.None
                                      } in
-                                   [sig_assume_reify])
+                                   ((let uu___13 =
+                                       let uu___14 =
+                                         let uu___15 =
+                                           FStar_Ident.string_of_lid
+                                             ed.FStar_Syntax_Syntax.mname in
+                                         FStar_Compiler_Util.format1
+                                           "Reification of indexed effects (%s here) is supported only as a type coercion to the underlying representation type (no support for smt-based reasoning or extraction)"
+                                           uu___15 in
+                                       (FStar_Errors.Warning_BleedingEdge_Feature,
+                                         uu___14) in
+                                     FStar_Errors.log_issue r uu___13);
+                                    [sig_assume_reify]))
                         else [] in
                       let tschemes_of uu___10 =
                         match uu___10 with
