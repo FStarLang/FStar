@@ -952,19 +952,72 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
 
   | Tm_app({n=Tm_constant Const_reify}, [(e, aqual)]) ->
     if Option.isSome aqual
-    then Errors.log_issue e.pos (Errors.Warning_IrrelevantQualifierOnArgumentToReify, "Qualifier on argument to reify is irrelevant and will be ignored");
+    then Errors.log_issue e.pos
+           (Errors.Warning_IrrelevantQualifierOnArgumentToReify,
+            "Qualifier on argument to reify is irrelevant and will be ignored");
+
+    //
+    // Typecheck e
+    //
     let env0, _ = Env.clear_expected_typ env in
     let e, c, g = tc_term env0 e in
     let reify_op, _ = U.head_and_args top in
-    let u_c = env.universe_of env c.res_typ in
-    let c, g_c = TcComm.lcomp_comp c in
-    let ef = U.comp_effect_name c in
-    if not (is_user_reifiable_effect env ef) then
-        raise_error (Errors.Fatal_EffectCannotBeReified, (BU.format1 "Effect %s cannot be reified" (string_of_lid ef))) e.pos;
-    let repr = Env.reify_comp env c u_c in
-    let e = mk (Tm_app(reify_op, [(e, aqual)])) top.pos in
+    let c, g_c =
+      let c, g_c = TcComm.lcomp_comp c in
+      Env.unfold_effect_abbrev env c, g_c in
+
+    if not (is_user_reifiable_effect env c.effect_name) then
+      raise_error (Errors.Fatal_EffectCannotBeReified,
+                   BU.format1 "Effect %s cannot be reified" (string_of_lid c.effect_name))
+                  e.pos;
+    let u_c = List.hd c.comp_univs in
+
+    let e =
+      //
+      // AR:
+      // Indexed effects reification is supported only as a type coercion from
+      //   (M a is) to (M.repr a is)
+      // We achieve this by:
+      //
+      // For a reifiable indexed effect, the typechecker adds an
+      //   assume val reify__M (#a:Type) (#is:_) ($f:unit -> M a is) : (Tot/Div) M.repr a is
+      //
+      // Then (reify e) is rewritten as reify__M (fun _ -> e)
+      //
+      // The rewriting happens in phase 2
+      //   This is consistent with the usual inference of indexed effect indices in phase 2
+      //
+      if Env.is_layered_effect env c.effect_name &&
+         not env.phase1
+      then 
+           // reify__M<u_c>
+           let reify_val_tm =
+             S.mk_Tm_uinst
+               (Const.layered_effect_reify_val_lid c.effect_name e.pos |> S.tconst)
+               [u_c] in
+           // fun _ -> e
+           let thunked_e =
+             S.mk (Tm_abs (
+                     [S.mk_binder (S.null_bv S.t_unit)],
+                     e,
+                     Some ({residual_effect=c.effect_name;
+                            residual_typ=None;
+                            residual_flags=[]}))) e.pos in
+           // #a, #is
+           let implicit_args =
+             let a_arg = S.iarg c.result_typ in
+             let indices_args =
+             c.effect_args |> List.map (fun (t, _) -> S.iarg t) in
+             a_arg::indices_args in
+           // reify__M<u> #a #is (fun _ -> e)
+           mk_Tm_app
+             reify_val_tm
+             (implicit_args@[S.as_arg thunked_e])
+             e.pos
+      else mk (Tm_app(reify_op, [(e, aqual)])) top.pos in
+    let repr = Env.reify_comp env (S.mk_Comp c) u_c in
     let c =
-        if is_total_effect env ef
+        if is_total_effect env c.effect_name
         then S.mk_Total repr |> TcComm.lcomp_of_comp
         else let ct = { comp_univs = [u_c]
                       ; effect_name = Const.effect_Dv_lid

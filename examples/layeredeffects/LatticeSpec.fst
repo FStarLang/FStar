@@ -242,26 +242,26 @@ let sublist_at_self (l1 : list eff_label)
 let labpoly #labs (f g : unit -> EFFT int labs) : EFFT  int labs =
   f () + g ()
 
+let catch0 #a #labs
+  (f:repr a (fun _ -> True) (fun _ _ _ -> True) (EXN::labs))
+  (g:repr a (fun _ -> True) (fun _ _ _ -> True) labs)
+  : repr a (fun _ -> True) (fun _ _ _ -> True) labs
+  =  fun s0 ->
+     let r0 : option a & state = f s0 in
+     let r1 : option a & state =
+       match r0 with
+       | (Some v, s1) -> (Some v, s1)
+       | (None, s1) -> g s1
+       | _ -> unreachable ()
+     in
+     r1
+
 (* no rollback *)
 let catch #a #labs
   (f : unit -> EFFT a (EXN::labs))
   (g : unit -> EFFT a labs)
   : EFFT a labs
-= EFF?.reflect begin
-  let reif : repr a (fun _ -> True) (fun _ _ _ -> True) labs =
-    fun s0 ->
-      let reif_r : repr a (fun _ -> True) (fun _ _ _ -> True) (EXN::labs) = reify (f ()) in
-      let r0 : option a & state = reif_r s0 in
-      let r1 : option a & state =
-        match r0 with
-        | (Some v, s1) -> (Some v, s1)
-        | (None, s1) -> reify (g ()) s1
-        | _ -> unreachable ()
-      in
-      r1
-  in
-  reif
-  end
+= EFF?.reflect (catch0 (reify (f ())) (reify (g ())))
 
 let g #labs () : EFFT int labs = 42
 
