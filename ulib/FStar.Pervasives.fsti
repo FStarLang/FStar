@@ -73,6 +73,18 @@ val smt_pat (#a: Type) (x: a) : Tot pattern
 *)
 val smt_pat_or (x: list (list pattern)) : Tot pattern
 
+(** eqtype is defined in prims at universe 0
+    
+    Although, usually, only universe 0 types have decidable equality,
+    sometimes it is possible to define a type in a higher univese also
+    with decidable equality (e.g., type t : Type u#1 = | Unit)
+
+    Further, sometimes, as in Lemma below, we need to use a
+    universe-polymorphic equality type (although it is only ever
+    instantiated with `unit`)
+*)
+type eqtype_u = a:Type{hasEq a}
+
 (** [Lemma] is a very widely used effect abbreviation.
 
     It stands for a unit-returning [Ghost] computation, whose main
@@ -97,10 +109,10 @@ val smt_pat_or (x: list (list pattern)) : Tot pattern
    the squash argument on the postcondition allows to assume the
    precondition for the *well-formedness* of the postcondition.
 *)
-effect Lemma (a: Type) (pre: Type) (post: (squash pre -> Type)) (pats: list pattern) =
+effect Lemma (a: eqtype_u) (pre: Type) (post: (squash pre -> Type)) (pats: list pattern) =
   Pure a pre (fun r -> post ())
 
-(** In the default mode of operation, all proofs in a verification
+(** IN the default mode of operation, all proofs in a verification
     condition are bundled into a single SMT query. Sub-terms marked
     with the [spinoff] below are the exception: each of them is
     spawned off into a separate SMT query *)
@@ -288,7 +300,6 @@ val norm_spec (s: list norm_step) (#a: Type) (x: a) : Lemma (norm s #a x == x)
     solver as: [reveal_opaque (`%defn) defn] *)
 let reveal_opaque (s: string) = norm_spec [delta_only [s]]
 
-
 (** Wrappers over pure wp combinators that return a pure_wp type
     (with monotonicity refinement) *)
 
@@ -333,7 +344,6 @@ unfold
 let pure_assume_wp (p:Type) : Tot (pure_wp unit) =
   reveal_opaque (`%pure_wp_monotonic) pure_wp_monotonic;
   pure_assume_wp0 p
-
 
 /// The [DIV] effect for divergent computations
 ///
@@ -1060,6 +1070,14 @@ val strictly_positive : unit
     in the rest of the program
   *)
 val no_auto_projectors : unit
+
+(** This attribute can be added to a let definition
+    and indicates to the typechecker to typecheck the signature of the definition
+    without using subtyping. This is sometimes useful for indicating that a lemma
+    can be applied by the tactic engine without requiring to check additional
+    subtyping obligations
+*)
+val no_subtyping : unit
 
 (** Pure and ghost inner let bindings are now always inlined during
     the wp computation, if: the return type is not unit and the head

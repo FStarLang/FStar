@@ -70,6 +70,27 @@ let tts = N.term_to_string
 
 let term_to_string e t = Print.term_to_string' e.dsenv t
 
+let set_uvar_expected_typ (u:ctx_uvar) (t:typ)
+  : unit
+  = let dec = UF.find_decoration u.ctx_uvar_head in
+    UF.change_decoration u.ctx_uvar_head ({dec with uvar_decoration_typ = t })
+
+let mark_uvar_as_allow_untyped (u:ctx_uvar)
+  : unit
+  = let dec = UF.find_decoration u.ctx_uvar_head in
+    UF.change_decoration u.ctx_uvar_head ({dec with uvar_decoration_should_check = Allow_untyped})
+  
+let mark_goal_implicit_allow_untyped (g:goal) 
+  : unit
+  = mark_uvar_as_allow_untyped g.goal_ctx_uvar
+
+let goal_with_type g t
+  : goal
+  = let u = g.goal_ctx_uvar in
+    set_uvar_expected_typ u t;
+    g
+
+    
 let bnorm_goal g = goal_with_type g (bnorm (goal_env g) (goal_type g))
 
 let tacprint  (s:string)       = BU.print1 "TAC>> %s\n" s
@@ -89,7 +110,7 @@ let debugging () : tac bool =
 let do_dump_ps (msg:string) (ps:proofstate) : unit =
   let psc = ps.psc in
   let subst = Cfg.psc_subst psc in
-  do_dump_proofstate (subst_proof_state subst ps) msg
+  do_dump_proofstate ps msg
 
 let dump (msg:string) : tac unit =
   mk_tac (fun ps ->
@@ -159,12 +180,26 @@ let __do_unify_wflags (dbg:bool) (allow_guards:bool)
     if dbg then
       BU.print2 "%%%%%%%%do_unify %s =? %s\n" (Print.term_to_string t1)
                                               (Print.term_to_string t2);
-    try
+
+    bind (trytac cur_goal) (fun gopt ->
+      try
         let res =
+          //
+          // If the current goal is set
+          //   (it may not be set in case the tactic engine is asked to unify two terms
+          //    even though no goals remain)
+          //   set rel_query_for_apply_tac_uvar so that any uvars solved as part of this Rel call,
+          //   can be typechecked properly
+          //   e.g. if the current goal depends on ?u, and ?u is solved indirectly in this Rel call,
+          //   then ?u must be typechecked without fastpath
+          //
+          let env =
+            gopt |> BU.map_option
+                     (fun g -> {env with rel_query_for_apply_tac_uvar=g.goal_ctx_uvar |> Some})
+                 |> BU.dflt env in
           if allow_guards
           then Rel.try_teq true env t1 t2
-          else Rel.teq_nosmt env t1 t2
-        in
+          else Rel.teq_nosmt env t1 t2 in
         if dbg then
           BU.print3 "%%%%%%%%do_unify (RESULT %s) %s =? %s\n"
                               (FStar.Common.string_of_option (Rel.guard_to_string env) res)
@@ -178,15 +213,15 @@ let __do_unify_wflags (dbg:bool) (allow_guards:bool)
           bind (add_implicits g.implicits) (fun () ->
           ret (Some g))
 
-    with | Errors.Err (_, msg, _) -> begin
-            mlog (fun () -> BU.print1 ">> do_unify error, (%s)\n" msg ) (fun _ ->
-            ret None)
-            end
-         | Errors.Error (_, msg, r, _) -> begin
-            mlog (fun () -> BU.print2 ">> do_unify error, (%s) at (%s)\n"
-                                msg (Range.string_of_range r)) (fun _ ->
-            ret None)
-            end
+      with | Errors.Err (_, msg, _) -> begin
+               mlog (fun () -> BU.print1 ">> do_unify error, (%s)\n" msg ) (fun _ ->
+               ret None)
+             end
+           | Errors.Error (_, msg, r, _) -> begin
+               mlog (fun () -> BU.print2 ">> do_unify error, (%s) at (%s)\n"
+                            msg (Range.string_of_range r)) (fun _ ->
+               ret None)
+             end)
 
 (* Just a wrapper over __do_unify_wflags to better debug *)
 let __do_unify (allow_guards:bool) (env : env) (t1 : term) (t2 : term)
@@ -256,7 +291,7 @@ let do_match_on_lhs (env:Env.env) (t1:term) (t2:term) : tac bool =
     end
     else ret false
     ))
-
+  
 (*
    set_solution:
 
@@ -279,6 +314,7 @@ let set_solution goal solution : tac unit =
       fail (BU.format1 "Goal %s is already solved" (goal_to_string_verbose goal))
     | None ->
       FStar.Syntax.Unionfind.change goal.goal_ctx_uvar.ctx_uvar_head solution;
+      mark_goal_implicit_allow_untyped goal;
       ret ()
 
 let trysolve (goal : goal) (solution : term) : tac bool =
@@ -403,31 +439,36 @@ let with_policy pol (t : tac 'a) : tac 'a =
     bind (set_guard_policy old_pol) (fun () ->
     ret r))))
 
-let proc_guard (reason:string) (e : env) (g : guard_t) (rng:Range.range) : tac unit =
+let proc_guard' (simplify:bool) (reason:string) (e : env) (g : guard_t) (rng:Range.range) : tac unit =
     mlog (fun () ->
         BU.print2 "Processing guard (%s:%s)\n" reason (Rel.guard_to_string e g)) (fun () ->
-    bind (add_implicits g.implicits) (fun () ->
-    match (Rel.simplify_guard e g).guard_f with
+    add_implicits g.implicits;;
+    let guard_f = 
+      if simplify
+      then (Rel.simplify_guard e g).guard_f
+      else g.guard_f
+    in
+    match guard_f with
     | TcComm.Trivial -> ret ()
     | TcComm.NonTrivial f ->
-    bind get (fun ps ->
-    match ps.guard_policy with
-    | Drop ->
+      ps <-- get;
+      match ps.guard_policy with
+      | Drop ->
         // should somehow taint the state instead of just printing a warning
         Err.log_issue e.range
             (Errors.Warning_TacAdmit, BU.format1 "Tactics admitted guard <%s>\n\n"
                         (Rel.guard_to_string e g));
         ret ()
 
-    | Goal ->
+      | Goal ->
         mlog (fun () -> BU.print2 "Making guard (%s:%s) into a goal\n" reason (Rel.guard_to_string e g)) (fun () ->
-        bind (goal_of_guard reason e f rng) (fun g ->
-        push_goals [g]))
+        g <-- goal_of_guard reason e f rng;
+        push_goals [g])
 
     | SMT ->
         mlog (fun () -> BU.print2 "Sending guard (%s:%s) to SMT goal\n" reason (Rel.guard_to_string e g)) (fun () ->
-        bind (goal_of_guard reason e f rng) (fun g ->
-        push_smt_goals [g]))
+        g <-- goal_of_guard reason e f rng;
+        push_smt_goals [g])
 
     | Force ->
         mlog (fun () -> BU.print2 "Forcing guard (%s:%s)\n" reason (Rel.guard_to_string e g)) (fun () ->
@@ -438,7 +479,9 @@ let proc_guard (reason:string) (e : env) (g : guard_t) (rng:Range.range) : tac u
             else ret ()
         with
         | _ -> mlog (fun () -> BU.print1 "guard = %s\n" (Rel.guard_to_string e g)) (fun () ->
-               fail1 "Forcing the guard failed (%s)" reason)))))
+               fail1 "Forcing the guard failed (%s)" reason)))
+
+let proc_guard = proc_guard' true
 
 let tcc (e : env) (t : term) : tac comp = wrap_err "tcc" <|
     bind (__tc_lax e t) (fun (_, lc, _) ->
@@ -495,6 +538,10 @@ let seq (t1:tac unit) (t2:tac unit) : tac unit =
         bind (map t2) (fun _ -> ret ()))
     )
 
+let should_check_goal_uvar (g:goal) = U.ctx_uvar_should_check g.goal_ctx_uvar
+
+let bnorm_and_replace g = replace_cur (bnorm_goal g)
+
 (*
   [intro]:
 
@@ -520,7 +567,11 @@ let intro () : tac binder = wrap_err "intro" <|
              //BU.print2 "[intro]: with binder = %s, new goal = %s"
              //         (Print.binders_to_string ", " [b])
              //         (Print.term_to_string typ');
-             bind (new_uvar "intro" env' typ' (rangeof goal)) (fun (body, ctx_uvar) ->
+             bind (new_uvar "intro" env' typ' 
+                            (Some (should_check_goal_uvar goal)) 
+                            goal.goal_ctx_uvar.ctx_uvar_apply_tac_prefix
+                            (rangeof goal))
+                  (fun (body, ctx_uvar) ->
              let sol = U.abs [b] body (Some (U.residual_comp_of_comp c)) in
              //BU.print1 "[intro]: solution is %s"
              //           (Print.term_to_string sol);
@@ -547,11 +598,12 @@ let intro () : tac binder = wrap_err "intro" <|
              *)
              bind (set_solution goal sol) (fun () ->
              let g = mk_goal env' ctx_uvar goal.opts goal.is_guard goal.label in
-             bind (replace_cur (bnorm_goal g)) (fun _ ->
+             bind (bnorm_and_replace g) (fun _ ->
              ret b)))
     | None ->
         fail1 "goal is not an arrow (%s)" (tts (goal_env goal) (goal_type goal))
     )
+
 
 // TODO: missing: precedes clause, and somehow disabling fixpoints only as needed
 let intro_rec () : tac (binder * binder) =
@@ -565,13 +617,13 @@ let intro_rec () : tac (binder * binder) =
         else let bv = gen_bv "__recf" None (goal_type goal) in
              let bs = [S.mk_binder bv; b] in // recursively bound name and argument we're introducing
              let env' = Env.push_binders (goal_env goal) bs in
-             bind (new_uvar "intro_rec" env' (U.comp_result c) (rangeof goal)) (fun (u, ctx_uvar_u) ->
+             bind (new_uvar "intro_rec" env' (U.comp_result c) (Some (should_check_goal_uvar goal)) goal.goal_ctx_uvar.ctx_uvar_apply_tac_prefix (rangeof goal)) (fun (u, ctx_uvar_u) ->
              let lb = U.mk_letbinding (Inl bv) [] (goal_type goal) PC.effect_Tot_lid (U.abs [b] u None) [] Range.dummyRange in
              let body = S.bv_to_name bv in
              let lbs, body = SS.close_let_rec [lb] body in
              let tm = mk (Tm_let ((true, lbs), body)) (goal_witness goal).pos in
              bind (set_solution goal tm) (fun () ->
-             bind (replace_cur (bnorm_goal ({ goal with goal_ctx_uvar=ctx_uvar_u}))) (fun _ ->
+             bind (bnorm_and_replace ({ goal with goal_ctx_uvar=ctx_uvar_u})) (fun _ ->
              ret (S.mk_binder bv, b))))
     | None ->
         fail1 "intro_rec: goal is not an arrow (%s)" (tts (goal_env goal) (goal_type goal))
@@ -608,6 +660,8 @@ let refine_intro () : tac unit = wrap_err "refine_intro" <|
     match Rel.base_and_refinement (goal_env g) (goal_type g) with
     | _, None -> fail "not a refinement"
     | t, Some (bv, phi) ->
+        //Mark goal as untyped, since we're adding its refinement as a separate goal
+        mark_goal_implicit_allow_untyped g;
         let g1 = goal_with_type g t in
         let bv, phi = match SS.open_term [S.mk_binder bv] phi with
                       | bvs, phi -> (List.hd bvs).binder_bv, phi
@@ -630,8 +684,12 @@ let __exact_now set_expected_typ (t:term) : tac unit =
     bind (proc_guard "__exact typing" (goal_env goal) guard (rangeof goal)) (fun _ ->
     mlog (fun () -> BU.print2 "__exact_now: unifying %s and %s\n" (Print.term_to_string typ)
                                                                   (Print.term_to_string (goal_type goal))) (fun _ ->
-    bind (do_unify (goal_env goal) typ (goal_type goal)) (fun b -> if b
-    then solve goal t
+    bind (do_unify (goal_env goal) typ (goal_type goal)) (fun b ->
+    if b
+    then ( // do unify succeeded with a trivial guard; so the goal is solved and we don't have to check it again
+      mark_goal_implicit_allow_untyped goal;
+      solve goal t
+    )
     else
       let typ, goalt = TypeChecker.Err.print_discrepancy (tts (goal_env goal)) typ (goal_type goal) in
       fail4 "%s : %s does not exactly solve the goal %s (witness = %s)"
@@ -678,7 +736,19 @@ let rec  __try_unify_by_application
             fail2 "Could not instantiate, %s to %s" (term_to_string e ty1) (term_to_string e ty2)
         | Some (b, c) ->
             if not (U.is_total_comp c) then fail "Codomain is effectful" else
-            bind (new_uvar "apply arg" e b.binder_bv.sort rng) (fun (uvt, uv) ->
+            //
+            // Set dependence uvars from acc
+            // If any of these dependence uvars are solved "indirectly" when solving this new uvar,
+            //   we will typecheck the dependence uvars without fastpath
+            //
+            let uvar_deps =
+              let bv_sort_free_uvs =
+                FStar.Syntax.Free.uvars b.binder_bv.sort in
+              acc
+                |> List.filter (fun (_, _, uv) -> BU.set_mem uv bv_sort_free_uvs)
+                |> List.map (fun (_, _, uv) -> uv) in
+            bind (new_uvar "apply arg" e b.binder_bv.sort None uvar_deps rng) (fun (uvt, uv) ->
+
             mlog (fun () -> BU.print1 "t_apply: generated uvar %s\n" (Print.ctx_uvar_to_string uv)) (fun _ ->
             let typ = U.comp_result c in
             let typ' = SS.subst [S.NT (b.binder_bv, uvt)] typ in
@@ -689,6 +759,74 @@ let rec  __try_unify_by_application
 (* NB: Result is reversed, which helps so we use fold_right instead of fold_left *)
 let try_unify_by_application (only_match:bool) (e : env) (ty1 : term) (ty2 : term) (rng:Range.range) : tac (list (term * aqual * ctx_uvar)) =
     __try_unify_by_application only_match [] e ty1 ty2 rng
+
+//
+// Checking implicit solutions that may have been solved during unification
+//   E.g. when unifying the goals in apply
+//
+let check_apply_implicits_solutions
+    (simplify_guard:bool)
+    (env:Env.env)
+    (gl:option goal)
+    (debug_on:bool)
+    (debug_prefix:string)
+    (must_tot:bool)
+    (imps:list (term & ctx_uvar))
+  
+  : tac (list (list goal)) =
+
+  let check_implicits_solution env (t:term) (k:typ) (must_tot:bool) : guard_t =
+    let env = Env.set_expected_typ ({env with use_bv_sorts=true}) k in
+
+    let slow_path () =
+      //expected type is already set in the env
+      let _, _, g = TcTerm.typeof_tot_or_gtot_term env t must_tot in
+      g in
+
+    match TcTerm.typeof_tot_or_gtot_term_fastpath env t must_tot with
+    | None -> slow_path ()
+    | Some k' ->
+      match Rel.subtype_nosmt env k' k with
+      | None -> slow_path ()
+      | Some g -> g
+  in
+
+  let check_one_implicit (term, ctx_uvar) =
+    let hd, _ = U.head_and_args term in
+    match (SS.compress hd).n with
+    | Tm_uvar (ctx_uvar, _) ->
+      let gl =
+        match gl with 
+        | None ->  mk_goal env ctx_uvar (FStar.Options.peek()) true "goal for unsolved implicit"
+        | Some gl -> { gl with goal_ctx_uvar = ctx_uvar } in
+      let gl = bnorm_goal gl in
+      ret [gl]
+    | _ ->
+      mlog (fun () -> BU.print3 "%s: arg %s unified to (%s)\n"
+                     debug_prefix
+                     (Print.uvar_to_string ctx_uvar.ctx_uvar_head)
+                     (Print.term_to_string term)) (fun () ->
+      let g_typ = check_implicits_solution env term (U.ctx_uvar_typ ctx_uvar) must_tot in
+      let rng = 
+        match gl with
+        | None ->  ctx_uvar.ctx_uvar_range
+        | Some gl -> rangeof gl
+      in
+      bind (proc_guard'
+             simplify_guard
+              (if debug_on
+               then BU.format3 "%s solved arg %s to %s\n"
+                      debug_prefix
+                      (Print.ctx_uvar_to_string ctx_uvar)
+                      (Print.term_to_string term)
+               else BU.format1 "%s solved arg" debug_prefix)
+              env g_typ rng) (fun () ->
+      //we've checked this implicit and added its guard as an explicit goal
+      //no need to recheck it
+      mark_uvar_as_allow_untyped ctx_uvar;
+      ret [])) in
+
+  imps |> mapM check_one_implicit
 
 // uopt: Don't add goals for implicits that appear free in posterior goals.
 // This is very handy for users, allowing to turn
@@ -703,8 +841,13 @@ let try_unify_by_application (only_match:bool) (e : env) (ty1 : term) (ty2 : ter
 // without asking for |- ?u : Type first, which will most likely be instantiated when
 // solving any of these two goals. In any case, if ?u is not solved, we will later fail.
 // TODO: this should probably be made into a user tactic
-let t_apply (uopt:bool) (only_match:bool) (tm:term) : tac unit = wrap_err "apply" <|
-    mlog (fun () -> BU.print1 "t_apply: tm = %s\n" (Print.term_to_string tm)) (fun _ ->
+let t_apply (uopt:bool) (only_match:bool) (tc_resolved_uvars:bool) (tm:term) : tac unit = wrap_err "apply" <|
+    mlog (fun () -> BU.print4 "t_apply: uopt %s, only_match %s, tc_resolved_uvars %s, tm = %s\n"
+                   (string_of_bool uopt)
+                   (string_of_bool only_match)
+                   (string_of_bool tc_resolved_uvars)
+                   (Print.term_to_string tm)) (fun _ ->
+    bind get (fun ps ->
     bind cur_goal (fun goal ->
     let e = goal_env goal in
     mlog (fun () -> BU.print3 "t_apply: tm = %s\nt_apply: goal = %s\nenv.gamma=%s\n"
@@ -719,27 +862,40 @@ let t_apply (uopt:bool) (only_match:bool) (tm:term) : tac unit = wrap_err "apply
         (FStar.Common.string_of_list (fun (t, _, _) -> Print.term_to_string t) uvs)) (fun () ->
     let w = List.fold_right (fun (uvt, q, _) w -> U.mk_app w [(uvt, q)]) uvs tm in
 
-    let uvset = List.fold_right (fun (_, _, uv) s -> BU.set_union s (SF.uvars uv.ctx_uvar_typ)) uvs (SF.new_uv_set ()) in
+    let uvset = List.fold_right (fun (_, _, uv) s -> BU.set_union s (SF.uvars (U.ctx_uvar_typ uv))) uvs (SF.new_uv_set ()) in
     let free_in_some_goal uv =
         BU.set_mem uv uvset
     in
     bind (solve' goal w) (fun () ->
-    bind (mapM (fun (uvt, q, uv) ->
-                 match UF.find uv.ctx_uvar_head with
-                 (* Already (at least partially) solved, skip asking the user for it *)
-                 | Some _ ->
-                       ret ()
-                 (* Not instantiated at all *)
-                 | None ->
-                    (* We might still not add it if uopt is on, as described above *)
-                    if uopt && free_in_some_goal uv
-                    then ret ()
-                    else add_goals [bnorm_goal ({ goal with
-                                                  goal_ctx_uvar = uv;
-                                                  is_guard = false; })]
-               ) uvs) (fun _ ->
-    proc_guard "apply guard" e guard (rangeof goal)
-    ))))))))
+    //
+    //process uvs
+    //first, if some of them are solved already, perhaps during unification,
+    //  typecheck them if tc_resolved_uvars is on
+    //then, if uopt is on, filter out those that appear in other goals
+    //add the rest as goals
+    //
+    bind (uvs |> List.map (fun (uvt, _q, uv) -> (uvt, uv))
+              |> (if tc_resolved_uvars
+                 then let must_tot = true in
+                      check_apply_implicits_solutions true e (Some goal) ps.tac_verb_dbg
+                        "apply" must_tot
+                 else (fun l -> l |> List.map (fun (_, uv) ->
+                                           match UF.find uv.ctx_uvar_head with
+                                           (* Already (at least partially) solved, skip asking the user for it *)
+                                           | Some _ -> []
+                                           | None -> [{goal with goal_ctx_uvar=uv; is_guard=false}])
+                               |> ret))) (fun subgoals ->
+    bind (subgoals |> List.flatten
+                   |> List.filter (fun g ->
+                                  //
+                                  //if uopt is on, we don't keep uvars that
+                                  //  appear in some other goals
+                                  //
+                                  not (uopt && free_in_some_goal g.goal_ctx_uvar))
+                   |> List.map bnorm_goal
+                   |> List.rev
+                   |> add_goals) (fun _ ->
+    proc_guard "apply guard" e guard (rangeof goal)))))))))))
 
 // returns pre and post
 let lemma_or_sq (c : comp) : option (term * term) =
@@ -763,22 +919,6 @@ let rec fold_left (f : ('a -> 'b -> tac 'b)) (e : 'b) (xs : list 'a) : tac 'b =
     | [] -> ret e
     | x::xs -> bind (f x e) (fun e' -> fold_left f e' xs)
 
-let check_lemma_implicits_solution env (t:term) (k:typ) : guard_t =
-  let env = Env.set_expected_typ ({env with use_bv_sorts=true}) k in
-
-  let slow_path () =
-    let must_tot = false in  //since we are typechecking lemma implicits
-    //expected type is already set in the env
-    let _, _, g = TcTerm.typeof_tot_or_gtot_term env t must_tot in
-    g in
-
-  match TcTerm.typeof_tot_or_gtot_term_fastpath env t false with
-  | None -> slow_path ()
-  | Some k' ->
-    match Rel.subtype_nosmt env k' k with
-    | None -> slow_path ()
-    | Some g -> g
-
 let t_apply_lemma (noinst:bool) (noinst_lhs:bool)
                   (tm:term) : tac unit = wrap_err "apply_lemma" <| focus (
     bind get (fun ps ->
@@ -795,6 +935,11 @@ let t_apply_lemma (noinst:bool) (noinst_lhs:bool)
     | None -> fail "not a lemma or squashed function"
     | Some (pre, post) ->
     bind (
+       let tm_uses_subtyping =
+         let tm_head, _ = U.head_and_args tm in
+         match (tm_head |> SS.compress |> U.unascribe |> U.un_uinst).n with
+         | Tm_fvar fv -> not (Env.fv_has_attr env fv PC.no_subtping_attr_lid)
+         | _ -> true in
        fold_left (fun ({binder_bv=b;binder_qual=aq}) (uvs, imps, subst) ->
                let b_t = SS.subst subst b.sort in
                if is_unit_t b_t
@@ -802,7 +947,18 @@ let t_apply_lemma (noinst:bool) (noinst_lhs:bool)
                    // Simplification: if the argument is simply unit, then don't ask for it
                    ret <| ((U.exp_unit, aq)::uvs, imps, S.NT(b, U.exp_unit)::subst)
                else
-                   bind (new_uvar "apply_lemma" env b_t (rangeof goal)) (fun (t, u) ->
+                   let uv_deps =
+                     if not tm_uses_subtyping then []
+                     else let b_t_uvs = FStar.Syntax.Free.uvars b_t in
+                          imps |> List.filter (fun (_, uv) -> BU.set_mem uv b_t_uvs) |> List.map snd in
+                   bind (new_uvar "apply_lemma" env b_t None uv_deps (rangeof goal)) (fun (t, u) ->
+                   if Env.debug env <| Options.Other "2635"
+                   then
+                   BU.print4 "Apply lemma created a new uvar %s and made it depend on %s while applying %s (uses_subtyping: %s)\n"
+                     (Print.ctx_uvar_to_string u)
+                     (List.fold_left (fun acc uv -> BU.format2 "%s; %s" acc (Print.ctx_uvar_to_string uv)) "" uv_deps)
+                     (Print.term_to_string tm)
+                     (string_of_bool tm_uses_subtyping);
                    ret <| ((t, aq)::uvs, (t, u)::imps, S.NT(b, t)::subst))
                )
        ([], [], [])
@@ -841,33 +997,9 @@ let t_apply_lemma (noinst:bool) (noinst_lhs:bool)
             | _ -> false
             end
         in
-        bind (implicits |> mapM (fun imp ->
-            let (term, ctx_uvar) = imp in
-            let hd, _ = U.head_and_args term in
-            match (SS.compress hd).n with
-            | Tm_uvar (ctx_uvar, _) ->
-                let goal = bnorm_goal ({ goal with goal_ctx_uvar = ctx_uvar }) in
-                ret [goal]
-            | _ ->
-                mlog (fun () -> BU.print2 "apply_lemma: arg %s unified to (%s)\n"
-                                    (Print.uvar_to_string ctx_uvar.ctx_uvar_head)
-                                    (Print.term_to_string term)) (fun () ->
-                let g_typ =
-                  // NS:01/24: use the fast path instead, knowing that term is at least well-typed
-                  // NS:05/25: protecting it under this option,
-                  //           since it causes a regression in examples/vale/*Math_i.fst
-                  // GM: Made it the default, but setting must_total to true
-                  // AR:03/17: These are lemma arguments, so we don't need to insist on must_total
-                  check_lemma_implicits_solution env term ctx_uvar.ctx_uvar_typ
-                in
-                bind (proc_guard
-                       (if ps.tac_verb_dbg
-                        then BU.format2 "apply_lemma solved arg %s to %s\n" (Print.ctx_uvar_to_string ctx_uvar)
-                                                                            (Print.term_to_string term)
-                        else "apply_lemma solved arg")
-                        env g_typ (rangeof goal)) (fun () ->
-                ret [])))
-            ) (fun sub_goals ->
+        bind (let must_tot = false in
+              implicits |>
+              check_apply_implicits_solutions true env (Some goal) ps.tac_verb_dbg "apply_lemma" must_tot) (fun sub_goals ->
         let sub_goals = List.flatten sub_goals in
         // Optimization: if a uvar appears in a later goal, don't ask for it, since
         // it will be instantiated later. It is tracked anyway in ps.implicits
@@ -899,6 +1031,7 @@ let split_env (bvar : bv) (e : env) : option (env * bv * list bv) =
 let push_bvs e bvs =
     List.fold_left (fun e b -> Env.push_bv e b) e bvs
 
+
 let subst_goal (b1 : bv) (b2 : bv) (g:goal) : tac (option (bv * goal)) =
     match split_env b1 (goal_env g) with
     | Some (e0, b1, bvs) ->
@@ -920,7 +1053,7 @@ let subst_goal (b1 : bv) (b2 : bv) (g:goal) : tac (option (bv * goal)) =
 
         (* Make a new goal in the new env (with new binders) *)
         let new_env = push_bvs e0 (List.map (fun b -> b.binder_bv) bs'') in
-        bind (new_uvar "subst_goal" new_env t'' (rangeof g)) (fun (uvt, uv) ->
+        bind (new_uvar "subst_goal" new_env t'' (Some (should_check_goal_uvar g)) g.goal_ctx_uvar.ctx_uvar_apply_tac_prefix (rangeof g)) (fun (uvt, uv) ->
         let goal' = mk_goal new_env uv g.opts g.is_guard g.label in
 
         (* Solve the old goal with an application of the new witness *)
@@ -959,7 +1092,10 @@ let rewrite (h:binder) : tac unit = wrap_err "rewrite" <|
 
              let new_env = push_bvs e0 (bv::(List.map (fun b -> b.binder_bv) bs'')) in
 
-             bind (new_uvar "rewrite" new_env t'' (rangeof goal)) (fun (uvt, uv) ->
+             //
+             // AR: TODO: what about copying apply deps here?
+             //
+             bind (new_uvar "rewrite" new_env t'' (Some (should_check_goal_uvar goal)) goal.goal_ctx_uvar.ctx_uvar_apply_tac_prefix (rangeof goal)) (fun (uvt, uv) ->
              let goal' = mk_goal new_env uv goal.opts goal.is_guard goal.label in
              let sol = U.mk_app (U.abs bs'' uvt None)
                                  (List.map (fun ({binder_bv=bv}) -> S.as_arg (S.bv_to_name bv)) bs) in
@@ -990,17 +1126,14 @@ let binder_retype (b : binder) : tac unit = wrap_err "binder_retype" <|
     | None -> fail "binder is not present in environment"
     | Some (e0, bv, bvs) ->
         let (ty, u) = U.type_u () in
-        bind (new_uvar "binder_retype" e0 ty (rangeof goal)) (fun (t', u_t') ->
-        //NS: Question ... u_t' is dropped; why?
-        //GM: No need for it... we just use t' which is approx (Tm_uvar u_t').
-        //    The uvar is tracked in the proofstate too.
+        bind (new_uvar "binder_retype" e0 ty (Some (should_check_goal_uvar goal)) goal.goal_ctx_uvar.ctx_uvar_apply_tac_prefix (rangeof goal)) (fun (t', u_t') ->
         let bv'' = {bv with sort = t'} in
         let s = [S.NT (bv, S.bv_to_name bv'')] in
         let bvs = List.map (fun b -> { b with sort = SS.subst s b.sort }) bvs in
         let env' = push_bvs e0 (bv''::bvs) in
         bind dismiss (fun _ ->
-        let new_goal =
-            goal_with_type
+        let new_goal = 
+          goal_with_type
                 (goal_with_env goal env')
                 (SS.subst s (goal_type goal))
         in
@@ -1030,7 +1163,7 @@ let revert () : tac unit =
     | None -> fail "Cannot revert; empty context"
     | Some (x, env') ->
         let typ' = U.arrow [S.mk_binder x] (mk_Total (goal_type goal)) in
-        bind (new_uvar "revert" env' typ' (rangeof goal)) (fun (r, u_r) ->
+        bind (new_uvar "revert" env' typ' (Some (should_check_goal_uvar goal)) goal.goal_ctx_uvar.ctx_uvar_apply_tac_prefix (rangeof goal)) (fun (r, u_r) ->
         bind (set_solution goal (S.mk_Tm_app r [S.as_arg (S.bv_to_name x)] (goal_type goal).pos)) (fun () ->
         let g = mk_goal env' u_r goal.opts goal.is_guard goal.label in
         replace_cur g)))
@@ -1060,7 +1193,7 @@ let clear (b : binder) : tac unit =
             fail "Cannot clear; binder present in goal"
         else bind (check bvs) (fun () ->
         let env' = push_bvs e' bvs in
-        bind (new_uvar "clear.witness" env' (goal_type goal) (rangeof goal)) (fun (ut, uvar_ut) ->
+        bind (new_uvar "clear.witness" env' (goal_type goal) (Some (should_check_goal_uvar goal)) goal.goal_ctx_uvar.ctx_uvar_apply_tac_prefix (rangeof goal)) (fun (ut, uvar_ut) ->
         bind (set_solution goal ut) (fun () ->
         replace_cur (mk_goal env' uvar_ut goal.opts goal.is_guard goal.label))))))
 
@@ -1131,7 +1264,11 @@ let t_trefl (allow_guards:bool) : tac unit = wrap_err "t_trefl" <|
 let dup () : tac unit =
     bind cur_goal (fun g ->
     let env = goal_env g in
-    bind (new_uvar "dup" env (goal_type g) (rangeof g)) (fun (u, u_uvar) ->
+    bind (new_uvar "dup" env (goal_type g) (Some (should_check_goal_uvar g)) g.goal_ctx_uvar.ctx_uvar_apply_tac_prefix (rangeof g)) (fun (u, u_uvar) ->
+    //the new uvar is just as Strict as the original one. So, its assignement will be checked
+    //and we have a goal that requires us to prove it equal to the original uvar
+    //so we can clear the should_check status of the current uvar
+    mark_uvar_as_allow_untyped g.goal_ctx_uvar;
     let g' = { g with goal_ctx_uvar = u_uvar } in
     bind dismiss (fun _ ->
     let t_eq = U.mk_eq2 (env.universe_of env (goal_type g)) (goal_type g) u (goal_witness g) in
@@ -1243,14 +1380,14 @@ let uvar_env (env : env) (ty : option typ) : tac term =
                (fun (ty, _, g) -> ret (ty, g, ty.pos))
 
         | None ->
-          bind (new_uvar "uvar_env.2" env (fst <| U.type_u ()) ps.entry_range)
-               (fun (typ, uvar_typ) -> //NS, FIXME discarding uvar_typ
+          bind (new_uvar "uvar_env.2" env (fst <| U.type_u ()) None [] ps.entry_range)
+               (fun (typ, uvar_typ) ->
                 ret (typ, Env.trivial_guard, Range.dummyRange))
         )
         (fun (typ, g, r) ->
             bind (proc_guard "uvar_env_typ" env g r)
                  (fun () ->
-                  bind (new_uvar "uvar_env" env typ ps.entry_range)
+                  bind (new_uvar "uvar_env" env typ None [] ps.entry_range)
                        (fun (t, uvar_t) -> ret t))))
 
 let fresh_universe_uvar () : tac term =
@@ -1268,7 +1405,8 @@ let unshelve (t : term) : tac unit = wrap_err "unshelve" <|
     | { n = Tm_uvar (ctx_uvar, _) }, _ ->
         let env = {env with gamma=ctx_uvar.ctx_uvar_gamma} in
         let g = mk_goal env ctx_uvar opts false "" in
-        add_goals [bnorm_goal g]
+        let g = bnorm_goal g in
+        add_goals [g]
     | _ -> fail "not a uvar")
 
 let tac_and (t1 : tac bool) (t2 : tac bool) : tac bool =
@@ -1471,7 +1609,7 @@ let t_destruct (s_tm : term) : tac (list (fv * Z.t)) = wrap_err "destruct" <|
                         let cod = U.arrow [S.mk_binder eq_b] (mk_Total cod) in
 
                         let nty = U.arrow bs (mk_Total cod) in
-                        bind (new_uvar "destruct branch" env nty (rangeof g)) (fun (uvt, uv) ->
+                        bind (new_uvar "destruct branch" env nty None [] (rangeof g)) (fun (uvt, uv) ->
                         let g' = mk_goal env uv g.opts false g.label in
                         let brt = U.mk_app_binders uvt bs in
                         (* Provide the scrutinee equality, which is trivially provable *)
@@ -1484,10 +1622,39 @@ let t_destruct (s_tm : term) : tac (list (fv * Z.t)) = wrap_err "destruct" <|
       let goals, brs, infos = List.unzip3 goal_brs in
       let w = mk (Tm_match (s_tm, None, brs, None)) s_tm.pos in
       bind (solve' g w) (fun () ->
+      //we constructed a well-typed term to solve g; no need to recheck it
+      mark_goal_implicit_allow_untyped g;
       bind (add_goals goals) (fun () ->
       ret infos)))))
 
     | _ -> fail "not an inductive type"))))
+
+let gather_explicit_guards_for_resolved_goals ()
+  : tac unit
+  = wrap_err "gather_explicit_guards_for_resolved_goals" <| (
+    with_policy Goal <| (
+    ps <-- get; 
+    let goals_of_resolved_implicits = 
+        List.filter_map 
+          (fun i -> 
+            if Rel.is_implicit_resolved ps.main_context i
+            && Some? (Rel.check_implicit_solution_for_tac ps.main_context i)
+            then let g = goal_of_implicit ps.main_context i in
+                 Some (goal_witness g, g.goal_ctx_uvar)
+            else None)
+          ps.all_implicits
+    in
+    sub_goals <--   
+      check_apply_implicits_solutions
+             false //don't simplify
+             ps.main_context
+             None 
+             ps.tac_verb_dbg
+             "gather_explicit_guards_for_resolved_goals"
+             true 
+             goals_of_resolved_implicits;
+    let sub_goals = List.flatten sub_goals in
+    add_goals sub_goals))  
 
 // TODO: move to library?
 let rec last (l:list 'a) : 'a =
@@ -1625,7 +1792,7 @@ let rec inspect (t:term) : tac term_view = wrap_err "inspect" (
 
 (* This function could actually be pure, it doesn't need freshness
  * like `inspect` does, but we mark it as Tac for uniformity. *)
-let pack (tv:term_view) : tac term =
+let pack' (tv:term_view) (leave_curried:bool) : tac term =
     match tv with
     | Tv_Var bv ->
         ret <| S.bv_to_name bv
@@ -1647,7 +1814,7 @@ let pack (tv:term_view) : tac term =
         ret <| U.abs [b] t None // TODO: effect?
 
     | Tv_Arrow (b, c) ->
-        ret <| U.arrow [b] c
+        ret <| (if leave_curried then U.arrow [b] c else U.canon_arrow (U.arrow [b] c))
 
     | Tv_Type u ->
         ret <| S.mk (Tm_type u) Range.dummyRange
@@ -1693,6 +1860,9 @@ let pack (tv:term_view) : tac term =
     | Tv_Unknown ->
         ret <| S.mk Tm_unknown Range.dummyRange
 
+let pack (tv:term_view) : tac term = pack' tv false
+let pack_curried (tv:term_view) : tac term = pack' tv true
+
 let lget (ty:term) (k:string) : tac term = wrap_err "lget" <|
     bind get (fun ps ->
     match BU.psmap_try_find ps.local_state k with
@@ -1718,12 +1888,26 @@ let t_commute_applied_match () : tac unit = wrap_err "t_commute_applied_match" <
     match (SS.compress (U.unascribe lh)).n with
     | Tm_match (e, asc_opt, brs, lopt) ->
       let brs' = List.map (fun (p, w, e) -> p, w, U.mk_app e las) brs in
-      let l' = mk (Tm_match (e, asc_opt, brs', lopt)) l.pos in
+      //
+      // If residual comp is set, apply arguments to it
+      //
+      let lopt' = lopt |> BU.map_option (fun rc -> {rc with residual_typ=
+        rc.residual_typ |> BU.map_option (fun t ->
+          let bs, c = N.get_n_binders (goal_env g) (List.length las) t in
+          let bs, c = SS.open_comp bs c in
+          let ss = List.map2 (fun b a -> NT (b.binder_bv, fst a)) bs las in
+          let c = SS.subst_comp ss c in
+          U.comp_result c)}) in
+      let l' = mk (Tm_match (e, asc_opt, brs', lopt')) l.pos in
       bind (do_unify' false (goal_env g) l' r) (function
       | None -> fail "discharging the equality failed"
       | Some guard ->
         if Env.is_trivial_guard_formula guard
-        then solve g U.exp_unit
+        then (
+          //we just checked that its guard is trivial; so no need to check again
+          mark_uvar_as_allow_untyped g.goal_ctx_uvar;
+          solve g U.exp_unit
+        )
         else failwith "internal error: _t_refl: guard is not trivial")
     | _ ->
       fail "lhs is not a match"
@@ -1776,7 +1960,7 @@ let proofstate_of_all_implicits rng env imps =
         goals = goals;
         smt_goals = [];
         depth = 0;
-        __dump = (fun ps msg -> do_dump_proofstate ps msg);
+        __dump = do_dump_proofstate;
         psc = Cfg.null_psc;
         entry_range = rng;
         guard_policy = SMT;

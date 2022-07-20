@@ -330,6 +330,7 @@ let (binder_strictly_positive_attr : FStar_Ident.lident) =
   psconst "strictly_positive"
 let (no_auto_projectors_attr : FStar_Ident.lident) =
   psconst "no_auto_projectors"
+let (no_subtping_attr_lid : FStar_Ident.lident) = psconst "no_subtyping"
 let (well_founded_relation_lid : FStar_Ident.lident) =
   p2l ["FStar"; "WellFounded"; "well_founded_relation"]
 let (gen_reset : ((unit -> Prims.int) * (unit -> unit))) =
@@ -541,3 +542,18 @@ let (or_elim_lid : FStar_Ident.lid) = classical_sugar_lid "or_elim"
 let (and_elim_lid : FStar_Ident.lid) = classical_sugar_lid "and_elim"
 let (match_returns_def_name : Prims.string) =
   FStar_String.op_Hat FStar_Ident.reserved_prefix "_ret_"
+let (layered_effect_reify_val_lid :
+  FStar_Ident.lident -> FStar_Compiler_Range.range -> FStar_Ident.lident) =
+  fun eff_name ->
+    fun r ->
+      let ns = FStar_Ident.ns_of_lid eff_name in
+      let reify_fn_name =
+        let uu___ =
+          let uu___1 =
+            FStar_Compiler_Effect.op_Bar_Greater eff_name
+              FStar_Ident.ident_of_lid in
+          FStar_Compiler_Effect.op_Bar_Greater uu___1
+            FStar_Ident.string_of_id in
+        FStar_String.op_Hat "reify___" uu___ in
+      let uu___ = FStar_Ident.mk_ident (reify_fn_name, r) in
+      FStar_Ident.lid_of_ns_and_id ns uu___

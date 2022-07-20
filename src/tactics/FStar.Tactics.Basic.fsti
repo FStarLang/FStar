@@ -34,6 +34,7 @@ module EMB   = FStar.Syntax.Embeddings
 module O     = FStar.Options
 module Range = FStar.Compiler.Range
 module Z     = FStar.BigInt
+module TcComm = FStar.TypeChecker.Common
 
 (* Internal utilities *)
 
@@ -68,7 +69,7 @@ val clear_top              : unit -> tac unit
 val clear                  : binder -> tac unit
 val rewrite                : binder -> tac unit
 val t_exact                : bool -> bool -> term -> tac unit
-val t_apply                : bool -> bool -> term -> tac unit
+val t_apply                : bool -> bool -> bool -> term -> tac unit
 val t_apply_lemma          : bool -> bool -> term -> tac unit
 val print                  : string -> tac unit
 val debugging              : unit -> tac bool
@@ -80,6 +81,7 @@ val dup                    : unit -> tac unit
 val prune                  : string -> tac unit
 val addns                  : string -> tac unit
 val t_destruct             : term -> tac (list (fv * Z.t))
+val gather_explicit_guards_for_resolved_goals : unit -> tac unit
 val set_options            : string -> tac unit
 val uvar_env               : env -> option typ -> tac term
 val fresh_universe_uvar    : unit -> tac term
@@ -95,9 +97,12 @@ val lax_on                 : unit -> tac bool
 val tadmit_t               : term -> tac unit
 val inspect                : term -> tac term_view
 val pack                   : term_view -> tac term
+val pack_curried           : term_view -> tac term
 val join                   : unit -> tac unit
 val lget                   : typ -> string -> tac term
 val lset                   : typ -> string -> term -> tac unit
 val curms                  : unit -> tac Z.t
 val set_urgency            : Z.t -> tac unit
 val t_commute_applied_match : unit -> tac unit
+val goal_with_type : goal -> typ -> goal
+val mark_goal_implicit_allow_untyped : goal -> unit

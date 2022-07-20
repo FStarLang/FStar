@@ -1,5 +1,5 @@
 [
-  "–©\tµxÅ•ÿ\u001dàøÃÌ®∞ó",
+  "≈Ω\t6A\u000bÇª–È\\(õ2è4",
   [
     [
       "Steel.ST.Util.rewrite",
@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "e314460408db5d53d0c8723a05476e67"
+      "04b5162de2f03b7cd63aa538c058b96b"
     ],
     [
       "Steel.ST.Util.rewrite_with_tactic",
@@ -20,7 +20,7 @@
         "typing_Steel.Effect.Common.hp_of"
       ],
       0,
-      "c1164cc85717a12427fa1672ebbe492f"
+      "54da78f42a5c6bb35d04209823a56424"
     ],
     [
       "Steel.ST.Util.rewrite_equiv",
@@ -37,16 +37,16 @@
         "typing_Steel.Effect.Common.hp_of"
       ],
       0,
-      "e50f5e5b3bd449e0be79b6078ddb9dc9"
+      "0acdf71874136da709e3d929e9888c90"
     ],
     [
-      "Steel.ST.Util.slassert0",
+      "Steel.ST.Util.reveal_pure",
       1,
       2,
       1,
-      [ "@query" ],
+      [ "@query", "equation_Steel.ST.Util.pure" ],
       0,
-      "43b037c1aa5d189aec535e6805ffff49"
+      "4227aab3a6fa5ca4016e91ade248fd17"
     ],
     [
       "Steel.ST.Util.extract_pure",
@@ -55,7 +55,52 @@
       1,
       [ "@query" ],
       0,
-      "b2ee5093db8ddfa702cc964eb0399629"
+      "7a58d40073df628dc67eb4fc8663b004"
+    ],
+    [
+      "Steel.ST.Util.intro_can_be_split_pure'",
+      1,
+      2,
+      1,
+      [
+        "@MaxFuel_assumption",
+        "@fuel_correspondence_Steel.Effect.Common.hp_of.fuel_instrumented",
+        "@query", "constructor_distinct_Steel.Effect.Common.VUnit",
+        "equation_Steel.Effect.Common.to_vprop_",
+        "equation_Steel.Memory.slimp", "equation_Steel.ST.Util.pure",
+        "equation_with_fuel_Steel.Effect.Common.hp_of.fuel_instrumented",
+        "proj_equation_Steel.Effect.Common.Mkvprop__hp",
+        "projection_inverse_Steel.Effect.Common.Mkvprop__hp",
+        "projection_inverse_Steel.Effect.Common.VUnit__0",
+        "typing_Steel.Effect.Common.emp", "typing_Steel.ST.Util.pure"
+      ],
+      0,
+      "2e821db2498cbac732a84161f7ff358a"
+    ],
+    [
+      "Steel.ST.Util.intro_can_be_split_pure",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "3ed994094d469a748b042d98b94a27ef"
+    ],
+    [
+      "Steel.ST.Util.intro_can_be_split_forall_dep_pure",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_Steel.Effect.Common.can_be_split_forall_dep",
+        "interpretation_Tm_abs_09e15c91c9fd35aef122eb614d643b18",
+        "interpretation_Tm_abs_6ebde0e0bc31e1490142ba1fbb3410a5"
+      ],
+      0,
+      "3d0a7fea85cb791ce3ed1154509252d2"
     ],
     [
       "Steel.ST.Util.return0",
@@ -64,7 +109,71 @@
       1,
       [ "@query" ],
       0,
-      "567f6a051b3568a7ca57a27ec72acf5c"
+      "bbbb3c8fd7202a92eeedcd38b87fe0ff"
+    ],
+    [
+      "Steel.ST.Util.intro_can_be_split_exists",
+      1,
+      2,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_Steel.Effect.Common.hp_of.fuel_instrumented",
+        "@query",
+        "Steel.Effect.Common_interpretation_Tm_arrow_bb7a711af297fead4d60d7aa8b8ddd2f",
+        "constructor_distinct_Steel.Effect.Common.VUnit",
+        "equation_Steel.Effect.Atomic.h_exists_sl",
+        "equation_Steel.Effect.Atomic.h_exists_sl_",
+        "equation_Steel.Effect.Common.to_vprop_",
+        "equation_Steel.Memory.slimp", "equation_Steel.ST.Util.exists_",
+        "equation_with_fuel_Steel.Effect.Common.hp_of.fuel_instrumented",
+        "interpretation_Tm_abs_43476be6e2b528121aa9b342a6d30d83",
+        "proj_equation_Steel.Effect.Common.Mkvprop__hp",
+        "projection_inverse_Steel.Effect.Common.Mkvprop__hp",
+        "projection_inverse_Steel.Effect.Common.VUnit__0",
+        "token_correspondence_Steel.Effect.Atomic.h_exists_sl_",
+        "typing_Steel.ST.Util.exists_"
+      ],
+      0,
+      "e304bde6613fc0fa0a2ccee9f8c47856"
+    ],
+    [
+      "Steel.ST.Util.intro_can_be_split_forall_dep_exists",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_e8ffb7d227a1bbf69407a8d2ad2c4c83",
+        "equality_tok_Prims.T@tok", "equation_Prims.l_True",
+        "equation_Prims.squash", "equation_Prims.subtype_of",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
+        "typing_tok_Prims.T@tok"
+      ],
+      0,
+      "0a0b459843ba35df1e71fd72a0985835"
+    ],
+    [
+      "Steel.ST.Util.intro_can_be_split_forall_dep_exists",
+      2,
+      2,
+      1,
+      [
+        "@query", "equation_Steel.Effect.Common.can_be_split_forall_dep",
+        "interpretation_Tm_abs_2a23f20fad15f79845a6a7269a49e4bb",
+        "interpretation_Tm_abs_537ed8a44990d10208b895650033818e"
+      ],
+      0,
+      "f4f4fce2fc307982eaf032f7fa491713"
+    ],
+    [
+      "Steel.ST.Util.exists_equiv",
+      1,
+      2,
+      1,
+      [ "@query", "equation_Steel.ST.Util.exists_" ],
+      0,
+      "93ee8c2d689bb8a5191d4621d34be2c2"
     ],
     [
       "Steel.ST.Util.with_invariant",
@@ -73,7 +182,7 @@
       1,
       [ "@query" ],
       0,
-      "70daccca3eb5a7f6951346443db1e302"
+      "1e69633e2db8e39bc2ab58ea220904c7"
     ],
     [
       "Steel.ST.Util.with_invariant_g",
@@ -82,7 +191,7 @@
       1,
       [ "@query" ],
       0,
-      "3086edea134e4d1acc287b5d22c00029"
+      "509e5c467162cb7b43a0172e26cc4f0d"
     ],
     [
       "Steel.ST.Util.par",
@@ -91,7 +200,61 @@
       1,
       [ "@query" ],
       0,
-      "bd5869eb6d97bd2ab9ac37fde5181b43"
+      "7e8f1ad72508bec995578c21f82ea814"
+    ],
+    [
+      "Steel.ST.Util.vpattern",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "5e3066bcd4b9a706fb7ca3b439611530"
+    ],
+    [
+      "Steel.ST.Util.vpattern_replace",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "32ea79a3c6ebecfe6e19a9176569adc4"
+    ],
+    [
+      "Steel.ST.Util.vpattern_erased",
+      1,
+      2,
+      1,
+      [ "@query", "lemma_FStar.Ghost.reveal_hide" ],
+      0,
+      "5b80bba928d87cb44f237e949ab572fa"
+    ],
+    [
+      "Steel.ST.Util.vpattern_replace_erased",
+      1,
+      2,
+      1,
+      [ "@query", "lemma_FStar.Ghost.reveal_hide" ],
+      0,
+      "f83f6aca4f7e0a400207345e5f2347ad"
+    ],
+    [
+      "Steel.ST.Util.vpattern_replace_erased_global",
+      1,
+      2,
+      1,
+      [ "@query", "lemma_FStar.Ghost.reveal_hide" ],
+      0,
+      "6d9fb4741353fbeb56af359528337870"
+    ],
+    [
+      "Steel.ST.Util.vpattern_rewrite",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "18bd244caad217cad1250f9946d525d8"
     ]
   ]
 ]

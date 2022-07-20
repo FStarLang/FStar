@@ -363,6 +363,7 @@ let default_effect_attr = psconst "default_effect"
 let bind_has_range_args_attr = psconst "bind_has_range_args"
 let binder_strictly_positive_attr = psconst "strictly_positive"
 let no_auto_projectors_attr = psconst "no_auto_projectors"
+let no_subtping_attr_lid = psconst "no_subtyping"
 
 
 //the type of well-founded relations, used for decreases clauses with relations
@@ -513,3 +514,11 @@ let and_elim_lid = classical_sugar_lid "and_elim"
 
 
 let match_returns_def_name = reserved_prefix ^ "_ret_"
+
+//
+// lid for the reify function assume val for an indexed effect
+//
+let layered_effect_reify_val_lid (eff_name:lident) (r:range) : lident =
+  let ns = Ident.ns_of_lid eff_name in
+  let reify_fn_name = "reify___" ^ (eff_name |> ident_of_lid |> string_of_id) in
+  lid_of_ns_and_id ns (mk_ident (reify_fn_name, r))

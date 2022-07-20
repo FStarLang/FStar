@@ -224,6 +224,14 @@ let rec (is_comp_type :
     fun t ->
       let uu___ = let uu___1 = unparen t in uu___1.FStar_Parser_AST.tm in
       match uu___ with
+      | FStar_Parser_AST.Name l when
+          (let uu___1 = FStar_Syntax_DsEnv.current_module env in
+           FStar_Ident.lid_equals uu___1 FStar_Parser_Const.prims_lid) &&
+            (let s =
+               let uu___1 = FStar_Ident.ident_of_lid l in
+               FStar_Ident.string_of_id uu___1 in
+             (s = "Tot") || (s = "GTot"))
+          -> true
       | FStar_Parser_AST.Name l ->
           let uu___1 = FStar_Syntax_DsEnv.try_lookup_effect_name env l in
           FStar_Compiler_Effect.op_Bar_Greater uu___1

@@ -14,6 +14,11 @@ Guidelines for the changelog:
 # Version 0.9.7.0
 
 ## Tactics
+  * The behavior of `pack` was changed to canonize arrows by flattening them in the internal
+    compiler representation (https://github.com/FStarLang/FStar/pull/2609).
+    An alternative version of `pack` called `pack_curried` which does not perform canonization,
+    thus retrieving the previous behavior was also exposed.
+
   * Mutually recursive let bindings are now supported in the reflected syntax, using the
     same constructor (`Tv_Let`) as before (https://github.com/FStarLang/FStar/pull/2291.
     Inspection of a let binding now usually looks like this:
@@ -31,6 +36,19 @@ Guidelines for the changelog:
      ...
     ```
 
+  * Bug2635, reported by Benjamin Bonneau, revealed an unsoundness in
+    the way the tactic engine was using the unifier. In some cases, it
+    would enable terms at a weaker type to be accepted as solutions
+    for a goal at a refinement type, without presenting any goals for
+    the refinement formula itself. This is now fixed by adding a phase
+    at the end of tactic evaluation that checks that any
+    as-yet-unchecked solution actually has the type of the goal. If
+    this check fails, F* reports Error 217 and suggests to use the new
+    primitive tactic
+    `gather_or_solve_explicit_guards_for_resolved_goals` which
+    collects all those refinement goals and presents them to the user
+    tactic for furhter processing.
+
 ## Typeclass argument syntax
 
   * The syntax for a typeclass argument (a.k.a. constraint) is now `{| ... |}`
@@ -42,6 +60,11 @@ Guidelines for the changelog:
   * Friend modules (https://github.com/FStarLang/FStar/wiki/Friend-modules)
 
 ## Core typechecker
+  * Cf. #2641, F* now supports only type-based reasoning of reification of indexed
+    effects. See https://github.com/FStarLang/FStar/issues/2641 for more discussions
+    and associated pull request. This may be a breaking change for clients relying on
+    extraction/smt reasoning of indexed effects via reification.
+
   * F* now supports accessibility predicates based termination proofs. When writing a recursive function
 
     ```

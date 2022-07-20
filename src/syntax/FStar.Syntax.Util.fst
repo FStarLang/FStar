@@ -925,7 +925,11 @@ let ses_of_sigbundle (se:sigelt) :list sigelt =
 
 let set_uvar uv t =
   match Unionfind.find uv with
-    | Some _ -> failwith (U.format1 "Changing a fixed uvar! ?%s\n" (U.string_of_int <| Unionfind.uvar_id uv))
+    | Some t' ->
+      failwith (U.format3 "Changing a fixed uvar! ?%s to %s but \
+                           it is already set to %s\n" (U.string_of_int <| Unionfind.uvar_id uv)
+                          (tts t)
+                          (tts t'))
     | _ -> Unionfind.change uv t
 
 let qualifier_equal q1 q2 = match q1, q2 with
@@ -2396,3 +2400,9 @@ let check_mutual_universes (lbs:list letbinding)
                    "Mutually recursive definitions do not abstract over the same universes")
                   lb.lbpos)
         lbs
+
+let ctx_uvar_should_check (u:ctx_uvar) = 
+    (Unionfind.find_decoration u.ctx_uvar_head).uvar_decoration_should_check
+
+let ctx_uvar_typ (u:ctx_uvar) = 
+    (Unionfind.find_decoration u.ctx_uvar_head).uvar_decoration_typ

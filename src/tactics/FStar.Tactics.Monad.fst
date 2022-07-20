@@ -238,16 +238,29 @@ let add_implicits (i:implicits) : tac unit =
     bind get (fun ps ->
     set ({ps with all_implicits=i@ps.all_implicits}))
 
-let new_uvar (reason:string) (env:env) (typ:typ) (rng:Range.range) : tac (term * ctx_uvar) =
+let new_uvar (reason:string) (env:env) (typ:typ)
+             (sc_opt:option should_check_uvar)
+             (apply_uvar_deps:list S.ctx_uvar)
+             (rng:Range.range) 
+  : tac (term * ctx_uvar) =
+    let should_check = 
+      match sc_opt with
+      | Some sc -> sc
+      | _ -> 
+        if Env.debug env <| Options.Other "2635"
+        then BU.print1 "Tactic introduced a strict uvar for %s\n" 
+               (Print.term_to_string typ);
+        Strict
+    in
     let u, ctx_uvar, g_u =
-        Env.new_implicit_var_aux reason rng env typ Allow_untyped None
+        Env.new_tac_implicit_var reason rng env typ should_check None apply_uvar_deps
     in
     bind (add_implicits g_u.implicits) (fun _ ->
     ret (u, fst (List.hd ctx_uvar)))
 
 let mk_irrelevant_goal (reason:string) (env:env) (phi:typ) (rng:Range.range) opts label : tac goal =
     let typ = U.mk_squash (env.universe_of env phi) phi in
-    bind (new_uvar reason env typ rng) (fun (_, ctx_uvar) ->
+    bind (new_uvar reason env typ (Some Strict) [] rng) (fun (_, ctx_uvar) ->
     let goal = mk_goal env ctx_uvar opts false label in
     ret goal)
 
@@ -289,6 +302,6 @@ let compress_implicits : tac unit =
     bind get (fun ps ->
     let imps = ps.all_implicits in
     let g = { Env.trivial_guard with implicits = imps } in
-    let g = Rel.resolve_implicits_tac ps.main_context g in
-    let ps' = { ps with all_implicits = g.implicits } in
+    let imps = Rel.resolve_implicits_tac ps.main_context g in
+    let ps' = { ps with all_implicits = List.map fst imps } in
     set ps')
