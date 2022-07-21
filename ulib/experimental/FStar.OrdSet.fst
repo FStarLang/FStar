@@ -272,7 +272,7 @@ let rec set_props #a #f (s:ordset a f)
   = if (size s > 1) then set_props (tail s)
 
 let rec same_members_means_eq #a #f (s1 s2: ordset a f)
-  : Lemma (requires forall x. mem x s1 = mem x s2) (ensures s1 = s2) = 
+  : Lemma (requires forall x. mem x s1 = mem x s2) (ensures s1 == s2) = 
   match s1 with
   | [] -> if size s2>0 then assert (mem (head s2) s2) 
   | h1::t1 -> set_props s1;
@@ -658,32 +658,35 @@ let union_of_tails_size (#a:eqtype) #f (s1 s2: ordset a f)
 
 let union_is_symmetric #a #f (s1 s2: ordset a f) : Lemma (union s1 s2 = union s2 s1) = 
   same_members_means_eq (union s1 s2) (union s2 s1)
+ 
+let size_of_union_aux_1 #a #f (s1 s2: (z:ordset a f{z<>empty}))
+  : Lemma (requires (head s1) <> (head s2) 
+                 && (f (head s1) (head s2)) 
+                 && (size (union (tail s1) s2) = size (tail s1) + size s2 - size (intersect (tail s1) s2)))
+          (ensures size (union s1 s2) = (size s1 + size s2 - size (intersect s1 s2))) =  
+    union_of_tails_size s1 s2;
+    same_members_means_eq (intersect (tail s1) s2) (intersect s1 s2)
 
-#push-options "--z3rlimit 10"
+let size_of_union_aux_2 #a #f (s1 s2: (z:ordset a f{z<>empty}))
+  : Lemma (requires (head s1) <> (head s2) 
+                 && not (f (head s1) (head s2)) 
+                 && (size (union s1 (tail s2)) = size s1 + size (tail s2) - size (intersect s1 (tail s2))))
+          (ensures size (union s1 s2) = (size s1 + size s2 - size (intersect s1 s2))) 
+  = Classical.forall_intro_2 (union_is_symmetric #a #f);
+    Classical.forall_intro_2 (intersect_is_symmetric #a #f);
+    size_of_union_aux_1 s2 s1 
+     
 let rec size_of_union #a #f s1 s2 = 
   let size = size #a #f in
   match s1,s2 with
-  | [], _ -> union_mem_forall s1 s2
-  | _, [] -> union_mem_forall s1 s2;
-            same_members_means_eq s1 (union s1 s2)
+  | [], _ -> same_members_means_eq s2 (union s1 s2)
+  | _, [] -> same_members_means_eq s1 (union s1 s2)
   | h1::(t1:ordset a f), h2::(t2:ordset a f) 
-          -> size_of_union t1 t2;
-            assert (size (union t1 t2) = size t1 + size t2 - size (intersect t1 t2));
+          -> size_of_union t1 s2;
+            size_of_union s1 t2;
             if h1 = h2 then union_with_prefix h1 t1 t2
-            else if f h1 h2 then begin 
-              size_of_union t1 s2;
-              union_of_tails_size s1 s2;
-              Classical.move_requires (mem_implies_f s2) h1;
-              same_members_means_eq (intersect s1 s2) (intersect t1 s2)
-            end else begin 
-              size_of_union s1 t2;
-              intersect_is_symmetric s1 t2;
-              same_members_means_eq (union s1 s2) (union s2 s1);
-              same_members_means_eq (union s1 t2) (union t2 s1); 
-              union_of_tails_size s2 s1; 
-              same_members_means_eq (intersect s1 s2) (intersect t2 s1)
-            end 
-#pop-options
+            else if f h1 h2 then size_of_union_aux_1 s1 s2 
+            else size_of_union_aux_2 s1 s2   
 
 let rec count_dichotomy #_ #_ s c = if s<>[] then count_dichotomy (tail s) c
 
