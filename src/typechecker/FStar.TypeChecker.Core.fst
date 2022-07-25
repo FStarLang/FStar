@@ -10,11 +10,24 @@ module N = FStar.TypeChecker.Normalize
 module PC = FStar.Parser.Const
 module I = FStar.Ident
 module P = FStar.Syntax.Print
+module BU = FStar.Compiler.Util
+
+type env = {
+   tcenv : Env.env;
+   allow_universe_instantiation : bool
+}
+
+let push_binders g bs = { g with tcenv = Env.push_binders g.tcenv bs }
 
 let precondition = option typ
 
 let success a = a & precondition
-let result (a:Type) = either (success a) string
+
+let context = list (string & option term)
+
+let error = context & string
+
+let result a = context -> either (success a) error
 
 type hash_entry = {
    he_term:term;
@@ -25,17 +38,17 @@ type hash_entry = {
 type tc_table = FStar.Hash.hashtable term hash_entry
 let table : tc_table = FStar.Hash.create FStar.Syntax.Hash.equal_term
 let clear_memo_table () = FStar.Hash.clear table
-let insert (g:Env.env) (e:term) (res:success typ) =
+let insert (g:env) (e:term) (res:success typ) =
     let entry = {
        he_term = e;
-       he_gamma = g.gamma;
+       he_gamma = g.tcenv.gamma;
        he_res = res
     }
     in
     FStar.Hash.insert (e, FStar.Syntax.Hash.hash_term) entry table
 
 inline_for_extraction
-let return (#a:Type) (x:a) : result a = Inl (x, None)
+let return (#a:Type) (x:a) : result a = fun _ -> Inl (x, None)
 
 let and_pre (p1 p2:precondition) =
   match p1, p2 with
@@ -47,25 +60,32 @@ let and_pre (p1 p2:precondition) =
 inline_for_extraction  
 let bind (#a:Type) (#b:Type) (x:result a) (y:a -> result b)
   : result b
-  = match x with
-    | Inl (x, g1) ->
-      (match y x with
-       | Inl (y, g2) -> Inl (y, and_pre g1 g2)
-       | err -> err)
-    | Inr err -> Inr err
+  = fun ctx0 ->
+      match x ctx0 with
+      | Inl (x, g1) ->
+        (match y x ctx0 with
+         | Inl (y, g2) -> Inl (y, and_pre g1 g2)
+         | err -> err)
+      | Inr err -> Inr err
 
-let fail #a msg : result a = Inr msg
+let fail #a msg : result a = fun ctx -> Inr (ctx, msg)
 
 inline_for_extraction
 let handle_with (#a:Type) (x:result a) (h: unit -> result a)
   : result a
-  = match x with
-    | Inr _ -> h ()
-    | res -> res
-    
-let mk_type (u:universe) = S.mk (Tm_type (U_succ u)) R.dummyRange
+  = fun ctx -> 
+      match x ctx with
+      | Inr _ -> h () ctx
+      | res -> res
 
-let is_type (g:Env.env) (t:term)
+inline_for_extraction
+let with_context (#a:Type) (msg:string) (t:option term) (x:unit -> result a)
+  : result a
+  = fun ctx -> x () ((msg,t)::ctx)
+
+let mk_type (u:universe) = S.mk (Tm_type u) R.dummyRange
+
+let is_type (g:env) (t:term)
   : result universe
   = let aux t = 
         match (SS.compress t).n with
@@ -75,11 +95,12 @@ let is_type (g:Env.env) (t:term)
         | _ -> 
           fail "Expected a type"
     in
-    handle_with
-      (aux t)
-      (fun _ -> aux (U.unrefine (N.unfold_whnf g t)))
-
-let is_tot_arrow (g:Env.env) (t:term)
+    with_context "is_type" None (fun _ -> 
+      handle_with
+        (aux t)
+        (fun _ -> aux (U.unrefine (N.unfold_whnf g.tcenv t))))
+  
+let is_tot_arrow (g:env) (t:term)
   : result (binder & typ)
   = let aux t =
         match (SS.compress t).n with
@@ -98,18 +119,30 @@ let is_tot_arrow (g:Env.env) (t:term)
         | _ ->
           fail "Expected an arrow"
     in
-    handle_with
-      (aux t)
-      (fun _ -> aux (N.unfold_whnf g t))
+    with_context "is_tot_arrow" None (fun _ -> 
+      handle_with
+        (aux t)
+        (fun _ -> aux (N.unfold_whnf g.tcenv t)))
 
 let check_arg_qual (a:aqual) (b:bqual)
   : result unit
-  = match b, a with
-    | None, None -> return ()
-    | Some (Implicit _), Some ({ aqual_implicit = true}) -> return ()
-    | Some _, None
-    | Some _, Some ({ aqual_implicit = false }) -> return ()
-    | _ -> fail "Arg qualfier mismatch"
+  = match b with
+    | Some (Implicit _) ->
+      begin
+      match a with
+      | Some ({aqual_implicit=true}) ->
+        return ()
+      | _ ->
+        fail "missing arg qualifier implicit"
+      end
+    
+    | _ -> 
+      begin
+      match a with
+      | Some ({aqual_implicit=true}) ->
+        fail "extra arg qualifier implicit"
+      | _ -> return ()
+      end
 
 let check_bqual (b0 b1:bqual)
   : result unit
@@ -146,21 +179,22 @@ let close_guard_with_definition (x:binder) (u:universe) (t:term) (g:precondition
       
 let with_binders (#a:Type) (xs:binders) (us:universes) (f:result a)
   : result a
-  = match f with
-    | Inl (t, g) -> Inl (t, close_guard xs us g)
-    | err -> err
+  = fun ctx ->
+      match f ctx with
+      | Inl (t, g) -> Inl (t, close_guard xs us g)
+      | err -> err
 
 let with_definition (#a:Type) (x:binder) (u:universe) (t:term) (f:result a)
   : result a
-  = match f with
-    | Inl (a, g) -> Inl (a, close_guard_with_definition x u t g)
-    | err -> err
+  = fun ctx ->
+      match f ctx with
+      | Inl (a, g) -> Inl (a, close_guard_with_definition x u t g)
+      | err -> err
 
 let guard (t:typ) 
   : result unit 
-  = Inl ((), Some t)
+  = fun _ -> Inl ((), Some t)
 
-module BU = FStar.Compiler.Util
 let abs (a:typ) (f: binder -> term) : term = 
   let x = S.new_bv None a in
   let xb = S.mk_binder x in
@@ -177,14 +211,16 @@ let strengthen_subtyping_guard (p:term)
   = Some (BU.dflt p (BU.map_opt g (fun q -> U.mk_and p q)))
 
 let weaken (p:term) (g:result 'a)
-  = match g with
-    | Inl (x, q) -> Inl (x, weaken_subtyping_guard p q)
-    | err -> err
+  = fun ctx ->
+      match g ctx with
+      | Inl (x, q) -> Inl (x, weaken_subtyping_guard p q)
+      | err -> err
 
 let strengthen (p:term) (g:result 'a)
-  = match g with
-    | Inl (x, q) -> Inl (x, strengthen_subtyping_guard p q)
-    | err -> err
+  = fun ctx -> 
+      match g ctx with
+      | Inl (x, q) -> Inl (x, strengthen_subtyping_guard p q)
+      | err -> err
                            
 let equatable t0 t1 =
   match (SS.compress t0).n, (SS.compress t1).n with
@@ -222,18 +258,27 @@ let rec context_included (g0 g1: list binding) =
 
   | _ -> false
 
-let lookup (g:Env.env) (e:term) : result typ =
+let curry_application hd arg args p = 
+    let head = S.mk (Tm_app(hd, [arg])) p in
+    let t = S.mk (Tm_app(head, args)) p in
+    t
+    
+
+let lookup (g:env) (e:term) : result typ =
    match FStar.Hash.lookup (e, FStar.Syntax.Hash.hash_term) table with
    | None -> fail "not in cache"
    | Some he ->
-     if he.he_gamma `context_included` g.gamma
-     then Inl he.he_res
+     if he.he_gamma `context_included` g.tcenv.gamma
+     then (
+       //BU.print1 "cache hit %s\n" (P.term_to_string e);
+       fun _ -> Inl he.he_res
+     )
      else fail "not in cache"
 
 (*
      G |- e : t0 <: t1 | p
  *)
-let rec check_subtype_whnf (g:Env.env) (e:term) (t0 t1: typ)
+let rec check_subtype_whnf (g:env) (e:term) (t0 t1: typ)
   : result unit
   = match (SS.compress t0).n, (SS.compress t1).n with
     | Tm_refine(x0, p0), _ ->
@@ -261,6 +306,17 @@ let rec check_subtype_whnf (g:Env.env) (e:term) (t0 t1: typ)
     | Tm_arrow (x0::xs0, c0), Tm_arrow(x1::xs1, c1) ->
       check_subtype_whnf g e (curry_arrow x0 xs0 c0) (curry_arrow x1 xs1 c1)
 
+    | Tm_app (hd0, [(arg0, aq0)]), Tm_app(hd1, [(arg1, aq1)]) ->
+      check_equality_whnf g hd0 hd1 ;;
+      check_equality g arg0 arg1      
+
+    | Tm_app(hd0, arg0::args0), Tm_app(hd1, arg1::args1) ->
+      check_subtype g e (curry_application hd0 arg0 args0 t0.pos)
+                        (curry_application hd1 arg1 args1 t1.pos)
+
+    | Tm_type u0, Tm_type u1 ->
+      check_equality_whnf g t0 t1
+  
     | _ ->
       if U.eq_tm t0 t1 = U.Equal
       then return ()
@@ -273,16 +329,51 @@ let rec check_subtype_whnf (g:Env.env) (e:term) (t0 t1: typ)
                            (P.term_to_string t0)
                            (P.term_to_string t1))
 
-and check_subtype (g:Env.env) (e:term) (t0 t1:typ)
+and check_subtype (g:env) (e:term) (t0 t1:typ)
   = match U.eq_tm t0 t1 with
     | U.Equal -> return ()
     | _ ->
       let open Env in
-      let t0 = N.normalize_refinement [Primops; Weak; HNF; UnfoldUntil delta_constant] g t0 in
-      let t1 = N.normalize_refinement [Primops; Weak; HNF; UnfoldUntil delta_constant] g t1 in      
+      let t0 = N.normalize_refinement [Primops; Weak; HNF; UnfoldUntil delta_constant] g.tcenv t0 in
+      let t1 = N.normalize_refinement [Primops; Weak; HNF; UnfoldUntil delta_constant] g.tcenv t1 in      
       check_subtype_whnf g e t0 t1
 
-and check_subcomp (g:Env.env) (e:term) (c0 c1:comp)
+and check_equality_whnf (g:env) (t0 t1:typ)
+  = let fail () = 
+        fail (BU.format2 "not equal terms: %s <> %s"
+                         (P.term_to_string t0)
+                         (P.term_to_string t1))
+    in
+    if U.eq_tm t0 t1 = U.Equal
+    then return ()
+    else if g.allow_universe_instantiation
+    then match t0.n, t1.n with
+         | Tm_uinst (f0, us0), Tm_uinst(f1, us1) ->
+           if U.eq_tm f0 f1 = U.Equal
+           then if Rel.teq_nosmt_force g.tcenv t0 t1
+                then return ()
+                else fail ()
+           else fail ()
+           
+         | Tm_type u0, Tm_type u1 ->
+           if Rel.teq_nosmt_force g.tcenv t0 t1
+           then return ()
+           else fail ()         
+            
+         | _ -> fail ()
+    else fail ()
+    
+
+and check_equality (g:env) (t0 t1:typ)
+  = match U.eq_tm t0 t1 with
+    | U.Equal -> return ()
+    | _ ->
+      let open Env in
+      let t0 = N.normalize_refinement [Primops; Weak; HNF; UnfoldUntil delta_constant] g.tcenv t0 in
+      let t1 = N.normalize_refinement [Primops; Weak; HNF; UnfoldUntil delta_constant] g.tcenv t1 in      
+      check_equality_whnf g t0 t1
+
+and check_subcomp (g:env) (e:term) (c0 c1:comp)
   : result unit
   = 
     if (U.is_total_comp c0 && U.is_tot_or_gtot_comp c1)
@@ -290,35 +381,40 @@ and check_subcomp (g:Env.env) (e:term) (c0 c1:comp)
     then check_subtype g e (U.comp_result c0) (U.comp_result c1)
     else fail "Subcomp failed"
 
-and check (g:Env.env) (e:term)
+and memo_check (g:env) (e:term)
   : result typ
   = handle_with
       (lookup g e)
-      (fun _ -> 
-         let r = check' g e in
+      (fun _ ctx -> 
+         let r = check' g e ctx in
          match r with
          | Inl res -> 
            insert g e res;
            r
          | _ -> r)
-      
+
+and check (msg:string) (g:env) (e:term)
+  : result typ
+  = with_context msg (Some e) (fun _ -> memo_check g e)
+  
 (*  G |- e : Tot t | pre *)
-and check' (g:Env.env) (e:term)
+and check' (g:env) (e:term)
   : result typ =
-  match (SS.compress e).n with
+  let e = SS.compress e in         
+  match e.n with
   | Tm_meta(t, _) ->
-    check g t
+    memo_check g t
 
   | Tm_uvar (uv, s) ->
     return (SS.subst' s (U.ctx_uvar_typ uv))
 
   | Tm_name x ->
-    let t, _ = Env.lookup_bv g x in
+    let t, _ = Env.lookup_bv g.tcenv x in
     return t
 
   | Tm_fvar f ->
     begin
-    match Env.try_lookup_lid g f.fv_name.v with
+    match Env.try_lookup_lid g.tcenv f.fv_name.v with
     | Some (([], t), _) ->
       return t
       
@@ -328,7 +424,7 @@ and check' (g:Env.env) (e:term)
     
   | Tm_uinst ({n=Tm_fvar f}, us) ->
     begin
-    match Env.try_lookup_and_inst_lid g us f.fv_name.v with
+    match Env.try_lookup_and_inst_lid g.tcenv us f.fv_name.v with
     | None ->
       fail "Top-level name not found"
 
@@ -337,74 +433,88 @@ and check' (g:Env.env) (e:term)
     end
 
   | Tm_constant c ->
-    let t = FStar.TypeChecker.TcTerm.tc_constant g e.pos c in
-    return t
+    begin
+    let open FStar.Const in
+    match c with
+    | Const_range_of
+    | Const_set_range_of
+    | Const_reify
+    | Const_reflect _ ->
+      fail "Unhandled constant"
+
+    | _ -> 
+      let t = FStar.TypeChecker.TcTerm.tc_constant g.tcenv e.pos c in
+      return t
+    end
     
   | Tm_type u ->
     return (mk_type (U_succ u))
     
   | Tm_refine(x, phi) ->
     let [x], phi = SS.open_term [S.mk_binder x] phi in
-    t <-- check g x.binder_bv.sort ;
+    t <-- check "refinement head" g x.binder_bv.sort ;
     u <-- is_type g t;
     with_binders [x] [u] (
-      let g' = Env.push_binders g [x] in
-      t' <-- check g' phi;
+      let g' = push_binders g [x] in
+      t' <-- check "refinement formula" g' phi;
       is_type g' t';;
       return t
     )
 
   | Tm_abs(xs, body, _) ->
     let xs, body = SS.open_term xs body in
-    xs_g <-- check_binders g xs;
+    xs_g <--  with_context "abs binders" None (fun _ -> check_binders g xs) ;
     let xs, us, g = xs_g in
     with_binders xs us (
-      t <-- check g body;
+      t <-- check "abs body" g body;
       return (U.arrow xs (S.mk_Total t))
     )
 
   | Tm_arrow(xs, c) ->
     let xs, c = SS.open_comp xs c in
-    xs_g <-- check_binders g xs;
+    xs_g <-- with_context "arrow binders" None (fun _ -> check_binders g xs);
     let xs, us, g = xs_g in
     with_binders xs us (
-      u <-- check_comp g c;
+      u <-- with_context "arrow comp" None (fun _ -> check_comp g c);
       return (mk_type (S.U_max (u::us)))
     )
 
   | Tm_app (hd, [(arg, arg_qual)]) ->
-    t <-- check g hd ;
+    t <-- check "app head" g hd ;
     x_r <-- is_tot_arrow g t;
     let x, t' = x_r in
-    t_arg <-- check g arg ;
-    check_subtype g arg t_arg x.binder_bv.sort ;;
-    check_arg_qual arg_qual x.binder_qual ;;
+    t_arg <-- check "app arg" g arg ;
+    with_context "app subtyping" None (fun _ -> check_subtype g arg t_arg x.binder_bv.sort) ;;
+    with_context "app arg qual" None (fun _ -> check_arg_qual arg_qual x.binder_qual) ;;
     return (SS.subst [NT(x.binder_bv, arg)] t')
 
   | Tm_app(hd, arg::args) ->
     let head = S.mk (Tm_app(hd, [arg])) e.pos in
     let t = S.mk (Tm_app(head, args)) e.pos in
-    check g t
+    memo_check g t
 
   | Tm_ascribed (e, (Inl t, _, eq), _) ->
-    te <-- check g e ;
-    t' <-- check g t ;
+    te <-- check "ascription head" g e ;
+    t' <-- check "ascription type" g t ;
     is_type g t' ;;
-    check_subtype g e te t;;
+    with_context "ascription subtyping" None (fun _ -> check_subtype g e te t);;
     return t
+
+  | Tm_ascribed (_, (Inr e, _, _), _) -> 
+    fail "Effect ascriptions are not handled yet"
     
   | Tm_let((false, [lb]), body) ->
     let Inl x = lb.lbname in
     let [x], body = SS.open_term [S.mk_binder x] body in
     if I.lid_equals lb.lbeff PC.effect_Tot_lid
     then (
-      tdef <-- check g lb.lbdef ;
-      ttyp <-- check g lb.lbtyp ;
+      tdef <-- check "let definition" g lb.lbdef ;
+      ttyp <-- check "let type" g lb.lbtyp ;
       u <-- is_type g ttyp ;
-      check_subtype g lb.lbdef tdef ttyp ;;
+      with_context "let subtyping" None (fun _ -> check_subtype g lb.lbdef tdef ttyp) ;;
       with_definition x u lb.lbdef (
-        let g = Env.push_binders g [x] in
-        check g body
+        let g = push_binders g [x] in
+        check "let body" g body
       )
     ) 
     else (
@@ -420,32 +530,66 @@ and check' (g:Env.env) (e:term)
   | _ -> 
     fail (BU.format1 "Unexpected term: %s" (FStar.Syntax.Print.tag_of_term e))
 
-and check_binders (g:Env.env) (xs:binders)
-  : result (binders & list universe & Env.env)
+and check_binders (g:env) (xs:binders)
+  : result (binders & list universe & env)
   = match xs with
     | [] ->
       return ([], [], g)
       
     | x ::xs ->
-      t <-- check g x.binder_bv.sort;
+      t <-- check "binder sort" g x.binder_bv.sort;
       u <-- is_type g t ;
       with_binders [x] [u] (
-        let g' = Env.push_binders g [x] in
+        let g' = push_binders g [x] in
         xs_g <-- check_binders g' xs;
         let xs, us, g = xs_g in
         return (x :: xs, u::us, g)
       )
 
-and check_comp (g:Env.env) (c:comp)
+and check_comp (g:env) (c:comp)
   : result universe
   = if U.is_tot_or_gtot_comp c
     then (
-      t <-- check g (U.comp_result c) ;
+      t <-- check "comp result" g (U.comp_result c) ;
       is_type g t
     )
     else fail "Computation type is not Tot or GTot"
 
-and universe_of (g:Env.env) (t:typ)
+and universe_of (g:env) (t:typ)
   : result universe
-  = t <-- check g t ;
+  = t <-- check "universe of" g t ;
     is_type g t
+
+let check_term_top g e t
+  : result unit
+  = let g = { tcenv = g; allow_universe_instantiation = false } in
+    te <-- check "top" g e;
+    with_context "top-level subtyping" None (fun _ ->
+      check_subtype ({ g with allow_universe_instantiation = true}) e te t)
+
+let check_term g e t
+  = match check_term_top g e t [] with
+    | Inl (_, g) -> Inl g
+    | Inr err -> Inr err
+
+let print_error (err:error) =
+  let rec print_context (depth:string) (ctx:context) = 
+    match ctx with
+    | [] -> ""
+    | (msg, topt)::tl ->
+      let hd = 
+        BU.format3
+          "%s %s (%s)\n"
+          depth
+          msg 
+          (match topt with
+          | None -> ""
+          | Some t -> P.term_to_string t)
+      in
+      let tl = print_context (depth ^ ">") tl in
+      hd ^ tl
+  in
+  let ctx, msg = err in
+  BU.format2 "%s%s"
+             (print_context "" (FStar.Compiler.List.rev ctx))
+             msg

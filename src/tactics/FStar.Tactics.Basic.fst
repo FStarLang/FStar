@@ -50,13 +50,13 @@ module TcUtil = FStar.TypeChecker.Util
 module UF     = FStar.Syntax.Unionfind
 module U      = FStar.Syntax.Util
 module Z      = FStar.BigInt
+module Core   = FStar.TypeChecker.Core
 
 let core_check env gamma sol t
-  : either (option typ) string
+  : either (option typ) Core.error
   = let env = { env with gamma } in
-    let sol = U.ascribe sol (Inl t, None, false) in
-    match FStar.TypeChecker.Core.check env sol with
-    | Inl (_, None) ->
+    match FStar.TypeChecker.Core.check_term env sol t with
+    | Inl None ->
       //checked with no guard
       //no need to check it again
       BU.print2 "(%s) Core checking succeeded on %s\n"
@@ -64,7 +64,7 @@ let core_check env gamma sol t
                 (Print.term_to_string sol);
       Inl None
 
-     | Inl (_, Some g) ->
+     | Inl (Some g) ->
        BU.print3 "(%s) Core checking succeeded on %s, with guard %s\n"
                 (Range.string_of_range (Env.get_range env))              
                 (Print.term_to_string sol)
@@ -72,12 +72,12 @@ let core_check env gamma sol t
        Inl (Some g)
        
 
-     | Inr msg ->
-       BU.print3 "(%s) Core checking failed on term %s: %s\n"
+     | Inr err ->
+       BU.print3 "(%s) Core checking failed on term %s\n%s\n"
                 (Range.string_of_range (Env.get_range env))              
                 (Print.term_to_string sol)
-                msg;
-       Inr msg
+                (Core.print_error err);
+       Inr err
 
 type name = bv
 type env = Env.env

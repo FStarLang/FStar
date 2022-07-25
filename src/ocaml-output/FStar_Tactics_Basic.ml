@@ -2,10 +2,10 @@ open Prims
 let (core_check :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.binding Prims.list ->
-      FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
-        FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
+      FStar_Syntax_Syntax.term ->
+        FStar_Syntax_Syntax.typ ->
           (FStar_Reflection_Data.typ FStar_Pervasives_Native.option,
-            Prims.string) FStar_Pervasives.either)
+            FStar_TypeChecker_Core.error) FStar_Pervasives.either)
   =
   fun env ->
     fun gamma ->
@@ -110,38 +110,36 @@ let (core_check :
               FStar_TypeChecker_Env.rel_query_for_apply_tac_uvar =
                 (env.FStar_TypeChecker_Env.rel_query_for_apply_tac_uvar)
             } in
-          let sol1 =
-            FStar_Syntax_Util.ascribe sol
-              ((FStar_Pervasives.Inl t), FStar_Pervasives_Native.None, false) in
-          let uu___ = FStar_TypeChecker_Core.check env1 sol1 in
+          let uu___ = FStar_TypeChecker_Core.check_term env1 sol t in
           match uu___ with
-          | FStar_Pervasives.Inl (uu___1, FStar_Pervasives_Native.None) ->
-              ((let uu___3 =
-                  let uu___4 = FStar_TypeChecker_Env.get_range env1 in
-                  FStar_Compiler_Range.string_of_range uu___4 in
-                let uu___4 = FStar_Syntax_Print.term_to_string sol1 in
-                FStar_Compiler_Util.print2
-                  "(%s) Core checking succeeded on %s\n" uu___3 uu___4);
-               FStar_Pervasives.Inl FStar_Pervasives_Native.None)
-          | FStar_Pervasives.Inl (uu___1, FStar_Pervasives_Native.Some g) ->
-              ((let uu___3 =
-                  let uu___4 = FStar_TypeChecker_Env.get_range env1 in
-                  FStar_Compiler_Range.string_of_range uu___4 in
-                let uu___4 = FStar_Syntax_Print.term_to_string sol1 in
-                let uu___5 = FStar_Syntax_Print.term_to_string g in
-                FStar_Compiler_Util.print3
-                  "(%s) Core checking succeeded on %s, with guard %s\n"
-                  uu___3 uu___4 uu___5);
-               FStar_Pervasives.Inl (FStar_Pervasives_Native.Some g))
-          | FStar_Pervasives.Inr msg ->
+          | FStar_Pervasives.Inl (FStar_Pervasives_Native.None) ->
               ((let uu___2 =
                   let uu___3 = FStar_TypeChecker_Env.get_range env1 in
                   FStar_Compiler_Range.string_of_range uu___3 in
-                let uu___3 = FStar_Syntax_Print.term_to_string sol1 in
+                let uu___3 = FStar_Syntax_Print.term_to_string sol in
+                FStar_Compiler_Util.print2
+                  "(%s) Core checking succeeded on %s\n" uu___2 uu___3);
+               FStar_Pervasives.Inl FStar_Pervasives_Native.None)
+          | FStar_Pervasives.Inl (FStar_Pervasives_Native.Some g) ->
+              ((let uu___2 =
+                  let uu___3 = FStar_TypeChecker_Env.get_range env1 in
+                  FStar_Compiler_Range.string_of_range uu___3 in
+                let uu___3 = FStar_Syntax_Print.term_to_string sol in
+                let uu___4 = FStar_Syntax_Print.term_to_string g in
                 FStar_Compiler_Util.print3
-                  "(%s) Core checking failed on term %s: %s\n" uu___2 uu___3
-                  msg);
-               FStar_Pervasives.Inr msg)
+                  "(%s) Core checking succeeded on %s, with guard %s\n"
+                  uu___2 uu___3 uu___4);
+               FStar_Pervasives.Inl (FStar_Pervasives_Native.Some g))
+          | FStar_Pervasives.Inr err ->
+              ((let uu___2 =
+                  let uu___3 = FStar_TypeChecker_Env.get_range env1 in
+                  FStar_Compiler_Range.string_of_range uu___3 in
+                let uu___3 = FStar_Syntax_Print.term_to_string sol in
+                let uu___4 = FStar_TypeChecker_Core.print_error err in
+                FStar_Compiler_Util.print3
+                  "(%s) Core checking failed on term %s\n%s\n" uu___2 uu___3
+                  uu___4);
+               FStar_Pervasives.Inr err)
 type name = FStar_Syntax_Syntax.bv
 type env = FStar_TypeChecker_Env.env
 type implicits = FStar_TypeChecker_Env.implicits
