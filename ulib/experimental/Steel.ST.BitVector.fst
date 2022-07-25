@@ -28,7 +28,7 @@ module A = Steel.ST.Array
 
 /// Implementation of bv_t using an array of bool
 
-type bv_t n = a:A.array bool{A.length a == U32.v n}
+type bv_t n = a:A.array bool{A.length a == U32.v n /\ A.is_full_array a}
 
 let pts_to bv p s = A.pts_to bv p s
 

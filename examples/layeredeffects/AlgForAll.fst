@@ -234,9 +234,12 @@ let rec interp_sem #a (t : rwtree a) (s0:state)
 let extract #a #w (c:repr a w)
   : Lemma (w `stronger` interp_as_wp c)
   = ()
-  
+
+let soundness_aux #a #wp (t:repr a wp)
+  : s0:state -> ID5.ID (a & state) (as_pure_wp (wp s0))
+  = interp_sem t
+
 let soundness #a #wp (t : unit -> AlgWP a wp)
   : Tot (s0:state -> ID5.ID (a & state) (as_pure_wp (wp s0)))
-  = let c = reify (t ()) in
-    extract c; //this became necessary after a fix to #2635, though it seems unrelated
-    interp_sem c
+  = soundness_aux (reify (t ()))
+

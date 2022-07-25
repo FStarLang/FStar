@@ -153,10 +153,7 @@ let wrap (f:int -> ND unit (as_pure_wp (fun p -> True))) (x':int) : ND unit (as_
   | Some x -> f x
   | None -> f 4
 
-// The test below use to fail while running the tactic, now it leaves a
-// goal that cannot be solved. That's what we check for with the 19.
-
-[@@expect_failure [19]]
+[@@expect_failure [217]]
 let rewrite_inside_reify
   (f : int -> ND unit (as_pure_wp (fun p -> True)))
   (g : int -> Tot (option int))
