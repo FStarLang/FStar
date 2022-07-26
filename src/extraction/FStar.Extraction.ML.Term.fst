@@ -921,7 +921,7 @@ let rec extract_one_pat (imp : bool)
     | Pat_dot_term _ ->
         g, None, true
 
-    | Pat_cons (f, pats) ->
+    | Pat_cons (f, _, pats) ->
         // The main subtlety here, relative to Bug2595, is to propapate the
         // expected type properly
 

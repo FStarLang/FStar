@@ -258,13 +258,31 @@ let e_const =
     in
     mk_emb' embed_const unembed_const fstar_refl_vconst_fv
 
+let e_universe =
+  let embed_universe cb (u:universe) : t =
+    mk_lazy cb u fstar_refl_universe Lazy_universe in
+  let unembed_universe cb (t:t) : option S.universe =
+    match t.nbe_t with
+    | Lazy (Inl {blob=b; lkind=Lazy_universe}, _) ->
+      Some (undyn b)
+    | _ ->
+      Err.log_issue Range.dummyRange
+        (Err.Warning_NotEmbedded,
+         (BU.format1 "Not an embedded universe: %s" (t_to_string t)));
+      None
+    in
+    mk_emb' embed_universe unembed_universe fstar_refl_universe_fv
+
 let rec e_pattern' () =
     let embed_pattern cb (p : pattern) : t =
         match p with
         | Pat_Constant c ->
             mkConstruct ref_Pat_Constant.fv [] [as_arg (embed e_const cb c)]
-        | Pat_Cons (fv, ps) ->
-            mkConstruct ref_Pat_Cons.fv [] [as_arg (embed e_fv cb fv); as_arg (embed (e_list (e_tuple2 (e_pattern' ()) e_bool)) cb ps)]
+        | Pat_Cons (fv, us_opt, ps) ->
+            mkConstruct ref_Pat_Cons.fv [] 
+              [as_arg (embed e_fv cb fv);
+               as_arg (embed (e_option (e_list e_universe)) cb us_opt);
+               as_arg (embed (e_list (e_tuple2 (e_pattern' ()) e_bool)) cb ps)]
         | Pat_Var bv ->
             mkConstruct ref_Pat_Var.fv [] [as_arg (embed e_bv cb bv)]
         | Pat_Wild bv ->
@@ -278,10 +296,11 @@ let rec e_pattern' () =
             BU.bind_opt (unembed e_const cb c) (fun c ->
             Some <| Pat_Constant c)
 
-        | Construct (fv, [], [(ps, _); (f, _)]) when S.fv_eq_lid fv ref_Pat_Cons.lid ->
+        | Construct (fv, [], [(ps, _); (us_opt, _); (f, _)]) when S.fv_eq_lid fv ref_Pat_Cons.lid ->
             BU.bind_opt (unembed e_fv cb f) (fun f ->
+            BU.bind_opt (unembed (e_option (e_list e_universe)) cb us_opt) (fun us ->            
             BU.bind_opt (unembed (e_list (e_tuple2 (e_pattern' ()) e_bool)) cb ps) (fun ps ->
-            Some <| Pat_Cons (f, ps)))
+            Some <| Pat_Cons (f, us, ps))))
 
         | Construct (fv, [], [(bv, _)]) when S.fv_eq_lid fv ref_Pat_Var.lid ->
             BU.bind_opt (unembed e_bv cb bv) (fun bv ->
@@ -349,20 +368,6 @@ let e_ident : embedding I.ident =
     // TODO: again a delta depth issue, should be this
     (* fstar_refl_ident *)
 
-let e_universe =
-  let embed_universe cb (u:universe) : t =
-    mk_lazy cb u fstar_refl_universe Lazy_universe in
-  let unembed_universe cb (t:t) : option S.universe =
-    match t.nbe_t with
-    | Lazy (Inl {blob=b; lkind=Lazy_universe}, _) ->
-      Some (undyn b)
-    | _ ->
-      Err.log_issue Range.dummyRange
-        (Err.Warning_NotEmbedded,
-         (BU.format1 "Not an embedded universe: %s" (t_to_string t)));
-      None
-    in
-    mk_emb' embed_universe unembed_universe fstar_refl_universe_fv
 
 let e_universe_view =
   let embed_universe_view cb (uv:universe_view) : t =

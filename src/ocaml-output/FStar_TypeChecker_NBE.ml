@@ -337,7 +337,7 @@ let (pickBranch :
                    if uu___1
                    then FStar_Pervasives.Inl []
                    else FStar_Pervasives.Inr false
-               | FStar_Syntax_Syntax.Pat_cons (fv, arg_pats) ->
+               | FStar_Syntax_Syntax.Pat_cons (fv, _us_opt, arg_pats) ->
                    let rec matches_args out a p1 =
                      match (a, p1) with
                      | ([], []) -> FStar_Pervasives.Inl out
@@ -967,7 +967,7 @@ let rec (translate :
                    match p.FStar_Syntax_Syntax.v with
                    | FStar_Syntax_Syntax.Pat_constant c ->
                        (bs1, (FStar_Syntax_Syntax.Pat_constant c))
-                   | FStar_Syntax_Syntax.Pat_cons (fvar, args) ->
+                   | FStar_Syntax_Syntax.Pat_cons (fvar, us_opt, args) ->
                        let uu___4 =
                          FStar_Compiler_List.fold_left
                            (fun uu___5 ->
@@ -981,9 +981,19 @@ let rec (translate :
                            (bs1, []) args in
                        (match uu___4 with
                         | (bs', args') ->
+                            let us_opt1 =
+                              match us_opt with
+                              | FStar_Pervasives_Native.None ->
+                                  FStar_Pervasives_Native.None
+                              | FStar_Pervasives_Native.Some us ->
+                                  let uu___5 =
+                                    FStar_Compiler_List.map
+                                      (translate_univ cfg1 bs1) us in
+                                  FStar_Pervasives_Native.Some uu___5 in
                             (bs',
                               (FStar_Syntax_Syntax.Pat_cons
-                                 (fvar, (FStar_Compiler_List.rev args')))))
+                                 (fvar, us_opt1,
+                                   (FStar_Compiler_List.rev args')))))
                    | FStar_Syntax_Syntax.Pat_var bvar ->
                        let x =
                          let uu___4 =

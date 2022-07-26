@@ -921,7 +921,7 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
                             then pos (Pat_dot_term (S.gen_bv (string_of_id x.ppname) None tun, tun)), b
                             else pos (Pat_wild (S.gen_bv (string_of_id x.ppname) None tun)), b)
                         in
-                        let pat_true = pos (S.Pat_cons (S.lid_as_fv lid delta_constant (Some fvq), arg_pats)), None, U.exp_true_bool in
+                        let pat_true = pos (S.Pat_cons (S.lid_as_fv lid delta_constant (Some fvq), None, arg_pats)), None, U.exp_true_bool in
                         let pat_false = pos (Pat_wild (S.new_bv None tun)), None, U.exp_false_bool in
                         let arg_exp = S.bv_to_name unrefined_arg_binder.binder_bv in
                         mk (Tm_match(arg_exp, None, [U.branch pat_true ; U.branch pat_false], None)) p
@@ -1014,7 +1014,7 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
                   then pos (Pat_dot_term (S.gen_bv (string_of_id x.ppname) None tun, tun)), b
                   else pos (Pat_wild (S.gen_bv (string_of_id x.ppname) None tun)), b)
               in
-              let pat = pos (S.Pat_cons (S.lid_as_fv lid delta_constant (Some fvq), arg_pats)), None, S.bv_to_name projection in
+              let pat = pos (S.Pat_cons (S.lid_as_fv lid delta_constant (Some fvq), None, arg_pats)), None, S.bv_to_name projection in
               let body =
                 let return_bv = S.gen_bv "proj_ret" (Some p) S.tun in
                 let result_typ = result_comp

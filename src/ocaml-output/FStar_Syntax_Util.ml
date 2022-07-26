@@ -1545,14 +1545,18 @@ let (set_uvar : FStar_Syntax_Syntax.uvar -> FStar_Syntax_Syntax.term -> unit)
     fun t ->
       let uu___ = FStar_Syntax_Unionfind.find uv in
       match uu___ with
-      | FStar_Pervasives_Native.Some uu___1 ->
-          let uu___2 =
-            let uu___3 =
-              let uu___4 = FStar_Syntax_Unionfind.uvar_id uv in
+      | FStar_Pervasives_Native.Some t' ->
+          let uu___1 =
+            let uu___2 =
+              let uu___3 = FStar_Syntax_Unionfind.uvar_id uv in
               FStar_Compiler_Effect.op_Less_Bar
-                FStar_Compiler_Util.string_of_int uu___4 in
-            FStar_Compiler_Util.format1 "Changing a fixed uvar! ?%s\n" uu___3 in
-          failwith uu___2
+                FStar_Compiler_Util.string_of_int uu___3 in
+            let uu___3 = tts t in
+            let uu___4 = tts t' in
+            FStar_Compiler_Util.format3
+              "Changing a fixed uvar! ?%s to %s but it is already set to %s\n"
+              uu___2 uu___3 uu___4 in
+          failwith uu___1
       | uu___1 -> FStar_Syntax_Unionfind.change uv t
 let (qualifier_equal :
   FStar_Syntax_Syntax.qualifier ->

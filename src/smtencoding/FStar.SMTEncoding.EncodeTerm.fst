@@ -1296,7 +1296,7 @@ and encode_pat (env:env_t) (pat:S.pat) : (env_t * pattern) =
             let tm, decls = encode_const c env in
             let _ = match decls with _::_ -> failwith "Unexpected encoding of constant pattern" | _ -> () in
             mkEq(scrutinee, tm)
-        | Pat_cons(f, args) ->
+        | Pat_cons(f, _, args) ->
             let is_f =
                 let tc_name = Env.typ_of_datacon env.tcenv f.fv_name.v in
                 match Env.datacons_of_typ env.tcenv tc_name with
@@ -1317,7 +1317,7 @@ and encode_pat (env:env_t) (pat:S.pat) : (env_t * pattern) =
 
         | Pat_constant _ -> []
 
-        | Pat_cons(f, args) ->
+        | Pat_cons(f, _, args) ->
             args
             |> List.mapi (fun i (arg, _) ->
                 let proj = primitive_projector_by_pos env.tcenv f.fv_name.v i in

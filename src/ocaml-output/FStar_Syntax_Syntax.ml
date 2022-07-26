@@ -230,7 +230,8 @@ and uvar_decoration =
   uvar_decoration_should_check: should_check_uvar }
 and pat' =
   | Pat_constant of sconst 
-  | Pat_cons of (fv * (pat' withinfo_t * Prims.bool) Prims.list) 
+  | Pat_cons of (fv * universes FStar_Pervasives_Native.option * (pat'
+  withinfo_t * Prims.bool) Prims.list) 
   | Pat_var of bv 
   | Pat_wild of bv 
   | Pat_dot_term of (bv * term' syntax) 
@@ -557,8 +558,10 @@ let (uu___is_Pat_cons : pat' -> Prims.bool) =
   fun projectee ->
     match projectee with | Pat_cons _0 -> true | uu___ -> false
 let (__proj__Pat_cons__item___0 :
-  pat' -> (fv * (pat' withinfo_t * Prims.bool) Prims.list)) =
-  fun projectee -> match projectee with | Pat_cons _0 -> _0
+  pat' ->
+    (fv * universes FStar_Pervasives_Native.option * (pat' withinfo_t *
+      Prims.bool) Prims.list))
+  = fun projectee -> match projectee with | Pat_cons _0 -> _0
 let (uu___is_Pat_var : pat' -> Prims.bool) =
   fun projectee -> match projectee with | Pat_var _0 -> true | uu___ -> false
 let (__proj__Pat_var__item___0 : pat' -> bv) =
@@ -1840,10 +1843,10 @@ let (pat_bvs : pat -> bv Prims.list) =
       | Pat_constant uu___ -> b
       | Pat_wild x -> x :: b
       | Pat_var x -> x :: b
-      | Pat_cons (uu___, pats) ->
+      | Pat_cons (uu___, uu___1, pats) ->
           FStar_Compiler_List.fold_left
             (fun b1 ->
-               fun uu___1 -> match uu___1 with | (p2, uu___2) -> aux b1 p2) b
+               fun uu___2 -> match uu___2 with | (p2, uu___3) -> aux b1 p2) b
             pats in
     let uu___ = aux [] p in
     FStar_Compiler_Effect.op_Less_Bar FStar_Compiler_List.rev uu___
@@ -1965,16 +1968,31 @@ let rec (eq_pat : pat -> pat -> Prims.bool) =
     fun p2 ->
       match ((p1.v), (p2.v)) with
       | (Pat_constant c1, Pat_constant c2) -> FStar_Const.eq_const c1 c2
-      | (Pat_cons (fv1, as1), Pat_cons (fv2, as2)) ->
-          let uu___ = fv_eq fv1 fv2 in
+      | (Pat_cons (fv1, us1, as1), Pat_cons (fv2, us2, as2)) ->
+          let uu___ =
+            (fv_eq fv1 fv2) &&
+              ((FStar_Compiler_List.length as1) =
+                 (FStar_Compiler_List.length as2)) in
           if uu___
           then
-            let uu___2 = FStar_Compiler_List.zip as1 as2 in
-            FStar_Compiler_Effect.op_Bar_Greater uu___2
-              (FStar_Compiler_List.for_all
-                 (fun uu___3 ->
-                    match uu___3 with
-                    | ((p11, b1), (p21, b2)) -> (b1 = b2) && (eq_pat p11 p21)))
+            (FStar_Compiler_List.forall2
+               (fun uu___1 ->
+                  fun uu___2 ->
+                    match (uu___1, uu___2) with
+                    | ((p11, b1), (p21, b2)) -> (b1 = b2) && (eq_pat p11 p21))
+               as1 as2)
+              &&
+              ((match (us1, us2) with
+                | (FStar_Pervasives_Native.None,
+                   FStar_Pervasives_Native.None) -> true
+                | (FStar_Pervasives_Native.Some us11,
+                   FStar_Pervasives_Native.Some us21) ->
+                    if
+                      (FStar_Compiler_List.length us11) =
+                        (FStar_Compiler_List.length us21)
+                    then true
+                    else false
+                | uu___1 -> false))
           else false
       | (Pat_var uu___, Pat_var uu___1) -> true
       | (Pat_wild uu___, Pat_wild uu___1) -> true

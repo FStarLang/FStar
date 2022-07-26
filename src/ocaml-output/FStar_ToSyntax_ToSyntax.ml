@@ -1441,32 +1441,32 @@ let (check_linear_pattern_variables :
             FStar_Syntax_Syntax.no_names
         | FStar_Syntax_Syntax.Pat_var x ->
             FStar_Compiler_Util.set_add x FStar_Syntax_Syntax.no_names
-        | FStar_Syntax_Syntax.Pat_cons (uu___, pats1) ->
-            let aux out uu___1 =
-              match uu___1 with
-              | (p1, uu___2) ->
+        | FStar_Syntax_Syntax.Pat_cons (uu___, uu___1, pats1) ->
+            let aux out uu___2 =
+              match uu___2 with
+              | (p1, uu___3) ->
                   let p_vars = pat_vars p1 in
                   let intersection =
                     FStar_Compiler_Util.set_intersect p_vars out in
-                  let uu___3 = FStar_Compiler_Util.set_is_empty intersection in
-                  if uu___3
+                  let uu___4 = FStar_Compiler_Util.set_is_empty intersection in
+                  if uu___4
                   then FStar_Compiler_Util.set_union out p_vars
                   else
                     (let duplicate_bv =
-                       let uu___5 =
-                         FStar_Compiler_Util.set_elements intersection in
-                       FStar_Compiler_List.hd uu___5 in
-                     let uu___5 =
                        let uu___6 =
-                         let uu___7 =
+                         FStar_Compiler_Util.set_elements intersection in
+                       FStar_Compiler_List.hd uu___6 in
+                     let uu___6 =
+                       let uu___7 =
+                         let uu___8 =
                            FStar_Ident.string_of_id
                              duplicate_bv.FStar_Syntax_Syntax.ppname in
                          FStar_Compiler_Util.format1
                            "Non-linear patterns are not permitted: `%s` appears more than once in this pattern."
-                           uu___7 in
+                           uu___8 in
                        (FStar_Errors.Fatal_NonLinearPatternNotPermitted,
-                         uu___6) in
-                     FStar_Errors.raise_error uu___5 r) in
+                         uu___7) in
+                     FStar_Errors.raise_error uu___6 r) in
             FStar_Compiler_List.fold_left aux FStar_Syntax_Syntax.no_names
               pats1 in
       match pats with
@@ -1651,7 +1651,8 @@ let rec (desugar_data_pat :
                   uu___ in
               let uu___ =
                 FStar_Compiler_Effect.op_Less_Bar pos
-                  (FStar_Syntax_Syntax.Pat_cons (l1, [])) in
+                  (FStar_Syntax_Syntax.Pat_cons
+                     (l1, FStar_Pervasives_Native.None, [])) in
               (loc, env1,
                 (LocalBinder (x, FStar_Pervasives_Native.None, [])), uu___,
                 [])
@@ -1686,7 +1687,8 @@ let rec (desugar_data_pat :
                           (p1.FStar_Parser_AST.prange)) uu___2 in
                    let uu___2 =
                      FStar_Compiler_Effect.op_Less_Bar pos
-                       (FStar_Syntax_Syntax.Pat_cons (l1, args1)) in
+                       (FStar_Syntax_Syntax.Pat_cons
+                          (l1, FStar_Pervasives_Native.None, args1)) in
                    (loc1, env2,
                      (LocalBinder (x, FStar_Pervasives_Native.None, [])),
                      uu___2, annots))
@@ -1724,7 +1726,7 @@ let rec (desugar_data_pat :
                                FStar_Syntax_Syntax.delta_constant
                                (FStar_Pervasives_Native.Some
                                   FStar_Syntax_Syntax.Data_ctor) in
-                           (uu___5, []) in
+                           (uu___5, FStar_Pervasives_Native.None, []) in
                          FStar_Syntax_Syntax.Pat_cons uu___4 in
                        FStar_Compiler_Effect.op_Less_Bar uu___2 uu___3 in
                      FStar_Compiler_List.fold_right
@@ -1742,7 +1744,8 @@ let rec (desugar_data_pat :
                                     FStar_Syntax_Syntax.delta_constant
                                     (FStar_Pervasives_Native.Some
                                        FStar_Syntax_Syntax.Data_ctor) in
-                                (uu___4, [(hd, false); (tl, false)]) in
+                                (uu___4, FStar_Pervasives_Native.None,
+                                  [(hd, false); (tl, false)]) in
                               FStar_Syntax_Syntax.Pat_cons uu___3 in
                             FStar_Compiler_Effect.op_Less_Bar (pos_r r)
                               uu___2) pats1 uu___1 in
@@ -1795,7 +1798,8 @@ let rec (desugar_data_pat :
                           (p1.FStar_Parser_AST.prange)) uu___1 in
                    let uu___1 =
                      FStar_Compiler_Effect.op_Less_Bar pos
-                       (FStar_Syntax_Syntax.Pat_cons (l1, args2)) in
+                       (FStar_Syntax_Syntax.Pat_cons
+                          (l1, FStar_Pervasives_Native.None, args2)) in
                    (loc1, env2,
                      (LocalBinder (x, FStar_Pervasives_Native.None, [])),
                      uu___1, annots))
@@ -1862,7 +1866,9 @@ let rec (desugar_data_pat :
                                   let pat =
                                     FStar_Compiler_Effect.op_Less_Bar pos
                                       (FStar_Syntax_Syntax.Pat_cons
-                                         (candidate_constructor, pats2)) in
+                                         (candidate_constructor,
+                                           FStar_Pervasives_Native.None,
+                                           pats2)) in
                                   let x =
                                     let uu___5 =
                                       tun_r p1.FStar_Parser_AST.prange in
@@ -2919,6 +2925,7 @@ and (desugar_term_maybe_top :
                                                 FStar_Syntax_Syntax.withinfo
                                                   (FStar_Syntax_Syntax.Pat_cons
                                                      (tup2,
+                                                       FStar_Pervasives_Native.None,
                                                        [(p', false);
                                                        (p1, false)])) uu___8 in
                                               FStar_Pervasives_Native.Some
@@ -2926,53 +2933,54 @@ and (desugar_term_maybe_top :
                                           | (FStar_Syntax_Syntax.Tm_app
                                              (uu___6, args),
                                              FStar_Syntax_Syntax.Pat_cons
-                                             (uu___7, pats1)) ->
+                                             (uu___7, uu___8, pats1)) ->
                                               let tupn =
-                                                let uu___8 =
+                                                let uu___9 =
                                                   FStar_Parser_Const.mk_tuple_data_lid
                                                     (Prims.int_one +
                                                        (FStar_Compiler_List.length
                                                           args))
                                                     top.FStar_Parser_AST.range in
                                                 FStar_Syntax_Syntax.lid_as_fv
-                                                  uu___8
+                                                  uu___9
                                                   FStar_Syntax_Syntax.delta_constant
                                                   (FStar_Pervasives_Native.Some
                                                      FStar_Syntax_Syntax.Data_ctor) in
                                               let sc1 =
-                                                let uu___8 =
-                                                  let uu___9 =
-                                                    let uu___10 =
+                                                let uu___9 =
+                                                  let uu___10 =
+                                                    let uu___11 =
                                                       mk
                                                         (FStar_Syntax_Syntax.Tm_fvar
                                                            tupn) in
-                                                    let uu___11 =
-                                                      let uu___12 =
-                                                        let uu___13 =
-                                                          let uu___14 =
+                                                    let uu___12 =
+                                                      let uu___13 =
+                                                        let uu___14 =
+                                                          let uu___15 =
                                                             FStar_Syntax_Syntax.bv_to_name
                                                               x in
                                                           FStar_Compiler_Effect.op_Less_Bar
                                                             FStar_Syntax_Syntax.as_arg
-                                                            uu___14 in
-                                                        [uu___13] in
+                                                            uu___15 in
+                                                        [uu___14] in
                                                       FStar_Compiler_List.op_At
-                                                        args uu___12 in
-                                                    (uu___10, uu___11) in
+                                                        args uu___13 in
+                                                    (uu___11, uu___12) in
                                                   FStar_Syntax_Syntax.Tm_app
-                                                    uu___9 in
-                                                mk uu___8 in
+                                                    uu___10 in
+                                                mk uu___9 in
                                               let p2 =
-                                                let uu___8 =
+                                                let uu___9 =
                                                   FStar_Compiler_Range.union_ranges
                                                     p'.FStar_Syntax_Syntax.p
                                                     p1.FStar_Syntax_Syntax.p in
                                                 FStar_Syntax_Syntax.withinfo
                                                   (FStar_Syntax_Syntax.Pat_cons
                                                      (tupn,
+                                                       FStar_Pervasives_Native.None,
                                                        (FStar_Compiler_List.op_At
                                                           pats1 [(p1, false)])))
-                                                  uu___8 in
+                                                  uu___9 in
                                               FStar_Pervasives_Native.Some
                                                 (sc1, p2)
                                           | uu___6 -> failwith "Impossible") in

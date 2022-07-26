@@ -2204,59 +2204,59 @@ and (resugar_pat' :
           match p1.FStar_Syntax_Syntax.v with
           | FStar_Syntax_Syntax.Pat_constant c ->
               mk (FStar_Parser_AST.PatConst c)
-          | FStar_Syntax_Syntax.Pat_cons (fv, []) ->
+          | FStar_Syntax_Syntax.Pat_cons (fv, uu___, []) ->
               mk
                 (FStar_Parser_AST.PatName
                    ((fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v))
-          | FStar_Syntax_Syntax.Pat_cons (fv, args) when
+          | FStar_Syntax_Syntax.Pat_cons (fv, uu___, args) when
               (FStar_Ident.lid_equals
                  (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v
                  FStar_Parser_Const.nil_lid)
                 && (may_drop_implicits args)
               ->
-              ((let uu___1 =
-                  let uu___2 =
-                    let uu___3 = filter_pattern_imp args in
-                    FStar_Compiler_List.isEmpty uu___3 in
-                  Prims.op_Negation uu___2 in
-                if uu___1
+              ((let uu___2 =
+                  let uu___3 =
+                    let uu___4 = filter_pattern_imp args in
+                    FStar_Compiler_List.isEmpty uu___4 in
+                  Prims.op_Negation uu___3 in
+                if uu___2
                 then
                   FStar_Errors.log_issue p1.FStar_Syntax_Syntax.p
                     (FStar_Errors.Warning_NilGivenExplicitArgs,
                       "Prims.Nil given explicit arguments")
                 else ());
                mk (FStar_Parser_AST.PatList []))
-          | FStar_Syntax_Syntax.Pat_cons (fv, args) when
+          | FStar_Syntax_Syntax.Pat_cons (fv, uu___, args) when
               (FStar_Ident.lid_equals
                  (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v
                  FStar_Parser_Const.cons_lid)
                 && (may_drop_implicits args)
               ->
-              let uu___ = filter_pattern_imp args in
-              (match uu___ with
+              let uu___1 = filter_pattern_imp args in
+              (match uu___1 with
                | (hd, false)::(tl, false)::[] ->
                    let hd' = aux hd (FStar_Pervasives_Native.Some false) in
-                   let uu___1 = aux tl (FStar_Pervasives_Native.Some false) in
-                   (match uu___1 with
+                   let uu___2 = aux tl (FStar_Pervasives_Native.Some false) in
+                   (match uu___2 with
                     | { FStar_Parser_AST.pat = FStar_Parser_AST.PatList tl';
                         FStar_Parser_AST.prange = p2;_} ->
                         FStar_Parser_AST.mk_pattern
                           (FStar_Parser_AST.PatList (hd' :: tl')) p2
                     | tl' -> resugar_plain_pat_cons' fv [hd'; tl'])
                | args' ->
-                   ((let uu___2 =
-                       let uu___3 =
-                         let uu___4 =
+                   ((let uu___3 =
+                       let uu___4 =
+                         let uu___5 =
                            FStar_Compiler_Effect.op_Less_Bar
                              FStar_Compiler_Util.string_of_int
                              (FStar_Compiler_List.length args') in
                          FStar_Compiler_Util.format1
                            "Prims.Cons applied to %s explicit arguments"
-                           uu___4 in
-                       (FStar_Errors.Warning_ConsAppliedExplicitArgs, uu___3) in
-                     FStar_Errors.log_issue p1.FStar_Syntax_Syntax.p uu___2);
+                           uu___5 in
+                       (FStar_Errors.Warning_ConsAppliedExplicitArgs, uu___4) in
+                     FStar_Errors.log_issue p1.FStar_Syntax_Syntax.p uu___3);
                     resugar_plain_pat_cons fv args))
-          | FStar_Syntax_Syntax.Pat_cons (fv, args) when
+          | FStar_Syntax_Syntax.Pat_cons (fv, uu___, args) when
               (is_tuple_constructor_lid
                  (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v)
                 && (may_drop_implicits args)
@@ -2264,15 +2264,15 @@ and (resugar_pat' :
               let args1 =
                 FStar_Compiler_Effect.op_Bar_Greater args
                   (FStar_Compiler_List.filter_map
-                     (fun uu___ ->
-                        match uu___ with
+                     (fun uu___1 ->
+                        match uu___1 with
                         | (p2, is_implicit) ->
                             if is_implicit
                             then FStar_Pervasives_Native.None
                             else
-                              (let uu___2 =
+                              (let uu___3 =
                                  aux p2 (FStar_Pervasives_Native.Some false) in
-                               FStar_Pervasives_Native.Some uu___2))) in
+                               FStar_Pervasives_Native.Some uu___3))) in
               let is_dependent_tuple =
                 FStar_Parser_Const.is_dtuple_data_lid'
                   (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v in
@@ -2282,44 +2282,44 @@ and (resugar_pat' :
                  FStar_Syntax_Syntax.fv_delta = uu___1;
                  FStar_Syntax_Syntax.fv_qual = FStar_Pervasives_Native.Some
                    (FStar_Syntax_Syntax.Record_ctor (name, fields));_},
-               args)
+               uu___2, args)
               ->
               let fields1 =
-                let uu___2 =
+                let uu___3 =
                   FStar_Compiler_Effect.op_Bar_Greater fields
                     (FStar_Compiler_List.map
                        (fun f -> FStar_Ident.lid_of_ids [f])) in
-                FStar_Compiler_Effect.op_Bar_Greater uu___2
+                FStar_Compiler_Effect.op_Bar_Greater uu___3
                   FStar_Compiler_List.rev in
               let args1 =
-                let uu___2 =
+                let uu___3 =
                   FStar_Compiler_Effect.op_Bar_Greater args
                     (FStar_Compiler_List.map
-                       (fun uu___3 ->
-                          match uu___3 with
+                       (fun uu___4 ->
+                          match uu___4 with
                           | (p2, b) ->
                               aux p2 (FStar_Pervasives_Native.Some b))) in
-                FStar_Compiler_Effect.op_Bar_Greater uu___2
+                FStar_Compiler_Effect.op_Bar_Greater uu___3
                   FStar_Compiler_List.rev in
               let rec map2 l1 l2 =
                 match (l1, l2) with
                 | ([], []) -> []
                 | ([], hd::tl) -> []
                 | (hd::tl, []) ->
-                    let uu___2 = map2 tl [] in
+                    let uu___3 = map2 tl [] in
                     (hd,
                       (mk
                          (FStar_Parser_AST.PatWild
                             (FStar_Pervasives_Native.None, []))))
-                      :: uu___2
+                      :: uu___3
                 | (hd1::tl1, hd2::tl2) ->
-                    let uu___2 = map2 tl1 tl2 in (hd1, hd2) :: uu___2 in
+                    let uu___3 = map2 tl1 tl2 in (hd1, hd2) :: uu___3 in
               let args2 =
-                let uu___2 = map2 fields1 args1 in
-                FStar_Compiler_Effect.op_Bar_Greater uu___2
+                let uu___3 = map2 fields1 args1 in
+                FStar_Compiler_Effect.op_Bar_Greater uu___3
                   FStar_Compiler_List.rev in
               mk (FStar_Parser_AST.PatRecord args2)
-          | FStar_Syntax_Syntax.Pat_cons (fv, args) ->
+          | FStar_Syntax_Syntax.Pat_cons (fv, uu___, args) ->
               resugar_plain_pat_cons fv args
           | FStar_Syntax_Syntax.Pat_var v ->
               let uu___ =

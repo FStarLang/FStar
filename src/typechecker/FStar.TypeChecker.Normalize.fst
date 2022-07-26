@@ -450,14 +450,19 @@ and rebuild_closure cfg env stack t =
             match p.v with
             | Pat_constant _ ->
               p, env
-            | Pat_cons(fv, pats) ->
+            | Pat_cons(fv, us_opt, pats) ->
               let pats, env =
                   pats |> List.fold_left
                   (fun (pats, env) (p, b) ->
                     let p, env = norm_pat env p in (p,b)::pats, env)
                   ([], env)
               in
-              {p with v=Pat_cons(fv, List.rev pats)}, env
+              let us_opt =
+                match us_opt with
+                | None -> None
+                | Some us -> Some (List.map (norm_universe cfg env) us)
+              in
+              {p with v=Pat_cons(fv, us_opt, List.rev pats)}, env
             | Pat_var x ->
               let x = {x with sort=non_tail_inline_closure_env cfg env x.sort} in
               {p with v=Pat_var x}, dummy::env
@@ -2692,11 +2697,16 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
           in
           let rec norm_pat env p = match p.v with
             | Pat_constant _ -> p, env
-            | Pat_cons(fv, pats) ->
+            | Pat_cons(fv, us_opt, pats) ->
               let pats, env = pats |> List.fold_left (fun (pats, env) (p, b) ->
                     let p, env = norm_pat env p in
                     (p,b)::pats, env) ([], env) in
-              {p with v=Pat_cons(fv, List.rev pats)}, env
+              let us_opt =
+                match us_opt with
+                | None -> None
+                | Some us -> Some (List.map (norm_universe cfg env) us)
+              in
+              {p with v=Pat_cons(fv, us_opt, List.rev pats)}, env
             | Pat_var x ->
               let x = {x with sort=norm_or_whnf env x.sort} in
               {p with v=Pat_var x}, dummy::env
@@ -2724,7 +2734,7 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
           let maybe_commute_matches () =
             let can_commute =
                 match branches with
-                | ({v=Pat_cons(fv, _)}, _, _)::_ ->
+                | ({v=Pat_cons(fv, _, _)}, _, _)::_ ->
                   Env.fv_has_attr cfg.tcenv fv FStar.Parser.Const.commute_nested_matches_lid
                 | _ -> false in
             match (U.unascribe scrutinee).n with
@@ -2816,7 +2826,7 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
                   Inl []
                 | _ -> Inr (not (is_cons head)) //if it's not a constant, it may match
               end
-            | Pat_cons(fv, arg_pats) -> begin
+            | Pat_cons(fv, _, arg_pats) -> begin
               match (U.un_uinst head).n with
                 | Tm_fvar fv' when fv_eq fv fv' ->
                   matches_args [] args arg_pats

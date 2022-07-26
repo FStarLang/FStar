@@ -263,7 +263,7 @@ and (hash_pat :
     | FStar_Syntax_Syntax.Pat_constant c ->
         let uu___ = FStar_Hash.of_int (Prims.of_int (89)) in
         let uu___1 = hash_constant c in FStar_Hash.mix uu___ uu___1
-    | FStar_Syntax_Syntax.Pat_cons (fv, args) ->
+    | FStar_Syntax_Syntax.Pat_cons (fv, _us, args) ->
         let uu___ =
           let uu___1 = FStar_Hash.of_int (Prims.of_int (97)) in
           let uu___2 =
@@ -1105,10 +1105,11 @@ and (equal_pat :
         (match ((p1.FStar_Syntax_Syntax.v), (p2.FStar_Syntax_Syntax.v)) with
          | (FStar_Syntax_Syntax.Pat_constant c1,
             FStar_Syntax_Syntax.Pat_constant c2) -> equal_constant c1 c2
-         | (FStar_Syntax_Syntax.Pat_cons (fv1, args1),
-            FStar_Syntax_Syntax.Pat_cons (fv2, args2)) ->
-             (equal_fv fv1 fv2) &&
-               (equal_list (equal_pair equal_pat equal_poly) args1 args2)
+         | (FStar_Syntax_Syntax.Pat_cons (fv1, us1, args1),
+            FStar_Syntax_Syntax.Pat_cons (fv2, us2, args2)) ->
+             ((equal_fv fv1 fv2) &&
+                (equal_opt (equal_list equal_universe) us1 us2))
+               && (equal_list (equal_pair equal_pat equal_poly) args1 args2)
          | (FStar_Syntax_Syntax.Pat_var bv1, FStar_Syntax_Syntax.Pat_var bv2)
              -> equal_bv bv1 bv2
          | (FStar_Syntax_Syntax.Pat_wild bv1, FStar_Syntax_Syntax.Pat_wild

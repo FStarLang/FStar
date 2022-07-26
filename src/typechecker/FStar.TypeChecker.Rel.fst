@@ -2777,9 +2777,9 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
                   false
           in
           let tx = UF.new_transaction () in
-          let solve_sub_probs_if_head_types_equal wl = 
+          let solve_sub_probs_if_head_types_equal head_uvars_to_restrict wl =
               let sol = [TERM(ctx_uv, head)] in
-              let wl = restrict_all_uvars env ctx_uv [] uvars_head wl in
+              let wl = restrict_all_uvars env ctx_uv [] head_uvars_to_restrict wl in
               let wl = solve_prob orig None sol wl in
               
               let sub_probs, wl =
@@ -2806,7 +2806,12 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
                 inapplicable "Subprobs failed: " (Some lstring)
           in
           if U.eq_tm t_head (U.ctx_uvar_typ ctx_uv) = U.Equal
-          then solve_sub_probs_if_head_types_equal wl
+          then
+            //
+            // eq_tm doesn't unify, so uvars_head computed remains consistent
+            //   (see the second call to solve_sub_probs_if_head_types_equal below)
+            //
+            solve_sub_probs_if_head_types_equal uvars_head wl
           else (
               if Env.debug env (Options.Other "Rel")
               then BU.print2  "first-order: head type mismatch:\n\tlhs=%s\n\trhs=%s\n"
@@ -2818,7 +2823,14 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
               in
               match try_solve_probs_without_smt env wl typ_equality_prob with
               | Inl wl ->
-                solve_sub_probs_if_head_types_equal wl
+                //
+                // Some uvars from uvars_head list above may already be solved
+                //   or restricted, so recompute since solve_sub_probs_if_head_types_equal
+                //   will also try to restrict them
+                //
+                solve_sub_probs_if_head_types_equal
+                  (head |> Free.uvars |> BU.set_elements)
+                  wl
               | Inr msg ->
                 UF.rollback tx;
                 inapplicable "first-order: head type mismatch" (Some msg)

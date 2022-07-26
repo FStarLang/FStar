@@ -1,4 +1,5 @@
 module FStar.TypeChecker.Core
+open FStar.Compiler
 open FStar.Compiler.Util
 open FStar.Syntax.Syntax
 module Env = FStar.TypeChecker.Env
@@ -154,18 +155,19 @@ let check_bqual (b0 b1:bqual)
     | _ -> 
       fail "Binder qualifier mismatch"
 
+let mk_forall_l (us:universes) (xs:binders) (t:term) 
+  : term
+  = FStar.Compiler.List.fold_right2
+        (fun u x t -> U.mk_forall u x.binder_bv t)
+        us
+        xs
+        t
+    
 let close_guard (xs:binders) (us:universes) (g:precondition)
   : precondition
   = match g with
     | None -> None
-    | Some t -> 
-      Some (
-        FStar.Compiler.List.fold_right2
-          (fun u x t -> U.mk_forall u x.binder_bv t)
-          us
-          xs
-          t
-      )
+    | Some t -> Some (mk_forall_l us xs t)
 
 let close_guard_with_definition (x:binder) (u:universe) (t:term) (g:precondition)
   : precondition
@@ -221,7 +223,15 @@ let strengthen (p:term) (g:result 'a)
       match g ctx with
       | Inl (x, q) -> Inl (x, strengthen_subtyping_guard p q)
       | err -> err
-                           
+
+let no_guard (g:result 'a)
+  : result 'a
+  = fun ctx ->
+      match g ctx with
+      | Inl (x, None) -> Inl (x, None)
+      | Inl _ -> fail "Unexpected guard" ctx
+      | err -> err
+      
 let equatable t0 t1 =
   match (SS.compress t0).n, (SS.compress t1).n with
   | Tm_name _, _
@@ -274,6 +284,12 @@ let lookup (g:env) (e:term) : result typ =
        fun _ -> Inl he.he_res
      )
      else fail "not in cache"
+
+let check_no_escape (bs:binders) t =
+    let xs = FStar.Syntax.Free.names t in
+    if BU.for_all (fun b -> not (BU.set_mem b.binder_bv xs)) bs
+    then return ()
+    else fail "Name escapes its scope"
 
 (*
      G |- e : t0 <: t1 | p
@@ -514,7 +530,9 @@ and check' (g:env) (e:term)
       with_context "let subtyping" None (fun _ -> check_subtype g lb.lbdef tdef ttyp) ;;
       with_definition x u lb.lbdef (
         let g = push_binders g [x] in
-        check "let body" g body
+        t <-- check "let body" g body ;
+        check_no_escape [x] t;;
+        return t
       )
     ) 
     else (
@@ -523,6 +541,7 @@ and check' (g:env) (e:term)
     
   | Tm_match(sc, None, branches, rc_opt) ->
     t_sc <-- check "scrutinee" g sc ;
+    u_sc <-- universe_of g t_sc ;
     let rec check_branches path_condition
                            branch_typ_opt
                            branches
@@ -538,43 +557,44 @@ and check' (g:env) (e:term)
              return t)
           
         | (p, None, b) :: rest ->
-          let check_subtype_no_guard g tm t0 t1
-            : result unit
-            =
-              check_subtype g tm t0 t1 //TODO: but this shouldn't add a guard
-          in
-          let rec check_pat expected_pat_t g pat
-            : result (term & binders)
-            = match pat.n with
-              | Pat_constant c ->
-                let t = FStar.TypeChecker.TcTerm.tc_constant g.tcenv pat.pos c in
-                let tm = S.mk (Tm_constant c) pat.pos in
-                check_subtype_no_guard g tm expected_pat_t t ;;
-                return (tm, [])
+          match PatternUtils.raw_pat_as_exp g.tcenv p with
+          | None ->
+            fail "Ill-formed pattern"
 
-              | Pat_var bv
-              | Pat_wild bv ->
-                is_type g bv.sort ;;
-                let tm = S.bv_to_name bv in
-                check_subtype_no_guard g tm expected_pat_t bv.sort ;;
-                return (tm, [S.mk_binder bv])
-    
-              | Pat_dot_term (_, tm) ->
-                t <-- check "dot term" g tm ;
-                check_subtype_no_guard g tm expected_pat_t t ;;
-                return (tm, [])
-                
-              | Pat_cons (f, args) -> //     of fv * list (pat * bool)                      (* flag marks an explicitly provided implicit *)
-                begin
-                match Env.try_lookup_lid g.tcenv f.fv_name.v with
-                | None ->
-                  fail "Pattern constructor not found"
-
-                | Some ((us, tf), _) ->
-                  fail "Const patterns not handled yet"
-                end
-          in
-          fail "match not handled yet"
+          | Some (e, bvs) ->
+            let binders = List.map S.mk_binder bvs in
+            bs_g <-- check_binders g binders ;
+            let bs, us, g' = bs_g in
+            t <-- check "pattern term" g' e ;
+            no_guard (check_subtype g' e t_sc t) ;;
+            let pat_sc_eq = (U.mk_eq2 u_sc t_sc sc e) in
+            tbr <--
+              with_binders bs us 
+                (weaken 
+                  (U.mk_conj path_condition pat_sc_eq)
+                  (tbr <-- check "branch" g' b ;
+                   match branch_typ_opt with
+                   | None -> 
+                     check_no_escape bs tbr;;
+                     return tbr
+                   
+                   | Some expect_tbr ->
+                     check_subtype g' b tbr expect_tbr;;
+                     return expect_tbr));
+            let path_condition = 
+              U.mk_conj path_condition
+                        (mk_forall_l us bs (U.mk_neg pat_sc_eq))
+            in
+            match p.v with
+            | Pat_var _
+            | Pat_wild _ ->
+              //trivially exhaustive
+              (match rest with
+               | _ :: _ -> fail "Redundant branches after wildcard"
+               | _ -> return tbr)
+               
+            | _ ->
+              check_branches path_condition (Some tbr) rest
     in
     branch_typ_opt <-- (
       match rc_opt with

@@ -1,20 +1,21 @@
 # -*- Makefile -*-
 
 # --------------------------------------------------------------------
-MSBUILD = dotnet msbuild
+DOTNET = dotnet
 
 CONFIGURATION?=Release
 
-MSBUILD := $(MSBUILD) /verbosity:minimal /p:Configuration=$(CONFIGURATION)
+DOTNET_PARAMS = /verbosity:minimal /p:Configuration=$(CONFIGURATION)
 
 # --------------------------------------------------------------------
 .PHONY: all install-packages
 
 all: install-packages
-	$(MSBUILD) UlibFS.sln
+	$(DOTNET) build UlibFS.sln
+	$(DOTNET) pack ../ulibfs.fsproj -o ../../../nuget/
 
 install-packages:
-	$(MSBUILD) /t:Restore UlibFS.sln
+	$(DOTNET) restore $(DOTNET_PARAMS) UlibFS.sln
 
 clean:
-	$(MSBUILD) /t:clean UlibFS.sln
+	$(DOTNET) clean $(DOTNET_PARAMS) UlibFS.sln

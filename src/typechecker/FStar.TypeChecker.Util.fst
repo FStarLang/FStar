@@ -437,10 +437,16 @@ let extract_let_rec_annotation env {lbname=lbname; lbunivs=univ_vars; lbtyp=t; l
     | Pat_var x  ->
         [x], mk (Tm_name x)
 
-    | Pat_cons(fv, pats) ->
+    | Pat_cons(fv, us_opt, pats) ->
         let vars, args = pats |> List.map pat_as_arg |> List.unzip in
         let vars = List.flatten vars in
-        vars,  mk (Tm_app(Syntax.fv_to_tm fv, args))
+        let head = Syntax.fv_to_tm fv in
+        let head = 
+          match us_opt with
+          | None -> head
+          | Some us -> S.mk_Tm_uinst head us
+        in
+        vars,  mk (Tm_app(head, args))
 
     | Pat_dot_term(x, e) ->
         [], e

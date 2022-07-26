@@ -116,7 +116,7 @@ and hash_branch b =
 and hash_pat p =
   match p.v with
   | Pat_constant c -> H.mix (H.of_int 89) (hash_constant c)
-  | Pat_cons(fv, args) ->
+  | Pat_cons(fv, _us, args) ->
     mix_list_lit
       [H.of_int 97;
        hash_fv fv;
@@ -499,8 +499,9 @@ and equal_pat p1 p2 =
   match p1.v, p2.v with
   | Pat_constant c1, Pat_constant c2 ->
     equal_constant c1 c2
-  | Pat_cons(fv1, args1), Pat_cons(fv2, args2) ->
+  | Pat_cons(fv1, us1, args1), Pat_cons(fv2, us2, args2) ->
     equal_fv fv1 fv2 &&
+    equal_opt (equal_list equal_universe) us1 us2 &&
     equal_list (equal_pair equal_pat equal_poly) args1 args2
   | Pat_var bv1, Pat_var bv2 ->
     equal_bv bv1 bv2
