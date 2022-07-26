@@ -521,11 +521,74 @@ and check' (g:env) (e:term)
       fail "Let binding is effectful"
     )
     
-  | Tm_match(sc, None, branches, Some ({ residual_typ = Some t })) ->
-    fail "Match is not handled yet"
+  | Tm_match(sc, None, branches, rc_opt) ->
+    t_sc <-- check "scrutinee" g sc ;
+    let rec check_branches path_condition
+                           branch_typ_opt
+                           branches
+      : result typ
+      = match branches with
+        | [] ->
+          (match branch_typ_opt with
+           | None ->
+             fail "could not compute a type for the match"
+
+           | Some t ->
+             guard (U.mk_imp path_condition U.t_false);;
+             return t)
+          
+        | (p, None, b) :: rest ->
+          let check_subtype_no_guard g tm t0 t1
+            : result unit
+            =
+              check_subtype g tm t0 t1 //TODO: but this shouldn't add a guard
+          in
+          let rec check_pat expected_pat_t g pat
+            : result (term & binders)
+            = match pat.n with
+              | Pat_constant c ->
+                let t = FStar.TypeChecker.TcTerm.tc_constant g.tcenv pat.pos c in
+                let tm = S.mk (Tm_constant c) pat.pos in
+                check_subtype_no_guard g tm expected_pat_t t ;;
+                return (tm, [])
+
+              | Pat_var bv
+              | Pat_wild bv ->
+                is_type g bv.sort ;;
+                let tm = S.bv_to_name bv in
+                check_subtype_no_guard g tm expected_pat_t bv.sort ;;
+                return (tm, [S.mk_binder bv])
+    
+              | Pat_dot_term (_, tm) ->
+                t <-- check "dot term" g tm ;
+                check_subtype_no_guard g tm expected_pat_t t ;;
+                return (tm, [])
+                
+              | Pat_cons (f, args) -> //     of fv * list (pat * bool)                      (* flag marks an explicitly provided implicit *)
+                begin
+                match Env.try_lookup_lid g.tcenv f.fv_name.v with
+                | None ->
+                  fail "Pattern constructor not found"
+
+                | Some ((us, tf), _) ->
+                  fail "Const patterns not handled yet"
+                end
+          in
+          fail "match not handled yet"
+    in
+    branch_typ_opt <-- (
+      match rc_opt with
+      | Some ({ residual_typ = Some t }) ->
+        is_type g t ;;
+        return (Some t)
+        
+      | _ ->
+        return None
+    );
+    check_branches U.t_true branch_typ_opt branches
 
   | Tm_match _ ->
-    fail "Match is not handled yet"  
+    fail "Match with returns clause is not handled yet"  
     
   | _ -> 
     fail (BU.format1 "Unexpected term: %s" (FStar.Syntax.Print.tag_of_term e))
