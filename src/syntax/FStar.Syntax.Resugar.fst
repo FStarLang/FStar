@@ -1157,16 +1157,16 @@ and resugar_pat' env (p:S.pat) (branch_bv: set bv) : A.pattern =
     match p.v with
     | Pat_constant c -> mk (A.PatConst c)
 
-    | Pat_cons (fv, []) ->
+    | Pat_cons (fv, _, []) ->
       mk (A.PatName fv.fv_name.v)
 
-    | Pat_cons(fv, args) when (lid_equals fv.fv_name.v C.nil_lid
+    | Pat_cons(fv, _, args) when (lid_equals fv.fv_name.v C.nil_lid
                                && may_drop_implicits args) ->
       if not (List.isEmpty (filter_pattern_imp args)) then
         E.log_issue p.p (E.Warning_NilGivenExplicitArgs, "Prims.Nil given explicit arguments");
       mk (A.PatList [])
 
-    | Pat_cons(fv, args) when (lid_equals fv.fv_name.v C.cons_lid
+    | Pat_cons(fv, _, args) when (lid_equals fv.fv_name.v C.cons_lid
                                && may_drop_implicits args) ->
       (match filter_pattern_imp args with
        | [(hd, false); (tl, false)] ->
@@ -1180,7 +1180,7 @@ and resugar_pat' env (p:S.pat) (branch_bv: set bv) : A.pattern =
              (string_of_int <| List.length args')));
          resugar_plain_pat_cons fv args)
 
-    | Pat_cons(fv, args) when (is_tuple_constructor_lid fv.fv_name.v
+    | Pat_cons(fv, _, args) when (is_tuple_constructor_lid fv.fv_name.v
                                && may_drop_implicits args) ->
       let args =
         args |>
@@ -1189,7 +1189,7 @@ and resugar_pat' env (p:S.pat) (branch_bv: set bv) : A.pattern =
       let is_dependent_tuple = C.is_dtuple_data_lid' fv.fv_name.v in
       mk (A.PatTuple (args, is_dependent_tuple))
 
-    | Pat_cons({fv_qual=Some (Record_ctor(name, fields))}, args) ->
+    | Pat_cons({fv_qual=Some (Record_ctor(name, fields))}, _, args) ->
       // reverse the fields and args list to match them since the args added by the type checker
       // are inserted in the front of the args list.
       let fields = fields |> List.map (fun f -> FStar.Ident.lid_of_ids [f]) |> List.rev in
@@ -1205,7 +1205,7 @@ and resugar_pat' env (p:S.pat) (branch_bv: set bv) : A.pattern =
       let args = map2 fields args |> List.rev in
       mk (A.PatRecord(args))
 
-    | Pat_cons (fv, args) ->
+    | Pat_cons (fv, _, args) ->
       resugar_plain_pat_cons fv args
 
     | Pat_var v ->

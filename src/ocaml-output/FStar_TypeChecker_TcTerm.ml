@@ -8098,7 +8098,7 @@ and (tc_pat :
                   FStar_Syntax_Syntax.fv_delta = uu___2;
                   FStar_Syntax_Syntax.fv_qual = FStar_Pervasives_Native.Some
                     (FStar_Syntax_Syntax.Unresolved_constructor uc);_},
-                sub_pats)
+                us_opt, sub_pats)
                ->
                let uu___3 =
                  FStar_TypeChecker_Util.find_record_or_dc_from_typ env1
@@ -8131,13 +8131,13 @@ and (tc_pat :
                       {
                         FStar_Syntax_Syntax.v =
                           (FStar_Syntax_Syntax.Pat_cons
-                             (constructor_fv, sub_pats1));
+                             (constructor_fv, us_opt, sub_pats1));
                         FStar_Syntax_Syntax.p = (p.FStar_Syntax_Syntax.p)
                       } in
                     let p2 =
                       FStar_TypeChecker_PatternUtils.elaborate_pat env1 p1 in
                     check_nested_pattern env1 p2 t)
-           | FStar_Syntax_Syntax.Pat_cons (fv, sub_pats) ->
+           | FStar_Syntax_Syntax.Pat_cons (fv, us_opt, sub_pats) ->
                let simple_pat =
                  let simple_sub_pats =
                    FStar_Compiler_List.map
@@ -8161,7 +8161,8 @@ and (tc_pat :
                                  (uu___3, b))) sub_pats in
                  {
                    FStar_Syntax_Syntax.v =
-                     (FStar_Syntax_Syntax.Pat_cons (fv, simple_sub_pats));
+                     (FStar_Syntax_Syntax.Pat_cons
+                        (fv, FStar_Pervasives_Native.None, simple_sub_pats));
                    FStar_Syntax_Syntax.p = (p.FStar_Syntax_Syntax.p)
                  } in
                let sub_pats1 =
@@ -8361,16 +8362,34 @@ and (tc_pat :
                                         | uu___6 ->
                                             failwith
                                               "Impossible: expected a simple pattern") in
+                                 let us =
+                                   let uu___6 =
+                                     FStar_Syntax_Util.head_and_args
+                                       simple_pat_e1 in
+                                   match uu___6 with
+                                   | (hd, uu___7) ->
+                                       let uu___8 =
+                                         let uu___9 =
+                                           FStar_Syntax_Subst.compress hd in
+                                         uu___9.FStar_Syntax_Syntax.n in
+                                       (match uu___8 with
+                                        | FStar_Syntax_Syntax.Tm_fvar uu___9
+                                            -> []
+                                        | FStar_Syntax_Syntax.Tm_uinst
+                                            (uu___9, us1) -> us1
+                                        | uu___9 -> failwith "Impossible") in
                                  match pat.FStar_Syntax_Syntax.v with
                                  | FStar_Syntax_Syntax.Pat_cons
-                                     (fv1, simple_pats) ->
+                                     (fv1, uu___6, simple_pats) ->
                                      let nested_pats =
                                        aux simple_pats simple_bvs1
                                          checked_sub_pats in
                                      {
                                        FStar_Syntax_Syntax.v =
                                          (FStar_Syntax_Syntax.Pat_cons
-                                            (fv1, nested_pats));
+                                            (fv1,
+                                              (FStar_Pervasives_Native.Some
+                                                 us), nested_pats));
                                        FStar_Syntax_Syntax.p =
                                          (pat.FStar_Syntax_Syntax.p)
                                      }
@@ -8738,100 +8757,101 @@ and (tc_eqn :
                                                               pat_exp2 in
                                                           [uu___18])
                                                  | (FStar_Syntax_Syntax.Pat_cons
-                                                    (uu___12, []),
+                                                    (uu___12, uu___13, []),
                                                     FStar_Syntax_Syntax.Tm_uinst
-                                                    uu___13) ->
+                                                    uu___14) ->
                                                      let f =
                                                        head_constructor
                                                          pat_exp2 in
-                                                     let uu___14 =
-                                                       let uu___15 =
+                                                     let uu___15 =
+                                                       let uu___16 =
                                                          FStar_TypeChecker_Env.is_datacon
                                                            env
                                                            f.FStar_Syntax_Syntax.v in
                                                        Prims.op_Negation
-                                                         uu___15 in
-                                                     if uu___14
+                                                         uu___16 in
+                                                     if uu___15
                                                      then
                                                        failwith
                                                          "Impossible: nullary patterns must be data constructors"
                                                      else
-                                                       (let uu___16 =
+                                                       (let uu___17 =
                                                           force_scrutinee () in
-                                                        let uu___17 =
+                                                        let uu___18 =
                                                           head_constructor
                                                             pat_exp2 in
-                                                        discriminate uu___16
-                                                          uu___17)
+                                                        discriminate uu___17
+                                                          uu___18)
                                                  | (FStar_Syntax_Syntax.Pat_cons
-                                                    (uu___12, []),
+                                                    (uu___12, uu___13, []),
                                                     FStar_Syntax_Syntax.Tm_fvar
-                                                    uu___13) ->
+                                                    uu___14) ->
                                                      let f =
                                                        head_constructor
                                                          pat_exp2 in
-                                                     let uu___14 =
-                                                       let uu___15 =
+                                                     let uu___15 =
+                                                       let uu___16 =
                                                          FStar_TypeChecker_Env.is_datacon
                                                            env
                                                            f.FStar_Syntax_Syntax.v in
                                                        Prims.op_Negation
-                                                         uu___15 in
-                                                     if uu___14
+                                                         uu___16 in
+                                                     if uu___15
                                                      then
                                                        failwith
                                                          "Impossible: nullary patterns must be data constructors"
                                                      else
-                                                       (let uu___16 =
+                                                       (let uu___17 =
                                                           force_scrutinee () in
-                                                        let uu___17 =
+                                                        let uu___18 =
                                                           head_constructor
                                                             pat_exp2 in
-                                                        discriminate uu___16
-                                                          uu___17)
+                                                        discriminate uu___17
+                                                          uu___18)
                                                  | (FStar_Syntax_Syntax.Pat_cons
-                                                    (uu___12, pat_args),
+                                                    (uu___12, uu___13,
+                                                     pat_args),
                                                     FStar_Syntax_Syntax.Tm_app
                                                     (head, args)) ->
                                                      let f =
                                                        head_constructor head in
-                                                     let uu___13 =
-                                                       (let uu___14 =
+                                                     let uu___14 =
+                                                       (let uu___15 =
                                                           FStar_TypeChecker_Env.is_datacon
                                                             env
                                                             f.FStar_Syntax_Syntax.v in
                                                         Prims.op_Negation
-                                                          uu___14)
+                                                          uu___15)
                                                          ||
                                                          ((FStar_Compiler_List.length
                                                              pat_args)
                                                             <>
                                                             (FStar_Compiler_List.length
                                                                args)) in
-                                                     if uu___13
+                                                     if uu___14
                                                      then
                                                        failwith
                                                          "Impossible: application patterns must be fully-applied data constructors"
                                                      else
                                                        (let sub_term_guards =
-                                                          let uu___15 =
-                                                            let uu___16 =
+                                                          let uu___16 =
+                                                            let uu___17 =
                                                               FStar_Compiler_List.zip
                                                                 pat_args args in
                                                             FStar_Compiler_Effect.op_Bar_Greater
-                                                              uu___16
+                                                              uu___17
                                                               (FStar_Compiler_List.mapi
                                                                  (fun i ->
                                                                     fun
-                                                                    uu___17
+                                                                    uu___18
                                                                     ->
-                                                                    match uu___17
+                                                                    match uu___18
                                                                     with
                                                                     | 
                                                                     ((pi,
-                                                                    uu___18),
+                                                                    uu___19),
                                                                     (ei,
-                                                                    uu___19))
+                                                                    uu___20))
                                                                     ->
                                                                     let projector
                                                                     =
@@ -8841,65 +8861,65 @@ and (tc_eqn :
                                                                     i in
                                                                     let scrutinee_tm2
                                                                     =
-                                                                    let uu___20
+                                                                    let uu___21
                                                                     =
                                                                     FStar_TypeChecker_Env.try_lookup_lid
                                                                     env
                                                                     projector in
-                                                                    match uu___20
+                                                                    match uu___21
                                                                     with
                                                                     | 
                                                                     FStar_Pervasives_Native.None
                                                                     ->
                                                                     FStar_Pervasives_Native.None
                                                                     | 
-                                                                    uu___21
+                                                                    uu___22
                                                                     ->
                                                                     let proj
                                                                     =
-                                                                    let uu___22
+                                                                    let uu___23
                                                                     =
                                                                     FStar_Ident.set_lid_range
                                                                     projector
                                                                     f.FStar_Syntax_Syntax.p in
                                                                     FStar_Syntax_Syntax.fvar
-                                                                    uu___22
+                                                                    uu___23
                                                                     (FStar_Syntax_Syntax.Delta_equational_at_level
                                                                     Prims.int_one)
                                                                     FStar_Pervasives_Native.None in
-                                                                    let uu___22
-                                                                    =
                                                                     let uu___23
                                                                     =
                                                                     let uu___24
                                                                     =
                                                                     let uu___25
                                                                     =
+                                                                    let uu___26
+                                                                    =
                                                                     force_scrutinee
                                                                     () in
                                                                     FStar_Syntax_Syntax.as_arg
-                                                                    uu___25 in
-                                                                    [uu___24] in
+                                                                    uu___26 in
+                                                                    [uu___25] in
                                                                     FStar_Syntax_Syntax.mk_Tm_app
                                                                     proj
-                                                                    uu___23
+                                                                    uu___24
                                                                     f.FStar_Syntax_Syntax.p in
                                                                     FStar_Pervasives_Native.Some
-                                                                    uu___22 in
+                                                                    uu___23 in
                                                                     build_branch_guard
                                                                     scrutinee_tm2
                                                                     pi ei)) in
                                                           FStar_Compiler_Effect.op_Bar_Greater
-                                                            uu___15
+                                                            uu___16
                                                             FStar_Compiler_List.flatten in
-                                                        let uu___15 =
-                                                          let uu___16 =
+                                                        let uu___16 =
+                                                          let uu___17 =
                                                             force_scrutinee
                                                               () in
                                                           discriminate
-                                                            uu___16 f in
+                                                            uu___17 f in
                                                         FStar_Compiler_List.op_At
-                                                          uu___15
+                                                          uu___16
                                                           sub_term_guards)
                                                  | (FStar_Syntax_Syntax.Pat_dot_term
                                                     uu___12, uu___13) -> []

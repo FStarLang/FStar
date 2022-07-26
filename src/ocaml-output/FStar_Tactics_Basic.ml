@@ -5286,6 +5286,8 @@ let (t_destruct :
                                                                     mk_pat
                                                                     (FStar_Syntax_Syntax.Pat_cons
                                                                     (fv1,
+                                                                    (FStar_Pervasives_Native.Some
+                                                                    a_us),
                                                                     subpats)) in
                                                                     let env1
                                                                     =
@@ -5861,7 +5863,7 @@ let rec (inspect :
                  | FStar_Syntax_Syntax.Pat_constant c ->
                      let uu___3 = FStar_Reflection_Basic.inspect_const c in
                      FStar_Reflection_Data.Pat_Constant uu___3
-                 | FStar_Syntax_Syntax.Pat_cons (fv, ps) ->
+                 | FStar_Syntax_Syntax.Pat_cons (fv, us_opt, ps) ->
                      let uu___3 =
                        let uu___4 =
                          FStar_Compiler_List.map
@@ -5870,7 +5872,7 @@ let rec (inspect :
                               | (p1, b) ->
                                   let uu___6 = inspect_pat p1 in (uu___6, b))
                            ps in
-                       (fv, uu___4) in
+                       (fv, us_opt, uu___4) in
                      FStar_Reflection_Data.Pat_Cons uu___3
                  | FStar_Syntax_Syntax.Pat_var bv ->
                      FStar_Reflection_Data.Pat_Var bv
@@ -6004,7 +6006,7 @@ let (pack' :
                   let uu___1 = FStar_Reflection_Basic.pack_const c in
                   FStar_Syntax_Syntax.Pat_constant uu___1 in
                 FStar_Compiler_Effect.op_Less_Bar wrap uu___
-            | FStar_Reflection_Data.Pat_Cons (fv, ps) ->
+            | FStar_Reflection_Data.Pat_Cons (fv, us_opt, ps) ->
                 let uu___ =
                   let uu___1 =
                     let uu___2 =
@@ -6013,7 +6015,7 @@ let (pack' :
                            match uu___3 with
                            | (p1, b) ->
                                let uu___4 = pack_pat p1 in (uu___4, b)) ps in
-                    (fv, uu___2) in
+                    (fv, us_opt, uu___2) in
                   FStar_Syntax_Syntax.Pat_cons uu___1 in
                 FStar_Compiler_Effect.op_Less_Bar wrap uu___
             | FStar_Reflection_Data.Pat_Var bv ->

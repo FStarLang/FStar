@@ -20,9 +20,9 @@ let rec (elaborate_pat :
              FStar_Syntax_Syntax.fv_delta = uu___1;
              FStar_Syntax_Syntax.fv_qual = FStar_Pervasives_Native.Some
                (FStar_Syntax_Syntax.Unresolved_constructor uu___2);_},
-           uu___3)
+           uu___3, uu___4)
           -> p
-      | FStar_Syntax_Syntax.Pat_cons (fv, pats) ->
+      | FStar_Syntax_Syntax.Pat_cons (fv, us_opt, pats) ->
           let pats1 =
             FStar_Compiler_List.map
               (fun uu___ ->
@@ -154,7 +154,8 @@ let rec (elaborate_pat :
                                let uu___6 = aux formals' pats' in uu___5 ::
                                  uu___6) in
                     let uu___4 =
-                      let uu___5 = let uu___6 = aux f pats1 in (fv, uu___6) in
+                      let uu___5 =
+                        let uu___6 = aux f pats1 in (fv, us_opt, uu___6) in
                       FStar_Syntax_Syntax.Pat_cons uu___5 in
                     {
                       FStar_Syntax_Syntax.v = uu___4;
@@ -170,11 +171,12 @@ let (uu___is_Raw_pat_cannot_be_translated : Prims.exn -> Prims.bool) =
 let (raw_pat_as_exp :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.pat ->
-      FStar_Syntax_Syntax.term FStar_Pervasives_Native.option)
+      (FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.bv Prims.list)
+        FStar_Pervasives_Native.option)
   =
   fun env ->
     fun p ->
-      let rec aux p1 =
+      let rec aux bs p1 =
         match p1.FStar_Syntax_Syntax.v with
         | FStar_Syntax_Syntax.Pat_constant c ->
             let e =
@@ -187,36 +189,57 @@ let (raw_pat_as_exp :
               | uu___ ->
                   FStar_Syntax_Syntax.mk (FStar_Syntax_Syntax.Tm_constant c)
                     p1.FStar_Syntax_Syntax.p in
-            e
+            (e, bs)
         | FStar_Syntax_Syntax.Pat_dot_term (uu___, t) ->
             let t1 = FStar_Syntax_Subst.compress t in
             (match t1.FStar_Syntax_Syntax.n with
              | FStar_Syntax_Syntax.Tm_unknown ->
                  FStar_Compiler_Effect.raise Raw_pat_cannot_be_translated
-             | uu___1 -> t1)
+             | uu___1 -> (t1, bs))
         | FStar_Syntax_Syntax.Pat_wild x ->
-            FStar_Syntax_Syntax.mk (FStar_Syntax_Syntax.Tm_name x)
-              p1.FStar_Syntax_Syntax.p
+            let uu___ =
+              FStar_Syntax_Syntax.mk (FStar_Syntax_Syntax.Tm_name x)
+                p1.FStar_Syntax_Syntax.p in
+            (uu___, (x :: bs))
         | FStar_Syntax_Syntax.Pat_var x ->
-            FStar_Syntax_Syntax.mk (FStar_Syntax_Syntax.Tm_name x)
-              p1.FStar_Syntax_Syntax.p
-        | FStar_Syntax_Syntax.Pat_cons (fv, pats) ->
-            let args =
-              FStar_Compiler_List.map
-                (fun uu___ ->
-                   match uu___ with
-                   | (p2, i) ->
-                       let uu___1 = aux p2 in
-                       let uu___2 = FStar_Syntax_Syntax.as_aqual_implicit i in
-                       (uu___1, uu___2)) pats in
-            let hd = FStar_Syntax_Syntax.fv_to_tm fv in
-            let e =
-              FStar_Syntax_Syntax.mk_Tm_app hd args p1.FStar_Syntax_Syntax.p in
-            e in
+            let uu___ =
+              FStar_Syntax_Syntax.mk (FStar_Syntax_Syntax.Tm_name x)
+                p1.FStar_Syntax_Syntax.p in
+            (uu___, (x :: bs))
+        | FStar_Syntax_Syntax.Pat_cons (fv, us_opt, pats) ->
+            let uu___ =
+              FStar_Compiler_List.fold_right
+                (fun uu___1 ->
+                   fun uu___2 ->
+                     match (uu___1, uu___2) with
+                     | ((p2, i), (args, bs1)) ->
+                         let uu___3 = aux bs1 p2 in
+                         (match uu___3 with
+                          | (ep, bs2) ->
+                              let uu___4 =
+                                let uu___5 =
+                                  let uu___6 =
+                                    FStar_Syntax_Syntax.as_aqual_implicit i in
+                                  (ep, uu___6) in
+                                uu___5 :: args in
+                              (uu___4, bs2))) pats ([], bs) in
+            (match uu___ with
+             | (args, bs1) ->
+                 let hd = FStar_Syntax_Syntax.fv_to_tm fv in
+                 let hd1 =
+                   match us_opt with
+                   | FStar_Pervasives_Native.None -> hd
+                   | FStar_Pervasives_Native.Some us ->
+                       FStar_Syntax_Syntax.mk_Tm_uinst hd us in
+                 let e =
+                   FStar_Syntax_Syntax.mk_Tm_app hd1 args
+                     p1.FStar_Syntax_Syntax.p in
+                 (e, bs1)) in
       try
         (fun uu___ ->
            match () with
-           | () -> let uu___1 = aux p in FStar_Pervasives_Native.Some uu___1)
+           | () ->
+               let uu___1 = aux [] p in FStar_Pervasives_Native.Some uu___1)
           ()
       with | Raw_pat_cannot_be_translated -> FStar_Pervasives_Native.None
 let (pat_as_exp :
@@ -334,7 +357,7 @@ let (pat_as_exp :
                          (FStar_Syntax_Syntax.Tm_name x1)
                          p1.FStar_Syntax_Syntax.p in
                      ([x1], [x1], [], env2, e, g, p1))
-            | FStar_Syntax_Syntax.Pat_cons (fv, pats) ->
+            | FStar_Syntax_Syntax.Pat_cons (fv, _us_opt, pats) ->
                 let uu___ =
                   FStar_Compiler_Effect.op_Bar_Greater pats
                     (FStar_Compiler_List.fold_left
@@ -360,46 +383,53 @@ let (pat_as_exp :
                          FStar_TypeChecker_Common.trivial_guard, [])) in
                 (match uu___ with
                  | (b, a, w, env2, args, guard, pats1) ->
-                     let hd =
-                       let hd1 = FStar_Syntax_Syntax.fv_to_tm fv in
+                     let uu___1 =
+                       let hd = FStar_Syntax_Syntax.fv_to_tm fv in
                        if Prims.op_Negation inst_pat_cons_univs
-                       then hd1
+                       then (hd, FStar_Pervasives_Native.None)
                        else
-                         (let uu___2 =
-                            let uu___3 = FStar_Syntax_Syntax.lid_of_fv fv in
-                            FStar_TypeChecker_Env.lookup_datacon env2 uu___3 in
-                          match uu___2 with
-                          | (us, uu___3) ->
+                         (let uu___3 =
+                            let uu___4 = FStar_Syntax_Syntax.lid_of_fv fv in
+                            FStar_TypeChecker_Env.lookup_datacon env2 uu___4 in
+                          match uu___3 with
+                          | (us, uu___4) ->
                               if
                                 (FStar_Compiler_List.length us) =
                                   Prims.int_zero
-                              then hd1
-                              else FStar_Syntax_Syntax.mk_Tm_uinst hd1 us) in
-                     let e =
-                       let uu___1 =
-                         FStar_Compiler_Effect.op_Bar_Greater args
-                           FStar_Compiler_List.rev in
-                       FStar_Syntax_Syntax.mk_Tm_app hd uu___1
-                         p1.FStar_Syntax_Syntax.p in
-                     let uu___1 =
-                       FStar_Compiler_Effect.op_Bar_Greater
-                         (FStar_Compiler_List.rev b)
-                         FStar_Compiler_List.flatten in
-                     let uu___2 =
-                       FStar_Compiler_Effect.op_Bar_Greater
-                         (FStar_Compiler_List.rev a)
-                         FStar_Compiler_List.flatten in
-                     let uu___3 =
-                       FStar_Compiler_Effect.op_Bar_Greater
-                         (FStar_Compiler_List.rev w)
-                         FStar_Compiler_List.flatten in
-                     (uu___1, uu___2, uu___3, env2, e, guard,
-                       {
-                         FStar_Syntax_Syntax.v =
-                           (FStar_Syntax_Syntax.Pat_cons
-                              (fv, (FStar_Compiler_List.rev pats1)));
-                         FStar_Syntax_Syntax.p = (p1.FStar_Syntax_Syntax.p)
-                       })) in
+                              then (hd, (FStar_Pervasives_Native.Some []))
+                              else
+                                (let uu___6 =
+                                   FStar_Syntax_Syntax.mk_Tm_uinst hd us in
+                                 (uu___6, (FStar_Pervasives_Native.Some us)))) in
+                     (match uu___1 with
+                      | (hd, us_opt) ->
+                          let e =
+                            let uu___2 =
+                              FStar_Compiler_Effect.op_Bar_Greater args
+                                FStar_Compiler_List.rev in
+                            FStar_Syntax_Syntax.mk_Tm_app hd uu___2
+                              p1.FStar_Syntax_Syntax.p in
+                          let uu___2 =
+                            FStar_Compiler_Effect.op_Bar_Greater
+                              (FStar_Compiler_List.rev b)
+                              FStar_Compiler_List.flatten in
+                          let uu___3 =
+                            FStar_Compiler_Effect.op_Bar_Greater
+                              (FStar_Compiler_List.rev a)
+                              FStar_Compiler_List.flatten in
+                          let uu___4 =
+                            FStar_Compiler_Effect.op_Bar_Greater
+                              (FStar_Compiler_List.rev w)
+                              FStar_Compiler_List.flatten in
+                          (uu___2, uu___3, uu___4, env2, e, guard,
+                            {
+                              FStar_Syntax_Syntax.v =
+                                (FStar_Syntax_Syntax.Pat_cons
+                                   (fv, us_opt,
+                                     (FStar_Compiler_List.rev pats1)));
+                              FStar_Syntax_Syntax.p =
+                                (p1.FStar_Syntax_Syntax.p)
+                            }))) in
           let one_pat env1 p1 =
             let p2 = elaborate_pat env1 p1 in
             let uu___ = pat_as_arg_with_env env1 p2 in

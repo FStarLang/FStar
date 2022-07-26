@@ -1595,7 +1595,7 @@ let t_destruct (s_tm : term) : tac (list (fv * Z.t)) = wrap_err "destruct" <|
                         let subpats_2 = List.map (fun ({binder_bv=bv;binder_qual=bq}) ->
                                                  (mk_pat (Pat_var bv), is_imp bq)) bs in
                         let subpats = subpats_1 @ subpats_2 in
-                        let pat = mk_pat (Pat_cons (fv, subpats)) in
+                        let pat = mk_pat (Pat_cons (fv, Some a_us, subpats)) in
                         let env = (goal_env g) in
 
 
@@ -1773,7 +1773,7 @@ let rec inspect (t:term) : tac term_view = wrap_err "inspect" (
         let rec inspect_pat p =
             match p.v with
             | Pat_constant c -> Pat_Constant (inspect_const c)
-            | Pat_cons (fv, ps) -> Pat_Cons (fv, List.map (fun (p, b) -> inspect_pat p, b) ps)
+            | Pat_cons (fv, us_opt, ps) -> Pat_Cons (fv, us_opt, List.map (fun (p, b) -> inspect_pat p, b) ps)
             | Pat_var bv -> Pat_Var bv
             | Pat_wild bv -> Pat_Wild bv
             | Pat_dot_term (bv, t) -> Pat_Dot_Term (bv, t)
@@ -1842,7 +1842,7 @@ let pack' (tv:term_view) (leave_curried:bool) : tac term =
         let rec pack_pat p : S.pat =
             match p with
             | Pat_Constant c -> wrap <| Pat_constant (pack_const c)
-            | Pat_Cons (fv, ps) -> wrap <| Pat_cons (fv, List.map (fun (p, b) -> pack_pat p, b) ps)
+            | Pat_Cons (fv, us_opt, ps) -> wrap <| Pat_cons (fv, us_opt, List.map (fun (p, b) -> pack_pat p, b) ps)
             | Pat_Var  bv -> wrap <| Pat_var bv
             | Pat_Wild bv -> wrap <| Pat_wild bv
             | Pat_Dot_Term (bv, t) -> wrap <| Pat_dot_term (bv, t)
