@@ -97,6 +97,23 @@ let free (#a:Type0)
   = coerce_steel(fun _ -> R.free_pt r);
     return ()
 
+let with_local
+  (#t: Type)
+  (init: t)
+  (#pre: vprop)
+  (#ret_t: Type)
+  (#post: ret_t -> vprop)
+  (body: (r: ref t) ->
+    STT ret_t
+    (pts_to r full_perm init `star` pre)
+    (fun v -> exists_ (pts_to r full_perm) `star` post v)
+  )
+: STF ret_t pre post True (fun _ -> True)
+= let r = alloc init in
+  let v = body r in
+  let _ = elim_exists () in
+  free r;
+  return v
 
 let share (#a:Type0)
           (#uses:_)

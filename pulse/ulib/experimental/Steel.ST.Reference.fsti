@@ -120,6 +120,43 @@ val free (#a:Type0)
   : STT unit
     (pts_to r full_perm v) (fun _ -> emp)
 
+/// Executes a code block with a local variable temporarily allocated
+/// on the stack. This function is declared in the `STF` effect so
+/// that the pre- and post-resources can be properly inferred by the
+/// Steel tactic from the caller's context.
+///
+/// `with_local init body` is to have primitive extraction, behaving
+/// similarly as the following Low* code:
+///
+/// <<<
+/// push_frame ();
+/// let r = alloca 1ul init in
+/// let res = body r in
+/// pop_frame ();
+/// r
+/// >>>
+///
+/// and thus, is to be extracted to C as:
+/// <<<
+/// ret_t res;
+/// {
+///   t r = init;
+///   res = <body r>;
+/// }
+/// >>>
+val with_local
+  (#t: Type)
+  (init: t)
+  (#pre: vprop)
+  (#ret_t: Type)
+  (#post: ret_t -> vprop)
+  (body: (r: ref t) ->
+    STT ret_t
+    (pts_to r full_perm init `star` pre)
+    (fun v -> exists_ (pts_to r full_perm) `star` post v)
+  )
+: STF ret_t pre post True (fun _ -> True)
+
 /// Splits the permission on reference [r] into two. This function is
 /// computationally irrelevant (it has effect SteelGhost)
 val share (#a:Type0)
