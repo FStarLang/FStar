@@ -94,9 +94,9 @@ let is_type (g:env) (t:term)
           return u
     
         | _ -> 
-          fail "Expected a type"
+          fail (BU.format1 "Expected a type; got %s" (P.term_to_string t))
     in
-    with_context "is_type" None (fun _ -> 
+    with_context "is_type" (Some t) (fun _ -> 
       handle_with
         (aux t)
         (fun _ -> aux (U.unrefine (N.unfold_whnf g.tcenv t))))
@@ -541,7 +541,7 @@ and check' (g:env) (e:term)
     
   | Tm_match(sc, None, branches, rc_opt) ->
     t_sc <-- check "scrutinee" g sc ;
-    u_sc <-- universe_of g t_sc ;
+    u_sc <--  with_context "universe_of" (Some t_sc) (fun _ -> universe_of g t_sc);
     let rec check_branches path_condition
                            branch_typ_opt
                            branches
@@ -599,7 +599,7 @@ and check' (g:env) (e:term)
     branch_typ_opt <-- (
       match rc_opt with
       | Some ({ residual_typ = Some t }) ->
-        is_type g t ;;
+        with_context "residual type" (Some t) (fun _ -> universe_of g t) ;;
         return (Some t)
         
       | _ ->

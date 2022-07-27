@@ -130,8 +130,12 @@ let (is_type :
           uu___1.FStar_Syntax_Syntax.n in
         match uu___ with
         | FStar_Syntax_Syntax.Tm_type u -> return u
-        | uu___1 -> fail "Expected a type" in
-      with_context "is_type" FStar_Pervasives_Native.None
+        | uu___1 ->
+            let uu___2 =
+              let uu___3 = FStar_Syntax_Print.term_to_string t1 in
+              FStar_Compiler_Util.format1 "Expected a type; got %s" uu___3 in
+            fail uu___2 in
+      with_context "is_type" (FStar_Pervasives_Native.Some t)
         (fun uu___ ->
            let uu___1 = aux t in
            handle_with uu___1
@@ -966,7 +970,10 @@ and (check' :
           let uu___ = check "scrutinee" g sc in
           bind uu___
             (fun t_sc ->
-               let uu___1 = universe_of g t_sc in
+               let uu___1 =
+                 with_context "universe_of"
+                   (FStar_Pervasives_Native.Some t_sc)
+                   (fun uu___2 -> universe_of g t_sc) in
                bind uu___1
                  (fun u_sc ->
                     let rec check_branches path_condition branch_typ_opt
@@ -1099,7 +1106,10 @@ and (check' :
                               FStar_Pervasives_Native.Some t;
                             FStar_Syntax_Syntax.residual_flags = uu___4;_}
                           ->
-                          let uu___5 = is_type g t in
+                          let uu___5 =
+                            with_context "residual type"
+                              (FStar_Pervasives_Native.Some t)
+                              (fun uu___6 -> universe_of g t) in
                           bind uu___5
                             (fun uu___6 ->
                                return (FStar_Pervasives_Native.Some t))
