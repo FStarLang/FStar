@@ -451,16 +451,16 @@ and rebuild_closure cfg env stack t =
             | Pat_constant _ ->
               p, env
             | Pat_cons(fv, us_opt, pats) ->
+              let us_opt =
+                match us_opt with
+                | None -> None
+                | Some us -> Some (List.map (norm_universe cfg env) us)
+              in
               let pats, env =
                   pats |> List.fold_left
                   (fun (pats, env) (p, b) ->
                     let p, env = norm_pat env p in (p,b)::pats, env)
                   ([], env)
-              in
-              let us_opt =
-                match us_opt with
-                | None -> None
-                | Some us -> Some (List.map (norm_universe cfg env) us)
               in
               {p with v=Pat_cons(fv, us_opt, List.rev pats)}, env
             | Pat_var x ->
@@ -2698,14 +2698,15 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
           let rec norm_pat env p = match p.v with
             | Pat_constant _ -> p, env
             | Pat_cons(fv, us_opt, pats) ->
-              let pats, env = pats |> List.fold_left (fun (pats, env) (p, b) ->
-                    let p, env = norm_pat env p in
-                    (p,b)::pats, env) ([], env) in
               let us_opt =
                 match us_opt with
                 | None -> None
-                | Some us -> Some (List.map (norm_universe cfg env) us)
+                | Some us ->
+                  Some (List.map (norm_universe cfg env) us)
               in
+              let pats, env = pats |> List.fold_left (fun (pats, env) (p, b) ->
+                    let p, env = norm_pat env p in
+                    (p,b)::pats, env) ([], env) in
               {p with v=Pat_cons(fv, us_opt, List.rev pats)}, env
             | Pat_var x ->
               let x = {x with sort=norm_or_whnf env x.sort} in

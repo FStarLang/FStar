@@ -583,7 +583,7 @@ let subst_args' :
         (FStar_Syntax_Syntax.term * 'uuuuu) Prims.list
   = fun s -> FStar_Compiler_List.map (subst_arg' s)
 let (subst_pat' :
-  (FStar_Syntax_Syntax.subst_elt Prims.list Prims.list *
+  (FStar_Syntax_Syntax.subst_t Prims.list *
     FStar_Syntax_Syntax.maybe_set_use_range) ->
     FStar_Syntax_Syntax.pat' FStar_Syntax_Syntax.withinfo_t ->
       (FStar_Syntax_Syntax.pat * Prims.int))
@@ -599,8 +599,12 @@ let (subst_pat' :
               | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None
               | FStar_Pervasives_Native.Some us ->
                   let uu___ =
-                    FStar_Compiler_List.map
-                      (subst_univ (FStar_Pervasives_Native.fst s)) us in
+                    let uu___1 =
+                      let uu___2 =
+                        let uu___3 = shift_subst' n s in
+                        FStar_Pervasives_Native.fst uu___3 in
+                      subst_univ uu___2 in
+                    FStar_Compiler_List.map uu___1 us in
                   FStar_Pervasives_Native.Some uu___ in
             let uu___ =
               FStar_Compiler_Effect.op_Bar_Greater pats

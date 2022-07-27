@@ -311,7 +311,7 @@ let subst_pat' s p : (pat * int) =
         let us_opt = 
           match us_opt with
           | None -> None
-          | Some us -> Some (List.map (subst_univ (fst s)) us)
+          | Some us -> Some (List.map (subst_univ (fst (shift_subst' n s))) us)
         in
         let pats, n = pats |> List.fold_left (fun (pats, n) (p, imp) ->
             let p, m = aux n p in

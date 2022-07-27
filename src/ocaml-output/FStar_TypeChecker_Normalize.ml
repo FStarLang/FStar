@@ -864,6 +864,15 @@ and (rebuild_closure :
                        match p.FStar_Syntax_Syntax.v with
                        | FStar_Syntax_Syntax.Pat_constant uu___2 -> (p, env4)
                        | FStar_Syntax_Syntax.Pat_cons (fv, us_opt, pats) ->
+                           let us_opt1 =
+                             match us_opt with
+                             | FStar_Pervasives_Native.None ->
+                                 FStar_Pervasives_Native.None
+                             | FStar_Pervasives_Native.Some us ->
+                                 let uu___2 =
+                                   FStar_Compiler_List.map
+                                     (norm_universe cfg1 env4) us in
+                                 FStar_Pervasives_Native.Some uu___2 in
                            let uu___2 =
                              FStar_Compiler_Effect.op_Bar_Greater pats
                                (FStar_Compiler_List.fold_left
@@ -878,15 +887,6 @@ and (rebuild_closure :
                                   ([], env4)) in
                            (match uu___2 with
                             | (pats1, env5) ->
-                                let us_opt1 =
-                                  match us_opt with
-                                  | FStar_Pervasives_Native.None ->
-                                      FStar_Pervasives_Native.None
-                                  | FStar_Pervasives_Native.Some us ->
-                                      let uu___3 =
-                                        FStar_Compiler_List.map
-                                          (norm_universe cfg1 env5) us in
-                                      FStar_Pervasives_Native.Some uu___3 in
                                 ({
                                    FStar_Syntax_Syntax.v =
                                      (FStar_Syntax_Syntax.Pat_cons
@@ -7050,6 +7050,15 @@ and (rebuild :
                          | FStar_Syntax_Syntax.Pat_constant uu___6 ->
                              (p, env3)
                          | FStar_Syntax_Syntax.Pat_cons (fv, us_opt, pats) ->
+                             let us_opt1 =
+                               match us_opt with
+                               | FStar_Pervasives_Native.None ->
+                                   FStar_Pervasives_Native.None
+                               | FStar_Pervasives_Native.Some us ->
+                                   let uu___6 =
+                                     FStar_Compiler_List.map
+                                       (norm_universe cfg1 env3) us in
+                                   FStar_Pervasives_Native.Some uu___6 in
                              let uu___6 =
                                FStar_Compiler_Effect.op_Bar_Greater pats
                                  (FStar_Compiler_List.fold_left
@@ -7064,15 +7073,6 @@ and (rebuild :
                                     ([], env3)) in
                              (match uu___6 with
                               | (pats1, env4) ->
-                                  let us_opt1 =
-                                    match us_opt with
-                                    | FStar_Pervasives_Native.None ->
-                                        FStar_Pervasives_Native.None
-                                    | FStar_Pervasives_Native.Some us ->
-                                        let uu___7 =
-                                          FStar_Compiler_List.map
-                                            (norm_universe cfg1 env4) us in
-                                        FStar_Pervasives_Native.Some uu___7 in
                                   ({
                                      FStar_Syntax_Syntax.v =
                                        (FStar_Syntax_Syntax.Pat_cons
