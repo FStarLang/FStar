@@ -11,6 +11,9 @@ let (core_check :
     fun gamma ->
       fun sol ->
         fun t ->
+          let debug f =
+            let uu___ = FStar_Options.debug_any () in
+            if uu___ then f () else () in
           let env1 =
             {
               FStar_TypeChecker_Env.solver =
@@ -113,32 +116,38 @@ let (core_check :
           let uu___ = FStar_TypeChecker_Core.check_term env1 sol t in
           match uu___ with
           | FStar_Pervasives.Inl (FStar_Pervasives_Native.None) ->
-              ((let uu___2 =
-                  let uu___3 = FStar_TypeChecker_Env.get_range env1 in
-                  FStar_Compiler_Range.string_of_range uu___3 in
-                let uu___3 = FStar_Syntax_Print.term_to_string sol in
-                FStar_Compiler_Util.print2
-                  "(%s) Core checking succeeded on %s\n" uu___2 uu___3);
+              (debug
+                 (fun uu___2 ->
+                    let uu___3 =
+                      let uu___4 = FStar_TypeChecker_Env.get_range env1 in
+                      FStar_Compiler_Range.string_of_range uu___4 in
+                    let uu___4 = FStar_Syntax_Print.term_to_string sol in
+                    FStar_Compiler_Util.print2
+                      "(%s) Core checking succeeded on %s\n" uu___3 uu___4);
                FStar_Pervasives.Inl FStar_Pervasives_Native.None)
           | FStar_Pervasives.Inl (FStar_Pervasives_Native.Some g) ->
-              ((let uu___2 =
-                  let uu___3 = FStar_TypeChecker_Env.get_range env1 in
-                  FStar_Compiler_Range.string_of_range uu___3 in
-                let uu___3 = FStar_Syntax_Print.term_to_string sol in
-                let uu___4 = FStar_Syntax_Print.term_to_string g in
-                FStar_Compiler_Util.print3
-                  "(%s) Core checking succeeded on %s, with guard %s\n"
-                  uu___2 uu___3 uu___4);
+              (debug
+                 (fun uu___2 ->
+                    let uu___3 =
+                      let uu___4 = FStar_TypeChecker_Env.get_range env1 in
+                      FStar_Compiler_Range.string_of_range uu___4 in
+                    let uu___4 = FStar_Syntax_Print.term_to_string sol in
+                    let uu___5 = FStar_Syntax_Print.term_to_string g in
+                    FStar_Compiler_Util.print3
+                      "(%s) Core checking succeeded on %s, with guard %s\n"
+                      uu___3 uu___4 uu___5);
                FStar_Pervasives.Inl (FStar_Pervasives_Native.Some g))
           | FStar_Pervasives.Inr err ->
-              ((let uu___2 =
-                  let uu___3 = FStar_TypeChecker_Env.get_range env1 in
-                  FStar_Compiler_Range.string_of_range uu___3 in
-                let uu___3 = FStar_Syntax_Print.term_to_string sol in
-                let uu___4 = FStar_TypeChecker_Core.print_error err in
-                FStar_Compiler_Util.print3
-                  "(%s) Core checking failed on term %s\n%s\n" uu___2 uu___3
-                  uu___4);
+              (debug
+                 (fun uu___2 ->
+                    let uu___3 =
+                      let uu___4 = FStar_TypeChecker_Env.get_range env1 in
+                      FStar_Compiler_Range.string_of_range uu___4 in
+                    let uu___4 = FStar_Syntax_Print.term_to_string sol in
+                    let uu___5 = FStar_TypeChecker_Core.print_error err in
+                    FStar_Compiler_Util.print3
+                      "(%s) Core checking failed on term %s\n%s\n" uu___3
+                      uu___4 uu___5);
                FStar_Pervasives.Inr err)
 type name = FStar_Syntax_Syntax.bv
 type env = FStar_TypeChecker_Env.env

@@ -24,7 +24,29 @@ type 'a success = ('a * precondition)
 type context =
   (Prims.string * FStar_Syntax_Syntax.term FStar_Pervasives_Native.option)
     Prims.list
+let (print_context : context -> Prims.string) =
+  fun ctx ->
+    let rec aux depth ctx1 =
+      match ctx1 with
+      | [] -> ""
+      | (msg, topt)::tl ->
+          let hd =
+            let uu___ =
+              match topt with
+              | FStar_Pervasives_Native.None -> ""
+              | FStar_Pervasives_Native.Some t ->
+                  FStar_Syntax_Print.term_to_string t in
+            FStar_Compiler_Util.format3 "%s %s (%s)\n" depth msg uu___ in
+          let tl1 = aux (Prims.op_Hat depth ">") tl in Prims.op_Hat hd tl1 in
+    aux "" (FStar_Compiler_List.rev ctx)
 type error = (context * Prims.string)
+let (print_error : error -> Prims.string) =
+  fun err ->
+    let uu___ = err in
+    match uu___ with
+    | (ctx, msg) ->
+        let uu___1 = print_context ctx in
+        FStar_Compiler_Util.format2 "%s%s" uu___1 msg
 type 'a result = context -> ('a success, error) FStar_Pervasives.either
 type hash_entry =
   {
@@ -97,6 +119,11 @@ let bind : 'a 'b . 'a result -> ('a -> 'b result) -> 'b result =
         | FStar_Pervasives.Inr err -> FStar_Pervasives.Inr err
 let fail : 'a . Prims.string -> 'a result =
   fun msg -> fun ctx -> FStar_Pervasives.Inr (ctx, msg)
+let (dump_context : unit result) =
+  fun ctx ->
+    (let uu___1 = print_context ctx in
+     FStar_Compiler_Util.print_string uu___1);
+    (let uu___1 = return () in uu___1 ctx)
 let handle_with : 'a . 'a result -> (unit -> 'a result) -> 'a result =
   fun x ->
     fun h ->
@@ -211,6 +238,21 @@ let (check_bqual :
          FStar_Pervasives_Native.Some (FStar_Syntax_Syntax.Implicit b11))
           when b01 = b11 -> return ()
       | uu___ -> fail "Binder qualifier mismatch"
+let (check_aqual :
+  FStar_Syntax_Syntax.aqual -> FStar_Syntax_Syntax.aqual -> unit result) =
+  fun a0 ->
+    fun a1 ->
+      match (a0, a1) with
+      | (FStar_Pervasives_Native.None, FStar_Pervasives_Native.None) ->
+          return ()
+      | (FStar_Pervasives_Native.Some
+         { FStar_Syntax_Syntax.aqual_implicit = b0;
+           FStar_Syntax_Syntax.aqual_attributes = uu___;_},
+         FStar_Pervasives_Native.Some
+         { FStar_Syntax_Syntax.aqual_implicit = b1;
+           FStar_Syntax_Syntax.aqual_attributes = uu___1;_})
+          -> if b0 = b1 then return () else fail "Unequal arg qualifiers"
+      | uu___ -> fail "Unequal arg qualifiers"
 let (mk_forall_l :
   FStar_Syntax_Syntax.universes ->
     FStar_Syntax_Syntax.binders ->
@@ -482,6 +524,21 @@ let (check_no_escape :
                FStar_Compiler_Util.set_mem b.FStar_Syntax_Syntax.binder_bv xs in
              Prims.op_Negation uu___1) bs in
       if uu___ then return () else fail "Name escapes its scope"
+let rec iter2 :
+  'a 'b .
+    'a Prims.list ->
+      'a Prims.list -> ('a -> 'a -> 'b -> 'b result) -> 'b -> 'b result
+  =
+  fun xs ->
+    fun ys ->
+      fun f ->
+        fun b1 ->
+          match (xs, ys) with
+          | ([], []) -> return b1
+          | (x::xs1, y::ys1) ->
+              let uu___ = f x y b1 in
+              bind uu___ (fun b2 -> iter2 xs1 ys1 f b2)
+          | uu___ -> fail "Lists of differing length"
 let rec (check_subtype_whnf :
   env ->
     FStar_Syntax_Syntax.term ->
@@ -570,17 +627,20 @@ let rec (check_subtype_whnf :
               let uu___1 = curry_arrow x0 xs0 c0 in
               let uu___2 = curry_arrow x1 xs1 c1 in
               check_subtype_whnf g e uu___1 uu___2
-          | (FStar_Syntax_Syntax.Tm_app (hd0, (arg0, aq0)::[]),
-             FStar_Syntax_Syntax.Tm_app (hd1, (arg1, aq1)::[])) ->
+          | (FStar_Syntax_Syntax.Tm_app (hd0, args0),
+             FStar_Syntax_Syntax.Tm_app (hd1, args1)) ->
               let uu___1 = check_equality_whnf g hd0 hd1 in
-              bind uu___1 (fun uu___2 -> check_equality g arg0 arg1)
-          | (FStar_Syntax_Syntax.Tm_app (hd0, arg0::args0),
-             FStar_Syntax_Syntax.Tm_app (hd1, arg1::args1)) ->
-              let uu___1 =
-                curry_application hd0 arg0 args0 t0.FStar_Syntax_Syntax.pos in
-              let uu___2 =
-                curry_application hd1 arg1 args1 t1.FStar_Syntax_Syntax.pos in
-              check_subtype g e uu___1 uu___2
+              bind uu___1
+                (fun uu___2 ->
+                   iter2 args0 args1
+                     (fun uu___3 ->
+                        fun uu___4 ->
+                          fun uu___5 ->
+                            match (uu___3, uu___4) with
+                            | ((a0, q0), (a1, q1)) ->
+                                let uu___6 = check_aqual q0 q1 in
+                                bind uu___6
+                                  (fun uu___7 -> check_equality g a0 a1)) ())
           | (FStar_Syntax_Syntax.Tm_type u0, FStar_Syntax_Syntax.Tm_type u1)
               -> check_equality_whnf g t0 t1
           | uu___1 ->
@@ -1200,23 +1260,3 @@ let (check_term :
         match uu___ with
         | FStar_Pervasives.Inl (uu___1, g1) -> FStar_Pervasives.Inl g1
         | FStar_Pervasives.Inr err -> FStar_Pervasives.Inr err
-let (print_error : error -> Prims.string) =
-  fun err ->
-    let rec print_context depth ctx =
-      match ctx with
-      | [] -> ""
-      | (msg, topt)::tl ->
-          let hd =
-            let uu___ =
-              match topt with
-              | FStar_Pervasives_Native.None -> ""
-              | FStar_Pervasives_Native.Some t ->
-                  FStar_Syntax_Print.term_to_string t in
-            FStar_Compiler_Util.format3 "%s %s (%s)\n" depth msg uu___ in
-          let tl1 = print_context (Prims.op_Hat depth ">") tl in
-          Prims.op_Hat hd tl1 in
-    let uu___ = err in
-    match uu___ with
-    | (ctx, msg) ->
-        let uu___1 = print_context "" (FStar_Compiler_List.rev ctx) in
-        FStar_Compiler_Util.format2 "%s%s" uu___1 msg

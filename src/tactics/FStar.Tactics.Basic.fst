@@ -54,30 +54,37 @@ module Core   = FStar.TypeChecker.Core
 
 let core_check env gamma sol t
   : either (option typ) Core.error
-  = let env = { env with gamma } in
+  = let debug f =
+        if Options.debug_any()
+        then f ()
+        else ()
+    in
+    let env = { env with gamma } in
     match FStar.TypeChecker.Core.check_term env sol t with
     | Inl None ->
       //checked with no guard
       //no need to check it again
-      BU.print2 "(%s) Core checking succeeded on %s\n"
-                (Range.string_of_range (Env.get_range env))
-                (Print.term_to_string sol);
+      debug (fun _ -> BU.print2 "(%s) Core checking succeeded on %s\n"
+                             (Range.string_of_range (Env.get_range env))
+                             (Print.term_to_string sol));
       Inl None
 
-     | Inl (Some g) ->
-       BU.print3 "(%s) Core checking succeeded on %s, with guard %s\n"
-                (Range.string_of_range (Env.get_range env))              
-                (Print.term_to_string sol)
-                (Print.term_to_string g);
-       Inl (Some g)
+    | Inl (Some g) ->
+      debug (fun _ -> 
+               BU.print3 "(%s) Core checking succeeded on %s, with guard %s\n"
+                         (Range.string_of_range (Env.get_range env))              
+                         (Print.term_to_string sol)
+                         (Print.term_to_string g));
+      Inl (Some g)
        
 
-     | Inr err ->
-       BU.print3 "(%s) Core checking failed on term %s\n%s\n"
-                (Range.string_of_range (Env.get_range env))              
-                (Print.term_to_string sol)
-                (Core.print_error err);
-       Inr err
+    | Inr err ->
+      debug (fun _ -> 
+               BU.print3 "(%s) Core checking failed on term %s\n%s\n"
+                         (Range.string_of_range (Env.get_range env))              
+                         (Print.term_to_string sol)
+                         (Core.print_error err));
+      Inr err
 
 type name = bv
 type env = Env.env

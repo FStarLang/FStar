@@ -26,7 +26,31 @@ let success a = a & precondition
 
 let context = list (string & option term)
 
+let print_context (ctx:context)
+  : string =
+  let rec aux (depth:string) (ctx:context) = 
+    match ctx with
+    | [] -> ""
+    | (msg, topt)::tl ->
+      let hd = 
+        BU.format3
+          "%s %s (%s)\n"
+          depth
+          msg 
+          (match topt with
+          | None -> ""
+          | Some t -> P.term_to_string t)
+      in
+      let tl = aux (depth ^ ">") tl in
+      hd ^ tl
+  in
+  aux "" (List.rev ctx)
+
 let error = context & string
+
+let print_error (err:error) =
+  let ctx, msg = err in
+  BU.format2 "%s%s" (print_context ctx) msg
 
 let result a = context -> either (success a) error
 
@@ -71,6 +95,12 @@ let bind (#a:Type) (#b:Type) (x:result a) (y:a -> result b)
 
 let fail #a msg : result a = fun ctx -> Inr (ctx, msg)
 
+let dump_context
+  : result unit
+  = fun ctx -> 
+      BU.print_string (print_context ctx);
+      return () ctx
+      
 inline_for_extraction
 let handle_with (#a:Type) (x:result a) (h: unit -> result a)
   : result a
@@ -155,6 +185,17 @@ let check_bqual (b0 b1:bqual)
     | _ -> 
       fail "Binder qualifier mismatch"
 
+let check_aqual (a0 a1:aqual)
+  : result unit
+  = match a0, a1 with
+    | None, None -> return ()
+    | Some ({aqual_implicit=b0}), Some ({aqual_implicit=b1}) ->
+      if b0 = b1
+      then return ()
+      else fail "Unequal arg qualifiers"
+    | _ ->
+      fail "Unequal arg qualifiers"
+      
 let mk_forall_l (us:universes) (xs:binders) (t:term) 
   : term
   = FStar.Compiler.List.fold_right2
@@ -291,6 +332,15 @@ let check_no_escape (bs:binders) t =
     then return ()
     else fail "Name escapes its scope"
 
+let rec iter2 (xs ys:list 'a) (f: 'a -> 'a -> 'b -> result 'b) (b:'b)
+  : result 'b
+  = match xs, ys with
+    | [], [] -> return b
+    | x::xs, y::ys ->
+      b <-- f x y b ;
+      iter2 xs ys f b
+    | _ -> fail "Lists of differing length"
+    
 (*
      G |- e : t0 <: t1 | p
  *)
@@ -322,13 +372,13 @@ let rec check_subtype_whnf (g:env) (e:term) (t0 t1: typ)
     | Tm_arrow (x0::xs0, c0), Tm_arrow(x1::xs1, c1) ->
       check_subtype_whnf g e (curry_arrow x0 xs0 c0) (curry_arrow x1 xs1 c1)
 
-    | Tm_app (hd0, [(arg0, aq0)]), Tm_app(hd1, [(arg1, aq1)]) ->
-      check_equality_whnf g hd0 hd1 ;;
-      check_equality g arg0 arg1      
-
-    | Tm_app(hd0, arg0::args0), Tm_app(hd1, arg1::args1) ->
-      check_subtype g e (curry_application hd0 arg0 args0 t0.pos)
-                        (curry_application hd1 arg1 args1 t1.pos)
+    | Tm_app(hd0, args0), Tm_app(hd1, args1) ->
+      check_equality_whnf g hd0 hd1;;
+      iter2 args0 args1 
+        (fun (a0, q0) (a1, q1) _ ->
+          check_aqual q0 q1;;
+          check_equality g a0 a1)
+        ()
 
     | Tm_type u0, Tm_type u1 ->
       check_equality_whnf g t0 t1
@@ -654,25 +704,3 @@ let check_term g e t
   = match check_term_top g e t [] with
     | Inl (_, g) -> Inl g
     | Inr err -> Inr err
-
-let print_error (err:error) =
-  let rec print_context (depth:string) (ctx:context) = 
-    match ctx with
-    | [] -> ""
-    | (msg, topt)::tl ->
-      let hd = 
-        BU.format3
-          "%s %s (%s)\n"
-          depth
-          msg 
-          (match topt with
-          | None -> ""
-          | Some t -> P.term_to_string t)
-      in
-      let tl = print_context (depth ^ ">") tl in
-      hd ^ tl
-  in
-  let ctx, msg = err in
-  BU.format2 "%s%s"
-             (print_context "" (FStar.Compiler.List.rev ctx))
-             msg
