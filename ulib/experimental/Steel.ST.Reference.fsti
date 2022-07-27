@@ -125,7 +125,7 @@ val free (#a:Type0)
 /// that the pre- and post-resources can be properly inferred by the
 /// Steel tactic from the caller's context.
 ///
-/// `with_local init body` is to have primitive extraction, behaving
+/// From the extraction point of view, `with_local init body` is to behave
 /// similarly as the following Low* code:
 ///
 /// <<<
@@ -144,6 +144,12 @@ val free (#a:Type0)
 ///   res = <body r>;
 /// }
 /// >>>
+///
+/// To this end, we mimic the Low* behavior by defining local
+/// primitives with primitive extraction in the `.fst`, and have them
+/// called by `with_local`. This is why we mark `with_local` as
+/// `inline_for_extraction`.
+inline_for_extraction
 val with_local
   (#t: Type)
   (init: t)
