@@ -543,6 +543,7 @@ let e_norm_step =
                      mkFV (lid_as_fv PC.steps_unfoldattr S.delta_constant None)
                           [] [as_arg (embed (e_list e_string) cb l)]
         | SE.ZetaFull -> mkFV (lid_as_fv PC.steps_zeta_full S.delta_constant None) [] []
+        | SE.Unascribe -> mkFV (lid_as_fv PC.steps_unascribe S.delta_constant None) [] []
     in
     let un cb (t0:t) : option SE.norm_step =
         match t0.nbe_t with

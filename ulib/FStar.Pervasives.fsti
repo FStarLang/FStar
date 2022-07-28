@@ -277,6 +277,8 @@ val delta_qualifier (s: list string) : Tot norm_step
    *)
 val unmeta : norm_step
 
+(** TODO: comment *)
+val unascribe : norm_step
 
 (** [norm s e] requests normalization of [e] with the reduction steps
     [s]. *)
