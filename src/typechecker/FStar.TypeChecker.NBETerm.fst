@@ -565,6 +565,10 @@ let e_norm_step =
             Some SE.NBE
         | FV (fv, _, []) when S.fv_eq_lid fv PC.steps_reify ->
             Some SE.Reify
+        | FV (fv, _, []) when S.fv_eq_lid fv PC.steps_zeta_full ->
+            Some SE.ZetaFull
+        | FV (fv, _, []) when S.fv_eq_lid fv PC.steps_unascribe ->
+            Some SE.Unascribe
         | FV (fv, _, [(l, _)]) when S.fv_eq_lid fv PC.steps_unfoldonly ->
             BU.bind_opt (unembed (e_list e_string) cb l) (fun ss ->
             Some <| SE.UnfoldOnly ss)

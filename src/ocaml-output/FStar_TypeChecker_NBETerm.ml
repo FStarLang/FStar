@@ -1461,6 +1461,12 @@ let (e_norm_step : FStar_Syntax_Embeddings.norm_step embedding) =
     | FV (fv, uu___, []) when
         FStar_Syntax_Syntax.fv_eq_lid fv FStar_Parser_Const.steps_reify ->
         FStar_Pervasives_Native.Some FStar_Syntax_Embeddings.Reify
+    | FV (fv, uu___, []) when
+        FStar_Syntax_Syntax.fv_eq_lid fv FStar_Parser_Const.steps_zeta_full
+        -> FStar_Pervasives_Native.Some FStar_Syntax_Embeddings.ZetaFull
+    | FV (fv, uu___, []) when
+        FStar_Syntax_Syntax.fv_eq_lid fv FStar_Parser_Const.steps_unascribe
+        -> FStar_Pervasives_Native.Some FStar_Syntax_Embeddings.Unascribe
     | FV (fv, uu___, (l, uu___1)::[]) when
         FStar_Syntax_Syntax.fv_eq_lid fv FStar_Parser_Const.steps_unfoldonly
         ->
