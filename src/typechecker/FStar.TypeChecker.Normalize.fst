@@ -1389,7 +1389,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                   if i >= norm_args_len then false
                   else
                     let arg_i, _ = List.nth norm_args i in
-                    let head, _ = arg_i |> U.unascribe |> U.head_and_args in
+                    let head, _ = arg_i |> U.unmeta_safe |> U.head_and_args in
                     match (un_uinst head).n with
                     | Tm_constant _ -> true
                     | Tm_fvar fv -> Env.is_datacon cfg.tcenv (S.lid_of_fv fv)

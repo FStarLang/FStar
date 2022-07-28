@@ -806,6 +806,7 @@ let check_apply_implicits_solutions
                      debug_prefix
                      (Print.uvar_to_string ctx_uvar.ctx_uvar_head)
                      (Print.term_to_string term)) (fun () ->
+      let env = {env with gamma=ctx_uvar.ctx_uvar_gamma} in
       let g_typ = check_implicits_solution env term (U.ctx_uvar_typ ctx_uvar) must_tot in
       let rng = 
         match gl with

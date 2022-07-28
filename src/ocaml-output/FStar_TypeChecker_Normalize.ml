@@ -3370,7 +3370,8 @@ let rec (norm :
                                      let uu___6 =
                                        let uu___7 =
                                          FStar_Compiler_Effect.op_Bar_Greater
-                                           arg_i FStar_Syntax_Util.unascribe in
+                                           arg_i
+                                           FStar_Syntax_Util.unmeta_safe in
                                        FStar_Compiler_Effect.op_Bar_Greater
                                          uu___7
                                          FStar_Syntax_Util.head_and_args in
