@@ -145,10 +145,9 @@ let (core_check :
                       FStar_Compiler_Range.string_of_range uu___4 in
                     let uu___4 = FStar_Syntax_Print.term_to_string sol in
                     let uu___5 = FStar_TypeChecker_Core.print_error err in
-                    let uu___6 = FStar_Compiler_Util.stack_dump () in
-                    FStar_Compiler_Util.print4
-                      "(%s) Core checking failed on term %s\n%s\n%s\n" uu___3
-                      uu___4 uu___5 uu___6);
+                    FStar_Compiler_Util.print3
+                      "(%s) Core checking failed on term %s\n%s\n" uu___3
+                      uu___4 uu___5);
                FStar_Pervasives.Inr err)
 type name = FStar_Syntax_Syntax.bv
 type env = FStar_TypeChecker_Env.env
@@ -3039,155 +3038,134 @@ let (t_apply_lemma :
                         | uu___4 -> false in
                       FStar_Tactics_Monad.bind FStar_Tactics_Monad.cur_goal
                         (fun goal ->
-                           FStar_Tactics_Monad.mlog
-                             (fun uu___3 ->
-                                let uu___4 =
-                                  FStar_Tactics_Printing.goal_to_string_verbose
-                                    goal in
-                                FStar_Compiler_Util.print1
-                                  "apply_lemma: goal is %s\n" uu___4)
-                             (fun uu___3 ->
-                                let env1 = FStar_Tactics_Types.goal_env goal in
-                                let uu___4 = __tc env1 tm in
-                                FStar_Tactics_Monad.bind uu___4
-                                  (fun uu___5 ->
-                                     match uu___5 with
-                                     | (tm1, t, guard) ->
-                                         let uu___6 =
-                                           FStar_Syntax_Util.arrow_formals_comp
-                                             t in
+                           let env1 = FStar_Tactics_Types.goal_env goal in
+                           let uu___3 = __tc env1 tm in
+                           FStar_Tactics_Monad.bind uu___3
+                             (fun uu___4 ->
+                                match uu___4 with
+                                | (tm1, t, guard) ->
+                                    let uu___5 =
+                                      FStar_Syntax_Util.arrow_formals_comp t in
+                                    (match uu___5 with
+                                     | (bs, comp) ->
+                                         let uu___6 = lemma_or_sq comp in
                                          (match uu___6 with
-                                          | (bs, comp) ->
-                                              let uu___7 = lemma_or_sq comp in
-                                              (match uu___7 with
-                                               | FStar_Pervasives_Native.None
-                                                   ->
-                                                   FStar_Tactics_Monad.fail
-                                                     "not a lemma or squashed function"
-                                               | FStar_Pervasives_Native.Some
-                                                   (pre, post) ->
-                                                   let uu___8 =
-                                                     let tm_uses_subtyping =
-                                                       let uu___9 =
-                                                         FStar_Syntax_Util.head_and_args
-                                                           tm1 in
-                                                       match uu___9 with
-                                                       | (tm_head, uu___10)
-                                                           ->
+                                          | FStar_Pervasives_Native.None ->
+                                              FStar_Tactics_Monad.fail
+                                                "not a lemma or squashed function"
+                                          | FStar_Pervasives_Native.Some
+                                              (pre, post) ->
+                                              let uu___7 =
+                                                let tm_uses_subtyping =
+                                                  let uu___8 =
+                                                    FStar_Syntax_Util.head_and_args
+                                                      tm1 in
+                                                  match uu___8 with
+                                                  | (tm_head, uu___9) ->
+                                                      let uu___10 =
+                                                        let uu___11 =
+                                                          let uu___12 =
+                                                            let uu___13 =
+                                                              FStar_Compiler_Effect.op_Bar_Greater
+                                                                tm_head
+                                                                FStar_Syntax_Subst.compress in
+                                                            FStar_Compiler_Effect.op_Bar_Greater
+                                                              uu___13
+                                                              FStar_Syntax_Util.unascribe in
+                                                          FStar_Compiler_Effect.op_Bar_Greater
+                                                            uu___12
+                                                            FStar_Syntax_Util.un_uinst in
+                                                        uu___11.FStar_Syntax_Syntax.n in
+                                                      (match uu___10 with
+                                                       | FStar_Syntax_Syntax.Tm_fvar
+                                                           fv ->
                                                            let uu___11 =
-                                                             let uu___12 =
-                                                               let uu___13 =
-                                                                 let uu___14
-                                                                   =
-                                                                   FStar_Compiler_Effect.op_Bar_Greater
-                                                                    tm_head
-                                                                    FStar_Syntax_Subst.compress in
-                                                                 FStar_Compiler_Effect.op_Bar_Greater
-                                                                   uu___14
-                                                                   FStar_Syntax_Util.unascribe in
-                                                               FStar_Compiler_Effect.op_Bar_Greater
-                                                                 uu___13
-                                                                 FStar_Syntax_Util.un_uinst in
-                                                             uu___12.FStar_Syntax_Syntax.n in
-                                                           (match uu___11
-                                                            with
-                                                            | FStar_Syntax_Syntax.Tm_fvar
-                                                                fv ->
-                                                                let uu___12 =
-                                                                  FStar_TypeChecker_Env.fv_has_attr
-                                                                    env1 fv
-                                                                    FStar_Parser_Const.no_subtping_attr_lid in
-                                                                Prims.op_Negation
-                                                                  uu___12
-                                                            | uu___12 -> true) in
-                                                     fold_left
-                                                       (fun uu___9 ->
-                                                          fun uu___10 ->
-                                                            match (uu___9,
-                                                                    uu___10)
-                                                            with
-                                                            | ({
-                                                                 FStar_Syntax_Syntax.binder_bv
-                                                                   = b;
-                                                                 FStar_Syntax_Syntax.binder_qual
-                                                                   = aq;
-                                                                 FStar_Syntax_Syntax.binder_attrs
-                                                                   = uu___11;_},
-                                                               (uvs, imps,
-                                                                subst)) ->
-                                                                let b_t =
-                                                                  FStar_Syntax_Subst.subst
-                                                                    subst
-                                                                    b.FStar_Syntax_Syntax.sort in
-                                                                let uu___12 =
-                                                                  is_unit_t
-                                                                    b_t in
-                                                                if uu___12
-                                                                then
-                                                                  FStar_Compiler_Effect.op_Less_Bar
-                                                                    FStar_Tactics_Monad.ret
-                                                                    (((FStar_Syntax_Util.exp_unit,
-                                                                    aq) ::
-                                                                    uvs),
-                                                                    imps,
-                                                                    ((FStar_Syntax_Syntax.NT
+                                                             FStar_TypeChecker_Env.fv_has_attr
+                                                               env1 fv
+                                                               FStar_Parser_Const.no_subtping_attr_lid in
+                                                           Prims.op_Negation
+                                                             uu___11
+                                                       | uu___11 -> true) in
+                                                fold_left
+                                                  (fun uu___8 ->
+                                                     fun uu___9 ->
+                                                       match (uu___8, uu___9)
+                                                       with
+                                                       | ({
+                                                            FStar_Syntax_Syntax.binder_bv
+                                                              = b;
+                                                            FStar_Syntax_Syntax.binder_qual
+                                                              = aq;
+                                                            FStar_Syntax_Syntax.binder_attrs
+                                                              = uu___10;_},
+                                                          (uvs, imps, subst))
+                                                           ->
+                                                           let b_t =
+                                                             FStar_Syntax_Subst.subst
+                                                               subst
+                                                               b.FStar_Syntax_Syntax.sort in
+                                                           let uu___11 =
+                                                             is_unit_t b_t in
+                                                           if uu___11
+                                                           then
+                                                             FStar_Compiler_Effect.op_Less_Bar
+                                                               FStar_Tactics_Monad.ret
+                                                               (((FStar_Syntax_Util.exp_unit,
+                                                                   aq) ::
+                                                                 uvs), imps,
+                                                                 ((FStar_Syntax_Syntax.NT
                                                                     (b,
                                                                     FStar_Syntax_Util.exp_unit))
-                                                                    ::
-                                                                    subst))
-                                                                else
-                                                                  (let uv_deps
-                                                                    =
-                                                                    if
-                                                                    Prims.op_Negation
+                                                                 :: subst))
+                                                           else
+                                                             (let uv_deps =
+                                                                if
+                                                                  Prims.op_Negation
                                                                     tm_uses_subtyping
-                                                                    then []
-                                                                    else
-                                                                    (let b_t_uvs
+                                                                then []
+                                                                else
+                                                                  (let b_t_uvs
                                                                     =
                                                                     FStar_Syntax_Free.uvars
                                                                     b_t in
-                                                                    let uu___15
+                                                                   let uu___14
                                                                     =
                                                                     FStar_Compiler_Effect.op_Bar_Greater
                                                                     imps
                                                                     (FStar_Compiler_List.filter
-                                                                    (fun
-                                                                    uu___16
-                                                                    ->
-                                                                    match uu___16
-                                                                    with
-                                                                    | 
-                                                                    (uu___17,
-                                                                    uv) ->
-                                                                    FStar_Compiler_Util.set_mem
-                                                                    uv
-                                                                    b_t_uvs)) in
-                                                                    FStar_Compiler_Effect.op_Bar_Greater
-                                                                    uu___15
-                                                                    (FStar_Compiler_List.map
-                                                                    FStar_Pervasives_Native.snd)) in
-                                                                   let uu___14
-                                                                    =
-                                                                    FStar_Tactics_Monad.new_uvar
-                                                                    "apply_lemma"
-                                                                    env1 b_t
-                                                                    FStar_Pervasives_Native.None
-                                                                    uv_deps
-                                                                    (rangeof
-                                                                    goal) in
-                                                                   FStar_Tactics_Monad.bind
-                                                                    uu___14
                                                                     (fun
                                                                     uu___15
                                                                     ->
                                                                     match uu___15
                                                                     with
                                                                     | 
-                                                                    (t1, u)
-                                                                    ->
+                                                                    (uu___16,
+                                                                    uv) ->
+                                                                    FStar_Compiler_Util.set_mem
+                                                                    uv
+                                                                    b_t_uvs)) in
+                                                                   FStar_Compiler_Effect.op_Bar_Greater
+                                                                    uu___14
+                                                                    (FStar_Compiler_List.map
+                                                                    FStar_Pervasives_Native.snd)) in
+                                                              let uu___13 =
+                                                                FStar_Tactics_Monad.new_uvar
+                                                                  "apply_lemma"
+                                                                  env1 b_t
+                                                                  FStar_Pervasives_Native.None
+                                                                  uv_deps
+                                                                  (rangeof
+                                                                    goal) in
+                                                              FStar_Tactics_Monad.bind
+                                                                uu___13
+                                                                (fun uu___14
+                                                                   ->
+                                                                   match uu___14
+                                                                   with
+                                                                   | 
+                                                                   (t1, u) ->
                                                                     ((
-                                                                    let uu___17
+                                                                    let uu___16
                                                                     =
                                                                     FStar_Compiler_Effect.op_Less_Bar
                                                                     (FStar_TypeChecker_Env.debug
@@ -3195,42 +3173,42 @@ let (t_apply_lemma :
                                                                     (FStar_Options.Other
                                                                     "2635") in
                                                                     if
-                                                                    uu___17
+                                                                    uu___16
                                                                     then
-                                                                    let uu___18
+                                                                    let uu___17
                                                                     =
                                                                     FStar_Syntax_Print.ctx_uvar_to_string
                                                                     u in
-                                                                    let uu___19
+                                                                    let uu___18
                                                                     =
                                                                     FStar_Compiler_List.fold_left
                                                                     (fun acc
                                                                     ->
                                                                     fun uv ->
-                                                                    let uu___20
+                                                                    let uu___19
                                                                     =
                                                                     FStar_Syntax_Print.ctx_uvar_to_string
                                                                     uv in
                                                                     FStar_Compiler_Util.format2
                                                                     "%s; %s"
                                                                     acc
-                                                                    uu___20)
+                                                                    uu___19)
                                                                     ""
                                                                     uv_deps in
-                                                                    let uu___20
+                                                                    let uu___19
                                                                     =
                                                                     FStar_Syntax_Print.term_to_string
                                                                     tm1 in
-                                                                    let uu___21
+                                                                    let uu___20
                                                                     =
                                                                     FStar_Compiler_Util.string_of_bool
                                                                     tm_uses_subtyping in
                                                                     FStar_Compiler_Util.print4
                                                                     "Apply lemma created a new uvar %s and made it depend on %s while applying %s (uses_subtyping: %s)\n"
+                                                                    uu___17
                                                                     uu___18
                                                                     uu___19
                                                                     uu___20
-                                                                    uu___21
                                                                     else ());
                                                                     FStar_Compiler_Effect.op_Less_Bar
                                                                     FStar_Tactics_Monad.ret
@@ -3243,110 +3221,100 @@ let (t_apply_lemma :
                                                                     (b, t1))
                                                                     ::
                                                                     subst))))))
-                                                       ([], [], []) bs in
-                                                   FStar_Tactics_Monad.bind
-                                                     uu___8
-                                                     (fun uu___9 ->
-                                                        match uu___9 with
-                                                        | (uvs, implicits1,
-                                                           subst) ->
-                                                            let implicits2 =
-                                                              FStar_Compiler_List.rev
-                                                                implicits1 in
-                                                            let uvs1 =
-                                                              FStar_Compiler_List.rev
-                                                                uvs in
-                                                            let pre1 =
-                                                              FStar_Syntax_Subst.subst
-                                                                subst pre in
-                                                            let post1 =
-                                                              FStar_Syntax_Subst.subst
-                                                                subst post in
-                                                            let post_u =
-                                                              env1.FStar_TypeChecker_Env.universe_of
-                                                                env1 post1 in
-                                                            let cmp_func =
-                                                              if noinst
-                                                              then do_match
-                                                              else
-                                                                if noinst_lhs
-                                                                then
-                                                                  do_match_on_lhs
-                                                                else do_unify in
-                                                            let uu___10 =
-                                                              let uu___11 =
-                                                                FStar_Tactics_Types.goal_type
-                                                                  goal in
-                                                              let uu___12 =
-                                                                FStar_Syntax_Util.mk_squash
-                                                                  post_u
-                                                                  post1 in
-                                                              cmp_func env1
-                                                                uu___11
-                                                                uu___12 in
-                                                            FStar_Tactics_Monad.bind
-                                                              uu___10
-                                                              (fun b ->
-                                                                 if
-                                                                   Prims.op_Negation
-                                                                    b
-                                                                 then
-                                                                   let uu___11
-                                                                    =
-                                                                    let uu___12
-                                                                    =
-                                                                    FStar_Syntax_Util.mk_squash
+                                                  ([], [], []) bs in
+                                              FStar_Tactics_Monad.bind uu___7
+                                                (fun uu___8 ->
+                                                   match uu___8 with
+                                                   | (uvs, implicits1, subst)
+                                                       ->
+                                                       let implicits2 =
+                                                         FStar_Compiler_List.rev
+                                                           implicits1 in
+                                                       let uvs1 =
+                                                         FStar_Compiler_List.rev
+                                                           uvs in
+                                                       let pre1 =
+                                                         FStar_Syntax_Subst.subst
+                                                           subst pre in
+                                                       let post1 =
+                                                         FStar_Syntax_Subst.subst
+                                                           subst post in
+                                                       let post_u =
+                                                         env1.FStar_TypeChecker_Env.universe_of
+                                                           env1 post1 in
+                                                       let cmp_func =
+                                                         if noinst
+                                                         then do_match
+                                                         else
+                                                           if noinst_lhs
+                                                           then
+                                                             do_match_on_lhs
+                                                           else do_unify in
+                                                       let uu___9 =
+                                                         let uu___10 =
+                                                           FStar_Tactics_Types.goal_type
+                                                             goal in
+                                                         let uu___11 =
+                                                           FStar_Syntax_Util.mk_squash
+                                                             post_u post1 in
+                                                         cmp_func env1
+                                                           uu___10 uu___11 in
+                                                       FStar_Tactics_Monad.bind
+                                                         uu___9
+                                                         (fun b ->
+                                                            if
+                                                              Prims.op_Negation
+                                                                b
+                                                            then
+                                                              let uu___10 =
+                                                                let uu___11 =
+                                                                  FStar_Syntax_Util.mk_squash
                                                                     post_u
                                                                     post1 in
-                                                                    let uu___13
-                                                                    =
-                                                                    FStar_Tactics_Types.goal_type
+                                                                let uu___12 =
+                                                                  FStar_Tactics_Types.goal_type
                                                                     goal in
-                                                                    FStar_TypeChecker_Err.print_discrepancy
-                                                                    (tts env1)
-                                                                    uu___12
-                                                                    uu___13 in
-                                                                   match uu___11
-                                                                   with
-                                                                   | 
-                                                                   (post2,
-                                                                    goalt) ->
-                                                                    let uu___12
+                                                                FStar_TypeChecker_Err.print_discrepancy
+                                                                  (tts env1)
+                                                                  uu___11
+                                                                  uu___12 in
+                                                              match uu___10
+                                                              with
+                                                              | (post2,
+                                                                 goalt) ->
+                                                                  let uu___11
                                                                     =
                                                                     tts env1
                                                                     tm1 in
-                                                                    fail3
+                                                                  fail3
                                                                     "Cannot instantiate lemma %s (with postcondition: %s) to match goal (%s)"
-                                                                    uu___12
+                                                                    uu___11
                                                                     post2
                                                                     goalt
-                                                                 else
-                                                                   (let uu___12
-                                                                    =
-                                                                    solve'
-                                                                    goal
-                                                                    FStar_Syntax_Util.exp_unit in
-                                                                    FStar_Tactics_Monad.bind
-                                                                    uu___12
-                                                                    (fun
-                                                                    uu___13
+                                                            else
+                                                              (let uu___11 =
+                                                                 solve' goal
+                                                                   FStar_Syntax_Util.exp_unit in
+                                                               FStar_Tactics_Monad.bind
+                                                                 uu___11
+                                                                 (fun uu___12
                                                                     ->
                                                                     let is_free_uvar
                                                                     uv t1 =
                                                                     let free_uvars
                                                                     =
-                                                                    let uu___14
+                                                                    let uu___13
                                                                     =
-                                                                    let uu___15
+                                                                    let uu___14
                                                                     =
                                                                     FStar_Syntax_Free.uvars
                                                                     t1 in
                                                                     FStar_Compiler_Util.set_elements
-                                                                    uu___15 in
+                                                                    uu___14 in
                                                                     FStar_Compiler_List.map
                                                                     (fun x ->
                                                                     x.FStar_Syntax_Syntax.ctx_uvar_head)
-                                                                    uu___14 in
+                                                                    uu___13 in
                                                                     FStar_Compiler_List.existsML
                                                                     (fun u ->
                                                                     FStar_Syntax_Unionfind.equiv
@@ -3358,26 +3326,26 @@ let (t_apply_lemma :
                                                                     FStar_Compiler_List.existsML
                                                                     (fun g'
                                                                     ->
-                                                                    let uu___14
+                                                                    let uu___13
                                                                     =
                                                                     FStar_Tactics_Types.goal_type
                                                                     g' in
                                                                     is_free_uvar
                                                                     uv
-                                                                    uu___14)
+                                                                    uu___13)
                                                                     goals in
                                                                     let checkone
                                                                     t1 goals
                                                                     =
-                                                                    let uu___14
+                                                                    let uu___13
                                                                     =
                                                                     FStar_Syntax_Util.head_and_args
                                                                     t1 in
-                                                                    match uu___14
+                                                                    match uu___13
                                                                     with
                                                                     | 
                                                                     (hd,
-                                                                    uu___15)
+                                                                    uu___14)
                                                                     ->
                                                                     (match 
                                                                     hd.FStar_Syntax_Syntax.n
@@ -3385,15 +3353,15 @@ let (t_apply_lemma :
                                                                     | 
                                                                     FStar_Syntax_Syntax.Tm_uvar
                                                                     (uv,
-                                                                    uu___16)
+                                                                    uu___15)
                                                                     ->
                                                                     appears
                                                                     uv.FStar_Syntax_Syntax.ctx_uvar_head
                                                                     goals
                                                                     | 
-                                                                    uu___16
+                                                                    uu___15
                                                                     -> false) in
-                                                                    let uu___14
+                                                                    let uu___13
                                                                     =
                                                                     let must_tot
                                                                     = false in
@@ -3407,7 +3375,7 @@ let (t_apply_lemma :
                                                                     "apply_lemma"
                                                                     must_tot) in
                                                                     FStar_Tactics_Monad.bind
-                                                                    uu___14
+                                                                    uu___13
                                                                     (fun
                                                                     sub_goals
                                                                     ->
@@ -3423,17 +3391,17 @@ let (t_apply_lemma :
                                                                     [] -> []
                                                                     | 
                                                                     x::xs1 ->
-                                                                    let uu___15
+                                                                    let uu___14
                                                                     = f x xs1 in
                                                                     if
-                                                                    uu___15
+                                                                    uu___14
                                                                     then
-                                                                    let uu___16
+                                                                    let uu___15
                                                                     =
                                                                     filter' f
                                                                     xs1 in x
                                                                     ::
-                                                                    uu___16
+                                                                    uu___15
                                                                     else
                                                                     filter' f
                                                                     xs1 in
@@ -3443,19 +3411,19 @@ let (t_apply_lemma :
                                                                     (fun g ->
                                                                     fun goals
                                                                     ->
-                                                                    let uu___15
+                                                                    let uu___14
                                                                     =
-                                                                    let uu___16
+                                                                    let uu___15
                                                                     =
                                                                     FStar_Tactics_Types.goal_witness
                                                                     g in
                                                                     checkone
-                                                                    uu___16
+                                                                    uu___15
                                                                     goals in
                                                                     Prims.op_Negation
-                                                                    uu___15)
+                                                                    uu___14)
                                                                     sub_goals1 in
-                                                                    let uu___15
+                                                                    let uu___14
                                                                     =
                                                                     proc_guard
                                                                     "apply_lemma guard"
@@ -3464,30 +3432,30 @@ let (t_apply_lemma :
                                                                     (rangeof
                                                                     goal) in
                                                                     FStar_Tactics_Monad.bind
-                                                                    uu___15
+                                                                    uu___14
                                                                     (fun
-                                                                    uu___16
+                                                                    uu___15
                                                                     ->
                                                                     let pre_u
                                                                     =
                                                                     env1.FStar_TypeChecker_Env.universe_of
                                                                     env1 pre1 in
+                                                                    let uu___16
+                                                                    =
                                                                     let uu___17
                                                                     =
                                                                     let uu___18
                                                                     =
                                                                     let uu___19
                                                                     =
-                                                                    let uu___20
-                                                                    =
                                                                     FStar_TypeChecker_Env.guard_of_guard_formula
                                                                     (FStar_TypeChecker_Common.NonTrivial
                                                                     pre1) in
                                                                     FStar_TypeChecker_Rel.simplify_guard
                                                                     env1
-                                                                    uu___20 in
-                                                                    uu___19.FStar_TypeChecker_Common.guard_f in
-                                                                    match uu___18
+                                                                    uu___19 in
+                                                                    uu___18.FStar_TypeChecker_Common.guard_f in
+                                                                    match uu___17
                                                                     with
                                                                     | 
                                                                     FStar_TypeChecker_Common.Trivial
@@ -3496,19 +3464,19 @@ let (t_apply_lemma :
                                                                     ()
                                                                     | 
                                                                     FStar_TypeChecker_Common.NonTrivial
-                                                                    uu___19
+                                                                    uu___18
                                                                     ->
                                                                     FStar_Tactics_Monad.add_irrelevant_goal
                                                                     goal
                                                                     "apply_lemma precondition"
                                                                     env1 pre1 in
                                                                     FStar_Tactics_Monad.bind
-                                                                    uu___17
+                                                                    uu___16
                                                                     (fun
-                                                                    uu___18
+                                                                    uu___17
                                                                     ->
                                                                     FStar_Tactics_Monad.add_goals
-                                                                    sub_goals2)))))))))))))) in
+                                                                    sub_goals2))))))))))))) in
           focus uu___1 in
         FStar_Compiler_Effect.op_Less_Bar
           (FStar_Tactics_Monad.wrap_err "apply_lemma") uu___
