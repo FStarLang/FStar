@@ -452,9 +452,13 @@ and rebuild_closure cfg env stack t =
               p, env
             | Pat_cons(fv, us_opt, pats) ->
               let us_opt =
-                match us_opt with
-                | None -> None
-                | Some us -> Some (List.map (norm_universe cfg env) us)
+                if cfg.steps.erase_universes
+                then None
+                else (
+                  match us_opt with
+                  | None -> None
+                  | Some us -> Some (List.map (norm_universe cfg env) us)
+                )
               in
               let pats, env =
                   pats |> List.fold_left
@@ -1394,7 +1398,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                   if i >= norm_args_len then false
                   else
                     let arg_i, _ = List.nth norm_args i in
-                    let head, _ = arg_i |> U.unascribe |> U.head_and_args in
+                    let head, _ = arg_i |> U.unmeta_safe |> U.head_and_args in
                     match (un_uinst head).n with
                     | Tm_constant _ -> true
                     | Tm_fvar fv -> Env.is_datacon cfg.tcenv (S.lid_of_fv fv)
@@ -2699,10 +2703,14 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
             | Pat_constant _ -> p, env
             | Pat_cons(fv, us_opt, pats) ->
               let us_opt =
-                match us_opt with
-                | None -> None
-                | Some us ->
-                  Some (List.map (norm_universe cfg env) us)
+                if cfg.steps.erase_universes
+                then None
+                else (
+                  match us_opt with
+                  | None -> None
+                  | Some us ->
+                    Some (List.map (norm_universe cfg env) us)
+                )
               in
               let pats, env = pats |> List.fold_left (fun (pats, env) (p, b) ->
                     let p, env = norm_pat env p in

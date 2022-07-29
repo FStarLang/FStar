@@ -865,14 +865,18 @@ and (rebuild_closure :
                        | FStar_Syntax_Syntax.Pat_constant uu___2 -> (p, env4)
                        | FStar_Syntax_Syntax.Pat_cons (fv, us_opt, pats) ->
                            let us_opt1 =
-                             match us_opt with
-                             | FStar_Pervasives_Native.None ->
-                                 FStar_Pervasives_Native.None
-                             | FStar_Pervasives_Native.Some us ->
-                                 let uu___2 =
-                                   FStar_Compiler_List.map
-                                     (norm_universe cfg1 env4) us in
-                                 FStar_Pervasives_Native.Some uu___2 in
+                             if
+                               (cfg1.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.erase_universes
+                             then FStar_Pervasives_Native.None
+                             else
+                               (match us_opt with
+                                | FStar_Pervasives_Native.None ->
+                                    FStar_Pervasives_Native.None
+                                | FStar_Pervasives_Native.Some us ->
+                                    let uu___3 =
+                                      FStar_Compiler_List.map
+                                        (norm_universe cfg1 env4) us in
+                                    FStar_Pervasives_Native.Some uu___3) in
                            let uu___2 =
                              FStar_Compiler_Effect.op_Bar_Greater pats
                                (FStar_Compiler_List.fold_left
@@ -3387,7 +3391,8 @@ let rec (norm :
                                      let uu___6 =
                                        let uu___7 =
                                          FStar_Compiler_Effect.op_Bar_Greater
-                                           arg_i FStar_Syntax_Util.unascribe in
+                                           arg_i
+                                           FStar_Syntax_Util.unmeta_safe in
                                        FStar_Compiler_Effect.op_Bar_Greater
                                          uu___7
                                          FStar_Syntax_Util.head_and_args in
@@ -7051,14 +7056,18 @@ and (rebuild :
                              (p, env3)
                          | FStar_Syntax_Syntax.Pat_cons (fv, us_opt, pats) ->
                              let us_opt1 =
-                               match us_opt with
-                               | FStar_Pervasives_Native.None ->
-                                   FStar_Pervasives_Native.None
-                               | FStar_Pervasives_Native.Some us ->
-                                   let uu___6 =
-                                     FStar_Compiler_List.map
-                                       (norm_universe cfg1 env3) us in
-                                   FStar_Pervasives_Native.Some uu___6 in
+                               if
+                                 (cfg1.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.erase_universes
+                               then FStar_Pervasives_Native.None
+                               else
+                                 (match us_opt with
+                                  | FStar_Pervasives_Native.None ->
+                                      FStar_Pervasives_Native.None
+                                  | FStar_Pervasives_Native.Some us ->
+                                      let uu___7 =
+                                        FStar_Compiler_List.map
+                                          (norm_universe cfg1 env3) us in
+                                      FStar_Pervasives_Native.Some uu___7) in
                              let uu___6 =
                                FStar_Compiler_Effect.op_Bar_Greater pats
                                  (FStar_Compiler_List.fold_left

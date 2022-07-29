@@ -52,14 +52,13 @@ module U      = FStar.Syntax.Util
 module Z      = FStar.BigInt
 module Core   = FStar.TypeChecker.Core
 
-let core_check env gamma sol t
+let core_check env sol t
   : either (option typ) Core.error
   = let debug f =
         if Options.debug_any()
         then f ()
         else ()
     in
-    let env = { env with gamma } in
     match FStar.TypeChecker.Core.check_term env sol t with
     | Inl None ->
       //checked with no guard
@@ -770,7 +769,7 @@ let rec  __try_unify_by_application
           match UF.find u.ctx_uvar_head with
           | None -> () //not solved yet
           | Some sol ->  //solved, check it
-            match core_check e u.ctx_uvar_gamma sol (U.ctx_uvar_typ u) with
+            match core_check ({e with gamma=u.ctx_uvar_gamma}) sol (U.ctx_uvar_typ u) with
             | Inl None ->
               //checked with no guard
               //no need to check it again
@@ -826,8 +825,8 @@ let check_apply_implicits_solutions
   
   : tac (list (list goal)) =
 
-  let check_implicits_solution env gamma (t:term) (k:typ) (must_tot:bool) : guard_t =
-      let _ = core_check env gamma t k in //just to see how much we can check
+  let check_implicits_solution env (t:term) (k:typ) (must_tot:bool) : guard_t =
+      let _ = core_check env t k in //just to see how much we can check
       // we should eventually use the core computed guard, but it has a different shape and causes some
       // tactics to fail
       // | Inl None -> Env.trivial_guard
@@ -861,7 +860,8 @@ let check_apply_implicits_solutions
                      debug_prefix
                      (Print.uvar_to_string ctx_uvar.ctx_uvar_head)
                      (Print.term_to_string term)) (fun () ->
-      let g_typ = check_implicits_solution env ctx_uvar.ctx_uvar_gamma term (U.ctx_uvar_typ ctx_uvar) must_tot in
+      let env = {env with gamma=ctx_uvar.ctx_uvar_gamma} in
+      let g_typ = check_implicits_solution env term (U.ctx_uvar_typ ctx_uvar) must_tot in
       let rng = 
         match gl with
         | None ->  ctx_uvar.ctx_uvar_range

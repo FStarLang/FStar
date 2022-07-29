@@ -223,9 +223,7 @@ let pat_as_exp (introduce_bv_uvars:bool)
              let e = mk (Tm_name x) p.p in
              ([x], [x], [], env, e, g, p)
 
-           | Pat_cons(fv, _us_opt, pats) -> 
-             //this ignores _us_opt and regenerates it with fresh uvars
-             //consider just using the universes, when they are present
+           | Pat_cons(fv, us_opt, pats) -> 
              let (b, a, w, env, args, guard, pats) =
                pats |>
                List.fold_left
@@ -235,9 +233,16 @@ let pat_as_exp (introduce_bv_uvars:bool)
                     (b'::b, a'::a, w'::w, env, arg::args, conj_guard guard guard', (pat, imp)::pats))
                ([], [], [], env, [], trivial_guard, [])
              in
+             let inst_head hd us_opt = 
+               match us_opt with
+               | None -> hd
+               | Some us -> Syntax.mk_Tm_uinst hd us
+             in
              let hd, us_opt =
                let hd = Syntax.fv_to_tm fv in
-               if not inst_pat_cons_univs then hd, None
+               if not inst_pat_cons_univs
+               || Some? us_opt
+               then inst_head hd us_opt, us_opt
                else let us, _ = Env.lookup_datacon env (Syntax.lid_of_fv fv) in
                     if List.length us = 0 then hd, Some []
                     else Syntax.mk_Tm_uinst hd us, Some us

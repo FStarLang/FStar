@@ -35,7 +35,7 @@ type universes = list universe
 noeq
 type pattern =
     | Pat_Constant : vconst -> pattern              // A built-in constant
-    | Pat_Cons     : fv -> option (list universe) -> list (pattern * bool) -> pattern
+    | Pat_Cons     : fv -> option universes -> list (pattern * bool) -> pattern
                                                     // A fully applied constructor, each boolean marks
                                                     // whether the argument was an explicitly-provided
                                                     // implicit argument

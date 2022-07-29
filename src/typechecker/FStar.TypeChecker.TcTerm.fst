@@ -2935,8 +2935,28 @@ and tc_pat env (pat_t:typ) (p0:pat) :
     let type_of_simple_pat env (e:term) : term * typ * list bv * guard_t * bool =
         let head, args = U.head_and_args e in
         match head.n with
-        | Tm_fvar f ->
-          let us, t_f = Env.lookup_datacon env f.fv_name.v in
+        | Tm_uinst ({n=Tm_fvar _}, _)
+        | Tm_fvar _ ->
+          let head, (us, t_f) = 
+            match head.n with
+            | Tm_uinst (head, us) ->
+              let Tm_fvar f = head.n in
+              let res = Env.try_lookup_and_inst_lid env us f.fv_name.v in
+              begin
+              match res with
+              | Some (t, _)
+                when Env.is_datacon env f.fv_name.v ->
+                head, (us, t)
+                
+              | _ ->
+                fail (BU.format1 "Could not find constructor: %s" 
+                                 (Ident.string_of_lid f.fv_name.v))
+              end
+
+            | Tm_fvar f ->
+              head,
+              Env.lookup_datacon env f.fv_name.v
+          in
           let formals, t = U.arrow_formals t_f in
           //Data constructors are marked with the "erasable" attribute
           //if their types are; matching on this constructor incurs
@@ -3126,7 +3146,7 @@ and tc_pat env (pat_t:typ) (p0:pat) :
                     | Pat_dot_term _ -> p, b
                     | _ -> S.withinfo (Pat_var (S.new_bv (Some p.p) S.tun)) p.p, b)
                 sub_pats in
-            {p with v = Pat_cons (fv, None, simple_sub_pats)}
+            {p with v = Pat_cons (fv, us_opt, simple_sub_pats)}
           in
           let sub_pats =
             sub_pats
