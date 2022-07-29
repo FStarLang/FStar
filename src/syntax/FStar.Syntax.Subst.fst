@@ -304,16 +304,18 @@ let subst_binders s (bs:binders) = subst_binders' ([s], NoUseRange) bs
 let subst_arg' s (t, imp) = (subst' s t, imp)
 
 let subst_args' s = List.map (subst_arg' s)
+
+let subst_univs_opt sub us_opt = 
+    match us_opt with
+    | None -> None
+    | Some us -> Some (List.map (subst_univ sub) us)
+
 let subst_pat' s p : (pat * int) =
     let rec aux n p : (pat * int) = match p.v with
       | Pat_constant _ -> p, n
 
       | Pat_cons(fv, us_opt, pats) ->
-        let us_opt = 
-          match us_opt with
-          | None -> None
-          | Some us -> Some (List.map (subst_univ (fst (shift_subst' n s))) us)
-        in
+        let us_opt = subst_univs_opt (fst (shift_subst' n s)) us_opt in
         let pats, n = pats |> List.fold_left (fun (pats, n) (p, imp) ->
             let p, m = aux n p in
             ((p,imp)::pats, m)) ([], n) in
@@ -568,18 +570,13 @@ let open_ascription bs asc =
   let bs', opening = open_binders' bs in
   bs', subst_ascription opening asc
 
-let subst_univs_opt sub us_opt = 
-    match us_opt with
-    | None -> None
-    | Some us -> Some (List.map (subst_univ [sub]) us)
-
 let open_pat (p:pat) : pat * subst_t =
     let rec open_pat_aux sub p =
         match p.v with
         | Pat_constant _ -> p, sub
 
         | Pat_cons(fv, us_opt, pats) ->
-            let us_opt = subst_univs_opt sub us_opt in
+            let us_opt = subst_univs_opt [sub] us_opt in
             let pats, sub = pats |> List.fold_left (fun (pats, sub) (p, imp) ->
                 let p, sub = open_pat_aux sub p in
                 ((p,imp)::pats, sub)) ([], sub) in
@@ -634,7 +631,7 @@ let close_pat p =
        | Pat_constant _ -> p, sub
 
        | Pat_cons(fv, us_opt, pats) ->
-         let us_opt = subst_univs_opt sub us_opt in         
+         let us_opt = subst_univs_opt [sub] us_opt in         
          let pats, sub = pats |> List.fold_left (fun (pats, sub) (p, imp) ->
              let p, sub = aux sub p in
              ((p,imp)::pats, sub)) ([], sub) in

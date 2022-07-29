@@ -266,9 +266,7 @@ let rec eq_pat (p1 : pat) (p2 : pat) : bool =
           && (match us1, us2 with
               | None, None -> true
               | Some us1, Some us2 -> 
-                if List.length us1 = List.length us2
-                then true
-                else false
+                List.length us1 = List.length us2
               | _ -> false)
         else false
     | Pat_var _, Pat_var _ -> true

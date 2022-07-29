@@ -580,6 +580,18 @@ let subst_args' :
       (FStar_Syntax_Syntax.term * 'uuuuu) Prims.list ->
         (FStar_Syntax_Syntax.term * 'uuuuu) Prims.list
   = fun s -> FStar_Compiler_List.map (subst_arg' s)
+let (subst_univs_opt :
+  FStar_Syntax_Syntax.subst_elt Prims.list Prims.list ->
+    FStar_Syntax_Syntax.universe Prims.list FStar_Pervasives_Native.option ->
+      FStar_Syntax_Syntax.universe Prims.list FStar_Pervasives_Native.option)
+  =
+  fun sub ->
+    fun us_opt ->
+      match us_opt with
+      | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None
+      | FStar_Pervasives_Native.Some us ->
+          let uu___ = FStar_Compiler_List.map (subst_univ sub) us in
+          FStar_Pervasives_Native.Some uu___
 let (subst_pat' :
   (FStar_Syntax_Syntax.subst_t Prims.list *
     FStar_Syntax_Syntax.maybe_set_use_range) ->
@@ -593,17 +605,10 @@ let (subst_pat' :
         | FStar_Syntax_Syntax.Pat_constant uu___ -> (p1, n)
         | FStar_Syntax_Syntax.Pat_cons (fv, us_opt, pats) ->
             let us_opt1 =
-              match us_opt with
-              | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None
-              | FStar_Pervasives_Native.Some us ->
-                  let uu___ =
-                    let uu___1 =
-                      let uu___2 =
-                        let uu___3 = shift_subst' n s in
-                        FStar_Pervasives_Native.fst uu___3 in
-                      subst_univ uu___2 in
-                    FStar_Compiler_List.map uu___1 us in
-                  FStar_Pervasives_Native.Some uu___ in
+              let uu___ =
+                let uu___1 = shift_subst' n s in
+                FStar_Pervasives_Native.fst uu___1 in
+              subst_univs_opt uu___ us_opt in
             let uu___ =
               FStar_Compiler_Effect.op_Bar_Greater pats
                 (FStar_Compiler_List.fold_left
@@ -1166,18 +1171,6 @@ let (open_ascription :
       match uu___ with
       | (bs', opening) ->
           let uu___1 = subst_ascription opening asc in (bs', uu___1)
-let (subst_univs_opt :
-  FStar_Syntax_Syntax.subst_elt Prims.list ->
-    FStar_Syntax_Syntax.universe Prims.list FStar_Pervasives_Native.option ->
-      FStar_Syntax_Syntax.universe Prims.list FStar_Pervasives_Native.option)
-  =
-  fun sub ->
-    fun us_opt ->
-      match us_opt with
-      | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None
-      | FStar_Pervasives_Native.Some us ->
-          let uu___ = FStar_Compiler_List.map (subst_univ [sub]) us in
-          FStar_Pervasives_Native.Some uu___
 let (open_pat :
   FStar_Syntax_Syntax.pat ->
     (FStar_Syntax_Syntax.pat * FStar_Syntax_Syntax.subst_t))
@@ -1187,7 +1180,7 @@ let (open_pat :
       match p1.FStar_Syntax_Syntax.v with
       | FStar_Syntax_Syntax.Pat_constant uu___ -> (p1, sub)
       | FStar_Syntax_Syntax.Pat_cons (fv, us_opt, pats) ->
-          let us_opt1 = subst_univs_opt sub us_opt in
+          let us_opt1 = subst_univs_opt [sub] us_opt in
           let uu___ =
             FStar_Compiler_Effect.op_Bar_Greater pats
               (FStar_Compiler_List.fold_left
@@ -1327,7 +1320,7 @@ let (close_pat :
       match p1.FStar_Syntax_Syntax.v with
       | FStar_Syntax_Syntax.Pat_constant uu___ -> (p1, sub)
       | FStar_Syntax_Syntax.Pat_cons (fv, us_opt, pats) ->
-          let us_opt1 = subst_univs_opt sub us_opt in
+          let us_opt1 = subst_univs_opt [sub] us_opt in
           let uu___ =
             FStar_Compiler_Effect.op_Bar_Greater pats
               (FStar_Compiler_List.fold_left

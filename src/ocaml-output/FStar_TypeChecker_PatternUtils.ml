@@ -357,7 +357,7 @@ let (pat_as_exp :
                          (FStar_Syntax_Syntax.Tm_name x1)
                          p1.FStar_Syntax_Syntax.p in
                      ([x1], [x1], [], env2, e, g, p1))
-            | FStar_Syntax_Syntax.Pat_cons (fv, _us_opt, pats) ->
+            | FStar_Syntax_Syntax.Pat_cons (fv, us_opt, pats) ->
                 let uu___ =
                   FStar_Compiler_Effect.op_Bar_Greater pats
                     (FStar_Compiler_List.fold_left
@@ -383,10 +383,18 @@ let (pat_as_exp :
                          FStar_TypeChecker_Common.trivial_guard, [])) in
                 (match uu___ with
                  | (b, a, w, env2, args, guard, pats1) ->
+                     let inst_head hd us_opt1 =
+                       match us_opt1 with
+                       | FStar_Pervasives_Native.None -> hd
+                       | FStar_Pervasives_Native.Some us ->
+                           FStar_Syntax_Syntax.mk_Tm_uinst hd us in
                      let uu___1 =
                        let hd = FStar_Syntax_Syntax.fv_to_tm fv in
-                       if Prims.op_Negation inst_pat_cons_univs
-                       then (hd, FStar_Pervasives_Native.None)
+                       if
+                         (Prims.op_Negation inst_pat_cons_univs) ||
+                           (FStar_Pervasives_Native.uu___is_Some us_opt)
+                       then
+                         let uu___2 = inst_head hd us_opt in (uu___2, us_opt)
                        else
                          (let uu___3 =
                             let uu___4 = FStar_Syntax_Syntax.lid_of_fv fv in
@@ -402,7 +410,7 @@ let (pat_as_exp :
                                    FStar_Syntax_Syntax.mk_Tm_uinst hd us in
                                  (uu___6, (FStar_Pervasives_Native.Some us)))) in
                      (match uu___1 with
-                      | (hd, us_opt) ->
+                      | (hd, us_opt1) ->
                           let e =
                             let uu___2 =
                               FStar_Compiler_Effect.op_Bar_Greater args
@@ -425,7 +433,7 @@ let (pat_as_exp :
                             {
                               FStar_Syntax_Syntax.v =
                                 (FStar_Syntax_Syntax.Pat_cons
-                                   (fv, us_opt,
+                                   (fv, us_opt1,
                                      (FStar_Compiler_List.rev pats1)));
                               FStar_Syntax_Syntax.p =
                                 (p1.FStar_Syntax_Syntax.p)

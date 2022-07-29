@@ -8162,7 +8162,7 @@ and (tc_pat :
                  {
                    FStar_Syntax_Syntax.v =
                      (FStar_Syntax_Syntax.Pat_cons
-                        (fv, FStar_Pervasives_Native.None, simple_sub_pats));
+                        (fv, us_opt, simple_sub_pats));
                    FStar_Syntax_Syntax.p = (p.FStar_Syntax_Syntax.p)
                  } in
                let sub_pats1 =

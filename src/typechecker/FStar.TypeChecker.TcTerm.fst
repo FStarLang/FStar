@@ -3126,7 +3126,7 @@ and tc_pat env (pat_t:typ) (p0:pat) :
                     | Pat_dot_term _ -> p, b
                     | _ -> S.withinfo (Pat_var (S.new_bv (Some p.p) S.tun)) p.p, b)
                 sub_pats in
-            {p with v = Pat_cons (fv, None, simple_sub_pats)}
+            {p with v = Pat_cons (fv, us_opt, simple_sub_pats)}
           in
           let sub_pats =
             sub_pats

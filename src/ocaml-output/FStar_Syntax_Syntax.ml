@@ -1979,11 +1979,8 @@ let rec (eq_pat : pat -> pat -> Prims.bool) =
                    FStar_Pervasives_Native.None) -> true
                 | (FStar_Pervasives_Native.Some us11,
                    FStar_Pervasives_Native.Some us21) ->
-                    if
-                      (FStar_Compiler_List.length us11) =
-                        (FStar_Compiler_List.length us21)
-                    then true
-                    else false
+                    (FStar_Compiler_List.length us11) =
+                      (FStar_Compiler_List.length us21)
                 | uu___1 -> false))
           else false
       | (Pat_var uu___, Pat_var uu___1) -> true
