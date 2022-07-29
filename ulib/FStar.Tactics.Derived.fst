@@ -902,9 +902,9 @@ and visit_br (ff : term -> Tac term) (b:branch) : Tac branch =
 and visit_pat (ff : term -> Tac term) (p:pattern) : Tac pattern =
   match p with
   | Pat_Constant c -> p
-  | Pat_Cons fv l ->
+  | Pat_Cons fv us l ->
       let l = (map (fun(p,b) -> (visit_pat ff p, b)) l) in
-      Pat_Cons fv l
+      Pat_Cons fv us l
   | Pat_Var bv ->
       let bv = on_sort_bv (visit_tm ff) bv in
       Pat_Var bv

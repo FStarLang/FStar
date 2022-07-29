@@ -13,7 +13,10 @@ Guidelines for the changelog:
 
 # Version 0.9.7.0
 
-## Tactics
+## Tactics & Reflection
+  * Pat_Cons, the case of constructed patterns, now takes an additional argument representing
+    the universe instantiation of the constructor.
+  
   * The behavior of `pack` was changed to canonize arrows by flattening them in the internal
     compiler representation (https://github.com/FStarLang/FStar/pull/2609).
     An alternative version of `pack` called `pack_curried` which does not perform canonization,

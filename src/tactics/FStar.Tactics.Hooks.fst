@@ -436,7 +436,7 @@ let rec traverse_for_spinoff
         let rec pat_as_exp env p =
           match FStar.TypeChecker.PatternUtils.raw_pat_as_exp env p with
           | None -> None
-          | Some e ->
+          | Some (e, _) ->
             let env, _ = Env.clear_expected_typ env in
             let e, lc =
               FStar.TypeChecker.TcTerm.tc_trivial_guard ({env with FStar.TypeChecker.Env.admit=true}) e in
