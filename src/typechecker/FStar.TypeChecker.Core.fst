@@ -369,18 +369,14 @@ let rec check_subtype_whnf (g:env) (e:term) (t0 t1: typ)
         check_subcomp g (S.mk_Tm_app e (snd (U.args_of_binders [x1])) R.dummyRange) c0 c1           
       )
          
-    | Tm_arrow (x0::xs0, c0), Tm_arrow(x1::xs1, c1) ->
-      check_subtype_whnf g e (curry_arrow x0 xs0 c0) (curry_arrow x1 xs1 c1)
+    | Tm_arrow (x0::xs0, c0), _ ->
+      check_subtype_whnf g e (curry_arrow x0 xs0 c0) t1
+      
+    | _, Tm_arrow(x1::xs1, c1) ->
+      check_subtype_whnf g e t0 (curry_arrow x1 xs1 c1)
 
-    | Tm_app(hd0, args0), Tm_app(hd1, args1) ->
-      check_equality_whnf g hd0 hd1;;
-      iter2 args0 args1 
-        (fun (a0, q0) (a1, q1) _ ->
-          check_aqual q0 q1;;
-          check_equality g a0 a1)
-        ()
-
-    | Tm_type u0, Tm_type u1 ->
+    | Tm_app _, Tm_app _
+    | Tm_type _, Tm_type _ ->
       check_equality_whnf g t0 t1
   
     | _ ->
@@ -412,23 +408,42 @@ and check_equality_whnf (g:env) (t0 t1:typ)
     in
     if U.eq_tm t0 t1 = U.Equal
     then return ()
-    else if g.allow_universe_instantiation
-    then match t0.n, t1.n with
-         | Tm_uinst (f0, us0), Tm_uinst(f1, us1) ->
-           if U.eq_tm f0 f1 = U.Equal
-           then if Rel.teq_nosmt_force g.tcenv t0 t1
-                then return ()
-                else fail ()
-           else fail ()
+    else 
+      match t0.n, t1.n with
+      | Tm_uinst (f0, us0), Tm_uinst(f1, us1) ->
+        //        when g.allow_universe_instantiation ->
+        // I had initially thought that the only place we might need
+        // universe instantiation was at the top-level, but that isn't true
+        // The tactic framework is often presented with goals that look like
+        //
+        // (eq2<2> #pre_t (?77 uu___) (return_pre (?69 (reveal<U_unif ?15:460.45> #unit (return<U_unif ?15:460.45> #unit ())))))
+        // 
+        // i.e., they contain unresolved universes like U_unif ...
+        //
+        // So the solution we check may contain these universe variables too
+        // and we need to solve them here
+        if U.eq_tm f0 f1 = U.Equal
+        then if Rel.teq_nosmt_force g.tcenv t0 t1
+             then return ()
+             else fail ()
+        else fail ()
            
-         | Tm_type u0, Tm_type u1 ->
-           if Rel.teq_nosmt_force g.tcenv t0 t1
-           then return ()
-           else fail ()         
-            
-         | _ -> fail ()
-    else fail ()
-    
+      | Tm_type u0, Tm_type u1 ->
+        // when g.allow_universe_instantiation ->      
+        // See above remark regarding universe instantiations
+        if Rel.teq_nosmt_force g.tcenv t0 t1
+        then return ()
+        else fail ()         
+
+      | Tm_app(hd0, args0), Tm_app(hd1, args1) ->
+        check_equality_whnf g hd0 hd1;;
+        iter2 args0 args1
+          (fun (a0, q0) (a1, q1) _ ->
+            check_aqual q0 q1;;
+            check_equality g a0 a1)
+          ()
+        
+      | _ -> fail ()
 
 and check_equality (g:env) (t0 t1:typ)
   = match U.eq_tm t0 t1 with

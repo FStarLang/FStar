@@ -622,27 +622,16 @@ let rec (check_subtype_whnf :
                                              FStar_Compiler_Range.dummyRange in
                                          check_subcomp g uu___9 c01 c11) in
                                   with_binders [x11] [u1] uu___6))))
-          | (FStar_Syntax_Syntax.Tm_arrow (x0::xs0, c0),
-             FStar_Syntax_Syntax.Tm_arrow (x1::xs1, c1)) ->
-              let uu___1 = curry_arrow x0 xs0 c0 in
+          | (FStar_Syntax_Syntax.Tm_arrow (x0::xs0, c0), uu___1) ->
+              let uu___2 = curry_arrow x0 xs0 c0 in
+              check_subtype_whnf g e uu___2 t1
+          | (uu___1, FStar_Syntax_Syntax.Tm_arrow (x1::xs1, c1)) ->
               let uu___2 = curry_arrow x1 xs1 c1 in
-              check_subtype_whnf g e uu___1 uu___2
-          | (FStar_Syntax_Syntax.Tm_app (hd0, args0),
-             FStar_Syntax_Syntax.Tm_app (hd1, args1)) ->
-              let uu___1 = check_equality_whnf g hd0 hd1 in
-              bind uu___1
-                (fun uu___2 ->
-                   iter2 args0 args1
-                     (fun uu___3 ->
-                        fun uu___4 ->
-                          fun uu___5 ->
-                            match (uu___3, uu___4) with
-                            | ((a0, q0), (a1, q1)) ->
-                                let uu___6 = check_aqual q0 q1 in
-                                bind uu___6
-                                  (fun uu___7 -> check_equality g a0 a1)) ())
-          | (FStar_Syntax_Syntax.Tm_type u0, FStar_Syntax_Syntax.Tm_type u1)
-              -> check_equality_whnf g t0 t1
+              check_subtype_whnf g e t0 uu___2
+          | (FStar_Syntax_Syntax.Tm_app uu___1, FStar_Syntax_Syntax.Tm_app
+             uu___2) -> check_equality_whnf g t0 t1
+          | (FStar_Syntax_Syntax.Tm_type uu___1, FStar_Syntax_Syntax.Tm_type
+             uu___2) -> check_equality_whnf g t0 t1
           | uu___1 ->
               let uu___2 =
                 let uu___3 = FStar_Syntax_Util.eq_tm t0 t1 in
@@ -713,28 +702,39 @@ and (check_equality_whnf :
         if uu___
         then return ()
         else
-          if g.allow_universe_instantiation
-          then
-            (match ((t0.FStar_Syntax_Syntax.n), (t1.FStar_Syntax_Syntax.n))
-             with
-             | (FStar_Syntax_Syntax.Tm_uinst (f0, us0),
-                FStar_Syntax_Syntax.Tm_uinst (f1, us1)) ->
-                 let uu___2 =
-                   let uu___3 = FStar_Syntax_Util.eq_tm f0 f1 in
-                   uu___3 = FStar_Syntax_Util.Equal in
-                 if uu___2
-                 then
-                   let uu___3 =
-                     FStar_TypeChecker_Rel.teq_nosmt_force g.tcenv t0 t1 in
-                   (if uu___3 then return () else fail1 ())
-                 else fail1 ()
-             | (FStar_Syntax_Syntax.Tm_type u0, FStar_Syntax_Syntax.Tm_type
-                u1) ->
-                 let uu___2 =
+          (match ((t0.FStar_Syntax_Syntax.n), (t1.FStar_Syntax_Syntax.n))
+           with
+           | (FStar_Syntax_Syntax.Tm_uinst (f0, us0),
+              FStar_Syntax_Syntax.Tm_uinst (f1, us1)) ->
+               let uu___2 =
+                 let uu___3 = FStar_Syntax_Util.eq_tm f0 f1 in
+                 uu___3 = FStar_Syntax_Util.Equal in
+               if uu___2
+               then
+                 let uu___3 =
                    FStar_TypeChecker_Rel.teq_nosmt_force g.tcenv t0 t1 in
-                 if uu___2 then return () else fail1 ()
-             | uu___2 -> fail1 ())
-          else fail1 ()
+                 (if uu___3 then return () else fail1 ())
+               else fail1 ()
+           | (FStar_Syntax_Syntax.Tm_type u0, FStar_Syntax_Syntax.Tm_type u1)
+               ->
+               let uu___2 =
+                 FStar_TypeChecker_Rel.teq_nosmt_force g.tcenv t0 t1 in
+               if uu___2 then return () else fail1 ()
+           | (FStar_Syntax_Syntax.Tm_app (hd0, args0),
+              FStar_Syntax_Syntax.Tm_app (hd1, args1)) ->
+               let uu___2 = check_equality_whnf g hd0 hd1 in
+               bind uu___2
+                 (fun uu___3 ->
+                    iter2 args0 args1
+                      (fun uu___4 ->
+                         fun uu___5 ->
+                           fun uu___6 ->
+                             match (uu___4, uu___5) with
+                             | ((a0, q0), (a1, q1)) ->
+                                 let uu___7 = check_aqual q0 q1 in
+                                 bind uu___7
+                                   (fun uu___8 -> check_equality g a0 a1)) ())
+           | uu___2 -> fail1 ())
 and (check_equality :
   env -> FStar_Syntax_Syntax.typ -> FStar_Syntax_Syntax.typ -> unit result) =
   fun g ->
