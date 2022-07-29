@@ -552,7 +552,7 @@ and deep_apply_subst_in_comp e c subst =
 and deep_apply_subst_in_pattern e pat subst =
   match pat with
   | Pat_Constant _ -> pat, subst
-  | Pat_Cons fv patterns ->
+  | Pat_Cons fv us patterns ->
     (* The types of the variables in the patterns should be independent of each
      * other: we use fold_left only to incrementally update the substitution *)
     let patterns, subst =
@@ -560,7 +560,7 @@ and deep_apply_subst_in_pattern e pat subst =
                       let pat, subst = deep_apply_subst_in_pattern e pat subst in
                       ((pat, b) :: pats, subst)) patterns ([], subst)
     in
-    Pat_Cons fv patterns, subst
+    Pat_Cons fv us patterns, subst
   | Pat_Var bv ->
     let bv, subst = deep_apply_subst_in_bv e bv subst in
     Pat_Var bv, subst

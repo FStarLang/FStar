@@ -2268,7 +2268,9 @@ let (mk_discriminator_and_indexed_projectors :
                                                    FStar_Syntax_Syntax.delta_constant
                                                    (FStar_Pervasives_Native.Some
                                                       fvq) in
-                                               (uu___7, arg_pats) in
+                                               (uu___7,
+                                                 FStar_Pervasives_Native.None,
+                                                 arg_pats) in
                                              FStar_Syntax_Syntax.Pat_cons
                                                uu___6 in
                                            pos uu___5 in
@@ -2624,7 +2626,9 @@ let (mk_discriminator_and_indexed_projectors :
                                                             FStar_Syntax_Syntax.delta_constant
                                                             (FStar_Pervasives_Native.Some
                                                                fvq) in
-                                                        (uu___9, arg_pats) in
+                                                        (uu___9,
+                                                          FStar_Pervasives_Native.None,
+                                                          arg_pats) in
                                                       FStar_Syntax_Syntax.Pat_cons
                                                         uu___8 in
                                                     pos uu___7 in

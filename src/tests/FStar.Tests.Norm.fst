@@ -74,10 +74,10 @@ let mk_match h branches =
     let branches = branches |> List.map U.branch in
     mk (Tm_match(h, None, branches, None)) dummyRange
 let pred_nat s  =
-    let zbranch = pat (Pat_cons(znat_l, [])),
+    let zbranch = pat (Pat_cons(znat_l, None, [])),
                   None,
                   znat in
-    let sbranch = pat (Pat_cons(snat_l, [pat (Pat_var x), false])),
+    let sbranch = pat (Pat_cons(snat_l, None, [pat (Pat_var x), false])),
                   None,
                   mk (Tm_bvar({x with index=0})) dummyRange in
     mk_match s [zbranch;sbranch]
@@ -85,10 +85,10 @@ let minus_nat t1 t2 =
     let minus = m in
     let x = { x with sort = snat_type } in
     let y = { y with sort = snat_type } in
-    let zbranch = pat (Pat_cons(znat_l, [])),
+    let zbranch = pat (Pat_cons(znat_l, None, [])),
                   None,
                   nm x in
-    let sbranch = pat (Pat_cons(snat_l, [pat (Pat_var n), false])),
+    let sbranch = pat (Pat_cons(snat_l, None, [pat (Pat_var n), false])),
                   None,
                   app (nm minus) [pred_nat (nm x); nm n] in
     let lb = {lbname=Inl minus; lbeff=lid_of_path ["Pure"] dummyRange; lbunivs=[]; lbtyp=tun;

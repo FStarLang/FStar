@@ -709,7 +709,7 @@ let check_linear_pattern_variables pats r =
     | Pat_wild _
     | Pat_constant _ -> S.no_names
     | Pat_var x -> BU.set_add x S.no_names
-    | Pat_cons(_, pats) ->
+    | Pat_cons(_, _, pats) ->
       let aux out (p, _) =
           let p_vars = pat_vars p in
           let intersection = BU.set_intersect p_vars out in
@@ -835,7 +835,7 @@ let rec desugar_data_pat
       | PatName l ->
         let l = fail_or env (try_lookup_datacon env) l in
         let x = S.new_bv (Some p.prange) (tun_r p.prange) in
-        loc, env, LocalBinder(x,  None, []), pos <| Pat_cons(l, []), []
+        loc, env, LocalBinder(x,  None, []), pos <| Pat_cons(l, None, []), []
 
       | PatApp({pat=PatName l}, args) ->
         let loc, env, annots, args = List.fold_right (fun arg (loc,env, annots, args) ->
@@ -844,7 +844,7 @@ let rec desugar_data_pat
           (loc, env, ans@annots, (arg, imp)::args)) args (loc, env, [], []) in
         let l = fail_or env  (try_lookup_datacon env) l in
         let x = S.new_bv (Some p.prange) (tun_r p.prange) in
-        loc, env, LocalBinder(x, None, []), pos <| Pat_cons(l, args), annots
+        loc, env, LocalBinder(x, None, []), pos <| Pat_cons(l, None, args), annots
 
       | PatApp _ -> raise_error (Errors.Fatal_UnexpectedPattern, "Unexpected pattern") p.prange
 
@@ -854,8 +854,8 @@ let rec desugar_data_pat
           loc, env, ans@annots, pat::pats) pats (loc, env, [], []) in
         let pat = List.fold_right (fun hd tl ->
             let r = Range.union_ranges hd.p tl.p in
-            pos_r r <| Pat_cons(S.lid_as_fv C.cons_lid delta_constant (Some Data_ctor), [(hd, false);(tl, false)])) pats
-                        (pos_r (Range.end_range p.prange) <| Pat_cons(S.lid_as_fv C.nil_lid delta_constant (Some Data_ctor), [])) in
+            pos_r r <| Pat_cons(S.lid_as_fv C.cons_lid delta_constant (Some Data_ctor), None, [(hd, false);(tl, false)])) pats
+                        (pos_r (Range.end_range p.prange) <| Pat_cons(S.lid_as_fv C.nil_lid delta_constant (Some Data_ctor), None, [])) in
         let x = S.new_bv (Some p.prange) (tun_r p.prange) in
         loc, env, LocalBinder(x, None, []), pat, annots
 
@@ -871,7 +871,7 @@ let rec desugar_data_pat
           | Tm_fvar fv -> fv
           | _ -> failwith "impossible" in
         let x = S.new_bv (Some p.prange) (tun_r p.prange) in
-        loc, env, LocalBinder(x, None, []), pos <| Pat_cons(l, args), annots
+        loc, env, LocalBinder(x, None, []), pos <| Pat_cons(l, None, args), annots
 
       | PatRecord ([]) ->
         raise_error (Errors.Fatal_UnexpectedPattern, "Unexpected pattern") p.prange
@@ -908,7 +908,7 @@ let rec desugar_data_pat
         let pats = List.rev pats in
         (* TcTerm will look for the Unresolved_constructor qualifier
            and resolve the pattern fully in tc_pat *)
-        let pat = pos <| Pat_cons(candidate_constructor, pats) in
+        let pat = pos <| Pat_cons(candidate_constructor, None, pats) in
         let x = S.new_bv (Some p.prange) (tun_r p.prange) in
         loc, env, LocalBinder(x, None, []), pat, annots
   and aux loc env p = aux' false loc env p
@@ -1362,12 +1362,12 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
                           | Tm_name _, _ ->
                             let tup2 = S.lid_as_fv (C.mk_tuple_data_lid 2 top.range) delta_constant (Some Data_ctor) in
                             let sc = S.mk (Tm_app(mk (Tm_fvar tup2), [as_arg sc; as_arg <| S.bv_to_name x])) top.range in
-                            let p = withinfo (Pat_cons(tup2, [(p', false);(p, false)])) (Range.union_ranges p'.p p.p) in
+                            let p = withinfo (Pat_cons(tup2, None, [(p', false);(p, false)])) (Range.union_ranges p'.p p.p) in
                             Some(sc, p)
-                          | Tm_app(_, args), Pat_cons(_, pats) ->
+                          | Tm_app(_, args), Pat_cons(_, _, pats) ->
                             let tupn = S.lid_as_fv (C.mk_tuple_data_lid (1 + List.length args) top.range) delta_constant (Some Data_ctor) in
                             let sc = mk (Tm_app(mk (Tm_fvar tupn), args@[as_arg <| S.bv_to_name x])) in
-                            let p = withinfo (Pat_cons(tupn, pats@[(p, false)])) (Range.union_ranges p'.p p.p) in
+                            let p = withinfo (Pat_cons(tupn, None, pats@[(p, false)])) (Range.union_ranges p'.p p.p) in
                             Some(sc, p)
                           | _ -> failwith "Impossible"
                           end
