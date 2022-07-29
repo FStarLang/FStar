@@ -227,9 +227,7 @@ let (infix_prim_ops :
 let (prim_uni_ops : unit -> (Prims.string * Prims.string) Prims.list) =
   fun uu___ ->
     let op_minus =
-      let uu___1 =
-        let uu___2 = FStar_Options.codegen () in
-        uu___2 = (FStar_Pervasives_Native.Some FStar_Options.FSharp) in
+      let uu___1 = FStar_Extraction_ML_Util.codegen_fsharp () in
       if uu___1 then "-" else "~-" in
     [("op_Negation", "not");
     ("op_Minus", op_minus);
@@ -373,16 +371,22 @@ let (string_of_mlconstant :
     | FStar_Extraction_ML_Syntax.MLC_Bool (true) -> "true"
     | FStar_Extraction_ML_Syntax.MLC_Bool (false) -> "false"
     | FStar_Extraction_ML_Syntax.MLC_Char c ->
-        let nc = FStar_Char.int_of_char c in
-        let uu___ = FStar_Compiler_Util.string_of_int nc in
-        Prims.op_Hat uu___
-          (if
-             ((nc >= (Prims.of_int (32))) && (nc = (Prims.of_int (127)))) &&
-               (nc < (Prims.of_int (34)))
-           then
-             Prims.op_Hat " (*"
-               (Prims.op_Hat (FStar_Compiler_Util.string_of_char c) "*)")
-           else "")
+        let uu___ = FStar_Extraction_ML_Util.codegen_fsharp () in
+        if uu___
+        then
+          Prims.op_Hat "'"
+            (Prims.op_Hat (FStar_Compiler_Util.string_of_char c) "'")
+        else
+          (let nc = FStar_Char.int_of_char c in
+           let uu___2 = FStar_Compiler_Util.string_of_int nc in
+           Prims.op_Hat uu___2
+             (if
+                ((nc >= (Prims.of_int (32))) && (nc = (Prims.of_int (127))))
+                  && (nc < (Prims.of_int (34)))
+              then
+                Prims.op_Hat " (*"
+                  (Prims.op_Hat (FStar_Compiler_Util.string_of_char c) "*)")
+              else ""))
     | FStar_Extraction_ML_Syntax.MLC_Int
         (s, FStar_Pervasives_Native.Some
          (FStar_Const.Signed, FStar_Const.Int32))
