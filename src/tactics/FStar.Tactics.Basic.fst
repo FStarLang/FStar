@@ -806,6 +806,7 @@ let check_apply_implicits_solutions
                      debug_prefix
                      (Print.uvar_to_string ctx_uvar.ctx_uvar_head)
                      (Print.term_to_string term)) (fun () ->
+      let env = {env with gamma=ctx_uvar.ctx_uvar_gamma} in
       let g_typ = check_implicits_solution env term (U.ctx_uvar_typ ctx_uvar) must_tot in
       let rng = 
         match gl with
@@ -1595,7 +1596,7 @@ let t_destruct (s_tm : term) : tac (list (fv * Z.t)) = wrap_err "destruct" <|
                         let subpats_2 = List.map (fun ({binder_bv=bv;binder_qual=bq}) ->
                                                  (mk_pat (Pat_var bv), is_imp bq)) bs in
                         let subpats = subpats_1 @ subpats_2 in
-                        let pat = mk_pat (Pat_cons (fv, subpats)) in
+                        let pat = mk_pat (Pat_cons (fv, Some a_us, subpats)) in
                         let env = (goal_env g) in
 
 
@@ -1773,7 +1774,7 @@ let rec inspect (t:term) : tac term_view = wrap_err "inspect" (
         let rec inspect_pat p =
             match p.v with
             | Pat_constant c -> Pat_Constant (inspect_const c)
-            | Pat_cons (fv, ps) -> Pat_Cons (fv, List.map (fun (p, b) -> inspect_pat p, b) ps)
+            | Pat_cons (fv, us_opt, ps) -> Pat_Cons (fv, us_opt, List.map (fun (p, b) -> inspect_pat p, b) ps)
             | Pat_var bv -> Pat_Var bv
             | Pat_wild bv -> Pat_Wild bv
             | Pat_dot_term (bv, t) -> Pat_Dot_Term (bv, t)
@@ -1792,7 +1793,7 @@ let rec inspect (t:term) : tac term_view = wrap_err "inspect" (
 
 (* This function could actually be pure, it doesn't need freshness
  * like `inspect` does, but we mark it as Tac for uniformity. *)
-let pack (tv:term_view) : tac term =
+let pack' (tv:term_view) (leave_curried:bool) : tac term =
     match tv with
     | Tv_Var bv ->
         ret <| S.bv_to_name bv
@@ -1814,7 +1815,7 @@ let pack (tv:term_view) : tac term =
         ret <| U.abs [b] t None // TODO: effect?
 
     | Tv_Arrow (b, c) ->
-        ret <| U.arrow [b] c
+        ret <| (if leave_curried then U.arrow [b] c else U.canon_arrow (U.arrow [b] c))
 
     | Tv_Type u ->
         ret <| S.mk (Tm_type u) Range.dummyRange
@@ -1842,7 +1843,7 @@ let pack (tv:term_view) : tac term =
         let rec pack_pat p : S.pat =
             match p with
             | Pat_Constant c -> wrap <| Pat_constant (pack_const c)
-            | Pat_Cons (fv, ps) -> wrap <| Pat_cons (fv, List.map (fun (p, b) -> pack_pat p, b) ps)
+            | Pat_Cons (fv, us_opt, ps) -> wrap <| Pat_cons (fv, us_opt, List.map (fun (p, b) -> pack_pat p, b) ps)
             | Pat_Var  bv -> wrap <| Pat_var bv
             | Pat_Wild bv -> wrap <| Pat_wild bv
             | Pat_Dot_Term (bv, t) -> wrap <| Pat_dot_term (bv, t)
@@ -1859,6 +1860,9 @@ let pack (tv:term_view) : tac term =
 
     | Tv_Unknown ->
         ret <| S.mk Tm_unknown Range.dummyRange
+
+let pack (tv:term_view) : tac term = pack' tv false
+let pack_curried (tv:term_view) : tac term = pack' tv true
 
 let lget (ty:term) (k:string) : tac term = wrap_err "lget" <|
     bind get (fun ps ->

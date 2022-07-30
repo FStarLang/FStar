@@ -531,6 +531,19 @@ let bind_spec'
     | Error e -> Error e
     | Correct (x, v2) -> destr_repr_spec (g x) v2
 
+let bind_spec2_aux
+  (inv: memory_invariant)
+  (p1 p2 p3: parser)
+  (a b: Type)
+  ($f: repr a p1 p2 inv)
+  ($g: a -> repr b p2 p3 inv)
+  (v1: Parser?.t p1)
+: GTot (result (b & Parser?.t p3))
+=
+   match Repr?.spec f v1 with
+    | Error e -> Error e
+    | Correct (x, v2) -> Repr?.spec (g x) v2
+
 let bind_spec2
   (inv: memory_invariant)
   (p1 p2 p3: parser)
@@ -539,10 +552,7 @@ let bind_spec2
   (g: (a -> unit -> TWrite b p2 p3 inv))
   (v1: Parser?.t p1)
 : GTot (result (b & Parser?.t p3))
-=
-   match Repr?.spec (reify (f ())) v1 with
-    | Error e -> Error e
-    | Correct (x, v2) -> Repr?.spec (reify (g x ())) v2
+= bind_spec2_aux _ _ _ _ _ _ (reify (f ())) (fun x -> reify (g x ())) v1
 
 let bind_impl'
   (inv: memory_invariant)

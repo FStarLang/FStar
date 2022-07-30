@@ -788,19 +788,34 @@ and (pat_to_string : FStar_Syntax_Syntax.pat -> Prims.string) =
         (Prims.of_int (100)) d
     else
       (match x.FStar_Syntax_Syntax.v with
-       | FStar_Syntax_Syntax.Pat_cons (l, pats) ->
+       | FStar_Syntax_Syntax.Pat_cons (l, us_opt, pats) ->
            let uu___2 = fv_to_string l in
            let uu___3 =
              let uu___4 =
+               let uu___5 = FStar_Options.print_universes () in
+               Prims.op_Negation uu___5 in
+             if uu___4
+             then " "
+             else
+               (match us_opt with
+                | FStar_Pervasives_Native.None -> " "
+                | FStar_Pervasives_Native.Some us ->
+                    let uu___6 =
+                      let uu___7 = FStar_Compiler_List.map univ_to_string us in
+                      FStar_Compiler_Effect.op_Bar_Greater uu___7
+                        (FStar_String.concat " ") in
+                    FStar_Compiler_Util.format1 " %s " uu___6) in
+           let uu___4 =
+             let uu___5 =
                FStar_Compiler_List.map
-                 (fun uu___5 ->
-                    match uu___5 with
+                 (fun uu___6 ->
+                    match uu___6 with
                     | (x1, b) ->
                         let p = pat_to_string x1 in
                         if b then Prims.op_Hat "#" p else p) pats in
-             FStar_Compiler_Effect.op_Bar_Greater uu___4
+             FStar_Compiler_Effect.op_Bar_Greater uu___5
                (FStar_String.concat " ") in
-           FStar_Compiler_Util.format2 "(%s %s)" uu___2 uu___3
+           FStar_Compiler_Util.format3 "(%s%s%s)" uu___2 uu___3 uu___4
        | FStar_Syntax_Syntax.Pat_dot_term (x1, uu___2) ->
            let uu___3 = FStar_Options.print_bound_var_types () in
            if uu___3

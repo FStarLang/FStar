@@ -859,7 +859,20 @@ and (rebuild_closure :
                      let rec norm_pat env4 p =
                        match p.FStar_Syntax_Syntax.v with
                        | FStar_Syntax_Syntax.Pat_constant uu___2 -> (p, env4)
-                       | FStar_Syntax_Syntax.Pat_cons (fv, pats) ->
+                       | FStar_Syntax_Syntax.Pat_cons (fv, us_opt, pats) ->
+                           let us_opt1 =
+                             if
+                               (cfg1.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.erase_universes
+                             then FStar_Pervasives_Native.None
+                             else
+                               (match us_opt with
+                                | FStar_Pervasives_Native.None ->
+                                    FStar_Pervasives_Native.None
+                                | FStar_Pervasives_Native.Some us ->
+                                    let uu___3 =
+                                      FStar_Compiler_List.map
+                                        (norm_universe cfg1 env4) us in
+                                    FStar_Pervasives_Native.Some uu___3) in
                            let uu___2 =
                              FStar_Compiler_Effect.op_Bar_Greater pats
                                (FStar_Compiler_List.fold_left
@@ -877,7 +890,8 @@ and (rebuild_closure :
                                 ({
                                    FStar_Syntax_Syntax.v =
                                      (FStar_Syntax_Syntax.Pat_cons
-                                        (fv, (FStar_Compiler_List.rev pats1)));
+                                        (fv, us_opt1,
+                                          (FStar_Compiler_List.rev pats1)));
                                    FStar_Syntax_Syntax.p =
                                      (p.FStar_Syntax_Syntax.p)
                                  }, env5))
@@ -3370,7 +3384,8 @@ let rec (norm :
                                      let uu___6 =
                                        let uu___7 =
                                          FStar_Compiler_Effect.op_Bar_Greater
-                                           arg_i FStar_Syntax_Util.unascribe in
+                                           arg_i
+                                           FStar_Syntax_Util.unmeta_safe in
                                        FStar_Compiler_Effect.op_Bar_Greater
                                          uu___7
                                          FStar_Syntax_Util.head_and_args in
@@ -7004,7 +7019,20 @@ and (rebuild :
                          match p.FStar_Syntax_Syntax.v with
                          | FStar_Syntax_Syntax.Pat_constant uu___6 ->
                              (p, env3)
-                         | FStar_Syntax_Syntax.Pat_cons (fv, pats) ->
+                         | FStar_Syntax_Syntax.Pat_cons (fv, us_opt, pats) ->
+                             let us_opt1 =
+                               if
+                                 (cfg1.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.erase_universes
+                               then FStar_Pervasives_Native.None
+                               else
+                                 (match us_opt with
+                                  | FStar_Pervasives_Native.None ->
+                                      FStar_Pervasives_Native.None
+                                  | FStar_Pervasives_Native.Some us ->
+                                      let uu___7 =
+                                        FStar_Compiler_List.map
+                                          (norm_universe cfg1 env3) us in
+                                      FStar_Pervasives_Native.Some uu___7) in
                              let uu___6 =
                                FStar_Compiler_Effect.op_Bar_Greater pats
                                  (FStar_Compiler_List.fold_left
@@ -7022,7 +7050,7 @@ and (rebuild :
                                   ({
                                      FStar_Syntax_Syntax.v =
                                        (FStar_Syntax_Syntax.Pat_cons
-                                          (fv,
+                                          (fv, us_opt1,
                                             (FStar_Compiler_List.rev pats1)));
                                      FStar_Syntax_Syntax.p =
                                        (p.FStar_Syntax_Syntax.p)
@@ -7112,9 +7140,10 @@ and (rebuild :
                            match branches1 with
                            | ({
                                 FStar_Syntax_Syntax.v =
-                                  FStar_Syntax_Syntax.Pat_cons (fv, uu___7);
-                                FStar_Syntax_Syntax.p = uu___8;_},
-                              uu___9, uu___10)::uu___11 ->
+                                  FStar_Syntax_Syntax.Pat_cons
+                                  (fv, uu___7, uu___8);
+                                FStar_Syntax_Syntax.p = uu___9;_},
+                              uu___10, uu___11)::uu___12 ->
                                FStar_TypeChecker_Env.fv_has_attr
                                  cfg1.FStar_TypeChecker_Cfg.tcenv fv
                                  FStar_Parser_Const.commute_nested_matches_lid
@@ -7335,19 +7364,20 @@ and (rebuild :
                                       let uu___7 = is_cons head in
                                       Prims.op_Negation uu___7 in
                                     FStar_Pervasives.Inr uu___6)
-                           | FStar_Syntax_Syntax.Pat_cons (fv, arg_pats) ->
-                               let uu___5 =
-                                 let uu___6 = FStar_Syntax_Util.un_uinst head in
-                                 uu___6.FStar_Syntax_Syntax.n in
-                               (match uu___5 with
+                           | FStar_Syntax_Syntax.Pat_cons
+                               (fv, uu___5, arg_pats) ->
+                               let uu___6 =
+                                 let uu___7 = FStar_Syntax_Util.un_uinst head in
+                                 uu___7.FStar_Syntax_Syntax.n in
+                               (match uu___6 with
                                 | FStar_Syntax_Syntax.Tm_fvar fv' when
                                     FStar_Syntax_Syntax.fv_eq fv fv' ->
                                     matches_args [] args arg_pats
-                                | uu___6 ->
-                                    let uu___7 =
-                                      let uu___8 = is_cons head in
-                                      Prims.op_Negation uu___8 in
-                                    FStar_Pervasives.Inr uu___7))
+                                | uu___7 ->
+                                    let uu___8 =
+                                      let uu___9 = is_cons head in
+                                      Prims.op_Negation uu___9 in
+                                    FStar_Pervasives.Inr uu___8))
                     and matches_args out a p =
                       match (a, p) with
                       | ([], []) -> FStar_Pervasives.Inl out

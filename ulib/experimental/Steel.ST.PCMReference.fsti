@@ -14,14 +14,12 @@
    limitations under the License.
 *)
 
-module Steel.PCMReference
+module Steel.ST.PCMReference
 
 open FStar.PCM
 open FStar.Ghost
 
-open Steel.Memory
-open Steel.Effect.Atomic
-open Steel.Effect
+open Steel.ST.Util
 
 /// This module exposes the core PCM-based memory model defined in Steel.Memory
 /// as stateful Steel computations.
@@ -41,11 +39,11 @@ val read (#a:Type)
          (#pcm:pcm a)
          (r:ref a pcm)
          (v0:erased a)
-  : Steel a
+  : ST a
           (pts_to r v0)
           (fun _ -> pts_to r v0)
-          (requires fun _ -> True)
-          (ensures fun _ v _ -> compatible pcm v0 v /\ True)
+          (requires True)
+          (ensures fun v -> compatible pcm v0 v /\ True)
 
 /// Writing value [v1] in reference [r], as long as it is frame-preserving with our
 /// current knowledge [v0], and that [v1] is a refined value for the PCM [pcm]
@@ -54,21 +52,21 @@ val write (#a:Type)
           (r:ref a pcm)
           (v0:erased a)
           (v1:a)
-  : Steel unit
+  : ST unit
           (pts_to r v0)
           (fun _ -> pts_to r v1)
-          (requires fun _ -> frame_preserving pcm v0 v1 /\ pcm.refine v1)
-          (ensures fun _ _ _ -> True)
+          (requires frame_preserving pcm v0 v1 /\ pcm.refine v1)
+          (ensures fun _ -> True)
 
 /// Allocates a new reference, initially storing value [x].
 val alloc (#a:Type)
           (#pcm:pcm a)
           (x:a)
-  : Steel (ref a pcm)
+  : ST (ref a pcm)
           emp
           (fun r -> pts_to r x)
-          (requires fun _ -> pcm.refine x)
-          (ensures fun _ _ _ -> True)
+          (requires pcm.refine x)
+          (ensures fun _ -> True)
 
 /// Frees reference [r], as long as we have exclusive ownership of [r]
 /// according to the governing PCM.
@@ -78,9 +76,9 @@ val free (#a:Type)
          (#p:pcm a)
          (r:ref a p)
          (x:erased a)
-  : Steel unit (pts_to r x) (fun _ -> pts_to r p.p.one)
-          (requires fun _ -> exclusive p x /\ p.refine p.p.one)
-          (ensures fun _ _ _ -> True)
+  : ST unit (pts_to r x) (fun _ -> pts_to r p.p.one)
+          (requires exclusive p x /\ p.refine p.p.one)
+          (ensures fun _ -> True)
 
 /// Splits permission on reference [r], in a way that is compatible with the governing PCM.
 val split (#inames: _)
@@ -90,12 +88,12 @@ val split (#inames: _)
           (v:erased a)
           (v0:erased a)
           (v1:erased a)
-  : SteelGhost unit inames (pts_to r v)
+  : STGhost unit inames (pts_to r v)
                (fun _ -> pts_to r v0 `star` pts_to r v1)
-               (requires fun _ ->
+               (requires
                  composable p v0 v1 /\
                  v == hide (op p v0 v1))
-               (ensures fun _ _ _ -> True)
+               (ensures fun _ -> True)
 
 /// Gather permissions on reference [r]
 val gather (#inames: _)
@@ -104,7 +102,7 @@ val gather (#inames: _)
            (r:ref a p)
            (v0:erased a)
            (v1:erased a)
-  : SteelGhostT (_:unit{composable p v0 v1}) inames
+  : STGhostT (_:unit{composable p v0 v1}) inames
            (pts_to r v0 `star` pts_to r v1)
            (fun _ -> pts_to r (op p v0 v1))
 
@@ -121,10 +119,10 @@ val witness (#inames: _) (#a:Type) (#pcm:pcm a)
             (fact:stable_property pcm)
             (v:erased a)
             (_:fact_valid_compat fact v)
-  : SteelGhost unit inames (pts_to r v)
+  : STGhost unit inames (pts_to r v)
                (fun _ -> pts_to r v)
-               (requires fun _ -> True)
-               (ensures fun _ _ _ -> witnessed r fact)
+               (requires True)
+               (ensures fun _ -> witnessed r fact)
 
 /// If we previously witnessed the validity of a predicate [fact],
 /// then we can recall this validity on the current value [v1], which
@@ -133,11 +131,11 @@ val recall (#inames: _) (#a:Type u#1) (#pcm:pcm a)
            (fact:property a)
            (r:ref a pcm)
            (v:erased a)
-  : SteelGhost (erased a) inames
+  : STGhost (erased a) inames
           (pts_to r v)
           (fun v1 -> pts_to r v)
-          (requires fun _ -> witnessed r fact)
-          (ensures fun _ v1 _ -> fact v1 /\ compatible pcm v v1)
+          (requires witnessed r fact)
+          (ensures fun v1 -> fact v1 /\ compatible pcm v v1)
 
 /// Refines our current knowledge [x] about reference [r] by applying function [f]
 /// as long as we can prove that this refinement is frame compatible
@@ -147,7 +145,7 @@ val select_refine (#a:Type u#1) (#p:pcm a)
                   (f:(v:a{compatible p x v}
                       -> GTot (y:a{compatible p y v /\
                                   frame_compatible p x v y})))
-   : SteelT (v:a{compatible p x v /\ p.refine v})
+   : STT (v:a{compatible p x v /\ p.refine v})
             (pts_to r x)
             (fun v -> pts_to r (f v))
 
@@ -155,7 +153,7 @@ val select_refine (#a:Type u#1) (#p:pcm a)
 /// as long as we can prove that this update is frame preserving
 val upd_gen (#a:Type) (#p:pcm a) (r:ref a p) (x y:erased a)
             (f:frame_preserving_upd p x y)
-  : SteelT unit
+  : STT unit
            (pts_to r x)
            (fun _ -> pts_to r y)
 
@@ -174,18 +172,18 @@ val upd_gen (#a:Type) (#p:pcm a) (r:ref a p) (x y:erased a)
 val atomic_read (#opened:_) (#a:Type) (#pcm:pcm a)
   (r:ref a pcm)
   (v0:erased a)
-  : SteelAtomic a opened
+  : STAtomic a opened
       (pts_to r v0)
       (fun _ -> pts_to r v0)
-      (requires fun _ -> True)
-      (ensures fun _ v _ -> compatible pcm v0 v /\ True)
+      (requires True)
+      (ensures fun v -> compatible pcm v0 v /\ True)
 
 val atomic_write (#opened:_) (#a:Type) (#pcm:pcm a)
   (r:ref a pcm)
   (v0:erased a)
   (v1:a)
-  : SteelAtomic unit opened
+  : STAtomic unit opened
       (pts_to r v0)
       (fun _ -> pts_to r v1)
-      (requires fun _ -> frame_preserving pcm v0 v1 /\ pcm.refine v1)
-      (ensures fun _ _ _ -> True)
+      (requires frame_preserving pcm v0 v1 /\ pcm.refine v1)
+      (ensures fun _ -> True)

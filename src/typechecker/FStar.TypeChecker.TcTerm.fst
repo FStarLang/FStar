@@ -952,19 +952,72 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
 
   | Tm_app({n=Tm_constant Const_reify}, [(e, aqual)]) ->
     if Option.isSome aqual
-    then Errors.log_issue e.pos (Errors.Warning_IrrelevantQualifierOnArgumentToReify, "Qualifier on argument to reify is irrelevant and will be ignored");
+    then Errors.log_issue e.pos
+           (Errors.Warning_IrrelevantQualifierOnArgumentToReify,
+            "Qualifier on argument to reify is irrelevant and will be ignored");
+
+    //
+    // Typecheck e
+    //
     let env0, _ = Env.clear_expected_typ env in
     let e, c, g = tc_term env0 e in
     let reify_op, _ = U.head_and_args top in
-    let u_c = env.universe_of env c.res_typ in
-    let c, g_c = TcComm.lcomp_comp c in
-    let ef = U.comp_effect_name c in
-    if not (is_user_reifiable_effect env ef) then
-        raise_error (Errors.Fatal_EffectCannotBeReified, (BU.format1 "Effect %s cannot be reified" (string_of_lid ef))) e.pos;
-    let repr = Env.reify_comp env c u_c in
-    let e = mk (Tm_app(reify_op, [(e, aqual)])) top.pos in
+    let c, g_c =
+      let c, g_c = TcComm.lcomp_comp c in
+      Env.unfold_effect_abbrev env c, g_c in
+
+    if not (is_user_reifiable_effect env c.effect_name) then
+      raise_error (Errors.Fatal_EffectCannotBeReified,
+                   BU.format1 "Effect %s cannot be reified" (string_of_lid c.effect_name))
+                  e.pos;
+    let u_c = List.hd c.comp_univs in
+
+    let e =
+      //
+      // AR:
+      // Indexed effects reification is supported only as a type coercion from
+      //   (M a is) to (M.repr a is)
+      // We achieve this by:
+      //
+      // For a reifiable indexed effect, the typechecker adds an
+      //   assume val reify__M (#a:Type) (#is:_) ($f:unit -> M a is) : (Tot/Div) M.repr a is
+      //
+      // Then (reify e) is rewritten as reify__M (fun _ -> e)
+      //
+      // The rewriting happens in phase 2
+      //   This is consistent with the usual inference of indexed effect indices in phase 2
+      //
+      if Env.is_layered_effect env c.effect_name &&
+         not env.phase1
+      then 
+           // reify__M<u_c>
+           let reify_val_tm =
+             S.mk_Tm_uinst
+               (Const.layered_effect_reify_val_lid c.effect_name e.pos |> S.tconst)
+               [u_c] in
+           // fun _ -> e
+           let thunked_e =
+             S.mk (Tm_abs (
+                     [S.mk_binder (S.null_bv S.t_unit)],
+                     e,
+                     Some ({residual_effect=c.effect_name;
+                            residual_typ=None;
+                            residual_flags=[]}))) e.pos in
+           // #a, #is
+           let implicit_args =
+             let a_arg = S.iarg c.result_typ in
+             let indices_args =
+             c.effect_args |> List.map (fun (t, _) -> S.iarg t) in
+             a_arg::indices_args in
+           // reify__M<u> #a #is (fun _ -> e)
+           mk_Tm_app
+             reify_val_tm
+             (implicit_args@[S.as_arg thunked_e])
+             e.pos
+      else mk (Tm_app(reify_op, [(e, aqual)])) top.pos in
+    let repr = Env.reify_comp env (S.mk_Comp c) u_c in
     let c =
-        if is_total_effect env ef
+        if is_total_effect env c.effect_name
         then S.mk_Total repr |> TcComm.lcomp_of_comp
         else let ct = { comp_univs = [u_c]
                       ; effect_name = Const.effect_Dv_lid
@@ -2882,8 +2935,28 @@ and tc_pat env (pat_t:typ) (p0:pat) :
     let type_of_simple_pat env (e:term) : term * typ * list bv * guard_t * bool =
         let head, args = U.head_and_args e in
         match head.n with
-        | Tm_fvar f ->
-          let us, t_f = Env.lookup_datacon env f.fv_name.v in
+        | Tm_uinst ({n=Tm_fvar _}, _)
+        | Tm_fvar _ ->
+          let head, (us, t_f) = 
+            match head.n with
+            | Tm_uinst (head, us) ->
+              let Tm_fvar f = head.n in
+              let res = Env.try_lookup_and_inst_lid env us f.fv_name.v in
+              begin
+              match res with
+              | Some (t, _)
+                when Env.is_datacon env f.fv_name.v ->
+                head, (us, t)
+                
+              | _ ->
+                fail (BU.format1 "Could not find constructor: %s" 
+                                 (Ident.string_of_lid f.fv_name.v))
+              end
+
+            | Tm_fvar f ->
+              head,
+              Env.lookup_datacon env f.fv_name.v
+          in
           let formals, t = U.arrow_formals t_f in
           //Data constructors are marked with the "erasable" attribute
           //if their types are; matching on this constructor incurs
@@ -3051,7 +3124,7 @@ and tc_pat env (pat_t:typ) (p0:pat) :
           Env.trivial_guard,
           false
 
-        | Pat_cons({fv_qual = Some (Unresolved_constructor uc)}, sub_pats) ->
+        | Pat_cons({fv_qual = Some (Unresolved_constructor uc)}, us_opt, sub_pats) ->
           let rdc, _, constructor_fv = TcUtil.find_record_or_dc_from_typ env (Some t) uc p.p in
           let f_sub_pats = List.zip uc.uc_fields sub_pats in
           let sub_pats =
@@ -3061,11 +3134,11 @@ and tc_pat env (pat_t:typ) (p0:pat) :
                 Some (S.withinfo (Pat_wild x) p.p, false))
               p.p
           in
-          let p = { p with v=Pat_cons(constructor_fv, sub_pats) } in
+          let p = { p with v=Pat_cons(constructor_fv, us_opt, sub_pats) } in
           let p = PatternUtils.elaborate_pat env p in
           check_nested_pattern env p t
 
-        | Pat_cons(fv, sub_pats) ->
+        | Pat_cons(fv, us_opt, sub_pats) ->
           let simple_pat =
             let simple_sub_pats =
                 List.map (fun (p, b) ->
@@ -3073,7 +3146,7 @@ and tc_pat env (pat_t:typ) (p0:pat) :
                     | Pat_dot_term _ -> p, b
                     | _ -> S.withinfo (Pat_var (S.new_bv (Some p.p) S.tun)) p.p, b)
                 sub_pats in
-            {p with v = Pat_cons (fv, simple_sub_pats)}
+            {p with v = Pat_cons (fv, us_opt, simple_sub_pats)}
           in
           let sub_pats =
             sub_pats
@@ -3150,10 +3223,17 @@ and tc_pat env (pat_t:typ) (p0:pat) :
                     end
                   | _ -> failwith "Impossible: expected a simple pattern"
               in
+              let us = 
+                let hd, _ = U.head_and_args simple_pat_e in
+                match (SS.compress hd).n with
+                | Tm_fvar _ -> []
+                | Tm_uinst(_, us) -> us
+                | _ -> failwith "Impossible"
+              in
               match pat.v with
-              | Pat_cons(fv, simple_pats) ->
+              | Pat_cons(fv, _, simple_pats) ->
                 let nested_pats = aux simple_pats simple_bvs checked_sub_pats in
-                {pat with v=Pat_cons(fv, nested_pats)}
+                {pat with v=Pat_cons(fv, Some us, nested_pats)}
               | _ -> failwith "Impossible"
           in
           bvs,
@@ -3346,15 +3426,15 @@ and tc_eqn scrutinee env ret_opt branch
               in
               [U.mk_decidable_eq t (force_scrutinee ()) pat_exp]
 
-            | Pat_cons (_, []), Tm_uinst _
-            | Pat_cons (_, []), Tm_fvar _ ->
+            | Pat_cons (_, _, []), Tm_uinst _
+            | Pat_cons (_, _, []), Tm_fvar _ ->
                 //nullary pattern
                 let f = head_constructor pat_exp in
                 if not (Env.is_datacon env f.v)
                 then failwith "Impossible: nullary patterns must be data constructors"
                 else discriminate (force_scrutinee ()) (head_constructor pat_exp)
 
-            | Pat_cons (_, pat_args), Tm_app(head, args) ->
+            | Pat_cons (_, _, pat_args), Tm_app(head, args) ->
                 //application pattern
                 let f = head_constructor head in
                 if not (Env.is_datacon env f.v)

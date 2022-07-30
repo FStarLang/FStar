@@ -462,12 +462,14 @@ let extract #a #w (c:repr a w)
   : Lemma (w `stronger` interp_as_wp c)
   = ()
 
+let soundness_aux #a #wp (t:repr a wp)
+  : Tot (s0:state -> ID5.ID (a & state) (as_pure_wp (wp s0)))
+  = extract t;
+    interp_sem t
+
 let soundness #a #wp (t : unit -> AlgWP a wp)
   : Tot (s0:state -> ID5.ID (a & state) (as_pure_wp (wp s0)))
-  = let c = reify (t ()) in
-    extract c;
-    interp_sem c
-
+  = soundness_aux (reify (t ()))
 
 (* Same as above, but one doesn't have to think about WPs *)
 let soundnessPP #a #pre #post (t : unit -> AlgPP a pre post)

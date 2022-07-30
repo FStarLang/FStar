@@ -90,3 +90,25 @@ let test_extraction_specific (w x y z:uint_64) : uint_64 =
   assume (ok (+) x (y + z));
   assume (ok (+) w (x + (y + z)));
   w + (x + (y + z))
+
+
+//
+// Benjamin Bonneau reported this example on Slack,
+//   where earlier f failed to reduce because of Meta_desugared wrapped around its arg
+//
+
+let mk_option_int () : option int
+  = (); Some #int 5
+
+[@@ strict_on_arguments [0]]
+let f (x : option int) : int
+  = match x with
+  | Some n -> n
+  | None   -> 0
+
+let _ : squash (f (mk_option_int ()) == 5)
+  = _ by (
+      norm [delta_only [`%mk_option_int]];
+      norm [delta_only [`%f]; iota; zeta];
+      trefl ()
+    )
