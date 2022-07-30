@@ -3044,11 +3044,8 @@ let init_resolve_tac' (dict: _) : Tac unit =
   // We split goals between framing goals, about slprops (slgs)
   // and goals related to requires/ensures, that depend on slprops (loggs)
   let slgs, loggs = filter_goals (goals()) in
-  if debugging ()
-  then (
-    print ("SL Goals: \n" ^ print_goals slgs);
-    print ("Logical goals: \n" ^ print_goals loggs)
-  );
+  // print ("SL Goals: \n" ^ print_goals slgs);
+  // print ("Logical goals: \n" ^ print_goals loggs);
 
   // We first solve the slprops
   set_goals slgs;
