@@ -187,3 +187,4 @@ val lcomp_of_comp_guard : comp -> guard_t -> lcomp
 //lcomp_of_comp_guard with trivial guard
 val lcomp_of_comp : comp -> lcomp
 val simplify : debug:bool -> term -> term
+

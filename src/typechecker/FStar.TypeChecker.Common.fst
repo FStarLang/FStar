@@ -594,38 +594,3 @@ let simplify (debug:bool) (tm:term) : term =
         | None -> tm
         end
     | _ -> tm
-
-
-////////////////////////////////////////////////////////////////////////////////
-
-// type hash_entry = {
-//   elaborated_term: term;
-//   free_names:set bv;
-//   lcomp: lcomp;
-//   guard: guard_t
-// }
-// type tc_table = FStar.Hash.hashtable term hash_entry
-// let table : tc_table = FStar.Hash.create FStar.Syntax.Hash.equal_term
-// let clear_memo_table () = FStar.Hash.clear table
-// let insert (e:term) (e':term) (lc:lcomp) (guard:guard_t) =
-//   if set_is_empty (FStar.Syntax.Free.uvars e')
-//   && set_is_empty (FStar.Syntax.Free.univs e')
-//   then
-//     let entry = {
-//       elaborated_term = e';
-//       free_names = FStar.Syntax.Free.names e';
-//       lcomp = lc;
-//       guard = guard
-//     }
-//     in
-//     FStar.Hash.insert (e, FStar.Syntax.Hash.hash_term) entry table
-//   else ()
-// let lookup (e:term) : option (term & lcomp & guard_t) =
-//   match FStar.Hash.lookup (e, FStar.Syntax.Hash.hash_term) table with
-//   | None -> None
-//   | Some he ->
-//     BU.print3 "Hit: %s elaborated to %s : %s\n"
-//       (Print.term_to_string e)
-//       (Print.term_to_string he.elaborated_term)
-//       (Print.comp_to_string (fst (lcomp_comp he.lcomp)));
-//     Some (he.elaborated_term, he.lcomp, he.guard)
