@@ -112,7 +112,11 @@ let handle_with (#a:Type) (x:result a) (h: unit -> result a)
 inline_for_extraction
 let with_context (#a:Type) (msg:string) (t:option term) (x:unit -> result a)
   : result a
-  = fun ctx -> x () ((msg,t)::ctx)
+  = fun ctx -> 
+     let ctx' = ((msg,t)::ctx) in
+     // (if Options.debug_any()
+     //  then BU.print_string (print_context ctx'));
+     x () ctx'
 
 let mk_type (u:universe) = S.mk (Tm_type u) R.dummyRange
 
@@ -359,6 +363,12 @@ let rec check_subtype_whnf (g:env) (e:term) (t0 t1: typ)
         (apply_predicate x1 p1 e)
         (check_subtype g e t0 x1.binder_bv.sort)
 
+    | Tm_arrow (x0::x1::xs, c0), _ ->
+      check_subtype_whnf g e (curry_arrow x0 (x1::xs) c0) t1
+      
+    | _, Tm_arrow(x0::x1::xs, c1) ->
+      check_subtype_whnf g e t0 (curry_arrow x0 (x1::xs) c1)
+
     | Tm_arrow ([x0], c0), Tm_arrow([x1], c1) ->
       let [x0], c0 = SS.open_comp [x0] c0 in
       let [x1], c1 = SS.open_comp [x1] c1 in
@@ -366,14 +376,8 @@ let rec check_subtype_whnf (g:env) (e:term) (t0 t1: typ)
       u1 <-- universe_of g x1.binder_bv.sort;
       with_binders [x1] [u1] (
         check_subtype g (S.bv_to_name x1.binder_bv) x1.binder_bv.sort x0.binder_bv.sort ;;
-        check_subcomp g (S.mk_Tm_app e (snd (U.args_of_binders [x1])) R.dummyRange) c0 c1           
+        check_subcomp g (S.mk_Tm_app e (snd (U.args_of_binders [x1])) R.dummyRange) c0 (SS.subst_comp [NT(x1.binder_bv, S.bv_to_name x0.binder_bv)] c1)
       )
-         
-    | Tm_arrow (x0::xs0, c0), _ ->
-      check_subtype_whnf g e (curry_arrow x0 xs0 c0) t1
-      
-    | _, Tm_arrow(x1::xs1, c1) ->
-      check_subtype_whnf g e t0 (curry_arrow x1 xs1 c1)
 
     | Tm_app _, Tm_app _
     | Tm_type _, Tm_type _ ->
@@ -392,7 +396,9 @@ let rec check_subtype_whnf (g:env) (e:term) (t0 t1: typ)
                            (P.term_to_string t1))
 
 and check_subtype (g:env) (e:term) (t0 t1:typ)
-  = match U.eq_tm t0 t1 with
+  = // if Env.debug g.tcenv (Options.Other "Core")
+    // then BU.print2 "check_subtype %s <: %s" (P.term_to_string t0) (P.term_to_string t1);
+    match U.eq_tm t0 t1 with
     | U.Equal -> return ()
     | _ ->
       let open Env in
@@ -481,7 +487,10 @@ and check (msg:string) (g:env) (e:term)
 (*  G |- e : Tot t | pre *)
 and check' (g:env) (e:term)
   : result typ =
-  let e = SS.compress e in         
+  // (if Env.debug g.tcenv (Options.Other "Core")
+  //  then dump_context
+  //  else return ());;
+  let e = SS.compress e in
   match e.n with
   | Tm_meta(t, _) ->
     memo_check g t
@@ -716,6 +725,13 @@ let check_term_top g e t
       check_subtype ({ g with allow_universe_instantiation = true}) e te t)
 
 let check_term g e t
-  = match check_term_top g e t [] with
+  = // if Env.debug g (Options.Other "Core")
+    // then BU.print1 "Entering core with %s\n" (P.term_to_string e);
+    let res = match check_term_top g e t [] with
     | Inl (_, g) -> Inl g
     | Inr err -> Inr err
+    in
+    // if Env.debug g (Options.Other "Core")
+    // then BU.print_string "Exiting core\n";
+    res
+    

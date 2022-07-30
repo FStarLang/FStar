@@ -139,7 +139,10 @@ let with_context :
         (unit -> 'a result) -> 'a result
   =
   fun msg ->
-    fun t -> fun x -> fun ctx -> let uu___ = x () in uu___ ((msg, t) :: ctx)
+    fun t ->
+      fun x ->
+        fun ctx ->
+          let ctx' = (msg, t) :: ctx in let uu___ = x () in uu___ ctx'
 let (mk_type :
   FStar_Syntax_Syntax.universe ->
     FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax)
@@ -582,6 +585,12 @@ let rec (check_subtype_whnf :
                      check_subtype g e t0
                        (x11.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort in
                    strengthen uu___3 uu___4)
+          | (FStar_Syntax_Syntax.Tm_arrow (x0::x1::xs, c0), uu___1) ->
+              let uu___2 = curry_arrow x0 (x1 :: xs) c0 in
+              check_subtype_whnf g e uu___2 t1
+          | (uu___1, FStar_Syntax_Syntax.Tm_arrow (x0::x1::xs, c1)) ->
+              let uu___2 = curry_arrow x0 (x1 :: xs) c1 in
+              check_subtype_whnf g e t0 uu___2
           | (FStar_Syntax_Syntax.Tm_arrow (x0::[], c0),
              FStar_Syntax_Syntax.Tm_arrow (x1::[], c1)) ->
               let uu___1 = FStar_Syntax_Subst.open_comp [x0] c0 in
@@ -620,14 +629,21 @@ let rec (check_subtype_whnf :
                                            FStar_Syntax_Syntax.mk_Tm_app e
                                              uu___10
                                              FStar_Compiler_Range.dummyRange in
-                                         check_subcomp g uu___9 c01 c11) in
+                                         let uu___10 =
+                                           let uu___11 =
+                                             let uu___12 =
+                                               let uu___13 =
+                                                 let uu___14 =
+                                                   FStar_Syntax_Syntax.bv_to_name
+                                                     x01.FStar_Syntax_Syntax.binder_bv in
+                                                 ((x11.FStar_Syntax_Syntax.binder_bv),
+                                                   uu___14) in
+                                               FStar_Syntax_Syntax.NT uu___13 in
+                                             [uu___12] in
+                                           FStar_Syntax_Subst.subst_comp
+                                             uu___11 c11 in
+                                         check_subcomp g uu___9 c01 uu___10) in
                                   with_binders [x11] [u1] uu___6))))
-          | (FStar_Syntax_Syntax.Tm_arrow (x0::xs0, c0), uu___1) ->
-              let uu___2 = curry_arrow x0 xs0 c0 in
-              check_subtype_whnf g e uu___2 t1
-          | (uu___1, FStar_Syntax_Syntax.Tm_arrow (x1::xs1, c1)) ->
-              let uu___2 = curry_arrow x1 xs1 c1 in
-              check_subtype_whnf g e t0 uu___2
           | (FStar_Syntax_Syntax.Tm_app uu___1, FStar_Syntax_Syntax.Tm_app
              uu___2) -> check_equality_whnf g t0 t1
           | (FStar_Syntax_Syntax.Tm_type uu___1, FStar_Syntax_Syntax.Tm_type
@@ -1256,7 +1272,9 @@ let (check_term :
   fun g ->
     fun e ->
       fun t ->
-        let uu___ = let uu___1 = check_term_top g e t in uu___1 [] in
-        match uu___ with
-        | FStar_Pervasives.Inl (uu___1, g1) -> FStar_Pervasives.Inl g1
-        | FStar_Pervasives.Inr err -> FStar_Pervasives.Inr err
+        let res =
+          let uu___ = let uu___1 = check_term_top g e t in uu___1 [] in
+          match uu___ with
+          | FStar_Pervasives.Inl (uu___1, g1) -> FStar_Pervasives.Inl g1
+          | FStar_Pervasives.Inr err -> FStar_Pervasives.Inr err in
+        res
