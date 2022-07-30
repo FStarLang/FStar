@@ -97,6 +97,20 @@ let bind (#a:Type) (#b:Type) (x:result a) (y:a -> result b)
          | err -> err)
       | Inr err -> Inr err
 
+inline_for_extraction
+let (let!) (#a:Type) (#b:Type) (x:result a) (y:a -> result b)
+  : result b
+  = v <-- x; y v
+
+
+inline_for_extraction
+let (and!) (#a:Type) (#b:Type) (x:result a) (y:result b)
+  : result (a & b)
+  = v <-- x;
+    u <-- y;
+    return (v, u)
+
+
 let fail #a msg : result a = fun ctx -> Inr (ctx, msg)
 
 let dump_context
@@ -345,7 +359,7 @@ let rec iter2 (xs ys:list 'a) (f: 'a -> 'a -> 'b -> result 'b) (b:'b)
   = match xs, ys with
     | [], [] -> return b
     | x::xs, y::ys ->
-      b <-- f x y b ;
+      let! b = f x y b in
       iter2 xs ys f b
     | _ -> fail "Lists of differing length"
 
@@ -361,7 +375,12 @@ let as_comp (g:env) (et: (effect_label & typ))
       if non_informative g t 
       then S.mk_Total t
       else S.mk_GTotal t
-    
+
+let join_eff e0 e1 = 
+  match e0, e1 with
+  | E_GHOST, _
+  | _, E_GHOST -> E_GHOST
+  | _ -> E_TOTAL
 
 (*
      G |- e : t0 <: t1 | p
@@ -390,8 +409,8 @@ let rec check_subtype_whnf (g:env) (e:term) (t0 t1: typ)
     | Tm_arrow ([x0], c0), Tm_arrow([x1], c1) ->
       let [x0], c0 = SS.open_comp [x0] c0 in
       let [x1], c1 = SS.open_comp [x1] c1 in
-      check_bqual x0.binder_qual x1.binder_qual ;;
-      u1 <-- universe_of g x1.binder_bv.sort;
+      let! _ = check_bqual x0.binder_qual x1.binder_qual in
+      let! u1 = universe_of g x1.binder_bv.sort in
       with_binders [x1] [u1] (
         check_subtype g (S.bv_to_name x1.binder_bv) x1.binder_bv.sort x0.binder_bv.sort ;;
         check_subcomp g (S.mk_Tm_app e (snd (U.args_of_binders [x1])) R.dummyRange) c0 (SS.subst_comp [NT(x1.binder_bv, S.bv_to_name x0.binder_bv)] c1)
@@ -406,7 +425,7 @@ let rec check_subtype_whnf (g:env) (e:term) (t0 t1: typ)
       then return ()
       else if equatable t0 t1
       then (
-        u <-- universe_of g t0;
+        let! u = universe_of g t0 in
         guard (U.mk_eq2 u (mk_type u) t0 t1)
       )
       else fail (BU.format2 "Subtyping failed: %s </: %s"
@@ -517,8 +536,13 @@ and check' (g:env) (e:term)
     return (E_TOTAL, SS.subst' s (U.ctx_uvar_typ uv))
 
   | Tm_name x ->
-    let t, _ = Env.lookup_bv g.tcenv x in
-    return (E_TOTAL, t)
+    begin
+    match Env.try_lookup_bv g.tcenv x with
+    | None ->
+      fail (BU.format1 "Variable not found: %s" (P.bv_to_string x))
+    | Some (t, _) ->
+      return (E_TOTAL, t)
+    end
 
   | Tm_fvar f ->
     begin
@@ -534,7 +558,7 @@ and check' (g:env) (e:term)
     begin
     match Env.try_lookup_and_inst_lid g.tcenv us f.fv_name.v with
     | None ->
-      fail "Top-level name not found"
+      fail (BU.format1 "Top-level name not found: %s" (Ident.string_of_lid f.fv_name.v))
 
     | Some (t, _) ->
       return (E_TOTAL, t)
@@ -560,41 +584,38 @@ and check' (g:env) (e:term)
     
   | Tm_refine(x, phi) ->
     let [x], phi = SS.open_term [S.mk_binder x] phi in
-    t <-- check "refinement head" g x.binder_bv.sort ;
-    u <-- is_type g (snd t);
+    let! _eff, t = check "refinement head" g x.binder_bv.sort in
+    let! u = is_type g t in
     with_binders [x] [u] (
       let g' = push_binders g [x] in
-      t' <-- check "refinement formula" g' phi;
-      is_type g' (snd t');;
-      return (E_TOTAL, snd t)
+      let! _eff', t' = check "refinement formula" g' phi in
+      is_type g' t';;
+      return (E_TOTAL, t)
     )
 
   | Tm_abs(xs, body, _) ->
     let xs, body = SS.open_term xs body in
-    xs_g <--  with_context "abs binders" None (fun _ -> check_binders g xs) ;
-    let xs, us, g = xs_g in
+    let! xs, us, g = with_context "abs binders" None (fun _ -> check_binders g xs) in
     with_binders xs us (
-      t <-- check "abs body" g body;
+      let! t = check "abs body" g body in
       return (E_TOTAL, U.arrow xs (as_comp g t))
     )
 
   | Tm_arrow(xs, c) ->
     let xs, c = SS.open_comp xs c in
-    xs_g <-- with_context "arrow binders" None (fun _ -> check_binders g xs);
-    let xs, us, g = xs_g in
+    let! xs, us, g = with_context "arrow binders" None (fun _ -> check_binders g xs) in
     with_binders xs us (
-      u <-- with_context "arrow comp" None (fun _ -> check_comp g c);
+      let! u = with_context "arrow comp" None (fun _ -> check_comp g c) in
       return (E_TOTAL, mk_type (S.U_max (u::us)))
     )
 
   | Tm_app (hd, [(arg, arg_qual)]) ->
-    t <-- check "app head" g hd ;
-    x_r <-- is_tot_arrow g (snd t);
-    let x, t' = x_r in
-    t_arg <-- check "app arg" g arg ;
-    with_context "app subtyping" None (fun _ -> check_subtype g arg (snd t_arg) x.binder_bv.sort) ;;
+    let! eff_hd, t = check "app head" g hd in
+    let! x, t' = is_tot_arrow g t in
+    let! eff_arg, t_arg = check "app arg" g arg in
+    with_context "app subtyping" None (fun _ -> check_subtype g arg t_arg x.binder_bv.sort) ;;
     with_context "app arg qual" None (fun _ -> check_arg_qual arg_qual x.binder_qual) ;;
-    return (E_TOTAL, SS.subst [NT(x.binder_bv, arg)] t')
+    return (join_eff eff_hd eff_arg, SS.subst [NT(x.binder_bv, arg)] t')
 
   | Tm_app(hd, arg::args) ->
     let head = S.mk (Tm_app(hd, [arg])) e.pos in
@@ -602,11 +623,11 @@ and check' (g:env) (e:term)
     memo_check g t
 
   | Tm_ascribed (e, (Inl t, _, eq), _) ->
-    te <-- check "ascription head" g e ;
-    t' <-- check "ascription type" g t ;
-    is_type g (snd t') ;;
-    with_context "ascription subtyping" None (fun _ -> check_subtype g e (snd te) t);;
-    return (E_TOTAL, t)
+    let! eff, te = check "ascription head" g e in
+    let! _, t' = check "ascription type" g t in
+    is_type g t';;
+    with_context "ascription subtyping" None (fun _ -> check_subtype g e te t);;
+    return (eff, t)
 
   | Tm_ascribed (_, (Inr e, _, _), _) -> 
     fail "Effect ascriptions are not handled yet"
@@ -616,15 +637,15 @@ and check' (g:env) (e:term)
     let [x], body = SS.open_term [S.mk_binder x] body in
     if I.lid_equals lb.lbeff PC.effect_Tot_lid
     then (
-      tdef <-- check "let definition" g lb.lbdef ;
-      ttyp <-- check "let type" g lb.lbtyp ;
-      u <-- is_type g (snd ttyp) ;
-      with_context "let subtyping" None (fun _ -> check_subtype g lb.lbdef (snd tdef) (snd ttyp)) ;;
+      let! eff_def, tdef = check "let definition" g lb.lbdef in
+      let! _, ttyp = check "let type" g lb.lbtyp in
+      let! u = is_type g ttyp in
+      with_context "let subtyping" None (fun _ -> check_subtype g lb.lbdef tdef ttyp) ;;
       with_definition x u lb.lbdef (
         let g = push_binders g [x] in
-        t <-- check "let body" g body ;
-        check_no_escape [x] (snd t);;
-        return (E_TOTAL, snd t)
+        let! eff_body, t = check "let body" g body in
+        check_no_escape [x] t;;
+        return (join_eff eff_def eff_body, t)
       )
     ) 
     else (
@@ -632,8 +653,8 @@ and check' (g:env) (e:term)
     )
     
   | Tm_match(sc, None, branches, rc_opt) ->
-    t_sc <-- check "scrutinee" g sc ;
-    u_sc <--  with_context "universe_of" (Some (snd t_sc)) (fun _ -> universe_of g (snd t_sc));
+    let! eff_sc, t_sc = check "scrutinee" g sc in
+    let! u_sc = with_context "universe_of" (Some t_sc) (fun _ -> universe_of g t_sc) in
     let rec check_branches path_condition
                            branch_typ_opt
                            branches
@@ -644,9 +665,9 @@ and check' (g:env) (e:term)
            | None ->
              fail "could not compute a type for the match"
 
-           | Some t ->
+           | Some et ->
              guard (U.mk_imp path_condition U.t_false);;
-             return (E_TOTAL, t))
+             return et)
           
         | (p, None, b) :: rest ->
           match PatternUtils.raw_pat_as_exp g.tcenv p with
@@ -655,24 +676,24 @@ and check' (g:env) (e:term)
 
           | Some (e, bvs) ->
             let binders = List.map S.mk_binder bvs in
-            bs_g <-- check_binders g binders ;
+            let! bs_g = check_binders g binders in
             let bs, us, g' = bs_g in
-            t <-- check "pattern term" g' e ;
-            no_guard (check_subtype g' e (snd t_sc) (snd t)) ;;
-            let pat_sc_eq = U.mk_eq2 u_sc (snd t_sc) sc e in
-            tbr <--
+            let! eff_pat, t = check "pattern term" g' e in
+            no_guard (check_subtype g' e t_sc t) ;;
+            let pat_sc_eq = U.mk_eq2 u_sc t_sc sc e in
+            let! eff_br, tbr =
               with_binders bs us 
                 (weaken 
                   (U.mk_conj path_condition pat_sc_eq)
-                  (tbr <-- check "branch" g' b ;
+                  (let! eff_br, tbr = check "branch" g' b in
                    match branch_typ_opt with
                    | None -> 
-                     check_no_escape bs (snd tbr);;
-                     return tbr
+                     check_no_escape bs tbr;;
+                     return (eff_br, tbr)
                    
-                   | Some expect_tbr ->
-                     check_subtype g' b (snd tbr) expect_tbr;;
-                     return (E_TOTAL, expect_tbr)));
+                   | Some (acc_eff, expect_tbr) ->
+                     check_subtype g' b tbr expect_tbr;;
+                     return (join_eff eff_br acc_eff, expect_tbr))) in
             let path_condition = 
               U.mk_conj path_condition
                         (mk_forall_l us bs (U.mk_neg pat_sc_eq))
@@ -683,20 +704,21 @@ and check' (g:env) (e:term)
               //trivially exhaustive
               (match rest with
                | _ :: _ -> fail "Redundant branches after wildcard"
-               | _ -> return (E_TOTAL, (snd tbr)))
+               | _ -> return (eff_br, tbr))
                
             | _ ->
-              check_branches path_condition (Some (snd tbr)) rest
-    in
-    branch_typ_opt <-- (
+              check_branches path_condition (Some (eff_br, tbr)) rest
+    in 
+
+    let! branch_typ_opt =
       match rc_opt with
       | Some ({ residual_typ = Some t }) ->
         with_context "residual type" (Some t) (fun _ -> universe_of g t) ;;
-        return (Some t)
+        return (Some (E_TOTAL, t))
         
       | _ ->
         return None
-    );
+    in
     check_branches U.t_true branch_typ_opt branches
 
   | Tm_match _ ->
@@ -712,12 +734,11 @@ and check_binders (g:env) (xs:binders)
       return ([], [], g)
       
     | x ::xs ->
-      t <-- check "binder sort" g x.binder_bv.sort;
-      u <-- is_type g (snd t) ;
+      let! _, t = check "binder sort" g x.binder_bv.sort in
+      let! u = is_type g t in
       with_binders [x] [u] (
         let g' = push_binders g [x] in
-        xs_g <-- check_binders g' xs;
-        let xs, us, g = xs_g in
+        let! xs, us, g = check_binders g' xs in
         return (x :: xs, u::us, g)
       )
 
@@ -725,22 +746,22 @@ and check_comp (g:env) (c:comp)
   : result universe
   = if U.is_tot_or_gtot_comp c
     then (
-      t <-- check "comp result" g (U.comp_result c) ;
-      is_type g (snd t)
+      let! _, t = check "comp result" g (U.comp_result c) in
+      is_type g t
     )
     else fail "Computation type is not Tot or GTot"
 
 and universe_of (g:env) (t:typ)
   : result universe
-  = t <-- check "universe of" g t ;
-    is_type g (snd t)
+  = let! _, t = check "universe of" g t in
+    is_type g t
 
 let check_term_top g e t
   : result unit
   = let g = { tcenv = g; allow_universe_instantiation = false } in
-    te <-- check "top" g e;
+    let! _, te = check "top" g e in
     with_context "top-level subtyping" None (fun _ ->
-      check_subtype ({ g with allow_universe_instantiation = true}) e (snd te) t)
+      check_subtype ({ g with allow_universe_instantiation = true}) e te t)
 
 let check_term g e t
   = // if Env.debug g (Options.Other "Core")

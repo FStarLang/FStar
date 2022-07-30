@@ -17,6 +17,17 @@ let map_rev : 'a 'b . ('a -> 'b) -> 'a Prims.list -> 'b Prims.list =
         | x::xs ->
             let uu___ = let uu___1 = f x in uu___1 :: acc in aux xs uu___ in
       aux l []
+let (strip_prefix :
+  Prims.string -> Prims.string -> Prims.string FStar_Pervasives_Native.option)
+  =
+  fun prefix ->
+    fun s ->
+      if FStar_Compiler_Util.starts_with s prefix
+      then
+        let uu___ =
+          FStar_Compiler_Util.substring_from s (FStar_String.length prefix) in
+        FStar_Pervasives_Native.Some uu___
+      else FStar_Pervasives_Native.None
 let map_if_all :
   'a 'b .
     ('a -> 'b FStar_Pervasives_Native.option) ->
@@ -2525,7 +2536,25 @@ and (p_noSeqTerm' :
                 FStar_Pprint.op_Hat_Slash_Hat uu___2 uu___3 in
               FStar_Pprint.group uu___1 in
             let uu___1 = paren_if (ps || pb) in uu___1 uu___
-        | FStar_Parser_AST.Match (e1, ret_opt, branches) ->
+        | FStar_Parser_AST.Match (e1, op_opt, ret_opt, branches) ->
+            let match_str =
+              let uu___ =
+                let uu___1 =
+                  FStar_Compiler_Util.bind_opt op_opt
+                    (fun id ->
+                       let uu___2 = FStar_Ident.string_of_id id in
+                       strip_prefix "let_" uu___2) in
+                match uu___1 with
+                | FStar_Pervasives_Native.Some op ->
+                    let uu___2 = FStar_Parser_AST.string_to_op op in
+                    (match uu___2 with
+                     | FStar_Pervasives_Native.Some (id, uu___3) -> id
+                     | FStar_Pervasives_Native.None ->
+                         failwith
+                           (Prims.op_Hat "Malformed operator ["
+                              (Prims.op_Hat op "] on match operator")))
+                | FStar_Pervasives_Native.None -> "" in
+              Prims.op_Hat "match" uu___ in
             let uu___ =
               let uu___1 =
                 match ret_opt with
@@ -2599,6 +2628,68 @@ and (p_noSeqTerm' :
                 FStar_Pprint.op_Hat_Slash_Hat uu___2 uu___3 in
               FStar_Pprint.group uu___1 in
             let uu___1 = paren_if ps in uu___1 uu___
+        | FStar_Parser_AST.LetOperator (lets, body) ->
+            let p_let uu___ is_first is_last =
+              match uu___ with
+              | (id, pat, e1) ->
+                  let id1 = FStar_Ident.string_of_id id in
+                  let let_or_and = if is_first then "let" else "and" in
+                  let op =
+                    let uu___1 =
+                      let uu___2 =
+                        strip_prefix (Prims.op_Hat let_or_and "_") id1 in
+                      FStar_Compiler_Util.bind_opt uu___2
+                        FStar_Parser_AST.string_to_op in
+                    match uu___1 with
+                    | FStar_Pervasives_Native.Some (op1, uu___2) -> op1
+                    | FStar_Pervasives_Native.None ->
+                        failwith
+                          (Prims.op_Hat
+                             "Could not decode let operator name '"
+                             (Prims.op_Hat id1 "' with string_to_op")) in
+                  let doc_let_or_and = str (Prims.op_Hat let_or_and op) in
+                  let doc_pat = p_letlhs doc_let_or_and (pat, e1) true in
+                  let uu___1 = p_term_sep false false e1 in
+                  (match uu___1 with
+                   | (comm, doc_expr) ->
+                       let doc_expr1 =
+                         inline_comment_or_above comm doc_expr
+                           FStar_Pprint.empty in
+                       if is_last
+                       then
+                         let uu___2 =
+                           FStar_Pprint.flow break1
+                             [doc_pat; FStar_Pprint.equals] in
+                         let uu___3 = str "in" in
+                         FStar_Pprint.surround (Prims.of_int (2))
+                           Prims.int_one uu___2 doc_expr1 uu___3
+                       else
+                         (let uu___3 =
+                            FStar_Pprint.flow break1
+                              [doc_pat; FStar_Pprint.equals; doc_expr1] in
+                          FStar_Pprint.hang (Prims.of_int (2)) uu___3)) in
+            let l = FStar_Compiler_List.length lets in
+            let lets_docs =
+              FStar_Compiler_List.mapi
+                (fun i ->
+                   fun lb ->
+                     let uu___ =
+                       p_let lb (i = Prims.int_zero)
+                         (i = (l - Prims.int_one)) in
+                     FStar_Pprint.group uu___) lets in
+            let lets_doc =
+              let uu___ = FStar_Pprint.separate break1 lets_docs in
+              FStar_Pprint.group uu___ in
+            let r =
+              let uu___ =
+                let uu___1 =
+                  let uu___2 =
+                    let uu___3 = p_term false pb body in
+                    FStar_Pprint.op_Hat_Hat FStar_Pprint.hardline uu___3 in
+                  FStar_Pprint.op_Hat_Hat lets_doc uu___2 in
+                FStar_Pprint.group uu___1 in
+              let uu___1 = paren_if ps in uu___1 uu___ in
+            r
         | FStar_Parser_AST.Let (q, lbs, e1) ->
             let p_lb q1 uu___ is_last =
               match uu___ with
@@ -2671,7 +2762,8 @@ and (p_noSeqTerm' :
                FStar_Parser_AST.prange = uu___1;_}::[],
              {
                FStar_Parser_AST.tm = FStar_Parser_AST.Match
-                 (maybe_x, FStar_Pervasives_Native.None, branches);
+                 (maybe_x, FStar_Pervasives_Native.None,
+                  FStar_Pervasives_Native.None, branches);
                FStar_Parser_AST.range = uu___2;
                FStar_Parser_AST.level = uu___3;_})
             when matches_var maybe_x x ->

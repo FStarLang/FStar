@@ -442,6 +442,18 @@ match%sedlex lexbuf with
  | ('\'', char, '\'', 'B') -> CHAR (unescape (utrim_both lexbuf 1 2))
  | '`' -> BACKTICK
 
+ | "match", Plus op_char ->
+   let s = L.lexeme lexbuf in
+   MATCH_OP (String.sub s 5 (String.length s - 5))
+
+ | "let", Plus op_char ->
+   let s = L.lexeme lexbuf in
+   LET_OP (String.sub s 3 (String.length s - 3))
+
+ | "and", Plus op_char ->
+   let s = L.lexeme lexbuf in
+   AND_OP (String.sub s 3 (String.length s - 3))
+
  | ident -> let id = L.lexeme lexbuf in
    if FStar_Compiler_Util.starts_with id FStar_Ident.reserved_prefix
    then FStar_Errors.raise_error
