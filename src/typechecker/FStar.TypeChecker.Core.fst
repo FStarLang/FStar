@@ -54,16 +54,20 @@ let print_error (err:error) =
 
 let result a = context -> either (success a) error
 
+type effect_label =
+  | E_TOTAL
+  | E_GHOST
+
 type hash_entry = {
    he_term:term;
    he_gamma:list binding;
-   he_res:success typ;
+   he_res:success (effect_label & typ);
 }
 
 type tc_table = FStar.Hash.hashtable term hash_entry
 let table : tc_table = FStar.Hash.create FStar.Syntax.Hash.equal_term
 let clear_memo_table () = FStar.Hash.clear table
-let insert (g:env) (e:term) (res:success typ) =
+let insert (g:env) (e:term) (res:success (effect_label & typ)) =
     let entry = {
        he_term = e;
        he_gamma = g.tcenv.gamma;
@@ -319,7 +323,7 @@ let curry_application hd arg args p =
     t
     
 
-let lookup (g:env) (e:term) : result typ =
+let lookup (g:env) (e:term) : result (effect_label & typ) =
    match FStar.Hash.lookup (e, FStar.Syntax.Hash.hash_term) table with
    | None -> fail "not in cache"
    | Some he ->
@@ -344,7 +348,21 @@ let rec iter2 (xs ys:list 'a) (f: 'a -> 'a -> 'b -> result 'b) (b:'b)
       b <-- f x y b ;
       iter2 xs ys f b
     | _ -> fail "Lists of differing length"
+
+let non_informative g t
+  : bool
+  = N.non_info_norm g.tcenv t
+  
+let as_comp (g:env) (et: (effect_label & typ))
+  : comp
+  = match et with
+    | E_TOTAL, t -> S.mk_Total t
+    | E_GHOST, t ->
+      if non_informative g t 
+      then S.mk_Total t
+      else S.mk_GTotal t
     
+
 (*
      G |- e : t0 <: t1 | p
  *)
@@ -469,7 +487,7 @@ and check_subcomp (g:env) (e:term) (c0 c1:comp)
     else fail "Subcomp failed"
 
 and memo_check (g:env) (e:term)
-  : result typ
+  : result (effect_label & typ)
   = handle_with
       (lookup g e)
       (fun _ ctx -> 
@@ -481,12 +499,12 @@ and memo_check (g:env) (e:term)
          | _ -> r)
 
 and check (msg:string) (g:env) (e:term)
-  : result typ
+  : result (effect_label & typ)
   = with_context msg (Some e) (fun _ -> memo_check g e)
   
 (*  G |- e : Tot t | pre *)
 and check' (g:env) (e:term)
-  : result typ =
+  : result (effect_label & typ) =
   // (if Env.debug g.tcenv (Options.Other "Core")
   //  then dump_context
   //  else return ());;
@@ -496,17 +514,17 @@ and check' (g:env) (e:term)
     memo_check g t
 
   | Tm_uvar (uv, s) ->
-    return (SS.subst' s (U.ctx_uvar_typ uv))
+    return (E_TOTAL, SS.subst' s (U.ctx_uvar_typ uv))
 
   | Tm_name x ->
     let t, _ = Env.lookup_bv g.tcenv x in
-    return t
+    return (E_TOTAL, t)
 
   | Tm_fvar f ->
     begin
     match Env.try_lookup_lid g.tcenv f.fv_name.v with
     | Some (([], t), _) ->
-      return t
+      return (E_TOTAL, t)
       
     | _ -> //no implicit universe instantiation allowed
       fail "Missing universes instantiation"
@@ -519,7 +537,7 @@ and check' (g:env) (e:term)
       fail "Top-level name not found"
 
     | Some (t, _) ->
-      return t
+      return (E_TOTAL, t)
     end
 
   | Tm_constant c ->
@@ -534,21 +552,21 @@ and check' (g:env) (e:term)
 
     | _ -> 
       let t = FStar.TypeChecker.TcTerm.tc_constant g.tcenv e.pos c in
-      return t
+      return (E_TOTAL, t)
     end
     
   | Tm_type u ->
-    return (mk_type (U_succ u))
+    return (E_TOTAL, mk_type (U_succ u))
     
   | Tm_refine(x, phi) ->
     let [x], phi = SS.open_term [S.mk_binder x] phi in
     t <-- check "refinement head" g x.binder_bv.sort ;
-    u <-- is_type g t;
+    u <-- is_type g (snd t);
     with_binders [x] [u] (
       let g' = push_binders g [x] in
       t' <-- check "refinement formula" g' phi;
-      is_type g' t';;
-      return t
+      is_type g' (snd t');;
+      return (E_TOTAL, snd t)
     )
 
   | Tm_abs(xs, body, _) ->
@@ -557,7 +575,7 @@ and check' (g:env) (e:term)
     let xs, us, g = xs_g in
     with_binders xs us (
       t <-- check "abs body" g body;
-      return (U.arrow xs (S.mk_Total t))
+      return (E_TOTAL, U.arrow xs (as_comp g t))
     )
 
   | Tm_arrow(xs, c) ->
@@ -566,17 +584,17 @@ and check' (g:env) (e:term)
     let xs, us, g = xs_g in
     with_binders xs us (
       u <-- with_context "arrow comp" None (fun _ -> check_comp g c);
-      return (mk_type (S.U_max (u::us)))
+      return (E_TOTAL, mk_type (S.U_max (u::us)))
     )
 
   | Tm_app (hd, [(arg, arg_qual)]) ->
     t <-- check "app head" g hd ;
-    x_r <-- is_tot_arrow g t;
+    x_r <-- is_tot_arrow g (snd t);
     let x, t' = x_r in
     t_arg <-- check "app arg" g arg ;
-    with_context "app subtyping" None (fun _ -> check_subtype g arg t_arg x.binder_bv.sort) ;;
+    with_context "app subtyping" None (fun _ -> check_subtype g arg (snd t_arg) x.binder_bv.sort) ;;
     with_context "app arg qual" None (fun _ -> check_arg_qual arg_qual x.binder_qual) ;;
-    return (SS.subst [NT(x.binder_bv, arg)] t')
+    return (E_TOTAL, SS.subst [NT(x.binder_bv, arg)] t')
 
   | Tm_app(hd, arg::args) ->
     let head = S.mk (Tm_app(hd, [arg])) e.pos in
@@ -586,9 +604,9 @@ and check' (g:env) (e:term)
   | Tm_ascribed (e, (Inl t, _, eq), _) ->
     te <-- check "ascription head" g e ;
     t' <-- check "ascription type" g t ;
-    is_type g t' ;;
-    with_context "ascription subtyping" None (fun _ -> check_subtype g e te t);;
-    return t
+    is_type g (snd t') ;;
+    with_context "ascription subtyping" None (fun _ -> check_subtype g e (snd te) t);;
+    return (E_TOTAL, t)
 
   | Tm_ascribed (_, (Inr e, _, _), _) -> 
     fail "Effect ascriptions are not handled yet"
@@ -600,13 +618,13 @@ and check' (g:env) (e:term)
     then (
       tdef <-- check "let definition" g lb.lbdef ;
       ttyp <-- check "let type" g lb.lbtyp ;
-      u <-- is_type g ttyp ;
-      with_context "let subtyping" None (fun _ -> check_subtype g lb.lbdef tdef ttyp) ;;
+      u <-- is_type g (snd ttyp) ;
+      with_context "let subtyping" None (fun _ -> check_subtype g lb.lbdef (snd tdef) (snd ttyp)) ;;
       with_definition x u lb.lbdef (
         let g = push_binders g [x] in
         t <-- check "let body" g body ;
-        check_no_escape [x] t;;
-        return t
+        check_no_escape [x] (snd t);;
+        return (E_TOTAL, snd t)
       )
     ) 
     else (
@@ -615,11 +633,11 @@ and check' (g:env) (e:term)
     
   | Tm_match(sc, None, branches, rc_opt) ->
     t_sc <-- check "scrutinee" g sc ;
-    u_sc <--  with_context "universe_of" (Some t_sc) (fun _ -> universe_of g t_sc);
+    u_sc <--  with_context "universe_of" (Some (snd t_sc)) (fun _ -> universe_of g (snd t_sc));
     let rec check_branches path_condition
                            branch_typ_opt
                            branches
-      : result typ
+      : result (effect_label & typ)
       = match branches with
         | [] ->
           (match branch_typ_opt with
@@ -628,7 +646,7 @@ and check' (g:env) (e:term)
 
            | Some t ->
              guard (U.mk_imp path_condition U.t_false);;
-             return t)
+             return (E_TOTAL, t))
           
         | (p, None, b) :: rest ->
           match PatternUtils.raw_pat_as_exp g.tcenv p with
@@ -640,8 +658,8 @@ and check' (g:env) (e:term)
             bs_g <-- check_binders g binders ;
             let bs, us, g' = bs_g in
             t <-- check "pattern term" g' e ;
-            no_guard (check_subtype g' e t_sc t) ;;
-            let pat_sc_eq = (U.mk_eq2 u_sc t_sc sc e) in
+            no_guard (check_subtype g' e (snd t_sc) (snd t)) ;;
+            let pat_sc_eq = U.mk_eq2 u_sc (snd t_sc) sc e in
             tbr <--
               with_binders bs us 
                 (weaken 
@@ -649,12 +667,12 @@ and check' (g:env) (e:term)
                   (tbr <-- check "branch" g' b ;
                    match branch_typ_opt with
                    | None -> 
-                     check_no_escape bs tbr;;
+                     check_no_escape bs (snd tbr);;
                      return tbr
                    
                    | Some expect_tbr ->
-                     check_subtype g' b tbr expect_tbr;;
-                     return expect_tbr));
+                     check_subtype g' b (snd tbr) expect_tbr;;
+                     return (E_TOTAL, expect_tbr)));
             let path_condition = 
               U.mk_conj path_condition
                         (mk_forall_l us bs (U.mk_neg pat_sc_eq))
@@ -665,10 +683,10 @@ and check' (g:env) (e:term)
               //trivially exhaustive
               (match rest with
                | _ :: _ -> fail "Redundant branches after wildcard"
-               | _ -> return tbr)
+               | _ -> return (E_TOTAL, (snd tbr)))
                
             | _ ->
-              check_branches path_condition (Some tbr) rest
+              check_branches path_condition (Some (snd tbr)) rest
     in
     branch_typ_opt <-- (
       match rc_opt with
@@ -695,7 +713,7 @@ and check_binders (g:env) (xs:binders)
       
     | x ::xs ->
       t <-- check "binder sort" g x.binder_bv.sort;
-      u <-- is_type g t ;
+      u <-- is_type g (snd t) ;
       with_binders [x] [u] (
         let g' = push_binders g [x] in
         xs_g <-- check_binders g' xs;
@@ -708,21 +726,21 @@ and check_comp (g:env) (c:comp)
   = if U.is_tot_or_gtot_comp c
     then (
       t <-- check "comp result" g (U.comp_result c) ;
-      is_type g t
+      is_type g (snd t)
     )
     else fail "Computation type is not Tot or GTot"
 
 and universe_of (g:env) (t:typ)
   : result universe
   = t <-- check "universe of" g t ;
-    is_type g t
+    is_type g (snd t)
 
 let check_term_top g e t
   : result unit
   = let g = { tcenv = g; allow_universe_instantiation = false } in
     te <-- check "top" g e;
     with_context "top-level subtyping" None (fun _ ->
-      check_subtype ({ g with allow_universe_instantiation = true}) e te t)
+      check_subtype ({ g with allow_universe_instantiation = true}) e (snd te) t)
 
 let check_term g e t
   = // if Env.debug g (Options.Other "Core")
