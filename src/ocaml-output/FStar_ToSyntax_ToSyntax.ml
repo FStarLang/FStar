@@ -3140,11 +3140,54 @@ and (desugar_term_maybe_top :
               {
                 FStar_Parser_AST.tm =
                   (FStar_Parser_AST.Match
-                     (r1, FStar_Pervasives_Native.None, [branch]));
+                     (r1, FStar_Pervasives_Native.None,
+                       FStar_Pervasives_Native.None, [branch]));
                 FStar_Parser_AST.range = (top.FStar_Parser_AST.range);
                 FStar_Parser_AST.level = (top.FStar_Parser_AST.level)
               } in
             desugar_term_maybe_top top_level env elab
+        | FStar_Parser_AST.LetOperator (lets, body) ->
+            (match lets with
+             | [] ->
+                 failwith
+                   "Impossible: a LetOperator (e.g. let+, let*...) cannot contain zero let binding"
+             | (letOp, letPat, letDef)::tl ->
+                 let term_of_op op =
+                   let uu___1 =
+                     let uu___2 = FStar_Ident.lid_of_ns_and_id [] op in
+                     FStar_Parser_AST.Var uu___2 in
+                   let uu___2 = FStar_Ident.range_of_id op in
+                   FStar_Parser_AST.mk_term uu___1 uu___2
+                     FStar_Parser_AST.Expr in
+                 let mproduct_def =
+                   FStar_Compiler_List.fold_left
+                     (fun def ->
+                        fun uu___1 ->
+                          match uu___1 with
+                          | (andOp, andPat, andDef) ->
+                              let uu___2 = term_of_op andOp in
+                              FStar_Parser_AST.mkExplicitApp uu___2
+                                [def; andDef] top.FStar_Parser_AST.range)
+                     letDef tl in
+                 let mproduct_pat =
+                   FStar_Compiler_List.fold_left
+                     (fun pat ->
+                        fun uu___1 ->
+                          match uu___1 with
+                          | (andOp, andPat, andDef) ->
+                              FStar_Parser_AST.mk_pattern
+                                (FStar_Parser_AST.PatTuple
+                                   ([pat; andPat], false))
+                                andPat.FStar_Parser_AST.prange) letPat tl in
+                 let fn =
+                   FStar_Parser_AST.mk_term
+                     (FStar_Parser_AST.Abs ([mproduct_pat], body))
+                     body.FStar_Parser_AST.range body.FStar_Parser_AST.level in
+                 let let_op = term_of_op letOp in
+                 let t =
+                   FStar_Parser_AST.mkExplicitApp let_op [mproduct_def; fn]
+                     top.FStar_Parser_AST.range in
+                 desugar_term_aq env t)
         | FStar_Parser_AST.Let (qual, lbs, body) ->
             let is_rec = qual = FStar_Parser_AST.Rec in
             let ds_let_rec_or_app uu___1 =
@@ -3627,7 +3670,35 @@ and (desugar_term_maybe_top :
                 (FStar_Parser_AST.App (a1, handler, FStar_Parser_AST.Nothing))
                 r top.FStar_Parser_AST.level in
             desugar_term_aq env a2
-        | FStar_Parser_AST.Match (e, topt, branches) ->
+        | FStar_Parser_AST.Match
+            (e, FStar_Pervasives_Native.Some op, topt, branches) ->
+            let var_id =
+              FStar_Ident.mk_ident
+                ((Prims.op_Hat FStar_Ident.reserved_prefix "match_op_head"),
+                  (e.FStar_Parser_AST.range)) in
+            let var =
+              let uu___1 =
+                let uu___2 = FStar_Ident.lid_of_ids [var_id] in
+                FStar_Parser_AST.Var uu___2 in
+              FStar_Parser_AST.mk_term uu___1 e.FStar_Parser_AST.range
+                FStar_Parser_AST.Expr in
+            let pat =
+              FStar_Parser_AST.mk_pattern
+                (FStar_Parser_AST.PatVar
+                   (var_id, FStar_Pervasives_Native.None, []))
+                e.FStar_Parser_AST.range in
+            let mt =
+              FStar_Parser_AST.mk_term
+                (FStar_Parser_AST.Match
+                   (var, FStar_Pervasives_Native.None, topt, branches))
+                top.FStar_Parser_AST.range FStar_Parser_AST.Expr in
+            let t =
+              FStar_Parser_AST.mk_term
+                (FStar_Parser_AST.LetOperator ([(op, pat, e)], mt))
+                e.FStar_Parser_AST.range FStar_Parser_AST.Expr in
+            desugar_term_aq env t
+        | FStar_Parser_AST.Match
+            (e, FStar_Pervasives_Native.None, topt, branches) ->
             let desugar_branch uu___1 =
               match uu___1 with
               | (pat, wopt, b) ->
@@ -8217,6 +8288,7 @@ and (desugar_decl_noattrs :
                               FStar_Parser_AST.mk_term
                                 (FStar_Parser_AST.Match
                                    (main, FStar_Pervasives_Native.None,
+                                     FStar_Pervasives_Native.None,
                                      [(pat, FStar_Pervasives_Native.None,
                                         branch)]))
                                 main.FStar_Parser_AST.range

@@ -1458,10 +1458,28 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
         in
         let branch = (pat, None, e) in
         let r = mk_term (Ascribed (r, rty, None, false)) r.range Expr in
-        { top with tm = Match (r, None, [branch]) }
+        { top with tm = Match (r, None, None, [branch]) }
       in
       desugar_term_maybe_top top_level env elab
 
+    | LetOperator(lets, body) ->
+      ( match lets with
+      | [] -> failwith "Impossible: a LetOperator (e.g. let+, let*...) cannot contain zero let binding"
+      | (letOp, letPat, letDef)::tl ->
+        let term_of_op op = AST.mk_term (AST.Var (Ident.lid_of_ns_and_id [] op)) (range_of_id op) AST.Expr in
+        let mproduct_def = fold_left (fun def (andOp, andPat, andDef) ->
+            AST.mkExplicitApp
+              (term_of_op andOp)
+              [def; andDef] top.range
+        ) letDef tl in
+        let mproduct_pat = fold_left (fun pat (andOp, andPat, andDef) ->
+            AST.mk_pattern (AST.PatTuple ([pat; andPat], false)) andPat.prange
+        ) letPat tl in
+        let fn = AST.mk_term (Abs([mproduct_pat], body)) body.range body.level in
+        let let_op = term_of_op letOp in
+        let t = AST.mkExplicitApp let_op [mproduct_def; fn] top.range in
+        desugar_term_aq env t
+      )
     | Let(qual, lbs, body) ->
       let is_rec = qual = Rec in
       let ds_let_rec_or_app () =
@@ -1643,7 +1661,17 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
       let a2 = mk_term (App(a1, handler, Nothing)) r top.level in
       desugar_term_aq env a2
 
-    | Match(e, topt, branches) ->
+    | Match(e, Some op, topt, branches) ->
+      // A match operator is desugared into a let operator binding
+      // with name "uu___match_op_head" followed by a regular match on
+      // "uu___match_op_head"
+      let var_id = mk_ident(reserved_prefix ^ "match_op_head", e.range) in
+      let var = mk_term (Var (lid_of_ids [var_id])) e.range Expr in
+      let pat = mk_pattern (PatVar (var_id, None, [])) e.range in
+      let mt  = mk_term (Match (var, None, topt, branches)) top.range Expr in
+      let t   = mk_term (LetOperator ([(op, pat, e)], mt)) e.range Expr in
+      desugar_term_aq env t
+    | Match(e, None, topt, branches) ->
       let desugar_branch (pat, wopt, b) =
         let env, pat = desugar_match_pat env pat in
         let wopt = match wopt with
@@ -3618,7 +3646,7 @@ and desugar_decl_noattrs env (d:decl) : (env_t * sigelts) =
                                     (range_of_id id) in
             bv_pat, branch
         in
-        let body = mk_term (Match (main, None, [pat, None, branch])) main.range Expr in
+        let body = mk_term (Match (main, None, None, [pat, None, branch])) main.range Expr in
         let id_decl = mk_decl (TopLevelLet(NoLetQualifier, [bv_pat, body])) Range.dummyRange [] in
         let id_decl = { id_decl with quals = d.quals } in
         let env, ses' = desugar_decl env id_decl in
