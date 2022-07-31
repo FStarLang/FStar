@@ -354,7 +354,6 @@ let newline   = [%sedlex.regexp? "\r\n" | 10 | 13 | 0x2028 | 0x2029]
 
 (* -------------------------------------------------------------------- *)
 let op_char = [%sedlex.regexp? Chars "!$%&*+-./<=?^|~:"]
-let ignored_op_char = [%sedlex.regexp? Chars ".$"]
 
 (* op_token must be splt into seperate regular expressions to prevent
    compliation from hanging *)
