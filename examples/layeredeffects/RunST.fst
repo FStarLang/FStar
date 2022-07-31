@@ -362,7 +362,7 @@ let coerce_st_to (t:Type) : EFF unit t t [] = ()
 let __c1 () : EFF int unit bool [EXN;RD;WR] =
   put "hello";
   raise EE;
-  coerce_st_to unit;// funny, but needed; or 'get ();'
+  coerce_st_to unit; // funny, but needed; or 'get ();'
   put true;
   42
 

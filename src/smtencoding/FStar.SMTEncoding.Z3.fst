@@ -614,7 +614,7 @@ let ask
         if fresh
         then flatten_fresh_scope()
         else let theory = !bg_scope in
-             bg_scope := [];//now consumed
+             bg_scope := []; //now consumed
              theory
     in
     let theory = theory @[Push]@qry@[Pop] in

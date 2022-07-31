@@ -2594,7 +2594,7 @@ let mk_data_discriminators quals env datas =
     datas |> List.map (fun d ->
         let disc_name = U.mk_discriminator d in
         { sigel = Sig_declare_typ(disc_name, [], Syntax.tun);
-          sigrng = range_of_lid disc_name;// FIXME: Isn't that range wrong?
+          sigrng = range_of_lid disc_name; // FIXME: Isn't that range wrong?
           sigquals =  quals [(* S.Logic ; *) S.OnlyName ; S.Discriminator d];
           sigmeta = default_sigmeta;
           sigattrs = [];
