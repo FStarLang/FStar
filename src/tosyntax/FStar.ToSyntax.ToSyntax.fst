@@ -1466,7 +1466,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
       ( match lets with
       | [] -> failwith "Impossible: a LetOperator (e.g. let+, let*...) cannot contain zero let binding"
       | (letOp, letPat, letDef)::tl ->
-        let term_of_op op = AST.mk_term (AST.Var (Ident.lid_of_ns_and_id [] op)) (range_of_id op) AST.Expr in
+        let term_of_op op = AST.mk_term (AST.Op (op, [])) (range_of_id op) AST.Expr in
         let mproduct_def = fold_left (fun def (andOp, andPat, andDef) ->
             AST.mkExplicitApp
               (term_of_op andOp)

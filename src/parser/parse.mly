@@ -519,10 +519,6 @@ atomicPattern:
   | tv=tvar                   { mk_pattern (PatTvar (tv, None, [])) (rhs parseState 1) }
   | LPAREN op=operator RPAREN
       { mk_pattern (PatOp op) (rhs2 parseState 1 3) }
-  | LPAREN op=let_op RPAREN
-      { mk_pattern (PatVar (op, None, [])) (rhs2 parseState 1 3) }
-  | LPAREN op=and_op RPAREN
-      { mk_pattern (PatVar (op, None, [])) (rhs2 parseState 1 3) }
   | UNDERSCORE
       { mk_pattern (PatWild (None, [])) (rhs parseState 1) }
   | HASH UNDERSCORE
@@ -641,24 +637,14 @@ ident:
 lidentOrOperator:
   | id=IDENT
     { mk_ident(id, rhs parseState 1) }
-  | LPAREN op=let_op RPAREN { op }
-  | LPAREN op=and_op RPAREN { op }
   | LPAREN id=operator RPAREN
     { mk_ident (compile_op' (string_of_id id) (range_of_id id), range_of_id id) }
-
-%inline and_op:
-  | op=AND_OP { let r = rhs parseState 1 in
-                mk_ident ("and_" ^ compile_op' op r, r) }
-
-%inline let_op:
-  | op=LET_OP { let r = rhs parseState 1 in
-                mk_ident ("let_" ^ compile_op' op r, r) }
 
 matchMaybeOp:
   | MATCH {None}
   | op=MATCH_OP {
 	   let r = rhs parseState 1 in
-           Some (mk_ident ("let_" ^ compile_op' op r, r))
+           Some (mk_ident ("let" ^ op, r))
 	 }
 
 lidentOrUnderscore:
@@ -1212,10 +1198,6 @@ atomicTermNotQUident:
     { x }
   | LPAREN op=operator RPAREN
       { mk_term (Op(op, [])) (rhs2 parseState 1 3) Un }
-  | LPAREN op=let_op RPAREN
-      { mk_term (Name(lid_of_ns_and_id [] op)) (rhs2 parseState 1 3) Un }
-  | LPAREN op=and_op RPAREN
-      { mk_term (Name(lid_of_ns_and_id [] op)) (rhs2 parseState 1 3) Un }
   | LENS_PAREN_LEFT e0=tmEq COMMA el=separated_nonempty_list(COMMA, tmEq) LENS_PAREN_RIGHT
       { mkDTuple (e0::el) (rhs2 parseState 1 5) }
   | e=projectionLHS field_projs=list(DOT id=qlident {id})
@@ -1411,6 +1393,17 @@ string:
     { op }
   | op=TILDE
     { mk_ident (op, rhs parseState 1) }
+  | op=and_op       {op}
+  | op=let_op       {op}
+
+%inline and_op:
+  | op=AND_OP { let r = rhs parseState 1 in
+                mk_ident ("and" ^ op, r) }
+
+%inline let_op:
+  | op=LET_OP { let r = rhs parseState 1 in
+                mk_ident ("let" ^ op, r) }
+
 
 /* These infix operators have a lower precedence than EQUALS */
 %inline operatorInfix0ad12:
