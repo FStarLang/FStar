@@ -642,10 +642,7 @@ lidentOrOperator:
 
 matchMaybeOp:
   | MATCH {None}
-  | op=MATCH_OP {
-	   let r = rhs parseState 1 in
-           Some (mk_ident ("let" ^ op, r))
-	 }
+  | op=MATCH_OP { Some (mk_ident ("let" ^ op, rhs parseState 1)) }
 
 lidentOrUnderscore:
   | id=IDENT { mk_ident(id, rhs parseState 1)}
@@ -1397,13 +1394,9 @@ string:
   | op=let_op       {op}
 
 %inline and_op:
-  | op=AND_OP { let r = rhs parseState 1 in
-                mk_ident ("and" ^ op, r) }
-
+  | op=AND_OP { mk_ident ("and" ^ op, rhs parseState 1) }
 %inline let_op:
-  | op=LET_OP { let r = rhs parseState 1 in
-                mk_ident ("let" ^ op, r) }
-
+  | op=LET_OP { mk_ident ("let" ^ op, rhs parseState 1) }
 
 /* These infix operators have a lower precedence than EQUALS */
 %inline operatorInfix0ad12:
