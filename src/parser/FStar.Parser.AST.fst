@@ -479,6 +479,12 @@ let as_frag (ds:list decl) : inputFragment =
       ) ds;
       Inr ds
 
+// TODO: Move to something like FStar.Compiler.Util
+let strip_prefix (prefix s: string): option string
+  = if starts_with s prefix
+    then Some (substring_from s (String.length prefix))
+    else None
+
 let compile_op arity s r =
     let name_of_char = function
       |'&' -> "Amp"

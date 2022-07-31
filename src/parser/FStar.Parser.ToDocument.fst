@@ -55,11 +55,6 @@ let map_rev (f: 'a -> 'b) (l: list 'a): list 'b =
   in
   aux l []
 
-let strip_prefix (prefix s: string): option string
-  = if starts_with s prefix
-    then Some (substring_from s (String.length prefix))
-    else None
-
 let map_if_all (f: 'a -> option 'b) (l: list 'a): option (list 'b) =
   let rec aux l acc =
     match l with
