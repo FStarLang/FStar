@@ -540,7 +540,7 @@ let rec (decorated_pattern_as_term :
         let uu___ = mk (FStar_Syntax_Syntax.Tm_name x) in ([x], uu___)
     | FStar_Syntax_Syntax.Pat_var x ->
         let uu___ = mk (FStar_Syntax_Syntax.Tm_name x) in ([x], uu___)
-    | FStar_Syntax_Syntax.Pat_cons (fv, pats) ->
+    | FStar_Syntax_Syntax.Pat_cons (fv, us_opt, pats) ->
         let uu___ =
           let uu___1 =
             FStar_Compiler_Effect.op_Bar_Greater pats
@@ -550,13 +550,13 @@ let rec (decorated_pattern_as_term :
         (match uu___ with
          | (vars, args) ->
              let vars1 = FStar_Compiler_List.flatten vars in
-             let uu___1 =
-               let uu___2 =
-                 let uu___3 =
-                   let uu___4 = FStar_Syntax_Syntax.fv_to_tm fv in
-                   (uu___4, args) in
-                 FStar_Syntax_Syntax.Tm_app uu___3 in
-               mk uu___2 in
+             let head = FStar_Syntax_Syntax.fv_to_tm fv in
+             let head1 =
+               match us_opt with
+               | FStar_Pervasives_Native.None -> head
+               | FStar_Pervasives_Native.Some us ->
+                   FStar_Syntax_Syntax.mk_Tm_uinst head us in
+             let uu___1 = mk (FStar_Syntax_Syntax.Tm_app (head1, args)) in
              (vars1, uu___1))
     | FStar_Syntax_Syntax.Pat_dot_term (x, e) -> ([], e)
 let (comp_univ_opt :

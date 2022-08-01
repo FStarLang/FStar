@@ -2935,8 +2935,28 @@ and tc_pat env (pat_t:typ) (p0:pat) :
     let type_of_simple_pat env (e:term) : term * typ * list bv * guard_t * bool =
         let head, args = U.head_and_args e in
         match head.n with
-        | Tm_fvar f ->
-          let us, t_f = Env.lookup_datacon env f.fv_name.v in
+        | Tm_uinst ({n=Tm_fvar _}, _)
+        | Tm_fvar _ ->
+          let head, (us, t_f) = 
+            match head.n with
+            | Tm_uinst (head, us) ->
+              let Tm_fvar f = head.n in
+              let res = Env.try_lookup_and_inst_lid env us f.fv_name.v in
+              begin
+              match res with
+              | Some (t, _)
+                when Env.is_datacon env f.fv_name.v ->
+                head, (us, t)
+                
+              | _ ->
+                fail (BU.format1 "Could not find constructor: %s" 
+                                 (Ident.string_of_lid f.fv_name.v))
+              end
+
+            | Tm_fvar f ->
+              head,
+              Env.lookup_datacon env f.fv_name.v
+          in
           let formals, t = U.arrow_formals t_f in
           //Data constructors are marked with the "erasable" attribute
           //if their types are; matching on this constructor incurs
@@ -3104,7 +3124,7 @@ and tc_pat env (pat_t:typ) (p0:pat) :
           Env.trivial_guard,
           false
 
-        | Pat_cons({fv_qual = Some (Unresolved_constructor uc)}, sub_pats) ->
+        | Pat_cons({fv_qual = Some (Unresolved_constructor uc)}, us_opt, sub_pats) ->
           let rdc, _, constructor_fv = TcUtil.find_record_or_dc_from_typ env (Some t) uc p.p in
           let f_sub_pats = List.zip uc.uc_fields sub_pats in
           let sub_pats =
@@ -3114,11 +3134,11 @@ and tc_pat env (pat_t:typ) (p0:pat) :
                 Some (S.withinfo (Pat_wild x) p.p, false))
               p.p
           in
-          let p = { p with v=Pat_cons(constructor_fv, sub_pats) } in
+          let p = { p with v=Pat_cons(constructor_fv, us_opt, sub_pats) } in
           let p = PatternUtils.elaborate_pat env p in
           check_nested_pattern env p t
 
-        | Pat_cons(fv, sub_pats) ->
+        | Pat_cons(fv, us_opt, sub_pats) ->
           let simple_pat =
             let simple_sub_pats =
                 List.map (fun (p, b) ->
@@ -3126,7 +3146,7 @@ and tc_pat env (pat_t:typ) (p0:pat) :
                     | Pat_dot_term _ -> p, b
                     | _ -> S.withinfo (Pat_var (S.new_bv (Some p.p) S.tun)) p.p, b)
                 sub_pats in
-            {p with v = Pat_cons (fv, simple_sub_pats)}
+            {p with v = Pat_cons (fv, us_opt, simple_sub_pats)}
           in
           let sub_pats =
             sub_pats
@@ -3203,10 +3223,17 @@ and tc_pat env (pat_t:typ) (p0:pat) :
                     end
                   | _ -> failwith "Impossible: expected a simple pattern"
               in
+              let us = 
+                let hd, _ = U.head_and_args simple_pat_e in
+                match (SS.compress hd).n with
+                | Tm_fvar _ -> []
+                | Tm_uinst(_, us) -> us
+                | _ -> failwith "Impossible"
+              in
               match pat.v with
-              | Pat_cons(fv, simple_pats) ->
+              | Pat_cons(fv, _, simple_pats) ->
                 let nested_pats = aux simple_pats simple_bvs checked_sub_pats in
-                {pat with v=Pat_cons(fv, nested_pats)}
+                {pat with v=Pat_cons(fv, Some us, nested_pats)}
               | _ -> failwith "Impossible"
           in
           bvs,
@@ -3399,15 +3426,15 @@ and tc_eqn scrutinee env ret_opt branch
               in
               [U.mk_decidable_eq t (force_scrutinee ()) pat_exp]
 
-            | Pat_cons (_, []), Tm_uinst _
-            | Pat_cons (_, []), Tm_fvar _ ->
+            | Pat_cons (_, _, []), Tm_uinst _
+            | Pat_cons (_, _, []), Tm_fvar _ ->
                 //nullary pattern
                 let f = head_constructor pat_exp in
                 if not (Env.is_datacon env f.v)
                 then failwith "Impossible: nullary patterns must be data constructors"
                 else discriminate (force_scrutinee ()) (head_constructor pat_exp)
 
-            | Pat_cons (_, pat_args), Tm_app(head, args) ->
+            | Pat_cons (_, _, pat_args), Tm_app(head, args) ->
                 //application pattern
                 let f = head_constructor head in
                 if not (Env.is_datacon env f.v)

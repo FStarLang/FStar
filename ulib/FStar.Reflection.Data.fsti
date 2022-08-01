@@ -29,11 +29,13 @@ type vconst =
   | C_Reflect   : name -> vconst
   (* TODO: complete *)
 
+type universes = list universe
+
 // This is shadowing `pattern` from Prims (for smt_pats)
 noeq
 type pattern =
     | Pat_Constant : vconst -> pattern              // A built-in constant
-    | Pat_Cons     : fv -> list (pattern * bool) -> pattern
+    | Pat_Cons     : fv -> option universes -> list (pattern * bool) -> pattern
                                                     // A fully applied constructor, each boolean marks
                                                     // whether the argument was an explicitly-provided
                                                     // implicit argument
@@ -58,7 +60,6 @@ type bv_view = {
     bv_sort : typ;
 }
 
-type universes = list universe
 
 noeq
 type universe_view =

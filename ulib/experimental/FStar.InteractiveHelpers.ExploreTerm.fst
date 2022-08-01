@@ -554,7 +554,7 @@ and explore_pattern dbg dfs #a f x ge0 pat =
   print_dbg dbg ("[> explore_pattern:");
   match pat with
   | Pat_Constant _ -> ge0, x, Continue
-  | Pat_Cons fv patterns ->
+  | Pat_Cons fv us patterns ->
     let explore_pat ge_x_flag pat =
       let ge0, x, flag = ge_x_flag in
       let pat1, _ = pat in

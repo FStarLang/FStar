@@ -84,7 +84,7 @@ let mk_printer_fun (dom : term) : Tac term =
             let head = pack (Tv_Const (C_String pn)) in
             let bod = mk_concat (mk_stringlit " ") (head :: TU.map (mk_print_bv xt_ns fftm) bvs) in
             let bod = match t_args with | [] -> bod | _ -> paren bod in
-            (Pat_Cons (pack_fv name) pats, bod)
+            (Pat_Cons (pack_fv name) None pats, bod)
         in
         let branches = TU.map br1 ctors in
         let xi = fresh_binder_named "v_inner" dom in
