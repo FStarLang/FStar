@@ -188,10 +188,11 @@ let (is_type :
                     FStar_TypeChecker_Normalize.unfold_whnf g.tcenv t in
                   FStar_Syntax_Util.unrefine uu___4 in
                 aux uu___3))
-let (is_tot_arrow :
+let (is_arrow :
   env ->
     FStar_Syntax_Syntax.term ->
-      (FStar_Syntax_Syntax.binder * FStar_Syntax_Syntax.typ) result)
+      (FStar_Syntax_Syntax.binder * effect_label * FStar_Syntax_Syntax.typ)
+        result)
   =
   fun g ->
     fun t ->
@@ -201,22 +202,25 @@ let (is_tot_arrow :
           uu___1.FStar_Syntax_Syntax.n in
         match uu___ with
         | FStar_Syntax_Syntax.Tm_arrow (x::[], c) ->
-            let uu___1 = FStar_Syntax_Util.is_total_comp c in
+            let uu___1 = FStar_Syntax_Util.is_tot_or_gtot_comp c in
             if uu___1
             then
               let uu___2 = FStar_Syntax_Subst.open_comp [x] c in
               (match uu___2 with
                | (x1::[], c1) ->
-                   return (x1, (FStar_Syntax_Util.comp_result c1)))
-            else fail "Expected total arrow"
+                   let eff =
+                     let uu___3 = FStar_Syntax_Util.is_total_comp c1 in
+                     if uu___3 then E_TOTAL else E_GHOST in
+                   return (x1, eff, (FStar_Syntax_Util.comp_result c1)))
+            else fail "Expected total or gtot arrow"
         | FStar_Syntax_Syntax.Tm_arrow (x::xs, c) ->
             let t2 =
               FStar_Syntax_Syntax.mk (FStar_Syntax_Syntax.Tm_arrow (xs, c))
                 t1.FStar_Syntax_Syntax.pos in
             let uu___1 = FStar_Syntax_Subst.open_term [x] t2 in
-            (match uu___1 with | (x1::[], t3) -> return (x1, t3))
+            (match uu___1 with | (x1::[], t3) -> return (x1, E_TOTAL, t3))
         | uu___1 -> fail "Expected an arrow" in
-      with_context "is_tot_arrow" FStar_Pervasives_Native.None
+      with_context "is_arrow" FStar_Pervasives_Native.None
         (fun uu___ ->
            let uu___1 = aux t in
            handle_with uu___1
@@ -821,15 +825,39 @@ and (check_subcomp :
     fun e ->
       fun c0 ->
         fun c1 ->
+          let destruct_comp c =
+            let uu___ = FStar_Syntax_Util.is_total_comp c in
+            if uu___
+            then
+              FStar_Pervasives_Native.Some
+                (E_TOTAL, (FStar_Syntax_Util.comp_result c))
+            else
+              (let uu___2 = FStar_Syntax_Util.is_tot_or_gtot_comp c in
+               if uu___2
+               then
+                 FStar_Pervasives_Native.Some
+                   (E_GHOST, (FStar_Syntax_Util.comp_result c))
+               else FStar_Pervasives_Native.None) in
           let uu___ =
-            ((FStar_Syntax_Util.is_total_comp c0) &&
-               (FStar_Syntax_Util.is_tot_or_gtot_comp c1))
-              || ((is_gtot_comp c0) && (is_gtot_comp c1)) in
-          if uu___
-          then
-            check_subtype g e (FStar_Syntax_Util.comp_result c0)
-              (FStar_Syntax_Util.comp_result c1)
-          else fail "Subcomp failed"
+            let uu___1 = destruct_comp c0 in
+            let uu___2 = destruct_comp c1 in (uu___1, uu___2) in
+          match uu___ with
+          | (FStar_Pervasives_Native.None, uu___1) ->
+              fail "Subcomp failed: Non Tot/GTot computation types unhandled"
+          | (uu___1, FStar_Pervasives_Native.None) ->
+              fail "Subcomp failed: Non Tot/GTot computation types unhandled"
+          | (FStar_Pervasives_Native.Some (E_TOTAL, t0),
+             FStar_Pervasives_Native.Some (uu___1, t1)) ->
+              check_subtype g e t0 t1
+          | (FStar_Pervasives_Native.Some (E_GHOST, t0),
+             FStar_Pervasives_Native.Some (E_GHOST, t1)) ->
+              check_subtype g e t0 t1
+          | (FStar_Pervasives_Native.Some (E_GHOST, t0),
+             FStar_Pervasives_Native.Some (E_TOTAL, t1)) ->
+              let uu___1 = non_informative g t1 in
+              if uu___1
+              then check_subtype g e t0 t1
+              else fail "Expected a Total computation, but got Ghost"
 and (memo_check :
   env ->
     FStar_Syntax_Syntax.term ->
@@ -939,22 +967,22 @@ and (check' :
                let_op_Bang uu___1
                  (fun uu___2 ->
                     match uu___2 with
-                    | (_eff, t) ->
-                        let uu___3 = is_type g t in
-                        let_op_Bang uu___3
+                    | (uu___3, t) ->
+                        let uu___4 = is_type g t in
+                        let_op_Bang uu___4
                           (fun u ->
-                             let uu___4 =
+                             let uu___5 =
                                let g' = push_binders g [x1] in
-                               let uu___5 =
+                               let uu___6 =
                                  check "refinement formula" g' phi1 in
-                               let_op_Bang uu___5
-                                 (fun uu___6 ->
-                                    match uu___6 with
-                                    | (_eff', t') ->
-                                        let uu___7 = is_type g' t' in
-                                        bind uu___7
-                                          (fun uu___8 -> return (E_TOTAL, t))) in
-                             with_binders [x1] [u] uu___4)))
+                               let_op_Bang uu___6
+                                 (fun uu___7 ->
+                                    match uu___7 with
+                                    | (uu___8, t') ->
+                                        let uu___9 = is_type g' t' in
+                                        bind uu___9
+                                          (fun uu___10 -> return (E_TOTAL, t))) in
+                             with_binders [x1] [u] uu___5)))
       | FStar_Syntax_Syntax.Tm_abs (xs, body, uu___) ->
           let uu___1 = FStar_Syntax_Subst.open_term xs body in
           (match uu___1 with
@@ -1008,11 +1036,11 @@ and (check' :
             (fun uu___1 ->
                match uu___1 with
                | (eff_hd, t) ->
-                   let uu___2 = is_tot_arrow g t in
+                   let uu___2 = is_arrow g t in
                    let_op_Bang uu___2
                      (fun uu___3 ->
                         match uu___3 with
-                        | (x, t') ->
+                        | (x, eff_arr, t') ->
                             let uu___4 = check "app arg" g arg in
                             let_op_Bang uu___4
                               (fun uu___5 ->
@@ -1040,8 +1068,9 @@ and (check' :
                                                      [FStar_Syntax_Syntax.NT
                                                         ((x.FStar_Syntax_Syntax.binder_bv),
                                                           arg)] t' in
-                                                 ((join_eff eff_hd eff_arg),
-                                                   uu___11) in
+                                                 ((join_eff eff_hd
+                                                     (join_eff eff_arr
+                                                        eff_arg)), uu___11) in
                                                return uu___10)))))
       | FStar_Syntax_Syntax.Tm_app (hd, arg::args) ->
           let head =
@@ -1349,8 +1378,14 @@ and (check' :
                           | uu___4 -> return FStar_Pervasives_Native.None in
                         let_op_Bang uu___3
                           (fun branch_typ_opt ->
-                             check_branches FStar_Syntax_Util.t_true
-                               branch_typ_opt branches)))
+                             let uu___4 =
+                               check_branches FStar_Syntax_Util.t_true
+                                 branch_typ_opt branches in
+                             let_op_Bang uu___4
+                               (fun uu___5 ->
+                                  match uu___5 with
+                                  | (eff_br, t_br) ->
+                                      return ((join_eff eff_sc eff_br), t_br)))))
       | FStar_Syntax_Syntax.Tm_match uu___ ->
           fail "Match with returns clause is not handled yet"
       | uu___ ->
@@ -1416,17 +1451,14 @@ let (check_term_top :
         let g1 = { tcenv = g; allow_universe_instantiation = false } in
         let uu___ = check "top" g1 e in
         let_op_Bang uu___
-          (fun uu___1 ->
-             match uu___1 with
-             | (uu___2, te) ->
-                 with_context "top-level subtyping"
-                   FStar_Pervasives_Native.None
-                   (fun uu___3 ->
-                      check_subtype
-                        {
-                          tcenv = (g1.tcenv);
-                          allow_universe_instantiation = true
-                        } e te t))
+          (fun eff_te ->
+             with_context "top-level subtyping" FStar_Pervasives_Native.None
+               (fun uu___1 ->
+                  let uu___2 = as_comp g1 eff_te in
+                  let uu___3 = FStar_Syntax_Syntax.mk_Total t in
+                  check_subcomp
+                    { tcenv = (g1.tcenv); allow_universe_instantiation = true
+                    } e uu___2 uu___3))
 let (check_term :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.term ->

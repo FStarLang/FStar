@@ -153,26 +153,31 @@ let is_type (g:env) (t:term)
         (aux t)
         (fun _ -> aux (U.unrefine (N.unfold_whnf g.tcenv t))))
   
-let is_tot_arrow (g:env) (t:term)
-  : result (binder & typ)
+let is_arrow (g:env) (t:term)
+  : result (binder & effect_label & typ)
   = let aux t =
         match (SS.compress t).n with
         | Tm_arrow ([x], c) ->
-          if U.is_total_comp c
+          if U.is_tot_or_gtot_comp c
           then 
             let [x], c = SS.open_comp [x] c in
-            return (x, U.comp_result c)
-          else fail "Expected total arrow"
+            let eff = 
+              if U.is_total_comp c
+              then E_TOTAL
+              else E_GHOST
+            in
+            return (x, eff, U.comp_result c)
+          else fail "Expected total or gtot arrow"
           
         | Tm_arrow (x::xs, c) ->
           let t = S.mk (Tm_arrow(xs, c)) t.pos in
           let [x], t = SS.open_term [x] t in
-          return (x, t)
+          return (x, E_TOTAL, t)
 
         | _ ->
           fail "Expected an arrow"
     in
-    with_context "is_tot_arrow" None (fun _ -> 
+    with_context "is_arrow" None (fun _ -> 
       handle_with
         (aux t)
         (fun _ -> aux (N.unfold_whnf g.tcenv t)))
@@ -499,11 +504,26 @@ and check_equality (g:env) (t0 t1:typ)
 
 and check_subcomp (g:env) (e:term) (c0 c1:comp)
   : result unit
-  = 
-    if (U.is_total_comp c0 && U.is_tot_or_gtot_comp c1)
-    ||  (is_gtot_comp c0 && is_gtot_comp c1)
-    then check_subtype g e (U.comp_result c0) (U.comp_result c1)
-    else fail "Subcomp failed"
+  = let destruct_comp c =
+        if U.is_total_comp c
+        then Some (E_TOTAL, U.comp_result c)
+        else if U.is_tot_or_gtot_comp c
+        then Some (E_GHOST, U.comp_result c)
+        else None
+    in
+    match destruct_comp c0, destruct_comp c1 with
+    | None, _
+    | _, None ->
+      fail "Subcomp failed: Non Tot/GTot computation types unhandled"
+
+    | Some (E_TOTAL, t0), Some (_, t1)
+    | Some (E_GHOST, t0), Some (E_GHOST, t1) ->
+      check_subtype g e t0 t1
+
+    | Some (E_GHOST, t0), Some (E_TOTAL, t1) ->
+      if non_informative g t1
+      then check_subtype g e t0 t1
+      else fail "Expected a Total computation, but got Ghost"
 
 and memo_check (g:env) (e:term)
   : result (effect_label & typ)
@@ -584,11 +604,11 @@ and check' (g:env) (e:term)
     
   | Tm_refine(x, phi) ->
     let [x], phi = SS.open_term [S.mk_binder x] phi in
-    let! _eff, t = check "refinement head" g x.binder_bv.sort in
+    let! _, t = check "refinement head" g x.binder_bv.sort in
     let! u = is_type g t in
     with_binders [x] [u] (
       let g' = push_binders g [x] in
-      let! _eff', t' = check "refinement formula" g' phi in
+      let! _, t' = check "refinement formula" g' phi in
       is_type g' t';;
       return (E_TOTAL, t)
     )
@@ -611,11 +631,11 @@ and check' (g:env) (e:term)
 
   | Tm_app (hd, [(arg, arg_qual)]) ->
     let! eff_hd, t = check "app head" g hd in
-    let! x, t' = is_tot_arrow g t in
+    let! x, eff_arr, t' = is_arrow g t in
     let! eff_arg, t_arg = check "app arg" g arg in
     with_context "app subtyping" None (fun _ -> check_subtype g arg t_arg x.binder_bv.sort) ;;
     with_context "app arg qual" None (fun _ -> check_arg_qual arg_qual x.binder_qual) ;;
-    return (join_eff eff_hd eff_arg, SS.subst [NT(x.binder_bv, arg)] t')
+    return (join_eff eff_hd (join_eff eff_arr eff_arg), SS.subst [NT(x.binder_bv, arg)] t')
 
   | Tm_app(hd, arg::args) ->
     let head = S.mk (Tm_app(hd, [arg])) e.pos in
@@ -719,7 +739,8 @@ and check' (g:env) (e:term)
       | _ ->
         return None
     in
-    check_branches U.t_true branch_typ_opt branches
+    let! eff_br, t_br = check_branches U.t_true branch_typ_opt branches in
+    return (join_eff eff_sc eff_br, t_br)
 
   | Tm_match _ ->
     fail "Match with returns clause is not handled yet"  
@@ -759,9 +780,9 @@ and universe_of (g:env) (t:typ)
 let check_term_top g e t
   : result unit
   = let g = { tcenv = g; allow_universe_instantiation = false } in
-    let! _, te = check "top" g e in
+    let! eff_te = check "top" g e in
     with_context "top-level subtyping" None (fun _ ->
-      check_subtype ({ g with allow_universe_instantiation = true}) e te t)
+      check_subcomp ({ g with allow_universe_instantiation = true}) e (as_comp g eff_te) (S.mk_Total t))
 
 let check_term g e t
   = // if Env.debug g (Options.Other "Core")
