@@ -3578,30 +3578,6 @@ let (fv_has_erasable_attr : env -> FStar_Syntax_Syntax.fv -> Prims.bool) =
             FStar_Parser_Const.erasable_attr in
         match uu___1 with | (ex, erasable) -> (ex, erasable) in
       cache_in_fv_tab env1.erasable_types_tab fv f
-let rec (non_informative : env -> FStar_Syntax_Syntax.typ -> Prims.bool) =
-  fun env1 ->
-    fun t ->
-      let uu___ =
-        let uu___1 = FStar_Syntax_Util.unrefine t in
-        uu___1.FStar_Syntax_Syntax.n in
-      match uu___ with
-      | FStar_Syntax_Syntax.Tm_type uu___1 -> true
-      | FStar_Syntax_Syntax.Tm_fvar fv ->
-          (((FStar_Syntax_Syntax.fv_eq_lid fv FStar_Parser_Const.unit_lid) ||
-              (FStar_Syntax_Syntax.fv_eq_lid fv FStar_Parser_Const.squash_lid))
-             ||
-             (FStar_Syntax_Syntax.fv_eq_lid fv FStar_Parser_Const.erased_lid))
-            || (fv_has_erasable_attr env1 fv)
-      | FStar_Syntax_Syntax.Tm_app (head, uu___1) ->
-          non_informative env1 head
-      | FStar_Syntax_Syntax.Tm_uinst (t1, uu___1) -> non_informative env1 t1
-      | FStar_Syntax_Syntax.Tm_arrow (uu___1, c) ->
-          ((FStar_Syntax_Util.is_pure_or_ghost_comp c) &&
-             (non_informative env1 (FStar_Syntax_Util.comp_result c)))
-            ||
-            (FStar_Syntax_Util.is_ghost_effect
-               (FStar_Syntax_Util.comp_effect_name c))
-      | uu___1 -> false
 let (fv_has_strict_args :
   env ->
     FStar_Syntax_Syntax.fv ->
@@ -3789,6 +3765,42 @@ let (norm_eff_name : env -> FStar_Ident.lident -> FStar_Ident.lident) =
                   m)) in
       let uu___ = FStar_Ident.range_of_lid l in
       FStar_Ident.set_lid_range res uu___
+let (is_erasable_effect : env -> FStar_Ident.lident -> Prims.bool) =
+  fun env1 ->
+    fun l ->
+      let uu___ = FStar_Compiler_Effect.op_Bar_Greater l (norm_eff_name env1) in
+      FStar_Compiler_Effect.op_Bar_Greater uu___
+        (fun l1 ->
+           (FStar_Ident.lid_equals l1 FStar_Parser_Const.effect_GHOST_lid) ||
+             (let uu___1 =
+                FStar_Syntax_Syntax.lid_as_fv l1
+                  (FStar_Syntax_Syntax.Delta_constant_at_level Prims.int_zero)
+                  FStar_Pervasives_Native.None in
+              FStar_Compiler_Effect.op_Bar_Greater uu___1
+                (fv_has_erasable_attr env1)))
+let rec (non_informative : env -> FStar_Syntax_Syntax.typ -> Prims.bool) =
+  fun env1 ->
+    fun t ->
+      let uu___ =
+        let uu___1 = FStar_Syntax_Util.unrefine t in
+        uu___1.FStar_Syntax_Syntax.n in
+      match uu___ with
+      | FStar_Syntax_Syntax.Tm_type uu___1 -> true
+      | FStar_Syntax_Syntax.Tm_fvar fv ->
+          (((FStar_Syntax_Syntax.fv_eq_lid fv FStar_Parser_Const.unit_lid) ||
+              (FStar_Syntax_Syntax.fv_eq_lid fv FStar_Parser_Const.squash_lid))
+             ||
+             (FStar_Syntax_Syntax.fv_eq_lid fv FStar_Parser_Const.erased_lid))
+            || (fv_has_erasable_attr env1 fv)
+      | FStar_Syntax_Syntax.Tm_app (head, uu___1) ->
+          non_informative env1 head
+      | FStar_Syntax_Syntax.Tm_uinst (t1, uu___1) -> non_informative env1 t1
+      | FStar_Syntax_Syntax.Tm_arrow (uu___1, c) ->
+          ((FStar_Syntax_Util.is_pure_or_ghost_comp c) &&
+             (non_informative env1 (FStar_Syntax_Util.comp_result c)))
+            ||
+            (is_erasable_effect env1 (FStar_Syntax_Util.comp_effect_name c))
+      | uu___1 -> false
 let (num_effect_indices :
   env -> FStar_Ident.lident -> FStar_Compiler_Range.range -> Prims.int) =
   fun env1 ->
@@ -4490,19 +4502,6 @@ let (reify_comp :
          | FStar_Pervasives_Native.None ->
              failwith "internal error: reifiable effect has no repr?"
          | FStar_Pervasives_Native.Some tm -> tm)
-let (is_erasable_effect : env -> FStar_Ident.lident -> Prims.bool) =
-  fun env1 ->
-    fun l ->
-      let uu___ = FStar_Compiler_Effect.op_Bar_Greater l (norm_eff_name env1) in
-      FStar_Compiler_Effect.op_Bar_Greater uu___
-        (fun l1 ->
-           (FStar_Ident.lid_equals l1 FStar_Parser_Const.effect_GHOST_lid) ||
-             (let uu___1 =
-                FStar_Syntax_Syntax.lid_as_fv l1
-                  (FStar_Syntax_Syntax.Delta_constant_at_level Prims.int_zero)
-                  FStar_Pervasives_Native.None in
-              FStar_Compiler_Effect.op_Bar_Greater uu___1
-                (fv_has_erasable_attr env1)))
 let (push_sigelt : env -> FStar_Syntax_Syntax.sigelt -> env) =
   fun env1 ->
     fun s ->
