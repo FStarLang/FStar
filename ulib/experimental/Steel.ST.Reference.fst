@@ -144,6 +144,27 @@ let with_local
   _free_and_pop_frame r;
   return v
 
+let with_named_local
+  (#t: Type)
+  (init: t)
+  (#pre: vprop)
+  (#ret_t: Type)
+  (#post: ret_t -> vprop)
+  (name: string)
+  (body: (r: ref t) ->
+    STT ret_t
+    (pts_to r full_perm init `star` pre)
+    (fun v -> exists_ (pts_to r full_perm) `star` post v)
+  )
+: STF ret_t pre post True (fun _ -> True)
+= _push_frame ();
+  [@(rename_let name)]
+  let r = _alloca init in
+  let v = body r in
+  let _ = elim_exists () in
+  _free_and_pop_frame r;
+  return v
+
 let share (#a:Type0)
           (#uses:_)
           (#p:perm)
