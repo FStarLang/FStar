@@ -16,3 +16,6 @@ val check_term (g:Env.env) (e:term) (t:typ)
 
 val print_error (err:error)
   : string
+
+val print_error_short (err:error)
+  : string

@@ -52,6 +52,8 @@ let print_error (err:error) =
   let ctx, msg = err in
   BU.format2 "%s%s" (print_context ctx) msg
 
+let print_error_short (err:error) = snd err
+
 let result a = context -> either (success a) error
 
 type effect_label =
@@ -153,9 +155,9 @@ let is_type (g:env) (t:term)
         (aux t)
         (fun _ -> aux (U.unrefine (N.unfold_whnf g.tcenv t))))
   
-let is_arrow (g:env) (t:term)
+let rec is_arrow (g:env) (t:term)
   : result (binder & effect_label & typ)
-  = let aux t =
+  = let rec aux t =
         match (SS.compress t).n with
         | Tm_arrow ([x], c) ->
           if U.is_tot_or_gtot_comp c
@@ -167,15 +169,53 @@ let is_arrow (g:env) (t:term)
               else E_GHOST
             in
             return (x, eff, U.comp_result c)
-          else fail "Expected total or gtot arrow"
+          else (
+            let Comp ct = c.n in
+            (* Turn   x:t -> Pure/Ghost t' pre post
+               into   x:t{pre} -> Tot/GTot (y:t'{post})
+
+               This is ok for pre.
+               But, it loses precision for post.
+               In effect form, the post is in scope for the entire continuation.
+               Whereas the refinement on the result is not.
+             *)
+            let e_tag =
+              if Ident.lid_equals ct.effect_name PC.effect_Pure_lid
+              then Some E_TOTAL
+              else if Ident.lid_equals ct.effect_name PC.effect_Ghost_lid 
+              then Some E_GHOST
+              else None
+            in
+            match e_tag with
+            | None -> fail (BU.format1 "Expected total or gtot arrow, got %s" (Ident.string_of_lid (U.comp_effect_name c)))
+            | Some e_tag ->
+              let [x], c = U.arrow_formals_comp t in
+              let (pre, _)::(post, _)::_ = ct.effect_args in
+              let arg_typ = U.refine x.binder_bv pre in
+              let res_typ = 
+                let r = S.new_bv None ct.result_typ in
+                let post = S.mk_Tm_app post [(S.bv_to_name r, None)] post.pos in
+                U.refine r post
+              in
+              let xbv = { x.binder_bv with sort = arg_typ } in
+              let x = { x with binder_bv = xbv } in
+              return (x, e_tag, res_typ)
+          )
           
         | Tm_arrow (x::xs, c) ->
           let t = S.mk (Tm_arrow(xs, c)) t.pos in
           let [x], t = SS.open_term [x] t in
           return (x, E_TOTAL, t)
 
+        | Tm_refine(x, _) ->
+          is_arrow g x.sort
+
+        | Tm_meta(t, _)
+        | Tm_ascribed(t, _, _) ->
+          aux t
+          
         | _ ->
-          fail "Expected an arrow"
+          fail (BU.format2 "Expected an arrow, got (%s) %s" (P.tag_of_term t) (P.term_to_string t))
     in
     with_context "is_arrow" None (fun _ -> 
       handle_with
@@ -312,6 +352,10 @@ let curry_arrow (x:binder) (xs:binders) (c:comp) =
   let tail = S.mk (Tm_arrow (xs, c)) R.dummyRange in
   S.mk (Tm_arrow([x], S.mk_Total tail)) R.dummyRange
 
+let curry_abs (b0:binder) (b1:binder) (bs:binders) (body:term) (ropt: option residual_comp) =
+  let tail = S.mk (Tm_abs(b1::bs, body, ropt)) body.pos in
+  S.mk (Tm_abs([b0], tail, None)) body.pos
+
 let is_gtot_comp c = U.is_tot_or_gtot_comp c && not (U.is_total_comp c)
 
 let rec context_included (g0 g1: list binding) =
@@ -381,6 +425,14 @@ let as_comp (g:env) (et: (effect_label & typ))
       then S.mk_Total t
       else S.mk_GTotal t
 
+let comp_as_effect_label_and_type (c:comp)
+  : option (effect_label & typ)
+  = if U.is_total_comp c
+    then Some (E_TOTAL, U.comp_result c)
+    else if U.is_tot_or_gtot_comp c
+    then Some (E_GHOST, U.comp_result c)
+    else None
+    
 let join_eff e0 e1 = 
   match e0, e1 with
   | E_GHOST, _
@@ -418,13 +470,21 @@ let rec check_subtype_whnf (g:env) (e:term) (t0 t1: typ)
       let! u1 = universe_of g x1.binder_bv.sort in
       with_binders [x1] [u1] (
         check_subtype g (S.bv_to_name x1.binder_bv) x1.binder_bv.sort x0.binder_bv.sort ;;
-        check_subcomp g (S.mk_Tm_app e (snd (U.args_of_binders [x1])) R.dummyRange) c0 (SS.subst_comp [NT(x1.binder_bv, S.bv_to_name x0.binder_bv)] c1)
+        check_subcomp g (S.mk_Tm_app e (snd (U.args_of_binders [x1])) R.dummyRange)
+                        c0 
+                        (SS.subst_comp [NT(x1.binder_bv, S.bv_to_name x0.binder_bv)] c1)
       )
 
+    | Tm_ascribed (t0, _, _), _ ->
+      check_subtype_whnf g e t0 t1
+      
+    | _, Tm_ascribed (t1, _, _) ->
+      check_subtype_whnf g e t0 t1      
+      
     | Tm_app _, Tm_app _
     | Tm_type _, Tm_type _ ->
       check_equality_whnf g t0 t1
-  
+      
     | _ ->
       if U.eq_tm t0 t1 = U.Equal
       then return ()
@@ -490,6 +550,20 @@ and check_equality_whnf (g:env) (t0 t1:typ)
             check_aqual q0 q1;;
             check_equality g a0 a1)
           ()
+
+      | Tm_abs(b0::b1::bs, body, ropt), _ ->
+        let t0 = curry_abs b0 b1 bs body ropt in
+        check_equality_whnf g t0 t1
+
+      | _, Tm_abs(b0::b1::bs, body, ropt) ->
+        let t1 = curry_abs b0 b1 bs body ropt in
+        check_equality_whnf g t0 t1
+
+      | Tm_abs([b0], body0, _), Tm_abs([b1], body1, _) ->
+        check_equality g b0.binder_bv.sort b1.binder_bv.sort;;
+        check_bqual b0.binder_qual b1.binder_qual;;
+        let body1 = SS.subst [NT(b1.binder_bv, S.bv_to_name b0.binder_bv)] body1 in
+        check_equality g body0 body1
         
       | _ -> fail ()
 
@@ -573,7 +647,7 @@ and check' (g:env) (e:term)
     | _ -> //no implicit universe instantiation allowed
       fail "Missing universes instantiation"
     end
-    
+      
   | Tm_uinst ({n=Tm_fvar f}, us) ->
     begin
     match Env.try_lookup_and_inst_lid g.tcenv us f.fv_name.v with
@@ -598,10 +672,10 @@ and check' (g:env) (e:term)
       let t = FStar.TypeChecker.TcTerm.tc_constant g.tcenv e.pos c in
       return (E_TOTAL, t)
     end
-    
+      
   | Tm_type u ->
     return (E_TOTAL, mk_type (U_succ u))
-    
+      
   | Tm_refine(x, phi) ->
     let [x], phi = SS.open_term [S.mk_binder x] phi in
     let! _, t = check "refinement head" g x.binder_bv.sort in
@@ -649,9 +723,18 @@ and check' (g:env) (e:term)
     with_context "ascription subtyping" None (fun _ -> check_subtype g e te t);;
     return (eff, t)
 
-  | Tm_ascribed (_, (Inr e, _, _), _) -> 
-    fail "Effect ascriptions are not handled yet"
-    
+  | Tm_ascribed (e, (Inr c, _, _), _) -> 
+    if U.is_tot_or_gtot_comp c
+    then (
+      let! eff, te = check "ascription head" g e in
+      let! _ = with_context "ascription comp" None (fun _ -> check_comp g c) in
+      let c_e = as_comp g (eff, te) in
+      check_subcomp g e c_e c;;
+      let Some (eff, t) = comp_as_effect_label_and_type c in
+      return (eff, t)
+    )
+    else fail (BU.format1 "Effect ascriptions are not fully handled yet: %s" (P.comp_to_string c))
+      
   | Tm_let((false, [lb]), body) ->
     let Inl x = lb.lbname in
     let [x], body = SS.open_term [S.mk_binder x] body in
@@ -671,7 +754,7 @@ and check' (g:env) (e:term)
     else (
       fail "Let binding is effectful"
     )
-    
+      
   | Tm_match(sc, None, branches, rc_opt) ->
     let! eff_sc, t_sc = check "scrutinee" g sc in
     let! u_sc = with_context "universe_of" (Some t_sc) (fun _ -> universe_of g t_sc) in
@@ -690,6 +773,7 @@ and check' (g:env) (e:term)
              return et)
           
         | (p, None, b) :: rest ->
+          let (p, _, b) = SS.open_branch (p, None, b) in
           match PatternUtils.raw_pat_as_exp g.tcenv p with
           | None ->
             fail "Ill-formed pattern"
@@ -731,19 +815,78 @@ and check' (g:env) (e:term)
     in 
 
     let! branch_typ_opt =
-      match rc_opt with
-      | Some ({ residual_typ = Some t }) ->
-        with_context "residual type" (Some t) (fun _ -> universe_of g t) ;;
-        return (Some (E_TOTAL, t))
-        
-      | _ ->
-        return None
+        match rc_opt with
+        | Some ({ residual_typ = Some t }) ->
+          with_context "residual type" (Some t) (fun _ -> universe_of g t) ;;
+          return (Some (E_TOTAL, t))
+          
+        | _ ->
+          return None
     in
     let! eff_br, t_br = check_branches U.t_true branch_typ_opt branches in
     return (join_eff eff_sc eff_br, t_br)
+  
+  | Tm_match(sc, Some (as_x, (Inl returns_ty, None, eq)), branches, rc_opt) ->
+    let! eff_sc, t_sc = check "scrutinee" g sc in
+    let! u_sc = with_context "universe_of" (Some t_sc) (fun _ -> universe_of g t_sc) in
+    let [as_x], returns_ty = SS.open_term [as_x] returns_ty in
+    let as_x = {as_x with binder_bv = { as_x.binder_bv with sort = t_sc } } in
+    let g_as_x = push_binders g [as_x] in
+    let! _eff_t, returns_ty_t = check "return type" g_as_x returns_ty in
+    let! _u_ty = is_type g_as_x returns_ty_t in
+    let rec check_branches (path_condition: S.term)
+                           (branches: list S.branch)
+                           (acc_eff: effect_label)
+      : result effect_label
+      = match branches with
+        | [] ->
+          guard (U.mk_imp path_condition U.t_false);;
+          return acc_eff
+          
+        | (p, None, b) :: rest ->
+          let (p, _, b) = SS.open_branch (p, None, b) in        
+          match PatternUtils.raw_pat_as_exp g.tcenv p with
+          | None ->
+            fail "Ill-formed pattern"
+
+          | Some (e, bvs) ->
+            let binders = List.map S.mk_binder bvs in
+            let! bs_g = check_binders g binders in
+            let bs, us, g' = bs_g in
+            let! eff_pat, t = check "pattern term" g' e in
+            no_guard (check_subtype g' e t_sc t) ;;
+            let pat_sc_eq = U.mk_eq2 u_sc t_sc sc e in
+            let! eff_br, tbr =
+              with_binders bs us 
+                (weaken 
+                  (U.mk_conj path_condition pat_sc_eq)
+                  (let! eff_br, tbr = check "branch" g' b in
+                   let expect_tbr = SS.subst [NT(as_x.binder_bv, e)] returns_ty in
+                   (if eq
+                    then check_equality g' tbr expect_tbr
+                    else check_subtype  g' b tbr expect_tbr);;
+                    return (join_eff eff_br acc_eff, expect_tbr))) in
+            let path_condition = 
+              U.mk_conj path_condition
+                        (mk_forall_l us bs (U.mk_neg pat_sc_eq))
+            in
+            match p.v with
+            | Pat_var _
+            | Pat_wild _ ->
+              //trivially exhaustive
+              (match rest with
+               | _ :: _ -> fail "Redundant branches after wildcard"
+               | _ -> return eff_br)
+               
+            | _ ->
+              check_branches path_condition rest eff_br
+    in 
+    let! eff = check_branches U.t_true branches E_TOTAL in
+    let ty = SS.subst [NT(as_x.binder_bv, sc)] returns_ty in
+    return (eff, ty)
 
   | Tm_match _ ->
-    fail "Match with returns clause is not handled yet"  
+    fail "Match with effect returns ascription, or tactic handler"
     
   | _ -> 
     fail (BU.format1 "Unexpected term: %s" (FStar.Syntax.Print.tag_of_term e))
@@ -770,7 +913,7 @@ and check_comp (g:env) (c:comp)
       let! _, t = check "comp result" g (U.comp_result c) in
       is_type g t
     )
-    else fail "Computation type is not Tot or GTot"
+    else fail (BU.format1 "Computation type is not Tot or GTot: %s" (Ident.string_of_lid (U.comp_effect_name c)))
 
 and universe_of (g:env) (t:typ)
   : result universe

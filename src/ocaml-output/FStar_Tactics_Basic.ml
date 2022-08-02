@@ -42,11 +42,12 @@ let (core_check :
                   let uu___3 =
                     let uu___4 = FStar_TypeChecker_Env.get_range env in
                     FStar_Compiler_Range.string_of_range uu___4 in
-                  let uu___4 = FStar_Syntax_Print.term_to_string sol in
-                  let uu___5 = FStar_TypeChecker_Core.print_error err in
-                  FStar_Compiler_Util.print3
-                    "(%s) Core checking failed on term %s\n%s\n" uu___3
-                    uu___4 uu___5);
+                  let uu___4 = FStar_TypeChecker_Core.print_error_short err in
+                  let uu___5 = FStar_Syntax_Print.term_to_string sol in
+                  let uu___6 = FStar_TypeChecker_Core.print_error err in
+                  FStar_Compiler_Util.print4
+                    "(%s) Core checking failed (%s) on term %s\n%s\n" uu___3
+                    uu___4 uu___5 uu___6);
              FStar_Pervasives.Inr err)
 type name = FStar_Syntax_Syntax.bv
 type env = FStar_TypeChecker_Env.env
