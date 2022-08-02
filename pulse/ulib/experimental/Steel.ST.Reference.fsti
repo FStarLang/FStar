@@ -163,6 +163,23 @@ val with_local
   )
 : STF ret_t pre post True (fun _ -> True)
 
+/// Same as with_local, with an additional string argument to set the
+/// name of the local variable in the extracted C code.
+inline_for_extraction
+val with_named_local
+  (#t: Type)
+  (init: t)
+  (#pre: vprop)
+  (#ret_t: Type)
+  (#post: ret_t -> vprop)
+  (name: string)
+  (body: (r: ref t) ->
+    STT ret_t
+    (pts_to r full_perm init `star` pre)
+    (fun v -> exists_ (pts_to r full_perm) `star` post v)
+  )
+: STF ret_t pre post True (fun _ -> True)
+
 /// Splits the permission on reference [r] into two. This function is
 /// computationally irrelevant (it has effect SteelGhost)
 val share (#a:Type0)
