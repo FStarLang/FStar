@@ -564,6 +564,12 @@ and check_equality_whnf (g:env) (t0 t1:typ)
         check_bqual b0.binder_qual b1.binder_qual;;
         let body1 = SS.subst [NT(b1.binder_bv, S.bv_to_name b0.binder_bv)] body1 in
         check_equality g body0 body1
+
+      | Tm_refine(b0, phi0), Tm_refine(b1, phi1) ->
+        check_equality_whnf g b0.sort b1.sort;;
+        let [b], phi0 = SS.open_term [S.mk_binder b0] phi0 in
+        let phi1 = SS.subst [DB(0, b.binder_bv)] phi1 in
+        check_equality ({g with tcenv=Env.push_binders g.tcenv [b]}) phi0 phi1
         
       | _ -> fail ()
 
