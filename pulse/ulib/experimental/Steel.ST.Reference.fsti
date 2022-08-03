@@ -120,6 +120,66 @@ val free (#a:Type0)
   : STT unit
     (pts_to r full_perm v) (fun _ -> emp)
 
+/// Executes a code block with a local variable temporarily allocated
+/// on the stack. This function is declared in the `STF` effect so
+/// that the pre- and post-resources can be properly inferred by the
+/// Steel tactic from the caller's context.
+///
+/// From the extraction point of view, `with_local init body` is to behave
+/// similarly as the following Low* code:
+///
+/// <<<
+/// push_frame ();
+/// let r = alloca 1ul init in
+/// let res = body r in
+/// pop_frame ();
+/// r
+/// >>>
+///
+/// and thus, is to be extracted to C as:
+/// <<<
+/// ret_t res;
+/// {
+///   t r = init;
+///   res = <body r>;
+/// }
+/// >>>
+///
+/// To this end, we mimic the Low* behavior by defining local
+/// primitives with primitive extraction in the `.fst`, and have them
+/// called by `with_local`. This is why we mark `with_local` as
+/// `inline_for_extraction`.
+inline_for_extraction
+val with_local
+  (#t: Type)
+  (init: t)
+  (#pre: vprop)
+  (#ret_t: Type)
+  (#post: ret_t -> vprop)
+  (body: (r: ref t) ->
+    STT ret_t
+    (pts_to r full_perm init `star` pre)
+    (fun v -> exists_ (pts_to r full_perm) `star` post v)
+  )
+: STF ret_t pre post True (fun _ -> True)
+
+/// Same as with_local, with an additional string argument to set the
+/// name of the local variable in the extracted C code.
+inline_for_extraction
+val with_named_local
+  (#t: Type)
+  (init: t)
+  (#pre: vprop)
+  (#ret_t: Type)
+  (#post: ret_t -> vprop)
+  (name: string)
+  (body: (r: ref t) ->
+    STT ret_t
+    (pts_to r full_perm init `star` pre)
+    (fun v -> exists_ (pts_to r full_perm) `star` post v)
+  )
+: STF ret_t pre post True (fun _ -> True)
+
 /// Splits the permission on reference [r] into two. This function is
 /// computationally irrelevant (it has effect SteelGhost)
 val share (#a:Type0)
