@@ -470,9 +470,10 @@ let rec check_subtype_whnf (g:env) (e:term) (t0 t1: typ)
       let! u1 = universe_of g x1.binder_bv.sort in
       with_binders [x1] [u1] (
         check_subtype g (S.bv_to_name x1.binder_bv) x1.binder_bv.sort x0.binder_bv.sort ;;
-        check_subcomp g (S.mk_Tm_app e (snd (U.args_of_binders [x1])) R.dummyRange)
-                        c0 
-                        (SS.subst_comp [NT(x1.binder_bv, S.bv_to_name x0.binder_bv)] c1)
+        check_subcomp ({g with tcenv=Env.push_binders g.tcenv [x0]})
+                      (S.mk_Tm_app e (snd (U.args_of_binders [x1])) R.dummyRange)
+                      c0 
+                      (SS.subst_comp [NT(x1.binder_bv, S.bv_to_name x0.binder_bv)] c1)
       )
 
     | Tm_ascribed (t0, _, _), _ ->
