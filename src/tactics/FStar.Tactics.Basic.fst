@@ -79,10 +79,11 @@ let core_check env sol t
 
     | Inr err ->
       debug (fun _ -> 
-               BU.print4 "(%s) Core checking failed (%s) on term %s\n%s\n"
+               BU.print5 "(%s) Core checking failed (%s) on term %s and type %s\n%s\n"
                          (Range.string_of_range (Env.get_range env))      
                          (Core.print_error_short err)
                          (Print.term_to_string sol)
+                         (Print.term_to_string t)
                          (Core.print_error err));
       Inr err
 
