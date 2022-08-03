@@ -2,7 +2,7 @@ open Prims
 let (core_check :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.term ->
-      FStar_Syntax_Syntax.typ ->
+      FStar_Syntax_Syntax.term ->
         (FStar_Reflection_Data.typ FStar_Pervasives_Native.option,
           FStar_TypeChecker_Core.error) FStar_Pervasives.either)
   =
@@ -44,10 +44,11 @@ let (core_check :
                     FStar_Compiler_Range.string_of_range uu___4 in
                   let uu___4 = FStar_TypeChecker_Core.print_error_short err in
                   let uu___5 = FStar_Syntax_Print.term_to_string sol in
-                  let uu___6 = FStar_TypeChecker_Core.print_error err in
-                  FStar_Compiler_Util.print4
-                    "(%s) Core checking failed (%s) on term %s\n%s\n" uu___3
-                    uu___4 uu___5 uu___6);
+                  let uu___6 = FStar_Syntax_Print.term_to_string t in
+                  let uu___7 = FStar_TypeChecker_Core.print_error err in
+                  FStar_Compiler_Util.print5
+                    "(%s) Core checking failed (%s) on term %s and type %s\n%s\n"
+                    uu___3 uu___4 uu___5 uu___6 uu___7);
              FStar_Pervasives.Inr err)
 type name = FStar_Syntax_Syntax.bv
 type env = FStar_TypeChecker_Env.env

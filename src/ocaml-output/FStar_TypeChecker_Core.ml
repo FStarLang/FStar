@@ -949,6 +949,34 @@ and (check_equality_whnf :
                              [uu___9] in
                            FStar_Syntax_Subst.subst uu___8 body1 in
                          check_equality g body0 body11))
+           | (FStar_Syntax_Syntax.Tm_refine (b0, phi0),
+              FStar_Syntax_Syntax.Tm_refine (b1, phi1)) ->
+               let uu___2 =
+                 check_equality_whnf g b0.FStar_Syntax_Syntax.sort
+                   b1.FStar_Syntax_Syntax.sort in
+               bind uu___2
+                 (fun uu___3 ->
+                    let uu___4 =
+                      let uu___5 =
+                        let uu___6 = FStar_Syntax_Syntax.mk_binder b0 in
+                        [uu___6] in
+                      FStar_Syntax_Subst.open_term uu___5 phi0 in
+                    match uu___4 with
+                    | (b::[], phi01) ->
+                        let phi11 =
+                          FStar_Syntax_Subst.subst
+                            [FStar_Syntax_Syntax.DB
+                               (Prims.int_zero,
+                                 (b.FStar_Syntax_Syntax.binder_bv))] phi1 in
+                        let uu___5 =
+                          let uu___6 =
+                            FStar_TypeChecker_Env.push_binders g.tcenv [b] in
+                          {
+                            tcenv = uu___6;
+                            allow_universe_instantiation =
+                              (g.allow_universe_instantiation)
+                          } in
+                        check_equality uu___5 phi01 phi11)
            | uu___2 -> fail1 ())
 and (check_equality :
   env -> FStar_Syntax_Syntax.typ -> FStar_Syntax_Syntax.typ -> unit result) =
