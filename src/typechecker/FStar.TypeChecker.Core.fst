@@ -499,8 +499,8 @@ let rec check_subtype_whnf (g:env) (e:term) (t0 t1: typ)
                            (P.term_to_string t1))
 
 and check_subtype (g:env) (e:term) (t0 t1:typ)
-  = // if Env.debug g.tcenv (Options.Other "Core")
-    // then BU.print2 "check_subtype %s <: %s" (P.term_to_string t0) (P.term_to_string t1);
+  = if Env.debug g.tcenv (Options.Other "Core")
+    then BU.print2 "check_subtype %s <: %s" (P.term_to_string t0) (P.term_to_string t1);
     match U.eq_tm t0 t1 with
     | U.Equal -> return ()
     | _ ->
@@ -508,6 +508,9 @@ and check_subtype (g:env) (e:term) (t0 t1:typ)
       let t0 = N.normalize_refinement [Primops; Weak; HNF; UnfoldUntil delta_constant] g.tcenv t0 in
       let t1 = N.normalize_refinement [Primops; Weak; HNF; UnfoldUntil delta_constant] g.tcenv t1 in      
       check_subtype_whnf g e t0 t1
+
+and check_equality_formula (g:env) (phi0 phi1:typ) =
+  strengthen (U.mk_iff phi0 phi1) (return ())
 
 and check_equality_whnf (g:env) (t0 t1:typ)
   = let fail () = 
@@ -570,7 +573,12 @@ and check_equality_whnf (g:env) (t0 t1:typ)
         check_equality_whnf g b0.sort b1.sort;;
         let [b], phi0 = SS.open_term [S.mk_binder b0] phi0 in
         let phi1 = SS.subst [DB(0, b.binder_bv)] phi1 in
-        check_equality ({g with tcenv=Env.push_binders g.tcenv [b]}) phi0 phi1
+        let! u = universe_of g b.binder_bv.sort in
+        with_binders [b] [u]
+          (check_equality_formula ({g with tcenv=Env.push_binders g.tcenv [b]}) phi0 phi1)
+
+      | Tm_ascribed(t0, _, _), _ -> check_equality_whnf g t0 t1
+      | _, Tm_ascribed(t1, _, _) -> check_equality_whnf g t0 t1
         
       | _ -> fail ()
 
@@ -944,4 +952,3 @@ let check_term g e t
     // if Env.debug g (Options.Other "Core")
     // then BU.print_string "Exiting core\n";
     res
-    
