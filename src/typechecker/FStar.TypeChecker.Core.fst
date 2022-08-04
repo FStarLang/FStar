@@ -608,11 +608,14 @@ and check_equality_whnf (g:env) (t0 t1:typ)
       | Tm_ascribed(t0, _, _), _ -> check_equality_whnf g t0 t1
       | _, Tm_ascribed(t1, _, _) -> check_equality_whnf g t0 t1
 
-      | _ when equatable t0 t1 ->
-        let! u = universe_of g t0 in
-        guard (U.mk_eq2 u (mk_type u) t0 t1)
-
-      | _ -> fail ()
+      | _ ->
+        match! guard_not_allowed with
+        | true -> fail ()
+        | false ->
+          if equatable t0 t1
+          then let! u = universe_of g t0 in
+               guard (U.mk_eq2 u (mk_type u) t0 t1)
+          else fail ()
 
 and check_equality (g:env) (t0 t1:typ)
   = match U.eq_tm t0 t1 with

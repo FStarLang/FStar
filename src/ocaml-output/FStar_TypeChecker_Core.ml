@@ -918,16 +918,11 @@ and (check_subtype :
                      FStar_Syntax_Syntax.delta_constant] g.tcenv t1 in
                check_subtype_whnf g e t01 t11)
 and (check_equality_formula :
-  env ->
-    FStar_Syntax_Syntax.typ ->
-      FStar_Syntax_Syntax.typ ->
-        context -> (unit success, error) FStar_Pervasives.either)
-  =
+  env -> FStar_Syntax_Syntax.typ -> FStar_Syntax_Syntax.typ -> unit result) =
   fun g ->
     fun phi0 ->
       fun phi1 ->
-        let uu___ = FStar_Syntax_Util.mk_iff phi0 phi1 in
-        let uu___1 = return () in strengthen uu___ uu___1
+        let uu___ = FStar_Syntax_Util.mk_iff phi0 phi1 in guard uu___
 and (check_equality_whnf :
   env -> FStar_Syntax_Syntax.typ -> FStar_Syntax_Syntax.typ -> unit result) =
   fun g ->
@@ -1058,7 +1053,23 @@ and (check_equality_whnf :
                -> check_equality_whnf g t01 t1
            | (uu___2, FStar_Syntax_Syntax.Tm_ascribed (t11, uu___3, uu___4))
                -> check_equality_whnf g t0 t11
-           | uu___2 -> fail1 ())
+           | uu___2 ->
+               let_op_Bang guard_not_allowed
+                 (fun uu___3 ->
+                    if uu___3
+                    then fail1 ()
+                    else
+                      (let uu___4 = equatable t0 t1 in
+                       if uu___4
+                       then
+                         let uu___5 = universe_of g t0 in
+                         let_op_Bang uu___5
+                           (fun u ->
+                              let uu___6 =
+                                let uu___7 = mk_type u in
+                                FStar_Syntax_Util.mk_eq2 u uu___7 t0 t1 in
+                              guard uu___6)
+                       else fail1 ())))
 and (check_equality :
   env -> FStar_Syntax_Syntax.typ -> FStar_Syntax_Syntax.typ -> unit result) =
   fun g ->
@@ -2024,19 +2035,51 @@ and (check_comp :
   env -> FStar_Syntax_Syntax.comp -> FStar_Syntax_Syntax.universe result) =
   fun g ->
     fun c ->
-      let uu___ = FStar_Syntax_Util.is_tot_or_gtot_comp c in
-      if uu___
-      then
-        let uu___1 = check "comp result" g (FStar_Syntax_Util.comp_result c) in
-        let_op_Bang uu___1
-          (fun uu___2 -> match uu___2 with | (uu___3, t) -> is_type g t)
-      else
-        (let uu___2 =
-           let uu___3 =
-             FStar_Ident.string_of_lid (FStar_Syntax_Util.comp_effect_name c) in
-           FStar_Compiler_Util.format1
-             "Computation type is not Tot or GTot: %s" uu___3 in
-         fail uu___2)
+      match c.FStar_Syntax_Syntax.n with
+      | FStar_Syntax_Syntax.Total (t, uu___) ->
+          let uu___1 =
+            check "(G)Tot comp result" g (FStar_Syntax_Util.comp_result c) in
+          let_op_Bang uu___1
+            (fun uu___2 -> match uu___2 with | (uu___3, t1) -> is_type g t1)
+      | FStar_Syntax_Syntax.GTotal (t, uu___) ->
+          let uu___1 =
+            check "(G)Tot comp result" g (FStar_Syntax_Util.comp_result c) in
+          let_op_Bang uu___1
+            (fun uu___2 -> match uu___2 with | (uu___3, t1) -> is_type g t1)
+      | FStar_Syntax_Syntax.Comp c1 ->
+          if
+            (FStar_Compiler_List.length c1.FStar_Syntax_Syntax.comp_univs) <>
+              Prims.int_one
+          then fail "Unexpected/missing universe instantitation in comp"
+          else
+            (let u = FStar_Compiler_List.hd c1.FStar_Syntax_Syntax.comp_univs in
+             let effect_app_tm =
+               let head =
+                 let uu___1 =
+                   FStar_Syntax_Syntax.fvar
+                     c1.FStar_Syntax_Syntax.effect_name
+                     FStar_Syntax_Syntax.delta_constant
+                     FStar_Pervasives_Native.None in
+                 FStar_Syntax_Syntax.mk_Tm_uinst uu___1 [u] in
+               let uu___1 =
+                 let uu___2 =
+                   FStar_Syntax_Syntax.as_arg
+                     c1.FStar_Syntax_Syntax.result_typ in
+                 uu___2 :: (c1.FStar_Syntax_Syntax.effect_args) in
+               FStar_Syntax_Syntax.mk_Tm_app head uu___1
+                 (c1.FStar_Syntax_Syntax.result_typ).FStar_Syntax_Syntax.pos in
+             let uu___1 = check "effectful comp" g effect_app_tm in
+             let_op_Bang uu___1
+               (fun uu___2 ->
+                  match uu___2 with
+                  | (uu___3, t) ->
+                      let uu___4 =
+                        with_context "comp fully applied"
+                          FStar_Pervasives_Native.None
+                          (fun uu___5 ->
+                             check_subtype g effect_app_tm t
+                               FStar_Syntax_Syntax.teff) in
+                      bind uu___4 (fun uu___5 -> return u)))
 and (universe_of :
   env -> FStar_Syntax_Syntax.typ -> FStar_Syntax_Syntax.universe result) =
   fun g ->
