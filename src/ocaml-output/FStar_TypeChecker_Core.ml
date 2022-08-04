@@ -195,10 +195,14 @@ let (is_type :
         match uu___ with
         | FStar_Syntax_Syntax.Tm_type u -> return u
         | uu___1 ->
-            let uu___2 =
-              let uu___3 = FStar_Syntax_Print.term_to_string t1 in
-              FStar_Compiler_Util.format1 "Expected a type; got %s" uu___3 in
-            fail uu___2 in
+            ((let uu___3 = FStar_Syntax_Print.term_to_string t1 in
+              let uu___4 = FStar_Compiler_Util.stack_dump () in
+              FStar_Compiler_Util.print2 "\n\n%s\n\n%s\n\n" uu___3 uu___4);
+             failwith "Panic!";
+             (let uu___4 =
+                let uu___5 = FStar_Syntax_Print.term_to_string t1 in
+                FStar_Compiler_Util.format1 "Expected a type; got %s" uu___5 in
+              fail uu___4)) in
       with_context "is_type" (FStar_Pervasives_Native.Some t)
         (fun uu___ ->
            let uu___1 = aux t in
@@ -1037,9 +1041,15 @@ and (check_equality_match :
                                              match uu___12 with
                                              | (uu___13, us, g1) ->
                                                  let uu___14 =
-                                                   check_equality g1 body01
-                                                     body12 in
-                                                 with_binders bs0 us uu___14)
+                                                   let uu___15 =
+                                                     check_equality g1 body01
+                                                       body12 in
+                                                   with_binders bs0 us
+                                                     uu___15 in
+                                                 let_op_Bang uu___14
+                                                   (fun uu___15 ->
+                                                      check_equality_branches
+                                                        brs02 brs12))
                                     | uu___9 ->
                                         fail1
                                           "raw_pat_as_exp failed in check_equality match rule")))

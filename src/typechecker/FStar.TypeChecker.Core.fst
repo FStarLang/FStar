@@ -579,7 +579,8 @@ and check_equality_match (g:env)
               // Don't expect it to fail
               //
               let! _, us, g = check_binders g bs0 in
-              with_binders bs0 us (check_equality g body0 body1)
+              let! _ = with_binders bs0 us (check_equality g body0 body1) in
+              check_equality_branches brs0 brs1
              | _ -> fail "raw_pat_as_exp failed in check_equality match rule"
           end
         | _, _ -> fail "check_equality does not support branches with when"
