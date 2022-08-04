@@ -529,6 +529,8 @@ atomicPattern:
       { mk_pattern (PatWild (Some Implicit, [])) (rhs parseState 1) }
   | c=constant
       { mk_pattern (PatConst c) (rhs parseState 1) }
+  | BACKTICK_PERC q=atomicTerm
+      { mk_pattern (PatVQuote q) (rhs2 parseState 1 2) }
   | qual_id=aqualifiedWithAttrs(lident)
     {
       let (aqual, attrs), lid = qual_id in

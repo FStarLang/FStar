@@ -491,6 +491,7 @@ let rec gather_pattern_bound_vars_maybe_top acc p =
   match p.pat with
   | PatWild _
   | PatConst _
+  | PatVQuote _
   | PatName _
   | PatOp _ -> acc
   | PatApp (phead, pats) -> gather_pattern_bound_vars_from_list (phead::pats)
@@ -824,6 +825,14 @@ let rec desugar_data_pat
       | PatConst c ->
         let x = S.new_bv (Some p.prange) (tun_r p.prange) in
         loc, env, LocalBinder(x, None, []), pos <| Pat_constant c, []
+        
+      | PatVQuote e ->
+        let tm = desugar_term env e in
+        begin match (Subst.compress tm).n with
+        | Tm_fvar fv -> aux' top loc env ({ p with pat = (PatConst (Const_string (string_of_lid (lid_of_fv fv), p.prange))) })
+        | _ ->
+          raise_error (Fatal_UnexpectedTermVQuote, ("VQuote, expected an fvar, got: " ^ P.term_to_string tm)) p.prange
+        end
 
       | PatTvar(x, aq, attrs)
       | PatVar (x, aq, attrs) ->
