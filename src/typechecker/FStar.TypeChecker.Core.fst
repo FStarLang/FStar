@@ -522,7 +522,7 @@ and check_subtype (g:env) (e:term) (t0 t1:typ)
       check_subtype_whnf g e t0 t1
 
 and check_equality_formula (g:env) (phi0 phi1:typ) =
-  strengthen (U.mk_iff phi0 phi1) (return ())
+  guard (U.mk_iff phi0 phi1)
 
 and check_equality_whnf (g:env) (t0 t1:typ)
   = let fail () =
@@ -607,6 +607,10 @@ and check_equality_whnf (g:env) (t0 t1:typ)
 
       | Tm_ascribed(t0, _, _), _ -> check_equality_whnf g t0 t1
       | _, Tm_ascribed(t1, _, _) -> check_equality_whnf g t0 t1
+
+      | _ when equatable t0 t1 ->
+        let! u = universe_of g t0 in
+        guard (U.mk_eq2 u (mk_type u) t0 t1)
 
       | _ -> fail ()
 
