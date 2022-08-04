@@ -953,14 +953,28 @@ and check_binders (g:env) (xs:binders)
         return (x :: xs, u::us, g)
       )
 
+//
+// May be called with an effectful comp type, e.g. from within an arrow
+// Caller should enforce Tot/GTot if needed
+//
 and check_comp (g:env) (c:comp)
   : result universe
-  = if U.is_tot_or_gtot_comp c
-    then (
-      let! _, t = check "comp result" g (U.comp_result c) in
+  = match c.n with
+    | Total(t, _)
+    | GTotal(t, _) ->
+      let! _, t = check "(G)Tot comp result" g (U.comp_result c) in
       is_type g t
-    )
-    else fail (BU.format1 "Computation type is not Tot or GTot: %s" (Ident.string_of_lid (U.comp_effect_name c)))
+    | Comp c ->
+      if List.length c.comp_univs <> 1
+      then fail "Unexpected/missing universe instantitation in comp"
+      else let u = List.hd c.comp_univs in
+           let effect_app_tm =
+             let head = S.mk_Tm_uinst (S.fvar c.effect_name delta_constant None) [u] in
+             S.mk_Tm_app head ((as_arg c.result_typ)::c.effect_args) c.result_typ.pos in
+           let! _, t = check "effectful comp" g effect_app_tm in
+           with_context "comp fully applied" None (fun _ -> check_subtype g effect_app_tm t S.teff);;
+           return u
+
 
 and universe_of (g:env) (t:typ)
   : result universe
