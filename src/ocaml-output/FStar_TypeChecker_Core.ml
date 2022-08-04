@@ -676,6 +676,18 @@ let (check_no_escape :
                FStar_Compiler_Util.set_mem b.FStar_Syntax_Syntax.binder_bv xs in
              Prims.op_Negation uu___1) bs in
       if uu___ then return () else fail "Name escapes its scope"
+let rec map :
+  'a 'b . ('a -> 'b result) -> 'a Prims.list -> 'b Prims.list result =
+  fun f ->
+    fun l ->
+      match l with
+      | [] -> return []
+      | hd::tl ->
+          let uu___ = f hd in
+          let_op_Bang uu___
+            (fun hd1 ->
+               let uu___1 = map f tl in
+               let_op_Bang uu___1 (fun tl1 -> return (hd1 :: tl1)))
 let rec iter2 :
   'a 'b .
     'a Prims.list ->
@@ -741,6 +753,13 @@ let rec (check_subtype_whnf :
     fun e ->
       fun t0 ->
         fun t1 ->
+          let fail1 s =
+            let uu___ =
+              let uu___1 = FStar_Syntax_Print.term_to_string t0 in
+              let uu___2 = FStar_Syntax_Print.term_to_string t1 in
+              FStar_Compiler_Util.format3
+                "Subtyping failed because %s: %s </: %s" s uu___1 uu___2 in
+            fail uu___ in
           let_op_Bang guard_not_allowed
             (fun guard_not_ok ->
                let uu___ =
@@ -856,6 +875,9 @@ let rec (check_subtype_whnf :
                | (FStar_Syntax_Syntax.Tm_type uu___1,
                   FStar_Syntax_Syntax.Tm_type uu___2) ->
                    check_equality_whnf g t0 t1
+               | (FStar_Syntax_Syntax.Tm_match (e0, uu___1, brs0, uu___2),
+                  FStar_Syntax_Syntax.Tm_match (e1, uu___3, brs1, uu___4)) ->
+                   check_equality_match g e0 brs0 e1 brs1
                | uu___1 ->
                    let uu___2 =
                      let uu___3 = FStar_Syntax_Util.eq_tm t0 t1 in
@@ -873,13 +895,7 @@ let rec (check_subtype_whnf :
                                let uu___7 = mk_type u in
                                FStar_Syntax_Util.mk_eq2 u uu___7 t0 t1 in
                              guard uu___6)
-                      else
-                        (let uu___6 =
-                           let uu___7 = FStar_Syntax_Print.term_to_string t0 in
-                           let uu___8 = FStar_Syntax_Print.term_to_string t1 in
-                           FStar_Compiler_Util.format2
-                             "Subtyping failed: %s </: %s" uu___7 uu___8 in
-                         fail uu___6)))
+                      else fail1 "no subtyping rule is applicable"))
 and (check_subtype :
   env ->
     FStar_Syntax_Syntax.term ->
@@ -923,6 +939,114 @@ and (check_equality_formula :
     fun phi0 ->
       fun phi1 ->
         let uu___ = FStar_Syntax_Util.mk_iff phi0 phi1 in guard uu___
+and (check_equality_match :
+  env ->
+    FStar_Syntax_Syntax.typ ->
+      FStar_Syntax_Syntax.branch Prims.list ->
+        FStar_Syntax_Syntax.typ ->
+          FStar_Syntax_Syntax.branch Prims.list -> unit result)
+  =
+  fun g ->
+    fun scrutinee0 ->
+      fun brs0 ->
+        fun scrutinee1 ->
+          fun brs1 ->
+            let fail1 s =
+              let uu___ =
+                let uu___1 =
+                  let uu___2 =
+                    FStar_Syntax_Syntax.mk
+                      (FStar_Syntax_Syntax.Tm_match
+                         (scrutinee0, FStar_Pervasives_Native.None, brs0,
+                           FStar_Pervasives_Native.None))
+                      FStar_Compiler_Range.dummyRange in
+                  FStar_Syntax_Print.term_to_string uu___2 in
+                let uu___2 =
+                  let uu___3 =
+                    FStar_Syntax_Syntax.mk
+                      (FStar_Syntax_Syntax.Tm_match
+                         (scrutinee1, FStar_Pervasives_Native.None, brs1,
+                           FStar_Pervasives_Native.None))
+                      FStar_Compiler_Range.dummyRange in
+                  FStar_Syntax_Print.term_to_string uu___3 in
+                FStar_Compiler_Util.format3
+                  "match equality failed because %s: %s </: %s" s uu___1
+                  uu___2 in
+              fail uu___ in
+            let uu___ = check_equality_whnf g scrutinee0 scrutinee1 in
+            let_op_Bang uu___
+              (fun uu___1 ->
+                 let rec check_equality_branches brs01 brs11 =
+                   match (brs01, brs11) with
+                   | ([], []) -> return ()
+                   | (uu___2, []) ->
+                       fail1 "different number of branches in match nodes"
+                   | ([], uu___2) ->
+                       fail1 "different number of branches in match nodes"
+                   | ((p0, FStar_Pervasives_Native.None, body0)::brs02,
+                      (p1, FStar_Pervasives_Native.None, body1)::brs12) ->
+                       let uu___2 =
+                         let uu___3 = FStar_Syntax_Syntax.eq_pat p0 p1 in
+                         Prims.op_Negation uu___3 in
+                       if uu___2
+                       then fail1 "patterns not equal"
+                       else
+                         (let uu___4 =
+                            FStar_Syntax_Subst.open_branch
+                              (p0, FStar_Pervasives_Native.None, body0) in
+                          match uu___4 with
+                          | (p01, uu___5, body01) ->
+                              let uu___6 =
+                                FStar_Syntax_Subst.open_branch
+                                  (p1, FStar_Pervasives_Native.None, body1) in
+                              (match uu___6 with
+                               | (p11, uu___7, body11) ->
+                                   let uu___8 =
+                                     let uu___9 =
+                                       FStar_TypeChecker_PatternUtils.raw_pat_as_exp
+                                         g.tcenv p01 in
+                                     let uu___10 =
+                                       FStar_TypeChecker_PatternUtils.raw_pat_as_exp
+                                         g.tcenv p11 in
+                                     (uu___9, uu___10) in
+                                   (match uu___8 with
+                                    | (FStar_Pervasives_Native.Some
+                                       (uu___9, bvs0),
+                                       FStar_Pervasives_Native.Some
+                                       (uu___10, bvs1)) ->
+                                        let s =
+                                          FStar_Compiler_List.map2
+                                            (fun bv0 ->
+                                               fun bv1 ->
+                                                 let uu___11 =
+                                                   let uu___12 =
+                                                     FStar_Syntax_Syntax.bv_to_name
+                                                       bv0 in
+                                                   (bv1, uu___12) in
+                                                 FStar_Syntax_Syntax.NT
+                                                   uu___11) bvs0 bvs1 in
+                                        let body12 =
+                                          FStar_Syntax_Subst.subst s body11 in
+                                        let bs0 =
+                                          FStar_Compiler_List.map
+                                            FStar_Syntax_Syntax.mk_binder
+                                            bvs0 in
+                                        let uu___11 = check_binders g bs0 in
+                                        let_op_Bang uu___11
+                                          (fun uu___12 ->
+                                             match uu___12 with
+                                             | (uu___13, us, g1) ->
+                                                 let uu___14 =
+                                                   check_equality g1 body01
+                                                     body12 in
+                                                 with_binders bs0 us uu___14)
+                                    | uu___9 ->
+                                        fail1
+                                          "raw_pat_as_exp failed in check_equality match rule")))
+                   | (uu___2, uu___3) ->
+                       fail1
+                         "check_equality does not support branches with when" in
+                 check_equality_branches brs0 brs1)
 and (check_equality_whnf :
   env -> FStar_Syntax_Syntax.typ -> FStar_Syntax_Syntax.typ -> unit result) =
   fun g ->
@@ -1049,6 +1173,9 @@ and (check_equality_whnf :
                                             check_equality_formula g1 phi01
                                               phi11) in
                                      with_binders [b] [u] uu___8))))
+           | (FStar_Syntax_Syntax.Tm_match (e0, uu___2, brs0, uu___3),
+              FStar_Syntax_Syntax.Tm_match (e1, uu___4, brs1, uu___5)) ->
+               check_equality_match g e0 brs0 e1 brs1
            | (FStar_Syntax_Syntax.Tm_ascribed (t01, uu___2, uu___3), uu___4)
                -> check_equality_whnf g t01 t1
            | (uu___2, FStar_Syntax_Syntax.Tm_ascribed (t11, uu___3, uu___4))

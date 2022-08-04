@@ -331,6 +331,7 @@ let update_trace #p (r:trace_ref p) (vr:chan_val) (vs:chan_val)
          MRef.pts_to r full_perm ts `star`
          pure (until ts == step vs.chan_prot vs.chan_msg))
 
+#set-options "--debug yes"
 let recv_availableT (#p:sprot) #q (cc:chan q) (vs vr:chan_val) (_:unit)
   : SteelT (msg_t p)
     (sender_ahead cc.chan_chan.recv p cc.chan_chan vs vr)

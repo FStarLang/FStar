@@ -63,17 +63,17 @@ let core_check env sol t
     | Inl None ->
       //checked with no guard
       //no need to check it again
-      debug (fun _ -> BU.print2 "(%s) Core checking succeeded on %s\n"
-                             (Range.string_of_range (Env.get_range env))
-                             (Print.term_to_string sol));
+      // debug (fun _ -> BU.print2 "(%s) Core checking succeeded on %s\n"
+      //                        (Range.string_of_range (Env.get_range env))
+      //                        (Print.term_to_string sol));
       Inl None
 
     | Inl (Some g) ->
-      debug (fun _ -> 
-               BU.print3 "(%s) Core checking succeeded on %s, with guard %s\n"
-                         (Range.string_of_range (Env.get_range env))              
-                         (Print.term_to_string sol)
-                         (Print.term_to_string g));
+      // debug (fun _ -> 
+      //          BU.print3 "(%s) Core checking succeeded on %s, with guard %s\n"
+      //                    (Range.string_of_range (Env.get_range env))              
+      //                    (Print.term_to_string sol)
+      //                    (Print.term_to_string g));
       Inl (Some g)
        
 

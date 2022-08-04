@@ -406,6 +406,14 @@ let check_no_escape (bs:binders) t =
     then return ()
     else fail "Name escapes its scope"
 
+let rec map (#a #b:Type) (f:a -> result b) (l:list a) : result (list b) =
+  match l with
+  | [] -> return []
+  | hd::tl ->
+    let! hd = f hd in
+    let! tl = map f tl in
+    return (hd::tl)
+
 let rec iter2 (xs ys:list 'a) (f: 'a -> 'a -> 'b -> result 'b) (b:'b)
   : result 'b
   = match xs, ys with
@@ -451,7 +459,13 @@ let guard_not_allowed
  *)
 let rec check_subtype_whnf (g:env) (e:term) (t0 t1: typ)
   : result unit
-  = let! guard_not_ok = guard_not_allowed in
+  = let fail (s:string) = 
+      fail (BU.format3 "Subtyping failed because %s: %s </: %s"
+              s
+              (P.term_to_string t0)
+              (P.term_to_string t1)) in
+
+    let! guard_not_ok = guard_not_allowed in
     match (SS.compress t0).n, (SS.compress t1).n with
     | Tm_refine _, Tm_refine _
       when guard_not_ok ->
@@ -498,6 +512,12 @@ let rec check_subtype_whnf (g:env) (e:term) (t0 t1: typ)
     | Tm_type _, Tm_type _ ->
       check_equality_whnf g t0 t1
 
+    | Tm_match (e0, _, brs0, _), Tm_match (e1, _, brs1, _) ->
+      //
+      // TODO: this will currently check equality of branches,
+      //   it could check subtyping instead
+      //
+      check_equality_match g e0 brs0 e1 brs1
     | _ ->
       if U.eq_tm t0 t1 = U.Equal
       then return ()
@@ -506,9 +526,7 @@ let rec check_subtype_whnf (g:env) (e:term) (t0 t1: typ)
         let! u = universe_of g t0 in
         guard (U.mk_eq2 u (mk_type u) t0 t1)
       )
-      else fail (BU.format2 "Subtyping failed: %s </: %s"
-                           (P.term_to_string t0)
-                           (P.term_to_string t1))
+      else fail "no subtyping rule is applicable"
 
 and check_subtype (g:env) (e:term) (t0 t1:typ)
   = if Env.debug g.tcenv (Options.Other "Core")
@@ -523,6 +541,50 @@ and check_subtype (g:env) (e:term) (t0 t1:typ)
 
 and check_equality_formula (g:env) (phi0 phi1:typ) =
   guard (U.mk_iff phi0 phi1)
+
+and check_equality_match (g:env)
+  (scrutinee0:typ) (brs0:list branch)
+  (scrutinee1:typ) (brs1:list branch)
+  = let fail (s:string) = 
+      fail (BU.format3 "match equality failed because %s: %s </: %s"
+              s
+              (P.term_to_string (S.mk (Tm_match (scrutinee0, None, brs0, None)) Range.dummyRange))
+              (P.term_to_string (S.mk (Tm_match (scrutinee1, None, brs1, None)) Range.dummyRange))) in
+    let! _ = check_equality_whnf g scrutinee0 scrutinee1 in
+    let rec check_equality_branches (brs0 brs1:list branch)
+      : result unit
+      = match brs0, brs1 with
+        | [], [] -> return ()
+        | _, []
+        | [], _ -> fail "different number of branches in match nodes"
+        | (p0, None, body0)::brs0, (p1, None, body1)::brs1 ->
+          //
+          // TODO: S.eq_pat does not compare universes or bound variables
+          //       Compare bv sorts for the bvs in here?
+          //
+          if not (S.eq_pat p0 p1)
+          then fail "patterns not equal"
+          else begin
+            let (p0, _, body0) = SS.open_branch (p0, None, body0) in
+            let (p1, _, body1) = SS.open_branch (p1, None, body1) in
+            match PatternUtils.raw_pat_as_exp g.tcenv p0, PatternUtils.raw_pat_as_exp g.tcenv p1 with
+            | Some (_, bvs0), Some (_, bvs1) ->
+              let s = List.map2 (fun bv0 bv1 ->
+                NT(bv1, S.bv_to_name bv0)
+              ) bvs0 bvs1 in
+              let body1 = SS.subst s body1 in
+              let bs0 = List.map S.mk_binder bvs0 in
+              //
+              // We need universes for the binders
+              // Don't expect it to fail
+              //
+              let! _, us, g = check_binders g bs0 in
+              with_binders bs0 us (check_equality g body0 body1)
+             | _ -> fail "raw_pat_as_exp failed in check_equality match rule"
+          end
+        | _, _ -> fail "check_equality does not support branches with when"
+    in
+    check_equality_branches brs0 brs1
 
 and check_equality_whnf (g:env) (t0 t1:typ)
   = let fail () =
@@ -605,8 +667,11 @@ and check_equality_whnf (g:env) (t0 t1:typ)
               (fun _ -> check_equality_formula g phi0 phi1))
         end
 
-      | Tm_ascribed(t0, _, _), _ -> check_equality_whnf g t0 t1
-      | _, Tm_ascribed(t1, _, _) -> check_equality_whnf g t0 t1
+      | Tm_match (e0, _, brs0, _), Tm_match (e1, _, brs1, _) ->
+        check_equality_match g e0 brs0 e1 brs1
+
+      | Tm_ascribed (t0, _, _), _ -> check_equality_whnf g t0 t1
+      | _, Tm_ascribed (t1, _, _) -> check_equality_whnf g t0 t1
 
       | _ ->
         match! guard_not_allowed with
