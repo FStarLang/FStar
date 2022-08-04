@@ -195,14 +195,10 @@ let (is_type :
         match uu___ with
         | FStar_Syntax_Syntax.Tm_type u -> return u
         | uu___1 ->
-            ((let uu___3 = FStar_Syntax_Print.term_to_string t1 in
-              let uu___4 = FStar_Compiler_Util.stack_dump () in
-              FStar_Compiler_Util.print2 "\n\n%s\n\n%s\n\n" uu___3 uu___4);
-             failwith "Panic!";
-             (let uu___4 =
-                let uu___5 = FStar_Syntax_Print.term_to_string t1 in
-                FStar_Compiler_Util.format1 "Expected a type; got %s" uu___5 in
-              fail uu___4)) in
+            let uu___2 =
+              let uu___3 = FStar_Syntax_Print.term_to_string t1 in
+              FStar_Compiler_Util.format1 "Expected a type; got %s" uu___3 in
+            fail uu___2 in
       with_context "is_type" (FStar_Pervasives_Native.Some t)
         (fun uu___ ->
            let uu___1 = aux t in
@@ -945,9 +941,9 @@ and (check_equality_formula :
         let uu___ = FStar_Syntax_Util.mk_iff phi0 phi1 in guard uu___
 and (check_equality_match :
   env ->
-    FStar_Syntax_Syntax.typ ->
+    FStar_Syntax_Syntax.term ->
       FStar_Syntax_Syntax.branch Prims.list ->
-        FStar_Syntax_Syntax.typ ->
+        FStar_Syntax_Syntax.term ->
           FStar_Syntax_Syntax.branch Prims.list -> unit result)
   =
   fun g ->
@@ -1199,13 +1195,18 @@ and (check_equality_whnf :
                       (let uu___4 = equatable t0 t1 in
                        if uu___4
                        then
-                         let uu___5 = universe_of g t0 in
+                         let uu___5 = check' g t0 in
                          let_op_Bang uu___5
-                           (fun u ->
-                              let uu___6 =
-                                let uu___7 = mk_type u in
-                                FStar_Syntax_Util.mk_eq2 u uu___7 t0 t1 in
-                              guard uu___6)
+                           (fun uu___6 ->
+                              match uu___6 with
+                              | (uu___7, t_typ) ->
+                                  let uu___8 = universe_of g t_typ in
+                                  let_op_Bang uu___8
+                                    (fun u ->
+                                       let uu___9 =
+                                         FStar_Syntax_Util.mk_eq2 u t_typ t0
+                                           t1 in
+                                       guard uu___9))
                        else fail1 ())))
 and (check_equality :
   env -> FStar_Syntax_Syntax.typ -> FStar_Syntax_Syntax.typ -> unit result) =

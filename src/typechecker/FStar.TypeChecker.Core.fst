@@ -543,14 +543,16 @@ and check_equality_formula (g:env) (phi0 phi1:typ) =
   guard (U.mk_iff phi0 phi1)
 
 and check_equality_match (g:env)
-  (scrutinee0:typ) (brs0:list branch)
-  (scrutinee1:typ) (brs1:list branch)
+  (scrutinee0:term) (brs0:list branch)
+  (scrutinee1:term) (brs1:list branch)
   = let fail (s:string) = 
       fail (BU.format3 "match equality failed because %s: %s </: %s"
               s
               (P.term_to_string (S.mk (Tm_match (scrutinee0, None, brs0, None)) Range.dummyRange))
               (P.term_to_string (S.mk (Tm_match (scrutinee1, None, brs1, None)) Range.dummyRange))) in
+
     let! _ = check_equality_whnf g scrutinee0 scrutinee1 in
+
     let rec check_equality_branches (brs0 brs1:list branch)
       : result unit
       = match brs0, brs1 with
@@ -679,8 +681,9 @@ and check_equality_whnf (g:env) (t0 t1:typ)
         | true -> fail ()
         | false ->
           if equatable t0 t1
-          then let! u = universe_of g t0 in
-               guard (U.mk_eq2 u (mk_type u) t0 t1)
+          then let! _, t_typ = check' g t0 in
+               let! u = universe_of g t_typ in
+               guard (U.mk_eq2 u t_typ t0 t1)
           else fail ()
 
 and check_equality (g:env) (t0 t1:typ)
