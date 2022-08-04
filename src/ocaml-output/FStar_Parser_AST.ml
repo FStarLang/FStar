@@ -128,6 +128,7 @@ and pattern' =
   | PatAscribed of (pattern * (term * term FStar_Pervasives_Native.option)) 
   | PatOr of pattern Prims.list 
   | PatOp of FStar_Ident.ident 
+  | PatVQuote of term 
 and pattern = {
   pat: pattern' ;
   prange: FStar_Compiler_Range.range }
@@ -523,6 +524,11 @@ let (uu___is_PatOp : pattern' -> Prims.bool) =
   fun projectee -> match projectee with | PatOp _0 -> true | uu___ -> false
 let (__proj__PatOp__item___0 : pattern' -> FStar_Ident.ident) =
   fun projectee -> match projectee with | PatOp _0 -> _0
+let (uu___is_PatVQuote : pattern' -> Prims.bool) =
+  fun projectee ->
+    match projectee with | PatVQuote _0 -> true | uu___ -> false
+let (__proj__PatVQuote__item___0 : pattern' -> term) =
+  fun projectee -> match projectee with | PatVQuote _0 -> _0
 let (__proj__Mkpattern__item__pat : pattern -> pattern') =
   fun projectee -> match projectee with | { pat; prange;_} -> pat
 let (__proj__Mkpattern__item__prange : pattern -> FStar_Compiler_Range.range)
@@ -2118,6 +2124,9 @@ and (pat_to_string : pattern -> Prims.string) =
           let uu___2 = attr_list_to_string attrs in Prims.op_Hat uu___2 "_" in
         Prims.op_Hat "#" uu___1
     | PatConst c -> FStar_Parser_Const.const_to_string c
+    | PatVQuote t ->
+        let uu___ = term_to_string t in
+        FStar_Compiler_Util.format1 "`%%%s" uu___
     | PatApp (p, ps) ->
         let uu___ = FStar_Compiler_Effect.op_Bar_Greater p pat_to_string in
         let uu___1 = to_string_l " " pat_to_string ps in

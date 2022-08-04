@@ -828,6 +828,7 @@ let rec (gather_pattern_bound_vars_maybe_top :
       match p.FStar_Parser_AST.pat with
       | FStar_Parser_AST.PatWild uu___ -> acc
       | FStar_Parser_AST.PatConst uu___ -> acc
+      | FStar_Parser_AST.PatVQuote uu___ -> acc
       | FStar_Parser_AST.PatName uu___ -> acc
       | FStar_Parser_AST.PatOp uu___ -> acc
       | FStar_Parser_AST.PatApp (phead, pats) ->
@@ -1612,6 +1613,21 @@ let rec (desugar_data_pat :
               (loc, env1,
                 (LocalBinder (x, FStar_Pervasives_Native.None, [])), uu___,
                 [])
+          | FStar_Parser_AST.PatVQuote e ->
+              let uu___ =
+                let uu___1 =
+                  let uu___2 =
+                    let uu___3 =
+                      let uu___4 =
+                        desugar_vquote env1 e p1.FStar_Parser_AST.prange in
+                      (uu___4, (p1.FStar_Parser_AST.prange)) in
+                    FStar_Const.Const_string uu___3 in
+                  FStar_Parser_AST.PatConst uu___2 in
+                {
+                  FStar_Parser_AST.pat = uu___1;
+                  FStar_Parser_AST.prange = (p1.FStar_Parser_AST.prange)
+                } in
+              aux' top loc env1 uu___
           | FStar_Parser_AST.PatTvar (x, aq, attrs) ->
               let aq1 = trans_bqual env1 aq in
               let attrs1 =
@@ -3939,32 +3955,16 @@ and (desugar_term_maybe_top :
              desugar_term_aq env e)
         | FStar_Parser_AST.Paren e -> failwith "impossible"
         | FStar_Parser_AST.VQuote e ->
-            let tm = desugar_term env e in
             let uu___1 =
-              let uu___2 = FStar_Syntax_Subst.compress tm in
-              uu___2.FStar_Syntax_Syntax.n in
-            (match uu___1 with
-             | FStar_Syntax_Syntax.Tm_fvar fv ->
-                 let uu___2 =
-                   let uu___3 =
-                     let uu___4 =
-                       let uu___5 = FStar_Syntax_Syntax.lid_of_fv fv in
-                       FStar_Ident.string_of_lid uu___5 in
-                     FStar_Syntax_Util.exp_string uu___4 in
-                   {
-                     FStar_Syntax_Syntax.n = (uu___3.FStar_Syntax_Syntax.n);
-                     FStar_Syntax_Syntax.pos = (e.FStar_Parser_AST.range);
-                     FStar_Syntax_Syntax.vars =
-                       (uu___3.FStar_Syntax_Syntax.vars)
-                   } in
-                 (uu___2, noaqs)
-             | uu___2 ->
-                 let uu___3 =
-                   let uu___4 =
-                     let uu___5 = FStar_Syntax_Print.term_to_string tm in
-                     Prims.op_Hat "VQuote, expected an fvar, got: " uu___5 in
-                   (FStar_Errors.Fatal_UnexpectedTermVQuote, uu___4) in
-                 FStar_Errors.raise_error uu___3 top.FStar_Parser_AST.range)
+              let uu___2 =
+                let uu___3 = desugar_vquote env e top.FStar_Parser_AST.range in
+                FStar_Syntax_Util.exp_string uu___3 in
+              {
+                FStar_Syntax_Syntax.n = (uu___2.FStar_Syntax_Syntax.n);
+                FStar_Syntax_Syntax.pos = (e.FStar_Parser_AST.range);
+                FStar_Syntax_Syntax.vars = (uu___2.FStar_Syntax_Syntax.vars)
+              } in
+            (uu___1, noaqs)
         | FStar_Parser_AST.Quote (e, FStar_Parser_AST.Static) ->
             let uu___1 = desugar_term_aq env e in
             (match uu___1 with
@@ -5505,6 +5505,28 @@ and (desugar_binder :
       | FStar_Parser_AST.Variable x ->
           let uu___ = let uu___1 = FStar_Ident.range_of_id x in tun_r uu___1 in
           ((FStar_Pervasives_Native.Some x), uu___, attrs)
+and (desugar_vquote :
+  env_t ->
+    FStar_Parser_AST.term -> FStar_Compiler_Range.range -> Prims.string)
+  =
+  fun env ->
+    fun e ->
+      fun r ->
+        let tm = desugar_term env e in
+        let uu___ =
+          let uu___1 = FStar_Syntax_Subst.compress tm in
+          uu___1.FStar_Syntax_Syntax.n in
+        match uu___ with
+        | FStar_Syntax_Syntax.Tm_fvar fv ->
+            let uu___1 = FStar_Syntax_Syntax.lid_of_fv fv in
+            FStar_Ident.string_of_lid uu___1
+        | uu___1 ->
+            let uu___2 =
+              let uu___3 =
+                let uu___4 = FStar_Syntax_Print.term_to_string tm in
+                Prims.op_Hat "VQuote, expected an fvar, got: " uu___4 in
+              (FStar_Errors.Fatal_UnexpectedTermVQuote, uu___3) in
+            FStar_Errors.raise_error uu___2 r
 and (as_binder :
   FStar_Syntax_DsEnv.env ->
     FStar_Parser_AST.arg_qualifier FStar_Pervasives_Native.option ->

@@ -1943,6 +1943,12 @@ and (p_atomicPattern : FStar_Parser_AST.pattern -> FStar_Pprint.document) =
           FStar_Pprint.op_Hat_Hat uu___2 FStar_Pprint.underscore in
         FStar_Pprint.op_Hat_Hat uu___ uu___1
     | FStar_Parser_AST.PatConst c -> p_constant c
+    | FStar_Parser_AST.PatVQuote e ->
+        let uu___ =
+          let uu___1 = str "`%" in
+          let uu___2 = p_noSeqTermAndComment false false e in
+          FStar_Pprint.op_Hat_Hat uu___1 uu___2 in
+        FStar_Pprint.group uu___
     | FStar_Parser_AST.PatVar (lid, aqual, attrs) ->
         let uu___ = FStar_Pprint.optional p_aqual aqual in
         let uu___1 =
