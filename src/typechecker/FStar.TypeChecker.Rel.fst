@@ -3203,6 +3203,11 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
     let try_match_heuristic env orig wl s1 s2 t1t2_opt =
         let try_solve_branch scrutinee p =
             let (Flex (_t, uv, _args), wl) = destruct_flex_t env scrutinee wl  in
+            //
+            // This is dropping the returned guard
+            //   that contains implicits introduced for bvs, dot terms etc.
+            // Why?
+            //
             let xs, pat_term, _, _ = PatternUtils.pat_as_exp true true env p in
             let subst, wl =
                 List.fold_left (fun (subst, wl) x ->
@@ -3219,9 +3224,22 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                             EQ pat_term None scrutinee.pos
                             "match heuristic"
             in
+            //
+            // Also add typing problem for the scrutinee type and pattern type
+            // Helps solve some uvars in patterns
+            //
+            let typing_prob, wl =
+              let pat_term_t, _ =
+                let must_tot = false in
+                env.typeof_well_typed_tot_or_gtot_term env pat_term must_tot in
+              new_problem wl env
+                pat_term_t
+                EQ
+                (U.ctx_uvar_typ uv)
+                None scrutinee.pos "match heuristic typing" in
             let wl' = {wl with defer_ok=NoDefer;
                                 smt_ok=false;
-                                attempting=[TProb prob];
+                                attempting=[TProb prob; TProb typing_prob];
                                 wl_deferred=[];
                                 wl_implicits=[]} in
             let tx = UF.new_transaction () in
