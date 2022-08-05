@@ -2664,14 +2664,21 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
         //see tc.fs, the case of Tm_match and the comment related to issue #594
         let scrutinee_env = env in
         let env = env' in
-        let scrutinee = t in
+        // If either Weak or HNF, then don't descend into branch
+        let whnf = cfg.steps.weak || cfg.steps.hnf in
+        let scrutinee = 
+            if whnf && cfg.steps.iota
+            then //the scrutinee is only whnf
+                 //which may not be enough to decide which pattern it matches
+                 norm ({cfg with steps={cfg.steps with weak=false; hnf=false; weakly_reduce_scrutinee=false}})
+                      scrutinee_env [] t
+            else t
+        in
         let norm_and_rebuild_match () =
           log cfg (fun () ->
               BU.print2 "match is irreducible: scrutinee=%s\nbranches=%s\n"
                     (Print.term_to_string scrutinee)
                     (branches |> List.map (fun (p, _, _) -> Print.pat_to_string p) |> String.concat "\n\t"));
-          // If either Weak or HNF, then don't descend into branch
-          let whnf = cfg.steps.weak || cfg.steps.hnf in
           let cfg_exclude_zeta =
             if cfg.steps.zeta_full
             then cfg

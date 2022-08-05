@@ -502,11 +502,8 @@ let rec check_subtype_whnf (g:env) (e:term) (t0 t1: typ)
                       (SS.subst_comp [NT(x1.binder_bv, S.bv_to_name x0.binder_bv)] c1)
       )
 
-    | Tm_ascribed (t0, _, _), _ ->
-      check_subtype_whnf g e t0 t1
-
-    | _, Tm_ascribed (t1, _, _) ->
-      check_subtype_whnf g e t0 t1
+    | Tm_ascribed _, _
+    | _, Tm_ascribed _ -> fail "Unexpected term: ascription"
 
     | Tm_app _, Tm_app _
     | Tm_type _, Tm_type _ ->
@@ -535,9 +532,9 @@ and check_subtype (g:env) (e:term) (t0 t1:typ)
     | U.Equal -> return ()
     | _ ->
       let open Env in
-      let t0 = N.normalize_refinement [Primops; Weak; HNF; UnfoldUntil delta_constant] g.tcenv t0 in
-      let t1 = N.normalize_refinement [Primops; Weak; HNF; UnfoldUntil delta_constant] g.tcenv t1 in
-      check_subtype_whnf g e t0 t1
+      let t0' = N.normalize_refinement [Primops; Weak; HNF; UnfoldUntil delta_constant; Unascribe] g.tcenv t0 in
+      let t1' = N.normalize_refinement [Primops; Weak; HNF; UnfoldUntil delta_constant; Unascribe] g.tcenv t1 in
+      check_subtype_whnf g e t0' t1'
 
 and check_equality_formula (g:env) (phi0 phi1:typ) =
   guard (U.mk_iff phi0 phi1)
@@ -590,7 +587,7 @@ and check_equality_match (g:env)
     check_equality_branches brs0 brs1
 
 and check_equality_whnf (g:env) (t0 t1:typ)
-  = let fail () =
+  = let err () =
         fail (BU.format2 "not equal terms: %s <> %s"
                          (P.term_to_string t0)
                          (P.term_to_string t1))
@@ -614,15 +611,15 @@ and check_equality_whnf (g:env) (t0 t1:typ)
         if U.eq_tm f0 f1 = U.Equal
         then if Rel.teq_nosmt_force g.tcenv t0 t1
              then return ()
-             else fail ()
-        else fail ()
+             else err ()
+        else err ()
 
       | Tm_type u0, Tm_type u1 ->
         // when g.allow_universe_instantiation ->
         // See above remark regarding universe instantiations
         if Rel.teq_nosmt_force g.tcenv t0 t1
         then return ()
-        else fail ()
+        else err ()
 
       | Tm_app(hd0, args0), Tm_app(hd1, args1) ->
         check_equality_whnf g hd0 hd1;;
@@ -673,18 +670,18 @@ and check_equality_whnf (g:env) (t0 t1:typ)
       | Tm_match (e0, _, brs0, _), Tm_match (e1, _, brs1, _) ->
         check_equality_match g e0 brs0 e1 brs1
 
-      | Tm_ascribed (t0, _, _), _ -> check_equality_whnf g t0 t1
-      | _, Tm_ascribed (t1, _, _) -> check_equality_whnf g t0 t1
+      | Tm_ascribed _, _
+      | _, Tm_ascribed _ -> fail "Unexpected term: ascription"
 
       | _ ->
         match! guard_not_allowed with
-        | true -> fail ()
+        | true -> err ()
         | false ->
           if equatable t0 t1
           then let! _, t_typ = check' g t0 in
                let! u = universe_of g t_typ in
                guard (U.mk_eq2 u t_typ t0 t1)
-          else fail ()
+          else err ()
 
 and check_equality (g:env) (t0 t1:typ)
   = match U.eq_tm t0 t1 with
@@ -692,9 +689,9 @@ and check_equality (g:env) (t0 t1:typ)
     | _ ->
       let open Env in
       //reduce to whnf, but don't unfold tac_opaque symbols
-      let t0 = N.normalize_refinement [Primops; Weak; HNF; UnfoldTac; UnfoldUntil delta_constant] g.tcenv t0 in
-      let t1 = N.normalize_refinement [Primops; Weak; HNF; UnfoldTac; UnfoldUntil delta_constant] g.tcenv t1 in
-      check_equality_whnf g t0 t1
+      let t0' = N.normalize_refinement [Primops; Weak; HNF; UnfoldTac; UnfoldUntil delta_constant; Unascribe] g.tcenv t0 in
+      let t1' = N.normalize_refinement [Primops; Weak; HNF; UnfoldTac; UnfoldUntil delta_constant; Unascribe] g.tcenv t1 in
+      check_equality_whnf g t0' t1'
 
 and check_subcomp (g:env) (e:term) (c0 c1:comp)
   : result unit
