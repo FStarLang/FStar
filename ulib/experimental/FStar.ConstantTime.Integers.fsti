@@ -181,10 +181,13 @@ let ( + ) (#q:qual) (x:t q) (y:t q{ok (+) (i x) (i y)})
 unfold
 noextract
 inline_for_extraction
-let ( +% ) (#q:qual{norm (Unsigned? (sw_qual q) /\ width_of_sw (sw_qual q) <> W128)})
+let ( +% ) (#q:qual)
            (x:t q)
            (y:t q)
-    : Tot (t q)
+    : Pure
+        (t q)
+        (requires norm (Unsigned? (sw_qual q) /\ width_of_sw (sw_qual q) <> W128))
+        (ensures fun _ -> True)
     = match q with
       | Public s -> as_public x +% as_public y
       | Secret l s -> as_secret x `addition_mod` as_secret y

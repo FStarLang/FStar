@@ -26,7 +26,7 @@ let ex0 (x:int) (y:int) = x + y
 let ex0_1 (x:Prims.int) (y:Prims.int) = x + y
 
 /// Overloading `+` for machine integers
-let ex0_2 (x:uint_32) (y:uint_32) = admit ()
+let ex0_2 (x:uint_32) (y:uint_32) = x +% y
 
 
 let hacl_lattice = Ghost.hide (SemiLattice () (fun _ _ -> ()))
