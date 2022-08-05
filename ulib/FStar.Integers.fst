@@ -586,4 +586,4 @@ let g (x:uint_32) (y:uint_32{ok ( * ) y y /\ ok (+) x (y * y)}) = x + y * y
 let h (x:Prims.nat) (y:Prims.nat): nat  = u x + u y
 let i (x:Prims.nat) (y:Prims.nat) = x + y
 let j (x:Prims.int) (y:Prims.nat) = x - y
-let k (x:Prims.int) (y:Prims.int) = x * y
+let k (x:Prims.int) (y:Prims.int) = admit ()
