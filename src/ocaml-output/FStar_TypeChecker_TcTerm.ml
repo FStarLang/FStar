@@ -8377,102 +8377,115 @@ and (tc_pat :
                    simple_pat in
                (match uu___1 with
                 | (simple_bvs, simple_pat_e, g0, simple_pat_elab) ->
-                    (if
+                    ((let uu___3 =
+                        FStar_Compiler_Effect.op_Less_Bar
+                          (FStar_TypeChecker_Env.debug env1)
+                          (FStar_Options.Other "Patterns") in
+                      if uu___3
+                      then
+                        let uu___4 =
+                          FStar_Syntax_Print.pat_to_string simple_pat in
+                        let uu___5 =
+                          FStar_Syntax_Print.term_to_string simple_pat_e in
+                        FStar_Compiler_Util.print2
+                          "Pattern %s in expression form %s\n" uu___4 uu___5
+                      else ());
+                     if
                        (FStar_Compiler_List.length simple_bvs) <>
                          (FStar_Compiler_List.length sub_pats1)
                      then
-                       (let uu___3 =
-                          let uu___4 =
+                       (let uu___4 =
+                          let uu___5 =
                             FStar_Compiler_Range.string_of_range
                               p.FStar_Syntax_Syntax.p in
-                          let uu___5 =
-                            FStar_Syntax_Print.pat_to_string simple_pat in
                           let uu___6 =
+                            FStar_Syntax_Print.pat_to_string simple_pat in
+                          let uu___7 =
                             FStar_Compiler_Util.string_of_int
                               (FStar_Compiler_List.length sub_pats1) in
-                          let uu___7 =
+                          let uu___8 =
                             FStar_Compiler_Util.string_of_int
                               (FStar_Compiler_List.length simple_bvs) in
                           FStar_Compiler_Util.format4
                             "(%s) Impossible: pattern bvar mismatch: %s; expected %s sub pats; got %s"
-                            uu___4 uu___5 uu___6 uu___7 in
-                        failwith uu___3)
+                            uu___5 uu___6 uu___7 uu___8 in
+                        failwith uu___4)
                      else ();
-                     (let uu___3 =
-                        let uu___4 = type_of_simple_pat env1 simple_pat_e in
-                        match uu___4 with
+                     (let uu___4 =
+                        let uu___5 = type_of_simple_pat env1 simple_pat_e in
+                        match uu___5 with
                         | (simple_pat_e1, simple_pat_t, simple_bvs1, guard,
                            erasable) ->
                             let g' =
-                              let uu___5 =
+                              let uu___6 =
                                 expected_pat_typ env1
                                   p0.FStar_Syntax_Syntax.p t in
-                              pat_typ_ok env1 simple_pat_t uu___5 in
+                              pat_typ_ok env1 simple_pat_t uu___6 in
                             let guard1 =
                               FStar_TypeChecker_Rel.discharge_guard_no_smt
                                 env1 guard in
                             let guard2 =
                               FStar_TypeChecker_Env.conj_guard guard1 g' in
-                            ((let uu___6 =
+                            ((let uu___7 =
                                 FStar_Compiler_Effect.op_Less_Bar
                                   (FStar_TypeChecker_Env.debug env1)
                                   (FStar_Options.Other "Patterns") in
-                              if uu___6
+                              if uu___7
                               then
-                                let uu___7 =
-                                  FStar_Syntax_Print.term_to_string
-                                    simple_pat_e1 in
                                 let uu___8 =
                                   FStar_Syntax_Print.term_to_string
-                                    simple_pat_t in
+                                    simple_pat_e1 in
                                 let uu___9 =
-                                  let uu___10 =
+                                  FStar_Syntax_Print.term_to_string
+                                    simple_pat_t in
+                                let uu___10 =
+                                  let uu___11 =
                                     FStar_Compiler_List.map
                                       (fun x ->
-                                         let uu___11 =
-                                           let uu___12 =
+                                         let uu___12 =
+                                           let uu___13 =
                                              FStar_Syntax_Print.bv_to_string
                                                x in
-                                           let uu___13 =
-                                             let uu___14 =
-                                               let uu___15 =
+                                           let uu___14 =
+                                             let uu___15 =
+                                               let uu___16 =
                                                  FStar_Syntax_Print.term_to_string
                                                    x.FStar_Syntax_Syntax.sort in
-                                               Prims.op_Hat uu___15 ")" in
-                                             Prims.op_Hat " : " uu___14 in
-                                           Prims.op_Hat uu___12 uu___13 in
-                                         Prims.op_Hat "(" uu___11)
+                                               Prims.op_Hat uu___16 ")" in
+                                             Prims.op_Hat " : " uu___15 in
+                                           Prims.op_Hat uu___13 uu___14 in
+                                         Prims.op_Hat "(" uu___12)
                                       simple_bvs1 in
                                   FStar_Compiler_Effect.op_Bar_Greater
-                                    uu___10 (FStar_String.concat " ") in
+                                    uu___11 (FStar_String.concat " ") in
                                 FStar_Compiler_Util.print3
                                   "$$$$$$$$$$$$Checked simple pattern %s at type %s with bvs=%s\n"
-                                  uu___7 uu___8 uu___9
+                                  uu___8 uu___9 uu___10
                               else ());
                              (simple_pat_e1, simple_bvs1, guard2, erasable)) in
-                      match uu___3 with
+                      match uu___4 with
                       | (simple_pat_e1, simple_bvs1, g1, erasable) ->
-                          let uu___4 =
-                            let uu___5 =
-                              let uu___6 =
+                          let uu___5 =
+                            let uu___6 =
+                              let uu___7 =
                                 FStar_TypeChecker_Env.conj_guard g0 g1 in
-                              (env1, [], [], [], [], uu___6, erasable,
+                              (env1, [], [], [], [], uu___7, erasable,
                                 Prims.int_zero) in
                             FStar_Compiler_List.fold_left2
-                              (fun uu___6 ->
-                                 fun uu___7 ->
+                              (fun uu___7 ->
+                                 fun uu___8 ->
                                    fun x ->
-                                     match (uu___6, uu___7) with
+                                     match (uu___7, uu___8) with
                                      | ((env2, bvs, tms, pats, subst, g,
                                          erasable1, i),
                                         (p1, b)) ->
                                          let expected_t =
                                            FStar_Syntax_Subst.subst subst
                                              x.FStar_Syntax_Syntax.sort in
-                                         let uu___8 =
+                                         let uu___9 =
                                            check_nested_pattern env2 p1
                                              expected_t in
-                                         (match uu___8 with
+                                         (match uu___9 with
                                           | (bvs_p, tms_p, e_p, p2, g',
                                              erasable_p) ->
                                               let env3 =
@@ -8480,25 +8493,25 @@ and (tc_pat :
                                                   env2 bvs_p in
                                               let tms_p1 =
                                                 let disc_tm =
-                                                  let uu___9 =
+                                                  let uu___10 =
                                                     FStar_Syntax_Syntax.lid_of_fv
                                                       fv in
                                                   FStar_TypeChecker_Util.get_field_projector_name
-                                                    env3 uu___9 i in
-                                                let uu___9 =
-                                                  let uu___10 =
-                                                    let uu___11 =
+                                                    env3 uu___10 i in
+                                                let uu___10 =
+                                                  let uu___11 =
+                                                    let uu___12 =
                                                       FStar_Syntax_Syntax.fvar
                                                         disc_tm
                                                         (FStar_Syntax_Syntax.Delta_constant_at_level
                                                            Prims.int_one)
                                                         FStar_Pervasives_Native.None in
-                                                    mk_disc_t uu___11 in
+                                                    mk_disc_t uu___12 in
                                                   FStar_Compiler_List.map
-                                                    uu___10 in
+                                                    uu___11 in
                                                 FStar_Compiler_Effect.op_Bar_Greater
-                                                  tms_p uu___9 in
-                                              let uu___9 =
+                                                  tms_p uu___10 in
+                                              let uu___10 =
                                                 FStar_TypeChecker_Env.conj_guard
                                                   g g' in
                                               (env3,
@@ -8510,13 +8523,13 @@ and (tc_pat :
                                                    pats [(p2, b)]),
                                                 ((FStar_Syntax_Syntax.NT
                                                     (x, e_p)) :: subst),
-                                                uu___9,
+                                                uu___10,
                                                 (erasable1 || erasable_p),
-                                                (i + Prims.int_one)))) uu___5
+                                                (i + Prims.int_one)))) uu___6
                               sub_pats1 simple_bvs1 in
-                          (match uu___4 with
+                          (match uu___5 with
                            | (_env, bvs, tms, checked_sub_pats, subst, g,
-                              erasable1, uu___5) ->
+                              erasable1, uu___6) ->
                                let pat_e =
                                  FStar_Syntax_Subst.subst subst simple_pat_e1 in
                                let reconstruct_nested_pat pat =
@@ -8538,46 +8551,46 @@ and (tc_pat :
                                                 FStar_Syntax_Syntax.p =
                                                   (hd.FStar_Syntax_Syntax.p)
                                               } in
-                                            let uu___6 =
+                                            let uu___7 =
                                               aux simple_pats1 bvs1 sub_pats2 in
-                                            (hd1, b) :: uu___6
+                                            (hd1, b) :: uu___7
                                         | FStar_Syntax_Syntax.Pat_var x ->
                                             (match (bvs1, sub_pats2) with
                                              | (x'::bvs2,
-                                                (hd1, uu___6)::sub_pats3)
+                                                (hd1, uu___7)::sub_pats3)
                                                  when
                                                  FStar_Syntax_Syntax.bv_eq x
                                                    x'
                                                  ->
-                                                 let uu___7 =
+                                                 let uu___8 =
                                                    aux simple_pats1 bvs2
                                                      sub_pats3 in
-                                                 (hd1, b) :: uu___7
-                                             | uu___6 ->
+                                                 (hd1, b) :: uu___8
+                                             | uu___7 ->
                                                  failwith
                                                    "Impossible: simple pat variable mismatch")
-                                        | uu___6 ->
+                                        | uu___7 ->
                                             failwith
                                               "Impossible: expected a simple pattern") in
                                  let us =
-                                   let uu___6 =
+                                   let uu___7 =
                                      FStar_Syntax_Util.head_and_args
                                        simple_pat_e1 in
-                                   match uu___6 with
-                                   | (hd, uu___7) ->
-                                       let uu___8 =
-                                         let uu___9 =
+                                   match uu___7 with
+                                   | (hd, uu___8) ->
+                                       let uu___9 =
+                                         let uu___10 =
                                            FStar_Syntax_Subst.compress hd in
-                                         uu___9.FStar_Syntax_Syntax.n in
-                                       (match uu___8 with
-                                        | FStar_Syntax_Syntax.Tm_fvar uu___9
+                                         uu___10.FStar_Syntax_Syntax.n in
+                                       (match uu___9 with
+                                        | FStar_Syntax_Syntax.Tm_fvar uu___10
                                             -> []
                                         | FStar_Syntax_Syntax.Tm_uinst
-                                            (uu___9, us1) -> us1
-                                        | uu___9 -> failwith "Impossible") in
+                                            (uu___10, us1) -> us1
+                                        | uu___10 -> failwith "Impossible") in
                                  match pat.FStar_Syntax_Syntax.v with
                                  | FStar_Syntax_Syntax.Pat_cons
-                                     (fv1, uu___6, simple_pats) ->
+                                     (fv1, uu___7, simple_pats) ->
                                      let nested_pats =
                                        aux simple_pats simple_bvs1
                                          checked_sub_pats in
@@ -8590,10 +8603,10 @@ and (tc_pat :
                                        FStar_Syntax_Syntax.p =
                                          (pat.FStar_Syntax_Syntax.p)
                                      }
-                                 | uu___6 -> failwith "Impossible" in
-                               let uu___6 =
+                                 | uu___7 -> failwith "Impossible" in
+                               let uu___7 =
                                  reconstruct_nested_pat simple_pat_elab in
-                               (bvs, tms, pat_e, uu___6, g, erasable1)))))) in
+                               (bvs, tms, pat_e, uu___7, g, erasable1)))))) in
         (let uu___1 =
            FStar_Compiler_Effect.op_Less_Bar
              (FStar_TypeChecker_Env.debug env)

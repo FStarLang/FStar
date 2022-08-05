@@ -901,7 +901,7 @@ and check' (g:env) (e:term)
             let bs, us, g' = bs_g in
             let! eff_pat, t = check "pattern term" g' e in
             with_context "Pattern and scrutinee type compatibility" None
-                          (fun _ -> no_guard (check_subtype g' e t_sc t)) ;;
+                          (fun _ -> no_guard (check_scrutinee_pattern_type_compatible g' t_sc t)) ;;
             let pat_sc_eq = U.mk_eq2 u_sc t_sc sc e in
             let! eff_br, tbr =
               with_binders bs us
@@ -972,6 +972,7 @@ and check' (g:env) (e:term)
             let! bs_g = check_binders g binders in
             let bs, us, g' = bs_g in
             let! eff_pat, t = check "pattern term" g' e in
+            // TODO: use pattern scrutinee type compatibility function
             with_context "Pattern and scrutinee type compatibility"
                          None
                           (fun _ -> no_guard (check_subtype g' e t_sc t)) ;;
@@ -1053,6 +1054,61 @@ and universe_of (g:env) (t:typ)
   : result universe
   = let! _, t = check "universe of" g t in
     is_type g t
+
+and check_scrutinee_pattern_type_compatible (g:env) (t_sc t_pat:typ)
+  : result precondition
+  = let open Env in
+    let err (s:string) =
+      fail (BU.format3 "Scrutinee type %s and Pattern type %s are not compatible because %s"
+              (P.term_to_string t_sc)
+              (P.term_to_string t_pat)
+              s) in
+
+    let t_sc = N.normalize_refinement [Primops; Weak; HNF; UnfoldTac; UnfoldUntil delta_constant; Unascribe] g.tcenv t_sc in
+    let t_pat = N.normalize_refinement [Primops; Weak; HNF; UnfoldTac; UnfoldUntil delta_constant; Unascribe] g.tcenv t_pat in
+
+    // TODO: check refinements
+
+    let t_sc = U.unrefine t_sc in
+    let t_pat = U.unrefine t_pat in
+
+    let head_sc, args_sc = U.head_and_args t_sc in
+    let head_pat, args_pat = U.head_and_args t_pat in
+
+    let! (t_fv:fv) =
+      match (SS.compress head_sc).n, (SS.compress head_pat).n with
+      | Tm_fvar (fv_head), Tm_fvar (fv_pat)
+        when Ident.lid_equals (lid_of_fv fv_head) (lid_of_fv fv_pat) -> return fv_head
+      | Tm_uinst ({n=Tm_fvar (fv_head)}, us_head), Tm_uinst ({n=Tm_fvar (fv_pat)}, us_pat)
+        when Ident.lid_equals (lid_of_fv fv_head) (lid_of_fv fv_pat) ->
+        if Rel.teq_nosmt_force g.tcenv head_sc head_pat
+        then return fv_head
+        else err "Incompatible universe instantiations"
+      | _, _ -> err (BU.format2 "Head constructors(%s and %s) not fvar"
+                      (P.tag_of_term head_sc)
+                      (P.tag_of_term head_pat)) in
+
+    (if Env.is_type_constructor g.tcenv (lid_of_fv t_fv)
+     then return t_fv
+     else err (BU.format1 "%s is not a type constructor" (P.fv_to_string t_fv)));;
+
+    (if List.length args_sc = List.length args_pat then return t_fv
+     else err (BU.format2 "Number of arguments don't match (%s and %s)"
+                          (string_of_int (List.length args_sc))
+                          (string_of_int (List.length args_pat))));;
+
+   let params_sc, params_pat =
+     match Env.num_inductive_ty_params g.tcenv (S.lid_of_fv t_fv) with
+     | None -> args_sc, args_pat
+     | Some n -> fst (BU.first_N n args_sc), fst (BU.first_N n args_pat) in
+
+   let! (_:unit) = iter2 params_sc params_pat (fun (t_sc, _) (t_pat, _) _ ->
+     check_equality g t_sc t_pat
+   ) () in
+
+   // TODO: return equality of indices for the caller to weaken the guard with?
+
+   return None
 
 let check_term_top g e t
   : result unit

@@ -1682,9 +1682,8 @@ and (check' :
                                                               (fun uu___11 ->
                                                                  let uu___12
                                                                    =
-                                                                   check_subtype
-                                                                    g' e2
-                                                                    t_sc t in
+                                                                   check_scrutinee_pattern_type_compatible
+                                                                    g' t_sc t in
                                                                  no_guard
                                                                    uu___12) in
                                                           bind uu___10
@@ -2229,6 +2228,168 @@ and (universe_of :
       let uu___ = check "universe of" g t in
       let_op_Bang uu___
         (fun uu___1 -> match uu___1 with | (uu___2, t1) -> is_type g t1)
+and (check_scrutinee_pattern_type_compatible :
+  env ->
+    FStar_Syntax_Syntax.typ -> FStar_Syntax_Syntax.typ -> precondition result)
+  =
+  fun g ->
+    fun t_sc ->
+      fun t_pat ->
+        let err s =
+          let uu___ =
+            let uu___1 = FStar_Syntax_Print.term_to_string t_sc in
+            let uu___2 = FStar_Syntax_Print.term_to_string t_pat in
+            FStar_Compiler_Util.format3
+              "Scrutinee type %s and Pattern type %s are not compatible because %s"
+              uu___1 uu___2 s in
+          fail uu___ in
+        let t_sc1 =
+          FStar_TypeChecker_Normalize.normalize_refinement
+            [FStar_TypeChecker_Env.Primops;
+            FStar_TypeChecker_Env.Weak;
+            FStar_TypeChecker_Env.HNF;
+            FStar_TypeChecker_Env.UnfoldTac;
+            FStar_TypeChecker_Env.UnfoldUntil
+              FStar_Syntax_Syntax.delta_constant;
+            FStar_TypeChecker_Env.Unascribe] g.tcenv t_sc in
+        let t_pat1 =
+          FStar_TypeChecker_Normalize.normalize_refinement
+            [FStar_TypeChecker_Env.Primops;
+            FStar_TypeChecker_Env.Weak;
+            FStar_TypeChecker_Env.HNF;
+            FStar_TypeChecker_Env.UnfoldTac;
+            FStar_TypeChecker_Env.UnfoldUntil
+              FStar_Syntax_Syntax.delta_constant;
+            FStar_TypeChecker_Env.Unascribe] g.tcenv t_pat in
+        let t_sc2 = FStar_Syntax_Util.unrefine t_sc1 in
+        let t_pat2 = FStar_Syntax_Util.unrefine t_pat1 in
+        let uu___ = FStar_Syntax_Util.head_and_args t_sc2 in
+        match uu___ with
+        | (head_sc, args_sc) ->
+            let uu___1 = FStar_Syntax_Util.head_and_args t_pat2 in
+            (match uu___1 with
+             | (head_pat, args_pat) ->
+                 let uu___2 =
+                   let uu___3 =
+                     let uu___4 =
+                       let uu___5 = FStar_Syntax_Subst.compress head_sc in
+                       uu___5.FStar_Syntax_Syntax.n in
+                     let uu___5 =
+                       let uu___6 = FStar_Syntax_Subst.compress head_pat in
+                       uu___6.FStar_Syntax_Syntax.n in
+                     (uu___4, uu___5) in
+                   match uu___3 with
+                   | (FStar_Syntax_Syntax.Tm_fvar fv_head,
+                      FStar_Syntax_Syntax.Tm_fvar fv_pat) when
+                       let uu___4 = FStar_Syntax_Syntax.lid_of_fv fv_head in
+                       let uu___5 = FStar_Syntax_Syntax.lid_of_fv fv_pat in
+                       FStar_Ident.lid_equals uu___4 uu___5 -> return fv_head
+                   | (FStar_Syntax_Syntax.Tm_uinst
+                      ({
+                         FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_fvar
+                           fv_head;
+                         FStar_Syntax_Syntax.pos = uu___4;
+                         FStar_Syntax_Syntax.vars = uu___5;
+                         FStar_Syntax_Syntax.hash_code = uu___6;_},
+                       us_head),
+                      FStar_Syntax_Syntax.Tm_uinst
+                      ({
+                         FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_fvar
+                           fv_pat;
+                         FStar_Syntax_Syntax.pos = uu___7;
+                         FStar_Syntax_Syntax.vars = uu___8;
+                         FStar_Syntax_Syntax.hash_code = uu___9;_},
+                       us_pat)) when
+                       let uu___10 = FStar_Syntax_Syntax.lid_of_fv fv_head in
+                       let uu___11 = FStar_Syntax_Syntax.lid_of_fv fv_pat in
+                       FStar_Ident.lid_equals uu___10 uu___11 ->
+                       let uu___10 =
+                         FStar_TypeChecker_Rel.teq_nosmt_force g.tcenv
+                           head_sc head_pat in
+                       if uu___10
+                       then return fv_head
+                       else err "Incompatible universe instantiations"
+                   | (uu___4, uu___5) ->
+                       let uu___6 =
+                         let uu___7 = FStar_Syntax_Print.tag_of_term head_sc in
+                         let uu___8 = FStar_Syntax_Print.tag_of_term head_pat in
+                         FStar_Compiler_Util.format2
+                           "Head constructors(%s and %s) not fvar" uu___7
+                           uu___8 in
+                       err uu___6 in
+                 let_op_Bang uu___2
+                   (fun t_fv ->
+                      let uu___3 =
+                        let uu___4 =
+                          let uu___5 = FStar_Syntax_Syntax.lid_of_fv t_fv in
+                          FStar_TypeChecker_Env.is_type_constructor g.tcenv
+                            uu___5 in
+                        if uu___4
+                        then return t_fv
+                        else
+                          (let uu___6 =
+                             let uu___7 =
+                               FStar_Syntax_Print.fv_to_string t_fv in
+                             FStar_Compiler_Util.format1
+                               "%s is not a type constructor" uu___7 in
+                           err uu___6) in
+                      bind uu___3
+                        (fun uu___4 ->
+                           let uu___5 =
+                             if
+                               (FStar_Compiler_List.length args_sc) =
+                                 (FStar_Compiler_List.length args_pat)
+                             then return t_fv
+                             else
+                               (let uu___7 =
+                                  let uu___8 =
+                                    FStar_Compiler_Util.string_of_int
+                                      (FStar_Compiler_List.length args_sc) in
+                                  let uu___9 =
+                                    FStar_Compiler_Util.string_of_int
+                                      (FStar_Compiler_List.length args_pat) in
+                                  FStar_Compiler_Util.format2
+                                    "Number of arguments don't match (%s and %s)"
+                                    uu___8 uu___9 in
+                                err uu___7) in
+                           bind uu___5
+                             (fun uu___6 ->
+                                let uu___7 =
+                                  let uu___8 =
+                                    let uu___9 =
+                                      FStar_Syntax_Syntax.lid_of_fv t_fv in
+                                    FStar_TypeChecker_Env.num_inductive_ty_params
+                                      g.tcenv uu___9 in
+                                  match uu___8 with
+                                  | FStar_Pervasives_Native.None ->
+                                      (args_sc, args_pat)
+                                  | FStar_Pervasives_Native.Some n ->
+                                      let uu___9 =
+                                        let uu___10 =
+                                          FStar_Compiler_Util.first_N n
+                                            args_sc in
+                                        FStar_Pervasives_Native.fst uu___10 in
+                                      let uu___10 =
+                                        let uu___11 =
+                                          FStar_Compiler_Util.first_N n
+                                            args_pat in
+                                        FStar_Pervasives_Native.fst uu___11 in
+                                      (uu___9, uu___10) in
+                                match uu___7 with
+                                | (params_sc, params_pat) ->
+                                    let uu___8 =
+                                      iter2 params_sc params_pat
+                                        (fun uu___9 ->
+                                           fun uu___10 ->
+                                             fun uu___11 ->
+                                               match (uu___9, uu___10) with
+                                               | ((t_sc3, uu___12),
+                                                  (t_pat3, uu___13)) ->
+                                                   check_equality g t_sc3
+                                                     t_pat3) () in
+                                    let_op_Bang uu___8
+                                      (fun uu___9 ->
+                                         return FStar_Pervasives_Native.None)))))
 let (check_term_top :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.typ -> unit result)

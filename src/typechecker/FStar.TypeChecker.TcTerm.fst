@@ -3158,6 +3158,10 @@ and tc_pat env (pat_t:typ) (p0:pat) :
           let simple_bvs, simple_pat_e, g0, simple_pat_elab =
               PatternUtils.pat_as_exp false false env simple_pat
           in
+          if Env.debug env <| Options.Other "Patterns"
+          then BU.print2 "Pattern %s in expression form %s\n"
+                 (Print.pat_to_string simple_pat)
+                 (Print.term_to_string simple_pat_e);
           if List.length simple_bvs <> List.length sub_pats
           then failwith (BU.format4 "(%s) Impossible: pattern bvar mismatch: %s; expected %s sub pats; got %s"
                                           (Range.string_of_range p.p)
