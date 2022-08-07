@@ -118,9 +118,9 @@ let rec foldr #a #n #acc
       f hd (foldr f tl init)
 //SNIPPET_END: foldr
 
+//SNIPPET_START: norm_spec
 open FStar.Mul
 
-//SNIPPET_START: norm_spec
 let rec pow2 (n:nat) : nat =
   if n = 0 then 1
   else 2 * pow2 (n - 1)
