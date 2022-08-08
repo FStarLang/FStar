@@ -2246,11 +2246,7 @@ let rec extract_contexts
       let hd_fv = match inspect hd with
       | Tv_FVar fv -> Some fv
       | Tv_UInst fv _ -> Some fv
-      | _ ->
-        let hd_s = term_to_string hd in
-        print "not a FVar/UInst:";
-        print hd_s;
-        None
+      | _ -> None
       in
       match hd_fv with
       | None -> []
