@@ -3228,6 +3228,9 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
             // Also add typing problem for the scrutinee type and pattern type
             // Helps solve some uvars in patterns
             //
+            // We normalize and unrefine the type of the scrutinee before,
+            //   so that the type of pattern can unify with it
+            //
             let typing_prob, wl =
               let pat_term_t, _ =
                 let must_tot = false in
