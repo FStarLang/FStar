@@ -44,6 +44,12 @@ let order_from_int (i : int) : order =
 
 let compare_int (i : int) (j : int) : order = order_from_int (i - j)
 
+let compare_bool (x y: bool): order
+    = match x, y with
+    | true, true | false, false -> Eq
+    | false, true               -> Lt
+    | true, false               -> Gt
+
 (*
  * It promises to call the comparator in strictly smaller elements
  * Useful when writing a comparator for an inductive type,
@@ -59,6 +65,14 @@ let rec compare_list (#a:Type)
     | [], _ -> Lt
     | _, [] -> Gt
     | x::xs, y::ys -> lex (f x y) (fun _ -> compare_list xs ys f)
+
+let compare_tuple
+    (x y: 'a * 'b)
+    (f: (v:'a{v << x} -> v:'a{v << y} -> order))
+    (g: (v:'b{v << x} -> v:'b{v << y} -> order)): order
+  = let xl, xr = x in
+    let yl, yr = y in
+    lex (f xl yl) (fun _ -> g xr yr)
 
 let compare_option (f : 'a -> 'a -> order) (x : option 'a) (y : option 'a) : order =
     match x, y with
