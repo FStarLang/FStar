@@ -782,11 +782,11 @@ let rec (traverse_for_spinoff :
                 FStar_TypeChecker_PatternUtils.raw_pat_as_exp env1 p in
               match uu___ with
               | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None
-              | FStar_Pervasives_Native.Some e1 ->
-                  let uu___1 = FStar_TypeChecker_Env.clear_expected_typ env1 in
-                  (match uu___1 with
-                   | (env2, uu___2) ->
-                       let uu___3 =
+              | FStar_Pervasives_Native.Some (e1, uu___1) ->
+                  let uu___2 = FStar_TypeChecker_Env.clear_expected_typ env1 in
+                  (match uu___2 with
+                   | (env2, uu___3) ->
+                       let uu___4 =
                          FStar_TypeChecker_TcTerm.tc_trivial_guard
                            {
                              FStar_TypeChecker_Env.solver =
@@ -893,7 +893,7 @@ let rec (traverse_for_spinoff :
                                =
                                (env2.FStar_TypeChecker_Env.rel_query_for_apply_tac_uvar)
                            } e1 in
-                       (match uu___3 with
+                       (match uu___4 with
                         | (e2, lc) ->
                             let u =
                               FStar_TypeChecker_TcTerm.universe_of env2
