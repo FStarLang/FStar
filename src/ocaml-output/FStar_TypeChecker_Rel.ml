@@ -7458,7 +7458,18 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                                   match uu___8 with
                                   | (pat_term_t, uu___9) ->
                                       let uu___10 =
-                                        FStar_Syntax_Util.ctx_uvar_typ uv in
+                                        let uu___11 =
+                                          let uu___12 =
+                                            FStar_Compiler_Effect.op_Bar_Greater
+                                              uv
+                                              FStar_Syntax_Util.ctx_uvar_typ in
+                                          FStar_Compiler_Effect.op_Bar_Greater
+                                            uu___12
+                                            (FStar_TypeChecker_Normalize.normalize_refinement
+                                               FStar_TypeChecker_Normalize.whnf_steps
+                                               env1) in
+                                        FStar_Compiler_Effect.op_Bar_Greater
+                                          uu___11 FStar_Syntax_Util.unrefine in
                                       new_problem wl4 env1 pat_term_t
                                         FStar_TypeChecker_Common.EQ uu___10
                                         FStar_Pervasives_Native.None
