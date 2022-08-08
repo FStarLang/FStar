@@ -492,6 +492,14 @@ let e_term_view_aq aq =
                          S.as_arg (embed e_bool rng use_eq)]
                         rng
 
+        | Tv_Quoted (t, k, anti) ->
+            S.mk_Tm_app ref_Tv_Quoted.t
+                        [S.as_arg (embed (e_term_aq aq) rng t);
+                         S.as_arg (embed e_bool rng k);
+                         S.as_arg (embed (e_list (e_tuple2 e_bv (e_term_aq aq))) rng anti)
+                        ]
+                        rng
+
         | Tv_Unknown ->
             { ref_Tv_Unknown.t with pos = rng }
     in
@@ -576,6 +584,12 @@ let e_term_view_aq aq =
             BU.bind_opt (unembed' w (e_option e_term) tacopt) (fun tacopt ->
             BU.bind_opt (unembed' w e_bool use_eq) (fun use_eq ->
             Some <| Tv_AscribedC (e, c, tacopt, use_eq)))))
+
+        | Tm_fvar fv, [(t, _); (k, _); (anti, _)] when S.fv_eq_lid fv ref_Tv_Quoted.lid ->
+            BU.bind_opt (unembed' w (e_term_aq aq) t) (fun t ->
+            BU.bind_opt (unembed' w e_bool k) (fun k ->
+            BU.bind_opt (unembed' w (e_list (e_tuple2 e_bv (e_term_aq aq))) anti) (fun anti ->
+            Some <| Tv_Quoted (t, k, anti))))
 
         | Tm_fvar fv, [] when S.fv_eq_lid fv ref_Tv_Unknown.lid ->
             Some <| Tv_Unknown

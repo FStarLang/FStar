@@ -239,6 +239,13 @@ let rec compare_term (s t : term) : Tot order (decreases s) =
         | _, None -> Gt
         | Some e1, Some e2 -> compare_term e1 e2))
 
+    | Tv_Quoted q1 k1 anti1, Tv_Quoted q2 k2 anti2 ->
+        lex (compare_term q1 q2) (fun () ->
+        lex (compare_bool k1 k2) (fun () ->
+          compare_list anti1 anti2 (fun tup1 tup2 ->
+            compare_tuple tup1 tup2 compare_bv (fun t1 t2 -> compare_term t1 t2)
+          )))
+
     | Tv_Unknown, Tv_Unknown ->
         Eq
 
@@ -257,7 +264,9 @@ let rec compare_term (s t : term) : Tot order (decreases s) =
     | Tv_Match _ _ _, _  -> Lt | _, Tv_Match _ _ _  -> Gt
     | Tv_AscribedT _ _ _ _, _  -> Lt | _, Tv_AscribedT _ _ _ _ -> Gt
     | Tv_AscribedC _ _ _ _, _  -> Lt | _, Tv_AscribedC _ _ _ _ -> Gt
+    | Tv_Quoted _ _ _, _  -> Lt | _, Tv_Quoted _ _ _ -> Gt
     | Tv_Unknown, _    -> Lt   | _, Tv_Unknown    -> Gt
+
 and compare_term_list (l1 l2:list term) : Tot order (decreases l1) =
   match l1, l2 with
   | [], [] -> Eq
@@ -373,6 +382,7 @@ let rec head (t : term) : term =
     | Tv_BVar _
     | Tv_FVar _
     | Tv_UInst _ _
+    | Tv_Quoted _ _ _
     | Tv_Arrow _ _ -> t
 
 let nameof (t : term) : string =

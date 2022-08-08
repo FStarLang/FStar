@@ -892,6 +892,14 @@ let rec visit_tm (ff : term -> Tac term) (t : term) : Tac term =
     | Tv_AscribedC e c topt use_eq ->
         let e = visit_tm ff e in
         Tv_AscribedC e c topt use_eq
+    | Tv_Quoted e dynamic anti -> 
+        let e = visit_tm ff e in
+        let args = map (fun (bv, t) -> 
+          let bv = on_sort_bv (visit_tm ff) bv in
+          let  t = visit_tm ff t in
+          (bv, t)
+        ) anti in
+        Tv_Quoted e dynamic anti
   in
   ff (pack_ln tv')
 and visit_br (ff : term -> Tac term) (b:branch) : Tac branch =

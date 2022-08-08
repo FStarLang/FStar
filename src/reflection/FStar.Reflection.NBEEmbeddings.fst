@@ -488,6 +488,12 @@ let e_term_view_aq aq =
                          as_arg (embed (e_option (e_term_aq aq)) cb tacopt);
                          as_arg (embed e_bool cb use_eq)]
 
+        | Tv_Quoted (t, k, anti) ->
+            mkConstruct ref_Tv_Quoted.fv []
+                        [as_arg (embed (e_term_aq aq) cb t);
+                         as_arg (embed e_bool cb k);
+                         as_arg (embed (e_list (e_tuple2 e_bv (e_term_aq aq))) cb anti)]
+
         | Tv_Unknown ->
             mkConstruct ref_Tv_Unknown.fv [] []
     in
@@ -570,6 +576,12 @@ let e_term_view_aq aq =
             BU.bind_opt (unembed (e_option e_term) cb tacopt) (fun tacopt ->
             BU.bind_opt (unembed e_bool cb use_eq) (fun use_eq ->
             Some <| Tv_AscribedC (e, c, tacopt, use_eq)))))
+
+        | Construct (fv, _, [(t, _); (k, _); (anti, _)]) when S.fv_eq_lid fv ref_Tv_Quoted.lid ->
+            BU.bind_opt (unembed (e_term_aq aq) cb t) (fun t ->
+            BU.bind_opt (unembed e_bool cb k) (fun k ->
+            BU.bind_opt (unembed (e_list (e_tuple2 e_bv (e_term_aq aq))) cb anti) (fun anti ->
+            Some <| Tv_Quoted (t, k, anti))))
 
         | Construct (fv, _, []) when S.fv_eq_lid fv ref_Tv_Unknown.lid ->
             Some <| Tv_Unknown
