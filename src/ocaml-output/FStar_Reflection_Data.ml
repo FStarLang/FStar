@@ -123,6 +123,8 @@ let (__proj__Uv_Unif__item___0 :
   fun projectee -> match projectee with | Uv_Unif _0 -> _0
 let (uu___is_Uv_Unk : universe_view -> Prims.bool) =
   fun projectee -> match projectee with | Uv_Unk -> true | uu___ -> false
+type antiquotations =
+  (FStar_Syntax_Syntax.bv * FStar_Syntax_Syntax.term) Prims.list
 type term_view =
   | Tv_Var of FStar_Syntax_Syntax.bv 
   | Tv_BVar of FStar_Syntax_Syntax.bv 
@@ -145,6 +147,7 @@ type term_view =
   FStar_Syntax_Syntax.term FStar_Pervasives_Native.option * Prims.bool) 
   | Tv_AscribedC of (FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.comp *
   FStar_Syntax_Syntax.term FStar_Pervasives_Native.option * Prims.bool) 
+  | Tv_Quoted of (FStar_Syntax_Syntax.term * Prims.bool * antiquotations) 
   | Tv_Unknown 
 let (uu___is_Tv_Var : term_view -> Prims.bool) =
   fun projectee -> match projectee with | Tv_Var _0 -> true | uu___ -> false
@@ -232,6 +235,12 @@ let (__proj__Tv_AscribedC__item___0 :
     (FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.comp *
       FStar_Syntax_Syntax.term FStar_Pervasives_Native.option * Prims.bool))
   = fun projectee -> match projectee with | Tv_AscribedC _0 -> _0
+let (uu___is_Tv_Quoted : term_view -> Prims.bool) =
+  fun projectee ->
+    match projectee with | Tv_Quoted _0 -> true | uu___ -> false
+let (__proj__Tv_Quoted__item___0 :
+  term_view -> (FStar_Syntax_Syntax.term * Prims.bool * antiquotations)) =
+  fun projectee -> match projectee with | Tv_Quoted _0 -> _0
 let (uu___is_Tv_Unknown : term_view -> Prims.bool) =
   fun projectee -> match projectee with | Tv_Unknown -> true | uu___ -> false
 type qualifier =

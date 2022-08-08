@@ -1173,6 +1173,35 @@ let (e_term_view_aq :
           mkConstruct
             FStar_Reflection_Constants.ref_Tv_AscT.FStar_Reflection_Constants.fv
             [] uu___
+      | FStar_Reflection_Data.Tv_Quoted (t, k, anti) ->
+          let uu___ =
+            let uu___1 =
+              let uu___2 =
+                let uu___3 = e_term_aq aq in
+                FStar_TypeChecker_NBETerm.embed uu___3 cb t in
+              FStar_TypeChecker_NBETerm.as_arg uu___2 in
+            let uu___2 =
+              let uu___3 =
+                let uu___4 =
+                  FStar_TypeChecker_NBETerm.embed
+                    FStar_TypeChecker_NBETerm.e_bool cb k in
+                FStar_TypeChecker_NBETerm.as_arg uu___4 in
+              let uu___4 =
+                let uu___5 =
+                  let uu___6 =
+                    let uu___7 =
+                      let uu___8 =
+                        let uu___9 = e_term_aq aq in
+                        FStar_TypeChecker_NBETerm.e_tuple2 e_bv uu___9 in
+                      FStar_TypeChecker_NBETerm.e_list uu___8 in
+                    FStar_TypeChecker_NBETerm.embed uu___7 cb anti in
+                  FStar_TypeChecker_NBETerm.as_arg uu___6 in
+                [uu___5] in
+              uu___3 :: uu___4 in
+            uu___1 :: uu___2 in
+          mkConstruct
+            FStar_Reflection_Constants.ref_Tv_Quoted.FStar_Reflection_Constants.fv
+            [] uu___
       | FStar_Reflection_Data.Tv_Unknown ->
           mkConstruct
             FStar_Reflection_Constants.ref_Tv_Unknown.FStar_Reflection_Constants.fv
@@ -1429,6 +1458,33 @@ let (e_term_view_aq :
                                    FStar_Pervasives_Native.Some uu___9)
                                 (FStar_Reflection_Data.Tv_AscribedC
                                    (e1, c1, tacopt1, use_eq1))))))
+      | FStar_TypeChecker_NBETerm.Construct
+          (fv, uu___, (t1, uu___1)::(k, uu___2)::(anti, uu___3)::[]) when
+          FStar_Syntax_Syntax.fv_eq_lid fv
+            FStar_Reflection_Constants.ref_Tv_Quoted.FStar_Reflection_Constants.lid
+          ->
+          let uu___4 =
+            let uu___5 = e_term_aq aq in
+            FStar_TypeChecker_NBETerm.unembed uu___5 cb t1 in
+          FStar_Compiler_Util.bind_opt uu___4
+            (fun t2 ->
+               let uu___5 =
+                 FStar_TypeChecker_NBETerm.unembed
+                   FStar_TypeChecker_NBETerm.e_bool cb k in
+               FStar_Compiler_Util.bind_opt uu___5
+                 (fun k1 ->
+                    let uu___6 =
+                      let uu___7 =
+                        let uu___8 =
+                          let uu___9 = e_term_aq aq in
+                          FStar_TypeChecker_NBETerm.e_tuple2 e_bv uu___9 in
+                        FStar_TypeChecker_NBETerm.e_list uu___8 in
+                      FStar_TypeChecker_NBETerm.unembed uu___7 cb anti in
+                    FStar_Compiler_Util.bind_opt uu___6
+                      (fun anti1 ->
+                         FStar_Compiler_Effect.op_Less_Bar
+                           (fun uu___7 -> FStar_Pervasives_Native.Some uu___7)
+                           (FStar_Reflection_Data.Tv_Quoted (t2, k1, anti1)))))
       | FStar_TypeChecker_NBETerm.Construct (fv, uu___, []) when
           FStar_Syntax_Syntax.fv_eq_lid fv
             FStar_Reflection_Constants.ref_Tv_Unknown.FStar_Reflection_Constants.lid

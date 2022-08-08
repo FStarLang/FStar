@@ -6017,6 +6017,18 @@ let rec (inspect :
            | FStar_Syntax_Syntax.Tm_unknown ->
                FStar_Compiler_Effect.op_Less_Bar FStar_Tactics_Monad.ret
                  FStar_Reflection_Data.Tv_Unknown
+           | FStar_Syntax_Syntax.Tm_quoted
+               (t3,
+                { FStar_Syntax_Syntax.qkind = qkind;
+                  FStar_Syntax_Syntax.antiquotes = antiquotes;_})
+               ->
+               FStar_Compiler_Effect.op_Less_Bar FStar_Tactics_Monad.ret
+                 (FStar_Reflection_Data.Tv_Quoted
+                    (t3,
+                      (match qkind with
+                       | FStar_Syntax_Syntax.Quote_static -> false
+                       | FStar_Syntax_Syntax.Quote_dynamic -> true),
+                      antiquotes))
            | uu___2 ->
                ((let uu___4 =
                    let uu___5 =
@@ -6181,6 +6193,19 @@ let (pack' :
                  (e, ((FStar_Pervasives.Inr c), tacopt, use_eq),
                    FStar_Pervasives_Native.None))
               FStar_Compiler_Range.dummyRange in
+          FStar_Compiler_Effect.op_Less_Bar FStar_Tactics_Monad.ret uu___
+      | FStar_Reflection_Data.Tv_Quoted (t, k, anti) ->
+          let uu___ =
+            FStar_Syntax_Syntax.mk
+              (FStar_Syntax_Syntax.Tm_quoted
+                 (t,
+                   {
+                     FStar_Syntax_Syntax.qkind =
+                       (if k
+                        then FStar_Syntax_Syntax.Quote_dynamic
+                        else FStar_Syntax_Syntax.Quote_static);
+                     FStar_Syntax_Syntax.antiquotes = anti
+                   })) FStar_Compiler_Range.dummyRange in
           FStar_Compiler_Effect.op_Less_Bar FStar_Tactics_Monad.ret uu___
       | FStar_Reflection_Data.Tv_Unknown ->
           let uu___ =

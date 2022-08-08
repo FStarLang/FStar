@@ -277,6 +277,16 @@ let rec (inspect_ln :
                    let uu___3 = inspect_pat pat in (uu___3, t4)) brs in
         FStar_Reflection_Data.Tv_Match (t3, ret_opt, brs1)
     | FStar_Syntax_Syntax.Tm_unknown -> FStar_Reflection_Data.Tv_Unknown
+    | FStar_Syntax_Syntax.Tm_quoted
+        (t3,
+         { FStar_Syntax_Syntax.qkind = qkind;
+           FStar_Syntax_Syntax.antiquotes = antiquotes;_})
+        ->
+        FStar_Reflection_Data.Tv_Quoted
+          (t3,
+            ((match qkind with
+              | FStar_Syntax_Syntax.Quote_static -> false
+              | FStar_Syntax_Syntax.Quote_dynamic -> true)), antiquotes)
     | uu___ ->
         ((let uu___2 =
             let uu___3 =
@@ -571,6 +581,17 @@ let (pack_ln : FStar_Reflection_Data.term_view -> FStar_Syntax_Syntax.term) =
           (FStar_Syntax_Syntax.Tm_ascribed
              (e, ((FStar_Pervasives.Inr c), tacopt, use_eq),
                FStar_Pervasives_Native.None)) FStar_Compiler_Range.dummyRange
+    | FStar_Reflection_Data.Tv_Quoted (t, k, anti) ->
+        FStar_Syntax_Syntax.mk
+          (FStar_Syntax_Syntax.Tm_quoted
+             (t,
+               {
+                 FStar_Syntax_Syntax.qkind =
+                   (if k
+                    then FStar_Syntax_Syntax.Quote_dynamic
+                    else FStar_Syntax_Syntax.Quote_static);
+                 FStar_Syntax_Syntax.antiquotes = anti
+               })) FStar_Compiler_Range.dummyRange
     | FStar_Reflection_Data.Tv_Unknown ->
         FStar_Syntax_Syntax.mk FStar_Syntax_Syntax.Tm_unknown
           FStar_Compiler_Range.dummyRange

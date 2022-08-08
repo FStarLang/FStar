@@ -1136,6 +1136,31 @@ let (e_term_view_aq :
           FStar_Syntax_Syntax.mk_Tm_app
             FStar_Reflection_Constants.ref_Tv_AscC.FStar_Reflection_Constants.t
             uu___ rng
+      | FStar_Reflection_Data.Tv_Quoted (t1, k, anti) ->
+          let uu___ =
+            let uu___1 =
+              let uu___2 = let uu___3 = e_term_aq aq in embed uu___3 rng t1 in
+              FStar_Syntax_Syntax.as_arg uu___2 in
+            let uu___2 =
+              let uu___3 =
+                let uu___4 = embed FStar_Syntax_Embeddings.e_bool rng k in
+                FStar_Syntax_Syntax.as_arg uu___4 in
+              let uu___4 =
+                let uu___5 =
+                  let uu___6 =
+                    let uu___7 =
+                      let uu___8 =
+                        let uu___9 = e_term_aq aq in
+                        FStar_Syntax_Embeddings.e_tuple2 e_bv uu___9 in
+                      FStar_Syntax_Embeddings.e_list uu___8 in
+                    embed uu___7 rng anti in
+                  FStar_Syntax_Syntax.as_arg uu___6 in
+                [uu___5] in
+              uu___3 :: uu___4 in
+            uu___1 :: uu___2 in
+          FStar_Syntax_Syntax.mk_Tm_app
+            FStar_Reflection_Constants.ref_Tv_Quoted.FStar_Reflection_Constants.t
+            uu___ rng
       | FStar_Reflection_Data.Tv_Unknown ->
           let uu___ =
             FStar_Reflection_Constants.ref_Tv_Unknown.FStar_Reflection_Constants.t in
@@ -1397,6 +1422,31 @@ let (e_term_view_aq :
                                         FStar_Pervasives_Native.Some uu___10)
                                      (FStar_Reflection_Data.Tv_AscribedC
                                         (e1, c1, tacopt1, use_eq1))))))
+           | (FStar_Syntax_Syntax.Tm_fvar fv,
+              (t1, uu___2)::(k, uu___3)::(anti, uu___4)::[]) when
+               FStar_Syntax_Syntax.fv_eq_lid fv
+                 FStar_Reflection_Constants.ref_Tv_Quoted.FStar_Reflection_Constants.lid
+               ->
+               let uu___5 = let uu___6 = e_term_aq aq in unembed' w uu___6 t1 in
+               FStar_Compiler_Util.bind_opt uu___5
+                 (fun t2 ->
+                    let uu___6 = unembed' w FStar_Syntax_Embeddings.e_bool k in
+                    FStar_Compiler_Util.bind_opt uu___6
+                      (fun k1 ->
+                         let uu___7 =
+                           let uu___8 =
+                             let uu___9 =
+                               let uu___10 = e_term_aq aq in
+                               FStar_Syntax_Embeddings.e_tuple2 e_bv uu___10 in
+                             FStar_Syntax_Embeddings.e_list uu___9 in
+                           unembed' w uu___8 anti in
+                         FStar_Compiler_Util.bind_opt uu___7
+                           (fun anti1 ->
+                              FStar_Compiler_Effect.op_Less_Bar
+                                (fun uu___8 ->
+                                   FStar_Pervasives_Native.Some uu___8)
+                                (FStar_Reflection_Data.Tv_Quoted
+                                   (t2, k1, anti1)))))
            | (FStar_Syntax_Syntax.Tm_fvar fv, []) when
                FStar_Syntax_Syntax.fv_eq_lid fv
                  FStar_Reflection_Constants.ref_Tv_Unknown.FStar_Reflection_Constants.lid
