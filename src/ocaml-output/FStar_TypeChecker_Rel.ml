@@ -7451,27 +7451,30 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                            (match uu___6 with
                             | (prob, wl4) ->
                                 let uu___7 =
+                                  let must_tot = false in
+                                  let scrutinee_t =
+                                    let uu___8 =
+                                      let uu___9 =
+                                        let uu___10 =
+                                          env1.FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term
+                                            env1 scrutinee must_tot in
+                                        FStar_Compiler_Effect.op_Bar_Greater
+                                          uu___10 FStar_Pervasives_Native.fst in
+                                      FStar_Compiler_Effect.op_Bar_Greater
+                                        uu___9
+                                        (FStar_TypeChecker_Normalize.normalize_refinement
+                                           FStar_TypeChecker_Normalize.whnf_steps
+                                           env1) in
+                                    FStar_Compiler_Effect.op_Bar_Greater
+                                      uu___8 FStar_Syntax_Util.unrefine in
                                   let uu___8 =
-                                    let must_tot = false in
                                     env1.FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term
                                       env1 pat_term1 must_tot in
                                   match uu___8 with
                                   | (pat_term_t, uu___9) ->
-                                      let uu___10 =
-                                        let uu___11 =
-                                          let uu___12 =
-                                            FStar_Compiler_Effect.op_Bar_Greater
-                                              uv
-                                              FStar_Syntax_Util.ctx_uvar_typ in
-                                          FStar_Compiler_Effect.op_Bar_Greater
-                                            uu___12
-                                            (FStar_TypeChecker_Normalize.normalize_refinement
-                                               FStar_TypeChecker_Normalize.whnf_steps
-                                               env1) in
-                                        FStar_Compiler_Effect.op_Bar_Greater
-                                          uu___11 FStar_Syntax_Util.unrefine in
                                       new_problem wl4 env1 pat_term_t
-                                        FStar_TypeChecker_Common.EQ uu___10
+                                        FStar_TypeChecker_Common.EQ
+                                        scrutinee_t
                                         FStar_Pervasives_Native.None
                                         scrutinee.FStar_Syntax_Syntax.pos
                                         "match heuristic typing" in
