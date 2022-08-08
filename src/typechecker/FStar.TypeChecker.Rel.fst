@@ -3235,7 +3235,9 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
               new_problem wl env
                 pat_term_t
                 EQ
-                (U.ctx_uvar_typ uv)
+                (uv |> U.ctx_uvar_typ
+                    |> N.normalize_refinement N.whnf_steps env
+                    |> U.unrefine)
                 None scrutinee.pos "match heuristic typing" in
             let wl' = {wl with defer_ok=NoDefer;
                                 smt_ok=false;
