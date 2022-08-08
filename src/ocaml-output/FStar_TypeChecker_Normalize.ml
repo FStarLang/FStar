@@ -4123,12 +4123,60 @@ let rec (norm :
                      let uu___4 = FStar_Syntax_Print.metadata_to_string m in
                      FStar_Compiler_Util.print1 ">> metadata = %s\n" uu___4);
                 (match m with
-                 | FStar_Syntax_Syntax.Meta_monadic (m1, t2) ->
-                     reduce_impure_comp cfg env1 stack1 head
-                       (FStar_Pervasives.Inl m1) t2
-                 | FStar_Syntax_Syntax.Meta_monadic_lift (m1, m', t2) ->
-                     reduce_impure_comp cfg env1 stack1 head
-                       (FStar_Pervasives.Inr (m1, m')) t2
+                 | FStar_Syntax_Syntax.Meta_monadic (m_from, ty) ->
+                     if
+                       (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.for_extraction
+                     then
+                       let uu___3 =
+                         (FStar_TypeChecker_Env.is_erasable_effect
+                            cfg.FStar_TypeChecker_Cfg.tcenv m_from)
+                           ||
+                           ((FStar_Syntax_Util.is_pure_effect m_from) &&
+                              (FStar_TypeChecker_Env.non_informative
+                                 cfg.FStar_TypeChecker_Cfg.tcenv ty)) in
+                       (if uu___3
+                        then
+                          let uu___4 =
+                            FStar_Syntax_Syntax.mk
+                              (FStar_Syntax_Syntax.Tm_meta
+                                 (FStar_Syntax_Util.exp_unit, m))
+                              t1.FStar_Syntax_Syntax.pos in
+                          rebuild cfg env1 stack1 uu___4
+                        else
+                          reduce_impure_comp cfg env1 stack1 head
+                            (FStar_Pervasives.Inl m_from) ty)
+                     else
+                       reduce_impure_comp cfg env1 stack1 head
+                         (FStar_Pervasives.Inl m_from) ty
+                 | FStar_Syntax_Syntax.Meta_monadic_lift (m_from, m_to, ty)
+                     ->
+                     if
+                       (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.for_extraction
+                     then
+                       let uu___3 =
+                         ((FStar_TypeChecker_Env.is_erasable_effect
+                             cfg.FStar_TypeChecker_Cfg.tcenv m_from)
+                            ||
+                            (FStar_TypeChecker_Env.is_erasable_effect
+                               cfg.FStar_TypeChecker_Cfg.tcenv m_to))
+                           ||
+                           ((FStar_Syntax_Util.is_pure_effect m_from) &&
+                              (FStar_TypeChecker_Env.non_informative
+                                 cfg.FStar_TypeChecker_Cfg.tcenv ty)) in
+                       (if uu___3
+                        then
+                          let uu___4 =
+                            FStar_Syntax_Syntax.mk
+                              (FStar_Syntax_Syntax.Tm_meta
+                                 (FStar_Syntax_Util.exp_unit, m))
+                              t1.FStar_Syntax_Syntax.pos in
+                          rebuild cfg env1 stack1 uu___4
+                        else
+                          reduce_impure_comp cfg env1 stack1 head
+                            (FStar_Pervasives.Inr (m_from, m_to)) ty)
+                     else
+                       reduce_impure_comp cfg env1 stack1 head
+                         (FStar_Pervasives.Inr (m_from, m_to)) ty
                  | uu___3 ->
                      if
                        (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.unmeta

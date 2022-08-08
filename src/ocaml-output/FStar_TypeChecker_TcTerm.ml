@@ -8622,7 +8622,8 @@ and (tc_pat :
              FStar_Compiler_Effect.op_Bar_Greater uu___3
                FStar_Pervasives_Native.fst in
            let uu___3 = FStar_TypeChecker_PatternUtils.elaborate_pat env p0 in
-           check_nested_pattern uu___2 uu___3 pat_t in
+           let uu___4 = expected_pat_typ env p0.FStar_Syntax_Syntax.p pat_t in
+           check_nested_pattern uu___2 uu___3 uu___4 in
          match uu___1 with
          | (bvs, tms, pat_e, pat, g, erasable) ->
              ((let uu___3 =

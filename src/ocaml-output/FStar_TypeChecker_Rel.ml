@@ -7457,63 +7457,104 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                                "match heuristic" in
                            (match uu___6 with
                             | (prob, wl4) ->
-                                let wl' =
-                                  {
-                                    attempting =
-                                      [FStar_TypeChecker_Common.TProb prob];
-                                    wl_deferred = [];
-                                    wl_deferred_to_tac =
-                                      (wl4.wl_deferred_to_tac);
-                                    ctr = (wl4.ctr);
-                                    defer_ok = NoDefer;
-                                    smt_ok = false;
-                                    umax_heuristic_ok =
-                                      (wl4.umax_heuristic_ok);
-                                    tcenv = (wl4.tcenv);
-                                    wl_implicits = [];
-                                    repr_subcomp_allowed =
-                                      (wl4.repr_subcomp_allowed)
-                                  } in
-                                let tx =
-                                  FStar_Syntax_Unionfind.new_transaction () in
-                                let uu___7 = solve env1 wl' in
+                                let uu___7 =
+                                  let must_tot = false in
+                                  let scrutinee_t =
+                                    let uu___8 =
+                                      let uu___9 =
+                                        let uu___10 =
+                                          env1.FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term
+                                            env1 scrutinee must_tot in
+                                        FStar_Compiler_Effect.op_Bar_Greater
+                                          uu___10 FStar_Pervasives_Native.fst in
+                                      FStar_Compiler_Effect.op_Bar_Greater
+                                        uu___9
+                                        (FStar_TypeChecker_Normalize.normalize_refinement
+                                           FStar_TypeChecker_Normalize.whnf_steps
+                                           env1) in
+                                    FStar_Compiler_Effect.op_Bar_Greater
+                                      uu___8 FStar_Syntax_Util.unrefine in
+                                  let uu___8 =
+                                    env1.FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term
+                                      env1 pat_term1 must_tot in
+                                  match uu___8 with
+                                  | (pat_term_t, uu___9) ->
+                                      new_problem wl4 env1 pat_term_t
+                                        FStar_TypeChecker_Common.EQ
+                                        scrutinee_t
+                                        FStar_Pervasives_Native.None
+                                        scrutinee.FStar_Syntax_Syntax.pos
+                                        "match heuristic typing" in
                                 (match uu___7 with
-                                 | Success (uu___8, defer_to_tac, imps) ->
-                                     let wl'1 =
+                                 | (typing_prob, wl5) ->
+                                     let wl' =
                                        {
-                                         attempting = [orig];
-                                         wl_deferred = (wl'.wl_deferred);
+                                         attempting =
+                                           [FStar_TypeChecker_Common.TProb
+                                              prob;
+                                           FStar_TypeChecker_Common.TProb
+                                             typing_prob];
+                                         wl_deferred = [];
                                          wl_deferred_to_tac =
-                                           (wl'.wl_deferred_to_tac);
-                                         ctr = (wl'.ctr);
-                                         defer_ok = (wl'.defer_ok);
-                                         smt_ok = (wl'.smt_ok);
+                                           (wl5.wl_deferred_to_tac);
+                                         ctr = (wl5.ctr);
+                                         defer_ok = NoDefer;
+                                         smt_ok = false;
                                          umax_heuristic_ok =
-                                           (wl'.umax_heuristic_ok);
-                                         tcenv = (wl'.tcenv);
-                                         wl_implicits = (wl'.wl_implicits);
+                                           (wl5.umax_heuristic_ok);
+                                         tcenv = (wl5.tcenv);
+                                         wl_implicits = [];
                                          repr_subcomp_allowed =
-                                           (wl'.repr_subcomp_allowed)
+                                           (wl5.repr_subcomp_allowed)
                                        } in
-                                     let uu___9 = solve env1 wl'1 in
-                                     (match uu___9 with
-                                      | Success
-                                          (uu___10, defer_to_tac', imps') ->
-                                          (FStar_Syntax_Unionfind.commit tx;
-                                           (let uu___12 =
-                                              extend_wl wl4 []
-                                                (FStar_Compiler_List.op_At
-                                                   defer_to_tac defer_to_tac')
-                                                (FStar_Compiler_List.op_At
-                                                   imps imps') in
-                                            FStar_Pervasives_Native.Some
-                                              uu___12))
-                                      | Failed uu___10 ->
+                                     let tx =
+                                       FStar_Syntax_Unionfind.new_transaction
+                                         () in
+                                     let uu___8 = solve env1 wl' in
+                                     (match uu___8 with
+                                      | Success (uu___9, defer_to_tac, imps)
+                                          ->
+                                          let wl'1 =
+                                            {
+                                              attempting = [orig];
+                                              wl_deferred = (wl'.wl_deferred);
+                                              wl_deferred_to_tac =
+                                                (wl'.wl_deferred_to_tac);
+                                              ctr = (wl'.ctr);
+                                              defer_ok = (wl'.defer_ok);
+                                              smt_ok = (wl'.smt_ok);
+                                              umax_heuristic_ok =
+                                                (wl'.umax_heuristic_ok);
+                                              tcenv = (wl'.tcenv);
+                                              wl_implicits =
+                                                (wl'.wl_implicits);
+                                              repr_subcomp_allowed =
+                                                (wl'.repr_subcomp_allowed)
+                                            } in
+                                          let uu___10 = solve env1 wl'1 in
+                                          (match uu___10 with
+                                           | Success
+                                               (uu___11, defer_to_tac',
+                                                imps')
+                                               ->
+                                               (FStar_Syntax_Unionfind.commit
+                                                  tx;
+                                                (let uu___13 =
+                                                   extend_wl wl5 []
+                                                     (FStar_Compiler_List.op_At
+                                                        defer_to_tac
+                                                        defer_to_tac')
+                                                     (FStar_Compiler_List.op_At
+                                                        imps imps') in
+                                                 FStar_Pervasives_Native.Some
+                                                   uu___13))
+                                           | Failed uu___11 ->
+                                               (FStar_Syntax_Unionfind.rollback
+                                                  tx;
+                                                FStar_Pervasives_Native.None))
+                                      | uu___9 ->
                                           (FStar_Syntax_Unionfind.rollback tx;
-                                           FStar_Pervasives_Native.None))
-                                 | uu___8 ->
-                                     (FStar_Syntax_Unionfind.rollback tx;
-                                      FStar_Pervasives_Native.None))))) in
+                                           FStar_Pervasives_Native.None)))))) in
            match t1t2_opt with
            | FStar_Pervasives_Native.None ->
                FStar_Pervasives.Inr FStar_Pervasives_Native.None
