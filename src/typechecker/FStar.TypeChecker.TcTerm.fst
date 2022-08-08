@@ -3025,15 +3025,20 @@ and tc_pat env (pat_t:typ) (p0:pat) :
      * Then we come to Cons (Some hd), and the term becomes t3 = (fun (x:list (option int)). t2 (Cons?.hd x))
      * After a bit of normalization, this is same as (fun (x:list (option int)). Some?.v (Cons?.hd x))
      *)
-    let rec check_nested_pattern env (p:pat) (t:typ)
+    let rec check_nested_pattern env (p:pat) (t0:typ)
         : list bv
         * list term
         * term
         * pat
         * guard_t
         * bool =
+
+        let expected_t = expected_pat_typ env p0.p t0 in
+
         if Env.debug env <| Options.Other "Patterns"
-        then BU.print2 "Checking pattern %s at type %s\n" (Print.pat_to_string p) (Print.term_to_string t);
+        then BU.print3 "Checking pattern %s at type %s (type before norm: %s)\n"
+               (Print.pat_to_string p) (Print.term_to_string expected_t)
+               (Print.term_to_string t0);
 
         let id t = mk_Tm_app
           (S.fvar Const.id_lid (S.Delta_constant_at_level 1) None)
@@ -3049,13 +3054,13 @@ and tc_pat env (pat_t:typ) (p0:pat) :
          * It builds the term as mentioned above in the comment at check_nested_pattern
          *)
         let mk_disc_t (disc:term) (inner_t:term) : term =
-          let x_b = S.gen_bv "x" None t |> S.mk_binder in
+          let x_b = S.gen_bv "x" None expected_t |> S.mk_binder in
           //
           //AR: 05/02/2022: Try to provide implicit type arguments to the projector,
           //                if we can't then (lax) typechecking later will infer them
           //
           let ty_args =
-            let hd, args = U.head_and_args t in
+            let hd, args = U.head_and_args expected_t in
             match (hd |> SS.compress |> U.un_uinst).n with
             | Tm_fvar fv ->
               fv |> lid_of_fv |> Env.num_inductive_ty_params env
@@ -3080,18 +3085,18 @@ and tc_pat env (pat_t:typ) (p0:pat) :
           failwith (BU.format1 "Impossible: Expected an undecorated pattern, got %s" (Print.pat_to_string p))
 
         | Pat_wild x ->
-          let x = {x with sort=t} in
+          let x = {x with sort=expected_t} in
           [x],
-          [id t],
+          [id expected_t],
           S.bv_to_name x,
           {p with v=Pat_wild x},
           Env.trivial_guard,
           false
 
         | Pat_var x ->
-          let x = {x with sort=t} in
+          let x = {x with sort=expected_t} in
           [x],
-          [id t],
+          [id expected_t],
           S.bv_to_name x,
           {p with v=Pat_var x},
           Env.trivial_guard,
@@ -3112,7 +3117,6 @@ and tc_pat env (pat_t:typ) (p0:pat) :
           let _, e_c, _, _ = PatternUtils.pat_as_exp false false env p in
           let e_c, lc, g = tc_tot_or_gtot_term env e_c in
           Rel.force_trivial_guard env g;
-          let expected_t = expected_pat_typ env p0.p t in
           if not (Rel.teq_nosmt_force env lc.res_typ expected_t)
           then fail (BU.format2 "Type of pattern (%s) does not match type of scrutinee (%s)"
                                 (Print.term_to_string lc.res_typ)
@@ -3125,10 +3129,10 @@ and tc_pat env (pat_t:typ) (p0:pat) :
           false
 
         | Pat_cons({fv_qual = Some (Unresolved_constructor uc)}, us_opt, sub_pats) ->
-          let rdc, _, constructor_fv = TcUtil.find_record_or_dc_from_typ env (Some t) uc p.p in
+          let rdc, _, constructor_fv = TcUtil.find_record_or_dc_from_typ env (Some expected_t) uc p.p in
           let f_sub_pats = List.zip uc.uc_fields sub_pats in
           let sub_pats =
-            TcUtil.make_record_fields_in_order env uc (Some (Inl t)) rdc f_sub_pats
+            TcUtil.make_record_fields_in_order env uc (Some (Inl expected_t)) rdc f_sub_pats
               (fun _ ->
                 let x = S.new_bv None S.tun in
                 Some (S.withinfo (Pat_wild x) p.p, false))
@@ -3136,7 +3140,7 @@ and tc_pat env (pat_t:typ) (p0:pat) :
           in
           let p = { p with v=Pat_cons(constructor_fv, us_opt, sub_pats) } in
           let p = PatternUtils.elaborate_pat env p in
-          check_nested_pattern env p t
+          check_nested_pattern env p expected_t
 
         | Pat_cons(fv, us_opt, sub_pats) ->
           let simple_pat =
@@ -3173,7 +3177,7 @@ and tc_pat env (pat_t:typ) (p0:pat) :
               let simple_pat_e, simple_pat_t, simple_bvs, guard, erasable =
                   type_of_simple_pat env simple_pat_e
               in
-              let g' = pat_typ_ok env simple_pat_t (expected_pat_typ env p0.p t) in
+              let g' = pat_typ_ok env simple_pat_t expected_t in
               //Now solve guard
               let guard = Rel.discharge_guard_no_smt env guard in
               //And combine with g' (the guard from pat_typ_ok)
