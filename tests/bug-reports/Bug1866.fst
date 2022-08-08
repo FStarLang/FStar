@@ -42,6 +42,7 @@ let rec not_do_much e: Tac term =
       let e = pack (Tv_AscribedC e c tac use_eq) in
       e
 
+  | Tv_Quoted _ _ _
   | Tv_Arrow _ _
   | Tv_Type _
   | Tv_Uvar _ _
