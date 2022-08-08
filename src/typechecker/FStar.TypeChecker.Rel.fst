@@ -3231,16 +3231,22 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
             // We normalize and unrefine the type of the scrutinee before,
             //   so that the type of pattern can unify with it
             //
+            // Note that we can't take the type of uv directly,
+            //   as _args may be non-empty
+            //
             let typing_prob, wl =
+              let must_tot = false in
+              let scrutinee_t =
+                env.typeof_well_typed_tot_or_gtot_term env scrutinee must_tot
+                |> fst
+                |> N.normalize_refinement N.whnf_steps env
+                |> U.unrefine in
               let pat_term_t, _ =
-                let must_tot = false in
                 env.typeof_well_typed_tot_or_gtot_term env pat_term must_tot in
               new_problem wl env
                 pat_term_t
                 EQ
-                (uv |> U.ctx_uvar_typ
-                    |> N.normalize_refinement N.whnf_steps env
-                    |> U.unrefine)
+                scrutinee_t
                 None scrutinee.pos "match heuristic typing" in
             let wl' = {wl with defer_ok=NoDefer;
                                 smt_ok=false;
