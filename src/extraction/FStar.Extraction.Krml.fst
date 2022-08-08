@@ -563,7 +563,10 @@ and translate_expr env e: expr =
       EBufCreateNoInit (Stack, translate_expr env elen)
 
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) } , [ init ])
-    when (string_of_mlpath p = "FStar.HyperStack.ST.salloc") ->
+    when (
+      string_of_mlpath p = "FStar.HyperStack.ST.salloc" ||
+      string_of_mlpath p = "Steel.ST.Reference._alloca"
+    ) ->
       EBufCreate (Stack, translate_expr env init, EConstant (UInt32, "1"))
 
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e2 ])
@@ -690,9 +693,14 @@ and translate_expr env e: expr =
     when string_of_mlpath p = "Steel.ST.Reference.write" ->
       EBufWrite (translate_expr env e1, EConstant (UInt32, "0"), translate_expr env e2)
 
-  | MLE_App ({ expr = MLE_Name p }, [ _ ]) when (string_of_mlpath p = "FStar.HyperStack.ST.push_frame") ->
+  | MLE_App ({ expr = MLE_Name p }, [ _ ]) when (
+        string_of_mlpath p = "FStar.HyperStack.ST.push_frame" ||
+        string_of_mlpath p = "Steel.ST.Reference._push_frame"
+      ) ->
       EPushFrame
   | MLE_App ({ expr = MLE_Name p }, [ _ ]) when (string_of_mlpath p = "FStar.HyperStack.ST.pop_frame") ->
+      EPopFrame
+  | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ _; _ ]) when (string_of_mlpath p = "Steel.ST.Reference._free_and_pop_frame") ->
       EPopFrame
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e1; e2; e3; e4; e5 ]) when (
       string_of_mlpath p = "FStar.Buffer.blit" ||

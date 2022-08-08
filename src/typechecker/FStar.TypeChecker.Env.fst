@@ -777,21 +777,6 @@ let fv_has_erasable_attr env fv =
   in
   cache_in_fv_tab env.erasable_types_tab fv f
 
-let rec non_informative env t =
-    match (U.unrefine t).n with
-    | Tm_type _ -> true
-    | Tm_fvar fv ->
-      fv_eq_lid fv Const.unit_lid
-      || fv_eq_lid fv Const.squash_lid
-      || fv_eq_lid fv Const.erased_lid
-      || fv_has_erasable_attr env fv
-    | Tm_app(head, _) -> non_informative env head
-    | Tm_uinst (t, _) -> non_informative env t
-    | Tm_arrow(_, c) ->
-      (is_pure_or_ghost_comp c && non_informative env (comp_result c))
-      || is_ghost_effect (comp_effect_name c)
-    | _ -> false
-
 let fv_has_strict_args env fv =
   let f () =
     let attrs = lookup_attrs_of_lid env (S.lid_of_fv fv) in
@@ -867,6 +852,28 @@ let norm_eff_name =
                                     m
               end in
        Ident.set_lid_range res (range_of_lid l)
+
+let is_erasable_effect env l =
+  l
+  |> norm_eff_name env
+  |> (fun l -> lid_equals l Const.effect_GHOST_lid ||
+           S.lid_as_fv l (Delta_constant_at_level 0) None
+           |> fv_has_erasable_attr env)
+
+let rec non_informative env t =
+    match (U.unrefine t).n with
+    | Tm_type _ -> true
+    | Tm_fvar fv ->
+      fv_eq_lid fv Const.unit_lid
+      || fv_eq_lid fv Const.squash_lid
+      || fv_eq_lid fv Const.erased_lid
+      || fv_has_erasable_attr env fv
+    | Tm_app(head, _) -> non_informative env head
+    | Tm_uinst (t, _) -> non_informative env t
+    | Tm_arrow(_, c) ->
+      (is_pure_or_ghost_comp c && non_informative env (comp_result c))
+      || is_erasable_effect env (comp_effect_name c)
+    | _ -> false
 
 let num_effect_indices env name r =
   let sig_t = name |> lookup_effect_lid env |> SS.compress in
@@ -1153,12 +1160,6 @@ let reify_comp env c u_c : term =
     | None -> failwith "internal error: reifiable effect has no repr?"
     | Some tm -> tm
 
-let is_erasable_effect env l =
-  l
-  |> norm_eff_name env
-  |> (fun l -> lid_equals l Const.effect_GHOST_lid ||
-           S.lid_as_fv l (Delta_constant_at_level 0) None
-           |> fv_has_erasable_attr env)
 
 ///////////////////////////////////////////////////////////
 // Introducing identifiers and updating the environment   //

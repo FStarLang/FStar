@@ -3253,7 +3253,7 @@ and tc_pat env (pat_t:typ) (p0:pat) :
         check_nested_pattern
             (Env.clear_expected_typ env |> fst)
             (PatternUtils.elaborate_pat env p0)
-            pat_t
+            (expected_pat_typ env p0.p pat_t)
     in
     if Env.debug env <| Options.Other "Patterns"
     then BU.print2 "Done checking pattern %s as expression %s\n"
