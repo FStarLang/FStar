@@ -1,6 +1,7 @@
 module FStar.TypeChecker.Core
 open FStar.Compiler
 open FStar.Compiler.Util
+open FStar.Compiler.Effect
 open FStar.Syntax.Syntax
 module Env = FStar.TypeChecker.Env
 module SS = FStar.Syntax.Subst
@@ -1064,13 +1065,8 @@ and check_scrutinee_pattern_type_compatible (g:env) (t_sc t_pat:typ)
               (P.term_to_string t_pat)
               s) in
 
-    let t_sc = N.normalize_refinement [Primops; Weak; HNF; UnfoldTac; UnfoldUntil delta_constant; Unascribe] g.tcenv t_sc in
-    let t_pat = N.normalize_refinement [Primops; Weak; HNF; UnfoldTac; UnfoldUntil delta_constant; Unascribe] g.tcenv t_pat in
-
-    // TODO: check refinements
-
-    let t_sc = U.unrefine t_sc in
-    let t_pat = U.unrefine t_pat in
+    let t_sc = t_sc |> N.normalize_refinement N.whnf_steps g.tcenv
+                    |> U.unrefine in
 
     let head_sc, args_sc = U.head_and_args t_sc in
     let head_pat, args_pat = U.head_and_args t_pat in

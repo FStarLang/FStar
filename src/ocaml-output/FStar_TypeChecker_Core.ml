@@ -2244,29 +2244,16 @@ and (check_scrutinee_pattern_type_compatible :
               uu___1 uu___2 s in
           fail uu___ in
         let t_sc1 =
-          FStar_TypeChecker_Normalize.normalize_refinement
-            [FStar_TypeChecker_Env.Primops;
-            FStar_TypeChecker_Env.Weak;
-            FStar_TypeChecker_Env.HNF;
-            FStar_TypeChecker_Env.UnfoldTac;
-            FStar_TypeChecker_Env.UnfoldUntil
-              FStar_Syntax_Syntax.delta_constant;
-            FStar_TypeChecker_Env.Unascribe] g.tcenv t_sc in
-        let t_pat1 =
-          FStar_TypeChecker_Normalize.normalize_refinement
-            [FStar_TypeChecker_Env.Primops;
-            FStar_TypeChecker_Env.Weak;
-            FStar_TypeChecker_Env.HNF;
-            FStar_TypeChecker_Env.UnfoldTac;
-            FStar_TypeChecker_Env.UnfoldUntil
-              FStar_Syntax_Syntax.delta_constant;
-            FStar_TypeChecker_Env.Unascribe] g.tcenv t_pat in
-        let t_sc2 = FStar_Syntax_Util.unrefine t_sc1 in
-        let t_pat2 = FStar_Syntax_Util.unrefine t_pat1 in
-        let uu___ = FStar_Syntax_Util.head_and_args t_sc2 in
+          let uu___ =
+            FStar_Compiler_Effect.op_Bar_Greater t_sc
+              (FStar_TypeChecker_Normalize.normalize_refinement
+                 FStar_TypeChecker_Normalize.whnf_steps g.tcenv) in
+          FStar_Compiler_Effect.op_Bar_Greater uu___
+            FStar_Syntax_Util.unrefine in
+        let uu___ = FStar_Syntax_Util.head_and_args t_sc1 in
         match uu___ with
         | (head_sc, args_sc) ->
-            let uu___1 = FStar_Syntax_Util.head_and_args t_pat2 in
+            let uu___1 = FStar_Syntax_Util.head_and_args t_pat in
             (match uu___1 with
              | (head_pat, args_pat) ->
                  let uu___2 =
@@ -2383,10 +2370,10 @@ and (check_scrutinee_pattern_type_compatible :
                                            fun uu___10 ->
                                              fun uu___11 ->
                                                match (uu___9, uu___10) with
-                                               | ((t_sc3, uu___12),
-                                                  (t_pat3, uu___13)) ->
-                                                   check_equality g t_sc3
-                                                     t_pat3) () in
+                                               | ((t_sc2, uu___12),
+                                                  (t_pat1, uu___13)) ->
+                                                   check_equality g t_sc2
+                                                     t_pat1) () in
                                     let_op_Bang uu___8
                                       (fun uu___9 ->
                                          return FStar_Pervasives_Native.None)))))
