@@ -1275,6 +1275,120 @@ let (extract_reifiable_effect :
                            iface_union_l (return_iface :: bind_iface ::
                              actions_iface) in
                          (g3, uu___4, (return_decl :: bind_decl :: actions1)))))
+let (should_split_let_rec_types_and_terms :
+  FStar_Extraction_ML_UEnv.uenv ->
+    FStar_Syntax_Syntax.letbinding Prims.list -> Prims.bool)
+  =
+  fun env ->
+    fun lbs ->
+      let rec is_homogeneous out lbs1 =
+        match lbs1 with
+        | [] -> true
+        | lb::lbs_tail ->
+            let is_type =
+              FStar_Extraction_ML_Term.is_arity env
+                lb.FStar_Syntax_Syntax.lbtyp in
+            (match out with
+             | FStar_Pervasives_Native.None ->
+                 is_homogeneous (FStar_Pervasives_Native.Some is_type)
+                   lbs_tail
+             | FStar_Pervasives_Native.Some b when b = is_type ->
+                 is_homogeneous (FStar_Pervasives_Native.Some is_type)
+                   lbs_tail
+             | uu___ -> false) in
+      let uu___ = is_homogeneous FStar_Pervasives_Native.None lbs in
+      Prims.op_Negation uu___
+let (split_let_rec_types_and_terms :
+  FStar_Syntax_Syntax.sigelt ->
+    FStar_Extraction_ML_UEnv.uenv ->
+      FStar_Syntax_Syntax.letbinding Prims.list ->
+        FStar_Syntax_Syntax.sigelt Prims.list)
+  =
+  fun se ->
+    fun env ->
+      fun lbs ->
+        let rec aux out mutuals lbs1 =
+          match lbs1 with
+          | [] -> (out, mutuals)
+          | lb::lbs_tail ->
+              let uu___ = aux out mutuals lbs_tail in
+              (match uu___ with
+               | (out1, mutuals1) ->
+                   let uu___1 =
+                     let uu___2 =
+                       FStar_Extraction_ML_Term.is_arity env
+                         lb.FStar_Syntax_Syntax.lbtyp in
+                     Prims.op_Negation uu___2 in
+                   if uu___1
+                   then (out1, (lb :: mutuals1))
+                   else
+                     (let uu___3 =
+                        FStar_Syntax_Util.abs_formals_maybe_unascribe_body
+                          true lb.FStar_Syntax_Syntax.lbdef in
+                      match uu___3 with
+                      | (formals, body, rc_opt) ->
+                          let body1 = FStar_Syntax_Syntax.t_unit in
+                          let lbdef =
+                            FStar_Syntax_Util.abs formals body1
+                              FStar_Pervasives_Native.None in
+                          let lb1 =
+                            {
+                              FStar_Syntax_Syntax.lbname =
+                                (lb.FStar_Syntax_Syntax.lbname);
+                              FStar_Syntax_Syntax.lbunivs =
+                                (lb.FStar_Syntax_Syntax.lbunivs);
+                              FStar_Syntax_Syntax.lbtyp =
+                                (lb.FStar_Syntax_Syntax.lbtyp);
+                              FStar_Syntax_Syntax.lbeff =
+                                (lb.FStar_Syntax_Syntax.lbeff);
+                              FStar_Syntax_Syntax.lbdef = lbdef;
+                              FStar_Syntax_Syntax.lbattrs =
+                                (lb.FStar_Syntax_Syntax.lbattrs);
+                              FStar_Syntax_Syntax.lbpos =
+                                (lb.FStar_Syntax_Syntax.lbpos)
+                            } in
+                          let se1 =
+                            {
+                              FStar_Syntax_Syntax.sigel =
+                                (FStar_Syntax_Syntax.Sig_let
+                                   ((false, [lb1]), []));
+                              FStar_Syntax_Syntax.sigrng =
+                                (se.FStar_Syntax_Syntax.sigrng);
+                              FStar_Syntax_Syntax.sigquals =
+                                (se.FStar_Syntax_Syntax.sigquals);
+                              FStar_Syntax_Syntax.sigmeta =
+                                (se.FStar_Syntax_Syntax.sigmeta);
+                              FStar_Syntax_Syntax.sigattrs =
+                                (se.FStar_Syntax_Syntax.sigattrs);
+                              FStar_Syntax_Syntax.sigopts =
+                                (se.FStar_Syntax_Syntax.sigopts)
+                            } in
+                          ((se1 :: out1), mutuals1))) in
+        let uu___ = aux [] [] lbs in
+        match uu___ with
+        | (sigs, lbs1) ->
+            let lb =
+              let uu___1 =
+                let uu___2 =
+                  let uu___3 =
+                    Obj.magic
+                      (FStar_Compiler_List.map
+                         (fun lb1 -> lb1.FStar_Syntax_Syntax.lbname) lbs1) in
+                  ((true, lbs1), uu___3) in
+                FStar_Syntax_Syntax.Sig_let uu___2 in
+              {
+                FStar_Syntax_Syntax.sigel = uu___1;
+                FStar_Syntax_Syntax.sigrng = (se.FStar_Syntax_Syntax.sigrng);
+                FStar_Syntax_Syntax.sigquals =
+                  (se.FStar_Syntax_Syntax.sigquals);
+                FStar_Syntax_Syntax.sigmeta =
+                  (se.FStar_Syntax_Syntax.sigmeta);
+                FStar_Syntax_Syntax.sigattrs =
+                  (se.FStar_Syntax_Syntax.sigattrs);
+                FStar_Syntax_Syntax.sigopts =
+                  (se.FStar_Syntax_Syntax.sigopts)
+              } in
+            let sigs1 = FStar_Compiler_List.op_At sigs [lb] in sigs1
 let (extract_let_rec_types :
   FStar_Syntax_Syntax.sigelt ->
     FStar_Extraction_ML_UEnv.uenv ->
@@ -1293,11 +1407,7 @@ let (extract_let_rec_types :
                    lb.FStar_Syntax_Syntax.lbtyp in
                Prims.op_Negation uu___1) lbs in
         if uu___
-        then
-          FStar_Errors.raise_error
-            (FStar_Errors.Fatal_ExtractionUnsupported,
-              "Mutually recursively defined typed and terms cannot yet be extracted")
-            se.FStar_Syntax_Syntax.sigrng
+        then failwith "Impossible: mixed mutual types and terms"
         else
           (let uu___2 =
              FStar_Compiler_List.fold_left
@@ -1416,7 +1526,7 @@ let (mark_sigelt_erased :
                  FStar_Pervasives_Native.None in
              FStar_Extraction_ML_UEnv.extend_erased_fv g1 uu___1)
         (FStar_Syntax_Util.lids_of_sigelt se) g
-let (extract_sigelt_iface :
+let rec (extract_sigelt_iface :
   FStar_Extraction_ML_UEnv.uenv ->
     FStar_Syntax_Syntax.sigelt -> (FStar_Extraction_ML_UEnv.uenv * iface))
   =
@@ -1459,6 +1569,27 @@ let (extract_sigelt_iface :
                   extract_typ_abbrev g se1.FStar_Syntax_Syntax.sigquals
                     se1.FStar_Syntax_Syntax.sigattrs lb in
                 match uu___5 with | (env, iface1, uu___6) -> (env, iface1))
+         | FStar_Syntax_Syntax.Sig_let ((true, lbs), uu___2) when
+             should_split_let_rec_types_and_terms g lbs ->
+             let ses = split_let_rec_types_and_terms se1 g lbs in
+             let iface1 =
+               let uu___3 = FStar_Extraction_ML_UEnv.current_module_of_uenv g in
+               {
+                 iface_module_name = uu___3;
+                 iface_bindings = (empty_iface.iface_bindings);
+                 iface_tydefs = (empty_iface.iface_tydefs);
+                 iface_type_names = (empty_iface.iface_type_names)
+               } in
+             FStar_Compiler_List.fold_left
+               (fun uu___3 ->
+                  fun se2 ->
+                    match uu___3 with
+                    | (g1, out) ->
+                        let uu___4 = extract_sigelt_iface g1 se2 in
+                        (match uu___4 with
+                         | (g2, mls) ->
+                             let uu___5 = iface_union out mls in (g2, uu___5)))
+               (g, iface1) ses
          | FStar_Syntax_Syntax.Sig_let ((true, lbs), uu___2) when
              FStar_Compiler_Util.for_some
                (fun lb ->
@@ -1961,6 +2092,19 @@ let rec (extract_sig :
                         extract_typ_abbrev g se1.FStar_Syntax_Syntax.sigquals
                           se1.FStar_Syntax_Syntax.sigattrs lb in
                       match uu___8 with | (env, uu___9, impl) -> (env, impl))
+               | FStar_Syntax_Syntax.Sig_let ((true, lbs), uu___5) when
+                   should_split_let_rec_types_and_terms g lbs ->
+                   let ses = split_let_rec_types_and_terms se1 g lbs in
+                   FStar_Compiler_List.fold_left
+                     (fun uu___6 ->
+                        fun se2 ->
+                          match uu___6 with
+                          | (g1, out) ->
+                              let uu___7 = extract_sig g1 se2 in
+                              (match uu___7 with
+                               | (g2, mls) ->
+                                   (g2, (FStar_Compiler_List.op_At out mls))))
+                     (g, []) ses
                | FStar_Syntax_Syntax.Sig_let ((true, lbs), uu___5) when
                    FStar_Compiler_Util.for_some
                      (fun lb ->
