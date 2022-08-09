@@ -620,7 +620,7 @@ let split_let_rec_types_and_terms se (env:uenv) (lbs:list letbinding)
           else (
             //This is a type; split it into a sigelt
             let formals, body, rc_opt = U.abs_formals_maybe_unascribe_body true lb.lbdef in
-            let body = S.t_unit in
+            let body = S.t_bool in //extract it not as unit, since otherwise it will be treated as erasable
             let lbdef = U.abs formals body None in
             let lb = { lb with lbdef } in
             let se = { se with sigel = Sig_let ((false, [lb]), []) } in

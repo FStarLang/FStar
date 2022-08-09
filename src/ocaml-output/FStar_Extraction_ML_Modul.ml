@@ -1327,7 +1327,7 @@ let (split_let_rec_types_and_terms :
                           true lb.FStar_Syntax_Syntax.lbdef in
                       match uu___3 with
                       | (formals, body, rc_opt) ->
-                          let body1 = FStar_Syntax_Syntax.t_unit in
+                          let body1 = FStar_Syntax_Syntax.t_bool in
                           let lbdef =
                             FStar_Syntax_Util.abs formals body1
                               FStar_Pervasives_Native.None in
