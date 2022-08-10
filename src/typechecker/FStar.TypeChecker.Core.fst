@@ -174,7 +174,14 @@ let rec is_arrow (g:env) (t:term)
             in
             return (x, eff, U.comp_result c)
           else (
-            let Comp ct = c.n in
+            let e_tag =
+              let Comp ct = c.n in
+              if Ident.lid_equals ct.effect_name PC.effect_Pure_lid
+              then Some E_TOTAL
+              else if Ident.lid_equals ct.effect_name PC.effect_Ghost_lid
+              then Some E_GHOST
+              else None
+            in
             (* Turn   x:t -> Pure/Ghost t' pre post
                into   x:t{pre} -> Tot/GTot (y:t'{post})
 
@@ -183,21 +190,14 @@ let rec is_arrow (g:env) (t:term)
                In effect form, the post is in scope for the entire continuation.
                Whereas the refinement on the result is not.
              *)
-            let e_tag =
-              if Ident.lid_equals ct.effect_name PC.effect_Pure_lid
-              then Some E_TOTAL
-              else if Ident.lid_equals ct.effect_name PC.effect_Ghost_lid
-              then Some E_GHOST
-              else None
-            in
             match e_tag with
             | None -> fail (BU.format1 "Expected total or gtot arrow, got %s" (Ident.string_of_lid (U.comp_effect_name c)))
             | Some e_tag ->
               let [x], c = U.arrow_formals_comp t in
-              let (pre, _)::(post, _)::_ = ct.effect_args in
+              let (pre, _)::(post, _)::_ = U.comp_effect_args c in
               let arg_typ = U.refine x.binder_bv pre in
               let res_typ =
-                let r = S.new_bv None ct.result_typ in
+                let r = S.new_bv None (U.comp_result c) in
                 let post = S.mk_Tm_app post [(S.bv_to_name r, None)] post.pos in
                 U.refine r post
               in
@@ -527,8 +527,8 @@ let rec check_subtype_whnf (g:env) (e:term) (t0 t1: typ)
       else fail "no subtyping rule is applicable"
 
 and check_subtype (g:env) (e:term) (t0 t1:typ)
-  = if Env.debug g.tcenv (Options.Other "Core")
-    then BU.print2 "check_subtype %s <: %s" (P.term_to_string t0) (P.term_to_string t1);
+  = // if Env.debug g.tcenv (Options.Other "Core")
+    // then BU.print2 "check_subtype %s <: %s\n" (P.term_to_string t0) (P.term_to_string t1);
     match U.eq_tm t0 t1 with
     | U.Equal -> return ()
     | _ ->
