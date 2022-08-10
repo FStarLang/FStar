@@ -7476,97 +7476,97 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                  let uu___2 =
                    FStar_TypeChecker_PatternUtils.pat_as_exp true true env1 p in
                  (match uu___2 with
-                  | (xs, pat_term, uu___3, uu___4) ->
-                      let uu___5 =
+                  | (xs, pat_term, g_pat_as_exp, uu___3) ->
+                      let uu___4 =
                         FStar_Compiler_List.fold_left
-                          (fun uu___6 ->
+                          (fun uu___5 ->
                              fun x ->
-                               match uu___6 with
+                               match uu___5 with
                                | (subst, wl3) ->
                                    let t_x =
                                      FStar_Syntax_Subst.subst subst
                                        x.FStar_Syntax_Syntax.sort in
-                                   let uu___7 = copy_uvar uv [] t_x wl3 in
-                                   (match uu___7 with
-                                    | (uu___8, u, wl4) ->
+                                   let uu___6 = copy_uvar uv [] t_x wl3 in
+                                   (match uu___6 with
+                                    | (uu___7, u, wl4) ->
                                         let subst1 =
                                           (FStar_Syntax_Syntax.NT (x, u)) ::
                                           subst in
                                         (subst1, wl4))) ([], wl2) xs in
-                      (match uu___5 with
+                      (match uu___4 with
                        | (subst, wl3) ->
                            let pat_term1 =
                              FStar_Syntax_Subst.subst subst pat_term in
-                           let uu___6 =
+                           let uu___5 =
                              let must_tot = false in
                              let scrutinee_t =
-                               let uu___7 =
-                                 let uu___8 =
-                                   let uu___9 =
+                               let uu___6 =
+                                 let uu___7 =
+                                   let uu___8 =
                                      env1.FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term
                                        env1 scrutinee must_tot in
                                    FStar_Compiler_Effect.op_Bar_Greater
-                                     uu___9 FStar_Pervasives_Native.fst in
-                                 FStar_Compiler_Effect.op_Bar_Greater uu___8
+                                     uu___8 FStar_Pervasives_Native.fst in
+                                 FStar_Compiler_Effect.op_Bar_Greater uu___7
                                    (FStar_TypeChecker_Normalize.normalize_refinement
                                       FStar_TypeChecker_Normalize.whnf_steps
                                       env1) in
-                               FStar_Compiler_Effect.op_Bar_Greater uu___7
+                               FStar_Compiler_Effect.op_Bar_Greater uu___6
                                  FStar_Syntax_Util.unrefine in
-                             (let uu___8 =
+                             (let uu___7 =
                                 FStar_Compiler_Effect.op_Less_Bar
                                   (FStar_TypeChecker_Env.debug env1)
                                   (FStar_Options.Other "Rel") in
-                              if uu___8
+                              if uu___7
                               then
-                                let uu___9 =
+                                let uu___8 =
                                   FStar_Syntax_Print.term_to_string pat_term1 in
                                 FStar_Compiler_Util.print1
                                   "Match heuristic, typechecking the pattern term: %s {\n\n"
-                                  uu___9
+                                  uu___8
                               else ());
-                             (let uu___8 =
-                                let uu___9 =
+                             (let uu___7 =
+                                let uu___8 =
                                   FStar_TypeChecker_Env.set_expected_typ env1
                                     scrutinee_t in
                                 env1.FStar_TypeChecker_Env.typeof_tot_or_gtot_term
-                                  uu___9 pat_term1 must_tot in
-                              match uu___8 with
+                                  uu___8 pat_term1 must_tot in
+                              match uu___7 with
                               | (pat_term2, pat_term_t, g_pat_term) ->
-                                  ((let uu___10 =
+                                  ((let uu___9 =
                                       FStar_Compiler_Effect.op_Less_Bar
                                         (FStar_TypeChecker_Env.debug env1)
                                         (FStar_Options.Other "Rel") in
-                                    if uu___10
+                                    if uu___9
                                     then
-                                      let uu___11 =
+                                      let uu___10 =
                                         FStar_Syntax_Print.term_to_string
                                           pat_term2 in
-                                      let uu___12 =
+                                      let uu___11 =
                                         FStar_Syntax_Print.term_to_string
                                           pat_term_t in
                                       FStar_Compiler_Util.print2
                                         "} Match heuristic, typechecked pattern term to %s and type %s\n"
-                                        uu___11 uu___12
+                                        uu___10 uu___11
                                     else ());
                                    (pat_term2, g_pat_term))) in
-                           (match uu___6 with
+                           (match uu___5 with
                             | (pat_term2, g_pat_term) ->
-                                let uu___7 =
-                                  let uu___8 =
+                                let uu___6 =
+                                  let uu___7 =
                                     FStar_Compiler_Effect.op_Bar_Greater
                                       g_pat_term (simplify_guard env1) in
-                                  FStar_Compiler_Effect.op_Bar_Greater uu___8
+                                  FStar_Compiler_Effect.op_Bar_Greater uu___7
                                     FStar_TypeChecker_Env.is_trivial_guard_formula in
-                                if uu___7
+                                if uu___6
                                 then
-                                  let uu___8 =
+                                  let uu___7 =
                                     new_problem wl3 env1 scrutinee
                                       FStar_TypeChecker_Common.EQ pat_term2
                                       FStar_Pervasives_Native.None
                                       scrutinee.FStar_Syntax_Syntax.pos
                                       "match heuristic" in
-                                  (match uu___8 with
+                                  (match uu___7 with
                                    | (prob, wl4) ->
                                        let wl' =
                                          extend_wl
@@ -7593,10 +7593,10 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                                        let tx =
                                          FStar_Syntax_Unionfind.new_transaction
                                            () in
-                                       let uu___9 = solve env1 wl' in
-                                       (match uu___9 with
+                                       let uu___8 = solve env1 wl' in
+                                       (match uu___8 with
                                         | Success
-                                            (uu___10, defer_to_tac, imps) ->
+                                            (uu___9, defer_to_tac, imps) ->
                                             let wl'1 =
                                               {
                                                 attempting = [orig];
@@ -7615,15 +7615,15 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                                                 repr_subcomp_allowed =
                                                   (wl'.repr_subcomp_allowed)
                                               } in
-                                            let uu___11 = solve env1 wl'1 in
-                                            (match uu___11 with
+                                            let uu___10 = solve env1 wl'1 in
+                                            (match uu___10 with
                                              | Success
-                                                 (uu___12, defer_to_tac',
+                                                 (uu___11, defer_to_tac',
                                                   imps')
                                                  ->
                                                  (FStar_Syntax_Unionfind.commit
                                                     tx;
-                                                  (let uu___14 =
+                                                  (let uu___13 =
                                                      extend_wl wl4 []
                                                        (FStar_Compiler_List.op_At
                                                           defer_to_tac
@@ -7632,14 +7632,16 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                                                           imps
                                                           (FStar_Compiler_List.op_At
                                                              imps'
-                                                             g_pat_term.FStar_TypeChecker_Common.implicits)) in
+                                                             (FStar_Compiler_List.op_At
+                                                                g_pat_as_exp.FStar_TypeChecker_Common.implicits
+                                                                g_pat_term.FStar_TypeChecker_Common.implicits))) in
                                                    FStar_Pervasives_Native.Some
-                                                     uu___14))
-                                             | Failed uu___12 ->
+                                                     uu___13))
+                                             | Failed uu___11 ->
                                                  (FStar_Syntax_Unionfind.rollback
                                                     tx;
                                                   FStar_Pervasives_Native.None))
-                                        | uu___10 ->
+                                        | uu___9 ->
                                             (FStar_Syntax_Unionfind.rollback
                                                tx;
                                              FStar_Pervasives_Native.None)))

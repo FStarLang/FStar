@@ -3216,11 +3216,10 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
         let try_solve_branch scrutinee p =
             let (Flex (_t, uv, _args), wl) = destruct_flex_t env scrutinee wl  in
             //
-            // This is dropping the returned guard
-            //   that contains implicits introduced for bvs, dot terms etc.
-            // Why?
+            // We add g_pat_as_exp implicits to the worklist later
+            // And we know it only contains implicits, no logical payload
             //
-            let xs, pat_term, _, _ = PatternUtils.pat_as_exp true true env p in
+            let xs, pat_term, g_pat_as_exp, _ = PatternUtils.pat_as_exp true true env p in
             let subst, wl =
                 List.fold_left (fun (subst, wl) x ->
                     let t_x = SS.subst subst x.sort in
@@ -3235,15 +3234,16 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
             //
             // The pat term here contains uvars for dot patterns, and even bvs
             //   and their types
-            // We are going to unify the pat_term with scrutinee terms, and that
+            // We are going to unify the pat_term with the scrutinee, and that
             //   will solve some of those uvars
             // But there are some uvars, e.g. for the dot pattern types, that will
             //   not get constrained even with those unifications
             //
-            // To solve such uvars, we typecheck the pat_term with the type of
-            //   the scrutinee
+            // To constrain such uvars, we typecheck the pat_term with the type of
+            //   the scrutinee as the expected type
             // This typechecking cannot use fastpath since the pat_term may be nested,
-            //   and may have uvars in nested levels (Cons ?u (Cons ?u1 ...))
+            //   and may have uvars in nested levels (Cons ?u (Cons ?u1 ...)),
+            //   whereas fastpath may only compute the type from the top-level (list ?u here, e.g.)
             // And so on
             //
 
@@ -3252,6 +3252,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
               //
               // Note that we cannot just use the uv.ctx_uvar_typ,
               //   since _args may be non-empty
+              // Also unrefine the scrutinee type
               //
               let scrutinee_t =
                 env.typeof_well_typed_tot_or_gtot_term env scrutinee must_tot
@@ -3296,7 +3297,10 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                   (match solve env wl' with
                   | Success (_, defer_to_tac', imps') ->
                     UF.commit tx;
-                    Some (extend_wl wl [] (defer_to_tac@defer_to_tac') (imps@imps'@g_pat_term.implicits))
+                    Some (extend_wl wl
+                                    []
+                                    (defer_to_tac@defer_to_tac')
+                                    (imps@imps'@g_pat_as_exp.implicits@g_pat_term.implicits))
   
                   | Failed _ ->
                     UF.rollback tx;
