@@ -544,11 +544,11 @@ and translate_expr env e: expr =
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e ])
     when string_of_mlpath p = "FStar.HyperStack.ST.op_Bang"
        || string_of_mlpath p = "Steel.Reference.read" ->
-      EBufRead (translate_expr env e, EConstant (UInt32, "0"))
+      EBufRead (translate_expr env e, EQualified (["C"], "_zero_for_deref"))
 
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ _perm; _v; e ])
     when string_of_mlpath p = "Steel.ST.Reference.read" ->
-      EBufRead (translate_expr env e, EConstant (UInt32, "0"))
+      EBufRead (translate_expr env e, EQualified (["C"], "_zero_for_deref"))
 
   (* All the distinguished combinators that correspond to allocation, either on
    * the stack, on the heap (GC'd or manually-managed). *)
@@ -687,11 +687,11 @@ and translate_expr env e: expr =
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e1; e2 ])
     when string_of_mlpath p = "FStar.HyperStack.ST.op_Colon_Equals"
       || string_of_mlpath p = "Steel.Reference.write" ->
-      EBufWrite (translate_expr env e1, EConstant (UInt32, "0"), translate_expr env e2)
+      EBufWrite (translate_expr env e1, EQualified (["C"], "_zero_for_deref"), translate_expr env e2)
 
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ _v; e1; e2 ])
     when string_of_mlpath p = "Steel.ST.Reference.write" ->
-      EBufWrite (translate_expr env e1, EConstant (UInt32, "0"), translate_expr env e2)
+      EBufWrite (translate_expr env e1, EQualified (["C"], "_zero_for_deref"), translate_expr env e2)
 
   | MLE_App ({ expr = MLE_Name p }, [ _ ]) when (
         string_of_mlpath p = "FStar.HyperStack.ST.push_frame" ||
