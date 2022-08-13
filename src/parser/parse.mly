@@ -31,6 +31,9 @@ let old_attribute_syntax_warning =
   "The `[@ ...]` syntax of attributes is deprecated. \
    Use `[@@ a1; a2; ...; an]`, a semi-colon separated list of attributes, instead"
 
+let do_notation_deprecation_warning =
+  "The lightweiht do notation [x <- y; z] or [x ;; z] is deprecated, use let operators (i.e. [let* x = y in z] or [y ;* z], [*] being any sequence of operator characters) instead."
+
 let none_to_empty_list x =
   match x with
   | None -> []
@@ -703,11 +706,13 @@ term:
 	     let pat = mk_pattern (PatWild(None, [])) (rhs parseState 2) in
 	     LetOperator ([(op, pat, e1)], e2)
 	  | None   ->
+             log_issue (lhs parseState) (Warning_DeprecatedLightDoNotation, do_notation_deprecation_warning);
 	     Bind(gen (rhs parseState 2), e1, e2)
         in mk_term t (rhs2 parseState 1 3) Expr
       }
   | x=lidentOrUnderscore LONG_LEFT_ARROW e1=noSeqTerm SEMICOLON e2=term
-      { mk_term (Bind(x, e1, e2)) (rhs2 parseState 1 5) Expr }
+    { log_issue (lhs parseState) (Warning_DeprecatedLightDoNotation, do_notation_deprecation_warning);
+      mk_term (Bind(x, e1, e2)) (rhs2 parseState 1 5) Expr }
 
 match_returning:
   | as_opt=option(AS i=lident {i}) RETURNS t=tmIff {as_opt,t,false}
