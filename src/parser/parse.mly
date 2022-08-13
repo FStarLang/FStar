@@ -64,6 +64,11 @@ let none_to_empty_list x =
 %token <string> LET_OP
 %token <string> AND_OP
 %token <string> MATCH_OP
+/* [SEMICOLON_OP] encodes either:
+- [;;], which used to be SEMICOLON_SEMICOLON, or
+- [;<OP>], with <OP> a sequence of [op_char] (see FStar_Parser_LexFStar).
+*/
+%token <string option> SEMICOLON_OP
 
 %token FORALL EXISTS ASSUME NEW LOGIC ATTRIBUTES
 %token IRREDUCIBLE UNFOLDABLE INLINE OPAQUE UNFOLD INLINE_FOR_EXTRACTION
@@ -81,7 +86,7 @@ let none_to_empty_list x =
 %token DOT COLON COLON_COLON SEMICOLON
 %token QMARK_DOT
 %token QMARK
-%token SEMICOLON_SEMICOLON EQUALS PERCENT_LBRACK LBRACK_AT LBRACK_AT_AT LBRACK_AT_AT_AT DOT_LBRACK
+%token EQUALS PERCENT_LBRACK LBRACK_AT LBRACK_AT_AT LBRACK_AT_AT_AT DOT_LBRACK
 %token DOT_LENS_PAREN_LEFT DOT_LPAREN DOT_LBRACK_BAR LBRACK LBRACK_BAR LBRACE_BAR LBRACE BANG_LBRACE
 %token BAR_RBRACK BAR_RBRACE UNDERSCORE LENS_PAREN_LEFT LENS_PAREN_RIGHT
 %token BAR RBRACK RBRACE DOLLAR
@@ -691,8 +696,16 @@ term:
 (* but it results in an additional shift/reduce conflict *)
 (* ... which is actually be benign, since the same conflict already *)
 (*     exists for the previous production *)
-  | e1=noSeqTerm SEMICOLON_SEMICOLON e2=term
-      { mk_term (Bind(gen (rhs parseState 2), e1, e2)) (rhs2 parseState 1 3) Expr }
+  | e1=noSeqTerm op=SEMICOLON_OP e2=term
+      { let t = match op with
+	  | Some op ->
+	     let op = mk_ident ("let" ^ op, rhs parseState 2) in
+	     let pat = mk_pattern (PatWild(None, [])) (rhs parseState 2) in
+	     LetOperator ([(op, pat, e1)], e2)
+	  | None   ->
+	     Bind(gen (rhs parseState 2), e1, e2)
+        in mk_term t (rhs2 parseState 1 3) Expr
+      }
   | x=lidentOrUnderscore LONG_LEFT_ARROW e1=noSeqTerm SEMICOLON e2=term
       { mk_term (Bind(x, e1, e2)) (rhs2 parseState 1 5) Expr }
 

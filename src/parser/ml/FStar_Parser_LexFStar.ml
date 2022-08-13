@@ -171,7 +171,6 @@ let () =
    ":", COLON;
    "::", COLON_COLON;
    ":=", COLON_EQUALS;
-   ";;", SEMICOLON_SEMICOLON;
    ";", SEMICOLON;
    "=", EQUALS;
    "%[", PERCENT_LBRACK;
@@ -453,6 +452,11 @@ match%sedlex lexbuf with
  | "and", Plus op_char ->
    let s = L.lexeme lexbuf in
    AND_OP (String.sub s 3 (String.length s - 3))
+
+ | ";", Plus op_char ->
+   let s = L.lexeme lexbuf in
+   SEMICOLON_OP (Some (String.sub s 1 (String.length s - 1)))
+ | ";;" -> SEMICOLON_OP None
 
  | ident -> let id = L.lexeme lexbuf in
    if FStar_Compiler_Util.starts_with id FStar_Ident.reserved_prefix
