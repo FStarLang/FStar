@@ -317,9 +317,14 @@ attr_letbinding:
     { attr, lb }
 
 letoperatorbinding:
-  | pat=tuplePattern tm=option(EQUALS tm=term {tm})
+  | pat=tuplePattern ascr_opt=ascribeTyp? tm=option(EQUALS tm=term {tm})
     {
-        let h tm = (pat, tm) in
+        let h tm
+	  = ( ( match ascr_opt with
+              | None   -> pat
+              | Some t -> mk_pattern (PatAscribed(pat, t)) (rhs2 parseState 1 2) )
+	    , tm)
+	in
 	match pat.pat, tm with
         | _               , Some tm -> h tm
         | PatVar (v, _, _), None    ->
