@@ -844,6 +844,10 @@ and translate_expr env e: expr =
     when (string_of_mlpath p = "Steel.ST.Loops.while_loop") ->
     EApp (EQualified (["Steel"; "Loops"], "while_loop"), [ EUnit; translate_expr env test; translate_expr env body ])
 
+  (* Piggyback Steel.ST.Printf primitives to LowStar.Printf *)
+  | MLE_App ({ expr = MLE_Name (["Steel"; "ST"; "Printf"], fn) }, args) ->
+        EApp (EQualified ([ "LowStar"; "Printf" ], fn), List.map (translate_expr env) args)
+
   | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, _)}, [_; _; e])
     when string_of_mlpath p = "Steel.Effect.Atomic.return" ||
          string_of_mlpath p = "Steel.ST.Util.return" ->
