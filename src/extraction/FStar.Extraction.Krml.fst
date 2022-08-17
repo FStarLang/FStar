@@ -436,6 +436,11 @@ let rec translate_type env t: typ =
     ->
       TBuf (translate_type env arg)
 
+  | MLTY_Named ([arg], p) when
+    Syntax.string_of_mlpath p = "FStar.Universe.raise_t"
+    ->
+      translate_type env arg
+
   | MLTY_Named ([_], p) when (Syntax.string_of_mlpath p = "FStar.Ghost.erased") ->
       TAny
 
@@ -549,6 +554,16 @@ and translate_expr env e: expr =
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ _perm; _v; e ])
     when string_of_mlpath p = "Steel.ST.Reference.read" ->
       EBufRead (translate_expr env e, EConstant (UInt32, "0"))
+
+  (* Flatten all universes *)
+
+  | MLE_App ({ expr = MLE_TApp ({ expr = MLE_Name p }, _) }, [arg])
+    when string_of_mlpath p = "FStar.Universe.raise_val" ->
+      translate_expr env arg
+
+  | MLE_App ({ expr = MLE_TApp ({ expr = MLE_Name p }, _) }, [arg])
+    when string_of_mlpath p = "FStar.Universe.downgrade_val" ->
+      translate_expr env arg
 
   (* All the distinguished combinators that correspond to allocation, either on
    * the stack, on the heap (GC'd or manually-managed). *)
