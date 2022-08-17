@@ -59,6 +59,8 @@ module L = FStar.List.Tot
 module A = Steel.ST.Array
 module U32 = FStar.UInt32
 
+#set-options "--ide_id_info_off"
+
 /// `lmbuffer a l` is
 ///    - an array of `a`
 ///    - governed by preorders `r` and `s`
@@ -76,15 +78,21 @@ effect StTrivial (a:Type) =
 
 /// `StBuf a b`: A effect abbreviation for a stateful computation
 ///  that may read `b` but does not change the state
+/// 
+///  NOTE: I need to provide those primitives operating on
+///  Steel.ST.Array.ptr instead of Steel.ST.Array.array, otherwise
+///  Karamel will complain about arity mismatch
 inline_for_extraction
 let stBuf (t:Type) : Type =
   (l: U32.t) ->
-  (p: perm) ->
+  (p: Ghost.erased (lmbuffer t l & perm)) ->
   (x: Ghost.erased (Seq.seq t)) ->
-  (b:lmbuffer t l) ->
-  STT unit
-    (A.pts_to b p x)
-    (fun _ -> A.pts_to b p x)
+  (b: A.ptr t) ->
+  ST unit
+    (A.pts_to (fst p) (snd p) x)
+    (fun _ -> A.pts_to (fst p) (snd p) x)
+    (A.ptr_of (fst p) == b)
+    (fun _ -> True)
 
 /// Primitive printers for all the types supported by this module
 assume val print_string: string -> StTrivial unit
@@ -375,9 +383,10 @@ let print_lmbuffer_gen
     (fun _ -> True)
 = [@inline_let] let b' : lmbuffer t l = coerce b in
   let v' : Ghost.erased (Seq.seq t) = coerce v in
-  rewrite (live_frag fr) (A.pts_to #t b' p v');
-  f l _ _ _;
-  rewrite (A.pts_to #t b' p v') (live_frag fr)
+  let p' : Ghost.erased (lmbuffer t l & perm) = Ghost.hide (b', p) in
+  rewrite (live_frag fr) (A.pts_to #t (fst p') (snd p') v');
+  f l _ _ (A.ptr_of b');
+  rewrite (A.pts_to _ _ _) (live_frag fr)
 
 noextract inline_for_extraction
 let print_frag (hd: frag_t) : STT unit (live_frag hd) (fun _ -> live_frag hd)
