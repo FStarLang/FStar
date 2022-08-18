@@ -121,7 +121,7 @@ assume val print_lmbuffer_i64 : stBuf Int64.t
 
 /// An attribute to control reduction
 noextract irreducible
-let __reduce__ = unit
+let __printf_reduce__ = unit
 
 /// Base types supported so far
 noextract
@@ -147,7 +147,7 @@ type arg =
   | Any
 
 /// Interpreting a `base_typ` as a type
-[@@__reduce__]
+[@@__printf_reduce__]
 noextract
 let base_typ_as_type (b:base_typ) : Type0 =
   match b with
@@ -177,7 +177,7 @@ let fragments = list fragment
 /// `parse_format s`:
 ///     Parses a list of characters in a format string into a list of fragments
 ///     Or None, in case the format string is invalid
-[@@__reduce__]
+[@@__printf_reduce__]
 noextract inline_for_extraction
 let rec parse_format
       (s:list char)
@@ -239,7 +239,7 @@ let rec parse_format
 
 
 /// `parse_format_string`: a wrapper around `parse_format`
-[@@__reduce__]
+[@@__printf_reduce__]
 noextract inline_for_extraction
 let parse_format_string
     (s:string)
@@ -261,7 +261,7 @@ let done : lift unit = Lift u#0 u#1 ()
 ///     or print_frags fails to verify. I don't know why; the generated
 ///     VC and its encoding seem identical (modulo hash consing in the
 ///     latter).
-[@@__reduce__]
+[@@__printf_reduce__]
 noextract
 let rec arg_t (a:arg) : Type u#1 =
   match a with
@@ -274,7 +274,7 @@ noextract
 let frag_t = either string (a:arg & arg_t a)
 
 /// `live_frags h l` is a separation logic predicate asserting ownership of all the arrays in `l`
-[@@__reduce__; Steel.Effect.Common.__reduce__]
+[@@__printf_reduce__; Steel.Effect.Common.__reduce__]
 noextract
 let live_frag0 (f: frag_t) : vprop =
   match f with
@@ -285,12 +285,12 @@ let live_frag0 (f: frag_t) : vprop =
      | (| Any, _ |) -> emp
      | (| Array _, Lift ((| _, b |), p, v) |) -> A.pts_to b p v)
 
-[@@__reduce__]
+[@@__printf_reduce__]
 noextract
 let live_frag (f: frag_t) : vprop =
   live_frag0 f
 
-[@@__reduce__]
+[@@__printf_reduce__]
 noextract
 let rec live_frags (l:list frag_t) : vprop =
   match l with
@@ -300,7 +300,7 @@ let rec live_frags (l:list frag_t) : vprop =
 /// `interpret_frags` interprets a list of fragments as a Steel.ST function type
 ///    Note `l` is the fragments in L-to-R order (i.e., parsing order)
 ///    `acc` accumulates the fragment values in reverse order
-[@@__reduce__]
+[@@__printf_reduce__]
 noextract
 let rec interpret_frags (l:fragments) (acc: list frag_t) : Type u#1 =
   match l with
@@ -344,7 +344,7 @@ let normal (#a:Type) (x:a) : a =
   FStar.Pervasives.norm
     [iota;
      zeta;
-     delta_attr [`%__reduce__; `%BigOps.__reduce__];
+     delta_attr [`%__printf_reduce__; `%BigOps.__reduce__];
      delta_only [`%Base?; `%Array?; `%Some?; `%Some?.v; `%list_of_string];
      primops;
      simplify]
@@ -436,14 +436,14 @@ let rec print_frags (acc:list frag_t)
       print_frag hd;
       rewrite (live_frag hd `star` live_frags tl) (live_frags acc)
 
-[@@__reduce__]
+[@@__printf_reduce__]
 let no_inst #a (#b:a -> Type) (f: (#x:a -> b x)) : unit -> #x:a -> b x = fun () -> f
-[@@__reduce__]
+[@@__printf_reduce__]
 let elim_unit_arrow #t (f:unit -> t) : t = f ()
 
 /// `aux frags acc`: This is the main workhorse which interprets a
 /// parsed format string (`frags`) as a variadic, stateful function
-[@@__reduce__]
+[@@__printf_reduce__]
 noextract inline_for_extraction
 let rec aux (frags:fragments) (acc:list frag_t) (fp: fragment_printer) : interpret_frags frags acc =
   match frags with
@@ -487,13 +487,13 @@ let rec aux (frags:fragments) (acc:list frag_t) (fp: fragment_printer) : interpr
     elim_unit_arrow (no_inst (f ()) <: (unit -> interpret_frags (Interpolate Any :: rest) acc))
 
 /// `format_string` : A valid format string is one that can be successfully parsed
-[@@__reduce__]
+[@@__printf_reduce__]
 noextract
 let format_string = s:string{normal #bool (Some? (parse_format_string s))}
 
 /// `interpret_format_string` parses a string into fragments and then
 /// interprets it as a type
-[@@__reduce__]
+[@@__printf_reduce__]
 noextract
 let interpret_format_string (s:format_string) : Type =
   interpret_frags (Some?.v (parse_format_string s)) []
