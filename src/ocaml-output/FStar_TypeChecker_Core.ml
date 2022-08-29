@@ -876,6 +876,28 @@ let rec (check_subtype_whnf :
                | (FStar_Syntax_Syntax.Tm_match (e0, uu___1, brs0, uu___2),
                   FStar_Syntax_Syntax.Tm_match (e1, uu___3, brs1, uu___4)) ->
                    check_equality_match g e0 brs0 e1 brs1
+               | (FStar_Syntax_Syntax.Tm_match uu___1, uu___2) ->
+                   let t01 =
+                     FStar_TypeChecker_Normalize.normalize_refinement
+                       [FStar_TypeChecker_Env.Primops;
+                       FStar_TypeChecker_Env.Weak;
+                       FStar_TypeChecker_Env.HNF;
+                       FStar_TypeChecker_Env.UnfoldTac;
+                       FStar_TypeChecker_Env.UnfoldUntil
+                         FStar_Syntax_Syntax.delta_constant;
+                       FStar_TypeChecker_Env.Unascribe] g.tcenv t0 in
+                   check_subtype_whnf g e t01 t1
+               | (uu___1, FStar_Syntax_Syntax.Tm_match uu___2) ->
+                   let t11 =
+                     FStar_TypeChecker_Normalize.normalize_refinement
+                       [FStar_TypeChecker_Env.Primops;
+                       FStar_TypeChecker_Env.Weak;
+                       FStar_TypeChecker_Env.HNF;
+                       FStar_TypeChecker_Env.UnfoldTac;
+                       FStar_TypeChecker_Env.UnfoldUntil
+                         FStar_Syntax_Syntax.delta_constant;
+                       FStar_TypeChecker_Env.Unascribe] g.tcenv t1 in
+                   check_subtype_whnf g e t0 t11
                | uu___1 ->
                    let uu___2 =
                      let uu___3 = FStar_Syntax_Util.eq_tm t0 t1 in
@@ -1056,6 +1078,27 @@ and (check_equality_whnf :
             FStar_Compiler_Util.format2 "not equal terms: %s <> %s" uu___2
               uu___3 in
           fail uu___1 in
+        let fallback t01 t11 =
+          let_op_Bang guard_not_allowed
+            (fun uu___ ->
+               if uu___
+               then err ()
+               else
+                 (let uu___1 = equatable t01 t11 in
+                  if uu___1
+                  then
+                    let uu___2 = check' g t01 in
+                    let_op_Bang uu___2
+                      (fun uu___3 ->
+                         match uu___3 with
+                         | (uu___4, t_typ) ->
+                             let uu___5 = universe_of g t_typ in
+                             let_op_Bang uu___5
+                               (fun u ->
+                                  let uu___6 =
+                                    FStar_Syntax_Util.mk_eq2 u t_typ t01 t11 in
+                                  guard uu___6))
+                  else err ())) in
         let uu___ =
           let uu___1 = FStar_Syntax_Util.eq_tm t0 t1 in
           uu___1 = FStar_Syntax_Util.Equal in
@@ -1173,32 +1216,43 @@ and (check_equality_whnf :
            | (FStar_Syntax_Syntax.Tm_match (e0, uu___2, brs0, uu___3),
               FStar_Syntax_Syntax.Tm_match (e1, uu___4, brs1, uu___5)) ->
                check_equality_match g e0 brs0 e1 brs1
+           | (FStar_Syntax_Syntax.Tm_match uu___2, uu___3) ->
+               let t0' =
+                 FStar_TypeChecker_Normalize.normalize_refinement
+                   [FStar_TypeChecker_Env.Primops;
+                   FStar_TypeChecker_Env.Weak;
+                   FStar_TypeChecker_Env.HNF;
+                   FStar_TypeChecker_Env.UnfoldTac;
+                   FStar_TypeChecker_Env.UnfoldUntil
+                     FStar_Syntax_Syntax.delta_constant;
+                   FStar_TypeChecker_Env.Unascribe] g.tcenv t0 in
+               let uu___4 =
+                 let uu___5 = FStar_Syntax_Util.eq_tm t0 t0' in
+                 uu___5 = FStar_Syntax_Util.NotEqual in
+               if uu___4
+               then check_equality_whnf g t0' t1
+               else fallback t0 t1
+           | (uu___2, FStar_Syntax_Syntax.Tm_match uu___3) ->
+               let t1' =
+                 FStar_TypeChecker_Normalize.normalize_refinement
+                   [FStar_TypeChecker_Env.Primops;
+                   FStar_TypeChecker_Env.Weak;
+                   FStar_TypeChecker_Env.HNF;
+                   FStar_TypeChecker_Env.UnfoldTac;
+                   FStar_TypeChecker_Env.UnfoldUntil
+                     FStar_Syntax_Syntax.delta_constant;
+                   FStar_TypeChecker_Env.Unascribe] g.tcenv t1 in
+               let uu___4 =
+                 let uu___5 = FStar_Syntax_Util.eq_tm t1 t1' in
+                 uu___5 = FStar_Syntax_Util.NotEqual in
+               if uu___4
+               then check_equality_whnf g t0 t1'
+               else fallback t0 t1
            | (FStar_Syntax_Syntax.Tm_ascribed uu___2, uu___3) ->
                fail "Unexpected term: ascription"
            | (uu___2, FStar_Syntax_Syntax.Tm_ascribed uu___3) ->
                fail "Unexpected term: ascription"
-           | uu___2 ->
-               let_op_Bang guard_not_allowed
-                 (fun uu___3 ->
-                    if uu___3
-                    then err ()
-                    else
-                      (let uu___4 = equatable t0 t1 in
-                       if uu___4
-                       then
-                         let uu___5 = check' g t0 in
-                         let_op_Bang uu___5
-                           (fun uu___6 ->
-                              match uu___6 with
-                              | (uu___7, t_typ) ->
-                                  let uu___8 = universe_of g t_typ in
-                                  let_op_Bang uu___8
-                                    (fun u ->
-                                       let uu___9 =
-                                         FStar_Syntax_Util.mk_eq2 u t_typ t0
-                                           t1 in
-                                       guard uu___9))
-                       else err ())))
+           | uu___2 -> fallback t0 t1)
 and (check_equality :
   env -> FStar_Syntax_Syntax.typ -> FStar_Syntax_Syntax.typ -> unit result) =
   fun g ->
