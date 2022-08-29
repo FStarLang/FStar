@@ -2692,21 +2692,14 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
         //see tc.fs, the case of Tm_match and the comment related to issue #594
         let scrutinee_env = env in
         let env = env' in
-        // If either Weak or HNF, then don't descend into branch
-        let whnf = cfg.steps.weak || cfg.steps.hnf in
-        let scrutinee = 
-            if whnf && cfg.steps.iota
-            then //the scrutinee is only whnf
-                 //which may not be enough to decide which pattern it matches
-                 norm ({cfg with steps={cfg.steps with weak=false; hnf=false; weakly_reduce_scrutinee=false}})
-                      scrutinee_env [] t
-            else t
-        in
+        let scrutinee = t in
         let norm_and_rebuild_match () =
           log cfg (fun () ->
               BU.print2 "match is irreducible: scrutinee=%s\nbranches=%s\n"
                     (Print.term_to_string scrutinee)
                     (branches |> List.map (fun (p, _, _) -> Print.pat_to_string p) |> String.concat "\n\t"));
+          // If either Weak or HNF, then don't descend into branch
+          let whnf = cfg.steps.weak || cfg.steps.hnf in
           let cfg_exclude_zeta =
             if cfg.steps.zeta_full
             then cfg
@@ -2904,9 +2897,22 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
                 //the elements of s are sub-terms of t
                 //the have no free de Bruijn indices; so their env=[]; see pre-condition at the top of rebuild
                 let env0 = env in
+                //
+                // AR: when adding the bindings for pattern arguments to the environment,
+                //     this code used to set the memo entry to t as well
+                //     (i.e. BU.mk_ref None used to be BU.mk_ref t), roughly
+                //
+                //     but unclear to me why is that ok
+                //     the scrutinee argument may not be normalized at all
+                //     in fact, in the core typechecker code, we had instances of this resulting
+                //       in incorrect behavior
+                //     there `t`, i.e. an argument to scrutinee was of the form `f x`,
+                //       where `f` did not get unfolded (we asked for whnf there),
+                //       because this memo entry was set to `f x`, and we returned it as is
+                //
                 let env = List.fold_left
                       (fun env (bv, t) -> (Some (S.mk_binder bv),
-                                           Clos([], t, BU.mk_ref (Some ([], t)), false))::env)
+                                        Clos([], t, BU.mk_ref None, false))::env)
                       env s in
                 norm cfg env stack (guard_when_clause wopt b rest)
         in
