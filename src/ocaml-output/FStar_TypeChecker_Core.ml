@@ -876,28 +876,6 @@ let rec (check_subtype_whnf :
                | (FStar_Syntax_Syntax.Tm_match (e0, uu___1, brs0, uu___2),
                   FStar_Syntax_Syntax.Tm_match (e1, uu___3, brs1, uu___4)) ->
                    check_equality_match g e0 brs0 e1 brs1
-               | (FStar_Syntax_Syntax.Tm_match uu___1, uu___2) ->
-                   let t01 =
-                     FStar_TypeChecker_Normalize.normalize_refinement
-                       [FStar_TypeChecker_Env.Primops;
-                       FStar_TypeChecker_Env.Weak;
-                       FStar_TypeChecker_Env.HNF;
-                       FStar_TypeChecker_Env.UnfoldTac;
-                       FStar_TypeChecker_Env.UnfoldUntil
-                         FStar_Syntax_Syntax.delta_constant;
-                       FStar_TypeChecker_Env.Unascribe] g.tcenv t0 in
-                   check_subtype_whnf g e t01 t1
-               | (uu___1, FStar_Syntax_Syntax.Tm_match uu___2) ->
-                   let t11 =
-                     FStar_TypeChecker_Normalize.normalize_refinement
-                       [FStar_TypeChecker_Env.Primops;
-                       FStar_TypeChecker_Env.Weak;
-                       FStar_TypeChecker_Env.HNF;
-                       FStar_TypeChecker_Env.UnfoldTac;
-                       FStar_TypeChecker_Env.UnfoldUntil
-                         FStar_Syntax_Syntax.delta_constant;
-                       FStar_TypeChecker_Env.Unascribe] g.tcenv t1 in
-                   check_subtype_whnf g e t0 t11
                | uu___1 ->
                    let uu___2 =
                      let uu___3 = FStar_Syntax_Util.eq_tm t0 t1 in
@@ -1216,38 +1194,6 @@ and (check_equality_whnf :
            | (FStar_Syntax_Syntax.Tm_match (e0, uu___2, brs0, uu___3),
               FStar_Syntax_Syntax.Tm_match (e1, uu___4, brs1, uu___5)) ->
                check_equality_match g e0 brs0 e1 brs1
-           | (FStar_Syntax_Syntax.Tm_match uu___2, uu___3) ->
-               let t0' =
-                 FStar_TypeChecker_Normalize.normalize_refinement
-                   [FStar_TypeChecker_Env.Primops;
-                   FStar_TypeChecker_Env.Weak;
-                   FStar_TypeChecker_Env.HNF;
-                   FStar_TypeChecker_Env.UnfoldTac;
-                   FStar_TypeChecker_Env.UnfoldUntil
-                     FStar_Syntax_Syntax.delta_constant;
-                   FStar_TypeChecker_Env.Unascribe] g.tcenv t0 in
-               let uu___4 =
-                 let uu___5 = FStar_Syntax_Util.eq_tm t0 t0' in
-                 uu___5 = FStar_Syntax_Util.NotEqual in
-               if uu___4
-               then check_equality_whnf g t0' t1
-               else fallback t0 t1
-           | (uu___2, FStar_Syntax_Syntax.Tm_match uu___3) ->
-               let t1' =
-                 FStar_TypeChecker_Normalize.normalize_refinement
-                   [FStar_TypeChecker_Env.Primops;
-                   FStar_TypeChecker_Env.Weak;
-                   FStar_TypeChecker_Env.HNF;
-                   FStar_TypeChecker_Env.UnfoldTac;
-                   FStar_TypeChecker_Env.UnfoldUntil
-                     FStar_Syntax_Syntax.delta_constant;
-                   FStar_TypeChecker_Env.Unascribe] g.tcenv t1 in
-               let uu___4 =
-                 let uu___5 = FStar_Syntax_Util.eq_tm t1 t1' in
-                 uu___5 = FStar_Syntax_Util.NotEqual in
-               if uu___4
-               then check_equality_whnf g t0 t1'
-               else fallback t0 t1
            | (FStar_Syntax_Syntax.Tm_ascribed uu___2, uu___3) ->
                fail "Unexpected term: ascription"
            | (uu___2, FStar_Syntax_Syntax.Tm_ascribed uu___3) ->
