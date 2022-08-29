@@ -516,6 +516,27 @@ let rec check_subtype_whnf (g:env) (e:term) (t0 t1: typ)
       //   it could check subtyping instead
       //
       check_equality_match g e0 brs0 e1 brs1
+
+    | Tm_match _, _ ->
+      let t0 = N.normalize_refinement [
+        Env.Primops;
+        Env.Weak;
+        Env.HNF;
+        Env.UnfoldTac;
+        Env.UnfoldUntil delta_constant;
+        Env.Unascribe] g.tcenv t0 in
+      check_subtype_whnf g e t0 t1
+
+    | _, Tm_match _ ->
+      let t1 = N.normalize_refinement [
+        Env.Primops;
+        Env.Weak;
+        Env.HNF;
+        Env.UnfoldTac;
+        Env.UnfoldUntil delta_constant;
+        Env.Unascribe] g.tcenv t1 in
+      check_subtype_whnf g e t0 t1
+    
     | _ ->
       if U.eq_tm t0 t1 = U.Equal
       then return ()
@@ -593,6 +614,15 @@ and check_equality_whnf (g:env) (t0 t1:typ)
                          (P.term_to_string t0)
                          (P.term_to_string t1))
     in
+    let fallback t0 t1 =
+      match! guard_not_allowed with
+      | true -> err ()
+      | false ->
+        if equatable t0 t1
+        then let! _, t_typ = check' g t0 in
+             let! u = universe_of g t_typ in
+             guard (U.mk_eq2 u t_typ t0 t1)
+        else err () in
     if U.eq_tm t0 t1 = U.Equal
     then return ()
     else
@@ -671,18 +701,41 @@ and check_equality_whnf (g:env) (t0 t1:typ)
       | Tm_match (e0, _, brs0, _), Tm_match (e1, _, brs1, _) ->
         check_equality_match g e0 brs0 e1 brs1
 
+      //
+      // AR: with some combination of flags, the normalizer today doesn't
+      //     properly reduce nested matches, which results in errors in core
+      //
+      //     so we do one last effort to reduce the match
+      //       guardrd properly to prevent loop
+      //
+      | Tm_match _, _ ->
+        let t0' = N.normalize_refinement [
+          Env.Primops;
+          Env.Weak;
+          Env.HNF;
+          Env.UnfoldTac;
+          Env.UnfoldUntil delta_constant;
+          Env.Unascribe] g.tcenv t0 in
+        if U.eq_tm t0 t0' = U.NotEqual
+        then check_equality_whnf g t0' t1
+        else fallback t0 t1
+
+      | _, Tm_match _ ->
+        let t1' = N.normalize_refinement [
+          Env.Primops;
+          Env.Weak;
+          Env.HNF;
+          Env.UnfoldTac;
+          Env.UnfoldUntil delta_constant;
+          Env.Unascribe] g.tcenv t1 in
+        if U.eq_tm t1 t1' = U.NotEqual
+        then check_equality_whnf g t0 t1'
+        else fallback t0 t1
+
       | Tm_ascribed _, _
       | _, Tm_ascribed _ -> fail "Unexpected term: ascription"
 
-      | _ ->
-        match! guard_not_allowed with
-        | true -> err ()
-        | false ->
-          if equatable t0 t1
-          then let! _, t_typ = check' g t0 in
-               let! u = universe_of g t_typ in
-               guard (U.mk_eq2 u t_typ t0 t1)
-          else err ()
+      | _ -> fallback t0 t1
 
 and check_equality (g:env) (t0 t1:typ)
   = match U.eq_tm t0 t1 with
