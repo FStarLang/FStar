@@ -1602,11 +1602,39 @@ let rec norm : cfg -> env -> stack -> term -> term =
           | Tm_meta (head, m) ->
             log cfg (fun () -> BU.print1 ">> metadata = %s\n" (Print.metadata_to_string m));
             begin match m with
-              | Meta_monadic (m, t) ->
-                reduce_impure_comp cfg env stack head (Inl m) t
+              | Meta_monadic (m_from, ty) ->
+                if cfg.steps.for_extraction
+                then (
+                  //In Extraction, we want to erase sub-terms with erasable effect
+                  //Or pure terms with non-informative return types
+                  if Env.is_erasable_effect cfg.tcenv m_from
+                  || (U.is_pure_effect m_from && Env.non_informative cfg.tcenv ty)
+                  then (
+                    rebuild cfg env stack (S.mk (Tm_meta (U.exp_unit, m)) t.pos)
+                  )
+                  else (
+                    reduce_impure_comp cfg env stack head (Inl m_from) ty
+                  )
+                )
+                else 
+                  reduce_impure_comp cfg env stack head (Inl m_from) ty
 
-              | Meta_monadic_lift (m, m', t) ->
-                reduce_impure_comp cfg env stack head (Inr (m, m')) t
+              | Meta_monadic_lift (m_from, m_to, ty) ->
+                if cfg.steps.for_extraction
+                then (
+                  //In Extraction, we want to erase sub-terms with erasable effect
+                  //Or pure terms with non-informative return types
+                  if Env.is_erasable_effect cfg.tcenv m_from
+                  ||  Env.is_erasable_effect cfg.tcenv m_to
+                  || (U.is_pure_effect m_from && Env.non_informative cfg.tcenv ty)
+                  then (
+                    rebuild cfg env stack (S.mk (Tm_meta (U.exp_unit, m)) t.pos)
+                  )
+                  else (
+                    reduce_impure_comp cfg env stack head (Inr (m_from, m_to)) ty
+                  )
+                )
+                else reduce_impure_comp cfg env stack head (Inr (m_from, m_to)) ty
 
               | _ ->
                 if cfg.steps.unmeta

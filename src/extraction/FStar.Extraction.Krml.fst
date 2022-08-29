@@ -436,6 +436,11 @@ let rec translate_type env t: typ =
     ->
       TBuf (translate_type env arg)
 
+  | MLTY_Named ([arg], p) when
+    Syntax.string_of_mlpath p = "FStar.Universe.raise_t"
+    ->
+      translate_type env arg
+
   | MLTY_Named ([_], p) when (Syntax.string_of_mlpath p = "FStar.Ghost.erased") ->
       TAny
 
@@ -550,6 +555,16 @@ and translate_expr env e: expr =
     when string_of_mlpath p = "Steel.ST.Reference.read" ->
       EBufRead (translate_expr env e, EConstant (UInt32, "0"))
 
+  (* Flatten all universes *)
+
+  | MLE_App ({ expr = MLE_TApp ({ expr = MLE_Name p }, _) }, [arg])
+    when string_of_mlpath p = "FStar.Universe.raise_val" ->
+      translate_expr env arg
+
+  | MLE_App ({ expr = MLE_TApp ({ expr = MLE_Name p }, _) }, [arg])
+    when string_of_mlpath p = "FStar.Universe.downgrade_val" ->
+      translate_expr env arg
+
   (* All the distinguished combinators that correspond to allocation, either on
    * the stack, on the heap (GC'd or manually-managed). *)
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) } , [ e1; e2 ])
@@ -563,7 +578,10 @@ and translate_expr env e: expr =
       EBufCreateNoInit (Stack, translate_expr env elen)
 
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) } , [ init ])
-    when (string_of_mlpath p = "FStar.HyperStack.ST.salloc") ->
+    when (
+      string_of_mlpath p = "FStar.HyperStack.ST.salloc" ||
+      string_of_mlpath p = "Steel.ST.Reference._alloca"
+    ) ->
       EBufCreate (Stack, translate_expr env init, EConstant (UInt32, "1"))
 
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e2 ])
@@ -690,9 +708,14 @@ and translate_expr env e: expr =
     when string_of_mlpath p = "Steel.ST.Reference.write" ->
       EBufWrite (translate_expr env e1, EConstant (UInt32, "0"), translate_expr env e2)
 
-  | MLE_App ({ expr = MLE_Name p }, [ _ ]) when (string_of_mlpath p = "FStar.HyperStack.ST.push_frame") ->
+  | MLE_App ({ expr = MLE_Name p }, [ _ ]) when (
+        string_of_mlpath p = "FStar.HyperStack.ST.push_frame" ||
+        string_of_mlpath p = "Steel.ST.Reference._push_frame"
+      ) ->
       EPushFrame
   | MLE_App ({ expr = MLE_Name p }, [ _ ]) when (string_of_mlpath p = "FStar.HyperStack.ST.pop_frame") ->
+      EPopFrame
+  | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ _; _ ]) when (string_of_mlpath p = "Steel.ST.Reference._free_and_pop_frame") ->
       EPopFrame
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e1; e2; e3; e4; e5 ]) when (
       string_of_mlpath p = "FStar.Buffer.blit" ||
@@ -835,6 +858,10 @@ and translate_expr env e: expr =
   | MLE_App ({expr=MLE_Name p}, [ _inv; test; body ])
     when (string_of_mlpath p = "Steel.ST.Loops.while_loop") ->
     EApp (EQualified (["Steel"; "Loops"], "while_loop"), [ EUnit; translate_expr env test; translate_expr env body ])
+
+  (* Piggyback Steel.ST.Printf primitives to LowStar.Printf *)
+  | MLE_App ({ expr = MLE_Name (["Steel"; "ST"; "Printf"], fn) }, args) ->
+        EApp (EQualified ([ "LowStar"; "Printf" ], fn), List.map (translate_expr env) args)
 
   | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, _)}, [_; _; e])
     when string_of_mlpath p = "Steel.Effect.Atomic.return" ||

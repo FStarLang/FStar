@@ -55,7 +55,7 @@ let repeat_until_body
     intro_exists b (repeat_until_inv p r)
 
 let repeat_until p $body
-  = let r = R.alloc true in
+= R.with_local true (fun r ->
     rewrite (R.pts_to r full_perm true `star` p true)
             (repeat_until_inv p r true);
     intro_exists true (repeat_until_inv p r);
@@ -65,4 +65,5 @@ let repeat_until p $body
       (repeat_until_body p r body);
     rewrite (repeat_until_inv p r false)
             (R.pts_to r full_perm false `star` p false);
-    R.free r
+    noop () // to handle intro_exists
+  )

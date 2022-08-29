@@ -227,6 +227,21 @@ Guidelines for the changelog:
      provided (using UInt128).
 
 ## Syntax
+   * PR #2644 introduces monadic let operators in the surface
+     syntax. One can now write:
+
+	 ```
+	 let (let?) (x: option 'a) (f: 'a -> option 'b): option 'b
+       = match x with
+       | Some x -> f x
+       | None   -> None
+
+     let foo (x: option (int * option int)) =
+	    let? (a, b) = x in
+		match? b with
+		...
+	 ```
+
    * PR #2603 introduces universes in the reflection syntax.
      It is a potentially breaking change for reflection clients.
      See the PR for more description.

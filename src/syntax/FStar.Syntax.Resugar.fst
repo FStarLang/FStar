@@ -134,62 +134,6 @@ let rec resugar_universe (u:S.universe) r: A.term =
 let resugar_universe' (env: DsEnv.env) (u:S.universe) r: A.term =
   resugar_universe u r
 
-
-let string_to_op s =
-  let name_of_op = function
-    | "Amp" ->  Some ("&", None)
-    | "At" -> Some ("@", None)
-    | "Plus" -> Some ("+", None)
-    | "Minus" -> Some ("-", None)
-    | "Subtraction" -> Some ("-", Some 2)
-    | "Tilde" -> Some ("~", None)
-    | "Slash" -> Some ("/", None)
-    | "Backslash" -> Some ("\\", None)
-    | "Less" -> Some ("<", None)
-    | "Equals" -> Some ("=", None)
-    | "Greater" -> Some (">", None)
-    | "Underscore" -> Some ("_", None)
-    | "Bar" -> Some ("|", None)
-    | "Bang" -> Some ("!", None)
-    | "Hat" -> Some ("^", None)
-    | "Percent" -> Some ("%", None)
-    | "Star" -> Some ("*", None)
-    | "Question" -> Some ("?", None)
-    | "Colon" -> Some (":", None)
-    | "Dollar" -> Some ("$", None)
-    | "Dot" -> Some (".", None)
-    | _ -> None
-  in
-  match s with
-  | "op_String_Assignment" -> Some (".[]<-", None)
-  | "op_Array_Assignment" -> Some (".()<-", None)
-  | "op_Brack_Lens_Assignment" -> Some (".[||]<-", None)
-  | "op_Lens_Assignment" -> Some (".(||)<-", None)
-  | "op_String_Access" -> Some (".[]", None)
-  | "op_Array_Access" -> Some (".()", None)
-  | "op_Brack_Lens_Access" -> Some (".[||]", None)
-  | "op_Lens_Access" -> Some (".(||)", None)
-  | _ ->
-    if BU.starts_with s "op_" then
-    begin
-      let s = BU.split (BU.substring_from s (String.length "op_")) "_" in
-      match s with
-      | [op] -> name_of_op op
-      | _ ->
-        let maybeop =
-          List.fold_left (fun acc x -> match acc with
-                                       | None -> None
-                                       | Some acc ->
-                                           match x with
-                                           | Some (op, _) -> Some (acc ^ op)
-                                           | None -> None)
-                         (Some "")
-                         (List.map name_of_op s)
-        in
-        BU.map_opt maybeop (fun o -> (o, None))
-    end else
-      None
-
 type expected_arity = option int
 
 (* GM: This almost never actually returns an expected arity. It does so
@@ -567,7 +511,7 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
             let body = resugar_term' env (decomp body) in
             let handler = resugar_term' env (decomp handler) in
             let rec resugar_body t = match (t.tm) with
-              | A.Match(e, None, [(_,_,b)]) -> b
+              | A.Match(e, None, None, [(_,_,b)]) -> b
               | A.Let(_, _, b) -> b  // One branch Match that is resugared as Let
               | A.Ascribed(t1, t2, t3, use_eq) ->
                 (* this case happens when the match is wrapped in Meta_Monadic which is resugared to Ascribe*)
@@ -575,7 +519,7 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
               | _ -> failwith("unexpected body format to try_with") in
             let e = resugar_body body in
             let rec resugar_branches t = match (t.tm) with
-              | A.Match(e, None, branches) -> branches
+              | A.Match(e, None, None, branches) -> branches
               | A.Ascribed(t1, t2, t3, _) ->
                 (* this case happens when the match is wrapped in Meta_Monadic which is resugared to Ascribe*)
                 (* TODO: where should we keep the information stored in Ascribed? *)
@@ -719,7 +663,7 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
         (pat, wopt, b) in
       let asc_opt = resugar_match_returns env e t.pos asc_opt in
       mk (A.Match(resugar_term' env e,
-                  asc_opt,
+                  None, asc_opt,
                   List.map resugar_branch branches))
 
     | Tm_ascribed(e, asc, _) ->

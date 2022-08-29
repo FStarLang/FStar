@@ -3632,45 +3632,37 @@ let rec (really_solve_universe_eq :
                           uu___4 msg)) in
           match (u11, u21) with
           | (FStar_Syntax_Syntax.U_bvar uu___, uu___1) ->
-              ((let uu___3 = FStar_Compiler_Util.stack_dump () in
-                FStar_Compiler_Util.print_string uu___3);
-               (let uu___3 =
-                  let uu___4 = FStar_Syntax_Print.univ_to_string u11 in
-                  let uu___5 = FStar_Syntax_Print.univ_to_string u21 in
-                  FStar_Compiler_Util.format2
-                    "Impossible: found an de Bruijn universe variable or unknown universe: %s, %s"
-                    uu___4 uu___5 in
-                failwith uu___3))
+              let uu___2 =
+                let uu___3 = FStar_Syntax_Print.univ_to_string u11 in
+                let uu___4 = FStar_Syntax_Print.univ_to_string u21 in
+                FStar_Compiler_Util.format2
+                  "Impossible: found an de Bruijn universe variable or unknown universe: %s, %s"
+                  uu___3 uu___4 in
+              failwith uu___2
           | (FStar_Syntax_Syntax.U_unknown, uu___) ->
-              ((let uu___2 = FStar_Compiler_Util.stack_dump () in
-                FStar_Compiler_Util.print_string uu___2);
-               (let uu___2 =
-                  let uu___3 = FStar_Syntax_Print.univ_to_string u11 in
-                  let uu___4 = FStar_Syntax_Print.univ_to_string u21 in
-                  FStar_Compiler_Util.format2
-                    "Impossible: found an de Bruijn universe variable or unknown universe: %s, %s"
-                    uu___3 uu___4 in
-                failwith uu___2))
+              let uu___1 =
+                let uu___2 = FStar_Syntax_Print.univ_to_string u11 in
+                let uu___3 = FStar_Syntax_Print.univ_to_string u21 in
+                FStar_Compiler_Util.format2
+                  "Impossible: found an de Bruijn universe variable or unknown universe: %s, %s"
+                  uu___2 uu___3 in
+              failwith uu___1
           | (uu___, FStar_Syntax_Syntax.U_bvar uu___1) ->
-              ((let uu___3 = FStar_Compiler_Util.stack_dump () in
-                FStar_Compiler_Util.print_string uu___3);
-               (let uu___3 =
-                  let uu___4 = FStar_Syntax_Print.univ_to_string u11 in
-                  let uu___5 = FStar_Syntax_Print.univ_to_string u21 in
-                  FStar_Compiler_Util.format2
-                    "Impossible: found an de Bruijn universe variable or unknown universe: %s, %s"
-                    uu___4 uu___5 in
-                failwith uu___3))
+              let uu___2 =
+                let uu___3 = FStar_Syntax_Print.univ_to_string u11 in
+                let uu___4 = FStar_Syntax_Print.univ_to_string u21 in
+                FStar_Compiler_Util.format2
+                  "Impossible: found an de Bruijn universe variable or unknown universe: %s, %s"
+                  uu___3 uu___4 in
+              failwith uu___2
           | (uu___, FStar_Syntax_Syntax.U_unknown) ->
-              ((let uu___2 = FStar_Compiler_Util.stack_dump () in
-                FStar_Compiler_Util.print_string uu___2);
-               (let uu___2 =
-                  let uu___3 = FStar_Syntax_Print.univ_to_string u11 in
-                  let uu___4 = FStar_Syntax_Print.univ_to_string u21 in
-                  FStar_Compiler_Util.format2
-                    "Impossible: found an de Bruijn universe variable or unknown universe: %s, %s"
-                    uu___3 uu___4 in
-                failwith uu___2))
+              let uu___1 =
+                let uu___2 = FStar_Syntax_Print.univ_to_string u11 in
+                let uu___3 = FStar_Syntax_Print.univ_to_string u21 in
+                FStar_Compiler_Util.format2
+                  "Impossible: found an de Bruijn universe variable or unknown universe: %s, %s"
+                  uu___2 uu___3 in
+              failwith uu___1
           | (FStar_Syntax_Syntax.U_name x, FStar_Syntax_Syntax.U_name y) ->
               let uu___ =
                 let uu___1 = FStar_Ident.string_of_id x in
@@ -3994,6 +3986,61 @@ let (run_meta_arg_tac :
     | uu___ ->
         failwith
           "run_meta_arg_tac must have been called with a uvar that has a meta tac"
+let (simplify_guard :
+  FStar_TypeChecker_Env.env ->
+    FStar_TypeChecker_Common.guard_t -> FStar_TypeChecker_Common.guard_t)
+  =
+  fun env ->
+    fun g ->
+      match g.FStar_TypeChecker_Common.guard_f with
+      | FStar_TypeChecker_Common.Trivial -> g
+      | FStar_TypeChecker_Common.NonTrivial f ->
+          ((let uu___1 =
+              FStar_Compiler_Effect.op_Less_Bar
+                (FStar_TypeChecker_Env.debug env)
+                (FStar_Options.Other "Simplification") in
+            if uu___1
+            then
+              let uu___2 = FStar_Syntax_Print.term_to_string f in
+              FStar_Compiler_Util.print1 "Simplifying guard %s\n" uu___2
+            else ());
+           (let f1 =
+              norm_with_steps "FStar.TypeChecker.Rel.norm_with_steps.6"
+                [FStar_TypeChecker_Env.Beta;
+                FStar_TypeChecker_Env.Eager_unfolding;
+                FStar_TypeChecker_Env.Simplify;
+                FStar_TypeChecker_Env.Primops;
+                FStar_TypeChecker_Env.NoFullNorm] env f in
+            (let uu___2 =
+               FStar_Compiler_Effect.op_Less_Bar
+                 (FStar_TypeChecker_Env.debug env)
+                 (FStar_Options.Other "Simplification") in
+             if uu___2
+             then
+               let uu___3 = FStar_Syntax_Print.term_to_string f1 in
+               FStar_Compiler_Util.print1 "Simplified guard to %s\n" uu___3
+             else ());
+            (let f2 =
+               let uu___2 =
+                 let uu___3 = FStar_Syntax_Util.unmeta f1 in
+                 uu___3.FStar_Syntax_Syntax.n in
+               match uu___2 with
+               | FStar_Syntax_Syntax.Tm_fvar fv when
+                   FStar_Syntax_Syntax.fv_eq_lid fv
+                     FStar_Parser_Const.true_lid
+                   -> FStar_TypeChecker_Common.Trivial
+               | uu___3 -> FStar_TypeChecker_Common.NonTrivial f1 in
+             {
+               FStar_TypeChecker_Common.guard_f = f2;
+               FStar_TypeChecker_Common.deferred_to_tac =
+                 (g.FStar_TypeChecker_Common.deferred_to_tac);
+               FStar_TypeChecker_Common.deferred =
+                 (g.FStar_TypeChecker_Common.deferred);
+               FStar_TypeChecker_Common.univ_ineqs =
+                 (g.FStar_TypeChecker_Common.univ_ineqs);
+               FStar_TypeChecker_Common.implicits =
+                 (g.FStar_TypeChecker_Common.implicits)
+             })))
 let rec (solve : FStar_TypeChecker_Env.env -> worklist -> solution) =
   fun env ->
     fun probs ->
@@ -7429,92 +7476,176 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                  let uu___2 =
                    FStar_TypeChecker_PatternUtils.pat_as_exp true true env1 p in
                  (match uu___2 with
-                  | (xs, pat_term, uu___3, uu___4) ->
-                      let uu___5 =
+                  | (xs, pat_term, g_pat_as_exp, uu___3) ->
+                      let uu___4 =
                         FStar_Compiler_List.fold_left
-                          (fun uu___6 ->
+                          (fun uu___5 ->
                              fun x ->
-                               match uu___6 with
+                               match uu___5 with
                                | (subst, wl3) ->
                                    let t_x =
                                      FStar_Syntax_Subst.subst subst
                                        x.FStar_Syntax_Syntax.sort in
-                                   let uu___7 = copy_uvar uv [] t_x wl3 in
-                                   (match uu___7 with
-                                    | (uu___8, u, wl4) ->
+                                   let uu___6 = copy_uvar uv [] t_x wl3 in
+                                   (match uu___6 with
+                                    | (uu___7, u, wl4) ->
                                         let subst1 =
                                           (FStar_Syntax_Syntax.NT (x, u)) ::
                                           subst in
                                         (subst1, wl4))) ([], wl2) xs in
-                      (match uu___5 with
+                      (match uu___4 with
                        | (subst, wl3) ->
                            let pat_term1 =
                              FStar_Syntax_Subst.subst subst pat_term in
-                           let uu___6 =
-                             new_problem wl3 env1 scrutinee
-                               FStar_TypeChecker_Common.EQ pat_term1
-                               FStar_Pervasives_Native.None
-                               scrutinee.FStar_Syntax_Syntax.pos
-                               "match heuristic" in
-                           (match uu___6 with
-                            | (prob, wl4) ->
-                                let wl' =
-                                  {
-                                    attempting =
-                                      [FStar_TypeChecker_Common.TProb prob];
-                                    wl_deferred = [];
-                                    wl_deferred_to_tac =
-                                      (wl4.wl_deferred_to_tac);
-                                    ctr = (wl4.ctr);
-                                    defer_ok = NoDefer;
-                                    smt_ok = false;
-                                    umax_heuristic_ok =
-                                      (wl4.umax_heuristic_ok);
-                                    tcenv = (wl4.tcenv);
-                                    wl_implicits = [];
-                                    repr_subcomp_allowed =
-                                      (wl4.repr_subcomp_allowed)
-                                  } in
-                                let tx =
-                                  FStar_Syntax_Unionfind.new_transaction () in
-                                let uu___7 = solve env1 wl' in
-                                (match uu___7 with
-                                 | Success (uu___8, defer_to_tac, imps) ->
-                                     let wl'1 =
-                                       {
-                                         attempting = [orig];
-                                         wl_deferred = (wl'.wl_deferred);
-                                         wl_deferred_to_tac =
-                                           (wl'.wl_deferred_to_tac);
-                                         ctr = (wl'.ctr);
-                                         defer_ok = (wl'.defer_ok);
-                                         smt_ok = (wl'.smt_ok);
-                                         umax_heuristic_ok =
-                                           (wl'.umax_heuristic_ok);
-                                         tcenv = (wl'.tcenv);
-                                         wl_implicits = (wl'.wl_implicits);
-                                         repr_subcomp_allowed =
-                                           (wl'.repr_subcomp_allowed)
-                                       } in
-                                     let uu___9 = solve env1 wl'1 in
-                                     (match uu___9 with
-                                      | Success
-                                          (uu___10, defer_to_tac', imps') ->
-                                          (FStar_Syntax_Unionfind.commit tx;
-                                           (let uu___12 =
-                                              extend_wl wl4 []
-                                                (FStar_Compiler_List.op_At
-                                                   defer_to_tac defer_to_tac')
-                                                (FStar_Compiler_List.op_At
-                                                   imps imps') in
-                                            FStar_Pervasives_Native.Some
-                                              uu___12))
-                                      | Failed uu___10 ->
-                                          (FStar_Syntax_Unionfind.rollback tx;
-                                           FStar_Pervasives_Native.None))
-                                 | uu___8 ->
-                                     (FStar_Syntax_Unionfind.rollback tx;
-                                      FStar_Pervasives_Native.None))))) in
+                           let uu___5 =
+                             let must_tot = false in
+                             let scrutinee_t =
+                               let uu___6 =
+                                 let uu___7 =
+                                   let uu___8 =
+                                     env1.FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term
+                                       env1 scrutinee must_tot in
+                                   FStar_Compiler_Effect.op_Bar_Greater
+                                     uu___8 FStar_Pervasives_Native.fst in
+                                 FStar_Compiler_Effect.op_Bar_Greater uu___7
+                                   (FStar_TypeChecker_Normalize.normalize_refinement
+                                      FStar_TypeChecker_Normalize.whnf_steps
+                                      env1) in
+                               FStar_Compiler_Effect.op_Bar_Greater uu___6
+                                 FStar_Syntax_Util.unrefine in
+                             (let uu___7 =
+                                FStar_Compiler_Effect.op_Less_Bar
+                                  (FStar_TypeChecker_Env.debug env1)
+                                  (FStar_Options.Other "Rel") in
+                              if uu___7
+                              then
+                                let uu___8 =
+                                  FStar_Syntax_Print.term_to_string pat_term1 in
+                                FStar_Compiler_Util.print1
+                                  "Match heuristic, typechecking the pattern term: %s {\n\n"
+                                  uu___8
+                              else ());
+                             (let uu___7 =
+                                let uu___8 =
+                                  FStar_TypeChecker_Env.set_expected_typ env1
+                                    scrutinee_t in
+                                env1.FStar_TypeChecker_Env.typeof_tot_or_gtot_term
+                                  uu___8 pat_term1 must_tot in
+                              match uu___7 with
+                              | (pat_term2, pat_term_t, g_pat_term) ->
+                                  ((let uu___9 =
+                                      FStar_Compiler_Effect.op_Less_Bar
+                                        (FStar_TypeChecker_Env.debug env1)
+                                        (FStar_Options.Other "Rel") in
+                                    if uu___9
+                                    then
+                                      let uu___10 =
+                                        FStar_Syntax_Print.term_to_string
+                                          pat_term2 in
+                                      let uu___11 =
+                                        FStar_Syntax_Print.term_to_string
+                                          pat_term_t in
+                                      FStar_Compiler_Util.print2
+                                        "} Match heuristic, typechecked pattern term to %s and type %s\n"
+                                        uu___10 uu___11
+                                    else ());
+                                   (pat_term2, g_pat_term))) in
+                           (match uu___5 with
+                            | (pat_term2, g_pat_term) ->
+                                let uu___6 =
+                                  let uu___7 =
+                                    FStar_Compiler_Effect.op_Bar_Greater
+                                      g_pat_term (simplify_guard env1) in
+                                  FStar_Compiler_Effect.op_Bar_Greater uu___7
+                                    FStar_TypeChecker_Env.is_trivial_guard_formula in
+                                if uu___6
+                                then
+                                  let uu___7 =
+                                    new_problem wl3 env1 scrutinee
+                                      FStar_TypeChecker_Common.EQ pat_term2
+                                      FStar_Pervasives_Native.None
+                                      scrutinee.FStar_Syntax_Syntax.pos
+                                      "match heuristic" in
+                                  (match uu___7 with
+                                   | (prob, wl4) ->
+                                       let wl' =
+                                         extend_wl
+                                           {
+                                             attempting =
+                                               [FStar_TypeChecker_Common.TProb
+                                                  prob];
+                                             wl_deferred = [];
+                                             wl_deferred_to_tac =
+                                               (wl4.wl_deferred_to_tac);
+                                             ctr = (wl4.ctr);
+                                             defer_ok = NoDefer;
+                                             smt_ok = false;
+                                             umax_heuristic_ok =
+                                               (wl4.umax_heuristic_ok);
+                                             tcenv = (wl4.tcenv);
+                                             wl_implicits = [];
+                                             repr_subcomp_allowed =
+                                               (wl4.repr_subcomp_allowed)
+                                           }
+                                           g_pat_term.FStar_TypeChecker_Common.deferred
+                                           g_pat_term.FStar_TypeChecker_Common.deferred_to_tac
+                                           [] in
+                                       let tx =
+                                         FStar_Syntax_Unionfind.new_transaction
+                                           () in
+                                       let uu___8 = solve env1 wl' in
+                                       (match uu___8 with
+                                        | Success
+                                            (uu___9, defer_to_tac, imps) ->
+                                            let wl'1 =
+                                              {
+                                                attempting = [orig];
+                                                wl_deferred =
+                                                  (wl'.wl_deferred);
+                                                wl_deferred_to_tac =
+                                                  (wl'.wl_deferred_to_tac);
+                                                ctr = (wl'.ctr);
+                                                defer_ok = (wl'.defer_ok);
+                                                smt_ok = (wl'.smt_ok);
+                                                umax_heuristic_ok =
+                                                  (wl'.umax_heuristic_ok);
+                                                tcenv = (wl'.tcenv);
+                                                wl_implicits =
+                                                  (wl'.wl_implicits);
+                                                repr_subcomp_allowed =
+                                                  (wl'.repr_subcomp_allowed)
+                                              } in
+                                            let uu___10 = solve env1 wl'1 in
+                                            (match uu___10 with
+                                             | Success
+                                                 (uu___11, defer_to_tac',
+                                                  imps')
+                                                 ->
+                                                 (FStar_Syntax_Unionfind.commit
+                                                    tx;
+                                                  (let uu___13 =
+                                                     extend_wl wl4 []
+                                                       (FStar_Compiler_List.op_At
+                                                          defer_to_tac
+                                                          defer_to_tac')
+                                                       (FStar_Compiler_List.op_At
+                                                          imps
+                                                          (FStar_Compiler_List.op_At
+                                                             imps'
+                                                             (FStar_Compiler_List.op_At
+                                                                g_pat_as_exp.FStar_TypeChecker_Common.implicits
+                                                                g_pat_term.FStar_TypeChecker_Common.implicits))) in
+                                                   FStar_Pervasives_Native.Some
+                                                     uu___13))
+                                             | Failed uu___11 ->
+                                                 (FStar_Syntax_Unionfind.rollback
+                                                    tx;
+                                                  FStar_Pervasives_Native.None))
+                                        | uu___9 ->
+                                            (FStar_Syntax_Unionfind.rollback
+                                               tx;
+                                             FStar_Pervasives_Native.None)))
+                                else FStar_Pervasives_Native.None))) in
            match t1t2_opt with
            | FStar_Pervasives_Native.None ->
                FStar_Pervasives.Inr FStar_Pervasives_Native.None
@@ -9440,31 +9571,39 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                       let uu___11 = (no_free_uvars t1) && (no_free_uvars t2) in
                       (if uu___11
                        then
-                         (if Prims.op_Negation wl.smt_ok
+                         let uu___12 =
+                           (Prims.op_Negation wl.smt_ok) ||
+                             (FStar_Options.ml_ish ()) in
+                         (if uu___12
                           then
-                            let uu___12 = equal t1 t2 in
-                            (if uu___12
+                            let uu___13 = equal t1 t2 in
+                            (if uu___13
                              then
-                               let uu___13 =
+                               let uu___14 =
                                  solve_prob orig FStar_Pervasives_Native.None
                                    [] wl in
-                               solve env uu___13
+                               solve env uu___14
                              else
                                rigid_rigid_delta env problem wl head1 head2
                                  t1 t2)
                           else solve_with_smt ())
                        else
-                         if Prims.op_Negation wl.smt_ok
-                         then
-                           rigid_rigid_delta env problem wl head1 head2 t1 t2
-                         else
-                           try_solve_then_or_else env wl
-                             (fun env1 ->
-                                fun wl_empty ->
-                                  rigid_rigid_delta env1 problem wl_empty
-                                    head1 head2 t1 t2)
-                             (fun env1 -> fun wl1 -> solve env1 wl1)
-                             (fun uu___14 -> fun uu___15 -> solve_with_smt ()))
+                         (let uu___13 =
+                            (Prims.op_Negation wl.smt_ok) ||
+                              (FStar_Options.ml_ish ()) in
+                          if uu___13
+                          then
+                            rigid_rigid_delta env problem wl head1 head2 t1
+                              t2
+                          else
+                            try_solve_then_or_else env wl
+                              (fun env1 ->
+                                 fun wl_empty ->
+                                   rigid_rigid_delta env1 problem wl_empty
+                                     head1 head2 t1 t2)
+                              (fun env1 -> fun wl1 -> solve env1 wl1)
+                              (fun uu___15 ->
+                                 fun uu___16 -> solve_with_smt ())))
                     else rigid_rigid_delta env problem wl head1 head2 t1 t2))
               | (FStar_Syntax_Syntax.Tm_uinst uu___7, uu___8) ->
                   let head1 =
@@ -9572,31 +9711,39 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                       let uu___11 = (no_free_uvars t1) && (no_free_uvars t2) in
                       (if uu___11
                        then
-                         (if Prims.op_Negation wl.smt_ok
+                         let uu___12 =
+                           (Prims.op_Negation wl.smt_ok) ||
+                             (FStar_Options.ml_ish ()) in
+                         (if uu___12
                           then
-                            let uu___12 = equal t1 t2 in
-                            (if uu___12
+                            let uu___13 = equal t1 t2 in
+                            (if uu___13
                              then
-                               let uu___13 =
+                               let uu___14 =
                                  solve_prob orig FStar_Pervasives_Native.None
                                    [] wl in
-                               solve env uu___13
+                               solve env uu___14
                              else
                                rigid_rigid_delta env problem wl head1 head2
                                  t1 t2)
                           else solve_with_smt ())
                        else
-                         if Prims.op_Negation wl.smt_ok
-                         then
-                           rigid_rigid_delta env problem wl head1 head2 t1 t2
-                         else
-                           try_solve_then_or_else env wl
-                             (fun env1 ->
-                                fun wl_empty ->
-                                  rigid_rigid_delta env1 problem wl_empty
-                                    head1 head2 t1 t2)
-                             (fun env1 -> fun wl1 -> solve env1 wl1)
-                             (fun uu___14 -> fun uu___15 -> solve_with_smt ()))
+                         (let uu___13 =
+                            (Prims.op_Negation wl.smt_ok) ||
+                              (FStar_Options.ml_ish ()) in
+                          if uu___13
+                          then
+                            rigid_rigid_delta env problem wl head1 head2 t1
+                              t2
+                          else
+                            try_solve_then_or_else env wl
+                              (fun env1 ->
+                                 fun wl_empty ->
+                                   rigid_rigid_delta env1 problem wl_empty
+                                     head1 head2 t1 t2)
+                              (fun env1 -> fun wl1 -> solve env1 wl1)
+                              (fun uu___15 ->
+                                 fun uu___16 -> solve_with_smt ())))
                     else rigid_rigid_delta env problem wl head1 head2 t1 t2))
               | (FStar_Syntax_Syntax.Tm_name uu___7, uu___8) ->
                   let head1 =
@@ -9704,31 +9851,39 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                       let uu___11 = (no_free_uvars t1) && (no_free_uvars t2) in
                       (if uu___11
                        then
-                         (if Prims.op_Negation wl.smt_ok
+                         let uu___12 =
+                           (Prims.op_Negation wl.smt_ok) ||
+                             (FStar_Options.ml_ish ()) in
+                         (if uu___12
                           then
-                            let uu___12 = equal t1 t2 in
-                            (if uu___12
+                            let uu___13 = equal t1 t2 in
+                            (if uu___13
                              then
-                               let uu___13 =
+                               let uu___14 =
                                  solve_prob orig FStar_Pervasives_Native.None
                                    [] wl in
-                               solve env uu___13
+                               solve env uu___14
                              else
                                rigid_rigid_delta env problem wl head1 head2
                                  t1 t2)
                           else solve_with_smt ())
                        else
-                         if Prims.op_Negation wl.smt_ok
-                         then
-                           rigid_rigid_delta env problem wl head1 head2 t1 t2
-                         else
-                           try_solve_then_or_else env wl
-                             (fun env1 ->
-                                fun wl_empty ->
-                                  rigid_rigid_delta env1 problem wl_empty
-                                    head1 head2 t1 t2)
-                             (fun env1 -> fun wl1 -> solve env1 wl1)
-                             (fun uu___14 -> fun uu___15 -> solve_with_smt ()))
+                         (let uu___13 =
+                            (Prims.op_Negation wl.smt_ok) ||
+                              (FStar_Options.ml_ish ()) in
+                          if uu___13
+                          then
+                            rigid_rigid_delta env problem wl head1 head2 t1
+                              t2
+                          else
+                            try_solve_then_or_else env wl
+                              (fun env1 ->
+                                 fun wl_empty ->
+                                   rigid_rigid_delta env1 problem wl_empty
+                                     head1 head2 t1 t2)
+                              (fun env1 -> fun wl1 -> solve env1 wl1)
+                              (fun uu___15 ->
+                                 fun uu___16 -> solve_with_smt ())))
                     else rigid_rigid_delta env problem wl head1 head2 t1 t2))
               | (FStar_Syntax_Syntax.Tm_constant uu___7, uu___8) ->
                   let head1 =
@@ -9836,31 +9991,39 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                       let uu___11 = (no_free_uvars t1) && (no_free_uvars t2) in
                       (if uu___11
                        then
-                         (if Prims.op_Negation wl.smt_ok
+                         let uu___12 =
+                           (Prims.op_Negation wl.smt_ok) ||
+                             (FStar_Options.ml_ish ()) in
+                         (if uu___12
                           then
-                            let uu___12 = equal t1 t2 in
-                            (if uu___12
+                            let uu___13 = equal t1 t2 in
+                            (if uu___13
                              then
-                               let uu___13 =
+                               let uu___14 =
                                  solve_prob orig FStar_Pervasives_Native.None
                                    [] wl in
-                               solve env uu___13
+                               solve env uu___14
                              else
                                rigid_rigid_delta env problem wl head1 head2
                                  t1 t2)
                           else solve_with_smt ())
                        else
-                         if Prims.op_Negation wl.smt_ok
-                         then
-                           rigid_rigid_delta env problem wl head1 head2 t1 t2
-                         else
-                           try_solve_then_or_else env wl
-                             (fun env1 ->
-                                fun wl_empty ->
-                                  rigid_rigid_delta env1 problem wl_empty
-                                    head1 head2 t1 t2)
-                             (fun env1 -> fun wl1 -> solve env1 wl1)
-                             (fun uu___14 -> fun uu___15 -> solve_with_smt ()))
+                         (let uu___13 =
+                            (Prims.op_Negation wl.smt_ok) ||
+                              (FStar_Options.ml_ish ()) in
+                          if uu___13
+                          then
+                            rigid_rigid_delta env problem wl head1 head2 t1
+                              t2
+                          else
+                            try_solve_then_or_else env wl
+                              (fun env1 ->
+                                 fun wl_empty ->
+                                   rigid_rigid_delta env1 problem wl_empty
+                                     head1 head2 t1 t2)
+                              (fun env1 -> fun wl1 -> solve env1 wl1)
+                              (fun uu___15 ->
+                                 fun uu___16 -> solve_with_smt ())))
                     else rigid_rigid_delta env problem wl head1 head2 t1 t2))
               | (FStar_Syntax_Syntax.Tm_fvar uu___7, uu___8) ->
                   let head1 =
@@ -9968,31 +10131,39 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                       let uu___11 = (no_free_uvars t1) && (no_free_uvars t2) in
                       (if uu___11
                        then
-                         (if Prims.op_Negation wl.smt_ok
+                         let uu___12 =
+                           (Prims.op_Negation wl.smt_ok) ||
+                             (FStar_Options.ml_ish ()) in
+                         (if uu___12
                           then
-                            let uu___12 = equal t1 t2 in
-                            (if uu___12
+                            let uu___13 = equal t1 t2 in
+                            (if uu___13
                              then
-                               let uu___13 =
+                               let uu___14 =
                                  solve_prob orig FStar_Pervasives_Native.None
                                    [] wl in
-                               solve env uu___13
+                               solve env uu___14
                              else
                                rigid_rigid_delta env problem wl head1 head2
                                  t1 t2)
                           else solve_with_smt ())
                        else
-                         if Prims.op_Negation wl.smt_ok
-                         then
-                           rigid_rigid_delta env problem wl head1 head2 t1 t2
-                         else
-                           try_solve_then_or_else env wl
-                             (fun env1 ->
-                                fun wl_empty ->
-                                  rigid_rigid_delta env1 problem wl_empty
-                                    head1 head2 t1 t2)
-                             (fun env1 -> fun wl1 -> solve env1 wl1)
-                             (fun uu___14 -> fun uu___15 -> solve_with_smt ()))
+                         (let uu___13 =
+                            (Prims.op_Negation wl.smt_ok) ||
+                              (FStar_Options.ml_ish ()) in
+                          if uu___13
+                          then
+                            rigid_rigid_delta env problem wl head1 head2 t1
+                              t2
+                          else
+                            try_solve_then_or_else env wl
+                              (fun env1 ->
+                                 fun wl_empty ->
+                                   rigid_rigid_delta env1 problem wl_empty
+                                     head1 head2 t1 t2)
+                              (fun env1 -> fun wl1 -> solve env1 wl1)
+                              (fun uu___15 ->
+                                 fun uu___16 -> solve_with_smt ())))
                     else rigid_rigid_delta env problem wl head1 head2 t1 t2))
               | (FStar_Syntax_Syntax.Tm_app uu___7, uu___8) ->
                   let head1 =
@@ -10100,31 +10271,39 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                       let uu___11 = (no_free_uvars t1) && (no_free_uvars t2) in
                       (if uu___11
                        then
-                         (if Prims.op_Negation wl.smt_ok
+                         let uu___12 =
+                           (Prims.op_Negation wl.smt_ok) ||
+                             (FStar_Options.ml_ish ()) in
+                         (if uu___12
                           then
-                            let uu___12 = equal t1 t2 in
-                            (if uu___12
+                            let uu___13 = equal t1 t2 in
+                            (if uu___13
                              then
-                               let uu___13 =
+                               let uu___14 =
                                  solve_prob orig FStar_Pervasives_Native.None
                                    [] wl in
-                               solve env uu___13
+                               solve env uu___14
                              else
                                rigid_rigid_delta env problem wl head1 head2
                                  t1 t2)
                           else solve_with_smt ())
                        else
-                         if Prims.op_Negation wl.smt_ok
-                         then
-                           rigid_rigid_delta env problem wl head1 head2 t1 t2
-                         else
-                           try_solve_then_or_else env wl
-                             (fun env1 ->
-                                fun wl_empty ->
-                                  rigid_rigid_delta env1 problem wl_empty
-                                    head1 head2 t1 t2)
-                             (fun env1 -> fun wl1 -> solve env1 wl1)
-                             (fun uu___14 -> fun uu___15 -> solve_with_smt ()))
+                         (let uu___13 =
+                            (Prims.op_Negation wl.smt_ok) ||
+                              (FStar_Options.ml_ish ()) in
+                          if uu___13
+                          then
+                            rigid_rigid_delta env problem wl head1 head2 t1
+                              t2
+                          else
+                            try_solve_then_or_else env wl
+                              (fun env1 ->
+                                 fun wl_empty ->
+                                   rigid_rigid_delta env1 problem wl_empty
+                                     head1 head2 t1 t2)
+                              (fun env1 -> fun wl1 -> solve env1 wl1)
+                              (fun uu___15 ->
+                                 fun uu___16 -> solve_with_smt ())))
                     else rigid_rigid_delta env problem wl head1 head2 t1 t2))
               | (uu___7, FStar_Syntax_Syntax.Tm_match uu___8) ->
                   let head1 =
@@ -10232,31 +10411,39 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                       let uu___11 = (no_free_uvars t1) && (no_free_uvars t2) in
                       (if uu___11
                        then
-                         (if Prims.op_Negation wl.smt_ok
+                         let uu___12 =
+                           (Prims.op_Negation wl.smt_ok) ||
+                             (FStar_Options.ml_ish ()) in
+                         (if uu___12
                           then
-                            let uu___12 = equal t1 t2 in
-                            (if uu___12
+                            let uu___13 = equal t1 t2 in
+                            (if uu___13
                              then
-                               let uu___13 =
+                               let uu___14 =
                                  solve_prob orig FStar_Pervasives_Native.None
                                    [] wl in
-                               solve env uu___13
+                               solve env uu___14
                              else
                                rigid_rigid_delta env problem wl head1 head2
                                  t1 t2)
                           else solve_with_smt ())
                        else
-                         if Prims.op_Negation wl.smt_ok
-                         then
-                           rigid_rigid_delta env problem wl head1 head2 t1 t2
-                         else
-                           try_solve_then_or_else env wl
-                             (fun env1 ->
-                                fun wl_empty ->
-                                  rigid_rigid_delta env1 problem wl_empty
-                                    head1 head2 t1 t2)
-                             (fun env1 -> fun wl1 -> solve env1 wl1)
-                             (fun uu___14 -> fun uu___15 -> solve_with_smt ()))
+                         (let uu___13 =
+                            (Prims.op_Negation wl.smt_ok) ||
+                              (FStar_Options.ml_ish ()) in
+                          if uu___13
+                          then
+                            rigid_rigid_delta env problem wl head1 head2 t1
+                              t2
+                          else
+                            try_solve_then_or_else env wl
+                              (fun env1 ->
+                                 fun wl_empty ->
+                                   rigid_rigid_delta env1 problem wl_empty
+                                     head1 head2 t1 t2)
+                              (fun env1 -> fun wl1 -> solve env1 wl1)
+                              (fun uu___15 ->
+                                 fun uu___16 -> solve_with_smt ())))
                     else rigid_rigid_delta env problem wl head1 head2 t1 t2))
               | (uu___7, FStar_Syntax_Syntax.Tm_uinst uu___8) ->
                   let head1 =
@@ -10364,31 +10551,39 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                       let uu___11 = (no_free_uvars t1) && (no_free_uvars t2) in
                       (if uu___11
                        then
-                         (if Prims.op_Negation wl.smt_ok
+                         let uu___12 =
+                           (Prims.op_Negation wl.smt_ok) ||
+                             (FStar_Options.ml_ish ()) in
+                         (if uu___12
                           then
-                            let uu___12 = equal t1 t2 in
-                            (if uu___12
+                            let uu___13 = equal t1 t2 in
+                            (if uu___13
                              then
-                               let uu___13 =
+                               let uu___14 =
                                  solve_prob orig FStar_Pervasives_Native.None
                                    [] wl in
-                               solve env uu___13
+                               solve env uu___14
                              else
                                rigid_rigid_delta env problem wl head1 head2
                                  t1 t2)
                           else solve_with_smt ())
                        else
-                         if Prims.op_Negation wl.smt_ok
-                         then
-                           rigid_rigid_delta env problem wl head1 head2 t1 t2
-                         else
-                           try_solve_then_or_else env wl
-                             (fun env1 ->
-                                fun wl_empty ->
-                                  rigid_rigid_delta env1 problem wl_empty
-                                    head1 head2 t1 t2)
-                             (fun env1 -> fun wl1 -> solve env1 wl1)
-                             (fun uu___14 -> fun uu___15 -> solve_with_smt ()))
+                         (let uu___13 =
+                            (Prims.op_Negation wl.smt_ok) ||
+                              (FStar_Options.ml_ish ()) in
+                          if uu___13
+                          then
+                            rigid_rigid_delta env problem wl head1 head2 t1
+                              t2
+                          else
+                            try_solve_then_or_else env wl
+                              (fun env1 ->
+                                 fun wl_empty ->
+                                   rigid_rigid_delta env1 problem wl_empty
+                                     head1 head2 t1 t2)
+                              (fun env1 -> fun wl1 -> solve env1 wl1)
+                              (fun uu___15 ->
+                                 fun uu___16 -> solve_with_smt ())))
                     else rigid_rigid_delta env problem wl head1 head2 t1 t2))
               | (uu___7, FStar_Syntax_Syntax.Tm_name uu___8) ->
                   let head1 =
@@ -10496,31 +10691,39 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                       let uu___11 = (no_free_uvars t1) && (no_free_uvars t2) in
                       (if uu___11
                        then
-                         (if Prims.op_Negation wl.smt_ok
+                         let uu___12 =
+                           (Prims.op_Negation wl.smt_ok) ||
+                             (FStar_Options.ml_ish ()) in
+                         (if uu___12
                           then
-                            let uu___12 = equal t1 t2 in
-                            (if uu___12
+                            let uu___13 = equal t1 t2 in
+                            (if uu___13
                              then
-                               let uu___13 =
+                               let uu___14 =
                                  solve_prob orig FStar_Pervasives_Native.None
                                    [] wl in
-                               solve env uu___13
+                               solve env uu___14
                              else
                                rigid_rigid_delta env problem wl head1 head2
                                  t1 t2)
                           else solve_with_smt ())
                        else
-                         if Prims.op_Negation wl.smt_ok
-                         then
-                           rigid_rigid_delta env problem wl head1 head2 t1 t2
-                         else
-                           try_solve_then_or_else env wl
-                             (fun env1 ->
-                                fun wl_empty ->
-                                  rigid_rigid_delta env1 problem wl_empty
-                                    head1 head2 t1 t2)
-                             (fun env1 -> fun wl1 -> solve env1 wl1)
-                             (fun uu___14 -> fun uu___15 -> solve_with_smt ()))
+                         (let uu___13 =
+                            (Prims.op_Negation wl.smt_ok) ||
+                              (FStar_Options.ml_ish ()) in
+                          if uu___13
+                          then
+                            rigid_rigid_delta env problem wl head1 head2 t1
+                              t2
+                          else
+                            try_solve_then_or_else env wl
+                              (fun env1 ->
+                                 fun wl_empty ->
+                                   rigid_rigid_delta env1 problem wl_empty
+                                     head1 head2 t1 t2)
+                              (fun env1 -> fun wl1 -> solve env1 wl1)
+                              (fun uu___15 ->
+                                 fun uu___16 -> solve_with_smt ())))
                     else rigid_rigid_delta env problem wl head1 head2 t1 t2))
               | (uu___7, FStar_Syntax_Syntax.Tm_constant uu___8) ->
                   let head1 =
@@ -10628,31 +10831,39 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                       let uu___11 = (no_free_uvars t1) && (no_free_uvars t2) in
                       (if uu___11
                        then
-                         (if Prims.op_Negation wl.smt_ok
+                         let uu___12 =
+                           (Prims.op_Negation wl.smt_ok) ||
+                             (FStar_Options.ml_ish ()) in
+                         (if uu___12
                           then
-                            let uu___12 = equal t1 t2 in
-                            (if uu___12
+                            let uu___13 = equal t1 t2 in
+                            (if uu___13
                              then
-                               let uu___13 =
+                               let uu___14 =
                                  solve_prob orig FStar_Pervasives_Native.None
                                    [] wl in
-                               solve env uu___13
+                               solve env uu___14
                              else
                                rigid_rigid_delta env problem wl head1 head2
                                  t1 t2)
                           else solve_with_smt ())
                        else
-                         if Prims.op_Negation wl.smt_ok
-                         then
-                           rigid_rigid_delta env problem wl head1 head2 t1 t2
-                         else
-                           try_solve_then_or_else env wl
-                             (fun env1 ->
-                                fun wl_empty ->
-                                  rigid_rigid_delta env1 problem wl_empty
-                                    head1 head2 t1 t2)
-                             (fun env1 -> fun wl1 -> solve env1 wl1)
-                             (fun uu___14 -> fun uu___15 -> solve_with_smt ()))
+                         (let uu___13 =
+                            (Prims.op_Negation wl.smt_ok) ||
+                              (FStar_Options.ml_ish ()) in
+                          if uu___13
+                          then
+                            rigid_rigid_delta env problem wl head1 head2 t1
+                              t2
+                          else
+                            try_solve_then_or_else env wl
+                              (fun env1 ->
+                                 fun wl_empty ->
+                                   rigid_rigid_delta env1 problem wl_empty
+                                     head1 head2 t1 t2)
+                              (fun env1 -> fun wl1 -> solve env1 wl1)
+                              (fun uu___15 ->
+                                 fun uu___16 -> solve_with_smt ())))
                     else rigid_rigid_delta env problem wl head1 head2 t1 t2))
               | (uu___7, FStar_Syntax_Syntax.Tm_fvar uu___8) ->
                   let head1 =
@@ -10760,31 +10971,39 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                       let uu___11 = (no_free_uvars t1) && (no_free_uvars t2) in
                       (if uu___11
                        then
-                         (if Prims.op_Negation wl.smt_ok
+                         let uu___12 =
+                           (Prims.op_Negation wl.smt_ok) ||
+                             (FStar_Options.ml_ish ()) in
+                         (if uu___12
                           then
-                            let uu___12 = equal t1 t2 in
-                            (if uu___12
+                            let uu___13 = equal t1 t2 in
+                            (if uu___13
                              then
-                               let uu___13 =
+                               let uu___14 =
                                  solve_prob orig FStar_Pervasives_Native.None
                                    [] wl in
-                               solve env uu___13
+                               solve env uu___14
                              else
                                rigid_rigid_delta env problem wl head1 head2
                                  t1 t2)
                           else solve_with_smt ())
                        else
-                         if Prims.op_Negation wl.smt_ok
-                         then
-                           rigid_rigid_delta env problem wl head1 head2 t1 t2
-                         else
-                           try_solve_then_or_else env wl
-                             (fun env1 ->
-                                fun wl_empty ->
-                                  rigid_rigid_delta env1 problem wl_empty
-                                    head1 head2 t1 t2)
-                             (fun env1 -> fun wl1 -> solve env1 wl1)
-                             (fun uu___14 -> fun uu___15 -> solve_with_smt ()))
+                         (let uu___13 =
+                            (Prims.op_Negation wl.smt_ok) ||
+                              (FStar_Options.ml_ish ()) in
+                          if uu___13
+                          then
+                            rigid_rigid_delta env problem wl head1 head2 t1
+                              t2
+                          else
+                            try_solve_then_or_else env wl
+                              (fun env1 ->
+                                 fun wl_empty ->
+                                   rigid_rigid_delta env1 problem wl_empty
+                                     head1 head2 t1 t2)
+                              (fun env1 -> fun wl1 -> solve env1 wl1)
+                              (fun uu___15 ->
+                                 fun uu___16 -> solve_with_smt ())))
                     else rigid_rigid_delta env problem wl head1 head2 t1 t2))
               | (uu___7, FStar_Syntax_Syntax.Tm_app uu___8) ->
                   let head1 =
@@ -10892,31 +11111,39 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                       let uu___11 = (no_free_uvars t1) && (no_free_uvars t2) in
                       (if uu___11
                        then
-                         (if Prims.op_Negation wl.smt_ok
+                         let uu___12 =
+                           (Prims.op_Negation wl.smt_ok) ||
+                             (FStar_Options.ml_ish ()) in
+                         (if uu___12
                           then
-                            let uu___12 = equal t1 t2 in
-                            (if uu___12
+                            let uu___13 = equal t1 t2 in
+                            (if uu___13
                              then
-                               let uu___13 =
+                               let uu___14 =
                                  solve_prob orig FStar_Pervasives_Native.None
                                    [] wl in
-                               solve env uu___13
+                               solve env uu___14
                              else
                                rigid_rigid_delta env problem wl head1 head2
                                  t1 t2)
                           else solve_with_smt ())
                        else
-                         if Prims.op_Negation wl.smt_ok
-                         then
-                           rigid_rigid_delta env problem wl head1 head2 t1 t2
-                         else
-                           try_solve_then_or_else env wl
-                             (fun env1 ->
-                                fun wl_empty ->
-                                  rigid_rigid_delta env1 problem wl_empty
-                                    head1 head2 t1 t2)
-                             (fun env1 -> fun wl1 -> solve env1 wl1)
-                             (fun uu___14 -> fun uu___15 -> solve_with_smt ()))
+                         (let uu___13 =
+                            (Prims.op_Negation wl.smt_ok) ||
+                              (FStar_Options.ml_ish ()) in
+                          if uu___13
+                          then
+                            rigid_rigid_delta env problem wl head1 head2 t1
+                              t2
+                          else
+                            try_solve_then_or_else env wl
+                              (fun env1 ->
+                                 fun wl_empty ->
+                                   rigid_rigid_delta env1 problem wl_empty
+                                     head1 head2 t1 t2)
+                              (fun env1 -> fun wl1 -> solve env1 wl1)
+                              (fun uu___15 ->
+                                 fun uu___16 -> solve_with_smt ())))
                     else rigid_rigid_delta env problem wl head1 head2 t1 t2))
               | (FStar_Syntax_Syntax.Tm_let uu___7,
                  FStar_Syntax_Syntax.Tm_let uu___8) ->
@@ -12549,61 +12776,6 @@ let (solve_and_commit :
                      else ());
                     (let result = err (d, s) in
                      FStar_Syntax_Unionfind.rollback tx; result)))))
-let (simplify_guard :
-  FStar_TypeChecker_Env.env ->
-    FStar_TypeChecker_Common.guard_t -> FStar_TypeChecker_Common.guard_t)
-  =
-  fun env ->
-    fun g ->
-      match g.FStar_TypeChecker_Common.guard_f with
-      | FStar_TypeChecker_Common.Trivial -> g
-      | FStar_TypeChecker_Common.NonTrivial f ->
-          ((let uu___1 =
-              FStar_Compiler_Effect.op_Less_Bar
-                (FStar_TypeChecker_Env.debug env)
-                (FStar_Options.Other "Simplification") in
-            if uu___1
-            then
-              let uu___2 = FStar_Syntax_Print.term_to_string f in
-              FStar_Compiler_Util.print1 "Simplifying guard %s\n" uu___2
-            else ());
-           (let f1 =
-              norm_with_steps "FStar.TypeChecker.Rel.norm_with_steps.6"
-                [FStar_TypeChecker_Env.Beta;
-                FStar_TypeChecker_Env.Eager_unfolding;
-                FStar_TypeChecker_Env.Simplify;
-                FStar_TypeChecker_Env.Primops;
-                FStar_TypeChecker_Env.NoFullNorm] env f in
-            (let uu___2 =
-               FStar_Compiler_Effect.op_Less_Bar
-                 (FStar_TypeChecker_Env.debug env)
-                 (FStar_Options.Other "Simplification") in
-             if uu___2
-             then
-               let uu___3 = FStar_Syntax_Print.term_to_string f1 in
-               FStar_Compiler_Util.print1 "Simplified guard to %s\n" uu___3
-             else ());
-            (let f2 =
-               let uu___2 =
-                 let uu___3 = FStar_Syntax_Util.unmeta f1 in
-                 uu___3.FStar_Syntax_Syntax.n in
-               match uu___2 with
-               | FStar_Syntax_Syntax.Tm_fvar fv when
-                   FStar_Syntax_Syntax.fv_eq_lid fv
-                     FStar_Parser_Const.true_lid
-                   -> FStar_TypeChecker_Common.Trivial
-               | uu___3 -> FStar_TypeChecker_Common.NonTrivial f1 in
-             {
-               FStar_TypeChecker_Common.guard_f = f2;
-               FStar_TypeChecker_Common.deferred_to_tac =
-                 (g.FStar_TypeChecker_Common.deferred_to_tac);
-               FStar_TypeChecker_Common.deferred =
-                 (g.FStar_TypeChecker_Common.deferred);
-               FStar_TypeChecker_Common.univ_ineqs =
-                 (g.FStar_TypeChecker_Common.univ_ineqs);
-               FStar_TypeChecker_Common.implicits =
-                 (g.FStar_TypeChecker_Common.implicits)
-             })))
 let (with_guard :
   FStar_TypeChecker_Env.env ->
     FStar_TypeChecker_Common.prob ->

@@ -905,6 +905,12 @@ let collect_one
                 collect_term t)
                 patterms;
             collect_term t
+        | LetOperator (lets, body) ->
+            List.iter (fun (ident, pat, def) ->
+                collect_pattern pat;
+                collect_term def
+            ) lets;
+            collect_term body
         | LetOpen (lid, t) ->
             add_to_parsing_data (P_open (true, lid));
             collect_term t
@@ -924,7 +930,7 @@ let collect_one
                collect_term ret);
             collect_term t2;
             collect_term t3
-        | Match (t, ret_opt, bs) ->
+        | Match (t, _, ret_opt, bs) ->
             collect_term t;
             (match ret_opt with
              | None -> ()
