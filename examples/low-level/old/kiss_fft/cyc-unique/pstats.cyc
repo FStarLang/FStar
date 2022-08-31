@@ -21,7 +21,7 @@ static void tms_report()
     times(&tms_end);
     cputime = ( ((float)tms_end.tms_utime + tms_end.tms_stime + tms_end.tms_cutime + tms_end.tms_cstime ) -
                 ((float)tms_beg.tms_utime + tms_beg.tms_stime + tms_beg.tms_cutime + tms_beg.tms_cstime ) )
-      / sysconf(2); //_SC_CLK_TCK);
+      / sysconf(2);//_SC_CLK_TCK);
     fprintf(stderr,"\tcputime=%.3f\n" , cputime);
 }
 

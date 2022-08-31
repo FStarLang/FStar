@@ -55,7 +55,7 @@ let on_dom_transitivity_of_equality =
   //We want to be able to show that f restricted to nat
   //is equal to h
   assert (on int f == g); //A0: g is restricted
-  assert (on nat (on int f) == on nat g); //A1: congruence; adding `on nat` to both sides
+  assert (on nat (on int f) == on nat g);//A1: congruence; adding `on nat` to both sides
   assert (on nat h == h); //A2: h is restricted
   assert (on nat (on int f) == h); //using H1, A1, A2
   assert (F.feq (on nat f) h) //`f` is pointwise equal to h on nat, but not provably equal
