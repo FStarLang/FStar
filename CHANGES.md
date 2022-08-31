@@ -227,6 +227,14 @@ Guidelines for the changelog:
      provided (using UInt128).
 
 ## Syntax
+   * PR #2670 makes F*'s parser accept unparenthesised record
+     expressions on function application. `f {x = 1}` is now legal
+     F\*, while before one was forced to write `f ({x = 1})`.
+
+	 Note that in the context of a (possible) refinement, this is not
+     allowed since it is a parser conflict.
+
+
    * PR #2644 introduces monadic let operators in the surface
      syntax. One can now write:
 
