@@ -227,6 +227,16 @@ Guidelines for the changelog:
      provided (using UInt128).
 
 ## Syntax
+   * PR #2671 allows operators as field names in record expressions
+     and record type declaration. Example:
+
+	 ```fstar
+	 type foo = { ( ^ ): int  }
+	 let _: foo = { ( ^ ) = 3 }
+	 ```
+
+	 See `tests/micro-benchmarks/RecordFieldOperator.fst` for details.
+
    * PR #2644 introduces monadic let operators in the surface
      syntax. One can now write:
 
