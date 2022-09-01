@@ -459,20 +459,33 @@ match%sedlex lexbuf with
  | '`' -> BACKTICK
 
  | "match", Plus op_char ->
-   let s = L.lexeme lexbuf in
-   MATCH_OP (String.sub s 5 (String.length s - 5))
+    ensure_no_comment lexbuf (fun s ->
+        match BatString.lchop ~n:5 s with
+        | "" -> MATCH
+        | s  -> MATCH_OP s
+      )
 
  | "let", Plus op_char ->
-   let s = L.lexeme lexbuf in
-   LET_OP (String.sub s 3 (String.length s - 3))
+    ensure_no_comment lexbuf (fun s ->
+        match BatString.lchop ~n:3 s with
+        | "" -> LET false
+        | s  -> LET_OP s
+      )
 
  | "and", Plus op_char ->
-   let s = L.lexeme lexbuf in
-   AND_OP (String.sub s 3 (String.length s - 3))
+    ensure_no_comment lexbuf (fun s ->
+        match BatString.lchop ~n:3 s with
+        | "" -> AND
+        | s  -> AND_OP s
+      )
 
  | ";", Plus op_char ->
-   let s = L.lexeme lexbuf in
-   SEMICOLON_OP (Some (String.sub s 1 (String.length s - 1)))
+    ensure_no_comment lexbuf (fun s ->
+        match BatString.lchop ~n:1 s with
+        | "" -> SEMICOLON
+        | s  -> SEMICOLON_OP (Some s)
+      )
+
  | ";;" -> SEMICOLON_OP None
 
  | ident -> let id = L.lexeme lexbuf in
