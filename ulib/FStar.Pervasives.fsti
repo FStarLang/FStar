@@ -277,6 +277,28 @@ val delta_qualifier (s: list string) : Tot norm_step
    *)
 val unmeta : norm_step
 
+(**
+    This step removes ascriptions during normalization
+
+    An ascription is a type or computation type annotation on
+      an expression, written as (e <: t) or (e <: C)
+
+    normalize (e <: (t|C)) usually would normalize both the expression e
+      and the ascription
+
+    However, with unascribe step on, it will drop the ascription
+      and return the result of (normalize e),
+
+    Removing ascriptions may improve the performance,
+      as the normalization has less work to do
+
+    However, ascriptions help in re-typechecking of the terms,
+      and in some cases, are necessary for doing so
+
+    Use it with care
+
+   *)
+val unascribe : norm_step
 
 (** [norm s e] requests normalization of [e] with the reduction steps
     [s]. *)
