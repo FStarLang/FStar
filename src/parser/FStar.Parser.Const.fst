@@ -326,6 +326,7 @@ let steps_unfoldonly    = psconst "delta_only"
 let steps_unfoldfully   = psconst "delta_fully"
 let steps_unfoldattr    = psconst "delta_attr"
 let steps_unfoldqual    = psconst "delta_qualifier"
+let steps_unascribe     = psconst "unascribe"
 let steps_nbe           = psconst "nbe"
 let steps_unmeta        = psconst "unmeta"
 
