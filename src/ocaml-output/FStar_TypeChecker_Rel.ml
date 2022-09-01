@@ -3632,45 +3632,37 @@ let rec (really_solve_universe_eq :
                           uu___4 msg)) in
           match (u11, u21) with
           | (FStar_Syntax_Syntax.U_bvar uu___, uu___1) ->
-              ((let uu___3 = FStar_Compiler_Util.stack_dump () in
-                FStar_Compiler_Util.print_string uu___3);
-               (let uu___3 =
-                  let uu___4 = FStar_Syntax_Print.univ_to_string u11 in
-                  let uu___5 = FStar_Syntax_Print.univ_to_string u21 in
-                  FStar_Compiler_Util.format2
-                    "Impossible: found an de Bruijn universe variable or unknown universe: %s, %s"
-                    uu___4 uu___5 in
-                failwith uu___3))
+              let uu___2 =
+                let uu___3 = FStar_Syntax_Print.univ_to_string u11 in
+                let uu___4 = FStar_Syntax_Print.univ_to_string u21 in
+                FStar_Compiler_Util.format2
+                  "Impossible: found an de Bruijn universe variable or unknown universe: %s, %s"
+                  uu___3 uu___4 in
+              failwith uu___2
           | (FStar_Syntax_Syntax.U_unknown, uu___) ->
-              ((let uu___2 = FStar_Compiler_Util.stack_dump () in
-                FStar_Compiler_Util.print_string uu___2);
-               (let uu___2 =
-                  let uu___3 = FStar_Syntax_Print.univ_to_string u11 in
-                  let uu___4 = FStar_Syntax_Print.univ_to_string u21 in
-                  FStar_Compiler_Util.format2
-                    "Impossible: found an de Bruijn universe variable or unknown universe: %s, %s"
-                    uu___3 uu___4 in
-                failwith uu___2))
+              let uu___1 =
+                let uu___2 = FStar_Syntax_Print.univ_to_string u11 in
+                let uu___3 = FStar_Syntax_Print.univ_to_string u21 in
+                FStar_Compiler_Util.format2
+                  "Impossible: found an de Bruijn universe variable or unknown universe: %s, %s"
+                  uu___2 uu___3 in
+              failwith uu___1
           | (uu___, FStar_Syntax_Syntax.U_bvar uu___1) ->
-              ((let uu___3 = FStar_Compiler_Util.stack_dump () in
-                FStar_Compiler_Util.print_string uu___3);
-               (let uu___3 =
-                  let uu___4 = FStar_Syntax_Print.univ_to_string u11 in
-                  let uu___5 = FStar_Syntax_Print.univ_to_string u21 in
-                  FStar_Compiler_Util.format2
-                    "Impossible: found an de Bruijn universe variable or unknown universe: %s, %s"
-                    uu___4 uu___5 in
-                failwith uu___3))
+              let uu___2 =
+                let uu___3 = FStar_Syntax_Print.univ_to_string u11 in
+                let uu___4 = FStar_Syntax_Print.univ_to_string u21 in
+                FStar_Compiler_Util.format2
+                  "Impossible: found an de Bruijn universe variable or unknown universe: %s, %s"
+                  uu___3 uu___4 in
+              failwith uu___2
           | (uu___, FStar_Syntax_Syntax.U_unknown) ->
-              ((let uu___2 = FStar_Compiler_Util.stack_dump () in
-                FStar_Compiler_Util.print_string uu___2);
-               (let uu___2 =
-                  let uu___3 = FStar_Syntax_Print.univ_to_string u11 in
-                  let uu___4 = FStar_Syntax_Print.univ_to_string u21 in
-                  FStar_Compiler_Util.format2
-                    "Impossible: found an de Bruijn universe variable or unknown universe: %s, %s"
-                    uu___3 uu___4 in
-                failwith uu___2))
+              let uu___1 =
+                let uu___2 = FStar_Syntax_Print.univ_to_string u11 in
+                let uu___3 = FStar_Syntax_Print.univ_to_string u21 in
+                FStar_Compiler_Util.format2
+                  "Impossible: found an de Bruijn universe variable or unknown universe: %s, %s"
+                  uu___2 uu___3 in
+              failwith uu___1
           | (FStar_Syntax_Syntax.U_name x, FStar_Syntax_Syntax.U_name y) ->
               let uu___ =
                 let uu___1 = FStar_Ident.string_of_id x in
