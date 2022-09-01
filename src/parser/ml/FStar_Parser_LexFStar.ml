@@ -417,6 +417,24 @@ let constructor = [%sedlex.regexp? constructor_start_char, Star ident_char]
 let ident       = [%sedlex.regexp? ident_start_char, Star ident_char]
 let tvar        = [%sedlex.regexp? '\'', (ident_start_char | constructor_start_char), Star tvar_char]
 
+(* [ensure_no_comment lexbuf next] takes a [lexbuf] and [next], a
+   continuation. It is to be called after a regexp was matched, to
+   ensure match text does not contain any comment start.
+
+   If the match [s] contains a comment start (an occurence of [//])
+   then we place the lexer at that comment start.  We continue with
+   [next s], [s] being either the whole match, or the chunk before
+   [//].
+*)
+let ensure_no_comment lexbuf (next: string -> token): token =
+  let s = L.lexeme lexbuf in
+  next (try let before, _after = BatString.split s "//" in
+            (* rollback to the begining of the match *)
+            L.rollback lexbuf;
+            (* skip [n] characters in the lexer, with [n] being [hd]'s len *)
+            BatString.iter (fun _ -> let _ = L.next lexbuf in ()) before;
+            before with | Not_found -> s)
+
 let rec token lexbuf =
 match%sedlex lexbuf with
  | "%splice" -> SPLICE
