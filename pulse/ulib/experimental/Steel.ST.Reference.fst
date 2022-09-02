@@ -97,6 +97,73 @@ let free (#a:Type0)
   = coerce_steel(fun _ -> R.free_pt r);
     return ()
 
+/// Local primitive, to be extracted to Low* EPushFrame.  To remember
+/// that we need to call some pop_frame later, we insert some dummy
+/// vprop into the context.
+let _stack_frame : vprop = pure True
+let _push_frame () : STT unit emp (fun _ -> _stack_frame) =
+  rewrite (pure True) _stack_frame
+
+/// Local primitive, to be extracted to Low* EBufCreate
+let _alloca (#a:Type) (x:a)
+  : ST (ref a)
+      emp
+      (fun r -> pts_to r full_perm x)
+      (requires True)
+      (ensures fun r -> not (is_null r))
+= alloc x
+
+/// Local primitive, to be extracted to Low* EPopFrame
+let _free_and_pop_frame
+  (#a:Type0)
+  (#v:erased a)
+  (r:ref a)
+: STT unit
+    (pts_to r full_perm v `star` _stack_frame)
+    (fun _ -> emp)
+= free r;
+  rewrite _stack_frame (pure True);
+  elim_pure _
+
+let with_local
+  (#t: Type)
+  (init: t)
+  (#pre: vprop)
+  (#ret_t: Type)
+  (#post: ret_t -> vprop)
+  (body: (r: ref t) ->
+    STT ret_t
+    (pts_to r full_perm init `star` pre)
+    (fun v -> exists_ (pts_to r full_perm) `star` post v)
+  )
+: STF ret_t pre post True (fun _ -> True)
+= _push_frame ();
+  let r = _alloca init in
+  let v = body r in
+  let _ = elim_exists () in
+  _free_and_pop_frame r;
+  return v
+
+let with_named_local
+  (#t: Type)
+  (init: t)
+  (#pre: vprop)
+  (#ret_t: Type)
+  (#post: ret_t -> vprop)
+  (name: string)
+  (body: (r: ref t) ->
+    STT ret_t
+    (pts_to r full_perm init `star` pre)
+    (fun v -> exists_ (pts_to r full_perm) `star` post v)
+  )
+: STF ret_t pre post True (fun _ -> True)
+= _push_frame ();
+  [@(rename_let name)]
+  let r = _alloca init in
+  let v = body r in
+  let _ = elim_exists () in
+  _free_and_pop_frame r;
+  return v
 
 let share (#a:Type0)
           (#uses:_)

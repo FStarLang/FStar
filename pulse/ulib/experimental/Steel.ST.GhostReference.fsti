@@ -119,3 +119,32 @@ val free (#a:Type0)
   : STGhostT unit u
       (pts_to r full_perm v)
       (fun _ -> emp)
+
+/// Executes a code block with a ghost reference temporarily
+/// allocated. This function is declared in the `STF` effect so
+/// that the pre- and post-resources can be properly inferred by the
+/// Steel tactic from the caller's context.
+///
+/// By virtue of `alloc` and `free` being STGhost
+/// functions, `with_local init body` simply extracts as `body _`.
+///
+/// This combinator is defined only to mirror its Steel.ST.Reference
+/// counterpart.
+inline_for_extraction
+let with_local
+  (#t: Type)
+  (init: Ghost.erased t)
+  (#pre: vprop)
+  (#ret_t: Type)
+  (#post: ret_t -> vprop)
+  (body: (r: ref t) ->
+    STT ret_t
+    (pts_to r full_perm init `star` pre)
+    (fun v -> exists_ (pts_to r full_perm) `star` post v)
+  )
+: STF ret_t pre post True (fun _ -> True)
+= let r = alloc init in
+  let v = body r in
+  let _ = elim_exists () in
+  free r;
+  return v

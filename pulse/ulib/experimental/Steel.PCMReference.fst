@@ -33,7 +33,8 @@ val alloc' (#a:Type)
 
 let alloc' x = as_action (alloc_action FStar.Set.empty x)
 
-let alloc x = rewrite_slprop emp (to_vprop Mem.emp) (fun _ -> reveal_emp ());
+let alloc #_ #pcm x = rewrite_slprop emp (to_vprop Mem.emp) (fun _ -> reveal_emp ());
+              compatible_refl pcm x;
               alloc' x
 
 let free r x = as_action (free_action FStar.Set.empty r x)

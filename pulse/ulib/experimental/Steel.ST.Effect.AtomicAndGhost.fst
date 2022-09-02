@@ -101,6 +101,7 @@ let weaken_repr #a #framed #o #g
                          #pre #post
                          #req' #ens'
                          #emp
+                         #True
                          #()
                          #()
                          #()
@@ -204,6 +205,7 @@ let subcomp (a:Type)
                          #(fun _ y _ -> ens_g y)
                          #frame
                          #_x
+                         #True
                          #p1
                          #p2
                          f) () ()

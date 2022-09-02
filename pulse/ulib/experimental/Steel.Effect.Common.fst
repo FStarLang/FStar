@@ -33,6 +33,14 @@ let can_be_split_star_l p q = ()
 let can_be_split_star_r p q = ()
 let can_be_split_refl p = ()
 
+let can_be_split_congr_l p q r =
+  Classical.forall_intro (interp_star (hp_of p) (hp_of r));
+  Classical.forall_intro (interp_star (hp_of q) (hp_of r))
+
+let can_be_split_congr_r p q r =
+  Classical.forall_intro (interp_star (hp_of r) (hp_of p));
+  Classical.forall_intro (interp_star (hp_of r) (hp_of q))
+
 let equiv (p q:vprop) : prop = Mem.equiv (hp_of p) (hp_of q) /\ True
 let reveal_equiv p q = ()
 
@@ -85,6 +93,7 @@ let lemma_frame_emp h0 h1 p =
 
 let elim_conjunction p1 p1' p2 p2' = ()
 
+let can_be_split_dep_refl p = ()
 let equiv_can_be_split p1 p2 = ()
 let intro_can_be_split_frame p q frame = ()
 let can_be_split_post_elim t1 t2 = ()
@@ -192,4 +201,10 @@ let vrewrite_sel_eq
   v #t f h
 = ()
 
+let solve_can_be_split_for _ = ()
+let solve_can_be_split_lookup = ()
+
 let emp_unit_variant p = Mem.emp_unit (hp_of p)
+
+let solve_can_be_split_forall_dep_for _ = ()
+let solve_can_be_split_forall_dep_lookup = ()

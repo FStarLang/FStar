@@ -1,5 +1,5 @@
 [
-  "s|Nâ¤yÓhVtìûL€C\u000b",
+  "Q²¥Ð\u001a€›ƒ\rî\u0007Ç\u0019Ä\u0007ƒ",
   [
     [
       "Steel.ST.Effect.equiv_star_emp_r",
@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "806cc7951bdb72b643a09c6adac06dd0"
+      "e07db0aa77355f27832d705cf62f47ba"
     ],
     [
       "Steel.ST.Effect.weaken_repr",
@@ -17,20 +17,26 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_e8ffb7d227a1bbf69407a8d2ad2c4c83",
         "Steel.Effect.Common_interpretation_Tm_arrow_bb7a711af297fead4d60d7aa8b8ddd2f",
-        "bool_inversion", "equation_Steel.Effect.Common.maybe_emp",
+        "bool_inversion", "equality_tok_Prims.T@tok",
+        "equation_Prims.l_True", "equation_Prims.squash",
+        "equation_Prims.subtype_of",
+        "equation_Steel.Effect.Common.can_be_split_dep",
+        "equation_Steel.Effect.Common.maybe_emp",
         "equation_Steel.Effect.Common.post_t",
         "equation_Steel.Effect.Common.pre_t",
         "lemma_Steel.Effect.Common.can_be_split_refl",
         "refinement_interpretation_Tm_refine_021cb0d87026d403e1b766cfc287f6bb",
         "refinement_interpretation_Tm_refine_036a4426b88dd36e638aebc89922374a",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
         "refinement_interpretation_Tm_refine_3f762ae732d5b5138080a59ba4ea4860",
         "typing_Steel.Effect.Common.emp",
         "typing_Steel.Effect.Common.mk_rmem",
-        "typing_Steel.Effect.Common.star"
+        "typing_Steel.Effect.Common.star", "typing_tok_Prims.T@tok"
       ],
       0,
-      "77460fc149b28b70702c702c20582b75"
+      "f80fd05aca7cff0b8b1a985867ae3c0a"
     ],
     [
       "Steel.ST.Effect.return_",
@@ -43,7 +49,7 @@
         "lemma_Steel.Effect.Common.can_be_split_refl"
       ],
       0,
-      "0a544aa03367bb9e5d5b0997d6678245"
+      "7bafce96468540e310bd1799a9019ae7"
     ],
     [
       "Steel.ST.Effect.bind",
@@ -52,7 +58,7 @@
       1,
       [ "@query" ],
       0,
-      "0f6368c6746d633718fc9643bc1bfa1c"
+      "316bff850547ab04ff2ff1d9b70f8a6d"
     ],
     [
       "Steel.ST.Effect.subcomp",
@@ -60,11 +66,17 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "bool_inversion",
-        "equation_Steel.ST.Effect.repr"
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_e8ffb7d227a1bbf69407a8d2ad2c4c83", "bool_inversion",
+        "equality_tok_Prims.T@tok", "equation_Prims.l_True",
+        "equation_Prims.squash", "equation_Prims.subtype_of",
+        "equation_Steel.Effect.Common.can_be_split_dep",
+        "equation_Steel.Effect.Common.star", "equation_Steel.ST.Effect.repr",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
+        "typing_tok_Prims.T@tok"
       ],
       0,
-      "82102967d72e22bc55b8febd8d652bc8"
+      "02aec6e174331dec103b6fc37548dbca"
     ],
     [
       "Steel.ST.Effect.STBase",
@@ -76,7 +88,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "c41c081abb13924128324730f5ff0206"
+      "0d216eb18fa0fb7448bfd191bcec8d6f"
     ],
     [
       "Steel.ST.Effect.STBase",
@@ -88,7 +100,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "9bf0d51bc45f1040f221f70708799b01"
+      "f762c8985a0a13a32e27c5b773a4b013"
     ],
     [
       "Steel.ST.Effect.STBase",
@@ -100,7 +112,7 @@
         "refinement_interpretation_Tm_refine_de09779676242898794a0b057d5f5bb4"
       ],
       0,
-      "35e805b380b1ade78463462823577521"
+      "be1c360196fc2b3ee9f4f684085fae35"
     ],
     [
       "Steel.ST.Effect.STBase",
@@ -112,7 +124,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "60897e032960e880370083f218ea23a0"
+      "b2021387ec2be661d5c110b489c7f0c7"
     ],
     [
       "Steel.ST.Effect.bind_pure_st_",
@@ -130,7 +142,7 @@
         "typing_Tm_abs_6ba36691ee58dee85cd144324b083848"
       ],
       0,
-      "584b6a1442952ef02b1cd57780af5070"
+      "e3415fd05ea287f274436811aff82fd6"
     ]
   ]
 ]
