@@ -1389,7 +1389,7 @@ let collect (all_cmd_line_files: list file_name)
         | None ->
           let parsing_data, deps, needs_interface_inlining, additional_roots = collect_one file_system_map file_name get_parsing_data_from_cache in
           parsing_data, (deps, additional_roots, needs_interface_inlining) in
-      if needs_interface_inlining
+      if is_interface file_name
       then add_interface_for_inlining file_name;
       BU.smap_add parse_results file_name parsing_data;
       let deps =

@@ -2006,9 +2006,8 @@ let (collect :
                        (deps1, additional_roots, needs_interface_inlining))) in
           match uu___1 with
           | (parsing_data1, (deps1, mo_roots, needs_interface_inlining)) ->
-              (if needs_interface_inlining
-               then add_interface_for_inlining file_name1
-               else ();
+              ((let uu___3 = is_interface file_name1 in
+                if uu___3 then add_interface_for_inlining file_name1 else ());
                FStar_Compiler_Util.smap_add parse_results file_name1
                  parsing_data1;
                (let deps2 =
