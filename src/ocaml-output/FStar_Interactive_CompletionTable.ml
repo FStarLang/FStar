@@ -266,9 +266,33 @@ let (__proj__Mkpath_elem__item__imports :
   fun projectee -> match projectee with | { imports; segment;_} -> imports
 let (__proj__Mkpath_elem__item__segment : path_elem -> prefix_match) =
   fun projectee -> match projectee with | { imports; segment;_} -> segment
+type path = path_elem Prims.list
 let (matched_prefix_of_path_elem :
   path_elem -> Prims.string FStar_Pervasives_Native.option) =
   fun elem -> (elem.segment).prefix
+type query = Prims.string Prims.list
+type ns_info = {
+  ns_name: Prims.string ;
+  ns_loaded: Prims.bool }
+let (__proj__Mkns_info__item__ns_name : ns_info -> Prims.string) =
+  fun projectee -> match projectee with | { ns_name; ns_loaded;_} -> ns_name
+let (__proj__Mkns_info__item__ns_loaded : ns_info -> Prims.bool) =
+  fun projectee ->
+    match projectee with | { ns_name; ns_loaded;_} -> ns_loaded
+type mod_info =
+  {
+  mod_name: Prims.string ;
+  mod_path: Prims.string ;
+  mod_loaded: Prims.bool }
+let (__proj__Mkmod_info__item__mod_name : mod_info -> Prims.string) =
+  fun projectee ->
+    match projectee with | { mod_name; mod_path; mod_loaded;_} -> mod_name
+let (__proj__Mkmod_info__item__mod_path : mod_info -> Prims.string) =
+  fun projectee ->
+    match projectee with | { mod_name; mod_path; mod_loaded;_} -> mod_path
+let (__proj__Mkmod_info__item__mod_loaded : mod_info -> Prims.bool) =
+  fun projectee ->
+    match projectee with | { mod_name; mod_path; mod_loaded;_} -> mod_loaded
 let (mk_path_el : Prims.string Prims.list -> prefix_match -> path_elem) =
   fun imports -> fun segment -> { imports; segment }
 let btree_find_prefix :
@@ -307,8 +331,6 @@ let rec btree_fold :
         | StrBranch (k, v, lbt, rbt) ->
             let uu___ = let uu___1 = btree_fold rbt f acc in f k v uu___1 in
             btree_fold lbt f uu___
-type path = path_elem Prims.list
-type query = Prims.string Prims.list
 let (query_to_string : Prims.string Prims.list -> Prims.string) =
   fun q -> FStar_String.concat "." q
 type 'a name_collection =
@@ -617,28 +639,6 @@ let rec trie_find_prefix' :
                 matching_bindings_rev acc_with_recursive_bindings
 let trie_find_prefix : 'a . 'a trie -> query -> (path * 'a) Prims.list =
   fun tr -> fun query1 -> trie_find_prefix' tr [] query1 []
-type ns_info = {
-  ns_name: Prims.string ;
-  ns_loaded: Prims.bool }
-let (__proj__Mkns_info__item__ns_name : ns_info -> Prims.string) =
-  fun projectee -> match projectee with | { ns_name; ns_loaded;_} -> ns_name
-let (__proj__Mkns_info__item__ns_loaded : ns_info -> Prims.bool) =
-  fun projectee ->
-    match projectee with | { ns_name; ns_loaded;_} -> ns_loaded
-type mod_info =
-  {
-  mod_name: Prims.string ;
-  mod_path: Prims.string ;
-  mod_loaded: Prims.bool }
-let (__proj__Mkmod_info__item__mod_name : mod_info -> Prims.string) =
-  fun projectee ->
-    match projectee with | { mod_name; mod_path; mod_loaded;_} -> mod_name
-let (__proj__Mkmod_info__item__mod_path : mod_info -> Prims.string) =
-  fun projectee ->
-    match projectee with | { mod_name; mod_path; mod_loaded;_} -> mod_path
-let (__proj__Mkmod_info__item__mod_loaded : mod_info -> Prims.bool) =
-  fun projectee ->
-    match projectee with | { mod_name; mod_path; mod_loaded;_} -> mod_loaded
 let (mod_name : mod_info -> Prims.string) = fun md -> md.mod_name
 type mod_symbol =
   | Module of mod_info 
@@ -781,7 +781,7 @@ let (first_import_of_path :
     match path1 with
     | [] -> FStar_Pervasives_Native.None
     | { imports; segment = uu___;_}::uu___1 ->
-        FStar_Compiler_List.last imports
+        FStar_Compiler_List.last_opt imports
 let (alist_of_ns_info :
   ns_info -> (Prims.string * FStar_Compiler_Util.json) Prims.list) =
   fun ns_info1 ->

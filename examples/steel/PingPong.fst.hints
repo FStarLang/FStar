@@ -79,7 +79,7 @@
         "typing_Tm_abs_ec58e7227b40214255baeecd4eaac483"
       ],
       0,
-      "448886abb7f2b887429cd4ce63354141"
+      "464c5d2f8f81d7eb08aa75e1e7680a3e"
     ],
     [
       "PingPong.server",
@@ -153,49 +153,7 @@
         "typing_tok_Steel.Channel.Protocol.Recv@tok"
       ],
       0,
-      "5e97e1f4d47f77e33a826b61ac86e2f4"
-    ],
-    [
-      "PingPong.client_server",
-      1,
-      2,
-      1,
-      [
-        "@MaxFuel_assumption", "@MaxIFuel_assumption",
-        "@fuel_correspondence_Steel.Channel.Protocol.ok.fuel_instrumented",
-        "@query",
-        "Steel.Channel.Protocol_interpretation_Tm_arrow_031046f3fc43ee3484586c152bce2df7",
-        "constructor_distinct_Steel.Channel.Protocol.Msg",
-        "constructor_distinct_Steel.Channel.Protocol.Return",
-        "equality_tok_Steel.Channel.Protocol.Send@tok",
-        "equation_Prims.eqtype", "equation_Prims.l_True",
-        "equation_Prims.prop", "equation_Steel.Channel.Protocol.protocol",
-        "equation_Steel.Channel.Protocol.return",
-        "equation_Steel.Channel.Protocol.send",
-        "equation_Steel.Effect.Common.ens_depends_only_on",
-        "equation_Steel.Effect.Common.true_p",
-        "equation_with_fuel_Steel.Channel.Protocol.ok.fuel_instrumented",
-        "function_token_typing_Prims.__cache_version_number__",
-        "function_token_typing_Prims.int", "int_inversion",
-        "interpretation_Tm_abs_3f2661c14ba91baade153acfa80178e2",
-        "interpretation_Tm_abs_875501b6408ee3dd742fd99899342071",
-        "interpretation_Tm_abs_ee8f8c64891ece2a1163fb21a21c6a69",
-        "l_quant_interp_3123446cc963c8ba07d8f2d7a3bf5b0b",
-        "projection_inverse_Steel.Channel.Protocol.Msg__0",
-        "projection_inverse_Steel.Channel.Protocol.Msg_a",
-        "projection_inverse_Steel.Channel.Protocol.Msg_b",
-        "projection_inverse_Steel.Channel.Protocol.Msg_k",
-        "projection_inverse_Steel.Channel.Protocol.Return_a",
-        "projection_inverse_Steel.Channel.Protocol.Return_v",
-        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-        "refinement_interpretation_Tm_refine_73f210ca6e0061ed4a3150f69b8f33bf",
-        "refinement_interpretation_Tm_refine_fc860510c81a46b2293eb7d9c36b54d5",
-        "true_interp", "typing_Steel.Channel.Protocol.send",
-        "typing_Steel.Effect.Common.true_p",
-        "typing_Tm_abs_875501b6408ee3dd742fd99899342071"
-      ],
-      0,
-      "38f4d79c493ec284f9d250a71b674d38"
+      "fed8f45d13b6b18165a127e45b9f3485"
     ],
     [
       "PingPong.join_all",
@@ -210,7 +168,7 @@
         "projection_inverse_BoxBool_proj_0", "true_interp"
       ],
       0,
-      "0751a3d6e332a81ac7582ea05c1cd534"
+      "d230be7e0604c833d00d9c7e2c6a5bba"
     ],
     [
       "PingPong.many",
@@ -224,7 +182,7 @@
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "5900cb024c8fbfeeb07263b5b5af9047"
+      "706085218542e5a259ec5a20249f666b"
     ]
   ]
 ]

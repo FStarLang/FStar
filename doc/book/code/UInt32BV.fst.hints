@@ -1,0 +1,351 @@
+[
+  "!s\u000eŸÐÈ1\u001b$·ùÉZC½ä",
+  [
+    [
+      "UInt32BV.max",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.pos",
+        "equation_UInt32BV.n", "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5"
+      ],
+      0,
+      "fa64dec24a8aa30c0327982e42302284"
+    ],
+    [
+      "UInt32BV.v",
+      1,
+      2,
+      1,
+      [
+        "@query", "b2t_def", "equation_FStar.UInt.fits",
+        "equation_FStar.UInt.max_int", "equation_FStar.UInt.min_int",
+        "equation_FStar.UInt.size", "equation_UInt32BV.max",
+        "equation_UInt32BV.n", "primitive_Prims.op_AmpAmp",
+        "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0"
+      ],
+      0,
+      "6b6e793cdf17748249000e53d54d1ed7"
+    ],
+    [
+      "UInt32BV.u",
+      1,
+      2,
+      1,
+      [
+        "@query", "b2t_def", "equation_FStar.UInt.fits",
+        "equation_FStar.UInt.max_int", "equation_FStar.UInt.min_int",
+        "equation_FStar.UInt.size", "equation_UInt32BV.max",
+        "equation_UInt32BV.n", "primitive_Prims.op_AmpAmp",
+        "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0"
+      ],
+      0,
+      "0abd7e6d5c15ab87e5f817541fefa395"
+    ],
+    [
+      "UInt32BV.sym",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "50c53669a437221636e77ee863d221cc"
+    ],
+    [
+      "UInt32BV.dec_eq",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "c9528e99d9941cef5c8040146a5e0a69"
+    ],
+    [
+      "UInt32BV.uv_inv",
+      1,
+      2,
+      1,
+      [ "@query", "true_interp" ],
+      0,
+      "e289cd19577e152a0bfe6de7e1d48646"
+    ],
+    [
+      "UInt32BV.ty",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "b2t_def",
+        "equation_FStar.UInt.fits", "equation_FStar.UInt.max_int",
+        "equation_FStar.UInt.min_int", "equation_FStar.UInt.size",
+        "equation_Prims.nat", "equation_UInt32BV.max", "equation_UInt32BV.n",
+        "equation_UInt32BV.u32_nat", "int_inversion",
+        "primitive_Prims.op_AmpAmp", "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_c1d4dc93ea6cce0512d2f8b84fba6607"
+      ],
+      0,
+      "888b149ac824b88d756c265bd330dd39"
+    ],
+    [
+      "UInt32BV.vu_inv",
+      1,
+      2,
+      1,
+      [ "@query", "true_interp" ],
+      0,
+      "a621c8d63987a24701b801340ad794be"
+    ],
+    [
+      "UInt32BV.vu_inv",
+      2,
+      2,
+      1,
+      [
+        "@query", "b2t_def", "equation_FStar.UInt.fits",
+        "equation_FStar.UInt.max_int", "equation_FStar.UInt.min_int",
+        "equation_FStar.UInt.size", "equation_UInt32BV.max",
+        "equation_UInt32BV.n", "primitive_Prims.op_AmpAmp",
+        "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0"
+      ],
+      0,
+      "be49485daf143634f0348b426e126ae3"
+    ],
+    [
+      "UInt32BV.vu_inv",
+      3,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_FStar.UInt.uint_t",
+        "equation_Prims.eqtype", "function_token_typing_Prims.int",
+        "haseqTm_refine_f13070840248fced9d9d60d77bdae3ec",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "6530ad93f78a9caa02de32dc1f911a5a"
+    ],
+    [
+      "UInt32BV.vu_inv",
+      4,
+      2,
+      1,
+      [
+        "@query", "b2t_def", "equation_FStar.UInt.fits",
+        "equation_FStar.UInt.max_int", "equation_FStar.UInt.min_int",
+        "equation_FStar.UInt.size", "equation_UInt32BV.max",
+        "equation_UInt32BV.n", "primitive_Prims.op_AmpAmp",
+        "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0"
+      ],
+      0,
+      "03c522293eb8362b710ede15d566ceb6"
+    ],
+    [
+      "UInt32BV.vu_inv",
+      5,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "b2t_def",
+        "equation_FStar.UInt.fits", "equation_FStar.UInt.max_int",
+        "equation_FStar.UInt.min_int", "equation_FStar.UInt.size",
+        "equation_UInt32BV.max", "equation_UInt32BV.n",
+        "equation_UInt32BV.u32_nat", "equation_UInt32BV.v",
+        "primitive_Prims.op_AmpAmp", "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_c1d4dc93ea6cce0512d2f8b84fba6607",
+        "typing_UInt32BV.u", "typing_UInt32BV.v"
+      ],
+      0,
+      "dc1157c0a49cc7d5f328486d96e8ca0a"
+    ],
+    [
+      "UInt32BV.vu_inv",
+      6,
+      2,
+      1,
+      [
+        "@query", "b2t_def", "equation_FStar.UInt.fits",
+        "equation_FStar.UInt.max_int", "equation_FStar.UInt.min_int",
+        "equation_FStar.UInt.size", "equation_UInt32BV.max",
+        "equation_UInt32BV.n", "primitive_Prims.op_AmpAmp",
+        "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0"
+      ],
+      0,
+      "8d1165a4a1593bd2530ba1865b18b24b"
+    ],
+    [
+      "UInt32BV.vu_inv",
+      7,
+      2,
+      1,
+      [
+        "@query", "b2t_def", "equation_FStar.UInt.fits",
+        "equation_FStar.UInt.max_int", "equation_FStar.UInt.min_int",
+        "equation_FStar.UInt.size", "equation_UInt32BV.max",
+        "equation_UInt32BV.n", "equation_UInt32BV.v",
+        "primitive_Prims.op_AmpAmp", "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0"
+      ],
+      0,
+      "84d839db9c5e4daa8b00aebd96f04a72"
+    ],
+    [
+      "UInt32BV.add_mod",
+      1,
+      2,
+      1,
+      [ "@query", "equation_UInt32BV.n", "projection_inverse_BoxInt_proj_0" ],
+      0,
+      "8feca91634010480c052a06bc5f0ba79"
+    ],
+    [
+      "UInt32BV.add_mod",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "b2t_def",
+        "equation_FStar.UInt.add_mod", "equation_FStar.UInt.fits",
+        "equation_FStar.UInt.max_int", "equation_FStar.UInt.min_int",
+        "equation_FStar.UInt.size", "equation_FStar.UInt.uint_t",
+        "equation_Prims.nat", "equation_UInt32BV.max", "equation_UInt32BV.n",
+        "equation_UInt32BV.u32_nat", "equation_UInt32BV.v",
+        "primitive_Prims.op_AmpAmp", "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_c1d4dc93ea6cce0512d2f8b84fba6607",
+        "refinement_interpretation_Tm_refine_f13070840248fced9d9d60d77bdae3ec",
+        "true_interp", "typing_UInt32BV.v"
+      ],
+      0,
+      "92b881fb29dba432631a9d9c855aafa2"
+    ],
+    [
+      "UInt32BV.add_mod",
+      3,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_FStar.UInt.uint_t",
+        "refinement_interpretation_Tm_refine_339c040f740fe6cb8fe8aa7d5fdf2630",
+        "refinement_interpretation_Tm_refine_f13070840248fced9d9d60d77bdae3ec"
+      ],
+      0,
+      "089814701f0387bcbaa8e3cef4d76369"
+    ],
+    [
+      "UInt32BV.add_mod",
+      4,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_FStar.UInt.uint_t",
+        "refinement_interpretation_Tm_refine_339c040f740fe6cb8fe8aa7d5fdf2630",
+        "refinement_interpretation_Tm_refine_f13070840248fced9d9d60d77bdae3ec"
+      ],
+      0,
+      "55c39b22ff7c9ec9f19e53998a72acf0"
+    ],
+    [
+      "UInt32BV.sub_mod",
+      1,
+      2,
+      1,
+      [ "@query", "equation_UInt32BV.n", "projection_inverse_BoxInt_proj_0" ],
+      0,
+      "edd87419905da9be1c4580826ae7c48b"
+    ],
+    [
+      "UInt32BV.sub_mod",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "b2t_def",
+        "equation_FStar.UInt.fits", "equation_FStar.UInt.max_int",
+        "equation_FStar.UInt.min_int", "equation_FStar.UInt.size",
+        "equation_FStar.UInt.sub_mod", "equation_FStar.UInt.uint_t",
+        "equation_Prims.nat", "equation_UInt32BV.max", "equation_UInt32BV.n",
+        "equation_UInt32BV.u32_nat", "equation_UInt32BV.v",
+        "primitive_Prims.op_AmpAmp", "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_c1d4dc93ea6cce0512d2f8b84fba6607",
+        "refinement_interpretation_Tm_refine_f13070840248fced9d9d60d77bdae3ec",
+        "true_interp", "typing_UInt32BV.v"
+      ],
+      0,
+      "9fcb6322b23a5a071f2732655438d500"
+    ],
+    [
+      "UInt32BV.sub_mod",
+      3,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_FStar.UInt.uint_t",
+        "refinement_interpretation_Tm_refine_339c040f740fe6cb8fe8aa7d5fdf2630",
+        "refinement_interpretation_Tm_refine_f13070840248fced9d9d60d77bdae3ec"
+      ],
+      0,
+      "724c19e76862d9128398efd5d04dff35"
+    ],
+    [
+      "UInt32BV.sub_mod",
+      4,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_FStar.UInt.uint_t",
+        "refinement_interpretation_Tm_refine_339c040f740fe6cb8fe8aa7d5fdf2630",
+        "refinement_interpretation_Tm_refine_f13070840248fced9d9d60d77bdae3ec"
+      ],
+      0,
+      "db4097eed2c8adca5eea6a46e922641e"
+    ],
+    [
+      "UInt32BV.add",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_UInt32BV.fits",
+        "equation_UInt32BV.max", "equation_UInt32BV.min",
+        "equation_UInt32BV.n", "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_1761bfa8b44737e701eb72381d854fb8",
+        "refinement_interpretation_Tm_refine_51da7585105249649ebfe4a819c04cd5",
+        "token_correspondence_Prims.op_Addition"
+      ],
+      0,
+      "551a652a37c028526a2b95535ea878f6"
+    ],
+    [
+      "UInt32BV.sub",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_UInt32BV.fits",
+        "equation_UInt32BV.max", "equation_UInt32BV.min",
+        "equation_UInt32BV.n",
+        "interpretation_Tm_abs_12ddde8171c888fa95f826be9c2a1fe9",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_0e393331314b02b2060c48f5040b4aa4",
+        "refinement_interpretation_Tm_refine_3adc12fceb0138e1883e7519601a17c4"
+      ],
+      0,
+      "d0341be5418526cc960376347f856a2c"
+    ]
+  ]
+]

@@ -1,5 +1,5 @@
 [
-  "\býŸ\u0014ËëšŠïö¯eµö7)",
+  "ÛZÕ‹%¤×EÑ»ÜÅ™ÞXû",
   [
     [
       "AlgForAll.tbind",
@@ -23,7 +23,7 @@
         "typing_tok_Alg.Write@tok"
       ],
       0,
-      "9d52ab62baa291babf0a74039a5a3027"
+      "64fdd29ce74c94c8c5b706ad3fc6f93c"
     ],
     [
       "AlgForAll.return_wp",
@@ -35,7 +35,7 @@
         "interpretation_Tm_abs_8fefa78b9304fa89f906a877711a1b75"
       ],
       0,
-      "c11ce5a16f2ca07e0ae6169e52a06544"
+      "1757330487b4d8d0b167c8436dfefb66"
     ],
     [
       "AlgForAll.bind_wp",
@@ -58,7 +58,7 @@
         "typing_Tm_abs_4945add4b777273a809fc4cf8035e3b7"
       ],
       0,
-      "c707a8ec541909eb264b5608278a5746"
+      "51b9c43dbeb5ce94d5bb67d425cb890a"
     ],
     [
       "AlgForAll.read_wp",
@@ -70,7 +70,7 @@
         "interpretation_Tm_abs_065d9e2b9fd3163c64bf757897f26553"
       ],
       0,
-      "bd0e3d5271851593652007a06013f23c"
+      "cebb295d2330953a0df9125044c7f2ee"
     ],
     [
       "AlgForAll.write_wp",
@@ -83,7 +83,7 @@
         "unit_typing"
       ],
       0,
-      "42d4600d0716c7fbbc022bf91a0dd9e7"
+      "ad1e8ccb5aa9b56e8df8f757491d880a"
     ],
     [
       "AlgForAll.interp_as_wp",
@@ -127,7 +127,7 @@
         "well_founded_ordering_on_codomain_Alg.Op"
       ],
       0,
-      "38ccfcbeb40420bc71ea2d31c87ba5ee"
+      "df921ad4d0f7a8a96b0bf04c487051f7"
     ],
     [
       "AlgForAll.interp_as_wp2",
@@ -157,7 +157,7 @@
         "typing_tok_Alg.Read@tok", "typing_tok_Alg.Write@tok"
       ],
       0,
-      "77cc516c7408cb18bd56aa849ae512f6"
+      "6b3fb95d0545de51b0ee719b51d2e02b"
     ],
     [
       "AlgForAll.interp_ret",
@@ -178,7 +178,7 @@
         "typing_tok_Alg.Read@tok", "typing_tok_Alg.Write@tok"
       ],
       0,
-      "df904cdf40c3ae692bb4d0167712f2b2"
+      "17d387125c8839622fd8e926816917bd"
     ],
     [
       "AlgForAll.interp_ret",
@@ -215,7 +215,7 @@
         "typing_tok_Alg.Read@tok", "typing_tok_Alg.Write@tok"
       ],
       0,
-      "48dd152e5727f64a08f00575a66eee98"
+      "462760f2ff9bdceeccf9b611bf51e46c"
     ],
     [
       "AlgForAll.bind_preserves_mon",
@@ -237,7 +237,7 @@
         "typing_Tm_abs_4945add4b777273a809fc4cf8035e3b7"
       ],
       0,
-      "035c363689f9dac5cf80a3cc3bc4d489"
+      "cb1eca42699ee7ade7e614f63e35ad22"
     ],
     [
       "AlgForAll.interp_monotonic",
@@ -295,7 +295,7 @@
         "well_founded_ordering_on_codomain_Alg.Op"
       ],
       0,
-      "62140ef8cece43306a6a197f00c52057"
+      "bb5a840928da1e948ed267fc00cec7b2"
     ],
     [
       "AlgForAll.elim_str",
@@ -310,7 +310,7 @@
         "token_correspondence_AlgForAll.stronger"
       ],
       0,
-      "97cb2ae555bdcf3f074bcc3b7d539cbc"
+      "a7377918d7115bd09c6d4a28ee214da9"
     ],
     [
       "AlgForAll.interp_morph",
@@ -400,7 +400,7 @@
         "well_founded_ordering_on_codomain_Alg.Op"
       ],
       0,
-      "d299804ca2ea5805b5b7f1926f798eff"
+      "996459dc9b60f0e63d27b8c6ee053ca9"
     ],
     [
       "AlgForAll.interp_bind",
@@ -436,7 +436,7 @@
         "typing_Tm_abs_ac8b2e1f5f927d134d88675f106a3f43"
       ],
       0,
-      "d5cf36c6cf5528df579bc1138d601325"
+      "00059d6ae4d9c065c7038c0d132842a1"
     ],
     [
       "AlgForAll.return",
@@ -457,7 +457,7 @@
         "typing_tok_Alg.Read@tok", "typing_tok_Alg.Write@tok"
       ],
       0,
-      "60be1012dca0cad4c7602080c1a06f5d"
+      "ff38e5309ef65a19231616230c96746e"
     ],
     [
       "AlgForAll.bind",
@@ -476,7 +476,7 @@
         "token_correspondence_AlgForAll.stronger"
       ],
       0,
-      "a287f632e4db06b4dc683e4621563f17"
+      "0cef68d1c534728735b785948ad5c4f2"
     ],
     [
       "AlgForAll.subcomp",
@@ -491,7 +491,7 @@
         "refinement_interpretation_Tm_refine_026324d6a27599b6bd889c228a092008"
       ],
       0,
-      "f2eb60fb37e5a26e304e51ddf747296d"
+      "17636afb7f465fc6178df50207b6e16e"
     ],
     [
       "AlgForAll.AlgWP",
@@ -504,7 +504,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "03a2fb5be13c21525267c5cadd27e090"
+      "6c219d10dcc840e59e4cdaa156d97e20"
     ],
     [
       "AlgForAll.AlgWP",
@@ -517,7 +517,7 @@
         "refinement_interpretation_Tm_refine_de09779676242898794a0b057d5f5bb4"
       ],
       0,
-      "590f173e3c2386e0b622ffd5fd67f8da"
+      "729d8848fd14f0c82dd053045badd328"
     ],
     [
       "AlgForAll.get",
@@ -568,7 +568,7 @@
         "unit_typing"
       ],
       0,
-      "fdd313543e2274103f52abc87756362f"
+      "2d9949e87568b6dc3b9bc43dbf14e27a"
     ],
     [
       "AlgForAll.put",
@@ -619,7 +619,7 @@
         "unit_typing"
       ],
       0,
-      "9fe2cfccb8b08b0d80bbbf45c2b623ac"
+      "4a0e86adbc295fc99cff7ea216ff1a93"
     ],
     [
       "AlgForAll.lift_pure_wp",
@@ -639,7 +639,7 @@
         "typing_Tm_abs_4d919759bceafc48670cf8103fc4eaae"
       ],
       0,
-      "5615a6a3500c981386a0910ba5b55da9"
+      "c3f834463aec0cbbe0adf6249e19e7aa"
     ],
     [
       "AlgForAll.lift_pure_algwp",
@@ -688,7 +688,7 @@
         "typing_tok_Alg.Read@tok", "typing_tok_Alg.Write@tok", "unit_typing"
       ],
       0,
-      "d44b8dd354fb48d86eb7cf1fcb682b9d"
+      "15a4c58e37790461c537fe78ad9be15f"
     ],
     [
       "AlgForAll.addx",
@@ -704,7 +704,7 @@
         "primitive_Prims.op_Addition", "unit_typing"
       ],
       0,
-      "6aae62a607dbb22abc6c53eeb0675d6c"
+      "7efa404b2bcc0c18bdc17718af039ce3"
     ],
     [
       "AlgForAll.add_via_state",
@@ -721,7 +721,7 @@
         "primitive_Prims.op_Addition"
       ],
       0,
-      "07da21ae8bd47a9f046d32b3136766c2"
+      "a04a6a899f0b71f673dd215437cacfc5"
     ],
     [
       "AlgForAll.interp_sem",
@@ -755,47 +755,11 @@
         "typing_AlgForAll.interp_as_wp"
       ],
       0,
-      "b80ba3c7836cc08535978cd7b710e963"
+      "5d72d64160ef7b462e67f485678185ad"
     ],
     [
       "AlgForAll.interp_sem",
       2,
-      2,
-      1,
-      [
-        "@MaxFuel_assumption", "@MaxIFuel_assumption",
-        "@fuel_correspondence_AlgForAll.interp_as_wp.fuel_instrumented",
-        "@query",
-        "AlgForAll_interpretation_Tm_arrow_21d4a34e68b52c8e57f26383cc48e992",
-        "Prims_interpretation_Tm_arrow_92458cff82f9ffee1f6e26a1c0c579f3",
-        "binder_x_09643a9c429aeb985d7e45b259cd113b_3",
-        "binder_x_f93366d49057ab15364e5645ec75733a_2",
-        "binder_x_fe28d8bcde588226b4e538b35321de05_1",
-        "data_elim_Alg.Return",
-        "data_typing_intro_FStar.Pervasives.Native.Mktuple2@tok",
-        "equation_Alg.state", "equation_Alg.tree",
-        "equation_AlgForAll.rwtree", "equation_AlgForAll.st_monotonic",
-        "equation_AlgForAll.st_wp", "equation_Prims.eqtype",
-        "equation_Prims.l_True", "equation_Prims.logical",
-        "equation_Prims.pure_post", "equation_Prims.pure_post_",
-        "equation_with_fuel_AlgForAll.interp_as_wp.fuel_instrumented",
-        "fuel_guarded_inversion_Alg.tree0",
-        "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
-        "function_token_typing_Prims.int", "int_inversion",
-        "interpretation_Tm_abs_e0424c476dc6010dc8b4c055f7ed9483",
-        "refinement_interpretation_Tm_refine_31cc90dcf4dccbb40dfbf6c2bed95232",
-        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-        "refinement_interpretation_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
-        "refinement_interpretation_Tm_refine_d7b395428ffdb3b0e0dfda2028f92502",
-        "token_correspondence_AlgForAll.interp_as_wp", "true_interp",
-        "typing_AlgForAll.interp_as_wp"
-      ],
-      0,
-      "804a13e71a43ed5bed7864482ea66b53"
-    ],
-    [
-      "AlgForAll.interp_sem",
-      3,
       2,
       1,
       [
@@ -805,46 +769,112 @@
         "@fuel_irrelevance_Alg.abides.fuel_instrumented",
         "@fuel_irrelevance_AlgForAll.interp_as_wp.fuel_instrumented",
         "@query",
+        "AlgForAll_interpretation_Tm_arrow_21d4a34e68b52c8e57f26383cc48e992",
+        "AlgForAll_interpretation_Tm_arrow_94223ee7c1c4b0cb46e7e41d0179a2c5",
         "AlgForAll_pre_typing_Tm_arrow_34c796a38713c8028506c781ebc8cf00",
         "Alg_pretyping_65df54ce4d63ba5b9686604a5875adf8",
+        "Prims_interpretation_Tm_arrow_92458cff82f9ffee1f6e26a1c0c579f3",
         "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
         "binder_x_09643a9c429aeb985d7e45b259cd113b_3",
         "binder_x_f93366d49057ab15364e5645ec75733a_2",
         "binder_x_fe28d8bcde588226b4e538b35321de05_1",
-        "constructor_distinct_Alg.Return", "constructor_distinct_Prims.unit",
-        "data_typing_intro_Alg.Write@tok",
+        "constructor_distinct_Alg.Op", "constructor_distinct_Alg.Return",
+        "constructor_distinct_Alg.Write", "constructor_distinct_Prims.unit",
+        "data_elim_Alg.Return", "data_typing_intro_Alg.Write@tok",
+        "data_typing_intro_FStar.Pervasives.Native.Mktuple2@tok",
         "data_typing_intro_Prims.Cons@tok",
         "data_typing_intro_Prims.Nil@tok", "disc_equation_Alg.Op",
         "disc_equation_Alg.Read", "disc_equation_Alg.Return",
         "disc_equation_Alg.Write", "equality_tok_Alg.Read@tok",
         "equality_tok_Alg.Write@tok", "equation_Alg.op_out",
         "equation_Alg.ops", "equation_Alg.state", "equation_Alg.tree",
-        "equation_AlgForAll.rwtree", "equation_AlgForAll.st_wp",
-        "equation_AlgForAll.st_wp0",
+        "equation_AlgForAll.rwtree", "equation_AlgForAll.st_monotonic",
+        "equation_AlgForAll.st_wp", "equation_AlgForAll.st_wp0",
+        "equation_Prims.eqtype", "equation_Prims.l_True",
+        "equation_Prims.logical", "equation_Prims.pure_post",
+        "equation_Prims.pure_post_",
         "equation_with_fuel_Alg.abides.fuel_instrumented",
         "equation_with_fuel_AlgForAll.interp_as_wp.fuel_instrumented",
         "fuel_guarded_inversion_Alg.tree0",
+        "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
         "fuel_token_correspondence_AlgForAll.interp_as_wp.fuel_instrumented_token",
-        "int_inversion",
+        "function_token_typing_AlgForAll.interp_as_wp",
+        "function_token_typing_Prims.int", "int_inversion",
         "interpretation_Tm_abs_7ba6353ba1a147d2926e23e183ab88c4",
         "interpretation_Tm_abs_b08defe3c519b7a8799979d37addb094",
         "interpretation_Tm_abs_e0424c476dc6010dc8b4c055f7ed9483",
         "kinding_Alg.op@tok", "l_and-interp",
         "l_quant_interp_cd66cb9dd6e7f7baed4d4a889c722b71",
-        "proj_equation_Alg.Op_i", "proj_equation_Alg.Op_k",
-        "proj_equation_Alg.Op_op", "projection_inverse_Alg.Return__0",
+        "lemma_Alg.append_single", "proj_equation_Alg.Op_i",
+        "proj_equation_Alg.Op_k", "proj_equation_Alg.Op_op",
+        "projection_inverse_Alg.Op_a", "projection_inverse_Alg.Op_i",
+        "projection_inverse_Alg.Op_k", "projection_inverse_Alg.Op_op",
+        "projection_inverse_Alg.Return__0",
         "projection_inverse_Alg.Return_a",
         "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_Tm_refine_31cc90dcf4dccbb40dfbf6c2bed95232",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "refinement_interpretation_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
         "refinement_interpretation_Tm_refine_d7b395428ffdb3b0e0dfda2028f92502",
         "token_correspondence_Alg.__proj__Op__item__k",
-        "token_correspondence_AlgForAll.interp_as_wp",
-        "typing_AlgForAll.interp_as_wp", "typing_tok_Alg.Read@tok",
-        "typing_tok_Alg.Write@tok", "unit_typing",
+        "token_correspondence_AlgForAll.interp_as_wp", "true_interp",
+        "typing_tok_Alg.Read@tok", "typing_tok_Alg.Write@tok", "unit_typing",
         "well_founded_ordering_on_codomain_Alg.Op"
       ],
       0,
-      "4716d52dc55008f8239981e1945f24e4"
+      "94423dd058120e8c8fff2388c988efb5"
+    ],
+    [
+      "AlgForAll.extract",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_AlgForAll.repr",
+        "refinement_interpretation_Tm_refine_026324d6a27599b6bd889c228a092008"
+      ],
+      0,
+      "95ad2bd257c268f03a631a50cd3a3fe2"
+    ],
+    [
+      "AlgForAll.soundness_aux",
+      1,
+      2,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_Alg.abides.fuel_instrumented", "@query",
+        "AlgForAll_interpretation_Tm_arrow_21d4a34e68b52c8e57f26383cc48e992",
+        "AlgForAll_interpretation_Tm_arrow_c1793e640e3fcdc25595ab3cf27199ac",
+        "Alg_pretyping_65df54ce4d63ba5b9686604a5875adf8",
+        "Prims_interpretation_Tm_arrow_92458cff82f9ffee1f6e26a1c0c579f3",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "data_typing_intro_Alg.Write@tok",
+        "data_typing_intro_FStar.Pervasives.Native.Mktuple2@tok",
+        "data_typing_intro_Prims.Cons@tok",
+        "data_typing_intro_Prims.Nil@tok", "equality_tok_Alg.Read@tok",
+        "equality_tok_Alg.Write@tok", "equation_Alg.ops",
+        "equation_Alg.state", "equation_Alg.tree", "equation_AlgForAll.repr",
+        "equation_AlgForAll.rwtree", "equation_AlgForAll.st_monotonic",
+        "equation_AlgForAll.st_wp", "equation_AlgForAll.stronger",
+        "equation_Prims.eqtype", "equation_Prims.l_True",
+        "equation_Prims.logical", "equation_Prims.pure_post",
+        "equation_Prims.pure_post_",
+        "equation_with_fuel_Alg.abides.fuel_instrumented",
+        "fuel_guarded_inversion_Alg.tree0",
+        "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
+        "function_token_typing_AlgForAll.interp_as_wp",
+        "function_token_typing_Prims.__cache_version_number__",
+        "function_token_typing_Prims.int", "kinding_Alg.op@tok",
+        "refinement_interpretation_Tm_refine_026324d6a27599b6bd889c228a092008",
+        "refinement_interpretation_Tm_refine_31cc90dcf4dccbb40dfbf6c2bed95232",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "refinement_interpretation_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
+        "refinement_interpretation_Tm_refine_d7b395428ffdb3b0e0dfda2028f92502",
+        "true_interp", "typing_tok_Alg.Read@tok", "typing_tok_Alg.Write@tok"
+      ],
+      0,
+      "62787638b076aae3dccc70bfc6ca4617"
     ],
     [
       "AlgForAll.soundness",
@@ -854,41 +884,25 @@
       [
         "@MaxIFuel_assumption", "@query",
         "AlgForAll_interpretation_Tm_arrow_21d4a34e68b52c8e57f26383cc48e992",
+        "AlgForAll_interpretation_Tm_arrow_c1793e640e3fcdc25595ab3cf27199ac",
         "Prims_interpretation_Tm_arrow_92458cff82f9ffee1f6e26a1c0c579f3",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "data_typing_intro_FStar.Pervasives.Native.Mktuple2@tok",
         "equation_Alg.state", "equation_AlgForAll.st_monotonic",
-        "equation_AlgForAll.st_wp", "equation_Prims.eqtype",
-        "equation_Prims.l_True", "equation_Prims.logical",
-        "equation_Prims.pure_post", "equation_Prims.pure_post_",
+        "equation_AlgForAll.st_wp", "equation_AlgForAll.stronger",
+        "equation_Prims.eqtype", "equation_Prims.l_True",
+        "equation_Prims.logical", "equation_Prims.pure_post",
+        "equation_Prims.pure_post_",
         "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
-        "function_token_typing_Prims.int", "int_inversion",
+        "function_token_typing_Prims.__cache_version_number__",
+        "function_token_typing_Prims.int",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "refinement_interpretation_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
         "refinement_interpretation_Tm_refine_d7b395428ffdb3b0e0dfda2028f92502",
-        "true_interp"
-      ],
-      0,
-      "f68b68f7c3e53c62d66355aec6e1f4cb"
-    ],
-    [
-      "AlgForAll.soundness",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "AlgForAll_interpretation_Tm_arrow_c1793e640e3fcdc25595ab3cf27199ac",
-        "Prims_interpretation_Tm_arrow_92458cff82f9ffee1f6e26a1c0c579f3",
-        "equation_Alg.state", "equation_AlgForAll.repr",
-        "equation_AlgForAll.stronger", "equation_Prims.l_True",
-        "equation_Prims.pure_post", "equation_Prims.pure_post_",
-        "int_inversion",
-        "refinement_interpretation_Tm_refine_026324d6a27599b6bd889c228a092008",
-        "refinement_interpretation_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
         "token_correspondence_AlgForAll.interp_as_wp", "true_interp"
       ],
       0,
-      "81042b0cb3637a46b83fabb36cd0fa7d"
+      "ba6034e00501869d072e3b4595ae8f0b"
     ]
   ]
 ]

@@ -153,10 +153,7 @@ let wrap (f:int -> ND unit (as_pure_wp (fun p -> True))) (x':int) : ND unit (as_
   | Some x -> f x
   | None -> f 4
 
-// The test below use to fail while running the tactic, now it leaves a
-// goal that cannot be solved. That's what we check for with the 19.
-
-[@@expect_failure [19]]
+[@@expect_failure [217]]
 let rewrite_inside_reify
   (f : int -> ND unit (as_pure_wp (fun p -> True)))
   (g : int -> Tot (option int))
@@ -170,8 +167,9 @@ let rewrite_inside_reify
      let ll = reify (f x) (fun _ -> True) in
      assert (l == ll) by (
        unfold_def (`wrap);
+       dump "A";
        // This puts in rwr: g x' == Some b
-       let rwr = (match (List.Tot.nth (cur_binders ()) 11) with
+       let rwr = (match (List.Tot.nth (cur_binders ()) 7) with
        | Some y -> y | None -> T.fail "no goal found") in
        l_to_r [`rwr])
      // The assert ^ fails with the error:

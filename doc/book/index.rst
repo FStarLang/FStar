@@ -235,3 +235,7 @@ Part 10: Steel: A Concurrent Separation Logic Embedded in F*
    intro
    part1/part1
    part2/part2
+   part3/part3
+
+..
+   part4/part4

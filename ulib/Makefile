@@ -40,11 +40,15 @@ fstartaclib.mgen: fstarlib.mgen
 	rm -f .depend.extract
 	+OUTPUT_DIRECTORY=tactics_ml/extracted \
 	    CODEGEN=Plugin \
-	    EXTRACT_MODULES="--extract '+FStar.Tactics +FStar.Reflection $(NOEXTRACT_MODULES) +Steel.Effect.Common +FStar.InteractiveHelpers'" \
+	    EXTRACT_MODULES="--extract '+FStar.Tactics +FStar.Reflection $(NOEXTRACT_MODULES) +Steel.Effect.Common +Steel.ST.GenElim.Base +FStar.InteractiveHelpers'" \
 	    $(MAKE) -f Makefile.extract all-ml
 	mkdir -p tactics_ml/fstarlib_leftovers
 	cp $(FSTARLIB_LEFTOVERS) tactics_ml/fstarlib_leftovers
 	touch fstartaclib.mgen
+
+ulib-in-fsharp:
+	+$(MAKE) -f Makefile.extract.fsharp all-fs
+	+$(MAKE) -C fs/VS
 
 ######################################################
 # OCaml extraction of fstarlib and fstar-tactics-lib #

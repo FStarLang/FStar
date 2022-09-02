@@ -1,0 +1,65 @@
+[
+  ",À»ø#p™›ã7ù\u000f•ñm‘",
+  [
+    [
+      "OPLSS2021.BasicState.left_unit",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.FunctionalExtensionality.feq",
+        "equation_OPLSS2021.BasicState.bind",
+        "equation_OPLSS2021.BasicState.return",
+        "interpretation_Tm_abs_7706f980135a89a687c904d968136d5b",
+        "interpretation_Tm_abs_a02c4ab615d86c1fd4d6707b08902221",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2"
+      ],
+      0,
+      "a30f638ab8f2cbaaaadc47109d149d9c"
+    ],
+    [
+      "OPLSS2021.BasicState.right_unit",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "OPLSS2021.BasicState_interpretation_Tm_arrow_a0084ca3a951f68c3110bd0ebd7c60fe",
+        "equation_FStar.FunctionalExtensionality.feq",
+        "equation_OPLSS2021.BasicState.bind",
+        "equation_OPLSS2021.BasicState.return",
+        "equation_OPLSS2021.BasicState.st",
+        "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
+        "interpretation_Tm_abs_691963f23579a36e889cc7f98eaa1210",
+        "interpretation_Tm_abs_7706f980135a89a687c904d968136d5b",
+        "interpretation_Tm_abs_a02c4ab615d86c1fd4d6707b08902221"
+      ],
+      0,
+      "4768d4cc1cb6f5fc10a04e1c112a62c7"
+    ],
+    [
+      "OPLSS2021.BasicState.assoc",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.FunctionalExtensionality.feq",
+        "equation_OPLSS2021.BasicState.bind",
+        "interpretation_Tm_abs_7706f980135a89a687c904d968136d5b",
+        "interpretation_Tm_abs_e92ddfe3fe3bd3ce88f858edd91a0f1a"
+      ],
+      0,
+      "c115caa20f96331db6260492afa9df3a"
+    ],
+    [
+      "OPLSS2021.BasicState.lift_pure_st",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "2b5202493f28566f7c333f391d7200e2"
+    ]
+  ]
+]

@@ -1,0 +1,116 @@
+[
+  "\u0006È∏p¨¢Ø∂ø!+\u0015z‹∆~",
+  [
+    [
+      "ConstructiveLogic.modulo_add_fail",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.pos",
+        "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5"
+      ],
+      0,
+      "a4298b18ba6c72485a6aa42c143843e0"
+    ],
+    [
+      "ConstructiveLogic.modulo_add_fail",
+      3,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.pos",
+        "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5"
+      ],
+      0,
+      "5a25ec3ad78d4cc608225eb52b4528a5"
+    ],
+    [
+      "ConstructiveLogic.modulo_add_fail",
+      4,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.pos",
+        "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5"
+      ],
+      0,
+      "bbe67519ca21c05d6558fc537e0f8796"
+    ],
+    [
+      "ConstructiveLogic.modulo_add_fail",
+      5,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.pos",
+        "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5"
+      ],
+      0,
+      "ec38a697847f754a9aae47fd9c65c170"
+    ],
+    [
+      "ConstructiveLogic.modulo_add_fail",
+      6,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.pos",
+        "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5"
+      ],
+      0,
+      "d27235ba24ea2a3ac162ed91a7fd7f44"
+    ],
+    [
+      "ConstructiveLogic.modulo_add_fail",
+      7,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.pos",
+        "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5"
+      ],
+      0,
+      "4bba488ab8734912d51a755989680aaa"
+    ],
+    [
+      "ConstructiveLogic.modulo_add",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.pos",
+        "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5"
+      ],
+      0,
+      "79284be659e961a9ef2e8a3c5cfc26b1"
+    ],
+    [
+      "ConstructiveLogic.ex11",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "5c82d15d00afe23d179640f8efedff56"
+    ],
+    [
+      "ConstructiveLogic.ex12",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "7dfd4abafd8fa5543ee53d6e1b168e81"
+    ],
+    [
+      "ConstructiveLogic.ex14",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "29b83e00c1f3136a2e75c27fd232a3bc"
+    ]
+  ]
+]

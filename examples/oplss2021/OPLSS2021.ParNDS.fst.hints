@@ -1,0 +1,300 @@
+[
+  "ün√ÎF˘‹KÊJ\u0007Xh\u0005\r∫",
+  [
+    [
+      "OPLSS2021.ParNDS.m",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
+      ],
+      0,
+      "11985f3b6204bcaa453a8ece20ad3f7d"
+    ],
+    [
+      "OPLSS2021.ParNDS.m",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
+      ],
+      0,
+      "2170ecbd60b338063ef9bddcf69a64ae"
+    ],
+    [
+      "OPLSS2021.ParNDS.__proj__Ret__item__a",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_25481ebd21b915c089d7d60f5674cb12"
+      ],
+      0,
+      "729bdd77027acc99396c4a87aed707ef"
+    ],
+    [
+      "OPLSS2021.ParNDS.__proj__Ret__item__x",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "data_elim_OPLSS2021.ParNDS.Ret",
+        "refinement_interpretation_Tm_refine_25481ebd21b915c089d7d60f5674cb12"
+      ],
+      0,
+      "f39ac209831706511e3f7e560d4889a1"
+    ],
+    [
+      "OPLSS2021.ParNDS.__proj__Act__item__a",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_1f60eb89b6620edebb0c230df7c700fd"
+      ],
+      0,
+      "efd7cdc75835fa0035b86bda62f450ff"
+    ],
+    [
+      "OPLSS2021.ParNDS.__proj__Act__item__b",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_1f60eb89b6620edebb0c230df7c700fd"
+      ],
+      0,
+      "6f0d40ea004ff55fe87b2b041c31da69"
+    ],
+    [
+      "OPLSS2021.ParNDS.__proj__Act__item__f",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "data_elim_OPLSS2021.ParNDS.Act",
+        "refinement_interpretation_Tm_refine_1f60eb89b6620edebb0c230df7c700fd"
+      ],
+      0,
+      "143ae65c6d92e351e3a96ed04a0a5f03"
+    ],
+    [
+      "OPLSS2021.ParNDS.__proj__Act__item__n",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_1f60eb89b6620edebb0c230df7c700fd"
+      ],
+      0,
+      "0f78dd7223a1380b399cec49c73a13d2"
+    ],
+    [
+      "OPLSS2021.ParNDS.__proj__Act__item__k",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "data_elim_OPLSS2021.ParNDS.Act",
+        "refinement_interpretation_Tm_refine_1f60eb89b6620edebb0c230df7c700fd"
+      ],
+      0,
+      "caf6827a6a0c3ed934ef59a0a37554bb"
+    ],
+    [
+      "OPLSS2021.ParNDS.__proj__Par__item__a",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_e46dc81b4cb9bba07d4182c5cbddac53"
+      ],
+      0,
+      "6afc19d1cbb485ff1f72ae4bd700c56b"
+    ],
+    [
+      "OPLSS2021.ParNDS.__proj__Par__item__a0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_e46dc81b4cb9bba07d4182c5cbddac53"
+      ],
+      0,
+      "1a779cfd58e55200f7b30416bcccb52d"
+    ],
+    [
+      "OPLSS2021.ParNDS.__proj__Par__item__n0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_e46dc81b4cb9bba07d4182c5cbddac53"
+      ],
+      0,
+      "bd123f68e26fc34bc39641741c11d4f3"
+    ],
+    [
+      "OPLSS2021.ParNDS.__proj__Par__item__m0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "data_elim_OPLSS2021.ParNDS.Par",
+        "refinement_interpretation_Tm_refine_e46dc81b4cb9bba07d4182c5cbddac53"
+      ],
+      0,
+      "1322fd97d5786a0609e635989f50a802"
+    ],
+    [
+      "OPLSS2021.ParNDS.__proj__Par__item__a1",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_e46dc81b4cb9bba07d4182c5cbddac53"
+      ],
+      0,
+      "4279cb08d5a46cb3cdb22c20b1b7ceae"
+    ],
+    [
+      "OPLSS2021.ParNDS.__proj__Par__item__n1",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_e46dc81b4cb9bba07d4182c5cbddac53"
+      ],
+      0,
+      "019d704056686eeab3051d3f6a4c62e8"
+    ],
+    [
+      "OPLSS2021.ParNDS.__proj__Par__item__m1",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "data_elim_OPLSS2021.ParNDS.Par",
+        "refinement_interpretation_Tm_refine_e46dc81b4cb9bba07d4182c5cbddac53"
+      ],
+      0,
+      "36f47299d0f84a8fdfeb46bfef5fc0fc"
+    ],
+    [
+      "OPLSS2021.ParNDS.__proj__Par__item__n",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_e46dc81b4cb9bba07d4182c5cbddac53"
+      ],
+      0,
+      "64e2f93e15f80e852289646b6f635a75"
+    ],
+    [
+      "OPLSS2021.ParNDS.__proj__Par__item__k",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "data_elim_OPLSS2021.ParNDS.Par",
+        "refinement_interpretation_Tm_refine_e46dc81b4cb9bba07d4182c5cbddac53"
+      ],
+      0,
+      "a6f89b76d7a757ae001f485cfbba97df"
+    ],
+    [
+      "OPLSS2021.ParNDS.step",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_79d1df9003770e84d961ae86e139d22c_4",
+        "binder_x_bb4e1c9af0265270f8e7a5f250f730e2_3",
+        "binder_x_fe28d8bcde588226b4e538b35321de05_1",
+        "binder_x_fe28d8bcde588226b4e538b35321de05_2", "bool_inversion",
+        "constructor_distinct_OPLSS2021.ParNDS.Ret",
+        "data_elim_OPLSS2021.ParNDS.Act", "data_elim_OPLSS2021.ParNDS.Par",
+        "data_elim_OPLSS2021.ParNDS.Ret",
+        "disc_equation_OPLSS2021.ParNDS.Act",
+        "disc_equation_OPLSS2021.ParNDS.Par",
+        "disc_equation_OPLSS2021.ParNDS.Ret", "equation_Prims.nat",
+        "fuel_guarded_inversion_OPLSS2021.ParNDS.m", "int_inversion",
+        "int_typing", "proj_equation_OPLSS2021.ParNDS.Par_a0",
+        "proj_equation_OPLSS2021.ParNDS.Par_a1",
+        "proj_equation_OPLSS2021.ParNDS.Par_m0",
+        "proj_equation_OPLSS2021.ParNDS.Par_m1",
+        "proj_equation_OPLSS2021.ParNDS.Par_n0",
+        "proj_equation_OPLSS2021.ParNDS.Par_n1",
+        "proj_equation_OPLSS2021.ParNDS.Step_n",
+        "proj_equation_OPLSS2021.ParNDS.Step_reduct",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "projection_inverse_OPLSS2021.ParNDS.Par_a",
+        "projection_inverse_OPLSS2021.ParNDS.Par_a0",
+        "projection_inverse_OPLSS2021.ParNDS.Par_a1",
+        "projection_inverse_OPLSS2021.ParNDS.Par_m0",
+        "projection_inverse_OPLSS2021.ParNDS.Par_m1",
+        "projection_inverse_OPLSS2021.ParNDS.Par_n",
+        "projection_inverse_OPLSS2021.ParNDS.Par_n0",
+        "projection_inverse_OPLSS2021.ParNDS.Par_n1",
+        "projection_inverse_OPLSS2021.ParNDS.Ret_a",
+        "projection_inverse_OPLSS2021.ParNDS.Ret_s",
+        "projection_inverse_OPLSS2021.ParNDS.Ret_x",
+        "projection_inverse_OPLSS2021.ParNDS.Step_n",
+        "projection_inverse_OPLSS2021.ParNDS.Step_reduct",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_ba07617d60364f3c3024bd6c6a7bae76",
+        "refinement_interpretation_Tm_refine_e46dc81b4cb9bba07d4182c5cbddac53",
+        "typing_OPLSS2021.ParNDS.__proj__Par__item__m0",
+        "typing_OPLSS2021.ParNDS.__proj__Par__item__m1",
+        "typing_OPLSS2021.ParNDS.uu___is_Ret", "well-founded-ordering-on-nat"
+      ],
+      0,
+      "90b54b06a01fef14e02c32db123c567d"
+    ],
+    [
+      "OPLSS2021.ParNDS.run",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_79d1df9003770e84d961ae86e139d22c_4",
+        "binder_x_bb4e1c9af0265270f8e7a5f250f730e2_3",
+        "data_elim_OPLSS2021.ParNDS.Act", "data_elim_OPLSS2021.ParNDS.Par",
+        "data_elim_OPLSS2021.ParNDS.Ret",
+        "disc_equation_OPLSS2021.ParNDS.Ret", "equation_Prims.nat",
+        "fuel_guarded_inversion_OPLSS2021.ParNDS.m", "int_inversion",
+        "proj_equation_OPLSS2021.ParNDS.Step_n",
+        "proj_equation_OPLSS2021.ParNDS.Step_reduct",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "projection_inverse_OPLSS2021.ParNDS.Step_n",
+        "projection_inverse_OPLSS2021.ParNDS.Step_reduct",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_cc004c894c96b720cba83dd5393f653e",
+        "well-founded-ordering-on-nat"
+      ],
+      0,
+      "b97c0de287c50c03799b3efbe1d9206a"
+    ]
+  ]
+]

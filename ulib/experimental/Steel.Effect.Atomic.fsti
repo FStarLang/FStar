@@ -162,19 +162,23 @@ let subcomp_pre (#a:Type)
   (#pre_f:pre_t) (#post_f:post_t a) (req_f:req_t pre_f) (ens_f:ens_t pre_f a post_f)
   (#pre_g:pre_t) (#post_g:post_t a) (req_g:req_t pre_g) (ens_g:ens_t pre_g a post_g)
   (#frame:vprop)
-  (_:squash (can_be_split pre_g (pre_f `star` frame)))
+  (#p:prop)
+  (_:squash (can_be_split_dep p pre_g (pre_f `star` frame)))
   (_:squash (equiv_forall post_g (fun x -> post_f x `star` frame)))
   : pure_pre
 // The call to with_tactic allows us to reduce VCs in a controlled way, once all
 // uvars have been resolved.
 // To ensure an SMT-friendly encoding of the VC, it needs to be encapsulated in a squash call
 = T.rewrite_with_tactic vc_norm (squash (
-  can_be_split_trans pre_g (pre_f `star` frame) pre_f;
-  (forall (h0:hmem pre_g). req_g (mk_rmem pre_g h0) ==> req_f (focus_rmem (mk_rmem pre_g h0) pre_f)) /\
+  (forall (h0:hmem pre_g). req_g (mk_rmem pre_g h0) ==> p /\
+    (can_be_split_trans pre_g (pre_f `star` frame) pre_f;
+    req_f (focus_rmem (mk_rmem pre_g h0) pre_f))) /\
   (forall (h0:hmem pre_g) (x:a) (h1:hmem (post_g x)). (
+    p ==> (
      can_be_split_trans (post_g x) (post_f x `star` frame) (post_f x);
      can_be_split_trans (pre_g) (pre_f `star` frame) frame;
      can_be_split_trans (post_g x) (post_f x `star` frame) frame;
+     can_be_split_trans pre_g (pre_f `star` frame) pre_f;
 
      (req_g (mk_rmem pre_g h0) /\
       ens_f (focus_rmem (mk_rmem pre_g h0) pre_f) x (focus_rmem (mk_rmem (post_g x) h1) (post_f x)) /\
@@ -182,7 +186,7 @@ let subcomp_pre (#a:Type)
         (focus_rmem (mk_rmem pre_g h0) frame)
         (focus_rmem (mk_rmem (post_g x) h1) frame))
 
-        ==> ens_g (mk_rmem pre_g h0) x (mk_rmem (post_g x) h1)
+        ==> ens_g (mk_rmem pre_g h0) x (mk_rmem (post_g x) h1))
   ))
 ))
 
@@ -205,7 +209,8 @@ val subcomp (a:Type)
   (#[@@@ framing_implicit] req_g:req_t pre_g) (#[@@@ framing_implicit] ens_g:ens_t pre_g a post_g)
   (#[@@@ framing_implicit] frame:vprop)
   (#[@@@ framing_implicit] _ : squash (maybe_emp framed_f frame))
-  (#[@@@ framing_implicit] p1:squash (can_be_split pre_g (pre_f `star` frame)))
+  (#[@@@ framing_implicit] p: prop)
+  (#[@@@ framing_implicit] p1:squash (can_be_split_dep p pre_g (pre_f `star` frame)))
   (#[@@@ framing_implicit] p2:squash (equiv_forall post_g (fun x -> post_f x `star` frame)))
   (f:repr a framed_f opened_invariants o1 pre_f post_f req_f ens_f)
 : Pure (repr a framed_g opened_invariants o2 pre_g post_g req_g ens_g)
@@ -217,30 +222,32 @@ val subcomp (a:Type)
 unfold
 let if_then_else_req
   (#pre_f:pre_t) (#pre_g:pre_t) (#frame_f #frame_g:vprop)
-  (s_pre: squash (can_be_split (pre_f `star` frame_f) (pre_g `star` frame_g)))
+  (#pr: prop)
+  (s_pre: squash (can_be_split_dep pr (pre_f `star` frame_f) (pre_g `star` frame_g)))
   (req_then:req_t pre_f) (req_else:req_t pre_g)
   (p:Type0)
 : req_t (pre_f `star` frame_f)
-= fun h ->
+= fun h -> pr /\ (
     can_be_split_trans (pre_f `star` frame_f) (pre_g `star` frame_g) pre_g;
     (p ==> req_then (focus_rmem h pre_f)) /\
-    ((~ p) ==> req_else (focus_rmem h pre_g))
+    ((~ p) ==> req_else (focus_rmem h pre_g)))
 
 /// Logical postcondition for the if_then_else combinator
 unfold
 let if_then_else_ens (#a:Type)
   (#pre_f:pre_t) (#pre_g:pre_t) (#post_f:post_t a) (#post_g:post_t a)
-  (#frame_f #frame_g:vprop)
-  (s1: squash (can_be_split (pre_f `star` frame_f) (pre_g `star` frame_g)))
+  (#frame_f #frame_g:vprop) (#pr:prop)
+  (s1: squash (can_be_split_dep pr (pre_f `star` frame_f) (pre_g `star` frame_g)))
   (s2: squash (equiv_forall (fun x -> post_f x `star` frame_f) (fun x -> post_g x `star` frame_g)))
   (ens_then:ens_t pre_f a post_f) (ens_else:ens_t pre_g a post_g)
   (p:Type0)
 : ens_t (pre_f `star` frame_f) a (fun x -> post_f x `star` frame_f)
-= fun h0 x h1 ->
+= fun h0 x h1 -> pr /\ (
     can_be_split_trans (pre_f `star` frame_f) (pre_g `star` frame_g) pre_g;
     can_be_split_trans (post_f x `star` frame_f) (post_g x `star` frame_g) (post_g x);
     (p ==> ens_then (focus_rmem h0 pre_f) x (focus_rmem h1 (post_f x))) /\
-    ((~ p) ==> ens_else (focus_rmem h0 pre_g) x (focus_rmem h1 (post_g x)))
+    ((~ p) ==> ens_else (focus_rmem h0 pre_g) x (focus_rmem h1 (post_g x))))
+
 
 /// If_then_else combinator for Steel computations.
 /// The soundness of this combinator is automatically proven with respect to the subcomp
@@ -258,9 +265,10 @@ let if_then_else (a:Type)
   (#[@@@ framing_implicit] req_else:req_t pre_g) (#[@@@ framing_implicit] ens_else:ens_t pre_g a post_g)
   (#[@@@ framing_implicit] frame_f : vprop)
   (#[@@@ framing_implicit] frame_g : vprop)
+  (#[@@@ framing_implicit] pr : prop)
   (#[@@@ framing_implicit] me1 : squash (maybe_emp framed_f frame_f))
   (#[@@@ framing_implicit] me2 : squash (maybe_emp framed_g frame_g))
-  (#[@@@ framing_implicit] s_pre: squash (can_be_split (pre_f `star` frame_f) (pre_g `star` frame_g)))
+  (#[@@@ framing_implicit] s_pre: squash (can_be_split_dep pr (pre_f `star` frame_f) (pre_g `star` frame_g)))
   (#[@@@ framing_implicit] s_post: squash (equiv_forall (fun x -> post_f x `star` frame_f) (fun x -> post_g x `star` frame_g)))
   (f:repr a framed_f o Unobservable pre_f post_f req_then ens_then)
   (g:repr a framed_g o Unobservable pre_g post_g req_else ens_else)
@@ -660,6 +668,10 @@ val lift_exists (#a:_) (#u:_) (p:a -> vprop)
 
 /// If two predicates [p] and [q] are equivalent, then their existentially quantified versions
 /// are equivalent, and we can switch from `h_exists p` to `h_exists q`
+
+val exists_equiv (#a:_) (p:a -> vprop) (q:a -> vprop {forall x. equiv (p x) (q x) })
+  : Lemma (h_exists p `equiv` h_exists q)
+
 val exists_cong (#a:_) (#u:_) (p:a -> vprop) (q:a -> vprop {forall x. equiv (p x) (q x) })
   : SteelGhostT unit u
                 (h_exists p)
@@ -762,3 +774,52 @@ val elim_vrewrite (#opened:inames)
 : SteelGhost unit opened (vrewrite v f) (fun _ -> v)
     (fun _ -> True)
     (fun h _ h' -> h (vrewrite v f) == f (h' v))
+
+/// Deriving a selector-style vprop from an injective pts-to-style vprop
+
+let interp_hp_of_injective (#t: Type) (h: t -> vprop) : Tot Type =
+  (x1: t) ->
+  (x2: t) ->
+  (m: mem) ->
+  Lemma
+  (requires (
+    interp (hp_of (h x1)) m /\
+    interp (hp_of (h x2)) m
+  ))
+  (ensures (x1 == x2))
+
+val mk_selector_vprop_hp
+  (#t: Type0) (p: t -> vprop)
+: Tot (slprop u#1)
+
+val mk_selector_vprop_sel
+  (#t: Type0) (p: t -> vprop) (p_inj: interp_hp_of_injective p)
+: Tot (selector t (mk_selector_vprop_hp p))
+
+[@@__steel_reduce__]
+let mk_selector_vprop
+  (#t: Type0) (p: t -> vprop) (p_inj: interp_hp_of_injective p)
+: Tot vprop
+= VUnit ({
+    hp = mk_selector_vprop_hp p;
+    t = t;
+    sel = mk_selector_vprop_sel p p_inj;
+  })
+
+val mk_selector_vprop_intro
+  (#opened: _) (#t: Type0) (#x: t)
+  (p: t -> vprop) (p_inj: interp_hp_of_injective p)
+: SteelGhost unit opened
+    (p x)
+    (fun _ -> mk_selector_vprop p p_inj)
+    (fun _ -> True)
+    (fun _ _ h' -> h' (mk_selector_vprop p p_inj) == x)
+
+val mk_selector_vprop_elim
+  (#opened: _) (#t: Type0)
+  (p: t -> vprop) (p_inj: interp_hp_of_injective p)
+: SteelGhost (Ghost.erased t) opened
+    (mk_selector_vprop p p_inj)
+    (fun x -> p x)
+    (fun _ -> True)
+    (fun h x _ -> h (mk_selector_vprop p p_inj) == Ghost.reveal x)

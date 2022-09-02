@@ -175,3 +175,14 @@ let g (p:prop)
     = f_ref p
   in
   let x = f2 p in x
+
+
+assume
+val int_sl ([@@@smt_fallback] n:int) : vprop
+
+assume val int_f (n:int) : SteelT unit (int_sl n) (fun _ -> int_sl n)
+
+[@@ expect_failure]
+let test_subcomp_dep (n:int) : SteelT unit (int_sl n) (fun _ -> int_sl n) =
+  int_f (n - 1 + 1);
+  int_f n

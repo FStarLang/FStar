@@ -1,5 +1,5 @@
 ﻿#r "../../../bin/ulibfs.dll"
-#r "bin/Debug/BinarySearch.dll"
+#r "bin/Debug/net6.0/BinarySearch.dll"
 open BinarySearch
 
 open FStar_Seq_Base

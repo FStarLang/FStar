@@ -1,7 +1,77 @@
 open Prims
+type norm_step =
+  | Simpl 
+  | Weak 
+  | HNF 
+  | Primops 
+  | Delta 
+  | Zeta 
+  | ZetaFull 
+  | Iota 
+  | Reify 
+  | UnfoldOnly of Prims.string Prims.list 
+  | UnfoldFully of Prims.string Prims.list 
+  | UnfoldAttr of Prims.string Prims.list 
+  | UnfoldQual of Prims.string Prims.list 
+  | Unascribe 
+  | NBE 
+  | Unmeta 
+let (uu___is_Simpl : norm_step -> Prims.bool) =
+  fun projectee -> match projectee with | Simpl -> true | uu___ -> false
+let (uu___is_Weak : norm_step -> Prims.bool) =
+  fun projectee -> match projectee with | Weak -> true | uu___ -> false
+let (uu___is_HNF : norm_step -> Prims.bool) =
+  fun projectee -> match projectee with | HNF -> true | uu___ -> false
+let (uu___is_Primops : norm_step -> Prims.bool) =
+  fun projectee -> match projectee with | Primops -> true | uu___ -> false
+let (uu___is_Delta : norm_step -> Prims.bool) =
+  fun projectee -> match projectee with | Delta -> true | uu___ -> false
+let (uu___is_Zeta : norm_step -> Prims.bool) =
+  fun projectee -> match projectee with | Zeta -> true | uu___ -> false
+let (uu___is_ZetaFull : norm_step -> Prims.bool) =
+  fun projectee -> match projectee with | ZetaFull -> true | uu___ -> false
+let (uu___is_Iota : norm_step -> Prims.bool) =
+  fun projectee -> match projectee with | Iota -> true | uu___ -> false
+let (uu___is_Reify : norm_step -> Prims.bool) =
+  fun projectee -> match projectee with | Reify -> true | uu___ -> false
+let (uu___is_UnfoldOnly : norm_step -> Prims.bool) =
+  fun projectee ->
+    match projectee with | UnfoldOnly _0 -> true | uu___ -> false
+let (__proj__UnfoldOnly__item___0 : norm_step -> Prims.string Prims.list) =
+  fun projectee -> match projectee with | UnfoldOnly _0 -> _0
+let (uu___is_UnfoldFully : norm_step -> Prims.bool) =
+  fun projectee ->
+    match projectee with | UnfoldFully _0 -> true | uu___ -> false
+let (__proj__UnfoldFully__item___0 : norm_step -> Prims.string Prims.list) =
+  fun projectee -> match projectee with | UnfoldFully _0 -> _0
+let (uu___is_UnfoldAttr : norm_step -> Prims.bool) =
+  fun projectee ->
+    match projectee with | UnfoldAttr _0 -> true | uu___ -> false
+let (__proj__UnfoldAttr__item___0 : norm_step -> Prims.string Prims.list) =
+  fun projectee -> match projectee with | UnfoldAttr _0 -> _0
+let (uu___is_UnfoldQual : norm_step -> Prims.bool) =
+  fun projectee ->
+    match projectee with | UnfoldQual _0 -> true | uu___ -> false
+let (__proj__UnfoldQual__item___0 : norm_step -> Prims.string Prims.list) =
+  fun projectee -> match projectee with | UnfoldQual _0 -> _0
+let (uu___is_Unascribe : norm_step -> Prims.bool) =
+  fun projectee -> match projectee with | Unascribe -> true | uu___ -> false
+let (uu___is_NBE : norm_step -> Prims.bool) =
+  fun projectee -> match projectee with | NBE -> true | uu___ -> false
+let (uu___is_Unmeta : norm_step -> Prims.bool) =
+  fun projectee -> match projectee with | Unmeta -> true | uu___ -> false
 type norm_cb =
-  (FStar_Ident.lid, FStar_Syntax_Syntax.term) FStar_Pervasives.either ->
+  (FStar_Ident.lident, FStar_Syntax_Syntax.term) FStar_Pervasives.either ->
     FStar_Syntax_Syntax.term
+type shadow_term =
+  FStar_Syntax_Syntax.term FStar_Thunk.t FStar_Pervasives_Native.option
+type embed_t =
+  FStar_Compiler_Range.range ->
+    shadow_term -> norm_cb -> FStar_Syntax_Syntax.term
+type 'a unembed_t =
+  Prims.bool -> norm_cb -> 'a FStar_Pervasives_Native.option
+type 'a raw_embedder = 'a -> embed_t
+type 'a raw_unembedder = FStar_Syntax_Syntax.term -> 'a unembed_t
 let (id_norm_cb : norm_cb) =
   fun uu___ ->
     match uu___ with
@@ -19,8 +89,6 @@ exception Unembedding_failure
 let (uu___is_Unembedding_failure : Prims.exn -> Prims.bool) =
   fun projectee ->
     match projectee with | Unembedding_failure -> true | uu___ -> false
-type shadow_term =
-  FStar_Syntax_Syntax.term FStar_Thunk.t FStar_Pervasives_Native.option
 let (map_shadow :
   shadow_term ->
     (FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term) -> shadow_term)
@@ -28,13 +96,6 @@ let (map_shadow :
 let (force_shadow :
   shadow_term -> FStar_Syntax_Syntax.term FStar_Pervasives_Native.option) =
   fun s -> FStar_Compiler_Util.map_opt s FStar_Thunk.force
-type embed_t =
-  FStar_Compiler_Range.range ->
-    shadow_term -> norm_cb -> FStar_Syntax_Syntax.term
-type 'a unembed_t =
-  Prims.bool -> norm_cb -> 'a FStar_Pervasives_Native.option
-type 'a raw_embedder = 'a -> embed_t
-type 'a raw_unembedder = FStar_Syntax_Syntax.term -> 'a unembed_t
 type 'a printer = 'a -> Prims.string
 type 'a embedding =
   {
@@ -112,9 +173,31 @@ let mk_emb_full :
       fun typ ->
         fun printer1 ->
           fun emb_typ -> { em; un; typ; print = printer1; emb_typ }
+let rec (unmeta_div_results :
+  FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term) =
+  fun t ->
+    let uu___ =
+      let uu___1 = FStar_Syntax_Subst.compress t in
+      uu___1.FStar_Syntax_Syntax.n in
+    match uu___ with
+    | FStar_Syntax_Syntax.Tm_meta
+        (t', FStar_Syntax_Syntax.Meta_monadic_lift (src, dst, uu___1)) ->
+        let uu___2 =
+          (FStar_Ident.lid_equals src FStar_Parser_Const.effect_PURE_lid) &&
+            (FStar_Ident.lid_equals dst FStar_Parser_Const.effect_DIV_lid) in
+        if uu___2 then unmeta_div_results t' else t
+    | FStar_Syntax_Syntax.Tm_meta
+        (t', FStar_Syntax_Syntax.Meta_monadic (m, uu___1)) ->
+        let uu___2 =
+          FStar_Ident.lid_equals m FStar_Parser_Const.effect_DIV_lid in
+        if uu___2 then unmeta_div_results t' else t
+    | FStar_Syntax_Syntax.Tm_meta (t', uu___1) -> unmeta_div_results t'
+    | FStar_Syntax_Syntax.Tm_ascribed (t', uu___1, uu___2) ->
+        unmeta_div_results t'
+    | uu___1 -> t
 let embed : 'a . 'a embedding -> 'a -> embed_t = fun e -> fun x -> e.em x
 let unembed : 'a . 'a embedding -> FStar_Syntax_Syntax.term -> 'a unembed_t =
-  fun e -> fun t -> e.un t
+  fun e -> fun t -> let uu___ = unmeta_div_results t in e.un uu___
 let warn_unembed :
   'a .
     'a embedding ->
@@ -359,7 +442,7 @@ let (e_bool : Prims.bool embedding) =
       FStar_Syntax_Syntax.vars = (t.FStar_Syntax_Syntax.vars)
     } in
   let un t0 w _norm =
-    let t = FStar_Syntax_Util.unmeta_safe t0 in
+    let t = unmeta_div_results t0 in
     match t.FStar_Syntax_Syntax.n with
     | FStar_Syntax_Syntax.Tm_constant (FStar_Const.Const_bool b) ->
         FStar_Pervasives_Native.Some b
@@ -392,7 +475,7 @@ let (e_char : FStar_Char.char embedding) =
       FStar_Syntax_Syntax.vars = (t.FStar_Syntax_Syntax.vars)
     } in
   let un t0 w _norm =
-    let t = FStar_Syntax_Util.unmeta_safe t0 in
+    let t = unmeta_div_results t0 in
     match t.FStar_Syntax_Syntax.n with
     | FStar_Syntax_Syntax.Tm_constant (FStar_Const.Const_char c) ->
         FStar_Pervasives_Native.Some c
@@ -431,7 +514,7 @@ let (e_int : FStar_BigInt.t embedding) =
          let uu___1 = FStar_BigInt.string_of_big_int i in
          FStar_Syntax_Util.exp_int uu___1) in
   let un t0 w _norm =
-    let t = FStar_Syntax_Util.unmeta_safe t0 in
+    let t = unmeta_div_results t0 in
     lazy_unembed FStar_BigInt.string_of_big_int emb_t_int t t_int
       (fun t1 ->
          match t1.FStar_Syntax_Syntax.n with
@@ -469,7 +552,7 @@ let (e_string : Prims.string embedding) =
       (FStar_Syntax_Syntax.Tm_constant (FStar_Const.Const_string (s, rng)))
       rng in
   let un t0 w _norm =
-    let t = FStar_Syntax_Util.unmeta_safe t0 in
+    let t = unmeta_div_results t0 in
     match t.FStar_Syntax_Syntax.n with
     | FStar_Syntax_Syntax.Tm_constant (FStar_Const.Const_string (s, uu___))
         -> FStar_Pervasives_Native.Some s
@@ -568,7 +651,7 @@ let e_option :
                  uu___3 :: uu___4 in
                FStar_Syntax_Syntax.mk_Tm_app uu___1 uu___2 rng) in
     let un t0 w norm =
-      let t = FStar_Syntax_Util.unmeta_safe t0 in
+      let t = unmeta_div_results t0 in
       lazy_unembed printer1 emb_t_option_a t t_option_a
         (fun t1 ->
            let uu___ = FStar_Syntax_Util.head_and_args_full t1 in
@@ -702,7 +785,7 @@ let e_tuple2 : 'a 'b . 'a embedding -> 'b embedding -> ('a * 'b) embedding =
                uu___3 :: uu___4 in
              FStar_Syntax_Syntax.mk_Tm_app uu___1 uu___2 rng) in
       let un t0 w norm =
-        let t = FStar_Syntax_Util.unmeta_safe t0 in
+        let t = unmeta_div_results t0 in
         lazy_unembed printer1 emb_t_pair_a_b t t_pair_a_b
           (fun t1 ->
              let uu___ = FStar_Syntax_Util.head_and_args_full t1 in
@@ -872,7 +955,7 @@ let e_tuple3 :
                      uu___4 :: uu___5 in
                    FStar_Syntax_Syntax.mk_Tm_app uu___2 uu___3 rng) in
         let un t0 w norm =
-          let t = FStar_Syntax_Util.unmeta_safe t0 in
+          let t = unmeta_div_results t0 in
           lazy_unembed printer1 emb_t_pair_a_b_c t t_pair_a_b_c
             (fun t1 ->
                let uu___ = FStar_Syntax_Util.head_and_args_full t1 in
@@ -885,24 +968,23 @@ let e_tuple3 :
                      (uu___2, args) in
                    (match uu___1 with
                     | (FStar_Syntax_Syntax.Tm_fvar fv,
-                       uu___2::uu___3::(a1, uu___4)::(b1, uu___5)::(c1,
-                                                                    uu___6)::[])
-                        when
+                       uu___2::uu___3::uu___4::(a1, uu___5)::(b1, uu___6)::
+                       (c1, uu___7)::[]) when
                         FStar_Syntax_Syntax.fv_eq_lid fv
                           FStar_Parser_Const.lid_Mktuple3
                         ->
-                        let uu___7 =
-                          let uu___8 = unembed ea a1 in uu___8 w norm in
-                        FStar_Compiler_Util.bind_opt uu___7
+                        let uu___8 =
+                          let uu___9 = unembed ea a1 in uu___9 w norm in
+                        FStar_Compiler_Util.bind_opt uu___8
                           (fun a2 ->
-                             let uu___8 =
-                               let uu___9 = unembed eb b1 in uu___9 w norm in
-                             FStar_Compiler_Util.bind_opt uu___8
+                             let uu___9 =
+                               let uu___10 = unembed eb b1 in uu___10 w norm in
+                             FStar_Compiler_Util.bind_opt uu___9
                                (fun b2 ->
-                                  let uu___9 =
-                                    let uu___10 = unembed ec c1 in
-                                    uu___10 w norm in
-                                  FStar_Compiler_Util.bind_opt uu___9
+                                  let uu___10 =
+                                    let uu___11 = unembed ec c1 in
+                                    uu___11 w norm in
+                                  FStar_Compiler_Util.bind_opt uu___10
                                     (fun c2 ->
                                        FStar_Pervasives_Native.Some
                                          (a2, b2, c2))))
@@ -1076,7 +1158,7 @@ let e_either :
                     uu___3 :: uu___4 in
                   FStar_Syntax_Syntax.mk_Tm_app uu___1 uu___2 rng)) in
       let un t0 w norm =
-        let t = FStar_Syntax_Util.unmeta_safe t0 in
+        let t = unmeta_div_results t0 in
         lazy_unembed printer1 emb_t_sum_a_b t t_sum_a_b
           (fun t1 ->
              let uu___ = FStar_Syntax_Util.head_and_args_full t1 in
@@ -1210,7 +1292,7 @@ let e_list : 'a . 'a embedding -> 'a Prims.list embedding =
                  t :: uu___2 in
                FStar_Syntax_Syntax.mk_Tm_app cons uu___1 rng) in
     let rec un t0 w norm =
-      let t = FStar_Syntax_Util.unmeta_safe t0 in
+      let t = unmeta_div_results t0 in
       lazy_unembed printer1 emb_t_list_a t t_list_a
         (fun t1 ->
            let uu___ = FStar_Syntax_Util.head_and_args_full t1 in
@@ -1274,64 +1356,6 @@ let e_list : 'a . 'a embedding -> 'a Prims.list embedding =
       let uu___1 = type_of ea in FStar_Syntax_Syntax.t_list_of uu___1 in
     mk_emb_full em un uu___ printer1 emb_t_list_a
 let (e_string_list : Prims.string Prims.list embedding) = e_list e_string
-type norm_step =
-  | Simpl 
-  | Weak 
-  | HNF 
-  | Primops 
-  | Delta 
-  | Zeta 
-  | ZetaFull 
-  | Iota 
-  | Reify 
-  | UnfoldOnly of Prims.string Prims.list 
-  | UnfoldFully of Prims.string Prims.list 
-  | UnfoldAttr of Prims.string Prims.list 
-  | UnfoldQual of Prims.string Prims.list 
-  | NBE 
-  | Unmeta 
-let (uu___is_Simpl : norm_step -> Prims.bool) =
-  fun projectee -> match projectee with | Simpl -> true | uu___ -> false
-let (uu___is_Weak : norm_step -> Prims.bool) =
-  fun projectee -> match projectee with | Weak -> true | uu___ -> false
-let (uu___is_HNF : norm_step -> Prims.bool) =
-  fun projectee -> match projectee with | HNF -> true | uu___ -> false
-let (uu___is_Primops : norm_step -> Prims.bool) =
-  fun projectee -> match projectee with | Primops -> true | uu___ -> false
-let (uu___is_Delta : norm_step -> Prims.bool) =
-  fun projectee -> match projectee with | Delta -> true | uu___ -> false
-let (uu___is_Zeta : norm_step -> Prims.bool) =
-  fun projectee -> match projectee with | Zeta -> true | uu___ -> false
-let (uu___is_ZetaFull : norm_step -> Prims.bool) =
-  fun projectee -> match projectee with | ZetaFull -> true | uu___ -> false
-let (uu___is_Iota : norm_step -> Prims.bool) =
-  fun projectee -> match projectee with | Iota -> true | uu___ -> false
-let (uu___is_Reify : norm_step -> Prims.bool) =
-  fun projectee -> match projectee with | Reify -> true | uu___ -> false
-let (uu___is_UnfoldOnly : norm_step -> Prims.bool) =
-  fun projectee ->
-    match projectee with | UnfoldOnly _0 -> true | uu___ -> false
-let (__proj__UnfoldOnly__item___0 : norm_step -> Prims.string Prims.list) =
-  fun projectee -> match projectee with | UnfoldOnly _0 -> _0
-let (uu___is_UnfoldFully : norm_step -> Prims.bool) =
-  fun projectee ->
-    match projectee with | UnfoldFully _0 -> true | uu___ -> false
-let (__proj__UnfoldFully__item___0 : norm_step -> Prims.string Prims.list) =
-  fun projectee -> match projectee with | UnfoldFully _0 -> _0
-let (uu___is_UnfoldAttr : norm_step -> Prims.bool) =
-  fun projectee ->
-    match projectee with | UnfoldAttr _0 -> true | uu___ -> false
-let (__proj__UnfoldAttr__item___0 : norm_step -> Prims.string Prims.list) =
-  fun projectee -> match projectee with | UnfoldAttr _0 -> _0
-let (uu___is_UnfoldQual : norm_step -> Prims.bool) =
-  fun projectee ->
-    match projectee with | UnfoldQual _0 -> true | uu___ -> false
-let (__proj__UnfoldQual__item___0 : norm_step -> Prims.string Prims.list) =
-  fun projectee -> match projectee with | UnfoldQual _0 -> _0
-let (uu___is_NBE : norm_step -> Prims.bool) =
-  fun projectee -> match projectee with | NBE -> true | uu___ -> false
-let (uu___is_Unmeta : norm_step -> Prims.bool) =
-  fun projectee -> match projectee with | Unmeta -> true | uu___ -> false
 let (steps_Simpl : FStar_Syntax_Syntax.term) =
   FStar_Syntax_Syntax.tconst FStar_Parser_Const.steps_simpl
 let (steps_Weak : FStar_Syntax_Syntax.term) =
@@ -1358,6 +1382,8 @@ let (steps_UnfoldAttr : FStar_Syntax_Syntax.term) =
   FStar_Syntax_Syntax.tconst FStar_Parser_Const.steps_unfoldattr
 let (steps_UnfoldQual : FStar_Syntax_Syntax.term) =
   FStar_Syntax_Syntax.tconst FStar_Parser_Const.steps_unfoldqual
+let (steps_Unascribe : FStar_Syntax_Syntax.term) =
+  FStar_Syntax_Syntax.tconst FStar_Parser_Const.steps_unascribe
 let (steps_NBE : FStar_Syntax_Syntax.term) =
   FStar_Syntax_Syntax.tconst FStar_Parser_Const.steps_nbe
 let (steps_Unmeta : FStar_Syntax_Syntax.term) =
@@ -1386,6 +1412,7 @@ let (e_norm_step : norm_step embedding) =
          | Zeta -> steps_Zeta
          | ZetaFull -> steps_ZetaFull
          | Iota -> steps_Iota
+         | Unascribe -> steps_Unascribe
          | NBE -> steps_NBE
          | Unmeta -> steps_Unmeta
          | Reify -> steps_Reify
@@ -1430,7 +1457,7 @@ let (e_norm_step : norm_step embedding) =
                [uu___2] in
              FStar_Syntax_Syntax.mk_Tm_app steps_UnfoldQual uu___1 rng) in
   let un t0 w norm =
-    let t = FStar_Syntax_Util.unmeta_safe t0 in
+    let t = unmeta_div_results t0 in
     lazy_unembed printer1 emb_t_norm_step t t_norm_step
       (fun t1 ->
          let uu___ = FStar_Syntax_Util.head_and_args t1 in
@@ -1474,6 +1501,10 @@ let (e_norm_step : norm_step embedding) =
                   FStar_Syntax_Syntax.fv_eq_lid fv
                     FStar_Parser_Const.steps_iota
                   -> FStar_Pervasives_Native.Some Iota
+              | (FStar_Syntax_Syntax.Tm_fvar fv, []) when
+                  FStar_Syntax_Syntax.fv_eq_lid fv
+                    FStar_Parser_Const.steps_unascribe
+                  -> FStar_Pervasives_Native.Some Unascribe
               | (FStar_Syntax_Syntax.Tm_fvar fv, []) when
                   FStar_Syntax_Syntax.fv_eq_lid fv
                     FStar_Parser_Const.steps_nbe
@@ -1557,7 +1588,7 @@ let (e_range : FStar_Compiler_Range.range embedding) =
     FStar_Syntax_Syntax.mk
       (FStar_Syntax_Syntax.Tm_constant (FStar_Const.Const_range r)) rng in
   let un t0 w _norm =
-    let t = FStar_Syntax_Util.unmeta_safe t0 in
+    let t = unmeta_div_results t0 in
     match t.FStar_Syntax_Syntax.n with
     | FStar_Syntax_Syntax.Tm_constant (FStar_Const.Const_range r) ->
         FStar_Pervasives_Native.Some r

@@ -21,7 +21,7 @@
         "typing_tok_Prims.T@tok"
       ],
       0,
-      "0742d1867c3d7e7b20b99309df6c0f59"
+      "3e163578413b01c9e9ed8b9f0b70711d"
     ],
     [
       "TwoLockQueue.rewrite",
@@ -41,7 +41,7 @@
         "typing_Steel.Effect.Common.hp_of"
       ],
       0,
-      "a6dc3a1516f9a43d0acafba0db8d4468"
+      "d23bf0c72cdb4e02ceb753696c6b46a8"
     ],
     [
       "TwoLockQueue.elim_pure",
@@ -61,16 +61,7 @@
         "true_interp", "typing_tok_Prims.T@tok"
       ],
       0,
-      "caf3b099fd945f78d136042d82926733"
-    ],
-    [
-      "TwoLockQueue.open_exists",
-      1,
-      2,
-      1,
-      [ "@query", "equation_Steel.Effect.Common.true_p", "true_interp" ],
-      0,
-      "f481f41af2242e3c054303f7cd7ac575"
+      "6820257829cd1beba978f8d17d8f4c8a"
     ],
     [
       "TwoLockQueue.intro_lock_inv",
@@ -84,7 +75,7 @@
         "projection_inverse_Steel.Effect.Common.VUnit__0"
       ],
       0,
-      "cdcc4b3f205045cd7c8a58f96f527101"
+      "639f8ebdbfaf9cb9aec75613a11e78f6"
     ],
     [
       "TwoLockQueue.intro_lock_inv",
@@ -93,16 +84,7 @@
       1,
       [ "@query", "equation_TwoLockQueue.lock_inv" ],
       0,
-      "57e41e55511b691fd6e64d96563b6a5d"
-    ],
-    [
-      "TwoLockQueue.pack_queue_invariant",
-      1,
-      2,
-      1,
-      [ "@query", "equation_Steel.Effect.Common.true_p", "true_interp" ],
-      0,
-      "59a5bbaccf4b5536821adff801cac941"
+      "e32c3ecb82bafdb47295416ec0f0e0bf"
     ],
     [
       "TwoLockQueue.new_queue",
@@ -111,7 +93,7 @@
       1,
       [ "@query", "equation_Steel.Effect.Common.true_p", "true_interp" ],
       0,
-      "5f8e6ef5013abf5db4eee633993ea38c"
+      "298bd2950d9a9591803fd39b1d55aa94"
     ],
     [
       "TwoLockQueue.enqueue",
@@ -120,50 +102,38 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "FStar.Tactics.Effect_interpretation_Tm_ghost_arrow_44164f5e759c8937bc211b53dca29861",
+        "FStar.Ghost_interpretation_Tm_ghost_arrow_44164f5e759c8937bc211b53dca29861",
         "Prims_pretyping_f537159ed795b314b4e58c260361ae86",
         "Steel.Memory_interpretation_Tm_ghost_arrow_9795a6b43f8ada736381f0d7f06aefac",
         "bool_inversion", "bool_typing",
         "data_elim_Steel.FractionalPermission.MkPerm",
-        "data_elim_TwoLockQueue.Mkt", "equation_FStar.Real.one",
-        "equation_FStar.Real.two", "equation_Prims.eqtype",
-        "equation_Steel.Effect.Common.inv",
+        "equation_Prims.eqtype", "equation_Steel.Effect.Common.inv",
         "equation_Steel.Effect.Common.mem_inv",
         "equation_Steel.FractionalPermission.full_perm",
-        "equation_Steel.FractionalPermission.half_perm",
-        "equation_Steel.FractionalPermission.sum_perm",
         "equation_Steel.Memory.inames",
         "equation_TwoLockQueue.queue_invariant",
         "fuel_guarded_inversion_TwoLockQueue.t",
         "function_token_typing_Prims.bool",
         "interpretation_Tm_abs_d716b89c7122244f867c074692bc6a31",
         "lemma_FStar.Ghost.hide_reveal", "lemma_FStar.Ghost.reveal_hide",
-        "lemma_FStar.Set.mem_empty", "primitive_FStar.Real.of_int",
+        "lemma_FStar.Set.mem_empty",
+        "lemma_Steel.FractionalPermission.sum_halves",
         "primitive_FStar.Real.op_Greater_Dot",
-        "primitive_FStar.Real.op_Plus_Dot",
-        "primitive_FStar.Real.op_Slash_Dot",
         "proj_equation_Queue.Def.Mkcell_next",
-        "proj_equation_Steel.FractionalPermission.MkPerm_v",
         "proj_equation_TwoLockQueue.Mkt_head",
         "proj_equation_TwoLockQueue.Mkt_inv",
         "proj_equation_TwoLockQueue.Mkt_tail",
         "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_BoxInt_proj_0",
-        "projection_inverse_BoxReal_proj_0",
         "projection_inverse_Queue.Def.Mkcell_next",
-        "projection_inverse_Steel.FractionalPermission.MkPerm_v",
-        "real_inversion",
         "refinement_interpretation_Tm_refine_30b51c86421a699c10f6925311aa63ba",
         "refinement_interpretation_Tm_refine_3f54e9b64bb1cf73ff37c7c9d439498d",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "refinement_interpretation_Tm_refine_65079789b5ee069d4dcb71b5d5562419",
         "typing_FStar.Ghost.elift2", "typing_FStar.Ghost.hide",
-        "typing_FStar.Ghost.reveal", "typing_FStar.Real.one",
-        "typing_FStar.Set.empty", "typing_FStar.Set.set",
-        "typing_Queue.Def.t", "typing_Steel.Effect.Common.mem_inv",
+        "typing_FStar.Ghost.reveal", "typing_FStar.Set.empty",
+        "typing_FStar.Set.set", "typing_Queue.Def.t",
+        "typing_Steel.Effect.Common.mem_inv",
         "typing_Steel.FractionalPermission.full_perm",
-        "typing_Steel.FractionalPermission.half_perm",
-        "typing_Steel.FractionalPermission.sum_perm",
         "typing_Steel.Memory.iname",
         "typing_Tm_abs_d716b89c7122244f867c074692bc6a31",
         "typing_TwoLockQueue.__proj__Mkt__item__head",
@@ -172,7 +142,7 @@
         "typing_TwoLockQueue.queue_invariant"
       ],
       0,
-      "0eaf602e515e0d706e00de85c7f05730"
+      "717a3bd4705a7a90ae1149b6d956d159"
     ],
     [
       "TwoLockQueue.maybe_ghost_pts_to",
@@ -183,7 +153,7 @@
         "@query", "lemma_FStar.Pervasives.invertOption", "typing_Queue.Def.t"
       ],
       0,
-      "4f845397e842f51f99198d28ffe0875d"
+      "0b93b7492e73ca39768fa1554b23edd8"
     ],
     [
       "TwoLockQueue.dequeue_core",
@@ -247,7 +217,7 @@
         "typing_TwoLockQueue.maybe_ghost_pts_to"
       ],
       0,
-      "897813a465ad8b375d965b6b35e7550e"
+      "62393cbf9ac42b2c24cb7a9d5bf9c5c1"
     ],
     [
       "TwoLockQueue.dequeue",
@@ -258,7 +228,7 @@
         "@MaxFuel_assumption", "@MaxIFuel_assumption",
         "@fuel_correspondence_Steel.Effect.Common.hp_of.fuel_instrumented",
         "@query",
-        "FStar.Tactics.Effect_interpretation_Tm_ghost_arrow_44164f5e759c8937bc211b53dca29861",
+        "FStar.Ghost_interpretation_Tm_ghost_arrow_44164f5e759c8937bc211b53dca29861",
         "Prims_pretyping_f537159ed795b314b4e58c260361ae86",
         "Steel.Memory_interpretation_Tm_ghost_arrow_9795a6b43f8ada736381f0d7f06aefac",
         "bool_inversion", "bool_typing",
@@ -326,7 +296,7 @@
         "typing_TwoLockQueue.queue_invariant"
       ],
       0,
-      "867a2ebe02bcf56347e172b2f62d3ea2"
+      "a3c65dbaad8460889e35cfce2bf22049"
     ]
   ]
 ]

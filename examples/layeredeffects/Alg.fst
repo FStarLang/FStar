@@ -355,8 +355,11 @@ let try_with #a #labs (f : (unit -> Alg a (Raise::labs))) (g:unit -> Alg a labs)
                 (function Raise -> fun _ _ -> g ()
                         | _     -> defh)
 
+let some_as_alg (#a:Type) #labs : a -> Alg (option a) labs =
+  fun x -> Some x
+
 let catchE #a #labs (f : unit -> Alg a (Raise::labs)) : Alg (option a) labs =
-  handle_with f Some (function Raise -> fun _ _ -> None
+  handle_with f some_as_alg (function Raise -> fun _ _ -> None
                                    | _     -> defh)
 
 (* Repeating the examples above *)
@@ -763,6 +766,14 @@ let rec fixup_no_other (l:op{Other? l}) (ls:list baseop)
     | [] -> ()
     | l1::ls -> fixup_no_other l ls
 
+let lattice_get_repr () : L.repr int [L.RD] = reify (L.get ())
+
+let lattice_put_repr (s:state) : L.repr unit [L.WR] =
+  reify (L.put s)
+
+let lattice_raise_repr (#a:Type) () : L.repr a [L.EXN] =
+  reify (L.raise #a ())
+
 // This would be a lot nicer if it was done in L.EFF itself,
 // but the termination proof fails since it has no logical payload.
 let rec interp_into_lattice_tree #a (#labs:list baseop)
@@ -771,13 +782,13 @@ let rec interp_into_lattice_tree #a (#labs:list baseop)
   = match t with
     | Return x -> L.return _ x
     | Op Read i k ->
-      L.bind _ _ _ _ (reify (L.get i))
+      L.bind _ _ _ _ (lattice_get_repr ())
        (fun x -> interp_into_lattice_tree #a #labs (k x))
     | Op Write i k ->
-      L.bind _ _ _ _ (reify (L.put i))
+      L.bind _ _ _ _ (lattice_put_repr i)
        (fun x -> interp_into_lattice_tree #a #labs (k x))
     | Op Raise i k ->
-      L.bind _ _ _ _ (reify (L.raise ()))
+      L.bind _ _ _ _ (lattice_raise_repr ())
        (fun x -> interp_into_lattice_tree #a #labs (k x))
 
 let interp_into_lattice #a (#labs:list baseop)
@@ -789,9 +800,8 @@ let interp_into_lattice #a (#labs:list baseop)
 // directly?
 let interp_full #a (#labs:list baseop)
   (f : unit -> Alg a (fixup labs))
-  : Tot (f:(state -> Tot (option a & state)){Lattice.abides f (Lattice.interp (trlabs labs))})
+  : L.repr a (trlabs labs)
   = reify (interp_into_lattice #a #labs f)
-
 
 (* Doing it directly. *)
 

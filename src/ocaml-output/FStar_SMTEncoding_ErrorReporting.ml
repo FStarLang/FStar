@@ -1,4 +1,6 @@
 open Prims
+type label = FStar_SMTEncoding_Term.error_label
+type labels = label Prims.list
 exception Not_a_wp_implication of Prims.string 
 let (uu___is_Not_a_wp_implication : Prims.exn -> Prims.bool) =
   fun projectee ->
@@ -7,8 +9,6 @@ let (uu___is_Not_a_wp_implication : Prims.exn -> Prims.bool) =
     | uu___ -> false
 let (__proj__Not_a_wp_implication__item__uu___ : Prims.exn -> Prims.string) =
   fun projectee -> match projectee with | Not_a_wp_implication uu___ -> uu___
-type label = FStar_SMTEncoding_Term.error_label
-type labels = FStar_SMTEncoding_Term.error_labels
 let (sort_labels :
   (FStar_SMTEncoding_Term.error_label * Prims.bool) Prims.list ->
     ((FStar_SMTEncoding_Term.fv * Prims.string * FStar_Compiler_Range.range)
@@ -138,11 +138,13 @@ let (label_goals :
               | FStar_SMTEncoding_Term.Real uu___1 -> (labels1, q1)
               | FStar_SMTEncoding_Term.LblPos uu___1 -> failwith "Impossible"
               | FStar_SMTEncoding_Term.Labeled
-                  (arg, "could not prove post-condition", uu___1) ->
-                  let fallback msg1 =
-                    aux default_msg ropt post_name_opt labels1 arg in
+                  (arg, "could not prove post-condition", label_range) ->
+                  let fallback debug_msg =
+                    aux default_msg
+                      (FStar_Pervasives_Native.Some label_range)
+                      post_name_opt labels1 arg in
                   (try
-                     (fun uu___2 ->
+                     (fun uu___1 ->
                         match () with
                         | () ->
                             (match arg.FStar_SMTEncoding_Term.tm with
@@ -154,60 +156,60 @@ let (label_goals :
                                       FStar_SMTEncoding_Term.App
                                       (FStar_SMTEncoding_Term.Imp,
                                        lhs::rhs::[]);
-                                    FStar_SMTEncoding_Term.freevars = uu___3;
+                                    FStar_SMTEncoding_Term.freevars = uu___2;
                                     FStar_SMTEncoding_Term.rng = rng;_})
                                  ->
                                  let post_name =
-                                   let uu___4 =
-                                     let uu___5 = FStar_Ident.next_id () in
+                                   let uu___3 =
+                                     let uu___4 = FStar_Ident.next_id () in
                                      FStar_Compiler_Effect.op_Less_Bar
                                        FStar_Compiler_Util.string_of_int
-                                       uu___5 in
-                                   Prims.op_Hat "^^post_condition_" uu___4 in
+                                       uu___4 in
+                                   Prims.op_Hat "^^post_condition_" uu___3 in
                                  let names =
-                                   let uu___4 =
+                                   let uu___3 =
                                      FStar_SMTEncoding_Term.mk_fv
                                        (post_name, post) in
-                                   let uu___5 =
+                                   let uu___4 =
                                      FStar_Compiler_List.map
                                        (fun s ->
-                                          let uu___6 =
-                                            let uu___7 =
-                                              let uu___8 =
-                                                let uu___9 =
+                                          let uu___5 =
+                                            let uu___6 =
+                                              let uu___7 =
+                                                let uu___8 =
                                                   FStar_Ident.next_id () in
                                                 FStar_Compiler_Effect.op_Less_Bar
                                                   FStar_Compiler_Util.string_of_int
-                                                  uu___9 in
-                                              Prims.op_Hat "^^" uu___8 in
-                                            (uu___7, s) in
-                                          FStar_SMTEncoding_Term.mk_fv uu___6)
+                                                  uu___8 in
+                                              Prims.op_Hat "^^" uu___7 in
+                                            (uu___6, s) in
+                                          FStar_SMTEncoding_Term.mk_fv uu___5)
                                        sorts in
-                                   uu___4 :: uu___5 in
+                                   uu___3 :: uu___4 in
                                  let instantiation =
                                    FStar_Compiler_List.map
                                      FStar_SMTEncoding_Util.mkFreeV names in
-                                 let uu___4 =
-                                   let uu___5 =
+                                 let uu___3 =
+                                   let uu___4 =
                                      FStar_SMTEncoding_Term.inst
                                        instantiation lhs in
-                                   let uu___6 =
+                                   let uu___5 =
                                      FStar_SMTEncoding_Term.inst
                                        instantiation rhs in
-                                   (uu___5, uu___6) in
-                                 (match uu___4 with
+                                   (uu___4, uu___5) in
+                                 (match uu___3 with
                                   | (lhs1, rhs1) ->
-                                      let uu___5 =
+                                      let uu___4 =
                                         match lhs1.FStar_SMTEncoding_Term.tm
                                         with
                                         | FStar_SMTEncoding_Term.App
                                             (FStar_SMTEncoding_Term.And,
                                              clauses_lhs)
                                             ->
-                                            let uu___6 =
+                                            let uu___5 =
                                               FStar_Compiler_Util.prefix
                                                 clauses_lhs in
-                                            (match uu___6 with
+                                            (match uu___5 with
                                              | (req, ens) ->
                                                  (match ens.FStar_SMTEncoding_Term.tm
                                                   with
@@ -222,17 +224,17 @@ let (label_goals :
                                                            (FStar_SMTEncoding_Term.Imp,
                                                             ensures_conjuncts::post1::[]);
                                                          FStar_SMTEncoding_Term.freevars
-                                                           = uu___7;
+                                                           = uu___6;
                                                          FStar_SMTEncoding_Term.rng
                                                            = rng_ens;_})
                                                       ->
-                                                      let uu___8 =
+                                                      let uu___7 =
                                                         is_a_post_condition
                                                           (FStar_Pervasives_Native.Some
                                                              post_name) post1 in
-                                                      if uu___8
+                                                      if uu___7
                                                       then
-                                                        let uu___9 =
+                                                        let uu___8 =
                                                           aux
                                                             "could not prove post-condition"
                                                             FStar_Pervasives_Native.None
@@ -240,7 +242,7 @@ let (label_goals :
                                                                post_name)
                                                             labels1
                                                             ensures_conjuncts in
-                                                        (match uu___9 with
+                                                        (match uu___8 with
                                                          | (labels2,
                                                             ensures_conjuncts1)
                                                              ->
@@ -251,13 +253,13 @@ let (label_goals :
                                                                    [[post1]]
                                                                | []::[] ->
                                                                    [[post1]]
-                                                               | uu___10 ->
+                                                               | uu___9 ->
                                                                    pats_ens in
                                                              let ens1 =
-                                                               let uu___10 =
-                                                                 let uu___11
+                                                               let uu___9 =
+                                                                 let uu___10
                                                                    =
-                                                                   let uu___12
+                                                                   let uu___11
                                                                     =
                                                                     FStar_SMTEncoding_Term.mk
                                                                     (FStar_SMTEncoding_Term.App
@@ -269,11 +271,11 @@ let (label_goals :
                                                                     pats_ens1,
                                                                     iopt_ens,
                                                                     sorts_ens,
-                                                                    uu___12) in
+                                                                    uu___11) in
                                                                  FStar_SMTEncoding_Term.Quant
-                                                                   uu___11 in
+                                                                   uu___10 in
                                                                FStar_SMTEncoding_Term.mk
-                                                                 uu___10
+                                                                 uu___9
                                                                  ens.FStar_SMTEncoding_Term.rng in
                                                              let lhs2 =
                                                                FStar_SMTEncoding_Term.mk
@@ -283,100 +285,100 @@ let (label_goals :
                                                                     req
                                                                     [ens1])))
                                                                  lhs1.FStar_SMTEncoding_Term.rng in
-                                                             let uu___10 =
+                                                             let uu___9 =
                                                                FStar_SMTEncoding_Term.abstr
                                                                  names lhs2 in
                                                              (labels2,
-                                                               uu___10))
+                                                               uu___9))
                                                       else
-                                                        (let uu___10 =
-                                                           let uu___11 =
-                                                             let uu___12 =
-                                                               let uu___13 =
-                                                                 let uu___14
+                                                        (let uu___9 =
+                                                           let uu___10 =
+                                                             let uu___11 =
+                                                               let uu___12 =
+                                                                 let uu___13
                                                                    =
                                                                    FStar_SMTEncoding_Term.print_smt_term
                                                                     post1 in
                                                                  Prims.op_Hat
                                                                    "  ... "
-                                                                   uu___14 in
+                                                                   uu___13 in
                                                                Prims.op_Hat
                                                                  post_name
-                                                                 uu___13 in
+                                                                 uu___12 in
                                                              Prims.op_Hat
                                                                "Ensures clause doesn't match post name:  "
-                                                               uu___12 in
+                                                               uu___11 in
                                                            Not_a_wp_implication
-                                                             uu___11 in
+                                                             uu___10 in
                                                          FStar_Compiler_Effect.raise
-                                                           uu___10)
-                                                  | uu___7 ->
-                                                      let uu___8 =
-                                                        let uu___9 =
-                                                          let uu___10 =
-                                                            let uu___11 =
-                                                              let uu___12 =
+                                                           uu___9)
+                                                  | uu___6 ->
+                                                      let uu___7 =
+                                                        let uu___8 =
+                                                          let uu___9 =
+                                                            let uu___10 =
+                                                              let uu___11 =
                                                                 FStar_SMTEncoding_Term.print_smt_term
                                                                   ens in
                                                               Prims.op_Hat
                                                                 "  ... "
-                                                                uu___12 in
+                                                                uu___11 in
                                                             Prims.op_Hat
                                                               post_name
-                                                              uu___11 in
+                                                              uu___10 in
                                                           Prims.op_Hat
                                                             "Ensures clause doesn't have the expected shape for post-condition "
-                                                            uu___10 in
+                                                            uu___9 in
                                                         Not_a_wp_implication
-                                                          uu___9 in
+                                                          uu___8 in
                                                       FStar_Compiler_Effect.raise
-                                                        uu___8))
-                                        | uu___6 ->
-                                            let uu___7 =
-                                              let uu___8 =
-                                                let uu___9 =
+                                                        uu___7))
+                                        | uu___5 ->
+                                            let uu___6 =
+                                              let uu___7 =
+                                                let uu___8 =
                                                   FStar_SMTEncoding_Term.print_smt_term
                                                     lhs1 in
                                                 Prims.op_Hat
                                                   "LHS not a conjunct: "
-                                                  uu___9 in
-                                              Not_a_wp_implication uu___8 in
+                                                  uu___8 in
+                                              Not_a_wp_implication uu___7 in
                                             FStar_Compiler_Effect.raise
-                                              uu___7 in
-                                      (match uu___5 with
+                                              uu___6 in
+                                      (match uu___4 with
                                        | (labels2, lhs2) ->
-                                           let uu___6 =
-                                             let uu___7 =
+                                           let uu___5 =
+                                             let uu___6 =
                                                aux default_msg
                                                  FStar_Pervasives_Native.None
                                                  (FStar_Pervasives_Native.Some
                                                     post_name) labels2 rhs1 in
-                                             match uu___7 with
+                                             match uu___6 with
                                              | (labels3, rhs2) ->
-                                                 let uu___8 =
+                                                 let uu___7 =
                                                    FStar_SMTEncoding_Term.abstr
                                                      names rhs2 in
-                                                 (labels3, uu___8) in
-                                           (match uu___6 with
+                                                 (labels3, uu___7) in
+                                           (match uu___5 with
                                             | (labels3, rhs2) ->
                                                 let body =
                                                   FStar_SMTEncoding_Term.mkImp
                                                     (lhs2, rhs2) rng in
-                                                let uu___7 =
+                                                let uu___6 =
                                                   FStar_SMTEncoding_Term.mk
                                                     (FStar_SMTEncoding_Term.Quant
                                                        (FStar_SMTEncoding_Term.Forall,
                                                          pats, iopt, (post ::
                                                          sorts), body))
                                                     q1.FStar_SMTEncoding_Term.rng in
-                                                (labels3, uu___7))))
-                             | uu___3 ->
-                                 let uu___4 =
-                                   let uu___5 =
+                                                (labels3, uu___6))))
+                             | uu___2 ->
+                                 let uu___3 =
+                                   let uu___4 =
                                      FStar_SMTEncoding_Term.print_smt_term
                                        arg in
-                                   Prims.op_Hat "arg not a quant: " uu___5 in
-                                 fallback uu___4)) ()
+                                   Prims.op_Hat "arg not a quant: " uu___4 in
+                                 fallback uu___3)) ()
                    with | Not_a_wp_implication msg1 -> fallback msg1)
               | FStar_SMTEncoding_Term.Labeled (arg, reason, r1) ->
                   aux reason (FStar_Pervasives_Native.Some r1) post_name_opt
@@ -574,6 +576,9 @@ let (label_goals :
                     fresh_label1 default_msg ropt
                       q1.FStar_SMTEncoding_Term.rng q1 in
                   (match uu___2 with | (lab, q2) -> ((lab :: labels1), q2))
+              | FStar_SMTEncoding_Term.App
+                  (FStar_SMTEncoding_Term.Var "Unreachable", uu___1) ->
+                  (labels1, q1)
               | FStar_SMTEncoding_Term.App
                   (FStar_SMTEncoding_Term.Var uu___1, uu___2) when
                   is_a_post_condition post_name_opt q1 -> (labels1, q1)

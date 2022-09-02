@@ -244,6 +244,8 @@ let (decls_lid : FStar_Ident.lident) =
   p2l ["FStar"; "Reflection"; "Data"; "decls"]
 let (ctx_uvar_and_subst_lid : FStar_Ident.lident) =
   p2l ["FStar"; "Reflection"; "Types"; "ctx_uvar_and_subst"]
+let (universe_uvar_lid : FStar_Ident.lident) =
+  p2l ["FStar"; "Reflection"; "Types"; "universe_uvar"]
 let (range_lid : FStar_Ident.lident) = pconst "range"
 let (range_of_lid : FStar_Ident.lident) = pconst "range_of"
 let (labeled_lid : FStar_Ident.lident) = pconst "labeled"
@@ -268,6 +270,7 @@ let (steps_unfoldonly : FStar_Ident.lident) = psconst "delta_only"
 let (steps_unfoldfully : FStar_Ident.lident) = psconst "delta_fully"
 let (steps_unfoldattr : FStar_Ident.lident) = psconst "delta_attr"
 let (steps_unfoldqual : FStar_Ident.lident) = psconst "delta_qualifier"
+let (steps_unascribe : FStar_Ident.lident) = psconst "unascribe"
 let (steps_nbe : FStar_Ident.lident) = psconst "nbe"
 let (steps_unmeta : FStar_Ident.lident) = psconst "unmeta"
 let (deprecated_attr : FStar_Ident.lident) = pconst "deprecated"
@@ -288,6 +291,8 @@ let (strict_on_arguments_attr : FStar_Ident.lident) =
   p2l ["FStar"; "Pervasives"; "strict_on_arguments"]
 let (resolve_implicits_attr_string : Prims.string) =
   "FStar.Pervasives.resolve_implicits"
+let (override_resolve_implicits_handler_lid : FStar_Ident.lident) =
+  p2l ["FStar"; "Pervasives"; "override_resolve_implicits_handler"]
 let (handle_smt_goals_attr : FStar_Ident.lident) = psconst "handle_smt_goals"
 let (handle_smt_goals_attr_string : Prims.string) =
   "FStar.Pervasives.handle_smt_goals"
@@ -319,10 +324,14 @@ let (allow_informative_binders_attr : FStar_Ident.lident) =
 let (remove_unused_type_parameters_lid : FStar_Ident.lident) =
   psconst "remove_unused_type_parameters"
 let (ite_soundness_by_attr : FStar_Ident.lident) = psconst "ite_soundness_by"
+let (default_effect_attr : FStar_Ident.lident) = psconst "default_effect"
+let (bind_has_range_args_attr : FStar_Ident.lident) =
+  psconst "bind_has_range_args"
 let (binder_strictly_positive_attr : FStar_Ident.lident) =
   psconst "strictly_positive"
 let (no_auto_projectors_attr : FStar_Ident.lident) =
   psconst "no_auto_projectors"
+let (no_subtping_attr_lid : FStar_Ident.lident) = psconst "no_subtyping"
 let (well_founded_relation_lid : FStar_Ident.lident) =
   p2l ["FStar"; "WellFounded"; "well_founded_relation"]
 let (gen_reset : ((unit -> Prims.int) * (unit -> unit))) =
@@ -475,8 +484,12 @@ let (mk_class_lid : FStar_Ident.lid) =
   fstar_tactics_lid' ["Typeclasses"; "mk_class"]
 let (tcresolve_lid : FStar_Ident.lid) =
   fstar_tactics_lid' ["Typeclasses"; "tcresolve"]
+let (tcclass_lid : FStar_Ident.lid) =
+  fstar_tactics_lid' ["Typeclasses"; "tcclass"]
 let (tcinstance_lid : FStar_Ident.lid) =
   fstar_tactics_lid' ["Typeclasses"; "tcinstance"]
+let (no_method_lid : FStar_Ident.lid) =
+  fstar_tactics_lid' ["Typeclasses"; "no_method"]
 let (effect_TAC_lid : FStar_Ident.lid) = fstar_tactics_lid' ["Effect"; "TAC"]
 let (effect_Tac_lid : FStar_Ident.lid) = fstar_tactics_lid' ["Effect"; "Tac"]
 let (by_tactic_lid : FStar_Ident.lid) =
@@ -530,3 +543,18 @@ let (or_elim_lid : FStar_Ident.lid) = classical_sugar_lid "or_elim"
 let (and_elim_lid : FStar_Ident.lid) = classical_sugar_lid "and_elim"
 let (match_returns_def_name : Prims.string) =
   FStar_String.op_Hat FStar_Ident.reserved_prefix "_ret_"
+let (layered_effect_reify_val_lid :
+  FStar_Ident.lident -> FStar_Compiler_Range.range -> FStar_Ident.lident) =
+  fun eff_name ->
+    fun r ->
+      let ns = FStar_Ident.ns_of_lid eff_name in
+      let reify_fn_name =
+        let uu___ =
+          let uu___1 =
+            FStar_Compiler_Effect.op_Bar_Greater eff_name
+              FStar_Ident.ident_of_lid in
+          FStar_Compiler_Effect.op_Bar_Greater uu___1
+            FStar_Ident.string_of_id in
+        FStar_String.op_Hat "reify___" uu___ in
+      let uu___ = FStar_Ident.mk_ident (reify_fn_name, r) in
+      FStar_Ident.lid_of_ns_and_id ns uu___

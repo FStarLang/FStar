@@ -80,7 +80,9 @@ let (init_once : unit -> unit) =
         FStar_TypeChecker_TcTerm.tc_term
         FStar_TypeChecker_TcTerm.typeof_tot_or_gtot_term
         FStar_TypeChecker_TcTerm.typeof_tot_or_gtot_term_fastpath
-        FStar_TypeChecker_TcTerm.universe_of solver
+        FStar_TypeChecker_TcTerm.universe_of
+        FStar_TypeChecker_Rel.teq_nosmt_force
+        FStar_TypeChecker_Rel.subtype_nosmt_force solver
         FStar_Parser_Const.prims_lid
         FStar_TypeChecker_NBE.normalize_for_unit_test in
     (env.FStar_TypeChecker_Env.solver).FStar_TypeChecker_Env.init env;
@@ -146,6 +148,10 @@ let (init_once : unit -> unit) =
                (env.FStar_TypeChecker_Env.universe_of);
              FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term =
                (env.FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term);
+             FStar_TypeChecker_Env.teq_nosmt_force =
+               (env.FStar_TypeChecker_Env.teq_nosmt_force);
+             FStar_TypeChecker_Env.subtype_nosmt_force =
+               (env.FStar_TypeChecker_Env.subtype_nosmt_force);
              FStar_TypeChecker_Env.use_bv_sorts =
                (env.FStar_TypeChecker_Env.use_bv_sorts);
              FStar_TypeChecker_Env.qtbl_name_and_index =
@@ -181,7 +187,9 @@ let (init_once : unit -> unit) =
              FStar_TypeChecker_Env.unif_allow_ref_guards =
                (env.FStar_TypeChecker_Env.unif_allow_ref_guards);
              FStar_TypeChecker_Env.erase_erasable_args =
-               (env.FStar_TypeChecker_Env.erase_erasable_args)
+               (env.FStar_TypeChecker_Env.erase_erasable_args);
+             FStar_TypeChecker_Env.rel_query_for_apply_tac_uvar =
+               (env.FStar_TypeChecker_Env.rel_query_for_apply_tac_uvar)
            } in
          let uu___3 = FStar_TypeChecker_Tc.check_module env1 prims_mod false in
          (match uu___3 with
@@ -246,6 +254,10 @@ let (init_once : unit -> unit) =
                     (env2.FStar_TypeChecker_Env.universe_of);
                   FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term =
                     (env2.FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term);
+                  FStar_TypeChecker_Env.teq_nosmt_force =
+                    (env2.FStar_TypeChecker_Env.teq_nosmt_force);
+                  FStar_TypeChecker_Env.subtype_nosmt_force =
+                    (env2.FStar_TypeChecker_Env.subtype_nosmt_force);
                   FStar_TypeChecker_Env.use_bv_sorts =
                     (env2.FStar_TypeChecker_Env.use_bv_sorts);
                   FStar_TypeChecker_Env.qtbl_name_and_index =
@@ -282,7 +294,9 @@ let (init_once : unit -> unit) =
                   FStar_TypeChecker_Env.unif_allow_ref_guards =
                     (env2.FStar_TypeChecker_Env.unif_allow_ref_guards);
                   FStar_TypeChecker_Env.erase_erasable_args =
-                    (env2.FStar_TypeChecker_Env.erase_erasable_args)
+                    (env2.FStar_TypeChecker_Env.erase_erasable_args);
+                  FStar_TypeChecker_Env.rel_query_for_apply_tac_uvar =
+                    (env2.FStar_TypeChecker_Env.rel_query_for_apply_tac_uvar)
                 } in
               let env4 =
                 FStar_TypeChecker_Env.set_current_module env3 test_lid in
@@ -300,7 +314,7 @@ let (init : unit -> FStar_TypeChecker_Env.env) =
 let (frag_of_text : Prims.string -> FStar_Parser_ParseIt.input_frag) =
   fun s ->
     {
-      FStar_Parser_ParseIt.frag_fname = "<input>";
+      FStar_Parser_ParseIt.frag_fname = " input";
       FStar_Parser_ParseIt.frag_text = s;
       FStar_Parser_ParseIt.frag_line = Prims.int_one;
       FStar_Parser_ParseIt.frag_col = Prims.int_zero
@@ -389,6 +403,10 @@ let (tc' :
           (tcenv.FStar_TypeChecker_Env.universe_of);
         FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term =
           (tcenv.FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term);
+        FStar_TypeChecker_Env.teq_nosmt_force =
+          (tcenv.FStar_TypeChecker_Env.teq_nosmt_force);
+        FStar_TypeChecker_Env.subtype_nosmt_force =
+          (tcenv.FStar_TypeChecker_Env.subtype_nosmt_force);
         FStar_TypeChecker_Env.use_bv_sorts =
           (tcenv.FStar_TypeChecker_Env.use_bv_sorts);
         FStar_TypeChecker_Env.qtbl_name_and_index =
@@ -423,7 +441,9 @@ let (tc' :
         FStar_TypeChecker_Env.unif_allow_ref_guards =
           (tcenv.FStar_TypeChecker_Env.unif_allow_ref_guards);
         FStar_TypeChecker_Env.erase_erasable_args =
-          (tcenv.FStar_TypeChecker_Env.erase_erasable_args)
+          (tcenv.FStar_TypeChecker_Env.erase_erasable_args);
+        FStar_TypeChecker_Env.rel_query_for_apply_tac_uvar =
+          (tcenv.FStar_TypeChecker_Env.rel_query_for_apply_tac_uvar)
       } in
     let uu___ = FStar_TypeChecker_TcTerm.tc_tot_or_gtot_term tcenv1 tm in
     match uu___ with | (tm1, uu___1, g) -> (tm1, g, tcenv1)
@@ -484,6 +504,10 @@ let (tc_nbe_term : FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term) =
           (tcenv.FStar_TypeChecker_Env.universe_of);
         FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term =
           (tcenv.FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term);
+        FStar_TypeChecker_Env.teq_nosmt_force =
+          (tcenv.FStar_TypeChecker_Env.teq_nosmt_force);
+        FStar_TypeChecker_Env.subtype_nosmt_force =
+          (tcenv.FStar_TypeChecker_Env.subtype_nosmt_force);
         FStar_TypeChecker_Env.use_bv_sorts =
           (tcenv.FStar_TypeChecker_Env.use_bv_sorts);
         FStar_TypeChecker_Env.qtbl_name_and_index =
@@ -518,7 +542,9 @@ let (tc_nbe_term : FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term) =
         FStar_TypeChecker_Env.unif_allow_ref_guards =
           (tcenv.FStar_TypeChecker_Env.unif_allow_ref_guards);
         FStar_TypeChecker_Env.erase_erasable_args =
-          (tcenv.FStar_TypeChecker_Env.erase_erasable_args)
+          (tcenv.FStar_TypeChecker_Env.erase_erasable_args);
+        FStar_TypeChecker_Env.rel_query_for_apply_tac_uvar =
+          (tcenv.FStar_TypeChecker_Env.rel_query_for_apply_tac_uvar)
       } in
     let uu___ = FStar_TypeChecker_TcTerm.tc_tot_or_gtot_term tcenv1 tm in
     match uu___ with

@@ -3,6 +3,7 @@
 include FStar_List_Tot_Base
 
 let isEmpty l = l = []
+let singleton x = [x]
 let mem = BatList.mem
 let memT = mem
 let hd = BatList.hd
@@ -37,7 +38,8 @@ let rec init = function
   | [] -> failwith "init: empty list"
   | [h] -> []
   | h::t -> h::(init t)
-let last l = fold_left (fun _ x -> Some x) None l
+let last = BatList.last
+let last_opt l = List.fold_left (fun _ x -> Some x) None l
 let collect f l = BatList.flatten (BatList.map f l)
 let unzip = BatList.split
 let rec unzip3 = function
@@ -72,3 +74,5 @@ let rec zip3 l1 l2 l3 =
   | _ -> failwith "zip3"
 let unique = BatList.unique
 let map_flatten f l = flatten (map f l)
+
+let span = BatList.span

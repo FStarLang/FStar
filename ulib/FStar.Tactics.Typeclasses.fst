@@ -21,9 +21,18 @@ open FStar.List.Tot
 open FStar.Tactics
 module T = FStar.Tactics
 
+(* The attribute that marks classes *)
+irreducible
+let tcclass : unit = ()
+
 (* The attribute that marks instances *)
 irreducible
 let tcinstance : unit = ()
+
+(* The attribute that marks class fields
+   to signal that no method should be generated for them *)
+irreducible
+let no_method : unit = ()
 
 let rec first (f : 'a -> Tac 'b) (l : list 'a) : Tac 'b =
     match l with
@@ -87,6 +96,23 @@ let rec last (l : list 'a) : Tac 'a =
   | [x] -> x
   | _::xs -> last xs
 
+let filter_no_method_binders (bs:binders)
+  : binders
+  = let has_no_method_attr (b:binder)
+      : bool
+      = let _, (_, attrs) = inspect_binder b in
+        let is_no_method (t:term)
+          : bool
+          = match inspect_ln t with
+            | Tv_FVar fv  ->
+              let n = flatten_name (inspect_fv fv) in
+              n = `%no_method
+            | _ -> false
+        in
+        List.Tot.existsb is_no_method attrs
+    in
+    List.Tot.filter (fun b -> not (has_no_method_attr b)) bs
+
 [@@plugin]
 let mk_class (nm:string) : Tac decls =
     let ns = explode_qn nm in
@@ -107,7 +133,7 @@ let mk_class (nm:string) : Tac decls =
     let bs, cod = collect_arr_bs ty in
     let r = inspect_comp cod in
     guard (C_Total? r);
-    let C_Total cod _ = r in (* must be total *)
+    let C_Total cod _ _ = r in (* must be total *)
 
     (* print ("n_univs = " ^ string_of_int (List.Tot.Base.length us)); *)
 
@@ -146,7 +172,7 @@ let mk_class (nm:string) : Tac decls =
                     | b1::bs' ->
                         let (bv, aq) = inspect_binder b1 in
                         let b1 = pack_binder bv (Q_Meta tcr) [] in
-                        mk_arr (ps@(b1::bs')) cod
+                        mk_arr_curried (ps@(b1::bs')) cod
                   in
 
                   let def : term =
@@ -169,4 +195,4 @@ let mk_class (nm:string) : Tac decls =
                   let se = set_sigelt_attrs attrs se in
                   //dump ("trying to return : " ^ term_to_string (quote se));
                   se
-    ) bs
+    ) (filter_no_method_binders bs)

@@ -1,0 +1,155 @@
+[
+  "…Fˆ\u0003è,¿³r³$\u0001\u000epf0",
+  [
+    [
+      "UInt32.t",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
+        "equation_Prims.nat", "function_token_typing_Prims.int",
+        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "75c07e3f7da21259ec1ef3f0af1b51a7"
+    ],
+    [
+      "UInt32.max",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.pos",
+        "equation_UInt32.n", "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5"
+      ],
+      0,
+      "b18316e67c0eb8674f3bba5828abcf29"
+    ],
+    [
+      "UInt32.v",
+      1,
+      2,
+      1,
+      [ "@query", "equation_UInt32.max", "equation_UInt32.n" ],
+      0,
+      "edd311d7d4093dead6a2ebfd6fefd376"
+    ],
+    [
+      "UInt32.u",
+      1,
+      2,
+      1,
+      [ "@query", "equation_UInt32.max", "equation_UInt32.n" ],
+      0,
+      "dfed3ba81aa24eab65129b255bd067a5"
+    ],
+    [
+      "UInt32.uv_inv",
+      1,
+      2,
+      1,
+      [ "@query", "equation_UInt32.u", "equation_UInt32.v" ],
+      0,
+      "efcb37c0f2a556a0f8b5630cd6a5128f"
+    ],
+    [
+      "UInt32.vu_inv",
+      1,
+      2,
+      1,
+      [ "@query", "equation_UInt32.u", "equation_UInt32.v" ],
+      0,
+      "8efaae04acf94845e5f209fa33dcb108"
+    ],
+    [
+      "UInt32.add_mod",
+      1,
+      2,
+      1,
+      [ "@query", "equation_UInt32.n", "projection_inverse_BoxInt_proj_0" ],
+      0,
+      "3cc3f03ea1efa921fef460129fe7b303"
+    ],
+    [
+      "UInt32.add_mod",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption",
+        "@fuel_correspondence_Prims.pow2.fuel_instrumented", "@query",
+        "equation_Prims.nat", "equation_Prims.nonzero", "equation_UInt32.n",
+        "equation_UInt32.t", "equation_UInt32.v", "int_inversion",
+        "primitive_Prims.op_Modulus", "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_0766302b68bb44ab7aff8c4d8be0b46f",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_c8dd98bb91cb1ba6963e5299b3babaa4"
+      ],
+      0,
+      "c7e87ee4ccef99a758209784bef2e8f7"
+    ],
+    [
+      "UInt32.sub_mod",
+      1,
+      2,
+      1,
+      [ "@query", "equation_UInt32.n", "projection_inverse_BoxInt_proj_0" ],
+      0,
+      "4d6bf7b9fc1b57638c3f225fd653c3fe"
+    ],
+    [
+      "UInt32.sub_mod",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption",
+        "@fuel_correspondence_Prims.pow2.fuel_instrumented", "@query",
+        "equation_Prims.nat", "equation_Prims.nonzero", "equation_UInt32.n",
+        "equation_UInt32.t", "equation_UInt32.v", "int_inversion",
+        "primitive_Prims.op_Modulus", "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_0766302b68bb44ab7aff8c4d8be0b46f",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_c8dd98bb91cb1ba6963e5299b3babaa4"
+      ],
+      0,
+      "4699756b2e45cce4e9725425db770f25"
+    ],
+    [
+      "UInt32.add",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_UInt32.fits",
+        "equation_UInt32.max", "equation_UInt32.min", "equation_UInt32.n",
+        "equation_UInt32.v",
+        "refinement_interpretation_Tm_refine_002a4f71c16db1370e7874a81f7e27c0",
+        "token_correspondence_Prims.op_Addition"
+      ],
+      0,
+      "b74f94ae625c30902fb2b6a87ee98877"
+    ],
+    [
+      "UInt32.sub",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_UInt32.fits",
+        "equation_UInt32.max", "equation_UInt32.min", "equation_UInt32.n",
+        "equation_UInt32.v",
+        "interpretation_Tm_abs_12ddde8171c888fa95f826be9c2a1fe9",
+        "refinement_interpretation_Tm_refine_7e6121326cfe7d9052697ff77b791937"
+      ],
+      0,
+      "574dc68fc145df191061633162ed6b4a"
+    ]
+  ]
+]

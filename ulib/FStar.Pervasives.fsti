@@ -73,6 +73,18 @@ val smt_pat (#a: Type) (x: a) : Tot pattern
 *)
 val smt_pat_or (x: list (list pattern)) : Tot pattern
 
+(** eqtype is defined in prims at universe 0
+    
+    Although, usually, only universe 0 types have decidable equality,
+    sometimes it is possible to define a type in a higher univese also
+    with decidable equality (e.g., type t : Type u#1 = | Unit)
+
+    Further, sometimes, as in Lemma below, we need to use a
+    universe-polymorphic equality type (although it is only ever
+    instantiated with `unit`)
+*)
+type eqtype_u = a:Type{hasEq a}
+
 (** [Lemma] is a very widely used effect abbreviation.
 
     It stands for a unit-returning [Ghost] computation, whose main
@@ -97,10 +109,10 @@ val smt_pat_or (x: list (list pattern)) : Tot pattern
    the squash argument on the postcondition allows to assume the
    precondition for the *well-formedness* of the postcondition.
 *)
-effect Lemma (a: Type) (pre: Type) (post: (squash pre -> Type)) (pats: list pattern) =
+effect Lemma (a: eqtype_u) (pre: Type) (post: (squash pre -> Type)) (pats: list pattern) =
   Pure a pre (fun r -> post ())
 
-(** In the default mode of operation, all proofs in a verification
+(** IN the default mode of operation, all proofs in a verification
     condition are bundled into a single SMT query. Sub-terms marked
     with the [spinoff] below are the exception: each of them is
     spawned off into a separate SMT query *)
@@ -265,6 +277,28 @@ val delta_qualifier (s: list string) : Tot norm_step
    *)
 val unmeta : norm_step
 
+(**
+    This step removes ascriptions during normalization
+
+    An ascription is a type or computation type annotation on
+      an expression, written as (e <: t) or (e <: C)
+
+    normalize (e <: (t|C)) usually would normalize both the expression e
+      and the ascription
+
+    However, with unascribe step on, it will drop the ascription
+      and return the result of (normalize e),
+
+    Removing ascriptions may improve the performance,
+      as the normalization has less work to do
+
+    However, ascriptions help in re-typechecking of the terms,
+      and in some cases, are necessary for doing so
+
+    Use it with care
+
+   *)
+val unascribe : norm_step
 
 (** [norm s e] requests normalization of [e] with the reduction steps
     [s]. *)
@@ -287,7 +321,6 @@ val norm_spec (s: list norm_step) (#a: Type) (x: a) : Lemma (norm s #a x == x)
 (** Use the following to expose an ["opaque_to_smt"] definition to the
     solver as: [reveal_opaque (`%defn) defn] *)
 let reveal_opaque (s: string) = norm_spec [delta_only [s]]
-
 
 (** Wrappers over pure wp combinators that return a pure_wp type
     (with monotonicity refinement) *)
@@ -333,7 +366,6 @@ unfold
 let pure_assume_wp (p:Type) : Tot (pure_wp unit) =
   reveal_opaque (`%pure_wp_monotonic) pure_wp_monotonic;
   pure_assume_wp0 p
-
 
 /// The [DIV] effect for divergent computations
 ///
@@ -889,6 +921,23 @@ val strict_on_arguments (x: list int) : Tot unit
  **)
 val resolve_implicits : unit
 
+(**
+ * Implicit arguments can be tagged with an attribute [abc] to dispatch 
+ * their solving to a user-defined tactic also tagged with the same 
+ * attribute and resolve_implicits [@@abc; resolve_implicits]. 
+ 
+ * However, sometimes it is useful to have multiple such 
+ * [abc]-tagged tactics in scope. In such a scenario, to choose among them, 
+ * one can use the attribute as shown below to declare that [t] overrides
+ * all the tactics [t1...tn] and should be used to solve [abc]-tagged 
+ * implicits, so long as [t] is not iself overridden by some other tactic.
+
+   [@@resolve_implicits; abc; override_resolve_implicits_handler abc [`%t1; ... `%tn]]
+   let t = e
+
+ **)
+val override_resolve_implicits_handler : #a:Type -> a -> list string -> Tot unit
+
 (** A tactic registered to solve implicits with the (handle_smt_goals)
     attribute will receive the SMT goal generated during typechecking
     just before it is passed to the SMT solver.
@@ -998,6 +1047,30 @@ val normalize_for_extraction (steps:list norm_step) : Tot unit
   *)
 val ite_soundness_by : unit
 
+(** By-default functions that have a layered effect, need to have a type
+    annotation for their bodies
+    However, a layered effect definition may contain the default_effect
+    attribute to indicate to the typechecker that for missing annotations,
+    use the default effect.
+    The default effect attribute takes as argument a string, that is the name
+    of the default effect, two caveats:
+      - The argument must be a string constant (not a name, for example)
+      - The argument should be the fully qualified name
+    For example, the TAC effect in FStar.Tactics.Effect.fsti specifies
+    its default effect as FStar.Tactics.Tac
+    F* will typecheck that the default effect only takes one argument,
+      the result type of the computation
+  *)
+val default_effect (s:string) : Tot unit
+
+(** Bind definition for a layered effect may optionally contain range
+    arguments, that are provided by the typechecker during reification
+    This attribute on the effect definition indicates that the bind
+    has range arguments.
+    See for example the TAC effect in FStar.Tactics.Effect.fsti
+  *)
+val bind_has_range_args : unit
+
 (** A binder in a definition/declaration may optionally be annotated as strictly_positive
     When the let definition is used in a data constructor type in an inductive
     definition, this annotation is used to check the positivity of the inductive
@@ -1019,6 +1092,14 @@ val strictly_positive : unit
     in the rest of the program
   *)
 val no_auto_projectors : unit
+
+(** This attribute can be added to a let definition
+    and indicates to the typechecker to typecheck the signature of the definition
+    without using subtyping. This is sometimes useful for indicating that a lemma
+    can be applied by the tactic engine without requiring to check additional
+    subtyping obligations
+*)
+val no_subtyping : unit
 
 (** Pure and ghost inner let bindings are now always inlined during
     the wp computation, if: the return type is not unit and the head

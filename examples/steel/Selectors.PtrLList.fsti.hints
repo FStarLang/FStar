@@ -7,16 +7,11 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.l_True",
-        "equation_Prims.l_and", "equation_Prims.logical",
-        "equation_Prims.squash",
-        "function_token_typing_Steel.Effect.Common.selector_tactic",
-        "l_and-interp", "lemma_FStar.Tactics.Effect.by_tactic_seman",
-        "refinement_interpretation_Tm_refine_3335bdb14ef31c6d6e17375d087c3a12",
-        "refinement_kinding_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_199584b56b28cac81327d72bb4d89b4d"
       ],
       0,
-      "2bb7eb376fd11e857ca4d3464cae1319"
+      "cacc0944d6fab2a76d65353d0785f880"
     ],
     [
       "Selectors.PtrLList.intro_llist_cons",
@@ -25,7 +20,7 @@
       1,
       [ "@query" ],
       0,
-      "2aab7ca6cf5dc931bb1798431eea272d"
+      "5d34210b117a333a14618c2945180cc3"
     ],
     [
       "Selectors.PtrLList.elim_llist_cons",
@@ -34,7 +29,7 @@
       1,
       [ "@query" ],
       0,
-      "57550e61ad1940ae59af8e7bf5abb1d0"
+      "f62da004c6aa324e691c2c02b68e070f"
     ]
   ]
 ]

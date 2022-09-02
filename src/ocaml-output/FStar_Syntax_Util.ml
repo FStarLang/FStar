@@ -933,15 +933,18 @@ let (eq_inj : eq_result -> eq_result -> eq_result) =
       | (uu___, NotEqual) -> NotEqual
       | (Unknown, uu___) -> Unknown
       | (uu___, Unknown) -> Unknown
+let (equal_if : Prims.bool -> eq_result) =
+  fun uu___ -> if uu___ then Equal else Unknown
+let (equal_iff : Prims.bool -> eq_result) =
+  fun uu___ -> if uu___ then Equal else NotEqual
+let (eq_and : eq_result -> (unit -> eq_result) -> eq_result) =
+  fun f -> fun g -> match f with | Equal -> g () | uu___ -> Unknown
 let rec (eq_tm :
   FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term -> eq_result) =
   fun t1 ->
     fun t2 ->
       let t11 = canon_app t1 in
       let t21 = canon_app t2 in
-      let equal_if uu___ = if uu___ then Equal else Unknown in
-      let equal_iff uu___ = if uu___ then Equal else NotEqual in
-      let eq_and f g = match f with | Equal -> g () | uu___ -> Unknown in
       let equal_data f1 args1 f2 args2 =
         let uu___ = FStar_Syntax_Syntax.fv_eq f1 f2 in
         if uu___
@@ -1095,6 +1098,22 @@ let rec (eq_tm :
                             (b2.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort))
               Equal bs1 bs2 in
           eq_and uu___ (fun uu___1 -> eq_tm body1 body2)
+      | (FStar_Syntax_Syntax.Tm_arrow (bs1, c1), FStar_Syntax_Syntax.Tm_arrow
+         (bs2, c2)) when
+          (FStar_Compiler_List.length bs1) = (FStar_Compiler_List.length bs2)
+          ->
+          let uu___ =
+            FStar_Compiler_List.fold_left2
+              (fun r ->
+                 fun b1 ->
+                   fun b2 ->
+                     eq_and r
+                       (fun uu___1 ->
+                          eq_tm
+                            (b1.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort
+                            (b2.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort))
+              Equal bs1 bs2 in
+          eq_and uu___ (fun uu___1 -> eq_comp c1 c2)
       | uu___ -> Unknown
 and (eq_quoteinfo :
   FStar_Syntax_Syntax.quoteinfo -> FStar_Syntax_Syntax.quoteinfo -> eq_result)
@@ -1189,6 +1208,38 @@ and (eq_univs_list :
     fun vs ->
       ((FStar_Compiler_List.length us) = (FStar_Compiler_List.length vs)) &&
         (FStar_Compiler_List.forall2 eq_univs us vs)
+and (eq_comp :
+  FStar_Syntax_Syntax.comp -> FStar_Syntax_Syntax.comp -> eq_result) =
+  fun c1 ->
+    fun c2 ->
+      match ((c1.FStar_Syntax_Syntax.n), (c2.FStar_Syntax_Syntax.n)) with
+      | (FStar_Syntax_Syntax.Total (t1, u1opt), FStar_Syntax_Syntax.Total
+         (t2, u2opt)) -> eq_tm t1 t2
+      | (FStar_Syntax_Syntax.GTotal (t1, u1opt), FStar_Syntax_Syntax.GTotal
+         (t2, u2opt)) -> eq_tm t1 t2
+      | (FStar_Syntax_Syntax.Comp ct1, FStar_Syntax_Syntax.Comp ct2) ->
+          let uu___ =
+            let uu___1 =
+              eq_univs_list ct1.FStar_Syntax_Syntax.comp_univs
+                ct2.FStar_Syntax_Syntax.comp_univs in
+            equal_if uu___1 in
+          eq_and uu___
+            (fun uu___1 ->
+               let uu___2 =
+                 let uu___3 =
+                   FStar_Ident.lid_equals ct1.FStar_Syntax_Syntax.effect_name
+                     ct2.FStar_Syntax_Syntax.effect_name in
+                 equal_if uu___3 in
+               eq_and uu___2
+                 (fun uu___3 ->
+                    let uu___4 =
+                      eq_tm ct1.FStar_Syntax_Syntax.result_typ
+                        ct2.FStar_Syntax_Syntax.result_typ in
+                    eq_and uu___4
+                      (fun uu___5 ->
+                         eq_args ct1.FStar_Syntax_Syntax.effect_args
+                           ct2.FStar_Syntax_Syntax.effect_args)))
+      | uu___ -> NotEqual
 let (eq_bqual :
   FStar_Syntax_Syntax.binder_qualifier FStar_Pervasives_Native.option ->
     FStar_Syntax_Syntax.binder_qualifier FStar_Pervasives_Native.option ->
@@ -1493,14 +1544,18 @@ let (set_uvar : FStar_Syntax_Syntax.uvar -> FStar_Syntax_Syntax.term -> unit)
     fun t ->
       let uu___ = FStar_Syntax_Unionfind.find uv in
       match uu___ with
-      | FStar_Pervasives_Native.Some uu___1 ->
-          let uu___2 =
-            let uu___3 =
-              let uu___4 = FStar_Syntax_Unionfind.uvar_id uv in
+      | FStar_Pervasives_Native.Some t' ->
+          let uu___1 =
+            let uu___2 =
+              let uu___3 = FStar_Syntax_Unionfind.uvar_id uv in
               FStar_Compiler_Effect.op_Less_Bar
-                FStar_Compiler_Util.string_of_int uu___4 in
-            FStar_Compiler_Util.format1 "Changing a fixed uvar! ?%s\n" uu___3 in
-          failwith uu___2
+                FStar_Compiler_Util.string_of_int uu___3 in
+            let uu___3 = tts t in
+            let uu___4 = tts t' in
+            FStar_Compiler_Util.format3
+              "Changing a fixed uvar! ?%s to %s but it is already set to %s\n"
+              uu___2 uu___3 uu___4 in
+          failwith uu___1
       | uu___1 -> FStar_Syntax_Unionfind.change uv t
 let (qualifier_equal :
   FStar_Syntax_Syntax.qualifier ->
@@ -2209,6 +2264,8 @@ let (rename_let_attr : FStar_Syntax_Syntax.term) =
   fvar_const FStar_Parser_Const.rename_let_attr
 let (t_ctx_uvar_and_sust : FStar_Syntax_Syntax.term) =
   fvar_const FStar_Parser_Const.ctx_uvar_and_subst_lid
+let (t_universe_uvar : FStar_Syntax_Syntax.term) =
+  fvar_const FStar_Parser_Const.universe_uvar_lid
 let (mk_conj_opt :
   FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax
     FStar_Pervasives_Native.option ->
@@ -3940,7 +3997,6 @@ let (process_pragma :
                (FStar_Errors.Fatal_FailToProcessPragma,
                  (Prims.op_Hat "Failed to process pragma: " s1)) r in
        match p with
-       | FStar_Syntax_Syntax.LightOff -> FStar_Options.set_ml_ish ()
        | FStar_Syntax_Syntax.SetOptions o -> set_options o
        | FStar_Syntax_Syntax.ResetOptions sopt ->
            ((let uu___2 = FStar_Options.restore_cmd_line_options false in
@@ -4683,3 +4739,19 @@ let (check_mutual_universes :
                    "Mutually recursive definitions do not abstract over the same universes")
                  lb1.FStar_Syntax_Syntax.lbpos
              else ()) lbs1
+let (ctx_uvar_should_check :
+  FStar_Syntax_Syntax.ctx_uvar -> FStar_Syntax_Syntax.should_check_uvar) =
+  fun u ->
+    let uu___ =
+      FStar_Syntax_Unionfind.find_decoration
+        u.FStar_Syntax_Syntax.ctx_uvar_head in
+    uu___.FStar_Syntax_Syntax.uvar_decoration_should_check
+let (ctx_uvar_typ :
+  FStar_Syntax_Syntax.ctx_uvar ->
+    FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax)
+  =
+  fun u ->
+    let uu___ =
+      FStar_Syntax_Unionfind.find_decoration
+        u.FStar_Syntax_Syntax.ctx_uvar_head in
+    uu___.FStar_Syntax_Syntax.uvar_decoration_typ

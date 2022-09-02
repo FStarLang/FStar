@@ -93,9 +93,12 @@ let rewrite_inside_reify (f : int -> ND unit (as_pure_wp(fun p -> True))) (x' : 
   let _ = f in
   match g x' with
   | Box x ->
-     let ll = reify (f x) (fun _ -> True) in
-     assert (ll == ll) by begin
-       let beq = T.nth_binder 3 in
-       T.rewrite beq;
-       ()
-     end
+     match x with
+     | 0 ->
+       let ll = reify (f x) (fun _ -> True) in
+       assert (ll == ll) by begin
+         let beq = T.nth_binder 5 in
+         T.rewrite beq;
+         ()
+       end
+     | _ -> ()

@@ -61,11 +61,14 @@ let none_to_empty_list x =
 %token <string> REAL
 %token <char> CHAR
 %token <bool> LET
+%token <string> LET_OP
+%token <string> AND_OP
+%token <string> MATCH_OP
 
 %token FORALL EXISTS ASSUME NEW LOGIC ATTRIBUTES
 %token IRREDUCIBLE UNFOLDABLE INLINE OPAQUE UNFOLD INLINE_FOR_EXTRACTION
 %token NOEXTRACT
-%token NOEQUALITY UNOPTEQUALITY PRAGMALIGHT PRAGMA_SET_OPTIONS PRAGMA_RESET_OPTIONS PRAGMA_PUSH_OPTIONS PRAGMA_POP_OPTIONS PRAGMA_RESTART_SOLVER PRAGMA_PRINT_EFFECTS_GRAPH
+%token NOEQUALITY UNOPTEQUALITY PRAGMA_SET_OPTIONS PRAGMA_RESET_OPTIONS PRAGMA_PUSH_OPTIONS PRAGMA_POP_OPTIONS PRAGMA_RESTART_SOLVER PRAGMA_PRINT_EFFECTS_GRAPH
 %token TYP_APP_LESS TYP_APP_GREATER SUBTYPE EQUALTYPE SUBKIND BY
 %token AND ASSERT SYNTH BEGIN ELSE END
 %token EXCEPTION FALSE FUN FUNCTION IF IN MODULE DEFAULT
@@ -125,9 +128,9 @@ let none_to_empty_list x =
 
 (* inputFragment is used at the same time for whole files and fragment of codes (for interactive mode) *)
 inputFragment:
-  | is_light=boption(PRAGMALIGHT STRING { }) decls=list(decl) EOF
+  | decls=list(decl) EOF
       {
-        as_frag is_light (rhs parseState 1) decls
+        as_frag decls
       }
 
 
@@ -305,6 +308,18 @@ attr_letbinding:
   | attr=ioption(attribute) AND lb=letbinding
     { attr, lb }
 
+letoperatorbinding:
+  | pat=tuplePattern tm=option(EQUALS tm=term {tm})
+    {
+        let h tm = (pat, tm) in
+	match pat.pat, tm with
+        | _               , Some tm -> h tm
+        | PatVar (v, _, _), None    ->
+          let v = lid_of_ns_and_id [] v in
+          h (mk_term (Var v) (rhs parseState 1) Expr)
+        | _ -> raise_error (Fatal_SyntaxError, "Syntax error: let-punning expects a name, not a pattern") (rhs parseState 2)
+    }
+
 letbinding:
   | focus_opt=maybeFocus lid=lidentOrOperator lbp=nonempty_list(patternOrMultibinder) ascr_opt=ascribeTyp? EQUALS tm=term
       {
@@ -349,7 +364,7 @@ layeredEffectDefinition:
              raise_error (Fatal_SyntaxError,
                           "Syntax error: unexpected empty binders list in the layered effect definition")
                          (range_of_id lid)
-          | _ -> hd bs, last bs |> must in
+          | _ -> hd bs, last bs in
         let r = union_ranges first_b.brange last_b.brange in
         mk_term (Product (bs, mk_term (Name (lid_of_str "Effect")) r Type_level)) r Type_level in
       let rec decls (r:term) =
@@ -504,6 +519,10 @@ atomicPattern:
   | tv=tvar                   { mk_pattern (PatTvar (tv, None, [])) (rhs parseState 1) }
   | LPAREN op=operator RPAREN
       { mk_pattern (PatOp op) (rhs2 parseState 1 3) }
+  | LPAREN op=let_op RPAREN
+      { mk_pattern (PatVar (op, None, [])) (rhs2 parseState 1 3) }
+  | LPAREN op=and_op RPAREN
+      { mk_pattern (PatVar (op, None, [])) (rhs2 parseState 1 3) }
   | UNDERSCORE
       { mk_pattern (PatWild (None, [])) (rhs parseState 1) }
   | HASH UNDERSCORE
@@ -622,8 +641,25 @@ ident:
 lidentOrOperator:
   | id=IDENT
     { mk_ident(id, rhs parseState 1) }
+  | LPAREN op=let_op RPAREN { op }
+  | LPAREN op=and_op RPAREN { op }
   | LPAREN id=operator RPAREN
     { mk_ident (compile_op' (string_of_id id) (range_of_id id), range_of_id id) }
+
+%inline and_op:
+  | op=AND_OP { let r = rhs parseState 1 in
+                mk_ident ("and_" ^ compile_op' op r, r) }
+
+%inline let_op:
+  | op=LET_OP { let r = rhs parseState 1 in
+                mk_ident ("let_" ^ compile_op' op r, r) }
+
+matchMaybeOp:
+  | MATCH {None}
+  | op=MATCH_OP {
+	   let r = rhs parseState 1 in
+           Some (mk_ident ("let_" ^ compile_op' op r, r))
+	 }
 
 lidentOrUnderscore:
   | id=IDENT { mk_ident(id, rhs parseState 1)}
@@ -733,12 +769,11 @@ noSeqTerm:
          let branches = focusBranches (pbs) (rhs2 parseState 1 4) in
          mk_term (TryWith(e1, branches)) (rhs2 parseState 1 4) Expr
       }
-  | MATCH e=term ret_opt=option(match_returning) WITH pbs=left_flexible_list(BAR, pb=patternBranch {pb})
+  | op=matchMaybeOp e=term ret_opt=option(match_returning) WITH pbs=left_flexible_list(BAR, pb=patternBranch {pb})
       {
         let branches = focusBranches pbs (rhs2 parseState 1 5) in
-        mk_term (Match(e, ret_opt, branches)) (rhs2 parseState 1 5) Expr
+        mk_term (Match(e, op, ret_opt, branches)) (rhs2 parseState 1 5) Expr
       }
-
   | LET OPEN t=term IN e=term
       {
             match t.tm with
@@ -762,6 +797,11 @@ noSeqTerm:
         let lbs = focusAttrLetBindings lbs (rhs2 parseState 2 3) in
         mk_term (Let(q, lbs, e)) (rhs2 parseState 1 6) Expr
       }
+  | op=let_op b=letoperatorbinding lbs=list(op=and_op b=letoperatorbinding {(op, b)}) IN e=term
+    { let lbs = (op, b)::lbs in
+      mk_term (LetOperator ( List.map (fun (op, (pat, tm)) -> (op, pat, tm)) lbs
+			   , e)) (rhs2 parseState 1 4) Expr
+    }
   | FUNCTION pbs=left_flexible_nonempty_list(BAR, patternBranch)
       {
         let branches = focusBranches pbs (rhs2 parseState 1 2) in
@@ -1172,6 +1212,10 @@ atomicTermNotQUident:
     { x }
   | LPAREN op=operator RPAREN
       { mk_term (Op(op, [])) (rhs2 parseState 1 3) Un }
+  | LPAREN op=let_op RPAREN
+      { mk_term (Name(lid_of_ns_and_id [] op)) (rhs2 parseState 1 3) Un }
+  | LPAREN op=and_op RPAREN
+      { mk_term (Name(lid_of_ns_and_id [] op)) (rhs2 parseState 1 3) Un }
   | LENS_PAREN_LEFT e0=tmEq COMMA el=separated_nonempty_list(COMMA, tmEq) LENS_PAREN_RIGHT
       { mkDTuple (e0::el) (rhs2 parseState 1 5) }
   | e=projectionLHS field_projs=list(DOT id=qlident {id})

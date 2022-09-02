@@ -1,0 +1,221 @@
+[
+  "kpÅß\u000b|Ç\u0019ê=ﬂ\u001d‘ö£x",
+  [
+    [
+      "OPLSS2021.Vector.vector",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
+      ],
+      0,
+      "48c21d1f0849f5ae1129a4dcb9b60945"
+    ],
+    [
+      "OPLSS2021.Vector.vector",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
+        "equation_Prims.nat", "function_token_typing_Prims.int",
+        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2", "int_inversion",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
+      ],
+      0,
+      "efc9251469e3e37518f0886be931ed76"
+    ],
+    [
+      "OPLSS2021.Vector.__proj__VCons__item__hd",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_2cb127f228a689d92b063741e0d7b001"
+      ],
+      0,
+      "c990c95e6362c00734f348510d73a444"
+    ],
+    [
+      "OPLSS2021.Vector.__proj__VCons__item__n",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_2cb127f228a689d92b063741e0d7b001"
+      ],
+      0,
+      "01ae35fb9279d1defd1f5e4618fc5322"
+    ],
+    [
+      "OPLSS2021.Vector.__proj__VCons__item__tl",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "data_elim_OPLSS2021.Vector.VCons",
+        "refinement_interpretation_Tm_refine_2cb127f228a689d92b063741e0d7b001"
+      ],
+      0,
+      "d193d6866ac055db11a5cd0fb75a3033"
+    ],
+    [
+      "OPLSS2021.Vector.head'",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_OPLSS2021.Vector.VCons",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_039b68a29747696797a6e7240d4505a6"
+      ],
+      0,
+      "71b98275b3c5066252b3fd92d481b9f9"
+    ],
+    [
+      "OPLSS2021.Vector.head",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_2cb127f228a689d92b063741e0d7b001"
+      ],
+      0,
+      "5ab3939157cc7e339bbcbcfd26add449"
+    ],
+    [
+      "OPLSS2021.Vector.nth",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "binder_x_87482a9309e1807e69fdfbecad0b1ed1_4",
+        "binder_x_bb4e1c9af0265270f8e7a5f250f730e2_2",
+        "binder_x_dea256e7a41198c89ed07f42894c7b2b_3",
+        "disc_equation_OPLSS2021.Vector.VCons", "equation_Prims.nat",
+        "fuel_guarded_inversion_OPLSS2021.Vector.vector",
+        "function_token_typing_Prims.__cache_version_number__",
+        "int_inversion", "int_typing", "primitive_Prims.op_Equality",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "projection_inverse_OPLSS2021.Vector.VCons_n",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_cd73fa2255f8011c45dec35de340a3ae",
+        "well-founded-ordering-on-nat"
+      ],
+      0,
+      "96dd7ce4b3f864c5d79e6eaf86f456ed"
+    ],
+    [
+      "OPLSS2021.Vector.append",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
+      ],
+      0,
+      "262308f145d24c9edd623319ab909044"
+    ],
+    [
+      "OPLSS2021.Vector.append",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_abcb2536fd6b41e346b3f673d0db35d7_4",
+        "binder_x_bb4e1c9af0265270f8e7a5f250f730e2_2",
+        "binder_x_bb4e1c9af0265270f8e7a5f250f730e2_3",
+        "data_elim_OPLSS2021.Vector.VCons",
+        "data_elim_OPLSS2021.Vector.VNil",
+        "disc_equation_OPLSS2021.Vector.VCons",
+        "disc_equation_OPLSS2021.Vector.VNil", "equation_Prims.nat",
+        "fuel_guarded_inversion_OPLSS2021.Vector.vector", "int_inversion",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "well-founded-ordering-on-nat"
+      ],
+      0,
+      "585996d9faffe15d61fa4dbfb2a0a322"
+    ],
+    [
+      "OPLSS2021.Vector.reverse",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_abcb2536fd6b41e346b3f673d0db35d7_3",
+        "binder_x_bb4e1c9af0265270f8e7a5f250f730e2_2",
+        "constructor_distinct_OPLSS2021.Vector.VNil",
+        "data_elim_OPLSS2021.Vector.VCons",
+        "disc_equation_OPLSS2021.Vector.VCons",
+        "disc_equation_OPLSS2021.Vector.VNil", "equation_Prims.nat",
+        "fuel_guarded_inversion_OPLSS2021.Vector.vector", "int_inversion",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "well-founded-ordering-on-nat"
+      ],
+      0,
+      "a655edceb2ed725f5edaec2a105aa541"
+    ],
+    [
+      "OPLSS2021.Vector.map",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_afbf7c56af8378e385ccd2b2dc34583b_6",
+        "binder_x_bb4e1c9af0265270f8e7a5f250f730e2_5",
+        "constructor_distinct_OPLSS2021.Vector.VNil",
+        "data_elim_OPLSS2021.Vector.VCons",
+        "disc_equation_OPLSS2021.Vector.VCons",
+        "disc_equation_OPLSS2021.Vector.VNil", "equation_Prims.nat",
+        "fuel_guarded_inversion_OPLSS2021.Vector.vector", "int_inversion",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "well-founded-ordering-on-nat"
+      ],
+      0,
+      "8eab455a9c4af97b83d347df15821573"
+    ],
+    [
+      "OPLSS2021.Vector.fold_right",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_afbf7c56af8378e385ccd2b2dc34583b_6",
+        "binder_x_bb4e1c9af0265270f8e7a5f250f730e2_5",
+        "data_elim_OPLSS2021.Vector.VCons",
+        "disc_equation_OPLSS2021.Vector.VCons",
+        "disc_equation_OPLSS2021.Vector.VNil", "equation_Prims.nat",
+        "fuel_guarded_inversion_OPLSS2021.Vector.vector", "int_inversion",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "well-founded-ordering-on-nat"
+      ],
+      0,
+      "47b603313de63f60958360e64989737d"
+    ]
+  ]
+]

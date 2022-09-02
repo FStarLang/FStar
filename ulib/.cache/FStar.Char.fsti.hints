@@ -1,5 +1,5 @@
 [
-  "×ßÿN–u׀,‎מ²ט5ֻÛנ",
+  "שִ׀<e³8ן4¾ u}בצע",
   [
     [
       "FStar.Char.int_of_char",
@@ -13,31 +13,30 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "b2770af9b2829612f4e69ae2925b5459"
+      "77c12743a6e1ab3c64f90b75e1507c66"
     ],
     [
       "FStar.Char.char_of_int",
       1,
-      8,
       2,
+      1,
       [
         "@MaxFuel_assumption", "@MaxIFuel_assumption",
         "@fuel_correspondence_Prims.pow2.fuel_instrumented",
         "@fuel_irrelevance_Prims.pow2.fuel_instrumented", "@query",
         "b2t_def", "equation_FStar.UInt.fits", "equation_FStar.UInt.max_int",
         "equation_FStar.UInt.min_int", "equation_FStar.UInt.size",
-        "equation_Prims.nat",
-        "equation_with_fuel_Prims.pow2.fuel_instrumented", "int_inversion",
-        "int_typing", "lemma_FStar.UInt.pow2_values",
-        "primitive_Prims.op_AmpAmp", "primitive_Prims.op_LessThanOrEqual",
-        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
+        "equation_Prims.nat", "int_inversion", "int_typing",
+        "lemma_FStar.UInt.pow2_values", "primitive_Prims.op_AmpAmp",
+        "primitive_Prims.op_LessThanOrEqual",
+        "primitive_Prims.op_Subtraction",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "refinement_interpretation_Tm_refine_cbae9286a4cd5dcd61e6ddad2b643794"
+        "refinement_interpretation_Tm_refine_41bb1fe33d2856748d537571528d32a1",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "0fe78717b32b902834cdc43edb2e2509"
+      "72dfa466210cf2f03f1c5677be176c00"
     ]
   ]
 ]

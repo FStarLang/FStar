@@ -40,7 +40,7 @@ let test (p:(unit -> Type0)) (q:(unit -> Type0))
              norm [];
              ddump "C";
              let hh = intro () in
-             apply (quote return_squash);
+             apply (`return_squash);
              exact (pack (Tv_Var (bv_of_binder hh)));
              ddump "D";
              exact (pack (Tv_Var (bv_of_binder h))) )
@@ -72,7 +72,7 @@ let test3 (p:(unit -> Type0)) (q:(unit -> Type0))
              norm [];
              ddump "C";
              let hh = intro () in
-             apply (quote return_squash);
+             apply (`return_squash);
              ddump "D";
              exact (pack (Tv_Var (bv_of_binder hh)));
              ddump "E";
@@ -90,7 +90,7 @@ let test4 (post:(unit -> Type0))
              norm [];
              ddump "C";
              let hh = intro () in
-             apply (quote return_squash);
+             apply (`return_squash);
              exact (pack (Tv_Var (bv_of_binder hh)));
              exact (pack (Tv_Var (bv_of_binder h)));
              ())

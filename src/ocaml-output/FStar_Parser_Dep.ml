@@ -1,4 +1,14 @@
 open Prims
+type open_kind =
+  | Open_module 
+  | Open_namespace 
+let (uu___is_Open_module : open_kind -> Prims.bool) =
+  fun projectee ->
+    match projectee with | Open_module -> true | uu___ -> false
+let (uu___is_Open_namespace : open_kind -> Prims.bool) =
+  fun projectee ->
+    match projectee with | Open_namespace -> true | uu___ -> false
+type module_name = Prims.string
 let profile : 'uuuuu . (unit -> 'uuuuu) -> Prims.string -> 'uuuuu =
   fun f -> fun c -> FStar_Profiling.profile f FStar_Pervasives_Native.None c
 type verify_mode =
@@ -56,15 +66,6 @@ let (uu___is_Gray : color -> Prims.bool) =
   fun projectee -> match projectee with | Gray -> true | uu___ -> false
 let (uu___is_Black : color -> Prims.bool) =
   fun projectee -> match projectee with | Black -> true | uu___ -> false
-type open_kind =
-  | Open_module 
-  | Open_namespace 
-let (uu___is_Open_module : open_kind -> Prims.bool) =
-  fun projectee ->
-    match projectee with | Open_module -> true | uu___ -> false
-let (uu___is_Open_namespace : open_kind -> Prims.bool) =
-  fun projectee ->
-    match projectee with | Open_namespace -> true | uu___ -> false
 let (check_and_strip_suffix :
   Prims.string -> Prims.string FStar_Pervasives_Native.option) =
   fun f ->
@@ -138,7 +139,6 @@ let (namespace_of_module :
         let uu___1 = FStar_Ident.lid_of_ids ns in
         FStar_Pervasives_Native.Some uu___1
 type file_name = Prims.string
-type module_name = Prims.string
 type dependence =
   | UseInterface of module_name 
   | PreferInterface of module_name 
@@ -1434,6 +1434,13 @@ let (collect_one :
                             collect_pattern pat;
                             collect_term t1)) patterms;
                   collect_term t)
+             | FStar_Parser_AST.LetOperator (lets, body) ->
+                 (FStar_Compiler_List.iter
+                    (fun uu___4 ->
+                       match uu___4 with
+                       | (ident, pat, def) ->
+                           (collect_pattern pat; collect_term def)) lets;
+                  collect_term body)
              | FStar_Parser_AST.LetOpen (lid, t) ->
                  (add_to_parsing_data (P_open (true, lid)); collect_term t)
              | FStar_Parser_AST.LetOpenRecord (r, rty, e) ->
@@ -1450,11 +1457,11 @@ let (collect_one :
                        collect_term ret);
                   collect_term t2;
                   collect_term t3)
-             | FStar_Parser_AST.Match (t, ret_opt, bs) ->
+             | FStar_Parser_AST.Match (t, uu___3, ret_opt, bs) ->
                  (collect_term t;
                   (match ret_opt with
                    | FStar_Pervasives_Native.None -> ()
-                   | FStar_Pervasives_Native.Some (uu___5, ret, uu___6) ->
+                   | FStar_Pervasives_Native.Some (uu___6, ret, uu___7) ->
                        collect_term ret);
                   collect_branches bs)
              | FStar_Parser_AST.TryWith (t, bs) ->
@@ -2302,6 +2309,7 @@ let (print_full : deps -> unit) =
     let norm_path s =
       FStar_Compiler_Util.replace_chars
         (FStar_Compiler_Util.replace_chars s 92 "/") 32 "\\ " in
+    let output_fs_file f = let uu___ = output_file ".fs" f in norm_path uu___ in
     let output_ml_file f = let uu___ = output_file ".ml" f in norm_path uu___ in
     let output_krml_file f =
       let uu___ = output_file ".krml" f in norm_path uu___ in
@@ -2459,22 +2467,47 @@ let (print_full : deps -> unit) =
                                        (FStar_Options.cmi ()) && widened1 in
                                      if uu___7
                                      then
+                                       let mname =
+                                         lowercase_module_name file_name1 in
                                        ((let uu___9 =
                                            output_ml_file file_name1 in
                                          print_entry uu___9 cache_file_name1
                                            all_checked_fst_dep_files_string);
-                                        (let uu___9 =
-                                           output_krml_file file_name1 in
-                                         print_entry uu___9 cache_file_name1
-                                           all_checked_fst_dep_files_string))
-                                     else
-                                       ((let uu___10 =
-                                           output_ml_file file_name1 in
-                                         print_entry uu___10 cache_file_name1
-                                           "");
+                                        (let uu___10 =
+                                           FStar_Options.should_extract mname
+                                             FStar_Options.FSharp in
+                                         if uu___10
+                                         then
+                                           let uu___11 =
+                                             output_fs_file file_name1 in
+                                           print_entry uu___11
+                                             cache_file_name1
+                                             all_checked_fst_dep_files_string
+                                         else ());
                                         (let uu___10 =
                                            output_krml_file file_name1 in
                                          print_entry uu___10 cache_file_name1
+                                           all_checked_fst_dep_files_string))
+                                     else
+                                       (let mname =
+                                          lowercase_module_name file_name1 in
+                                        (let uu___10 =
+                                           output_ml_file file_name1 in
+                                         print_entry uu___10 cache_file_name1
+                                           "");
+                                        (let uu___11 =
+                                           FStar_Options.should_extract mname
+                                             FStar_Options.FSharp in
+                                         if uu___11
+                                         then
+                                           let uu___12 =
+                                             output_fs_file file_name1 in
+                                           print_entry uu___12
+                                             cache_file_name1 ""
+                                         else ());
+                                        (let uu___11 =
+                                           output_krml_file file_name1 in
+                                         print_entry uu___11 cache_file_name1
                                            "")));
                                     (let cmx_files =
                                        let extracted_fst_files =
@@ -2569,6 +2602,21 @@ let (print_full : deps -> unit) =
                     FStar_Compiler_Util.smap_add ml_file_map mname uu___3
                   else ()));
           sort_output_files ml_file_map in
+        let all_fs_files =
+          let fs_file_map =
+            FStar_Compiler_Util.smap_create (Prims.of_int (41)) in
+          FStar_Compiler_Effect.op_Bar_Greater all_fst_files
+            (FStar_Compiler_List.iter
+               (fun fst_file ->
+                  let mname = lowercase_module_name fst_file in
+                  let uu___2 =
+                    FStar_Options.should_extract mname FStar_Options.FSharp in
+                  if uu___2
+                  then
+                    let uu___3 = output_fs_file fst_file in
+                    FStar_Compiler_Util.smap_add fs_file_map mname uu___3
+                  else ()));
+          sort_output_files fs_file_map in
         let all_krml_files =
           let krml_file_map =
             FStar_Compiler_Util.smap_create (Prims.of_int (41)) in
@@ -2618,6 +2666,7 @@ let (print_full : deps -> unit) =
          print_all "ALL_FST_FILES" all_fst_files;
          print_all "ALL_FSTI_FILES" all_fsti_files;
          print_all "ALL_CHECKED_FILES" all_checked_files;
+         print_all "ALL_FS_FILES" all_fs_files;
          print_all "ALL_ML_FILES" all_ml_files;
          print_all "ALL_KRML_FILES" all_krml_files;
          FStar_StringBuffer.output_channel FStar_Compiler_Util.stdout sb)

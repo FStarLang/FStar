@@ -1,0 +1,221 @@
+[
+  "2Å◊Çâ\u0011H/?™dkEp\u001c\u0018",
+  [
+    [
+      "Hybrid.modulo_add",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.pos",
+        "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5"
+      ],
+      0,
+      "88c65ff6c4640c2b32873e45d2eeca1f"
+    ],
+    [
+      "Hybrid.modulo_add_tactic",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.pos",
+        "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
+        "true_interp"
+      ],
+      0,
+      "b9ad0b5f50377cb329aa5bd1facb7434"
+    ],
+    [
+      "Hybrid.modulo_add_tactic",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_562ff5f40524a960e140f45abc45541e",
+        "refinement_interpretation_Tm_refine_e3a4e5476d18c8c2f957436958fd7dc3"
+      ],
+      0,
+      "a1a70b55b17a70b4f453c031c80749fa"
+    ],
+    [
+      "Hybrid.modulo_add_tactic",
+      3,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.pos",
+        "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
+        "true_interp"
+      ],
+      0,
+      "d7973cc7e4f54630473879919a5999d8"
+    ],
+    [
+      "Hybrid.modulo_add_tactic",
+      4,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_562ff5f40524a960e140f45abc45541e",
+        "refinement_interpretation_Tm_refine_e3a4e5476d18c8c2f957436958fd7dc3"
+      ],
+      0,
+      "a9281b1e3fa8464ea2a807df72791f9e"
+    ],
+    [
+      "Hybrid.modulo_add_tactic",
+      5,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.pos",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_0dee8cb03258a67c2f7ec66427696212",
+        "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5"
+      ],
+      0,
+      "fe7765e7ad9bf1766273952b560d70a9"
+    ],
+    [
+      "Hybrid.modulo_add_tactic",
+      6,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.pos",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_0dee8cb03258a67c2f7ec66427696212",
+        "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5"
+      ],
+      0,
+      "69acfa0de9bfe31b964b6a8563f8f8bf"
+    ],
+    [
+      "Hybrid.triang",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_bb4e1c9af0265270f8e7a5f250f730e2_0", "equation_Prims.nat",
+        "int_inversion", "int_typing", "primitive_Prims.op_Addition",
+        "primitive_Prims.op_Equality", "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "well-founded-ordering-on-nat"
+      ],
+      0,
+      "b7d36962b8f0deff3418c154e7ecd0d6"
+    ],
+    [
+      "Hybrid.gauss",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "b2t_def", "equation_Prims.squash",
+        "primitive_Prims.op_GreaterThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "7e344428f54b3bf13e56c5cdf6a839ce"
+    ],
+    [
+      "Hybrid.gauss",
+      2,
+      2,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_Hybrid.triang.fuel_instrumented",
+        "@fuel_irrelevance_Hybrid.triang.fuel_instrumented", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565", "b2t_def",
+        "binder_x_ae567c2fb75be05905677af440075565_0", "equation_Prims.nat",
+        "equation_Prims.squash",
+        "equation_with_fuel_Hybrid.triang.fuel_instrumented",
+        "function_token_typing_Prims.__cache_version_number__",
+        "int_inversion", "int_typing", "primitive_Prims.op_Addition",
+        "primitive_Prims.op_Division", "primitive_Prims.op_Equality",
+        "primitive_Prims.op_GreaterThanOrEqual",
+        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
+        "primitive_Prims.op_disEquality",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_c0359807ffcd7fd2b13895c324f3884a",
+        "typing_Hybrid.triang", "well-founded-ordering-on-nat"
+      ],
+      0,
+      "9569e5e739e62042e4fdb2afc1bb0ac1"
+    ],
+    [
+      "Hybrid.prod_even",
+      1,
+      2,
+      1,
+      [
+        "@query", "primitive_Prims.op_Addition",
+        "primitive_Prims.op_Modulus", "primitive_Prims.op_Multiply",
+        "projection_inverse_BoxInt_proj_0"
+      ],
+      0,
+      "17d646a040b80b0475880badf620db85"
+    ],
+    [
+      "Hybrid.triang2",
+      1,
+      2,
+      1,
+      [
+        "@query", "primitive_Prims.op_Addition",
+        "primitive_Prims.op_Division", "primitive_Prims.op_Modulus",
+        "primitive_Prims.op_Multiply", "projection_inverse_BoxInt_proj_0",
+        "true_interp"
+      ],
+      0,
+      "0a53081cc13221f9f6c6484eb9914ee5"
+    ],
+    [
+      "Hybrid.triang2",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
+      ],
+      0,
+      "710695112e1f075cd8ae2463db7a1241"
+    ],
+    [
+      "Hybrid.silly_lemma",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
+        "primitive_Prims.op_Multiply", "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
+      ],
+      0,
+      "6828974be4ca8ba155ebebee733144ee"
+    ],
+    [
+      "Hybrid.test_need_arg",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_417e6b562faf2c5944c7cd18ae8df052"
+      ],
+      0,
+      "fcf0ab4d83fae1ffdf5a451eaaa3336d"
+    ]
+  ]
+]
