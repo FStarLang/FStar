@@ -20,8 +20,8 @@ open Steel.Memory
 open Steel.Effect.Atomic
 open Steel.Effect
 open FStar.PCM
-open FStar.Real
 open Steel.PCMFrac
+open FStar.Real
 module RP = Steel.PCMReference
 
 #set-options "--ide_id_info_off"

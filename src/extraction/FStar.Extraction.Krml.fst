@@ -51,7 +51,7 @@ type decl =
   | DTypeVariant of lident * list flag * int * branches_t
   | DTypeAbstractStruct of lident
   | DExternal of option cc * list flag * lident * typ * list ident
-  | DUntaggedUnion of lident * list<flag> * int * list<(ident * typ)>
+  | DUntaggedUnion of lident * list flag * int * list (ident * typ)
 
 and cc =
   | StdCall
@@ -276,10 +276,10 @@ let is_machine_int m =
   mk_width m <> None
 
 (* JL: TODO: in stdlib somewhere? *)
-let opt_bind (m: option<'a>) (k: 'a -> option<'b>): option<'b> =
+let opt_bind (m: option 'a) (k: 'a -> option 'b): option 'b =
   match m with Some x -> k x | None -> None
 
-let char_of_typechar (t: mlty): option<char> =
+let char_of_typechar (t: mlty): option char =
   match t with
   | MLTY_Named ([], p) ->
     let p = Syntax.string_of_mlpath p in
@@ -292,8 +292,8 @@ let char_of_typechar (t: mlty): option<char> =
 
   | _ -> None
 
-let string_of_typestring (t: mlty): option<string> =
-  let rec go t: option<list<string>> =
+let string_of_typestring (t: mlty): option string =
+  let rec go t: option (list string) =
     match t with
     | MLTY_Named ([], p)
       when Syntax.string_of_mlpath p = "Steel.C.Typestring.string_nil"
@@ -311,7 +311,7 @@ let string_of_typestring (t: mlty): option<string> =
   in
   opt_bind (go t) (fun ss -> Some (FStar.String.concat "" ss))
 
-let lident_of_string (s: string): option<lident> =
+let lident_of_string (s: string): option lident =
   let path = FStar.String.split ['.'] s in
   let rec go p =
     match p with
@@ -322,10 +322,10 @@ let lident_of_string (s: string): option<lident> =
       Some (s :: names, name))
   in go path
 
-let lident_of_typestring (t: mlty): option<lident> =
+let lident_of_typestring (t: mlty): option lident =
   opt_bind (string_of_typestring t) lident_of_string
 
-let int_of_typenat (t: mlty): option<int> =
+let int_of_typenat (t: mlty): option int =
   let rec go t =
     match t with
     | MLTY_Named ([], p)
@@ -1269,7 +1269,7 @@ let translate_type_decl env ty: option decl =
     None
   else
     // JL: TODO: hoist?
-    let parse_fields (fields: mlty): option<list<_>> =
+    let parse_fields (fields: mlty): option (list _) =
       let rec go fields =
         match fields with
         | MLTY_Named ([], p)
