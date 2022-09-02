@@ -27,7 +27,7 @@ ALL_SOURCE_FILES = $(wildcard *.fst *.fsti)
 SOME_LOWSTAR_FILES = $(FSTAR_HOME)/ulib/LowStar.Monotonic.Buffer.fst $(FSTAR_HOME)/ulib/LowStar.Buffer.fst
 
 .depend: $(ALL_SOURCE_FILES) Makefile
-	$(FSTAR) --dep full $(ALL_SOURCE_FILES) $(SOME_LOWSTAR_FILES) > $@.tmp
+	$(FSTAR) --dep full $(ALL_SOURCE_FILES) $(SOME_LOWSTAR_FILES) --extract 'krml:*,-Prims,-FStar.MSTTotal,-FStar.NMSTTotal,-FStar.MST,-FStar.NMST' > $@.tmp
 	mv $@.tmp $@
 
 depend: .depend
