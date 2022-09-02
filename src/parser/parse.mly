@@ -32,7 +32,7 @@ let old_attribute_syntax_warning =
    Use `[@@ a1; a2; ...; an]`, a semi-colon separated list of attributes, instead"
 
 let do_notation_deprecation_warning =
-  "The lightweiht do notation [x <- y; z] or [x ;; z] is deprecated, use let operators (i.e. [let* x = y in z] or [y ;* z], [*] being any sequence of operator characters) instead."
+  "The lightweight do notation [x <- y; z] or [x ;; z] is deprecated, use let operators (i.e. [let* x = y in z] or [y ;* z], [*] being any sequence of operator characters) instead."
 
 let none_to_empty_list x =
   match x with
