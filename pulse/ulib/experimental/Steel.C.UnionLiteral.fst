@@ -160,13 +160,13 @@ let addr_of_union_field'
   let s: Ghost.erased (union_pcm_carrier tag fields) =
     pts_to_view_elim p (union_view tag fields)
   in
-//  assert (Ghost.reveal s == (union_view tag fields).to_carrier v);
+  //  assert (Ghost.reveal s == (union_view tag fields).to_carrier v);
   let q = Steel.C.Union.addr_of_union_field #'a #_ #_ #(union_pcms fields) p field s in
-  change_equal_slprop (q `pts_to` _) (q `pts_to` _);
+//  change_equal_slprop (q `pts_to` _) (q `pts_to` _);
   pts_to_view_intro q (Ghost.reveal s field)
     (fields.get_field field).view
     (dsnd (Ghost.reveal v));
-  assert (Ghost.reveal v == (|field, dsnd (Ghost.reveal v)|));
+//  assert (Ghost.reveal v == (|field, dsnd (Ghost.reveal v)|));
   return q
 #pop-options
 
