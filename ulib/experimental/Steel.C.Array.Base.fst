@@ -182,9 +182,9 @@ let array_view t n =
   array_view' t n
 
 noeq
-type array_from0 base t = {
+type array_from0 t = {
   base_len: Ghost.erased size_t;
-  base_ref: Steel.C.Reference.ref base (array_view_type t base_len) (array_pcm t base_len);
+  base_ref: Steel.C.Reference.ref (array_view_type t base_len) (array_pcm t base_len);
   from: size_t;
   perm_ref: Steel.Reference.ghost_ref unit;
 }
@@ -197,9 +197,8 @@ type array_to0 = {
 }
 
 let array0_spec
-  (#base: _)
   (#t: _)
-  (from: array_from0 base t)
+  (from: array_from0 t)
   (to: array_to0)
 : Tot prop
 =
@@ -207,8 +206,8 @@ let array0_spec
     size_v from.from <= size_v to.to /\
     size_v to.to <= size_v from.base_len
 
-let array_or_null_from base t = option (array_from0 base t)
-let array_or_null_to base t = Ghost.erased (option array_to0)
+let array_or_null_from t = option (array_from0 t)
+let array_or_null_to t = Ghost.erased (option array_to0)
 let array_or_null_spec (from, to) =
   None? from == None? to /\
   ((Some? from \/ Some? to) ==> array0_spec (Some?.v from) (Some?.v to))
@@ -219,8 +218,8 @@ let len (from, to) =
     let Some to = Ghost.reveal to in to.to `size_sub` from.from
   | _ -> zero_size
 
-let null_from _ _ = None
-let null_to _ _ = None
+let null_from _ = None
+let null_to _ = None
 let null_to_unique _ = ()
 
 let g_is_null a = None? (fst a)
@@ -937,91 +936,85 @@ let to_view_array_conn
 #pop-options
 
 let array__base_len
-  (#base #t: _)
-  (a: array base t)
+  (#t: _)
+  (a: array t)
 : GTot size_t
 = (Some?.v (fst a)).base_len
 
 let array__base_ref
-  (#base #t: _)
-  (a: array base t)
-: Tot (Steel.C.Reference.ref base (array_view_type t (array__base_len a)) (array_pcm t (array__base_len a)))
+  (#t: _)
+  (a: array t)
+: Tot (Steel.C.Reference.ref (array_view_type t (array__base_len a)) (array_pcm t (array__base_len a)))
 = (Some?.v (fst a)).base_ref
 
 let array__from
-  (#base #t: _)
-  (a: array base t)
+  (#t: _)
+  (a: array t)
 : Tot size_t
 = (Some?.v (fst a)).from
 
 let array__to
-  (#base #t: _)
-  (a: array base t)
+  (#t: _)
+  (a: array t)
 : GTot size_t
 = (Some?.v (snd a)).to
 
 let array__perm_ref
-  (#base #t: _)
-  (a: array base t)
+  (#t: _)
+  (a: array t)
 : Tot (Steel.Reference.ghost_ref unit)
 = (Some?.v (fst a)).perm_ref
 
 let array__perm_val
-  (#base #t: _)
-  (a: array base t)
+  (#t: _)
+  (a: array t)
 : Tot Steel.FractionalPermission.perm
 = (Some?.v (snd a)).perm_val
 
 let array_as_ref_conn
-  (#base: Type)
   (#t: Type)
-  (a: array base t)
+  (a: array t)
 : GTot (Steel.C.Connection.connection (array_pcm t (array__base_len a)) (array_pcm t (len a)))
 = array_conn t (array__base_len a) (array__from a) (array__to a) ()
 
 let array_as_ref
-  (#base: Type)
   (#t: Type)
-  (a: array base t)
-: GTot (Steel.C.Reference.ref base (array_view_type t (len a)) (array_pcm t (len a)))
+  (a: array t)
+: GTot (Steel.C.Reference.ref (array_view_type t (len a)) (array_pcm t (len a)))
 = Steel.C.Ref.ref_focus (array__base_ref a) (array_as_ref_conn a)
 
 [@@__steel_reduce__]
 let varray0
-  (#base: Type)
   (#t: Type)
-  (x: array base t)
+  (x: array t)
 : Tot vprop
 = Steel.C.Ref.pts_to_view
-    #base
     #(array_pcm_carrier t (len x))
     #(array_pcm t (len x))
-    (array_as_ref #base #t x)
+    (array_as_ref #t x)
     #(array_view_type t (len x))
     #(size_v (len x) = 0)
     (array_view' t (len x))
 
 [@@__steel_reduce__]
 let varray9
-  (#base: Type)
   (#t: Type)
-  (x: array base t)
+  (x: array t)
 : Tot vprop
 = (varray0 x `star` Steel.Reference.ghost_vptrp (array__perm_ref x)  (array__perm_val x)) `vrewrite` fst
 
-let varray_hp #base #t x = hp_of (varray9 #base #t x)
+let varray_hp #t x = hp_of (varray9 #t x)
 
 #push-options "--debug Steel.C.Array --debug_level Extreme"
 
-let varray_sel #base #t x = sel_of (varray9 #base #t x)
+let varray_sel #t x = sel_of (varray9 #t x)
 
 #pop-options
 
 let intro_varray1
   (#inames: _)
-  (#base: Type)
   (#t: Type)
-  (x: array base t)
+  (x: array t)
 : SteelGhost unit inames
     (varray0 x `star` Steel.Reference.ghost_vptrp (array__perm_ref x) (array__perm_val x))
     (fun _ -> varray x)
@@ -1038,9 +1031,8 @@ let intro_varray1
 
 let elim_varray1
   (#inames: _)
-  (#base: Type)
   (#t: Type)
-  (x: array base t)
+  (x: array t)
 : SteelGhost unit inames
     (varray x)
     (fun _ -> varray0 x `star` Steel.Reference.ghost_vptrp (array__perm_ref x) (array__perm_val x))
@@ -1056,8 +1048,8 @@ let elim_varray1
     fst
 
 let g_mk_array_from'
-  (#base: Type u#0) (#t: Type u#0) (#n: size_t) (r: Steel.C.Reference.ref base (array_view_type t n) (array_pcm t n))
-  (a: array_or_null_from base t)
+  (#t: Type u#0) (#n: size_t) (r: Steel.C.Reference.ref (array_view_type t n) (array_pcm t n))
+  (a: array_or_null_from t)
 : Tot prop
 = 
   Some? a /\
@@ -1068,7 +1060,7 @@ let g_mk_array_from'
   a.from == mk_size_t 0ul
   end
 
-let g_mk_array #base #t #n r a =
+let g_mk_array #t #n r a =
   g_mk_array_from' r (fst a) /\
   (array__to a) == n /\
   (array__perm_val a) == Steel.FractionalPermission.full_perm
@@ -1077,7 +1069,7 @@ let g_mk_array_weak r a = ()
 
 let g_mk_array_from r a = g_mk_array_from' r a
 
-let g_mk_array_to #base #t #n r a
+let g_mk_array_to #t #n r a
 =
   Some ({
     to = n;
@@ -1086,9 +1078,9 @@ let g_mk_array_to #base #t #n r a
 
 #push-options "--z3rlimit 32"
 
-val intro_varray0 (#base: Type u#0) (#t: Type u#0) (#opened: _) (#n: size_t) (r: Steel.C.Reference.ref base (array_view_type t n) (array_pcm t n))
+val intro_varray0 (#t: Type u#0) (#opened: _) (#n: size_t) (r: Steel.C.Reference.ref (array_view_type t n) (array_pcm t n))
   (_: squash (size_v n > 0))
-: SteelAtomicBase (array base t)
+: SteelAtomicBase (array t)
     false opened Unobservable
     (Steel.C.Ref.pts_to_view r (array_view t n))
     (fun a -> varray a)
@@ -1100,7 +1092,7 @@ val intro_varray0 (#base: Type u#0) (#t: Type u#0) (#opened: _) (#n: size_t) (r:
   ))
 
 let intro_varray0
-  #base #t #_ #n r sq
+  #t #_ #n r sq
 =
   let perm_ref = Steel.Reference.ghost_alloc #unit () in
   let from = Some ({
@@ -1113,7 +1105,7 @@ let intro_varray0
   change_equal_slprop
     (Steel.Reference.ghost_vptr perm_ref)
     (Steel.Reference.ghost_vptrp (array__perm_ref res) (array__perm_val res));
-  assert ((array_as_ref res <: Steel.C.Ref.ref base (array_pcm t n)) == Steel.C.Ref.ref_focus r (array_conn t n (mk_size_t 0ul) n ()));
+  assert ((array_as_ref res <: Steel.C.Ref.ref (array_pcm t n)) == Steel.C.Ref.ref_focus r (array_conn t n (mk_size_t 0ul) n ()));
   array_conn_id t n;
   assert (array_conn t n (mk_size_t 0ul) n () == Steel.C.Connection.connection_id (array_pcm t n));
   assert (array_as_ref res == Steel.C.Ref.ref_focus r (Steel.C.Connection.connection_id (array_pcm t n)));
@@ -1135,7 +1127,7 @@ let intro_varray_from r _ =
   return res
 
 let elim_varray
-  #_ #base #t #n r res sq
+  #_ #t #n r res sq
 =
   assert (g_mk_array r res);
   assert (array_as_ref res == Steel.C.Ref.ref_focus r (array_conn t n (mk_size_t 0ul) n ()));
@@ -1164,10 +1156,9 @@ let adjacent r1 r2 =
   (array__to r1) == (array__from r2)
 
 val t_merge
-  (#base: Type)
   (#t: Type)
-  (r1 r2: array base t)
-: Pure (array base t)
+  (r1 r2: array t)
+: Pure (array t)
   (requires (adjacent r1 r2))
   (ensures (fun r -> length r == length r1 + length r2))
 
@@ -1185,7 +1176,7 @@ let merge_inj_right a b1 b2 = ()
 
 let merge_inj_left a1 a2 b = ()
 
-let no_self_merge_1 (#base #t: Type) (a b: array base t) : Lemma
+let no_self_merge_1 (#t: Type) (a b: array t) : Lemma
   (~ (merge_into a b a))
 = let aux () : Lemma
     (requires (merge_into a b a))
@@ -1198,7 +1189,7 @@ let no_self_merge_1 (#base #t: Type) (a b: array base t) : Lemma
   in
   Classical.move_requires aux ()
 
-let no_self_merge_2 (#base #t: Type) (a b: array base t) : Lemma
+let no_self_merge_2 (#t: Type) (a b: array t) : Lemma
   (~ (merge_into a b b))
 = let aux () : Lemma
     (requires (merge_into a b a))
@@ -1212,26 +1203,25 @@ let no_self_merge_2 (#base #t: Type) (a b: array base t) : Lemma
   Classical.move_requires aux ()
 
 val tsplit
-  (#base: Type)
   (#t: Type)
-  (r: array base t)
+  (r: array t)
   (i: size_t)
-: Pure (array base t & array base t)
+: Pure (array t & array t)
   (requires (size_v i <= length r))
   (ensures (fun (rl, rr) ->
     merge_into rl rr r /\
     length rl == size_v i
   ))
 
-let tsplit #base #t r i =
+let tsplit #t r i =
   let h = half_perm (array__perm_val r) in
-  let r1 : array base t =
+  let r1 : array t =
     (fst r, Ghost.hide (Some ({
       to = (array__from r) `size_add` i;
       perm_val = h;
     })))
   in
-  let r2 : array base t = (Some ({
+  let r2 : array t = (Some ({
     base_len = (array__base_len r);
     base_ref = (array__base_ref r);
     from = (array__from r) `size_add` i;
@@ -1299,9 +1289,8 @@ let to_carrier_split t n x v i =
     assert ((array_view' t (n `size_sub` i)).Steel.C.Ref.to_carrier (Seq.slice v (size_v i) (size_v n)) `feq` xr)
 
 let array_as_ref_split_left
-  (base: Type)
   (t: Type)
-  (x: array base t)
+  (x: array t)
   (i: size_t)
 : Lemma
   (requires (size_v i <= length x))
@@ -1314,9 +1303,8 @@ let array_as_ref_split_left
 
 #restart-solver
 let array_as_ref_split_right
-  (base: Type)
   (t: Type)
-  (x: array base t)
+  (x: array t)
   (i: size_t)
 : Lemma
   (requires (size_v i <= length x))
@@ -1327,8 +1315,8 @@ let array_as_ref_split_right
   array_conn_compose t (array__base_len x) (array__from x) (array__to x) i (len x);
   Steel.C.Ref.ref_focus_comp (array__base_ref x) (array_as_ref_conn x) (array_conn t (len x) i (len x) ())
 
-val split_ (#opened: _) (#base: Type) (#t:Type) (a:array base t) (i:size_t)
-  : SteelGhost (array base t `gpair` array base t) opened
+val split_ (#opened: _) (#t:Type) (a:array t) (i:size_t)
+  : SteelGhost (array t `gpair` array t) opened
           (varray a)
           (fun res -> varray (GPair?.fst res) `star` varray (GPair?.snd res))
           (fun _ -> size_v i <= length a)
@@ -1347,16 +1335,15 @@ val split_ (#opened: _) (#base: Type) (#t:Type) (a:array base t) (i:size_t)
 
 #restart-solver
 let split_
-  #j #base #t x i
+  #j #t x i
 =
   let gv = gget (varray x) in
   elim_varray1 x;
   let v = Steel.C.Ref.pts_to_view_elim
     #j
-    #base
     #(array_pcm_carrier t (len x))
     #(array_pcm t (len x))
-    (array_as_ref #base #t x)
+    (array_as_ref #t x)
     #(array_view_type t (len x))
     #(size_v (len x) = 0)
     (array_view' t (len x))
@@ -1370,7 +1357,7 @@ let split_
   let vr' : array_pcm_carrier t (len xr) = array_large_to_small_f t n i n () v in
   let vr : array_pcm_carrier t (len x) = array_small_to_large_f t n i n () vr' in
   Steel.C.Ref.split
-    (array_as_ref #base #t x)
+    (array_as_ref #t x)
     v
     vl
     vr;
@@ -1382,11 +1369,11 @@ let split_
   = magic () // array_conn t n z i ()  // FIXME: WHY WHY WHY does this send F* off rails (> 35 GB RAM consumption and going)
   in
   Steel.C.Ref.gfocus
-    (array_as_ref #base #t x)
+    (array_as_ref #t x)
     cl
     vl
     vl';
-  array_as_ref_split_left _ t x i;
+  array_as_ref_split_left t x i;
   assert (array_as_ref xl == Steel.C.Ref.ref_focus (array_as_ref x) cl);
   change_equal_slprop
     (_ `Steel.C.Ref.pts_to` vl')
@@ -1395,7 +1382,6 @@ let split_
   let gvl : array_view_type t (len xl) = Seq.slice gv 0 (size_v i) in
   Steel.C.Ref.pts_to_view_intro
     #j
-    #base
     #(array_pcm_carrier t (len xl))
     #(array_pcm t (len xl))
     (array_as_ref xl)
@@ -1420,11 +1406,11 @@ let split_
   = magic () // array_conn t n i n ()  // FIXME: WHY WHY WHY does this send F* off rails (> 35 GB RAM consumption and going)
   in
   Steel.C.Ref.gfocus
-    (array_as_ref #base #t x)
+    (array_as_ref #t x)
     cr
     vr
     vr';
-  array_as_ref_split_right _ t x i;
+  array_as_ref_split_right t x i;
   assert (array_as_ref xr == Steel.C.Ref.ref_focus (array_as_ref x) cr);
   change_equal_slprop
     (_ `Steel.C.Ref.pts_to` vr')
@@ -1435,7 +1421,6 @@ let split_
 //  in
   Steel.C.Ref.pts_to_view_intro
     #j
-    #base
     #(array_pcm_carrier t (len xr))
     #(array_pcm t (len xr))
     (array_as_ref xr)
@@ -1461,7 +1446,7 @@ let split_
   res
 
 let split'
-  #_ #_ #t a i
+  #_ #t a i
 =
   let g = gget (varray a) in
   Seq.lemma_split #t (Ghost.reveal g) (size_v i);
@@ -1475,7 +1460,6 @@ let split_right_from
 let join' = admit ()
 
 let array_as_one_ref_iso
-  (base: Type)
   (t: Type)
 : Tot (Steel.C.Connection.isomorphism (array_pcm t one_size) (Steel.C.Opt.opt_pcm #t))
 = let c1 = (Steel.C.Struct.struct_to_field (array_elements_pcm t one_size) zero_size) in
@@ -1497,56 +1481,55 @@ let array_as_one_ref_iso
     (fun x -> ())
 
 let array_as_one_ref_conn
-  (base: Type)
   (t: Type)
 : Tot (Steel.C.Connection.connection (array_pcm t one_size) (Steel.C.Opt.opt_pcm #t))
-= Steel.C.Connection.connection_of_isomorphism (array_as_one_ref_iso base t)
+= Steel.C.Connection.connection_of_isomorphism (array_as_one_ref_iso t)
 
 let g_ref_of_array
-  #base #t r
+  #t r
 =
-  array_as_ref r `Steel.C.Ref.ref_focus` array_as_one_ref_conn base t
+  array_as_ref r `Steel.C.Ref.ref_focus` array_as_one_ref_conn t
 
 let array_as_one_ref_conn'
-  (#base: Type) (#t:Type0) (r:array base t)
+  (#t:Type0) (r:array t)
 : Pure (Steel.C.Connection.connection (array_pcm t (array__base_len r)) (Steel.C.Opt.opt_pcm #t))
   (requires (size_v (len r) == 1))
   (ensures (fun _ -> True))
 =
-  array_conn t (array__base_len r) (array__from r) ((array__from r) `size_add` one_size) () `Steel.C.Connection.connection_compose` array_as_one_ref_conn base t
+  array_conn t (array__base_len r) (array__from r) ((array__from r) `size_add` one_size) () `Steel.C.Connection.connection_compose` array_as_one_ref_conn t
 
 #restart-solver
 let array_as_one_ref_conn'_small_to_large
-  (#base: Type) (#t:Type0) (r:array base t)
+  (#t:Type0) (r:array t)
   (x: option t)
   (i: array_domain t (array__base_len r))
 : Lemma
   (requires (size_v (len r) == 1))
   (ensures ((array_as_one_ref_conn' r).Steel.C.Connection.conn_small_to_large.Steel.C.Connection.morph x i == (if i = (array__from r) then x else None)))
 = Steel.C.Connection.morphism_compose_morph
-    (array_as_one_ref_conn base t).Steel.C.Connection.conn_small_to_large
+    (array_as_one_ref_conn t).Steel.C.Connection.conn_small_to_large
     (array_conn t (array__base_len r) (array__from r) (array__from r `size_add` one_size) ()).Steel.C.Connection.conn_small_to_large
     x
 
 let g_ref_of_array'
-  (#base: Type) (#t:Type0) (r:array base t)
-: Ghost (Steel.C.Reference.ref base t (Steel.C.Opt.opt_pcm #t))
+  (#t:Type0) (r:array t)
+: Ghost (Steel.C.Reference.ref t (Steel.C.Opt.opt_pcm #t))
   (requires (size_v (len r) == 1))
   (ensures (fun _ -> True))
 = (array__base_ref r) `Steel.C.Ref.ref_focus` array_as_one_ref_conn' r
 
 let g_ref_of_array'_correct
-  (#base: Type) (#t:Type0) (r:array base t)
+  (#t:Type0) (r:array t)
 : Lemma
   (requires (length r == 1))
   (ensures (g_ref_of_array r == g_ref_of_array' r))
 =
-  Steel.C.Ref.ref_focus_comp (array__base_ref r) (array_conn t (array__base_len r) (array__from r) (array__to r) ()) (array_as_one_ref_conn base t)
+  Steel.C.Ref.ref_focus_comp (array__base_ref r) (array_conn t (array__base_len r) (array__from r) (array__to r) ()) (array_as_one_ref_conn t)
 
 let get_pts_to
   (#inames: _)
-  (#a: Type u#0) (#b: Type u#b) (#p: Steel.C.PCM.pcm b)
-  (r: Steel.C.Ref.ref a p) (v: Ghost.erased b)
+  (#b: Type u#b) (#p: Steel.C.PCM.pcm b)
+  (r: Steel.C.Ref.ref p) (v: Ghost.erased b)
 : SteelGhost (Ghost.erased b) inames
     (Steel.C.Ref.pts_to r v)
     (fun v' -> Steel.C.Ref.pts_to r v)
@@ -1570,39 +1553,36 @@ val abstract_id
 #push-options "--z3rlimit 64 --fuel 1 --ifuel 2 --query_stats --z3cliopt smt.arith.nl=false --print_implicits"
 
 #restart-solver
-let ref_of_array_ghost #inames #base #t x sq =
+let ref_of_array_ghost #inames #t x sq =
   let gv = gget (varray x) in
   elim_varray1 x;
   let v : Ghost.erased (array_pcm_carrier t (len x)) = Steel.C.Ref.pts_to_view_elim
     #inames
-    #base
     #(array_pcm_carrier t (len x))
     #(array_pcm t (len x))
-    (array_as_ref #base #t x)
+    (array_as_ref #t x)
     #(array_view_type t (len x))
     #(size_v (len x) = 0)
     (array_view' t (len x))
   in
   assert (len x == one_size);
   let z : array_domain t one_size = zero_size in
-  assert (Ghost.reveal v `feq` (array_as_one_ref_conn base t).Steel.C.Connection.conn_small_to_large.Steel.C.Connection.morph (Ghost.reveal v z));
+  assert (Ghost.reveal v `feq` (array_as_one_ref_conn t).Steel.C.Connection.conn_small_to_large.Steel.C.Connection.morph (Ghost.reveal v z));
   Steel.C.Ref.gfocus
-    #base
     #(array_pcm_carrier t (len x))
     #(option t)
     #_
     #(array_pcm t (len x))
     (array_as_ref x)
     #(Steel.C.Opt.opt_pcm #t)
-    (array_as_one_ref_conn base t)
+    (array_as_one_ref_conn t)
     _
     (Ghost.reveal v z);
   Steel.C.Ref.pts_to_view_intro
     #inames
-    #base
     #(option t)
     #(Steel.C.Opt.opt_pcm #t)
-    (Steel.C.Ref.ref_focus (array_as_ref x) (array_as_one_ref_conn base t))
+    (Steel.C.Ref.ref_focus (array_as_ref x) (array_as_one_ref_conn t))
     (Ghost.reveal v z)
     #t
     #false
@@ -1613,25 +1593,24 @@ let ref_of_array_ghost #inames #base #t x sq =
     (Steel.C.Ref.pts_to_view (g_ref_of_array x) (Steel.C.Opt.opt_view t))
 
 #restart-solver
-val ref_of_array0 (#base: Type) (#t:Type0) (#opened: _) (r:array base t) (sq: squash (length r == 1)) (v0: Ghost.erased t)
-  : SteelAtomicBase (Steel.C.Reference.ref base t (Steel.C.Opt.opt_pcm #t))
+val ref_of_array0 (#t:Type0) (#opened: _) (r:array t) (sq: squash (length r == 1)) (v0: Ghost.erased t)
+  : SteelAtomicBase (Steel.C.Reference.ref t (Steel.C.Opt.opt_pcm #t))
              false opened Unobservable
              (varray r)
-             (fun r' -> (Steel.C.Ref.pts_to_view r' (Steel.C.Opt.opt_view t) `vrefine` (fun v' -> v' == Ghost.reveal v0)) `star` pure (g_ref_of_array #base #t r == r') `star` v_ref_of_array r)
+             (fun r' -> (Steel.C.Ref.pts_to_view r' (Steel.C.Opt.opt_view t) `vrefine` (fun v' -> v' == Ghost.reveal v0)) `star` pure (g_ref_of_array #t r == r') `star` v_ref_of_array r)
              (requires fun h0 -> Seq.index (h0 (varray r)) 0 == Ghost.reveal v0)
              (ensures fun h0 r' h1 -> True)
 
 #restart-solver
-let ref_of_array0 #base #t x sq v0 =
+let ref_of_array0 #t x sq v0 =
   let gv : Ghost.erased (array_view_type t (len x)) = gget (varray x) in
   assert (Seq.index (Ghost.reveal gv) 0 == Ghost.reveal v0);
   elim_varray1 x;
   let v : Ghost.erased (array_pcm_carrier t (len x)) = Steel.C.Ref.pts_to_view_elim
     #_
-    #base
     #(array_pcm_carrier t (len x))
     #(array_pcm t (len x))
-    (array_as_ref #base #t x)
+    (array_as_ref #t x)
     #(array_view_type t (len x))
     #(size_v (len x) = 0)
     (array_view' t (len x))
@@ -1643,10 +1622,9 @@ let ref_of_array0 #base #t x sq v0 =
     array_as_one_ref_conn'_small_to_large x (Ghost.reveal v zero_size) i
   );
   g_ref_of_array'_correct x;
-  let r : Steel.C.Reference.ref base t (Steel.C.Opt.opt_pcm #t) = Steel.C.Ref.focus (array__base_ref x) (array_as_one_ref_conn' x) s (Ghost.reveal v zero_size) in
+  let r : Steel.C.Reference.ref t (Steel.C.Opt.opt_pcm #t) = Steel.C.Ref.focus (array__base_ref x) (array_as_one_ref_conn' x) s (Ghost.reveal v zero_size) in
   Steel.C.Ref.pts_to_view_intro
     #_
-    #base
     #(option t)
     #(Steel.C.Opt.opt_pcm #t)
     r
@@ -1658,12 +1636,12 @@ let ref_of_array0 #base #t x sq v0 =
   intro_vrefine
     (Steel.C.Ref.pts_to_view r (Steel.C.Opt.opt_view t))
     (fun v' -> v' == Ghost.reveal v0);
-  intro_pure (g_ref_of_array #base #t x == r);
+  intro_pure (g_ref_of_array #t x == r);
   return r
 
 #restart-solver
-let ref_of_array_from #base #t r_from r_to sq =
-  let x : array base t = (r_from, r_to) in
+let ref_of_array_from #t r_from r_to sq =
+  let x : array t = (r_from, r_to) in
   change_equal_slprop
     (varray (r_from, r_to))
     (varray x);
@@ -1681,7 +1659,7 @@ let ref_of_array_from #base #t r_from r_to sq =
 
 #restart-solver
 let array_of_ref
-  #_ #base #t r' r sq
+  #_ #t r' r sq
 =
   let g : Ghost.erased t = gget (Steel.C.Ref.pts_to_view r (Steel.C.Opt.opt_view t)) in
   let v = Steel.C.Ref.pts_to_view_elim
@@ -1691,7 +1669,7 @@ let array_of_ref
   Steel.C.Ref.unfocus
     r
     (array_as_ref r')
-    (array_as_one_ref_conn base t)
+    (array_as_one_ref_conn t)
     v;
   let g' : Ghost.erased (array_view_type t (len r')) =
     (Ghost.hide (Seq.create 1 (Ghost.reveal g)))
@@ -1714,15 +1692,15 @@ let array_of_ref
 
 #restart-solver
 let one_ref_as_array_conn
-  (base: Type) (t:Type0)
+  (t:Type0)
 : Tot (Steel.C.Connection.connection (Steel.C.Opt.opt_pcm #t) (array_pcm t one_size))
 =
-  Steel.C.Connection.(connection_of_isomorphism (isomorphism_inverse (array_as_one_ref_iso base t)))
+  Steel.C.Connection.(connection_of_isomorphism (isomorphism_inverse (array_as_one_ref_iso t)))
 
-let mk_array_of_ref' (#base: Type) (#t:Type0) (r: Steel.C.Reference.ref base t (Steel.C.Opt.opt_pcm #t)) (perm_ref: Steel.Reference.ghost_ref unit) : GTot (array base t) =
+let mk_array_of_ref' (#t:Type0) (r: Steel.C.Reference.ref t (Steel.C.Opt.opt_pcm #t)) (perm_ref: Steel.Reference.ghost_ref unit) : GTot (array t) =
   (Some ({
     base_len = one_size;
-    base_ref = r `Steel.C.Ref.ref_focus` one_ref_as_array_conn base t;
+    base_ref = r `Steel.C.Ref.ref_focus` one_ref_as_array_conn t;
     from = zero_size;
     perm_ref = perm_ref;
   }), Ghost.hide (Some ({
@@ -1732,20 +1710,20 @@ let mk_array_of_ref' (#base: Type) (#t:Type0) (r: Steel.C.Reference.ref base t (
 
 #restart-solver
 let mk_array_of_ref'_correct
-  (#base: Type) (#t:Type0) (r: Steel.C.Reference.ref base t (Steel.C.Opt.opt_pcm #t)) (perm_ref: Steel.Reference.ghost_ref unit)
+  (#t:Type0) (r: Steel.C.Reference.ref t (Steel.C.Opt.opt_pcm #t)) (perm_ref: Steel.Reference.ghost_ref unit)
 : Lemma
   (g_ref_of_array (mk_array_of_ref' r perm_ref) == r)
 =
   g_ref_of_array'_correct (mk_array_of_ref' r perm_ref);
   array_conn_id t one_size;
-  Steel.C.Connection.connection_compose_id_left (array_as_one_ref_conn base t);
-  Steel.C.Ref.ref_focus_comp r (one_ref_as_array_conn base t) (array_as_one_ref_conn base t);
-  Steel.C.Connection.connection_of_isomorphism_inverse_left (array_as_one_ref_iso base t);
+  Steel.C.Connection.connection_compose_id_left (array_as_one_ref_conn t);
+  Steel.C.Ref.ref_focus_comp r (one_ref_as_array_conn t) (array_as_one_ref_conn t);
+  Steel.C.Connection.connection_of_isomorphism_inverse_left (array_as_one_ref_iso t);
   Steel.C.Ref.ref_focus_id r
 
 #restart-solver
 let array_as_ref_eq_base_ref
-  (#base: Type) (#t:Type0) (a: array base t)
+  (#t:Type0) (a: array t)
 : Lemma
   (requires (
     array__base_len a == one_size /\
@@ -1761,7 +1739,7 @@ let array_as_ref_eq_base_ref
 
 #restart-solver
 let array_as_ref_mk_array_of_ref'
-  (#base: Type) (#t:Type0) (r: Steel.C.Reference.ref base t (Steel.C.Opt.opt_pcm #t)) (perm_ref: Steel.Reference.ghost_ref unit)
+  (#t:Type0) (r: Steel.C.Reference.ref t (Steel.C.Opt.opt_pcm #t)) (perm_ref: Steel.Reference.ghost_ref unit)
 : Lemma
   (ensures (
     let x = mk_array_of_ref' r perm_ref in
@@ -1779,7 +1757,7 @@ let array_domain_one_size
 = ()
 
 #restart-solver
-let mk_array_of_ref_view_intro (base: Type) (#t:Type0)
+let mk_array_of_ref_view_intro (#t:Type0)
   (g: Ghost.erased t)
   (v: Ghost.erased (option t))
   (v' : Ghost.erased (array_pcm_carrier t one_size))
@@ -1787,7 +1765,7 @@ let mk_array_of_ref_view_intro (base: Type) (#t:Type0)
 : Lemma
   (requires (
     Ghost.reveal v == (Steel.C.Opt.opt_view t).Steel.C.Ref.to_carrier (Ghost.reveal g) /\
-    Ghost.reveal v' == (array_as_one_ref_conn base t).Steel.C.Connection.conn_small_to_large.Steel.C.Connection.morph (Ghost.reveal v) /\
+    Ghost.reveal v' == (array_as_one_ref_conn t).Steel.C.Connection.conn_small_to_large.Steel.C.Connection.morph (Ghost.reveal v) /\
     Ghost.reveal g' == Seq.create 1 (Ghost.reveal g)
   ))
   (ensures (
@@ -1798,27 +1776,27 @@ let mk_array_of_ref_view_intro (base: Type) (#t:Type0)
   )
 
 let mk_array_of_ref_to'
-  (base: Type) (t:Type0)
-: Tot (array_or_null_to base t)
+  (t:Type0)
+: Tot (array_or_null_to t)
 = Some ({
     to = one_size;
     perm_val = Steel.FractionalPermission.full_perm;
   })
 
 let mk_array_of_ref_from_spec
-  #base #t r from
+  #t r from
 =
-  let a = (from, mk_array_of_ref_to' base t) in
+  let a = (from, mk_array_of_ref_to' t) in
   array_or_null_spec a /\
   g_is_null a == false /\
   array__base_len a == one_size /\
   array__from a == zero_size /\
-  array__base_ref a == r `Steel.C.Ref.ref_focus` one_ref_as_array_conn base t
+  array__base_ref a == r `Steel.C.Ref.ref_focus` one_ref_as_array_conn t
 
-let mk_array_of_ref_to #base #t r from = mk_array_of_ref_to' base t
+let mk_array_of_ref_to #t r from = mk_array_of_ref_to' t
 
-val mk_array_of_ref0 (#base: Type) (#t:Type0) (#opened: _) (r: Steel.C.Reference.ref base t (Steel.C.Opt.opt_pcm #t))
-  : SteelAtomicBase (array base t)
+val mk_array_of_ref0 (#t:Type0) (#opened: _) (r: Steel.C.Reference.ref t (Steel.C.Opt.opt_pcm #t))
+  : SteelAtomicBase (array t)
              false opened Unobservable
              (Steel.C.Ref.pts_to_view r (Steel.C.Opt.opt_view t))
              (fun r' -> varray r')
@@ -1833,17 +1811,17 @@ val mk_array_of_ref0 (#base: Type) (#t:Type0) (#opened: _) (r: Steel.C.Reference
 
 #restart-solver
 let mk_array_of_ref0
-  #base #t r
+  #t r
 =
   let g : Ghost.erased t = gget (Steel.C.Ref.pts_to_view r (Steel.C.Opt.opt_view t)) in
   let v : Ghost.erased (option t) = Steel.C.Ref.pts_to_view_elim r (Steel.C.Opt.opt_view t) in
-  let v' : Ghost.erased (array_pcm_carrier t one_size) = Ghost.hide ((array_as_one_ref_conn base t).Steel.C.Connection.conn_small_to_large.Steel.C.Connection.morph (Ghost.reveal v)) in
-  let _ : squash (Ghost.reveal v == (one_ref_as_array_conn base t).Steel.C.Connection.conn_small_to_large.Steel.C.Connection.morph (Ghost.reveal v')) =
-    Steel.C.Connection.connection_of_isomorphism_inverse_left (array_as_one_ref_iso base t)
+  let v' : Ghost.erased (array_pcm_carrier t one_size) = Ghost.hide ((array_as_one_ref_conn t).Steel.C.Connection.conn_small_to_large.Steel.C.Connection.morph (Ghost.reveal v)) in
+  let _ : squash (Ghost.reveal v == (one_ref_as_array_conn t).Steel.C.Connection.conn_small_to_large.Steel.C.Connection.morph (Ghost.reveal v')) =
+    Steel.C.Connection.connection_of_isomorphism_inverse_left (array_as_one_ref_iso t)
   in
-  let r' = Steel.C.Ref.focus r (one_ref_as_array_conn base t) v v' in
+  let r' = Steel.C.Ref.focus r (one_ref_as_array_conn t) v v' in
   let perm_ref = Steel.Reference.ghost_alloc #unit () in
-  let res : array base t = (Some ({
+  let res : array t = (Some ({
     base_len = one_size;
     base_ref = r';
     from = zero_size;
@@ -1858,7 +1836,7 @@ let mk_array_of_ref0
   let g' : Ghost.erased (array_view_type t one_size) =
     Ghost.hide (Seq.create 1 (Ghost.reveal g))
   in
-  mk_array_of_ref_view_intro base g v v' g' ;
+  mk_array_of_ref_view_intro g v v' g' ;
   Steel.C.Ref.pts_to_view_intro
     _
     _
@@ -1875,7 +1853,7 @@ let mk_array_of_ref0
   return res
 
 let mk_array_of_ref_from
-  #base #t r
+  #t r
 =
   let a = mk_array_of_ref0 r in
   let res = fst a in
@@ -1887,16 +1865,16 @@ let mk_array_of_ref_from
 #pop-options
 
 let varray_or_null0_rewrite
-  (#base #a: Type0)
-  (r: array_or_null base a)
+  (#a: Type0)
+  (r: array_or_null a)
   (_: t_of emp)
 : Tot (option (array_view_type a (len r)))
 = None
 
 [@@__steel_reduce__]
 let varray_or_null0
-  (#base #a: Type0)
-  (r: array_or_null base a)
+  (#a: Type0)
+  (r: array_or_null a)
 : Tot vprop
 = if g_is_null r
   then emp `vrewrite` varray_or_null0_rewrite r
@@ -1975,7 +1953,7 @@ let elim_varray_or_null_none x =
 
 #restart-solver
 let freeable
-  #base #t a
+  #t a
 =
   Steel.C.Ref.freeable (array__base_ref a) /\
   size_v (array__base_len a) > 0 /\
@@ -1997,8 +1975,8 @@ let malloc_to'
  (#t: Type0)
   (x: t)
   (n: size_t)
-  (from: array_or_null_from (array_pcm_carrier t n) t)
-: Tot (array_or_null_to (array_pcm_carrier t n) t)
+  (from: array_or_null_from t)
+: Tot (array_or_null_to t)
 = if None? from
   then None
   else Some ({
@@ -2019,7 +1997,7 @@ val malloc0
   (#t: Type0)
   (x: t)
   (n: size_t)
-: Steel (array_or_null (array_pcm_carrier t n) t)
+: Steel (array_or_null t)
     emp
     (fun r -> varray_or_null r)
     (requires fun _ -> size_v n > 0)
@@ -2053,9 +2031,8 @@ let malloc_from
   return res
  
 val free0
-  (#base: Type0)
   (#t: Type0)
-  (a: array base t)
+  (a: array t)
 : Steel unit
     (varray a)
     (fun _ -> emp)
@@ -2065,12 +2042,11 @@ val free0
 #restart-solver
 #push-options "--print_implicits"
 let free0
-  #base #t a
+  #t a
 =
   let r = (array__base_ref a) in
   elim_varray r a ();
   let v = Steel.C.Ref.pts_to_view_elim
-    #_
     #_
     #(array_pcm_carrier t (Ghost.hide (Ghost.reveal (array__base_len a))))
     #(array_pcm t (Ghost.hide (Ghost.reveal (array__base_len a))))
@@ -2078,16 +2054,15 @@ let free0
     (array_view t (array__base_len a))
   in
   Steel.C.Ref.ref_free
-    #_
     #(array_pcm_carrier t (Ghost.hide (Ghost.reveal (array__base_len a))))
     #(array_pcm t (Ghost.hide (Ghost.reveal (array__base_len a))))
     #v
     r
 
 let free_from
-  #base #t a a' sq
+  #t a a' sq
 =
-  let a0 : array base t = (a, a') in
+  let a0 : array t = (a, a') in
   change_equal_slprop
     (varray (a, a'))
     (varray a0);
