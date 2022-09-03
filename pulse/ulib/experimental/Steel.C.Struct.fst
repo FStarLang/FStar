@@ -299,10 +299,10 @@ let struct_peel (#a:eqtype) (#b: a -> Type u#b) (p:(k:a -> pcm (b k))) (k:a)
   assert (xs `feq` op (prod_pcm p) (struct_without_field p k xs) (field_to_struct_f p k (xs k)))
 
 let addr_of_struct_field
-  (#base:Type) (#a:eqtype) (#b: a -> Type u#b) (#p:(k:a -> pcm (b k)))
-  (r: ref base (prod_pcm p)) (k:a)
+  (#a:eqtype) (#b: a -> Type u#b) (#p:(k:a -> pcm (b k)))
+  (r: ref (prod_pcm p)) (k:a)
   (xs: Ghost.erased (restricted_t a b))
-: Steel (ref base (p k))
+: Steel (ref (p k))
     (r `pts_to` xs)
     (fun s ->
       (r `pts_to` struct_without_field p k xs) `star` 
@@ -350,8 +350,8 @@ let struct_unpeel (#a:eqtype) (#b: a -> Type u#b) (p:(k:a -> pcm (b k))) (k:a)
   assert (struct_with_field p k x xs `feq` op (prod_pcm p) xs (field_to_struct_f p k x))
 
 let unaddr_of_struct_field
-  (#base:Type) (#a:eqtype) (#b: a -> Type u#b) (#p:(k:a -> pcm (b k))) (k:a)
-  (r': ref base (p k)) (r: ref base (prod_pcm p))
+  (#a:eqtype) (#b: a -> Type u#b) (#p:(k:a -> pcm (b k))) (k:a)
+  (r': ref (p k)) (r: ref (prod_pcm p))
   (xs: Ghost.erased (restricted_t a b)) (x: Ghost.erased (b k))
 : Steel unit
     ((r `pts_to` xs) `star` (r' `pts_to` x))

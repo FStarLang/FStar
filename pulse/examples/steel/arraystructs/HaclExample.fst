@@ -87,7 +87,7 @@ let _ = norm norm_c_typedef (mk_c_struct comp_tag comp_fields)
     element of the corresponding array to zero) *)
 
 let do_something_with_limbs
-  (a: array 'a U64.t)
+  (a: array U64.t)
 : Steel unit
     (varray a)
     (fun _ -> varray a)
@@ -97,14 +97,14 @@ let do_something_with_limbs
   return ()
 
 let do_something_with_precomp
-  (a: array 'a U64.t)
-: Steel (array_or_null 'a U64.t)
+  (a: array U64.t)
+: Steel (array_or_null U64.t)
     (varray a)
     (fun _ -> varray a)
     (requires fun _ -> length a == 20)
     (ensures fun _ _ _ -> True)
 = upd a (mk_size_t (U32.uint_to_t 19)) (U64.uint_to_t 0);
-  return (null _ _)
+  return (null _)
 
 let test_alloc_free
   ()
@@ -125,7 +125,7 @@ let test_alloc_free
 #push-options "--fuel 0 --print_universes --print_implicits --z3rlimit 30"
 
 let test
-  (p: ref 'a comp comp_pcm)
+  (p: ref comp comp_pcm)
 : SteelT unit
     (p `pts_to_view` comp_view emptyset)
     (fun _ -> p `pts_to_view` comp_view emptyset)

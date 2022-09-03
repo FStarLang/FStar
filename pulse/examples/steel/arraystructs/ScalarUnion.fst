@@ -73,7 +73,7 @@ let _ = norm norm_c_typedef (mk_c_union u32_or_u16_tag u32_or_u16_fields)
 
 (** Switch a case of the union to the u16 case, by writing x to it. *)
 val switch_to_u16
-  (p: ref unit u32_or_u16 u32_or_u16_pcm)
+  (p: ref u32_or_u16 u32_or_u16_pcm)
   (x: U16.t)
 : Steel unit
     (p `pts_to_view` u32_or_u16_view)
@@ -89,7 +89,7 @@ let switch_to_u16 p x =
   return ()
 
 (** Helper function that zeros the memory location pointed to by p. *)
-let zero_u32_ref (p:ref 'a U32.t (opt_pcm #U32.t))
+let zero_u32_ref (p:ref U32.t (opt_pcm #U32.t))
 : Steel unit
   (p `pts_to_view` opt_view _)
   (fun _ -> p `pts_to_view` opt_view _)
@@ -98,7 +98,7 @@ let zero_u32_ref (p:ref 'a U32.t (opt_pcm #U32.t))
 = opt_write_sel p 0ul
 
 (** Given a union in the u32 case, set the u32 to zero. *)
-val zero_u32_of_union (p: ref unit u32_or_u16 u32_or_u16_pcm)
+val zero_u32_of_union (p: ref u32_or_u16 u32_or_u16_pcm)
 : Steel unit
     (p `pts_to_view` u32_or_u16_view)
     (fun _ -> p `pts_to_view` u32_or_u16_view)
@@ -106,7 +106,7 @@ val zero_u32_of_union (p: ref unit u32_or_u16 u32_or_u16_pcm)
     (ensures fun h q h' -> True)
 
 let zero_u32_of_union p =
-  let q: ref _ U32.t _ = addr_of_union_field "as_u32" p in
+  let q: ref U32.t _ = addr_of_union_field "as_u32" p in
   zero_u32_ref q;
   unaddr_of_union_field "as_u32" p q;
   return ()
