@@ -12,7 +12,7 @@ let seq_equal_1
   (ensures (s1 == s2))
 = assert (s1 `Seq.equal` s2)
 
-val index0 (#base: Type) (#t:Type) (r:array base t) (i:size_t)
+val index0 (#t:Type) (r:array t) (i:size_t)
   : Steel t
              (varray r)
              (fun _ -> varray r)
@@ -27,7 +27,7 @@ val index0 (#base: Type) (#t:Type) (r:array base t) (i:size_t)
 #restart-solver
 
 let index0
-  #_ #t r i
+  #t r i
 =
   let rr = split r i () in
   let rrr = split rr one_size () in
@@ -49,9 +49,9 @@ let index0
   return res
 
 let index_from
-  #base #t r r' i
+  #t r r' i
 =
-  let r0 : array base t = (r, r') in
+  let r0 : array t = (r, r') in
   change_equal_slprop
     (varray (r, r'))
     (varray r0);
@@ -80,7 +80,7 @@ let seq_append_append_upd
     (s1 `Seq.append` (s2' `Seq.append` s3)) `Seq.equal` (Seq.upd (s1 `Seq.append` (s2 `Seq.append` s3)) i x)
   )
 
-val upd0 (#base: Type) (#t:Type) (r:array base t) (i:size_t) (x:t)
+val upd0 (#t:Type) (r:array t) (i:size_t) (x:t)
   : Steel unit
              (varray r)
              (fun _ -> varray r)
@@ -90,7 +90,7 @@ val upd0 (#base: Type) (#t:Type) (r:array base t) (i:size_t) (x:t)
                h1 (varray r) == Seq.upd (h0 (varray r)) (size_v i) x)
 
 let upd0
-  #_ #t r i x
+  #t r i x
 =
   let rr = split r i () in
   let rrr = split rr one_size () in
@@ -113,9 +113,9 @@ let upd0
     (varray r)
 
 let upd_from
-  #base #t r r' i x
+  #t r r' i x
 =
-  let r0 : array base t = (r, r') in
+  let r0 : array t = (r, r') in
   change_equal_slprop
     (varray (r, r'))
     (varray r0);
@@ -125,8 +125,8 @@ let upd_from
     (varray (r, r'))
 
 let varray_or_null0_rewrite
-  (#base #a: Type0)
-  (r: array_or_null base a)
+  (#a: Type0)
+  (r: array_or_null a)
   (_: t_of emp)
 : Tot (option (array_view_type a (len r)))
 = None
