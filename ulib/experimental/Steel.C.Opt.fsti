@@ -35,8 +35,8 @@ let some (x: Ghost.erased 'a): Ghost.erased (option 'a) = Some (Ghost.reveal x)
 let some_v (x: Ghost.erased (option 'a){Some? x}): Ghost.erased 'a = Some?.v x
 
 val opt_read
-  (#a:Type) (#b:Type) (#x: Ghost.erased b)
-  (r: ref a (opt_pcm #b))
+  (#b:Type) (#x: Ghost.erased b)
+  (r: ref (opt_pcm #b))
 : Steel b
     (r `pts_to` Some #b x)
     (fun _ -> r `pts_to` Some #b x)
@@ -44,8 +44,8 @@ val opt_read
     (ensures fun _ x' _ -> Ghost.reveal x == x')
 
 val opt_write
-  (#a:Type) (#b:Type) (#x: Ghost.erased b)
-  (r: ref a (opt_pcm #b)) (y: b)
+  (#b:Type) (#x: Ghost.erased b)
+  (r: ref (opt_pcm #b)) (y: b)
 : SteelT unit
     (r `pts_to` Some #b x)
     (fun _ -> r `pts_to` Some y)
@@ -94,22 +94,22 @@ let opt_pcm_fpu
 = base_fpu opt_pcm x (Some y)
 
 val opt_pcm_write
-  (#a:Type) (#b: Type)
-  (r: ref a (opt_pcm #b)) (x: Ghost.erased (option b)) (y: b)
+  (#b: Type)
+  (r: ref (opt_pcm #b)) (x: Ghost.erased (option b)) (y: b)
 : Steel unit (r `pts_to` x) (fun _ -> r `pts_to` Some y)
   (requires (fun _ -> Some? x))
   (ensures (fun _ _ _ -> True))
 
 val opt_pcm_read
-  (#a:Type) (#b: Type)
-  (r: ref a (opt_pcm #b)) (x: Ghost.erased (option b))
+  (#b: Type)
+  (r: ref (opt_pcm #b)) (x: Ghost.erased (option b))
 : Steel b (r `pts_to` x) (fun _ -> r `pts_to` x)
   (requires (fun _ -> Some? x))
   (ensures (fun _ y _ -> Ghost.reveal x == Some y))
 
 let opt_read_sel
-  (#a: Type u#0) (#b: Type u#0)
-  (r: ref a (opt_pcm #b))
+  (#b: Type u#0)
+  (r: ref (opt_pcm #b))
 : Steel b
   (pts_to_view r (opt_view b))
   (fun _ -> pts_to_view r (opt_view b))
@@ -121,8 +121,8 @@ let opt_read_sel
 = ref_read_sel r (opt_view b)
 
 let opt_write_sel
-  (#a: Type u#0) (#b: Type u#0)
-  (r: ref a (opt_pcm #b))
+  (#b: Type u#0)
+  (r: ref (opt_pcm #b))
   (w: b)
 : Steel unit
   (pts_to_view r (opt_view b))
@@ -139,8 +139,8 @@ let opt_write_sel
 open Steel.C.Reference
 
 let ref_opt_read
-  (#a: Type u#0) (#b: Type u#0)
-  (r: ref a b (opt_pcm #b))
+  (#b: Type u#0)
+  (r: ref b (opt_pcm #b))
 : Steel b
   (pts_to_view r (opt_view b))
   (fun _ -> pts_to_view r (opt_view b))
@@ -152,8 +152,8 @@ let ref_opt_read
 = ref_read_sel r (opt_view b)
 
 let ref_opt_write
-  (#a: Type u#0) (#b: Type u#0)
-  (r: ref a b (opt_pcm #b))
+  (#b: Type u#0)
+  (r: ref b (opt_pcm #b))
   (w: b)
 : Steel unit
   (pts_to_view r (opt_view b))
@@ -166,7 +166,7 @@ let ref_opt_write
 
 val malloc
   (#c:Type0) (x: c)
-: Steel (ptr (option c) c (opt_pcm #c))
+: Steel (ptr c (opt_pcm #c))
     emp
     (fun r -> pts_to_view_or_null r (opt_view c))
     (requires fun _ -> True)
@@ -178,7 +178,7 @@ val malloc
 
 val free
   (#c: Type0)
-  (r: ref (option c) c (opt_pcm #c))
+  (r: ref c (opt_pcm #c))
 : Steel unit
     (pts_to_view r (opt_view c))
     (fun _ -> emp)

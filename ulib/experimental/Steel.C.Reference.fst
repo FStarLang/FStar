@@ -7,40 +7,39 @@ open Steel.Effect.Atomic
 #push-options "--print_universes"
 
 // [@@__reduce__]
-let ptr (a: Type u#0) (view_t: Type u#0) (#b: Type u#b) (q: pcm b)
+let ptr (view_t: Type u#0) (#b: Type u#b) (q: pcm b)
 : Type u#b
-= ptr a q
+= ptr q
 
 // [@@__reduce__]
 inline_for_extraction
-let ref (a: Type u#0) (view_t: Type u#0) (#b: Type u#b) (q: pcm b)
+let ref (view_t: Type u#0) (#b: Type u#b) (q: pcm b)
 : Tot (Type u#b)
 =
-  (x: ptr a view_t q { not_null x })
+  (x: ptr view_t q { not_null x })
 
 unfold
 let ref_of_ref
-  (#a: Type u#0) (#view_t: Type u#0) (#b: Type u#b) (#q: pcm b)
-  (r: ref a view_t q)
-: Tot (Steel.C.Ref.ref a q)
+  (#view_t: Type u#0) (#b: Type u#b) (#q: pcm b)
+  (r: ref view_t q)
+: Tot (Steel.C.Ref.ref q)
 = r
 
 [@@__steel_reduce__] // ; __reduce__]
 let pts_to_view
-  (#a: Type u#0) 
   (#view_t: Type u#0)
   (#view_t': Type u#0)
   (#b: Type u#b) (#p: pcm b)
-  (r: ref a view_t p) (view: sel_view p view_t' false)
+  (r: ref view_t p) (view: sel_view p view_t' false)
 : vprop
 = r `pts_to_view` view
 
 let ref_read
-  (#a: Type u#0) (#b: Type u#b)
+  (#b: Type u#b)
   (#view_t: Type u#0)
   (#p: pcm b)
   (#vw: sel_view p view_t false)
-  (r: ref a view_t p)
+  (r: ref view_t p)
 : Steel view_t
   (r `pts_to_view` vw)
   (fun _ -> r `pts_to_view` vw)
@@ -51,21 +50,20 @@ let ref_read
   ))
 = ref_read_sel r vw
 
-let null (a: Type u#0) (view_t: Type u#0) (#b: Type u#b) (p: pcm b) : Tot (ptr a view_t p) = null a p
+let null (view_t: Type u#0) (#b: Type u#b) (p: pcm b) : Tot (ptr view_t p) = null p
 
 [@@__steel_reduce__] // ; __reduce__]
 let pts_to_view_or_null
-  (#a: Type u#0) 
   (#view_t: Type u#0)
   (#view_t': Type u#0)
   (#b: Type u#b) (#p: pcm b)
-  (r: ptr a view_t p) (view: sel_view p view_t' false)
+  (r: ptr view_t p) (view: sel_view p view_t' false)
 : vprop
 = r `pts_to_view_or_null` view
 
 let is_null
-  (#a: Type u#0) (#b: Type u#b) (#c: Type0) (#opened: _) (#p: pcm b)
-  (r: ptr a c p)
+  (#b: Type u#b) (#c: Type0) (#opened: _) (#p: pcm b)
+  (r: ptr c p)
   (vw: sel_view p c false)
 : SteelAtomicBase bool false opened Unobservable
     (pts_to_view_or_null r vw)
@@ -81,21 +79,21 @@ let is_null
 
 let intro_pts_to_view_or_null_null
   (#inames: _)
-  (a: Type) (#b: Type) (#p: pcm b)
+  (#b: Type) (#p: pcm b)
   (#c: Type0)
   (vw: sel_view p c false)
 : SteelGhost unit inames
     emp
-    (fun _ -> pts_to_view_or_null (null a c p) vw)
+    (fun _ -> pts_to_view_or_null (null c p) vw)
     (requires (fun _ -> True))
-    (ensures (fun _ _ h' -> h' (pts_to_view_or_null (null a c p) vw) == None))
-= intro_pts_to_view_or_null_null a vw
+    (ensures (fun _ _ h' -> h' (pts_to_view_or_null (null c p) vw) == None))
+= intro_pts_to_view_or_null_null vw
 
 let elim_pts_to_view_or_null_null
   (#inames: _)
-  (a: Type) (#b: Type) (#p: pcm b)
+  (#b: Type) (#p: pcm b)
   (#c: Type0)
-  (r: ptr a c p)
+  (r: ptr c p)
   (vw: sel_view p c false)
 : SteelGhost unit inames
     (pts_to_view_or_null r vw)
@@ -104,14 +102,14 @@ let elim_pts_to_view_or_null_null
     (ensures (fun _ _ _ -> True))
 = change_equal_slprop
     (pts_to_view_or_null r vw)
-    (pts_to_view_or_null (null a c p) vw);
-  elim_pts_to_view_or_null_null a vw
+    (pts_to_view_or_null (null c p) vw);
+  elim_pts_to_view_or_null_null vw
 
 let intro_pts_to_view_or_null_not_null
   (#inames: _)
-  (#a: Type) (#b: Type) (#p: pcm b)
+  (#b: Type) (#p: pcm b)
   (#c: Type0)
-  (r: ref a c p)
+  (r: ref c p)
   (vw: sel_view p c false)
 : SteelGhost unit inames
     (pts_to_view r vw)
@@ -122,9 +120,9 @@ let intro_pts_to_view_or_null_not_null
 
 let elim_pts_to_view_or_null_not_null
   (#inames: _)
-  (#a: Type) (#b: Type) (#p: pcm b)
+  (#b: Type) (#p: pcm b)
   (#c: Type0)
-  (r: ref a c p)
+  (r: ref c p)
   (vw: sel_view p c false)
 : SteelGhost unit inames
     (pts_to_view_or_null r vw)
@@ -134,10 +132,10 @@ let elim_pts_to_view_or_null_not_null
 = elim_pts_to_view_or_null_not_null r vw
 
 let freeable
-  (#a: Type u#0) (#view_t: Type u#0) (#b: Type u#0) (#q: pcm b)
-  (r: ref a view_t q)
+  (#view_t: Type u#0) (#b: Type u#0) (#q: pcm b)
+  (r: ref view_t q)
 : Tot prop
-= freeable (r <: Steel.C.Ref.ref a q)
+= freeable (r <: Steel.C.Ref.ref q)
 
 (* Operations on views *)
 
@@ -164,8 +162,7 @@ let intro_refine_view'
   (#view: Type)
   (vw: sel_view p view false)
   (pr: (view -> Tot prop))
-  (#base: Type)
-  (r: ref base view p)
+  (r: ref view p)
 : SteelGhost unit opened
     (pts_to_view r vw)
     (fun _ -> pts_to_view r (refine_view vw pr))
@@ -188,9 +185,8 @@ let intro_refine_view
   (#view: Type)
   (vw: sel_view p view false)
   (pr: (view -> Tot prop))
-  (#base: Type)
-  (r: ref base view p)
-: SteelAtomicBase (ref base (refine view pr) p) false opened Unobservable
+  (r: ref view p)
+: SteelAtomicBase (ref (refine view pr) p) false opened Unobservable
     (pts_to_view r vw)
     (fun r' -> pts_to_view r' (refine_view vw pr))
     (fun h -> pr (h (pts_to_view r vw)))
@@ -201,7 +197,7 @@ let intro_refine_view
       x == h' (pts_to_view r' (refine_view vw pr))
     )
 = intro_refine_view' vw pr r;
-  let r' : ref base (refine view pr) p = r in
+  let r' : ref (refine view pr) p = r in
   change_equal_slprop
     (pts_to_view r (refine_view vw pr))
     (pts_to_view r' (refine_view vw pr));
@@ -214,8 +210,7 @@ let elim_refine_view'
   (#view: Type)
   (vw: sel_view p view false)
   (pr: (view -> Tot prop))
-  (#base: Type)
-  (r: ref base (refine view pr) p)
+  (r: ref (refine view pr) p)
 : SteelGhost unit opened
     (pts_to_view r (refine_view vw pr))
     (fun _ -> pts_to_view r vw)
@@ -238,9 +233,8 @@ let elim_refine_view
   (#view: Type)
   (vw: sel_view p view false)
   (pr: (view -> Tot prop))
-  (#base: Type)
-  (r: ref base (refine view pr) p)
-: SteelAtomicBase (ref base view p) false opened Unobservable
+  (r: ref (refine view pr) p)
+: SteelAtomicBase (ref view p) false opened Unobservable
     (pts_to_view r (refine_view vw pr))
     (fun r' -> pts_to_view r' vw)
     (fun h -> True)
@@ -251,7 +245,7 @@ let elim_refine_view
       x == h (pts_to_view r (refine_view vw pr))
     )
 = elim_refine_view' vw pr r;
-  let r' : ref base view p = r in
+  let r' : ref view p = r in
   change_equal_slprop
     (pts_to_view r vw)
     (pts_to_view r' vw);
@@ -286,8 +280,7 @@ let intro_rewrite_view'
   (f: view -> view')
   (g: view' -> view)
   (prf: squash (f `Steel.C.Connection.is_inverse_of` g))
-  (#base: _)
-  (r: ref base view p)
+  (r: ref view p)
   (x' : Ghost.erased view')
 : SteelGhost unit opened
     (pts_to_view r vw)
@@ -312,10 +305,9 @@ let intro_rewrite_view
   (f: view -> view')
   (g: view' -> view)
   (prf: squash (f `Steel.C.Connection.is_inverse_of` g))
-  (#base: _)
-  (r: ref base view p)
+  (r: ref view p)
   (x' : Ghost.erased view')
-: SteelAtomicBase (ref base view' p) false opened Unobservable
+: SteelAtomicBase (ref view' p) false opened Unobservable
     (pts_to_view r vw)
     (fun r' -> pts_to_view r' (rewrite_view vw f g prf))
     (fun h -> h (pts_to_view r vw) == g x')
@@ -324,7 +316,7 @@ let intro_rewrite_view
       h' (pts_to_view r' (rewrite_view vw f g prf)) == Ghost.reveal x'
     )
 = intro_rewrite_view' vw f g prf r x';
-  let r' : ref base view' p = r in
+  let r' : ref view' p = r in
   change_equal_slprop
     (pts_to_view r (rewrite_view vw f g prf))
     (pts_to_view r' (rewrite_view vw f g prf));
@@ -340,8 +332,7 @@ let elim_rewrite_view'
   (f: view -> view')
   (g: view' -> view)
   (prf: squash (f `Steel.C.Connection.is_inverse_of` g))
-  (#base: _)
-  (r: ref base view' p)
+  (r: ref view' p)
 : SteelGhost unit opened
     (pts_to_view r (rewrite_view vw f g prf))
     (fun _ -> pts_to_view r vw)
@@ -368,9 +359,8 @@ let elim_rewrite_view
   (f: view -> view')
   (g: view' -> view)
   (prf: squash (f `Steel.C.Connection.is_inverse_of` g))
-  (#base: _)
-  (r: ref base view' p)
-: SteelAtomicBase (ref base view p) false opened Unobservable
+  (r: ref view' p)
+: SteelAtomicBase (ref view p) false opened Unobservable
     (pts_to_view r (rewrite_view vw f g prf))
     (fun r' -> pts_to_view r' vw)
     (fun _ -> True)
@@ -381,7 +371,7 @@ let elim_rewrite_view
       f (Ghost.reveal x') == Ghost.reveal x
     )
 = elim_rewrite_view' vw f g prf r;
-  let r' : ref base view p = r in
+  let r' : ref view p = r in
   change_equal_slprop
     (pts_to_view r vw)
     (pts_to_view r' vw);
