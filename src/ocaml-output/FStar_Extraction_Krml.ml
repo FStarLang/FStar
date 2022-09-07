@@ -1245,7 +1245,7 @@ and (translate_expr : env -> FStar_Extraction_ML_Syntax.mlexpr -> expr) =
           ->
           let uu___5 =
             let uu___6 = translate_expr env1 e1 in
-            (uu___6, (EQualified (["C"], "_zero_for_deref"))) in
+            (uu___6, (EConstant (UInt32, "0"))) in
           EBufRead uu___5
       | FStar_Extraction_ML_Syntax.MLE_App
           ({
@@ -1265,7 +1265,7 @@ and (translate_expr : env -> FStar_Extraction_ML_Syntax.mlexpr -> expr) =
           uu___5 = "Steel.ST.Reference.read" ->
           let uu___5 =
             let uu___6 = translate_expr env1 e1 in
-            (uu___6, (EQualified (["C"], "_zero_for_deref"))) in
+            (uu___6, (EConstant (UInt32, "0"))) in
           EBufRead uu___5
       | FStar_Extraction_ML_Syntax.MLE_App
           ({
@@ -1838,7 +1838,7 @@ and (translate_expr : env -> FStar_Extraction_ML_Syntax.mlexpr -> expr) =
           let uu___5 =
             let uu___6 = translate_expr env1 e1 in
             let uu___7 = translate_expr env1 e2 in
-            (uu___6, (EQualified (["C"], "_zero_for_deref")), uu___7) in
+            (uu___6, (EConstant (UInt32, "0")), uu___7) in
           EBufWrite uu___5
       | FStar_Extraction_ML_Syntax.MLE_App
           ({
@@ -1859,7 +1859,7 @@ and (translate_expr : env -> FStar_Extraction_ML_Syntax.mlexpr -> expr) =
           let uu___5 =
             let uu___6 = translate_expr env1 e1 in
             let uu___7 = translate_expr env1 e2 in
-            (uu___6, (EQualified (["C"], "_zero_for_deref")), uu___7) in
+            (uu___6, (EConstant (UInt32, "0")), uu___7) in
           EBufWrite uu___5
       | FStar_Extraction_ML_Syntax.MLE_App
           ({
