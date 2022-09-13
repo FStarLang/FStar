@@ -290,8 +290,9 @@ let check_expected_effect env (use_eq:bool) (copt:option comp) (ec : term * comp
                  c,
                  None                   
              end
+             // Not a layered effect
              else if Options.trivial_pre_for_unannotated_effectful_fns ()
-             then None, c, (let _, _, g = TcUtil.check_trivial_precondition env c in
+             then None, c, (let _, _, g = TcUtil.check_trivial_precondition_wp env c in
                             Some g)
              else None, c, None
   in
@@ -3668,23 +3669,11 @@ and check_top_level_let env e =
 
          (* Check that it doesn't have a top-level effect; warn if it does *)
          let e2, c1 =
-            if Env.should_verify env
-            then
-                let ok, c1 = TcUtil.check_top_level env g1 c1 in //check that it has no effect and a trivial pre-condition
-                if ok
-                then e2, c1
-                else (Errors.log_issue (Env.get_range env) Err.top_level_effect;
-                      mk (Tm_meta(e2, Meta_desugared Masked_effect)) e2.pos, c1) //and tag it as masking an effect
-            else //even if we're not verifying, still need to solve remaining unification/subtyping constraints
-                 let _ = Rel.force_trivial_guard env g1 in
-                 let comp1, g_comp1 = TcComm.lcomp_comp c1 in
-                 let _ = Rel.force_trivial_guard env g_comp1 in
-                 let c = comp1 |> N.normalize_comp [Env.Beta; Env.NoFullNorm; Env.DoNotUnfoldPureLets] env in
-                 let e2 = if Util.is_pure_comp c
-                          then e2
-                          else (Errors.log_issue (Env.get_range env) Err.top_level_effect;
-                                mk (Tm_meta(e2, Meta_desugared Masked_effect)) e2.pos) in
-                 e2, c
+           let ok, c1 = TcUtil.check_top_level env g1 c1 in //check that it has no effect and a trivial pre-condition
+           if ok
+           then e2, c1
+           else (Errors.log_issue (Env.get_range env) Err.top_level_effect;
+                 mk (Tm_meta(e2, Meta_desugared Masked_effect)) e2.pos, c1) //and tag it as masking an effect
          in
 
          (* Unfold all @tcnorm subterms in the binding *)
@@ -3700,53 +3689,21 @@ and check_top_level_let env e =
                 BU.print1 "Let binding AFTER tcnorm: %s\n" (Print.term_to_string e1);
 
          (*
-          * AR: we now compute comp for the whole `let x = e1 in e2`, where e2 = ()
+          * AR: comp for the whole `let x = e1 in e2`, where e2 = ()
           *
-          *     we have already checked that c1 has a trivial precondition
-          *       and in most cases, c1 is some variant of PURE (top-level functions)
-          *     so if that's the case, we simply make cres as Tot unit
+          *     we have already checked that e1 has the right effect args
+          *     for it to be a top-level effect
           *
-          *     if c1 is not PURE, then we take a longer route and compute:
-          *       M.bind wp1 (fun _ -> (M.return_wp unit))
+          *     for wp effects that means trivial precondition,
+          *     and for indexed effects that means as per the top_level_effect
+          *     specification
           *
-          *     all this to remove the earlier usage of M.null_wp
+          *     Since the top-level effect is masked at this point,
+          *     we just return Tot unit and the final computation type
+          *
+          *     Note that for top-level lets, this cres is not used anyway
           *)
-         let cres =
-           if U.is_pure_or_ghost_comp c1 then S.mk_Total' S.t_unit (Some S.U_zero)
-           else let c1_comp_typ = c1 |> Env.unfold_effect_abbrev env in
-                let c1_wp =
-                  match c1_comp_typ.effect_args with
-                  | [(wp, _)] -> wp
-                  | _ -> failwith "Impossible! check_top_level_let: got unexpected effect args"
-                in
-                let c1_eff_decl = Env.get_effect_decl env c1_comp_typ.effect_name in
-
-                (* wp2 = M.return_wp unit () *)
-                let wp2 =
-                  let ret = c1_eff_decl |> U.get_return_vc_combinator in
-                  mk_Tm_app
-                    (inst_effect_fun_with [ S.U_zero ] env c1_eff_decl ret)
-                    [S.as_arg S.t_unit; S.as_arg S.unit_const]
-                    e2.pos in
-
-                (* wp = M.bind wp_c1 (fun _ -> wp2) *)
-                let wp =
-                  let bind = c1_eff_decl |> U.get_bind_vc_combinator in
-                  mk_Tm_app
-                    (inst_effect_fun_with (c1_comp_typ.comp_univs @ [S.U_zero]) env c1_eff_decl bind)
-                    [ S.as_arg <| S.mk (S.Tm_constant (FStar.Const.Const_range lb.lbpos)) lb.lbpos;
-                      S.as_arg <| c1_comp_typ.result_typ;
-                      S.as_arg S.t_unit;
-                      S.as_arg c1_wp;
-                      S.as_arg <| U.abs [null_binder c1_comp_typ.result_typ] wp2 (Some (U.mk_residual_comp Const.effect_Tot_lid None [TOTAL])) ]
-                    lb.lbpos in
-                mk_Comp ({
-                  comp_univs=[S.U_zero];
-                  effect_name=c1_comp_typ.effect_name;
-                  result_typ=S.t_unit;
-                  effect_args=[S.as_arg wp];
-                  flags=[]})
-         in
+         let cres = S.mk_Total' S.t_unit (Some S.U_zero) in
 
 (*close*)let lb = U.close_univs_and_mk_letbinding None lb.lbname univ_vars (U.comp_result c1) (U.comp_effect_name c1) e1 lb.lbattrs lb.lbpos in
          mk (Tm_let((false, [lb]), e2))
