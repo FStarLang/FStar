@@ -167,6 +167,7 @@ let normalize_for_extraction _ = ()
 let ite_soundness_by = ()
 
 let default_effect _ = ()
+let top_level_effect _ = ()
 let bind_has_range_args = ()
 
 let strictly_positive = ()
