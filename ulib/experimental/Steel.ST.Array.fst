@@ -75,6 +75,18 @@ let seq_map_raise_inj
 = assert (seq_map lower (seq_map raise s1) `Seq.equal` s1);
   assert (seq_map lower (seq_map raise s2) `Seq.equal` s2)
 
+let rec seq_map_map_list
+  (#elt:Type0)
+  (l:list elt)
+  : Lemma (Seq.seq_of_list (List.Tot.map raise l) `Seq.equal` seq_map raise (Seq.seq_of_list l))
+  = match l with
+    | [] -> ()
+    | hd::tl ->
+      let s = Seq.seq_of_list l in
+      Seq.lemma_seq_of_list_induction l;
+      Seq.lemma_seq_of_list_induction (List.Tot.map raise l);
+      seq_map_map_list tl
+
 /// Implementation of the interface
 
 /// base, ptr, array, pts_to
@@ -105,6 +117,14 @@ let malloc x n =
   rewrite
     (H.pts_to res _ _)
     (pts_to res _ _);
+  return res
+
+let malloca_of_list init =
+  let res = H.malloca_of_list (List.Tot.map raise init) in
+  seq_map_map_list init;
+  rewrite
+    (H.pts_to res _ (Seq.seq_of_list (List.Tot.map raise init)))
+    (pts_to res _ (Seq.seq_of_list init));
   return res
 
 let free #_ x =

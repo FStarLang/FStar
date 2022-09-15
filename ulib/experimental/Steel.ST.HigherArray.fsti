@@ -188,7 +188,10 @@ let malloca_of_list
        emp
        (fun a -> pts_to a P.full_perm (Seq.seq_of_list init))
        (0 < List.Tot.length init /\ List.Tot.length init <= UInt.max_int 32)
-       (fun _ -> True)
+       (fun a ->
+         length a == normalize_term (List.Tot.length init) /\
+         is_full_array a
+       )
   = let p = malloca_of_list_ptr init in
     let a : array elt = (| p, Ghost.hide (normalize_term (List.Tot.length init)) |) in
     rewrite
