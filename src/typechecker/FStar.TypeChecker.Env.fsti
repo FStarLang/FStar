@@ -394,6 +394,7 @@ val monad_leq              : env -> lident -> lident -> option edge
 val effect_decl_opt        : env -> lident -> option (eff_decl * list qualifier)
 val get_effect_decl        : env -> lident -> eff_decl
 val get_default_effect     : env -> lident -> option lident
+val get_top_level_effect   : env -> lident -> option lident
 val is_layered_effect      : env -> lident -> bool
 val wp_signature           : env -> lident -> (bv * term)
 val comp_to_comp_typ       : env -> comp -> comp_typ
