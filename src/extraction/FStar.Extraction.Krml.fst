@@ -723,6 +723,10 @@ and translate_expr env e: expr =
       string_of_mlpath p = "LowStar.UninitializedBuffer.ublit"
     ) ->
       EBufBlit (translate_expr env e1, translate_expr env e2, translate_expr env e3, translate_expr env e4, translate_expr env e5)
+  | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ _; _; _; e1; _; e2; e3; _; e4; e5 ]) when (
+      string_of_mlpath p = "Steel.ST.HigherArray.blit_ptr"
+    ) ->
+      EBufBlit (translate_expr env e1, translate_expr env e2, translate_expr env e3, translate_expr env e4, translate_expr env e5)
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e1; e2; e3 ])
     when (let s = string_of_mlpath p in (s = "FStar.Buffer.fill" || s = "LowStar.Monotonic.Buffer.fill" )) ->
       EBufFill (translate_expr env e1, translate_expr env e2, translate_expr env e3)
