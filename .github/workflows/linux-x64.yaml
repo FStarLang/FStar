@@ -10,6 +10,8 @@ on:
         description: Refresh hints and advance version number
         required: true
         type: boolean
+permissions:
+  contents: read # to fetch code (actions/checkout)
 jobs:
   build:
     runs-on: [self-hosted, linux, X64]
