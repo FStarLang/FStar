@@ -175,6 +175,7 @@ unfold let alloca_of_list_pre (#elt:Type) (init:list elt) =
   normalize (0 < FStar.List.Tot.length init) /\
   normalize (FStar.List.Tot.length init <= UInt.max_int 32)
 
+inline_for_extraction
 [@@noextract_to "krml"]
 val malloca_of_list
   (#elt: Type)
