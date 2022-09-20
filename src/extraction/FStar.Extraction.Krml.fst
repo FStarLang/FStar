@@ -327,6 +327,9 @@ let list_elements e2 =
         list_elements (hd :: acc) tl
     | MLE_CTor (([ "Prims" ], "Nil" ), []) ->
         List.rev acc
+    | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e ])
+              when string_of_mlpath p = "Steel.ST.Array.raise_list" ->
+      list_elements acc e
     | _ ->
         failwith "Argument of FStar.Buffer.createL is not a list literal!"
   in

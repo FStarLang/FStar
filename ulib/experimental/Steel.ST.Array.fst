@@ -31,6 +31,10 @@ inline_for_extraction
 let raise (#t: Type) (x: t) : Tot (raise_t t) =
   FStar.Universe.raise_val x
 
+[@@noextract_to "krml"]
+let raise_list (#t: Type) (l: list t) : Tot (list (raise_t t)) =
+  List.Tot.map raise l
+
 inline_for_extraction
 [@@noextract_to "krml"]
 let lower (#t: Type) (x: raise_t t) : Tot t =
@@ -120,10 +124,10 @@ let malloc x n =
   return res
 
 let malloca_of_list init =
-  let res = H.malloca_of_list (List.Tot.map raise init) in
+  let res = H.malloca_of_list (raise_list init) in
   seq_map_map_list init;
   rewrite
-    (H.pts_to res _ (Seq.seq_of_list (List.Tot.map raise init)))
+    (H.pts_to res _ (Seq.seq_of_list (raise_list init)))
     (pts_to res _ (Seq.seq_of_list init));
   return res
 
