@@ -21,23 +21,34 @@ open Steel.Reference
 module AT = Steel.Effect.Atomic
 module U32 = FStar.UInt32
 
-val for_loop' (start:U32.t)
-              (finish:U32.t { U32.v start <= U32.v finish })
-              (current:U32.t { U32.v start <= U32.v current /\
+val for_loop_full' (start:U32.t)
+             (finish:U32.t { U32.v start <= U32.v finish })
+             (current:U32.t { U32.v start <= U32.v current /\
                                U32.v current <= U32.v finish })
-              (inv: nat_at_most finish -> vprop)
-              (body:
+
+             (inv: nat_at_most finish -> vprop)
+             (inv_sel: (i:nat_at_most finish) -> t_of (inv i) -> prop)
+             (body:
                     (i:u32_between start finish ->
-                          SteelT unit
+                          Steel unit
                           (inv (U32.v i))
-                          (fun _ -> inv (U32.v i + 1))))
-  : SteelT unit
+                          (fun _ -> inv (U32.v i + 1))
+                          (requires fun h -> inv_sel (U32.v i) (h (inv (U32.v i))))
+                          (ensures fun h0 _ h1 ->
+                            inv_sel (U32.v i) (h0 (inv (U32.v i))) /\
+                            inv_sel (U32.v i + 1) (h1 (inv (U32.v i + 1)))
+                          )))
+  : Steel unit
       (inv (U32.v current))
       (fun _ -> inv (U32.v finish))
+      (requires fun h -> inv_sel (U32.v current) (h (inv (U32.v current))))
+      (ensures fun h0 _ h1 ->
+        inv_sel (U32.v current) (h0 (inv (U32.v current))) /\
+        inv_sel (U32.v finish) (h1 (inv (U32.v finish)))
+      )
 
-#push-options "--fuel 0 --ifuel 0"
-let rec for_loop' start finish current inv body
-  = if current = finish then (
+let rec for_loop_full' start finish current inv inv_sel body
+    = if current = finish then (
        AT.change_equal_slprop (inv _) (inv _);
        AT.return ()
     )
@@ -47,13 +58,12 @@ let rec for_loop' start finish current inv body
       let current' = U32.(current +^ 1ul) in
       AT.change_equal_slprop (inv (U32.v current + 1))
                              (inv (U32.v current'));
-      for_loop' start finish current' inv body
+      for_loop_full' start finish current' inv inv_sel body
     )
 
-
 (* produces 11 queries *)
-let for_loop start finish inv body = for_loop' start finish start inv body
-
+let for_loop start finish inv body = for_loop_full' start finish start inv (fun _ _ -> True) body
+let for_loop_full start finish inv inv_sel body = for_loop_full' start finish start inv inv_sel body
 
 let rec while_loop inv cond body =
   let b = cond () in
