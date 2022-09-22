@@ -38,6 +38,7 @@ deploy:
 	rm -rf $(FSTARLANG_ORG_ROOT)/tutorial/book/
 	cp -R _build/html $(FSTARLANG_ORG_ROOT)/tutorial/book/
 	cp -R code $(FSTARLANG_ORG_ROOT)/tutorial/book/
+	cp _build/latex/proof-orientedprogramminginf.pdf $(FSTARLANG_ORG_ROOT)/tutorial/proof-oriented-programming-in-fstar.pdf
 
 .PHONY: help Makefile
 
