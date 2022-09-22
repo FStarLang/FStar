@@ -278,10 +278,10 @@ let lift_frame_preservation #a (#k:eqtype) (p:pcm a)
 /// Lift a frame-preserving update from [v0] to [v1]
 /// to a map contains [v0] at [k] producing the updated map
 let lift_frame_preserving_upd #a #k (#p:pcm a)
-                              (v0 v1:a)
+                              (v0 v1: Ghost.erased a)
                               (f:frame_preserving_upd p v0 v1)
-                              (m0:map k a)
-                              (key:k { Map.sel m0 key == v0 })
+                              (m0: Ghost.erased (map k a))
+                              (key:k { Map.sel m0 key == Ghost.reveal v0 })
   : frame_preserving_upd (pointwise k p) m0 (Map.upd m0 key v1)
   = fun full_m0 ->
           let p' = pointwise k p in
@@ -294,8 +294,10 @@ let lift_frame_preserving_upd #a #k (#p:pcm a)
           let full_m1 = Map.upd full_m0 key full_v1 in
           assert (p'.refine full_m1);
           compatible_pointwise_upd p v1 full_v1 m0 full_m0 key;
-          let m1 = Map.upd m0 key v1 in
-          assert (compatible p' m1 full_m1);
+          assert (
+            let m1 = Map.upd m0 key v1 in
+            compatible p' m1 full_m1
+          );
           lift_frame_preservation p m0 full_m0 v1 full_v1 key;
           full_m1
 

@@ -20,43 +20,6 @@ function export_home() {
     fi
 }
 
-function fetch_vale() {
-    if [[ ! -d vale ]]; then
-        mkdir vale
-    fi
-    vale_version=$(<hacl-star/vale/.vale_version)
-    vale_version=${vale_version%$'\r'}  # remove Windows carriage return, if it exists
-    wget "https://github.com/project-everest/vale/releases/download/v${vale_version}/vale-release-${vale_version}.zip" -O vale/vale-release.zip
-    rm -rf "vale/vale-release-${vale_version}"
-    unzip -o vale/vale-release.zip -d vale
-    rm -rf "vale/bin"
-    mv "vale/vale-release-${vale_version}/bin" vale/
-    chmod +x vale/bin/*.exe
-    export_home VALE "$(pwd)/vale"
-}
-
-# By default, HACL* master works against F* stable. Can also be overridden.
-function fetch_hacl() {
-    if [ ! -d hacl-star ]; then
-        git clone https://github.com/mitls/hacl-star hacl-star
-    fi
-
-    cd hacl-star
-    git fetch origin
-    local ref=$(jq -c -r '.RepoVersions["hacl_version"]' "$rootPath/.docker/build/config.json" )
-    if [[ $ref == "" || $ref == "null" ]]; then
-        echo "Unable to find RepoVersions.hacl_version on $rootPath/.docker/build/config.json"
-        return -1
-    fi
-
-    echo Switching to HACL $ref
-    git reset --hard $ref
-    git clean -fdx
-    cd ..
-    export_home HACL "$(pwd)/hacl-star"
-    export_home EVERCRYPT "$(pwd)/hacl-star/providers"
-}
-
 # By default, karamel master works against F* stable. Can also be overridden.
 function fetch_karamel() {
     if [ ! -d karamel ]; then
@@ -75,6 +38,11 @@ function fetch_karamel() {
     git reset --hard $ref
     cd ..
     export_home KRML "$(pwd)/karamel"
+
+    # Install the Karamel dependencies
+    pushd $KRML_HOME
+    .docker/build/install-other-deps.sh
+    popd
 }
 
 function make_karamel() {
@@ -90,60 +58,6 @@ function make_karamel() {
         (cd karamel && git clean -fdx && make -j $threads $localTarget)
     OTHERFLAGS='--admit_smt_queries true' make -C karamel/krmllib -j $threads
     export PATH="$(pwd)/karamel:$PATH"
-}
-
-# By default, EverParse master works against F* stable. Can also be overridden.
-function fetch_everparse() {
-    if [ ! -d everparse ]; then
-        git clone https://github.com/project-everest/everparse everparse
-    fi
-
-    cd everparse
-    git fetch origin
-    local ref=$(jq -c -r '.RepoVersions["everparse_version"]' "$rootPath/.docker/build/config.json" )
-    if [[ $ref == "" || $ref == "null" ]]; then
-        echo "Unable to find RepoVersions.everparse_version on $rootPath/.docker/build/config.json"
-        return -1
-    fi
-
-    echo Switching to EverParse $ref
-    git reset --hard $ref
-    cd ..
-    export_home EVERPARSE "$(pwd)/everparse"
-}
-
-function make_everparse() {
-    # Default build target is minimal, unless specified otherwise
-    local localTarget
-    if [[ $1 == "" ]]; then
-        localTarget="quackyducky"
-    else
-        localTarget="$1"
-    fi
-
-    make -C everparse -j $threads $localTarget ||
-        (cd everparse && git clean -fdx && make -j $threads $localTarget)
-}
-
-
-# By default, mitls-fstar master works against F* stable. Can also be overridden.
-function fetch_mitls() {
-    if [ ! -d mitls-fstar ]; then
-        git clone https://github.com/mitls/mitls-fstar mitls-fstar
-    fi
-    cd mitls-fstar
-    git fetch origin
-    local ref=$(jq -c -r '.RepoVersions["mitls_version"]' "$rootPath/.docker/build/config.json" )
-    if [[ $ref == "" || $ref == "null" ]]; then
-        echo "Unable to find RepoVersions.mitls_version on $rootPath/.docker/build/config.json"
-        return -1
-    fi
-
-    echo Switching to mitls-fstar $ref
-    git reset --hard $ref
-    git clean -fdx
-    cd ..
-    export_home MITLS "$(pwd)/mitls-fstar"
 }
 
 # Update the version number in version.txt and fstar.opam
@@ -295,9 +209,6 @@ function fstar_default_build () {
 
     # Start fetching while we build F*
     fetch_karamel &
-    fetch_hacl &
-    fetch_everparse &
-    fetch_mitls &
 
     # Build F*, along with fstarlib
     if ! make -C src -j $threads utest-prelude; then
@@ -312,66 +223,14 @@ function fstar_default_build () {
 
     # The commands above were executed in sub-shells and their EXPORTs are not
     # propagated to the current shell. Re-do.
-    export_home HACL "$(pwd)/hacl-star"
-    export_home EVERCRYPT "$(pwd)/hacl-star/providers"
     export_home KRML "$(pwd)/karamel"
-    export_home EVERPARSE "$(pwd)/everparse"
 
     # Fetch and build subprojects for orange tests
-    make_karamel &
-    make_everparse &
-    wait
+    make_karamel
 
-    # fetch_vale depends on fetch_hacl for the hacl-star/vale/.vale_version file
-    fetch_vale
-
-    # Once F* is built, run its main regression suite, along with more relevant
-    # tests.
-    {
-        $gnutime make -C src -j $threads -k $localTarget && echo true >$status_file
-        echo Done building FStar
-    } &
-
-    {
-        OTHERFLAGS='--warn_error -276 --use_hint_hashes' \
-        NOOPENSSLCHECK=1 make -C hacl-star -j $threads min-test ||
-            {
-                echo "Error - Hacl.Hash.MD.fst.checked (HACL*)"
-                echo " - min-test (HACL*)" >>$ORANGE_FILE
-            }
-    } &
-
-    # The LowParse test suite is now in project-everest/everparse
-    {
-        $gnutime make -C everparse -j $threads -k lowparse-fstar-test || {
-            echo "Error - LowParse"
-            echo " - min-test (LowParse)" >>$ORANGE_FILE
-        }
-    } &
-
-    # We now run all (hardcoded) tests in mitls-fstar@master
-    {
-        # First regenerate dependencies and parsers (maybe not
-        # really needed for now, since any test of this set
-        # already does this; but it will become necessary if
-        # we later decide to perform these tests in parallel,
-        # to avoid races.)
-        make -C mitls-fstar/src/tls refresh-depend
-
-        OTHERFLAGS=--use_hint_hashes make -C mitls-fstar/src/tls -j $threads StreamAE.fst-ver ||
-            {
-                echo "Error - StreamAE.fst-ver (mitls)"
-                echo " - StreamAE.fst-ver (mitls)" >>$ORANGE_FILE
-            }
-
-        OTHERFLAGS=--use_hint_hashes make -C mitls-fstar/src/tls -j $threads Pkg.fst-ver ||
-            {
-                echo "Error - Pkg.fst-ver (mitls verify)"
-                echo " - Pkg.fst-ver (mitls verify)" >>$ORANGE_FILE
-            }
-    } &
-
-    wait
+    # Once F* is built, run its main regression suite.
+    $gnutime make -C src -j $threads -k $localTarget && echo true >$status_file
+    echo Done building FStar
 
     # Make it an orange if there's a git diff. Note: FStar_Version.ml is in the
     # .gitignore.

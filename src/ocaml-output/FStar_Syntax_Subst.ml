@@ -89,21 +89,20 @@ let rec (force_uvar' :
         ({ FStar_Syntax_Syntax.ctx_uvar_head = uv;
            FStar_Syntax_Syntax.ctx_uvar_gamma = uu___;
            FStar_Syntax_Syntax.ctx_uvar_binders = uu___1;
-           FStar_Syntax_Syntax.ctx_uvar_typ = uu___2;
-           FStar_Syntax_Syntax.ctx_uvar_reason = uu___3;
-           FStar_Syntax_Syntax.ctx_uvar_should_check = uu___4;
-           FStar_Syntax_Syntax.ctx_uvar_range = uu___5;
-           FStar_Syntax_Syntax.ctx_uvar_meta = uu___6;_},
+           FStar_Syntax_Syntax.ctx_uvar_reason = uu___2;
+           FStar_Syntax_Syntax.ctx_uvar_range = uu___3;
+           FStar_Syntax_Syntax.ctx_uvar_meta = uu___4;
+           FStar_Syntax_Syntax.ctx_uvar_apply_tac_prefix = uu___5;_},
          s)
         ->
-        let uu___7 = FStar_Syntax_Unionfind.find uv in
-        (match uu___7 with
+        let uu___6 = FStar_Syntax_Unionfind.find uv in
+        (match uu___6 with
          | FStar_Pervasives_Native.Some t' ->
-             let uu___8 =
-               let uu___9 = let uu___10 = delay t' s in force_uvar' uu___10 in
-               FStar_Pervasives_Native.fst uu___9 in
-             (uu___8, true)
-         | uu___8 -> (t, false))
+             let uu___7 =
+               let uu___8 = let uu___9 = delay t' s in force_uvar' uu___9 in
+               FStar_Pervasives_Native.fst uu___8 in
+             (uu___7, true)
+         | uu___7 -> (t, false))
     | uu___ -> (t, false)
 let (force_uvar :
   FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
@@ -581,6 +580,18 @@ let subst_args' :
       (FStar_Syntax_Syntax.term * 'uuuuu) Prims.list ->
         (FStar_Syntax_Syntax.term * 'uuuuu) Prims.list
   = fun s -> FStar_Compiler_List.map (subst_arg' s)
+let (subst_univs_opt :
+  FStar_Syntax_Syntax.subst_elt Prims.list Prims.list ->
+    FStar_Syntax_Syntax.universe Prims.list FStar_Pervasives_Native.option ->
+      FStar_Syntax_Syntax.universe Prims.list FStar_Pervasives_Native.option)
+  =
+  fun sub ->
+    fun us_opt ->
+      match us_opt with
+      | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None
+      | FStar_Pervasives_Native.Some us ->
+          let uu___ = FStar_Compiler_List.map (subst_univ sub) us in
+          FStar_Pervasives_Native.Some uu___
 let (subst_pat' :
   (FStar_Syntax_Syntax.subst_t Prims.list *
     FStar_Syntax_Syntax.maybe_set_use_range) ->
@@ -592,7 +603,12 @@ let (subst_pat' :
       let rec aux n p1 =
         match p1.FStar_Syntax_Syntax.v with
         | FStar_Syntax_Syntax.Pat_constant uu___ -> (p1, n)
-        | FStar_Syntax_Syntax.Pat_cons (fv, pats) ->
+        | FStar_Syntax_Syntax.Pat_cons (fv, us_opt, pats) ->
+            let us_opt1 =
+              let uu___ =
+                let uu___1 = shift_subst' n s in
+                FStar_Pervasives_Native.fst uu___1 in
+              subst_univs_opt uu___ us_opt in
             let uu___ =
               FStar_Compiler_Effect.op_Bar_Greater pats
                 (FStar_Compiler_List.fold_left
@@ -609,7 +625,7 @@ let (subst_pat' :
                  ({
                     FStar_Syntax_Syntax.v =
                       (FStar_Syntax_Syntax.Pat_cons
-                         (fv, (FStar_Compiler_List.rev pats1)));
+                         (fv, us_opt1, (FStar_Compiler_List.rev pats1)));
                     FStar_Syntax_Syntax.p = (p1.FStar_Syntax_Syntax.p)
                   }, n1))
         | FStar_Syntax_Syntax.Pat_var x ->
@@ -1040,6 +1056,26 @@ let (subst_decreasing_order :
   =
   fun s ->
     fun dec -> subst_dec_order' ([s], FStar_Syntax_Syntax.NoUseRange) dec
+let (subst_residual_comp :
+  FStar_Syntax_Syntax.subst_elt Prims.list ->
+    FStar_Syntax_Syntax.residual_comp -> FStar_Syntax_Syntax.residual_comp)
+  =
+  fun s ->
+    fun rc ->
+      match rc.FStar_Syntax_Syntax.residual_typ with
+      | FStar_Pervasives_Native.None -> rc
+      | FStar_Pervasives_Native.Some t ->
+          let uu___ =
+            let uu___1 = subst s t in
+            FStar_Compiler_Effect.op_Bar_Greater uu___1
+              (fun uu___2 -> FStar_Pervasives_Native.Some uu___2) in
+          {
+            FStar_Syntax_Syntax.residual_effect =
+              (rc.FStar_Syntax_Syntax.residual_effect);
+            FStar_Syntax_Syntax.residual_typ = uu___;
+            FStar_Syntax_Syntax.residual_flags =
+              (rc.FStar_Syntax_Syntax.residual_flags)
+          }
 let (closing_subst :
   FStar_Syntax_Syntax.binders -> FStar_Syntax_Syntax.subst_elt Prims.list) =
   fun bs ->
@@ -1143,7 +1179,8 @@ let (open_pat :
     let rec open_pat_aux sub p1 =
       match p1.FStar_Syntax_Syntax.v with
       | FStar_Syntax_Syntax.Pat_constant uu___ -> (p1, sub)
-      | FStar_Syntax_Syntax.Pat_cons (fv, pats) ->
+      | FStar_Syntax_Syntax.Pat_cons (fv, us_opt, pats) ->
+          let us_opt1 = subst_univs_opt [sub] us_opt in
           let uu___ =
             FStar_Compiler_Effect.op_Bar_Greater pats
               (FStar_Compiler_List.fold_left
@@ -1160,7 +1197,7 @@ let (open_pat :
                ({
                   FStar_Syntax_Syntax.v =
                     (FStar_Syntax_Syntax.Pat_cons
-                       (fv, (FStar_Compiler_List.rev pats1)));
+                       (fv, us_opt1, (FStar_Compiler_List.rev pats1)));
                   FStar_Syntax_Syntax.p = (p1.FStar_Syntax_Syntax.p)
                 }, sub1))
       | FStar_Syntax_Syntax.Pat_var x ->
@@ -1282,7 +1319,8 @@ let (close_pat :
     let rec aux sub p1 =
       match p1.FStar_Syntax_Syntax.v with
       | FStar_Syntax_Syntax.Pat_constant uu___ -> (p1, sub)
-      | FStar_Syntax_Syntax.Pat_cons (fv, pats) ->
+      | FStar_Syntax_Syntax.Pat_cons (fv, us_opt, pats) ->
+          let us_opt1 = subst_univs_opt [sub] us_opt in
           let uu___ =
             FStar_Compiler_Effect.op_Bar_Greater pats
               (FStar_Compiler_List.fold_left
@@ -1299,7 +1337,7 @@ let (close_pat :
                ({
                   FStar_Syntax_Syntax.v =
                     (FStar_Syntax_Syntax.Pat_cons
-                       (fv, (FStar_Compiler_List.rev pats1)));
+                       (fv, us_opt1, (FStar_Compiler_List.rev pats1)));
                   FStar_Syntax_Syntax.p = (p1.FStar_Syntax_Syntax.p)
                 }, sub1))
       | FStar_Syntax_Syntax.Pat_var x ->
@@ -1785,7 +1823,14 @@ let rec (deep_compress :
                 FStar_Syntax_Syntax.v = uu___;
                 FStar_Syntax_Syntax.p = (p.FStar_Syntax_Syntax.p)
               }
-          | FStar_Syntax_Syntax.Pat_cons (fv, pats) ->
+          | FStar_Syntax_Syntax.Pat_cons (fv, us_opt, pats) ->
+              let us_opt1 =
+                match us_opt with
+                | FStar_Pervasives_Native.None ->
+                    FStar_Pervasives_Native.None
+                | FStar_Pervasives_Native.Some us ->
+                    let uu___ = FStar_Compiler_List.map deep_compress_univ us in
+                    FStar_Pervasives_Native.Some uu___ in
               let uu___ =
                 let uu___1 =
                   let uu___2 =
@@ -1794,7 +1839,7 @@ let rec (deep_compress :
                          match uu___3 with
                          | (x, b) -> let uu___4 = elim_pat x in (uu___4, b))
                       pats in
-                  (fv, uu___2) in
+                  (fv, us_opt1, uu___2) in
                 FStar_Syntax_Syntax.Pat_cons uu___1 in
               {
                 FStar_Syntax_Syntax.v = uu___;

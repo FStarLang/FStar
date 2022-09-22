@@ -1,5 +1,5 @@
 >> Got issues: [
-NegativeTests.False.fst(23,13-23,33): (Error 19) assertion failed; The SMT solver could not prove the query, try to spell your proof in more detail or increase fuel/ifuel (see also prims.fst(444,55-444,67))
+NegativeTests.False.fst(23,13-23,33): (Error 19) assertion failed; The SMT solver could not prove the query. Use --query_stats for more details. (see also prims.fst(442,55-442,67))
 >>]
 >> Got issues: [
 NegativeTests.False.fst(30,18-30,41): (Error 12) Expected type "Prims.l_True \/ Prims.l_True"; but "Prims.Left (Prims.T)" has type "Prims.sum (*?u1*) _ Prims.l_True"

@@ -1544,14 +1544,18 @@ let (set_uvar : FStar_Syntax_Syntax.uvar -> FStar_Syntax_Syntax.term -> unit)
     fun t ->
       let uu___ = FStar_Syntax_Unionfind.find uv in
       match uu___ with
-      | FStar_Pervasives_Native.Some uu___1 ->
-          let uu___2 =
-            let uu___3 =
-              let uu___4 = FStar_Syntax_Unionfind.uvar_id uv in
+      | FStar_Pervasives_Native.Some t' ->
+          let uu___1 =
+            let uu___2 =
+              let uu___3 = FStar_Syntax_Unionfind.uvar_id uv in
               FStar_Compiler_Effect.op_Less_Bar
-                FStar_Compiler_Util.string_of_int uu___4 in
-            FStar_Compiler_Util.format1 "Changing a fixed uvar! ?%s\n" uu___3 in
-          failwith uu___2
+                FStar_Compiler_Util.string_of_int uu___3 in
+            let uu___3 = tts t in
+            let uu___4 = tts t' in
+            FStar_Compiler_Util.format3
+              "Changing a fixed uvar! ?%s to %s but it is already set to %s\n"
+              uu___2 uu___3 uu___4 in
+          failwith uu___1
       | uu___1 -> FStar_Syntax_Unionfind.change uv t
 let (qualifier_equal :
   FStar_Syntax_Syntax.qualifier ->
@@ -2260,6 +2264,8 @@ let (rename_let_attr : FStar_Syntax_Syntax.term) =
   fvar_const FStar_Parser_Const.rename_let_attr
 let (t_ctx_uvar_and_sust : FStar_Syntax_Syntax.term) =
   fvar_const FStar_Parser_Const.ctx_uvar_and_subst_lid
+let (t_universe_uvar : FStar_Syntax_Syntax.term) =
+  fvar_const FStar_Parser_Const.universe_uvar_lid
 let (mk_conj_opt :
   FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax
     FStar_Pervasives_Native.option ->
@@ -4733,3 +4739,19 @@ let (check_mutual_universes :
                    "Mutually recursive definitions do not abstract over the same universes")
                  lb1.FStar_Syntax_Syntax.lbpos
              else ()) lbs1
+let (ctx_uvar_should_check :
+  FStar_Syntax_Syntax.ctx_uvar -> FStar_Syntax_Syntax.should_check_uvar) =
+  fun u ->
+    let uu___ =
+      FStar_Syntax_Unionfind.find_decoration
+        u.FStar_Syntax_Syntax.ctx_uvar_head in
+    uu___.FStar_Syntax_Syntax.uvar_decoration_should_check
+let (ctx_uvar_typ :
+  FStar_Syntax_Syntax.ctx_uvar ->
+    FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax)
+  =
+  fun u ->
+    let uu___ =
+      FStar_Syntax_Unionfind.find_decoration
+        u.FStar_Syntax_Syntax.ctx_uvar_head in
+    uu___.FStar_Syntax_Syntax.uvar_decoration_typ

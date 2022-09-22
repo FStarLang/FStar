@@ -13,6 +13,7 @@ type norm_step =
   | UnfoldFully of Prims.string Prims.list 
   | UnfoldAttr of Prims.string Prims.list 
   | UnfoldQual of Prims.string Prims.list 
+  | Unascribe 
   | NBE 
   | Unmeta 
 let (uu___is_Simpl : norm_step -> Prims.bool) =
@@ -53,6 +54,8 @@ let (uu___is_UnfoldQual : norm_step -> Prims.bool) =
     match projectee with | UnfoldQual _0 -> true | uu___ -> false
 let (__proj__UnfoldQual__item___0 : norm_step -> Prims.string Prims.list) =
   fun projectee -> match projectee with | UnfoldQual _0 -> _0
+let (uu___is_Unascribe : norm_step -> Prims.bool) =
+  fun projectee -> match projectee with | Unascribe -> true | uu___ -> false
 let (uu___is_NBE : norm_step -> Prims.bool) =
   fun projectee -> match projectee with | NBE -> true | uu___ -> false
 let (uu___is_Unmeta : norm_step -> Prims.bool) =
@@ -965,24 +968,23 @@ let e_tuple3 :
                      (uu___2, args) in
                    (match uu___1 with
                     | (FStar_Syntax_Syntax.Tm_fvar fv,
-                       uu___2::uu___3::(a1, uu___4)::(b1, uu___5)::(c1,
-                                                                    uu___6)::[])
-                        when
+                       uu___2::uu___3::uu___4::(a1, uu___5)::(b1, uu___6)::
+                       (c1, uu___7)::[]) when
                         FStar_Syntax_Syntax.fv_eq_lid fv
                           FStar_Parser_Const.lid_Mktuple3
                         ->
-                        let uu___7 =
-                          let uu___8 = unembed ea a1 in uu___8 w norm in
-                        FStar_Compiler_Util.bind_opt uu___7
+                        let uu___8 =
+                          let uu___9 = unembed ea a1 in uu___9 w norm in
+                        FStar_Compiler_Util.bind_opt uu___8
                           (fun a2 ->
-                             let uu___8 =
-                               let uu___9 = unembed eb b1 in uu___9 w norm in
-                             FStar_Compiler_Util.bind_opt uu___8
+                             let uu___9 =
+                               let uu___10 = unembed eb b1 in uu___10 w norm in
+                             FStar_Compiler_Util.bind_opt uu___9
                                (fun b2 ->
-                                  let uu___9 =
-                                    let uu___10 = unembed ec c1 in
-                                    uu___10 w norm in
-                                  FStar_Compiler_Util.bind_opt uu___9
+                                  let uu___10 =
+                                    let uu___11 = unembed ec c1 in
+                                    uu___11 w norm in
+                                  FStar_Compiler_Util.bind_opt uu___10
                                     (fun c2 ->
                                        FStar_Pervasives_Native.Some
                                          (a2, b2, c2))))
@@ -1380,6 +1382,8 @@ let (steps_UnfoldAttr : FStar_Syntax_Syntax.term) =
   FStar_Syntax_Syntax.tconst FStar_Parser_Const.steps_unfoldattr
 let (steps_UnfoldQual : FStar_Syntax_Syntax.term) =
   FStar_Syntax_Syntax.tconst FStar_Parser_Const.steps_unfoldqual
+let (steps_Unascribe : FStar_Syntax_Syntax.term) =
+  FStar_Syntax_Syntax.tconst FStar_Parser_Const.steps_unascribe
 let (steps_NBE : FStar_Syntax_Syntax.term) =
   FStar_Syntax_Syntax.tconst FStar_Parser_Const.steps_nbe
 let (steps_Unmeta : FStar_Syntax_Syntax.term) =
@@ -1408,6 +1412,7 @@ let (e_norm_step : norm_step embedding) =
          | Zeta -> steps_Zeta
          | ZetaFull -> steps_ZetaFull
          | Iota -> steps_Iota
+         | Unascribe -> steps_Unascribe
          | NBE -> steps_NBE
          | Unmeta -> steps_Unmeta
          | Reify -> steps_Reify
@@ -1496,6 +1501,10 @@ let (e_norm_step : norm_step embedding) =
                   FStar_Syntax_Syntax.fv_eq_lid fv
                     FStar_Parser_Const.steps_iota
                   -> FStar_Pervasives_Native.Some Iota
+              | (FStar_Syntax_Syntax.Tm_fvar fv, []) when
+                  FStar_Syntax_Syntax.fv_eq_lid fv
+                    FStar_Parser_Const.steps_unascribe
+                  -> FStar_Pervasives_Native.Some Unascribe
               | (FStar_Syntax_Syntax.Tm_fvar fv, []) when
                   FStar_Syntax_Syntax.fv_eq_lid fv
                     FStar_Parser_Const.steps_nbe

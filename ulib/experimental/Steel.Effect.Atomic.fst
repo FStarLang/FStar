@@ -619,10 +619,15 @@ let witness_exists #a #u #p _ =
 let lift_exists #a #u p =
   as_atomic_action_ghost (Steel.Memory.lift_h_exists #u (fun x -> hp_of (p x)))
 
+let exists_equiv p q =
+  Classical.forall_intro_2 reveal_equiv;
+  h_exists_cong (h_exists_sl' p) (h_exists_sl' q)
+
 let exists_cong p q =
   rewrite_slprop (h_exists p) (h_exists q)
-    (fun m -> Classical.forall_intro_2 reveal_equiv;
-            h_exists_cong (h_exists_sl' p) (h_exists_sl' q))
+    (fun m ->
+      reveal_equiv (h_exists p) (h_exists q);
+      exists_equiv p q)
 
 let new_invariant #uses p =
   rewrite_slprop p (to_vprop (hp_of p)) (fun _ -> ());
@@ -830,3 +835,81 @@ let elim_vrewrite
     v
     (fun y x -> y == f x)
     (fun m -> vrewrite_sel_eq v f m)
+
+/// Deriving a selector-style vprop from an injective pts-to-style vprop
+
+let hp_of_pointwise
+  (#t: Type)
+  (p: t -> vprop)
+  (x: t)
+: Tot slprop
+= hp_of (p x)
+
+let mk_selector_vprop_hp
+  p
+= Steel.Memory.h_exists (hp_of_pointwise p)
+
+let mk_selector_vprop_sel'
+  (#t: Type)
+  (p: t -> vprop)
+  (p_inj: interp_hp_of_injective p) // unused in the definition, but necessary for the local SMTPats below
+: Tot (selector' t (mk_selector_vprop_hp p))
+= fun m -> id_elim_exists (hp_of_pointwise p) m
+
+let mk_selector_vprop_sel
+  #t p p_inj
+=
+  let varrayp_sel_depends_only_on
+    (#t: Type)
+    (p: t -> vprop)
+    (p_inj: interp_hp_of_injective p)
+    (m0: Steel.Memory.hmem (mk_selector_vprop_hp p))
+    (m1: mem { disjoint m0 m1 })
+  : Lemma
+    (
+      mk_selector_vprop_sel' p p_inj m0 == mk_selector_vprop_sel' p p_inj (Steel.Memory.join m0 m1)
+    )
+    [SMTPat (mk_selector_vprop_sel' p p_inj (Steel.Memory.join m0 m1))]
+  = p_inj (mk_selector_vprop_sel' p p_inj m0) (mk_selector_vprop_sel' p p_inj (Steel.Memory.join m0 m1)) (Steel.Memory.join m0 m1)
+  in
+  let varrayp_sel_depends_only_on_core
+    (#t: Type)
+    (p: t -> vprop)
+    (p_inj: interp_hp_of_injective p)
+    (m0: Steel.Memory.hmem (mk_selector_vprop_hp p))
+  : Lemma
+    (
+      mk_selector_vprop_sel' p p_inj m0 == mk_selector_vprop_sel' p p_inj (core_mem m0)
+    )
+    [SMTPat (mk_selector_vprop_sel' p p_inj (core_mem m0))]
+  = p_inj (mk_selector_vprop_sel' p p_inj m0) (mk_selector_vprop_sel' p p_inj (core_mem m0)) m0
+  in
+  mk_selector_vprop_sel' p p_inj
+
+let mk_selector_vprop_intro
+  #_ #_ #x p p_inj
+= change_slprop_rel
+    (p _)
+    (mk_selector_vprop p p_inj)
+    (fun _ x' -> x == x')
+    (fun m ->
+      intro_h_exists x (hp_of_pointwise p) m;
+      let x' = mk_selector_vprop_sel' p p_inj m in
+      p_inj x x' m
+    )
+
+let mk_selector_vprop_elim
+  #_ #t p p_inj
+=
+  let x0 = gget (mk_selector_vprop p p_inj) in
+  let refinement (x: t) : Tot prop = x == Ghost.reveal x0 in
+  intro_vrefine (mk_selector_vprop p p_inj) refinement;
+  rewrite_slprop
+    (mk_selector_vprop p p_inj `vrefine` refinement)
+    (p x0)
+    (fun m ->
+      interp_vrefine_hp (mk_selector_vprop p p_inj) refinement m
+      // injectivity is not needed, because the return value of the
+      // selector is exactly the witness of exists_
+    );
+  x0

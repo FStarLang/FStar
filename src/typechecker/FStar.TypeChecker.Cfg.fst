@@ -1152,6 +1152,7 @@ let translate_norm_step = function
         [UnfoldUntil delta_constant; UnfoldAttr (List.map I.lid_of_str names)]
     | EMB.UnfoldQual names ->
         [UnfoldUntil delta_constant; UnfoldQual names]
+    | EMB.Unascribe -> [Unascribe]
     | EMB.NBE -> [NBE]
     | EMB.Unmeta -> [Unmeta]
 

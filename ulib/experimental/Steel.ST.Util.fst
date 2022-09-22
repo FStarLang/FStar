@@ -50,9 +50,35 @@ let slassert0 #o (p:vprop)
 let assert_ #o p = coerce_ghost (fun _ -> slassert0 p)
 let assume_ #o p = admit_ ()
 let drop #o p = coerce_ghost (fun _ -> SEA.drop p)
+let pure = pure
+let reveal_pure _ = ()
 let intro_pure #o p = coerce_ghost (fun _ -> SEA.intro_pure p)
 let elim_pure #o p = coerce_ghost (fun _ -> SEA.elim_pure p)
 
+/// Extracting a proposition from a [pure p] while retaining [pure p]
+let extract_pure (#uses:_) (p:prop)
+  : STGhost unit uses (pure p) (fun _ -> pure p) True (fun _ -> p)
+  = let _ = elim_pure p in
+    intro_pure p
+
+let intro_can_be_split_pure'
+  (p: prop)
+: Lemma
+  (p ==> emp `can_be_split` pure p)
+= reveal_can_be_split ();
+  Classical.forall_intro (pure_interp p)
+
+let intro_can_be_split_pure
+  (p: prop)
+  (sq: squash p)
+: Tot (squash (emp `can_be_split` pure p))
+= intro_can_be_split_pure' p
+
+let intro_can_be_split_forall_dep_pure
+  p
+= Classical.forall_intro (fun x -> intro_can_be_split_pure' (p x))
+
+[@@noextract_to "Plugin"]
 let return0 #a #o #p (x:a)
   : SEA.SteelAtomicBase a true o Unobservable
                         (return_pre (p x)) p
@@ -60,12 +86,31 @@ let return0 #a #o #p (x:a)
                         (fun _ v _ -> v == x)
   = let _ = () in SEA.return x
 
+[@@noextract_to "Plugin"]
 let return #a #o #p x = coerce_atomicF (fun _ -> return0 x)
 
 (* Lifting the separation logic exists combinator to vprop *)
 let exists_ (#a:Type u#a) (p:a -> vprop)
   : vprop
   = SEA.h_exists p
+
+let intro_can_be_split_exists
+  a x p
+=
+  SEA.reveal_can_be_split ();
+  Classical.forall_intro (Steel.Memory.intro_h_exists x (SEA.h_exists_sl' p))
+
+let intro_can_be_split_forall_dep_exists
+  b a x p
+=
+  let prf
+    (y: b)
+  : Lemma
+    (p y (x y) `can_be_split` exists_ (p y))
+  =
+    intro_can_be_split_exists (a y) (x y) (p y)
+  in
+  Classical.forall_intro prf
 
 /// Introducing an existential if the predicate [p] currently holds for value [x]
 let intro_exists #a #o x p
@@ -80,6 +125,9 @@ let elim_exists #a #o #p _
 
 let lift_exists (#a:_) (#u:_) (p:a -> vprop)
   = coerce_ghost (fun _ -> SEA.lift_exists #a #u p)
+
+let exists_equiv #a p1 p2
+  = SEA.exists_equiv p1 p2
 
 let exists_cong #a #u p q
   = coerce_ghost (fun _ -> SEA.exists_cong #a #u p q)
@@ -126,3 +174,57 @@ let par #aL #aR #preL #postL #preR #postR f g =
                        (fun y -> postL (fst y) `star` postR (snd y))
     = fun _ -> SE.par f g in
   coerce_steel p
+
+let vpattern
+  (#opened: _)
+  (#a: Type)
+  (#x: a)
+  (p: a -> vprop)
+: STGhost a opened (p x) (fun _ -> p x) True (fun res -> res == x)
+= noop ();
+  x
+
+let vpattern_replace
+  (#opened: _)
+  (#a: Type)
+  (#x: a)
+  (p: a -> vprop)
+: STGhost a opened (p x) (fun res -> p res) True (fun res -> res == x)
+= noop ();
+  x
+
+let vpattern_erased
+  (#opened: _)
+  (#a: Type)
+  (#x: a)
+  (p: a -> vprop)
+: STGhost (Ghost.erased a) opened (p x) (fun _ -> p x) True (fun res -> Ghost.reveal res == x)
+= noop ();
+  x
+
+let vpattern_replace_erased
+  (#opened: _)
+  (#a: Type)
+  (#x: a)
+  (p: a -> vprop)
+: STGhost (Ghost.erased a) opened (p x) (fun res -> p (Ghost.reveal res)) True (fun res -> Ghost.reveal res == x)
+= noop ();
+  x
+
+let vpattern_replace_erased_global
+  #opened #a #x #q p
+= noop ();
+  x
+
+let vpattern_rewrite
+  (#opened: _)
+  (#a: Type)
+  (#x1: a)
+  (p: a -> vprop)
+  (x2: a)
+: STGhost unit opened
+    (p x1)
+    (fun _ -> p x2)
+    (x1 == x2)
+    (fun _ -> True)
+= rewrite (p x1) (p x2)

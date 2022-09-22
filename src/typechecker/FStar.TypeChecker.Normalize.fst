@@ -450,14 +450,23 @@ and rebuild_closure cfg env stack t =
             match p.v with
             | Pat_constant _ ->
               p, env
-            | Pat_cons(fv, pats) ->
+            | Pat_cons(fv, us_opt, pats) ->
+              let us_opt =
+                if cfg.steps.erase_universes
+                then None
+                else (
+                  match us_opt with
+                  | None -> None
+                  | Some us -> Some (List.map (norm_universe cfg env) us)
+                )
+              in
               let pats, env =
                   pats |> List.fold_left
                   (fun (pats, env) (p, b) ->
                     let p, env = norm_pat env p in (p,b)::pats, env)
                   ([], env)
               in
-              {p with v=Pat_cons(fv, List.rev pats)}, env
+              {p with v=Pat_cons(fv, us_opt, List.rev pats)}, env
             | Pat_var x ->
               let x = {x with sort=non_tail_inline_closure_env cfg env x.sort} in
               {p with v=Pat_var x}, dummy::env
@@ -999,10 +1008,10 @@ let should_unfold cfg should_reify fv qninfo : should_unfold_res =
        && !plugin_unfold_warn_ctr > 0                   // and we haven't raised too many warnings
     then begin
       // then warn about it
+      let msg = BU.format1 "Unfolding name which is marked as a plugin: %s"
+                                    (Print.fv_to_string fv) in
       Errors.log_issue fv.fv_name.p
-                       (Errors.Warning_UnfoldPlugin,
-                        BU.format1 "Unfolding name which is marked as a plugin: %s"
-                                    (Print.fv_to_string fv));
+                       (Errors.Warning_UnfoldPlugin, msg);
       plugin_unfold_warn_ctr := !plugin_unfold_warn_ctr - 1
     end;
     r
@@ -1389,7 +1398,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                   if i >= norm_args_len then false
                   else
                     let arg_i, _ = List.nth norm_args i in
-                    let head, _ = arg_i |> U.unascribe |> U.head_and_args in
+                    let head, _ = arg_i |> U.unmeta_safe |> U.head_and_args in
                     match (un_uinst head).n with
                     | Tm_constant _ -> true
                     | Tm_fvar fv -> Env.is_datacon cfg.tcenv (S.lid_of_fv fv)
@@ -1593,11 +1602,39 @@ let rec norm : cfg -> env -> stack -> term -> term =
           | Tm_meta (head, m) ->
             log cfg (fun () -> BU.print1 ">> metadata = %s\n" (Print.metadata_to_string m));
             begin match m with
-              | Meta_monadic (m, t) ->
-                reduce_impure_comp cfg env stack head (Inl m) t
+              | Meta_monadic (m_from, ty) ->
+                if cfg.steps.for_extraction
+                then (
+                  //In Extraction, we want to erase sub-terms with erasable effect
+                  //Or pure terms with non-informative return types
+                  if Env.is_erasable_effect cfg.tcenv m_from
+                  || (U.is_pure_effect m_from && Env.non_informative cfg.tcenv ty)
+                  then (
+                    rebuild cfg env stack (S.mk (Tm_meta (U.exp_unit, m)) t.pos)
+                  )
+                  else (
+                    reduce_impure_comp cfg env stack head (Inl m_from) ty
+                  )
+                )
+                else 
+                  reduce_impure_comp cfg env stack head (Inl m_from) ty
 
-              | Meta_monadic_lift (m, m', t) ->
-                reduce_impure_comp cfg env stack head (Inr (m, m')) t
+              | Meta_monadic_lift (m_from, m_to, ty) ->
+                if cfg.steps.for_extraction
+                then (
+                  //In Extraction, we want to erase sub-terms with erasable effect
+                  //Or pure terms with non-informative return types
+                  if Env.is_erasable_effect cfg.tcenv m_from
+                  ||  Env.is_erasable_effect cfg.tcenv m_to
+                  || (U.is_pure_effect m_from && Env.non_informative cfg.tcenv ty)
+                  then (
+                    rebuild cfg env stack (S.mk (Tm_meta (U.exp_unit, m)) t.pos)
+                  )
+                  else (
+                    reduce_impure_comp cfg env stack head (Inr (m_from, m_to)) ty
+                  )
+                )
+                else reduce_impure_comp cfg env stack head (Inr (m_from, m_to)) ty
 
               | _ ->
                 if cfg.steps.unmeta
@@ -2692,11 +2729,21 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
           in
           let rec norm_pat env p = match p.v with
             | Pat_constant _ -> p, env
-            | Pat_cons(fv, pats) ->
+            | Pat_cons(fv, us_opt, pats) ->
+              let us_opt =
+                if cfg.steps.erase_universes
+                then None
+                else (
+                  match us_opt with
+                  | None -> None
+                  | Some us ->
+                    Some (List.map (norm_universe cfg env) us)
+                )
+              in
               let pats, env = pats |> List.fold_left (fun (pats, env) (p, b) ->
                     let p, env = norm_pat env p in
                     (p,b)::pats, env) ([], env) in
-              {p with v=Pat_cons(fv, List.rev pats)}, env
+              {p with v=Pat_cons(fv, us_opt, List.rev pats)}, env
             | Pat_var x ->
               let x = {x with sort=norm_or_whnf env x.sort} in
               {p with v=Pat_var x}, dummy::env
@@ -2724,7 +2771,7 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
           let maybe_commute_matches () =
             let can_commute =
                 match branches with
-                | ({v=Pat_cons(fv, _)}, _, _)::_ ->
+                | ({v=Pat_cons(fv, _, _)}, _, _)::_ ->
                   Env.fv_has_attr cfg.tcenv fv FStar.Parser.Const.commute_nested_matches_lid
                 | _ -> false in
             match (U.unascribe scrutinee).n with
@@ -2816,7 +2863,7 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
                   Inl []
                 | _ -> Inr (not (is_cons head)) //if it's not a constant, it may match
               end
-            | Pat_cons(fv, arg_pats) -> begin
+            | Pat_cons(fv, _, arg_pats) -> begin
               match (U.un_uinst head).n with
                 | Tm_fvar fv' when fv_eq fv fv' ->
                   matches_args [] args arg_pats
@@ -3110,7 +3157,7 @@ let eta_expand (env:Env.env) (t:term) : term =
       let head, args = U.head_and_args t in
       begin match (SS.compress head).n with
       | Tm_uvar (u,s) ->
-        let formals, _tres = U.arrow_formals (SS.subst' s u.ctx_uvar_typ) in
+        let formals, _tres = U.arrow_formals (SS.subst' s (U.ctx_uvar_typ u)) in
         if List.length formals = List.length args
         then t
         else let _, ty, _ = env.typeof_tot_or_gtot_term ({env with lax=true; use_bv_sorts=true; expected_typ=None}) t true in

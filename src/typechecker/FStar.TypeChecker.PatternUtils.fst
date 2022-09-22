@@ -48,12 +48,12 @@ let rec elaborate_pat env p = //Adds missing implicit patterns to constructor pa
         else withinfo (Pat_var a) r
     in
     match p.v with
-    | Pat_cons({fv_qual=Some (Unresolved_constructor _)}, _) ->
+    | Pat_cons({fv_qual=Some (Unresolved_constructor _)}, _, _) ->
       (* Unresolved constructors cannot be elaborated yet.
          tc_pat has to resolve it first. *)
       p
 
-    | Pat_cons(fv, pats) ->
+    | Pat_cons(fv, us_opt, pats) ->
         let pats = List.map (fun (p, imp) -> elaborate_pat env p, imp) pats in
         let _, t = Env.lookup_datacon env fv.fv_name.v in
         let f, _ = U.arrow_formals t in
@@ -115,8 +115,56 @@ let rec elaborate_pat env p = //Adds missing implicit patterns to constructor pa
                 (p, S.is_bqual_implicit imp)::aux formals' pats'
             end
         in
-        {p with v=Pat_cons(fv, aux f pats)}
+        {p with v=Pat_cons(fv, us_opt, aux f pats)}
     | _ -> p
+
+exception Raw_pat_cannot_be_translated
+let raw_pat_as_exp (env:Env.env) (p:pat)
+  : option (term * list bv)
+  = let rec aux bs p = 
+        match p.v with
+        | Pat_constant c ->
+          let e =
+              match c with
+              | FStar.Const.Const_int(repr, Some sw) ->
+                FStar.ToSyntax.ToSyntax.desugar_machine_integer env.dsenv repr sw p.p
+              | _ ->
+                mk (Tm_constant c) p.p
+          in
+          e, bs
+
+        | Pat_dot_term(_, t) ->
+          begin
+          let t = SS.compress t in
+          match t.n with
+          | Tm_unknown -> raise Raw_pat_cannot_be_translated
+          | _ -> t, bs
+          end
+
+        | Pat_wild x
+        | Pat_var x ->
+          mk (Tm_name x) p.p, x::bs
+
+        | Pat_cons(fv, us_opt, pats) ->
+          let args, bs = 
+            List.fold_right
+              (fun (p, i) (args, bs) ->
+                let ep, bs = aux bs p in
+                ((ep, as_aqual_implicit i) :: args), bs)
+              pats
+              ([], bs)
+          in
+          let hd = Syntax.fv_to_tm fv in
+          let hd = 
+            match us_opt with
+            | None -> hd
+            | Some us -> S.mk_Tm_uinst hd us 
+          in
+          let e = mk_Tm_app hd args p.p in
+          e, bs
+    in
+    try Some (aux [] p)
+    with Raw_pat_cannot_be_translated -> None
 
 (*
   pat_as_exps allow_implicits env p:
@@ -175,7 +223,7 @@ let pat_as_exp (introduce_bv_uvars:bool)
              let e = mk (Tm_name x) p.p in
              ([x], [x], [], env, e, g, p)
 
-           | Pat_cons(fv, pats) ->
+           | Pat_cons(fv, us_opt, pats) -> 
              let (b, a, w, env, args, guard, pats) =
                pats |>
                List.fold_left
@@ -185,12 +233,20 @@ let pat_as_exp (introduce_bv_uvars:bool)
                     (b'::b, a'::a, w'::w, env, arg::args, conj_guard guard guard', (pat, imp)::pats))
                ([], [], [], env, [], trivial_guard, [])
              in
-             let hd =
+             let inst_head hd us_opt = 
+               match us_opt with
+               | None -> hd
+               | Some us -> Syntax.mk_Tm_uinst hd us
+             in
+             let hd, us_opt =
                let hd = Syntax.fv_to_tm fv in
-               if not inst_pat_cons_univs then hd
+               if not inst_pat_cons_univs
+               || Some? us_opt
+               then inst_head hd us_opt, us_opt
                else let us, _ = Env.lookup_datacon env (Syntax.lid_of_fv fv) in
-                    if List.length us = 0 then hd
-                    else Syntax.mk_Tm_uinst hd us in
+                    if List.length us = 0 then hd, Some []
+                    else Syntax.mk_Tm_uinst hd us, Some us
+             in
              let e = mk_Tm_app hd (args |> List.rev) p.p in
              (List.rev b |> List.flatten,
               List.rev a |> List.flatten,
@@ -198,7 +254,7 @@ let pat_as_exp (introduce_bv_uvars:bool)
               env,
               e,
               guard,
-              {p with v=Pat_cons(fv, List.rev pats)})
+              {p with v=Pat_cons(fv, us_opt, List.rev pats)})
     in
     let one_pat env p =
         let p = elaborate_pat env p in

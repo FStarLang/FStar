@@ -55,6 +55,11 @@ let map_rev (f: 'a -> 'b) (l: list 'a): list 'b =
   in
   aux l []
 
+let strip_prefix (prefix s: string): option string
+  = if starts_with s prefix
+    then Some (substring_from s (String.length prefix))
+    else None
+
 let map_if_all (f: 'a -> option 'b) (l: list 'a): option (list 'b) =
   let rec aux l acc =
     match l with
@@ -1286,9 +1291,15 @@ and p_noSeqTerm' ps pb e = match e.tm with
       paren_if (ps || pb) (
           group (prefix2 (str "try") (p_noSeqTermAndComment false false e) ^/^ str "with" ^/^
               separate_map_last hardline p_patternBranch branches))
-  | Match (e, ret_opt, branches) ->
+  | Match (e, op_opt, ret_opt, branches) ->
+      let match_str = "match"
+                    ^ ( match bind_opt op_opt (fun id -> strip_prefix "let_" (string_of_id id)) with
+                      | Some op -> ( match string_to_op op with
+                                  | Some (id, _) -> id
+                                  | None         -> failwith ("Malformed operator ["^op^"] on match operator"))
+                      | None    -> ""
+                      ) in
       paren_if (ps || pb) (
-
       (match ret_opt with
        | None ->
         group (surround 2 1 (str "match") (p_noSeqTermAndComment false false e) (str "with"))
@@ -1313,6 +1324,29 @@ and p_noSeqTerm' ps pb e = match e.tm with
         group (surround 2 1 (str "let open") (p_term false pb r) (str "as") ^/^ (p_term false pb rty)
                ^/^ str "in" ^/^ p_term false pb e)
       )
+  | LetOperator(lets, body) ->
+    let p_let (id, pat, e) is_first is_last =
+      let id = string_of_id id in
+      let let_or_and = if is_first then "let" else "and" in
+      let op = match bind_opt (strip_prefix (let_or_and ^ "_") id) string_to_op with
+         | Some (op, _) -> op
+         | None         -> failwith ("Could not decode let operator name '"^id^"' with string_to_op") in
+      let doc_let_or_and = str (let_or_and ^ op) in
+      let doc_pat =  p_letlhs doc_let_or_and (pat, e) true in
+      let comm, doc_expr = p_term_sep false false e in
+      let doc_expr = inline_comment_or_above comm doc_expr empty in
+      if is_last then
+        surround 2 1 (flow break1 [doc_pat; equals]) doc_expr (str "in")
+      else
+        hang 2 (flow break1 [doc_pat; equals; doc_expr])
+    in
+    let l = List.length lets in
+    let lets_docs = List.mapi (fun i lb ->
+        group (p_let lb (i = 0) (i = l - 1))
+    ) lets in
+    let lets_doc = group (separate break1 lets_docs) in
+    let r = paren_if ps (group (lets_doc ^^ hardline ^^ p_term false pb body)) in
+    r
   | Let(q, lbs, e) ->
     (* We wish to print let-bindings as follows.
      *
@@ -1348,7 +1382,7 @@ and p_noSeqTerm' ps pb e = match e.tm with
     let lbs_doc = group (separate break1 lbs_docs) in
     paren_if ps (group (lbs_doc ^^ hardline ^^ p_term false pb e))
 
-  | Abs([{pat=PatVar(x, typ_opt, _)}], {tm=Match(maybe_x, None, branches)}) when matches_var maybe_x x ->
+  | Abs([{pat=PatVar(x, typ_opt, _)}], {tm=Match(maybe_x, None, None, branches)}) when matches_var maybe_x x ->
     paren_if (ps || pb) (
       group (str "function" ^/^ separate_map_last hardline p_patternBranch branches))
   | Quote (e, Dynamic) ->

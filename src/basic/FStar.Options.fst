@@ -227,6 +227,7 @@ let defaults =
       ("smtencoding.l_arith_repr"     , String "boxwrap");
       ("smtencoding.valid_intro"      , Bool true);
       ("smtencoding.valid_elim"       , Bool false);
+      ("split_queries"                , Bool false);      
       ("tactics_failhard"             , Bool false);
       ("tactics_info"                 , Bool false);
       ("tactic_raw_binders"           , Bool false);
@@ -401,7 +402,8 @@ let get_smtencoding_elim_box    ()      = lookup_opt "smtencoding.elim_box"     
 let get_smtencoding_nl_arith_repr ()    = lookup_opt "smtencoding.nl_arith_repr" as_string
 let get_smtencoding_l_arith_repr()      = lookup_opt "smtencoding.l_arith_repr" as_string
 let get_smtencoding_valid_intro ()      = lookup_opt "smtencoding.valid_intro"  as_bool
-let get_smtencoding_valid_elim  ()      = lookup_opt "smtencoding.valid_elim"  as_bool
+let get_smtencoding_valid_elim  ()      = lookup_opt "smtencoding.valid_elim"   as_bool
+let get_split_queries           ()      = lookup_opt "split_queries"            as_bool
 let get_tactic_raw_binders      ()      = lookup_opt "tactic_raw_binders"       as_bool
 let get_tactics_failhard        ()      = lookup_opt "tactics_failhard"         as_bool
 let get_tactics_info            ()      = lookup_opt "tactics_info"             as_bool
@@ -1089,6 +1091,11 @@ let rec specs_with_types warn_unsafe : list (char * string * opt_type * string) 
         "Include an axiom in the SMT encoding to eliminate proof-irrelevance into the existence of a proof witness");
 
        ( noshort,
+        "split_queries",
+        Const (Bool true),
+        "Split SMT verification conditions into several separate queries, one per goal");
+
+       ( noshort,
         "tactic_raw_binders",
         Const (Bool true),
         "Do not use the lexical scope of tactics to improve binder names");
@@ -1373,6 +1380,7 @@ let settable = function
     | "smtencoding.nl_arith_repr"
     | "smtencoding.valid_intro"
     | "smtencoding.valid_elim"
+    | "split_queries"
     | "tactic_raw_binders"
     | "tactics_failhard"
     | "tactics_info"
@@ -1744,6 +1752,7 @@ let smtencoding_l_arith_native   () = get_smtencoding_l_arith_repr () = "native"
 let smtencoding_l_arith_default  () = get_smtencoding_l_arith_repr () = "boxwrap"
 let smtencoding_valid_intro      () = get_smtencoding_valid_intro     ()
 let smtencoding_valid_elim       () = get_smtencoding_valid_elim      ()
+let split_queries                () = get_split_queries               ()
 let tactic_raw_binders           () = get_tactic_raw_binders          ()
 let tactics_failhard             () = get_tactics_failhard            ()
 let tactics_info                 () = get_tactics_info                ()

@@ -1,5 +1,5 @@
 ﻿#r "../../../bin/ulibfs.dll"
-#r "bin/Debug/Huffman.dll"
+#r "bin/Debug/net6.0/Huffman.dll"
 open Huffman
 
 let t = huffman (List.map (fun (c,n) -> (c, Prims.of_int n))

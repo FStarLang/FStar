@@ -1,0 +1,85 @@
+open Prims
+type sum_type =
+  | SumType1 of Prims.string 
+  | SumType2 of Prims.nat 
+let (uu___is_SumType1 : sum_type -> Prims.bool) =
+  fun projectee ->
+    match projectee with | SumType1 _0 -> true | uu___ -> false
+let (__proj__SumType1__item___0 : sum_type -> Prims.string) =
+  fun projectee -> match projectee with | SumType1 _0 -> _0
+let (uu___is_SumType2 : sum_type -> Prims.bool) =
+  fun projectee ->
+    match projectee with | SumType2 _0 -> true | uu___ -> false
+let (__proj__SumType2__item___0 : sum_type -> Prims.nat) =
+  fun projectee -> match projectee with | SumType2 _0 -> _0
+let (test_buggy : (Prims.bool, Obj.t) Prims.dtuple2 -> sum_type) =
+  fun x ->
+    match x with
+    | Prims.Mkdtuple2 (false, x2) -> SumType1 (Obj.magic x2)
+    | Prims.Mkdtuple2 (true, x4) -> SumType2 (Obj.magic x4)
+type sum_type2 =
+  | SumType2_1 of Prims.string * Prims.string 
+  | SumType2_2 of Prims.nat * Prims.nat 
+let (uu___is_SumType2_1 : sum_type2 -> Prims.bool) =
+  fun projectee ->
+    match projectee with | SumType2_1 (_0, _1) -> true | uu___ -> false
+let (__proj__SumType2_1__item___0 : sum_type2 -> Prims.string) =
+  fun projectee -> match projectee with | SumType2_1 (_0, _1) -> _0
+let (__proj__SumType2_1__item___1 : sum_type2 -> Prims.string) =
+  fun projectee -> match projectee with | SumType2_1 (_0, _1) -> _1
+let (uu___is_SumType2_2 : sum_type2 -> Prims.bool) =
+  fun projectee ->
+    match projectee with | SumType2_2 (_0, _1) -> true | uu___ -> false
+let (__proj__SumType2_2__item___0 : sum_type2 -> Prims.nat) =
+  fun projectee -> match projectee with | SumType2_2 (_0, _1) -> _0
+let (__proj__SumType2_2__item___1 : sum_type2 -> Prims.nat) =
+  fun projectee -> match projectee with | SumType2_2 (_0, _1) -> _1
+let (test_buggy2 : (Prims.bool, Obj.t) Prims.dtuple2 -> sum_type2) =
+  fun x ->
+    match Obj.magic x with
+    | Prims.Mkdtuple2 (false, (y, z)) ->
+        SumType2_1 ((Obj.magic y), (Obj.magic z))
+    | Prims.Mkdtuple2 (true, (y, z)) ->
+        SumType2_2 ((Obj.magic y), (Obj.magic z))
+let (test_ok2 :
+  (Prims.bool, (Prims.nat * Prims.int)) Prims.dtuple2 -> sum_type2) =
+  fun x ->
+    match x with
+    | Prims.Mkdtuple2 (true, (z, y)) -> SumType2_2 (z, y)
+    | Prims.Mkdtuple2 (false, (z, y)) -> SumType2_2 (z, z)
+type 'a mixed =
+  | Mixed of 'a * Prims.int 
+let uu___is_Mixed : 'a . 'a mixed -> Prims.bool = fun projectee -> true
+let __proj__Mixed__item___0 : 'a . 'a mixed -> 'a =
+  fun projectee -> match projectee with | Mixed (_0, _1) -> _0
+let __proj__Mixed__item___1 : 'a . 'a mixed -> Prims.int =
+  fun projectee -> match projectee with | Mixed (_0, _1) -> _1
+type t3 =
+  | T3_1 of Prims.string * Prims.int 
+  | T3_2 of Prims.nat * Prims.int 
+let (uu___is_T3_1 : t3 -> Prims.bool) =
+  fun projectee ->
+    match projectee with | T3_1 (_0, _1) -> true | uu___ -> false
+let (__proj__T3_1__item___0 : t3 -> Prims.string) =
+  fun projectee -> match projectee with | T3_1 (_0, _1) -> _0
+let (__proj__T3_1__item___1 : t3 -> Prims.int) =
+  fun projectee -> match projectee with | T3_1 (_0, _1) -> _1
+let (uu___is_T3_2 : t3 -> Prims.bool) =
+  fun projectee ->
+    match projectee with | T3_2 (_0, _1) -> true | uu___ -> false
+let (__proj__T3_2__item___0 : t3 -> Prims.nat) =
+  fun projectee -> match projectee with | T3_2 (_0, _1) -> _0
+let (__proj__T3_2__item___1 : t3 -> Prims.int) =
+  fun projectee -> match projectee with | T3_2 (_0, _1) -> _1
+let (test_mixed : (Prims.bool, Obj.t) Prims.dtuple2 -> t3) =
+  fun x ->
+    match Obj.magic x with
+    | Prims.Mkdtuple2 (true, Mixed (s, z)) -> T3_1 ((Obj.magic s), z)
+    | Prims.Mkdtuple2 (false, Mixed (n, z)) -> T3_2 ((Obj.magic n), z)
+type flen = Prims.pos
+type ('a, 'len) ntuple_ = Obj.t
+type ('a, 'len) ntuple = Obj.t
+let rest_ : 'a . flen -> Obj.t -> Obj.t =
+  fun len -> fun s -> FStar_Pervasives_Native.snd (Obj.magic s)
+let rest : 'a . flen -> Obj.t -> Obj.t =
+  fun len -> fun s -> match Obj.magic s with | (_1, _2) -> _2

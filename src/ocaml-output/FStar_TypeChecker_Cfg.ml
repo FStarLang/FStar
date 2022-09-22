@@ -3534,6 +3534,7 @@ let (translate_norm_step :
     | FStar_Syntax_Embeddings.UnfoldQual names ->
         [FStar_TypeChecker_Env.UnfoldUntil FStar_Syntax_Syntax.delta_constant;
         FStar_TypeChecker_Env.UnfoldQual names]
+    | FStar_Syntax_Embeddings.Unascribe -> [FStar_TypeChecker_Env.Unascribe]
     | FStar_Syntax_Embeddings.NBE -> [FStar_TypeChecker_Env.NBE]
     | FStar_Syntax_Embeddings.Unmeta -> [FStar_TypeChecker_Env.Unmeta]
 let (translate_norm_steps :

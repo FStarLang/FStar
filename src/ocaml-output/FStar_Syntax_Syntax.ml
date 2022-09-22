@@ -163,7 +163,8 @@ type should_check_uvar =
   | Allow_unresolved 
   | Allow_untyped 
   | Allow_ghost 
-  | Strict [@@deriving yojson,show]
+  | Strict 
+  | Strict_no_fastpath [@@deriving yojson,show]
 let (uu___is_Allow_unresolved : should_check_uvar -> Prims.bool) =
   fun projectee ->
     match projectee with | Allow_unresolved -> true | uu___ -> false
@@ -175,6 +176,9 @@ let (uu___is_Allow_ghost : should_check_uvar -> Prims.bool) =
     match projectee with | Allow_ghost -> true | uu___ -> false
 let (uu___is_Strict : should_check_uvar -> Prims.bool) =
   fun projectee -> match projectee with | Strict -> true | uu___ -> false
+let (uu___is_Strict_no_fastpath : should_check_uvar -> Prims.bool) =
+  fun projectee ->
+    match projectee with | Strict_no_fastpath -> true | uu___ -> false
 type term' =
   | Tm_bvar of bv 
   | Tm_name of bv 
@@ -208,22 +212,26 @@ type term' =
 and ctx_uvar =
   {
   ctx_uvar_head:
-    (term' syntax FStar_Pervasives_Native.option FStar_Unionfind.p_uvar *
-      version * FStar_Compiler_Range.range)
+    ((term' syntax FStar_Pervasives_Native.option * uvar_decoration)
+      FStar_Unionfind.p_uvar * version * FStar_Compiler_Range.range)
     ;
   ctx_uvar_gamma: binding Prims.list ;
   ctx_uvar_binders: binder Prims.list ;
-  ctx_uvar_typ: term' syntax ;
   ctx_uvar_reason: Prims.string ;
-  ctx_uvar_should_check: should_check_uvar ;
   ctx_uvar_range: FStar_Compiler_Range.range ;
-  ctx_uvar_meta: ctx_uvar_meta_t FStar_Pervasives_Native.option }
+  ctx_uvar_meta: ctx_uvar_meta_t FStar_Pervasives_Native.option ;
+  ctx_uvar_apply_tac_prefix: ctx_uvar Prims.list }
 and ctx_uvar_meta_t =
   | Ctx_uvar_meta_tac of (FStar_Compiler_Dyn.dyn * term' syntax) 
   | Ctx_uvar_meta_attr of term' syntax 
+and uvar_decoration =
+  {
+  uvar_decoration_typ: term' syntax ;
+  uvar_decoration_should_check: should_check_uvar }
 and pat' =
   | Pat_constant of sconst 
-  | Pat_cons of (fv * (pat' withinfo_t * Prims.bool) Prims.list) 
+  | Pat_cons of (fv * universes FStar_Pervasives_Native.option * (pat'
+  withinfo_t * Prims.bool) Prims.list) 
   | Pat_var of bv 
   | Pat_wild of bv 
   | Pat_dot_term of (bv * term' syntax) 
@@ -348,6 +356,8 @@ and lazy_kind =
   | Lazy_uvar 
   | Lazy_letbinding 
   | Lazy_embedding of (emb_typ * term' syntax FStar_Thunk.t) 
+  | Lazy_universe 
+  | Lazy_universe_uvar 
 and binding =
   | Binding_var of bv 
   | Binding_lid of (FStar_Ident.lident * (univ_names * term' syntax)) 
@@ -466,61 +476,55 @@ let (uu___is_Tm_unknown : term' -> Prims.bool) =
   fun projectee -> match projectee with | Tm_unknown -> true | uu___ -> false
 let (__proj__Mkctx_uvar__item__ctx_uvar_head :
   ctx_uvar ->
-    (term' syntax FStar_Pervasives_Native.option FStar_Unionfind.p_uvar *
-      version * FStar_Compiler_Range.range))
+    ((term' syntax FStar_Pervasives_Native.option * uvar_decoration)
+      FStar_Unionfind.p_uvar * version * FStar_Compiler_Range.range))
   =
   fun projectee ->
     match projectee with
-    | { ctx_uvar_head; ctx_uvar_gamma; ctx_uvar_binders; ctx_uvar_typ;
-        ctx_uvar_reason; ctx_uvar_should_check; ctx_uvar_range;
-        ctx_uvar_meta;_} -> ctx_uvar_head
+    | { ctx_uvar_head; ctx_uvar_gamma; ctx_uvar_binders; ctx_uvar_reason;
+        ctx_uvar_range; ctx_uvar_meta; ctx_uvar_apply_tac_prefix;_} ->
+        ctx_uvar_head
 let (__proj__Mkctx_uvar__item__ctx_uvar_gamma :
   ctx_uvar -> binding Prims.list) =
   fun projectee ->
     match projectee with
-    | { ctx_uvar_head; ctx_uvar_gamma; ctx_uvar_binders; ctx_uvar_typ;
-        ctx_uvar_reason; ctx_uvar_should_check; ctx_uvar_range;
-        ctx_uvar_meta;_} -> ctx_uvar_gamma
+    | { ctx_uvar_head; ctx_uvar_gamma; ctx_uvar_binders; ctx_uvar_reason;
+        ctx_uvar_range; ctx_uvar_meta; ctx_uvar_apply_tac_prefix;_} ->
+        ctx_uvar_gamma
 let (__proj__Mkctx_uvar__item__ctx_uvar_binders :
   ctx_uvar -> binder Prims.list) =
   fun projectee ->
     match projectee with
-    | { ctx_uvar_head; ctx_uvar_gamma; ctx_uvar_binders; ctx_uvar_typ;
-        ctx_uvar_reason; ctx_uvar_should_check; ctx_uvar_range;
-        ctx_uvar_meta;_} -> ctx_uvar_binders
-let (__proj__Mkctx_uvar__item__ctx_uvar_typ : ctx_uvar -> term' syntax) =
-  fun projectee ->
-    match projectee with
-    | { ctx_uvar_head; ctx_uvar_gamma; ctx_uvar_binders; ctx_uvar_typ;
-        ctx_uvar_reason; ctx_uvar_should_check; ctx_uvar_range;
-        ctx_uvar_meta;_} -> ctx_uvar_typ
+    | { ctx_uvar_head; ctx_uvar_gamma; ctx_uvar_binders; ctx_uvar_reason;
+        ctx_uvar_range; ctx_uvar_meta; ctx_uvar_apply_tac_prefix;_} ->
+        ctx_uvar_binders
 let (__proj__Mkctx_uvar__item__ctx_uvar_reason : ctx_uvar -> Prims.string) =
   fun projectee ->
     match projectee with
-    | { ctx_uvar_head; ctx_uvar_gamma; ctx_uvar_binders; ctx_uvar_typ;
-        ctx_uvar_reason; ctx_uvar_should_check; ctx_uvar_range;
-        ctx_uvar_meta;_} -> ctx_uvar_reason
-let (__proj__Mkctx_uvar__item__ctx_uvar_should_check :
-  ctx_uvar -> should_check_uvar) =
-  fun projectee ->
-    match projectee with
-    | { ctx_uvar_head; ctx_uvar_gamma; ctx_uvar_binders; ctx_uvar_typ;
-        ctx_uvar_reason; ctx_uvar_should_check; ctx_uvar_range;
-        ctx_uvar_meta;_} -> ctx_uvar_should_check
+    | { ctx_uvar_head; ctx_uvar_gamma; ctx_uvar_binders; ctx_uvar_reason;
+        ctx_uvar_range; ctx_uvar_meta; ctx_uvar_apply_tac_prefix;_} ->
+        ctx_uvar_reason
 let (__proj__Mkctx_uvar__item__ctx_uvar_range :
   ctx_uvar -> FStar_Compiler_Range.range) =
   fun projectee ->
     match projectee with
-    | { ctx_uvar_head; ctx_uvar_gamma; ctx_uvar_binders; ctx_uvar_typ;
-        ctx_uvar_reason; ctx_uvar_should_check; ctx_uvar_range;
-        ctx_uvar_meta;_} -> ctx_uvar_range
+    | { ctx_uvar_head; ctx_uvar_gamma; ctx_uvar_binders; ctx_uvar_reason;
+        ctx_uvar_range; ctx_uvar_meta; ctx_uvar_apply_tac_prefix;_} ->
+        ctx_uvar_range
 let (__proj__Mkctx_uvar__item__ctx_uvar_meta :
   ctx_uvar -> ctx_uvar_meta_t FStar_Pervasives_Native.option) =
   fun projectee ->
     match projectee with
-    | { ctx_uvar_head; ctx_uvar_gamma; ctx_uvar_binders; ctx_uvar_typ;
-        ctx_uvar_reason; ctx_uvar_should_check; ctx_uvar_range;
-        ctx_uvar_meta;_} -> ctx_uvar_meta
+    | { ctx_uvar_head; ctx_uvar_gamma; ctx_uvar_binders; ctx_uvar_reason;
+        ctx_uvar_range; ctx_uvar_meta; ctx_uvar_apply_tac_prefix;_} ->
+        ctx_uvar_meta
+let (__proj__Mkctx_uvar__item__ctx_uvar_apply_tac_prefix :
+  ctx_uvar -> ctx_uvar Prims.list) =
+  fun projectee ->
+    match projectee with
+    | { ctx_uvar_head; ctx_uvar_gamma; ctx_uvar_binders; ctx_uvar_reason;
+        ctx_uvar_range; ctx_uvar_meta; ctx_uvar_apply_tac_prefix;_} ->
+        ctx_uvar_apply_tac_prefix
 let (uu___is_Ctx_uvar_meta_tac : ctx_uvar_meta_t -> Prims.bool) =
   fun projectee ->
     match projectee with | Ctx_uvar_meta_tac _0 -> true | uu___ -> false
@@ -532,6 +536,18 @@ let (uu___is_Ctx_uvar_meta_attr : ctx_uvar_meta_t -> Prims.bool) =
     match projectee with | Ctx_uvar_meta_attr _0 -> true | uu___ -> false
 let (__proj__Ctx_uvar_meta_attr__item___0 : ctx_uvar_meta_t -> term' syntax)
   = fun projectee -> match projectee with | Ctx_uvar_meta_attr _0 -> _0
+let (__proj__Mkuvar_decoration__item__uvar_decoration_typ :
+  uvar_decoration -> term' syntax) =
+  fun projectee ->
+    match projectee with
+    | { uvar_decoration_typ; uvar_decoration_should_check;_} ->
+        uvar_decoration_typ
+let (__proj__Mkuvar_decoration__item__uvar_decoration_should_check :
+  uvar_decoration -> should_check_uvar) =
+  fun projectee ->
+    match projectee with
+    | { uvar_decoration_typ; uvar_decoration_should_check;_} ->
+        uvar_decoration_should_check
 let (uu___is_Pat_constant : pat' -> Prims.bool) =
   fun projectee ->
     match projectee with | Pat_constant _0 -> true | uu___ -> false
@@ -541,8 +557,10 @@ let (uu___is_Pat_cons : pat' -> Prims.bool) =
   fun projectee ->
     match projectee with | Pat_cons _0 -> true | uu___ -> false
 let (__proj__Pat_cons__item___0 :
-  pat' -> (fv * (pat' withinfo_t * Prims.bool) Prims.list)) =
-  fun projectee -> match projectee with | Pat_cons _0 -> _0
+  pat' ->
+    (fv * universes FStar_Pervasives_Native.option * (pat' withinfo_t *
+      Prims.bool) Prims.list))
+  = fun projectee -> match projectee with | Pat_cons _0 -> _0
 let (uu___is_Pat_var : pat' -> Prims.bool) =
   fun projectee -> match projectee with | Pat_var _0 -> true | uu___ -> false
 let (__proj__Pat_var__item___0 : pat' -> bv) =
@@ -910,6 +928,12 @@ let (uu___is_Lazy_embedding : lazy_kind -> Prims.bool) =
 let (__proj__Lazy_embedding__item___0 :
   lazy_kind -> (emb_typ * term' syntax FStar_Thunk.t)) =
   fun projectee -> match projectee with | Lazy_embedding _0 -> _0
+let (uu___is_Lazy_universe : lazy_kind -> Prims.bool) =
+  fun projectee ->
+    match projectee with | Lazy_universe -> true | uu___ -> false
+let (uu___is_Lazy_universe_uvar : lazy_kind -> Prims.bool) =
+  fun projectee ->
+    match projectee with | Lazy_universe_uvar -> true | uu___ -> false
 let (uu___is_Binding_var : binding -> Prims.bool) =
   fun projectee ->
     match projectee with | Binding_var _0 -> true | uu___ -> false
@@ -952,8 +976,8 @@ type ctx_uvar_and_subst =
   (ctx_uvar * (subst_elt Prims.list Prims.list * maybe_set_use_range))
 type term = term' syntax
 type uvar =
-  (term' syntax FStar_Pervasives_Native.option FStar_Unionfind.p_uvar *
-    version * FStar_Compiler_Range.range)
+  ((term' syntax FStar_Pervasives_Native.option * uvar_decoration)
+    FStar_Unionfind.p_uvar * version * FStar_Compiler_Range.range)
 type uvars = ctx_uvar FStar_Compiler_Util.set
 type comp = comp' syntax
 type ascription =
@@ -1812,10 +1836,10 @@ let (pat_bvs : pat -> bv Prims.list) =
       | Pat_constant uu___ -> b
       | Pat_wild x -> x :: b
       | Pat_var x -> x :: b
-      | Pat_cons (uu___, pats) ->
+      | Pat_cons (uu___, uu___1, pats) ->
           FStar_Compiler_List.fold_left
             (fun b1 ->
-               fun uu___1 -> match uu___1 with | (p2, uu___2) -> aux b1 p2) b
+               fun uu___2 -> match uu___2 with | (p2, uu___3) -> aux b1 p2) b
             pats in
     let uu___ = aux [] p in
     FStar_Compiler_Effect.op_Less_Bar FStar_Compiler_List.rev uu___
@@ -1936,16 +1960,28 @@ let rec (eq_pat : pat -> pat -> Prims.bool) =
     fun p2 ->
       match ((p1.v), (p2.v)) with
       | (Pat_constant c1, Pat_constant c2) -> FStar_Const.eq_const c1 c2
-      | (Pat_cons (fv1, as1), Pat_cons (fv2, as2)) ->
-          let uu___ = fv_eq fv1 fv2 in
+      | (Pat_cons (fv1, us1, as1), Pat_cons (fv2, us2, as2)) ->
+          let uu___ =
+            (fv_eq fv1 fv2) &&
+              ((FStar_Compiler_List.length as1) =
+                 (FStar_Compiler_List.length as2)) in
           if uu___
           then
-            let uu___2 = FStar_Compiler_List.zip as1 as2 in
-            FStar_Compiler_Effect.op_Bar_Greater uu___2
-              (FStar_Compiler_List.for_all
-                 (fun uu___3 ->
-                    match uu___3 with
-                    | ((p11, b1), (p21, b2)) -> (b1 = b2) && (eq_pat p11 p21)))
+            (FStar_Compiler_List.forall2
+               (fun uu___1 ->
+                  fun uu___2 ->
+                    match (uu___1, uu___2) with
+                    | ((p11, b1), (p21, b2)) -> (b1 = b2) && (eq_pat p11 p21))
+               as1 as2)
+              &&
+              ((match (us1, us2) with
+                | (FStar_Pervasives_Native.None,
+                   FStar_Pervasives_Native.None) -> true
+                | (FStar_Pervasives_Native.Some us11,
+                   FStar_Pervasives_Native.Some us21) ->
+                    (FStar_Compiler_List.length us11) =
+                      (FStar_Compiler_List.length us21)
+                | uu___1 -> false))
           else false
       | (Pat_var uu___, Pat_var uu___1) -> true
       | (Pat_wild uu___, Pat_wild uu___1) -> true

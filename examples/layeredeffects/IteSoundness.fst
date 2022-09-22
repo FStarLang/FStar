@@ -146,13 +146,15 @@ let msubcomp (a:Type)
   ([@@@ an_attr] bb:squash phi)  (f:mrepr a)
   : mrepr a = f
 
-[@@ resolve_implicits; an_attr]
+let an_attr1 = ()
+
+[@@ resolve_implicits; an_attr1]
 let mtac1 () : Tac unit =
   smt ();
   smt ();
   exact (`True)  //just solve the unconstrained phi with True
 
-[@@ ite_soundness_by an_attr]
+[@@ ite_soundness_by an_attr1]
 effect {
   M (a:Type)
   with {repr=mrepr; return=mreturn; bind=mbind; if_then_else=mif_then_else; subcomp=msubcomp}
@@ -185,7 +187,9 @@ effect {
   with { repr = mmrepr; return = mmreturn; bind = mmbind; subcomp = mmsubcomp }
 }
 
-[@@ resolve_implicits; an_attr]
+irreducible let an_attr2 : unit = ()
+
+[@@ resolve_implicits; an_attr2]
 let mtac2 () : Tac unit =
   tadmit ()
 
@@ -193,7 +197,7 @@ let mtac2 () : Tac unit =
  * If-then-else proof is dispatched to mtac1 that admits it
  *)
 
-[@@ ite_soundness_by an_attr]
+[@@ ite_soundness_by an_attr2]
 effect {
   N (a:Type)
   with { repr = mmrepr; return = mmreturn; bind = mmbind; subcomp = mmsubcomp }

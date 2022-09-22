@@ -83,13 +83,10 @@ val tracepoint_with_psc : Cfg.psc -> proofstate -> bool
 val tracepoint : proofstate -> bool
 val set_proofstate_range : proofstate -> Range.range -> proofstate
 
-val subst_proof_state: subst_t -> proofstate -> proofstate
-
 val set_ps_psc : Cfg.psc -> proofstate -> proofstate
 val goal_env: goal -> env
 val goal_witness: goal -> term
 val goal_type: goal -> term
-val goal_with_type: goal -> term -> goal
 val goal_with_env: goal -> env -> goal
 val is_guard : goal -> bool
 

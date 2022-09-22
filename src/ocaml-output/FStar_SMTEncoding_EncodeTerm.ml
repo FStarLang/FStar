@@ -1248,8 +1248,8 @@ and (encode_term :
                let uu___3 =
                  let uu___4 = FStar_Syntax_Syntax.as_arg tv in [uu___4] in
                FStar_Syntax_Util.mk_app
-                 (FStar_Reflection_Data.refl_constant_term
-                    FStar_Reflection_Data.fstar_refl_pack_ln) uu___3 in
+                 (FStar_Reflection_Constants.refl_constant_term
+                    FStar_Reflection_Constants.fstar_refl_pack_ln) uu___3 in
              encode_term t2 env))
        | FStar_Syntax_Syntax.Tm_meta
            (t2, FStar_Syntax_Syntax.Meta_pattern uu___1) ->
@@ -1435,6 +1435,10 @@ and (encode_term :
                               FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term
                                 =
                                 (uu___6.FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term);
+                              FStar_TypeChecker_Env.teq_nosmt_force =
+                                (uu___6.FStar_TypeChecker_Env.teq_nosmt_force);
+                              FStar_TypeChecker_Env.subtype_nosmt_force =
+                                (uu___6.FStar_TypeChecker_Env.subtype_nosmt_force);
                               FStar_TypeChecker_Env.use_bv_sorts =
                                 (uu___6.FStar_TypeChecker_Env.use_bv_sorts);
                               FStar_TypeChecker_Env.qtbl_name_and_index =
@@ -1473,7 +1477,10 @@ and (encode_term :
                               FStar_TypeChecker_Env.unif_allow_ref_guards =
                                 (uu___6.FStar_TypeChecker_Env.unif_allow_ref_guards);
                               FStar_TypeChecker_Env.erase_erasable_args =
-                                (uu___6.FStar_TypeChecker_Env.erase_erasable_args)
+                                (uu___6.FStar_TypeChecker_Env.erase_erasable_args);
+                              FStar_TypeChecker_Env.rel_query_for_apply_tac_uvar
+                                =
+                                (uu___6.FStar_TypeChecker_Env.rel_query_for_apply_tac_uvar)
                             }) res in
                        (match uu___5 with
                         | (pre_opt, res_t) ->
@@ -2004,8 +2011,8 @@ and (encode_term :
                  uv.FStar_Syntax_Syntax.ctx_uvar_head in
              FStar_SMTEncoding_Util.mk_Term_uvar uu___2 in
            let uu___2 =
-             encode_term_pred FStar_Pervasives_Native.None
-               uv.FStar_Syntax_Syntax.ctx_uvar_typ env ttm in
+             let uu___3 = FStar_Syntax_Util.ctx_uvar_typ uv in
+             encode_term_pred FStar_Pervasives_Native.None uu___3 env ttm in
            (match uu___2 with
             | (t_has_k, decls) ->
                 let d =
@@ -3253,49 +3260,23 @@ and (encode_pat :
                                    "Unexpected encoding of constant pattern"
                              | uu___5 -> ());
                             FStar_SMTEncoding_Util.mkEq (scrutinee, tm)))
-                  | FStar_Syntax_Syntax.Pat_cons (f, args) ->
+                  | FStar_Syntax_Syntax.Pat_cons (f, uu___3, args) ->
                       let is_f =
                         let tc_name =
                           FStar_TypeChecker_Env.typ_of_datacon
                             env1.FStar_SMTEncoding_Env.tcenv
                             (f.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v in
-                        let uu___3 =
+                        let uu___4 =
                           FStar_TypeChecker_Env.datacons_of_typ
                             env1.FStar_SMTEncoding_Env.tcenv tc_name in
-                        match uu___3 with
-                        | (uu___4, uu___5::[]) ->
+                        match uu___4 with
+                        | (uu___5, uu___6::[]) ->
                             FStar_SMTEncoding_Util.mkTrue
-                        | uu___4 ->
+                        | uu___5 ->
                             FStar_SMTEncoding_Env.mk_data_tester env1
                               (f.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v
                               scrutinee in
                       let sub_term_guards =
-                        FStar_Compiler_Effect.op_Bar_Greater args
-                          (FStar_Compiler_List.mapi
-                             (fun i ->
-                                fun uu___3 ->
-                                  match uu___3 with
-                                  | (arg, uu___4) ->
-                                      let proj =
-                                        FStar_SMTEncoding_Env.primitive_projector_by_pos
-                                          env1.FStar_SMTEncoding_Env.tcenv
-                                          (f.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v
-                                          i in
-                                      let uu___5 =
-                                        FStar_SMTEncoding_Util.mkApp
-                                          (proj, [scrutinee]) in
-                                      mk_guard arg uu___5)) in
-                      FStar_SMTEncoding_Util.mk_and_l (is_f ::
-                        sub_term_guards) in
-                let rec mk_projections pat1 scrutinee =
-                  match pat1.FStar_Syntax_Syntax.v with
-                  | FStar_Syntax_Syntax.Pat_dot_term (x, uu___3) ->
-                      [(x, scrutinee)]
-                  | FStar_Syntax_Syntax.Pat_var x -> [(x, scrutinee)]
-                  | FStar_Syntax_Syntax.Pat_wild x -> [(x, scrutinee)]
-                  | FStar_Syntax_Syntax.Pat_constant uu___3 -> []
-                  | FStar_Syntax_Syntax.Pat_cons (f, args) ->
-                      let uu___3 =
                         FStar_Compiler_Effect.op_Bar_Greater args
                           (FStar_Compiler_List.mapi
                              (fun i ->
@@ -3310,8 +3291,34 @@ and (encode_pat :
                                       let uu___6 =
                                         FStar_SMTEncoding_Util.mkApp
                                           (proj, [scrutinee]) in
-                                      mk_projections arg uu___6)) in
-                      FStar_Compiler_Effect.op_Bar_Greater uu___3
+                                      mk_guard arg uu___6)) in
+                      FStar_SMTEncoding_Util.mk_and_l (is_f ::
+                        sub_term_guards) in
+                let rec mk_projections pat1 scrutinee =
+                  match pat1.FStar_Syntax_Syntax.v with
+                  | FStar_Syntax_Syntax.Pat_dot_term (x, uu___3) ->
+                      [(x, scrutinee)]
+                  | FStar_Syntax_Syntax.Pat_var x -> [(x, scrutinee)]
+                  | FStar_Syntax_Syntax.Pat_wild x -> [(x, scrutinee)]
+                  | FStar_Syntax_Syntax.Pat_constant uu___3 -> []
+                  | FStar_Syntax_Syntax.Pat_cons (f, uu___3, args) ->
+                      let uu___4 =
+                        FStar_Compiler_Effect.op_Bar_Greater args
+                          (FStar_Compiler_List.mapi
+                             (fun i ->
+                                fun uu___5 ->
+                                  match uu___5 with
+                                  | (arg, uu___6) ->
+                                      let proj =
+                                        FStar_SMTEncoding_Env.primitive_projector_by_pos
+                                          env1.FStar_SMTEncoding_Env.tcenv
+                                          (f.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v
+                                          i in
+                                      let uu___7 =
+                                        FStar_SMTEncoding_Util.mkApp
+                                          (proj, [scrutinee]) in
+                                      mk_projections arg uu___7)) in
+                      FStar_Compiler_Effect.op_Bar_Greater uu___4
                         FStar_Compiler_List.flatten in
                 let pat_term1 uu___3 = encode_term pat_term env1 in
                 let pattern1 =
@@ -3616,7 +3623,7 @@ and (encode_formula :
             encode_formula uu___1 env
         | FStar_Syntax_Syntax.Tm_match (e, uu___, pats, uu___1) ->
             let uu___2 =
-              encode_match e pats FStar_SMTEncoding_Util.mkFalse env
+              encode_match e pats FStar_SMTEncoding_Term.mkUnreachable env
                 encode_formula in
             (match uu___2 with | (t, decls) -> (t, decls))
         | FStar_Syntax_Syntax.Tm_let

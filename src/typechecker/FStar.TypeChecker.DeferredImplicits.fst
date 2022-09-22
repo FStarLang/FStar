@@ -79,13 +79,128 @@ let print_goal_dep gd =
      |> String.concat "; ")
     (Print.ctx_uvar_to_string gd.goal_imp.imp_uvar)
 
+(*
+  If [u] is tagged with attribute [a]
+
+  We look in the context for definitions tagged with [@@resolve_implicits; a]
+  These are the initial [candidates]
+  
+  We filter the [candidates] to find a unique candidate [c], such that
+  [c] is not overridden and it overrides all other all other
+  [candidates]. 
+
+  A candidate [c] overriders [c'] if [c] contains the attribute
+
+   override_resolve_implicits_handler a [l]
+
+  and [l] contains the name of [c]
+
+  If no candidates are found we return None
+  If no unique [c] exists we warn and return None
+*)
 let find_user_tac_for_uvar env (u:ctx_uvar) : option sigelt =
+    (* This tries to unembed a Cons (Tm_constant (Const_string s1))
+                               ...
+                               Cons (Tm_constant (Const_string sn))
+                               Nil
+       to [s1;..;sn]                               
+       
+       It's a bit ugly because the term it is applied to [e]
+       is just an attribute, and so it is not actually a type-correct term.
+       
+       So, the type arguments of the Cons may be missing *)
+    let rec attr_list_elements (e:term) : option (list string) =
+      let head, args = U.head_and_args (U.unmeta e) in
+      match (U.un_uinst head).n, args with
+      | Tm_fvar fv, _ when fv_eq_lid fv FStar.Parser.Const.nil_lid ->
+        Some []
+      | Tm_fvar fv, [_; (hd, _); (tl, _)] 
+      | Tm_fvar fv, [(hd, _); (tl, _)]     
+        when fv_eq_lid fv FStar.Parser.Const.cons_lid ->
+        (match hd.n with
+         | Tm_constant (FStar.Const.Const_string (s, _)) -> 
+           (match attr_list_elements tl with
+            | None -> None
+            | Some tl -> Some (s::tl))
+         | _ -> None)
+      | _ ->
+        None
+    in
+    let candidate_names candidates = 
+          List.collect U.lids_of_sigelt candidates
+          |> List.map string_of_lid
+          |> String.concat ", "
+    in
     match u.ctx_uvar_meta with
     | Some (Ctx_uvar_meta_attr a) ->
+      (* hooks: all definitions with the resolve_implicits attr *)
       let hooks = Env.lookup_attr env FStar.Parser.Const.resolve_implicits_attr_string in
-      hooks |> BU.try_find
-                  (fun hook ->
-                    hook.sigattrs |> BU.for_some (U.attr_eq a))
+      (* candidates: hooks that also have the attribute [a] *)
+      let candidates = 
+        hooks |> List.filter
+                  (fun hook -> hook.sigattrs |> BU.for_some (U.attr_eq a))
+      in
+      (* The environment sometimes returns duplicates in the candidate list; filter out dups *)
+      let candidates =
+        BU.remove_dups
+          (fun s0 s1 -> 
+            let l0 = U.lids_of_sigelt s0 in
+            let l1 = U.lids_of_sigelt s1 in
+            if List.length l0 = List.length l1
+            then List.forall2 (fun l0 l1 -> Ident.lid_equals l0 l1) l0 l1
+            else false)
+          candidates
+      in
+      (* Checking if a candidate is overridden, by scanning the list of all 
+         candidates and seeing if any of them override it *)
+      let is_overridden (candidate:sigelt)
+        : bool
+        = (* A candidate may have more than one lid, in case it is a let rec
+             It is overridden if any of its names are overridden *)
+          let candidate_lids = U.lids_of_sigelt candidate in
+          candidates |>
+          BU.for_some 
+            (fun (other:sigelt) ->
+               other.sigattrs |>
+               BU.for_some 
+               (fun attr -> 
+                 let head, args = U.head_and_args attr in
+                 match (U.un_uinst head).n, args with
+                 | Tm_fvar fv, [_; (a', _); (overrides, _)] //type argument may be missing, since it is just an attr
+                 | Tm_fvar fv, [(a', _); (overrides, _)]                 
+                   when fv_eq_lid fv FStar.Parser.Const.override_resolve_implicits_handler_lid
+                     && U.attr_eq a a' ->
+                   //other has an attribute [@@override_resolve_implicits_handler a overrides]
+                   begin
+                   match attr_list_elements overrides with
+                   | None -> false
+                   | Some names ->
+                     //if the overrides mention one of the candidate's names
+                     //the candidate is overriden
+                     names |>
+                     BU.for_some (fun n -> 
+                       candidate_lids |> BU.for_some (fun l -> string_of_lid l = n))
+                   end
+                 | _ -> false))
+      in
+      let candidates = candidates |> List.filter (fun c -> not (is_overridden c)) in
+      begin
+      match candidates with
+      | [] -> None //no candidates
+      | [ c ] -> Some c //if there is a unique candidate return it
+      | _ -> //it is ambiguous; complain
+        let candidates = candidate_names candidates in
+        let attr = Print.term_to_string a in
+        FStar.Errors.log_issue u.ctx_uvar_range
+                               (FStar.Errors.Warning_AmbiguousResolveImplicitsHook,
+                                BU.format2
+                                  "Multiple resolve_implicits hooks are eligible for attribute %s; \n\
+                                   please resolve the ambiguity by using the `override_resolve_implicits_handler` attribute \
+                                   to choose among these candidates {%s}"
+                                   attr candidates);
+        None
+      end
+      
     | _ -> None
 
 let should_defer_uvar_to_user_tac env (u:ctx_uvar) =
@@ -136,7 +251,7 @@ let solve_deferred_to_tactic_goals env g =
         in
         let goal_ty = U.mk_eq2 (env.universe_of env_lax t_eq) t_eq tp.lhs tp.rhs in
         let goal, ctx_uvar, _ =
-            Env.new_implicit_var_aux reason tp.lhs.pos env goal_ty Allow_untyped None
+            Env.new_implicit_var_aux reason tp.lhs.pos env goal_ty Strict None
         in
         let imp =
             { imp_reason = "";
