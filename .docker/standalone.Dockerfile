@@ -5,6 +5,7 @@ FROM ubuntu:22.04
 # Base dependencies: opam
 # CI dependencies: jq (to identify F* branch)
 # python3 (for interactive tests)
+# libicu (for .NET, cf. https://aka.ms/dotnet-missing-libicu )
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
       jq \
@@ -16,19 +17,8 @@ RUN apt-get update && \
       sudo \
       python3 \
       python-is-python3 \
+      libicu70 \
       opam
-
-# CI dependencies: .NET Core
-# Dotnet feed should be kept in sync with Ubuntu version
-# see https://docs.microsoft.com/en-us/dotnet/core/install/linux-ubuntu
-RUN apt install -y gnupg ca-certificates wget && \
-    wget https://packages.microsoft.com/config/ubuntu/22.04/packages-microsoft-prod.deb -O packages-microsoft-prod.deb && \
-    dpkg -i packages-microsoft-prod.deb && \
-    rm packages-microsoft-prod.deb && \
-    apt-get update && \
-    apt-get --yes install --no-install-recommends \
-    apt-transport-https \
-    dotnet-sdk-6.0
 
 # Create a new user and give them sudo rights
 # NOTE: we give them the name "opam" to keep compatibility with
@@ -41,6 +31,15 @@ USER opam
 ENV HOME /home/opam
 WORKDIR $HOME
 SHELL ["/bin/bash", "--login", "-c"]
+
+# CI dependencies: .NET Core
+# Repository install may incur some (transient?) failures (see for instance https://github.com/dotnet/sdk/issues/27082 )
+# So, we use manual install instead, from https://docs.microsoft.com/en-us/dotnet/core/install/linux-scripted-manual#manual-install
+ENV DOTNET_ROOT /home/opam/dotnet
+RUN wget https://download.visualstudio.microsoft.com/download/pr/cd0d0a4d-2a6a-4d0d-b42e-dfd3b880e222/008a93f83aba6d1acf75ded3d2cfba24/dotnet-sdk-6.0.400-linux-x64.tar.gz && \
+    mkdir -p $DOTNET_ROOT && \
+    tar xf dotnet-sdk-6.0.400-linux-x64.tar.gz -C $DOTNET_ROOT && \
+    echo 'export PATH=$PATH:$DOTNET_ROOT:$DOTNET_ROOT/tools' | tee --append $HOME/.profile $HOME/.bashrc $HOME/.bash_profile
 
 # Install OCaml
 ARG OCAML_VERSION=4.12.0
