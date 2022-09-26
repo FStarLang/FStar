@@ -561,12 +561,9 @@ and deep_apply_subst_in_pattern e pat subst =
                       ((pat, b) :: pats, subst)) patterns ([], subst)
     in
     Pat_Cons fv us patterns, subst
-  | Pat_Var bv ->
+  | Pat_Var is_wild bv ->
     let bv, subst = deep_apply_subst_in_bv e bv subst in
-    Pat_Var bv, subst
-  | Pat_Wild bv ->
-    let bv, subst = deep_apply_subst_in_bv e bv subst in
-    Pat_Wild bv, subst
+    Pat_Var is_wild bv, subst
   | Pat_Dot_Term bv t ->
     let bv, subst = deep_apply_subst_in_bv e bv subst in
     let t = deep_apply_subst e t subst in

@@ -905,12 +905,9 @@ and visit_pat (ff : term -> Tac term) (p:pattern) : Tac pattern =
   | Pat_Cons fv us l ->
       let l = (map (fun(p,b) -> (visit_pat ff p, b)) l) in
       Pat_Cons fv us l
-  | Pat_Var bv ->
+  | Pat_Var is_wild bv ->
       let bv = on_sort_bv (visit_tm ff) bv in
-      Pat_Var bv
-  | Pat_Wild bv ->
-      let bv = on_sort_bv (visit_tm ff) bv in
-      Pat_Wild bv
+      Pat_Var is_wild bv
   | Pat_Dot_Term bv term ->
       let bv = on_sort_bv (visit_tm ff) bv in
       let term = visit_tm ff term in
