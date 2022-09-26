@@ -88,6 +88,10 @@ let range b = (b.start_p, b.cur_p)
 let ulexeme lexbuf =
   Array.sub lexbuf.buf lexbuf.start (lexbuf.cur - lexbuf.start)
 
+let rollback b =
+  b.cur <- b.start;
+  b.cur_p <- b.start_p
+
 let lexeme lexbuf =
   FStar_Parser_Utf8.from_int_array lexbuf.buf lexbuf.start (lexbuf.cur - lexbuf.start)
 
