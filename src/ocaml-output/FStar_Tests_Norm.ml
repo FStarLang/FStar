@@ -140,7 +140,8 @@ let (pred_nat :
             let uu___3 =
               let uu___4 =
                 let uu___5 =
-                  pat (FStar_Syntax_Syntax.Pat_var FStar_Tests_Util.x) in
+                  pat
+                    (FStar_Syntax_Syntax.Pat_var (false, FStar_Tests_Util.x)) in
                 (uu___5, false) in
               [uu___4] in
             (snat_l, FStar_Pervasives_Native.None, uu___3) in
@@ -196,7 +197,9 @@ let (minus_nat :
               let uu___3 =
                 let uu___4 =
                   let uu___5 =
-                    pat (FStar_Syntax_Syntax.Pat_var FStar_Tests_Util.n) in
+                    pat
+                      (FStar_Syntax_Syntax.Pat_var
+                         (false, FStar_Tests_Util.n)) in
                   (uu___5, false) in
                 [uu___4] in
               (snat_l, FStar_Pervasives_Native.None, uu___3) in

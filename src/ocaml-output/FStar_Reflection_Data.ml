@@ -43,8 +43,7 @@ type pattern =
   | Pat_Cons of (FStar_Syntax_Syntax.fv * FStar_Syntax_Syntax.universe
   Prims.list FStar_Pervasives_Native.option * (pattern * Prims.bool)
   Prims.list) 
-  | Pat_Var of FStar_Syntax_Syntax.bv 
-  | Pat_Wild of FStar_Syntax_Syntax.bv 
+  | Pat_Var of (Prims.bool * FStar_Syntax_Syntax.bv) 
   | Pat_Dot_Term of (FStar_Syntax_Syntax.bv * FStar_Syntax_Syntax.term) 
 let (uu___is_Pat_Constant : pattern -> Prims.bool) =
   fun projectee ->
@@ -61,13 +60,9 @@ let (__proj__Pat_Cons__item___0 :
   = fun projectee -> match projectee with | Pat_Cons _0 -> _0
 let (uu___is_Pat_Var : pattern -> Prims.bool) =
   fun projectee -> match projectee with | Pat_Var _0 -> true | uu___ -> false
-let (__proj__Pat_Var__item___0 : pattern -> FStar_Syntax_Syntax.bv) =
+let (__proj__Pat_Var__item___0 :
+  pattern -> (Prims.bool * FStar_Syntax_Syntax.bv)) =
   fun projectee -> match projectee with | Pat_Var _0 -> _0
-let (uu___is_Pat_Wild : pattern -> Prims.bool) =
-  fun projectee ->
-    match projectee with | Pat_Wild _0 -> true | uu___ -> false
-let (__proj__Pat_Wild__item___0 : pattern -> FStar_Syntax_Syntax.bv) =
-  fun projectee -> match projectee with | Pat_Wild _0 -> _0
 let (uu___is_Pat_Dot_Term : pattern -> Prims.bool) =
   fun projectee ->
     match projectee with | Pat_Dot_Term _0 -> true | uu___ -> false

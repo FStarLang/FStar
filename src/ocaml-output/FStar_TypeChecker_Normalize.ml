@@ -895,7 +895,7 @@ and (rebuild_closure :
                                    FStar_Syntax_Syntax.p =
                                      (p.FStar_Syntax_Syntax.p)
                                  }, env5))
-                       | FStar_Syntax_Syntax.Pat_var x ->
+                       | FStar_Syntax_Syntax.Pat_var (is_wild, x) ->
                            let x1 =
                              let uu___2 =
                                non_tail_inline_closure_env cfg1 env4
@@ -909,25 +909,7 @@ and (rebuild_closure :
                              } in
                            ({
                               FStar_Syntax_Syntax.v =
-                                (FStar_Syntax_Syntax.Pat_var x1);
-                              FStar_Syntax_Syntax.p =
-                                (p.FStar_Syntax_Syntax.p)
-                            }, (dummy :: env4))
-                       | FStar_Syntax_Syntax.Pat_wild x ->
-                           let x1 =
-                             let uu___2 =
-                               non_tail_inline_closure_env cfg1 env4
-                                 x.FStar_Syntax_Syntax.sort in
-                             {
-                               FStar_Syntax_Syntax.ppname =
-                                 (x.FStar_Syntax_Syntax.ppname);
-                               FStar_Syntax_Syntax.index =
-                                 (x.FStar_Syntax_Syntax.index);
-                               FStar_Syntax_Syntax.sort = uu___2
-                             } in
-                           ({
-                              FStar_Syntax_Syntax.v =
-                                (FStar_Syntax_Syntax.Pat_wild x1);
+                                (FStar_Syntax_Syntax.Pat_var (is_wild, x1));
                               FStar_Syntax_Syntax.p =
                                 (p.FStar_Syntax_Syntax.p)
                             }, (dummy :: env4))
@@ -7103,7 +7085,7 @@ and (rebuild :
                                      FStar_Syntax_Syntax.p =
                                        (p.FStar_Syntax_Syntax.p)
                                    }, env4))
-                         | FStar_Syntax_Syntax.Pat_var x ->
+                         | FStar_Syntax_Syntax.Pat_var (is_wild, x) ->
                              let x1 =
                                let uu___6 =
                                  norm_or_whnf env3 x.FStar_Syntax_Syntax.sort in
@@ -7116,24 +7098,7 @@ and (rebuild :
                                } in
                              ({
                                 FStar_Syntax_Syntax.v =
-                                  (FStar_Syntax_Syntax.Pat_var x1);
-                                FStar_Syntax_Syntax.p =
-                                  (p.FStar_Syntax_Syntax.p)
-                              }, (dummy :: env3))
-                         | FStar_Syntax_Syntax.Pat_wild x ->
-                             let x1 =
-                               let uu___6 =
-                                 norm_or_whnf env3 x.FStar_Syntax_Syntax.sort in
-                               {
-                                 FStar_Syntax_Syntax.ppname =
-                                   (x.FStar_Syntax_Syntax.ppname);
-                                 FStar_Syntax_Syntax.index =
-                                   (x.FStar_Syntax_Syntax.index);
-                                 FStar_Syntax_Syntax.sort = uu___6
-                               } in
-                             ({
-                                FStar_Syntax_Syntax.v =
-                                  (FStar_Syntax_Syntax.Pat_wild x1);
+                                  (FStar_Syntax_Syntax.Pat_var (is_wild, x1));
                                 FStar_Syntax_Syntax.p =
                                   (p.FStar_Syntax_Syntax.p)
                               }, (dummy :: env3))
@@ -7396,9 +7361,7 @@ and (rebuild :
                       match uu___4 with
                       | (head, args) ->
                           (match p.FStar_Syntax_Syntax.v with
-                           | FStar_Syntax_Syntax.Pat_var bv ->
-                               FStar_Pervasives.Inl [(bv, scrutinee_orig)]
-                           | FStar_Syntax_Syntax.Pat_wild bv ->
+                           | FStar_Syntax_Syntax.Pat_var (uu___5, bv) ->
                                FStar_Pervasives.Inl [(bv, scrutinee_orig)]
                            | FStar_Syntax_Syntax.Pat_dot_term uu___5 ->
                                FStar_Pervasives.Inl []

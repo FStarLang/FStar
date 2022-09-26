@@ -8183,7 +8183,7 @@ and (tc_pat :
                    "Impossible: Expected an undecorated pattern, got %s"
                    uu___3 in
                failwith uu___2
-           | FStar_Syntax_Syntax.Pat_wild x ->
+           | FStar_Syntax_Syntax.Pat_var (is_wild, x) ->
                let x1 =
                  {
                    FStar_Syntax_Syntax.ppname =
@@ -8195,22 +8195,8 @@ and (tc_pat :
                let uu___2 = FStar_Syntax_Syntax.bv_to_name x1 in
                ([x1], uu___1, uu___2,
                  {
-                   FStar_Syntax_Syntax.v = (FStar_Syntax_Syntax.Pat_wild x1);
-                   FStar_Syntax_Syntax.p = (p.FStar_Syntax_Syntax.p)
-                 }, FStar_TypeChecker_Env.trivial_guard, false)
-           | FStar_Syntax_Syntax.Pat_var x ->
-               let x1 =
-                 {
-                   FStar_Syntax_Syntax.ppname =
-                     (x.FStar_Syntax_Syntax.ppname);
-                   FStar_Syntax_Syntax.index = (x.FStar_Syntax_Syntax.index);
-                   FStar_Syntax_Syntax.sort = t
-                 } in
-               let uu___1 = let uu___2 = id t in [uu___2] in
-               let uu___2 = FStar_Syntax_Syntax.bv_to_name x1 in
-               ([x1], uu___1, uu___2,
-                 {
-                   FStar_Syntax_Syntax.v = (FStar_Syntax_Syntax.Pat_var x1);
+                   FStar_Syntax_Syntax.v =
+                     (FStar_Syntax_Syntax.Pat_var (is_wild, x1));
                    FStar_Syntax_Syntax.p = (p.FStar_Syntax_Syntax.p)
                  }, FStar_TypeChecker_Env.trivial_guard, false)
            | FStar_Syntax_Syntax.Pat_constant c ->
@@ -8291,7 +8277,7 @@ and (tc_pat :
                            let uu___6 =
                              let uu___7 =
                                FStar_Syntax_Syntax.withinfo
-                                 (FStar_Syntax_Syntax.Pat_wild x)
+                                 (FStar_Syntax_Syntax.Pat_var (true, x))
                                  p.FStar_Syntax_Syntax.p in
                              (uu___7, false) in
                            FStar_Pervasives_Native.Some uu___6)
@@ -8320,10 +8306,12 @@ and (tc_pat :
                                  let uu___3 =
                                    let uu___4 =
                                      let uu___5 =
-                                       FStar_Syntax_Syntax.new_bv
-                                         (FStar_Pervasives_Native.Some
-                                            (p1.FStar_Syntax_Syntax.p))
-                                         FStar_Syntax_Syntax.tun in
+                                       let uu___6 =
+                                         FStar_Syntax_Syntax.new_bv
+                                           (FStar_Pervasives_Native.Some
+                                              (p1.FStar_Syntax_Syntax.p))
+                                           FStar_Syntax_Syntax.tun in
+                                       (false, uu___6) in
                                      FStar_Syntax_Syntax.Pat_var uu___5 in
                                    FStar_Syntax_Syntax.withinfo uu___4
                                      p1.FStar_Syntax_Syntax.p in
@@ -8513,7 +8501,8 @@ and (tc_pat :
                                             let uu___6 =
                                               aux simple_pats1 bvs1 sub_pats2 in
                                             (hd1, b) :: uu___6
-                                        | FStar_Syntax_Syntax.Pat_var x ->
+                                        | FStar_Syntax_Syntax.Pat_var
+                                            (false, x) ->
                                             (match (bvs1, sub_pats2) with
                                              | (x'::bvs2,
                                                 (hd1, uu___6)::sub_pats3)

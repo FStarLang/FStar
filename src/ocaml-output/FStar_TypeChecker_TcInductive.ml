@@ -2248,13 +2248,17 @@ let (mk_discriminator_and_indexed_projectors :
                                                             let uu___8 =
                                                               let uu___9 =
                                                                 let uu___10 =
-                                                                  FStar_Ident.string_of_id
+                                                                  let uu___11
+                                                                    =
+                                                                    FStar_Ident.string_of_id
                                                                     x.FStar_Syntax_Syntax.ppname in
-                                                                FStar_Syntax_Syntax.gen_bv
-                                                                  uu___10
-                                                                  FStar_Pervasives_Native.None
-                                                                  FStar_Syntax_Syntax.tun in
-                                                              FStar_Syntax_Syntax.Pat_wild
+                                                                  FStar_Syntax_Syntax.gen_bv
+                                                                    uu___11
+                                                                    FStar_Pervasives_Native.None
+                                                                    FStar_Syntax_Syntax.tun in
+                                                                (true,
+                                                                  uu___10) in
+                                                              FStar_Syntax_Syntax.Pat_var
                                                                 uu___9 in
                                                             pos uu___8 in
                                                           (uu___7, b)))) in
@@ -2281,10 +2285,12 @@ let (mk_discriminator_and_indexed_projectors :
                                          let uu___4 =
                                            let uu___5 =
                                              let uu___6 =
-                                               FStar_Syntax_Syntax.new_bv
-                                                 FStar_Pervasives_Native.None
-                                                 FStar_Syntax_Syntax.tun in
-                                             FStar_Syntax_Syntax.Pat_wild
+                                               let uu___7 =
+                                                 FStar_Syntax_Syntax.new_bv
+                                                   FStar_Pervasives_Native.None
+                                                   FStar_Syntax_Syntax.tun in
+                                               (true, uu___7) in
+                                             FStar_Syntax_Syntax.Pat_var
                                                uu___6 in
                                            pos uu___5 in
                                          (uu___4,
@@ -2562,7 +2568,8 @@ let (mk_discriminator_and_indexed_projectors :
                                                                     =
                                                                     pos
                                                                     (FStar_Syntax_Syntax.Pat_var
-                                                                    projection) in
+                                                                    (false,
+                                                                    projection)) in
                                                                   (uu___8, b)
                                                                 else
                                                                   if
@@ -2604,13 +2611,17 @@ let (mk_discriminator_and_indexed_projectors :
                                                                     =
                                                                     let uu___13
                                                                     =
+                                                                    let uu___14
+                                                                    =
                                                                     FStar_Ident.string_of_id
                                                                     x1.FStar_Syntax_Syntax.ppname in
                                                                     FStar_Syntax_Syntax.gen_bv
-                                                                    uu___13
+                                                                    uu___14
                                                                     FStar_Pervasives_Native.None
                                                                     FStar_Syntax_Syntax.tun in
-                                                                    FStar_Syntax_Syntax.Pat_wild
+                                                                    (true,
+                                                                    uu___13) in
+                                                                    FStar_Syntax_Syntax.Pat_var
                                                                     uu___12 in
                                                                     pos
                                                                     uu___11 in

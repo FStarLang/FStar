@@ -2770,11 +2770,11 @@ let (close_exists_no_univs :
              if uu___
              then f1
              else mk_exists_no_univ b.FStar_Syntax_Syntax.binder_bv f1) bs f
-let (is_wild_pat :
+let (is_pat_wild :
   FStar_Syntax_Syntax.pat' FStar_Syntax_Syntax.withinfo_t -> Prims.bool) =
   fun p ->
     match p.FStar_Syntax_Syntax.v with
-    | FStar_Syntax_Syntax.Pat_wild uu___ -> true
+    | FStar_Syntax_Syntax.Pat_var (b, uu___) -> b
     | uu___ -> false
 let (if_then_else :
   FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->

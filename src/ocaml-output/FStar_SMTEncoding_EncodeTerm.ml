@@ -3246,8 +3246,6 @@ and (encode_pat :
                   match pat1.FStar_Syntax_Syntax.v with
                   | FStar_Syntax_Syntax.Pat_var uu___3 ->
                       FStar_SMTEncoding_Util.mkTrue
-                  | FStar_Syntax_Syntax.Pat_wild uu___3 ->
-                      FStar_SMTEncoding_Util.mkTrue
                   | FStar_Syntax_Syntax.Pat_dot_term uu___3 ->
                       FStar_SMTEncoding_Util.mkTrue
                   | FStar_Syntax_Syntax.Pat_constant c ->
@@ -3298,8 +3296,8 @@ and (encode_pat :
                   match pat1.FStar_Syntax_Syntax.v with
                   | FStar_Syntax_Syntax.Pat_dot_term (x, uu___3) ->
                       [(x, scrutinee)]
-                  | FStar_Syntax_Syntax.Pat_var x -> [(x, scrutinee)]
-                  | FStar_Syntax_Syntax.Pat_wild x -> [(x, scrutinee)]
+                  | FStar_Syntax_Syntax.Pat_var (uu___3, x) ->
+                      [(x, scrutinee)]
                   | FStar_Syntax_Syntax.Pat_constant uu___3 -> []
                   | FStar_Syntax_Syntax.Pat_cons (f, uu___3, args) ->
                       let uu___4 =

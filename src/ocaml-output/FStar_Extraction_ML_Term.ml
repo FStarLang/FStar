@@ -1384,25 +1384,12 @@ let rec (extract_one_pat :
                     (uu___2, []) in
                   FStar_Pervasives_Native.Some uu___1 in
                 let uu___1 = ok mlty in (g, uu___, uu___1)
-            | FStar_Syntax_Syntax.Pat_var x ->
-                let uu___ =
+            | FStar_Syntax_Syntax.Pat_var (uu___, x) ->
+                let uu___1 =
                   FStar_Extraction_ML_UEnv.extend_bv g x ([], expected_ty)
                     false imp in
-                (match uu___ with
-                 | (g1, x1, uu___1) ->
-                     (g1,
-                       (if imp
-                        then FStar_Pervasives_Native.None
-                        else
-                          FStar_Pervasives_Native.Some
-                            ((FStar_Extraction_ML_Syntax.MLP_Var x1), [])),
-                       true))
-            | FStar_Syntax_Syntax.Pat_wild x ->
-                let uu___ =
-                  FStar_Extraction_ML_UEnv.extend_bv g x ([], expected_ty)
-                    false imp in
-                (match uu___ with
-                 | (g1, x1, uu___1) ->
+                (match uu___1 with
+                 | (g1, x1, uu___2) ->
                      (g1,
                        (if imp
                         then FStar_Pervasives_Native.None

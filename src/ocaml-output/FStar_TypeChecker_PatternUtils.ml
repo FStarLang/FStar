@@ -13,7 +13,9 @@ let rec (elaborate_pat :
         then
           FStar_Syntax_Syntax.withinfo
             (FStar_Syntax_Syntax.Pat_dot_term (a, FStar_Syntax_Syntax.tun)) r
-        else FStar_Syntax_Syntax.withinfo (FStar_Syntax_Syntax.Pat_var a) r in
+        else
+          FStar_Syntax_Syntax.withinfo
+            (FStar_Syntax_Syntax.Pat_var (false, a)) r in
       match p.FStar_Syntax_Syntax.v with
       | FStar_Syntax_Syntax.Pat_cons
           ({ FStar_Syntax_Syntax.fv_name = uu___;
@@ -102,7 +104,8 @@ let rec (elaborate_pat :
                                 | FStar_Syntax_Syntax.Pat_dot_term uu___5 ->
                                     let uu___6 = aux formals' pats' in
                                     (p1, true) :: uu___6
-                                | FStar_Syntax_Syntax.Pat_wild uu___5 ->
+                                | FStar_Syntax_Syntax.Pat_var (true, uu___5)
+                                    ->
                                     let a =
                                       FStar_Syntax_Syntax.new_bv
                                         (FStar_Pervasives_Native.Some
@@ -196,16 +199,11 @@ let (raw_pat_as_exp :
              | FStar_Syntax_Syntax.Tm_unknown ->
                  FStar_Compiler_Effect.raise Raw_pat_cannot_be_translated
              | uu___1 -> (t1, bs))
-        | FStar_Syntax_Syntax.Pat_wild x ->
-            let uu___ =
+        | FStar_Syntax_Syntax.Pat_var (uu___, x) ->
+            let uu___1 =
               FStar_Syntax_Syntax.mk (FStar_Syntax_Syntax.Tm_name x)
                 p1.FStar_Syntax_Syntax.p in
-            (uu___, (x :: bs))
-        | FStar_Syntax_Syntax.Pat_var x ->
-            let uu___ =
-              FStar_Syntax_Syntax.mk (FStar_Syntax_Syntax.Tm_name x)
-                p1.FStar_Syntax_Syntax.p in
-            (uu___, (x :: bs))
+            (uu___1, (x :: bs))
         | FStar_Syntax_Syntax.Pat_cons (fv, us_opt, pats) ->
             let uu___ =
               FStar_Compiler_List.fold_right
@@ -339,7 +337,7 @@ let (pat_as_exp :
                                let uu___7 =
                                  FStar_TypeChecker_Common.conj_guard g g' in
                                ([], [], [], env1, e, uu___7, p2))))
-            | FStar_Syntax_Syntax.Pat_wild x ->
+            | FStar_Syntax_Syntax.Pat_var (true, x) ->
                 let uu___ = intro_bv env1 x in
                 (match uu___ with
                  | (x1, g, env2) ->
@@ -348,7 +346,7 @@ let (pat_as_exp :
                          (FStar_Syntax_Syntax.Tm_name x1)
                          p1.FStar_Syntax_Syntax.p in
                      ([x1], [], [x1], env2, e, g, p1))
-            | FStar_Syntax_Syntax.Pat_var x ->
+            | FStar_Syntax_Syntax.Pat_var (false, x) ->
                 let uu___ = intro_bv env1 x in
                 (match uu___ with
                  | (x1, g, env2) ->

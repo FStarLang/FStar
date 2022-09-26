@@ -826,23 +826,16 @@ and (pat_to_string : FStar_Syntax_Syntax.pat -> Prims.string) =
            else
              (let uu___5 = bv_to_string x1 in
               FStar_Compiler_Util.format1 ".%s" uu___5)
-       | FStar_Syntax_Syntax.Pat_var x1 ->
+       | FStar_Syntax_Syntax.Pat_var (is_wild, x1) ->
            let uu___2 = FStar_Options.print_bound_var_types () in
            if uu___2
            then
              let uu___3 = bv_to_string x1 in
              let uu___4 = term_to_string x1.FStar_Syntax_Syntax.sort in
-             FStar_Compiler_Util.format2 "%s:%s" uu___3 uu___4
+             FStar_Compiler_Util.format3 "%s%s:%s"
+               (if is_wild then "_wild_" else "") uu___3 uu___4
            else bv_to_string x1
-       | FStar_Syntax_Syntax.Pat_constant c -> const_to_string c
-       | FStar_Syntax_Syntax.Pat_wild x1 ->
-           let uu___2 = FStar_Options.print_bound_var_types () in
-           if uu___2
-           then
-             let uu___3 = bv_to_string x1 in
-             let uu___4 = term_to_string x1.FStar_Syntax_Syntax.sort in
-             FStar_Compiler_Util.format2 "_wild_%s:%s" uu___3 uu___4
-           else bv_to_string x1)
+       | FStar_Syntax_Syntax.Pat_constant c -> const_to_string c)
 and (lbs_to_string :
   FStar_Syntax_Syntax.qualifier Prims.list ->
     FStar_Syntax_Syntax.letbindings -> Prims.string)

@@ -5398,7 +5398,8 @@ let (t_destruct :
                                                                     ->
                                                                     ((mk_pat
                                                                     (FStar_Syntax_Syntax.Pat_var
-                                                                    bv)),
+                                                                    (false,
+                                                                    bv))),
                                                                     (is_imp
                                                                     bq))) bs3 in
                                                                     let subpats
@@ -5998,10 +5999,8 @@ let rec (inspect :
                            ps in
                        (fv, us_opt, uu___4) in
                      FStar_Reflection_Data.Pat_Cons uu___3
-                 | FStar_Syntax_Syntax.Pat_var bv ->
-                     FStar_Reflection_Data.Pat_Var bv
-                 | FStar_Syntax_Syntax.Pat_wild bv ->
-                     FStar_Reflection_Data.Pat_Wild bv
+                 | FStar_Syntax_Syntax.Pat_var (is_wild, bv) ->
+                     FStar_Reflection_Data.Pat_Var (is_wild, bv)
                  | FStar_Syntax_Syntax.Pat_dot_term (bv, t4) ->
                      FStar_Reflection_Data.Pat_Dot_Term (bv, t4) in
                let brs1 =
@@ -6142,12 +6141,9 @@ let (pack' :
                     (fv, us_opt, uu___2) in
                   FStar_Syntax_Syntax.Pat_cons uu___1 in
                 FStar_Compiler_Effect.op_Less_Bar wrap uu___
-            | FStar_Reflection_Data.Pat_Var bv ->
+            | FStar_Reflection_Data.Pat_Var (is_wild, bv) ->
                 FStar_Compiler_Effect.op_Less_Bar wrap
-                  (FStar_Syntax_Syntax.Pat_var bv)
-            | FStar_Reflection_Data.Pat_Wild bv ->
-                FStar_Compiler_Effect.op_Less_Bar wrap
-                  (FStar_Syntax_Syntax.Pat_wild bv)
+                  (FStar_Syntax_Syntax.Pat_var (is_wild, bv))
             | FStar_Reflection_Data.Pat_Dot_Term (bv, t1) ->
                 FStar_Compiler_Effect.op_Less_Bar wrap
                   (FStar_Syntax_Syntax.Pat_dot_term (bv, t1)) in

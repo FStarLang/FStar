@@ -1668,15 +1668,11 @@ let (collect_one :
            and collect_pattern p = collect_pattern' p.FStar_Parser_AST.pat
            and collect_pattern' uu___2 =
              match uu___2 with
-             | FStar_Parser_AST.PatVar (uu___3, aqual, attrs) ->
+             | FStar_Parser_AST.PatVar (uu___3, uu___4, aqual, attrs) ->
                  (collect_aqual aqual;
                   FStar_Compiler_Effect.op_Bar_Greater attrs
                     (FStar_Compiler_List.iter collect_term))
              | FStar_Parser_AST.PatTvar (uu___3, aqual, attrs) ->
-                 (collect_aqual aqual;
-                  FStar_Compiler_Effect.op_Bar_Greater attrs
-                    (FStar_Compiler_List.iter collect_term))
-             | FStar_Parser_AST.PatWild (aqual, attrs) ->
                  (collect_aqual aqual;
                   FStar_Compiler_Effect.op_Bar_Greater attrs
                     (FStar_Compiler_List.iter collect_term))

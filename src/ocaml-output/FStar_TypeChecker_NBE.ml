@@ -289,9 +289,7 @@ let (pickBranch :
             (let scrutinee = unlazy_unmeta scrutinee0 in
              let r =
                match p.FStar_Syntax_Syntax.v with
-               | FStar_Syntax_Syntax.Pat_var bv ->
-                   FStar_Pervasives.Inl [scrutinee0]
-               | FStar_Syntax_Syntax.Pat_wild bv ->
+               | FStar_Syntax_Syntax.Pat_var uu___1 ->
                    FStar_Pervasives.Inl [scrutinee0]
                | FStar_Syntax_Syntax.Pat_dot_term uu___1 ->
                    FStar_Pervasives.Inl []
@@ -985,7 +983,7 @@ let rec (translate :
                               (FStar_Syntax_Syntax.Pat_cons
                                  (fvar, us_opt1,
                                    (FStar_Compiler_List.rev args')))))
-                   | FStar_Syntax_Syntax.Pat_var bvar ->
+                   | FStar_Syntax_Syntax.Pat_var (is_wild, bvar) ->
                        let x =
                          let uu___4 =
                            let uu___5 =
@@ -996,19 +994,7 @@ let rec (translate :
                        let uu___4 =
                          let uu___5 = FStar_TypeChecker_NBETerm.mkAccuVar x in
                          uu___5 :: bs1 in
-                       (uu___4, (FStar_Syntax_Syntax.Pat_var x))
-                   | FStar_Syntax_Syntax.Pat_wild bvar ->
-                       let x =
-                         let uu___4 =
-                           let uu___5 =
-                             translate cfg1 bs1 bvar.FStar_Syntax_Syntax.sort in
-                           readback cfg1 uu___5 in
-                         FStar_Syntax_Syntax.new_bv
-                           FStar_Pervasives_Native.None uu___4 in
-                       let uu___4 =
-                         let uu___5 = FStar_TypeChecker_NBETerm.mkAccuVar x in
-                         uu___5 :: bs1 in
-                       (uu___4, (FStar_Syntax_Syntax.Pat_wild x))
+                       (uu___4, (FStar_Syntax_Syntax.Pat_var (is_wild, x)))
                    | FStar_Syntax_Syntax.Pat_dot_term (bvar, tm) ->
                        let x =
                          let uu___4 =
