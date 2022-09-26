@@ -321,15 +321,10 @@ let subst_pat' s p : (pat * int) =
             ((p,imp)::pats, m)) ([], n) in
         {p with v=Pat_cons(fv, us_opt, List.rev pats)}, n
 
-      | Pat_var x ->
+      | Pat_var (is_wild, x) ->
         let s = shift_subst' n s in
         let x = {x with sort=subst' s x.sort} in
-        {p with v=Pat_var x}, n + 1
-
-      | Pat_wild x ->
-        let s = shift_subst' n s in
-        let x = {x with sort=subst' s x.sort} in
-        {p with v=Pat_wild x}, n + 1 //these may be in scope in the inferred types of other terms, so shift the index
+        {p with v=Pat_var (is_wild, x)}, n + 1
 
       | Pat_dot_term(x, t0) ->
         let s = shift_subst' n s in
@@ -582,15 +577,10 @@ let open_pat (p:pat) : pat * subst_t =
                 ((p,imp)::pats, sub)) ([], sub) in
             {p with v=Pat_cons(fv, us_opt, List.rev pats)}, sub
 
-        | Pat_var x ->
+        | Pat_var (is_wild, x) ->
             let x' = {freshen_bv x with sort=subst sub x.sort} in
             let sub = DB(0, x')::shift_subst 1 sub in
-            {p with v=Pat_var x'}, sub
-
-        | Pat_wild x ->
-            let x' = {freshen_bv x with sort=subst sub x.sort} in
-            let sub = DB(0, x')::shift_subst 1 sub in
-            {p with v=Pat_wild x'}, sub
+            {p with v=Pat_var (is_wild, x')}, sub
 
         | Pat_dot_term(x, t0) ->
             let x = {x with sort=subst sub x.sort} in
@@ -637,15 +627,10 @@ let close_pat p =
              ((p,imp)::pats, sub)) ([], sub) in
          {p with v=Pat_cons(fv, us_opt, List.rev pats)}, sub
 
-       | Pat_var x ->
+       | Pat_var (is_wild, x) ->
          let x = {x with sort=subst sub x.sort} in
          let sub = NM(x, 0)::shift_subst 1 sub in
-         {p with v=Pat_var x}, sub
-
-       | Pat_wild x ->
-         let x = {x with sort=subst sub x.sort} in
-         let sub = NM(x, 0)::shift_subst 1 sub in
-         {p with v=Pat_wild x}, sub
+         {p with v=Pat_var (is_wild, x)}, sub
 
        | Pat_dot_term(x, t0) ->
          let x = {x with sort=subst sub x.sort} in
@@ -868,10 +853,8 @@ let rec deep_compress (t:term) : term =
     | Tm_match(t, asc_opt, branches, rc_opt) ->
       let rec elim_pat (p:pat) =
         match p.v with
-        | Pat_var x ->
-          {p with v=Pat_var (elim_bv x)}
-        | Pat_wild x ->
-          {p with v=Pat_wild (elim_bv x)}
+        | Pat_var (is_wild, x) ->
+          {p with v=Pat_var (is_wild, elim_bv x)}
         | Pat_dot_term(x, t0) ->
           {p with v=Pat_dot_term(elim_bv x, deep_compress t0)}
         | Pat_cons (fv, us_opt, pats) ->

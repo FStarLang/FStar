@@ -427,16 +427,14 @@ and pat_to_string x =
       if Options.print_bound_var_types()
       then U.format2 ".%s:%s" (bv_to_string x) (term_to_string x.sort)
       else U.format1 ".%s" (bv_to_string x)
-    | Pat_var x ->
+    | Pat_var (is_wild, x) ->
       if Options.print_bound_var_types()
-      then U.format2 "%s:%s" (bv_to_string x) (term_to_string x.sort)
+      then U.format3 "%s%s:%s"
+             (if is_wild then "_wild_" else "")
+             (bv_to_string x)
+             (term_to_string x.sort)
       else bv_to_string x
     | Pat_constant c -> const_to_string c
-    | Pat_wild x ->
-      if Options.print_bound_var_types()
-      then U.format2 "_wild_%s:%s" (bv_to_string x) (term_to_string x.sort)
-      else bv_to_string x
-
 
 and lbs_to_string quals lbs =
 //    let lbs =

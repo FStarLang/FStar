@@ -47,8 +47,7 @@ type universes = list universe
 type pattern =
     | Pat_Constant of vconst
     | Pat_Cons     of fv * option (list universe) * list (pattern * bool)
-    | Pat_Var      of bv
-    | Pat_Wild     of bv
+    | Pat_Var      of bool * bv  // bool true indicates a wild pattern (_)
     | Pat_Dot_Term of bv * term
 
 type branch = pattern * term

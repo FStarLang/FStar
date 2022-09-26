@@ -208,7 +208,7 @@ let is_true_pat (p:S.pat) : bool = match p.v with
     | _ -> false
 
 let is_wild_pat (p:S.pat) : bool = match p.v with
-    | Pat_wild _ -> true
+    | Pat_var(b, _) -> b
     | _ -> false
 
 let is_tuple_constructor_lid lid =
@@ -698,7 +698,7 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
         let pat, term = match bnd.lbname with
           | Inr fv -> mk_pat (A.PatName fv.fv_name.v), term
           | Inl bv ->
-            mk_pat (A.PatVar (bv_as_unique_ident bv, None, [])), term
+            mk_pat (A.PatVar (false, bv_as_unique_ident bv, None, [])), term
         in
         attrs_opt,
         (if is_pat_app then
@@ -706,7 +706,8 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
             BU.map_opt
               (resugar_bqual env b.binder_qual)
               (fun q ->
-               mk_pat(A.PatVar (bv_as_unique_ident b.binder_bv,
+               mk_pat(A.PatVar (false,
+                                bv_as_unique_ident b.binder_bv,
                                 q,
                                 b.binder_attrs |> List.map (resugar_term' env))))) in
           (mk_pat (A.PatApp (pat, args)), resugar_term' env term), (universe_to_string univs)
@@ -1060,8 +1061,8 @@ and resugar_bv_as_pat' env (v: S.bv) aqual (body_bv: BU.set bv) typ_opt =
   let used = BU.set_mem v body_bv in
   let pat =
     mk (if used
-        then A.PatVar (bv_as_unique_ident v, aqual, [])
-        else A.PatWild (aqual, [])) in
+        then A.PatVar (false, bv_as_unique_ident v, aqual, [])
+        else A.mk_pat_wild aqual []) in
   match typ_opt with
   | None | Some { n = Tm_unknown } -> pat
   | Some typ -> if Options.print_bound_var_types ()
@@ -1083,9 +1084,9 @@ and resugar_pat' env (p:S.pat) (branch_bv: set bv) : A.pattern =
     not (List.existsML (fun (pattern, is_implicit) ->
              let might_be_used =
                match pattern.v with
-               | Pat_var bv
+               | Pat_var (false, bv)
                | Pat_dot_term (bv, _) -> Util.set_mem bv branch_bv
-               | Pat_wild _ -> false
+               | Pat_var (true, _) -> false
                | _ -> true in
              is_implicit && might_be_used) args) in
   let resugar_plain_pat_cons' fv args =
@@ -1142,7 +1143,7 @@ and resugar_pat' env (p:S.pat) (branch_bv: set bv) : A.pattern =
       let rec map2 l1 l2  = match (l1, l2) with
         | ([], []) -> []
         | ([], hd::tl) -> [] (* new args could be added by the type checker *)
-        | (hd::tl, []) -> (hd, mk (A.PatWild (None, []))) :: map2 tl [] (* no new fields should be added*)
+        | (hd::tl, []) -> (hd, mk (A.mk_pat_wild None [])) :: map2 tl [] (* no new fields should be added*)
         | (hd1::tl1, hd2::tl2) -> (hd1, hd2) :: map2 tl1 tl2
       in
       // reverse back the args list
@@ -1152,7 +1153,7 @@ and resugar_pat' env (p:S.pat) (branch_bv: set bv) : A.pattern =
     | Pat_cons (fv, _, args) ->
       resugar_plain_pat_cons fv args
 
-    | Pat_var v ->
+    | Pat_var (false, v) ->
       // both A.PatTvar and A.PatVar are desugared to S.Pat_var. A PatTvar in the original file coresponds
       // to some type variable which is implicitly bound to the enclosing toplevel declaration.
       // When resugaring it will be just a normal (explicitly bound) variable.
@@ -1161,7 +1162,7 @@ and resugar_pat' env (p:S.pat) (branch_bv: set bv) : A.pattern =
        | None -> resugar_bv_as_pat' env v (to_arg_qual imp_opt) branch_bv None
       end
 
-    | Pat_wild _ -> mk (A.PatWild (to_arg_qual imp_opt, []))
+    | Pat_var (true, _) -> mk (A.mk_pat_wild (to_arg_qual imp_opt) [])
 
     | Pat_dot_term (bv, term) ->
       (* TODO : this should never be resugared unless in a comment *)

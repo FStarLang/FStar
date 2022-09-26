@@ -119,10 +119,9 @@ and binder' =
 and binder = {b:binder'; brange:range; blevel:level; aqual:aqual; battributes:attributes_}
 
 and pattern' =
-  | PatWild     of aqual * attributes_
   | PatConst    of sconst
   | PatApp      of pattern * list pattern
-  | PatVar      of ident * aqual * attributes_
+  | PatVar      of bool * ident * aqual * attributes_  // bool true for wild patterns (_)
   | PatName     of lid
   | PatTvar     of ident * aqual * attributes_
   | PatList     of list pattern
@@ -245,6 +244,14 @@ type inputFragment = either file (list decl)
 let decl_drange decl = decl.drange
 
 (********************************************************************************)
+
+let mk_pat_wild aq attrs =
+  PatVar (true, Ident.reserved_prefix |> Ident.id_of_text, aq, attrs)
+let is_pat_wild p =
+  match p with
+  | PatVar (b, _, _, _) -> b
+  | _ -> false
+
 let check_id id =
     let first_char = String.substring (string_of_id id) 0 1 in
     if String.lowercase first_char = first_char
@@ -283,7 +290,7 @@ let un_curry_abs ps body = match body.tm with
     | _ -> Abs(ps, body)
 let mk_function branches r1 r2 =
   let x = Ident.gen r1 in
-  mk_term (Abs([mk_pattern (PatVar(x,None,[])) r1],
+  mk_term (Abs([mk_pattern (PatVar(false, x, None,[])) r1],
                mk_term (Match(mk_term (Var(lid_of_ids [x])) r1 Expr, None, None, branches)) r2 Expr))
     r2 Expr
 let un_function p tm = match p.pat, tm.tm with
@@ -346,7 +353,7 @@ let mkAdmitMagic r =
     let admit_magic = mk_term(Seq(admit, magic)) r Expr in
     admit_magic
 
-let mkWildAdmitMagic r = (mk_pattern (PatWild (None, [])) r, None, mkAdmitMagic r)
+let mkWildAdmitMagic r = (mk_pattern (mk_pat_wild None []) r, None, mkAdmitMagic r)
 
 let focusBranches branches r =
     let should_filter = Util.for_some fst branches in
@@ -405,7 +412,7 @@ let mkRefinedPattern pat t should_bind_pat phi_opt t_range range =
             if should_bind_pat
             then
                 begin match pat.pat with
-                | PatVar (x,_,attrs) ->
+                | PatVar (false, x,_,attrs) ->
                     mk_term (Refine(mk_binder_with_attrs (Annotated(x, t)) t_range Type_level None attrs, phi)) range Type_level
                 | _ ->
                     let x = gen t_range in
@@ -414,7 +421,7 @@ let mkRefinedPattern pat t should_bind_pat phi_opt t_range range =
                         let x_var = mk_term (Var (lid_of_ids [x])) phi.range Formula in
                         let pat_branch = (pat, None, phi)in
                         let otherwise_branch =
-                            (mk_pattern (PatWild (None, [])) phi.range, None,
+                            (mk_pattern (mk_pat_wild None []) phi.range, None,
                              mk_term (Name (lid_of_path ["False"] phi.range)) phi.range Formula)
                         in
                         mk_term (Match (x_var, None, None, [pat_branch ; otherwise_branch])) phi.range Formula
@@ -857,15 +864,16 @@ and attr_list_to_string = function
   | l -> attrs_opt_to_string (Some l)
 
 and pat_to_string x = match x.pat with
-  | PatWild (None, attrs) -> attr_list_to_string attrs ^ "_"
-  | PatWild (_, attrs) -> "#" ^ (attr_list_to_string attrs) ^ "_" 
   | PatConst c -> C.const_to_string c
   | PatApp(p, ps) -> Util.format2 "(%s %s)" (p |> pat_to_string) (to_string_l " " pat_to_string ps)
-  | PatTvar (i, aq, attrs)
-  | PatVar (i,  aq, attrs) -> Util.format3 "%s%s%s"
+  | PatTvar (i, aq, attrs) -> Util.format3 "%s%s%s"
     (aqual_to_string aq)
     (attr_list_to_string attrs)
     (string_of_id i)
+  | PatVar (is_wild, i,  aq, attrs) -> Util.format3 "%s%s%s"
+    (aqual_to_string aq)
+    (attr_list_to_string attrs)
+    (if is_wild then "_" else string_of_id i)
   | PatName l -> (string_of_lid l)
   | PatList l -> Util.format1 "[%s]" (to_string_l "; " pat_to_string l)
   | PatTuple (l, false) -> Util.format1 "(%s)" (to_string_l ", " pat_to_string l)
@@ -882,7 +890,7 @@ and attrs_opt_to_string = function
 
 let rec head_id_of_pat p = match p.pat with
   | PatName l -> [l]
-  | PatVar (i, _, _) -> [FStar.Ident.lid_of_ids [i]]
+  | PatVar (false, i, _, _) -> [FStar.Ident.lid_of_ids [i]]
   | PatApp(p, _) -> head_id_of_pat p
   | PatAscribed(p, _) -> head_id_of_pat p
   | _ -> []
@@ -932,7 +940,7 @@ let decl_is_val id decl =
     | _ -> false
 
 let thunk (ens : term) : term =
-    let wildpat = mk_pattern (PatWild (None, [])) ens.range in
+    let wildpat = mk_pattern (mk_pat_wild None []) ens.range in
     mk_term (Abs ([wildpat], ens)) ens.range Expr
 
 let ident_of_binder r b =

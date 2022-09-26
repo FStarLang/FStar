@@ -1290,7 +1290,6 @@ and encode_pat (env:env_t) (pat:S.pat) : (env_t * pattern) =
     let rec mk_guard pat (scrutinee:term) : term =
         match pat.v with
         | Pat_var _
-        | Pat_wild _
         | Pat_dot_term _ -> mkTrue
         | Pat_constant c ->
             let tm, decls = encode_const c env in
@@ -1312,8 +1311,7 @@ and encode_pat (env:env_t) (pat:S.pat) : (env_t * pattern) =
     let rec mk_projections pat (scrutinee:term) =
         match pat.v with
         | Pat_dot_term (x, _)
-        | Pat_var x
-        | Pat_wild x -> [x, scrutinee]
+        | Pat_var (_, x) -> [x, scrutinee]
 
         | Pat_constant _ -> []
 

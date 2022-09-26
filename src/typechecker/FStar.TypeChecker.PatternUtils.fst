@@ -45,7 +45,7 @@ let rec elaborate_pat env p = //Adds missing implicit patterns to constructor pa
     let maybe_dot inaccessible a r =
         if inaccessible
         then withinfo (Pat_dot_term(a, tun)) r
-        else withinfo (Pat_var a) r
+        else withinfo (Pat_var (false, a)) r
     in
     match p.v with
     | Pat_cons({fv_qual=Some (Unresolved_constructor _)}, _, _) ->
@@ -91,7 +91,7 @@ let rec elaborate_pat env p = //Adds missing implicit patterns to constructor pa
               | Pat_dot_term _ ->
                 (p, true)::aux formals' pats'
 
-              | Pat_wild _ -> //it's ok; it's not going to be bound anyway
+              | Pat_var (true, _) -> //it's ok; it's not going to be bound anyway
                 let a = Syntax.new_bv (Some p.p) tun in
                 let p = maybe_dot inaccessible a (range_of_lid fv.fv_name.v) in
                 (p, true)::aux formals' pats'
@@ -141,8 +141,7 @@ let raw_pat_as_exp (env:Env.env) (p:pat)
           | _ -> t, bs
           end
 
-        | Pat_wild x
-        | Pat_var x ->
+        | Pat_var (_, x) ->
           mk (Tm_name x) p.p, x::bs
 
         | Pat_cons(fv, us_opt, pats) ->
@@ -213,12 +212,12 @@ let pat_as_exp (introduce_bv_uvars:bool)
              let p = {p with v=Pat_dot_term(x, e)} in
              ([], [], [], env, e, conj_guard g g', p)
 
-           | Pat_wild x ->
+           | Pat_var (true, x) ->
              let x, g, env = intro_bv env x in
              let e = mk (Tm_name x) p.p in
              ([x], [], [x], env, e, g, p)
 
-           | Pat_var x ->
+           | Pat_var (false, x) ->
              let x, g, env = intro_bv env x in
              let e = mk (Tm_name x) p.p in
              ([x], [x], [], env, e, g, p)

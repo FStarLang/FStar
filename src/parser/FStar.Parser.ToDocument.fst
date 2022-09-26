@@ -836,7 +836,7 @@ and p_letlhs kw (pat, _) inner_let =
     | _ -> pat, None
   in
   match pat.pat with
-  | PatApp ({pat=PatVar (lid, _, _)}, pats) ->
+  | PatApp ({pat=PatVar (false, lid, _, _)}, pats) ->
       (* has binders *)
       let ascr_doc =
         (match ascr with
@@ -999,7 +999,7 @@ and p_atomicPattern p = match p.pat with
     (* This inverts the first rule of atomicPattern (LPAREN tuplePattern COLON
      * simpleArrow RPAREN). *)
     begin match pat.pat, t.tm with
-    | PatVar (lid, aqual, attrs), Refine({b = Annotated(lid', t)}, phi)
+    | PatVar (false, lid, aqual, attrs), Refine({b = Annotated(lid', t)}, phi)
       when (string_of_id lid) = (string_of_id lid') ->
       (* p_refinement jumps into p_appTerm for the annotated type; this is
        * tighter than simpleArrow (which is what the parser uses), meaning that
@@ -1007,7 +1007,7 @@ and p_atomicPattern p = match p.pat with
        * aware that there are multiple callers to p_refinement and that
        * p_appTerm is probably the lower bound of all expected levels. *)
       soft_parens_with_nesting (p_refinement aqual attrs (p_ident lid) t phi)
-    | PatWild (aqual, attrs), Refine({b = NoName t}, phi) ->
+    | PatVar (true, _, aqual, attrs), Refine({b = NoName t}, phi) ->
       soft_parens_with_nesting (p_refinement aqual attrs underscore t phi)
     | _ ->
         (* TODO implement p_simpleArrow *)
@@ -1026,12 +1026,11 @@ and p_atomicPattern p = match p.pat with
     p_tvar tv
   | PatOp op ->
     lparen ^^ space ^^ str (Ident.string_of_id op) ^^ space ^^ rparen
-  | PatWild (aqual, attrs) ->
-    optional p_aqual aqual ^^ p_attributes attrs ^^ underscore
   | PatConst c ->
     p_constant c
-  | PatVar (lid, aqual, attrs) ->
-    optional p_aqual aqual ^^ p_attributes attrs ^^ p_lident lid
+  | PatVar (is_wild, lid, aqual, attrs) ->
+    optional p_aqual aqual ^^ p_attributes attrs ^^
+    (if is_wild then underscore else p_lident lid)
   | PatName uid ->
       p_quident uid
   | PatOr _ -> failwith "Inner or pattern !"
@@ -1382,7 +1381,7 @@ and p_noSeqTerm' ps pb e = match e.tm with
     let lbs_doc = group (separate break1 lbs_docs) in
     paren_if ps (group (lbs_doc ^^ hardline ^^ p_term false pb e))
 
-  | Abs([{pat=PatVar(x, typ_opt, _)}], {tm=Match(maybe_x, None, None, branches)}) when matches_var maybe_x x ->
+  | Abs([{pat=PatVar(false, x, typ_opt, _)}], {tm=Match(maybe_x, None, None, branches)}) when matches_var maybe_x x ->
     paren_if (ps || pb) (
       group (str "function" ^/^ separate_map_last hardline p_patternBranch branches))
   | Quote (e, Dynamic) ->
@@ -1569,10 +1568,10 @@ and pats_as_binders_if_possible pats =
   let all_binders p = match p.pat with
   | PatAscribed(pat, (t, None)) ->
     (match pat.pat, t.tm  with
-     | PatVar (lid, aqual, attrs), Refine({b = Annotated(lid', t)}, phi)
+     | PatVar (false, lid, aqual, attrs), Refine({b = Annotated(lid', t)}, phi)
        when (string_of_id lid) = (string_of_id lid') ->
          Some (p_refinement' aqual attrs (p_ident lid) t phi)
-     | PatVar (lid, aqual, attrs), _ ->
+     | PatVar (false, lid, aqual, attrs), _ ->
        Some (optional p_aqual aqual ^^ p_attributes attrs ^^  p_ident lid, p_tmEqNoRefinement t)
      | _ -> None)
   | _ -> None

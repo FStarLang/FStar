@@ -1085,9 +1085,8 @@ let collect_one
         collect_pattern' p.pat
 
       and collect_pattern' = function
-        | PatVar (_, aqual, attrs)
-        | PatTvar (_, aqual, attrs)
-        | PatWild (aqual, attrs) ->
+        | PatVar (_, _, aqual, attrs)
+        | PatTvar (_, aqual, attrs) ->
             collect_aqual aqual;
             attrs |> List.iter collect_term
 

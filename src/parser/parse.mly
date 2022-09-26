@@ -314,7 +314,7 @@ letoperatorbinding:
         let h tm = (pat, tm) in
 	match pat.pat, tm with
         | _               , Some tm -> h tm
-        | PatVar (v, _, _), None    ->
+        | PatVar (false, v, _, _), None    ->
           let v = lid_of_ns_and_id [] v in
           h (mk_term (Var v) (rhs parseState 1) Expr)
         | _ -> raise_error (Fatal_SyntaxError, "Syntax error: let-punning expects a name, not a pattern") (rhs parseState 2)
@@ -323,7 +323,7 @@ letoperatorbinding:
 letbinding:
   | focus_opt=maybeFocus lid=lidentOrOperator lbp=nonempty_list(patternOrMultibinder) ascr_opt=ascribeTyp? EQUALS tm=term
       {
-        let pat = mk_pattern (PatVar(lid, None, [])) (rhs parseState 2) in
+        let pat = mk_pattern (PatVar(false, lid, None, [])) (rhs parseState 2) in
         let pat = mk_pattern (PatApp (pat, flatten lbp)) (rhs2 parseState 1 3) in
         let pos = rhs2 parseState 1 6 in
         match ascr_opt with
@@ -520,19 +520,19 @@ atomicPattern:
   | LPAREN op=operator RPAREN
       { mk_pattern (PatOp op) (rhs2 parseState 1 3) }
   | LPAREN op=let_op RPAREN
-      { mk_pattern (PatVar (op, None, [])) (rhs2 parseState 1 3) }
+      { mk_pattern (PatVar (false, op, None, [])) (rhs2 parseState 1 3) }
   | LPAREN op=and_op RPAREN
-      { mk_pattern (PatVar (op, None, [])) (rhs2 parseState 1 3) }
+      { mk_pattern (PatVar (false, op, None, [])) (rhs2 parseState 1 3) }
   | UNDERSCORE
-      { mk_pattern (PatWild (None, [])) (rhs parseState 1) }
+      { mk_pattern (mk_pat_wild None []) (rhs parseState 1) }
   | HASH UNDERSCORE
-      { mk_pattern (PatWild (Some Implicit, [])) (rhs parseState 1) }
+      { mk_pattern (mk_pat_wild (Some Implicit) []) (rhs parseState 1) }
   | c=constant
       { mk_pattern (PatConst c) (rhs parseState 1) }
   | qual_id=aqualifiedWithAttrs(lident)
     {
       let (aqual, attrs), lid = qual_id in
-      mk_pattern (PatVar (lid, aqual, attrs)) (rhs parseState 1) }
+      mk_pattern (PatVar (false, lid, aqual, attrs)) (rhs parseState 1) }
   | uid=quident
       { mk_pattern (PatName uid) (rhs parseState 1) }
 
@@ -540,7 +540,7 @@ fieldPattern:
   | p = separated_pair(qlident, EQUALS, tuplePattern)
       { p }
   | lid=qlident
-      { lid, mk_pattern (PatVar (ident_of_lid lid, None, [])) (rhs parseState 1) }
+      { lid, mk_pattern (PatVar (false, ident_of_lid lid, None, [])) (rhs parseState 1) }
 
   (* (x : t) is already covered by atomicPattern *)
   (* we do *NOT* allow _ in multibinder () since it creates reduce/reduce conflicts when*)
@@ -548,18 +548,16 @@ fieldPattern:
 patternOrMultibinder:
   | LBRACE_BAR UNDERSCORE COLON t=simpleArrow BAR_RBRACE
       { let mt = mk_term (Var tcresolve_lid) (rhs parseState 4) Type_level in
-        let w = mk_pattern (PatWild (Some (mk_meta_tac mt), []))
+        let w = mk_pattern (mk_pat_wild (Some (mk_meta_tac mt)) [])
                                  (rhs2 parseState 1 5) in
         let asc = (t, None) in
         [mk_pattern (PatAscribed(w, asc)) (rhs2 parseState 1 5)]
       }
 
-  (* GM: I would rather use lidentOrUnderscore and delete the rule above,
-   * but I need to produce a PatWild above, and a PatVar here. However
-   * why does PatWild even exist..? *)
+  (* GM: I would rather use lidentOrUnderscore and delete the rule above *)
   | LBRACE_BAR i=lident COLON t=simpleArrow BAR_RBRACE
       { let mt = mk_term (Var tcresolve_lid) (rhs parseState 4) Type_level in
-        let w = mk_pattern (PatVar (i, Some (mk_meta_tac mt), []))
+        let w = mk_pattern (PatVar (false, i, Some (mk_meta_tac mt), []))
                                  (rhs2 parseState 1 5) in
         let asc = (t, None) in
         [mk_pattern (PatAscribed(w, asc)) (rhs2 parseState 1 5)]
@@ -567,7 +565,7 @@ patternOrMultibinder:
 
   | LBRACE_BAR t=simpleArrow BAR_RBRACE
       { let mt = mk_term (Var tcresolve_lid) (rhs parseState 2) Type_level in
-        let w = mk_pattern (PatVar (gen (rhs2 parseState 1 3), Some (mk_meta_tac mt), []))
+        let w = mk_pattern (PatVar (false, gen (rhs2 parseState 1 3), Some (mk_meta_tac mt), []))
                                  (rhs2 parseState 1 3) in
         let asc = (t, None) in
         [mk_pattern (PatAscribed(w, asc)) (rhs2 parseState 1 3)]
@@ -578,7 +576,7 @@ patternOrMultibinder:
         let pos = rhs2 parseState 1 7 in
         let t_pos = rhs parseState 5 in
         let qual_ids = qual_id0 :: qual_ids in
-        List.map (fun ((aq, attrs), x) -> mkRefinedPattern (mk_pattern (PatVar (x, aq, attrs)) pos) t false r t_pos pos) qual_ids
+        List.map (fun ((aq, attrs), x) -> mkRefinedPattern (mk_pattern (PatVar (false, x, aq, attrs)) pos) t false r t_pos pos) qual_ids
       }
 
 binder:
@@ -679,13 +677,13 @@ tvar:
 /*                            Types and terms                                 */
 /******************************************************************************/
 
-thunk(X): | t=X { mk_term (Abs ([mk_pattern (PatWild (None, [])) (rhs parseState 3)], t)) (rhs parseState 3) Expr }
+thunk(X): | t=X { mk_term (Abs ([mk_pattern (mk_pat_wild None []) (rhs parseState 3)], t)) (rhs parseState 3) Expr }
 
 thunk2(X):
   | t=X
      { let u = mk_term (Const Const_unit) (rhs parseState 3) Expr in
        let t = mk_term (Seq (u, t)) (rhs parseState 3) Expr in
-       mk_term (Abs ([mk_pattern (PatWild (None, [])) (rhs parseState 3)], t)) (rhs parseState 3) Expr }
+       mk_term (Abs ([mk_pattern (mk_pat_wild None []) (rhs parseState 3)], t)) (rhs parseState 3) Expr }
 
 ascribeTyp:
   | COLON t=tmArrow(tmNoEq) tacopt=option(BY tactic=thunk(atomicTerm) {tactic}) { t, tacopt }

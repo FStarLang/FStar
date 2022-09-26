@@ -202,8 +202,7 @@ let pat_bvs (p:pat) : list bv =
     let rec aux b p = match p.v with
         | Pat_dot_term _
         | Pat_constant _ -> b
-        | Pat_wild x
-        | Pat_var x -> x::b
+        | Pat_var (_, x) -> x::b
         | Pat_cons(_, _, pats) -> List.fold_left (fun b (p, _) -> aux b p) b pats
     in
   List.rev <| aux [] p
@@ -270,7 +269,6 @@ let rec eq_pat (p1 : pat) (p2 : pat) : bool =
               | _ -> false)
         else false
     | Pat_var _, Pat_var _ -> true
-    | Pat_wild _, Pat_wild _ -> true
     | Pat_dot_term (bv1, t1), Pat_dot_term (bv2, t2) -> true //&& term_eq t1 t2
     | _, _ -> false
 

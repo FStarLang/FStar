@@ -77,7 +77,7 @@ let pred_nat s  =
     let zbranch = pat (Pat_cons(znat_l, None, [])),
                   None,
                   znat in
-    let sbranch = pat (Pat_cons(snat_l, None, [pat (Pat_var x), false])),
+    let sbranch = pat (Pat_cons(snat_l, None, [pat (Pat_var (false, x)), false])),
                   None,
                   mk (Tm_bvar({x with index=0})) dummyRange in
     mk_match s [zbranch;sbranch]
@@ -88,7 +88,7 @@ let minus_nat t1 t2 =
     let zbranch = pat (Pat_cons(znat_l, None, [])),
                   None,
                   nm x in
-    let sbranch = pat (Pat_cons(snat_l, None, [pat (Pat_var n), false])),
+    let sbranch = pat (Pat_cons(snat_l, None, [pat (Pat_var (false, n)), false])),
                   None,
                   app (nm minus) [pred_nat (nm x); nm n] in
     let lb = {lbname=Inl minus; lbeff=lid_of_path ["Pure"] dummyRange; lbunivs=[]; lbtyp=tun;

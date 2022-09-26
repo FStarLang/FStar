@@ -353,10 +353,10 @@ let rec e_pattern' () =
               [S.as_arg (embed e_fv rng fv);
                S.as_arg (embed (e_option (e_list e_universe)) rng us_opt);
                S.as_arg (embed (e_list (e_tuple2 (e_pattern' ()) e_bool)) rng ps)] rng
-        | Pat_Var bv ->
-            S.mk_Tm_app ref_Pat_Var.t [S.as_arg (embed e_bv rng bv)] rng
-        | Pat_Wild bv ->
-            S.mk_Tm_app ref_Pat_Wild.t [S.as_arg (embed e_bv rng bv)] rng
+        | Pat_Var (is_wild, bv) ->
+            S.mk_Tm_app ref_Pat_Var.t
+              [S.as_arg (embed e_bool rng is_wild);
+               S.as_arg (embed e_bv rng bv)] rng
         | Pat_Dot_Term (bv, t) ->
             S.mk_Tm_app ref_Pat_Dot_Term.t [S.as_arg (embed e_bv rng bv);
                                             S.as_arg (embed e_term rng t)]
@@ -376,13 +376,10 @@ let rec e_pattern' () =
             BU.bind_opt (unembed' w (e_list (e_tuple2 (e_pattern' ()) e_bool)) ps) (fun ps ->
             Some <| Pat_Cons (f, us_opt, ps))))
 
-        | Tm_fvar fv, [(bv, _)] when S.fv_eq_lid fv ref_Pat_Var.lid ->
+        | Tm_fvar fv, [(is_wild, _); (bv, _)] when S.fv_eq_lid fv ref_Pat_Var.lid ->
+            BU.bind_opt (unembed' w e_bool is_wild) (fun is_wild ->
             BU.bind_opt (unembed' w e_bv bv) (fun bv ->
-            Some <| Pat_Var bv)
-
-        | Tm_fvar fv, [(bv, _)] when S.fv_eq_lid fv ref_Pat_Wild.lid ->
-            BU.bind_opt (unembed' w e_bv bv) (fun bv ->
-            Some <| Pat_Wild bv)
+            Some <| Pat_Var (is_wild, bv)))
 
         | Tm_fvar fv, [(bv, _); (t, _)] when S.fv_eq_lid fv ref_Pat_Dot_Term.lid ->
             BU.bind_opt (unembed' w e_bv bv) (fun bv ->

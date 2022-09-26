@@ -265,8 +265,7 @@ let rec inspect_ln (t:term) : term_view =
             match p.v with
             | Pat_constant c -> Pat_Constant (inspect_const c)
             | Pat_cons (fv, us_opt, ps) -> Pat_Cons (fv, us_opt, List.map (fun (p, b) -> inspect_pat p, b) ps)
-            | Pat_var bv -> Pat_Var bv
-            | Pat_wild bv -> Pat_Wild bv
+            | Pat_var (is_wild, bv) -> Pat_Var (is_wild, bv)
             | Pat_dot_term (bv, t) -> Pat_Dot_Term (bv, t)
         in
         let brs = List.map (function (pat, _, t) -> (inspect_pat pat, t)) brs in
@@ -429,8 +428,7 @@ let pack_ln (tv:term_view) : term =
             match p with
             | Pat_Constant c -> wrap <| Pat_constant (pack_const c)
             | Pat_Cons (fv, us_opt, ps) -> wrap <| Pat_cons (fv, us_opt, List.map (fun (p, b) -> pack_pat p, b) ps)
-            | Pat_Var  bv -> wrap <| Pat_var bv
-            | Pat_Wild bv -> wrap <| Pat_wild bv
+            | Pat_Var  (is_wild, bv) -> wrap <| Pat_var (is_wild, bv)
             | Pat_Dot_Term (bv, t) -> wrap <| Pat_dot_term (bv, t)
         in
         let brs = List.map (function (pat, t) -> (pack_pat pat, None, t)) brs in
