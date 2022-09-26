@@ -14,6 +14,10 @@ Guidelines for the changelog:
 # Version 0.9.7.0
 
 ## Tactics & Reflection
+  * Pat_Wild is no longer part of the AST, instead wildcard patterns are represented as
+    Pat_Var, which now has an additional boolean argument to maintain if it is a
+    wildcard pattern.
+
   * Pat_Cons, the case of constructed patterns, now takes an additional argument representing
     the universe instantiation of the constructor.
   
