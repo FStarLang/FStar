@@ -37,7 +37,7 @@ let rec mk_tenum_branches (ty: T.term) (vty: T.term) (v: nat) (accu: list T.bran
     begin match q with
     | [] ->
       let b = T.fresh_binder ty in
-      let pat = T.Pat_Var (T.bv_of_binder b) in
+      let pat = T.Pat_Var false (T.bv_of_binder b) in
       let br = (pat, v) in
       accu' `List.Tot.append` [br]
     | _ -> mk_tenum_branches ty vty v' accu' q
