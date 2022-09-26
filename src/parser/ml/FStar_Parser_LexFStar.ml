@@ -171,7 +171,6 @@ let () =
    ":", COLON;
    "::", COLON_COLON;
    ":=", COLON_EQUALS;
-   ";;", SEMICOLON_SEMICOLON;
    ";", SEMICOLON;
    "=", EQUALS;
    "%[", PERCENT_LBRACK;
@@ -354,8 +353,7 @@ let anywhite  = [%sedlex.regexp? u_space | u_space_extra]
 let newline   = [%sedlex.regexp? "\r\n" | 10 | 13 | 0x2028 | 0x2029]
 
 (* -------------------------------------------------------------------- *)
-let op_char = [%sedlex.regexp? Chars "!$%&*+-./<=?^|~:"]
-let ignored_op_char = [%sedlex.regexp? Chars ".$"]
+let op_char = [%sedlex.regexp? Chars "!$%&*+-.<>=?^|~:@#\\/"]
 
 (* op_token must be splt into seperate regular expressions to prevent
    compliation from hanging *)
@@ -419,6 +417,24 @@ let constructor = [%sedlex.regexp? constructor_start_char, Star ident_char]
 let ident       = [%sedlex.regexp? ident_start_char, Star ident_char]
 let tvar        = [%sedlex.regexp? '\'', (ident_start_char | constructor_start_char), Star tvar_char]
 
+(* [ensure_no_comment lexbuf next] takes a [lexbuf] and [next], a
+   continuation. It is to be called after a regexp was matched, to
+   ensure match text does not contain any comment start.
+
+   If the match [s] contains a comment start (an occurence of [//])
+   then we place the lexer at that comment start.  We continue with
+   [next s], [s] being either the whole match, or the chunk before
+   [//].
+*)
+let ensure_no_comment lexbuf (next: string -> token): token =
+  let s = L.lexeme lexbuf in
+  next (try let before, _after = BatString.split s "//" in
+            (* rollback to the begining of the match *)
+            L.rollback lexbuf;
+            (* skip [n] characters in the lexer, with [n] being [hd]'s len *)
+            BatString.iter (fun _ -> let _ = L.next lexbuf in ()) before;
+            before with | Not_found -> s)
+
 let rec token lexbuf =
 match%sedlex lexbuf with
  | "%splice" -> SPLICE
@@ -443,16 +459,34 @@ match%sedlex lexbuf with
  | '`' -> BACKTICK
 
  | "match", Plus op_char ->
-   let s = L.lexeme lexbuf in
-   MATCH_OP (String.sub s 5 (String.length s - 5))
+    ensure_no_comment lexbuf (fun s ->
+        match BatString.lchop ~n:5 s with
+        | "" -> MATCH
+        | s  -> MATCH_OP s
+      )
 
  | "let", Plus op_char ->
-   let s = L.lexeme lexbuf in
-   LET_OP (String.sub s 3 (String.length s - 3))
+    ensure_no_comment lexbuf (fun s ->
+        match BatString.lchop ~n:3 s with
+        | "" -> LET false
+        | s  -> LET_OP s
+      )
 
  | "and", Plus op_char ->
-   let s = L.lexeme lexbuf in
-   AND_OP (String.sub s 3 (String.length s - 3))
+    ensure_no_comment lexbuf (fun s ->
+        match BatString.lchop ~n:3 s with
+        | "" -> AND
+        | s  -> AND_OP s
+      )
+
+ | ";", Plus op_char ->
+    ensure_no_comment lexbuf (fun s ->
+        match BatString.lchop ~n:1 s with
+        | "" -> SEMICOLON
+        | s  -> SEMICOLON_OP (Some s)
+      )
+
+ | ";;" -> SEMICOLON_OP None
 
  | ident -> let id = L.lexeme lexbuf in
    if FStar_Compiler_Util.starts_with id FStar_Ident.reserved_prefix

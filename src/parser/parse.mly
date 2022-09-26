@@ -31,6 +31,9 @@ let old_attribute_syntax_warning =
   "The `[@ ...]` syntax of attributes is deprecated. \
    Use `[@@ a1; a2; ...; an]`, a semi-colon separated list of attributes, instead"
 
+let do_notation_deprecation_warning =
+  "The lightweight do notation [x <- y; z] or [x ;; z] is deprecated, use let operators (i.e. [let* x = y in z] or [y ;* z], [*] being any sequence of operator characters) instead."
+
 let none_to_empty_list x =
   match x with
   | None -> []
@@ -64,6 +67,11 @@ let none_to_empty_list x =
 %token <string> LET_OP
 %token <string> AND_OP
 %token <string> MATCH_OP
+/* [SEMICOLON_OP] encodes either:
+- [;;], which used to be SEMICOLON_SEMICOLON, or
+- [;<OP>], with <OP> a sequence of [op_char] (see FStar_Parser_LexFStar).
+*/
+%token <string option> SEMICOLON_OP
 
 %token FORALL EXISTS ASSUME NEW LOGIC ATTRIBUTES
 %token IRREDUCIBLE UNFOLDABLE INLINE OPAQUE UNFOLD INLINE_FOR_EXTRACTION
@@ -81,7 +89,7 @@ let none_to_empty_list x =
 %token DOT COLON COLON_COLON SEMICOLON
 %token QMARK_DOT
 %token QMARK
-%token SEMICOLON_SEMICOLON EQUALS PERCENT_LBRACK LBRACK_AT LBRACK_AT_AT LBRACK_AT_AT_AT DOT_LBRACK
+%token EQUALS PERCENT_LBRACK LBRACK_AT LBRACK_AT_AT LBRACK_AT_AT_AT DOT_LBRACK
 %token DOT_LENS_PAREN_LEFT DOT_LPAREN DOT_LBRACK_BAR LBRACK LBRACK_BAR LBRACE_BAR LBRACE BANG_LBRACE
 %token BAR_RBRACK BAR_RBRACE UNDERSCORE LENS_PAREN_LEFT LENS_PAREN_RIGHT
 %token BAR RBRACK RBRACE DOLLAR
@@ -309,9 +317,14 @@ attr_letbinding:
     { attr, lb }
 
 letoperatorbinding:
-  | pat=tuplePattern tm=option(EQUALS tm=term {tm})
+  | pat=tuplePattern ascr_opt=ascribeTyp? tm=option(EQUALS tm=term {tm})
     {
-        let h tm = (pat, tm) in
+        let h tm
+	  = ( ( match ascr_opt with
+              | None   -> pat
+              | Some t -> mk_pattern (PatAscribed(pat, t)) (rhs2 parseState 1 2) )
+	    , tm)
+	in
 	match pat.pat, tm with
         | _               , Some tm -> h tm
         | PatVar (v, _, _), None    ->
@@ -519,10 +532,6 @@ atomicPattern:
   | tv=tvar                   { mk_pattern (PatTvar (tv, None, [])) (rhs parseState 1) }
   | LPAREN op=operator RPAREN
       { mk_pattern (PatOp op) (rhs2 parseState 1 3) }
-  | LPAREN op=let_op RPAREN
-      { mk_pattern (PatVar (op, None, [])) (rhs2 parseState 1 3) }
-  | LPAREN op=and_op RPAREN
-      { mk_pattern (PatVar (op, None, [])) (rhs2 parseState 1 3) }
   | UNDERSCORE
       { mk_pattern (PatWild (None, [])) (rhs parseState 1) }
   | HASH UNDERSCORE
@@ -641,25 +650,12 @@ ident:
 lidentOrOperator:
   | id=IDENT
     { mk_ident(id, rhs parseState 1) }
-  | LPAREN op=let_op RPAREN { op }
-  | LPAREN op=and_op RPAREN { op }
   | LPAREN id=operator RPAREN
     { mk_ident (compile_op' (string_of_id id) (range_of_id id), range_of_id id) }
 
-%inline and_op:
-  | op=AND_OP { let r = rhs parseState 1 in
-                mk_ident ("and_" ^ compile_op' op r, r) }
-
-%inline let_op:
-  | op=LET_OP { let r = rhs parseState 1 in
-                mk_ident ("let_" ^ compile_op' op r, r) }
-
 matchMaybeOp:
   | MATCH {None}
-  | op=MATCH_OP {
-	   let r = rhs parseState 1 in
-           Some (mk_ident ("let_" ^ compile_op' op r, r))
-	 }
+  | op=MATCH_OP { Some (mk_ident ("let" ^ op, rhs parseState 1)) }
 
 lidentOrUnderscore:
   | id=IDENT { mk_ident(id, rhs parseState 1)}
@@ -708,10 +704,20 @@ term:
 (* but it results in an additional shift/reduce conflict *)
 (* ... which is actually be benign, since the same conflict already *)
 (*     exists for the previous production *)
-  | e1=noSeqTerm SEMICOLON_SEMICOLON e2=term
-      { mk_term (Bind(gen (rhs parseState 2), e1, e2)) (rhs2 parseState 1 3) Expr }
+  | e1=noSeqTerm op=SEMICOLON_OP e2=term
+      { let t = match op with
+	  | Some op ->
+	     let op = mk_ident ("let" ^ op, rhs parseState 2) in
+	     let pat = mk_pattern (PatWild(None, [])) (rhs parseState 2) in
+	     LetOperator ([(op, pat, e1)], e2)
+	  | None   ->
+             log_issue (lhs parseState) (Warning_DeprecatedLightDoNotation, do_notation_deprecation_warning);
+	     Bind(gen (rhs parseState 2), e1, e2)
+        in mk_term t (rhs2 parseState 1 3) Expr
+      }
   | x=lidentOrUnderscore LONG_LEFT_ARROW e1=noSeqTerm SEMICOLON e2=term
-      { mk_term (Bind(x, e1, e2)) (rhs2 parseState 1 5) Expr }
+    { log_issue (lhs parseState) (Warning_DeprecatedLightDoNotation, do_notation_deprecation_warning);
+      mk_term (Bind(x, e1, e2)) (rhs2 parseState 1 5) Expr }
 
 match_returning:
   | as_opt=option(AS i=lident {i}) RETURNS t=tmIff {as_opt,t,false}
@@ -1212,10 +1218,6 @@ atomicTermNotQUident:
     { x }
   | LPAREN op=operator RPAREN
       { mk_term (Op(op, [])) (rhs2 parseState 1 3) Un }
-  | LPAREN op=let_op RPAREN
-      { mk_term (Name(lid_of_ns_and_id [] op)) (rhs2 parseState 1 3) Un }
-  | LPAREN op=and_op RPAREN
-      { mk_term (Name(lid_of_ns_and_id [] op)) (rhs2 parseState 1 3) Un }
   | LENS_PAREN_LEFT e0=tmEq COMMA el=separated_nonempty_list(COMMA, tmEq) LENS_PAREN_RIGHT
       { mkDTuple (e0::el) (rhs2 parseState 1 5) }
   | e=projectionLHS field_projs=list(DOT id=qlident {id})
@@ -1411,6 +1413,13 @@ string:
     { op }
   | op=TILDE
     { mk_ident (op, rhs parseState 1) }
+  | op=and_op       {op}
+  | op=let_op       {op}
+
+%inline and_op:
+  | op=AND_OP { mk_ident ("and" ^ op, rhs parseState 1) }
+%inline let_op:
+  | op=LET_OP { mk_ident ("let" ^ op, rhs parseState 1) }
 
 /* These infix operators have a lower precedence than EQUALS */
 %inline operatorInfix0ad12:

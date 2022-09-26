@@ -479,6 +479,12 @@ let as_frag (ds:list decl) : inputFragment =
       ) ds;
       Inr ds
 
+// TODO: Move to something like FStar.Compiler.Util
+let strip_prefix (prefix s: string): option string
+  = if starts_with s prefix
+    then Some (substring_from s (String.length prefix))
+    else None
+
 let compile_op arity s r =
     let name_of_char = function
       |'&' -> "Amp"
@@ -513,7 +519,11 @@ let compile_op arity s r =
     | ".()" -> "op_Array_Access"
     | ".[||]" -> "op_Brack_Lens_Access"
     | ".(||)" -> "op_Lens_Access"
-    | _ -> "op_"^ (String.concat "_" (List.map name_of_char (String.list_of_string s)))
+    | _ -> // handle let operators (i.e. [let?] or [and*])
+          let prefix, s = if starts_with s "let" || starts_with s "and"
+                          then substring s 0 3 ^ "_", substring_from s 3
+                          else "", s in
+          "op_" ^ prefix ^ String.concat "_" (List.map name_of_char (String.list_of_string s))
 
 let compile_op' s r =
   compile_op (-1) s r
@@ -541,6 +551,7 @@ let string_to_op s =
     | "Colon" -> Some (":", None)
     | "Dollar" -> Some ("$", None)
     | "Dot" -> Some (".", None)
+    | "let" | "and" -> Some (s, None)
     | _ -> None
   in
   match s with
