@@ -25,7 +25,7 @@ fstar-mode.el relies on a generic but custom interaction protocol
 implemented by the F* compiler. F* also provides a basic
 implementation of the `Language Server Protocol
 <https://microsoft.github.io/language-server-protocol/>`_, which could
-be form the basis of integration with other editors. More information
+form the basis of integration with other editors. More information
 about F*'s editor support can be found `here
 <https://github.com/FStarLang/FStar/wiki/Editor-support-for-F*>`_.
 
