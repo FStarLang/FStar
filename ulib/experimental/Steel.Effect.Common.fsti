@@ -2135,7 +2135,7 @@ let rec term_is_uvar (t: term) (i: int) : Tac bool = match t with
       term_is_uvar hd i
   | _ -> false
 
-val solve_can_be_split_for (#a: Type u#b) : a -> Tot unit
+val solve_can_be_split_for : string -> Tot unit
 
 val solve_can_be_split_lookup : unit // FIXME: src/reflection/FStar.Reflection.Basic.lookup_attr only supports fvar attributes, so we cannot directly look up for (solve_can_be_split_for blabla), we need a nullary attribute to use with lookup_attr
 
@@ -2242,7 +2242,19 @@ let rec extract_contexts
       end
     | _ -> None
   else
-    let candidates = lookup_by_term_attr label_attr (mk_app attr [hd, Q_Explicit]) in
+    let candidates =
+      let hd_fv = match inspect hd with
+      | Tv_FVar fv -> Some fv
+      | Tv_UInst fv _ -> Some fv
+      | _ -> None
+      in
+      match hd_fv with
+      | None -> []
+      | Some hd_fv ->
+        let hd_s' = implode_qn (inspect_fv hd_fv) in
+        let hd_s = pack (Tv_Const (C_String hd_s')) in
+        lookup_by_term_attr label_attr (mk_app attr [hd_s, Q_Explicit])
+    in
     if Nil? candidates
     then None
     else
@@ -2419,7 +2431,7 @@ let solve_can_be_split_forall (args:list argv) : Tac bool =
 
   | _ -> fail "Ill-formed can_be_split_forall, should not happen"
 
-val solve_can_be_split_forall_dep_for (#a: Type u#b) : a -> Tot unit
+val solve_can_be_split_forall_dep_for : string -> Tot unit
 
 val solve_can_be_split_forall_dep_lookup : unit // FIXME: same as solve_can_be_split_for above
 

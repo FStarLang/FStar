@@ -18,28 +18,23 @@ module Steel.ST.Array
 
 module U32 = FStar.UInt32
 
-/// Lifting a value of universe 0 to universe 1. We could use
-/// FStar.Universe, but that module is not tailored to inlining at
-/// extraction.
+/// Lifting a value of universe 0 to universe 1. We use
+/// FStar.Universe, since FStar.Extraction.Krml is set to extract
+/// those functions to identity.
 
-[@@erasable]
-noeq
-type dummy_universe1 : Type u#1 = | DummyU1
-
-/// This type definition supports inlining, contrary to the custom
-/// type defined in FStar.Universe.fst.
 inline_for_extraction
 [@@ noextract_to "krml"]
-let raise_t (t: Type0) : Type u#1 = (t & dummy_universe1)
+let raise_t (t: Type0) : Type u#1 = FStar.Universe.raise_t t
 
 inline_for_extraction
 [@@noextract_to "krml"]
-let raise (#t: Type) (x: t) : Tot (raise_t t) = (x, DummyU1)
+let raise (#t: Type) (x: t) : Tot (raise_t t) =
+  FStar.Universe.raise_val x
 
 inline_for_extraction
 [@@noextract_to "krml"]
 let lower (#t: Type) (x: raise_t t) : Tot t =
-  match x with (x', _) -> x'
+  FStar.Universe.downgrade_val x
 
 /// A map operation on sequences. Here we only need Ghost versions,
 /// because such sequences are only used in vprops or with their

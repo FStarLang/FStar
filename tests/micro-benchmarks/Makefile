@@ -14,7 +14,8 @@ verify-all: $(CACHE_DIR) $(addsuffix .checked, $(addprefix $(CACHE_DIR)/, $(FSTA
             Erasable.ml-cmp \
 	    InlineForExtractionNormRequest.ml-cmp \
 	    MachineIntegerConstants.ml-cmp \
-            $(CACHE_DIR)/Coercions1Phase.fst.checked
+            $(CACHE_DIR)/Coercions1Phase.fst.checked \
+	    ExtractMutRecTypesAndTerms.ml-cmp
 
 $(CACHE_DIR)/MustEraseForExtraction.fst.checked: OTHERFLAGS += --warn_error @318
 

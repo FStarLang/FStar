@@ -749,6 +749,41 @@ let check_linear_pattern_variables pats r =
 let smt_pat_lid (r:Range.range) = Ident.set_lid_range C.smtpat_lid r
 let smt_pat_or_lid (r:Range.range) = Ident.set_lid_range C.smtpatOr_lid r
 
+// [hoist_pat_ascription' pat] pulls [PatAscribed] nodes out of [pat]
+// and construct a tuple that consists in a non-ascribed pattern and a
+// type abscription.  Note [hoist_pat_ascription'] only works with
+// patterns whose ascriptions live under tuple or list nodes. This
+// function is used for [LetOperator] desugaring in
+// [resugar_data_pat], because direct ascriptions in patterns are
+// dropped (see issue #2678).
+let rec hoist_pat_ascription' (pat: pattern): pattern * option term
+  = let mk tm = mk_term tm (pat.prange) Type_level in
+    let handle_list type_lid pat_cons pats =
+      let pats, terms = List.unzip (List.map hoist_pat_ascription' pats) in
+      if List.for_all None? terms
+      then pat, None
+      else
+        let terms = List.map (function | Some t -> t | None -> mk Wild) terms in
+        { pat with pat = pat_cons pats}
+      , Some (mkApp (mk type_lid) (List.map (fun t -> (t, Nothing)) terms) pat.prange)
+    in match pat.pat with
+  | PatList pats -> handle_list (Var C.list_lid) PatList pats
+  | PatTuple (pats, dep) ->
+    handle_list
+      (Var ((if dep then C.mk_dtuple_lid else C.mk_tuple_lid) (List.length pats) pat.prange))
+      (fun pats -> PatTuple (pats, dep)) pats
+  | PatAscribed (pat, (typ, None)) -> pat, Some typ
+  // if [pat] is not a list, a tuple or an ascription, we cannot
+  // compose (at least not in a simple way) sub ascriptions, thus we
+  // return the pattern directly
+  | _ -> pat, None
+
+let hoist_pat_ascription (pat: pattern): pattern
+  = let pat, typ = hoist_pat_ascription' pat in
+    match typ with
+  | Some typ -> { pat with pat = PatAscribed (pat, (typ, None)) }
+  | None     -> pat
+
 (* TODO : Patterns should be checked that there are no incompatible type ascriptions *)
 (* and these type ascriptions should not be dropped !!!                              *)
 let rec desugar_data_pat
@@ -1473,7 +1508,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
       ( match lets with
       | [] -> failwith "Impossible: a LetOperator (e.g. let+, let*...) cannot contain zero let binding"
       | (letOp, letPat, letDef)::tl ->
-        let term_of_op op = AST.mk_term (AST.Var (Ident.lid_of_ns_and_id [] op)) (range_of_id op) AST.Expr in
+        let term_of_op op = AST.mk_term (AST.Op (op, [])) (range_of_id op) AST.Expr in
         let mproduct_def = fold_left (fun def (andOp, andPat, andDef) ->
             AST.mkExplicitApp
               (term_of_op andOp)
@@ -1482,7 +1517,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
         let mproduct_pat = fold_left (fun pat (andOp, andPat, andDef) ->
             AST.mk_pattern (AST.PatTuple ([pat; andPat], false)) andPat.prange
         ) letPat tl in
-        let fn = AST.mk_term (Abs([mproduct_pat], body)) body.range body.level in
+        let fn = AST.mk_term (Abs([hoist_pat_ascription mproduct_pat], body)) body.range body.level in
         let let_op = term_of_op letOp in
         let t = AST.mkExplicitApp let_op [mproduct_def; fn] top.range in
         desugar_term_aq env t

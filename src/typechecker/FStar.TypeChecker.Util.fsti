@@ -116,7 +116,7 @@ val universe_of_comp: env -> universe -> comp -> universe
 (*
  * return value: formula for input comp to have trivial wp * guard for that formula
  *)
-val check_trivial_precondition : env -> comp -> (comp_typ * formula * guard_t)
+val check_trivial_precondition_wp : env -> comp -> (comp_typ * formula * guard_t)
 
 //
 //checking that e:t is convertible to t'

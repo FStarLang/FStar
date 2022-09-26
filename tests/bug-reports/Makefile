@@ -109,7 +109,7 @@ SHOULD_NOT_VERIFY_NOT_WORKING=Bug186.fst Bug397b.fst
 SHOULD_EXTRACT_CLOSED=Bug086.fst Bug314.fst Bug540.fst Bug541.fst Bug589.fst \
 	ExtractionBug2.fst Bug1101.fst Bug1485.fst Bug734.fst Bug310.fst \
 	Bug2058.fst RemoveUnusedTypars.B.fst RemoveUnusedTyparsIFace.B.fst \
-	PushPopProjectors.fst Bug2412.fst Bug2595.fst
+	PushPopProjectors.fst Bug2412.fst Bug2595.fst Bug2699.fst
 #ExtractionBug03.fst
 
 # Bug1479.fst Crashes when in CI with "Error: Unbound module FStar_Tactics_Effect"
@@ -172,6 +172,12 @@ Bug2595.ml:
 
 Bug2595.extract: Bug2595.ml
 	diff -u --strip-trailing-cr Bug2595.ml Bug2595.ml.expected
+
+Bug2699.ml:
+	$(FSTAR) $(FSTAR_DEFAULT_ARGS) --extract Bug2699 --codegen OCaml Bug2699.fst
+
+Bug2699.extract: Bug2699.ml
+	diff -u --strip-trailing-cr Bug2699.ml Bug2699.ml.expected
 
 
 RemoveUnusedTypars.B.extract: RemoveUnusedTypars.A.fst RemoveUnusedTypars.B.fst

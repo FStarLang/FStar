@@ -1501,6 +1501,82 @@ let (smt_pat_lid : FStar_Compiler_Range.range -> FStar_Ident.lident) =
   fun r -> FStar_Ident.set_lid_range FStar_Parser_Const.smtpat_lid r
 let (smt_pat_or_lid : FStar_Compiler_Range.range -> FStar_Ident.lident) =
   fun r -> FStar_Ident.set_lid_range FStar_Parser_Const.smtpatOr_lid r
+let rec (hoist_pat_ascription' :
+  FStar_Parser_AST.pattern ->
+    (FStar_Parser_AST.pattern * FStar_Parser_AST.term
+      FStar_Pervasives_Native.option))
+  =
+  fun pat ->
+    let mk tm =
+      FStar_Parser_AST.mk_term tm pat.FStar_Parser_AST.prange
+        FStar_Parser_AST.Type_level in
+    let handle_list type_lid pat_cons pats =
+      let uu___ =
+        let uu___1 = FStar_Compiler_List.map hoist_pat_ascription' pats in
+        FStar_Compiler_List.unzip uu___1 in
+      match uu___ with
+      | (pats1, terms) ->
+          let uu___1 =
+            FStar_Compiler_List.for_all FStar_Pervasives_Native.uu___is_None
+              terms in
+          if uu___1
+          then (pat, FStar_Pervasives_Native.None)
+          else
+            (let terms1 =
+               FStar_Compiler_List.map
+                 (fun uu___3 ->
+                    match uu___3 with
+                    | FStar_Pervasives_Native.Some t -> t
+                    | FStar_Pervasives_Native.None ->
+                        mk FStar_Parser_AST.Wild) terms in
+             let uu___3 =
+               let uu___4 = pat_cons pats1 in
+               {
+                 FStar_Parser_AST.pat = uu___4;
+                 FStar_Parser_AST.prange = (pat.FStar_Parser_AST.prange)
+               } in
+             let uu___4 =
+               let uu___5 =
+                 let uu___6 =
+                   FStar_Compiler_List.map
+                     (fun t -> (t, FStar_Parser_AST.Nothing)) terms1 in
+                 FStar_Parser_AST.mkApp (mk type_lid) uu___6
+                   pat.FStar_Parser_AST.prange in
+               FStar_Pervasives_Native.Some uu___5 in
+             (uu___3, uu___4)) in
+    match pat.FStar_Parser_AST.pat with
+    | FStar_Parser_AST.PatList pats ->
+        handle_list (FStar_Parser_AST.Var FStar_Parser_Const.list_lid)
+          (fun uu___ -> FStar_Parser_AST.PatList uu___) pats
+    | FStar_Parser_AST.PatTuple (pats, dep) ->
+        let uu___ =
+          let uu___1 =
+            (if dep
+             then FStar_Parser_Const.mk_dtuple_lid
+             else FStar_Parser_Const.mk_tuple_lid)
+              (FStar_Compiler_List.length pats) pat.FStar_Parser_AST.prange in
+          FStar_Parser_AST.Var uu___1 in
+        handle_list uu___
+          (fun pats1 -> FStar_Parser_AST.PatTuple (pats1, dep)) pats
+    | FStar_Parser_AST.PatAscribed
+        (pat1, (typ, FStar_Pervasives_Native.None)) ->
+        (pat1, (FStar_Pervasives_Native.Some typ))
+    | uu___ -> (pat, FStar_Pervasives_Native.None)
+let (hoist_pat_ascription :
+  FStar_Parser_AST.pattern -> FStar_Parser_AST.pattern) =
+  fun pat ->
+    let uu___ = hoist_pat_ascription' pat in
+    match uu___ with
+    | (pat1, typ) ->
+        (match typ with
+         | FStar_Pervasives_Native.Some typ1 ->
+             {
+               FStar_Parser_AST.pat =
+                 (FStar_Parser_AST.PatAscribed
+                    (pat1, (typ1, FStar_Pervasives_Native.None)));
+               FStar_Parser_AST.prange = (pat1.FStar_Parser_AST.prange)
+             }
+         | FStar_Pervasives_Native.None -> pat1)
 let rec (desugar_data_pat :
   Prims.bool ->
     env_t ->
@@ -3169,12 +3245,9 @@ and (desugar_term_maybe_top :
                    "Impossible: a LetOperator (e.g. let+, let*...) cannot contain zero let binding"
              | (letOp, letPat, letDef)::tl ->
                  let term_of_op op =
-                   let uu___1 =
-                     let uu___2 = FStar_Ident.lid_of_ns_and_id [] op in
-                     FStar_Parser_AST.Var uu___2 in
-                   let uu___2 = FStar_Ident.range_of_id op in
-                   FStar_Parser_AST.mk_term uu___1 uu___2
-                     FStar_Parser_AST.Expr in
+                   let uu___1 = FStar_Ident.range_of_id op in
+                   FStar_Parser_AST.mk_term (FStar_Parser_AST.Op (op, []))
+                     uu___1 FStar_Parser_AST.Expr in
                  let mproduct_def =
                    FStar_Compiler_List.fold_left
                      (fun def ->
@@ -3196,8 +3269,14 @@ and (desugar_term_maybe_top :
                                    ([pat; andPat], false))
                                 andPat.FStar_Parser_AST.prange) letPat tl in
                  let fn =
-                   FStar_Parser_AST.mk_term
-                     (FStar_Parser_AST.Abs ([mproduct_pat], body))
+                   let uu___1 =
+                     let uu___2 =
+                       let uu___3 =
+                         let uu___4 = hoist_pat_ascription mproduct_pat in
+                         [uu___4] in
+                       (uu___3, body) in
+                     FStar_Parser_AST.Abs uu___2 in
+                   FStar_Parser_AST.mk_term uu___1
                      body.FStar_Parser_AST.range body.FStar_Parser_AST.level in
                  let let_op = term_of_op letOp in
                  let t =

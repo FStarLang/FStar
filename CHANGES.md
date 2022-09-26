@@ -246,6 +246,11 @@ Guidelines for the changelog:
 		...
 	 ```
 
+     Where `?` is any operator sequence; there is also support for
+     `and?`, `;?`, etc. See [example module
+     `MonadicLetBindings`](./examples/misc/MonadicLetBindings.fst) for
+     more details.
+
    * PR #2603 introduces universes in the reflection syntax.
      It is a potentially breaking change for reflection clients.
      See the PR for more description.

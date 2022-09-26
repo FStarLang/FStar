@@ -1461,6 +1461,17 @@ let (as_frag : decl Prims.list -> inputFragment) =
                            "Unexpected module declaration") r
                    | uu___4 -> ()) ds2;
               FStar_Pervasives.Inr ds2))
+let (strip_prefix :
+  Prims.string -> Prims.string -> Prims.string FStar_Pervasives_Native.option)
+  =
+  fun prefix ->
+    fun s ->
+      if FStar_Compiler_Util.starts_with s prefix
+      then
+        let uu___ =
+          FStar_Compiler_Util.substring_from s (FStar_String.length prefix) in
+        FStar_Pervasives_Native.Some uu___
+      else FStar_Pervasives_Native.None
 let (compile_op :
   Prims.int -> Prims.string -> FStar_Compiler_Range.range -> Prims.string) =
   fun arity ->
@@ -1506,11 +1517,29 @@ let (compile_op :
         | ".(||)" -> "op_Lens_Access"
         | uu___ ->
             let uu___1 =
-              let uu___2 =
-                let uu___3 = FStar_String.list_of_string s in
-                FStar_Compiler_List.map name_of_char uu___3 in
-              FStar_String.concat "_" uu___2 in
-            Prims.op_Hat "op_" uu___1
+              if
+                (FStar_Compiler_Util.starts_with s "let") ||
+                  (FStar_Compiler_Util.starts_with s "and")
+              then
+                let uu___2 =
+                  let uu___3 =
+                    FStar_Compiler_Util.substring s Prims.int_zero
+                      (Prims.of_int (3)) in
+                  Prims.op_Hat uu___3 "_" in
+                let uu___3 =
+                  FStar_Compiler_Util.substring_from s (Prims.of_int (3)) in
+                (uu___2, uu___3)
+              else ("", s) in
+            (match uu___1 with
+             | (prefix, s1) ->
+                 let uu___2 =
+                   let uu___3 =
+                     let uu___4 =
+                       let uu___5 = FStar_String.list_of_string s1 in
+                       FStar_Compiler_List.map name_of_char uu___5 in
+                     FStar_String.concat "_" uu___4 in
+                   Prims.op_Hat prefix uu___3 in
+                 Prims.op_Hat "op_" uu___2)
 let (compile_op' :
   Prims.string -> FStar_Compiler_Range.range -> Prims.string) =
   fun s -> fun r -> compile_op (~- Prims.int_one) s r
@@ -1565,6 +1594,10 @@ let (string_to_op :
           FStar_Pervasives_Native.Some ("$", FStar_Pervasives_Native.None)
       | "Dot" ->
           FStar_Pervasives_Native.Some (".", FStar_Pervasives_Native.None)
+      | "let" ->
+          FStar_Pervasives_Native.Some (s, FStar_Pervasives_Native.None)
+      | "and" ->
+          FStar_Pervasives_Native.Some (s, FStar_Pervasives_Native.None)
       | uu___1 -> FStar_Pervasives_Native.None in
     match s with
     | "op_String_Assignment" ->
