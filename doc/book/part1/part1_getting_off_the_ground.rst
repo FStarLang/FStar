@@ -7,6 +7,28 @@ To start writing some F* programs, we'll need to learn some basics
 about the syntax of the language and some core concepts of types and
 functions.
 
+.. _Part1_editors:
+
+Text Editors
+^^^^^^^^^^^^
+
+F* can be used as a command line tool with any text editor. If you're
+viewing this in the interactive online tutorial, you can use the
+`Ace-based <https://ace.c9.io/>`_ text editor alongside, which
+provides some basic conveniences like syntax highlighting. However,
+most advanced users of F* use emacs and `fstar-mode.el
+<https://github.com/FStarLang/fstar-mode.el>`_, which provides several
+utilities for interactively editing and checking F* files. We'll refer
+to some features specific to fstar-mode.el as we go.
+
+fstar-mode.el relies on a generic but custom interaction protocol
+implemented by the F* compiler. F* also provides a basic
+implementation of the `Language Server Protocol
+<https://microsoft.github.io/language-server-protocol/>`_, which could
+be form the basis of integration with other editors. More information
+about F*'s editor support can be found `here
+<https://github.com/FStarLang/FStar/wiki/Editor-support-for-F*>`_.
+
 
 Basic syntactic structure
 ^^^^^^^^^^^^^^^^^^^^^^^^^

@@ -50,4 +50,5 @@ functions and prove them correct.
    part1_termination
    part1_lemmas
    part1_quicksort
+   part1_execution   
    part1_wrap

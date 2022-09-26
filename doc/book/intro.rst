@@ -212,6 +212,8 @@ As an F* user, you can choose a programming model and a suite of
 program proof abstractions to match your needs. You'll learn more
 about this in the section on :ref:`user-defined effects <effects>`.
 
+.. _Part1_symbolic_computation:
+
 F* proofs use SMT solving, symbolic computation and tactics
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -250,6 +252,7 @@ in :ref:`this chapter <Part1_prop_assertions>`.
 That said, Z3 cannot solve all problems that F* feeds to it. As such,
 F* offers several other mechanisms with varying levels of user
 control.
+
 
 **Symbolic computation**
 
