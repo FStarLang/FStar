@@ -179,8 +179,8 @@ let pack_universe uv =
   | Uv_Unk -> U_unknown
 
 let rec inspect_ln (t:term) : term_view =
-    let t = U.unascribe t in
     let t = U.unlazy_emb t in
+    let t = SS.compress t in
     match t.n with
     | Tm_meta (t, _) ->
         inspect_ln t
@@ -199,7 +199,12 @@ let rec inspect_ln (t:term) : term_view =
       (match t.n with
        | Tm_fvar fv -> Tv_UInst (fv, us)
        | _ -> failwith "Reflection::inspect_ln: uinst for a non-fvar node")
-        
+
+    | Tm_ascribed (t, (Inl ty, tacopt, eq), _elid) ->
+        Tv_AscribedT (t, ty, tacopt, eq)
+
+    | Tm_ascribed (t, (Inr cty, tacopt, eq), elid) ->
+        Tv_AscribedC (t, cty, tacopt, eq)
 
     | Tm_app (hd, []) ->
         failwith "inspect_ln: empty arguments on Tm_app"

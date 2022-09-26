@@ -1673,8 +1673,8 @@ let rec init (l:list 'a) : list 'a =
 (* TODO: these are mostly duplicated from FStar.Reflection.Basic, unify *)
 let rec inspect (t:term) : tac term_view = wrap_err "inspect" (
     bind (top_env ()) (fun e ->
-    let t = U.unascribe t in
     let t = U.unlazy_emb t in
+    let t = SS.compress t in
     match t.n with
     | Tm_meta (t, _) ->
         inspect t
@@ -1692,6 +1692,12 @@ let rec inspect (t:term) : tac term_view = wrap_err "inspect" (
       (match (t |> SS.compress |> U.unascribe).n with
        | Tm_fvar fv -> ret <| Tv_UInst (fv, us)
        | _ -> failwith "Tac::inspect: Tm_uinst head not an fvar")
+
+    | Tm_ascribed (t, (Inl ty, tacopt, eq), _elid) ->
+        ret <| Tv_AscribedT (t, ty, tacopt, eq)
+
+    | Tm_ascribed (t, (Inr cty, tacopt, eq), elid) ->
+        ret <| Tv_AscribedC (t, cty, tacopt, eq)
 
     | Tm_app (hd, []) ->
         failwith "empty arguments on Tm_app"
