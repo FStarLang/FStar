@@ -777,21 +777,6 @@ let fv_has_erasable_attr env fv =
   in
   cache_in_fv_tab env.erasable_types_tab fv f
 
-let rec non_informative env t =
-    match (U.unrefine t).n with
-    | Tm_type _ -> true
-    | Tm_fvar fv ->
-      fv_eq_lid fv Const.unit_lid
-      || fv_eq_lid fv Const.squash_lid
-      || fv_eq_lid fv Const.erased_lid
-      || fv_has_erasable_attr env fv
-    | Tm_app(head, _) -> non_informative env head
-    | Tm_uinst (t, _) -> non_informative env t
-    | Tm_arrow(_, c) ->
-      (is_pure_or_ghost_comp c && non_informative env (comp_result c))
-      || is_ghost_effect (comp_effect_name c)
-    | _ -> false
-
 let fv_has_strict_args env fv =
   let f () =
     let attrs = lookup_attrs_of_lid env (S.lid_of_fv fv) in
@@ -867,6 +852,28 @@ let norm_eff_name =
                                     m
               end in
        Ident.set_lid_range res (range_of_lid l)
+
+let is_erasable_effect env l =
+  l
+  |> norm_eff_name env
+  |> (fun l -> lid_equals l Const.effect_GHOST_lid ||
+           S.lid_as_fv l (Delta_constant_at_level 0) None
+           |> fv_has_erasable_attr env)
+
+let rec non_informative env t =
+    match (U.unrefine t).n with
+    | Tm_type _ -> true
+    | Tm_fvar fv ->
+      fv_eq_lid fv Const.unit_lid
+      || fv_eq_lid fv Const.squash_lid
+      || fv_eq_lid fv Const.erased_lid
+      || fv_has_erasable_attr env fv
+    | Tm_app(head, _) -> non_informative env head
+    | Tm_uinst (t, _) -> non_informative env t
+    | Tm_arrow(_, c) ->
+      (is_pure_or_ghost_comp c && non_informative env (comp_result c))
+      || is_erasable_effect env (comp_effect_name c)
+    | _ -> false
 
 let num_effect_indices env name r =
   let sig_t = name |> lookup_effect_lid env |> SS.compress in
@@ -988,20 +995,37 @@ let get_effect_decl env l =
     | None -> raise_error (name_not_found l) (range_of_lid l)
     | Some md -> fst md
 
+let get_lid_valued_effect_attr env
+  (eff_lid attr_name_lid:lident)
+  (default_if_attr_has_no_arg:option lident)
+  : option lident
+  = let attr_args =
+      eff_lid |> norm_eff_name env
+              |> lookup_attrs_of_lid env
+              |> BU.dflt []
+              |> U.get_attribute attr_name_lid in
+    match attr_args with
+    | None -> None
+    | Some args ->
+      if List.length args = 0
+      then default_if_attr_has_no_arg
+      else args
+           |> List.hd
+           |> (fun (t, _) ->
+              match (SS.compress t).n with
+              | Tm_constant (FStar.Const.Const_string (s, _)) -> s |> Ident.lid_of_str |> Some
+              | _ ->
+                raise_error
+                  (Errors.Fatal_UnexpectedEffect,
+                   BU.format2 "The argument for the effect attribute for %s is not a constant string, it is %s\n"
+                     (string_of_lid eff_lid)
+                     (Print.term_to_string t)) t.pos)
+
 let get_default_effect env lid =
-  lid |> norm_eff_name env
-      |> lookup_attrs_of_lid env
-      |> BU.dflt []
-      |> U.get_attribute Const.default_effect_attr
-      |> BU.map_option List.hd
-      |> BU.map_option (fun (t, _) ->
-                       match (SS.compress t).n with
-                       | Tm_constant (FStar.Const.Const_string (s, _)) -> Ident.lid_of_str s
-                       | _ ->
-                         raise_error (Errors.Fatal_UnexpectedEffect,
-                                      BU.format2 "The argument for the default effect attribute for %s is not a constant string, it is %s\n"
-                                        (string_of_lid lid)
-                                        (Print.term_to_string t)) t.pos)
+  get_lid_valued_effect_attr env lid Const.default_effect_attr None
+
+let get_top_level_effect env lid =
+  get_lid_valued_effect_attr env lid Const.top_level_effect_attr (Some lid)
 
 let is_layered_effect env l =
   l |> get_effect_decl env |> U.is_layered
@@ -1153,12 +1177,6 @@ let reify_comp env c u_c : term =
     | None -> failwith "internal error: reifiable effect has no repr?"
     | Some tm -> tm
 
-let is_erasable_effect env l =
-  l
-  |> norm_eff_name env
-  |> (fun l -> lid_equals l Const.effect_GHOST_lid ||
-           S.lid_as_fv l (Delta_constant_at_level 0) None
-           |> fv_has_erasable_attr env)
 
 ///////////////////////////////////////////////////////////
 // Introducing identifiers and updating the environment   //
