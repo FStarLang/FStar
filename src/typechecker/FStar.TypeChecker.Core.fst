@@ -93,7 +93,7 @@ let and_pre (p1 p2:precondition) =
   | Some p1, Some p2 -> Some (U.mk_conj p1 p2)
 
 inline_for_extraction
-let bind (#a:Type) (#b:Type) (x:result a) (y:a -> result b)
+let (let!) (#a:Type) (#b:Type) (x:result a) (y:a -> result b)
   : result b
   = fun ctx0 ->
       match x ctx0 with
@@ -104,16 +104,10 @@ let bind (#a:Type) (#b:Type) (x:result a) (y:a -> result b)
       | Inr err -> Inr err
 
 inline_for_extraction
-let (let!) (#a:Type) (#b:Type) (x:result a) (y:a -> result b)
-  : result b
-  = v <-- x; y v
-
-
-inline_for_extraction
 let (and!) (#a:Type) (#b:Type) (x:result a) (y:result b)
   : result (a & b)
-  = v <-- x;
-    u <-- y;
+  = let! v = x in
+    let! u = y in
     return (v, u)
 
 
@@ -496,7 +490,7 @@ let rec check_subtype_whnf (g:env) (e:term) (t0 t1: typ)
       let! _ = check_bqual x0.binder_qual x1.binder_qual in
       let! u1 = universe_of g x1.binder_bv.sort in
       with_binders [x1] [u1] (
-        check_subtype g (S.bv_to_name x1.binder_bv) x1.binder_bv.sort x0.binder_bv.sort ;;
+        check_subtype g (S.bv_to_name x1.binder_bv) x1.binder_bv.sort x0.binder_bv.sort ;!
         check_subcomp (push_binders g [x0])
                       (S.mk_Tm_app e (snd (U.args_of_binders [x1])) R.dummyRange)
                       c0
@@ -633,10 +627,10 @@ and check_equality_whnf (g:env) (t0 t1:typ)
         else err ()
 
       | Tm_app(hd0, args0), Tm_app(hd1, args1) ->
-        check_equality_whnf g hd0 hd1;;
+        check_equality_whnf g hd0 hd1;!
         iter2 args0 args1
           (fun (a0, q0) (a1, q1) _ ->
-            check_aqual q0 q1;;
+            check_aqual q0 q1;!
             check_equality g a0 a1)
           ()
 
@@ -649,8 +643,8 @@ and check_equality_whnf (g:env) (t0 t1:typ)
         check_equality_whnf g t0 t1
 
       | Tm_abs([b0], body0, _), Tm_abs([b1], body1, _) ->
-        check_equality g b0.binder_bv.sort b1.binder_bv.sort;;
-        check_bqual b0.binder_qual b1.binder_qual;;
+        check_equality g b0.binder_bv.sort b1.binder_bv.sort;!
+        check_bqual b0.binder_qual b1.binder_qual;!
         let! u = universe_of g b0.binder_bv.sort in
         let [b0], body0 = SS.open_term [b0] body0 in
         //little strange to use a DB substitution here
@@ -661,7 +655,7 @@ and check_equality_whnf (g:env) (t0 t1:typ)
            check_equality g body0 body1)
 
       | Tm_refine(b0, phi0), Tm_refine(b1, phi1) ->
-        check_equality_whnf g b0.sort b1.sort;;
+        check_equality_whnf g b0.sort b1.sort;!
         let [b], phi0 = SS.open_term [S.mk_binder b0] phi0 in
         //little strange to use a DB substitution here
         //Maybe cleaner to open both and use an NT subst
@@ -740,7 +734,7 @@ and check' (g:env) (e:term)
   : result (effect_label & typ) =
   // (if Env.debug g.tcenv (Options.Other "Core")
   //  then dump_context
-  //  else return ());;
+  //  else return ());!
   let e = SS.compress e in
   match e.n with
   | Tm_meta(t, _) ->
@@ -803,7 +797,7 @@ and check' (g:env) (e:term)
     with_binders [x] [u] (
       let g' = push_binders g [x] in
       let! _, t' = check "refinement formula" g' phi in
-      is_type g' t';;
+      is_type g' t';!
       return (E_TOTAL, t)
     )
 
@@ -827,8 +821,8 @@ and check' (g:env) (e:term)
     let! eff_hd, t = check "app head" g hd in
     let! x, eff_arr, t' = is_arrow g t in
     let! eff_arg, t_arg = check "app arg" g arg in
-    with_context "app subtyping" None (fun _ -> check_subtype g arg t_arg x.binder_bv.sort) ;;
-    with_context "app arg qual" None (fun _ -> check_arg_qual arg_qual x.binder_qual) ;;
+    with_context "app subtyping" None (fun _ -> check_subtype g arg t_arg x.binder_bv.sort) ;!
+    with_context "app arg qual" None (fun _ -> check_arg_qual arg_qual x.binder_qual) ;!
     return (join_eff eff_hd (join_eff eff_arr eff_arg), SS.subst [NT(x.binder_bv, arg)] t')
 
   | Tm_app(hd, arg::args) ->
@@ -839,8 +833,8 @@ and check' (g:env) (e:term)
   | Tm_ascribed (e, (Inl t, _, eq), _) ->
     let! eff, te = check "ascription head" g e in
     let! _, t' = check "ascription type" g t in
-    is_type g t';;
-    with_context "ascription subtyping" None (fun _ -> check_subtype g e te t);;
+    is_type g t';!
+    with_context "ascription subtyping" None (fun _ -> check_subtype g e te t);!
     return (eff, t)
 
   | Tm_ascribed (e, (Inr c, _, _), _) ->
@@ -849,7 +843,7 @@ and check' (g:env) (e:term)
       let! eff, te = check "ascription head" g e in
       let! _ = with_context "ascription comp" None (fun _ -> check_comp g c) in
       let c_e = as_comp g (eff, te) in
-      check_subcomp g e c_e c;;
+      check_subcomp g e c_e c;!
       let Some (eff, t) = comp_as_effect_label_and_type c in
       return (eff, t)
     )
@@ -863,11 +857,11 @@ and check' (g:env) (e:term)
       let! eff_def, tdef = check "let definition" g lb.lbdef in
       let! _, ttyp = check "let type" g lb.lbtyp in
       let! u = is_type g ttyp in
-      with_context "let subtyping" None (fun _ -> check_subtype g lb.lbdef tdef ttyp) ;;
+      with_context "let subtyping" None (fun _ -> check_subtype g lb.lbdef tdef ttyp) ;!
       with_definition x u lb.lbdef (
         let g = push_binders g [x] in
         let! eff_body, t = check "let body" g body in
-        check_no_escape [x] t;;
+        check_no_escape [x] t;!
         return (join_eff eff_def eff_body, t)
       )
     )
@@ -889,7 +883,7 @@ and check' (g:env) (e:term)
              fail "could not compute a type for the match"
 
            | Some et ->
-             guard (U.mk_imp path_condition U.t_false);;
+             guard (U.mk_imp path_condition U.t_false);!
              return et)
 
         | (p, None, b) :: rest ->
@@ -904,7 +898,7 @@ and check' (g:env) (e:term)
             let bs, us, g' = bs_g in
             let! eff_pat, t = check "pattern term" g' e in
             with_context "Pattern and scrutinee type compatibility" None
-                          (fun _ -> no_guard (check_scrutinee_pattern_type_compatible g' t_sc t)) ;;
+                          (fun _ -> no_guard (check_scrutinee_pattern_type_compatible g' t_sc t)) ;!
             let pat_sc_eq = U.mk_eq2 u_sc t_sc sc e in
             let! eff_br, tbr =
               with_binders bs us
@@ -913,11 +907,11 @@ and check' (g:env) (e:term)
                   (let! eff_br, tbr = check "branch" g' b in
                    match branch_typ_opt with
                    | None ->
-                     check_no_escape bs tbr;;
+                     check_no_escape bs tbr;!
                      return (eff_br, tbr)
 
                    | Some (acc_eff, expect_tbr) ->
-                     check_subtype g' b tbr expect_tbr;;
+                     check_subtype g' b tbr expect_tbr;!
                      return (join_eff eff_br acc_eff, expect_tbr))) in
             let path_condition =
               U.mk_conj path_condition
@@ -938,7 +932,7 @@ and check' (g:env) (e:term)
     let! branch_typ_opt =
         match rc_opt with
         | Some ({ residual_typ = Some t }) ->
-          with_context "residual type" (Some t) (fun _ -> universe_of g t) ;;
+          with_context "residual type" (Some t) (fun _ -> universe_of g t) ;!
           return (Some (E_TOTAL, t))
 
         | _ ->
@@ -961,7 +955,7 @@ and check' (g:env) (e:term)
       : result effect_label
       = match branches with
         | [] ->
-          guard (U.mk_imp path_condition U.t_false);;
+          guard (U.mk_imp path_condition U.t_false);!
           return acc_eff
 
         | (p, None, b) :: rest ->
@@ -978,7 +972,7 @@ and check' (g:env) (e:term)
             // TODO: use pattern scrutinee type compatibility function
             with_context "Pattern and scrutinee type compatibility"
                          None
-                          (fun _ -> no_guard (check_subtype g' e t_sc t)) ;;
+                          (fun _ -> no_guard (check_subtype g' e t_sc t)) ;!
             let pat_sc_eq = U.mk_eq2 u_sc t_sc sc e in
             let! eff_br, tbr =
               with_binders bs us
@@ -988,7 +982,7 @@ and check' (g:env) (e:term)
                    let expect_tbr = SS.subst [NT(as_x.binder_bv, e)] returns_ty in
                    (if eq
                     then check_equality g' tbr expect_tbr
-                    else check_subtype  g' b tbr expect_tbr);;
+                    else check_subtype  g' b tbr expect_tbr);!
                     return (join_eff eff_br acc_eff, expect_tbr))) in
             let path_condition =
               U.mk_conj path_condition
@@ -1049,7 +1043,7 @@ and check_comp (g:env) (c:comp)
              let head = S.mk_Tm_uinst (S.fvar c.effect_name delta_constant None) [u] in
              S.mk_Tm_app head ((as_arg c.result_typ)::c.effect_args) c.result_typ.pos in
            let! _, t = check "effectful comp" g effect_app_tm in
-           with_context "comp fully applied" None (fun _ -> check_subtype g effect_app_tm t S.teff);;
+           with_context "comp fully applied" None (fun _ -> check_subtype g effect_app_tm t S.teff);!
            return u
 
 
@@ -1088,12 +1082,12 @@ and check_scrutinee_pattern_type_compatible (g:env) (t_sc t_pat:typ)
 
     (if Env.is_type_constructor g.tcenv (lid_of_fv t_fv)
      then return t_fv
-     else err (BU.format1 "%s is not a type constructor" (P.fv_to_string t_fv)));;
+     else err (BU.format1 "%s is not a type constructor" (P.fv_to_string t_fv)));!
 
     (if List.length args_sc = List.length args_pat then return t_fv
      else err (BU.format2 "Number of arguments don't match (%s and %s)"
                           (string_of_int (List.length args_sc))
-                          (string_of_int (List.length args_pat))));;
+                          (string_of_int (List.length args_pat))));!
 
    let params_sc, params_pat =
      match Env.num_inductive_ty_params g.tcenv (S.lid_of_fv t_fv) with

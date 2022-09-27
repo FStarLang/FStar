@@ -128,7 +128,7 @@ let (and_pre :
           ->
           let uu___ = FStar_Syntax_Util.mk_conj p11 p21 in
           FStar_Pervasives_Native.Some uu___
-let bind : 'a 'b . 'a result -> ('a -> 'b result) -> 'b result =
+let op_let_Bang : 'a 'b . 'a result -> ('a -> 'b result) -> 'b result =
   fun x ->
     fun y ->
       fun ctx0 ->
@@ -142,10 +142,9 @@ let bind : 'a 'b . 'a result -> ('a -> 'b result) -> 'b result =
                  FStar_Pervasives.Inl uu___2
              | err -> err)
         | FStar_Pervasives.Inr err -> FStar_Pervasives.Inr err
-let op_let_Bang : 'a 'b . 'a result -> ('a -> 'b result) -> 'b result =
-  fun x -> fun y -> bind x (fun v -> y v)
 let op_and_Bang : 'a 'b . 'a result -> 'b result -> ('a * 'b) result =
-  fun x -> fun y -> bind x (fun v -> bind y (fun u -> return (v, u)))
+  fun x ->
+    fun y -> op_let_Bang x (fun v -> op_let_Bang y (fun u -> return (v, u)))
 let fail : 'a . Prims.string -> 'a result =
   fun msg -> fun ctx -> FStar_Pervasives.Inr (ctx, msg)
 let (dump_context : unit result) =
@@ -832,7 +831,7 @@ let rec (check_subtype_whnf :
                                            check_subtype g uu___8
                                              (x11.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort
                                              (x01.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort in
-                                         bind uu___7
+                                         op_let_Bang uu___7
                                            (fun uu___8 ->
                                               let uu___9 =
                                                 push_binders g [x01] in
@@ -1104,7 +1103,7 @@ and (check_equality_whnf :
            | (FStar_Syntax_Syntax.Tm_app (hd0, args0),
               FStar_Syntax_Syntax.Tm_app (hd1, args1)) ->
                let uu___2 = check_equality_whnf g hd0 hd1 in
-               bind uu___2
+               op_let_Bang uu___2
                  (fun uu___3 ->
                     iter2 args0 args1
                       (fun uu___4 ->
@@ -1113,7 +1112,7 @@ and (check_equality_whnf :
                              match (uu___4, uu___5) with
                              | ((a0, q0), (a1, q1)) ->
                                  let uu___7 = check_aqual q0 q1 in
-                                 bind uu___7
+                                 op_let_Bang uu___7
                                    (fun uu___8 -> check_equality g a0 a1)) ())
            | (FStar_Syntax_Syntax.Tm_abs (b0::b1::bs, body, ropt), uu___2) ->
                let t01 = curry_abs b0 b1 bs body ropt in
@@ -1127,12 +1126,12 @@ and (check_equality_whnf :
                  check_equality g
                    (b0.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort
                    (b1.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort in
-               bind uu___4
+               op_let_Bang uu___4
                  (fun uu___5 ->
                     let uu___6 =
                       check_bqual b0.FStar_Syntax_Syntax.binder_qual
                         b1.FStar_Syntax_Syntax.binder_qual in
-                    bind uu___6
+                    op_let_Bang uu___6
                       (fun uu___7 ->
                          let uu___8 =
                            universe_of g
@@ -1158,7 +1157,7 @@ and (check_equality_whnf :
                let uu___2 =
                  check_equality_whnf g b0.FStar_Syntax_Syntax.sort
                    b1.FStar_Syntax_Syntax.sort in
-               bind uu___2
+               op_let_Bang uu___2
                  (fun uu___3 ->
                     let uu___4 =
                       let uu___5 =
@@ -1391,7 +1390,7 @@ and (check' :
                                     match uu___7 with
                                     | (uu___8, t') ->
                                         let uu___9 = is_type g' t' in
-                                        bind uu___9
+                                        op_let_Bang uu___9
                                           (fun uu___10 -> return (E_TOTAL, t))) in
                              with_binders [x1] [u] uu___5)))
       | FStar_Syntax_Syntax.Tm_abs (xs, body, uu___) ->
@@ -1463,7 +1462,7 @@ and (check' :
                                          (fun uu___7 ->
                                             check_subtype g arg t_arg
                                               (x.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort) in
-                                     bind uu___6
+                                     op_let_Bang uu___6
                                        (fun uu___7 ->
                                           let uu___8 =
                                             with_context "app arg qual"
@@ -1471,7 +1470,7 @@ and (check' :
                                               (fun uu___9 ->
                                                  check_arg_qual arg_qual
                                                    x.FStar_Syntax_Syntax.binder_qual) in
-                                          bind uu___8
+                                          op_let_Bang uu___8
                                             (fun uu___9 ->
                                                let uu___10 =
                                                  let uu___11 =
@@ -1504,13 +1503,14 @@ and (check' :
                         match uu___5 with
                         | (uu___6, t') ->
                             let uu___7 = is_type g t' in
-                            bind uu___7
+                            op_let_Bang uu___7
                               (fun uu___8 ->
                                  let uu___9 =
                                    with_context "ascription subtyping"
                                      FStar_Pervasives_Native.None
                                      (fun uu___10 -> check_subtype g e2 te t) in
-                                 bind uu___9 (fun uu___10 -> return (eff, t)))))
+                                 op_let_Bang uu___9
+                                   (fun uu___10 -> return (eff, t)))))
       | FStar_Syntax_Syntax.Tm_ascribed
           (e2, (FStar_Pervasives.Inr c, uu___, uu___1), uu___2) ->
           let uu___3 = FStar_Syntax_Util.is_tot_or_gtot_comp c in
@@ -1529,7 +1529,7 @@ and (check' :
                        (fun uu___7 ->
                           let c_e = as_comp g (eff, te) in
                           let uu___8 = check_subcomp g e2 c_e c in
-                          bind uu___8
+                          op_let_Bang uu___8
                             (fun uu___9 ->
                                let uu___10 = comp_as_effect_label_and_type c in
                                match uu___10 with
@@ -1579,7 +1579,7 @@ and (check' :
                                                     check_subtype g
                                                       lb.FStar_Syntax_Syntax.lbdef
                                                       tdef ttyp) in
-                                             bind uu___9
+                                             op_let_Bang uu___9
                                                (fun uu___10 ->
                                                   let uu___11 =
                                                     let g1 =
@@ -1594,7 +1594,8 @@ and (check' :
                                                              let uu___14 =
                                                                check_no_escape
                                                                  [x1] t in
-                                                             bind uu___14
+                                                             op_let_Bang
+                                                               uu___14
                                                                (fun uu___15
                                                                   ->
                                                                   return
@@ -1634,7 +1635,8 @@ and (check' :
                                          path_condition
                                          FStar_Syntax_Util.t_false in
                                      guard uu___4 in
-                                   bind uu___3 (fun uu___4 -> return et))
+                                   op_let_Bang uu___3
+                                     (fun uu___4 -> return et))
                           | (p, FStar_Pervasives_Native.None, b)::rest ->
                               let uu___3 =
                                 FStar_Syntax_Subst.open_branch
@@ -1675,7 +1677,7 @@ and (check' :
                                                                     g' t_sc t in
                                                                  no_guard
                                                                    uu___12) in
-                                                          bind uu___10
+                                                          op_let_Bang uu___10
                                                             (fun uu___11 ->
                                                                let pat_sc_eq
                                                                  =
@@ -1716,7 +1718,7 @@ and (check' :
                                                                     =
                                                                     check_no_escape
                                                                     bs tbr in
-                                                                    bind
+                                                                    op_let_Bang
                                                                     uu___18
                                                                     (fun
                                                                     uu___19
@@ -1734,7 +1736,7 @@ and (check' :
                                                                     check_subtype
                                                                     g' b1 tbr
                                                                     expect_tbr in
-                                                                    bind
+                                                                    op_let_Bang
                                                                     uu___18
                                                                     (fun
                                                                     uu___19
@@ -1831,7 +1833,7 @@ and (check' :
                                 with_context "residual type"
                                   (FStar_Pervasives_Native.Some t)
                                   (fun uu___7 -> universe_of g t) in
-                              bind uu___6
+                              op_let_Bang uu___6
                                 (fun uu___7 ->
                                    return
                                      (FStar_Pervasives_Native.Some
@@ -1907,7 +1909,7 @@ and (check' :
                                                       path_condition
                                                       FStar_Syntax_Util.t_false in
                                                   guard uu___8 in
-                                                bind uu___7
+                                                op_let_Bang uu___7
                                                   (fun uu___8 ->
                                                      return acc_eff)
                                             | (p,
@@ -1975,7 +1977,7 @@ and (check' :
                                                                     t_sc t in
                                                                     no_guard
                                                                     uu___16) in
-                                                                    bind
+                                                                    op_let_Bang
                                                                     uu___14
                                                                     (fun
                                                                     uu___15
@@ -2030,7 +2032,7 @@ and (check' :
                                                                     check_subtype
                                                                     g' b1 tbr
                                                                     expect_tbr in
-                                                                    bind
+                                                                    op_let_Bang
                                                                     uu___22
                                                                     (fun
                                                                     uu___23
@@ -2209,7 +2211,7 @@ and (check_comp :
                           (fun uu___5 ->
                              check_subtype g effect_app_tm t
                                FStar_Syntax_Syntax.teff) in
-                      bind uu___4 (fun uu___5 -> return u)))
+                      op_let_Bang uu___4 (fun uu___5 -> return u)))
 and (universe_of :
   env -> FStar_Syntax_Syntax.typ -> FStar_Syntax_Syntax.universe result) =
   fun g ->
@@ -2309,7 +2311,7 @@ and (check_scrutinee_pattern_type_compatible :
                              FStar_Compiler_Util.format1
                                "%s is not a type constructor" uu___7 in
                            err uu___6) in
-                      bind uu___3
+                      op_let_Bang uu___3
                         (fun uu___4 ->
                            let uu___5 =
                              if
@@ -2328,7 +2330,7 @@ and (check_scrutinee_pattern_type_compatible :
                                     "Number of arguments don't match (%s and %s)"
                                     uu___8 uu___9 in
                                 err uu___7) in
-                           bind uu___5
+                           op_let_Bang uu___5
                              (fun uu___6 ->
                                 let uu___7 =
                                   let uu___8 =
