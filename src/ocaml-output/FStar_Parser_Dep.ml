@@ -1682,6 +1682,7 @@ let (collect_one :
                     (FStar_Compiler_List.iter collect_term))
              | FStar_Parser_AST.PatOp uu___3 -> ()
              | FStar_Parser_AST.PatConst uu___3 -> ()
+             | FStar_Parser_AST.PatVQuote t -> collect_term t
              | FStar_Parser_AST.PatApp (p, ps) ->
                  (collect_pattern p; collect_patterns ps)
              | FStar_Parser_AST.PatName uu___3 -> ()

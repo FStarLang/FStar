@@ -2745,186 +2745,490 @@ let (built_in_primitive_steps : primitive_step FStar_Compiler_Util.psmap) =
     uu___ :: uu___1 in
   let weak_ops = [] in
   let bounded_arith_ops =
-    let bounded_signed_int_types = ["Int8"; "Int16"; "Int32"; "Int64"] in
+    let bounded_signed_int_types =
+      [("Int8", (Prims.of_int (8)));
+      ("Int16", (Prims.of_int (16)));
+      ("Int32", (Prims.of_int (32)));
+      ("Int64", (Prims.of_int (64)))] in
     let bounded_unsigned_int_types =
-      ["UInt8"; "UInt16"; "UInt32"; "UInt64"; "UInt128"] in
-    let add_sub_mul_v =
+      [("UInt8", (Prims.of_int (8)));
+      ("UInt16", (Prims.of_int (16)));
+      ("UInt32", (Prims.of_int (32)));
+      ("UInt64", (Prims.of_int (64)));
+      ("UInt128", (Prims.of_int (128)))] in
+    let add_sub_mul_v_comparisons =
       FStar_Compiler_Effect.op_Bar_Greater
         (FStar_Compiler_List.op_At bounded_signed_int_types
            bounded_unsigned_int_types)
         (FStar_Compiler_List.collect
-           (fun m ->
-              let uu___ =
-                let uu___1 = FStar_Parser_Const.p2l ["FStar"; m; "add"] in
-                let uu___2 =
-                  FStar_TypeChecker_NBETerm.binary_op
-                    FStar_TypeChecker_NBETerm.arg_as_bounded_int
-                    (fun uu___3 ->
-                       fun uu___4 ->
-                         match (uu___3, uu___4) with
-                         | ((int_to_t, x, m1), (uu___5, y, uu___6)) ->
-                             let uu___7 =
-                               let uu___8 = FStar_BigInt.add_big_int x y in
-                               FStar_TypeChecker_NBETerm.int_as_bounded
-                                 int_to_t uu___8 in
-                             FStar_TypeChecker_NBETerm.with_meta_ds uu___7 m1) in
-                (uu___1, (Prims.of_int (2)), Prims.int_zero,
-                  (binary_op arg_as_bounded_int
-                     (fun r ->
-                        fun uu___3 ->
-                          fun uu___4 ->
-                            match (uu___3, uu___4) with
-                            | ((int_to_t, x, m1), (uu___5, y, uu___6)) ->
-                                let uu___7 =
-                                  let uu___8 = FStar_BigInt.add_big_int x y in
-                                  int_as_bounded r int_to_t uu___8 in
-                                with_meta_ds r uu___7 m1)), uu___2) in
-              let uu___1 =
-                let uu___2 =
-                  let uu___3 = FStar_Parser_Const.p2l ["FStar"; m; "sub"] in
-                  let uu___4 =
-                    FStar_TypeChecker_NBETerm.binary_op
-                      FStar_TypeChecker_NBETerm.arg_as_bounded_int
-                      (fun uu___5 ->
-                         fun uu___6 ->
-                           match (uu___5, uu___6) with
-                           | ((int_to_t, x, m1), (uu___7, y, uu___8)) ->
-                               let uu___9 =
-                                 let uu___10 = FStar_BigInt.sub_big_int x y in
-                                 FStar_TypeChecker_NBETerm.int_as_bounded
-                                   int_to_t uu___10 in
-                               FStar_TypeChecker_NBETerm.with_meta_ds uu___9
-                                 m1) in
-                  (uu___3, (Prims.of_int (2)), Prims.int_zero,
-                    (binary_op arg_as_bounded_int
-                       (fun r ->
-                          fun uu___5 ->
-                            fun uu___6 ->
-                              match (uu___5, uu___6) with
-                              | ((int_to_t, x, m1), (uu___7, y, uu___8)) ->
-                                  let uu___9 =
-                                    let uu___10 =
-                                      FStar_BigInt.sub_big_int x y in
-                                    int_as_bounded r int_to_t uu___10 in
-                                  with_meta_ds r uu___9 m1)), uu___4) in
-                let uu___3 =
-                  let uu___4 =
-                    let uu___5 = FStar_Parser_Const.p2l ["FStar"; m; "mul"] in
-                    let uu___6 =
+           (fun uu___ ->
+              match uu___ with
+              | (m, uu___1) ->
+                  let uu___2 =
+                    let uu___3 = FStar_Parser_Const.p2l ["FStar"; m; "add"] in
+                    let uu___4 =
                       FStar_TypeChecker_NBETerm.binary_op
                         FStar_TypeChecker_NBETerm.arg_as_bounded_int
-                        (fun uu___7 ->
-                           fun uu___8 ->
-                             match (uu___7, uu___8) with
-                             | ((int_to_t, x, m1), (uu___9, y, uu___10)) ->
-                                 let uu___11 =
-                                   let uu___12 =
-                                     FStar_BigInt.mult_big_int x y in
+                        (fun uu___5 ->
+                           fun uu___6 ->
+                             match (uu___5, uu___6) with
+                             | ((int_to_t, x, m1), (uu___7, y, uu___8)) ->
+                                 let uu___9 =
+                                   let uu___10 = FStar_BigInt.add_big_int x y in
                                    FStar_TypeChecker_NBETerm.int_as_bounded
-                                     int_to_t uu___12 in
+                                     int_to_t uu___10 in
                                  FStar_TypeChecker_NBETerm.with_meta_ds
-                                   uu___11 m1) in
-                    (uu___5, (Prims.of_int (2)), Prims.int_zero,
+                                   uu___9 m1) in
+                    (uu___3, (Prims.of_int (2)), Prims.int_zero,
                       (binary_op arg_as_bounded_int
                          (fun r ->
-                            fun uu___7 ->
-                              fun uu___8 ->
-                                match (uu___7, uu___8) with
-                                | ((int_to_t, x, m1), (uu___9, y, uu___10))
-                                    ->
-                                    let uu___11 =
-                                      let uu___12 =
-                                        FStar_BigInt.mult_big_int x y in
-                                      int_as_bounded r int_to_t uu___12 in
-                                    with_meta_ds r uu___11 m1)), uu___6) in
-                  let uu___5 =
-                    let uu___6 =
-                      let uu___7 = FStar_Parser_Const.p2l ["FStar"; m; "v"] in
-                      let uu___8 =
-                        FStar_TypeChecker_NBETerm.unary_op
+                            fun uu___5 ->
+                              fun uu___6 ->
+                                match (uu___5, uu___6) with
+                                | ((int_to_t, x, m1), (uu___7, y, uu___8)) ->
+                                    let uu___9 =
+                                      let uu___10 =
+                                        FStar_BigInt.add_big_int x y in
+                                      int_as_bounded r int_to_t uu___10 in
+                                    with_meta_ds r uu___9 m1)), uu___4) in
+                  let uu___3 =
+                    let uu___4 =
+                      let uu___5 = FStar_Parser_Const.p2l ["FStar"; m; "sub"] in
+                      let uu___6 =
+                        FStar_TypeChecker_NBETerm.binary_op
                           FStar_TypeChecker_NBETerm.arg_as_bounded_int
-                          (fun uu___9 ->
-                             match uu___9 with
-                             | (int_to_t, x, m1) ->
-                                 let uu___10 =
-                                   FStar_TypeChecker_NBETerm.embed
-                                     FStar_TypeChecker_NBETerm.e_int
-                                     bogus_cbs x in
-                                 FStar_TypeChecker_NBETerm.with_meta_ds
-                                   uu___10 m1) in
-                      (uu___7, Prims.int_one, Prims.int_zero,
-                        (unary_op arg_as_bounded_int
+                          (fun uu___7 ->
+                             fun uu___8 ->
+                               match (uu___7, uu___8) with
+                               | ((int_to_t, x, m1), (uu___9, y, uu___10)) ->
+                                   let uu___11 =
+                                     let uu___12 =
+                                       FStar_BigInt.sub_big_int x y in
+                                     FStar_TypeChecker_NBETerm.int_as_bounded
+                                       int_to_t uu___12 in
+                                   FStar_TypeChecker_NBETerm.with_meta_ds
+                                     uu___11 m1) in
+                      (uu___5, (Prims.of_int (2)), Prims.int_zero,
+                        (binary_op arg_as_bounded_int
                            (fun r ->
-                              fun uu___9 ->
-                                match uu___9 with
-                                | (int_to_t, x, m1) ->
-                                    let uu___10 =
-                                      embed_simple
-                                        FStar_Syntax_Embeddings.e_int r x in
-                                    with_meta_ds r uu___10 m1)), uu___8) in
-                    [uu___6] in
-                  uu___4 :: uu___5 in
-                uu___2 :: uu___3 in
-              uu___ :: uu___1)) in
-    let div_mod_unsigned =
+                              fun uu___7 ->
+                                fun uu___8 ->
+                                  match (uu___7, uu___8) with
+                                  | ((int_to_t, x, m1), (uu___9, y, uu___10))
+                                      ->
+                                      let uu___11 =
+                                        let uu___12 =
+                                          FStar_BigInt.sub_big_int x y in
+                                        int_as_bounded r int_to_t uu___12 in
+                                      with_meta_ds r uu___11 m1)), uu___6) in
+                    let uu___5 =
+                      let uu___6 =
+                        let uu___7 =
+                          FStar_Parser_Const.p2l ["FStar"; m; "mul"] in
+                        let uu___8 =
+                          FStar_TypeChecker_NBETerm.binary_op
+                            FStar_TypeChecker_NBETerm.arg_as_bounded_int
+                            (fun uu___9 ->
+                               fun uu___10 ->
+                                 match (uu___9, uu___10) with
+                                 | ((int_to_t, x, m1), (uu___11, y, uu___12))
+                                     ->
+                                     let uu___13 =
+                                       let uu___14 =
+                                         FStar_BigInt.mult_big_int x y in
+                                       FStar_TypeChecker_NBETerm.int_as_bounded
+                                         int_to_t uu___14 in
+                                     FStar_TypeChecker_NBETerm.with_meta_ds
+                                       uu___13 m1) in
+                        (uu___7, (Prims.of_int (2)), Prims.int_zero,
+                          (binary_op arg_as_bounded_int
+                             (fun r ->
+                                fun uu___9 ->
+                                  fun uu___10 ->
+                                    match (uu___9, uu___10) with
+                                    | ((int_to_t, x, m1),
+                                       (uu___11, y, uu___12)) ->
+                                        let uu___13 =
+                                          let uu___14 =
+                                            FStar_BigInt.mult_big_int x y in
+                                          int_as_bounded r int_to_t uu___14 in
+                                        with_meta_ds r uu___13 m1)), uu___8) in
+                      let uu___7 =
+                        let uu___8 =
+                          let uu___9 =
+                            FStar_Parser_Const.p2l ["FStar"; m; "v"] in
+                          let uu___10 =
+                            FStar_TypeChecker_NBETerm.unary_op
+                              FStar_TypeChecker_NBETerm.arg_as_bounded_int
+                              (fun uu___11 ->
+                                 match uu___11 with
+                                 | (int_to_t, x, m1) ->
+                                     let uu___12 =
+                                       FStar_TypeChecker_NBETerm.embed
+                                         FStar_TypeChecker_NBETerm.e_int
+                                         bogus_cbs x in
+                                     FStar_TypeChecker_NBETerm.with_meta_ds
+                                       uu___12 m1) in
+                          (uu___9, Prims.int_one, Prims.int_zero,
+                            (unary_op arg_as_bounded_int
+                               (fun r ->
+                                  fun uu___11 ->
+                                    match uu___11 with
+                                    | (int_to_t, x, m1) ->
+                                        let uu___12 =
+                                          embed_simple
+                                            FStar_Syntax_Embeddings.e_int r x in
+                                        with_meta_ds r uu___12 m1)), uu___10) in
+                        let uu___9 =
+                          let uu___10 =
+                            let uu___11 =
+                              FStar_Parser_Const.p2l ["FStar"; m; "gt"] in
+                            let uu___12 =
+                              FStar_TypeChecker_NBETerm.binary_op
+                                FStar_TypeChecker_NBETerm.arg_as_bounded_int
+                                (fun uu___13 ->
+                                   fun uu___14 ->
+                                     match (uu___13, uu___14) with
+                                     | ((int_to_t, x, m1),
+                                        (uu___15, y, uu___16)) ->
+                                         let uu___17 =
+                                           let uu___18 =
+                                             FStar_BigInt.gt_big_int x y in
+                                           FStar_TypeChecker_NBETerm.embed
+                                             FStar_TypeChecker_NBETerm.e_bool
+                                             bogus_cbs uu___18 in
+                                         FStar_TypeChecker_NBETerm.with_meta_ds
+                                           uu___17 m1) in
+                            (uu___11, (Prims.of_int (2)), Prims.int_zero,
+                              (binary_op arg_as_bounded_int
+                                 (fun r ->
+                                    fun uu___13 ->
+                                      fun uu___14 ->
+                                        match (uu___13, uu___14) with
+                                        | ((int_to_t, x, m1),
+                                           (uu___15, y, uu___16)) ->
+                                            let uu___17 =
+                                              let uu___18 =
+                                                FStar_BigInt.gt_big_int x y in
+                                              embed_simple
+                                                FStar_Syntax_Embeddings.e_bool
+                                                r uu___18 in
+                                            with_meta_ds r uu___17 m1)),
+                              uu___12) in
+                          let uu___11 =
+                            let uu___12 =
+                              let uu___13 =
+                                FStar_Parser_Const.p2l ["FStar"; m; "gte"] in
+                              let uu___14 =
+                                FStar_TypeChecker_NBETerm.binary_op
+                                  FStar_TypeChecker_NBETerm.arg_as_bounded_int
+                                  (fun uu___15 ->
+                                     fun uu___16 ->
+                                       match (uu___15, uu___16) with
+                                       | ((int_to_t, x, m1),
+                                          (uu___17, y, uu___18)) ->
+                                           let uu___19 =
+                                             let uu___20 =
+                                               FStar_BigInt.ge_big_int x y in
+                                             FStar_TypeChecker_NBETerm.embed
+                                               FStar_TypeChecker_NBETerm.e_bool
+                                               bogus_cbs uu___20 in
+                                           FStar_TypeChecker_NBETerm.with_meta_ds
+                                             uu___19 m1) in
+                              (uu___13, (Prims.of_int (2)), Prims.int_zero,
+                                (binary_op arg_as_bounded_int
+                                   (fun r ->
+                                      fun uu___15 ->
+                                        fun uu___16 ->
+                                          match (uu___15, uu___16) with
+                                          | ((int_to_t, x, m1),
+                                             (uu___17, y, uu___18)) ->
+                                              let uu___19 =
+                                                let uu___20 =
+                                                  FStar_BigInt.ge_big_int x y in
+                                                embed_simple
+                                                  FStar_Syntax_Embeddings.e_bool
+                                                  r uu___20 in
+                                              with_meta_ds r uu___19 m1)),
+                                uu___14) in
+                            let uu___13 =
+                              let uu___14 =
+                                let uu___15 =
+                                  FStar_Parser_Const.p2l ["FStar"; m; "lt"] in
+                                let uu___16 =
+                                  FStar_TypeChecker_NBETerm.binary_op
+                                    FStar_TypeChecker_NBETerm.arg_as_bounded_int
+                                    (fun uu___17 ->
+                                       fun uu___18 ->
+                                         match (uu___17, uu___18) with
+                                         | ((int_to_t, x, m1),
+                                            (uu___19, y, uu___20)) ->
+                                             let uu___21 =
+                                               let uu___22 =
+                                                 FStar_BigInt.lt_big_int x y in
+                                               FStar_TypeChecker_NBETerm.embed
+                                                 FStar_TypeChecker_NBETerm.e_bool
+                                                 bogus_cbs uu___22 in
+                                             FStar_TypeChecker_NBETerm.with_meta_ds
+                                               uu___21 m1) in
+                                (uu___15, (Prims.of_int (2)), Prims.int_zero,
+                                  (binary_op arg_as_bounded_int
+                                     (fun r ->
+                                        fun uu___17 ->
+                                          fun uu___18 ->
+                                            match (uu___17, uu___18) with
+                                            | ((int_to_t, x, m1),
+                                               (uu___19, y, uu___20)) ->
+                                                let uu___21 =
+                                                  let uu___22 =
+                                                    FStar_BigInt.lt_big_int x
+                                                      y in
+                                                  embed_simple
+                                                    FStar_Syntax_Embeddings.e_bool
+                                                    r uu___22 in
+                                                with_meta_ds r uu___21 m1)),
+                                  uu___16) in
+                              let uu___15 =
+                                let uu___16 =
+                                  let uu___17 =
+                                    FStar_Parser_Const.p2l
+                                      ["FStar"; m; "lte"] in
+                                  let uu___18 =
+                                    FStar_TypeChecker_NBETerm.binary_op
+                                      FStar_TypeChecker_NBETerm.arg_as_bounded_int
+                                      (fun uu___19 ->
+                                         fun uu___20 ->
+                                           match (uu___19, uu___20) with
+                                           | ((int_to_t, x, m1),
+                                              (uu___21, y, uu___22)) ->
+                                               let uu___23 =
+                                                 let uu___24 =
+                                                   FStar_BigInt.le_big_int x
+                                                     y in
+                                                 FStar_TypeChecker_NBETerm.embed
+                                                   FStar_TypeChecker_NBETerm.e_bool
+                                                   bogus_cbs uu___24 in
+                                               FStar_TypeChecker_NBETerm.with_meta_ds
+                                                 uu___23 m1) in
+                                  (uu___17, (Prims.of_int (2)),
+                                    Prims.int_zero,
+                                    (binary_op arg_as_bounded_int
+                                       (fun r ->
+                                          fun uu___19 ->
+                                            fun uu___20 ->
+                                              match (uu___19, uu___20) with
+                                              | ((int_to_t, x, m1),
+                                                 (uu___21, y, uu___22)) ->
+                                                  let uu___23 =
+                                                    let uu___24 =
+                                                      FStar_BigInt.le_big_int
+                                                        x y in
+                                                    embed_simple
+                                                      FStar_Syntax_Embeddings.e_bool
+                                                      r uu___24 in
+                                                  with_meta_ds r uu___23 m1)),
+                                    uu___18) in
+                                [uu___16] in
+                              uu___14 :: uu___15 in
+                            uu___12 :: uu___13 in
+                          uu___10 :: uu___11 in
+                        uu___8 :: uu___9 in
+                      uu___6 :: uu___7 in
+                    uu___4 :: uu___5 in
+                  uu___2 :: uu___3)) in
+    let unsigned_modulo_add_sub_mul_div_rem =
       FStar_Compiler_Effect.op_Bar_Greater bounded_unsigned_int_types
         (FStar_Compiler_List.collect
-           (fun m ->
-              let uu___ =
-                let uu___1 = FStar_Parser_Const.p2l ["FStar"; m; "div"] in
-                let uu___2 =
-                  FStar_TypeChecker_NBETerm.binary_op
-                    FStar_TypeChecker_NBETerm.arg_as_bounded_int
-                    (fun uu___3 ->
-                       fun uu___4 ->
-                         match (uu___3, uu___4) with
-                         | ((int_to_t, x, m1), (uu___5, y, uu___6)) ->
-                             let uu___7 =
-                               let uu___8 = FStar_BigInt.div_big_int x y in
-                               FStar_TypeChecker_NBETerm.int_as_bounded
-                                 int_to_t uu___8 in
-                             FStar_TypeChecker_NBETerm.with_meta_ds uu___7 m1) in
-                (uu___1, (Prims.of_int (2)), Prims.int_zero,
-                  (binary_op arg_as_bounded_int
-                     (fun r ->
-                        fun uu___3 ->
-                          fun uu___4 ->
-                            match (uu___3, uu___4) with
-                            | ((int_to_t, x, m1), (uu___5, y, uu___6)) ->
-                                let uu___7 =
-                                  let uu___8 = FStar_BigInt.div_big_int x y in
-                                  int_as_bounded r int_to_t uu___8 in
-                                with_meta_ds r uu___7 m1)), uu___2) in
-              let uu___1 =
-                let uu___2 =
-                  let uu___3 = FStar_Parser_Const.p2l ["FStar"; m; "rem"] in
-                  let uu___4 =
-                    FStar_TypeChecker_NBETerm.binary_op
-                      FStar_TypeChecker_NBETerm.arg_as_bounded_int
-                      (fun uu___5 ->
-                         fun uu___6 ->
-                           match (uu___5, uu___6) with
-                           | ((int_to_t, x, m1), (uu___7, y, uu___8)) ->
-                               let uu___9 =
-                                 let uu___10 = FStar_BigInt.mod_big_int x y in
-                                 FStar_TypeChecker_NBETerm.int_as_bounded
-                                   int_to_t uu___10 in
-                               FStar_TypeChecker_NBETerm.with_meta_ds uu___9
-                                 m1) in
-                  (uu___3, (Prims.of_int (2)), Prims.int_zero,
-                    (binary_op arg_as_bounded_int
-                       (fun r ->
-                          fun uu___5 ->
-                            fun uu___6 ->
-                              match (uu___5, uu___6) with
-                              | ((int_to_t, x, m1), (uu___7, y, uu___8)) ->
-                                  let uu___9 =
-                                    let uu___10 =
-                                      FStar_BigInt.mod_big_int x y in
-                                    int_as_bounded r int_to_t uu___10 in
-                                  with_meta_ds r uu___9 m1)), uu___4) in
-                [uu___2] in
-              uu___ :: uu___1)) in
+           (fun uu___ ->
+              match uu___ with
+              | (m, sz) ->
+                  let modulus =
+                    let uu___1 = FStar_BigInt.of_int_fs sz in
+                    FStar_BigInt.shift_left_big_int FStar_BigInt.one uu___1 in
+                  let mod1 x = FStar_BigInt.mod_big_int x modulus in
+                  let uu___1 =
+                    if sz = (Prims.of_int (128))
+                    then []
+                    else
+                      (let uu___3 =
+                         let uu___4 =
+                           FStar_Parser_Const.p2l ["FStar"; m; "mul_mod"] in
+                         let uu___5 =
+                           FStar_TypeChecker_NBETerm.binary_op
+                             FStar_TypeChecker_NBETerm.arg_as_bounded_int
+                             (fun uu___6 ->
+                                fun uu___7 ->
+                                  match (uu___6, uu___7) with
+                                  | ((int_to_t, x, m1), (uu___8, y, uu___9))
+                                      ->
+                                      let uu___10 =
+                                        let uu___11 =
+                                          let uu___12 =
+                                            FStar_BigInt.mult_big_int x y in
+                                          mod1 uu___12 in
+                                        FStar_TypeChecker_NBETerm.int_as_bounded
+                                          int_to_t uu___11 in
+                                      FStar_TypeChecker_NBETerm.with_meta_ds
+                                        uu___10 m1) in
+                         (uu___4, (Prims.of_int (2)), Prims.int_zero,
+                           (binary_op arg_as_bounded_int
+                              (fun r ->
+                                 fun uu___6 ->
+                                   fun uu___7 ->
+                                     match (uu___6, uu___7) with
+                                     | ((int_to_t, x, m1),
+                                        (uu___8, y, uu___9)) ->
+                                         let uu___10 =
+                                           let uu___11 =
+                                             let uu___12 =
+                                               FStar_BigInt.mult_big_int x y in
+                                             mod1 uu___12 in
+                                           int_as_bounded r int_to_t uu___11 in
+                                         with_meta_ds r uu___10 m1)), uu___5) in
+                       [uu___3]) in
+                  let uu___2 =
+                    let uu___3 =
+                      let uu___4 =
+                        FStar_Parser_Const.p2l ["FStar"; m; "add_mod"] in
+                      let uu___5 =
+                        FStar_TypeChecker_NBETerm.binary_op
+                          FStar_TypeChecker_NBETerm.arg_as_bounded_int
+                          (fun uu___6 ->
+                             fun uu___7 ->
+                               match (uu___6, uu___7) with
+                               | ((int_to_t, x, m1), (uu___8, y, uu___9)) ->
+                                   let uu___10 =
+                                     let uu___11 =
+                                       let uu___12 =
+                                         FStar_BigInt.add_big_int x y in
+                                       mod1 uu___12 in
+                                     FStar_TypeChecker_NBETerm.int_as_bounded
+                                       int_to_t uu___11 in
+                                   FStar_TypeChecker_NBETerm.with_meta_ds
+                                     uu___10 m1) in
+                      (uu___4, (Prims.of_int (2)), Prims.int_zero,
+                        (binary_op arg_as_bounded_int
+                           (fun r ->
+                              fun uu___6 ->
+                                fun uu___7 ->
+                                  match (uu___6, uu___7) with
+                                  | ((int_to_t, x, m1), (uu___8, y, uu___9))
+                                      ->
+                                      let uu___10 =
+                                        let uu___11 =
+                                          let uu___12 =
+                                            FStar_BigInt.add_big_int x y in
+                                          mod1 uu___12 in
+                                        int_as_bounded r int_to_t uu___11 in
+                                      with_meta_ds r uu___10 m1)), uu___5) in
+                    let uu___4 =
+                      let uu___5 =
+                        let uu___6 =
+                          FStar_Parser_Const.p2l ["FStar"; m; "sub_mod"] in
+                        let uu___7 =
+                          FStar_TypeChecker_NBETerm.binary_op
+                            FStar_TypeChecker_NBETerm.arg_as_bounded_int
+                            (fun uu___8 ->
+                               fun uu___9 ->
+                                 match (uu___8, uu___9) with
+                                 | ((int_to_t, x, m1), (uu___10, y, uu___11))
+                                     ->
+                                     let uu___12 =
+                                       let uu___13 =
+                                         let uu___14 =
+                                           FStar_BigInt.sub_big_int x y in
+                                         mod1 uu___14 in
+                                       FStar_TypeChecker_NBETerm.int_as_bounded
+                                         int_to_t uu___13 in
+                                     FStar_TypeChecker_NBETerm.with_meta_ds
+                                       uu___12 m1) in
+                        (uu___6, (Prims.of_int (2)), Prims.int_zero,
+                          (binary_op arg_as_bounded_int
+                             (fun r ->
+                                fun uu___8 ->
+                                  fun uu___9 ->
+                                    match (uu___8, uu___9) with
+                                    | ((int_to_t, x, m1),
+                                       (uu___10, y, uu___11)) ->
+                                        let uu___12 =
+                                          let uu___13 =
+                                            let uu___14 =
+                                              FStar_BigInt.sub_big_int x y in
+                                            mod1 uu___14 in
+                                          int_as_bounded r int_to_t uu___13 in
+                                        with_meta_ds r uu___12 m1)), uu___7) in
+                      let uu___6 =
+                        let uu___7 =
+                          let uu___8 =
+                            FStar_Parser_Const.p2l ["FStar"; m; "div"] in
+                          let uu___9 =
+                            FStar_TypeChecker_NBETerm.binary_op
+                              FStar_TypeChecker_NBETerm.arg_as_bounded_int
+                              (fun uu___10 ->
+                                 fun uu___11 ->
+                                   match (uu___10, uu___11) with
+                                   | ((int_to_t, x, m1),
+                                      (uu___12, y, uu___13)) ->
+                                       let uu___14 =
+                                         let uu___15 =
+                                           FStar_BigInt.div_big_int x y in
+                                         FStar_TypeChecker_NBETerm.int_as_bounded
+                                           int_to_t uu___15 in
+                                       FStar_TypeChecker_NBETerm.with_meta_ds
+                                         uu___14 m1) in
+                          (uu___8, (Prims.of_int (2)), Prims.int_zero,
+                            (binary_op arg_as_bounded_int
+                               (fun r ->
+                                  fun uu___10 ->
+                                    fun uu___11 ->
+                                      match (uu___10, uu___11) with
+                                      | ((int_to_t, x, m1),
+                                         (uu___12, y, uu___13)) ->
+                                          let uu___14 =
+                                            let uu___15 =
+                                              FStar_BigInt.div_big_int x y in
+                                            int_as_bounded r int_to_t uu___15 in
+                                          with_meta_ds r uu___14 m1)),
+                            uu___9) in
+                        let uu___8 =
+                          let uu___9 =
+                            let uu___10 =
+                              FStar_Parser_Const.p2l ["FStar"; m; "rem"] in
+                            let uu___11 =
+                              FStar_TypeChecker_NBETerm.binary_op
+                                FStar_TypeChecker_NBETerm.arg_as_bounded_int
+                                (fun uu___12 ->
+                                   fun uu___13 ->
+                                     match (uu___12, uu___13) with
+                                     | ((int_to_t, x, m1),
+                                        (uu___14, y, uu___15)) ->
+                                         let uu___16 =
+                                           let uu___17 =
+                                             FStar_BigInt.mod_big_int x y in
+                                           FStar_TypeChecker_NBETerm.int_as_bounded
+                                             int_to_t uu___17 in
+                                         FStar_TypeChecker_NBETerm.with_meta_ds
+                                           uu___16 m1) in
+                            (uu___10, (Prims.of_int (2)), Prims.int_zero,
+                              (binary_op arg_as_bounded_int
+                                 (fun r ->
+                                    fun uu___12 ->
+                                      fun uu___13 ->
+                                        match (uu___12, uu___13) with
+                                        | ((int_to_t, x, m1),
+                                           (uu___14, y, uu___15)) ->
+                                            let uu___16 =
+                                              let uu___17 =
+                                                FStar_BigInt.mod_big_int x y in
+                                              int_as_bounded r int_to_t
+                                                uu___17 in
+                                            with_meta_ds r uu___16 m1)),
+                              uu___11) in
+                          [uu___9] in
+                        uu___7 :: uu___8 in
+                      uu___5 :: uu___6 in
+                    uu___3 :: uu___4 in
+                  FStar_Compiler_List.op_At uu___1 uu___2)) in
     let mask m =
       match m with
       | "UInt8" -> FStar_BigInt.of_hex "ff"
@@ -2940,214 +3244,226 @@ let (built_in_primitive_steps : primitive_step FStar_Compiler_Util.psmap) =
     let bitwise =
       FStar_Compiler_Effect.op_Bar_Greater bounded_unsigned_int_types
         (FStar_Compiler_List.collect
-           (fun m ->
-              let uu___ =
-                let uu___1 = FStar_Parser_Const.p2l ["FStar"; m; "logor"] in
-                let uu___2 =
-                  FStar_TypeChecker_NBETerm.binary_op
-                    FStar_TypeChecker_NBETerm.arg_as_bounded_int
-                    (fun uu___3 ->
-                       fun uu___4 ->
-                         match (uu___3, uu___4) with
-                         | ((int_to_t, x, m1), (uu___5, y, uu___6)) ->
-                             let uu___7 =
-                               let uu___8 = FStar_BigInt.logor_big_int x y in
-                               FStar_TypeChecker_NBETerm.int_as_bounded
-                                 int_to_t uu___8 in
-                             FStar_TypeChecker_NBETerm.with_meta_ds uu___7 m1) in
-                (uu___1, (Prims.of_int (2)), Prims.int_zero,
-                  (binary_op arg_as_bounded_int
-                     (fun r ->
-                        fun uu___3 ->
-                          fun uu___4 ->
-                            match (uu___3, uu___4) with
-                            | ((int_to_t, x, m1), (uu___5, y, uu___6)) ->
-                                let uu___7 =
-                                  let uu___8 = FStar_BigInt.logor_big_int x y in
-                                  int_as_bounded r int_to_t uu___8 in
-                                with_meta_ds r uu___7 m1)), uu___2) in
-              let uu___1 =
-                let uu___2 =
-                  let uu___3 = FStar_Parser_Const.p2l ["FStar"; m; "logand"] in
-                  let uu___4 =
-                    FStar_TypeChecker_NBETerm.binary_op
-                      FStar_TypeChecker_NBETerm.arg_as_bounded_int
-                      (fun uu___5 ->
-                         fun uu___6 ->
-                           match (uu___5, uu___6) with
-                           | ((int_to_t, x, m1), (uu___7, y, uu___8)) ->
-                               let uu___9 =
-                                 let uu___10 =
-                                   FStar_BigInt.logand_big_int x y in
-                                 FStar_TypeChecker_NBETerm.int_as_bounded
-                                   int_to_t uu___10 in
-                               FStar_TypeChecker_NBETerm.with_meta_ds uu___9
-                                 m1) in
-                  (uu___3, (Prims.of_int (2)), Prims.int_zero,
-                    (binary_op arg_as_bounded_int
-                       (fun r ->
-                          fun uu___5 ->
-                            fun uu___6 ->
-                              match (uu___5, uu___6) with
-                              | ((int_to_t, x, m1), (uu___7, y, uu___8)) ->
-                                  let uu___9 =
-                                    let uu___10 =
-                                      FStar_BigInt.logand_big_int x y in
-                                    int_as_bounded r int_to_t uu___10 in
-                                  with_meta_ds r uu___9 m1)), uu___4) in
-                let uu___3 =
-                  let uu___4 =
-                    let uu___5 =
-                      FStar_Parser_Const.p2l ["FStar"; m; "logxor"] in
-                    let uu___6 =
+           (fun uu___ ->
+              match uu___ with
+              | (m, uu___1) ->
+                  let uu___2 =
+                    let uu___3 = FStar_Parser_Const.p2l ["FStar"; m; "logor"] in
+                    let uu___4 =
                       FStar_TypeChecker_NBETerm.binary_op
                         FStar_TypeChecker_NBETerm.arg_as_bounded_int
-                        (fun uu___7 ->
-                           fun uu___8 ->
-                             match (uu___7, uu___8) with
-                             | ((int_to_t, x, m1), (uu___9, y, uu___10)) ->
-                                 let uu___11 =
-                                   let uu___12 =
-                                     FStar_BigInt.logxor_big_int x y in
+                        (fun uu___5 ->
+                           fun uu___6 ->
+                             match (uu___5, uu___6) with
+                             | ((int_to_t, x, m1), (uu___7, y, uu___8)) ->
+                                 let uu___9 =
+                                   let uu___10 =
+                                     FStar_BigInt.logor_big_int x y in
                                    FStar_TypeChecker_NBETerm.int_as_bounded
-                                     int_to_t uu___12 in
+                                     int_to_t uu___10 in
                                  FStar_TypeChecker_NBETerm.with_meta_ds
-                                   uu___11 m1) in
-                    (uu___5, (Prims.of_int (2)), Prims.int_zero,
+                                   uu___9 m1) in
+                    (uu___3, (Prims.of_int (2)), Prims.int_zero,
                       (binary_op arg_as_bounded_int
                          (fun r ->
-                            fun uu___7 ->
-                              fun uu___8 ->
-                                match (uu___7, uu___8) with
-                                | ((int_to_t, x, m1), (uu___9, y, uu___10))
-                                    ->
-                                    let uu___11 =
-                                      let uu___12 =
-                                        FStar_BigInt.logxor_big_int x y in
-                                      int_as_bounded r int_to_t uu___12 in
-                                    with_meta_ds r uu___11 m1)), uu___6) in
-                  let uu___5 =
-                    let uu___6 =
-                      let uu___7 =
-                        FStar_Parser_Const.p2l ["FStar"; m; "lognot"] in
-                      let uu___8 =
-                        FStar_TypeChecker_NBETerm.unary_op
+                            fun uu___5 ->
+                              fun uu___6 ->
+                                match (uu___5, uu___6) with
+                                | ((int_to_t, x, m1), (uu___7, y, uu___8)) ->
+                                    let uu___9 =
+                                      let uu___10 =
+                                        FStar_BigInt.logor_big_int x y in
+                                      int_as_bounded r int_to_t uu___10 in
+                                    with_meta_ds r uu___9 m1)), uu___4) in
+                  let uu___3 =
+                    let uu___4 =
+                      let uu___5 =
+                        FStar_Parser_Const.p2l ["FStar"; m; "logand"] in
+                      let uu___6 =
+                        FStar_TypeChecker_NBETerm.binary_op
                           FStar_TypeChecker_NBETerm.arg_as_bounded_int
-                          (fun uu___9 ->
-                             match uu___9 with
-                             | (int_to_t, x, d) ->
-                                 let uu___10 =
+                          (fun uu___7 ->
+                             fun uu___8 ->
+                               match (uu___7, uu___8) with
+                               | ((int_to_t, x, m1), (uu___9, y, uu___10)) ->
                                    let uu___11 =
                                      let uu___12 =
-                                       FStar_BigInt.lognot_big_int x in
-                                     let uu___13 = mask m in
-                                     FStar_BigInt.logand_big_int uu___12
-                                       uu___13 in
-                                   FStar_TypeChecker_NBETerm.int_as_bounded
-                                     int_to_t uu___11 in
-                                 FStar_TypeChecker_NBETerm.with_meta_ds
-                                   uu___10 d) in
-                      (uu___7, Prims.int_one, Prims.int_zero,
-                        (unary_op arg_as_bounded_int
+                                       FStar_BigInt.logand_big_int x y in
+                                     FStar_TypeChecker_NBETerm.int_as_bounded
+                                       int_to_t uu___12 in
+                                   FStar_TypeChecker_NBETerm.with_meta_ds
+                                     uu___11 m1) in
+                      (uu___5, (Prims.of_int (2)), Prims.int_zero,
+                        (binary_op arg_as_bounded_int
                            (fun r ->
-                              fun uu___9 ->
-                                match uu___9 with
-                                | (int_to_t, x, d) ->
-                                    let uu___10 =
+                              fun uu___7 ->
+                                fun uu___8 ->
+                                  match (uu___7, uu___8) with
+                                  | ((int_to_t, x, m1), (uu___9, y, uu___10))
+                                      ->
                                       let uu___11 =
                                         let uu___12 =
-                                          FStar_BigInt.lognot_big_int x in
-                                        let uu___13 = mask m in
-                                        FStar_BigInt.logand_big_int uu___12
-                                          uu___13 in
-                                      int_as_bounded r int_to_t uu___11 in
-                                    with_meta_ds r uu___10 d)), uu___8) in
-                    let uu___7 =
-                      let uu___8 =
-                        let uu___9 =
-                          FStar_Parser_Const.p2l ["FStar"; m; "shift_left"] in
-                        let uu___10 =
+                                          FStar_BigInt.logand_big_int x y in
+                                        int_as_bounded r int_to_t uu___12 in
+                                      with_meta_ds r uu___11 m1)), uu___6) in
+                    let uu___5 =
+                      let uu___6 =
+                        let uu___7 =
+                          FStar_Parser_Const.p2l ["FStar"; m; "logxor"] in
+                        let uu___8 =
                           FStar_TypeChecker_NBETerm.binary_op
                             FStar_TypeChecker_NBETerm.arg_as_bounded_int
-                            (fun uu___11 ->
-                               fun uu___12 ->
-                                 match (uu___11, uu___12) with
-                                 | ((int_to_t, x, d), (uu___13, y, uu___14))
+                            (fun uu___9 ->
+                               fun uu___10 ->
+                                 match (uu___9, uu___10) with
+                                 | ((int_to_t, x, m1), (uu___11, y, uu___12))
                                      ->
-                                     let uu___15 =
-                                       let uu___16 =
-                                         let uu___17 =
-                                           FStar_BigInt.shift_left_big_int x
-                                             y in
-                                         let uu___18 = mask m in
-                                         FStar_BigInt.logand_big_int uu___17
-                                           uu___18 in
+                                     let uu___13 =
+                                       let uu___14 =
+                                         FStar_BigInt.logxor_big_int x y in
                                        FStar_TypeChecker_NBETerm.int_as_bounded
-                                         int_to_t uu___16 in
+                                         int_to_t uu___14 in
                                      FStar_TypeChecker_NBETerm.with_meta_ds
-                                       uu___15 d) in
-                        (uu___9, (Prims.of_int (2)), Prims.int_zero,
+                                       uu___13 m1) in
+                        (uu___7, (Prims.of_int (2)), Prims.int_zero,
                           (binary_op arg_as_bounded_int
                              (fun r ->
-                                fun uu___11 ->
-                                  fun uu___12 ->
-                                    match (uu___11, uu___12) with
-                                    | ((int_to_t, x, d),
-                                       (uu___13, y, uu___14)) ->
-                                        let uu___15 =
-                                          let uu___16 =
-                                            let uu___17 =
-                                              FStar_BigInt.shift_left_big_int
-                                                x y in
-                                            let uu___18 = mask m in
-                                            FStar_BigInt.logand_big_int
-                                              uu___17 uu___18 in
-                                          int_as_bounded r int_to_t uu___16 in
-                                        with_meta_ds r uu___15 d)), uu___10) in
-                      let uu___9 =
-                        let uu___10 =
-                          let uu___11 =
-                            FStar_Parser_Const.p2l
-                              ["FStar"; m; "shift_right"] in
-                          let uu___12 =
-                            FStar_TypeChecker_NBETerm.binary_op
+                                fun uu___9 ->
+                                  fun uu___10 ->
+                                    match (uu___9, uu___10) with
+                                    | ((int_to_t, x, m1),
+                                       (uu___11, y, uu___12)) ->
+                                        let uu___13 =
+                                          let uu___14 =
+                                            FStar_BigInt.logxor_big_int x y in
+                                          int_as_bounded r int_to_t uu___14 in
+                                        with_meta_ds r uu___13 m1)), uu___8) in
+                      let uu___7 =
+                        let uu___8 =
+                          let uu___9 =
+                            FStar_Parser_Const.p2l ["FStar"; m; "lognot"] in
+                          let uu___10 =
+                            FStar_TypeChecker_NBETerm.unary_op
                               FStar_TypeChecker_NBETerm.arg_as_bounded_int
-                              (fun uu___13 ->
-                                 fun uu___14 ->
-                                   match (uu___13, uu___14) with
-                                   | ((int_to_t, x, d),
-                                      (uu___15, y, uu___16)) ->
-                                       let uu___17 =
-                                         let uu___18 =
-                                           FStar_BigInt.shift_right_big_int x
-                                             y in
-                                         FStar_TypeChecker_NBETerm.int_as_bounded
-                                           int_to_t uu___18 in
-                                       FStar_TypeChecker_NBETerm.with_meta_ds
-                                         uu___17 d) in
-                          (uu___11, (Prims.of_int (2)), Prims.int_zero,
-                            (binary_op arg_as_bounded_int
+                              (fun uu___11 ->
+                                 match uu___11 with
+                                 | (int_to_t, x, d) ->
+                                     let uu___12 =
+                                       let uu___13 =
+                                         let uu___14 =
+                                           FStar_BigInt.lognot_big_int x in
+                                         let uu___15 = mask m in
+                                         FStar_BigInt.logand_big_int uu___14
+                                           uu___15 in
+                                       FStar_TypeChecker_NBETerm.int_as_bounded
+                                         int_to_t uu___13 in
+                                     FStar_TypeChecker_NBETerm.with_meta_ds
+                                       uu___12 d) in
+                          (uu___9, Prims.int_one, Prims.int_zero,
+                            (unary_op arg_as_bounded_int
                                (fun r ->
-                                  fun uu___13 ->
-                                    fun uu___14 ->
-                                      match (uu___13, uu___14) with
-                                      | ((int_to_t, x, d),
-                                         (uu___15, y, uu___16)) ->
-                                          let uu___17 =
-                                            let uu___18 =
-                                              FStar_BigInt.shift_right_big_int
-                                                x y in
-                                            int_as_bounded r int_to_t uu___18 in
-                                          with_meta_ds r uu___17 d)),
-                            uu___12) in
-                        [uu___10] in
-                      uu___8 :: uu___9 in
-                    uu___6 :: uu___7 in
-                  uu___4 :: uu___5 in
-                uu___2 :: uu___3 in
-              uu___ :: uu___1)) in
-    FStar_Compiler_List.op_At add_sub_mul_v
-      (FStar_Compiler_List.op_At div_mod_unsigned bitwise) in
+                                  fun uu___11 ->
+                                    match uu___11 with
+                                    | (int_to_t, x, d) ->
+                                        let uu___12 =
+                                          let uu___13 =
+                                            let uu___14 =
+                                              FStar_BigInt.lognot_big_int x in
+                                            let uu___15 = mask m in
+                                            FStar_BigInt.logand_big_int
+                                              uu___14 uu___15 in
+                                          int_as_bounded r int_to_t uu___13 in
+                                        with_meta_ds r uu___12 d)), uu___10) in
+                        let uu___9 =
+                          let uu___10 =
+                            let uu___11 =
+                              FStar_Parser_Const.p2l
+                                ["FStar"; m; "shift_left"] in
+                            let uu___12 =
+                              FStar_TypeChecker_NBETerm.binary_op
+                                FStar_TypeChecker_NBETerm.arg_as_bounded_int
+                                (fun uu___13 ->
+                                   fun uu___14 ->
+                                     match (uu___13, uu___14) with
+                                     | ((int_to_t, x, d),
+                                        (uu___15, y, uu___16)) ->
+                                         let uu___17 =
+                                           let uu___18 =
+                                             let uu___19 =
+                                               FStar_BigInt.shift_left_big_int
+                                                 x y in
+                                             let uu___20 = mask m in
+                                             FStar_BigInt.logand_big_int
+                                               uu___19 uu___20 in
+                                           FStar_TypeChecker_NBETerm.int_as_bounded
+                                             int_to_t uu___18 in
+                                         FStar_TypeChecker_NBETerm.with_meta_ds
+                                           uu___17 d) in
+                            (uu___11, (Prims.of_int (2)), Prims.int_zero,
+                              (binary_op arg_as_bounded_int
+                                 (fun r ->
+                                    fun uu___13 ->
+                                      fun uu___14 ->
+                                        match (uu___13, uu___14) with
+                                        | ((int_to_t, x, d),
+                                           (uu___15, y, uu___16)) ->
+                                            let uu___17 =
+                                              let uu___18 =
+                                                let uu___19 =
+                                                  FStar_BigInt.shift_left_big_int
+                                                    x y in
+                                                let uu___20 = mask m in
+                                                FStar_BigInt.logand_big_int
+                                                  uu___19 uu___20 in
+                                              int_as_bounded r int_to_t
+                                                uu___18 in
+                                            with_meta_ds r uu___17 d)),
+                              uu___12) in
+                          let uu___11 =
+                            let uu___12 =
+                              let uu___13 =
+                                FStar_Parser_Const.p2l
+                                  ["FStar"; m; "shift_right"] in
+                              let uu___14 =
+                                FStar_TypeChecker_NBETerm.binary_op
+                                  FStar_TypeChecker_NBETerm.arg_as_bounded_int
+                                  (fun uu___15 ->
+                                     fun uu___16 ->
+                                       match (uu___15, uu___16) with
+                                       | ((int_to_t, x, d),
+                                          (uu___17, y, uu___18)) ->
+                                           let uu___19 =
+                                             let uu___20 =
+                                               FStar_BigInt.shift_right_big_int
+                                                 x y in
+                                             FStar_TypeChecker_NBETerm.int_as_bounded
+                                               int_to_t uu___20 in
+                                           FStar_TypeChecker_NBETerm.with_meta_ds
+                                             uu___19 d) in
+                              (uu___13, (Prims.of_int (2)), Prims.int_zero,
+                                (binary_op arg_as_bounded_int
+                                   (fun r ->
+                                      fun uu___15 ->
+                                        fun uu___16 ->
+                                          match (uu___15, uu___16) with
+                                          | ((int_to_t, x, d),
+                                             (uu___17, y, uu___18)) ->
+                                              let uu___19 =
+                                                let uu___20 =
+                                                  FStar_BigInt.shift_right_big_int
+                                                    x y in
+                                                int_as_bounded r int_to_t
+                                                  uu___20 in
+                                              with_meta_ds r uu___19 d)),
+                                uu___14) in
+                            [uu___12] in
+                          uu___10 :: uu___11 in
+                        uu___8 :: uu___9 in
+                      uu___6 :: uu___7 in
+                    uu___4 :: uu___5 in
+                  uu___2 :: uu___3)) in
+    FStar_Compiler_List.op_At add_sub_mul_v_comparisons
+      (FStar_Compiler_List.op_At unsigned_modulo_add_sub_mul_div_rem bitwise) in
   let reveal_hide =
     (FStar_Parser_Const.reveal, (Prims.of_int (2)), Prims.int_one,
       (mixed_binary_op (fun x -> FStar_Pervasives_Native.Some x)
@@ -3203,9 +3519,7 @@ let (equality_ops : primitive_step FStar_Compiler_Util.psmap) =
                    (FStar_Syntax_Util.t_true.FStar_Syntax_Syntax.n);
                  FStar_Syntax_Syntax.pos = r;
                  FStar_Syntax_Syntax.vars =
-                   (FStar_Syntax_Util.t_true.FStar_Syntax_Syntax.vars);
-                 FStar_Syntax_Syntax.hash_code =
-                   (FStar_Syntax_Util.t_true.FStar_Syntax_Syntax.hash_code)
+                   (FStar_Syntax_Util.t_true.FStar_Syntax_Syntax.vars)
                }
          | FStar_Syntax_Util.NotEqual ->
              FStar_Pervasives_Native.Some
@@ -3214,9 +3528,7 @@ let (equality_ops : primitive_step FStar_Compiler_Util.psmap) =
                    (FStar_Syntax_Util.t_false.FStar_Syntax_Syntax.n);
                  FStar_Syntax_Syntax.pos = r;
                  FStar_Syntax_Syntax.vars =
-                   (FStar_Syntax_Util.t_false.FStar_Syntax_Syntax.vars);
-                 FStar_Syntax_Syntax.hash_code =
-                   (FStar_Syntax_Util.t_false.FStar_Syntax_Syntax.hash_code)
+                   (FStar_Syntax_Util.t_false.FStar_Syntax_Syntax.vars)
                }
          | uu___4 -> FStar_Pervasives_Native.None)
     | uu___ -> failwith "Unexpected number of arguments" in
@@ -3538,6 +3850,7 @@ let (translate_norm_step :
     | FStar_Syntax_Embeddings.UnfoldQual names ->
         [FStar_TypeChecker_Env.UnfoldUntil FStar_Syntax_Syntax.delta_constant;
         FStar_TypeChecker_Env.UnfoldQual names]
+    | FStar_Syntax_Embeddings.Unascribe -> [FStar_TypeChecker_Env.Unascribe]
     | FStar_Syntax_Embeddings.NBE -> [FStar_TypeChecker_Env.NBE]
     | FStar_Syntax_Embeddings.Unmeta -> [FStar_TypeChecker_Env.Unmeta]
 let (translate_norm_steps :
