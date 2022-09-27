@@ -118,10 +118,6 @@ let fetch_eq_side () : Tac (term * term) =
 ///                let l, r = quote left, quote right in
 ///                print (term_to_string l ^ " / " ^ term_to_string r) <: Tac unit))
 
-// Many of the tactics are written in the ``Tac`` effect, which isn't
-// well-supported in SMT.  FIXME: remove this once ``Tac`` is marked as a stable
-// effect.
-// GM: Tac is now stable, but some VCs are still tough on z3, so there are a few admit()s.
 
 /// Some utility functions
 /// ======================
@@ -294,7 +290,6 @@ let string_of_bindings (bindings: bindings) =
 the pattern.  Returns a result in the exception monad. **)
 let rec interp_pattern_aux (pat: pattern) (cur_bindings: bindings) (tm:term)
     : Tac (match_res bindings) =
-  admit();
   let interp_var (v: varname) cur_bindings tm =
     match List.Tot.Base.assoc v cur_bindings with
     | Some tm' -> if term_eq tm tm' then return cur_bindings
@@ -762,8 +757,7 @@ let match_abspat #b #a (abspat: a)
   let goal = cur_goal () in
   let hypotheses = binders_of_env (cur_env ()) in
   let problem, continuation = interp_abspat abspat in
-  admit();  //NS: imprecision in the encoding of the impure result function type
-  solve_mp #matching_solution problem hypotheses goal (k continuation)
+  solve_mp problem hypotheses goal (k continuation)
 
 (** Inspect the matching problem produced by parsing an abspat. **)
 let inspect_abspat_problem #a (abspat: a) : Tac matching_problem =
