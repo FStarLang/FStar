@@ -376,3 +376,13 @@ val curms : unit -> Tac int
 (** [set_urgency u] sets the urgency of error messages. Usually set just
 before raising an exception (see e.g. [fail_silently]). *)
 val set_urgency : int -> TacS unit
+
+(** [string_to_term e s] runs the F* parser on the string [s] in the
+environment [e], and produces a term. *)
+val string_to_term : env -> string -> Tac term
+
+(** [push_bv_dsenv e id] pushes a identifier [id] into the parsing
+environment of [e] an environment. It returns a new environment that
+has the identifier [id] along with its corresponding bounded
+variable. *)
+val push_bv_dsenv : env -> string -> Tac (env * bv)
