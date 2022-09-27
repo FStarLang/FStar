@@ -76,14 +76,11 @@ let if_then_else (a:Type)
   (fun h -> (p ==> pre_f h) /\ ((~ p) ==> pre_g h))
   (fun h0 r h1 -> (p ==> post_f h0 r h1) /\ ((~ p) ==> post_g h0 r h1))
 
+[@@ top_level_effect "HoareST.HoareSTT"]
 reifiable reflectable
-layered_effect {
-  HoareST : a:Type -> pre:pre_t -> post:post_t a -> Effect
-  with repr         = repr;
-       return       = return;
-       bind         = bind;
-       subcomp      = subcomp;
-       if_then_else = if_then_else
+effect {
+  HoareST (a:Type) (pre:pre_t) (post:post_t a)
+  with {repr; return; bind; subcomp; if_then_else}
 }
 
 
@@ -237,3 +234,11 @@ let copy (#a:Type0) (s:array a)
   let cpy = alloc (Seq.create (length s) (index s 0)) in
   copy_aux s cpy 0;
   cpy
+
+//
+// Top-level effect
+//
+
+effect HoareSTT (a:Type) (post:post_t a) = HoareST a (fun _ -> True) post
+
+let r : ref int = alloc 2

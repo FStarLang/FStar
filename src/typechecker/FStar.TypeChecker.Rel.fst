@@ -1807,6 +1807,18 @@ let run_meta_arg_tac (ctx_u:ctx_uvar) : term =
   | _ ->
     failwith "run_meta_arg_tac must have been called with a uvar that has a meta tac"
 
+let simplify_guard env g = match g.guard_f with
+    | Trivial -> g
+    | NonTrivial f ->
+      if Env.debug env <| Options.Other "Simplification" then BU.print1 "Simplifying guard %s\n" (Print.term_to_string f);
+      let f = norm_with_steps "FStar.TypeChecker.Rel.norm_with_steps.6"
+              [Env.Beta; Env.Eager_unfolding; Env.Simplify; Env.Primops; Env.NoFullNorm] env f in
+      if Env.debug env <| Options.Other "Simplification" then BU.print1 "Simplified guard to %s\n" (Print.term_to_string f);
+      let f = match (U.unmeta f).n with
+        | Tm_fvar fv when S.fv_eq_lid fv Const.true_lid -> Trivial
+        | _ -> NonTrivial f in
+      {g with guard_f=f}
+
 (******************************************************************************************************)
 (* Main solving algorithm begins here *)
 (******************************************************************************************************)
@@ -3203,7 +3215,11 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
     let try_match_heuristic env orig wl s1 s2 t1t2_opt =
         let try_solve_branch scrutinee p =
             let (Flex (_t, uv, _args), wl) = destruct_flex_t env scrutinee wl  in
-            let xs, pat_term, _, _ = PatternUtils.pat_as_exp true true env p in
+            //
+            // We add g_pat_as_exp implicits to the worklist later
+            // And we know it only contains implicits, no logical payload
+            //
+            let xs, pat_term, g_pat_as_exp, _ = PatternUtils.pat_as_exp true true env p in
             let subst, wl =
                 List.fold_left (fun (subst, wl) x ->
                     let t_x = SS.subst subst x.sort in
@@ -3214,31 +3230,86 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                     xs
             in
             let pat_term = SS.subst subst pat_term in
-            let prob, wl =
-                new_problem wl env scrutinee
-                            EQ pat_term None scrutinee.pos
-                            "match heuristic"
-            in
-            let wl' = {wl with defer_ok=NoDefer;
-                                smt_ok=false;
-                                attempting=[TProb prob];
-                                wl_deferred=[];
-                                wl_implicits=[]} in
-            let tx = UF.new_transaction () in
-            match solve env wl' with
-            | Success (_, defer_to_tac, imps) ->
-                let wl' = {wl' with attempting=[orig]} in
-                (match solve env wl' with
-                | Success (_, defer_to_tac', imps') ->
-                  UF.commit tx;
-                  Some (extend_wl wl [] (defer_to_tac@defer_to_tac') (imps@imps'))
 
-                | Failed _ ->
-                  UF.rollback tx;
-                  None)
-            | _ ->
-              UF.rollback tx;
-              None
+            //
+            // The pat term here contains uvars for dot patterns, and even bvs
+            //   and their types
+            // We are going to unify the pat_term with the scrutinee, and that
+            //   will solve some of those uvars
+            // But there are some uvars, e.g. for the dot pattern types, that will
+            //   not get constrained even with those unifications
+            //
+            // To constrain such uvars, we typecheck the pat_term with the type of
+            //   the scrutinee as the expected type
+            // This typechecking cannot use fastpath since the pat_term may be nested,
+            //   and may have uvars in nested levels (Cons ?u (Cons ?u1 ...)),
+            //   whereas fastpath may only compute the type from the top-level (list ?u here, e.g.)
+            // And so on
+            //
+
+            let pat_term, g_pat_term =
+              let must_tot = false in
+              //
+              // Note that we cannot just use the uv.ctx_uvar_typ,
+              //   since _args may be non-empty
+              // Also unrefine the scrutinee type
+              //
+              let scrutinee_t =
+                env.typeof_well_typed_tot_or_gtot_term env scrutinee must_tot
+                |> fst
+                |> N.normalize_refinement N.whnf_steps env
+                |> U.unrefine in
+              if Env.debug env <| Options.Other "Rel"
+              then BU.print1 "Match heuristic, typechecking the pattern term: %s {\n\n"
+                     (Print.term_to_string pat_term);
+              let pat_term, pat_term_t, g_pat_term =
+                env.typeof_tot_or_gtot_term
+                  (Env.set_expected_typ env scrutinee_t)
+                  pat_term
+                  must_tot in
+              if Env.debug env <| Options.Other "Rel"
+              then BU.print2 "} Match heuristic, typechecked pattern term to %s and type %s\n"
+                     (Print.term_to_string pat_term)
+                     (Print.term_to_string pat_term_t);
+              pat_term, g_pat_term in
+
+            //
+            // Enforce that the pattern typechecking guard has trivial logical payload
+            //
+            if g_pat_term |> simplify_guard env |> Env.is_trivial_guard_formula
+            then begin
+              let prob, wl = new_problem wl env scrutinee
+                EQ pat_term None scrutinee.pos
+                "match heuristic" in
+
+              let wl' = extend_wl ({wl with defer_ok=NoDefer;
+                                    smt_ok=false;
+                                    attempting=[TProb prob];
+                                    wl_deferred=[];
+                                    wl_implicits=[]})
+                                  g_pat_term.deferred
+                                  g_pat_term.deferred_to_tac
+                                  [] in
+              let tx = UF.new_transaction () in
+              match solve env wl' with
+              | Success (_, defer_to_tac, imps) ->
+                  let wl' = {wl' with attempting=[orig]} in
+                  (match solve env wl' with
+                  | Success (_, defer_to_tac', imps') ->
+                    UF.commit tx;
+                    Some (extend_wl wl
+                                    []
+                                    (defer_to_tac@defer_to_tac')
+                                    (imps@imps'@g_pat_as_exp.implicits@g_pat_term.implicits))
+  
+                  | Failed _ ->
+                    UF.rollback tx;
+                    None)
+              | _ ->
+                UF.rollback tx;
+                None
+            end
+            else None
         in
         match t1t2_opt with
         | None -> Inr None
@@ -3839,11 +3910,13 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
            && no_free_uvars t2
            then
              if not wl.smt_ok
+             || Options.ml_ish ()
              then if equal t1 t2
                   then solve env (solve_prob orig None [] wl)
                   else rigid_rigid_delta env problem wl head1 head2 t1 t2
              else solve_with_smt()
            else if not wl.smt_ok
+                || Options.ml_ish()
            then rigid_rigid_delta env problem wl head1 head2 t1 t2
            else (
             try_solve_then_or_else
@@ -4397,18 +4470,6 @@ let solve_and_commit env wl err
       let result = err (d,s) in
       UF.rollback tx;
       result
-
-let simplify_guard env g = match g.guard_f with
-    | Trivial -> g
-    | NonTrivial f ->
-      if Env.debug env <| Options.Other "Simplification" then BU.print1 "Simplifying guard %s\n" (Print.term_to_string f);
-      let f = norm_with_steps "FStar.TypeChecker.Rel.norm_with_steps.6"
-              [Env.Beta; Env.Eager_unfolding; Env.Simplify; Env.Primops; Env.NoFullNorm] env f in
-      if Env.debug env <| Options.Other "Simplification" then BU.print1 "Simplified guard to %s\n" (Print.term_to_string f);
-      let f = match (U.unmeta f).n with
-        | Tm_fvar fv when S.fv_eq_lid fv Const.true_lid -> Trivial
-        | _ -> NonTrivial f in
-      {g with guard_f=f}
 
 let with_guard env prob dopt =
     match dopt with

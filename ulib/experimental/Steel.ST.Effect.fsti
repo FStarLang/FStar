@@ -155,7 +155,10 @@ let if_then_else (a:Type)
 
 
 /// Assembling the combinators defined above into an actual effect
-[@@ite_soundness_by ite_attr]
+/// 
+/// If the effect appears at the top-level, make sure it is constrained as per STTop
+
+[@@ite_soundness_by ite_attr; top_level_effect "Steel.ST.Effect.STTop"]
 reflectable
 effect {
   STBase
@@ -172,6 +175,11 @@ effect ST (a:Type) (pre:pre_t) (post:post_t a) (req:pure_pre) (ens:pure_post a) 
 effect STF (a:Type) (pre:pre_t) (post:post_t a) (req:pure_pre) (ens:pure_post a) =
   STBase a true pre post req ens
 
+//
+// Trivial preconditions for top-level effect
+//
+effect STTop (a:Type) (framed:bool) (post:post_t a) (ens:pure_post a) =
+  STBase a framed emp post True ens
 
 /// Logical precondition of a Pure and a Steel computation composition.
 /// The current state (memory) must satisfy the precondition of the Steel computation,

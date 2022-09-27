@@ -42,6 +42,7 @@ type norm_step =
     | UnfoldFully of list string
     | UnfoldAttr  of list string
     | UnfoldQual  of list string
+    | Unascribe
     | NBE
     | Unmeta
 
@@ -67,6 +68,7 @@ val steps_Reify         : term
 val steps_UnfoldOnly    : term
 val steps_UnfoldFully   : term
 val steps_UnfoldAttr    : term
+val steps_Unascribe     : term
 val steps_NBE           : term
 val steps_Unmeta        : term
 

@@ -1426,6 +1426,11 @@ let (e_norm_step : FStar_Syntax_Embeddings.norm_step embedding) =
         let uu___ =
           FStar_Syntax_Syntax.lid_as_fv FStar_Parser_Const.steps_zeta_full
             FStar_Syntax_Syntax.delta_constant FStar_Pervasives_Native.None in
+        mkFV uu___ [] []
+    | FStar_Syntax_Embeddings.Unascribe ->
+        let uu___ =
+          FStar_Syntax_Syntax.lid_as_fv FStar_Parser_Const.steps_unascribe
+            FStar_Syntax_Syntax.delta_constant FStar_Pervasives_Native.None in
         mkFV uu___ [] [] in
   let un cb t0 =
     match t0.nbe_t with
@@ -1456,6 +1461,12 @@ let (e_norm_step : FStar_Syntax_Embeddings.norm_step embedding) =
     | FV (fv, uu___, []) when
         FStar_Syntax_Syntax.fv_eq_lid fv FStar_Parser_Const.steps_reify ->
         FStar_Pervasives_Native.Some FStar_Syntax_Embeddings.Reify
+    | FV (fv, uu___, []) when
+        FStar_Syntax_Syntax.fv_eq_lid fv FStar_Parser_Const.steps_zeta_full
+        -> FStar_Pervasives_Native.Some FStar_Syntax_Embeddings.ZetaFull
+    | FV (fv, uu___, []) when
+        FStar_Syntax_Syntax.fv_eq_lid fv FStar_Parser_Const.steps_unascribe
+        -> FStar_Pervasives_Native.Some FStar_Syntax_Embeddings.Unascribe
     | FV (fv, uu___, (l, uu___1)::[]) when
         FStar_Syntax_Syntax.fv_eq_lid fv FStar_Parser_Const.steps_unfoldonly
         ->
