@@ -13,7 +13,9 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-module Map
+module MyMap
+
+(* Renamed from Map to not clash with FStar.Map, and avoid the warning *)
 
 type map (k:eqtype) (v:Type) = k -> v
 
