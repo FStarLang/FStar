@@ -1435,7 +1435,7 @@ let (proc_guard' :
                  let uu___1 =
                    FStar_Tactics_Monad.add_implicits
                      g.FStar_TypeChecker_Common.implicits in
-                 FStar_Tactics_Monad.bind uu___1
+                 FStar_Tactics_Monad.op_let_Bang uu___1
                    (fun uu___2 ->
                       let guard_f =
                         if simplify
@@ -1448,7 +1448,8 @@ let (proc_guard' :
                       | FStar_TypeChecker_Common.Trivial ->
                           FStar_Tactics_Monad.ret ()
                       | FStar_TypeChecker_Common.NonTrivial f ->
-                          FStar_Tactics_Monad.bind FStar_Tactics_Monad.get
+                          FStar_Tactics_Monad.op_let_Bang
+                            FStar_Tactics_Monad.get
                             (fun ps ->
                                match ps.FStar_Tactics_Types.guard_policy with
                                | FStar_Tactics_Types.Drop ->
@@ -1478,7 +1479,8 @@ let (proc_guard' :
                                         let uu___4 =
                                           FStar_Tactics_Monad.goal_of_guard
                                             reason e f rng in
-                                        FStar_Tactics_Monad.bind uu___4
+                                        FStar_Tactics_Monad.op_let_Bang
+                                          uu___4
                                           (fun g1 ->
                                              FStar_Tactics_Monad.push_goals
                                                [g1]))
@@ -1495,7 +1497,8 @@ let (proc_guard' :
                                         let uu___4 =
                                           FStar_Tactics_Monad.goal_of_guard
                                             reason e f rng in
-                                        FStar_Tactics_Monad.bind uu___4
+                                        FStar_Tactics_Monad.op_let_Bang
+                                          uu___4
                                           (fun g1 ->
                                              FStar_Tactics_Monad.push_smt_goals
                                                [g1]))
@@ -5756,7 +5759,7 @@ let (gather_explicit_guards_for_resolved_goals :
   fun uu___ ->
     let uu___1 =
       let uu___2 =
-        FStar_Tactics_Monad.bind FStar_Tactics_Monad.get
+        FStar_Tactics_Monad.op_let_Bang FStar_Tactics_Monad.get
           (fun ps ->
              let goals_of_resolved_implicits =
                FStar_Compiler_List.filter_map
@@ -5787,7 +5790,7 @@ let (gather_explicit_guards_for_resolved_goals :
                  ps.FStar_Tactics_Types.tac_verb_dbg
                  "gather_explicit_guards_for_resolved_goals" true
                  goals_of_resolved_implicits in
-             FStar_Tactics_Monad.bind uu___3
+             FStar_Tactics_Monad.op_let_Bang uu___3
                (fun sub_goals ->
                   let sub_goals1 = FStar_Compiler_List.flatten sub_goals in
                   FStar_Tactics_Monad.add_goals sub_goals1)) in

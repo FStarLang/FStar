@@ -39,6 +39,8 @@ val ret : 'a -> tac 'a
 (* Monadic bind *)
 val bind : tac 'a -> ('a -> tac 'b) -> tac 'b
 
+val (let!) (t:tac 'a) (k:('a -> tac 'b)) : tac 'b
+
 (* Get current proofstate *)
 val get : tac proofstate
 

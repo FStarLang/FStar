@@ -1690,20 +1690,19 @@ let rec (desugar_data_pat :
                 (LocalBinder (x, FStar_Pervasives_Native.None, [])), uu___,
                 [])
           | FStar_Parser_AST.PatVQuote e ->
-              let uu___ =
-                let uu___1 =
-                  let uu___2 =
-                    let uu___3 =
-                      let uu___4 =
-                        desugar_vquote env1 e p1.FStar_Parser_AST.prange in
-                      (uu___4, (p1.FStar_Parser_AST.prange)) in
-                    FStar_Const.Const_string uu___3 in
-                  FStar_Parser_AST.PatConst uu___2 in
+              let pat =
+                let uu___ =
+                  let uu___1 =
+                    let uu___2 =
+                      desugar_vquote env1 e p1.FStar_Parser_AST.prange in
+                    (uu___2, (p1.FStar_Parser_AST.prange)) in
+                  FStar_Const.Const_string uu___1 in
+                FStar_Parser_AST.PatConst uu___ in
+              aux' top loc env1
                 {
-                  FStar_Parser_AST.pat = uu___1;
+                  FStar_Parser_AST.pat = pat;
                   FStar_Parser_AST.prange = (p1.FStar_Parser_AST.prange)
-                } in
-              aux' top loc env1 uu___
+                }
           | FStar_Parser_AST.PatTvar (x, aq, attrs) ->
               let aq1 = trans_bqual env1 aq in
               let attrs1 =
