@@ -539,29 +539,31 @@ match%sedlex lexbuf with
  | op_token_4
  | op_token_5 -> L.lexeme lexbuf |> Hashtbl.find operators
 
- | "<"       -> OPINFIX0c("<")
- | ">"       -> if is_typ_app_gt () then TYP_APP_GREATER else symbolchar_parser lexbuf
+ | "<" -> OPINFIX0c("<")
+ | ">" -> if is_typ_app_gt ()
+          then TYP_APP_GREATER
+          else begin match%sedlex lexbuf with
+               | Star symbolchar -> ensure_no_comment lexbuf (fun s -> OPINFIX0c (">" ^ s))
+               | _ -> assert false end
 
  (* Operators. *)
- | op_prefix,  Star symbolchar -> OPPREFIX (L.lexeme lexbuf)
- | op_infix0a, Star symbolchar -> OPINFIX0a (L.lexeme lexbuf)
- | op_infix0b, Star symbolchar -> OPINFIX0b (L.lexeme lexbuf)
- | op_infix0c_nogt, Star symbolchar -> OPINFIX0c (L.lexeme lexbuf)
- | op_infix0d, Star symbolchar -> OPINFIX0d (L.lexeme lexbuf)
- | op_infix1,  Star symbolchar -> OPINFIX1 (L.lexeme lexbuf)
- | op_infix2,  Star symbolchar -> OPINFIX2 (L.lexeme lexbuf)
- | "**"     ,  Star symbolchar -> OPINFIX4 (L.lexeme lexbuf)
+ | op_prefix,  Star symbolchar -> ensure_no_comment lexbuf (fun s -> OPPREFIX  s)
+ | op_infix0a, Star symbolchar -> ensure_no_comment lexbuf (fun s -> OPINFIX0a s)
+ | op_infix0b, Star symbolchar -> ensure_no_comment lexbuf (fun s -> OPINFIX0b s)
+ | op_infix0c_nogt, Star symbolchar -> ensure_no_comment lexbuf (fun s -> OPINFIX0c s)
+ | op_infix0d, Star symbolchar -> ensure_no_comment lexbuf (fun s -> OPINFIX0d s)
+ | op_infix1,  Star symbolchar -> ensure_no_comment lexbuf (fun s -> OPINFIX1  s)
+ | op_infix2,  Star symbolchar -> ensure_no_comment lexbuf (fun s -> OPINFIX2  s)
+ | op_infix3,  Star symbolchar -> ensure_no_comment lexbuf (function
+                                      | "" -> one_line_comment "" lexbuf
+                                      | s  -> OPINFIX3 s
+                                    )
+ | "**"     ,  Star symbolchar -> ensure_no_comment lexbuf (fun s -> OPINFIX4  s)
 
  (* Unicode Operators *)
  | uoperator -> let id = L.lexeme lexbuf in
    Hashtbl.find_option operators id |> Option.default (OPINFIX4 id)
 
- | op_infix3, Star symbolchar ->
-     let l = L.lexeme lexbuf in
-     if String.length l >= 2 && String.sub l 0 2 = "//" then
-       one_line_comment l lexbuf
-     else
-        OPINFIX3 l
  | ".[]<-"                 -> OP_MIXFIX_ASSIGNMENT (L.lexeme lexbuf)
  | ".()<-"                 -> OP_MIXFIX_ASSIGNMENT (L.lexeme lexbuf)
  | ".(||)<-"                -> OP_MIXFIX_ASSIGNMENT (L.lexeme lexbuf)
@@ -577,11 +579,6 @@ match%sedlex lexbuf with
 and one_line_comment pre lexbuf =
 match%sedlex lexbuf with
  | Star (Compl (10 | 13 | 0x2028 | 0x2029)) -> push_one_line_comment pre lexbuf; token lexbuf
- | _ -> assert false
-
-and symbolchar_parser lexbuf =
-match%sedlex lexbuf with
- | Star symbolchar -> OPINFIX0c (">" ^  L.lexeme lexbuf)
  | _ -> assert false
 
 and string buffer start_pos lexbuf =

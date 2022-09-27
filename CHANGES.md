@@ -227,6 +227,10 @@ Guidelines for the changelog:
      provided (using UInt128).
 
 ## Syntax
+   * PR #2686 forbids the sequence `//` in operators. For instance,
+     `+//` used to be a legal operator, it is not the case anymore,
+     since it is ambiguous with the comment syntax.
+
    * PR #2644 introduces monadic let operators in the surface
      syntax. One can now write:
 
