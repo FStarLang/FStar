@@ -250,7 +250,7 @@ noeq type match_res a =
 let return #a (x: a) : match_res a =
   Success x
 
-let bind (#a #b: Type)
+let (let?) (#a #b: Type)
          (f: match_res a)
          (g: a -> Tac (match_res b))
     : Tac (match_res b) =
@@ -314,8 +314,8 @@ let rec interp_pattern_aux (pat: pattern) (cur_bindings: bindings) (tm:term)
   let interp_app (p_hd p_arg: (p:pattern{p << pat})) cur_bindings tm =
     match inspect tm with
     | Tv_App hd (arg, _) ->
-      with_hd <-- interp_pattern_aux p_hd cur_bindings hd;
-      with_arg <-- interp_pattern_aux p_arg with_hd arg;
+      let? with_hd = interp_pattern_aux p_hd cur_bindings hd in
+      let? with_arg = interp_pattern_aux p_arg with_hd arg in
       return with_arg
     | _ -> raise (SimpleMismatch (pat, tm)) in
     match pat with
@@ -331,7 +331,7 @@ let rec interp_pattern_aux (pat: pattern) (cur_bindings: bindings) (tm:term)
 Returns a result in the exception monad. **)
 let interp_pattern (pat: pattern) : term -> Tac (match_res bindings) =
   fun (tm: term) ->
-    rev_bindings <-- interp_pattern_aux pat [] tm;
+    let? rev_bindings = interp_pattern_aux pat [] tm in
     return (List.Tot.Base.rev rev_bindings)
 
 (** Match a term `tm` against a pattern `pat`.
@@ -519,9 +519,9 @@ let rec pattern_of_term_ex tm : Tac (match_res pattern) =
   | Tv_Type _ ->
     return PType
   | Tv_App f (x, _) ->
-      (fpat <-- pattern_of_term_ex f;
-       xpat <-- pattern_of_term_ex x;
-       return (PApp fpat xpat))
+     let? fpat = pattern_of_term_ex f in
+     let? xpat = pattern_of_term_ex x in
+     return (PApp fpat xpat)
   | _ -> raise (UnsupportedTermInPattern tm)
 
 (** β-reduce a term `tm`.
