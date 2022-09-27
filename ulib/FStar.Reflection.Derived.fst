@@ -321,8 +321,7 @@ let rec mk_list (ts : list term) : term =
     | [] -> pack_ln (Tv_FVar (pack_fv nil_qn))
     | t::ts -> mk_cons t (mk_list ts)
 
-let mktuple_n (ts : list term) : term =
-    assume (List.Tot.Base.length ts <= 8);
+let mktuple_n (ts : list term{List.Tot.Base.length ts <= 8}) : term =
     match List.Tot.Base.length ts with
     | 0 -> pack_ln (Tv_Const C_Unit)
     | 1 -> let [x] = ts in x
