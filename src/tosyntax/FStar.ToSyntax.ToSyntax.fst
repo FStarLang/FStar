@@ -491,6 +491,7 @@ let rec gather_pattern_bound_vars_maybe_top acc p =
   match p.pat with
   | PatWild _
   | PatConst _
+  | PatVQuote _
   | PatName _
   | PatOp _ -> acc
   | PatApp (phead, pats) -> gather_pattern_bound_vars_from_list (phead::pats)
@@ -748,6 +749,41 @@ let check_linear_pattern_variables pats r =
 let smt_pat_lid (r:Range.range) = Ident.set_lid_range C.smtpat_lid r
 let smt_pat_or_lid (r:Range.range) = Ident.set_lid_range C.smtpatOr_lid r
 
+// [hoist_pat_ascription' pat] pulls [PatAscribed] nodes out of [pat]
+// and construct a tuple that consists in a non-ascribed pattern and a
+// type abscription.  Note [hoist_pat_ascription'] only works with
+// patterns whose ascriptions live under tuple or list nodes. This
+// function is used for [LetOperator] desugaring in
+// [resugar_data_pat], because direct ascriptions in patterns are
+// dropped (see issue #2678).
+let rec hoist_pat_ascription' (pat: pattern): pattern * option term
+  = let mk tm = mk_term tm (pat.prange) Type_level in
+    let handle_list type_lid pat_cons pats =
+      let pats, terms = List.unzip (List.map hoist_pat_ascription' pats) in
+      if List.for_all None? terms
+      then pat, None
+      else
+        let terms = List.map (function | Some t -> t | None -> mk Wild) terms in
+        { pat with pat = pat_cons pats}
+      , Some (mkApp (mk type_lid) (List.map (fun t -> (t, Nothing)) terms) pat.prange)
+    in match pat.pat with
+  | PatList pats -> handle_list (Var C.list_lid) PatList pats
+  | PatTuple (pats, dep) ->
+    handle_list
+      (Var ((if dep then C.mk_dtuple_lid else C.mk_tuple_lid) (List.length pats) pat.prange))
+      (fun pats -> PatTuple (pats, dep)) pats
+  | PatAscribed (pat, (typ, None)) -> pat, Some typ
+  // if [pat] is not a list, a tuple or an ascription, we cannot
+  // compose (at least not in a simple way) sub ascriptions, thus we
+  // return the pattern directly
+  | _ -> pat, None
+
+let hoist_pat_ascription (pat: pattern): pattern
+  = let pat, typ = hoist_pat_ascription' pat in
+    match typ with
+  | Some typ -> { pat with pat = PatAscribed (pat, (typ, None)) }
+  | None     -> pat
+
 (* TODO : Patterns should be checked that there are no incompatible type ascriptions *)
 (* and these type ascriptions should not be dropped !!!                              *)
 let rec desugar_data_pat
@@ -824,7 +860,13 @@ let rec desugar_data_pat
       | PatConst c ->
         let x = S.new_bv (Some p.prange) (tun_r p.prange) in
         loc, env, LocalBinder(x, None, []), pos <| Pat_constant c, []
-
+        
+      | PatVQuote e ->
+        // Here, we desugar [PatVQuote e] into a [PatConst s] where
+        // [s] is the (string represented) lid of [e] (see function
+        // [desugar_vquote]), then re-run desugaring on [PatConst s].
+        let pat = PatConst (Const_string (desugar_vquote env e p.prange, p.prange)) in
+        aux' top loc env ({ p with pat })
       | PatTvar(x, aq, attrs)
       | PatVar (x, aq, attrs) ->
         let aq = trans_bqual env aq in
@@ -1466,7 +1508,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
       ( match lets with
       | [] -> failwith "Impossible: a LetOperator (e.g. let+, let*...) cannot contain zero let binding"
       | (letOp, letPat, letDef)::tl ->
-        let term_of_op op = AST.mk_term (AST.Var (Ident.lid_of_ns_and_id [] op)) (range_of_id op) AST.Expr in
+        let term_of_op op = AST.mk_term (AST.Op (op, [])) (range_of_id op) AST.Expr in
         let mproduct_def = fold_left (fun def (andOp, andPat, andDef) ->
             AST.mkExplicitApp
               (term_of_op andOp)
@@ -1475,7 +1517,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
         let mproduct_pat = fold_left (fun pat (andOp, andPat, andDef) ->
             AST.mk_pattern (AST.PatTuple ([pat; andPat], false)) andPat.prange
         ) letPat tl in
-        let fn = AST.mk_term (Abs([mproduct_pat], body)) body.range body.level in
+        let fn = AST.mk_term (Abs([hoist_pat_ascription mproduct_pat], body)) body.range body.level in
         let let_op = term_of_op letOp in
         let t = AST.mkExplicitApp let_op [mproduct_def; fn] top.range in
         desugar_term_aq env t
@@ -1791,13 +1833,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
     | Paren e -> failwith "impossible"
 
     | VQuote e ->
-      (* Just get the lid and replace the VQuote for a string of it *)
-      let tm = desugar_term env e in
-      begin match (Subst.compress tm).n with
-      | Tm_fvar fv -> { U.exp_string (string_of_lid (lid_of_fv fv)) with pos = e.range }, noaqs
-      | _ ->
-        raise_error (Fatal_UnexpectedTermVQuote, ("VQuote, expected an fvar, got: " ^ P.term_to_string tm)) top.range
-      end
+      { U.exp_string (desugar_vquote env e top.range) with pos = e.range }, noaqs
 
     | Quote (e, Static) ->
       let tm, vts = desugar_term_aq env e in
@@ -2535,6 +2571,13 @@ and desugar_binder env b : option ident * S.term * list S.attribute =
    | TVariable x     -> Some x, mk (Tm_type U_unknown) (range_of_id x), attrs
    | NoName t        -> None, desugar_typ env t, attrs
    | Variable x      -> Some x, tun_r (range_of_id x), attrs
+
+and desugar_vquote env e r: string =
+  (* Returns the string representation of the lid behind [e], fails if it is not an FV *)
+  let tm = desugar_term env e in
+  match (Subst.compress tm).n with
+  | Tm_fvar fv -> string_of_lid (lid_of_fv fv)
+  | _ -> raise_error (Fatal_UnexpectedTermVQuote, ("VQuote, expected an fvar, got: " ^ P.term_to_string tm)) r
 
 and as_binder env imp = function
   | (None, k, attrs) ->

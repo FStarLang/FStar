@@ -1094,6 +1094,8 @@ let collect_one
         | PatOp _
         | PatConst _ ->
             ()
+        | PatVQuote t ->
+            collect_term t
         | PatApp (p, ps) ->
             collect_pattern p;
             collect_patterns ps

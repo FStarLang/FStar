@@ -1,5 +1,5 @@
 [
-  "'Ì¿Üš™Ô†v>Ã€]éLe",
+  "!\u001f˜+W\r\fOd\u001fNê\n^³ú",
   [
     [
       "FStar.Option.isNone",
@@ -80,6 +80,15 @@
       ],
       0,
       "0b43b069b2d7ba176742757a05ddca15"
+    ],
+    [
+      "FStar.Option.let_op_Question",
+      1,
+      2,
+      1,
+      [ "@query", "lemma_FStar.Pervasives.invertOption" ],
+      0,
+      "b2b2f9c798e79af91190693b6b021337"
     ]
   ]
 ]
