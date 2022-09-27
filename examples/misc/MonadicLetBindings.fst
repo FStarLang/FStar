@@ -6,6 +6,29 @@ open FStar.List.Tot
 ///
 /// Monadic let bindings allows the user to write custom _let
 /// operators_ to ease writing monadic programs.
+///
+/// F* supports:
+///
+///  - [let] operators [let*], that represent the _bind_ operator of a
+///    monad or the _map_ operator of a functor;
+///
+///  - [and] operators [and*], that represent a _pair_ operation
+///    (a.k.a. a reformulation of the [<*>] operator of an
+///    applicative);
+///
+///  - monadic pattern matching [match*], desugaring into (1) a [let]
+///    operator [let*] and (2) a normal [match];
+///
+///  - and monadic sequences [x ;* y], that desugars into
+///    [let* _ = x in y].
+///
+/// Note that above [*] stands for any non-empty sequence of character
+/// in the class "!$%&*+-.<>=?^|~:@#\\/".
+///
+/// Also, F* support the lightweight do notations [x <-- y; z] and [x
+/// ;; z] that desugars into [bind y (fun x -> z)] and [bind y (fun _
+/// -> z)], using the ambient identifier `bind`. However, this do
+/// notation is deprecated in favor of monadic let bindings.
 
 (**** The [option] monad *)
 // Bind operator
@@ -24,20 +47,54 @@ let head: list _ -> option _
   = function | v::_ -> Some v
              |   _ -> None
 
-let option_example (a b: list (int * int)) (c: option bool) = 
-  let? haL, haR = head a 
+let option_example (a b: list (int * int)) (c: option bool) =
+  let? haL, haR = head a
   and? hbL, hbR = head b in
   match? c with
   | true  -> Some (haL + hbL)
   | false -> Some (haR + hbR)
 
-let letPunning (a: option int)
+let let_punning (a: option int)
   = let? a in // equivalent to [let? a = a in]
     Some (a + 10)
+
+let sequence_example (validate: int -> option int) (x: int)
+  = validate x ;?
+    if x = 0 then None
+             else Some (42 / x)
 
 let _ = assert_norm (option_example [(1,2)] [(3,4)] (Some true) == Some 4)
 let _ = assert_norm (option_example [] [(3,4)] (Some true) == None)
 
+(**** How does let operators desugar? *)
+/// The [let<OP>] syntax is desugared into function applications.
+/// For instance, [sugared1] below desugars into [desugared1].
+/// Using Emacs's F* mode, it is easy to evaluate [sugared1] to show to
+/// what it desugar exactly, using the command [fstar-eval] (or the
+/// keybinding <C-c C-s C-e>)
+let sugared1 (let*) (and*) ex ey ez f
+  = let* x = ex
+    and* y = ey
+    and* z = ez in
+    f x y z
+let desugared1 op_let_Star op_and_Star ex ey ez f
+    = op_let_Star (op_and_Star (op_and_Star ex ey) ez)
+        (fun ((x, y), z) -> f x y z)
+
+let sugared2 (let?) (ex: option int): option int
+  = match? ex with
+  | 0 -> None
+  | x -> Some (10 / x)
+let desugared2 op_let_Question ex
+  = op_let_Question ex (fun x -> match x with
+                       | 0 -> None
+                       | x -> Some (10 / x))
+
+let sugared3 (let?) ex
+  = ex ;?
+    Some 1
+let desugared3 op_let_Question ex
+  = op_let_Question ex (fun _ -> Some 1)
 
 (**** The [list] monad *)
 let ( let:: ) (l: list 'a) (f: 'a -> list 'b): list 'b
@@ -81,3 +138,15 @@ let rec eval (e: exp): option int
                  | y -> let? x = eval x in
                        Some (x / y)
 
+
+(**** [pair] is just a reformulation of [<*>] *)
+// Section 7 of McBride & Patterson "Applicative programming with
+// effects" [https://www.staff.city.ac.uk/~ross/papers/Applicative.pdf]
+let applicative_eq (m: Type -> Type) (fmap: (#a:Type -> #b:Type -> (a -> b) -> m a -> m b)) =
+  let (<*>) (pair: (#a:Type -> #b:Type -> m a -> m b -> m (a * b)))
+    : #a:Type -> #b:Type -> m (a -> b) -> m a -> m b
+    = fun f o -> fmap (fun (f, x) -> f x) (pair f o) in
+  let pair ((<*>): (#a:Type -> #b:Type -> m (a -> b) -> m a -> m b))
+    : #a:Type -> #b:Type -> m a -> m b -> m (a * b)
+    = fun x y -> fmap Mktuple2 x <*> y in
+  ()

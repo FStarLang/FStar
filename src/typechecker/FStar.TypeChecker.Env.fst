@@ -996,20 +996,37 @@ let get_effect_decl env l =
     | None -> raise_error (name_not_found l) (range_of_lid l)
     | Some md -> fst md
 
+let get_lid_valued_effect_attr env
+  (eff_lid attr_name_lid:lident)
+  (default_if_attr_has_no_arg:option lident)
+  : option lident
+  = let attr_args =
+      eff_lid |> norm_eff_name env
+              |> lookup_attrs_of_lid env
+              |> BU.dflt []
+              |> U.get_attribute attr_name_lid in
+    match attr_args with
+    | None -> None
+    | Some args ->
+      if List.length args = 0
+      then default_if_attr_has_no_arg
+      else args
+           |> List.hd
+           |> (fun (t, _) ->
+              match (SS.compress t).n with
+              | Tm_constant (FStar.Const.Const_string (s, _)) -> s |> Ident.lid_of_str |> Some
+              | _ ->
+                raise_error
+                  (Errors.Fatal_UnexpectedEffect,
+                   BU.format2 "The argument for the effect attribute for %s is not a constant string, it is %s\n"
+                     (string_of_lid eff_lid)
+                     (Print.term_to_string t)) t.pos)
+
 let get_default_effect env lid =
-  lid |> norm_eff_name env
-      |> lookup_attrs_of_lid env
-      |> BU.dflt []
-      |> U.get_attribute Const.default_effect_attr
-      |> BU.map_option List.hd
-      |> BU.map_option (fun (t, _) ->
-                       match (SS.compress t).n with
-                       | Tm_constant (FStar.Const.Const_string (s, _)) -> Ident.lid_of_str s
-                       | _ ->
-                         raise_error (Errors.Fatal_UnexpectedEffect,
-                                      BU.format2 "The argument for the default effect attribute for %s is not a constant string, it is %s\n"
-                                        (string_of_lid lid)
-                                        (Print.term_to_string t)) t.pos)
+  get_lid_valued_effect_attr env lid Const.default_effect_attr None
+
+let get_top_level_effect env lid =
+  get_lid_valued_effect_attr env lid Const.top_level_effect_attr (Some lid)
 
 let is_layered_effect env l =
   l |> get_effect_decl env |> U.is_layered

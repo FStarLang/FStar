@@ -32,6 +32,7 @@ let tr1 = function
           | Zeta           -> EMB.Zeta
           | ZetaFull       -> EMB.ZetaFull
           | Iota           -> EMB.Iota
+          | Unascribe      -> EMB.Unascribe
           | NBE            -> EMB.NBE
           | Unmeta         -> EMB.Unmeta
           | Reify          -> EMB.Reify
@@ -49,6 +50,7 @@ let rt1 = function
           | EMB.Zeta           -> Zeta
           | EMB.ZetaFull       -> ZetaFull
           | EMB.Iota           -> Iota
+          | EMB.Unascribe      -> Unascribe
           | EMB.NBE            -> NBE
           | EMB.Unmeta         -> Unmeta
           | EMB.Reify          -> Reify

@@ -549,6 +549,7 @@ let e_norm_step =
                      mkFV (lid_as_fv PC.steps_unfoldnamespace S.delta_constant None)
                           [] [as_arg (embed (e_list e_string) cb l)]
         | SE.ZetaFull -> mkFV (lid_as_fv PC.steps_zeta_full S.delta_constant None) [] []
+        | SE.Unascribe -> mkFV (lid_as_fv PC.steps_unascribe S.delta_constant None) [] []
     in
     let un cb (t0:t) : option SE.norm_step =
         match t0.nbe_t with
@@ -570,6 +571,10 @@ let e_norm_step =
             Some SE.NBE
         | FV (fv, _, []) when S.fv_eq_lid fv PC.steps_reify ->
             Some SE.Reify
+        | FV (fv, _, []) when S.fv_eq_lid fv PC.steps_zeta_full ->
+            Some SE.ZetaFull
+        | FV (fv, _, []) when S.fv_eq_lid fv PC.steps_unascribe ->
+            Some SE.Unascribe
         | FV (fv, _, [(l, _)]) when S.fv_eq_lid fv PC.steps_unfoldonly ->
             BU.bind_opt (unembed (e_list e_string) cb l) (fun ss ->
             Some <| SE.UnfoldOnly ss)

@@ -694,6 +694,7 @@ let steps_UnfoldFully   = tconst PC.steps_unfoldonly
 let steps_UnfoldAttr    = tconst PC.steps_unfoldattr
 let steps_UnfoldQual    = tconst PC.steps_unfoldqual
 let steps_UnfoldNamespace = tconst PC.steps_unfoldnamespace
+let steps_Unascribe     = tconst PC.steps_unascribe
 let steps_NBE           = tconst PC.steps_nbe
 let steps_Unmeta        = tconst PC.steps_unmeta
 
@@ -726,6 +727,8 @@ let e_norm_step =
                     steps_ZetaFull
                 | Iota ->
                     steps_Iota
+                | Unascribe ->
+                    steps_Unascribe
                 | NBE ->
                     steps_NBE
                 | Unmeta ->
@@ -777,6 +780,8 @@ let e_norm_step =
                     Some ZetaFull
                 | Tm_fvar fv, [] when S.fv_eq_lid fv PC.steps_iota ->
                     Some Iota
+                | Tm_fvar fv, [] when S.fv_eq_lid fv PC.steps_unascribe ->
+                    Some Unascribe
                 | Tm_fvar fv, [] when S.fv_eq_lid fv PC.steps_nbe ->
                     Some NBE
                 | Tm_fvar fv, [] when S.fv_eq_lid fv PC.steps_unmeta ->

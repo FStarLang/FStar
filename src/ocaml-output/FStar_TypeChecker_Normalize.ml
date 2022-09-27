@@ -7163,9 +7163,6 @@ and (rebuild :
                        let cfg_exclude_zeta =
                          if
                            (cfg1.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.zeta_full
-                             ||
-                             (FStar_Pervasives_Native.uu___is_Some
-                                (cfg1.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.unfold_namespace)
                          then cfg1
                          else
                            (let new_delta =

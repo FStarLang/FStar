@@ -59,6 +59,7 @@ type norm_step =
   | UnfoldQual : list string -> norm_step
   | UnfoldNamespace : list string -> norm_step
   | Unmeta : norm_step
+  | Unascribe // Remove type ascriptions [t <: ty ~> t]
 
 irreducible
 let simplify = Simpl
@@ -107,6 +108,9 @@ let delta_namespace s = UnfoldNamespace s
 
 irreducible
 let unmeta = Unmeta
+
+irreducible
+let unascribe = Unascribe
 
 let norm _ #_ x = x
 
@@ -167,6 +171,7 @@ let normalize_for_extraction _ = ()
 let ite_soundness_by = ()
 
 let default_effect _ = ()
+let top_level_effect _ = ()
 let bind_has_range_args = ()
 
 let strictly_positive = ()

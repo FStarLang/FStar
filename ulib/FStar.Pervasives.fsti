@@ -279,6 +279,28 @@ val delta_namespace (s: list string) : Tot norm_step
    *)
 val unmeta : norm_step
 
+(**
+    This step removes ascriptions during normalization
+
+    An ascription is a type or computation type annotation on
+      an expression, written as (e <: t) or (e <: C)
+
+    normalize (e <: (t|C)) usually would normalize both the expression e
+      and the ascription
+
+    However, with unascribe step on, it will drop the ascription
+      and return the result of (normalize e),
+
+    Removing ascriptions may improve the performance,
+      as the normalization has less work to do
+
+    However, ascriptions help in re-typechecking of the terms,
+      and in some cases, are necessary for doing so
+
+    Use it with care
+
+   *)
+val unascribe : norm_step
 
 (** [norm s e] requests normalization of [e] with the reduction steps
     [s]. *)
@@ -1042,6 +1064,33 @@ val ite_soundness_by : unit
       the result type of the computation
   *)
 val default_effect (s:string) : Tot unit
+
+(** A layered effect may optionally be annotated with the
+    top_level_effect attribute so indicate that this effect may
+    appear at the top-level
+    (e.g., a top-level let x = e, where e has a layered effect type)
+
+    The top_level_effect attribute takes (optional) string argument, that is the
+    name of the effect abbreviation that may constrain effect arguments
+    for the top-level effect
+
+    As with default effect, the string argument must be a string constant,
+    and fully qualified
+
+    E.g. a Hoare-style effect `M a pre post`, may have the attribute
+    `@@ top_level_effect "N"`, where the effect abbreviation `N` may be:
+
+    effect N a post = M a True post
+
+    i.e., enforcing a trivial precondition if `M` appears at the top-level
+
+    If the argument to `top_level_effect` is absent, then the effect itself
+    is allowed at the top-level with any effect arguments
+
+    See tests/micro-benchmarks/TopLevelIndexedEffects.fst for examples
+
+    *)
+val top_level_effect (s:string) : Tot unit
 
 (** Bind definition for a layered effect may optionally contain range
     arguments, that are provided by the typechecker during reification
