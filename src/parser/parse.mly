@@ -1136,7 +1136,7 @@ binop_name:
   | o=OP_MIXFIX_ACCESS       { mk_ident (o, rhs parseState 1) }
 
 tmEqNoRefinement:
-  | e=tmEqWith(appTerm) { e }
+  | e=tmEqWith(appTermNoRecordExp) { e }
 
 tmEq:
   | e=tmEqWith(tmRefinement)  { e }
@@ -1145,7 +1145,7 @@ tmNoEq:
   | e=tmNoEqWith(tmRefinement) { e }
 
 tmRefinement:
-  | id=lidentOrUnderscore COLON e=appTerm phi_opt=refineOpt
+  | id=lidentOrUnderscore COLON e=appTermNoRecordExp phi_opt=refineOpt
       {
         let t = match phi_opt with
           | None -> NamedTyp(id, e)
@@ -1170,9 +1170,15 @@ simpleDef:
   | e=separated_pair(qlident, EQUALS, noSeqTerm) { e }
   | lid=qlident { lid, mk_term (Name (lid_of_ids [ ident_of_lid lid ])) (rhs parseState 1) Un }
 
-appTerm:
+%inline appTermCommon(argTerm):
   | head=indexingTerm args=list(argTerm)
       { mkApp head (map (fun (x,y) -> (y,x)) args) (rhs2 parseState 1 2) }
+
+appTerm:
+  | t=appTermCommon(t=argTerm {t} | h=maybeHash LBRACE t=recordExp RBRACE {h, t}) {t}
+
+appTermNoRecordExp:
+  | t=appTermCommon(argTerm) {t}
 
 argTerm:
   | x=pair(maybeHash, indexingTerm) { x }

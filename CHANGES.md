@@ -228,6 +228,13 @@ Guidelines for the changelog:
 
 ## Syntax
 
+   * PR #2670 makes F*'s parser accept unparenthesised record
+     expressions on function application. `f {x = 1}` is now legal
+     F\*, while before one was forced to write `f ({x = 1})`.
+
+	   Note that in the context of a (possible) refinement, this is not
+     allowed since it is a parser conflict.
+
    * PR #2669 allows name quotes in patterns, i.e. ``%`foo`` is a
      valid pattern and is desugared to the constant string
      pattern `"X.Y.Z.foo"`, with `X.Y.Z` being `foo`'s module.
