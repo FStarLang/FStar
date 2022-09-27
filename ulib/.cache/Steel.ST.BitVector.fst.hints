@@ -1,5 +1,5 @@
 [
-  "êN¬≥{‹Lßüñ/\u0016Ó™z…",
+  "íí($∏O›ògÌî‘W\u001dHç",
   [
     [
       "Steel.ST.BitVector.bv_t",
@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "f0ea3c54df3ab1f14c5e3b6beb0d6192"
+      "c2c1197b313c74c7b26272aa129e6bc9"
     ],
     [
       "Steel.ST.BitVector.pts_to_length",
@@ -17,7 +17,7 @@
       1,
       [ "@query" ],
       0,
-      "ea1801813c5654123d79ef0a643fdf61"
+      "73f9f3baf4a7048d82304c1228565d40"
     ],
     [
       "Steel.ST.BitVector.pts_to_length",
@@ -26,10 +26,10 @@
       1,
       [
         "@MaxIFuel_assumption", "@query", "equation_Steel.ST.BitVector.bv_t",
-        "refinement_interpretation_Tm_refine_6137d072aabd8f36861f0934645eca7b"
+        "refinement_interpretation_Tm_refine_ba90344fd7c406dec06152227a75d69e"
       ],
       0,
-      "1e4e2374e40a4195ecabca6c838a3035"
+      "cf4c1af60b9b3c7880fb51cfb83610ed"
     ],
     [
       "Steel.ST.BitVector.alloc",
@@ -41,16 +41,7 @@
         "refinement_interpretation_Tm_refine_9e7f68c38e43484e77069094f4fd88d3"
       ],
       0,
-      "d32473c85f26ee530421706be21ab040"
-    ],
-    [
-      "Steel.ST.BitVector.alloc",
-      2,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "f8e3b3eba70ebfbb6627144f44e2b006"
+      "a6598dce78223a6695982203bdb6a5e7"
     ],
     [
       "Steel.ST.BitVector.bv_is_set",
@@ -66,7 +57,7 @@
         "refinement_interpretation_Tm_refine_2ce108babc6ed3819eacd1b797e2708c"
       ],
       0,
-      "137324b09e6e3cf3df9bae614431880e"
+      "970867e873a0148478c5a2bc2b3c5193"
     ],
     [
       "Steel.ST.BitVector.bv_is_set",
@@ -78,7 +69,7 @@
         "refinement_interpretation_Tm_refine_2ce108babc6ed3819eacd1b797e2708c"
       ],
       0,
-      "9c6bdab903dfbc4a42c4dda9ed4d2f9e"
+      "f105de9b96bbc6ad12f14312a9e6c6ab"
     ],
     [
       "Steel.ST.BitVector.bv_set",
@@ -94,7 +85,7 @@
         "refinement_interpretation_Tm_refine_2ce108babc6ed3819eacd1b797e2708c"
       ],
       0,
-      "894eb43c55477bd1470a4581dbf1c120"
+      "c79d6df3ebe33d6d83123c2cc5a9d008"
     ],
     [
       "Steel.ST.BitVector.bv_set",
@@ -103,7 +94,7 @@
       1,
       [ "@query", "equation_Steel.ST.BitVector.repr" ],
       0,
-      "e3c9fa5ee7210b58eb20db014758891c"
+      "1be03593f6376fa2920703fa67a48fb1"
     ],
     [
       "Steel.ST.BitVector.bv_unset",
@@ -119,7 +110,7 @@
         "refinement_interpretation_Tm_refine_2ce108babc6ed3819eacd1b797e2708c"
       ],
       0,
-      "379622539b6ba01e1432d09b9a2114ed"
+      "0b946e4f1d1142dbb5bb85e0188e48f6"
     ],
     [
       "Steel.ST.BitVector.bv_unset",
@@ -128,7 +119,19 @@
       1,
       [ "@query", "equation_Steel.ST.BitVector.repr" ],
       0,
-      "3c28b7e9a6fb005a43bdf1fd6ab04c1f"
+      "4ecc01e2853243b2d58871c507d4eca9"
+    ],
+    [
+      "Steel.ST.BitVector.free",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Steel.ST.BitVector.bv_t",
+        "refinement_interpretation_Tm_refine_ba90344fd7c406dec06152227a75d69e"
+      ],
+      0,
+      "3eef02cde343f26bf1ec2a88a0f56581"
     ]
   ]
 ]

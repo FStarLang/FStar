@@ -435,11 +435,91 @@ val ghost_split
 
 
 /// Copies the contents of a0 to a1
-/// TODO: extraction (currently not handled yet?)
-val memcpy (#t:_) (#p0:perm)
+
+let blit_post
+(#t:_) (s0 s1:Ghost.erased (Seq.seq t))
+           (src:array t)
+           (idx_src: U32.t)
+           (dst:array t)
+           (idx_dst: U32.t)
+           (len: U32.t)
+           (s1' : Seq.seq t)
+: Tot prop
+= 
+        U32.v idx_src + U32.v len <= length src /\
+        U32.v idx_dst + U32.v len <= length dst /\
+        length src == Seq.length s0 /\
+        length dst == Seq.length s1 /\
+        Seq.length s1' == Seq.length s1 /\
+        Seq.slice s1' (U32.v idx_dst) (U32.v idx_dst + U32.v len) `Seq.equal`
+          Seq.slice s0 (U32.v idx_src) (U32.v idx_src + U32.v len) /\
+        Seq.slice s1' 0 (U32.v idx_dst) `Seq.equal`
+          Seq.slice s1 0 (U32.v idx_dst) /\
+        Seq.slice s1' (U32.v idx_dst + U32.v len) (length dst) `Seq.equal`
+          Seq.slice s1 (U32.v idx_dst + U32.v len) (length dst)
+
+[@@noextract_to "krml"] // primitive
+val blit_ptr (#t:_) (#p0:perm) (#s0 #s1:Ghost.erased (Seq.seq t))
+           (src:ptr t)
+           (len_src: Ghost.erased nat { offset src + len_src <= base_len (base src) })
+           (idx_src: U32.t)
+           (dst:ptr t)
+           (len_dst: Ghost.erased nat { offset dst + len_dst <= base_len (base dst) })
+           (idx_dst: U32.t)
+           (len: U32.t)
+  : ST unit
+    (pts_to (| src, len_src |) p0 s0 `star` pts_to (| dst, len_dst |) full_perm s1)
+    (fun _ -> pts_to (| src, len_src |) p0 s0  `star` exists_ (fun s1' ->
+      pts_to (| dst, len_dst |) full_perm s1' `star`
+      pure (blit_post s0 s1 (| src, len_src |) idx_src (| dst, len_dst |) idx_dst len s1')
+    ))
+    (
+        U32.v idx_src + U32.v len <= len_src /\
+        U32.v idx_dst + U32.v len <= len_dst
+    )
+    (fun _ -> True)
+
+inline_for_extraction
+[@@noextract_to "krml"]
+let blit (#t:_) (#p0:perm) (#s0 #s1:Ghost.erased (Seq.seq t))
+           (src:array t)
+           (idx_src: U32.t)
+           (dst:array t)
+           (idx_dst: U32.t)
+           (len: U32.t)
+  : ST unit
+    (pts_to src p0 s0 `star` pts_to dst full_perm s1)
+    (fun _ -> pts_to src p0 s0  `star` exists_ (fun s1' ->
+      pts_to dst full_perm s1' `star`
+      pure (blit_post s0 s1 src idx_src dst idx_dst len s1')
+    ))
+    (
+        U32.v idx_src + U32.v len <= length src /\
+        U32.v idx_dst + U32.v len <= length dst
+    )
+    (fun _ -> True)
+= let (| p_src, len_src |) = src in
+  vpattern_rewrite #_ #_ #src (fun src -> pts_to src p0 _) (| p_src, len_src |);
+  let (| p_dst, len_dst |) = dst in
+  vpattern_rewrite #_ #_ #dst (fun dst -> pts_to dst full_perm _) (| p_dst, len_dst |);
+  blit_ptr p_src len_src idx_src p_dst len_dst idx_dst len;
+  let _ = elim_exists () in
+  elim_pure _;
+  vpattern_rewrite #_ #_ #(| p_src, _ |) (fun src -> pts_to src p0 _) src;
+  vpattern_rewrite #_ #_ #(| p_dst, _ |) (fun dst -> pts_to dst full_perm _) dst;
+  noop ()
+
+inline_for_extraction
+[@@noextract_to "krml"]
+let memcpy (#t:_) (#p0:perm)
            (a0 a1:array t)
            (#s0 #s1:Ghost.erased (Seq.seq t))
            (l:U32.t { U32.v l == length a0 /\ length a0 == length a1 } )
   : STT unit
     (pts_to a0 p0 s0 `star` pts_to a1 full_perm s1)
     (fun _ -> pts_to a0 p0 s0  `star` pts_to a1 full_perm s0)
+= blit #t #p0 #s0 #s1 a0 0ul a1 0ul l;
+  let s1' = elim_exists () in
+  elim_pure (blit_post s0 s1 a0 0ul a1 0ul l s1');
+  vpattern_rewrite (pts_to a1 full_perm) (Ghost.reveal s0);
+  return ()
