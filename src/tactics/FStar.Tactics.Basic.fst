@@ -1916,6 +1916,26 @@ let t_commute_applied_match () : tac unit = wrap_err "t_commute_applied_match" <
   | None ->
     fail "not an equality")
 
+let string_to_term (e: Env.env) (s: string): tac term
+  = let open FStar.Parser.ParseIt in
+    let frag_of_text s = { frag_fname= "<string_of_term>"
+                         ; frag_line = 1 ; frag_col  = 0
+                         ; frag_text = s } in
+    match parse (Fragment (frag_of_text s)) with
+    | Term t ->
+      let dsenv = FStar.Syntax.DsEnv.set_current_module e.dsenv (current_module e) in
+      begin try ret (FStar.ToSyntax.ToSyntax.desugar_term dsenv t) with
+          | FStar.Errors.Error (_, e, _, _) -> fail ("string_of_term: " ^ e)
+          | _ -> fail ("string_of_term: Unknown error")
+      end
+    | ASTFragment _ -> fail ("string_of_term: expected a Term as a result, got an ASTFragment")
+    | ParseError (_, err, _) -> fail ("string_of_term: got error " ^ err)
+
+let push_bv_dsenv (e: Env.env) (i: string): tac (env * bv)
+  = let ident = Ident.mk_ident (i, FStar.Compiler.Range.dummyRange) in
+    let dsenv, bv = FStar.Syntax.DsEnv.push_bv e.dsenv ident in
+    ret ({ e with dsenv }, bv)
+
 (**** Creating proper environments and proofstates ****)
 
 let tac_env (env:Env.env) : Env.env =
