@@ -1025,6 +1025,7 @@ and p_atomicPattern p = match p.pat with
     optional p_aqual aqual ^^ p_attributes attrs ^^ underscore
   | PatConst c ->
     p_constant c
+  | PatVQuote e -> group (str "`%" ^^ p_noSeqTermAndComment false false e)
   | PatVar (lid, aqual, attrs) ->
     optional p_aqual aqual ^^ p_attributes attrs ^^ p_lident lid
   | PatName uid ->

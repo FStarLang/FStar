@@ -131,6 +131,7 @@ and pattern' =
   | PatAscribed of pattern * (term * option term)
   | PatOr       of list pattern
   | PatOp       of ident
+  | PatVQuote   of term (* [`%foo], transformed into "X.Y.Z.foo" by the desugarer *)
 and pattern = {pat:pattern'; prange:range}
 
 and branch = (pattern * option term * term)
@@ -871,6 +872,7 @@ and pat_to_string x = match x.pat with
   | PatWild (None, attrs) -> attr_list_to_string attrs ^ "_"
   | PatWild (_, attrs) -> "#" ^ (attr_list_to_string attrs) ^ "_" 
   | PatConst c -> C.const_to_string c
+  | PatVQuote t -> Util.format1 "`%%%s" (term_to_string t)
   | PatApp(p, ps) -> Util.format2 "(%s %s)" (p |> pat_to_string) (to_string_l " " pat_to_string ps)
   | PatTvar (i, aq, attrs)
   | PatVar (i,  aq, attrs) -> Util.format3 "%s%s%s"

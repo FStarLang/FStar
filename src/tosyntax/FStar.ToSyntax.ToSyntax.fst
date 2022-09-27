@@ -491,6 +491,7 @@ let rec gather_pattern_bound_vars_maybe_top acc p =
   match p.pat with
   | PatWild _
   | PatConst _
+  | PatVQuote _
   | PatName _
   | PatOp _ -> acc
   | PatApp (phead, pats) -> gather_pattern_bound_vars_from_list (phead::pats)
@@ -859,7 +860,13 @@ let rec desugar_data_pat
       | PatConst c ->
         let x = S.new_bv (Some p.prange) (tun_r p.prange) in
         loc, env, LocalBinder(x, None, []), pos <| Pat_constant c, []
-
+        
+      | PatVQuote e ->
+        // Here, we desugar [PatVQuote e] into a [PatConst s] where
+        // [s] is the (string represented) lid of [e] (see function
+        // [desugar_vquote]), then re-run desugaring on [PatConst s].
+        let pat = PatConst (Const_string (desugar_vquote env e p.prange, p.prange)) in
+        aux' top loc env ({ p with pat })
       | PatTvar(x, aq, attrs)
       | PatVar (x, aq, attrs) ->
         let aq = trans_bqual env aq in
@@ -1826,13 +1833,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
     | Paren e -> failwith "impossible"
 
     | VQuote e ->
-      (* Just get the lid and replace the VQuote for a string of it *)
-      let tm = desugar_term env e in
-      begin match (Subst.compress tm).n with
-      | Tm_fvar fv -> { U.exp_string (string_of_lid (lid_of_fv fv)) with pos = e.range }, noaqs
-      | _ ->
-        raise_error (Fatal_UnexpectedTermVQuote, ("VQuote, expected an fvar, got: " ^ P.term_to_string tm)) top.range
-      end
+      { U.exp_string (desugar_vquote env e top.range) with pos = e.range }, noaqs
 
     | Quote (e, Static) ->
       let tm, vts = desugar_term_aq env e in
@@ -2570,6 +2571,13 @@ and desugar_binder env b : option ident * S.term * list S.attribute =
    | TVariable x     -> Some x, mk (Tm_type U_unknown) (range_of_id x), attrs
    | NoName t        -> None, desugar_typ env t, attrs
    | Variable x      -> Some x, tun_r (range_of_id x), attrs
+
+and desugar_vquote env e r: string =
+  (* Returns the string representation of the lid behind [e], fails if it is not an FV *)
+  let tm = desugar_term env e in
+  match (Subst.compress tm).n with
+  | Tm_fvar fv -> string_of_lid (lid_of_fv fv)
+  | _ -> raise_error (Fatal_UnexpectedTermVQuote, ("VQuote, expected an fvar, got: " ^ P.term_to_string tm)) r
 
 and as_binder env imp = function
   | (None, k, attrs) ->
