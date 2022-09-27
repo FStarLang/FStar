@@ -1021,3 +1021,16 @@ let rec mk_abs (args : list binder) (t : term) : Tac term (decreases args) =
   | a :: args' ->
     let t' = mk_abs args' t in
     pack (Tv_Abs a t')
+
+(** [string_to_term_with_lb [(id1, t1); ...; (idn, tn)] e s] parses
+[s] as a term in environment [e] augmented with bindings
+[id1, t1], ..., [idn, tn]. *)
+let string_to_term_with_lb
+  (letbindings: list (string * term))
+  (e: env) (t: string): Tac term
+  = let e, lb_bvs = fold_left (fun (e, lb_bvs) (i, v) ->
+        let e, bv = push_bv_dsenv e i in
+        e, (v,bv)::lb_bvs
+      ) (e, []) letbindings in
+    let t = string_to_term e t in
+    fold_left (fun t (i, bv) -> pack (Tv_Let false [] bv i t)) t lb_bvs
