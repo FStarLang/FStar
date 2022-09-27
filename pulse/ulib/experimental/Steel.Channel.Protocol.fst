@@ -61,6 +61,9 @@ let rec bind #a #b (p:protocol a) (q:(a -> protocol b))
       Msg tag c k
     | DoWhile w k -> DoWhile w (bind k q)
 
+unfold
+let (let^) = bind
+
 let return (#a:Type) (x:a) : protocol a = Return x
 let done = return ()
 let send (t:Type) : protocol t = Msg Send t (fun x -> return x)
@@ -70,14 +73,14 @@ let recv (t:Type) : protocol t = Msg Recv t (fun x -> return x)
 
 (* Send an int [x], recv a [y > x] *)
 let xy : prot unit =
-  x <-- send int;
-  y <-- recv (y:int{y > x});
+  let^ x = send int in
+  let^ y = recv (y:int{y > x}) in
   return ()
 
 let rec hnf (p:protocol 'a)
   : (q:protocol 'a{(Return? q \/ Msg? q) /\ (~(DoWhile? p) ==> (p == q))})
   = match p with
-    | DoWhile p k -> b <-- hnf p ; if b then DoWhile p k else k
+    | DoWhile p k -> let^ b = hnf p in if b then DoWhile p k else k
     | _ -> p
 
 let finished (p:protocol 'a) : GTot bool = Return? (hnf p)
