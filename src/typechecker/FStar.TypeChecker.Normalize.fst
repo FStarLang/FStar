@@ -910,7 +910,8 @@ let should_unfold cfg should_reify fv qninfo : should_unfold_res =
           cfg.steps.unfold_only,
           cfg.steps.unfold_fully,
           cfg.steps.unfold_attr,
-          cfg.steps.unfold_qual
+          cfg.steps.unfold_qual,
+          cfg.steps.unfold_namespace
     with
     // We unfold dm4f actions if and only if we are reifying
     | _ when Env.qninfo_is_action qninfo ->
@@ -926,27 +927,28 @@ let should_unfold cfg should_reify fv qninfo : should_unfold_res =
         no
 
     // Don't unfold HasMaskedEffect
-    | Some (Inr ({sigquals=qs; sigel=Sig_let((is_rec, _), _)}, _), _), _, _, _, _ when
+    | Some (Inr ({sigquals=qs; sigel=Sig_let((is_rec, _), _)}, _), _), _, _, _, _, _ when
             List.contains HasMaskedEffect qs ->
         log_unfolding cfg (fun () -> BU.print_string " >> HasMaskedEffect, not unfolding\n");
         no
 
     // UnfoldTac means never unfold FVs marked [@"tac_opaque"]
-    | _, _, _, _, _ when cfg.steps.unfold_tac && BU.for_some (U.attr_eq U.tac_opaque_attr) attrs ->
+    | _, _, _, _, _, _ when cfg.steps.unfold_tac && BU.for_some (U.attr_eq U.tac_opaque_attr) attrs ->
         log_unfolding cfg (fun () -> BU.print_string " >> tac_opaque, not unfolding\n");
         no
 
     // Recursive lets may only be unfolded when Zeta is on
-    | Some (Inr ({sigquals=qs; sigel=Sig_let((is_rec, _), _)}, _), _), _, _, _, _ when
+    | Some (Inr ({sigquals=qs; sigel=Sig_let((is_rec, _), _)}, _), _), _, _, _, _, _ when
             is_rec && not cfg.steps.zeta && not cfg.steps.zeta_full ->
         log_unfolding cfg (fun () -> BU.print_string " >> It's a recursive definition but we're not doing Zeta, not unfolding\n");
         no
 
     // We're doing selectively unfolding, assume it to not unfold unless it meets the criteria
-    | _, Some _, _, _, _
-    | _, _, Some _, _, _
-    | _, _, _, Some _, _
-    | _, _, _, _, Some _ ->
+    | _, Some _, _, _, _, _
+    | _, _, Some _, _, _, _
+    | _, _, _, Some _, _, _
+    | _, _, _, _, Some _, _
+    | _, _, _, _, _, Some _ ->
         log_unfolding cfg (fun () -> BU.print1 "should_unfold: Reached a %s with selective unfolding\n"
                                                (Print.fv_to_string fv));
         // How does the following code work?
@@ -980,6 +982,10 @@ let should_unfold cfg should_reify fv qninfo : should_unfold_res =
                      (fun qual -> Print.qual_to_string qual = q)
                      quals)
                qs)
+           ;(match cfg.steps.unfold_namespace with
+             | None -> no
+             | Some namespaces ->
+               yesno <| BU.for_some (fun ns -> BU.starts_with (FStar.Ident.nsstr (lid_of_fv fv)) ns) namespaces)
            ]
         in
         meets_some_criterion
@@ -1034,6 +1040,7 @@ let decide_unfolding cfg env stack rng fv qninfo (* : option (cfg * stack) *) =
                      ; unfold_fully = None
                      ; unfold_attr  = None
                      ; unfold_qual  = None
+                     ; unfold_namespace = None
                      ; unfold_until = Some delta_constant } } in
 
         (* Take care to not change the stack's head if there's a universe
@@ -2717,6 +2724,7 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
                     unfold_only = None;
                     unfold_attr = None;
                     unfold_qual = None;
+                    unfold_namespace = None;
                     unfold_tac = false
              }
              in

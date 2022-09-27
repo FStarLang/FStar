@@ -542,6 +542,12 @@ let e_norm_step =
         | SE.UnfoldAttr l ->
                      mkFV (lid_as_fv PC.steps_unfoldattr S.delta_constant None)
                           [] [as_arg (embed (e_list e_string) cb l)]
+        | SE.UnfoldQual l ->
+                     mkFV (lid_as_fv PC.steps_unfoldqual S.delta_constant None)
+                          [] [as_arg (embed (e_list e_string) cb l)]
+        | SE.UnfoldNamespace l ->
+                     mkFV (lid_as_fv PC.steps_unfoldnamespace S.delta_constant None)
+                          [] [as_arg (embed (e_list e_string) cb l)]
         | SE.ZetaFull -> mkFV (lid_as_fv PC.steps_zeta_full S.delta_constant None) [] []
     in
     let un cb (t0:t) : option SE.norm_step =
@@ -573,6 +579,12 @@ let e_norm_step =
         | FV (fv, _, [(l, _)]) when S.fv_eq_lid fv PC.steps_unfoldattr ->
             BU.bind_opt (unembed (e_list e_string) cb l) (fun ss ->
             Some <| SE.UnfoldAttr ss)
+        | FV (fv, _, [(l, _)]) when S.fv_eq_lid fv PC.steps_unfoldqual ->
+            BU.bind_opt (unembed (e_list e_string) cb l) (fun ss ->
+            Some <| SE.UnfoldQual ss)
+        | FV (fv, _, [(l, _)]) when S.fv_eq_lid fv PC.steps_unfoldnamespace ->
+            BU.bind_opt (unembed (e_list e_string) cb l) (fun ss ->
+            Some <| SE.UnfoldNamespace ss)            
         | _ ->
             Errors.log_issue Range.dummyRange (Errors.Warning_NotEmbedded, (BU.format1 "Not an embedded norm_step: %s" (t_to_string t0)));
             None

@@ -44,6 +44,7 @@ let steps_to_string f =
     unfold_fully = %s;\n\
     unfold_attr = %s;\n\
     unfold_qual = %s;\n\
+    unfold_namespace = %s;\n\    
     unfold_tac = %s;\n\
     pure_subterms_within_computations = %s;\n\
     simplify = %s;\n\
@@ -73,6 +74,7 @@ let steps_to_string f =
     f.unfold_fully |> format_opt (fun x -> List.map Ident.string_of_lid x |> String.concat ", ");
     f.unfold_attr |> format_opt (fun x -> List.map Ident.string_of_lid x |> String.concat ", ");
     f.unfold_qual |> format_opt (String.concat ", ");
+    f.unfold_namespace |> format_opt (String.concat ", ");    
     f.unfold_tac |> b;
     f.pure_subterms_within_computations |> b;
     f.simplify |> b;
@@ -104,6 +106,7 @@ let default_steps : fsteps = {
     unfold_fully = None;
     unfold_attr = None;
     unfold_qual = None;
+    unfold_namespace = None;    
     unfold_tac = false;
     pure_subterms_within_computations = false;
     simplify = false;
@@ -147,6 +150,8 @@ let fstep_add_one s fs =
       if List.contains "pure_subterms_within_computations" strs
       then {fs with pure_subterms_within_computations = true}
       else fs
+    | UnfoldNamespace strs ->
+     { fs with unfold_namespace  = Some strs }
     | UnfoldTac ->  { fs with unfold_tac = true }
     | PureSubtermsWithinComputations ->  { fs with pure_subterms_within_computations = true }
     | Simplify ->  { fs with simplify = true }
@@ -1152,6 +1157,8 @@ let translate_norm_step = function
         [UnfoldUntil delta_constant; UnfoldAttr (List.map I.lid_of_str names)]
     | EMB.UnfoldQual names ->
         [UnfoldUntil delta_constant; UnfoldQual names]
+    | EMB.UnfoldNamespace names ->
+        [UnfoldUntil delta_constant; UnfoldNamespace names]
     | EMB.NBE -> [NBE]
     | EMB.Unmeta -> [Unmeta]
 

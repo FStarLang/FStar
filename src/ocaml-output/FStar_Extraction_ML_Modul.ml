@@ -2347,6 +2347,9 @@ let rec (extract_sig :
                               FStar_TypeChecker_Normalize.normalize steps
                                 env1 lb.FStar_Syntax_Syntax.lbdef) uu___6
                            "FStar.Extraction.ML.Module.normalize_for_extraction" in
+                       (let uu___7 = FStar_Syntax_Print.term_to_string lbd in
+                        FStar_Compiler_Util.print1
+                          "normalize_for_extraction produced:\n%s\n" uu___7);
                        {
                          FStar_Syntax_Syntax.lbname =
                            (lb.FStar_Syntax_Syntax.lbname);

@@ -269,6 +269,8 @@ val delta_attr (s: list string) : Tot norm_step
   *)
 val delta_qualifier (s: list string) : Tot norm_step
 
+val delta_namespace (s: list string) : Tot norm_step
+
 (**
     This step removes the some internal meta nodes during normalization
 

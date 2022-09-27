@@ -693,6 +693,7 @@ let steps_UnfoldOnly    = tconst PC.steps_unfoldonly
 let steps_UnfoldFully   = tconst PC.steps_unfoldonly
 let steps_UnfoldAttr    = tconst PC.steps_unfoldattr
 let steps_UnfoldQual    = tconst PC.steps_unfoldqual
+let steps_UnfoldNamespace = tconst PC.steps_unfoldnamespace
 let steps_NBE           = tconst PC.steps_nbe
 let steps_Unmeta        = tconst PC.steps_unmeta
 
@@ -743,6 +744,10 @@ let e_norm_step =
                 | UnfoldQual l ->
                     S.mk_Tm_app steps_UnfoldQual [S.as_arg (embed (e_list e_string) l rng None norm)]
                                 rng
+                | UnfoldNamespace l ->
+                    S.mk_Tm_app steps_UnfoldNamespace [S.as_arg (embed (e_list e_string) l rng None norm)]
+                                rng
+                                
 
                 )
     in
@@ -790,6 +795,9 @@ let e_norm_step =
                 | Tm_fvar fv, [(l, _)] when S.fv_eq_lid fv PC.steps_unfoldqual ->
                     BU.bind_opt (unembed (e_list e_string) l w norm) (fun ss ->
                     Some <| UnfoldQual ss)
+                | Tm_fvar fv, [(l, _)] when S.fv_eq_lid fv PC.steps_unfoldnamespace ->
+                    BU.bind_opt (unembed (e_list e_string) l w norm) (fun ss ->
+                    Some <| UnfoldNamespace ss)
                 | _ ->
                     if w then
                     Err.log_issue t0.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded norm_step: %s" (Print.term_to_string t0)));

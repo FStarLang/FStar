@@ -27,6 +27,7 @@ type norm_step =
   | UnfoldFully of Prims.string Prims.list 
   | UnfoldAttr of Prims.string Prims.list 
   | UnfoldQual of Prims.string Prims.list 
+  | UnfoldNamespace of Prims.string Prims.list 
   | Unmeta 
 let (uu___is_Simpl : norm_step -> Prims.bool) =
   fun projectee -> match projectee with | Simpl -> true | uu___ -> false
@@ -68,6 +69,12 @@ let (uu___is_UnfoldQual : norm_step -> Prims.bool) =
     match projectee with | UnfoldQual _0 -> true | uu___ -> false
 let (__proj__UnfoldQual__item___0 : norm_step -> Prims.string Prims.list) =
   fun projectee -> match projectee with | UnfoldQual _0 -> _0
+let (uu___is_UnfoldNamespace : norm_step -> Prims.bool) =
+  fun projectee ->
+    match projectee with | UnfoldNamespace _0 -> true | uu___ -> false
+let (__proj__UnfoldNamespace__item___0 :
+  norm_step -> Prims.string Prims.list) =
+  fun projectee -> match projectee with | UnfoldNamespace _0 -> _0
 let (uu___is_Unmeta : norm_step -> Prims.bool) =
   fun projectee -> match projectee with | Unmeta -> true | uu___ -> false
 let (simplify : norm_step) = Simpl
@@ -88,6 +95,8 @@ let (delta_attr : Prims.string Prims.list -> norm_step) =
   fun s -> UnfoldAttr s
 let (delta_qualifier : Prims.string Prims.list -> norm_step) =
   fun s -> UnfoldAttr s
+let (delta_namespace : Prims.string Prims.list -> norm_step) =
+  fun s -> UnfoldNamespace s
 let (unmeta : norm_step) = Unmeta
 let (norm : norm_step Prims.list -> unit -> Obj.t -> Obj.t) =
   fun uu___ -> fun uu___1 -> fun x -> x
