@@ -4377,6 +4377,8 @@ and (p_atomicTerm : FStar_Parser_AST.term -> FStar_Pprint.document) =
           FStar_Pprint.op_Hat_Hat FStar_Pprint.dot uu___2 in
         FStar_Pprint.op_Hat_Hat uu___ uu___1
     | FStar_Parser_AST.Name lid -> p_quident lid
+    | FStar_Parser_AST.Construct (lid, []) when is_general_construction e ->
+        p_quident lid
     | FStar_Parser_AST.Op (op, e1::[]) when is_general_prefix_op op ->
         let uu___ = let uu___1 = FStar_Ident.string_of_id op in str uu___1 in
         let uu___1 = p_atomicTerm e1 in FStar_Pprint.op_Hat_Hat uu___ uu___1
