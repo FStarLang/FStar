@@ -227,9 +227,14 @@ Guidelines for the changelog:
      provided (using UInt128).
 
 ## Syntax
+
    * PR #2669 allows name quotes in patterns, i.e. ``%`foo`` is a
      valid pattern and is desugared to the constant string
      pattern `"X.Y.Z.foo"`, with `X.Y.Z` being `foo`'s module.
+
+   * PR #2686 forbids the sequence `//` in operators. For instance,
+     `+//` used to be a legal operator, it is not the case anymore,
+     since it is ambiguous with the comment syntax.
 
    * PR #2644 introduces monadic let operators in the surface
      syntax. One can now write:
