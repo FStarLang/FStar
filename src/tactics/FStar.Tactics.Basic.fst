@@ -61,6 +61,7 @@ let core_check env sol t
     in
     match FStar.TypeChecker.Core.check_term env sol t with
     | Inl None ->
+      debug (fun _ -> BU.print_string "Core check ok (no guard)\n");
       //checked with no guard
       //no need to check it again
       // debug (fun _ -> BU.print2 "(%s) Core checking succeeded on %s\n"
@@ -69,6 +70,7 @@ let core_check env sol t
       Inl None
 
     | Inl (Some g) ->
+      debug (fun _ -> BU.print_string "Core check ok\n");
       // debug (fun _ -> 
       //          BU.print3 "(%s) Core checking succeeded on %s, with guard %s\n"
       //                    (Range.string_of_range (Env.get_range env))              

@@ -15,9 +15,16 @@ let (core_check :
         let uu___ = FStar_TypeChecker_Core.check_term env sol t in
         match uu___ with
         | FStar_Pervasives.Inl (FStar_Pervasives_Native.None) ->
-            FStar_Pervasives.Inl FStar_Pervasives_Native.None
+            (debug
+               (fun uu___2 ->
+                  FStar_Compiler_Util.print_string
+                    "Core check ok (no guard)\n");
+             FStar_Pervasives.Inl FStar_Pervasives_Native.None)
         | FStar_Pervasives.Inl (FStar_Pervasives_Native.Some g) ->
-            FStar_Pervasives.Inl (FStar_Pervasives_Native.Some g)
+            (debug
+               (fun uu___2 ->
+                  FStar_Compiler_Util.print_string "Core check ok\n");
+             FStar_Pervasives.Inl (FStar_Pervasives_Native.Some g))
         | FStar_Pervasives.Inr err ->
             (debug
                (fun uu___2 ->
