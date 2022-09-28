@@ -846,6 +846,9 @@ let rec (translate_type : env -> FStar_Extraction_ML_Syntax.mlty -> typ) =
       | FStar_Extraction_ML_Syntax.MLTY_Named (arg::[], p) when
           let uu___ = FStar_Extraction_ML_Syntax.string_of_mlpath p in
           uu___ = "FStar.Monotonic.HyperStack.mem" -> TUnit
+      | FStar_Extraction_ML_Syntax.MLTY_Named (arg::[], p) when
+          let uu___ = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+          uu___ = "FStar.Monotonic.HyperHeap.rid" -> TUnit
       | FStar_Extraction_ML_Syntax.MLTY_Named (uu___::arg::uu___1::[], p)
           when
           (((let uu___2 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
