@@ -651,15 +651,11 @@ ident:
 
 qlidentOrOperator:
   | qid=qlident { qid }
-  | LPAREN op=let_op RPAREN { lid_of_ns_and_id [] op }
-  | LPAREN op=and_op RPAREN { lid_of_ns_and_id [] op }
   | LPAREN id=operator RPAREN
     { lid_of_ns_and_id [] (id_of_text (compile_op' (string_of_id id) (range_of_id id))) }
 
 %inline lidentOrOperator:
   | id=lident { id }
-  | LPAREN op=let_op RPAREN { op }
-  | LPAREN op=and_op RPAREN { op }
   | LPAREN id=operator RPAREN
     { mk_ident (compile_op' (string_of_id id) (range_of_id id), range_of_id id) }
 
