@@ -1623,7 +1623,9 @@ let run_push_without_deps :
                FStar_TypeChecker_Env.erase_erasable_args =
                  (uu___.FStar_TypeChecker_Env.erase_erasable_args);
                FStar_TypeChecker_Env.rel_query_for_apply_tac_uvar =
-                 (uu___.FStar_TypeChecker_Env.rel_query_for_apply_tac_uvar)
+                 (uu___.FStar_TypeChecker_Env.rel_query_for_apply_tac_uvar);
+               FStar_TypeChecker_Env.core_check =
+                 (uu___.FStar_TypeChecker_Env.core_check)
              });
           FStar_Interactive_JsonHelper.repl_stdin =
             (st1.FStar_Interactive_JsonHelper.repl_stdin);

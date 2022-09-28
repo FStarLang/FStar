@@ -120,7 +120,8 @@ let initial_env deps
   universe_of
   teq_nosmt_force
   subtype_nosmt_force
-  solver module_lid nbe : env =
+  solver module_lid nbe
+  core_check : env =
   { solver=solver;
     range=dummyRange;
     curmodule=module_lid;
@@ -180,6 +181,7 @@ let initial_env deps
     erase_erasable_args=false;
 
     rel_query_for_apply_tac_uvar=None;
+    core_check
   }
 
 let dsenv env = env.dsenv

@@ -208,6 +208,7 @@ and env = {
   //   as part of this Rel call
   //
   rel_query_for_apply_tac_uvar: option S.ctx_uvar;
+  core_check: core_check_t;
 }
 
 and solver_depth_t = int * int * int
@@ -227,6 +228,8 @@ and solver_t = {
 }
 and tcenv_hooks =
   { tc_push_in_gamma_hook : (env -> either binding sig_binding -> unit) }
+and core_check_t = 
+  env -> term -> typ -> bool -> either (option typ) (bool -> string)
 
 type implicit = TcComm.implicit
 type implicits = TcComm.implicits
@@ -249,7 +252,8 @@ val initial_env : FStar.Parser.Dep.deps ->
                   (env -> term -> term -> bool) ->
                   (env -> term -> term -> bool) ->
                   solver_t -> lident ->
-                  (list step -> env -> term -> term) -> env
+                  (list step -> env -> term -> term) ->
+                  core_check_t -> env
 
 (* Some utilities *)
 val should_verify   : env -> bool

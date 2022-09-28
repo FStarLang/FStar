@@ -59,7 +59,8 @@ let core_check env sol t
         then f ()
         else ()
     in
-    match FStar.TypeChecker.Core.check_term env sol t with
+    let must_tot = true in
+    match FStar.TypeChecker.Core.check_term env sol t must_tot with
     | Inl None ->
       debug (fun _ -> BU.print_string "Core check ok (no guard)\n");
       //checked with no guard

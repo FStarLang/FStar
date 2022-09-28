@@ -1481,7 +1481,9 @@ and (encode_term :
                                 (uu___6.FStar_TypeChecker_Env.erase_erasable_args);
                               FStar_TypeChecker_Env.rel_query_for_apply_tac_uvar
                                 =
-                                (uu___6.FStar_TypeChecker_Env.rel_query_for_apply_tac_uvar)
+                                (uu___6.FStar_TypeChecker_Env.rel_query_for_apply_tac_uvar);
+                              FStar_TypeChecker_Env.core_check =
+                                (uu___6.FStar_TypeChecker_Env.core_check)
                             }) res in
                        (match uu___5 with
                         | (pre_opt, res_t) ->

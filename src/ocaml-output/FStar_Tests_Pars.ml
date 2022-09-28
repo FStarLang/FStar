@@ -84,7 +84,8 @@ let (init_once : unit -> unit) =
         FStar_TypeChecker_Rel.teq_nosmt_force
         FStar_TypeChecker_Rel.subtype_nosmt_force solver
         FStar_Parser_Const.prims_lid
-        FStar_TypeChecker_NBE.normalize_for_unit_test in
+        FStar_TypeChecker_NBE.normalize_for_unit_test
+        FStar_Universal.core_check in
     (env.FStar_TypeChecker_Env.solver).FStar_TypeChecker_Env.init env;
     (let uu___2 =
        let uu___3 = FStar_Options.prims () in
@@ -189,7 +190,9 @@ let (init_once : unit -> unit) =
              FStar_TypeChecker_Env.erase_erasable_args =
                (env.FStar_TypeChecker_Env.erase_erasable_args);
              FStar_TypeChecker_Env.rel_query_for_apply_tac_uvar =
-               (env.FStar_TypeChecker_Env.rel_query_for_apply_tac_uvar)
+               (env.FStar_TypeChecker_Env.rel_query_for_apply_tac_uvar);
+             FStar_TypeChecker_Env.core_check =
+               (env.FStar_TypeChecker_Env.core_check)
            } in
          let uu___3 = FStar_TypeChecker_Tc.check_module env1 prims_mod false in
          (match uu___3 with
@@ -296,7 +299,9 @@ let (init_once : unit -> unit) =
                   FStar_TypeChecker_Env.erase_erasable_args =
                     (env2.FStar_TypeChecker_Env.erase_erasable_args);
                   FStar_TypeChecker_Env.rel_query_for_apply_tac_uvar =
-                    (env2.FStar_TypeChecker_Env.rel_query_for_apply_tac_uvar)
+                    (env2.FStar_TypeChecker_Env.rel_query_for_apply_tac_uvar);
+                  FStar_TypeChecker_Env.core_check =
+                    (env2.FStar_TypeChecker_Env.core_check)
                 } in
               let env4 =
                 FStar_TypeChecker_Env.set_current_module env3 test_lid in
@@ -443,7 +448,9 @@ let (tc' :
         FStar_TypeChecker_Env.erase_erasable_args =
           (tcenv.FStar_TypeChecker_Env.erase_erasable_args);
         FStar_TypeChecker_Env.rel_query_for_apply_tac_uvar =
-          (tcenv.FStar_TypeChecker_Env.rel_query_for_apply_tac_uvar)
+          (tcenv.FStar_TypeChecker_Env.rel_query_for_apply_tac_uvar);
+        FStar_TypeChecker_Env.core_check =
+          (tcenv.FStar_TypeChecker_Env.core_check)
       } in
     let uu___ = FStar_TypeChecker_TcTerm.tc_tot_or_gtot_term tcenv1 tm in
     match uu___ with | (tm1, uu___1, g) -> (tm1, g, tcenv1)
@@ -544,7 +551,9 @@ let (tc_nbe_term : FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term) =
         FStar_TypeChecker_Env.erase_erasable_args =
           (tcenv.FStar_TypeChecker_Env.erase_erasable_args);
         FStar_TypeChecker_Env.rel_query_for_apply_tac_uvar =
-          (tcenv.FStar_TypeChecker_Env.rel_query_for_apply_tac_uvar)
+          (tcenv.FStar_TypeChecker_Env.rel_query_for_apply_tac_uvar);
+        FStar_TypeChecker_Env.core_check =
+          (tcenv.FStar_TypeChecker_Env.core_check)
       } in
     let uu___ = FStar_TypeChecker_TcTerm.tc_tot_or_gtot_term tcenv1 tm in
     match uu___ with

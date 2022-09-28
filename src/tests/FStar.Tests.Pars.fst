@@ -76,7 +76,9 @@ let init_once () : unit =
                 Rel.subtype_nosmt_force
                 solver
                 Const.prims_lid
-                NBE.normalize_for_unit_test in
+                NBE.normalize_for_unit_test
+                FStar.Universal.core_check 
+  in
   env.solver.init env;
   let dsenv, prims_mod = parse_mod (Options.prims()) (DsEnv.empty_env FStar.Parser.Dep.empty_deps) in
   let env = {env with dsenv=dsenv} in

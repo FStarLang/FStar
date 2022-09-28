@@ -253,7 +253,9 @@ let (check_no_subtyping_for_layered_combinator :
              FStar_TypeChecker_Env.erase_erasable_args =
                (env.FStar_TypeChecker_Env.erase_erasable_args);
              FStar_TypeChecker_Env.rel_query_for_apply_tac_uvar =
-               (env.FStar_TypeChecker_Env.rel_query_for_apply_tac_uvar)
+               (env.FStar_TypeChecker_Env.rel_query_for_apply_tac_uvar);
+             FStar_TypeChecker_Env.core_check =
+               (env.FStar_TypeChecker_Env.core_check)
            } in
          match k with
          | FStar_Pervasives_Native.None ->
@@ -2459,7 +2461,9 @@ let (tc_layered_eff_decl :
                                           (uu___16.FStar_TypeChecker_Env.erase_erasable_args);
                                         FStar_TypeChecker_Env.rel_query_for_apply_tac_uvar
                                           =
-                                          (uu___16.FStar_TypeChecker_Env.rel_query_for_apply_tac_uvar)
+                                          (uu___16.FStar_TypeChecker_Env.rel_query_for_apply_tac_uvar);
+                                        FStar_TypeChecker_Env.core_check =
+                                          (uu___16.FStar_TypeChecker_Env.core_check)
                                       } in
                                     FStar_TypeChecker_TcTerm.tc_tot_or_gtot_term
                                       uu___15
@@ -4385,7 +4389,10 @@ let (tc_non_layered_eff_decl :
                                                                     (env1.FStar_TypeChecker_Env.erase_erasable_args);
                                                                     FStar_TypeChecker_Env.rel_query_for_apply_tac_uvar
                                                                     =
-                                                                    (env1.FStar_TypeChecker_Env.rel_query_for_apply_tac_uvar)
+                                                                    (env1.FStar_TypeChecker_Env.rel_query_for_apply_tac_uvar);
+                                                                    FStar_TypeChecker_Env.core_check
+                                                                    =
+                                                                    (env1.FStar_TypeChecker_Env.core_check)
                                                                     }
                                                                     (
                                                                     fun
@@ -4666,7 +4673,10 @@ let (tc_non_layered_eff_decl :
                                                                     (uu___24.FStar_TypeChecker_Env.erase_erasable_args);
                                                                    FStar_TypeChecker_Env.rel_query_for_apply_tac_uvar
                                                                     =
-                                                                    (uu___24.FStar_TypeChecker_Env.rel_query_for_apply_tac_uvar)
+                                                                    (uu___24.FStar_TypeChecker_Env.rel_query_for_apply_tac_uvar);
+                                                                   FStar_TypeChecker_Env.core_check
+                                                                    =
+                                                                    (uu___24.FStar_TypeChecker_Env.core_check)
                                                                  } in
                                                                ((let uu___25
                                                                    =
@@ -5886,7 +5896,9 @@ let (tc_lift :
                                  (env.FStar_TypeChecker_Env.erase_erasable_args);
                                FStar_TypeChecker_Env.rel_query_for_apply_tac_uvar
                                  =
-                                 (env.FStar_TypeChecker_Env.rel_query_for_apply_tac_uvar)
+                                 (env.FStar_TypeChecker_Env.rel_query_for_apply_tac_uvar);
+                               FStar_TypeChecker_Env.core_check =
+                                 (env.FStar_TypeChecker_Env.core_check)
                              } in
                            let lift1 =
                              match lift with

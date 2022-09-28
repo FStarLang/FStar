@@ -20,7 +20,7 @@ module FStar.LexicographicOrdering
 #push-options "--warn_error -242" //no inner let recs in SMT
 open FStar.ReflexiveTransitiveClosure
 open FStar.WellFounded
-
+#push-options "--debug yes"
 
 /// A helper lemma about reflexive transitive closure
 
@@ -98,6 +98,35 @@ let lex_t_wf #_ #_ #_ #_ wf_a wf_b =
 
 open FStar.Squash
 
+let elim_and_r (pf:('p /\ 'q)) : squash 'q = ()
+
+(* NS: I had to rewrite lex_to_lex_t to make it work around a limitation of Core.check_term
+   In particular, if the last branching were written more idiomatically as
+
+    match p with
+    | Left p1 -> left p1
+    | Right p2 -> right p2
+
+  Then this is elaborated with dot pattern as
+
+    match p with
+    | Left .(squash ...)
+           .(squash (dfst t1 == dfst t2 /\ squash (r_b (dfst t1) (dsnd t1) (dsnd t2))))
+           p1 -> left p1
+    | Right p2 -> right p2
+
+  That dot pattern is re-solved in phase 2 and is passed to the core checker.
+  To check (r_b (dfst t1) (dsnd t1) (dsnd t2))
+    we need  dsnd t1 : b (dfst t1), which is fine
+    and also dsnd t2 : b (dfst t2) <: b (dfst t1)
+  That latter subtyping is solved by the core checker by emitting (t2 == t1) as a guard,
+  which is not provable.
+  We need to make the core checker aware of "equational" symbols and have it emit
+  (dfst t2 == dfst t1) in cases like this
+
+  By rewriting the code without a dot pattern, everything is resolved in phase1
+  and the core checker is not called in phase2, which is a cop out
+*)
 (*
  * Given lex_sq, we can output a squashed instance of lex
  *)
@@ -109,16 +138,19 @@ let lex_to_lex_t #a #b r_a r_b t1 t2 p =
 
   let right (p:(dfst t1 == dfst t2 /\ (squash (r_b (dfst t1) (dsnd t1) (dsnd t2)))))
     : squash (lex_t r_a r_b t1 t2)
-    = bind_squash p (fun p ->
-        match p with
-        | Prims.Pair (_:dfst t1 == dfst t2) p2 ->
-          bind_squash p2 (fun p2 ->
-            return_squash (Right_lex #a #b #r_a #r_b (dfst t1) (dsnd t1) (dsnd t2) p2))) in
-
-  bind_squash p (fun p ->
-    match p with
-    | Prims.Left p1 -> left p1
-    | Prims.Right p2 -> right p2)
+    = let p2 : _ // squash (r_b (dfst t1) (dsnd t1) (dsnd t2))
+             = FStar.Squash.join_squash (elim_and_r p)
+      in
+      bind_squash p2 (fun p2 ->
+        return_squash (Right_lex #a #b #r_a #r_b (dfst t1) (dsnd t1) (dsnd t2) p2)) in
+  let snd_t2 (_:squash (dfst t1 == dfst t2)) : b (dfst t1) = dsnd t2 in
+  bind_squash #(sum (squash (r_a (dfst t1) (dfst t2))) 
+                    (dfst t1 == dfst t2 /\ squash (r_b (dfst t1) (dsnd t1) (dsnd t2))))
+              // #(lex_t r_a r_b t1 t2)
+              p (fun p ->
+              if Left? p
+              then left (Left?.v p)
+              else right (Right?.v p))
 
 
 let lex_t_non_dep_wf #a #b #r_a #r_b wf_a wf_b =

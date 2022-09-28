@@ -39,6 +39,8 @@ val with_dsenv_of_tcenv : TcEnv.env -> DsEnv.withenv 'a -> 'a * TcEnv.env
 graph is used to populate the internal dsenv of the tcenv. *)
 val init_env : Dep.deps -> TcEnv.env
 
+val core_check: TcEnv.core_check_t
+
 (* Interactive mode: checking a fragment of code. *)
 val tc_one_fragment :
     option Syntax.modul ->

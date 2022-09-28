@@ -1286,7 +1286,7 @@ let rec head_matches env t1 t2 : match_result =
     | _ -> MisMatch(delta_depth_of_term env t1, delta_depth_of_term env t2)
 
 (* Does t1 head-match t2, after some delta steps? *)
-let head_matches_delta env wl t1 t2 : (match_result * option (typ*typ)) =
+let head_matches_delta env smt_ok t1 t2 : (match_result * option (typ*typ)) =
     let maybe_inline t =
         let head = U.head_of (unrefine env t) in
         if Env.debug env <| Options.Other "RelDelta" then
@@ -1315,7 +1315,7 @@ let head_matches_delta env wl t1 t2 : (match_result * option (typ*typ)) =
                  Env.Iota]
             in
             let steps =
-              if wl.smt_ok then basic_steps
+              if smt_ok then basic_steps
               else Env.Exclude Env.Zeta::basic_steps
                    //NS: added this to prevent unifier looping
                    //see bug606.fst
@@ -1981,7 +1981,7 @@ and solve_rigid_flex_or_flex_rigid_subtyping
         let pairwise t1 t2 wl =
             if Env.debug env <| Options.Other "Rel"
             then BU.print2 "[meet/join]: pairwise: %s and %s\n" (Print.term_to_string t1) (Print.term_to_string t2);
-            let mr, ts = head_matches_delta env wl t1 t2 in
+            let mr, ts = head_matches_delta env wl.smt_ok t1 t2 in
             match mr with
             | HeadMatch true
             | MisMatch _ ->
@@ -3348,7 +3348,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                             if pat_discriminates b
                             then
                               let (_, _, t') = SS.open_branch b in
-                              match head_matches_delta env wl s t' with
+                              match head_matches_delta env wl.smt_ok s t' with
                               | FullMatch, _
                               | HeadMatch _, _ ->
                                 true
@@ -3397,7 +3397,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                         (Print.tag_of_term t2)
                         (Print.term_to_string t1)
                         (Print.term_to_string t2);
-        let m, o = head_matches_delta env wl t1 t2 in
+        let m, o = head_matches_delta env wl.smt_ok t1 t2 in
         match m, o  with
         | (MisMatch _, _) -> //heads definitely do not match
             let try_reveal_hide env t1 t2 =
@@ -3619,7 +3619,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
          * necessarily always correct.
          *)
         let x1, x2 =
-            match head_matches_delta env wl x1.sort x2.sort with
+            match head_matches_delta env wl.smt_ok x1.sort x2.sort with
             (* We allow (HeadMatch true) since we're gonna unify them again anyway via base_prob *)
             | FullMatch, Some (t1, t2)
             | HeadMatch _, Some (t1, t2) ->
@@ -3763,7 +3763,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
               then let flex, wl = destruct_flex_t env not_abs wl in
                     solve_t_flex_rigid_eq env orig wl flex t_abs
               else begin
-                match head_matches_delta env wl not_abs t_abs with
+                match head_matches_delta env wl.smt_ok not_abs t_abs with
                 | HeadMatch _, Some (not_abs', _) ->
                   solve_t env ({problem with lhs=not_abs'; rhs=t_abs}) wl
 
@@ -4923,7 +4923,7 @@ let try_solve_single_valued_implicits env is_tac (imps:Env.implicits) : Env.impl
  *
  * must_tot : if t must be a Tot
  *)
-let check_implicit_solution env t k (must_tot:bool) : guard_t =
+let check_implicit_solution env t k (must_tot:bool) (reason:string) : guard_t =
   (*
    * AR: when we create lambda terms as solutions to implicits (in u_abs),
    *       we set the type in the residual comp to be the type of the uvar
@@ -4938,14 +4938,42 @@ let check_implicit_solution env t k (must_tot:bool) : guard_t =
             {t with n=Tm_abs (bs, body, Some ({rc with residual_typ=None}))}
           | _ -> t in
 
-  let k', g =
-    env.typeof_well_typed_tot_or_gtot_term
-    (Env.set_expected_typ ({env with use_bv_sorts=true}) k)
-    t must_tot in
-
-  match get_subtyping_predicate env k' k with
-  | None -> raise_error (Err.expected_expression_of_type env k t k') t.pos
-  | Some f -> Env.conj_guard (Env.apply_guard f t) g
+  let fallback () =
+    let k', g =
+      env.typeof_well_typed_tot_or_gtot_term
+      (Env.set_expected_typ ({env with use_bv_sorts=true}) k)
+      t must_tot in
+  
+    match get_subtyping_predicate env k' k with
+    | None -> raise_error (Err.expected_expression_of_type env k t k') t.pos
+    | Some f -> Env.conj_guard (Env.apply_guard f t) g
+  in
+  
+  if Options.debug_any()
+  && not (env.phase1)
+  then (
+    let env, _ = Env.clear_expected_typ env in
+    match env.core_check env t k must_tot with
+    | Inl None ->
+      if Options.debug_any () 
+      then BU.print1 "(Rel) core_check succeeded (%s)\n" reason;
+      trivial_guard
+    | Inl (Some g) -> 
+      if Options.debug_any () 
+      then (
+        let fb_guard = fallback () in      
+        BU.print3 "(Rel) core_check succeeded (%s) (with guard) %s  ... fb_guard is %s\n"
+          reason
+          (Print.term_to_string g)
+          (guard_to_string env fb_guard)
+      );
+      { trivial_guard with guard_f = NonTrivial g }
+    | Inr print_err ->
+      if Options.debug_any()
+      then BU.print2 "(Rel) core_check failed (%s) because %s\n" reason (print_err false);
+      fallback()
+  )
+  else fallback()
 
 (*
  * Return None if we did not typecheck the implicit because
@@ -4978,7 +5006,7 @@ let check_implicit_solution_and_discharge_guard env imp force_univ_constraints
          (Print.uvar_to_string ctx_u.ctx_uvar_head)
          (N.term_to_string env tm)
          (N.term_to_string env (U.ctx_uvar_typ ctx_u)))
-      (fun () -> check_implicit_solution env tm (U.ctx_uvar_typ ctx_u) must_tot) in
+      (fun () -> check_implicit_solution env tm (U.ctx_uvar_typ ctx_u) must_tot ctx_u.ctx_uvar_reason) in
 
     if (not force_univ_constraints) &&
        (List.existsb (fun (reason, _, _) -> reason = Deferred_univ_constraint) g.deferred)

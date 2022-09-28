@@ -522,8 +522,8 @@ let rec check_subtype_whnf (g:env) (e:term) (t0 t1: typ)
       else fail "no subtyping rule is applicable"
 
 and check_subtype (g:env) (e:term) (t0 t1:typ)
-  = // if Env.debug g.tcenv (Options.Other "Core")
-    // then BU.print2 "check_subtype %s <: %s\n" (P.term_to_string t0) (P.term_to_string t1);
+  = if Env.debug g.tcenv (Options.Other "Core")
+    then BU.print2 "check_subtype %s <: %s\n" (P.term_to_string t0) (P.term_to_string t1);
     match U.eq_tm t0 t1 with
     | U.Equal -> return ()
     | _ ->
@@ -596,7 +596,10 @@ and check_equality_whnf (g:env) (t0 t1:typ)
         then let! _, t_typ = check' g t0 in
              let! u = universe_of g t_typ in
              guard (U.mk_eq2 u t_typ t0 t1)
-        else err () in
+        else err ()
+    in
+    if Env.debug g.tcenv (Options.Other "Core")
+    then BU.print2 "check_equality_whnf %s %s\n" (P.term_to_string t0) (P.term_to_string t1);
     if U.eq_tm t0 t1 = U.Equal
     then return ()
     else
@@ -1102,18 +1105,23 @@ and check_scrutinee_pattern_type_compatible (g:env) (t_sc t_pat:typ)
 
    return None
 
-let check_term_top g e t
+let check_term_top g e t (must_tot:bool)
   : result unit
   = let g = { tcenv = g; allow_universe_instantiation = false } in
     let! eff_te = check "top" g e in
+    let target_comp = 
+      if must_tot || fst eff_te = E_TOTAL
+      then S.mk_Total t
+      else S.mk_GTotal t
+    in
     with_context "top-level subtyping" None (fun _ ->
-      check_subcomp ({ g with allow_universe_instantiation = true}) e (as_comp g eff_te) (S.mk_Total t))
+      check_subcomp ({ g with allow_universe_instantiation = true}) e (as_comp g eff_te) target_comp)
 
-let check_term g e t
+let check_term g e t (must_tot:bool)
   = // if Env.debug g (Options.Other "Core")
     // then BU.print1 "Entering core with %s\n" (P.term_to_string e);
     let ctx = { no_guard = false; error_context = [] } in
-    let res = match check_term_top g e t ctx with
+    let res = match check_term_top g e t must_tot ctx with
     | Inl (_, g) -> Inl g
     | Inr err -> Inr err
     in
