@@ -21,14 +21,9 @@ module Map = FStar.Map
 open FStar.Monotonic.Heap
 open FStar.Ghost
 
-(*
- * This is a temporary assumption, we should fix the model to get rid of it
- *)
-assume HasEq_rid: hasEq (erased (list (int * int * bool)))
+let rid = list (int * int * bool)
 
-let rid = erased (list (int * int * bool))
-
-let reveal r = FStar.List.Tot.map (fun (i, j, _) -> i, j) (reveal r)
+let reveal r = FStar.List.Tot.map (fun (i, j, _) -> i, j) r
 
 let color r =
   match reveal r with
@@ -36,11 +31,11 @@ let color r =
   | (c, _)::_ -> c
 
 let rid_freeable r =
-  match Ghost.reveal r with
+  match r with
   | [] -> false
   | (_, _, b)::_ -> b
 
-let root = hide []
+let root = []
 
 let root_last_component () = ()
 
@@ -50,7 +45,7 @@ let root_is_not_freeable () = ()
 
 let rid_length r = List.Tot.length (reveal r)
 
-let rid_tail r = elift1_p (tot_to_gtot Cons?.tl) r
+let rid_tail r = Cons?.tl r
 
 let rec includes r1 r2 =
   if r1 = r2 then true
@@ -124,16 +119,11 @@ let includes_child _ _ = ()
 let root_is_root _ = ()
 
 let extend r n c =
-  elift1 (fun r ->
-    let freeable = rid_freeable (hide r) in
-    (c, n, freeable)::r
-  ) r
+  let freeable = rid_freeable r in
+  (c, n, freeable)::r
 
 let extend_monochrome_freeable r n freeable =
-  elift1 (fun r ->
-    let c = color (hide r) in
-    (c, n, freeable)::r
-  ) r
+  let c = color r in
+  (c, n, freeable)::r
 
 let extend_monochrome r n = extend_monochrome_freeable r n (rid_freeable r)
-

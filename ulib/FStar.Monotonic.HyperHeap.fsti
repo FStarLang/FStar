@@ -27,23 +27,18 @@ open FStar.Ghost
  * Clients should not open/know about HyperHeap, they should work only with HyperStack
  *)
 
-(*
- * AR: mark it must_erase_for_extraction temporarily until CMI comes in
- *)
-[@@must_erase_for_extraction]
 val rid :eqtype
 
-val reveal (r:rid) :GTot (list (int * int))
+val reveal (r:rid) :list (int * int)
 
-let rid_last_component (r:rid) :GTot int
+let rid_last_component (r:rid) : int
   = let open FStar.List.Tot in
-    let r = reveal r in
-    if length r = 0 then 0
-    else snd (hd r)
+    if length (reveal r) = 0 then 0
+    else snd (hd (reveal r))
 
-val color (x:rid) :GTot int
+val color (x:rid) : int
 
-val rid_freeable (x:rid) : GTot bool
+val rid_freeable (x:rid) : bool
 
 type hmap = Map.t rid heap
 
@@ -55,13 +50,13 @@ let root_has_color_zero (u:unit) :Lemma (color root == 0) = ()
 
 val root_is_not_freeable (_:unit) : Lemma (not (rid_freeable root))
 
-private val rid_length (r:rid) :GTot nat
+private val rid_length (r:rid) : nat
 
 private val rid_tail (r:rid{rid_length r > 0}) :rid
 
-val includes (r1:rid) (r2:rid) :GTot bool (decreases (reveal r2))
+val includes (r1:rid) (r2:rid) :Tot bool (decreases (reveal r2))
 
-let disjoint (i:rid) (j:rid) :GTot bool = not (includes i j) && not (includes j i)
+let disjoint (i:rid) (j:rid) :Tot bool = not (includes i j) && not (includes j i)
 
 val lemma_disjoint_includes (i:rid) (j:rid) (k:rid)
   :Lemma (requires  (disjoint i j /\ includes j k))
@@ -69,7 +64,7 @@ val lemma_disjoint_includes (i:rid) (j:rid) (k:rid)
          (decreases (List.Tot.length (reveal k)))
          [SMTPat (disjoint i j); SMTPat (includes j k)]
 
-val extends (i:rid) (j:rid) :GTot bool
+val extends (i:rid) (j:rid) :bool
 
 val parent (r:rid{r =!= root}) :rid
 
