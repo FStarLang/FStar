@@ -1017,6 +1017,8 @@ let mk_Valid t        = match t.tm with
     | App(Var "Prims.b2t", [t1]) -> {unboxBool t1 with rng=t.rng}
     | _ ->
         mkApp("Valid",  [t]) t.rng
+let mk_unit_type = mkApp("Prims.unit", []) norng
+let mk_subtype_of_unit v = mkApp("Prims.subtype_of", [v;mk_unit_type]) v.rng
 let mk_HasType v t    = mkApp("HasType", [v;t]) t.rng
 let mk_HasTypeZ v t   = mkApp("HasTypeZ", [v;t]) t.rng
 let mk_IsTotFun t     = mkApp("IsTotFun", [t]) t.rng

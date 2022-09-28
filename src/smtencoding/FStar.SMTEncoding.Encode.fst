@@ -817,7 +817,12 @@ let encode_top_level_let :
                     else "equation"
                   in
                   let basic_eqn, decls =
-                    let pat, app, (body, decls) = app, app, encode_term body env' in
+                    let body, decls = encode_term body env' in
+                    let pat =
+                      if should_encode_logical
+                      then Term.mk_subtype_of_unit app
+                      else app
+                    in
                     make_eqn basic_eqn_name pat app body, decls
                   in
                   if should_encode_logical

@@ -282,6 +282,7 @@ val mk_Term_unit:    term
 
 val mk_PreType:      term -> term
 val mk_Valid:        term -> term
+val mk_subtype_of_unit: term -> term
 val mk_HasType:      term -> term -> term
 val mk_HasTypeZ:     term -> term -> term
 val mk_IsTotFun:     term -> term

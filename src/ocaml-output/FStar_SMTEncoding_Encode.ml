@@ -2932,20 +2932,23 @@ let (encode_top_level_let :
                                                             else "equation" in
                                                           let uu___16 =
                                                             let uu___17 =
-                                                              let uu___18 =
-                                                                FStar_SMTEncoding_EncodeTerm.encode_term
-                                                                  body env'1 in
-                                                              (app, app,
-                                                                uu___18) in
+                                                              FStar_SMTEncoding_EncodeTerm.encode_term
+                                                                body env'1 in
                                                             match uu___17
                                                             with
-                                                            | (pat, app1,
-                                                               (body1,
-                                                                decls2)) ->
+                                                            | (body1, decls2)
+                                                                ->
+                                                                let pat =
+                                                                  if
+                                                                    should_encode_logical
+                                                                  then
+                                                                    FStar_SMTEncoding_Term.mk_subtype_of_unit
+                                                                    app
+                                                                  else app in
                                                                 let uu___18 =
                                                                   make_eqn
                                                                     basic_eqn_name
-                                                                    pat app1
+                                                                    pat app
                                                                     body1 in
                                                                 (uu___18,
                                                                   decls2) in
