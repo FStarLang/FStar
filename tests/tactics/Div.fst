@@ -21,6 +21,10 @@ let rec f0 (x : int) : Dv int = f0 x
 let g0 (x : int) : Tac int = f0 x
 
 (* Testing that a non-diverging example works *)
+
+#push-options "--warn_error -328" (* Recursive definition not used in its body *)
 let rec f (x : int) : Dv int = 25
+#pop-options
+
 let g (x : int) : Tac int = f x
 let _ = assert True by (let x = g 2 in trivial ())

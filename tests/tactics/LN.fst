@@ -23,7 +23,14 @@ let badtm () : Tac term =
     pack (Tv_BVar (pack_bv ({ bv_index  = 0;
                               bv_sort   = (`int);
                               bv_ppname = "ouch"; })))
+
+(* We do get a warning about the normalizer failing though, so
+silence it. *)
+#push-options "--warn_error -264"
+
 let _ =
     assert True 
         by (let _ = trytac (fun () -> exact (badtm ())) in
              trivial ())
+
+#pop-options

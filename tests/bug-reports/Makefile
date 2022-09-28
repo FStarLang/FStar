@@ -47,7 +47,7 @@ SHOULD_VERIFY_CLOSED=Bug022.fst Bug024.fst Bug025.fst Bug026.fst Bug026b.fst Bug
   Bug1418.fst Bug171.fst Bug2496.fst Bug2478.fst Bug2414.fst Bug2515.fst \
   Bug2535.fst Bug2557.fst Bug2572.fst Bug2522.fst Bug2486.fst \
   Bug2552.fst Bug2597.fst Bug2471_B.fst Bug2605.fst Bug2614.fst Bug2622.fst \
-  Bug2637.fst Bug2641.fst
+  Bug2637.fst Bug2641.fst Bug1486.fst
 
 SHOULD_VERIFY_INTERFACE_CLOSED=Bug771.fsti Bug771b.fsti
 SHOULD_VERIFY_AND_WARN_CLOSED=Bug016.fst
@@ -60,7 +60,7 @@ SHOULD_VERIFY_OPEN=Bug045.fst Bug057.fst Bug064.fst Bug065.fst Bug071.fst Bug121
   Bug171b.fst Bug171c.fst Bug259.fst Bug282.fst Bug291.fst Bug419.fst \
   Bug442b.fst Bug484.fst Bug542.fst Bug543.fst Bug554.fst Bug604.fst Bug606.fst\
   Bug626.fst Bug682.fst Bug715.fst Bug739.fst Bug815.fst Bug815b.fst Bug851.fst Bug933.fst Bug933b.fst\
-  Bug1038.fst Bug1091.fst Bug807d.fst Bug1486.fst Bug1392.fst Bug1867.fst
+  Bug1038.fst Bug1091.fst Bug807d.fst Bug1392.fst Bug1867.fst
 
 # These examples go through but their corresponding GitHub issue is still open. Consider closing and adding them
 # to SHOULD_VERIFY_CLOSED.

@@ -37,10 +37,6 @@ clean:
 
 # Shortcuts for developers
 
-# Build the F# version
-0:
-	$(Q)+$(MAKE) -C src/
-
 # Build the OCaml snapshot. NOTE: This will not build the standard library,
 # nor tests, and native tactics will not run
 1:

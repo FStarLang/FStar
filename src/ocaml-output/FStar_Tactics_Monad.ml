@@ -50,6 +50,8 @@ let bind : 'a 'b . 'a tac -> ('a -> 'b tac) -> 'b tac =
                let uu___1 = t2 a1 in run uu___1 q
            | FStar_Tactics_Result.Failed (msg, q) ->
                FStar_Tactics_Result.Failed (msg, q))
+let op_let_Bang : 'a 'b . 'a tac -> ('a -> 'b tac) -> 'b tac =
+  fun t1 -> fun t2 -> bind t1 t2
 let (idtac : unit tac) = ret ()
 let (set : FStar_Tactics_Types.proofstate -> unit tac) =
   fun ps -> mk_tac (fun uu___ -> FStar_Tactics_Result.Success ((), ps))
