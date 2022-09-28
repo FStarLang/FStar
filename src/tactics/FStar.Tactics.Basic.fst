@@ -442,8 +442,8 @@ let with_policy pol (t : tac 'a) : tac 'a =
 let proc_guard' (simplify:bool) (reason:string) (e : env) (g : guard_t) (rng:Range.range) : tac unit =
     mlog (fun () ->
         BU.print2 "Processing guard (%s:%s)\n" reason (Rel.guard_to_string e g)) (fun () ->
-    add_implicits g.implicits;;
-    let guard_f = 
+    add_implicits g.implicits;!
+    let guard_f =
       if simplify
       then (Rel.simplify_guard e g).guard_f
       else g.guard_f
@@ -451,7 +451,7 @@ let proc_guard' (simplify:bool) (reason:string) (e : env) (g : guard_t) (rng:Ran
     match guard_f with
     | TcComm.Trivial -> ret ()
     | TcComm.NonTrivial f ->
-      ps <-- get;
+      let! ps = get in
       match ps.guard_policy with
       | Drop ->
         // should somehow taint the state instead of just printing a warning
@@ -462,12 +462,12 @@ let proc_guard' (simplify:bool) (reason:string) (e : env) (g : guard_t) (rng:Ran
 
       | Goal ->
         mlog (fun () -> BU.print2 "Making guard (%s:%s) into a goal\n" reason (Rel.guard_to_string e g)) (fun () ->
-        g <-- goal_of_guard reason e f rng;
+        let! g = goal_of_guard reason e f rng in
         push_goals [g])
 
     | SMT ->
         mlog (fun () -> BU.print2 "Sending guard (%s:%s) to SMT goal\n" reason (Rel.guard_to_string e g)) (fun () ->
-        g <-- goal_of_guard reason e f rng;
+        let! g = goal_of_guard reason e f rng in
         push_smt_goals [g])
 
     | Force ->
@@ -1634,7 +1634,7 @@ let gather_explicit_guards_for_resolved_goals ()
   : tac unit
   = wrap_err "gather_explicit_guards_for_resolved_goals" <| (
     with_policy Goal <| (
-    ps <-- get; 
+    let! ps = get in
     let goals_of_resolved_implicits = 
         List.filter_map 
           (fun i -> 
@@ -1645,7 +1645,7 @@ let gather_explicit_guards_for_resolved_goals ()
             else None)
           ps.all_implicits
     in
-    sub_goals <--   
+    let! sub_goals =
       check_apply_implicits_solutions
              false //don't simplify
              ps.main_context
@@ -1653,7 +1653,7 @@ let gather_explicit_guards_for_resolved_goals ()
              ps.tac_verb_dbg
              "gather_explicit_guards_for_resolved_goals"
              true 
-             goals_of_resolved_implicits;
+             goals_of_resolved_implicits in
     let sub_goals = List.flatten sub_goals in
     add_goals sub_goals))  
 
@@ -1915,6 +1915,26 @@ let t_commute_applied_match () : tac unit = wrap_err "t_commute_applied_match" <
     end
   | None ->
     fail "not an equality")
+
+let string_to_term (e: Env.env) (s: string): tac term
+  = let open FStar.Parser.ParseIt in
+    let frag_of_text s = { frag_fname= "<string_of_term>"
+                         ; frag_line = 1 ; frag_col  = 0
+                         ; frag_text = s } in
+    match parse (Fragment (frag_of_text s)) with
+    | Term t ->
+      let dsenv = FStar.Syntax.DsEnv.set_current_module e.dsenv (current_module e) in
+      begin try ret (FStar.ToSyntax.ToSyntax.desugar_term dsenv t) with
+          | FStar.Errors.Error (_, e, _, _) -> fail ("string_of_term: " ^ e)
+          | _ -> fail ("string_of_term: Unknown error")
+      end
+    | ASTFragment _ -> fail ("string_of_term: expected a Term as a result, got an ASTFragment")
+    | ParseError (_, err, _) -> fail ("string_of_term: got error " ^ err)
+
+let push_bv_dsenv (e: Env.env) (i: string): tac (env * bv)
+  = let ident = Ident.mk_ident (i, FStar.Compiler.Range.dummyRange) in
+    let dsenv, bv = FStar.Syntax.DsEnv.push_bv e.dsenv ident in
+    ret ({ e with dsenv }, bv)
 
 (**** Creating proper environments and proofstates ****)
 

@@ -33,9 +33,7 @@ let h : int =
 
 let _ = assert (h == 16)
 
-
 (* Types do not unify, so this fails *)
-val x : squash False
 [@@ (expect_failure [228])]
 let x = assert False
             by (let w = cur_witness () in
