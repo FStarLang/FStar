@@ -177,7 +177,6 @@ type exp : Type =
   | Var : var -> exp
   | Mult : exp -> exp -> exp
 
-
 type decls = list sigelt
 
 let rec forall_list (p:'a -> Type) (l:list 'a) : Type =
@@ -190,7 +189,7 @@ let rec forall_list (p:'a -> Type) (l:list 'a) : Type =
 let smaller (tv:term_view) (t:term) : Type0 =
     match tv with
     | Tv_App l r ->
-        l << t /\ r << t /\ fst r << t
+        l << t /\ r << t
 
     | Tv_Abs b t'
     | Tv_Arrow b t' ->
