@@ -5820,8 +5820,8 @@ let rec (inspect :
       let uu___1 = top_env () in
       FStar_Tactics_Monad.bind uu___1
         (fun e ->
-           let t1 = FStar_Syntax_Util.unascribe t in
-           let t2 = FStar_Syntax_Util.unlazy_emb t1 in
+           let t1 = FStar_Syntax_Util.unlazy_emb t in
+           let t2 = FStar_Syntax_Subst.compress t1 in
            match t2.FStar_Syntax_Syntax.n with
            | FStar_Syntax_Syntax.Tm_meta (t3, uu___2) -> inspect t3
            | FStar_Syntax_Syntax.Tm_name bv ->
@@ -5848,6 +5848,14 @@ let rec (inspect :
                       (FStar_Reflection_Data.Tv_UInst (fv, us))
                 | uu___3 ->
                     failwith "Tac::inspect: Tm_uinst head not an fvar")
+           | FStar_Syntax_Syntax.Tm_ascribed
+               (t3, (FStar_Pervasives.Inl ty, tacopt, eq), _elid) ->
+               FStar_Compiler_Effect.op_Less_Bar FStar_Tactics_Monad.ret
+                 (FStar_Reflection_Data.Tv_AscribedT (t3, ty, tacopt, eq))
+           | FStar_Syntax_Syntax.Tm_ascribed
+               (t3, (FStar_Pervasives.Inr cty, tacopt, eq), elid) ->
+               FStar_Compiler_Effect.op_Less_Bar FStar_Tactics_Monad.ret
+                 (FStar_Reflection_Data.Tv_AscribedC (t3, cty, tacopt, eq))
            | FStar_Syntax_Syntax.Tm_app (hd, []) ->
                failwith "empty arguments on Tm_app"
            | FStar_Syntax_Syntax.Tm_app (hd, args) ->

@@ -160,8 +160,8 @@ let (pack_universe :
 let rec (inspect_ln :
   FStar_Syntax_Syntax.term -> FStar_Reflection_Data.term_view) =
   fun t ->
-    let t1 = FStar_Syntax_Util.unascribe t in
-    let t2 = FStar_Syntax_Util.unlazy_emb t1 in
+    let t1 = FStar_Syntax_Util.unlazy_emb t in
+    let t2 = FStar_Syntax_Subst.compress t1 in
     match t2.FStar_Syntax_Syntax.n with
     | FStar_Syntax_Syntax.Tm_meta (t3, uu___) -> inspect_ln t3
     | FStar_Syntax_Syntax.Tm_name bv -> FStar_Reflection_Data.Tv_Var bv
@@ -182,6 +182,12 @@ let rec (inspect_ln :
              FStar_Reflection_Data.Tv_UInst (fv, us)
          | uu___ ->
              failwith "Reflection::inspect_ln: uinst for a non-fvar node")
+    | FStar_Syntax_Syntax.Tm_ascribed
+        (t3, (FStar_Pervasives.Inl ty, tacopt, eq), _elid) ->
+        FStar_Reflection_Data.Tv_AscribedT (t3, ty, tacopt, eq)
+    | FStar_Syntax_Syntax.Tm_ascribed
+        (t3, (FStar_Pervasives.Inr cty, tacopt, eq), elid) ->
+        FStar_Reflection_Data.Tv_AscribedC (t3, cty, tacopt, eq)
     | FStar_Syntax_Syntax.Tm_app (hd, []) ->
         failwith "inspect_ln: empty arguments on Tm_app"
     | FStar_Syntax_Syntax.Tm_app (hd, args) ->
