@@ -789,30 +789,47 @@ let encode_top_level_let :
                          [dummy_var], app
                     else vars, maybe_curry_fvb (FStar.Syntax.Util.range_of_lbname lbn) fvb (List.map mkFreeV vars)
                 in
-                let pat, app, (body, decls2) =
-                  let is_logical =
-                    match (SS.compress t_body).n with
-                    | Tm_fvar fv when S.fv_eq_lid fv FStar.Parser.Const.logical_lid -> true
-                    | _ -> false
-                  in
-                  let is_smt_theory_symbol =
-                      let fv = FStar.Compiler.Util.right lbn in
-                      Env.fv_has_attr env.tcenv fv FStar.Parser.Const.smt_theory_symbol_attr_lid
-                  in
-                  if not is_smt_theory_symbol
-                  && (quals |> List.contains Logic || is_logical)
-                  then app, mk_Valid app, encode_formula body env'
-                  else app, app, encode_term body env'
+                let is_logical =
+                  match (SS.compress t_body).n with
+                  | Tm_fvar fv when S.fv_eq_lid fv FStar.Parser.Const.logical_lid -> true
+                  | _ -> false
                 in
-
-                //NS 05.25: This used to be mkImp(mk_and_l guards, mkEq(app, body))),
-                //But the guard is unnecessary given the pattern
-                let eqn = Util.mkAssume(mkForall (U.range_of_lbname lbn)
-                                                 ([[pat]], vars, mkEq(app,body)),
-                                    Some (BU.format1 "Equation for %s" (string_of_lid flid)),
-                                    ("equation_"^fvb.smt_id)) in
-                decls@binder_decls@decls2@(eqn::primitive_type_axioms env.tcenv flid fvb.smt_id app
-                                           |> mk_decls_trivial),
+                let is_smt_theory_symbol =
+                    let fv = FStar.Compiler.Util.right lbn in
+                    Env.fv_has_attr env.tcenv fv FStar.Parser.Const.smt_theory_symbol_attr_lid
+                in
+                let should_encode_logical =
+                    not is_smt_theory_symbol
+                    && (quals |> List.contains Logic || is_logical)
+                in
+                let make_eqn name pat app body =
+                    //NS 05.25: This used to be mkImp(mk_and_l guards, mkEq(app, body))),
+                    //But the guard is unnecessary given the pattern
+                    Util.mkAssume(mkForall (U.range_of_lbname lbn)
+                                           ([[pat]], vars, mkEq(app,body)),
+                                  Some (BU.format1 "Equation for %s" (string_of_lid flid)),
+                                  (name ^ "_" ^ fvb.smt_id))
+                in
+                let eqns,decls2 =
+                  let basic_eqn_name =
+                    if should_encode_logical
+                    then "defn_equation"
+                    else "equation"
+                  in
+                  let basic_eqn, decls =
+                    let pat, app, (body, decls) = app, app, encode_term body env' in
+                    make_eqn basic_eqn_name pat app body, decls
+                  in
+                  if should_encode_logical
+                  then let pat, app, (body, decls2) =
+                           app, mk_Valid app, encode_formula body env'
+                       in
+                       let logical_eqn = make_eqn "equation" pat app body in
+                       [logical_eqn; basic_eqn], decls@decls2
+                  else [basic_eqn], decls
+                in
+                decls@binder_decls@decls2@((eqns@primitive_type_axioms env.tcenv flid fvb.smt_id app)
+                                                 |> mk_decls_trivial),
                 env
             | _ -> failwith "Impossible"
         in
