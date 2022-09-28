@@ -36,18 +36,6 @@ let rec list_ref #a #p l =
     | [] -> []
     | x::xs -> x :: list_ref #a #p xs
 
-val mk_app_collect_inv_s : (t:term) -> (args:list argv) ->
-                            Lemma (uncurry mk_app (collect_app' args t) == mk_app t args)
-let rec mk_app_collect_inv_s t args =
-    match inspect_ln t with
-    | Tv_App l r ->
-        mk_app_collect_inv_s l (r::args);
-        pack_inspect_inv t
-    | _ -> ()
-
-val mk_app_collect_inv : (t:term) -> Lemma (uncurry mk_app (collect_app t) == t)
-let mk_app_collect_inv t = mk_app_collect_inv_s t []
-
 (*
  * The way back is not stricly true: the list of arguments could grow.
  * It's annoying to even state
@@ -59,7 +47,7 @@ val collect_app_order' : (args:list argv) -> (tt:term) -> (t:term) ->
                            /\ fst (collect_app' args t) << tt)
                   (decreases t)
 let rec collect_app_order' args tt t =
-    match inspect_ln t with
+    match inspect_ln_unascribe t with
     | Tv_App l r -> collect_app_order' (r::args) tt l
     | _ -> ()
 
@@ -68,7 +56,7 @@ val collect_app_order : (t:term) ->
                               (f << t /\ forall_list (fun a -> fst a << t) (snd (collect_app t)))
                            \/ (f == t /\ s == [])))
 let collect_app_order t =
-    match inspect_ln t with
+    match inspect_ln_unascribe t with
     | Tv_App l r -> collect_app_order' [r] t l
     | _ -> ()
 

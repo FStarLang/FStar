@@ -90,6 +90,9 @@ type term_view =
   | Tv_AscribedC : e:term -> c:comp -> tac:option term -> use_eq:bool -> term_view
   | Tv_Unknown  : term_view // Baked in "None"
 
+let notAscription (tv:term_view) : bool =
+  not (Tv_AscribedT? tv) && not (Tv_AscribedC? tv)
+
 // Very basic for now
 noeq
 type comp_view =
@@ -249,3 +252,36 @@ let smaller_universe (uv:universe_view) (u:universe) : Type0 =
   | Uv_Name _
   | Uv_Unif _
   | Uv_Unk -> True
+
+let rec forall_list_impl (p1 p2 : 'a -> Type) (l : list 'a)
+  : Lemma (requires (forall x. p1 x ==> p2 x))
+          (ensures (forall_list p1 l ==> forall_list p2 l))
+= match l with
+  | [] -> ()
+  | hd::tl -> forall_list_impl p1 p2 tl
+
+let smaller_trans_r
+    (tv1 : term_view) (t1 : term) (t2 : term)
+  : Lemma (requires (tv1 `smaller` t1 /\ t1 << t2))
+          (ensures tv1 `smaller` t2)
+= match tv1 with
+  | Tv_Let r attrs bv _ _ ->
+    forall_list_impl (fun t' -> t' << t1) (fun t' -> t' << t2) attrs
+
+  | Tv_Match _ ret_opt brs ->
+    forall_list_impl (fun (_, t') -> t' << t1) (fun (_, t') -> t' << t2) brs
+
+  | Tv_App _ _
+  | Tv_Abs _ _
+  | Tv_Arrow _ _
+  | Tv_Refine _ _
+  | Tv_AscribedT _ _ _ _
+  | Tv_AscribedC _ _ _ _
+  | Tv_Type _
+  | Tv_Const _
+  | Tv_Unknown
+  | Tv_Var _
+  | Tv_BVar _
+  | Tv_Uvar _ _
+  | Tv_FVar _
+  | Tv_UInst _ _ -> ()

@@ -61,7 +61,7 @@ let mk_Exists (typ : term) (pred : term) : Tac formula =
     Exists b (pack_ln (Tv_App pred (pack_ln (Tv_BVar b), Q_Explicit)))
 
 let term_as_formula' (t:term) : Tac formula =
-    match inspect_ln t with
+    match inspect_ln_unascribe t with
     | Tv_Var n ->
         Name n
 
@@ -116,16 +116,24 @@ let term_as_formula' (t:term) : Tac formula =
     | Tv_Const (C_Int i) ->
         IntLit i
 
-    // TODO: all these. Do we want to export them?
+    (* Not formulas. *)
+    | Tv_Let _ _ _ _ _
+    | Tv_Match _ _ _
     | Tv_Type _
     | Tv_Abs _ _
-    | Tv_Refine _ _
-    | Tv_Const (C_Unit)
-    | _ -> 
-        F_Unknown
+    | Tv_Arrow _ _
+    | Tv_Uvar _ _
+    | Tv_Unknown
+    | Tv_Refine _ _ -> F_Unknown
+
+    (* Other constants? *)
+    | Tv_Const _ -> F_Unknown
+
+    (* Should not occur, we're using inspect_ln *)
+    | Tv_BVar _ -> F_Unknown
 
 let rec is_name_imp (nm : name) (t : term) : bool =
-    begin match inspect_ln t with
+    begin match inspect_ln_unascribe t with
     | Tv_FVar fv
     | Tv_UInst fv _ ->
         if inspect_fv fv = nm
@@ -137,7 +145,7 @@ let rec is_name_imp (nm : name) (t : term) : bool =
     end
 
 let unsquash (t : term) : option term =
-    match inspect_ln t with
+    match inspect_ln_unascribe t with
     | Tv_App l (r, Q_Explicit) ->
         if is_name_imp squash_qn l
         then Some r
@@ -145,7 +153,7 @@ let unsquash (t : term) : option term =
     | _ -> None
 
 let unsquash_total (t : term) : term =
-    match inspect_ln t with
+    match inspect_ln_unascribe t with
     | Tv_App l (r, Q_Explicit) ->
         if is_name_imp squash_qn l
         then r

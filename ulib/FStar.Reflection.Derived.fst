@@ -35,6 +35,15 @@ let bv_of_binder (b : binder) : bv =
     let bv, _ = inspect_binder b in
     bv
 
+let rec inspect_ln_unascribe (t:term) : tv:term_view{smaller tv t /\ notAscription tv} =
+    match inspect_ln t with
+    | Tv_AscribedT t' _ _ _
+    | Tv_AscribedC t' _ _ _ ->
+      let tv' = inspect_ln_unascribe t' in
+      smaller_trans_r tv' t' t;
+      tv'
+    | tv -> tv
+
 (*
  * AR: add versions that take attributes as arguments?
  *)
@@ -62,7 +71,7 @@ let rec flatten_name ns =
 
 (* Helpers for dealing with nested applications and arrows *)
 let rec collect_app' (args : list argv) (t : term) : Tot (term * list argv) (decreases t) =
-    match inspect_ln t with
+    match inspect_ln_unascribe t with
     | Tv_App l r ->
         collect_app' (r::args) l
     | _ -> (t, args)
@@ -91,7 +100,7 @@ private
 let rec collect_arr' (bs : list binder) (c : comp) : Tot (list binder * comp) (decreases c) =
     begin match inspect_comp c with
     | C_Total t _ _ ->
-        begin match inspect_ln t with
+        begin match inspect_ln_unascribe t with
         | Tv_Arrow b c ->
             collect_arr' (b::bs) c
         | _ ->
@@ -113,7 +122,7 @@ let collect_arr_ln t =
 
 private
 let rec collect_abs' (bs : list binder) (t : term) : Tot (list binder * term) (decreases t) =
-    match inspect_ln t with
+    match inspect_ln_unascribe t with
     | Tv_Abs b t' ->
         collect_abs' (b::bs) t'
     | _ -> (bs, t)
