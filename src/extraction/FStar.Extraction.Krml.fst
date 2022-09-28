@@ -379,6 +379,8 @@ let rec translate_type env t: typ =
       TInt (must (mk_width m))
   | MLTY_Named ([arg], p) when (Syntax.string_of_mlpath p = "FStar.Monotonic.HyperStack.mem") ->
       TUnit
+  | MLTY_Named ([arg], p) when (Syntax.string_of_mlpath p = "FStar.Monotonic.HyperHeap.rid") ->
+      TUnit
 
   | MLTY_Named ([_; arg; _], p) when
     Syntax.string_of_mlpath p = "FStar.Monotonic.HyperStack.s_mref" ||
