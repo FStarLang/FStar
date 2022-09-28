@@ -570,18 +570,19 @@ let query_info settings z3result =
                 let str = smap_fold z3result.z3result_statistics f "statistics={" in
                     (substring str 0 ((String.length str) - 1)) ^ "}"
             else "" in
-        BU.print "%s\tQuery-stats (%s, %s)\t%s%s in %s milliseconds with fuel %s and ifuel %s and rlimit %s %s\n"
-             [  range;
-                settings.query_name;
-                BU.string_of_int settings.query_index;
-                tag;
-                used_hint_tag;
-                BU.string_of_int z3result.z3result_time;
-                BU.string_of_int settings.query_fuel;
-                BU.string_of_int settings.query_ifuel;
-                BU.string_of_int settings.query_rlimit;
-                stats
-             ];
+        if !Options.silent () then
+          BU.print "%s\tQuery-stats (%s, %s)\t%s%s in %s milliseconds with fuel %s and ifuel %s and rlimit %s %s\n"
+               [  range;
+                  settings.query_name;
+                  BU.string_of_int settings.query_index;
+                  tag;
+                  used_hint_tag;
+                  BU.string_of_int z3result.z3result_time;
+                  BU.string_of_int settings.query_fuel;
+                  BU.string_of_int settings.query_ifuel;
+                  BU.string_of_int settings.query_rlimit;
+                  stats
+               ];
         if Options.print_z3_statistics () then process_unsat_core core;
         errs |> List.iter (fun (_, msg, range) ->
             let tag = if used_hint settings then "(Hint-replay failed): " else "" in
