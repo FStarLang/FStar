@@ -846,9 +846,9 @@ let rec (translate_type : env -> FStar_Extraction_ML_Syntax.mlty -> typ) =
       | FStar_Extraction_ML_Syntax.MLTY_Named (arg::[], p) when
           let uu___ = FStar_Extraction_ML_Syntax.string_of_mlpath p in
           uu___ = "FStar.Monotonic.HyperStack.mem" -> TUnit
-      | FStar_Extraction_ML_Syntax.MLTY_Named (arg::[], p) when
-          let uu___ = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-          uu___ = "FStar.Monotonic.HyperHeap.rid" -> TUnit
+      | FStar_Extraction_ML_Syntax.MLTY_Named (uu___, p) when
+          let uu___1 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+          uu___1 = "FStar.Monotonic.HyperHeap.rid" -> TUnit
       | FStar_Extraction_ML_Syntax.MLTY_Named (uu___::arg::uu___1::[], p)
           when
           (((let uu___2 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
@@ -1035,6 +1035,9 @@ and (translate_expr : env -> FStar_Extraction_ML_Syntax.mlexpr -> expr) =
             let uu___1 = FStar_Compiler_Util.must (mk_bool_op op1) in
             (uu___1, Bool) in
           EOp uu___
+      | FStar_Extraction_ML_Syntax.MLE_Name p when
+          let uu___ = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+          uu___ = "FStar.Monotonic.HyperHeap.root" -> EUnit
       | FStar_Extraction_ML_Syntax.MLE_Name n -> EQualified n
       | FStar_Extraction_ML_Syntax.MLE_Let
           ((flavor,

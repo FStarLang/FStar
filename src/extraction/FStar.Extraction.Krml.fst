@@ -379,7 +379,7 @@ let rec translate_type env t: typ =
       TInt (must (mk_width m))
   | MLTY_Named ([arg], p) when (Syntax.string_of_mlpath p = "FStar.Monotonic.HyperStack.mem") ->
       TUnit
-  | MLTY_Named ([arg], p) when (Syntax.string_of_mlpath p = "FStar.Monotonic.HyperHeap.rid") ->
+  | MLTY_Named (_, p) when (Syntax.string_of_mlpath p = "FStar.Monotonic.HyperHeap.rid") ->
       TUnit
 
   | MLTY_Named ([_; arg; _], p) when
@@ -485,6 +485,9 @@ and translate_expr env e: expr =
 
   | MLE_Name ([ "Prims" ], op) when (is_bool_op op) ->
       EOp (must (mk_bool_op op), Bool)
+
+  | MLE_Name p when string_of_mlpath p = "FStar.Monotonic.HyperHeap.root" ->
+      EUnit
 
   | MLE_Name n ->
       EQualified n
