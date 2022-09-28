@@ -20,11 +20,10 @@ open FStar.Reflection.Builtins
 open FStar.Reflection.Data
 open FStar.Reflection.Derived
 
-val uncurry : ('a -> 'b -> 'c) -> ('a * 'b -> 'c)
-let uncurry f (x, y) = f x y
-
-val curry : ('a * 'b -> 'c) -> ('a -> 'b -> 'c)
-let curry f x y = f (x, y)
+let rec forall_list (p:'a -> Type) (l:list 'a) : Type =
+    match l with
+    | [] -> True
+    | x::xs -> p x /\ forall_list p xs
 
 // A glorified `id`
 val list_ref : (#a:Type) -> (#p:(a -> Type)) -> (l:list a) ->
@@ -59,7 +58,6 @@ let collect_app_order t =
     match inspect_ln_unascribe t with
     | Tv_App l r -> collect_app_order' [r] t l
     | _ -> ()
-
 
 val collect_app_ref : (t:term) -> (h:term{h == t \/ h << t}) * list (a:argv{fst a << t})
 let collect_app_ref t =

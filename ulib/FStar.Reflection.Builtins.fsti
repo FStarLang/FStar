@@ -26,14 +26,33 @@ open FStar.Reflection.Data
  * work with de Bruijn indices (using Tv_BVar). The only reason these
  * two exists is that they can be made Tot, and hence can be used in
  * specifications. *)
-val inspect_ln     : (t:term) -> tv:term_view{smaller tv t}
+
+(** "Inspecting" a term: reveal one level of its syntax via the type
+term_view.
+
+Crucially, this function guarantees that the result "precedes" the
+argument, since it is morally exposing the subterms of [t] in the view.
+This can be justified by this model of [term] and [term_view]:
+
+  type term = | Pack of term_view
+  let pack_ln = Pack
+  let inspect_ln (Pack tv) = tv
+
+Where inspect_ln would give exactly this guarantee on its result. Of
+course, the [term] type is actually implemented via internal F* terms,
+but the inspect and pack should be consistent with this model.
+*)
+
+val inspect_ln     : (t:term) -> tv:term_view{tv << t}
+
+(** "Packing": the inverse of inspecting. Used to construct terms. *)
 val pack_ln        : term_view -> term
 
 (* The bijection lemmas: the view exposes all details of terms. *)
 val pack_inspect_inv : (t:term) -> Lemma (pack_ln (inspect_ln t) == t)
 val inspect_pack_inv : (tv:term_view) -> Lemma (inspect_ln (pack_ln tv) == tv)
 
-val inspect_comp   : (c:comp) -> cv:comp_view{smaller_comp cv c}
+val inspect_comp   : (c:comp) -> cv:comp_view{cv << c}
 val pack_comp      : comp_view -> comp
 
 val inspect_sigelt : sigelt -> sigelt_view
@@ -51,7 +70,7 @@ val pack_lb        : lb_view -> letbinding
 val inspect_binder : binder -> bv * (aqualv * list term)
 val pack_binder    : bv -> aqualv -> attrs:list term -> binder
 
-val inspect_universe : u:universe -> uv:universe_view{smaller_universe uv u}
+val inspect_universe : u:universe -> uv:universe_view{uv << u}
 val pack_universe    : universe_view -> universe
 
 (** These are equivalent to [String.concat "."], [String.split ['.']]

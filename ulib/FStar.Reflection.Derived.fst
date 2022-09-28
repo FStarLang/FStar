@@ -35,13 +35,10 @@ let bv_of_binder (b : binder) : bv =
     let bv, _ = inspect_binder b in
     bv
 
-let rec inspect_ln_unascribe (t:term) : tv:term_view{smaller tv t /\ notAscription tv} =
+let rec inspect_ln_unascribe (t:term) : tv:term_view{tv << t /\ notAscription tv} =
     match inspect_ln t with
     | Tv_AscribedT t' _ _ _
-    | Tv_AscribedC t' _ _ _ ->
-      let tv' = inspect_ln_unascribe t' in
-      smaller_trans_r tv' t' t;
-      tv'
+    | Tv_AscribedC t' _ _ _ -> inspect_ln_unascribe t'
     | tv -> tv
 
 (*
