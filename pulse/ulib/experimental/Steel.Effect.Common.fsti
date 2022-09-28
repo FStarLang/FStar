@@ -940,7 +940,7 @@ let is_smt_binder (b:binder) : Tac bool =
 /// Creates a new term, where all arguments where SMT rewriting is enabled have been replaced
 /// by fresh, unconstrained unification variables
 let rec new_args_for_smt_attrs (env:env) (l:list argv) (ty:typ) : Tac (list argv * list term) =
-  match l, inspect ty with
+  match l, inspect_unascribe ty with
   | (arg, aqualv)::tl, Tv_Arrow binder comp ->
     let needs_smt = is_smt_binder binder in
     let new_hd =
@@ -1623,7 +1623,7 @@ let fatom (t:term) (ts:list term) (am:amap term) : Tac (exp * list term * amap t
 let rec reification_aux (ts:list term) (am:amap term)
                         (mult unit t : term) : Tac (exp * list term * amap term) =
   let hd, tl = collect_app_ref t in
-  match inspect hd, List.Tot.Base.list_unref tl with
+  match inspect_unascribe hd, List.Tot.Base.list_unref tl with
   | Tv_FVar fv, [(t1, Q_Explicit) ; (t2, Q_Explicit)] ->
     if term_eq (pack (Tv_FVar fv)) mult
     then (let (e1, ts, am) = reification_aux ts am mult unit t1 in
@@ -1767,7 +1767,7 @@ let rec unify_pr_with_true (pr: term) : Tac unit =
       unify_pr_with_true pr_r
     | _ -> fail "unify_pr_with_true: ill-formed /\\"
   else
-    match inspect hd with
+    match inspect_unascribe hd with
     | Tv_Uvar _ _ ->
       if unify pr (`true_p)
       then ()
@@ -1824,7 +1824,7 @@ let rec set_abduction_variable_term (pr: term) : Tac term =
 
 let set_abduction_variable () : Tac unit =
   let g = cur_goal () in
-  match inspect g with
+  match inspect_unascribe g with
   | Tv_Arrow b _ ->
     let (bv, _) = inspect_binder b in
     let bv = inspect_bv bv in
@@ -2078,7 +2078,7 @@ let canon' (use_smt:bool) (pr:term) (pr_bind:term) : Tac unit =
 
 /// Counts the number of unification variables corresponding to vprops in the term [t]
 let rec slterm_nbr_uvars (t:term) : Tac int =
-  match inspect t with
+  match inspect_unascribe t with
   | Tv_Uvar _ _ -> 1
   | Tv_App _ _ ->
     let hd, args = collect_app t in
@@ -2096,7 +2096,7 @@ and slterm_nbr_uvars_argv (args: list argv) : Tac int =
 let guard_vprop (v: vprop) : Tot vprop = v
 
 let rec all_guards_solved (t: term) : Tac bool =
-  match inspect t with
+  match inspect_unascribe t with
   | Tv_Abs _ t -> all_guards_solved t
   | Tv_App _ _ ->
     let hd, args = collect_app t in
@@ -2243,7 +2243,7 @@ let rec extract_contexts
     | _ -> None
   else
     let candidates =
-      let hd_fv = match inspect hd with
+      let hd_fv = match inspect_unascribe hd with
       | Tv_FVar fv -> Some fv
       | Tv_UInst fv _ -> Some fv
       | _ -> None
@@ -2466,7 +2466,7 @@ let open_existentials_forall_dep () : Tac unit
       match tl with
       | _ (* cond *) :: _ (* lhs *) :: (rhs, Q_Explicit) :: []
       | (_, Q_Implicit) (* #a *) :: _ (* cond *) :: _ (* lhs *) :: (rhs, Q_Explicit) :: [] ->
-        begin match inspect rhs with
+        begin match inspect_unascribe rhs with
         | Tv_Abs _ body ->
           begin match extract_cbs_forall_dep_contexts body with
           | None -> fail "open_existentials_forall_dep: no candidate"
@@ -2798,7 +2798,7 @@ let solve_or_delay (dict: list (term & (unit -> Tac bool))) : Tac bool =
 /// which should mean only delayed goals are left
 
 let rec vprop_term_uvars (t:term) : Tac (list int) =
-  match inspect t with
+  match inspect_unascribe t with
   | Tv_Uvar i' _ -> [i']
   | Tv_App _ _ ->
     let hd, args = collect_app t in
