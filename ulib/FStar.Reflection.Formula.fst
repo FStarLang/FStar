@@ -60,7 +60,7 @@ let mk_Exists (typ : term) (pred : term) : Tac formula =
                        bv_index = 0; }) in
     Exists b (pack_ln (Tv_App pred (pack_ln (Tv_BVar b), Q_Explicit)))
 
-let rec term_as_formula' (t:term) : Tac formula =
+let term_as_formula' (t:term) : Tac formula =
     match inspect_ln_unascribe t with
     | Tv_Var n ->
         Name n
@@ -144,7 +144,7 @@ let rec is_name_imp (nm : name) (t : term) : bool =
     | _ -> false
     end
 
-let rec unsquash (t : term) : option term =
+let unsquash (t : term) : option term =
     match inspect_ln_unascribe t with
     | Tv_App l (r, Q_Explicit) ->
         if is_name_imp squash_qn l
@@ -152,7 +152,7 @@ let rec unsquash (t : term) : option term =
         else None
     | _ -> None
 
-let rec unsquash_total (t : term) : term =
+let unsquash_total (t : term) : term =
     match inspect_ln_unascribe t with
     | Tv_App l (r, Q_Explicit) ->
         if is_name_imp squash_qn l
