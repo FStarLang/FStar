@@ -14079,36 +14079,27 @@ let (check_implicit_solution :
                    | FStar_Pervasives_Native.Some f ->
                        let uu___3 = FStar_TypeChecker_Env.apply_guard f t1 in
                        FStar_TypeChecker_Env.conj_guard uu___3 g) in
-            let uu___ =
-              (FStar_Options.debug_any ()) &&
-                (Prims.op_Negation env.FStar_TypeChecker_Env.phase1) in
-            if uu___
+            if Prims.op_Negation env.FStar_TypeChecker_Env.phase1
             then
-              let uu___1 = FStar_TypeChecker_Env.clear_expected_typ env in
-              match uu___1 with
-              | (env1, uu___2) ->
-                  let uu___3 =
+              let uu___ = FStar_TypeChecker_Env.clear_expected_typ env in
+              match uu___ with
+              | (env1, uu___1) ->
+                  let uu___2 =
                     env1.FStar_TypeChecker_Env.core_check env1 t1 k must_tot in
-                  (match uu___3 with
+                  (match uu___2 with
                    | FStar_Pervasives.Inl (FStar_Pervasives_Native.None) ->
-                       ((let uu___5 = FStar_Options.debug_any () in
-                         if uu___5
+                       ((let uu___4 = FStar_Options.debug_any () in
+                         if uu___4
                          then
                            FStar_Compiler_Util.print1
                              "(Rel) core_check succeeded (%s)\n" reason
                          else ());
                         FStar_TypeChecker_Common.trivial_guard)
                    | FStar_Pervasives.Inl (FStar_Pervasives_Native.Some g) ->
-                       ((let uu___5 = FStar_Options.debug_any () in
-                         if uu___5
-                         then
-                           let fb_guard = fallback () in
-                           let uu___6 = FStar_Syntax_Print.term_to_string g in
-                           let uu___7 = guard_to_string env1 fb_guard in
-                           FStar_Compiler_Util.print3
-                             "(Rel) core_check succeeded (%s) (with guard) %s  ... fb_guard is %s\n"
-                             reason uu___6 uu___7
-                         else ());
+                       ((let uu___4 = FStar_Syntax_Print.term_to_string g in
+                         FStar_Compiler_Util.print2
+                           "(Rel) core_check succeeded (%s) (with guard) %s\n"
+                           reason uu___4);
                         {
                           FStar_TypeChecker_Common.guard_f =
                             (FStar_TypeChecker_Common.NonTrivial g);
@@ -14122,14 +14113,10 @@ let (check_implicit_solution :
                             (FStar_TypeChecker_Common.trivial_guard.FStar_TypeChecker_Common.implicits)
                         })
                    | FStar_Pervasives.Inr print_err ->
-                       ((let uu___5 = FStar_Options.debug_any () in
-                         if uu___5
-                         then
-                           let uu___6 = print_err false in
-                           FStar_Compiler_Util.print2
-                             "(Rel) core_check failed (%s) because %s\n"
-                             reason uu___6
-                         else ());
+                       ((let uu___4 = print_err false in
+                         FStar_Compiler_Util.print2
+                           "(Rel) core_check failed (%s) because %s\n" reason
+                           uu___4);
                         fallback ()))
             else fallback ()
 let (check_implicit_solution_and_discharge_guard :

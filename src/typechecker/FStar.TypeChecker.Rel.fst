@@ -4946,8 +4946,7 @@ let check_implicit_solution env t k (must_tot:bool) (reason:string) : guard_t =
     | Some f -> Env.conj_guard (Env.apply_guard f t) g
   in
   
-  if Options.debug_any()
-  && not (env.phase1)
+  if not (env.phase1)
   then (
     let env, _ = Env.clear_expected_typ env in
     match env.core_check env t k must_tot with
@@ -4956,18 +4955,19 @@ let check_implicit_solution env t k (must_tot:bool) (reason:string) : guard_t =
       then BU.print1 "(Rel) core_check succeeded (%s)\n" reason;
       trivial_guard
     | Inl (Some g) -> 
-      if Options.debug_any () 
-      then (
-        let fb_guard = fallback () in      
-        BU.print3 "(Rel) core_check succeeded (%s) (with guard) %s  ... fb_guard is %s\n"
+      // if Options.debug_any () 
+      // then (
+      //   let fb_guard = fallback () in      
+      BU.print2 "(Rel) core_check succeeded (%s) (with guard) %s\n"
           reason
-          (Print.term_to_string g)
-          (guard_to_string env fb_guard)
-      );
+          (Print.term_to_string g);
+      //     (guard_to_string env fb_guard)
+      // );
       { trivial_guard with guard_f = NonTrivial g }
     | Inr print_err ->
-      if Options.debug_any()
-      then BU.print2 "(Rel) core_check failed (%s) because %s\n" reason (print_err false);
+      // if Options.debug_any()
+      // then
+      BU.print2 "(Rel) core_check failed (%s) because %s\n" reason (print_err false);
       fallback()
   )
   else fallback()
