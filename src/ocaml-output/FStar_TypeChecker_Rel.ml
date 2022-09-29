@@ -1,4 +1,25 @@
 open Prims
+type match_result =
+  | MisMatch of (FStar_Syntax_Syntax.delta_depth
+  FStar_Pervasives_Native.option * FStar_Syntax_Syntax.delta_depth
+  FStar_Pervasives_Native.option) 
+  | HeadMatch of Prims.bool 
+  | FullMatch 
+let (uu___is_MisMatch : match_result -> Prims.bool) =
+  fun projectee ->
+    match projectee with | MisMatch _0 -> true | uu___ -> false
+let (__proj__MisMatch__item___0 :
+  match_result ->
+    (FStar_Syntax_Syntax.delta_depth FStar_Pervasives_Native.option *
+      FStar_Syntax_Syntax.delta_depth FStar_Pervasives_Native.option))
+  = fun projectee -> match projectee with | MisMatch _0 -> _0
+let (uu___is_HeadMatch : match_result -> Prims.bool) =
+  fun projectee ->
+    match projectee with | HeadMatch _0 -> true | uu___ -> false
+let (__proj__HeadMatch__item___0 : match_result -> Prims.bool) =
+  fun projectee -> match projectee with | HeadMatch _0 -> _0
+let (uu___is_FullMatch : match_result -> Prims.bool) =
+  fun projectee -> match projectee with | FullMatch -> true | uu___ -> false
 type implicit_checking_status =
   | Implicit_unresolved 
   | Implicit_checking_defers_univ_constraint 
@@ -1994,12 +2015,12 @@ let (no_free_uvars : FStar_Syntax_Syntax.term -> Prims.bool) =
      FStar_Compiler_Util.set_is_empty uu___) &&
       (let uu___ = FStar_Syntax_Free.univs t in
        FStar_Compiler_Util.set_is_empty uu___)
-let rec (may_relate :
+let rec (may_relate_with_logical_guard :
   FStar_TypeChecker_Env.env ->
-    FStar_TypeChecker_Common.rel -> FStar_Syntax_Syntax.term -> Prims.bool)
+    Prims.bool -> FStar_Syntax_Syntax.typ -> Prims.bool)
   =
   fun env ->
-    fun prel ->
+    fun is_eq ->
       fun head ->
         let uu___ =
           let uu___1 = FStar_Syntax_Subst.compress head in
@@ -2011,14 +2032,24 @@ let rec (may_relate :
             let uu___1 = FStar_TypeChecker_Env.delta_depth_of_fv env fv in
             (match uu___1 with
              | FStar_Syntax_Syntax.Delta_equational_at_level uu___2 -> true
-             | FStar_Syntax_Syntax.Delta_abstract uu___2 ->
-                 prel = FStar_TypeChecker_Common.EQ
+             | FStar_Syntax_Syntax.Delta_abstract uu___2 -> is_eq
              | uu___2 -> false)
         | FStar_Syntax_Syntax.Tm_ascribed (t, uu___1, uu___2) ->
-            may_relate env prel t
-        | FStar_Syntax_Syntax.Tm_uinst (t, uu___1) -> may_relate env prel t
-        | FStar_Syntax_Syntax.Tm_meta (t, uu___1) -> may_relate env prel t
+            may_relate_with_logical_guard env is_eq t
+        | FStar_Syntax_Syntax.Tm_uinst (t, uu___1) ->
+            may_relate_with_logical_guard env is_eq t
+        | FStar_Syntax_Syntax.Tm_meta (t, uu___1) ->
+            may_relate_with_logical_guard env is_eq t
         | uu___1 -> false
+let (may_relate :
+  FStar_TypeChecker_Env.env ->
+    FStar_TypeChecker_Common.rel -> FStar_Syntax_Syntax.typ -> Prims.bool)
+  =
+  fun env ->
+    fun prel ->
+      fun head ->
+        may_relate_with_logical_guard env
+          (FStar_TypeChecker_Common.uu___is_EQ prel) head
 let (destruct_flex_t' : FStar_Syntax_Syntax.term -> flex_t) =
   fun t ->
     let uu___ = FStar_Syntax_Util.head_and_args t in
@@ -2620,27 +2651,6 @@ let (pat_vars :
                           aux uu___3 args2)
                | uu___ -> FStar_Pervasives_Native.None) in
         aux [] args
-type match_result =
-  | MisMatch of (FStar_Syntax_Syntax.delta_depth
-  FStar_Pervasives_Native.option * FStar_Syntax_Syntax.delta_depth
-  FStar_Pervasives_Native.option) 
-  | HeadMatch of Prims.bool 
-  | FullMatch 
-let (uu___is_MisMatch : match_result -> Prims.bool) =
-  fun projectee ->
-    match projectee with | MisMatch _0 -> true | uu___ -> false
-let (__proj__MisMatch__item___0 :
-  match_result ->
-    (FStar_Syntax_Syntax.delta_depth FStar_Pervasives_Native.option *
-      FStar_Syntax_Syntax.delta_depth FStar_Pervasives_Native.option))
-  = fun projectee -> match projectee with | MisMatch _0 -> _0
-let (uu___is_HeadMatch : match_result -> Prims.bool) =
-  fun projectee ->
-    match projectee with | HeadMatch _0 -> true | uu___ -> false
-let (__proj__HeadMatch__item___0 : match_result -> Prims.bool) =
-  fun projectee -> match projectee with | HeadMatch _0 -> _0
-let (uu___is_FullMatch : match_result -> Prims.bool) =
-  fun projectee -> match projectee with | FullMatch -> true | uu___ -> false
 let (string_of_match_result : match_result -> Prims.string) =
   fun uu___ ->
     match uu___ with
@@ -2869,8 +2879,8 @@ let rec (head_matches :
 let (head_matches_delta :
   FStar_TypeChecker_Env.env ->
     Prims.bool ->
-      FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
-        FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
+      FStar_Syntax_Syntax.typ ->
+        FStar_Syntax_Syntax.typ ->
           (match_result * (FStar_Syntax_Syntax.typ * FStar_Syntax_Syntax.typ)
             FStar_Pervasives_Native.option))
   =

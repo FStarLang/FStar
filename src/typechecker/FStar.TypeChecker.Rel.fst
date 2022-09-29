@@ -884,7 +884,7 @@ let no_free_uvars t = BU.set_is_empty (Free.uvars t) && BU.set_is_empty (Free.un
 
 (* Deciding when it's okay to issue an SMT query for
    equating a term whose head symbol is `head` with another term *)
-let rec may_relate env prel head =
+let rec may_relate_with_logical_guard env is_eq head =
     match (SS.compress head).n with
     | Tm_name _
     | Tm_match _ -> true
@@ -896,12 +896,14 @@ let rec may_relate env prel head =
          //these may be relatable via a logical theory
          //which may provide **equations** among abstract symbols
          //Note, this is specifically not applicable for subtyping queries: see issue #1359
-         prel = EQ
+         is_eq
        | _ -> false)
     | Tm_ascribed (t, _, _)
     | Tm_uinst (t, _)
-    | Tm_meta (t, _) -> may_relate env prel t
+    | Tm_meta (t, _) -> may_relate_with_logical_guard env is_eq t
     | _ -> false
+
+let may_relate env prel head  = may_relate_with_logical_guard env (EQ? prel) head
 
 (* Only call if ensure_no_uvar_subst was called on t before *)
 let destruct_flex_t' t : flex_t =
@@ -1178,11 +1180,6 @@ let pat_vars env ctx args : option binders =
 (* </variable ops>                                  *)
 (* ------------------------------------------------ *)
 
-type match_result =
-  | MisMatch of option delta_depth * option delta_depth
-  | HeadMatch of bool // true iff the heads MAY match after further unification, false if already the same
-  | FullMatch
-
 let string_of_match_result = function
     | MisMatch (d1, d2) ->
         "MisMatch ("
@@ -1286,7 +1283,7 @@ let rec head_matches env t1 t2 : match_result =
     | _ -> MisMatch(delta_depth_of_term env t1, delta_depth_of_term env t2)
 
 (* Does t1 head-match t2, after some delta steps? *)
-let head_matches_delta env smt_ok t1 t2 : (match_result * option (typ*typ)) =
+let head_matches_delta env smt_ok t1 t2 : (match_result & option (typ&typ)) =
     let maybe_inline t =
         let head = U.head_of (unrefine env t) in
         if Env.debug env <| Options.Other "RelDelta" then

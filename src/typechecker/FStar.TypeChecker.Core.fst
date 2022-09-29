@@ -13,6 +13,7 @@ module PC = FStar.Parser.Const
 module I = FStar.Ident
 module P = FStar.Syntax.Print
 module BU = FStar.Compiler.Util
+module TcUtil = FStar.TypeChecker.Util
 
 type env = {
    tcenv : Env.env;
@@ -324,6 +325,11 @@ let weaken (p:term) (g:result 'a)
       | Inl (x, q) -> Inl (x, weaken_subtyping_guard p q)
       | err -> err
 
+let weaken_with_guard_formula (p:FStar.TypeChecker.Common.guard_formula) (g:result 'a)
+  = match p with
+    | Common.Trivial -> g
+    | Common.NonTrivial p -> weaken p g
+    
 let strengthen (p:term) (g:result 'a)
   = fun ctx ->
       match g ctx with
@@ -338,11 +344,9 @@ let no_guard (g:result 'a)
       | Inl (x, Some g) -> fail (BU.format1 "Unexpected guard: %s" (P.term_to_string g)) ctx
       | err -> err
 
-let equatable t0 t1 =
-  match (SS.compress t0).n, (SS.compress t1).n with
-  | Tm_name _, _
-  | _, Tm_name _ -> true
-  | _ -> false
+let equatable g t = 
+  let head, _ = U.head_and_args t in
+  Rel.may_relate_with_logical_guard g.tcenv true head
 
 let apply_predicate x p = fun e -> SS.subst [NT(x.binder_bv, e)] p
 
@@ -445,9 +449,21 @@ let join_eff e0 e1 =
   | _, E_GHOST -> E_GHOST
   | _ -> E_TOTAL
 
+let join_eff_l es = List.Tot.fold_right join_eff es E_TOTAL
+
 let guard_not_allowed
   : result bool
   = fun ctx -> Inl (ctx.no_guard, None)
+
+let default_norm_steps : Env.steps = 
+  let open Env in
+  [ Primops;
+    Weak;
+    HNF;
+    UnfoldUntil delta_constant;
+    Unascribe;
+    Eager_unfolding;
+    Iota ]
 
 (*
      G |- e : t0 <: t1 | p
@@ -459,8 +475,17 @@ let rec check_subtype_whnf (g:env) (e:term) (t0 t1: typ)
               s
               (P.term_to_string t0)
               (P.term_to_string t1)) in
-
+    if Env.debug g.tcenv (Options.Other "Core")
+    then BU.print2 "check_subtype_whnf %s <: %s\n" (P.term_to_string t0) (P.term_to_string t1);
     let! guard_not_ok = guard_not_allowed in
+    let guard_ok = not guard_not_ok in
+    let fallback g t0 t1 = 
+      if guard_ok && (equatable g t0 || equatable g t1)
+      then
+        let! u = universe_of g t0 in
+        guard (U.mk_eq2 u (mk_type u) t0 t1)
+      else fail "no subtyping rule is applicable"
+    in
     match (SS.compress t0).n, (SS.compress t1).n with
     | Tm_refine _, Tm_refine _
       when guard_not_ok ->
@@ -500,9 +525,31 @@ let rec check_subtype_whnf (g:env) (e:term) (t0 t1: typ)
     | Tm_ascribed _, _
     | _, Tm_ascribed _ -> fail "Unexpected term: ascription"
 
-    | Tm_app _, Tm_app _
     | Tm_type _, Tm_type _ ->
       check_equality_whnf g t0 t1
+
+    | Tm_app _, _
+    | _, Tm_app _ ->
+      let smt_ok = not (guard_not_ok) in
+      let mr, ts = Rel.head_matches_delta g.tcenv smt_ok t0 t1 in
+      begin
+      match mr, ts with
+      | Rel.MisMatch _, _
+      | Rel.HeadMatch true, _ ->
+        //HeadMatch true: heads may match, e.g, both heads are Tm_match nodes, but we can't decide.
+        //So, just handle as a fallback
+        fallback g t0 t1
+
+      | _, Some (t0, t1) ->
+        //match after reduction to t0, t1
+        check_subtype_whnf g e t0 t1
+      
+      | Rel.FullMatch, _
+      | Rel.HeadMatch false, _ ->
+        //heads already match
+        check_equality_whnf g t0 t1
+      end
+      
 
     | Tm_match (e0, _, brs0, _), Tm_match (e1, _, brs1, _) ->
       //
@@ -514,12 +561,7 @@ let rec check_subtype_whnf (g:env) (e:term) (t0 t1: typ)
     | _ ->
       if U.eq_tm t0 t1 = U.Equal
       then return ()
-      else if equatable t0 t1
-      then (
-        let! u = universe_of g t0 in
-        guard (U.mk_eq2 u (mk_type u) t0 t1)
-      )
-      else fail "no subtyping rule is applicable"
+      else fallback g t0 t1
 
 and check_subtype (g:env) (e:term) (t0 t1:typ)
   = if Env.debug g.tcenv (Options.Other "Core")
@@ -527,9 +569,8 @@ and check_subtype (g:env) (e:term) (t0 t1:typ)
     match U.eq_tm t0 t1 with
     | U.Equal -> return ()
     | _ ->
-      let open Env in
-      let t0' = N.normalize_refinement [Primops; Weak; HNF; UnfoldUntil delta_constant; Unascribe] g.tcenv t0 in
-      let t1' = N.normalize_refinement [Primops; Weak; HNF; UnfoldUntil delta_constant; Unascribe] g.tcenv t1 in
+      let t0' = N.normalize_refinement default_norm_steps g.tcenv t0 in
+      let t1' = N.normalize_refinement default_norm_steps g.tcenv t1 in
       check_subtype_whnf g e t0' t1'
 
 and check_equality_formula (g:env) (phi0 phi1:typ) =
@@ -588,18 +629,20 @@ and check_equality_whnf (g:env) (t0 t1:typ)
                          (P.term_to_string t0)
                          (P.term_to_string t1))
     in
+    let! guard_not_ok = guard_not_allowed in
+    let guard_ok = not guard_not_ok in
     let fallback t0 t1 =
-      match! guard_not_allowed with
-      | true -> err ()
-      | false ->
-        if equatable t0 t1
-        then let! _, t_typ = check' g t0 in
-             let! u = universe_of g t_typ in
-             guard (U.mk_eq2 u t_typ t0 t1)
-        else err ()
+      if guard_ok
+      then if equatable g t0
+            || equatable g t1
+           then let! _, t_typ = check' g t0 in
+                let! u = universe_of g t_typ in
+                guard (U.mk_eq2 u t_typ t0 t1)
+           else err ()
+      else err ()
     in
     if Env.debug g.tcenv (Options.Other "Core")
-    then BU.print2 "check_equality_whnf %s %s\n" (P.term_to_string t0) (P.term_to_string t1);
+    then BU.print2 "check_equality_whnf %s =?= %s\n" (P.term_to_string t0) (P.term_to_string t1);
     if U.eq_tm t0 t1 = U.Equal
     then return ()
     else
@@ -628,15 +671,7 @@ and check_equality_whnf (g:env) (t0 t1:typ)
         if Rel.teq_nosmt_force g.tcenv t0 t1
         then return ()
         else err ()
-
-      | Tm_app(hd0, args0), Tm_app(hd1, args1) ->
-        check_equality_whnf g hd0 hd1;!
-        iter2 args0 args1
-          (fun (a0, q0) (a1, q1) _ ->
-            check_aqual q0 q1;!
-            check_equality g a0 a1)
-          ()
-
+        
       | Tm_abs(b0::b1::bs, body, ropt), _ ->
         let t0 = curry_abs b0 b1 bs body ropt in
         check_equality_whnf g t0 t1
@@ -681,16 +716,45 @@ and check_equality_whnf (g:env) (t0 t1:typ)
       | Tm_ascribed _, _
       | _, Tm_ascribed _ -> fail "Unexpected term: ascription"
 
+      | Tm_app _, _
+      | _, Tm_app _ ->
+        let mr, ts = Rel.head_matches_delta g.tcenv guard_ok t0 t1 in
+        begin
+        match mr, ts with
+        | Rel.MisMatch _, _
+        | Rel.HeadMatch true, _ ->
+          fallback t0 t1
+
+        | _, Some (t0, t1) ->
+          check_equality_whnf g t0 t1
+
+        | Rel.FullMatch, _
+        | Rel.HeadMatch false, _ ->
+          if guard_ok 
+          && (equatable g t0 || equatable g t1)
+          then fallback t0 t1
+          else (
+            match (SS.compress t0).n, (SS.compress t1).n with
+            | Tm_app (hd0, args0), Tm_app(hd1, args1) ->
+              check_equality_whnf g hd0 hd1;!
+              iter2 args0 args1
+                (fun (a0, q0) (a1, q1) _ ->
+                  check_aqual q0 q1;!
+                  check_equality g a0 a1)
+                ()
+            | _ -> fallback t0 t1
+          )
+        end
+
       | _ -> fallback t0 t1
 
 and check_equality (g:env) (t0 t1:typ)
   = match U.eq_tm t0 t1 with
     | U.Equal -> return ()
     | _ ->
-      let open Env in
       //reduce to whnf, but don't unfold tac_opaque symbols
-      let t0' = N.normalize_refinement [Primops; Weak; HNF; UnfoldTac; UnfoldUntil delta_constant; Unascribe] g.tcenv t0 in
-      let t1' = N.normalize_refinement [Primops; Weak; HNF; UnfoldTac; UnfoldUntil delta_constant; Unascribe] g.tcenv t1 in
+      let t0' = N.normalize_refinement default_norm_steps g.tcenv t0 in
+      let t1' = N.normalize_refinement default_norm_steps g.tcenv t1 in
       check_equality_whnf g t0' t1'
 
 and check_subcomp (g:env) (e:term) (c0 c1:comp)
@@ -819,6 +883,20 @@ and check' (g:env) (e:term)
       let! u = with_context "arrow comp" None (fun _ -> check_comp g c) in
       return (E_TOTAL, mk_type (S.U_max (u::us)))
     )
+
+  | Tm_app (hd, [(t1, None); (t2, None)])
+    when TcUtil.short_circuit_head hd ->
+    let! eff_hd, t_hd = check "app head" g hd in
+    let! x, eff_arr1, s1 = is_arrow g t_hd in    
+    let! eff_arg1, t_t1 = check "app arg" g t1 in
+    with_context "operator arg1" None (fun _ -> check_subtype g t1 t_t1 x.binder_bv.sort) ;!    
+    let s1 = SS.subst [NT(x.binder_bv, t1)] s1 in
+    let! y, eff_arr2, s2 = is_arrow g s1 in
+    let guard_formula = TcUtil.short_circuit hd [(t1, None)]in
+    let! eff_arg2, t_t2 = weaken_with_guard_formula guard_formula (check "app arg" g t2) in    
+    with_context "operator arg2" None (fun _ -> check_subtype g t2 t_t2 y.binder_bv.sort) ;!
+    return (join_eff_l [eff_hd; eff_arr1; eff_arr2; eff_arg1; eff_arg2],
+            SS.subst [NT(y.binder_bv, t2)] s2)
 
   | Tm_app (hd, [(arg, arg_qual)]) ->
     let! eff_hd, t = check "app head" g hd in
