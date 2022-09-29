@@ -3006,10 +3006,31 @@ and tc_pat env (pat_t:typ) (p0:pat) :
                   (a, imp_a), subst, bvs, g
 
                 | _ ->
-                  fail "Not a simple pattern"
+                  //
+                  // AR: 09/29:
+                  //
+                  // Before we carried on dot patterns solutions from phase1 to phase2,
+                  //   the arguments args here could just be names (from Pat_var)
+                  //   or uvars (from Pat_dot_term)
+                  //
+                  // But now they can be arbitrary terms for Pat_dot_term,
+                  //   since in phase1, Pat_dot_term could be solved with
+                  //   arbitrary term
+                  //
+                  // If not a name or uvar, we typecheck the term,
+                  //   and add it to args_out
+                  //
+                  // TODO: should we check no smt guards are generated?
+                  //
+                  let a = SS.subst subst a in
+                  let env = Env.set_expected_typ env t_f in
+                  let a, _, g = tc_tot_or_gtot_term env a in
+                  Rel.force_trivial_guard env g;
+                  let subst = NT(f, a)::subst in
+                  (a, imp_a), subst, bvs, Env.trivial_guard
               in
               aux (subst, args_out@[a], bvs, Env.conj_guard g guard) formals args
-            | _ -> fail "Not a fully applued pattern"
+            | _ -> fail "Not a fully applied pattern"
            in
            aux ([], [], [], Env.trivial_guard) formals args
         | _ ->
@@ -3156,28 +3177,33 @@ and tc_pat env (pat_t:typ) (p0:pat) :
                             | Pat_dot_term _ -> false
                             | _ -> true)
           in
-          let simple_bvs, simple_pat_e, g0, simple_pat_elab =
+          let simple_bvs_pat, simple_pat_e, g0, simple_pat_elab =
               PatternUtils.pat_as_exp false false env simple_pat
           in
-          if List.length simple_bvs <> List.length sub_pats
+          //
+          // simple_bvs are the Pat_vars in a Pat_cons
+          //
+          // Number of simple_bvs should be same as the number of simple_pats
+          //
+          if List.length simple_bvs_pat <> List.length sub_pats
           then failwith (BU.format4 "(%s) Impossible: pattern bvar mismatch: %s; expected %s sub pats; got %s"
                                           (Range.string_of_range p.p)
                                           (Print.pat_to_string simple_pat)
                                           (BU.string_of_int (List.length sub_pats))
-                                          (BU.string_of_int (List.length simple_bvs)));
+                                          (BU.string_of_int (List.length simple_bvs_pat)));
           let simple_pat_e, simple_bvs, g1, erasable =
               //
-              //guard is the typechecking guard
-              //it contains some deferred constraints for dot pattern uvars
-              //we will solve them after pat_typ_ok
+              // guard is the typechecking guard
+              // it contains some deferred constraints for dot pattern uvars
+              // we will solve them after pat_typ_ok
               //
               let simple_pat_e, simple_pat_t, simple_bvs, guard, erasable =
                   type_of_simple_pat env simple_pat_e
               in
               let g' = pat_typ_ok env simple_pat_t (expected_pat_typ env p0.p t) in
-              //Now solve guard
+              // Now solve guard
               let guard = Rel.discharge_guard_no_smt env guard in
-              //And combine with g' (the guard from pat_typ_ok)
+              // And combine with g' (the guard from pat_typ_ok)
               let guard = Env.conj_guard guard g' in
               if Env.debug env <| Options.Other "Patterns"
               then BU.print3 "$$$$$$$$$$$$Checked simple pattern %s at type %s with bvs=%s\n"
@@ -3185,7 +3211,28 @@ and tc_pat env (pat_t:typ) (p0:pat) :
                             (Print.term_to_string simple_pat_t)
                             (List.map (fun x -> "(" ^ Print.bv_to_string x ^ " : " ^ Print.term_to_string x.sort ^ ")") simple_bvs
                               |> String.concat " ");
-              simple_pat_e, simple_bvs, guard, erasable
+              //
+              // AR: 09/29:
+              //
+              // Some gymnastics to return simple_bvs:
+              //
+              // Before we started to reuse Pat_dot_term solutions from phase1 to phase2,
+              //   the simple_bvs returned by typechecking of simple pat would be
+              //   same as the simple_bvs_pat that we got from pat_as_exp
+              //   (since Pat_dot_term were always elaborated to uvars)
+              //
+              // But now, a Pat_dot_term solution could itself be a name,
+              //   and typechecking the simple pat would return it in simple_bvs
+              //
+              // Noting that Pat_dot_terms occur at the beginning,
+              //   we take the suffix of simple_bvs with length same as
+              //   simple_bvs_pat
+              //
+              simple_pat_e,
+              (simple_bvs
+                 |> BU.first_N (List.length simple_bvs - List.length simple_bvs_pat)
+                 |> snd),
+              guard, erasable
           in
           let _env, bvs, tms, checked_sub_pats, subst, g, erasable, _ =
             List.fold_left2
