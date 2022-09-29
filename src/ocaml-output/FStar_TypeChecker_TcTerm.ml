@@ -7922,7 +7922,25 @@ and (tc_pat :
                                                      ((a1, imp_a), subst1,
                                                        bvs, g))
                                             | uu___13 ->
-                                                fail "Not a simple pattern" in
+                                                let a1 =
+                                                  FStar_Syntax_Subst.subst
+                                                    subst a in
+                                                let env2 =
+                                                  FStar_TypeChecker_Env.set_expected_typ
+                                                    env1 t_f1 in
+                                                let uu___14 =
+                                                  tc_tot_or_gtot_term env2 a1 in
+                                                (match uu___14 with
+                                                 | (a2, uu___15, g) ->
+                                                     (FStar_TypeChecker_Rel.force_trivial_guard
+                                                        env2 g;
+                                                      (let subst1 =
+                                                         (FStar_Syntax_Syntax.NT
+                                                            (f, a2))
+                                                         :: subst in
+                                                       ((a2, imp_a), subst1,
+                                                         bvs,
+                                                         FStar_TypeChecker_Env.trivial_guard)))) in
                                           (match uu___11 with
                                            | (a1, subst1, bvs1, g) ->
                                                let uu___12 =
@@ -7935,7 +7953,7 @@ and (tc_pat :
                                                    uu___13) in
                                                aux uu___12 formals2 args2)
                                       | uu___9 ->
-                                          fail "Not a fully applued pattern") in
+                                          fail "Not a fully applied pattern") in
                                aux
                                  ([], [], [],
                                    FStar_TypeChecker_Env.trivial_guard)
@@ -8058,7 +8076,25 @@ and (tc_pat :
                                                      ((a1, imp_a), subst1,
                                                        bvs, g))
                                             | uu___10 ->
-                                                fail "Not a simple pattern" in
+                                                let a1 =
+                                                  FStar_Syntax_Subst.subst
+                                                    subst a in
+                                                let env2 =
+                                                  FStar_TypeChecker_Env.set_expected_typ
+                                                    env1 t_f1 in
+                                                let uu___11 =
+                                                  tc_tot_or_gtot_term env2 a1 in
+                                                (match uu___11 with
+                                                 | (a2, uu___12, g) ->
+                                                     (FStar_TypeChecker_Rel.force_trivial_guard
+                                                        env2 g;
+                                                      (let subst1 =
+                                                         (FStar_Syntax_Syntax.NT
+                                                            (f, a2))
+                                                         :: subst in
+                                                       ((a2, imp_a), subst1,
+                                                         bvs,
+                                                         FStar_TypeChecker_Env.trivial_guard)))) in
                                           (match uu___8 with
                                            | (a1, subst1, bvs1, g) ->
                                                let uu___9 =
@@ -8071,7 +8107,7 @@ and (tc_pat :
                                                    uu___10) in
                                                aux uu___9 formals2 args2)
                                       | uu___6 ->
-                                          fail "Not a fully applued pattern") in
+                                          fail "Not a fully applied pattern") in
                                aux
                                  ([], [], [],
                                    FStar_TypeChecker_Env.trivial_guard)
@@ -8348,9 +8384,9 @@ and (tc_pat :
                  FStar_TypeChecker_PatternUtils.pat_as_exp false false env1
                    simple_pat in
                (match uu___1 with
-                | (simple_bvs, simple_pat_e, g0, simple_pat_elab) ->
+                | (simple_bvs_pat, simple_pat_e, g0, simple_pat_elab) ->
                     (if
-                       (FStar_Compiler_List.length simple_bvs) <>
+                       (FStar_Compiler_List.length simple_bvs_pat) <>
                          (FStar_Compiler_List.length sub_pats1)
                      then
                        (let uu___3 =
@@ -8364,7 +8400,7 @@ and (tc_pat :
                               (FStar_Compiler_List.length sub_pats1) in
                           let uu___7 =
                             FStar_Compiler_Util.string_of_int
-                              (FStar_Compiler_List.length simple_bvs) in
+                              (FStar_Compiler_List.length simple_bvs_pat) in
                           FStar_Compiler_Util.format4
                             "(%s) Impossible: pattern bvar mismatch: %s; expected %s sub pats; got %s"
                             uu___4 uu___5 uu___6 uu___7 in
@@ -8373,7 +8409,7 @@ and (tc_pat :
                      (let uu___3 =
                         let uu___4 = type_of_simple_pat env1 simple_pat_e in
                         match uu___4 with
-                        | (simple_pat_e1, simple_pat_t, simple_bvs1, guard,
+                        | (simple_pat_e1, simple_pat_t, simple_bvs, guard,
                            erasable) ->
                             let g' =
                               let uu___5 =
@@ -8413,17 +8449,28 @@ and (tc_pat :
                                                Prims.op_Hat uu___15 ")" in
                                              Prims.op_Hat " : " uu___14 in
                                            Prims.op_Hat uu___12 uu___13 in
-                                         Prims.op_Hat "(" uu___11)
-                                      simple_bvs1 in
+                                         Prims.op_Hat "(" uu___11) simple_bvs in
                                   FStar_Compiler_Effect.op_Bar_Greater
                                     uu___10 (FStar_String.concat " ") in
                                 FStar_Compiler_Util.print3
                                   "$$$$$$$$$$$$Checked simple pattern %s at type %s with bvs=%s\n"
                                   uu___7 uu___8 uu___9
                               else ());
-                             (simple_pat_e1, simple_bvs1, guard2, erasable)) in
+                             (let uu___6 =
+                                let uu___7 =
+                                  FStar_Compiler_Effect.op_Bar_Greater
+                                    simple_bvs
+                                    (FStar_Compiler_Util.first_N
+                                       ((FStar_Compiler_List.length
+                                           simple_bvs)
+                                          -
+                                          (FStar_Compiler_List.length
+                                             simple_bvs_pat))) in
+                                FStar_Compiler_Effect.op_Bar_Greater uu___7
+                                  FStar_Pervasives_Native.snd in
+                              (simple_pat_e1, uu___6, guard2, erasable))) in
                       match uu___3 with
-                      | (simple_pat_e1, simple_bvs1, g1, erasable) ->
+                      | (simple_pat_e1, simple_bvs, g1, erasable) ->
                           let uu___4 =
                             let uu___5 =
                               let uu___6 =
@@ -8485,7 +8532,7 @@ and (tc_pat :
                                                 uu___9,
                                                 (erasable1 || erasable_p),
                                                 (i + Prims.int_one)))) uu___5
-                              sub_pats1 simple_bvs1 in
+                              sub_pats1 simple_bvs in
                           (match uu___4 with
                            | (_env, bvs, tms, checked_sub_pats, subst, g,
                               erasable1, uu___5) ->
@@ -8551,7 +8598,7 @@ and (tc_pat :
                                  | FStar_Syntax_Syntax.Pat_cons
                                      (fv1, uu___6, simple_pats) ->
                                      let nested_pats =
-                                       aux simple_pats simple_bvs1
+                                       aux simple_pats simple_bvs
                                          checked_sub_pats in
                                      {
                                        FStar_Syntax_Syntax.v =
