@@ -526,7 +526,9 @@ let guard_letrecs env actuals expected_c : list (lbname*typ*univ_names) =
           match l, l_prev with
           | [], [] ->
             mk_Tm_app precedes_t [as_arg S.unit_const; as_arg S.unit_const] r
-          | [x], [x_prev] -> mk_Tm_app precedes_t [as_arg x; as_arg x_prev] r
+          | [x], [x_prev] -> 
+            let t_x, t_x_prev = type_of x x_prev in            
+            mk_Tm_app precedes_t [iarg t_x; iarg t_x_prev; as_arg x; as_arg x_prev] r
           | x::tl, x_prev::tl_prev ->
             let t_x, t_x_prev = type_of x x_prev in
             let tm_precedes = mk_Tm_app precedes_t [
