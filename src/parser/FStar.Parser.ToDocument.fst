@@ -1937,6 +1937,12 @@ and p_atomicTerm e = match e.tm with
       p_quident lid ^^ dot ^^ soft_parens_with_nesting (p_term false false e)
   | Name lid ->
       p_quident lid
+  | Construct (lid, []) when is_general_construction e ->
+      (*
+       * This case is needed to avoid extra parenthesis on applications
+       * where the argument is a constructor. cf. #2181.
+       *)
+      p_quident lid
   | Op(op, [e]) when is_general_prefix_op op ->
       str (Ident.string_of_id op) ^^ p_atomicTerm e
   | _ -> p_atomicTermNotQUident e
@@ -2018,7 +2024,7 @@ and p_projectionLHS e = match e.tm with
   | Tvar _      (* p_atomicTermNotQUident *)
   | Var _       (* p_projectionLHS *)
   | Name _      (* p_atomicTerm *)
-  | Construct _ (* p_appTerm *)
+  | Construct _ (* p_atomicTerm and p_appTerm *)
   | Abs _       (* p_simpleTerm *)
   | App _       (* p_appTerm *)
   | Let _       (* p_noSeqTerm *)

@@ -361,7 +361,10 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
         resugar_bv_as_pat env x.binder_bv x.binder_qual body_bv)
       in
       let body = resugar_term' env body in
-      mk (A.Abs(patterns, body))
+      (* If no binders/patterns remain after filtering, drop the Abs node *)
+      if List.isEmpty patterns
+      then body
+      else mk (A.Abs(patterns, body))
 
     | Tm_arrow _ ->
       (* Flatten the arrow *)
