@@ -630,7 +630,9 @@ let rec (resugar_term' :
                            x.FStar_Syntax_Syntax.binder_bv
                            x.FStar_Syntax_Syntax.binder_qual body_bv)) in
                let body2 = resugar_term' env body1 in
-               mk (FStar_Parser_AST.Abs (patterns, body2)))
+               if FStar_Compiler_List.isEmpty patterns
+               then body2
+               else mk (FStar_Parser_AST.Abs (patterns, body2)))
       | FStar_Syntax_Syntax.Tm_arrow uu___1 ->
           let uu___2 =
             let uu___3 =
