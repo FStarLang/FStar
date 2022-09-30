@@ -23,7 +23,6 @@ param \
 typeclasses \
 low-mitls-experiments \
 seplogic \
-csl \
 demos \
 indexed_effects \
 doublylinkedlist \
