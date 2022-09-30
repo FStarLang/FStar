@@ -144,12 +144,12 @@ let rec canon_expr (e:expr) : Dv expr =
          (see cannon_correct below) *)
 let canon_expr' (e:expr) : Tot expr = e
 
-let pack_fv' (n:name) : Tac term = pack (Tv_FVar (pack_fv n))
+let pack_fv' (n:name) : Tot term = pack_ln (Tv_FVar (pack_fv n))
 
-let rec expr_to_term (e:expr) : Tac term =
+let rec expr_to_term (e:expr) : Tot term =
   match e with
   | Atom i t -> t
-  | Lit i -> pack (Tv_Const (C_Int i))
+  | Lit i -> pack_ln (Tv_Const (C_Int i))
   | Plus l r -> mk_e_app (pack_fv' add_qn) [expr_to_term l; expr_to_term r]
   | Minus l r -> mk_e_app (pack_fv' minus_qn) [expr_to_term l; expr_to_term r]
   | Mult l r -> mk_e_app (pack_fv' mult_qn) [expr_to_term l; expr_to_term r]
