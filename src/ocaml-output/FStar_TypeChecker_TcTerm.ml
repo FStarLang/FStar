@@ -7932,15 +7932,12 @@ and (tc_pat :
                                                   tc_tot_or_gtot_term env2 a1 in
                                                 (match uu___14 with
                                                  | (a2, uu___15, g) ->
-                                                     (FStar_TypeChecker_Rel.force_trivial_guard
-                                                        env2 g;
-                                                      (let subst1 =
-                                                         (FStar_Syntax_Syntax.NT
-                                                            (f, a2))
-                                                         :: subst in
-                                                       ((a2, imp_a), subst1,
-                                                         bvs,
-                                                         FStar_TypeChecker_Env.trivial_guard)))) in
+                                                     let subst1 =
+                                                       (FStar_Syntax_Syntax.NT
+                                                          (f, a2))
+                                                       :: subst in
+                                                     ((a2, imp_a), subst1,
+                                                       bvs, g)) in
                                           (match uu___11 with
                                            | (a1, subst1, bvs1, g) ->
                                                let uu___12 =
@@ -8086,15 +8083,12 @@ and (tc_pat :
                                                   tc_tot_or_gtot_term env2 a1 in
                                                 (match uu___11 with
                                                  | (a2, uu___12, g) ->
-                                                     (FStar_TypeChecker_Rel.force_trivial_guard
-                                                        env2 g;
-                                                      (let subst1 =
-                                                         (FStar_Syntax_Syntax.NT
-                                                            (f, a2))
-                                                         :: subst in
-                                                       ((a2, imp_a), subst1,
-                                                         bvs,
-                                                         FStar_TypeChecker_Env.trivial_guard)))) in
+                                                     let subst1 =
+                                                       (FStar_Syntax_Syntax.NT
+                                                          (f, a2))
+                                                       :: subst in
+                                                     ((a2, imp_a), subst1,
+                                                       bvs, g)) in
                                           (match uu___8 with
                                            | (a1, subst1, bvs1, g) ->
                                                let uu___9 =
@@ -8411,14 +8405,52 @@ and (tc_pat :
                         match uu___4 with
                         | (simple_pat_e1, simple_pat_t, simple_bvs, guard,
                            erasable) ->
+                            let simple_bvs1 =
+                              let uu___5 =
+                                FStar_Compiler_Effect.op_Bar_Greater
+                                  simple_bvs
+                                  (FStar_Compiler_Util.first_N
+                                     ((FStar_Compiler_List.length simple_bvs)
+                                        -
+                                        (FStar_Compiler_List.length
+                                           simple_bvs_pat))) in
+                              FStar_Compiler_Effect.op_Bar_Greater uu___5
+                                FStar_Pervasives_Native.snd in
                             let g' =
                               let uu___5 =
                                 expected_pat_typ env1
                                   p0.FStar_Syntax_Syntax.p t in
                               pat_typ_ok env1 simple_pat_t uu___5 in
                             let guard1 =
-                              FStar_TypeChecker_Rel.discharge_guard_no_smt
-                                env1 guard in
+                              let fml =
+                                FStar_TypeChecker_Env.guard_form guard in
+                              let guard2 =
+                                FStar_TypeChecker_Rel.discharge_guard_no_smt
+                                  env1
+                                  {
+                                    FStar_TypeChecker_Common.guard_f =
+                                      FStar_TypeChecker_Common.Trivial;
+                                    FStar_TypeChecker_Common.deferred_to_tac
+                                      =
+                                      (guard.FStar_TypeChecker_Common.deferred_to_tac);
+                                    FStar_TypeChecker_Common.deferred =
+                                      (guard.FStar_TypeChecker_Common.deferred);
+                                    FStar_TypeChecker_Common.univ_ineqs =
+                                      (guard.FStar_TypeChecker_Common.univ_ineqs);
+                                    FStar_TypeChecker_Common.implicits =
+                                      (guard.FStar_TypeChecker_Common.implicits)
+                                  } in
+                              {
+                                FStar_TypeChecker_Common.guard_f = fml;
+                                FStar_TypeChecker_Common.deferred_to_tac =
+                                  (guard2.FStar_TypeChecker_Common.deferred_to_tac);
+                                FStar_TypeChecker_Common.deferred =
+                                  (guard2.FStar_TypeChecker_Common.deferred);
+                                FStar_TypeChecker_Common.univ_ineqs =
+                                  (guard2.FStar_TypeChecker_Common.univ_ineqs);
+                                FStar_TypeChecker_Common.implicits =
+                                  (guard2.FStar_TypeChecker_Common.implicits)
+                              } in
                             let guard2 =
                               FStar_TypeChecker_Env.conj_guard guard1 g' in
                             ((let uu___6 =
@@ -8449,61 +8481,58 @@ and (tc_pat :
                                                Prims.op_Hat uu___15 ")" in
                                              Prims.op_Hat " : " uu___14 in
                                            Prims.op_Hat uu___12 uu___13 in
-                                         Prims.op_Hat "(" uu___11) simple_bvs in
+                                         Prims.op_Hat "(" uu___11)
+                                      simple_bvs1 in
                                   FStar_Compiler_Effect.op_Bar_Greater
                                     uu___10 (FStar_String.concat " ") in
                                 FStar_Compiler_Util.print3
                                   "$$$$$$$$$$$$Checked simple pattern %s at type %s with bvs=%s\n"
                                   uu___7 uu___8 uu___9
                               else ());
-                             (let uu___6 =
-                                let uu___7 =
-                                  FStar_Compiler_Effect.op_Bar_Greater
-                                    simple_bvs
-                                    (FStar_Compiler_Util.first_N
-                                       ((FStar_Compiler_List.length
-                                           simple_bvs)
-                                          -
-                                          (FStar_Compiler_List.length
-                                             simple_bvs_pat))) in
-                                FStar_Compiler_Effect.op_Bar_Greater uu___7
-                                  FStar_Pervasives_Native.snd in
-                              (simple_pat_e1, uu___6, guard2, erasable))) in
+                             (simple_pat_e1, simple_bvs1, guard2, erasable)) in
                       match uu___3 with
                       | (simple_pat_e1, simple_bvs, g1, erasable) ->
                           let uu___4 =
                             let uu___5 =
                               let uu___6 =
                                 FStar_TypeChecker_Env.conj_guard g0 g1 in
-                              (env1, [], [], [], [], uu___6, erasable,
+                              ([], [], [], [], uu___6, erasable,
                                 Prims.int_zero) in
                             FStar_Compiler_List.fold_left2
                               (fun uu___6 ->
                                  fun uu___7 ->
                                    fun x ->
                                      match (uu___6, uu___7) with
-                                     | ((env2, bvs, tms, pats, subst, g,
-                                         erasable1, i),
+                                     | ((bvs, tms, pats, subst, g, erasable1,
+                                         i),
                                         (p1, b)) ->
                                          let expected_t =
                                            FStar_Syntax_Subst.subst subst
                                              x.FStar_Syntax_Syntax.sort in
+                                         let env2 =
+                                           FStar_TypeChecker_Env.push_bvs
+                                             env1 bvs in
                                          let uu___8 =
                                            check_nested_pattern env2 p1
                                              expected_t in
                                          (match uu___8 with
                                           | (bvs_p, tms_p, e_p, p2, g',
                                              erasable_p) ->
-                                              let env3 =
-                                                FStar_TypeChecker_Env.push_bvs
-                                                  env2 bvs_p in
+                                              let g'1 =
+                                                let uu___9 =
+                                                  FStar_Compiler_Effect.op_Bar_Greater
+                                                    bvs
+                                                    (FStar_Compiler_List.map
+                                                       FStar_Syntax_Syntax.mk_binder) in
+                                                FStar_TypeChecker_Env.close_guard
+                                                  env2 uu___9 g' in
                                               let tms_p1 =
                                                 let disc_tm =
                                                   let uu___9 =
                                                     FStar_Syntax_Syntax.lid_of_fv
                                                       fv in
                                                   FStar_TypeChecker_Util.get_field_projector_name
-                                                    env3 uu___9 i in
+                                                    env2 uu___9 i in
                                                 let uu___9 =
                                                   let uu___10 =
                                                     let uu___11 =
@@ -8519,10 +8548,9 @@ and (tc_pat :
                                                   tms_p uu___9 in
                                               let uu___9 =
                                                 FStar_TypeChecker_Env.conj_guard
-                                                  g g' in
-                                              (env3,
-                                                (FStar_Compiler_List.op_At
-                                                   bvs bvs_p),
+                                                  g g'1 in
+                                              ((FStar_Compiler_List.op_At bvs
+                                                  bvs_p),
                                                 (FStar_Compiler_List.op_At
                                                    tms tms_p1),
                                                 (FStar_Compiler_List.op_At
@@ -8534,7 +8562,7 @@ and (tc_pat :
                                                 (i + Prims.int_one)))) uu___5
                               sub_pats1 simple_bvs in
                           (match uu___4 with
-                           | (_env, bvs, tms, checked_sub_pats, subst, g,
+                           | (bvs, tms, checked_sub_pats, subst, g,
                               erasable1, uu___5) ->
                                let pat_e =
                                  FStar_Syntax_Subst.subst subst simple_pat_e1 in
