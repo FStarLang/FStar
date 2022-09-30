@@ -2141,6 +2141,9 @@ let (mk_Valid : term -> term) =
         let uu___ = unboxBool t1 in
         { tm = (uu___.tm); freevars = (uu___.freevars); rng = (t.rng) }
     | uu___ -> mkApp ("Valid", [t]) t.rng
+let (mk_unit_type : term) = mkApp ("Prims.unit", []) norng
+let (mk_subtype_of_unit : term -> term) =
+  fun v -> mkApp ("Prims.subtype_of", [v; mk_unit_type]) v.rng
 let (mk_HasType : term -> term -> term) =
   fun v -> fun t -> mkApp ("HasType", [v; t]) t.rng
 let (mk_HasTypeZ : term -> term -> term) =
