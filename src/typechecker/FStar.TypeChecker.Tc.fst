@@ -537,7 +537,9 @@ let tc_sig_let env r se lbs lids : list sigelt * list sigelt * Env.env =
         { lb with lbdef = lbdef }
     in
     let r =
-      Profiling.profile (fun () -> tc_maybe_toplevel_term env' e)
+        //We already generalized phase1; don't need to generalize again
+      let should_generalize = not (do_two_phases env') in
+      Profiling.profile (fun () -> tc_maybe_toplevel_term { env' with generalize = should_generalize } e)
                         (Some (Ident.string_of_lid (Env.current_module env)))
                         "FStar.TypeChecker.Tc.tc_sig_let-tc-phase2"
     in

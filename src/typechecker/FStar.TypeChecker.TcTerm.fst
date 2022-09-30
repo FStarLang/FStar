@@ -1253,6 +1253,9 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
                   else check_application_args env head chead g_head args (Env.expected_typ env0) in
     let e, c, implicits =
         if TcComm.is_tot_or_gtot_lcomp c
+        //Also instantiate in phase1, dropping any precondition,
+        //since it will be recomputed correctly in phase2        
+        || (env.phase1 && TcComm.is_pure_or_ghost_lcomp c)
         then let e, res_typ, implicits = TcUtil.maybe_instantiate env0 e c.res_typ in
              e, TcComm.set_result_typ_lc c res_typ, implicits
         else e, c, Env.trivial_guard
