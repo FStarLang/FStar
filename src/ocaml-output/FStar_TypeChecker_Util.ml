@@ -286,7 +286,9 @@ let (extract_let_rec_annotation :
                                   FStar_Syntax_Syntax.pos =
                                     (e3.FStar_Syntax_Syntax.pos);
                                   FStar_Syntax_Syntax.vars =
-                                    (e3.FStar_Syntax_Syntax.vars)
+                                    (e3.FStar_Syntax_Syntax.vars);
+                                  FStar_Syntax_Syntax.hash_code =
+                                    (e3.FStar_Syntax_Syntax.hash_code)
                                 }, recheck))
                      | FStar_Syntax_Syntax.Tm_ascribed
                          (e', (FStar_Pervasives.Inr c, tac_opt, use_eq),
@@ -316,7 +318,9 @@ let (extract_let_rec_annotation :
                                     FStar_Syntax_Syntax.pos =
                                       (e3.FStar_Syntax_Syntax.pos);
                                     FStar_Syntax_Syntax.vars =
-                                      (e3.FStar_Syntax_Syntax.vars)
+                                      (e3.FStar_Syntax_Syntax.vars);
+                                    FStar_Syntax_Syntax.hash_code =
+                                      (e3.FStar_Syntax_Syntax.hash_code)
                                   } in
                                 (lbtyp, e4, recheck))
                          else
@@ -349,7 +353,9 @@ let (extract_let_rec_annotation :
                                   FStar_Syntax_Syntax.pos =
                                     (e3.FStar_Syntax_Syntax.pos);
                                   FStar_Syntax_Syntax.vars =
-                                    (e3.FStar_Syntax_Syntax.vars)
+                                    (e3.FStar_Syntax_Syntax.vars);
+                                  FStar_Syntax_Syntax.hash_code =
+                                    (e3.FStar_Syntax_Syntax.hash_code)
                                 } in
                               (lbtyp, e4, recheck))
                      | FStar_Syntax_Syntax.Tm_abs uu___6 ->
@@ -381,7 +387,9 @@ let (extract_let_rec_annotation :
                                              FStar_Syntax_Syntax.pos =
                                                (body3.FStar_Syntax_Syntax.pos);
                                              FStar_Syntax_Syntax.vars =
-                                               (body3.FStar_Syntax_Syntax.vars)
+                                               (body3.FStar_Syntax_Syntax.vars);
+                                             FStar_Syntax_Syntax.hash_code =
+                                               (body3.FStar_Syntax_Syntax.hash_code)
                                            } in
                                          (t3, body4, recheck))
                                 | FStar_Syntax_Syntax.Tm_ascribed
@@ -455,7 +463,10 @@ let (extract_let_rec_annotation :
                                                        (body2.FStar_Syntax_Syntax.pos);
                                                      FStar_Syntax_Syntax.vars
                                                        =
-                                                       (body2.FStar_Syntax_Syntax.vars)
+                                                       (body2.FStar_Syntax_Syntax.vars);
+                                                     FStar_Syntax_Syntax.hash_code
+                                                       =
+                                                       (body2.FStar_Syntax_Syntax.hash_code)
                                                    } in
                                                  (lbtyp, body3, recheck))))
                                 | uu___8 ->
@@ -4850,8 +4861,9 @@ let (weaken_result_typ :
                                   FStar_Syntax_Syntax.n =
                                     FStar_Syntax_Syntax.Tm_fvar fv;
                                   FStar_Syntax_Syntax.pos = uu___7;
-                                  FStar_Syntax_Syntax.vars = uu___8;_},
-                                uu___9)
+                                  FStar_Syntax_Syntax.vars = uu___8;
+                                  FStar_Syntax_Syntax.hash_code = uu___9;_},
+                                uu___10)
                                when
                                FStar_Syntax_Syntax.fv_eq_lid fv
                                  FStar_Parser_Const.true_lid
@@ -7252,7 +7264,9 @@ let (update_env_sub_eff :
               FStar_TypeChecker_Env.erase_erasable_args =
                 (env.FStar_TypeChecker_Env.erase_erasable_args);
               FStar_TypeChecker_Env.rel_query_for_apply_tac_uvar =
-                (env.FStar_TypeChecker_Env.rel_query_for_apply_tac_uvar)
+                (env.FStar_TypeChecker_Env.rel_query_for_apply_tac_uvar);
+              FStar_TypeChecker_Env.core_check =
+                (env.FStar_TypeChecker_Env.core_check)
             } sub.FStar_Syntax_Syntax.source sub.FStar_Syntax_Syntax.target
             uu___ in
         {
@@ -7347,7 +7361,9 @@ let (update_env_sub_eff :
           FStar_TypeChecker_Env.erase_erasable_args =
             (env1.FStar_TypeChecker_Env.erase_erasable_args);
           FStar_TypeChecker_Env.rel_query_for_apply_tac_uvar =
-            (env1.FStar_TypeChecker_Env.rel_query_for_apply_tac_uvar)
+            (env1.FStar_TypeChecker_Env.rel_query_for_apply_tac_uvar);
+          FStar_TypeChecker_Env.core_check =
+            (env1.FStar_TypeChecker_Env.core_check)
         }
 let (update_env_polymonadic_bind :
   FStar_TypeChecker_Env.env ->

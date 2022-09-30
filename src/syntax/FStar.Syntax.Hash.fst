@@ -123,7 +123,7 @@ and hash_pat p =
        hash_list (hash_pair hash_pat hash_bool) args]
   | Pat_var bv -> H.mix (H.of_int 101) (hash_bv bv)
   | Pat_wild bv -> H.mix (H.of_int 103) (hash_bv bv)
-  | Pat_dot_term (bv, t) -> mix_list_lit [H.of_int 107; hash_bv bv; hash_term t]
+  | Pat_dot_term t -> mix_list_lit [H.of_int 107; hash_option hash_term t]
 
 and hash_comp c =
   //Primes: 141--160
@@ -507,9 +507,8 @@ and equal_pat p1 p2 =
     equal_bv bv1 bv2
   | Pat_wild bv1, Pat_wild bv2 ->
     equal_bv bv1 bv2
-  | Pat_dot_term (bv1, t1), Pat_dot_term (bv2, t2) ->
-    equal_bv bv1 bv2 &&
-    equal_term t1 t2
+  | Pat_dot_term t1, Pat_dot_term t2 ->
+    equal_opt equal_term t1 t2
 
 and equal_meta m1 m2 =
   match m1, m2 with

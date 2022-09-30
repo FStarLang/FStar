@@ -280,13 +280,10 @@ and (hash_pat :
     | FStar_Syntax_Syntax.Pat_wild bv ->
         let uu___ = FStar_Hash.of_int (Prims.of_int (103)) in
         let uu___1 = hash_bv bv in FStar_Hash.mix uu___ uu___1
-    | FStar_Syntax_Syntax.Pat_dot_term (bv, t) ->
+    | FStar_Syntax_Syntax.Pat_dot_term t ->
         let uu___ =
           let uu___1 = FStar_Hash.of_int (Prims.of_int (107)) in
-          let uu___2 =
-            let uu___3 = hash_bv bv in
-            let uu___4 = let uu___5 = hash_term t in [uu___5] in uu___3 ::
-              uu___4 in
+          let uu___2 = let uu___3 = hash_option hash_term t in [uu___3] in
           uu___1 :: uu___2 in
         mix_list_lit uu___
 and (hash_comp :
@@ -1114,9 +1111,9 @@ and (equal_pat :
              -> equal_bv bv1 bv2
          | (FStar_Syntax_Syntax.Pat_wild bv1, FStar_Syntax_Syntax.Pat_wild
             bv2) -> equal_bv bv1 bv2
-         | (FStar_Syntax_Syntax.Pat_dot_term (bv1, t1),
-            FStar_Syntax_Syntax.Pat_dot_term (bv2, t2)) ->
-             (equal_bv bv1 bv2) && (equal_term t1 t2))
+         | (FStar_Syntax_Syntax.Pat_dot_term t1,
+            FStar_Syntax_Syntax.Pat_dot_term t2) ->
+             equal_opt equal_term t1 t2)
 and (equal_meta :
   FStar_Syntax_Syntax.metadata -> FStar_Syntax_Syntax.metadata -> Prims.bool)
   =
