@@ -2520,7 +2520,19 @@ and (check_comp :
                           (fun uu___5 ->
                              check_subtype g effect_app_tm t
                                FStar_Syntax_Syntax.teff) in
-                      op_let_Bang uu___4 (fun uu___5 -> return u)))
+                      op_let_Bang uu___4
+                        (fun uu___5 ->
+                           let is_total =
+                             let uu___6 =
+                               FStar_TypeChecker_Env.lookup_effect_quals
+                                 g.tcenv c1.FStar_Syntax_Syntax.effect_name in
+                             FStar_Compiler_Effect.op_Bar_Greater uu___6
+                               (FStar_Compiler_List.existsb
+                                  (fun q ->
+                                     q = FStar_Syntax_Syntax.TotalEffect)) in
+                           if Prims.op_Negation is_total
+                           then return FStar_Syntax_Syntax.U_zero
+                           else return u)))
 and (universe_of :
   env -> FStar_Syntax_Syntax.typ -> FStar_Syntax_Syntax.universe result) =
   fun g ->

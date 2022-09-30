@@ -1125,7 +1125,10 @@ and check_comp (g:env) (c:comp)
              S.mk_Tm_app head ((as_arg c.result_typ)::c.effect_args) c.result_typ.pos in
            let! _, t = check "effectful comp" g effect_app_tm in
            with_context "comp fully applied" None (fun _ -> check_subtype g effect_app_tm t S.teff);!
-           return u
+           let is_total = Env.lookup_effect_quals g.tcenv c.effect_name |> List.existsb (fun q -> q = S.TotalEffect) in
+           if not is_total
+           then return S.U_zero  //if it is a non-total effect then u0
+           else return u
 
 
 and universe_of (g:env) (t:typ)

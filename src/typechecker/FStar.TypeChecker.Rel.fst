@@ -4935,12 +4935,13 @@ let check_implicit_solution env t k (must_tot:bool) (reason:string) : guard_t =
             {t with n=Tm_abs (bs, body, Some ({rc with residual_typ=None}))}
           | _ -> t in
 
+  let env, _ = Env.clear_expected_typ env in
   let fallback () =
     let k', g =
       env.typeof_well_typed_tot_or_gtot_term
       (Env.set_expected_typ ({env with use_bv_sorts=true}) k)
       t must_tot in
-  
+
     match get_subtyping_predicate env k' k with
     | None -> raise_error (Err.expected_expression_of_type env k t k') t.pos
     | Some f -> Env.conj_guard (Env.apply_guard f t) g
@@ -4948,26 +4949,15 @@ let check_implicit_solution env t k (must_tot:bool) (reason:string) : guard_t =
   
   if not (env.phase1)
   then (
-    let env, _ = Env.clear_expected_typ env in
     match env.core_check env t k must_tot with
     | Inl None ->
-      if Options.debug_any () 
-      then BU.print1 "(Rel) core_check succeeded (%s)\n" reason;
       trivial_guard
     | Inl (Some g) -> 
-      // if Options.debug_any () 
-      // then (
-      //   let fb_guard = fallback () in      
-      BU.print2 "(Rel) core_check succeeded (%s) (with guard) %s\n"
-          reason
-          (Print.term_to_string g);
-      //     (guard_to_string env fb_guard)
-      // );
       { trivial_guard with guard_f = NonTrivial g }
     | Inr print_err ->
-      // if Options.debug_any()
-      // then
-      BU.print2 "(Rel) core_check failed (%s) because %s\n" reason (print_err false);
+        (BU.print2 "(Rel) core_check failed (%s) because %s\n" 
+          reason
+          (print_err false));
       fallback()
   )
   else fallback()
