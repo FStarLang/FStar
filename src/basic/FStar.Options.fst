@@ -1345,6 +1345,7 @@ let settable = function
     | "initial_fuel"
     | "initial_ifuel"
     | "ide_id_info_off"
+    | "keep_query_captions"
     | "lax"
     | "load"
     | "load_cmxs"
