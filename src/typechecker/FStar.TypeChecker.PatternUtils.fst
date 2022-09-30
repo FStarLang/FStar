@@ -219,9 +219,8 @@ let pat_as_exp (introduce_bv_uvars:bool)
                 let x = {x with sort=t} in
                 let e, _,  g' = new_implicit_var_aux "pat_dot_term" (S.range_of_bv  x) env t Allow_ghost None in
                 let p = {p with v=Pat_dot_term(x, e)} in
-                ([], [], [], env, e, conj_guard g g', p)
-              | _ ->
-                [], [], [], env, e, Env.trivial_guard, p)
+                [], [], [], env, e, conj_guard g g', p
+              | _ -> [], [], [], env, e, Env.trivial_guard, p)
 
            | Pat_wild x ->
              let x, g, env = intro_bv env x in
