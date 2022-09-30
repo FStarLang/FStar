@@ -2852,103 +2852,148 @@ let (encode_top_level_let :
                                                         (vars, uu___16)) in
                                                    (match uu___14 with
                                                     | (vars1, app) ->
-                                                        let uu___15 =
-                                                          let is_logical =
+                                                        let is_logical =
+                                                          let uu___15 =
+                                                            let uu___16 =
+                                                              FStar_Syntax_Subst.compress
+                                                                t_body in
+                                                            uu___16.FStar_Syntax_Syntax.n in
+                                                          match uu___15 with
+                                                          | FStar_Syntax_Syntax.Tm_fvar
+                                                              fv when
+                                                              FStar_Syntax_Syntax.fv_eq_lid
+                                                                fv
+                                                                FStar_Parser_Const.logical_lid
+                                                              -> true
+                                                          | uu___16 -> false in
+                                                        let is_smt_theory_symbol
+                                                          =
+                                                          let fv =
+                                                            FStar_Compiler_Util.right
+                                                              lbn in
+                                                          FStar_TypeChecker_Env.fv_has_attr
+                                                            env2.FStar_SMTEncoding_Env.tcenv
+                                                            fv
+                                                            FStar_Parser_Const.smt_theory_symbol_attr_lid in
+                                                        let should_encode_logical
+                                                          =
+                                                          (Prims.op_Negation
+                                                             is_smt_theory_symbol)
+                                                            &&
+                                                            ((FStar_Compiler_Effect.op_Bar_Greater
+                                                                quals
+                                                                (FStar_Compiler_List.contains
+                                                                   FStar_Syntax_Syntax.Logic))
+                                                               || is_logical) in
+                                                        let make_eqn name pat
+                                                          app1 body1 =
+                                                          let uu___15 =
                                                             let uu___16 =
                                                               let uu___17 =
-                                                                FStar_Syntax_Subst.compress
-                                                                  t_body in
-                                                              uu___17.FStar_Syntax_Syntax.n in
-                                                            match uu___16
-                                                            with
-                                                            | FStar_Syntax_Syntax.Tm_fvar
-                                                                fv when
-                                                                FStar_Syntax_Syntax.fv_eq_lid
-                                                                  fv
-                                                                  FStar_Parser_Const.logical_lid
-                                                                -> true
-                                                            | uu___17 ->
-                                                                false in
-                                                          let is_smt_theory_symbol
-                                                            =
-                                                            let fv =
-                                                              FStar_Compiler_Util.right
-                                                                lbn in
-                                                            FStar_TypeChecker_Env.fv_has_attr
-                                                              env2.FStar_SMTEncoding_Env.tcenv
-                                                              fv
-                                                              FStar_Parser_Const.smt_theory_symbol_attr_lid in
-                                                          let uu___16 =
-                                                            (Prims.op_Negation
-                                                               is_smt_theory_symbol)
-                                                              &&
-                                                              ((FStar_Compiler_Effect.op_Bar_Greater
-                                                                  quals
-                                                                  (FStar_Compiler_List.contains
-                                                                    FStar_Syntax_Syntax.Logic))
-                                                                 ||
-                                                                 is_logical) in
-                                                          if uu___16
-                                                          then
-                                                            let uu___17 =
-                                                              FStar_SMTEncoding_Term.mk_Valid
-                                                                app in
-                                                            let uu___18 =
-                                                              FStar_SMTEncoding_EncodeTerm.encode_formula
-                                                                body env'1 in
-                                                            (app, uu___17,
-                                                              uu___18)
-                                                          else
-                                                            (let uu___18 =
-                                                               FStar_SMTEncoding_EncodeTerm.encode_term
-                                                                 body env'1 in
-                                                             (app, app,
-                                                               uu___18)) in
-                                                        (match uu___15 with
-                                                         | (pat, app1,
-                                                            (body1, decls2))
-                                                             ->
-                                                             let eqn =
-                                                               let uu___16 =
-                                                                 let uu___17
-                                                                   =
-                                                                   let uu___18
-                                                                    =
-                                                                    FStar_Syntax_Util.range_of_lbname
-                                                                    lbn in
-                                                                   let uu___19
-                                                                    =
-                                                                    let uu___20
-                                                                    =
-                                                                    FStar_SMTEncoding_Util.mkEq
+                                                                FStar_Syntax_Util.range_of_lbname
+                                                                  lbn in
+                                                              let uu___18 =
+                                                                let uu___19 =
+                                                                  FStar_SMTEncoding_Util.mkEq
                                                                     (app1,
                                                                     body1) in
-                                                                    ([[pat]],
-                                                                    vars1,
-                                                                    uu___20) in
-                                                                   FStar_SMTEncoding_Term.mkForall
-                                                                    uu___18
-                                                                    uu___19 in
-                                                                 let uu___18
-                                                                   =
-                                                                   let uu___19
-                                                                    =
-                                                                    let uu___20
-                                                                    =
-                                                                    FStar_Ident.string_of_lid
+                                                                ([[pat]],
+                                                                  vars1,
+                                                                  uu___19) in
+                                                              FStar_SMTEncoding_Term.mkForall
+                                                                uu___17
+                                                                uu___18 in
+                                                            let uu___17 =
+                                                              let uu___18 =
+                                                                let uu___19 =
+                                                                  FStar_Ident.string_of_lid
                                                                     flid in
-                                                                    FStar_Compiler_Util.format1
-                                                                    "Equation for %s"
-                                                                    uu___20 in
-                                                                   FStar_Pervasives_Native.Some
-                                                                    uu___19 in
-                                                                 (uu___17,
-                                                                   uu___18,
-                                                                   (Prims.op_Hat
-                                                                    "equation_"
-                                                                    fvb.FStar_SMTEncoding_Env.smt_id)) in
-                                                               FStar_SMTEncoding_Util.mkAssume
-                                                                 uu___16 in
+                                                                FStar_Compiler_Util.format1
+                                                                  "Equation for %s"
+                                                                  uu___19 in
+                                                              FStar_Pervasives_Native.Some
+                                                                uu___18 in
+                                                            (uu___16,
+                                                              uu___17,
+                                                              (Prims.op_Hat
+                                                                 name
+                                                                 (Prims.op_Hat
+                                                                    "_"
+                                                                    fvb.FStar_SMTEncoding_Env.smt_id))) in
+                                                          FStar_SMTEncoding_Util.mkAssume
+                                                            uu___15 in
+                                                        let uu___15 =
+                                                          let basic_eqn_name
+                                                            =
+                                                            if
+                                                              should_encode_logical
+                                                            then
+                                                              "defn_equation"
+                                                            else "equation" in
+                                                          let uu___16 =
+                                                            let uu___17 =
+                                                              FStar_SMTEncoding_EncodeTerm.encode_term
+                                                                body env'1 in
+                                                            match uu___17
+                                                            with
+                                                            | (body1, decls2)
+                                                                ->
+                                                                let pat =
+                                                                  if
+                                                                    should_encode_logical
+                                                                  then
+                                                                    FStar_SMTEncoding_Term.mk_subtype_of_unit
+                                                                    app
+                                                                  else app in
+                                                                let uu___18 =
+                                                                  make_eqn
+                                                                    basic_eqn_name
+                                                                    pat app
+                                                                    body1 in
+                                                                (uu___18,
+                                                                  decls2) in
+                                                          match uu___16 with
+                                                          | (basic_eqn,
+                                                             decls2) ->
+                                                              if
+                                                                should_encode_logical
+                                                              then
+                                                                let uu___17 =
+                                                                  let uu___18
+                                                                    =
+                                                                    FStar_SMTEncoding_Term.mk_Valid
+                                                                    app in
+                                                                  let uu___19
+                                                                    =
+                                                                    FStar_SMTEncoding_EncodeTerm.encode_formula
+                                                                    body
+                                                                    env'1 in
+                                                                  (app,
+                                                                    uu___18,
+                                                                    uu___19) in
+                                                                (match uu___17
+                                                                 with
+                                                                 | (pat,
+                                                                    app1,
+                                                                    (body1,
+                                                                    decls21))
+                                                                    ->
+                                                                    let logical_eqn
+                                                                    =
+                                                                    make_eqn
+                                                                    "equation"
+                                                                    pat app1
+                                                                    body1 in
+                                                                    ([logical_eqn;
+                                                                    basic_eqn],
+                                                                    (FStar_Compiler_List.op_At
+                                                                    decls2
+                                                                    decls21)))
+                                                              else
+                                                                ([basic_eqn],
+                                                                  decls2) in
+                                                        (match uu___15 with
+                                                         | (eqns, decls2) ->
                                                              let uu___16 =
                                                                let uu___17 =
                                                                  let uu___18
@@ -2963,8 +3008,9 @@ let (encode_top_level_let :
                                                                     env2.FStar_SMTEncoding_Env.tcenv
                                                                     flid
                                                                     fvb.FStar_SMTEncoding_Env.smt_id
-                                                                    app1 in
-                                                                    eqn ::
+                                                                    app in
+                                                                    FStar_Compiler_List.op_At
+                                                                    eqns
                                                                     uu___21 in
                                                                     FStar_Compiler_Effect.op_Bar_Greater
                                                                     uu___20
