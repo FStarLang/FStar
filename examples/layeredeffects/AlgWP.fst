@@ -263,16 +263,6 @@ let add_via_state (x y : int) : AlgWP int [Read;Write] (fun s0 p -> p ((x+y), s0
   put o;
   r
 
-
-// Why does this admit fail? Only with the 'rec'...
-//
-// let rec interp_sem #a #wp (t : repr a wp) (s0:state)
-//   : PURE (a & state) (fun p -> wp s0 p)
-//   = admit ()
-//
-// literally zero difference in the VC a tactic sees. Also, seems only
-// for the builtin Pure???
-
 open FStar.Monotonic.Pure
 
 let rec interp_sem #a (t : rwtree a [Read; Write]) (s0:state)
@@ -331,12 +321,11 @@ let ro_soundness_pre_post #a #wp (t : unit -> AlgWP a [Read] wp)
                        (ensures (fun (r, s1) -> s0 == s1))
   = ro_soundness t s0
 
-(* Same thing here sadly *)
 let bind_ro #a #b (w : st_wp a) (f : a -> st_wp b)
   : Lemma (requires is_ro w /\ (forall x. is_ro (f x)))
           (ensures is_ro (bind_wp w f))
-  = assume (is_mono w)
-  
+  = ()
+
 let quot_mono #a #b (w1 w2 : st_wp a)
   : Lemma (requires w1 `stronger` w2)
           (ensures quotient_ro w1 `stronger` quotient_ro w2)

@@ -212,16 +212,6 @@ let add_via_state (x y : int) : AlgWP int (fun s0 p -> p ((x+y), s0)) =
   put o;
   r
 
-
-// Why does this admit fail? Only with the 'rec'...
-//
-// let rec interp_sem #a #wp (t : repr a wp) (s0:state)
-//   : PURE (a & state) (fun p -> wp s0 p)
-//   = admit ()
-//
-// literally zero difference in the VC a tactic sees. Also, seems only
-// for the builtin Pure???
-
 let rec interp_sem #a (t : rwtree a) (s0:state)
   : ID5.ID (a & state) (as_pure_wp (interp_as_wp t s0))
   = match t with

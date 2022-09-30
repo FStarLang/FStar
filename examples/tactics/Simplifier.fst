@@ -28,6 +28,8 @@ let test_simplify () : Tac unit =
     simplify ();
     or_else goal_is_true (fun () -> dump ""; fail "simplify left open goals")
 
+#push-options "--no_smt"
+
 let _ = assert (True /\ True)
             by test_simplify ()
 let _ = assert (True \/ True)
