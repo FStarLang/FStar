@@ -51,7 +51,9 @@ let report env errs =
 (* Unification variables *)
 (************************************************************************)
 let new_implicit_var reason r env k =
-    new_implicit_var_aux reason r env k Strict None
+  if Env.debug env <| Options.Extreme
+  then BU.print2 "New implicit var: %s\n%s\n" reason (BU.stack_dump());
+  new_implicit_var_aux reason r env k Strict None
 
 let close_guard_implicits env solve_deferred (xs:binders) (g:guard_t) : guard_t =
   if Options.eager_subtyping ()

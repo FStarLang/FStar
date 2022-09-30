@@ -157,6 +157,7 @@ let defaults =
       ("detail_hint_replay"           , Bool false);
       ("dump_module"                  , List []);
       ("eager_subtyping"              , Bool false);
+      ("enable_core"                  , Bool false);
       ("error_contexts"               , Bool false);
       ("expose_interfaces"            , Bool false);
       ("extract"                      , Unset);
@@ -340,6 +341,7 @@ let get_detail_errors           ()      = lookup_opt "detail_errors"            
 let get_detail_hint_replay      ()      = lookup_opt "detail_hint_replay"       as_bool
 let get_dump_module             ()      = lookup_opt "dump_module"              (as_list as_string)
 let get_eager_subtyping         ()      = lookup_opt "eager_subtyping"          as_bool
+let get_enable_core             ()      = lookup_opt "enable_core"              as_bool
 let get_error_contexts          ()      = lookup_opt "error_contexts"           as_bool
 let get_expose_interfaces       ()      = lookup_opt "expose_interfaces"        as_bool
 let get_extract                 ()      = lookup_opt "extract"                  (as_option (as_list as_string))
@@ -724,6 +726,11 @@ let rec specs_with_types warn_unsafe : list (char * string * opt_type * string) 
         "eager_subtyping",
         Const (Bool true),
         "Try to solve subtyping constraints at each binder (loses precision but may be slightly more efficient)");
+
+       (noshort,
+        "enable_core",
+        Const (Bool true),
+        "Use the experimental core typechecker");
 
        (noshort,
         "error_contexts",
@@ -1335,6 +1342,7 @@ let settable = function
     | "detail_errors"
     | "detail_hint_replay"
     | "eager_subtyping"
+    | "enable_core"
     | "error_contexts"
     | "hide_uvar_nums"
     | "hint_dir"
@@ -1677,6 +1685,7 @@ let detail_errors                () = get_detail_errors               ()
 let detail_hint_replay           () = get_detail_hint_replay          ()
 let dump_module                  s  = get_dump_module() |> List.existsb (module_name_eq s)
 let eager_subtyping              () = get_eager_subtyping()
+let enable_core                  () = get_enable_core()
 let error_contexts               () = get_error_contexts              ()
 let expose_interfaces            () = get_expose_interfaces          ()
 let force                        () = get_force                       ()

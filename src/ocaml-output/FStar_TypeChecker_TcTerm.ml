@@ -1310,13 +1310,23 @@ let (guard_letrecs :
                       uu___1 :: uu___2 in
                     FStar_Syntax_Syntax.mk_Tm_app precedes_t uu___ r
                 | (x::[], x_prev::[]) ->
-                    let uu___ =
-                      let uu___1 = FStar_Syntax_Syntax.as_arg x in
-                      let uu___2 =
-                        let uu___3 = FStar_Syntax_Syntax.as_arg x_prev in
-                        [uu___3] in
-                      uu___1 :: uu___2 in
-                    FStar_Syntax_Syntax.mk_Tm_app precedes_t uu___ r
+                    let uu___ = type_of x x_prev in
+                    (match uu___ with
+                     | (t_x, t_x_prev) ->
+                         let uu___1 =
+                           let uu___2 = FStar_Syntax_Syntax.iarg t_x in
+                           let uu___3 =
+                             let uu___4 = FStar_Syntax_Syntax.iarg t_x_prev in
+                             let uu___5 =
+                               let uu___6 = FStar_Syntax_Syntax.as_arg x in
+                               let uu___7 =
+                                 let uu___8 =
+                                   FStar_Syntax_Syntax.as_arg x_prev in
+                                 [uu___8] in
+                               uu___6 :: uu___7 in
+                             uu___4 :: uu___5 in
+                           uu___2 :: uu___3 in
+                         FStar_Syntax_Syntax.mk_Tm_app precedes_t uu___1 r)
                 | (x::tl, x_prev::tl_prev) ->
                     let uu___ = type_of x x_prev in
                     (match uu___ with

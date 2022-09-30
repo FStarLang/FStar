@@ -14084,7 +14084,9 @@ let (check_implicit_solution :
                            let uu___5 =
                              FStar_TypeChecker_Env.apply_guard f t1 in
                            FStar_TypeChecker_Env.conj_guard uu___5 g) in
-                if Prims.op_Negation env1.FStar_TypeChecker_Env.phase1
+                if
+                  (Prims.op_Negation env1.FStar_TypeChecker_Env.phase1) &&
+                    (Prims.op_Negation env1.FStar_TypeChecker_Env.lax)
                 then
                   let uu___2 =
                     env1.FStar_TypeChecker_Env.core_check env1 t1 k must_tot in

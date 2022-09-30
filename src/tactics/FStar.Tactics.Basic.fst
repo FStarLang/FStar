@@ -754,6 +754,12 @@ let t_exact try_refine set_expected_typ tm : tac unit = wrap_err "exact" <|
                   mlog (fun () -> BU.print_string "__exact_now: was not a refinement\n") (fun _ ->
                   traise e)))))
 
+let rec iter_tac (f: 'a -> tac unit) (l:list 'a)
+  : tac unit
+  = match l with
+    | [] -> ret ()
+    | hd::tl -> f hd ;! iter_tac f tl
+    
 let rec  __try_unify_by_application
             (only_match : bool)
             (acc : list (term * aqual * ctx_uvar))
@@ -770,17 +776,39 @@ let rec  __try_unify_by_application
     bind (f e ty2 ty1) (function
     | true ->
       ty2_uvars
-      |> List.iter (fun u ->
+      |> iter_tac (fun u ->
           match UF.find u.ctx_uvar_head with
-          | None -> () //not solved yet
+          | None -> ret () //not solved yet
           | Some sol ->  //solved, check it
-            match core_check ({e with gamma=u.ctx_uvar_gamma}) sol (U.ctx_uvar_typ u) with
+            let env = {e with gamma=u.ctx_uvar_gamma} in
+            match core_check env sol (U.ctx_uvar_typ u) with
             | Inl None ->
               //checked with no guard
               //no need to check it again
-              mark_uvar_as_allow_untyped u
+              mark_uvar_as_allow_untyped u;
+              ret ()
 
-            | _ -> ());
+            | res ->
+              if true || Options.enable_core()
+              then
+              (
+                match res with
+                | Inl None ->
+                  ret ()
+                  
+                | Inl (Some g) ->
+                  let! goal = goal_of_guard "guard for implicit" env g u.ctx_uvar_range in
+                  add_smt_goals [goal] ;!
+                  mark_uvar_as_allow_untyped u;
+                  ret ()
+              
+                | Inr failed ->
+                  fail3 "Could not instantiate %s to %s because %s" 
+                               (Print.uvar_to_string u.ctx_uvar_head)
+                               (term_to_string env sol)
+                               (Core.print_error_short failed)
+                )
+              else ret ());!
         (* Done! *)
         ret acc
     | false -> begin

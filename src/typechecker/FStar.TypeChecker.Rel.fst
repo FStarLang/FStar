@@ -4947,8 +4947,9 @@ let check_implicit_solution env t k (must_tot:bool) (reason:string) : guard_t =
     | Some f -> Env.conj_guard (Env.apply_guard f t) g
   in
   
-  if not (env.phase1)
-  then (
+  if not (env.phase1) //this can be false if we're running in lax mode without phase2 to follow
+  && not env.lax //no point running core checker if we're in lax mode
+   then (
     match env.core_check env t k must_tot with
     | Inl None ->
       trivial_guard

@@ -21,6 +21,15 @@ let (new_implicit_var :
     fun r ->
       fun env ->
         fun k ->
+          (let uu___1 =
+             FStar_Compiler_Effect.op_Less_Bar
+               (FStar_TypeChecker_Env.debug env) FStar_Options.Extreme in
+           if uu___1
+           then
+             let uu___2 = FStar_Compiler_Util.stack_dump () in
+             FStar_Compiler_Util.print2 "New implicit var: %s\n%s\n" reason
+               uu___2
+           else ());
           FStar_TypeChecker_Env.new_implicit_var_aux reason r env k
             FStar_Syntax_Syntax.Strict FStar_Pervasives_Native.None
 let (close_guard_implicits :

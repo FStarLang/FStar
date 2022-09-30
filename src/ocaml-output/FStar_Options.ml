@@ -281,6 +281,7 @@ let (defaults : (Prims.string * option_val) Prims.list) =
   ("detail_hint_replay", (Bool false));
   ("dump_module", (List []));
   ("eager_subtyping", (Bool false));
+  ("enable_core", (Bool false));
   ("error_contexts", (Bool false));
   ("expose_interfaces", (Bool false));
   ("extract", Unset);
@@ -481,6 +482,8 @@ let (get_dump_module : unit -> Prims.string Prims.list) =
   fun uu___ -> lookup_opt "dump_module" (as_list as_string)
 let (get_eager_subtyping : unit -> Prims.bool) =
   fun uu___ -> lookup_opt "eager_subtyping" as_bool
+let (get_enable_core : unit -> Prims.bool) =
+  fun uu___ -> lookup_opt "enable_core" as_bool
 let (get_error_contexts : unit -> Prims.bool) =
   fun uu___ -> lookup_opt "error_contexts" as_bool
 let (get_expose_interfaces : unit -> Prims.bool) =
@@ -949,7 +952,7 @@ let (interp_quake_arg : Prims.string -> (Prims.int * Prims.int * Prims.bool))
           let uu___ = ios f1 in let uu___1 = ios f2 in (uu___, uu___1, true)
         else failwith "unexpected value for --quake"
     | uu___ -> failwith "unexpected value for --quake"
-let (uu___406 : (((Prims.string -> unit) -> unit) * (Prims.string -> unit)))
+let (uu___407 : (((Prims.string -> unit) -> unit) * (Prims.string -> unit)))
   =
   let cb = FStar_Compiler_Util.mk_ref FStar_Pervasives_Native.None in
   let set1 f =
@@ -961,11 +964,11 @@ let (uu___406 : (((Prims.string -> unit) -> unit) * (Prims.string -> unit)))
     | FStar_Pervasives_Native.Some f -> f msg in
   (set1, call)
 let (set_option_warning_callback_aux : (Prims.string -> unit) -> unit) =
-  match uu___406 with
+  match uu___407 with
   | (set_option_warning_callback_aux1, option_warning_callback) ->
       set_option_warning_callback_aux1
 let (option_warning_callback : Prims.string -> unit) =
-  match uu___406 with
+  match uu___407 with
   | (set_option_warning_callback_aux1, option_warning_callback1) ->
       option_warning_callback1
 let (set_option_warning_callback : (Prims.string -> unit) -> unit) =
@@ -1040,6 +1043,8 @@ let rec (specs_with_types :
       (Accumulated (SimpleStr "module_name")), "");
     (FStar_Getopt.noshort, "eager_subtyping", (Const (Bool true)),
       "Try to solve subtyping constraints at each binder (loses precision but may be slightly more efficient)");
+    (FStar_Getopt.noshort, "enable_core", (Const (Bool true)),
+      "Use the experimental core typechecker");
     (FStar_Getopt.noshort, "error_contexts", BoolStr,
       "Print context information for each error or warning raised (default false)");
     (FStar_Getopt.noshort, "extract",
@@ -1373,6 +1378,7 @@ let (settable : Prims.string -> Prims.bool) =
     | "detail_errors" -> true
     | "detail_hint_replay" -> true
     | "eager_subtyping" -> true
+    | "enable_core" -> true
     | "error_contexts" -> true
     | "hide_uvar_nums" -> true
     | "hint_dir" -> true
@@ -1457,7 +1463,7 @@ let (settable_specs :
     (FStar_Compiler_List.filter
        (fun uu___ ->
           match uu___ with | (uu___1, x, uu___2, uu___3) -> settable x))
-let (uu___589 :
+let (uu___591 :
   (((unit -> FStar_Getopt.parse_cmdline_res) -> unit) *
     (unit -> FStar_Getopt.parse_cmdline_res)))
   =
@@ -1474,11 +1480,11 @@ let (uu___589 :
   (set1, call)
 let (set_error_flags_callback_aux :
   (unit -> FStar_Getopt.parse_cmdline_res) -> unit) =
-  match uu___589 with
+  match uu___591 with
   | (set_error_flags_callback_aux1, set_error_flags) ->
       set_error_flags_callback_aux1
 let (set_error_flags : unit -> FStar_Getopt.parse_cmdline_res) =
-  match uu___589 with
+  match uu___591 with
   | (set_error_flags_callback_aux1, set_error_flags1) -> set_error_flags1
 let (set_error_flags_callback :
   (unit -> FStar_Getopt.parse_cmdline_res) -> unit) =
@@ -1843,6 +1849,7 @@ let (dump_module : Prims.string -> Prims.bool) =
       (FStar_Compiler_List.existsb (module_name_eq s))
 let (eager_subtyping : unit -> Prims.bool) =
   fun uu___ -> get_eager_subtyping ()
+let (enable_core : unit -> Prims.bool) = fun uu___ -> get_enable_core ()
 let (error_contexts : unit -> Prims.bool) =
   fun uu___ -> get_error_contexts ()
 let (expose_interfaces : unit -> Prims.bool) =

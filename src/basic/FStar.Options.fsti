@@ -121,6 +121,7 @@ val detail_hint_replay          : unit    -> bool
 val display_usage               : unit    -> unit
 val dump_module                 : string  -> bool
 val eager_subtyping             : unit    -> bool
+val enable_core                 : unit    -> bool
 val error_contexts              : unit    -> bool
 val expose_interfaces           : unit    -> bool
 val file_list                   : unit    -> list string
