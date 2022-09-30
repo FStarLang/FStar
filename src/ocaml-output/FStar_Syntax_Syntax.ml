@@ -234,7 +234,7 @@ and pat' =
   withinfo_t * Prims.bool) Prims.list) 
   | Pat_var of bv 
   | Pat_wild of bv 
-  | Pat_dot_term of (bv * term' syntax) 
+  | Pat_dot_term of term' syntax FStar_Pervasives_Native.option 
 and letbinding =
   {
   lbname: (bv, fv) FStar_Pervasives.either ;
@@ -315,8 +315,7 @@ and 'a syntax =
   {
   n: 'a ;
   pos: FStar_Compiler_Range.range ;
-  vars: free_vars memo ;
-  hash_code: FStar_Hash.hash_code memo }
+  vars: free_vars memo }
 and bv = {
   ppname: FStar_Ident.ident ;
   index: Prims.int ;
@@ -574,7 +573,8 @@ let (__proj__Pat_wild__item___0 : pat' -> bv) =
 let (uu___is_Pat_dot_term : pat' -> Prims.bool) =
   fun projectee ->
     match projectee with | Pat_dot_term _0 -> true | uu___ -> false
-let (__proj__Pat_dot_term__item___0 : pat' -> (bv * term' syntax)) =
+let (__proj__Pat_dot_term__item___0 :
+  pat' -> term' syntax FStar_Pervasives_Native.option) =
   fun projectee -> match projectee with | Pat_dot_term _0 -> _0
 let (__proj__Mkletbinding__item__lbname :
   letbinding -> (bv, fv) FStar_Pervasives.either) =
@@ -824,17 +824,12 @@ let (uu___is_UD : subst_elt -> Prims.bool) =
 let (__proj__UD__item___0 : subst_elt -> (univ_name * Prims.int)) =
   fun projectee -> match projectee with | UD _0 -> _0
 let __proj__Mksyntax__item__n : 'a . 'a syntax -> 'a =
-  fun projectee -> match projectee with | { n; pos; vars; hash_code;_} -> n
+  fun projectee -> match projectee with | { n; pos; vars;_} -> n
 let __proj__Mksyntax__item__pos :
   'a . 'a syntax -> FStar_Compiler_Range.range =
-  fun projectee -> match projectee with | { n; pos; vars; hash_code;_} -> pos
+  fun projectee -> match projectee with | { n; pos; vars;_} -> pos
 let __proj__Mksyntax__item__vars : 'a . 'a syntax -> free_vars memo =
-  fun projectee ->
-    match projectee with | { n; pos; vars; hash_code;_} -> vars
-let __proj__Mksyntax__item__hash_code :
-  'a . 'a syntax -> FStar_Hash.hash_code memo =
-  fun projectee ->
-    match projectee with | { n; pos; vars; hash_code;_} -> hash_code
+  fun projectee -> match projectee with | { n; pos; vars;_} -> vars
 let (__proj__Mkbv__item__ppname : bv -> FStar_Ident.ident) =
   fun projectee -> match projectee with | { ppname; index; sort;_} -> ppname
 let (__proj__Mkbv__item__index : bv -> Prims.int) =
@@ -1665,8 +1660,7 @@ let mk : 'a . 'a -> FStar_Compiler_Range.range -> 'a syntax =
   fun t ->
     fun r ->
       let uu___ = FStar_Compiler_Util.mk_ref FStar_Pervasives_Native.None in
-      let uu___1 = FStar_Compiler_Util.mk_ref FStar_Pervasives_Native.None in
-      { n = t; pos = r; vars = uu___; hash_code = uu___1 }
+      { n = t; pos = r; vars = uu___ }
 let (bv_to_tm : bv -> term) =
   fun bv1 -> let uu___ = range_of_bv bv1 in mk (Tm_bvar bv1) uu___
 let (bv_to_name : bv -> term) =
@@ -1960,8 +1954,7 @@ let (has_simple_attribute : term Prims.list -> Prims.string -> Prims.bool) =
         (fun uu___ ->
            match uu___ with
            | { n = Tm_constant (FStar_Const.Const_string (data, uu___1));
-               pos = uu___2; vars = uu___3; hash_code = uu___4;_} when
-               data = s -> true
+               pos = uu___2; vars = uu___3;_} when data = s -> true
            | uu___1 -> false) l
 let rec (eq_pat : pat -> pat -> Prims.bool) =
   fun p1 ->
@@ -1993,7 +1986,7 @@ let rec (eq_pat : pat -> pat -> Prims.bool) =
           else false
       | (Pat_var uu___, Pat_var uu___1) -> true
       | (Pat_wild uu___, Pat_wild uu___1) -> true
-      | (Pat_dot_term (bv1, t1), Pat_dot_term (bv2, t2)) -> true
+      | (Pat_dot_term uu___, Pat_dot_term uu___1) -> true
       | (uu___, uu___1) -> false
 let (delta_constant : delta_depth) = Delta_constant_at_level Prims.int_zero
 let (delta_equational : delta_depth) =

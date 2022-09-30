@@ -473,10 +473,9 @@ and rebuild_closure cfg env stack t =
             | Pat_wild x ->
               let x = {x with sort=non_tail_inline_closure_env cfg env x.sort} in
               {p with v=Pat_wild x}, dummy::env
-            | Pat_dot_term(x, t) ->
-              let x = {x with sort=non_tail_inline_closure_env cfg env x.sort} in
-              let t = non_tail_inline_closure_env cfg env t in
-              {p with v=Pat_dot_term(x, t)}, env
+            | Pat_dot_term eopt ->
+              let eopt = BU.map_option (non_tail_inline_closure_env cfg env) eopt in
+              {p with v=Pat_dot_term eopt}, env
           in
           let pat, env = norm_pat env pat in
           let w_opt =
@@ -2750,10 +2749,9 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
             | Pat_wild x ->
               let x = {x with sort=norm_or_whnf env x.sort} in
               {p with v=Pat_wild x}, dummy::env
-            | Pat_dot_term(x, t) ->
-              let x = {x with sort=norm_or_whnf env x.sort} in
-              let t = norm_or_whnf env t in
-              {p with v=Pat_dot_term(x, t)}, env
+            | Pat_dot_term eopt ->
+              let eopt = BU.map_option (norm_or_whnf env) eopt in
+              {p with v=Pat_dot_term eopt}, env
           in
           let norm_branches () =
             match env with

@@ -421,9 +421,7 @@ let (tc_data :
                                                          FStar_Syntax_Syntax.pos
                                                            = uu___9;
                                                          FStar_Syntax_Syntax.vars
-                                                           = uu___10;
-                                                         FStar_Syntax_Syntax.hash_code
-                                                           = uu___11;_},
+                                                           = uu___10;_},
                                                        tuvs)
                                                       when
                                                       FStar_Syntax_Syntax.fv_eq_lid
@@ -440,15 +438,15 @@ let (tc_data :
                                                           (fun g ->
                                                              fun u1 ->
                                                                fun u2 ->
-                                                                 let uu___12
+                                                                 let uu___11
                                                                    =
-                                                                   let uu___13
+                                                                   let uu___12
                                                                     =
                                                                     FStar_Syntax_Syntax.mk
                                                                     (FStar_Syntax_Syntax.Tm_type
                                                                     u1)
                                                                     FStar_Compiler_Range.dummyRange in
-                                                                   let uu___14
+                                                                   let uu___13
                                                                     =
                                                                     FStar_Syntax_Syntax.mk
                                                                     (FStar_Syntax_Syntax.Tm_type
@@ -457,10 +455,10 @@ let (tc_data :
                                                                     FStar_Compiler_Range.dummyRange in
                                                                    FStar_TypeChecker_Rel.teq
                                                                     env'1
-                                                                    uu___13
-                                                                    uu___14 in
+                                                                    uu___12
+                                                                    uu___13 in
                                                                  FStar_TypeChecker_Env.conj_guard
-                                                                   g uu___12)
+                                                                   g uu___11)
                                                           FStar_TypeChecker_Env.trivial_guard
                                                           tuvs _uvs1
                                                       else
@@ -1044,9 +1042,7 @@ let (get_optimized_haseq_axiom :
                        FStar_Syntax_Syntax.pos =
                          (fml.FStar_Syntax_Syntax.pos);
                        FStar_Syntax_Syntax.vars =
-                         (fml.FStar_Syntax_Syntax.vars);
-                       FStar_Syntax_Syntax.hash_code =
-                         (fml.FStar_Syntax_Syntax.hash_code)
+                         (fml.FStar_Syntax_Syntax.vars)
                      } in
                    let fml2 =
                      FStar_Compiler_List.fold_right
@@ -1523,9 +1519,7 @@ let (unoptimized_haseq_ty :
                            FStar_Syntax_Syntax.pos =
                              (fml.FStar_Syntax_Syntax.pos);
                            FStar_Syntax_Syntax.vars =
-                             (fml.FStar_Syntax_Syntax.vars);
-                           FStar_Syntax_Syntax.hash_code =
-                             (fml.FStar_Syntax_Syntax.hash_code)
+                             (fml.FStar_Syntax_Syntax.vars)
                          } in
                        let fml2 =
                          FStar_Compiler_List.fold_right
@@ -2232,22 +2226,9 @@ let (mk_discriminator_and_indexed_projectors :
                                                        if b && (j < ntps)
                                                        then
                                                          let uu___6 =
-                                                           let uu___7 =
-                                                             let uu___8 =
-                                                               let uu___9 =
-                                                                 let uu___10
-                                                                   =
-                                                                   FStar_Ident.string_of_id
-                                                                    x.FStar_Syntax_Syntax.ppname in
-                                                                 FStar_Syntax_Syntax.gen_bv
-                                                                   uu___10
-                                                                   FStar_Pervasives_Native.None
-                                                                   FStar_Syntax_Syntax.tun in
-                                                               (uu___9,
-                                                                 FStar_Syntax_Syntax.tun) in
-                                                             FStar_Syntax_Syntax.Pat_dot_term
-                                                               uu___8 in
-                                                           pos uu___7 in
+                                                           pos
+                                                             (FStar_Syntax_Syntax.Pat_dot_term
+                                                                FStar_Pervasives_Native.None) in
                                                          (uu___6, b)
                                                        else
                                                          (let uu___7 =
@@ -2578,26 +2559,9 @@ let (mk_discriminator_and_indexed_projectors :
                                                                     (
                                                                     let uu___9
                                                                     =
-                                                                    let uu___10
-                                                                    =
-                                                                    let uu___11
-                                                                    =
-                                                                    let uu___12
-                                                                    =
-                                                                    let uu___13
-                                                                    =
-                                                                    FStar_Ident.string_of_id
-                                                                    x1.FStar_Syntax_Syntax.ppname in
-                                                                    FStar_Syntax_Syntax.gen_bv
-                                                                    uu___13
-                                                                    FStar_Pervasives_Native.None
-                                                                    FStar_Syntax_Syntax.tun in
-                                                                    (uu___12,
-                                                                    FStar_Syntax_Syntax.tun) in
-                                                                    FStar_Syntax_Syntax.Pat_dot_term
-                                                                    uu___11 in
                                                                     pos
-                                                                    uu___10 in
+                                                                    (FStar_Syntax_Syntax.Pat_dot_term
+                                                                    FStar_Pervasives_Native.None) in
                                                                     (uu___9,
                                                                     b))
                                                                   else

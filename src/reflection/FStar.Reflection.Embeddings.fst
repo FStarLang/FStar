@@ -357,9 +357,8 @@ let rec e_pattern' () =
             S.mk_Tm_app ref_Pat_Var.t [S.as_arg (embed e_bv rng bv)] rng
         | Pat_Wild bv ->
             S.mk_Tm_app ref_Pat_Wild.t [S.as_arg (embed e_bv rng bv)] rng
-        | Pat_Dot_Term (bv, t) ->
-            S.mk_Tm_app ref_Pat_Dot_Term.t [S.as_arg (embed e_bv rng bv);
-                                            S.as_arg (embed e_term rng t)]
+        | Pat_Dot_Term eopt ->
+            S.mk_Tm_app ref_Pat_Dot_Term.t [S.as_arg (embed (e_option e_term) rng eopt)]
                         rng
     in
     let rec unembed_pattern w (t : term) : option pattern =
@@ -384,10 +383,9 @@ let rec e_pattern' () =
             BU.bind_opt (unembed' w e_bv bv) (fun bv ->
             Some <| Pat_Wild bv)
 
-        | Tm_fvar fv, [(bv, _); (t, _)] when S.fv_eq_lid fv ref_Pat_Dot_Term.lid ->
-            BU.bind_opt (unembed' w e_bv bv) (fun bv ->
-            BU.bind_opt (unembed' w e_term t) (fun t ->
-            Some <| Pat_Dot_Term (bv, t)))
+        | Tm_fvar fv, [(eopt, _)] when S.fv_eq_lid fv ref_Pat_Dot_Term.lid ->
+            BU.bind_opt (unembed' w (e_option e_term) eopt) (fun eopt ->
+            Some <| Pat_Dot_Term eopt)
 
         | _ ->
             if w then

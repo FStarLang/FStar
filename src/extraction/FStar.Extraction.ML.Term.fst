@@ -955,7 +955,7 @@ let rec extract_one_pat (imp : bool)
                     | _ ->
                       //Otherwise, if it has a dot pattern for matching the type parameters
                       match p.v with
-                      | Pat_dot_term (_, t) ->
+                      | Pat_dot_term (Some t) ->
                         //use the type that the dot patterns is instantiated to
                         term_as_mlty g t
                       | _ ->

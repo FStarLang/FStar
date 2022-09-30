@@ -330,11 +330,10 @@ let subst_pat' s p : (pat * int) =
         let x = {x with sort=subst' s x.sort} in
         {p with v=Pat_wild x}, n + 1 //these may be in scope in the inferred types of other terms, so shift the index
 
-      | Pat_dot_term(x, t0) ->
+      | Pat_dot_term eopt ->
         let s = shift_subst' n s in
-        let x = {x with sort=subst' s x.sort} in
-        let t0 = subst' s t0 in
-        {p with v=Pat_dot_term(x, t0)}, n //these are not in scope, so don't shift the index
+        let eopt = U.map_option (subst' s) eopt in
+        {p with v=Pat_dot_term eopt}, n
   in aux 0 p
 
 let push_subst_lcomp s lopt = match lopt with
@@ -591,10 +590,9 @@ let open_pat (p:pat) : pat * subst_t =
             let sub = DB(0, x')::shift_subst 1 sub in
             {p with v=Pat_wild x'}, sub
 
-        | Pat_dot_term(x, t0) ->
-            let x = {x with sort=subst sub x.sort} in
-            let t0 = subst sub t0 in
-            {p with v=Pat_dot_term(x, t0)}, sub //these are not in scope, so don't shift the index
+        | Pat_dot_term eopt ->
+            let eopt = U.map_option (subst sub) eopt in
+            {p with v=Pat_dot_term eopt}, sub
     in
     open_pat_aux [] p
 
@@ -646,10 +644,9 @@ let close_pat p =
          let sub = NM(x, 0)::shift_subst 1 sub in
          {p with v=Pat_wild x}, sub
 
-       | Pat_dot_term(x, t0) ->
-         let x = {x with sort=subst sub x.sort} in
-         let t0 = subst sub t0 in
-         {p with v=Pat_dot_term(x, t0)}, sub in //these are not in scope, so don't shift the index
+       | Pat_dot_term eopt ->
+         let eopt = U.map_option (subst sub) eopt in
+         {p with v=Pat_dot_term eopt}, sub in
     aux [] p
 
 let close_branch (p, wopt, e) =
@@ -871,8 +868,8 @@ let rec deep_compress (t:term) : term =
           {p with v=Pat_var (elim_bv x)}
         | Pat_wild x ->
           {p with v=Pat_wild (elim_bv x)}
-        | Pat_dot_term(x, t0) ->
-          {p with v=Pat_dot_term(elim_bv x, deep_compress t0)}
+        | Pat_dot_term eopt ->
+          {p with v=Pat_dot_term (U.map_option deep_compress eopt)}
         | Pat_cons (fv, us_opt, pats) ->
           let us_opt =
             match us_opt with

@@ -143,8 +143,6 @@ let permute_correct (p:permute) =
 // In the general case, an arbitrary permutation can be done via swaps.
 // (see FStar.Tactics.CanonCommSwaps for a proof)
 
-let swap (n:nat) :Type = x:nat{x < n-1}
-
 let rec apply_swap_aux_correct (#a:Type) (n:nat) (eq:equiv a) (m:cm a eq) (am:amap a)
                            (xs:list atom) (s:swap (length xs + n))
   : Lemma (requires True)

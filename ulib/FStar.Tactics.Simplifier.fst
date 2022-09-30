@@ -118,12 +118,16 @@ let imp_cong #p #q #p' #q' _ _ = ()
 val fa_cong (#a : Type) (#p #q : a -> Type) :
     (x:a -> squash (p x <==> q x)) ->
     Lemma ((forall (x:a). p x) <==> (forall (x:a). q x))
-let fa_cong #a #p #q f = admit() //fix, this should certainly be provable
+let fa_cong #a #p #q f =
+  let lem (x:a) : Lemma (p x <==> q x) = f x in
+  FStar.Classical.forall_intro lem
 
 val ex_cong (#a : Type) (#p #q : a -> Type) :
     (x:a -> squash (p x <==> q x)) ->
     Lemma ((exists (x:a). p x) <==> (exists (x:a). q x))
-let ex_cong #a #p #q f = admit() //fix, this should certainly be provable
+let ex_cong #a #p #q f =
+  let lem (x:a) : Lemma (p x <==> q x) = f x in
+  FStar.Classical.forall_intro lem
 
 val neg_cong (#p #q:Type) : squash (p <==> q) -> Lemma (~p <==> ~q)
 let neg_cong #p #q _ = ()
