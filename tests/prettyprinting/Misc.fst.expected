@@ -24,7 +24,7 @@ let ne e1 e2 = CompProp e1 C_Ne e2
 
 (* comment *)
 assume new
-type eq : #a: Type -> #m: nat -> #n: nat -> matrix2 m n a -> matrix2 m n a -> Type 
+type eq : #a: Type -> #m: nat -> #n: nat -> matrix2 m n a -> matrix2 m n a -> Type
 
 let ne e1 e2 = CompProp e1 C_Ne e2
 let gt e1 e2 = CompProp e1 C_Gt e2
@@ -131,7 +131,7 @@ let slice (#a: Type) (x: t a) (i: len_t) (j: len_t{let open U32 in v i <= v j /\
 noeq
 type mbuffer (a: Type0) (rrel: srel a) (rel: srel a) : Type0 =
   | Null
-  | Buffer : 
+  | Buffer :
       max_length: U32.t ->
       content:
         HST.mreference (Seq.lseq a (U32.v max_length)) (srel_to_lsrel (U32.v max_length) rrel) ->
@@ -281,7 +281,7 @@ type map' (a: Type) (b: (a -> Type)) = f : (x: a -> Tot (option (b x)))
 noeq
 type mbuffer (a: Type0) (rrel: srel a) (rel: srel a) : Type0 =
   | Null
-  | Buffer : 
+  | Buffer :
       max_length: U32.t ->
       content:
         HST.mreference (Seq.lseq a (U32.v max_length)) (srel_to_lsrel (U32.v max_length) rrel) ->
@@ -299,7 +299,7 @@ type mbuffer (a: Type0) (rrel: srel a) (rel: srel a) : Type0 =
         rel
 noeq private
 type _buffer (a: Type) =
-  | MkBuffer : 
+  | MkBuffer :
       max_length: UInt32.t ->
       content: reference (s : lseq a (v max_length)) ->
       idx: UInt32.t ->
