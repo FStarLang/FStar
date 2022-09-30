@@ -448,8 +448,10 @@ let extract_let_rec_annotation env {lbname=lbname; lbunivs=univ_vars; lbtyp=t; l
         in
         vars,  mk (Tm_app(head, args))
 
-    | Pat_dot_term(x, e) ->
-        [], e
+    | Pat_dot_term eopt ->
+        (match eopt with
+         | None -> failwith "TcUtil::decorated_pattern_as_term: dot pattern not resolved"
+         | Some e -> [], e)
 
 
 (*********************************************************************************************)

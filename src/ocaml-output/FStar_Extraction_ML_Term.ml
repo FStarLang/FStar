@@ -1463,8 +1463,8 @@ let rec (extract_one_pat :
                                                (match p1.FStar_Syntax_Syntax.v
                                                 with
                                                 | FStar_Syntax_Syntax.Pat_dot_term
-                                                    (uu___6, t) ->
-                                                    term_as_mlty g t
+                                                    (FStar_Pervasives_Native.Some
+                                                    t) -> term_as_mlty g t
                                                 | uu___6 ->
                                                     FStar_Extraction_ML_Syntax.MLTY_Top)))) in
                             let f_ty1 =

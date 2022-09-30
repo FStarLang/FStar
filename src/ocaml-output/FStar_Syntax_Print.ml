@@ -816,16 +816,20 @@ and (pat_to_string : FStar_Syntax_Syntax.pat -> Prims.string) =
              FStar_Compiler_Effect.op_Bar_Greater uu___5
                (FStar_String.concat " ") in
            FStar_Compiler_Util.format3 "(%s%s%s)" uu___2 uu___3 uu___4
-       | FStar_Syntax_Syntax.Pat_dot_term (x1, uu___2) ->
-           let uu___3 = FStar_Options.print_bound_var_types () in
-           if uu___3
+       | FStar_Syntax_Syntax.Pat_dot_term topt ->
+           let uu___2 = FStar_Options.print_bound_var_types () in
+           if uu___2
            then
-             let uu___4 = bv_to_string x1 in
-             let uu___5 = term_to_string x1.FStar_Syntax_Syntax.sort in
-             FStar_Compiler_Util.format2 ".%s:%s" uu___4 uu___5
-           else
-             (let uu___5 = bv_to_string x1 in
-              FStar_Compiler_Util.format1 ".%s" uu___5)
+             let uu___3 =
+               if topt = FStar_Pervasives_Native.None
+               then "_"
+               else
+                 (let uu___5 =
+                    FStar_Compiler_Effect.op_Bar_Greater topt
+                      FStar_Compiler_Util.must in
+                  FStar_Compiler_Effect.op_Bar_Greater uu___5 term_to_string) in
+             FStar_Compiler_Util.format1 ".%s" uu___3
+           else "._"
        | FStar_Syntax_Syntax.Pat_var x1 ->
            let uu___2 = FStar_Options.print_bound_var_types () in
            if uu___2
