@@ -1083,8 +1083,7 @@ and resugar_pat' env (p:S.pat) (branch_bv: set bv) : A.pattern =
     not (List.existsML (fun (pattern, is_implicit) ->
              let might_be_used =
                match pattern.v with
-               | Pat_var bv
-               | Pat_dot_term (bv, _) -> Util.set_mem bv branch_bv
+               | Pat_var bv -> Util.set_mem bv branch_bv
                | Pat_wild _ -> false
                | _ -> true in
              is_implicit && might_be_used) args) in
@@ -1163,9 +1162,7 @@ and resugar_pat' env (p:S.pat) (branch_bv: set bv) : A.pattern =
 
     | Pat_wild _ -> mk (A.PatWild (to_arg_qual imp_opt, []))
 
-    | Pat_dot_term (bv, term) ->
-      (* TODO : this should never be resugared unless in a comment *)
-      resugar_bv_as_pat' env bv (Some A.Implicit) branch_bv (Some term)
+    | Pat_dot_term _ -> mk (A.PatWild (Some A.Implicit, []))
   in
   aux p None
 // FIXME inspect uses of resugar_arg_qual and resugar_imp
