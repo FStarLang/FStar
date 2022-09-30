@@ -3020,14 +3020,11 @@ and tc_pat env (pat_t:typ) (p0:pat) :
                   // If not a name or uvar, we typecheck the term,
                   //   and add it to args_out
                   //
-                  // TODO: should we check no smt guards are generated?
-                  //
                   let a = SS.subst subst a in
                   let env = Env.set_expected_typ env t_f in
                   let a, _, g = tc_tot_or_gtot_term env a in
-                  Rel.force_trivial_guard env g;
                   let subst = NT(f, a)::subst in
-                  (a, imp_a), subst, bvs, Env.trivial_guard
+                  (a, imp_a), subst, bvs, g
               in
               aux (subst, args_out@[a], bvs, Env.conj_guard g guard) formals args
             | _ -> fail "Not a fully applied pattern"
@@ -3181,7 +3178,7 @@ and tc_pat env (pat_t:typ) (p0:pat) :
               PatternUtils.pat_as_exp false false env simple_pat
           in
           //
-          // simple_bvs are the Pat_vars in a Pat_cons
+          // simple_bvs_pat are the Pat_vars in a Pat_cons
           //
           // Number of simple_bvs should be same as the number of simple_pats
           //
@@ -3200,9 +3197,44 @@ and tc_pat env (pat_t:typ) (p0:pat) :
               let simple_pat_e, simple_pat_t, simple_bvs, guard, erasable =
                   type_of_simple_pat env simple_pat_e
               in
+
+              //
+              // AR: 09/29:
+              //
+              // A note about simple_bvs:
+              //
+              // Before we started to reuse Pat_dot_term solutions from phase1 to phase2,
+              //   the simple_bvs returned by typechecking of simple pat would be
+              //   same as the simple_bvs_pat that we got from pat_as_exp,
+              //   since Pat_dot_term were always elaborated to uvars, so the only names were
+              //   those coming from Pat_vars (a simple pat is a Pat_cons with sub pats as
+              //   Pat_dot_term or Pat_var)
+              //
+              // But now, a Pat_dot_term solution could itself be a name,
+              //   and typechecking the simple pat returns it in simple_bvs
+              //
+              // Noting that all the Pat_dot_terms occur at the beginning,
+              //   we take the suffix of simple_bvs with length same as
+              //   simple_bvs_pat
+              //
+              let simple_bvs =
+                simple_bvs
+                 |> BU.first_N (List.length simple_bvs - List.length simple_bvs_pat)
+                 |> snd in
+
               let g' = pat_typ_ok env simple_pat_t (expected_pat_typ env p0.p t) in
+              //
               // Now solve guard
-              let guard = Rel.discharge_guard_no_smt env guard in
+              // guard may have logical payload coming from typechecking of the
+              //   Pat_dot_term solutions computed in phase 1
+              // Here we only want to solve the implicits,
+              //   folding in the logical payload in the rest of the VC
+              //
+              let guard =
+                let fml = Env.guard_form guard in
+                let guard =
+                  Rel.discharge_guard_no_smt env {guard with guard_f = Trivial} in
+                {guard with guard_f=fml} in
               // And combine with g' (the guard from pat_typ_ok)
               let guard = Env.conj_guard guard g' in
               if Env.debug env <| Options.Other "Patterns"
@@ -3211,40 +3243,23 @@ and tc_pat env (pat_t:typ) (p0:pat) :
                             (Print.term_to_string simple_pat_t)
                             (List.map (fun x -> "(" ^ Print.bv_to_string x ^ " : " ^ Print.term_to_string x.sort ^ ")") simple_bvs
                               |> String.concat " ");
-              //
-              // AR: 09/29:
-              //
-              // Some gymnastics to return simple_bvs:
-              //
-              // Before we started to reuse Pat_dot_term solutions from phase1 to phase2,
-              //   the simple_bvs returned by typechecking of simple pat would be
-              //   same as the simple_bvs_pat that we got from pat_as_exp
-              //   (since Pat_dot_term were always elaborated to uvars)
-              //
-              // But now, a Pat_dot_term solution could itself be a name,
-              //   and typechecking the simple pat would return it in simple_bvs
-              //
-              // Noting that Pat_dot_terms occur at the beginning,
-              //   we take the suffix of simple_bvs with length same as
-              //   simple_bvs_pat
-              //
-              simple_pat_e,
-              (simple_bvs
-                 |> BU.first_N (List.length simple_bvs - List.length simple_bvs_pat)
-                 |> snd),
-              guard, erasable
+              simple_pat_e, simple_bvs, guard, erasable
           in
-          let _env, bvs, tms, checked_sub_pats, subst, g, erasable, _ =
+          let bvs, tms, checked_sub_pats, subst, g, erasable, _ =
+            //
+            // Invariant: g must be well-formed in the top-level env
+            //
             List.fold_left2
-              (fun (env, bvs, tms, pats, subst, g, erasable, i) (p, b) x ->
+              (fun (bvs, tms, pats, subst, g, erasable, i) (p, b) x ->
                 let expected_t = SS.subst subst x.sort in
+                let env = Env.push_bvs env bvs in
                 let bvs_p, tms_p, e_p, p, g', erasable_p = check_nested_pattern env p expected_t in
-                let env = Env.push_bvs env bvs_p in
+                let g' = Env.close_guard env (bvs |> List.map S.mk_binder) g' in
                 let tms_p =
                   let disc_tm = TcUtil.get_field_projector_name env (S.lid_of_fv fv) i in
                   tms_p |> List.map (mk_disc_t (S.fvar disc_tm (S.Delta_constant_at_level 1) None)) in
-                env, bvs@bvs_p, tms@tms_p, pats@[(p,b)], NT(x, e_p)::subst, Env.conj_guard g g', erasable || erasable_p, i+1)
-              (env, [], [], [], [], Env.conj_guard g0 g1, erasable, 0)
+                bvs@bvs_p, tms@tms_p, pats@[(p,b)], NT(x, e_p)::subst, Env.conj_guard g g', erasable || erasable_p, i+1)
+              ([], [], [], [], Env.conj_guard g0 g1, erasable, 0)
               sub_pats
               simple_bvs
           in
