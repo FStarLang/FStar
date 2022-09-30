@@ -1460,6 +1460,9 @@ let (tc_sig_let :
                                      (lb.FStar_Syntax_Syntax.lbpos)
                                  } in
                            let r1 =
+                             let should_generalize1 =
+                               let uu___4 = do_two_phases env' in
+                               Prims.op_Negation uu___4 in
                              let uu___4 =
                                let uu___5 =
                                  let uu___6 =
@@ -1495,7 +1498,7 @@ let (tc_sig_let :
                                       FStar_TypeChecker_Env.effects =
                                         (env'.FStar_TypeChecker_Env.effects);
                                       FStar_TypeChecker_Env.generalize =
-                                        false;
+                                        should_generalize1;
                                       FStar_TypeChecker_Env.letrecs =
                                         (env'.FStar_TypeChecker_Env.letrecs);
                                       FStar_TypeChecker_Env.top_level =
@@ -4448,7 +4451,7 @@ let (tc_decls :
                ([], env) ses) in
       match uu___ with
       | (ses1, env1) -> ((FStar_Compiler_List.rev_append ses1 []), env1)
-let (uu___905 : unit) =
+let (uu___906 : unit) =
   FStar_Compiler_Effect.op_Colon_Equals tc_decls_knot
     (FStar_Pervasives_Native.Some tc_decls)
 let (snapshot_context :
