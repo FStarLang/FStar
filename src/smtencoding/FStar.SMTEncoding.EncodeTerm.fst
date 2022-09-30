@@ -1311,7 +1311,7 @@ and encode_pat (env:env_t) (pat:S.pat) : (env_t * pattern) =
 
     let rec mk_projections pat (scrutinee:term) =
         match pat.v with
-        | Pat_dot_term (x, _)
+        | Pat_dot_term _ -> []
         | Pat_var x
         | Pat_wild x -> [x, scrutinee]
 

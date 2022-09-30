@@ -423,10 +423,10 @@ and pat_to_string x =
                    | Some us ->
                      U.format1 " %s " (List.map univ_to_string us |> String.concat " "))
                 (List.map (fun (x, b) -> let p = pat_to_string x in if b then "#"^p else p) pats |> String.concat " ")
-    | Pat_dot_term (x, _) ->
+    | Pat_dot_term topt ->
       if Options.print_bound_var_types()
-      then U.format2 ".%s:%s" (bv_to_string x) (term_to_string x.sort)
-      else U.format1 ".%s" (bv_to_string x)
+      then U.format1 ".%s" (if topt = None then "_" else topt |> U.must |> term_to_string)
+      else "._"
     | Pat_var x ->
       if Options.print_bound_var_types()
       then U.format2 "%s:%s" (bv_to_string x) (term_to_string x.sort)

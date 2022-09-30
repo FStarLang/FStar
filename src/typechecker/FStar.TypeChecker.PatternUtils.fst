@@ -44,7 +44,7 @@ module C = FStar.Parser.Const
 let rec elaborate_pat env p = //Adds missing implicit patterns to constructor patterns
     let maybe_dot inaccessible a r =
         if inaccessible
-        then withinfo (Pat_dot_term(a, tun)) r
+        then withinfo (Pat_dot_term None) r
         else withinfo (Pat_var a) r
     in
     match p.v with
@@ -133,12 +133,11 @@ let raw_pat_as_exp (env:Env.env) (p:pat)
           in
           e, bs
 
-        | Pat_dot_term(_, t) ->
+        | Pat_dot_term eopt ->
           begin
-          let t = SS.compress t in
-          match t.n with
-          | Tm_unknown -> raise Raw_pat_cannot_be_translated
-          | _ -> t, bs
+            match eopt with
+            | None -> raise Raw_pat_cannot_be_translated
+            | Some e -> SS.compress e, bs
           end
 
         | Pat_wild x
@@ -205,9 +204,9 @@ let pat_as_exp (introduce_bv_uvars:bool)
              in
              ([], [], [], env, e, trivial_guard, p)
 
-           | Pat_dot_term (x, e) ->
-             (match (SS.compress e).n with
-              | Tm_unknown ->
+           | Pat_dot_term eopt ->
+             (match eopt with
+              | None ->
                 if Env.debug env <| Options.Other "Patterns"
                 then begin
                   if not env.phase1
@@ -215,12 +214,11 @@ let pat_as_exp (introduce_bv_uvars:bool)
                          (Print.pat_to_string p)
                 end;
                 let k, _ = U.type_u () in
-                let t, _, g = new_implicit_var_aux "pat_dot_term type" (S.range_of_bv x) env k Allow_ghost None in
-                let x = {x with sort=t} in
-                let e, _,  g' = new_implicit_var_aux "pat_dot_term" (S.range_of_bv  x) env t Allow_ghost None in
-                let p = {p with v=Pat_dot_term(x, e)} in
+                let t, _, g = new_implicit_var_aux "pat_dot_term type" p.p env k Allow_ghost None in
+                let e, _,  g' = new_implicit_var_aux "pat_dot_term" p.p env t Allow_ghost None in
+                let p = {p with v=Pat_dot_term (Some e)} in
                 [], [], [], env, e, conj_guard g g', p
-              | _ -> [], [], [], env, e, Env.trivial_guard, p)
+              | Some e -> [], [], [], env, e, Env.trivial_guard, p)
 
            | Pat_wild x ->
              let x, g, env = intro_bv env x in

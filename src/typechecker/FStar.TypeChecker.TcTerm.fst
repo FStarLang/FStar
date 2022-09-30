@@ -3270,9 +3270,9 @@ and tc_pat env (pat_t:typ) (p0:pat) :
                 | [] -> []
                 | (hd, b)::simple_pats ->
                   match hd.v with
-                  | Pat_dot_term(x, e) ->
-                    let e = SS.subst subst e in
-                    let hd = {hd with v=Pat_dot_term(x, e)} in
+                  | Pat_dot_term eopt ->
+                    let eopt = BU.map_option (SS.subst subst) eopt in
+                    let hd = {hd with v=Pat_dot_term eopt} in
                     (hd, b) :: aux simple_pats bvs sub_pats
                   | Pat_var x ->
                     begin
