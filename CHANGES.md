@@ -14,6 +14,9 @@ Guidelines for the changelog:
 # Version 0.9.7.0
 
 ## Tactics & Reflection
+  * Pat_Dot_Term now only has an `option term` as argument, where a `Some e` indicates that
+    the dot pattern has been resolved to `e`.
+
   * Pat_Cons, the case of constructed patterns, now takes an additional argument representing
     the universe instantiation of the constructor.
   

@@ -558,7 +558,12 @@ let rec (decorated_pattern_as_term :
                    FStar_Syntax_Syntax.mk_Tm_uinst head us in
              let uu___1 = mk (FStar_Syntax_Syntax.Tm_app (head1, args)) in
              (vars1, uu___1))
-    | FStar_Syntax_Syntax.Pat_dot_term (x, e) -> ([], e)
+    | FStar_Syntax_Syntax.Pat_dot_term eopt ->
+        (match eopt with
+         | FStar_Pervasives_Native.None ->
+             failwith
+               "TcUtil::decorated_pattern_as_term: dot pattern not resolved"
+         | FStar_Pervasives_Native.Some e -> ([], e))
 let (comp_univ_opt :
   FStar_Syntax_Syntax.comp' FStar_Syntax_Syntax.syntax ->
     FStar_Syntax_Syntax.universe FStar_Pervasives_Native.option)

@@ -911,10 +911,8 @@ and visit_pat (ff : term -> Tac term) (p:pattern) : Tac pattern =
   | Pat_Wild bv ->
       let bv = on_sort_bv (visit_tm ff) bv in
       Pat_Wild bv
-  | Pat_Dot_Term bv term ->
-      let bv = on_sort_bv (visit_tm ff) bv in
-      let term = visit_tm ff term in
-      Pat_Dot_Term bv term
+  | Pat_Dot_Term eopt ->
+      Pat_Dot_Term (map_opt (visit_tm ff) eopt)
 and visit_comp (ff : term -> Tac term) (c : comp) : Tac comp =
   let cv = inspect_comp c in
   let cv' =
