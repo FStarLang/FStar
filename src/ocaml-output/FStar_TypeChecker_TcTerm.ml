@@ -8573,15 +8573,16 @@ and (tc_pat :
                                    | (hd, b)::simple_pats1 ->
                                        (match hd.FStar_Syntax_Syntax.v with
                                         | FStar_Syntax_Syntax.Pat_dot_term
-                                            (x, e) ->
-                                            let e1 =
-                                              FStar_Syntax_Subst.subst subst
-                                                e in
+                                            eopt ->
+                                            let eopt1 =
+                                              FStar_Compiler_Util.map_option
+                                                (FStar_Syntax_Subst.subst
+                                                   subst) eopt in
                                             let hd1 =
                                               {
                                                 FStar_Syntax_Syntax.v =
                                                   (FStar_Syntax_Syntax.Pat_dot_term
-                                                     (x, e1));
+                                                     eopt1);
                                                 FStar_Syntax_Syntax.p =
                                                   (hd.FStar_Syntax_Syntax.p)
                                               } in

@@ -234,7 +234,7 @@ and pat' =
   withinfo_t * Prims.bool) Prims.list) 
   | Pat_var of bv 
   | Pat_wild of bv 
-  | Pat_dot_term of (bv * term' syntax) 
+  | Pat_dot_term of term' syntax FStar_Pervasives_Native.option 
 and letbinding =
   {
   lbname: (bv, fv) FStar_Pervasives.either ;
@@ -573,7 +573,8 @@ let (__proj__Pat_wild__item___0 : pat' -> bv) =
 let (uu___is_Pat_dot_term : pat' -> Prims.bool) =
   fun projectee ->
     match projectee with | Pat_dot_term _0 -> true | uu___ -> false
-let (__proj__Pat_dot_term__item___0 : pat' -> (bv * term' syntax)) =
+let (__proj__Pat_dot_term__item___0 :
+  pat' -> term' syntax FStar_Pervasives_Native.option) =
   fun projectee -> match projectee with | Pat_dot_term _0 -> _0
 let (__proj__Mkletbinding__item__lbname :
   letbinding -> (bv, fv) FStar_Pervasives.either) =
@@ -1985,7 +1986,7 @@ let rec (eq_pat : pat -> pat -> Prims.bool) =
           else false
       | (Pat_var uu___, Pat_var uu___1) -> true
       | (Pat_wild uu___, Pat_wild uu___1) -> true
-      | (Pat_dot_term (bv1, t1), Pat_dot_term (bv2, t2)) -> true
+      | (Pat_dot_term uu___, Pat_dot_term uu___1) -> true
       | (uu___, uu___1) -> false
 let (delta_constant : delta_depth) = Delta_constant_at_level Prims.int_zero
 let (delta_equational : delta_depth) =

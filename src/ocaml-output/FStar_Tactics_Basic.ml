@@ -5379,7 +5379,8 @@ let (t_destruct :
                                                                     ->
                                                                     ((mk_pat
                                                                     (FStar_Syntax_Syntax.Pat_dot_term
-                                                                    (bv, t))),
+                                                                    (FStar_Pervasives_Native.Some
+                                                                    t))),
                                                                     true))
                                                                     d_ps_a_ps in
                                                                     let subpats_2
@@ -6005,8 +6006,8 @@ let rec (inspect :
                      FStar_Reflection_Data.Pat_Var bv
                  | FStar_Syntax_Syntax.Pat_wild bv ->
                      FStar_Reflection_Data.Pat_Wild bv
-                 | FStar_Syntax_Syntax.Pat_dot_term (bv, t4) ->
-                     FStar_Reflection_Data.Pat_Dot_Term (bv, t4) in
+                 | FStar_Syntax_Syntax.Pat_dot_term eopt ->
+                     FStar_Reflection_Data.Pat_Dot_Term eopt in
                let brs1 =
                  FStar_Compiler_List.map FStar_Syntax_Subst.open_branch brs in
                let brs2 =
@@ -6151,9 +6152,9 @@ let (pack' :
             | FStar_Reflection_Data.Pat_Wild bv ->
                 FStar_Compiler_Effect.op_Less_Bar wrap
                   (FStar_Syntax_Syntax.Pat_wild bv)
-            | FStar_Reflection_Data.Pat_Dot_Term (bv, t1) ->
+            | FStar_Reflection_Data.Pat_Dot_Term eopt ->
                 FStar_Compiler_Effect.op_Less_Bar wrap
-                  (FStar_Syntax_Syntax.Pat_dot_term (bv, t1)) in
+                  (FStar_Syntax_Syntax.Pat_dot_term eopt) in
           let brs1 =
             FStar_Compiler_List.map
               (fun uu___ ->
