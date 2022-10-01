@@ -618,7 +618,15 @@ let prefix_copied #t
 
 #push-options "--z3rlimit 16"
 
-let memcpy
+val memcpy0 (#t:_) (#p0:perm)
+           (a0 a1:array t)
+           (#s0 #s1:Ghost.erased (Seq.seq t))
+           (l:U32.t { U32.v l == length a0 /\ length a0 == length a1 } )
+  : STT unit
+    (pts_to a0 p0 s0 `star` pts_to a1 full_perm s1)
+    (fun _ -> pts_to a0 p0 s0  `star` pts_to a1 full_perm s0)
+
+let memcpy0
   #t #p0 a0 a1 #e0 #e1 i
   =
     pts_to_length a0 _;
@@ -660,3 +668,40 @@ let memcpy
     return ()
 
 #pop-options
+
+let blit0 (#t:_) (#p0:perm) (#s0 #s1:Ghost.erased (Seq.seq t))
+           (src:array t)
+           (idx_src: U32.t)
+           (dst:array t)
+           (idx_dst: U32.t)
+           (len: U32.t)
+  : ST unit
+    (pts_to src p0 s0 `star` pts_to dst full_perm s1)
+    (fun _ -> pts_to src p0 s0  `star` exists_ (fun s1' ->
+      pts_to dst full_perm s1' `star`
+      pure (blit_post s0 s1 src idx_src dst idx_dst len s1')
+    ))
+    (
+        U32.v idx_src + U32.v len <= length src /\
+        U32.v idx_dst + U32.v len <= length dst
+    )
+    (fun _ -> True)
+= pts_to_length src s0;
+  pts_to_length dst s1;
+  ghost_split src idx_src;
+  ghost_split (split_r src idx_src) len;
+  ghost_split dst idx_dst;
+  ghost_split (split_r dst idx_dst) len;
+  memcpy0 (split_l (split_r src idx_src) len) (split_l (split_r dst idx_dst) len) len;
+  ghost_join (split_l (split_r dst _) _) (split_r (split_r dst _) _) ();
+  ghost_join (split_l dst _) (merge _ _) ();
+  vpattern_rewrite #_ #_ #(merge _ _) (fun a -> pts_to a _ _) dst;
+  ghost_join (split_l (split_r src _) _) (split_r (split_r src _) _) ();
+  ghost_join (split_l src _) (merge _ _) ();
+  vpattern_rewrite #_ #_ #(merge _ _) (fun a -> pts_to a _ _) src;
+  vpattern_rewrite (pts_to src _) (Ghost.reveal s0);
+  noop ()
+
+let blit_ptr
+  src len_src idx_src dst len_dst idx_dst len
+= blit0 _ idx_src _ idx_dst len
