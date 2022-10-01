@@ -63,12 +63,6 @@ unfold private let downward_closed_predicate (h:hmap) :Type0 =
 unfold private let tip_top_predicate (tip:rid) (h:hmap) :Type0 =
   forall (r:sid). r `is_in` h <==> r `is_above` tip
 
-let rid_last_component (r:rid) :GTot int
-  = let open FStar.List.Tot in
-    let r = reveal r in
-    if length r = 0 then 0
-    else snd (hd r)
-
 [@@"opaque_to_smt"]
 unfold private let rid_ctr_pred_predicate (h:hmap) (n:int) :Type0 =
   forall (r:rid). h `Map.contains` r ==> rid_last_component r < n
@@ -182,7 +176,7 @@ let empty_mem : mem =
   let empty_map = Map.restrict Set.empty (Map.const Heap.emp) in
   let h = Map.upd empty_map root Heap.emp in
   let tip = root in
-  assume (rid_last_component root == 0);
+  root_last_component ();
   lemma_is_wf_ctr_and_tip_intro h 1 tip;
   mk_mem 1 h tip
 

@@ -71,6 +71,8 @@ let bind (t1:tac 'a) (t2:'a -> tac 'b) : tac 'b =
             | Success (a, q)  -> run (t2 a) q
             | Failed (msg, q) -> Failed (msg, q))
 
+let (let!) t1 t2 = bind t1 t2
+
 let idtac : tac unit = ret ()
 
 (* Set the current proofstate *)

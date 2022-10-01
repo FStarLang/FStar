@@ -41,7 +41,7 @@ type pattern =
                                                     // implicit argument
     | Pat_Var      : bv -> pattern                  // Pattern bound variable
     | Pat_Wild     : bv -> pattern                  // Wildcard (GM: why is this not Pat_var too?)
-    | Pat_Dot_Term : bv -> term -> pattern          // Dot pattern: resolved by other elements in the pattern and type
+    | Pat_Dot_Term : option term -> pattern          // Dot pattern: resolved by other elements in the pattern and type
 
 type branch = pattern * term  // | pattern -> term
 

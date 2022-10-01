@@ -867,14 +867,13 @@ let loc_includes_loc_buffer_from_to #_ #_ #_ b from1 to1 from2 to2 =
   else MG.loc_includes_aloc #_ #cls #(frameOf b) #(as_addr b) (ubuffer_of_buffer_from_to b from1 to1) (ubuffer_of_buffer_from_to b from2 to2)
 
 #push-options "--z3rlimit 20"
-let loc_includes_as_seq #_ #rrel1 #rrel2 #_ #_ h1 h2 larger smaller =
+let loc_includes_as_seq #_ #rrel #_ #_ h1 h2 larger smaller =
   if Null? smaller then () else
   if Null? larger then begin
     MG.loc_includes_none_elim (loc_buffer smaller);
     MG.loc_of_aloc_not_none #_ #cls #(frameOf smaller) #(as_addr smaller) (ubuffer_of_buffer smaller)
   end else begin
     MG.loc_includes_aloc_elim #_ #cls #(frameOf larger) #(frameOf smaller) #(as_addr larger) #(as_addr smaller) (ubuffer_of_buffer larger) (ubuffer_of_buffer smaller);
-    assume (rrel1 == rrel2);  //TODO: we should be able to prove this somehow in HS?
     let ul = Ghost.reveal (ubuffer_of_buffer larger) in
     let us = Ghost.reveal (ubuffer_of_buffer smaller) in
     assert (as_seq h1 smaller == Seq.slice (as_seq h1 larger) (us.b_offset - ul.b_offset) (us.b_offset - ul.b_offset + length smaller));

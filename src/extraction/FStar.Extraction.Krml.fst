@@ -552,11 +552,11 @@ and translate_expr env e: expr =
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e ])
     when string_of_mlpath p = "FStar.HyperStack.ST.op_Bang"
        || string_of_mlpath p = "Steel.Reference.read" ->
-      EBufRead (translate_expr env e, EConstant (UInt32, "0"))
+      EBufRead (translate_expr env e, EQualified (["C"], "_zero_for_deref"))
 
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ _perm; _v; e ])
     when string_of_mlpath p = "Steel.ST.Reference.read" ->
-      EBufRead (translate_expr env e, EConstant (UInt32, "0"))
+      EBufRead (translate_expr env e, EQualified (["C"], "_zero_for_deref"))
 
   (* Flatten all universes *)
 
@@ -706,11 +706,11 @@ and translate_expr env e: expr =
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e1; e2 ])
     when string_of_mlpath p = "FStar.HyperStack.ST.op_Colon_Equals"
       || string_of_mlpath p = "Steel.Reference.write" ->
-      EBufWrite (translate_expr env e1, EConstant (UInt32, "0"), translate_expr env e2)
+      EBufWrite (translate_expr env e1, EQualified (["C"], "_zero_for_deref"), translate_expr env e2)
 
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ _v; e1; e2 ])
     when string_of_mlpath p = "Steel.ST.Reference.write" ->
-      EBufWrite (translate_expr env e1, EConstant (UInt32, "0"), translate_expr env e2)
+      EBufWrite (translate_expr env e1, EQualified (["C"], "_zero_for_deref"), translate_expr env e2)
 
   | MLE_App ({ expr = MLE_Name p }, [ _ ]) when (
         string_of_mlpath p = "FStar.HyperStack.ST.push_frame" ||
@@ -725,6 +725,10 @@ and translate_expr env e: expr =
       string_of_mlpath p = "FStar.Buffer.blit" ||
       string_of_mlpath p = "LowStar.Monotonic.Buffer.blit" ||
       string_of_mlpath p = "LowStar.UninitializedBuffer.ublit"
+    ) ->
+      EBufBlit (translate_expr env e1, translate_expr env e2, translate_expr env e3, translate_expr env e4, translate_expr env e5)
+  | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ _; _; _; e1; _; e2; e3; _; e4; e5 ]) when (
+      string_of_mlpath p = "Steel.ST.HigherArray.blit_ptr"
     ) ->
       EBufBlit (translate_expr env e1, translate_expr env e2, translate_expr env e3, translate_expr env e4, translate_expr env e5)
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e1; e2; e3 ])

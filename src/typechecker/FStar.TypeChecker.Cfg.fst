@@ -749,14 +749,14 @@ let built_in_primitive_steps : prim_step_set =
     let bounded_arith_ops
         =
         let bounded_signed_int_types =
-           [ "Int8"; "Int16"; "Int32"; "Int64" ]
+           [ "Int8", 8; "Int16", 16; "Int32", 32; "Int64", 64 ]
         in
         let bounded_unsigned_int_types =
-           [ "UInt8"; "UInt16"; "UInt32"; "UInt64"; "UInt128"]
+           [ "UInt8", 8; "UInt16", 16; "UInt32", 32; "UInt64", 64; "UInt128", 128]
         in
-        let add_sub_mul_v =
+        let add_sub_mul_v_comparisons =
           (bounded_signed_int_types @ bounded_unsigned_int_types)
-          |> List.collect (fun m ->
+          |> List.collect (fun (m, _) ->
             [(PC.p2l ["FStar"; m; "add"],
                  2,
                  0,
@@ -807,12 +807,109 @@ let built_in_primitive_steps : prim_step_set =
                     NBETerm.arg_as_bounded_int
                     (fun (int_to_t, x, m) ->
                      NBETerm.with_meta_ds
-                       (NBETerm.embed NBETerm.e_int bogus_cbs x) m))])
+                       (NBETerm.embed NBETerm.e_int bogus_cbs x) m));
+             (PC.p2l ["FStar"; m; "gt"],
+                 2,
+                 0,
+                 binary_op
+                   arg_as_bounded_int
+                   (fun r (int_to_t, x, m) (_, y, _) ->
+                     with_meta_ds r
+                       (embed_simple EMB.e_bool r (Z.gt_big_int x y)) m),
+                 NBETerm.binary_op
+                   NBETerm.arg_as_bounded_int
+                   (fun (int_to_t, x, m) (_, y, _) ->
+                     NBETerm.with_meta_ds
+                       (NBETerm.embed NBETerm.e_bool bogus_cbs (Z.gt_big_int x y)) m));
+             (PC.p2l ["FStar"; m; "gte"],
+                 2,
+                 0,
+                 binary_op
+                   arg_as_bounded_int
+                   (fun r (int_to_t, x, m) (_, y, _) ->
+                     with_meta_ds r
+                       (embed_simple EMB.e_bool r (Z.ge_big_int x y)) m),
+                 NBETerm.binary_op
+                   NBETerm.arg_as_bounded_int
+                   (fun (int_to_t, x, m) (_, y, _) ->
+                     NBETerm.with_meta_ds
+                       (NBETerm.embed NBETerm.e_bool bogus_cbs (Z.ge_big_int x y)) m));
+             (PC.p2l ["FStar"; m; "lt"],
+                 2,
+                 0,
+                 binary_op
+                   arg_as_bounded_int
+                   (fun r (int_to_t, x, m) (_, y, _) ->
+                     with_meta_ds r
+                       (embed_simple EMB.e_bool r (Z.lt_big_int x y)) m),
+                 NBETerm.binary_op
+                   NBETerm.arg_as_bounded_int
+                   (fun (int_to_t, x, m) (_, y, _) ->
+                     NBETerm.with_meta_ds
+                       (NBETerm.embed NBETerm.e_bool bogus_cbs (Z.lt_big_int x y)) m));
+             (PC.p2l ["FStar"; m; "lte"],
+                 2,
+                 0,
+                 binary_op
+                   arg_as_bounded_int
+                   (fun r (int_to_t, x, m) (_, y, _) ->
+                     with_meta_ds r
+                       (embed_simple EMB.e_bool r (Z.le_big_int x y)) m),
+                 NBETerm.binary_op
+                   NBETerm.arg_as_bounded_int
+                   (fun (int_to_t, x, m) (_, y, _) ->
+                     NBETerm.with_meta_ds
+                       (NBETerm.embed NBETerm.e_bool bogus_cbs (Z.le_big_int x y)) m));
+                       ])
         in
-        let div_mod_unsigned =
+        let unsigned_modulo_add_sub_mul_div_rem =
           bounded_unsigned_int_types
-          |> List.collect (fun m ->
-            [(PC.p2l ["FStar"; m; "div"],
+          |> List.collect (fun (m, sz) ->
+            let modulus = Z.shift_left_big_int Z.one (Z.of_int_fs sz) in
+            let mod x = Z.mod_big_int x modulus in
+            //UInt128 does not have a mul_mod
+           (if sz = 128
+            then []
+            else [(PC.p2l ["FStar"; m; "mul_mod"],
+                 2,
+                 0,
+                 binary_op
+                   arg_as_bounded_int
+                   (fun r (int_to_t, x, m) (_, y, _) ->
+                     with_meta_ds r
+                       (int_as_bounded r int_to_t (mod (Z.mult_big_int x y))) m),
+                 NBETerm.binary_op
+                   NBETerm.arg_as_bounded_int
+                   (fun (int_to_t, x, m) (_, y, _) ->
+                     NBETerm.with_meta_ds
+                       (NBETerm.int_as_bounded int_to_t (mod (Z.mult_big_int x y))) m))])@
+            [(PC.p2l ["FStar"; m; "add_mod"],
+                 2,
+                 0,
+                 binary_op
+                   arg_as_bounded_int
+                   (fun r (int_to_t, x, m) (_, y, _) ->
+                     with_meta_ds r
+                       (int_as_bounded r int_to_t (mod (Z.add_big_int x y))) m),
+                 NBETerm.binary_op
+                   NBETerm.arg_as_bounded_int
+                   (fun (int_to_t, x, m) (_, y, _) ->
+                     NBETerm.with_meta_ds
+                       (NBETerm.int_as_bounded int_to_t (mod (Z.add_big_int x y))) m));
+             (PC.p2l ["FStar"; m; "sub_mod"],
+                 2,
+                 0,
+                 binary_op
+                   arg_as_bounded_int
+                   (fun r (int_to_t, x, m) (_, y, _) ->
+                     with_meta_ds r
+                       (int_as_bounded r int_to_t (mod (Z.sub_big_int x y))) m),
+                 NBETerm.binary_op
+                   NBETerm.arg_as_bounded_int
+                   (fun (int_to_t, x, m) (_, y, _) ->
+                     NBETerm.with_meta_ds
+                       (NBETerm.int_as_bounded int_to_t (mod (Z.sub_big_int x y))) m));             
+            (PC.p2l ["FStar"; m; "div"],
                  2,
                  0,
                  binary_op
@@ -851,7 +948,7 @@ let built_in_primitive_steps : prim_step_set =
         in
         let bitwise =
           bounded_unsigned_int_types
-          |> List.collect (fun m ->
+          |> List.collect (fun (m, _) ->
             [
               PC.p2l ["FStar"; m; "logor"],
                  2,
@@ -937,8 +1034,8 @@ let built_in_primitive_steps : prim_step_set =
                     (NBETerm.int_as_bounded int_to_t (Z.shift_right_big_int x y)) d);
             ])
         in
-       add_sub_mul_v
-       @ div_mod_unsigned
+       add_sub_mul_v_comparisons
+       @ unsigned_modulo_add_sub_mul_div_rem
        @ bitwise
     in
     let reveal_hide =

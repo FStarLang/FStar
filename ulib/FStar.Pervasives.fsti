@@ -1063,6 +1063,33 @@ val ite_soundness_by : unit
   *)
 val default_effect (s:string) : Tot unit
 
+(** A layered effect may optionally be annotated with the
+    top_level_effect attribute so indicate that this effect may
+    appear at the top-level
+    (e.g., a top-level let x = e, where e has a layered effect type)
+
+    The top_level_effect attribute takes (optional) string argument, that is the
+    name of the effect abbreviation that may constrain effect arguments
+    for the top-level effect
+
+    As with default effect, the string argument must be a string constant,
+    and fully qualified
+
+    E.g. a Hoare-style effect `M a pre post`, may have the attribute
+    `@@ top_level_effect "N"`, where the effect abbreviation `N` may be:
+
+    effect N a post = M a True post
+
+    i.e., enforcing a trivial precondition if `M` appears at the top-level
+
+    If the argument to `top_level_effect` is absent, then the effect itself
+    is allowed at the top-level with any effect arguments
+
+    See tests/micro-benchmarks/TopLevelIndexedEffects.fst for examples
+
+    *)
+val top_level_effect (s:string) : Tot unit
+
 (** Bind definition for a layered effect may optionally contain range
     arguments, that are provided by the typechecker during reification
     This attribute on the effect definition indicates that the bind

@@ -1468,7 +1468,53 @@ let (uu___143 : unit) =
                                                                     FStar_Tactics_Basic.gather_explicit_guards_for_resolved_goals
                                                                     FStar_TypeChecker_NBETerm.e_unit
                                                                     FStar_TypeChecker_NBETerm.e_unit in
-                                                                    [uu___140] in
+                                                                    let uu___141
+                                                                    =
+                                                                    let uu___142
+                                                                    =
+                                                                    FStar_Tactics_InterpFuns.mk_tac_step_2
+                                                                    Prims.int_zero
+                                                                    "string_to_term"
+                                                                    FStar_Tactics_Basic.string_to_term
+                                                                    FStar_Reflection_Embeddings.e_env
+                                                                    FStar_Syntax_Embeddings.e_string
+                                                                    FStar_Reflection_Embeddings.e_term
+                                                                    FStar_Tactics_Basic.string_to_term
+                                                                    FStar_Reflection_NBEEmbeddings.e_env
+                                                                    FStar_TypeChecker_NBETerm.e_string
+                                                                    FStar_Reflection_NBEEmbeddings.e_term in
+                                                                    let uu___144
+                                                                    =
+                                                                    let uu___145
+                                                                    =
+                                                                    let uu___146
+                                                                    =
+                                                                    FStar_Syntax_Embeddings.e_tuple2
+                                                                    FStar_Reflection_Embeddings.e_env
+                                                                    FStar_Reflection_Embeddings.e_bv in
+                                                                    let uu___147
+                                                                    =
+                                                                    FStar_TypeChecker_NBETerm.e_tuple2
+                                                                    FStar_Reflection_NBEEmbeddings.e_env
+                                                                    FStar_Reflection_NBEEmbeddings.e_bv in
+                                                                    FStar_Tactics_InterpFuns.mk_tac_step_2
+                                                                    Prims.int_zero
+                                                                    "push_bv_dsenv"
+                                                                    FStar_Tactics_Basic.push_bv_dsenv
+                                                                    FStar_Reflection_Embeddings.e_env
+                                                                    FStar_Syntax_Embeddings.e_string
+                                                                    uu___146
+                                                                    FStar_Tactics_Basic.push_bv_dsenv
+                                                                    FStar_Reflection_NBEEmbeddings.e_env
+                                                                    FStar_TypeChecker_NBETerm.e_string
+                                                                    uu___147 in
+                                                                    [uu___145] in
+                                                                    uu___142
+                                                                    ::
+                                                                    uu___144 in
+                                                                    uu___140
+                                                                    ::
+                                                                    uu___141 in
                                                                     uu___138
                                                                     ::
                                                                     uu___139 in

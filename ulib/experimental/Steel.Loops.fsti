@@ -40,6 +40,42 @@ val for_loop (start:U32.t)
       (inv (U32.v start))
       (fun _ -> inv (U32.v finish))
 
+inline_for_extraction
+noextract
+let for_loop_full
+  (start:U32.t)
+  (finish:U32.t { U32.v start <= U32.v finish })
+  (inv: nat_at_most finish -> vprop)
+  (inv_sel: (i:nat_at_most finish) -> t_of (inv i) -> prop)
+  (body:
+    (i:u32_between start finish ->
+    Steel unit
+    (inv (U32.v i))
+    (fun _ -> inv (U32.v i + 1))
+    (requires fun h -> inv_sel (U32.v i) (h (inv (U32.v i))))
+    (ensures fun h0 _ h1 ->
+      inv_sel (U32.v i) (h0 (inv (U32.v i))) /\
+      inv_sel (U32.v i + 1) (h1 (inv (U32.v i + 1)))
+    )))
+: Steel unit
+    (inv (U32.v start))
+    (fun _ -> inv (U32.v finish))
+    (requires fun h -> inv_sel (U32.v start) (h (inv (U32.v start))))
+    (ensures fun h0 _ h1 ->
+      inv_sel (U32.v start) (h0 (inv (U32.v start))) /\
+      inv_sel (U32.v finish) (h1 (inv (U32.v finish)))
+    )
+= AT.intro_vrefine (inv (U32.v start)) (inv_sel (U32.v start));
+  for_loop start finish
+    (fun n -> inv n `vrefine` inv_sel n)
+    (fun i ->
+      AT.elim_vrefine (inv (U32.v i)) (inv_sel (U32.v i));
+      body i;
+      AT.intro_vrefine (inv (U32.v i + 1)) (inv_sel (U32.v i + 1))
+    );
+  AT.elim_vrefine (inv (U32.v finish)) (inv_sel (U32.v finish))
+
+
 /// while_loop: while (cond()) { body () }
 val while_loop (inv: Ghost.erased bool -> vprop)
                (cond: (unit -> SteelT bool

@@ -654,19 +654,12 @@ let (subst_pat' :
                FStar_Syntax_Syntax.v = (FStar_Syntax_Syntax.Pat_wild x1);
                FStar_Syntax_Syntax.p = (p1.FStar_Syntax_Syntax.p)
              }, (n + Prims.int_one))
-        | FStar_Syntax_Syntax.Pat_dot_term (x, t0) ->
+        | FStar_Syntax_Syntax.Pat_dot_term eopt ->
             let s1 = shift_subst' n s in
-            let x1 =
-              let uu___ = subst' s1 x.FStar_Syntax_Syntax.sort in
-              {
-                FStar_Syntax_Syntax.ppname = (x.FStar_Syntax_Syntax.ppname);
-                FStar_Syntax_Syntax.index = (x.FStar_Syntax_Syntax.index);
-                FStar_Syntax_Syntax.sort = uu___
-              } in
-            let t01 = subst' s1 t0 in
+            let eopt1 = FStar_Compiler_Util.map_option (subst' s1) eopt in
             ({
                FStar_Syntax_Syntax.v =
-                 (FStar_Syntax_Syntax.Pat_dot_term (x1, t01));
+                 (FStar_Syntax_Syntax.Pat_dot_term eopt1);
                FStar_Syntax_Syntax.p = (p1.FStar_Syntax_Syntax.p)
              }, n) in
       aux Prims.int_zero p
@@ -1232,18 +1225,10 @@ let (open_pat :
              FStar_Syntax_Syntax.v = (FStar_Syntax_Syntax.Pat_wild x');
              FStar_Syntax_Syntax.p = (p1.FStar_Syntax_Syntax.p)
            }, sub1)
-      | FStar_Syntax_Syntax.Pat_dot_term (x, t0) ->
-          let x1 =
-            let uu___ = subst sub x.FStar_Syntax_Syntax.sort in
-            {
-              FStar_Syntax_Syntax.ppname = (x.FStar_Syntax_Syntax.ppname);
-              FStar_Syntax_Syntax.index = (x.FStar_Syntax_Syntax.index);
-              FStar_Syntax_Syntax.sort = uu___
-            } in
-          let t01 = subst sub t0 in
+      | FStar_Syntax_Syntax.Pat_dot_term eopt ->
+          let eopt1 = FStar_Compiler_Util.map_option (subst sub) eopt in
           ({
-             FStar_Syntax_Syntax.v =
-               (FStar_Syntax_Syntax.Pat_dot_term (x1, t01));
+             FStar_Syntax_Syntax.v = (FStar_Syntax_Syntax.Pat_dot_term eopt1);
              FStar_Syntax_Syntax.p = (p1.FStar_Syntax_Syntax.p)
            }, sub) in
     open_pat_aux [] p
@@ -1370,18 +1355,10 @@ let (close_pat :
              FStar_Syntax_Syntax.v = (FStar_Syntax_Syntax.Pat_wild x1);
              FStar_Syntax_Syntax.p = (p1.FStar_Syntax_Syntax.p)
            }, sub1)
-      | FStar_Syntax_Syntax.Pat_dot_term (x, t0) ->
-          let x1 =
-            let uu___ = subst sub x.FStar_Syntax_Syntax.sort in
-            {
-              FStar_Syntax_Syntax.ppname = (x.FStar_Syntax_Syntax.ppname);
-              FStar_Syntax_Syntax.index = (x.FStar_Syntax_Syntax.index);
-              FStar_Syntax_Syntax.sort = uu___
-            } in
-          let t01 = subst sub t0 in
+      | FStar_Syntax_Syntax.Pat_dot_term eopt ->
+          let eopt1 = FStar_Compiler_Util.map_option (subst sub) eopt in
           ({
-             FStar_Syntax_Syntax.v =
-               (FStar_Syntax_Syntax.Pat_dot_term (x1, t01));
+             FStar_Syntax_Syntax.v = (FStar_Syntax_Syntax.Pat_dot_term eopt1);
              FStar_Syntax_Syntax.p = (p1.FStar_Syntax_Syntax.p)
            }, sub) in
     aux [] p
@@ -1813,11 +1790,10 @@ let rec (deep_compress :
                 FStar_Syntax_Syntax.v = uu___;
                 FStar_Syntax_Syntax.p = (p.FStar_Syntax_Syntax.p)
               }
-          | FStar_Syntax_Syntax.Pat_dot_term (x, t0) ->
+          | FStar_Syntax_Syntax.Pat_dot_term eopt ->
               let uu___ =
                 let uu___1 =
-                  let uu___2 = elim_bv x in
-                  let uu___3 = deep_compress t0 in (uu___2, uu___3) in
+                  FStar_Compiler_Util.map_option deep_compress eopt in
                 FStar_Syntax_Syntax.Pat_dot_term uu___1 in
               {
                 FStar_Syntax_Syntax.v = uu___;

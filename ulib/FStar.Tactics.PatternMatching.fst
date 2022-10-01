@@ -118,10 +118,6 @@ let fetch_eq_side () : Tac (term * term) =
 ///                let l, r = quote left, quote right in
 ///                print (term_to_string l ^ " / " ^ term_to_string r) <: Tac unit))
 
-// Many of the tactics are written in the ``Tac`` effect, which isn't
-// well-supported in SMT.  FIXME: remove this once ``Tac`` is marked as a stable
-// effect.
-// GM: Tac is now stable, but some VCs are still tough on z3, so there are a few admit()s.
 
 /// Some utility functions
 /// ======================
@@ -250,7 +246,7 @@ noeq type match_res a =
 let return #a (x: a) : match_res a =
   Success x
 
-let bind (#a #b: Type)
+let (let?) (#a #b: Type)
          (f: match_res a)
          (g: a -> Tac (match_res b))
     : Tac (match_res b) =
@@ -294,7 +290,6 @@ let string_of_bindings (bindings: bindings) =
 the pattern.  Returns a result in the exception monad. **)
 let rec interp_pattern_aux (pat: pattern) (cur_bindings: bindings) (tm:term)
     : Tac (match_res bindings) =
-  admit();
   let interp_var (v: varname) cur_bindings tm =
     match List.Tot.Base.assoc v cur_bindings with
     | Some tm' -> if term_eq tm tm' then return cur_bindings
@@ -314,8 +309,8 @@ let rec interp_pattern_aux (pat: pattern) (cur_bindings: bindings) (tm:term)
   let interp_app (p_hd p_arg: (p:pattern{p << pat})) cur_bindings tm =
     match inspect tm with
     | Tv_App hd (arg, _) ->
-      with_hd <-- interp_pattern_aux p_hd cur_bindings hd;
-      with_arg <-- interp_pattern_aux p_arg with_hd arg;
+      let? with_hd = interp_pattern_aux p_hd cur_bindings hd in
+      let? with_arg = interp_pattern_aux p_arg with_hd arg in
       return with_arg
     | _ -> raise (SimpleMismatch (pat, tm)) in
     match pat with
@@ -331,7 +326,7 @@ let rec interp_pattern_aux (pat: pattern) (cur_bindings: bindings) (tm:term)
 Returns a result in the exception monad. **)
 let interp_pattern (pat: pattern) : term -> Tac (match_res bindings) =
   fun (tm: term) ->
-    rev_bindings <-- interp_pattern_aux pat [] tm;
+    let? rev_bindings = interp_pattern_aux pat [] tm in
     return (List.Tot.Base.rev rev_bindings)
 
 (** Match a term `tm` against a pattern `pat`.
@@ -519,9 +514,9 @@ let rec pattern_of_term_ex tm : Tac (match_res pattern) =
   | Tv_Type _ ->
     return PType
   | Tv_App f (x, _) ->
-      (fpat <-- pattern_of_term_ex f;
-       xpat <-- pattern_of_term_ex x;
-       return (PApp fpat xpat))
+     let? fpat = pattern_of_term_ex f in
+     let? xpat = pattern_of_term_ex x in
+     return (PApp fpat xpat)
   | _ -> raise (UnsupportedTermInPattern tm)
 
 (** β-reduce a term `tm`.
@@ -762,8 +757,7 @@ let match_abspat #b #a (abspat: a)
   let goal = cur_goal () in
   let hypotheses = binders_of_env (cur_env ()) in
   let problem, continuation = interp_abspat abspat in
-  admit();  //NS: imprecision in the encoding of the impure result function type
-  solve_mp #matching_solution problem hypotheses goal (k continuation)
+  solve_mp problem hypotheses goal (k continuation)
 
 (** Inspect the matching problem produced by parsing an abspat. **)
 let inspect_abspat_problem #a (abspat: a) : Tac matching_problem =

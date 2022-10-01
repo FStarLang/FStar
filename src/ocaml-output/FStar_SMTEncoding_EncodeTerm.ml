@@ -3296,8 +3296,7 @@ and (encode_pat :
                         sub_term_guards) in
                 let rec mk_projections pat1 scrutinee =
                   match pat1.FStar_Syntax_Syntax.v with
-                  | FStar_Syntax_Syntax.Pat_dot_term (x, uu___3) ->
-                      [(x, scrutinee)]
+                  | FStar_Syntax_Syntax.Pat_dot_term uu___3 -> []
                   | FStar_Syntax_Syntax.Pat_var x -> [(x, scrutinee)]
                   | FStar_Syntax_Syntax.Pat_wild x -> [(x, scrutinee)]
                   | FStar_Syntax_Syntax.Pat_constant uu___3 -> []

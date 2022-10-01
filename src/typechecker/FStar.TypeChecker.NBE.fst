@@ -574,10 +574,9 @@ let rec translate (cfg:config) (bs:list t) (e:term) : t =
             | Pat_wild bvar ->
               let x = S.new_bv None (readback cfg (translate cfg bs bvar.sort)) in
               (mkAccuVar x :: bs, Pat_wild x)
-            | Pat_dot_term (bvar, tm) ->
-              let x = S.new_bv None (readback cfg (translate cfg bs bvar.sort)) in
+            | Pat_dot_term eopt ->
               (bs,
-               Pat_dot_term (x, readback cfg (translate cfg bs tm)))
+               Pat_dot_term (BU.map_option (fun e -> readback cfg (translate cfg bs e)) eopt))
           in
           (bs, {p with v = p_new}) (* keep the info and change the pattern *)
         in
