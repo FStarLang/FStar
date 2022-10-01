@@ -271,7 +271,7 @@ let rec eq_pat (p1 : pat) (p2 : pat) : bool =
         else false
     | Pat_var _, Pat_var _ -> true
     | Pat_wild _, Pat_wild _ -> true
-    | Pat_dot_term (bv1, t1), Pat_dot_term (bv2, t2) -> true //&& term_eq t1 t2
+    | Pat_dot_term _, Pat_dot_term _ -> true
     | _, _ -> false
 
 ///////////////////////////////////////////////////////////////////////

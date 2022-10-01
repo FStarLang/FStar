@@ -1592,7 +1592,7 @@ let t_destruct (s_tm : term) : tac (list (fv * Z.t)) = wrap_err "destruct" <|
                         let subst = List.map (fun (({binder_bv=bv}), (t, _)) -> NT (bv, t)) d_ps_a_ps in
                         let bs = SS.subst_binders subst bs in
                         let subpats_1 = List.map (fun (({binder_bv=bv}), (t, _)) ->
-                                                 (mk_pat (Pat_dot_term (bv, t)), true)) d_ps_a_ps in
+                                                 (mk_pat (Pat_dot_term (Some t)), true)) d_ps_a_ps in
                         let subpats_2 = List.map (fun ({binder_bv=bv;binder_qual=bq}) ->
                                                  (mk_pat (Pat_var bv), is_imp bq)) bs in
                         let subpats = subpats_1 @ subpats_2 in
@@ -1777,7 +1777,7 @@ let rec inspect (t:term) : tac term_view = wrap_err "inspect" (
             | Pat_cons (fv, us_opt, ps) -> Pat_Cons (fv, us_opt, List.map (fun (p, b) -> inspect_pat p, b) ps)
             | Pat_var bv -> Pat_Var bv
             | Pat_wild bv -> Pat_Wild bv
-            | Pat_dot_term (bv, t) -> Pat_Dot_Term (bv, t)
+            | Pat_dot_term eopt -> Pat_Dot_Term eopt
         in
         let brs = List.map SS.open_branch brs in
         let brs = List.map (function (pat, _, t) -> (inspect_pat pat, t)) brs in
@@ -1846,7 +1846,7 @@ let pack' (tv:term_view) (leave_curried:bool) : tac term =
             | Pat_Cons (fv, us_opt, ps) -> wrap <| Pat_cons (fv, us_opt, List.map (fun (p, b) -> pack_pat p, b) ps)
             | Pat_Var  bv -> wrap <| Pat_var bv
             | Pat_Wild bv -> wrap <| Pat_wild bv
-            | Pat_Dot_Term (bv, t) -> wrap <| Pat_dot_term (bv, t)
+            | Pat_Dot_Term eopt -> wrap <| Pat_dot_term eopt
         in
         let brs = List.map (function (pat, t) -> (pack_pat pat, None, t)) brs in
         let brs = List.map SS.close_branch brs in

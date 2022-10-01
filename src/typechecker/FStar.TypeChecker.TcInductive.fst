@@ -918,7 +918,7 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
                         let arg_pats = all_params |> List.mapi (fun j ({binder_bv=x;binder_qual=imp}) ->
                             let b = S.is_bqual_implicit imp in
                             if b && j < ntps
-                            then pos (Pat_dot_term (S.gen_bv (string_of_id x.ppname) None tun, tun)), b
+                            then pos (Pat_dot_term None), b
                             else pos (Pat_wild (S.gen_bv (string_of_id x.ppname) None tun)), b)
                         in
                         let pat_true = pos (S.Pat_cons (S.lid_as_fv lid delta_constant (Some fvq), None, arg_pats)), None, U.exp_true_bool in
@@ -1011,7 +1011,7 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
                   if i+ntps=j  //this is the one to project
                   then pos (Pat_var projection), b
                   else if b && j < ntps
-                  then pos (Pat_dot_term (S.gen_bv (string_of_id x.ppname) None tun, tun)), b
+                  then pos (Pat_dot_term None), b
                   else pos (Pat_wild (S.gen_bv (string_of_id x.ppname) None tun)), b)
               in
               let pat = pos (S.Pat_cons (S.lid_as_fv lid delta_constant (Some fvq), None, arg_pats)), None, S.bv_to_name projection in

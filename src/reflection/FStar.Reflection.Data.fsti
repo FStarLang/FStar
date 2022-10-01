@@ -49,7 +49,7 @@ type pattern =
     | Pat_Cons     of fv * option (list universe) * list (pattern * bool)
     | Pat_Var      of bv
     | Pat_Wild     of bv
-    | Pat_Dot_Term of bv * term
+    | Pat_Dot_Term of option term
 
 type branch = pattern * term
 

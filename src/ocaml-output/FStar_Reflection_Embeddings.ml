@@ -725,17 +725,14 @@ let rec (e_pattern' :
           FStar_Syntax_Syntax.mk_Tm_app
             FStar_Reflection_Constants.ref_Pat_Wild.FStar_Reflection_Constants.t
             uu___1 rng
-      | FStar_Reflection_Data.Pat_Dot_Term (bv, t) ->
+      | FStar_Reflection_Data.Pat_Dot_Term eopt ->
           let uu___1 =
             let uu___2 =
-              let uu___3 = embed e_bv rng bv in
+              let uu___3 =
+                let uu___4 = FStar_Syntax_Embeddings.e_option e_term in
+                embed uu___4 rng eopt in
               FStar_Syntax_Syntax.as_arg uu___3 in
-            let uu___3 =
-              let uu___4 =
-                let uu___5 = embed e_term rng t in
-                FStar_Syntax_Syntax.as_arg uu___5 in
-              [uu___4] in
-            uu___2 :: uu___3 in
+            [uu___2] in
           FStar_Syntax_Syntax.mk_Tm_app
             FStar_Reflection_Constants.ref_Pat_Dot_Term.FStar_Reflection_Constants.t
             uu___1 rng in
@@ -811,20 +808,18 @@ let rec (e_pattern' :
                     FStar_Compiler_Effect.op_Less_Bar
                       (fun uu___5 -> FStar_Pervasives_Native.Some uu___5)
                       (FStar_Reflection_Data.Pat_Wild bv1))
-           | (FStar_Syntax_Syntax.Tm_fvar fv, (bv, uu___3)::(t2, uu___4)::[])
-               when
+           | (FStar_Syntax_Syntax.Tm_fvar fv, (eopt, uu___3)::[]) when
                FStar_Syntax_Syntax.fv_eq_lid fv
                  FStar_Reflection_Constants.ref_Pat_Dot_Term.FStar_Reflection_Constants.lid
                ->
-               let uu___5 = unembed' w e_bv bv in
-               FStar_Compiler_Util.bind_opt uu___5
-                 (fun bv1 ->
-                    let uu___6 = unembed' w e_term t2 in
-                    FStar_Compiler_Util.bind_opt uu___6
-                      (fun t3 ->
-                         FStar_Compiler_Effect.op_Less_Bar
-                           (fun uu___7 -> FStar_Pervasives_Native.Some uu___7)
-                           (FStar_Reflection_Data.Pat_Dot_Term (bv1, t3))))
+               let uu___4 =
+                 let uu___5 = FStar_Syntax_Embeddings.e_option e_term in
+                 unembed' w uu___5 eopt in
+               FStar_Compiler_Util.bind_opt uu___4
+                 (fun eopt1 ->
+                    FStar_Compiler_Effect.op_Less_Bar
+                      (fun uu___5 -> FStar_Pervasives_Native.Some uu___5)
+                      (FStar_Reflection_Data.Pat_Dot_Term eopt1))
            | uu___3 ->
                (if w
                 then
