@@ -1193,7 +1193,7 @@ let (guard_letrecs :
                 FStar_Parser_Const.precedes_lid in
             let rec mk_precedes_lex env2 l l_prev =
               let rec aux l1 l_prev1 =
-                let type_of e1 e2 =
+                let type_of should_warn e1 e2 =
                   let t1 =
                     let uu___ =
                       let uu___1 =
@@ -1257,7 +1257,7 @@ let (guard_letrecs :
                        | (uu___3, FStar_Syntax_Syntax.Tm_uvar uu___4) ->
                            false
                        | (uu___3, uu___4) -> true) in
-                  (let uu___1 = warn t1 t2 in
+                  (let uu___1 = should_warn && (warn t1 t2) in
                    if uu___1
                    then
                      let uu___2 =
@@ -1310,7 +1310,7 @@ let (guard_letrecs :
                       uu___1 :: uu___2 in
                     FStar_Syntax_Syntax.mk_Tm_app precedes_t uu___ r
                 | (x::[], x_prev::[]) ->
-                    let uu___ = type_of x x_prev in
+                    let uu___ = type_of false x x_prev in
                     (match uu___ with
                      | (t_x, t_x_prev) ->
                          let uu___1 =
@@ -1328,7 +1328,7 @@ let (guard_letrecs :
                            uu___2 :: uu___3 in
                          FStar_Syntax_Syntax.mk_Tm_app precedes_t uu___1 r)
                 | (x::tl, x_prev::tl_prev) ->
-                    let uu___ = type_of x x_prev in
+                    let uu___ = type_of true x x_prev in
                     (match uu___ with
                      | (t_x, t_x_prev) ->
                          let tm_precedes =

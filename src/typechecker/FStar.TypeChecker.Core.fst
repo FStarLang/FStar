@@ -463,7 +463,12 @@ let default_norm_steps : Env.steps =
     UnfoldUntil delta_constant;
     Unascribe;
     Eager_unfolding;
-    Iota ]
+    Iota;
+    Exclude Zeta ] 
+
+let debug g f = 
+  if Env.debug g.tcenv (Options.Other "Core")
+  then f ()
 
 (*
      G |- e : t0 <: t1 | p
@@ -471,18 +476,23 @@ let default_norm_steps : Env.steps =
 let rec check_subtype_whnf (g:env) (e:term) (t0 t1: typ)
   : result unit
   = let fail (s:string) = 
+      debug g (fun () ->
+        BU.print2 "check_subtype_whnf  [[%s <: %s]] failed\n" (P.term_to_string t0) (P.term_to_string t1));        
       fail (BU.format3 "Subtyping failed because %s: %s </: %s"
               s
               (P.term_to_string t0)
-              (P.term_to_string t1)) in
-    if Env.debug g.tcenv (Options.Other "Core")
-    then BU.print2 "check_subtype_whnf %s <: %s\n" (P.term_to_string t0) (P.term_to_string t1);
+              (P.term_to_string t1))
+    in
+    debug g (fun () ->
+      BU.print2 "check_subtype_whnf %s <: %s\n" (P.term_to_string t0) (P.term_to_string t1));
     let! guard_not_ok = guard_not_allowed in
     let guard_ok = not guard_not_ok in
     let fallback g t0 t1 = 
       if guard_ok && (equatable g t0 || equatable g t1)
       then
         let! u = universe_of g t0 in
+        debug g (fun () ->
+          BU.print2 "exiting check_subtype_whnf [[%s <: %s]] with guard\n" (P.term_to_string t0) (P.term_to_string t1));
         guard (U.mk_eq2 u (mk_type u) t0 t1)
       else fail "no subtyping rule is applicable"
     in
@@ -532,6 +542,7 @@ let rec check_subtype_whnf (g:env) (e:term) (t0 t1: typ)
     | _, Tm_app _ ->
       let smt_ok = not (guard_not_ok) in
       let mr, ts = Rel.head_matches_delta g.tcenv smt_ok t0 t1 in
+      debug g (fun _ -> BU.print_string "Back from head_matches_delta\n");
       begin
       match mr, ts with
       | Rel.MisMatch _, _
@@ -540,9 +551,13 @@ let rec check_subtype_whnf (g:env) (e:term) (t0 t1: typ)
         //So, just handle as a fallback
         fallback g t0 t1
 
-      | _, Some (t0, t1) ->
+      | _, Some (t0', t1') ->
         //match after reduction to t0, t1
-        check_subtype_whnf g e t0 t1
+        debug g (fun _ ->
+          BU.print4 "check_subtype_whnf after redunction [[%s <: %s]] reduced to [[%s <: %s]]\n"
+                       (P.term_to_string t0) (P.term_to_string t1)
+                       (P.term_to_string t0') (P.term_to_string t1'));
+        check_subtype_whnf g e t0' t1'
       
       | Rel.FullMatch, _
       | Rel.HeadMatch false, _ ->
@@ -560,14 +575,19 @@ let rec check_subtype_whnf (g:env) (e:term) (t0 t1: typ)
     
     | _ ->
       if U.eq_tm t0 t1 = U.Equal
-      then return ()
+      then (
+        debug g (fun _ -> BU.print_string "exiting check_subtype_whnf (EQUAL)\n");      
+        return ()
+      )
       else fallback g t0 t1
 
 and check_subtype (g:env) (e:term) (t0 t1:typ)
-  = if Env.debug g.tcenv (Options.Other "Core")
-    then BU.print2 "check_subtype %s <: %s\n" (P.term_to_string t0) (P.term_to_string t1);
+  = debug g (fun () ->
+      BU.print2 "check_subtype %s <: %s\n" (P.term_to_string t0) (P.term_to_string t1));
     match U.eq_tm t0 t1 with
-    | U.Equal -> return ()
+    | U.Equal -> 
+      debug g (fun _ -> BU.print_string "exiting check_subtype (EQUAL)\n");
+      return ()
     | _ ->
       let t0' = N.normalize_refinement default_norm_steps g.tcenv t0 in
       let t1' = N.normalize_refinement default_norm_steps g.tcenv t1 in
@@ -1199,13 +1219,13 @@ let check_term_top g e t (must_tot:bool)
       check_subcomp ({ g with allow_universe_instantiation = true}) e (as_comp g eff_te) target_comp)
 
 let check_term g e t (must_tot:bool)
-  = // if Env.debug g (Options.Other "Core")
-    // then BU.print1 "Entering core with %s\n" (P.term_to_string e);
+  = if Env.debug g (Options.Other "Core")
+    then BU.print2 "Entering core with %s <: %s\n" (P.term_to_string e) (P.term_to_string t);
     let ctx = { no_guard = false; error_context = [] } in
     let res = match check_term_top g e t must_tot ctx with
     | Inl (_, g) -> Inl g
     | Inr err -> Inr err
     in
-    // if Env.debug g (Options.Other "Core")
-    // then BU.print_string "Exiting core\n";
+    if Env.debug g (Options.Other "Core")
+    then BU.print_string "Exiting core\n";
     res

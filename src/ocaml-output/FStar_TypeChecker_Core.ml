@@ -752,7 +752,14 @@ let (default_norm_steps : FStar_TypeChecker_Env.steps) =
   FStar_TypeChecker_Env.UnfoldUntil FStar_Syntax_Syntax.delta_constant;
   FStar_TypeChecker_Env.Unascribe;
   FStar_TypeChecker_Env.Eager_unfolding;
-  FStar_TypeChecker_Env.Iota]
+  FStar_TypeChecker_Env.Iota;
+  FStar_TypeChecker_Env.Exclude FStar_TypeChecker_Env.Zeta]
+let (debug : env -> (unit -> unit) -> unit) =
+  fun g ->
+    fun f ->
+      let uu___ =
+        FStar_TypeChecker_Env.debug g.tcenv (FStar_Options.Other "Core") in
+      if uu___ then f () else ()
 let rec (check_subtype_whnf :
   env ->
     FStar_Syntax_Syntax.term ->
@@ -763,21 +770,24 @@ let rec (check_subtype_whnf :
       fun t0 ->
         fun t1 ->
           let fail1 s =
-            let uu___ =
-              let uu___1 = FStar_Syntax_Print.term_to_string t0 in
-              let uu___2 = FStar_Syntax_Print.term_to_string t1 in
-              FStar_Compiler_Util.format3
-                "Subtyping failed because %s: %s </: %s" s uu___1 uu___2 in
-            fail uu___ in
-          (let uu___1 =
-             FStar_TypeChecker_Env.debug g.tcenv (FStar_Options.Other "Core") in
-           if uu___1
-           then
-             let uu___2 = FStar_Syntax_Print.term_to_string t0 in
-             let uu___3 = FStar_Syntax_Print.term_to_string t1 in
-             FStar_Compiler_Util.print2 "check_subtype_whnf %s <: %s\n"
-               uu___2 uu___3
-           else ());
+            debug g
+              (fun uu___1 ->
+                 let uu___2 = FStar_Syntax_Print.term_to_string t0 in
+                 let uu___3 = FStar_Syntax_Print.term_to_string t1 in
+                 FStar_Compiler_Util.print2
+                   "check_subtype_whnf  [[%s <: %s]] failed\n" uu___2 uu___3);
+            (let uu___1 =
+               let uu___2 = FStar_Syntax_Print.term_to_string t0 in
+               let uu___3 = FStar_Syntax_Print.term_to_string t1 in
+               FStar_Compiler_Util.format3
+                 "Subtyping failed because %s: %s </: %s" s uu___2 uu___3 in
+             fail uu___1) in
+          debug g
+            (fun uu___1 ->
+               let uu___2 = FStar_Syntax_Print.term_to_string t0 in
+               let uu___3 = FStar_Syntax_Print.term_to_string t1 in
+               FStar_Compiler_Util.print2 "check_subtype_whnf %s <: %s\n"
+                 uu___2 uu___3);
           op_let_Bang guard_not_allowed
             (fun guard_not_ok ->
                let guard_ok = Prims.op_Negation guard_not_ok in
@@ -789,10 +799,19 @@ let rec (check_subtype_whnf :
                    let uu___2 = universe_of g1 t01 in
                    op_let_Bang uu___2
                      (fun u ->
-                        let uu___3 =
-                          let uu___4 = mk_type u in
-                          FStar_Syntax_Util.mk_eq2 u uu___4 t01 t11 in
-                        guard uu___3)
+                        debug g1
+                          (fun uu___4 ->
+                             let uu___5 =
+                               FStar_Syntax_Print.term_to_string t01 in
+                             let uu___6 =
+                               FStar_Syntax_Print.term_to_string t11 in
+                             FStar_Compiler_Util.print2
+                               "exiting check_subtype_whnf [[%s <: %s]] with guard\n"
+                               uu___5 uu___6);
+                        (let uu___4 =
+                           let uu___5 = mk_type u in
+                           FStar_Syntax_Util.mk_eq2 u uu___5 t01 t11 in
+                         guard uu___4))
                  else fail1 "no subtyping rule is applicable" in
                let uu___1 =
                  let uu___2 =
@@ -911,17 +930,35 @@ let rec (check_subtype_whnf :
                        t0 t1 in
                    (match uu___4 with
                     | (mr, ts) ->
-                        (match (mr, ts) with
-                         | (FStar_TypeChecker_Rel.MisMatch uu___5, uu___6) ->
-                             fallback g t0 t1
-                         | (FStar_TypeChecker_Rel.HeadMatch (true), uu___5)
-                             -> fallback g t0 t1
-                         | (uu___5, FStar_Pervasives_Native.Some (t01, t11))
-                             -> check_subtype_whnf g e t01 t11
-                         | (FStar_TypeChecker_Rel.FullMatch, uu___5) ->
-                             check_equality_whnf g t0 t1
-                         | (FStar_TypeChecker_Rel.HeadMatch (false), uu___5)
-                             -> check_equality_whnf g t0 t1))
+                        (debug g
+                           (fun uu___6 ->
+                              FStar_Compiler_Util.print_string
+                                "Back from head_matches_delta\n");
+                         (match (mr, ts) with
+                          | (FStar_TypeChecker_Rel.MisMatch uu___6, uu___7)
+                              -> fallback g t0 t1
+                          | (FStar_TypeChecker_Rel.HeadMatch (true), uu___6)
+                              -> fallback g t0 t1
+                          | (uu___6, FStar_Pervasives_Native.Some (t0', t1'))
+                              ->
+                              (debug g
+                                 (fun uu___8 ->
+                                    let uu___9 =
+                                      FStar_Syntax_Print.term_to_string t0 in
+                                    let uu___10 =
+                                      FStar_Syntax_Print.term_to_string t1 in
+                                    let uu___11 =
+                                      FStar_Syntax_Print.term_to_string t0' in
+                                    let uu___12 =
+                                      FStar_Syntax_Print.term_to_string t1' in
+                                    FStar_Compiler_Util.print4
+                                      "check_subtype_whnf after redunction [[%s <: %s]] reduced to [[%s <: %s]]\n"
+                                      uu___9 uu___10 uu___11 uu___12);
+                               check_subtype_whnf g e t0' t1')
+                          | (FStar_TypeChecker_Rel.FullMatch, uu___6) ->
+                              check_equality_whnf g t0 t1
+                          | (FStar_TypeChecker_Rel.HeadMatch (false), uu___6)
+                              -> check_equality_whnf g t0 t1)))
                | (uu___2, FStar_Syntax_Syntax.Tm_app uu___3) ->
                    let smt_ok = Prims.op_Negation guard_not_ok in
                    let uu___4 =
@@ -929,17 +966,35 @@ let rec (check_subtype_whnf :
                        t0 t1 in
                    (match uu___4 with
                     | (mr, ts) ->
-                        (match (mr, ts) with
-                         | (FStar_TypeChecker_Rel.MisMatch uu___5, uu___6) ->
-                             fallback g t0 t1
-                         | (FStar_TypeChecker_Rel.HeadMatch (true), uu___5)
-                             -> fallback g t0 t1
-                         | (uu___5, FStar_Pervasives_Native.Some (t01, t11))
-                             -> check_subtype_whnf g e t01 t11
-                         | (FStar_TypeChecker_Rel.FullMatch, uu___5) ->
-                             check_equality_whnf g t0 t1
-                         | (FStar_TypeChecker_Rel.HeadMatch (false), uu___5)
-                             -> check_equality_whnf g t0 t1))
+                        (debug g
+                           (fun uu___6 ->
+                              FStar_Compiler_Util.print_string
+                                "Back from head_matches_delta\n");
+                         (match (mr, ts) with
+                          | (FStar_TypeChecker_Rel.MisMatch uu___6, uu___7)
+                              -> fallback g t0 t1
+                          | (FStar_TypeChecker_Rel.HeadMatch (true), uu___6)
+                              -> fallback g t0 t1
+                          | (uu___6, FStar_Pervasives_Native.Some (t0', t1'))
+                              ->
+                              (debug g
+                                 (fun uu___8 ->
+                                    let uu___9 =
+                                      FStar_Syntax_Print.term_to_string t0 in
+                                    let uu___10 =
+                                      FStar_Syntax_Print.term_to_string t1 in
+                                    let uu___11 =
+                                      FStar_Syntax_Print.term_to_string t0' in
+                                    let uu___12 =
+                                      FStar_Syntax_Print.term_to_string t1' in
+                                    FStar_Compiler_Util.print4
+                                      "check_subtype_whnf after redunction [[%s <: %s]] reduced to [[%s <: %s]]\n"
+                                      uu___9 uu___10 uu___11 uu___12);
+                               check_subtype_whnf g e t0' t1')
+                          | (FStar_TypeChecker_Rel.FullMatch, uu___6) ->
+                              check_equality_whnf g t0 t1
+                          | (FStar_TypeChecker_Rel.HeadMatch (false), uu___6)
+                              -> check_equality_whnf g t0 t1)))
                | (FStar_Syntax_Syntax.Tm_match (e0, uu___2, brs0, uu___3),
                   FStar_Syntax_Syntax.Tm_match (e1, uu___4, brs1, uu___5)) ->
                    check_equality_match g e0 brs0 e1 brs1
@@ -947,7 +1002,14 @@ let rec (check_subtype_whnf :
                    let uu___3 =
                      let uu___4 = FStar_Syntax_Util.eq_tm t0 t1 in
                      uu___4 = FStar_Syntax_Util.Equal in
-                   if uu___3 then return () else fallback g t0 t1)
+                   if uu___3
+                   then
+                     (debug g
+                        (fun uu___5 ->
+                           FStar_Compiler_Util.print_string
+                             "exiting check_subtype_whnf (EQUAL)\n");
+                      return ())
+                   else fallback g t0 t1)
 and (check_subtype :
   env ->
     FStar_Syntax_Syntax.term ->
@@ -957,18 +1019,20 @@ and (check_subtype :
     fun e ->
       fun t0 ->
         fun t1 ->
-          (let uu___1 =
-             FStar_TypeChecker_Env.debug g.tcenv (FStar_Options.Other "Core") in
-           if uu___1
-           then
-             let uu___2 = FStar_Syntax_Print.term_to_string t0 in
-             let uu___3 = FStar_Syntax_Print.term_to_string t1 in
-             FStar_Compiler_Util.print2 "check_subtype %s <: %s\n" uu___2
-               uu___3
-           else ());
+          debug g
+            (fun uu___1 ->
+               let uu___2 = FStar_Syntax_Print.term_to_string t0 in
+               let uu___3 = FStar_Syntax_Print.term_to_string t1 in
+               FStar_Compiler_Util.print2 "check_subtype %s <: %s\n" uu___2
+                 uu___3);
           (let uu___1 = FStar_Syntax_Util.eq_tm t0 t1 in
            match uu___1 with
-           | FStar_Syntax_Util.Equal -> return ()
+           | FStar_Syntax_Util.Equal ->
+               (debug g
+                  (fun uu___3 ->
+                     FStar_Compiler_Util.print_string
+                       "exiting check_subtype (EQUAL)\n");
+                return ())
            | uu___2 ->
                let t0' =
                  FStar_TypeChecker_Normalize.normalize_refinement
@@ -2729,11 +2793,25 @@ let (check_term :
     fun e ->
       fun t ->
         fun must_tot ->
-          let ctx = { no_guard = false; error_context = [] } in
-          let res =
-            let uu___ =
-              let uu___1 = check_term_top g e t must_tot in uu___1 ctx in
-            match uu___ with
-            | FStar_Pervasives.Inl (uu___1, g1) -> FStar_Pervasives.Inl g1
-            | FStar_Pervasives.Inr err -> FStar_Pervasives.Inr err in
-          res
+          (let uu___1 =
+             FStar_TypeChecker_Env.debug g (FStar_Options.Other "Core") in
+           if uu___1
+           then
+             let uu___2 = FStar_Syntax_Print.term_to_string e in
+             let uu___3 = FStar_Syntax_Print.term_to_string t in
+             FStar_Compiler_Util.print2 "Entering core with %s <: %s\n"
+               uu___2 uu___3
+           else ());
+          (let ctx = { no_guard = false; error_context = [] } in
+           let res =
+             let uu___1 =
+               let uu___2 = check_term_top g e t must_tot in uu___2 ctx in
+             match uu___1 with
+             | FStar_Pervasives.Inl (uu___2, g1) -> FStar_Pervasives.Inl g1
+             | FStar_Pervasives.Inr err -> FStar_Pervasives.Inr err in
+           (let uu___2 =
+              FStar_TypeChecker_Env.debug g (FStar_Options.Other "Core") in
+            if uu___2
+            then FStar_Compiler_Util.print_string "Exiting core\n"
+            else ());
+           res)
