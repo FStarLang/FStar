@@ -1684,7 +1684,7 @@ and format_sig style terms no_last_op flat_space =
         n, ln, terms', space ^^ rarrow ^^ break1, rarrow ^^ space
     | Binders (n, ln, parens) ->
         n, ln,
-        (if parens then List.map soft_parens_with_nesting terms' else terms'), // HERE!!!
+        (if parens then List.map soft_parens_with_nesting terms' else terms'),
         break1, colon ^^ space
   in
   let last = List.hd last in
