@@ -429,6 +429,18 @@ let z3_options = BU.mk_ref
 let set_z3_options opts =
     z3_options := opts
 
+let cli_as_options clis =
+  List.collect
+    (fun cli ->
+      List.collect
+        (fun opt ->
+          match BU.split opt "=" with
+          | [lhs;rhs] -> [BU.format2 "(set-option :%s %s)" lhs rhs]
+          | _ -> [])
+        (BU.split cli " "))
+    clis
+  |> String.concat "\n"
+
 let init () =
     (* A no-op now that there's no concurrency *)
     ()
@@ -436,6 +448,7 @@ let init () =
 let finish () =
     (* A no-op now that there's no concurrency *)
     ()
+
 
 // bg_scope is a global, mutable variable that keeps a list of the declarations
 // that we have given to z3 so far. In order to allow rollback of history,
@@ -514,6 +527,7 @@ let context_profile (theory:list decl) =
 
 let mk_input fresh theory =
     let options = !z3_options in
+    let options = options ^ (cli_as_options (Options.z3_cliopt())) in
     if Options.print_z3_statistics() then context_profile theory;
     let r, hash =
         if Options.record_hints()
