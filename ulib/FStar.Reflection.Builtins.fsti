@@ -19,7 +19,7 @@ open FStar.Order
 open FStar.Reflection.Types
 open FStar.Reflection.Data
 
-(* Views  *)
+(*** Views ***)
 
 (* NOTE: You probably want inspect/pack from FStar.Tactics, which work
  * over a fully named representation. If you use these, you have to
@@ -29,6 +29,7 @@ open FStar.Reflection.Data
 val inspect_ln     : (t:term) -> tv:term_view{smaller tv t}
 val pack_ln        : term_view -> term
 
+(* The bijection lemmas: the view exposes all details of terms. *)
 val pack_inspect_inv : (t:term) -> Lemma (pack_ln (inspect_ln t) == t)
 val inspect_pack_inv : (tv:term_view) -> Lemma (inspect_ln (pack_ln tv) == tv)
 
@@ -53,8 +54,7 @@ val pack_binder    : bv -> aqualv -> attrs:list term -> binder
 val inspect_universe : u:universe -> uv:universe_view{smaller_universe uv u}
 val pack_universe    : universe_view -> universe
 
-
-(* These are equivalent to [String.concat "."], [String.split ['.']]
+(** These are equivalent to [String.concat "."], [String.split ['.']]
  * and [String.compare]. We're only taking them as primitives to break
  * the dependency of Reflection/Tactics into * FStar.String, which
  * pulls a LOT of modules. *)
@@ -62,7 +62,7 @@ val implode_qn     : list string -> string
 val explode_qn     : string -> list string
 val compare_string : string -> string -> int
 
-(* Primitives & helpers *)
+(** Primitives & helpers *)
 val lookup_typ            : env -> name -> option sigelt
 val compare_bv            : bv -> bv -> order
 val binders_of_env        : env -> binders
@@ -84,28 +84,28 @@ val env_open_modules      : env -> list name
     match, etc. *)
 val push_binder           : env -> binder -> env
 
-(* Attributes are terms, not to be confused with Prims.attribute *)
+(** Attributes are terms, not to be confused with Prims.attribute. *)
 val sigelt_attrs     : sigelt -> list term
 val set_sigelt_attrs : list term -> sigelt -> sigelt
 
-(* Setting and reading qualifiers from sigelts *)
+(** Setting and reading qualifiers from sigelts *)
 val sigelt_quals     : sigelt -> list qualifier
 val set_sigelt_quals : list qualifier -> sigelt -> sigelt
 
-(* Reading the vconfig under which a particular sigelt was typechecked.
-   This function returns None if "--record_options" was not on when
-   typechecking the sigelt *)
+(** Obtains the vconfig under which a particular sigelt was typechecked.
+    This function returns None if "--record_options" was not on when
+    typechecking the sigelt. *)
 val sigelt_opts : sigelt -> option vconfig
 
-(* Embed a vconfig as a term, for instance to use it with the check_with
-attribute *)
+(** Embed a vconfig as a term, for instance to use it with the check_with attribute *)
 val embed_vconfig : vconfig -> term
 
-(* Marker to check a sigelt with a particular vconfig *)
+(** Marker to check a sigelt with a particular vconfig *)
 irreducible
 let check_with (vcfg : vconfig) : unit = ()
 
-val subst : bv -> term -> term -> term
+(** Substitute an open bv (a name) by a term [t1] in a term [t2]. *)
+val subst : bv -> t1:term -> t2:term -> term
 
-
+(** Close an open binder in a term (i.e. turn the name into a de Bruijn index. *)
 val close_term : binder -> term -> term
