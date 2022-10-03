@@ -97,16 +97,16 @@ let tc_assume (env:env) (ts:tscheme) (r:Range.range) :tscheme =
   tc_type_common env ts (U.type_u () |> fst) r
 
 let tc_decl_attributes env se =
-  // [Substitute] (defined in Pervasives), is added as attribute
-  // by TcInductive when a type has no projector, and this
-  // happens for some types (see
-  // TcInductive.early_prims_inductives) that are defined before
-  // Substitute even exists.
-  // Thus the hack below, that typecheck attribtues only when
-  // they're not literally [Substitute]. TODO: fix this.
-  let is_substitute attr = attr_substitute = attr in
-  {se with sigattrs =      filter                is_substitute        se.sigattrs
-      @ tc_attributes env (filter (fun attr -> not (is_substitute attr)) se.sigattrs) }
+  // [Substitute] (defined in Pervasives), is added as attribute by
+  // TcInductive when a type has no projector, and this happens for
+  // some types (see TcInductive.early_prims_inductives) that are
+  // defined before [Substitute] even exists.
+  // Thus the partition of attributes below.
+  let blacklisted_attrs, other_attrs =
+    if lid_exists env PC.attr_substitute_lid
+    then ([], se.sigattrs)
+    else partition ((=) attr_substitute) se.sigattrs
+  in {se with sigattrs = blacklisted_attrs @ tc_attributes env other_attrs }
 
 let tc_inductive' env ses quals attrs lids =
     if Env.debug env Options.Low then

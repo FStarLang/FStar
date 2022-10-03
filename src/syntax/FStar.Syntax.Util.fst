@@ -1234,7 +1234,7 @@ let attr_eq a a' =
    | _ -> false
 
 let attr_substitute =
-    mk (Tm_fvar (lid_as_fv (lid_of_path ["FStar"; "Pervasives"; "Substitute"] Range.dummyRange)
+    mk (Tm_fvar (lid_as_fv PC.attr_substitute_lid
                            delta_constant
                            None))
        Range.dummyRange
