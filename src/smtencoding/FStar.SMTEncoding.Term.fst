@@ -259,6 +259,7 @@ let isInjective s =
 let mk t r = {tm=t; freevars=BU.mk_ref None; rng=r}
 let mkTrue  r       = mk (App(TrueOp, [])) r
 let mkFalse r       = mk (App(FalseOp, [])) r
+let mkUnreachable   = mk (App(Var "Unreachable", [])) Range.dummyRange
 let mkInteger i  r  = mk (Integer (ensure_decimal i)) r
 let mkInteger' i r  = mkInteger (string_of_int i) r
 let mkReal i r      = mk (Real i) r
@@ -864,7 +865,8 @@ and mkPrelude z3options =
                 (declare-fun _rmul (Real Real) Real)\n\
                 (declare-fun _rdiv (Real Real) Real)\n\
                 (assert (forall ((x Real) (y Real)) (! (= (_rmul x y) (* x y)) :pattern ((_rmul x y)))))\n\
-                (assert (forall ((x Real) (y Real)) (! (= (_rdiv x y) (/ x y)) :pattern ((_rdiv x y)))))"
+                (assert (forall ((x Real) (y Real)) (! (= (_rdiv x y) (/ x y)) :pattern ((_rdiv x y)))))\n\
+                (define-fun Unreachable () Bool false)"
    in
    let constrs : constructors = [("FString_const", ["FString_const_proj_0", Int_sort, true], String_sort, 0, true);
                                  ("Tm_type",  [], Term_sort, 2, true);
@@ -1015,6 +1017,8 @@ let mk_Valid t        = match t.tm with
     | App(Var "Prims.b2t", [t1]) -> {unboxBool t1 with rng=t.rng}
     | _ ->
         mkApp("Valid",  [t]) t.rng
+let mk_unit_type = mkApp("Prims.unit", []) norng
+let mk_subtype_of_unit v = mkApp("Prims.subtype_of", [v;mk_unit_type]) v.rng
 let mk_HasType v t    = mkApp("HasType", [v;t]) t.rng
 let mk_HasTypeZ v t   = mkApp("HasTypeZ", [v;t]) t.rng
 let mk_IsTotFun t     = mkApp("IsTotFun", [t]) t.rng

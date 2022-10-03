@@ -32,6 +32,7 @@ let tr1 = function
           | Zeta           -> EMB.Zeta
           | ZetaFull       -> EMB.ZetaFull
           | Iota           -> EMB.Iota
+          | Unascribe      -> EMB.Unascribe
           | NBE            -> EMB.NBE
           | Unmeta         -> EMB.Unmeta
           | Reify          -> EMB.Reify
@@ -48,6 +49,7 @@ let rt1 = function
           | EMB.Zeta           -> Zeta
           | EMB.ZetaFull       -> ZetaFull
           | EMB.Iota           -> Iota
+          | EMB.Unascribe      -> Unascribe
           | EMB.NBE            -> NBE
           | EMB.Unmeta         -> Unmeta
           | EMB.Reify          -> Reify
@@ -95,6 +97,15 @@ let from_tac_3 (t: 'a -> 'b -> 'c -> 'd TM.tac): 'a  -> 'b -> 'c -> 'd __tac =
           let m = t x y z in
           interpret_tac m ps
 
+let from_tac_4 (t: 'a -> 'b -> 'c -> 'd -> 'e TM.tac): 'a  -> 'b -> 'c -> 'd -> 'e __tac =
+  fun (x: 'a) ->
+  fun (y: 'b) ->
+  fun (z: 'c) ->
+  fun (w: 'd) ->
+  fun (ps: proofstate) ->
+  let m = t x y z w in
+  interpret_tac m ps
+
 (* Pointing to the internal primitives *)
 let set_goals               = from_tac_1 TM.set_goals
 let set_smt_goals           = from_tac_1 TM.set_smt_goals
@@ -117,7 +128,7 @@ let clear_top               = from_tac_1 B.clear_top
 let clear                   = from_tac_1 B.clear
 let rewrite                 = from_tac_1 B.rewrite
 let t_exact                 = from_tac_3 B.t_exact
-let t_apply                 = from_tac_3 B.t_apply
+let t_apply                 = from_tac_4 B.t_apply
 let t_apply_lemma           = from_tac_3 B.t_apply_lemma
 let print                   = from_tac_1 B.print
 let debugging               = from_tac_1 B.debugging
@@ -144,9 +155,13 @@ let tadmit_t                = from_tac_1 B.tadmit_t
 let join                    = from_tac_1 B.join
 let inspect                 = from_tac_1 B.inspect
 let pack                    = from_tac_1 B.pack
+let pack_curried            = from_tac_1 B.pack_curried
 let curms                   = from_tac_1 B.curms
 let set_urgency             = from_tac_1 B.set_urgency
 let t_commute_applied_match = from_tac_1 B.t_commute_applied_match
+let gather_or_solve_explicit_guards_for_resolved_goals = from_tac_1 B.gather_explicit_guards_for_resolved_goals
+let string_to_term          = from_tac_2 B.string_to_term
+let push_bv_dsenv           = from_tac_2 B.push_bv_dsenv
 
 (* sigh *)
 let fix_either (s : ('a, 'b) either) : ('a, 'b) either =

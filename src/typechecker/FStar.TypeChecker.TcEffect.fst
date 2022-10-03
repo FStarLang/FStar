@@ -124,68 +124,14 @@ let check_no_subtyping_for_layered_combinator env (t:term) (k:option typ) =
 
 
 (*
- * Check that the layered effect binders that will be solved by unification,
- *   appear in the repr indices in the combinator type in a head position
- *
- * For example, appearing in an argument position in an index term does not count
- *
- * If the flag check_non_informative_binders is set, additionally checks that the
+ * If the flag check_non_informative_binders is set, additionally checks
  *   binders have non-informative types
  *
- * Precondition: repr_terms may not be well-typed in env but bs must be well-typed (properly closed etc.)
  * To check for non_informativeness, we do some normalization, so bs well-typedness is required
  *)
-let validate_layered_effect_binders env (bs:binders) (repr_terms:list term) (check_non_informatve_binders:bool) (r:Range.range)
+let validate_layered_effect_binders env (bs:binders) (check_non_informatve_binders:bool) (r:Range.range)
 : unit
-= //repr can be (repr a is) or unit -> M a wp for wp effects
-  let repr_args repr =
-    match (SS.compress repr).n with
-    | Tm_app (_, args) -> args
-    | Tm_arrow ([_], c) -> c |> U.comp_effect_args
-    | _ ->
-      raise_error (Errors.Fatal_UnexpectedEffect,
-        BU.format1 "Unexpected repr term %s when validating layered effect combinator binders"
-          (Print.term_to_string repr)) r in
-
-  let rec head_names_in_term arg =
-    match (SS.compress arg).n with
-    | Tm_name _ -> [arg]
-    | Tm_app (head, _) ->
-      (match (SS.compress head).n with
-       | Tm_name _ -> [head]
-       | _-> [])
-    | Tm_abs (_, body, _) -> head_names_in_term body
-    | _ -> [] in
-
-  let head_names_in_args args =
-    args
-    |> List.map fst
-    |> List.collect head_names_in_term in
-
-  let repr_names_args = List.collect (fun repr -> repr |> repr_args |> head_names_in_args) repr_terms in
-
-  if Env.debug env <| Options.Other "LayeredEffectsTc" then
-    BU.print2 "Checking layered effect combinator binders validity, names: %s, binders: %s\n\n"
-      (List.fold_left (fun s t -> s ^ "; " ^ (Print.term_to_string t)) "" repr_names_args)
-      (Print.binders_to_string "; " bs);
-
-  let valid_binder b =
-    //it appears in a repr index in a head position
-    List.existsb (fun t -> U.eq_tm (S.bv_to_name b.binder_bv) t = U.Equal) repr_names_args
-    ||
-    (match b.binder_attrs with  //or has a tactic associated
-     | _::_ -> true
-     | _ -> false) in
-
-  let invalid_binders = List.filter (fun b -> not (valid_binder b)) bs in
-
-  if List.length invalid_binders <> 0 then
-    raise_error (Errors.Fatal_UnexpectedEffect,
-      BU.format1 "Binders %s neither appear as repr indices nor have an associated tactic"
-        (Print.binders_to_string "; " invalid_binders)) r
-  else ();
-
-  if check_non_informatve_binders
+= if check_non_informatve_binders
   then
     let _, informative_binders = List.fold_left (fun (env, bs) b ->
       let env = Env.push_binders env [b] in
@@ -202,6 +148,8 @@ let validate_layered_effect_binders env (bs:binders) (repr_terms:list term) (che
 
 (*
  * Typechecking of layered effects
+ *
+ * If the effect is reifiable, returns reify__M sigelt also
  *)
 let tc_layered_eff_decl env0 (ed : S.eff_decl) (quals : list qualifier) (attrs : list S.attribute) =
 Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (string_of_lid ed.mname)) (fun () ->
@@ -355,7 +303,7 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
         let a::x::bs, c = SS.open_comp bs c in
         let res_t = U.comp_result c in
         let env = Env.push_binders env [a; x] in
-        validate_layered_effect_binders env bs [res_t] check_non_informative_binders r in
+        validate_layered_effect_binders env bs check_non_informative_binders r in
 
     ret_us, ret_t, k |> SS.close_univ_vars us in
 
@@ -457,7 +405,7 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
           match (SS.compress g_b.binder_bv.sort).n with
           | Tm_arrow (_, c) -> U.comp_result c in
         let env = Env.push_binders env [a; b] in
-        validate_layered_effect_binders env bs [f_b.binder_bv.sort; g_sort; res_t]
+        validate_layered_effect_binders env bs
           check_non_informative_binders r in
 
     bind_us, bind_t, k |> SS.close_univ_vars bind_us in
@@ -556,7 +504,7 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
           List.splitAt (List.length bs - 1) bs
           |> (fun (l1, l2) -> l1, List.hd l2) in
         let env = Env.push_binders env [a] in
-        validate_layered_effect_binders env bs [f_b.binder_bv.sort; res_t]
+        validate_layered_effect_binders env bs
           check_non_informative_binders r in
 
     stronger_us, stronger_t, k |> SS.close_univ_vars stronger_us in
@@ -632,7 +580,7 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
           |> (fun (l1, l2) -> l1,
                           l2 |> List.hd, l2 |> List.tl |> List.hd) in
         let env = Env.push_binders env [a] in
-        validate_layered_effect_binders env bs [f_b.binder_bv.sort; g_b.binder_bv.sort; body]
+        validate_layered_effect_binders env bs
           check_non_informative_binders r in
 
     if_then_else_us,
@@ -938,6 +886,66 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
 
     act in
 
+  //
+  // If the effect is reifiable, create an
+  //   assume val reify_M (#a:Type) ... ($f:unit -> M a is) : M.repr a is
+  //
+  // The toplevel tc loop will typecheck reify_sigelt
+  //
+  let reify_sigelt =
+    if List.contains Reifiable quals
+    then
+      let env = env0 in
+      let r = range_of_lid ed.mname in
+      let a, u_a = fresh_a_and_u_a "a" in
+      let rest_bs =
+        let signature_ts = let us, t, _ = signature in us, t in
+        TcUtil.layered_effect_indices_as_binders env r ed.mname signature_ts u_a (a.binder_bv |> S.bv_to_name) in
+      let f_binder =
+        let thunked_t = U.arrow [S.null_bv S.t_unit |> S.mk_binder]
+          ({comp_univs = [];
+            effect_name = ed.mname;
+            result_typ = S.bv_to_name a.binder_bv;
+            effect_args = rest_bs |> List.map (fun b -> as_arg (S.bv_to_name b.binder_bv));
+            flags=[]} |> S.mk_Comp) in
+        S.mk_binder_with_attrs
+          (S.null_bv thunked_t)
+          (Some Equality)
+          [] in
+      let bs = a::rest_bs in
+      let applied_repr : term =
+        let repr_ts = let us, t, _ = repr in us, t in
+        let repr = Env.inst_tscheme_with repr_ts [u_a] |> snd in
+        mk_Tm_app repr
+          (bs |> List.map (fun b -> S.bv_to_name b.binder_bv, U.aqual_of_binder b))
+          r in
+      let reify_val_t =
+        let bs =
+          bs |> List.map (fun b -> {b with binder_qual = Some (Implicit false); binder_attrs = []}) in
+        U.arrow (bs@[f_binder])
+        (if List.contains S.TotalEffect quals
+         then S.mk_Total applied_repr
+         else { comp_univs = [];
+                effect_name = PC.effect_Dv_lid;
+                result_typ = applied_repr;
+                effect_args = [];
+                flags = [] } |> S.mk_Comp) in
+      let us, reify_val_t = Gen.generalize_universes env reify_val_t in
+      let sig_assume_reify =
+        let lid = PC.layered_effect_reify_val_lid ed.mname r in
+        { sigel = Sig_declare_typ (lid, us, reify_val_t);
+          sigrng = r;
+          sigquals = [Assumption];
+          sigmeta = default_sigmeta;
+          sigattrs = [];
+          sigopts = None } in
+      log_issue r (Errors.Warning_BleedingEdge_Feature,
+                   BU.format1 "Reification of indexed effects (%s here) is supported only as a type coercion \
+                     to the underlying representation type (no support for smt-based reasoning or extraction)"
+                     (string_of_lid ed.mname));
+      [sig_assume_reify]
+    else [] in
+
   let tschemes_of (us, t, ty) : tscheme * tscheme = (us, t), (us, ty) in
 
   let combinators = Layered_eff ({
@@ -951,7 +959,8 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
   { ed with
     signature     = (let us, t, _ = signature in (us, t));
     combinators   = combinators;
-    actions       = List.map (tc_action env0) ed.actions }
+    actions       = List.map (tc_action env0) ed.actions },
+  reify_sigelt
 )
 
 let tc_non_layered_eff_decl env0 (ed:S.eff_decl) (_quals : list qualifier) (_attrs : list S.attribute) : S.eff_decl =
@@ -1373,7 +1382,9 @@ Errors.with_ctx (BU.format1 "While checking effect definition `%s`" (string_of_l
 )
 
 let tc_eff_decl env ed quals attrs =
-  (if ed |> U.is_layered then tc_layered_eff_decl else tc_non_layered_eff_decl) env ed quals attrs
+  if ed |> U.is_layered
+  then tc_layered_eff_decl env ed quals attrs
+  else tc_non_layered_eff_decl env ed quals attrs, []
 
 let monad_signature env m s =
  let fail () = raise_error (Err.unexpected_signature_for_monad env m s) (range_of_lid m) in
@@ -1499,7 +1510,7 @@ let tc_layered_lift env0 (sub:S.sub_eff) : S.sub_eff =
         List.splitAt (List.length bs - 1) bs
         |> (fun (l1, l2) -> l1, List.hd l2) in
       let env = Env.push_binders env [a] in
-      validate_layered_effect_binders env bs [f_b.binder_bv.sort; res_t] check_non_informative_binders r in
+      validate_layered_effect_binders env bs check_non_informative_binders r in
 
   let sub = { sub with
     lift = Some (us, lift);
@@ -1829,7 +1840,7 @@ let tc_polymonadic_bind env (m:lident) (n:lident) (p:lident) (ts:S.tscheme) : (S
         match (SS.compress g_b.binder_bv.sort).n with
         | Tm_arrow (_, c) -> U.comp_result c in
       let env = Env.push_binders env [a; b] in
-      validate_layered_effect_binders env bs [f_b.binder_bv.sort; g_sort; res_t] check_non_informative_binders r in
+      validate_layered_effect_binders env bs check_non_informative_binders r in
 
 
   log_issue r (Errors.Warning_BleedingEdge_Feature,
@@ -1923,7 +1934,7 @@ let tc_polymonadic_subcomp env0 (m:lident) (n:lident) (ts:S.tscheme) : (S.tschem
         List.splitAt (List.length bs - 1) bs
         |> (fun (l1, l2) -> l1, List.hd l2) in
       let env = Env.push_binders env [a] in
-      validate_layered_effect_binders env bs [f_b.binder_bv.sort; res_t] check_non_informative_binders r in
+      validate_layered_effect_binders env bs check_non_informative_binders r in
 
 
   log_issue r (Errors.Warning_BleedingEdge_Feature,

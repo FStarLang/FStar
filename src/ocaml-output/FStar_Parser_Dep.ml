@@ -1434,6 +1434,13 @@ let (collect_one :
                             collect_pattern pat;
                             collect_term t1)) patterms;
                   collect_term t)
+             | FStar_Parser_AST.LetOperator (lets, body) ->
+                 (FStar_Compiler_List.iter
+                    (fun uu___4 ->
+                       match uu___4 with
+                       | (ident, pat, def) ->
+                           (collect_pattern pat; collect_term def)) lets;
+                  collect_term body)
              | FStar_Parser_AST.LetOpen (lid, t) ->
                  (add_to_parsing_data (P_open (true, lid)); collect_term t)
              | FStar_Parser_AST.LetOpenRecord (r, rty, e) ->
@@ -1450,11 +1457,11 @@ let (collect_one :
                        collect_term ret);
                   collect_term t2;
                   collect_term t3)
-             | FStar_Parser_AST.Match (t, ret_opt, bs) ->
+             | FStar_Parser_AST.Match (t, uu___3, ret_opt, bs) ->
                  (collect_term t;
                   (match ret_opt with
                    | FStar_Pervasives_Native.None -> ()
-                   | FStar_Pervasives_Native.Some (uu___5, ret, uu___6) ->
+                   | FStar_Pervasives_Native.Some (uu___6, ret, uu___7) ->
                        collect_term ret);
                   collect_branches bs)
              | FStar_Parser_AST.TryWith (t, bs) ->
@@ -1675,6 +1682,7 @@ let (collect_one :
                     (FStar_Compiler_List.iter collect_term))
              | FStar_Parser_AST.PatOp uu___3 -> ()
              | FStar_Parser_AST.PatConst uu___3 -> ()
+             | FStar_Parser_AST.PatVQuote t -> collect_term t
              | FStar_Parser_AST.PatApp (p, ps) ->
                  (collect_pattern p; collect_patterns ps)
              | FStar_Parser_AST.PatName uu___3 -> ()

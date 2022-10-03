@@ -45,6 +45,8 @@ module Env = FStar.TypeChecker.Env
 module SE = FStar.Syntax.Embeddings
 open FStar.SMTEncoding.Env
 
+module RC = FStar.Reflection.Constants
+
 (*---------------------------------------------------------------------------------*)
 (*  <Utilities> *)
 
@@ -614,7 +616,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
         if Env.debug env.tcenv <| Options.Other "SMTEncoding" then
             BU.print2 ">> Inspected (%s) ~> (%s)\n" (Print.term_to_string t0)
                                                     (Print.term_to_string tv);
-        let t = U.mk_app (RD.refl_constant_term RD.fstar_refl_pack_ln) [S.as_arg tv] in
+        let t = U.mk_app (RC.refl_constant_term RC.fstar_refl_pack_ln) [S.as_arg tv] in
         encode_term t env
 
       | Tm_meta(t, Meta_pattern _) ->
@@ -896,7 +898,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
 
       | Tm_uvar (uv, _) ->
         let ttm = mk_Term_uvar (Unionfind.uvar_id uv.ctx_uvar_head) in
-        let t_has_k, decls = encode_term_pred None uv.ctx_uvar_typ env ttm in //TODO: skip encoding this if it has already been encoded before
+        let t_has_k, decls = encode_term_pred None (U.ctx_uvar_typ uv) env ttm in //TODO: skip encoding this if it has already been encoded before
         let d =
             Util.mkAssume(t_has_k,
                           Some "Uvar typing",
@@ -1294,7 +1296,7 @@ and encode_pat (env:env_t) (pat:S.pat) : (env_t * pattern) =
             let tm, decls = encode_const c env in
             let _ = match decls with _::_ -> failwith "Unexpected encoding of constant pattern" | _ -> () in
             mkEq(scrutinee, tm)
-        | Pat_cons(f, args) ->
+        | Pat_cons(f, _, args) ->
             let is_f =
                 let tc_name = Env.typ_of_datacon env.tcenv f.fv_name.v in
                 match Env.datacons_of_typ env.tcenv tc_name with
@@ -1309,13 +1311,13 @@ and encode_pat (env:env_t) (pat:S.pat) : (env_t * pattern) =
 
     let rec mk_projections pat (scrutinee:term) =
         match pat.v with
-        | Pat_dot_term (x, _)
+        | Pat_dot_term _ -> []
         | Pat_var x
         | Pat_wild x -> [x, scrutinee]
 
         | Pat_constant _ -> []
 
-        | Pat_cons(f, args) ->
+        | Pat_cons(f, _, args) ->
             args
             |> List.mapi (fun i (arg, _) ->
                 let proj = primitive_projector_by_pos env.tcenv f.fv_name.v i in
@@ -1455,7 +1457,7 @@ and encode_formula (phi:typ) (env:env_t) : (term * decls_t)  = (* expects phi to
           encode_formula (U.unmeta phi) env
 
         | Tm_match(e, _, pats, _) ->
-           let t, decls = encode_match e pats mkFalse env encode_formula in
+           let t, decls = encode_match e pats mkUnreachable env encode_formula in
            t, decls
 
         | Tm_let((false, [{lbname=Inl x; lbtyp=t1; lbdef=e1}]), e2) ->

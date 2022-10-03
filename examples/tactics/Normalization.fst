@@ -33,6 +33,7 @@ let def_of (#t:Type) (x:t) : Tac term =
   let e = cur_env () in
   let t = quote x in
   match inspect t with
+  | Tv_UInst fv _
   | Tv_FVar fv -> begin
     let se = match lookup_typ e (inspect_fv fv) with
              | None -> fail "Not found..?"
@@ -98,7 +99,7 @@ let _ = assert (four'' == 4)
 
 let _ = assert True
             by (let t = def_of four'' in
-                let s = `(does_not_normalize #int (2 + 2)) in
+                let s = `(does_not_normalize u#0 #int (2 + 2)) in
                 if compare_term t s = FStar.Order.Eq
                 then ()
-                else fail "Test 4")
+                else fail ("Test 4: " ^ (term_to_string t) ^ " and " ^ (term_to_string s)))

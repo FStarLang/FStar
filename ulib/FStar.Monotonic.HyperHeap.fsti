@@ -35,6 +35,12 @@ val rid :eqtype
 
 val reveal (r:rid) :GTot (list (int * int))
 
+let rid_last_component (r:rid) :GTot int
+  = let open FStar.List.Tot in
+    let r = reveal r in
+    if length r = 0 then 0
+    else snd (hd r)
+
 val color (x:rid) :GTot int
 
 val rid_freeable (x:rid) : GTot bool
@@ -42,6 +48,8 @@ val rid_freeable (x:rid) : GTot bool
 type hmap = Map.t rid heap
 
 val root : r:rid{color r == 0 /\ not (rid_freeable r)}
+
+val root_last_component (_:unit) : Lemma (rid_last_component root == 0)
 
 let root_has_color_zero (u:unit) :Lemma (color root == 0) = ()
 

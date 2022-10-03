@@ -128,7 +128,10 @@ let (pred_nat :
   =
   fun s ->
     let zbranch =
-      let uu___ = pat (FStar_Syntax_Syntax.Pat_cons (znat_l, [])) in
+      let uu___ =
+        pat
+          (FStar_Syntax_Syntax.Pat_cons
+             (znat_l, FStar_Pervasives_Native.None, [])) in
       (uu___, FStar_Pervasives_Native.None, znat) in
     let sbranch =
       let uu___ =
@@ -140,7 +143,7 @@ let (pred_nat :
                   pat (FStar_Syntax_Syntax.Pat_var FStar_Tests_Util.x) in
                 (uu___5, false) in
               [uu___4] in
-            (snat_l, uu___3) in
+            (snat_l, FStar_Pervasives_Native.None, uu___3) in
           FStar_Syntax_Syntax.Pat_cons uu___2 in
         pat uu___1 in
       let uu___1 =
@@ -180,7 +183,10 @@ let (minus_nat :
           FStar_Syntax_Syntax.sort = snat_type
         } in
       let zbranch =
-        let uu___ = pat (FStar_Syntax_Syntax.Pat_cons (znat_l, [])) in
+        let uu___ =
+          pat
+            (FStar_Syntax_Syntax.Pat_cons
+               (znat_l, FStar_Pervasives_Native.None, [])) in
         let uu___1 = FStar_Tests_Util.nm x in
         (uu___, FStar_Pervasives_Native.None, uu___1) in
       let sbranch =
@@ -193,7 +199,7 @@ let (minus_nat :
                     pat (FStar_Syntax_Syntax.Pat_var FStar_Tests_Util.n) in
                   (uu___5, false) in
                 [uu___4] in
-              (snat_l, uu___3) in
+              (snat_l, FStar_Pervasives_Native.None, uu___3) in
             FStar_Syntax_Syntax.Pat_cons uu___2 in
           pat uu___1 in
         let uu___1 =

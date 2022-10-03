@@ -17,7 +17,7 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "d06e86e2ff7062a94d1c411ed865ccea"
+      "5c1970f870f87288163c1f6fdef255d0"
     ],
     [
       "Queens.no_clash_minus",
@@ -35,7 +35,7 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "c772df9521bb8f6aec8934237d00c4e9"
+      "4f8747ce788636b72e7ba8f710caf407"
     ],
     [
       "Queens.valid",
@@ -59,7 +59,7 @@
         "subterm_ordering_Prims.Cons", "typing_tok_Prims.T@tok"
       ],
       0,
-      "fcb616e141b0f84d3b834e6d771f9f07"
+      "a6db6fc49ba294df860bb0ac64801f62"
     ],
     [
       "Queens.pickn",
@@ -94,7 +94,7 @@
         "unit_typing", "well-founded-ordering-on-nat"
       ],
       0,
-      "4c9d9a5d112d931da5b1e0f749052c3d"
+      "c15a86c6c01806ca892bafa64040bbb6"
     ],
     [
       "Queens._queens",
@@ -163,7 +163,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "ea3d8cc49c4586a0e1954c39a238385f"
+      "119b057f9b006ac2fe69c65c20f1a3df"
     ],
     [
       "Queens.queens",
@@ -204,7 +204,7 @@
         "true_interp", "typing_Queens.flipOp", "typing_Queens.quitOp"
       ],
       0,
-      "89b2d7f548e8d0f1bfe4dbea4ea4cdb4"
+      "ca83a50ae410b393bcbb71dbf359e2af"
     ]
   ]
 ]

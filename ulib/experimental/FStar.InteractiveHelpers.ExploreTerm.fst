@@ -29,8 +29,8 @@ val comp_qualifier (c : comp) : Tac string
 #push-options "--ifuel 1"
 let comp_qualifier (c : comp) : Tac string =
   match inspect_comp c with
-  | C_Total _ _ -> "C_Total"
-  | C_GTotal _ _ -> "C_GTotal"
+  | C_Total _ _ _ -> "C_Total"
+  | C_GTotal _ _ _ -> "C_GTotal"
   | C_Lemma _ _ _ -> "C_Lemma"
   | C_Eff _ _ _ _ -> "C_Eff"
 #pop-options
@@ -118,13 +118,13 @@ let get_type_info (e:env) (t:term) : Tac (option type_info) =
 val get_total_or_gtotal_ret_type : comp -> Tot (option typ)
 let get_total_or_gtotal_ret_type c =
   match inspect_comp c with
-  | C_Total ret_ty _ | C_GTotal ret_ty _ -> Some ret_ty
+  | C_Total ret_ty _ _ | C_GTotal ret_ty _ _ -> Some ret_ty
   | _ -> None
 
 val get_comp_ret_type : comp -> Tot typ
 let get_comp_ret_type c =
   match inspect_comp c with
-  | C_Total ret_ty _ | C_GTotal ret_ty _
+  | C_Total ret_ty _ _ | C_GTotal ret_ty _ _
   | C_Eff _ _ ret_ty _ -> ret_ty
   | C_Lemma _ _ _ -> (`unit)
 
@@ -371,7 +371,7 @@ let flush_typ_or_comp dbg e tyc =
   in
   try begin match tyc with
   | TC_Typ ty pl n ->
-    let c = pack_comp (C_Total ty []) in
+    let c = pack_comp (C_Total ty u_unk []) in
     flush_comp pl n c
   | TC_Comp c pl n -> flush_comp pl n c
   end
@@ -493,7 +493,7 @@ let rec explore_term dbg dfs #a f x ge0 pl0 c0 t0 =
       let c1 = abs_update_opt_typ_or_comp br c0 ge1.env in
       explore_term dbg dfs f x0 ge1 pl1 c1 body
     | Tv_Arrow br c0 -> x0, Continue (* TODO: we might want to explore that *)
-    | Tv_Type () -> x0, Continue
+    | Tv_Type _ -> x0, Continue
     | Tv_Refine bv ref ->
       let bvv = inspect_bv bv in
       let x1, flag1 = explore_term dbg dfs f x0 ge0 pl1 None bvv.bv_sort in
@@ -554,7 +554,7 @@ and explore_pattern dbg dfs #a f x ge0 pat =
   print_dbg dbg ("[> explore_pattern:");
   match pat with
   | Pat_Constant _ -> ge0, x, Continue
-  | Pat_Cons fv patterns ->
+  | Pat_Cons fv us patterns ->
     let explore_pat ge_x_flag pat =
       let ge0, x, flag = ge_x_flag in
       let pat1, _ = pat in
@@ -568,10 +568,7 @@ and explore_pattern dbg dfs #a f x ge0 pat =
   | Pat_Var bv | Pat_Wild bv ->
     let ge1 = genv_push_bv ge0 bv false None in
     ge1, x, Continue
-  | Pat_Dot_Term bv t ->
-    (* TODO: I'm not sure what this is *)
-    let ge1 = genv_push_bv ge0 bv false None in
-    ge1, x, Continue
+  | Pat_Dot_Term _ -> ge0, x, Continue
 
 (*** Variables in a term *)
 /// Returns the list of free variables contained in a term

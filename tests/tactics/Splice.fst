@@ -53,7 +53,7 @@ let _ = assert (x == 42)
     Sg_Let true [pack_lb ({
       lb_fv = recursive_fv
     ; lb_us = []
-    ; lb_typ = mk_arr [n] (pack_comp (C_Total (`Type0) [`(10 - (`#(binder_to_term n)))]))
+    ; lb_typ = mk_arr [n] (pack_comp (C_Total (`Type0) (pack_universe (Uv_Succ (pack_universe Uv_Zero))) [`(10 - (`#(binder_to_term n)))]))
     ; lb_def = `(fun n -> if n>=10 then int else int * (`#recursive) (n + 1))
     })]
     )
@@ -63,5 +63,3 @@ let _ = assert (x == 42)
 let _ = assert_norm (recursive 10 ==          int );
         assert_norm (recursive  9 ==      int * int );
         assert_norm (recursive  8 == int * (int * int))
-
-

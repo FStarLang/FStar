@@ -151,10 +151,10 @@ of [f] to any amount of arguments (which need to be solved as further goals).
 The amount of arguments introduced is the least such that [f a_i] unifies
 with the goal's type. *)
 let apply (t : term) : Tac unit =
-    t_apply true false t
+    t_apply true false false t
 
 let apply_noinst (t : term) : Tac unit =
-    t_apply true true t
+    t_apply true true false t
 
 (** [apply_lemma l] will solve a goal of type [squash phi] when [l] is a
 Lemma ensuring [phi]. The arguments to [l] and its requires clause are
@@ -187,7 +187,7 @@ let apply_lemma_rw (t : term) : Tac unit =
 regardless of whether they appear free in further goals. See the
 explanation in [t_apply]. *)
 let apply_raw (t : term) : Tac unit =
-    t_apply false false t
+    t_apply false false false t
 
 (** Like [exact], but allows for the term [e] to have a type [t] only
 under some guard [g], adding the guard as a goal. *)
@@ -680,7 +680,7 @@ let rec apply_squash_or_lem d t =
        | _ ->
            fail "mapply: can't apply (1)"
        end
-    | C_Total rt _ ->
+    | C_Total rt _ _ ->
        begin match unsquash rt with
        (* If the function returns a squash, just apply it, since our goals are squashed *)
        | Some rt ->
@@ -837,7 +837,8 @@ let rec visit_tm (ff : term -> Tac term) (t : term) : Tac term =
   let tv = inspect_ln t in
   let tv' =
     match tv with
-    | Tv_FVar _ -> tv
+    | Tv_FVar _
+    | Tv_UInst _ _ -> tv
     | Tv_Var bv ->
         let bv = on_sort_bv (visit_tm ff) bv in
         Tv_Var bv
@@ -846,7 +847,7 @@ let rec visit_tm (ff : term -> Tac term) (t : term) : Tac term =
         let bv = on_sort_bv (visit_tm ff) bv in
         Tv_BVar bv
 
-    | Tv_Type () -> Tv_Type ()
+    | Tv_Type u -> Tv_Type u
     | Tv_Const c -> Tv_Const c
     | Tv_Uvar i u -> Tv_Uvar i u
     | Tv_Unknown -> Tv_Unknown
@@ -901,32 +902,30 @@ and visit_br (ff : term -> Tac term) (b:branch) : Tac branch =
 and visit_pat (ff : term -> Tac term) (p:pattern) : Tac pattern =
   match p with
   | Pat_Constant c -> p
-  | Pat_Cons fv l ->
+  | Pat_Cons fv us l ->
       let l = (map (fun(p,b) -> (visit_pat ff p, b)) l) in
-      Pat_Cons fv l
+      Pat_Cons fv us l
   | Pat_Var bv ->
       let bv = on_sort_bv (visit_tm ff) bv in
       Pat_Var bv
   | Pat_Wild bv ->
       let bv = on_sort_bv (visit_tm ff) bv in
       Pat_Wild bv
-  | Pat_Dot_Term bv term ->
-      let bv = on_sort_bv (visit_tm ff) bv in
-      let term = visit_tm ff term in
-      Pat_Dot_Term bv term
+  | Pat_Dot_Term eopt ->
+      Pat_Dot_Term (map_opt (visit_tm ff) eopt)
 and visit_comp (ff : term -> Tac term) (c : comp) : Tac comp =
   let cv = inspect_comp c in
   let cv' =
     match cv with
-    | C_Total ret decr ->
+    | C_Total ret uopt decr ->
         let ret = visit_tm ff ret in
         let decr = map (visit_tm ff) decr in
-        C_Total ret decr
+        C_Total ret uopt decr
 
-    | C_GTotal ret decr ->
+    | C_GTotal ret uopt decr ->
         let ret = visit_tm ff ret in
         let decr = map (visit_tm ff) decr in
-        C_GTotal ret decr
+        C_GTotal ret uopt decr
 
     | C_Lemma pre post pats ->
         let pre = visit_tm ff pre in
@@ -1020,3 +1019,16 @@ let rec mk_abs (args : list binder) (t : term) : Tac term (decreases args) =
   | a :: args' ->
     let t' = mk_abs args' t in
     pack (Tv_Abs a t')
+
+(** [string_to_term_with_lb [(id1, t1); ...; (idn, tn)] e s] parses
+[s] as a term in environment [e] augmented with bindings
+[id1, t1], ..., [idn, tn]. *)
+let string_to_term_with_lb
+  (letbindings: list (string * term))
+  (e: env) (t: string): Tac term
+  = let e, lb_bvs = fold_left (fun (e, lb_bvs) (i, v) ->
+        let e, bv = push_bv_dsenv e i in
+        e, (v,bv)::lb_bvs
+      ) (e, []) letbindings in
+    let t = string_to_term e t in
+    fold_left (fun t (i, bv) -> pack (Tv_Let false [] bv i t)) t lb_bvs

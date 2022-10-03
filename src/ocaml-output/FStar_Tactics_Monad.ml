@@ -50,6 +50,8 @@ let bind : 'a 'b . 'a tac -> ('a -> 'b tac) -> 'b tac =
                let uu___1 = t2 a1 in run uu___1 q
            | FStar_Tactics_Result.Failed (msg, q) ->
                FStar_Tactics_Result.Failed (msg, q))
+let op_let_Bang : 'a 'b . 'a tac -> ('a -> 'b tac) -> 'b tac =
+  fun t1 -> fun t2 -> bind t1 t2
 let (idtac : unit tac) = ret ()
 let (set : FStar_Tactics_Types.proofstate -> unit tac) =
   fun ps -> mk_tac (fun uu___ -> FStar_Tactics_Result.Success ((), ps))
@@ -517,28 +519,48 @@ let (new_uvar :
   Prims.string ->
     FStar_TypeChecker_Env.env ->
       FStar_Syntax_Syntax.typ ->
-        FStar_Compiler_Range.range ->
-          (FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.ctx_uvar) tac)
+        FStar_Syntax_Syntax.should_check_uvar FStar_Pervasives_Native.option
+          ->
+          FStar_Syntax_Syntax.ctx_uvar Prims.list ->
+            FStar_Compiler_Range.range ->
+              (FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.ctx_uvar) tac)
   =
   fun reason ->
     fun env ->
       fun typ ->
-        fun rng ->
-          let uu___ =
-            FStar_TypeChecker_Env.new_implicit_var_aux reason rng env typ
-              FStar_Syntax_Syntax.Allow_untyped FStar_Pervasives_Native.None in
-          match uu___ with
-          | (u, ctx_uvar, g_u) ->
-              let uu___1 =
-                add_implicits g_u.FStar_TypeChecker_Common.implicits in
-              bind uu___1
-                (fun uu___2 ->
-                   let uu___3 =
-                     let uu___4 =
-                       let uu___5 = FStar_Compiler_List.hd ctx_uvar in
-                       FStar_Pervasives_Native.fst uu___5 in
-                     (u, uu___4) in
-                   ret uu___3)
+        fun sc_opt ->
+          fun apply_uvar_deps ->
+            fun rng ->
+              let should_check =
+                match sc_opt with
+                | FStar_Pervasives_Native.Some sc -> sc
+                | uu___ ->
+                    ((let uu___2 =
+                        FStar_Compiler_Effect.op_Less_Bar
+                          (FStar_TypeChecker_Env.debug env)
+                          (FStar_Options.Other "2635") in
+                      if uu___2
+                      then
+                        let uu___3 = FStar_Syntax_Print.term_to_string typ in
+                        FStar_Compiler_Util.print1
+                          "Tactic introduced a strict uvar for %s\n" uu___3
+                      else ());
+                     FStar_Syntax_Syntax.Strict) in
+              let uu___ =
+                FStar_TypeChecker_Env.new_tac_implicit_var reason rng env typ
+                  should_check FStar_Pervasives_Native.None apply_uvar_deps in
+              match uu___ with
+              | (u, ctx_uvar, g_u) ->
+                  let uu___1 =
+                    add_implicits g_u.FStar_TypeChecker_Common.implicits in
+                  bind uu___1
+                    (fun uu___2 ->
+                       let uu___3 =
+                         let uu___4 =
+                           let uu___5 = FStar_Compiler_List.hd ctx_uvar in
+                           FStar_Pervasives_Native.fst uu___5 in
+                         (u, uu___4) in
+                       ret uu___3)
 let (mk_irrelevant_goal :
   Prims.string ->
     FStar_TypeChecker_Env.env ->
@@ -556,7 +578,10 @@ let (mk_irrelevant_goal :
               let typ =
                 let uu___ = env.FStar_TypeChecker_Env.universe_of env phi in
                 FStar_Syntax_Util.mk_squash uu___ phi in
-              let uu___ = new_uvar reason env typ rng in
+              let uu___ =
+                new_uvar reason env typ
+                  (FStar_Pervasives_Native.Some FStar_Syntax_Syntax.Strict)
+                  [] rng in
               bind uu___
                 (fun uu___1 ->
                    match uu___1 with
@@ -655,15 +680,16 @@ let (compress_implicits : unit tac) =
              (FStar_TypeChecker_Env.trivial_guard.FStar_TypeChecker_Common.univ_ineqs);
            FStar_TypeChecker_Common.implicits = imps
          } in
-       let g1 =
+       let imps1 =
          FStar_TypeChecker_Rel.resolve_implicits_tac
            ps.FStar_Tactics_Types.main_context g in
        let ps' =
+         let uu___ =
+           FStar_Compiler_List.map FStar_Pervasives_Native.fst imps1 in
          {
            FStar_Tactics_Types.main_context =
              (ps.FStar_Tactics_Types.main_context);
-           FStar_Tactics_Types.all_implicits =
-             (g1.FStar_TypeChecker_Common.implicits);
+           FStar_Tactics_Types.all_implicits = uu___;
            FStar_Tactics_Types.goals = (ps.FStar_Tactics_Types.goals);
            FStar_Tactics_Types.smt_goals = (ps.FStar_Tactics_Types.smt_goals);
            FStar_Tactics_Types.depth = (ps.FStar_Tactics_Types.depth);

@@ -91,6 +91,8 @@ let rec instrument_body (ii : ins_info) (t : term) : Tac term =
     end
   | _ -> begin
     let hd, args = collect_app t in
+    if length args > 8 then
+      fail ("too many args on call: " ^ term_to_string t);
     let argpack = mktuple_n ii.args in
     if term_is_fv hd ii.orig_name
     then begin

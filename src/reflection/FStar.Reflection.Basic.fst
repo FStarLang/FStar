@@ -15,7 +15,8 @@
 *)
 module FStar.Reflection.Basic
 
-open FStar open FStar.Compiler
+open FStar
+open FStar.Compiler
 open FStar.Pervasives
 open FStar.Compiler.Effect
 open FStar.Reflection.Data
@@ -157,9 +158,28 @@ let inspect_const (c:sconst) : vconst =
     | FStar.Const.Const_reflect l -> C_Reflect (Ident.path_of_lid l)
     | _ -> failwith (BU.format1 "unknown constant: %s" (Print.const_to_string c))
 
+let inspect_universe u =
+  match u with
+  | U_zero -> Uv_Zero
+  | U_succ u -> Uv_Succ u
+  | U_max us -> Uv_Max us
+  | U_bvar n -> Uv_BVar (Z.of_int_fs n)
+  | U_name i -> Uv_Name (Ident.string_of_id i, Ident.range_of_id i)
+  | U_unif u -> Uv_Unif u
+  | U_unknown -> Uv_Unk
+
+let pack_universe uv =
+  match uv with
+  | Uv_Zero -> U_zero
+  | Uv_Succ u -> U_succ u
+  | Uv_Max us -> U_max us
+  | Uv_BVar n -> U_bvar (Z.to_int_fs n)
+  | Uv_Name i -> U_name (Ident.mk_ident i)
+  | Uv_Unif u -> U_unif u
+  | Uv_Unk -> U_unknown
+
 let rec inspect_ln (t:term) : term_view =
     let t = U.unascribe t in
-    let t = U.un_uinst t in
     let t = U.unlazy_emb t in
     match t.n with
     | Tm_meta (t, _) ->
@@ -173,6 +193,13 @@ let rec inspect_ln (t:term) : term_view =
 
     | Tm_fvar fv ->
         Tv_FVar fv
+
+    | Tm_uinst (t, us) ->
+      let t = t |> SS.compress |> U.unascribe |> U.unlazy_emb in
+      (match t.n with
+       | Tm_fvar fv -> Tv_UInst (fv, us)
+       | _ -> failwith "Reflection::inspect_ln: uinst for a non-fvar node")
+        
 
     | Tm_app (hd, []) ->
         failwith "inspect_ln: empty arguments on Tm_app"
@@ -195,8 +222,8 @@ let rec inspect_ln (t:term) : term_view =
         in
         Tv_Abs (b, body)
 
-    | Tm_type _ ->
-        Tv_Type ()
+    | Tm_type u ->
+        Tv_Type u
 
     | Tm_arrow ([], k) ->
         failwith "inspect_ln: empty binders on arrow"
@@ -237,10 +264,10 @@ let rec inspect_ln (t:term) : term_view =
         let rec inspect_pat p =
             match p.v with
             | Pat_constant c -> Pat_Constant (inspect_const c)
-            | Pat_cons (fv, ps) -> Pat_Cons (fv, List.map (fun (p, b) -> inspect_pat p, b) ps)
+            | Pat_cons (fv, us_opt, ps) -> Pat_Cons (fv, us_opt, List.map (fun (p, b) -> inspect_pat p, b) ps)
             | Pat_var bv -> Pat_Var bv
             | Pat_wild bv -> Pat_Wild bv
-            | Pat_dot_term (bv, t) -> Pat_Dot_Term (bv, t)
+            | Pat_dot_term eopt -> Pat_Dot_Term eopt
         in
         let brs = List.map (function (pat, _, t) -> (inspect_pat pat, t)) brs in
         Tv_Match (t, ret_opt, brs)
@@ -266,9 +293,13 @@ let inspect_comp (c : comp) : comp_view =
         | _ -> failwith "Impossible!"
     in
     match c.n with
-    | Total (t, _) -> C_Total (t, [])
-    | GTotal (t, _) -> C_GTotal (t, [])
+    | Total (t, uopt) -> C_Total (t, BU.dflt U_unknown uopt, [])
+    | GTotal (t, uopt) -> C_GTotal (t, BU.dflt U_unknown uopt, [])
     | Comp ct -> begin
+        let uopt =
+          if List.length ct.comp_univs = 0
+          then U_unknown
+          else ct.comp_univs |> List.hd in
         if Ident.lid_equals ct.effect_name PC.effect_Lemma_lid then
             match ct.effect_args with
             | (pre,_)::(post,_)::(pats,_)::_ ->
@@ -277,23 +308,31 @@ let inspect_comp (c : comp) : comp_view =
                 failwith "inspect_comp: Lemma does not have enough arguments?"
         else if Ident.lid_equals ct.effect_name PC.effect_Tot_lid then
             let md = get_dec ct.flags in
-            C_Total (ct.result_typ, md)
+            C_Total (ct.result_typ, uopt, md)
         else if Ident.lid_equals ct.effect_name PC.effect_GTot_lid then
             let md = get_dec ct.flags in
-            C_GTotal (ct.result_typ, md)
+            C_GTotal (ct.result_typ, uopt, md)
         else
             let inspect_arg (a, q) = (a, inspect_aqual q) in
-            C_Eff ([], // ct.comp_univs,
+            C_Eff (ct.comp_univs,
                    Ident.path_of_lid ct.effect_name,
                    ct.result_typ,
                    List.map inspect_arg ct.effect_args)
       end
 
 let pack_comp (cv : comp_view) : comp =
+    let urefl_to_univs u =
+      if u = U_unknown
+      then []
+      else [u] in
+    let urefl_to_univ_opt u =
+      if u = U_unknown
+      then None
+      else Some u in
     match cv with
-    | C_Total (t, []) -> mk_Total t
-    | C_Total (t, l) ->
-        let ct = { comp_univs=[U_unknown]
+    | C_Total (t, u, []) -> mk_Total' t (urefl_to_univ_opt u)
+    | C_Total (t, u, l) ->
+        let ct = { comp_univs=urefl_to_univs u
                  ; effect_name=PC.effect_Tot_lid
                  ; result_typ = t
                  ; effect_args = []
@@ -301,9 +340,9 @@ let pack_comp (cv : comp_view) : comp =
         in
         S.mk_Comp ct
 
-    | C_GTotal (t, []) -> mk_GTotal t
-    | C_GTotal (t, l) ->
-        let ct = { comp_univs=[U_unknown]
+    | C_GTotal (t, u, []) -> mk_GTotal' t (urefl_to_univ_opt u)
+    | C_GTotal (t, u, l) ->
+        let ct = { comp_univs=urefl_to_univs u
                  ; effect_name=PC.effect_GTot_lid
                  ; result_typ = t
                  ; effect_args = []
@@ -321,7 +360,7 @@ let pack_comp (cv : comp_view) : comp =
 
     | C_Eff (us, ef, res, args) ->
         let pack_arg (a, q) = (a, pack_aqual q) in
-        let ct = { comp_univs  = [] //us
+        let ct = { comp_univs  = us
                  ; effect_name = Ident.lid_of_path ef Range.dummyRange
                  ; result_typ  = res
                  ; effect_args = List.map pack_arg args
@@ -351,6 +390,9 @@ let pack_ln (tv:term_view) : term =
     | Tv_FVar fv ->
         S.fv_to_tm fv
 
+    | Tv_UInst (fv, us) ->
+      mk_Tm_uinst (S.fv_to_tm fv) us
+
     | Tv_App (l, (r, q)) ->
         let q' = pack_aqual q in
         U.mk_app l [(r, q')]
@@ -361,8 +403,8 @@ let pack_ln (tv:term_view) : term =
     | Tv_Arrow (b, c) ->
         mk (Tm_arrow ([b], c)) c.pos
 
-    | Tv_Type () ->
-        U.ktype
+    | Tv_Type u ->
+        mk (Tm_type u) Range.dummyRange
 
     | Tv_Refine (bv, t) ->
         mk (Tm_refine (bv, t)) t.pos
@@ -386,10 +428,10 @@ let pack_ln (tv:term_view) : term =
         let rec pack_pat p : S.pat =
             match p with
             | Pat_Constant c -> wrap <| Pat_constant (pack_const c)
-            | Pat_Cons (fv, ps) -> wrap <| Pat_cons (fv, List.map (fun (p, b) -> pack_pat p, b) ps)
+            | Pat_Cons (fv, us_opt, ps) -> wrap <| Pat_cons (fv, us_opt, List.map (fun (p, b) -> pack_pat p, b) ps)
             | Pat_Var  bv -> wrap <| Pat_var bv
             | Pat_Wild bv -> wrap <| Pat_wild bv
-            | Pat_Dot_Term (bv, t) -> wrap <| Pat_dot_term (bv, t)
+            | Pat_Dot_Term eopt -> wrap <| Pat_dot_term eopt
         in
         let brs = List.map (function (pat, t) -> (pack_pat pat, None, t)) brs in
         S.mk (Tm_match (t, ret_opt, brs, None)) Range.dummyRange
@@ -575,6 +617,12 @@ let inspect_sigelt (se : sigelt) : sigelt_view =
         Unk
 
 let pack_sigelt (sv:sigelt_view) : sigelt =
+    let check_lid lid =
+        if List.length (Ident.path_of_lid lid) <= 1
+	then failwith ("pack_sigelt: invalid long identifier \""
+	              ^ Ident.string_of_lid lid
+		      ^ "\" (did you forget a module path?)")
+    in
     match sv with
     | Sg_Let (r, lbs) ->
         let pack_letbinding (lb:letbinding) =
@@ -584,6 +632,7 @@ let pack_sigelt (sv:sigelt_view) : sigelt =
                       | _ -> failwith
                               "impossible: pack_sigelt: bv in toplevel let binding"
             in
+            check_lid lid;
             let s = SS.univ_var_closing us in
             let typ = SS.subst s typ in
             let def = SS.subst s def in
@@ -597,6 +646,7 @@ let pack_sigelt (sv:sigelt_view) : sigelt =
 
     | Sg_Inductive (nm, us_names, param_bs, ty, ctors) ->
       let ind_lid = Ident.lid_of_path nm Range.dummyRange in
+      check_lid ind_lid;
       let s = SS.univ_var_closing us_names in
       let nparam = List.length param_bs in
       let pack_ctor (c:ctor) : sigelt =
@@ -625,6 +675,7 @@ let pack_sigelt (sv:sigelt_view) : sigelt =
 
     | Sg_Val (nm, us_names, ty) ->
         let val_lid = Ident.lid_of_path nm Range.dummyRange in
+        check_lid val_lid;
         let typ = SS.close_univ_vars us_names ty in
         mk_sigelt <| Sig_declare_typ (val_lid, us_names, typ)
 

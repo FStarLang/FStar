@@ -298,20 +298,28 @@ let subst_binders' s bs =
         else subst_binder' (shift_subst' i s) b)
 let subst_binders s (bs:binders) = subst_binders' ([s], NoUseRange) bs
 
+
 // NOTE: We don't descend into `imp` here since one cannot *apply* a
 // `Meta t` argument, so this would always be a no-op
 let subst_arg' s (t, imp) = (subst' s t, imp)
 
 let subst_args' s = List.map (subst_arg' s)
+
+let subst_univs_opt sub us_opt = 
+    match us_opt with
+    | None -> None
+    | Some us -> Some (List.map (subst_univ sub) us)
+
 let subst_pat' s p : (pat * int) =
     let rec aux n p : (pat * int) = match p.v with
       | Pat_constant _ -> p, n
 
-      | Pat_cons(fv, pats) ->
+      | Pat_cons(fv, us_opt, pats) ->
+        let us_opt = subst_univs_opt (fst (shift_subst' n s)) us_opt in
         let pats, n = pats |> List.fold_left (fun (pats, n) (p, imp) ->
             let p, m = aux n p in
             ((p,imp)::pats, m)) ([], n) in
-        {p with v=Pat_cons(fv, List.rev pats)}, n
+        {p with v=Pat_cons(fv, us_opt, List.rev pats)}, n
 
       | Pat_var x ->
         let s = shift_subst' n s in
@@ -323,11 +331,10 @@ let subst_pat' s p : (pat * int) =
         let x = {x with sort=subst' s x.sort} in
         {p with v=Pat_wild x}, n + 1 //these may be in scope in the inferred types of other terms, so shift the index
 
-      | Pat_dot_term(x, t0) ->
+      | Pat_dot_term eopt ->
         let s = shift_subst' n s in
-        let x = {x with sort=subst' s x.sort} in
-        let t0 = subst' s t0 in
-        {p with v=Pat_dot_term(x, t0)}, n //these are not in scope, so don't shift the index
+        let eopt = U.map_option (subst' s) eopt in
+        {p with v=Pat_dot_term eopt}, n
   in aux 0 p
 
 let push_subst_lcomp s lopt = match lopt with
@@ -531,6 +538,10 @@ let subst_bqual s imp = subst_bqual' ([s], NoUseRange) imp
 let subst_aqual s imp = subst_aqual' ([s], NoUseRange) imp
 let subst_ascription s (asc:ascription) = subst_ascription' ([s], NoUseRange) asc
 let subst_decreasing_order s dec = subst_dec_order' ([s], NoUseRange) dec
+let subst_residual_comp s rc =
+  match rc.residual_typ with
+  | None -> rc
+  | Some t -> {rc with residual_typ=subst s t |> Some}
 let closing_subst (bs:binders) =
     List.fold_right (fun b (subst, n)  -> (NM(b.binder_bv, n)::subst, n+1)) bs ([], 0) |> fst
 let open_binders' bs =
@@ -563,11 +574,12 @@ let open_pat (p:pat) : pat * subst_t =
         match p.v with
         | Pat_constant _ -> p, sub
 
-        | Pat_cons(fv, pats) ->
+        | Pat_cons(fv, us_opt, pats) ->
+            let us_opt = subst_univs_opt [sub] us_opt in
             let pats, sub = pats |> List.fold_left (fun (pats, sub) (p, imp) ->
                 let p, sub = open_pat_aux sub p in
                 ((p,imp)::pats, sub)) ([], sub) in
-            {p with v=Pat_cons(fv, List.rev pats)}, sub
+            {p with v=Pat_cons(fv, us_opt, List.rev pats)}, sub
 
         | Pat_var x ->
             let x' = {freshen_bv x with sort=subst sub x.sort} in
@@ -579,10 +591,9 @@ let open_pat (p:pat) : pat * subst_t =
             let sub = DB(0, x')::shift_subst 1 sub in
             {p with v=Pat_wild x'}, sub
 
-        | Pat_dot_term(x, t0) ->
-            let x = {x with sort=subst sub x.sort} in
-            let t0 = subst sub t0 in
-            {p with v=Pat_dot_term(x, t0)}, sub //these are not in scope, so don't shift the index
+        | Pat_dot_term eopt ->
+            let eopt = U.map_option (subst sub) eopt in
+            {p with v=Pat_dot_term eopt}, sub
     in
     open_pat_aux [] p
 
@@ -617,11 +628,12 @@ let close_pat p =
     let rec aux sub p = match p.v with
        | Pat_constant _ -> p, sub
 
-       | Pat_cons(fv, pats) ->
+       | Pat_cons(fv, us_opt, pats) ->
+         let us_opt = subst_univs_opt [sub] us_opt in         
          let pats, sub = pats |> List.fold_left (fun (pats, sub) (p, imp) ->
              let p, sub = aux sub p in
              ((p,imp)::pats, sub)) ([], sub) in
-         {p with v=Pat_cons(fv, List.rev pats)}, sub
+         {p with v=Pat_cons(fv, us_opt, List.rev pats)}, sub
 
        | Pat_var x ->
          let x = {x with sort=subst sub x.sort} in
@@ -633,10 +645,9 @@ let close_pat p =
          let sub = NM(x, 0)::shift_subst 1 sub in
          {p with v=Pat_wild x}, sub
 
-       | Pat_dot_term(x, t0) ->
-         let x = {x with sort=subst sub x.sort} in
-         let t0 = subst sub t0 in
-         {p with v=Pat_dot_term(x, t0)}, sub in //these are not in scope, so don't shift the index
+       | Pat_dot_term eopt ->
+         let eopt = U.map_option (subst sub) eopt in
+         {p with v=Pat_dot_term eopt}, sub in
     aux [] p
 
 let close_branch (p, wopt, e) =
@@ -858,10 +869,15 @@ let rec deep_compress (t:term) : term =
           {p with v=Pat_var (elim_bv x)}
         | Pat_wild x ->
           {p with v=Pat_wild (elim_bv x)}
-        | Pat_dot_term(x, t0) ->
-          {p with v=Pat_dot_term(elim_bv x, deep_compress t0)}
-        | Pat_cons (fv, pats) ->
-          {p with v=Pat_cons(fv, List.map (fun (x, b) -> elim_pat x, b) pats)}
+        | Pat_dot_term eopt ->
+          {p with v=Pat_dot_term (U.map_option deep_compress eopt)}
+        | Pat_cons (fv, us_opt, pats) ->
+          let us_opt =
+            match us_opt with
+            | None -> None
+            | Some us -> Some (List.map deep_compress_univ us)
+          in
+          {p with v=Pat_cons(fv, us_opt, List.map (fun (x, b) -> elim_pat x, b) pats)}
 
         (* Nothing to inline *)
         | Pat_constant _ ->

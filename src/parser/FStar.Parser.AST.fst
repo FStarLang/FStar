@@ -56,12 +56,14 @@ type term' =
   | Abs       of list pattern * term
   | App       of term * term * imp                    (* aqual marks an explicitly provided implicit parameter *)
   | Let       of let_qualifier * list (option attributes_ * (pattern * term)) * term
+  | LetOperator   of list (ident * pattern * term) * term
   | LetOpen   of lid * term
   | LetOpenRecord of term * term * term
   | Seq       of term * term
   | Bind      of ident * term * term
   | If        of term * option match_returns_annotation * term * term
-  | Match     of term * option match_returns_annotation * list branch
+  | Match     of term * option ident (* is this a regular match or a match operator (i.e. [match*]) *)
+                      * option match_returns_annotation * list branch
   | TryWith   of term * list branch
   | Ascribed  of term * term * option term * bool  (* bool says whether equality ascription $: *)
   | Record    of option term * list (lid * term)
@@ -129,6 +131,7 @@ and pattern' =
   | PatAscribed of pattern * (term * option term)
   | PatOr       of list pattern
   | PatOp       of ident
+  | PatVQuote   of term (* [`%foo], transformed into "X.Y.Z.foo" by the desugarer *)
 and pattern = {pat:pattern'; prange:range}
 
 and branch = (pattern * option term * term)
@@ -282,7 +285,7 @@ let un_curry_abs ps body = match body.tm with
 let mk_function branches r1 r2 =
   let x = Ident.gen r1 in
   mk_term (Abs([mk_pattern (PatVar(x,None,[])) r1],
-               mk_term (Match(mk_term (Var(lid_of_ids [x])) r1 Expr, None, branches)) r2 Expr))
+               mk_term (Match(mk_term (Var(lid_of_ids [x])) r1 Expr, None, None, branches)) r2 Expr))
     r2 Expr
 let un_function p tm = match p.pat, tm.tm with
     | PatVar _, Abs(pats, body) -> Some (mk_pattern (PatApp(p, pats)) p.prange, body)
@@ -415,7 +418,7 @@ let mkRefinedPattern pat t should_bind_pat phi_opt t_range range =
                             (mk_pattern (PatWild (None, [])) phi.range, None,
                              mk_term (Name (lid_of_path ["False"] phi.range)) phi.range Formula)
                         in
-                        mk_term (Match (x_var, None, [pat_branch ; otherwise_branch])) phi.range Formula
+                        mk_term (Match (x_var, None, None, [pat_branch ; otherwise_branch])) phi.range Formula
                     in
                     mk_term (Refine(mk_binder (Annotated(x, t)) t_range Type_level None, phi)) range Type_level
                 end
@@ -477,6 +480,12 @@ let as_frag (ds:list decl) : inputFragment =
       ) ds;
       Inr ds
 
+// TODO: Move to something like FStar.Compiler.Util
+let strip_prefix (prefix s: string): option string
+  = if starts_with s prefix
+    then Some (substring_from s (String.length prefix))
+    else None
+
 let compile_op arity s r =
     let name_of_char = function
       |'&' -> "Amp"
@@ -511,10 +520,68 @@ let compile_op arity s r =
     | ".()" -> "op_Array_Access"
     | ".[||]" -> "op_Brack_Lens_Access"
     | ".(||)" -> "op_Lens_Access"
-    | _ -> "op_"^ (String.concat "_" (List.map name_of_char (String.list_of_string s)))
+    | _ -> // handle let operators (i.e. [let?] or [and*])
+          let prefix, s = if starts_with s "let" || starts_with s "and"
+                          then substring s 0 3 ^ "_", substring_from s 3
+                          else "", s in
+          "op_" ^ prefix ^ String.concat "_" (List.map name_of_char (String.list_of_string s))
 
 let compile_op' s r =
   compile_op (-1) s r
+
+let string_to_op s =
+  let name_of_op = function
+    | "Amp" ->  Some ("&", None)
+    | "At" -> Some ("@", None)
+    | "Plus" -> Some ("+", None)
+    | "Minus" -> Some ("-", None)
+    | "Subtraction" -> Some ("-", Some 2)
+    | "Tilde" -> Some ("~", None)
+    | "Slash" -> Some ("/", None)
+    | "Backslash" -> Some ("\\", None)
+    | "Less" -> Some ("<", None)
+    | "Equals" -> Some ("=", None)
+    | "Greater" -> Some (">", None)
+    | "Underscore" -> Some ("_", None)
+    | "Bar" -> Some ("|", None)
+    | "Bang" -> Some ("!", None)
+    | "Hat" -> Some ("^", None)
+    | "Percent" -> Some ("%", None)
+    | "Star" -> Some ("*", None)
+    | "Question" -> Some ("?", None)
+    | "Colon" -> Some (":", None)
+    | "Dollar" -> Some ("$", None)
+    | "Dot" -> Some (".", None)
+    | "let" | "and" -> Some (s, None)
+    | _ -> None
+  in
+  match s with
+  | "op_String_Assignment" -> Some (".[]<-", None)
+  | "op_Array_Assignment" -> Some (".()<-", None)
+  | "op_Brack_Lens_Assignment" -> Some (".[||]<-", None)
+  | "op_Lens_Assignment" -> Some (".(||)<-", None)
+  | "op_String_Access" -> Some (".[]", None)
+  | "op_Array_Access" -> Some (".()", None)
+  | "op_Brack_Lens_Access" -> Some (".[||]", None)
+  | "op_Lens_Access" -> Some (".(||)", None)
+  | _ ->
+    if starts_with s "op_"
+    then let s = split (substring_from s (String.length "op_")) "_" in
+         match s with
+         | [op] -> name_of_op op
+         | _ ->
+           let maybeop =
+             List.fold_left (fun acc x -> match acc with
+                                          | None -> None
+                                          | Some acc ->
+                                              match x with
+                                              | Some (op, _) -> Some (acc ^ op)
+                                              | None -> None)
+                            (Some "")
+                            (List.map name_of_op s)
+           in
+           map_opt maybeop (fun o -> (o, None))
+    else None
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 // Printing ASTs, mostly for debugging
@@ -605,8 +672,8 @@ let rec term_to_string (x:term) = match x.tm with
       (t2|> term_to_string)
       (t3|> term_to_string)
 
-  | Match(t, ret_opt,  branches) -> try_or_match_to_string x t branches ret_opt
-  | TryWith (t, branches) -> try_or_match_to_string x t branches None
+  | Match(t, op_opt, ret_opt, branches) -> try_or_match_to_string x t branches op_opt ret_opt
+  | TryWith (t, branches) -> try_or_match_to_string x t branches None None
 
   | Ascribed(t1, t2, None, flag) ->
     let s = if flag then "$:" else "<:" in
@@ -752,14 +819,15 @@ let rec term_to_string (x:term) = match x.tm with
 and binders_to_string sep bs =
     List.map binder_to_string bs |> String.concat sep
 
-and try_or_match_to_string (x:term) scrutinee branches ret_opt =
+and try_or_match_to_string (x:term) scrutinee branches op_opt ret_opt =
   let s =
     match x.tm with
     | Match _ -> "match"
     | TryWith _ -> "try"
     | _ -> failwith "impossible" in
-  Util.format4 "%s %s %swith %s"
+  Util.format5 "%s%s %s %swith %s"
     s
+    (match op_opt with | Some op -> string_of_id op | None -> "")
     (scrutinee|> term_to_string)
     (match ret_opt with
      | None -> ""
@@ -804,6 +872,7 @@ and pat_to_string x = match x.pat with
   | PatWild (None, attrs) -> attr_list_to_string attrs ^ "_"
   | PatWild (_, attrs) -> "#" ^ (attr_list_to_string attrs) ^ "_" 
   | PatConst c -> C.const_to_string c
+  | PatVQuote t -> Util.format1 "`%%%s" (term_to_string t)
   | PatApp(p, ps) -> Util.format2 "(%s %s)" (p |> pat_to_string) (to_string_l " " pat_to_string ps)
   | PatTvar (i, aq, attrs)
   | PatVar (i,  aq, attrs) -> Util.format3 "%s%s%s"

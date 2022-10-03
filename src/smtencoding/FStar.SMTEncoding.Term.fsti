@@ -201,6 +201,7 @@ val fvs_subset_of: fvs -> fvs -> bool
 val free_variables: term -> fvs
 val mkTrue :  (Range.range -> term)
 val mkFalse : (Range.range -> term)
+val mkUnreachable : term
 val mkInteger : string -> Range.range -> term
 val mkInteger': int -> Range.range -> term
 val mkReal: string -> Range.range -> term
@@ -281,6 +282,7 @@ val mk_Term_unit:    term
 
 val mk_PreType:      term -> term
 val mk_Valid:        term -> term
+val mk_subtype_of_unit: term -> term
 val mk_HasType:      term -> term -> term
 val mk_HasTypeZ:     term -> term -> term
 val mk_IsTotFun:     term -> term

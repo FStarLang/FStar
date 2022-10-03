@@ -39,6 +39,8 @@ val ret : 'a -> tac 'a
 (* Monadic bind *)
 val bind : tac 'a -> ('a -> tac 'b) -> tac 'b
 
+val (let!) (t:tac 'a) (k:('a -> tac 'b)) : tac 'b
+
 (* Get current proofstate *)
 val get : tac proofstate
 
@@ -103,7 +105,7 @@ val add_implicits : implicits -> tac unit
 
 (* Create a new uvar, and keep track of it in the proofstate to
  * ensure we solve it. *)
-val new_uvar : string -> env -> typ -> Range.range -> tac (term * ctx_uvar)
+val new_uvar : string -> env -> typ -> option should_check_uvar -> list ctx_uvar -> Range.range -> tac (term * ctx_uvar)
 
 (* Create a squashed goal from a given formula *)
 val mk_irrelevant_goal : string -> env -> typ -> Range.range -> O.optionstate -> string -> tac goal

@@ -2226,22 +2226,9 @@ let (mk_discriminator_and_indexed_projectors :
                                                        if b && (j < ntps)
                                                        then
                                                          let uu___6 =
-                                                           let uu___7 =
-                                                             let uu___8 =
-                                                               let uu___9 =
-                                                                 let uu___10
-                                                                   =
-                                                                   FStar_Ident.string_of_id
-                                                                    x.FStar_Syntax_Syntax.ppname in
-                                                                 FStar_Syntax_Syntax.gen_bv
-                                                                   uu___10
-                                                                   FStar_Pervasives_Native.None
-                                                                   FStar_Syntax_Syntax.tun in
-                                                               (uu___9,
-                                                                 FStar_Syntax_Syntax.tun) in
-                                                             FStar_Syntax_Syntax.Pat_dot_term
-                                                               uu___8 in
-                                                           pos uu___7 in
+                                                           pos
+                                                             (FStar_Syntax_Syntax.Pat_dot_term
+                                                                FStar_Pervasives_Native.None) in
                                                          (uu___6, b)
                                                        else
                                                          (let uu___7 =
@@ -2268,7 +2255,9 @@ let (mk_discriminator_and_indexed_projectors :
                                                    FStar_Syntax_Syntax.delta_constant
                                                    (FStar_Pervasives_Native.Some
                                                       fvq) in
-                                               (uu___7, arg_pats) in
+                                               (uu___7,
+                                                 FStar_Pervasives_Native.None,
+                                                 arg_pats) in
                                              FStar_Syntax_Syntax.Pat_cons
                                                uu___6 in
                                            pos uu___5 in
@@ -2570,26 +2559,9 @@ let (mk_discriminator_and_indexed_projectors :
                                                                     (
                                                                     let uu___9
                                                                     =
-                                                                    let uu___10
-                                                                    =
-                                                                    let uu___11
-                                                                    =
-                                                                    let uu___12
-                                                                    =
-                                                                    let uu___13
-                                                                    =
-                                                                    FStar_Ident.string_of_id
-                                                                    x1.FStar_Syntax_Syntax.ppname in
-                                                                    FStar_Syntax_Syntax.gen_bv
-                                                                    uu___13
-                                                                    FStar_Pervasives_Native.None
-                                                                    FStar_Syntax_Syntax.tun in
-                                                                    (uu___12,
-                                                                    FStar_Syntax_Syntax.tun) in
-                                                                    FStar_Syntax_Syntax.Pat_dot_term
-                                                                    uu___11 in
                                                                     pos
-                                                                    uu___10 in
+                                                                    (FStar_Syntax_Syntax.Pat_dot_term
+                                                                    FStar_Pervasives_Native.None) in
                                                                     (uu___9,
                                                                     b))
                                                                   else
@@ -2624,7 +2596,9 @@ let (mk_discriminator_and_indexed_projectors :
                                                             FStar_Syntax_Syntax.delta_constant
                                                             (FStar_Pervasives_Native.Some
                                                                fvq) in
-                                                        (uu___9, arg_pats) in
+                                                        (uu___9,
+                                                          FStar_Pervasives_Native.None,
+                                                          arg_pats) in
                                                       FStar_Syntax_Syntax.Pat_cons
                                                         uu___8 in
                                                     pos uu___7 in

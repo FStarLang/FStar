@@ -30,10 +30,6 @@ open FStar.Const
 module O = FStar.Options
 open FStar.VConfig
 
-// JP: all these types are defined twice and every change has to be performed
-// twice (because of the .fs). TODO: move the type definitions into a standalone
-// fs without fsi, and move the helpers into syntaxhelpers.fs / syntaxhelpers.fsi
-
 (* Objects with metadata *)
 // IN F*: [@@ PpxDerivingYoJson; PpxDerivingShow ]
 type withinfo_t 'a = {
@@ -118,7 +114,8 @@ type should_check_uvar =
   | Allow_unresolved      (* Escape hatch for uvars in logical guards that are sometimes left unresolved *)
   | Allow_untyped         (* Escape hatch to not re-typecheck guards in WPs and types of pattern bound vars *)
   | Allow_ghost           (* Escape hatch used for dot patterns *)
-  | Strict                (* Everything else is strict *)
+  | Strict                (* Strict uvar that must be typechecked, using fastpath is ok *)
+  | Strict_no_fastpath    (* Strict uvar that must be typechecked without fastpath *)
 
 type term' =
   | Tm_bvar       of bv                //bound variable, referenced by de Bruijn index
@@ -143,20 +140,34 @@ type term' =
   | Tm_quoted     of term * quoteinfo                            (* A quoted term, in one of its many variants *)
   | Tm_unknown                                                   (* only present initially while desugaring a term *)
 and ctx_uvar = {                                                 (* (G |- ?u : t), a uvar introduced in context G at type t *)
-    ctx_uvar_head:uvar;                                          (* ?u *)
-    ctx_uvar_gamma:gamma;                                        (* G: a cons list of bindings (most recent at the head) *)
-    ctx_uvar_binders:binders;                                    (* All the Tm_name bindings in G, a snoc list (most recent at the tail) *)
-    ctx_uvar_typ:typ;                                            (* t *)
-    ctx_uvar_reason:string;
-    ctx_uvar_should_check:should_check_uvar;
-    ctx_uvar_range:Range.range;
-    ctx_uvar_meta: option ctx_uvar_meta_t;
+  ctx_uvar_head:uvar;                                          (* ?u *)
+  ctx_uvar_gamma:gamma;                                        (* G: a cons list of bindings (most recent at the head) *)
+  ctx_uvar_binders:binders;                                    (* All the Tm_name bindings in G, a snoc list (most recent at the tail) *)
+  ctx_uvar_reason:string;
+  ctx_uvar_range:Range.range;
+  ctx_uvar_meta: option ctx_uvar_meta_t;
+
+  //
+  // If this uvar ?u:t is created by the apply tactic,
+  //   then ctx_uvar_apply_tac_prefix keeps the uvars created as part of same apply call,
+  //   that are free in t
+  //
+  // E.g. consider apply creating two uvars for the binders in (x:int -> y:int{x == 2} -> Tot int)
+  // Then ctx_uvar_apply_tac_prefix for the second uvar will contain the first uvar
+  //
+  ctx_uvar_apply_tac_prefix: list ctx_uvar;
 }
 and ctx_uvar_meta_t =
   | Ctx_uvar_meta_tac of dyn * term (* the dyn is an FStar.TypeChecker.Env.env *)
   | Ctx_uvar_meta_attr of term (* An attribute associated with an implicit argument using the #[@@...] notation *)
 and ctx_uvar_and_subst = ctx_uvar * subst_ts
-and uvar = Unionfind.p_uvar (option term) * version * Range.range
+
+and uvar_decoration = {
+  uvar_decoration_typ:typ;
+  uvar_decoration_should_check:should_check_uvar;
+}
+
+and uvar = Unionfind.p_uvar (option term * uvar_decoration) * version * Range.range
 and uvars = set ctx_uvar
 and match_returns_ascription = binder * ascription               (* as x returns C|t *)
 and branch = pat * option term * term                           (* optional when clause in each branch *)
@@ -164,10 +175,11 @@ and ascription = either term comp * option term * bool        (* e <: t [by tac]
                                                                  (* the bool says whether the ascription is an equality ascription, i.e. $: *)
 and pat' =
   | Pat_constant of sconst
-  | Pat_cons     of fv * list (pat * bool)                      (* flag marks an explicitly provided implicit *)
+  | Pat_cons     of fv * option universes * list (pat * bool)    (* flag marks an explicitly provided implicit *)
   | Pat_var      of bv                                           (* a pattern bound variable (linear in a pattern) *)
   | Pat_wild     of bv                                           (* need stable names for even the wild patterns *)
-  | Pat_dot_term of bv * term                                    (* dot patterns: determined by other elements in the pattern and type *)
+  | Pat_dot_term of option term                                  (* dot patterns: determined by other elements in the pattern *)
+                                                                 (* the option term is the optionally resolved pat dot term *)
 and letbinding = {  //let f : forall u1..un. M t = e
     lbname :lbname;          //f
     lbunivs:list univ_name; //u1..un
@@ -311,6 +323,8 @@ and lazy_kind =
   | Lazy_uvar
   | Lazy_letbinding
   | Lazy_embedding of emb_typ * Thunk.t term
+  | Lazy_universe
+  | Lazy_universe_uvar
 and binding =
   | Binding_var      of bv
   | Binding_lid      of lident * (univ_names * typ)

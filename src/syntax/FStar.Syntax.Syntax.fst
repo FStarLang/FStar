@@ -204,7 +204,7 @@ let pat_bvs (p:pat) : list bv =
         | Pat_constant _ -> b
         | Pat_wild x
         | Pat_var x -> x::b
-        | Pat_cons(_, pats) -> List.fold_left (fun b (p, _) -> aux b p) b pats
+        | Pat_cons(_, _, pats) -> List.fold_left (fun b (p, _) -> aux b p) b pats
     in
   List.rev <| aux [] p
 
@@ -255,20 +255,23 @@ let has_simple_attribute (l: list term) s =
         false
   ) l
 
-// Compares the SHAPE of the patterns, *ignoring bound variables*
+// Compares the SHAPE of the patterns, *ignoring bound variables and universes*
 let rec eq_pat (p1 : pat) (p2 : pat) : bool =
     match p1.v, p2.v with
     | Pat_constant c1, Pat_constant c2 -> eq_const c1 c2
-    | Pat_cons (fv1, as1), Pat_cons (fv2, as2) ->
+    | Pat_cons (fv1, us1, as1), Pat_cons (fv2, us2, as2) ->
         if fv_eq fv1 fv2
-        then begin assert(List.length as1 = List.length as2);
-                   List.zip as1 as2 |>
-                   List.for_all (fun ((p1, b1), (p2, b2)) -> b1 = b2 && eq_pat p1 p2)
-             end
+        && List.length as1 = List.length as2
+        then List.forall2 (fun (p1, b1) (p2, b2) -> b1 = b2 && eq_pat p1 p2) as1 as2
+          && (match us1, us2 with
+              | None, None -> true
+              | Some us1, Some us2 -> 
+                List.length us1 = List.length us2
+              | _ -> false)
         else false
     | Pat_var _, Pat_var _ -> true
     | Pat_wild _, Pat_wild _ -> true
-    | Pat_dot_term (bv1, t1), Pat_dot_term (bv2, t2) -> true //&& term_eq t1 t2
+    | Pat_dot_term _, Pat_dot_term _ -> true
     | _, _ -> false
 
 ///////////////////////////////////////////////////////////////////////

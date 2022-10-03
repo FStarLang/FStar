@@ -111,9 +111,9 @@ let print_binders_info (full : bool) (e:env) : Tac unit =
 
 let acomp_to_string (c:comp) : Tot string =
   match inspect_comp c with
-  | C_Total ret decr ->
+  | C_Total ret _ decr ->
     "C_Total (" ^ term_to_string ret ^ ")"
-  | C_GTotal ret decr ->
+  | C_GTotal ret _ decr ->
     "C_GTotal (" ^ term_to_string ret ^ ")"
   | C_Lemma pre post patterns ->
     "C_Lemma (" ^ term_to_string pre ^ ") (" ^ term_to_string post ^ ")"
@@ -398,14 +398,14 @@ let norm_apply_subst_in_comp e c subst =
     | Q_Meta t -> Q_Meta (subst t)
   in
   match inspect_comp c with
-  | C_Total ret decr ->
+  | C_Total ret uopt decr ->
     let ret = subst ret in
     let decr = map subst decr in
-    pack_comp (C_Total ret decr)
-  | C_GTotal ret decr ->
+    pack_comp (C_Total ret uopt decr)
+  | C_GTotal ret uopt decr ->
     let ret = subst ret in
     let decr = map subst decr in
-    pack_comp (C_GTotal ret decr)
+    pack_comp (C_GTotal ret uopt decr)
   | C_Lemma pre post patterns ->
     let pre = subst pre in
     let post = subst post in
@@ -457,7 +457,7 @@ let rec deep_apply_subst e t subst =
     let br, subst = deep_apply_subst_in_binder e br subst in
     let c = deep_apply_subst_in_comp e c subst in
     pack (Tv_Arrow br c)
-  | Tv_Type () -> t
+  | Tv_Type _ -> t
   | Tv_Refine bv ref ->
     let bv, subst = deep_apply_subst_in_bv e bv subst in
     let ref = deep_apply_subst e ref subst in
@@ -531,14 +531,14 @@ and deep_apply_subst_in_comp e c subst =
     | Q_Meta t -> Q_Meta (subst t)
   in
   match inspect_comp c with
-  | C_Total ret decr ->
+  | C_Total ret uopt decr ->
     let ret = subst ret in
     let decr = map subst decr in
-    pack_comp (C_Total ret decr)
-  | C_GTotal ret decr ->
+    pack_comp (C_Total ret uopt decr)
+  | C_GTotal ret uopt decr ->
     let ret = subst ret in
     let decr = map subst decr in
-    pack_comp (C_GTotal ret decr)
+    pack_comp (C_GTotal ret uopt decr)
   | C_Lemma pre post patterns ->
     let pre = subst pre in
     let post = subst post in
@@ -552,7 +552,7 @@ and deep_apply_subst_in_comp e c subst =
 and deep_apply_subst_in_pattern e pat subst =
   match pat with
   | Pat_Constant _ -> pat, subst
-  | Pat_Cons fv patterns ->
+  | Pat_Cons fv us patterns ->
     (* The types of the variables in the patterns should be independent of each
      * other: we use fold_left only to incrementally update the substitution *)
     let patterns, subst =
@@ -560,17 +560,15 @@ and deep_apply_subst_in_pattern e pat subst =
                       let pat, subst = deep_apply_subst_in_pattern e pat subst in
                       ((pat, b) :: pats, subst)) patterns ([], subst)
     in
-    Pat_Cons fv patterns, subst
+    Pat_Cons fv us patterns, subst
   | Pat_Var bv ->
     let bv, subst = deep_apply_subst_in_bv e bv subst in
     Pat_Var bv, subst
   | Pat_Wild bv ->
     let bv, subst = deep_apply_subst_in_bv e bv subst in
     Pat_Wild bv, subst
-  | Pat_Dot_Term bv t ->
-    let bv, subst = deep_apply_subst_in_bv e bv subst in
-    let t = deep_apply_subst e t subst in
-    Pat_Dot_Term bv t, subst
+  | Pat_Dot_Term eopt ->
+    Pat_Dot_Term (map_opt (fun t -> deep_apply_subst e t subst) eopt), subst
 
 /// The substitution functions actually used in the rest of the meta F* functions.
 /// For now, we use normalization because even though it is sometimes slow it

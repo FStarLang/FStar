@@ -389,6 +389,9 @@ type raw_error =
   | Warning_NoMagicInFSharp
   | Error_BadLetOpenRecord
   | Error_UnexpectedTypeclassInstance
+  | Warning_AmbiguousResolveImplicitsHook
+  | Warning_SplitAndRetryQueries
+  | Warning_DeprecatedLightDoNotation
 
 type flag = error_flag
 type error_setting = raw_error * error_flag * int
@@ -741,6 +744,9 @@ let default_settings : list error_setting =
     Warning_NoMagicInFSharp                           , CWarning, 345;
     Error_BadLetOpenRecord                            , CAlwaysError, 346;
     Error_UnexpectedTypeclassInstance                 , CAlwaysError, 347;
+    Warning_AmbiguousResolveImplicitsHook             , CWarning, 348;    
+    Warning_SplitAndRetryQueries                      , CWarning, 349;
+    Warning_DeprecatedLightDoNotation                 , CWarning, 350;
     ]
 
 let lookup_error settings e =

@@ -53,7 +53,7 @@ type mynat =
 let rec tick_last (ns:list string) =
   match ns with
   | [] -> []
-  | [x] -> [x ^ "'"] // forgetting braces gave me a uvar explosion
+  | [x] -> [x ^ "'"]
   | x::xs -> x :: (tick_last xs)
 
 let tick (nm : fv) : fv =
@@ -65,7 +65,7 @@ let cons_fst (x : 'a) (p : list 'a * 'b) : list 'a * 'b =
 
 let cons_fst_qn = ["Trace"; "cons_fst"]
 
-let term_is_fv hd nm =
+let term_is_fv hd nm : Tac bool =
     match inspect hd with
     | Tv_FVar fv -> inspect_fv fv = inspect_fv nm
     | _ -> false
@@ -74,7 +74,7 @@ noeq
 type ins_info = {
     orig_name : fv;
     ins_name : fv;
-    args : list term;
+    args : (args : list term{length args <= 8});
     trace_arg : term;
 }
 
@@ -110,9 +110,8 @@ and ins_br (ii : ins_info) (br : branch) : Tac branch =
   let t' = instrument_body ii t in
   (p, t')
 
-let rec cutlast (l : list 'a) : list 'a * 'a =
+let rec cutlast (l : list 'a{length l > 0}) : list 'a * 'a =
     match l with
-    | [] -> magic () // fuck
     | [x] -> [], x
     | x::xs -> let ys, y = cutlast xs in x::ys, y
 
@@ -125,8 +124,13 @@ let instrument (f : 'a) : Tac unit =
     in
     let n' = tick n in
     let all_args = intros () in
+    if length all_args = 0 then
+      fail "Function has no arguments?";
     let real, trace_arg = cutlast all_args in 
     let real = map (fun b -> pack (Tv_Var (bv_of_binder b))) real in
+    if length real > 8 then
+      fail "Too many arguments to instrument function";
+    assert (length real <= 8);
     let ii = {
         orig_name = n;
         ins_name = n';
