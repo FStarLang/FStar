@@ -8,7 +8,7 @@
       1,
       [ "@query", "equation_GenericTotalDM4A.equiv" ],
       0,
-      "b498c4fe0b95e6df1d6b2390c73bf659"
+      "be4187780ac5fa292c86b0b1c5ff0fd5"
     ],
     [
       "GenericTotalDM4A.bind",
@@ -32,7 +32,7 @@
         "token_correspondence_GenericTotalDM4A.stronger"
       ],
       0,
-      "afa9141be59128831cd3331c372330b3"
+      "89f5255e531786685090f6e9ddaf65a4"
     ],
     [
       "GenericTotalDM4A.subcomp",
@@ -50,7 +50,7 @@
         "typing_GenericTotalDM4A.interp", "typing_GenericTotalDM4A.stronger"
       ],
       0,
-      "c586ba9c76fad288562f90673324c697"
+      "1ea51010cfb0a5f7990f22b4778c3151"
     ],
     [
       "GenericTotalDM4A.DM4A",
@@ -68,7 +68,7 @@
         "typing_GenericTotalDM4A.stronger"
       ],
       0,
-      "f1f387f86554e3e730495a0b5a03641d"
+      "682ec9d11217ea705a27e1391d74cb21"
     ],
     [
       "GenericTotalDM4A.DM4A",
@@ -86,7 +86,7 @@
         "typing_GenericTotalDM4A.stronger"
       ],
       0,
-      "553706e019ba55f186e17bb0bc1f0f45"
+      "f8eb2372eea23d107fdee251f92a334c"
     ]
   ]
 ]
