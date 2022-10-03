@@ -49,7 +49,7 @@ let rec for_loop' start finish current inv body
                              (inv (U32.v current'));
       for_loop' start finish current' inv body
     )
-
+#pop-options
 
 (* produces 11 queries *)
 let for_loop start finish inv body = for_loop' start finish start inv body

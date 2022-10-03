@@ -668,6 +668,10 @@ val lift_exists (#a:_) (#u:_) (p:a -> vprop)
 
 /// If two predicates [p] and [q] are equivalent, then their existentially quantified versions
 /// are equivalent, and we can switch from `h_exists p` to `h_exists q`
+
+val exists_equiv (#a:_) (p:a -> vprop) (q:a -> vprop {forall x. equiv (p x) (q x) })
+  : Lemma (h_exists p `equiv` h_exists q)
+
 val exists_cong (#a:_) (#u:_) (p:a -> vprop) (q:a -> vprop {forall x. equiv (p x) (q x) })
   : SteelGhostT unit u
                 (h_exists p)
@@ -770,3 +774,52 @@ val elim_vrewrite (#opened:inames)
 : SteelGhost unit opened (vrewrite v f) (fun _ -> v)
     (fun _ -> True)
     (fun h _ h' -> h (vrewrite v f) == f (h' v))
+
+/// Deriving a selector-style vprop from an injective pts-to-style vprop
+
+let interp_hp_of_injective (#t: Type) (h: t -> vprop) : Tot Type =
+  (x1: t) ->
+  (x2: t) ->
+  (m: mem) ->
+  Lemma
+  (requires (
+    interp (hp_of (h x1)) m /\
+    interp (hp_of (h x2)) m
+  ))
+  (ensures (x1 == x2))
+
+val mk_selector_vprop_hp
+  (#t: Type0) (p: t -> vprop)
+: Tot (slprop u#1)
+
+val mk_selector_vprop_sel
+  (#t: Type0) (p: t -> vprop) (p_inj: interp_hp_of_injective p)
+: Tot (selector t (mk_selector_vprop_hp p))
+
+[@@__steel_reduce__]
+let mk_selector_vprop
+  (#t: Type0) (p: t -> vprop) (p_inj: interp_hp_of_injective p)
+: Tot vprop
+= VUnit ({
+    hp = mk_selector_vprop_hp p;
+    t = t;
+    sel = mk_selector_vprop_sel p p_inj;
+  })
+
+val mk_selector_vprop_intro
+  (#opened: _) (#t: Type0) (#x: t)
+  (p: t -> vprop) (p_inj: interp_hp_of_injective p)
+: SteelGhost unit opened
+    (p x)
+    (fun _ -> mk_selector_vprop p p_inj)
+    (fun _ -> True)
+    (fun _ _ h' -> h' (mk_selector_vprop p p_inj) == x)
+
+val mk_selector_vprop_elim
+  (#opened: _) (#t: Type0)
+  (p: t -> vprop) (p_inj: interp_hp_of_injective p)
+: SteelGhost (Ghost.erased t) opened
+    (mk_selector_vprop p p_inj)
+    (fun x -> p x)
+    (fun _ -> True)
+    (fun h x _ -> h (mk_selector_vprop p p_inj) == Ghost.reveal x)

@@ -1,5 +1,5 @@
 [
-  "V≠Ûá\u0006•…k©éDÑ∆èÏÌ",
+  "™~ghébÿ“C§}ÜF∞¶\r",
   [
     [
       "Steel.PCMMap.composable_maps",
@@ -13,7 +13,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "4d35b2590d81d9dcc1cb07c5db697282"
+      "a7b45466c16dfc82ce6ef057655463e4"
     ],
     [
       "Steel.PCMMap.compose_maps",
@@ -32,7 +32,7 @@
         "typing_FStar.Set.empty"
       ],
       0,
-      "8b3c4627dc534e3b2c9c3725149a491e"
+      "3920ebb134a2c5c6267080d5cc03ba79"
     ],
     [
       "Steel.PCMMap.composable_maps_comm",
@@ -52,7 +52,7 @@
         "typing_FStar.Map.sel", "typing_FStar.PCM.__proj__Mkpcm__item__p"
       ],
       0,
-      "87a17a705bdd584cfd1a8b7a2d9a0900"
+      "f255392caceb6e2da3db4d1d443af337"
     ],
     [
       "Steel.PCMMap.compose_maps_comm",
@@ -83,7 +83,7 @@
         "typing_Tm_abs_5188755db2ead4251e1b8bdb6dbf5d47"
       ],
       0,
-      "317d91817742d73814969246ac39f2a3"
+      "5d72ab92e7091d31ee0a2f4ae7a86c1a"
     ],
     [
       "Steel.PCMMap.composable_maps_assoc_l",
@@ -108,7 +108,7 @@
         "typing_Tm_abs_5188755db2ead4251e1b8bdb6dbf5d47"
       ],
       0,
-      "1b2bb0e43d68f18e2bbe1c6aafd2a1ed"
+      "e4d3ef95d89c4f430f9050a7393ef4b5"
     ],
     [
       "Steel.PCMMap.composable_maps_assoc_r",
@@ -133,7 +133,7 @@
         "typing_Tm_abs_5188755db2ead4251e1b8bdb6dbf5d47"
       ],
       0,
-      "1b265565c3aea5f95633dc08579dee1f"
+      "643abedb390def483a3fe59e4d53a790"
     ],
     [
       "Steel.PCMMap.pcm'_map_of_pcm",
@@ -165,7 +165,7 @@
         "typing_FStar.Set.mem"
       ],
       0,
-      "1d89bf29ad5988baa49aec33c8ba3f77"
+      "eef491cb8a589883555d5339967e4e27"
     ],
     [
       "Steel.PCMMap.is_unit",
@@ -210,7 +210,7 @@
         "typing_Tm_abs_5188755db2ead4251e1b8bdb6dbf5d47"
       ],
       0,
-      "67408c3fe18f751ac431afe6996eee20"
+      "317a1cba15aee2306f6a10ec563ae1b3"
     ],
     [
       "Steel.PCMMap.pointwise",
@@ -250,7 +250,7 @@
         "typing_Tm_abs_5188755db2ead4251e1b8bdb6dbf5d47"
       ],
       0,
-      "5bcedc1acd50e5f1c13d12c159f421c7"
+      "b78a603016713ee648f95bc86f723d04"
     ],
     [
       "Steel.PCMMap.compatible_pointwise",
@@ -293,7 +293,7 @@
         "typing_Tm_abs_5188755db2ead4251e1b8bdb6dbf5d47"
       ],
       0,
-      "818bcfe83239cbbdce65f542e496c95c"
+      "2169d2e1be2a2b8c675271070d75c165"
     ],
     [
       "Steel.PCMMap.compatible_pointwise_upd",
@@ -350,7 +350,7 @@
         "typing_Tm_abs_5188755db2ead4251e1b8bdb6dbf5d47"
       ],
       0,
-      "825606f01eb0ac31327df57257e61d21"
+      "230d2ff98b35584f4be2a6c91ba63e25"
     ],
     [
       "Steel.PCMMap.lift_frame_preservation",
@@ -406,7 +406,7 @@
         "typing_Tm_abs_5188755db2ead4251e1b8bdb6dbf5d47"
       ],
       0,
-      "135562fcac920e75780267a3f3542d5f"
+      "2da205e7203e77cc971be01643a5e122"
     ],
     [
       "Steel.PCMMap.lift_frame_preserving_upd",
@@ -414,34 +414,46 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "equation_Steel.PCMMap.map",
+        "@MaxIFuel_assumption", "@query",
+        "FStar.PCM_interpretation_Tm_arrow_6ee640369479b30d95d17c96f1df8c0f",
+        "data_elim_FStar.PCM.Mkpcm_",
+        "equation_FStar.PCM.frame_preserving_upd",
+        "equation_Steel.PCMMap.map", "equation_Steel.PCMMap.pcm__map_of_pcm",
         "equation_Steel.PCMMap.pointwise",
         "fuel_guarded_inversion_FStar.PCM.pcm",
         "interpretation_Tm_abs_42fc792216fb17ca81b4ea80737dbb13",
         "l_quant_interp_ef861a612db380d68214651ae1dd2f90",
-        "lemma_FStar.Map.lemma_SelUpd1", "lemma_FStar.Map.lemma_SelUpd2",
-        "lemma_FStar.Map.lemma_UpdDomain",
+        "lemma_FStar.Map.lemma_ContainsDom",
+        "lemma_FStar.Map.lemma_InDomConstMap",
+        "lemma_FStar.Map.lemma_InDomUpd1", "lemma_FStar.Map.lemma_SelUpd1",
+        "lemma_FStar.Map.lemma_SelUpd2", "lemma_FStar.Map.lemma_UpdDomain",
         "lemma_FStar.Set.lemma_equal_elim",
         "lemma_FStar.Set.lemma_equal_intro",
         "lemma_FStar.Set.mem_complement", "lemma_FStar.Set.mem_empty",
         "lemma_FStar.Set.mem_union", "primitive_Prims.op_BarBar",
-        "primitive_Prims.op_Negation",
+        "primitive_Prims.op_Negation", "proj_equation_FStar.PCM.Mkpcm__one",
         "proj_equation_FStar.PCM.Mkpcm_refine",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_FStar.PCM.Mkpcm_refine",
-        "refinement_interpretation_Tm_refine_2e0f6d1d5cff697d21b4a0b8e522c14b",
-        "refinement_interpretation_Tm_refine_30a417b542b2e636de33af9d55e60f1d",
-        "refinement_interpretation_Tm_refine_81f887cfd97bfb7c7a94750f6f20c1e2",
+        "refinement_interpretation_Tm_refine_24b8ff5bf08d390a7f9e83ccf9d61410",
+        "refinement_interpretation_Tm_refine_298fe99918b5a6c264e87d1dbea61615",
+        "refinement_interpretation_Tm_refine_3c732d92a6e0f7787ba51a026fe9d820",
+        "refinement_interpretation_Tm_refine_7eebd600d891f49b54ed679633298cb6",
+        "refinement_interpretation_Tm_refine_7fd7eadaa6330ace6901832174b56165",
         "refinement_interpretation_Tm_refine_8d24a8ed0792f3ba8f451fa9e50aefec",
+        "refinement_interpretation_Tm_refine_94537faf8e509c574d7a7098e9701eed",
         "refinement_interpretation_Tm_refine_ce38f492787371f877c4f0015affb000",
-        "refinement_interpretation_Tm_refine_dcb4d7348be20a6f23242373c11d6f91",
         "token_correspondence_FStar.PCM.__proj__Mkpcm__item__refine",
-        "typing_FStar.Map.domain", "typing_FStar.Map.upd",
+        "typing_FStar.Ghost.reveal", "typing_FStar.Map.const",
+        "typing_FStar.Map.domain", "typing_FStar.Map.sel",
+        "typing_FStar.Map.upd", "typing_FStar.PCM.__proj__Mkpcm___item__one",
+        "typing_FStar.PCM.__proj__Mkpcm__item__p",
         "typing_FStar.Set.complement", "typing_FStar.Set.empty",
-        "typing_FStar.Set.singleton", "typing_FStar.Set.union"
+        "typing_FStar.Set.singleton", "typing_FStar.Set.union",
+        "typing_Steel.PCMMap.map", "typing_Steel.PCMMap.pcm__map_of_pcm"
       ],
       0,
-      "43584d1436bfc1295b5b20e753dc36ce"
+      "105fa578cec42b47a063f990e7b05d0c"
     ],
     [
       "Steel.PCMMap.lift_composable",
@@ -481,7 +493,7 @@
         "typing_Steel.PCMMap.pcm__map_of_pcm"
       ],
       0,
-      "e3e95d2d6e8faf42773945d590c5ce63"
+      "aa554b81eafa057b883557e0451204d1"
     ]
   ]
 ]

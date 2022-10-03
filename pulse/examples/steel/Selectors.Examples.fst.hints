@@ -29,7 +29,7 @@
         "typing_Tm_abs_64af26f8f6f7aa591215151e01f6dfb2"
       ],
       0,
-      "41efc61f885c0e17e83ba0bbf070d4aa"
+      "a79d7378b62db3739d360fe95b1f693c"
     ],
     [
       "Selectors.Examples.test0",
@@ -43,7 +43,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "1b34c2275be16a1e477df9fc3f94c978"
+      "ce4d276d6e63019a75caef33c15fbe1f"
     ],
     [
       "Selectors.Examples.test1",
@@ -74,7 +74,7 @@
         "typing_Tm_abs_ab401011b19136651d922e7ec299f2ae"
       ],
       0,
-      "259a71f775a1e09f4b721dd60ada3862"
+      "e0b4d8b53d25b33fe4d1da6aced94da4"
     ],
     [
       "Selectors.Examples.test2",
@@ -105,7 +105,7 @@
         "typing_Tm_abs_9281e745d83000b4dc8a7d65d7bc69c7"
       ],
       0,
-      "418b683e9492ed39f7947171e6000574"
+      "8bdb084113926cdc10d2e4ff60d8d5cc"
     ],
     [
       "Selectors.Examples.test3",
@@ -119,16 +119,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "f7c979ec8a39821cda6d038686afb15d"
-    ],
-    [
-      "Selectors.Examples.test4",
-      1,
-      0,
-      0,
-      [ "@query" ],
-      0,
-      "4084bfefff8f5e1b1c14ff728e82c4e0"
+      "be2f888bd5f5948e3ce1b32fd5ec327a"
     ],
     [
       "Selectors.Examples.test5",
@@ -142,7 +133,7 @@
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "b885c0743c214f9a85155f8ebd917cc2"
+      "7607ae6355c49df1cfb483951815c7e1"
     ]
   ]
 ]

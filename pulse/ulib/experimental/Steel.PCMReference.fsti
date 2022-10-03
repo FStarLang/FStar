@@ -67,7 +67,7 @@ val alloc (#a:Type)
   : Steel (ref a pcm)
           emp
           (fun r -> pts_to r x)
-          (requires fun _ -> compatible pcm x x /\ pcm.refine x)
+          (requires fun _ -> pcm.refine x)
           (ensures fun _ _ _ -> True)
 
 /// Frees reference [r], as long as we have exclusive ownership of [r]
