@@ -64,14 +64,14 @@ let lem_ult_1 (a b: uint_t 64)
   : squash (bvult (int2bv a) (int2bv b) ==> fact1 a b)
   = assert (bvult (int2bv a) (int2bv b) ==> fact1 a b)
        by (T.norm [delta_only [`%fact1;`%carry_bv]];
-           set_options "--smtencoding.elim_box true --using_facts_from '__Nothing__' --z3cliopt 'smt.case_split=1'";
+           set_options "--smtencoding.elim_box true --using_facts_from '__Nothing__' --z3smtopt '(set-option :smt.case_split 1)'";
            smt())
 
 let lem_ult_2 (a b:uint_t 64)
   : squash (not (bvult (int2bv a) (int2bv b)) ==> fact0 a b)
   = assert (not (bvult (int2bv a) (int2bv b)) ==> fact0 a b)
        by (T.norm [delta_only [`%fact0;`%carry_bv]];
-           set_options "--smtencoding.elim_box true --using_facts_from '__Nothing__' --z3cliopt 'smt.case_split=1'")
+           set_options "--smtencoding.elim_box true --using_facts_from '__Nothing__' --z3smtopt '(set-option :smt.case_split 1)'")
 
 let int2bv_ult (#n: pos) (a b: uint_t n)
   : Lemma (ensures a < b <==> bvult #n (int2bv #n a) (int2bv #n b))

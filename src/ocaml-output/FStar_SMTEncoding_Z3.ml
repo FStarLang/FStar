@@ -734,21 +734,6 @@ let (z3_options : Prims.string FStar_Compiler_Effect.ref) =
     "(set-option :global-decls false)\n(set-option :smt.mbqi false)\n(set-option :auto_config false)\n(set-option :produce-unsat-cores true)\n(set-option :model true)\n(set-option :smt.case_split 3)\n(set-option :smt.relevancy 2)\n"
 let (set_z3_options : Prims.string -> unit) =
   fun opts -> FStar_Compiler_Effect.op_Colon_Equals z3_options opts
-let (cli_as_options : Prims.string Prims.list -> Prims.string) =
-  fun clis ->
-    let uu___ =
-      FStar_Compiler_List.collect
-        (fun cli ->
-           FStar_Compiler_List.collect
-             (fun opt ->
-                match FStar_Compiler_Util.split opt "=" with
-                | lhs::rhs::[] ->
-                    let uu___1 =
-                      FStar_Compiler_Util.format2 "(set-option :%s %s)" lhs
-                        rhs in
-                    [uu___1]
-                | uu___1 -> []) (FStar_Compiler_Util.split cli " ")) clis in
-    FStar_Compiler_Effect.op_Bar_Greater uu___ (FStar_String.concat "\n")
 let (init : unit -> unit) = fun uu___ -> ()
 let (finish : unit -> unit) = fun uu___ -> ()
 let (fresh_scope : scope_t FStar_Compiler_Effect.ref) =
@@ -879,7 +864,9 @@ let (mk_input :
       let options = FStar_Compiler_Effect.op_Bang z3_options in
       let options1 =
         let uu___ =
-          let uu___1 = FStar_Options.z3_cliopt () in cli_as_options uu___1 in
+          let uu___1 = FStar_Options.z3_smtopt () in
+          FStar_Compiler_Effect.op_Bar_Greater uu___1
+            (FStar_String.concat "\n") in
         Prims.op_Hat options uu___ in
       (let uu___1 = FStar_Options.print_z3_statistics () in
        if uu___1 then context_profile theory else ());
