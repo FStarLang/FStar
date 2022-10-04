@@ -3199,10 +3199,7 @@ let elim_uvars_aux_c env univ_names binders c =
    univ_names, binders, BU.right tc
 
 let rec elim_uvars (env:Env.env) (s:sigelt) =
-    let sigattrs = List.map (fun attr ->
-      let _, _, attr = elim_uvars_aux_t env [] [] attr in
-      deep_compress attr
-    ) s.sigattrs in
+    let sigattrs = List.map Mktuple3?._3 <| List.map (elim_uvars_aux_t env [] []) s.sigattrs in
     let s = { s with sigattrs } in
     match s.sigel with
     | Sig_inductive_typ (lid, univ_names, binders, typ, lids, lids') ->
