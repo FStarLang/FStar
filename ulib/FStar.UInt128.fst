@@ -31,6 +31,8 @@ open FStar.Tactics
 module T = FStar.Tactics
 module TBV = FStar.Tactics.BV
 
+[@@ noextract_to "krml"]
+noextract
 let carry_uint64 (a b: uint_t 64) : Tot (uint_t 64) =
   let ( ^^ ) = UInt.logxor in
   let ( |^ ) = UInt.logor in
@@ -38,6 +40,8 @@ let carry_uint64 (a b: uint_t 64) : Tot (uint_t 64) =
   let ( >>^ ) = UInt.shift_right in
   a ^^ ((a ^^ b) |^ ((a -%^ b) ^^ b)) >>^ 63
 
+[@@ noextract_to "krml"]
+noextract
 let carry_bv (a b: uint_t 64) =
     bvshr (bvxor (int2bv a)
                  (bvor (bvxor (int2bv a) (int2bv b)) (bvxor (bvsub (int2bv a) (int2bv b)) (int2bv b))))
@@ -1163,6 +1167,7 @@ let sum_rounded_mod_exact n m k =
 
 val div_sum_combine : n:nat -> m:nat -> k:pos ->
   Lemma (n / k + m / k == (n + (m - n % k) - m % k) / k)
+#push-options "--z3rlimit 60"
 let div_sum_combine n m k =
   sum_rounded_mod_exact n m k;
   div_sum_combine1 n m k;
