@@ -190,7 +190,8 @@ let is_arith_expr t =
     | Tv_FVar _, []
     | Tv_BVar _, []
     | Tv_Var _, [] -> return a
-    | _ -> fail ("not an arithmetic expression: (" ^ term_to_string t ^ ")")
+    | _ -> let! s = lift term_to_string t in
+           fail ("not an arithmetic expression: (" ^ s ^ ")")
   end
   | _ -> return a
 
@@ -206,7 +207,9 @@ let rec is_arith_prop (t:term) = fun i ->
     | Comp Le l r     -> liftM2 le (is_arith_expr l) (is_arith_expr r)
     | And l r         -> liftM2 AndProp (is_arith_prop l) (is_arith_prop r)
     | Or l r          -> liftM2  OrProp (is_arith_prop l) (is_arith_prop r)
-    | _               -> fail ("connector (" ^ term_to_string t ^ ")")) i
+    | _               ->
+        let! s = lift term_to_string t in
+        fail ("connector (" ^ s ^ ")")) i
 
 
 // Run the monadic computations, disregard the counter

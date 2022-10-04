@@ -20,7 +20,7 @@ open FStar.InteractiveHelpers.ExploreTerm
 
 type proposition = term
 
-val proposition_to_string : proposition -> Tot string
+val proposition_to_string : proposition -> Tac string
 let proposition_to_string p = term_to_string p
 
 /// Propositions split between pre and post assertions

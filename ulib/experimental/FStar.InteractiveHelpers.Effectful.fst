@@ -26,7 +26,7 @@ noeq type cast_info = {
 let mk_cast_info t p_ty exp_ty : cast_info =
   Mkcast_info t p_ty exp_ty
 
-val cast_info_to_string : cast_info -> Tot string
+val cast_info_to_string : cast_info -> Tac string
 let cast_info_to_string info =
   "Mkcast_info (" ^ term_to_string info.term ^ ") (" ^
   option_to_string type_info_to_string info.p_ty ^ ") (" ^
@@ -43,7 +43,7 @@ noeq type effect_info = {
 let mk_effect_info = Mkeffect_info
 
 /// Convert a ``typ_or_comp`` to cast information
-val effect_info_to_string : effect_info -> Tot string
+val effect_info_to_string : effect_info -> Tac string
 let effect_info_to_string c =
   "Mkeffect_info " ^
   effect_type_to_string c.ei_type ^ " (" ^
@@ -59,9 +59,9 @@ noeq type eterm_info = {
   parameters : list cast_info;
 }
 
-val eterm_info_to_string : eterm_info -> Tot string
+val eterm_info_to_string : eterm_info -> Tac string
 let eterm_info_to_string info =
-  let params = List.Tot.map (fun x -> "(" ^ cast_info_to_string x ^ ");  \n") info.parameters in
+  let params = map (fun x -> "(" ^ cast_info_to_string x ^ ");  \n") info.parameters in
   let params_str = List.Tot.fold_left (fun x y -> x ^ y) "" params in
   "Mketerm_info (" ^
   effect_info_to_string info.einfo ^ ") (" ^

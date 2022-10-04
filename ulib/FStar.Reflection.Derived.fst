@@ -29,7 +29,7 @@ let type_of_bv (bv : bv) : typ =
 
 let bv_to_string (bv : bv) : string =
     let bvv = inspect_bv bv in
-    "(" ^ bvv.bv_ppname ^ ":" ^ term_to_string bvv.bv_sort ^ ")"
+    bvv.bv_ppname
 
 let bv_of_binder (b : binder) : bv =
     let bv, _ = inspect_binder b in

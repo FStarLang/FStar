@@ -211,7 +211,7 @@ let formula_as_term_view (f:formula) : Tot term_view =
 let formula_as_term (f:formula) : Tot term =
     pack_ln (formula_as_term_view f)
 
-let formula_to_string (f:formula) : string =
+let formula_to_string (f:formula) : Tac string =
     match f with
     | True_ -> "True_"
     | False_ -> "False_"

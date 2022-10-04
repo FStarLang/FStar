@@ -7,6 +7,11 @@ open FStar.Tactics.Builtins
 private
 let paren (s:string) : string = "(" ^ s ^ ")"
 
+(* Redefine bv_to_string, which is able to show the type of the bv when in TAC *)
+let bv_to_string (bv : bv) : Tac string =
+    let bvv = inspect_bv bv in
+    "(" ^ bvv.bv_ppname ^ ":" ^ term_to_string bvv.bv_sort ^ ")"
+
 (* TODO: making this a local definition in print_list fails to extract. *)
 private
 let rec print_list_aux (f:'a -> Tac string) (xs:list 'a) : Tac string =

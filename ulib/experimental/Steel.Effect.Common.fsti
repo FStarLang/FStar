@@ -3039,12 +3039,12 @@ let rec norm_return_pre (fuel: nat) : Tac unit =
   | [] -> ()
   | _::_ -> norm [delta_only [`%return_pre]]; later(); norm_return_pre (fuel - 1)
 
-let print_goal (g:goal) =
+let print_goal (g:goal) : Tac string =
   let t = goal_type g in
   term_to_string t
 
-let print_goals (g:list goal) =
-  let strs = List.Tot.map print_goal g in
+let print_goals (g:list goal) : Tac string =
+  let strs = map print_goal g in
   String.concat "\n" strs
 
 /// The entry point of the frame inference tactic:

@@ -501,7 +501,7 @@ let rec sl (i:int) : Tac unit =
 
     //compute the footprint from the arg (e.g. read_wp r1, swap_wp r1 r2, etc.)
     let fp_refs = footprint_of twp in
-    ddump ("fp_refs="^ FStar.String.concat "," (List.Tot.map term_to_string fp_refs));
+    ddump ("fp_refs="^ FStar.String.concat "," (Tactics.Util.map term_to_string fp_refs));
 
     //build the footprint memory expression, uvars for ref values, and join then
     let fp = ref_terms_to_heap_term fp_refs in
