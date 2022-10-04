@@ -605,7 +605,14 @@ let tc_sig_let env r se lbs lids : list sigelt * list sigelt * Env.env =
 
 let tc_decl' env0 se: list sigelt * list sigelt * Env.env =
   let env = env0 in
-  let se = tc_decl_attributes env se in
+  let se = match se.sigel with
+         // Disable typechecking attributes for [Sig_fail] bundles, so
+         // that typechecking is wrapped in [Errors.catch_errors]
+         // below, thus allowing using [expect_failure] to mark that
+         // an attribute will fail typechecking.
+         | Sig_fail _ -> se
+         | _ -> tc_decl_attributes env se
+  in
   TcUtil.check_sigelt_quals env se;
   proc_check_with se.sigattrs (fun () ->
   let r = se.sigrng in
