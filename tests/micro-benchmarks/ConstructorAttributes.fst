@@ -11,8 +11,13 @@ type test0 =
 
 type test1 = [@@@ a1 u#12] { foo: int; }
 
-[@expect_failure 230]
+[@@ expect_failure [66]]
 type test2 = [@@@ id] { bar: int; }
+
+// The attribute [expect_failure] can be used when a failure is
+// expected in an attribute
+[@@ expect_failure [189]; 1 + ()]
+let test3: unit = unit
 
 let lookup_sigelt (name: string): Tac sigelt
   = match lookup_typ (top_env ()) (explode_qn name) with
