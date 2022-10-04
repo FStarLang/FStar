@@ -1,6 +1,7 @@
 FSTAR_HOME = ../..
 FSTAR=$(FSTAR_HOME)/bin/fstar.exe
 EXCLUDED_FILES=
+include $(FSTAR_HOME)/.common.mk
 
 BASES=$(filter-out $(EXCLUDED_FILES), $(wildcard *.fst))
 
@@ -13,28 +14,30 @@ TESTS_IN_PLACE=$(patsubst %.fst, .%.test.inplace, $(BASES))
 all: $(TESTS) $(TESTS_IN_PLACE)
 
 inplace:
-	mkdir -p $@
+	$(Q)mkdir -p $@
 
 printed:
-	mkdir -p $@
+	$(Q)mkdir -p $@
 
 printed/%.fst: %.fst | printed
-	$(FSTAR) --print $< > $@
+	@echo "[PPRINT    $(basename $(notdir $@))]"
+	$(Q)$(FSTAR) $(SIL) --print $< > $@
 
 inplace/%.fst: %.fst | inplace
-	cp $< $@
-	$(FSTAR) --print_in_place $@
+	@echo "[PPRINT    $(basename $(notdir $@))]"
+	$(Q)cp $< $@
+	$(Q)$(FSTAR) $(SIL) --print_in_place $@
 
 
 # Note how these two rules make an empty touch file for 
 # the target so we don't keep running diff uselessly.
 .%.test.print: %.fst.expected printed/%.fst
-	diff -w -u --strip-trailing-cr $^
-	touch $@
+	$(Q)diff -w -u --strip-trailing-cr $^
+	$(Q)touch $@
 
 .%.test.inplace: %.fst.expected inplace/%.fst
-	diff -w -u --strip-trailing-cr $^
-	touch $@
+	$(Q)diff -w -u --strip-trailing-cr $^
+	$(Q)touch $@
 
 %.fst.accept: printed/%.fst
 	cp $< $(patsubst printed/%.fst,%.fst.expected, $<)
@@ -42,9 +45,10 @@ inplace/%.fst: %.fst | inplace
 accept: $(patsubst %, %.accept, $(BASES))
 
 clean:
-	rm -rf printed inplace
-	rm -f .*.test.print
-	rm -f .*.test.inplace
+	@echo "[CLEAN]"
+	$(Q)rm -rf printed inplace
+	$(Q)rm -f .*.test.print
+	$(Q)rm -f .*.test.inplace
 
 .PHONY: accept clean
 
