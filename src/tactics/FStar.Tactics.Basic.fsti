@@ -111,3 +111,5 @@ val push_bv_dsenv          : env -> string -> tac (env * bv)
 
 val term_to_string         : term -> tac string
 val comp_to_string         : comp -> tac string
+
+val term_eq'               : term -> term -> tac bool

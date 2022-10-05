@@ -1963,6 +1963,10 @@ let comp_to_string (c:comp) : tac string
   = let s = Print.comp_to_string c in
     ret s
 
+let term_eq' (t1:term) (t2:term) : tac bool
+  = bind idtac (fun () ->
+    ret (Syntax.Util.term_eq t1 t2))
+
 (**** Creating proper environments and proofstates ****)
 
 let tac_env (env:Env.env) : Env.env =
