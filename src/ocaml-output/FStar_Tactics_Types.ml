@@ -168,9 +168,7 @@ let (goal_with_env : goal -> FStar_TypeChecker_Env.env -> goal) =
           FStar_Syntax_Syntax.ctx_uvar_range =
             (c.FStar_Syntax_Syntax.ctx_uvar_range);
           FStar_Syntax_Syntax.ctx_uvar_meta =
-            (c.FStar_Syntax_Syntax.ctx_uvar_meta);
-          FStar_Syntax_Syntax.ctx_uvar_apply_tac_prefix =
-            (c.FStar_Syntax_Syntax.ctx_uvar_apply_tac_prefix)
+            (c.FStar_Syntax_Syntax.ctx_uvar_meta)
         } in
       {
         goal_main_env = env;

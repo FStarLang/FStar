@@ -179,7 +179,7 @@ let (__do_rewrite :
                    (let typ = lcomp.FStar_TypeChecker_Common.res_typ in
                     let uu___4 =
                       FStar_Tactics_Monad.new_uvar "do_rewrite.rhs" env typ
-                        FStar_Pervasives_Native.None [] (rangeof g0) in
+                        FStar_Pervasives_Native.None (rangeof g0) in
                     FStar_Tactics_Monad.bind uu___4
                       (fun uu___5 ->
                          match uu___5 with

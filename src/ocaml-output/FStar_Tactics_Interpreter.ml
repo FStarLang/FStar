@@ -1861,7 +1861,7 @@ let run_tactic_on_ps' :
                                        ps1.FStar_Tactics_Types.smt_goals in
                                    (FStar_Compiler_List.iter
                                       (fun g1 ->
-                                         FStar_Tactics_Basic.mark_goal_implicit_allow_untyped
+                                         FStar_Tactics_Basic.mark_goal_implicit_already_checked
                                            g1;
                                          (let uu___12 =
                                             FStar_Tactics_Types.is_irrelevant

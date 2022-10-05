@@ -473,7 +473,6 @@ val new_tac_implicit_var : string ->
                            typ ->
                            should_check_uvar ->
                            option ctx_uvar_meta_t ->
-                           list S.ctx_uvar ->
                            (term * list (ctx_uvar * Range.range) * guard_t)
 
 val new_implicit_var_aux : string ->

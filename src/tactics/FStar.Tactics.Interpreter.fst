@@ -579,7 +579,7 @@ let run_tactic_on_ps'
         let remaining_smt_goals = ps.goals@ps.smt_goals in
         List.iter 
           (fun g -> 
-            FStar.Tactics.Basic.mark_goal_implicit_allow_untyped g;//all of these will be fed to SMT anyway
+            FStar.Tactics.Basic.mark_goal_implicit_already_checked g;//all of these will be fed to SMT anyway
             if is_irrelevant g
             then (
               if !tacdbg then BU.print1 "Assigning irrelevant goal %s\n" (Print.term_to_string (goal_witness g));

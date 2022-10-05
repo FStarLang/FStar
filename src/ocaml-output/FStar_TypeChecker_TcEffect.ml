@@ -130,7 +130,8 @@ let (pure_wp_uvar :
                 FStar_Syntax_Syntax.mk_Tm_app pure_wp_t1 uu___2 r in
           let uu___ =
             FStar_TypeChecker_Env.new_implicit_var_aux reason r env pure_wp_t
-              FStar_Syntax_Syntax.Allow_untyped FStar_Pervasives_Native.None in
+              (FStar_Syntax_Syntax.Allow_untyped "wp")
+              FStar_Pervasives_Native.None in
           match uu___ with
           | (pure_wp_uvar1, uu___1, guard_wp) -> (pure_wp_uvar1, guard_wp)
 let (check_no_subtyping_for_layered_combinator :
@@ -2036,7 +2037,8 @@ let (tc_layered_eff_decl :
                                                                   then
                                                                     FStar_Syntax_Syntax.Strict
                                                                   else
-                                                                    FStar_Syntax_Syntax.Allow_untyped in
+                                                                    FStar_Syntax_Syntax.Allow_untyped
+                                                                    "effect ite binder" in
                                                                 let ctx_uvar_meta
                                                                   =
                                                                   FStar_Compiler_Util.map_option

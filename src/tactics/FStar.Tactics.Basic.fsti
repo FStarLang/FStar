@@ -105,6 +105,6 @@ val curms                  : unit -> tac Z.t
 val set_urgency            : Z.t -> tac unit
 val t_commute_applied_match : unit -> tac unit
 val goal_with_type : goal -> typ -> goal
-val mark_goal_implicit_allow_untyped : goal -> unit
+val mark_goal_implicit_already_checked : goal -> unit
 val string_to_term         : env -> string -> tac term
 val push_bv_dsenv          : env -> string -> tac (env * bv)

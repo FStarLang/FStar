@@ -122,7 +122,7 @@ let as_wl_deferred wl (d:deferred): list (int * deferred_reason * lstring * prob
 (* --------------------------------------------------------- *)
 (* <new_uvar> Generating new unification variables/patterns  *)
 (* --------------------------------------------------------- *)
-let new_uvar reason wl r gamma binders k should_check meta apply_uvar_deps : ctx_uvar * term * worklist =
+let new_uvar reason wl r gamma binders k should_check meta : ctx_uvar * term * worklist =
     let decoration = {
              uvar_decoration_typ = k;
              uvar_decoration_should_check = should_check
@@ -135,8 +135,6 @@ let new_uvar reason wl r gamma binders k should_check meta apply_uvar_deps : ctx
          ctx_uvar_reason=reason;
          ctx_uvar_range=r;
          ctx_uvar_meta=meta;
-
-         ctx_uvar_apply_tac_prefix=apply_uvar_deps;
        } in
     check_uvar_ctx_invariant reason r true gamma binders;
     let t = mk (Tm_uvar (ctx_uvar, ([], NoUseRange))) r in
@@ -156,7 +154,6 @@ let copy_uvar u (bs:binders) t wl =
              (Env.all_binders env) t
              (U.ctx_uvar_should_check u)
              u.ctx_uvar_meta
-             []
 
 (* --------------------------------------------------------- *)
 (* </new_uvar>                                               *)
@@ -369,7 +366,7 @@ let mk_eq2 wl env prob t1 t2 : term * worklist =
     *)
     let t_type, u = U.type_u () in
     let binders = Env.all_binders env in
-    let _, tt, wl = new_uvar "eq2" wl t1.pos env.gamma binders t_type Allow_unresolved None [] in
+    let _, tt, wl = new_uvar "eq2" wl t1.pos env.gamma binders t_type (Allow_unresolved "eq2 type") None in
     U.mk_eq2 u tt t1 t2, wl
 
 let p_invert = function
@@ -395,9 +392,8 @@ let mk_problem wl scope orig lhs rel rhs elt reason =
                  gamma
                  bs
                  U.ktype0
-                 Allow_untyped
+                 (Allow_untyped "logical guard")
                  None
-                 []
     in
     let prob =
         //logical guards are always squashed;
@@ -444,9 +440,8 @@ let new_problem wl env lhs rel rhs (subject:option bv) loc reason =
                env.gamma
                (Env.all_binders env)
                lg_ty
-               Allow_untyped
+               (Allow_untyped "logical guard")
                None
-               []
   in
   let lg =
     match subject with
@@ -543,21 +538,9 @@ let set_uvar env u (should_check_opt:option S.should_check_uvar) t =
                (Print.ctx_uvar_to_string u)
       | Some u1 ->
         if Env.debug env <| Options.Other "2635"
-        then BU.print3 "Setting uvar %s and env is solving %s that depends on %s\n"
+        then BU.print2 "Setting uvar %s and env is solving %s\n"
                (Print.ctx_uvar_to_string u)
-               (Print.ctx_uvar_to_string u1)
-               (List.fold_left (fun acc uv ->
-                  BU.format2 "%s; %s" acc (Print.ctx_uvar_to_string uv))
-                  "" u1.ctx_uvar_apply_tac_prefix);
-        //
-        // We are solving this uvar u indirectly when solving an apply tac uvar u1
-        // If u1 depends on u, then u must be typechecked strictly with no fastpath
-        //
-        if u1.ctx_uvar_apply_tac_prefix
-          |> List.existsb (fun u2 -> UF.equiv u.ctx_uvar_head u2.ctx_uvar_head)
-        then
-          UF.change_decoration u.ctx_uvar_head
-               ({UF.find_decoration u.ctx_uvar_head with uvar_decoration_should_check=Strict_no_fastpath}))
+               (Print.ctx_uvar_to_string u1))
    | Some should_check ->
      UF.change_decoration u.ctx_uvar_head
        ({UF.find_decoration u.ctx_uvar_head with uvar_decoration_should_check=should_check}));
@@ -856,7 +839,6 @@ let ensure_no_uvar_subst env (t0:term) (wl:worklist)
                          (U.arrow dom_binders (S.mk_Total (U.ctx_uvar_typ uv)))
                          (U.ctx_uvar_should_check uv)
                          uv.ctx_uvar_meta
-                         uv.ctx_uvar_apply_tac_prefix
         in
 
         (* Solve the old variable *)
@@ -866,7 +848,7 @@ let ensure_no_uvar_subst env (t0:term) (wl:worklist)
         then BU.print2 "ensure_no_uvar_subst solving %s with %s\n"
                (Print.ctx_uvar_to_string uv)
                (Print.term_to_string sol);
-        set_uvar env uv (Some Allow_untyped) sol;
+        set_uvar env uv (Some (Allow_untyped "sol is a new uvar that will be checked")) sol;
 
         (* Make a term for the new uvar, applied to the substitutions of
          * the abstracted arguments, plus all the original arguments. *)
@@ -1093,9 +1075,8 @@ let restrict_ctx env (tgt:ctx_uvar) (bs:binders) (src:ctx_uvar) wl : worklist =
     let _, src', wl = new_uvar ("restricted " ^ (Print.uvar_to_string src.ctx_uvar_head)) wl
       src.ctx_uvar_range g pfx t
       (U.ctx_uvar_should_check src)
-      src.ctx_uvar_meta
-      src.ctx_uvar_apply_tac_prefix in
-    set_uvar env src (Some Allow_untyped) (f src');
+      src.ctx_uvar_meta in
+    set_uvar env src (Some (Allow_untyped "assigned solution will be checked")) (f src');
 
     wl in
 
@@ -3001,11 +2982,11 @@ and solve_t_flex_flex env orig wl (lhs:flex_t) (rhs:flex_t) : solution =
                                           ^"\tlhs="  ^u_lhs.ctx_uvar_reason
                                           ^ "\trhs=" ^u_rhs.ctx_uvar_reason)
                                          wl range gamma_w ctx_w new_uvar_typ
-                                         (if U.ctx_uvar_should_check u_lhs = Allow_untyped &&
-                                             U.ctx_uvar_should_check u_rhs = Allow_untyped
-                                          then Allow_untyped
+                                         (if Allow_untyped? (U.ctx_uvar_should_check u_lhs) &&
+                                             Allow_untyped? (U.ctx_uvar_should_check u_rhs)
+                                          then U.ctx_uvar_should_check u_lhs
                                           else Strict)
-                                         None (u_lhs.ctx_uvar_apply_tac_prefix@u_rhs.ctx_uvar_apply_tac_prefix) in
+                                         None in
                    let w_app = S.mk_Tm_app w (List.map (fun ({binder_bv=z}) -> S.as_arg (S.bv_to_name z)) zs) w.pos in
                    let _ =
                      if Env.debug env <| Options.Other "Rel"
@@ -4987,7 +4968,7 @@ let check_implicit_solution_and_discharge_guard env imp force_univ_constraints
   let g =
     let must_tot = not (env.phase1 ||
                         env.lax    ||
-                        U.ctx_uvar_should_check ctx_u = Allow_ghost) in
+                        Allow_ghost? (U.ctx_uvar_should_check ctx_u)) in
 
     Errors.with_ctx
       (BU.format3 "While checking implicit %s set to %s of expected type %s"
@@ -5054,67 +5035,92 @@ let is_implicit_resolved (env:env) (i:implicit) : bool =
     i.imp_tm
     |> Free.uvars
     |> BU.set_elements
-    |> List.for_all (fun uv -> U.ctx_uvar_should_check uv = Allow_unresolved)
+    |> List.for_all (fun uv -> Allow_unresolved? (U.ctx_uvar_should_check uv))
 
 let rec check_implicit_solution_for_tac (env:env) (i:implicit) : option (term * typ) =
   let { imp_reason = reason; imp_tm = tm; imp_uvar = ctx_u; imp_range = r } = i in
   let uvar_ty = U.ctx_uvar_typ ctx_u in
   let uvar_should_check = U.ctx_uvar_should_check ctx_u in
-  if uvar_should_check = Allow_untyped
-   //|| is_base_type env uvar_ty
+  if Allow_untyped? uvar_should_check
+  || Already_checked? uvar_should_check
   then None
   else (
     let env = { env with gamma = ctx_u.ctx_uvar_gamma } in
-    if uvar_should_check = Strict_no_fastpath
-    then let _ =
-           if Env.debug env <| Options.Other "2635"
-           then BU.print2 "Uvar %s solution deemed to be solved in a larger context, rechecking %s {\n"
-                  (Print.ctx_uvar_to_string ctx_u)
-                  (Print.term_to_string tm) in
-         let env = {Env.set_expected_typ env uvar_ty with enable_defer_to_tac=false} in
-         let _, _, g_t = Profiling.profile (fun () -> env.typeof_tot_or_gtot_term env tm false)
-                           None
-                           "retype_tactic_solution" in
-         force_trivial_guard env g_t;
-         if Env.debug env <| Options.Other "2635"
-         then BU.print1 "Retyped tm %s}\n" (Print.ctx_uvar_to_string ctx_u);
-         None
-    else let tm_t, _ = Profiling.profile (fun () -> env.typeof_well_typed_tot_or_gtot_term env tm false)
-                         None
-                         "retype_tactic_solution" in
-         if Profiling.profile (fun () -> env.teq_nosmt_force env tm_t uvar_ty)
-                              None
-                              "tc_tactic_solution"
-        then None
-        else if Profiling.profile (fun () -> env.subtype_nosmt_force env tm_t uvar_ty)
-                              None
-                              "tc_tactic_solution"
-       then None
-       else begin
-        //
-        // failing at this point is fatal;
-        // and the check may have failed because we didn't unroll let recs;
-        // so try once more after normalizing both types
-        //
-        let compute t =
-            N.normalize [Env.UnfoldTac; //we're in is_tac; don't unfold "tac_opaque"
-                         Env.UnfoldUntil delta_constant;
-                         Env.Zeta;
-                         Env.Iota;
-                         Env.Primops]
-                         env
-                         t
-        in
-        let retry () = 
-          let tm_t = compute tm_t in
-          let uv_t = compute uvar_ty in
-          env.subtype_nosmt_force env tm_t uv_t
-        in
-        if retry()
-        then None
-        else Some (tm, tm_t)
-      end
+    match env.core_check env tm uvar_ty false with
+    | Inl None -> None
+    | Inl (Some g) ->
+      let g = { trivial_guard with guard_f = NonTrivial g } in
+      force_trivial_guard env g; None
+      // else (
+      //   if Env.debug env <| Options.Other "Core"
+      //   then BU.print3 "Core computed %s : %s <== %s"
+      //                    (Print.term_to_string tm)
+      //                    (Print.term_to_string uvar_ty)
+      //                    (Print.term_to_string g);
+      //   Some (tm, uvar_ty)
+      // )
+
+    | Inr err ->
+      FStar.Errors.log_issue
+        (Env.get_range env)
+        (Errors.Error_TypeError, 
+         BU.format3 "Term %s computed by tactic does not have type %s, because %s"
+           (Print.term_to_string tm)
+           (Print.term_to_string uvar_ty)
+           (err false));
+      None
   )
+    
+  //   if uvar_should_check = Strict_no_fastpath
+  //   then let _ =
+  //          if Env.debug env <| Options.Other "2635"
+  //          then BU.print2 "Uvar %s solution deemed to be solved in a larger context, rechecking %s {\n"
+  //                 (Print.ctx_uvar_to_string ctx_u)
+  //                 (Print.term_to_string tm) in
+  //        let env = {Env.set_expected_typ env uvar_ty with enable_defer_to_tac=false} in
+  //        let _, _, g_t = Profiling.profile (fun () -> env.typeof_tot_or_gtot_term env tm false)
+  //                          None
+  //                          "retype_tactic_solution" in
+  //        force_trivial_guard env g_t;
+  //        if Env.debug env <| Options.Other "2635"
+  //        then BU.print1 "Retyped tm %s}\n" (Print.ctx_uvar_to_string ctx_u);
+  //        None
+  //   else let tm_t, _ = Profiling.profile (fun () -> env.typeof_well_typed_tot_or_gtot_term env tm false)
+  //                        None
+  //                        "retype_tactic_solution" in
+  //        if Profiling.profile (fun () -> env.teq_nosmt_force env tm_t uvar_ty)
+  //                             None
+  //                             "tc_tactic_solution"
+  //       then None
+  //       else if Profiling.profile (fun () -> env.subtype_nosmt_force env tm_t uvar_ty)
+  //                             None
+  //                             "tc_tactic_solution"
+  //      then None
+  //      else begin
+  //       //
+  //       // failing at this point is fatal;
+  //       // and the check may have failed because we didn't unroll let recs;
+  //       // so try once more after normalizing both types
+  //       //
+  //       let compute t =
+  //           N.normalize [Env.UnfoldTac; //we're in is_tac; don't unfold "tac_opaque"
+  //                        Env.UnfoldUntil delta_constant;
+  //                        Env.Zeta;
+  //                        Env.Iota;
+  //                        Env.Primops]
+  //                        env
+  //                        t
+  //       in
+  //       let retry () = 
+  //         let tm_t = compute tm_t in
+  //         let uv_t = compute uvar_ty in
+  //         env.subtype_nosmt_force env tm_t uv_t
+  //       in
+  //       if retry()
+  //       then None
+  //       else Some (tm, tm_t)
+  //     end
+  // )
 
 and resolve_implicits' env is_tac (implicits:Env.implicits) 
   : list (implicit * implicit_checking_status) =
@@ -5158,7 +5164,7 @@ and resolve_implicits' env is_tac (implicits:Env.implicits)
              (Print.term_to_string tm)
              (Print.ctx_uvar_to_string ctx_u)
              (string_of_bool is_tac);
-      if uvar_decoration_should_check = Allow_unresolved
+      if Allow_unresolved? uvar_decoration_should_check
       then until_fixpoint (out, true) tl
       else if unresolved ctx_u
       then (if flex_uvar_has_meta_tac ctx_u
@@ -5171,7 +5177,8 @@ and resolve_implicits' env is_tac (implicits:Env.implicits)
 
                  until_fixpoint (out, true) (extra @ tl)
             else until_fixpoint ((hd, Implicit_unresolved)::out, changed) tl)
-      else if uvar_decoration_should_check = Allow_untyped
+      else if Allow_untyped? uvar_decoration_should_check
+           || Already_checked? uvar_decoration_should_check
       then until_fixpoint (out, true) tl
       else begin
         let env = {env with gamma=ctx_u.ctx_uvar_gamma} in

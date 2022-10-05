@@ -1666,7 +1666,7 @@ let guard_form g = g.guard_f
 let is_trivial g = match g with
     | {guard_f=Trivial; deferred=[]; univ_ineqs=([], []); implicits=i} ->
       i |> BU.for_all (fun imp ->
-           (U.ctx_uvar_should_check imp.imp_uvar=Allow_unresolved)
+           (Allow_unresolved? (U.ctx_uvar_should_check imp.imp_uvar))
            || (match Unionfind.find imp.imp_uvar.ctx_uvar_head with
                | Some _ -> true
                | None -> false))
@@ -1769,7 +1769,7 @@ let close_guard env binders g =
 (* ------------------------------------------------*)
 
 (* Generating new implicit variables *)
-let new_tac_implicit_var reason r env k should_check meta apply_tac_deps =
+let new_tac_implicit_var reason r env k should_check meta =
     match U.destruct k FStar.Parser.Const.range_of_lid with
      | Some [_; (tm, _)] ->
        let t = S.mk (S.Tm_constant (FStar.Const.Const_range tm.pos)) tm.pos in
@@ -1790,8 +1790,6 @@ let new_tac_implicit_var reason r env k should_check meta apply_tac_deps =
           ctx_uvar_reason=reason;
           ctx_uvar_range=r;
           ctx_uvar_meta=meta;
-
-          ctx_uvar_apply_tac_prefix=apply_tac_deps;
       } in
       check_uvar_ctx_invariant reason r true gamma binders;
       let t = mk (Tm_uvar (ctx_uvar, ([], NoUseRange))) r in
@@ -1806,7 +1804,7 @@ let new_tac_implicit_var reason r env k should_check meta apply_tac_deps =
       t, [(ctx_uvar, r)], g
 
 let new_implicit_var_aux reason r env k should_check meta =
-  new_tac_implicit_var reason r env k should_check meta []
+  new_tac_implicit_var reason r env k should_check meta
 
 (***************************************************)
 
@@ -1854,7 +1852,7 @@ let uvars_for_binders env (bs:S.binders) substs reason r =
       | _ -> None in
 
     let t, l_ctx_uvars, g_t = new_implicit_var_aux
-      (reason b) r env sort Allow_untyped ctx_uvar_meta_t in
+      (reason b) r env sort (Allow_untyped "layered effects binder") ctx_uvar_meta_t in
 
     if debug env <| Options.Other "LayeredEffectsEqns"
     then List.iter (fun (ctx_uvar, _) -> BU.print1 "Layered Effect uvar : %s\n"

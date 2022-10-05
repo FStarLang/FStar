@@ -95,7 +95,7 @@ let pure_wp_uvar env (t:typ) (reason:string) (r:Range.range) : term * guard_t =
       [t |> S.as_arg]
       r in
 
-  let pure_wp_uvar, _, guard_wp = Env.new_implicit_var_aux reason r env pure_wp_t Allow_untyped None in
+  let pure_wp_uvar, _, guard_wp = Env.new_implicit_var_aux reason r env pure_wp_t (Allow_untyped "wp") None in
   pure_wp_uvar, guard_wp
 
 
@@ -697,7 +697,7 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
            if List.length b.binder_attrs > 0 ||
               attr_opt |> is_some
            then Strict
-           else Allow_untyped in
+           else Allow_untyped "effect ite binder" in
          let ctx_uvar_meta = BU.map_option Ctx_uvar_meta_attr attr_opt in
          new_implicit_var_aux
            (BU.format1 "uvar for subcomp %s binder when checking ite soundness"

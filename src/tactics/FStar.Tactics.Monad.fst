@@ -242,7 +242,6 @@ let add_implicits (i:implicits) : tac unit =
 
 let new_uvar (reason:string) (env:env) (typ:typ)
              (sc_opt:option should_check_uvar)
-             (apply_uvar_deps:list S.ctx_uvar)
              (rng:Range.range) 
   : tac (term * ctx_uvar) =
     let should_check = 
@@ -255,14 +254,14 @@ let new_uvar (reason:string) (env:env) (typ:typ)
         Strict
     in
     let u, ctx_uvar, g_u =
-        Env.new_tac_implicit_var reason rng env typ should_check None apply_uvar_deps
+        Env.new_tac_implicit_var reason rng env typ should_check None
     in
     bind (add_implicits g_u.implicits) (fun _ ->
     ret (u, fst (List.hd ctx_uvar)))
 
 let mk_irrelevant_goal (reason:string) (env:env) (phi:typ) (rng:Range.range) opts label : tac goal =
     let typ = U.mk_squash (env.universe_of env phi) phi in
-    bind (new_uvar reason env typ (Some Strict) [] rng) (fun (_, ctx_uvar) ->
+    bind (new_uvar reason env typ (Some Strict) rng) (fun (_, ctx_uvar) ->
     let goal = mk_goal env ctx_uvar opts false label in
     ret goal)
 
@@ -298,8 +297,16 @@ let wrap_err (pref:string) (t : tac 'a) : tac 'a =
            )
 
 let mlog f (cont : unit -> tac 'a) : tac 'a =
-    bind get (fun ps -> log ps f; cont ())
+  let! ps = get in
+  log ps f;
+  cont ()
 
+let if_verbose f =
+  let! ps = get in
+  if ps.tac_verb_dbg
+  then f ()
+  else ret ()
+    
 let compress_implicits : tac unit =
     bind get (fun ps ->
     let imps = ps.all_implicits in
