@@ -314,7 +314,8 @@ let join
     (fun res -> pts_to res p (x1 `Seq.append` x2))
     (adjacent a1 a2)
     (fun res -> merge_into a1 a2 res)
-= ghost_join a1 a2 ();
+= let _ : squash (adjacent a1 a2) = () in
+  ghost_join a1 a2 ();
   let res = merge a1 a2 in
   rewrite
     (pts_to (merge a1 (Ghost.reveal a2)) p (x1 `Seq.append` x2))
