@@ -94,13 +94,14 @@ $(FSTAR_MAIN_NATIVE): $(GENERATED_FILES)
 	$(Q)cp $^ $@
 
 install-compiler-lib: $(FSTAR_MAIN_NATIVE)
-	mkdir -p ../../bin/fstar-compiler-lib/
+	@echo "[INSTALL   fstar-compiler-lib]"
+	$(Q)mkdir -p ../../bin/fstar-compiler-lib/
 	@# VD: forcing the recompilation of modules in ulib/tactics_ml whenever the compiler is rebuilt
 	@# in order to avoid inconsistent assumption errors between fstartaclib and compiler-lib
-	$(FIND) ../../ulib/tactics_ml \( -name '*.cmi' -or -name '*.cmx' \) -exec rm {} \;
-	$(FIND) . \( -name '*.cmi' -or -name '*.cmx' \) -exec cp {} ../../bin/fstar-compiler-lib/ \;
-	sed "s/__FSTAR_VERSION__/$$(cat ../../version.txt)/" <../../ulib/ml/fstar-compiler-lib-META >../../bin/fstar-compiler-lib/META
-	touch $@
+	$(Q)$(FIND) ../../ulib/tactics_ml \( -name '*.cmi' -or -name '*.cmx' \) -exec rm {} \;
+	$(Q)$(FIND) . \( -name '*.cmi' -or -name '*.cmx' \) -exec cp {} ../../bin/fstar-compiler-lib/ \;
+	$(Q)sed "s/__FSTAR_VERSION__/$$(cat ../../version.txt)/" <../../ulib/ml/fstar-compiler-lib-META >../../bin/fstar-compiler-lib/META
+	$(Q)touch $@
 
 FStar_Parser_Parse.ml: parse.mly
 	@# We are opening the same module twice but we need these modules
