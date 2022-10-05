@@ -1,5 +1,6 @@
 # --------------------------------------------------------------------
 ifdef FSTAR_HOME
+   include $(FSTAR_HOME)/.common.mk
    FSTAR_ULIB=$(FSTAR_HOME)/ulib
 else
    # FSTAR_HOME not defined, assume fstar.exe installed through opam
