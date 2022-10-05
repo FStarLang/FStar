@@ -158,7 +158,7 @@ COMMITDATE = $(shell git log --pretty=format:%ci -n 1 2>/dev/null || echo unset)
 
 .PHONY: FStar_Version.ml
 FStar_Version.ml:
-	@echo [MAKE      FStar_Version.ml]
+	@echo '[MAKE      FStar_Version.ml]'
 	$(Q)echo 'let dummy () = ();;' >> $@
 	$(Q)echo 'FStar_Options._version := "$(VERSION)";;' >> $@
 	$(Q)echo 'FStar_Options._platform := "$(PLATFORM)";;' >> $@
