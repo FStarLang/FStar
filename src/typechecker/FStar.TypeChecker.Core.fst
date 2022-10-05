@@ -532,8 +532,11 @@ let rec check_subtype_whnf (g:env) (e:term) (t0 t1: typ)
                       (SS.subst_comp [NT(x1.binder_bv, S.bv_to_name x0.binder_bv)] c1)
       )
 
-    | Tm_ascribed _, _
-    | _, Tm_ascribed _ -> fail "Unexpected term: ascription"
+    | Tm_ascribed (t0, _, _), _ ->
+      check_subtype_whnf g e t0 t1
+      
+    | _, Tm_ascribed (t1, _, _) -> 
+      check_subtype_whnf g e t0 t1
 
     | Tm_type _, Tm_type _ ->
       check_equality_whnf g t0 t1

@@ -916,10 +916,10 @@ let rec (check_subtype_whnf :
                                               check_subcomp uu___10 uu___11
                                                 c01 uu___12) in
                                        with_binders [x11] [u1] uu___7))))
-               | (FStar_Syntax_Syntax.Tm_ascribed uu___2, uu___3) ->
-                   fail1 "Unexpected term: ascription"
-               | (uu___2, FStar_Syntax_Syntax.Tm_ascribed uu___3) ->
-                   fail1 "Unexpected term: ascription"
+               | (FStar_Syntax_Syntax.Tm_ascribed (t01, uu___2, uu___3),
+                  uu___4) -> check_subtype_whnf g e t01 t1
+               | (uu___2, FStar_Syntax_Syntax.Tm_ascribed
+                  (t11, uu___3, uu___4)) -> check_subtype_whnf g e t0 t11
                | (FStar_Syntax_Syntax.Tm_type uu___2,
                   FStar_Syntax_Syntax.Tm_type uu___3) ->
                    check_equality_whnf g t0 t1
