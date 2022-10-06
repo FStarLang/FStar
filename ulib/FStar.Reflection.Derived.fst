@@ -206,6 +206,21 @@ let nameof (t : term) : string =
     | Tv_FVar fv -> implode_qn (inspect_fv fv)
     | _ -> "?"
 
+(** Checks if a term `t` is equal to some FV (a top level name).
+Ignores universes and ascriptions. *)
+let is_fvar (t : term) (nm:string) : bool =
+    match inspect_ln_unascribe t with
+    | Tv_FVar fv
+    | Tv_UInst fv _ -> implode_qn (inspect_fv fv) = nm
+    | _ -> false
+
+(** Checks if a term `t` is equal to any FV (a top level name) from
+those given in the list. Ignores universes and ascriptions. *)
+let rec is_any_fvar (t : term) (nms:list string) : bool =
+    match nms with
+    | [] -> false
+    | v::vs -> is_fvar t v || is_any_fvar t vs
+
 let is_uvar (t : term) : bool =
     match inspect_ln (head t) with
     | Tv_Uvar _ _ -> true

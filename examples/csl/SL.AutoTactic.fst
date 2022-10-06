@@ -47,18 +47,14 @@ let fv_is (fv:fv) (name:string) = implode_qn (inspect_fv fv) = name
 
 let rec explode_list (t:term) : Tac (list term) =
     let hd, args = collect_app t in
-    match inspect hd with
-    | Tv_UInst fv _
-    | Tv_FVar fv ->
-        if fv_is fv (`%Cons)
-        then match args with
-             | [(_t, Q_Implicit); (hd, Q_Explicit); (tl, Q_Explicit)] -> hd :: explode_list tl
-             | _ -> fail "bad Cons"
-        else if fv_is fv (`%Nil)
-        then []
-        else fail "not a list"
-    | _ ->
-        fail "not a list (not an fv)"
+    if is_fvar hd (`%Cons) then
+      match args with
+      | [(_t, Q_Implicit); (hd, Q_Explicit); (tl, Q_Explicit)] -> hd :: explode_list tl
+      | _ -> fail "bad Cons"
+    else if is_fvar hd (`%Nil) then
+      []
+    else
+      fail "not a list"
 
 let from_sref (t:term) : Tac term =
     let hd, args = collect_app t in
@@ -337,7 +333,7 @@ let ref_terms_to_heap_term (refs : list term) : Tac term =
       (fun a t ->
         let u = fresh_uvar (Some (`int)) in // TODO: int is hardcoded
         let t = (`(`#t |> `#u)) in
-        if term_eq a (`emp)
+        if is_fvar a (`%emp)
         then t
         else (`(`#a <*> `#t))) (`emp) refs
 

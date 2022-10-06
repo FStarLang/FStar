@@ -85,11 +85,11 @@ let rec reification_aux (#a:Type) (mult unit me : term) : Tac (exp a) =
   let tl = list_unref tl in
   match inspect hd, tl with
   | Tv_FVar fv, [(me1, Q_Explicit) ; (me2, Q_Explicit)] ->
-    if term_eq (pack (Tv_FVar fv)) mult
+    if term_eq' (pack (Tv_FVar fv)) mult
     then Mult (reification_aux mult unit me1) (reification_aux mult unit me2)
     else Var (unquote me)
   | _, _ ->
-    if term_eq me unit
+    if term_eq' me unit
     then Unit
     else Var (unquote me)
 
@@ -107,7 +107,7 @@ let canon_monoid (#a:Type) (m:monoid a) : Tac unit =
   let g = cur_goal () in
   match term_as_formula g with
   | Comp (Eq (Some t)) me1 me2 ->
-      if term_eq t (quote a) then
+      if term_eq' t (quote a) then
         let r1 = reification m me1 in
         let r2 = reification m me2 in
         change_sq (quote (mdenote m r1 == mdenote m r2));

@@ -60,7 +60,6 @@ type bv_view = {
     bv_sort : typ;
 }
 
-
 noeq
 type universe_view =
   | Uv_Zero : universe_view
@@ -109,7 +108,6 @@ type comp_view =
 [Sg_Inductive] below. *)
 type ctor = name & typ
 
-
 noeq
 type lb_view = {
     lb_fv : fv;
@@ -117,7 +115,6 @@ type lb_view = {
     lb_typ : typ;
     lb_def : term
 }
-
 
 noeq
 type sigelt_view =

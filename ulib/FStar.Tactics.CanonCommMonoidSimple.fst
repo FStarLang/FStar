@@ -22,6 +22,8 @@ open FStar.Reflection
 open FStar.Classical
 open FStar.Tactics.CanonCommSwaps
 
+let term_eq = FStar.Tactics.term_eq'
+
 (* A simple expression canonizer for commutative monoids.
    For a canonizer with more features see FStar.Tactics.CanonCommMonoid.fst.
 
@@ -209,7 +211,7 @@ let monoid_reflect (#a:Type) (m:cm a) (am:amap a) (e1 e2:exp)
 (* Finds the position of first occurrence of x in xs.
    This is now specialized to terms and their funny term_eq. *)
 let rec where_aux (n:nat) (x:term) (xs:list term) :
-    Tot (option nat) (decreases xs) =
+    Tac (option nat) =
   match xs with
   | [] -> None
   | x'::xs' -> if term_eq x x' then Some n else where_aux (n+1) x xs'
