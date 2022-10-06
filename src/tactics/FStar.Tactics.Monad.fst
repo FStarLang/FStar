@@ -140,6 +140,12 @@ let rec mapM (f : 'a -> tac 'b) (l : list 'a) : tac (list 'b) =
         bind (mapM f xs) (fun ys ->
         ret (y::ys)))
 
+let rec iter_tac f l =
+  match l with
+  | [] -> ret ()
+  | hd::tl -> f hd ;! iter_tac f tl
+
+
 (* private *)
 let nwarn = BU.mk_ref 0
 let check_valid_goal g =

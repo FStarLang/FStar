@@ -40,6 +40,7 @@ module Err    = FStar.Errors
 module N      = FStar.TypeChecker.Normalize
 module PC     = FStar.Parser.Const
 module Print  = FStar.Syntax.Print
+module Free   = FStar.Syntax.Free
 module Rel    = FStar.TypeChecker.Rel
 module SF     = FStar.Syntax.Free
 module S      = FStar.Syntax.Syntax
@@ -212,12 +213,71 @@ let destruct_eq (typ : typ) : option (term * term) =
         | None -> None
         end
 
-let __do_unify_wflags (dbg:bool) (allow_guards:bool)
-               (env : env) (t1 : term) (t2 : term)
-: tac (option guard_t) =
+//
+// See if any of the implicits in uvs were solved in a Rel call,
+//   if so, core check them
+//
+let tc_unifier_solved_implicits env (must_tot:bool) (uvs:list ctx_uvar) : tac unit =
+  let aux (u:ctx_uvar) : tac unit =
+    match UF.find u.ctx_uvar_head with
+    | None -> ret () //not solved yet
+    | Some sol ->  //solved, check it
+      let env = {env with gamma=u.ctx_uvar_gamma} in
+      match core_check env sol (U.ctx_uvar_typ u) must_tot with
+      | Inl None ->
+        //checked with no guard
+        //no need to check it again
+        mark_uvar_as_already_checked u;
+        ret ()
+
+      | Inl (Some g) ->
+        //
+        // TODO: AR: should this call proc_guard?
+        //
+        let! goal = goal_of_guard "guard for implicit" env g u.ctx_uvar_range in
+        add_smt_goals [goal] ;!
+        mark_uvar_as_already_checked u;
+        ret ()
+              
+      | Inr failed ->
+        fail3 "Could not typecheck unifier solved implicit %s to %s because %s" 
+          (Print.uvar_to_string u.ctx_uvar_head)
+          (term_to_string env sol)
+          (Core.print_error_short failed)
+  in
+  uvs |> iter_tac aux
+
+//
+// When calling Rel for t1 `rel` t2, caller can choose to tc
+//   implicits solved during this unification
+// With side argument they can control, which side args to check
+// E.g. do_match will choose only Right,
+//   since it fails if some uvar on the left is instantiated
+//
+type check_unifier_solved_implicits_side =
+  | Check_none
+  | Check_left_only
+  | Check_right_only
+  | Check_both
+
+let __do_unify_wflags
+  (dbg:bool)
+  (allow_guards:bool)
+  (must_tot:bool)
+  (check_side:check_unifier_solved_implicits_side)
+  (env:env) (t1:term) (t2:term)
+  : tac (option guard_t) =
     if dbg then
       BU.print2 "%%%%%%%%do_unify %s =? %s\n" (Print.term_to_string t1)
                                               (Print.term_to_string t2);
+
+    let all_uvars =
+      (match check_side with
+       | Check_none -> Free.new_uv_set ()
+       | Check_left_only -> Free.uvars t1
+       | Check_right_only -> Free.uvars t2
+       | Check_both -> BU.set_union (Free.uvars t1) (Free.uvars t2))
+      |> BU.set_elements in
 
     bind (trytac cur_goal) (fun gopt ->
       try
@@ -235,8 +295,9 @@ let __do_unify_wflags (dbg:bool) (allow_guards:bool)
         | None ->
           ret None
         | Some g ->
-          bind (add_implicits g.implicits) (fun () ->
-          ret (Some g))
+          tc_unifier_solved_implicits env must_tot [];!
+          add_implicits g.implicits;!
+          ret (Some g)
 
       with | Errors.Err (_, msg, _) -> begin
                mlog (fun () -> BU.print1 ">> do_unify error, (%s)\n" msg ) (fun _ ->
@@ -249,26 +310,30 @@ let __do_unify_wflags (dbg:bool) (allow_guards:bool)
              end)
 
 (* Just a wrapper over __do_unify_wflags to better debug *)
-let __do_unify (allow_guards:bool) (env : env) (t1 : term) (t2 : term)
-: tac (option guard_t) =
-    let dbg = Env.debug env (Options.Other "TacUnify") in
-    bind idtac (fun () ->
-    if dbg then begin
-        Options.push ();
-        let _ = Options.set_options "--debug_level Rel --debug_level RelCheck" in
-        ()
-    end;
-    bind (__do_unify_wflags dbg allow_guards env t1 t2) (fun r ->
-    if dbg then
-        Options.pop ();
-    (* bind compress_implicits (fun _ -> *)
-    ret r))
-
+let __do_unify
+  (allow_guards:bool)
+  (must_tot:bool)
+  (check_side:check_unifier_solved_implicits_side)
+  (env:env) (t1:term) (t2:term)
+  : tac (option guard_t) =
+  let dbg = Env.debug env (Options.Other "TacUnify") in
+  bind idtac (fun () ->
+  if dbg then begin
+    Options.push ();
+    let _ = Options.set_options "--debug_level Rel --debug_level RelCheck" in
+    ()
+  end;
+  bind (__do_unify_wflags dbg allow_guards must_tot check_side env t1 t2) (fun r ->
+  if dbg then Options.pop ();
+  ret r))
 
 (* SMT-free unification. *)
-let do_unify (env : env) (t1 : term) (t2 : term)
-: tac bool =
-  bind (__do_unify false env t1 t2) (function
+let do_unify_aux
+  (must_tot:bool)
+  (check_side:check_unifier_solved_implicits_side)
+  (env:env) (t1:term) (t2:term)  
+  : tac bool =
+  bind (__do_unify false must_tot check_side env t1 t2) (function
   | None -> ret false
   | Some g ->
     (* g has to be trivial and we have already added its implicits *)
@@ -277,16 +342,20 @@ let do_unify (env : env) (t1 : term) (t2 : term)
     ret true
   )
 
-let do_unify' (allow_guards : bool) (env : env) (t1 : term) (t2 : term)
-: tac (option guard_t) =
-  __do_unify allow_guards env t1 t2
+let do_unify (must_tot:bool) (env:env) (t1:term) (t2:term) : tac bool =
+  do_unify_aux must_tot Check_both env t1 t2
+
+let do_unify_maybe_guards (allow_guards:bool) (must_tot:bool)
+  (env:env) (t1:term) (t2:term)
+  : tac (option guard_t) =
+  __do_unify allow_guards must_tot Check_both env t1 t2
 
 (* Does t1 match t2? That is, do they unify without instantiating/changing t1? *)
-let do_match (env:Env.env) (t1:term) (t2:term) : tac bool =
+let do_match (must_tot:bool) (env:Env.env) (t1:term) (t2:term) : tac bool =
     bind (mk_tac (fun ps -> let tx = UF.new_transaction () in
                             Success (tx, ps))) (fun tx ->
     let uvs1 = SF.uvars_uncached t1 in
-    bind (do_unify env t1 t2) (fun r ->
+    bind (do_unify_aux must_tot Check_right_only env t1 t2) (fun r ->
     if r then begin
         let uvs2 = SF.uvars_uncached t1 in
         if not (set_eq uvs1 uvs2)
@@ -300,14 +369,14 @@ let do_match (env:Env.env) (t1:term) (t2:term) : tac bool =
 LHS of the equality in [t1] is not instantiated, but the RHS might be.
 It is a pain to expose the whole logic to tactics, so we just do it
 here for now. *)
-let do_match_on_lhs (env:Env.env) (t1:term) (t2:term) : tac bool =
+let do_match_on_lhs (must_tot:bool) (env:Env.env) (t1:term) (t2:term) : tac bool =
     bind (mk_tac (fun ps -> let tx = UF.new_transaction () in
                             Success (tx, ps))) (fun tx ->
     match destruct_eq t1 with
     | None -> fail "do_match_on_lhs: not an eq"
     | Some (lhs, _) ->
     let uvs1 = SF.uvars_uncached lhs in
-    bind (do_unify env t1 t2) (fun r ->
+    bind (do_unify_aux must_tot Check_right_only env t1 t2) (fun r ->
     if r then begin
         let uvs2 = SF.uvars_uncached lhs in
         if not (set_eq uvs1 uvs2)
@@ -343,7 +412,8 @@ let set_solution goal solution : tac unit =
       ret ()
 
 let trysolve (goal : goal) (solution : term) : tac bool =
-    do_unify (goal_env goal) solution (goal_witness goal)
+  let must_tot = true in
+  do_unify must_tot (goal_env goal) solution (goal_witness goal)
 
 let solve (goal : goal) (solution : term) : tac unit =
     let e = goal_env goal in
@@ -708,7 +778,7 @@ let __exact_now set_expected_typ (t:term) : tac unit =
     bind (proc_guard "__exact typing" (goal_env goal) guard (rangeof goal)) (fun _ ->
     mlog (fun () -> BU.print2 "__exact_now: unifying %s and %s\n" (Print.term_to_string typ)
                                                                   (Print.term_to_string (goal_type goal))) (fun _ ->
-    bind (do_unify (goal_env goal) typ (goal_type goal)) (fun b ->
+    bind (do_unify true (goal_env goal) typ (goal_type goal)) (fun b ->
     if b
     then ( // do unify succeeded with a trivial guard; so the goal is solved and we don't have to check it again
       mark_goal_implicit_already_checked goal;
@@ -739,63 +809,23 @@ let t_exact try_refine set_expected_typ tm : tac unit = wrap_err "exact" <|
                   mlog (fun () -> BU.print_string "__exact_now: was not a refinement\n") (fun _ ->
                   traise e)))))
 
-let rec iter_tac (f: 'a -> tac unit) (l:list 'a)
-  : tac unit
-  = match l with
-    | [] -> ret ()
-    | hd::tl -> f hd ;! iter_tac f tl
-    
 let rec  __try_unify_by_application
             (only_match : bool)
             (acc : list (term * aqual * ctx_uvar))
             (e : env)
             (ty1 : term)
             (ty2 : term)
-            (ty2_uvars: list ctx_uvar)
             (rng : Range.range)
             : tac (list (term * aqual * ctx_uvar)) =
-    let f = if only_match
-            then do_match
-            else do_unify
-    in
-    bind (f e ty2 ty1) (function
-    | true ->
-      ty2_uvars
-      |> iter_tac (fun u ->
-          match UF.find u.ctx_uvar_head with
-          | None -> ret () //not solved yet
-          | Some sol ->  //solved, check it
-            let env = {e with gamma=u.ctx_uvar_gamma} in
-            match core_check env sol (U.ctx_uvar_typ u) true with
-            | Inl None ->
-              //checked with no guard
-              //no need to check it again
-              mark_uvar_as_already_checked u;
-              ret ()
+    let f = 
+      if only_match
+      then do_match
+      else do_unify in
 
-            | res ->
-              if true || Options.enable_core()
-              then
-              (
-                match res with
-                | Inl None ->
-                  ret ()
-                  
-                | Inl (Some g) ->
-                  let! goal = goal_of_guard "guard for implicit" env g u.ctx_uvar_range in
-                  add_smt_goals [goal] ;!
-                  mark_uvar_as_already_checked u;
-                  ret ()
-              
-                | Inr failed ->
-                  fail3 "Could not instantiate %s to %s because %s" 
-                               (Print.uvar_to_string u.ctx_uvar_head)
-                               (term_to_string env sol)
-                               (Core.print_error_short failed)
-                )
-              else ret ());!
-        (* Done! *)
-        ret acc
+    bind (let must_tot = true in f must_tot e ty2 ty1) (function
+    | true ->
+      (* Done! *)
+      ret acc
     | false -> begin
         (* Not a match, try instantiating the first type by application *)
         match U.arrow_one ty1 with
@@ -808,101 +838,42 @@ let rec  __try_unify_by_application
             mlog (fun () -> BU.print1 "t_apply: generated uvar %s\n" (Print.ctx_uvar_to_string uv)) (fun _ ->
             let typ = U.comp_result c in
             let typ' = SS.subst [S.NT (b.binder_bv, uvt)] typ in
-            __try_unify_by_application only_match ((uvt, U.aqual_of_binder b, uv)::acc) e typ' ty2 ty2_uvars rng))
+            __try_unify_by_application only_match ((uvt, U.aqual_of_binder b, uv)::acc) e typ' ty2 rng))
     end)
 
 (* Can t1 unify t2 if it's applied to arguments? If so return uvars for them *)
 (* NB: Result is reversed, which helps so we use fold_right instead of fold_left *)
 let try_unify_by_application (only_match:bool) (e : env) (ty1 : term) (ty2 : term) (rng:Range.range) : tac (list (term * aqual * ctx_uvar)) =
-  let ty2_uvars = FStar.Syntax.Free.uvars ty2 in
-    __try_unify_by_application only_match [] e ty1 ty2 (BU.set_elements ty2_uvars) rng
+  __try_unify_by_application only_match [] e ty1 ty2 rng
 
 //
-// Checking implicit solutions that may have been solved during unification
-//   E.g. when unifying the goals in apply
+// Goals for implicits created during apply
 //
-let check_apply_implicits_solutions
-    (simplify_guard:bool)
+let apply_implicits_as_goals
     (env:Env.env)
     (gl:option goal)
-    (debug_on:bool)
-    (debug_prefix:string)
-    (must_tot:bool)
-    (imps:list (term & ctx_uvar))
-  
+    (imps:list (term & ctx_uvar))  
   : tac (list (list goal)) =
 
-  let check_implicits_solution env uv (t:term) (k:typ) (must_tot:bool) 
-    : tac guard_t
-    = match core_check env t k must_tot with
-      | Inl None -> ret trivial_guard
-      | Inl (Some g) -> ret { trivial_guard with guard_f = NonTrivial g }
-      | Inr err ->
-        fail3 "Failed to check solution %s of variable %s because %s"
-          (term_to_string env t)
-          (Print.uvar_to_string uv)
-          (Core.print_error_short err)
-  in
-        
-      
-  //     in //just to see how much we can check
-  //     // we should eventually use the core computed guard, but it has a different shape and causes some
-  //     // tactics to fail
-  //     // | Inl None -> Env.trivial_guard
-  //     // | Inl (Some g) -> Env.guard_of_guard_formula (NonTrivial g)
-  //     let env = Env.set_expected_typ ({env with use_bv_sorts=true}) k in
-  //     let slow_path () =
-  //       //expected type is already set in the env
-  //       let _, _, g = TcTerm.typeof_tot_or_gtot_term env t must_tot in
-  //       g
-  //     in
-  //     match TcTerm.typeof_tot_or_gtot_term_fastpath env t must_tot with
-  //     | None -> slow_path ()
-  //     | Some k' ->
-  //       match Rel.subtype_nosmt env k' k with
-  //       | None -> slow_path ()
-  //       | Some g -> g
-  // in
-
-  let check_one_implicit (term, ctx_uvar) =
+  let one_implicit_as_goal (term, ctx_uvar) =
     let hd, _ = U.head_and_args term in
     match (SS.compress hd).n with
     | Tm_uvar (ctx_uvar, _) ->
       let gl =
         match gl with 
         | None ->  mk_goal env ctx_uvar (FStar.Options.peek()) true "goal for unsolved implicit"
-        | Some gl -> { gl with goal_ctx_uvar = ctx_uvar } in
+        | Some gl -> { gl with goal_ctx_uvar = ctx_uvar } in  //TODO: AR: what's happening here?
       let gl = bnorm_goal gl in
       ret [gl]
     | _ ->
-      if_verbose 
-        (fun () -> BU.print3 "%s: arg %s unified to (%s)\n"
-                     debug_prefix
-                     (Print.uvar_to_string ctx_uvar.ctx_uvar_head)
-                     (Print.term_to_string term);
-                ret ()) ;!
-      let env = {env with gamma=ctx_uvar.ctx_uvar_gamma} in
-      let! g_typ = check_implicits_solution env ctx_uvar.ctx_uvar_head term (U.ctx_uvar_typ ctx_uvar) must_tot in
-      let rng = 
-        match gl with
-        | None ->  ctx_uvar.ctx_uvar_range
-        | Some gl -> rangeof gl
-      in
-      proc_guard'
-        simplify_guard
-        (if debug_on
-         then BU.format3 "%s solved arg %s to %s\n"
-                      debug_prefix
-                      (Print.ctx_uvar_to_string ctx_uvar)
-                      (Print.term_to_string term)
-         else BU.format1 "%s solved arg" debug_prefix)
-         env g_typ rng ;!
-      //we've checked this implicit and added its guard as an explicit goal
-      //no need to recheck it
-      mark_uvar_as_already_checked ctx_uvar;
+      //
+      // This implicits has already been solved
+      // We would have typechecked its solution already,
+      //   just after the Rel call
+      //
       ret []
   in
-  imps |> mapM check_one_implicit
+  imps |> mapM one_implicit_as_goal
 
 // uopt: Don't add goals for implicits that appear free in posterior goals.
 // This is very handy for users, allowing to turn
@@ -961,8 +932,7 @@ let t_apply (uopt:bool) (only_match:bool) (tc_resolved_uvars:bool) (tm:term) : t
     //
     let uvt_uv_l = uvs |> List.map (fun (uvt, _q, uv) -> (uvt, uv)) in
     let! sub_goals = 
-        check_apply_implicits_solutions true e (Some goal) ps.tac_verb_dbg 
-                                        "apply" true uvt_uv_l in
+      apply_implicits_as_goals e (Some goal) uvt_uv_l in
     let sub_goals = List.flatten sub_goals
                   |> List.filter (fun g ->
                                   //if uopt is on, we don't keep uvars that
@@ -973,6 +943,7 @@ let t_apply (uopt:bool) (only_match:bool) (tc_resolved_uvars:bool) (tm:term) : t
     add_goals sub_goals ;!
     proc_guard "apply guard" e guard (rangeof goal)
   )
+
 // returns pre and post
 let lemma_or_sq (c : comp) : option (term * term) =
     let ct = U.comp_to_comp_typ_nouniv c in
@@ -1049,7 +1020,9 @@ let t_apply_lemma (noinst:bool) (noinst_lhs:bool)
           else if noinst_lhs then do_match_on_lhs
           else do_unify
       in
-      let! b = cmp_func env (goal_type goal) (U.mk_squash post_u post) in
+      let! b =
+        let must_tot = false in
+        cmp_func must_tot env (goal_type goal) (U.mk_squash post_u post) in
       if not b
       then (
         let post, goalt = TypeChecker.Err.print_discrepancy (tts env)
@@ -1075,7 +1048,7 @@ let t_apply_lemma (noinst:bool) (noinst_lhs:bool)
         in
         let must_tot = false in
         let! sub_goals = 
-             check_apply_implicits_solutions true env (Some goal) ps.tac_verb_dbg "apply_lemma" must_tot implicits in
+             apply_implicits_as_goals env (Some goal) implicits in
         let sub_goals = List.flatten sub_goals in
         // Optimization: if a uvar appears in a later goal, don't ask for it, since
         // it will be instantiated later. It is tracked anyway in ps.implicits
@@ -1302,7 +1275,8 @@ let guard_formula (g:guard_t) : term =
 let _t_trefl (allow_guards:bool) (l : term) (r : term) : tac unit =
   bind cur_goal (fun g ->
   let attempt (l : term) (r : term) : tac bool =
-    bind (do_unify' allow_guards (goal_env g) l r) (function
+    bind (let must_tot = true in
+          do_unify_maybe_guards allow_guards must_tot (goal_env g) l r) (function
     | None -> ret false
     | Some guard ->
       bind (solve' g U.exp_unit) (fun _ ->
@@ -1502,7 +1476,9 @@ let match_env (e:env) (t1 : term) (t2 : term) : tac bool = wrap_err "match_env" 
     bind (__tc e t2) (fun (t2, ty2, g2) ->
     bind (proc_guard "match_env g1" e g1 ps.entry_range) (fun () ->
     bind (proc_guard "match_env g2" e g2 ps.entry_range) (fun () ->
-    tac_and (do_match e ty1 ty2) (do_match e t1 t2))))))
+    let must_tot = true in
+    tac_and (do_match must_tot e ty1 ty2)
+            (do_match must_tot e t1 t2))))))
 
 let unify_env (e:env) (t1 : term) (t2 : term) : tac bool = wrap_err "unify_env" <|
     bind get (fun ps ->
@@ -1510,7 +1486,8 @@ let unify_env (e:env) (t1 : term) (t2 : term) : tac bool = wrap_err "unify_env" 
     bind (__tc e t2) (fun (t2, ty2, g2) ->
     bind (proc_guard "unify_env g1" e g1 ps.entry_range) (fun () ->
     bind (proc_guard "unify_env g2" e g2 ps.entry_range) (fun () ->
-    tac_and (do_unify e ty1 ty2) (do_unify e t1 t2))))))
+    let must_tot = true in
+    tac_and (do_unify must_tot e ty1 ty2) (do_unify must_tot e t1 t2))))))
 
 let unify_guard_env (e:env) (t1 : term) (t2 : term) : tac bool = wrap_err "unify_guard_env" <|
     bind get (fun ps ->
@@ -1518,10 +1495,11 @@ let unify_guard_env (e:env) (t1 : term) (t2 : term) : tac bool = wrap_err "unify
     bind (__tc e t2) (fun (t2, ty2, g2) ->
     bind (proc_guard "unify_guard_env g1" e g1 ps.entry_range) (fun () ->
     bind (proc_guard "unify_guard_env g2" e g2 ps.entry_range) (fun () ->
-    bind (do_unify' true e ty1 ty2) (function
+    let must_tot = true in
+    bind (do_unify_maybe_guards true must_tot e ty1 ty2) (function
     | None -> ret false
     | Some g1 ->
-      bind (do_unify' true e t1 t2) (function
+      bind (do_unify_maybe_guards true must_tot e t1 t2) (function
       | None -> ret false
       | Some g2 ->
         let formula : term = U.mk_conj (guard_formula g1) (guard_formula g2) in
@@ -1550,7 +1528,8 @@ let change (ty : typ) : tac unit = wrap_err "change" <|
     bind cur_goal (fun g ->
     bind (__tc (goal_env g) ty) (fun (ty, _, guard) ->
     bind (proc_guard "change" (goal_env g) guard (rangeof g)) (fun () ->
-    bind (do_unify (goal_env g) (goal_type g) ty) (fun bb ->
+    let must_tot = true in
+    bind (do_unify must_tot (goal_env g) (goal_type g) ty) (fun bb ->
     if bb
     then replace_cur (goal_with_type g ty)
     else begin
@@ -1561,7 +1540,7 @@ let change (ty : typ) : tac unit = wrap_err "change" <|
         let steps = [Env.AllowUnboundUniverses; Env.UnfoldUntil delta_constant; Env.Primops] in
         let ng  = normalize steps (goal_env g) (goal_type g) in
         let nty = normalize steps (goal_env g) ty in
-        bind (do_unify (goal_env g) ng nty) (fun b ->
+        bind (do_unify must_tot (goal_env g) ng nty) (fun b ->
         if b
         then replace_cur (goal_with_type g ty)
         else fail "not convertible")
@@ -1705,30 +1684,31 @@ let t_destruct (s_tm : term) : tac (list (fv * Z.t)) = wrap_err "destruct" <|
 
 let gather_explicit_guards_for_resolved_goals ()
   : tac unit
-  = wrap_err "gather_explicit_guards_for_resolved_goals" <| (
-    with_policy Goal <| (
-    let! ps = get in
-    let goals_of_resolved_implicits = 
-        List.filter_map 
-          (fun i -> 
-            if Rel.is_implicit_resolved ps.main_context i
-            && Some? (Rel.check_implicit_solution_for_tac ps.main_context i)
-            then let g = goal_of_implicit ps.main_context i in
-                 Some (goal_witness g, g.goal_ctx_uvar)
-            else None)
-          ps.all_implicits
-    in
-    let! sub_goals =
-      check_apply_implicits_solutions
-             false //don't simplify
-             ps.main_context
-             None 
-             ps.tac_verb_dbg
-             "gather_explicit_guards_for_resolved_goals"
-             true 
-             goals_of_resolved_implicits in
-    let sub_goals = List.flatten sub_goals in
-    add_goals sub_goals))  
+  = ret ()
+    // wrap_err "gather_explicit_guards_for_resolved_goals" <| (
+    // with_policy Goal <| (
+    // let! ps = get in
+    // let goals_of_resolved_implicits = 
+    //     List.filter_map 
+    //       (fun i -> 
+    //         if Rel.is_implicit_resolved ps.main_context i
+    //         && Some? (Rel.check_implicit_solution_for_tac ps.main_context i)
+    //         then let g = goal_of_implicit ps.main_context i in
+    //              Some (goal_witness g, g.goal_ctx_uvar)
+    //         else None)
+    //       ps.all_implicits
+    // in
+    // let! sub_goals =
+    //   apply_implicits_as_goals
+    //          false //don't simplify
+    //          ps.main_context
+    //          None 
+    //          ps.tac_verb_dbg
+    //          "gather_explicit_guards_for_resolved_goals"
+    //          true 
+    //          goals_of_resolved_implicits in
+    // let sub_goals = List.flatten sub_goals in
+    // add_goals sub_goals))  
 
 // TODO: move to library?
 let rec last (l:list 'a) : 'a =
@@ -1973,7 +1953,8 @@ let t_commute_applied_match () : tac unit = wrap_err "t_commute_applied_match" <
           let c = SS.subst_comp ss c in
           U.comp_result c)}) in
       let l' = mk (Tm_match (e, asc_opt, brs', lopt')) l.pos in
-      bind (do_unify' false (goal_env g) l' r) (function
+      let must_tot = true in
+      bind (do_unify_maybe_guards false must_tot (goal_env g) l' r) (function
       | None -> fail "discharging the equality failed"
       | Some guard ->
         if Env.is_trivial_guard_formula guard
