@@ -1668,7 +1668,22 @@ let rec init (l:list 'a) : list 'a =
     | [x] -> []
     | x::xs -> x :: init xs
 
-(* TODO: these are mostly duplicated from FStar.Reflection.Basic, unify *)
+(* TODO: to avoid the duplication with inspect_ln (and the same
+for pack), we could instead have an `open_view` function (maybe even
+user-facing?) that takes care of opening the needed binders in the rest
+of the term. Similarly, a `close_view`. Then:
+
+  inspect = open_view . inspect_ln
+  pack    = pack_ln . close_view
+
+which would be nice. But.. patterns in matches and recursive
+letbindings make that complicated, since we need to duplicate a bunch of
+logic from Syntax.Subst here, so I dropped that idea for now.
+Everything else goes surprisingly smooth though!
+
+-- GM 2022/Oct/05
+*)
+
 let rec inspect (t:term) : tac term_view = wrap_err "inspect" (
     bind (top_env ()) (fun e ->
     let t = U.unlazy_emb t in
