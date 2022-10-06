@@ -228,6 +228,7 @@ val warn_default_effects        : unit    -> bool
 val with_saved_options          : (unit -> 'a) -> 'a
 val z3_exe                      : unit    -> string
 val z3_cliopt                   : unit    -> list string
+val z3_smtopt                   : unit    -> list string
 val z3_refresh                  : unit    -> bool
 val z3_rlimit                   : unit    -> int
 val z3_rlimit_factor            : unit    -> int

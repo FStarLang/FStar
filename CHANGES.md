@@ -231,6 +231,16 @@ Guidelines for the changelog:
 
 ## Syntax
 
+   * PR #2671 allows operators as field names in record expressions
+     and record type declaration. Example:
+
+	 ```fstar
+	 type foo = { ( ^ ): int  }
+	 let _: foo = { ( ^ ) = 3 }
+	 ```
+
+	 See `tests/micro-benchmarks/RecordFieldOperator.fst` for details.
+
    * PR #2670 makes F*'s parser accept unparenthesised record
      expressions on function application. `f {x = 1}` is now legal
      F\*, while before one was forced to write `f ({x = 1})`.

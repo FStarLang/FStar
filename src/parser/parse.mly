@@ -302,7 +302,7 @@ typeDefinition:
       { (fun id binders kopt -> check_id id; TyconVariant(id, binders, kopt, ct_decls)) }
 
 recordFieldDecl:
-  | qualified_lid=aqualifiedWithAttrs(lident) COLON t=typ
+  | qualified_lid=aqualifiedWithAttrs(lidentOrOperator) COLON t=typ
       {
         let (qual, attrs), lid = qualified_lid in
         (lid, qual, attrs, t)
@@ -649,9 +649,13 @@ ident:
   | x=lident { x }
   | x=uident  { x }
 
-lidentOrOperator:
-  | id=IDENT
-    { mk_ident(id, rhs parseState 1) }
+qlidentOrOperator:
+  | qid=qlident { qid }
+  | LPAREN id=operator RPAREN
+    { lid_of_ns_and_id [] (id_of_text (compile_op' (string_of_id id) (range_of_id id))) }
+
+%inline lidentOrOperator:
+  | id=lident { id }
   | LPAREN id=operator RPAREN
     { mk_ident (compile_op' (string_of_id id) (range_of_id id), range_of_id id) }
 
@@ -1167,8 +1171,8 @@ recordExp:
       { mk_term (Record (Some e, record_fields)) (rhs2 parseState 1 3) Expr }
 
 simpleDef:
-  | e=separated_pair(qlident, EQUALS, noSeqTerm) { e }
-  | lid=qlident { lid, mk_term (Name (lid_of_ids [ ident_of_lid lid ])) (rhs parseState 1) Un }
+  | e=separated_pair(qlidentOrOperator, EQUALS, noSeqTerm) { e }
+  | lid=qlidentOrOperator { lid, mk_term (Name (lid_of_ids [ ident_of_lid lid ])) (rhs parseState 1) Un }
 
 %inline appTermCommon(argTerm):
   | head=indexingTerm args=list(argTerm)
