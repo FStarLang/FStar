@@ -934,6 +934,7 @@ let ask_and_report_errors is_being_retried env all_labels prefix query query_ter
 type solver_cfg = {
   seed             : int;
   cliopt           : list string;
+  smtopt           : list string;  
   facts            : list (list string * bool);
   valid_intro      : bool;
   valid_elim       : bool;
@@ -944,6 +945,7 @@ let _last_cfg : ref (option solver_cfg) = BU.mk_ref None
 let get_cfg env : solver_cfg =
     { seed             = Options.z3_seed ()
     ; cliopt           = Options.z3_cliopt ()
+    ; smtopt           = Options.z3_smtopt ()    
     ; facts            = env.proof_ns
     ; valid_intro      = Options.smtencoding_valid_intro ()
     ; valid_elim       = Options.smtencoding_valid_elim ()

@@ -862,6 +862,12 @@ let (mk_input :
   fun fresh ->
     fun theory ->
       let options = FStar_Compiler_Effect.op_Bang z3_options in
+      let options1 =
+        let uu___ =
+          let uu___1 = FStar_Options.z3_smtopt () in
+          FStar_Compiler_Effect.op_Bar_Greater uu___1
+            (FStar_String.concat "\n") in
+        Prims.op_Hat options uu___ in
       (let uu___1 = FStar_Options.print_z3_statistics () in
        if uu___1 then context_profile theory else ());
       (let uu___1 =
@@ -885,7 +891,7 @@ let (mk_input :
            | (prefix, check_sat, suffix) ->
                let pp =
                  FStar_Compiler_List.map
-                   (FStar_SMTEncoding_Term.declToSmt options) in
+                   (FStar_SMTEncoding_Term.declToSmt options1) in
                let suffix1 = check_sat :: suffix in
                let ps_lines = pp prefix in
                let ss_lines = pp suffix1 in
@@ -898,7 +904,7 @@ let (mk_input :
                    let uu___5 =
                      FStar_Compiler_Effect.op_Bar_Greater prefix
                        (FStar_Compiler_List.map
-                          (FStar_SMTEncoding_Term.declToSmt_no_caps options)) in
+                          (FStar_SMTEncoding_Term.declToSmt_no_caps options1)) in
                    FStar_Compiler_Effect.op_Bar_Greater uu___5
                      (FStar_String.concat "\n")
                  else ps in
@@ -910,7 +916,7 @@ let (mk_input :
            (let uu___4 =
               let uu___5 =
                 FStar_Compiler_List.map
-                  (FStar_SMTEncoding_Term.declToSmt options) theory in
+                  (FStar_SMTEncoding_Term.declToSmt options1) theory in
               FStar_Compiler_Effect.op_Bar_Greater uu___5
                 (FStar_String.concat "\n") in
             (uu___4, FStar_Pervasives_Native.None)) in

@@ -8,10 +8,10 @@
       1,
       [ "@query" ],
       0,
-      "a96f70bc088c0150dcd2cc7f81bf8641"
+      "ce905491912039450e492086669ca662"
     ],
     [
-      "ImmutableSTwHeaps.1934",
+      "ImmutableSTwHeaps.1985",
       1,
       2,
       1,
@@ -23,25 +23,25 @@
         "token_correspondence_ImmutableSTwHeaps.heap_rel"
       ],
       0,
-      "485e48f392e7ef2d335fb20c315411f0"
-    ],
-    [
-      "ImmutableSTwHeaps.ist_witnessed",
-      1,
-      2,
-      1,
-      [
-        "@query", "equation_FStar.Preorder.preorder_rel",
-        "equation_FStar.Preorder.reflexive",
-        "equation_FStar.Preorder.transitive",
-        "equation_ImmutableSTwHeaps.heap_rel",
-        "token_correspondence_ImmutableSTwHeaps.heap_rel"
-      ],
-      0,
-      "98e961fe18e76531aaad39d4a4f04404"
+      "616f7309afc2fee6313f8c7abac60c61"
     ],
     [
       "ImmutableSTwHeaps.ist_witnessed",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.Preorder.preorder_rel",
+        "equation_FStar.Preorder.reflexive",
+        "equation_FStar.Preorder.transitive",
+        "equation_ImmutableSTwHeaps.heap_rel",
+        "token_correspondence_ImmutableSTwHeaps.heap_rel"
+      ],
+      0,
+      "cc4d1951b54eac1e806a4aaae5452b49"
+    ],
+    [
+      "ImmutableSTwHeaps.ist_witnessed",
       2,
       2,
       1,
@@ -53,7 +53,7 @@
         "token_correspondence_ImmutableSTwHeaps.heap_rel"
       ],
       0,
-      "c7c3ff62ae807447517191923f8f02d1"
+      "30b261bdf2951ada5d5a5d6194012f91"
     ],
     [
       "ImmutableSTwHeaps.ist_witness",
@@ -68,7 +68,7 @@
         "token_correspondence_ImmutableSTwHeaps.heap_rel"
       ],
       0,
-      "44bbfe240aa657854d57f2b6c02d5064"
+      "6ad86b3672d0e2a2de6705953476a719"
     ],
     [
       "ImmutableSTwHeaps.ist_recall",
@@ -83,7 +83,7 @@
         "token_correspondence_ImmutableSTwHeaps.heap_rel"
       ],
       0,
-      "e9355e3fece7d6e98b6a11b12f6e31e4"
+      "4992794fb7e1e6795ff761ce198b1a1d"
     ],
     [
       "ImmutableSTwHeaps.alloc",
@@ -109,7 +109,7 @@
         "typing_ImmutableSTwHeaps.upd"
       ],
       0,
-      "fba31656c21cc8db4e78e93d7b3e852c"
+      "9ea0a954833e11080e81e39ae6aac52a"
     ],
     [
       "ImmutableSTwHeaps.read",
@@ -122,7 +122,7 @@
         "typing_ImmutableSTwHeaps.sel"
       ],
       0,
-      "88a73edd7b21ad0d29232632ebc403b4"
+      "8049577e152eb4197f8e0b9aaa0fa0e1"
     ],
     [
       "ImmutableSTwHeaps.write",
@@ -146,7 +146,7 @@
         "typing_ImmutableSTwHeaps.upd"
       ],
       0,
-      "2171d302b3bc1478c1c0adfd7846a03b"
+      "d1646d0b41fbe39c7c4e5ac48c57efff"
     ]
   ]
 ]
