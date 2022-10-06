@@ -778,73 +778,85 @@ let (__do_unify_wflags :
                    FStar_Compiler_Effect.op_Bar_Greater uu___1
                      FStar_Compiler_Util.set_elements in
                  let uu___1 =
-                   FStar_Tactics_Monad.trytac FStar_Tactics_Monad.cur_goal in
-                 FStar_Tactics_Monad.bind uu___1
-                   (fun gopt ->
-                      try
-                        (fun uu___2 ->
-                           match () with
-                           | () ->
-                               let res =
-                                 if allow_guards
-                                 then
-                                   FStar_TypeChecker_Rel.try_teq true env1 t1
-                                     t2
-                                 else
-                                   FStar_TypeChecker_Rel.teq_nosmt env1 t1 t2 in
-                               (if dbg
-                                then
-                                  (let uu___4 =
-                                     FStar_Common.string_of_option
-                                       (FStar_TypeChecker_Rel.guard_to_string
-                                          env1) res in
-                                   let uu___5 =
-                                     FStar_Syntax_Print.term_to_string t1 in
-                                   let uu___6 =
-                                     FStar_Syntax_Print.term_to_string t2 in
-                                   FStar_Compiler_Util.print3
-                                     "%%%%%%%%do_unify (RESULT %s) %s =? %s\n"
-                                     uu___4 uu___5 uu___6)
-                                else ();
-                                (match res with
-                                 | FStar_Pervasives_Native.None ->
-                                     FStar_Tactics_Monad.ret
-                                       FStar_Pervasives_Native.None
-                                 | FStar_Pervasives_Native.Some g ->
-                                     let uu___4 =
-                                       tc_unifier_solved_implicits env1
-                                         must_tot allow_guards all_uvars in
-                                     FStar_Tactics_Monad.op_let_Bang uu___4
-                                       (fun uu___5 ->
-                                          let uu___6 =
-                                            FStar_Tactics_Monad.add_implicits
-                                              g.FStar_TypeChecker_Common.implicits in
-                                          FStar_Tactics_Monad.op_let_Bang
-                                            uu___6
-                                            (fun uu___7 ->
-                                               FStar_Tactics_Monad.ret
-                                                 (FStar_Pervasives_Native.Some
-                                                    g)))))) ()
-                      with
-                      | FStar_Errors.Err (uu___3, msg, uu___4) ->
-                          FStar_Tactics_Monad.mlog
-                            (fun uu___5 ->
-                               FStar_Compiler_Util.print1
-                                 ">> do_unify error, (%s)\n" msg)
-                            (fun uu___5 ->
-                               FStar_Tactics_Monad.ret
-                                 FStar_Pervasives_Native.None)
-                      | FStar_Errors.Error (uu___3, msg, r, uu___4) ->
-                          FStar_Tactics_Monad.mlog
-                            (fun uu___5 ->
-                               let uu___6 =
-                                 FStar_Compiler_Range.string_of_range r in
-                               FStar_Compiler_Util.print2
-                                 ">> do_unify error, (%s) at (%s)\n" msg
-                                 uu___6)
-                            (fun uu___5 ->
-                               FStar_Tactics_Monad.ret
-                                 FStar_Pervasives_Native.None)))
+                   let uu___2 =
+                     let uu___3 =
+                       FStar_Tactics_Monad.trytac
+                         FStar_Tactics_Monad.cur_goal in
+                     FStar_Tactics_Monad.bind uu___3
+                       (fun gopt ->
+                          try
+                            (fun uu___4 ->
+                               match () with
+                               | () ->
+                                   let res =
+                                     if allow_guards
+                                     then
+                                       FStar_TypeChecker_Rel.try_teq true
+                                         env1 t1 t2
+                                     else
+                                       FStar_TypeChecker_Rel.teq_nosmt env1
+                                         t1 t2 in
+                                   (if dbg
+                                    then
+                                      (let uu___6 =
+                                         FStar_Common.string_of_option
+                                           (FStar_TypeChecker_Rel.guard_to_string
+                                              env1) res in
+                                       let uu___7 =
+                                         FStar_Syntax_Print.term_to_string t1 in
+                                       let uu___8 =
+                                         FStar_Syntax_Print.term_to_string t2 in
+                                       FStar_Compiler_Util.print3
+                                         "%%%%%%%%do_unify (RESULT %s) %s =? %s\n"
+                                         uu___6 uu___7 uu___8)
+                                    else ();
+                                    (match res with
+                                     | FStar_Pervasives_Native.None ->
+                                         FStar_Tactics_Monad.ret
+                                           FStar_Pervasives_Native.None
+                                     | FStar_Pervasives_Native.Some g ->
+                                         let uu___6 =
+                                           tc_unifier_solved_implicits env1
+                                             must_tot allow_guards all_uvars in
+                                         FStar_Tactics_Monad.op_let_Bang
+                                           uu___6
+                                           (fun uu___7 ->
+                                              let uu___8 =
+                                                FStar_Tactics_Monad.add_implicits
+                                                  g.FStar_TypeChecker_Common.implicits in
+                                              FStar_Tactics_Monad.op_let_Bang
+                                                uu___8
+                                                (fun uu___9 ->
+                                                   FStar_Tactics_Monad.ret
+                                                     (FStar_Pervasives_Native.Some
+                                                        g)))))) ()
+                          with
+                          | FStar_Errors.Err (uu___5, msg, uu___6) ->
+                              FStar_Tactics_Monad.mlog
+                                (fun uu___7 ->
+                                   FStar_Compiler_Util.print1
+                                     ">> do_unify error, (%s)\n" msg)
+                                (fun uu___7 ->
+                                   FStar_Tactics_Monad.ret
+                                     FStar_Pervasives_Native.None)
+                          | FStar_Errors.Error (uu___5, msg, r, uu___6) ->
+                              FStar_Tactics_Monad.mlog
+                                (fun uu___7 ->
+                                   let uu___8 =
+                                     FStar_Compiler_Range.string_of_range r in
+                                   FStar_Compiler_Util.print2
+                                     ">> do_unify error, (%s) at (%s)\n" msg
+                                     uu___8)
+                                (fun uu___7 ->
+                                   FStar_Tactics_Monad.ret
+                                     FStar_Pervasives_Native.None)) in
+                   FStar_Tactics_Monad.catch uu___2 in
+                 FStar_Tactics_Monad.op_let_Bang uu___1
+                   (fun uu___2 ->
+                      match uu___2 with
+                      | FStar_Pervasives.Inl exn ->
+                          FStar_Tactics_Monad.traise exn
+                      | FStar_Pervasives.Inr v -> FStar_Tactics_Monad.ret v))
 let (__do_unify :
   Prims.bool ->
     Prims.bool ->

@@ -344,35 +344,42 @@ let __do_unify_wflags
        | Check_both -> BU.set_union (Free.uvars t1) (Free.uvars t2))
       |> BU.set_elements in
 
-    bind (trytac cur_goal) (fun gopt ->
-      try
-        let res =
+    match!
+      catch (//restore UF graph in case anything fails
+        bind (trytac cur_goal) (fun gopt ->
+        try
+          let res =
           if allow_guards
           then Rel.try_teq true env t1 t2
           else Rel.teq_nosmt env t1 t2 in
-        if dbg then
-          BU.print3 "%%%%%%%%do_unify (RESULT %s) %s =? %s\n"
+          if dbg then
+            BU.print3 "%%%%%%%%do_unify (RESULT %s) %s =? %s\n"
                               (FStar.Common.string_of_option (Rel.guard_to_string env) res)
                               (Print.term_to_string t1)
                               (Print.term_to_string t2);
 
-        match res with
-        | None ->
-          ret None
-        | Some g ->
-          tc_unifier_solved_implicits env must_tot allow_guards all_uvars;!
-          add_implicits g.implicits;!
-          ret (Some g)
-
-      with | Errors.Err (_, msg, _) -> begin
-               mlog (fun () -> BU.print1 ">> do_unify error, (%s)\n" msg ) (fun _ ->
-               ret None)
-             end
-           | Errors.Error (_, msg, r, _) -> begin
-               mlog (fun () -> BU.print2 ">> do_unify error, (%s) at (%s)\n"
+          match res with
+          | None ->
+            ret None
+          | Some g ->
+            tc_unifier_solved_implicits env must_tot allow_guards all_uvars;!
+            add_implicits g.implicits;!
+            ret (Some g)
+  
+        with | Errors.Err (_, msg, _) -> begin
+                          mlog (fun () -> BU.print1 ">> do_unify error, (%s)\n" msg ) (fun _ ->
+                          ret None)
+               end
+             | Errors.Error (_, msg, r, _) -> begin
+                            mlog (fun () -> BU.print2 ">> do_unify error, (%s) at (%s)\n"
                             msg (Range.string_of_range r)) (fun _ ->
-               ret None)
-             end)
+                            ret None)
+               end
+        )
+      )
+    with
+    | Inl exn -> traise exn
+    | Inr v -> ret v
 
 (* Just a wrapper over __do_unify_wflags to better debug *)
 let __do_unify
