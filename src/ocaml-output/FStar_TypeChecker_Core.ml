@@ -1544,9 +1544,41 @@ and (check_subcomp :
             let uu___2 = destruct_comp c1 in (uu___1, uu___2) in
           match uu___ with
           | (FStar_Pervasives_Native.None, uu___1) ->
-              fail "Subcomp failed: Non Tot/GTot computation types unhandled"
+              let uu___2 =
+                let uu___3 = FStar_Syntax_Util.eq_comp c0 c1 in
+                uu___3 = FStar_Syntax_Util.Equal in
+              if uu___2
+              then return ()
+              else
+                (let uu___4 =
+                   let uu___5 =
+                     FStar_Ident.string_of_lid
+                       (FStar_Syntax_Util.comp_effect_name c0) in
+                   let uu___6 =
+                     FStar_Ident.string_of_lid
+                       (FStar_Syntax_Util.comp_effect_name c1) in
+                   FStar_Compiler_Util.format2
+                     "Subcomp failed: Non Tot/GTot computation types unhandled; got %s and %s"
+                     uu___5 uu___6 in
+                 fail uu___4)
           | (uu___1, FStar_Pervasives_Native.None) ->
-              fail "Subcomp failed: Non Tot/GTot computation types unhandled"
+              let uu___2 =
+                let uu___3 = FStar_Syntax_Util.eq_comp c0 c1 in
+                uu___3 = FStar_Syntax_Util.Equal in
+              if uu___2
+              then return ()
+              else
+                (let uu___4 =
+                   let uu___5 =
+                     FStar_Ident.string_of_lid
+                       (FStar_Syntax_Util.comp_effect_name c0) in
+                   let uu___6 =
+                     FStar_Ident.string_of_lid
+                       (FStar_Syntax_Util.comp_effect_name c1) in
+                   FStar_Compiler_Util.format2
+                     "Subcomp failed: Non Tot/GTot computation types unhandled; got %s and %s"
+                     uu___5 uu___6 in
+                 fail uu___4)
           | (FStar_Pervasives_Native.Some (E_TOTAL, t0),
              FStar_Pervasives_Native.Some (uu___1, t1)) ->
               check_subtype g e t0 t1
@@ -2797,10 +2829,11 @@ let (check_term :
              FStar_TypeChecker_Env.debug g (FStar_Options.Other "Core") in
            if uu___1
            then
-             let uu___2 = FStar_Syntax_Print.term_to_string e in
-             let uu___3 = FStar_Syntax_Print.term_to_string t in
-             FStar_Compiler_Util.print2 "Entering core with %s <: %s\n"
-               uu___2 uu___3
+             let uu___2 = FStar_Compiler_Util.stack_dump () in
+             let uu___3 = FStar_Syntax_Print.term_to_string e in
+             let uu___4 = FStar_Syntax_Print.term_to_string t in
+             FStar_Compiler_Util.print3 "%s\nEntering core with %s <: %s\n"
+               uu___2 uu___3 uu___4
            else ());
           (let ctx = { no_guard = false; error_context = [] } in
            let res =

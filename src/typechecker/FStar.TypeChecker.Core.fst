@@ -792,7 +792,11 @@ and check_subcomp (g:env) (e:term) (c0 c1:comp)
     match destruct_comp c0, destruct_comp c1 with
     | None, _
     | _, None ->
-      fail "Subcomp failed: Non Tot/GTot computation types unhandled"
+      if U.eq_comp c0 c1 = U.Equal
+      then return ()
+      else fail (BU.format2 "Subcomp failed: Non Tot/GTot computation types unhandled; got %s and %s" 
+                            (Ident.string_of_lid (U.comp_effect_name c0))
+                            (Ident.string_of_lid (U.comp_effect_name c1)))
 
     | Some (E_TOTAL, t0), Some (_, t1)
     | Some (E_GHOST, t0), Some (E_GHOST, t1) ->
@@ -1223,7 +1227,10 @@ let check_term_top g e t (must_tot:bool)
 
 let check_term g e t (must_tot:bool)
   = if Env.debug g (Options.Other "Core")
-    then BU.print2 "Entering core with %s <: %s\n" (P.term_to_string e) (P.term_to_string t);
+    then BU.print3 "%s\nEntering core with %s <: %s\n"
+                   (BU.stack_dump ())
+                   (P.term_to_string e)
+                   (P.term_to_string t);
     let ctx = { no_guard = false; error_context = [] } in
     let res = match check_term_top g e t must_tot ctx with
     | Inl (_, g) -> Inl g

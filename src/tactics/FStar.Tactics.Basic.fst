@@ -213,11 +213,69 @@ let destruct_eq (typ : typ) : option (term * term) =
         | None -> None
         end
 
+
+let get_guard_policy () : tac guard_policy =
+    bind get (fun ps -> ret ps.guard_policy)
+
+let set_guard_policy (pol : guard_policy) : tac unit =
+    bind get (fun ps -> set ({ ps with guard_policy = pol }))
+
+let with_policy pol (t : tac 'a) : tac 'a =
+    bind (get_guard_policy ()) (fun old_pol ->
+    bind (set_guard_policy pol) (fun () ->
+    bind t (fun r ->
+    bind (set_guard_policy old_pol) (fun () ->
+    ret r))))
+
+let proc_guard' (simplify:bool) (reason:string) (e : env) (g : guard_t) (rng:Range.range) : tac unit =
+    mlog (fun () ->
+        BU.print2 "Processing guard (%s:%s)\n" reason (Rel.guard_to_string e g)) (fun () ->
+    add_implicits g.implicits;!
+    let guard_f =
+      if simplify
+      then (Rel.simplify_guard e g).guard_f
+      else g.guard_f
+    in
+    match guard_f with
+    | TcComm.Trivial -> ret ()
+    | TcComm.NonTrivial f ->
+      let! ps = get in
+      match ps.guard_policy with
+      | Drop ->
+        // should somehow taint the state instead of just printing a warning
+        Err.log_issue e.range
+            (Errors.Warning_TacAdmit, BU.format1 "Tactics admitted guard <%s>\n\n"
+                        (Rel.guard_to_string e g));
+        ret ()
+
+      | Goal ->
+        mlog (fun () -> BU.print2 "Making guard (%s:%s) into a goal\n" reason (Rel.guard_to_string e g)) (fun () ->
+        let! g = goal_of_guard reason e f rng in
+        push_goals [g])
+
+    | SMT ->
+        mlog (fun () -> BU.print2 "Sending guard (%s:%s) to SMT goal\n" reason (Rel.guard_to_string e g)) (fun () ->
+        let! g = goal_of_guard reason e f rng in
+        push_smt_goals [g])
+
+    | Force ->
+        mlog (fun () -> BU.print2 "Forcing guard (%s:%s)\n" reason (Rel.guard_to_string e g)) (fun () ->
+        try if not (Env.is_trivial <| Rel.discharge_guard_no_smt e g)
+            then
+                mlog (fun () -> BU.print1 "guard = %s\n" (Rel.guard_to_string e g)) (fun () ->
+                fail1 "Forcing the guard failed (%s)" reason)
+            else ret ()
+        with
+        | _ -> mlog (fun () -> BU.print1 "guard = %s\n" (Rel.guard_to_string e g)) (fun () ->
+               fail1 "Forcing the guard failed (%s)" reason)))
+
+let proc_guard = proc_guard' true
+
 //
 // See if any of the implicits in uvs were solved in a Rel call,
 //   if so, core check them
 //
-let tc_unifier_solved_implicits env (must_tot:bool) (uvs:list ctx_uvar) : tac unit =
+let tc_unifier_solved_implicits env (must_tot:bool) (allow_guards:bool) (uvs:list ctx_uvar) : tac unit =
   let aux (u:ctx_uvar) : tac unit =
     match UF.find u.ctx_uvar_head with
     | None -> ret () //not solved yet
@@ -231,13 +289,20 @@ let tc_unifier_solved_implicits env (must_tot:bool) (uvs:list ctx_uvar) : tac un
         ret ()
 
       | Inl (Some g) ->
-        //
-        // TODO: AR: should this call proc_guard?
-        //
-        let! goal = goal_of_guard "guard for implicit" env g u.ctx_uvar_range in
-        add_smt_goals [goal] ;!
-        mark_uvar_as_already_checked u;
-        ret ()
+        let guard = { Env.trivial_guard with guard_f = NonTrivial g } in
+        let guard = Rel.simplify_guard env guard in
+        if not allow_guards
+        && NonTrivial? guard.guard_f
+        then (
+          fail2 "Could not typecheck unifier solved implicit %s to %s since it produced a guard and guards were not allowed"
+            (Print.uvar_to_string u.ctx_uvar_head)
+            (term_to_string env sol)
+        )
+        else (
+          proc_guard' false "guard for implicit" env guard u.ctx_uvar_range ;!
+          mark_uvar_as_already_checked u;
+          ret ()
+        )
               
       | Inr failed ->
         fail3 "Could not typecheck unifier solved implicit %s to %s because %s" 
@@ -295,7 +360,7 @@ let __do_unify_wflags
         | None ->
           ret None
         | Some g ->
-          tc_unifier_solved_implicits env must_tot [];!
+          tc_unifier_solved_implicits env must_tot allow_guards all_uvars;!
           add_implicits g.implicits;!
           ret (Some g)
 
@@ -520,63 +585,6 @@ let __tc_lax (e : env) (t : term) : tac (term * lcomp * guard_t) =
                                                   (Env.all_binders e |> Print.binders_to_string ", ")
                                                   msg
            end))
-
-let get_guard_policy () : tac guard_policy =
-    bind get (fun ps -> ret ps.guard_policy)
-
-let set_guard_policy (pol : guard_policy) : tac unit =
-    bind get (fun ps -> set ({ ps with guard_policy = pol }))
-
-let with_policy pol (t : tac 'a) : tac 'a =
-    bind (get_guard_policy ()) (fun old_pol ->
-    bind (set_guard_policy pol) (fun () ->
-    bind t (fun r ->
-    bind (set_guard_policy old_pol) (fun () ->
-    ret r))))
-
-let proc_guard' (simplify:bool) (reason:string) (e : env) (g : guard_t) (rng:Range.range) : tac unit =
-    mlog (fun () ->
-        BU.print2 "Processing guard (%s:%s)\n" reason (Rel.guard_to_string e g)) (fun () ->
-    add_implicits g.implicits;!
-    let guard_f =
-      if simplify
-      then (Rel.simplify_guard e g).guard_f
-      else g.guard_f
-    in
-    match guard_f with
-    | TcComm.Trivial -> ret ()
-    | TcComm.NonTrivial f ->
-      let! ps = get in
-      match ps.guard_policy with
-      | Drop ->
-        // should somehow taint the state instead of just printing a warning
-        Err.log_issue e.range
-            (Errors.Warning_TacAdmit, BU.format1 "Tactics admitted guard <%s>\n\n"
-                        (Rel.guard_to_string e g));
-        ret ()
-
-      | Goal ->
-        mlog (fun () -> BU.print2 "Making guard (%s:%s) into a goal\n" reason (Rel.guard_to_string e g)) (fun () ->
-        let! g = goal_of_guard reason e f rng in
-        push_goals [g])
-
-    | SMT ->
-        mlog (fun () -> BU.print2 "Sending guard (%s:%s) to SMT goal\n" reason (Rel.guard_to_string e g)) (fun () ->
-        let! g = goal_of_guard reason e f rng in
-        push_smt_goals [g])
-
-    | Force ->
-        mlog (fun () -> BU.print2 "Forcing guard (%s:%s)\n" reason (Rel.guard_to_string e g)) (fun () ->
-        try if not (Env.is_trivial <| Rel.discharge_guard_no_smt e g)
-            then
-                mlog (fun () -> BU.print1 "guard = %s\n" (Rel.guard_to_string e g)) (fun () ->
-                fail1 "Forcing the guard failed (%s)" reason)
-            else ret ()
-        with
-        | _ -> mlog (fun () -> BU.print1 "guard = %s\n" (Rel.guard_to_string e g)) (fun () ->
-               fail1 "Forcing the guard failed (%s)" reason)))
-
-let proc_guard = proc_guard' true
 
 let tcc (e : env) (t : term) : tac comp = wrap_err "tcc" <|
     bind (__tc_lax e t) (fun (_, lc, _) ->
