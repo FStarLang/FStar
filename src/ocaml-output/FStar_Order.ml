@@ -27,6 +27,14 @@ let (order_from_int : Prims.int -> order) =
     if i < Prims.int_zero then Lt else if i = Prims.int_zero then Eq else Gt
 let (compare_int : Prims.int -> Prims.int -> order) =
   fun i -> fun j -> order_from_int (i - j)
+let (compare_bool : Prims.bool -> Prims.bool -> order) =
+  fun x ->
+    fun y ->
+      match (x, y) with
+      | (true, true) -> Eq
+      | (false, false) -> Eq
+      | (false, true) -> Lt
+      | (true, false) -> Gt
 let rec compare_list :
   'a . 'a Prims.list -> 'a Prims.list -> ('a -> 'a -> order) -> order =
   fun l1 ->
@@ -39,6 +47,22 @@ let rec compare_list :
         | (x::xs, y::ys) ->
             let uu___ = f x y in
             lex uu___ (fun uu___1 -> compare_list xs ys f)
+let compare_tuple :
+  'a 'b .
+    ('a * 'b) ->
+      ('a * 'b) -> ('a -> 'a -> order) -> ('b -> 'b -> order) -> order
+  =
+  fun x ->
+    fun y ->
+      fun f ->
+        fun g ->
+          let uu___ = x in
+          match uu___ with
+          | (xl, xr) ->
+              let uu___1 = y in
+              (match uu___1 with
+               | (yl, yr) ->
+                   let uu___2 = f xl yl in lex uu___2 (fun uu___3 -> g xr yr))
 let compare_option :
   'a .
     ('a -> 'a -> order) ->

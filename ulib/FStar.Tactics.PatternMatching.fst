@@ -216,6 +216,7 @@ let term_head t : Tac string =
   | Tv_Match t _ branches -> "Tv_Match"
   | Tv_AscribedT _ _ _ _ -> "Tv_AscribedT"
   | Tv_AscribedC _ _ _ _ -> "Tv_AscribedC"
+  | Tv_Quoted _ _ _ -> "Tv_Quoted"
   | Tv_Unknown -> "Tv_Unknown"
 
 let string_of_match_exception = function

@@ -62,6 +62,7 @@ let rec blah (t : term) : Tac term =
              | Tv_Match t ret_opt brs -> Tv_Match t ret_opt brs
              | Tv_AscribedT e t tac use_eq -> Tv_AscribedT e t tac use_eq
              | Tv_AscribedC e c tac use_eq -> Tv_AscribedC e c tac use_eq
+             | Tv_Quoted t dyn anti -> Tv_Quoted t dyn anti
              | Tv_Unknown -> Tv_Unknown
     in pack tv
 
