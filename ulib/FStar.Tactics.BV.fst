@@ -103,7 +103,7 @@ val trans_lt: #n:pos -> (#x:bv_t n) -> (#y:bv_t n) -> (#z:bv_t n) -> (#w:bv_t n)
 let trans_lt #n #x #y #z #w pf1 pf2 pf3 = ()
 
 val trans_lt2: #n:pos -> (#x:uint_t n) -> (#y:uint_t n) -> (#z:bv_t n) -> (#w:bv_t n) ->
-          squash (int2bv #n x == z) -> squash (int2bv #n y == w) -> (b2t (bvult #n z w)) ->
+          squash (int2bv #n x == z) -> squash (int2bv #n y == w) -> squash (bvult #n z w) ->
           Lemma (x < y)
 let trans_lt2 #n #x #y #z #w pf1 pf2 pf3 = int2bv_lemma_ult_2 x y
 
