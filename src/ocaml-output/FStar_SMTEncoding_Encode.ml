@@ -998,15 +998,7 @@ let (primitive_type_axioms :
       uu___2 :: uu___3 in
     uu___ :: uu___1 in
   let mk_real env nm tt =
-    let lex_t =
-      let uu___ =
-        let uu___1 =
-          let uu___2 = FStar_Ident.string_of_lid FStar_Parser_Const.lex_t_lid in
-          (uu___2, FStar_SMTEncoding_Term.Term_sort) in
-        FStar_SMTEncoding_Term.mk_fv uu___1 in
-      FStar_Compiler_Effect.op_Less_Bar FStar_SMTEncoding_Util.mkFreeV uu___ in
     let typing_pred = FStar_SMTEncoding_Term.mk_HasType x tt in
-    let typing_pred_y = FStar_SMTEncoding_Term.mk_HasType y tt in
     let aa =
       FStar_SMTEncoding_Term.mk_fv
         ("a", (FStar_SMTEncoding_Term.Sort "Real")) in
@@ -1015,10 +1007,6 @@ let (primitive_type_axioms :
       FStar_SMTEncoding_Term.mk_fv
         ("b", (FStar_SMTEncoding_Term.Sort "Real")) in
     let b = FStar_SMTEncoding_Util.mkFreeV bb in
-    let precedes_y_x =
-      let uu___ =
-        FStar_SMTEncoding_Util.mkApp ("Prims.precedes", [lex_t; lex_t; y; x]) in
-      FStar_Compiler_Effect.op_Less_Bar FStar_SMTEncoding_Term.mk_Valid uu___ in
     let uu___ =
       let uu___1 =
         let uu___2 =
@@ -1056,63 +1044,7 @@ let (primitive_type_axioms :
           (uu___4, (FStar_Pervasives_Native.Some "real inversion"),
             "real_inversion") in
         FStar_SMTEncoding_Util.mkAssume uu___3 in
-      let uu___3 =
-        let uu___4 =
-          let uu___5 =
-            let uu___6 =
-              let uu___7 =
-                let uu___8 =
-                  let uu___9 =
-                    let uu___10 =
-                      let uu___11 =
-                        let uu___12 =
-                          let uu___13 =
-                            let uu___14 =
-                              let uu___15 =
-                                let uu___16 =
-                                  FStar_SMTEncoding_Term.unboxReal x in
-                                let uu___17 =
-                                  FStar_SMTEncoding_Util.mkReal "0.0" in
-                                (uu___16, uu___17) in
-                              FStar_SMTEncoding_Util.mkGT uu___15 in
-                            let uu___15 =
-                              let uu___16 =
-                                let uu___17 =
-                                  let uu___18 =
-                                    FStar_SMTEncoding_Term.unboxReal y in
-                                  let uu___19 =
-                                    FStar_SMTEncoding_Util.mkReal "0.0" in
-                                  (uu___18, uu___19) in
-                                FStar_SMTEncoding_Util.mkGTE uu___17 in
-                              let uu___17 =
-                                let uu___18 =
-                                  let uu___19 =
-                                    let uu___20 =
-                                      FStar_SMTEncoding_Term.unboxReal y in
-                                    let uu___21 =
-                                      FStar_SMTEncoding_Term.unboxReal x in
-                                    (uu___20, uu___21) in
-                                  FStar_SMTEncoding_Util.mkLT uu___19 in
-                                [uu___18] in
-                              uu___16 :: uu___17 in
-                            uu___14 :: uu___15 in
-                          typing_pred_y :: uu___13 in
-                        typing_pred :: uu___12 in
-                      FStar_SMTEncoding_Util.mk_and_l uu___11 in
-                    (uu___10, precedes_y_x) in
-                  FStar_SMTEncoding_Util.mkImp uu___9 in
-                ([[typing_pred; typing_pred_y; precedes_y_x]], [xx; yy],
-                  uu___8) in
-              let uu___8 =
-                let uu___9 = FStar_TypeChecker_Env.get_range env in
-                let uu___10 = mkForall_fuel env in uu___10 uu___9 in
-              uu___8 uu___7 in
-            (uu___6,
-              (FStar_Pervasives_Native.Some "well-founded ordering on real"),
-              "well-founded-ordering-on-real") in
-          FStar_SMTEncoding_Util.mkAssume uu___5 in
-        [uu___4] in
-      uu___2 :: uu___3 in
+      [uu___2] in
     uu___ :: uu___1 in
   let mk_str env nm tt =
     let typing_pred = FStar_SMTEncoding_Term.mk_HasType x tt in

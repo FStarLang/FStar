@@ -581,32 +581,35 @@ let is_BitVector_primitive :
       match ((head.FStar_Syntax_Syntax.n), args) with
       | (FStar_Syntax_Syntax.Tm_fvar fv, (sz_arg, uu___)::uu___1::uu___2::[])
           ->
-          (((((((((((FStar_Syntax_Syntax.fv_eq_lid fv
-                       FStar_Parser_Const.bv_and_lid)
+          ((((((((((((FStar_Syntax_Syntax.fv_eq_lid fv
+                        FStar_Parser_Const.bv_and_lid)
+                       ||
+                       (FStar_Syntax_Syntax.fv_eq_lid fv
+                          FStar_Parser_Const.bv_xor_lid))
                       ||
                       (FStar_Syntax_Syntax.fv_eq_lid fv
-                         FStar_Parser_Const.bv_xor_lid))
+                         FStar_Parser_Const.bv_or_lid))
                      ||
                      (FStar_Syntax_Syntax.fv_eq_lid fv
-                        FStar_Parser_Const.bv_or_lid))
+                        FStar_Parser_Const.bv_add_lid))
                     ||
                     (FStar_Syntax_Syntax.fv_eq_lid fv
-                       FStar_Parser_Const.bv_add_lid))
+                       FStar_Parser_Const.bv_sub_lid))
                    ||
                    (FStar_Syntax_Syntax.fv_eq_lid fv
-                      FStar_Parser_Const.bv_sub_lid))
+                      FStar_Parser_Const.bv_shift_left_lid))
                   ||
                   (FStar_Syntax_Syntax.fv_eq_lid fv
-                     FStar_Parser_Const.bv_shift_left_lid))
+                     FStar_Parser_Const.bv_shift_right_lid))
                  ||
                  (FStar_Syntax_Syntax.fv_eq_lid fv
-                    FStar_Parser_Const.bv_shift_right_lid))
+                    FStar_Parser_Const.bv_udiv_lid))
                 ||
                 (FStar_Syntax_Syntax.fv_eq_lid fv
-                   FStar_Parser_Const.bv_udiv_lid))
+                   FStar_Parser_Const.bv_mod_lid))
                ||
                (FStar_Syntax_Syntax.fv_eq_lid fv
-                  FStar_Parser_Const.bv_mod_lid))
+                  FStar_Parser_Const.bv_ult_lid))
               ||
               (FStar_Syntax_Syntax.fv_eq_lid fv
                  FStar_Parser_Const.bv_uext_lid))
