@@ -162,6 +162,13 @@ let rec mapM : 'a 'b . ('a -> 'b tac) -> 'a Prims.list -> 'b Prims.list tac =
             (fun y ->
                let uu___1 = mapM f xs in
                bind uu___1 (fun ys -> ret (y :: ys)))
+let rec iter_tac : 'a . ('a -> unit tac) -> 'a Prims.list -> unit tac =
+  fun f ->
+    fun l ->
+      match l with
+      | [] -> ret ()
+      | hd::tl ->
+          let uu___ = f hd in op_let_Bang uu___ (fun uu___1 -> iter_tac f tl)
 let (nwarn : Prims.int FStar_Compiler_Effect.ref) =
   FStar_Compiler_Util.mk_ref Prims.int_zero
 let (check_valid_goal : FStar_Tactics_Types.goal -> unit) =
