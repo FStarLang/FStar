@@ -1756,6 +1756,7 @@ let eqprod (e1 : 'a -> 'a -> bool) (e2 : 'b -> 'b -> bool) (x : 'a * 'b) (y : 'a
 let eqopt (e : 'a -> 'a -> bool) (x : option 'a) (y : option 'a) : bool =
     match x, y with
     | Some x, Some y -> e x y
+    | None, None -> true
     | _ -> false
 
 // Checks for syntactic equality. A returned false doesn't guarantee anything.
