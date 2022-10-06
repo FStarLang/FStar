@@ -222,19 +222,6 @@ let __do_unify_wflags (dbg:bool) (allow_guards:bool)
     bind (trytac cur_goal) (fun gopt ->
       try
         let res =
-          //
-          // If the current goal is set
-          //   (it may not be set in case the tactic engine is asked to unify two terms
-          //    even though no goals remain)
-          //   set rel_query_for_apply_tac_uvar so that any uvars solved as part of this Rel call,
-          //   can be typechecked properly
-          //   e.g. if the current goal depends on ?u, and ?u is solved indirectly in this Rel call,
-          //   then ?u must be typechecked without fastpath
-          //
-          let env =
-            gopt |> BU.map_option
-                     (fun g -> {env with rel_query_for_apply_tac_uvar=g.goal_ctx_uvar |> Some})
-                 |> BU.dflt env in
           if allow_guards
           then Rel.try_teq true env t1 t2
           else Rel.teq_nosmt env t1 t2 in

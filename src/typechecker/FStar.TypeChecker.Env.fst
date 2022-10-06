@@ -180,7 +180,6 @@ let initial_env deps
     unif_allow_ref_guards=false;
     erase_erasable_args=false;
 
-    rel_query_for_apply_tac_uvar=None;
     core_check
   }
 

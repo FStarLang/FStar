@@ -530,17 +530,7 @@ let set_uvar env u (should_check_opt:option S.should_check_uvar) t =
   // );
 
   (match should_check_opt with
-   | None ->
-     (match env.rel_query_for_apply_tac_uvar with
-      | None ->
-        if Env.debug env <| Options.Other "2635"
-        then BU.print1 "Setting uvar %s and env is not solving an apply uvar\n"
-               (Print.ctx_uvar_to_string u)
-      | Some u1 ->
-        if Env.debug env <| Options.Other "2635"
-        then BU.print2 "Setting uvar %s and env is solving %s\n"
-               (Print.ctx_uvar_to_string u)
-               (Print.ctx_uvar_to_string u1))
+   | None -> ()
    | Some should_check ->
      UF.change_decoration u.ctx_uvar_head
        ({UF.find_decoration u.ctx_uvar_head with uvar_decoration_should_check=should_check}));
