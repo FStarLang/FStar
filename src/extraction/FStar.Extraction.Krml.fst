@@ -407,7 +407,8 @@ let rec translate_type env t: typ =
     Syntax.string_of_mlpath p = "LowStar.Monotonic.Buffer.mbuffer" -> TBuf (translate_type env arg)
 
   | MLTY_Named ([arg], p) when
-    Syntax.string_of_mlpath p = "LowStar.ConstBuffer.const_buffer" -> TConstBuf (translate_type env arg)
+    Syntax.string_of_mlpath p = "LowStar.ConstBuffer.const_buffer" ||
+    Syntax.string_of_mlpath p = "Steel.TLArray.t" -> TConstBuf (translate_type env arg)
 
   | MLTY_Named ([arg], p) when
     Syntax.string_of_mlpath p = "FStar.Buffer.buffer" ||
@@ -539,7 +540,8 @@ and translate_expr env e: expr =
     when string_of_mlpath p = "FStar.Buffer.index" || string_of_mlpath p = "FStar.Buffer.op_Array_Access"
       || string_of_mlpath p = "LowStar.Monotonic.Buffer.index"
       || string_of_mlpath p = "LowStar.UninitializedBuffer.uindex"
-      || string_of_mlpath p = "LowStar.ConstBuffer.index" ->
+      || string_of_mlpath p = "LowStar.ConstBuffer.index"
+      || string_of_mlpath p = "Steel.TLArray.get" ->
       EBufRead (translate_expr env e1, translate_expr env e2)
 
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ _perm; e1; _len; _seq; e2 ])
@@ -1151,6 +1153,29 @@ let translate_let env flavor lb: option decl =
           Some (DFunction (cc, meta, List.length tvars, t, name, binders, EAbortS msg))
         end
 
+  | {
+      mllb_name = name;
+      mllb_tysc = Some (tvars, t);
+      mllb_def = { expr = MLE_App ({
+        expr = MLE_TApp ({expr = MLE_Name p}, _)}, [ l ] ) };
+      mllb_meta = meta
+    }
+    when string_of_mlpath p = "Steel.TLArray.create" ->
+    if List.mem Syntax.NoExtract meta then
+      None
+    else
+      // This is a global const array, defined using Steel.TLArray
+      let meta = translate_flags meta in
+      let env = List.fold_left (fun env name -> extend_t env name) env tvars in
+      let t = translate_type env t in
+      let name = env.module_name, name in
+      begin try
+        let expr = List.map (translate_expr env) (list_elements l) in
+        Some (DGlobal (meta, name, List.length tvars, t, EBufCreateL (Eternal, expr)))
+      with e ->
+          Errors. log_issue Range.dummyRange (Errors.Warning_DefinitionNotTranslated, (BU.format2 "Error extracting %s to KaRaMeL (%s)\n" (Syntax.string_of_mlpath name) (BU.print_exn e)));
+          Some (DGlobal (meta, name, List.length tvars, t, EAny))
+        end
   | {
       mllb_name = name;
       mllb_tysc = Some (tvars, t);
