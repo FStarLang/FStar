@@ -449,8 +449,6 @@ let solve_goals_with_tac :
                 (env.FStar_TypeChecker_Env.unif_allow_ref_guards);
               FStar_TypeChecker_Env.erase_erasable_args =
                 (env.FStar_TypeChecker_Env.erase_erasable_args);
-              FStar_TypeChecker_Env.rel_query_for_apply_tac_uvar =
-                (env.FStar_TypeChecker_Env.rel_query_for_apply_tac_uvar);
               FStar_TypeChecker_Env.core_check =
                 (env.FStar_TypeChecker_Env.core_check)
             } in
@@ -580,9 +578,6 @@ let (solve_deferred_to_tactic_goals :
                                (env1.FStar_TypeChecker_Env.unif_allow_ref_guards);
                              FStar_TypeChecker_Env.erase_erasable_args =
                                (env1.FStar_TypeChecker_Env.erase_erasable_args);
-                             FStar_TypeChecker_Env.rel_query_for_apply_tac_uvar
-                               =
-                               (env1.FStar_TypeChecker_Env.rel_query_for_apply_tac_uvar);
                              FStar_TypeChecker_Env.core_check =
                                (env1.FStar_TypeChecker_Env.core_check)
                            } in
@@ -687,9 +682,6 @@ let (solve_deferred_to_tactic_goals :
                                (env2.FStar_TypeChecker_Env.unif_allow_ref_guards);
                              FStar_TypeChecker_Env.erase_erasable_args =
                                (env2.FStar_TypeChecker_Env.erase_erasable_args);
-                             FStar_TypeChecker_Env.rel_query_for_apply_tac_uvar
-                               =
-                               (env2.FStar_TypeChecker_Env.rel_query_for_apply_tac_uvar);
                              FStar_TypeChecker_Env.core_check =
                                (env2.FStar_TypeChecker_Env.core_check)
                            } in

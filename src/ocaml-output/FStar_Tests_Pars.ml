@@ -189,8 +189,6 @@ let (init_once : unit -> unit) =
                (env.FStar_TypeChecker_Env.unif_allow_ref_guards);
              FStar_TypeChecker_Env.erase_erasable_args =
                (env.FStar_TypeChecker_Env.erase_erasable_args);
-             FStar_TypeChecker_Env.rel_query_for_apply_tac_uvar =
-               (env.FStar_TypeChecker_Env.rel_query_for_apply_tac_uvar);
              FStar_TypeChecker_Env.core_check =
                (env.FStar_TypeChecker_Env.core_check)
            } in
@@ -298,8 +296,6 @@ let (init_once : unit -> unit) =
                     (env2.FStar_TypeChecker_Env.unif_allow_ref_guards);
                   FStar_TypeChecker_Env.erase_erasable_args =
                     (env2.FStar_TypeChecker_Env.erase_erasable_args);
-                  FStar_TypeChecker_Env.rel_query_for_apply_tac_uvar =
-                    (env2.FStar_TypeChecker_Env.rel_query_for_apply_tac_uvar);
                   FStar_TypeChecker_Env.core_check =
                     (env2.FStar_TypeChecker_Env.core_check)
                 } in
@@ -447,8 +443,6 @@ let (tc' :
           (tcenv.FStar_TypeChecker_Env.unif_allow_ref_guards);
         FStar_TypeChecker_Env.erase_erasable_args =
           (tcenv.FStar_TypeChecker_Env.erase_erasable_args);
-        FStar_TypeChecker_Env.rel_query_for_apply_tac_uvar =
-          (tcenv.FStar_TypeChecker_Env.rel_query_for_apply_tac_uvar);
         FStar_TypeChecker_Env.core_check =
           (tcenv.FStar_TypeChecker_Env.core_check)
       } in
@@ -550,8 +544,6 @@ let (tc_nbe_term : FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term) =
           (tcenv.FStar_TypeChecker_Env.unif_allow_ref_guards);
         FStar_TypeChecker_Env.erase_erasable_args =
           (tcenv.FStar_TypeChecker_Env.erase_erasable_args);
-        FStar_TypeChecker_Env.rel_query_for_apply_tac_uvar =
-          (tcenv.FStar_TypeChecker_Env.rel_query_for_apply_tac_uvar);
         FStar_TypeChecker_Env.core_check =
           (tcenv.FStar_TypeChecker_Env.core_check)
       } in
