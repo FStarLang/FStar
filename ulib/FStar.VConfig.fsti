@@ -43,6 +43,7 @@ type vconfig = {
   no_tactics                                : bool;
   vcgen_optimize_bind_as_seq                : option string;
   z3cliopt                                  : list string;
+  z3smtopt                                  : list string;  
   z3refresh                                 : bool;
   z3rlimit                                  : int;
   z3rlimit_factor                           : int;
