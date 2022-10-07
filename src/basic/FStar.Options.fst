@@ -253,6 +253,7 @@ let defaults =
       ("z3rlimit_factor"              , Int 1);
       ("z3seed"                       , Int 0);
       ("z3cliopt"                     , List []);
+      ("z3smtopt"                     , List []);
       ("__no_positivity"              , Bool false);
       ("__tactics_nbe"                , Bool false);
       ("warn_error"                   , List []);
@@ -310,6 +311,7 @@ let set_verification_options o =
     "no_tactics";
     "vcgen.optimize_bind_as_seq";
     "z3cliopt";
+    "z3smtopt";    
     "z3refresh";
     "z3rlimit";
     "z3rlimit_factor";
@@ -426,6 +428,7 @@ let get_verify_module           ()      = lookup_opt "verify_module"            
 let get_version                 ()      = lookup_opt "version"                  as_bool
 let get_warn_default_effects    ()      = lookup_opt "warn_default_effects"     as_bool
 let get_z3cliopt                ()      = lookup_opt "z3cliopt"                 (as_list as_string)
+let get_z3smtopt                ()      = lookup_opt "z3smtopt"                 (as_list as_string)
 let get_z3refresh               ()      = lookup_opt "z3refresh"                as_bool
 let get_z3rlimit                ()      = lookup_opt "z3rlimit"                 as_int
 let get_z3rlimit_factor         ()      = lookup_opt "z3rlimit_factor"          as_int
@@ -1233,6 +1236,11 @@ let rec specs_with_types warn_unsafe : list (char * string * opt_type * string) 
          "Z3 command line options");
 
        ( noshort,
+         "z3smtopt",
+         ReverseAccumulated (SimpleStr "option"),
+         "Z3 options in smt2 format");
+
+       ( noshort,
         "z3refresh",
         Const (Bool true),
         "Restart Z3 after each query; useful for ensuring proof robustness");
@@ -1345,6 +1353,7 @@ let settable = function
     | "initial_fuel"
     | "initial_ifuel"
     | "ide_id_info_off"
+    | "keep_query_captions"
     | "lax"
     | "load"
     | "load_cmxs"
@@ -1398,6 +1407,7 @@ let settable = function
     | "vcgen.optimize_bind_as_seq"
     | "warn_error"
     | "z3cliopt"
+    | "z3smtopt"    
     | "z3refresh"
     | "z3rlimit"
     | "z3rlimit_factor"
@@ -1783,6 +1793,7 @@ let z3_exe                       () = match get_smt () with
                                     | None -> Platform.exe "z3"
                                     | Some s -> s
 let z3_cliopt                    () = get_z3cliopt                    ()
+let z3_smtopt                    () = get_z3smtopt                    ()
 let z3_refresh                   () = get_z3refresh                   ()
 let z3_rlimit                    () = get_z3rlimit                    ()
 let z3_rlimit_factor             () = get_z3rlimit_factor             ()
@@ -2039,6 +2050,7 @@ let get_vconfig () =
     no_tactics                                = get_no_tactics ();
     vcgen_optimize_bind_as_seq                = get_vcgen_optimize_bind_as_seq ();
     z3cliopt                                  = get_z3cliopt ();
+    z3smtopt                                  = get_z3smtopt ();    
     z3refresh                                 = get_z3refresh ();
     z3rlimit                                  = get_z3rlimit ();
     z3rlimit_factor                           = get_z3rlimit_factor ();
@@ -2076,6 +2088,7 @@ let set_vconfig (vcfg:vconfig) : unit =
   set_option "no_tactics"                                (Bool vcfg.no_tactics);
   set_option "vcgen.optimize_bind_as_seq"                (option_as String vcfg.vcgen_optimize_bind_as_seq);
   set_option "z3cliopt"                                  (List (List.map String vcfg.z3cliopt));
+  set_option "z3smtopt"                                  (List (List.map String vcfg.z3smtopt));  
   set_option "z3refresh"                                 (Bool vcfg.z3refresh);
   set_option "z3rlimit"                                  (Int vcfg.z3rlimit);
   set_option "z3rlimit_factor"                           (Int vcfg.z3rlimit_factor);

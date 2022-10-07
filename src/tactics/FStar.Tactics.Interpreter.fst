@@ -419,6 +419,10 @@ let () =
         pack    RE.e_term_view RE.e_term
         pack    NRE.e_term_view NRE.e_term;
 
+      mk_tac_step_1 0 "pack_curried"
+        pack_curried    RE.e_term_view RE.e_term
+        pack_curried    NRE.e_term_view NRE.e_term;
+
       mk_tac_step_1 0 "fresh"
         fresh       e_unit e_int
         fresh       NBET.e_unit NBET.e_int;

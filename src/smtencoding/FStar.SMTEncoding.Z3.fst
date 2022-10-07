@@ -437,6 +437,7 @@ let finish () =
     (* A no-op now that there's no concurrency *)
     ()
 
+
 // bg_scope is a global, mutable variable that keeps a list of the declarations
 // that we have given to z3 so far. In order to allow rollback of history,
 // one can enter a new "scope" by pushing a new, empty z3 list of declarations
@@ -514,6 +515,7 @@ let context_profile (theory:list decl) =
 
 let mk_input fresh theory =
     let options = !z3_options in
+    let options = options ^ (Options.z3_smtopt() |> String.concat "\n") in
     if Options.print_z3_statistics() then context_profile theory;
     let r, hash =
         if Options.record_hints()

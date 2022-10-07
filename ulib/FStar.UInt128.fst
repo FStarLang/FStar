@@ -26,8 +26,81 @@ module U64 = FStar.UInt64
 
 module Math = FStar.Math.Lemmas
 
+open FStar.BV
+open FStar.Tactics
+module T = FStar.Tactics
+module TBV = FStar.Tactics.BV
+
+[@@ noextract_to "krml"]
+noextract
+let carry_uint64 (a b: uint_t 64) : Tot (uint_t 64) =
+  let ( ^^ ) = UInt.logxor in
+  let ( |^ ) = UInt.logor in
+  let ( -%^ ) = UInt.sub_mod in
+  let ( >>^ ) = UInt.shift_right in
+  a ^^ ((a ^^ b) |^ ((a -%^ b) ^^ b)) >>^ 63
+
+[@@ noextract_to "krml"]
+noextract
+let carry_bv (a b: uint_t 64) =
+    bvshr (bvxor (int2bv a)
+                 (bvor (bvxor (int2bv a) (int2bv b)) (bvxor (bvsub (int2bv a) (int2bv b)) (int2bv b))))
+          63
+
+let carry_uint64_ok (a b:uint_t 64)
+  : squash (int2bv (carry_uint64 a b) == carry_bv a b)
+  = _ by (T.norm [delta_only [`%carry_uint64]; unascribe];
+          let open FStar.Tactics.BV in
+          mapply (`trans);
+          arith_to_bv_tac ();
+          arith_to_bv_tac ();
+          T.norm [delta_only [`%carry_bv]];
+          trefl())
+
+let fact1 (a b: uint_t 64) = carry_bv a b == int2bv 1
+let fact0 (a b: uint_t 64) = carry_bv a b == int2bv 0
+
+let lem_ult_1 (a b: uint_t 64)
+  : squash (bvult (int2bv a) (int2bv b) ==> fact1 a b)
+  = assert (bvult (int2bv a) (int2bv b) ==> fact1 a b)
+       by (T.norm [delta_only [`%fact1;`%carry_bv]];
+           set_options "--smtencoding.elim_box true --using_facts_from '__Nothing__' --z3smtopt '(set-option :smt.case_split 1)'";
+           smt())
+
+let lem_ult_2 (a b:uint_t 64)
+  : squash (not (bvult (int2bv a) (int2bv b)) ==> fact0 a b)
+  = assert (not (bvult (int2bv a) (int2bv b)) ==> fact0 a b)
+       by (T.norm [delta_only [`%fact0;`%carry_bv]];
+           set_options "--smtencoding.elim_box true --using_facts_from '__Nothing__' --z3smtopt '(set-option :smt.case_split 1)'")
+
+let int2bv_ult (#n: pos) (a b: uint_t n)
+  : Lemma (ensures a < b <==> bvult #n (int2bv #n a) (int2bv #n b))
+  = introduce (a < b) ==> (bvult #n (int2bv #n a) (int2bv #n b))
+    with _ . FStar.BV.int2bv_lemma_ult_1 a b;
+    introduce (bvult #n (int2bv #n a) (int2bv #n b)) ==> (a < b)
+    with _ . FStar.BV.int2bv_lemma_ult_2 a b
+
+let lem_ult (a b:uint_t 64)
+  : Lemma (if a < b
+           then fact1 a b
+           else fact0 a b)
+  = int2bv_ult a b;
+    lem_ult_1 a b;
+    lem_ult_2 a b
+
 #reset-options "--max_fuel 0 --max_ifuel 0 --smtencoding.elim_box true --smtencoding.nl_arith_repr wrapped --smtencoding.l_arith_repr native"
 #set-options "--normalize_pure_terms_for_extraction"
+
+let constant_time_carry (a b: U64.t) : Tot U64.t =
+  let open U64 in
+  // CONSTANT_TIME_CARRY macro
+  // ((a ^ ((a ^ b) | ((a - b) ^ b))) >> (sizeof(a) * 8 - 1))
+  // 63 = sizeof(a) * 8 - 1
+  a ^^ ((a ^^ b) |^ ((a -%^ b) ^^ b)) >>^ 63ul
+
+let carry_uint64_equiv (a b:UInt64.t)
+  : Lemma (U64.v (constant_time_carry a b) == carry_uint64 (U64.v a) (U64.v b))
+  = ()
 
 // This type gets a special treatment in KaRaMeL and its definition is never
 // printed in the resulting C file.
@@ -55,17 +128,22 @@ let v_inj (x1 x2: t): Lemma (requires (v x1 == v x2))
  assert (uint_to_t (v x2) == x2);
  ()
 
-let constant_time_carry (a b: U64.t) : Tot U64.t =
-  let open U64 in
-  // CONSTANT_TIME_CARRY macro
-  // ((a ^ ((a ^ b) | ((a - b) ^ b))) >> (sizeof(a) * 8 - 1))
-  // 63 = sizeof(a) * 8 - 1
-  a ^^ ((a ^^ b) |^ ((a -%^ b) ^^ b)) >>^ U32.uint_to_t 63
-
-// TODO: eventually we should prove this equivalence
-assume val constant_time_carry_ok (a b:U64.t) :
-    Lemma (constant_time_carry a b ==
+let constant_time_carry_ok (a b:U64.t)
+  : Lemma (constant_time_carry a b ==
            (if U64.lt a b then U64.uint_to_t 1 else U64.uint_to_t 0))
+  = calc (==) {
+      U64.v (constant_time_carry a b);
+    (==) {     carry_uint64_equiv a b }
+      carry_uint64 (U64.v a) (U64.v b);
+    (==) { carry_uint64_ok (U64.v a) (U64.v b) }
+      bv2int (carry_bv (U64.v a) (U64.v b));
+    (==) { lem_ult (U64.v a) (U64.v b) }
+      bv2int
+        (if U64.v a < U64.v b
+         then int2bv 1
+         else int2bv 0);
+    }
+
 
 let carry (a b: U64.t) : Pure U64.t
   (requires True)
@@ -633,7 +711,7 @@ let add_u64_shift_right (hi lo: U64.t) (s: U32.t{U32.v s < 64}) : Pure U64.t
   assert (low_n < pow2 (64 - s));
   mod_mul_pow2 (U64.v hi) s (64 - s);
   U64.add low high
-  
+
 #set-options "--z3rlimit 10"
 val mul_pow2_diff: a:nat -> n1:nat -> n2:nat{n2 <= n1} ->
   Lemma (a * pow2 (n1 - n2) == a * pow2 n1 / pow2 n2)
@@ -1089,6 +1167,7 @@ let sum_rounded_mod_exact n m k =
 
 val div_sum_combine : n:nat -> m:nat -> k:pos ->
   Lemma (n / k + m / k == (n + (m - n % k) - m % k) / k)
+#push-options "--z3rlimit 60"
 let div_sum_combine n m k =
   sum_rounded_mod_exact n m k;
   div_sum_combine1 n m k;

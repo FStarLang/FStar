@@ -3308,8 +3308,12 @@ and (tc_maybe_toplevel_term :
                        | (e1, c, g) ->
                            let uu___5 =
                              let uu___6 =
-                               FStar_TypeChecker_Common.is_tot_or_gtot_lcomp
-                                 c in
+                               (FStar_TypeChecker_Common.is_tot_or_gtot_lcomp
+                                  c)
+                                 ||
+                                 (env2.FStar_TypeChecker_Env.phase1 &&
+                                    (FStar_TypeChecker_Common.is_pure_or_ghost_lcomp
+                                       c)) in
                              if uu___6
                              then
                                let uu___7 =
