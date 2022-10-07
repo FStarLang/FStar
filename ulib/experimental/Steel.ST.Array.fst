@@ -42,8 +42,7 @@ let lower (#t: Type) (x: raise_t t) : Tot t =
 
 /// A map operation on sequences. Here we only need Ghost versions,
 /// because such sequences are only used in vprops or with their
-/// selectors.
-
+///
 let rec seq_map
   (#t: Type u#a)
   (#t' : Type u#b)
@@ -124,7 +123,7 @@ let malloc x n =
   return res
 
 let malloca_of_list init =
-  let res = H.malloca_of_list (raise_list init) in
+  let res = H.malloca_of_list (normalize_term (raise_list init)) in
   seq_map_map_list init;
   rewrite
     (H.pts_to res _ (Seq.seq_of_list (raise_list init)))
