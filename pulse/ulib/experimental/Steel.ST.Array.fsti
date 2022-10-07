@@ -167,7 +167,30 @@ inline_for_extraction
 [@@noextract_to "krml"]
 let alloc #elt = malloc #elt
 
-/// Freeing a full array. 
+/// Allocating a new array, whose initial values are specified by the
+/// ```init``` list, which must be nonempty, and of length representable as
+/// a machine integer
+
+unfold let alloca_of_list_pre (#elt:Type) (init:list elt) =
+  normalize (0 < FStar.List.Tot.length init) /\
+  normalize (FStar.List.Tot.length init <= UInt.max_int 32)
+
+inline_for_extraction
+[@@noextract_to "krml"]
+val malloca_of_list
+  (#elt: Type)
+  (init: list elt)
+  : ST (array elt)
+       emp
+       (fun a -> pts_to a P.full_perm (Seq.seq_of_list init))
+       (alloca_of_list_pre init)
+       (fun a ->
+         length a == normalize_term (List.Tot.length init) /\
+         is_full_array a
+       )
+
+
+/// Freeing a full array.
 inline_for_extraction
 [@@ noextract_to "krml";
     warn_on_use "Steel.Array.free_pt is currently unsound in the presence of zero-size subarrays, have you collected them all?"]
