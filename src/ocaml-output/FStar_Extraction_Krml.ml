@@ -762,22 +762,6 @@ let (list_elements :
           list_elements1 (hd :: acc) tl
       | FStar_Extraction_ML_Syntax.MLE_CTor (("Prims"::[], "Nil"), []) ->
           FStar_Compiler_List.rev acc
-      | FStar_Extraction_ML_Syntax.MLE_App
-          ({
-             FStar_Extraction_ML_Syntax.expr =
-               FStar_Extraction_ML_Syntax.MLE_TApp
-               ({
-                  FStar_Extraction_ML_Syntax.expr =
-                    FStar_Extraction_ML_Syntax.MLE_Name p;
-                  FStar_Extraction_ML_Syntax.mlty = uu___;
-                  FStar_Extraction_ML_Syntax.loc = uu___1;_},
-                uu___2);
-             FStar_Extraction_ML_Syntax.mlty = uu___3;
-             FStar_Extraction_ML_Syntax.loc = uu___4;_},
-           e::[])
-          when
-          let uu___5 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-          uu___5 = "Steel.ST.Array.raise_list" -> list_elements1 acc e
       | uu___ ->
           failwith "Argument of FStar.Buffer.createL is not a list literal!" in
     list_elements1 [] e2
