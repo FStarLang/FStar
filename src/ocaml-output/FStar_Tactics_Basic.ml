@@ -666,9 +666,21 @@ let (tc_unifier_solved_implicits :
                     FStar_TypeChecker_Env.core_check =
                       (env1.FStar_TypeChecker_Env.core_check)
                   } in
+                let must_tot1 =
+                  if must_tot
+                  then
+                    let uu___1 =
+                      let uu___2 =
+                        FStar_Syntax_Unionfind.find_decoration
+                          u.FStar_Syntax_Syntax.ctx_uvar_head in
+                      uu___2.FStar_Syntax_Syntax.uvar_decoration_should_check in
+                    match uu___1 with
+                    | FStar_Syntax_Syntax.Allow_ghost uu___2 -> false
+                    | uu___2 -> true
+                  else false in
                 let uu___1 =
                   let uu___2 = FStar_Syntax_Util.ctx_uvar_typ u in
-                  core_check env2 sol uu___2 must_tot in
+                  core_check env2 sol uu___2 must_tot1 in
                 (match uu___1 with
                  | FStar_Pervasives.Inl (FStar_Pervasives_Native.None) ->
                      (mark_uvar_as_already_checked u;
@@ -690,7 +702,7 @@ let (tc_unifier_solved_implicits :
                      let guard1 =
                        FStar_TypeChecker_Rel.simplify_guard env2 guard in
                      if
-                       (Prims.op_Negation allow_guards) &&
+                       (false && (Prims.op_Negation allow_guards)) &&
                          (FStar_TypeChecker_Common.uu___is_NonTrivial
                             guard1.FStar_TypeChecker_Common.guard_f)
                      then
@@ -714,8 +726,7 @@ let (tc_unifier_solved_implicits :
                        FStar_Syntax_Print.uvar_to_string
                          u.FStar_Syntax_Syntax.ctx_uvar_head in
                      let uu___3 = term_to_string env2 sol in
-                     let uu___4 =
-                       FStar_TypeChecker_Core.print_error_short failed in
+                     let uu___4 = FStar_TypeChecker_Core.print_error failed in
                      fail3
                        "Could not typecheck unifier solved implicit %s to %s because %s"
                        uu___2 uu___3 uu___4) in

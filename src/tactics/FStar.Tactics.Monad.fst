@@ -253,11 +253,7 @@ let new_uvar (reason:string) (env:env) (typ:typ)
     let should_check = 
       match sc_opt with
       | Some sc -> sc
-      | _ -> 
-        if Env.debug env <| Options.Other "2635"
-        then BU.print1 "Tactic introduced a strict uvar for %s\n" 
-               (Print.term_to_string typ);
-        Strict
+      | _ -> Strict
     in
     let u, ctx_uvar, g_u =
         Env.new_tac_implicit_var reason rng env typ should_check None

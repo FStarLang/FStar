@@ -281,6 +281,13 @@ let tc_unifier_solved_implicits env (must_tot:bool) (allow_guards:bool) (uvs:lis
     | None -> ret () //not solved yet
     | Some sol ->  //solved, check it
       let env = {env with gamma=u.ctx_uvar_gamma} in
+      let must_tot = 
+        if must_tot
+        then match (UF.find_decoration u.ctx_uvar_head).uvar_decoration_should_check with
+             | Allow_ghost _ -> false
+             | _ -> true
+        else false
+      in
       match core_check env sol (U.ctx_uvar_typ u) must_tot with
       | Inl None ->
         //checked with no guard
@@ -291,7 +298,8 @@ let tc_unifier_solved_implicits env (must_tot:bool) (allow_guards:bool) (uvs:lis
       | Inl (Some g) ->
         let guard = { Env.trivial_guard with guard_f = NonTrivial g } in
         let guard = Rel.simplify_guard env guard in
-        if not allow_guards
+        if false //disable this for now
+        && not allow_guards
         && NonTrivial? guard.guard_f
         then (
           fail2 "Could not typecheck unifier solved implicit %s to %s since it produced a guard and guards were not allowed"
@@ -308,7 +316,7 @@ let tc_unifier_solved_implicits env (must_tot:bool) (allow_guards:bool) (uvs:lis
         fail3 "Could not typecheck unifier solved implicit %s to %s because %s" 
           (Print.uvar_to_string u.ctx_uvar_head)
           (term_to_string env sol)
-          (Core.print_error_short failed)
+          (Core.print_error failed)
   in
   uvs |> iter_tac aux
 
