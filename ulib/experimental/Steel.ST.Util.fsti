@@ -108,13 +108,13 @@ val extract_pure (#uses:_) (p:prop)
 
 /// Useful lemmas to make the framing tactic automatically handle `pure`
 
-[@@solve_can_be_split_lookup; (solve_can_be_split_for pure)]
+[@@solve_can_be_split_lookup; (solve_can_be_split_for (`%pure))]
 val intro_can_be_split_pure
   (p: prop)
   (sq: squash p)
 : Lemma (emp `can_be_split` pure p)
 
-[@@solve_can_be_split_forall_dep_lookup; (solve_can_be_split_forall_dep_for pure)]
+[@@solve_can_be_split_forall_dep_lookup; (solve_can_be_split_forall_dep_for (`%pure))]
 val intro_can_be_split_forall_dep_pure
   (#a: Type)
   (p: a -> Tot prop)
@@ -145,12 +145,12 @@ val return (#a:Type u#a)
 val exists_ (#a:Type u#a) (p:a -> vprop) : vprop
 
 /// Useful lemmas to make the framing tactic automatically handle `exists_`
-[@@solve_can_be_split_lookup; (solve_can_be_split_for exists_)]
+[@@solve_can_be_split_lookup; (solve_can_be_split_for (`%exists_))]
 val intro_can_be_split_exists (a:Type) (x:a) (p: a -> vprop)
   : Lemma
     (ensures (p x `can_be_split` (exists_ p)))
 
-[@@solve_can_be_split_forall_dep_lookup; (solve_can_be_split_forall_dep_for exists_)]
+[@@solve_can_be_split_forall_dep_lookup; (solve_can_be_split_forall_dep_for (`%exists_))]
 val intro_can_be_split_forall_dep_exists (b:Type) (a: b -> Type)
                            (x: (u: b) -> GTot (a u))
                            (p: (u: b) -> a u -> vprop)

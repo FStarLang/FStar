@@ -331,7 +331,7 @@ let is_BitVector_primitive head args =
       || S.fv_eq_lid fv Const.bv_shift_right_lid
       || S.fv_eq_lid fv Const.bv_udiv_lid
       || S.fv_eq_lid fv Const.bv_mod_lid
-    //  || S.fv_eq_lid fv Const.bv_ult_lid
+      || S.fv_eq_lid fv Const.bv_ult_lid
       || S.fv_eq_lid fv Const.bv_uext_lid
       || S.fv_eq_lid fv Const.bv_mul_lid) &&
       (isInteger sz_arg.n)
@@ -1296,7 +1296,7 @@ and encode_pat (env:env_t) (pat:S.pat) : (env_t * pattern) =
             let tm, decls = encode_const c env in
             let _ = match decls with _::_ -> failwith "Unexpected encoding of constant pattern" | _ -> () in
             mkEq(scrutinee, tm)
-        | Pat_cons(f, args) ->
+        | Pat_cons(f, _, args) ->
             let is_f =
                 let tc_name = Env.typ_of_datacon env.tcenv f.fv_name.v in
                 match Env.datacons_of_typ env.tcenv tc_name with
@@ -1311,13 +1311,13 @@ and encode_pat (env:env_t) (pat:S.pat) : (env_t * pattern) =
 
     let rec mk_projections pat (scrutinee:term) =
         match pat.v with
-        | Pat_dot_term (x, _)
+        | Pat_dot_term _ -> []
         | Pat_var x
         | Pat_wild x -> [x, scrutinee]
 
         | Pat_constant _ -> []
 
-        | Pat_cons(f, args) ->
+        | Pat_cons(f, _, args) ->
             args
             |> List.mapi (fun i (arg, _) ->
                 let proj = primitive_projector_by_pos env.tcenv f.fv_name.v i in

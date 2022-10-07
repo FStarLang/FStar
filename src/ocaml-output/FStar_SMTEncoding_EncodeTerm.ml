@@ -580,32 +580,35 @@ let is_BitVector_primitive :
       match ((head.FStar_Syntax_Syntax.n), args) with
       | (FStar_Syntax_Syntax.Tm_fvar fv, (sz_arg, uu___)::uu___1::uu___2::[])
           ->
-          (((((((((((FStar_Syntax_Syntax.fv_eq_lid fv
-                       FStar_Parser_Const.bv_and_lid)
+          ((((((((((((FStar_Syntax_Syntax.fv_eq_lid fv
+                        FStar_Parser_Const.bv_and_lid)
+                       ||
+                       (FStar_Syntax_Syntax.fv_eq_lid fv
+                          FStar_Parser_Const.bv_xor_lid))
                       ||
                       (FStar_Syntax_Syntax.fv_eq_lid fv
-                         FStar_Parser_Const.bv_xor_lid))
+                         FStar_Parser_Const.bv_or_lid))
                      ||
                      (FStar_Syntax_Syntax.fv_eq_lid fv
-                        FStar_Parser_Const.bv_or_lid))
+                        FStar_Parser_Const.bv_add_lid))
                     ||
                     (FStar_Syntax_Syntax.fv_eq_lid fv
-                       FStar_Parser_Const.bv_add_lid))
+                       FStar_Parser_Const.bv_sub_lid))
                    ||
                    (FStar_Syntax_Syntax.fv_eq_lid fv
-                      FStar_Parser_Const.bv_sub_lid))
+                      FStar_Parser_Const.bv_shift_left_lid))
                   ||
                   (FStar_Syntax_Syntax.fv_eq_lid fv
-                     FStar_Parser_Const.bv_shift_left_lid))
+                     FStar_Parser_Const.bv_shift_right_lid))
                  ||
                  (FStar_Syntax_Syntax.fv_eq_lid fv
-                    FStar_Parser_Const.bv_shift_right_lid))
+                    FStar_Parser_Const.bv_udiv_lid))
                 ||
                 (FStar_Syntax_Syntax.fv_eq_lid fv
-                   FStar_Parser_Const.bv_udiv_lid))
+                   FStar_Parser_Const.bv_mod_lid))
                ||
                (FStar_Syntax_Syntax.fv_eq_lid fv
-                  FStar_Parser_Const.bv_mod_lid))
+                  FStar_Parser_Const.bv_ult_lid))
               ||
               (FStar_Syntax_Syntax.fv_eq_lid fv
                  FStar_Parser_Const.bv_uext_lid))
@@ -3260,49 +3263,23 @@ and (encode_pat :
                                    "Unexpected encoding of constant pattern"
                              | uu___5 -> ());
                             FStar_SMTEncoding_Util.mkEq (scrutinee, tm)))
-                  | FStar_Syntax_Syntax.Pat_cons (f, args) ->
+                  | FStar_Syntax_Syntax.Pat_cons (f, uu___3, args) ->
                       let is_f =
                         let tc_name =
                           FStar_TypeChecker_Env.typ_of_datacon
                             env1.FStar_SMTEncoding_Env.tcenv
                             (f.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v in
-                        let uu___3 =
+                        let uu___4 =
                           FStar_TypeChecker_Env.datacons_of_typ
                             env1.FStar_SMTEncoding_Env.tcenv tc_name in
-                        match uu___3 with
-                        | (uu___4, uu___5::[]) ->
+                        match uu___4 with
+                        | (uu___5, uu___6::[]) ->
                             FStar_SMTEncoding_Util.mkTrue
-                        | uu___4 ->
+                        | uu___5 ->
                             FStar_SMTEncoding_Env.mk_data_tester env1
                               (f.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v
                               scrutinee in
                       let sub_term_guards =
-                        FStar_Compiler_Effect.op_Bar_Greater args
-                          (FStar_Compiler_List.mapi
-                             (fun i ->
-                                fun uu___3 ->
-                                  match uu___3 with
-                                  | (arg, uu___4) ->
-                                      let proj =
-                                        FStar_SMTEncoding_Env.primitive_projector_by_pos
-                                          env1.FStar_SMTEncoding_Env.tcenv
-                                          (f.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v
-                                          i in
-                                      let uu___5 =
-                                        FStar_SMTEncoding_Util.mkApp
-                                          (proj, [scrutinee]) in
-                                      mk_guard arg uu___5)) in
-                      FStar_SMTEncoding_Util.mk_and_l (is_f ::
-                        sub_term_guards) in
-                let rec mk_projections pat1 scrutinee =
-                  match pat1.FStar_Syntax_Syntax.v with
-                  | FStar_Syntax_Syntax.Pat_dot_term (x, uu___3) ->
-                      [(x, scrutinee)]
-                  | FStar_Syntax_Syntax.Pat_var x -> [(x, scrutinee)]
-                  | FStar_Syntax_Syntax.Pat_wild x -> [(x, scrutinee)]
-                  | FStar_Syntax_Syntax.Pat_constant uu___3 -> []
-                  | FStar_Syntax_Syntax.Pat_cons (f, args) ->
-                      let uu___3 =
                         FStar_Compiler_Effect.op_Bar_Greater args
                           (FStar_Compiler_List.mapi
                              (fun i ->
@@ -3317,8 +3294,33 @@ and (encode_pat :
                                       let uu___6 =
                                         FStar_SMTEncoding_Util.mkApp
                                           (proj, [scrutinee]) in
-                                      mk_projections arg uu___6)) in
-                      FStar_Compiler_Effect.op_Bar_Greater uu___3
+                                      mk_guard arg uu___6)) in
+                      FStar_SMTEncoding_Util.mk_and_l (is_f ::
+                        sub_term_guards) in
+                let rec mk_projections pat1 scrutinee =
+                  match pat1.FStar_Syntax_Syntax.v with
+                  | FStar_Syntax_Syntax.Pat_dot_term uu___3 -> []
+                  | FStar_Syntax_Syntax.Pat_var x -> [(x, scrutinee)]
+                  | FStar_Syntax_Syntax.Pat_wild x -> [(x, scrutinee)]
+                  | FStar_Syntax_Syntax.Pat_constant uu___3 -> []
+                  | FStar_Syntax_Syntax.Pat_cons (f, uu___3, args) ->
+                      let uu___4 =
+                        FStar_Compiler_Effect.op_Bar_Greater args
+                          (FStar_Compiler_List.mapi
+                             (fun i ->
+                                fun uu___5 ->
+                                  match uu___5 with
+                                  | (arg, uu___6) ->
+                                      let proj =
+                                        FStar_SMTEncoding_Env.primitive_projector_by_pos
+                                          env1.FStar_SMTEncoding_Env.tcenv
+                                          (f.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v
+                                          i in
+                                      let uu___7 =
+                                        FStar_SMTEncoding_Util.mkApp
+                                          (proj, [scrutinee]) in
+                                      mk_projections arg uu___7)) in
+                      FStar_Compiler_Effect.op_Bar_Greater uu___4
                         FStar_Compiler_List.flatten in
                 let pat_term1 uu___3 = encode_term pat_term env1 in
                 let pattern1 =

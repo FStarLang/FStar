@@ -253,7 +253,7 @@ let rec (inspect_ln :
           | FStar_Syntax_Syntax.Pat_constant c ->
               let uu___1 = inspect_const c in
               FStar_Reflection_Data.Pat_Constant uu___1
-          | FStar_Syntax_Syntax.Pat_cons (fv, ps) ->
+          | FStar_Syntax_Syntax.Pat_cons (fv, us_opt, ps) ->
               let uu___1 =
                 let uu___2 =
                   FStar_Compiler_List.map
@@ -261,14 +261,14 @@ let rec (inspect_ln :
                        match uu___3 with
                        | (p1, b) ->
                            let uu___4 = inspect_pat p1 in (uu___4, b)) ps in
-                (fv, uu___2) in
+                (fv, us_opt, uu___2) in
               FStar_Reflection_Data.Pat_Cons uu___1
           | FStar_Syntax_Syntax.Pat_var bv ->
               FStar_Reflection_Data.Pat_Var bv
           | FStar_Syntax_Syntax.Pat_wild bv ->
               FStar_Reflection_Data.Pat_Wild bv
-          | FStar_Syntax_Syntax.Pat_dot_term (bv, t4) ->
-              FStar_Reflection_Data.Pat_Dot_Term (bv, t4) in
+          | FStar_Syntax_Syntax.Pat_dot_term eopt ->
+              FStar_Reflection_Data.Pat_Dot_Term eopt in
         let brs1 =
           FStar_Compiler_List.map
             (fun uu___1 ->
@@ -529,7 +529,7 @@ let (pack_ln : FStar_Reflection_Data.term_view -> FStar_Syntax_Syntax.term) =
                 let uu___1 = pack_const c in
                 FStar_Syntax_Syntax.Pat_constant uu___1 in
               FStar_Compiler_Effect.op_Less_Bar wrap uu___
-          | FStar_Reflection_Data.Pat_Cons (fv, ps) ->
+          | FStar_Reflection_Data.Pat_Cons (fv, us_opt, ps) ->
               let uu___ =
                 let uu___1 =
                   let uu___2 =
@@ -538,7 +538,7 @@ let (pack_ln : FStar_Reflection_Data.term_view -> FStar_Syntax_Syntax.term) =
                          match uu___3 with
                          | (p1, b) -> let uu___4 = pack_pat p1 in (uu___4, b))
                       ps in
-                  (fv, uu___2) in
+                  (fv, us_opt, uu___2) in
                 FStar_Syntax_Syntax.Pat_cons uu___1 in
               FStar_Compiler_Effect.op_Less_Bar wrap uu___
           | FStar_Reflection_Data.Pat_Var bv ->
@@ -547,9 +547,9 @@ let (pack_ln : FStar_Reflection_Data.term_view -> FStar_Syntax_Syntax.term) =
           | FStar_Reflection_Data.Pat_Wild bv ->
               FStar_Compiler_Effect.op_Less_Bar wrap
                 (FStar_Syntax_Syntax.Pat_wild bv)
-          | FStar_Reflection_Data.Pat_Dot_Term (bv, t1) ->
+          | FStar_Reflection_Data.Pat_Dot_Term eopt ->
               FStar_Compiler_Effect.op_Less_Bar wrap
-                (FStar_Syntax_Syntax.Pat_dot_term (bv, t1)) in
+                (FStar_Syntax_Syntax.Pat_dot_term eopt) in
         let brs1 =
           FStar_Compiler_List.map
             (fun uu___ ->

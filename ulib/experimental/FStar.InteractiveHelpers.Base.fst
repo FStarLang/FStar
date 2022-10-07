@@ -552,7 +552,7 @@ and deep_apply_subst_in_comp e c subst =
 and deep_apply_subst_in_pattern e pat subst =
   match pat with
   | Pat_Constant _ -> pat, subst
-  | Pat_Cons fv patterns ->
+  | Pat_Cons fv us patterns ->
     (* The types of the variables in the patterns should be independent of each
      * other: we use fold_left only to incrementally update the substitution *)
     let patterns, subst =
@@ -560,17 +560,15 @@ and deep_apply_subst_in_pattern e pat subst =
                       let pat, subst = deep_apply_subst_in_pattern e pat subst in
                       ((pat, b) :: pats, subst)) patterns ([], subst)
     in
-    Pat_Cons fv patterns, subst
+    Pat_Cons fv us patterns, subst
   | Pat_Var bv ->
     let bv, subst = deep_apply_subst_in_bv e bv subst in
     Pat_Var bv, subst
   | Pat_Wild bv ->
     let bv, subst = deep_apply_subst_in_bv e bv subst in
     Pat_Wild bv, subst
-  | Pat_Dot_Term bv t ->
-    let bv, subst = deep_apply_subst_in_bv e bv subst in
-    let t = deep_apply_subst e t subst in
-    Pat_Dot_Term bv t, subst
+  | Pat_Dot_Term eopt ->
+    Pat_Dot_Term (map_opt (fun t -> deep_apply_subst e t subst) eopt), subst
 
 /// The substitution functions actually used in the rest of the meta F* functions.
 /// For now, we use normalization because even though it is sometimes slow it

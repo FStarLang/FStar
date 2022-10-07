@@ -437,13 +437,21 @@ let extract_let_rec_annotation env {lbname=lbname; lbunivs=univ_vars; lbtyp=t; l
     | Pat_var x  ->
         [x], mk (Tm_name x)
 
-    | Pat_cons(fv, pats) ->
+    | Pat_cons(fv, us_opt, pats) ->
         let vars, args = pats |> List.map pat_as_arg |> List.unzip in
         let vars = List.flatten vars in
-        vars,  mk (Tm_app(Syntax.fv_to_tm fv, args))
+        let head = Syntax.fv_to_tm fv in
+        let head = 
+          match us_opt with
+          | None -> head
+          | Some us -> S.mk_Tm_uinst head us
+        in
+        vars,  mk (Tm_app(head, args))
 
-    | Pat_dot_term(x, e) ->
-        [], e
+    | Pat_dot_term eopt ->
+        (match eopt with
+         | None -> failwith "TcUtil::decorated_pattern_as_term: dot pattern not resolved"
+         | Some e -> [], e)
 
 
 (*********************************************************************************************)
@@ -1958,7 +1966,7 @@ let universe_of_comp env u_res c =
                         c.pos
          | Some tm -> env.universe_of env tm
 
-let check_trivial_precondition env c =
+let check_trivial_precondition_wp env c =
   let ct = c |> Env.unfold_effect_abbrev env in
   let md = Env.get_effect_decl env ct.effect_name in
   let u_t, t, wp = destruct_wp_comp ct in
@@ -2568,14 +2576,96 @@ let check_top_level env g lc : (bool * comp) =
   let c, g_c = TcComm.lcomp_comp lc in
   if TcComm.is_total_lcomp lc
   then discharge (Env.conj_guard g g_c), c
-  else let steps = [Env.Beta; Env.NoFullNorm; Env.DoNotUnfoldPureLets] in
-       let c = Env.unfold_effect_abbrev env c
+  else let c = Env.unfold_effect_abbrev env c in
+       let us = c.comp_univs in
+       if Env.is_layered_effect env c.effect_name
+       then begin
+         //
+         // A top-level indexed effect
+         // We will look at the top_level_effect attr for the effect definition
+         //   and make sure that c unifies with it
+         //
+         let c_eff = c.effect_name in
+         let ret_comp = c |> S.mk_Comp in
+         //
+         // Using simplify etc. to help unificiation of logical effect arguments
+         // E.g., F* may insert returns, equalities, with which a precondition
+         //   may look like e ==> True,
+         //   as opposed to just True specified in the top-level effect abbreviation
+         //
+         // But this is just for unification, we return the original comp (ret_comp)
+         //   without normalization
+         //
+         let steps = [Env.Eager_unfolding; Env.Simplify; Env.Primops; Env.NoFullNorm] in
+         let c =
+           c
+           |> S.mk_Comp
+           |> Normalize.normalize_comp steps env in
+         let top_level_eff_opt = Env.get_top_level_effect env c_eff in
+         match top_level_eff_opt with
+         | None ->
+           raise_error
+             (Errors.Fatal_UnexpectedEffect,
+              BU.format1 "Indexed effect %s cannot be used as a top-level effect"
+                (c_eff |> Ident.string_of_lid))
+             (Env.get_range env)
+         | Some top_level_eff ->
+           // If top-level effect is same as c_eff, return
+           if Ident.lid_equals top_level_eff c_eff
+           then discharge g_c, ret_comp
+           else
+             let bc_opt = Env.lookup_effect_abbrev env us top_level_eff in
+             match bc_opt with
+             | None -> 
+               raise_error
+                 (Errors.Fatal_UnexpectedEffect,
+                  BU.format2 "Could not find top-level effect abbreviation %s for %s"
+                    (Ident.string_of_lid top_level_eff)
+                    (c_eff |> Ident.string_of_lid))
+                 (Env.get_range env)
+             | Some (bs, _) ->
+               //
+               // Typechecking of effect abbreviation ensures that there is at least
+               //   one return type argument, so the following a::bs is ok
+               //
+               let a::bs = SS.open_binders bs in
+               let uvs, g_uvs = Env.uvars_for_binders
+                 env
+                 bs
+                 [NT (a.binder_bv, U.comp_result c)]
+                 (fun b ->
+                  BU.format2
+                    "implicit for binder %s in effect abbreviation %s while checking top-level effect"
+                    (Print.binder_to_string b)
+                    (Ident.string_of_lid top_level_eff))
+                 (Env.get_range env) in
+               let top_level_comp =
+                 ({ comp_univs = us;
+                    effect_name = top_level_eff;
+                    result_typ = U.comp_result c;
+                    effect_args = uvs |> List.map S.as_arg;
+                    flags = [] }) |> S.mk_Comp in
+               // Unify
+               let gopt = Rel.eq_comp env top_level_comp c in
+               match gopt with
+               | None -> 
+                 raise_error
+                   (Errors.Fatal_UnexpectedEffect,
+                    BU.format2 "Could not unify %s and %s when checking top-level effect"
+                      (Print.comp_to_string top_level_comp)
+                      (Print.comp_to_string c))
+                   (Env.get_range env)
+               | Some g ->
+                 discharge (Env.conj_guards [g_c; g_uvs; g]), ret_comp
+       end
+       else let steps = [Env.Beta; Env.NoFullNorm; Env.DoNotUnfoldPureLets] in
+            let c = c
               |> S.mk_Comp
               |> Normalize.normalize_comp steps env in
-       let ct, vc, g_pre = check_trivial_precondition env c in
-       if Env.debug env <| Options.Other "Simplification"
-       then BU.print1 "top-level VC: %s\n" (Print.term_to_string vc);
-       discharge (Env.conj_guard g (Env.conj_guard g_c g_pre)), ct |> mk_Comp
+            let ct, vc, g_pre = check_trivial_precondition_wp env c in
+            if Env.debug env <| Options.Other "Simplification"
+            then BU.print1 "top-level VC: %s\n" (Print.term_to_string vc);
+            discharge (Env.conj_guard g (Env.conj_guard g_c g_pre)), ct |> S.mk_Comp
 
 (* Having already seen_args to head (from right to left),
    compute the guard, if any, for the next argument,

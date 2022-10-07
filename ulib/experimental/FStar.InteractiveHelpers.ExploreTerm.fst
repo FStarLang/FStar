@@ -554,7 +554,7 @@ and explore_pattern dbg dfs #a f x ge0 pat =
   print_dbg dbg ("[> explore_pattern:");
   match pat with
   | Pat_Constant _ -> ge0, x, Continue
-  | Pat_Cons fv patterns ->
+  | Pat_Cons fv us patterns ->
     let explore_pat ge_x_flag pat =
       let ge0, x, flag = ge_x_flag in
       let pat1, _ = pat in
@@ -568,10 +568,7 @@ and explore_pattern dbg dfs #a f x ge0 pat =
   | Pat_Var bv | Pat_Wild bv ->
     let ge1 = genv_push_bv ge0 bv false None in
     ge1, x, Continue
-  | Pat_Dot_Term bv t ->
-    (* TODO: I'm not sure what this is *)
-    let ge1 = genv_push_bv ge0 bv false None in
-    ge1, x, Continue
+  | Pat_Dot_Term _ -> ge0, x, Continue
 
 (*** Variables in a term *)
 /// Returns the list of free variables contained in a term

@@ -232,7 +232,7 @@ let pickBranch (cfg:config) (scrut : t) (branches : list branch) : option (term 
             in
             if matches_const scrutinee s then Inl [] else Inr false
 
-        | Pat_cons(fv, arg_pats) ->
+        | Pat_cons(fv, _us_opt, arg_pats) ->
             let rec matches_args out (a:list (t * aqual)) (p:list (pat * bool))
                 : either (list t) bool =
                 match a, p with
@@ -556,23 +556,27 @@ let rec translate (cfg:config) (bs:list t) (e:term) : t =
           let (bs, p_new) =
             match p.v with
             | Pat_constant c -> (bs, Pat_constant c)
-            | Pat_cons (fvar, args) ->
+            | Pat_cons (fvar, us_opt, args) ->
               let (bs', args') =
                   List.fold_left (fun (bs, args) (arg, b) ->
                                     let (bs', arg') = process_pattern bs arg in
                                     (bs', (arg', b) :: args)) (bs, []) args
               in
-              (bs', Pat_cons (fvar, List.rev args'))
+              let us_opt =
+                match us_opt with
+                | None -> None
+                | Some us -> Some (List.map (translate_univ cfg bs) us)
+              in
+              (bs', Pat_cons (fvar, us_opt, List.rev args'))
             | Pat_var bvar ->
               let x = S.new_bv None (readback cfg (translate cfg bs bvar.sort)) in
               (mkAccuVar x :: bs, Pat_var x)
             | Pat_wild bvar ->
               let x = S.new_bv None (readback cfg (translate cfg bs bvar.sort)) in
               (mkAccuVar x :: bs, Pat_wild x)
-            | Pat_dot_term (bvar, tm) ->
-              let x = S.new_bv None (readback cfg (translate cfg bs bvar.sort)) in
+            | Pat_dot_term eopt ->
               (bs,
-               Pat_dot_term (x, readback cfg (translate cfg bs tm)))
+               Pat_dot_term (BU.map_option (fun e -> readback cfg (translate cfg bs e)) eopt))
           in
           (bs, {p with v = p_new}) (* keep the info and change the pattern *)
         in

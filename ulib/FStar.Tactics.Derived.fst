@@ -902,19 +902,17 @@ and visit_br (ff : term -> Tac term) (b:branch) : Tac branch =
 and visit_pat (ff : term -> Tac term) (p:pattern) : Tac pattern =
   match p with
   | Pat_Constant c -> p
-  | Pat_Cons fv l ->
+  | Pat_Cons fv us l ->
       let l = (map (fun(p,b) -> (visit_pat ff p, b)) l) in
-      Pat_Cons fv l
+      Pat_Cons fv us l
   | Pat_Var bv ->
       let bv = on_sort_bv (visit_tm ff) bv in
       Pat_Var bv
   | Pat_Wild bv ->
       let bv = on_sort_bv (visit_tm ff) bv in
       Pat_Wild bv
-  | Pat_Dot_Term bv term ->
-      let bv = on_sort_bv (visit_tm ff) bv in
-      let term = visit_tm ff term in
-      Pat_Dot_Term bv term
+  | Pat_Dot_Term eopt ->
+      Pat_Dot_Term (map_opt (visit_tm ff) eopt)
 and visit_comp (ff : term -> Tac term) (c : comp) : Tac comp =
   let cv = inspect_comp c in
   let cv' =
@@ -1021,3 +1019,16 @@ let rec mk_abs (args : list binder) (t : term) : Tac term (decreases args) =
   | a :: args' ->
     let t' = mk_abs args' t in
     pack (Tv_Abs a t')
+
+(** [string_to_term_with_lb [(id1, t1); ...; (idn, tn)] e s] parses
+[s] as a term in environment [e] augmented with bindings
+[id1, t1], ..., [idn, tn]. *)
+let string_to_term_with_lb
+  (letbindings: list (string * term))
+  (e: env) (t: string): Tac term
+  = let e, lb_bvs = fold_left (fun (e, lb_bvs) (i, v) ->
+        let e, bv = push_bv_dsenv e i in
+        e, (v,bv)::lb_bvs
+      ) (e, []) letbindings in
+    let t = string_to_term e t in
+    fold_left (fun t (i, bv) -> pack (Tv_Let false [] bv i t)) t lb_bvs

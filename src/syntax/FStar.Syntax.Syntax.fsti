@@ -175,10 +175,11 @@ and ascription = either term comp * option term * bool        (* e <: t [by tac]
                                                                  (* the bool says whether the ascription is an equality ascription, i.e. $: *)
 and pat' =
   | Pat_constant of sconst
-  | Pat_cons     of fv * list (pat * bool)                      (* flag marks an explicitly provided implicit *)
+  | Pat_cons     of fv * option universes * list (pat * bool)    (* flag marks an explicitly provided implicit *)
   | Pat_var      of bv                                           (* a pattern bound variable (linear in a pattern) *)
   | Pat_wild     of bv                                           (* need stable names for even the wild patterns *)
-  | Pat_dot_term of bv * term                                    (* dot patterns: determined by other elements in the pattern and type *)
+  | Pat_dot_term of option term                                  (* dot patterns: determined by other elements in the pattern *)
+                                                                 (* the option term is the optionally resolved pat dot term *)
 and letbinding = {  //let f : forall u1..un. M t = e
     lbname :lbname;          //f
     lbunivs:list univ_name; //u1..un

@@ -1,5 +1,5 @@
 [
-  "Õ,ºã\u0000¤Ýú\u001b¯´TË{†,",
+  "üDGîãz¦vïåòCøUÑ™",
   [
     [
       "FStar.Tactics.SyntaxHelpers.mk_arr",
@@ -11,7 +11,20 @@
         "disc_equation_Prims.Nil", "fuel_guarded_inversion_Prims.list"
       ],
       0,
-      "986001521bfe1403ab72c081dcbe1653"
+      "ac954cd9156d89d43378699af2137f0b"
+    ],
+    [
+      "FStar.Tactics.SyntaxHelpers.mk_arr_curried",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Prims.Cons",
+        "disc_equation_Prims.Nil", "fuel_guarded_inversion_Prims.list",
+        "projection_inverse_BoxBool_proj_0"
+      ],
+      0,
+      "c23a4ece35d42c7961ccd42ba8d90d3b"
     ],
     [
       "FStar.Tactics.SyntaxHelpers.mk_tot_arr",
@@ -23,7 +36,7 @@
         "disc_equation_Prims.Nil", "fuel_guarded_inversion_Prims.list"
       ],
       0,
-      "70dc892229faf78b2cc60f9a1d2f0d74"
+      "93beb619bec8a98a9b613cfc572dad89"
     ],
     [
       "FStar.Tactics.SyntaxHelpers.lookup_lb_view",
@@ -49,7 +62,7 @@
         "typing_Tm_abs_221246e01212a4a5cd2192fb779fba3d"
       ],
       0,
-      "61b4a359a763ed5047b76a67137d7be5"
+      "445d97c82eb579cf1c6992e9e874edfa"
     ]
   ]
 ]

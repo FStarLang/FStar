@@ -32,6 +32,7 @@ let tr1 = function
           | Zeta           -> EMB.Zeta
           | ZetaFull       -> EMB.ZetaFull
           | Iota           -> EMB.Iota
+          | Unascribe      -> EMB.Unascribe
           | NBE            -> EMB.NBE
           | Unmeta         -> EMB.Unmeta
           | Reify          -> EMB.Reify
@@ -48,6 +49,7 @@ let rt1 = function
           | EMB.Zeta           -> Zeta
           | EMB.ZetaFull       -> ZetaFull
           | EMB.Iota           -> Iota
+          | EMB.Unascribe      -> Unascribe
           | EMB.NBE            -> NBE
           | EMB.Unmeta         -> Unmeta
           | EMB.Reify          -> Reify
@@ -158,6 +160,8 @@ let curms                   = from_tac_1 B.curms
 let set_urgency             = from_tac_1 B.set_urgency
 let t_commute_applied_match = from_tac_1 B.t_commute_applied_match
 let gather_or_solve_explicit_guards_for_resolved_goals = from_tac_1 B.gather_explicit_guards_for_resolved_goals
+let string_to_term          = from_tac_2 B.string_to_term
+let push_bv_dsenv           = from_tac_2 B.push_bv_dsenv
 
 (* sigh *)
 let fix_either (s : ('a, 'b) either) : ('a, 'b) either =

@@ -412,11 +412,21 @@ and pat_to_string x =
     let d = ToDocument.pat_to_document e in
     Pp.pretty_string (float_of_string "1.0") 100 d
   else match x.v with
-    | Pat_cons(l, pats) -> U.format2 "(%s %s)" (fv_to_string l) (List.map (fun (x, b) -> let p = pat_to_string x in if b then "#"^p else p) pats |> String.concat " ")
-    | Pat_dot_term (x, _) ->
+    | Pat_cons(l, us_opt, pats) ->
+      U.format3 "(%s%s%s)" 
+                (fv_to_string l)
+                (if not (Options.print_universes())
+                 then " "
+                 else 
+                   match us_opt with
+                   | None -> " "
+                   | Some us ->
+                     U.format1 " %s " (List.map univ_to_string us |> String.concat " "))
+                (List.map (fun (x, b) -> let p = pat_to_string x in if b then "#"^p else p) pats |> String.concat " ")
+    | Pat_dot_term topt ->
       if Options.print_bound_var_types()
-      then U.format2 ".%s:%s" (bv_to_string x) (term_to_string x.sort)
-      else U.format1 ".%s" (bv_to_string x)
+      then U.format1 ".%s" (if topt = None then "_" else topt |> U.must |> term_to_string)
+      else "._"
     | Pat_var x ->
       if Options.print_bound_var_types()
       then U.format2 "%s:%s" (bv_to_string x) (term_to_string x.sort)

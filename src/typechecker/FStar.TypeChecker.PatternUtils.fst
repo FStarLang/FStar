@@ -44,16 +44,16 @@ module C = FStar.Parser.Const
 let rec elaborate_pat env p = //Adds missing implicit patterns to constructor patterns
     let maybe_dot inaccessible a r =
         if inaccessible
-        then withinfo (Pat_dot_term(a, tun)) r
+        then withinfo (Pat_dot_term None) r
         else withinfo (Pat_var a) r
     in
     match p.v with
-    | Pat_cons({fv_qual=Some (Unresolved_constructor _)}, _) ->
+    | Pat_cons({fv_qual=Some (Unresolved_constructor _)}, _, _) ->
       (* Unresolved constructors cannot be elaborated yet.
          tc_pat has to resolve it first. *)
       p
 
-    | Pat_cons(fv, pats) ->
+    | Pat_cons(fv, us_opt, pats) ->
         let pats = List.map (fun (p, imp) -> elaborate_pat env p, imp) pats in
         let _, t = Env.lookup_datacon env fv.fv_name.v in
         let f, _ = U.arrow_formals t in
@@ -115,13 +115,13 @@ let rec elaborate_pat env p = //Adds missing implicit patterns to constructor pa
                 (p, S.is_bqual_implicit imp)::aux formals' pats'
             end
         in
-        {p with v=Pat_cons(fv, aux f pats)}
+        {p with v=Pat_cons(fv, us_opt, aux f pats)}
     | _ -> p
 
 exception Raw_pat_cannot_be_translated
 let raw_pat_as_exp (env:Env.env) (p:pat)
-  : option term 
-  = let rec aux p = 
+  : option (term * list bv)
+  = let rec aux bs p = 
         match p.v with
         | Pat_constant c ->
           let e =
@@ -131,27 +131,38 @@ let raw_pat_as_exp (env:Env.env) (p:pat)
               | _ ->
                 mk (Tm_constant c) p.p
           in
-          e
+          e, bs
 
-        | Pat_dot_term(_, t) ->
+        | Pat_dot_term eopt ->
           begin
-          let t = SS.compress t in
-          match t.n with
-          | Tm_unknown -> raise Raw_pat_cannot_be_translated
-          | _ -> t
+            match eopt with
+            | None -> raise Raw_pat_cannot_be_translated
+            | Some e -> SS.compress e, bs
           end
 
         | Pat_wild x
         | Pat_var x ->
-          mk (Tm_name x) p.p
+          mk (Tm_name x) p.p, x::bs
 
-        | Pat_cons(fv, pats) ->
-          let args = List.map (fun (p, i) -> aux p, as_aqual_implicit i) pats in
+        | Pat_cons(fv, us_opt, pats) ->
+          let args, bs = 
+            List.fold_right
+              (fun (p, i) (args, bs) ->
+                let ep, bs = aux bs p in
+                ((ep, as_aqual_implicit i) :: args), bs)
+              pats
+              ([], bs)
+          in
           let hd = Syntax.fv_to_tm fv in
+          let hd = 
+            match us_opt with
+            | None -> hd
+            | Some us -> S.mk_Tm_uinst hd us 
+          in
           let e = mk_Tm_app hd args p.p in
-          e
+          e, bs
     in
-    try Some (aux p)
+    try Some (aux [] p)
     with Raw_pat_cannot_be_translated -> None
 
 (*
@@ -193,13 +204,21 @@ let pat_as_exp (introduce_bv_uvars:bool)
              in
              ([], [], [], env, e, trivial_guard, p)
 
-           | Pat_dot_term(x, _) ->
-             let k, _ = U.type_u () in
-             let t, _, g = new_implicit_var_aux "pat_dot_term type" (S.range_of_bv x) env k Allow_ghost None in
-             let x = {x with sort=t} in
-             let e, _,  g' = new_implicit_var_aux "pat_dot_term" (S.range_of_bv x) env t Allow_ghost None in
-             let p = {p with v=Pat_dot_term(x, e)} in
-             ([], [], [], env, e, conj_guard g g', p)
+           | Pat_dot_term eopt ->
+             (match eopt with
+              | None ->
+                if Env.debug env <| Options.Other "Patterns"
+                then begin
+                  if not env.phase1
+                  then BU.print1 "Found a non-instantiated dot pattern in phase2 (%s)\n"
+                         (Print.pat_to_string p)
+                end;
+                let k, _ = U.type_u () in
+                let t, _, g = new_implicit_var_aux "pat_dot_term type" p.p env k Allow_ghost None in
+                let e, _,  g' = new_implicit_var_aux "pat_dot_term" p.p env t Allow_ghost None in
+                let p = {p with v=Pat_dot_term (Some e)} in
+                [], [], [], env, e, conj_guard g g', p
+              | Some e -> [], [], [], env, e, Env.trivial_guard, p)
 
            | Pat_wild x ->
              let x, g, env = intro_bv env x in
@@ -211,7 +230,7 @@ let pat_as_exp (introduce_bv_uvars:bool)
              let e = mk (Tm_name x) p.p in
              ([x], [x], [], env, e, g, p)
 
-           | Pat_cons(fv, pats) ->
+           | Pat_cons(fv, us_opt, pats) -> 
              let (b, a, w, env, args, guard, pats) =
                pats |>
                List.fold_left
@@ -221,12 +240,20 @@ let pat_as_exp (introduce_bv_uvars:bool)
                     (b'::b, a'::a, w'::w, env, arg::args, conj_guard guard guard', (pat, imp)::pats))
                ([], [], [], env, [], trivial_guard, [])
              in
-             let hd =
+             let inst_head hd us_opt = 
+               match us_opt with
+               | None -> hd
+               | Some us -> Syntax.mk_Tm_uinst hd us
+             in
+             let hd, us_opt =
                let hd = Syntax.fv_to_tm fv in
-               if not inst_pat_cons_univs then hd
+               if not inst_pat_cons_univs
+               || Some? us_opt
+               then inst_head hd us_opt, us_opt
                else let us, _ = Env.lookup_datacon env (Syntax.lid_of_fv fv) in
-                    if List.length us = 0 then hd
-                    else Syntax.mk_Tm_uinst hd us in
+                    if List.length us = 0 then hd, Some []
+                    else Syntax.mk_Tm_uinst hd us, Some us
+             in
              let e = mk_Tm_app hd (args |> List.rev) p.p in
              (List.rev b |> List.flatten,
               List.rev a |> List.flatten,
@@ -234,7 +261,7 @@ let pat_as_exp (introduce_bv_uvars:bool)
               env,
               e,
               guard,
-              {p with v=Pat_cons(fv, List.rev pats)})
+              {p with v=Pat_cons(fv, us_opt, List.rev pats)})
     in
     let one_pat env p =
         let p = elaborate_pat env p in

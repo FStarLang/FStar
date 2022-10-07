@@ -1,5 +1,5 @@
 [
-  "'Ì¿Üš™Ô†v>Ã€]éLe",
+  "!\u001f˜+W\r\fOd\u001fNê\n^³ú",
   [
     [
       "FStar.Option.isNone",
@@ -15,7 +15,7 @@
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "55e8ac4a198f06fd35d1429bf3b3c33b"
+      "e6136f85225984c2642307cda0e96e2e"
     ],
     [
       "FStar.Option.isSome",
@@ -31,7 +31,7 @@
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "68fed524bbae31e441ecdb14dba14579"
+      "8df1cfdea3194f3350ec3caff3502100"
     ],
     [
       "FStar.Option.map",
@@ -47,7 +47,7 @@
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "bad8a1db6721c50f9b84812f8dcf5c5c"
+      "9f8df17b202851398a9d31a4d0f5dc21"
     ],
     [
       "FStar.Option.mapTot",
@@ -63,7 +63,7 @@
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "08fe08099b70fa97dd9ecab220db96de"
+      "bc2b46ad087a6c006fb2217e193c5e24"
     ],
     [
       "FStar.Option.get",
@@ -79,7 +79,16 @@
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "0b43b069b2d7ba176742757a05ddca15"
+      "03349b488f1c22f4b1638585c0f51fc1"
+    ],
+    [
+      "FStar.Option.op_let_Question",
+      1,
+      2,
+      1,
+      [ "@query", "lemma_FStar.Pervasives.invertOption" ],
+      0,
+      "f34e6271c8255b60d4c27ad12a194688"
     ]
   ]
 ]

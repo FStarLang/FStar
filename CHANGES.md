@@ -13,7 +13,13 @@ Guidelines for the changelog:
 
 # Version 0.9.7.0
 
-## Tactics
+## Tactics & Reflection
+  * Pat_Dot_Term now only has an `option term` as argument, where a `Some e` indicates that
+    the dot pattern has been resolved to `e`.
+
+  * Pat_Cons, the case of constructed patterns, now takes an additional argument representing
+    the universe instantiation of the constructor.
+  
   * The behavior of `pack` was changed to canonize arrows by flattening them in the internal
     compiler representation (https://github.com/FStarLang/FStar/pull/2609).
     An alternative version of `pack` called `pack_curried` which does not perform canonization,
@@ -224,6 +230,52 @@ Guidelines for the changelog:
      provided (using UInt128).
 
 ## Syntax
+
+   * PR #2671 allows operators as field names in record expressions
+     and record type declaration. Example:
+
+	 ```fstar
+	 type foo = { ( ^ ): int  }
+	 let _: foo = { ( ^ ) = 3 }
+	 ```
+
+	 See `tests/micro-benchmarks/RecordFieldOperator.fst` for details.
+
+   * PR #2670 makes F*'s parser accept unparenthesised record
+     expressions on function application. `f {x = 1}` is now legal
+     F\*, while before one was forced to write `f ({x = 1})`.
+
+	   Note that in the context of a (possible) refinement, this is not
+     allowed since it is a parser conflict.
+
+   * PR #2669 allows name quotes in patterns, i.e. ``%`foo`` is a
+     valid pattern and is desugared to the constant string
+     pattern `"X.Y.Z.foo"`, with `X.Y.Z` being `foo`'s module.
+
+   * PR #2686 forbids the sequence `//` in operators. For instance,
+     `+//` used to be a legal operator, it is not the case anymore,
+     since it is ambiguous with the comment syntax.
+
+   * PR #2644 introduces monadic let operators in the surface
+     syntax. One can now write:
+
+	 ```
+	 let (let?) (x: option 'a) (f: 'a -> option 'b): option 'b
+       = match x with
+       | Some x -> f x
+       | None   -> None
+
+     let foo (x: option (int * option int)) =
+	    let? (a, b) = x in
+		match? b with
+		...
+	 ```
+
+     Where `?` is any operator sequence; there is also support for
+     `and?`, `;?`, etc. See [example module
+     `MonadicLetBindings`](./examples/misc/MonadicLetBindings.fst) for
+     more details.
+
    * PR #2603 introduces universes in the reflection syntax.
      It is a potentially breaking change for reflection clients.
      See the PR for more description.

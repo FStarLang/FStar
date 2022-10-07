@@ -450,24 +450,32 @@ and rebuild_closure cfg env stack t =
             match p.v with
             | Pat_constant _ ->
               p, env
-            | Pat_cons(fv, pats) ->
+            | Pat_cons(fv, us_opt, pats) ->
+              let us_opt =
+                if cfg.steps.erase_universes
+                then None
+                else (
+                  match us_opt with
+                  | None -> None
+                  | Some us -> Some (List.map (norm_universe cfg env) us)
+                )
+              in
               let pats, env =
                   pats |> List.fold_left
                   (fun (pats, env) (p, b) ->
                     let p, env = norm_pat env p in (p,b)::pats, env)
                   ([], env)
               in
-              {p with v=Pat_cons(fv, List.rev pats)}, env
+              {p with v=Pat_cons(fv, us_opt, List.rev pats)}, env
             | Pat_var x ->
               let x = {x with sort=non_tail_inline_closure_env cfg env x.sort} in
               {p with v=Pat_var x}, dummy::env
             | Pat_wild x ->
               let x = {x with sort=non_tail_inline_closure_env cfg env x.sort} in
               {p with v=Pat_wild x}, dummy::env
-            | Pat_dot_term(x, t) ->
-              let x = {x with sort=non_tail_inline_closure_env cfg env x.sort} in
-              let t = non_tail_inline_closure_env cfg env t in
-              {p with v=Pat_dot_term(x, t)}, env
+            | Pat_dot_term eopt ->
+              let eopt = BU.map_option (non_tail_inline_closure_env cfg env) eopt in
+              {p with v=Pat_dot_term eopt}, env
           in
           let pat, env = norm_pat env pat in
           let w_opt =
@@ -1389,7 +1397,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                   if i >= norm_args_len then false
                   else
                     let arg_i, _ = List.nth norm_args i in
-                    let head, _ = arg_i |> U.unascribe |> U.head_and_args in
+                    let head, _ = arg_i |> U.unmeta_safe |> U.head_and_args in
                     match (un_uinst head).n with
                     | Tm_constant _ -> true
                     | Tm_fvar fv -> Env.is_datacon cfg.tcenv (S.lid_of_fv fv)
@@ -1593,11 +1601,39 @@ let rec norm : cfg -> env -> stack -> term -> term =
           | Tm_meta (head, m) ->
             log cfg (fun () -> BU.print1 ">> metadata = %s\n" (Print.metadata_to_string m));
             begin match m with
-              | Meta_monadic (m, t) ->
-                reduce_impure_comp cfg env stack head (Inl m) t
+              | Meta_monadic (m_from, ty) ->
+                if cfg.steps.for_extraction
+                then (
+                  //In Extraction, we want to erase sub-terms with erasable effect
+                  //Or pure terms with non-informative return types
+                  if Env.is_erasable_effect cfg.tcenv m_from
+                  || (U.is_pure_effect m_from && Env.non_informative cfg.tcenv ty)
+                  then (
+                    rebuild cfg env stack (S.mk (Tm_meta (U.exp_unit, m)) t.pos)
+                  )
+                  else (
+                    reduce_impure_comp cfg env stack head (Inl m_from) ty
+                  )
+                )
+                else 
+                  reduce_impure_comp cfg env stack head (Inl m_from) ty
 
-              | Meta_monadic_lift (m, m', t) ->
-                reduce_impure_comp cfg env stack head (Inr (m, m')) t
+              | Meta_monadic_lift (m_from, m_to, ty) ->
+                if cfg.steps.for_extraction
+                then (
+                  //In Extraction, we want to erase sub-terms with erasable effect
+                  //Or pure terms with non-informative return types
+                  if Env.is_erasable_effect cfg.tcenv m_from
+                  ||  Env.is_erasable_effect cfg.tcenv m_to
+                  || (U.is_pure_effect m_from && Env.non_informative cfg.tcenv ty)
+                  then (
+                    rebuild cfg env stack (S.mk (Tm_meta (U.exp_unit, m)) t.pos)
+                  )
+                  else (
+                    reduce_impure_comp cfg env stack head (Inr (m_from, m_to)) ty
+                  )
+                )
+                else reduce_impure_comp cfg env stack head (Inr (m_from, m_to)) ty
 
               | _ ->
                 if cfg.steps.unmeta
@@ -2692,21 +2728,30 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
           in
           let rec norm_pat env p = match p.v with
             | Pat_constant _ -> p, env
-            | Pat_cons(fv, pats) ->
+            | Pat_cons(fv, us_opt, pats) ->
+              let us_opt =
+                if cfg.steps.erase_universes
+                then None
+                else (
+                  match us_opt with
+                  | None -> None
+                  | Some us ->
+                    Some (List.map (norm_universe cfg env) us)
+                )
+              in
               let pats, env = pats |> List.fold_left (fun (pats, env) (p, b) ->
                     let p, env = norm_pat env p in
                     (p,b)::pats, env) ([], env) in
-              {p with v=Pat_cons(fv, List.rev pats)}, env
+              {p with v=Pat_cons(fv, us_opt, List.rev pats)}, env
             | Pat_var x ->
               let x = {x with sort=norm_or_whnf env x.sort} in
               {p with v=Pat_var x}, dummy::env
             | Pat_wild x ->
               let x = {x with sort=norm_or_whnf env x.sort} in
               {p with v=Pat_wild x}, dummy::env
-            | Pat_dot_term(x, t) ->
-              let x = {x with sort=norm_or_whnf env x.sort} in
-              let t = norm_or_whnf env t in
-              {p with v=Pat_dot_term(x, t)}, env
+            | Pat_dot_term eopt ->
+              let eopt = BU.map_option (norm_or_whnf env) eopt in
+              {p with v=Pat_dot_term eopt}, env
           in
           let norm_branches () =
             match env with
@@ -2724,7 +2769,7 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
           let maybe_commute_matches () =
             let can_commute =
                 match branches with
-                | ({v=Pat_cons(fv, _)}, _, _)::_ ->
+                | ({v=Pat_cons(fv, _, _)}, _, _)::_ ->
                   Env.fv_has_attr cfg.tcenv fv FStar.Parser.Const.commute_nested_matches_lid
                 | _ -> false in
             match (U.unascribe scrutinee).n with
@@ -2816,7 +2861,7 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
                   Inl []
                 | _ -> Inr (not (is_cons head)) //if it's not a constant, it may match
               end
-            | Pat_cons(fv, arg_pats) -> begin
+            | Pat_cons(fv, _, arg_pats) -> begin
               match (U.un_uinst head).n with
                 | Tm_fvar fv' when fv_eq fv fv' ->
                   matches_args [] args arg_pats

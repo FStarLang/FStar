@@ -540,7 +540,7 @@ let rec (decorated_pattern_as_term :
         let uu___ = mk (FStar_Syntax_Syntax.Tm_name x) in ([x], uu___)
     | FStar_Syntax_Syntax.Pat_var x ->
         let uu___ = mk (FStar_Syntax_Syntax.Tm_name x) in ([x], uu___)
-    | FStar_Syntax_Syntax.Pat_cons (fv, pats) ->
+    | FStar_Syntax_Syntax.Pat_cons (fv, us_opt, pats) ->
         let uu___ =
           let uu___1 =
             FStar_Compiler_Effect.op_Bar_Greater pats
@@ -550,15 +550,20 @@ let rec (decorated_pattern_as_term :
         (match uu___ with
          | (vars, args) ->
              let vars1 = FStar_Compiler_List.flatten vars in
-             let uu___1 =
-               let uu___2 =
-                 let uu___3 =
-                   let uu___4 = FStar_Syntax_Syntax.fv_to_tm fv in
-                   (uu___4, args) in
-                 FStar_Syntax_Syntax.Tm_app uu___3 in
-               mk uu___2 in
+             let head = FStar_Syntax_Syntax.fv_to_tm fv in
+             let head1 =
+               match us_opt with
+               | FStar_Pervasives_Native.None -> head
+               | FStar_Pervasives_Native.Some us ->
+                   FStar_Syntax_Syntax.mk_Tm_uinst head us in
+             let uu___1 = mk (FStar_Syntax_Syntax.Tm_app (head1, args)) in
              (vars1, uu___1))
-    | FStar_Syntax_Syntax.Pat_dot_term (x, e) -> ([], e)
+    | FStar_Syntax_Syntax.Pat_dot_term eopt ->
+        (match eopt with
+         | FStar_Pervasives_Native.None ->
+             failwith
+               "TcUtil::decorated_pattern_as_term: dot pattern not resolved"
+         | FStar_Pervasives_Native.Some e -> ([], e))
 let (comp_univ_opt :
   FStar_Syntax_Syntax.comp' FStar_Syntax_Syntax.syntax ->
     FStar_Syntax_Syntax.universe FStar_Pervasives_Native.option)
@@ -4105,7 +4110,7 @@ let (universe_of_comp :
                   FStar_Errors.raise_error uu___4 c.FStar_Syntax_Syntax.pos
               | FStar_Pervasives_Native.Some tm ->
                   env.FStar_TypeChecker_Env.universe_of env tm))
-let (check_trivial_precondition :
+let (check_trivial_precondition_wp :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.comp ->
       (FStar_Syntax_Syntax.comp_typ * FStar_Syntax_Syntax.formula *
@@ -5616,41 +5621,178 @@ let (check_top_level :
                  discharge uu___4 in
                (uu___3, c)
              else
-               (let steps =
-                  [FStar_TypeChecker_Env.Beta;
-                  FStar_TypeChecker_Env.NoFullNorm;
-                  FStar_TypeChecker_Env.DoNotUnfoldPureLets] in
-                let c1 =
-                  let uu___4 =
-                    let uu___5 =
-                      FStar_TypeChecker_Env.unfold_effect_abbrev env c in
-                    FStar_Compiler_Effect.op_Bar_Greater uu___5
+               (let c1 = FStar_TypeChecker_Env.unfold_effect_abbrev env c in
+                let us = c1.FStar_Syntax_Syntax.comp_univs in
+                let uu___4 =
+                  FStar_TypeChecker_Env.is_layered_effect env
+                    c1.FStar_Syntax_Syntax.effect_name in
+                if uu___4
+                then
+                  let c_eff = c1.FStar_Syntax_Syntax.effect_name in
+                  let ret_comp =
+                    FStar_Compiler_Effect.op_Bar_Greater c1
                       FStar_Syntax_Syntax.mk_Comp in
-                  FStar_Compiler_Effect.op_Bar_Greater uu___4
-                    (FStar_TypeChecker_Normalize.normalize_comp steps env) in
-                let uu___4 = check_trivial_precondition env c1 in
-                match uu___4 with
-                | (ct, vc, g_pre) ->
-                    ((let uu___6 =
-                        FStar_Compiler_Effect.op_Less_Bar
-                          (FStar_TypeChecker_Env.debug env)
-                          (FStar_Options.Other "Simplification") in
-                      if uu___6
-                      then
-                        let uu___7 = FStar_Syntax_Print.term_to_string vc in
-                        FStar_Compiler_Util.print1 "top-level VC: %s\n"
-                          uu___7
-                      else ());
-                     (let uu___6 =
-                        let uu___7 =
-                          let uu___8 =
-                            FStar_TypeChecker_Env.conj_guard g_c g_pre in
-                          FStar_TypeChecker_Env.conj_guard g1 uu___8 in
-                        discharge uu___7 in
-                      let uu___7 =
-                        FStar_Compiler_Effect.op_Bar_Greater ct
-                          FStar_Syntax_Syntax.mk_Comp in
-                      (uu___6, uu___7)))))
+                  let steps =
+                    [FStar_TypeChecker_Env.Eager_unfolding;
+                    FStar_TypeChecker_Env.Simplify;
+                    FStar_TypeChecker_Env.Primops;
+                    FStar_TypeChecker_Env.NoFullNorm] in
+                  let c2 =
+                    let uu___5 =
+                      FStar_Compiler_Effect.op_Bar_Greater c1
+                        FStar_Syntax_Syntax.mk_Comp in
+                    FStar_Compiler_Effect.op_Bar_Greater uu___5
+                      (FStar_TypeChecker_Normalize.normalize_comp steps env) in
+                  let top_level_eff_opt =
+                    FStar_TypeChecker_Env.get_top_level_effect env c_eff in
+                  match top_level_eff_opt with
+                  | FStar_Pervasives_Native.None ->
+                      let uu___5 =
+                        let uu___6 =
+                          let uu___7 =
+                            FStar_Compiler_Effect.op_Bar_Greater c_eff
+                              FStar_Ident.string_of_lid in
+                          FStar_Compiler_Util.format1
+                            "Indexed effect %s cannot be used as a top-level effect"
+                            uu___7 in
+                        (FStar_Errors.Fatal_UnexpectedEffect, uu___6) in
+                      let uu___6 = FStar_TypeChecker_Env.get_range env in
+                      FStar_Errors.raise_error uu___5 uu___6
+                  | FStar_Pervasives_Native.Some top_level_eff ->
+                      let uu___5 = FStar_Ident.lid_equals top_level_eff c_eff in
+                      (if uu___5
+                       then let uu___6 = discharge g_c in (uu___6, ret_comp)
+                       else
+                         (let bc_opt =
+                            FStar_TypeChecker_Env.lookup_effect_abbrev env us
+                              top_level_eff in
+                          match bc_opt with
+                          | FStar_Pervasives_Native.None ->
+                              let uu___7 =
+                                let uu___8 =
+                                  let uu___9 =
+                                    FStar_Ident.string_of_lid top_level_eff in
+                                  let uu___10 =
+                                    FStar_Compiler_Effect.op_Bar_Greater
+                                      c_eff FStar_Ident.string_of_lid in
+                                  FStar_Compiler_Util.format2
+                                    "Could not find top-level effect abbreviation %s for %s"
+                                    uu___9 uu___10 in
+                                (FStar_Errors.Fatal_UnexpectedEffect, uu___8) in
+                              let uu___8 =
+                                FStar_TypeChecker_Env.get_range env in
+                              FStar_Errors.raise_error uu___7 uu___8
+                          | FStar_Pervasives_Native.Some (bs, uu___7) ->
+                              let uu___8 = FStar_Syntax_Subst.open_binders bs in
+                              (match uu___8 with
+                               | a::bs1 ->
+                                   let uu___9 =
+                                     let uu___10 =
+                                       FStar_TypeChecker_Env.get_range env in
+                                     FStar_TypeChecker_Env.uvars_for_binders
+                                       env bs1
+                                       [FStar_Syntax_Syntax.NT
+                                          ((a.FStar_Syntax_Syntax.binder_bv),
+                                            (FStar_Syntax_Util.comp_result c2))]
+                                       (fun b ->
+                                          let uu___11 =
+                                            FStar_Syntax_Print.binder_to_string
+                                              b in
+                                          let uu___12 =
+                                            FStar_Ident.string_of_lid
+                                              top_level_eff in
+                                          FStar_Compiler_Util.format2
+                                            "implicit for binder %s in effect abbreviation %s while checking top-level effect"
+                                            uu___11 uu___12) uu___10 in
+                                   (match uu___9 with
+                                    | (uvs, g_uvs) ->
+                                        let top_level_comp =
+                                          let uu___10 =
+                                            let uu___11 =
+                                              FStar_Compiler_Effect.op_Bar_Greater
+                                                uvs
+                                                (FStar_Compiler_List.map
+                                                   FStar_Syntax_Syntax.as_arg) in
+                                            {
+                                              FStar_Syntax_Syntax.comp_univs
+                                                = us;
+                                              FStar_Syntax_Syntax.effect_name
+                                                = top_level_eff;
+                                              FStar_Syntax_Syntax.result_typ
+                                                =
+                                                (FStar_Syntax_Util.comp_result
+                                                   c2);
+                                              FStar_Syntax_Syntax.effect_args
+                                                = uu___11;
+                                              FStar_Syntax_Syntax.flags = []
+                                            } in
+                                          FStar_Compiler_Effect.op_Bar_Greater
+                                            uu___10
+                                            FStar_Syntax_Syntax.mk_Comp in
+                                        let gopt =
+                                          FStar_TypeChecker_Rel.eq_comp env
+                                            top_level_comp c2 in
+                                        (match gopt with
+                                         | FStar_Pervasives_Native.None ->
+                                             let uu___10 =
+                                               let uu___11 =
+                                                 let uu___12 =
+                                                   FStar_Syntax_Print.comp_to_string
+                                                     top_level_comp in
+                                                 let uu___13 =
+                                                   FStar_Syntax_Print.comp_to_string
+                                                     c2 in
+                                                 FStar_Compiler_Util.format2
+                                                   "Could not unify %s and %s when checking top-level effect"
+                                                   uu___12 uu___13 in
+                                               (FStar_Errors.Fatal_UnexpectedEffect,
+                                                 uu___11) in
+                                             let uu___11 =
+                                               FStar_TypeChecker_Env.get_range
+                                                 env in
+                                             FStar_Errors.raise_error uu___10
+                                               uu___11
+                                         | FStar_Pervasives_Native.Some g2 ->
+                                             let uu___10 =
+                                               let uu___11 =
+                                                 FStar_TypeChecker_Env.conj_guards
+                                                   [g_c; g_uvs; g2] in
+                                               discharge uu___11 in
+                                             (uu___10, ret_comp))))))
+                else
+                  (let steps =
+                     [FStar_TypeChecker_Env.Beta;
+                     FStar_TypeChecker_Env.NoFullNorm;
+                     FStar_TypeChecker_Env.DoNotUnfoldPureLets] in
+                   let c2 =
+                     let uu___6 =
+                       FStar_Compiler_Effect.op_Bar_Greater c1
+                         FStar_Syntax_Syntax.mk_Comp in
+                     FStar_Compiler_Effect.op_Bar_Greater uu___6
+                       (FStar_TypeChecker_Normalize.normalize_comp steps env) in
+                   let uu___6 = check_trivial_precondition_wp env c2 in
+                   match uu___6 with
+                   | (ct, vc, g_pre) ->
+                       ((let uu___8 =
+                           FStar_Compiler_Effect.op_Less_Bar
+                             (FStar_TypeChecker_Env.debug env)
+                             (FStar_Options.Other "Simplification") in
+                         if uu___8
+                         then
+                           let uu___9 = FStar_Syntax_Print.term_to_string vc in
+                           FStar_Compiler_Util.print1 "top-level VC: %s\n"
+                             uu___9
+                         else ());
+                        (let uu___8 =
+                           let uu___9 =
+                             let uu___10 =
+                               FStar_TypeChecker_Env.conj_guard g_c g_pre in
+                             FStar_TypeChecker_Env.conj_guard g1 uu___10 in
+                           discharge uu___9 in
+                         let uu___9 =
+                           FStar_Compiler_Effect.op_Bar_Greater ct
+                             FStar_Syntax_Syntax.mk_Comp in
+                         (uu___8, uu___9))))))
 let (short_circuit :
   FStar_Syntax_Syntax.term ->
     FStar_Syntax_Syntax.args -> FStar_TypeChecker_Common.guard_formula)

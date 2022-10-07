@@ -16,7 +16,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "6723fae8a4a893ee8c89a1c8e2e2ee55"
+      "4bfb200a4327971c59e365624b784efa"
     ],
     [
       "Part1.Lemmas.factorial_is_greater_than_arg",
@@ -31,7 +31,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "c5e103e88efc35516f433d425058cd55"
+      "f82676a42945c852def045fafc95f4ae"
     ],
     [
       "Part1.Lemmas.factorial_is_greater_than_arg",
@@ -46,7 +46,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "7f88a493d799e33c2362ee88bd4f787e"
+      "c82658080bd9960f7cb59f3d47a0c323"
     ],
     [
       "Part1.Lemmas.fibonacci",
@@ -63,7 +63,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "2e3b81ae85e0423a59d074cb3304c778"
+      "d9ba434d058a7acca49f2ce20aad791e"
     ],
     [
       "Part1.Lemmas.app",
@@ -78,7 +78,7 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "0c8214724577dd16b75dcc8658f05346"
+      "c8668647c07e969d8911bce59338ada5"
     ],
     [
       "Part1.Lemmas.length",
@@ -96,7 +96,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "a7bbff90a24f47e724e0f08a39a85bca"
+      "de406b7baa764c357917804e510615d4"
     ],
     [
       "Part1.Lemmas.append",
@@ -111,7 +111,7 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "f4effdb22f51702366f25b31c050373d"
+      "9a023bc3b5c5e3ccfd46489946102fee"
     ],
     [
       "Part1.Lemmas.reverse",
@@ -126,7 +126,7 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "2088f01a895c651cbf57d0a10676222e"
+      "fbae7e0bc4d2773a051d885f78157b30"
     ],
     [
       "Part1.Lemmas.map",
@@ -141,7 +141,7 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "e4448e6793db749e04f7a90202aeb563"
+      "ecfae07afff8011b0c2469243f3309c6"
     ],
     [
       "Part1.Lemmas.find",
@@ -156,7 +156,7 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "68c24062e5c6abf3979eae25cfe244e6"
+      "b47ea5ec603a61d8bd0c1fb75c4148ea"
     ],
     [
       "Part1.Lemmas.find_alt",
@@ -171,7 +171,7 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "ab90581048facdb69349c7d9a3f5765f"
+      "6a4f8ba01d357c43af4e7400514eeb4f"
     ],
     [
       "Part1.Lemmas.find_alt_ok",
@@ -202,7 +202,7 @@
         "subterm_ordering_Prims.Cons", "typing_Part1.Lemmas.find_alt"
       ],
       0,
-      "70776c8c126c28b2d96eb346a51d3a23"
+      "89fbdaaafccce4535dbc6558bac50837"
     ],
     [
       "Part1.Lemmas.fold_left",
@@ -217,7 +217,7 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "6a31ead82f13687ceffe73b0bd9cb706"
+      "8846dea98f362b4f4c5364e948a29954"
     ],
     [
       "Part1.Lemmas.rev_aux",
@@ -232,7 +232,7 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "716f276df27b9d67084113b38172318d"
+      "c2d9ca9fd462926e393d8597c9662985"
     ],
     [
       "Part1.Lemmas.fib_aux",
@@ -242,14 +242,15 @@
       [
         "@MaxIFuel_assumption", "@query",
         "binder_x_bb4e1c9af0265270f8e7a5f250f730e2_0",
-        "binder_x_bb4e1c9af0265270f8e7a5f250f730e2_1", "equation_Prims.nat",
+        "binder_x_bb4e1c9af0265270f8e7a5f250f730e2_1",
+        "binder_x_bb4e1c9af0265270f8e7a5f250f730e2_2", "equation_Prims.nat",
         "int_inversion", "int_typing", "primitive_Prims.op_Addition",
         "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "well-founded-ordering-on-nat"
       ],
       0,
-      "a8c86338ebc163aaf33989d1a1d5f9c0"
+      "2310c9d11199c47e696d056da7d00903"
     ]
   ]
 ]

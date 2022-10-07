@@ -218,14 +218,11 @@ let primitive_type_axioms : env -> lident -> string -> term -> list decl =
                                          precedes_y_x)),
                                   Some "well-founded ordering on nat (alt)", "well-founded-ordering-on-nat")] in
     let mk_real : env -> string -> term -> list decl  = fun env nm tt ->
-        let lex_t = mkFreeV <| mk_fv (string_of_lid Const.lex_t_lid, Term_sort) in
         let typing_pred = mk_HasType x tt in
-        let typing_pred_y = mk_HasType y tt in
         let aa = mk_fv ("a", Sort "Real") in
         let a = mkFreeV aa in
         let bb = mk_fv ("b", Sort "Real") in
         let b = mkFreeV bb in
-        let precedes_y_x = mk_Valid <| mkApp("Prims.precedes", [lex_t; lex_t;y;x]) in
         [Util.mkAssume(mkForall
                          (Env.get_range env)
                          ([[Term.boxReal b]],
@@ -241,19 +238,7 @@ let primitive_type_axioms : env -> lident -> string -> term -> list decl =
                           mkImp(typing_pred,
                                 mk_tester (fst boxRealFun) x)),
                           Some "real inversion",
-                          "real_inversion");
-         Util.mkAssume(mkForall_fuel
-                         env
-                         (Env.get_range env)
-                           ([[typing_pred; typing_pred_y;precedes_y_x]],
-                            [xx;yy],
-                            mkImp(mk_and_l [typing_pred;
-                                            typing_pred_y;
-                                            mkGT (Term.unboxReal x, mkReal "0.0");
-                                            mkGTE (Term.unboxReal y,mkReal "0.0");
-                                            mkLT (Term.unboxReal y, Term.unboxReal x)],
-                                   precedes_y_x)),
-                            Some "well-founded ordering on real", "well-founded-ordering-on-real")]
+                          "real_inversion")]
     in
     let mk_str : env -> string -> term -> list decl  = fun env nm tt ->
         let typing_pred = mk_HasType x tt in
@@ -789,30 +774,52 @@ let encode_top_level_let :
                          [dummy_var], app
                     else vars, maybe_curry_fvb (FStar.Syntax.Util.range_of_lbname lbn) fvb (List.map mkFreeV vars)
                 in
-                let pat, app, (body, decls2) =
-                  let is_logical =
-                    match (SS.compress t_body).n with
-                    | Tm_fvar fv when S.fv_eq_lid fv FStar.Parser.Const.logical_lid -> true
-                    | _ -> false
-                  in
-                  let is_smt_theory_symbol =
-                      let fv = FStar.Compiler.Util.right lbn in
-                      Env.fv_has_attr env.tcenv fv FStar.Parser.Const.smt_theory_symbol_attr_lid
-                  in
-                  if not is_smt_theory_symbol
-                  && (quals |> List.contains Logic || is_logical)
-                  then app, mk_Valid app, encode_formula body env'
-                  else app, app, encode_term body env'
+                let is_logical =
+                  match (SS.compress t_body).n with
+                  | Tm_fvar fv when S.fv_eq_lid fv FStar.Parser.Const.logical_lid -> true
+                  | _ -> false
                 in
-
-                //NS 05.25: This used to be mkImp(mk_and_l guards, mkEq(app, body))),
-                //But the guard is unnecessary given the pattern
-                let eqn = Util.mkAssume(mkForall (U.range_of_lbname lbn)
-                                                 ([[pat]], vars, mkEq(app,body)),
-                                    Some (BU.format1 "Equation for %s" (string_of_lid flid)),
-                                    ("equation_"^fvb.smt_id)) in
-                decls@binder_decls@decls2@(eqn::primitive_type_axioms env.tcenv flid fvb.smt_id app
-                                           |> mk_decls_trivial),
+                let is_smt_theory_symbol =
+                    let fv = FStar.Compiler.Util.right lbn in
+                    Env.fv_has_attr env.tcenv fv FStar.Parser.Const.smt_theory_symbol_attr_lid
+                in
+                let should_encode_logical =
+                    not is_smt_theory_symbol
+                    && (quals |> List.contains Logic || is_logical)
+                in
+                let make_eqn name pat app body =
+                    //NS 05.25: This used to be mkImp(mk_and_l guards, mkEq(app, body))),
+                    //But the guard is unnecessary given the pattern
+                    Util.mkAssume(mkForall (U.range_of_lbname lbn)
+                                           ([[pat]], vars, mkEq(app,body)),
+                                  Some (BU.format1 "Equation for %s" (string_of_lid flid)),
+                                  (name ^ "_" ^ fvb.smt_id))
+                in
+                let eqns,decls2 =
+                  let basic_eqn_name =
+                    if should_encode_logical
+                    then "defn_equation"
+                    else "equation"
+                  in
+                  let basic_eqn, decls =
+                    let body, decls = encode_term body env' in
+                    let pat =
+                      if should_encode_logical
+                      then Term.mk_subtype_of_unit app
+                      else app
+                    in
+                    make_eqn basic_eqn_name pat app body, decls
+                  in
+                  if should_encode_logical
+                  then let pat, app, (body, decls2) =
+                           app, mk_Valid app, encode_formula body env'
+                       in
+                       let logical_eqn = make_eqn "equation" pat app body in
+                       [logical_eqn; basic_eqn], decls@decls2
+                  else [basic_eqn], decls
+                in
+                decls@binder_decls@decls2@((eqns@primitive_type_axioms env.tcenv flid fvb.smt_id app)
+                                                 |> mk_decls_trivial),
                 env
             | _ -> failwith "Impossible"
         in

@@ -30,7 +30,7 @@ let rec mk_tenum_branches (ty: T.term) (vty: T.term) (v: nat) (accu: list T.bran
     let v = T.mk_app (`(mk_u16)) [pack_nat v, T.Q_Explicit] in
     let v = T.pack (T.Tv_AscribedT v vty None false) in
     let pat =
-      T.Pat_Cons (T.pack_fv n) []
+      T.Pat_Cons (T.pack_fv n) None []
     in
     let br : T.branch = (pat, v) in
     let accu' = br :: accu in
@@ -80,13 +80,15 @@ let pat_of_term (t: T.term) : T.Tac T.pattern =
   let t = T.norm_term_env (T.cur_env ()) [delta; iota; primops] t in
   match T.inspect t with
   | T.Tv_Const v -> T.Pat_Constant v
-  | T.Tv_FVar v -> T.Pat_Cons v []
+  | T.Tv_FVar v -> T.Pat_Cons v (Some []) []
   | _ -> T.fail "Not a pattern"
 
 let term_of_pat (t: T.pattern) : T.Tac (option T.term) =
   match t with
   | T.Pat_Constant v -> Some (T.pack (T.Tv_Const v))
-  | T.Pat_Cons v [] -> Some (T.pack (T.Tv_FVar v))
+  | T.Pat_Cons v None [] -> Some (T.pack (T.Tv_FVar v))
+  | T.Pat_Cons v (Some []) [] -> Some (T.pack (T.Tv_FVar v))  
+  | T.Pat_Cons v (Some us) [] -> Some (T.pack (T.Tv_UInst v us))    
   | _ -> None
 
 let rec invert_branches_with_cascade (enum_ty: T.term) (val_eq: T.term) (x: T.term) (accu: option T.term) (l: list T.branch) : T.Tac T.term =

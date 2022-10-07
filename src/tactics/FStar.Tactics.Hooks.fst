@@ -152,21 +152,13 @@ let by_tactic_interp (pol:pol) (e:Env.env) (t:term) : tres =
         let goal = U.mk_squash U_zero (U.mk_eq2 u typ tm uvtm) in
         let gs, _ = run_tactic_on_typ tactic.pos tm.pos tactic e goal in
 
-        // Ensure that rewriting did not leave goals
-        let _ =
-          match gs with
-          | [] -> ()
-          | _ ->
-            Err.raise_error (Err.Fatal_OpenGoalsInSynthesis, "rewrite_with_tactic left open goals") typ.pos
-        in
-
         // abort if the uvar was not solved
         let tagged_imps = TcRel.resolve_implicits_tac e g_imp in
         report_implicits tm.pos tagged_imps;
 
         // If the rewriting succeeded, we return the generated uvar, which is now
-        // a synthesized term
-        Simplified (uvtm, [])
+        // a synthesized term. Any unsolved goals (gs) are spun off.
+        Simplified (uvtm, gs)
 
     | _ ->
         Unchanged t
@@ -436,7 +428,7 @@ let rec traverse_for_spinoff
         let rec pat_as_exp env p =
           match FStar.TypeChecker.PatternUtils.raw_pat_as_exp env p with
           | None -> None
-          | Some e ->
+          | Some (e, _) ->
             let env, _ = Env.clear_expected_typ env in
             let e, lc =
               FStar.TypeChecker.TcTerm.tc_trivial_guard ({env with FStar.TypeChecker.Env.admit=true}) e in

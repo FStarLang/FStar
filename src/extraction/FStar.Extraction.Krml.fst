@@ -407,7 +407,8 @@ let rec translate_type env t: typ =
     Syntax.string_of_mlpath p = "LowStar.Monotonic.Buffer.mbuffer" -> TBuf (translate_type env arg)
 
   | MLTY_Named ([arg], p) when
-    Syntax.string_of_mlpath p = "LowStar.ConstBuffer.const_buffer" -> TConstBuf (translate_type env arg)
+    Syntax.string_of_mlpath p = "LowStar.ConstBuffer.const_buffer" ||
+    Syntax.string_of_mlpath p = "Steel.TLArray.t" -> TConstBuf (translate_type env arg)
 
   | MLTY_Named ([arg], p) when
     Syntax.string_of_mlpath p = "FStar.Buffer.buffer" ||
@@ -435,6 +436,11 @@ let rec translate_type env t: typ =
     Syntax.string_of_mlpath p = "FStar.HyperStack.ST.s_ref"
     ->
       TBuf (translate_type env arg)
+
+  | MLTY_Named ([arg], p) when
+    Syntax.string_of_mlpath p = "FStar.Universe.raise_t"
+    ->
+      translate_type env arg
 
   | MLTY_Named ([_], p) when (Syntax.string_of_mlpath p = "FStar.Ghost.erased") ->
       TAny
@@ -534,7 +540,8 @@ and translate_expr env e: expr =
     when string_of_mlpath p = "FStar.Buffer.index" || string_of_mlpath p = "FStar.Buffer.op_Array_Access"
       || string_of_mlpath p = "LowStar.Monotonic.Buffer.index"
       || string_of_mlpath p = "LowStar.UninitializedBuffer.uindex"
-      || string_of_mlpath p = "LowStar.ConstBuffer.index" ->
+      || string_of_mlpath p = "LowStar.ConstBuffer.index"
+      || string_of_mlpath p = "Steel.TLArray.get" ->
       EBufRead (translate_expr env e1, translate_expr env e2)
 
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ _perm; e1; _len; _seq; e2 ])
@@ -544,11 +551,21 @@ and translate_expr env e: expr =
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e ])
     when string_of_mlpath p = "FStar.HyperStack.ST.op_Bang"
        || string_of_mlpath p = "Steel.Reference.read" ->
-      EBufRead (translate_expr env e, EConstant (UInt32, "0"))
+      EBufRead (translate_expr env e, EQualified (["C"], "_zero_for_deref"))
 
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ _perm; _v; e ])
     when string_of_mlpath p = "Steel.ST.Reference.read" ->
-      EBufRead (translate_expr env e, EConstant (UInt32, "0"))
+      EBufRead (translate_expr env e, EQualified (["C"], "_zero_for_deref"))
+
+  (* Flatten all universes *)
+
+  | MLE_App ({ expr = MLE_TApp ({ expr = MLE_Name p }, _) }, [arg])
+    when string_of_mlpath p = "FStar.Universe.raise_val" ->
+      translate_expr env arg
+
+  | MLE_App ({ expr = MLE_TApp ({ expr = MLE_Name p }, _) }, [arg])
+    when string_of_mlpath p = "FStar.Universe.downgrade_val" ->
+      translate_expr env arg
 
   (* All the distinguished combinators that correspond to allocation, either on
    * the stack, on the heap (GC'd or manually-managed). *)
@@ -563,11 +580,15 @@ and translate_expr env e: expr =
       EBufCreateNoInit (Stack, translate_expr env elen)
 
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) } , [ init ])
-    when (string_of_mlpath p = "FStar.HyperStack.ST.salloc") ->
+    when (
+      string_of_mlpath p = "FStar.HyperStack.ST.salloc" ||
+      string_of_mlpath p = "Steel.ST.Reference._alloca"
+    ) ->
       EBufCreate (Stack, translate_expr env init, EConstant (UInt32, "1"))
 
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e2 ])
     when (string_of_mlpath p = "FStar.Buffer.createL" ||
+          string_of_mlpath p = "Steel.ST.HigherArray.malloca_of_list_ptr" ||
           string_of_mlpath p = "LowStar.Monotonic.Buffer.malloca_of_list" ||
           string_of_mlpath p = "LowStar.ImmutableBuffer.ialloca_of_list") ->
       EBufCreateL (Stack, List.map (translate_expr env) (list_elements e2))
@@ -684,20 +705,29 @@ and translate_expr env e: expr =
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e1; e2 ])
     when string_of_mlpath p = "FStar.HyperStack.ST.op_Colon_Equals"
       || string_of_mlpath p = "Steel.Reference.write" ->
-      EBufWrite (translate_expr env e1, EConstant (UInt32, "0"), translate_expr env e2)
+      EBufWrite (translate_expr env e1, EQualified (["C"], "_zero_for_deref"), translate_expr env e2)
 
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ _v; e1; e2 ])
     when string_of_mlpath p = "Steel.ST.Reference.write" ->
-      EBufWrite (translate_expr env e1, EConstant (UInt32, "0"), translate_expr env e2)
+      EBufWrite (translate_expr env e1, EQualified (["C"], "_zero_for_deref"), translate_expr env e2)
 
-  | MLE_App ({ expr = MLE_Name p }, [ _ ]) when (string_of_mlpath p = "FStar.HyperStack.ST.push_frame") ->
+  | MLE_App ({ expr = MLE_Name p }, [ _ ]) when (
+        string_of_mlpath p = "FStar.HyperStack.ST.push_frame" ||
+        string_of_mlpath p = "Steel.ST.Reference._push_frame"
+      ) ->
       EPushFrame
   | MLE_App ({ expr = MLE_Name p }, [ _ ]) when (string_of_mlpath p = "FStar.HyperStack.ST.pop_frame") ->
+      EPopFrame
+  | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ _; _ ]) when (string_of_mlpath p = "Steel.ST.Reference._free_and_pop_frame") ->
       EPopFrame
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e1; e2; e3; e4; e5 ]) when (
       string_of_mlpath p = "FStar.Buffer.blit" ||
       string_of_mlpath p = "LowStar.Monotonic.Buffer.blit" ||
       string_of_mlpath p = "LowStar.UninitializedBuffer.ublit"
+    ) ->
+      EBufBlit (translate_expr env e1, translate_expr env e2, translate_expr env e3, translate_expr env e4, translate_expr env e5)
+  | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ _; _; _; e1; _; e2; e3; _; e4; e5 ]) when (
+      string_of_mlpath p = "Steel.ST.HigherArray.blit_ptr"
     ) ->
       EBufBlit (translate_expr env e1, translate_expr env e2, translate_expr env e3, translate_expr env e4, translate_expr env e5)
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e1; e2; e3 ])
@@ -835,6 +865,10 @@ and translate_expr env e: expr =
   | MLE_App ({expr=MLE_Name p}, [ _inv; test; body ])
     when (string_of_mlpath p = "Steel.ST.Loops.while_loop") ->
     EApp (EQualified (["Steel"; "Loops"], "while_loop"), [ EUnit; translate_expr env test; translate_expr env body ])
+
+  (* Piggyback Steel.ST.Printf primitives to LowStar.Printf *)
+  | MLE_App ({ expr = MLE_Name (["Steel"; "ST"; "Printf"], fn) }, args) ->
+        EApp (EQualified ([ "LowStar"; "Printf" ], fn), List.map (translate_expr env) args)
 
   | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, _)}, [_; _; e])
     when string_of_mlpath p = "Steel.Effect.Atomic.return" ||
@@ -1120,6 +1154,29 @@ let translate_let env flavor lb: option decl =
           Some (DFunction (cc, meta, List.length tvars, t, name, binders, EAbortS msg))
         end
 
+  | {
+      mllb_name = name;
+      mllb_tysc = Some (tvars, t);
+      mllb_def = { expr = MLE_App ({
+        expr = MLE_TApp ({expr = MLE_Name p}, _)}, [ l ] ) };
+      mllb_meta = meta
+    }
+    when string_of_mlpath p = "Steel.TLArray.create" ->
+    if List.mem Syntax.NoExtract meta then
+      None
+    else
+      // This is a global const array, defined using Steel.TLArray
+      let meta = translate_flags meta in
+      let env = List.fold_left (fun env name -> extend_t env name) env tvars in
+      let t = translate_type env t in
+      let name = env.module_name, name in
+      begin try
+        let expr = List.map (translate_expr env) (list_elements l) in
+        Some (DGlobal (meta, name, List.length tvars, t, EBufCreateL (Eternal, expr)))
+      with e ->
+          Errors. log_issue Range.dummyRange (Errors.Warning_DefinitionNotTranslated, (BU.format2 "Error extracting %s to KaRaMeL (%s)\n" (Syntax.string_of_mlpath name) (BU.print_exn e)));
+          Some (DGlobal (meta, name, List.length tvars, t, EAny))
+        end
   | {
       mllb_name = name;
       mllb_tysc = Some (tvars, t);

@@ -3578,30 +3578,6 @@ let (fv_has_erasable_attr : env -> FStar_Syntax_Syntax.fv -> Prims.bool) =
             FStar_Parser_Const.erasable_attr in
         match uu___1 with | (ex, erasable) -> (ex, erasable) in
       cache_in_fv_tab env1.erasable_types_tab fv f
-let rec (non_informative : env -> FStar_Syntax_Syntax.typ -> Prims.bool) =
-  fun env1 ->
-    fun t ->
-      let uu___ =
-        let uu___1 = FStar_Syntax_Util.unrefine t in
-        uu___1.FStar_Syntax_Syntax.n in
-      match uu___ with
-      | FStar_Syntax_Syntax.Tm_type uu___1 -> true
-      | FStar_Syntax_Syntax.Tm_fvar fv ->
-          (((FStar_Syntax_Syntax.fv_eq_lid fv FStar_Parser_Const.unit_lid) ||
-              (FStar_Syntax_Syntax.fv_eq_lid fv FStar_Parser_Const.squash_lid))
-             ||
-             (FStar_Syntax_Syntax.fv_eq_lid fv FStar_Parser_Const.erased_lid))
-            || (fv_has_erasable_attr env1 fv)
-      | FStar_Syntax_Syntax.Tm_app (head, uu___1) ->
-          non_informative env1 head
-      | FStar_Syntax_Syntax.Tm_uinst (t1, uu___1) -> non_informative env1 t1
-      | FStar_Syntax_Syntax.Tm_arrow (uu___1, c) ->
-          ((FStar_Syntax_Util.is_pure_or_ghost_comp c) &&
-             (non_informative env1 (FStar_Syntax_Util.comp_result c)))
-            ||
-            (FStar_Syntax_Util.is_ghost_effect
-               (FStar_Syntax_Util.comp_effect_name c))
-      | uu___1 -> false
 let (fv_has_strict_args :
   env ->
     FStar_Syntax_Syntax.fv ->
@@ -3789,6 +3765,42 @@ let (norm_eff_name : env -> FStar_Ident.lident -> FStar_Ident.lident) =
                   m)) in
       let uu___ = FStar_Ident.range_of_lid l in
       FStar_Ident.set_lid_range res uu___
+let (is_erasable_effect : env -> FStar_Ident.lident -> Prims.bool) =
+  fun env1 ->
+    fun l ->
+      let uu___ = FStar_Compiler_Effect.op_Bar_Greater l (norm_eff_name env1) in
+      FStar_Compiler_Effect.op_Bar_Greater uu___
+        (fun l1 ->
+           (FStar_Ident.lid_equals l1 FStar_Parser_Const.effect_GHOST_lid) ||
+             (let uu___1 =
+                FStar_Syntax_Syntax.lid_as_fv l1
+                  (FStar_Syntax_Syntax.Delta_constant_at_level Prims.int_zero)
+                  FStar_Pervasives_Native.None in
+              FStar_Compiler_Effect.op_Bar_Greater uu___1
+                (fv_has_erasable_attr env1)))
+let rec (non_informative : env -> FStar_Syntax_Syntax.typ -> Prims.bool) =
+  fun env1 ->
+    fun t ->
+      let uu___ =
+        let uu___1 = FStar_Syntax_Util.unrefine t in
+        uu___1.FStar_Syntax_Syntax.n in
+      match uu___ with
+      | FStar_Syntax_Syntax.Tm_type uu___1 -> true
+      | FStar_Syntax_Syntax.Tm_fvar fv ->
+          (((FStar_Syntax_Syntax.fv_eq_lid fv FStar_Parser_Const.unit_lid) ||
+              (FStar_Syntax_Syntax.fv_eq_lid fv FStar_Parser_Const.squash_lid))
+             ||
+             (FStar_Syntax_Syntax.fv_eq_lid fv FStar_Parser_Const.erased_lid))
+            || (fv_has_erasable_attr env1 fv)
+      | FStar_Syntax_Syntax.Tm_app (head, uu___1) ->
+          non_informative env1 head
+      | FStar_Syntax_Syntax.Tm_uinst (t1, uu___1) -> non_informative env1 t1
+      | FStar_Syntax_Syntax.Tm_arrow (uu___1, c) ->
+          ((FStar_Syntax_Util.is_pure_or_ghost_comp c) &&
+             (non_informative env1 (FStar_Syntax_Util.comp_result c)))
+            ||
+            (is_erasable_effect env1 (FStar_Syntax_Util.comp_effect_name c))
+      | uu___1 -> false
 let (num_effect_indices :
   env -> FStar_Ident.lident -> FStar_Compiler_Range.range -> Prims.int) =
   fun env1 ->
@@ -4071,50 +4083,85 @@ let (get_effect_decl :
           let uu___2 = FStar_Ident.range_of_lid l in
           FStar_Errors.raise_error uu___1 uu___2
       | FStar_Pervasives_Native.Some md -> FStar_Pervasives_Native.fst md
+let (get_lid_valued_effect_attr :
+  env ->
+    FStar_Ident.lident ->
+      FStar_Ident.lident ->
+        FStar_Ident.lident FStar_Pervasives_Native.option ->
+          FStar_Ident.lident FStar_Pervasives_Native.option)
+  =
+  fun env1 ->
+    fun eff_lid ->
+      fun attr_name_lid ->
+        fun default_if_attr_has_no_arg ->
+          let attr_args =
+            let uu___ =
+              let uu___1 =
+                let uu___2 =
+                  FStar_Compiler_Effect.op_Bar_Greater eff_lid
+                    (norm_eff_name env1) in
+                FStar_Compiler_Effect.op_Bar_Greater uu___2
+                  (lookup_attrs_of_lid env1) in
+              FStar_Compiler_Effect.op_Bar_Greater uu___1
+                (FStar_Compiler_Util.dflt []) in
+            FStar_Compiler_Effect.op_Bar_Greater uu___
+              (FStar_Syntax_Util.get_attribute attr_name_lid) in
+          match attr_args with
+          | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None
+          | FStar_Pervasives_Native.Some args ->
+              if (FStar_Compiler_List.length args) = Prims.int_zero
+              then default_if_attr_has_no_arg
+              else
+                (let uu___1 =
+                   FStar_Compiler_Effect.op_Bar_Greater args
+                     FStar_Compiler_List.hd in
+                 FStar_Compiler_Effect.op_Bar_Greater uu___1
+                   (fun uu___2 ->
+                      match uu___2 with
+                      | (t, uu___3) ->
+                          let uu___4 =
+                            let uu___5 = FStar_Syntax_Subst.compress t in
+                            uu___5.FStar_Syntax_Syntax.n in
+                          (match uu___4 with
+                           | FStar_Syntax_Syntax.Tm_constant
+                               (FStar_Const.Const_string (s, uu___5)) ->
+                               let uu___6 =
+                                 FStar_Compiler_Effect.op_Bar_Greater s
+                                   FStar_Ident.lid_of_str in
+                               FStar_Compiler_Effect.op_Bar_Greater uu___6
+                                 (fun uu___7 ->
+                                    FStar_Pervasives_Native.Some uu___7)
+                           | uu___5 ->
+                               let uu___6 =
+                                 let uu___7 =
+                                   let uu___8 =
+                                     FStar_Ident.string_of_lid eff_lid in
+                                   let uu___9 =
+                                     FStar_Syntax_Print.term_to_string t in
+                                   FStar_Compiler_Util.format2
+                                     "The argument for the effect attribute for %s is not a constant string, it is %s\n"
+                                     uu___8 uu___9 in
+                                 (FStar_Errors.Fatal_UnexpectedEffect,
+                                   uu___7) in
+                               FStar_Errors.raise_error uu___6
+                                 t.FStar_Syntax_Syntax.pos)))
 let (get_default_effect :
   env ->
     FStar_Ident.lident -> FStar_Ident.lident FStar_Pervasives_Native.option)
   =
   fun env1 ->
     fun lid ->
-      let uu___ =
-        let uu___1 =
-          let uu___2 =
-            let uu___3 =
-              let uu___4 =
-                FStar_Compiler_Effect.op_Bar_Greater lid (norm_eff_name env1) in
-              FStar_Compiler_Effect.op_Bar_Greater uu___4
-                (lookup_attrs_of_lid env1) in
-            FStar_Compiler_Effect.op_Bar_Greater uu___3
-              (FStar_Compiler_Util.dflt []) in
-          FStar_Compiler_Effect.op_Bar_Greater uu___2
-            (FStar_Syntax_Util.get_attribute
-               FStar_Parser_Const.default_effect_attr) in
-        FStar_Compiler_Effect.op_Bar_Greater uu___1
-          (FStar_Compiler_Util.map_option FStar_Compiler_List.hd) in
-      FStar_Compiler_Effect.op_Bar_Greater uu___
-        (FStar_Compiler_Util.map_option
-           (fun uu___1 ->
-              match uu___1 with
-              | (t, uu___2) ->
-                  let uu___3 =
-                    let uu___4 = FStar_Syntax_Subst.compress t in
-                    uu___4.FStar_Syntax_Syntax.n in
-                  (match uu___3 with
-                   | FStar_Syntax_Syntax.Tm_constant
-                       (FStar_Const.Const_string (s, uu___4)) ->
-                       FStar_Ident.lid_of_str s
-                   | uu___4 ->
-                       let uu___5 =
-                         let uu___6 =
-                           let uu___7 = FStar_Ident.string_of_lid lid in
-                           let uu___8 = FStar_Syntax_Print.term_to_string t in
-                           FStar_Compiler_Util.format2
-                             "The argument for the default effect attribute for %s is not a constant string, it is %s\n"
-                             uu___7 uu___8 in
-                         (FStar_Errors.Fatal_UnexpectedEffect, uu___6) in
-                       FStar_Errors.raise_error uu___5
-                         t.FStar_Syntax_Syntax.pos)))
+      get_lid_valued_effect_attr env1 lid
+        FStar_Parser_Const.default_effect_attr FStar_Pervasives_Native.None
+let (get_top_level_effect :
+  env ->
+    FStar_Ident.lident -> FStar_Ident.lident FStar_Pervasives_Native.option)
+  =
+  fun env1 ->
+    fun lid ->
+      get_lid_valued_effect_attr env1 lid
+        FStar_Parser_Const.top_level_effect_attr
+        (FStar_Pervasives_Native.Some lid)
 let (is_layered_effect : env -> FStar_Ident.lident -> Prims.bool) =
   fun env1 ->
     fun l ->
@@ -4490,19 +4537,6 @@ let (reify_comp :
          | FStar_Pervasives_Native.None ->
              failwith "internal error: reifiable effect has no repr?"
          | FStar_Pervasives_Native.Some tm -> tm)
-let (is_erasable_effect : env -> FStar_Ident.lident -> Prims.bool) =
-  fun env1 ->
-    fun l ->
-      let uu___ = FStar_Compiler_Effect.op_Bar_Greater l (norm_eff_name env1) in
-      FStar_Compiler_Effect.op_Bar_Greater uu___
-        (fun l1 ->
-           (FStar_Ident.lid_equals l1 FStar_Parser_Const.effect_GHOST_lid) ||
-             (let uu___1 =
-                FStar_Syntax_Syntax.lid_as_fv l1
-                  (FStar_Syntax_Syntax.Delta_constant_at_level Prims.int_zero)
-                  FStar_Pervasives_Native.None in
-              FStar_Compiler_Effect.op_Bar_Greater uu___1
-                (fv_has_erasable_attr env1)))
 let (push_sigelt : env -> FStar_Syntax_Syntax.sigelt -> env) =
   fun env1 ->
     fun s ->

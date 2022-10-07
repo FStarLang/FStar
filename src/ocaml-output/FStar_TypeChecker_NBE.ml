@@ -337,7 +337,7 @@ let (pickBranch :
                    if uu___1
                    then FStar_Pervasives.Inl []
                    else FStar_Pervasives.Inr false
-               | FStar_Syntax_Syntax.Pat_cons (fv, arg_pats) ->
+               | FStar_Syntax_Syntax.Pat_cons (fv, _us_opt, arg_pats) ->
                    let rec matches_args out a p1 =
                      match (a, p1) with
                      | ([], []) -> FStar_Pervasives.Inl out
@@ -958,7 +958,7 @@ let rec (translate :
                    match p.FStar_Syntax_Syntax.v with
                    | FStar_Syntax_Syntax.Pat_constant c ->
                        (bs1, (FStar_Syntax_Syntax.Pat_constant c))
-                   | FStar_Syntax_Syntax.Pat_cons (fvar, args) ->
+                   | FStar_Syntax_Syntax.Pat_cons (fvar, us_opt, args) ->
                        let uu___4 =
                          FStar_Compiler_List.fold_left
                            (fun uu___5 ->
@@ -972,9 +972,19 @@ let rec (translate :
                            (bs1, []) args in
                        (match uu___4 with
                         | (bs', args') ->
+                            let us_opt1 =
+                              match us_opt with
+                              | FStar_Pervasives_Native.None ->
+                                  FStar_Pervasives_Native.None
+                              | FStar_Pervasives_Native.Some us ->
+                                  let uu___5 =
+                                    FStar_Compiler_List.map
+                                      (translate_univ cfg1 bs1) us in
+                                  FStar_Pervasives_Native.Some uu___5 in
                             (bs',
                               (FStar_Syntax_Syntax.Pat_cons
-                                 (fvar, (FStar_Compiler_List.rev args')))))
+                                 (fvar, us_opt1,
+                                   (FStar_Compiler_List.rev args')))))
                    | FStar_Syntax_Syntax.Pat_var bvar ->
                        let x =
                          let uu___4 =
@@ -999,20 +1009,13 @@ let rec (translate :
                          let uu___5 = FStar_TypeChecker_NBETerm.mkAccuVar x in
                          uu___5 :: bs1 in
                        (uu___4, (FStar_Syntax_Syntax.Pat_wild x))
-                   | FStar_Syntax_Syntax.Pat_dot_term (bvar, tm) ->
-                       let x =
-                         let uu___4 =
-                           let uu___5 =
-                             translate cfg1 bs1 bvar.FStar_Syntax_Syntax.sort in
-                           readback cfg1 uu___5 in
-                         FStar_Syntax_Syntax.new_bv
-                           FStar_Pervasives_Native.None uu___4 in
+                   | FStar_Syntax_Syntax.Pat_dot_term eopt ->
                        let uu___4 =
                          let uu___5 =
-                           let uu___6 =
-                             let uu___7 = translate cfg1 bs1 tm in
-                             readback cfg1 uu___7 in
-                           (x, uu___6) in
+                           FStar_Compiler_Util.map_option
+                             (fun e1 ->
+                                let uu___6 = translate cfg1 bs1 e1 in
+                                readback cfg1 uu___6) eopt in
                          FStar_Syntax_Syntax.Pat_dot_term uu___5 in
                        (bs1, uu___4) in
                  match uu___3 with

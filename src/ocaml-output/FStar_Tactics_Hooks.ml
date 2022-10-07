@@ -221,19 +221,12 @@ let (by_tactic_interp :
                           tm.FStar_Syntax_Syntax.pos tactic e goal in
                       (match uu___5 with
                        | (gs, uu___6) ->
-                           ((match gs with
-                             | [] -> ()
-                             | uu___8 ->
-                                 FStar_Errors.raise_error
-                                   (FStar_Errors.Fatal_OpenGoalsInSynthesis,
-                                     "rewrite_with_tactic left open goals")
-                                   typ.FStar_Syntax_Syntax.pos);
-                            (let tagged_imps =
-                               FStar_TypeChecker_Rel.resolve_implicits_tac e
-                                 g_imp in
-                             FStar_Tactics_Interpreter.report_implicits
-                               tm.FStar_Syntax_Syntax.pos tagged_imps;
-                             Simplified (uvtm, [])))))
+                           let tagged_imps =
+                             FStar_TypeChecker_Rel.resolve_implicits_tac e
+                               g_imp in
+                           (FStar_Tactics_Interpreter.report_implicits
+                              tm.FStar_Syntax_Syntax.pos tagged_imps;
+                            Simplified (uvtm, gs))))
              | uu___2 -> Unchanged t)
 let explode :
   'a . 'a tres_m -> ('a * 'a * FStar_Tactics_Types.goal Prims.list) =
@@ -782,11 +775,11 @@ let rec (traverse_for_spinoff :
                 FStar_TypeChecker_PatternUtils.raw_pat_as_exp env1 p in
               match uu___ with
               | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None
-              | FStar_Pervasives_Native.Some e1 ->
-                  let uu___1 = FStar_TypeChecker_Env.clear_expected_typ env1 in
-                  (match uu___1 with
-                   | (env2, uu___2) ->
-                       let uu___3 =
+              | FStar_Pervasives_Native.Some (e1, uu___1) ->
+                  let uu___2 = FStar_TypeChecker_Env.clear_expected_typ env1 in
+                  (match uu___2 with
+                   | (env2, uu___3) ->
+                       let uu___4 =
                          FStar_TypeChecker_TcTerm.tc_trivial_guard
                            {
                              FStar_TypeChecker_Env.solver =
@@ -893,7 +886,7 @@ let rec (traverse_for_spinoff :
                                =
                                (env2.FStar_TypeChecker_Env.rel_query_for_apply_tac_uvar)
                            } e1 in
-                       (match uu___3 with
+                       (match uu___4 with
                         | (e2, lc) ->
                             let u =
                               FStar_TypeChecker_TcTerm.universe_of env2
