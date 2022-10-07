@@ -8465,16 +8465,20 @@ let rec (elim_uvars :
   =
   fun env1 ->
     fun s ->
-      let s1 =
+      let sigattrs =
         let uu___ =
-          FStar_Compiler_List.map FStar_Syntax_Subst.deep_compress
+          FStar_Compiler_List.map (elim_uvars_aux_t env1 [] [])
             s.FStar_Syntax_Syntax.sigattrs in
+        FStar_Compiler_Effect.op_Less_Bar
+          (FStar_Compiler_List.map
+             FStar_Pervasives_Native.__proj__Mktuple3__item___3) uu___ in
+      let s1 =
         {
           FStar_Syntax_Syntax.sigel = (s.FStar_Syntax_Syntax.sigel);
           FStar_Syntax_Syntax.sigrng = (s.FStar_Syntax_Syntax.sigrng);
           FStar_Syntax_Syntax.sigquals = (s.FStar_Syntax_Syntax.sigquals);
           FStar_Syntax_Syntax.sigmeta = (s.FStar_Syntax_Syntax.sigmeta);
-          FStar_Syntax_Syntax.sigattrs = uu___;
+          FStar_Syntax_Syntax.sigattrs = sigattrs;
           FStar_Syntax_Syntax.sigopts = (s.FStar_Syntax_Syntax.sigopts)
         } in
       match s1.FStar_Syntax_Syntax.sigel with

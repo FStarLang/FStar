@@ -2193,11 +2193,8 @@ let (attr_substitute : FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax)
   =
   let uu___ =
     let uu___1 =
-      let uu___2 =
-        FStar_Ident.lid_of_path ["FStar"; "Pervasives"; "Substitute"]
-          FStar_Compiler_Range.dummyRange in
-      FStar_Syntax_Syntax.lid_as_fv uu___2 FStar_Syntax_Syntax.delta_constant
-        FStar_Pervasives_Native.None in
+      FStar_Syntax_Syntax.lid_as_fv FStar_Parser_Const.attr_substitute_lid
+        FStar_Syntax_Syntax.delta_constant FStar_Pervasives_Native.None in
     FStar_Syntax_Syntax.Tm_fvar uu___1 in
   FStar_Syntax_Syntax.mk uu___ FStar_Compiler_Range.dummyRange
 let (exp_true_bool : FStar_Syntax_Syntax.term) =
