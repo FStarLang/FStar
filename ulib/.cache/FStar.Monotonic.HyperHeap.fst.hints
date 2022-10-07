@@ -29,7 +29,7 @@
         "typing_FStar.List.Tot.Base.length"
       ],
       0,
-      "395a9b277b310e1faeb7f2a695997518"
+      "291ff86e9f7b6d7816cf5cf35740bd45"
     ],
     [
       "FStar.Monotonic.HyperHeap.color",
@@ -125,7 +125,7 @@
         "typing_Tm_abs_d4b9974b4509a8834134802982063acd"
       ],
       0,
-      "70e3c425b533582719af356c3008655b"
+      "65d86ad1938e6753f537ee53f2db3905"
     ],
     [
       "FStar.Monotonic.HyperHeap.root_has_color_zero",

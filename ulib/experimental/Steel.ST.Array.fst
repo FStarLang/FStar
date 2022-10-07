@@ -31,6 +31,10 @@ inline_for_extraction
 let raise (#t: Type) (x: t) : Tot (raise_t t) =
   FStar.Universe.raise_val x
 
+[@@noextract_to "krml"]
+let raise_list (#t: Type) (l: list t) : Tot (list (raise_t t)) =
+  List.Tot.map raise l
+
 inline_for_extraction
 [@@noextract_to "krml"]
 let lower (#t: Type) (x: raise_t t) : Tot t =
@@ -38,8 +42,7 @@ let lower (#t: Type) (x: raise_t t) : Tot t =
 
 /// A map operation on sequences. Here we only need Ghost versions,
 /// because such sequences are only used in vprops or with their
-/// selectors.
-
+///
 let rec seq_map
   (#t: Type u#a)
   (#t' : Type u#b)
@@ -75,6 +78,18 @@ let seq_map_raise_inj
 = assert (seq_map lower (seq_map raise s1) `Seq.equal` s1);
   assert (seq_map lower (seq_map raise s2) `Seq.equal` s2)
 
+let rec seq_map_map_list
+  (#elt:Type0)
+  (l:list elt)
+  : Lemma (Seq.seq_of_list (List.Tot.map raise l) `Seq.equal` seq_map raise (Seq.seq_of_list l))
+  = match l with
+    | [] -> ()
+    | hd::tl ->
+      let s = Seq.seq_of_list l in
+      Seq.lemma_seq_of_list_induction l;
+      Seq.lemma_seq_of_list_induction (List.Tot.map raise l);
+      seq_map_map_list tl
+
 /// Implementation of the interface
 
 /// base, ptr, array, pts_to
@@ -105,6 +120,14 @@ let malloc x n =
   rewrite
     (H.pts_to res _ _)
     (pts_to res _ _);
+  return res
+
+let malloca_of_list init =
+  let res = H.malloca_of_list (normalize_term (raise_list init)) in
+  seq_map_map_list init;
+  rewrite
+    (H.pts_to res _ (Seq.seq_of_list (raise_list init)))
+    (pts_to res _ (Seq.seq_of_list init));
   return res
 
 let free #_ x =
