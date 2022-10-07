@@ -122,10 +122,11 @@ let as_wl_deferred wl (d:deferred): list (int * deferred_reason * lstring * prob
 (* --------------------------------------------------------- *)
 (* <new_uvar> Generating new unification variables/patterns  *)
 (* --------------------------------------------------------- *)
-let new_uvar reason wl r gamma binders k should_check meta : ctx_uvar * term * worklist =
+let new_uvar reason wl r gamma binders k should_check kind meta : ctx_uvar * term * worklist =
     let decoration = {
              uvar_decoration_typ = k;
-             uvar_decoration_should_check = should_check
+             uvar_decoration_should_check = should_check;
+             uvar_decoration_uvar_kind = kind;
         }
     in
     let ctx_uvar = {
@@ -147,13 +148,21 @@ let new_uvar reason wl r gamma binders k should_check meta : ctx_uvar * term * w
       BU.print1 "Just created uvar (Rel) {%s}\n" (Print.uvar_to_string ctx_uvar.ctx_uvar_head);
     ctx_uvar, t, {wl with wl_implicits=imp::wl.wl_implicits}
 
-let copy_uvar u (bs:binders) t wl =
-    let env = {wl.tcenv with gamma = u.ctx_uvar_gamma } in
-    let env = Env.push_binders env bs in
-    new_uvar ("copy:"^u.ctx_uvar_reason) wl u.ctx_uvar_range env.gamma
-             (Env.all_binders env) t
-             (U.ctx_uvar_should_check u)
-             u.ctx_uvar_meta
+let rec copy_uvar u (bs:binders) t wl =
+  let kind, wl =
+    match U.ctx_uvar_uvar_kind u with
+    | Inl None -> Inl None, wl
+    | Inl (Some u) ->
+      let u, _, wl = copy_uvar u bs t wl in
+      Inl (Some u), wl
+    | Inr _ -> Inr [], wl in
+  let env = {wl.tcenv with gamma = u.ctx_uvar_gamma } in
+  let env = Env.push_binders env bs in
+  new_uvar ("copy:"^u.ctx_uvar_reason) wl u.ctx_uvar_range env.gamma
+           (Env.all_binders env) t
+           (U.ctx_uvar_should_check u)
+           kind
+           u.ctx_uvar_meta
 
 (* --------------------------------------------------------- *)
 (* </new_uvar>                                               *)
@@ -366,7 +375,7 @@ let mk_eq2 wl env prob t1 t2 : term * worklist =
     *)
     let t_type, u = U.type_u () in
     let binders = Env.all_binders env in
-    let _, tt, wl = new_uvar "eq2" wl t1.pos env.gamma binders t_type (Allow_unresolved "eq2 type") None in
+    let _, tt, wl = new_uvar "eq2" wl t1.pos env.gamma binders t_type (Allow_unresolved "eq2 type") (Inl None) None in
     U.mk_eq2 u tt t1 t2, wl
 
 let p_invert = function
@@ -393,6 +402,7 @@ let mk_problem wl scope orig lhs rel rhs elt reason =
                  bs
                  U.ktype0
                  (Allow_untyped "logical guard")
+                 (Inl None)
                  None
     in
     let prob =
@@ -441,6 +451,7 @@ let new_problem wl env lhs rel rhs (subject:option bv) loc reason =
                (Env.all_binders env)
                lg_ty
                (Allow_untyped "logical guard")
+               (Inl None)
                None
   in
   let lg =
@@ -828,6 +839,7 @@ let ensure_no_uvar_subst env (t0:term) (wl:worklist)
                          (Env.binders_of_bindings new_gamma)
                          (U.arrow dom_binders (S.mk_Total (U.ctx_uvar_typ uv)))
                          (U.ctx_uvar_should_check uv)
+                         (Inl None)
                          uv.ctx_uvar_meta
         in
 
@@ -1065,6 +1077,7 @@ let restrict_ctx env (tgt:ctx_uvar) (bs:binders) (src:ctx_uvar) wl : worklist =
     let _, src', wl = new_uvar ("restricted " ^ (Print.uvar_to_string src.ctx_uvar_head)) wl
       src.ctx_uvar_range g pfx t
       (U.ctx_uvar_should_check src)
+      (U.ctx_uvar_uvar_kind src)
       src.ctx_uvar_meta in
     set_uvar env src (Some (Allow_untyped "assigned solution will be checked")) (f src');
 
@@ -2983,6 +2996,7 @@ and solve_t_flex_flex env orig wl (lhs:flex_t) (rhs:flex_t) : solution =
                                              Allow_untyped? (U.ctx_uvar_should_check u_rhs)
                                           then U.ctx_uvar_should_check u_lhs
                                           else Strict)
+                                         (Inl None)
                                          None in
                    let w_app = S.mk_Tm_app w (List.map (fun ({binder_bv=z}) -> S.as_arg (S.bv_to_name z)) zs) w.pos in
                    let _ =
@@ -4148,10 +4162,14 @@ and solve_c (env:Env.env) (problem:problem comp) (wl:worklist) : solution =
                 raise_error (Errors.Fatal_UnexpectedExpressionType,
                   stronger_t_shape_error "not an arrow or not enough binders") r in
 
-            let rest_bs_uvars, g_uvars = Env.uvars_for_binders env rest_bs
-              [NT (a_b.binder_bv, c2.result_typ)]
-              (fun b -> BU.format3 "implicit for binder %s in subcomp of %s at %s"
-                (Print.binder_to_string b) (Ident.string_of_lid c2.effect_name) (Range.string_of_range r)) r in
+            let rest_bs_uvars, _, g_uvars =
+              let with_guard_uvar = false in
+              Env.uvars_for_binders env rest_bs
+                [NT (a_b.binder_bv, c2.result_typ)] with_guard_uvar
+                (fun b -> BU.format3 "implicit for binder %s in subcomp of %s at %s"
+                        (Print.binder_to_string b)
+                        (Ident.string_of_lid c2.effect_name)
+                        (Range.string_of_range r)) r in
 
             let wl = { wl with wl_implicits = g_uvars.implicits@wl.wl_implicits } in  //AR: TODO: FIXME: using knowledge that g_uvars is only implicits
 

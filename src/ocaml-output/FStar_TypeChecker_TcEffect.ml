@@ -129,7 +129,7 @@ let (pure_wp_uvar :
                   [uu___3] in
                 FStar_Syntax_Syntax.mk_Tm_app pure_wp_t1 uu___2 r in
           let uu___ =
-            FStar_TypeChecker_Env.new_implicit_var_aux reason r env pure_wp_t
+            FStar_TypeChecker_Env.new_implicit_var reason r env pure_wp_t
               (FStar_Syntax_Syntax.Allow_untyped "wp")
               FStar_Pervasives_Native.None in
           match uu___ with
@@ -2055,7 +2055,7 @@ let (tc_layered_eff_decl :
                                                                   FStar_Compiler_Util.format1
                                                                     "uvar for subcomp %s binder when checking ite soundness"
                                                                     uu___22 in
-                                                                FStar_TypeChecker_Env.new_implicit_var_aux
+                                                                FStar_TypeChecker_Env.new_implicit_var
                                                                   uu___21 r
                                                                   env1 sort
                                                                   uv_qual
@@ -2150,7 +2150,7 @@ let (tc_layered_eff_decl :
                                                                   ->
                                                                   FStar_Pervasives_Native.Some
                                                                     uu___20) in
-                                                           FStar_TypeChecker_Env.new_implicit_var_aux
+                                                           FStar_TypeChecker_Env.new_implicit_var
                                                              "" r env1
                                                              uu___18
                                                              FStar_Syntax_Syntax.Strict

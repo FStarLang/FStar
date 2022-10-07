@@ -459,21 +459,13 @@ val def_check_closed_in_env   : Range.range -> msg:string -> env -> term -> unit
 val def_check_guard_wf        : Range.range -> msg:string -> env -> guard_t -> unit
 val close_forall              : env -> binders -> term -> term
 
-val new_tac_implicit_var : string ->
-                           Range.range ->
-                           env ->
-                           typ ->
-                           should_check_uvar ->
-                           option ctx_uvar_meta_t ->
-                           (term * list (ctx_uvar * Range.range) * guard_t)
-
-val new_implicit_var_aux : string ->
-                           Range.range ->
-                           env ->
-                           typ ->
-                           should_check_uvar ->
-                           option ctx_uvar_meta_t ->
-                           (term * list (ctx_uvar * Range.range) * guard_t)
+val new_implicit_var : string ->
+                       Range.range ->
+                       env ->
+                       typ ->
+                       should_check_uvar ->
+                       option ctx_uvar_meta_t ->
+                       (term * list (ctx_uvar * Range.range) * guard_t)
 
 
 val print_gamma : gamma -> string
@@ -491,7 +483,14 @@ val print_gamma : gamma -> string
  * It returns the list of the uvars, and combined guard (which essentially contains the uvars as implicits)
  *)
 
-val uvars_for_binders : env -> bs:S.binders -> substs:S.subst_t -> reason:(S.binder -> string) -> r:Range.range -> (list S.term * guard_t)
+val uvars_for_binders :
+  env ->
+  bs:S.binders ->
+  substs:S.subst_t ->
+  add_guard_uvar:bool ->
+  reason:(S.binder -> string) ->
+  r:Range.range ->
+  (list S.term * option S.term * guard_t)
 
 val pure_precondition_for_trivial_post : env -> universe -> typ -> typ -> Range.range -> typ
 

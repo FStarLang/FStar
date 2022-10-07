@@ -7044,7 +7044,7 @@ and (check_application_args :
                                           FStar_Compiler_Range.range_of_rng
                                             uu___10 uu___11 in
                                     let uu___6 =
-                                      FStar_TypeChecker_Env.new_implicit_var_aux
+                                      FStar_TypeChecker_Env.new_implicit_var
                                         "Instantiating meta argument in application"
                                         r1 env t1 FStar_Syntax_Syntax.Strict
                                         (FStar_Pervasives_Native.Some

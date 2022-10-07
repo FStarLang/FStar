@@ -53,7 +53,7 @@ let report env errs =
 let new_implicit_var reason r env k =
   if Env.debug env <| Options.Extreme
   then BU.print2 "New implicit var: %s\n%s\n" reason (BU.stack_dump());
-  new_implicit_var_aux reason r env k Strict None
+  Env.new_implicit_var reason r env k Strict None
 
 let close_guard_implicits env solve_deferred (xs:binders) (g:guard_t) : guard_t =
   if Options.eager_subtyping ()
@@ -555,12 +555,15 @@ let mk_indexed_return env (ed:S.eff_decl) (u_a:universe) (a:typ) (e:term) (r:Ran
       a_b, x_b, bs, U.comp_to_comp_typ c
     | _ -> raise_error (return_t_shape_error "Either not an arrow or not enough binders") r in
 
-  let rest_bs_uvars, g_uvars = Env.uvars_for_binders
-    env rest_bs [NT (a_b.binder_bv, a); NT (x_b.binder_bv, e)]
-    (fun b -> BU.format3 "implicit var for binder %s of %s at %s"
-             (Print.binder_to_string b)
-             (BU.format1 "%s.return" (Ident.string_of_lid ed.mname))
-             (Range.string_of_range r)) r in
+  let rest_bs_uvars, _, g_uvars =
+    let with_guard_uvar = false in
+    Env.uvars_for_binders
+      env rest_bs [NT (a_b.binder_bv, a); NT (x_b.binder_bv, e)]
+      with_guard_uvar
+      (fun b -> BU.format3 "implicit var for binder %s of %s at %s"
+               (Print.binder_to_string b)
+               (BU.format1 "%s.return" (Ident.string_of_lid ed.mname))
+               (Range.string_of_range r)) r in
 
   let subst = List.map2
     (fun b t -> NT (b.binder_bv, t))
@@ -903,11 +906,14 @@ let mk_indexed_bind env
     | _ -> raise_error (bind_t_shape_error "Either not an arrow or not enough binders") r1 in
 
   //create uvars for rest_bs, with proper substitutions of a_b, b_b, and b_i with t1, t2, and ?ui
-  let rest_bs_uvars, g_uvars = Env.uvars_for_binders
-    env rest_bs [NT (a_b.binder_bv, t1); NT (b_b.binder_bv, t2)]
-    (fun b -> BU.format3
-      "implicit var for binder %s of %s at %s"
-      (Print.binder_to_string b) bind_name (Range.string_of_range r1)) r1 in
+  let rest_bs_uvars, _, g_uvars =
+    let with_guard_uvar = false in
+    Env.uvars_for_binders
+      env rest_bs [NT (a_b.binder_bv, t1); NT (b_b.binder_bv, t2)]
+      with_guard_uvar
+      (fun b -> BU.format3
+               "implicit var for binder %s of %s at %s"
+               (Print.binder_to_string b) bind_name (Range.string_of_range r1)) r1 in
 
   if Env.debug env <| Options.Other "ResolveImplicitsHook"
   then rest_bs_uvars |>
@@ -1674,12 +1680,15 @@ let mk_layered_conjunction env (ed:S.eff_decl) (u_a:universe) (a:term) (p:typ) (
       a_b, rest_bs, f_b, g_b, p_b, body |> U.unascribe
     | _ -> raise_error (conjunction_t_error "Either not an abstraction or not enough binders") r in
 
-  let rest_bs_uvars, g_uvars = Env.uvars_for_binders
-    env rest_bs [NT (a_b.binder_bv, a)]
-    (fun b -> BU.format3
-      "implicit var for binder %s of %s:conjunction at %s"
-      (Print.binder_to_string b) (Ident.string_of_lid ed.mname)
-      (r |> Range.string_of_range)) r in
+  let rest_bs_uvars, _, g_uvars =
+    let with_guard_uvar = false in
+    Env.uvars_for_binders
+      env rest_bs [NT (a_b.binder_bv, a)]
+      with_guard_uvar
+      (fun b -> BU.format3
+               "implicit var for binder %s of %s:conjunction at %s"
+               (Print.binder_to_string b) (Ident.string_of_lid ed.mname)
+               (r |> Range.string_of_range)) r in
 
   let substs = List.map2
     (fun b t -> NT (b.binder_bv, t))
@@ -2499,7 +2508,7 @@ let maybe_instantiate (env:Env.env) e t =
                           Ctx_uvar_meta_attr attr
                         | _ -> failwith "Impossible, match is under a guard, did not expect this case"
                       in
-                      let v, _, g = new_implicit_var_aux "Instantiation of meta argument"
+                      let v, _, g = Env.new_implicit_var "Instantiation of meta argument"
                                                          e.pos env t Strict
                                                          (Some meta_t) in
                       if Env.debug env Options.High then
@@ -2631,16 +2640,19 @@ let check_top_level env g lc : (bool * comp) =
                //   one return type argument, so the following a::bs is ok
                //
                let a::bs = SS.open_binders bs in
-               let uvs, g_uvs = Env.uvars_for_binders
-                 env
-                 bs
-                 [NT (a.binder_bv, U.comp_result c)]
-                 (fun b ->
-                  BU.format2
-                    "implicit for binder %s in effect abbreviation %s while checking top-level effect"
-                    (Print.binder_to_string b)
-                    (Ident.string_of_lid top_level_eff))
-                 (Env.get_range env) in
+               let uvs, _, g_uvs =
+                 let with_guard_uvar = false in
+                 Env.uvars_for_binders
+                   env
+                   bs
+                   [NT (a.binder_bv, U.comp_result c)]
+                   with_guard_uvar
+                   (fun b ->
+                    BU.format2
+                      "implicit for binder %s in effect abbreviation %s while checking top-level effect"
+                      (Print.binder_to_string b)
+                      (Ident.string_of_lid top_level_eff))
+                   (Env.get_range env) in
                let top_level_comp =
                  ({ comp_univs = us;
                     effect_name = top_level_eff;
@@ -3038,10 +3050,13 @@ let fresh_effect_repr env r eff_name signature_ts repr_ts_opt u a_tm =
     (match bs with
      | a::bs ->
        //is is all the uvars, and g is their collective guard
-       let is, g = Env.uvars_for_binders env bs [NT (a.binder_bv, a_tm)]
-         (fun b -> BU.format3
-           "uvar for binder %s when creating a fresh repr for %s at %s"
-           (Print.binder_to_string b) (string_of_lid eff_name) (Range.string_of_range r)) r in
+       let is, _, g =
+         let with_guard_uvar = false in
+         Env.uvars_for_binders env bs [NT (a.binder_bv, a_tm)]
+           with_guard_uvar
+           (fun b -> BU.format3
+                    "uvar for binder %s when creating a fresh repr for %s at %s"
+                    (Print.binder_to_string b) (string_of_lid eff_name) (Range.string_of_range r)) r in
        (match repr_ts_opt with
         | None ->  //no repr, return thunked computation type
           let eff_c = mk_Comp ({
@@ -3144,12 +3159,15 @@ let lift_tf_layered_effect (tgt:lident) (lift_ts:tscheme) env (c:comp) : comp * 
       raise_error (Errors.Fatal_UnexpectedEffect, lift_t_shape_error
         "either not an arrow or not enough binders") r in
 
-  let rest_bs_uvars, g = Env.uvars_for_binders env rest_bs
-    [NT (a_b.binder_bv, a)]
-    (fun b -> BU.format4
-      "implicit var for binder %s of %s~>%s at %s"
-      (Print.binder_to_string b) (Ident.string_of_lid ct.effect_name)
-      (Ident.string_of_lid tgt) (Range.string_of_range r)) r in
+  let rest_bs_uvars, _, g =
+    let with_guard_uvar = false in
+    Env.uvars_for_binders env rest_bs
+      [NT (a_b.binder_bv, a)]
+      with_guard_uvar
+      (fun b -> BU.format4
+               "implicit var for binder %s of %s~>%s at %s"
+               (Print.binder_to_string b) (Ident.string_of_lid ct.effect_name)
+               (Ident.string_of_lid tgt) (Range.string_of_range r)) r in
 
   if debug env <| Options.Other "LayeredEffects" then
     BU.print1 "Introduced uvars: %s\n"

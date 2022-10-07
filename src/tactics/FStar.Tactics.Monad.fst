@@ -260,7 +260,7 @@ let new_uvar (reason:string) (env:env) (typ:typ)
         Strict
     in
     let u, ctx_uvar, g_u =
-        Env.new_tac_implicit_var reason rng env typ should_check None
+        Env.new_implicit_var reason rng env typ should_check None
     in
     bind (add_implicits g_u.implicits) (fun _ ->
     ret (u, fst (List.hd ctx_uvar)))

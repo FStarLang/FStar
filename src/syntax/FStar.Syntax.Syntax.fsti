@@ -152,9 +152,17 @@ and ctx_uvar_meta_t =
   | Ctx_uvar_meta_attr of term (* An attribute associated with an implicit argument using the #[@@...] notation *)
 and ctx_uvar_and_subst = ctx_uvar * subst_ts
 
+//
+// kind:
+//   Inl None ==> This uvar typing guard is not to be accumulated in any other uvar,
+//   Inl (Some u) ==> This uvar's typing guard will be added to u,
+//                     u's kind must be Inr l
+//   Inr l ==> This uvar is only accumulating the typing guards for some uvars in l
+//
 and uvar_decoration = {
   uvar_decoration_typ:typ;
   uvar_decoration_should_check:should_check_uvar;
+  uvar_decoration_uvar_kind:either (option ctx_uvar) (list term);
 }
 
 and uvar = Unionfind.p_uvar (option term * uvar_decoration) * version * Range.range

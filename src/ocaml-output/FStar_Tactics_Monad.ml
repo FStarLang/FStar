@@ -552,7 +552,7 @@ let (new_uvar :
                     else ());
                    FStar_Syntax_Syntax.Strict) in
             let uu___ =
-              FStar_TypeChecker_Env.new_tac_implicit_var reason rng env typ
+              FStar_TypeChecker_Env.new_implicit_var reason rng env typ
                 should_check FStar_Pervasives_Native.None in
             match uu___ with
             | (u, ctx_uvar, g_u) ->

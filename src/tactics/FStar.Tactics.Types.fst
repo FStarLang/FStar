@@ -56,7 +56,7 @@ let mk_goal env u o b l = {
 
 let goal_of_goal_ty env typ : goal * guard_t =
     let u, ctx_uvars, g_u =
-        Env.new_implicit_var_aux "proofstate_of_goal_ty" typ.pos env typ Strict None
+        Env.new_implicit_var "proofstate_of_goal_ty" typ.pos env typ Strict None
     in
     let ctx_uvar, _ = List.hd ctx_uvars in
     let g = mk_goal env ctx_uvar (FStar.Options.peek()) false "" in

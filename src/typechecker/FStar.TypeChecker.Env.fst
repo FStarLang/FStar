@@ -1768,7 +1768,7 @@ let close_guard env binders g =
 (* ------------------------------------------------*)
 
 (* Generating new implicit variables *)
-let new_tac_implicit_var reason r env k should_check meta =
+let new_implicit_var_with_kind reason r env k should_check kind meta =
     match U.destruct k FStar.Parser.Const.range_of_lid with
      | Some [_; (tm, _)] ->
        let t = S.mk (S.Tm_constant (FStar.Const.Const_range tm.pos)) tm.pos in
@@ -1780,6 +1780,7 @@ let new_tac_implicit_var reason r env k should_check meta =
       let decoration = {
              uvar_decoration_typ = k;
              uvar_decoration_should_check = should_check;
+             uvar_decoration_uvar_kind = kind;
           }
       in
       let ctx_uvar = {
@@ -1802,8 +1803,8 @@ let new_tac_implicit_var reason r env k should_check meta =
       let g = {trivial_guard with implicits=[imp]} in
       t, [(ctx_uvar, r)], g
 
-let new_implicit_var_aux reason r env k should_check meta =
-  new_tac_implicit_var reason r env k should_check meta
+let new_implicit_var reason r env k should_check meta =
+  new_implicit_var_with_kind reason r env k should_check (Inl None) meta
 
 (***************************************************)
 
@@ -1838,7 +1839,19 @@ let new_implicit_var_aux reason r env k should_check meta =
  * To guard against misuses of this, we typecheck the layered effect combinator types in a strict
  *   mode (with no smt and subtyping)
  *)
-let uvars_for_binders env (bs:S.binders) substs reason r =
+let uvars_for_binders env (bs:S.binders) substs add_guard_uvar reason r =
+  let guard_uvar_tm_opt, guard_uvar_opt, g_guard_uvar =
+    if add_guard_uvar
+    then let t, [u, _], g = new_implicit_var_with_kind
+           "uvars typing guard"
+           r
+           env
+           U.ktype0
+           (Allow_untyped "uvars typing guard")
+           (Inr [])
+           None in
+         Some t, Some u, g
+    else None, None, trivial_guard in
   bs |> List.fold_left (fun (substs, uvars, g) b ->
     let sort = SS.subst substs b.binder_bv.sort in
 
@@ -1850,16 +1863,15 @@ let uvars_for_binders env (bs:S.binders) substs reason r =
         Some (Ctx_uvar_meta_attr t)
       | _ -> None in
 
-    let t, l_ctx_uvars, g_t = new_implicit_var_aux
-      (reason b) r env sort (Allow_untyped "layered effects binder") ctx_uvar_meta_t in
+    let t, l_ctx_uvars, g_t = new_implicit_var_with_kind
+      (reason b) r env sort (Allow_untyped "layered effects binder") (Inl guard_uvar_opt) ctx_uvar_meta_t in
 
     if debug env <| Options.Other "LayeredEffectsEqns"
     then List.iter (fun (ctx_uvar, _) -> BU.print1 "Layered Effect uvar : %s\n"
       (Print.ctx_uvar_to_string_no_reason ctx_uvar)) l_ctx_uvars;
 
     substs@[NT (b.binder_bv, t)], uvars@[t], conj_guard g g_t
-  ) (substs, [], trivial_guard) |> (fun (_, uvars, g) -> uvars, g)
-
+  ) (substs, [], g_guard_uvar) |> (fun (_, uvars, g) -> uvars, guard_uvar_tm_opt, g)
 
 let pure_precondition_for_trivial_post env u t wp r =
   let trivial_post =

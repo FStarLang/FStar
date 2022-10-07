@@ -251,7 +251,7 @@ let solve_deferred_to_tactic_goals env g =
         in
         let goal_ty = U.mk_eq2 (env.universe_of env_lax t_eq) t_eq tp.lhs tp.rhs in
         let goal, ctx_uvar, _ =
-            Env.new_implicit_var_aux reason tp.lhs.pos env goal_ty Strict None
+            Env.new_implicit_var reason tp.lhs.pos env goal_ty Strict None
         in
         let imp =
             { imp_reason = "";

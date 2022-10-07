@@ -4767,3 +4767,14 @@ let (ctx_uvar_typ :
       FStar_Syntax_Unionfind.find_decoration
         u.FStar_Syntax_Syntax.ctx_uvar_head in
     uu___.FStar_Syntax_Syntax.uvar_decoration_typ
+let (ctx_uvar_uvar_kind :
+  FStar_Syntax_Syntax.ctx_uvar ->
+    (FStar_Syntax_Syntax.ctx_uvar FStar_Pervasives_Native.option,
+      FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax Prims.list)
+      FStar_Pervasives.either)
+  =
+  fun u ->
+    let uu___ =
+      FStar_Syntax_Unionfind.find_decoration
+        u.FStar_Syntax_Syntax.ctx_uvar_head in
+    uu___.FStar_Syntax_Syntax.uvar_decoration_uvar_kind

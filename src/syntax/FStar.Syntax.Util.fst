@@ -2406,3 +2406,6 @@ let ctx_uvar_should_check (u:ctx_uvar) =
 
 let ctx_uvar_typ (u:ctx_uvar) = 
     (Unionfind.find_decoration u.ctx_uvar_head).uvar_decoration_typ
+
+let ctx_uvar_uvar_kind (u:ctx_uvar) = 
+    (Unionfind.find_decoration u.ctx_uvar_head).uvar_decoration_uvar_kind

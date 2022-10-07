@@ -114,6 +114,14 @@ let set_uvar_expected_typ (u:ctx_uvar) (t:typ)
   = let dec = UF.find_decoration u.ctx_uvar_head in
     UF.change_decoration u.ctx_uvar_head ({dec with uvar_decoration_typ = t })
 
+let add_guard_to_guard_uvar (u:ctx_uvar) (phi:typ)
+  : unit
+  = let dec = UF.find_decoration u.ctx_uvar_head in
+    match dec.uvar_decoration_uvar_kind with
+    | Inr l -> 
+      UF.change_decoration u.ctx_uvar_head ({dec with uvar_decoration_uvar_kind = Inr (l@[phi]) })
+    | _ -> failwith "Unexpected ctx_uvar passed to add_guard_to_guard_uvar"
+
 let mark_uvar_as_already_checked (u:ctx_uvar)
   : unit
   = let dec = UF.find_decoration u.ctx_uvar_head in
@@ -128,7 +136,6 @@ let goal_with_type g t
   = let u = g.goal_ctx_uvar in
     set_uvar_expected_typ u t;
     g
-
     
 let bnorm_goal g = goal_with_type g (bnorm (goal_env g) (goal_type g))
 
@@ -291,18 +298,31 @@ let tc_unifier_solved_implicits env (must_tot:bool) (allow_guards:bool) (uvs:lis
       | Inl (Some g) ->
         let guard = { Env.trivial_guard with guard_f = NonTrivial g } in
         let guard = Rel.simplify_guard env guard in
-        if not allow_guards
-        && NonTrivial? guard.guard_f
+
+        if Trivial? guard.guard_f
+        then ret ()
+        else if not allow_guards
         then (
           fail2 "Could not typecheck unifier solved implicit %s to %s since it produced a guard and guards were not allowed"
             (Print.uvar_to_string u.ctx_uvar_head)
             (term_to_string env sol)
         )
-        else (
-          proc_guard' false "guard for implicit" env guard u.ctx_uvar_range ;!
-          mark_uvar_as_already_checked u;
-          ret ()
-        )
+        else begin
+          let phi =
+            match Env.guard_form guard with
+            | NonTrivial phi -> phi
+            | _ -> failwith "Impossible!" in
+          let k = U.ctx_uvar_uvar_kind u in
+          if Inl? k && Some? (Inl?.v k)
+          then let guard_uv = Some?.v (Inl?.v k) in
+               add_guard_to_guard_uvar guard_uv phi;
+               ret ()          
+          else (
+            proc_guard' false "guard for implicit" env guard u.ctx_uvar_range ;!
+            mark_uvar_as_already_checked u;
+            ret ()
+          )
+        end
               
       | Inr failed ->
         fail3 "Could not typecheck unifier solved implicit %s to %s because %s" 
