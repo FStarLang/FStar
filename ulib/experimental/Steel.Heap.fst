@@ -657,6 +657,40 @@ let pure_star_interp p q h = ()
 // wand & implications
 ////////////////////////////////////////////////////////////////////////////////
 
+let wand_permute (p q r:slprop) 
+  : Lemma (wand p (wand q r) `stronger` wand q (wand p r))
+  = introduce forall h. _ ==> _
+    with introduce interp (wand p (wand q r)) h ==> interp (wand q (wand p r)) h
+    with _ . (
+      introduce forall hq. _ ==> _
+      with introduce h `disjoint` hq /\ interp q hq ==> interp (wand p r) (join h hq)
+      with _ . (
+        introduce forall hp. _ ==> _
+        with introduce join h hq `disjoint` hp /\ interp p hp ==> interp r (join (join h hp) hq)
+        with _ . (
+          assert (disjoint h hp);
+          assert (disjoint (join h hp) hq)
+        )
+      )
+    )
+
+let wand_curry (p q r:slprop) 
+  : Lemma (wand (p `star` q) r `stronger` wand p (wand q r))
+  = introduce forall h. _ ==> _
+    with introduce interp (wand p (wand q r)) h ==> interp (wand q (wand p r)) h
+    with _ . (
+      introduce forall hq. _ ==> _
+      with introduce h `disjoint` hq /\ interp q hq ==> interp (wand p r) (join h hq)
+      with _ . (
+        introduce forall hp. _ ==> _
+        with introduce join h hq `disjoint` hp /\ interp p hp ==> interp r (join (join h hp) hq)
+        with _ . (
+          assert (disjoint h hp);
+          assert (disjoint (join h hp) hq)
+        )
+      )
+    )
+
 let stronger_star p q r = ()
 let weaken (p q r:slprop) (h:heap u#a) = ()
 

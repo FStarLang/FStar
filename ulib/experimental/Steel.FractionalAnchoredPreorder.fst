@@ -179,15 +179,34 @@ let compose_permissions (#v:_) (p0:permission v) (p1:permission v{permission_com
 /// This definition shows the interplay between fractions and anchors.
 /// It wasn't obvious to me how to factor this further, e.g., adding
 /// anchors to preorders and then separately adding fractions to it.
+let avalue_composable' (#v:Type) (#p:preorder v) (#anchors:anchor_rel p)
+                      (av0 av1: avalue anchors)
+   : prop
+   = let (p0, v0) = av0 in
+     let (p1, v1) = av1 in
+     permission_composable p0 p1 /\
+     p_composable _ v0 v1 /\
+     (match p0, p1 with
+      | (None, None), (None, None) -> True
+      | (None, None), (Some _, _) -> v1 `extends` v0
+      | (None, None), (_, Some a) -> v0 `extends` v1 ==> a `anchors` curval v0
+      | (Some _, _), (None, None) -> v0 `extends` v1
+      | (_, Some a), (None, None) -> v1 `extends` v0 ==> a `anchors` curval v1
+      | (Some _, _),  (Some _, _) -> v0 == v1
+      | (Some _, _),  (_, Some a) -> v0 `extends` v1 /\ a `anchors` curval v0
+      | (_, Some a),  (Some _, _) -> v1 `extends` v0 /\ a `anchors` curval v1)
+
+
 let avalue_composable (#v:Type) (#p:preorder v) (#anchors:anchor_rel p)
                       (av0 av1: avalue anchors)
    : prop
    = let (p0, v0) = av0 in
      let (p1, v1) = av1 in
      permission_composable p0 p1 /\
+     p_composable _ v0 v1 /\
     (if not (has_some_ownership p0)
      && not (has_some_ownership p1)
-     then p_composable _ v0 v1 //neither has ownership, one history is older than the other
+     then True
      else if not (has_some_ownership p0)
           && has_some_ownership p1
      then (
@@ -230,6 +249,7 @@ let avalue_composable (#v:Type) (#p:preorder v) (#anchors:anchor_rel p)
        else (assert false; False)
      )
     ) //exhaustive
+
 
 /// Lifting avalue comosability to knowledge, including the unit
 let composable #v (#p:preorder v) (#a:anchor_rel p)
@@ -582,29 +602,40 @@ let snapshot_lemma (#v:Type)
                    (#s:anchor_rel p)
                    (a:avalue s)
   : Lemma (requires perm_ok a)
-          (ensures Owns a `composable` Owns (snapshot a))
+          (ensures a `avalue_composable` snapshot a /\
+                   a `compose_avalue` snapshot a == a)
   = ()
+
+let snapshot_props (#v:Type)
+                   (#p:preorder v)
+                   (#s:anchor_rel p)
+                   (a:avalue s { perm_ok a })
+    : Lemma (a `avalue_composable` snapshot a /\
+             a `compose_avalue` snapshot a == a /\
+             snapshot a `avalue_composable` snapshot a /\
+             snapshot a `compose_avalue` snapshot a == snapshot a /\
+             (forall (b:avalue s { Some? (fst (fst b)) }).
+               b `avalue_composable` snapshot a ==>
+               curval (snd (snapshot a)) `p` curval (snd b)))
+    = ()
 
 /// A snapshot is duplicable
 let snapshot_dup_lemma (#v:Type)
                        (#p:preorder v)
                        (#s:anchor_rel p)
                        (a:avalue s)
-  : Lemma (ensures Owns (snapshot a) `composable` Owns (snapshot a))
+  : Lemma (ensures Owns (snapshot a) `composable` Owns (snapshot a) /\
+                   ((Owns (snapshot a) `compose` Owns (snapshot a)) ==
+                     Owns (snapshot a)))
   = ()
 
 /// An anchored snapshot takes the current value, drops the fraction
 /// but keeps the anchor or takes the current value as the anchor, if
 /// not set
 let anchored_snapshot (#v:Type0) (#p:preorder v) (#s:anchor_rel p)
-                      (a: avalue s { s (curval (avalue_val a)) (curval (avalue_val a)) })
+                      (a: avalue s)
   : avalue s & avalue s
-  = let (p,a0), v = a in
-    let a =
-      match a0 with
-      | None -> Some (curval v)
-      | Some a -> Some a
-    in
+  = let (p,a), v = a in
     ((p, None), v),
     ((None, a), v)
 
@@ -613,12 +644,20 @@ let anchored_snapshot (#v:Type0) (#p:preorder v) (#s:anchor_rel p)
 let anchored_snapshot_lemma (#v:Type)
                             (#p:preorder v)
                             (#s:anchor_rel p)
-                            (a:avalue s)
-  : Lemma (requires avalue_owns a /\
-                    s (curval (avalue_val a)) (curval (avalue_val a)))
-          (ensures (
+                            (a:avalue s { perm_ok a })
+  : Lemma (ensures (
             let owned, anchor = anchored_snapshot a in
-            (Owns owned `composable` Owns anchor) /\
+            (owned `avalue_composable` anchor)  /\
             compose_avalue owned anchor == a))
   = ()
 
+let elim_anchor (#v:Type)
+                (#p:preorder v)
+                (#s:anchor_rel p)
+                (a:avalue s { Some? (fst (fst a)) })
+                (b:avalue s { Some? (snd (fst b)) /\ avalue_composable a b})
+  : Lemma (ensures (
+            let (_, Some anchor), _ = b in
+            let (_, _), v = a in
+            s anchor (curval v)))
+  = ()
