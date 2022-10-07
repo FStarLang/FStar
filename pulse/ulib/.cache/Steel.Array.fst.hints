@@ -8,7 +8,7 @@
       1,
       [ "@query", "equation_Steel.Array.pts_to_" ],
       0,
-      "1456a7db93ec62e71e318324f4b1eeb3"
+      "88d8ac9766a17323a2bec47a4f021211"
     ],
     [
       "Steel.Array.aselp",
@@ -20,7 +20,7 @@
         "refinement_interpretation_Tm_refine_d091b554085bad34aa8f4a8aec727221"
       ],
       0,
-      "91176aab5b2ee8679b7c40cf50885150"
+      "4bb790140bcc47fae9fc5f3e7eebbbeb"
     ],
     [
       "Steel.Array.asel",
@@ -32,7 +32,7 @@
         "refinement_interpretation_Tm_refine_25fbe89bee0bab60b5b7c05aadd09d5b"
       ],
       0,
-      "a5312143334747cca630a62155eaf7d3"
+      "f5148369b7a85ce35f786f9d9f178623"
     ],
     [
       "Steel.Array.intro_varrayp",
@@ -47,7 +47,7 @@
         "fuel_guarded_inversion_Steel.FractionalPermission.perm"
       ],
       0,
-      "59cecfeceaabf836a19e1470f7f17eb2"
+      "35f1d8e66ceedf0b1b0e15caa13f4fe1"
     ],
     [
       "Steel.Array.elim_varrayp",
@@ -68,7 +68,7 @@
         "typing_FStar.Seq.Properties.lseq", "typing_Steel.ST.Array.length"
       ],
       0,
-      "5b6c3771943db9e0150804398dcbb5e0"
+      "c4afca7898c569c699c647a1739d38c6"
     ],
     [
       "Steel.Array.malloc",
@@ -82,7 +82,23 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "3cabd03c96c0000f4e73e4366d435632"
+      "ad90226b6bb1f3545a1056724580db89"
+    ],
+    [
+      "Steel.Array.malloca_of_list",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.Seq.Properties.lseq", "equation_Prims.eqtype",
+        "equation_Prims.nat", "function_token_typing_Prims.int",
+        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "refinement_interpretation_Tm_refine_a0cd7d06c5da6444b6b51b319febde8e"
+      ],
+      0,
+      "4ebde673d82000d07968e203edd0d3bd"
     ],
     [
       "Steel.Array.free",
@@ -94,7 +110,7 @@
         "equation_Steel.Effect.Common.prop_and", "true_interp"
       ],
       0,
-      "4059e6e59a02be1f2395f8828c3b443b"
+      "b718fc0505b71646372777e632aec739"
     ],
     [
       "Steel.Array.share",
@@ -103,7 +119,7 @@
       1,
       [ "@query" ],
       0,
-      "812c7274a0ba528d5d417db9a2952f26"
+      "d11804202a9434eaddf2c5b8d6cd217e"
     ],
     [
       "Steel.Array.gather",
@@ -112,7 +128,7 @@
       1,
       [ "@query" ],
       0,
-      "885836ca4f961a0fcbb6a0c3b725b30a"
+      "88c2db5d9dc1a41caba3545ad6166c61"
     ],
     [
       "Steel.Array.index",
@@ -129,7 +145,7 @@
         "refinement_interpretation_Tm_refine_a0cd7d06c5da6444b6b51b319febde8e"
       ],
       0,
-      "5c8c8f1162eacbb1590e9ee2d1666a68"
+      "43b98965b8a3abd57fe4172918be7fbf"
     ],
     [
       "Steel.Array.upd",
@@ -146,7 +162,7 @@
         "refinement_interpretation_Tm_refine_a0cd7d06c5da6444b6b51b319febde8e"
       ],
       0,
-      "5d02c907b753940985ee829427bd1e25"
+      "7af9a6b2e01ab9ff8d31d674891d1be8"
     ],
     [
       "Steel.Array.ghost_join",
@@ -158,7 +174,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "ddfb40f7bbe983c9e3c8aa93b80f1bec"
+      "4ded6e0a370c8b3d7cebda972400460c"
     ],
     [
       "Steel.Array.join",
@@ -167,7 +183,7 @@
       1,
       [ "@query" ],
       0,
-      "4c72e77845cefec0d96cad8072295cc1"
+      "7f0c08816aa1513ca3d387defc319c22"
     ],
     [
       "Steel.Array.ghost_split",
@@ -194,7 +210,7 @@
         "typing_FStar.UInt32.v"
       ],
       0,
-      "389cf2d9b0b39689dac93a7950ebfbaa"
+      "b4d3346bc2a20941ab57b32aa1f0d98d"
     ],
     [
       "Steel.Array.memcpy",
@@ -203,7 +219,7 @@
       1,
       [ "@query" ],
       0,
-      "df090e162b240281caedc7232ef96c41"
+      "60d2dc3249f752ac1b5c6a592a94e1a6"
     ],
     [
       "Steel.Array.compare",
@@ -220,7 +236,7 @@
         "refinement_interpretation_Tm_refine_83b47227979900a844226d60c4a9297d"
       ],
       0,
-      "7ba58b64bc4220a69610a3b53be24204"
+      "4de3102eb8fe162c470407623fdc6feb"
     ],
     [
       "Steel.Array.compare",
@@ -240,7 +256,7 @@
         "refinement_interpretation_Tm_refine_7799879c622ef68c6ebfac3166207072"
       ],
       0,
-      "bf8bc9abe34819498b8ffabb873639f6"
+      "002749edad7cfc0ac1c13a29e7e64df1"
     ]
   ]
 ]

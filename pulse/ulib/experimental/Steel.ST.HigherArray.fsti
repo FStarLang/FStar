@@ -17,7 +17,7 @@
 module Steel.ST.HigherArray
 
 /// C arrays of universe 1 elements.
-/// 
+///
 /// - Due to a limitation on the universe for selectors, no selector
 ///   version can be defined for universe 1.
 /// - Due to F* universes not being cumulative, arrays of universe 0
@@ -131,6 +131,25 @@ val malloc_ptr
     emp
     (fun a -> pts_to (| a, Ghost.hide (U32.v n) |) P.full_perm (Seq.create (U32.v n) x))
 
+/// Allocating a new array, whose initial values are specified by the
+/// ```init``` list, which must be nonempty, and of length representable as
+/// a machine integer
+
+unfold let alloca_of_list_pre (#elt:Type) (init:list elt) =
+  normalize (0 < FStar.List.Tot.length init) /\
+  normalize (FStar.List.Tot.length init <= UInt.max_int 32)
+
+[@@noextract_to "krml"]
+val malloca_of_list_ptr
+  (#elt: Type)
+  (init: list elt)
+  : ST (a: ptr elt {base_len (base a) == normalize_term (List.Tot.length init) /\ offset a == 0})
+       emp
+       (fun a -> pts_to (| a, Ghost.hide (normalize_term (List.Tot.length init)) |)
+         P.full_perm (Seq.seq_of_list init))
+       (alloca_of_list_pre init)
+       (fun _ -> True)
+
 /// Allocating a new array of size n, where each cell is initialized
 /// with value x
 
@@ -157,6 +176,28 @@ let malloc
     (pts_to _ _ _)
     (pts_to a _ _);
   return a
+
+#set-options "--ide_id_info_off"
+
+inline_for_extraction
+[@@noextract_to "krml"]
+let malloca_of_list
+  (#elt: Type)
+  (init: list elt)
+  : ST (array elt)
+       emp
+       (fun a -> pts_to a P.full_perm (Seq.seq_of_list init))
+       (0 < List.Tot.length init /\ List.Tot.length init <= UInt.max_int 32)
+       (fun a ->
+         length a == normalize_term (List.Tot.length init) /\
+         is_full_array a
+       )
+  = let p = malloca_of_list_ptr init in
+    let a : array elt = (| p, Ghost.hide (normalize_term (List.Tot.length init)) |) in
+    rewrite
+      (pts_to _ _ _)
+      (pts_to a _ _);
+    return a
 
 /// Freeing a full array. Same here, we expose a ptr version for extraction purposes only
 [@@ noextract_to "krml"; // primitive
