@@ -847,7 +847,13 @@ and mkPrelude z3options =
                     (exists ((t Term)) (HasTypeZ x t)))\n\
                 (declare-fun ApplyTF (Term Fuel) Term)\n\
                 (declare-fun ApplyTT (Term Term) Term)\n\
-                (declare-fun Rank (Term) Int)\n\
+                (declare-fun Prec (Term Term) Bool)\n\
+                (assert (forall ((x Term) (y Term) (z Term))\n\
+                  (implies (and (Prec x y) (Prec y z))\n\
+                           (Prec x z))))\n\
+                (assert (forall ((x Term) (y Term))\n\
+                         (implies (Prec x y)\n\
+                          (not (Prec y x)))))\n\
                 (declare-fun Closure (Term) Term)\n\
                 (declare-fun ConsTerm (Term Term) Term)\n\
                 (declare-fun ConsFuel (Fuel Term) Term)\n\
@@ -903,7 +909,7 @@ and mkPrelude z3options =
                                                           :pattern (Prims.precedes t1 t2 e1 e2))))\n\
                       (assert (forall ((t1 Term) (t2 Term))\n\
                                       (! (iff (Valid (Prims.precedes Prims.lex_t Prims.lex_t t1 t2)) \n\
-                                      (< (Rank t1) (Rank t2)))\n\
+                                              (Prec t1 t2))\n\
                                       :pattern ((Prims.precedes Prims.lex_t Prims.lex_t t1 t2)))))\n" in
 
    let valid_intro =
@@ -1032,7 +1038,6 @@ let mk_HasTypeWithFuel f v t = match f with
     | Some f -> mk_HasTypeFuel f v t
 let mk_NoHoist dummy b = mkApp("NoHoist", [dummy;b]) b.rng
 let mk_Destruct v     = mkApp("Destruct", [v])
-let mk_Rank x         = mkApp("Rank", [x])
 let mk_tester n t     = mkApp("is-"^n,   [t]) t.rng
 let mk_ApplyTF t t'   = mkApp("ApplyTF", [t;t']) t.rng
 let mk_ApplyTT t t'  r  = mkApp("ApplyTT", [t;t']) r
