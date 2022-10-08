@@ -598,7 +598,6 @@ let default_settings : list error_setting =
     Fatal_UnexpectedModuleDeclaration                 , CFatal, 199;
     Fatal_UnexpectedNumberOfUniverse                  , CFatal, 200;
     Fatal_UnexpectedNumericLiteral                    , CFatal, 201;
-    Fatal_UnexpectedOperatorSymbol                    , CFatal, 202;
     Fatal_UnexpectedPattern                           , CFatal, 203;
     Fatal_UnexpectedPosition                          , CFatal, 204;
     Fatal_UnExpectedPreCondition                      , CFatal, 205;
