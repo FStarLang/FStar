@@ -297,10 +297,13 @@ let token_to_string = function
     | Exact           s -> s
     | UnicodeOperator -> "<unicode-op>"
 
+let is_non_latin_char (s:Char.char): bool
+    = int_of_char s > 0x024f
+
 let matches_token (s:string) = function
     | StartsWith c  -> FStar.String.get s 0 = c
     | Exact      s' -> s = s'
-    | UnicodeOperator -> in_sm_unicode_category (FStar.String.get s 0)
+    | UnicodeOperator -> is_non_latin_char (FStar.String.get s 0)
 
 let matches_level s (assoc_levels, tokens) =
     List.tryFind (matches_token s) tokens <> None
