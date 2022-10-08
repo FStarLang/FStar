@@ -266,7 +266,6 @@ val hashcode: string -> Tot int
 val compare: string -> string -> Tot int
 val splitlines: string -> Tot (list string)
 val split: str:string -> sep:string -> Tot (list string)
-val in_sm_unicode_category: char -> bool
 
 val is_left: either 'a 'b -> bool
 val is_right: either 'a 'b -> bool

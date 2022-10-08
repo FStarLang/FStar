@@ -25,7 +25,6 @@ true: \
   package(dynlink), \
   package(pprint), \
   package(sedlex), \
-  package(sedlex.ppx), \
   package(stdint), \
   package(yojson), \
   package(ppxlib), \
