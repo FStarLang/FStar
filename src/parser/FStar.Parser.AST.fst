@@ -568,7 +568,12 @@ let string_to_op s =
     if starts_with s "op_"
     then let s = split (substring_from s (String.length "op_")) "_" in
          match s with
-         | [op] -> name_of_op op
+         | [op] ->
+                if starts_with op "u"
+                then map_opt (safe_int_of_string (substring_from op 1)) (
+                       fun op -> (string_of_char (char_of_int op), None)
+                     )
+                else name_of_op op
          | _ ->
            let maybeop =
              List.fold_left (fun acc x -> match acc with
