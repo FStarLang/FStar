@@ -558,6 +558,10 @@ let hashcode s = Z.of_int (StringOps.hash s)
 let compare s1 s2 = Z.of_int (BatString.compare s1 s2)
 let split s sep = BatString.split_on_string sep s
 let splitlines s = split s "\n"
+let in_sm_unicode_category (c: int): bool =
+  let open Sedlex_ppx.Sedlex_cset in
+  let open Sedlex_ppx.Unicode.Categories in
+  not (is_empty (intersection (singleton c) sm))
 
 let iof = int_of_float
 let foi = float_of_int
