@@ -1028,7 +1028,6 @@ let mk_subtype_of_unit v = mkApp("Prims.subtype_of", [v;mk_unit_type]) v.rng
 let mk_HasType v t    = mkApp("HasType", [v;t]) t.rng
 let mk_HasTypeZ v t   = mkApp("HasTypeZ", [v;t]) t.rng
 let mk_IsTotFun t     = mkApp("IsTotFun", [t]) t.rng
-let mk_IsTyped v      = mkApp("IsTyped", [v]) norng
 let mk_HasTypeFuel f v t =
    if Options.unthrottle_inductives()
    then mk_HasType v t
@@ -1037,7 +1036,6 @@ let mk_HasTypeWithFuel f v t = match f with
     | None -> mk_HasType v t
     | Some f -> mk_HasTypeFuel f v t
 let mk_NoHoist dummy b = mkApp("NoHoist", [dummy;b]) b.rng
-let mk_Destruct v     = mkApp("Destruct", [v])
 let mk_tester n t     = mkApp("is-"^n,   [t]) t.rng
 let mk_ApplyTF t t'   = mkApp("ApplyTF", [t;t']) t.rng
 let mk_ApplyTT t t'  r  = mkApp("ApplyTT", [t;t']) r
@@ -1047,17 +1045,6 @@ let mk_Precedes x1 x2 x3 x4 r = mkApp("Prims.precedes", [x1;x2;x3;x4])  r|> mk_V
 let rec n_fuel n =
     if n = 0 then mkApp("ZFuel", []) norng
     else mkApp("SFuel", [n_fuel (n - 1)]) norng
-let fuel_2 = n_fuel 2
-let fuel_100 = n_fuel 100
-
-let mk_and_opt p1 p2 r = match p1, p2  with
-  | Some p1, Some p2 -> Some (mkAnd(p1, p2) r)
-  | Some p, None
-  | None, Some p -> Some p
-  | None, None -> None
-
-let mk_and_opt_l pl r =
-  List.fold_right (fun p out -> mk_and_opt p out r) pl None
 
 let mk_and_l l r = List.fold_right (fun p1 p2 -> mkAnd(p1, p2) r) l (mkTrue r)
 
