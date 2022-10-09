@@ -26,11 +26,6 @@ let (whnf :
 let (tts :
   FStar_TypeChecker_Env.env -> FStar_Syntax_Syntax.term -> Prims.string) =
   FStar_TypeChecker_Normalize.term_to_string
-let (term_to_string :
-  FStar_TypeChecker_Env.env -> FStar_Syntax_Syntax.term -> Prims.string) =
-  fun e ->
-    fun t ->
-      FStar_Syntax_Print.term_to_string' e.FStar_TypeChecker_Env.dsenv t
 let (set_uvar_expected_typ :
   FStar_Syntax_Syntax.ctx_uvar -> FStar_Reflection_Data.typ -> unit) =
   fun u ->
@@ -2248,8 +2243,8 @@ let rec (__try_unify_by_application :
                      (let uu___2 = FStar_Syntax_Util.arrow_one ty1 in
                       match uu___2 with
                       | FStar_Pervasives_Native.None ->
-                          let uu___3 = term_to_string e ty1 in
-                          let uu___4 = term_to_string e ty2 in
+                          let uu___3 = tts e ty1 in
+                          let uu___4 = tts e ty2 in
                           fail2 "Could not instantiate, %s to %s" uu___3
                             uu___4
                       | FStar_Pervasives_Native.Some (b, c) ->
@@ -5821,8 +5816,8 @@ let rec (inspect :
       let uu___1 = top_env () in
       FStar_Tactics_Monad.bind uu___1
         (fun e ->
-           let t1 = FStar_Syntax_Util.unascribe t in
-           let t2 = FStar_Syntax_Util.unlazy_emb t1 in
+           let t1 = FStar_Syntax_Util.unlazy_emb t in
+           let t2 = FStar_Syntax_Subst.compress t1 in
            match t2.FStar_Syntax_Syntax.n with
            | FStar_Syntax_Syntax.Tm_meta (t3, uu___2) -> inspect t3
            | FStar_Syntax_Syntax.Tm_name bv ->
@@ -5849,6 +5844,14 @@ let rec (inspect :
                       (FStar_Reflection_Data.Tv_UInst (fv, us))
                 | uu___3 ->
                     failwith "Tac::inspect: Tm_uinst head not an fvar")
+           | FStar_Syntax_Syntax.Tm_ascribed
+               (t3, (FStar_Pervasives.Inl ty, tacopt, eq), _elid) ->
+               FStar_Compiler_Effect.op_Less_Bar FStar_Tactics_Monad.ret
+                 (FStar_Reflection_Data.Tv_AscribedT (t3, ty, tacopt, eq))
+           | FStar_Syntax_Syntax.Tm_ascribed
+               (t3, (FStar_Pervasives.Inr cty, tacopt, eq), elid) ->
+               FStar_Compiler_Effect.op_Less_Bar FStar_Tactics_Monad.ret
+                 (FStar_Reflection_Data.Tv_AscribedC (t3, cty, tacopt, eq))
            | FStar_Syntax_Syntax.Tm_app (hd, []) ->
                failwith "empty arguments on Tm_app"
            | FStar_Syntax_Syntax.Tm_app (hd, args) ->
@@ -6025,7 +6028,7 @@ let rec (inspect :
                ((let uu___4 =
                    let uu___5 =
                      let uu___6 = FStar_Syntax_Print.tag_of_term t2 in
-                     let uu___7 = term_to_string e t2 in
+                     let uu___7 = FStar_Syntax_Print.term_to_string t2 in
                      FStar_Compiler_Util.format2
                        "inspect: outside of expected syntax (%s, %s)\n"
                        uu___6 uu___7 in
@@ -6545,6 +6548,24 @@ let (push_bv_dsenv :
                FStar_TypeChecker_Env.rel_query_for_apply_tac_uvar =
                  (e.FStar_TypeChecker_Env.rel_query_for_apply_tac_uvar)
              }, bv)
+let (term_to_string :
+  FStar_Syntax_Syntax.term -> Prims.string FStar_Tactics_Monad.tac) =
+  fun t ->
+    let s = FStar_Syntax_Print.term_to_string t in FStar_Tactics_Monad.ret s
+let (comp_to_string :
+  FStar_Syntax_Syntax.comp -> Prims.string FStar_Tactics_Monad.tac) =
+  fun c ->
+    let s = FStar_Syntax_Print.comp_to_string c in FStar_Tactics_Monad.ret s
+let (term_eq' :
+  FStar_Syntax_Syntax.term ->
+    FStar_Syntax_Syntax.term -> Prims.bool FStar_Tactics_Monad.tac)
+  =
+  fun t1 ->
+    fun t2 ->
+      FStar_Tactics_Monad.bind FStar_Tactics_Monad.idtac
+        (fun uu___ ->
+           let uu___1 = FStar_Syntax_Util.term_eq t1 t2 in
+           FStar_Tactics_Monad.ret uu___1)
 let (tac_env : FStar_TypeChecker_Env.env -> FStar_TypeChecker_Env.env) =
   fun env1 ->
     let uu___ = FStar_TypeChecker_Env.clear_expected_typ env1 in
