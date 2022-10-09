@@ -201,11 +201,6 @@ let rec head (t : term) : term =
     | Tv_UInst _ _
     | Tv_Arrow _ _ -> t
 
-let nameof (t : term) : string =
-    match inspect_ln t with
-    | Tv_FVar fv -> implode_qn (inspect_fv fv)
-    | _ -> "?"
-
 (** Checks if a term `t` is equal to some FV (a top level name).
 Ignores universes and ascriptions. *)
 let is_fvar (t : term) (nm:string) : bool =
