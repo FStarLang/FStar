@@ -112,10 +112,10 @@ let canon_monoid (#a:Type) (m:monoid a) : Tac unit =
         let r2 = reification m me2 in
         change_sq (quote (mdenote m r1 == mdenote m r2));
         apply (`monoid_reflect);
-        norm [delta_only ["CanonMonoid.mldenote";
-                          "CanonMonoid.flatten";
-                          "FStar.List.Tot.Base.op_At";
-                          "FStar.List.Tot.Base.append"]]
+        norm [delta_only [`%mldenote;
+                          `%flatten;
+                          `%FStar.List.Tot.op_At;
+                          `%FStar.List.Tot.append]]
       else fail "Goal should be an equality at the right monoid type"
   | _ -> fail "Goal should be an equality"
 

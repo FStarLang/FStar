@@ -1563,13 +1563,13 @@ let steps =
       `%__proj__CR__item__cm_add;
       `%__proj__CR__item__opp;
       `%__proj__CR__item__cm_mult;
-      `%FStar.List.Tot.Base.assoc;
+      `%FStar.List.Tot.assoc;
       `%FStar.Pervasives.Native.fst;
       `%FStar.Pervasives.Native.snd;
       `%FStar.Pervasives.Native.__proj__Mktuple2__item___1;
       `%FStar.Pervasives.Native.__proj__Mktuple2__item___2;
-      `%FStar.List.Tot.Base.op_At;
-      `%FStar.List.Tot.Base.append;
+      `%FStar.List.Tot.op_At;
+      `%FStar.List.Tot.append;
     ]
   ]
 

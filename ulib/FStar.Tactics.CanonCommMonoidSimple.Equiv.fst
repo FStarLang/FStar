@@ -361,8 +361,8 @@ let canon_lhs_rhs (eq: term) (m: term) (lhs rhs:term) : Tac unit =
   //dump ("after apply monoid_reflect");
   norm [iota; zeta; delta_only [`%canon; `%xsdenote; `%flatten; `%sort;
                     `%select; `%assoc; `%fst; `%__proj__Mktuple2__item___1;
-                    `%(@); `%append; `%List.Tot.Base.sortWith;
-                    `%List.Tot.Base.partition; `%bool_of_compare;
+                    `%(@); `%append; `%List.Tot.sortWith;
+                    `%List.Tot.partition; `%bool_of_compare;
                     `%compare_of_bool;
        ]; primops];
   //dump "before refl";

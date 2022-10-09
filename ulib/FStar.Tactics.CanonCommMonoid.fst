@@ -372,34 +372,38 @@ let canon_monoid_aux
           (* dump ("after unfold"); *)
           // would like to do only this norm [primops] but ...
           // for now having to do all this mess
-          // WIP REPLACE BY `%quotes
           norm [delta_only [// term_to_string tp;
-                            "FStar.Tactics.CanonCommMonoid.canon";
-                            "FStar.Tactics.CanonCommMonoid.xsdenote";
-                            "FStar.Tactics.CanonCommMonoid.flatten";
-                            "FStar.Tactics.CanonCommMonoid.select";
-                            "FStar.Tactics.CanonCommMonoid.select_extra";
-                            "FStar.Tactics.CanonCommMonoid.quote_list";
-                            "FStar.Tactics.CanonCommMonoid.quote_vm";
-                            "FStar.Tactics.CanonCommMonoid.quote_exp";
+                            `%canon;
+                            `%xsdenote;
+                            `%flatten;
+                            `%select;
+                            `%select_extra;
+                            `%quote_list;
+                            `%quote_vm;
+                            `%quote_exp;
+
+                            (* Defined ahead *)
                             "FStar.Tactics.CanonCommMonoid.const_compare";
                             "FStar.Tactics.CanonCommMonoid.special_compare";
-                            "FStar.List.Tot.Base.assoc";
-                            "FStar.Pervasives.Native.fst";
-                            "FStar.Pervasives.Native.snd";
-                            "FStar.Pervasives.Native.__proj__Mktuple2__item___1";
-                            "FStar.Pervasives.Native.__proj__Mktuple2__item___2";
-                            "FStar.List.Tot.Base.op_At";
-                            "FStar.List.Tot.Base.append";
+
+                            `%FStar.Pervasives.Native.fst;
+                            `%FStar.Pervasives.Native.snd;
+                            `%FStar.Pervasives.Native.__proj__Mktuple2__item___1;
+                            `%FStar.Pervasives.Native.__proj__Mktuple2__item___2;
+
+                            `%FStar.List.Tot.assoc;
+                            `%FStar.List.Tot.op_At;
+                            `%FStar.List.Tot.append;
+
             (* TODO: the rest is a super brittle stop-gap, know thy instances *)
                             "SL.AutoTactic.compare_b";
                             "SL.AutoTactic.compare_v";
-                            "FStar.Order.int_of_order";
-                            "FStar.Reflection.Derived.compare_term";
-                            "FStar.List.Tot.Base.sortWith";
-                            "FStar.List.Tot.Base.partition";
-                            "FStar.List.Tot.Base.bool_of_compare";
-                            "FStar.List.Tot.Base.compare_of_bool";
+                            `%FStar.Order.int_of_order;
+                            `%FStar.Reflection.compare_term;
+                            `%FStar.List.Tot.sortWith;
+                            `%FStar.List.Tot.partition;
+                            `%FStar.List.Tot.bool_of_compare;
+                            `%FStar.List.Tot.compare_of_bool;
              ]; zeta; iota; primops] // TODO: restrict primops to "less than" only
                          // - would need this even if unfold_def did it's job?
           // ; dump "done"
