@@ -106,4 +106,5 @@ clean:
 
 #extract F* files to OCaml
 $(OUTPUT_DIRECTORY)/%.ml:
-	$(MY_FSTAR) $(subst .checked,,$(notdir $<)) --codegen OCaml --extract_module $(subst .fst.checked,,$(notdir $<))
+	@echo "[EXTRACT   $(basename $(notdir $@))]"
+	$(Q)$(MY_FSTAR) $(subst .checked,,$(notdir $<)) --codegen OCaml --extract_module $(subst .fst.checked,,$(notdir $<))

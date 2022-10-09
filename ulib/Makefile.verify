@@ -49,6 +49,8 @@ verify-extra: $(filter $(addprefix %, $(addsuffix .checked, $(notdir $(EXTRA))))
 
 %.checked:
 	@echo "[CHECK     $(basename $(notdir $@))]"
+	@# MY_FSTAR does not contain the $(SIL) flag since it comes from
+	@# gmake/Makefile.tmpl, which is meant for external users.
 	$(Q)$(MY_FSTAR) $(SIL) $<
 
 # Benchmarking rules
