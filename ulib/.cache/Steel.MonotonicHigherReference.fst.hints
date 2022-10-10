@@ -11,7 +11,7 @@
         "refinement_interpretation_Tm_refine_27311b9668d16ee17a6b476d886021fd"
       ],
       0,
-      "5aec32d5fcebe0449e66f60f530b5b0f"
+      "e84d0a43e0f94f7324ffe8060fd2d6da"
     ],
     [
       "Steel.MonotonicHigherReference.__proj__Current__item__h",
@@ -23,7 +23,7 @@
         "refinement_interpretation_Tm_refine_7de76a22046def3621eb3a98b6096f67"
       ],
       0,
-      "e98798bbfe9ecef5d93fd9b7cb2c2e67"
+      "0ca6f4a833d5272c1dde2cd455765b61"
     ],
     [
       "Steel.MonotonicHigherReference.__proj__Current__item__f",
@@ -35,7 +35,7 @@
         "refinement_interpretation_Tm_refine_7de76a22046def3621eb3a98b6096f67"
       ],
       0,
-      "6287cd4689d72b13669a2405a6f867e5"
+      "a235180b8588df7ddbf5523463343fbc"
     ],
     [
       "Steel.MonotonicHigherReference.hval_tot",
@@ -47,7 +47,7 @@
         "refinement_interpretation_Tm_refine_7de76a22046def3621eb3a98b6096f67"
       ],
       0,
-      "5d6a81bae8bfe66bc2e0d3d7466cb0fb"
+      "ce7359b42d7a9c1c7242c05b9744c25d"
     ],
     [
       "Steel.MonotonicHigherReference.hperm",
@@ -59,7 +59,7 @@
         "refinement_interpretation_Tm_refine_7de76a22046def3621eb3a98b6096f67"
       ],
       0,
-      "0d9784490b4cfa97ec2d661f4a79f2ae"
+      "d7817e4f364db9798c7c0bc8f24b3cb6"
     ],
     [
       "Steel.MonotonicHigherReference.history_composable",
@@ -98,7 +98,7 @@
         "token_correspondence_Steel.Preorder.p_composable"
       ],
       0,
-      "95334e4330264df03aab5376a916d395"
+      "036556278276859fb83edb09e5ceb163"
     ],
     [
       "Steel.MonotonicHigherReference.history_compose",
@@ -149,7 +149,7 @@
         "token_correspondence_Steel.Preorder.p_composable"
       ],
       0,
-      "823c6908f84267ca901d7fccea28aa55"
+      "60429dc4a0ee0c46dc2fc07e96684612"
     ],
     [
       "Steel.MonotonicHigherReference.unit_history",
@@ -165,7 +165,7 @@
         "projection_inverse_Prims.Nil_a", "true_interp"
       ],
       0,
-      "53771f0f6775b85a4857f8c747454e10"
+      "1df5d6202a5e8349d86d0093b1043115"
     ],
     [
       "Steel.MonotonicHigherReference.lem_is_unit",
@@ -225,7 +225,7 @@
         "typing_Steel.Preorder.p_op"
       ],
       0,
-      "ff4e03ac0d7334318d834d63b9eb4ddb"
+      "3e008ca37f442e5651315fdba2ae6afd"
     ],
     [
       "Steel.MonotonicHigherReference.assoc_l",
@@ -234,7 +234,7 @@
       1,
       [ "@query" ],
       0,
-      "84053e3f694aa12ef4b9f06066fb1ddf"
+      "c588920e7ae26615bc482b95ffc5bdc5"
     ],
     [
       "Steel.MonotonicHigherReference.assoc_l",
@@ -319,7 +319,7 @@
         "typing_Steel.Preorder.p_op", "unit_typing"
       ],
       0,
-      "59314a9dec50e51df8e4c2eece54a02d"
+      "331a3721991a4da376e2b6323f9ca868"
     ],
     [
       "Steel.MonotonicHigherReference.assoc_r",
@@ -328,7 +328,7 @@
       1,
       [ "@query" ],
       0,
-      "3fa788cd7aaca9a70ef8e3469a99f850"
+      "480f7653375c452492b0f8a783beb90e"
     ],
     [
       "Steel.MonotonicHigherReference.assoc_r",
@@ -413,7 +413,7 @@
         "typing_Steel.Preorder.p_op"
       ],
       0,
-      "d2edebd358ca5a79639299473dbbebe6"
+      "decdd0b0c5e06b567d36b6d0a8c55c17"
     ],
     [
       "Steel.MonotonicHigherReference.pcm_history",
@@ -472,7 +472,7 @@
         "typing_tok_Prims.T@tok"
       ],
       0,
-      "e6262ed751d79426599e8a8530993d08"
+      "e88f3272c7964ec270db37da66dac684"
     ],
     [
       "Steel.MonotonicHigherReference.pcm_history_preorder",
@@ -513,7 +513,7 @@
         "token_correspondence_Steel.Preorder.extends_"
       ],
       0,
-      "cc60b755a03ed3bd431d8052c846fb5f"
+      "c9de9676228c07f1cc68f0c8c396170a"
     ],
     [
       "Steel.MonotonicHigherReference.pcm_history_induces_preorder",
@@ -636,7 +636,7 @@
         "unit_inversion", "unit_typing"
       ],
       0,
-      "6cf4b1c6895c8e9c5455deade513ba06"
+      "4ba03a5e917d61659428eb7cdfc1533d"
     ],
     [
       "Steel.MonotonicHigherReference.extend_history",
@@ -673,7 +673,7 @@
         "typing_Steel.MonotonicHigherReference.hval_tot"
       ],
       0,
-      "27610a5b4446fbec5a2c9d3c6110e88f"
+      "226bb4e9d0f0c69e5dd9b5b8bd83a55d"
     ],
     [
       "Steel.MonotonicHigherReference.extend_history_is_frame_preserving",
@@ -682,7 +682,7 @@
       1,
       [ "@query" ],
       0,
-      "4206bb5872feb30f90e3122ae295b5a2"
+      "164b278cad8546c64fbefeb9ce4c184a"
     ],
     [
       "Steel.MonotonicHigherReference.extend_history_is_frame_preserving",
@@ -767,7 +767,7 @@
         "typing_Steel.MonotonicHigherReference.uu___is_Current"
       ],
       0,
-      "ed53a53a041f8999cce567859198f3ed"
+      "b278032bc174c0c1f01df2394aa66b24"
     ],
     [
       "Steel.MonotonicHigherReference.history_val",
@@ -782,7 +782,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "625f256db3c48e22037ea2365a935cd0"
+      "3d6cbcd0af05bd63af6a3654a0d47426"
     ],
     [
       "Steel.MonotonicHigherReference.split_current",
@@ -843,7 +843,7 @@
         "token_correspondence_Steel.MonotonicHigherReference.history_compose"
       ],
       0,
-      "03fa37bd45108ba22ec1b149168f96ad"
+      "35d3202c3f6bc5197446f2e73ce24841"
     ],
     [
       "Steel.MonotonicHigherReference.split_current",
@@ -852,7 +852,7 @@
       1,
       [ "@query", "lemma_Steel.FractionalPermission.sum_halves" ],
       0,
-      "0348fe2071547f23cc050772e640c8fd"
+      "1d56f32375cc927632df418a2c428d9c"
     ],
     [
       "Steel.MonotonicHigherReference.intro_pure",
@@ -892,7 +892,7 @@
         "typing_Steel.MonotonicHigherReference.pts_to_body"
       ],
       0,
-      "8f1604d5e0d65808ab9bbbc89d224fcb"
+      "e13500165ed3466df5efc3c1531c0c04"
     ],
     [
       "Steel.MonotonicHigherReference.alloc",
@@ -977,7 +977,7 @@
         "typing_Steel.MonotonicHigherReference.unit_history"
       ],
       0,
-      "1fe9bc6f4830a1e1ea846d9c9bf0df83"
+      "a785711ce2ab2ad492d891fc4dcb2dcb"
     ],
     [
       "Steel.MonotonicHigherReference.extract_pure",
@@ -1022,7 +1022,7 @@
         "typing_Steel.MonotonicHigherReference.unit_history"
       ],
       0,
-      "0528a4f115199daafb215a5ecf651cfa"
+      "525fb62044059e42dde166860e659791"
     ],
     [
       "Steel.MonotonicHigherReference.elim_pure",
@@ -1047,7 +1047,7 @@
         "true_interp"
       ],
       0,
-      "40aca23ea590b90bec35f818bee6931f"
+      "fad0d99faeab88be43062dbeb906b976"
     ],
     [
       "Steel.MonotonicHigherReference.rewrite_erased",
@@ -1059,7 +1059,7 @@
         "refinement_interpretation_Tm_refine_f8d868fc29a9c202336ef5f443303c1f"
       ],
       0,
-      "dbde11ea8eb45ec7d45a373c14677c11"
+      "0db76a3128a08afb153bd72315bf65e7"
     ],
     [
       "Steel.MonotonicHigherReference.rewrite_reveal_hide",
@@ -1068,7 +1068,7 @@
       1,
       [ "@query", "lemma_FStar.Ghost.reveal_hide" ],
       0,
-      "0f49be7dee7105e5c111864ac46e012e"
+      "46f0e3eba2ad1db9e4bb4276c1f76d94"
     ],
     [
       "Steel.MonotonicHigherReference.read_refine",
@@ -1157,7 +1157,7 @@
         "typing_Steel.Preorder.p_op"
       ],
       0,
-      "5556c1f3995bd35ad93560eadfaf9c33"
+      "2390a0c66f5c2c94542642649a821ed7"
     ],
     [
       "Steel.MonotonicHigherReference.write",
@@ -1270,7 +1270,7 @@
         "typing_Steel.Preorder.p_op"
       ],
       0,
-      "741ed75826b6639014aebc585dcbc0e6"
+      "e5c4de02abf4501e294d3bd7aee56630"
     ],
     [
       "Steel.MonotonicHigherReference.lift_fact",
@@ -1294,7 +1294,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "7157581ccf85142167a1a522d7eff561"
+      "f74e9b6afab7937429d1742763aaba28"
     ],
     [
       "Steel.MonotonicHigherReference.lift_fact_is_stable",
@@ -1334,7 +1334,7 @@
         "typing_Prims.__proj__Cons__item__hd", "typing_Steel.Preorder.curval"
       ],
       0,
-      "da039a500200b29ff5aa7ba1780764fa"
+      "fc86035567befc953884141df9659235"
     ],
     [
       "Steel.MonotonicHigherReference.get_squash",
@@ -1346,7 +1346,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "02815673890970200d7b713bd4a7fac5"
+      "4a46d55b227c3703330c41c3c1939f92"
     ],
     [
       "Steel.MonotonicHigherReference.witness_thunk",
@@ -1359,7 +1359,7 @@
         "refinement_interpretation_Tm_refine_816f3fe7bd55a9e3150fe37777137c20"
       ],
       0,
-      "088d013ed7f858e3d61cfe6f64db48d7"
+      "ddf9bb8284c7b0576c1bfc0cf25acddc"
     ],
     [
       "Steel.MonotonicHigherReference.witness",
@@ -1462,7 +1462,7 @@
         "typing_Tm_abs_3186fdffb769911444e226c902379d08"
       ],
       0,
-      "9e19e8a4a52a168e8ca9e6a359e936fa"
+      "b074166bf9ff28edda959b7b5ddf5a7b"
     ],
     [
       "Steel.MonotonicHigherReference.recall",
@@ -1550,7 +1550,7 @@
         "typing_Steel.Preorder.p_op"
       ],
       0,
-      "bacdd248d80807c36c99ed01160c725c"
+      "4eb83b6283a434ea361a9d598b6110f4"
     ],
     [
       "Steel.MonotonicHigherReference.elim_pts_to",
@@ -1568,7 +1568,7 @@
         "typing_Steel.MonotonicHigherReference.pts_to_"
       ],
       0,
-      "b880e43a8a027420bea02d8d224f6ad6"
+      "758d1926bd1426ccf1c29e5f500e0cb0"
     ],
     [
       "Steel.MonotonicHigherReference.intro_pts_to",
@@ -1577,7 +1577,7 @@
       1,
       [ "@query" ],
       0,
-      "6ce2f19bee7587535b2c3fb796fc0144"
+      "a5e039b175db5c205dff58a18a36efef"
     ],
     [
       "Steel.MonotonicHigherReference.share",
@@ -1618,7 +1618,7 @@
         "typing_Steel.MonotonicHigherReference.uu___is_Current"
       ],
       0,
-      "ebf3ee82fc2ae2e052b11c58ba6191ba"
+      "91d6e1fb9a296a66dee42c89cc7f17a8"
     ],
     [
       "Steel.MonotonicHigherReference.gather",
@@ -1663,7 +1663,7 @@
         "typing_Steel.MonotonicHigherReference.uu___is_Current"
       ],
       0,
-      "681ae3dd62648f5fbb00c42670be2765"
+      "e92a2e39d4fb9f6f815d970388c1de25"
     ]
   ]
 ]
