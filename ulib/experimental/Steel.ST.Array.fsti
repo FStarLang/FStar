@@ -185,8 +185,7 @@ val malloca_of_list
        (fun a -> pts_to a P.full_perm (Seq.seq_of_list init))
        (alloca_of_list_pre init)
        (fun a ->
-         length a == normalize_term (List.Tot.length init) /\
-         is_full_array a
+         length a == normalize_term (List.Tot.length init)
        )
 
 

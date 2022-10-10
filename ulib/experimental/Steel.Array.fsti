@@ -163,7 +163,6 @@ let malloca_of_list
        (fun _ -> alloca_of_list_pre init)
        (fun _ a h' ->
          length a == normalize_term (List.Tot.length init) /\
-         is_full_array a /\
          asel a h' == Seq.seq_of_list init
        )
 = let res = A.malloca_of_list init in

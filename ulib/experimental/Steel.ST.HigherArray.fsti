@@ -189,8 +189,7 @@ let malloca_of_list
        (fun a -> pts_to a P.full_perm (Seq.seq_of_list init))
        (0 < List.Tot.length init /\ List.Tot.length init <= UInt.max_int 32)
        (fun a ->
-         length a == normalize_term (List.Tot.length init) /\
-         is_full_array a
+         length a == normalize_term (List.Tot.length init)
        )
   = let p = malloca_of_list_ptr init in
     let a : array elt = (| p, Ghost.hide (normalize_term (List.Tot.length init)) |) in
@@ -486,7 +485,7 @@ let blit_post
            (len: U32.t)
            (s1' : Seq.seq t)
 : Tot prop
-= 
+=
         U32.v idx_src + U32.v len <= length src /\
         U32.v idx_dst + U32.v len <= length dst /\
         length src == Seq.length s0 /\
