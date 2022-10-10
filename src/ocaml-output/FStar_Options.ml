@@ -1395,6 +1395,7 @@ let (settable : Prims.string -> Prims.bool) =
     | "initial_fuel" -> true
     | "initial_ifuel" -> true
     | "ide_id_info_off" -> true
+    | "keep_query_captions" -> true
     | "lax" -> true
     | "load" -> true
     | "load_cmxs" -> true
@@ -1470,7 +1471,7 @@ let (settable_specs :
     (FStar_Compiler_List.filter
        (fun uu___ ->
           match uu___ with | (uu___1, x, uu___2, uu___3) -> settable x))
-let (uu___593 :
+let (uu___594 :
   (((unit -> FStar_Getopt.parse_cmdline_res) -> unit) *
     (unit -> FStar_Getopt.parse_cmdline_res)))
   =
@@ -1487,11 +1488,11 @@ let (uu___593 :
   (set1, call)
 let (set_error_flags_callback_aux :
   (unit -> FStar_Getopt.parse_cmdline_res) -> unit) =
-  match uu___593 with
+  match uu___594 with
   | (set_error_flags_callback_aux1, set_error_flags) ->
       set_error_flags_callback_aux1
 let (set_error_flags : unit -> FStar_Getopt.parse_cmdline_res) =
-  match uu___593 with
+  match uu___594 with
   | (set_error_flags_callback_aux1, set_error_flags1) -> set_error_flags1
 let (set_error_flags_callback :
   (unit -> FStar_Getopt.parse_cmdline_res) -> unit) =

@@ -221,19 +221,12 @@ let (by_tactic_interp :
                           tm.FStar_Syntax_Syntax.pos tactic e goal in
                       (match uu___5 with
                        | (gs, uu___6) ->
-                           ((match gs with
-                             | [] -> ()
-                             | uu___8 ->
-                                 FStar_Errors.raise_error
-                                   (FStar_Errors.Fatal_OpenGoalsInSynthesis,
-                                     "rewrite_with_tactic left open goals")
-                                   typ.FStar_Syntax_Syntax.pos);
-                            (let tagged_imps =
-                               FStar_TypeChecker_Rel.resolve_implicits_tac e
-                                 g_imp in
-                             FStar_Tactics_Interpreter.report_implicits
-                               tm.FStar_Syntax_Syntax.pos tagged_imps;
-                             Simplified (uvtm, [])))))
+                           let tagged_imps =
+                             FStar_TypeChecker_Rel.resolve_implicits_tac e
+                               g_imp in
+                           (FStar_Tactics_Interpreter.report_implicits
+                              tm.FStar_Syntax_Syntax.pos tagged_imps;
+                            Simplified (uvtm, gs))))
              | uu___2 -> Unchanged t)
 let explode :
   'a . 'a tres_m -> ('a * 'a * FStar_Tactics_Types.goal Prims.list) =
