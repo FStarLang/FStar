@@ -400,5 +400,9 @@ val comp_to_string : comp -> Tac string
 
 (** A variant of Reflection.term_eq that may inspect more underlying
 details of terms. This function could distinguish two _otherwise equal
-terms_, but that distinction cannot leave the Tac effect. *)
-val term_eq' : term -> term -> Tac bool
+terms_, but that distinction cannot leave the Tac effect.
+
+This is only exposed as a migration path. Please use
+[Reflection.term_eq] instead. *)
+[@@deprecated "use Reflection.term_eq instead"]
+val term_eq_old : term -> term -> Tac bool

@@ -233,7 +233,7 @@ let rec where_aux (n:nat) (x:term) (xs:list term) :
     Tac (option nat) =
   match xs with
   | [] -> None
-  | x'::xs' -> if term_eq' x x' then Some n else where_aux (n+1) x xs'
+  | x'::xs' -> if term_eq_old x x' then Some n else where_aux (n+1) x xs'
 let where = where_aux 0
 
 // This expects that mult, unit, and t have already been normalized
@@ -249,13 +249,13 @@ let rec reification_aux (#a #b:Type) (unquotea:term->Tac a) (ts:list term)
   in
   match inspect hd, list_unref tl with
   | Tv_FVar fv, [(t1, Q_Explicit) ; (t2, Q_Explicit)] ->
-    if term_eq' (pack (Tv_FVar fv)) mult
+    if term_eq_old (pack (Tv_FVar fv)) mult
     then (let (e1,ts,vm) = reification_aux unquotea ts vm f mult unit t1 in
           let (e2,ts,vm) = reification_aux unquotea ts vm f mult unit t2 in
           (Mult e1 e2, ts, vm))
     else fvar t ts vm
   | _, _ ->
-    if term_eq' t unit
+    if term_eq_old t unit
     then (Unit, ts, vm)
     else fvar t ts vm
 
@@ -281,7 +281,7 @@ let reification (b:Type) (f:term->Tac b) (def:b) (#a:Type)
 val term_mem: term -> list term -> Tac bool
 let rec term_mem x = function
   | [] -> false
-  | hd::tl -> if term_eq' hd x then true else term_mem x tl
+  | hd::tl -> if term_eq_old hd x then true else term_mem x tl
 
 let unfold_topdown (ts: list term) =
   let should_rewrite (s:term) : Tac (bool * int) =
@@ -337,7 +337,7 @@ let canon_monoid_aux
   | Comp (Eq (Some t)) t1 t2 ->
       // dump ("t1 =" ^ term_to_string t1 ^
       //     "; t2 =" ^ term_to_string t2);
-      if term_eq' t ta then
+      if term_eq_old t ta then
         match reification b f def unquotea quotea tmult tunit munit [t1;t2] with
         | [r1;r2], vm ->
           // dump ("r1=" ^ exp_to_string r1 ^

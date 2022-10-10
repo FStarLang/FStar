@@ -113,7 +113,7 @@ private let rec find_idx (f : 'a -> Tac bool) (l : list 'a) : Tac (option ((n:na
              end
 
 private let atom (t:term) : tm expr = fun (n, atoms) ->
-    match find_idx (term_eq' t) atoms with
+    match find_idx (term_eq_old t) atoms with
     | None -> Inr (Atom n t, (n + 1, t::atoms))
     | Some (i, t) -> Inr (Atom (n - 1 - i) t, (n, atoms))
 

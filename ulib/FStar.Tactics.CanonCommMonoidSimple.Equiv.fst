@@ -22,7 +22,7 @@ open FStar.Reflection
 open FStar.Classical
 open FStar.Tactics.CanonCommSwaps
 
-let term_eq = FStar.Tactics.term_eq'
+let term_eq = FStar.Tactics.term_eq_old
 
 (* A simple expression canonizer for commutative monoids (working up to
    some given equivalence relation as opposed to just propositional equality).
