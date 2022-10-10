@@ -198,8 +198,9 @@ type mlift =
   {
   mlift_wp:
     env ->
-      FStar_Syntax_Syntax.comp ->
-        (FStar_Syntax_Syntax.comp * FStar_TypeChecker_Common.guard_t)
+      Prims.bool ->
+        FStar_Syntax_Syntax.comp ->
+          (FStar_Syntax_Syntax.comp * FStar_TypeChecker_Common.guard_t)
     ;
   mlift_term:
     (FStar_Syntax_Syntax.universe ->
@@ -227,13 +228,14 @@ and effects =
   polymonadic_binds:
     (FStar_Ident.lident * FStar_Ident.lident * FStar_Ident.lident *
       (env ->
-         FStar_Syntax_Syntax.comp_typ ->
-           FStar_Syntax_Syntax.bv FStar_Pervasives_Native.option ->
-             FStar_Syntax_Syntax.comp_typ ->
-               FStar_Syntax_Syntax.cflag Prims.list ->
-                 FStar_Compiler_Range.range ->
-                   (FStar_Syntax_Syntax.comp *
-                     FStar_TypeChecker_Common.guard_t)))
+         Prims.bool ->
+           FStar_Syntax_Syntax.comp_typ ->
+             FStar_Syntax_Syntax.bv FStar_Pervasives_Native.option ->
+               FStar_Syntax_Syntax.comp_typ ->
+                 FStar_Syntax_Syntax.cflag Prims.list ->
+                   FStar_Compiler_Range.range ->
+                     (FStar_Syntax_Syntax.comp *
+                       FStar_TypeChecker_Common.guard_t)))
       Prims.list
     ;
   polymonadic_subcomps:
@@ -386,8 +388,9 @@ and tcenv_hooks =
 let (__proj__Mkmlift__item__mlift_wp :
   mlift ->
     env ->
-      FStar_Syntax_Syntax.comp ->
-        (FStar_Syntax_Syntax.comp * FStar_TypeChecker_Common.guard_t))
+      Prims.bool ->
+        FStar_Syntax_Syntax.comp ->
+          (FStar_Syntax_Syntax.comp * FStar_TypeChecker_Common.guard_t))
   =
   fun projectee ->
     match projectee with | { mlift_wp; mlift_term;_} -> mlift_wp
@@ -443,13 +446,14 @@ let (__proj__Mkeffects__item__polymonadic_binds :
   effects ->
     (FStar_Ident.lident * FStar_Ident.lident * FStar_Ident.lident *
       (env ->
-         FStar_Syntax_Syntax.comp_typ ->
-           FStar_Syntax_Syntax.bv FStar_Pervasives_Native.option ->
-             FStar_Syntax_Syntax.comp_typ ->
-               FStar_Syntax_Syntax.cflag Prims.list ->
-                 FStar_Compiler_Range.range ->
-                   (FStar_Syntax_Syntax.comp *
-                     FStar_TypeChecker_Common.guard_t)))
+         Prims.bool ->
+           FStar_Syntax_Syntax.comp_typ ->
+             FStar_Syntax_Syntax.bv FStar_Pervasives_Native.option ->
+               FStar_Syntax_Syntax.comp_typ ->
+                 FStar_Syntax_Syntax.cflag Prims.list ->
+                   FStar_Compiler_Range.range ->
+                     (FStar_Syntax_Syntax.comp *
+                       FStar_TypeChecker_Common.guard_t)))
       Prims.list)
   =
   fun projectee ->
@@ -1419,16 +1423,18 @@ let (__proj__Mktcenv_hooks__item__tc_push_in_gamma_hook :
     | { tc_push_in_gamma_hook;_} -> tc_push_in_gamma_hook
 type lift_comp_t =
   env ->
-    FStar_Syntax_Syntax.comp ->
-      (FStar_Syntax_Syntax.comp * FStar_TypeChecker_Common.guard_t)
+    Prims.bool ->
+      FStar_Syntax_Syntax.comp ->
+        (FStar_Syntax_Syntax.comp * FStar_TypeChecker_Common.guard_t)
 type polymonadic_bind_t =
   env ->
-    FStar_Syntax_Syntax.comp_typ ->
-      FStar_Syntax_Syntax.bv FStar_Pervasives_Native.option ->
-        FStar_Syntax_Syntax.comp_typ ->
-          FStar_Syntax_Syntax.cflag Prims.list ->
-            FStar_Compiler_Range.range ->
-              (FStar_Syntax_Syntax.comp * FStar_TypeChecker_Common.guard_t)
+    Prims.bool ->
+      FStar_Syntax_Syntax.comp_typ ->
+        FStar_Syntax_Syntax.bv FStar_Pervasives_Native.option ->
+          FStar_Syntax_Syntax.comp_typ ->
+            FStar_Syntax_Syntax.cflag Prims.list ->
+              FStar_Compiler_Range.range ->
+                (FStar_Syntax_Syntax.comp * FStar_TypeChecker_Common.guard_t)
 type solver_depth_t = (Prims.int * Prims.int * Prims.int)
 type core_check_t =
   env ->
@@ -4177,7 +4183,8 @@ let (is_layered_effect : env -> FStar_Ident.lident -> Prims.bool) =
 let (identity_mlift : mlift) =
   {
     mlift_wp =
-      (fun uu___ -> fun c -> (c, FStar_TypeChecker_Common.trivial_guard));
+      (fun uu___ ->
+         fun uu___1 -> fun c -> (c, FStar_TypeChecker_Common.trivial_guard));
     mlift_term =
       (FStar_Pervasives_Native.Some
          (fun uu___ ->
@@ -4831,17 +4838,18 @@ let (update_effect_lattice :
         fun st_mlift ->
           let compose_edges e1 e2 =
             let composed_lift =
-              let mlift_wp env2 c =
+              let mlift_wp env2 guard_indexed_effect_uvars c =
                 let uu___ =
                   FStar_Compiler_Effect.op_Bar_Greater c
-                    ((e1.mlift).mlift_wp env2) in
+                    ((e1.mlift).mlift_wp env2 guard_indexed_effect_uvars) in
                 FStar_Compiler_Effect.op_Bar_Greater uu___
                   (fun uu___1 ->
                      match uu___1 with
                      | (c1, g1) ->
                          let uu___2 =
                            FStar_Compiler_Effect.op_Bar_Greater c1
-                             ((e2.mlift).mlift_wp env2) in
+                             ((e2.mlift).mlift_wp env2
+                                guard_indexed_effect_uvars) in
                          FStar_Compiler_Effect.op_Bar_Greater uu___2
                            (fun uu___3 ->
                               match uu___3 with

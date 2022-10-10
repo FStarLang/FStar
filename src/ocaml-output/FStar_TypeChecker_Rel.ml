@@ -11440,13 +11440,14 @@ and (solve_c :
                       FStar_Ident.string_of_id in
                   FStar_Compiler_Util.format2 "%s <: %s" uu___4 uu___5 in
                 let lift_c1 edge =
+                  let guard_indexed_effect_uvars = true in
                   let uu___4 =
                     let uu___5 =
                       FStar_Compiler_Effect.op_Bar_Greater c11
                         FStar_Syntax_Syntax.mk_Comp in
                     FStar_Compiler_Effect.op_Bar_Greater uu___5
                       ((edge.FStar_TypeChecker_Env.mlift).FStar_TypeChecker_Env.mlift_wp
-                         env) in
+                         env guard_indexed_effect_uvars) in
                   FStar_Compiler_Effect.op_Bar_Greater uu___4
                     (fun uu___5 ->
                        match uu___5 with
@@ -11696,13 +11697,14 @@ and (solve_c :
                                  (match uu___9 with
                                   | (a_b, rest_bs, f_b, stronger_c) ->
                                       let uu___10 =
-                                        let with_guard_uvar = false in
+                                        let guard_indexed_effect_uvars =
+                                          false in
                                         FStar_TypeChecker_Env.uvars_for_binders
                                           env rest_bs
                                           [FStar_Syntax_Syntax.NT
                                              ((a_b.FStar_Syntax_Syntax.binder_bv),
                                                (c21.FStar_Syntax_Syntax.result_typ))]
-                                          with_guard_uvar
+                                          guard_indexed_effect_uvars
                                           (fun b ->
                                              let uu___11 =
                                                FStar_Syntax_Print.binder_to_string
@@ -11970,6 +11972,7 @@ and (solve_c :
                    (c11.FStar_Syntax_Syntax.effect_args);
                  FStar_Syntax_Syntax.flags = (c11.FStar_Syntax_Syntax.flags)
                } in
+             let guard_indexed_effect_uvars = true in
              let uu___2 =
                let uu___3 =
                  FStar_Compiler_Effect.op_Bar_Greater
@@ -11986,7 +11989,7 @@ and (solve_c :
                    } FStar_Syntax_Syntax.mk_Comp in
                FStar_Compiler_Effect.op_Bar_Greater uu___3
                  ((edge.FStar_TypeChecker_Env.mlift).FStar_TypeChecker_Env.mlift_wp
-                    env) in
+                    env guard_indexed_effect_uvars) in
              FStar_Compiler_Effect.op_Bar_Greater uu___2
                (fun uu___3 ->
                   match uu___3 with
