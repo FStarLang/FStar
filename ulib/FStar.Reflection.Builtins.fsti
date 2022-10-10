@@ -35,19 +35,22 @@ val inspect_pack_inv : (tv:term_view) -> Lemma (inspect_ln (pack_ln tv) == tv)
 val inspect_comp   : (c:comp) -> cv:comp_view{smaller_comp cv c}
 val pack_comp      : comp_view -> comp
 
+val pack_inspect_comp_inv : (c:comp) -> Lemma (pack_comp (inspect_comp c) == c)
+val inspect_pack_comp_inv : (cv:comp_view) -> Lemma (inspect_comp (pack_comp cv) == cv)
+
 val inspect_sigelt : sigelt -> sigelt_view
 val pack_sigelt    : sigelt_view -> sigelt
 
 val inspect_fv     : fv -> name
 val pack_fv        : name -> fv
 
-val inspect_bv     : bv -> bv_view
+val inspect_bv     : v:bv -> vv: bv_view {smaller_bv vv v}
 val pack_bv        : bv_view -> bv
 
-val inspect_lb     : letbinding -> lb_view
+val inspect_lb     : lb:letbinding -> lbv:lb_view {smaller_letbinding lbv lb}
 val pack_lb        : lb_view -> letbinding
 
-val inspect_binder : binder -> bv * (aqualv * list term)
+val inspect_binder : b:binder -> bv:(bv * (aqualv * list term)) {smaller_binder b bv}
 val pack_binder    : bv -> aqualv -> attrs:list term -> binder
 
 val inspect_universe : u:universe -> uv:universe_view{smaller_universe uv u}

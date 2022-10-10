@@ -180,11 +180,6 @@ type exp : Type =
 
 type decls = list sigelt
 
-let rec forall_list (p:'a -> Type) (l:list 'a) : Type =
-    match l with
-    | [] -> True
-    | x::xs -> p x /\ forall_list p xs
-
 (* Comparison of a term_view to term. Allows to recurse while changing the view *)
 [@@ remove_unused_type_parameters [0; 1]]
 let smaller (tv:term_view) (t:term) : Type0 =
@@ -200,22 +195,24 @@ let smaller (tv:term_view) (t:term) : Type0 =
         bv << t /\ t' << t
 
     | Tv_Let r attrs bv t1 t2 ->
-        (forall_list (fun t' -> t' << t) attrs) /\ bv << t /\ t1 << t /\ t2 << t
+        attrs << t /\ bv << t /\ t1 << t /\ t2 << t
 
     | Tv_Match t1 ret_opt brs ->
-        t1 << t /\ ret_opt << t /\ (forall_list (fun (b, t') -> t' << t) brs)
+        t1 << t /\ ret_opt << t /\ brs << t
 
     | Tv_AscribedT e ty tac _use_eq ->
-      e << t /\ ty << t /\ tac << t
+        e << t /\ ty << t /\ tac << t
 
     | Tv_AscribedC e c tac _use_eq ->
-      e << t /\ c << t /\ tac << t
+        e << t /\ c << t /\ tac << t
+
+    | Tv_Var v
+    | Tv_BVar v ->
+        v << t
 
     | Tv_Type _
     | Tv_Const _
     | Tv_Unknown
-    | Tv_Var _
-    | Tv_BVar _
     | Tv_Uvar _ _
     | Tv_FVar _
     | Tv_UInst _ _ -> True
@@ -223,21 +220,24 @@ let smaller (tv:term_view) (t:term) : Type0 =
 [@@ remove_unused_type_parameters [0; 1]]
 let smaller_comp (cv:comp_view) (c:comp) : Type0 =
     match cv with
-    | C_Total t _ md -> t << c /\ md << c
+    | C_Total t _ md
     | C_GTotal t _ md ->
         t << c /\ md << c
     | C_Lemma pre post pats ->
         pre << c /\ post << c /\ pats << c
     | C_Eff _us eff res args ->
-        res << c
+        res << c /\ args << c
 
 [@@ remove_unused_type_parameters [0; 1]]
 let smaller_bv (bvv:bv_view) (bv:bv) : Type0 =
     bvv.bv_sort << bv
 
 [@@ remove_unused_type_parameters [0; 1]]
-let smaller_binder (b:binder) ((bv, _): bv * aqualv) : Type0 =
-    bv << b
+let smaller_binder (b:binder) ((bv, (q, attrs)): bv * (aqualv * list term)) : Type0 =
+      bv << b /\ attrs << b
+    /\ ( match q with
+      | Q_Meta m -> m << b
+      | _ -> True )
 
 [@@ remove_unused_type_parameters [0; 1]]
 let smaller_universe (uv:universe_view) (u:universe) : Type0 =
@@ -249,3 +249,7 @@ let smaller_universe (uv:universe_view) (u:universe) : Type0 =
   | Uv_Name _
   | Uv_Unif _
   | Uv_Unk -> True
+
+[@@ remove_unused_type_parameters [0; 1]]
+let smaller_letbinding (lbv:lb_view) (lb: letbinding) : Type0 =
+    lbv.lb_typ << lb /\ lbv.lb_def << lb
