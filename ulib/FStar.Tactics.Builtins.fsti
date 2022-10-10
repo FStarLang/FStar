@@ -386,3 +386,19 @@ environment of [e] an environment. It returns a new environment that
 has the identifier [id] along with its corresponding bounded
 variable. *)
 val push_bv_dsenv : env -> string -> Tac (env * bv)
+
+(** Print a term via the pretty printer. This is considered effectful
+since 1) setting options can change the behavior of this function, and
+hence is not really pure; and 2) this function could expose details of
+the term representation that do not show up in the view, invalidating
+the pack_inspect_inv/inspeck_pack_inv lemmas. *)
+val term_to_string : term -> Tac string
+
+(** Print a computation type via the pretty printer. See comment
+on [term_to_string]. *)
+val comp_to_string : comp -> Tac string
+
+(** A variant of Reflection.term_eq that may inspect more underlying
+details of terms. This function could distinguish two _otherwise equal
+terms_, but that distinction cannot leave the Tac effect. *)
+val term_eq' : term -> term -> Tac bool

@@ -60,7 +60,6 @@ type bv_view = {
     bv_sort : typ;
 }
 
-
 noeq
 type universe_view =
   | Uv_Zero : universe_view
@@ -90,6 +89,9 @@ type term_view =
   | Tv_AscribedC : e:term -> c:comp -> tac:option term -> use_eq:bool -> term_view
   | Tv_Unknown  : term_view // Baked in "None"
 
+let notAscription (tv:term_view) : bool =
+  not (Tv_AscribedT? tv) && not (Tv_AscribedC? tv)
+
 // Very basic for now
 noeq
 type comp_view =
@@ -106,7 +108,6 @@ type comp_view =
 [Sg_Inductive] below. *)
 type ctor = name & typ
 
-
 noeq
 type lb_view = {
     lb_fv : fv;
@@ -114,7 +115,6 @@ type lb_view = {
     lb_typ : typ;
     lb_def : term
 }
-
 
 noeq
 type sigelt_view =
@@ -177,79 +177,4 @@ type exp : Type =
   | Var : var -> exp
   | Mult : exp -> exp -> exp
 
-
 type decls = list sigelt
-
-(* Comparison of a term_view to term. Allows to recurse while changing the view *)
-[@@ remove_unused_type_parameters [0; 1]]
-let smaller (tv:term_view) (t:term) : Type0 =
-    match tv with
-    | Tv_App l r ->
-        l << t /\ r << t /\ fst r << t
-
-    | Tv_Abs b t'
-    | Tv_Arrow b t' ->
-        b << t /\ t' << t
-
-    | Tv_Refine b t' ->
-        bv << t /\ t' << t
-
-    | Tv_Let r attrs bv t1 t2 ->
-        attrs << t /\ bv << t /\ t1 << t /\ t2 << t
-
-    | Tv_Match t1 ret_opt brs ->
-        t1 << t /\ ret_opt << t /\ brs << t
-
-    | Tv_AscribedT e ty tac _use_eq ->
-        e << t /\ ty << t /\ tac << t
-
-    | Tv_AscribedC e c tac _use_eq ->
-        e << t /\ c << t /\ tac << t
-
-    | Tv_Var v
-    | Tv_BVar v ->
-        v << t
-
-    | Tv_Type _
-    | Tv_Const _
-    | Tv_Unknown
-    | Tv_Uvar _ _
-    | Tv_FVar _
-    | Tv_UInst _ _ -> True
-
-[@@ remove_unused_type_parameters [0; 1]]
-let smaller_comp (cv:comp_view) (c:comp) : Type0 =
-    match cv with
-    | C_Total t _ md
-    | C_GTotal t _ md ->
-        t << c /\ md << c
-    | C_Lemma pre post pats ->
-        pre << c /\ post << c /\ pats << c
-    | C_Eff _us eff res args ->
-        res << c /\ args << c
-
-[@@ remove_unused_type_parameters [0; 1]]
-let smaller_bv (bvv:bv_view) (bv:bv) : Type0 =
-    bvv.bv_sort << bv
-
-[@@ remove_unused_type_parameters [0; 1]]
-let smaller_binder (b:binder) ((bv, (q, attrs)): bv * (aqualv * list term)) : Type0 =
-      bv << b /\ attrs << b
-    /\ ( match q with
-      | Q_Meta m -> m << b
-      | _ -> True )
-
-[@@ remove_unused_type_parameters [0; 1]]
-let smaller_universe (uv:universe_view) (u:universe) : Type0 =
-  match uv with
-  | Uv_Succ u' -> u' << u
-  | Uv_Max us -> us << u
-  | Uv_Zero
-  | Uv_BVar _
-  | Uv_Name _
-  | Uv_Unif _
-  | Uv_Unk -> True
-
-[@@ remove_unused_type_parameters [0; 1]]
-let smaller_letbinding (lbv:lb_view) (lb: letbinding) : Type0 =
-    lbv.lb_typ << lb /\ lbv.lb_def << lb

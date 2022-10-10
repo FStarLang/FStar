@@ -13,6 +13,8 @@ open FStar.InteractiveHelpers.Propositions
 open FStar.InteractiveHelpers.Effectful
 open FStar.InteractiveHelpers.Output
 
+let term_eq = FStar.Tactics.term_eq'
+
 /// The high-level post-processing tactics, used to retrieve some specific
 /// information from the context and generate output which can be exploited
 /// on the IDE side.
@@ -65,11 +67,7 @@ let pp_explore_print_goal () =
 /// Check for meta-identifiers. Note that we can't simply use ``term_eq`` which
 /// sometimes unexpectedly fails (maybe because of information hidden to Meta-F*)
 val is_focus_on_term : term -> Tac bool
-let is_focus_on_term t =
-  match inspect t with
-  | Tv_FVar fv ->
-    flatten_name (inspect_fv fv) = `%focus_on_term
-  | _ -> false
+let is_focus_on_term t = is_fvar t (`%focus_on_term)
 
 /// Check if a term is an assertion or an assumption and return its content
 /// if it is the case.
@@ -77,16 +75,9 @@ val term_is_assert_or_assume : term -> Tac (option term)
 let term_is_assert_or_assume t =
   match inspect t with
   | Tv_App hd (a, Q_Explicit) ->
-    begin match inspect hd with
-    | Tv_FVar fv ->
-      let fname = flatten_name (inspect_fv fv) in
-      if fname = "Prims._assert"
-         || fname = "FStar.Pervasives.assert_norm"
-         || fname = "Prims._assume"
-      then Some a
-      else None
-    | _ -> None
-    end
+    if is_any_fvar a [`%Prims._assert; `%FStar.Pervasives.assert_norm; `%Prims._assume]
+    then Some a
+    else None
   | _ -> None
 
 /// Check if the given term view is of the form: 'let _ = focus_on_term in body'
@@ -390,16 +381,15 @@ let is_eq dbg t =
   print_dbg dbg ("- parameters:\n" ^ list_to_string (fun (x, y) -> term_to_string x) params);
   match inspect hd with
   | Tv_FVar fv ->
-    let name = flatten_name (inspect_fv fv) in
     begin match params with
     | [(a,Q_Implicit);(x,Q_Explicit);(y,Q_Explicit)] ->
-      if name = "Prims.op_Equality" || name = "Prims.equals" || name = "Prims.op_Equals" then
+      if is_any_fvar a [`%Prims.op_Equality; `%Prims.equals; "Prims.op_Equals"] then
         Some ((Eq_Dec a), x, y)
-      else if name = "Prims.eq2" || name = "Prims.op_Equals_Equals" then
+      else if is_any_fvar a [`%Prims.eq2; "Prims.op_Equals_Equals"] then
         Some ((Eq_Undec a), x, y)
       else None
     | [(a,Q_Implicit);(b,Q_Implicit);(x,Q_Explicit);(y,Q_Explicit)] ->
-      if name = "Prims.op_Equals_Equals_Equals" then
+      if is_fvar a (`%Prims.op_Equals_Equals_Equals) then
         Some ((Eq_Hetero a b), x, y)
       else None
     | _ -> None

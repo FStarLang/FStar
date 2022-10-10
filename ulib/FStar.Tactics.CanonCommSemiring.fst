@@ -48,6 +48,8 @@ open FStar.Tactics
 open FStar.Reflection
 open FStar.Algebra.CommMonoid
 
+let term_eq = FStar.Tactics.term_eq'
+
 (** An attribute for marking definitions to unfold by the tactic *)
 irreducible let canon_attr = ()
 
@@ -1499,7 +1501,7 @@ let ddump m = if debugging () then dump m
  * Finds the position of first occurrence of x in xs.
  * This is specialized to terms and their funny term_eq.
 **)
-let rec find_aux (n:nat) (x:term) (xs:list term) : Tot (option nat) (decreases xs) =
+let rec find_aux (n:nat) (x:term) (xs:list term) : Tac (option nat) =
   match xs with
   | [] -> None
   | x'::xs' -> if term_eq x x' then Some n else find_aux (n+1) x xs'
@@ -1561,13 +1563,13 @@ let steps =
       `%__proj__CR__item__cm_add;
       `%__proj__CR__item__opp;
       `%__proj__CR__item__cm_mult;
-      `%FStar.List.Tot.Base.assoc;
+      `%FStar.List.Tot.assoc;
       `%FStar.Pervasives.Native.fst;
       `%FStar.Pervasives.Native.snd;
       `%FStar.Pervasives.Native.__proj__Mktuple2__item___1;
       `%FStar.Pervasives.Native.__proj__Mktuple2__item___2;
-      `%FStar.List.Tot.Base.op_At;
-      `%FStar.List.Tot.Base.append;
+      `%FStar.List.Tot.op_At;
+      `%FStar.List.Tot.append;
     ]
   ]
 

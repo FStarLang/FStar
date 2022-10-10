@@ -19,20 +19,40 @@ open FStar.Order
 open FStar.Reflection.Types
 open FStar.Reflection.Data
 
-(* Views  *)
+(*** Views ***)
 
 (* NOTE: You probably want inspect/pack from FStar.Tactics, which work
  * over a fully named representation. If you use these, you have to
  * work with de Bruijn indices (using Tv_BVar). The only reason these
  * two exists is that they can be made Tot, and hence can be used in
  * specifications. *)
-val inspect_ln     : (t:term) -> tv:term_view{smaller tv t}
+
+(** "Inspecting" a term: reveal one level of its syntax via the type
+term_view.
+
+Crucially, this function guarantees that the result "precedes" the
+argument, since it is morally exposing the subterms of [t] in the view.
+This can be justified by this model of [term] and [term_view]:
+
+  type term = | Pack of term_view
+  let pack_ln = Pack
+  let inspect_ln (Pack tv) = tv
+
+Where inspect_ln would give exactly this guarantee on its result. Of
+course, the [term] type is actually implemented via internal F* terms,
+but the inspect and pack should be consistent with this model.
+*)
+
+val inspect_ln     : (t:term) -> tv:term_view{tv << t}
+
+(** "Packing": the inverse of inspecting. Used to construct terms. *)
 val pack_ln        : term_view -> term
 
+(* The bijection lemmas: the view exposes all details of terms. *)
 val pack_inspect_inv : (t:term) -> Lemma (pack_ln (inspect_ln t) == t)
 val inspect_pack_inv : (tv:term_view) -> Lemma (inspect_ln (pack_ln tv) == tv)
 
-val inspect_comp   : (c:comp) -> cv:comp_view{smaller_comp cv c}
+val inspect_comp   : (c:comp) -> cv:comp_view{cv << c}
 val pack_comp      : comp_view -> comp
 
 val pack_inspect_comp_inv : (c:comp) -> Lemma (pack_comp (inspect_comp c) == c)
@@ -44,20 +64,19 @@ val pack_sigelt    : sigelt_view -> sigelt
 val inspect_fv     : fv -> name
 val pack_fv        : name -> fv
 
-val inspect_bv     : v:bv -> vv: bv_view {smaller_bv vv v}
+val inspect_bv     : v:bv -> bvv:bv_view {bvv << v}
 val pack_bv        : bv_view -> bv
 
-val inspect_lb     : lb:letbinding -> lbv:lb_view {smaller_letbinding lbv lb}
+val inspect_lb     : lb:letbinding -> lbv:lb_view {lbv << lb}
 val pack_lb        : lb_view -> letbinding
 
-val inspect_binder : b:binder -> bv:(bv * (aqualv * list term)) {smaller_binder b bv}
+val inspect_binder : b:binder -> bv:(bv * (aqualv * list term)) {b << bv}
 val pack_binder    : bv -> aqualv -> attrs:list term -> binder
 
-val inspect_universe : u:universe -> uv:universe_view{smaller_universe uv u}
+val inspect_universe : u:universe -> uv:universe_view{uv << u}
 val pack_universe    : universe_view -> universe
 
-
-(* These are equivalent to [String.concat "."], [String.split ['.']]
+(** These are equivalent to [String.concat "."], [String.split ['.']]
  * and [String.compare]. We're only taking them as primitives to break
  * the dependency of Reflection/Tactics into * FStar.String, which
  * pulls a LOT of modules. *)
@@ -65,7 +84,7 @@ val implode_qn     : list string -> string
 val explode_qn     : string -> list string
 val compare_string : string -> string -> int
 
-(* Primitives & helpers *)
+(** Primitives & helpers *)
 val lookup_typ            : env -> name -> option sigelt
 val compare_bv            : bv -> bv -> order
 val binders_of_env        : env -> binders
@@ -77,8 +96,6 @@ val lookup_attr           : term -> env -> list fv
 val all_defs_in_env       : env -> list fv
 val defs_in_module        : env -> name -> list fv
 val term_eq               : term -> term -> bool
-val term_to_string        : term -> string
-val comp_to_string        : comp -> string
 val env_open_modules      : env -> list name
 
 (** [push_binder] extends the environment with a single binder.
@@ -87,28 +104,28 @@ val env_open_modules      : env -> list name
     match, etc. *)
 val push_binder           : env -> binder -> env
 
-(* Attributes are terms, not to be confused with Prims.attribute *)
+(** Attributes are terms, not to be confused with Prims.attribute. *)
 val sigelt_attrs     : sigelt -> list term
 val set_sigelt_attrs : list term -> sigelt -> sigelt
 
-(* Setting and reading qualifiers from sigelts *)
+(** Setting and reading qualifiers from sigelts *)
 val sigelt_quals     : sigelt -> list qualifier
 val set_sigelt_quals : list qualifier -> sigelt -> sigelt
 
-(* Reading the vconfig under which a particular sigelt was typechecked.
-   This function returns None if "--record_options" was not on when
-   typechecking the sigelt *)
+(** Obtains the vconfig under which a particular sigelt was typechecked.
+    This function returns None if "--record_options" was not on when
+    typechecking the sigelt. *)
 val sigelt_opts : sigelt -> option vconfig
 
-(* Embed a vconfig as a term, for instance to use it with the check_with
-attribute *)
+(** Embed a vconfig as a term, for instance to use it with the check_with attribute *)
 val embed_vconfig : vconfig -> term
 
-(* Marker to check a sigelt with a particular vconfig *)
+(** Marker to check a sigelt with a particular vconfig *)
 irreducible
 let check_with (vcfg : vconfig) : unit = ()
 
-val subst : bv -> term -> term -> term
+(** Substitute an open bv (a name) by a term [t1] in a term [t2]. *)
+val subst : bv -> t1:term -> t2:term -> term
 
-
+(** Close an open binder in a term (i.e. turn the name into a de Bruijn index. *)
 val close_term : binder -> term -> term

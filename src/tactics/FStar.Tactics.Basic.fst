@@ -68,8 +68,6 @@ let whnf e t = N.unfold_whnf e t
  * flags. *)
 let tts = N.term_to_string
 
-let term_to_string e t = Print.term_to_string' e.dsenv t
-
 let set_uvar_expected_typ (u:ctx_uvar) (t:typ)
   : unit
   = let dec = UF.find_decoration u.ctx_uvar_head in
@@ -733,7 +731,7 @@ let rec  __try_unify_by_application
         (* Not a match, try instantiating the first type by application *)
         match U.arrow_one ty1 with
         | None ->
-            fail2 "Could not instantiate, %s to %s" (term_to_string e ty1) (term_to_string e ty2)
+            fail2 "Could not instantiate, %s to %s" (tts e ty1) (tts e ty2)
         | Some (b, c) ->
             if not (U.is_total_comp c) then fail "Codomain is effectful" else
             //
@@ -1670,11 +1668,26 @@ let rec init (l:list 'a) : list 'a =
     | [x] -> []
     | x::xs -> x :: init xs
 
-(* TODO: these are mostly duplicated from FStar.Reflection.Basic, unify *)
+(* TODO: to avoid the duplication with inspect_ln (and the same
+for pack), we could instead have an `open_view` function (maybe even
+user-facing?) that takes care of opening the needed binders in the rest
+of the term. Similarly, a `close_view`. Then:
+
+  inspect = open_view . inspect_ln
+  pack    = pack_ln . close_view
+
+which would be nice. But.. patterns in matches and recursive
+letbindings make that complicated, since we need to duplicate a bunch of
+logic from Syntax.Subst here, so I dropped that idea for now.
+Everything else goes surprisingly smooth though!
+
+-- GM 2022/Oct/05
+*)
+
 let rec inspect (t:term) : tac term_view = wrap_err "inspect" (
     bind (top_env ()) (fun e ->
-    let t = U.unascribe t in
     let t = U.unlazy_emb t in
+    let t = SS.compress t in
     match t.n with
     | Tm_meta (t, _) ->
         inspect t
@@ -1692,6 +1705,12 @@ let rec inspect (t:term) : tac term_view = wrap_err "inspect" (
       (match (t |> SS.compress |> U.unascribe).n with
        | Tm_fvar fv -> ret <| Tv_UInst (fv, us)
        | _ -> failwith "Tac::inspect: Tm_uinst head not an fvar")
+
+    | Tm_ascribed (t, (Inl ty, tacopt, eq), _elid) ->
+        ret <| Tv_AscribedT (t, ty, tacopt, eq)
+
+    | Tm_ascribed (t, (Inr cty, tacopt, eq), elid) ->
+        ret <| Tv_AscribedC (t, cty, tacopt, eq)
 
     | Tm_app (hd, []) ->
         failwith "empty arguments on Tm_app"
@@ -1787,7 +1806,7 @@ let rec inspect (t:term) : tac term_view = wrap_err "inspect" (
         ret <| Tv_Unknown
 
     | _ ->
-        Err.log_issue t.pos (Err.Warning_CantInspect, BU.format2 "inspect: outside of expected syntax (%s, %s)\n" (Print.tag_of_term t) (term_to_string e t));
+        Err.log_issue t.pos (Err.Warning_CantInspect, BU.format2 "inspect: outside of expected syntax (%s, %s)\n" (Print.tag_of_term t) (Print.term_to_string t));
         ret <| Tv_Unknown
     ))
 
@@ -1935,6 +1954,18 @@ let push_bv_dsenv (e: Env.env) (i: string): tac (env * bv)
   = let ident = Ident.mk_ident (i, FStar.Compiler.Range.dummyRange) in
     let dsenv, bv = FStar.Syntax.DsEnv.push_bv e.dsenv ident in
     ret ({ e with dsenv }, bv)
+
+let term_to_string (t:term) : tac string
+  = let s = Print.term_to_string t in
+    ret s
+
+let comp_to_string (c:comp) : tac string
+  = let s = Print.comp_to_string c in
+    ret s
+
+let term_eq' (t1:term) (t2:term) : tac bool
+  = bind idtac (fun () ->
+    ret (Syntax.Util.term_eq t1 t2))
 
 (**** Creating proper environments and proofstates ****)
 

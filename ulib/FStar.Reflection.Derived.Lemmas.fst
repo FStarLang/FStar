@@ -21,12 +21,10 @@ open FStar.Reflection.Data
 open FStar.Reflection.Derived
 open FStar.List.Tot
 
-(**** Helpers *)
-val uncurry : ('a -> 'b -> 'c) -> ('a * 'b -> 'c)
-let uncurry f (x, y) = f x y
-
-val curry : ('a * 'b -> 'c) -> ('a -> 'b -> 'c)
-let curry f x y = f (x, y)
+let rec forall_list (p:'a -> Type) (l:list 'a) : Type =
+    match l with
+    | [] -> True
+    | x::xs -> p x /\ forall_list p xs
 
 let forallP (p: 'a -> Type) (l: list 'a): Type
   = forall (x: 'a). memP x l ==> p x
@@ -44,31 +42,13 @@ let rec list_ref #a #p l =
     | [] -> []
     | x::xs -> x :: list_ref #a #p xs
 
-(**** [mk_app] and [collect_app] are invertible functions *)
-val mk_app_collect_inv_s : (t:term) -> (args:list argv) ->
-                            Lemma (uncurry mk_app (collect_app' args t) == mk_app t args)
-let rec mk_app_collect_inv_s t args =
-    match inspect_ln t with
-    | Tv_App l r ->
-        mk_app_collect_inv_s l (r::args);
-        pack_inspect_inv t
-    | _ -> ()
-
-val mk_app_collect_inv : (t:term) -> Lemma (uncurry mk_app (collect_app t) == t)
-let mk_app_collect_inv t = mk_app_collect_inv_s t []
-
-(**** [collect_app t] is smaller than [t] *)
-(*
- * The way back is not stricly true: the list of arguments could grow.
- * It's annoying to even state
- *)
 val collect_app_order' : (args:list argv) -> (tt:term) -> (t:term) ->
              Lemma (requires args <<: tt /\ t << tt)
                    (ensures (let fn, args' = collect_app' args t in
                              args' <<: tt /\ fn << tt))
                    (decreases t)
 let rec collect_app_order' args tt t =
-    match inspect_ln t with
+    match inspect_ln_unascribe t with
     | Tv_App l r -> collect_app_order' (r::args) tt l
     | _ -> ()
 
@@ -77,11 +57,11 @@ val collect_app_order : (t:term) ->
                               (f << t /\ s <<: t)
                             \/ (f == t /\ s == [])))
 let collect_app_order t =
-    match inspect_ln t with
+    match inspect_ln_unascribe t with
     | Tv_App l r -> collect_app_order' [r] t l
     | _ -> ()
 
-val collect_app_ref : (t:term) -> (h:term{h == t \/ h << t}) * list (a:argv{a << t})
+val collect_app_ref : (t:term) -> (h:term{h == t \/ h << t}) * list (a:argv{fst a << t})
 let collect_app_ref t =
     let h, a = collect_app t in
     collect_app_order t;
@@ -91,9 +71,9 @@ let collect_app_ref t =
 let rec collect_abs_order' (bds: binders) (tt t: term)
   : Lemma (requires t << tt /\ bds <<: tt)
           (ensures (let bds', body = collect_abs' bds t in
-                    bds' <<: tt /\ body << tt ))
+                    (bds' <<: tt /\ body << tt)))
           (decreases t)
-  = match inspect_ln t with
+  = match inspect_ln_unascribe t with
     | Tv_Abs b body -> collect_abs_order' (b::bds) tt body
     | _ -> ()
 
@@ -104,7 +84,7 @@ val collect_abs_ln_order : (t:term) ->
                               \/ (body == t /\ bds == [])
                   )
 let collect_abs_ln_order t =
-    match inspect_ln t with
+    match inspect_ln_unascribe t with
     | Tv_Abs b body -> collect_abs_order' [b] t body;
                       let bds, body = collect_abs' [] t in
                       Classical.forall_intro (rev_memP bds)
@@ -126,7 +106,7 @@ let rec collect_arr_order' (bds: binders) (tt: term) (c: comp)
           (decreases c)
   = match inspect_comp c with
     | C_Total ret _ _ ->
-        ( match inspect_ln ret with
+        ( match inspect_ln_unascribe ret with
         | Tv_Arrow b c -> collect_arr_order' (b::bds) tt c
         | _ -> ())
     | _ -> ()
@@ -138,7 +118,7 @@ val collect_arr_ln_bs_order : (t:term) ->
                               \/ (c == pack_comp (C_Total t u_unk []) /\ bds == [])
                   )
 let collect_arr_ln_bs_order t = 
-  match inspect_ln t with
+  match inspect_ln_unascribe t with
   | Tv_Arrow b c -> collect_arr_order' [b] t c;
                    Classical.forall_intro_2 (rev_memP #binder);
                    inspect_pack_comp_inv (C_Total t u_unk [])
@@ -150,4 +130,3 @@ let collect_arr_ln_bs_ref t =
     let bds, c = collect_arr_ln_bs t in
     collect_arr_ln_bs_order t;
     list_ref bds, c
-

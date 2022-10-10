@@ -502,6 +502,18 @@ let () =
       mk_tac_step_2 0 "push_bv_dsenv"
         push_bv_dsenv RE.e_env e_string (e_tuple2 RE.e_env RE.e_bv)
         push_bv_dsenv NRE.e_env NBET.e_string (NBET.e_tuple2 NRE.e_env NRE.e_bv);
+
+      mk_tac_step_1 0 "term_to_string"
+        term_to_string RE.e_term e_string
+        term_to_string NRE.e_term NBET.e_string;
+
+      mk_tac_step_1 0 "comp_to_string"
+        comp_to_string RE.e_comp e_string
+        comp_to_string NRE.e_comp NBET.e_string;
+
+      mk_tac_step_2 0 "term_eq'"
+        term_eq' RE.e_term RE.e_term e_bool
+        term_eq' NRE.e_term NRE.e_term NBET.e_bool;
     ]
 
 let unembed_tactic_1_alt (ea:embedding 'a) (er:embedding 'r) (f:term) (ncb:norm_cb) : option ('a -> tac 'r) =
