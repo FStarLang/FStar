@@ -22,6 +22,7 @@ open FStar.Tactics.Util
 open FStar.Reflection
 open FStar.Reflection.Formula
 
+(** Returns the current goal as a [formula]. *)
 let cur_formula () : Tac formula = term_as_formula (cur_goal ())
 
 private val revert_squash : (#a:Type) -> (#b : (a -> Type)) ->
@@ -29,10 +30,12 @@ private val revert_squash : (#a:Type) -> (#b : (a -> Type)) ->
                             x:a -> squash (b x)
 let revert_squash #a #b s x = let x : (_:unit{forall x. b x}) = s in ()
 
+(** Revert an introduced binder as a forall. *)
 let l_revert () : Tac unit =
     revert ();
     apply (`revert_squash)
 
+(** Repeated [l_revert]. *)
 let rec l_revert_all (bs:binders) : Tac unit =
     match bs with
     | []    -> ()
@@ -42,20 +45,24 @@ private let fa_intro_lem (#a:Type) (#p:a -> Type) (f:(x:a -> squash (p x))) : Le
   FStar.Classical.lemma_forall_intro_gtot
     ((fun x -> FStar.IndefiniteDescription.elim_squash (f x)) <: (x:a -> GTot (p x)))
 
+(** Introduce a forall. *)
 let forall_intro () : Tac binder =
     apply_lemma (`fa_intro_lem);
     intro ()
 
+(** Introduce a forall, with some given name. *)
 let forall_intro_as (s:string) : Tac binder =
     apply_lemma (`fa_intro_lem);
     intro_as s
 
+(** Repeated [forall_intro]. *)
 let forall_intros () : Tac binders = repeat1 forall_intro
 
 private val split_lem : (#a:Type) -> (#b:Type) ->
                         squash a -> squash b -> Lemma (a /\ b)
 let split_lem #a #b sa sb = ()
 
+(** Split a conjunction into two goals. *)
 let split () : Tac unit =
     try apply_lemma (`split_lem)
     with | _ -> fail "Could not split goal"
@@ -66,22 +73,19 @@ private val imp_intro_lem : (#a:Type) -> (#b : Type) ->
 let imp_intro_lem #a #b f =
   FStar.Classical.give_witness (FStar.Classical.arrow_to_impl (fun (x:squash a) -> FStar.Squash.bind_squash x f))
 
+(** Introduce an implication. *)
 let implies_intro () : Tac binder =
     apply_lemma (`imp_intro_lem);
     intro ()
 
+(** Repeated [implies_intro]. *)
 let implies_intros () : Tac binders = repeat1 implies_intro
 
+(** "Logical" intro: introduce a forall or an implication. *)
 let l_intro () = forall_intro `or_else` implies_intro
+
+(** Repeated [l]. *)
 let l_intros () = repeat l_intro
-
-(* This should be next to mapply... bring mapply here?
- * Or make a separate module? *)
-let mintro () : Tac binder =
-    first [intro; implies_intro; forall_intro; (fun () -> fail "cannot intro")]
-
-let mintros () : Tac (list binder) =
-    repeat mintro
 
 let squash_intro () : Tac unit =
     apply (`FStar.Squash.return_squash)
@@ -178,6 +182,8 @@ let rec unfold_definition_and_simplify_eq (tm:term) : Tac unit =
 private val vbind : (#p:Type) -> (#q:Type) -> squash p -> (p -> squash q) -> Lemma q
 let vbind #p #q sq f = FStar.Classical.give_witness_from_squash (FStar.Squash.bind_squash sq f)
 
+(** A tactic to unsquash a hypothesis. Perhaps you are looking
+for [unsquash_term]. *)
 let unsquash (t:term) : Tac term =
     let v = `vbind in
     apply_lemma (mk_e_app v [t]);

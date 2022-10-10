@@ -18,6 +18,8 @@ module FStar.Tactics.Util
 open FStar.Tactics.Effect
 open FStar.List.Tot
 
+(* GM: What's the rationale for setting the limits and fuel? *)
+
 #set-options "--z3rlimit 25 --fuel 0 --ifuel 0"
 
 (* Tac list functions, since there's no effect polymorphism *)
@@ -115,3 +117,9 @@ let map_opt (f:'a -> Tac 'b) (x:option 'a) : Tac (option 'b) =
   match x with
   | None -> None
   | Some x -> Some (f x)
+
+(** Apply a given tactic [t] repeatedly [n] times and return the results. *)
+let rec repeatn (#a:Type) (n : int) (t : unit -> Tac a) : Tac (list a) =
+    if n <= 0
+    then []
+    else t () :: repeatn (n - 1) t
