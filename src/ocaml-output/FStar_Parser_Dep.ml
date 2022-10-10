@@ -1291,14 +1291,14 @@ let (collect_one :
                  (collect_binders binders;
                   FStar_Compiler_Util.iter_opt k collect_term;
                   collect_term t)
-             | FStar_Parser_AST.TyconRecord (uu___3, binders, k, identterms)
-                 ->
+             | FStar_Parser_AST.TyconRecord
+                 (uu___3, binders, k, uu___4, identterms) ->
                  (collect_binders binders;
                   FStar_Compiler_Util.iter_opt k collect_term;
                   FStar_Compiler_List.iter
-                    (fun uu___6 ->
-                       match uu___6 with
-                       | (uu___7, aq, attrs, t) ->
+                    (fun uu___7 ->
+                       match uu___7 with
+                       | (uu___8, aq, attrs, t) ->
                            (collect_aqual aq;
                             FStar_Compiler_Effect.op_Bar_Greater attrs
                               (FStar_Compiler_List.iter collect_term);
@@ -1310,7 +1310,7 @@ let (collect_one :
                   FStar_Compiler_List.iter
                     (fun uu___6 ->
                        match uu___6 with
-                       | (uu___7, t, uu___8) ->
+                       | (uu___7, t, uu___8, uu___9) ->
                            FStar_Compiler_Util.iter_opt t collect_term)
                     identterms)
            and collect_effect_decl uu___2 =
