@@ -1032,7 +1032,7 @@ let is_layered_effect env l =
   l |> get_effect_decl env |> U.is_layered
 
 let identity_mlift : mlift =
-  { mlift_wp=(fun _ c -> c, trivial_guard);
+  { mlift_wp=(fun _ _ c -> c, trivial_guard);
     mlift_term=Some (fun _ _ e -> return_all e) }
 
 let join_opt env (l1:lident) (l2:lident) : option (lident * mlift * mlift) =
@@ -1308,9 +1308,10 @@ let print_effects_graph env =
 let update_effect_lattice env src tgt st_mlift =
   let compose_edges e1 e2 : edge =
     let composed_lift =
-      let mlift_wp env c =
-        c |> e1.mlift.mlift_wp env
-	  |> (fun (c, g1) -> c |> e2.mlift.mlift_wp env |> (fun (c, g2) -> c, TcComm.conj_guard g1 g2)) in
+      let mlift_wp env guard_indexed_effect_uvars c =
+        c |> e1.mlift.mlift_wp env guard_indexed_effect_uvars
+	  |> (fun (c, g1) -> c |> e2.mlift.mlift_wp env guard_indexed_effect_uvars
+                           |> (fun (c, g2) -> c, TcComm.conj_guard g1 g2)) in
       let mlift_term =
         match e1.mlift.mlift_term, e2.mlift.mlift_term with
         | Some l1, Some l2 -> Some (fun u t e -> l2 u t (l1 u t e))

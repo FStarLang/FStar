@@ -4062,7 +4062,8 @@ and solve_c (env:Env.env) (problem:problem comp) (wl:worklist) : solution =
             (c2.effect_name |> Ident.ident_of_lid |> Ident.string_of_id) in
 
           let lift_c1 (edge:edge) : comp_typ * guard_t =
-            c1 |> S.mk_Comp |> edge.mlift.mlift_wp env
+            let guard_indexed_effect_uvars = true in
+            c1 |> S.mk_Comp |> edge.mlift.mlift_wp env guard_indexed_effect_uvars
                |> (fun (c, g) -> U.comp_to_comp_typ c, g) in
   
           let c1, g_lift, stronger_t_opt, is_polymonadic =
@@ -4163,9 +4164,9 @@ and solve_c (env:Env.env) (problem:problem comp) (wl:worklist) : solution =
                   stronger_t_shape_error "not an arrow or not enough binders") r in
 
             let rest_bs_uvars, _, g_uvars =
-              let with_guard_uvar = false in
+              let guard_indexed_effect_uvars = false in
               Env.uvars_for_binders env rest_bs
-                [NT (a_b.binder_bv, c2.result_typ)] with_guard_uvar
+                [NT (a_b.binder_bv, c2.result_typ)] guard_indexed_effect_uvars
                 (fun b -> BU.format3 "implicit for binder %s in subcomp of %s at %s"
                         (Print.binder_to_string b)
                         (Ident.string_of_lid c2.effect_name)
@@ -4234,9 +4235,10 @@ and solve_c (env:Env.env) (problem:problem comp) (wl:worklist) : solution =
                | [] -> [env.universe_of env c1.result_typ]
                | x -> x in
              let c1 = { c1 with comp_univs = univs } in
+             let guard_indexed_effect_uvars = true in
              ({ c1 with comp_univs = univs })
              |> S.mk_Comp
-             |> edge.mlift.mlift_wp env
+             |> edge.mlift.mlift_wp env guard_indexed_effect_uvars
              |> (fun (c, g) ->
                  if not (Env.is_trivial g)
                  then raise_error (Errors.Fatal_UnexpectedEffect,
