@@ -144,7 +144,33 @@ let malloc
   intro_varray res _;
   return res
 
-/// Freeing a full array. 
+/// Allocating a new array, whose initial values are specified by the
+/// ```init``` list, which must be nonempty, and of length representable as
+/// a machine integer
+
+unfold let alloca_of_list_pre (#elt:Type) (init:list elt) =
+  normalize (0 < FStar.List.Tot.length init) /\
+  normalize (FStar.List.Tot.length init <= UInt.max_int 32)
+
+inline_for_extraction
+[@@noextract_to "krml"]
+let malloca_of_list
+  (#elt: Type)
+  (init: list elt)
+  : Steel (array elt)
+       emp
+       (fun a -> varray a)
+       (fun _ -> alloca_of_list_pre init)
+       (fun _ a h' ->
+         length a == normalize_term (List.Tot.length init) /\
+         is_full_array a /\
+         asel a h' == Seq.seq_of_list init
+       )
+= let res = A.malloca_of_list init in
+  intro_varray res _;
+  return res
+
+/// Freeing a full array.
 inline_for_extraction
 [@@ noextract_to "krml";
     warn_on_use "Steel.Array.free is currently unsound in the presence of zero-size subarrays, have you collected them all?"]
