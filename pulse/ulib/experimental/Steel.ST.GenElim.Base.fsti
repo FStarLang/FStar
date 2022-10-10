@@ -307,7 +307,7 @@ let rec term_has_head
   (head: T.term)
 : T.Tac bool
 = let (hd, tl) = T.collect_app t in
-  if hd `T.term_eq'` head
+  if hd `T.term_eq_old` head
   then true
   else if is_star_or_vstar hd
   then
@@ -501,7 +501,7 @@ let rec solve_gen_elim_nondep' (fuel: nat) (rev_types_and_binders: list (T.term 
         try
           let env = cur_env () in
           let ty = tc env type_list in
-          ty `term_eq'` (`(list Type0))
+          ty `term_eq_old` (`(list Type0))
         with _ -> false
       in
       if not type_list_typechecks
@@ -573,7 +573,7 @@ let solve_gen_elim_prop
     then T.fail "not a gen_elim_prop goal";
     begin match List.Tot.filter (fun (_, x) -> T.Q_Explicit? x) tl1 with
     | [(enable_nondep_opt_tm, _); (p, _); (a, _); (q, _); (post, _)] ->
-      let enable_nondep_opt = enable_nondep_opt_tm `T.term_eq'` (`true) in
+      let enable_nondep_opt = enable_nondep_opt_tm `T.term_eq_old` (`true) in
       let i' = solve_gen_elim p in
       let norm () = T.norm [delta_attr [(`%gen_elim_reduce)]; zeta; iota] in
       begin match solve_gen_elim_nondep0 enable_nondep_opt i' with
@@ -624,7 +624,7 @@ let solve_gen_elim_prop_placeholder
       let post_is_uvar = T.Tv_Uvar? (T.inspect post) in
       if not (a_is_uvar && q_is_uvar && post_is_uvar)
       then T.fail "gen_elim_prop_placeholder is already solved";
-      let enable_nondep_opt = enable_nondep_opt_tm `T.term_eq'` (`true) in
+      let enable_nondep_opt = enable_nondep_opt_tm `T.term_eq_old` (`true) in
       let i' = solve_gen_elim p in
       let j' = solve_gen_elim_nondep enable_nondep_opt i' in
       let norm_term = T.norm_term [delta_attr [(`%gen_elim_reduce)]; zeta; iota] in
