@@ -12,6 +12,17 @@ let sum_to_n_for (r:ref UInt32.t) : SteelT unit (vptr r) (fun _ -> vptr r) =
     (fun _ -> vptr r)
     (fun _ -> let x = read r in write r (x `FStar.UInt32.add_mod` 1ul))
 
+let sum_to_n_for_2 (r:ref UInt32.t) : Steel unit (vptr r) (fun _ -> vptr r)
+  (requires fun h -> sel r h == 0ul)
+  (ensures fun h0 _ h1 -> sel r h1 == 10ul)
+=
+  for_loop_full
+    0ul
+    10ul
+    (fun _ -> vptr r)
+    (fun i v -> v == UInt32.uint_to_t i)
+    (fun _ -> let x = read r in write r (x `FStar.UInt32.add_mod` 1ul))
+
 let sum_to_n_while (r:ref UInt32.t) : SteelT unit (vptr r) (fun _ -> vptr r) =
   intro_exists (Ghost.hide true) (fun _ -> vptr r);
   while_loop
