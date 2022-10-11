@@ -6602,9 +6602,25 @@ let (uvars_for_binders :
                                                          let uu___9 =
                                                            FStar_Syntax_Print.ctx_uvar_to_string_no_reason
                                                              ctx_uvar in
-                                                         FStar_Compiler_Util.print1
-                                                           "Layered Effect uvar : %s\n"
-                                                           uu___9)
+                                                         let uu___10 =
+                                                           let uu___11 =
+                                                             FStar_Syntax_Util.ctx_uvar_uvar_kind
+                                                               ctx_uvar in
+                                                           match uu___11 with
+                                                           | FStar_Pervasives.Inl
+                                                               (FStar_Pervasives_Native.None)
+                                                               -> "None"
+                                                           | FStar_Pervasives.Inl
+                                                               (FStar_Pervasives_Native.Some
+                                                               uv) ->
+                                                               FStar_Syntax_Print.ctx_uvar_to_string_no_reason
+                                                                 ctx_uvar
+                                                           | uu___12 ->
+                                                               failwith
+                                                                 "Impossible!" in
+                                                         FStar_Compiler_Util.print2
+                                                           "Layered Effect uvar : %s (Typing guard uvar : %s)\n"
+                                                           uu___9 uu___10)
                                                   l_ctx_uvars
                                               else ());
                                              (let uu___6 = conj_guard g g_t in

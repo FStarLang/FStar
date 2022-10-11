@@ -1881,8 +1881,12 @@ let uvars_for_binders env (bs:S.binders) substs add_guard_uvars reason r =
       (reason b) r env sort (Allow_untyped "layered effects binder") (Inl guard_uvar_opt) ctx_uvar_meta_t in
 
     if debug env <| Options.Other "LayeredEffectsEqns"
-    then List.iter (fun (ctx_uvar, _) -> BU.print1 "Layered Effect uvar : %s\n"
-      (Print.ctx_uvar_to_string_no_reason ctx_uvar)) l_ctx_uvars;
+    then List.iter (fun (ctx_uvar, _) -> BU.print2 "Layered Effect uvar : %s (Typing guard uvar : %s)\n"
+      (Print.ctx_uvar_to_string_no_reason ctx_uvar)
+      (match U.ctx_uvar_uvar_kind ctx_uvar with
+       | Inl None -> "None"
+       | Inl (Some uv) -> Print.ctx_uvar_to_string_no_reason ctx_uvar
+       | _ -> failwith "Impossible!")) l_ctx_uvars;
 
     substs@[NT (b.binder_bv, t)], uvars@[t], conj_guard g g_t
   ) (substs, [], g_guard_uvars) |> (fun (_, uvars, g) -> uvars, guard_uvar_tms, g)

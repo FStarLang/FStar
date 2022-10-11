@@ -14832,14 +14832,33 @@ and (resolve_implicits' :
                          | FStar_Pervasives.Inl uu___5 -> [t_imp]
                          | FStar_Pervasives.Inr fmls ->
                              ((let uu___6 =
+                                 FStar_Compiler_Effect.op_Less_Bar
+                                   (FStar_TypeChecker_Env.debug env)
+                                   (FStar_Options.Other "Rel") in
+                               if uu___6
+                               then
                                  let uu___7 =
-                                   let uu___8 =
-                                     let uu___9 =
+                                   FStar_Syntax_Print.ctx_uvar_to_string
+                                     imp_uvar in
+                                 let uu___8 =
+                                   let uu___9 =
+                                     FStar_Compiler_Effect.op_Bar_Greater
+                                       fmls FStar_Syntax_Util.mk_conj_l in
+                                   FStar_Compiler_Effect.op_Bar_Greater
+                                     uu___9 FStar_Syntax_Print.term_to_string in
+                                 FStar_Compiler_Util.print2
+                                   "resolve_implicits': solving typing guard uvar %s with %s\n"
+                                   uu___7 uu___8
+                               else ());
+                              (let uu___7 =
+                                 let uu___8 =
+                                   let uu___9 =
+                                     let uu___10 =
                                        FStar_Syntax_Util.mk_conj_l fmls in
-                                     (imp_uvar, uu___9) in
-                                   TERM uu___8 in
-                                 [uu___7] in
-                               commit env uu___6);
+                                     (imp_uvar, uu___10) in
+                                   TERM uu___9 in
+                                 [uu___8] in
+                               commit env uu___7);
                               []))
                     | uu___1 -> [t_imp])) in
           FStar_Compiler_Effect.op_Bar_Greater uu___

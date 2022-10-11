@@ -4994,21 +4994,21 @@ let check_implicit_solution_and_discharge_guard env imp force_univ_constraints
          (N.term_to_string env (U.ctx_uvar_typ ctx_u)))
       (fun () -> check_implicit_solution env tm (U.ctx_uvar_typ ctx_u) must_tot ctx_u.ctx_uvar_reason) in
 
-    if (not force_univ_constraints) &&
-       (List.existsb (fun (reason, _, _) -> reason = Deferred_univ_constraint) g.deferred)
-    then None
-    else let g' =
-          (match discharge_guard'
-                   (Some (fun () ->
-                          BU.format4 "%s (Introduced at %s for %s resolved at %s)"
-                            (Print.term_to_string tm)
-                            (Range.string_of_range r)
-                            reason
-                            (Range.string_of_range tm.pos)))
-                   env g true with
-           | Some g -> g
-           | None -> failwith "Impossible, with use_smt = true, discharge_guard' must return Some") in
-         g'.implicits |> Some
+  if (not force_univ_constraints) &&
+     (List.existsb (fun (reason, _, _) -> reason = Deferred_univ_constraint) g.deferred)
+  then None
+  else let g' =
+         (match discharge_guard'
+                  (Some (fun () ->
+                         BU.format4 "%s (Introduced at %s for %s resolved at %s)"
+                           (Print.term_to_string tm)
+                           (Range.string_of_range r)
+                           reason
+                           (Range.string_of_range tm.pos)))
+                env g true with
+          | Some g -> g
+          | None -> failwith "Impossible, with use_smt = true, discharge_guard' must return Some") in
+       g'.implicits |> Some
 
 (*
  * resolve_implicits' uses it to determine if a ctx uvar is unresolved
@@ -5254,6 +5254,10 @@ and resolve_implicits' env is_tac (implicits:Env.implicits)
                        (match U.ctx_uvar_uvar_kind imp_uvar with
                         | Inl _ -> [t_imp]
                         | Inr fmls ->
+                          if Env.debug env <| Options.Other "Rel"
+                          then BU.print2 "resolve_implicits': solving typing guard uvar %s with %s\n"
+                            (Print.ctx_uvar_to_string imp_uvar)
+                            (fmls |> U.mk_conj_l |> Print.term_to_string);
                           commit env [TERM (imp_uvar, U.mk_conj_l fmls)];
                           [])
                       | _ -> [t_imp])

@@ -287,7 +287,7 @@ let proc_guard = proc_guard' true
 // See if any of the implicits in uvs were solved in a Rel call,
 //   if so, core check them
 //
-let tc_unifier_solved_implicits env (must_tot:bool) (allow_guards:bool) (uvs:list ctx_uvar) : tac unit =
+let tc_unifier_solved_implicits dbg env (must_tot:bool) (allow_guards:bool) (uvs:list ctx_uvar) : tac unit =
   let aux (u:ctx_uvar) : tac unit =
     match UF.find u.ctx_uvar_head with
     | None -> ret () //not solved yet
@@ -320,6 +320,10 @@ let tc_unifier_solved_implicits env (must_tot:bool) (allow_guards:bool) (uvs:lis
           let k = U.ctx_uvar_uvar_kind u in
           if Inl? k && Some? (Inl?.v k)
           then let guard_uv = Some?.v (Inl?.v k) in
+               if dbg
+               then BU.print2 "tc_unifier_solved_implicits: adding guard %s to guard uvar %s\n"
+                      (Print.term_to_string phi)
+                      (Print.ctx_uvar_to_string guard_uv);
                add_guard_to_guard_uvar guard_uv phi;
                ret ()          
           else (
@@ -387,7 +391,7 @@ let __do_unify_wflags
           | None ->
             ret None
           | Some g ->
-            tc_unifier_solved_implicits env must_tot allow_guards all_uvars;!
+            tc_unifier_solved_implicits dbg env must_tot allow_guards all_uvars;!
             add_implicits g.implicits;!
             ret (Some g)
   
