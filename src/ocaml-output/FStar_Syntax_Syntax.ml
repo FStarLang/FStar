@@ -233,10 +233,8 @@ and uvar_decoration =
   {
   uvar_decoration_typ: term' syntax ;
   uvar_decoration_should_check: should_check_uvar ;
-  uvar_decoration_uvar_kind:
-    (ctx_uvar FStar_Pervasives_Native.option, term' syntax Prims.list)
-      FStar_Pervasives.either
-    }
+  uvar_decoration_kind:
+    (ctx_uvar FStar_Pervasives_Native.option, unit) FStar_Pervasives.either }
 and pat' =
   | Pat_constant of sconst 
   | Pat_cons of (fv * universes FStar_Pervasives_Native.option * (pat'
@@ -538,22 +536,21 @@ let (__proj__Mkuvar_decoration__item__uvar_decoration_typ :
   fun projectee ->
     match projectee with
     | { uvar_decoration_typ; uvar_decoration_should_check;
-        uvar_decoration_uvar_kind;_} -> uvar_decoration_typ
+        uvar_decoration_kind;_} -> uvar_decoration_typ
 let (__proj__Mkuvar_decoration__item__uvar_decoration_should_check :
   uvar_decoration -> should_check_uvar) =
   fun projectee ->
     match projectee with
     | { uvar_decoration_typ; uvar_decoration_should_check;
-        uvar_decoration_uvar_kind;_} -> uvar_decoration_should_check
-let (__proj__Mkuvar_decoration__item__uvar_decoration_uvar_kind :
+        uvar_decoration_kind;_} -> uvar_decoration_should_check
+let (__proj__Mkuvar_decoration__item__uvar_decoration_kind :
   uvar_decoration ->
-    (ctx_uvar FStar_Pervasives_Native.option, term' syntax Prims.list)
-      FStar_Pervasives.either)
+    (ctx_uvar FStar_Pervasives_Native.option, unit) FStar_Pervasives.either)
   =
   fun projectee ->
     match projectee with
     | { uvar_decoration_typ; uvar_decoration_should_check;
-        uvar_decoration_uvar_kind;_} -> uvar_decoration_uvar_kind
+        uvar_decoration_kind;_} -> uvar_decoration_kind
 let (uu___is_Pat_constant : pat' -> Prims.bool) =
   fun projectee ->
     match projectee with | Pat_constant _0 -> true | uu___ -> false

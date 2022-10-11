@@ -228,8 +228,9 @@ and solver_t = {
 }
 and tcenv_hooks =
   { tc_push_in_gamma_hook : (env -> either binding sig_binding -> unit) }
-and core_check_t = 
-  env -> term -> typ -> bool -> either (option typ) (bool -> string)
+
+and core_check_ret_t = either (option typ) (bool -> string)
+and core_check_t = env -> term -> typ -> bool -> core_check_ret_t
 
 type implicit = TcComm.implicit
 type implicits = TcComm.implicits

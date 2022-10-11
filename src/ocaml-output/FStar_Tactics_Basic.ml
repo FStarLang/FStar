@@ -86,38 +86,9 @@ let (set_uvar_expected_typ :
           FStar_Syntax_Syntax.uvar_decoration_typ = t;
           FStar_Syntax_Syntax.uvar_decoration_should_check =
             (dec.FStar_Syntax_Syntax.uvar_decoration_should_check);
-          FStar_Syntax_Syntax.uvar_decoration_uvar_kind =
-            (dec.FStar_Syntax_Syntax.uvar_decoration_uvar_kind)
+          FStar_Syntax_Syntax.uvar_decoration_kind =
+            (dec.FStar_Syntax_Syntax.uvar_decoration_kind)
         }
-let (add_guard_to_guard_uvar :
-  FStar_Syntax_Syntax.ctx_uvar -> FStar_Reflection_Data.typ -> unit) =
-  fun u ->
-    fun phi ->
-      let uu___ =
-        FStar_Syntax_Unionfind.find u.FStar_Syntax_Syntax.ctx_uvar_head in
-      match uu___ with
-      | FStar_Pervasives_Native.Some uu___1 ->
-          failwith "Guard uvar unexpectedly solved already"
-      | uu___1 ->
-          let dec =
-            FStar_Syntax_Unionfind.find_decoration
-              u.FStar_Syntax_Syntax.ctx_uvar_head in
-          (match dec.FStar_Syntax_Syntax.uvar_decoration_uvar_kind with
-           | FStar_Pervasives.Inr l ->
-               FStar_Syntax_Unionfind.change_decoration
-                 u.FStar_Syntax_Syntax.ctx_uvar_head
-                 {
-                   FStar_Syntax_Syntax.uvar_decoration_typ =
-                     (dec.FStar_Syntax_Syntax.uvar_decoration_typ);
-                   FStar_Syntax_Syntax.uvar_decoration_should_check =
-                     (dec.FStar_Syntax_Syntax.uvar_decoration_should_check);
-                   FStar_Syntax_Syntax.uvar_decoration_uvar_kind =
-                     (FStar_Pervasives.Inr
-                        (FStar_Compiler_List.op_At l [phi]))
-                 }
-           | uu___2 ->
-               failwith
-                 "Unexpected ctx_uvar passed to add_guard_to_guard_uvar")
 let (mark_uvar_as_already_checked : FStar_Syntax_Syntax.ctx_uvar -> unit) =
   fun u ->
     let dec =
@@ -130,8 +101,8 @@ let (mark_uvar_as_already_checked : FStar_Syntax_Syntax.ctx_uvar -> unit) =
           (dec.FStar_Syntax_Syntax.uvar_decoration_typ);
         FStar_Syntax_Syntax.uvar_decoration_should_check =
           FStar_Syntax_Syntax.Already_checked;
-        FStar_Syntax_Syntax.uvar_decoration_uvar_kind =
-          (dec.FStar_Syntax_Syntax.uvar_decoration_uvar_kind)
+        FStar_Syntax_Syntax.uvar_decoration_kind =
+          (dec.FStar_Syntax_Syntax.uvar_decoration_kind)
       }
 let (mark_goal_implicit_already_checked : FStar_Tactics_Types.goal -> unit) =
   fun g -> mark_uvar_as_already_checked g.FStar_Tactics_Types.goal_ctx_uvar
@@ -576,13 +547,14 @@ let (proc_guard :
       FStar_TypeChecker_Common.guard_t ->
         FStar_Compiler_Range.range -> unit FStar_Tactics_Monad.tac)
   = proc_guard' true
-let (tc_unifier_solved_implicits :
-  Prims.bool ->
-    FStar_TypeChecker_Env.env ->
-      Prims.bool ->
+let tc_unifier_solved_implicits :
+  'uuuuu .
+    'uuuuu ->
+      FStar_TypeChecker_Env.env ->
         Prims.bool ->
-          FStar_Syntax_Syntax.ctx_uvar Prims.list ->
-            unit FStar_Tactics_Monad.tac)
+          Prims.bool ->
+            FStar_Syntax_Syntax.ctx_uvar Prims.list ->
+              unit FStar_Tactics_Monad.tac
   =
   fun dbg ->
     fun env1 ->
@@ -704,7 +676,8 @@ let (tc_unifier_solved_implicits :
                     } in
                   let uu___1 =
                     let uu___2 = FStar_Syntax_Util.ctx_uvar_typ u in
-                    core_check env2 sol uu___2 must_tot in
+                    FStar_TypeChecker_Rel.core_check_and_maybe_add_to_guard_uvar
+                      env2 u sol uu___2 must_tot in
                   (match uu___1 with
                    | FStar_Pervasives.Inl (FStar_Pervasives_Native.None) ->
                        (mark_uvar_as_already_checked u;
@@ -740,51 +713,19 @@ let (tc_unifier_solved_implicits :
                               "Could not typecheck unifier solved implicit %s to %s since it produced a guard and guards were not allowed"
                               uu___3 uu___4)
                          else
-                           (let phi =
-                              let uu___4 =
-                                FStar_TypeChecker_Env.guard_form guard1 in
-                              match uu___4 with
-                              | FStar_TypeChecker_Common.NonTrivial phi1 ->
-                                  phi1
-                              | uu___5 -> failwith "Impossible!" in
-                            let k = FStar_Syntax_Util.ctx_uvar_uvar_kind u in
-                            if
-                              (FStar_Pervasives.uu___is_Inl k) &&
-                                (FStar_Pervasives_Native.uu___is_Some
-                                   (FStar_Pervasives.__proj__Inl__item__v k))
-                            then
-                              let guard_uv =
-                                FStar_Pervasives_Native.__proj__Some__item__v
-                                  (FStar_Pervasives.__proj__Inl__item__v k) in
-                              (if dbg
-                               then
-                                 (let uu___5 =
-                                    FStar_Syntax_Print.term_to_string phi in
-                                  let uu___6 =
-                                    FStar_Syntax_Print.ctx_uvar_to_string
-                                      guard_uv in
-                                  FStar_Compiler_Util.print2
-                                    "tc_unifier_solved_implicits: adding guard %s to guard uvar %s\n"
-                                    uu___5 uu___6)
-                               else ();
-                               add_guard_to_guard_uvar guard_uv phi;
-                               FStar_Tactics_Monad.ret ())
-                            else
-                              (let uu___5 =
-                                 proc_guard' false "guard for implicit" env2
-                                   guard1
-                                   u.FStar_Syntax_Syntax.ctx_uvar_range in
-                               FStar_Tactics_Monad.op_let_Bang uu___5
-                                 (fun uu___6 ->
-                                    mark_uvar_as_already_checked u;
-                                    FStar_Tactics_Monad.ret ())))
+                           (let uu___4 =
+                              proc_guard' false "guard for implicit" env2
+                                guard1 u.FStar_Syntax_Syntax.ctx_uvar_range in
+                            FStar_Tactics_Monad.op_let_Bang uu___4
+                              (fun uu___5 ->
+                                 mark_uvar_as_already_checked u;
+                                 FStar_Tactics_Monad.ret ()))
                    | FStar_Pervasives.Inr failed ->
                        let uu___2 =
                          FStar_Syntax_Print.uvar_to_string
                            u.FStar_Syntax_Syntax.ctx_uvar_head in
                        let uu___3 = term_to_string env2 sol in
-                       let uu___4 =
-                         FStar_TypeChecker_Core.print_error_short failed in
+                       let uu___4 = failed true in
                        fail3
                          "Could not typecheck unifier solved implicit %s to %s because %s"
                          uu___2 uu___3 uu___4) in

@@ -114,19 +114,6 @@ let set_uvar_expected_typ (u:ctx_uvar) (t:typ)
   = let dec = UF.find_decoration u.ctx_uvar_head in
     UF.change_decoration u.ctx_uvar_head ({dec with uvar_decoration_typ = t })
 
-let add_guard_to_guard_uvar (u:ctx_uvar) (phi:typ)
-  : unit
-  = match FStar.Syntax.Unionfind.find u.ctx_uvar_head with
-    | Some _ ->
-      // AR: this may happen, if Rel decided to create a new uvar for this?
-      failwith "Guard uvar unexpectedly solved already"
-    | _ ->
-      let dec = UF.find_decoration u.ctx_uvar_head in
-      match dec.uvar_decoration_uvar_kind with
-      | Inr l -> 
-        UF.change_decoration u.ctx_uvar_head ({dec with uvar_decoration_uvar_kind = Inr (l@[phi]) })
-      | _ -> failwith "Unexpected ctx_uvar passed to add_guard_to_guard_uvar"
-
 let mark_uvar_as_already_checked (u:ctx_uvar)
   : unit
   = let dec = UF.find_decoration u.ctx_uvar_head in
@@ -293,9 +280,10 @@ let tc_unifier_solved_implicits dbg env (must_tot:bool) (allow_guards:bool) (uvs
     | None -> ret () //not solved yet
     | Some sol ->  //solved, check it
       let env = {env with gamma=u.ctx_uvar_gamma} in
-      match core_check env sol (U.ctx_uvar_typ u) must_tot with
+      match Rel.core_check_and_maybe_add_to_guard_uvar env u sol (U.ctx_uvar_typ u) must_tot with
       | Inl None ->
         //checked with no guard
+        //or folded into some guard uvar
         //no need to check it again
         mark_uvar_as_already_checked u;
         ret ()
@@ -312,32 +300,17 @@ let tc_unifier_solved_implicits dbg env (must_tot:bool) (allow_guards:bool) (uvs
             (Print.uvar_to_string u.ctx_uvar_head)
             (term_to_string env sol)
         )
-        else begin
-          let phi =
-            match Env.guard_form guard with
-            | NonTrivial phi -> phi
-            | _ -> failwith "Impossible!" in
-          let k = U.ctx_uvar_uvar_kind u in
-          if Inl? k && Some? (Inl?.v k)
-          then let guard_uv = Some?.v (Inl?.v k) in
-               if dbg
-               then BU.print2 "tc_unifier_solved_implicits: adding guard %s to guard uvar %s\n"
-                      (Print.term_to_string phi)
-                      (Print.ctx_uvar_to_string guard_uv);
-               add_guard_to_guard_uvar guard_uv phi;
-               ret ()          
-          else (
-            proc_guard' false "guard for implicit" env guard u.ctx_uvar_range ;!
-            mark_uvar_as_already_checked u;
-            ret ()
-          )
-        end
+        else (
+          proc_guard' false "guard for implicit" env guard u.ctx_uvar_range ;!
+          mark_uvar_as_already_checked u;
+          ret ()
+        )
               
       | Inr failed ->
         fail3 "Could not typecheck unifier solved implicit %s to %s because %s" 
           (Print.uvar_to_string u.ctx_uvar_head)
           (term_to_string env sol)
-          (Core.print_error_short failed)
+          (failed true)
   in
   uvs |> iter_tac aux
 

@@ -126,7 +126,7 @@ let new_uvar reason wl r gamma binders k should_check kind meta : ctx_uvar * ter
     let decoration = {
              uvar_decoration_typ = k;
              uvar_decoration_should_check = should_check;
-             uvar_decoration_uvar_kind = kind;
+             uvar_decoration_kind = kind;
         }
     in
     let ctx_uvar = {
@@ -150,12 +150,12 @@ let new_uvar reason wl r gamma binders k should_check kind meta : ctx_uvar * ter
 
 let rec copy_uvar u (bs:binders) t wl =
   let kind, wl =
-    match U.ctx_uvar_uvar_kind u with
+    match U.ctx_uvar_kind u with
     | Inl None -> Inl None, wl
     | Inl (Some u) ->
       let u, _, wl = copy_uvar u bs t wl in
       Inl (Some u), wl
-    | Inr _ -> Inr [], wl in
+    | Inr () -> Inr (), wl in
   let env = {wl.tcenv with gamma = u.ctx_uvar_gamma } in
   let env = Env.push_binders env bs in
   new_uvar ("copy:"^u.ctx_uvar_reason) wl u.ctx_uvar_range env.gamma
@@ -1077,7 +1077,7 @@ let restrict_ctx env (tgt:ctx_uvar) (bs:binders) (src:ctx_uvar) wl : worklist =
     let _, src', wl = new_uvar ("restricted " ^ (Print.uvar_to_string src.ctx_uvar_head)) wl
       src.ctx_uvar_range g pfx t
       (U.ctx_uvar_should_check src)
-      (U.ctx_uvar_uvar_kind src)
+      (U.ctx_uvar_kind src)
       src.ctx_uvar_meta in
     set_uvar env src (Some (Allow_untyped "assigned solution will be checked")) (f src');
 
@@ -4912,13 +4912,24 @@ let try_solve_single_valued_implicits env is_tac (imps:Env.implicits) : Env.impl
 
     imps, b
 
+let core_check_and_maybe_add_to_guard_uvar env uv t k must_tot =
+  match env.core_check env t k must_tot with
+  | Inl (Some vc) ->
+    (match U.ctx_uvar_kind uv with
+     | Inl None -> Inl (Some vc)
+     | Inl (Some g_uv) ->
+       commit env [TERM (g_uv, vc)];
+       Inl None
+     | Inr () -> failwith "Impossible!")
+  | r -> r
+
 (*
  * Check that an implicit solution t has an expected type k
  *   we know that G |- t : (G)Tot k', for some k'
  *
  * must_tot : if t must be a Tot
  *)
-let check_implicit_solution env t k (must_tot:bool) (reason:string) : guard_t =
+let check_implicit_solution env uv t k (must_tot:bool) (reason:string) : guard_t =
   (*
    * AR: when we create lambda terms as solutions to implicits (in u_abs),
    *       we set the type in the residual comp to be the type of the uvar
@@ -4948,7 +4959,7 @@ let check_implicit_solution env t k (must_tot:bool) (reason:string) : guard_t =
   if not (env.phase1) //this can be false if we're running in lax mode without phase2 to follow
   && not env.lax //no point running core checker if we're in lax mode
    then (
-    match env.core_check env t k must_tot with
+    match core_check_and_maybe_add_to_guard_uvar env uv t k must_tot with
     | Inl None ->
       trivial_guard
     | Inl (Some g) -> 
@@ -4992,7 +5003,7 @@ let check_implicit_solution_and_discharge_guard env imp force_univ_constraints
          (Print.uvar_to_string ctx_u.ctx_uvar_head)
          (N.term_to_string env tm)
          (N.term_to_string env (U.ctx_uvar_typ ctx_u)))
-      (fun () -> check_implicit_solution env tm (U.ctx_uvar_typ ctx_u) must_tot ctx_u.ctx_uvar_reason) in
+      (fun () -> check_implicit_solution env ctx_u tm (U.ctx_uvar_typ ctx_u) must_tot ctx_u.ctx_uvar_reason) in
 
   if (not force_univ_constraints) &&
      (List.existsb (fun (reason, _, _) -> reason = Deferred_univ_constraint) g.deferred)
@@ -5063,7 +5074,7 @@ let rec check_implicit_solution_for_tac (env:env) (i:implicit) : option (term * 
   then None
   else (
     let env = { env with gamma = ctx_u.ctx_uvar_gamma } in
-    match env.core_check env tm uvar_ty false with
+    match core_check_and_maybe_add_to_guard_uvar env ctx_u tm uvar_ty false with
     | Inl None -> None
     | Inl (Some g) ->
       let g = { trivial_guard with guard_f = NonTrivial g } in
@@ -5245,24 +5256,7 @@ and resolve_implicits' env is_tac (implicits:Env.implicits)
         end
       end
   in
-  let tagged_imps = until_fixpoint ([], false) implicits in
-  if is_tac
-  then tagged_imps
-         |> List.map (fun t_imp ->
-                     match t_imp with
-                     | {imp_uvar}, Implicit_unresolved ->
-                       (match U.ctx_uvar_uvar_kind imp_uvar with
-                        | Inl _ -> [t_imp]
-                        | Inr fmls ->
-                          if Env.debug env <| Options.Other "Rel"
-                          then BU.print2 "resolve_implicits': solving typing guard uvar %s with %s\n"
-                            (Print.ctx_uvar_to_string imp_uvar)
-                            (fmls |> U.mk_conj_l |> Print.term_to_string);
-                          commit env [TERM (imp_uvar, U.mk_conj_l fmls)];
-                          [])
-                      | _ -> [t_imp])
-         |> List.flatten
-  else tagged_imps
+  until_fixpoint ([], false) implicits
 
 and resolve_implicits env g =
     if Env.debug env <| Options.Other "ResolveImplicitsHook"
