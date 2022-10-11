@@ -1,46 +1,4 @@
 open Prims
-let (core_check :
-  FStar_TypeChecker_Env.env ->
-    FStar_Syntax_Syntax.term ->
-      FStar_Syntax_Syntax.term ->
-        Prims.bool ->
-          (FStar_Reflection_Data.typ FStar_Pervasives_Native.option,
-            FStar_TypeChecker_Core.error) FStar_Pervasives.either)
-  =
-  fun env ->
-    fun sol ->
-      fun t ->
-        fun must_tot ->
-          let debug f =
-            let uu___ = FStar_Options.debug_any () in
-            if uu___ then f () else () in
-          let uu___ = FStar_TypeChecker_Core.check_term env sol t must_tot in
-          match uu___ with
-          | FStar_Pervasives.Inl (FStar_Pervasives_Native.None) ->
-              (debug
-                 (fun uu___2 ->
-                    FStar_Compiler_Util.print_string
-                      "Core check ok (no guard)\n");
-               FStar_Pervasives.Inl FStar_Pervasives_Native.None)
-          | FStar_Pervasives.Inl (FStar_Pervasives_Native.Some g) ->
-              (debug
-                 (fun uu___2 ->
-                    FStar_Compiler_Util.print_string "Core check ok\n");
-               FStar_Pervasives.Inl (FStar_Pervasives_Native.Some g))
-          | FStar_Pervasives.Inr err ->
-              (debug
-                 (fun uu___2 ->
-                    let uu___3 =
-                      let uu___4 = FStar_TypeChecker_Env.get_range env in
-                      FStar_Compiler_Range.string_of_range uu___4 in
-                    let uu___4 = FStar_TypeChecker_Core.print_error_short err in
-                    let uu___5 = FStar_Syntax_Print.term_to_string sol in
-                    let uu___6 = FStar_Syntax_Print.term_to_string t in
-                    let uu___7 = FStar_TypeChecker_Core.print_error err in
-                    FStar_Compiler_Util.print5
-                      "(%s) Core checking failed (%s) on term %s and type %s\n%s\n"
-                      uu___3 uu___4 uu___5 uu___6 uu___7);
-               FStar_Pervasives.Inr err)
 type name = FStar_Syntax_Syntax.bv
 type env = FStar_TypeChecker_Env.env
 type implicits = FStar_TypeChecker_Env.implicits
@@ -89,11 +47,54 @@ let (set_uvar_expected_typ :
           FStar_Syntax_Syntax.uvar_decoration_kind =
             (dec.FStar_Syntax_Syntax.uvar_decoration_kind)
         }
+let (transfer_guard_uvar :
+  FStar_Syntax_Syntax.ctx_uvar -> FStar_Syntax_Syntax.ctx_uvar -> unit) =
+  fun u_src ->
+    fun u_dst ->
+      let src_dec =
+        FStar_Syntax_Unionfind.find_decoration
+          u_src.FStar_Syntax_Syntax.ctx_uvar_head in
+      let dst_dec =
+        FStar_Syntax_Unionfind.find_decoration
+          u_dst.FStar_Syntax_Syntax.ctx_uvar_head in
+      match ((src_dec.FStar_Syntax_Syntax.uvar_decoration_kind),
+              (dst_dec.FStar_Syntax_Syntax.uvar_decoration_kind))
+      with
+      | (FStar_Pervasives.Inl (FStar_Pervasives_Native.None),
+         FStar_Pervasives.Inl (FStar_Pervasives_Native.None)) -> ()
+      | (FStar_Pervasives.Inl (FStar_Pervasives_Native.Some u),
+         FStar_Pervasives.Inl (FStar_Pervasives_Native.None)) ->
+          (FStar_Syntax_Unionfind.change_decoration
+             u_src.FStar_Syntax_Syntax.ctx_uvar_head
+             {
+               FStar_Syntax_Syntax.uvar_decoration_typ =
+                 (src_dec.FStar_Syntax_Syntax.uvar_decoration_typ);
+               FStar_Syntax_Syntax.uvar_decoration_should_check =
+                 (src_dec.FStar_Syntax_Syntax.uvar_decoration_should_check);
+               FStar_Syntax_Syntax.uvar_decoration_kind =
+                 (FStar_Pervasives.Inl FStar_Pervasives_Native.None)
+             };
+           FStar_Syntax_Unionfind.change_decoration
+             u_dst.FStar_Syntax_Syntax.ctx_uvar_head
+             {
+               FStar_Syntax_Syntax.uvar_decoration_typ =
+                 (dst_dec.FStar_Syntax_Syntax.uvar_decoration_typ);
+               FStar_Syntax_Syntax.uvar_decoration_should_check =
+                 (dst_dec.FStar_Syntax_Syntax.uvar_decoration_should_check);
+               FStar_Syntax_Syntax.uvar_decoration_kind =
+                 (FStar_Pervasives.Inl (FStar_Pervasives_Native.Some u))
+             })
+      | (uu___, uu___1) -> failwith "Unexpected call to transfer guard uvar"
 let (mark_uvar_as_already_checked : FStar_Syntax_Syntax.ctx_uvar -> unit) =
   fun u ->
     let dec =
       FStar_Syntax_Unionfind.find_decoration
         u.FStar_Syntax_Syntax.ctx_uvar_head in
+    (match dec.FStar_Syntax_Syntax.uvar_decoration_kind with
+     | FStar_Pervasives.Inl (FStar_Pervasives_Native.Some g_uv) ->
+         FStar_Syntax_Unionfind.change g_uv.FStar_Syntax_Syntax.ctx_uvar_head
+           FStar_Syntax_Util.t_true
+     | uu___1 -> ());
     FStar_Syntax_Unionfind.change_decoration
       u.FStar_Syntax_Syntax.ctx_uvar_head
       {
@@ -3846,7 +3847,9 @@ let (dup : unit -> unit FStar_Tactics_Monad.tac) =
            (fun uu___2 ->
               match uu___2 with
               | (u, u_uvar) ->
-                  (mark_uvar_as_already_checked
+                  (transfer_guard_uvar g.FStar_Tactics_Types.goal_ctx_uvar
+                     u_uvar;
+                   mark_uvar_as_already_checked
                      g.FStar_Tactics_Types.goal_ctx_uvar;
                    (let g' =
                       {
@@ -3861,23 +3864,23 @@ let (dup : unit -> unit FStar_Tactics_Monad.tac) =
                           (g.FStar_Tactics_Types.label)
                       } in
                     FStar_Tactics_Monad.bind FStar_Tactics_Monad.dismiss
-                      (fun uu___4 ->
+                      (fun uu___5 ->
                          let t_eq =
-                           let uu___5 =
-                             let uu___6 = FStar_Tactics_Types.goal_type g in
+                           let uu___6 =
+                             let uu___7 = FStar_Tactics_Types.goal_type g in
                              env1.FStar_TypeChecker_Env.universe_of env1
-                               uu___6 in
-                           let uu___6 = FStar_Tactics_Types.goal_type g in
-                           let uu___7 = FStar_Tactics_Types.goal_witness g in
-                           FStar_Syntax_Util.mk_eq2 uu___5 uu___6 u uu___7 in
-                         let uu___5 =
+                               uu___7 in
+                           let uu___7 = FStar_Tactics_Types.goal_type g in
+                           let uu___8 = FStar_Tactics_Types.goal_witness g in
+                           FStar_Syntax_Util.mk_eq2 uu___6 uu___7 u uu___8 in
+                         let uu___6 =
                            FStar_Tactics_Monad.add_irrelevant_goal g
                              "dup equation" env1 t_eq in
-                         FStar_Tactics_Monad.bind uu___5
-                           (fun uu___6 ->
-                              let uu___7 = FStar_Tactics_Monad.add_goals [g'] in
-                              FStar_Tactics_Monad.bind uu___7
-                                (fun uu___8 -> FStar_Tactics_Monad.ret ())))))))
+                         FStar_Tactics_Monad.bind uu___6
+                           (fun uu___7 ->
+                              let uu___8 = FStar_Tactics_Monad.add_goals [g'] in
+                              FStar_Tactics_Monad.bind uu___8
+                                (fun uu___9 -> FStar_Tactics_Monad.ret ())))))))
 let longest_prefix :
   'a .
     ('a -> 'a -> Prims.bool) ->

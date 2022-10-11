@@ -53,43 +53,6 @@ module U      = FStar.Syntax.Util
 module Z      = FStar.BigInt
 module Core   = FStar.TypeChecker.Core
 
-let core_check env sol t must_tot
-  : either (option typ) Core.error
-  = let debug f =
-        if Options.debug_any()
-        then f ()
-        else ()
-    in
-    match FStar.TypeChecker.Core.check_term env sol t must_tot with
-    | Inl None ->
-      debug (fun _ -> BU.print_string "Core check ok (no guard)\n");
-      //checked with no guard
-      //no need to check it again
-      // debug (fun _ -> BU.print2 "(%s) Core checking succeeded on %s\n"
-      //                        (Range.string_of_range (Env.get_range env))
-      //                        (Print.term_to_string sol));
-      Inl None
-
-    | Inl (Some g) ->
-      debug (fun _ -> BU.print_string "Core check ok\n");
-      // debug (fun _ -> 
-      //          BU.print3 "(%s) Core checking succeeded on %s, with guard %s\n"
-      //                    (Range.string_of_range (Env.get_range env))              
-      //                    (Print.term_to_string sol)
-      //                    (Print.term_to_string g));
-      Inl (Some g)
-       
-
-    | Inr err ->
-      debug (fun _ -> 
-               BU.print5 "(%s) Core checking failed (%s) on term %s and type %s\n%s\n"
-                         (Range.string_of_range (Env.get_range env))      
-                         (Core.print_error_short err)
-                         (Print.term_to_string sol)
-                         (Print.term_to_string t)
-                         (Core.print_error err));
-      Inr err
-
 type name = bv
 type env = Env.env
 type implicits = Env.implicits
@@ -114,9 +77,26 @@ let set_uvar_expected_typ (u:ctx_uvar) (t:typ)
   = let dec = UF.find_decoration u.ctx_uvar_head in
     UF.change_decoration u.ctx_uvar_head ({dec with uvar_decoration_typ = t })
 
+let transfer_guard_uvar (u_src u_dst:ctx_uvar) : unit =
+  let src_dec = UF.find_decoration u_src.ctx_uvar_head in
+  let dst_dec = UF.find_decoration u_dst.ctx_uvar_head in
+
+  match src_dec.uvar_decoration_kind, dst_dec.uvar_decoration_kind with
+  | Inl None, Inl None -> ()
+  | Inl (Some u), Inl None ->
+    UF.change_decoration u_src.ctx_uvar_head
+      ({src_dec with uvar_decoration_kind = Inl None});
+    UF.change_decoration u_dst.ctx_uvar_head
+      ({dst_dec with uvar_decoration_kind = Inl (Some u)})
+  | _, _ -> failwith "Unexpected call to transfer guard uvar"
+
 let mark_uvar_as_already_checked (u:ctx_uvar)
   : unit
   = let dec = UF.find_decoration u.ctx_uvar_head in
+    (match dec.uvar_decoration_kind with
+     | Inl (Some g_uv) ->
+       FStar.Syntax.Unionfind.change g_uv.ctx_uvar_head U.t_true
+     | _ -> ());
     UF.change_decoration u.ctx_uvar_head ({dec with uvar_decoration_should_check = Already_checked})
   
 let mark_goal_implicit_already_checked (g:goal) 
@@ -128,7 +108,7 @@ let goal_with_type g t
   = let u = g.goal_ctx_uvar in
     set_uvar_expected_typ u t;
     g
-    
+
 let bnorm_goal g = goal_with_type g (bnorm (goal_env g) (goal_type g))
 
 let tacprint  (s:string)       = BU.print1 "TAC>> %s\n" s
@@ -1336,6 +1316,7 @@ let dup () : tac unit =
     //the new uvar is just as Strict as the original one. So, its assignement will be checked
     //and we have a goal that requires us to prove it equal to the original uvar
     //so we can clear the should_check status of the current uvar
+    transfer_guard_uvar g.goal_ctx_uvar u_uvar;    
     mark_uvar_as_already_checked g.goal_ctx_uvar;
     let g' = { g with goal_ctx_uvar = u_uvar } in
     bind dismiss (fun _ ->

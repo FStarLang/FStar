@@ -148,20 +148,13 @@ let new_uvar reason wl r gamma binders k should_check kind meta : ctx_uvar * ter
       BU.print1 "Just created uvar (Rel) {%s}\n" (Print.uvar_to_string ctx_uvar.ctx_uvar_head);
     ctx_uvar, t, {wl with wl_implicits=imp::wl.wl_implicits}
 
-let rec copy_uvar u (bs:binders) t wl =
-  let kind, wl =
-    match U.ctx_uvar_kind u with
-    | Inl None -> Inl None, wl
-    | Inl (Some u) ->
-      let u, _, wl = copy_uvar u bs t wl in
-      Inl (Some u), wl
-    | Inr () -> Inr (), wl in
+let copy_uvar u (bs:binders) t wl =
   let env = {wl.tcenv with gamma = u.ctx_uvar_gamma } in
   let env = Env.push_binders env bs in
   new_uvar ("copy:"^u.ctx_uvar_reason) wl u.ctx_uvar_range env.gamma
            (Env.all_binders env) t
            (U.ctx_uvar_should_check u)
-           kind
+           (Inl None)
            u.ctx_uvar_meta
 
 (* --------------------------------------------------------- *)
@@ -524,7 +517,7 @@ let explain env d (s : lstring) =
 (* <uvi ops> Instantiating unification variables   *)
 (* ------------------------------------------------*)
 
-let set_uvar env u (should_check_opt:option S.should_check_uvar) t =
+let set_uvar env u t =
   // Useful for debugging uvars setting bugs
   // if Env.debug env <| Options.Other "Rel"
   // then (
@@ -540,13 +533,17 @@ let set_uvar env u (should_check_opt:option S.should_check_uvar) t =
   //     failwith "DIE"
   // );
 
-  (match should_check_opt with
-   | None -> ()
-   | Some should_check ->
-     UF.change_decoration u.ctx_uvar_head
-       ({UF.find_decoration u.ctx_uvar_head with uvar_decoration_should_check=should_check}));
-
   U.set_uvar u.ctx_uvar_head t
+
+let mark_uvar_as_allow_untyped (u:ctx_uvar) (s:string)
+  : unit
+  = let dec = UF.find_decoration u.ctx_uvar_head in
+    (match dec.uvar_decoration_kind with
+     | Inl (Some g_uv) -> set_uvar env g_uv U.t_true
+     | _ -> ());
+    UF.change_decoration u.ctx_uvar_head ({dec with
+                                           uvar_decoration_should_check = Allow_untyped s;
+                                           uvar_decoration_kind = Inl None})
 
 let commit env uvis = uvis |> List.iter (function
     | UNIV(u, t)      ->
@@ -556,7 +553,7 @@ let commit env uvis = uvis |> List.iter (function
       end
     | TERM(u, t) ->
       def_check_closed_in t.pos "commit" (List.map (fun b -> b.binder_bv) u.ctx_uvar_binders) t;
-      set_uvar env u None t
+      set_uvar env u t
     )
 
 let find_term_uvar uv s = BU.find_map s (function
@@ -832,6 +829,10 @@ let ensure_no_uvar_subst env (t0:term) (wl:worklist)
       | _ ->
         (* At least one variable is affected, make a new uvar *)
         let dom_binders = Env.binders_of_bindings gamma_aff in
+        let v_k =
+          match U.ctx_uvar_kind uv with
+          | Inl _ -> Inl None
+          | _ -> failwith "Did not expect to create a new uvar for guard uvar" in
         let v, t_v, wl = new_uvar (uv.ctx_uvar_reason ^ "; force delayed")
                          wl
                          t0.pos
@@ -839,7 +840,7 @@ let ensure_no_uvar_subst env (t0:term) (wl:worklist)
                          (Env.binders_of_bindings new_gamma)
                          (U.arrow dom_binders (S.mk_Total (U.ctx_uvar_typ uv)))
                          (U.ctx_uvar_should_check uv)
-                         (Inl None)
+                         v_k
                          uv.ctx_uvar_meta
         in
 
@@ -850,7 +851,8 @@ let ensure_no_uvar_subst env (t0:term) (wl:worklist)
         then BU.print2 "ensure_no_uvar_subst solving %s with %s\n"
                (Print.ctx_uvar_to_string uv)
                (Print.term_to_string sol);
-        set_uvar env uv (Some (Allow_untyped "sol is a new uvar that will be checked")) sol;
+        set_uvar env uv sol;
+        mark_uvar_as_allow_untyped uv "sol is a new uvar that will be checked";
 
         (* Make a term for the new uvar, applied to the substitutions of
          * the abstracted arguments, plus all the original arguments. *)
@@ -939,7 +941,7 @@ let solve_prob' resolve_ok prob logical_guard uvis wl =
         let phi = U.abs xs phi (Some (U.residual_tot U.ktype0)) in
         def_check_closed_in (p_loc prob) ("solve_prob'.sol." ^ string_of_int (p_pid prob))
                             (List.map (fun b -> b.binder_bv) <| p_scope prob) phi;
-        set_uvar wl.tcenv uv None phi
+        set_uvar wl.tcenv uv phi
     in
     let uv = p_guard_uvar prob in
     let fail () =
@@ -1074,12 +1076,17 @@ let restrict_ctx env (tgt:ctx_uvar) (bs:binders) (src:ctx_uvar) wl : worklist =
   //t is the type at which new uvar ?u should be created
   //f is a function that applied to the new uvar term should return the term that ?u_t should be solved to
   let aux (t:typ) (f:term -> term) =
+    let kind' =
+      match U.ctx_uvar_kind src with
+      | Inl _ -> Inl None
+      | _ -> failwith "Did not expect to restrict a guard typing uvar" in
     let _, src', wl = new_uvar ("restricted " ^ (Print.uvar_to_string src.ctx_uvar_head)) wl
       src.ctx_uvar_range g pfx t
       (U.ctx_uvar_should_check src)
-      (U.ctx_uvar_kind src)
+      kind'
       src.ctx_uvar_meta in
-    set_uvar env src (Some (Allow_untyped "assigned solution will be checked")) (f src');
+    set_uvar env src (f src');
+    mark_uvar_as_allow_untyped src "assigned solution will be checked";
 
     wl in
 
@@ -2920,7 +2927,7 @@ and solve_t_flex_flex env orig wl (lhs:flex_t) (rhs:flex_t) : solution =
       then BU.print2 "solve_t_flex_flex: solving meta arg uvar %s with %s\n"
              (Print.ctx_uvar_to_string uv)
              (Print.term_to_string t);
-      set_uvar env uv None t;
+      set_uvar env uv t;
       solve env (attempt [orig] wl) in
 
     match p_rel orig with
@@ -4913,15 +4920,33 @@ let try_solve_single_valued_implicits env is_tac (imps:Env.implicits) : Env.impl
     imps, b
 
 let core_check_and_maybe_add_to_guard_uvar env uv t k must_tot =
+  let debug f =
+    if Options.debug_any()
+    then f ()
+    else () in
   match env.core_check env t k must_tot with
+  | Inl None ->
+    debug (fun _ -> BU.print_string "Core check ok (no guard)\n");
+    Inl None
+
   | Inl (Some vc) ->
+    debug (fun _ -> BU.print_string "Core check ok\n");    
     (match U.ctx_uvar_kind uv with
      | Inl None -> Inl (Some vc)
      | Inl (Some g_uv) ->
        commit env [TERM (g_uv, vc)];
        Inl None
      | Inr () -> failwith "Impossible!")
-  | r -> r
+  | Inr err ->
+    debug (fun _ -> 
+           BU.print5 "(%s) Core checking failed (%s) on term %s and type %s\n%s\n"
+             (Range.string_of_range (Env.get_range env))      
+             (err true)
+             (Print.term_to_string t)
+             (Print.term_to_string k)
+             (err false));
+    Inr err
+
 
 (*
  * Check that an implicit solution t has an expected type k
