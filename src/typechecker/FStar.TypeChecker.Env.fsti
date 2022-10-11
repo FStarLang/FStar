@@ -498,7 +498,7 @@ val uvars_for_binders :
   add_guard_uvar:bool ->
   reason:(S.binder -> string) ->
   r:Range.range ->
-  (list S.term * option S.term * guard_t)
+  (list S.term * list S.term * guard_t)
 
 val pure_precondition_for_trivial_post : env -> universe -> typ -> typ -> Range.range -> typ
 

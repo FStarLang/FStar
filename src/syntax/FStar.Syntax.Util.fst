@@ -2402,10 +2402,12 @@ let check_mutual_universes (lbs:list letbinding)
         lbs
 
 let ctx_uvar_should_check (u:ctx_uvar) = 
-    (Unionfind.find_decoration u.ctx_uvar_head).uvar_decoration_should_check
+  (Unionfind.find_decoration u.ctx_uvar_head).uvar_decoration_should_check
 
 let ctx_uvar_typ (u:ctx_uvar) = 
-    (Unionfind.find_decoration u.ctx_uvar_head).uvar_decoration_typ
+  (Unionfind.find_decoration u.ctx_uvar_head).uvar_decoration_typ
 
 let ctx_uvar_uvar_kind (u:ctx_uvar) = 
-    (Unionfind.find_decoration u.ctx_uvar_head).uvar_decoration_uvar_kind
+  (Unionfind.find_decoration u.ctx_uvar_head).uvar_decoration_uvar_kind
+
+let is_guard_ctx_uvar (u:ctx_uvar) = Inr? (ctx_uvar_uvar_kind u)

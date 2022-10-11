@@ -555,7 +555,7 @@ let mk_indexed_return env (ed:S.eff_decl) (u_a:universe) (a:typ) (e:term) (r:Ran
       a_b, x_b, bs, U.comp_to_comp_typ c
     | _ -> raise_error (return_t_shape_error "Either not an arrow or not enough binders") r in
 
-  let rest_bs_uvars, Some rest_uvars_guard_tm, g_uvars =
+  let rest_bs_uvars, rest_uvars_guard_tms, g_uvars =
     let guard_indexed_effect_uvars = true in
     Env.uvars_for_binders
       env rest_bs [NT (a_b.binder_bv, a); NT (x_b.binder_bv, e)]
@@ -584,7 +584,13 @@ let mk_indexed_return env (ed:S.eff_decl) (u_a:universe) (a:typ) (e:term) (r:Ran
   if Env.debug env <| Options.Other "LayeredEffects"
   then BU.print1 "} c after return %s\n" (Print.comp_to_string c);
 
-  c, Env.conj_guard g_uvars (Env.guard_of_guard_formula (TcComm.NonTrivial rest_uvars_guard_tm))
+  c,
+  Env.conj_guard
+    g_uvars
+    (rest_uvars_guard_tms
+     |> U.mk_and_l
+     |> TcComm.NonTrivial
+     |> Env.guard_of_guard_formula)
 
 (*
  * Wrapper over mk_wp_return and mk_indexed_return
@@ -912,7 +918,7 @@ let mk_indexed_bind env
     | _ -> raise_error (bind_t_shape_error "Either not an arrow or not enough binders") r1 in
 
   //create uvars for rest_bs, with proper substitutions of a_b, b_b, and b_i with t1, t2, and ?ui
-  let rest_bs_uvars, Some rest_uvars_guard_tm, g_uvars =
+  let rest_bs_uvars, rest_uvars_guard_tms, g_uvars =
     Env.uvars_for_binders
       env rest_bs [NT (a_b.binder_bv, t1); NT (b_b.binder_bv, t2)]
       guard_indexed_effect_uvars
@@ -1004,7 +1010,10 @@ let mk_indexed_bind env
   let guard =
     Env.conj_guards [
       g_uvars;
-      Env.guard_of_guard_formula (TcComm.NonTrivial rest_uvars_guard_tm);
+      (rest_uvars_guard_tms
+         |> U.mk_and_l
+         |> TcComm.NonTrivial
+         |> Env.guard_of_guard_formula);
       f_guard;
       g_guard;
       Env.guard_of_guard_formula (TcComm.NonTrivial fml)]
@@ -1701,11 +1710,11 @@ let mk_layered_conjunction env (ed:S.eff_decl) (u_a:universe) (a:term) (p:typ) (
       a_b, rest_bs, f_b, g_b, p_b, body |> U.unascribe
     | _ -> raise_error (conjunction_t_error "Either not an abstraction or not enough binders") r in
 
-  let rest_bs_uvars, Some rest_uvars_guard_tm, g_uvars =
-    let with_guard_uvar = false in
+  let rest_bs_uvars, rest_uvars_guard_tms, g_uvars =
+    let guard_indexed_effect_uvars = true in
     Env.uvars_for_binders
       env rest_bs [NT (a_b.binder_bv, a)]
-      with_guard_uvar
+      guard_indexed_effect_uvars
       (fun b -> BU.format3
                "implicit var for binder %s of %s:conjunction at %s"
                (Print.binder_to_string b) (Ident.string_of_lid ed.mname)
@@ -1744,7 +1753,10 @@ let mk_layered_conjunction env (ed:S.eff_decl) (u_a:universe) (a:term) (p:typ) (
 
   let g = Env.conj_guards [
     g_uvars;
-    Env.guard_of_guard_formula (TcComm.NonTrivial rest_uvars_guard_tm);
+    (rest_uvars_guard_tms
+       |> U.mk_and_l
+       |> TcComm.NonTrivial
+       |> Env.guard_of_guard_formula);
     f_guard;
     g_guard ] in
 
@@ -3189,7 +3201,7 @@ let lift_tf_layered_effect (tgt:lident) (lift_ts:tscheme)
       raise_error (Errors.Fatal_UnexpectedEffect, lift_t_shape_error
         "either not an arrow or not enough binders") r in
 
-  let rest_bs_uvars, Some rest_uvars_guard_tm, g =
+  let rest_bs_uvars, rest_uvars_guard_tms, g =
     Env.uvars_for_binders env rest_bs
       [NT (a_b.binder_bv, a)]
       guard_indexed_effect_uvars
@@ -3239,7 +3251,10 @@ let lift_tf_layered_effect (tgt:lident) (lift_ts:tscheme)
 
   let g = Env.conj_guards [
     g;
-    Env.guard_of_guard_formula (TcComm.NonTrivial rest_uvars_guard_tm);
+    (rest_uvars_guard_tms
+       |> U.mk_and_l
+       |> TcComm.NonTrivial
+       |> Env.guard_of_guard_formula);
     guard_f;
     Env.guard_of_guard_formula (TcComm.NonTrivial fml) ] in
     

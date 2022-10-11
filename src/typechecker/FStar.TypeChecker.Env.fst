@@ -1840,29 +1840,42 @@ let new_implicit_var reason r env k should_check meta =
  * To guard against misuses of this, we typecheck the layered effect combinator types in a strict
  *   mode (with no smt and subtyping)
  *)
-let uvars_for_binders env (bs:S.binders) substs add_guard_uvar reason r =
-  let guard_uvar_tm_opt, guard_uvar_opt, g_guard_uvar =
-    if add_guard_uvar
-    then let t, [u, _], g = new_implicit_var_with_kind
-           "uvars typing guard"
-           r
-           env
-           U.ktype0
-           (Allow_untyped "uvars typing guard")
-           (Inr [])
-           None in
-         Some t, Some u, g
-    else None, None, trivial_guard in
+let uvars_for_binders env (bs:S.binders) substs add_guard_uvars reason r =
+  let (guard_uvar_tms:list term),
+      (guard_uvars:list (term & ctx_uvar)),
+      g_guard_uvars =
+    if not add_guard_uvars
+    then [], [], trivial_guard
+    else List.fold_left (fun (tms, uvs, g) b ->
+           match b.binder_attrs with
+           | t::_ ->
+             (match List.tryFind (fun (t1, _) -> U.eq_tm t t1 = U.Equal) uvs with
+              | None ->
+                let u_t, [u, _], g_u = new_implicit_var_with_kind
+                  "uvars typing guard"
+                  r
+                  env
+                  U.ktype0
+                  (Allow_untyped "uvars typing guard")
+                  (Inr [])
+                  (Some (Ctx_uvar_meta_attr t)) in
+                (u_t::tms), ((t, u)::uvs), conj_guard g_u g
+              | _ -> tms, uvs, g)
+           | _ -> tms, uvs, g) ([], [], trivial_guard) bs in
+
   bs |> List.fold_left (fun (substs, uvars, g) b ->
     let sort = SS.subst substs b.binder_bv.sort in
 
-    let ctx_uvar_meta_t =
+    let ctx_uvar_meta_t, guard_uvar_opt =
       match b.binder_qual, b.binder_attrs with
       | Some (Meta t), [] ->
-        Some (Ctx_uvar_meta_tac (FStar.Compiler.Dyn.mkdyn env, t))
+        Some (Ctx_uvar_meta_tac (FStar.Compiler.Dyn.mkdyn env, t)),
+        None
       | _, t::_ ->
-        Some (Ctx_uvar_meta_attr t)
-      | _ -> None in
+        Some (Ctx_uvar_meta_attr t),
+        guard_uvars |> List.tryFind (fun (t1, _) -> U.eq_tm t t1 = U.Equal)
+                    |> BU.map_option snd
+      | _ -> None, None in
 
     let t, l_ctx_uvars, g_t = new_implicit_var_with_kind
       (reason b) r env sort (Allow_untyped "layered effects binder") (Inl guard_uvar_opt) ctx_uvar_meta_t in
@@ -1872,7 +1885,7 @@ let uvars_for_binders env (bs:S.binders) substs add_guard_uvar reason r =
       (Print.ctx_uvar_to_string_no_reason ctx_uvar)) l_ctx_uvars;
 
     substs@[NT (b.binder_bv, t)], uvars@[t], conj_guard g g_t
-  ) (substs, [], g_guard_uvar) |> (fun (_, uvars, g) -> uvars, guard_uvar_tm_opt, g)
+  ) (substs, [], g_guard_uvars) |> (fun (_, uvars, g) -> uvars, guard_uvar_tms, g)
 
 let pure_precondition_for_trivial_post env u t wp r =
   let trivial_post =

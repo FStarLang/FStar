@@ -4898,9 +4898,9 @@ let try_solve_single_valued_implicits env is_tac (imps:Env.implicits) : Env.impl
       match (SS.compress t_norm).n with
       | Tm_fvar fv when S.fv_eq_lid fv Const.unit_lid ->
         r |> S.unit_const_with_range |> Some
-     | Tm_refine (b, _) when U.is_unit b.sort ->
+      | Tm_refine (b, _) when U.is_unit b.sort ->
         r |> S.unit_const_with_range |> Some
-     | _ -> None in
+      | _ -> None in
 
     let b = List.fold_left (fun b imp ->  //check that the imp is still unsolved
       if UF.find imp.imp_uvar.ctx_uvar_head |> is_none &&
@@ -5245,7 +5245,20 @@ and resolve_implicits' env is_tac (implicits:Env.implicits)
         end
       end
   in
-  until_fixpoint ([], false) implicits
+  let tagged_imps = until_fixpoint ([], false) implicits in
+  if is_tac
+  then tagged_imps
+         |> List.map (fun t_imp ->
+                     match t_imp with
+                     | {imp_uvar}, Implicit_unresolved ->
+                       (match U.ctx_uvar_uvar_kind imp_uvar with
+                        | Inl _ -> [t_imp]
+                        | Inr fmls ->
+                          commit env [TERM (imp_uvar, U.mk_conj_l fmls)];
+                          [])
+                      | _ -> [t_imp])
+         |> List.flatten
+  else tagged_imps
 
 and resolve_implicits env g =
     if Env.debug env <| Options.Other "ResolveImplicitsHook"

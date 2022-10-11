@@ -116,11 +116,16 @@ let set_uvar_expected_typ (u:ctx_uvar) (t:typ)
 
 let add_guard_to_guard_uvar (u:ctx_uvar) (phi:typ)
   : unit
-  = let dec = UF.find_decoration u.ctx_uvar_head in
-    match dec.uvar_decoration_uvar_kind with
-    | Inr l -> 
-      UF.change_decoration u.ctx_uvar_head ({dec with uvar_decoration_uvar_kind = Inr (l@[phi]) })
-    | _ -> failwith "Unexpected ctx_uvar passed to add_guard_to_guard_uvar"
+  = match FStar.Syntax.Unionfind.find u.ctx_uvar_head with
+    | Some _ ->
+      // AR: this may happen, if Rel decided to create a new uvar for this?
+      failwith "Guard uvar unexpectedly solved already"
+    | _ ->
+      let dec = UF.find_decoration u.ctx_uvar_head in
+      match dec.uvar_decoration_uvar_kind with
+      | Inr l -> 
+        UF.change_decoration u.ctx_uvar_head ({dec with uvar_decoration_uvar_kind = Inr (l@[phi]) })
+      | _ -> failwith "Unexpected ctx_uvar passed to add_guard_to_guard_uvar"
 
 let mark_uvar_as_already_checked (u:ctx_uvar)
   : unit
@@ -2062,7 +2067,9 @@ let proofstate_of_goal_ty rng env typ =
 
 let proofstate_of_all_implicits rng env imps =
     let env = tac_env env in
-    let goals = List.map (goal_of_implicit env) imps in
+    let goals =
+      imps |> List.filter (fun {imp_uvar} -> not (U.is_guard_ctx_uvar imp_uvar))
+           |> List.map (goal_of_implicit env) in
     let w = goal_witness (List.hd goals) in
     let ps = {
         main_context = env;
