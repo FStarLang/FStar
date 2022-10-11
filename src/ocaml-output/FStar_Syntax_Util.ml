@@ -4778,3 +4778,6 @@ let (ctx_uvar_uvar_kind :
       FStar_Syntax_Unionfind.find_decoration
         u.FStar_Syntax_Syntax.ctx_uvar_head in
     uu___.FStar_Syntax_Syntax.uvar_decoration_uvar_kind
+let (is_guard_ctx_uvar : FStar_Syntax_Syntax.ctx_uvar -> Prims.bool) =
+  fun u ->
+    let uu___ = ctx_uvar_uvar_kind u in FStar_Pervasives.uu___is_Inr uu___

@@ -93,23 +93,31 @@ let (add_guard_to_guard_uvar :
   FStar_Syntax_Syntax.ctx_uvar -> FStar_Reflection_Data.typ -> unit) =
   fun u ->
     fun phi ->
-      let dec =
-        FStar_Syntax_Unionfind.find_decoration
-          u.FStar_Syntax_Syntax.ctx_uvar_head in
-      match dec.FStar_Syntax_Syntax.uvar_decoration_uvar_kind with
-      | FStar_Pervasives.Inr l ->
-          FStar_Syntax_Unionfind.change_decoration
-            u.FStar_Syntax_Syntax.ctx_uvar_head
-            {
-              FStar_Syntax_Syntax.uvar_decoration_typ =
-                (dec.FStar_Syntax_Syntax.uvar_decoration_typ);
-              FStar_Syntax_Syntax.uvar_decoration_should_check =
-                (dec.FStar_Syntax_Syntax.uvar_decoration_should_check);
-              FStar_Syntax_Syntax.uvar_decoration_uvar_kind =
-                (FStar_Pervasives.Inr (FStar_Compiler_List.op_At l [phi]))
-            }
-      | uu___ ->
-          failwith "Unexpected ctx_uvar passed to add_guard_to_guard_uvar"
+      let uu___ =
+        FStar_Syntax_Unionfind.find u.FStar_Syntax_Syntax.ctx_uvar_head in
+      match uu___ with
+      | FStar_Pervasives_Native.Some uu___1 ->
+          failwith "Guard uvar unexpectedly solved already"
+      | uu___1 ->
+          let dec =
+            FStar_Syntax_Unionfind.find_decoration
+              u.FStar_Syntax_Syntax.ctx_uvar_head in
+          (match dec.FStar_Syntax_Syntax.uvar_decoration_uvar_kind with
+           | FStar_Pervasives.Inr l ->
+               FStar_Syntax_Unionfind.change_decoration
+                 u.FStar_Syntax_Syntax.ctx_uvar_head
+                 {
+                   FStar_Syntax_Syntax.uvar_decoration_typ =
+                     (dec.FStar_Syntax_Syntax.uvar_decoration_typ);
+                   FStar_Syntax_Syntax.uvar_decoration_should_check =
+                     (dec.FStar_Syntax_Syntax.uvar_decoration_should_check);
+                   FStar_Syntax_Syntax.uvar_decoration_uvar_kind =
+                     (FStar_Pervasives.Inr
+                        (FStar_Compiler_List.op_At l [phi]))
+                 }
+           | uu___2 ->
+               failwith
+                 "Unexpected ctx_uvar passed to add_guard_to_guard_uvar")
 let (mark_uvar_as_already_checked : FStar_Syntax_Syntax.ctx_uvar -> unit) =
   fun u ->
     let dec =
@@ -6629,8 +6637,21 @@ let (proofstate_of_all_implicits :
       fun imps ->
         let env2 = tac_env env1 in
         let goals =
-          FStar_Compiler_List.map (FStar_Tactics_Types.goal_of_implicit env2)
-            imps in
+          let uu___ =
+            FStar_Compiler_Effect.op_Bar_Greater imps
+              (FStar_Compiler_List.filter
+                 (fun uu___1 ->
+                    match uu___1 with
+                    | { FStar_TypeChecker_Common.imp_reason = uu___2;
+                        FStar_TypeChecker_Common.imp_uvar = imp_uvar;
+                        FStar_TypeChecker_Common.imp_tm = uu___3;
+                        FStar_TypeChecker_Common.imp_range = uu___4;_} ->
+                        let uu___5 =
+                          FStar_Syntax_Util.is_guard_ctx_uvar imp_uvar in
+                        Prims.op_Negation uu___5)) in
+          FStar_Compiler_Effect.op_Bar_Greater uu___
+            (FStar_Compiler_List.map
+               (FStar_Tactics_Types.goal_of_implicit env2)) in
         let w =
           let uu___ = FStar_Compiler_List.hd goals in
           FStar_Tactics_Types.goal_witness uu___ in

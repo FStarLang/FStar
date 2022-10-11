@@ -6474,31 +6474,57 @@ let (uvars_for_binders :
           (FStar_Syntax_Syntax.binder -> Prims.string) ->
             FStar_Compiler_Range.range ->
               (FStar_Syntax_Syntax.term Prims.list * FStar_Syntax_Syntax.term
-                FStar_Pervasives_Native.option * guard_t))
+                Prims.list * guard_t))
   =
   fun env1 ->
     fun bs ->
       fun substs ->
-        fun add_guard_uvar ->
+        fun add_guard_uvars ->
           fun reason ->
             fun r ->
               let uu___ =
-                if add_guard_uvar
-                then
-                  let uu___1 =
-                    new_implicit_var_with_kind "uvars typing guard" r env1
-                      FStar_Syntax_Util.ktype0
-                      (FStar_Syntax_Syntax.Allow_untyped "uvars typing guard")
-                      (FStar_Pervasives.Inr []) FStar_Pervasives_Native.None in
-                  match uu___1 with
-                  | (t, (u, uu___2)::[], g) ->
-                      ((FStar_Pervasives_Native.Some t),
-                        (FStar_Pervasives_Native.Some u), g)
+                if Prims.op_Negation add_guard_uvars
+                then ([], [], trivial_guard)
                 else
-                  (FStar_Pervasives_Native.None,
-                    FStar_Pervasives_Native.None, trivial_guard) in
+                  FStar_Compiler_List.fold_left
+                    (fun uu___2 ->
+                       fun b ->
+                         match uu___2 with
+                         | (tms, uvs, g) ->
+                             (match b.FStar_Syntax_Syntax.binder_attrs with
+                              | t::uu___3 ->
+                                  let uu___4 =
+                                    FStar_Compiler_List.tryFind
+                                      (fun uu___5 ->
+                                         match uu___5 with
+                                         | (t1, uu___6) ->
+                                             let uu___7 =
+                                               FStar_Syntax_Util.eq_tm t t1 in
+                                             uu___7 = FStar_Syntax_Util.Equal)
+                                      uvs in
+                                  (match uu___4 with
+                                   | FStar_Pervasives_Native.None ->
+                                       let uu___5 =
+                                         new_implicit_var_with_kind
+                                           "uvars typing guard" r env1
+                                           FStar_Syntax_Util.ktype0
+                                           (FStar_Syntax_Syntax.Allow_untyped
+                                              "uvars typing guard")
+                                           (FStar_Pervasives.Inr [])
+                                           (FStar_Pervasives_Native.Some
+                                              (FStar_Syntax_Syntax.Ctx_uvar_meta_attr
+                                                 t)) in
+                                       (match uu___5 with
+                                        | (u_t, (u, uu___6)::[], g_u) ->
+                                            let uu___7 = conj_guard g_u g in
+                                            ((u_t :: tms), ((t, u) :: uvs),
+                                              uu___7))
+                                   | uu___5 -> (tms, uvs, g))
+                              | uu___3 -> (tms, uvs, g)))
+                    ([], [], trivial_guard) bs in
               match uu___ with
-              | (guard_uvar_tm_opt, guard_uvar_opt, g_guard_uvar) ->
+              | (guard_uvar_tms, guard_uvars, g_guard_uvars) ->
+                  let guard_uvar_tms1 = guard_uvar_tms in
                   let uu___1 =
                     FStar_Compiler_Effect.op_Bar_Greater bs
                       (FStar_Compiler_List.fold_left
@@ -6509,65 +6535,91 @@ let (uvars_for_binders :
                                   let sort =
                                     FStar_Syntax_Subst.subst substs1
                                       (b.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort in
-                                  let ctx_uvar_meta_t =
+                                  let uu___3 =
                                     match ((b.FStar_Syntax_Syntax.binder_qual),
                                             (b.FStar_Syntax_Syntax.binder_attrs))
                                     with
                                     | (FStar_Pervasives_Native.Some
                                        (FStar_Syntax_Syntax.Meta t), []) ->
-                                        let uu___3 =
-                                          let uu___4 =
-                                            let uu___5 =
-                                              FStar_Compiler_Dyn.mkdyn env1 in
-                                            (uu___5, t) in
-                                          FStar_Syntax_Syntax.Ctx_uvar_meta_tac
-                                            uu___4 in
-                                        FStar_Pervasives_Native.Some uu___3
-                                    | (uu___3, t::uu___4) ->
-                                        FStar_Pervasives_Native.Some
-                                          (FStar_Syntax_Syntax.Ctx_uvar_meta_attr
-                                             t)
-                                    | uu___3 -> FStar_Pervasives_Native.None in
-                                  let uu___3 =
-                                    let uu___4 = reason b in
-                                    new_implicit_var_with_kind uu___4 r env1
-                                      sort
-                                      (FStar_Syntax_Syntax.Allow_untyped
-                                         "layered effects binder")
-                                      (FStar_Pervasives.Inl guard_uvar_opt)
-                                      ctx_uvar_meta_t in
+                                        let uu___4 =
+                                          let uu___5 =
+                                            let uu___6 =
+                                              let uu___7 =
+                                                FStar_Compiler_Dyn.mkdyn env1 in
+                                              (uu___7, t) in
+                                            FStar_Syntax_Syntax.Ctx_uvar_meta_tac
+                                              uu___6 in
+                                          FStar_Pervasives_Native.Some uu___5 in
+                                        (uu___4,
+                                          FStar_Pervasives_Native.None)
+                                    | (uu___4, t::uu___5) ->
+                                        let uu___6 =
+                                          let uu___7 =
+                                            FStar_Compiler_Effect.op_Bar_Greater
+                                              guard_uvars
+                                              (FStar_Compiler_List.tryFind
+                                                 (fun uu___8 ->
+                                                    match uu___8 with
+                                                    | (t1, uu___9) ->
+                                                        let uu___10 =
+                                                          FStar_Syntax_Util.eq_tm
+                                                            t t1 in
+                                                        uu___10 =
+                                                          FStar_Syntax_Util.Equal)) in
+                                          FStar_Compiler_Effect.op_Bar_Greater
+                                            uu___7
+                                            (FStar_Compiler_Util.map_option
+                                               FStar_Pervasives_Native.snd) in
+                                        ((FStar_Pervasives_Native.Some
+                                            (FStar_Syntax_Syntax.Ctx_uvar_meta_attr
+                                               t)), uu___6)
+                                    | uu___4 ->
+                                        (FStar_Pervasives_Native.None,
+                                          FStar_Pervasives_Native.None) in
                                   (match uu___3 with
-                                   | (t, l_ctx_uvars, g_t) ->
-                                       ((let uu___5 =
-                                           FStar_Compiler_Effect.op_Less_Bar
-                                             (debug env1)
-                                             (FStar_Options.Other
-                                                "LayeredEffectsEqns") in
-                                         if uu___5
-                                         then
-                                           FStar_Compiler_List.iter
-                                             (fun uu___6 ->
-                                                match uu___6 with
-                                                | (ctx_uvar, uu___7) ->
-                                                    let uu___8 =
-                                                      FStar_Syntax_Print.ctx_uvar_to_string_no_reason
-                                                        ctx_uvar in
-                                                    FStar_Compiler_Util.print1
-                                                      "Layered Effect uvar : %s\n"
-                                                      uu___8) l_ctx_uvars
-                                         else ());
-                                        (let uu___5 = conj_guard g g_t in
-                                         ((FStar_Compiler_List.op_At substs1
-                                             [FStar_Syntax_Syntax.NT
-                                                ((b.FStar_Syntax_Syntax.binder_bv),
-                                                  t)]),
-                                           (FStar_Compiler_List.op_At uvars
-                                              [t]), uu___5)))))
-                         (substs, [], g_guard_uvar)) in
+                                   | (ctx_uvar_meta_t, guard_uvar_opt) ->
+                                       let uu___4 =
+                                         let uu___5 = reason b in
+                                         new_implicit_var_with_kind uu___5 r
+                                           env1 sort
+                                           (FStar_Syntax_Syntax.Allow_untyped
+                                              "layered effects binder")
+                                           (FStar_Pervasives.Inl
+                                              guard_uvar_opt) ctx_uvar_meta_t in
+                                       (match uu___4 with
+                                        | (t, l_ctx_uvars, g_t) ->
+                                            ((let uu___6 =
+                                                FStar_Compiler_Effect.op_Less_Bar
+                                                  (debug env1)
+                                                  (FStar_Options.Other
+                                                     "LayeredEffectsEqns") in
+                                              if uu___6
+                                              then
+                                                FStar_Compiler_List.iter
+                                                  (fun uu___7 ->
+                                                     match uu___7 with
+                                                     | (ctx_uvar, uu___8) ->
+                                                         let uu___9 =
+                                                           FStar_Syntax_Print.ctx_uvar_to_string_no_reason
+                                                             ctx_uvar in
+                                                         FStar_Compiler_Util.print1
+                                                           "Layered Effect uvar : %s\n"
+                                                           uu___9)
+                                                  l_ctx_uvars
+                                              else ());
+                                             (let uu___6 = conj_guard g g_t in
+                                              ((FStar_Compiler_List.op_At
+                                                  substs1
+                                                  [FStar_Syntax_Syntax.NT
+                                                     ((b.FStar_Syntax_Syntax.binder_bv),
+                                                       t)]),
+                                                (FStar_Compiler_List.op_At
+                                                   uvars [t]), uu___6))))))
+                         (substs, [], g_guard_uvars)) in
                   FStar_Compiler_Effect.op_Bar_Greater uu___1
                     (fun uu___2 ->
                        match uu___2 with
-                       | (uu___3, uvars, g) -> (uvars, guard_uvar_tm_opt, g))
+                       | (uu___3, uvars, g) -> (uvars, guard_uvar_tms1, g))
 let (pure_precondition_for_trivial_post :
   env ->
     FStar_Syntax_Syntax.universe ->

@@ -14813,7 +14813,38 @@ and (resolve_implicits' :
                                                    uu___12 out in
                                                (uu___11, true) in
                                              until_fixpoint uu___10 tl))))))) in
-        until_fixpoint ([], false) implicits
+        let tagged_imps = until_fixpoint ([], false) implicits in
+        if is_tac
+        then
+          let uu___ =
+            FStar_Compiler_Effect.op_Bar_Greater tagged_imps
+              (FStar_Compiler_List.map
+                 (fun t_imp ->
+                    match t_imp with
+                    | ({ FStar_TypeChecker_Common.imp_reason = uu___1;
+                         FStar_TypeChecker_Common.imp_uvar = imp_uvar;
+                         FStar_TypeChecker_Common.imp_tm = uu___2;
+                         FStar_TypeChecker_Common.imp_range = uu___3;_},
+                       Implicit_unresolved) ->
+                        let uu___4 =
+                          FStar_Syntax_Util.ctx_uvar_uvar_kind imp_uvar in
+                        (match uu___4 with
+                         | FStar_Pervasives.Inl uu___5 -> [t_imp]
+                         | FStar_Pervasives.Inr fmls ->
+                             ((let uu___6 =
+                                 let uu___7 =
+                                   let uu___8 =
+                                     let uu___9 =
+                                       FStar_Syntax_Util.mk_conj_l fmls in
+                                     (imp_uvar, uu___9) in
+                                   TERM uu___8 in
+                                 [uu___7] in
+                               commit env uu___6);
+                              []))
+                    | uu___1 -> [t_imp])) in
+          FStar_Compiler_Effect.op_Bar_Greater uu___
+            FStar_Compiler_List.flatten
+        else tagged_imps
 and (resolve_implicits :
   FStar_TypeChecker_Env.env ->
     FStar_TypeChecker_Common.guard_t -> FStar_TypeChecker_Common.guard_t)

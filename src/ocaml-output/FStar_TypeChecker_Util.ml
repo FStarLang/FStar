@@ -841,8 +841,7 @@ let (mk_indexed_return :
                                  "implicit var for binder %s of %s at %s"
                                  uu___5 uu___6 uu___7) r in
                         (match uu___4 with
-                         | (rest_bs_uvars, FStar_Pervasives_Native.Some
-                            rest_uvars_guard_tm, g_uvars) ->
+                         | (rest_bs_uvars, rest_uvars_guard_tms, g_uvars) ->
                              let subst =
                                FStar_Compiler_List.map2
                                  (fun b ->
@@ -889,9 +888,19 @@ let (mk_indexed_return :
                                else ());
                               (let uu___6 =
                                  let uu___7 =
-                                   FStar_TypeChecker_Env.guard_of_guard_formula
-                                     (FStar_TypeChecker_Common.NonTrivial
-                                        rest_uvars_guard_tm) in
+                                   let uu___8 =
+                                     let uu___9 =
+                                       FStar_Compiler_Effect.op_Bar_Greater
+                                         rest_uvars_guard_tms
+                                         FStar_Syntax_Util.mk_and_l in
+                                     FStar_Compiler_Effect.op_Bar_Greater
+                                       uu___9
+                                       (fun uu___10 ->
+                                          FStar_TypeChecker_Common.NonTrivial
+                                            uu___10) in
+                                   FStar_Compiler_Effect.op_Bar_Greater
+                                     uu___8
+                                     FStar_TypeChecker_Env.guard_of_guard_formula in
                                  FStar_TypeChecker_Env.conj_guard g_uvars
                                    uu___7 in
                                (c, uu___6))))))
@@ -1674,8 +1683,7 @@ let (mk_indexed_bind :
                                                             uu___11) r1 in
                                                    (match uu___9 with
                                                     | (rest_bs_uvars,
-                                                       FStar_Pervasives_Native.Some
-                                                       rest_uvars_guard_tm,
+                                                       rest_uvars_guard_tms,
                                                        g_uvars) ->
                                                         ((let uu___11 =
                                                             FStar_Compiler_Effect.op_Less_Bar
@@ -2019,9 +2027,23 @@ let (mk_indexed_bind :
                                                                let uu___13 =
                                                                  let uu___14
                                                                    =
-                                                                   FStar_TypeChecker_Env.guard_of_guard_formula
-                                                                    (FStar_TypeChecker_Common.NonTrivial
-                                                                    rest_uvars_guard_tm) in
+                                                                   let uu___15
+                                                                    =
+                                                                    let uu___16
+                                                                    =
+                                                                    FStar_Compiler_Effect.op_Bar_Greater
+                                                                    rest_uvars_guard_tms
+                                                                    FStar_Syntax_Util.mk_and_l in
+                                                                    FStar_Compiler_Effect.op_Bar_Greater
+                                                                    uu___16
+                                                                    (fun
+                                                                    uu___17
+                                                                    ->
+                                                                    FStar_TypeChecker_Common.NonTrivial
+                                                                    uu___17) in
+                                                                   FStar_Compiler_Effect.op_Bar_Greater
+                                                                    uu___15
+                                                                    FStar_TypeChecker_Env.guard_of_guard_formula in
                                                                  let uu___15
                                                                    =
                                                                    let uu___16
@@ -3501,12 +3523,12 @@ let (mk_layered_conjunction :
                            (match uu___3 with
                             | (a_b, rest_bs, f_b, g_b, p_b, body) ->
                                 let uu___4 =
-                                  let with_guard_uvar = false in
+                                  let guard_indexed_effect_uvars = true in
                                   FStar_TypeChecker_Env.uvars_for_binders env
                                     rest_bs
                                     [FStar_Syntax_Syntax.NT
                                        ((a_b.FStar_Syntax_Syntax.binder_bv),
-                                         a)] with_guard_uvar
+                                         a)] guard_indexed_effect_uvars
                                     (fun b ->
                                        let uu___5 =
                                          FStar_Syntax_Print.binder_to_string
@@ -3522,9 +3544,8 @@ let (mk_layered_conjunction :
                                          "implicit var for binder %s of %s:conjunction at %s"
                                          uu___5 uu___6 uu___7) r in
                                 (match uu___4 with
-                                 | (rest_bs_uvars,
-                                    FStar_Pervasives_Native.Some
-                                    rest_uvars_guard_tm, g_uvars) ->
+                                 | (rest_bs_uvars, rest_uvars_guard_tms,
+                                    g_uvars) ->
                                      let substs =
                                        FStar_Compiler_List.map2
                                          (fun b ->
@@ -3635,9 +3656,19 @@ let (mk_layered_conjunction :
                                        let uu___5 =
                                          let uu___6 =
                                            let uu___7 =
-                                             FStar_TypeChecker_Env.guard_of_guard_formula
-                                               (FStar_TypeChecker_Common.NonTrivial
-                                                  rest_uvars_guard_tm) in
+                                             let uu___8 =
+                                               let uu___9 =
+                                                 FStar_Compiler_Effect.op_Bar_Greater
+                                                   rest_uvars_guard_tms
+                                                   FStar_Syntax_Util.mk_and_l in
+                                               FStar_Compiler_Effect.op_Bar_Greater
+                                                 uu___9
+                                                 (fun uu___10 ->
+                                                    FStar_TypeChecker_Common.NonTrivial
+                                                      uu___10) in
+                                             FStar_Compiler_Effect.op_Bar_Greater
+                                               uu___8
+                                               FStar_TypeChecker_Env.guard_of_guard_formula in
                                            [uu___7; f_guard; g_guard] in
                                          g_uvars :: uu___6 in
                                        FStar_TypeChecker_Env.conj_guards
@@ -6897,8 +6928,7 @@ let (lift_tf_layered_effect :
                                      "implicit var for binder %s of %s~>%s at %s"
                                      uu___7 uu___8 uu___9 uu___10) r in
                             (match uu___6 with
-                             | (rest_bs_uvars, FStar_Pervasives_Native.Some
-                                rest_uvars_guard_tm, g) ->
+                             | (rest_bs_uvars, rest_uvars_guard_tms, g) ->
                                  ((let uu___8 =
                                      FStar_Compiler_Effect.op_Less_Bar
                                        (FStar_TypeChecker_Env.debug env)
@@ -7037,9 +7067,19 @@ let (lift_tf_layered_effect :
                                        let uu___10 =
                                          let uu___11 =
                                            let uu___12 =
-                                             FStar_TypeChecker_Env.guard_of_guard_formula
-                                               (FStar_TypeChecker_Common.NonTrivial
-                                                  rest_uvars_guard_tm) in
+                                             let uu___13 =
+                                               let uu___14 =
+                                                 FStar_Compiler_Effect.op_Bar_Greater
+                                                   rest_uvars_guard_tms
+                                                   FStar_Syntax_Util.mk_and_l in
+                                               FStar_Compiler_Effect.op_Bar_Greater
+                                                 uu___14
+                                                 (fun uu___15 ->
+                                                    FStar_TypeChecker_Common.NonTrivial
+                                                      uu___15) in
+                                             FStar_Compiler_Effect.op_Bar_Greater
+                                               uu___13
+                                               FStar_TypeChecker_Env.guard_of_guard_formula in
                                            let uu___13 =
                                              let uu___14 =
                                                let uu___15 =
