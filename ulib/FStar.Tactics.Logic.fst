@@ -317,3 +317,40 @@ let easy_fill () =
 
 val easy : #a:Type -> (#[easy_fill ()] _ : a) -> a
 let easy #a #x = x
+
+private
+let lem1_fa #a #pre #post
+  ($lem : (x:a -> Lemma (requires pre x) (ensures post x))) :
+  Lemma (forall (x:a). pre x ==> post x) =
+  let l' x : Lemma (pre x ==> post x) =
+    Classical.move_requires lem x
+  in
+  Classical.forall_intro l'
+
+private
+let lem2_fa #a #b #pre #post
+  ($lem : (x:a -> y:b -> Lemma (requires pre x y) (ensures post x y))) :
+  Lemma (forall (x:a) (y:b). pre x y ==> post x y) =
+  let l' x y : Lemma (pre x y ==> post x y) =
+    Classical.move_requires (lem x) y
+  in
+  Classical.forall_intro_2 l'
+
+private
+let lem3_fa #a #b #c #pre #post
+  ($lem : (x:a -> y:b -> z:c -> Lemma (requires pre x y z) (ensures post x y z))) :
+  Lemma (forall (x:a) (y:b) (z:c). pre x y z ==> post x y z) =
+  let l' x y z : Lemma (pre x y z ==> post x y z) =
+    Classical.move_requires (lem x y) z
+  in
+  Classical.forall_intro_3 l'
+
+(** Add a lemma into the local context, quantified for all arguments.
+Only works for lemmas with up to 3 arguments for now. It is expected
+that `t` is a top-level name, this has not been battle-tested for other
+kinds of terms. *)
+let using_lemma (t : term) : Tac binder =
+  try pose_lemma (`(lem1_fa (`#t))) with | _ ->
+  try pose_lemma (`(lem2_fa (`#t))) with | _ ->
+  try pose_lemma (`(lem3_fa (`#t))) with | _ ->
+  fail #binder "using_lemma: failed to instantiate"
