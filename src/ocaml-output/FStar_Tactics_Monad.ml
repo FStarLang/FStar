@@ -279,6 +279,10 @@ let (set_smt_goals : FStar_Tactics_Types.goal Prims.list -> unit tac) =
            })
 let (cur_goals : FStar_Tactics_Types.goal Prims.list tac) =
   bind get (fun ps -> ret ps.FStar_Tactics_Types.goals)
+let (cur_goal_maybe_solved : FStar_Tactics_Types.goal tac) =
+  bind cur_goals
+    (fun uu___ ->
+       match uu___ with | [] -> fail "No more goals" | hd::tl -> ret hd)
 let (cur_goal : FStar_Tactics_Types.goal tac) =
   bind cur_goals
     (fun uu___ ->
@@ -290,11 +294,14 @@ let (cur_goal : FStar_Tactics_Types.goal tac) =
             | FStar_Pervasives_Native.None -> ret hd
             | FStar_Pervasives_Native.Some t ->
                 ((let uu___3 =
-                    FStar_Tactics_Printing.goal_to_string_verbose hd in
-                  let uu___4 = FStar_Syntax_Print.term_to_string t in
-                  FStar_Compiler_Util.print2
-                    "!!!!!!!!!!!! GOAL IS ALREADY SOLVED! %s\nsol is %s\n"
-                    uu___3 uu___4);
+                    let uu___4 = FStar_Compiler_Util.stack_dump () in
+                    let uu___5 =
+                      FStar_Tactics_Printing.goal_to_string_verbose hd in
+                    let uu___6 = FStar_Syntax_Print.term_to_string t in
+                    FStar_Compiler_Util.format3
+                      "%s\n!!!!!!!!!!!! GOAL IS ALREADY SOLVED! %s\nsol is %s\n"
+                      uu___4 uu___5 uu___6 in
+                  failwith uu___3);
                  ret hd)))
 let (remove_solved_goals : unit tac) =
   bind cur_goals
@@ -368,7 +375,7 @@ let (replace_cur : FStar_Tactics_Types.goal -> unit tac) =
             } in
           set uu___1))
 let (getopts : FStar_Options.optionstate tac) =
-  let uu___ = trytac cur_goal in
+  let uu___ = trytac cur_goal_maybe_solved in
   bind uu___
     (fun uu___1 ->
        match uu___1 with

@@ -719,8 +719,24 @@ let (tc_unifier_solved_implicits :
                             u.FStar_Syntax_Syntax.ctx_uvar_range in
                         FStar_Tactics_Monad.op_let_Bang uu___3
                           (fun uu___4 ->
-                             mark_uvar_as_already_checked u;
-                             FStar_Tactics_Monad.ret ()))
+                             let uu___5 =
+                               FStar_Tactics_Monad.if_verbose
+                                 (fun uu___6 ->
+                                    FStar_Compiler_Util.print_string
+                                      "After proc_guard'\n";
+                                    FStar_Tactics_Monad.ret ()) in
+                             FStar_Tactics_Monad.op_let_Bang uu___5
+                               (fun uu___6 ->
+                                  mark_uvar_as_already_checked u;
+                                  (let uu___8 =
+                                     FStar_Tactics_Monad.if_verbose
+                                       (fun uu___9 ->
+                                          FStar_Compiler_Util.print_string
+                                            "After mark_uvar\n";
+                                          FStar_Tactics_Monad.ret ()) in
+                                   FStar_Tactics_Monad.op_let_Bang uu___8
+                                     (fun uu___9 ->
+                                        FStar_Tactics_Monad.ret ())))))
                  | FStar_Pervasives.Inr failed ->
                      let uu___2 =
                        FStar_Syntax_Print.uvar_to_string

@@ -357,9 +357,10 @@ let __do_unify_wflags
         bind (trytac cur_goal) (fun gopt ->
         try
           let res =
-          if allow_guards
-          then Rel.try_teq true env t1 t2
-          else Rel.teq_nosmt env t1 t2 in
+            if allow_guards
+            then Rel.try_teq true env t1 t2
+            else Rel.teq_nosmt env t1 t2
+          in
           if dbg then
             BU.print3 "%%%%%%%%do_unify (RESULT %s) %s =? %s\n"
                               (FStar.Common.string_of_option (Rel.guard_to_string env) res)
