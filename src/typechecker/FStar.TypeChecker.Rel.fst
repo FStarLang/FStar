@@ -4170,8 +4170,8 @@ and solve_c (env:Env.env) (problem:problem comp) (wl:worklist) : solution =
                 raise_error (Errors.Fatal_UnexpectedExpressionType,
                   stronger_t_shape_error "not an arrow or not enough binders") r in
 
-            let rest_bs_uvars, _, g_uvars =
-              let guard_indexed_effect_uvars = false in
+            let rest_bs_uvars, rest_uvars_guard_tms, g_uvars =
+              let guard_indexed_effect_uvars = true in
               Env.uvars_for_binders env rest_bs
                 [NT (a_b.binder_bv, c2.result_typ)] guard_indexed_effect_uvars
                 (fun b -> BU.format3 "implicit for binder %s in subcomp of %s at %s"
@@ -4225,7 +4225,7 @@ and solve_c (env:Env.env) (problem:problem comp) (wl:worklist) : solution =
                             f_sub_probs@
                             g_sub_probs) in
             let guard =
-              let guard = U.mk_conj_l (List.map p_guard sub_probs) in
+              let guard = U.mk_conj_l ((List.map p_guard sub_probs)@rest_uvars_guard_tms) in
               match g_lift.guard_f with
               | Trivial -> guard
               | NonTrivial f -> U.mk_conj guard f in
@@ -4926,17 +4926,27 @@ let core_check_and_maybe_add_to_guard_uvar env uv t k must_tot =
     else () in
   match env.core_check env t k must_tot with
   | Inl None ->
-    debug (fun _ -> BU.print_string "Core check ok (no guard)\n");
+    debug (fun _ ->
+           BU.print1 "Core checking of uvar %s ok (no guard)\n"
+             (Print.ctx_uvar_to_string uv));
     Inl None
 
   | Inl (Some vc) ->
-    debug (fun _ -> BU.print_string "Core check ok\n");    
+    debug (fun _ ->
+           BU.print1 "Core checking of uvar %s ok\n"
+             (Print.ctx_uvar_to_string uv));
+
     (match U.ctx_uvar_kind uv with
      | Inl None -> Inl (Some vc)
      | Inl (Some g_uv) ->
+       debug (fun _ ->
+              BU.print2 "Uvar %s has guard uvar %s, setting guard\n"
+                (Print.ctx_uvar_to_string uv)
+                (Print.ctx_uvar_to_string g_uv));
        commit env [TERM (g_uv, vc)];
        Inl None
      | Inr () -> failwith "Impossible!")
+
   | Inr err ->
     debug (fun _ -> 
            BU.print5 "(%s) Core checking failed (%s) on term %s and type %s\n%s\n"

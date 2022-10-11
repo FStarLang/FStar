@@ -109,18 +109,18 @@ let pure_wp_uvar env (t:typ) (reason:string) (r:Range.range) : term * guard_t =
  * Essentially we want to ensure that uvars are not introduces at a type different than
  *   what they are used at
  *)
-let check_no_subtyping_for_layered_combinator env (t:term) (k:option typ) =
-  if Env.debug env <| Options.Other "LayeredEffectsTc"
-  then BU.print2 "Checking that %s is well typed with no subtyping (k:%s)\n"
-         (Print.term_to_string t)
-         (match k with
-          | None -> "None"
-          | Some k -> Print.term_to_string k);
+let check_no_subtyping_for_layered_combinator env (t:term) (k:option typ) = ()
+  // if Env.debug env <| Options.Other "LayeredEffectsTc"
+  // then BU.print2 "Checking that %s is well typed with no subtyping (k:%s)\n"
+  //        (Print.term_to_string t)
+  //        (match k with
+  //         | None -> "None"
+  //         | Some k -> Print.term_to_string k);
 
-  let env = ({ env with use_eq_strict = true }) in
-  match k with
-  | None -> ignore (tc_trivial_guard env t)
-  | Some k -> ignore (tc_check_trivial_guard env t k)
+  // let env = ({ env with use_eq_strict = true }) in
+  // match k with
+  // | None -> ignore (tc_trivial_guard env t)
+  // | Some k -> ignore (tc_check_trivial_guard env t k)
 
 
 (*

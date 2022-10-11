@@ -748,6 +748,62 @@ let (mk_wp_return :
                    "(%s) returning %s at comp type %s\n" uu___2 uu___3 uu___4
                else ());
               c
+let (label :
+  Prims.string ->
+    FStar_Compiler_Range.range ->
+      FStar_Syntax_Syntax.typ -> FStar_Syntax_Syntax.typ)
+  =
+  fun reason ->
+    fun r ->
+      fun f ->
+        FStar_Syntax_Syntax.mk
+          (FStar_Syntax_Syntax.Tm_meta
+             (f, (FStar_Syntax_Syntax.Meta_labeled (reason, r, false))))
+          f.FStar_Syntax_Syntax.pos
+let (label_opt :
+  FStar_TypeChecker_Env.env ->
+    (unit -> Prims.string) FStar_Pervasives_Native.option ->
+      FStar_Compiler_Range.range ->
+        FStar_Syntax_Syntax.typ -> FStar_Syntax_Syntax.typ)
+  =
+  fun env ->
+    fun reason ->
+      fun r ->
+        fun f ->
+          match reason with
+          | FStar_Pervasives_Native.None -> f
+          | FStar_Pervasives_Native.Some reason1 ->
+              let uu___ =
+                let uu___1 = FStar_TypeChecker_Env.should_verify env in
+                FStar_Compiler_Effect.op_Less_Bar Prims.op_Negation uu___1 in
+              if uu___
+              then f
+              else (let uu___2 = reason1 () in label uu___2 r f)
+let (label_guard :
+  FStar_Compiler_Range.range ->
+    Prims.string ->
+      FStar_TypeChecker_Env.guard_t -> FStar_TypeChecker_Env.guard_t)
+  =
+  fun r ->
+    fun reason ->
+      fun g ->
+        match g.FStar_TypeChecker_Common.guard_f with
+        | FStar_TypeChecker_Common.Trivial -> g
+        | FStar_TypeChecker_Common.NonTrivial f ->
+            let uu___ =
+              let uu___1 = label reason r f in
+              FStar_TypeChecker_Common.NonTrivial uu___1 in
+            {
+              FStar_TypeChecker_Common.guard_f = uu___;
+              FStar_TypeChecker_Common.deferred_to_tac =
+                (g.FStar_TypeChecker_Common.deferred_to_tac);
+              FStar_TypeChecker_Common.deferred =
+                (g.FStar_TypeChecker_Common.deferred);
+              FStar_TypeChecker_Common.univ_ineqs =
+                (g.FStar_TypeChecker_Common.univ_ineqs);
+              FStar_TypeChecker_Common.implicits =
+                (g.FStar_TypeChecker_Common.implicits)
+            }
 let (mk_indexed_return :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.eff_decl ->
@@ -890,17 +946,22 @@ let (mk_indexed_return :
                                  let uu___7 =
                                    let uu___8 =
                                      let uu___9 =
+                                       let uu___10 =
+                                         FStar_Compiler_Effect.op_Bar_Greater
+                                           rest_uvars_guard_tms
+                                           FStar_Syntax_Util.mk_and_l in
                                        FStar_Compiler_Effect.op_Bar_Greater
-                                         rest_uvars_guard_tms
-                                         FStar_Syntax_Util.mk_and_l in
+                                         uu___10
+                                         (fun uu___11 ->
+                                            FStar_TypeChecker_Common.NonTrivial
+                                              uu___11) in
                                      FStar_Compiler_Effect.op_Bar_Greater
                                        uu___9
-                                       (fun uu___10 ->
-                                          FStar_TypeChecker_Common.NonTrivial
-                                            uu___10) in
+                                       FStar_TypeChecker_Env.guard_of_guard_formula in
                                    FStar_Compiler_Effect.op_Bar_Greater
                                      uu___8
-                                     FStar_TypeChecker_Env.guard_of_guard_formula in
+                                     (label_guard r
+                                        "tc guard for indexed binders (return)") in
                                  FStar_TypeChecker_Env.conj_guard g_uvars
                                    uu___7 in
                                (c, uu___6))))))
@@ -1137,62 +1198,6 @@ let (is_function : FStar_Syntax_Syntax.term -> Prims.bool) =
     match uu___ with
     | FStar_Syntax_Syntax.Tm_arrow uu___1 -> true
     | uu___1 -> false
-let (label :
-  Prims.string ->
-    FStar_Compiler_Range.range ->
-      FStar_Syntax_Syntax.typ -> FStar_Syntax_Syntax.typ)
-  =
-  fun reason ->
-    fun r ->
-      fun f ->
-        FStar_Syntax_Syntax.mk
-          (FStar_Syntax_Syntax.Tm_meta
-             (f, (FStar_Syntax_Syntax.Meta_labeled (reason, r, false))))
-          f.FStar_Syntax_Syntax.pos
-let (label_opt :
-  FStar_TypeChecker_Env.env ->
-    (unit -> Prims.string) FStar_Pervasives_Native.option ->
-      FStar_Compiler_Range.range ->
-        FStar_Syntax_Syntax.typ -> FStar_Syntax_Syntax.typ)
-  =
-  fun env ->
-    fun reason ->
-      fun r ->
-        fun f ->
-          match reason with
-          | FStar_Pervasives_Native.None -> f
-          | FStar_Pervasives_Native.Some reason1 ->
-              let uu___ =
-                let uu___1 = FStar_TypeChecker_Env.should_verify env in
-                FStar_Compiler_Effect.op_Less_Bar Prims.op_Negation uu___1 in
-              if uu___
-              then f
-              else (let uu___2 = reason1 () in label uu___2 r f)
-let (label_guard :
-  FStar_Compiler_Range.range ->
-    Prims.string ->
-      FStar_TypeChecker_Env.guard_t -> FStar_TypeChecker_Env.guard_t)
-  =
-  fun r ->
-    fun reason ->
-      fun g ->
-        match g.FStar_TypeChecker_Common.guard_f with
-        | FStar_TypeChecker_Common.Trivial -> g
-        | FStar_TypeChecker_Common.NonTrivial f ->
-            let uu___ =
-              let uu___1 = label reason r f in
-              FStar_TypeChecker_Common.NonTrivial uu___1 in
-            {
-              FStar_TypeChecker_Common.guard_f = uu___;
-              FStar_TypeChecker_Common.deferred_to_tac =
-                (g.FStar_TypeChecker_Common.deferred_to_tac);
-              FStar_TypeChecker_Common.deferred =
-                (g.FStar_TypeChecker_Common.deferred);
-              FStar_TypeChecker_Common.univ_ineqs =
-                (g.FStar_TypeChecker_Common.univ_ineqs);
-              FStar_TypeChecker_Common.implicits =
-                (g.FStar_TypeChecker_Common.implicits)
-            }
 let (close_wp_comp :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.bv Prims.list ->
@@ -2031,19 +2036,33 @@ let (mk_indexed_bind :
                                                                     =
                                                                     let uu___16
                                                                     =
+                                                                    let uu___17
+                                                                    =
                                                                     FStar_Compiler_Effect.op_Bar_Greater
                                                                     rest_uvars_guard_tms
                                                                     FStar_Syntax_Util.mk_and_l in
                                                                     FStar_Compiler_Effect.op_Bar_Greater
-                                                                    uu___16
-                                                                    (fun
                                                                     uu___17
+                                                                    (fun
+                                                                    uu___18
                                                                     ->
                                                                     FStar_TypeChecker_Common.NonTrivial
-                                                                    uu___17) in
+                                                                    uu___18) in
+                                                                    FStar_Compiler_Effect.op_Bar_Greater
+                                                                    uu___16
+                                                                    FStar_TypeChecker_Env.guard_of_guard_formula in
+                                                                   let uu___16
+                                                                    =
+                                                                    let uu___17
+                                                                    =
+                                                                    FStar_TypeChecker_Env.get_range
+                                                                    env in
+                                                                    label_guard
+                                                                    uu___17
+                                                                    "tc guard for indexed binders (bind)" in
                                                                    FStar_Compiler_Effect.op_Bar_Greater
                                                                     uu___15
-                                                                    FStar_TypeChecker_Env.guard_of_guard_formula in
+                                                                    uu___16 in
                                                                  let uu___15
                                                                    =
                                                                    let uu___16
@@ -3658,17 +3677,22 @@ let (mk_layered_conjunction :
                                            let uu___7 =
                                              let uu___8 =
                                                let uu___9 =
+                                                 let uu___10 =
+                                                   FStar_Compiler_Effect.op_Bar_Greater
+                                                     rest_uvars_guard_tms
+                                                     FStar_Syntax_Util.mk_and_l in
                                                  FStar_Compiler_Effect.op_Bar_Greater
-                                                   rest_uvars_guard_tms
-                                                   FStar_Syntax_Util.mk_and_l in
+                                                   uu___10
+                                                   (fun uu___11 ->
+                                                      FStar_TypeChecker_Common.NonTrivial
+                                                        uu___11) in
                                                FStar_Compiler_Effect.op_Bar_Greater
                                                  uu___9
-                                                 (fun uu___10 ->
-                                                    FStar_TypeChecker_Common.NonTrivial
-                                                      uu___10) in
+                                                 FStar_TypeChecker_Env.guard_of_guard_formula in
                                              FStar_Compiler_Effect.op_Bar_Greater
                                                uu___8
-                                               FStar_TypeChecker_Env.guard_of_guard_formula in
+                                               (label_guard r
+                                                  "tc guard for indexed binders (conj)") in
                                            [uu___7; f_guard; g_guard] in
                                          g_uvars :: uu___6 in
                                        FStar_TypeChecker_Env.conj_guards
@@ -7069,17 +7093,22 @@ let (lift_tf_layered_effect :
                                            let uu___12 =
                                              let uu___13 =
                                                let uu___14 =
+                                                 let uu___15 =
+                                                   FStar_Compiler_Effect.op_Bar_Greater
+                                                     rest_uvars_guard_tms
+                                                     FStar_Syntax_Util.mk_and_l in
                                                  FStar_Compiler_Effect.op_Bar_Greater
-                                                   rest_uvars_guard_tms
-                                                   FStar_Syntax_Util.mk_and_l in
+                                                   uu___15
+                                                   (fun uu___16 ->
+                                                      FStar_TypeChecker_Common.NonTrivial
+                                                        uu___16) in
                                                FStar_Compiler_Effect.op_Bar_Greater
                                                  uu___14
-                                                 (fun uu___15 ->
-                                                    FStar_TypeChecker_Common.NonTrivial
-                                                      uu___15) in
+                                                 FStar_TypeChecker_Env.guard_of_guard_formula in
                                              FStar_Compiler_Effect.op_Bar_Greater
                                                uu___13
-                                               FStar_TypeChecker_Env.guard_of_guard_formula in
+                                               (label_guard r
+                                                  "tc guard for indexed binders (lift)") in
                                            let uu___13 =
                                              let uu___14 =
                                                let uu___15 =

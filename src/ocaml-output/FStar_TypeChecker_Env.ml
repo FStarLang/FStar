@@ -6555,8 +6555,7 @@ let (uvars_for_binders :
                                           let uu___5 = reason b in
                                           new_implicit_var_with_kind uu___5 r
                                             env1 sort
-                                            (FStar_Syntax_Syntax.Allow_untyped
-                                               "layered effects binder")
+                                            FStar_Syntax_Syntax.Strict
                                             (FStar_Pervasives.Inl
                                                guard_uvar_opt)
                                             ctx_uvar_meta_t in

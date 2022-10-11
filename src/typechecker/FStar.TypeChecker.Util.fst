@@ -527,6 +527,20 @@ let mk_wp_return env (ed:S.eff_decl) (u_a:universe) (a:typ) (e:term) (r:Range.ra
                     (N.comp_to_string env c);
   c
 
+let label reason r f : term =
+    mk (Tm_meta(f, Meta_labeled(reason, r, false))) f.pos
+
+let label_opt env reason r f = match reason with
+    | None -> f
+    | Some reason ->
+        if not <| Env.should_verify env
+        then f
+        else label (reason()) r f
+
+let label_guard r reason (g:guard_t) = match g.guard_f with
+    | Trivial -> g
+    | NonTrivial f -> {g with guard_f=NonTrivial (label reason r f)}
+
 (*
  * Build the M.return comp for an indexed effect
  *
@@ -590,7 +604,8 @@ let mk_indexed_return env (ed:S.eff_decl) (u_a:universe) (a:typ) (e:term) (r:Ran
     (rest_uvars_guard_tms
      |> U.mk_and_l
      |> TcComm.NonTrivial
-     |> Env.guard_of_guard_formula)
+     |> Env.guard_of_guard_formula
+     |> label_guard r "tc guard for indexed binders (return)")
 
 (*
  * Wrapper over mk_wp_return and mk_indexed_return
@@ -685,20 +700,6 @@ let lax_mk_tot_or_comp_l mname u_result result flags =
 let is_function t = match (compress t).n with
     | Tm_arrow _ -> true
     | _ -> false
-
-let label reason r f : term =
-    mk (Tm_meta(f, Meta_labeled(reason, r, false))) f.pos
-
-let label_opt env reason r f = match reason with
-    | None -> f
-    | Some reason ->
-        if not <| Env.should_verify env
-        then f
-        else label (reason()) r f
-
-let label_guard r reason (g:guard_t) = match g.guard_f with
-    | Trivial -> g
-    | NonTrivial f -> {g with guard_f=NonTrivial (label reason r f)}
 
 let close_wp_comp env bvs (c:comp) =
     if U.is_ml_comp c then c
@@ -1013,7 +1014,8 @@ let mk_indexed_bind env
       (rest_uvars_guard_tms
          |> U.mk_and_l
          |> TcComm.NonTrivial
-         |> Env.guard_of_guard_formula);
+         |> Env.guard_of_guard_formula
+         |> label_guard (Env.get_range env) "tc guard for indexed binders (bind)");
       f_guard;
       g_guard;
       Env.guard_of_guard_formula (TcComm.NonTrivial fml)]
@@ -1756,7 +1758,8 @@ let mk_layered_conjunction env (ed:S.eff_decl) (u_a:universe) (a:term) (p:typ) (
     (rest_uvars_guard_tms
        |> U.mk_and_l
        |> TcComm.NonTrivial
-       |> Env.guard_of_guard_formula);
+       |> Env.guard_of_guard_formula
+       |> label_guard r "tc guard for indexed binders (conj)");
     f_guard;
     g_guard ] in
 
@@ -3254,7 +3257,8 @@ let lift_tf_layered_effect (tgt:lident) (lift_ts:tscheme)
     (rest_uvars_guard_tms
        |> U.mk_and_l
        |> TcComm.NonTrivial
-       |> Env.guard_of_guard_formula);
+       |> Env.guard_of_guard_formula
+       |> label_guard r "tc guard for indexed binders (lift)");
     guard_f;
     Env.guard_of_guard_formula (TcComm.NonTrivial fml) ] in
     

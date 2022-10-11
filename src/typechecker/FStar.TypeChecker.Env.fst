@@ -1866,7 +1866,7 @@ let uvars_for_binders env (bs:S.binders) substs add_guard_uvars reason r =
       else guard_uvar_tms, None, trivial_guard in
 
     let t, l_ctx_uvars, g_t = new_implicit_var_with_kind
-      (reason b) r env sort (Allow_untyped "layered effects binder") (Inl guard_uvar_opt) ctx_uvar_meta_t in
+      (reason b) r env sort Strict (Inl guard_uvar_opt) ctx_uvar_meta_t in
 
     if debug env <| Options.Other "LayeredEffectsEqns"
     then List.iter (fun (ctx_uvar, _) -> BU.print2 "Layered Effect uvar : %s (Typing guard uvar : %s)\n"
