@@ -2263,6 +2263,10 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
         body, cbody, Env.conj_guard guard_body g_lc
     in
 
+    if Env.debug env <| Options.Extreme
+    then BU.print1 "tc_abs: guard_body: %s\n"
+           (Rel.guard_to_string env guard_body);
+
     let guard = if env.top_level
                 || not (Options.should_verify (string_of_lid env.curmodule))
                 then Env.conj_guard (Rel.discharge_guard env g_env)

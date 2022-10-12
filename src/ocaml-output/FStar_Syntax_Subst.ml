@@ -764,7 +764,8 @@ let rec (push_subst :
         let uu___ = mk_range t.FStar_Syntax_Syntax.pos s in
         FStar_Syntax_Syntax.mk t' uu___ in
       match t.FStar_Syntax_Syntax.n with
-      | FStar_Syntax_Syntax.Tm_delayed uu___ -> failwith "Impossible"
+      | FStar_Syntax_Syntax.Tm_delayed uu___ ->
+          failwith "Impossible (push_subst)"
       | FStar_Syntax_Syntax.Tm_lazy i ->
           (match i.FStar_Syntax_Syntax.lkind with
            | FStar_Syntax_Syntax.Lazy_embedding uu___ ->
@@ -780,7 +781,7 @@ let rec (push_subst :
       | FStar_Syntax_Syntax.Tm_constant uu___ -> tag_with_range t s
       | FStar_Syntax_Syntax.Tm_fvar uu___ -> tag_with_range t s
       | FStar_Syntax_Syntax.Tm_unknown -> tag_with_range t s
-      | FStar_Syntax_Syntax.Tm_uvar (uv, s0) ->
+      | FStar_Syntax_Syntax.Tm_uvar (uv, s1) ->
           let uu___ =
             FStar_Syntax_Unionfind.find uv.FStar_Syntax_Syntax.ctx_uvar_head in
           (match uu___ with
@@ -788,7 +789,7 @@ let rec (push_subst :
                let uu___1 =
                  let uu___2 =
                    let uu___3 =
-                     let uu___4 = compose_uvar_subst uv s0 s in (uv, uu___4) in
+                     let uu___4 = compose_uvar_subst uv s1 s in (uv, uu___4) in
                    FStar_Syntax_Syntax.Tm_uvar uu___3 in
                  {
                    FStar_Syntax_Syntax.n = uu___2;
@@ -799,7 +800,12 @@ let rec (push_subst :
                  } in
                tag_with_range uu___1 s
            | FStar_Pervasives_Native.Some t1 ->
-               push_subst (compose_subst s0 s) t1)
+               let uu___1 =
+                 match t1.FStar_Syntax_Syntax.n with
+                 | FStar_Syntax_Syntax.Tm_delayed (t2, s0) ->
+                     ((compose_subst s0 (compose_subst s1 s)), t2)
+                 | uu___2 -> ((compose_subst s1 s), t1) in
+               (match uu___1 with | (s2, t2) -> push_subst s2 t2))
       | FStar_Syntax_Syntax.Tm_type uu___ -> subst' s t
       | FStar_Syntax_Syntax.Tm_bvar uu___ -> subst' s t
       | FStar_Syntax_Syntax.Tm_name uu___ -> subst' s t
@@ -1697,7 +1703,8 @@ let rec (deep_compress :
         FStar_Syntax_Syntax.sort = uu___
       } in
     match t1.FStar_Syntax_Syntax.n with
-    | FStar_Syntax_Syntax.Tm_delayed uu___ -> failwith "Impossible"
+    | FStar_Syntax_Syntax.Tm_delayed uu___ ->
+        failwith "Impossible (deep_compress)"
     | FStar_Syntax_Syntax.Tm_fvar uu___ ->
         let uu___1 = FStar_Compiler_Util.mk_ref FStar_Pervasives_Native.None in
         {

@@ -373,7 +373,7 @@ let rec push_subst s t =
     //makes a syntax node, setting it's use range as appropriate from s
     let mk t' = Syntax.mk t' (mk_range t.pos s) in
     match t.n with
-    | Tm_delayed _ -> failwith "Impossible"
+    | Tm_delayed _ -> failwith "Impossible (delayed node in push_subst)"
 
     | Tm_lazy i ->
         begin match i.lkind with
@@ -832,7 +832,7 @@ let rec deep_compress (t:term) : term =
     let t = compress t in
     let elim_bv x = {x with sort=deep_compress x.sort} in
     match t.n with
-    | Tm_delayed _ -> failwith "Impossible"
+    | Tm_delayed _ -> failwith "Impossible (delayed node in deep_compress)"
     | Tm_fvar _
     | Tm_constant _
     (* NOTE: the BVs here contain a sort, but it is not reached

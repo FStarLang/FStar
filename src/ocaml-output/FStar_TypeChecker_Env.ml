@@ -6588,7 +6588,7 @@ let (uvars_for_binders :
                                                                 (FStar_Pervasives_Native.Some
                                                                 uv) ->
                                                                 FStar_Syntax_Print.ctx_uvar_to_string_no_reason
-                                                                  ctx_uvar
+                                                                  uv
                                                             | uu___12 ->
                                                                 failwith
                                                                   "Impossible!" in

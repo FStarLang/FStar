@@ -1873,7 +1873,7 @@ let uvars_for_binders env (bs:S.binders) substs add_guard_uvars reason r =
       (Print.ctx_uvar_to_string_no_reason ctx_uvar)
       (match U.ctx_uvar_kind ctx_uvar with
        | Inl None -> "None"
-       | Inl (Some uv) -> Print.ctx_uvar_to_string_no_reason ctx_uvar
+       | Inl (Some uv) -> Print.ctx_uvar_to_string_no_reason uv
        | _ -> failwith "Impossible!")) l_ctx_uvars;
 
     substs@[NT (b.binder_bv, t)],

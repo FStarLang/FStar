@@ -1214,7 +1214,7 @@ let rec delta_depth_of_term env t =
     let t = U.unmeta t in
     match t.n with
     | Tm_meta _
-    | Tm_delayed _  -> failwith "Impossible"
+    | Tm_delayed _  -> failwith "Impossible (delta depth of term)"
     | Tm_lazy i -> delta_depth_of_term env (U.unfold_lazy i)
     | Tm_unknown
     | Tm_bvar _
@@ -4919,30 +4919,35 @@ let try_solve_single_valued_implicits env is_tac (imps:Env.implicits) : Env.impl
 
     imps, b
 
+//
+// Set the guard uvar for uv to tm, if it exists
+// Return true if we set it, false otherwise
+//
+let maybe_set_guard_uvar env (uv:ctx_uvar) (tm:typ) : bool =
+  match U.ctx_uvar_kind uv with
+  | Inl None -> false
+  | Inl (Some g_uv) ->
+    if Options.debug_any ()
+    then BU.print3 "Uvar %s has guard uvar %s, setting guard to %s\n"
+           (Print.ctx_uvar_to_string uv)
+           (Print.ctx_uvar_to_string g_uv)
+           (Print.term_to_string tm);
+    commit env [TERM (g_uv, tm)];
+    true
+  | Inr _ -> failwith "Impossible (maybe_set_guard_uvar)"
+
+
 let core_check_and_maybe_add_to_guard_uvar env uv t k must_tot =
   let debug f =
     if Options.debug_any()
-    then f ()
-    else () in
-
-  let maybe_set_guard_uvar tm : bool =
-    match U.ctx_uvar_kind uv with
-    | Inl None -> false
-    | Inl (Some g_uv) ->
-      debug (fun _ ->
-             BU.print2 "Uvar %s has guard uvar %s, setting guard\n"
-               (Print.ctx_uvar_to_string uv)
-               (Print.ctx_uvar_to_string g_uv));
-       commit env [TERM (g_uv, tm)];
-       true
-    | Inr _ -> failwith "Impossible!" in
+    then f () in
 
   match env.core_check env t k must_tot with
   | Inl None ->
     debug (fun _ ->
            BU.print1 "Core checking of uvar %s ok (no guard)\n"
              (Print.ctx_uvar_to_string uv));
-    ignore (maybe_set_guard_uvar U.t_true);
+    ignore (maybe_set_guard_uvar env uv U.t_true);
     Inl None
 
   | Inl (Some vc) ->
@@ -4950,7 +4955,7 @@ let core_check_and_maybe_add_to_guard_uvar env uv t k must_tot =
            BU.print1 "Core checking of uvar %s ok\n"
              (Print.ctx_uvar_to_string uv));
 
-    if maybe_set_guard_uvar vc
+    if maybe_set_guard_uvar env uv vc
     then Inl None
     else Inl (Some vc)
 
@@ -5011,7 +5016,10 @@ let check_implicit_solution env uv t k (must_tot:bool) (reason:string) : guard_t
           (print_err false));
       fallback()
   )
-  else fallback()
+  else begin
+    ignore (maybe_set_guard_uvar env uv U.t_true);
+    fallback()
+  end
 
 (*
  * Return None if we did not typecheck the implicit because
@@ -5139,57 +5147,6 @@ let rec check_implicit_solution_for_tac (env:env) (i:implicit) : option (term * 
            (err false));
       None
   )
-    
-  //   if uvar_should_check = Strict_no_fastpath
-  //   then let _ =
-  //          if Env.debug env <| Options.Other "2635"
-  //          then BU.print2 "Uvar %s solution deemed to be solved in a larger context, rechecking %s {\n"
-  //                 (Print.ctx_uvar_to_string ctx_u)
-  //                 (Print.term_to_string tm) in
-  //        let env = {Env.set_expected_typ env uvar_ty with enable_defer_to_tac=false} in
-  //        let _, _, g_t = Profiling.profile (fun () -> env.typeof_tot_or_gtot_term env tm false)
-  //                          None
-  //                          "retype_tactic_solution" in
-  //        force_trivial_guard env g_t;
-  //        if Env.debug env <| Options.Other "2635"
-  //        then BU.print1 "Retyped tm %s}\n" (Print.ctx_uvar_to_string ctx_u);
-  //        None
-  //   else let tm_t, _ = Profiling.profile (fun () -> env.typeof_well_typed_tot_or_gtot_term env tm false)
-  //                        None
-  //                        "retype_tactic_solution" in
-  //        if Profiling.profile (fun () -> env.teq_nosmt_force env tm_t uvar_ty)
-  //                             None
-  //                             "tc_tactic_solution"
-  //       then None
-  //       else if Profiling.profile (fun () -> env.subtype_nosmt_force env tm_t uvar_ty)
-  //                             None
-  //                             "tc_tactic_solution"
-  //      then None
-  //      else begin
-  //       //
-  //       // failing at this point is fatal;
-  //       // and the check may have failed because we didn't unroll let recs;
-  //       // so try once more after normalizing both types
-  //       //
-  //       let compute t =
-  //           N.normalize [Env.UnfoldTac; //we're in is_tac; don't unfold "tac_opaque"
-  //                        Env.UnfoldUntil delta_constant;
-  //                        Env.Zeta;
-  //                        Env.Iota;
-  //                        Env.Primops]
-  //                        env
-  //                        t
-  //       in
-  //       let retry () = 
-  //         let tm_t = compute tm_t in
-  //         let uv_t = compute uvar_ty in
-  //         env.subtype_nosmt_force env tm_t uv_t
-  //       in
-  //       if retry()
-  //       then None
-  //       else Some (tm, tm_t)
-  //     end
-  // )
 
 and resolve_implicits' env is_tac (implicits:Env.implicits) 
   : list (implicit * implicit_checking_status) =
