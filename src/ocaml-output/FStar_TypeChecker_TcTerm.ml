@@ -6160,7 +6160,7 @@ and (tc_abs :
                       | (body2, cbody, guard_body) ->
                           let guard =
                             let uu___6 =
-                              env1.FStar_TypeChecker_Env.top_level ||
+                              false ||
                                 (let uu___7 =
                                    let uu___8 =
                                      FStar_Ident.string_of_lid
