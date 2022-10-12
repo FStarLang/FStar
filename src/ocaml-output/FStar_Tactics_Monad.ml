@@ -279,6 +279,10 @@ let (set_smt_goals : FStar_Tactics_Types.goal Prims.list -> unit tac) =
            })
 let (cur_goals : FStar_Tactics_Types.goal Prims.list tac) =
   bind get (fun ps -> ret ps.FStar_Tactics_Types.goals)
+let (cur_goal_maybe_solved : FStar_Tactics_Types.goal tac) =
+  bind cur_goals
+    (fun uu___ ->
+       match uu___ with | [] -> fail "No more goals" | hd::tl -> ret hd)
 let (cur_goal : FStar_Tactics_Types.goal tac) =
   bind cur_goals
     (fun uu___ ->
@@ -368,7 +372,7 @@ let (replace_cur : FStar_Tactics_Types.goal -> unit tac) =
             } in
           set uu___1))
 let (getopts : FStar_Options.optionstate tac) =
-  let uu___ = trytac cur_goal in
+  let uu___ = trytac cur_goal_maybe_solved in
   bind uu___
     (fun uu___1 ->
        match uu___1 with
@@ -539,18 +543,7 @@ let (new_uvar :
             let should_check =
               match sc_opt with
               | FStar_Pervasives_Native.Some sc -> sc
-              | uu___ ->
-                  ((let uu___2 =
-                      FStar_Compiler_Effect.op_Less_Bar
-                        (FStar_TypeChecker_Env.debug env)
-                        (FStar_Options.Other "2635") in
-                    if uu___2
-                    then
-                      let uu___3 = FStar_Syntax_Print.term_to_string typ in
-                      FStar_Compiler_Util.print1
-                        "Tactic introduced a strict uvar for %s\n" uu___3
-                    else ());
-                   FStar_Syntax_Syntax.Strict) in
+              | uu___ -> FStar_Syntax_Syntax.Strict in
             let uu___ =
               FStar_TypeChecker_Env.new_implicit_var reason rng env typ
                 should_check FStar_Pervasives_Native.None in

@@ -281,7 +281,7 @@ let tc_unifier_solved_implicits dbg env (must_tot:bool) (allow_guards:bool) (uvs
 
         if Trivial? guard.guard_f
         then ret ()
-        else if false && not allow_guards
+        else if false && not allow_guards // Nik: Disable it for now
         then (
           fail2 "Could not typecheck unifier solved implicit %s to %s since it produced a guard and guards were not allowed"
             (Print.uvar_to_string u.ctx_uvar_head)
