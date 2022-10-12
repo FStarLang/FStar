@@ -6202,7 +6202,7 @@ and (tc_abs :
                             else ());
                            (let guard =
                               let uu___7 =
-                                false ||
+                                env1.FStar_TypeChecker_Env.top_level ||
                                   (let uu___8 =
                                      let uu___9 =
                                        FStar_Ident.string_of_lid
