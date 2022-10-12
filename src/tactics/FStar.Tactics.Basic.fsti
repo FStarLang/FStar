@@ -84,6 +84,7 @@ val t_destruct             : term -> tac (list (fv * Z.t))
 val gather_explicit_guards_for_resolved_goals : unit -> tac unit
 val set_options            : string -> tac unit
 val uvar_env               : env -> option typ -> tac term
+val ghost_uvar_env         : env -> typ -> tac term
 val fresh_universe_uvar    : unit -> tac term
 val unify_env              : env -> term -> term -> tac bool
 val unify_guard_env        : env -> term -> term -> tac bool

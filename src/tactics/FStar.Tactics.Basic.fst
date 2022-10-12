@@ -260,6 +260,13 @@ let tc_unifier_solved_implicits dbg env (must_tot:bool) (allow_guards:bool) (uvs
     | None -> ret () //not solved yet
     | Some sol ->  //solved, check it
       let env = {env with gamma=u.ctx_uvar_gamma} in
+      let must_tot = 
+        if must_tot
+        then match (UF.find_decoration u.ctx_uvar_head).uvar_decoration_should_check with
+             | Allow_ghost _ -> false
+             | _ -> true
+        else false
+      in
       match Rel.core_check_and_maybe_add_to_guard_uvar env u sol (U.ctx_uvar_typ u) must_tot with
       | Inl None ->
         //checked with no guard
@@ -274,7 +281,7 @@ let tc_unifier_solved_implicits dbg env (must_tot:bool) (allow_guards:bool) (uvs
 
         if Trivial? guard.guard_f
         then ret ()
-        else if not allow_guards
+        else if false && not allow_guards
         then (
           fail2 "Could not typecheck unifier solved implicit %s to %s since it produced a guard and guards were not allowed"
             (Print.uvar_to_string u.ctx_uvar_head)
@@ -292,7 +299,9 @@ let tc_unifier_solved_implicits dbg env (must_tot:bool) (allow_guards:bool) (uvs
           (term_to_string env sol)
           (failed true)
   in
-  uvs |> iter_tac aux
+  if env.phase1 //phase1 is untrusted
+  then ret ()
+  else uvs |> iter_tac aux
 
 //
 // When calling Rel for t1 `rel` t2, caller can choose to tc
@@ -331,9 +340,10 @@ let __do_unify_wflags
         bind (trytac cur_goal) (fun gopt ->
         try
           let res =
-          if allow_guards
-          then Rel.try_teq true env t1 t2
-          else Rel.teq_nosmt env t1 t2 in
+            if allow_guards
+            then Rel.try_teq true env t1 t2
+            else Rel.teq_nosmt env t1 t2
+          in
           if dbg then
             BU.print3 "%%%%%%%%do_unify (RESULT %s) %s =? %s\n"
                               (FStar.Common.string_of_option (Rel.guard_to_string env) res)
@@ -1435,6 +1445,14 @@ let uvar_env (env : env) (ty : option typ) : tac term =
   proc_guard "uvar_env_typ" env g r;!
   let! t, uvar_t = new_uvar "uvar_env" env typ None ps.entry_range in
   ret t
+
+let ghost_uvar_env (env : env) (ty : typ) : tac term =
+  let! ps = get in
+  // If no type was given, add a uvar for it too!
+  let! typ, _, g = __tc_ghost env ty in
+  let! t, uvar_t = new_uvar "uvar_env" env typ (Some (Allow_ghost "User ghost uvar")) ps.entry_range in
+  ret t
+
 
 let fresh_universe_uvar () : tac term =
   U.type_u () |> fst |> ret

@@ -185,6 +185,12 @@ let cur_goals : tac (list goal) =
   bind get (fun ps ->
   ret ps.goals)
 
+let cur_goal_maybe_solved 
+  : tac goal
+  = bind cur_goals (function
+    | [] -> fail "No more goals"
+    | hd::tl -> ret hd)
+
 let cur_goal : tac goal =
   bind cur_goals (function
   | [] -> fail "No more goals"
@@ -214,7 +220,7 @@ let replace_cur (g:goal) : tac unit =
     set ({ps with goals=g::(List.tl ps.goals)}))
 
 let getopts : tac FStar.Options.optionstate =
-    bind (trytac cur_goal) (function
+    bind (trytac cur_goal_maybe_solved) (function
     | Some g -> ret g.opts
     | None -> ret (FStar.Options.peek ()))
 
@@ -253,11 +259,7 @@ let new_uvar (reason:string) (env:env) (typ:typ)
     let should_check = 
       match sc_opt with
       | Some sc -> sc
-      | _ -> 
-        if Env.debug env <| Options.Other "2635"
-        then BU.print1 "Tactic introduced a strict uvar for %s\n" 
-               (Print.term_to_string typ);
-        Strict
+      | _ -> Strict
     in
     let u, ctx_uvar, g_u =
         Env.new_implicit_var reason rng env typ should_check None

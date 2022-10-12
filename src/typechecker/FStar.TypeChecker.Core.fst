@@ -90,7 +90,7 @@ let and_pre (p1 p2:precondition) =
   match p1, p2 with
   | None, None -> None
   | Some p, None
-  | None, Some p -> Some p
+    | None, Some p -> Some p
   | Some p1, Some p2 -> Some (U.mk_conj p1 p2)
 
 inline_for_extraction
@@ -317,7 +317,7 @@ let weaken_subtyping_guard (p:term)
 let strengthen_subtyping_guard (p:term)
                                (g:precondition)
   : precondition
-  = Some (BU.dflt p (BU.map_opt g (fun q -> U.mk_and p q)))
+  = Some (BU.dflt p (BU.map_opt g (fun q -> U.mk_conj p q)))
 
 let weaken (p:term) (g:result 'a)
   = fun ctx ->
@@ -831,6 +831,12 @@ and check' (g:env) (e:term)
   //  else return ());!
   let e = SS.compress e in
   match e.n with
+  | Tm_lazy ({lkind=Lazy_embedding _}) ->
+    check' g (U.unlazy e)
+
+  | Tm_lazy i ->
+    return (E_TOTAL, i.ltyp)
+    
   | Tm_meta(t, _) ->
     memo_check g t
 
@@ -1225,10 +1231,19 @@ let check_term_top g e t (must_tot:bool)
     with_context "top-level subtyping" None (fun _ ->
       check_subcomp ({ g with allow_universe_instantiation = true}) e (as_comp g eff_te) target_comp)
 
+let simplify_steps =
+    [Env.Beta; 
+     Env.UnfoldUntil delta_constant;
+     Env.UnfoldQual ["unfold"];
+     Env.UnfoldOnly [PC.pure_wp_monotonic_lid; PC.pure_wp_monotonic0_lid];
+     Env.Simplify;
+     Env.Primops;
+     Env.NoFullNorm]
+     
 let check_term g e t (must_tot:bool)
   = if Env.debug g (Options.Other "Core")
-    then BU.print3 "%s\nEntering core with %s <: %s\n"
-                   (BU.stack_dump ())
+    then BU.print2 "Entering core with %s <: %s\n"
+                   // (BU.stack_dump ())
                    (P.term_to_string e)
                    (P.term_to_string t);
     let ctx = { no_guard = false; error_context = [] } in
@@ -1236,6 +1251,18 @@ let check_term g e t (must_tot:bool)
     | Inl (_, g) -> Inl g
     | Inr err -> Inr err
     in
-    if Env.debug g (Options.Other "Core")
-    then BU.print_string "Exiting core\n";
-    res
+    (
+      match res with
+      | Inl (Some guard0) ->
+        Options.push();
+        Options.set_option "debug_level" (Options.List [Options.String "Unfolding"]);
+        let guard = N.normalize simplify_steps g guard0 in
+        Options.pop();
+        if Env.debug g (Options.Other "CoreExit")
+        then
+          BU.print2 "Simplified guard from {{%s}} to {{%s}}\n"
+            (P.term_to_string guard0)
+            (P.term_to_string guard);
+        Inl (Some guard)
+      | _ -> res
+    )

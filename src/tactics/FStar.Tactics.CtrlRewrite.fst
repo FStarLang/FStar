@@ -89,6 +89,7 @@ let __do_rewrite
     let res =
       try
         Errors.with_ctx "While typechecking a subterm for ctrl_rewrite" (fun () ->
+          (* NS: Should we use Core here? *)
           Some (env.tc_term ({ env with Env.lax = true }) tm))
       with
       | Errors.Error (Errors.Error_LayeredMissingAnnot, _, _, _) -> None
@@ -102,7 +103,12 @@ let __do_rewrite
       ret tm (* SHOULD THIS CHECK BE IN maybe_rewrite INSTEAD? *)
     else
     let typ = lcomp.res_typ in
-    bind (new_uvar "do_rewrite.rhs" env typ None (rangeof g0)) (fun (ut, uvar_ut) ->
+    let should_check =
+      if FStar.TypeChecker.Common.is_total_lcomp lcomp 
+      then None
+      else Some (Allow_ghost "do_rewrite.lhs")
+    in
+    bind (new_uvar "do_rewrite.rhs" env typ should_check (rangeof g0)) (fun (ut, uvar_ut) ->
     mlog (fun () ->
        BU.print2 "do_rewrite: making equality\n\t%s ==\n\t%s\n"
          (Print.term_to_string tm) (Print.term_to_string ut)) (fun () ->

@@ -174,9 +174,17 @@ let (__do_rewrite :
                  then FStar_Tactics_Monad.ret tm
                  else
                    (let typ = lcomp.FStar_TypeChecker_Common.res_typ in
+                    let should_check =
+                      let uu___4 =
+                        FStar_TypeChecker_Common.is_total_lcomp lcomp in
+                      if uu___4
+                      then FStar_Pervasives_Native.None
+                      else
+                        FStar_Pervasives_Native.Some
+                          (FStar_Syntax_Syntax.Allow_ghost "do_rewrite.lhs") in
                     let uu___4 =
                       FStar_Tactics_Monad.new_uvar "do_rewrite.rhs" env typ
-                        FStar_Pervasives_Native.None (rangeof g0) in
+                        should_check (rangeof g0) in
                     FStar_Tactics_Monad.bind uu___4
                       (fun uu___5 ->
                          match uu___5 with

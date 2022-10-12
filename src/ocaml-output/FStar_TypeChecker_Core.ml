@@ -484,7 +484,7 @@ let (strengthen_subtyping_guard :
       let uu___ =
         let uu___1 =
           FStar_Compiler_Util.map_opt g
-            (fun q -> FStar_Syntax_Util.mk_and p q) in
+            (fun q -> FStar_Syntax_Util.mk_conj p q) in
         FStar_Compiler_Util.dflt p uu___1 in
       FStar_Pervasives_Native.Some uu___
 let weaken :
@@ -1626,6 +1626,15 @@ and (check' :
     fun e ->
       let e1 = FStar_Syntax_Subst.compress e in
       match e1.FStar_Syntax_Syntax.n with
+      | FStar_Syntax_Syntax.Tm_lazy
+          { FStar_Syntax_Syntax.blob = uu___;
+            FStar_Syntax_Syntax.lkind = FStar_Syntax_Syntax.Lazy_embedding
+              uu___1;
+            FStar_Syntax_Syntax.ltyp = uu___2;
+            FStar_Syntax_Syntax.rng = uu___3;_}
+          -> let uu___4 = FStar_Syntax_Util.unlazy e1 in check' g uu___4
+      | FStar_Syntax_Syntax.Tm_lazy i ->
+          return (E_TOTAL, (i.FStar_Syntax_Syntax.ltyp))
       | FStar_Syntax_Syntax.Tm_meta (t, uu___) -> memo_check g t
       | FStar_Syntax_Syntax.Tm_uvar (uv, s) ->
           let uu___ =
@@ -2813,6 +2822,16 @@ let (check_term_top :
                         tcenv = (g1.tcenv);
                         allow_universe_instantiation = true
                       } e uu___2 target_comp))
+let (simplify_steps : FStar_TypeChecker_Env.step Prims.list) =
+  [FStar_TypeChecker_Env.Beta;
+  FStar_TypeChecker_Env.UnfoldUntil FStar_Syntax_Syntax.delta_constant;
+  FStar_TypeChecker_Env.UnfoldQual ["unfold"];
+  FStar_TypeChecker_Env.UnfoldOnly
+    [FStar_Parser_Const.pure_wp_monotonic_lid;
+    FStar_Parser_Const.pure_wp_monotonic0_lid];
+  FStar_TypeChecker_Env.Simplify;
+  FStar_TypeChecker_Env.Primops;
+  FStar_TypeChecker_Env.NoFullNorm]
 let (check_term :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.term ->
@@ -2829,11 +2848,10 @@ let (check_term :
              FStar_TypeChecker_Env.debug g (FStar_Options.Other "Core") in
            if uu___1
            then
-             let uu___2 = FStar_Compiler_Util.stack_dump () in
-             let uu___3 = FStar_Syntax_Print.term_to_string e in
-             let uu___4 = FStar_Syntax_Print.term_to_string t in
-             FStar_Compiler_Util.print3 "%s\nEntering core with %s <: %s\n"
-               uu___2 uu___3 uu___4
+             let uu___2 = FStar_Syntax_Print.term_to_string e in
+             let uu___3 = FStar_Syntax_Print.term_to_string t in
+             FStar_Compiler_Util.print2 "Entering core with %s <: %s\n"
+               uu___2 uu___3
            else ());
           (let ctx = { no_guard = false; error_context = [] } in
            let res =
@@ -2842,9 +2860,25 @@ let (check_term :
              match uu___1 with
              | FStar_Pervasives.Inl (uu___2, g1) -> FStar_Pervasives.Inl g1
              | FStar_Pervasives.Inr err -> FStar_Pervasives.Inr err in
-           (let uu___2 =
-              FStar_TypeChecker_Env.debug g (FStar_Options.Other "Core") in
-            if uu___2
-            then FStar_Compiler_Util.print_string "Exiting core\n"
-            else ());
-           res)
+           match res with
+           | FStar_Pervasives.Inl (FStar_Pervasives_Native.Some guard0) ->
+               (FStar_Options.push ();
+                FStar_Options.set_option "debug_level"
+                  (FStar_Options.List [FStar_Options.String "Unfolding"]);
+                (let guard1 =
+                   FStar_TypeChecker_Normalize.normalize simplify_steps g
+                     guard0 in
+                 FStar_Options.pop ();
+                 (let uu___5 =
+                    FStar_TypeChecker_Env.debug g
+                      (FStar_Options.Other "CoreExit") in
+                  if uu___5
+                  then
+                    let uu___6 = FStar_Syntax_Print.term_to_string guard0 in
+                    let uu___7 = FStar_Syntax_Print.term_to_string guard1 in
+                    FStar_Compiler_Util.print2
+                      "Simplified guard from {{%s}} to {{%s}}\n" uu___6
+                      uu___7
+                  else ());
+                 FStar_Pervasives.Inl (FStar_Pervasives_Native.Some guard1)))
+           | uu___1 -> res)

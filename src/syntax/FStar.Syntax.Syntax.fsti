@@ -113,7 +113,7 @@ type delta_depth =
 type should_check_uvar =
   | Allow_unresolved of string  (* Escape hatch for uvars in logical guards that are sometimes left unresolved *)
   | Allow_untyped of string     (* Escape hatch to not re-typecheck guards in WPs and types of pattern bound vars *)
-  | Allow_ghost of string       (* Escape hatch used for dot patterns *)
+  | Allow_ghost of string       (* In some cases, e.g., in ctrl_rewrite, we introduce uvars in Ghost context *)
   | Strict                      (* Strict uvar that must be typechecked *)
   | Already_checked             (* A uvar whose solution has already been checked *)
 

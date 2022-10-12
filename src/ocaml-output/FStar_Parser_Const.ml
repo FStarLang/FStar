@@ -82,6 +82,9 @@ let (none_lid : FStar_Ident.lident) = psnconst "None"
 let (assume_lid : FStar_Ident.lident) = pconst "_assume"
 let (assert_lid : FStar_Ident.lident) = pconst "_assert"
 let (pure_wp_lid : FStar_Ident.lident) = pconst "pure_wp"
+let (pure_wp_monotonic_lid : FStar_Ident.lident) = pconst "pure_wp_monotonic"
+let (pure_wp_monotonic0_lid : FStar_Ident.lident) =
+  pconst "pure_wp_monotonic0"
 let (trivial_pure_post_lid : FStar_Ident.lident) =
   psconst "trivial_pure_post"
 let (pure_assert_wp_lid : FStar_Ident.lident) = pconst "pure_assert_wp0"
