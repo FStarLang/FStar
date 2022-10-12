@@ -1354,19 +1354,7 @@ and (check_equality_whnf :
                                         check_equality_whnf g hd0 hd1 in
                                       op_let_Bang uu___10
                                         (fun uu___11 ->
-                                           iter2 args0 args1
-                                             (fun uu___12 ->
-                                                fun uu___13 ->
-                                                  fun uu___14 ->
-                                                    match (uu___12, uu___13)
-                                                    with
-                                                    | ((a0, q0), (a1, q1)) ->
-                                                        let uu___15 =
-                                                          check_aqual q0 q1 in
-                                                        op_let_Bang uu___15
-                                                          (fun uu___16 ->
-                                                             check_equality g
-                                                               a0 a1)) ())
+                                           check_equality_args g args0 args1)
                                   | uu___10 -> fallback t0 t1)
                            | (FStar_TypeChecker_Rel.HeadMatch (false),
                               uu___6) ->
@@ -1394,19 +1382,7 @@ and (check_equality_whnf :
                                         check_equality_whnf g hd0 hd1 in
                                       op_let_Bang uu___10
                                         (fun uu___11 ->
-                                           iter2 args0 args1
-                                             (fun uu___12 ->
-                                                fun uu___13 ->
-                                                  fun uu___14 ->
-                                                    match (uu___12, uu___13)
-                                                    with
-                                                    | ((a0, q0), (a1, q1)) ->
-                                                        let uu___15 =
-                                                          check_aqual q0 q1 in
-                                                        op_let_Bang uu___15
-                                                          (fun uu___16 ->
-                                                             check_equality g
-                                                               a0 a1)) ())
+                                           check_equality_args g args0 args1)
                                   | uu___10 -> fallback t0 t1)))
                  | (uu___3, FStar_Syntax_Syntax.Tm_app uu___4) ->
                      let uu___5 =
@@ -1446,19 +1422,7 @@ and (check_equality_whnf :
                                         check_equality_whnf g hd0 hd1 in
                                       op_let_Bang uu___10
                                         (fun uu___11 ->
-                                           iter2 args0 args1
-                                             (fun uu___12 ->
-                                                fun uu___13 ->
-                                                  fun uu___14 ->
-                                                    match (uu___12, uu___13)
-                                                    with
-                                                    | ((a0, q0), (a1, q1)) ->
-                                                        let uu___15 =
-                                                          check_aqual q0 q1 in
-                                                        op_let_Bang uu___15
-                                                          (fun uu___16 ->
-                                                             check_equality g
-                                                               a0 a1)) ())
+                                           check_equality_args g args0 args1)
                                   | uu___10 -> fallback t0 t1)
                            | (FStar_TypeChecker_Rel.HeadMatch (false),
                               uu___6) ->
@@ -1486,19 +1450,7 @@ and (check_equality_whnf :
                                         check_equality_whnf g hd0 hd1 in
                                       op_let_Bang uu___10
                                         (fun uu___11 ->
-                                           iter2 args0 args1
-                                             (fun uu___12 ->
-                                                fun uu___13 ->
-                                                  fun uu___14 ->
-                                                    match (uu___12, uu___13)
-                                                    with
-                                                    | ((a0, q0), (a1, q1)) ->
-                                                        let uu___15 =
-                                                          check_aqual q0 q1 in
-                                                        op_let_Bang uu___15
-                                                          (fun uu___16 ->
-                                                             check_equality g
-                                                               a0 a1)) ())
+                                           check_equality_args g args0 args1)
                                   | uu___10 -> fallback t0 t1)))
                  | uu___3 -> fallback t0 t1)))
 and (check_equality :
@@ -1517,6 +1469,24 @@ and (check_equality :
               FStar_TypeChecker_Normalize.normalize_refinement
                 default_norm_steps g.tcenv t1 in
             check_equality_whnf g t0' t1'
+and (check_equality_args :
+  env -> FStar_Syntax_Syntax.args -> FStar_Syntax_Syntax.args -> unit result)
+  =
+  fun g ->
+    fun a0 ->
+      fun a1 ->
+        if (FStar_Compiler_List.length a0) = (FStar_Compiler_List.length a1)
+        then
+          iter2 a0 a1
+            (fun uu___ ->
+               fun uu___1 ->
+                 fun uu___2 ->
+                   match (uu___, uu___1) with
+                   | ((t0, q0), (t1, q1)) ->
+                       let uu___3 = check_aqual q0 q1 in
+                       op_let_Bang uu___3
+                         (fun uu___4 -> check_equality g t0 t1)) ()
+        else fail "Unequal number of arguments"
 and (check_subcomp :
   env ->
     FStar_Syntax_Syntax.term ->
@@ -1550,17 +1520,33 @@ and (check_subcomp :
               if uu___2
               then return ()
               else
-                (let uu___4 =
+                (let c01 = FStar_Syntax_Util.comp_to_comp_typ_nouniv c0 in
+                 let c11 = FStar_Syntax_Util.comp_to_comp_typ_nouniv c1 in
+                 let uu___4 =
+                   FStar_Ident.lid_equals c01.FStar_Syntax_Syntax.effect_name
+                     c11.FStar_Syntax_Syntax.effect_name in
+                 if uu___4
+                 then
                    let uu___5 =
-                     FStar_Ident.string_of_lid
-                       (FStar_Syntax_Util.comp_effect_name c0) in
-                   let uu___6 =
-                     FStar_Ident.string_of_lid
-                       (FStar_Syntax_Util.comp_effect_name c1) in
-                   FStar_Compiler_Util.format2
-                     "Subcomp failed: Non Tot/GTot computation types unhandled; got %s and %s"
-                     uu___5 uu___6 in
-                 fail uu___4)
+                     check_equality g c01.FStar_Syntax_Syntax.result_typ
+                       c11.FStar_Syntax_Syntax.result_typ in
+                   op_let_Bang uu___5
+                     (fun uu___6 ->
+                        check_equality_args g
+                          c01.FStar_Syntax_Syntax.effect_args
+                          c11.FStar_Syntax_Syntax.effect_args)
+                 else
+                   (let uu___6 =
+                      let uu___7 =
+                        FStar_Ident.string_of_lid
+                          c01.FStar_Syntax_Syntax.effect_name in
+                      let uu___8 =
+                        FStar_Ident.string_of_lid
+                          c11.FStar_Syntax_Syntax.effect_name in
+                      FStar_Compiler_Util.format2
+                        "Subcomp failed: Unequal computation types %s and %s"
+                        uu___7 uu___8 in
+                    fail uu___6))
           | (uu___1, FStar_Pervasives_Native.None) ->
               let uu___2 =
                 let uu___3 = FStar_Syntax_Util.eq_comp c0 c1 in
@@ -1568,17 +1554,33 @@ and (check_subcomp :
               if uu___2
               then return ()
               else
-                (let uu___4 =
+                (let c01 = FStar_Syntax_Util.comp_to_comp_typ_nouniv c0 in
+                 let c11 = FStar_Syntax_Util.comp_to_comp_typ_nouniv c1 in
+                 let uu___4 =
+                   FStar_Ident.lid_equals c01.FStar_Syntax_Syntax.effect_name
+                     c11.FStar_Syntax_Syntax.effect_name in
+                 if uu___4
+                 then
                    let uu___5 =
-                     FStar_Ident.string_of_lid
-                       (FStar_Syntax_Util.comp_effect_name c0) in
-                   let uu___6 =
-                     FStar_Ident.string_of_lid
-                       (FStar_Syntax_Util.comp_effect_name c1) in
-                   FStar_Compiler_Util.format2
-                     "Subcomp failed: Non Tot/GTot computation types unhandled; got %s and %s"
-                     uu___5 uu___6 in
-                 fail uu___4)
+                     check_equality g c01.FStar_Syntax_Syntax.result_typ
+                       c11.FStar_Syntax_Syntax.result_typ in
+                   op_let_Bang uu___5
+                     (fun uu___6 ->
+                        check_equality_args g
+                          c01.FStar_Syntax_Syntax.effect_args
+                          c11.FStar_Syntax_Syntax.effect_args)
+                 else
+                   (let uu___6 =
+                      let uu___7 =
+                        FStar_Ident.string_of_lid
+                          c01.FStar_Syntax_Syntax.effect_name in
+                      let uu___8 =
+                        FStar_Ident.string_of_lid
+                          c11.FStar_Syntax_Syntax.effect_name in
+                      FStar_Compiler_Util.format2
+                        "Subcomp failed: Unequal computation types %s and %s"
+                        uu___7 uu___8 in
+                    fail uu___6))
           | (FStar_Pervasives_Native.Some (E_TOTAL, t0),
              FStar_Pervasives_Native.Some (uu___1, t1)) ->
               check_subtype g e t0 t1
@@ -2592,28 +2594,28 @@ and (check_comp :
             check "(G)Tot comp result" g (FStar_Syntax_Util.comp_result c) in
           op_let_Bang uu___1
             (fun uu___2 -> match uu___2 with | (uu___3, t1) -> is_type g t1)
-      | FStar_Syntax_Syntax.Comp c1 ->
+      | FStar_Syntax_Syntax.Comp ct ->
           if
-            (FStar_Compiler_List.length c1.FStar_Syntax_Syntax.comp_univs) <>
+            (FStar_Compiler_List.length ct.FStar_Syntax_Syntax.comp_univs) <>
               Prims.int_one
           then fail "Unexpected/missing universe instantitation in comp"
           else
-            (let u = FStar_Compiler_List.hd c1.FStar_Syntax_Syntax.comp_univs in
+            (let u = FStar_Compiler_List.hd ct.FStar_Syntax_Syntax.comp_univs in
              let effect_app_tm =
                let head =
                  let uu___1 =
                    FStar_Syntax_Syntax.fvar
-                     c1.FStar_Syntax_Syntax.effect_name
+                     ct.FStar_Syntax_Syntax.effect_name
                      FStar_Syntax_Syntax.delta_constant
                      FStar_Pervasives_Native.None in
                  FStar_Syntax_Syntax.mk_Tm_uinst uu___1 [u] in
                let uu___1 =
                  let uu___2 =
                    FStar_Syntax_Syntax.as_arg
-                     c1.FStar_Syntax_Syntax.result_typ in
-                 uu___2 :: (c1.FStar_Syntax_Syntax.effect_args) in
+                     ct.FStar_Syntax_Syntax.result_typ in
+                 uu___2 :: (ct.FStar_Syntax_Syntax.effect_args) in
                FStar_Syntax_Syntax.mk_Tm_app head uu___1
-                 (c1.FStar_Syntax_Syntax.result_typ).FStar_Syntax_Syntax.pos in
+                 (ct.FStar_Syntax_Syntax.result_typ).FStar_Syntax_Syntax.pos in
              let uu___1 = check "effectful comp" g effect_app_tm in
              op_let_Bang uu___1
                (fun uu___2 ->
@@ -2627,17 +2629,28 @@ and (check_comp :
                                FStar_Syntax_Syntax.teff) in
                       op_let_Bang uu___4
                         (fun uu___5 ->
+                           let c_lid =
+                             FStar_TypeChecker_Env.norm_eff_name g.tcenv
+                               ct.FStar_Syntax_Syntax.effect_name in
                            let is_total =
                              let uu___6 =
                                FStar_TypeChecker_Env.lookup_effect_quals
-                                 g.tcenv c1.FStar_Syntax_Syntax.effect_name in
+                                 g.tcenv c_lid in
                              FStar_Compiler_Effect.op_Bar_Greater uu___6
                                (FStar_Compiler_List.existsb
                                   (fun q ->
                                      q = FStar_Syntax_Syntax.TotalEffect)) in
                            if Prims.op_Negation is_total
                            then return FStar_Syntax_Syntax.U_zero
-                           else return u)))
+                           else
+                             (let uu___7 =
+                                FStar_TypeChecker_Env.effect_repr g.tcenv c u in
+                              match uu___7 with
+                              | FStar_Pervasives_Native.None ->
+                                  fail
+                                    "Total effect does not have a representation"
+                              | FStar_Pervasives_Native.Some tm ->
+                                  universe_of g tm))))
 and (universe_of :
   env -> FStar_Syntax_Syntax.typ -> FStar_Syntax_Syntax.universe result) =
   fun g ->

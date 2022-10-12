@@ -760,11 +760,7 @@ and check_equality_whnf (g:env) (t0 t1:typ)
             match (SS.compress t0).n, (SS.compress t1).n with
             | Tm_app (hd0, args0), Tm_app(hd1, args1) ->
               check_equality_whnf g hd0 hd1;!
-              iter2 args0 args1
-                (fun (a0, q0) (a1, q1) _ ->
-                  check_aqual q0 q1;!
-                  check_equality g a0 a1)
-                ()
+              check_equality_args g args0 args1
             | _ -> fallback t0 t1
           )
         end
@@ -780,6 +776,16 @@ and check_equality (g:env) (t0 t1:typ)
       let t1' = N.normalize_refinement default_norm_steps g.tcenv t1 in
       check_equality_whnf g t0' t1'
 
+and check_equality_args (g:env) (a0 a1:args)
+  : result unit
+  = if List.length a0 = List.length a1
+    then iter2 a0 a1
+         (fun (t0, q0) (t1, q1) _ ->
+            check_aqual q0 q1;!
+            check_equality g t0 t1)
+         ()
+    else fail "Unequal number of arguments"
+
 and check_subcomp (g:env) (e:term) (c0 c1:comp)
   : result unit
   = let destruct_comp c =
@@ -794,9 +800,18 @@ and check_subcomp (g:env) (e:term) (c0 c1:comp)
     | _, None ->
       if U.eq_comp c0 c1 = U.Equal
       then return ()
-      else fail (BU.format2 "Subcomp failed: Non Tot/GTot computation types unhandled; got %s and %s" 
-                            (Ident.string_of_lid (U.comp_effect_name c0))
-                            (Ident.string_of_lid (U.comp_effect_name c1)))
+      else (
+        let c0 = U.comp_to_comp_typ_nouniv c0 in
+        let c1 = U.comp_to_comp_typ_nouniv c1 in
+        if I.lid_equals c0.effect_name c1.effect_name
+        then (
+          check_equality g c0.result_typ c1.result_typ ;!
+          check_equality_args g c0.effect_args c1.effect_args
+        )
+        else fail (BU.format2 "Subcomp failed: Unequal computation types %s and %s" 
+                            (Ident.string_of_lid c0.effect_name)
+                            (Ident.string_of_lid c1.effect_name))
+      )
 
     | Some (E_TOTAL, t0), Some (_, t1)
     | Some (E_GHOST, t0), Some (E_GHOST, t1) ->
@@ -1149,20 +1164,24 @@ and check_comp (g:env) (c:comp)
     | GTotal(t, _) ->
       let! _, t = check "(G)Tot comp result" g (U.comp_result c) in
       is_type g t
-    | Comp c ->
-      if List.length c.comp_univs <> 1
+    | Comp ct ->
+      if List.length ct.comp_univs <> 1
       then fail "Unexpected/missing universe instantitation in comp"
-      else let u = List.hd c.comp_univs in
+      else let u = List.hd ct.comp_univs in
            let effect_app_tm =
-             let head = S.mk_Tm_uinst (S.fvar c.effect_name delta_constant None) [u] in
-             S.mk_Tm_app head ((as_arg c.result_typ)::c.effect_args) c.result_typ.pos in
+             let head = S.mk_Tm_uinst (S.fvar ct.effect_name delta_constant None) [u] in
+             S.mk_Tm_app head ((as_arg ct.result_typ)::ct.effect_args) ct.result_typ.pos in
            let! _, t = check "effectful comp" g effect_app_tm in
            with_context "comp fully applied" None (fun _ -> check_subtype g effect_app_tm t S.teff);!
-           let is_total = Env.lookup_effect_quals g.tcenv c.effect_name |> List.existsb (fun q -> q = S.TotalEffect) in
+           let c_lid = Env.norm_eff_name g.tcenv ct.effect_name in           
+           let is_total = Env.lookup_effect_quals g.tcenv c_lid |> List.existsb (fun q -> q = S.TotalEffect) in
            if not is_total
            then return S.U_zero  //if it is a non-total effect then u0
-           else return u
-
+           else (
+              match Env.effect_repr g.tcenv c u with
+              | None -> fail "Total effect does not have a representation"
+              | Some tm -> universe_of g tm
+           )
 
 and universe_of (g:env) (t:typ)
   : result universe
