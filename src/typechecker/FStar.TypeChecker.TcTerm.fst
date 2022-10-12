@@ -2261,7 +2261,7 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
         body, cbody, Env.conj_guard guard_body g_lc
     in
 
-    let guard = if env.top_level
+    let guard = if false //env.top_level
                 || not (Options.should_verify (string_of_lid env.curmodule))
                 then Env.conj_guard (Rel.discharge_guard env g_env)
                                     (Rel.discharge_guard envbody guard_body)
