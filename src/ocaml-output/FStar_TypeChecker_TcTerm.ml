@@ -6211,14 +6211,40 @@ and (tc_abs :
                                    Prims.op_Negation uu___8) in
                               if uu___7
                               then
-                                let uu___8 =
-                                  FStar_TypeChecker_Rel.discharge_guard env1
-                                    g_env in
-                                let uu___9 =
-                                  FStar_TypeChecker_Rel.discharge_guard
-                                    envbody1 guard_body in
-                                FStar_TypeChecker_Env.conj_guard uu___8
-                                  uu___9
+                                (if
+                                   env1.FStar_TypeChecker_Env.lax ||
+                                     env1.FStar_TypeChecker_Env.phase1
+                                 then
+                                   let uu___8 =
+                                     FStar_TypeChecker_Rel.discharge_guard
+                                       env1 g_env in
+                                   let uu___9 =
+                                     FStar_TypeChecker_Rel.discharge_guard
+                                       envbody1 guard_body in
+                                   FStar_TypeChecker_Env.conj_guard uu___8
+                                     uu___9
+                                 else
+                                   (let uu___9 =
+                                      FStar_TypeChecker_Common.split_guard
+                                        g_env in
+                                    match uu___9 with
+                                    | (g_env1, g_env_logical) ->
+                                        let uu___10 =
+                                          FStar_TypeChecker_Common.split_guard
+                                            guard_body in
+                                        (match uu___10 with
+                                         | (guard_body1, guard_body_logical)
+                                             ->
+                                             ((let uu___12 =
+                                                 FStar_TypeChecker_Env.conj_guard
+                                                   g_env1 guard_body1 in
+                                               FStar_TypeChecker_Rel.force_trivial_guard
+                                                 env1 uu___12);
+                                              FStar_TypeChecker_Rel.force_trivial_guard
+                                                env1 g_env_logical;
+                                              FStar_TypeChecker_Rel.force_trivial_guard
+                                                envbody1 guard_body_logical;
+                                              FStar_TypeChecker_Env.trivial_guard))))
                               else
                                 (let guard1 =
                                    let uu___9 =
