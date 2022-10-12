@@ -393,11 +393,21 @@ let rec push_subst s t =
     | Tm_fvar _
     | Tm_unknown -> tag_with_range t s //these are always closed
 
-    | Tm_uvar (uv, s0) ->
+    | Tm_uvar (uv, s1) ->
       begin
-      match (Unionfind.find uv.ctx_uvar_head) with
-      | None -> tag_with_range ({t with n = Tm_uvar(uv, compose_uvar_subst uv s0 s)}) s
-      | Some t -> push_subst (compose_subst s0 s) t
+        match (Unionfind.find uv.ctx_uvar_head) with
+        | None -> tag_with_range ({t with n = Tm_uvar(uv, compose_uvar_subst uv s1 s)}) s
+        | Some t ->
+          //
+          // push_subst precondition is that the term should not be a Tm_delayed
+          // so handle here a Tm_delayed
+          //
+          let s, t =
+            match t.n with
+            | Tm_delayed (t, s0) ->
+              compose_subst s0 (compose_subst s1 s), t
+            | _ -> compose_subst s1 s, t in
+          push_subst s t
       end
 
     | Tm_type _
