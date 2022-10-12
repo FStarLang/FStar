@@ -2263,8 +2263,19 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
 
     let guard = if env.top_level
                 || not (Options.should_verify (string_of_lid env.curmodule))
-                then Env.conj_guard (Rel.discharge_guard env g_env)
-                                    (Rel.discharge_guard envbody guard_body)
+                then begin
+                  if env.lax ||
+                     env.phase1
+                  then Env.conj_guard (Rel.discharge_guard env g_env)
+                                      (Rel.discharge_guard envbody guard_body)
+                  else
+                    let g_env, g_env_logical = TcComm.split_guard g_env in
+                    let guard_body, guard_body_logical = TcComm.split_guard guard_body in
+                    Rel.force_trivial_guard env (Env.conj_guard g_env guard_body);
+                    Rel.force_trivial_guard env g_env_logical;
+                    Rel.force_trivial_guard envbody guard_body_logical;
+                    Env.trivial_guard
+                end
                 else let guard = Env.conj_guard g_env (Env.close_guard env (bs@letrec_binders) guard_body) in
                      guard in
 
