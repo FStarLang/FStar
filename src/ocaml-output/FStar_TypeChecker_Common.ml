@@ -661,6 +661,22 @@ let (imp_guard : guard_t -> guard_t -> guard_t) =
   fun g1 -> fun g2 -> binop_guard imp_guard_f g1 g2
 let (conj_guards : guard_t Prims.list -> guard_t) =
   fun gs -> FStar_Compiler_List.fold_left conj_guard trivial_guard gs
+let (split_guard : guard_t -> (guard_t * guard_t)) =
+  fun g ->
+    ({
+       guard_f = Trivial;
+       deferred_to_tac = (g.deferred_to_tac);
+       deferred = (g.deferred);
+       univ_ineqs = (g.univ_ineqs);
+       implicits = (g.implicits)
+     },
+      {
+        guard_f = (g.guard_f);
+        deferred_to_tac = (trivial_guard.deferred_to_tac);
+        deferred = (trivial_guard.deferred);
+        univ_ineqs = (trivial_guard.univ_ineqs);
+        implicits = (trivial_guard.implicits)
+      })
 let (weaken_guard_formula : guard_t -> FStar_Syntax_Syntax.typ -> guard_t) =
   fun g ->
     fun fml ->
