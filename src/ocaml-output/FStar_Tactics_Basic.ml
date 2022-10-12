@@ -719,24 +719,8 @@ let (tc_unifier_solved_implicits :
                             u.FStar_Syntax_Syntax.ctx_uvar_range in
                         FStar_Tactics_Monad.op_let_Bang uu___3
                           (fun uu___4 ->
-                             let uu___5 =
-                               FStar_Tactics_Monad.if_verbose
-                                 (fun uu___6 ->
-                                    FStar_Compiler_Util.print_string
-                                      "After proc_guard'\n";
-                                    FStar_Tactics_Monad.ret ()) in
-                             FStar_Tactics_Monad.op_let_Bang uu___5
-                               (fun uu___6 ->
-                                  mark_uvar_as_already_checked u;
-                                  (let uu___8 =
-                                     FStar_Tactics_Monad.if_verbose
-                                       (fun uu___9 ->
-                                          FStar_Compiler_Util.print_string
-                                            "After mark_uvar\n";
-                                          FStar_Tactics_Monad.ret ()) in
-                                   FStar_Tactics_Monad.op_let_Bang uu___8
-                                     (fun uu___9 ->
-                                        FStar_Tactics_Monad.ret ())))))
+                             mark_uvar_as_already_checked u;
+                             FStar_Tactics_Monad.ret ()))
                  | FStar_Pervasives.Inr failed ->
                      let uu___2 =
                        FStar_Syntax_Print.uvar_to_string
@@ -746,8 +730,11 @@ let (tc_unifier_solved_implicits :
                      fail3
                        "Could not typecheck unifier solved implicit %s to %s because %s"
                        uu___2 uu___3 uu___4) in
-          FStar_Compiler_Effect.op_Bar_Greater uvs
-            (FStar_Tactics_Monad.iter_tac aux)
+          if env1.FStar_TypeChecker_Env.phase1
+          then FStar_Tactics_Monad.ret ()
+          else
+            FStar_Compiler_Effect.op_Bar_Greater uvs
+              (FStar_Tactics_Monad.iter_tac aux)
 type check_unifier_solved_implicits_side =
   | Check_none 
   | Check_left_only 
@@ -4287,6 +4274,29 @@ let (uvar_env :
                            (fun uu___5 ->
                               match uu___5 with
                               | (t, uvar_t) -> FStar_Tactics_Monad.ret t))))
+let (ghost_uvar_env :
+  env ->
+    FStar_Reflection_Data.typ ->
+      FStar_Syntax_Syntax.term FStar_Tactics_Monad.tac)
+  =
+  fun env1 ->
+    fun ty ->
+      FStar_Tactics_Monad.op_let_Bang FStar_Tactics_Monad.get
+        (fun ps ->
+           let uu___ = __tc_ghost env1 ty in
+           FStar_Tactics_Monad.op_let_Bang uu___
+             (fun uu___1 ->
+                match uu___1 with
+                | (typ, uu___2, g) ->
+                    let uu___3 =
+                      FStar_Tactics_Monad.new_uvar "uvar_env" env1 typ
+                        (FStar_Pervasives_Native.Some
+                           (FStar_Syntax_Syntax.Allow_ghost "User ghost uvar"))
+                        ps.FStar_Tactics_Types.entry_range in
+                    FStar_Tactics_Monad.op_let_Bang uu___3
+                      (fun uu___4 ->
+                         match uu___4 with
+                         | (t, uvar_t) -> FStar_Tactics_Monad.ret t)))
 let (fresh_universe_uvar :
   unit -> FStar_Syntax_Syntax.term FStar_Tactics_Monad.tac) =
   fun uu___ ->

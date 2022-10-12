@@ -318,7 +318,9 @@ let tc_unifier_solved_implicits env (must_tot:bool) (allow_guards:bool) (uvs:lis
           (term_to_string env sol)
           (Core.print_error failed)
   in
-  uvs |> iter_tac aux
+  if env.phase1 //phase1 is untrusted
+  then ret ()
+  else uvs |> iter_tac aux
 
 //
 // When calling Rel for t1 `rel` t2, caller can choose to tc
@@ -1461,6 +1463,14 @@ let uvar_env (env : env) (ty : option typ) : tac term =
   proc_guard "uvar_env_typ" env g r;!
   let! t, uvar_t = new_uvar "uvar_env" env typ None ps.entry_range in
   ret t
+
+let ghost_uvar_env (env : env) (ty : typ) : tac term =
+  let! ps = get in
+  // If no type was given, add a uvar for it too!
+  let! typ, _, g = __tc_ghost env ty in
+  let! t, uvar_t = new_uvar "uvar_env" env typ (Some (Allow_ghost "User ghost uvar")) ps.entry_range in
+  ret t
+
 
 let fresh_universe_uvar () : tac term =
   U.type_u () |> fst |> ret

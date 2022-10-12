@@ -294,14 +294,11 @@ let (cur_goal : FStar_Tactics_Types.goal tac) =
             | FStar_Pervasives_Native.None -> ret hd
             | FStar_Pervasives_Native.Some t ->
                 ((let uu___3 =
-                    let uu___4 = FStar_Compiler_Util.stack_dump () in
-                    let uu___5 =
-                      FStar_Tactics_Printing.goal_to_string_verbose hd in
-                    let uu___6 = FStar_Syntax_Print.term_to_string t in
-                    FStar_Compiler_Util.format3
-                      "%s\n!!!!!!!!!!!! GOAL IS ALREADY SOLVED! %s\nsol is %s\n"
-                      uu___4 uu___5 uu___6 in
-                  failwith uu___3);
+                    FStar_Tactics_Printing.goal_to_string_verbose hd in
+                  let uu___4 = FStar_Syntax_Print.term_to_string t in
+                  FStar_Compiler_Util.print2
+                    "!!!!!!!!!!!! GOAL IS ALREADY SOLVED! %s\nsol is %s\n"
+                    uu___3 uu___4);
                  ret hd)))
 let (remove_solved_goals : unit tac) =
   bind cur_goals
