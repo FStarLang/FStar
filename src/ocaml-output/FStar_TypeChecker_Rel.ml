@@ -13903,6 +13903,22 @@ let (core_check_and_maybe_add_to_guard_uvar :
             let debug f =
               let uu___ = FStar_Options.debug_any () in
               if uu___ then f () else () in
+            let maybe_set_guard_uvar tm =
+              let uu___ = FStar_Syntax_Util.ctx_uvar_kind uv in
+              match uu___ with
+              | FStar_Pervasives.Inl (FStar_Pervasives_Native.None) -> false
+              | FStar_Pervasives.Inl (FStar_Pervasives_Native.Some g_uv) ->
+                  (debug
+                     (fun uu___2 ->
+                        let uu___3 = FStar_Syntax_Print.ctx_uvar_to_string uv in
+                        let uu___4 =
+                          FStar_Syntax_Print.ctx_uvar_to_string g_uv in
+                        FStar_Compiler_Util.print2
+                          "Uvar %s has guard uvar %s, setting guard\n" uu___3
+                          uu___4);
+                   commit env [TERM (g_uv, tm)];
+                   true)
+              | FStar_Pervasives.Inr uu___1 -> failwith "Impossible!" in
             let uu___ = env.FStar_TypeChecker_Env.core_check env t k must_tot in
             match uu___ with
             | FStar_Pervasives.Inl (FStar_Pervasives_Native.None) ->
@@ -13911,6 +13927,8 @@ let (core_check_and_maybe_add_to_guard_uvar :
                       let uu___3 = FStar_Syntax_Print.ctx_uvar_to_string uv in
                       FStar_Compiler_Util.print1
                         "Core checking of uvar %s ok (no guard)\n" uu___3);
+                 (let uu___3 = maybe_set_guard_uvar FStar_Syntax_Util.t_true in
+                  ());
                  FStar_Pervasives.Inl FStar_Pervasives_Native.None)
             | FStar_Pervasives.Inl (FStar_Pervasives_Native.Some vc) ->
                 (debug
@@ -13918,24 +13936,10 @@ let (core_check_and_maybe_add_to_guard_uvar :
                       let uu___3 = FStar_Syntax_Print.ctx_uvar_to_string uv in
                       FStar_Compiler_Util.print1
                         "Core checking of uvar %s ok\n" uu___3);
-                 (let uu___2 = FStar_Syntax_Util.ctx_uvar_kind uv in
-                  match uu___2 with
-                  | FStar_Pervasives.Inl (FStar_Pervasives_Native.None) ->
-                      FStar_Pervasives.Inl (FStar_Pervasives_Native.Some vc)
-                  | FStar_Pervasives.Inl (FStar_Pervasives_Native.Some g_uv)
-                      ->
-                      (debug
-                         (fun uu___4 ->
-                            let uu___5 =
-                              FStar_Syntax_Print.ctx_uvar_to_string uv in
-                            let uu___6 =
-                              FStar_Syntax_Print.ctx_uvar_to_string g_uv in
-                            FStar_Compiler_Util.print2
-                              "Uvar %s has guard uvar %s, setting guard\n"
-                              uu___5 uu___6);
-                       commit env [TERM (g_uv, vc)];
-                       FStar_Pervasives.Inl FStar_Pervasives_Native.None)
-                  | FStar_Pervasives.Inr () -> failwith "Impossible!"))
+                 (let uu___2 = maybe_set_guard_uvar vc in
+                  if uu___2
+                  then FStar_Pervasives.Inl FStar_Pervasives_Native.None
+                  else FStar_Pervasives.Inl (FStar_Pervasives_Native.Some vc)))
             | FStar_Pervasives.Inr err ->
                 (debug
                    (fun uu___2 ->

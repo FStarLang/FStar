@@ -4924,11 +4924,25 @@ let core_check_and_maybe_add_to_guard_uvar env uv t k must_tot =
     if Options.debug_any()
     then f ()
     else () in
+
+  let maybe_set_guard_uvar tm : bool =
+    match U.ctx_uvar_kind uv with
+    | Inl None -> false
+    | Inl (Some g_uv) ->
+      debug (fun _ ->
+             BU.print2 "Uvar %s has guard uvar %s, setting guard\n"
+               (Print.ctx_uvar_to_string uv)
+               (Print.ctx_uvar_to_string g_uv));
+       commit env [TERM (g_uv, tm)];
+       true
+    | Inr _ -> failwith "Impossible!" in
+
   match env.core_check env t k must_tot with
   | Inl None ->
     debug (fun _ ->
            BU.print1 "Core checking of uvar %s ok (no guard)\n"
              (Print.ctx_uvar_to_string uv));
+    ignore (maybe_set_guard_uvar U.t_true);
     Inl None
 
   | Inl (Some vc) ->
@@ -4936,16 +4950,9 @@ let core_check_and_maybe_add_to_guard_uvar env uv t k must_tot =
            BU.print1 "Core checking of uvar %s ok\n"
              (Print.ctx_uvar_to_string uv));
 
-    (match U.ctx_uvar_kind uv with
-     | Inl None -> Inl (Some vc)
-     | Inl (Some g_uv) ->
-       debug (fun _ ->
-              BU.print2 "Uvar %s has guard uvar %s, setting guard\n"
-                (Print.ctx_uvar_to_string uv)
-                (Print.ctx_uvar_to_string g_uv));
-       commit env [TERM (g_uv, vc)];
-       Inl None
-     | Inr () -> failwith "Impossible!")
+    if maybe_set_guard_uvar vc
+    then Inl None
+    else Inl (Some vc)
 
   | Inr err ->
     debug (fun _ -> 
@@ -4956,7 +4963,6 @@ let core_check_and_maybe_add_to_guard_uvar env uv t k must_tot =
              (Print.term_to_string k)
              (err false));
     Inr err
-
 
 (*
  * Check that an implicit solution t has an expected type k
