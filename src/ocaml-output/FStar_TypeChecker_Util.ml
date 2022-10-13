@@ -949,7 +949,7 @@ let (mk_indexed_return :
                                        let uu___10 =
                                          FStar_Compiler_Effect.op_Bar_Greater
                                            rest_uvars_guard_tms
-                                           FStar_Syntax_Util.mk_and_l in
+                                           FStar_Syntax_Util.mk_conj_l in
                                        FStar_Compiler_Effect.op_Bar_Greater
                                          uu___10
                                          (fun uu___11 ->
@@ -2040,7 +2040,7 @@ let (mk_indexed_bind :
                                                                     =
                                                                     FStar_Compiler_Effect.op_Bar_Greater
                                                                     rest_uvars_guard_tms
-                                                                    FStar_Syntax_Util.mk_and_l in
+                                                                    FStar_Syntax_Util.mk_conj_l in
                                                                     FStar_Compiler_Effect.op_Bar_Greater
                                                                     uu___17
                                                                     (fun
@@ -3054,7 +3054,7 @@ let (bind :
                                                             FStar_Syntax_Print.bv_to_string
                                                               x in
                                                           FStar_Compiler_Util.print2
-                                                            "(3) bind (case a): Substituting %s for %s"
+                                                            "(3) bind (case a): Substituting %s for %s\n"
                                                             uu___15 uu___16);
                                                      (let c21 =
                                                         FStar_Syntax_Subst.subst_comp
@@ -3105,7 +3105,7 @@ let (bind :
                                                                FStar_Syntax_Print.bv_to_string
                                                                  x in
                                                              FStar_Compiler_Util.print2
-                                                               "(3) bind (case b): Substituting %s for %s"
+                                                               "(3) bind (case b): Substituting %s for %s\n"
                                                                uu___17
                                                                uu___18);
                                                         (let c21 =
@@ -3123,7 +3123,7 @@ let (bind :
                                                                FStar_Syntax_Print.bv_to_string
                                                                  x in
                                                              FStar_Compiler_Util.print2
-                                                               "(3) bind (case c): Adding equality %s = %s"
+                                                               "(3) bind (case c): Adding equality %s = %s\n"
                                                                uu___18
                                                                uu___19);
                                                         (let c21 =
@@ -3680,7 +3680,7 @@ let (mk_layered_conjunction :
                                                  let uu___10 =
                                                    FStar_Compiler_Effect.op_Bar_Greater
                                                      rest_uvars_guard_tms
-                                                     FStar_Syntax_Util.mk_and_l in
+                                                     FStar_Syntax_Util.mk_conj_l in
                                                  FStar_Compiler_Effect.op_Bar_Greater
                                                    uu___10
                                                    (fun uu___11 ->
@@ -7096,7 +7096,7 @@ let (lift_tf_layered_effect :
                                                  let uu___15 =
                                                    FStar_Compiler_Effect.op_Bar_Greater
                                                      rest_uvars_guard_tms
-                                                     FStar_Syntax_Util.mk_and_l in
+                                                     FStar_Syntax_Util.mk_conj_l in
                                                  FStar_Compiler_Effect.op_Bar_Greater
                                                    uu___15
                                                    (fun uu___16 ->

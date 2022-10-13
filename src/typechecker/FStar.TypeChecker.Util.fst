@@ -602,7 +602,7 @@ let mk_indexed_return env (ed:S.eff_decl) (u_a:universe) (a:typ) (e:term) (r:Ran
   Env.conj_guard
     g_uvars
     (rest_uvars_guard_tms
-     |> U.mk_and_l
+     |> U.mk_conj_l
      |> TcComm.NonTrivial
      |> Env.guard_of_guard_formula
      |> label_guard r "tc guard for indexed binders (return)")
@@ -1012,7 +1012,7 @@ let mk_indexed_bind env
     Env.conj_guards [
       g_uvars;
       (rest_uvars_guard_tms
-         |> U.mk_and_l
+         |> U.mk_conj_l
          |> TcComm.NonTrivial
          |> Env.guard_of_guard_formula
          |> label_guard (Env.get_range env) "tc guard for indexed binders (bind)");
@@ -1506,7 +1506,7 @@ let bind r1 env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
                  if U.is_partial_return c1
                  then // case (a)
                       let _ = debug (fun () ->
-                        BU.print2 "(3) bind (case a): Substituting %s for %s" (N.term_to_string env e1) (Print.bv_to_string x)) in
+                        BU.print2 "(3) bind (case a): Substituting %s for %s\n" (N.term_to_string env e1) (Print.bv_to_string x)) in
                       let c2 = SS.subst_comp [NT(x,e1)] c2 in
                       let g = Env.conj_guard g_c1 (Env.map_guard g_c2 (SS.subst [NT (x, e1)])) in
                       mk_bind c1 b c2 g
@@ -1520,12 +1520,12 @@ let bind r1 env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
                         else e1                                // case (b) (i)
                       in
                       let _ = debug (fun () ->
-                        BU.print2 "(3) bind (case b): Substituting %s for %s" (N.term_to_string env e1') (Print.bv_to_string x)) in
+                        BU.print2 "(3) bind (case b): Substituting %s for %s\n" (N.term_to_string env e1') (Print.bv_to_string x)) in
                       let c2 = SS.subst_comp [NT(x, e1')] c2 in
                       mk_seq c1 b c2
                  else // case (c)
                       let _ = debug (fun () ->
-                        BU.print2 "(3) bind (case c): Adding equality %s = %s" (N.term_to_string env e1) (Print.bv_to_string x)) in
+                        BU.print2 "(3) bind (case c): Adding equality %s = %s\n" (N.term_to_string env e1) (Print.bv_to_string x)) in
                       let c2 = SS.subst_comp [NT(x,e1)] c2 in
                       let x_eq_e = U.mk_eq2 u_res_t1 res_t1 e1 (bv_to_name x) in
                       let c2, g_w = weaken_comp (Env.push_binders env [S.mk_binder x]) c2 x_eq_e in
@@ -1756,7 +1756,7 @@ let mk_layered_conjunction env (ed:S.eff_decl) (u_a:universe) (a:term) (p:typ) (
   let g = Env.conj_guards [
     g_uvars;
     (rest_uvars_guard_tms
-       |> U.mk_and_l
+       |> U.mk_conj_l
        |> TcComm.NonTrivial
        |> Env.guard_of_guard_formula
        |> label_guard r "tc guard for indexed binders (conj)");
@@ -3255,7 +3255,7 @@ let lift_tf_layered_effect (tgt:lident) (lift_ts:tscheme)
   let g = Env.conj_guards [
     g;
     (rest_uvars_guard_tms
-       |> U.mk_and_l
+       |> U.mk_conj_l
        |> TcComm.NonTrivial
        |> Env.guard_of_guard_formula
        |> label_guard r "tc guard for indexed binders (lift)");

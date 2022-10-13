@@ -13947,8 +13947,10 @@ let (core_check_and_maybe_add_to_guard_uvar :
                 (debug
                    (fun uu___2 ->
                       let uu___3 = FStar_Syntax_Print.ctx_uvar_to_string uv in
-                      FStar_Compiler_Util.print1
-                        "Core checking of uvar %s ok\n" uu___3);
+                      let uu___4 = FStar_Syntax_Print.term_to_string vc in
+                      FStar_Compiler_Util.print2
+                        "Core checking of uvar %s ok with guard: %s\n" uu___3
+                        uu___4);
                  (let uu___2 = maybe_set_guard_uvar env uv vc in
                   if uu___2
                   then FStar_Pervasives.Inl FStar_Pervasives_Native.None

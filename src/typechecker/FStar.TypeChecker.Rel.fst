@@ -4952,8 +4952,9 @@ let core_check_and_maybe_add_to_guard_uvar env uv t k must_tot =
 
   | Inl (Some vc) ->
     debug (fun _ ->
-           BU.print1 "Core checking of uvar %s ok\n"
-             (Print.ctx_uvar_to_string uv));
+           BU.print2 "Core checking of uvar %s ok with guard: %s\n"
+             (Print.ctx_uvar_to_string uv)
+             (Print.term_to_string vc));
 
     if maybe_set_guard_uvar env uv vc
     then Inl None
