@@ -982,7 +982,7 @@ let mk_eq2 :
     worklist ->
       FStar_TypeChecker_Env.env ->
         'uuuuu ->
-          FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
+          FStar_Syntax_Syntax.term ->
             FStar_Syntax_Syntax.term -> (FStar_Syntax_Syntax.term * worklist)
   =
   fun wl ->
@@ -990,20 +990,14 @@ let mk_eq2 :
       fun prob ->
         fun t1 ->
           fun t2 ->
-            let uu___ = FStar_Syntax_Util.type_u () in
+            let uu___ =
+              env.FStar_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term
+                env t1 false in
             match uu___ with
-            | (t_type, u) ->
-                let binders = FStar_TypeChecker_Env.all_binders env in
-                let uu___1 =
-                  new_uvar "eq2" wl t1.FStar_Syntax_Syntax.pos
-                    env.FStar_TypeChecker_Env.gamma binders t_type
-                    (FStar_Syntax_Syntax.Allow_unresolved "eq2 type")
-                    (FStar_Pervasives.Inl FStar_Pervasives_Native.None)
-                    FStar_Pervasives_Native.None in
-                (match uu___1 with
-                 | (uu___2, tt, wl1) ->
-                     let uu___3 = FStar_Syntax_Util.mk_eq2 u tt t1 t2 in
-                     (uu___3, wl1))
+            | (tt, uu___1) ->
+                let u = env.FStar_TypeChecker_Env.universe_of env tt in
+                let uu___2 = FStar_Syntax_Util.mk_eq2 u tt t1 t2 in
+                (uu___2, wl)
 let (p_invert :
   FStar_TypeChecker_Common.prob -> FStar_TypeChecker_Common.prob) =
   fun uu___ ->
@@ -13330,8 +13324,17 @@ let (try_solve_deferred_constraints :
                   (let g2 =
                      if deferred_to_tac_ok
                      then
-                       FStar_TypeChecker_DeferredImplicits.solve_deferred_to_tactic_goals
-                         env g1
+                       let uu___4 =
+                         let uu___5 =
+                           let uu___6 =
+                             FStar_TypeChecker_Env.current_module env in
+                           FStar_Ident.string_of_lid uu___6 in
+                         FStar_Pervasives_Native.Some uu___5 in
+                       FStar_Profiling.profile
+                         (fun uu___5 ->
+                            FStar_TypeChecker_DeferredImplicits.solve_deferred_to_tactic_goals
+                              env g1) uu___4
+                         "FStar.TypeChecker.Rel.solve_deferred_to_tactic_goals"
                      else g1 in
                    (let uu___5 =
                       FStar_Compiler_Effect.op_Less_Bar
@@ -13525,35 +13528,51 @@ let (discharge_guard' :
                                       (let vcs1 =
                                          (env.FStar_TypeChecker_Env.solver).FStar_TypeChecker_Env.preprocess
                                            env vc2 in
-                                       let vcs2 =
-                                         FStar_Compiler_List.map
-                                           (fun uu___13 ->
-                                              match uu___13 with
-                                              | (env1, goal, opts) ->
-                                                  let uu___14 =
-                                                    norm_with_steps
-                                                      "FStar.TypeChecker.Rel.norm_with_steps.7"
-                                                      [FStar_TypeChecker_Env.Simplify;
-                                                      FStar_TypeChecker_Env.Primops]
-                                                      env1 goal in
-                                                  (env1, uu___14, opts)) vcs1 in
-                                       let vcs3 =
-                                         FStar_Compiler_List.map
-                                           (fun uu___13 ->
-                                              match uu___13 with
-                                              | (env1, goal, opts) ->
-                                                  let uu___14 =
-                                                    (env1.FStar_TypeChecker_Env.solver).FStar_TypeChecker_Env.handle_smt_goal
-                                                      env1 goal in
-                                                  FStar_Compiler_Effect.op_Bar_Greater
-                                                    uu___14
-                                                    (FStar_Compiler_List.map
-                                                       (fun uu___15 ->
-                                                          match uu___15 with
-                                                          | (env2, goal1) ->
-                                                              (env2, goal1,
-                                                                opts)))) vcs2 in
-                                       FStar_Compiler_List.flatten vcs3))
+                                       (let uu___14 =
+                                          FStar_Options.profile_enabled
+                                            FStar_Pervasives_Native.None
+                                            "FStar.TypeChecker" in
+                                        if uu___14
+                                        then
+                                          let uu___15 =
+                                            FStar_Compiler_Util.string_of_int
+                                              (FStar_Compiler_List.length
+                                                 vcs1) in
+                                          FStar_Compiler_Util.print1
+                                            "Tactic preprocessing produced %s goals\n"
+                                            uu___15
+                                        else ());
+                                       (let vcs2 =
+                                          FStar_Compiler_List.map
+                                            (fun uu___14 ->
+                                               match uu___14 with
+                                               | (env1, goal, opts) ->
+                                                   let uu___15 =
+                                                     norm_with_steps
+                                                       "FStar.TypeChecker.Rel.norm_with_steps.7"
+                                                       [FStar_TypeChecker_Env.Simplify;
+                                                       FStar_TypeChecker_Env.Primops]
+                                                       env1 goal in
+                                                   (env1, uu___15, opts))
+                                            vcs1 in
+                                        let vcs3 =
+                                          FStar_Compiler_List.map
+                                            (fun uu___14 ->
+                                               match uu___14 with
+                                               | (env1, goal, opts) ->
+                                                   let uu___15 =
+                                                     (env1.FStar_TypeChecker_Env.solver).FStar_TypeChecker_Env.handle_smt_goal
+                                                       env1 goal in
+                                                   FStar_Compiler_Effect.op_Bar_Greater
+                                                     uu___15
+                                                     (FStar_Compiler_List.map
+                                                        (fun uu___16 ->
+                                                           match uu___16 with
+                                                           | (env2, goal1) ->
+                                                               (env2, goal1,
+                                                                 opts))))
+                                            vcs2 in
+                                        FStar_Compiler_List.flatten vcs3)))
                                else
                                  (let uu___12 =
                                     let uu___13 = FStar_Options.peek () in
