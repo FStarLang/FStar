@@ -1078,23 +1078,17 @@ let restrict_ctx env (tgt:ctx_uvar) (bs:binders) (src:ctx_uvar) wl : worklist =
   //t is the type at which new uvar ?u should be created
   //f is a function that applied to the new uvar term should return the term that ?u_t should be solved to
   let aux (t:typ) (f:term -> term) =
-    let kind' =
-      match U.ctx_uvar_kind src with
-      | Inl _ -> Inl None
-      | _ ->
-        failwith
-          (BU.format1
-             "Did not expect to restrict a guard typing uvar %s"
-             (Print.ctx_uvar_to_string src)) in
-    let _, src', wl = new_uvar ("restricted " ^ (Print.uvar_to_string src.ctx_uvar_head)) wl
-      src.ctx_uvar_range g pfx t
-      (U.ctx_uvar_should_check src)
-      kind'
-      src.ctx_uvar_meta in
-    set_uvar env src (f src');
-    mark_uvar_as_allow_untyped src "assigned solution will be checked";
-
-    wl in
+    if Inl? (U.ctx_uvar_kind src)
+    then
+      let _, src', wl = new_uvar ("restricted " ^ (Print.uvar_to_string src.ctx_uvar_head)) wl
+        src.ctx_uvar_range g pfx t
+        (U.ctx_uvar_should_check src)
+        (Inl None)
+        src.ctx_uvar_meta in
+      set_uvar env src (f src');
+      mark_uvar_as_allow_untyped src "assigned solution will be checked";  
+      wl
+    else wl in
 
   let bs = bs |> List.filter (fun ({binder_bv=bv1}) ->
     src.ctx_uvar_binders |> List.existsb (fun ({binder_bv=bv2}) -> S.bv_eq bv1 bv2) &&  //binder exists in G_t

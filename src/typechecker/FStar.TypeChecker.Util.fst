@@ -541,82 +541,6 @@ let label_guard r reason (g:guard_t) = match g.guard_f with
     | Trivial -> g
     | NonTrivial f -> {g with guard_f=NonTrivial (label reason r f)}
 
-(*
- * Build the M.return comp for an indexed effect
- *
- * Caller must ensure that ed is an indexed effect
- *)
-let mk_indexed_return env (ed:S.eff_decl) (u_a:universe) (a:typ) (e:term) (r:Range.range)
-: comp * guard_t
-= if Env.debug env <| Options.Other "LayeredEffects"
-  then BU.print4 "Computing %s.return for u_a:%s, a:%s, and e:%s{\n"
-         (Ident.string_of_lid ed.mname) (Print.univ_to_string u_a)
-         (Print.term_to_string a) (Print.term_to_string e);
-
-  let _, return_t = Env.inst_tscheme_with
-    (ed |> U.get_return_vc_combinator)
-    [u_a] in
-
-  let return_t_shape_error (s:string) =
-    (Errors.Fatal_UnexpectedEffect, BU.format3
-      "%s.return %s does not have proper shape (reason:%s)"
-      (Ident.string_of_lid ed.mname) (Print.term_to_string return_t) s) in
-
-  let a_b, x_b, rest_bs, return_ct =
-    match (SS.compress return_t).n with
-    | Tm_arrow (bs, c) when List.length bs >= 2 ->
-      let ((a_b::x_b::bs, c)) = SS.open_comp bs c in
-      a_b, x_b, bs, U.comp_to_comp_typ c
-    | _ -> raise_error (return_t_shape_error "Either not an arrow or not enough binders") r in
-
-  let rest_bs_uvars, rest_uvars_guard_tms, g_uvars =
-    let guard_indexed_effect_uvars = true in
-    Env.uvars_for_binders
-      env rest_bs [NT (a_b.binder_bv, a); NT (x_b.binder_bv, e)]
-      guard_indexed_effect_uvars
-      (fun b -> BU.format3 "implicit var for binder %s of %s at %s"
-               (Print.binder_to_string b)
-               (BU.format1 "%s.return" (Ident.string_of_lid ed.mname))
-               (Range.string_of_range r)) r in
-
-  let subst = List.map2
-    (fun b t -> NT (b.binder_bv, t))
-    (a_b::x_b::rest_bs) (a::e::rest_bs_uvars) in
-
-  let is =
-    effect_args_from_repr (SS.compress return_ct.result_typ) (U.is_layered ed) r
-    |> List.map (SS.subst subst) in
-
-  let c = mk_Comp ({
-    comp_univs = [u_a];
-    effect_name = ed.mname;
-    result_typ = a;
-    effect_args = is |> List.map S.as_arg;
-    flags = []
-  }) in
-
-  if Env.debug env <| Options.Other "LayeredEffects"
-  then BU.print1 "} c after return %s\n" (Print.comp_to_string c);
-
-  c,
-  Env.conj_guard
-    g_uvars
-    (rest_uvars_guard_tms
-     |> U.mk_conj_l
-     |> TcComm.NonTrivial
-     |> Env.guard_of_guard_formula
-     |> label_guard r "tc guard for indexed binders (return)")
-
-(*
- * Wrapper over mk_wp_return and mk_indexed_return
- *)
-let mk_return env (ed:S.eff_decl) (u_a:universe) (a:typ) (e:term) (r:Range.range)
-: comp * guard_t
-= if ed |> U.is_layered
-  then mk_indexed_return env ed u_a a e r
-  else mk_wp_return env ed u_a a e r, Env.trivial_guard
-
-
 let lift_comp env guard_indexed_effect_uvars (c:comp_typ) lift : comp * guard_t =
   ({ c with flags = [] }) |> S.mk_Comp |> lift.mlift_wp env guard_indexed_effect_uvars
 
@@ -812,17 +736,77 @@ let should_return env eopt lc =
      | _ -> true)                               &&
    not (should_not_inline_lc lc)                   //condition (d)
 
-(*
- * Return a value in eff_lid
- *)
-let return_value env eff_lid u_t_opt t v =
-  let u =
-    match u_t_opt with
-    | None -> env.universe_of env t
-    | Some u -> u in
-  mk_return env (Env.get_effect_decl env eff_lid) u t v v.pos
-
 (* private *)
+
+(*
+ * Build the M.return comp for an indexed effect
+ *
+ * Caller must ensure that ed is an indexed effect
+ *)
+let rec mk_indexed_return env (ed:S.eff_decl) (u_a:universe) (a:typ) (e:term) (r:Range.range)
+: comp * guard_t
+= if Env.debug env <| Options.Other "LayeredEffects"
+  then BU.print4 "Computing %s.return for u_a:%s, a:%s, and e:%s{\n"
+         (Ident.string_of_lid ed.mname) (Print.univ_to_string u_a)
+         (Print.term_to_string a) (Print.term_to_string e);
+
+  let _, return_t = Env.inst_tscheme_with
+    (ed |> U.get_return_vc_combinator)
+    [u_a] in
+
+  let return_t_shape_error (s:string) =
+    (Errors.Fatal_UnexpectedEffect, BU.format3
+      "%s.return %s does not have proper shape (reason:%s)"
+      (Ident.string_of_lid ed.mname) (Print.term_to_string return_t) s) in
+
+  let a_b, x_b, rest_bs, return_ct =
+    match (SS.compress return_t).n with
+    | Tm_arrow (bs, c) when List.length bs >= 2 ->
+      let ((a_b::x_b::bs, c)) = SS.open_comp bs c in
+      a_b, x_b, bs, U.comp_to_comp_typ c
+    | _ -> raise_error (return_t_shape_error "Either not an arrow or not enough binders") r in
+
+  let rest_bs_uvars, rest_uvars_guard_tms, g_uvars =
+    let guard_indexed_effect_uvars = true in
+    Env.uvars_for_binders
+      env rest_bs [NT (a_b.binder_bv, a); NT (x_b.binder_bv, e)]
+      guard_indexed_effect_uvars
+      (fun b -> BU.format3 "implicit var for binder %s of %s at %s"
+               (Print.binder_to_string b)
+               (BU.format1 "%s.return" (Ident.string_of_lid ed.mname))
+               (Range.string_of_range r)) r in
+
+  let subst = List.map2
+    (fun b t -> NT (b.binder_bv, t))
+    (a_b::x_b::rest_bs) (a::e::rest_bs_uvars) in
+
+  let is =
+    effect_args_from_repr (SS.compress return_ct.result_typ) (U.is_layered ed) r
+    |> List.map (SS.subst subst) in
+
+  let c = mk_Comp ({
+    comp_univs = [u_a];
+    effect_name = ed.mname;
+    result_typ = a;
+    effect_args = is |> List.map S.as_arg;
+    flags = []
+  }) in
+
+  let c, g_strengthen =
+    if List.length rest_uvars_guard_tms = 0
+    then c, Env.trivial_guard
+    else let fml = rest_uvars_guard_tms |> U.mk_conj_l in
+         strengthen_comp env
+           (Some (fun () -> "tc guard for indexed binders (return)"))
+           c
+           fml
+           [] in
+
+  if Env.debug env <| Options.Other "LayeredEffects"
+  then BU.print1 "} c after return %s\n" (Print.comp_to_string c);
+
+  c,
+  Env.conj_guard g_uvars g_strengthen
 
 (*
  * Bind for indexed effects
@@ -858,7 +842,7 @@ let return_value env eff_lid u_t_opt t v =
  *
  * In addition, we add ((wp[substs]) (fun _ -> True)) to the returned guard
  *)
-let mk_indexed_bind env
+and mk_indexed_bind env
   (guard_indexed_effect_uvars:bool)
   (m:lident) (n:lident) (p:lident) (bind_t:tscheme)
   (ct1:comp_typ) (b:option bv) (ct2:comp_typ)
@@ -1004,18 +988,23 @@ let mk_indexed_bind env
     flags = flags
   }) in
 
+  let c, g_strengthen =
+    if List.length rest_uvars_guard_tms = 0
+    then c, Env.trivial_guard
+    else let fml = rest_uvars_guard_tms |> U.mk_conj_l in
+         strengthen_comp env
+           (Some (fun () -> "tc guard for indexed binders (bind)"))
+           c
+           fml
+           [] in
+
   if Env.debug env <| Options.Other "LayeredEffects"
-  then
-    BU.print1 "} c after bind: %s\n" (Print.comp_to_string c);
+  then BU.print1 "} c after bind: %s\n" (Print.comp_to_string c);
 
   let guard =
     Env.conj_guards [
       g_uvars;
-      (rest_uvars_guard_tms
-         |> U.mk_conj_l
-         |> TcComm.NonTrivial
-         |> Env.guard_of_guard_formula
-         |> label_guard (Env.get_range env) "tc guard for indexed binders (bind)");
+      g_strengthen;
       f_guard;
       g_guard;
       Env.guard_of_guard_formula (TcComm.NonTrivial fml)]
@@ -1029,7 +1018,7 @@ let mk_indexed_bind env
 
   c, guard
 
-let mk_wp_bind env (m:lident) (ct1:comp_typ) (b:option bv) (ct2:comp_typ) (flags:list cflag) (r1:Range.range)
+and mk_wp_bind env (m:lident) (ct1:comp_typ) (b:option bv) (ct2:comp_typ) (flags:list cflag) (r1:Range.range)
   : comp =
 
   let (md, a, kwp), (u_t1, t1, wp1), (u_t2, t2, wp2) =
@@ -1056,7 +1045,7 @@ let mk_wp_bind env (m:lident) (ct1:comp_typ) (b:option bv) (ct2:comp_typ) (flags
   let wp = mk_Tm_app (inst_effect_fun_with [u_t1;u_t2] env md bind_wp) wp_args t2.pos in
   mk_comp md u_t2 t2 wp flags
 
-let mk_bind env guard_indexed_effect_uvars
+and mk_bind env guard_indexed_effect_uvars
   (c1:comp)
   (b:option bv)
   (c2:comp)
@@ -1087,6 +1076,61 @@ let mk_bind env guard_indexed_effect_uvars
         mk_indexed_bind env guard_indexed_effect_uvars m m m bind_t ct1 b ct2 flags r1 has_range_args
       else mk_wp_bind env m ct1 b ct2 flags r1, Env.trivial_guard in
     c, Env.conj_guard g_lift g_bind
+
+and strengthen_comp env (reason:option (unit -> string)) (c:comp) (f:formula) flags : comp * guard_t =
+    if env.lax || Env.too_early_in_prims env
+    then c, Env.trivial_guard
+    else let r = Env.get_range env in
+         (*
+          * The following code does:
+          *   M.bind_wp (lift_pure_M (Prims.pure_assert_wp f)) (fun _ -> wp)
+          *)
+
+         (*
+          * lookup the pure_assert_wp from prims
+          * its type is p:Type -> pure_wp unit
+          *  and it is not universe polymorphic
+          *)
+         let pure_assert_wp = S.fv_to_tm (S.lid_as_fv C.pure_assert_wp_lid (Delta_constant_at_level 1) None) in
+
+         (* apply it to f, after decorating f with the reason *)
+         let pure_assert_wp = mk_Tm_app
+           pure_assert_wp
+           [ S.as_arg <| label_opt env reason r f ]
+           r
+         in
+
+         let r = Env.get_range env in
+
+         let pure_c = S.mk_Comp ({
+           comp_univs = [S.U_zero];
+           effect_name = C.effect_PURE_lid;
+           result_typ = S.t_unit;
+           effect_args = [pure_assert_wp |> S.as_arg];
+           flags = []
+         }) in
+
+         let guard_indexed_effect_uvars = false in
+         mk_bind env guard_indexed_effect_uvars pure_c None c flags r
+
+(*
+ * Wrapper over mk_wp_return and mk_indexed_return
+ *)
+let mk_return env (ed:S.eff_decl) (u_a:universe) (a:typ) (e:term) (r:Range.range)
+: comp * guard_t
+= if ed |> U.is_layered
+  then mk_indexed_return env ed u_a a e r
+  else mk_wp_return env ed u_a a e r, Env.trivial_guard
+
+(*
+ * Return a value in eff_lid
+ *)
+let return_value env eff_lid u_t_opt t v =
+  let u =
+    match u_t_opt with
+    | None -> env.universe_of env t
+    | Some u -> u in
+  mk_return env (Env.get_effect_decl env eff_lid) u t v v.pos
 
 let weaken_flags flags =
     if flags |> BU.for_some (function SHOULD_NOT_INLINE -> true | _ -> false)
@@ -1146,43 +1190,6 @@ let weaken_precondition env lc (f:guard_formula) : lcomp =
              c, Env.conj_guard g_c g_w
   in
   TcComm.mk_lcomp lc.eff_name lc.res_typ (weaken_flags lc.cflags) weaken
-
-
-let strengthen_comp env (reason:option (unit -> string)) (c:comp) (f:formula) flags : comp * guard_t =
-    if env.lax || Env.too_early_in_prims env
-    then c, Env.trivial_guard
-    else let r = Env.get_range env in
-         (*
-          * The following code does:
-          *   M.bind_wp (lift_pure_M (Prims.pure_assert_wp f)) (fun _ -> wp)
-          *)
-
-         (*
-          * lookup the pure_assert_wp from prims
-          * its type is p:Type -> pure_wp unit
-          *  and it is not universe polymorphic
-          *)
-         let pure_assert_wp = S.fv_to_tm (S.lid_as_fv C.pure_assert_wp_lid (Delta_constant_at_level 1) None) in
-
-         (* apply it to f, after decorating f with the reason *)
-         let pure_assert_wp = mk_Tm_app
-           pure_assert_wp
-           [ S.as_arg <| label_opt env reason r f ]
-           r
-         in
-
-         let r = Env.get_range env in
-
-         let pure_c = S.mk_Comp ({
-           comp_univs = [S.U_zero];
-           effect_name = C.effect_PURE_lid;
-           result_typ = S.t_unit;
-           effect_args = [pure_assert_wp |> S.as_arg];
-           flags = []
-         }) in
-
-         let guard_indexed_effect_uvars = false in
-         mk_bind env guard_indexed_effect_uvars pure_c None c flags r
 
 let strengthen_precondition
             (reason:option (unit -> string))
@@ -3254,7 +3261,7 @@ let lift_tf_layered_effect (tgt:lident) (lift_ts:tscheme)
     then c, Env.trivial_guard
     else let fml = rest_uvars_guard_tms |> U.mk_conj_l in
          strengthen_comp env
-           (Some (fun () -> "tc guard for indexed binders (lift"))
+           (Some (fun () -> "tc guard for indexed binders (lift)"))
            c
            fml
            [] in
