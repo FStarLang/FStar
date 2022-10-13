@@ -3249,16 +3249,22 @@ let lift_tf_layered_effect (tgt:lident) (lift_ts:tscheme)
     flags = []  //AR: setting the flags to empty
   }) in
 
+  let c, g_strengthen =
+    if List.length rest_uvars_guard_tms = 0
+    then c, Env.trivial_guard
+    else let fml = rest_uvars_guard_tms |> U.mk_conj_l in
+         strengthen_comp env
+           (Some (fun () -> "tc guard for indexed binders (lift"))
+           c
+           fml
+           [] in
+
   if debug env <| Options.Other "LayeredEffects" then
     BU.print1 "} Lifted comp: %s\n" (Print.comp_to_string c);
 
   let g = Env.conj_guards [
     g;
-    (rest_uvars_guard_tms
-       |> U.mk_conj_l
-       |> TcComm.NonTrivial
-       |> Env.guard_of_guard_formula
-       |> label_guard r "tc guard for indexed binders (lift)");
+    g_strengthen;
     guard_f;
     Env.guard_of_guard_formula (TcComm.NonTrivial fml) ] in
     

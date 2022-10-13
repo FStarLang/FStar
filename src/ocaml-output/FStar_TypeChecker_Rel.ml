@@ -2370,8 +2370,13 @@ let (restrict_ctx :
                     | FStar_Pervasives.Inl uu___3 ->
                         FStar_Pervasives.Inl FStar_Pervasives_Native.None
                     | uu___3 ->
-                        failwith
-                          "Did not expect to restrict a guard typing uvar" in
+                        let uu___4 =
+                          let uu___5 =
+                            FStar_Syntax_Print.ctx_uvar_to_string src in
+                          FStar_Compiler_Util.format1
+                            "Did not expect to restrict a guard typing uvar %s"
+                            uu___5 in
+                        failwith uu___4 in
                   let uu___2 =
                     let uu___3 =
                       let uu___4 =

@@ -1081,7 +1081,11 @@ let restrict_ctx env (tgt:ctx_uvar) (bs:binders) (src:ctx_uvar) wl : worklist =
     let kind' =
       match U.ctx_uvar_kind src with
       | Inl _ -> Inl None
-      | _ -> failwith "Did not expect to restrict a guard typing uvar" in
+      | _ ->
+        failwith
+          (BU.format1
+             "Did not expect to restrict a guard typing uvar %s"
+             (Print.ctx_uvar_to_string src)) in
     let _, src', wl = new_uvar ("restricted " ^ (Print.uvar_to_string src.ctx_uvar_head)) wl
       src.ctx_uvar_range g pfx t
       (U.ctx_uvar_should_check src)

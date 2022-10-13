@@ -7075,53 +7075,56 @@ let (lift_tf_layered_effect :
                                           FStar_Syntax_Syntax.flags = []
                                         } in
                                       FStar_Syntax_Syntax.mk_Comp uu___9 in
-                                    (let uu___10 =
-                                       FStar_Compiler_Effect.op_Less_Bar
-                                         (FStar_TypeChecker_Env.debug env)
-                                         (FStar_Options.Other
-                                            "LayeredEffects") in
-                                     if uu___10
-                                     then
-                                       let uu___11 =
-                                         FStar_Syntax_Print.comp_to_string c1 in
-                                       FStar_Compiler_Util.print1
-                                         "} Lifted comp: %s\n" uu___11
-                                     else ());
-                                    (let g1 =
-                                       let uu___10 =
-                                         let uu___11 =
-                                           let uu___12 =
-                                             let uu___13 =
-                                               let uu___14 =
-                                                 let uu___15 =
-                                                   FStar_Compiler_Effect.op_Bar_Greater
-                                                     rest_uvars_guard_tms
-                                                     FStar_Syntax_Util.mk_conj_l in
-                                                 FStar_Compiler_Effect.op_Bar_Greater
-                                                   uu___15
-                                                   (fun uu___16 ->
-                                                      FStar_TypeChecker_Common.NonTrivial
-                                                        uu___16) in
-                                               FStar_Compiler_Effect.op_Bar_Greater
-                                                 uu___14
-                                                 FStar_TypeChecker_Env.guard_of_guard_formula in
-                                             FStar_Compiler_Effect.op_Bar_Greater
-                                               uu___13
-                                               (label_guard r
-                                                  "tc guard for indexed binders (lift)") in
-                                           let uu___13 =
-                                             let uu___14 =
-                                               let uu___15 =
-                                                 FStar_TypeChecker_Env.guard_of_guard_formula
-                                                   (FStar_TypeChecker_Common.NonTrivial
-                                                      fml) in
-                                               [uu___15] in
-                                             guard_f :: uu___14 in
-                                           uu___12 :: uu___13 in
-                                         g :: uu___11 in
-                                       FStar_TypeChecker_Env.conj_guards
-                                         uu___10 in
-                                     (c1, g1))))))))))
+                                    let uu___9 =
+                                      if
+                                        (FStar_Compiler_List.length
+                                           rest_uvars_guard_tms)
+                                          = Prims.int_zero
+                                      then
+                                        (c1,
+                                          FStar_TypeChecker_Env.trivial_guard)
+                                      else
+                                        (let fml1 =
+                                           FStar_Compiler_Effect.op_Bar_Greater
+                                             rest_uvars_guard_tms
+                                             FStar_Syntax_Util.mk_conj_l in
+                                         strengthen_comp env
+                                           (FStar_Pervasives_Native.Some
+                                              (fun uu___11 ->
+                                                 "tc guard for indexed binders (lift"))
+                                           c1 fml1 []) in
+                                    match uu___9 with
+                                    | (c2, g_strengthen) ->
+                                        ((let uu___11 =
+                                            FStar_Compiler_Effect.op_Less_Bar
+                                              (FStar_TypeChecker_Env.debug
+                                                 env)
+                                              (FStar_Options.Other
+                                                 "LayeredEffects") in
+                                          if uu___11
+                                          then
+                                            let uu___12 =
+                                              FStar_Syntax_Print.comp_to_string
+                                                c2 in
+                                            FStar_Compiler_Util.print1
+                                              "} Lifted comp: %s\n" uu___12
+                                          else ());
+                                         (let g1 =
+                                            let uu___11 =
+                                              let uu___12 =
+                                                let uu___13 =
+                                                  let uu___14 =
+                                                    let uu___15 =
+                                                      FStar_TypeChecker_Env.guard_of_guard_formula
+                                                        (FStar_TypeChecker_Common.NonTrivial
+                                                           fml) in
+                                                    [uu___15] in
+                                                  guard_f :: uu___14 in
+                                                g_strengthen :: uu___13 in
+                                              g :: uu___12 in
+                                            FStar_TypeChecker_Env.conj_guards
+                                              uu___11 in
+                                          (c2, g1)))))))))))
 let lift_tf_layered_effect_term :
   'uuuuu .
     'uuuuu ->
