@@ -2364,35 +2364,30 @@ let (restrict_ctx :
                 let g =
                   gamma_until src.FStar_Syntax_Syntax.ctx_uvar_gamma pfx in
                 let aux t f =
-                  let kind' =
-                    let uu___2 = FStar_Syntax_Util.ctx_uvar_kind src in
-                    match uu___2 with
-                    | FStar_Pervasives.Inl uu___3 ->
-                        FStar_Pervasives.Inl FStar_Pervasives_Native.None
-                    | uu___3 ->
-                        let uu___4 =
-                          let uu___5 =
-                            FStar_Syntax_Print.ctx_uvar_to_string src in
-                          FStar_Compiler_Util.format1
-                            "Did not expect to restrict a guard typing uvar %s"
-                            uu___5 in
-                        failwith uu___4 in
                   let uu___2 =
+                    let uu___3 = FStar_Syntax_Util.ctx_uvar_kind src in
+                    FStar_Pervasives.uu___is_Inl uu___3 in
+                  if uu___2
+                  then
                     let uu___3 =
                       let uu___4 =
-                        FStar_Syntax_Print.uvar_to_string
-                          src.FStar_Syntax_Syntax.ctx_uvar_head in
-                      Prims.op_Hat "restricted " uu___4 in
-                    let uu___4 = FStar_Syntax_Util.ctx_uvar_should_check src in
-                    new_uvar uu___3 wl src.FStar_Syntax_Syntax.ctx_uvar_range
-                      g pfx t uu___4 kind'
-                      src.FStar_Syntax_Syntax.ctx_uvar_meta in
-                  match uu___2 with
-                  | (uu___3, src', wl1) ->
-                      ((let uu___5 = f src' in set_uvar env src uu___5);
-                       mark_uvar_as_allow_untyped src
-                         "assigned solution will be checked";
-                       wl1) in
+                        let uu___5 =
+                          FStar_Syntax_Print.uvar_to_string
+                            src.FStar_Syntax_Syntax.ctx_uvar_head in
+                        Prims.op_Hat "restricted " uu___5 in
+                      let uu___5 =
+                        FStar_Syntax_Util.ctx_uvar_should_check src in
+                      new_uvar uu___4 wl
+                        src.FStar_Syntax_Syntax.ctx_uvar_range g pfx t uu___5
+                        (FStar_Pervasives.Inl FStar_Pervasives_Native.None)
+                        src.FStar_Syntax_Syntax.ctx_uvar_meta in
+                    match uu___3 with
+                    | (uu___4, src', wl1) ->
+                        ((let uu___6 = f src' in set_uvar env src uu___6);
+                         mark_uvar_as_allow_untyped src
+                           "assigned solution will be checked";
+                         wl1)
+                  else wl in
                 let bs1 =
                   FStar_Compiler_Effect.op_Bar_Greater bs
                     (FStar_Compiler_List.filter

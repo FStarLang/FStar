@@ -804,190 +804,6 @@ let (label_guard :
               FStar_TypeChecker_Common.implicits =
                 (g.FStar_TypeChecker_Common.implicits)
             }
-let (mk_indexed_return :
-  FStar_TypeChecker_Env.env ->
-    FStar_Syntax_Syntax.eff_decl ->
-      FStar_Syntax_Syntax.universe ->
-        FStar_Syntax_Syntax.typ ->
-          FStar_Syntax_Syntax.term ->
-            FStar_Compiler_Range.range ->
-              (FStar_Syntax_Syntax.comp * FStar_TypeChecker_Env.guard_t))
-  =
-  fun env ->
-    fun ed ->
-      fun u_a ->
-        fun a ->
-          fun e ->
-            fun r ->
-              (let uu___1 =
-                 FStar_Compiler_Effect.op_Less_Bar
-                   (FStar_TypeChecker_Env.debug env)
-                   (FStar_Options.Other "LayeredEffects") in
-               if uu___1
-               then
-                 let uu___2 =
-                   FStar_Ident.string_of_lid ed.FStar_Syntax_Syntax.mname in
-                 let uu___3 = FStar_Syntax_Print.univ_to_string u_a in
-                 let uu___4 = FStar_Syntax_Print.term_to_string a in
-                 let uu___5 = FStar_Syntax_Print.term_to_string e in
-                 FStar_Compiler_Util.print4
-                   "Computing %s.return for u_a:%s, a:%s, and e:%s{\n" uu___2
-                   uu___3 uu___4 uu___5
-               else ());
-              (let uu___1 =
-                 let uu___2 =
-                   FStar_Compiler_Effect.op_Bar_Greater ed
-                     FStar_Syntax_Util.get_return_vc_combinator in
-                 FStar_TypeChecker_Env.inst_tscheme_with uu___2 [u_a] in
-               match uu___1 with
-               | (uu___2, return_t) ->
-                   let return_t_shape_error s =
-                     let uu___3 =
-                       let uu___4 =
-                         FStar_Ident.string_of_lid
-                           ed.FStar_Syntax_Syntax.mname in
-                       let uu___5 =
-                         FStar_Syntax_Print.term_to_string return_t in
-                       FStar_Compiler_Util.format3
-                         "%s.return %s does not have proper shape (reason:%s)"
-                         uu___4 uu___5 s in
-                     (FStar_Errors.Fatal_UnexpectedEffect, uu___3) in
-                   let uu___3 =
-                     let uu___4 =
-                       let uu___5 = FStar_Syntax_Subst.compress return_t in
-                       uu___5.FStar_Syntax_Syntax.n in
-                     match uu___4 with
-                     | FStar_Syntax_Syntax.Tm_arrow (bs, c) when
-                         (FStar_Compiler_List.length bs) >=
-                           (Prims.of_int (2))
-                         ->
-                         let uu___5 = FStar_Syntax_Subst.open_comp bs c in
-                         (match uu___5 with
-                          | (a_b::x_b::bs1, c1) ->
-                              let uu___6 =
-                                FStar_Syntax_Util.comp_to_comp_typ c1 in
-                              (a_b, x_b, bs1, uu___6))
-                     | uu___5 ->
-                         let uu___6 =
-                           return_t_shape_error
-                             "Either not an arrow or not enough binders" in
-                         FStar_Errors.raise_error uu___6 r in
-                   (match uu___3 with
-                    | (a_b, x_b, rest_bs, return_ct) ->
-                        let uu___4 =
-                          let guard_indexed_effect_uvars = true in
-                          FStar_TypeChecker_Env.uvars_for_binders env rest_bs
-                            [FStar_Syntax_Syntax.NT
-                               ((a_b.FStar_Syntax_Syntax.binder_bv), a);
-                            FStar_Syntax_Syntax.NT
-                              ((x_b.FStar_Syntax_Syntax.binder_bv), e)]
-                            guard_indexed_effect_uvars
-                            (fun b ->
-                               let uu___5 =
-                                 FStar_Syntax_Print.binder_to_string b in
-                               let uu___6 =
-                                 let uu___7 =
-                                   FStar_Ident.string_of_lid
-                                     ed.FStar_Syntax_Syntax.mname in
-                                 FStar_Compiler_Util.format1 "%s.return"
-                                   uu___7 in
-                               let uu___7 =
-                                 FStar_Compiler_Range.string_of_range r in
-                               FStar_Compiler_Util.format3
-                                 "implicit var for binder %s of %s at %s"
-                                 uu___5 uu___6 uu___7) r in
-                        (match uu___4 with
-                         | (rest_bs_uvars, rest_uvars_guard_tms, g_uvars) ->
-                             let subst =
-                               FStar_Compiler_List.map2
-                                 (fun b ->
-                                    fun t ->
-                                      FStar_Syntax_Syntax.NT
-                                        ((b.FStar_Syntax_Syntax.binder_bv),
-                                          t)) (a_b :: x_b :: rest_bs) (a :: e
-                                 :: rest_bs_uvars) in
-                             let is =
-                               let uu___5 =
-                                 let uu___6 =
-                                   FStar_Syntax_Subst.compress
-                                     return_ct.FStar_Syntax_Syntax.result_typ in
-                                 let uu___7 = FStar_Syntax_Util.is_layered ed in
-                                 effect_args_from_repr uu___6 uu___7 r in
-                               FStar_Compiler_Effect.op_Bar_Greater uu___5
-                                 (FStar_Compiler_List.map
-                                    (FStar_Syntax_Subst.subst subst)) in
-                             let c =
-                               let uu___5 =
-                                 let uu___6 =
-                                   FStar_Compiler_Effect.op_Bar_Greater is
-                                     (FStar_Compiler_List.map
-                                        FStar_Syntax_Syntax.as_arg) in
-                                 {
-                                   FStar_Syntax_Syntax.comp_univs = [u_a];
-                                   FStar_Syntax_Syntax.effect_name =
-                                     (ed.FStar_Syntax_Syntax.mname);
-                                   FStar_Syntax_Syntax.result_typ = a;
-                                   FStar_Syntax_Syntax.effect_args = uu___6;
-                                   FStar_Syntax_Syntax.flags = []
-                                 } in
-                               FStar_Syntax_Syntax.mk_Comp uu___5 in
-                             ((let uu___6 =
-                                 FStar_Compiler_Effect.op_Less_Bar
-                                   (FStar_TypeChecker_Env.debug env)
-                                   (FStar_Options.Other "LayeredEffects") in
-                               if uu___6
-                               then
-                                 let uu___7 =
-                                   FStar_Syntax_Print.comp_to_string c in
-                                 FStar_Compiler_Util.print1
-                                   "} c after return %s\n" uu___7
-                               else ());
-                              (let uu___6 =
-                                 let uu___7 =
-                                   let uu___8 =
-                                     let uu___9 =
-                                       let uu___10 =
-                                         FStar_Compiler_Effect.op_Bar_Greater
-                                           rest_uvars_guard_tms
-                                           FStar_Syntax_Util.mk_conj_l in
-                                       FStar_Compiler_Effect.op_Bar_Greater
-                                         uu___10
-                                         (fun uu___11 ->
-                                            FStar_TypeChecker_Common.NonTrivial
-                                              uu___11) in
-                                     FStar_Compiler_Effect.op_Bar_Greater
-                                       uu___9
-                                       FStar_TypeChecker_Env.guard_of_guard_formula in
-                                   FStar_Compiler_Effect.op_Bar_Greater
-                                     uu___8
-                                     (label_guard r
-                                        "tc guard for indexed binders (return)") in
-                                 FStar_TypeChecker_Env.conj_guard g_uvars
-                                   uu___7 in
-                               (c, uu___6))))))
-let (mk_return :
-  FStar_TypeChecker_Env.env ->
-    FStar_Syntax_Syntax.eff_decl ->
-      FStar_Syntax_Syntax.universe ->
-        FStar_Syntax_Syntax.typ ->
-          FStar_Syntax_Syntax.term ->
-            FStar_Compiler_Range.range ->
-              (FStar_Syntax_Syntax.comp * FStar_TypeChecker_Env.guard_t))
-  =
-  fun env ->
-    fun ed ->
-      fun u_a ->
-        fun a ->
-          fun e ->
-            fun r ->
-              let uu___ =
-                FStar_Compiler_Effect.op_Bar_Greater ed
-                  FStar_Syntax_Util.is_layered in
-              if uu___
-              then mk_indexed_return env ed u_a a e r
-              else
-                (let uu___2 = mk_wp_return env ed u_a a e r in
-                 (uu___2, FStar_TypeChecker_Env.trivial_guard))
 let (lift_comp :
   FStar_TypeChecker_Env.env ->
     Prims.bool ->
@@ -1397,27 +1213,167 @@ let (should_return :
                      | uu___3 -> true)))
               &&
               (let uu___ = should_not_inline_lc lc in Prims.op_Negation uu___)
-let (return_value :
+let rec (mk_indexed_return :
   FStar_TypeChecker_Env.env ->
-    FStar_Ident.lident ->
-      FStar_Syntax_Syntax.universe FStar_Pervasives_Native.option ->
-        FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
-          FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
-            (FStar_Syntax_Syntax.comp * FStar_TypeChecker_Env.guard_t))
+    FStar_Syntax_Syntax.eff_decl ->
+      FStar_Syntax_Syntax.universe ->
+        FStar_Syntax_Syntax.typ ->
+          FStar_Syntax_Syntax.term ->
+            FStar_Compiler_Range.range ->
+              (FStar_Syntax_Syntax.comp * FStar_TypeChecker_Env.guard_t))
   =
   fun env ->
-    fun eff_lid ->
-      fun u_t_opt ->
-        fun t ->
-          fun v ->
-            let u =
-              match u_t_opt with
-              | FStar_Pervasives_Native.None ->
-                  env.FStar_TypeChecker_Env.universe_of env t
-              | FStar_Pervasives_Native.Some u1 -> u1 in
-            let uu___ = FStar_TypeChecker_Env.get_effect_decl env eff_lid in
-            mk_return env uu___ u t v v.FStar_Syntax_Syntax.pos
-let (mk_indexed_bind :
+    fun ed ->
+      fun u_a ->
+        fun a ->
+          fun e ->
+            fun r ->
+              (let uu___1 =
+                 FStar_Compiler_Effect.op_Less_Bar
+                   (FStar_TypeChecker_Env.debug env)
+                   (FStar_Options.Other "LayeredEffects") in
+               if uu___1
+               then
+                 let uu___2 =
+                   FStar_Ident.string_of_lid ed.FStar_Syntax_Syntax.mname in
+                 let uu___3 = FStar_Syntax_Print.univ_to_string u_a in
+                 let uu___4 = FStar_Syntax_Print.term_to_string a in
+                 let uu___5 = FStar_Syntax_Print.term_to_string e in
+                 FStar_Compiler_Util.print4
+                   "Computing %s.return for u_a:%s, a:%s, and e:%s{\n" uu___2
+                   uu___3 uu___4 uu___5
+               else ());
+              (let uu___1 =
+                 let uu___2 =
+                   FStar_Compiler_Effect.op_Bar_Greater ed
+                     FStar_Syntax_Util.get_return_vc_combinator in
+                 FStar_TypeChecker_Env.inst_tscheme_with uu___2 [u_a] in
+               match uu___1 with
+               | (uu___2, return_t) ->
+                   let return_t_shape_error s =
+                     let uu___3 =
+                       let uu___4 =
+                         FStar_Ident.string_of_lid
+                           ed.FStar_Syntax_Syntax.mname in
+                       let uu___5 =
+                         FStar_Syntax_Print.term_to_string return_t in
+                       FStar_Compiler_Util.format3
+                         "%s.return %s does not have proper shape (reason:%s)"
+                         uu___4 uu___5 s in
+                     (FStar_Errors.Fatal_UnexpectedEffect, uu___3) in
+                   let uu___3 =
+                     let uu___4 =
+                       let uu___5 = FStar_Syntax_Subst.compress return_t in
+                       uu___5.FStar_Syntax_Syntax.n in
+                     match uu___4 with
+                     | FStar_Syntax_Syntax.Tm_arrow (bs, c) when
+                         (FStar_Compiler_List.length bs) >=
+                           (Prims.of_int (2))
+                         ->
+                         let uu___5 = FStar_Syntax_Subst.open_comp bs c in
+                         (match uu___5 with
+                          | (a_b::x_b::bs1, c1) ->
+                              let uu___6 =
+                                FStar_Syntax_Util.comp_to_comp_typ c1 in
+                              (a_b, x_b, bs1, uu___6))
+                     | uu___5 ->
+                         let uu___6 =
+                           return_t_shape_error
+                             "Either not an arrow or not enough binders" in
+                         FStar_Errors.raise_error uu___6 r in
+                   (match uu___3 with
+                    | (a_b, x_b, rest_bs, return_ct) ->
+                        let uu___4 =
+                          let guard_indexed_effect_uvars = true in
+                          FStar_TypeChecker_Env.uvars_for_binders env rest_bs
+                            [FStar_Syntax_Syntax.NT
+                               ((a_b.FStar_Syntax_Syntax.binder_bv), a);
+                            FStar_Syntax_Syntax.NT
+                              ((x_b.FStar_Syntax_Syntax.binder_bv), e)]
+                            guard_indexed_effect_uvars
+                            (fun b ->
+                               let uu___5 =
+                                 FStar_Syntax_Print.binder_to_string b in
+                               let uu___6 =
+                                 let uu___7 =
+                                   FStar_Ident.string_of_lid
+                                     ed.FStar_Syntax_Syntax.mname in
+                                 FStar_Compiler_Util.format1 "%s.return"
+                                   uu___7 in
+                               let uu___7 =
+                                 FStar_Compiler_Range.string_of_range r in
+                               FStar_Compiler_Util.format3
+                                 "implicit var for binder %s of %s at %s"
+                                 uu___5 uu___6 uu___7) r in
+                        (match uu___4 with
+                         | (rest_bs_uvars, rest_uvars_guard_tms, g_uvars) ->
+                             let subst =
+                               FStar_Compiler_List.map2
+                                 (fun b ->
+                                    fun t ->
+                                      FStar_Syntax_Syntax.NT
+                                        ((b.FStar_Syntax_Syntax.binder_bv),
+                                          t)) (a_b :: x_b :: rest_bs) (a :: e
+                                 :: rest_bs_uvars) in
+                             let is =
+                               let uu___5 =
+                                 let uu___6 =
+                                   FStar_Syntax_Subst.compress
+                                     return_ct.FStar_Syntax_Syntax.result_typ in
+                                 let uu___7 = FStar_Syntax_Util.is_layered ed in
+                                 effect_args_from_repr uu___6 uu___7 r in
+                               FStar_Compiler_Effect.op_Bar_Greater uu___5
+                                 (FStar_Compiler_List.map
+                                    (FStar_Syntax_Subst.subst subst)) in
+                             let c =
+                               let uu___5 =
+                                 let uu___6 =
+                                   FStar_Compiler_Effect.op_Bar_Greater is
+                                     (FStar_Compiler_List.map
+                                        FStar_Syntax_Syntax.as_arg) in
+                                 {
+                                   FStar_Syntax_Syntax.comp_univs = [u_a];
+                                   FStar_Syntax_Syntax.effect_name =
+                                     (ed.FStar_Syntax_Syntax.mname);
+                                   FStar_Syntax_Syntax.result_typ = a;
+                                   FStar_Syntax_Syntax.effect_args = uu___6;
+                                   FStar_Syntax_Syntax.flags = []
+                                 } in
+                               FStar_Syntax_Syntax.mk_Comp uu___5 in
+                             let uu___5 =
+                               if
+                                 (FStar_Compiler_List.length
+                                    rest_uvars_guard_tms)
+                                   = Prims.int_zero
+                               then (c, FStar_TypeChecker_Env.trivial_guard)
+                               else
+                                 (let fml =
+                                    FStar_Compiler_Effect.op_Bar_Greater
+                                      rest_uvars_guard_tms
+                                      FStar_Syntax_Util.mk_conj_l in
+                                  strengthen_comp env
+                                    (FStar_Pervasives_Native.Some
+                                       (fun uu___7 ->
+                                          "tc guard for indexed binders (return)"))
+                                    c fml []) in
+                             (match uu___5 with
+                              | (c1, g_strengthen) ->
+                                  ((let uu___7 =
+                                      FStar_Compiler_Effect.op_Less_Bar
+                                        (FStar_TypeChecker_Env.debug env)
+                                        (FStar_Options.Other "LayeredEffects") in
+                                    if uu___7
+                                    then
+                                      let uu___8 =
+                                        FStar_Syntax_Print.comp_to_string c1 in
+                                      FStar_Compiler_Util.print1
+                                        "} c after return %s\n" uu___8
+                                    else ());
+                                   (let uu___7 =
+                                      FStar_TypeChecker_Env.conj_guard
+                                        g_uvars g_strengthen in
+                                    (c1, uu___7)))))))
+and (mk_indexed_bind :
   FStar_TypeChecker_Env.env ->
     Prims.bool ->
       FStar_Ident.lident ->
@@ -2012,60 +1968,58 @@ let (mk_indexed_bind :
                                                               } in
                                                             FStar_Syntax_Syntax.mk_Comp
                                                               uu___11 in
-                                                          (let uu___12 =
-                                                             FStar_Compiler_Effect.op_Less_Bar
-                                                               (FStar_TypeChecker_Env.debug
-                                                                  env)
-                                                               (FStar_Options.Other
-                                                                  "LayeredEffects") in
-                                                           if uu___12
-                                                           then
-                                                             let uu___13 =
-                                                               FStar_Syntax_Print.comp_to_string
-                                                                 c in
-                                                             FStar_Compiler_Util.print1
-                                                               "} c after bind: %s\n"
-                                                               uu___13
-                                                           else ());
-                                                          (let guard =
-                                                             let uu___12 =
-                                                               let uu___13 =
-                                                                 let uu___14
-                                                                   =
-                                                                   let uu___15
+                                                          let uu___11 =
+                                                            if
+                                                              (FStar_Compiler_List.length
+                                                                 rest_uvars_guard_tms)
+                                                                =
+                                                                Prims.int_zero
+                                                            then
+                                                              (c,
+                                                                FStar_TypeChecker_Env.trivial_guard)
+                                                            else
+                                                              (let fml1 =
+                                                                 FStar_Compiler_Effect.op_Bar_Greater
+                                                                   rest_uvars_guard_tms
+                                                                   FStar_Syntax_Util.mk_conj_l in
+                                                               strengthen_comp
+                                                                 env
+                                                                 (FStar_Pervasives_Native.Some
+                                                                    (
+                                                                    fun
+                                                                    uu___13
+                                                                    ->
+                                                                    "tc guard for indexed binders (bind)"))
+                                                                 c fml1 []) in
+                                                          match uu___11 with
+                                                          | (c1,
+                                                             g_strengthen) ->
+                                                              ((let uu___13 =
+                                                                  FStar_Compiler_Effect.op_Less_Bar
+                                                                    (
+                                                                    FStar_TypeChecker_Env.debug
+                                                                    env)
+                                                                    (
+                                                                    FStar_Options.Other
+                                                                    "LayeredEffects") in
+                                                                if uu___13
+                                                                then
+                                                                  let uu___14
+                                                                    =
+                                                                    FStar_Syntax_Print.comp_to_string
+                                                                    c1 in
+                                                                  FStar_Compiler_Util.print1
+                                                                    "} c after bind: %s\n"
+                                                                    uu___14
+                                                                else ());
+                                                               (let guard =
+                                                                  let uu___13
+                                                                    =
+                                                                    let uu___14
+                                                                    =
+                                                                    let uu___15
                                                                     =
                                                                     let uu___16
-                                                                    =
-                                                                    let uu___17
-                                                                    =
-                                                                    FStar_Compiler_Effect.op_Bar_Greater
-                                                                    rest_uvars_guard_tms
-                                                                    FStar_Syntax_Util.mk_conj_l in
-                                                                    FStar_Compiler_Effect.op_Bar_Greater
-                                                                    uu___17
-                                                                    (fun
-                                                                    uu___18
-                                                                    ->
-                                                                    FStar_TypeChecker_Common.NonTrivial
-                                                                    uu___18) in
-                                                                    FStar_Compiler_Effect.op_Bar_Greater
-                                                                    uu___16
-                                                                    FStar_TypeChecker_Env.guard_of_guard_formula in
-                                                                   let uu___16
-                                                                    =
-                                                                    let uu___17
-                                                                    =
-                                                                    FStar_TypeChecker_Env.get_range
-                                                                    env in
-                                                                    label_guard
-                                                                    uu___17
-                                                                    "tc guard for indexed binders (bind)" in
-                                                                   FStar_Compiler_Effect.op_Bar_Greater
-                                                                    uu___15
-                                                                    uu___16 in
-                                                                 let uu___15
-                                                                   =
-                                                                   let uu___16
                                                                     =
                                                                     let uu___17
                                                                     =
@@ -2078,38 +2032,45 @@ let (mk_indexed_bind :
                                                                     g_guard
                                                                     ::
                                                                     uu___17 in
-                                                                   f_guard ::
+                                                                    f_guard
+                                                                    ::
                                                                     uu___16 in
-                                                                 uu___14 ::
-                                                                   uu___15 in
-                                                               g_uvars ::
-                                                                 uu___13 in
-                                                             FStar_TypeChecker_Env.conj_guards
-                                                               uu___12 in
-                                                           (let uu___13 =
-                                                              FStar_Compiler_Effect.op_Less_Bar
-                                                                (FStar_TypeChecker_Env.debug
-                                                                   env)
-                                                                (FStar_Options.Other
-                                                                   "ResolveImplicitsHook") in
-                                                            if uu___13
-                                                            then
-                                                              let uu___14 =
-                                                                let uu___15 =
-                                                                  FStar_TypeChecker_Env.get_range
+                                                                    g_strengthen
+                                                                    ::
+                                                                    uu___15 in
+                                                                    g_uvars
+                                                                    ::
+                                                                    uu___14 in
+                                                                  FStar_TypeChecker_Env.conj_guards
+                                                                    uu___13 in
+                                                                (let uu___14
+                                                                   =
+                                                                   FStar_Compiler_Effect.op_Less_Bar
+                                                                    (FStar_TypeChecker_Env.debug
+                                                                    env)
+                                                                    (FStar_Options.Other
+                                                                    "ResolveImplicitsHook") in
+                                                                 if uu___14
+                                                                 then
+                                                                   let uu___15
+                                                                    =
+                                                                    let uu___16
+                                                                    =
+                                                                    FStar_TypeChecker_Env.get_range
                                                                     env in
-                                                                FStar_Compiler_Range.string_of_range
-                                                                  uu___15 in
-                                                              let uu___15 =
-                                                                FStar_TypeChecker_Rel.guard_to_string
-                                                                  env guard in
-                                                              FStar_Compiler_Util.print2
-                                                                "///////////////////////////////EndBind at %s/////////////////////\nguard = %s\n"
-                                                                uu___14
-                                                                uu___15
-                                                            else ());
-                                                           (c, guard))))))))))
-let (mk_wp_bind :
+                                                                    FStar_Compiler_Range.string_of_range
+                                                                    uu___16 in
+                                                                   let uu___16
+                                                                    =
+                                                                    FStar_TypeChecker_Rel.guard_to_string
+                                                                    env guard in
+                                                                   FStar_Compiler_Util.print2
+                                                                    "///////////////////////////////EndBind at %s/////////////////////\nguard = %s\n"
+                                                                    uu___15
+                                                                    uu___16
+                                                                 else ());
+                                                                (c1, guard)))))))))))
+and (mk_wp_bind :
   FStar_TypeChecker_Env.env ->
     FStar_Ident.lident ->
       FStar_Syntax_Syntax.comp_typ ->
@@ -2174,7 +2135,7 @@ let (mk_wp_bind :
                       FStar_Syntax_Syntax.mk_Tm_app uu___1 wp_args
                         t2.FStar_Syntax_Syntax.pos in
                     mk_comp md u_t2 t2 wp flags
-let (mk_bind :
+and (mk_bind :
   FStar_TypeChecker_Env.env ->
     Prims.bool ->
       FStar_Syntax_Syntax.comp ->
@@ -2256,6 +2217,106 @@ let (mk_bind :
                                           FStar_TypeChecker_Env.conj_guard
                                             g_lift g_bind in
                                         (c, uu___5)))))
+and (strengthen_comp :
+  FStar_TypeChecker_Env.env ->
+    (unit -> Prims.string) FStar_Pervasives_Native.option ->
+      FStar_Syntax_Syntax.comp ->
+        FStar_Syntax_Syntax.formula ->
+          FStar_Syntax_Syntax.cflag Prims.list ->
+            (FStar_Syntax_Syntax.comp * FStar_TypeChecker_Env.guard_t))
+  =
+  fun env ->
+    fun reason ->
+      fun c ->
+        fun f ->
+          fun flags ->
+            let uu___ =
+              env.FStar_TypeChecker_Env.lax ||
+                (FStar_TypeChecker_Env.too_early_in_prims env) in
+            if uu___
+            then (c, FStar_TypeChecker_Env.trivial_guard)
+            else
+              (let r = FStar_TypeChecker_Env.get_range env in
+               let pure_assert_wp =
+                 let uu___2 =
+                   FStar_Syntax_Syntax.lid_as_fv
+                     FStar_Parser_Const.pure_assert_wp_lid
+                     (FStar_Syntax_Syntax.Delta_constant_at_level
+                        Prims.int_one) FStar_Pervasives_Native.None in
+                 FStar_Syntax_Syntax.fv_to_tm uu___2 in
+               let pure_assert_wp1 =
+                 let uu___2 =
+                   let uu___3 =
+                     let uu___4 = label_opt env reason r f in
+                     FStar_Compiler_Effect.op_Less_Bar
+                       FStar_Syntax_Syntax.as_arg uu___4 in
+                   [uu___3] in
+                 FStar_Syntax_Syntax.mk_Tm_app pure_assert_wp uu___2 r in
+               let r1 = FStar_TypeChecker_Env.get_range env in
+               let pure_c =
+                 let uu___2 =
+                   let uu___3 =
+                     let uu___4 =
+                       FStar_Compiler_Effect.op_Bar_Greater pure_assert_wp1
+                         FStar_Syntax_Syntax.as_arg in
+                     [uu___4] in
+                   {
+                     FStar_Syntax_Syntax.comp_univs =
+                       [FStar_Syntax_Syntax.U_zero];
+                     FStar_Syntax_Syntax.effect_name =
+                       FStar_Parser_Const.effect_PURE_lid;
+                     FStar_Syntax_Syntax.result_typ =
+                       FStar_Syntax_Syntax.t_unit;
+                     FStar_Syntax_Syntax.effect_args = uu___3;
+                     FStar_Syntax_Syntax.flags = []
+                   } in
+                 FStar_Syntax_Syntax.mk_Comp uu___2 in
+               let guard_indexed_effect_uvars = false in
+               mk_bind env guard_indexed_effect_uvars pure_c
+                 FStar_Pervasives_Native.None c flags r1)
+let (mk_return :
+  FStar_TypeChecker_Env.env ->
+    FStar_Syntax_Syntax.eff_decl ->
+      FStar_Syntax_Syntax.universe ->
+        FStar_Syntax_Syntax.typ ->
+          FStar_Syntax_Syntax.term ->
+            FStar_Compiler_Range.range ->
+              (FStar_Syntax_Syntax.comp * FStar_TypeChecker_Env.guard_t))
+  =
+  fun env ->
+    fun ed ->
+      fun u_a ->
+        fun a ->
+          fun e ->
+            fun r ->
+              let uu___ =
+                FStar_Compiler_Effect.op_Bar_Greater ed
+                  FStar_Syntax_Util.is_layered in
+              if uu___
+              then mk_indexed_return env ed u_a a e r
+              else
+                (let uu___2 = mk_wp_return env ed u_a a e r in
+                 (uu___2, FStar_TypeChecker_Env.trivial_guard))
+let (return_value :
+  FStar_TypeChecker_Env.env ->
+    FStar_Ident.lident ->
+      FStar_Syntax_Syntax.universe FStar_Pervasives_Native.option ->
+        FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
+          FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
+            (FStar_Syntax_Syntax.comp * FStar_TypeChecker_Env.guard_t))
+  =
+  fun env ->
+    fun eff_lid ->
+      fun u_t_opt ->
+        fun t ->
+          fun v ->
+            let u =
+              match u_t_opt with
+              | FStar_Pervasives_Native.None ->
+                  env.FStar_TypeChecker_Env.universe_of env t
+              | FStar_Pervasives_Native.Some u1 -> u1 in
+            let uu___ = FStar_TypeChecker_Env.get_effect_decl env eff_lid in
+            mk_return env uu___ u t v v.FStar_Syntax_Syntax.pos
 let (weaken_flags :
   FStar_Syntax_Syntax.cflag Prims.list ->
     FStar_Syntax_Syntax.cflag Prims.list)
@@ -2363,63 +2424,6 @@ let (weaken_precondition :
         FStar_TypeChecker_Common.mk_lcomp
           lc.FStar_TypeChecker_Common.eff_name
           lc.FStar_TypeChecker_Common.res_typ uu___ weaken
-let (strengthen_comp :
-  FStar_TypeChecker_Env.env ->
-    (unit -> Prims.string) FStar_Pervasives_Native.option ->
-      FStar_Syntax_Syntax.comp ->
-        FStar_Syntax_Syntax.formula ->
-          FStar_Syntax_Syntax.cflag Prims.list ->
-            (FStar_Syntax_Syntax.comp * FStar_TypeChecker_Env.guard_t))
-  =
-  fun env ->
-    fun reason ->
-      fun c ->
-        fun f ->
-          fun flags ->
-            let uu___ =
-              env.FStar_TypeChecker_Env.lax ||
-                (FStar_TypeChecker_Env.too_early_in_prims env) in
-            if uu___
-            then (c, FStar_TypeChecker_Env.trivial_guard)
-            else
-              (let r = FStar_TypeChecker_Env.get_range env in
-               let pure_assert_wp =
-                 let uu___2 =
-                   FStar_Syntax_Syntax.lid_as_fv
-                     FStar_Parser_Const.pure_assert_wp_lid
-                     (FStar_Syntax_Syntax.Delta_constant_at_level
-                        Prims.int_one) FStar_Pervasives_Native.None in
-                 FStar_Syntax_Syntax.fv_to_tm uu___2 in
-               let pure_assert_wp1 =
-                 let uu___2 =
-                   let uu___3 =
-                     let uu___4 = label_opt env reason r f in
-                     FStar_Compiler_Effect.op_Less_Bar
-                       FStar_Syntax_Syntax.as_arg uu___4 in
-                   [uu___3] in
-                 FStar_Syntax_Syntax.mk_Tm_app pure_assert_wp uu___2 r in
-               let r1 = FStar_TypeChecker_Env.get_range env in
-               let pure_c =
-                 let uu___2 =
-                   let uu___3 =
-                     let uu___4 =
-                       FStar_Compiler_Effect.op_Bar_Greater pure_assert_wp1
-                         FStar_Syntax_Syntax.as_arg in
-                     [uu___4] in
-                   {
-                     FStar_Syntax_Syntax.comp_univs =
-                       [FStar_Syntax_Syntax.U_zero];
-                     FStar_Syntax_Syntax.effect_name =
-                       FStar_Parser_Const.effect_PURE_lid;
-                     FStar_Syntax_Syntax.result_typ =
-                       FStar_Syntax_Syntax.t_unit;
-                     FStar_Syntax_Syntax.effect_args = uu___3;
-                     FStar_Syntax_Syntax.flags = []
-                   } in
-                 FStar_Syntax_Syntax.mk_Comp uu___2 in
-               let guard_indexed_effect_uvars = false in
-               mk_bind env guard_indexed_effect_uvars pure_c
-                 FStar_Pervasives_Native.None c flags r1)
 let (strengthen_precondition :
   (unit -> Prims.string) FStar_Pervasives_Native.option ->
     FStar_TypeChecker_Env.env ->
@@ -7091,7 +7095,7 @@ let (lift_tf_layered_effect :
                                          strengthen_comp env
                                            (FStar_Pervasives_Native.Some
                                               (fun uu___11 ->
-                                                 "tc guard for indexed binders (lift"))
+                                                 "tc guard for indexed binders (lift)"))
                                            c1 fml1 []) in
                                     match uu___9 with
                                     | (c2, g_strengthen) ->
