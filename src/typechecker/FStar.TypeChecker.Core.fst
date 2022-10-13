@@ -73,6 +73,17 @@ type hash_entry = {
 
 type tc_table = FStar.Hash.hashtable term hash_entry
 let table : tc_table = FStar.Hash.create FStar.Syntax.Hash.equal_term
+type cache_stats_t = { hits : int; misses : int }
+let cache_stats = Util.mk_ref { hits = 0; misses = 0 }
+let record_cache_hit () =
+   let cs = !cache_stats in
+    cache_stats := { cs with hits = cs.hits + 1 }
+let record_cache_miss () =
+   let cs = !cache_stats in
+    cache_stats := { cs with misses = cs.misses + 1 }
+let reset_cache_stats () =     
+    cache_stats := { hits = 0; misses = 0 }
+let report_cache_stats () = !cache_stats
 let clear_memo_table () = FStar.Hash.clear table
 let insert (g:env) (e:term) (res:success (effect_label & typ)) =
     let entry = {
@@ -111,6 +122,11 @@ let (and!) (#a:Type) (#b:Type) (x:result a) (y:result b)
     let! u = y in
     return (v, u)
 
+let (let?) (#a:Type) (#b:Type) (x:option a) (f: a -> option b)
+  : option b
+  = match x with
+    | None -> None
+    | Some x -> f x
 
 let fail #a msg : result a = fun ctx -> Inr (ctx, msg)
 
@@ -394,10 +410,14 @@ let lookup (g:env) (e:term) : result (effect_label & typ) =
    | Some he ->
      if he.he_gamma `context_included` g.tcenv.gamma
      then (
+       record_cache_hit();
        //BU.print1 "cache hit %s\n" (P.term_to_string e);
        fun _ -> Inl he.he_res
      )
-     else fail "not in cache"
+     else (
+       record_cache_miss();
+       fail "not in cache"
+     )
 
 let check_no_escape (bs:binders) t =
     let xs = FStar.Syntax.Free.names t in
@@ -472,8 +492,11 @@ let debug g f =
 
 (*
      G |- e : t0 <: t1 | p
+
+or   G |- t0 <: t1 | p
+
  *)
-let rec check_subtype_whnf (g:env) (e:term) (t0 t1: typ)
+let rec check_subtype_whnf (g:env) (e:option term) (t0 t1: typ)
   : result unit
   = let fail (s:string) = 
       debug g (fun () ->
@@ -494,7 +517,9 @@ let rec check_subtype_whnf (g:env) (e:term) (t0 t1: typ)
         debug g (fun () ->
           BU.print2 "exiting check_subtype_whnf [[%s <: %s]] with guard\n" (P.term_to_string t0) (P.term_to_string t1));
         guard (U.mk_eq2 u (mk_type u) t0 t1)
-      else fail "no subtyping rule is applicable"
+      else (
+          fail "no subtyping rule is applicable"
+      )
     in
     match (SS.compress t0).n, (SS.compress t1).n with
     | Tm_refine _, Tm_refine _
@@ -503,16 +528,39 @@ let rec check_subtype_whnf (g:env) (e:term) (t0 t1: typ)
 
     | Tm_refine(x0, p0), _ ->
       let [x0], p0 = SS.open_term [S.mk_binder x0] p0 in
-      weaken
-        (apply_predicate x0 p0 e)
-        (check_subtype g e x0.binder_bv.sort t1)
+      if Some? e
+      then (
+        weaken
+          (apply_predicate x0 p0 (Some?.v e))
+          (check_subtype g e x0.binder_bv.sort t1)
+      )
+      else (
+        let! u0 = universe_of g x0.binder_bv.sort in
+        with_binders [x0] [u0] (
+          weaken p0
+            (check_subtype (push_binders g [x0]) 
+                           (Some (S.bv_to_name x0.binder_bv))
+                           x0.binder_bv.sort
+                           t1))
+      )
+
 
     | _, Tm_refine(x1, p1) ->
       let [x1], p1 = SS.open_term [S.mk_binder x1] p1 in
-      strengthen
-        (apply_predicate x1 p1 e)
-        (check_subtype g e t0 x1.binder_bv.sort)
-
+      if Some? e
+      then (
+        strengthen
+          (apply_predicate x1 p1 (Some?.v e))
+          (check_subtype g e t0 x1.binder_bv.sort)
+      )
+      else (
+        let! u0 = universe_of g t0 in
+        let x0 = S.new_bv None t0 in
+        strengthen
+            (mk_forall_l [u0] [mk_binder x0] (SS.subst [NT(x1.binder_bv, S.bv_to_name x0)] p1))
+            (check_subtype g None t0 x1.binder_bv.sort)
+      )
+  
     | Tm_arrow (x0::x1::xs, c0), _ ->
       check_subtype_whnf g e (curry_arrow x0 (x1::xs) c0) t1
 
@@ -525,11 +573,13 @@ let rec check_subtype_whnf (g:env) (e:term) (t0 t1: typ)
       let! _ = check_bqual x0.binder_qual x1.binder_qual in
       let! u1 = universe_of g x1.binder_bv.sort in
       with_binders [x1] [u1] (
-        check_subtype g (S.bv_to_name x1.binder_bv) x1.binder_bv.sort x0.binder_bv.sort ;!
-        check_subcomp (push_binders g [x0])
-                      (S.mk_Tm_app e (snd (U.args_of_binders [x1])) R.dummyRange)
-                      c0
-                      (SS.subst_comp [NT(x1.binder_bv, S.bv_to_name x0.binder_bv)] c1)
+        check_subtype g (Some (S.bv_to_name x1.binder_bv)) x1.binder_bv.sort x0.binder_bv.sort ;!
+        check_subcomp (push_binders g [x1])
+                      (if U.is_pure_or_ghost_comp c0
+                       then let? e in Some (S.mk_Tm_app e (snd (U.args_of_binders [x1])) R.dummyRange)
+                       else None)
+                      (SS.subst_comp [NT(x0.binder_bv, S.bv_to_name x1.binder_bv)] c0)
+                      c1
       )
 
     | Tm_ascribed (t0, _, _), _ ->
@@ -584,7 +634,7 @@ let rec check_subtype_whnf (g:env) (e:term) (t0 t1: typ)
       )
       else fallback g t0 t1
 
-and check_subtype (g:env) (e:term) (t0 t1:typ)
+and check_subtype (g:env) (e:option term) (t0 t1:typ)
   = debug g (fun () ->
       BU.print2 "check_subtype %s <: %s\n" (P.term_to_string t0) (P.term_to_string t1));
     match U.eq_tm t0 t1 with
@@ -736,9 +786,12 @@ and check_equality_whnf (g:env) (t0 t1:typ)
       | Tm_match (e0, _, brs0, _), Tm_match (e1, _, brs1, _) ->
         check_equality_match g e0 brs0 e1 brs1
 
-      | Tm_ascribed _, _
-      | _, Tm_ascribed _ -> fail "Unexpected term: ascription"
-
+      | Tm_ascribed (t0, _, _), _ ->
+        check_equality g t0 t1
+        
+      | _, Tm_ascribed(t1, _, _) ->
+        check_equality g t0 t1
+        
       | Tm_app _, _
       | _, Tm_app _ ->
         let mr, ts = Rel.head_matches_delta g.tcenv guard_ok t0 t1 in
@@ -760,11 +813,7 @@ and check_equality_whnf (g:env) (t0 t1:typ)
             match (SS.compress t0).n, (SS.compress t1).n with
             | Tm_app (hd0, args0), Tm_app(hd1, args1) ->
               check_equality_whnf g hd0 hd1;!
-              iter2 args0 args1
-                (fun (a0, q0) (a1, q1) _ ->
-                  check_aqual q0 q1;!
-                  check_equality g a0 a1)
-                ()
+              check_equality_args g args0 args1
             | _ -> fallback t0 t1
           )
         end
@@ -780,7 +829,17 @@ and check_equality (g:env) (t0 t1:typ)
       let t1' = N.normalize_refinement default_norm_steps g.tcenv t1 in
       check_equality_whnf g t0' t1'
 
-and check_subcomp (g:env) (e:term) (c0 c1:comp)
+and check_equality_args (g:env) (a0 a1:args)
+  : result unit
+  = if List.length a0 = List.length a1
+    then iter2 a0 a1
+         (fun (t0, q0) (t1, q1) _ ->
+            check_aqual q0 q1;!
+            check_equality g t0 t1)
+         ()
+    else fail "Unequal number of arguments"
+
+and check_subcomp (g:env) (e:option term) (c0 c1:comp)
   : result unit
   = let destruct_comp c =
         if U.is_total_comp c
@@ -794,9 +853,25 @@ and check_subcomp (g:env) (e:term) (c0 c1:comp)
     | _, None ->
       if U.eq_comp c0 c1 = U.Equal
       then return ()
-      else fail (BU.format2 "Subcomp failed: Non Tot/GTot computation types unhandled; got %s and %s" 
-                            (Ident.string_of_lid (U.comp_effect_name c0))
-                            (Ident.string_of_lid (U.comp_effect_name c1)))
+      else (
+        let ct_eq ct0 ct1 =
+          check_equality g ct0.result_typ ct1.result_typ ;!
+          check_equality_args g ct0.effect_args ct1.effect_args
+        in
+        let ct0 = U.comp_to_comp_typ_nouniv c0 in
+        let ct1 = U.comp_to_comp_typ_nouniv c1 in
+        if I.lid_equals ct0.effect_name ct1.effect_name
+        then ct_eq ct0 ct1
+        else (
+          let ct0 = Env.unfold_effect_abbrev g.tcenv c0 in
+          let ct1 = Env.unfold_effect_abbrev g.tcenv c1 in          
+          if I.lid_equals ct0.effect_name ct1.effect_name
+          then ct_eq ct0 ct1
+          else fail (BU.format2 "Subcomp failed: Unequal computation types %s and %s" 
+                            (Ident.string_of_lid ct0.effect_name)
+                            (Ident.string_of_lid ct1.effect_name))
+        )
+      )
 
     | Some (E_TOTAL, t0), Some (_, t1)
     | Some (E_GHOST, t0), Some (E_GHOST, t1) ->
@@ -922,12 +997,12 @@ and check' (g:env) (e:term)
     let! eff_hd, t_hd = check "app head" g hd in
     let! x, eff_arr1, s1 = is_arrow g t_hd in    
     let! eff_arg1, t_t1 = check "app arg" g t1 in
-    with_context "operator arg1" None (fun _ -> check_subtype g t1 t_t1 x.binder_bv.sort) ;!    
+    with_context "operator arg1" None (fun _ -> check_subtype g (Some t1) t_t1 x.binder_bv.sort) ;!    
     let s1 = SS.subst [NT(x.binder_bv, t1)] s1 in
     let! y, eff_arr2, s2 = is_arrow g s1 in
     let guard_formula = TcUtil.short_circuit hd [(t1, None)]in
     let! eff_arg2, t_t2 = weaken_with_guard_formula guard_formula (check "app arg" g t2) in    
-    with_context "operator arg2" None (fun _ -> check_subtype g t2 t_t2 y.binder_bv.sort) ;!
+    with_context "operator arg2" None (fun _ -> check_subtype g (Some t2) t_t2 y.binder_bv.sort) ;!
     return (join_eff_l [eff_hd; eff_arr1; eff_arr2; eff_arg1; eff_arg2],
             SS.subst [NT(y.binder_bv, t2)] s2)
 
@@ -935,7 +1010,7 @@ and check' (g:env) (e:term)
     let! eff_hd, t = check "app head" g hd in
     let! x, eff_arr, t' = is_arrow g t in
     let! eff_arg, t_arg = check "app arg" g arg in
-    with_context "app subtyping" None (fun _ -> check_subtype g arg t_arg x.binder_bv.sort) ;!
+    with_context "app subtyping" None (fun _ -> check_subtype g (Some arg) t_arg x.binder_bv.sort) ;!
     with_context "app arg qual" None (fun _ -> check_arg_qual arg_qual x.binder_qual) ;!
     return (join_eff eff_hd (join_eff eff_arr eff_arg), SS.subst [NT(x.binder_bv, arg)] t')
 
@@ -948,7 +1023,7 @@ and check' (g:env) (e:term)
     let! eff, te = check "ascription head" g e in
     let! _, t' = check "ascription type" g t in
     is_type g t';!
-    with_context "ascription subtyping" None (fun _ -> check_subtype g e te t);!
+    with_context "ascription subtyping" None (fun _ -> check_subtype g (Some e) te t);!
     return (eff, t)
 
   | Tm_ascribed (e, (Inr c, _, _), _) ->
@@ -957,7 +1032,7 @@ and check' (g:env) (e:term)
       let! eff, te = check "ascription head" g e in
       let! _ = with_context "ascription comp" None (fun _ -> check_comp g c) in
       let c_e = as_comp g (eff, te) in
-      check_subcomp g e c_e c;!
+      check_subcomp g (Some e) c_e c;!
       let Some (eff, t) = comp_as_effect_label_and_type c in
       return (eff, t)
     )
@@ -971,7 +1046,7 @@ and check' (g:env) (e:term)
       let! eff_def, tdef = check "let definition" g lb.lbdef in
       let! _, ttyp = check "let type" g lb.lbtyp in
       let! u = is_type g ttyp in
-      with_context "let subtyping" None (fun _ -> check_subtype g lb.lbdef tdef ttyp) ;!
+      with_context "let subtyping" None (fun _ -> check_subtype g (Some lb.lbdef) tdef ttyp) ;!
       with_definition x u lb.lbdef (
         let g = push_binders g [x] in
         let! eff_body, t = check "let body" g body in
@@ -1025,7 +1100,7 @@ and check' (g:env) (e:term)
                      return (eff_br, tbr)
 
                    | Some (acc_eff, expect_tbr) ->
-                     check_subtype g' b tbr expect_tbr;!
+                     check_subtype g' (Some b) tbr expect_tbr;!
                      return (join_eff eff_br acc_eff, expect_tbr))) in
             let path_condition =
               U.mk_conj path_condition
@@ -1086,7 +1161,7 @@ and check' (g:env) (e:term)
             // TODO: use pattern scrutinee type compatibility function
             with_context "Pattern and scrutinee type compatibility"
                          None
-                          (fun _ -> no_guard (check_subtype g' e t_sc t)) ;!
+                          (fun _ -> no_guard (check_subtype g' (Some e) t_sc t)) ;!
             let pat_sc_eq = U.mk_eq2 u_sc t_sc sc e in
             let! eff_br, tbr =
               with_binders bs us
@@ -1096,7 +1171,7 @@ and check' (g:env) (e:term)
                    let expect_tbr = SS.subst [NT(as_x.binder_bv, e)] returns_ty in
                    (if eq
                     then check_equality g' tbr expect_tbr
-                    else check_subtype  g' b tbr expect_tbr);!
+                    else check_subtype  g' (Some b) tbr expect_tbr);!
                     return (join_eff eff_br acc_eff, expect_tbr))) in
             let path_condition =
               U.mk_conj path_condition
@@ -1149,20 +1224,28 @@ and check_comp (g:env) (c:comp)
     | GTotal(t, _) ->
       let! _, t = check "(G)Tot comp result" g (U.comp_result c) in
       is_type g t
-    | Comp c ->
-      if List.length c.comp_univs <> 1
+    | Comp ct ->
+      if List.length ct.comp_univs <> 1
       then fail "Unexpected/missing universe instantitation in comp"
-      else let u = List.hd c.comp_univs in
+      else let u = List.hd ct.comp_univs in
            let effect_app_tm =
-             let head = S.mk_Tm_uinst (S.fvar c.effect_name delta_constant None) [u] in
-             S.mk_Tm_app head ((as_arg c.result_typ)::c.effect_args) c.result_typ.pos in
+             let head = S.mk_Tm_uinst (S.fvar ct.effect_name delta_constant None) [u] in
+             S.mk_Tm_app head ((as_arg ct.result_typ)::ct.effect_args) ct.result_typ.pos in
            let! _, t = check "effectful comp" g effect_app_tm in
-           with_context "comp fully applied" None (fun _ -> check_subtype g effect_app_tm t S.teff);!
-           let is_total = Env.lookup_effect_quals g.tcenv c.effect_name |> List.existsb (fun q -> q = S.TotalEffect) in
+           with_context "comp fully applied" None (fun _ -> check_subtype g None t S.teff);!
+           let c_lid = Env.norm_eff_name g.tcenv ct.effect_name in           
+           let is_total = Env.lookup_effect_quals g.tcenv c_lid |> List.existsb (fun q -> q = S.TotalEffect) in
            if not is_total
            then return S.U_zero  //if it is a non-total effect then u0
-           else return u
-
+           else if U.is_pure_or_ghost_effect c_lid
+           then return u
+           else (
+              match Env.effect_repr g.tcenv c u with
+              | None -> fail (BU.format2 "Total effect %s (normalized to %s) does not have a representation"
+                                        (Ident.string_of_lid (U.comp_effect_name c))
+                                        (Ident.string_of_lid c_lid))
+              | Some tm -> universe_of g tm
+           )
 
 and universe_of (g:env) (t:typ)
   : result universe
@@ -1229,7 +1312,7 @@ let check_term_top g e t (must_tot:bool)
       else S.mk_GTotal t
     in
     with_context "top-level subtyping" None (fun _ ->
-      check_subcomp ({ g with allow_universe_instantiation = true}) e (as_comp g eff_te) target_comp)
+      check_subcomp ({ g with allow_universe_instantiation = true}) (Some e) (as_comp g eff_te) target_comp)
 
 let simplify_steps =
     [Env.Beta; 
@@ -1239,30 +1322,58 @@ let simplify_steps =
      Env.Simplify;
      Env.Primops;
      Env.NoFullNorm]
-     
+
+let profile_check_term_top g e t must_tot ctx = 
+  FStar.Profiling.profile
+    (fun _ -> check_term_top g e t must_tot ctx)
+    None
+    "FStar.TypeChecker.Core.check_term_top"
+    
 let check_term g e t (must_tot:bool)
   = if Env.debug g (Options.Other "Core")
     then BU.print2 "Entering core with %s <: %s\n"
                    // (BU.stack_dump ())
                    (P.term_to_string e)
                    (P.term_to_string t);
+    reset_cache_stats();
     let ctx = { no_guard = false; error_context = [] } in
-    let res = match check_term_top g e t must_tot ctx with
-    | Inl (_, g) -> Inl g
-    | Inr err -> Inr err
+    let res = 
+      match profile_check_term_top g e t must_tot ctx with
+      | Inl (_, g) -> Inl g
+      | Inr err -> Inr err
     in
     (
+    let res = 
       match res with
       | Inl (Some guard0) ->
-        Options.push();
-        Options.set_option "debug_level" (Options.List [Options.String "Unfolding"]);
+        // Options.push();
+        // Options.set_option "debug_level" (Options.List [Options.String "Unfolding"]);
         let guard = N.normalize simplify_steps g guard0 in
-        Options.pop();
+        // Options.pop();
         if Env.debug g (Options.Other "CoreExit")
+        || Env.debug g (Options.Other "Core")
         then
-          BU.print2 "Simplified guard from {{%s}} to {{%s}}\n"
+          BU.print2 "Exiting core: Simplified guard from {{%s}} to {{%s}}\n"
             (P.term_to_string guard0)
             (P.term_to_string guard);
         Inl (Some guard)
-      | _ -> res
+
+      | Inl _ ->
+        if Env.debug g (Options.Other "Core")        
+        then BU.print_string "Exiting core (ok)\n";
+        res
+
+      | Inr _ ->
+        if Env.debug g (Options.Other "Core")        
+        then BU.print_string "Exiting core (failed)\n";      
+        res
+    in
+    if FStar.Options.profile_enabled None "FStar.TypeChecker.Core.check_term_top"
+    then (
+      let cs = report_cache_stats() in
+      BU.print2 "Cache_stats { hits = %s; misses = %s }\n"
+                     (BU.string_of_int cs.hits)
+                     (BU.string_of_int cs.misses)
+    );
+    res
     )
