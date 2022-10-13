@@ -35,7 +35,13 @@ let for_loop' (start:U32.t)
   : SE.SteelT unit
       (inv (U32.v start))
       (fun _ -> inv (U32.v finish))
-  = L.for_loop start finish inv body //lift works for body
+  = let body (i:u32_between start finish) 
+      : SE.SteelT unit
+                  (inv (U32.v i))
+                  (fun _ -> inv (U32.v i + 1))
+      = body i
+    in
+    L.for_loop start finish inv body //lift works for body; NS 12/10: Need to eta expand for the lift
 
 let for_loop (start:U32.t)
              (finish:U32.t { U32.v start <= U32.v finish })
@@ -73,7 +79,7 @@ let coerce_cond (inv: Ghost.erased bool -> vprop)
                                    (exists_ inv)
                                    (fun b -> inv b)))
                 (_:unit)
-  : STT bool (SEA.h_exists inv) (fun b -> inv b)
+  : SE.SteelT bool (SEA.h_exists inv) (fun b -> inv b)
   = let w = elim_h_exists inv in
     intro_exists_erased w inv;
     cond ()
@@ -83,7 +89,7 @@ let coerce_body (inv: Ghost.erased bool -> vprop)
                                    (inv true)
                                    (fun _ -> exists_ inv)))
                 (_:unit)
-  : STT unit (inv true) (fun _ -> SEA.h_exists inv)
+  : SE.SteelT unit (inv true) (fun _ -> SEA.h_exists inv)
   = let b = body () in
     let w = elim_exists () in
     intro_h_exists w inv;
