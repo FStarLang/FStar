@@ -509,6 +509,7 @@ and equal_pat p1 p2 =
     equal_bv bv1 bv2
   | Pat_dot_term t1, Pat_dot_term t2 ->
     equal_opt equal_term t1 t2
+  | _ -> false
 
 and equal_meta m1 m2 =
   match m1, m2 with

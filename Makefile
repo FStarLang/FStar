@@ -48,6 +48,9 @@ boot:
 	$(Q)+$(MAKE) -C src/ ocaml
 	$(Q)+$(MAKE) -C src/ocaml-output ../../bin/fstar.exe
 
+boot_libs: boot
+	$(Q)+$(MAKE) libs
+
 boot.ocaml:
 	$(Q)+$(MAKE) -C src/ ocaml
 	$(Q)+$(MAKE) -C src/ocaml-output ../../bin/fstar.ocaml

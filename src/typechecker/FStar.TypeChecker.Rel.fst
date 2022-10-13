@@ -364,9 +364,11 @@ let mk_eq2 wl env prob t1 t2 : term * worklist =
             to simply compute the type of t1 here.
             Sadly, it seems to be way too expensive to call env.type_of here.
     *)
-    let t_type, u = U.type_u () in
-    let binders = Env.all_binders env in
-    let _, tt, wl = new_uvar "eq2" wl t1.pos env.gamma binders t_type (Allow_unresolved "eq2 type") None in
+    // let t_type, u = U.type_u () in
+    // let binders = Env.all_binders env in
+    // let _, tt, wl = new_uvar "eq2" wl t1.pos env.gamma binders t_type (Allow_unresolved "eq2 type") None in
+    let tt, _ = env.typeof_well_typed_tot_or_gtot_term env t1 false in
+    let u = env.universe_of env tt in
     U.mk_eq2 u tt t1 t2, wl
 
 let p_invert = function
@@ -4639,7 +4641,9 @@ let try_solve_deferred_constraints (defer_ok:defer_ok_t) smt_ok deferred_to_tac_
    solve_universe_inequalities env g.univ_ineqs;
    let g =
      if deferred_to_tac_ok
-     then DeferredImplicits.solve_deferred_to_tactic_goals env g
+     then Profiling.profile (fun () -> DeferredImplicits.solve_deferred_to_tactic_goals env g)
+                            (Some (Ident.string_of_lid (Env.current_module env)))
+                            "FStar.TypeChecker.Rel.solve_deferred_to_tactic_goals"
      else g
    in
    if Env.debug env <| Options.Other "ResolveImplicitsHook"
@@ -4737,6 +4741,8 @@ let discharge_guard' use_env_range_msg env (g:guard_t) (use_smt:bool) : option g
                     Options.with_saved_options (fun () ->
                         ignore <| Options.set_options "--no_tactics";
                         let vcs = env.solver.preprocess env vc in
+                        if Options.profile_enabled None "FStar.TypeChecker"
+                        then BU.print1 "Tactic preprocessing produced %s goals\n" (BU.string_of_int (List.length vcs));
                         let vcs = List.map (fun (env, goal, opts) ->
                         env, norm_with_steps "FStar.TypeChecker.Rel.norm_with_steps.7" [Env.Simplify; Env.Primops] env goal, opts) vcs in
                         let vcs = List.map (fun (env, goal, opts) ->

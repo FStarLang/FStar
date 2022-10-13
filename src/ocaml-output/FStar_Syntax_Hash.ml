@@ -1113,7 +1113,8 @@ and (equal_pat :
             bv2) -> equal_bv bv1 bv2
          | (FStar_Syntax_Syntax.Pat_dot_term t1,
             FStar_Syntax_Syntax.Pat_dot_term t2) ->
-             equal_opt equal_term t1 t2)
+             equal_opt equal_term t1 t2
+         | uu___2 -> false)
 and (equal_meta :
   FStar_Syntax_Syntax.metadata -> FStar_Syntax_Syntax.metadata -> Prims.bool)
   =
