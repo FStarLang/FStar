@@ -141,15 +141,16 @@ let tc' s =
     let tcenv = init() in
     let tcenv = {tcenv with top_level=false} in
     let tm, _, g = TcTerm.tc_tot_or_gtot_term tcenv tm in
-    tm, g, tcenv
+    Rel.force_trivial_guard tcenv g;
+    let tm = FStar.Syntax.Subst.deep_compress tm in        
+    tm, tcenv
 
 let tc s =
-    let tm, _, _ = tc' s in
+    let tm, _ = tc' s in
     tm
 
 let tc_nbe s =
-    let tm, g, tcenv = tc' s in
-    Rel.force_trivial_guard tcenv g;
+    let tm, _ = tc' s in
     tm
 
 let tc_nbe_term tm =
@@ -157,6 +158,7 @@ let tc_nbe_term tm =
     let tcenv = {tcenv with top_level=false} in
     let tm, _, g = TcTerm.tc_tot_or_gtot_term tcenv tm in
     Rel.force_trivial_guard tcenv g;
+    let tm = FStar.Syntax.Subst.deep_compress tm in
     tm
 
 let pars_and_tc_fragment (s:string) =

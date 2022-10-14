@@ -221,20 +221,20 @@ let (run_all : unit -> Prims.bool) =
             FStar_Syntax_Util.t_bool x y in
         FStar_TypeChecker_Common.NonTrivial uu___6 in
       unify1 Prims.int_one x y uu___5);
-     (let id = FStar_Tests_Pars.tc "fun x -> x" in
+     (let id = FStar_Tests_Pars.tc "fun (x:bool) -> x" in
       (let uu___6 = FStar_Tests_Util.app id [x] in
        unify1 (Prims.of_int (2)) x uu___6 FStar_TypeChecker_Common.Trivial);
-      (let id1 = FStar_Tests_Pars.tc "fun x -> x" in
+      (let id1 = FStar_Tests_Pars.tc "fun (x:bool) -> x" in
        unify1 (Prims.of_int (3)) id1 id1 FStar_TypeChecker_Common.Trivial;
-       (let id2 = FStar_Tests_Pars.tc "fun x -> x" in
-        let id' = FStar_Tests_Pars.tc "fun y -> y" in
+       (let id2 = FStar_Tests_Pars.tc "fun (x:bool) -> x" in
+        let id' = FStar_Tests_Pars.tc "fun (y:bool) -> y" in
         unify1 (Prims.of_int (4)) id2 id' FStar_TypeChecker_Common.Trivial;
-        (let uu___9 = FStar_Tests_Pars.tc "fun x y -> x" in
-         let uu___10 = FStar_Tests_Pars.tc "fun a b -> a" in
+        (let uu___9 = FStar_Tests_Pars.tc "fun (x y:bool) -> x" in
+         let uu___10 = FStar_Tests_Pars.tc "fun (a b:bool) -> a" in
          unify1 (Prims.of_int (5)) uu___9 uu___10
            FStar_TypeChecker_Common.Trivial);
-        (let uu___10 = FStar_Tests_Pars.tc "fun x y z -> y" in
-         let uu___11 = FStar_Tests_Pars.tc "fun a b c -> b" in
+        (let uu___10 = FStar_Tests_Pars.tc "fun (x y z:bool) -> y" in
+         let uu___11 = FStar_Tests_Pars.tc "fun (a b c:bool) -> b" in
          unify1 (Prims.of_int (6)) uu___10 uu___11
            FStar_TypeChecker_Common.Trivial);
         (let uu___11 = FStar_Tests_Pars.tc "fun (x:int) (y:int) -> y" in
@@ -254,20 +254,21 @@ let (run_all : unit -> Prims.bool) =
          unify1 (Prims.of_int (8)) uu___12 uu___13 uu___14);
         (let uu___13 = FStar_Main.process_args () in
          FStar_Compiler_Effect.op_Bar_Greater uu___13 (fun uu___14 -> ()));
-        (let uu___14 =
-           let uu___15 =
-             FStar_Options.debug_at_level_no_module
-               (FStar_Options.Other "Core") in
-           FStar_Compiler_Util.string_of_bool uu___15 in
-         FStar_Compiler_Util.print1
-           "Processed args: debug_at_level Core? %s\n" uu___14);
-        (let uu___14 =
-           let uu___15 = FStar_Tests_Pars.tc "fun u x -> u x" in
-           inst Prims.int_one uu___15 in
-         match uu___14 with
+        (let uu___13 =
+           let uu___14 =
+             FStar_Tests_Pars.tc "fun (u:Type0 -> Type0) (x:Type0) -> u x" in
+           inst Prims.int_one uu___14 in
+         match uu___13 with
          | (tm, us) ->
-             let sol = FStar_Tests_Pars.tc "fun x -> Prims.pair x x" in
-             (unify_check (Prims.of_int (9)) tm sol
+             let sol = FStar_Tests_Pars.tc "fun (x:Type0) -> Prims.pair x x" in
+             ((let uu___15 =
+                 let uu___16 =
+                   FStar_Options.debug_at_level_no_module
+                     (FStar_Options.Other "Core") in
+                 FStar_Compiler_Util.string_of_bool uu___16 in
+               FStar_Compiler_Util.print1
+                 "Processed args: debug_at_level Core? %s\n" uu___15);
+              unify_check (Prims.of_int (9)) tm sol
                 FStar_TypeChecker_Common.Trivial
                 (fun uu___16 ->
                    let uu___17 =
@@ -278,11 +279,13 @@ let (run_all : unit -> Prims.bool) =
                      FStar_Tests_Util.term_eq uu___18 uu___19 in
                    FStar_Tests_Util.always (Prims.of_int (9)) uu___17);
               (let uu___16 =
-                 let uu___17 = FStar_Tests_Pars.tc "fun u x -> u x" in
+                 let uu___17 =
+                   FStar_Tests_Pars.tc
+                     "fun (u: int -> int -> int) (x:int) -> u x" in
                  inst Prims.int_one uu___17 in
                match uu___16 with
                | (tm1, us1) ->
-                   let sol1 = FStar_Tests_Pars.tc "fun x y -> x + y" in
+                   let sol1 = FStar_Tests_Pars.tc "fun (x y:int) -> x + y" in
                    (unify_check (Prims.of_int (10)) tm1 sol1
                       FStar_TypeChecker_Common.Trivial
                       (fun uu___18 ->

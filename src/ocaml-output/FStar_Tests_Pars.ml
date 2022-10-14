@@ -357,10 +357,7 @@ let (pars : Prims.string -> FStar_Syntax_Syntax.term) =
         let uu___1 = FStar_Options.trace_error () in Prims.op_Negation uu___1
         -> FStar_Compiler_Effect.raise e
 let (tc' :
-  Prims.string ->
-    (FStar_Syntax_Syntax.term * FStar_TypeChecker_Common.guard_t *
-      FStar_TypeChecker_Env.env))
-  =
+  Prims.string -> (FStar_Syntax_Syntax.term * FStar_TypeChecker_Env.env)) =
   fun s ->
     let tm = pars s in
     let tcenv = init () in
@@ -453,15 +450,14 @@ let (tc' :
           (tcenv.FStar_TypeChecker_Env.core_check)
       } in
     let uu___ = FStar_TypeChecker_TcTerm.tc_tot_or_gtot_term tcenv1 tm in
-    match uu___ with | (tm1, uu___1, g) -> (tm1, g, tcenv1)
-let (tc : Prims.string -> FStar_Syntax_Syntax.term) =
-  fun s -> let uu___ = tc' s in match uu___ with | (tm, uu___1, uu___2) -> tm
-let (tc_nbe : Prims.string -> FStar_Syntax_Syntax.term) =
-  fun s ->
-    let uu___ = tc' s in
     match uu___ with
-    | (tm, g, tcenv) ->
-        (FStar_TypeChecker_Rel.force_trivial_guard tcenv g; tm)
+    | (tm1, uu___1, g) ->
+        (FStar_TypeChecker_Rel.force_trivial_guard tcenv1 g;
+         (let tm2 = FStar_Syntax_Subst.deep_compress tm1 in (tm2, tcenv1)))
+let (tc : Prims.string -> FStar_Syntax_Syntax.term) =
+  fun s -> let uu___ = tc' s in match uu___ with | (tm, uu___1) -> tm
+let (tc_nbe : Prims.string -> FStar_Syntax_Syntax.term) =
+  fun s -> let uu___ = tc' s in match uu___ with | (tm, uu___1) -> tm
 let (tc_nbe_term : FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term) =
   fun tm ->
     let tcenv = init () in
@@ -556,7 +552,8 @@ let (tc_nbe_term : FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term) =
     let uu___ = FStar_TypeChecker_TcTerm.tc_tot_or_gtot_term tcenv1 tm in
     match uu___ with
     | (tm1, uu___1, g) ->
-        (FStar_TypeChecker_Rel.force_trivial_guard tcenv1 g; tm1)
+        (FStar_TypeChecker_Rel.force_trivial_guard tcenv1 g;
+         (let tm2 = FStar_Syntax_Subst.deep_compress tm1 in tm2))
 let (pars_and_tc_fragment : Prims.string -> unit) =
   fun s ->
     FStar_Options.set_option "trace_error" (FStar_Options.Bool true);
