@@ -4946,33 +4946,40 @@ let core_check_and_maybe_add_to_guard_uvar env uv t k must_tot =
     if Options.debug_any()
     then f () in
 
-  match env.core_check env t k must_tot with
-  | Inl None ->
-    debug (fun _ ->
-           BU.print1 "Core checking of uvar %s ok (no guard)\n"
-             (Print.ctx_uvar_to_string uv));
+  if Allow_untyped? (U.ctx_uvar_should_check uv)
+  then begin
     ignore (maybe_set_guard_uvar env uv U.t_true);
     Inl None
+  end
+  else
+    match env.core_check env t k must_tot with
+    | Inl None ->
+      debug (fun _ ->
+             BU.print1 "Core checking of uvar %s ok (no guard)\n"
+               (Print.ctx_uvar_to_string uv));
+      ignore (maybe_set_guard_uvar env uv U.t_true);
+      Inl None
+  
+    | Inl (Some vc) ->
+      debug (fun _ ->
+             BU.print3 "Core checking of uvar %s solved to %s ok with guard: %s\n"
+               (Print.ctx_uvar_to_string uv)
+               (Print.term_to_string t)
+               (Print.term_to_string vc));
 
-  | Inl (Some vc) ->
-    debug (fun _ ->
-           BU.print2 "Core checking of uvar %s ok with guard: %s\n"
-             (Print.ctx_uvar_to_string uv)
-             (Print.term_to_string vc));
+      if maybe_set_guard_uvar env uv vc
+      then Inl None
+      else Inl (Some vc)
 
-    if maybe_set_guard_uvar env uv vc
-    then Inl None
-    else Inl (Some vc)
-
-  | Inr err ->
-    debug (fun _ -> 
-           BU.print5 "(%s) Core checking failed (%s) on term %s and type %s\n%s\n"
-             (Range.string_of_range (Env.get_range env))      
-             (err true)
-             (Print.term_to_string t)
-             (Print.term_to_string k)
-             (err false));
-    Inr err
+    | Inr err ->
+      debug (fun _ -> 
+             BU.print5 "(%s) Core checking failed (%s) on term %s and type %s\n%s\n"
+               (Range.string_of_range (Env.get_range env))      
+               (err true)
+               (Print.term_to_string t)
+               (Print.term_to_string k)
+               (err false));
+      Inr err
 
 (*
  * Check that an implicit solution t has an expected type k

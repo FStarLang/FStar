@@ -13950,44 +13950,59 @@ let (core_check_and_maybe_add_to_guard_uvar :
             let debug f =
               let uu___ = FStar_Options.debug_any () in
               if uu___ then f () else () in
-            let uu___ = env.FStar_TypeChecker_Env.core_check env t k must_tot in
-            match uu___ with
-            | FStar_Pervasives.Inl (FStar_Pervasives_Native.None) ->
-                (debug
-                   (fun uu___2 ->
-                      let uu___3 = FStar_Syntax_Print.ctx_uvar_to_string uv in
-                      FStar_Compiler_Util.print1
-                        "Core checking of uvar %s ok (no guard)\n" uu___3);
-                 (let uu___3 =
-                    maybe_set_guard_uvar env uv FStar_Syntax_Util.t_true in
-                  ());
-                 FStar_Pervasives.Inl FStar_Pervasives_Native.None)
-            | FStar_Pervasives.Inl (FStar_Pervasives_Native.Some vc) ->
-                (debug
-                   (fun uu___2 ->
-                      let uu___3 = FStar_Syntax_Print.ctx_uvar_to_string uv in
-                      let uu___4 = FStar_Syntax_Print.term_to_string vc in
-                      FStar_Compiler_Util.print2
-                        "Core checking of uvar %s ok with guard: %s\n" uu___3
-                        uu___4);
-                 (let uu___2 = maybe_set_guard_uvar env uv vc in
-                  if uu___2
-                  then FStar_Pervasives.Inl FStar_Pervasives_Native.None
-                  else FStar_Pervasives.Inl (FStar_Pervasives_Native.Some vc)))
-            | FStar_Pervasives.Inr err ->
-                (debug
-                   (fun uu___2 ->
-                      let uu___3 =
-                        let uu___4 = FStar_TypeChecker_Env.get_range env in
-                        FStar_Compiler_Range.string_of_range uu___4 in
-                      let uu___4 = err true in
-                      let uu___5 = FStar_Syntax_Print.term_to_string t in
-                      let uu___6 = FStar_Syntax_Print.term_to_string k in
-                      let uu___7 = err false in
-                      FStar_Compiler_Util.print5
-                        "(%s) Core checking failed (%s) on term %s and type %s\n%s\n"
-                        uu___3 uu___4 uu___5 uu___6 uu___7);
-                 FStar_Pervasives.Inr err)
+            let uu___ =
+              let uu___1 = FStar_Syntax_Util.ctx_uvar_should_check uv in
+              FStar_Syntax_Syntax.uu___is_Allow_untyped uu___1 in
+            if uu___
+            then
+              ((let uu___2 =
+                  maybe_set_guard_uvar env uv FStar_Syntax_Util.t_true in
+                ());
+               FStar_Pervasives.Inl FStar_Pervasives_Native.None)
+            else
+              (let uu___2 =
+                 env.FStar_TypeChecker_Env.core_check env t k must_tot in
+               match uu___2 with
+               | FStar_Pervasives.Inl (FStar_Pervasives_Native.None) ->
+                   (debug
+                      (fun uu___4 ->
+                         let uu___5 =
+                           FStar_Syntax_Print.ctx_uvar_to_string uv in
+                         FStar_Compiler_Util.print1
+                           "Core checking of uvar %s ok (no guard)\n" uu___5);
+                    (let uu___5 =
+                       maybe_set_guard_uvar env uv FStar_Syntax_Util.t_true in
+                     ());
+                    FStar_Pervasives.Inl FStar_Pervasives_Native.None)
+               | FStar_Pervasives.Inl (FStar_Pervasives_Native.Some vc) ->
+                   (debug
+                      (fun uu___4 ->
+                         let uu___5 =
+                           FStar_Syntax_Print.ctx_uvar_to_string uv in
+                         let uu___6 = FStar_Syntax_Print.term_to_string t in
+                         let uu___7 = FStar_Syntax_Print.term_to_string vc in
+                         FStar_Compiler_Util.print3
+                           "Core checking of uvar %s solved to %s ok with guard: %s\n"
+                           uu___5 uu___6 uu___7);
+                    (let uu___4 = maybe_set_guard_uvar env uv vc in
+                     if uu___4
+                     then FStar_Pervasives.Inl FStar_Pervasives_Native.None
+                     else
+                       FStar_Pervasives.Inl (FStar_Pervasives_Native.Some vc)))
+               | FStar_Pervasives.Inr err ->
+                   (debug
+                      (fun uu___4 ->
+                         let uu___5 =
+                           let uu___6 = FStar_TypeChecker_Env.get_range env in
+                           FStar_Compiler_Range.string_of_range uu___6 in
+                         let uu___6 = err true in
+                         let uu___7 = FStar_Syntax_Print.term_to_string t in
+                         let uu___8 = FStar_Syntax_Print.term_to_string k in
+                         let uu___9 = err false in
+                         FStar_Compiler_Util.print5
+                           "(%s) Core checking failed (%s) on term %s and type %s\n%s\n"
+                           uu___5 uu___6 uu___7 uu___8 uu___9);
+                    FStar_Pervasives.Inr err))
 let (check_implicit_solution :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.ctx_uvar ->
