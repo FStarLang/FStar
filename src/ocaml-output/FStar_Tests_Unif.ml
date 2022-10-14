@@ -158,12 +158,13 @@ let (check_core :
           match uu___2 with
           | FStar_Pervasives.Inl (FStar_Pervasives_Native.None) ->
               let uu___3 = FStar_Compiler_Util.string_of_int i in
-              FStar_Compiler_Util.print1 "%s ok\n" uu___3
+              FStar_Compiler_Util.print1 "%s core check ok\n" uu___3
           | FStar_Pervasives.Inl (FStar_Pervasives_Native.Some g) ->
-              let uu___3 = FStar_Compiler_Util.string_of_int i in
-              let uu___4 = FStar_Syntax_Print.term_to_string g in
-              FStar_Compiler_Util.print2 "%s computed guard %s ok\n" uu___3
-                uu___4
+              ((let uu___4 = FStar_Compiler_Util.string_of_int i in
+                let uu___5 = FStar_Syntax_Print.term_to_string g in
+                FStar_Compiler_Util.print2
+                  "%s core check computed guard %s ok\n" uu___4 uu___5);
+               FStar_Compiler_Effect.op_Colon_Equals success false)
           | FStar_Pervasives.Inr err ->
               (FStar_Compiler_Effect.op_Colon_Equals success false;
                (let uu___4 = FStar_Compiler_Util.string_of_int i in

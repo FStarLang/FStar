@@ -95,9 +95,10 @@ let check_core i x y =
   let _ = 
     match FStar.TypeChecker.Core.check_term_equality env x y with
     | Inl None ->
-      BU.print1 "%s ok\n" (BU.string_of_int i)
+      BU.print1 "%s core check ok\n" (BU.string_of_int i)
     | Inl (Some g) ->
-      BU.print2 "%s computed guard %s ok\n" (BU.string_of_int i) (P.term_to_string g)
+      BU.print2 "%s core check computed guard %s ok\n" (BU.string_of_int i) (P.term_to_string g);
+      success := false
     | Inr err ->
       success := false;
       BU.print2 "%s failed\n%s\n" (BU.string_of_int i) (FStar.TypeChecker.Core.print_error err)

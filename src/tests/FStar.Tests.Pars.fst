@@ -149,11 +149,7 @@ let tc s =
     let tm, _ = tc' s in
     tm
 
-let tc_nbe s =
-    let tm, _ = tc' s in
-    tm
-
-let tc_nbe_term tm =
+let tc_term tm =
     let tcenv = init() in
     let tcenv = {tcenv with top_level=false} in
     let tm, _, g = TcTerm.tc_tot_or_gtot_term tcenv tm in

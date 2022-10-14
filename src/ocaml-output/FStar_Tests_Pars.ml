@@ -456,9 +456,7 @@ let (tc' :
          (let tm2 = FStar_Syntax_Subst.deep_compress tm1 in (tm2, tcenv1)))
 let (tc : Prims.string -> FStar_Syntax_Syntax.term) =
   fun s -> let uu___ = tc' s in match uu___ with | (tm, uu___1) -> tm
-let (tc_nbe : Prims.string -> FStar_Syntax_Syntax.term) =
-  fun s -> let uu___ = tc' s in match uu___ with | (tm, uu___1) -> tm
-let (tc_nbe_term : FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term) =
+let (tc_term : FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term) =
   fun tm ->
     let tcenv = init () in
     let tcenv1 =
