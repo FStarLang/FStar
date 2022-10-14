@@ -89,6 +89,21 @@ let unify' x y =
 
 let norm t = N.normalize [] (tcenv()) t
 
+let check_core i x y =
+  FStar.Main.process_args () |> ignore; //set options
+  let env = tcenv () in
+  let _ = 
+    match FStar.TypeChecker.Core.check_term_equality env x y with
+    | Inl None ->
+      BU.print1 "%s ok\n" (BU.string_of_int i)
+    | Inl (Some g) ->
+      BU.print2 "%s computed guard %s ok\n" (BU.string_of_int i) (P.term_to_string g)
+    | Inr err ->
+      success := false;
+      BU.print2 "%s failed\n%s\n" (BU.string_of_int i) (FStar.TypeChecker.Core.print_error err)
+  in
+  Options.init()
+
 let inst n tm =
    let rec aux out n =
     if n=0 then out
@@ -149,6 +164,7 @@ let run_all () =
 
     //imitation: unifies u to a constant
     FStar.Main.process_args () |> ignore; //set options
+    BU.print1 "Processed args: debug_at_level Core? %s\n" (BU.string_of_bool (Options.debug_at_level_no_module (Options.Other "Core")));
     let tm, us = inst 1 (tc "fun u x -> u x") in
     let sol = tc "fun x -> Prims.pair x x" in
     unify_check 9 tm
@@ -214,6 +230,26 @@ let run_all () =
     in
 
     unify 14 tm1 tm2 Trivial;
+
+    let tm1, tm2 =
+      let _ = Pars.pars_and_tc_fragment 
+        "let ty0 n = x:int { x >= n }\n\
+         let ty1 n = x:ty0 n { x > n }\n\
+         assume val tc (t:Type0) : Type0"
+      in
+      let t0 = tc "ty1 17" in
+      let t1 = tc "x:ty0 17 { x > 17 }" in
+      t0, t1
+    in
+    check_core 15 tm1 tm2;
+
+    let tm1, tm2 =
+      let t0 = tc "x:int { x >= 17 /\ x > 17 }" in
+      let t1 = tc "x:ty0 17 { x > 17 }" in
+      t0, t1
+    in
+    check_core 16 tm1 tm2;
+
 
     Options.__clear_unit_tests();
 

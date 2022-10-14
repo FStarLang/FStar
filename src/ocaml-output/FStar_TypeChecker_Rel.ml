@@ -14057,12 +14057,7 @@ let (check_implicit_solution :
                          FStar_TypeChecker_Common.implicits =
                            (FStar_TypeChecker_Common.trivial_guard.FStar_TypeChecker_Common.implicits)
                        }
-                   | FStar_Pervasives.Inr print_err ->
-                       ((let uu___4 = print_err false in
-                         FStar_Compiler_Util.print2
-                           "(Rel) core_check failed (%s) because %s\n" reason
-                           uu___4);
-                        fallback ()))
+                   | FStar_Pervasives.Inr print_err -> fallback ())
                 else fallback ()
 let (check_implicit_solution_and_discharge_guard :
   FStar_TypeChecker_Env.env ->

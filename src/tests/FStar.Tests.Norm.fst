@@ -101,7 +101,7 @@ let encode_nat n =
         else aux (snat out) (n - 1) in
     aux znat n
 
-let tests =
+let default_tests =
   let _ = Pars.pars_and_tc_fragment "let rec copy (x:list int) : Tot (list int) = \
                                          match x with \
                                           | [] -> []  \
@@ -267,41 +267,84 @@ let run_either i r expected normalizer =
     // ignore (Options.set_options "--debug Test --debug_level univ_norm --debug_level NBE");
     always i (term_eq (U.unascribe x) expected)
 
+let run_whnf i r expected = 
+  let open Env in
+  let steps = 
+    [ Primops;
+      Weak;
+      HNF;
+      UnfoldUntil delta_constant ] 
+  in
+  run_either i r expected  (N.normalize steps)
+    
 let run_interpreter i r expected = run_either i r expected (N.normalize [Env.Beta; Env.UnfoldUntil delta_constant; Env.Primops])
 let run_nbe i r expected = run_either i r expected (FStar.TypeChecker.NBE.normalize_for_unit_test [FStar.TypeChecker.Env.UnfoldUntil delta_constant])
 let run_interpreter_with_time i r expected =
   let interp () = run_interpreter i r expected in
   (i, snd (FStar.Compiler.Util.return_execution_time interp))
 
+let run_whnf_with_time i r expected =
+  let whnf () = run_whnf i r expected in
+  (i, snd (FStar.Compiler.Util.return_execution_time whnf))
+
 let run_nbe_with_time i r expected =
   let nbe () = run_nbe i r expected in
   (i, snd (FStar.Compiler.Util.return_execution_time nbe))
 
-let run_tests run =
+let run_tests tests run =
   Options.__set_unit_tests();
   let l = List.map (function (no, test, res) -> run no test res) tests in
   Options.__clear_unit_tests();
   l
 
+let whnf_tests =
+    let _ = Pars.pars_and_tc_fragment "assume val def : Type0" in
+    let _ = Pars.pars_and_tc_fragment "assume val pred : Type0" in    
+    let _ = Pars.pars_and_tc_fragment "let def0 (y:int) = def" in
+    let _ = Pars.pars_and_tc_fragment "unfold let def1 (y:int) = x:def0 y { pred }" in
+    let def_def1 = tc_nbe "x:def0 17 { pred }" in
+    let def_def1_unfolded = tc_nbe "x:def { pred }" in
+    // let tests =  //We should expect this ... for 602
+    //   [(601, tc_nbe "def1 17", def_def1);
+    //    (602, def_def1, def_def1)]
+    // in
+    let tests =  //but the current behavior is this
+                 //if we can fix the normalizer, we should change test 602
+      [(601, tc_nbe "def1 17", def_def1);
+       (602, def_def1, def_def1_unfolded)]
+    in    
+    tests
+
+let run_all_whnf () = 
+  BU.print_string "Testing Normlizer WHNF\n";
+  let _ = run_tests whnf_tests run_whnf in
+  BU.print_string "Normalizer WHNF ok\n"
+
 let run_all_nbe () =
     BU.print_string "Testing NBE\n";
-    let _ = run_tests run_nbe in
+    let _ = run_tests default_tests run_nbe in
     BU.print_string "NBE ok\n"
 
 let run_all_interpreter () =
     BU.print_string "Testing the normalizer\n";
-    let _ = run_tests run_interpreter in
+    let _ = run_tests default_tests run_interpreter in
     BU.print_string "Normalizer ok\n"
+
+let run_all_whnf_with_time () =
+  BU.print_string "Testing WHNF\n";
+  let l = run_tests whnf_tests run_whnf_with_time in
+  BU.print_string "WHNF ok\n";
+  l
 
 let run_all_nbe_with_time () =
   BU.print_string "Testing NBE\n";
-  let l = run_tests run_nbe_with_time in
+  let l = run_tests default_tests run_nbe_with_time in
   BU.print_string "NBE ok\n";
   l
 
 let run_all_interpreter_with_time () =
   BU.print_string "Testing the normalizer\n";
-  let l = run_tests run_interpreter_with_time in
+  let l = run_tests default_tests run_interpreter_with_time in
   BU.print_string "Normalizer ok\n";
   l
 
@@ -336,6 +379,7 @@ let compare_times l_int l_nbe =
 
 let run_all () =
     BU.print1 "%s" (P.term_to_string znat);
+    let _ = run_all_whnf_with_time () in
     let l_int = run_all_interpreter_with_time () in
     let l_nbe = run_all_nbe_with_time () in
     compare_times l_int l_nbe

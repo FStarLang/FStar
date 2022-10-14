@@ -344,12 +344,18 @@ let (pars : Prims.string -> FStar_Syntax_Syntax.term) =
                     "Impossible: parsing a Fragment always results in a Term"))
         ()
     with
-    | uu___ ->
-        if
-          let uu___1 = FStar_Options.trace_error () in
-          Prims.op_Negation uu___1
-        then Obj.magic (Obj.repr (FStar_Compiler_Effect.raise uu___))
-        else Obj.magic (Obj.repr (failwith "unreachable"))
+    | FStar_Errors.Error (err, msg, r, _ctx) when
+        let uu___1 = FStar_Options.trace_error () in
+        FStar_Compiler_Effect.op_Less_Bar Prims.op_Negation uu___1 ->
+        (if r = FStar_Compiler_Range.dummyRange
+         then FStar_Compiler_Util.print_string msg
+         else
+           (let uu___3 = FStar_Compiler_Range.string_of_range r in
+            FStar_Compiler_Util.print2 "%s: %s\n" uu___3 msg);
+         FStar_Compiler_Effect.exit Prims.int_one)
+    | e when
+        let uu___1 = FStar_Options.trace_error () in Prims.op_Negation uu___1
+        -> FStar_Compiler_Effect.raise e
 let (tc' :
   Prims.string ->
     (FStar_Syntax_Syntax.term * FStar_TypeChecker_Common.guard_t *

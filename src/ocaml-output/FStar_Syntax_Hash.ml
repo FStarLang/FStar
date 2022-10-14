@@ -748,69 +748,77 @@ let rec (equal_term :
       then true
       else
         (let uu___2 =
-           let uu___3 =
-             let uu___4 = FStar_Syntax_Subst.compress t1 in
-             uu___4.FStar_Syntax_Syntax.n in
-           let uu___4 =
-             let uu___5 = FStar_Syntax_Subst.compress t2 in
-             uu___5.FStar_Syntax_Syntax.n in
-           (uu___3, uu___4) in
-         match uu___2 with
-         | (FStar_Syntax_Syntax.Tm_bvar x, FStar_Syntax_Syntax.Tm_bvar y) ->
-             x.FStar_Syntax_Syntax.index = y.FStar_Syntax_Syntax.index
-         | (FStar_Syntax_Syntax.Tm_name x, FStar_Syntax_Syntax.Tm_name y) ->
-             (FStar_Ident.ident_equals x.FStar_Syntax_Syntax.ppname
-                y.FStar_Syntax_Syntax.ppname)
-               && (x.FStar_Syntax_Syntax.index = y.FStar_Syntax_Syntax.index)
-         | (FStar_Syntax_Syntax.Tm_fvar f, FStar_Syntax_Syntax.Tm_fvar g) ->
-             equal_fv f g
-         | (FStar_Syntax_Syntax.Tm_uinst (t11, u1),
-            FStar_Syntax_Syntax.Tm_uinst (t21, u2)) ->
-             (equal_term t11 t21) && (equal_list equal_universe u1 u2)
-         | (FStar_Syntax_Syntax.Tm_constant c1,
-            FStar_Syntax_Syntax.Tm_constant c2) -> equal_constant c1 c2
-         | (FStar_Syntax_Syntax.Tm_type u1, FStar_Syntax_Syntax.Tm_type u2)
-             -> equal_universe u1 u2
-         | (FStar_Syntax_Syntax.Tm_abs (bs1, t11, rc1),
-            FStar_Syntax_Syntax.Tm_abs (bs2, t21, rc2)) ->
-             ((equal_list equal_binder bs1 bs2) && (equal_term t11 t21)) &&
-               (equal_opt equal_rc rc1 rc2)
-         | (FStar_Syntax_Syntax.Tm_arrow (bs1, c1),
-            FStar_Syntax_Syntax.Tm_arrow (bs2, c2)) ->
-             (equal_list equal_binder bs1 bs2) && (equal_comp c1 c2)
-         | (FStar_Syntax_Syntax.Tm_refine (b1, t11),
-            FStar_Syntax_Syntax.Tm_refine (b2, t21)) ->
-             (equal_bv b1 b2) && (equal_term t11 t21)
-         | (FStar_Syntax_Syntax.Tm_app (t11, as1), FStar_Syntax_Syntax.Tm_app
-            (t21, as2)) ->
-             (equal_term t11 t21) && (equal_list equal_arg as1 as2)
-         | (FStar_Syntax_Syntax.Tm_match (t11, asc_opt1, bs1, ropt1),
-            FStar_Syntax_Syntax.Tm_match (t21, asc_opt2, bs2, ropt2)) ->
-             (((equal_term t11 t21) &&
-                 (equal_opt equal_match_returns asc_opt1 asc_opt2))
-                && (equal_list equal_branch bs1 bs2))
-               && (equal_opt equal_rc ropt1 ropt2)
-         | (FStar_Syntax_Syntax.Tm_ascribed (t11, a1, l1),
-            FStar_Syntax_Syntax.Tm_ascribed (t21, a2, l2)) ->
-             ((equal_term t11 t21) && (equal_ascription a1 a2)) &&
-               (equal_opt FStar_Ident.lid_equals l1 l2)
-         | (FStar_Syntax_Syntax.Tm_let ((r1, lbs1), t11),
-            FStar_Syntax_Syntax.Tm_let ((r2, lbs2), t21)) ->
-             ((r1 = r2) && (equal_list equal_letbinding lbs1 lbs2)) &&
-               (equal_term t11 t21)
-         | (FStar_Syntax_Syntax.Tm_uvar u1, FStar_Syntax_Syntax.Tm_uvar u2)
-             -> equal_uvar u1 u2
-         | (FStar_Syntax_Syntax.Tm_meta (t11, m1),
-            FStar_Syntax_Syntax.Tm_meta (t21, m2)) ->
-             (equal_term t11 t21) && (equal_meta m1 m2)
-         | (FStar_Syntax_Syntax.Tm_lazy l1, FStar_Syntax_Syntax.Tm_lazy l2)
-             -> equal_lazyinfo l1 l2
-         | (FStar_Syntax_Syntax.Tm_quoted (t11, q1),
-            FStar_Syntax_Syntax.Tm_quoted (t21, q2)) ->
-             (equal_term t11 t21) && (equal_quoteinfo q1 q2)
-         | (FStar_Syntax_Syntax.Tm_unknown, FStar_Syntax_Syntax.Tm_unknown)
-             -> true
-         | uu___3 -> false)
+           let uu___3 = hash_term t1 in
+           let uu___4 = hash_term t2 in uu___3 <> uu___4 in
+         if uu___2
+         then false
+         else
+           (let uu___4 =
+              let uu___5 =
+                let uu___6 = FStar_Syntax_Subst.compress t1 in
+                uu___6.FStar_Syntax_Syntax.n in
+              let uu___6 =
+                let uu___7 = FStar_Syntax_Subst.compress t2 in
+                uu___7.FStar_Syntax_Syntax.n in
+              (uu___5, uu___6) in
+            match uu___4 with
+            | (FStar_Syntax_Syntax.Tm_bvar x, FStar_Syntax_Syntax.Tm_bvar y)
+                -> x.FStar_Syntax_Syntax.index = y.FStar_Syntax_Syntax.index
+            | (FStar_Syntax_Syntax.Tm_name x, FStar_Syntax_Syntax.Tm_name y)
+                ->
+                (FStar_Ident.ident_equals x.FStar_Syntax_Syntax.ppname
+                   y.FStar_Syntax_Syntax.ppname)
+                  &&
+                  (x.FStar_Syntax_Syntax.index = y.FStar_Syntax_Syntax.index)
+            | (FStar_Syntax_Syntax.Tm_fvar f, FStar_Syntax_Syntax.Tm_fvar g)
+                -> equal_fv f g
+            | (FStar_Syntax_Syntax.Tm_uinst (t11, u1),
+               FStar_Syntax_Syntax.Tm_uinst (t21, u2)) ->
+                (equal_term t11 t21) && (equal_list equal_universe u1 u2)
+            | (FStar_Syntax_Syntax.Tm_constant c1,
+               FStar_Syntax_Syntax.Tm_constant c2) -> equal_constant c1 c2
+            | (FStar_Syntax_Syntax.Tm_type u1, FStar_Syntax_Syntax.Tm_type
+               u2) -> equal_universe u1 u2
+            | (FStar_Syntax_Syntax.Tm_abs (bs1, t11, rc1),
+               FStar_Syntax_Syntax.Tm_abs (bs2, t21, rc2)) ->
+                ((equal_list equal_binder bs1 bs2) && (equal_term t11 t21))
+                  && (equal_opt equal_rc rc1 rc2)
+            | (FStar_Syntax_Syntax.Tm_arrow (bs1, c1),
+               FStar_Syntax_Syntax.Tm_arrow (bs2, c2)) ->
+                (equal_list equal_binder bs1 bs2) && (equal_comp c1 c2)
+            | (FStar_Syntax_Syntax.Tm_refine (b1, t11),
+               FStar_Syntax_Syntax.Tm_refine (b2, t21)) ->
+                (equal_bv b1 b2) && (equal_term t11 t21)
+            | (FStar_Syntax_Syntax.Tm_app (t11, as1),
+               FStar_Syntax_Syntax.Tm_app (t21, as2)) ->
+                (equal_term t11 t21) && (equal_list equal_arg as1 as2)
+            | (FStar_Syntax_Syntax.Tm_match (t11, asc_opt1, bs1, ropt1),
+               FStar_Syntax_Syntax.Tm_match (t21, asc_opt2, bs2, ropt2)) ->
+                (((equal_term t11 t21) &&
+                    (equal_opt equal_match_returns asc_opt1 asc_opt2))
+                   && (equal_list equal_branch bs1 bs2))
+                  && (equal_opt equal_rc ropt1 ropt2)
+            | (FStar_Syntax_Syntax.Tm_ascribed (t11, a1, l1),
+               FStar_Syntax_Syntax.Tm_ascribed (t21, a2, l2)) ->
+                ((equal_term t11 t21) && (equal_ascription a1 a2)) &&
+                  (equal_opt FStar_Ident.lid_equals l1 l2)
+            | (FStar_Syntax_Syntax.Tm_let ((r1, lbs1), t11),
+               FStar_Syntax_Syntax.Tm_let ((r2, lbs2), t21)) ->
+                ((r1 = r2) && (equal_list equal_letbinding lbs1 lbs2)) &&
+                  (equal_term t11 t21)
+            | (FStar_Syntax_Syntax.Tm_uvar u1, FStar_Syntax_Syntax.Tm_uvar
+               u2) -> equal_uvar u1 u2
+            | (FStar_Syntax_Syntax.Tm_meta (t11, m1),
+               FStar_Syntax_Syntax.Tm_meta (t21, m2)) ->
+                (equal_term t11 t21) && (equal_meta m1 m2)
+            | (FStar_Syntax_Syntax.Tm_lazy l1, FStar_Syntax_Syntax.Tm_lazy
+               l2) -> equal_lazyinfo l1 l2
+            | (FStar_Syntax_Syntax.Tm_quoted (t11, q1),
+               FStar_Syntax_Syntax.Tm_quoted (t21, q2)) ->
+                (equal_term t11 t21) && (equal_quoteinfo q1 q2)
+            | (FStar_Syntax_Syntax.Tm_unknown,
+               FStar_Syntax_Syntax.Tm_unknown) -> true
+            | uu___5 -> false))
 and (equal_comp :
   FStar_Syntax_Syntax.comp' FStar_Syntax_Syntax.syntax ->
     FStar_Syntax_Syntax.comp' FStar_Syntax_Syntax.syntax -> Prims.bool)

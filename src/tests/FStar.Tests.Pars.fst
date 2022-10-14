@@ -128,6 +128,12 @@ let pars s =
         | ASTFragment _ ->
             failwith "Impossible: parsing a Fragment always results in a Term"
     with
+        | Error(err, msg, r, _ctx) when not <| FStar.Options.trace_error() ->
+          if r = FStar.Compiler.Range.dummyRange
+          then BU.print_string msg
+          else BU.print2 "%s: %s\n" (FStar.Compiler.Range.string_of_range r) msg;
+          exit 1
+    
         | e when not ((Options.trace_error())) -> raise e
 
 let tc' s =

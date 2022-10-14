@@ -4767,3 +4767,20 @@ let (ctx_uvar_typ :
       FStar_Syntax_Unionfind.find_decoration
         u.FStar_Syntax_Syntax.ctx_uvar_head in
     uu___.FStar_Syntax_Syntax.uvar_decoration_typ
+let rec (flatten_refinement :
+  FStar_Syntax_Syntax.term ->
+    FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax)
+  =
+  fun t ->
+    let t1 = FStar_Syntax_Subst.compress t in
+    match t1.FStar_Syntax_Syntax.n with
+    | FStar_Syntax_Syntax.Tm_refine (x, phi) ->
+        let t0 = flatten_refinement x.FStar_Syntax_Syntax.sort in
+        (match t0.FStar_Syntax_Syntax.n with
+         | FStar_Syntax_Syntax.Tm_refine (y, phi1) ->
+             let uu___ =
+               let uu___1 = let uu___2 = mk_conj_simp phi1 phi in (y, uu___2) in
+               FStar_Syntax_Syntax.Tm_refine uu___1 in
+             FStar_Syntax_Syntax.mk uu___ t0.FStar_Syntax_Syntax.pos
+         | uu___ -> t1)
+    | uu___ -> t1
