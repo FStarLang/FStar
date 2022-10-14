@@ -225,9 +225,8 @@ let rec is_arrow (g:env) (t:term)
         | Tm_refine(x, _) ->
           is_arrow g x.sort
 
-        | Tm_meta(t, _)
-        | Tm_ascribed(t, _, _) ->
-          aux t
+        | Tm_meta(t, m) when m <> Meta_core_guard -> aux t
+        | Tm_ascribed(t, _, _) -> aux t
 
         | _ ->
           fail (BU.format2 "Expected an arrow, got (%s) %s" (P.tag_of_term t) (P.term_to_string t))
@@ -911,7 +910,10 @@ and check' (g:env) (e:term)
 
   | Tm_lazy i ->
     return (E_TOTAL, i.ltyp)
-    
+
+  | Tm_meta (_, Meta_core_guard) ->
+    return (E_TOTAL, U.ktype0)
+
   | Tm_meta(t, _) ->
     memo_check g t
 

@@ -1213,7 +1213,36 @@ let (should_return :
                      | uu___3 -> true)))
               &&
               (let uu___ = should_not_inline_lc lc in Prims.op_Negation uu___)
-let rec (mk_indexed_return :
+let rec (strengthen_indexed_comp_with_guard_uvars :
+  FStar_TypeChecker_Env.env ->
+    FStar_Syntax_Syntax.comp ->
+      FStar_Syntax_Syntax.term Prims.list ->
+        Prims.string ->
+          (FStar_Syntax_Syntax.comp * FStar_TypeChecker_Env.guard_t))
+  =
+  fun env ->
+    fun c ->
+      fun rest_uvars_guard_tms ->
+        fun comb ->
+          if
+            (FStar_Compiler_List.length rest_uvars_guard_tms) =
+              Prims.int_zero
+          then (c, FStar_TypeChecker_Env.trivial_guard)
+          else
+            (let fml =
+               FStar_Compiler_Effect.op_Bar_Greater rest_uvars_guard_tms
+                 FStar_Syntax_Util.mk_conj_l in
+             let uu___1 =
+               FStar_Syntax_Syntax.mk
+                 (FStar_Syntax_Syntax.Tm_meta
+                    (fml, FStar_Syntax_Syntax.Meta_core_guard))
+                 fml.FStar_Syntax_Syntax.pos in
+             strengthen_comp env
+               (FStar_Pervasives_Native.Some
+                  (fun uu___2 ->
+                     FStar_Compiler_Util.format1
+                       "tc guard for indexed binders (%s)" comb)) c uu___1 [])
+and (mk_indexed_return :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.eff_decl ->
       FStar_Syntax_Syntax.universe ->
@@ -1284,7 +1313,7 @@ let rec (mk_indexed_return :
                    (match uu___3 with
                     | (a_b, x_b, rest_bs, return_ct) ->
                         let uu___4 =
-                          let guard_indexed_effect_uvars = true in
+                          let guard_indexed_effect_uvars = false in
                           FStar_TypeChecker_Env.uvars_for_binders env rest_bs
                             [FStar_Syntax_Syntax.NT
                                ((a_b.FStar_Syntax_Syntax.binder_bv), a);
@@ -1341,21 +1370,8 @@ let rec (mk_indexed_return :
                                  } in
                                FStar_Syntax_Syntax.mk_Comp uu___5 in
                              let uu___5 =
-                               if
-                                 (FStar_Compiler_List.length
-                                    rest_uvars_guard_tms)
-                                   = Prims.int_zero
-                               then (c, FStar_TypeChecker_Env.trivial_guard)
-                               else
-                                 (let fml =
-                                    FStar_Compiler_Effect.op_Bar_Greater
-                                      rest_uvars_guard_tms
-                                      FStar_Syntax_Util.mk_conj_l in
-                                  strengthen_comp env
-                                    (FStar_Pervasives_Native.Some
-                                       (fun uu___7 ->
-                                          "tc guard for indexed binders (return)"))
-                                    c fml []) in
+                               strengthen_indexed_comp_with_guard_uvars env c
+                                 rest_uvars_guard_tms "return" in
                              (match uu___5 with
                               | (c1, g_strengthen) ->
                                   ((let uu___7 =
@@ -1969,28 +1985,10 @@ and (mk_indexed_bind :
                                                             FStar_Syntax_Syntax.mk_Comp
                                                               uu___11 in
                                                           let uu___11 =
-                                                            if
-                                                              (FStar_Compiler_List.length
-                                                                 rest_uvars_guard_tms)
-                                                                =
-                                                                Prims.int_zero
-                                                            then
-                                                              (c,
-                                                                FStar_TypeChecker_Env.trivial_guard)
-                                                            else
-                                                              (let fml1 =
-                                                                 FStar_Compiler_Effect.op_Bar_Greater
-                                                                   rest_uvars_guard_tms
-                                                                   FStar_Syntax_Util.mk_conj_l in
-                                                               strengthen_comp
-                                                                 env
-                                                                 (FStar_Pervasives_Native.Some
-                                                                    (
-                                                                    fun
-                                                                    uu___13
-                                                                    ->
-                                                                    "tc guard for indexed binders (bind)"))
-                                                                 c fml1 []) in
+                                                            strengthen_indexed_comp_with_guard_uvars
+                                                              env c
+                                                              rest_uvars_guard_tms
+                                                              "bind" in
                                                           match uu___11 with
                                                           | (c1,
                                                              g_strengthen) ->
@@ -3546,7 +3544,7 @@ let (mk_layered_conjunction :
                            (match uu___3 with
                             | (a_b, rest_bs, f_b, g_b, p_b, body) ->
                                 let uu___4 =
-                                  let guard_indexed_effect_uvars = true in
+                                  let guard_indexed_effect_uvars = false in
                                   FStar_TypeChecker_Env.uvars_for_binders env
                                     rest_bs
                                     [FStar_Syntax_Syntax.NT
@@ -3675,35 +3673,9 @@ let (mk_layered_conjunction :
                                              conjunction_t_error
                                                "body is not a repr type" in
                                            FStar_Errors.raise_error uu___7 r in
-                                     let g =
+                                     let c =
                                        let uu___5 =
                                          let uu___6 =
-                                           let uu___7 =
-                                             let uu___8 =
-                                               let uu___9 =
-                                                 let uu___10 =
-                                                   FStar_Compiler_Effect.op_Bar_Greater
-                                                     rest_uvars_guard_tms
-                                                     FStar_Syntax_Util.mk_conj_l in
-                                                 FStar_Compiler_Effect.op_Bar_Greater
-                                                   uu___10
-                                                   (fun uu___11 ->
-                                                      FStar_TypeChecker_Common.NonTrivial
-                                                        uu___11) in
-                                               FStar_Compiler_Effect.op_Bar_Greater
-                                                 uu___9
-                                                 FStar_TypeChecker_Env.guard_of_guard_formula in
-                                             FStar_Compiler_Effect.op_Bar_Greater
-                                               uu___8
-                                               (label_guard r
-                                                  "tc guard for indexed binders (conj)") in
-                                           [uu___7; f_guard; g_guard] in
-                                         g_uvars :: uu___6 in
-                                       FStar_TypeChecker_Env.conj_guards
-                                         uu___5 in
-                                     let uu___5 =
-                                       let uu___6 =
-                                         let uu___7 =
                                            FStar_Compiler_Effect.op_Bar_Greater
                                              is
                                              (FStar_Compiler_List.map
@@ -3715,11 +3687,22 @@ let (mk_layered_conjunction :
                                              (ed.FStar_Syntax_Syntax.mname);
                                            FStar_Syntax_Syntax.result_typ = a;
                                            FStar_Syntax_Syntax.effect_args =
-                                             uu___7;
+                                             uu___6;
                                            FStar_Syntax_Syntax.flags = []
                                          } in
-                                       FStar_Syntax_Syntax.mk_Comp uu___6 in
-                                     (uu___5, g))))
+                                       FStar_Syntax_Syntax.mk_Comp uu___5 in
+                                     let uu___5 =
+                                       strengthen_indexed_comp_with_guard_uvars
+                                         env c rest_uvars_guard_tms "conj" in
+                                     (match uu___5 with
+                                      | (c1, g_strengthen) ->
+                                          let g =
+                                            FStar_TypeChecker_Env.conj_guards
+                                              [g_uvars;
+                                              g_strengthen;
+                                              f_guard;
+                                              g_guard] in
+                                          (c1, g)))))
 let (mk_non_layered_conjunction :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.eff_decl ->
@@ -6851,13 +6834,14 @@ let (check_non_informative_type_for_lift :
                 (FStar_Errors.Error_TypeError, uu___2) in
               FStar_Errors.raise_error uu___1 r
             else ()
-let (lift_tf_layered_effect :
-  FStar_Ident.lident ->
-    FStar_Syntax_Syntax.tscheme ->
-      FStar_TypeChecker_Env.env ->
-        Prims.bool ->
-          FStar_Syntax_Syntax.comp ->
-            (FStar_Syntax_Syntax.comp * FStar_TypeChecker_Env.guard_t))
+let lift_tf_layered_effect :
+  'uuuuu .
+    FStar_Ident.lident ->
+      FStar_Syntax_Syntax.tscheme ->
+        FStar_TypeChecker_Env.env ->
+          'uuuuu ->
+            FStar_Syntax_Syntax.comp ->
+              (FStar_Syntax_Syntax.comp * FStar_TypeChecker_Env.guard_t)
   =
   fun tgt ->
     fun lift_ts ->
@@ -6938,11 +6922,12 @@ let (lift_tf_layered_effect :
                        (match uu___5 with
                         | (a_b, (rest_bs, f_b::[]), lift_c) ->
                             let uu___6 =
+                              let guard_indexed_effect_uvars1 = false in
                               FStar_TypeChecker_Env.uvars_for_binders env
                                 rest_bs
                                 [FStar_Syntax_Syntax.NT
                                    ((a_b.FStar_Syntax_Syntax.binder_bv), a)]
-                                guard_indexed_effect_uvars
+                                guard_indexed_effect_uvars1
                                 (fun b ->
                                    let uu___7 =
                                      FStar_Syntax_Print.binder_to_string b in
@@ -7080,23 +7065,8 @@ let (lift_tf_layered_effect :
                                         } in
                                       FStar_Syntax_Syntax.mk_Comp uu___9 in
                                     let uu___9 =
-                                      if
-                                        (FStar_Compiler_List.length
-                                           rest_uvars_guard_tms)
-                                          = Prims.int_zero
-                                      then
-                                        (c1,
-                                          FStar_TypeChecker_Env.trivial_guard)
-                                      else
-                                        (let fml1 =
-                                           FStar_Compiler_Effect.op_Bar_Greater
-                                             rest_uvars_guard_tms
-                                             FStar_Syntax_Util.mk_conj_l in
-                                         strengthen_comp env
-                                           (FStar_Pervasives_Native.Some
-                                              (fun uu___11 ->
-                                                 "tc guard for indexed binders (lift)"))
-                                           c1 fml1 []) in
+                                      strengthen_indexed_comp_with_guard_uvars
+                                        env c1 rest_uvars_guard_tms "lift" in
                                     match uu___9 with
                                     | (c2, g_strengthen) ->
                                         ((let uu___11 =

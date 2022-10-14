@@ -738,12 +738,27 @@ let should_return env eopt lc =
 
 (* private *)
 
+let rec strengthen_indexed_comp_with_guard_uvars
+  env
+  (c:comp)
+  (rest_uvars_guard_tms:list term)
+  (comb:string)
+  : comp & guard_t  = 
+  if List.length rest_uvars_guard_tms = 0
+  then c, Env.trivial_guard
+  else let fml = rest_uvars_guard_tms |> U.mk_conj_l in
+       strengthen_comp env
+         (Some (fun () -> BU.format1 "tc guard for indexed binders (%s)" comb))
+         c
+         (S.mk (Tm_meta (fml, Meta_core_guard)) fml.pos)
+         []
+
 (*
  * Build the M.return comp for an indexed effect
  *
  * Caller must ensure that ed is an indexed effect
  *)
-let rec mk_indexed_return env (ed:S.eff_decl) (u_a:universe) (a:typ) (e:term) (r:Range.range)
+and mk_indexed_return env (ed:S.eff_decl) (u_a:universe) (a:typ) (e:term) (r:Range.range)
 : comp * guard_t
 = if Env.debug env <| Options.Other "LayeredEffects"
   then BU.print4 "Computing %s.return for u_a:%s, a:%s, and e:%s{\n"
@@ -767,7 +782,7 @@ let rec mk_indexed_return env (ed:S.eff_decl) (u_a:universe) (a:typ) (e:term) (r
     | _ -> raise_error (return_t_shape_error "Either not an arrow or not enough binders") r in
 
   let rest_bs_uvars, rest_uvars_guard_tms, g_uvars =
-    let guard_indexed_effect_uvars = true in
+    let guard_indexed_effect_uvars = false in
     Env.uvars_for_binders
       env rest_bs [NT (a_b.binder_bv, a); NT (x_b.binder_bv, e)]
       guard_indexed_effect_uvars
@@ -792,15 +807,10 @@ let rec mk_indexed_return env (ed:S.eff_decl) (u_a:universe) (a:typ) (e:term) (r
     flags = []
   }) in
 
-  let c, g_strengthen =
-    if List.length rest_uvars_guard_tms = 0
-    then c, Env.trivial_guard
-    else let fml = rest_uvars_guard_tms |> U.mk_conj_l in
-         strengthen_comp env
-           (Some (fun () -> "tc guard for indexed binders (return)"))
-           c
-           fml
-           [] in
+  let c, g_strengthen = strengthen_indexed_comp_with_guard_uvars env
+    c
+    rest_uvars_guard_tms
+    "return" in
 
   if Env.debug env <| Options.Other "LayeredEffects"
   then BU.print1 "} c after return %s\n" (Print.comp_to_string c);
@@ -988,15 +998,10 @@ and mk_indexed_bind env
     flags = flags
   }) in
 
-  let c, g_strengthen =
-    if List.length rest_uvars_guard_tms = 0
-    then c, Env.trivial_guard
-    else let fml = rest_uvars_guard_tms |> U.mk_conj_l in
-         strengthen_comp env
-           (Some (fun () -> "tc guard for indexed binders (bind)"))
-           c
-           fml
-           [] in
+  let c, g_strengthen = strengthen_indexed_comp_with_guard_uvars env
+    c
+    rest_uvars_guard_tms
+    "bind" in
 
   if Env.debug env <| Options.Other "LayeredEffects"
   then BU.print1 "} c after bind: %s\n" (Print.comp_to_string c);
@@ -1720,7 +1725,7 @@ let mk_layered_conjunction env (ed:S.eff_decl) (u_a:universe) (a:term) (p:typ) (
     | _ -> raise_error (conjunction_t_error "Either not an abstraction or not enough binders") r in
 
   let rest_bs_uvars, rest_uvars_guard_tms, g_uvars =
-    let guard_indexed_effect_uvars = true in
+    let guard_indexed_effect_uvars = false in
     Env.uvars_for_binders
       env rest_bs [NT (a_b.binder_bv, a)]
       guard_indexed_effect_uvars
@@ -1760,24 +1765,26 @@ let mk_layered_conjunction env (ed:S.eff_decl) (u_a:universe) (a:term) (p:typ) (
     | Tm_app (_, a::args) -> List.map fst args
     | _ -> raise_error (conjunction_t_error "body is not a repr type") r in
 
-  let g = Env.conj_guards [
-    g_uvars;
-    (rest_uvars_guard_tms
-       |> U.mk_conj_l
-       |> TcComm.NonTrivial
-       |> Env.guard_of_guard_formula
-       |> label_guard r "tc guard for indexed binders (conj)");
-    f_guard;
-    g_guard ] in
-
-  mk_Comp ({
+  let c = mk_Comp ({
     comp_univs = [u_a];
     effect_name = ed.mname;
     result_typ = a;
     effect_args = is |> List.map S.as_arg;
     flags = []
-  }),
-  g
+  }) in
+
+  let c, g_strengthen = strengthen_indexed_comp_with_guard_uvars env
+    c
+    rest_uvars_guard_tms
+    "conj" in
+
+  let g = Env.conj_guards [
+    g_uvars;
+    g_strengthen;
+    f_guard;
+    g_guard ] in
+
+  c, g
 
 (*
  * For non-layered effects, just apply the if_then_else combinator
@@ -3212,6 +3219,7 @@ let lift_tf_layered_effect (tgt:lident) (lift_ts:tscheme)
         "either not an arrow or not enough binders") r in
 
   let rest_bs_uvars, rest_uvars_guard_tms, g =
+    let guard_indexed_effect_uvars = false in
     Env.uvars_for_binders env rest_bs
       [NT (a_b.binder_bv, a)]
       guard_indexed_effect_uvars
@@ -3256,15 +3264,10 @@ let lift_tf_layered_effect (tgt:lident) (lift_ts:tscheme)
     flags = []  //AR: setting the flags to empty
   }) in
 
-  let c, g_strengthen =
-    if List.length rest_uvars_guard_tms = 0
-    then c, Env.trivial_guard
-    else let fml = rest_uvars_guard_tms |> U.mk_conj_l in
-         strengthen_comp env
-           (Some (fun () -> "tc guard for indexed binders (lift)"))
-           c
-           fml
-           [] in
+  let c, g_strengthen = strengthen_indexed_comp_with_guard_uvars env
+    c
+    rest_uvars_guard_tms
+    "lift" in
 
   if debug env <| Options.Other "LayeredEffects" then
     BU.print1 "} Lifted comp: %s\n" (Print.comp_to_string c);

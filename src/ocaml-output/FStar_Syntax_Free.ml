@@ -283,7 +283,8 @@ let rec (free_names_and_uvs' :
                union u1 uu___2
            | FStar_Syntax_Syntax.Meta_labeled uu___ -> u1
            | FStar_Syntax_Syntax.Meta_desugared uu___ -> u1
-           | FStar_Syntax_Syntax.Meta_named uu___ -> u1)
+           | FStar_Syntax_Syntax.Meta_named uu___ -> u1
+           | FStar_Syntax_Syntax.Meta_core_guard -> u1)
 and (free_names_and_uvars_binders :
   FStar_Syntax_Syntax.binders -> use_cache_t -> free_vars_and_fvars) =
   fun bs ->

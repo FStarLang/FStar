@@ -264,6 +264,7 @@ let rec (unlazy_unmeta :
          | FStar_Syntax_Syntax.Meta_monadic (uu___1, uu___2) -> t
          | FStar_Syntax_Syntax.Meta_monadic_lift (uu___1, uu___2, uu___3) ->
              t
+         | FStar_Syntax_Syntax.Meta_core_guard -> t
          | uu___1 -> unlazy_unmeta t0)
     | uu___ -> t
 let (pickBranch :
@@ -1126,6 +1127,7 @@ let rec (translate :
                | FStar_Syntax_Syntax.Meta_named uu___3 -> meta
                | FStar_Syntax_Syntax.Meta_labeled uu___3 -> meta
                | FStar_Syntax_Syntax.Meta_desugared uu___3 -> meta
+               | FStar_Syntax_Syntax.Meta_core_guard -> meta
                | FStar_Syntax_Syntax.Meta_pattern (ts, args) ->
                    let uu___3 =
                      let uu___4 = FStar_Compiler_List.map norm ts in

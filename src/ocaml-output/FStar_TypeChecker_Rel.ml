@@ -11687,7 +11687,8 @@ and (solve_c :
                                  (match uu___9 with
                                   | (a_b, rest_bs, f_b, stronger_c) ->
                                       let uu___10 =
-                                        let guard_indexed_effect_uvars = true in
+                                        let guard_indexed_effect_uvars =
+                                          false in
                                         FStar_TypeChecker_Env.uvars_for_binders
                                           env rest_bs
                                           [FStar_Syntax_Syntax.NT

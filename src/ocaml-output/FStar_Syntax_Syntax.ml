@@ -295,6 +295,7 @@ and metadata =
   | Meta_desugared of meta_source_info 
   | Meta_monadic of (monad_name * term' syntax) 
   | Meta_monadic_lift of (monad_name * monad_name * term' syntax) 
+  | Meta_core_guard 
 and meta_source_info =
   | Sequence 
   | Primop 
@@ -748,6 +749,9 @@ let (uu___is_Meta_monadic_lift : metadata -> Prims.bool) =
 let (__proj__Meta_monadic_lift__item___0 :
   metadata -> (monad_name * monad_name * term' syntax)) =
   fun projectee -> match projectee with | Meta_monadic_lift _0 -> _0
+let (uu___is_Meta_core_guard : metadata -> Prims.bool) =
+  fun projectee ->
+    match projectee with | Meta_core_guard -> true | uu___ -> false
 let (uu___is_Sequence : meta_source_info -> Prims.bool) =
   fun projectee -> match projectee with | Sequence -> true | uu___ -> false
 let (uu___is_Primop : meta_source_info -> Prims.bool) =

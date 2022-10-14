@@ -4171,7 +4171,7 @@ and solve_c (env:Env.env) (problem:problem comp) (wl:worklist) : solution =
                   stronger_t_shape_error "not an arrow or not enough binders") r in
 
             let rest_bs_uvars, rest_uvars_guard_tms, g_uvars =
-              let guard_indexed_effect_uvars = true in
+              let guard_indexed_effect_uvars = false in
               Env.uvars_for_binders env rest_bs
                 [NT (a_b.binder_bv, c2.result_typ)] guard_indexed_effect_uvars
                 (fun b -> BU.format3 "implicit for binder %s in subcomp of %s at %s"

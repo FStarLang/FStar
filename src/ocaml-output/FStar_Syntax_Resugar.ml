@@ -1396,10 +1396,10 @@ let rec (resugar_term' :
            | FStar_Syntax_Syntax.Meta_desugared i -> resugar_meta_desugared i
            | FStar_Syntax_Syntax.Meta_named t1 ->
                mk (FStar_Parser_AST.Name t1)
-           | FStar_Syntax_Syntax.Meta_monadic (uu___1, t1) ->
+           | FStar_Syntax_Syntax.Meta_monadic uu___1 -> resugar_term' env e
+           | FStar_Syntax_Syntax.Meta_monadic_lift uu___1 ->
                resugar_term' env e
-           | FStar_Syntax_Syntax.Meta_monadic_lift (uu___1, uu___2, t1) ->
-               resugar_term' env e)
+           | FStar_Syntax_Syntax.Meta_core_guard -> resugar_term' env e)
       | FStar_Syntax_Syntax.Tm_unknown -> mk FStar_Parser_AST.Wild
 and (resugar_ascription :
   FStar_Syntax_DsEnv.env ->

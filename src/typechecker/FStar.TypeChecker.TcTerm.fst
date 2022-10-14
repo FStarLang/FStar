@@ -803,6 +803,9 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
     (* okay to just drop the annotation ? *)
     tc_term env e
 
+  | Tm_meta (e, Meta_core_guard) ->
+    failwith "Impossible: did not expect tc_term on a core guard"
+
   | Tm_meta(e, m) ->
     let e, c, g = tc_term env e in
     let e = mk (Tm_meta(e, m)) top.pos in

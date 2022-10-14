@@ -348,7 +348,8 @@ let rec (is_arrow :
             (match uu___1 with | (x1::[], t3) -> return (x1, E_TOTAL, t3))
         | FStar_Syntax_Syntax.Tm_refine (x, uu___1) ->
             is_arrow g x.FStar_Syntax_Syntax.sort
-        | FStar_Syntax_Syntax.Tm_meta (t2, uu___1) -> aux t2
+        | FStar_Syntax_Syntax.Tm_meta (t2, m) when
+            m <> FStar_Syntax_Syntax.Meta_core_guard -> aux t2
         | FStar_Syntax_Syntax.Tm_ascribed (t2, uu___1, uu___2) -> aux t2
         | uu___1 ->
             let uu___2 =
@@ -1773,6 +1774,11 @@ and (check' :
           -> let uu___4 = FStar_Syntax_Util.unlazy e1 in check' g uu___4
       | FStar_Syntax_Syntax.Tm_lazy i ->
           return (E_TOTAL, (i.FStar_Syntax_Syntax.ltyp))
+      | FStar_Syntax_Syntax.Tm_meta
+          (uu___, FStar_Syntax_Syntax.Meta_core_guard) ->
+          (FStar_Compiler_Util.print_string
+             "core checker got a call to tc core guard!\n";
+           return (E_TOTAL, FStar_Syntax_Util.ktype0))
       | FStar_Syntax_Syntax.Tm_meta (t, uu___) -> memo_check g t
       | FStar_Syntax_Syntax.Tm_uvar (uv, s) ->
           let uu___ =

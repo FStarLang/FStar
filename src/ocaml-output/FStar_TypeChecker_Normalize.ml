@@ -1893,7 +1893,8 @@ let rec (maybe_weakly_reduced :
                 maybe_weakly_reduced t'
             | FStar_Syntax_Syntax.Meta_labeled uu___ -> false
             | FStar_Syntax_Syntax.Meta_desugared uu___ -> false
-            | FStar_Syntax_Syntax.Meta_named uu___ -> false))
+            | FStar_Syntax_Syntax.Meta_named uu___ -> false
+            | FStar_Syntax_Syntax.Meta_core_guard -> false))
 let (plugin_unfold_warn_ctr : Prims.int FStar_Compiler_Effect.ref) =
   FStar_Compiler_Util.mk_ref Prims.int_zero
 let (should_unfold :
@@ -4197,6 +4198,12 @@ let rec (norm :
                              | FStar_Syntax_Syntax.Meta_desugared
                                  (FStar_Syntax_Syntax.Machine_integer
                                  (uu___7, uu___8)) ->
+                                 norm cfg env1
+                                   ((Meta
+                                       (env1, m,
+                                         (t1.FStar_Syntax_Syntax.pos))) ::
+                                   stack1) head
+                             | FStar_Syntax_Syntax.Meta_core_guard ->
                                  norm cfg env1
                                    ((Meta
                                        (env1, m,

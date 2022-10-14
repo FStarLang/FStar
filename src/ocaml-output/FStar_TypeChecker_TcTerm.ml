@@ -2130,6 +2130,9 @@ and (tc_maybe_toplevel_term :
        | FStar_Syntax_Syntax.Tm_meta
            (e1, FStar_Syntax_Syntax.Meta_monadic_lift uu___1) ->
            tc_term env1 e1
+       | FStar_Syntax_Syntax.Tm_meta
+           (e1, FStar_Syntax_Syntax.Meta_core_guard) ->
+           failwith "Impossible: did not expect tc_term on a core guard"
        | FStar_Syntax_Syntax.Tm_meta (e1, m) ->
            let uu___1 = tc_term env1 e1 in
            (match uu___1 with

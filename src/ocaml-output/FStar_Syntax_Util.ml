@@ -253,6 +253,8 @@ let rec (unmeta : FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term) =
   fun e ->
     let e1 = FStar_Syntax_Subst.compress e in
     match e1.FStar_Syntax_Syntax.n with
+    | FStar_Syntax_Syntax.Tm_meta
+        (uu___, FStar_Syntax_Syntax.Meta_core_guard) -> e1
     | FStar_Syntax_Syntax.Tm_meta (e2, uu___) -> unmeta e2
     | FStar_Syntax_Syntax.Tm_ascribed (e2, uu___, uu___1) -> unmeta e2
     | uu___ -> e1
@@ -265,6 +267,7 @@ let rec (unmeta_safe : FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term)
         (match m with
          | FStar_Syntax_Syntax.Meta_monadic uu___ -> e1
          | FStar_Syntax_Syntax.Meta_monadic_lift uu___ -> e1
+         | FStar_Syntax_Syntax.Meta_core_guard -> e1
          | uu___ -> unmeta_safe e')
     | FStar_Syntax_Syntax.Tm_ascribed (e2, uu___, uu___1) -> unmeta_safe e2
     | uu___ -> e1

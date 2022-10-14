@@ -777,8 +777,9 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
           resugar_meta_desugared i
       | Meta_named t ->
           mk (A.Name t)
-      | Meta_monadic (_, t)
-      | Meta_monadic_lift (_, _, t) ->
+      | Meta_monadic _
+      | Meta_monadic_lift _
+      | Meta_core_guard ->
         resugar_term' env e
       end
 
