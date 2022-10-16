@@ -56,8 +56,8 @@ VERBOSE_FSTAR=$(BENCHMARK_PRE) $(FSTAR)                     \
 		  $(addprefix --include , $(INCLUDE_PATHS)) \
 		  $(OTHERFLAGS) $(MAYBE_ADMIT)
 
-# As above, but perhaps with --silent
-MY_FSTAR=$(VERBOSE_FSTAR) $(SIL)
+# As above, but perhaps with --silent, and perhaps with a prefix (usually for monitoring)
+MY_FSTAR=$(PREF) $(VERBOSE_FSTAR) $(SIL)
 
 #--------------------------------------------------------------------------------
 # Default target: verify all FSTAR_FILES

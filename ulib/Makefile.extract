@@ -20,7 +20,7 @@ FSTAR_FILES:=$(filter-out $(NOEXTRACT_FILES), \
         $(wildcard FStar.InteractiveHelpers.*.fst)
 
 CODEGEN ?= OCaml
-MY_FSTAR=$(FSTAR) $(SIL) $(OTHERFLAGS) --lax --cache_checked_modules --odir $(OUTPUT_DIRECTORY) --cache_dir .cache.lax
+MY_FSTAR=$(PREF) $(FSTAR) $(SIL) $(OTHERFLAGS) --lax --cache_checked_modules --odir $(OUTPUT_DIRECTORY) --cache_dir .cache.lax
 
 %.checked.lax:
 	@echo "[LAXCHECK  $(basename $(notdir $@))]"
