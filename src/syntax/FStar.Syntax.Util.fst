@@ -2413,7 +2413,6 @@ let ctx_uvar_kind (u:ctx_uvar) =
   (Unionfind.find_decoration u.ctx_uvar_head).uvar_decoration_kind
 
 let is_guard_ctx_uvar (u:ctx_uvar) = Inr? (ctx_uvar_kind u)
-    (Unionfind.find_decoration u.ctx_uvar_head).uvar_decoration_typ
 
 let rec flatten_refinement t =
   let t = compress t in

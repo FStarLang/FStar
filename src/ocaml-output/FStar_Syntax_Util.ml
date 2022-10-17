@@ -4782,3 +4782,20 @@ let (ctx_uvar_kind :
     uu___.FStar_Syntax_Syntax.uvar_decoration_kind
 let (is_guard_ctx_uvar : FStar_Syntax_Syntax.ctx_uvar -> Prims.bool) =
   fun u -> let uu___ = ctx_uvar_kind u in FStar_Pervasives.uu___is_Inr uu___
+let rec (flatten_refinement :
+  FStar_Syntax_Syntax.term ->
+    FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax)
+  =
+  fun t ->
+    let t1 = FStar_Syntax_Subst.compress t in
+    match t1.FStar_Syntax_Syntax.n with
+    | FStar_Syntax_Syntax.Tm_refine (x, phi) ->
+        let t0 = flatten_refinement x.FStar_Syntax_Syntax.sort in
+        (match t0.FStar_Syntax_Syntax.n with
+         | FStar_Syntax_Syntax.Tm_refine (y, phi1) ->
+             let uu___ =
+               let uu___1 = let uu___2 = mk_conj_simp phi1 phi in (y, uu___2) in
+               FStar_Syntax_Syntax.Tm_refine uu___1 in
+             FStar_Syntax_Syntax.mk uu___ t0.FStar_Syntax_Syntax.pos
+         | uu___ -> t1)
+    | uu___ -> t1

@@ -8059,22 +8059,7 @@ let (normalize_refinement :
           normalize
             (FStar_Compiler_List.op_At steps [FStar_TypeChecker_Env.Beta])
             env1 t0 in
-        let rec aux t1 =
-          let t2 = FStar_Syntax_Subst.compress t1 in
-          match t2.FStar_Syntax_Syntax.n with
-          | FStar_Syntax_Syntax.Tm_refine (x, phi) ->
-              let t01 = aux x.FStar_Syntax_Syntax.sort in
-              (match t01.FStar_Syntax_Syntax.n with
-               | FStar_Syntax_Syntax.Tm_refine (y, phi1) ->
-                   let uu___ =
-                     let uu___1 =
-                       let uu___2 = FStar_Syntax_Util.mk_conj_simp phi1 phi in
-                       (y, uu___2) in
-                     FStar_Syntax_Syntax.Tm_refine uu___1 in
-                   FStar_Syntax_Syntax.mk uu___ t01.FStar_Syntax_Syntax.pos
-               | uu___ -> t2)
-          | uu___ -> t2 in
-        aux t
+        FStar_Syntax_Util.flatten_refinement t
 let (whnf_steps : FStar_TypeChecker_Env.step Prims.list) =
   [FStar_TypeChecker_Env.Primops;
   FStar_TypeChecker_Env.Weak;
@@ -9030,3 +9015,53 @@ let (get_n_binders :
                     | (bs', c') -> ((FStar_Compiler_List.op_At bs1 bs'), c'))
                | (bs1, c1) -> (bs1, c1)) in
         aux true n t
+let (maybe_unfold_head :
+  FStar_TypeChecker_Env.env ->
+    FStar_Syntax_Syntax.term ->
+      FStar_Syntax_Syntax.term FStar_Pervasives_Native.option)
+  =
+  fun env1 ->
+    fun t ->
+      let uu___ = FStar_Syntax_Util.head_and_args t in
+      match uu___ with
+      | (head, args) ->
+          let fv_us_opt =
+            let uu___1 =
+              let uu___2 = FStar_Syntax_Subst.compress head in
+              uu___2.FStar_Syntax_Syntax.n in
+            match uu___1 with
+            | FStar_Syntax_Syntax.Tm_uinst
+                ({ FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_fvar fv;
+                   FStar_Syntax_Syntax.pos = uu___2;
+                   FStar_Syntax_Syntax.vars = uu___3;
+                   FStar_Syntax_Syntax.hash_code = uu___4;_},
+                 us)
+                -> FStar_Pervasives_Native.Some (fv, us)
+            | FStar_Syntax_Syntax.Tm_fvar fv ->
+                FStar_Pervasives_Native.Some (fv, [])
+            | uu___2 -> FStar_Pervasives_Native.None in
+          (match fv_us_opt with
+           | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None
+           | FStar_Pervasives_Native.Some (fv, us) ->
+               let uu___1 =
+                 FStar_TypeChecker_Env.lookup_definition
+                   [FStar_TypeChecker_Env.Unfold
+                      FStar_Syntax_Syntax.delta_constant] env1
+                   (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v in
+               (match uu___1 with
+                | FStar_Pervasives_Native.None ->
+                    FStar_Pervasives_Native.None
+                | FStar_Pervasives_Native.Some (us_formals, defn) ->
+                    let subst =
+                      FStar_TypeChecker_Env.mk_univ_subst us_formals us in
+                    let defn1 = FStar_Syntax_Subst.subst subst defn in
+                    let term =
+                      FStar_Syntax_Syntax.mk_Tm_app defn1 args
+                        t.FStar_Syntax_Syntax.pos in
+                    let uu___2 =
+                      normalize
+                        [FStar_TypeChecker_Env.Beta;
+                        FStar_TypeChecker_Env.Iota;
+                        FStar_TypeChecker_Env.Weak;
+                        FStar_TypeChecker_Env.HNF] env1 term in
+                    FStar_Pervasives_Native.Some uu___2))
