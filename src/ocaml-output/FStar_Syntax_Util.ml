@@ -2188,6 +2188,10 @@ let (type_u :
       FStar_Syntax_Syntax.mk (FStar_Syntax_Syntax.Tm_type u)
         FStar_Compiler_Range.dummyRange in
     (uu___1, u)
+let (type_with_u : FStar_Syntax_Syntax.universe -> FStar_Syntax_Syntax.typ) =
+  fun u ->
+    FStar_Syntax_Syntax.mk (FStar_Syntax_Syntax.Tm_type u)
+      FStar_Compiler_Range.dummyRange
 let (attr_eq :
   FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term -> Prims.bool) =
   fun a ->
