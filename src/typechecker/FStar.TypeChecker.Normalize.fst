@@ -1393,6 +1393,17 @@ let rec norm : cfg -> env -> stack -> term -> term =
                       then U.exp_unit
                       else a
                     in
+                    // !! Optimization: if the argument we are pushing is an obvious
+                    // value/closed term, then drop the environment. This can save
+                    // a ton of memory, particularly when running tactics in tight loop.
+                    let env =
+                      match (Subst.compress a).n with
+                      | Tm_name _
+                      | Tm_constant _
+                      | Tm_lazy _
+                      | Tm_fvar _ -> empty_env
+                      | _ -> env
+                    in
                     Arg (Clos(env, a, BU.mk_ref None, false),aq,t.pos)::stack)
                   args
                   stack
