@@ -37,7 +37,7 @@ let _ =
   run_tactic (fun _ ->
         let ( ==. ) = terms_eq in
         guard (lookup_sigelt_attrs (`%A) ==. [`(meta_implicit #1); `(123 + 456)]);
-        guard (lookup_sigelt_attrs (`%B) ==. [`"B"; `id #int 3]);
+        guard (lookup_sigelt_attrs (`%B) ==. [`"B"; `id u#0 #int 3]);
         guard (lookup_sigelt_attrs (`%Mktest1) ==. [`(a1 u#12)]);
 	// // binders are typechecked, thus [id 3] is actually turned into `id #int 3`.
 	// // consequently:
