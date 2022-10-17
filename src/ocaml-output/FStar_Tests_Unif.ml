@@ -436,15 +436,42 @@ let (run_all : unit -> Prims.bool) =
                                          | (tm16, tm25) ->
                                              (check_core (Prims.of_int (16))
                                                 tm16 tm25;
-                                              FStar_Options.__clear_unit_tests
-                                                ();
-                                              (let uu___30 =
-                                                 FStar_Compiler_Effect.op_Bang
-                                                   success in
-                                               if uu___30
-                                               then
-                                                 FStar_Compiler_Util.print_string
-                                                   "Unifier ok\n"
-                                               else ());
-                                              FStar_Compiler_Effect.op_Bang
-                                                success))))))))))))))))))
+                                              (let uu___28 =
+                                                 FStar_Tests_Pars.pars_and_tc_fragment
+                                                   "let defn17_0 (x:nat) : nat -> nat -> Type0 = fun y z -> a:int { a + x == y + z }";
+                                                 (let t0 =
+                                                    FStar_Tests_Pars.tc
+                                                      "defn17_0 0 1 2" in
+                                                  let t1_head =
+                                                    FStar_Tests_Pars.tc
+                                                      "(defn17_0 0)" in
+                                                  let arg1 =
+                                                    FStar_Tests_Pars.tc "1" in
+                                                  let arg2 =
+                                                    FStar_Tests_Pars.tc "2" in
+                                                  let t1 =
+                                                    FStar_Syntax_Syntax.mk_Tm_app
+                                                      t1_head
+                                                      [(arg1,
+                                                         FStar_Pervasives_Native.None);
+                                                      (arg2,
+                                                        FStar_Pervasives_Native.None)]
+                                                      t0.FStar_Syntax_Syntax.pos in
+                                                  (t0, t1)) in
+                                               match uu___28 with
+                                               | (tm17, tm26) ->
+                                                   (check_core
+                                                      (Prims.of_int (17))
+                                                      tm17 tm26;
+                                                    FStar_Options.__clear_unit_tests
+                                                      ();
+                                                    (let uu___32 =
+                                                       FStar_Compiler_Effect.op_Bang
+                                                         success in
+                                                     if uu___32
+                                                     then
+                                                       FStar_Compiler_Util.print_string
+                                                         "Unifier ok\n"
+                                                     else ());
+                                                    FStar_Compiler_Effect.op_Bang
+                                                      success))))))))))))))))))))

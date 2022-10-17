@@ -251,6 +251,19 @@ let run_all () =
     in
     check_core 16 tm1 tm2;
 
+    let tm1, tm2 =
+      let _ = Pars.pars_and_tc_fragment 
+        "let defn17_0 (x:nat) : nat -> nat -> Type0 = fun y z -> a:int { a + x == y + z }"
+      in
+      let t0 = tc "defn17_0 0 1 2" in
+      let t1_head = tc "(defn17_0 0)" in
+      let arg1 = tc "1" in
+      let arg2 = tc "2" in      
+      let t1 = S.mk_Tm_app t1_head [(arg1, None); (arg2, None)] t0.pos in
+      t0, t1
+    in
+    check_core 17 tm1 tm2;
+
 
     Options.__clear_unit_tests();
 

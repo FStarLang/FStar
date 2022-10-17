@@ -21,20 +21,56 @@ let (push_binders : env -> FStar_Syntax_Syntax.binders -> env) =
       }
 type precondition = FStar_Syntax_Syntax.typ FStar_Pervasives_Native.option
 type 'a success = ('a * precondition)
+type relation =
+  | EQUALITY 
+  | SUBTYPING of FStar_Syntax_Syntax.term FStar_Pervasives_Native.option 
+let (uu___is_EQUALITY : relation -> Prims.bool) =
+  fun projectee -> match projectee with | EQUALITY -> true | uu___ -> false
+let (uu___is_SUBTYPING : relation -> Prims.bool) =
+  fun projectee ->
+    match projectee with | SUBTYPING _0 -> true | uu___ -> false
+let (__proj__SUBTYPING__item___0 :
+  relation -> FStar_Syntax_Syntax.term FStar_Pervasives_Native.option) =
+  fun projectee -> match projectee with | SUBTYPING _0 -> _0
+let (relation_to_string : relation -> Prims.string) =
+  fun uu___ ->
+    match uu___ with | EQUALITY -> "=?=" | SUBTYPING uu___1 -> "<:?"
+type context_term =
+  | CtxTerm of FStar_Syntax_Syntax.term 
+  | CtxRel of FStar_Syntax_Syntax.term * relation * FStar_Syntax_Syntax.term 
+let (uu___is_CtxTerm : context_term -> Prims.bool) =
+  fun projectee -> match projectee with | CtxTerm _0 -> true | uu___ -> false
+let (__proj__CtxTerm__item___0 : context_term -> FStar_Syntax_Syntax.term) =
+  fun projectee -> match projectee with | CtxTerm _0 -> _0
+let (uu___is_CtxRel : context_term -> Prims.bool) =
+  fun projectee ->
+    match projectee with | CtxRel (_0, _1, _2) -> true | uu___ -> false
+let (__proj__CtxRel__item___0 : context_term -> FStar_Syntax_Syntax.term) =
+  fun projectee -> match projectee with | CtxRel (_0, _1, _2) -> _0
+let (__proj__CtxRel__item___1 : context_term -> relation) =
+  fun projectee -> match projectee with | CtxRel (_0, _1, _2) -> _1
+let (__proj__CtxRel__item___2 : context_term -> FStar_Syntax_Syntax.term) =
+  fun projectee -> match projectee with | CtxRel (_0, _1, _2) -> _2
+let (context_term_to_string : context_term -> Prims.string) =
+  fun c ->
+    match c with
+    | CtxTerm term -> FStar_Syntax_Print.term_to_string term
+    | CtxRel (t0, r, t1) ->
+        let uu___ = FStar_Syntax_Print.term_to_string t0 in
+        let uu___1 = FStar_Syntax_Print.term_to_string t1 in
+        FStar_Compiler_Util.format3 "%s %s %s" uu___ (relation_to_string r)
+          uu___1
 type context =
   {
   no_guard: Prims.bool ;
   error_context:
-    (Prims.string * FStar_Syntax_Syntax.term FStar_Pervasives_Native.option)
-      Prims.list
-    }
+    (Prims.string * context_term FStar_Pervasives_Native.option) Prims.list }
 let (__proj__Mkcontext__item__no_guard : context -> Prims.bool) =
   fun projectee ->
     match projectee with | { no_guard; error_context;_} -> no_guard
 let (__proj__Mkcontext__item__error_context :
   context ->
-    (Prims.string * FStar_Syntax_Syntax.term FStar_Pervasives_Native.option)
-      Prims.list)
+    (Prims.string * context_term FStar_Pervasives_Native.option) Prims.list)
   =
   fun projectee ->
     match projectee with | { no_guard; error_context;_} -> error_context
@@ -43,13 +79,13 @@ let (print_context : context -> Prims.string) =
     let rec aux depth ctx1 =
       match ctx1 with
       | [] -> ""
-      | (msg, topt)::tl ->
+      | (msg, ctx_term)::tl ->
           let hd =
             let uu___ =
-              match topt with
+              match ctx_term with
               | FStar_Pervasives_Native.None -> ""
-              | FStar_Pervasives_Native.Some t ->
-                  FStar_Syntax_Print.term_to_string t in
+              | FStar_Pervasives_Native.Some ctx_term1 ->
+                  context_term_to_string ctx_term1 in
             FStar_Compiler_Util.format3 "%s %s (%s)\n" depth msg uu___ in
           let tl1 = aux (Prims.op_Hat depth ">") tl in Prims.op_Hat hd tl1 in
     aux "" (FStar_Compiler_List.rev ctx.error_context)
@@ -200,7 +236,7 @@ let handle_with : 'a . 'a result -> (unit -> 'a result) -> 'a result =
 let with_context :
   'a .
     Prims.string ->
-      FStar_Syntax_Syntax.term FStar_Pervasives_Native.option ->
+      context_term FStar_Pervasives_Native.option ->
         (unit -> 'a result) -> 'a result
   =
   fun msg ->
@@ -235,7 +271,7 @@ let (is_type :
               let uu___3 = FStar_Syntax_Print.term_to_string t1 in
               FStar_Compiler_Util.format1 "Expected a type; got %s" uu___3 in
             fail uu___2 in
-      with_context "is_type" (FStar_Pervasives_Native.Some t)
+      with_context "is_type" (FStar_Pervasives_Native.Some (CtxTerm t))
         (fun uu___ ->
            let uu___1 = aux t in
            handle_with uu___1
@@ -812,1222 +848,911 @@ let (uu___is_Both : side -> Prims.bool) =
   fun projectee -> match projectee with | Both -> true | uu___ -> false
 let (uu___is_Neither : side -> Prims.bool) =
   fun projectee -> match projectee with | Neither -> true | uu___ -> false
-let rec (check_subtype_whnf :
+let rec (check_relation_alt :
   env ->
-    FStar_Syntax_Syntax.term FStar_Pervasives_Native.option ->
+    relation ->
       FStar_Syntax_Syntax.typ -> FStar_Syntax_Syntax.typ -> unit result)
   =
   fun g ->
-    fun e ->
+    fun rel ->
       fun t0 ->
         fun t1 ->
-          let fail1 s =
-            debug g
-              (fun uu___1 ->
-                 let uu___2 = FStar_Syntax_Print.term_to_string t0 in
-                 let uu___3 = FStar_Syntax_Print.term_to_string t1 in
-                 FStar_Compiler_Util.print2
-                   "check_subtype_whnf  [[%s <: %s]] failed\n" uu___2 uu___3);
-            (let uu___1 =
-               let uu___2 = FStar_Syntax_Print.term_to_string t0 in
-               let uu___3 = FStar_Syntax_Print.term_to_string t1 in
-               FStar_Compiler_Util.format3
-                 "Subtyping failed because %s: %s </: %s" s uu___2 uu___3 in
-             fail uu___1) in
-          debug g
-            (fun uu___1 ->
-               let uu___2 = FStar_Syntax_Print.term_to_string t0 in
-               let uu___3 = FStar_Syntax_Print.term_to_string t1 in
-               FStar_Compiler_Util.print2 "check_subtype_whnf %s <: %s\n"
-                 uu___2 uu___3);
+          let err uu___ =
+            match rel with
+            | EQUALITY ->
+                let uu___1 =
+                  let uu___2 = FStar_Syntax_Print.term_to_string t0 in
+                  let uu___3 = FStar_Syntax_Print.term_to_string t1 in
+                  FStar_Compiler_Util.format2 "not equal terms: %s <> %s"
+                    uu___2 uu___3 in
+                fail uu___1
+            | uu___1 ->
+                let uu___2 =
+                  let uu___3 = FStar_Syntax_Print.term_to_string t0 in
+                  let uu___4 = FStar_Syntax_Print.term_to_string t1 in
+                  FStar_Compiler_Util.format2 "%s is not a subtype of %s"
+                    uu___3 uu___4 in
+                fail uu___2 in
+          let rel_to_string rel1 =
+            match rel1 with | EQUALITY -> "=?=" | uu___ -> "<:?" in
+          (let uu___1 =
+             FStar_TypeChecker_Env.debug g.tcenv (FStar_Options.Other "Core") in
+           if uu___1
+           then
+             let uu___2 = FStar_Syntax_Print.tag_of_term t0 in
+             let uu___3 = FStar_Syntax_Print.term_to_string t0 in
+             let uu___4 = FStar_Syntax_Print.tag_of_term t1 in
+             let uu___5 = FStar_Syntax_Print.term_to_string t1 in
+             FStar_Compiler_Util.print5
+               "check_relation_alt (%s) %s %s (%s) %s\n" uu___2 uu___3
+               (rel_to_string rel) uu___4 uu___5
+           else ());
           op_let_Bang guard_not_allowed
             (fun guard_not_ok ->
                let guard_ok = Prims.op_Negation guard_not_ok in
-               let fallback g1 t01 t11 =
-                 let uu___1 =
-                   guard_ok && ((equatable g1 t01) || (equatable g1 t11)) in
-                 if uu___1
-                 then
-                   let uu___2 = universe_of g1 t01 in
-                   op_let_Bang uu___2
-                     (fun u ->
-                        debug g1
-                          (fun uu___4 ->
-                             let uu___5 =
-                               FStar_Syntax_Print.term_to_string t01 in
-                             let uu___6 =
-                               FStar_Syntax_Print.term_to_string t11 in
-                             FStar_Compiler_Util.print2
-                               "exiting check_subtype_whnf [[%s <: %s]] with guard\n"
-                               uu___5 uu___6);
-                        (let uu___4 =
-                           let uu___5 = mk_type u in
-                           FStar_Syntax_Util.mk_eq2 u uu___5 t01 t11 in
-                         guard uu___4))
-                 else fail1 "no subtyping rule is applicable" in
-               let uu___1 =
-                 let uu___2 =
-                   let uu___3 = FStar_Syntax_Subst.compress t0 in
-                   uu___3.FStar_Syntax_Syntax.n in
-                 let uu___3 =
-                   let uu___4 = FStar_Syntax_Subst.compress t1 in
-                   uu___4.FStar_Syntax_Syntax.n in
-                 (uu___2, uu___3) in
-               match uu___1 with
-               | (FStar_Syntax_Syntax.Tm_refine uu___2,
-                  FStar_Syntax_Syntax.Tm_refine uu___3) when guard_not_ok ->
-                   check_equality_whnf g t0 t1
-               | (FStar_Syntax_Syntax.Tm_refine (x0, p0), uu___2) ->
-                   let uu___3 =
-                     let uu___4 =
-                       let uu___5 = FStar_Syntax_Syntax.mk_binder x0 in
-                       [uu___5] in
-                     FStar_Syntax_Subst.open_term uu___4 p0 in
-                   (match uu___3 with
-                    | (x01::[], p01) ->
-                        if FStar_Pervasives_Native.uu___is_Some e
-                        then
-                          let uu___4 =
-                            apply_predicate x01 p01
-                              (FStar_Pervasives_Native.__proj__Some__item__v
-                                 e) in
-                          let uu___5 =
-                            check_subtype g e
-                              (x01.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort
-                              t1 in
-                          weaken uu___4 uu___5
-                        else
-                          (let uu___5 =
-                             universe_of g
-                               (x01.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort in
-                           op_let_Bang uu___5
-                             (fun u0 ->
-                                let uu___6 =
-                                  let uu___7 =
-                                    let uu___8 = push_binders g [x01] in
-                                    let uu___9 =
-                                      let uu___10 =
-                                        FStar_Syntax_Syntax.bv_to_name
-                                          x01.FStar_Syntax_Syntax.binder_bv in
-                                      FStar_Pervasives_Native.Some uu___10 in
-                                    check_subtype uu___8 uu___9
-                                      (x01.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort
-                                      t1 in
-                                  weaken p01 uu___7 in
-                                with_binders [x01] [u0] uu___6)))
-               | (uu___2, FStar_Syntax_Syntax.Tm_refine (x1, p1)) ->
-                   let uu___3 =
-                     let uu___4 =
-                       let uu___5 = FStar_Syntax_Syntax.mk_binder x1 in
-                       [uu___5] in
-                     FStar_Syntax_Subst.open_term uu___4 p1 in
-                   (match uu___3 with
-                    | (x11::[], p11) ->
-                        if FStar_Pervasives_Native.uu___is_Some e
-                        then
-                          let uu___4 =
-                            apply_predicate x11 p11
-                              (FStar_Pervasives_Native.__proj__Some__item__v
-                                 e) in
-                          let uu___5 =
-                            check_subtype g e t0
-                              (x11.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort in
-                          strengthen uu___4 uu___5
-                        else
-                          (let uu___5 = universe_of g t0 in
-                           op_let_Bang uu___5
-                             (fun u0 ->
-                                let x0 =
-                                  FStar_Syntax_Syntax.new_bv
-                                    FStar_Pervasives_Native.None t0 in
-                                let uu___6 =
-                                  let uu___7 =
-                                    let uu___8 =
-                                      FStar_Syntax_Syntax.mk_binder x0 in
-                                    [uu___8] in
-                                  let uu___8 =
-                                    let uu___9 =
-                                      let uu___10 =
-                                        let uu___11 =
-                                          let uu___12 =
-                                            FStar_Syntax_Syntax.bv_to_name x0 in
-                                          ((x11.FStar_Syntax_Syntax.binder_bv),
-                                            uu___12) in
-                                        FStar_Syntax_Syntax.NT uu___11 in
-                                      [uu___10] in
-                                    FStar_Syntax_Subst.subst uu___9 p11 in
-                                  mk_forall_l [u0] uu___7 uu___8 in
-                                let uu___7 =
-                                  check_subtype g
-                                    FStar_Pervasives_Native.None t0
-                                    (x11.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort in
-                                strengthen uu___6 uu___7)))
-               | (FStar_Syntax_Syntax.Tm_arrow (x0::x1::xs, c0), uu___2) ->
-                   let uu___3 = curry_arrow x0 (x1 :: xs) c0 in
-                   check_subtype_whnf g e uu___3 t1
-               | (uu___2, FStar_Syntax_Syntax.Tm_arrow (x0::x1::xs, c1)) ->
-                   let uu___3 = curry_arrow x0 (x1 :: xs) c1 in
-                   check_subtype_whnf g e t0 uu___3
-               | (FStar_Syntax_Syntax.Tm_arrow (x0::[], c0),
-                  FStar_Syntax_Syntax.Tm_arrow (x1::[], c1)) ->
-                   let uu___2 =
-                     let uu___3 = FStar_Syntax_Util.mk_untyped_eq2 t0 t1 in
-                     FStar_Pervasives_Native.Some uu___3 in
-                   with_context "subtype arrow" uu___2
-                     (fun uu___3 ->
-                        let uu___4 = FStar_Syntax_Subst.open_comp [x0] c0 in
-                        match uu___4 with
-                        | (x01::[], c01) ->
-                            let uu___5 = FStar_Syntax_Subst.open_comp [x1] c1 in
-                            (match uu___5 with
-                             | (x11::[], c11) ->
-                                 let uu___6 =
-                                   check_bqual
-                                     x01.FStar_Syntax_Syntax.binder_qual
-                                     x11.FStar_Syntax_Syntax.binder_qual in
-                                 op_let_Bang uu___6
-                                   (fun uu___7 ->
-                                      let uu___8 =
-                                        universe_of g
-                                          (x11.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort in
-                                      op_let_Bang uu___8
-                                        (fun u1 ->
-                                           let uu___9 =
-                                             let uu___10 =
-                                               let uu___11 =
-                                                 let uu___12 =
-                                                   FStar_Syntax_Syntax.bv_to_name
-                                                     x11.FStar_Syntax_Syntax.binder_bv in
-                                                 FStar_Pervasives_Native.Some
-                                                   uu___12 in
-                                               check_subtype g uu___11
-                                                 (x11.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort
-                                                 (x01.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort in
-                                             op_let_Bang uu___10
-                                               (fun uu___11 ->
-                                                  with_context
-                                                    "check_subcomp"
-                                                    FStar_Pervasives_Native.None
-                                                    (fun uu___12 ->
-                                                       let uu___13 =
-                                                         push_binders g [x11] in
-                                                       let uu___14 =
-                                                         let uu___15 =
-                                                           FStar_Syntax_Util.is_pure_or_ghost_comp
-                                                             c01 in
-                                                         if uu___15
-                                                         then
-                                                           op_let_Question e
-                                                             (fun e1 ->
-                                                                let uu___16 =
-                                                                  let uu___17
-                                                                    =
-                                                                    let uu___18
-                                                                    =
-                                                                    FStar_Syntax_Util.args_of_binders
-                                                                    [x11] in
-                                                                    FStar_Pervasives_Native.snd
-                                                                    uu___18 in
-                                                                  FStar_Syntax_Syntax.mk_Tm_app
-                                                                    e1
-                                                                    uu___17
-                                                                    FStar_Compiler_Range.dummyRange in
-                                                                FStar_Pervasives_Native.Some
-                                                                  uu___16)
-                                                         else
-                                                           FStar_Pervasives_Native.None in
-                                                       let uu___15 =
-                                                         let uu___16 =
-                                                           let uu___17 =
-                                                             let uu___18 =
-                                                               let uu___19 =
-                                                                 FStar_Syntax_Syntax.bv_to_name
-                                                                   x11.FStar_Syntax_Syntax.binder_bv in
-                                                               ((x01.FStar_Syntax_Syntax.binder_bv),
-                                                                 uu___19) in
-                                                             FStar_Syntax_Syntax.NT
-                                                               uu___18 in
-                                                           [uu___17] in
-                                                         FStar_Syntax_Subst.subst_comp
-                                                           uu___16 c01 in
-                                                       check_subcomp uu___13
-                                                         uu___14 uu___15 c11)) in
-                                           with_binders [x11] [u1] uu___9))))
-               | (FStar_Syntax_Syntax.Tm_ascribed (t01, uu___2, uu___3),
-                  uu___4) -> check_subtype_whnf g e t01 t1
-               | (uu___2, FStar_Syntax_Syntax.Tm_ascribed
-                  (t11, uu___3, uu___4)) -> check_subtype_whnf g e t0 t11
-               | (FStar_Syntax_Syntax.Tm_type uu___2,
-                  FStar_Syntax_Syntax.Tm_type uu___3) ->
-                   check_equality_whnf g t0 t1
-               | (FStar_Syntax_Syntax.Tm_app uu___2, uu___3) ->
-                   let smt_ok = Prims.op_Negation guard_not_ok in
-                   let uu___4 =
-                     FStar_TypeChecker_Rel.head_matches_delta g.tcenv smt_ok
-                       t0 t1 in
-                   (match uu___4 with
-                    | (mr, ts) ->
-                        (debug g
-                           (fun uu___6 ->
-                              FStar_Compiler_Util.print_string
-                                "Back from head_matches_delta\n");
-                         (match (mr, ts) with
-                          | (FStar_TypeChecker_Rel.MisMatch uu___6, uu___7)
-                              -> fallback g t0 t1
-                          | (FStar_TypeChecker_Rel.HeadMatch (true), uu___6)
-                              -> fallback g t0 t1
-                          | (uu___6, FStar_Pervasives_Native.Some (t0', t1'))
-                              ->
-                              (debug g
-                                 (fun uu___8 ->
-                                    let uu___9 =
-                                      FStar_Syntax_Print.term_to_string t0 in
-                                    let uu___10 =
-                                      FStar_Syntax_Print.term_to_string t1 in
-                                    let uu___11 =
-                                      FStar_Syntax_Print.term_to_string t0' in
-                                    let uu___12 =
-                                      FStar_Syntax_Print.term_to_string t1' in
-                                    FStar_Compiler_Util.print4
-                                      "check_subtype_whnf after redunction [[%s <: %s]] reduced to [[%s <: %s]]\n"
-                                      uu___9 uu___10 uu___11 uu___12);
-                               check_subtype_whnf g e t0' t1')
-                          | (FStar_TypeChecker_Rel.FullMatch, uu___6) ->
-                              check_equality_whnf g t0 t1
-                          | (FStar_TypeChecker_Rel.HeadMatch (false), uu___6)
-                              -> check_equality_whnf g t0 t1)))
-               | (uu___2, FStar_Syntax_Syntax.Tm_app uu___3) ->
-                   let smt_ok = Prims.op_Negation guard_not_ok in
-                   let uu___4 =
-                     FStar_TypeChecker_Rel.head_matches_delta g.tcenv smt_ok
-                       t0 t1 in
-                   (match uu___4 with
-                    | (mr, ts) ->
-                        (debug g
-                           (fun uu___6 ->
-                              FStar_Compiler_Util.print_string
-                                "Back from head_matches_delta\n");
-                         (match (mr, ts) with
-                          | (FStar_TypeChecker_Rel.MisMatch uu___6, uu___7)
-                              -> fallback g t0 t1
-                          | (FStar_TypeChecker_Rel.HeadMatch (true), uu___6)
-                              -> fallback g t0 t1
-                          | (uu___6, FStar_Pervasives_Native.Some (t0', t1'))
-                              ->
-                              (debug g
-                                 (fun uu___8 ->
-                                    let uu___9 =
-                                      FStar_Syntax_Print.term_to_string t0 in
-                                    let uu___10 =
-                                      FStar_Syntax_Print.term_to_string t1 in
-                                    let uu___11 =
-                                      FStar_Syntax_Print.term_to_string t0' in
-                                    let uu___12 =
-                                      FStar_Syntax_Print.term_to_string t1' in
-                                    FStar_Compiler_Util.print4
-                                      "check_subtype_whnf after redunction [[%s <: %s]] reduced to [[%s <: %s]]\n"
-                                      uu___9 uu___10 uu___11 uu___12);
-                               check_subtype_whnf g e t0' t1')
-                          | (FStar_TypeChecker_Rel.FullMatch, uu___6) ->
-                              check_equality_whnf g t0 t1
-                          | (FStar_TypeChecker_Rel.HeadMatch (false), uu___6)
-                              -> check_equality_whnf g t0 t1)))
-               | (FStar_Syntax_Syntax.Tm_match (e0, uu___2, brs0, uu___3),
-                  FStar_Syntax_Syntax.Tm_match (e1, uu___4, brs1, uu___5)) ->
-                   check_equality_match g e0 brs0 e1 brs1
-               | uu___2 ->
-                   let uu___3 =
-                     let uu___4 = FStar_Syntax_Util.eq_tm t0 t1 in
-                     uu___4 = FStar_Syntax_Util.Equal in
-                   if uu___3
-                   then
-                     (debug g
-                        (fun uu___5 ->
-                           FStar_Compiler_Util.print_string
-                             "exiting check_subtype_whnf (EQUAL)\n");
-                      return ())
-                   else fallback g t0 t1)
-and (check_subtype :
-  env ->
-    FStar_Syntax_Syntax.term FStar_Pervasives_Native.option ->
-      FStar_Syntax_Syntax.typ -> FStar_Syntax_Syntax.typ -> unit result)
-  =
-  fun g ->
-    fun e ->
-      fun t0 ->
-        fun t1 ->
-          debug g
-            (fun uu___1 ->
-               let uu___2 = FStar_Syntax_Print.term_to_string t0 in
-               let uu___3 = FStar_Syntax_Print.term_to_string t1 in
-               FStar_Compiler_Util.print2 "check_subtype %s <: %s\n" uu___2
-                 uu___3);
-          (let uu___1 = FStar_Syntax_Util.eq_tm t0 t1 in
-           match uu___1 with
-           | FStar_Syntax_Util.Equal ->
-               (debug g
-                  (fun uu___3 ->
-                     FStar_Compiler_Util.print_string
-                       "exiting check_subtype (EQUAL)\n");
-                return ())
-           | uu___2 ->
-               let t0' =
-                 FStar_TypeChecker_Normalize.normalize_refinement
-                   default_norm_steps g.tcenv t0 in
-               let t1' =
-                 FStar_TypeChecker_Normalize.normalize_refinement
-                   default_norm_steps g.tcenv t1 in
-               check_subtype_whnf g e t0' t1')
-and (check_equality_formula :
-  env -> FStar_Syntax_Syntax.typ -> FStar_Syntax_Syntax.typ -> unit result) =
-  fun g ->
-    fun phi0 ->
-      fun phi1 ->
-        let uu___ = FStar_Syntax_Util.mk_iff phi0 phi1 in guard uu___
-and (check_equality_match :
-  env ->
-    FStar_Syntax_Syntax.term ->
-      FStar_Syntax_Syntax.branch Prims.list ->
-        FStar_Syntax_Syntax.term ->
-          FStar_Syntax_Syntax.branch Prims.list -> unit result)
-  =
-  fun g ->
-    fun scrutinee0 ->
-      fun brs0 ->
-        fun scrutinee1 ->
-          fun brs1 ->
-            let fail1 s =
-              let uu___ =
-                let uu___1 =
-                  let uu___2 =
-                    FStar_Syntax_Syntax.mk
-                      (FStar_Syntax_Syntax.Tm_match
-                         (scrutinee0, FStar_Pervasives_Native.None, brs0,
-                           FStar_Pervasives_Native.None))
-                      FStar_Compiler_Range.dummyRange in
-                  FStar_Syntax_Print.term_to_string uu___2 in
-                let uu___2 =
-                  let uu___3 =
-                    FStar_Syntax_Syntax.mk
-                      (FStar_Syntax_Syntax.Tm_match
-                         (scrutinee1, FStar_Pervasives_Native.None, brs1,
-                           FStar_Pervasives_Native.None))
-                      FStar_Compiler_Range.dummyRange in
-                  FStar_Syntax_Print.term_to_string uu___3 in
-                FStar_Compiler_Util.format3
-                  "match equality failed because %s: %s </: %s" s uu___1
-                  uu___2 in
-              fail uu___ in
-            let uu___ = check_equality_whnf g scrutinee0 scrutinee1 in
-            op_let_Bang uu___
-              (fun uu___1 ->
-                 let rec check_equality_branches brs01 brs11 =
-                   match (brs01, brs11) with
-                   | ([], []) -> return ()
-                   | (uu___2, []) ->
-                       fail1 "different number of branches in match nodes"
-                   | ([], uu___2) ->
-                       fail1 "different number of branches in match nodes"
-                   | ((p0, FStar_Pervasives_Native.None, body0)::brs02,
-                      (p1, FStar_Pervasives_Native.None, body1)::brs12) ->
-                       let uu___2 =
-                         let uu___3 = FStar_Syntax_Syntax.eq_pat p0 p1 in
-                         Prims.op_Negation uu___3 in
-                       if uu___2
-                       then fail1 "patterns not equal"
-                       else
-                         (let uu___4 =
-                            FStar_Syntax_Subst.open_branch
-                              (p0, FStar_Pervasives_Native.None, body0) in
-                          match uu___4 with
-                          | (p01, uu___5, body01) ->
-                              let uu___6 =
-                                FStar_Syntax_Subst.open_branch
-                                  (p1, FStar_Pervasives_Native.None, body1) in
-                              (match uu___6 with
-                               | (p11, uu___7, body11) ->
-                                   let uu___8 =
-                                     let uu___9 =
-                                       FStar_TypeChecker_PatternUtils.raw_pat_as_exp
-                                         g.tcenv p01 in
-                                     let uu___10 =
-                                       FStar_TypeChecker_PatternUtils.raw_pat_as_exp
-                                         g.tcenv p11 in
-                                     (uu___9, uu___10) in
-                                   (match uu___8 with
-                                    | (FStar_Pervasives_Native.Some
-                                       (uu___9, bvs0),
-                                       FStar_Pervasives_Native.Some
-                                       (uu___10, bvs1)) ->
-                                        let s =
-                                          FStar_Compiler_List.map2
-                                            (fun bv0 ->
-                                               fun bv1 ->
-                                                 let uu___11 =
-                                                   let uu___12 =
-                                                     FStar_Syntax_Syntax.bv_to_name
-                                                       bv0 in
-                                                   (bv1, uu___12) in
-                                                 FStar_Syntax_Syntax.NT
-                                                   uu___11) bvs0 bvs1 in
-                                        let body12 =
-                                          FStar_Syntax_Subst.subst s body11 in
-                                        let bs0 =
-                                          FStar_Compiler_List.map
-                                            FStar_Syntax_Syntax.mk_binder
-                                            bvs0 in
-                                        let uu___11 = check_binders g bs0 in
-                                        op_let_Bang uu___11
-                                          (fun uu___12 ->
-                                             match uu___12 with
-                                             | (uu___13, us, g1) ->
-                                                 let uu___14 =
-                                                   let uu___15 =
-                                                     check_equality g1 body01
-                                                       body12 in
-                                                   with_binders bs0 us
-                                                     uu___15 in
-                                                 op_let_Bang uu___14
-                                                   (fun uu___15 ->
-                                                      check_equality_branches
-                                                        brs02 brs12))
-                                    | uu___9 ->
-                                        fail1
-                                          "raw_pat_as_exp failed in check_equality match rule")))
-                   | (uu___2, uu___3) ->
-                       fail1
-                         "check_equality does not support branches with when" in
-                 check_equality_branches brs0 brs1)
-and (check_equality_alt :
-  env -> FStar_Syntax_Syntax.typ -> FStar_Syntax_Syntax.typ -> unit result) =
-  fun g ->
-    fun t0 ->
-      fun t1 ->
-        let err uu___ =
-          let uu___1 =
-            let uu___2 = FStar_Syntax_Print.term_to_string t0 in
-            let uu___3 = FStar_Syntax_Print.term_to_string t1 in
-            FStar_Compiler_Util.format2 "not equal terms: %s <> %s" uu___2
-              uu___3 in
-          fail uu___1 in
-        (let uu___1 =
-           FStar_TypeChecker_Env.debug g.tcenv (FStar_Options.Other "Core") in
-         if uu___1
-         then
-           let uu___2 = FStar_Syntax_Print.term_to_string t0 in
-           let uu___3 = FStar_Syntax_Print.term_to_string t1 in
-           FStar_Compiler_Util.print2 "check_equality_alt %s =?= %s\n" uu___2
-             uu___3
-         else ());
-        op_let_Bang guard_not_allowed
-          (fun guard_not_ok ->
-             let guard_ok = Prims.op_Negation guard_not_ok in
-             let head_matches t01 t11 =
-               let uu___1 = FStar_Syntax_Util.head_and_args t01 in
-               match uu___1 with
-               | (head0, uu___2) ->
-                   let uu___3 = FStar_Syntax_Util.head_and_args t11 in
-                   (match uu___3 with
-                    | (head1, uu___4) ->
-                        let uu___5 =
-                          let uu___6 =
-                            let uu___7 = FStar_Syntax_Util.un_uinst head0 in
-                            uu___7.FStar_Syntax_Syntax.n in
-                          let uu___7 =
-                            let uu___8 = FStar_Syntax_Util.un_uinst head1 in
-                            uu___8.FStar_Syntax_Syntax.n in
-                          (uu___6, uu___7) in
-                        (match uu___5 with
-                         | (FStar_Syntax_Syntax.Tm_fvar fv0,
-                            FStar_Syntax_Syntax.Tm_fvar fv1) ->
-                             FStar_Syntax_Syntax.fv_eq fv0 fv1
-                         | (FStar_Syntax_Syntax.Tm_name x0,
-                            FStar_Syntax_Syntax.Tm_name x1) ->
-                             FStar_Syntax_Syntax.bv_eq x0 x1
-                         | (FStar_Syntax_Syntax.Tm_constant c0,
-                            FStar_Syntax_Syntax.Tm_constant c1) ->
-                             FStar_Syntax_Hash.equal_term head0 head1
-                         | uu___6 -> false)) in
-             let which_side_to_unfold t01 t11 =
-               let delta_depth_of_head t =
-                 let uu___1 = FStar_Syntax_Util.head_and_args t in
+               let head_matches t01 t11 =
+                 let uu___1 = FStar_Syntax_Util.head_and_args t01 in
                  match uu___1 with
-                 | (head, uu___2) ->
-                     let uu___3 =
-                       let uu___4 = FStar_Syntax_Util.un_uinst head in
-                       uu___4.FStar_Syntax_Syntax.n in
+                 | (head0, uu___2) ->
+                     let uu___3 = FStar_Syntax_Util.head_and_args t11 in
                      (match uu___3 with
-                      | FStar_Syntax_Syntax.Tm_fvar fv ->
-                          let uu___4 =
-                            FStar_TypeChecker_Env.delta_depth_of_fv g.tcenv
-                              fv in
-                          FStar_Pervasives_Native.Some uu___4
-                      | uu___4 -> FStar_Pervasives_Native.None) in
-               let dd0 = delta_depth_of_head t01 in
-               let dd1 = delta_depth_of_head t11 in
-               match (dd0, dd1) with
-               | (FStar_Pervasives_Native.Some uu___1,
-                  FStar_Pervasives_Native.None) -> Left
-               | (FStar_Pervasives_Native.None, FStar_Pervasives_Native.Some
-                  uu___1) -> Right
-               | (FStar_Pervasives_Native.Some dd01,
-                  FStar_Pervasives_Native.Some dd11) ->
-                   if dd01 = dd11
-                   then Both
-                   else
-                     (let uu___2 =
-                        FStar_TypeChecker_Common.delta_depth_greater_than
-                          dd01 dd11 in
-                      if uu___2 then Left else Right)
-               | (FStar_Pervasives_Native.None, FStar_Pervasives_Native.None)
-                   -> Neither in
-             let maybe_unfold t01 t11 =
-               let uu___1 = which_side_to_unfold t01 t11 in
-               match uu___1 with
-               | Neither -> FStar_Pervasives_Native.None
-               | Both ->
-                   let uu___2 =
-                     let uu___3 =
+                      | (head1, uu___4) ->
+                          let rec aux head01 head11 =
+                            let uu___5 =
+                              let uu___6 =
+                                let uu___7 =
+                                  FStar_Syntax_Util.un_uinst head01 in
+                                uu___7.FStar_Syntax_Syntax.n in
+                              let uu___7 =
+                                let uu___8 =
+                                  FStar_Syntax_Util.un_uinst head11 in
+                                uu___8.FStar_Syntax_Syntax.n in
+                              (uu___6, uu___7) in
+                            match uu___5 with
+                            | (FStar_Syntax_Syntax.Tm_fvar fv0,
+                               FStar_Syntax_Syntax.Tm_fvar fv1) ->
+                                FStar_Syntax_Syntax.fv_eq fv0 fv1
+                            | (FStar_Syntax_Syntax.Tm_name x0,
+                               FStar_Syntax_Syntax.Tm_name x1) ->
+                                FStar_Syntax_Syntax.bv_eq x0 x1
+                            | (FStar_Syntax_Syntax.Tm_constant c0,
+                               FStar_Syntax_Syntax.Tm_constant c1) ->
+                                FStar_Syntax_Hash.equal_term head01 head11
+                            | (FStar_Syntax_Syntax.Tm_type uu___6,
+                               FStar_Syntax_Syntax.Tm_type uu___7) -> true
+                            | (FStar_Syntax_Syntax.Tm_arrow uu___6,
+                               FStar_Syntax_Syntax.Tm_arrow uu___7) -> true
+                            | (FStar_Syntax_Syntax.Tm_ascribed
+                               (t, uu___6, uu___7), uu___8) -> aux t head11
+                            | (uu___6, FStar_Syntax_Syntax.Tm_ascribed
+                               (t, uu___7, uu___8)) -> aux head01 t
+                            | uu___6 -> false in
+                          aux head0 head1) in
+               let which_side_to_unfold t01 t11 =
+                 let delta_depth_of_head t =
+                   let uu___1 = FStar_Syntax_Util.head_and_args_full t in
+                   match uu___1 with
+                   | (head, uu___2) ->
+                       let uu___3 =
+                         let uu___4 = FStar_Syntax_Util.un_uinst head in
+                         uu___4.FStar_Syntax_Syntax.n in
+                       (match uu___3 with
+                        | FStar_Syntax_Syntax.Tm_fvar fv ->
+                            let uu___4 =
+                              FStar_TypeChecker_Env.delta_depth_of_fv 
+                                g.tcenv fv in
+                            FStar_Pervasives_Native.Some uu___4
+                        | uu___4 -> FStar_Pervasives_Native.None) in
+                 let dd0 = delta_depth_of_head t01 in
+                 let dd1 = delta_depth_of_head t11 in
+                 match (dd0, dd1) with
+                 | (FStar_Pervasives_Native.Some uu___1,
+                    FStar_Pervasives_Native.None) -> Left
+                 | (FStar_Pervasives_Native.None,
+                    FStar_Pervasives_Native.Some uu___1) -> Right
+                 | (FStar_Pervasives_Native.Some dd01,
+                    FStar_Pervasives_Native.Some dd11) ->
+                     if dd01 = dd11
+                     then Both
+                     else
+                       (let uu___2 =
+                          FStar_TypeChecker_Common.delta_depth_greater_than
+                            dd01 dd11 in
+                        if uu___2 then Left else Right)
+                 | (FStar_Pervasives_Native.None,
+                    FStar_Pervasives_Native.None) -> Neither in
+               let maybe_unfold_side side1 t01 t11 =
+                 match side1 with
+                 | Neither -> FStar_Pervasives_Native.None
+                 | Both ->
+                     let uu___1 =
+                       let uu___2 =
+                         FStar_TypeChecker_Normalize.maybe_unfold_head
+                           g.tcenv t01 in
+                       let uu___3 =
+                         FStar_TypeChecker_Normalize.maybe_unfold_head
+                           g.tcenv t11 in
+                       (uu___2, uu___3) in
+                     (match uu___1 with
+                      | (FStar_Pervasives_Native.Some t02,
+                         FStar_Pervasives_Native.Some t12) ->
+                          FStar_Pervasives_Native.Some (t02, t12)
+                      | (FStar_Pervasives_Native.Some t02,
+                         FStar_Pervasives_Native.None) ->
+                          FStar_Pervasives_Native.Some (t02, t11)
+                      | (FStar_Pervasives_Native.None,
+                         FStar_Pervasives_Native.Some t12) ->
+                          FStar_Pervasives_Native.Some (t01, t12)
+                      | uu___2 -> FStar_Pervasives_Native.None)
+                 | Left ->
+                     let uu___1 =
                        FStar_TypeChecker_Normalize.maybe_unfold_head 
                          g.tcenv t01 in
-                     let uu___4 =
+                     (match uu___1 with
+                      | FStar_Pervasives_Native.Some t02 ->
+                          FStar_Pervasives_Native.Some (t02, t11)
+                      | uu___2 -> FStar_Pervasives_Native.None)
+                 | Right ->
+                     let uu___1 =
                        FStar_TypeChecker_Normalize.maybe_unfold_head 
                          g.tcenv t11 in
-                     (uu___3, uu___4) in
-                   (match uu___2 with
-                    | (FStar_Pervasives_Native.Some t02,
-                       FStar_Pervasives_Native.Some t12) ->
-                        FStar_Pervasives_Native.Some (t02, t12)
-                    | (FStar_Pervasives_Native.Some t02,
-                       FStar_Pervasives_Native.None) ->
-                        FStar_Pervasives_Native.Some (t02, t11)
-                    | (FStar_Pervasives_Native.None,
-                       FStar_Pervasives_Native.Some t12) ->
-                        FStar_Pervasives_Native.Some (t01, t12)
-                    | uu___3 -> FStar_Pervasives_Native.None)
-               | Left ->
-                   let uu___2 =
-                     FStar_TypeChecker_Normalize.maybe_unfold_head g.tcenv
-                       t01 in
-                   (match uu___2 with
-                    | FStar_Pervasives_Native.Some t02 ->
-                        FStar_Pervasives_Native.Some (t02, t11)
-                    | uu___3 -> FStar_Pervasives_Native.None)
-               | Right ->
-                   let uu___2 =
-                     FStar_TypeChecker_Normalize.maybe_unfold_head g.tcenv
-                       t11 in
-                   (match uu___2 with
-                    | FStar_Pervasives_Native.Some t12 ->
-                        FStar_Pervasives_Native.Some (t01, t12)
-                    | uu___3 -> FStar_Pervasives_Native.None) in
-             let fallback t01 t11 =
-               if guard_ok
-               then
-                 let uu___1 = (equatable g t01) || (equatable g t11) in
-                 (if uu___1
-                  then
-                    let uu___2 = check' g t01 in
-                    op_let_Bang uu___2
-                      (fun uu___3 ->
-                         match uu___3 with
-                         | (uu___4, t_typ) ->
-                             let uu___5 = universe_of g t_typ in
+                     (match uu___1 with
+                      | FStar_Pervasives_Native.Some t12 ->
+                          FStar_Pervasives_Native.Some (t01, t12)
+                      | uu___2 -> FStar_Pervasives_Native.None) in
+               let maybe_unfold t01 t11 =
+                 let uu___1 = which_side_to_unfold t01 t11 in
+                 maybe_unfold_side uu___1 t01 t11 in
+               let fallback t01 t11 =
+                 if guard_ok
+                 then
+                   let uu___1 = (equatable g t01) || (equatable g t11) in
+                   (if uu___1
+                    then
+                      let uu___2 = check' g t01 in
+                      op_let_Bang uu___2
+                        (fun uu___3 ->
+                           match uu___3 with
+                           | (uu___4, t_typ) ->
+                               let uu___5 = universe_of g t_typ in
+                               op_let_Bang uu___5
+                                 (fun u ->
+                                    let uu___6 =
+                                      FStar_Syntax_Util.mk_eq2 u t_typ t01
+                                        t11 in
+                                    guard uu___6))
+                    else err ())
+                 else err () in
+               let maybe_unfold_side_and_retry side1 t01 t11 =
+                 let uu___1 = maybe_unfold_side side1 t01 t11 in
+                 match uu___1 with
+                 | FStar_Pervasives_Native.None -> fallback t01 t11
+                 | FStar_Pervasives_Native.Some (t02, t12) ->
+                     check_relation_alt g rel t02 t12 in
+               let maybe_unfold_and_retry t01 t11 =
+                 let uu___1 = which_side_to_unfold t01 t11 in
+                 maybe_unfold_side_and_retry uu___1 t01 t11 in
+               let beta_iota_reduce t =
+                 let t2 = FStar_Syntax_Subst.compress t in
+                 let uu___1 =
+                   let uu___2 = FStar_Syntax_Subst.compress t2 in
+                   uu___2.FStar_Syntax_Syntax.n in
+                 match uu___1 with
+                 | FStar_Syntax_Syntax.Tm_app uu___2 ->
+                     let uu___3 = FStar_Syntax_Util.head_and_args t2 in
+                     (match uu___3 with
+                      | (head, uu___4) ->
+                          let uu___5 =
+                            let uu___6 = FStar_Syntax_Subst.compress head in
+                            uu___6.FStar_Syntax_Syntax.n in
+                          (match uu___5 with
+                           | FStar_Syntax_Syntax.Tm_abs uu___6 ->
+                               FStar_TypeChecker_Normalize.normalize
+                                 [FStar_TypeChecker_Env.Beta;
+                                 FStar_TypeChecker_Env.Iota] g.tcenv t2
+                           | uu___6 -> t2))
+                 | FStar_Syntax_Syntax.Tm_match uu___2 ->
+                     FStar_TypeChecker_Normalize.normalize
+                       [FStar_TypeChecker_Env.Beta;
+                       FStar_TypeChecker_Env.Iota] g.tcenv t2
+                 | FStar_Syntax_Syntax.Tm_refine uu___2 ->
+                     FStar_Syntax_Util.flatten_refinement t2
+                 | uu___2 -> t2 in
+               let t01 =
+                 let uu___1 = beta_iota_reduce t0 in
+                 FStar_Syntax_Subst.compress uu___1 in
+               let t11 =
+                 let uu___1 = beta_iota_reduce t1 in
+                 FStar_Syntax_Subst.compress uu___1 in
+               let check_relation_alt1 g1 rel1 t02 t12 =
+                 with_context "check_relation_alt"
+                   (FStar_Pervasives_Native.Some (CtxRel (t02, rel1, t12)))
+                   (fun uu___1 -> check_relation_alt g1 rel1 t02 t12) in
+               let uu___1 = FStar_Syntax_Hash.equal_term t01 t11 in
+               if uu___1
+               then return ()
+               else
+                 (match ((t01.FStar_Syntax_Syntax.n),
+                          (t11.FStar_Syntax_Syntax.n))
+                  with
+                  | (FStar_Syntax_Syntax.Tm_type u0,
+                     FStar_Syntax_Syntax.Tm_type u1) ->
+                      let uu___3 =
+                        FStar_TypeChecker_Rel.teq_nosmt_force g.tcenv t01 t11 in
+                      if uu___3 then return () else err ()
+                  | (FStar_Syntax_Syntax.Tm_meta
+                     (t02, FStar_Syntax_Syntax.Meta_pattern uu___3), uu___4)
+                      -> check_relation_alt1 g rel t02 t11
+                  | (FStar_Syntax_Syntax.Tm_meta
+                     (t02, FStar_Syntax_Syntax.Meta_named uu___3), uu___4) ->
+                      check_relation_alt1 g rel t02 t11
+                  | (FStar_Syntax_Syntax.Tm_meta
+                     (t02, FStar_Syntax_Syntax.Meta_labeled uu___3), uu___4)
+                      -> check_relation_alt1 g rel t02 t11
+                  | (FStar_Syntax_Syntax.Tm_meta
+                     (t02, FStar_Syntax_Syntax.Meta_desugared uu___3),
+                     uu___4) -> check_relation_alt1 g rel t02 t11
+                  | (FStar_Syntax_Syntax.Tm_ascribed (t02, uu___3, uu___4),
+                     uu___5) -> check_relation_alt1 g rel t02 t11
+                  | (uu___3, FStar_Syntax_Syntax.Tm_meta
+                     (t12, FStar_Syntax_Syntax.Meta_pattern uu___4)) ->
+                      check_relation_alt1 g rel t01 t12
+                  | (uu___3, FStar_Syntax_Syntax.Tm_meta
+                     (t12, FStar_Syntax_Syntax.Meta_named uu___4)) ->
+                      check_relation_alt1 g rel t01 t12
+                  | (uu___3, FStar_Syntax_Syntax.Tm_meta
+                     (t12, FStar_Syntax_Syntax.Meta_labeled uu___4)) ->
+                      check_relation_alt1 g rel t01 t12
+                  | (uu___3, FStar_Syntax_Syntax.Tm_meta
+                     (t12, FStar_Syntax_Syntax.Meta_desugared uu___4)) ->
+                      check_relation_alt1 g rel t01 t12
+                  | (uu___3, FStar_Syntax_Syntax.Tm_ascribed
+                     (t12, uu___4, uu___5)) ->
+                      check_relation_alt1 g rel t01 t12
+                  | (FStar_Syntax_Syntax.Tm_uinst (f0, us0),
+                     FStar_Syntax_Syntax.Tm_uinst (f1, us1)) ->
+                      let uu___3 = FStar_Syntax_Hash.equal_term f0 f1 in
+                      if uu___3
+                      then
+                        let uu___4 =
+                          FStar_TypeChecker_Rel.teq_nosmt_force g.tcenv t01
+                            t11 in
+                        (if uu___4 then return () else err ())
+                      else maybe_unfold_and_retry t01 t11
+                  | (FStar_Syntax_Syntax.Tm_fvar uu___3,
+                     FStar_Syntax_Syntax.Tm_fvar uu___4) ->
+                      maybe_unfold_and_retry t01 t11
+                  | (FStar_Syntax_Syntax.Tm_refine (x0, f0),
+                     FStar_Syntax_Syntax.Tm_refine (x1, f1)) ->
+                      let uu___3 =
+                        head_matches x0.FStar_Syntax_Syntax.sort
+                          x1.FStar_Syntax_Syntax.sort in
+                      if uu___3
+                      then
+                        let uu___4 =
+                          let uu___5 =
+                            let uu___6 = FStar_Syntax_Syntax.mk_binder x0 in
+                            [uu___6] in
+                          FStar_Syntax_Subst.open_term uu___5 f0 in
+                        (match uu___4 with
+                         | (b::[], f01) ->
+                             let f11 =
+                               FStar_Syntax_Subst.subst
+                                 [FStar_Syntax_Syntax.DB
+                                    (Prims.int_zero,
+                                      (b.FStar_Syntax_Syntax.binder_bv))] f1 in
+                             let uu___5 =
+                               universe_of g
+                                 (b.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort in
                              op_let_Bang uu___5
                                (fun u ->
                                   let uu___6 =
-                                    FStar_Syntax_Util.mk_eq2 u t_typ t01 t11 in
-                                  guard uu___6))
-                  else err ())
-               else err () in
-             let maybe_unfold_and_retry t01 t11 =
-               let uu___1 = maybe_unfold t01 t11 in
-               match uu___1 with
-               | FStar_Pervasives_Native.None -> fallback t01 t11
-               | FStar_Pervasives_Native.Some (t02, t12) ->
-                   check_equality_alt g t02 t12 in
-             let uu___1 = FStar_Syntax_Hash.equal_term t0 t1 in
-             if uu___1
-             then return ()
-             else
-               (match ((t0.FStar_Syntax_Syntax.n),
-                        (t1.FStar_Syntax_Syntax.n))
-                with
-                | (FStar_Syntax_Syntax.Tm_type u0,
-                   FStar_Syntax_Syntax.Tm_type u1) ->
-                    let uu___3 =
-                      FStar_TypeChecker_Rel.teq_nosmt_force g.tcenv t0 t1 in
-                    if uu___3 then return () else err ()
-                | (FStar_Syntax_Syntax.Tm_ascribed (t01, uu___3, uu___4),
-                   uu___5) -> check_equality_alt g t01 t1
-                | (uu___3, FStar_Syntax_Syntax.Tm_ascribed
-                   (t11, uu___4, uu___5)) -> check_equality_alt g t0 t11
-                | (FStar_Syntax_Syntax.Tm_uinst (f0, us0),
-                   FStar_Syntax_Syntax.Tm_uinst (f1, us1)) ->
-                    let uu___3 = FStar_Syntax_Hash.equal_term f0 f1 in
-                    if uu___3
-                    then
+                                    check_relation_alt1 g EQUALITY
+                                      x0.FStar_Syntax_Syntax.sort
+                                      x1.FStar_Syntax_Syntax.sort in
+                                  op_let_Bang uu___6
+                                    (fun uu___7 ->
+                                       op_let_Bang guard_not_allowed
+                                         (fun uu___8 ->
+                                            if uu___8
+                                            then
+                                              let uu___9 =
+                                                let g1 = push_binders g [b] in
+                                                check_relation_alt1 g1
+                                                  EQUALITY f01 f11 in
+                                              with_binders [b] [u] uu___9
+                                            else
+                                              (match rel with
+                                               | EQUALITY ->
+                                                   let uu___10 =
+                                                     let g1 =
+                                                       push_binders g [b] in
+                                                     let uu___11 =
+                                                       check_relation_alt1 g1
+                                                         EQUALITY f01 f11 in
+                                                     handle_with uu___11
+                                                       (fun uu___12 ->
+                                                          let uu___13 =
+                                                            FStar_Syntax_Util.mk_iff
+                                                              f01 f11 in
+                                                          guard uu___13) in
+                                                   with_binders [b] [u]
+                                                     uu___10
+                                               | SUBTYPING
+                                                   (FStar_Pervasives_Native.Some
+                                                   tm) ->
+                                                   let uu___10 =
+                                                     let uu___11 =
+                                                       FStar_Syntax_Util.mk_imp
+                                                         f01 f11 in
+                                                     FStar_Syntax_Subst.subst
+                                                       [FStar_Syntax_Syntax.NT
+                                                          ((b.FStar_Syntax_Syntax.binder_bv),
+                                                            tm)] uu___11 in
+                                                   guard uu___10
+                                               | SUBTYPING
+                                                   (FStar_Pervasives_Native.None)
+                                                   ->
+                                                   let uu___10 =
+                                                     let uu___11 =
+                                                       FStar_Syntax_Util.mk_imp
+                                                         f01 f11 in
+                                                     FStar_Syntax_Util.mk_forall
+                                                       u
+                                                       b.FStar_Syntax_Syntax.binder_bv
+                                                       uu___11 in
+                                                   guard uu___10)))))
+                      else
+                        (let uu___5 =
+                           maybe_unfold x0.FStar_Syntax_Syntax.sort
+                             x1.FStar_Syntax_Syntax.sort in
+                         match uu___5 with
+                         | FStar_Pervasives_Native.None -> fallback t01 t11
+                         | FStar_Pervasives_Native.Some (t02, t12) ->
+                             let lhs =
+                               FStar_Syntax_Syntax.mk
+                                 (FStar_Syntax_Syntax.Tm_refine
+                                    ({
+                                       FStar_Syntax_Syntax.ppname =
+                                         (x0.FStar_Syntax_Syntax.ppname);
+                                       FStar_Syntax_Syntax.index =
+                                         (x0.FStar_Syntax_Syntax.index);
+                                       FStar_Syntax_Syntax.sort = t02
+                                     }, f0)) t02.FStar_Syntax_Syntax.pos in
+                             let rhs =
+                               FStar_Syntax_Syntax.mk
+                                 (FStar_Syntax_Syntax.Tm_refine
+                                    ({
+                                       FStar_Syntax_Syntax.ppname =
+                                         (x1.FStar_Syntax_Syntax.ppname);
+                                       FStar_Syntax_Syntax.index =
+                                         (x1.FStar_Syntax_Syntax.index);
+                                       FStar_Syntax_Syntax.sort = t12
+                                     }, f1)) t12.FStar_Syntax_Syntax.pos in
+                             let uu___6 =
+                               FStar_Syntax_Util.flatten_refinement lhs in
+                             let uu___7 =
+                               FStar_Syntax_Util.flatten_refinement rhs in
+                             check_relation_alt1 g rel uu___6 uu___7)
+                  | (FStar_Syntax_Syntax.Tm_refine (x0, f0), uu___3) ->
                       let uu___4 =
-                        FStar_TypeChecker_Rel.teq_nosmt_force g.tcenv t0 t1 in
-                      (if uu___4 then return () else err ())
-                    else maybe_unfold_and_retry t0 t1
-                | (FStar_Syntax_Syntax.Tm_fvar uu___3,
-                   FStar_Syntax_Syntax.Tm_fvar uu___4) ->
-                    maybe_unfold_and_retry t0 t1
-                | (FStar_Syntax_Syntax.Tm_uinst uu___3, uu___4) ->
-                    let uu___5 =
-                      let uu___6 = head_matches t0 t1 in
-                      Prims.op_Negation uu___6 in
-                    if uu___5
-                    then maybe_unfold_and_retry t0 t1
-                    else
-                      (let uu___7 = FStar_Syntax_Util.head_and_args t0 in
-                       match uu___7 with
-                       | (head0, args0) ->
-                           let uu___8 = FStar_Syntax_Util.head_and_args t1 in
-                           (match uu___8 with
-                            | (head1, args1) ->
-                                let uu___9 = check_equality_alt g head0 head1 in
-                                op_let_Bang uu___9
-                                  (fun uu___10 ->
-                                     check_equality_args g args0 args1)))
-                | (FStar_Syntax_Syntax.Tm_fvar uu___3, uu___4) ->
-                    let uu___5 =
-                      let uu___6 = head_matches t0 t1 in
-                      Prims.op_Negation uu___6 in
-                    if uu___5
-                    then maybe_unfold_and_retry t0 t1
-                    else
-                      (let uu___7 = FStar_Syntax_Util.head_and_args t0 in
-                       match uu___7 with
-                       | (head0, args0) ->
-                           let uu___8 = FStar_Syntax_Util.head_and_args t1 in
-                           (match uu___8 with
-                            | (head1, args1) ->
-                                let uu___9 = check_equality_alt g head0 head1 in
-                                op_let_Bang uu___9
-                                  (fun uu___10 ->
-                                     check_equality_args g args0 args1)))
-                | (FStar_Syntax_Syntax.Tm_app uu___3, uu___4) ->
-                    let uu___5 =
-                      let uu___6 = head_matches t0 t1 in
-                      Prims.op_Negation uu___6 in
-                    if uu___5
-                    then maybe_unfold_and_retry t0 t1
-                    else
-                      (let uu___7 = FStar_Syntax_Util.head_and_args t0 in
-                       match uu___7 with
-                       | (head0, args0) ->
-                           let uu___8 = FStar_Syntax_Util.head_and_args t1 in
-                           (match uu___8 with
-                            | (head1, args1) ->
-                                let uu___9 = check_equality_alt g head0 head1 in
-                                op_let_Bang uu___9
-                                  (fun uu___10 ->
-                                     check_equality_args g args0 args1)))
-                | (uu___3, FStar_Syntax_Syntax.Tm_uinst uu___4) ->
-                    let uu___5 =
-                      let uu___6 = head_matches t0 t1 in
-                      Prims.op_Negation uu___6 in
-                    if uu___5
-                    then maybe_unfold_and_retry t0 t1
-                    else
-                      (let uu___7 = FStar_Syntax_Util.head_and_args t0 in
-                       match uu___7 with
-                       | (head0, args0) ->
-                           let uu___8 = FStar_Syntax_Util.head_and_args t1 in
-                           (match uu___8 with
-                            | (head1, args1) ->
-                                let uu___9 = check_equality_alt g head0 head1 in
-                                op_let_Bang uu___9
-                                  (fun uu___10 ->
-                                     check_equality_args g args0 args1)))
-                | (uu___3, FStar_Syntax_Syntax.Tm_fvar uu___4) ->
-                    let uu___5 =
-                      let uu___6 = head_matches t0 t1 in
-                      Prims.op_Negation uu___6 in
-                    if uu___5
-                    then maybe_unfold_and_retry t0 t1
-                    else
-                      (let uu___7 = FStar_Syntax_Util.head_and_args t0 in
-                       match uu___7 with
-                       | (head0, args0) ->
-                           let uu___8 = FStar_Syntax_Util.head_and_args t1 in
-                           (match uu___8 with
-                            | (head1, args1) ->
-                                let uu___9 = check_equality_alt g head0 head1 in
-                                op_let_Bang uu___9
-                                  (fun uu___10 ->
-                                     check_equality_args g args0 args1)))
-                | (uu___3, FStar_Syntax_Syntax.Tm_app uu___4) ->
-                    let uu___5 =
-                      let uu___6 = head_matches t0 t1 in
-                      Prims.op_Negation uu___6 in
-                    if uu___5
-                    then maybe_unfold_and_retry t0 t1
-                    else
-                      (let uu___7 = FStar_Syntax_Util.head_and_args t0 in
-                       match uu___7 with
-                       | (head0, args0) ->
-                           let uu___8 = FStar_Syntax_Util.head_and_args t1 in
-                           (match uu___8 with
-                            | (head1, args1) ->
-                                let uu___9 = check_equality_alt g head0 head1 in
-                                op_let_Bang uu___9
-                                  (fun uu___10 ->
-                                     check_equality_args g args0 args1)))
-                | (FStar_Syntax_Syntax.Tm_refine (x0, f0),
-                   FStar_Syntax_Syntax.Tm_refine (x1, f1)) ->
-                    let uu___3 =
-                      head_matches x0.FStar_Syntax_Syntax.sort
-                        x1.FStar_Syntax_Syntax.sort in
-                    if uu___3
-                    then
+                        head_matches x0.FStar_Syntax_Syntax.sort t11 in
+                      if uu___4
+                      then
+                        check_relation_alt1 g rel x0.FStar_Syntax_Syntax.sort
+                          t11
+                      else
+                        (let uu___6 =
+                           maybe_unfold x0.FStar_Syntax_Syntax.sort t11 in
+                         match uu___6 with
+                         | FStar_Pervasives_Native.None -> fallback t01 t11
+                         | FStar_Pervasives_Native.Some (t02, t12) ->
+                             let lhs =
+                               FStar_Syntax_Syntax.mk
+                                 (FStar_Syntax_Syntax.Tm_refine
+                                    ({
+                                       FStar_Syntax_Syntax.ppname =
+                                         (x0.FStar_Syntax_Syntax.ppname);
+                                       FStar_Syntax_Syntax.index =
+                                         (x0.FStar_Syntax_Syntax.index);
+                                       FStar_Syntax_Syntax.sort = t02
+                                     }, f0)) t02.FStar_Syntax_Syntax.pos in
+                             let uu___7 =
+                               FStar_Syntax_Util.flatten_refinement lhs in
+                             check_relation_alt1 g rel uu___7 t12)
+                  | (uu___3, FStar_Syntax_Syntax.Tm_refine (x1, f1)) ->
                       let uu___4 =
+                        head_matches t01 x1.FStar_Syntax_Syntax.sort in
+                      if uu___4
+                      then
                         let uu___5 =
-                          let uu___6 = FStar_Syntax_Syntax.mk_binder x0 in
-                          [uu___6] in
-                        FStar_Syntax_Subst.open_term uu___5 f0 in
-                      (match uu___4 with
-                       | (b::[], f01) ->
-                           let f11 =
-                             FStar_Syntax_Subst.subst
-                               [FStar_Syntax_Syntax.DB
-                                  (Prims.int_zero,
-                                    (b.FStar_Syntax_Syntax.binder_bv))] f1 in
-                           let uu___5 =
-                             universe_of g
-                               (b.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort in
-                           op_let_Bang uu___5
-                             (fun u ->
-                                let uu___6 =
-                                  check_equality_alt g
-                                    x0.FStar_Syntax_Syntax.sort
-                                    x1.FStar_Syntax_Syntax.sort in
-                                op_let_Bang uu___6
-                                  (fun uu___7 ->
-                                     let uu___8 =
-                                       let g1 = push_binders g [b] in
+                          let uu___6 =
+                            let uu___7 = FStar_Syntax_Syntax.mk_binder x1 in
+                            [uu___7] in
+                          FStar_Syntax_Subst.open_term uu___6 f1 in
+                        (match uu___5 with
+                         | (b1::[], f11) ->
+                             let uu___6 =
+                               universe_of g
+                                 (b1.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort in
+                             op_let_Bang uu___6
+                               (fun u1 ->
+                                  let uu___7 =
+                                    check_relation_alt1 g EQUALITY t01
+                                      x1.FStar_Syntax_Syntax.sort in
+                                  op_let_Bang uu___7
+                                    (fun uu___8 ->
                                        op_let_Bang guard_not_allowed
                                          (fun uu___9 ->
                                             if uu___9
                                             then
-                                              check_equality_alt g1 f01 f11
+                                              let uu___10 =
+                                                let g1 = push_binders g [b1] in
+                                                check_relation_alt1 g1
+                                                  EQUALITY
+                                                  FStar_Syntax_Util.t_true
+                                                  f11 in
+                                              with_binders [b1] [u1] uu___10
                                             else
-                                              (let uu___11 =
-                                                 check_equality_alt g1 f01
-                                                   f11 in
-                                               handle_with uu___11
-                                                 (fun uu___12 ->
-                                                    check_equality_formula g1
-                                                      f01 f11))) in
-                                     with_binders [b] [u] uu___8)))
-                    else
-                      (let uu___5 =
-                         maybe_unfold x0.FStar_Syntax_Syntax.sort
-                           x1.FStar_Syntax_Syntax.sort in
-                       match uu___5 with
-                       | FStar_Pervasives_Native.None -> fallback t0 t1
-                       | FStar_Pervasives_Native.Some (t01, t11) ->
-                           let lhs =
-                             FStar_Syntax_Syntax.mk
-                               (FStar_Syntax_Syntax.Tm_refine
-                                  ({
-                                     FStar_Syntax_Syntax.ppname =
-                                       (x0.FStar_Syntax_Syntax.ppname);
-                                     FStar_Syntax_Syntax.index =
-                                       (x0.FStar_Syntax_Syntax.index);
-                                     FStar_Syntax_Syntax.sort = t01
-                                   }, f0)) t01.FStar_Syntax_Syntax.pos in
-                           let rhs =
-                             FStar_Syntax_Syntax.mk
-                               (FStar_Syntax_Syntax.Tm_refine
-                                  ({
-                                     FStar_Syntax_Syntax.ppname =
-                                       (x1.FStar_Syntax_Syntax.ppname);
-                                     FStar_Syntax_Syntax.index =
-                                       (x1.FStar_Syntax_Syntax.index);
-                                     FStar_Syntax_Syntax.sort = t11
-                                   }, f1)) t11.FStar_Syntax_Syntax.pos in
-                           let uu___6 =
-                             FStar_Syntax_Util.flatten_refinement lhs in
+                                              (match rel with
+                                               | EQUALITY ->
+                                                   let uu___11 =
+                                                     let g1 =
+                                                       push_binders g [b1] in
+                                                     let uu___12 =
+                                                       check_relation_alt1 g1
+                                                         EQUALITY
+                                                         FStar_Syntax_Util.t_true
+                                                         f11 in
+                                                     handle_with uu___12
+                                                       (fun uu___13 ->
+                                                          guard f11) in
+                                                   with_binders [b1] 
+                                                     [u1] uu___11
+                                               | SUBTYPING
+                                                   (FStar_Pervasives_Native.Some
+                                                   tm) ->
+                                                   let uu___11 =
+                                                     FStar_Syntax_Subst.subst
+                                                       [FStar_Syntax_Syntax.NT
+                                                          ((b1.FStar_Syntax_Syntax.binder_bv),
+                                                            tm)] f11 in
+                                                   guard uu___11
+                                               | SUBTYPING
+                                                   (FStar_Pervasives_Native.None)
+                                                   ->
+                                                   let uu___11 =
+                                                     FStar_Syntax_Util.mk_forall
+                                                       u1
+                                                       b1.FStar_Syntax_Syntax.binder_bv
+                                                       f11 in
+                                                   guard uu___11)))))
+                      else
+                        (let uu___6 =
+                           maybe_unfold t01 x1.FStar_Syntax_Syntax.sort in
+                         match uu___6 with
+                         | FStar_Pervasives_Native.None -> fallback t01 t11
+                         | FStar_Pervasives_Native.Some (t02, t12) ->
+                             let rhs =
+                               FStar_Syntax_Syntax.mk
+                                 (FStar_Syntax_Syntax.Tm_refine
+                                    ({
+                                       FStar_Syntax_Syntax.ppname =
+                                         (x1.FStar_Syntax_Syntax.ppname);
+                                       FStar_Syntax_Syntax.index =
+                                         (x1.FStar_Syntax_Syntax.index);
+                                       FStar_Syntax_Syntax.sort = t12
+                                     }, f1)) t12.FStar_Syntax_Syntax.pos in
+                             let uu___7 =
+                               FStar_Syntax_Util.flatten_refinement rhs in
+                             check_relation_alt1 g rel t02 uu___7)
+                  | (FStar_Syntax_Syntax.Tm_uinst uu___3, uu___4) ->
+                      let uu___5 =
+                        let uu___6 = head_matches t01 t11 in
+                        Prims.op_Negation uu___6 in
+                      if uu___5
+                      then maybe_unfold_and_retry t01 t11
+                      else
+                        (let uu___7 = FStar_Syntax_Util.head_and_args t01 in
+                         match uu___7 with
+                         | (head0, args0) ->
+                             let uu___8 = FStar_Syntax_Util.head_and_args t11 in
+                             (match uu___8 with
+                              | (head1, args1) ->
+                                  let uu___9 =
+                                    let uu___10 =
+                                      check_relation_alt1 g EQUALITY head0
+                                        head1 in
+                                    op_let_Bang uu___10
+                                      (fun uu___11 ->
+                                         check_relation_args g EQUALITY args0
+                                           args1) in
+                                  handle_with uu___9
+                                    (fun uu___10 ->
+                                       maybe_unfold_side_and_retry Both t01
+                                         t11)))
+                  | (FStar_Syntax_Syntax.Tm_fvar uu___3, uu___4) ->
+                      let uu___5 =
+                        let uu___6 = head_matches t01 t11 in
+                        Prims.op_Negation uu___6 in
+                      if uu___5
+                      then maybe_unfold_and_retry t01 t11
+                      else
+                        (let uu___7 = FStar_Syntax_Util.head_and_args t01 in
+                         match uu___7 with
+                         | (head0, args0) ->
+                             let uu___8 = FStar_Syntax_Util.head_and_args t11 in
+                             (match uu___8 with
+                              | (head1, args1) ->
+                                  let uu___9 =
+                                    let uu___10 =
+                                      check_relation_alt1 g EQUALITY head0
+                                        head1 in
+                                    op_let_Bang uu___10
+                                      (fun uu___11 ->
+                                         check_relation_args g EQUALITY args0
+                                           args1) in
+                                  handle_with uu___9
+                                    (fun uu___10 ->
+                                       maybe_unfold_side_and_retry Both t01
+                                         t11)))
+                  | (FStar_Syntax_Syntax.Tm_app uu___3, uu___4) ->
+                      let uu___5 =
+                        let uu___6 = head_matches t01 t11 in
+                        Prims.op_Negation uu___6 in
+                      if uu___5
+                      then maybe_unfold_and_retry t01 t11
+                      else
+                        (let uu___7 = FStar_Syntax_Util.head_and_args t01 in
+                         match uu___7 with
+                         | (head0, args0) ->
+                             let uu___8 = FStar_Syntax_Util.head_and_args t11 in
+                             (match uu___8 with
+                              | (head1, args1) ->
+                                  let uu___9 =
+                                    let uu___10 =
+                                      check_relation_alt1 g EQUALITY head0
+                                        head1 in
+                                    op_let_Bang uu___10
+                                      (fun uu___11 ->
+                                         check_relation_args g EQUALITY args0
+                                           args1) in
+                                  handle_with uu___9
+                                    (fun uu___10 ->
+                                       maybe_unfold_side_and_retry Both t01
+                                         t11)))
+                  | (uu___3, FStar_Syntax_Syntax.Tm_uinst uu___4) ->
+                      let uu___5 =
+                        let uu___6 = head_matches t01 t11 in
+                        Prims.op_Negation uu___6 in
+                      if uu___5
+                      then maybe_unfold_and_retry t01 t11
+                      else
+                        (let uu___7 = FStar_Syntax_Util.head_and_args t01 in
+                         match uu___7 with
+                         | (head0, args0) ->
+                             let uu___8 = FStar_Syntax_Util.head_and_args t11 in
+                             (match uu___8 with
+                              | (head1, args1) ->
+                                  let uu___9 =
+                                    let uu___10 =
+                                      check_relation_alt1 g EQUALITY head0
+                                        head1 in
+                                    op_let_Bang uu___10
+                                      (fun uu___11 ->
+                                         check_relation_args g EQUALITY args0
+                                           args1) in
+                                  handle_with uu___9
+                                    (fun uu___10 ->
+                                       maybe_unfold_side_and_retry Both t01
+                                         t11)))
+                  | (uu___3, FStar_Syntax_Syntax.Tm_fvar uu___4) ->
+                      let uu___5 =
+                        let uu___6 = head_matches t01 t11 in
+                        Prims.op_Negation uu___6 in
+                      if uu___5
+                      then maybe_unfold_and_retry t01 t11
+                      else
+                        (let uu___7 = FStar_Syntax_Util.head_and_args t01 in
+                         match uu___7 with
+                         | (head0, args0) ->
+                             let uu___8 = FStar_Syntax_Util.head_and_args t11 in
+                             (match uu___8 with
+                              | (head1, args1) ->
+                                  let uu___9 =
+                                    let uu___10 =
+                                      check_relation_alt1 g EQUALITY head0
+                                        head1 in
+                                    op_let_Bang uu___10
+                                      (fun uu___11 ->
+                                         check_relation_args g EQUALITY args0
+                                           args1) in
+                                  handle_with uu___9
+                                    (fun uu___10 ->
+                                       maybe_unfold_side_and_retry Both t01
+                                         t11)))
+                  | (uu___3, FStar_Syntax_Syntax.Tm_app uu___4) ->
+                      let uu___5 =
+                        let uu___6 = head_matches t01 t11 in
+                        Prims.op_Negation uu___6 in
+                      if uu___5
+                      then maybe_unfold_and_retry t01 t11
+                      else
+                        (let uu___7 = FStar_Syntax_Util.head_and_args t01 in
+                         match uu___7 with
+                         | (head0, args0) ->
+                             let uu___8 = FStar_Syntax_Util.head_and_args t11 in
+                             (match uu___8 with
+                              | (head1, args1) ->
+                                  let uu___9 =
+                                    let uu___10 =
+                                      check_relation_alt1 g EQUALITY head0
+                                        head1 in
+                                    op_let_Bang uu___10
+                                      (fun uu___11 ->
+                                         check_relation_args g EQUALITY args0
+                                           args1) in
+                                  handle_with uu___9
+                                    (fun uu___10 ->
+                                       maybe_unfold_side_and_retry Both t01
+                                         t11)))
+                  | (FStar_Syntax_Syntax.Tm_abs (b0::b1::bs, body, ropt),
+                     uu___3) ->
+                      let t02 = curry_abs b0 b1 bs body ropt in
+                      check_relation_alt1 g rel t02 t11
+                  | (uu___3, FStar_Syntax_Syntax.Tm_abs
+                     (b0::b1::bs, body, ropt)) ->
+                      let t12 = curry_abs b0 b1 bs body ropt in
+                      check_relation_alt1 g rel t01 t12
+                  | (FStar_Syntax_Syntax.Tm_abs (b0::[], body0, uu___3),
+                     FStar_Syntax_Syntax.Tm_abs (b1::[], body1, uu___4)) ->
+                      let uu___5 =
+                        check_relation_alt1 g EQUALITY
+                          (b0.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort
+                          (b1.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort in
+                      op_let_Bang uu___5
+                        (fun uu___6 ->
                            let uu___7 =
-                             FStar_Syntax_Util.flatten_refinement rhs in
-                           check_equality_alt g uu___6 uu___7)
-                | (FStar_Syntax_Syntax.Tm_abs (b0::b1::bs, body, ropt),
-                   uu___3) ->
-                    let t01 = curry_abs b0 b1 bs body ropt in
-                    check_equality_whnf g t01 t1
-                | (uu___3, FStar_Syntax_Syntax.Tm_abs
-                   (b0::b1::bs, body, ropt)) ->
-                    let t11 = curry_abs b0 b1 bs body ropt in
-                    check_equality_whnf g t0 t11
-                | (FStar_Syntax_Syntax.Tm_abs (b0::[], body0, uu___3),
-                   FStar_Syntax_Syntax.Tm_abs (b1::[], body1, uu___4)) ->
-                    let uu___5 =
-                      check_equality g
-                        (b0.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort
-                        (b1.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort in
-                    op_let_Bang uu___5
-                      (fun uu___6 ->
-                         let uu___7 =
-                           check_bqual b0.FStar_Syntax_Syntax.binder_qual
-                             b1.FStar_Syntax_Syntax.binder_qual in
-                         op_let_Bang uu___7
-                           (fun uu___8 ->
-                              let uu___9 =
-                                universe_of g
-                                  (b0.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort in
-                              op_let_Bang uu___9
-                                (fun u ->
-                                   let uu___10 =
-                                     FStar_Syntax_Subst.open_term [b0] body0 in
-                                   match uu___10 with
-                                   | (b01::[], body01) ->
-                                       let body11 =
-                                         FStar_Syntax_Subst.subst
-                                           [FStar_Syntax_Syntax.DB
-                                              (Prims.int_zero,
-                                                (b01.FStar_Syntax_Syntax.binder_bv))]
-                                           body1 in
-                                       let uu___11 =
-                                         let g1 = push_binders g [b01] in
-                                         check_equality g1 body01 body11 in
-                                       with_binders [b01] [u] uu___11)))
-                | uu___3 -> fallback t0 t1))
-and (check_equality_whnf :
-  env -> FStar_Syntax_Syntax.typ -> FStar_Syntax_Syntax.typ -> unit result) =
-  fun g ->
-    fun t0 ->
-      fun t1 ->
-        let err uu___ =
-          let uu___1 =
-            let uu___2 = FStar_Syntax_Print.term_to_string t0 in
-            let uu___3 = FStar_Syntax_Print.term_to_string t1 in
-            FStar_Compiler_Util.format2 "not equal terms: %s <> %s" uu___2
-              uu___3 in
-          fail uu___1 in
-        op_let_Bang guard_not_allowed
-          (fun guard_not_ok ->
-             let guard_ok = Prims.op_Negation guard_not_ok in
-             let fallback t01 t11 =
-               if guard_ok
-               then
-                 let uu___ = (equatable g t01) || (equatable g t11) in
-                 (if uu___
-                  then
-                    let uu___1 = check' g t01 in
-                    op_let_Bang uu___1
-                      (fun uu___2 ->
-                         match uu___2 with
-                         | (uu___3, t_typ) ->
-                             let uu___4 = universe_of g t_typ in
-                             op_let_Bang uu___4
-                               (fun u ->
-                                  let uu___5 =
-                                    FStar_Syntax_Util.mk_eq2 u t_typ t01 t11 in
-                                  guard uu___5))
-                  else err ())
-               else err () in
-             (let uu___1 =
-                FStar_TypeChecker_Env.debug g.tcenv
-                  (FStar_Options.Other "Core") in
-              if uu___1
-              then
-                let uu___2 = FStar_Syntax_Print.term_to_string t0 in
-                let uu___3 = FStar_Syntax_Print.term_to_string t1 in
-                FStar_Compiler_Util.print2 "check_equality_whnf %s =?= %s\n"
-                  uu___2 uu___3
-              else ());
-             (let uu___1 =
-                let uu___2 = FStar_Syntax_Util.eq_tm t0 t1 in
-                uu___2 = FStar_Syntax_Util.Equal in
-              if uu___1
-              then return ()
-              else
-                (match ((t0.FStar_Syntax_Syntax.n),
-                         (t1.FStar_Syntax_Syntax.n))
-                 with
-                 | (FStar_Syntax_Syntax.Tm_uinst (f0, us0),
-                    FStar_Syntax_Syntax.Tm_uinst (f1, us1)) ->
-                     let uu___3 =
-                       let uu___4 = FStar_Syntax_Util.eq_tm f0 f1 in
-                       uu___4 = FStar_Syntax_Util.Equal in
-                     if uu___3
-                     then
-                       let uu___4 =
-                         FStar_TypeChecker_Rel.teq_nosmt_force g.tcenv t0 t1 in
-                       (if uu___4 then return () else err ())
-                     else err ()
-                 | (FStar_Syntax_Syntax.Tm_type u0,
-                    FStar_Syntax_Syntax.Tm_type u1) ->
-                     let uu___3 =
-                       FStar_TypeChecker_Rel.teq_nosmt_force g.tcenv t0 t1 in
-                     if uu___3 then return () else err ()
-                 | (FStar_Syntax_Syntax.Tm_abs (b0::b1::bs, body, ropt),
-                    uu___3) ->
-                     let t01 = curry_abs b0 b1 bs body ropt in
-                     check_equality_whnf g t01 t1
-                 | (uu___3, FStar_Syntax_Syntax.Tm_abs
-                    (b0::b1::bs, body, ropt)) ->
-                     let t11 = curry_abs b0 b1 bs body ropt in
-                     check_equality_whnf g t0 t11
-                 | (FStar_Syntax_Syntax.Tm_abs (b0::[], body0, uu___3),
-                    FStar_Syntax_Syntax.Tm_abs (b1::[], body1, uu___4)) ->
-                     let uu___5 =
-                       check_equality g
-                         (b0.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort
-                         (b1.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort in
-                     op_let_Bang uu___5
-                       (fun uu___6 ->
-                          let uu___7 =
-                            check_bqual b0.FStar_Syntax_Syntax.binder_qual
-                              b1.FStar_Syntax_Syntax.binder_qual in
-                          op_let_Bang uu___7
-                            (fun uu___8 ->
-                               let uu___9 =
-                                 universe_of g
-                                   (b0.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort in
-                               op_let_Bang uu___9
-                                 (fun u ->
-                                    let uu___10 =
-                                      FStar_Syntax_Subst.open_term [b0] body0 in
-                                    match uu___10 with
-                                    | (b01::[], body01) ->
-                                        let body11 =
-                                          FStar_Syntax_Subst.subst
-                                            [FStar_Syntax_Syntax.DB
-                                               (Prims.int_zero,
-                                                 (b01.FStar_Syntax_Syntax.binder_bv))]
-                                            body1 in
-                                        let uu___11 =
-                                          let g1 = push_binders g [b01] in
-                                          check_equality g1 body01 body11 in
-                                        with_binders [b01] [u] uu___11)))
-                 | (FStar_Syntax_Syntax.Tm_refine (b0, phi0),
-                    FStar_Syntax_Syntax.Tm_refine (b1, phi1)) ->
-                     let uu___3 =
-                       check_equality_whnf g b0.FStar_Syntax_Syntax.sort
-                         b1.FStar_Syntax_Syntax.sort in
-                     op_let_Bang uu___3
-                       (fun uu___4 ->
-                          let uu___5 =
-                            let uu___6 =
-                              let uu___7 = FStar_Syntax_Syntax.mk_binder b0 in
-                              [uu___7] in
-                            FStar_Syntax_Subst.open_term uu___6 phi0 in
-                          match uu___5 with
-                          | (b::[], phi01) ->
-                              let phi11 =
-                                FStar_Syntax_Subst.subst
-                                  [FStar_Syntax_Syntax.DB
-                                     (Prims.int_zero,
-                                       (b.FStar_Syntax_Syntax.binder_bv))]
-                                  phi1 in
-                              op_let_Bang guard_not_allowed
-                                (fun uu___6 ->
-                                   if uu___6
-                                   then check_equality g phi01 phi11
-                                   else
-                                     (let uu___8 =
-                                        universe_of g
-                                          (b.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort in
-                                      op_let_Bang uu___8
-                                        (fun u ->
-                                           let uu___9 =
-                                             let g1 = push_binders g [b] in
-                                             let uu___10 =
-                                               check_equality g1 phi01 phi11 in
-                                             handle_with uu___10
-                                               (fun uu___11 ->
-                                                  check_equality_formula g1
-                                                    phi01 phi11) in
-                                           with_binders [b] [u] uu___9))))
-                 | (FStar_Syntax_Syntax.Tm_match (e0, uu___3, brs0, uu___4),
-                    FStar_Syntax_Syntax.Tm_match (e1, uu___5, brs1, uu___6))
-                     -> check_equality_match g e0 brs0 e1 brs1
-                 | (FStar_Syntax_Syntax.Tm_ascribed (t01, uu___3, uu___4),
-                    uu___5) -> check_equality g t01 t1
-                 | (uu___3, FStar_Syntax_Syntax.Tm_ascribed
-                    (t11, uu___4, uu___5)) -> check_equality g t0 t11
-                 | (FStar_Syntax_Syntax.Tm_app uu___3, uu___4) ->
-                     let uu___5 =
-                       FStar_TypeChecker_Rel.head_matches_delta g.tcenv
-                         guard_ok t0 t1 in
-                     (match uu___5 with
-                      | (mr, ts) ->
-                          (match (mr, ts) with
-                           | (FStar_TypeChecker_Rel.MisMatch uu___6, uu___7)
-                               -> fallback t0 t1
-                           | (FStar_TypeChecker_Rel.HeadMatch (true), uu___6)
-                               -> fallback t0 t1
-                           | (uu___6, FStar_Pervasives_Native.Some
-                              (t01, t11)) -> check_equality_whnf g t01 t11
-                           | (FStar_TypeChecker_Rel.FullMatch, uu___6) ->
-                               let uu___7 =
-                                 guard_ok &&
-                                   ((equatable g t0) || (equatable g t1)) in
-                               if uu___7
-                               then fallback t0 t1
-                               else
-                                 (let uu___9 =
-                                    let uu___10 =
-                                      let uu___11 =
-                                        FStar_Syntax_Subst.compress t0 in
-                                      uu___11.FStar_Syntax_Syntax.n in
-                                    let uu___11 =
-                                      let uu___12 =
-                                        FStar_Syntax_Subst.compress t1 in
-                                      uu___12.FStar_Syntax_Syntax.n in
-                                    (uu___10, uu___11) in
-                                  match uu___9 with
-                                  | (FStar_Syntax_Syntax.Tm_app (hd0, args0),
-                                     FStar_Syntax_Syntax.Tm_app (hd1, args1))
-                                      ->
-                                      let uu___10 =
-                                        check_equality_whnf g hd0 hd1 in
-                                      op_let_Bang uu___10
-                                        (fun uu___11 ->
-                                           check_equality_args g args0 args1)
-                                  | uu___10 -> fallback t0 t1)
-                           | (FStar_TypeChecker_Rel.HeadMatch (false),
-                              uu___6) ->
-                               let uu___7 =
-                                 guard_ok &&
-                                   ((equatable g t0) || (equatable g t1)) in
-                               if uu___7
-                               then fallback t0 t1
-                               else
-                                 (let uu___9 =
-                                    let uu___10 =
-                                      let uu___11 =
-                                        FStar_Syntax_Subst.compress t0 in
-                                      uu___11.FStar_Syntax_Syntax.n in
-                                    let uu___11 =
-                                      let uu___12 =
-                                        FStar_Syntax_Subst.compress t1 in
-                                      uu___12.FStar_Syntax_Syntax.n in
-                                    (uu___10, uu___11) in
-                                  match uu___9 with
-                                  | (FStar_Syntax_Syntax.Tm_app (hd0, args0),
-                                     FStar_Syntax_Syntax.Tm_app (hd1, args1))
-                                      ->
-                                      let uu___10 =
-                                        check_equality_whnf g hd0 hd1 in
-                                      op_let_Bang uu___10
-                                        (fun uu___11 ->
-                                           check_equality_args g args0 args1)
-                                  | uu___10 -> fallback t0 t1)))
-                 | (uu___3, FStar_Syntax_Syntax.Tm_app uu___4) ->
-                     let uu___5 =
-                       FStar_TypeChecker_Rel.head_matches_delta g.tcenv
-                         guard_ok t0 t1 in
-                     (match uu___5 with
-                      | (mr, ts) ->
-                          (match (mr, ts) with
-                           | (FStar_TypeChecker_Rel.MisMatch uu___6, uu___7)
-                               -> fallback t0 t1
-                           | (FStar_TypeChecker_Rel.HeadMatch (true), uu___6)
-                               -> fallback t0 t1
-                           | (uu___6, FStar_Pervasives_Native.Some
-                              (t01, t11)) -> check_equality_whnf g t01 t11
-                           | (FStar_TypeChecker_Rel.FullMatch, uu___6) ->
-                               let uu___7 =
-                                 guard_ok &&
-                                   ((equatable g t0) || (equatable g t1)) in
-                               if uu___7
-                               then fallback t0 t1
-                               else
-                                 (let uu___9 =
-                                    let uu___10 =
-                                      let uu___11 =
-                                        FStar_Syntax_Subst.compress t0 in
-                                      uu___11.FStar_Syntax_Syntax.n in
-                                    let uu___11 =
-                                      let uu___12 =
-                                        FStar_Syntax_Subst.compress t1 in
-                                      uu___12.FStar_Syntax_Syntax.n in
-                                    (uu___10, uu___11) in
-                                  match uu___9 with
-                                  | (FStar_Syntax_Syntax.Tm_app (hd0, args0),
-                                     FStar_Syntax_Syntax.Tm_app (hd1, args1))
-                                      ->
-                                      let uu___10 =
-                                        check_equality_whnf g hd0 hd1 in
-                                      op_let_Bang uu___10
-                                        (fun uu___11 ->
-                                           check_equality_args g args0 args1)
-                                  | uu___10 -> fallback t0 t1)
-                           | (FStar_TypeChecker_Rel.HeadMatch (false),
-                              uu___6) ->
-                               let uu___7 =
-                                 guard_ok &&
-                                   ((equatable g t0) || (equatable g t1)) in
-                               if uu___7
-                               then fallback t0 t1
-                               else
-                                 (let uu___9 =
-                                    let uu___10 =
-                                      let uu___11 =
-                                        FStar_Syntax_Subst.compress t0 in
-                                      uu___11.FStar_Syntax_Syntax.n in
-                                    let uu___11 =
-                                      let uu___12 =
-                                        FStar_Syntax_Subst.compress t1 in
-                                      uu___12.FStar_Syntax_Syntax.n in
-                                    (uu___10, uu___11) in
-                                  match uu___9 with
-                                  | (FStar_Syntax_Syntax.Tm_app (hd0, args0),
-                                     FStar_Syntax_Syntax.Tm_app (hd1, args1))
-                                      ->
-                                      let uu___10 =
-                                        check_equality_whnf g hd0 hd1 in
-                                      op_let_Bang uu___10
-                                        (fun uu___11 ->
-                                           check_equality_args g args0 args1)
-                                  | uu___10 -> fallback t0 t1)))
-                 | uu___3 -> fallback t0 t1)))
-and (check_equality :
-  env -> FStar_Syntax_Syntax.typ -> FStar_Syntax_Syntax.typ -> unit result) =
-  fun g ->
-    fun t0 ->
-      fun t1 ->
-        let uu___ = FStar_Syntax_Util.eq_tm t0 t1 in
-        match uu___ with
-        | FStar_Syntax_Util.Equal -> return ()
-        | uu___1 ->
-            let t0' =
-              FStar_TypeChecker_Normalize.normalize_refinement
-                default_norm_steps g.tcenv t0 in
-            let t1' =
-              FStar_TypeChecker_Normalize.normalize_refinement
-                default_norm_steps g.tcenv t1 in
-            check_equality_whnf g t0' t1'
-and (check_equality_args :
-  env -> FStar_Syntax_Syntax.args -> FStar_Syntax_Syntax.args -> unit result)
+                             check_bqual b0.FStar_Syntax_Syntax.binder_qual
+                               b1.FStar_Syntax_Syntax.binder_qual in
+                           op_let_Bang uu___7
+                             (fun uu___8 ->
+                                let uu___9 =
+                                  universe_of g
+                                    (b0.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort in
+                                op_let_Bang uu___9
+                                  (fun u ->
+                                     let uu___10 =
+                                       FStar_Syntax_Subst.open_term [b0]
+                                         body0 in
+                                     match uu___10 with
+                                     | (b01::[], body01) ->
+                                         let body11 =
+                                           FStar_Syntax_Subst.subst
+                                             [FStar_Syntax_Syntax.DB
+                                                (Prims.int_zero,
+                                                  (b01.FStar_Syntax_Syntax.binder_bv))]
+                                             body1 in
+                                         let uu___11 =
+                                           let g1 = push_binders g [b01] in
+                                           check_relation_alt1 g1 EQUALITY
+                                             body01 body11 in
+                                         with_binders [b01] [u] uu___11)))
+                  | (FStar_Syntax_Syntax.Tm_arrow (x0::x1::xs, c0), uu___3)
+                      ->
+                      let uu___4 = curry_arrow x0 (x1 :: xs) c0 in
+                      check_relation_alt1 g rel uu___4 t11
+                  | (uu___3, FStar_Syntax_Syntax.Tm_arrow (x0::x1::xs, c1))
+                      ->
+                      let uu___4 = curry_arrow x0 (x1 :: xs) c1 in
+                      check_relation_alt1 g rel t01 uu___4
+                  | (FStar_Syntax_Syntax.Tm_arrow (x0::[], c0),
+                     FStar_Syntax_Syntax.Tm_arrow (x1::[], c1)) ->
+                      with_context "subtype arrow"
+                        FStar_Pervasives_Native.None
+                        (fun uu___3 ->
+                           let uu___4 = FStar_Syntax_Subst.open_comp [x0] c0 in
+                           match uu___4 with
+                           | (x01::[], c01) ->
+                               let uu___5 =
+                                 FStar_Syntax_Subst.open_comp [x1] c1 in
+                               (match uu___5 with
+                                | (x11::[], c11) ->
+                                    let uu___6 =
+                                      check_bqual
+                                        x01.FStar_Syntax_Syntax.binder_qual
+                                        x11.FStar_Syntax_Syntax.binder_qual in
+                                    op_let_Bang uu___6
+                                      (fun uu___7 ->
+                                         let uu___8 =
+                                           universe_of g
+                                             (x11.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort in
+                                         op_let_Bang uu___8
+                                           (fun u1 ->
+                                              let uu___9 =
+                                                let rel_arg =
+                                                  match rel with
+                                                  | EQUALITY -> EQUALITY
+                                                  | uu___10 ->
+                                                      let uu___11 =
+                                                        let uu___12 =
+                                                          FStar_Syntax_Syntax.bv_to_name
+                                                            x11.FStar_Syntax_Syntax.binder_bv in
+                                                        FStar_Pervasives_Native.Some
+                                                          uu___12 in
+                                                      SUBTYPING uu___11 in
+                                                let rel_comp =
+                                                  match rel with
+                                                  | EQUALITY -> EQUALITY
+                                                  | SUBTYPING e ->
+                                                      let uu___10 =
+                                                        let uu___11 =
+                                                          FStar_Syntax_Util.is_pure_or_ghost_comp
+                                                            c01 in
+                                                        if uu___11
+                                                        then
+                                                          op_let_Question e
+                                                            (fun e1 ->
+                                                               let uu___12 =
+                                                                 let uu___13
+                                                                   =
+                                                                   let uu___14
+                                                                    =
+                                                                    FStar_Syntax_Util.args_of_binders
+                                                                    [x11] in
+                                                                   FStar_Pervasives_Native.snd
+                                                                    uu___14 in
+                                                                 FStar_Syntax_Syntax.mk_Tm_app
+                                                                   e1 uu___13
+                                                                   FStar_Compiler_Range.dummyRange in
+                                                               FStar_Pervasives_Native.Some
+                                                                 uu___12)
+                                                        else
+                                                          FStar_Pervasives_Native.None in
+                                                      SUBTYPING uu___10 in
+                                                let uu___10 =
+                                                  check_relation_alt1 g rel
+                                                    (x11.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort
+                                                    (x01.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort in
+                                                op_let_Bang uu___10
+                                                  (fun uu___11 ->
+                                                     with_context
+                                                       "check_subcomp"
+                                                       FStar_Pervasives_Native.None
+                                                       (fun uu___12 ->
+                                                          let uu___13 =
+                                                            push_binders g
+                                                              [x11] in
+                                                          let uu___14 =
+                                                            let uu___15 =
+                                                              let uu___16 =
+                                                                let uu___17 =
+                                                                  let uu___18
+                                                                    =
+                                                                    FStar_Syntax_Syntax.bv_to_name
+                                                                    x11.FStar_Syntax_Syntax.binder_bv in
+                                                                  ((x01.FStar_Syntax_Syntax.binder_bv),
+                                                                    uu___18) in
+                                                                FStar_Syntax_Syntax.NT
+                                                                  uu___17 in
+                                                              [uu___16] in
+                                                            FStar_Syntax_Subst.subst_comp
+                                                              uu___15 c01 in
+                                                          check_relation_comp
+                                                            uu___13 rel_comp
+                                                            uu___14 c11)) in
+                                              with_binders [x11] [u1] uu___9))))
+                  | (FStar_Syntax_Syntax.Tm_match (e0, uu___3, brs0, uu___4),
+                     FStar_Syntax_Syntax.Tm_match (e1, uu___5, brs1, uu___6))
+                      ->
+                      let uu___7 = check_relation_alt1 g EQUALITY e0 e1 in
+                      op_let_Bang uu___7
+                        (fun uu___8 ->
+                           let relate_branch br0 br1 uu___9 =
+                             match (br0, br1) with
+                             | ((p0, FStar_Pervasives_Native.None, body0),
+                                (p1, FStar_Pervasives_Native.None, body1)) ->
+                                 let uu___10 =
+                                   let uu___11 =
+                                     FStar_Syntax_Syntax.eq_pat p0 p1 in
+                                   Prims.op_Negation uu___11 in
+                                 if uu___10
+                                 then fail "patterns not equal"
+                                 else
+                                   (let uu___12 =
+                                      FStar_Syntax_Subst.open_branch
+                                        (p0, FStar_Pervasives_Native.None,
+                                          body0) in
+                                    match uu___12 with
+                                    | (p01, uu___13, body01) ->
+                                        let uu___14 =
+                                          FStar_Syntax_Subst.open_branch
+                                            (p1,
+                                              FStar_Pervasives_Native.None,
+                                              body1) in
+                                        (match uu___14 with
+                                         | (p11, uu___15, body11) ->
+                                             let uu___16 =
+                                               let uu___17 =
+                                                 FStar_TypeChecker_PatternUtils.raw_pat_as_exp
+                                                   g.tcenv p01 in
+                                               let uu___18 =
+                                                 FStar_TypeChecker_PatternUtils.raw_pat_as_exp
+                                                   g.tcenv p11 in
+                                               (uu___17, uu___18) in
+                                             (match uu___16 with
+                                              | (FStar_Pervasives_Native.Some
+                                                 (uu___17, bvs0),
+                                                 FStar_Pervasives_Native.Some
+                                                 (uu___18, bvs1)) ->
+                                                  let s =
+                                                    FStar_Compiler_List.map2
+                                                      (fun bv0 ->
+                                                         fun bv1 ->
+                                                           let uu___19 =
+                                                             let uu___20 =
+                                                               FStar_Syntax_Syntax.bv_to_name
+                                                                 bv0 in
+                                                             (bv1, uu___20) in
+                                                           FStar_Syntax_Syntax.NT
+                                                             uu___19) bvs0
+                                                      bvs1 in
+                                                  let body12 =
+                                                    FStar_Syntax_Subst.subst
+                                                      s body11 in
+                                                  let bs0 =
+                                                    FStar_Compiler_List.map
+                                                      FStar_Syntax_Syntax.mk_binder
+                                                      bvs0 in
+                                                  let uu___19 =
+                                                    check_binders g bs0 in
+                                                  op_let_Bang uu___19
+                                                    (fun uu___20 ->
+                                                       match uu___20 with
+                                                       | (uu___21, us, g1) ->
+                                                           let uu___22 =
+                                                             check_relation_alt1
+                                                               g1 rel body01
+                                                               body12 in
+                                                           with_binders bs0
+                                                             us uu___22)
+                                              | uu___17 ->
+                                                  fail
+                                                    "raw_pat_as_exp failed in check_equality match rule")))
+                             | uu___10 ->
+                                 fail
+                                   "Core does not support branches with when" in
+                           iter2 brs0 brs1 relate_branch ())
+                  | uu___3 -> fallback t01 t11))
+and (check_relation_args :
+  env ->
+    relation ->
+      FStar_Syntax_Syntax.args -> FStar_Syntax_Syntax.args -> unit result)
   =
   fun g ->
-    fun a0 ->
-      fun a1 ->
-        if (FStar_Compiler_List.length a0) = (FStar_Compiler_List.length a1)
-        then
-          iter2 a0 a1
-            (fun uu___ ->
-               fun uu___1 ->
-                 fun uu___2 ->
-                   match (uu___, uu___1) with
-                   | ((t0, q0), (t1, q1)) ->
-                       let uu___3 = check_aqual q0 q1 in
-                       op_let_Bang uu___3
-                         (fun uu___4 -> check_equality g t0 t1)) ()
-        else fail "Unequal number of arguments"
-and (check_subcomp :
+    fun rel ->
+      fun a0 ->
+        fun a1 ->
+          if
+            (FStar_Compiler_List.length a0) = (FStar_Compiler_List.length a1)
+          then
+            iter2 a0 a1
+              (fun uu___ ->
+                 fun uu___1 ->
+                   fun uu___2 ->
+                     match (uu___, uu___1) with
+                     | ((t0, q0), (t1, q1)) ->
+                         let uu___3 = check_aqual q0 q1 in
+                         op_let_Bang uu___3
+                           (fun uu___4 -> check_relation_alt g rel t0 t1)) ()
+          else fail "Unequal number of arguments"
+and (check_relation_comp :
   env ->
-    FStar_Syntax_Syntax.term FStar_Pervasives_Native.option ->
+    relation ->
       FStar_Syntax_Syntax.comp -> FStar_Syntax_Syntax.comp -> unit result)
   =
   fun g ->
-    fun e ->
+    fun rel ->
       fun c0 ->
         fun c1 ->
           let destruct_comp c =
@@ -2056,11 +1781,12 @@ and (check_subcomp :
               else
                 (let ct_eq ct0 ct1 =
                    let uu___4 =
-                     check_equality g ct0.FStar_Syntax_Syntax.result_typ
+                     check_relation_alt g EQUALITY
+                       ct0.FStar_Syntax_Syntax.result_typ
                        ct1.FStar_Syntax_Syntax.result_typ in
                    op_let_Bang uu___4
                      (fun uu___5 ->
-                        check_equality_args g
+                        check_relation_args g EQUALITY
                           ct0.FStar_Syntax_Syntax.effect_args
                           ct1.FStar_Syntax_Syntax.effect_args) in
                  let ct0 = FStar_Syntax_Util.comp_to_comp_typ_nouniv c0 in
@@ -2102,11 +1828,12 @@ and (check_subcomp :
               else
                 (let ct_eq ct0 ct1 =
                    let uu___4 =
-                     check_equality g ct0.FStar_Syntax_Syntax.result_typ
+                     check_relation_alt g EQUALITY
+                       ct0.FStar_Syntax_Syntax.result_typ
                        ct1.FStar_Syntax_Syntax.result_typ in
                    op_let_Bang uu___4
                      (fun uu___5 ->
-                        check_equality_args g
+                        check_relation_args g EQUALITY
                           ct0.FStar_Syntax_Syntax.effect_args
                           ct1.FStar_Syntax_Syntax.effect_args) in
                  let ct0 = FStar_Syntax_Util.comp_to_comp_typ_nouniv c0 in
@@ -2141,16 +1868,29 @@ and (check_subcomp :
                        fail uu___8)))
           | (FStar_Pervasives_Native.Some (E_TOTAL, t0),
              FStar_Pervasives_Native.Some (uu___1, t1)) ->
-              check_subtype g e t0 t1
+              check_relation_alt g rel t0 t1
           | (FStar_Pervasives_Native.Some (E_GHOST, t0),
              FStar_Pervasives_Native.Some (E_GHOST, t1)) ->
-              check_subtype g e t0 t1
+              check_relation_alt g rel t0 t1
           | (FStar_Pervasives_Native.Some (E_GHOST, t0),
              FStar_Pervasives_Native.Some (E_TOTAL, t1)) ->
               let uu___1 = non_informative g t1 in
               if uu___1
-              then check_subtype g e t0 t1
+              then check_relation_alt g rel t0 t1
               else fail "Expected a Total computation, but got Ghost"
+and (check_subtype :
+  env ->
+    FStar_Syntax_Syntax.term FStar_Pervasives_Native.option ->
+      FStar_Syntax_Syntax.typ -> FStar_Syntax_Syntax.typ -> unit result)
+  =
+  fun g ->
+    fun e ->
+      fun t0 ->
+        fun t1 ->
+          let rel = SUBTYPING e in
+          with_context "check_subtype"
+            (FStar_Pervasives_Native.Some (CtxRel (t0, rel, t1)))
+            (fun uu___ -> check_relation_alt g rel t0 t1)
 and (memo_check :
   env ->
     FStar_Syntax_Syntax.term ->
@@ -2175,7 +1915,7 @@ and (check :
   fun msg ->
     fun g ->
       fun e ->
-        with_context msg (FStar_Pervasives_Native.Some e)
+        with_context msg (FStar_Pervasives_Native.Some (CtxTerm e))
           (fun uu___ -> memo_check g e)
 and (check' :
   env ->
@@ -2512,7 +2252,8 @@ and (check' :
                        (fun uu___7 ->
                           let c_e = as_comp g (eff, te) in
                           let uu___8 =
-                            check_subcomp g (FStar_Pervasives_Native.Some e2)
+                            check_relation_comp g
+                              (SUBTYPING (FStar_Pervasives_Native.Some e2))
                               c_e c in
                           op_let_Bang uu___8
                             (fun uu___9 ->
@@ -2602,7 +2343,7 @@ and (check' :
                | (eff_sc, t_sc) ->
                    let uu___2 =
                      with_context "universe_of"
-                       (FStar_Pervasives_Native.Some t_sc)
+                       (FStar_Pervasives_Native.Some (CtxTerm t_sc))
                        (fun uu___3 -> universe_of g t_sc) in
                    op_let_Bang uu___2
                      (fun u_sc ->
@@ -2819,7 +2560,7 @@ and (check' :
                               ->
                               let uu___6 =
                                 with_context "residual type"
-                                  (FStar_Pervasives_Native.Some t)
+                                  (FStar_Pervasives_Native.Some (CtxTerm t))
                                   (fun uu___7 -> universe_of g t) in
                               op_let_Bang uu___6
                                 (fun uu___7 ->
@@ -2851,7 +2592,7 @@ and (check' :
                | (eff_sc, t_sc) ->
                    let uu___2 =
                      with_context "universe_of"
-                       (FStar_Pervasives_Native.Some t_sc)
+                       (FStar_Pervasives_Native.Some (CtxTerm t_sc))
                        (fun uu___3 -> universe_of g t_sc) in
                    op_let_Bang uu___2
                      (fun u_sc ->
@@ -3011,18 +2752,19 @@ and (check' :
                                                                     ((as_x2.FStar_Syntax_Syntax.binder_bv),
                                                                     e2)]
                                                                     returns_ty1 in
-                                                                    let uu___22
-                                                                    =
+                                                                    let rel =
                                                                     if eq
                                                                     then
-                                                                    check_equality
-                                                                    g' tbr
-                                                                    expect_tbr
+                                                                    EQUALITY
                                                                     else
-                                                                    check_subtype
-                                                                    g'
+                                                                    SUBTYPING
                                                                     (FStar_Pervasives_Native.Some
-                                                                    b1) tbr
+                                                                    b1) in
+                                                                    let uu___22
+                                                                    =
+                                                                    check_relation_alt
+                                                                    g' rel
+                                                                    tbr
                                                                     expect_tbr in
                                                                     op_let_Bang
                                                                     uu___22
@@ -3394,8 +3136,9 @@ and (check_scrutinee_pattern_type_compatible :
                                                match (uu___9, uu___10) with
                                                | ((t_sc2, uu___12),
                                                   (t_pat1, uu___13)) ->
-                                                   check_equality g t_sc2
-                                                     t_pat1) () in
+                                                   check_relation_alt g
+                                                     EQUALITY t_sc2 t_pat1)
+                                        () in
                                     op_let_Bang uu___8
                                       (fun uu___9 ->
                                          return FStar_Pervasives_Native.None)))))
@@ -3422,11 +3165,12 @@ let (check_term_top :
                  FStar_Pervasives_Native.None
                  (fun uu___1 ->
                     let uu___2 = as_comp g1 eff_te in
-                    check_subcomp
+                    check_relation_comp
                       {
                         tcenv = (g1.tcenv);
                         allow_universe_instantiation = true
-                      } (FStar_Pervasives_Native.Some e) uu___2 target_comp))
+                      } (SUBTYPING (FStar_Pervasives_Native.Some e)) uu___2
+                      target_comp))
 let (simplify_steps : FStar_TypeChecker_Env.step Prims.list) =
   [FStar_TypeChecker_Env.Beta;
   FStar_TypeChecker_Env.UnfoldUntil FStar_Syntax_Syntax.delta_constant;
@@ -3546,7 +3290,8 @@ let (check_term_equality :
       fun t1 ->
         let g1 = { tcenv = g; allow_universe_instantiation = false } in
         let ctx = { no_guard = false; error_context = [] } in
-        let uu___ = let uu___1 = check_equality_alt g1 t0 t1 in uu___1 ctx in
+        let uu___ =
+          let uu___1 = check_relation_alt g1 EQUALITY t0 t1 in uu___1 ctx in
         match uu___ with
         | FStar_Pervasives.Inl (uu___1, g2) -> FStar_Pervasives.Inl g2
         | FStar_Pervasives.Inr err -> FStar_Pervasives.Inr err
