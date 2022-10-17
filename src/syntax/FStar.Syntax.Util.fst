@@ -1229,6 +1229,8 @@ let type_u () : typ * universe =
     let u = U_unif <| Unionfind.univ_fresh Range.dummyRange in
     mk (Tm_type u) dummyRange, u
 
+let type_with_u (u:universe) : typ = mk (Tm_type u) dummyRange
+
 // works on anything, really
 let attr_eq a a' =
    match eq_tm a a' with
