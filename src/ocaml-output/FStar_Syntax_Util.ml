@@ -3604,6 +3604,8 @@ let eqopt :
         match (x, y) with
         | (FStar_Pervasives_Native.Some x1, FStar_Pervasives_Native.Some y1)
             -> e x1 y1
+        | (FStar_Pervasives_Native.None, FStar_Pervasives_Native.None) ->
+            true
         | uu___ -> false
 let (debug_term_eq : Prims.bool FStar_Compiler_Effect.ref) =
   FStar_Compiler_Util.mk_ref false

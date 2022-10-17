@@ -335,6 +335,7 @@ let (uu___is_Effect : qualifier -> Prims.bool) =
   fun projectee -> match projectee with | Effect -> true | uu___ -> false
 let (uu___is_OnlyName : qualifier -> Prims.bool) =
   fun projectee -> match projectee with | OnlyName -> true | uu___ -> false
+type qualifiers = qualifier Prims.list
 type bv_view =
   {
   bv_ppname: Prims.string ;
